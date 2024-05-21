@@ -1,445 +1,216 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from EUR04-DB3-obe.outbound.protection.outlook.com (mail-db3eur04on2042.outbound.protection.outlook.com [40.107.6.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 095A218B1A
-	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 02:38:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716259117; cv=none; b=T2qcJKaZvkvGxYAjlh9h3xsZ3PGqgqU5I1BXhwK/GsFygZrfmm+IqyCXgNGOzfCEkBbLY4CkDWj5lHyQD7h4JomzxEPixkm5dV6VE5NViKW1fSoBQ7T816Zg1KZcvIWs/9Yr+Yy5b5xUtWW+17SD1hnTB3Zx5ffA2HX5STqfS6I=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716259117; c=relaxed/simple;
-	bh=04V2TiG7n1566pTE69nmTzCYQM93yyc3uTcAW5bgVaU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FN2gs4ebXFHajaTxnwRImzoKyh3P2bmxmoEM5kpWt3wVKQknxXcv001yYQBPP6RcCoVMwGwgnXnPIGtgKKGRnOSe3c0T5rJH56W8xwAjJsGMiVM75pmZhBJIaj3V+sFTotWzfheooDT53eHCh9IUjNw2+z4chUaNANubpsibMW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=evMcCNPM; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B111D51E;
+	Tue, 21 May 2024 03:28:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.6.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1716262104; cv=fail; b=ROWdj6mjyHlB5ESt6CXC59XMROJH0CDcDDD/aEAu8dSPRwi6YtrCrgmEonnONcCpikkkUcvYRTvedeFJLSIC1EHMnq8nOpGmDQtquJxMh8wiIArZAx6CV1o3inx7uegzzVpHrmottL5u6CIQsgBwlmjiS/rkEea3t2JPlGBujYI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1716262104; c=relaxed/simple;
+	bh=e2dBL+mQOixdKHxHSTgIw8VwGHTAYPq9mze9v2FwmXU=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=aNdv/XmHaDnGcnuBos9tuuAPJWyePRFvU+RhB3y7pYelUXl1b3R0bUQ9UAz6LsAanGx7/Sks57/4B4IxE7Fh5oaAjGl1CVNGEQLYiuHjM9+nY9LQgCQjvYylMMd7rYsqoBXoE7/lsqewY+DAjHqaFPAef5zPlozSbtsB+6QgbTU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b=MQr3FTER; arc=fail smtp.client-ip=40.107.6.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="evMcCNPM"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1ee954e0aa6so64551555ad.3
-        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 19:38:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1716259114; x=1716863914; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=nAD2HfoXLZII7PkQY+RIy3eDF2S7Lzem/nR8E1ux0Zo=;
-        b=evMcCNPM/oQaYMxN5Tu6ChZk/eJjm1GQ7ac5FjwH7ETz17OMJHkA8BExK9wzo4N8V1
-         mZsNUG3a5h7BcE+Bvhk6xW6T5a7laj0uK+kvsSWGwprkNz9T0AUccLU21hUolmXkaA3q
-         XOqaKxl+L3dwgwEku1KiRUSE5mWj6l3iHII5A1mmaZCymmZm2ODNGafpacssQjC/I1o7
-         ekxBMG7rqdCXFNlFFQWtMLvA1yD4I7SSDeffZPSAYBOtv/4QnmCd6eoYG1meReUljzAG
-         hn4Il/rrhj9EGVzUHGqNjrdXLLTh+WxW0zxS6TRCK5XAEEVgW19oUD4FpKVK8+Ei89Y+
-         cREQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716259114; x=1716863914;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=nAD2HfoXLZII7PkQY+RIy3eDF2S7Lzem/nR8E1ux0Zo=;
-        b=A+mv25I1adXK4NxYjbAl1lCDAAKfNsJLL8t/pJ38w6IrwP6OpvNQvp97Qb21hhUxhQ
-         kdlQhWUyunGtnaTQJNgpG5us9dwuS3zeEfA2VRkz/sVfoWT3cWaw0LcphMxdnu+NXLTE
-         AsJDwjatS/T+J2IvVXq6v1oxOl/3pFtgB0IrbzeVrmKlGMdC8YcRNz2fZyKXHBfu9yVq
-         Q4shUAgWhFQLmLq7EaKTA9+DE/MbN7pu+H8bAmjlXG1XWOyWdGzrIaX4s4ZDd2lbkZxA
-         BP5/ZOZLaPG1tTvjS5qysbzpfyqG2egbyhBfc0YYs07eS+9e4ArYqCMhzh5yTXZj9zbx
-         ffjw==
-X-Gm-Message-State: AOJu0YyqD77495EafiNhZQ4/0EsMlIm9/pOdKr0FuyTyMhSvcdn26BbR
-	9tfwjR2XLvpwPWsxchk221G7DBOm7zqSNOPhPdOhQ170CyEruXoKJ603CcnW2LY=
-X-Google-Smtp-Source: AGHT+IF+y45+russ+eDPrVjYNTO1UVyGDJjV/s+G/taRA7G2C00wpzQgV7fi+keZlGEa+fybql83YA==
-X-Received: by 2002:a17:90b:301:b0:2bd:92b3:c09b with SMTP id 98e67ed59e1d1-2bd92b3c272mr755060a91.42.1716259114007;
-        Mon, 20 May 2024 19:38:34 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2b67158c39dsm20679185a91.35.2024.05.20.19.38.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 May 2024 19:38:33 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1s9FOY-004rHv-07;
-	Tue, 21 May 2024 12:38:30 +1000
-Date: Tue, 21 May 2024 12:38:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	djwong@kernel.org, hch@infradead.org, brauner@kernel.org,
-	chandanbabu@kernel.org, jack@suse.cz, yi.zhang@huawei.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH v3 3/3] xfs: correct the zeroing truncate range
-Message-ID: <ZkwJJuFCV+WQLl40@dread.disaster.area>
-References: <20240517111355.233085-1-yi.zhang@huaweicloud.com>
- <20240517111355.233085-4-yi.zhang@huaweicloud.com>
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="MQr3FTER"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nijPkSngFQNVgoKCip/wvwaImX8FBtfm2lSk+q5XpBeDBBg/nJtT0ExFe4UhuWBqOndn25/ItB/gjapKYvK8GBn3l9ZGwy/Gql7vMX6WwUrxaoNLXIzAwbBzUFcR8odIArvnf+nT946AYoebKdf5v/vevjiO1ucvj0oC6xkc/3HrAuT7GSTeLOvEZRfrxNC5WaKmBIVJOLxlx6EDzp6T2Ng41l7seKqL1L+v7Q+tyQMrvvOkCf/+iG2T2q0t0gD2rxeezwuYgPoW0wQLwJpdPbL7JS5xgtsQb4hgp1W42Pd0O+XnS6D7TnwBSxPBCGJyTPG+A31aPtt4/tJAyE0u0A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=kpBy7C2LF/T+5wMu59RClHeVqnf8zCo0un+Q8AuCxaU=;
+ b=WtYJMm25M4CuGDYhVz9C0y7pqexxoMWLOhWV0xqgpXYgX6FCKeCV6VJQkXKIWV+/22oFFcdoGJV82hjivqc5VqR5Vvf5nTdLBTEHeYte7haUfAv2iuoUfzwwO2pjgPTrf7aDc5c9OHKeV4hv239gxXcH4gP0Jb11HseXEP6cVw4ZufMGYmCi9YvONC0Dfr/yt7fNDE+AOrunU/VNGjNU0iZ9INuxqMmCpSlRNeu7nfLnXAZ+zWo8n8kKUBNq2chKmBFLWyNTjqNtC+9AT9wqfnpMfqU0FJ+KpPHBrLkzjc7/Gn5+UjR1nxzNLl5Dc5XK1yXtjhQoERaTuX3oD/G3kA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=kpBy7C2LF/T+5wMu59RClHeVqnf8zCo0un+Q8AuCxaU=;
+ b=MQr3FTERt+hhmosTGCOlrnF1jQDhIrAVj7j+4wSoDCz+QBcxrIHTokvuoMHuSsHSql6g5Xhnnkd18nqGn5c86pKaHnJGsh+/iEQ+xqkfIMbEolwGQUymzWsJkhIuwV9DlJT2oR0C3iSAIfGcCGPvrUyjC1d5fbkMI3hNdRSjzIQ=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from DU2PR04MB8822.eurprd04.prod.outlook.com (2603:10a6:10:2e1::11)
+ by PAXPR04MB8606.eurprd04.prod.outlook.com (2603:10a6:102:219::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.36; Tue, 21 May
+ 2024 03:28:18 +0000
+Received: from DU2PR04MB8822.eurprd04.prod.outlook.com
+ ([fe80::8d2f:ac7e:966a:2f5f]) by DU2PR04MB8822.eurprd04.prod.outlook.com
+ ([fe80::8d2f:ac7e:966a:2f5f%6]) with mapi id 15.20.7587.035; Tue, 21 May 2024
+ 03:28:18 +0000
+From: Xu Yang <xu.yang_2@nxp.com>
+To: brauner@kernel.org,
+	djwong@kernel.org,
+	willy@infradead.org,
+	kpm@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org,
+	jun.li@nxp.com
+Subject: [PATCH v4 1/2] filemap: add helper mapping_max_folio_size()
+Date: Tue, 21 May 2024 19:36:23 +0800
+Message-Id: <20240521113624.2538951-1-xu.yang_2@nxp.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI2P153CA0022.APCP153.PROD.OUTLOOK.COM (2603:1096:4:190::8)
+ To DU2PR04MB8822.eurprd04.prod.outlook.com (2603:10a6:10:2e1::11)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240517111355.233085-4-yi.zhang@huaweicloud.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DU2PR04MB8822:EE_|PAXPR04MB8606:EE_
+X-MS-Office365-Filtering-Correlation-Id: d1fb49b4-2882-485c-6407-08dc79460ea8
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230031|1800799015|376005|52116005|366007|38350700005;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?CQ5jYG8iMWR9o+4uQbMBHbj4FBT4c3ibyQKDewZ9xekaHrkbeorVBubKPt+x?=
+ =?us-ascii?Q?g7bZO8Rzu7A5O0398eSba1NpJkpzsju63Tee+I7bIQhSwzqJUn7S4mamrDPI?=
+ =?us-ascii?Q?8GIOD6lU+H6HqW7Dv0ZkHfUxxadhm0K8EyAw1ADmDpixIh/gd7CiUJm5GUBJ?=
+ =?us-ascii?Q?1+Xq3w5KBQRFk9IDC6EiHAfzKzx8KtiZ51Oewq0Q6otdsRjxTU9nr6o7tzOK?=
+ =?us-ascii?Q?aPt1mpehr4Uzqua+/Kijo+u7KntFMb5H0/Rus1fzmw1Dj+XbOOFHtk6C5Aya?=
+ =?us-ascii?Q?qCj72eNuHj5ZD+MMR1NEzl0nf5W/6BoNwcclqTBg2I7R2VsQjqPn0r9NzMtT?=
+ =?us-ascii?Q?mV+XSU/SHw6QQjA5dqCypq6eK97rnDdICwDDAE1u5/+Mt9Bq3Y+eN0Aq88Re?=
+ =?us-ascii?Q?RKshxHmI9jTcOBzYFiD4dJvf7503DT5sjlaL2DLSFtDPGto2E3hZM7PuViOP?=
+ =?us-ascii?Q?PTe8haFOH2wv8udo1a+9y2Y8A7a4cdkhpBRu2pIMcMVx8GZtdMsGHys3H3H+?=
+ =?us-ascii?Q?QzjEdv656mtFDQkko1xZvpENLAi0fKQiv4u8PEp9/a82C+5YuRqkV0EzPsnn?=
+ =?us-ascii?Q?eYI6ZKELlyBF7LE5ZaDJqN/UUi0MLGXWlptIuJPkVie/W9pmAPbmXq72HYzD?=
+ =?us-ascii?Q?TsqEM4Mh1r9ZRzt4GMCN7FOwtZPpJu7MTKDRLzQfWNJeoMhf+N7bXPHUgr7X?=
+ =?us-ascii?Q?JpOGuUW7WDmdJuiaCS9TGifDhWEQXwulChAnEsSsU94zvpKJcqwE4CeyRq2J?=
+ =?us-ascii?Q?l0f5dgBtXLUDv4oEVmG/KC7HplDib5fJN2zsjWen4FlXgRAEf/EAlcLSzwlz?=
+ =?us-ascii?Q?7jt/gC5p7gYSw4d2e/u4T25i8heJY2FPvlteIZ4HeGboo/YKM7FgJklJbkMA?=
+ =?us-ascii?Q?prGmNFjYwZkp9M4H98BLg+GifXQMi6VCFAONN8Q8e+t1gEDZw3MsVUVW+b+0?=
+ =?us-ascii?Q?L5aC0j/01lfSB5ll7kjtRl+7+WB9bLlbvuCkGoxKJlkNtSfez7SR7cDuiBt6?=
+ =?us-ascii?Q?UGActt88V/PeEQgKZp1NdjHId1t3c+OhyZaa/sIg4LuRDDg0KIh5QWz9Dhe2?=
+ =?us-ascii?Q?UKrcrmCsgLAKrhcTCohjbqvHBoZPG8/h58GCRx9KlwZ8kRoWloFh1h0xzmyo?=
+ =?us-ascii?Q?Rla4sYx+lOxTPCvdTDjLq0QM/NUJSL0VDgOCbj0CTlCLm10Elj0Nm2rTn6l2?=
+ =?us-ascii?Q?AmMweHJ7lDXZyiGm9/iL+BVqwlc2eBosVxyGzNMu8ynybYEiEjSkMGFatLoa?=
+ =?us-ascii?Q?QB52/AEwERSpBNui6JjmS1TE11szSTWrxZJ8Gh3KT1n2hyyIouF2hah66dPt?=
+ =?us-ascii?Q?Uq3iTd51V3FUwjdbsi+DD1Czmgd7+qpyMcKcdU26Xf+9FQ=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU2PR04MB8822.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(376005)(52116005)(366007)(38350700005);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?ILXP/AiSf49y27eq0OFLsww+ISEGzfXx5abrXvUEVdQ+WPmf7LjMEQlqN6yL?=
+ =?us-ascii?Q?74SrxDUU8oIVpSFrV0KNVFqvm4h6RW3Np5E3i+inclCQYtq2EC5rZ+VKrOiz?=
+ =?us-ascii?Q?HluuUGzMyTNrT25J/u6aZhc9jqKacCdsL701z2NGfJYwzO1m/MdC01R1wcf2?=
+ =?us-ascii?Q?j8A3iW8/Lpy55rlsU8e3ZE56y09f8e3Q0QHQAUPNm61Z0r4LzAp5YH7u4QmC?=
+ =?us-ascii?Q?nplWgU3EFs5ZfaUv/XvpLdyxPmRiiMXDnmKbJ+ah4pfA4Zaj2upQN9Ha3oxF?=
+ =?us-ascii?Q?64dlOA4KgiGLtNyyi6Xul5M1sQoiIrTRXeBesVLoROqrjRBac+3u6qHFPEhD?=
+ =?us-ascii?Q?9OYmB47CmMgOWotRPC4+Tdc4e+4ElnSRhaO6agyuuhiOhOKXM37fiotpwGCP?=
+ =?us-ascii?Q?ur7J4OHJNcGoZCpZGLeTJTHzhib7oxFKuVLVPW02/NNu1kQ3h48LKDTPn9et?=
+ =?us-ascii?Q?31kQMt7Yt9ybKGBUXH+rJnkGrg19oCxU35/XMAUHzrMwgDrxUIF1ygi+ti20?=
+ =?us-ascii?Q?eNYY7mm9y6RX8KLcr0s/rVEaxgSatQjiYlxyeb8p4BYD1R71ziXjDMD5fbTm?=
+ =?us-ascii?Q?M6JPVEDLDKOp1PXP+KcxAogMgOjP2XTflEbgdytBCARHwaQ4He1eWk5Vg5TQ?=
+ =?us-ascii?Q?NHe99mYcX6kpdUUzRnqKI1r8YaJdlUHDLUJ+CAuKc0twNEAkGjp5njk0h+IP?=
+ =?us-ascii?Q?Z97rjYQuckABQ94Piz8/1m5OpmGI0lILzleb6k9hAqKG8PtxQO9zTMuTO8Y6?=
+ =?us-ascii?Q?KgrCyohFKUukeW5rllIQYVaPT2EcSu9OokXbJx7LEl/67BzToD0GHJoHk9Dr?=
+ =?us-ascii?Q?hIUqtVsoxFQv9dgtj7mS0B4GzXcSKkaAyxQEnOX98IFwDWXJ5zaoDemmKX3k?=
+ =?us-ascii?Q?pNgW0GQL/Hp7kmX2gzdKFgSZfnB0rDR7C+pIwpN12JjFK0ohXHJayV12MdOg?=
+ =?us-ascii?Q?zcUpLP2d01o9LegEprg8ACkicah3CmIfGX/PMxs7pTxlvPxs8Mal3/hjvpIZ?=
+ =?us-ascii?Q?sPd3v6FtjL2+nG36UBQOpseg0oECm+6ugBOemTGu2FbGrJsoILa+lRnqiPhV?=
+ =?us-ascii?Q?S6lJ7RjD8CU0Yd/0lcWK3pd60w61SRjZ3fP42xXsl9/d31B2nw/dDNYxezJ+?=
+ =?us-ascii?Q?gFOD1+q+Ys34yUkdCaBgzX/zSBW/FKJ1+XgG1QwPkbScPLAQ1qcLmggl+aiB?=
+ =?us-ascii?Q?IPGgBTKlz0VHWL2Lx6gOK8rTJHwfcXdLknn4RrX1ewauW9S+sXVt42Dy6z7P?=
+ =?us-ascii?Q?t3N+B2Lf6lb3ryj5QSG76Oz5gJFRG6mJ7InU4oxWjgHFmK7uvGJ3qxftzp2R?=
+ =?us-ascii?Q?ljcI/arrh7NmCReVAkk7Rl2CNikx+IYGF0euRh1l2w/JqtI72dk7+t06cedP?=
+ =?us-ascii?Q?GXJPxZBPW6/XWN9XHTYvqireoBv71m+pE4F3AW6//RqUm6FaLVtuDDucbNu3?=
+ =?us-ascii?Q?GqXJXABIvymVPlSajVFta5jh+UtRe3rSx9Gjag7LL8AWWjXyULD76KPMNvpm?=
+ =?us-ascii?Q?xzyy2CjW/Kx0pqmx9fYheu+oQjJgG2TJORPmDRjuMohJ9dPeO2VGTlGxU5g6?=
+ =?us-ascii?Q?tu24sa5y/3K6RecSkWDZXtJvajIubAqpSVNDOnHp?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d1fb49b4-2882-485c-6407-08dc79460ea8
+X-MS-Exchange-CrossTenant-AuthSource: DU2PR04MB8822.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 May 2024 03:28:18.3103
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Bc/eXfTkVaPo3+QDNkP7voklK9LySVId3XEXlowdszw7Fc3PWuM3TtKSF5aVScUC0nMttd2nHCYTvwskAIQ3Ng==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8606
 
-On Fri, May 17, 2024 at 07:13:55PM +0800, Zhang Yi wrote:
-> From: Zhang Yi <yi.zhang@huawei.com>
-> 
-> When truncating a realtime file unaligned to a shorter size,
-> xfs_setattr_size() only flush the EOF page before zeroing out, and
-> xfs_truncate_page() also only zeros the EOF block. This could expose
-> stale data since 943bc0882ceb ("iomap: don't increase i_size if it's not
-> a write operation").
-> 
-> If the sb_rextsize is bigger than one block, and we have a realtime
-> inode that contains a long enough written extent. If we unaligned
-> truncate into the middle of this extent, xfs_itruncate_extents() could
-> split the extent and align the it's tail to sb_rextsize, there maybe
-> have more than one blocks more between the end of the file. Since
-> xfs_truncate_page() only zeros the trailing portion of the i_blocksize()
-> value, so it may leftover some blocks contains stale data that could be
-> exposed if we append write it over a long enough distance later.
-> 
-> xfs_truncate_page() should flush, zeros out the entire rtextsize range,
-> and make sure the entire zeroed range have been flushed to disk before
-> updating the inode size.
-> 
-> Fixes: 943bc0882ceb ("iomap: don't increase i_size if it's not a write operation")
-> Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-> Link: https://lore.kernel.org/linux-xfs/0b92a215-9d9b-3788-4504-a520778953c2@huaweicloud.com
-> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> ---
->  fs/xfs/xfs_iomap.c | 35 +++++++++++++++++++++++++++++++----
->  fs/xfs/xfs_iops.c  | 10 ----------
->  2 files changed, 31 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 4958cc3337bc..fc379450fe74 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1466,12 +1466,39 @@ xfs_truncate_page(
->  	loff_t			pos,
->  	bool			*did_zero)
->  {
-> +	struct xfs_mount	*mp = ip->i_mount;
->  	struct inode		*inode = VFS_I(ip);
->  	unsigned int		blocksize = i_blocksize(inode);
-> +	int			error;
-> +
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		blocksize = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
-> +
-> +	/*
-> +	 * iomap won't detect a dirty page over an unwritten block (or a
-> +	 * cow block over a hole) and subsequently skips zeroing the
-> +	 * newly post-EOF portion of the page. Flush the new EOF to
-> +	 * convert the block before the pagecache truncate.
-> +	 */
-> +	error = filemap_write_and_wait_range(inode->i_mapping, pos,
-> +					     roundup_64(pos, blocksize));
-> +	if (error)
-> +		return error;
->  
->  	if (IS_DAX(inode))
-> -		return dax_truncate_page(inode, pos, blocksize, did_zero,
-> -					&xfs_dax_write_iomap_ops);
-> -	return iomap_truncate_page(inode, pos, blocksize, did_zero,
-> -				   &xfs_buffered_write_iomap_ops);
-> +		error = dax_truncate_page(inode, pos, blocksize, did_zero,
-> +					  &xfs_dax_write_iomap_ops);
-> +	else
-> +		error = iomap_truncate_page(inode, pos, blocksize, did_zero,
-> +					    &xfs_buffered_write_iomap_ops);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Write back path won't write dirty blocks post EOF folio,
-> +	 * flush the entire zeroed range before updating the inode
-> +	 * size.
-> +	 */
-> +	return filemap_write_and_wait_range(inode->i_mapping, pos,
-> +					    roundup_64(pos, blocksize));
->  }
+Add mapping_max_folio_size() to get the maximum folio size for this
+pagecache mapping.
 
-Ok, this means we do -three- blocking writebacks through this path
-instead of one or maybe two.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Xu Yang <xu.yang_2@nxp.com>
 
-We already know that this existing blocking writeback case for dirty
-pages over unwritten extents is a significant performance issue for
-some workloads. I have a fix in progress for iomap to handle this
-case without requiring blocking writeback to be done to convert the
-extent to written before we do the truncate.
-
-Regardless, I think this whole "truncate is allocation unit size
-aware" algorithm is largely unworkable without a rewrite. What XFS
-needs to do on truncate *down* before we start the truncate
-transaction is pretty simple:
-
-	- ensure that the new EOF extent tail contains zeroes
-	- ensure that the range from the existing ip->i_disk_size to
-	  the new EOF is on disk so data vs metadata ordering is
-	  correct for crash recovery purposes.
-
-What this patch does to acheive that is:
-
-	1. blocking writeback to clean dirty unwritten/cow blocks at
-	the new EOF.
-	2. iomap_truncate_page() writes zeroes into the page cache,
-	which dirties the pages we just cleaned at the new EOF.
-	3. blocking writeback to clean the dirty blocks at the new
-	EOF.
-	4. truncate_setsize() then writes zeros to partial folios at
-	the new EOF, dirtying the EOF page again.
-	5. blocking writeback to clean dirty blocks from the current
-	on-disk size to the new EOF.
-
-This is pretty crazy when you stop and think about it. We're writing
-the same EOF block -three- times. The first data write gets
-overwritten by zeroes on the second write, and the third write
-writes the same zeroes as the second write. There are two redundant
-*blocking* writes in this process.
-
-We can do all this with a single writeback operation if we are a
-little bit smarter about the order of operations we perform and we
-are a little bit smarter in iomap about zeroing dirty pages in the
-page cache:
-
-	1. change iomap_zero_range() to do the right thing with
-	dirty unwritten and cow extents (the patch I've been working
-	on).
-
-	2. pass the range to be zeroed into iomap_truncate_page()
-	(the fundamental change being made here).
-
-	3. zero the required range *through the page cache*
-	(iomap_zero_range() already does this).
-
-	4. write back the XFS inode from ip->i_disk_size to the end
-	of the range zeroed by iomap_truncate_page()
-	(xfs_setattr_size() already does this).
-
-	5. i_size_write(newsize);
-
-	6. invalidate_inode_pages2_range(newsize, -1) to trash all
-	the page cache beyond the new EOF without doing any zeroing
-	as we've already done all the zeroing needed to the page
-	cache through iomap_truncate_page().
-
-
-The patch I'm working on for step 1 is below. It still needs to be
-extended to handle the cow case, but I'm unclear on how to exercise
-that case so I haven't written the code to do it. The rest of it is
-just rearranging the code that we already use just to get the order
-of operations right. The only notable change in behaviour is using
-invalidate_inode_pages2_range() instead of truncate_pagecache(),
-because we don't want the EOF page to be dirtied again once we've
-already written zeroes to disk....
-
--- 
-Dave Chinner
-david@fromorbit.com
-
-
-[RFC] iomap: zeroing needs to be pagecache aware
-
-From: Dave Chinner <dchinner@redhat.com>
-
-Unwritten extents can have page cache data over the range being
-zeroed so we can't just skip them entirely. Fix this by checking for
-an existing dirty folio over the unwritten range we are zeroing
-and only performing zeroing if the folio is already dirty.
-
-XXX: how do we detect a iomap containing a cow mapping over a hole
-in iomap_zero_iter()? The XFS code implies this case also needs to
-zero the page cache if there is data present, so trigger for page
-cache lookup only in iomap_zero_iter() needs to handle this case as
-well.
-
-Before:
-
-$ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
-path /mnt/scratch/foo, 50000 iters
-
-real    0m14.103s
-user    0m0.015s
-sys     0m0.020s
-
-$ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
-path /mnt/scratch/foo, 50000 iters
-% time     seconds  usecs/call     calls    errors syscall
------- ----------- ----------- --------- --------- ----------------
- 85.90    0.847616          16     50000           ftruncate
- 14.01    0.138229           2     50000           pwrite64
-....
-
-After:
-
-$ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
-path /mnt/scratch/foo, 50000 iters
-
-real    0m0.144s
-user    0m0.021s
-sys     0m0.012s
-
-$ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
-path /mnt/scratch/foo, 50000 iters
-% time     seconds  usecs/call     calls    errors syscall
------- ----------- ----------- --------- --------- ----------------
- 53.86    0.505964          10     50000           ftruncate
- 46.12    0.433251           8     50000           pwrite64
-....
-
-Yup, we get back all the performance.
-
-As for the "mmap write beyond EOF" data exposure aspect
-documented here:
-
-https://lore.kernel.org/linux-xfs/20221104182358.2007475-1-bfoster@redhat.com/
-
-With this command:
-
-$ sudo xfs_io -tfc "falloc 0 1k" -c "pwrite 0 1k" \
-  -c "mmap 0 4k" -c "mwrite 3k 1k" -c "pwrite 32k 4k" \
-  -c fsync -c "pread -v 3k 32" /mnt/scratch/foo
-
-Before:
-
-wrote 1024/1024 bytes at offset 0
-1 KiB, 1 ops; 0.0000 sec (34.877 MiB/sec and 35714.2857 ops/sec)
-wrote 4096/4096 bytes at offset 32768
-4 KiB, 1 ops; 0.0000 sec (229.779 MiB/sec and 58823.5294 ops/sec)
-00000c00:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
-00000c10:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
-read 32/32 bytes at offset 3072
-32.000000 bytes, 1 ops; 0.0000 sec (568.182 KiB/sec and 18181.8182 ops/sec
-
-After:
-
-wrote 1024/1024 bytes at offset 0
-1 KiB, 1 ops; 0.0000 sec (40.690 MiB/sec and 41666.6667 ops/sec)
-wrote 4096/4096 bytes at offset 32768
-4 KiB, 1 ops; 0.0000 sec (150.240 MiB/sec and 38461.5385 ops/sec)
-00000c00:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000c10:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-read 32/32 bytes at offset 3072
-32.000000 bytes, 1 ops; 0.0000 sec (558.036 KiB/sec and 17857.1429 ops/sec)
-
-We see that this post-eof unwritten extent dirty page zeroing is
-working correctly.
-
-This has passed through most of fstests on a couple of test VMs
-without issues at the moment, so I think this approach to fixing the
-issue is going to be solid once we've worked out how to detect the
-COW-hole mapping case.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/iomap/buffered-io.c | 42 ++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_iops.c      | 12 +-----------
- 2 files changed, 41 insertions(+), 13 deletions(-)
+Changes in v4:
+ - split the mapping_max_folio_size() from v3
+ - adjust mapping_max_folio_size() comment
+ - add Rb tag
+---
+ include/linux/pagemap.h | 34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 4e8e41c8b3c0..6877474de0c9 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -583,11 +583,23 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
-  *
-  * Returns a locked reference to the folio at @pos, or an error pointer if the
-  * folio could not be obtained.
-+ *
-+ * Note: when zeroing unwritten extents, we might have data in the page cache
-+ * over an unwritten extent. In this case, we want to do a pure lookup on the
-+ * page cache and not create a new folio as we don't need to perform zeroing on
-+ * unwritten extents if there is no cached data over the given range.
-  */
- struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len)
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index c5e33e2ca48a..d43cf36bb68b 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -346,6 +346,19 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+ 	m->gfp_mask = mask;
+ }
+ 
++/*
++ * There are some parts of the kernel which assume that PMD entries
++ * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
++ * limit the maximum allocation order to PMD size.  I'm not aware of any
++ * assumptions about maximum order if THP are disabled, but 8 seems like
++ * a good order (that's 1MB if you're using 4kB pages)
++ */
++#ifdef CONFIG_TRANSPARENT_HUGEPAGE
++#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
++#else
++#define MAX_PAGECACHE_ORDER	8
++#endif
++
+ /**
+  * mapping_set_large_folios() - Indicate the file supports large folios.
+  * @mapping: The file.
+@@ -372,6 +385,14 @@ static inline bool mapping_large_folio_support(struct address_space *mapping)
+ 		test_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
+ }
+ 
++/* Return the maximum folio size for this pagecache mapping, in bytes. */
++static inline size_t mapping_max_folio_size(struct address_space *mapping)
++{
++	if (mapping_large_folio_support(mapping))
++		return PAGE_SIZE << MAX_PAGECACHE_ORDER;
++	return PAGE_SIZE;
++}
++
+ static inline int filemap_nr_thps(struct address_space *mapping)
  {
- 	fgf_t fgp = FGP_WRITEBEGIN | FGP_NOFS;
+ #ifdef CONFIG_READ_ONLY_THP_FOR_FS
+@@ -530,19 +551,6 @@ static inline void *detach_page_private(struct page *page)
+ 	return folio_detach_private(page_folio(page));
+ }
  
-+	if (iter->flags & IOMAP_ZERO) {
-+		const struct iomap *srcmap = iomap_iter_srcmap(iter);
-+
-+		if (srcmap->type == IOMAP_UNWRITTEN)
-+			fgp &= ~FGP_CREAT;
-+	}
-+
- 	if (iter->flags & IOMAP_NOWAIT)
- 		fgp |= FGP_NOWAIT;
- 	fgp |= fgf_set_order(len);
-@@ -1375,7 +1387,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 	loff_t written = 0;
- 
- 	/* already zeroed?  we're done. */
--	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
-+	if (srcmap->type == IOMAP_HOLE)
- 		return length;
- 
- 	do {
-@@ -1385,8 +1397,22 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		size_t bytes = min_t(u64, SIZE_MAX, length);
- 
- 		status = iomap_write_begin(iter, pos, bytes, &folio);
--		if (status)
-+		if (status) {
-+			if (status == -ENOENT) {
-+				/*
-+				 * Unwritten extents need to have page cache
-+				 * lookups done to determine if they have data
-+				 * over them that needs zeroing. If there is no
-+				 * data, we'll get -ENOENT returned here, so we
-+				 * can just skip over this index.
-+				 */
-+				WARN_ON_ONCE(srcmap->type != IOMAP_UNWRITTEN);
-+				if (bytes > PAGE_SIZE - offset_in_page(pos))
-+					bytes = PAGE_SIZE - offset_in_page(pos);
-+				goto loop_continue;
-+			}
- 			return status;
-+		}
- 		if (iter->iomap.flags & IOMAP_F_STALE)
- 			break;
- 
-@@ -1394,6 +1420,17 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		if (bytes > folio_size(folio) - offset)
- 			bytes = folio_size(folio) - offset;
- 
-+		/*
-+		 * If the folio over an unwritten extent is clean (i.e. because
-+		 * it has been read from), then it already contains zeros. Hence
-+		 * we can just skip it.
-+		 */
-+		if (srcmap->type == IOMAP_UNWRITTEN &&
-+		    !folio_test_dirty(folio)) {
-+			folio_unlock(folio);
-+			goto loop_continue;
-+		}
-+
- 		folio_zero_range(folio, offset, bytes);
- 		folio_mark_accessed(folio);
- 
-@@ -1401,6 +1438,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		if (WARN_ON_ONCE(bytes == 0))
- 			return -EIO;
- 
-+loop_continue:
- 		pos += bytes;
- 		length -= bytes;
- 		written += bytes;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 8a145ca7d380..e8c9f3018c80 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -838,17 +838,7 @@ xfs_setattr_size(
- 		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
- 		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
- 				&did_zeroing);
--	} else {
--		/*
--		 * iomap won't detect a dirty page over an unwritten block (or a
--		 * cow block over a hole) and subsequently skips zeroing the
--		 * newly post-EOF portion of the page. Flush the new EOF to
--		 * convert the block before the pagecache truncate.
--		 */
--		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
--						     newsize);
--		if (error)
--			return error;
-+	} else if (newsize != oldsize) {
- 		error = xfs_truncate_page(ip, newsize, &did_zeroing);
- 	}
- 
+-/*
+- * There are some parts of the kernel which assume that PMD entries
+- * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+- * limit the maximum allocation order to PMD size.  I'm not aware of any
+- * assumptions about maximum order if THP are disabled, but 8 seems like
+- * a good order (that's 1MB if you're using 4kB pages)
+- */
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+-#else
+-#define MAX_PAGECACHE_ORDER	8
+-#endif
+-
+ #ifdef CONFIG_NUMA
+ struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
+ #else
+-- 
+2.34.1
+
