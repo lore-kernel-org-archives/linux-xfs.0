@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E51742A94
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 02:47:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A38C58210
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 02:48:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716346079; cv=none; b=vDufdu3k/9ZM9ii6NU3OvuZWFR6dKIDg+DKQK2lGCJ7Ku9mIr5fH4F5mDcFuzAxQw+rz2fD618NwU5aVJR66gSb2tdctABT8zOujH5hEAIA3i1H0P+/nbL12JtNXZa7n3C9EBpwnQFAO8SXBskmUZHGqRuNW788gab7BMneeCaw=
+	t=1716346095; cv=none; b=h4X55ppT31wc3H4BeTqG2zxQd42zA2WhFsjIUG81c98XpZ4Uf8Kqmyb4V04TA4ICyMJynaL+G7Y3MLjJZmxpbhkeUN7QSaI3lV0Rd/4KxT7PNZkOju+vY5hGH39MNk25l6zKZzjFcua6b0cOQRV2DQ8VhPnpxm6B1S3RApFhAXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716346079; c=relaxed/simple;
-	bh=v7K5vlRgSuh8iVZvQE2EOFW+3L/lMyVchCaQqMlAHWo=;
+	s=arc-20240116; t=1716346095; c=relaxed/simple;
+	bh=WWwIT5M/tzs+Feo4cLV5B7sbQMJZeJfo1czDP3f5HjA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Z7ukfbZ20yqaurLAsAxRwFYF7hEPxkOu+okS/hWKkSLCErQuPZUzFZnQ/O0tEAWDR5KaVrr3JUFektNb/uPRziz+py3+OXWE7B5tpALAySVZfvkwPnfSKZKNebtfwV2SMoXKbpvTrHhwNEu92hiMnoEjmgZ0P/CRuV75rPTLsvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OO77Le2/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lMpEG7GWSntyAYMw/v/1+tGhItYeysXlWntzdRkCHUv11DPfXiJFdF24ICqf6v1ezB55amn/bCF2BhJr/917I0a6g+pB+QJWv+UnS4CEMHTa3gnJB9qnm6WGvBe21a4lGfke1JMaFtWRRow2tDyDrwmJs9m+s+YFmtFNZJOr/kI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TTrQRZhU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OO77Le2/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7903CC2BD11;
-	Wed, 22 May 2024 02:47:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TTrQRZhU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22454C2BD11;
+	Wed, 22 May 2024 02:48:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716346079;
-	bh=v7K5vlRgSuh8iVZvQE2EOFW+3L/lMyVchCaQqMlAHWo=;
+	s=k20201202; t=1716346095;
+	bh=WWwIT5M/tzs+Feo4cLV5B7sbQMJZeJfo1czDP3f5HjA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OO77Le2/nM4S/8fd0JN4r0VPuxLP/XGUPiLxc5/jorsT8lpoVO867LIbLHaowYJF/
-	 hvtrwn0NO30UxJhB58udNtfrTPNd06fDckg8Pi9b5ldugvfaWidJ7lGsl2mmO8Mbj3
-	 /IK2PrQgSsAFgzQCzl2N681VAmOvVnrk5HGT300TuDgvVrcwAZKC9k3UhiMF8frQ+q
-	 uL8zBNUyKBdc6Y0jz/QL3FuiAAWrkUacFu/SvpA4E2C1ClihKK9A67eh5ZAW+W1rjF
-	 DrPXtu1RsWGOIs6Q6F4MrV70AFFNolKfbkt1+uO7HMlVwxspsl5KCvXGL7rENVlxSN
-	 Frf00SOpx8wvQ==
-Date: Tue, 21 May 2024 19:47:59 -0700
-Subject: [PATCHSET v30.4 10/10] mkfs: cleanups for 6.9
+	b=TTrQRZhU0c2bwCBjgv/5iNrNv6MpKO8LzJzgBmBP1aVy89NUIJtDex3idhRWfUYeT
+	 Gyo/gH/3c3Ih8phc9WKcLxKiMo8zXk5DFbji0wemUyMdSMsEs67jZmqdr+U6PsL7FG
+	 yh0Eth+tjHw6ZrFRw2//r9Qj0k1HMlfZWlMQzP2Z7RuBjVX8AxuZChP2rD8OS87Vm2
+	 ZyyQcM0tQmxQdR0uJDqOt2opirYuJQLXZ0JNBKorv6ivWR5+r74VCNXOV3hPMnjUp8
+	 7gbrkvoReuDHM0OOJZRVywab3hxIinMUzO9vMarvfdM4IQHAwcYEegOIFjbY+SYjAE
+	 OSI1PI6Ow6GoA==
+Date: Tue, 21 May 2024 19:48:14 -0700
+Subject: [PATCH 1/3] libxfs: actually set m_fsname
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171634536154.2483724.11500970754963017164.stgit@frogsfrogsfrogs>
-In-Reply-To: <20240522023341.GB25546@frogsfrogsfrogs>
-References: <20240522023341.GB25546@frogsfrogsfrogs>
+Message-ID: <171634531156.2478774.2478899438270350659.stgit@frogsfrogsfrogs>
+In-Reply-To: <171634531139.2478774.17043099852261356412.stgit@frogsfrogsfrogs>
+References: <171634531139.2478774.17043099852261356412.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -44,23 +44,44 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Clean up mkfs' open-coded symlink handling code.
+Set the name of the filesystem before we actually start using it for
+creating xfiles.  This leads to nice(r) output from /proc/maps such as:
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+7fcd0a44f000-7fcd0a450000 rw-s 021f6000 00:01 3612684 /memfd:xfs_repair (/dev/sda): AG 0 rmap records (deleted)
 
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-cleanups-6.9
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * mkfs: use libxfs to create symlinks
----
- libxfs/libxfs_api_defs.h |    1 +
- mkfs/proto.c             |   72 ++++++++++++++++++++++++----------------------
- 2 files changed, 39 insertions(+), 34 deletions(-)
+ libxfs/init.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 6ac9d6824..c9c61ac18 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -643,6 +643,11 @@ libxfs_mount(
+ 		xfs_set_reporting_corruption(mp);
+ 	libxfs_buftarg_init(mp, xi);
+ 
++	if (xi->data.name)
++		mp->m_fsname = strdup(xi->data.name);
++	else
++		mp->m_fsname = NULL;
++
+ 	mp->m_finobt_nores = true;
+ 	xfs_set_inode32(mp);
+ 	mp->m_sb = *sb;
+@@ -903,6 +908,9 @@ libxfs_umount(
+ 	kmem_free(mp->m_attr_geo);
+ 	kmem_free(mp->m_dir_geo);
+ 
++	free(mp->m_fsname);
++	mp->m_fsname = NULL;
++
+ 	kmem_free(mp->m_rtdev_targp);
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp)
+ 		kmem_free(mp->m_logdev_targp);
 
