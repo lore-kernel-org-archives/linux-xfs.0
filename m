@@ -1,131 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 631FF182B9;
-	Wed, 22 May 2024 18:03:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93898D51E;
+	Wed, 22 May 2024 18:29:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716400993; cv=none; b=DrByRj+AZIfFSSUuWMBU00OO1QxOrVpash5YWPiY9ni9ifVctxuVEz+YO9ZMA4YC92WjEDhUPrcbyhm6huph9yyHHt1a2cteUwbk9qADCfYvMBJfh4XFBMtr2BMP+oZnZoCIgYOGhvhn8WXeZhw5JXPtfaBvP/lPzGNx93VzoB8=
+	t=1716402542; cv=none; b=DcMpjHZQeszURWCnqMbV4dMd1DIQbM2ivmeFQZ+MF9lMIbMQ3zNL/z98wxOs8SpkqtT8iNARnus+XTLCx38AB2+xelSsR6/GylgS1SeQx8uSp/YPG65DZyV2GS+9Rz7IZ4MOG+psgdyE0+JpHkp3PSbuP9vwJjKAxSmSWYnTHio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716400993; c=relaxed/simple;
-	bh=EgqUgI0H7TNae0QKJUbfzzMgFbTC81vHTSiEYGcj1Kc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=T3p1Df0swB4XkKeUOI8KMG7sDgB2WyNY9In7TbfSeBpyDwA/7HmV3RaJ1T+TI4Ev036UQRM6RYR1NprHzEfUhF6AjBo2PrUJ6JD7hA4DlZbqWgsg+DFGwzez1cJO/4grO0EggZoCOCIam0tnMN5PO0dHbt/kHxsDzn82oFi74E8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eqnG3Bur; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716402542; c=relaxed/simple;
+	bh=QBh+Kz0JP4xQ7T1N7vHv392YPIHKOlcyxs7oMAFk2W8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IiozQ50Y0Ze/e5OJQU7jbg+5Q8eh8iFivbh0j6Tp94XowQOm6ZhENQTYqAoymG5nM0um/TIjfq1ndaNNkt7gBpc8baIS3UszMQSkXdf1GV1sh+PWOClkkMNxvZpt1WXcPlxlwuG2lgFYjlmQFGm/8floi6FLeEEhQS2QsZG3Ld0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dHVTH4FA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eqnG3Bur"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F17E8C4AF09;
-	Wed, 22 May 2024 18:03:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dHVTH4FA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF9ADC2BBFC;
+	Wed, 22 May 2024 18:29:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716400993;
-	bh=EgqUgI0H7TNae0QKJUbfzzMgFbTC81vHTSiEYGcj1Kc=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=eqnG3BurugA8eP+sBdeowbE+tTl1ziDioTAU76vCtcnMRell+SQ6FCr0wmO56ZbyF
-	 04BXP1XMFrNHmKIrorHpFHirI7Y8+eTSXKUpfM+ivhMr6ZIVSJMxan9pJ33UMWwLuz
-	 pRMurL9vRHaVw4lvUASCjD/KLQALbHF42X8Z4NWprQpZTuvBuTO9DY0fSST7idEF7S
-	 c7PSRjLHs/w4uOsQK2ImVFG1o1D0g9RrmSYjK3tdmYnnifuFPrTXidirpg4HI8syja
-	 TRAFUi8ts/h3esYVg+R10zYSnYf1TqAHyf4hfdgyoZszcPzTHfuk/WLvKXBx80xtwj
-	 1lW5FYanDiNcA==
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-2e1fa824504so65411741fa.0;
-        Wed, 22 May 2024 11:03:12 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCX5syn8iZtyEwb+Ocr0CIqpotitMw+84IR1sLoV01S1mPzwoMUnhqdidQiCH9Kjf5XgXJ9fq2XT+ns4Z2JknPSkq1Wx9xR8L5DPQQIZcG0leOBfntPpxPx0LG9iqVVQ9mTMCX5KfO3Xhib1/2xK0QuWfz8yvscRzVUc0O9oe3XcpthkF5isvq4IF4ReblQgnuMHzU8C9KW4KDfrQ3XZaEGY
-X-Gm-Message-State: AOJu0YyijETD19m/3iL/jJ4Xl71X/WnpPxluAV5FWi8s4ZZX5FfmNPfA
-	0FZKxzvIH9uXaxqiXiYasuwyVaxQrpebRMw0/KLPXwS808UhtMphYpfcERSN3q5PXLyxbNQRew6
-	YxB3yguRZn4/KVraKmml/ANvLvg==
-X-Google-Smtp-Source: AGHT+IHwAu69YuO1Nh3RQD2Pvp4YaJq25imcdHx3Dm0uO3K69AKZ/92diCIr1s9eL3l/QWkXG2g3XsBaE4fqA9npTO0=
-X-Received: by 2002:a19:9143:0:b0:51d:1830:8380 with SMTP id
- 2adb3069b0e04-526bebb4d43mr1337039e87.8.1716400991593; Wed, 22 May 2024
- 11:03:11 -0700 (PDT)
+	s=k20201202; t=1716402542;
+	bh=QBh+Kz0JP4xQ7T1N7vHv392YPIHKOlcyxs7oMAFk2W8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dHVTH4FA89qy6c6HJ0vV3TddtRd86Ev3fQYWaFgB9YvcOU4CZvUk24rop1UU3KouI
+	 yR6R6QOFfzz5p8YORvkpEBBAFiXnuPKiTls3MLZnbMKDNgsHsnUSHdbOCc9DRsC0al
+	 T6BgXWrxqAhKuIHfTcnIo/gmrakgfgm09AvfS13Z1cNCQ0Trk/oQBj8hJiQEzC2V1S
+	 Jbej9YV5lSVcpdaXMp4GGeMmWabCfWBES5rx5Mcb7bxxujG3XuE1mzJTx36mztiVAq
+	 qIdZNoksOWGRS92i9g0KUNOqKnPLN8SHj5jlDEZObW2c9aLFoFrnBqbKZfH96goIkO
+	 uVn4TebZ49y6A==
+Date: Wed, 22 May 2024 11:29:00 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, aalbersh@redhat.com,
+	linux-xfs@vger.kernel.org, alexl@redhat.com, walters@verbum.org,
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
+Message-ID: <20240522182900.GB1789@sol.localdomain>
+References: <ZjtmVIST_ujh_ld6@infradead.org>
+ <20240508202603.GC360919@frogsfrogsfrogs>
+ <ZjxY_LbTOhv1i24m@infradead.org>
+ <20240509200250.GQ360919@frogsfrogsfrogs>
+ <Zj2r0Ewrn-MqNKwc@infradead.org>
+ <Zj28oXB6leJGem-9@infradead.org>
+ <20240517171720.GA360919@frogsfrogsfrogs>
+ <ZktEn5KOZTiy42c8@infradead.org>
+ <20240520160259.GA25546@frogsfrogsfrogs>
+ <Zk4DIzXJX_gVoj2-@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240522074658.2420468-1-Sukrit.Bhatnagar@sony.com> <20240522074658.2420468-2-Sukrit.Bhatnagar@sony.com>
-In-Reply-To: <20240522074658.2420468-2-Sukrit.Bhatnagar@sony.com>
-From: Chris Li <chrisl@kernel.org>
-Date: Wed, 22 May 2024 11:02:59 -0700
-X-Gmail-Original-Message-ID: <CANeU7Qn5KmdA2bVmEMjFtxcP+WnE174VgtkXZEHX82fc-gxXhg@mail.gmail.com>
-Message-ID: <CANeU7Qn5KmdA2bVmEMjFtxcP+WnE174VgtkXZEHX82fc-gxXhg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] iomap: swap: print warning for unaligned swapfile
-To: Sukrit Bhatnagar <Sukrit.Bhatnagar@sony.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Pavel Machek <pavel@ucw.cz>, 
-	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, linux-xfs@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, 
-	linux-kernel <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zk4DIzXJX_gVoj2-@infradead.org>
 
-Hi Sukrit,
+On Wed, May 22, 2024 at 07:37:23AM -0700, Christoph Hellwig wrote:
+> On Mon, May 20, 2024 at 09:02:59AM -0700, Darrick J. Wong wrote:
+> > On Mon, May 20, 2024 at 05:39:59AM -0700, Christoph Hellwig wrote:
+> > > On Fri, May 17, 2024 at 10:17:20AM -0700, Darrick J. Wong wrote:
+> > > > >   Note that the verity metadata *must* be encrypted when the file is,
+> > > > >   since it contains hashes of the plaintext data.
+> > > > 
+> > > > Refresh my memory of fscrypt -- does it encrypt directory names, xattr
+> > > > names, and xattr values too?  Or does it only do that to file data?
+> > > 
+> > > It does encrypt the file names in the directories, but nothing in
+> > > xattrs as far as I can tell.
+> > 
+> > Do we want that for user.* attrs?  That seems like quite an omission.
+> 
+> I'll let Eric answer that.  Btw, is the threat model for fscrypt written
+> down somewhere?
 
-It seems that you need the swap file block start address to read the
-swap file headers.
-This warning still requires the user to read the dmesg. The kernel
-still does not have the swapfile header at resume. In other words, it
-does not fix the issue.
+See https://www.kernel.org/doc/html/latest/filesystems/fscrypt.html?highlight=fscrypt#threat-model
 
-I don't know the suspend/resume code enough, will adding recording the
-physical start address of the swapfile in swap_info_struct help you
-address this problem? The suspend code can write that value to
-"somewhere* for resume to pick it up.
+As for why it stopped at file contents and names (and fsverity Merkle tree
+blocks which ext4 and f2fs encrypt in the same way as contents), it's just
+because it's very difficult to add more, and file contents and names alone were
+enough for parity with most other file-level encryption systems.  That's just
+the nature of file-level encryption.  For each additional type of data or
+metadata that's encrypted, there are a huge number of things that need to be
+resolved including algorithm selection, key derivation, IV selection, on-disk
+format, padding, UAPI for enabling the feature, userspace tool support including
+fsck and debugging tools, access semantics without the key, etc...
 
-Let's find a proper way to fix this issue rather than just warning on it.
+xattr encryption is definitely something that people have thought about, and it
+probably would be the next thing to consider after the existing contents and
+names.  Encrypting the exact file sizes is also something to consider.  But it's
+not something that someone has volunteered to do all the work for (yet).  If you
+restricted it to the contents of user xattrs only (not other xattrs, and not
+xattr names), it would be more feasible than trying to encrypt the names and
+values of all xattrs, though it would still be difficult.
 
-Chris
+Of course, generally speaking, when adding fscrypt support to a filesystem, it's
+going to be much easier to just target the existing feature set, and not try to
+include new, unproven features too.  (FWIW, this also applies to fsverity.)  If
+someone is interested in taking on an experimental project add xattr encryption
+support, I'd be glad to try to provide guidance, but it probably should be
+separated out from adding fscrypt support in the first place.
 
-On Wed, May 22, 2024 at 12:42=E2=80=AFAM Sukrit Bhatnagar
-<Sukrit.Bhatnagar@sony.com> wrote:
->
-> When creating a swapfile on a filesystem with block size less than the
-> PAGE_SIZE, there is a possibility that the starting physical block is not
-> page-aligned, which results in rounding up that value before setting it
-> in the first swap extent. But now that the value is rounded up, we have
-> lost the actual offset location of the first physical block.
->
-> The starting physical block value is needed in hibernation when using a
-> swapfile, i.e., the resume_offset. After we have written the snapshot
-> pages, some values will be set in the swap header which is accessed using
-> that offset location. However, it will not find the swap header if the
-> offset value was rounded up and results in an error.
->
-> The swapfile offset being unaligned should not fail the swapon activation
-> as the swap extents will always have the alignment.
->
-> Therefore, just print a warning if an unaligned swapfile is activated
-> when hibernation is enabled.
->
-> Signed-off-by: Sukrit Bhatnagar <Sukrit.Bhatnagar@sony.com>
-> ---
->  fs/iomap/swapfile.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
->
-> diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
-> index 5fc0ac36dee3..1f7b189089dd 100644
-> --- a/fs/iomap/swapfile.c
-> +++ b/fs/iomap/swapfile.c
-> @@ -49,6 +49,16 @@ static int iomap_swapfile_add_extent(struct iomap_swap=
-file_info *isi)
->         next_ppage =3D ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE)=
- >>
->                         PAGE_SHIFT;
->
-> +#ifdef CONFIG_HIBERNATION
-> +       /*
-> +        * Print a warning if the starting physical block is not aligned
-> +        * to PAGE_SIZE (for filesystems using smaller block sizes).
-> +        * This will fail the hibernation suspend as we need to read
-> +        * the swap header later using the starting block offset.
-> +        */
-> +       if (!iomap->offset && iomap->addr & PAGE_MASK)
-> +               pr_warn("swapon: starting physical offset not page-aligne=
-d\n");
-> +#endif
->         /* Skip too-short physical extents. */
->         if (first_ppage >=3D next_ppage)
->                 return 0;
-> --
-> 2.34.1
->
->
+> > > > And if we copy the ext4 method of putting the merkle data after eof and
+> > > > loading it into the pagecache, how much of the generic fs/verity cleanup
+> > > > patches do we really need?
+> > > 
+> > > We shouldn't need anything.  A bunch of cleanup
+> > 
+> > Should we do the read/drop_merkle_tree_block cleanup anyway?
+> 
+> To me the block based interface seems a lot cleaner, but Eric has some
+> reservations due to the added indirect call on the drop side.
+
+The point of the block based interface is really so that filesystems could
+actually do the block-based caching.  If XFS isn't going to end up using that
+after all, I think we should just stay with ->read_merkle_tree_page for now.
+
+> > One of the advantages of xfs caching merkle tree blocks ourselves
+> > is that we neither extend the usage of PageChecked when merkle blocksize
+> > == pagesize nor become subject to the 1-million merkle block limit when
+> > merkle blocksize < pagesize.  There's a tripping hazard if you mount a 4k
+> > merkle block filesystem on a computer with 64k pages -- now you can't
+> > open 6T verity files.
+> > 
+> > That said, it also sounds dumb to maintain a separate index for
+> > pagecache pages to track a single bit.
+> 
+> Yeah.  As I mentioned earlier I think fsverify really should enforce
+> a size limit.  Right now it will simply run out space eventually which
+> doesn't seem like a nice failure mode.
+
+You could enforce the limit of 1 << 23 Merkle tree blocks regardless of whether
+the block size and page size are equal, if you want.  This probably would need
+to be specific to XFS, though, as it would be a breaking change for other
+filesystems.
+
+As for ext4 and f2fs failing with EFBIG in the middle of building the Merkle
+tree due to it exceeding s_maxbytes, yes that could be detected at the beginning
+of building the tree to get the error right away.  This just isn't done
+currently because the current way is simpler, and this case isn't really
+encountered in practice so there isn't too much reason to optimize it.
+
+- Eric
