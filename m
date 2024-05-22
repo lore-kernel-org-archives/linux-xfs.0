@@ -1,92 +1,163 @@
-Received: from jpms-ob02.noc.sony.co.jp (jpms-ob02.noc.sony.co.jp [211.125.140.165])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DBDA8003A;
-	Wed, 22 May 2024 07:53:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.125.140.165
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9951177117
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 10:00:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716364386; cv=none; b=pwspLI3rSE+O+oGoGCxnRyxjdVn1O4P3VULL4lsd+/ColgwnPukdcgQe849KDAFWL8sTbczOKdozRJ1f0WtrT3mYSIc53ZPxlimVJOTCbzqvmLsGzB+1yM/ZfPm645k8JUlFckJTCgco8vfDoBAks2e2unD8+dDsnhyOVIomlC0=
+	t=1716372012; cv=none; b=gMbeP1zY7cLdatSKejUIa9PJ84D3J6N9ImtGNAqtQCCSefLWsjCFvhDclpgauVGfDPXopcgMdJ+vTex0aGQs6gtHMxnMW/I6LloAdMMBSQsycHyjdEmS1aKNt1GcDPRWpZZmzxpd2F6P/iUkDB4Qu36f2xX6QuVbh7R6uDrRU/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716364386; c=relaxed/simple;
-	bh=Xj30BspwB2ZJM37mRWm/eSDeD9On/18YKbKVZJZ6Bjg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=P9veCyz2HH1WqS/qQfLYWxnnDnunQ/IqSOQNMn1aVFA2V+V0M8ziHZI71rfybUfzsbzH0q8kxt7Von5tjKfjdxQ0mLZAKFQ935VC41/Tll/Z/pzOTIo+wqipsG3FVACFZurdK4xGLISlejmcSe2ip7NDtkMN85I5KCrj6LZ9SZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com; spf=pass smtp.mailfrom=sony.com; dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b=fxmmeEfh; arc=none smtp.client-ip=211.125.140.165
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sony.com
+	s=arc-20240116; t=1716372012; c=relaxed/simple;
+	bh=pqK/vq/5jkJy4HG1OMHAYhgdYfEdZpq3fUY9ypkr6qQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rNeiwej9tZEjQ3rf/TYabwO10dXZWfu0WsOQIGX8dUnlBYb61bbuW2Z/MXGtc1oeQih8KW/hhavByo//Yq6p6ZnMoFRD3IlKtXx6GZNyszJ4SWKQWWrTwsDyQBuk6bk2MAeupfxfVdnXiZViLmn/gypg4bNlo6UHj6TXWQDcle8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=FO6fTS/M; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=CxeJxE9B; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=FO6fTS/M; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=CxeJxE9B; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b="fxmmeEfh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=sony.com; s=s1jp; t=1716364385; x=1747900385;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=tcuh+p5nJoghdQBJL3ji43C7DQTD/lzlQqzzKUPARXQ=;
-  b=fxmmeEfhvk90lanVuO6bLRo37ZXx+aXkcJ3u1EhxrMmqY0UyV3bHuUx+
-   EB7wfFUKMiCsyNSZDzLKQC6xSHvgC3mPaB5+fHA1LGBRb/d/dTS3DfGGA
-   XGx6hYaGnnKWBo5aZStug25P7y6qbQIuE/6fgH/K1ugDQC4oVyjMx4L25
-   aIYrH0YKDA8KwzCQoq76kNm3wtLY8tCiX+/RXGnpQY7KBDrYBAgTq+FW1
-   wIzscznnjaildtJG9b8WxY0IzndUkoFeTIwsHgVXptI5d505bqj01PAF1
-   QPCVwLDzCIXxNonmU3g1sviHwyV+7/YJScg77xKB5GyoPf0WDhCEQ3v3u
-   w==;
-Received: from unknown (HELO jpmta-ob1.noc.sony.co.jp) ([IPv6:2001:cf8:0:6e7::6])
-  by jpms-ob02.noc.sony.co.jp with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2024 16:42:51 +0900
-X-IronPort-AV: E=Sophos;i="6.08,179,1712588400"; 
-   d="scan'208";a="415026697"
-Received: from unknown (HELO OptiPlex-7080..) ([IPv6:2001:cf8:1:5f1:0:dddd:6fe5:f4d0])
-  by jpmta-ob1.noc.sony.co.jp with ESMTP; 22 May 2024 16:42:51 +0900
-From: Sukrit Bhatnagar <Sukrit.Bhatnagar@sony.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-xfs@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	Sukrit.Bhatnagar@sony.com
-Subject: [PATCH 2/2] mm: swap: print starting physical block offset in swapon
-Date: Wed, 22 May 2024 16:46:58 +0900
-Message-Id: <20240522074658.2420468-3-Sukrit.Bhatnagar@sony.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240522074658.2420468-1-Sukrit.Bhatnagar@sony.com>
-References: <20240522074658.2420468-1-Sukrit.Bhatnagar@sony.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="FO6fTS/M";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="CxeJxE9B";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="FO6fTS/M";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="CxeJxE9B"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 968F534C70;
+	Wed, 22 May 2024 10:00:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1716372007; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9/ETceqGTYVoiPjk4K7THgyHBrzOk+V+gE0Q13umQU0=;
+	b=FO6fTS/Md7EG4G9mD2jOgb0ZKngdAm0C3f9A7XZupymcMpPneE4QtfrUFa9la+Ygt7zlxM
+	lqqc3WkJXjf/2OlwV/bcKb5uJtNq8nyqtotSbmU8xfFHLLmzFgxtr+aXr85KeGjMX4LICA
+	37mgKWajnaXdo01oTgu1+sixKjjA3ZE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1716372007;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9/ETceqGTYVoiPjk4K7THgyHBrzOk+V+gE0Q13umQU0=;
+	b=CxeJxE9BbTKOFaJjEcd8Z7UfaaSkgkKmEwfRp2DgGchtGu4HzpKuqh6jDmqPofe1SQ4bhC
+	HYViKq20uiqrGnDg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="FO6fTS/M";
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=CxeJxE9B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1716372007; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9/ETceqGTYVoiPjk4K7THgyHBrzOk+V+gE0Q13umQU0=;
+	b=FO6fTS/Md7EG4G9mD2jOgb0ZKngdAm0C3f9A7XZupymcMpPneE4QtfrUFa9la+Ygt7zlxM
+	lqqc3WkJXjf/2OlwV/bcKb5uJtNq8nyqtotSbmU8xfFHLLmzFgxtr+aXr85KeGjMX4LICA
+	37mgKWajnaXdo01oTgu1+sixKjjA3ZE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1716372007;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9/ETceqGTYVoiPjk4K7THgyHBrzOk+V+gE0Q13umQU0=;
+	b=CxeJxE9BbTKOFaJjEcd8Z7UfaaSkgkKmEwfRp2DgGchtGu4HzpKuqh6jDmqPofe1SQ4bhC
+	HYViKq20uiqrGnDg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8171313A6B;
+	Wed, 22 May 2024 10:00:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id dyaVHyfCTWaiFwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 22 May 2024 10:00:07 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 3508AA0861; Wed, 22 May 2024 12:00:07 +0200 (CEST)
+Date: Wed, 22 May 2024 12:00:07 +0200
+From: Jan Kara <jack@suse.cz>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-fsdevel@vgre.kernel.org, linux-xfs@vger.kernel.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
+ FS_IOC_FSGETXATTRAT
+Message-ID: <20240522100007.zqpa5fxsele5m7wo@quack3>
+References: <20240520164624.665269-2-aalbersh@redhat.com>
+ <20240520164624.665269-4-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240520164624.665269-4-aalbersh@redhat.com>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.com:email]
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: 968F534C70
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Score: -4.01
 
-When a swapfile is created for hibernation purposes, we always need
-the starting physical block offset, which is usually determined using
-userspace commands such as filefrag.
+Hello!
 
-It would be good to have that value printed when we do swapon and get
-that value directly from dmesg.
+On Mon 20-05-24 18:46:21, Andrey Albershteyn wrote:
+> XFS has project quotas which could be attached to a directory. All
+> new inodes in these directories inherit project ID set on parent
+> directory.
+> 
+> The project is created from userspace by opening and calling
+> FS_IOC_FSSETXATTR on each inode. This is not possible for special
+> files such as FIFO, SOCK, BLK etc. as opening them returns a special
+> inode from VFS. Therefore, some inodes are left with empty project
+> ID. Those inodes then are not shown in the quota accounting but
+> still exist in the directory.
+> 
+> This patch adds two new ioctls which allows userspace, such as
+> xfs_quota, to set project ID on special files by using parent
+> directory to open FS inode. This will let xfs_quota set ID on all
+> inodes and also reset it when project is removed. Also, as
+> vfs_fileattr_set() is now will called on special files too, let's
+> forbid any other attributes except projid and nextents (symlink can
+> have one).
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 
-Signed-off-by: Sukrit Bhatnagar <Sukrit.Bhatnagar@sony.com>
----
- mm/swapfile.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I'd like to understand one thing. Is it practically useful to set project
+IDs for special inodes? There is no significant disk space usage associated
+with them so wrt quotas we are speaking only about the inode itself. So is
+the concern that user could escape inode project quota accounting and
+perform some DoS? Or why do we bother with two new somewhat hairy ioctls
+for something that seems as a small corner case to me?
 
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index f6ca215fb92f..53c9187d5fbe 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3264,8 +3264,9 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
- 		  (swap_flags & SWAP_FLAG_PRIO_MASK) >> SWAP_FLAG_PRIO_SHIFT;
- 	enable_swap_info(p, prio, swap_map, cluster_info);
- 
--	pr_info("Adding %uk swap on %s.  Priority:%d extents:%d across:%lluk %s%s%s%s\n",
-+	pr_info("Adding %uk swap on %s. Priority:%d extents:%d start:%llu across:%lluk %s%s%s%s\n",
- 		K(p->pages), name->name, p->prio, nr_extents,
-+		(unsigned long long)first_se(p)->start_block,
- 		K((unsigned long long)span),
- 		(p->flags & SWP_SOLIDSTATE) ? "SS" : "",
- 		(p->flags & SWP_DISCARDABLE) ? "D" : "",
+								Honza
 -- 
-2.34.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
