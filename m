@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AA4B4C89
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:01:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5983C139E
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:01:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716346863; cv=none; b=FU5c2DCptELGsWSsJDrR0O3CqL601KASmyyaVDqlK7tbgKNup+h0X8CPYAWUaDatoxZ7jRwX56WBpp8N0dN8J7JHQx5Ap0HVDFmEvC+sUj1G4kozI5QntdKTfteVPPfoYTwdlAUg93WOp+PDDX0W5PPfUNcd3mMTtA8l+ie7Sd4=
+	t=1716346878; cv=none; b=TD4Wx9BRMgEtMHF7djBTFf7BGHLbk9y9Dx4p/dgEAR0VaSOuMcd37f6CNSmD5jXJFBnEX+NwYNJwwSPrrg1Al+N+qkVUr9H8tQorGK2x6p26yS7XqlZPZA9DXdAhzhkDzAejmebug/EJii8ckimvMiazOrxBp7BOt2yGEKzVSVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716346863; c=relaxed/simple;
-	bh=KUGXAjxdc50HU6TEn3Lc9TK7RT4TckRzSD1yYemzAYI=;
+	s=arc-20240116; t=1716346878; c=relaxed/simple;
+	bh=EIgV+0rlkbNws7psncy85qga41CRhbPJ+VAsInJzttE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D0Sgl1ktFMbC0P5Rq0F90kX0r+R4qCsnSLaOdDq823DKrppEEr0FPXruALOyCxe2wbwnDVccoebNien7N9sOSHFl1bVLNN5aaUSrh0njSVKL3ycJoXBF5mAleDsifirhHlF7Gn0xgukbM7ax2AhBntzrOfX+PQeB+BP2B6d+C+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ehwGj+dp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XZFvpuK/JxPThmP3rQ7vpT7nLhUCvwLvO8Crlnh1hln/uJb9Rye3byAhQ/4HOzXZucskrmq628nklM7ABfA0kLDzCkm4HcS0v3USuUmbAevSOrLqGAOLCC1m//Exm0m74aX2Fi0/uGwbBDF2L85lHvoSLszZr874oKfy9OqKtQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mzQyz/W8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ehwGj+dp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E303C2BD11;
-	Wed, 22 May 2024 03:01:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mzQyz/W8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EABFC2BD11;
+	Wed, 22 May 2024 03:01:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716346862;
-	bh=KUGXAjxdc50HU6TEn3Lc9TK7RT4TckRzSD1yYemzAYI=;
+	s=k20201202; t=1716346878;
+	bh=EIgV+0rlkbNws7psncy85qga41CRhbPJ+VAsInJzttE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ehwGj+dpLFkJGDmx+r6dxQWyMrYXxVRxetn2YiXfbNZPhCX2bnGgNPgVcryevsbdO
-	 UArW5R+CcRsta5CTz7blBaXw29MW4qZyRiy5UzmG7qfiBQwli8NBFkkgBCaFIiucNb
-	 WqShH9PBXuiG0h9hTDq15nXKCyC1BmsYi9rhCU1wssy+Sw4RHiNgVj+4/pXZoEQxTU
-	 XygUUJp2QXr3M7d9tzMRLynfnntiZnB/kyy/FCXXEwxxAsSyJYT7ofnJ6tJa6qRXyO
-	 ob7ONhAaRGeEJ8aBJoMC8gnoHfLx/91ZDtEtzg6zD452H0MXcMqBfc87/ftmtPOVdx
-	 Zkd/klm9kdERQ==
-Date: Tue, 21 May 2024 20:01:02 -0700
-Subject: [PATCH 047/111] xfs: split out a btree type from the btree ops
- geometry flags
+	b=mzQyz/W8C3fjZKY6hmOOl3ZmbzaAd5cy7+ERFBnPZ4vkPw3Us/8d5jVDLwh/JJQ8V
+	 FO+SJ7lacg7knx0pWqnLCGe2/O061GvgNSm7ms6uQnQ2Uzxj2f3MBmZ3ASWlfYQ/eD
+	 Ov3DvKDbkI8p/etxTHBp/RkKd2OfZZ3BogtLAUSljyj4viQG9Eag7R5gSVDL0aY1v7
+	 c6Gy/EsnHqntD1R/4q2Lfh7YEjQ/4RQuzjMel1YXzuA43SlYO73nNT3CX102Ps3Zh7
+	 OMN9AKNzSfi1WJhYcZWmUaBjf6KYYoAFoiryZxa85fBVVUGKsEcnT3LXjSOXe//KtD
+	 +gZX5hOdOivug==
+Date: Tue, 21 May 2024 20:01:17 -0700
+Subject: [PATCH 048/111] xfs: split the per-btree union in struct
+ xfs_btree_cur
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171634532410.2478931.10379864954761996361.stgit@frogsfrogsfrogs>
+Message-ID: <171634532425.2478931.13479473351009767109.stgit@frogsfrogsfrogs>
 In-Reply-To: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 References: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,447 +47,361 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 4f0cd5a555072e21fb589975607b70798e073f8f
+Source kernel commit: 88ee2f4849119b82b95d6e8e2d9daa81214eb080
 
-Two of the btree cursor flags are always used together and encode
-the fundamental btree type.  There currently are two such types:
+Split up the union that encodes btree-specific fields in struct
+xfs_btree_cur.  Most fields in there are specific to the btree type
+encoded in xfs_btree_ops.type, and we can use the obviously named union
+for that.  But one field is specific to the bmapbt and two are shared by
+the refcount and rtrefcountbt.  Move those to a separate union to make
+the usage clear and not need a separate struct for the refcount-related
+fields.
 
-1) an on-disk AG-rooted btree with 32-bit pointers
-2) an on-disk inode-rooted btree with 64-bit pointers
-
-and we're about to add:
-
-3) an in-memory btree with 64-bit pointers
-
-Introduce a new enum and a new type field in struct xfs_btree_geom
-to encode this type directly instead of using flags and change most
-code to switch on this enum.
+This will also make unnecessary some very awkward btree cursor
+refc/rtrefc switching logic in the rtrefcount patchset.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: make the pointer lengths explicit]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_alloc_btree.c    |    3 ++
- libxfs/xfs_bmap_btree.c     |    2 +
- libxfs/xfs_btree.c          |   66 +++++++++++++++++++++++--------------------
- libxfs/xfs_btree.h          |   15 +++++++---
- libxfs/xfs_btree_staging.c  |   12 ++++----
- libxfs/xfs_btree_staging.h  |    3 +-
- libxfs/xfs_ialloc_btree.c   |    4 +++
- libxfs/xfs_refcount_btree.c |    2 +
- libxfs/xfs_rmap_btree.c     |    1 +
- 9 files changed, 65 insertions(+), 43 deletions(-)
+ libxfs/xfs_bmap.c           |   22 +++++++++--------
+ libxfs/xfs_bmap_btree.c     |    9 +++----
+ libxfs/xfs_btree.c          |    2 +-
+ libxfs/xfs_btree.h          |   55 ++++++++++++++++++-------------------------
+ libxfs/xfs_btree_staging.c  |    1 +
+ libxfs/xfs_refcount.c       |   24 +++++++++----------
+ libxfs/xfs_refcount_btree.c |    4 ++-
+ 7 files changed, 54 insertions(+), 63 deletions(-)
 
 
-diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index e1637580c..b18ac7045 100644
---- a/libxfs/xfs_alloc_btree.c
-+++ b/libxfs/xfs_alloc_btree.c
-@@ -453,6 +453,8 @@ xfs_allocbt_keys_contiguous(
- }
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index b81f3e3da..2d332989b 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -670,7 +670,7 @@ xfs_bmap_extents_to_btree(
+ 		goto out_root_realloc;
+ 	}
  
- const struct xfs_btree_ops xfs_bnobt_ops = {
-+	.type			= XFS_BTREE_TYPE_AG,
-+
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
- 	.key_len		= sizeof(xfs_alloc_key_t),
- 	.ptr_len		= XFS_BTREE_SHORT_PTR_LEN,
-@@ -480,6 +482,7 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
- };
+-	cur->bc_ino.allocated++;
++	cur->bc_bmap.allocated++;
+ 	ip->i_nblocks++;
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+ 	error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
+@@ -888,7 +888,7 @@ xfs_bmap_add_attrfork_btree(
+ 			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 			return -ENOSPC;
+ 		}
+-		cur->bc_ino.allocated = 0;
++		cur->bc_bmap.allocated = 0;
+ 		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 	}
+ 	return 0;
+@@ -916,7 +916,7 @@ xfs_bmap_add_attrfork_extents(
+ 	error = xfs_bmap_extents_to_btree(tp, ip, &cur, 0, flags,
+ 					  XFS_DATA_FORK);
+ 	if (cur) {
+-		cur->bc_ino.allocated = 0;
++		cur->bc_bmap.allocated = 0;
+ 		xfs_btree_del_cursor(cur, error);
+ 	}
+ 	return error;
+@@ -1740,7 +1740,7 @@ xfs_bmap_add_extent_delay_real(
+ 		temp = PREV.br_blockcount - new->br_blockcount;
+ 		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
+ 			startblockval(PREV.br_startblock) -
+-			(bma->cur ? bma->cur->bc_ino.allocated : 0));
++			(bma->cur ? bma->cur->bc_bmap.allocated : 0));
  
- const struct xfs_btree_ops xfs_cntbt_ops = {
-+	.type			= XFS_BTREE_TYPE_AG,
- 	.geom_flags		= XFS_BTGEO_LASTREC_UPDATE,
+ 		PREV.br_startoff = new_endoff;
+ 		PREV.br_blockcount = temp;
+@@ -1830,7 +1830,7 @@ xfs_bmap_add_extent_delay_real(
+ 		temp = PREV.br_blockcount - new->br_blockcount;
+ 		da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
+ 			startblockval(PREV.br_startblock) -
+-			(bma->cur ? bma->cur->bc_ino.allocated : 0));
++			(bma->cur ? bma->cur->bc_bmap.allocated : 0));
  
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 		PREV.br_startblock = nullstartblock(da_new);
+ 		PREV.br_blockcount = temp;
+@@ -1953,8 +1953,8 @@ xfs_bmap_add_extent_delay_real(
+ 		xfs_mod_delalloc(mp, (int64_t)da_new - da_old);
+ 
+ 	if (bma->cur) {
+-		da_new += bma->cur->bc_ino.allocated;
+-		bma->cur->bc_ino.allocated = 0;
++		da_new += bma->cur->bc_bmap.allocated;
++		bma->cur->bc_bmap.allocated = 0;
+ 	}
+ 
+ 	/* adjust for changes in reserved delayed indirect blocks */
+@@ -2519,7 +2519,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 
+ 	/* clear out the allocated field, done with it now in any case. */
+ 	if (cur) {
+-		cur->bc_ino.allocated = 0;
++		cur->bc_bmap.allocated = 0;
+ 		*curp = cur;
+ 	}
+ 
+@@ -2907,7 +2907,7 @@ xfs_bmap_add_extent_hole_real(
+ 
+ 	/* clear out the allocated field, done with it now in any case. */
+ 	if (cur)
+-		cur->bc_ino.allocated = 0;
++		cur->bc_bmap.allocated = 0;
+ 
+ 	xfs_bmap_check_leaf_extents(cur, ip, whichfork);
+ done:
+@@ -5623,7 +5623,7 @@ __xfs_bunmapi(
+ 		xfs_trans_log_inode(tp, ip, logflags);
+ 	if (cur) {
+ 		if (!error)
+-			cur->bc_ino.allocated = 0;
++			cur->bc_bmap.allocated = 0;
+ 		xfs_btree_del_cursor(cur, error);
+ 	}
+ 	return error;
+@@ -6139,7 +6139,7 @@ xfs_bmap_split_extent(
+ 
+ del_cursor:
+ 	if (cur) {
+-		cur->bc_ino.allocated = 0;
++		cur->bc_bmap.allocated = 0;
+ 		xfs_btree_del_cursor(cur, error);
+ 	}
+ 
 diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index d2399ea42..54020dea2 100644
+index 54020dea2..9f66eee9a 100644
 --- a/libxfs/xfs_bmap_btree.c
 +++ b/libxfs/xfs_bmap_btree.c
-@@ -524,7 +524,7 @@ xfs_bmbt_keys_contiguous(
+@@ -197,10 +197,10 @@ xfs_bmbt_update_cursor(
+ 	ASSERT((dst->bc_tp->t_highest_agno != NULLAGNUMBER) ||
+ 	       (dst->bc_ino.ip->i_diflags & XFS_DIFLAG_REALTIME));
+ 
+-	dst->bc_ino.allocated += src->bc_ino.allocated;
++	dst->bc_bmap.allocated += src->bc_bmap.allocated;
+ 	dst->bc_tp->t_highest_agno = src->bc_tp->t_highest_agno;
+ 
+-	src->bc_ino.allocated = 0;
++	src->bc_bmap.allocated = 0;
  }
  
- const struct xfs_btree_ops xfs_bmbt_ops = {
--	.geom_flags		= XFS_BTGEO_ROOT_IN_INODE,
-+	.type			= XFS_BTREE_TYPE_INODE,
+ STATIC int
+@@ -255,7 +255,7 @@ xfs_bmbt_alloc_block(
+ 	}
  
- 	.rec_len		= sizeof(xfs_bmbt_rec_t),
- 	.key_len		= sizeof(xfs_bmbt_key_t),
+ 	ASSERT(args.len == 1);
+-	cur->bc_ino.allocated++;
++	cur->bc_bmap.allocated++;
+ 	cur->bc_ino.ip->i_nblocks++;
+ 	xfs_trans_log_inode(args.tp, cur->bc_ino.ip, XFS_ILOG_CORE);
+ 	xfs_trans_mod_dquot_byino(args.tp, cur->bc_ino.ip,
+@@ -567,8 +567,7 @@ xfs_bmbt_init_common(
+ 			mp->m_bm_maxlevels[whichfork], xfs_bmbt_cur_cache);
+ 
+ 	cur->bc_ino.ip = ip;
+-	cur->bc_ino.allocated = 0;
+-
++	cur->bc_bmap.allocated = 0;
+ 	return cur;
+ }
+ 
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 2bce8ebbd..f8c348e49 100644
+index f8c348e49..6d90e10b3 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -444,10 +444,19 @@ xfs_btree_del_cursor(
+@@ -442,7 +442,7 @@ xfs_btree_del_cursor(
+ 	 * zero, then we should be shut down or on our way to shutdown due to
+ 	 * cancelling a dirty transaction on error.
  	 */
- 	ASSERT(cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 ||
+-	ASSERT(cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 ||
++	ASSERT(cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_bmap.allocated == 0 ||
  	       xfs_is_shutdown(cur->bc_mp) || error != 0);
-+
-+	switch (cur->bc_ops->type) {
-+	case XFS_BTREE_TYPE_AG:
-+		if (cur->bc_ag.pag)
-+			xfs_perag_put(cur->bc_ag.pag);
-+		break;
-+	case XFS_BTREE_TYPE_INODE:
-+		/* nothing to do */
-+		break;
-+	}
-+
- 	if (unlikely(cur->bc_flags & XFS_BTREE_STAGING))
- 		kfree(cur->bc_ops);
--	if (!(cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN) && cur->bc_ag.pag)
--		xfs_perag_put(cur->bc_ag.pag);
- 	kmem_cache_free(cur->bc_cache, cur);
- }
  
-@@ -705,7 +714,7 @@ struct xfs_ifork *
- xfs_btree_ifork_ptr(
- 	struct xfs_btree_cur	*cur)
- {
--	ASSERT(cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE);
-+	ASSERT(cur->bc_ops->type == XFS_BTREE_TYPE_INODE);
- 
- 	if (cur->bc_flags & XFS_BTREE_STAGING)
- 		return cur->bc_ino.ifake->if_fork;
-@@ -737,8 +746,8 @@ xfs_btree_get_block(
- 	int			level,	/* level in btree */
- 	struct xfs_buf		**bpp)	/* buffer containing the block */
- {
--	if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
--	    (level == cur->bc_nlevels - 1)) {
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE &&
-+	    level == cur->bc_nlevels - 1) {
- 		*bpp = NULL;
- 		return xfs_btree_get_iroot(cur);
- 	}
-@@ -980,8 +989,8 @@ xfs_btree_readahead(
- 	 * No readahead needed if we are at the root level and the
- 	 * btree root is stored in the inode.
- 	 */
--	if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
--	    (lev == cur->bc_nlevels - 1))
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE &&
-+	    lev == cur->bc_nlevels - 1)
- 		return 0;
- 
- 	if ((cur->bc_levels[lev].ra | lr) == cur->bc_levels[lev].ra)
-@@ -1169,14 +1178,12 @@ __xfs_btree_init_block(
- 			buf->bb_u.l.bb_lsn = 0;
- 		}
- 	} else {
--		/* owner is a 32 bit value on short blocks */
--		__u32 __owner = (__u32)owner;
--
- 		buf->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
- 		buf->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
- 		if (crc) {
- 			buf->bb_u.s.bb_blkno = cpu_to_be64(blkno);
--			buf->bb_u.s.bb_owner = cpu_to_be32(__owner);
-+			/* owner is a 32 bit value on short blocks */
-+			buf->bb_u.s.bb_owner = cpu_to_be32((__u32)owner);
- 			uuid_copy(&buf->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid);
- 			buf->bb_u.s.bb_lsn = 0;
- 		}
-@@ -1214,7 +1221,7 @@ static inline __u64
- xfs_btree_owner(
- 	struct xfs_btree_cur    *cur)
- {
--	if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE)
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
- 		return cur->bc_ino.ip->i_ino;
- 	return cur->bc_ag.pag->pag_agno;
- }
-@@ -1635,7 +1642,7 @@ xfs_btree_increment(
- 	 * confused or have the tree root in an inode.
- 	 */
- 	if (lev == cur->bc_nlevels) {
--		if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE)
-+		if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
- 			goto out0;
- 		ASSERT(0);
- 		xfs_btree_mark_sick(cur);
-@@ -1729,7 +1736,7 @@ xfs_btree_decrement(
- 	 * or the root of the tree is in an inode.
- 	 */
- 	if (lev == cur->bc_nlevels) {
--		if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE)
-+		if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
- 			goto out0;
- 		ASSERT(0);
- 		xfs_btree_mark_sick(cur);
-@@ -1804,8 +1811,8 @@ xfs_btree_lookup_get_block(
- 	int			error = 0;
- 
- 	/* special case the root block if in an inode */
--	if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
--	    (level == cur->bc_nlevels - 1)) {
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE &&
-+	    level == cur->bc_nlevels - 1) {
- 		*blkp = xfs_btree_get_iroot(cur);
- 		return 0;
- 	}
-@@ -2340,7 +2347,7 @@ xfs_btree_lshift(
- 	int			error;		/* error return value */
- 	int			i;
- 
--	if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
-+	if ((cur->bc_ops->type == XFS_BTREE_TYPE_INODE) &&
- 	    level == cur->bc_nlevels - 1)
- 		goto out0;
- 
-@@ -2536,8 +2543,8 @@ xfs_btree_rshift(
- 	int			error;		/* error return value */
- 	int			i;		/* loop counter */
- 
--	if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
--	    (level == cur->bc_nlevels - 1))
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE &&
-+	    level == cur->bc_nlevels - 1)
- 		goto out0;
- 
- 	/* Set up variables for this block as "left". */
-@@ -2987,7 +2994,6 @@ xfs_btree_split(
- #define xfs_btree_split	__xfs_btree_split
- #endif /* __KERNEL__ */
- 
--
- /*
-  * Copy the old inode root contents into a real block and make the
-  * broot point to it.
-@@ -3012,7 +3018,7 @@ xfs_btree_new_iroot(
- 
- 	XFS_BTREE_STATS_INC(cur, newroot);
- 
--	ASSERT(cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE);
-+	ASSERT(cur->bc_ops->type == XFS_BTREE_TYPE_INODE);
- 
- 	level = cur->bc_nlevels - 1;
- 
-@@ -3237,7 +3243,7 @@ xfs_btree_make_block_unfull(
- {
- 	int			error = 0;
- 
--	if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE &&
- 	    level == cur->bc_nlevels - 1) {
- 		struct xfs_inode *ip = cur->bc_ino.ip;
- 
-@@ -3323,8 +3329,8 @@ xfs_btree_insrec(
- 	 * If we have an external root pointer, and we've made it to the
- 	 * root level, allocate a new root block and we're done.
- 	 */
--	if (!(cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
--	    (level >= cur->bc_nlevels)) {
-+	if (cur->bc_ops->type != XFS_BTREE_TYPE_INODE &&
-+	    level >= cur->bc_nlevels) {
- 		error = xfs_btree_new_root(cur, stat);
- 		xfs_btree_set_ptr_null(cur, ptrp);
- 
-@@ -3611,7 +3617,7 @@ xfs_btree_kill_iroot(
- #endif
- 	int			i;
- 
--	ASSERT(cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE);
-+	ASSERT(cur->bc_ops->type == XFS_BTREE_TYPE_INODE);
- 	ASSERT(cur->bc_nlevels > 1);
- 
- 	/*
-@@ -3848,7 +3854,7 @@ xfs_btree_delrec(
- 	 * nothing left to do.
- 	 */
- 	if (level == cur->bc_nlevels - 1) {
--		if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) {
-+		if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE) {
- 			xfs_iroot_realloc(cur->bc_ino.ip, -1,
- 					  cur->bc_ino.whichfork);
- 
-@@ -3916,7 +3922,7 @@ xfs_btree_delrec(
- 	xfs_btree_get_sibling(cur, block, &rptr, XFS_BB_RIGHTSIB);
- 	xfs_btree_get_sibling(cur, block, &lptr, XFS_BB_LEFTSIB);
- 
--	if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) {
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE) {
- 		/*
- 		 * One child of root, need to get a chance to copy its contents
- 		 * into the root and delete it. Can't go up to next level,
-@@ -4233,8 +4239,8 @@ xfs_btree_delrec(
- 	 * If we joined with the right neighbor and there's a level above
- 	 * us, increment the cursor at that level.
- 	 */
--	else if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) ||
--		   (level + 1 < cur->bc_nlevels)) {
-+	else if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE ||
-+		 level + 1 < cur->bc_nlevels) {
- 		error = xfs_btree_increment(cur, level + 1, &i);
- 		if (error)
- 			goto error0;
-@@ -4525,7 +4531,7 @@ xfs_btree_block_change_owner(
- 	 * though, so everything is consistent in memory.
- 	 */
- 	if (!bp) {
--		ASSERT(cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE);
-+		ASSERT(cur->bc_ops->type == XFS_BTREE_TYPE_INODE);
- 		ASSERT(level == cur->bc_nlevels - 1);
- 		return 0;
- 	}
+ 	switch (cur->bc_ops->type) {
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 559066e3a..5f2b5ef85 100644
+index 5f2b5ef85..153d86725 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -117,7 +117,15 @@ static inline enum xbtree_key_contig xbtree_key_contig(uint64_t x, uint64_t y)
- #define XFS_BTREE_LONG_PTR_LEN		(sizeof(__be64))
- #define XFS_BTREE_SHORT_PTR_LEN		(sizeof(__be32))
- 
-+enum xfs_btree_type {
-+	XFS_BTREE_TYPE_AG,
-+	XFS_BTREE_TYPE_INODE,
-+};
-+
- struct xfs_btree_ops {
-+	/* Type of btree - AG-rooted or inode-rooted */
-+	enum xfs_btree_type	type;
-+
- 	/* XFS_BTGEO_* flags that determine the geometry of the btree */
- 	unsigned int		geom_flags;
- 
-@@ -216,9 +224,8 @@ struct xfs_btree_ops {
+@@ -243,30 +243,6 @@ union xfs_btree_irec {
+ 	struct xfs_refcount_irec	rc;
  };
  
- /* btree geometry flags */
--#define XFS_BTGEO_ROOT_IN_INODE		(1U << 0) /* root may be variable size */
--#define XFS_BTGEO_LASTREC_UPDATE	(1U << 1) /* track last rec externally */
--#define XFS_BTGEO_OVERLAPPING		(1U << 2) /* overlapping intervals */
-+#define XFS_BTGEO_LASTREC_UPDATE	(1U << 0) /* track last rec externally */
-+#define XFS_BTGEO_OVERLAPPING		(1U << 1) /* overlapping intervals */
+-/* Per-AG btree information. */
+-struct xfs_btree_cur_ag {
+-	struct xfs_perag		*pag;
+-	union {
+-		struct xfs_buf		*agbp;
+-		struct xbtree_afakeroot	*afake;	/* for staging cursor */
+-	};
+-	union {
+-		struct {
+-			unsigned int	nr_ops;	/* # record updates */
+-			unsigned int	shape_changes;	/* # of extent splits */
+-		} refc;
+-	};
+-};
+-
+-/* Btree-in-inode cursor information */
+-struct xfs_btree_cur_ino {
+-	struct xfs_inode		*ip;
+-	struct xbtree_ifakeroot		*ifake;	/* for staging cursor */
+-	int				allocated;
+-	short				forksize;
+-	char				whichfork;
+-};
+-
+ struct xfs_btree_level {
+ 	/* buffer pointer */
+ 	struct xfs_buf		*bp;
+@@ -296,15 +272,30 @@ struct xfs_btree_cur
+ 	uint8_t			bc_nlevels; /* number of levels in the tree */
+ 	uint8_t			bc_maxlevels; /* maximum levels for this btree type */
  
- /*
-  * Reasons for the update_lastrec method to be called.
-@@ -292,7 +299,7 @@ struct xfs_btree_cur
- 	/*
- 	 * Short btree pointers need an agno to be able to turn the pointers
- 	 * into physical addresses for IO, so the btree cursor switches between
--	 * bc_ino and bc_ag based on whether XFS_BTGEO_ROOT_IN_INODE is set for
-+	 * bc_ino and bc_ag based on bc_ops->type.
- 	 * the cursor.
- 	 */
+-	/*
+-	 * Short btree pointers need an agno to be able to turn the pointers
+-	 * into physical addresses for IO, so the btree cursor switches between
+-	 * bc_ino and bc_ag based on bc_ops->type.
+-	 * the cursor.
+-	 */
++	/* per-type information */
  	union {
+-		struct xfs_btree_cur_ag	bc_ag;
+-		struct xfs_btree_cur_ino bc_ino;
++		struct {
++			struct xfs_inode	*ip;
++			short			forksize;
++			char			whichfork;
++			struct xbtree_ifakeroot	*ifake;	/* for staging cursor */
++		} bc_ino;
++		struct {
++			struct xfs_perag	*pag;
++			struct xfs_buf		*agbp;
++			struct xbtree_afakeroot	*afake;	/* for staging cursor */
++		} bc_ag;
++	};
++
++	/* per-format private data */
++	union {
++		struct {
++			int		allocated;
++		} bc_bmap;	/* bmapbt */
++		struct {
++			unsigned int	nr_ops;		/* # record updates */
++			unsigned int	shape_changes;	/* # of extent splits */
++		} bc_refc;	/* refcountbt */
+ 	};
+ 
+ 	/* Must be at the end of the struct! */
 diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
-index 39e95a771..e1fd57dee 100644
+index e1fd57dee..80bcb7ba2 100644
 --- a/libxfs/xfs_btree_staging.c
 +++ b/libxfs/xfs_btree_staging.c
-@@ -136,7 +136,7 @@ xfs_btree_stage_afakeroot(
- 	struct xfs_btree_ops		*nops;
+@@ -172,6 +172,7 @@ xfs_btree_commit_afakeroot(
+ 	trace_xfs_btree_commit_afakeroot(cur);
  
- 	ASSERT(!(cur->bc_flags & XFS_BTREE_STAGING));
--	ASSERT(!(cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE));
-+	ASSERT(cur->bc_ops->type != XFS_BTREE_TYPE_INODE);
- 	ASSERT(cur->bc_tp == NULL);
- 
- 	nops = kmalloc(sizeof(struct xfs_btree_ops), GFP_KERNEL | __GFP_NOFAIL);
-@@ -217,7 +217,7 @@ xfs_btree_stage_ifakeroot(
- 	struct xfs_btree_ops		*nops;
- 
- 	ASSERT(!(cur->bc_flags & XFS_BTREE_STAGING));
--	ASSERT(cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE);
-+	ASSERT(cur->bc_ops->type == XFS_BTREE_TYPE_INODE);
- 	ASSERT(cur->bc_tp == NULL);
- 
- 	nops = kmalloc(sizeof(struct xfs_btree_ops), GFP_KERNEL | __GFP_NOFAIL);
-@@ -397,7 +397,7 @@ xfs_btree_bload_prep_block(
- 	struct xfs_btree_block		*new_block;
- 	int				ret;
- 
--	if ((cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) &&
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE &&
- 	    level == cur->bc_nlevels - 1) {
- 		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
- 		size_t			new_size;
-@@ -702,7 +702,7 @@ xfs_btree_bload_compute_geometry(
- 		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
- 				&avg_per_block, &level_blocks, &dontcare64);
- 
--		if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) {
-+		if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE) {
- 			/*
- 			 * If all the items we want to store at this level
- 			 * would fit in the inode root block, then we have our
-@@ -761,7 +761,7 @@ xfs_btree_bload_compute_geometry(
- 		return -EOVERFLOW;
- 
- 	bbl->btree_height = cur->bc_nlevels;
--	if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE)
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
- 		bbl->nr_blocks = nr_blocks - 1;
- 	else
- 		bbl->nr_blocks = nr_blocks;
-@@ -888,7 +888,7 @@ xfs_btree_bload(
- 	}
- 
- 	/* Initialize the new root. */
--	if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE) {
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE) {
- 		ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
- 		cur->bc_ino.ifake->if_levels = cur->bc_nlevels;
- 		cur->bc_ino.ifake->if_blocks = total_blocks - 1;
-diff --git a/libxfs/xfs_btree_staging.h b/libxfs/xfs_btree_staging.h
-index 9624ae06c..8e29cd3cc 100644
---- a/libxfs/xfs_btree_staging.h
-+++ b/libxfs/xfs_btree_staging.h
-@@ -76,8 +76,7 @@ struct xfs_btree_bload {
- 
- 	/*
- 	 * This function should return the size of the in-core btree root
--	 * block.  It is only necessary for XFS_BTGEO_ROOT_IN_INODE btree
--	 * types.
-+	 * block.  It is only necessary for XFS_BTREE_TYPE_INODE btrees.
+ 	kfree((void *)cur->bc_ops);
++	cur->bc_ag.afake = NULL;
+ 	cur->bc_ag.agbp = agbp;
+ 	cur->bc_ops = ops;
+ 	cur->bc_flags &= ~XFS_BTREE_STAGING;
+diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
+index d0d0d8617..47049488b 100644
+--- a/libxfs/xfs_refcount.c
++++ b/libxfs/xfs_refcount.c
+@@ -1076,7 +1076,7 @@ xfs_refcount_still_have_space(
+ 	 * to handle each of the shape changes to the refcount btree.
  	 */
- 	xfs_btree_bload_iroot_size_fn	iroot_size;
+ 	overhead = xfs_allocfree_block_count(cur->bc_mp,
+-				cur->bc_ag.refc.shape_changes);
++				cur->bc_refc.shape_changes);
+ 	overhead += cur->bc_mp->m_refc_maxlevels;
+ 	overhead *= cur->bc_mp->m_sb.sb_blocksize;
  
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index a9b2a48a3..79ab04684 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -398,6 +398,8 @@ xfs_inobt_keys_contiguous(
+@@ -1084,17 +1084,17 @@ xfs_refcount_still_have_space(
+ 	 * Only allow 2 refcount extent updates per transaction if the
+ 	 * refcount continue update "error" has been injected.
+ 	 */
+-	if (cur->bc_ag.refc.nr_ops > 2 &&
++	if (cur->bc_refc.nr_ops > 2 &&
+ 	    XFS_TEST_ERROR(false, cur->bc_mp,
+ 			XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE))
+ 		return false;
+ 
+-	if (cur->bc_ag.refc.nr_ops == 0)
++	if (cur->bc_refc.nr_ops == 0)
+ 		return true;
+ 	else if (overhead > cur->bc_tp->t_log_res)
+ 		return false;
+-	return  cur->bc_tp->t_log_res - overhead >
+-		cur->bc_ag.refc.nr_ops * XFS_REFCOUNT_ITEM_OVERHEAD;
++	return cur->bc_tp->t_log_res - overhead >
++		cur->bc_refc.nr_ops * XFS_REFCOUNT_ITEM_OVERHEAD;
  }
  
- const struct xfs_btree_ops xfs_inobt_ops = {
-+	.type			= XFS_BTREE_TYPE_AG,
-+
- 	.rec_len		= sizeof(xfs_inobt_rec_t),
- 	.key_len		= sizeof(xfs_inobt_key_t),
- 	.ptr_len		= XFS_BTREE_SHORT_PTR_LEN,
-@@ -424,6 +426,8 @@ const struct xfs_btree_ops xfs_inobt_ops = {
- };
+ /*
+@@ -1154,7 +1154,7 @@ xfs_refcount_adjust_extents(
+ 			 * Either cover the hole (increment) or
+ 			 * delete the range (decrement).
+ 			 */
+-			cur->bc_ag.refc.nr_ops++;
++			cur->bc_refc.nr_ops++;
+ 			if (tmp.rc_refcount) {
+ 				error = xfs_refcount_insert(cur, &tmp,
+ 						&found_tmp);
+@@ -1215,7 +1215,7 @@ xfs_refcount_adjust_extents(
+ 		ext.rc_refcount += adj;
+ 		trace_xfs_refcount_modify_extent(cur->bc_mp,
+ 				cur->bc_ag.pag->pag_agno, &ext);
+-		cur->bc_ag.refc.nr_ops++;
++		cur->bc_refc.nr_ops++;
+ 		if (ext.rc_refcount > 1) {
+ 			error = xfs_refcount_update(cur, &ext);
+ 			if (error)
+@@ -1304,7 +1304,7 @@ xfs_refcount_adjust(
+ 	if (shape_changed)
+ 		shape_changes++;
+ 	if (shape_changes)
+-		cur->bc_ag.refc.shape_changes++;
++		cur->bc_refc.shape_changes++;
  
- const struct xfs_btree_ops xfs_finobt_ops = {
-+	.type			= XFS_BTREE_TYPE_AG,
-+
- 	.rec_len		= sizeof(xfs_inobt_rec_t),
- 	.key_len		= sizeof(xfs_inobt_key_t),
- 	.ptr_len		= XFS_BTREE_SHORT_PTR_LEN,
+ 	/* Now that we've taken care of the ends, adjust the middle extents */
+ 	error = xfs_refcount_adjust_extents(cur, agbno, aglen, adj);
+@@ -1399,8 +1399,8 @@ xfs_refcount_finish_one(
+ 	 */
+ 	rcur = *pcur;
+ 	if (rcur != NULL && rcur->bc_ag.pag != ri->ri_pag) {
+-		nr_ops = rcur->bc_ag.refc.nr_ops;
+-		shape_changes = rcur->bc_ag.refc.shape_changes;
++		nr_ops = rcur->bc_refc.nr_ops;
++		shape_changes = rcur->bc_refc.shape_changes;
+ 		xfs_refcount_finish_one_cleanup(tp, rcur, 0);
+ 		rcur = NULL;
+ 		*pcur = NULL;
+@@ -1412,8 +1412,8 @@ xfs_refcount_finish_one(
+ 			return error;
+ 
+ 		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, ri->ri_pag);
+-		rcur->bc_ag.refc.nr_ops = nr_ops;
+-		rcur->bc_ag.refc.shape_changes = shape_changes;
++		rcur->bc_refc.nr_ops = nr_ops;
++		rcur->bc_refc.shape_changes = shape_changes;
+ 	}
+ 	*pcur = rcur;
+ 
 diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index 4918c8bae..3d61eeaca 100644
+index 3d61eeaca..529091a6b 100644
 --- a/libxfs/xfs_refcount_btree.c
 +++ b/libxfs/xfs_refcount_btree.c
-@@ -317,6 +317,8 @@ xfs_refcountbt_keys_contiguous(
+@@ -361,8 +361,8 @@ xfs_refcountbt_init_common(
+ 			&xfs_refcountbt_ops, mp->m_refc_maxlevels,
+ 			xfs_refcountbt_cur_cache);
+ 	cur->bc_ag.pag = xfs_perag_hold(pag);
+-	cur->bc_ag.refc.nr_ops = 0;
+-	cur->bc_ag.refc.shape_changes = 0;
++	cur->bc_refc.nr_ops = 0;
++	cur->bc_refc.shape_changes = 0;
+ 	return cur;
  }
  
- const struct xfs_btree_ops xfs_refcountbt_ops = {
-+	.type			= XFS_BTREE_TYPE_AG,
-+
- 	.rec_len		= sizeof(struct xfs_refcount_rec),
- 	.key_len		= sizeof(struct xfs_refcount_key),
- 	.ptr_len		= XFS_BTREE_SHORT_PTR_LEN,
-diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index b1d25d99d..f87e34a1d 100644
---- a/libxfs/xfs_rmap_btree.c
-+++ b/libxfs/xfs_rmap_btree.c
-@@ -471,6 +471,7 @@ xfs_rmapbt_keys_contiguous(
- }
- 
- const struct xfs_btree_ops xfs_rmapbt_ops = {
-+	.type			= XFS_BTREE_TYPE_AG,
- 	.geom_flags		= XFS_BTGEO_OVERLAPPING,
- 
- 	.rec_len		= sizeof(struct xfs_rmap_rec),
 
