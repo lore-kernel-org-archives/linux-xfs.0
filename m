@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 304D42C9D
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:19:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F115200B7
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:19:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716347958; cv=none; b=mlwGHxNsjlliRj5u4HZslbwE9vBm4KApfXeTgaxYReVYWkkNGrZG+vWh+ea1ZHooPpOaW/iS7rpPLl7B2MRu+oa2930dem2PMED4KCCuUeGS+WMfzIrKvNrSZRKGyMORFPcieGvUzcl3iZCir4s4UpXI6uEodmTlTrgWu7xWpbE=
+	t=1716347974; cv=none; b=sU8fKuizxt3c8LmeNWXy/ThoPzFzqy79XZslgmd+kWdbYjsw52AClfC8VtCZ7NvsE84qHOqg8uNi8W1yAWVy9S799kUkaTW7rP/vJtzfxLqD7oW1XFn/jm0S2sIj+UOfRwCmLI3wF91BJfRxRJ5SS/sUoB40aYOVMknKBk3HKAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716347958; c=relaxed/simple;
-	bh=X/B8CnADYTTgPQpFIxU/xFO+czmbCSbGODZZemcUvBg=;
+	s=arc-20240116; t=1716347974; c=relaxed/simple;
+	bh=+qqjVrjE2XhYWZkQYoMrW0JfdLnsfNGz3+1KQ5WbZ+o=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Erhuv8ZLYKgVzn1t8kepMWIdFmGTGfP9AyY54Bgmc0ZAToiKuJwE84K++gQmJi+oymtexPDCrtHHCIFIILeOufpgir0CVHnGL+aikupCZIDBicuqoGsciIgNyN03kpQQVdneVXUbjKaXgEYL42Eniyu9HifjkACzdJKtOJEVARw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q9nHFpoH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=J5njvuWz78IFU+gEPdDB/1KH2RF84StLRHrV5jQOTYKnC3gY8ejxeGIhYATdiLnspDVr8DEwXpYMTzHKPASTFq+CZ/ju3xtam+m7XuLQz2PAQAlAG4xFGiPOiWFahYY7E5xxRZegBEF5o0pgVAejLFJMK5dWTJ/Gy/Kar4m57Og=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EYDP36Xn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q9nHFpoH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01F06C2BD11;
-	Wed, 22 May 2024 03:19:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EYDP36Xn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C869C2BD11;
+	Wed, 22 May 2024 03:19:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716347958;
-	bh=X/B8CnADYTTgPQpFIxU/xFO+czmbCSbGODZZemcUvBg=;
+	s=k20201202; t=1716347973;
+	bh=+qqjVrjE2XhYWZkQYoMrW0JfdLnsfNGz3+1KQ5WbZ+o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Q9nHFpoHuI43LbR6/rRdqaxVxK/Kem/36J9ryue4KeVlSTsRxLywaycGcbGNmTTbl
-	 hNheXKVffY13iFAWkiuUoOzyEPSRUxWkrPs0I5iBLCgPNQdcGk8fw0xKrcmayAvh3X
-	 XXfVdM2JwbxpZhW0CUgRdkCsb1Xk7Ol3GaSF7BYvgAyea+Dqy2alm1JhTJxbj+woNT
-	 TC32tzXy7YC4kheuUa4THA3FsFUPWLVPXzByIIAwdNLym2OwoNj5IHbMJ/iQcoT7zo
-	 M0cKXUrozlaFGsqzvfJ2X1qrC+sej0GCr9tHis2tAf6ewQQ0QR5CTbDbG42C2j3AV+
-	 Kh0Ttzhg4Ty/Q==
-Date: Tue, 21 May 2024 20:19:17 -0700
-Subject: [PATCH 1/2] xfs_spaceman: report the health of quota counts
+	b=EYDP36Xn/YasEkB/cI5XAyZxFiDwjUwTjD+NfX3Ms2gZZS3XQc3QlOU+9xjGEe2Yi
+	 JY4bHUaX30PubrmVT/QYG4o1xr9Z+qiNyPK7t9OIe2Ya5RShgcKcTy7JDxbH0rI2rB
+	 1TU3yo74lGwRrVAACyBsMD408ViCkQM97JuplzY/hZFhjIUatR5Ky5ulR2uhJzX50I
+	 ThGtavU7O+ZvQnkdICLKHXMDvGTg8yQaWphUBwXuivAtd9P1BRwWUvgy//pPyAa0R3
+	 vaL548F02EIxypw4QQVZ6G/X1wuq7EUA/+yX4GwItXzW1OSymGravRCq/ljaAuCWnU
+	 N8V7akT1KrEEA==
+Date: Tue, 21 May 2024 20:19:33 -0700
+Subject: [PATCH 2/2] xfs_spaceman: report health of inode link counts
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171634534405.2482833.6391980051868485997.stgit@frogsfrogsfrogs>
+Message-ID: <171634534420.2482833.15149371878461172207.stgit@frogsfrogsfrogs>
 In-Reply-To: <171634534389.2482833.12547453553760834310.stgit@frogsfrogsfrogs>
 References: <171634534389.2482833.12547453553760834310.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,41 +46,26 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Report the health of quota counts.
+Report on the health of the inode link counts.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man2/ioctl_xfs_fsgeometry.2 |    3 +++
- spaceman/health.c               |    4 ++++
- 2 files changed, 7 insertions(+)
+ spaceman/health.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/man/man2/ioctl_xfs_fsgeometry.2 b/man/man2/ioctl_xfs_fsgeometry.2
-index 6b7c83da7..f59a6e8a6 100644
---- a/man/man2/ioctl_xfs_fsgeometry.2
-+++ b/man/man2/ioctl_xfs_fsgeometry.2
-@@ -256,6 +256,9 @@ Free space bitmap for the realtime device.
- .TP
- .B XFS_FSOP_GEOM_SICK_RT_SUMMARY
- Free space summary for the realtime device.
-+.TP
-+.B XFS_FSOP_GEOM_SICK_QUOTACHECK
-+Quota resource usage counters.
- .RE
- 
- .SH RETURN VALUE
 diff --git a/spaceman/health.c b/spaceman/health.c
-index d83c5ccd9..3318f9d1a 100644
+index 3318f9d1a..88b12c0b0 100644
 --- a/spaceman/health.c
 +++ b/spaceman/health.c
-@@ -72,6 +72,10 @@ static const struct flag_map fs_flags[] = {
- 		.descr = "realtime summary",
- 		.has_fn = has_realtime,
+@@ -76,6 +76,10 @@ static const struct flag_map fs_flags[] = {
+ 		.mask = XFS_FSOP_GEOM_SICK_QUOTACHECK,
+ 		.descr = "quota counts",
  	},
 +	{
-+		.mask = XFS_FSOP_GEOM_SICK_QUOTACHECK,
-+		.descr = "quota counts",
++		.mask = XFS_FSOP_GEOM_SICK_NLINKS,
++		.descr = "inode link counts",
 +	},
  	{0},
  };
