@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3E735894
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:17:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB4B533F9
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:17:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716347864; cv=none; b=XcASFT6wDMdigv5BVLBZjB6l3y/eZkGvk57ZPZdwO/6nXIZxaoYeyx+V2M+Xma5uH733eIVyYUSCzV/b+0fjAVUb2FYzUIMPAO7LEsJ67iYn4XyBAsGXrZcJ8g6FJ9CheqYw7OwYb7xoCoich3RKPaiurhfFPQEuBiJysxYNoaI=
+	t=1716347879; cv=none; b=tNf4TfpaQoJ3Yn5ye/pK7u/O1RFp0ooLoXSohbprleJHGh+uUt6Fi32nDACMqSIQdmrpFXDzjdJNcS0MywxQ5fetmpv4oDkIKd8HMdYbPBIgDSOSv2cK1PCZgpBvGPWkM9xk1jfSCoiorsQh5Otq6KIy67K5ge8ACLv0acrFMHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716347864; c=relaxed/simple;
-	bh=ehTUX/H2/4tYxB7w9HukFn7STI37Z3HrScIjBUzRwX8=;
+	s=arc-20240116; t=1716347879; c=relaxed/simple;
+	bh=LlD72zMPdAJnpRK9KH66WyehusDpwwrSazotfmy7SCI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OKWuf/nODlKriVynbq4BBdiD6DtxgQqJwbIgLxHOop4nKZTKOCWsBDjoNqW0lIRGATXJ0l6YyWOX1tMgKI+cKXijmZMO/oa9CoSjcZgitXIOcog3WTtpth9j+ytlBolVf1sf8VgpGp9GhE1sbV6v4OB2zhnDnstc/UufpjAuTaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IKpwEPyJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rf1rGwaFFrjAtbt22ri/EPhmyEdjr+B7D0lcqjYqgsQcYK415hp3sC2CqRkgfytaNVOhLjRZjDKel7ebA8C6P6EUIDx5PEf+FP1zbZH1Vq8ykPgcJDGB8x/mGTCw+YDCVgj5KkQzLcHp+nXvy+q9IMBa2rrL/tNE1eUkcXBMND0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jCYIXn3C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IKpwEPyJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14327C2BD11;
-	Wed, 22 May 2024 03:17:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jCYIXn3C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4554C2BD11;
+	Wed, 22 May 2024 03:17:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716347864;
-	bh=ehTUX/H2/4tYxB7w9HukFn7STI37Z3HrScIjBUzRwX8=;
+	s=k20201202; t=1716347879;
+	bh=LlD72zMPdAJnpRK9KH66WyehusDpwwrSazotfmy7SCI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IKpwEPyJ1yRdCL7gkRG7AxsDH0ZfJNuYaSMmi9DgHB8HY7J+d/KtGBdJ7J9QPf4QH
-	 Zikfgw5qlvOWzfcNpvDszz5IXo9y+S5UWtej2ExzRbIeghRb+Sj3AjzX3JofdXmHK8
-	 GGZ7ouseqnTjkwFN/qUcTME0mkYYUL5iXSoPGkiul8B6m5MH0my/ZruLMGe6/pDaf+
-	 bq9xcE8fcgmoYz1eEh4tQQcl1cWNtaODGC10lwc3JJdgC79dgiO2yQwBM6vBxfQhy6
-	 +W3H30uwYaTAVUa8axKpThYEiOjmp+7ljGxhi0xUBT+5ghIVZPcEEarZkM9cwdmRTe
-	 G5uF/HlWJeQpw==
-Date: Tue, 21 May 2024 20:17:43 -0700
-Subject: [PATCH 111/111] xfs: allow sunit mount option to repair bad primary
- sb stripe values
+	b=jCYIXn3C0Z1xA0m0DCkUYKd7IShkE7j87LcgB3QF97iDOgGpugZDaTEh0eHWrDat9
+	 Q5L835125UaeUnH5NeYVUEXJsa3qKka9q1YvjA3T3LY7TxPrkVFypXJ46NwLDXvorU
+	 +UqCW73WbZulN2S9PFWAi3vdRdXIpr2G7pl1QybCbEVJlohoH7V7YXtQI7dcMUaxFh
+	 vV9UHF9zUUUn2e+vQk7gXJlx655at8YlIsuGcyowvw7v8f1oQs/sQUi2QI79g4DDKR
+	 wBGjxn+gx3mKjex2qdsC2eFddD021o6r7E41rmylDhS7E40/U0HoLXxF8Sc9pAuowt
+	 aTscsrXXKvOsQ==
+Date: Tue, 21 May 2024 20:17:59 -0700
+Subject: [PATCH 1/4] libxfs: remove kmem_alloc, kmem_zalloc, and kmem_free
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
- Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-Message-ID: <171634533368.2478931.13284254880140693065.stgit@frogsfrogsfrogs>
-In-Reply-To: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
-References: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <171634533711.2482547.1270461379482180313.stgit@frogsfrogsfrogs>
+In-Reply-To: <171634533692.2482547.7100831050962784521.stgit@frogsfrogsfrogs>
+References: <171634533692.2482547.7100831050962784521.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,198 +44,224 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 15922f5dbf51dad334cde888ce6835d377678dc9
+Remove all three of these helpers now that the kernel has dropped them.
 
-If a filesystem has a busted stripe alignment configuration on disk
-(e.g. because broken RAID firmware told mkfs that swidth was smaller
-than sunit), then the filesystem will refuse to mount due to the
-stripe validation failing. This failure is triggering during distro
-upgrades from old kernels lacking this check to newer kernels with
-this check, and currently the only way to fix it is with offline
-xfs_db surgery.
-
-This runtime validity checking occurs when we read the superblock
-for the first time and causes the mount to fail immediately. This
-prevents the rewrite of stripe unit/width via
-mount options that occurs later in the mount process. Hence there is
-no way to recover this situation without resorting to offline xfs_db
-rewrite of the values.
-
-However, we parse the mount options long before we read the
-superblock, and we know if the mount has been asked to re-write the
-stripe alignment configuration when we are reading the superblock
-and verifying it for the first time. Hence we can conditionally
-ignore stripe verification failures if the mount options specified
-will correct the issue.
-
-We validate that the new stripe unit/width are valid before we
-overwrite the superblock values, so we can ignore the invalid config
-at verification and fail the mount later if the new values are not
-valid. This, at least, gives users the chance of correcting the
-issue after a kernel upgrade without having to resort to xfs-db
-hacks.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_sb.c |   40 +++++++++++++++++++++++++++++++---------
- libxfs/xfs_sb.h |    5 +++--
- mkfs/xfs_mkfs.c |    6 +++---
- 3 files changed, 37 insertions(+), 14 deletions(-)
+ db/bmap_inflate.c         |    2 +-
+ include/kmem.h            |   10 +---------
+ libxfs/defer_item.c       |    2 +-
+ libxfs/init.c             |    2 +-
+ libxfs/kmem.c             |   32 ++++++++++----------------------
+ libxlog/xfs_log_recover.c |   19 +++++++++----------
+ repair/bmap_repair.c      |    4 ++--
+ 7 files changed, 25 insertions(+), 46 deletions(-)
 
 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 00b0a937d..895d646bb 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -528,7 +528,8 @@ xfs_validate_sb_common(
+diff --git a/db/bmap_inflate.c b/db/bmap_inflate.c
+index c85d5dc0d..00e1aff66 100644
+--- a/db/bmap_inflate.c
++++ b/db/bmap_inflate.c
+@@ -327,7 +327,7 @@ populate_btree(
+ 	/* Leak any unused blocks */
+ 	list_for_each_entry_safe(resv, n, &bd.resv_list, list) {
+ 		list_del(&resv->list);
+-		kmem_free(resv);
++		kfree(resv);
  	}
- 
- 	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
--			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
-+			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
-+			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
- 		return -EFSCORRUPTED;
- 
- 	/*
-@@ -1321,8 +1322,10 @@ xfs_sb_get_secondary(
+ 	return error;
+ }
+diff --git a/include/kmem.h b/include/kmem.h
+index 6818a4047..386b4a6be 100644
+--- a/include/kmem.h
++++ b/include/kmem.h
+@@ -50,15 +50,7 @@ kmem_cache_free(struct kmem_cache *cache, void *ptr)
+ 	free(ptr);
  }
  
- /*
-- * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
-- * so users won't be confused by values in error messages.
-+ * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
-+ * won't be confused by values in error messages.  This function returns false
-+ * if the stripe geometry is invalid and the caller is unable to repair the
-+ * stripe configuration later in the mount process.
-  */
- bool
- xfs_validate_stripe_geometry(
-@@ -1330,20 +1333,21 @@ xfs_validate_stripe_geometry(
- 	__s64			sunit,
- 	__s64			swidth,
- 	int			sectorsize,
-+	bool			may_repair,
- 	bool			silent)
+-extern void	*kmem_alloc(size_t, int);
+ extern void	*kvmalloc(size_t, gfp_t);
+-extern void	*kmem_zalloc(size_t, int);
+-
+-static inline void
+-kmem_free(const void *ptr) {
+-	free((void *)ptr);
+-}
+-
+ extern void	*krealloc(void *, size_t, int);
+ 
+ static inline void *kmalloc(size_t size, gfp_t flags)
+@@ -70,7 +62,7 @@ static inline void *kmalloc(size_t size, gfp_t flags)
+ 
+ static inline void kfree(const void *ptr)
  {
- 	if (swidth > INT_MAX) {
- 		if (!silent)
- 			xfs_notice(mp,
- "stripe width (%lld) is too large", swidth);
--		return false;
-+		goto check_override;
- 	}
+-	return kmem_free(ptr);
++	free((void *)ptr);
+ }
  
- 	if (sunit > swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sectorsize && (int)sunit % sectorsize) {
-@@ -1351,21 +1355,21 @@ xfs_validate_stripe_geometry(
- 			xfs_notice(mp,
- "stripe unit (%lld) must be a multiple of the sector size (%d)",
- 				   sunit, sectorsize);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sunit && !swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "invalid stripe unit (%lld) and stripe width of 0", sunit);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (!sunit && swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "invalid stripe width (%lld) and stripe unit of 0", swidth);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sunit && (int)swidth % (int)sunit) {
-@@ -1373,9 +1377,27 @@ xfs_validate_stripe_geometry(
- 			xfs_notice(mp,
- "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
- 				   swidth, sunit);
--		return false;
-+		goto check_override;
- 	}
- 	return true;
-+
-+check_override:
-+	if (!may_repair)
-+		return false;
-+	/*
-+	 * During mount, mp->m_dalign will not be set unless the sunit mount
-+	 * option was set. If it was set, ignore the bad stripe alignment values
-+	 * and allow the validation and overwrite later in the mount process to
-+	 * attempt to overwrite the bad stripe alignment values with the values
-+	 * supplied by mount options.
-+	 */
-+	if (!mp->m_dalign)
-+		return false;
-+	if (!silent)
-+		xfs_notice(mp,
-+"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
-+			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
-+	return true;
+ #endif
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index d67032c26..680a72664 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -606,7 +606,7 @@ xfs_attr_free_item(
+ 	if (attr->xattri_da_state)
+ 		xfs_da_state_free(attr->xattri_da_state);
+ 	if (attr->xattri_da_args->op_flags & XFS_DA_OP_RECOVERY)
+-		kmem_free(attr);
++		kfree(attr);
+ 	else
+ 		kmem_cache_free(xfs_attr_intent_cache, attr);
+ }
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 82618a07e..de91bbf3c 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -893,7 +893,7 @@ libxfs_buftarg_free(
+ 	struct xfs_buftarg	*btp)
+ {
+ 	cache_destroy(btp->bcache);
+-	kmem_free(btp);
++	kfree(btp);
  }
  
  /*
-diff --git a/libxfs/xfs_sb.h b/libxfs/xfs_sb.h
-index 2e8e8d63d..37b1ed1bc 100644
---- a/libxfs/xfs_sb.h
-+++ b/libxfs/xfs_sb.h
-@@ -35,8 +35,9 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
- 				struct xfs_trans *tp, xfs_agnumber_t agno,
- 				struct xfs_buf **bpp);
+diff --git a/libxfs/kmem.c b/libxfs/kmem.c
+index c264be018..a2a3935d0 100644
+--- a/libxfs/kmem.c
++++ b/libxfs/kmem.c
+@@ -65,33 +65,21 @@ kmem_cache_zalloc(struct kmem_cache *cache, gfp_t flags)
+ 	return ptr;
+ }
  
--extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
--		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
-+bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
-+		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
-+		bool silent);
+-void *
+-kmem_alloc(size_t size, int flags)
+-{
+-	void	*ptr = malloc(size);
+-
+-	if (ptr == NULL) {
+-		fprintf(stderr, _("%s: malloc failed (%d bytes): %s\n"),
+-			progname, (int)size, strerror(errno));
+-		exit(1);
+-	}
+-	return ptr;
+-}
+-
+ void *
+ kvmalloc(size_t size, gfp_t flags)
+ {
++	void	*ptr;
++
+ 	if (flags & __GFP_ZERO)
+-		return kmem_zalloc(size, 0);
+-	return kmem_alloc(size, 0);
+-}
++		ptr = calloc(1, size);
++	else
++		ptr = malloc(size);
  
- uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+-void *
+-kmem_zalloc(size_t size, int flags)
+-{
+-	void	*ptr = kmem_alloc(size, flags);
+-
+-	memset(ptr, 0, size);
++	if (ptr == NULL) {
++		fprintf(stderr, _("%s: malloc failed (%d bytes): %s\n"),
++			progname, (int)size, strerror(errno));
++		exit(1);
++	}
+ 	return ptr;
+ }
  
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index d6fa48ede..4f2d529aa 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2765,13 +2765,13 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index 99f759d5c..31b11fee9 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -991,7 +991,7 @@ xlog_recover_new_tid(
+ {
+ 	struct xlog_recover	*trans;
+ 
+-	trans = kmem_zalloc(sizeof(struct xlog_recover), 0);
++	trans = kzalloc(sizeof(struct xlog_recover), 0);
+ 	trans->r_log_tid   = tid;
+ 	trans->r_lsn	   = lsn;
+ 	INIT_LIST_HEAD(&trans->r_itemq);
+@@ -1006,7 +1006,7 @@ xlog_recover_add_item(
+ {
+ 	struct xlog_recover_item *item;
+ 
+-	item = kmem_zalloc(sizeof(struct xlog_recover_item), 0);
++	item = kzalloc(sizeof(struct xlog_recover_item), 0);
+ 	INIT_LIST_HEAD(&item->ri_list);
+ 	list_add_tail(&item->ri_list, head);
+ }
+@@ -1085,7 +1085,7 @@ xlog_recover_add_to_trans(
+ 		return 0;
+ 	}
+ 
+-	ptr = kmem_alloc(len, 0);
++	ptr = kmalloc(len, 0);
+ 	memcpy(ptr, dp, len);
+ 	in_f = (struct xfs_inode_log_format *)ptr;
+ 
+@@ -1107,13 +1107,12 @@ xlog_recover_add_to_trans(
+ 		"bad number of regions (%d) in inode log format",
+ 				  in_f->ilf_size);
+ 			ASSERT(0);
+-			kmem_free(ptr);
++			kfree(ptr);
+ 			return XFS_ERROR(EIO);
  		}
  
- 		if (!libxfs_validate_stripe_geometry(NULL, dsu, big_dswidth,
--						     cfg->sectorsize, false))
-+					cfg->sectorsize, false, false))
- 			usage();
- 
- 		dsunit = BTOBBT(dsu);
- 		dswidth = BTOBBT(big_dswidth);
- 	} else if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit),
--			BBTOB(dswidth), cfg->sectorsize, false)) {
-+			BBTOB(dswidth), cfg->sectorsize, false, false)) {
- 		usage();
+ 		item->ri_total = in_f->ilf_size;
+-		item->ri_buf =
+-			kmem_zalloc(item->ri_total * sizeof(xfs_log_iovec_t),
++		item->ri_buf = kzalloc(item->ri_total * sizeof(xfs_log_iovec_t),
+ 				    0);
  	}
+ 	ASSERT(item->ri_total > item->ri_cnt);
+@@ -1141,13 +1140,13 @@ xlog_recover_free_trans(
+ 		/* Free the regions in the item. */
+ 		list_del(&item->ri_list);
+ 		for (i = 0; i < item->ri_cnt; i++)
+-			kmem_free(item->ri_buf[i].i_addr);
++			kfree(item->ri_buf[i].i_addr);
+ 		/* Free the item itself */
+-		kmem_free(item->ri_buf);
+-		kmem_free(item);
++		kfree(item->ri_buf);
++		kfree(item);
+ 	}
+ 	/* Free the transaction recover structure */
+-	kmem_free(trans);
++	kfree(trans);
+ }
  
-@@ -2791,7 +2791,7 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
- 	if (!dsunit) {
- 		/* Ignore nonsense from device report. */
- 		if (!libxfs_validate_stripe_geometry(NULL, BBTOB(ft->data.sunit),
--				BBTOB(ft->data.swidth), 0, true)) {
-+				BBTOB(ft->data.swidth), 0, false, true)) {
- 			fprintf(stderr,
- _("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\n"),
- 				progname,
+ /*
+diff --git a/repair/bmap_repair.c b/repair/bmap_repair.c
+index 845584f18..317061aa5 100644
+--- a/repair/bmap_repair.c
++++ b/repair/bmap_repair.c
+@@ -595,7 +595,7 @@ xrep_bmap(
+ 	if (error)
+ 		return error;
+ 
+-	rb = kmem_zalloc(sizeof(struct xrep_bmap), KM_NOFS | KM_MAYFAIL);
++	rb = kzalloc(sizeof(struct xrep_bmap), 0);
+ 	if (!rb)
+ 		return ENOMEM;
+ 	rb->sc = sc;
+@@ -622,7 +622,7 @@ xrep_bmap(
+ out_bitmap:
+ 	free_slab(&rb->bmap_records);
+ out_rb:
+-	kmem_free(rb);
++	kfree(rb);
+ 	return error;
+ }
+ 
 
