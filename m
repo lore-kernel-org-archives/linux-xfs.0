@@ -1,101 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40FA9824A3;
-	Wed, 22 May 2024 14:11:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF65E17550;
+	Wed, 22 May 2024 14:37:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716387103; cv=none; b=SMBH6s8jEeBFfiC9GYAlUfhGWzlTLLRLzOa+99M/mcwDaAvn+uh/pCIcVxeClObUnrT47HbfUj8gdHd5zkNKXhZKcDm2ojy83Jae5HGG5HnwwhZUO1T8YjwqP0mueIn92IyCuq8G8dhUpWIuytaCpZcoVntGHp+svK5/WnMfDMQ=
+	t=1716388647; cv=none; b=Qtp+NRRFjp6WFBcy3IC9pBBzKPGqhdA0E8wcpZArO07707LGP8MmxyBbTC6eG6ysRWmm2HS0LpNwlVmh1EHRadcw87zOzmstVrcVVXKPUNUPNzrhz79AK/bQd7xVL1RgaBjzBdMNzMYbhUQmWI7DdUmI9hkcbOBM/6Mdm/XcUTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716387103; c=relaxed/simple;
-	bh=G6CioGR1T6nYwLpMGws26Lml2/wV8jRNqdfuXs9RyFo=;
+	s=arc-20240116; t=1716388647; c=relaxed/simple;
+	bh=hxmhP567s4dSC9jpCW+zdbc4PJzsQqx6YlXvRACd2is=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ecsKzZPFodkGTyhKQ/uYwRC+oS+qjhq+W1Agd5GDY1xB7ydZ0TOD3wMGehT5msZxFo/OQGgBAMWgtAzP54Ac/ngED6w2HF+uKaFHWi7GJs0zFCSTnGp45EK11eB6Uqqr0qiSyJvL/E6QfbAxtB50CbjCw8W+8fD4aMQSBHPaj+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=jmiK9CGI; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=WvBh2FrSN1lAcLCCill1tZp02ZFLwISaV9ccCHKVslw+BhReywdYHfgTkO6fuClmn7MWxgrLVp2D9oEaQUmVkK8kDqBui+Hbl5D9lgglV9HeK728LmzHINHZOB+kWVdCkk0GHnE36ZOXjZUwAE6cSXV8fAMt1vT3MNC2LdSKRp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pIEJ0Wpi; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="jmiK9CGI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 305DFC32789;
-	Wed, 22 May 2024 14:11:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1716387102;
-	bh=G6CioGR1T6nYwLpMGws26Lml2/wV8jRNqdfuXs9RyFo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jmiK9CGITyff1F3T237GOjN12HWy+YFJgGhvEjTEsB3YUvSYTgR+ghI6/8AMRcVfc
-	 XRcm9L/aG7Rl9HMd/ZXu433HGq0/qTS0L9nO8QulnrMK4NGihiB6aoOLt2UasbdrFM
-	 ehnWRzrI2Uk8FhGVs86kXBxAqgRg7K79oj7s6N90=
-Date: Wed, 22 May 2024 16:11:39 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Leah Rumancik <leah.rumancik@gmail.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
-	fred@cloudflare.com, Dave Chinner <dchinner@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 6.1 01/24] xfs: write page faults in iomap are not
- buffered writes
-Message-ID: <2024052207-curve-revered-b879@gregkh>
-References: <20240501184112.3799035-1-leah.rumancik@gmail.com>
- <2024050436-conceded-idealness-d2c5@gregkh>
- <CAOQ4uxhcFSPhnAfDxm-GQ8i-NmDonzLAq5npMh84EZxxr=qhjQ@mail.gmail.com>
- <CACzhbgSNe5amnMPEz8AYu3Z=qZRyKLFDvOtA_9wFGW9Bh-jg+g@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pIEJ0Wpi"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=I8E1hYnWG4Q3QnCoU6Xf7Jd0qzrKBRB6EdoIRleFSv8=; b=pIEJ0WpiPen6MsG0bCFP7QKQfi
+	1jyJCsEWaTO0vqdgEVHEDEYA5cdYX0mqfEuG7vivgDpcFYEfp0aU7EZEcjv/bgH0CVozHq0y9bV8h
+	Y4HCuGVuJzjsWBsgZLf+0VH1jhi8V/ykqSUm9BssvrmWWJDne2hgWYb56UUqhE0HwLtphv1CS05y4
+	okWbseLm13A8IZi6nK1xu2VE1UgXnighmjqOW9EJHG623gjjX13jmQvKqYlzZ9oXVQiFj42hsokdD
+	hsacBYeoJ2LyOI23NP4ippDnfNCxRNrwPWiDfal92qwbc+raAu80aoa/B4Yy2KGLry+6AfW8VBcT9
+	fpY86kMQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s9n5n-00000003EKQ-39ku;
+	Wed, 22 May 2024 14:37:23 +0000
+Date: Wed, 22 May 2024 07:37:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@redhat.com,
+	ebiggers@kernel.org, linux-xfs@vger.kernel.org, alexl@redhat.com,
+	walters@verbum.org, fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
+Message-ID: <Zk4DIzXJX_gVoj2-@infradead.org>
+References: <20240507212454.GX360919@frogsfrogsfrogs>
+ <ZjtmVIST_ujh_ld6@infradead.org>
+ <20240508202603.GC360919@frogsfrogsfrogs>
+ <ZjxY_LbTOhv1i24m@infradead.org>
+ <20240509200250.GQ360919@frogsfrogsfrogs>
+ <Zj2r0Ewrn-MqNKwc@infradead.org>
+ <Zj28oXB6leJGem-9@infradead.org>
+ <20240517171720.GA360919@frogsfrogsfrogs>
+ <ZktEn5KOZTiy42c8@infradead.org>
+ <20240520160259.GA25546@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CACzhbgSNe5amnMPEz8AYu3Z=qZRyKLFDvOtA_9wFGW9Bh-jg+g@mail.gmail.com>
+In-Reply-To: <20240520160259.GA25546@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, May 06, 2024 at 10:52:16AM -0700, Leah Rumancik wrote:
-> Ah my bad, I'll make sure to explicitly mention its been ACK'd by
-> linux-xfs in the future.
+On Mon, May 20, 2024 at 09:02:59AM -0700, Darrick J. Wong wrote:
+> On Mon, May 20, 2024 at 05:39:59AM -0700, Christoph Hellwig wrote:
+> > On Fri, May 17, 2024 at 10:17:20AM -0700, Darrick J. Wong wrote:
+> > > >   Note that the verity metadata *must* be encrypted when the file is,
+> > > >   since it contains hashes of the plaintext data.
+> > > 
+> > > Refresh my memory of fscrypt -- does it encrypt directory names, xattr
+> > > names, and xattr values too?  Or does it only do that to file data?
+> > 
+> > It does encrypt the file names in the directories, but nothing in
+> > xattrs as far as I can tell.
 > 
-> Will send out a MAINTAINERS file patch as well.
+> Do we want that for user.* attrs?  That seems like quite an omission.
 
-Did that happen?
+I'll let Eric answer that.  Btw, is the threat model for fscrypt written
+down somewhere?
 
-Anyway, this patch series breaks the build:
+> > > And if we copy the ext4 method of putting the merkle data after eof and
+> > > loading it into the pagecache, how much of the generic fs/verity cleanup
+> > > patches do we really need?
+> > 
+> > We shouldn't need anything.  A bunch of cleanup
+> 
+> Should we do the read/drop_merkle_tree_block cleanup anyway?
 
-s/xfs/xfs_iomap.c: In function ‘xfs_iomap_inode_sequence’:
-fs/xfs/xfs_iomap.c:58:27: error: ‘IOMAP_F_XATTR’ undeclared (first use in this function); did you mean ‘IOP_XATTR’?
-   58 |         if (iomap_flags & IOMAP_F_XATTR)
-      |                           ^~~~~~~~~~~~~
-      |                           IOP_XATTR
-fs/xfs/xfs_iomap.c:58:27: note: each undeclared identifier is reported only once for each function it appears in
-fs/xfs/xfs_iomap.c: In function ‘xfs_iomap_valid’:
-fs/xfs/xfs_iomap.c:74:21: error: ‘const struct iomap’ has no member named ‘validity_cookie’
-   74 |         return iomap->validity_cookie ==
-      |                     ^~
-fs/xfs/xfs_iomap.c: At top level:
-fs/xfs/xfs_iomap.c:79:10: error: ‘const struct iomap_page_ops’ has no member named ‘iomap_valid’
-   79 |         .iomap_valid            = xfs_iomap_valid,
-      |          ^~~~~~~~~~~
-fs/xfs/xfs_iomap.c:79:35: error: positional initialization of field in ‘struct’ declared with ‘designated_init’ attribute [-Werror=designated-init]
-   79 |         .iomap_valid            = xfs_iomap_valid,
-      |                                   ^~~~~~~~~~~~~~~
-fs/xfs/xfs_iomap.c:79:35: note: (near initialization for ‘xfs_iomap_page_ops’)
-fs/xfs/xfs_iomap.c:79:35: error: invalid initializer
-fs/xfs/xfs_iomap.c:79:35: note: (near initialization for ‘xfs_iomap_page_ops.<anonymous>’)
-fs/xfs/xfs_iomap.c: In function ‘xfs_bmbt_to_iomap’:
-fs/xfs/xfs_iomap.c:127:14: error: ‘struct iomap’ has no member named ‘validity_cookie’
-  127 |         iomap->validity_cookie = sequence_cookie;
-      |              ^~
-fs/xfs/xfs_iomap.c: In function ‘xfs_xattr_iomap_begin’:
-fs/xfs/xfs_iomap.c:1375:44: error: ‘IOMAP_F_XATTR’ undeclared (first use in this function); did you mean ‘IOP_XATTR’?
- 1375 |         seq = xfs_iomap_inode_sequence(ip, IOMAP_F_XATTR);
-      |                                            ^~~~~~~~~~~~~
-      |                                            IOP_XATTR
-fs/xfs/xfs_iomap.c:1382:1: error: control reaches end of non-void function [-Werror=return-type]
- 1382 | }
-      | ^
-cc1: all warnings being treated as errors
+To me the block based interface seems a lot cleaner, but Eric has some
+reservations due to the added indirect call on the drop side.
 
+> One of the advantages of xfs caching merkle tree blocks ourselves
+> is that we neither extend the usage of PageChecked when merkle blocksize
+> == pagesize nor become subject to the 1-million merkle block limit when
+> merkle blocksize < pagesize.  There's a tripping hazard if you mount a 4k
+> merkle block filesystem on a computer with 64k pages -- now you can't
+> open 6T verity files.
+> 
+> That said, it also sounds dumb to maintain a separate index for
+> pagecache pages to track a single bit.
 
-Any chance you can rebase and resend it?
+Yeah.  As I mentioned earlier I think fsverify really should enforce
+a size limit.  Right now it will simply run out space eventually which
+doesn't seem like a nice failure mode.
 
-thanks,
+> Maybe we should port verity to
+> use xbitmap64 from xfs instead of single static buffer?
 
-greg k-h
+The seems like a bit of overkill for the current use cases.
+
