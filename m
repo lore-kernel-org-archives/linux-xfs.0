@@ -1,112 +1,149 @@
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
+Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 810184C9A;
-	Wed, 22 May 2024 19:04:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DBD51BF2A;
+	Wed, 22 May 2024 21:55:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716404649; cv=none; b=e/cnP8hOj+BAa267BKX68gtzMWM7Ro/6hKWc7kfLprkklWSZ55WOWIxEPffxxXTc0tPMj3AKlDlO5OFJSmzFks+zbUPVfMds9sGX4r7CklNNDySO1KEzeeZsDR6OTVBkhhr5ycFmyHXyW8hxLN2sNkFxt2H2EhJqpAfl2+/t5Ek=
+	t=1716414931; cv=none; b=ngJP7KnET87RK7OsA+Tg7Y5dHx2QbOUfGHr3ya14TnbXnCeA+9YWjWk32iLXQ/z5ePMudtjgvd8GOxsUmqQi8Dx8xhM+zYwLbAcx1YWVk/O2Wxs3y2o957/dd4SIC9LZpZW0GR304BnJjFkZF2SLvwMQdIl6qxiuwDaaJNSFFqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716404649; c=relaxed/simple;
-	bh=naPqae9NhhGSu1hXRtGdKUlnkPgFQKrKm6m3DnHH2xg=;
+	s=arc-20240116; t=1716414931; c=relaxed/simple;
+	bh=biS27k1v25ESh7nlKLwuhk7msK7Vxc95usSBLqpbkVc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tI2t9DVQUpDwurgbc7QqGgozlKqaJpKrs0g6UWl/pv4vzY4yRXtHWnIdEmNFaiiQ1DqWDOXn1aDWfHYJaai14CIEW3BRMV2aJFHJjyUEitKFr9H12GPW577DYSMmwsXT10v562wUqPXLwaK+2vkXRK19/JKez+FH1PGigrE3iAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G08kuBza; arc=none smtp.client-ip=209.85.167.178
+	 To:Cc:Content-Type; b=GzYwNmIxTXq5Lbrg7n9wKSdgdlX90sZY+sXY8wFehxdNv7141LZJlyKehigex44X16q3SHCzeiCYJZSxitjDYGgNb+nIl3y5dIzkFpcP8hLHO142rZZwfEIf6etJPKE04dslapgQ6We7CzaLiD3xiqtoSqRO6Lm52pPPUX6eaFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a1KU88kl; arc=none smtp.client-ip=209.85.128.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G08kuBza"
-Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3c9a0042e7dso2682651b6e.0;
-        Wed, 22 May 2024 12:04:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a1KU88kl"
+Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-61bee45d035so58022497b3.1;
+        Wed, 22 May 2024 14:55:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1716404647; x=1717009447; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1716414929; x=1717019729; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hhTCzNR+kkWgJXYlLCgQiTzJ53TKdalqadL/jDFO8ng=;
-        b=G08kuBza1emOToU/ksVyZtKqFZQ3xZWJbY5xTVDSRVyNp9FPmWKGQSlFHs+8bf7PEH
-         33eZAnNMivYc/668kljY3xvwH7IBUkCnEJ9Fc/lY6uKt/05XJs8YpVQUNG1n29SdSFhn
-         Kj8TvH/sZaZA+JSKG1tq8pKG3QJ8cZmzHEa/V3dZqVYJvaXAb6PVIuRln+r3yBDxa2Vr
-         6NBIkkOwom1TS2BgNhWjrIARTtCplURgw/cF/J+BAu73k8/4NLt1VCbGhOq+3ZCwypOc
-         juyQC0H15xN3Ri861Zj84TTLYfNUanVaFC4FS2A8kNyD1PQbqPgMouq0E8ZD0qCReu6Z
-         UH8g==
+        bh=qvHEXtI8w2mJSWFFWNE5WHl/b53q+5tj9SqX8JL+kf4=;
+        b=a1KU88kl931GNsUx/9+xrsjMdPIjTbRXGi1lcWsm83BFCh/Xtr/ij7XUMf0jchnpBi
+         njgV3WGHMYmZkFcVl9kIXjVoXQqH6TnzfKYIxDeaIGXUx+3KMwhfl/76NxbWtdzatuLm
+         YFprP47WSLMBKpasKdU6n/TkKAfD4Lsm2hZcOWfQ33HUA6XuecllOkCJm+BkknfPo8cK
+         IF4wdY6eKhtiS4FqmK56C4VfJV2JDgNGn4ExJac0zyo0JcO/yrYPBoJuhNVdRk5cELtA
+         2w1bfQLJFOUwBOGPKLknj+XYRq9EheXfT1B35Ehy8HjZ8rXLStufv9RpT1BUS3O4szdt
+         +4lA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716404647; x=1717009447;
+        d=1e100.net; s=20230601; t=1716414929; x=1717019729;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=hhTCzNR+kkWgJXYlLCgQiTzJ53TKdalqadL/jDFO8ng=;
-        b=XT+O3kK6WAQWzo4RF2BTPS3cHjdC/qqNSA6i+wy1mYWgYB6q33R5ef7aQDLI5lhCV/
-         v12VZ8vuSb31laF2wpBHa+99NSsNpcq0mCcTjc4pKsa0wOeXRtfpnlV1vwDJnFLXyybi
-         h+8xSBLxwooCPj49CFUpeunOBCmA48H485kLFzL4QLM6GpVR+8dScRZA1BwKI5xuqMMU
-         spr1+PlFUhcLDIqKo+4aQ9vF8GcKgSf0p8PF0lP4R8736qoHhvSd2B+lpvxEjn8hyhtX
-         bEjAeB6E0qqdd/tHNDR48kUXGP9UsvB7CB88RHpGoVmoDcSGhPhlvAuNq63+ZBLhjwUP
-         uANg==
-X-Forwarded-Encrypted: i=1; AJvYcCVyYqmF2msWse/aZ+kGh9xSZkYzgGwziMQNfawyCY9bjklMyEitPD0tWGVgvBTo4x5NnIm0/G7woPW5URBT0qhxvRcJAd3ZRQQfg2liL9Cyt7vxcwlCjYfW6n6tC8N1lawHrc4aCThp8Q==
-X-Gm-Message-State: AOJu0Yze5OwrKI6vrRMF7WRBVeW2ky7diUjBD99iOtmixIoIR+CSUP6g
-	07NdgZr1eOWjl685b/4NoAU955sjoTogALDufW0JcHeWr41WzVH7lvch7E4Td1IZcV7eI/58RtA
-	uncPqOTGVJNGRa6VKvY07JqdDwKY=
-X-Google-Smtp-Source: AGHT+IHXGG8EeECVx6IQRrc2tmEp7pGT7N+FzEhPFyZ1tm9iUiRy0me55JvgI94rkmjegw0PVLR87pcoKkgGjI2LEF0=
-X-Received: by 2002:a05:6870:184d:b0:24c:4fcc:9017 with SMTP id
- 586e51a60fabf-24c68e065a7mr3124594fac.34.1716404647362; Wed, 22 May 2024
- 12:04:07 -0700 (PDT)
+        bh=qvHEXtI8w2mJSWFFWNE5WHl/b53q+5tj9SqX8JL+kf4=;
+        b=lXaEKOnxCD8STpTDYAjktIAH4JBpixt2sF01JFGsd4imR4l7tyqIHopr5tACMCZR7K
+         78aoLMwXGzLT3MRSBKYNWyEzM9hJ3QMfsVLVO2X+Gy5jkeh5D8iU8zltxaoaG9ZCpO36
+         2k/x/B232p81dKdXJAuVu+czIO3tVQLUrvztdWAyjZmZMpbe2yHpnmuoJJ4xu9/MRAmA
+         47KdaWE90oaqcvBR2ZTL05J/SW7DJDQFVJFBa5Iis8wUhsL7UvrcXNcFQNQ+mqc/yhi9
+         p1Vx426c1zFQZ00FJRQ7PcxODFTNBJfvw3oOOAvY3lENbnFsx2tiEXf+iJFu742xBk1D
+         x2xA==
+X-Forwarded-Encrypted: i=1; AJvYcCXkX6vbM4Fz+1jKvE3+1xWtOP0gp4An2TZz9RiSWpoE4j0M3JN2ZBMWOllvpJRjqzC9hUyPNIi8HE+Gh0BInuS/QEUJLiV/FXVPxYA8e4KOBCpk3WP0Tqw8IsrqtADEEqBz
+X-Gm-Message-State: AOJu0YzvlJt+J+t5nZKf82AlV2iT0Nx3ZTbdwNRmWSiC6+g0RX2rEZ0w
+	LPfFi5+nPX+NSO9RlxdFD7Ni+YS2oXDW999CC44IT7tFhY7vWXzMMCY7CIJQ2iO7f8wPSNViNYl
+	z5PVSnvTUTjy8GlvervZaqfhTmuS3qx5S
+X-Google-Smtp-Source: AGHT+IEiscBx1uu8+wmYNfvzZIUfh6mAICeSHfdeOAIEqxaswj3+oWoFbGbHAqF/rUOMe4pVWdLmMPfbWXqU80+VKfQ=
+X-Received: by 2002:a0d:ddc6:0:b0:61d:fcf7:3377 with SMTP id
+ 00721157ae682-627e48809fbmr34428347b3.44.1716414928946; Wed, 22 May 2024
+ 14:55:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240520164624.665269-2-aalbersh@redhat.com> <20240520164624.665269-4-aalbersh@redhat.com>
- <CAOQ4uxikMjmAkXwGk3d9897622JfkeE8LXaT9PBrtTiR5y3=Rg@mail.gmail.com>
- <z6ctkxtwhwioc5a5kzisjxffkde6xpchstrr3zlflh4bsz4mpd@5z2s2d7lbje5>
- <CAOQ4uxjaLbrmSDk_a_M6YDT5tQoHO=dXTDsHVOSYcMxeQnpP1w@mail.gmail.com>
- <3b7opex4hgm3ed6v24m7k4oagp2gnsjms45yq223u2nnrbvicx@bgoqeylzxelj>
- <20240522162853.GW25518@frogsfrogsfrogs> <20240522163856.GA1789@sol.localdomain>
-In-Reply-To: <20240522163856.GA1789@sol.localdomain>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 22 May 2024 22:03:55 +0300
-Message-ID: <CAOQ4uxjkHyRvV1VVAa+Agdgb8TOHJv1QOJvNbgmG-PY=G1L+DQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and FS_IOC_FSGETXATTRAT
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Andrey Albershteyn <aalbersh@redhat.com>, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Miklos Szeredi <miklos@szeredi.hu>
+References: <20240501184112.3799035-1-leah.rumancik@gmail.com>
+ <2024050436-conceded-idealness-d2c5@gregkh> <CAOQ4uxhcFSPhnAfDxm-GQ8i-NmDonzLAq5npMh84EZxxr=qhjQ@mail.gmail.com>
+ <CACzhbgSNe5amnMPEz8AYu3Z=qZRyKLFDvOtA_9wFGW9Bh-jg+g@mail.gmail.com> <2024052207-curve-revered-b879@gregkh>
+In-Reply-To: <2024052207-curve-revered-b879@gregkh>
+From: Leah Rumancik <leah.rumancik@gmail.com>
+Date: Wed, 22 May 2024 14:55:18 -0700
+Message-ID: <CACzhbgQzrmKHX-VAzt8VKsxRT8YZN1nVdnd5Tq4bc4THtp5Lxg@mail.gmail.com>
+Subject: Re: [PATCH 6.1 01/24] xfs: write page faults in iomap are not
+ buffered writes
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	chandan.babu@oracle.com, fred@cloudflare.com, 
+	Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <djwong@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, May 22, 2024 at 7:38=E2=80=AFPM Eric Biggers <ebiggers@kernel.org> =
-wrote:
+On Wed, May 22, 2024 at 7:11=E2=80=AFAM Greg KH <gregkh@linuxfoundation.org=
+> wrote:
 >
-> On Wed, May 22, 2024 at 09:28:53AM -0700, Darrick J. Wong wrote:
+> On Mon, May 06, 2024 at 10:52:16AM -0700, Leah Rumancik wrote:
+> > Ah my bad, I'll make sure to explicitly mention its been ACK'd by
+> > linux-xfs in the future.
 > >
-> > Do the other *at() syscalls prohibit dfd + path pointing to a different
-> > filesystem?  It seems odd to have this restriction that the rest don't,
-> > but perhaps documenting this in the ioctl_xfs_fsgetxattrat manpage is o=
-k.
+> > Will send out a MAINTAINERS file patch as well.
 >
-> No, but they are arbitrary syscalls so they can do that.  ioctls traditio=
-nally
-> operate on the specific filesystem of the fd.
+> Did that happen?
 
-To emphasize the absurdity
-think opening /dev/random and doing ioctl to set projid on some xfs file.
-It is ridiculous.
+Yep, https://lore.kernel.org/all/Zj9xj1wIzlTK8VCm@sashalap/
 
 >
-> It feels like these should be syscalls, not ioctls.
+> Anyway, this patch series breaks the build:
+>
+> s/xfs/xfs_iomap.c: In function =E2=80=98xfs_iomap_inode_sequence=E2=80=99=
+:
+> fs/xfs/xfs_iomap.c:58:27: error: =E2=80=98IOMAP_F_XATTR=E2=80=99 undeclar=
+ed (first use in this function); did you mean =E2=80=98IOP_XATTR=E2=80=99?
+>    58 |         if (iomap_flags & IOMAP_F_XATTR)
+>       |                           ^~~~~~~~~~~~~
+>       |                           IOP_XATTR
+> fs/xfs/xfs_iomap.c:58:27: note: each undeclared identifier is reported on=
+ly once for each function it appears in
+> fs/xfs/xfs_iomap.c: In function =E2=80=98xfs_iomap_valid=E2=80=99:
+> fs/xfs/xfs_iomap.c:74:21: error: =E2=80=98const struct iomap=E2=80=99 has=
+ no member named =E2=80=98validity_cookie=E2=80=99
+>    74 |         return iomap->validity_cookie =3D=3D
+>       |                     ^~
+> fs/xfs/xfs_iomap.c: At top level:
+> fs/xfs/xfs_iomap.c:79:10: error: =E2=80=98const struct iomap_page_ops=E2=
+=80=99 has no member named =E2=80=98iomap_valid=E2=80=99
+>    79 |         .iomap_valid            =3D xfs_iomap_valid,
+>       |          ^~~~~~~~~~~
+> fs/xfs/xfs_iomap.c:79:35: error: positional initialization of field in =
+=E2=80=98struct=E2=80=99 declared with =E2=80=98designated_init=E2=80=99 at=
+tribute [-Werror=3Ddesignated-init]
+>    79 |         .iomap_valid            =3D xfs_iomap_valid,
+>       |                                   ^~~~~~~~~~~~~~~
+> fs/xfs/xfs_iomap.c:79:35: note: (near initialization for =E2=80=98xfs_iom=
+ap_page_ops=E2=80=99)
+> fs/xfs/xfs_iomap.c:79:35: error: invalid initializer
+> fs/xfs/xfs_iomap.c:79:35: note: (near initialization for =E2=80=98xfs_iom=
+ap_page_ops.<anonymous>=E2=80=99)
+> fs/xfs/xfs_iomap.c: In function =E2=80=98xfs_bmbt_to_iomap=E2=80=99:
+> fs/xfs/xfs_iomap.c:127:14: error: =E2=80=98struct iomap=E2=80=99 has no m=
+ember named =E2=80=98validity_cookie=E2=80=99
+>   127 |         iomap->validity_cookie =3D sequence_cookie;
+>       |              ^~
+> fs/xfs/xfs_iomap.c: In function =E2=80=98xfs_xattr_iomap_begin=E2=80=99:
+> fs/xfs/xfs_iomap.c:1375:44: error: =E2=80=98IOMAP_F_XATTR=E2=80=99 undecl=
+ared (first use in this function); did you mean =E2=80=98IOP_XATTR=E2=80=99=
+?
+>  1375 |         seq =3D xfs_iomap_inode_sequence(ip, IOMAP_F_XATTR);
+>       |                                            ^~~~~~~~~~~~~
+>       |                                            IOP_XATTR
+> fs/xfs/xfs_iomap.c:1382:1: error: control reaches end of non-void functio=
+n [-Werror=3Dreturn-type]
+>  1382 | }
+>       | ^
+> cc1: all warnings being treated as errors
+>
+>
+> Any chance you can rebase and resend it?
 >
 
-I bet whatever name you choose for syscalls it is going to be too
-close lexicographically to [gs]etxattrat(2) [1]. It is really crowded
-in the area of getattr/getfattr/fgetxattr/getxattr/getfileattr/getfsxattr..=
-.
-I think I would vote for [gs]etfsxattrat(2) following the uapi struct fsxat=
-tr.
-I guess we have officially spiralled.
+Will do.
 
 Thanks,
-Amir.
+Leah
 
-[1] https://lore.kernel.org/linux-fsdevel/20240426162042.191916-1-cgoettsch=
-e@seltendoof.de/
+> thanks,
+>
+> greg k-h
