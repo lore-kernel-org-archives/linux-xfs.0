@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D836A1E498
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:15:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 833C81E498
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:15:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716347707; cv=none; b=rJKbC/S3zEBH+Y1naJ7ulbKDznyF6dNdslyDHq9R2craD4704DhJHjQrO64VupQ5HrR1A9MgW8LkpzzFr7ko/joCsysyFnIO5A8WwGvUokbB9/J3zcpC0gD5rnGnuVoM+obc6A8q8RQvm6LyzS0GQli8zNiX3AGtc+c7a5UbLtU=
+	t=1716347723; cv=none; b=cILibQmbDmyei8KPmGIgBE0lmVl6h3VZRYMtefGh4EHtHbgaecOFzwgy2PMGsXDwMsO0VZvds3zALmP8CnG7c4CSQo6htuTTYHsTW17qAE96C+43XpvbLJGMn3dwTvDtgA6PcCQUw3fm9gNVumgKKbK2Jnx+D5FNspS0h2V9ntw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716347707; c=relaxed/simple;
-	bh=LSC1yosxYf2fcPd4VCa9SFjXKFq3UVzglM4+chgWhsQ=;
+	s=arc-20240116; t=1716347723; c=relaxed/simple;
+	bh=ma/SH4XburZjxuKKdYtVavy9Q6WmapeCQANpcZlOw4w=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZalZKNdqxhSGbOKu5eirsu8znnv/e7ITCKq/B4tEvFe88I7e4X+DILxQLef2H40bfRtCLfiWbdFET0OCVMYIc0UBHNzAjN9sj7vYtPwS/lJ6uRMLJMc/Rh7QBhXxPv2f5hk5IYcQf5OdWf1gMh6srZ3zRHEIZTTE242uolkebXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IyxPkVSN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=r9SLvPEb0JhN6jEc8xKqij2Z8xXwfALZhxkSdPvPKl7lMuDqBbZq1KKPy+F+7E4j2SXRB8Ptp7c46QOWb520OWT8ipzzFbzCI/XfofSdrHZ+lSo9HO4/ZXucFMl18F0WMFO7/gvPa1mttUFLixt3I0U/JgemEZ3BKRk4OMGmz7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qhgHxggL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IyxPkVSN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64EFFC2BD11;
-	Wed, 22 May 2024 03:15:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qhgHxggL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19F12C2BD11;
+	Wed, 22 May 2024 03:15:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716347707;
-	bh=LSC1yosxYf2fcPd4VCa9SFjXKFq3UVzglM4+chgWhsQ=;
+	s=k20201202; t=1716347723;
+	bh=ma/SH4XburZjxuKKdYtVavy9Q6WmapeCQANpcZlOw4w=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IyxPkVSNB1i8JBq/UOWl2ACRlEVwHhsBKr3HdQpvtXhHUYqrb+vESSSRnylvKJKny
-	 DhCIKR999cyfx+pXCBT1Q8bgqiPT5aboaT0rN+Movd1eykDmJuC9qqGIxvr3PLokEi
-	 hzOYOf6FPut/w1qi47Zfzu6G/IEnn70hhCGfCda1ozACOxZjRu4YzJQoEtavnnvV8D
-	 gl1T7l4yTfczxcviZq1joNbTxGlAPg8hLbU3rhU6s+wzmjtjJ+oz6k3SIrJeGHDzaD
-	 E8EBRPUUWA5TN+PDRknc5BGdm+KDoEocGACPsOrWGiIcW+m5d1kId0isRZahEp8xc8
-	 6G44qpmtg6mlg==
-Date: Tue, 21 May 2024 20:15:06 -0700
-Subject: [PATCH 101/111] xfs: move xfs_bmap_defer_add to xfs_bmap_item.c
+	b=qhgHxggL/T/UR0IVTjkipnPth/xR9xCW/7z7OpD64w/A+VHl3im8UjGqbD+NB4H0O
+	 yuDcCgQQnVde0umBtGMGw/TitHNfGXUKGfdlx8CrsA3cEtLKgNIplEteKrX+GqM79t
+	 mYqZCTEm/m89wMBhJf8cDr21JKv/JQkdJvzUXpHW0WwulG7Io+sd0FD9Z4TqKo9pSe
+	 p1/tfpEDthR/eMDDDkfd1kk/XgA8qUgvOttatqXIyq8J/11+9CwnK/ZeavSSPK39Ks
+	 1ZpvgQXozbpXykkHzc46o1A8c7owShZlnmYT/JzzANaWZpT8amgepjISS4OZzysocm
+	 72ZOUOsuH/RYw==
+Date: Tue, 21 May 2024 20:15:22 -0700
+Subject: [PATCH 102/111] xfs: fix xfs_bunmapi to allow unmapping of partial rt
+ extents
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171634533219.2478931.15046541974176982300.stgit@frogsfrogsfrogs>
+Message-ID: <171634533233.2478931.1181500881974935567.stgit@frogsfrogsfrogs>
 In-Reply-To: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 References: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,134 +47,45 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 80284115854e60686b2e0183b31bb303ae69aa8c
+Source kernel commit: 2b6a5ec26887cba195022286b039f2cc0ec683b1
 
-Move the code that adds the incore xfs_bmap_item deferred work data to a
-transaction live with the BUI log item code.  This means that the file
-mapping code no longer has to know about the inner workings of the BUI
-log items.
+When XFS_BMAPI_REMAP is passed to bunmapi, that means that we want to
+remove part of a block mapping without touching the allocator.  For
+realtime files with rtextsize > 1, that also means that we should skip
+all the code that changes a partial remove request into an unwritten
+extent conversion.  IOWs, bunmapi in this mode should handle removing
+the mapping from the rt file and nothing else.
 
-As a consequence, we can hide the _get_group helper.
+Note that XFS_BMAPI_REMAP callers are required to decrement the
+reference count and/or free the space manually.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/Makefile     |    1 +
- libxfs/defer_item.c |   15 ++++++++++++++-
- libxfs/defer_item.h |   13 +++++++++++++
- libxfs/xfs_bmap.c   |    6 ++----
- libxfs/xfs_bmap.h   |    3 ---
- 5 files changed, 30 insertions(+), 8 deletions(-)
- create mode 100644 libxfs/defer_item.h
+ libxfs/xfs_bmap.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 9baee62c0..1c88dbc2a 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -20,6 +20,7 @@ PKGHFILES = xfs_fs.h \
- 	xfs_log_format.h
- 
- HFILES = \
-+	defer_item.h \
- 	libxfs_io.h \
- 	libxfs_api_defs.h \
- 	init.h \
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 014589f82..d67032c26 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -24,6 +24,7 @@
- #include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "libxfs.h"
-+#include "defer_item.h"
- 
- /* Dummy defer item ops, since we don't do logging. */
- 
-@@ -479,7 +480,7 @@ xfs_bmap_update_create_done(
- }
- 
- /* Take an active ref to the AG containing the space we're mapping. */
--void
-+static inline void
- xfs_bmap_update_get_group(
- 	struct xfs_mount	*mp,
- 	struct xfs_bmap_intent	*bi)
-@@ -498,6 +499,18 @@ xfs_bmap_update_get_group(
- 	bi->bi_pag = xfs_perag_intent_get(mp, agno);
- }
- 
-+/* Add this deferred BUI to the transaction. */
-+void
-+xfs_bmap_defer_add(
-+	struct xfs_trans	*tp,
-+	struct xfs_bmap_intent	*bi)
-+{
-+	trace_xfs_bmap_defer(bi);
-+
-+	xfs_bmap_update_get_group(tp->t_mountp, bi);
-+	xfs_defer_add(tp, &bi->bi_list, &xfs_bmap_update_defer_type);
-+}
-+
- /* Release an active AG ref after finishing mapping work. */
- static inline void
- xfs_bmap_update_put_group(
-diff --git a/libxfs/defer_item.h b/libxfs/defer_item.h
-new file mode 100644
-index 000000000..6d3abf158
---- /dev/null
-+++ b/libxfs/defer_item.h
-@@ -0,0 +1,13 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2023-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef	__LIBXFS_DEFER_ITEM_H_
-+#define	__LIBXFS_DEFER_ITEM_H_
-+
-+struct xfs_bmap_intent;
-+
-+void xfs_bmap_defer_add(struct xfs_trans *tp, struct xfs_bmap_intent *bi);
-+
-+#endif /* __LIBXFS_DEFER_ITEM_H_ */
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index ae4f7e699..07bd8b346 100644
+index 07bd8b346..388550912 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -31,6 +31,7 @@
- #include "xfs_refcount.h"
- #include "xfs_rtbitmap.h"
- #include "xfs_health.h"
-+#include "defer_item.h"
+@@ -5453,7 +5453,7 @@ __xfs_bunmapi(
+ 		if (del.br_startoff + del.br_blockcount > end + 1)
+ 			del.br_blockcount = end + 1 - del.br_startoff;
  
- struct kmem_cache		*xfs_bmap_intent_cache;
+-		if (!isrt)
++		if (!isrt || (flags & XFS_BMAPI_REMAP))
+ 			goto delete;
  
-@@ -6192,10 +6193,7 @@ __xfs_bmap_add(
- 	bi->bi_whichfork = whichfork;
- 	bi->bi_bmap = *bmap;
- 
--	trace_xfs_bmap_defer(bi);
--
--	xfs_bmap_update_get_group(tp->t_mountp, bi);
--	xfs_defer_add(tp, &bi->bi_list, &xfs_bmap_update_defer_type);
-+	xfs_bmap_defer_add(tp, bi);
- 	return 0;
- }
- 
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index 0a2fd9304..325cc232a 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -245,9 +245,6 @@ struct xfs_bmap_intent {
- 	struct xfs_bmbt_irec			bi_bmap;
- };
- 
--void xfs_bmap_update_get_group(struct xfs_mount *mp,
--		struct xfs_bmap_intent *bi);
--
- int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_bmap_intent *bi);
- void	xfs_bmap_map_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap);
+ 		mod = xfs_rtb_to_rtxoff(mp,
+@@ -5471,7 +5471,7 @@ __xfs_bunmapi(
+ 				 * This piece is unwritten, or we're not
+ 				 * using unwritten extents.  Skip over it.
+ 				 */
+-				ASSERT(end >= mod);
++				ASSERT((flags & XFS_BMAPI_REMAP) || end >= mod);
+ 				end -= mod > del.br_blockcount ?
+ 					del.br_blockcount : mod;
+ 				if (end < got.br_startoff &&
 
