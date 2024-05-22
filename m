@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A58D35234
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 02:59:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 529DB42A89
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 02:59:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716346768; cv=none; b=DeuB4bGDdiCuG14bCr5p5N/c4H+ICL/eYQQ/uH9ZO4D/116jKk/mP5/CLhhgSn/yIJ7Fol4IIioVXP3v1rJX08OWORwSEd4IFRWrH73tuwNLy2JPOzZ+bw9gVY5+ONefRvMdSpP3U8GVal2AQNFrb/s5S17oPmvu2GN4+hQF/+A=
+	t=1716346784; cv=none; b=FrHBpoWdTQgxhQHhHawS0J4cP1Q60/l1K1Go9A6ri66L1PuPdNKj4zUpUYrh+5CqS5UQzKu8/sf7rnNlERPWhMYUe7s2YJo07h796eAk3CYHSuHJydPSG1lWwlk8I2NGU6eIRGYm7Mw9U2eq06m8v2TyOCalT35sGnegMxcP6yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716346768; c=relaxed/simple;
-	bh=Tsa++AlzTjPdAcRh7kjHXOYdUlbJ+BUIIC0IL0cohfo=;
+	s=arc-20240116; t=1716346784; c=relaxed/simple;
+	bh=QvAPoBXY1D50Mb7qi92eqSMgo8BBkRYyfFo/Dap0JdQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V6KWienqg1S4An0DEiXXCrlhAqVH/jlt2/VOzrVNcZYKsm8S42k0vgIhzJ4ZQvn8NdRf11zuc7rYQSHgqPVlbpfPpYsyd9o7B1XeLZ75iQDYJE7Fhrt5F/zoSdGRC+Eb0aUzNjVzOrkNx4KcTbnv1m2eB4wEbkQ+tEhmTj+yl/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TxVlQj7q; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=krfcEhUI+JdowDaO3U4E7E/Kcfd059wcT/L8CoWvXYaIJALmN6Ax0jam/4853dLsrFpeXB2UOlcngWnR7ev2EI9XSqwMxBSCh6jeuDUpgKMk0ssuPhgLBq74cxIxQaJoeRNVPMw9hLYNIzTdfNit6aUweS5J+LxGt2Xqkb3L2Mk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YixFiOwQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TxVlQj7q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77BA8C2BD11;
-	Wed, 22 May 2024 02:59:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YixFiOwQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A17EC2BD11;
+	Wed, 22 May 2024 02:59:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716346768;
-	bh=Tsa++AlzTjPdAcRh7kjHXOYdUlbJ+BUIIC0IL0cohfo=;
+	s=k20201202; t=1716346784;
+	bh=QvAPoBXY1D50Mb7qi92eqSMgo8BBkRYyfFo/Dap0JdQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TxVlQj7qBJhuuNqD24xiTlNLiEZxQZS5oRwxyIouFNjmfUdFF1qUucIQ5y6k/Uc63
-	 hZBJsIsIiOetqHsKc4omegLof71H1zaX7xnqx7tGf8iB1wSK6CMMg1Ed3T4vyspssl
-	 6Ye1k5pdWkO3wk5zr42DDJPwStfiZJrqEvtu9NQp/3+4JmDi2G57hfFk5IJ3zcV13i
-	 S5xBUqfW533xCvmr2aAfs0qHbaNjmq7OvnOGWdJpkuf+Vqi1h/i+N0HtpKHXv6UTVd
-	 IBuPIX+9P+bpakdsmkATZG8vNAlCFTPfsaAAKD530DuFd7c2xoIzt8fBA8CA0sWBO6
-	 D6jgpCpAjHdaQ==
-Date: Tue, 21 May 2024 19:59:28 -0700
-Subject: [PATCH 041/111] xfs: set btree block buffer ops in _init_buf
+	b=YixFiOwQcqus84rOvCWL+nsPaXtAPCin+Avd26TZLiocyoBEEjznG54XCm7DAK9mt
+	 cxJ6/eDVQmfz24uPMwqIx8iA4r3GeKhJIXMiBDRDuW3YMtzDs5+6enIR63IfWabtL9
+	 mEJWDPeMib0E0enSmc4+MH0FelXI0kUj1Kle5tY69EHAQFxIKFIiCsTBTHsm6Lwt4y
+	 g0BoPJnZdeliufc1Thzki0M7sdFNnM/FyZP5iB8PygIXtPRG4qAWg4LMrd/GXSJQ63
+	 WsaFfgEGmewjV5nyiruVaHoIRkW3mHf0bPkF/8ACHlYC4XrJQqZNaJIm6XXLFGL72U
+	 ZxByY508zbE6w==
+Date: Tue, 21 May 2024 19:59:43 -0700
+Subject: [PATCH 042/111] xfs: move lru refs to the btree ops structure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171634532327.2478931.18293299527362508752.stgit@frogsfrogsfrogs>
+Message-ID: <171634532342.2478931.16091061611806879504.stgit@frogsfrogsfrogs>
 In-Reply-To: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 References: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,41 +46,160 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: ad065ef0d2fcd787225bd8887b6b75c6eb4da9a1
+Source kernel commit: 90cfae818dac5227e94e21d0f5250e098432723e
 
-Set the btree block buffer ops in xfs_btree_init_buf since we already
-have access to that information through the btree ops.
+Move the btree buffer LRU refcount to the btree ops structure so that we
+can eliminate the last bc_btnum switch in the generic btree code.  We're
+about to create repair-specific btree types, and we don't want that
+stuff cluttering up libxfs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_bmap.c  |    1 -
- libxfs/xfs_btree.c |    1 +
- 2 files changed, 1 insertion(+), 1 deletion(-)
+ libxfs/xfs_alloc_btree.c    |    4 ++++
+ libxfs/xfs_bmap_btree.c     |    2 ++
+ libxfs/xfs_btree.c          |   24 ++----------------------
+ libxfs/xfs_btree.h          |    3 +++
+ libxfs/xfs_ialloc_btree.c   |    4 ++++
+ libxfs/xfs_refcount_btree.c |    2 ++
+ libxfs/xfs_rmap_btree.c     |    2 ++
+ 7 files changed, 19 insertions(+), 22 deletions(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index a7b6c44f1..b81f3e3da 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -682,7 +682,6 @@ xfs_bmap_extents_to_btree(
- 	/*
- 	 * Fill in the child block.
- 	 */
--	abp->b_ops = &xfs_bmbt_buf_ops;
- 	ablock = XFS_BUF_TO_BLOCK(abp);
- 	xfs_bmbt_init_block(ip, ablock, abp, 0, 0);
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index 6c9781fcf..51c6703db 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -456,6 +456,8 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
  
++	.lru_refs		= XFS_ALLOC_BTREE_REF,
++
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
+ 	.set_root		= xfs_allocbt_set_root,
+ 	.alloc_block		= xfs_allocbt_alloc_block,
+@@ -481,6 +483,8 @@ const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
+ 
++	.lru_refs		= XFS_ALLOC_BTREE_REF,
++
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
+ 	.set_root		= xfs_allocbt_set_root,
+ 	.alloc_block		= xfs_allocbt_alloc_block,
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 2d8411809..966e793b0 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -529,6 +529,8 @@ const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.rec_len		= sizeof(xfs_bmbt_rec_t),
+ 	.key_len		= sizeof(xfs_bmbt_key_t),
+ 
++	.lru_refs		= XFS_BMAP_BTREE_REF,
++
+ 	.dup_cursor		= xfs_bmbt_dup_cursor,
+ 	.update_cursor		= xfs_bmbt_update_cursor,
+ 	.alloc_block		= xfs_bmbt_alloc_block,
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 2386084a5..95041d626 100644
+index 95041d626..150f8ac23 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -1216,6 +1216,7 @@ xfs_btree_init_buf(
- {
- 	__xfs_btree_init_block(mp, XFS_BUF_TO_BLOCK(bp), ops,
- 			xfs_buf_daddr(bp), level, numrecs, owner);
-+	bp->b_ops = ops->buf_ops;
+@@ -1281,32 +1281,12 @@ xfs_btree_buf_to_ptr(
+ 	}
  }
  
- void
+-STATIC void
++static inline void
+ xfs_btree_set_refs(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_buf		*bp)
+ {
+-	switch (cur->bc_btnum) {
+-	case XFS_BTNUM_BNO:
+-	case XFS_BTNUM_CNT:
+-		xfs_buf_set_ref(bp, XFS_ALLOC_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_INO:
+-	case XFS_BTNUM_FINO:
+-		xfs_buf_set_ref(bp, XFS_INO_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_BMAP:
+-		xfs_buf_set_ref(bp, XFS_BMAP_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_RMAP:
+-		xfs_buf_set_ref(bp, XFS_RMAP_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_REFC:
+-		xfs_buf_set_ref(bp, XFS_REFC_BTREE_REF);
+-		break;
+-	default:
+-		ASSERT(0);
+-	}
++	xfs_buf_set_ref(bp, cur->bc_ops->lru_refs);
+ }
+ 
+ int
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 80be40ca8..39df108a3 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -120,6 +120,9 @@ struct xfs_btree_ops {
+ 	size_t	key_len;
+ 	size_t	rec_len;
+ 
++	/* LRU refcount to set on each btree buffer created */
++	unsigned int		lru_refs;
++
+ 	/* cursor operations */
+ 	struct xfs_btree_cur *(*dup_cursor)(struct xfs_btree_cur *);
+ 	void	(*update_cursor)(struct xfs_btree_cur *src,
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 52cc00e4f..332d497ea 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -401,6 +401,8 @@ const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.key_len		= sizeof(xfs_inobt_key_t),
+ 
++	.lru_refs		= XFS_INO_BTREE_REF,
++
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_inobt_set_root,
+ 	.alloc_block		= xfs_inobt_alloc_block,
+@@ -423,6 +425,8 @@ const struct xfs_btree_ops xfs_finobt_ops = {
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.key_len		= sizeof(xfs_inobt_key_t),
+ 
++	.lru_refs		= XFS_INO_BTREE_REF,
++
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_finobt_set_root,
+ 	.alloc_block		= xfs_finobt_alloc_block,
+diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
+index 2f91c7b62..1774b0477 100644
+--- a/libxfs/xfs_refcount_btree.c
++++ b/libxfs/xfs_refcount_btree.c
+@@ -320,6 +320,8 @@ const struct xfs_btree_ops xfs_refcountbt_ops = {
+ 	.rec_len		= sizeof(struct xfs_refcount_rec),
+ 	.key_len		= sizeof(struct xfs_refcount_key),
+ 
++	.lru_refs		= XFS_REFC_BTREE_REF,
++
+ 	.dup_cursor		= xfs_refcountbt_dup_cursor,
+ 	.set_root		= xfs_refcountbt_set_root,
+ 	.alloc_block		= xfs_refcountbt_alloc_block,
+diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
+index c3a113c88..6a7a9a176 100644
+--- a/libxfs/xfs_rmap_btree.c
++++ b/libxfs/xfs_rmap_btree.c
+@@ -476,6 +476,8 @@ const struct xfs_btree_ops xfs_rmapbt_ops = {
+ 	.rec_len		= sizeof(struct xfs_rmap_rec),
+ 	.key_len		= 2 * sizeof(struct xfs_rmap_key),
+ 
++	.lru_refs		= XFS_RMAP_BTREE_REF,
++
+ 	.dup_cursor		= xfs_rmapbt_dup_cursor,
+ 	.set_root		= xfs_rmapbt_set_root,
+ 	.alloc_block		= xfs_rmapbt_alloc_block,
 
