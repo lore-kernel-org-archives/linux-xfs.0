@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 205E15234
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 02:55:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 100D325776
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 02:55:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716346518; cv=none; b=gcgBwWG26A7LCZX2t1S7S+klVqrik/BsNGRu0VarnDGZsayHZ1uNguVcAV9xQYIrWhh3TKK0tU9kxZZKEjBJp1tZ+PFt+hVZ/ghXUrpPrxIavkYal/4kadqeMZSESEALx73olXbF1dbUumfERiVCbi9AnwYMDj/8v/jvTYzKcJA=
+	t=1716346534; cv=none; b=uydxkJu2a05aiXsTRldtS5UWZ7Q4xS15CdlEWS5SM2zdu4AZhDt8WPYRhcRj8UM2tUHKAnNh5uQdYEJmlYslM3QOUNCA/lP28Bp5NLHTs7RHOTUgKwL88dwNDuuOuDxKIMEloYs11HnqFPWwlCbuFTKUqdbhBX18MVZE6WuihVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716346518; c=relaxed/simple;
-	bh=G0WD7ZPsjGnvrDCgNt3vqahYVelGn/gbdCgBxm1nJbM=;
+	s=arc-20240116; t=1716346534; c=relaxed/simple;
+	bh=RhtSPesLbLlCUhLC/D+R60Di8awbboVi4MolgHtEBZE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LOK/etJ7nvBsYdpSOKMN9rwNefApG8eHDg18NadSS0kQEhjE9N/0E0QC6ecWhDsb9NQUIVVqAw1DvuthE+/Kzkz2whVVxq6m8qCh4QBmM4eYKvAKO4rxUmxVepddhgvFZKbUI1/WTNnOTaGDyWEe1jHUkLNdgBx4nvHD8Lgf8y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ah89HPb6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kEcwELzQIJTFLjzi3bhZ36RZxEyvxAkTKtWpt+MElybPUO6GKUecDOmciaXq8ZIqMHOTkrGyRK+x6gfCHMKT360vTZuZA6VvrrdxPVgvJzHy2XT5ibtfAO5lQlGDBd1kBgSvXbFcWvtePOX/pBVFuxFg4qY5bqtbILgh3z+pBAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sUq+Ecx/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ah89HPb6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB4D2C2BD11;
-	Wed, 22 May 2024 02:55:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sUq+Ecx/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A317C32786;
+	Wed, 22 May 2024 02:55:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716346517;
-	bh=G0WD7ZPsjGnvrDCgNt3vqahYVelGn/gbdCgBxm1nJbM=;
+	s=k20201202; t=1716346533;
+	bh=RhtSPesLbLlCUhLC/D+R60Di8awbboVi4MolgHtEBZE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Ah89HPb64muxDF8QiZFN+ubCazEyeioUYa4dRkyTeIhHtynFELYA8Xl+Hr7aUM2BP
-	 kgmfLseWKoY8laTGhoUAOdhr1kBDIbL5rErOvSnDDTBvz2r8lZ+H8oIYEc5KoWecVC
-	 ppMDYro4zB3jKLAifMq9sE+iqLJgXdhIVHtiECa6PdkaU1RGIDAza2s6gMXkZJoHpE
-	 1akNKQxQxv45VsG/qvvTRHivIUQM2S7Ia38bWcm9kypvRwfWGcrvpDF2VeZGq6poaP
-	 ZTvvODELbU6ku3DfUdzjsop///xgjZYzDJGy/ay8z4aynnwEqruKR6TS0nZMXwoylh
-	 XXZIHjzxV3omQ==
-Date: Tue, 21 May 2024 19:55:17 -0700
-Subject: [PATCH 025/111] xfs: add secondary and indirect classes to the health
- tracking system
+	b=sUq+Ecx/YjAuBkFeorFj9iK5pp7c2e7bALQMArY0x/vVTXJPK2O/cG7Pr5FW/mfxa
+	 woVYrwj6J3UtXEWtGh2dH1tRiC2mVgi3Z4jwnqGI0D41q2X08qGRODmDcZZ4wMfhSh
+	 xXKDEpl5OjjsPRtvkHkWwMhO7KxTWi+Rt1vJfGCg7Gmk62p/5igrrTRecLqwn4N8wo
+	 FzOGytyh0OkrI/tkIeOp+O35FIqj9uQlbnpIEAlGFu5A0fajcvXWS/y27w5fakGBCU
+	 7WD4Gk0zri01HC8TkDGLRNyWZXa687KLfzYBMX3Bvb5vKawSeB2oZ66BXHuE/QIzkQ
+	 WTnsiUAqSOjJA==
+Date: Tue, 21 May 2024 19:55:32 -0700
+Subject: [PATCH 026/111] xfs: remember sick inodes that get inactivated
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171634532087.2478931.17288933171932073142.stgit@frogsfrogsfrogs>
+Message-ID: <171634532101.2478931.4044812737925407294.stgit@frogsfrogsfrogs>
 In-Reply-To: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 References: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,87 +46,80 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 4e587917ee1cc28ac3a04cd55937419b9e65d81d
+Source kernel commit: 0e24ec3c56fbc797b34fc94073320c336336b4f9
 
-Establish two more classes of health tracking bits:
-
-* Indirect problems, which suggest problems in other health domains
-that we weren't able to preserve.
-
-* Secondary problems, which track state that's related to primary
-evidence of health problems; and
-
-The first class we'll use in an upcoming patch to record in the AG
-health status the fact that we ran out of memory and had to inactivate
-an inode with defective metadata.  The second class we use to indicate
-that repair knows that an inode is bad and we need to fix it later.
+If an unhealthy inode gets inactivated, remember this fact in the
+per-fs health summary.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_health.h |   43 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+ libxfs/xfs_fs.h        |    1 +
+ libxfs/xfs_health.h    |    8 ++++++--
+ libxfs/xfs_inode_buf.c |    2 +-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
 
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 515cd27d3..b5c8da7e6 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -294,6 +294,7 @@ struct xfs_ag_geometry {
+ #define XFS_AG_GEOM_SICK_FINOBT	(1 << 7)  /* free inode index */
+ #define XFS_AG_GEOM_SICK_RMAPBT	(1 << 8)  /* reverse mappings */
+ #define XFS_AG_GEOM_SICK_REFCNTBT (1 << 9)  /* reference counts */
++#define XFS_AG_GEOM_SICK_INODES	(1 << 10) /* bad inodes were seen */
+ 
+ /*
+  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
 diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index ff98c0321..032d45fcb 100644
+index 032d45fcb..3c64b5f9b 100644
 --- a/libxfs/xfs_health.h
 +++ b/libxfs/xfs_health.h
-@@ -31,6 +31,19 @@
-  *  - !checked && sick  => errors have been observed during normal operation,
-  *                         but the metadata has not been checked thoroughly
-  *  - !checked && !sick => has not been examined since mount
-+ *
-+ * Evidence of health problems can be sorted into three basic categories:
-+ *
-+ * a) Primary evidence, which signals that something is defective within the
-+ *    general grouping of metadata.
-+ *
-+ * b) Secondary evidence, which are side effects of primary problem but are
-+ *    not themselves problems.  These can be forgotten when the primary
-+ *    health problems are addressed.
-+ *
-+ * c) Indirect evidence, which points to something being wrong in another
-+ *    group, but we had to release resources and this is all that's left of
-+ *    that state.
-  */
+@@ -76,6 +76,7 @@ struct xfs_da_args;
+ #define XFS_SICK_AG_FINOBT	(1 << 7)  /* free inode index */
+ #define XFS_SICK_AG_RMAPBT	(1 << 8)  /* reverse mappings */
+ #define XFS_SICK_AG_REFCNTBT	(1 << 9)  /* reference counts */
++#define XFS_SICK_AG_INODES	(1 << 10) /* inactivated bad inodes */
  
- struct xfs_mount;
-@@ -115,6 +128,36 @@ struct xfs_da_args;
- 				 XFS_SICK_INO_DIR_ZAPPED | \
- 				 XFS_SICK_INO_SYMLINK_ZAPPED)
+ /* Observable health issues for inode metadata. */
+ #define XFS_SICK_INO_CORE	(1 << 0)  /* inode core */
+@@ -92,6 +93,9 @@ struct xfs_da_args;
+ #define XFS_SICK_INO_DIR_ZAPPED		(1 << 10) /* directory erased */
+ #define XFS_SICK_INO_SYMLINK_ZAPPED	(1 << 11) /* symlink erased */
  
-+/* Secondary state related to (but not primary evidence of) health problems. */
-+#define XFS_SICK_FS_SECONDARY	(0)
-+#define XFS_SICK_RT_SECONDARY	(0)
-+#define XFS_SICK_AG_SECONDARY	(0)
-+#define XFS_SICK_INO_SECONDARY	(0)
++/* Don't propagate sick status to ag health summary during inactivation */
++#define XFS_SICK_INO_FORGET	(1 << 12)
 +
-+/* Evidence of health problems elsewhere. */
-+#define XFS_SICK_FS_INDIRECT	(0)
-+#define XFS_SICK_RT_INDIRECT	(0)
-+#define XFS_SICK_AG_INDIRECT	(0)
-+#define XFS_SICK_INO_INDIRECT	(0)
-+
-+/* All health masks. */
-+#define XFS_SICK_FS_ALL	(XFS_SICK_FS_PRIMARY | \
-+				 XFS_SICK_FS_SECONDARY | \
-+				 XFS_SICK_FS_INDIRECT)
-+
-+#define XFS_SICK_RT_ALL	(XFS_SICK_RT_PRIMARY | \
-+				 XFS_SICK_RT_SECONDARY | \
-+				 XFS_SICK_RT_INDIRECT)
-+
-+#define XFS_SICK_AG_ALL	(XFS_SICK_AG_PRIMARY | \
-+				 XFS_SICK_AG_SECONDARY | \
-+				 XFS_SICK_AG_INDIRECT)
-+
-+#define XFS_SICK_INO_ALL	(XFS_SICK_INO_PRIMARY | \
-+				 XFS_SICK_INO_SECONDARY | \
-+				 XFS_SICK_INO_INDIRECT | \
-+				 XFS_SICK_INO_ZAPPED)
-+
- /*
-  * These functions must be provided by the xfs implementation.  Function
-  * behavior with respect to the first argument should be as follows:
+ /* Primary evidence of health problems in a given group. */
+ #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+ 				 XFS_SICK_FS_UQUOTA | \
+@@ -132,12 +136,12 @@ struct xfs_da_args;
+ #define XFS_SICK_FS_SECONDARY	(0)
+ #define XFS_SICK_RT_SECONDARY	(0)
+ #define XFS_SICK_AG_SECONDARY	(0)
+-#define XFS_SICK_INO_SECONDARY	(0)
++#define XFS_SICK_INO_SECONDARY	(XFS_SICK_INO_FORGET)
+ 
+ /* Evidence of health problems elsewhere. */
+ #define XFS_SICK_FS_INDIRECT	(0)
+ #define XFS_SICK_RT_INDIRECT	(0)
+-#define XFS_SICK_AG_INDIRECT	(0)
++#define XFS_SICK_AG_INDIRECT	(XFS_SICK_AG_INODES)
+ #define XFS_SICK_INO_INDIRECT	(0)
+ 
+ /* All health masks. */
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 83d936981..82cf64db9 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -136,7 +136,7 @@ xfs_imap_to_bp(
+ 			imap->im_len, XBF_UNMAPPED, bpp, &xfs_inode_buf_ops);
+ 	if (xfs_metadata_is_sick(error))
+ 		xfs_agno_mark_sick(mp, xfs_daddr_to_agno(mp, imap->im_blkno),
+-				XFS_SICK_AG_INOBT);
++				XFS_SICK_AG_INODES);
+ 	return error;
+ }
+ 
 
