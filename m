@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6CEE282E5
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:17:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3E735894
+	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 03:17:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716347850; cv=none; b=IOqPMTiieJP80tJ8GvHSmu0/OthnIYl41OH3G2ujsyA7LONtddK7EQwoMdh46IesvP54KBAPre51ITvxDWasAFYP3iW6Eg6irQu3Mo7Q+ok/N7rIHuvgC/RQrZIU8aY34qxGbN8EydNokOPEcGGssQJx4KKQjvBBa83mHECiV4k=
+	t=1716347864; cv=none; b=XcASFT6wDMdigv5BVLBZjB6l3y/eZkGvk57ZPZdwO/6nXIZxaoYeyx+V2M+Xma5uH733eIVyYUSCzV/b+0fjAVUb2FYzUIMPAO7LEsJ67iYn4XyBAsGXrZcJ8g6FJ9CheqYw7OwYb7xoCoich3RKPaiurhfFPQEuBiJysxYNoaI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716347850; c=relaxed/simple;
-	bh=nLZ+k+ZeOqIxQEgjz3IEoxQAwMvntLpCHtRoWSA3kmY=;
+	s=arc-20240116; t=1716347864; c=relaxed/simple;
+	bh=ehTUX/H2/4tYxB7w9HukFn7STI37Z3HrScIjBUzRwX8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=X/92nekp9CWdi7QDrAJlr/U4f4fmo/5P2feYzCaolrSEoP8dLoFAShxhpDRIFKBEME3SujFyZDPYpMjUSHyazwzgO3GdR/uUhCQ0P+seiu/Hm/nnUu1+ogLRpf2ajo5XmhbTG02hhC4YnCMR4ZNWg/xVpKnPRlPbWFuxYL2XhEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o9v7Eqg1; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=OKWuf/nODlKriVynbq4BBdiD6DtxgQqJwbIgLxHOop4nKZTKOCWsBDjoNqW0lIRGATXJ0l6YyWOX1tMgKI+cKXijmZMO/oa9CoSjcZgitXIOcog3WTtpth9j+ytlBolVf1sf8VgpGp9GhE1sbV6v4OB2zhnDnstc/UufpjAuTaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IKpwEPyJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o9v7Eqg1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76ED7C2BD11;
-	Wed, 22 May 2024 03:17:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IKpwEPyJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14327C2BD11;
+	Wed, 22 May 2024 03:17:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716347848;
-	bh=nLZ+k+ZeOqIxQEgjz3IEoxQAwMvntLpCHtRoWSA3kmY=;
+	s=k20201202; t=1716347864;
+	bh=ehTUX/H2/4tYxB7w9HukFn7STI37Z3HrScIjBUzRwX8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=o9v7Eqg1IgjfBpEyQ+fs2zjsoEiMgiABPdQ7nt870nqUFujeDCUBta8klEoEb20Y3
-	 UwsUIWSQpZ5GuToQJB4rP+Y/aHsa1cVmLD7Ws7idZZ3h/Jac/0ovS1o7NKlH2c3eqX
-	 2Ksdiusly9tyD7Vya90Vusc7AHxb03Y6HEAeosYD70GfviROVLhpkidmyE2b1mu5ck
-	 n+0C2ScVboyhR21D0XGuya+3BjaxV0OYSeyW5c0suOnxamY95nIp2DKLKAHa68GzTO
-	 n9nY6M7H9WYt13SHEFthMx9I+uIh5hCLO5HAsETBTe5C7mNhLgjUX9rqH9VifR6rSl
-	 UnAMav+UbFMxw==
-Date: Tue, 21 May 2024 20:17:27 -0700
-Subject: [PATCH 110/111] xfs: shrink failure needs to hold AGI buffer
+	b=IKpwEPyJ1yRdCL7gkRG7AxsDH0ZfJNuYaSMmi9DgHB8HY7J+d/KtGBdJ7J9QPf4QH
+	 Zikfgw5qlvOWzfcNpvDszz5IXo9y+S5UWtej2ExzRbIeghRb+Sj3AjzX3JofdXmHK8
+	 GGZ7ouseqnTjkwFN/qUcTME0mkYYUL5iXSoPGkiul8B6m5MH0my/ZruLMGe6/pDaf+
+	 bq9xcE8fcgmoYz1eEh4tQQcl1cWNtaODGC10lwc3JJdgC79dgiO2yQwBM6vBxfQhy6
+	 +W3H30uwYaTAVUa8axKpThYEiOjmp+7ljGxhi0xUBT+5ghIVZPcEEarZkM9cwdmRTe
+	 G5uF/HlWJeQpw==
+Date: Tue, 21 May 2024 20:17:43 -0700
+Subject: [PATCH 111/111] xfs: allow sunit mount option to repair bad primary
+ sb stripe values
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
- Dave Chinner <dchinner@redhat.com>, Gao Xiang <hsiangkao@linux.alibaba.com>,
- Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
- linux-xfs@vger.kernel.org
-Message-ID: <171634533353.2478931.3296707388319648696.stgit@frogsfrogsfrogs>
+Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+ Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
+Message-ID: <171634533368.2478931.13284254880140693065.stgit@frogsfrogsfrogs>
 In-Reply-To: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 References: <171634531590.2478931.8474978645585392776.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,81 +48,196 @@ Content-Transfer-Encoding: 7bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: 75bcffbb9e7563259b7aed0fa77459d6a3a35627
+Source kernel commit: 15922f5dbf51dad334cde888ce6835d377678dc9
 
-Chandan reported a AGI/AGF lock order hang on xfs/168 during recent
-testing. The cause of the problem was the task running xfs_growfs
-to shrink the filesystem. A failure occurred trying to remove the
-free space from the btrees that the shrink would make disappear,
-and that meant it ran the error handling for a partial failure.
+If a filesystem has a busted stripe alignment configuration on disk
+(e.g. because broken RAID firmware told mkfs that swidth was smaller
+than sunit), then the filesystem will refuse to mount due to the
+stripe validation failing. This failure is triggering during distro
+upgrades from old kernels lacking this check to newer kernels with
+this check, and currently the only way to fix it is with offline
+xfs_db surgery.
 
-This error path involves restoring the per-ag block reservations,
-and that requires calculating the amount of space needed to be
-reserved for the free inode btree. The growfs operation hung here:
+This runtime validity checking occurs when we read the superblock
+for the first time and causes the mount to fail immediately. This
+prevents the rewrite of stripe unit/width via
+mount options that occurs later in the mount process. Hence there is
+no way to recover this situation without resorting to offline xfs_db
+rewrite of the values.
 
-[18679.536829]  down+0x71/0xa0
-[18679.537657]  xfs_buf_lock+0xa4/0x290 [xfs]
-[18679.538731]  xfs_buf_find_lock+0xf7/0x4d0 [xfs]
-[18679.539920]  xfs_buf_lookup.constprop.0+0x289/0x500 [xfs]
-[18679.542628]  xfs_buf_get_map+0x2b3/0xe40 [xfs]
-[18679.547076]  xfs_buf_read_map+0xbb/0x900 [xfs]
-[18679.562616]  xfs_trans_read_buf_map+0x449/0xb10 [xfs]
-[18679.569778]  xfs_read_agi+0x1cd/0x500 [xfs]
-[18679.573126]  xfs_ialloc_read_agi+0xc2/0x5b0 [xfs]
-[18679.578708]  xfs_finobt_calc_reserves+0xe7/0x4d0 [xfs]
-[18679.582480]  xfs_ag_resv_init+0x2c5/0x490 [xfs]
-[18679.586023]  xfs_ag_shrink_space+0x736/0xd30 [xfs]
-[18679.590730]  xfs_growfs_data_private.isra.0+0x55e/0x990 [xfs]
-[18679.599764]  xfs_growfs_data+0x2f1/0x410 [xfs]
-[18679.602212]  xfs_file_ioctl+0xd1e/0x1370 [xfs]
+However, we parse the mount options long before we read the
+superblock, and we know if the mount has been asked to re-write the
+stripe alignment configuration when we are reading the superblock
+and verifying it for the first time. Hence we can conditionally
+ignore stripe verification failures if the mount options specified
+will correct the issue.
 
-trying to get the AGI lock. The AGI lock was held by a fstress task
-trying to do an inode allocation, and it was waiting on the AGF
-lock to allocate a new inode chunk on disk. Hence deadlock.
+We validate that the new stripe unit/width are valid before we
+overwrite the superblock values, so we can ignore the invalid config
+at verification and fail the mount later if the new values are not
+valid. This, at least, gives users the chance of correcting the
+issue after a kernel upgrade without having to resort to xfs-db
+hacks.
 
-The fix for this is for the growfs code to hold the AGI over the
-transaction roll it does in the error path. It already holds the AGF
-locked across this, and that is what causes the lock order inversion
-in the xfs_ag_resv_init() call.
-
-Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-Fixes: 46141dc891f7 ("xfs: introduce xfs_ag_shrink_space()")
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_ag.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ libxfs/xfs_sb.c |   40 +++++++++++++++++++++++++++++++---------
+ libxfs/xfs_sb.h |    5 +++--
+ mkfs/xfs_mkfs.c |    6 +++---
+ 3 files changed, 37 insertions(+), 14 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index e2fc3e882..a9aae0990 100644
---- a/libxfs/xfs_ag.c
-+++ b/libxfs/xfs_ag.c
-@@ -973,14 +973,23 @@ xfs_ag_shrink_space(
- 
- 	if (error) {
- 		/*
--		 * if extent allocation fails, need to roll the transaction to
-+		 * If extent allocation fails, need to roll the transaction to
- 		 * ensure that the AGFL fixup has been committed anyway.
-+		 *
-+		 * We need to hold the AGF across the roll to ensure nothing can
-+		 * access the AG for allocation until the shrink is fully
-+		 * cleaned up. And due to the resetting of the AG block
-+		 * reservation space needing to lock the AGI, we also have to
-+		 * hold that so we don't get AGI/AGF lock order inversions in
-+		 * the error handling path.
- 		 */
- 		xfs_trans_bhold(*tpp, agfbp);
-+		xfs_trans_bhold(*tpp, agibp);
- 		err2 = xfs_trans_roll(tpp);
- 		if (err2)
- 			return err2;
- 		xfs_trans_bjoin(*tpp, agfbp);
-+		xfs_trans_bjoin(*tpp, agibp);
- 		goto resv_init_out;
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 00b0a937d..895d646bb 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -528,7 +528,8 @@ xfs_validate_sb_common(
  	}
  
+ 	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
+-			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
++			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
++			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
+ 		return -EFSCORRUPTED;
+ 
+ 	/*
+@@ -1321,8 +1322,10 @@ xfs_sb_get_secondary(
+ }
+ 
+ /*
+- * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
+- * so users won't be confused by values in error messages.
++ * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
++ * won't be confused by values in error messages.  This function returns false
++ * if the stripe geometry is invalid and the caller is unable to repair the
++ * stripe configuration later in the mount process.
+  */
+ bool
+ xfs_validate_stripe_geometry(
+@@ -1330,20 +1333,21 @@ xfs_validate_stripe_geometry(
+ 	__s64			sunit,
+ 	__s64			swidth,
+ 	int			sectorsize,
++	bool			may_repair,
+ 	bool			silent)
+ {
+ 	if (swidth > INT_MAX) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "stripe width (%lld) is too large", swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit > swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sectorsize && (int)sunit % sectorsize) {
+@@ -1351,21 +1355,21 @@ xfs_validate_stripe_geometry(
+ 			xfs_notice(mp,
+ "stripe unit (%lld) must be a multiple of the sector size (%d)",
+ 				   sunit, sectorsize);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit && !swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "invalid stripe unit (%lld) and stripe width of 0", sunit);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (!sunit && swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "invalid stripe width (%lld) and stripe unit of 0", swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit && (int)swidth % (int)sunit) {
+@@ -1373,9 +1377,27 @@ xfs_validate_stripe_geometry(
+ 			xfs_notice(mp,
+ "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
+ 				   swidth, sunit);
+-		return false;
++		goto check_override;
+ 	}
+ 	return true;
++
++check_override:
++	if (!may_repair)
++		return false;
++	/*
++	 * During mount, mp->m_dalign will not be set unless the sunit mount
++	 * option was set. If it was set, ignore the bad stripe alignment values
++	 * and allow the validation and overwrite later in the mount process to
++	 * attempt to overwrite the bad stripe alignment values with the values
++	 * supplied by mount options.
++	 */
++	if (!mp->m_dalign)
++		return false;
++	if (!silent)
++		xfs_notice(mp,
++"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
++			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
++	return true;
+ }
+ 
+ /*
+diff --git a/libxfs/xfs_sb.h b/libxfs/xfs_sb.h
+index 2e8e8d63d..37b1ed1bc 100644
+--- a/libxfs/xfs_sb.h
++++ b/libxfs/xfs_sb.h
+@@ -35,8 +35,9 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+ 				struct xfs_trans *tp, xfs_agnumber_t agno,
+ 				struct xfs_buf **bpp);
+ 
+-extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+-		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
++bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
++		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
++		bool silent);
+ 
+ uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+ 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d6fa48ede..4f2d529aa 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2765,13 +2765,13 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+ 		}
+ 
+ 		if (!libxfs_validate_stripe_geometry(NULL, dsu, big_dswidth,
+-						     cfg->sectorsize, false))
++					cfg->sectorsize, false, false))
+ 			usage();
+ 
+ 		dsunit = BTOBBT(dsu);
+ 		dswidth = BTOBBT(big_dswidth);
+ 	} else if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit),
+-			BBTOB(dswidth), cfg->sectorsize, false)) {
++			BBTOB(dswidth), cfg->sectorsize, false, false)) {
+ 		usage();
+ 	}
+ 
+@@ -2791,7 +2791,7 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+ 	if (!dsunit) {
+ 		/* Ignore nonsense from device report. */
+ 		if (!libxfs_validate_stripe_geometry(NULL, BBTOB(ft->data.sunit),
+-				BBTOB(ft->data.swidth), 0, true)) {
++				BBTOB(ft->data.swidth), 0, false, true)) {
+ 			fprintf(stderr,
+ _("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\n"),
+ 				progname,
 
