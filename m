@@ -1,97 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from jpms-ob02.noc.sony.co.jp (jpms-ob02.noc.sony.co.jp [211.125.140.165])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62CEE5221
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 06:02:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72D467FBA3;
+	Wed, 22 May 2024 07:53:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.125.140.165
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716357753; cv=none; b=ArPp+soi3cf0CHmSu6D0CypO6jXQoDdyYx5QkoqHeyt8i75vfAZqS2OIyS+AWaao/dD2+geZ16UdsUmYDAQxgmxk0Ii+W+y5/QLzmjh7eGt6+0uydE/6hkCd0+lEOpe0N8vXPa8go43oB7C0mCoLpaJs2N+dYnXshmZEk3TXS/g=
+	t=1716364382; cv=none; b=FLK2EZrTwA89kOXuFfZg7M7l7QFzFIW7hdPqn9c3fM3LUnAZ7ZKx4CKcA/4o9UKQJiS+S5nMDo/vsYhZ+b6LFQn2CR/WAgKZnrRXhSr/8tgJf2tCdk+tVgjVjwvIyru7AxubJVdk1sHaqQxWsp/Yni9TYAfk4VEizvMZHB+W3wg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716357753; c=relaxed/simple;
-	bh=Z/4l+7M/FKbkMknz6DHB4UNWMnwpKh3UbqiktjL6Zfk=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=g7kZSR1VklMg3gCW2kOIIsGIV3UEmqXr2KpB6LcnDUAekA5Oc+BHKLyZ0JbmUuGNAZUwQ5eCWGIQ56S6R6LoPoXaz0AJu90FwQBsq1N62DhiIlH6Sjf6l/2A4aE0E53XqKWLUuJBwSC5OygPqf6rqB5VrnCYII6FWVfzVVMTo0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PeNgZvzy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716364382; c=relaxed/simple;
+	bh=7hh+JKNoOSYUXcr16/GBfPDuDDEZW0YlbjXrngNmoH4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OohshTE6jkkqis6Nm2c8DU4JiXo0xpDGwT+XUQxkEPbrWH/ZlcirOS0b8FziU9sFCPwP/Mxm5s0/GAHrlh5dN+EYyg6oHABRKdNuI4VnWff/EAADHyupnExxMCVuH9d7Oal5M/eWaAm6+19EuI0wifAi/xjxDNcvT56lQ9EXWkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com; spf=pass smtp.mailfrom=sony.com; dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b=WwyV/xR4; arc=none smtp.client-ip=211.125.140.165
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sony.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PeNgZvzy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 300A7C2BD11;
-	Wed, 22 May 2024 06:02:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716357753;
-	bh=Z/4l+7M/FKbkMknz6DHB4UNWMnwpKh3UbqiktjL6Zfk=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PeNgZvzy3xxO28heAICAq8o/05MiEjODyOfQTVSrI9Jcg6sB1+UtQh7AduYECdTln
-	 R7DfYD7RtVd/ss9tej4TVx3E45BMeUx2Euoe/Sbd757SYASILgvCiqHkbRPW9euuyn
-	 4F+TrGMlaSd0I8PpKz/CrZf3wYEd9iTQPfr2lZrLy6ifI90B/2Wyw0wcg+4mCM1Iv3
-	 sGbJdAB4tpMVhmjH7a2Q6uIBCz5UA986ba+LaMt8maFDFYi2wPHeOOSw0vc6e66p/L
-	 KWcELSdexzN83gxOj61V8JKcZzhfCsL7fWICUW5M/6DTv9pUVJmT6M73v+7ogYx381
-	 8dUQdRrJ9PDxg==
-Date: Tue, 21 May 2024 23:02:32 -0700
-Subject: [PATCH 4/4] xfs: don't open-code u64_to_user_ptr
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, chandanbabu@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171635763440.2619960.14439661076356669914.stgit@frogsfrogsfrogs>
-In-Reply-To: <171635763360.2619960.2969937208358016010.stgit@frogsfrogsfrogs>
-References: <171635763360.2619960.2969937208358016010.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b="WwyV/xR4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=sony.com; s=s1jp; t=1716364381; x=1747900381;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=AIWEN8D6NjuFU1bmJszkWUHQ/Up5x+riI0D821zKlIY=;
+  b=WwyV/xR4c75UOFx+GWT2T38o/ljVHJ5fchnxWh+NHsZDuOQ5zOExLujA
+   RW09m+6KapekXKJ6Rz+EOM2AWvh5/D+fP7CVA2oMNYzZT3ZZjT0wA0xtm
+   CkKFjcJV0FZsONrNgDtDUpOc1asPwPDlnboa/r3eiDKsWanQLOiF1qM1R
+   33pYdwL1solHzWvy29DC3h5k5MkkoZMymGx4dTSFV2JSUUnRvedj2DszP
+   zTZmgiIHMLgSvblXz93m43zmnh8+hePJtAqJkfJrcMW1YKXFbA/hEz4IR
+   Ncs0sx/YsTaw/tqjGRYUuOAxid96sn57poiq0hSIfWqzQnv2x9yjzEdBG
+   A==;
+Received: from unknown (HELO jpmta-ob1.noc.sony.co.jp) ([IPv6:2001:cf8:0:6e7::6])
+  by jpms-ob02.noc.sony.co.jp with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2024 16:42:51 +0900
+X-IronPort-AV: E=Sophos;i="6.08,179,1712588400"; 
+   d="scan'208";a="415026695"
+Received: from unknown (HELO OptiPlex-7080..) ([IPv6:2001:cf8:1:5f1:0:dddd:6fe5:f4d0])
+  by jpmta-ob1.noc.sony.co.jp with ESMTP; 22 May 2024 16:42:51 +0900
+From: Sukrit Bhatnagar <Sukrit.Bhatnagar@sony.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	Sukrit.Bhatnagar@sony.com
+Subject: [PATCH 0/2] Improve dmesg output for swapfile+hibernation
+Date: Wed, 22 May 2024 16:46:56 +0900
+Message-Id: <20240522074658.2420468-1-Sukrit.Bhatnagar@sony.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+While trying to use a swapfile for hibernation, I noticed that the suspend
+process was failing when it tried to search for the swap to use for snapshot.
+I had created the swapfile on ext4 and got the starting physical block offset
+using the filefrag command.
 
-Don't open-code what the kernel already provides.
+Upon looking at the swap activation code, I realized that the iomap part is
+doing some rounding up for the physical offset of the swapfile.
+Then I checked the block size of the filesystem, which was actually set to
+1KB by default in my environment.
+(This was in buildroot, using the genimage utility to create the VM disk
+partitions, filesystems etc.)
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/scrub/scrub.c |    2 +-
- fs/xfs/xfs_handle.c  |    7 +------
- 2 files changed, 2 insertions(+), 7 deletions(-)
+The block offset is rounded-up and stored in the swap extents metadata by
+iomap code, but as the exact value is lost for 1KB-block filesystem, hibernate
+cannot read back the swap header after it finishes writing data pages to swap.
 
+Note that this is not a bug in my understanding. Both swapfile and hibernate
+subsystems have the correct handling of this edge case, individually.
 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index c013f0ba4f36..4cbcf7a86dbe 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -856,7 +856,7 @@ xfs_ioc_scrubv_metadata(
- 	if (vec_bytes > PAGE_SIZE)
- 		return -ENOMEM;
- 
--	uvectors = (void __user *)(uintptr_t)head.svh_vectors;
-+	uvectors = u64_to_user_ptr(head.svh_vectors);
- 	vectors = memdup_user(uvectors, vec_bytes);
- 	if (IS_ERR(vectors))
- 		return PTR_ERR(vectors);
-diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-index c8785ed59543..a3f16e9b6fe5 100644
---- a/fs/xfs/xfs_handle.c
-+++ b/fs/xfs/xfs_handle.c
-@@ -773,11 +773,6 @@ xfs_getparents_expand_lastrec(
- 	trace_xfs_getparents_expand_lastrec(gpx->ip, gp, &gpx->context, gpr);
- }
- 
--static inline void __user *u64_to_uptr(u64 val)
--{
--	return (void __user *)(uintptr_t)val;
--}
--
- /* Retrieve the parent pointers for a given inode. */
- STATIC int
- xfs_getparents(
-@@ -862,7 +857,7 @@ xfs_getparents(
- 	ASSERT(gpx->context.firstu <= gpx->gph.gph_request.gp_bufsize);
- 
- 	/* Copy the records to userspace. */
--	if (copy_to_user(u64_to_uptr(gpx->gph.gph_request.gp_buffer),
-+	if (copy_to_user(u64_to_user_ptr(gpx->gph.gph_request.gp_buffer),
- 				gpx->krecords, gpx->context.firstu))
- 		error = -EFAULT;
- 
+Another observation was that we need to rely on external commands, such as
+filefrag for getting the swapfile offset value. This value can be conveniently
+printed in dmesg output when doing swapon.
+
+Sukrit Bhatnagar (2):
+  iomap: swap: print warning for unaligned swapfile
+  mm: swap: print starting physical block offset in swapon
+
+ fs/iomap/swapfile.c | 10 ++++++++++
+ mm/swapfile.c       |  3 ++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+-- 
+2.34.1
 
