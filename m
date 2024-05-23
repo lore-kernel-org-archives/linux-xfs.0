@@ -1,138 +1,146 @@
-Received: from muffat.debian.org (muffat.debian.org [209.87.16.33])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728431494B6
-	for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 23:05:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C91363D0
+	for <linux-xfs@vger.kernel.org>; Thu, 23 May 2024 01:11:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716419146; cv=none; b=RS56tYityb3KVoiosxbgmHIbpktV52anfhR8HNw/P7XxnYT7yz9zeXJjZKnooa7la7fErIgA4J4MSOJ657zeTJEnOpe6O2ZtRZbgypubKQK6Vp+QvjZEXQyRs+uotuQRQoIQClO+xQvWymXWkDrZjOx5txZBMSLn9MEPtIYZkQU=
+	t=1716426670; cv=none; b=txJE2G+hYI435B3jRUbiIWsnQYx6P2QgAHe8YVHwrn2SIdQTLWVQ8HoyKtmz+UblQ463yWUqHmVuuF5GcGSwoIxB+oVnySCaKqdvuTxzyNd9gGfvrFw/v0GOEgluv172kKSowW5vfbX4c4Dqf3oWX9+ze/Ttqknw749KXHNVjqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716419146; c=relaxed/simple;
-	bh=tiBreC4C1YUI4pmi3y2ZHCLAGpEEE5JkOQnOKvKvjvA=;
-	h=From:To:MIME-Version:Subject:Content-Type:Message-Id:Date; b=SOPokOfBR7TG4Yx0FIXIUjgaElCHWiO8WlaYOlbotomE8FF1dPJLDKxGm7qnjzdRNf+sawkHNgkFUvdca6DWXAwxeP9gzJCHaSI4gR6B6NIsAo0ucsjT8qSYZ1XsTdxxfLXsiFyE+1LVWi3ILK4LQ7BYTNmWEgKY03KF73MFo+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=NDZMgxYT; arc=none smtp.client-ip=209.87.16.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
+	s=arc-20240116; t=1716426670; c=relaxed/simple;
+	bh=irmPEB0EJHZap0scHqXlwAoFaMpePoW3FnqN7BaOryk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lBYVtnvsRtj1aHgfH2YeEnmYslfO9diwt82rrQDZ9AtoJjKqrowK23aFDOwKWFveJq1Ed9GC78US47pGpqLi0tMRDUZFf1Z2+fhqrJbjKx8mCV3+nG2hyfWF/TYOutXjiKkjDAmVDESnzfM3F4BBSrZWb8nQWbhytaVFYasyK7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Dji7+uYF; arc=none smtp.client-ip=209.85.161.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="NDZMgxYT"
-Received: from [192.91.235.231] (port=40598 helo=fasolo.debian.org)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-	by muffat.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1s9v1e-0000G1-AX
-	for linux-xfs@vger.kernel.org; Wed, 22 May 2024 23:05:38 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Content-Type:
-	Subject:MIME-Version:To:From:Reply-To:Cc:Content-Transfer-Encoding:Content-ID
-	:Content-Description:In-Reply-To:References;
-	bh=5VpyDtYIfdNHBu+cP8IqtKdBFlTjBTRGISTd01N3tpc=; b=NDZMgxYThGsqS5f2Yzq8XeON6p
-	WShlyXlC4BVJ2gdQYMJ514IO/dkScW+33Ek4ZIVlHv/Yc7JVLZpIYnZE92+Xj9RNmO0WP0h30UhlY
-	3CBA/bdEZKToOGeimplXSbT80Eckj/OoiYuDSf5PYGo3BBUKe+l2FETCL1jutFxTOpMqVHd8rDBTd
-	CBsH31+agB/u3mIgBLm+V1ytzAg5WLvL6nlVRWof5N3bEO0hJGTLKT4MpYbuJ7J1HuD9GmyqqE+18
-	zgnsspra6SY9d+xTg0L9YXmyvGm8ydljcRnish0OctpiciVR40AseMtE8lg9MNOI3BoMZf0BNrxTC
-	rzfcYQrQ==;
-Received: from dak by fasolo.debian.org with local (Exim 4.94.2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1s9v1Z-000NUm-Dp; Wed, 22 May 2024 23:05:33 +0000
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To: Bastian Germann <bage@debian.org>,
- XFS Development Team <linux-xfs@vger.kernel.org>
-X-DAK: dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Debian: DAK
-Debian-Changes: xfsprogs_6.8.0-2_source.changes
-Debian-Source: xfsprogs
-Debian-Version: 6.8.0-2
-Debian-Architecture: source
-Debian-Suite: unstable
-Debian-Archive-Action: accept
-Precedence: bulk
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Dji7+uYF"
+Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-5b27bbcb5f0so2940814eaf.3
+        for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 18:11:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1716426668; x=1717031468; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=XmvUqD+Lw4cLCsEe0vSwF972lL7nlr8Q3vsLBnKUsoc=;
+        b=Dji7+uYFTPtSdPwm2cXr8wjncXPx+e1dWVj7qrpHYjJ7T6l3XIVsCUkv/UDMwtOFQ/
+         KpXm3NRTkB9POaEAxRUcvzQ8uAN6o6ALv5WzfQTDjkFT/i6/MKPCt8zb1QwMNbpKGmSs
+         1WBO6JHhNfHnlWA4AXwS4++xG79uNrQcFSAbIujB0AbaP08cYlVPLF7kMRQmc8EZSCvP
+         loyIyNqq06i46/mxIGKcCoPwh4NU/S9ZsqtMITsfu7M9cYkAPu9Ku1va5nV7ycQsEeYd
+         m5KjCXfIlacnd3CMEjT7imUxPlb2n+E4wWv1EHOUE58lxlT3f8HeqRXrOWlm9hqsCOSM
+         +UyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1716426668; x=1717031468;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XmvUqD+Lw4cLCsEe0vSwF972lL7nlr8Q3vsLBnKUsoc=;
+        b=IhZOC10e7Bb8Y1/y8kMw+SVFiq+cdIheVXDxjp8z8XqNirQdmNaFLJ11qCKtmtBQ6L
+         8iuMDgetykre5zM4rBcCbB+N0s2880Ju0K0yZJYJVqfpPvHkDbY2EcgYhD6WcsgnSQLU
+         rmGWG5fZ5/w9DBx4qsFE7rvgkKV98ah2tHwnJ1LPnsS8h+H660C5YL58OXAp73y6PGmA
+         x68iYJXTcY9qT67OmHh80WhY1WzzyNo/Fd5CbM2/Wp5qpJe7PH2D1o9gaoIn8kQtj4D7
+         ojEEuVLg6JXpThvlzupn/SUI9Vop3DydDN5cgwQtTN/Xe/GtFJJB0pP6FY1v6nhFktsO
+         IZaw==
+X-Gm-Message-State: AOJu0YyHIEj4/wV/4lJ3ODcKEK/+TLv8XZ7pRbj2ndps6RnTcpxmg7od
+	b5MiU38qyY6F5WVlgMmv/PLZac+yCVulqYf8NPu2Z7nM2vMnD7JBwIp8fn/sE6E=
+X-Google-Smtp-Source: AGHT+IHLpQjpY/ZDizwGZZhnZO6kNpcNVrezvsSVGVdrwzcu/g7Obm3i7DB5DFERDBG9ikNNOGjsXw==
+X-Received: by 2002:a05:6358:614b:b0:183:a0ac:b638 with SMTP id e5c5f4694b2df-19791b6fceemr296203455d.11.1716426667893;
+        Wed, 22 May 2024 18:11:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-6341180dc5csm20062714a12.93.2024.05.22.18.11.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 May 2024 18:11:07 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1s9wz2-007786-19;
+	Thu, 23 May 2024 11:11:04 +1000
+Date: Thu, 23 May 2024 11:11:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	djwong@kernel.org, hch@infradead.org, brauner@kernel.org,
+	chandanbabu@kernel.org, jack@suse.cz, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com
+Subject: Re: [PATCH v3 3/3] xfs: correct the zeroing truncate range
+Message-ID: <Zk6XqIcO+7+VPn35@dread.disaster.area>
+References: <20240517111355.233085-1-yi.zhang@huaweicloud.com>
+ <20240517111355.233085-4-yi.zhang@huaweicloud.com>
+ <ZkwJJuFCV+WQLl40@dread.disaster.area>
+ <122ab6ed-147b-517c-148d-7cb35f7f888b@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: xfsprogs_6.8.0-2_source.changes ACCEPTED into unstable
-Content-Type: multipart/signed; micalg="pgp-sha256";
- protocol="application/pgp-signature";
- boundary="===============1637208704852889351=="
-Message-Id: <E1s9v1Z-000NUm-Dp@fasolo.debian.org>
-Date: Wed, 22 May 2024 23:05:33 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <122ab6ed-147b-517c-148d-7cb35f7f888b@huaweicloud.com>
 
---===============1637208704852889351==
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Wed, May 22, 2024 at 09:57:13AM +0800, Zhang Yi wrote:
+> On 2024/5/21 10:38, Dave Chinner wrote:
+> > We can do all this with a single writeback operation if we are a
+> > little bit smarter about the order of operations we perform and we
+> > are a little bit smarter in iomap about zeroing dirty pages in the
+> > page cache:
+> > 
+> > 	1. change iomap_zero_range() to do the right thing with
+> > 	dirty unwritten and cow extents (the patch I've been working
+> > 	on).
+> > 
+> > 	2. pass the range to be zeroed into iomap_truncate_page()
+> > 	(the fundamental change being made here).
+> > 
+> > 	3. zero the required range *through the page cache*
+> > 	(iomap_zero_range() already does this).
+> > 
+> > 	4. write back the XFS inode from ip->i_disk_size to the end
+> > 	of the range zeroed by iomap_truncate_page()
+> > 	(xfs_setattr_size() already does this).
+> > 
+> > 	5. i_size_write(newsize);
+> > 
+> > 	6. invalidate_inode_pages2_range(newsize, -1) to trash all
+> > 	the page cache beyond the new EOF without doing any zeroing
+> > 	as we've already done all the zeroing needed to the page
+> > 	cache through iomap_truncate_page().
+> > 
+> > 
+> > The patch I'm working on for step 1 is below. It still needs to be
+> > extended to handle the cow case, but I'm unclear on how to exercise
+> > that case so I haven't written the code to do it. The rest of it is
+> > just rearranging the code that we already use just to get the order
+> > of operations right. The only notable change in behaviour is using
+> > invalidate_inode_pages2_range() instead of truncate_pagecache(),
+> > because we don't want the EOF page to be dirtied again once we've
+> > already written zeroes to disk....
+> > 
+> 
+> Indeed, this sounds like the best solution. Since Darrick recommended
+> that we could fix the stale data exposure on realtime inode issue by
+> convert the tail extent to unwritten, I suppose we could do this after
+> fixing the problem.
 
-Thank you for your contribution to Debian.
+We also need to fix the truncate issue for the upcoming forced
+alignment feature (for atomic writes), and in that case we are
+required to write zeroes to the entire tail extent. i.e. forced
+alignment does not allow partial unwritten extent conversion of
+the EOF extent.
 
+Hence I think we want to fix the problem by zeroing the entire EOF
+extent first, then optimise the large rtextsize case to use
+unwritten extents if that tail zeroing proves to be a performance
+issue.
 
+I say "if" because the large rtextsize case will still need to write
+zeroes for the fsb that spans EOF. Adding conversion of the rest of
+the extent to unwritten may well be more expensive (in terms of both
+CPU and IO requirements for the transactional metadata updates) than
+just submitting a slightly larger IO containing real zeroes and
+leaving it as a written extent....
 
-Accepted:
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Format: 1.8
-Date: Wed, 22 May 2024 22:44:14 +0000
-Source: xfsprogs
-Architecture: source
-Version: 6.8.0-2
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Bastian Germann <bage@debian.org>
-Changes:
- xfsprogs (6.8.0-2) unstable; urgency=3Dmedium
- .
-   * Fix build on mips64el
-Checksums-Sha1:
- df0994f248e30a636e3ea0433d20ab37fc9c17b7 2034 xfsprogs_6.8.0-2.dsc
- 154da395ee40037351c203c664b47095939b4024 14200 xfsprogs_6.8.0-2.debian.tar.xz
- 4a61dca5bfad8312bd145b142ddab3bfc50754a4 6418 xfsprogs_6.8.0-2_source.buildi=
-nfo
-Checksums-Sha256:
- 387b087e68082f3f4e1a3eaff97644e923edd686928a877f86b23eea347bea38 2034 xfspro=
-gs_6.8.0-2.dsc
- 993808ce25a5b79c1ea83c00a3a7fa05ed8631b37ea82775704c476eb13ddadb 14200 xfspr=
-ogs_6.8.0-2.debian.tar.xz
- bd962c1ae5bf6c5e74cd1d17dea1dd2528ffb1879704574f1fff8ab64567bb6e 6418 xfspro=
-gs_6.8.0-2_source.buildinfo
-Files:
- e7a5389a7dce60e96eef18d5ecac1214 2034 admin optional xfsprogs_6.8.0-2.dsc
- 51e84cd7df255d7f811106bfacbf7727 14200 admin optional xfsprogs_6.8.0-2.debia=
-n.tar.xz
- beec52267c3006e127dfc303ace90aaa 6418 admin optional xfsprogs_6.8.0-2_source=
-.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQHEBAEBCgAuFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmZOdfMQHGJhZ2VAZGVi
-aWFuLm9yZwAKCRAfXHqLRVZDFGRtDACAePncHd9+XawFwfrHGBwvWpUpp+CBrR5j
-BKr9sgLBlR1824TzUxD/emHwXdOP0CmOvJGx2PGApvCE80qJrn1tzMyfveVg4a4w
-xlYTIn76Tnk6boDK4n3VaRQPv++2c/MqckeOmku0+LSLAnZvWRmlJC3/ZtA8o6va
-jpLx3apV+y42ar2rEHixpcSvqrQ3tOBKBVRIDSBMQ/7HkViR410pXHJQcX4kgbkh
-onsVxVK5PpXgVRnJRRkjFNiiL1goJHUyD834TELQf4h/yWAMoIxn2rtWcrFFpGhO
-3UP8boV3BIMxOlMujN/r72OBrW5sQplqIWL56RbFb+ICTdCy6cLQ/WWkEXf5s9gq
-aVos3CqC9ZN+6caqC0A/7k2xB6va28yzzGGxpZrpVmJ/jbq3wYgrHYVCNMSMqZOt
-GNZwwV7i1PFnd5xMQu++xPt78jPTpXqvs9gJJvYMU0ooOIvebRDc+dPZ1ioeBSjB
-JD12cG2QFJJtmfoIDEsqhyV1uxoL8+Y=3D
-=3Dv3+g
------END PGP SIGNATURE-----
-
-
---===============1637208704852889351==
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTziqJOuF8J+ZI8pJSb9qggYcy5IQUCZk56PQAKCRCb9qggYcy5
-IRArAP461gUkA2qxQi6gsDe8bH6LV8a4k996xlwV/sc3ZQA4QgEApFjqWV4VYfX4
-Wl/IaWQQMloiPpJA1dJefE2Cb1IRUQs=
-=WV7V
------END PGP SIGNATURE-----
-
---===============1637208704852889351==--
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
