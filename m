@@ -1,73 +1,74 @@
-Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C91363D0
-	for <linux-xfs@vger.kernel.org>; Thu, 23 May 2024 01:11:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C83D1878
+	for <linux-xfs@vger.kernel.org>; Thu, 23 May 2024 01:14:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716426670; cv=none; b=txJE2G+hYI435B3jRUbiIWsnQYx6P2QgAHe8YVHwrn2SIdQTLWVQ8HoyKtmz+UblQ463yWUqHmVuuF5GcGSwoIxB+oVnySCaKqdvuTxzyNd9gGfvrFw/v0GOEgluv172kKSowW5vfbX4c4Dqf3oWX9+ze/Ttqknw749KXHNVjqk=
+	t=1716426890; cv=none; b=RroBm31OzJs7E4rAwlZK70Y3H4HUWLpFpababysK74vaugeDi99ohN3ZYGf3/dlyg/xJbPikRT9A79j2mxrZeyrJe2hcKLsFGNJ6TuQOJG9d4zzrxC1hm/6oRka5EkHEdRC+QsRRyz5ENDvwl9P1y7tOdquLZqOf4Wy2GnSWMiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716426670; c=relaxed/simple;
-	bh=irmPEB0EJHZap0scHqXlwAoFaMpePoW3FnqN7BaOryk=;
+	s=arc-20240116; t=1716426890; c=relaxed/simple;
+	bh=F6aTYxhT26oFwWZ67Ld502s2Po3+Xcgbu+9VvbthueI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lBYVtnvsRtj1aHgfH2YeEnmYslfO9diwt82rrQDZ9AtoJjKqrowK23aFDOwKWFveJq1Ed9GC78US47pGpqLi0tMRDUZFf1Z2+fhqrJbjKx8mCV3+nG2hyfWF/TYOutXjiKkjDAmVDESnzfM3F4BBSrZWb8nQWbhytaVFYasyK7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Dji7+uYF; arc=none smtp.client-ip=209.85.161.45
+	 Content-Type:Content-Disposition:In-Reply-To; b=m94yH7+87/E1BW0amzRR4c80fHJGsLEQyV0DmzZcxczGQu2MbcndKh8GqZWquY5HjPEQfrTenbJ6k3RyxmcQ8BAuMRct5pAq0yjHU2gRqd4pA7APOROZUtuHwjZalI9DAwpcTMjNk5Qr+GPp+DLe/ZP/yrvyKe+8tgmmk4T+pTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=AGc+tg3U; arc=none smtp.client-ip=209.85.215.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Dji7+uYF"
-Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-5b27bbcb5f0so2940814eaf.3
-        for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 18:11:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="AGc+tg3U"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-602801ea164so1544941a12.0
+        for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 18:14:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1716426668; x=1717031468; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1716426888; x=1717031688; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=XmvUqD+Lw4cLCsEe0vSwF972lL7nlr8Q3vsLBnKUsoc=;
-        b=Dji7+uYFTPtSdPwm2cXr8wjncXPx+e1dWVj7qrpHYjJ7T6l3XIVsCUkv/UDMwtOFQ/
-         KpXm3NRTkB9POaEAxRUcvzQ8uAN6o6ALv5WzfQTDjkFT/i6/MKPCt8zb1QwMNbpKGmSs
-         1WBO6JHhNfHnlWA4AXwS4++xG79uNrQcFSAbIujB0AbaP08cYlVPLF7kMRQmc8EZSCvP
-         loyIyNqq06i46/mxIGKcCoPwh4NU/S9ZsqtMITsfu7M9cYkAPu9Ku1va5nV7ycQsEeYd
-         m5KjCXfIlacnd3CMEjT7imUxPlb2n+E4wWv1EHOUE58lxlT3f8HeqRXrOWlm9hqsCOSM
-         +UyA==
+        bh=ggg+vU4NzAtpKME671SbzqiVssDUIpzqRXRtZ78AP3g=;
+        b=AGc+tg3UybDOW3aXsoS6q+WCEN4SAEaK82cy4MdraW193bOI8rCfEdGhcIUHhKVMkj
+         UnMfbQMetndoJgNnacpamn53zETSm6/ADa6Z15VSLjLx0IZFh/yQE/92fdNYUN7GbRLN
+         qj431krkIukCq7krtanCX6aysNuGJJ7IbktPhaDWn4VFhVFdQkzAX4XgcO4LxgY6s1OS
+         m9lVQLcg5R2of4AGoRU0iss9GFD6kGlTxb/ug7plz0nMKyokTwCwoeMdqGpfpOP8G+4f
+         KAA0xFIKV/t3dFAP0ThDbXnuYwnYhu/2f3ds3bd+JhezYRLXXK+FYp+gFvSNHug/kLMP
+         VcLQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716426668; x=1717031468;
+        d=1e100.net; s=20230601; t=1716426888; x=1717031688;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=XmvUqD+Lw4cLCsEe0vSwF972lL7nlr8Q3vsLBnKUsoc=;
-        b=IhZOC10e7Bb8Y1/y8kMw+SVFiq+cdIheVXDxjp8z8XqNirQdmNaFLJ11qCKtmtBQ6L
-         8iuMDgetykre5zM4rBcCbB+N0s2880Ju0K0yZJYJVqfpPvHkDbY2EcgYhD6WcsgnSQLU
-         rmGWG5fZ5/w9DBx4qsFE7rvgkKV98ah2tHwnJ1LPnsS8h+H660C5YL58OXAp73y6PGmA
-         x68iYJXTcY9qT67OmHh80WhY1WzzyNo/Fd5CbM2/Wp5qpJe7PH2D1o9gaoIn8kQtj4D7
-         ojEEuVLg6JXpThvlzupn/SUI9Vop3DydDN5cgwQtTN/Xe/GtFJJB0pP6FY1v6nhFktsO
-         IZaw==
-X-Gm-Message-State: AOJu0YyHIEj4/wV/4lJ3ODcKEK/+TLv8XZ7pRbj2ndps6RnTcpxmg7od
-	b5MiU38qyY6F5WVlgMmv/PLZac+yCVulqYf8NPu2Z7nM2vMnD7JBwIp8fn/sE6E=
-X-Google-Smtp-Source: AGHT+IHLpQjpY/ZDizwGZZhnZO6kNpcNVrezvsSVGVdrwzcu/g7Obm3i7DB5DFERDBG9ikNNOGjsXw==
-X-Received: by 2002:a05:6358:614b:b0:183:a0ac:b638 with SMTP id e5c5f4694b2df-19791b6fceemr296203455d.11.1716426667893;
-        Wed, 22 May 2024 18:11:07 -0700 (PDT)
+        bh=ggg+vU4NzAtpKME671SbzqiVssDUIpzqRXRtZ78AP3g=;
+        b=TTxiEd7uEKDKXx4D1jom+TzmlDAwfFClaz8dwKe6cQ760AdPjTwp9pw3zkQxLTZWHj
+         vnVqIH6Lfh/u8d7TGD4U7gTQkX9S6zGr37koVX8f51+OlnRjNftUlXxQavqJPKhkrqf4
+         bH1qer8GEtNhuHe08lCZtae+wKGJ7l4X21RVm0OEByI7YnyhijApuNIW+402VJ9DEf4M
+         Mur+kW8t/Yb5p1MPYZoaNq5xK4RJXzTGbja92pI7Eh2UjLqHiueBrIlG8Zt17kOa245Z
+         dVlIc8NBAmPtGz2SEaZVsiNIfxcFeKQK9Pd3gVF9o8shgrK9poD+BYNhOgkErxWpZNWv
+         CRLQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVrwtCAC6lGCc5UDdx3bJRj7ebkXUQm57QumapRe7Z+dzHmtTV5ojxnUAnobBpgc7F5G08ZCPp2sma6q7Nak4lV8vbo0GyXqa8M
+X-Gm-Message-State: AOJu0YxSNBuQ3EXxM2JNnaQLK1mqinaQ3OsWOOvEzP2DHOSiLww5O2fH
+	jc8S8U0jDpIkuNvW6kqSAZ1UkAEItpMyxz/xvchAAHcKrzNujvAal/TQjzu/Zko=
+X-Google-Smtp-Source: AGHT+IGrhJ7h989jjAjSMtYNfzU+Yi3+mZLiquC92tnMfDp+of2ZtyY0LfEoupYObDtgvUJLtg9k7A==
+X-Received: by 2002:a17:90a:d706:b0:2ae:b8df:89e7 with SMTP id 98e67ed59e1d1-2bd9f5a2611mr3687386a91.38.1716426888226;
+        Wed, 22 May 2024 18:14:48 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-6341180dc5csm20062714a12.93.2024.05.22.18.11.07
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2bdd9f0adfdsm413976a91.34.2024.05.22.18.14.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 May 2024 18:11:07 -0700 (PDT)
+        Wed, 22 May 2024 18:14:47 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1s9wz2-007786-19;
-	Thu, 23 May 2024 11:11:04 +1000
-Date: Thu, 23 May 2024 11:11:04 +1000
+	id 1s9x2a-0077HZ-2j;
+	Thu, 23 May 2024 11:14:44 +1000
+Date: Thu, 23 May 2024 11:14:44 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	djwong@kernel.org, hch@infradead.org, brauner@kernel.org,
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
 	chandanbabu@kernel.org, jack@suse.cz, yi.zhang@huawei.com,
 	chengzhihao1@huawei.com, yukuai3@huawei.com
 Subject: Re: [PATCH v3 3/3] xfs: correct the zeroing truncate range
-Message-ID: <Zk6XqIcO+7+VPn35@dread.disaster.area>
+Message-ID: <Zk6YhF/DsbOy66EZ@dread.disaster.area>
 References: <20240517111355.233085-1-yi.zhang@huaweicloud.com>
  <20240517111355.233085-4-yi.zhang@huaweicloud.com>
  <ZkwJJuFCV+WQLl40@dread.disaster.area>
- <122ab6ed-147b-517c-148d-7cb35f7f888b@huaweicloud.com>
+ <20240522030020.GU25518@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,71 +77,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <122ab6ed-147b-517c-148d-7cb35f7f888b@huaweicloud.com>
+In-Reply-To: <20240522030020.GU25518@frogsfrogsfrogs>
 
-On Wed, May 22, 2024 at 09:57:13AM +0800, Zhang Yi wrote:
-> On 2024/5/21 10:38, Dave Chinner wrote:
-> > We can do all this with a single writeback operation if we are a
-> > little bit smarter about the order of operations we perform and we
-> > are a little bit smarter in iomap about zeroing dirty pages in the
-> > page cache:
+On Tue, May 21, 2024 at 08:00:20PM -0700, Darrick J. Wong wrote:
+> On Tue, May 21, 2024 at 12:38:30PM +1000, Dave Chinner wrote:
+> > [RFC] iomap: zeroing needs to be pagecache aware
 > > 
-> > 	1. change iomap_zero_range() to do the right thing with
-> > 	dirty unwritten and cow extents (the patch I've been working
-> > 	on).
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > 	2. pass the range to be zeroed into iomap_truncate_page()
-> > 	(the fundamental change being made here).
+> > Unwritten extents can have page cache data over the range being
+> > zeroed so we can't just skip them entirely. Fix this by checking for
+> > an existing dirty folio over the unwritten range we are zeroing
+> > and only performing zeroing if the folio is already dirty.
 > > 
-> > 	3. zero the required range *through the page cache*
-> > 	(iomap_zero_range() already does this).
-> > 
-> > 	4. write back the XFS inode from ip->i_disk_size to the end
-> > 	of the range zeroed by iomap_truncate_page()
-> > 	(xfs_setattr_size() already does this).
-> > 
-> > 	5. i_size_write(newsize);
-> > 
-> > 	6. invalidate_inode_pages2_range(newsize, -1) to trash all
-> > 	the page cache beyond the new EOF without doing any zeroing
-> > 	as we've already done all the zeroing needed to the page
-> > 	cache through iomap_truncate_page().
-> > 
-> > 
-> > The patch I'm working on for step 1 is below. It still needs to be
-> > extended to handle the cow case, but I'm unclear on how to exercise
-> > that case so I haven't written the code to do it. The rest of it is
-> > just rearranging the code that we already use just to get the order
-> > of operations right. The only notable change in behaviour is using
-> > invalidate_inode_pages2_range() instead of truncate_pagecache(),
-> > because we don't want the EOF page to be dirtied again once we've
-> > already written zeroes to disk....
-> > 
+> > XXX: how do we detect a iomap containing a cow mapping over a hole
+> > in iomap_zero_iter()? The XFS code implies this case also needs to
+> > zero the page cache if there is data present, so trigger for page
+> > cache lookup only in iomap_zero_iter() needs to handle this case as
+> > well.
 > 
-> Indeed, this sounds like the best solution. Since Darrick recommended
-> that we could fix the stale data exposure on realtime inode issue by
-> convert the tail extent to unwritten, I suppose we could do this after
-> fixing the problem.
+> Hmm.  If memory serves, we probably need to adapt the
+> xfs_buffered/direct_write_iomap_begin functions to return the hole in
+> srcmap and the cow mapping in the iomap.  RN I think it just returns the
+> hole.
 
-We also need to fix the truncate issue for the upcoming forced
-alignment feature (for atomic writes), and in that case we are
-required to write zeroes to the entire tail extent. i.e. forced
-alignment does not allow partial unwritten extent conversion of
-the EOF extent.
-
-Hence I think we want to fix the problem by zeroing the entire EOF
-extent first, then optimise the large rtextsize case to use
-unwritten extents if that tail zeroing proves to be a performance
-issue.
-
-I say "if" because the large rtextsize case will still need to write
-zeroes for the fsb that spans EOF. Adding conversion of the rest of
-the extent to unwritten may well be more expensive (in terms of both
-CPU and IO requirements for the transactional metadata updates) than
-just submitting a slightly larger IO containing real zeroes and
-leaving it as a written extent....
+Yes, that is what I was thinking we need to do -
+xfs_buffered_write_iomap_begin() doesn't even check for COW mappings
+if IOMAP_ZERO is set, so there's a bunch of refactoring work needed
+to let iomap know that there is a COW mapping over the hole so it
+can do the same page cache lookup stuff that I added for unwritten
+extents....
 
 -Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
