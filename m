@@ -1,224 +1,144 @@
-Received: from mail-il1-f205.google.com (mail-il1-f205.google.com [209.85.166.205])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D7C91C36
-	for <linux-xfs@vger.kernel.org>; Thu, 23 May 2024 01:43:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CECD6FB9;
+	Thu, 23 May 2024 02:00:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716428604; cv=none; b=XzMIwa89t7cG5z/DBy6aZNm3AASn1+p17S9gPnYOxdnsvCJA5uB0fkPUj/M+a9pG22vtyCctl27liXCN64d6O15nt8BJXkI9tDofQL6SgirpfvmAHoa+0C4IbYE/QOGW2TRusvd/i/vyAg7ah1kO3EkRcQXRX49pgcfh2V1CwEM=
+	t=1716429611; cv=none; b=O002i80YUmthVFMHIxCnArDud8l6unHvgL6afQwx1sZPmqDEnSuMhlj6gSj5naJyFtsEqBTj1u8S/p8Kbma36a94wf6pQVmRAR4LMxYtLQaSBeVfaxQwPYZjq9/3dFINccCQnD4TDR0lFTnc3L8clz4ZqYHsK+6BPfibbsP68cs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716428604; c=relaxed/simple;
-	bh=Z5WdbOyFbS252rSgLKRem8n+kAHsN9IjibFP7J7flHQ=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=DzLlb+d54YZJzW4zffZjObWDmzLWUxSVzL+L6UMmbs/N7SrraRDBbFjVic9WvnPuEmI+zdi8yYA/QgvHGBOFXCFqsAxVdSISZMHTXM2Cm941UN6EFKExX0iQ3G1sThEbaT38eHxsBdOlhHe1VLFoQed4Tni6WSFtrJViuqn/b1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f205.google.com with SMTP id e9e14a558f8ab-36c8c30f0edso14347435ab.2
-        for <linux-xfs@vger.kernel.org>; Wed, 22 May 2024 18:43:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716428601; x=1717033401;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EfGOwghk0SEybfh8KkfhSSWI7803jUVK6U//DXwFXno=;
-        b=quLEX3oqOfJPaPSzyblWVyAuNX99hSxiIV19H4pUQtjvVzKS9Wj5N8b4FlR57VklWx
-         orAeVzQ/y117Sl9qJfdPEIycvC7JK2gzEzKOIo7fuj2L1BcCDlma/xscFIHbrirxFZFM
-         pbaT9do3Q+kyc/+R33iEWcqOf35eOsSgMSbV4lirljgcZ9Og13WeIfWapiVl+4IlnMa8
-         hlGp4/mvRalaq0OgvBbi69BKLpcdBxygJcJ/mnY5zzQr3mHQUHTfJ2TH1gda75pPEqmP
-         7ZEGdBpq4yaz4bldijPcErUFNXQesi1xeolk/fQ1vndKhOaN45MqngTVa3wz6GAU4ros
-         Re/w==
-X-Forwarded-Encrypted: i=1; AJvYcCX21NfAXg8iBAyraDEfynjcdVDdME5H9gd2KkzBUUljsbdN19eQSMHFL22QAyLE5LgEo8CXQgyFaw6sbmob3uuqOLlkqO4MYJ7J
-X-Gm-Message-State: AOJu0YzmVPefvMfxlB+nKR0MfRROjm3uO4UMTJodtCLspnGAs3yP9yh3
-	QI7+7TJalT9F7InwdVMfnZx1HxxDhktViU0TgDYOWDDap+7C6IMLm0j7x9WGApm2BSBWgpTpHJF
-	elhvKTRd+A5pxREegOJqVftA2W/fFLPT9h/cl85VCgDWXWNC0AksWaxc=
-X-Google-Smtp-Source: AGHT+IFcRc/GlHtCDjx7gDnLS8p3d5nIGXpLvlZqLJU38jtJZ6rK4/24MovDS4MaQQP81TeeSfzYKBFVInIto7xM4eNS2y5HfCvr
+	s=arc-20240116; t=1716429611; c=relaxed/simple;
+	bh=nhCPewS1z5PaPTyemrch/Z3VzSgGoYpoFUicHPWxQVY=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=H0t5zkbJI8FVlKV6zWEzxI0l6qrGSW+aJ13OuVQ5p0DObiTHfNud9oLgzkq7mj/0mZ2MdzMg2SPqSIPLMXBroaxs+1SxQedrM1mNns1lrfNItyaej+bQ9jQhIavMmED6Mu1DjhDd4uqXTawSgf6O7zDz22OTofKcm/zDfgU+nKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VlBFV2NwWz4f3jQd;
+	Thu, 23 May 2024 09:59:58 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 255B11A0CD9;
+	Thu, 23 May 2024 10:00:04 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP2 (Coremail) with SMTP id Syh0CgCnyw4io05myMQANw--.37203S3;
+	Thu, 23 May 2024 10:00:03 +0800 (CST)
+Subject: Re: [PATCH v3 3/3] xfs: correct the zeroing truncate range
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, djwong@kernel.org,
+ hch@infradead.org, brauner@kernel.org, chandanbabu@kernel.org, jack@suse.cz,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
+References: <20240517111355.233085-1-yi.zhang@huaweicloud.com>
+ <20240517111355.233085-4-yi.zhang@huaweicloud.com>
+ <ZkwJJuFCV+WQLl40@dread.disaster.area>
+ <122ab6ed-147b-517c-148d-7cb35f7f888b@huaweicloud.com>
+ <Zk6XqIcO+7+VPn35@dread.disaster.area>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <92cec08a-7fe7-1cc7-7a39-7f3d5fbc087b@huaweicloud.com>
+Date: Thu, 23 May 2024 10:00:02 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1c87:b0:36d:a6b0:f4fa with SMTP id
- e9e14a558f8ab-371fcdae973mr2622235ab.4.1716428601659; Wed, 22 May 2024
- 18:43:21 -0700 (PDT)
-Date: Wed, 22 May 2024 18:43:21 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000015a57d0619152dcd@google.com>
-Subject: [syzbot] [xfs?] possible deadlock in xfs_ilock_attr_map_shared
-From: syzbot <syzbot+069cc167ecbee6e3e91a@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <Zk6XqIcO+7+VPn35@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:Syh0CgCnyw4io05myMQANw--.37203S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXr13urW3Cw1xAr45Wr1Utrb_yoW5Cry8pF
+	WUGa4UKr4kA3yDC34IyFn2qw1Fyw1rJrW8uryrtw12kas8X342yFyjgFWFkFyUuFZ3Gr12
+	vF4jy3y3Zwn5A3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
+	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07UWE__UUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Hello,
+On 2024/5/23 9:11, Dave Chinner wrote:
+> On Wed, May 22, 2024 at 09:57:13AM +0800, Zhang Yi wrote:
+>> On 2024/5/21 10:38, Dave Chinner wrote:
+>>> We can do all this with a single writeback operation if we are a
+>>> little bit smarter about the order of operations we perform and we
+>>> are a little bit smarter in iomap about zeroing dirty pages in the
+>>> page cache:
+>>>
+>>> 	1. change iomap_zero_range() to do the right thing with
+>>> 	dirty unwritten and cow extents (the patch I've been working
+>>> 	on).
+>>>
+>>> 	2. pass the range to be zeroed into iomap_truncate_page()
+>>> 	(the fundamental change being made here).
+>>>
+>>> 	3. zero the required range *through the page cache*
+>>> 	(iomap_zero_range() already does this).
+>>>
+>>> 	4. write back the XFS inode from ip->i_disk_size to the end
+>>> 	of the range zeroed by iomap_truncate_page()
+>>> 	(xfs_setattr_size() already does this).
+>>>
+>>> 	5. i_size_write(newsize);
+>>>
+>>> 	6. invalidate_inode_pages2_range(newsize, -1) to trash all
+>>> 	the page cache beyond the new EOF without doing any zeroing
+>>> 	as we've already done all the zeroing needed to the page
+>>> 	cache through iomap_truncate_page().
+>>>
+>>>
+>>> The patch I'm working on for step 1 is below. It still needs to be
+>>> extended to handle the cow case, but I'm unclear on how to exercise
+>>> that case so I haven't written the code to do it. The rest of it is
+>>> just rearranging the code that we already use just to get the order
+>>> of operations right. The only notable change in behaviour is using
+>>> invalidate_inode_pages2_range() instead of truncate_pagecache(),
+>>> because we don't want the EOF page to be dirtied again once we've
+>>> already written zeroes to disk....
+>>>
+>>
+>> Indeed, this sounds like the best solution. Since Darrick recommended
+>> that we could fix the stale data exposure on realtime inode issue by
+>> convert the tail extent to unwritten, I suppose we could do this after
+>> fixing the problem.
+> 
+> We also need to fix the truncate issue for the upcoming forced
+> alignment feature (for atomic writes), and in that case we are
+> required to write zeroes to the entire tail extent. i.e. forced
+> alignment does not allow partial unwritten extent conversion of
+> the EOF extent.
+> 
 
-syzbot found the following issue on:
+Yes, right. I noticed that feature also needs to fix.
 
-HEAD commit:    4b377b4868ef kprobe/ftrace: fix build error due to bad fun..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=16f19368980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=17ffd15f654c98ba
-dashboard link: https://syzkaller.appspot.com/bug?extid=069cc167ecbee6e3e91a
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> Hence I think we want to fix the problem by zeroing the entire EOF
+> extent first, then optimise the large rtextsize case to use
+> unwritten extents if that tail zeroing proves to be a performance
+> issue.
+> 
+> I say "if" because the large rtextsize case will still need to write
+> zeroes for the fsb that spans EOF. Adding conversion of the rest of
+> the extent to unwritten may well be more expensive (in terms of both
+> CPU and IO requirements for the transactional metadata updates) than
+> just submitting a slightly larger IO containing real zeroes and
+> leaving it as a written extent....
+> 
 
-Unfortunately, I don't have any reproducer for this issue yet.
+Yeah, if the rtextsize if not large (in most cases), I'm pretty sure
+that writing zeros would better. If the rtextsize is large enough, I
+think it deserves a performance test.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/80503f9339d4/disk-4b377b48.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/c74a52927209/vmlinux-4b377b48.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/6ea396d85317/bzImage-4b377b48.xz
+Thanks,
+Yi.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+069cc167ecbee6e3e91a@syzkaller.appspotmail.com
-
-======================================================
-WARNING: possible circular locking dependency detected
-6.9.0-syzkaller-08544-g4b377b4868ef #0 Not tainted
-------------------------------------------------------
-syz-executor.3/11981 is trying to acquire lock:
-ffffffff8e42ad40 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:312 [inline]
-ffffffff8e42ad40 (fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:3819 [inline]
-ffffffff8e42ad40 (fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:3900 [inline]
-ffffffff8e42ad40 (fs_reclaim){+.+.}-{0:0}, at: __do_kmalloc_node mm/slub.c:4038 [inline]
-ffffffff8e42ad40 (fs_reclaim){+.+.}-{0:0}, at: __kmalloc+0xb7/0x4a0 mm/slub.c:4052
-
-but task is already holding lock:
-ffff88806a1308d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_attr_map_shared+0x8c/0xc0 fs/xfs/xfs_inode.c:126
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&xfs_dir_ilock_class){++++}-{3:3}:
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
-       down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
-       xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
-       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
-       xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
-       xfs_icwalk fs/xfs/xfs_icache.c:1762 [inline]
-       xfs_reclaim_inodes_nr+0x257/0x360 fs/xfs/xfs_icache.c:1011
-       super_cache_scan+0x411/0x4b0 fs/super.c:227
-       do_shrink_slab+0x707/0x1160 mm/shrinker.c:435
-       shrink_slab_memcg mm/shrinker.c:548 [inline]
-       shrink_slab+0x883/0x14d0 mm/shrinker.c:626
-       shrink_one+0x453/0x880 mm/vmscan.c:4774
-       shrink_many mm/vmscan.c:4835 [inline]
-       lru_gen_shrink_node mm/vmscan.c:4935 [inline]
-       shrink_node+0x3b17/0x4310 mm/vmscan.c:5894
-       kswapd_shrink_node mm/vmscan.c:6704 [inline]
-       balance_pgdat mm/vmscan.c:6895 [inline]
-       kswapd+0x1882/0x38a0 mm/vmscan.c:7164
-       kthread+0x2f2/0x390 kernel/kthread.c:389
-       ret_from_fork+0x4d/0x80 arch/x86/kernel/process.c:147
-       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-
--> #0 (fs_reclaim){+.+.}-{0:0}:
-       check_prev_add kernel/locking/lockdep.c:3134 [inline]
-       check_prevs_add kernel/locking/lockdep.c:3253 [inline]
-       validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
-       __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
-       __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
-       fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
-       might_alloc include/linux/sched/mm.h:312 [inline]
-       slab_pre_alloc_hook mm/slub.c:3819 [inline]
-       slab_alloc_node mm/slub.c:3900 [inline]
-       __do_kmalloc_node mm/slub.c:4038 [inline]
-       __kmalloc+0xb7/0x4a0 mm/slub.c:4052
-       kmalloc include/linux/slab.h:632 [inline]
-       xfs_attr_shortform_list+0x6f3/0x17a0 fs/xfs/xfs_attr_list.c:115
-       xfs_attr_list_ilocked fs/xfs/xfs_attr_list.c:527 [inline]
-       xfs_attr_list+0x25b/0x350 fs/xfs/xfs_attr_list.c:547
-       xfs_vn_listxattr+0x1d2/0x2c0 fs/xfs/xfs_xattr.c:314
-       vfs_listxattr fs/xattr.c:493 [inline]
-       listxattr+0x109/0x290 fs/xattr.c:840
-       path_listxattr fs/xattr.c:864 [inline]
-       __do_sys_listxattr fs/xattr.c:876 [inline]
-       __se_sys_listxattr fs/xattr.c:873 [inline]
-       __x64_sys_listxattr+0x176/0x240 fs/xattr.c:873
-       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
-       do_syscall_64+0xf5/0x240 arch/x86/entry/common.c:83
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  rlock(&xfs_dir_ilock_class);
-                               lock(fs_reclaim);
-                               lock(&xfs_dir_ilock_class);
-  lock(fs_reclaim);
-
- *** DEADLOCK ***
-
-1 lock held by syz-executor.3/11981:
- #0: ffff88806a1308d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_attr_map_shared+0x8c/0xc0 fs/xfs/xfs_inode.c:126
-
-stack backtrace:
-CPU: 0 PID: 11981 Comm: syz-executor.3 Not tainted 6.9.0-syzkaller-08544-g4b377b4868ef #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 04/02/2024
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:114
- check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2187
- check_prev_add kernel/locking/lockdep.c:3134 [inline]
- check_prevs_add kernel/locking/lockdep.c:3253 [inline]
- validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
- __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
- lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
- __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
- fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
- might_alloc include/linux/sched/mm.h:312 [inline]
- slab_pre_alloc_hook mm/slub.c:3819 [inline]
- slab_alloc_node mm/slub.c:3900 [inline]
- __do_kmalloc_node mm/slub.c:4038 [inline]
- __kmalloc+0xb7/0x4a0 mm/slub.c:4052
- kmalloc include/linux/slab.h:632 [inline]
- xfs_attr_shortform_list+0x6f3/0x17a0 fs/xfs/xfs_attr_list.c:115
- xfs_attr_list_ilocked fs/xfs/xfs_attr_list.c:527 [inline]
- xfs_attr_list+0x25b/0x350 fs/xfs/xfs_attr_list.c:547
- xfs_vn_listxattr+0x1d2/0x2c0 fs/xfs/xfs_xattr.c:314
- vfs_listxattr fs/xattr.c:493 [inline]
- listxattr+0x109/0x290 fs/xattr.c:840
- path_listxattr fs/xattr.c:864 [inline]
- __do_sys_listxattr fs/xattr.c:876 [inline]
- __se_sys_listxattr fs/xattr.c:873 [inline]
- __x64_sys_listxattr+0x176/0x240 fs/xattr.c:873
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf5/0x240 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fa1f3a7cee9
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 e1 20 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fa1f48160c8 EFLAGS: 00000246 ORIG_RAX: 00000000000000c2
-RAX: ffffffffffffffda RBX: 00007fa1f3bac050 RCX: 00007fa1f3a7cee9
-RDX: 0000000000000011 RSI: 0000000000000000 RDI: 0000000020000140
-RBP: 00007fa1f3ac949e R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 000000000000006e R14: 00007fa1f3bac050 R15: 00007ffdecee0588
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
