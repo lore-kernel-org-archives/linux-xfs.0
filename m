@@ -1,45 +1,92 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 923DF83CCC;
-	Fri, 24 May 2024 12:18:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853DD12E1CD;
+	Fri, 24 May 2024 16:11:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716553124; cv=none; b=awCYFAlhdJYAS4r9laLNuH97PF3SVZ9pB1IgP6QCyWh1wynYgr/83TixPTLGdwUd6lxcqQGDEAsbupYQSfXn5r24V1UlYDyDpEXEMGuq52d/PHNcz21tu6WD8J88UYv5xtfuh2worvXk9haDGQTwaxBTDV1Ffi64Q3WPJ08KTPc=
+	t=1716567071; cv=none; b=BWnQLFYKZnBAlthDOsXT4TMHJLVFpeD2SPAHfY/PTqr3OSqhzoB0TBQVgowqOxO0ZEns+jW9IfFHvdzR8R+inlX3d+MitSG4g0EunXRVyfx/bfToE0ZdQKDERZoI/FecKrSM2bJIuEHsUvvpQvMxwuXonBPTeiXmb2lU3sLEBlY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716553124; c=relaxed/simple;
-	bh=7lqilfxHEeNt7OyvbNoz9CUGiZAgzoC5RAd+VQwnTuI=;
+	s=arc-20240116; t=1716567071; c=relaxed/simple;
+	bh=MbIDm/EOzzFNJZHj/CU8dpRFf31Fu7lF0M2i1om0c6I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PF7d1UR4/wfZd8QcnXpCLv21IVAoKIHwSZW5TxPo36QbThlWWFVzhw+9YPQolBDHJD8LQmXO6qlLfts39KV/aurSV3JIFVMJJxwuRlConacc5VzLIC1B5zti3XHLFSyLgZsk9H26V5CWqAIlivSPRGHgNMjCPfJ9Ns5ZO1nD4tU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lepPuE9q; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=gjchfMqt8m/ruIr6MOq2SIHc5oOVw9EmVugz8M3EFyv934dVsbCy1NfnpWnE2lUvS1jEToalK08hDXcK5yYPBRGdxmwCfFB1whaf1tDGpzdfJ8cyGGBtKCx1bztxI+zeJxMrFMhZdmsWu5lEQ8fM3Rx6l9ZOcDlcjY6CTgAqndQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=jon/I9tb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+R3nOw1M; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=jon/I9tb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+R3nOw1M; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lepPuE9q"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=vbEsMDh+E9GqojdWiKM6c4copHUEF+ZhaKXyW3Xhetg=; b=lepPuE9qDtPJho7Qxv+ml69iYD
-	wqnNO1/3aCN7fNuLsBd8G0XhyWdw4M2ziQxVY5tnpCy2WZKPGpDleB/ZH19zsCAVu8t+zSv5oYHoi
-	wS/D2d1niHKRzC1x8CIdC1V99uG9jWbAoGVrMDRCIuBJA3W+qyDKmcpLA/eKI4JV94hQGdH8BQEwl
-	KkID2EDDDMlVWh40oHOZBw0NHzL14zga0Bfcy1iYkjcEQ5APE1K53L7MBN2+prAeu78BVaQyqNene
-	urU4eZx4ZtLhE1Y6LJebQj+F+ZKBdOgQrM1opPychQlvObh07XyEdMfBmaYetiFOaYu0c4YavDAUh
-	Q/AoXQUw==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sATsc-00000002eqS-2EiW;
-	Fri, 24 May 2024 12:18:38 +0000
-Date: Fri, 24 May 2024 13:18:38 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Xu Yang <xu.yang_2@nxp.com>
-Cc: brauner@kernel.org, djwong@kernel.org, akpm@linux-foundation.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, jun.li@nxp.com
-Subject: Re: [PATCH v5 2/2] iomap: fault in smaller chunks for non-large
- folio mappings
-Message-ID: <ZlCFnlXPPUo_0mYX@casper.infradead.org>
-References: <20240521114939.2541461-1-xu.yang_2@nxp.com>
- <20240521114939.2541461-2-xu.yang_2@nxp.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="jon/I9tb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+R3nOw1M";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="jon/I9tb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+R3nOw1M"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 2228833C19;
+	Fri, 24 May 2024 16:11:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1716567066; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ysBr6rr3XIJGv0PLGaKvnX8Hh7qnkO7TpyajCujbtZY=;
+	b=jon/I9tb+diUeXQs7wZ15l2V3PGbBeDx+1AaFpda6wU+dOM0OhGuOV7XbX6FIHiGHHA7oh
+	RfZ6XdCOG0FycMC8kdCJbVbspGltBtmxnrLabRXeg58/xEImh8SZiD5jCo3nR99BZlbh7D
+	jZ/3FRA0B0wZEVUfSur3QqQonAbgqUw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1716567066;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ysBr6rr3XIJGv0PLGaKvnX8Hh7qnkO7TpyajCujbtZY=;
+	b=+R3nOw1MwXzvxFnFQG/g8tFha4KFv6IVMLZE3oOEwjp2CJYwdHhtqtPmM6TdJyaMSAiBbP
+	H1urwezJQ61inaDw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="jon/I9tb";
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=+R3nOw1M
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1716567066; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ysBr6rr3XIJGv0PLGaKvnX8Hh7qnkO7TpyajCujbtZY=;
+	b=jon/I9tb+diUeXQs7wZ15l2V3PGbBeDx+1AaFpda6wU+dOM0OhGuOV7XbX6FIHiGHHA7oh
+	RfZ6XdCOG0FycMC8kdCJbVbspGltBtmxnrLabRXeg58/xEImh8SZiD5jCo3nR99BZlbh7D
+	jZ/3FRA0B0wZEVUfSur3QqQonAbgqUw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1716567066;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ysBr6rr3XIJGv0PLGaKvnX8Hh7qnkO7TpyajCujbtZY=;
+	b=+R3nOw1MwXzvxFnFQG/g8tFha4KFv6IVMLZE3oOEwjp2CJYwdHhtqtPmM6TdJyaMSAiBbP
+	H1urwezJQ61inaDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0C04E13A6B;
+	Fri, 24 May 2024 16:11:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 2BYSAhq8UGbEeQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 24 May 2024 16:11:06 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 40C9FA0825; Fri, 24 May 2024 18:11:01 +0200 (CEST)
+Date: Fri, 24 May 2024 18:11:01 +0200
+From: Jan Kara <jack@suse.cz>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
+ FS_IOC_FSGETXATTRAT
+Message-ID: <20240524161101.yyqacjob42qjcbnb@quack3>
+References: <20240520164624.665269-2-aalbersh@redhat.com>
+ <20240520164624.665269-4-aalbersh@redhat.com>
+ <20240522100007.zqpa5fxsele5m7wo@quack3>
+ <snhvkg3lm2lbdgswfzyjzmlmtcwcb725madazkdx4kd6ofqmw6@hiunsuigmq6f>
+ <20240523074828.7ut55rhhbawsqrn4@quack3>
+ <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,56 +95,108 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240521114939.2541461-2-xu.yang_2@nxp.com>
+In-Reply-To: <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
+X-Spam-Flag: NO
+X-Spam-Score: -4.01
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: 2228833C19
+X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	MISSING_XM_UA(0.00)[];
+	ARC_NA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_THREE(0.00)[3];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	DKIM_TRACE(0.00)[suse.cz:+]
 
-On Tue, May 21, 2024 at 07:49:39PM +0800, Xu Yang wrote:
-> Since commit (5d8edfb900d5 "iomap: Copy larger chunks from userspace"),
-> iomap will try to copy in larger chunks than PAGE_SIZE. However, if the
-> mapping doesn't support large folio, only one page of maximum 4KB will
-> be created and 4KB data will be writen to pagecache each time. Then,
-> next 4KB will be handled in next iteration. This will cause potential
-> write performance problem.
+On Thu 23-05-24 13:16:48, Andrey Albershteyn wrote:
+> On 2024-05-23 09:48:28, Jan Kara wrote:
+> > Hi!
+> > 
+> > On Wed 22-05-24 12:45:09, Andrey Albershteyn wrote:
+> > > On 2024-05-22 12:00:07, Jan Kara wrote:
+> > > > Hello!
+> > > > 
+> > > > On Mon 20-05-24 18:46:21, Andrey Albershteyn wrote:
+> > > > > XFS has project quotas which could be attached to a directory. All
+> > > > > new inodes in these directories inherit project ID set on parent
+> > > > > directory.
+> > > > > 
+> > > > > The project is created from userspace by opening and calling
+> > > > > FS_IOC_FSSETXATTR on each inode. This is not possible for special
+> > > > > files such as FIFO, SOCK, BLK etc. as opening them returns a special
+> > > > > inode from VFS. Therefore, some inodes are left with empty project
+> > > > > ID. Those inodes then are not shown in the quota accounting but
+> > > > > still exist in the directory.
+> > > > > 
+> > > > > This patch adds two new ioctls which allows userspace, such as
+> > > > > xfs_quota, to set project ID on special files by using parent
+> > > > > directory to open FS inode. This will let xfs_quota set ID on all
+> > > > > inodes and also reset it when project is removed. Also, as
+> > > > > vfs_fileattr_set() is now will called on special files too, let's
+> > > > > forbid any other attributes except projid and nextents (symlink can
+> > > > > have one).
+> > > > > 
+> > > > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > > > 
+> > > > I'd like to understand one thing. Is it practically useful to set project
+> > > > IDs for special inodes? There is no significant disk space usage associated
+> > > > with them so wrt quotas we are speaking only about the inode itself. So is
+> > > > the concern that user could escape inode project quota accounting and
+> > > > perform some DoS? Or why do we bother with two new somewhat hairy ioctls
+> > > > for something that seems as a small corner case to me?
+> > > 
+> > > So there's few things:
+> > > - Quota accounting is missing only some special files. Special files
+> > >   created after quota project is setup inherit ID from the project
+> > >   directory.
+> > > - For special files created after the project is setup there's no
+> > >   way to make them project-less. Therefore, creating a new project
+> > >   over those will fail due to project ID miss match.
+> > > - It wasn't possible to hardlink/rename project-less special files
+> > >   inside a project due to ID miss match. The linking is fixed, and
+> > >   renaming is worked around in first patch.
+> > > 
+> > > The initial report I got was about second and last point, an
+> > > application was failing to create a new project after "restart" and
+> > > wasn't able to link special files created beforehand.
+> > 
+> > I see. OK, but wouldn't it then be an easier fix to make sure we *never*
+> > inherit project id for special inodes? And make sure inodes with unset
+> > project ID don't fail to be linked, renamed, etc...
 > 
-> If chunk is 2MB, total 512 pages need to be handled finally. During this
-> period, fault_in_iov_iter_readable() is called to check iov_iter readable
-> validity. Since only 4KB will be handled each time, below address space
-> will be checked over and over again:
-> 
-> start         	end
-> -
-> buf,    	buf+2MB
-> buf+4KB, 	buf+2MB
-> buf+8KB, 	buf+2MB
-> ...
-> buf+2044KB 	buf+2MB
-> 
-> Obviously the checking size is wrong since only 4KB will be handled each
-> time. So this will get a correct chunk to let iomap work well in non-large
-> folio case.
-> 
-> With this change, the write speed will be stable. Tested on ARM64 device.
-> 
-> Before:
-> 
->  - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (334 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (278 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (204 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (170 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (150 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (139 MB/s)
-> 
-> After:
-> 
->  - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (339 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (330 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (332 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (333 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (333 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (333 MB/s)
-> 
-> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-> Cc: stable@vger.kernel.org
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Xu Yang <xu.yang_2@nxp.com>
+> But then, in set up project, you can cross-link between projects and
+> escape quota this way. During linking/renaming if source inode has
+> ID but target one doesn't, we won't be able to tell that this link
+> is within the project.
 
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Well, I didn't want to charge these special inodes to project quota at all
+so "escaping quota" was pretty much what I suggested to do. But my point
+was that since the only thing that's really charged for these inodes is the
+inodes itself then does this small inaccuracy really matter in practice?
+Are we afraid the user is going to fill the filesystem with symlinks?
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
