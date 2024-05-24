@@ -1,45 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A630217578;
-	Fri, 24 May 2024 08:03:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1FB81292D0;
+	Fri, 24 May 2024 08:18:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716537841; cv=none; b=ZWlrjbGyDjt4o45JPNA+6IsS+VEn07c67PIUo7pRQT6/wO+V4rqxOiM1xOfACWg7hKXKKr52/aNyH0PTRT9WJk77apAUd087HQhO6azK20WfA8JGlv5edYs+JbnjYqVO1y5QIzh2QojosbVOQAKZMQCsfGZaMf3owKtUpfIhsnE=
+	t=1716538687; cv=none; b=MsIkkU7Y6tHWKjPmO7FsvDJFDwRVYlreCMBQP56lDFDbEWvLh+h9Q5r16EIjwInanqaJUdJt+vIUjA77+jhnPrytYomC4NE+9m0TYR5Hi3uVHNR2eyUN/JMQKb92y6Q1wFYLZKyYZ29P9NKO6/7+U+VMXXL0ZJsBXeqvQrdew/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716537841; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1716538687; c=relaxed/simple;
+	bh=AbpBb4SoeryfpDXDfbidLfrYC8TWLUiF5wG1wSMxyjo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RgPaOmabnSobn6htke0h68hIBVQEgnvVD5EqXHwdm8eOmD/mRI5wGC1gNZFlb1UBXR4rpF9HfbzGqpDERLkjxuHlZWcJC+1Kg7WbilR793+t9KfKFiGQQrinHaWmogcNZ23uaG+0gEnqwmAsmCxMiGOo6znZ54hqnLuFcydmngc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4LaSb5Dk; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=JGetKbt2TezxNZ+unI14fVlQX0yGWDlJ5v0XkZs6tsffVhChlFzsxPiq0k5STUJFnBimzaVQyQdc1uZ+ZytSxsvBxNEv39lv3AwpFqfuO0B9httvMJ1n33thRKD1SLuAE+kY88RcJSS8A8f3VpwTZuFNp7RK7zKMINVqul0jkkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hWZIpCr6; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4LaSb5Dk"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hWZIpCr6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=4LaSb5DkqD1oMkgAtQaskvPO2n
-	4YT6Bj6kYdPTjWSLDVCdrvexHM2yuYX0lSbHquXZhArPwhqM5DdvhhPwnJe9f3T7W+qXoWcLnPLX3
-	wcZ1HnNINU7eMlzQ5c1aJjRB/cxdcwiCXyL5h8uW1rUZaGle95saFynho04Jlos/+0KCDlNx8IHLp
-	v4om1FBMe6640uSGvVKIvLWobsUYug5MK1Pt1Q93w9cUo7LF5aYRCOuel9kuO5M2FlOZZkG+dMoCj
-	KHVnmSTobboSYaJkZcqGVF25r6uEH1zsVwjMXfIJgVpmmwWQJcnPcl1N+lTQ2EzHwE+nINY2dExD3
-	mKdoeJcg==;
+	bh=AbpBb4SoeryfpDXDfbidLfrYC8TWLUiF5wG1wSMxyjo=; b=hWZIpCr6tviREUMFWAuUp4umW9
+	NZWn0004AbZVadOJsQS3lqt3L6PEWltNr1UilzcQUMAxde60wR4ht4KwMwWKoU5X0DfpJpqD8YbYG
+	22HkWcjNNZMshRc+io0jryT2aa5bcQcMoFr0M6lnNbU2cINVO3JzpT1i8TPHe32l7AhObONCL5i/O
+	fXhwQw8bbCU7nFFDdE/mJ4WbMcGHGA99R56TAsydb9ku8EQLv8JCy6ibtgC8eeNs0MnC7uezI8ffe
+	cu+YDVT5EYwrvcF5yiKXhFeVrGs38R02hMo6WwvQn7MxsmynQAQprDu8xGaoJl2qs2rh4DsfOZTCp
+	3wbExWWA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sAPuA-00000008L2W-0pVB;
-	Fri, 24 May 2024 08:03:58 +0000
-Date: Fri, 24 May 2024 01:03:58 -0700
+	id 1sAQ7o-00000008Mbk-0faT;
+	Fri, 24 May 2024 08:18:04 +0000
+Date: Fri, 24 May 2024 01:18:04 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Xu Yang <xu.yang_2@nxp.com>
-Cc: brauner@kernel.org, djwong@kernel.org, willy@infradead.org,
-	akpm@linux-foundation.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, jun.li@nxp.com
-Subject: Re: [PATCH v5 2/2] iomap: fault in smaller chunks for non-large
- folio mappings
-Message-ID: <ZlBJ7muFSIl-rRwe@infradead.org>
-References: <20240521114939.2541461-1-xu.yang_2@nxp.com>
- <20240521114939.2541461-2-xu.yang_2@nxp.com>
+To: Bastian Germann <bage@debian.org>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	linux-mips@vger.kernel.org, linux-api@vger.kernel.org
+Subject: Re: [PATCH v2] xfs_io: make MADV_SOFT_OFFLINE conditional
+Message-ID: <ZlBNPDomQpTfAmt2@infradead.org>
+References: <20240522223748.9986-1-bage@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,10 +46,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240521114939.2541461-2-xu.yang_2@nxp.com>
+In-Reply-To: <20240522223748.9986-1-bage@debian.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+> +#ifdef MADV_SOFT_OFFLINE
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Can you add a comment here that this is missing on mips as of Linux
+6.9?
+
+Also adding the mips maintainer so he can add it, as missing a madvise
+random feature on a random architecture looks like a bug that should be
+fixed.
 
