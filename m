@@ -1,141 +1,207 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B053B295
-	for <linux-xfs@vger.kernel.org>; Mon, 27 May 2024 09:22:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC0413A241;
+	Mon, 27 May 2024 09:23:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716801776; cv=none; b=tBITyGICmQCi0jz/vQ/GburiaeE24JKm3sFPXx53FssD3kIfk43W7G7/un82CXIEWIjhrxPuSNcAqpUglB+s3SWVWxFg3hBR6uuF1PMtWFp8lMGsD3zCrVfs/xjzjDHwhLTAhhu2u0rmOMSNLG2LNVrGgE4jka1WtV+8hVXSGxg=
+	t=1716801832; cv=none; b=rUHDx+zkuoR1IgEfmWjWJhkuIpmV2fHzosyALKSFrj+J3HEGGQHDExp8+Rb7AjUKMHo0//B+TR2Hy5gMSCwBD1dBGPVwvhK0iH/Fl2MgxMVNhm8SPe2bOVOzMazihHV5wykzRJx7S7xmIe2w29M59N8bnWji1ENRHEVGKuvIzKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716801776; c=relaxed/simple;
-	bh=Irw72qnjzCiDrkn8xJNVAndXCKXYUfjW4pvDmgE9Q/A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ga8UfFzjy4hyQH0xa0ME7KZ4zfXl/ahAqLD4aYtuKkdDVUBVoj5nyhNCeJhPUVWvU2GhLMnS/RraGtbx5j3NIWeqOuuNBXqeOawNj4HEtVYyTeQzeLw3i53ft+sM/6wvaBaPay/iLdAPzaCp+CqZu0zR5swsRqH1RfT4dn/V+aQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wouzl9vK; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1716801832; c=relaxed/simple;
+	bh=3OcXZCSPL67gEa8iZoXVuvDdjEjFD/HXPIObOC3Z7HE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Jlgr89C4SzWZrH2P9O3GjsM5gKHtlmMr42+xT0AGgVPBkysWJXvP/kngDVpCMw9mIqQGCjhzIjP6W799/hXnQPonCN+NXQrlLkohv92ARIZXgy0UhzlIgfkoTd4ishXRbO9uSGAjIqVwu0Kttny9e6DLDLhWqcb/qq2oIPjDu+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=yUahua0c; arc=none smtp.client-ip=115.124.30.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wouzl9vK"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-2bde636ddc2so3082025a91.1
-        for <linux-xfs@vger.kernel.org>; Mon, 27 May 2024 02:22:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1716801774; x=1717406574; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gZoZWr1Vh12blhESF5X1LZQugFHlNJncqtcHdAI5v7g=;
-        b=wouzl9vKIqLWp+FaisisawMgc2DAxSLVI/KVslIlPjW47GO81Bvl9WewhYg9Dp7AVv
-         46SUY4GQhQByOwmy+XneYeHp9acJ19ATbERR/Rzo1f5nWFPtXwEMiU7o2bHg6UJ80AFe
-         GvU0nrTMv4j6n1hlKEErP3qfhEctK1ToLhFHelscLcJhftYOUP4Qt8j5+NWiG0yCvaEd
-         2MBcn+5bTmnOsBZf0dqBsDEk51TI1O6xueKV2lfx8JP/JzDrDbV5gFOrS68NaD7RjPp9
-         eWq7czOQ0qmuFpJIPzn5a2w9zNiofWuaClrJz1fQ1c6vD48P1tpSdvRJYwlZpZa6GfU8
-         Xy+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716801774; x=1717406574;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gZoZWr1Vh12blhESF5X1LZQugFHlNJncqtcHdAI5v7g=;
-        b=bUPMRX9ti8S1dsjXDq2QiunxNbqcFkGvzZr5uYLN3Qfs17bLXYJi9RvYPEmZ/AGPG3
-         3ud73wEkXTPxF3rKwZnAbJIcRl6fearE7ou8ywQYCKHT33c0pRCHJ4hqHwIO7FiYLWaP
-         mDD1wlFVzwwe3W0P8Mnekpq2XW2mIwEdyE39oI5lnBjSrR8pchhdGOQeBGVnyikO2DMK
-         Q+ICFERdql5eFceGprtpg2m1SiYgxcOdJJXcxxA3YDu2RfClWkpLfrh9cigdtCpvtRbo
-         HJ2aPKYgAnoykI1wvsaZzi06dQFlg/uJ/NX/4+6pjUvbDmVVSuUNg3SEBehMWR3ycsyo
-         0vDQ==
-X-Gm-Message-State: AOJu0YzVdvLpulxH3Gn166QStnYSbdHfx6IkLE/z24S1JYAsb3xIzAzN
-	Y4MiL+B4lc2e/qi1G7cda76aOJoOfAt9p/itwoIOf+g6pk2B8rYjOH9DFG4vHeG41mN7RgXVgTV
-	8
-X-Google-Smtp-Source: AGHT+IEIqBh2zqLXCPkNIKJYAJWl3jrtI9OWJOk7lB39bWNq025EcdFNiwYaLFjpmAw3ZVh4cpAT6g==
-X-Received: by 2002:a17:90b:33d2:b0:2bf:ebf5:c9d4 with SMTP id 98e67ed59e1d1-2bfebf5cb71mr594734a91.42.1716801773684;
-        Mon, 27 May 2024 02:22:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2bf72ac197bsm4870094a91.23.2024.05.27.02.22.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 May 2024 02:22:53 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sBWZ7-00C9K0-3B;
-	Mon, 27 May 2024 19:22:50 +1000
-Date: Mon, 27 May 2024 19:22:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	djwong@kernel.org, lei lu <llfamsec@gmail.com>
-Subject: Re: Fwd: [PATCH] xfs: don't walk off the end of a directory data
- block
-Message-ID: <ZlRQ6W8BlfZ+3rWs@dread.disaster.area>
-References: <20240524164119.5943-1-llfamsec@gmail.com>
- <87ikyz7tvj.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="yUahua0c"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1716801827; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=AjXreatmcwvB9m/vXBrgxMmdp6KXfvqWLgchc/T9yD4=;
+	b=yUahua0cGX7BgY/pmnZEeOwxwlvRxcw8PAJLkN0x2GwOcfS33z/zAOojYrTmVl1t1Lcrmy8kEo5d2VRiTHf8Kuzk9HXrbp7j+7rf9oxiOMdAEh9aIphpio7VKqSOkFRkIPczcoMxl3QZfX7T0P6X7ohwD64d+BZSLkAb/kutvB4=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R361e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045075189;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0W7HigJ3_1716801825;
+Received: from 30.97.48.235(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0W7HigJ3_1716801825)
+          by smtp.aliyun-inc.com;
+          Mon, 27 May 2024 17:23:46 +0800
+Message-ID: <1b2be7fa-332d-4fab-8d36-89ef7a0d3a24@linux.alibaba.com>
+Date: Mon, 27 May 2024 17:23:44 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87ikyz7tvj.fsf@debian-BULLSEYE-live-builder-AMD64>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: avoid redundant AGFL buffer invalidation
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
+ Chandan Babu R <chandanbabu@kernel.org>, LKML <linux-kernel@vger.kernel.org>
+References: <20240527061006.4045908-1-hsiangkao@linux.alibaba.com>
+ <ZlRLWP3Ty6uvMzjd@dread.disaster.area>
+From: Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <ZlRLWP3Ty6uvMzjd@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, May 27, 2024 at 10:05:17AM +0530, Chandan Babu R wrote:
+Hi Dave,
+
+On 2024/5/27 16:59, Dave Chinner wrote:
+> On Mon, May 27, 2024 at 02:10:06PM +0800, Gao Xiang wrote:
+>> Currently AGFL blocks can be filled from the following three sources:
+>>   - allocbt free blocks, as in xfs_allocbt_free_block();
+>>   - rmapbt free blocks, as in xfs_rmapbt_free_block();
+>>   - refilled from freespace btrees, as in xfs_alloc_fix_freelist().
+>>
+>> Originally, allocbt free blocks would be marked as stale only when they
+>> put back in the general free space pool as Dave mentioned on IRC, "we
+>> don't stale AGF metadata btree blocks when they are returned to the
+>> AGFL .. but once they get put back in the general free space pool, we
+>> have to make sure the buffers are marked stale as the next user of
+>> those blocks might be user data...."
 > 
-> [CC-ing linux-xfs mailing list]
+> So it turns out that xfs_alloc_ag_vextent_small() does this when
+> allocating from the AGFL:
 > 
-> On Sat, May 25, 2024 at 12:41:19 AM +0800, lei lu wrote:
-> > Add a check to make sure xfs_dir2_data_unused and xfs_dir2_data_entry
-> > don't stray beyond valid memory region.
-
-How was this found? What symptoms did it have? i.e. How do we know
-if we've tripped over the same problem on an older LTS/distro kernel
-and need to backport it?
-
-> > Tested-by: lei lu <llfamsec@gmail.com>
-> > Signed-off-by: lei lu <llfamsec@gmail.com>
+> 	if (args->datatype & XFS_ALLOC_USERDATA) {
+>                  struct xfs_buf  *bp;
 > 
-> Also adding the missing RVB from Darrick,
+>                  error = xfs_trans_get_buf(args->tp, args->mp->m_ddev_targp,
+>                                  XFS_AGB_TO_DADDR(args->mp, args->agno, fbno),
+>                                  args->mp->m_bsize, 0, &bp);
+>                  if (error)
+>                          goto error;
+>                  xfs_trans_binval(args->tp, bp);
+>          }
 > 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Hence we're already invalidating any buffer over the block allocated
+> from the AGFL to ensure nothing will overwrite the user data that
+> will be placed in the block after the allocation is committed.
+> 
+> This means we can trigger the log force from this path - more
+> about that below....
 
-That's not really normal process - adding third party tags like this
-are kinda frowned upon because there's no actual public record of
-Darrick saying this.
+Thanks for your reply!
 
-i.e. patches send privately should really be reposted to the public
-list by the submitter and everyone then adds their rvb/acks, etc on
-list themselves.
+Yeah, I understand.
 
 > 
-> > ---
-> >  fs/xfs/libxfs/xfs_dir2_data.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-> > index dbcf58979a59..08c18e0c1baa 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_data.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_data.c
-> > @@ -178,6 +178,9 @@ __xfs_dir3_data_check(
-> >  		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
-> >  		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
-> >  
-> > +		if (offset + sizeof(*dup) > end)
-> > +			return __this_address;
-> > +
-> >  		/*
-> >  		 * If it's unused, look for the space in the bestfree table.
-> >  		 * If we find it, account for that, else make sure it
-> > @@ -210,6 +213,10 @@ __xfs_dir3_data_check(
-> >  			lastfree = 1;
-> >  			continue;
-> >  		}
-> > +
-> > +		if (offset + sizeof(*dep) > end)
-> > +			return __this_address;
-> > +
-> >  		/*
-> >  		 * It's a real entry.  Validate the fields.
-> >  		 * If this is a block directory then make sure it's
+>> However, after commit ca250b1b3d71 ("xfs: invalidate allocbt blocks
+>> moved to the free list") and commit edfd9dd54921 ("xfs: move buffer
+>> invalidation to xfs_btree_free_block"), even allocbt / bmapbt free
+>> blocks will be invalidated immediately since they may fail to pass
+>> V5 format validation on writeback even writeback to free space would be
+>> safe.
+> 
+> *nod*
+> 
+>> IOWs, IMHO currently there is actually no difference of free blocks
+>> between AGFL freespace pool and the general free space pool.  So let's
+>> avoid extra redundant AGFL buffer invalidation, since otherwise we're
+>> currently facing unnecessary xfs_log_force() due to xfs_trans_binval()
+>> again on buffers already marked as stale before as below:
+>>
+>> [  333.507469] Call Trace:
+>> [  333.507862]  xfs_buf_find+0x371/0x6a0
+>> [  333.508451]  xfs_buf_get_map+0x3f/0x230
+>> [  333.509062]  xfs_trans_get_buf_map+0x11a/0x280
+>> [  333.509751]  xfs_free_agfl_block+0xa1/0xd0
+>> [  333.510403]  xfs_agfl_free_finish_item+0x16e/0x1d0
+>> [  333.511157]  xfs_defer_finish_noroll+0x1ef/0x5c0
+>> [  333.511871]  xfs_defer_finish+0xc/0xa0
+>> [  333.512471]  xfs_itruncate_extents_flags+0x18a/0x5e0
+>> [  333.513253]  xfs_inactive_truncate+0xb8/0x130
+>> [  333.513930]  xfs_inactive+0x223/0x270
+>>
+>> And xfs_log_force() will take tens of milliseconds with AGF buffer
+>> locked.  It becomes an unnecessary long latency especially on our PMEM
+>> devices with FSDAX enabled.  Also fstests are passed with this patch.
+> 
+> Well, keep in mind the reason the log force was introduced in
+> xfs_buf_lock() - commit ed3b4d6cdc81 ("xfs: Improve scalability of
+> busy extent tracking") says:
+> 
+>      The only problem with this approach is that when a metadata buffer is
+>      marked stale (e.g. a directory block is removed), then buffer remains
+>      pinned and locked until the log goes to disk. The issue here is that
+>      if that stale buffer is reallocated in a subsequent transaction, the
+>      attempt to lock that buffer in the transaction will hang waiting
+>      the log to go to disk to unlock and unpin the buffer. Hence if
+>      someone tries to lock a pinned, stale, locked buffer we need to
+>      push on the log to get it unlocked ASAP. Effectively we are trading
+>      off a guaranteed log force for a much less common trigger for log
+>      force to occur.
+> 
+> IOWs, this "log force on buffer lock" trigger isn't specific to AGFL
+> blocks.  The log force is placed there to ensure that access latency
+> to any block we rapidly reallocate is *only* a few milliseconds,
+> rather than being "whenever the next log writes trigger" which could
+> be tens of seconds away....
 
-Nothing wrong with the code change, though.
+Yes, I understand, also see below:
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Hence we need to be aware that removing the double invalidation on
+> the AGFL blocks does not make this "log force on stale buffer"
+> latency issue go away, it just changes when and where it happens
+> (i.e. on reallocation).
+
+Yes, I totally agree with you that removing the double invalidation
+doesn't make this "log force on stale buffer" go away.  However,
+currently with our workloads we've seen this path
+("xfs_agfl_free_finish_item->take AGF lock-> xfs_trans_get_buf_map->
+xfs_buf_lock on AGFL blocks") takes AGF lock for tens of milliseconds.
+At the same time, other parallel operations like
+"xfs_reflink_find_shared" which tend to take AGF lock will be blocked
+for tens of milliseconds.
+
+And after we remove the double invalidation, our workloads now behave
+normal (AGF lock won't be bottlenecked at least in our workloads)..
+Since it's unnecessary for the current codebase and it resolves our
+issues, I'd like to remove this double invalidation entirely.
+
+> 
+>> Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_alloc.c | 18 ++----------------
+>>   1 file changed, 2 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+>> index 6cb8b2ddc541..a80d2a31252a 100644
+>> --- a/fs/xfs/libxfs/xfs_alloc.c
+>> +++ b/fs/xfs/libxfs/xfs_alloc.c
+>> @@ -2432,22 +2432,8 @@ xfs_free_agfl_block(
+>>   	struct xfs_buf		*agbp,
+>>   	struct xfs_owner_info	*oinfo)
+>>   {
+>> -	int			error;
+>> -	struct xfs_buf		*bp;
+>> -
+>> -	error = xfs_free_ag_extent(tp, agbp, agno, agbno, 1, oinfo,
+>> -				   XFS_AG_RESV_AGFL);
+>> -	if (error)
+>> -		return error;
+>> -
+>> -	error = xfs_trans_get_buf(tp, tp->t_mountp->m_ddev_targp,
+>> -			XFS_AGB_TO_DADDR(tp->t_mountp, agno, agbno),
+>> -			tp->t_mountp->m_bsize, 0, &bp);
+>> -	if (error)
+>> -		return error;
+>> -	xfs_trans_binval(tp, bp);
+>> -
+>> -	return 0;
+>> +	return xfs_free_ag_extent(tp, agbp, agno, agbno, 1, oinfo,
+>> +				  XFS_AG_RESV_AGFL);
+>>   }
+> 
+> I'd just get rid of the xfs_free_agfl_block() wrapper entirely and
+> call xfs_free_ag_extent() directly from xfs_agfl_free_finish_item().
+
+Okay, let me revise a new version later.
+
+Thanks,
+Gao Xiang
+
+> 
+> -Dave.
