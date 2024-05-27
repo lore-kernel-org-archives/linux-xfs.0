@@ -1,205 +1,221 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DCA415ECEC
-	for <linux-xfs@vger.kernel.org>; Mon, 27 May 2024 13:45:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 409961640B;
+	Mon, 27 May 2024 13:56:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716817505; cv=none; b=sTJXYOfujl740z2JJ8MnGmaMk8Hq3ZxFYl9C8W+cit0hoLalJqvgQ7WJTBSCcChW/Te+sA3uonmvXqB14yOoYnJGHIunMH39u0LiIkgKW6fnT9Y/B44aLOnT/3HlTJzK/+TwEIhADyjYdM7n5r4HK6s9P75f81puUoJCqEWXuxs=
+	t=1716818188; cv=none; b=Sbsn0cC6uM83Wq2c4VV/3dNDfIaFPCpUAmyPqUt+vCoeRhajkzcx6X5LHQYHjDouYO3B+byzBO9VKFEuqVItsIGsfFhBNlaT/tIiGDvGyQA07Q/hLrehaX1cuRwR7/pMqJTD1RYFiQZM5Le9wAfm/IX1+UBzouWfO4thWW2DF6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716817505; c=relaxed/simple;
-	bh=4IXm3Yl7oDe1+t/7xS2Awgu2rRYivEFLXgRHhPcdOpM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ha4kmXeGPUkL9SRnREafFDmTAGDqXsjNzWzMOfJIoOTx9xPo322a8nkTJoiTt0GAguURnn1rRXlSKauldBsbIe1SJRZSBizg4PVwR57LSESSpDdSejNBcj5/1kkqFA7FbGNLmYx03I2ppApquaANEwRi1aOZJeLfGfmxKwkQMYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 44RDgjxa019453;
-	Mon, 27 May 2024 13:44:54 GMT
-DKIM-Signature: =?UTF-8?Q?v=3D1;_a=3Drsa-sha256;_c=3Drelaxed/relaxed;_d=3Dibm.com;_h=3Dcc?=
- =?UTF-8?Q?:content-transfer-encoding:content-type:date:from:in-reply-to:m?=
- =?UTF-8?Q?essage-id:mime-version:references:subject:to;_s=3Dpp1;_bh=3DuSG?=
- =?UTF-8?Q?QRSnvRZfQihTEn+0Rznx9VCq9jJ2IFpz+KUe/nUo=3D;_b=3DQblVpvAGkw3nCo?=
- =?UTF-8?Q?PgR0Hz0mmC8KJBEOxLaeb6yjKXlQpM1dUYkzzvwUxa4F5PEuriXZLy_wAdFIuru?=
- =?UTF-8?Q?CY5MLZKV5JFJZ1BAhQ9qtu32vyOj0AdrMyBDki/M9hMJ89tMj65Pmuf72h8m_z9?=
- =?UTF-8?Q?13dpoBQcTSir2DTfSPauor3iXvOcdyvBa+sxgQQZXR4VOgsa5ocZ29/O7PAojcM?=
- =?UTF-8?Q?5JX_zXMvUk9Q+GymfmIsYwmBrk1j+HbXxbMAEE7cux9j+B0m5gbSIjL2Sr0hDz4?=
- =?UTF-8?Q?mBECykUiQ_kV26z0c3Kw/y/IUZrxzJz9n83/c+AhM6B/MF3SqcWdf9kLv4Baguq?=
- =?UTF-8?Q?xzEicsqrWbQNNry_+A=3D=3D_?=
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ycu9ur04d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 27 May 2024 13:44:53 +0000
-Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 44RDirHw022873;
-	Mon, 27 May 2024 13:44:53 GMT
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ycu9ur04a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 27 May 2024 13:44:53 +0000
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 44RC10ik004505;
-	Mon, 27 May 2024 13:44:52 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3ybuans92k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 27 May 2024 13:44:52 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 44RDimCP30278348
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 27 May 2024 13:44:50 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5716E20043;
-	Mon, 27 May 2024 13:44:48 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6A6E020040;
-	Mon, 27 May 2024 13:44:46 +0000 (GMT)
-Received: from [9.43.100.127] (unknown [9.43.100.127])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 27 May 2024 13:44:46 +0000 (GMT)
-Message-ID: <26730f46-ad28-47f1-bc5f-e719d192f3c5@linux.ibm.com>
-Date: Mon, 27 May 2024 19:14:44 +0530
+	s=arc-20240116; t=1716818188; c=relaxed/simple;
+	bh=NgOcCSGHTbzpnvl9Mq6Om5C2Z9Lk+2YXyn4VKP6Rd2U=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=QhgKSH/BsNDhT3N6Cb1CRWAROTkqX7OF2IwY6AJ+6L/fBL31DWRXbiaiv6Av4pljsssCHH2dEo38/m5zYzjuO0CQK8j1/z/qrPVmYByv72UCoCaXH3nHzvzoRkXDEaTiB0EWf03dRMKrdAoWsp4D8O2iPLNagWWEYg8XcAZhsQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QKm0YyE4; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QKm0YyE4"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6fdfee2734aso1308576b3a.0;
+        Mon, 27 May 2024 06:56:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1716818186; x=1717422986; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=EsenHvk4IovIHHC5dnWr0r84fdaChyIxj7I5Rp7B2Ho=;
+        b=QKm0YyE41+++ghsaw1kRiOwofZYeYOC1opKNPiwq6wfDT3gvMzgANcjnNAcpx0a09D
+         Cy36/6GbqI6zdfPxOvA7dosn8P92ybXplj/7wKbglbIZPbTFXOTJNflWjDFvO/OrXMLD
+         J/dwJTc7bcM0WXFR5hJJm2p8eU+i5Qdcyg/vBEKxKjFx788Ggi5bEITpUBxyjtQL2Ou/
+         q8RMeATbj6upOXVDJeP406gCcdbpzhxdoBYs/lPxb8CRyu/AU/W00rWDdyFd2jr6DKuy
+         HHjDoZhu4vHRk7dkB9Elz0Bqu/eb/G8hMJZo9yWnGZRcrFre7E8r7TpRtUGPpxU/27HI
+         Ui+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1716818186; x=1717422986;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=EsenHvk4IovIHHC5dnWr0r84fdaChyIxj7I5Rp7B2Ho=;
+        b=BrS1tAKK694Ohhrt2IDGUtgJkanZcwYEtXrsnwAwULRxdjvFYgINws5K+AVSHr7lNw
+         GBeqdR+WxmVRQcvvPkiuJ9F/mPf5MzZbEynqrsvbsOL5dckr97IARiIUxhEhdsm+gtNY
+         E4MD0tInUO2zoX+8NE4RSowZx9P1WOLoasPuHKoPDoYQxQ9/OOcJXsFyZRFi3LXZQgxz
+         OU64xexXgP5x6RxNNMMBCrLXodnS97yGCQlItvRgepO9pr+/x/hQ1XqYcprl3olW5f5G
+         Dd37aUHC49nksvcPEvBLxPaNIGrLY7Ho4/+gy+/72C+zWONtGULbieYxZV+1fcdtcyjJ
+         om/A==
+X-Forwarded-Encrypted: i=1; AJvYcCXt3gh82f3VFSTJXUj+8JY2lahJluNt7CLUqF4FG2e688m4EB27bEF4ugdwKuCbLxemot0IJneKT3XC0EL4UgUYUmWPrD3GpvHzXIIUKbiKIih8TBrLZpxRZbfwUWx5UxifJHER/DlnyBLE2nnxAW3Y1hKPFeGOGCJd6NQwtg==
+X-Gm-Message-State: AOJu0YxpKxOcMQeaViBwoCwABwDDdd2gLrfK8vyGPC6THde2avks65kp
+	9W+t9PJzxzRIARQ4hUYcyhAB+lUlbTB+ypPJMK+NS9Na7NE0reIb
+X-Google-Smtp-Source: AGHT+IGGsI8QxA/ax0FtzuuOY3wCa0fKExkQy2Thg9FQKwyXs0zsdMWc9yTMXpokXOq9FgnHauwnIw==
+X-Received: by 2002:a05:6a21:99a5:b0:1b2:487f:bb0d with SMTP id adf61e73a8af0-1b2487fc282mr560507637.49.1716818186351;
+        Mon, 27 May 2024 06:56:26 -0700 (PDT)
+Received: from localhost.localdomain ([14.22.11.162])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-6f8fd4e27adsm4896119b3a.213.2024.05.27.06.56.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 May 2024 06:56:25 -0700 (PDT)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: david@fromorbit.com
+Cc: alexjlzheng@gmail.com,
+	alexjlzheng@tencent.com,
+	bfoster@redhat.com,
+	djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	raven@themaw.net,
+	rcu@vger.kernel.org
+Subject: Re: About the conflict between XFS inode recycle and VFS rcu-walk
+Date: Mon, 27 May 2024 21:56:15 +0800
+Message-Id: <20240527135615.2633248-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.39.3
+In-Reply-To: <ZlRVPv0EGIu5q7l9@dread.disaster.area>
+References: <ZlRVPv0EGIu5q7l9@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv4 1/1] xfs: Add cond_resched to block unmap range and
- reflink remap path
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong"
- <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>
-References: <cover.1715073983.git.ritesh.list@gmail.com>
- <3e1986b79faa3307059ce9d57ff3e44c0d85fe4f.1715073983.git.ritesh.list@gmail.com>
-Content-Language: en-GB
-From: Disha Goel <disgoel@linux.ibm.com>
-In-Reply-To: <3e1986b79faa3307059ce9d57ff3e44c0d85fe4f.1715073983.git.ritesh.list@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: 8pgJJon73PQ9FDL8kh_yuanA_A6CgYMc
-X-Proofpoint-GUID: 0_l8VeHCOeFMriv315eqmIyIzQHLsvkD
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
- definitions=2024-05-27_03,2024-05-24_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- impostorscore=0 mlxscore=0 spamscore=0 clxscore=1011 mlxlogscore=848
- bulkscore=0 phishscore=0 suspectscore=0 adultscore=0 priorityscore=1501
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2405010000 definitions=main-2405270112
+Content-Transfer-Encoding: 8bit
 
-On 07/05/24 3:06 pm, Ritesh Harjani (IBM) wrote:
+On Mon, 27 May 2024 at 19:41:18 +1000, Dave Chinner wrote:
+> On Thu, May 16, 2024 at 03:23:40PM +0800, Ian Kent wrote:
+> > On 16/5/24 15:08, Ian Kent wrote:
+> > > On 16/5/24 12:56, Jinliang Zheng wrote:
+> > > > > I encountered the following calltrace:
+> > > > > 
+> > > > > [20213.578756] BUG: kernel NULL pointer dereference, address:
+> > > > > 0000000000000000
+> > > > > [20213.578785] #PF: supervisor instruction fetch in kernel mode
+> > > > > [20213.578799] #PF: error_code(0x0010) - not-present page
+> > > > > [20213.578812] PGD 3f01d64067 P4D 3f01d64067 PUD 3f01d65067 PMD 0
+> > > > > [20213.578828] Oops: 0010 [#1] SMP NOPTI
+> > > > > [20213.578839] CPU: 92 PID: 766 Comm: /usr/local/serv Kdump:
+> > > > > loaded Not tainted 5.4.241-1-tlinux4-0017.3 #1
+> > > > > [20213.578860] Hardware name: New H3C Technologies Co., Ltd.
+> > > > > UniServer R4900 G3/RS33M2C9SA, BIOS 2.00.38P02 04/14/2020
+> > > > > [20213.578884] RIP: 0010:0x0
+> > > > > [20213.578894] Code: Bad RIP value.
+> > > > > [20213.578903] RSP: 0018:ffffc90021ebfc38 EFLAGS: 00010246
+> > > > > [20213.578916] RAX: ffffffff82081f40 RBX: ffffc90021ebfce0 RCX:
+> > > > > 0000000000000000
+> > > > > [20213.578932] RDX: ffffc90021ebfd48 RSI: ffff88bfad8d3890 RDI:
+> > > > > 0000000000000000
+> > > > > [20213.578948] RBP: ffffc90021ebfc70 R08: 0000000000000001 R09:
+> > > > > ffff889b9eeae380
+> > > > > [20213.578965] R10: 302d343200000067 R11: 0000000000000001 R12:
+> > > > > 0000000000000000
+> > > > > [20213.578981] R13: ffff88bfad8d3890 R14: ffff889b9eeae380 R15:
+> > > > > ffffc90021ebfd48
+> > > > > [20213.578998] FS:  00007f89c534e740(0000)
+> > > > > GS:ffff88c07fd00000(0000) knlGS:0000000000000000
+> > > > > [20213.579016] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > > [20213.579030] CR2: ffffffffffffffd6 CR3: 0000003f01d90001 CR4:
+> > > > > 00000000007706e0
+> > > > > [20213.579046] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> > > > > 0000000000000000
+> > > > > [20213.579062] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+> > > > > 0000000000000400
+> > > > > [20213.579079] PKRU: 55555554
+> > > > > [20213.579087] Call Trace:
+> > > > > [20213.579099]  trailing_symlink+0x1da/0x260
+> > > > > [20213.579112]  path_lookupat.isra.53+0x79/0x220
+> > > > > [20213.579125]  filename_lookup.part.69+0xa0/0x170
+> > > > > [20213.579138]  ? kmem_cache_alloc+0x3f/0x3f0
+> > > > > [20213.579151]  ? getname_flags+0x4f/0x1e0
+> > > > > [20213.579161]  user_path_at_empty+0x3e/0x50
+> > > > > [20213.579172]  vfs_statx+0x76/0xe0
+> > > > > [20213.579182]  __do_sys_newstat+0x3d/0x70
+> > > > > [20213.579194]  ? fput+0x13/0x20
+> > > > > [20213.579203]  ? ksys_ioctl+0xb0/0x300
+> > > > > [20213.579213]  ? generic_file_llseek+0x24/0x30
+> > > > > [20213.579225]  ? fput+0x13/0x20
+> > > > > [20213.579233]  ? ksys_lseek+0x8d/0xb0
+> > > > > [20213.579243]  __x64_sys_newstat+0x16/0x20
+> > > > > [20213.579256]  do_syscall_64+0x4d/0x140
+> > > > > [20213.579268]  entry_SYSCALL_64_after_hwframe+0x5c/0xc1
+> > > > > 
+> > > > > <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+> > > > > 
+> > > > Please note that the kernel version I use is the one maintained by
+> > > > Tencent.Inc,
+> > > > and the baseline is v5.4. But in fact, in the latest upstream source
+> > > > tree,
+> > > > although the trailing_symlink() function has been removed, its logic
+> > > > has been
+> > > > moved to pick_link(), so the problem still exists.
+> > > > 
+> > > > Ian Kent pointed out that try_to_unlazy() was introduced in
+> > > > pick_link() in the
+> > > > latest upstream source tree, but I don't understand why this can
+> > > > solve the NULL
+> > > > ->get_link pointer dereference problem, because ->get_link pointer
+> > > > will be
+> > > > dereferenced before try_to_unlazy().
+> > > > 
+> > > > (I don't understand why Ian Kent's email didn't appear on the
+> > > > mailing list.)
+> > > 
+> > > It was something about html mail and I think my mail client was at fault.
+> > > 
+> > > In any case what you say is indeed correct, so the comment isn't
+> > > important.
+> > > 
+> > > 
+> > > Fact is it is still a race between the lockless path walk and inode
+> > > eviction
+> > > 
+> > > and xfs recycling. I believe that the xfs recycling code is very hard to
+> > > fix.
+> 
+> Not really for this case. This is simply concurrent pathwalk lookups
+> occurring just after the inode has been evicted from the VFS inode
+> cache. The first lookup hits the XFS inode cache, sees
+> XFS_IRECLAIMABLE, and it then enters xfs_reinit_inode() to
+> reinstantiate the VFS inode to an initial state. The Xfs inode
+> itself is still valid as it hasn't reached the XFS_IRECLAIM state
+> where it will be torn down and freed.
+> 
+> Whilst we are running xfs_reinit_inode(), a second RCU pathwalk has
+> been run and that it is trying to call ->get_link on that same
+> inode. Unfortunately, the first lookup has just set inode->f_ops =
+> &empty_fops as part of the VFS inode reinit, and that then triggers
+> the null pointer deref.
 
-> An async dio write to a sparse file can generate a lot of extents
-> and when we unlink this file (using rm), the kernel can be busy in umapping
-> and freeing those extents as part of transaction processing.
->
-> Similarly xfs reflink remapping path can also iterate over a million
-> extent entries in xfs_reflink_remap_blocks().
->
-> Since we can busy loop in these two functions, so let's add cond_resched()
-> to avoid softlockup messages like these.
->
-> watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [kworker/1:0:82435]
-> CPU: 1 PID: 82435 Comm: kworker/1:0 Tainted: G S  L   6.9.0-rc5-0-default #1
-> Workqueue: xfs-inodegc/sda2 xfs_inodegc_worker
-> NIP [c000000000beea10] xfs_extent_busy_trim+0x100/0x290
-> LR [c000000000bee958] xfs_extent_busy_trim+0x48/0x290
-> Call Trace:
->    xfs_alloc_get_rec+0x54/0x1b0 (unreliable)
->    xfs_alloc_compute_aligned+0x5c/0x144
->    xfs_alloc_ag_vextent_size+0x238/0x8d4
->    xfs_alloc_fix_freelist+0x540/0x694
->    xfs_free_extent_fix_freelist+0x84/0xe0
->    __xfs_free_extent+0x74/0x1ec
->    xfs_extent_free_finish_item+0xcc/0x214
->    xfs_defer_finish_one+0x194/0x388
->    xfs_defer_finish_noroll+0x1b4/0x5c8
->    xfs_defer_finish+0x2c/0xc4
->    xfs_bunmapi_range+0xa4/0x100
->    xfs_itruncate_extents_flags+0x1b8/0x2f4
->    xfs_inactive_truncate+0xe0/0x124
->    xfs_inactive+0x30c/0x3e0
->    xfs_inodegc_worker+0x140/0x234
->    process_scheduled_works+0x240/0x57c
->    worker_thread+0x198/0x468
->    kthread+0x138/0x140
->    start_kernel_thread+0x14/0x18
->
-> run fstests generic/175 at 2024-02-02 04:40:21
-> [   C17] watchdog: BUG: soft lockup - CPU#17 stuck for 23s! [xfs_io:7679]
->   watchdog: BUG: soft lockup - CPU#17 stuck for 23s! [xfs_io:7679]
->   CPU: 17 PID: 7679 Comm: xfs_io Kdump: loaded Tainted: G X 6.4.0
->   NIP [c008000005e3ec94] xfs_rmapbt_diff_two_keys+0x54/0xe0 [xfs]
->   LR [c008000005e08798] xfs_btree_get_leaf_keys+0x110/0x1e0 [xfs]
->   Call Trace:
->    0xc000000014107c00 (unreliable)
->    __xfs_btree_updkeys+0x8c/0x2c0 [xfs]
->    xfs_btree_update_keys+0x150/0x170 [xfs]
->    xfs_btree_lshift+0x534/0x660 [xfs]
->    xfs_btree_make_block_unfull+0x19c/0x240 [xfs]
->    xfs_btree_insrec+0x4e4/0x630 [xfs]
->    xfs_btree_insert+0x104/0x2d0 [xfs]
->    xfs_rmap_insert+0xc4/0x260 [xfs]
->    xfs_rmap_map_shared+0x228/0x630 [xfs]
->    xfs_rmap_finish_one+0x2d4/0x350 [xfs]
->    xfs_rmap_update_finish_item+0x44/0xc0 [xfs]
->    xfs_defer_finish_noroll+0x2e4/0x740 [xfs]
->    __xfs_trans_commit+0x1f4/0x400 [xfs]
->    xfs_reflink_remap_extent+0x2d8/0x650 [xfs]
->    xfs_reflink_remap_blocks+0x154/0x320 [xfs]
->    xfs_file_remap_range+0x138/0x3a0 [xfs]
->    do_clone_file_range+0x11c/0x2f0
->    vfs_clone_file_range+0x60/0x1c0
->    ioctl_file_clone+0x78/0x140
->    sys_ioctl+0x934/0x1270
->    system_call_exception+0x158/0x320
->    system_call_vectored_common+0x15c/0x2ec
->
-> Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+The RCU pathwalk must occur before xfs_reinit_inode(), and must obtain the
+target inode before xfs_reinit_inode(). Because the target inode of
+xfs_reinit_inode() must NOT be associated with any dentry, which is necessary
+conditions for iput() -> iput_final() -> evict(), and the RCU pathwalk cannot
+obtain any inode without a dentry.
 
-Thanks for the fix patch. I have tested it on a power machine,
-and it resolves the soft lockup issue.
+> 
+> Once the first lookup has finished the inode_init_always(),
+> xfs_reinit_inode() resets inode->f_ops back to 
+> xfs_symlink_file_ops and get_link calls work again.
+> 
+> Fundamentally, the problem is that we are completely reinitialising
+> the VFS inode within the RCU grace period. i.e. while concurrent RCU
+> pathwalks can still be in progress and find the VFS inode whilst the
+> XFS inode cache is manipulating it.
+> 
+> What we should be doing here is a subset of inode_init_always(),
+> which only reinitialises the bits of the VFS inode we need to
+> initialise rather than the entire inode. The identity of the inode
+> is not changing and so we don't need to go through a transient state
+> where the VFS inode goes xfs symlink -> empty initialised inode ->
+> xfs symlink.
 
-Tested-by: Disha Goel<disgoel@linux.ibm.com>
+Sorry, I think this question is wrong in more ways than just inode_operations.
+After the target inode has been reinited by xfs_reinit_inode(), its semantics
+is no longer the inode required by RCU walkpath. The meanings of many fields
+have changed, such as mode, i_mtime, i_atime, i_ctime and so on.
 
-> ---
->   fs/xfs/libxfs/xfs_bmap.c | 1 +
->   fs/xfs/xfs_reflink.c     | 1 +
->   2 files changed, 2 insertions(+)
->
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 656c95a22f2e..44d5381bc66f 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -6354,6 +6354,7 @@ xfs_bunmapi_range(
->   		error = xfs_defer_finish(tpp);
->   		if (error)
->   			goto out;
-> +		cond_resched();
->   	}
->   out:
->   	return error;
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 7da0e8f961d3..5f26a608bc09 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1417,6 +1417,7 @@ xfs_reflink_remap_blocks(
->   		destoff += imap.br_blockcount;
->   		len -= imap.br_blockcount;
->   		remapped_len += imap.br_blockcount;
-> +		cond_resched();
->   	}
->
->   	if (error)
-> --
-> 2.44.0
->
->
+> 
+> i.e. We need to re-initialise the non-identity related parts of the
+> VFS inode so the identity parts that the RCU pathwalks rely on never
+> change within the RCU grace period where lookups can find the VFS
+> inode after it has been evicted.
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
