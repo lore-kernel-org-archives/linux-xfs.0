@@ -1,211 +1,184 @@
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82DFD13AA44
-	for <linux-xfs@vger.kernel.org>; Mon, 27 May 2024 09:41:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2442232A
+	for <linux-xfs@vger.kernel.org>; Mon, 27 May 2024 09:43:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716802884; cv=none; b=XN9xAOddjnURd1dH7MB68lpSJ5YfoKTYVOX0jP2GyCCUAnETE3h+yZ7aTi8RR22velFJY9e6eCs/Spj0i2OEFKWwi6U7ghsEmC2YacGbj3J51HXsqjgGK6l2Yfhbtx9HRClbmtjIw7Ofh7oqXxmLS7CKorbtD8CgPo/gcdVyWjU=
+	t=1716802997; cv=none; b=hDUr797joYXHXk8FMFqpS5ptA2IXDqOfqt4y6SfVkA/Ieoi1EZ+miRap8dZ6msVOaftE3zbB9KcZ+zf4Bv9P4WWhbsd/lzmymdEl6INL5YN+lMRjWTiBY9Uv8pA1ZBStIRihsmHwFFq+hDk2KbWXFYhfQOzGgBHVdZ570DmvZIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716802884; c=relaxed/simple;
-	bh=0Zrwzc6df6IFQfS1/XIBTBiqyVbeqBNE7NyQC1Nmtbg=;
+	s=arc-20240116; t=1716802997; c=relaxed/simple;
+	bh=4TAnsgRU3FqL2CVyRoWPdi38cUzoxU0puszdnE0/8Ng=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eD1oi+q6JW/slJ2/bzBsF09KyTMXy5PoQmfJmQ6z6D0Yg7ooI/uQbblEe2KTQ8eZw7oKPZavtoOwO4ebWzMXCTnifJDz+9PJ4QgpLxWDoYgJq2wkdtziwIDuIQ/NnOPQ9ApB7H5f+lar6Wiu9dl9Et48PpiDe27WxsFHjaGZy+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=pqc8Cl7u; arc=none smtp.client-ip=209.85.215.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=JfFGpPYTCvMqsCfGStldkGq392jOfj9C8lbk3H2IQb74SISc6hDwAfzc3tKPiLSvOjrsPxgdTk2KI5R437rRiuBurhaFEmhOdyWBRy+gOgHnHX6H36kKlSSNAfVto29KqDhwJ1wStZAewMydEBry7zbxWXYv02TJtKY00A8F7pg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=agHRxBwL; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="pqc8Cl7u"
-Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-681919f89f2so2355795a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 27 May 2024 02:41:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1716802882; x=1717407682; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=+8gxNcVFWirZ31LoEEY20bp3YI5Zlkldggnnr1LW6VY=;
-        b=pqc8Cl7u9mcbRrfAv666QmdhqvW+GXbF0ihS915tGrucQGTM6/yVEcLvnaUNV5U2bN
-         B2h71jOX8Iooe+3zxj9kN3CZKXwtdNQbYSpRZK24YzUM7h/Q5WRBQhpcwODo6DmkT7Nj
-         QwzANRLq9JZgEwGo4c7i+vQRIjVxE1qYBbf2l5guAuqnCeIn12Mu3LmMrk/jK9pXbasN
-         8JC84OfszqP0kl8J481NQMUed2P9dh7jCVGZUYRUR1g4LrX6zGxncPACDRNLonci/xJJ
-         BssSQvCbLKBz6vMi7m/Bz5Uu90VrQjrE/Jg/Qi7sLAY5OW63/OVhYXJ5wD0owgu66Wjg
-         cIaw==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="agHRxBwL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1716802994;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=01xQt1pVX53eXZ63Wy8mqsxhl6WWb+Dr6WxWNznAp/Y=;
+	b=agHRxBwL95uduC8PSNN4k+gJHKN/U5ly2nl9OAZhBU2kDKaogvHfOL+Sw2qdrpTFeX6R/x
+	DODEKlQiYR6bOQb/XdnELUdT39CyupFC2kIW81kTyBmmkCzNYFJX9IJdLWYu5XtqVhaQJ+
+	zLubmVvKrQotG/eLrIt8zP6YazRkjus=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-477-jUaNE34OMOq3tZTkvlc1gA-1; Mon, 27 May 2024 05:43:12 -0400
+X-MC-Unique: jUaNE34OMOq3tZTkvlc1gA-1
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-529aa3f32ecso915352e87.1
+        for <linux-xfs@vger.kernel.org>; Mon, 27 May 2024 02:43:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716802882; x=1717407682;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+8gxNcVFWirZ31LoEEY20bp3YI5Zlkldggnnr1LW6VY=;
-        b=kVNJR9YHkBeBr5973wvxvpH/jtK7AVu92opOQcCpGmL23TJx2aFb34po7LPcFDHbnK
-         7XjCFgyrvO+bGhZR+hSPUc3a46dsD2FISZjS73hpr1PhKqFWiS+VCcnV0o0MpuxJHC3m
-         TEbH4VOrKRo042uHzCSaXWZtQ8Bo90ZXyK9tlKZqXcUR3epDLeSz/2UDhm/m58Ye03lz
-         PbAueFUpjOxhUTcGrvAIEG/OghDwlsIyrM1ScLcbAJhxp1TbKXXGGdccANFypUIfyVyY
-         A8kDIp16+wyqm+mnaYirz8V+7YFabEJi+w1Fmz2vuKiKK//sce4ks7ev22SNPa/NCsdx
-         34bA==
-X-Forwarded-Encrypted: i=1; AJvYcCUBB7p2t1K5sJ/QQWGTxvdEPgDiXB/qGDXdPRPM1dHlM1YlAJvN9BVIzC+mO730hjx52KzpcJoQ4grx6HfdMZkoy5XsGA2xadeq
-X-Gm-Message-State: AOJu0YyUAVt36kCDrYj05kS4U+XUxP3KtOcKaK0f45bxG6ocMrslteY5
-	TuK16hfp2yHVl7iwLVax3eQco+mzbOVHeoW73DKfkmfTTr7pjs7sBV5bmM9n3IhGPSceP7/tyJA
-	N
-X-Google-Smtp-Source: AGHT+IHkHA9PGtS6NUdhkvlZxZe+UY2Tf4e1T+h4Oq0CH//KjXpVUiGmtak6tj35U98uNuBj6D/otg==
-X-Received: by 2002:a17:90a:cb0c:b0:2bd:ed7e:b712 with SMTP id 98e67ed59e1d1-2bf5e84a967mr9703323a91.9.1716802881596;
-        Mon, 27 May 2024 02:41:21 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2bf5f613795sm6016723a91.31.2024.05.27.02.41.21
+        d=1e100.net; s=20230601; t=1716802991; x=1717407791;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=01xQt1pVX53eXZ63Wy8mqsxhl6WWb+Dr6WxWNznAp/Y=;
+        b=vs0G8oRgfDCTpvmV1x34hap3ajKzlzwAB+PFMjpVWtahjL3l/9XVEO6+WvKrbgOXfM
+         wCnTfA/J/4Nudnk9z3UzM9VgyfAOfqQNWm1lO3uOsoyj9GSlZx2MxdCyjVblhd2tsXs4
+         S+jFBcDQYg+qJ4UHRgVlxk9AE81vxHMuNvIiXUjTlgdBysl8euNhLwjn6KrBp8nitzda
+         LbpTQ8/LWsGf18Oyi9cDSwgt+Uf6jeNpoWnZwealKloQ/UGb94BlwNX8xfwiz17uTpPL
+         cuEzjN26KBQeQhGe1fPak6Xi0Jw9o1+QwGRF37PN4dsTmiviqyybVjLrX2CTw+xuLcHT
+         YkAQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVbNijUwyd1w1Hvm3CVJD5eOBzAtk7hAo3qcB8Ofqm/0hPnliRQBL6fmlWWR7rZ/O1eWakbRmug48C2ObhJexSlbQdtyrLYpYPx
+X-Gm-Message-State: AOJu0YzMPuefWfIJz35MuVwxQOXqZzxZbIOU+pUiVBmaGvmqRo1VOUxo
+	fL9T06HGgUHD3k56SJFxU4MC0i7rdR6DFMkAThMpDm0EHWqJAjNFamthCyt7lZUzfkxJiYTLs62
+	+LepQ2kyakA08jlv23enSgQQJ09ZfZ7d51LzzweIF6EwW/SERZMWmM8vFtt/yn/Kn
+X-Received: by 2002:a05:6512:31cb:b0:520:9df8:f245 with SMTP id 2adb3069b0e04-529645e242bmr7086626e87.1.1716802990745;
+        Mon, 27 May 2024 02:43:10 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHCnOgy3AuFG33Flx9qdZtJBuvSL+1Xt7c4UsRxuEMsXwXtDIVjTu+tqu5MCRpdme2hgS0KZw==
+X-Received: by 2002:a05:6512:31cb:b0:520:9df8:f245 with SMTP id 2adb3069b0e04-529645e242bmr7086602e87.1.1716802989968;
+        Mon, 27 May 2024 02:43:09 -0700 (PDT)
+Received: from thinky ([2a02:6bf:fff0:6300:6263:2b90:eac8:9097])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42100ee7edbsm136396605e9.5.2024.05.27.02.43.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 May 2024 02:41:21 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sBWr0-00CAKw-2q;
-	Mon, 27 May 2024 19:41:18 +1000
-Date: Mon, 27 May 2024 19:41:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Ian Kent <raven@themaw.net>
-Cc: Jinliang Zheng <alexjlzheng@gmail.com>, alexjlzheng@tencent.com,
-	bfoster@redhat.com, djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	rcu@vger.kernel.org
-Subject: Re: About the conflict between XFS inode recycle and VFS rcu-walk
-Message-ID: <ZlRVPv0EGIu5q7l9@dread.disaster.area>
-References: <20240515155441.2788093-1-alexjlzheng@tencent.com>
- <20240516045655.40122-1-alexjlzheng@tencent.com>
- <7f744bf5-5f6d-4031-8a4f-91be2cd45147@themaw.net>
- <3545f78c-5e1c-4328-8ab0-19227005f4b7@themaw.net>
+        Mon, 27 May 2024 02:43:09 -0700 (PDT)
+Date: Mon, 27 May 2024 11:43:06 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test quota's project ID on special files
+Message-ID: <amb432qfsbrvbtfrs5zeqif7ddbzauktmm5xn7hiszpuftw7qg@7rtsuoqznx5t>
+References: <20240520170004.669254-2-aalbersh@redhat.com>
+ <20240525054252.2h55e2oer65mpy6s@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3545f78c-5e1c-4328-8ab0-19227005f4b7@themaw.net>
+In-Reply-To: <20240525054252.2h55e2oer65mpy6s@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Thu, May 16, 2024 at 03:23:40PM +0800, Ian Kent wrote:
-> On 16/5/24 15:08, Ian Kent wrote:
-> > On 16/5/24 12:56, Jinliang Zheng wrote:
-> > > > I encountered the following calltrace:
-> > > > 
-> > > > [20213.578756] BUG: kernel NULL pointer dereference, address:
-> > > > 0000000000000000
-> > > > [20213.578785] #PF: supervisor instruction fetch in kernel mode
-> > > > [20213.578799] #PF: error_code(0x0010) - not-present page
-> > > > [20213.578812] PGD 3f01d64067 P4D 3f01d64067 PUD 3f01d65067 PMD 0
-> > > > [20213.578828] Oops: 0010 [#1] SMP NOPTI
-> > > > [20213.578839] CPU: 92 PID: 766 Comm: /usr/local/serv Kdump:
-> > > > loaded Not tainted 5.4.241-1-tlinux4-0017.3 #1
-> > > > [20213.578860] Hardware name: New H3C Technologies Co., Ltd.
-> > > > UniServer R4900 G3/RS33M2C9SA, BIOS 2.00.38P02 04/14/2020
-> > > > [20213.578884] RIP: 0010:0x0
-> > > > [20213.578894] Code: Bad RIP value.
-> > > > [20213.578903] RSP: 0018:ffffc90021ebfc38 EFLAGS: 00010246
-> > > > [20213.578916] RAX: ffffffff82081f40 RBX: ffffc90021ebfce0 RCX:
-> > > > 0000000000000000
-> > > > [20213.578932] RDX: ffffc90021ebfd48 RSI: ffff88bfad8d3890 RDI:
-> > > > 0000000000000000
-> > > > [20213.578948] RBP: ffffc90021ebfc70 R08: 0000000000000001 R09:
-> > > > ffff889b9eeae380
-> > > > [20213.578965] R10: 302d343200000067 R11: 0000000000000001 R12:
-> > > > 0000000000000000
-> > > > [20213.578981] R13: ffff88bfad8d3890 R14: ffff889b9eeae380 R15:
-> > > > ffffc90021ebfd48
-> > > > [20213.578998] FS:  00007f89c534e740(0000)
-> > > > GS:ffff88c07fd00000(0000) knlGS:0000000000000000
-> > > > [20213.579016] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > [20213.579030] CR2: ffffffffffffffd6 CR3: 0000003f01d90001 CR4:
-> > > > 00000000007706e0
-> > > > [20213.579046] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> > > > 0000000000000000
-> > > > [20213.579062] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
-> > > > 0000000000000400
-> > > > [20213.579079] PKRU: 55555554
-> > > > [20213.579087] Call Trace:
-> > > > [20213.579099]  trailing_symlink+0x1da/0x260
-> > > > [20213.579112]  path_lookupat.isra.53+0x79/0x220
-> > > > [20213.579125]  filename_lookup.part.69+0xa0/0x170
-> > > > [20213.579138]  ? kmem_cache_alloc+0x3f/0x3f0
-> > > > [20213.579151]  ? getname_flags+0x4f/0x1e0
-> > > > [20213.579161]  user_path_at_empty+0x3e/0x50
-> > > > [20213.579172]  vfs_statx+0x76/0xe0
-> > > > [20213.579182]  __do_sys_newstat+0x3d/0x70
-> > > > [20213.579194]  ? fput+0x13/0x20
-> > > > [20213.579203]  ? ksys_ioctl+0xb0/0x300
-> > > > [20213.579213]  ? generic_file_llseek+0x24/0x30
-> > > > [20213.579225]  ? fput+0x13/0x20
-> > > > [20213.579233]  ? ksys_lseek+0x8d/0xb0
-> > > > [20213.579243]  __x64_sys_newstat+0x16/0x20
-> > > > [20213.579256]  do_syscall_64+0x4d/0x140
-> > > > [20213.579268]  entry_SYSCALL_64_after_hwframe+0x5c/0xc1
-> > > > 
-> > > > <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-> > > > 
-> > > Please note that the kernel version I use is the one maintained by
-> > > Tencent.Inc,
-> > > and the baseline is v5.4. But in fact, in the latest upstream source
-> > > tree,
-> > > although the trailing_symlink() function has been removed, its logic
-> > > has been
-> > > moved to pick_link(), so the problem still exists.
-> > > 
-> > > Ian Kent pointed out that try_to_unlazy() was introduced in
-> > > pick_link() in the
-> > > latest upstream source tree, but I don't understand why this can
-> > > solve the NULL
-> > > ->get_link pointer dereference problem, because ->get_link pointer
-> > > will be
-> > > dereferenced before try_to_unlazy().
-> > > 
-> > > (I don't understand why Ian Kent's email didn't appear on the
-> > > mailing list.)
+On 2024-05-25 13:42:52, Zorro Lang wrote:
+> On Mon, May 20, 2024 at 07:00:05PM +0200, Andrey Albershteyn wrote:
+> > With addition of FS_IOC_FSSETXATTRAT xfs_quota now can set project
+> > ID on filesystem inodes behind special files. Previously, quota
+> > reporting didn't count inodes of special files created before
+> > project initialization. Only new inodes had project ID set.
 > > 
-> > It was something about html mail and I think my mail client was at fault.
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > ---
 > > 
-> > In any case what you say is indeed correct, so the comment isn't
-> > important.
+> > Notes:
+> >     This is part of the patchset which introduces
+> >     FS_IOC_FS[GET|SET]XATTRAT:
+> >     https://lore.kernel.org/linux-xfs/20240520164624.665269-2-aalbersh@redhat.com/T/#t
+> >     https://lore.kernel.org/linux-xfs/20240520165200.667150-2-aalbersh@redhat.com/T/#u
+> 
+> So this test fails on old xfsprogs and kernel which doesn't support
+> above feature? Do we need a _require_xxxx helper to skip this test?
+> Or you hope to fail on old kernel to clarify this feature missing?
+> 
+> As this test requires some new patches, better to point out:
+>   _wants_kernel_commit xxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxx
+>   _wants_git_commit xfsprogs xxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxx
+
+Sure, thanks, will add it.
+
+> 
 > > 
+> >  tests/xfs/608     | 73 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/608.out | 10 +++++++
+> >  2 files changed, 83 insertions(+)
+> >  create mode 100755 tests/xfs/608
+> >  create mode 100644 tests/xfs/608.out
 > > 
-> > Fact is it is still a race between the lockless path walk and inode
-> > eviction
-> > 
-> > and xfs recycling. I believe that the xfs recycling code is very hard to
-> > fix.
+> > diff --git a/tests/xfs/608 b/tests/xfs/608
+> > new file mode 100755
+> > index 000000000000..3573c764c5f4
+> > --- /dev/null
+> > +++ b/tests/xfs/608
+> > @@ -0,0 +1,73 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2024 Red Hat.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 608
+> > +#
+> > +# Test that XFS can set quota project ID on special files
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quota
+> > +
+> > +# Override the default cleanup function.
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -r -f $tmp.*
+> > +	rm -f $tmp.proects $tmp.projid
+>                       ^^^^
+>                    projects? (same below)
+> 
+> And won't "rm -f $tmp.*" help to remove $tmp.proects and $tmp.projid ?
+> If it does, we can remove this _cleanup, just use the default one.
+> 
+> > +}
+> > +
+> > +
+> > +# Import common functions.
+> > +. ./common/quota
+> > +. ./common/filter
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs xfs
+> > +_require_scratch
+> > +_require_xfs_quota
+> > +_require_user
+> 
+> Does this patch use "fsgqa" user/group?
+> 
+> > +
+> > +_scratch_mkfs >/dev/null 2>&1
+> > +_qmount_option "pquota"
+> > +_scratch_mount
+> 
+> If there's not special reason, we generally do all _require_xxx checking
+> at first, then mkfs & mount.
+> 
+> > +_require_test_program "af_unix"
+> > +_require_symlinks
+> > +_require_mknod
+> 
+> So you might can move above 3 lines over the _scratch_mkfs, looks like
+> they don't need a SCRATCH_DEV with $FSTYP.
+> 
+> > +
+> > +function create_af_unix () {
+> 
+> We generally don't use "function", but that's fine if you intend that :)
+> 
+> Thanks,
+> Zorro
+> 
 
-Not really for this case. This is simply concurrent pathwalk lookups
-occurring just after the inode has been evicted from the VFS inode
-cache. The first lookup hits the XFS inode cache, sees
-XFS_IRECLAIMABLE, and it then enters xfs_reinit_inode() to
-reinstantiate the VFS inode to an initial state. The Xfs inode
-itself is still valid as it hasn't reached the XFS_IRECLAIM state
-where it will be torn down and freed.
+Thanks, will apply all your suggestions above.
 
-Whilst we are running xfs_reinit_inode(), a second RCU pathwalk has
-been run and that it is trying to call ->get_link on that same
-inode. Unfortunately, the first lookup has just set inode->f_ops =
-&empty_fops as part of the VFS inode reinit, and that then triggers
-the null pointer deref.
-
-Once the first lookup has finished the inode_init_always(),
-xfs_reinit_inode() resets inode->f_ops back to 
-xfs_symlink_file_ops and get_link calls work again.
-
-Fundamentally, the problem is that we are completely reinitialising
-the VFS inode within the RCU grace period. i.e. while concurrent RCU
-pathwalks can still be in progress and find the VFS inode whilst the
-XFS inode cache is manipulating it.
-
-What we should be doing here is a subset of inode_init_always(),
-which only reinitialises the bits of the VFS inode we need to
-initialise rather than the entire inode. The identity of the inode
-is not changing and so we don't need to go through a transient state
-where the VFS inode goes xfs symlink -> empty initialised inode ->
-xfs symlink.
-
-i.e. We need to re-initialise the non-identity related parts of the
-VFS inode so the identity parts that the RCU pathwalks rely on never
-change within the RCU grace period where lookups can find the VFS
-inode after it has been evicted.
-
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+- Andrey
+
