@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C791D15AAD7;
-	Wed, 29 May 2024 01:59:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9DF15AAD9;
+	Wed, 29 May 2024 01:59:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716947963; cv=none; b=htxsbibMeARNkIUHbTKqVD4VvM96lwHE/QvdtJ8f7Rr/jCXydcEXnmUzDzmWqQctLvrNK1+7Ysy6BoGiX265lKQNcnq26mQQ+pngT8P1baXqR7rBStNoBhKrxlj3hHzecRZK+dx3HF0ItlFmMmrbI5gZVd18Nw6LE0nd0d/KQlQ=
+	t=1716947964; cv=none; b=hhEiKWUh/M7uFewHHWkVXBO8Fb/lEWTFGYv7vETkxU7ag5ig+7r7RjA3SmoLUuHuW2nbd/ZrOBGraSSBE+plFvS5z3/dsBhutuDZgBRnTXbiSgy2lCSei0Lvvtp68xBs12MKP66Y8eYLtAEp1AdN+8CKL2zi5K1Aa0SHmJ5Ll8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716947963; c=relaxed/simple;
-	bh=afHJRbRc/fwFUeIfW0Vig/K+3WKRwJ2tZp8Ww3qk80o=;
+	s=arc-20240116; t=1716947964; c=relaxed/simple;
+	bh=25KBZBHt/e9frPug4/2IwbXcYndgkcYnsmEzSEbR1rE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TKMRjt8jpAeZiq8920ZJO1OsiW690XpDhsb35XXNS4KbkzOI3xMi2s+C6oBSzknBk5HVBGBdAGCcqU5+dBJmMVJcmDDGNUnwbWl2uuZ5TjEutDi0ytp6cR4wFIlDmoZbBloODekZB9vEVp52B6ZNYTbBxiuRx6GjhGc86MKTo1g=
+	 MIME-Version; b=qJAq9Fl01GIeeVOO7DoQ+XNiVbSh8eLyshCt9xzz+gYVeyySz83EN4pKQn+84vkhoHrWF9EXVvm8aHfSJqE1sloG25ElASZpiMM0PRRLumikdSjGvedSJXAUw5qTxcpDO+VqJ0djswn4nB6AjqU7buV5JOqIjxtgDL5c9l82KTo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vpsxn5T2zz4f3jHW;
-	Wed, 29 May 2024 09:59:09 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vpsxp5d6Lz4f3jJ2;
+	Wed, 29 May 2024 09:59:10 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 0F1521A058E;
-	Wed, 29 May 2024 09:59:19 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 150341A0572;
+	Wed, 29 May 2024 09:59:20 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAn9g7wi1Zmr3XbNw--.12147S8;
-	Wed, 29 May 2024 09:59:18 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgAn9g7wi1Zmr3XbNw--.12147S10;
+	Wed, 29 May 2024 09:59:19 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
@@ -38,9 +38,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yi.zhang@huaweicloud.com,
 	chengzhihao1@huawei.com,
 	yukuai3@huawei.com
-Subject: [RFC PATCH v4 4/8] fsdax: pass blocksize to dax_truncate_page()
-Date: Wed, 29 May 2024 17:52:02 +0800
-Message-Id: <20240529095206.2568162-5-yi.zhang@huaweicloud.com>
+Subject: [RFC PATCH v4 6/8] xfs: correct the truncate blocksize of realtime inode
+Date: Wed, 29 May 2024 17:52:04 +0800
+Message-Id: <20240529095206.2568162-7-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
 References: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
@@ -51,10 +51,10 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAn9g7wi1Zmr3XbNw--.12147S8
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFyrKF15GF1kGr4kGw1rWFg_yoW5urWDpF
-	1DCa15G397Xryj9F1kWF12vw45t3WDCF409ryxArZ3Zr9Fqr1IyF1qkF1YkF4UKr48u3yj
-	qF98Kr47Gr15AFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgAn9g7wi1Zmr3XbNw--.12147S10
+X-Coremail-Antispam: 1UD129KBjvJXoWxXw1rJr47CF1kAw4kWrWDXFb_yoW5GFW3pF
+	Z2k3WUGrWDG340k3WxJFn0qw1UKa4kAr47Ary5Wrn7X3WDJr1fXrn2qryYgw43trs7XFn0
+	gFn8C3y7Z345AaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
 	0E87I2jVAFwI0_JF0E3s1l82xGYIkIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0
@@ -65,7 +65,7 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxuFyrKF15GF1kGr4kGw1rWFg_yoW5urWDpF
 	JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20V
 	AGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCj
 	c4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4
-	CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1x
+	CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4U
 	MIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r
 	1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBI
 	daVFxhVjvjDU0xZFpf9x0pRHa0PUUUUU=
@@ -73,91 +73,78 @@ X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-dax_truncate_page() always assumes the block size of the truncating
-inode is i_blocksize(), this is not always true for some filesystems,
-e.g. XFS does extent size alignment for realtime inodes. Drop this
-assumption and pass the block size for zeroing into dax_truncate_page(),
-allow filesystems to indicate the correct block size.
+When unaligned truncating down a realtime file which sb_rextsize is
+bigger than one block, xfs_truncate_page() only zeros out the tail EOF
+block, this could expose stale data since commit '943bc0882ceb ("iomap:
+don't increase i_size if it's not a write operation")'.
 
-Suggested-by: Dave Chinner <david@fromorbit.com>
+If we truncate file that contains a large enough written extent:
+
+     |<    rxext    >|<    rtext    >|
+  ...WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+        ^ (new EOF)      ^ old EOF
+
+Since we only zeros out the tail of the EOF block, and
+xfs_itruncate_extents() unmap the whole ailgned extents, it becomes
+this state:
+
+     |<    rxext    >|
+  ...WWWzWWWWWWWWWWWWW
+        ^ new EOF
+
+Then if we do an extending write like this, the blocks in the previous
+tail extent becomes stale:
+
+     |<    rxext    >|
+  ...WWWzSSSSSSSSSSSSS..........WWWWWWWWWWWWWWWWW
+        ^ old EOF               ^ append start  ^ new EOF
+
+Fix this by zeroing out the tail allocation uint and also make sure
+xfs_itruncate_extents() unmap rtextsize aligned extents.
+
+Fixes: 943bc0882ceb ("iomap: don't increase i_size if it's not a write operation")
+Reported-by: Chandan Babu R <chandanbabu@kernel.org>
+Link: https://lore.kernel.org/linux-xfs/0b92a215-9d9b-3788-4504-a520778953c2@huaweicloud.com
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 ---
- fs/dax.c            | 8 ++++----
- fs/ext2/inode.c     | 4 ++--
- fs/xfs/xfs_iomap.c  | 2 +-
- include/linux/dax.h | 4 ++--
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_inode.c | 3 +++
+ fs/xfs/xfs_iops.c  | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index becb4a6920c6..4cbd94fd96ed 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -25,6 +25,7 @@
- #include <linux/mmu_notifier.h>
- #include <linux/iomap.h>
- #include <linux/rmap.h>
-+#include <linux/math64.h>
- #include <asm/pgalloc.h>
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 58fb7a5062e1..db35167acef6 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -35,6 +35,7 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_log.h"
+ #include "xfs_bmap_btree.h"
++#include "xfs_rtbitmap.h"
+ #include "xfs_reflink.h"
+ #include "xfs_ag.h"
+ #include "xfs_log_priv.h"
+@@ -1512,6 +1513,8 @@ xfs_itruncate_extents_flags(
+ 	 * the page cache can't scale that far.
+ 	 */
+ 	first_unmap_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
++	if (xfs_inode_has_bigrtalloc(ip))
++		first_unmap_block = xfs_rtb_roundup_rtx(mp, first_unmap_block);
+ 	if (!xfs_verify_fileoff(mp, first_unmap_block)) {
+ 		WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
+ 		return 0;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index d24927075022..ec7b7bdf8825 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -865,7 +865,7 @@ xfs_setattr_size(
+ 	 */
+ 	write_back = newsize > ip->i_disk_size && oldsize != ip->i_disk_size;
+ 	if (newsize < oldsize) {
+-		unsigned int blocksize = i_blocksize(inode);
++		unsigned int blocksize = xfs_inode_alloc_unitsize(ip);
  
- #define CREATE_TRACE_POINTS
-@@ -1403,11 +1404,10 @@ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- }
- EXPORT_SYMBOL_GPL(dax_zero_range);
- 
--int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--		const struct iomap_ops *ops)
-+int dax_truncate_page(struct inode *inode, loff_t pos, unsigned int blocksize,
-+		bool *did_zero, const struct iomap_ops *ops)
- {
--	unsigned int blocksize = i_blocksize(inode);
--	unsigned int off = pos & (blocksize - 1);
-+	unsigned int off = rem_u64(pos, blocksize);
- 
- 	/* Block boundary? Nothing to do */
- 	if (!off)
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 0caa1650cee8..337349c94adf 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1276,8 +1276,8 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
- 	inode_dio_wait(inode);
- 
- 	if (IS_DAX(inode))
--		error = dax_truncate_page(inode, newsize, NULL,
--					  &ext2_iomap_ops);
-+		error = dax_truncate_page(inode, newsize, i_blocksize(inode),
-+					  NULL, &ext2_iomap_ops);
- 	else
- 		error = block_truncate_page(inode->i_mapping,
- 				newsize, ext2_get_block);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 32306804b01b..8cdfcbb5baa7 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1474,7 +1474,7 @@ xfs_truncate_page(
- 	unsigned int		blocksize = i_blocksize(inode);
- 
- 	if (IS_DAX(inode))
--		return dax_truncate_page(inode, pos, did_zero,
-+		return dax_truncate_page(inode, pos, blocksize, did_zero,
- 					&xfs_dax_write_iomap_ops);
- 	return iomap_truncate_page(inode, pos, blocksize, did_zero,
- 				   &xfs_buffered_write_iomap_ops);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 9d3e3327af4c..4aa8ef7c8fd4 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -210,8 +210,8 @@ int dax_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 		const struct iomap_ops *ops);
--int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--		const struct iomap_ops *ops);
-+int dax_truncate_page(struct inode *inode, loff_t pos, unsigned int blocksize,
-+		bool *did_zero, const struct iomap_ops *ops);
- 
- #if IS_ENABLED(CONFIG_DAX)
- int dax_read_lock(void);
+ 		/*
+ 		 * Zeroing out the partial EOF block and the rest of the extra
 -- 
 2.39.2
 
