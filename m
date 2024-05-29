@@ -1,148 +1,141 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F88314EC56
-	for <linux-xfs@vger.kernel.org>; Wed, 29 May 2024 00:28:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD81715AAD1;
+	Wed, 29 May 2024 01:59:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716942522; cv=none; b=p1Jh4Gx47NAOBKhSfaivqV+hs7sDBH22rEImauJ+eNlUHV5Puyxhohq8rpKR5c/6iptztlBcKnD/aX/PY9IpNweNvTaoGFid5Aghvkdi+jOHGLU4TXDZSPts5wlpA2IK4yDYXO2R4hjQ3HtGttPBBLoLwrCCsuGBSgs/SV5ewpA=
+	t=1716947963; cv=none; b=dWWgj0Aeftuj9p2YwQ++NyNgyHvg6kNhjZvQZEhzZVuDGCOveZWZrNazQ9ZO7iRnRf0Ji7nv0pIsruzBYo/ymgTFHSlnOgq/KiIQEBp+pMXbBLq67xvmohcGbydwFxopVTffJLX8rgqelY/MHETOxE07TYXMhnQksWx639RoGgk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716942522; c=relaxed/simple;
-	bh=yCC2XhdoqcrVGPVCuuGH8xc+X7lrIWtkAzs8ln3HmvA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rrpfj1H2W87fIaOnUCLM3cNpsPKiyHhxBdu4aEgNu82dWmVZD4rUNRpbaPTy2Jz6PVje4L+ChX+Lg2vaV0iFQxvt4p7XjIdC6Rxrbk+1OP+3rdQCYnEdpDoTctF5HyieBGO9WmMlNTjt2NH4jeVpCWQYxB1snimYISuNIGl4hPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=bcVG4bbz; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="bcVG4bbz"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1f44b42e9a6so11959745ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 28 May 2024 17:28:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1716942520; x=1717547320; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=1c9G1Yasw8H462EyOiSehnDLVP9jP7KmNiDzPxioqSM=;
-        b=bcVG4bbzPffUJ9a1vsCUPfHHsUlQYfch95/Fn3dwGqZXwkOyHjdm6ftWU5IPmyLwX9
-         EcLrk+oyiB2uESqRQXA26J102VxfYZA4H1NiQ+Di+DJrgHrLoXtq8k2yweD+SpqR1PB1
-         O5krVgrm/PSHDjknVEcRZETCezvCKhRPmz9yJyxVNU0SIzRJcotS0owEnvmD5vK+uY73
-         CCo39PzeLIqYjIir0PkDXWnNLzw/rRrGrs8IfoobHaEVveU700RP8vJL4MpVU/rPZpDE
-         ltP4jujFS5OgFuwGIpRg+GLRvvBCks7T51pNSdlgtB2gOv3aGg/V1NUARp8oxs5GX2Va
-         jJPw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716942520; x=1717547320;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1c9G1Yasw8H462EyOiSehnDLVP9jP7KmNiDzPxioqSM=;
-        b=AdnivHW/ZRoL8RQlMKlRs58GD1C6XE54c15Y3hW0nP5IjIXfh5cRLfnDpmX7lzNlW0
-         9yD1+44tpboaqfAswQfmF9PgIOiaJ1KDTVbtlwor7HBRrhvIF+GNLl67fdR8+kHlrHZ3
-         J/HCb/NUH4pgRzI1zy2QpzE8YloHCnpLEUZ+kBnrx5W4adjBG6s9zlUjPEJ6NUxtDF9s
-         JTfZi/KgmOQpUbEQMEyu3IAckFNHydJTBy96F/B+tBNIYBvgfIjOhl/FYr+tpUtJENH9
-         nlLHi1UgGK94eism9EZJTE3CPREz4prpiQPHtIuLM2EhU9binqB/XkKQXBH2svNGDaPs
-         QeYg==
-X-Gm-Message-State: AOJu0YyY/8qIlb7XNC4y2vWYRK5i3i4zit5SmNguZsLNfHZe6DnWzUHz
-	mRq13k6/nZNwpK4WjS4qpbrjbmVqAnoBT4sST0bRcjhLoYFHQ8bbZwaqUy9zNlbJ7whBvWqKer8
-	v
-X-Google-Smtp-Source: AGHT+IErol/Kf7s7IaV5INq5x9HrKvgHUI68JV/sh0AcH0N8qryzCBp/1solrCqXc/0XR6QAWHV1RQ==
-X-Received: by 2002:a17:902:ecc7:b0:1f4:8190:33a5 with SMTP id d9443c01a7336-1f481903723mr100631945ad.56.1716942520407;
-        Tue, 28 May 2024 17:28:40 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f44c967ab5sm86402065ad.162.2024.05.28.17.28.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 May 2024 17:28:39 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sC7BF-00E344-0H;
-	Wed, 29 May 2024 10:28:37 +1000
-Date: Wed, 29 May 2024 10:28:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs: avoid redundant AGFL buffer invalidation
-Message-ID: <ZlZ2tfqvagRusmVv@dread.disaster.area>
-References: <1b2be7fa-332d-4fab-8d36-89ef7a0d3a24@linux.alibaba.com>
- <20240528041239.1190215-1-hsiangkao@linux.alibaba.com>
+	s=arc-20240116; t=1716947963; c=relaxed/simple;
+	bh=EftrWlTdXrV8eries2uVwbxcta6q8kmV/CnKImnKnAY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gczpBbgaUwPV4/RkfGd9Gu8GaTMqSFSuV5dNu7/CBeXGyVJURziatCmtScfbTG9r/ukwR0PzB14yJO1ytZ99Q8oLCXtFRikqYm0jjeMh8RkGVoxfw4ted/GDAXjbdEkzicUDp6DglUnu/TgmTF8WBpiMmd1Ojb0JbCyqS8O/4Vg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vpsxl51PTz4f3jcp;
+	Wed, 29 May 2024 09:59:07 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id F21CE1A0572;
+	Wed, 29 May 2024 09:59:16 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgAn9g7wi1Zmr3XbNw--.12147S4;
+	Wed, 29 May 2024 09:59:14 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org,
+	brauner@kernel.org,
+	david@fromorbit.com,
+	chandanbabu@kernel.org,
+	jack@suse.cz,
+	willy@infradead.org,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com
+Subject: [RFC PATCH v4 0/8] iomap/xfs: fix stale data exposure when truncating realtime inodes
+Date: Wed, 29 May 2024 17:51:58 +0800
+Message-Id: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240528041239.1190215-1-hsiangkao@linux.alibaba.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAn9g7wi1Zmr3XbNw--.12147S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxCr17JFyfuw1UCw1Utw4ktFb_yoW5Xw1UpF
+	Z3G3yY9r4kJ343ZFyfZ3ZFqw15u3ZYkF4UCFy7Grsak3W3Wr1Iyr1aqF45XayjkrWkWr4Y
+	vr45tFW8urnYyFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9a14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2ocxC64kIII
+	0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
+	wVC0I7IYx2IY6xkF7I0E14v26F4UJVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7
+	xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40E
+	FcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr
+	0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
+	x2IErcIFxwACI402YVCY1x02628vn2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4
+	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
+	MI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
+	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3
+	Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8Jr
+	UvcSsGvfC2KfnxnUUI43ZEXa7sRiRwZDUUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Tue, May 28, 2024 at 12:12:39PM +0800, Gao Xiang wrote:
-> Currently AGFL blocks can be filled from the following three sources:
->  - allocbt free blocks, as in xfs_allocbt_free_block();
->  - rmapbt free blocks, as in xfs_rmapbt_free_block();
->  - refilled from freespace btrees, as in xfs_alloc_fix_freelist().
-> 
-> Originally, allocbt free blocks would be marked as stale only when they
-> put back in the general free space pool as Dave mentioned on IRC, "we
-> don't stale AGF metadata btree blocks when they are returned to the
-> AGFL .. but once they get put back in the general free space pool, we
-> have to make sure the buffers are marked stale as the next user of
-> those blocks might be user data...."
-> 
-> However, after commit ca250b1b3d71 ("xfs: invalidate allocbt blocks
-> moved to the free list") and commit edfd9dd54921 ("xfs: move buffer
-> invalidation to xfs_btree_free_block"), even allocbt / bmapbt free
-> blocks will be invalidated immediately since they may fail to pass
-> V5 format validation on writeback even writeback to free space would be
-> safe.
-> 
-> IOWs, IMHO currently there is actually no difference of free blocks
-> between AGFL freespace pool and the general free space pool.  So let's
-> avoid extra redundant AGFL buffer invalidation, since otherwise we're
-> currently facing unnecessary xfs_log_force() due to xfs_trans_binval()
-> again on buffers already marked as stale before as below:
-> 
-> [  333.507469] Call Trace:
-> [  333.507862]  xfs_buf_find+0x371/0x6a0       <- xfs_buf_lock
-> [  333.508451]  xfs_buf_get_map+0x3f/0x230
-> [  333.509062]  xfs_trans_get_buf_map+0x11a/0x280
-> [  333.509751]  xfs_free_agfl_block+0xa1/0xd0
-> [  333.510403]  xfs_agfl_free_finish_item+0x16e/0x1d0
-> [  333.511157]  xfs_defer_finish_noroll+0x1ef/0x5c0
-> [  333.511871]  xfs_defer_finish+0xc/0xa0
-> [  333.512471]  xfs_itruncate_extents_flags+0x18a/0x5e0
-> [  333.513253]  xfs_inactive_truncate+0xb8/0x130
-> [  333.513930]  xfs_inactive+0x223/0x270
-> 
-> xfs_log_force() will take tens of milliseconds with AGF buffer locked.
-> It becomes an unnecessary long latency especially on our PMEM devices
-> with FSDAX enabled and fsops like xfs_reflink_find_shared() at the same
-> time are stuck due to the same AGF lock.  Removing the double
-> invalidation on the AGFL blocks does not make this issue go away, but
-> this patch fixes for our workloads in reality and it should also work
-> by the code analysis.
-> 
-> Note that I'm not sure I need to remove another redundant one in
-> xfs_alloc_ag_vextent_small() since it's unrelated to our workloads.
-> Also fstests are passed with this patch.
-> 
-> Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-> ---
-> changes since v1:
->  - Get rid of xfs_free_agfl_block() suggested by Dave;
->  - Some commit message refinement.
-> 
->  fs/xfs/libxfs/xfs_alloc.c | 28 +---------------------------
->  fs/xfs/libxfs/xfs_alloc.h |  6 ++++--
->  fs/xfs/xfs_extfree_item.c |  4 ++--
->  3 files changed, 7 insertions(+), 31 deletions(-)
+From: Zhang Yi <yi.zhang@huawei.com>
 
-Looks fine - it appears to me that all the places that put blocks
-onto the freelist will have already invalidated any buffers over
-those blocks, so we don't need to do it again when moving them from
-the freelist to the freespace btrees.
+Changes since v3:
+ - Factor out a new helper to get the remainder in math64.h as Darrick
+   suggested.
+ - Adjust the truncating order to prevent too much redundant blocking
+   writes as Dave suggested.
+ - Improve to convert the tail extent to unwritten when truncating down
+   an inode with large rtextsize as Darrick and Dave suggested.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+This series fix a stale data exposure issue reported by Chandan when
+running fstests generic/561 on xfs with realtime device[1]. The real
+problem is xfs_setattr_size() doesn't zero out enough range when
+truncating a realtime inode, please see the patch 6 or [1] for
+details.
+
+Patch 1 is from Dave, it improves truncate down performace by changing
+iomap_zero_iter() to aware dirty pages on unwritten extents, but for the
+case of the zeroing range that contains a cow mapping over a hole still
+needs to be handled. 
+
+Patch 3-5 modify iomap_truncate_page() and dax_truncate_page() to pass
+filesystem identified blocksize, and drop the assumption of
+i_blocksize() as Dave suggested.
+
+Patch 6-7 adjust the truncating down processing order to first zero out
+the tail aligned blocks, then write back, update i_size and finally drop
+cache beyond aligned EOF. Fix the data exposure issue by zeroing out the
+entire EOF extent.
+
+Patch 8-9 add a rtextsize threshold (64k), improves truncate down performace
+on realtime inode with large rtextsize (beyonds this threshold) by
+converting the tail unaligned extent to unwritten.
+
+I've tested this series on fstests (1) with reflink=0, (2) with 28K RT
+device and (3) with 96K RT device (beyonds rtextsize threshold), no new
+failures detected. This series still needs to do furtuer tests with
+reflink=1 after Patch 1 covers the cow mapping over a hole case.
+
+[1] https://lore.kernel.org/linux-xfs/87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64/
+
+Thanks,
+Yi.
+
+Dave Chinner (1):
+  iomap: zeroing needs to be pagecache aware
+
+Zhang Yi (7):
+  math64: add rem_u64() to just return the remainder
+  iomap: pass blocksize to iomap_truncate_page()
+  fsdax: pass blocksize to dax_truncate_page()
+  xfs: refactor the truncating order
+  xfs: correct the truncate blocksize of realtime inode
+  xfs: reserve blocks for truncating realtime inode
+  xfs: improve truncate on a realtime inode with huge extsize
+
+ fs/dax.c               |   8 +--
+ fs/ext2/inode.c        |   4 +-
+ fs/iomap/buffered-io.c |  50 ++++++++++++++--
+ fs/xfs/xfs_inode.c     |   3 +
+ fs/xfs/xfs_inode.h     |  12 ++++
+ fs/xfs/xfs_iomap.c     |   5 +-
+ fs/xfs/xfs_iomap.h     |   3 +-
+ fs/xfs/xfs_iops.c      | 133 +++++++++++++++++++++++++----------------
+ include/linux/dax.h    |   4 +-
+ include/linux/iomap.h  |   4 +-
+ include/linux/math64.h |  24 ++++++++
+ 11 files changed, 179 insertions(+), 71 deletions(-)
 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.39.2
+
