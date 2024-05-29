@@ -1,63 +1,64 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8325D54FAE;
-	Wed, 29 May 2024 13:46:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E2E515B96F
+	for <linux-xfs@vger.kernel.org>; Wed, 29 May 2024 22:57:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716990370; cv=none; b=ILkCSH/roY0b6jgTOFuIKl/bMSJ0NDS82ZrlDIaqdSuojJyDH0MlejHIhaxu2rkSu9zQx49hGMWLvp39GKhq9uwwoVS98of1DxbxDqaodOiBXDnUiZ79i3Ut0Zrug8THqxgT/5KKGhZFx8x/XGoIuzU6jfvvnR5TiZ7RMm7Lliw=
+	t=1717023480; cv=none; b=YryAo2SYJAAHT2OgjlkZm8a1Dn/FH1T1vGJFb6sdWwfsmqLJKXXX+Vd57wsDupJ13zgjW+dUcSWk3/Md6o7w3ym3Aa4eetyyTwQPCVeFFBPQGKhMZwz39YltjYvRc6W+Rcf+VaEwHwqy2EejGw1jjTNkmnnzmswxTEi3MSsV8+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716990370; c=relaxed/simple;
-	bh=Bd1DidW1VaQFsu722u8hSC2d9nc3WHgEr4MJCAsqorg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OpBNnOeBoOM/uwLtBkuMB67MGT9AaXtcEqSKYBVkIcJ+LX1E1RhiXNRbQgC2WrQ2bIatshw7wtoqgEmuLB7jezf9UXIo9K6eCZ5vAZzFC7UCcMGpso2YaHnYsLsK9iiDiC0I3f6kaG+1dzhLbei76+rJFSSwX04FQrJkiB9pldM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=XOB+N42p; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1717023480; c=relaxed/simple;
+	bh=0rE0OntTNMC0RuayBPygNQt9D2uaUIMA0Pp4PDn5Ono=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=s/6cLffzbpXD6JiRuwsP8DYDi5YMZF5HDUwOxK67PMJHsz8rTXnzOfee33M3IhW1qdyKl9/8DhBhglHcA0P6sVy2mlHE0KKiS4TIHD0Rzr0eHTX1UQKD6yOcaR5+F3BKzLgfgkrVYuYwhYtD74m3gMpXdtRBSi1bvyAxHkispYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NkSBZK+w; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="XOB+N42p"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4Vq9dT0Tshz9shb;
-	Wed, 29 May 2024 15:46:05 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1716990365;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CqWeILzukHgisrDT2Qez2BasOK0ht2d7BaH6ApZlpmc=;
-	b=XOB+N42pJ9+3yh+2a6EE3JxrNjiMx8gcmgcydGpbQbIokRbFL9n3t1fou4c1PKi/QVZjOS
-	dTxNmxENzLyvTp1SXADWg964pMqyPN3GvoMMuBfee0rb00QvHSqiAOuULn+UyqpRJTRgTN
-	9e9oJyX7ba+wT93bWncZTvZBfDTMvOZmPihPM4+cO/q40fueOR+XsgPF3Wgq2fBwarvFlU
-	zPAKTlze5cXDwRdOdd9G2L1s1oqtTlVZUbyy89yBU89iVhZ2zyAWqcJlR9CK5IIol98vkB
-	iFvGPn/UHeDLe6u78yR2gJyiiDC3TA7k7Ux5UUp++B4SSoEcLTqVFSyWzsjLBA==
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: david@fromorbit.com,
-	chandan.babu@oracle.com,
-	akpm@linux-foundation.org,
-	brauner@kernel.org,
-	willy@infradead.org,
-	djwong@kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	hare@suse.de,
-	john.g.garry@oracle.com,
-	gost.dev@samsung.com,
-	yang@os.amperecomputing.com,
-	p.raghav@samsung.com,
-	cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org,
-	hch@lst.de,
-	mcgrof@kernel.org,
-	linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH v6 11/11] xfs: enable block size larger than page size support
-Date: Wed, 29 May 2024 15:45:09 +0200
-Message-Id: <20240529134509.120826-12-kernel@pankajraghav.com>
-In-Reply-To: <20240529134509.120826-1-kernel@pankajraghav.com>
-References: <20240529134509.120826-1-kernel@pankajraghav.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NkSBZK+w"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1f47f07acd3so2779575ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2024 15:57:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1717023478; x=1717628278; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=EGqXHvCVKzbKMq8BA7OITh+mD89jJo6RiFCtc1rRPBA=;
+        b=NkSBZK+wpqlnlZQ1vIy+Ao1UsBoikD5td4GU0zcyjQNL7wWTTs47lez2VQOFV/rIXw
+         VpmamFSfn0IdtmCzViP/fdQZ+qZBOzF+P/1TlrKW0Ptdr4nVNhe0dtEunDKWST1qc1JT
+         AaB9OF1F4p5LuXvI0/IELSEeRP60vrjg+B/SCvqmU2Qi1nC9OcB8DtZ2+GbB2SCGqUkx
+         vm/XksnY3PQ+wEuYql8gt+pZzUnRXFjdjZ6HqFSFFHL1A8XYWpzJLTrweOkXbbKktTYW
+         n8O7UO+NaIb3LY3g5l0mDYDT2oLWWarQYxljlH+0E3T+/JSjZnRzJLll3SuKy/q9PZI8
+         zo4w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717023478; x=1717628278;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=EGqXHvCVKzbKMq8BA7OITh+mD89jJo6RiFCtc1rRPBA=;
+        b=iZReTuxCHd6h1UPTDZzSRBVeHaUxMAIoVSpiL0kgV/UcpJfgsiIu4SN4tMN0FLrgDj
+         WjbTHoz/O553L4PrxSg6ZY769SgFvPb3p++SO0MLHnj12uQwlNGLop0QGDAsuClYMm+u
+         N1qWE//QG4AxtlTYUVgbl4fhm28JSqrnvjSL2/DdmO8IkGOPq/wp/eB+dJo9TC30Uh1h
+         YGN8e0OB+MTG51PG01Bw+hOWAKDNxsrqY8wgCYxQLhiiU2kRSgDmku7R8y+pO1fNfZhA
+         xVHrE1pWRwGjHPfj9iwm9tUSpNfCQvPkv5RmM8g2RbvTfV9XoZMblQlzVYsHmUo5QBjl
+         tCcw==
+X-Forwarded-Encrypted: i=1; AJvYcCUgXOIH0rVjS70vqIPxquXO4K7uOUg8sePO+UvOeFldErrVEjMk1BOhrTqGMl4+mlemey2uXNqybmEF1mhLbtp6L484sEOlu6iC
+X-Gm-Message-State: AOJu0YwwrlTivMz4zRHeuQcWCV17j1k3cd/d2qgHA4Ev/ZbXxALDxmbG
+	Xsf+RsW08/YNhyfW8pxiKOvkEIvsDQHldd17fbV0a1hgS9WfCL+n
+X-Google-Smtp-Source: AGHT+IFQCUQt87sFHduT1ho378xVyDC8C0VLjUPbtWnRYdzVQ9kORdneaAK5LYulj7F0oCcSpwj/bg==
+X-Received: by 2002:a17:903:2385:b0:1f3:375f:3bb8 with SMTP id d9443c01a7336-1f61961f9c2mr5023335ad.41.1717023478261;
+        Wed, 29 May 2024 15:57:58 -0700 (PDT)
+Received: from localhost.localdomain ([47.238.252.167])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f6173a2325sm2902795ad.20.2024.05.29.15.57.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 May 2024 15:57:58 -0700 (PDT)
+From: lei lu <llfamsec@gmail.com>
+To: djwong@kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: chandan.babu@oracle.com,
+	lei lu <llfamsec@gmail.com>
+Subject: [PATCH] xfs: don't walk off the end of a directory data block
+Date: Thu, 30 May 2024 06:57:36 +0800
+Message-Id: <20240529225736.21028-1-llfamsec@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -65,122 +66,45 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4Vq9dT0Tshz9shb
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entry
+to make sure don't stray beyond valid memory region. It just checks start
+offset < end without checking end offset < end. So if last entry is
+xfs_dir2_data_unused, and is located at the end of ag. We can change
+dup->length to dup->length-1 and leave 1 byte of space. In the next
+traversal, this space will be considered as dup or dep. We may encounter
+an out-of-bound read when accessing the fixed members.
 
-Page cache now has the ability to have a minimum order when allocating
-a folio which is a prerequisite to add support for block size > page
-size.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: lei lu <llfamsec@gmail.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c |  5 +++++
- fs/xfs/libxfs/xfs_shared.h |  3 +++
- fs/xfs/xfs_icache.c        |  6 ++++--
- fs/xfs/xfs_mount.c         |  1 -
- fs/xfs/xfs_super.c         | 18 ++++++++++--------
- 5 files changed, 22 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_data.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 14c81f227c5b..1e76431d75a4 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -3019,6 +3019,11 @@ xfs_ialloc_setup_geometry(
- 		igeo->ialloc_align = mp->m_dalign;
- 	else
- 		igeo->ialloc_align = 0;
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index dbcf58979a59..08c18e0c1baa 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -178,6 +178,9 @@ __xfs_dir3_data_check(
+ 		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+ 		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
+ 
++		if (offset + sizeof(*dup) > end)
++			return __this_address;
 +
-+	if (mp->m_sb.sb_blocksize > PAGE_SIZE)
-+		igeo->min_folio_order = mp->m_sb.sb_blocklog - PAGE_SHIFT;
-+	else
-+		igeo->min_folio_order = 0;
- }
- 
- /* Compute the location of the root directory inode that is laid out by mkfs. */
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 34f104ed372c..e67a1c7cc0b0 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -231,6 +231,9 @@ struct xfs_ino_geometry {
- 	/* precomputed value for di_flags2 */
- 	uint64_t	new_diflags2;
- 
-+	/* minimum folio order of a page cache allocation */
-+	unsigned int	min_folio_order;
+ 		/*
+ 		 * If it's unused, look for the space in the bestfree table.
+ 		 * If we find it, account for that, else make sure it
+@@ -210,6 +213,10 @@ __xfs_dir3_data_check(
+ 			lastfree = 1;
+ 			continue;
+ 		}
 +
- };
- 
- #endif /* __XFS_SHARED_H__ */
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0953163a2d84..5ed3dc9e7d90 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -89,7 +89,8 @@ xfs_inode_alloc(
- 	/* VFS doesn't initialise i_mode or i_state! */
- 	VFS_I(ip)->i_mode = 0;
- 	VFS_I(ip)->i_state = 0;
--	mapping_set_large_folios(VFS_I(ip)->i_mapping);
-+	mapping_set_folio_min_order(VFS_I(ip)->i_mapping,
-+				    M_IGEO(mp)->min_folio_order);
- 
- 	XFS_STATS_INC(mp, vn_active);
- 	ASSERT(atomic_read(&ip->i_pincount) == 0);
-@@ -324,7 +325,8 @@ xfs_reinit_inode(
- 	inode->i_rdev = dev;
- 	inode->i_uid = uid;
- 	inode->i_gid = gid;
--	mapping_set_large_folios(inode->i_mapping);
-+	mapping_set_folio_min_order(inode->i_mapping,
-+				    M_IGEO(mp)->min_folio_order);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 46cb0384143b..a99454208807 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -135,7 +135,6 @@ xfs_sb_validate_fsb_count(
- 	uint64_t		max_index;
- 	uint64_t		max_bytes;
- 
--	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
- 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
- 
- 	if (check_shl_overflow(nblocks, sbp->sb_blocklog, &max_bytes))
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 27e9f749c4c7..b8a93a8f35ca 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1638,16 +1638,18 @@ xfs_fs_fill_super(
- 		goto out_free_sb;
- 	}
- 
--	/*
--	 * Until this is fixed only page-sized or smaller data blocks work.
--	 */
- 	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
--		xfs_warn(mp,
--		"File system with blocksize %d bytes. "
--		"Only pagesize (%ld) or less will currently work.",
-+		if (!xfs_has_crc(mp)) {
-+			xfs_warn(mp,
-+"V4 Filesystem with blocksize %d bytes. Only pagesize (%ld) or less is supported.",
- 				mp->m_sb.sb_blocksize, PAGE_SIZE);
--		error = -ENOSYS;
--		goto out_free_sb;
-+			error = -ENOSYS;
-+			goto out_free_sb;
-+		}
++		if (offset + sizeof(*dep) > end)
++			return __this_address;
 +
-+		xfs_warn(mp,
-+"EXPERIMENTAL: V5 Filesystem with Large Block Size (%d bytes) enabled.",
-+			mp->m_sb.sb_blocksize);
- 	}
- 
- 	/* Ensure this filesystem fits in the page cache limits */
+ 		/*
+ 		 * It's a real entry.  Validate the fields.
+ 		 * If this is a block directory then make sure it's
 -- 
 2.34.1
 
