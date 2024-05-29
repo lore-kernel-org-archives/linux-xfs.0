@@ -1,37 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82BE52F32;
-	Wed, 29 May 2024 07:09:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2A015B99A
+	for <linux-xfs@vger.kernel.org>; Wed, 29 May 2024 07:13:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716966558; cv=none; b=TRKv1/dkiHopL33FV2q6jEmi7Zb09v7I0KN6b6VYW26oemwpQJtG9YtA2sMHWwxvfx0cE6a6uUtmtjt3hVyv7b7QPBhXfynDMxRz+Bywc2eTDs4k9ciuVhlag2WfjwqGD3BjKJNPcnh5P1ZFPHuAR22UEsNTsMxLEzxT2jumhsg=
+	t=1716966832; cv=none; b=nxTjMFHygqI0guQjxph3n3IkVDCH0AGRGQvRUV4t0n4k4pUUbXOiNQfsch2Tt8fBY6z6x/aD0l1XiqGP3x0pCrxYwPNXaf/4OTZNjjHhkD5k4tFKxT+emBD98QcRQJR+SriXNOju6T03FP8LrJWYnj6do9uMQPltrSkSB/Jqm8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716966558; c=relaxed/simple;
-	bh=b+YAwrRdYcKfFOnIPL1HViPw0hDv02uRQVI1ZdE86xg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=AxwX+xeRwufZRN3Q0zvZ6FkmMF03ZiaAVH4S3RX10XPFqvIYduaMVmeGmiKU0DSf2MYNtzttEuqwcnp+8zr+V66LVdtYQBcVesWaVXsBRlxG+zsaHQFPMU78f1YG6bpxJte6ctuX4ECXsf2nZJcW2gcOD7VxSvp2UU5aGRN9tz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q3hv+vxv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716966832; c=relaxed/simple;
+	bh=q+6DGofejyWJwZMfQce/qAs8oSL6Sj8lNquP/+7a+d4=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=q03AM3Zl/+lUEqfcAU0jDr96L86igrIJGtOtczGXkAn/i66PbCxt9njtbsJEtF0vN4BD5HbppDFLuvht/S9rgTEKBdV2/ljHKCyfonezr83bkAs8byQu0eXZoG0T4USEcfL1/WL4EfnWv+KMRH7RnOH2eLgSBKGbqaIY3uPb+YM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kDrlvjSL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q3hv+vxv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93A02C2BD10;
-	Wed, 29 May 2024 07:09:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kDrlvjSL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8ED1C2BD10;
+	Wed, 29 May 2024 07:13:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716966558;
-	bh=b+YAwrRdYcKfFOnIPL1HViPw0hDv02uRQVI1ZdE86xg=;
-	h=From:To:Cc:Subject:Date:From;
-	b=q3hv+vxva8whLTDrS+RIROnGg8zomWvQslUjF7xPGMV3mUuwyzVAT6ZaPStKDd0ZM
-	 vOnOua7sI/OkxDChO7Wz/kUFhfWk31DxB6EslJdi0ghVEyipzqccpQWlTJcMeEPSzV
-	 zsWegdFnSyv9juUt74kFc9QeRZ6H7poBBgtGMk/W4xcFbxm8et278i8FLiHSaXAK9F
-	 4ey4LCpj/Fqqg0UpMnd3azUOCgsxaUHMaO6WZKthf5qnfDmsNfYfXGmnRnW2SIhhPg
-	 ZDGG/jipnRYgizMOAeCucQEKR+cciMGqhJD0kj0x+gi8fQkfZZQjxrrx3/taISNdlz
-	 y8F126Rgw8tsw==
+	s=k20201202; t=1716966832;
+	bh=q+6DGofejyWJwZMfQce/qAs8oSL6Sj8lNquP/+7a+d4=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=kDrlvjSLOZ6nEXY/gMS4yN89BX1vJU1AUdorRXVOWns4c1DpXVYhNfYELKMOvyUdc
+	 GEl7x+q8QKDK/iqLagi+wfWgkE9KJVoCMOvNiYMv6gGOg/0fKF6ZMBXDka6MDlLgli
+	 eRCmG3QVLqGMhlPP26Ukyh+SZZranP5tQoIwK2DqtWInJ84lO58JUkqLv7faNJS/Ev
+	 A/TliVcJeVCD32NvG9bdRMTfXokZzvIRBiPWvEkAhJ6SWkYLef2ViN94y16gmx1GHO
+	 VtD+e6iVLq/UyleTxJQvRI4CcQda2/mbBqd4+KWkCB7LDmFwB4nHIlP5WL6JwXQFEw
+	 dfsdeo2eoCENw==
+References: <171635763360.2619960.2969937208358016010.stgit@frogsfrogsfrogs>
+ <171635763423.2619960.122476714020756620.stgit@frogsfrogsfrogs>
 User-agent: mu4e 1.10.8; emacs 29.2
 From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: disgoel@linux.ibm.com,djwong@kernel.org,hch@lst.de,john.g.garry@oracle.com,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,ojaswin@linux.ibm.com,ritesh.list@gmail.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to b0c6bcd58d44
-Date: Wed, 29 May 2024 12:38:04 +0530
-Message-ID: <87cyp5qelo.fsf@debian-BULLSEYE-live-builder-AMD64>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: allow symlinks with short remote targets
+Date: Wed, 29 May 2024 12:40:08 +0530
+In-reply-to: <171635763423.2619960.122476714020756620.stgit@frogsfrogsfrogs>
+Message-ID: <878qztqee2.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,52 +44,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Hi folks,
+On Tue, May 21, 2024 at 11:02:16 PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> An internal user complained about log recovery failing on a symlink
+> ("Bad dinode after recovery") with the following (excerpted) format:
+>
+> core.magic = 0x494e
+> core.mode = 0120777
+> core.version = 3
+> core.format = 2 (extents)
+> core.nlinkv2 = 1
+> core.nextents = 1
+> core.size = 297
+> core.nblocks = 1
+> core.naextents = 0
+> core.forkoff = 0
+> core.aformat = 2 (extents)
+> u3.bmx[0] = [startoff,startblock,blockcount,extentflag]
+> 0:[0,12,1,0]
+>
+> This is a symbolic link with a 297-byte target stored in a disk block,
+> which is to say this is a symlink with a remote target.  The forkoff is
+> 0, which is to say that there's 512 - 176 == 336 bytes in the inode core
+> to store the data fork.
+>
+> Eventually, testing of generic/388 failed with the same inode corruption
+> message during inode recovery.  In writing a debugging patch to call
+> xfs_dinode_verify on dirty inode log items when we're committing
+> transactions, I observed that xfs/298 can reproduce the problem quite
+> quickly.
+>
+> xfs/298 creates a symbolic link, adds some extended attributes, then
+> deletes them all.  The test failure occurs when the final removexattr
+> also deletes the attr fork because that does not convert the remote
+> symlink back into a shortform symlink.  That is how we trip this test.
+> The only reason why xfs/298 only triggers with the debug patch added is
+> that it deletes the symlink, so the final iflush shows the inode as
+> free.
+>
+> I wrote a quick fstest to emulate the behavior of xfs/298, except that
+> it leaves the symlinks on the filesystem after inducing the "corrupt"
+> state.  Kernels going back at least as far as 4.18 have written out
+> symlink inodes in this manner and prior to 1eb70f54c445f they did not
+> object to reading them back in.
+>
+> Because we've been writing out inodes this way for quite some time, the
+> only way to fix this is to relax the check for symbolic links.
+> Directories don't have this problem because di_size is bumped to
+> blocksize during the sf->data conversion.
+>
 
-The for-next branch of the xfs-linux repository at:
-
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-b0c6bcd58d44 xfs: Add cond_resched to block unmap range and reflink remap path
-
-7 new commits:
-
-Darrick J. Wong (4):
-      [2b3f004d3d51] xfs: drop xfarray sortinfo folio on error
-      [97835e686679] xfs: fix xfs_init_attr_trans not handling explicit operation codes
-      [38de567906d9] xfs: allow symlinks with short remote targets
-      [95b19e2f4e0f] xfs: don't open-code u64_to_user_ptr
-
-John Garry (2):
-      [d7ba701da636] xfs: Clear W=1 warning in xfs_iwalk_run_callbacks()
-      [b33874fb7f28] xfs: Stop using __maybe_unused in xfs_alloc.c
-
-Ritesh Harjani (IBM) (1):
-      [b0c6bcd58d44] xfs: Add cond_resched to block unmap range and reflink remap path
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_alloc.c     |  6 ++----
- fs/xfs/libxfs/xfs_attr.c      | 38 ++++++++++++++++++--------------------
- fs/xfs/libxfs/xfs_attr.h      |  3 +--
- fs/xfs/libxfs/xfs_bmap.c      |  1 +
- fs/xfs/libxfs/xfs_inode_buf.c | 28 ++++++++++++++++++++++++----
- fs/xfs/scrub/scrub.c          |  2 +-
- fs/xfs/scrub/xfarray.c        |  9 ++++++---
- fs/xfs/xfs_attr_item.c        | 17 +++++++++++++++--
- fs/xfs/xfs_handle.c           |  7 +------
- fs/xfs/xfs_iwalk.c            |  5 ++---
- fs/xfs/xfs_reflink.c          |  1 +
- 11 files changed, 72 insertions(+), 45 deletions(-)
+Darrick, This patch causes xfs/348 to fail. To be precise, the case where the
+test sets the file type of all inodes to 12 (a symbolic link) causes the DATA
+inode (i.e. a regular file) to be interpreted as a symbolic link. The test
+however expected 'stat' to fail with EUCLEAN. Hence the test needs to be
+fixed.
 
 -- 
 Chandan
