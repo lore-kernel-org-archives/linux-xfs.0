@@ -1,69 +1,69 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C2FB181315
-	for <linux-xfs@vger.kernel.org>; Thu, 30 May 2024 22:38:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8619158A23
+	for <linux-xfs@vger.kernel.org>; Thu, 30 May 2024 22:38:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717108712; cv=none; b=kjI97sGa+KW/+LSJpsdzXtXOvtdJCwjaqGzf8Kk6QDb+4L5+tZb9qfG3MxmDzZh/DS7hINEMP/atjKxVI3kakVhx9porW6FCTvTVM3nsrKcv2078cy7bwYp1ajZQO6uEDQXUBQ1xQzAHYKQvMr1oFDZOSm1mo+FJ960uRC9jA6U=
+	t=1717108718; cv=none; b=DA70gvdek58qlzfSE19QemFUATTD33er4arEm9b3P0FLm7ssaRh0rv+Yp4d/OSXDn+cP0IGVl/6vSFopBpJ4B2FJsD306mHZRCYmvTLHjC3VmbJXknEs8nHcv6P0lPsbuRzZQq65adbkahh/RGpxX1TAvWCzcTyxs5g46X3w5tU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717108712; c=relaxed/simple;
-	bh=1mDNaQtRtZjqq3cguAIsNw7oJL2/n3m51c2V4Uh8vQs=;
+	s=arc-20240116; t=1717108718; c=relaxed/simple;
+	bh=8uEL7LOaxBe2zYOC1ER9tCcB1uhzqh4OVfgLktiwhec=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CfwCYEe/5lAXxkFEAuIdvGN9McjdDx32cJIN+uRfGKX6Vpqa+1nQ0ikyHnYeVSBXGl7ZnYNQ2KrKReytJFH3bEhJ3f8sSQjbOSiRjACnFbMsQQM3CWYtHCcl4btvPHd+noVu1EO/jCu6sDRopDebbwSisgrz1lrZ6Xrjf6J+LHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ekOkUBvP; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=e9kXm9uw9ZpVjTb2mrt1ObduPnZzxUePocwqsshA5APzYY8YW9EdqAS8MYs9QklHSU8S9bMUa8RzavUCR5uIPyiUHdScRkzQ3iivAmx67BBr6RXGSSJyjXWOM3sKlRz4quwITDOC0Zs5crMU+JNKpJgAt4u7WFW4zVl3jnkvIps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Kl1g0qZ/; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ekOkUBvP"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Kl1g0qZ/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1717108709;
+	s=mimecast20190719; t=1717108715;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=j9tiitZFJDzvK5qQMds5jEIzliYEPVTcw0FA9qQCPvs=;
-	b=ekOkUBvP4Bgn7ieYNlM/Rjc7tW6UrkPmeJAMx1YinFmKH8VCIh5lx4utaAzMymithN6klV
-	OGmqIAl5BNbbXpbNd45zdEgLHcip2gbwux3kqm8oPVmXPvuilzUZxcM6W46aTb+7tiI73x
-	MqVNXTW79lDvNjubUyJ4oDcJwgtGaX8=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=V64FAc8udCCb/Com74YGnVDUWw9uEkCgUMKkardGstA=;
+	b=Kl1g0qZ/il+82M77wDPWWO1eRA1dxHertkOO2BLxXO0FQJjHR5p0Zxr08G2Bku/kA7DBpX
+	uqs8DzXCjM2Bsybx20IswpDlUk18gqiKzLNxss6nSWGlD8//QlVChxYo2WSzO2oMBboLt8
+	IXdGwE61xYTJ7BXSvvoOFOK9RW9k818=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-638-Kf4EW9pRMAqr9xloxBkp3A-1; Thu, 30 May 2024 18:38:28 -0400
-X-MC-Unique: Kf4EW9pRMAqr9xloxBkp3A-1
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-42128f7b5fbso8543975e9.2
-        for <linux-xfs@vger.kernel.org>; Thu, 30 May 2024 15:38:27 -0700 (PDT)
+ us-mta-114-REC8NWFoMBCp_W9CjxUpeA-1; Thu, 30 May 2024 18:38:33 -0400
+X-MC-Unique: REC8NWFoMBCp_W9CjxUpeA-1
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4212a4bb9d7so5878035e9.1
+        for <linux-xfs@vger.kernel.org>; Thu, 30 May 2024 15:38:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717108702; x=1717713502;
+        d=1e100.net; s=20230601; t=1717108708; x=1717713508;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=j9tiitZFJDzvK5qQMds5jEIzliYEPVTcw0FA9qQCPvs=;
-        b=W0G7vuHKWmjRMyOvzQKog3BRRGXImeNZ1YWsopvxJ4lvNA90/s0fp4YNlSsbAQE0SH
-         lJrQDKBdlawIjAO8uyFz7uIHvCCWAClGoXMljwry3BrYkTj6ygvNGMHNBThjDpwE+oYF
-         rRzEGXq1AIGPvF3kC91MBaDhG5FhkXxZDXU5qk2w9E2t9D6owvOptLBiytL4ZMjDbZwO
-         h6/Ut61Zu4ZAgj6Ls9WUGRR3/S9zFxwAk3Cat2MBlbqy3w+1DBpO8Qz7VvFPx090hpst
-         PTwhB+BF6V4r4T1RHUdLpz7hb5Jh6bK6eBqc9wUTHACnLl2hV2mY+nVptz8IufjGRB0L
-         OMfQ==
-X-Gm-Message-State: AOJu0YzmIcd2pOcK828wvAN9WvlEbZsU5urxr5jTep0B/T2/01iIa7FN
-	Jub4CUw6pbqxJ5L66wDL2wrNZUuYPqwQc1EXYcddadvjRkVtct/LAB7QooLsL0RqS6pPTeJKnfK
-	xnvksbDP/CoE/TA9CRqqKp7orC39+x7Zsk4LDvHtZx+77jrwoHC70iHq1a4TgNeUyzz1/EIdWq5
-	uzvtLxG6wv84iSmPbhUpFWP3c0/Vl8jHAl91WDghqv
-X-Received: by 2002:a05:600c:4684:b0:420:2a22:bd3e with SMTP id 5b1f17b1804b1-4212e075641mr1063235e9.18.1717108702029;
-        Thu, 30 May 2024 15:38:22 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGBZ0jyZJBDyBkBuqrx6xyw/T5Qb55jqqd6NU0n1pEBwX8uXc3drCTlS7eYHsb1Ks2P8FfU0w==
-X-Received: by 2002:a05:600c:4684:b0:420:2a22:bd3e with SMTP id 5b1f17b1804b1-4212e075641mr1063105e9.18.1717108701581;
-        Thu, 30 May 2024 15:38:21 -0700 (PDT)
+        bh=V64FAc8udCCb/Com74YGnVDUWw9uEkCgUMKkardGstA=;
+        b=lkY3ZzUpIzo13Ie77AE2lAUrIMyFZy9nA8P21bo9MIf4b8QQIIuEMPUMTdiH5w0GRA
+         NfG7/E8zxLW7Lj/a1OsyCwDVkIp/10Ba3eDgaTCnxQptGwq3Hs/kHbN1W1Hxp8Vo4mma
+         4GY6B5OFGA23L70kq6TeNFt7SYTCdY2H8A0hIQZ1Mc0kSJKI9pnOqYVFmfhcefCRyxjG
+         llyQEhCcOqEiCGvBoRO6ylU1ZxgZymM5Z/dRd1GKHiXJ/zbavAGbWPPdw5qIP3ks1NOv
+         7d+DZZwXJj0jyVebxitRKvWvtlbRr3TKdXWjaUBIaVDchk8+R8fjHJMwgV6uMOWcx/mC
+         X7vA==
+X-Gm-Message-State: AOJu0YzBpzaNbV9dvqebxMIJzElc9yeWTCCmNV+zr+9tzOpGdEOp+/1V
+	GJ/7KwxwGeFdCLrHbQ1nhgbruMCE4HI2cZAN1qxgHDA/JX36xU3kxEEr8WN85J6O0NdbYRbNZ3P
+	v8jx7rLoUPA3A5XbfQeeulc/C6hPFkvYI+nDps94Rbq+kCjbknCRZt8rXdUSs8t4WQaBBNATk1k
+	svEBP1ZtY/Bt1naPoZe9AjKIGXvKxY8xijg0M7cBQz
+X-Received: by 2002:a05:600c:5117:b0:421:1fb1:fe00 with SMTP id 5b1f17b1804b1-4212e075248mr1621425e9.17.1717108708466;
+        Thu, 30 May 2024 15:38:28 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IESkVxJVLUFYCpqv2qCW9C/TXtafaBLHsfrPUBaTk0596saCC2wKDG6jqyNo0BwjoYnxXgA3Q==
+X-Received: by 2002:a05:600c:5117:b0:421:1fb1:fe00 with SMTP id 5b1f17b1804b1-4212e075248mr1621275e9.17.1717108707772;
+        Thu, 30 May 2024 15:38:27 -0700 (PDT)
 Received: from fedora.redhat.com (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42127062149sm36053675e9.14.2024.05.30.15.38.20
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42127062149sm36053675e9.14.2024.05.30.15.38.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Thu, 30 May 2024 15:38:21 -0700 (PDT)
 From: Pavel Reichl <preichl@redhat.com>
 To: linux-xfs@vger.kernel.org
 Cc: cem@redhat.com
-Subject: [PATCH 1/2] xfs_db: Fix uninicialized error variable
-Date: Fri, 31 May 2024 00:38:18 +0200
-Message-ID: <20240530223819.135697-2-preichl@redhat.com>
+Subject: [PATCH 2/2] xfs_io: Fix do not loop through uninitialized var
+Date: Fri, 31 May 2024 00:38:19 +0200
+Message-ID: <20240530223819.135697-3-preichl@redhat.com>
 X-Mailer: git-send-email 2.45.1
 In-Reply-To: <20240530223819.135697-1-preichl@redhat.com>
 References: <20240530223819.135697-1-preichl@redhat.com>
@@ -75,29 +75,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-To silence redhat's covscan checker:
+Red Hat's covscan checker found the following issue:
 
-Error: UNINIT (CWE-457): [#def1] [important]
-xfsprogs-6.4.0/db/hash.c:308:2: var_decl: Declaring variable "error" without initializer.
-xfsprogs-6.4.0/db/hash.c:353:2: uninit_use: Using uninitialized value "error".
+xfsprogs-6.4.0/io/parent.c:115:2: var_decl: Declaring variable "count" without initializer.
+xfsprogs-6.4.0/io/parent.c:134:2: uninit_use: Using uninitialized value "count".
+
+Currently, jdm_parentpaths() returns EOPNOTSUPP and does not initialize
+the count variable. The count variable is subsequently used in a for
+loop, which leads to undefined behavior. Fix this by returning from the
+check_parents() function immediately after checking the return value of
+the jdm_parentpaths() function.
 
 Signed-off-by: Pavel Reichl <preichl@redhat.com>
 ---
- db/hash.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ io/parent.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/db/hash.c b/db/hash.c
-index 05a94f24..9b3fdea6 100644
---- a/db/hash.c
-+++ b/db/hash.c
-@@ -304,7 +304,7 @@ collide_xattrs(
- 	struct dup_table	*tab = NULL;
- 	xfs_dahash_t		old_hash;
- 	unsigned long		i;
--	int			error;
-+	int			error = 0;
+diff --git a/io/parent.c b/io/parent.c
+index 8f63607f..93f40997 100644
+--- a/io/parent.c
++++ b/io/parent.c
+@@ -112,7 +112,7 @@ check_parents(parent_t *parentbuf, size_t *parentbuf_size,
+ 	     jdm_fshandle_t *fshandlep, struct xfs_bstat *statp)
+ {
+ 	int error, i;
+-	__u32 count;
++	__u32 count = 0;
+ 	parent_t *entryp;
  
- 	old_hash = libxfs_da_hashname((uint8_t *)name, namelen);
+ 	do {
+@@ -126,7 +126,7 @@ check_parents(parent_t *parentbuf, size_t *parentbuf_size,
+ 			       (unsigned long long) statp->bs_ino,
+ 				strerror(errno));
+ 			err_status++;
+-			break;
++			return;
+ 		}
+ 	} while (error == ERANGE);
  
 -- 
 2.45.1
