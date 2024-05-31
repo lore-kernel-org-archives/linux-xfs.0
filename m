@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7D2B17D374
-	for <linux-xfs@vger.kernel.org>; Fri, 31 May 2024 20:10:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 291C2EAE7
+	for <linux-xfs@vger.kernel.org>; Fri, 31 May 2024 20:12:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717186240; cv=none; b=K8XQGzd5BptqaQxZqu+1rHZgdbeIlfFJtghMRT60H+75LdvLAFVZSxShQ8KX3mYPRMysKFwYsWz08MMjsMUjK0feRm5bbRCMi352HmhP18nLnAaUFABai9NS5g+0QtO45v4hIfsfXAUOFHRfc3w8nyof6TKK4NzIfVNM+KsI1gM=
+	t=1717186343; cv=none; b=Dl5vD9Oz4hxMUIa+XD4Dw7xa2ketmVFhLyX0ANUHhe1y3CyqSXoR7yCwTOPBWPL4YYcmYCWDsGFPchq5yFGbRgly9OaDmP2VJTQDAd6lXKwLF21Adf6jSf4yPxauXdqugX/vflnkEkR2XsBGZSEN1R3KmnkOoGB4FDw44KIqcaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717186240; c=relaxed/simple;
-	bh=TPSE5AIREbBfurrspqujKLfb0HtpXacQ+H6ne+Wf0IA=;
+	s=arc-20240116; t=1717186343; c=relaxed/simple;
+	bh=/knBw9H3uc3B/e4jwbgLbaBhOoVi80G4Za91a+o4tHE=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=OYRL9ziseYVnj3U75Gc2RJth0BTrn2ZuWaxWIAt2MEf3PWSqUl/Qb2QsFMAPU1HuchqC3vVsW4r/m3PVHQRhgdSPBeaGvqqxhHN0Ll8o6v+xnm/Xo+5fRM9A54bbJ1vwWuZQES8ouraGmGXuE3g4va1dTOZjSdw0cZSfbXA7y/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PU2qwhot; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=f1rbODBcHRz0g5miD2DiNH6nKQYp8zwECbZgTDbHtjaGr/6s/dQDbvdRMSG7GKzllMkwqGobFOBsPG2Ssoz0q5exdrEBYcP/X31ScJOgjvjC1gxA8fYzodoQ8DQpuZ4uId34rFpm9DkmbLpc6oZkXltdxEX9wrzyKfLT0myx218=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lsbjd8yv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PU2qwhot"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 327A1C116B1;
-	Fri, 31 May 2024 20:10:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lsbjd8yv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95ACEC116B1;
+	Fri, 31 May 2024 20:12:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717186240;
-	bh=TPSE5AIREbBfurrspqujKLfb0HtpXacQ+H6ne+Wf0IA=;
+	s=k20201202; t=1717186342;
+	bh=/knBw9H3uc3B/e4jwbgLbaBhOoVi80G4Za91a+o4tHE=;
 	h=Date:From:To:Cc:Subject:From;
-	b=PU2qwhotWhmqlGpcy8i0DPWKFXVTm2PGWzYmW9uj6MH8FClgPBvHy0E85bRpg9j40
-	 0dB23mXWpjsgzPUrA2XP6EluzApVtZLaKxVzVQxZ+E4cLj4xphXeZTWNJZufxM5f1n
-	 bM0NCJpZjtzz9UxsMumNFPk8DuVXsWZucdPBlrOjdFX0oORtS7W6bDI5i3kCXbPNpj
-	 msvLaM4PmduwP0JGe0CsvsR0AAJu2VuoBb82p5FJODVw071+KUfdp6BtZosN5wyq7I
-	 3J5dJeO1Tu+EMB8Yj9P4ROI9NxQZ11kgujGh1mcz9gJ3G7wgyS5Y28a9vWzbOsT/G3
-	 qs9lDAEY3DWKw==
-Date: Fri, 31 May 2024 13:10:39 -0700
+	b=Lsbjd8yvPxbjri0p5sxndJprusWljjAk3hOvrZZW2WJnsDTKqdlNAXOMQK4Xyw+sP
+	 XFSL5SPem+1POK8sVTiQ9nJwCTZGz+V9G9oqaf8Sq43EVw/rr69yiEM02Zv7fWMutA
+	 mTgRuKKC+nFx7V1aSIHH2UbgA5ZyDuQrB6ETyE9ppLPhHemjHapG64FtXycDUpwvw/
+	 GnBQX8Ez29/2NU30+rTwOcuse2omP6V9cMb15SxRhYSRWcMSeG+rDmjH6btaOe+cFe
+	 IfAtQrSHGtlL31S6/s4sGso6h8E+Te+XnBbmAghHKhjSvzyDj/+6e5wv2PouYu1sx5
+	 D1GOm7eTYeIJw==
+Date: Fri, 31 May 2024 13:12:22 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs_repair: detect null buf passed to duration
-Message-ID: <20240531201039.GR52987@frogsfrogsfrogs>
+Subject: [PATCH] xfs_io: fix gcc complaints about potentially uninitialized
+ variables
+Message-ID: <20240531201222.GS52987@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,43 +45,45 @@ Content-Transfer-Encoding: 8bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-gcc 12.2 with ubsan and fortify turned on complains about this:
+When I turned on UBSAN on the userspace build with gcc 12.2, I get this:
 
-In file included from /usr/include/stdio.h:906,
-                 from ../include/platform_defs.h:9,
-                 from ../include/libxfs.h:16,
-                 from progress.c:3:
-In function ‘sprintf’,
-    inlined from ‘duration’ at progress.c:443:4:
-/usr/include/x86_64-linux-gnu/bits/stdio2.h:30:10: error: null destination pointer [-Werror=format-overflow=]
-   30 |   return __builtin___sprintf_chk (__s, __USE_FORTIFY_LEVEL - 1,
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   31 |                                   __glibc_objsize (__s), __fmt,
-      |                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   32 |                                   __va_arg_pack ());
-      |                                   ~~~~~~~~~~~~~~~~~
+bulkstat.c: In function ‘bulkstat_single_f’:
+bulkstat.c:316:24: error: ‘ino’ may be used uninitialized [-Werror=maybe-uninitialized]
+  316 |                 ret = -xfrog_bulkstat_single(&xfd, ino, flags, &bulkstat);
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bulkstat.c:293:41: note: ‘ino’ was declared here
+  293 |                 uint64_t                ino;
+      |                                         ^~~
 
-I think this is a false negative since all callers are careful not to
-pass in a null pointer.  Unfortunately the compiler cannot detect that
-since this isn't a static function and complains.  Fix this by adding an
-explicit null check.
+I /think/ this is a failure of the gcc static checker to notice that sm
+will always be set to the last element of the tags[] array if it didn't
+set ino, but this code could be more explicit about deciding to
+fallback to strtoul.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/progress.c |    3 +++
- 1 file changed, 3 insertions(+)
+ io/bulkstat.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/repair/progress.c b/repair/progress.c
-index 084afa63c121..e13494e0ed23 100644
---- a/repair/progress.c
-+++ b/repair/progress.c
-@@ -435,6 +435,9 @@ duration(time_t length, char *buf)
- 	int seconds;
- 	char temp[128];
+diff --git a/io/bulkstat.c b/io/bulkstat.c
+index 829f6a025153..f312c6d55f47 100644
+--- a/io/bulkstat.c
++++ b/io/bulkstat.c
+@@ -301,7 +301,7 @@ bulkstat_single_f(
  
-+	if (!buf)
-+		return NULL;
-+
- 	*buf = '\0';
- 	weeks = days = hours = minutes = seconds = sum = 0;
- 	if (length >= ONEWEEK) {
+ 	for (i = optind; i < argc; i++) {
+ 		struct single_map	*sm = tags;
+-		uint64_t		ino;
++		uint64_t		ino = NULLFSINO;
+ 		unsigned int		flags = 0;
+ 
+ 		/* Try to look up our tag... */
+@@ -314,7 +314,7 @@ bulkstat_single_f(
+ 		}
+ 
+ 		/* ...or else it's an inode number. */
+-		if (sm->tag == NULL) {
++		if (ino == NULLFSINO) {
+ 			errno = 0;
+ 			ino = strtoull(argv[i], NULL, 10);
+ 			if (errno) {
