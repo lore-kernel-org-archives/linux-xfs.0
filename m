@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C76721C687;
-	Fri, 31 May 2024 15:27:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902AB33080;
+	Fri, 31 May 2024 15:29:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717169253; cv=none; b=nNJABPQIy0ozn0mAGsen1tPVTbktFc8uUHHvfMgi5Fd8HeBEQ/fiSwIC/0pTwPRcWE39d2plJOY5JCW8mXOjbA5wt7GEWyHxrgJvlDnyEhixjCfL910BpUkmR1vkhHCrvbLkWoSYZomSQfqsj+0N0dDEJToSoY4TgMTSdEzNayQ=
+	t=1717169363; cv=none; b=JVeSrP5J03IoYApssbR4pyJCPiOs7sSkjRkscc9eqkciBcsY/QZ/0OZEbxCrzDIVcLI1FH1YIxgJC7pwS1fEFWxWrPZX2DZltROw84ZpDy78JtbtTnDxHEz6KUDCIMdWu6zBxPUge5vyLKiCVWSCJr6FaH5R7o/hJlPOk56+f/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717169253; c=relaxed/simple;
-	bh=rjij/e0aNKDfKAiiaNEJ7N7+ZrqYaMhO+848HjpvkF0=;
+	s=arc-20240116; t=1717169363; c=relaxed/simple;
+	bh=vGdGcvG/usBANOA8rI6HjNUXFa+3GSenghMlRYfsdgA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gqtYAEmfEz1g5szWXmQYf9Z2evEGbcWa1tuNTKLtRGoP7CfNZ+nHfq6KM4CgZC6NPO/ZaWOUGn85HgWnwwDkTUL7h5Xa8enl9REyt7c3YWEVigmboAKk9LyfnCO0L1v/5H9J2w+ct20DCIQxioU3Mm1gC0jqgaitAaAB8A/dOxQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WDsbjgom; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jOmr+leAS3krXSHLhQryUSfbPQUejdVtVj4u4rf9wq1oaOAJyLn6PxeOdVcgfwdkEeplbBe6+bf996DpC+TqBrzKUJdfeyEdohr0XdalcfW4xe0vDxTXnye2fHH7XqJey8Is+PQJaEvFqM39BkF1UQNKuQrUP04Nm4jdLuOanPI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UF+2dzDh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WDsbjgom"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52C21C116B1;
-	Fri, 31 May 2024 15:27:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UF+2dzDh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 122DFC116B1;
+	Fri, 31 May 2024 15:29:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717169253;
-	bh=rjij/e0aNKDfKAiiaNEJ7N7+ZrqYaMhO+848HjpvkF0=;
+	s=k20201202; t=1717169363;
+	bh=vGdGcvG/usBANOA8rI6HjNUXFa+3GSenghMlRYfsdgA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WDsbjgom4IPUjMX7uh8DQOqumPO4dBoDgGxbqi1FsE+c59LokizFlvmnmkEWykPvm
-	 9vFEdwI1n0M7xzHISQFTv+p1C4lmtQoLvGe5gAwJLgBlfW3mpMUHxVE941lqPWu/OH
-	 PMNBRXcN+aOU/9m6q/id+Ox3YvAuPzS+NdR44L2KoGF+zLi6pKgkLqC5rhLeFTPUm3
-	 MlMhWCpm9FVw2X/qanj1024hmrS1DfSXYs5MZG2pYmUKA2iLVXB9EMztBC84ADLH59
-	 bsI6+v9MTyCftjTXac9qATSEuQ4UMayjvS96fGgn9P9T/yfUpXfLguhivY7XZebjtw
-	 eBvZjjSGq//YA==
-Date: Fri, 31 May 2024 08:27:32 -0700
+	b=UF+2dzDh6UpZmUspof8Y3Y11pjEkOJ4u4k3fnlpwD6csQFbUlRc+YOwzDBNfgjQ0Y
+	 6y6UArHPAvnIA+M8dgy8aB4CBagR2BPX9DLzaP0cG/KuYMztdP+qIv5RQ/q3nzGyVt
+	 l5s1afe35RsHc6Mq7c9F2kqWJs23LDOQNT1y/FNxXgWcdpipHTxVWBjfsA0b3iueuF
+	 /WHKa8NytnhvEHZDmFgPxMa6azgFXgLT7DgNDpvIppfmCorcFwSkPVjtUDuhe4y1K1
+	 8oKOV2eU+WtmkkMx1hy/gZ1DY+sYyerAhamQf0sGVWzRKWGOUWnZEWghbiccyg8MlV
+	 stx36vE4Oz9vw==
+Date: Fri, 31 May 2024 08:29:22 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org,
@@ -34,11 +34,14 @@ Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org,
 	brauner@kernel.org, david@fromorbit.com, chandanbabu@kernel.org,
 	jack@suse.cz, willy@infradead.org, yi.zhang@huawei.com,
 	chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [RFC PATCH v4 5/8] xfs: refactor the truncating order
-Message-ID: <20240531152732.GM52987@frogsfrogsfrogs>
+Subject: Re: [RFC PATCH v4 7/8] xfs: reserve blocks for truncating realtime
+ inode
+Message-ID: <20240531152922.GN52987@frogsfrogsfrogs>
 References: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
- <20240529095206.2568162-6-yi.zhang@huaweicloud.com>
- <ZlnRODP_b8bhXOEE@infradead.org>
+ <20240529095206.2568162-8-yi.zhang@huaweicloud.com>
+ <ZlnFvWsvfrR1HBZW@infradead.org>
+ <20240531141000.GH52987@frogsfrogsfrogs>
+ <Zlna8S76sbj-6ItP@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,51 +50,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZlnRODP_b8bhXOEE@infradead.org>
+In-Reply-To: <Zlna8S76sbj-6ItP@infradead.org>
 
-On Fri, May 31, 2024 at 06:31:36AM -0700, Christoph Hellwig wrote:
-> > +	write_back = newsize > ip->i_disk_size && oldsize != ip->i_disk_size;
+On Fri, May 31, 2024 at 07:13:05AM -0700, Christoph Hellwig wrote:
+> On Fri, May 31, 2024 at 07:10:00AM -0700, Darrick J. Wong wrote:
+> > On Fri, May 31, 2024 at 05:42:37AM -0700, Christoph Hellwig wrote:
+> > > > -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+> > > > +	resblks = XFS_IS_REALTIME_INODE(ip) ? XFS_DIOSTRAT_SPACE_RES(mp, 0) : 0;
+> > > 
+> > > This probably wants a comment explaining that we need the block
+> > > reservation for bmap btree block allocations / splits that can happen
+> > > because we can split a written extent into one written and one
+> > > unwritten, while for the data fork we'll always just shorten or
+> > > remove extents.
+> > 
+> > "for the data fork"? <confused>
+> > 
+> > This always runs on the data fork.  Did you mean "for files with alloc
+> > unit > 1 fsblock"?
 > 
-> Maybe need_writeback would be a better name for the variable?  Also no
-> need to initialize it to false at declaration time if it is
-> unconditionally set here.
+> Sorry, it was meant to say for the data device.  My whole journey
+> to check if this could get called for the attr fork twisted my mind.
 
-This variable captures whether or not we need to write dirty file tail
-data because we're extending the ondisk EOF, right?
+I really hope not -- all writes to the attr fork have known sizes at
+syscall time, and appending doesn't even make sense.
 
-I don't really like long names like any good 1980s C programmer, but
-maybe we should name this something like "extending_ondisk_eof"?
+> But you have a good point that even for the rt device we only need
+> the reservation for an rtextsize > 1.
 
-	if (newsize > ip->i_disk_size && oldsize != ip->i_disk_size)
-		extending_ondisk_eof = true;
-
-	...
-
-	if (did_zeroing || extending_ondisk_eof)
-		filemap_write_and_wait_range(...);
-
-Hm?
-
-> > +		/*
-> > +		 * Updating i_size after writing back to make sure the zeroed
-> > +		 * blocks could been written out, and drop all the page cache
-> > +		 * range that beyond blocksize aligned new EOF block.
-> > +		 *
-> > +		 * We've already locked out new page faults, so now we can
-> > +		 * safely remove pages from the page cache knowing they won't
-> > +		 * get refaulted until we drop the XFS_MMAP_EXCL lock after the
-
-And can we correct the comment here too?
-
-"...until we drop XFS_MMAPLOCK_EXCL after the extent manipulations..."
+<nod>
 
 --D
-
-> > +		 * extent manipulations are complete.
-> > +		 */
-> > +		i_size_write(inode, newsize);
-> > +		truncate_pagecache(inode, roundup_64(newsize, blocksize));
-> 
-> Any reason this open codes truncate_setsize()?
-> 
-> 
