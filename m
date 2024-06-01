@@ -1,40 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6DE2AD59;
-	Fri, 31 May 2024 21:52:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A55AD4B
+	for <linux-xfs@vger.kernel.org>; Sat,  1 Jun 2024 04:48:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717192350; cv=none; b=hcZS0fRgPML3MVAagauCqFtn+kY0gj2U5PYgloZV7x0lmTq1e8Jr8OEAGAebBKbDGAfk22x+DrmRdqrshpvbmDzrprnylNEYiwXJi/Av6mcmwuqKhq0NSfVO8MPLvDO99RhY3gg4FO6w3C69gB11oQdLqQNoyI9R84kKaljaO5g=
+	t=1717217291; cv=none; b=g4X+q4ZJrOKpSUOJg1BouVODaghogMeEtmoGezR4qDQei6DZqBlAbcpR7AFPSIwnobr6+7b3T/NI3zA3W64gv8OYTjwaoc7Oph9PtXYCF7VwkEJ3cG5a16Dd4uj0es2Pea6TfjURLj0G825PdYstjZEMSR6rO+2JY67BFxToMFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717192350; c=relaxed/simple;
-	bh=QGFa1su3G1GQlhYw2Bl1frsvO5x1Io9tnw4wIHm8v4Y=;
+	s=arc-20240116; t=1717217291; c=relaxed/simple;
+	bh=f27eFlnyqwt5ktV2bqEuueuvQGZtJrQFcs93s3lJXRs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lioW62HB4g77DgjjtH0riGZruOhEvcjM3JHX/H6V/cn35Nslxkd0mlfnP2xdMxoD62SeSdk2pkyb2pRb4lpYUxiHhaGsBu4JFipwvEQXqQSmbzHworkNBDi7cmNLMT65WCPdR/XUCLVpz3fJewCt7zOUfbhGxxnSJu9JKfv7JD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OFsNzDFj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aoavT3CLlmCjYXe66t3anDIi/r6RcR/wSxMfWGmkEoaszbaPWVDM6vvBO7yeh7BYyeDkLW8Qy1V33KELvRTQNoKaPJIyiizX8s7t1kvj+iXDG67P04gqdbW9lqGuri1Sl3nlvejbvYed8uyuFWzDHK6ZY/ihyVeZT/u7fqLhM7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WmrZDfck; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OFsNzDFj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6393FC116B1;
-	Fri, 31 May 2024 21:52:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717192349;
-	bh=QGFa1su3G1GQlhYw2Bl1frsvO5x1Io9tnw4wIHm8v4Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OFsNzDFj0NCEqWTvkytvVOXDu/bYefFjFt8aMHe03+SKhpJHrPkbNeDIYLzE3xKVb
-	 2Hr2VSqNPxXX9OkxQqS//w29agcrCI/Egzn6jVpAaydrIU8xXcpkYsei2TJVf+ZROQ
-	 1tfG9C6CYTa6YuJk8iHt0e7VFk+OF2VCAge13fKs8iCD6shhzReiCkWiKl1UUR82JJ
-	 h4CB2mPV1QZD/tzn0EEmOogtl9Ihn6hqXKlSlf1Jz+cUCdyjynnqYP6vl+e+qlPY85
-	 tZ1TEqaSCmxtYZmzCLRa30jDi0Lij9bJklY101KmpQjj+rdiMmgjzc4qbDQOzlV7/s
-	 Sl4FpLtM4FvXA==
-Date: Fri, 31 May 2024 21:52:28 +0000
-From: Eric Biggers <ebiggers@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH] fsverity: support block-based Merkle tree caching
-Message-ID: <20240531215228.GD2838215@google.com>
-References: <20240515015320.323443-1-ebiggers@kernel.org>
- <20240531213212.GV52987@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WmrZDfck"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=f27eFlnyqwt5ktV2bqEuueuvQGZtJrQFcs93s3lJXRs=; b=WmrZDfckFqxegVf3zSAEOXp4B2
+	rMwvL2UxlyvbY8IBam4aUOn+rWT6jCWTqvJHXkBlYhma7azIdpJ5uMJWIctysXf6Dx+VCe2VQ4kUe
+	x2w6p/xYrDRc0gcnOayzYcZlO06po49YQxtIJ/tiIlQZggsolOrL2aaj1s51ht2DvAq9UvXddKU/u
+	fr+XNE04BNgoRd3kbwVthO9FF2KV+Kgd/+9fnrwhCsaseImMx/iHpCQTTPZ3WcxVzRLDqWRWdBidK
+	ehk8/f8A3D9LT6e86h7yAGc/jO8VeyN+iYD3ks70cY/Z6Y2PcxGQVcvZNB8JpGDs2gmW8/SncIHzO
+	Rj64gXAQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sDGez-0000000ByRF-3rDZ;
+	Sat, 01 Jun 2024 04:48:05 +0000
+Date: Fri, 31 May 2024 21:48:05 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Bastian Germann <bage@debian.org>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v3 1/1] xfs_io: make MADV_SOFT_OFFLINE conditional
+Message-ID: <ZlqoBUiK9WBpDTMr@infradead.org>
+References: <20240531195751.15302-1-bage@debian.org>
+ <20240531195751.15302-2-bage@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,70 +45,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240531213212.GV52987@frogsfrogsfrogs>
+In-Reply-To: <20240531195751.15302-2-bage@debian.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, May 31, 2024 at 02:32:12PM -0700, Darrick J. Wong wrote:
-> On Tue, May 14, 2024 at 06:53:20PM -0700, Eric Biggers wrote:
-> > From: Eric Biggers <ebiggers@google.com>
-> > 
-> > Currently fs/verity/ assumes that filesystems cache Merkle tree blocks
-> > in the page cache.  Specifically, it requires that filesystems provide a
-> > ->read_merkle_tree_page() method which returns a page of blocks.  It
-> > also stores the "is the block verified" flag in PG_checked, or (if there
-> > are multiple blocks per page) in a bitmap, with PG_checked used to
-> > detect cache evictions instead.  This solution is specific to the page
-> > cache, as a different cache would store the flag in a different way.
-> > 
-> > To allow XFS to use a custom Merkle tree block cache, this patch
-> > refactors the Merkle tree caching interface to be based around the
-> > concept of reading and dropping blocks (not pages), where the storage of
-> > the "is the block verified" flag is up to the implementation.
-> > 
-> > The existing pagecache based solution, used by ext4, f2fs, and btrfs, is
-> > reimplemented using this interface.
-> > 
-> > Co-developed-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > Co-developed-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> > ---
-> > 
-> > This reworks the block-based caching patch to clean up many different
-> > things, including putting the pagecache based caching behind the same
-> > interface as suggested by Christoph.
-> 
-> I gather this means that you ported btrfs/f2fs/ext4 to use the read/drop
-> merkle_tree_block interfaces?
+On Fri, May 31, 2024 at 09:57:51PM +0200, Bastian Germann wrote:
+> +#ifdef MADV_SOFT_OFFLINE
+> +/* MADV_SOFT_OFFLINE is undefined on mips */
 
-Yes, this patch does that.
+... as of Linux 6.9 */
 
-> >                                       This applies to mainline commit
-> > a5131c3fdf26.  It corresponds to the following patches in Darrick's v5.6
-> > patchset:
-> > 
-> >     fsverity: convert verification to use byte instead of page offsets
-> >     fsverity: support block-based Merkle tree caching
-> >     fsverity: pass the merkle tree block level to fsverity_read_merkle_tree_block
-> >     fsverity: pass the zero-hash value to the implementation
-> > 
-> > (I don't really understand the split between the first two, as I see
-> > them as being logically part of the same change.  The new parameters
-> > would make sense to split out though.)
-> 
-> I separated the first two to reduce the mental burden of rebasing these
-> patches against new -rc1 kernels.  It's a lot less effort if one only
-> has to concentrate on one aspect at a time.  You might have heard that
-> it's difficult to add an xfs feature without it taking multiple kernel
-> cycles.
-> 
-> (That said, 6.10 wasn't bad at all.)
-> 
+With that (can probably just be fixed when applying):
 
-I'd be glad to start applying some of the fsverity patches for 6.11.  This one
-seems good to me (if it's revised to split the new parameters back into separate
-patches again), but it only really makes sense if XFS is going to use it, and
-that seems uncertain now.  Either way though, we could go ahead with the
-workqueue change, FS_XFLAG_VERITY, and tracepoints.
 
-- Eric
+Reviewed-by: Christoph Hellwig <hch@lst.de>
