@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 100E9F9E9
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:49:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C32912BB0D
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:49:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717440567; cv=none; b=g686G5GE5rpFGoD7QOr2v8TQQ1FTbrAyGqtyBmmEqIEDd8bCi2NtPx2LG++8pgjvRbfxyeTo3fvSmiPzAAeMj6nIh2OwhQyE/veSN2RpzI3EDIW6EYv4BzdW4vslN9jJl1K+gl4tobKAU1I5S7JcN3PmYtmVhOrzPn/Qx7t64/k=
+	t=1717440582; cv=none; b=s+A81zX2nXd8WBf2PVLum/SNKtp4D7FmGf9hCRuakRfXaVPCOpCJkneZv8wtHusLUztxFJlySJ8xgWG7NUqSIEbw7XP0SoSSIt+kce6tKvk0Uh5LSRJECGe6/OU6CkAJPQL4f95ZmP5Y9t9aaynuWuz/U9z9mUUPw0UkhGZrI1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717440567; c=relaxed/simple;
-	bh=5i05vUsH4wf0NDMt5S93Yui3V/j9jSE9iJe7P1J8Y70=;
+	s=arc-20240116; t=1717440582; c=relaxed/simple;
+	bh=jijeS6SC6glwkFyCIPJYe83bkqkjIj5N4DlpiyMJnvU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m+jmBw6fjfjKFNhIyPuNSBMphWRlk2ppvgUM1TRa2rKK12kIzRNo4wzbBxtbz7nzXaChH2mtV0mSyhS2B6IajZQA5QsIt+EkYEIhB6P9wV5QBLlKpxCwGnIy7jtdlzlVx54oH79IWEEpHmW9JEvxogm+PCZxTzK+6mWk0++IOlM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VwpMVrXn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=f+gSFo6Cp/wZy8KQHFyWaIxvzT40BTjbFCi+FukbrD9KtCEF3evZ0U/FWR4Tr3HRapo/WtaXsBBRauMI00tVduJl5LQxy5r4nlRdNRpmg+aBD4ScoZ21EY7lEKsHnwwNeaPesdnYMRUqOzfMftCt+aqVMWaLC+uLhyK51G8ky9c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TFxEPLSc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VwpMVrXn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC667C2BD10;
-	Mon,  3 Jun 2024 18:49:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TFxEPLSc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 986D8C2BD10;
+	Mon,  3 Jun 2024 18:49:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717440566;
-	bh=5i05vUsH4wf0NDMt5S93Yui3V/j9jSE9iJe7P1J8Y70=;
+	s=k20201202; t=1717440582;
+	bh=jijeS6SC6glwkFyCIPJYe83bkqkjIj5N4DlpiyMJnvU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VwpMVrXn0VHiPeU/KqZ/aemwxSxjsEaw0YYKEHY2E3+j7bqF+MSTUw+xnyvzqD/q6
-	 9iH0rNoAaClFIjs0fI7GfNEqqOjEaniXXShqq95gpavJlBygwyD/PBrurdF0H/+v/s
-	 zLK+rDdzxNRbkRZb8PLqgyZJ+0kHni8gdEVxNsAHRLvbmnjMgAXcKfSoTHQiLZJUOb
-	 onaCIaeIp4tDELJiFpPKHwU529uSvF7DsZm42snjngS3W8JuJQDrTRjIRAS5YZudB/
-	 g0I9KcQIIVHEhPjDWkK3/Z5CbU1ePzyPL0iIE3zqLb8/eCUcvaWWioLqoBWRYIti7s
-	 cw5R9QBkSDQjA==
-Date: Mon, 03 Jun 2024 11:49:26 -0700
-Subject: [PATCHSET v30.5 03/10] xfsprogs: bmap log intent cleanups
+	b=TFxEPLSc0/kyCAmkd9d32B0uBrCJ1orOKzBN5ZKob13w1ytfS0EaNZJJtZXIjoXuL
+	 EUU4bAVC0xrq6CrP0HPnX2EPG3og0MZiXDAuflmTccpbrocIADvYWK3gYPKese4knR
+	 UlRy6EZXTLzYdeuMmFVFFV857WkRm00NYqTO4O9aJ374zUlNQn+614qHIBOuf6b0C6
+	 Wkup4MFc3fIOHU6Xh8tO21bQebNruQO9rugTDI8yNCMe5YN6NlFnsG7eG6P3/2EWkJ
+	 Nta6r96hVzzfglRyOcrY0lmWOJliBS5sl277GEqbsNN4fIfH7yZPOS08VxMYweQd0A
+	 4FrJydHAXRVbQ==
+Date: Mon, 03 Jun 2024 11:49:42 -0700
+Subject: [PATCHSET v30.5 04/10] xfsprogs: widen BUI formats to support
+ realtime
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171744041355.1447589.2661742462217465267.stgit@frogsfrogsfrogs>
+Message-ID: <171744041730.1449579.11894722565578033409.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240603184512.GD52987@frogsfrogsfrogs>
 References: <20240603184512.GD52987@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,24 +47,11 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-The next major target of online repair are metadata that are persisted
-in blocks mapped by a file fork.  In other words, we want to repair
-directories, extended attributes, symbolic links, and the realtime free
-space information.  For file-based metadata, we assume that the space
-metadata is correct, which enables repair to construct new versions of
-the metadata in a temporary file.  We then need to swap the file fork
-mappings of the two files atomically.  With this patchset, we begin
-constructing such a facility based on the existing bmap log items and a
-new extent swap log item.
-
-This series cleans up a few parts of the file block mapping log intent
-code before we start adding support for realtime bmap intents.  Most of
-it involves cleaning up tracepoints so that more of the data extraction
-logic ends up in the tracepoint code and not the tracepoint call site,
-which should reduce overhead further when tracepoints are disabled.
-There is also a change to pass bmap intents all the way back to the bmap
-code instead of unboxing the intent values and re-boxing them after the
-_finish_one function completes.
+Atomic extent swapping (and later, reverse mapping and reflink) on the
+realtime device needs to be able to defer file mapping and extent
+freeing work in much the same manner as is required on the data volume.
+Make the BUI log items operate on rt extents in preparation for atomic
+swapping and realtime rmap.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -72,23 +60,14 @@ This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bmap-intent-cleanups-6.9
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-bmap-intents-6.9
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bmap-intent-cleanups-6.9
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-bmap-intents-6.9
 ---
 Commits in this patchset:
- * libxfs: remove kmem_alloc, kmem_zalloc, and kmem_free
- * libxfs: add a bi_entry helper
- * libxfs: reuse xfs_bmap_update_cancel_item
- * libxfs: add a xattr_entry helper
+ * libxfs: add a realtime flag to the bmap update log redo items
 ---
- db/bmap_inflate.c         |    2 +-
- include/kmem.h            |   10 +-------
- libxfs/defer_item.c       |   58 ++++++++++++++++++++++++---------------------
- libxfs/init.c             |    2 +-
- libxfs/kmem.c             |   32 ++++++++-----------------
- libxlog/xfs_log_recover.c |   19 +++++++--------
- repair/bmap_repair.c      |    4 ++-
- 7 files changed, 55 insertions(+), 72 deletions(-)
+ libxfs/defer_item.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
