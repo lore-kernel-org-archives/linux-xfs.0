@@ -1,119 +1,159 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0B9620DD3
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 05:58:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEDEB374C3;
+	Mon,  3 Jun 2024 06:28:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717394305; cv=none; b=PX7ifGCnwJNcNnY9su/FV0oFX+i2xSuemNNAQTVPeFNpT7pZwREuoM5IvypvHE2IPI6zw+0VIQxYl/2jrU1lRUOuIg1g/gl4+51JykEXxVjaTJ33ndo7Tn88YiJBXunkKkCOdG/wPb6IivPUbZlZ0lGxl4klhewT79XI3ECqVTE=
+	t=1717396099; cv=none; b=OUieYiMHvFwAVicvfmEhii+LagV8bjKmqjux8BrS7cNXnwMIKMfnFiUPTExAKesyn02X8n8AGTKMO5wqtU8eF/fRobAZ3bwYsxcBrnPQDBIiDANvbkd27y1T3/KT7U1vznOqa/MSAnttaATO4GbP6uQf9FY+qvMl/lGgvj8n0ho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717394305; c=relaxed/simple;
-	bh=4Ra6RxsOrSwPmGiIWAS5TwqYTWhLgiRF5MeJXK5ADRI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PG4KAZqtGQVQHiinUAeQ4+oKBnkp39eXllCn1SM/316FYFz4WGSABix4kMFSQuJG1sOI2FOM3V5FnSAiopYbAf4ywLOdnjOi/YeoVy3shiTyAmMF1FVEMuv/gvNQnxnrJu31tHdk9dnMF+de1M6m18IcnGWz0/jzTI9+0ZKh2kM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=cBnu3fh8; arc=none smtp.client-ip=209.85.215.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1717396099; c=relaxed/simple;
+	bh=7AaEvVMfY/4GKdSeCZCV1fOqUcNHAMZgXIepet8NVLE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a21IH9G2Her9KM9jspLsQ6m/OOkot/016NRzZXVyWLpoVA1H/fuAYQvcKLOvXJo7GBwKKrkHvq5aSc+v7x+ZR7ikB5cEowfgvTpyUNZKHVGjVPOpBUR4TZMy0Xu4DNF2JfFtZ7mh0d20clV7YpGQoarBy3j6zDTnMYS/ozDyx3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=icedoS8t; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Dr3NTjY7; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bkMILn3a; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=O1enm+Co; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="cBnu3fh8"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-6818e31e5baso3160989a12.1
-        for <linux-xfs@vger.kernel.org>; Sun, 02 Jun 2024 22:58:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717394303; x=1717999103; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=dV5YAk3OuJ/dDV1tXlQo+ZgRRjdyd5n49Sq2I5KEZHU=;
-        b=cBnu3fh8L9dYCkVIjvm+9XGRvSUVm5RVvg+ICctFsjPyysIxkPzOFg/XehKc9zqdMB
-         tSp0QMMOzy72jyozw1bLDBvqYoaq5IwkI0gZFO6OkcBP3OBnkRCEZbQTS8CaeoJqTgJL
-         GKNk8Zqz6tcE6Y+10sNJd+zSVwGUMig1wn+jrHK1bLlNv9DqrcTbz5A6y6ficKigExP4
-         uf6AsBuJt5gnCc8OWX65t+0GzB7gbmzF+8Sb/Ir6p+xFLInOewcOVDro5NkJzfZv/VXb
-         ZPPUUGlkUCaquQtO5FabQfDxfu+UYN3krK9bfTJ5LSUC4smDlJQ37TAIToYal95UZFm+
-         Zb+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717394303; x=1717999103;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dV5YAk3OuJ/dDV1tXlQo+ZgRRjdyd5n49Sq2I5KEZHU=;
-        b=YReV/yjOFcvweyAGZyuKC3zbw5WeGPGmwMTz19pg+OPlr8QWPGoH9m685iT6qJXpB4
-         fdZQdDLodKkvZ8MPqI+YetG3Z6IGQ2CVBIUc5V2CkPGbSwJQox5pdCpAQAKNkP9dzufO
-         RQAg7E2pYC0KaFVxMNbu1z+XLenqGURxS5ft2aa69X15x791J5WmL6MWyGQyU8RUG/Ej
-         z8RVWyIjVQE/WHf6RiIj75nSZ4cIdFueMxp2wDAbD+4IQtVtGCeNQmPod3SMCpEmzrKU
-         TuHtISpJqyVDRp+4L3eT22h93bhWMgczwEXp7/4bs2HVqylweqgynPiMqy/7M1Ue7hN9
-         cgcw==
-X-Forwarded-Encrypted: i=1; AJvYcCXgc7eWFXA4rrPuvFzZ5ac+OIA1koQFKmLjdHVxd4DiKFIdRqMsVeYELCPWeO40Ka2nnJ/NXioGSsqXNivqOXuG6DvnCAb/Awxt
-X-Gm-Message-State: AOJu0Yx9XpdwmToyEfSNlcXNYgeCLDxgD5yZKSCJ51uPk9MSMOkWPf1r
-	mIjhgl3zQLuLFN2hrx6+DfzaiB7hN/4UKheIC+dFSvEbbJviyjAuIiV919tg1LcJbRWMtVm8LGI
-	t
-X-Google-Smtp-Source: AGHT+IGL9EKw0QkM0DX8sEixtiwvu4DONx4v5JiBJUnkAo0b/QORzqNcWnzCXUwo+ebWqz3zUISmVg==
-X-Received: by 2002:a17:90b:4a83:b0:2c2:4106:1a48 with SMTP id 98e67ed59e1d1-2c241063a50mr870291a91.22.1717394302847;
-        Sun, 02 Jun 2024 22:58:22 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c1a77baebcsm7542997a91.53.2024.06.02.22.58.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 02 Jun 2024 22:58:22 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sE0i2-002XK2-2e;
-	Mon, 03 Jun 2024 15:58:18 +1000
-Date: Mon, 3 Jun 2024 15:58:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: lei lu <llfamsec@gmail.com>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, chandan.babu@oracle.com
-Subject: Re: [PATCH] xfs: don't walk off the end of a directory data block
-Message-ID: <Zl1bequjV5u9QjXD@dread.disaster.area>
-References: <20240529225736.21028-1-llfamsec@gmail.com>
- <Zlfmu4/kVJxZ/J7B@dread.disaster.area>
- <CAEBF3_ayLsCJVPdZQCb=gHtiFCNG9C3xcGv4_cnUpmS8TQRdYw@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="icedoS8t";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Dr3NTjY7";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bkMILn3a";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="O1enm+Co"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id C3E9D222D3;
+	Mon,  3 Jun 2024 06:28:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1717396090; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=G4kktwsbW6z/0NnNeugpgEFh8XvGTwwRbkxW1BafLgg=;
+	b=icedoS8tE74qqGZXCIqtKhe2cdZjIqwBGKwvLk5Gl0tXhYgq/PpnmabeIM0HCpfth0iMA8
+	1nLePLBZ6In4scqhcGwb8peKkIOvVTgA+8mzjM5IaThEIX5hhezYRaBW6MeNp7Z2eiFYnG
+	rhn6+JBvhdqjlkjb/XDgf3vpb9NV044=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1717396090;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=G4kktwsbW6z/0NnNeugpgEFh8XvGTwwRbkxW1BafLgg=;
+	b=Dr3NTjY7gE5DszwjwybB1Q8k6oUnim+TIzbFGQ008cbbIHxhpj/U47nEoI4CXLTchFJTMv
+	3Z4AmNaE3qS+AsBg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=bkMILn3a;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=O1enm+Co
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1717396089; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=G4kktwsbW6z/0NnNeugpgEFh8XvGTwwRbkxW1BafLgg=;
+	b=bkMILn3auV3QWoiQ5ga+r46ZiJ+280ioTuMGqZagiAU+5c8RTDw70jvCjmRvnHZsHjzQ/c
+	3Rh+ynPdXvVpoedKoEiS5L0hpdTYve5+UYhJ4tsnv97pc5bR9rsjcobNl74/ydnZ0ozVZ9
+	XBTFf+s+3c+GqYdnZtF17v6xs9/sVBQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1717396089;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=G4kktwsbW6z/0NnNeugpgEFh8XvGTwwRbkxW1BafLgg=;
+	b=O1enm+CoV2gDRN/SuNkMFZv6hZrjo79EFfoVDo0656LVgdlemDUskF5ctP6eMNX9vWdYxu
+	tzfw5l2puMAIEPCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0EA3413A93;
+	Mon,  3 Jun 2024 06:28:09 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id bl1wAHliXWb9RwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 03 Jun 2024 06:28:09 +0000
+Message-ID: <5ace80c8-8b70-4227-aa63-914b69fa32cb@suse.de>
+Date: Mon, 3 Jun 2024 08:28:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 02/11] fs: Allow fine-grained control of folio sizes
+Content-Language: en-US
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, david@fromorbit.com,
+ chandan.babu@oracle.com, akpm@linux-foundation.org, brauner@kernel.org,
+ willy@infradead.org, djwong@kernel.org
+Cc: linux-kernel@vger.kernel.org, john.g.garry@oracle.com,
+ gost.dev@samsung.com, yang@os.amperecomputing.com, p.raghav@samsung.com,
+ cl@os.amperecomputing.com, linux-xfs@vger.kernel.org, hch@lst.de,
+ mcgrof@kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+References: <20240529134509.120826-1-kernel@pankajraghav.com>
+ <20240529134509.120826-3-kernel@pankajraghav.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240529134509.120826-3-kernel@pankajraghav.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAEBF3_ayLsCJVPdZQCb=gHtiFCNG9C3xcGv4_cnUpmS8TQRdYw@mail.gmail.com>
+X-Spam-Flag: NO
+X-Spam-Score: -6.50
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: C3E9D222D3
+X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-6.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	DWL_DNSWL_MED(-2.00)[suse.de:dkim];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	XM_UA_NO_VERSION(0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[18];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,infradead.org:email];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DKIM_TRACE(0.00)[suse.de:+]
 
-On Thu, May 30, 2024 at 11:10:57AM +0800, lei lu wrote:
-> Thanks for your time.
+On 5/29/24 15:45, Pankaj Raghav (Samsung) wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> I just add check for the fixed members because I see after the patch
-> code there is some checks for dup and dep. "offset +
-> be16_to_cpu(dup->length) > end" for dup and "offset +
-> xfs_dir2_data_entsize(mp, dep->namelen) > end" for dep.
-> “xfs_dir2_data_entsize(mp, dep->namelen)” ensures the alignment of the
-> dep.
+> We need filesystems to be able to communicate acceptable folio sizes
+> to the pagecache for a variety of uses (e.g. large block sizes).
+> Support a range of folio sizes between order-0 and order-31.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> ---
+>   include/linux/pagemap.h | 86 ++++++++++++++++++++++++++++++++++-------
+>   mm/filemap.c            |  6 +--
+>   mm/readahead.c          |  4 +-
+>   3 files changed, 77 insertions(+), 19 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Sure, but go back and read what I said.
+Cheers,
 
-Detect the actual object corruption, not the downstream symptom.
-
-IOWs, the verifier should be detecting the exact corruption you
-induced.
-
-Catching all the object corruptions prevents a buffer overrun.
-We abort processing before we move beyond the end of the buffer.
-
-IOWs, we need to:
-
-1. verify dup->length is a multiple of XFS_DIR2_DATA_ALIGN; and
-2. verify that if the last object in the buffer is less than
-   xfs_dir2_data_entsize(mp, 1) bytes in size it must be a dup
-   entry of exactly XFS_DIR2_DATA_ALIGN bytes in length.
-
-If either of these checks fail, then the block is corrupt.
-#1 will catch your induced corruption and fail immediately.
-#2 will catch the runt entry in the structure without derefencing
-past the end of the structure.
-
-Can you now see how properly validating that the objects within the
-structure will prevent buffer overruns from occurring without
-needing generic buffer overrun checks?
-
--Dave.
+Hannes
 -- 
-Dave Chinner
-david@fromorbit.com
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+
