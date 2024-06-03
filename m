@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24730127B62
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:56:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADF3E127B62
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:56:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717440974; cv=none; b=GPfYLVkdjeZs9hkmyIb6HtGJrjPA3dwFLVwW24+q94io49EKFLx++1hqO7K5OS3/4M0Fk3Ld1g7551szFQ3gky36rsNELSIRqoFq0PPCELE5vRg+0TGMCHYmBIvpWJ1NTZKgLuit/H+WMbO0OSzYqTmZQmwL49C1gBt7eiySmq8=
+	t=1717440989; cv=none; b=MouqGk5YhObDjjhpIhjkSxeDKK+DkSzdpzffEue0n72eio+Tz49w+dDLLIAg4rXxZIwxlOlscUBpZg7q6bj6lRHK4KWYTbtbJJruMlULo4JSK0Q/flpXR/CmBZWHNe+wzwoQJAHsMLBfof5Ck9wV62QZRuK17HBcfCZjidmspc0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717440974; c=relaxed/simple;
-	bh=uGzv+R5Anm06IQLHIUP3RAjBOACIGxtOswt9zRY/MUA=;
+	s=arc-20240116; t=1717440989; c=relaxed/simple;
+	bh=jnYbNgg12sRx3GV5IpOb+hbdUJF3g0fTVg2Zbt5hkD4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jXRW9rr3ESr1AxZRW59X+/2uNWjeMRMW85xuLdEuIXqCQ0+waybsfcZcHBWBKFSv9NhX8zZjhjI28N7lJNrCWkff5e4Cc+7y8afMz5GWF2NDFZtaPRWOkO9km6Q4GX7zlyMitmMGfT7atDBylh23ikAWWw16y+3kYUQch6NX+tE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ITUQPlsG; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KVUFAsGyNjsTsRt0NReC516KL9jZYMdNGYASPjb7yMyosQGderyxoPfFv3qi5LgSjNKZ84T321UK3PgJcHYV3rl4Q4lGuN1NVSdedU+/x0niziBs5CLKlIDP0Ntz4EBF5Giww7OtbAG+mSQ7YMouNVlDfTtEOJFKC6S+TfY6rIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJENkNCo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ITUQPlsG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFBE6C2BD10;
-	Mon,  3 Jun 2024 18:56:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJENkNCo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BCFEC32786;
+	Mon,  3 Jun 2024 18:56:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717440974;
-	bh=uGzv+R5Anm06IQLHIUP3RAjBOACIGxtOswt9zRY/MUA=;
+	s=k20201202; t=1717440989;
+	bh=jnYbNgg12sRx3GV5IpOb+hbdUJF3g0fTVg2Zbt5hkD4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ITUQPlsGPVskAXSAz5RyFT3TupajIraV+az/PxyjDH6BrpMDCGXIvzInaIhAXTTFY
-	 t9oPpCqbxCqr31oUblOSMFCHLhoPu0zY5mdgOYxH9rQXNrm39sLc9ufRbrXslh30js
-	 VKg1a6cwvDnYAIktFGxPGZ5V7uhIhsHioRrsThZpke+7rIT84U0DMqhvW3vZ962qdq
-	 VjrFqHLdwD4H+SB0k7Qggx6Bl2Ou7tVTR8bfMc00L0yrsjWsgNvPS5R7CUJrZKsS7o
-	 jmQg3B2T9wHpal/kFrFCij1+s6syjg5xHn7E5MqqCKl0aBgeb0JF1MaZLKmf8oMqRg
-	 BDEWcmpz9w7JA==
-Date: Mon, 03 Jun 2024 11:56:13 -0700
-Subject: [PATCH 016/111] xfs: separate the marking of sick and checked
- metadata
+	b=UJENkNCokr5OqmBjIMRWOm1tUdZD/HvKKQkapitL1DdHiNZiiOFb2yPpl86wL0XBW
+	 n0I8m5QeInW8mfOwoPAbbjYFAps0Z19tWbfY3nRQNBiKlpybRFFl/vpDp2A+wZUB2m
+	 0l7muaisFU/lUH5NQcc56WTCEU9vHc1UkvisgtYlcvdtGQnCfXCVDg2d64u1O8oShe
+	 u08mBrJt4ay5rQVbIaAQRwY+IdvLm8Trqg9Xw+jfif2bSu0KfwKir0KeH2z+zLQua+
+	 WwzmOgNVi95vwjT90sxAqSuuZXNCXLk4UzqvqT45pH9QoaNzyN9Si+a9+p3QqEg4om
+	 pT4XSIKPcaufQ==
+Date: Mon, 03 Jun 2024 11:56:29 -0700
+Subject: [PATCH 017/111] xfs: report fs corruption errors to the health
+ tracking system
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744039608.1443973.8324087218491764495.stgit@frogsfrogsfrogs>
+Message-ID: <171744039623.1443973.3743432359823421276.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,71 +48,84 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 0b8686f19879d896bbe2d3e893f433a08160452d
+Source kernel commit: 50645ce8822d23ae3e002d3bee775fa8c315f957
 
-Split the setting of the sick and checked masks into separate functions
-as part of preparing to add the ability for regular runtime fs code
-(i.e. not scrub) to mark metadata structures sick when corruptions are
-found.  Improve the documentation of libxfs' requirements for helper
-behavior.
+Whenever we encounter corrupt fs metadata, we should report that to the
+health monitoring system for later reporting.  A convenient program for
+identifying places to insert xfs_*_mark_sick calls is as follows:
+
+#!/bin/bash
+
+# Detect missing calls to xfs_*_mark_sick
+
+filter=cat
+tty -s && filter=less
+
+git grep -B3 EFSCORRUPTED fs/xfs/*.[ch] fs/xfs/libxfs/*.[ch] fs/xfs/scrub/*.[ch] | awk '
+BEGIN {
+ignore = 0;
+lineno = 0;
+delete lines;
+}
+{
+if ($0 == "--") {
+if (!ignore) {
+for (i = 0; i < lineno; i++) {
+print(lines[i]);
+}
+printf("--\n");
+}
+delete lines;
+lineno = 0;
+ignore = 0;
+} else if ($0 ~ /mark_sick/) {
+ignore = 1;
+} else if ($0 ~ /if .fa/) {
+ignore = 1;
+} else if ($0 ~ /failaddr/) {
+ignore = 1;
+} else if ($0 ~ /_verifier_error/) {
+ignore = 1;
+} else if ($0 ~ /^ \* .*EFSCORRUPTED/) {
+ignore = 1;
+} else if ($0 ~ /== -EFSCORRUPTED/) {
+ignore = 1;
+} else if ($0 ~ /!= -EFSCORRUPTED/) {
+ignore = 1;
+} else {
+lines[lineno++] = $0;
+}
+}
+' | $filter
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_health.h |   23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
+ libxfs/util.c   |    1 +
+ libxfs/xfs_ag.c |    1 +
+ 2 files changed, 2 insertions(+)
 
 
-diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index 2bfe2dc40..bec7adf9f 100644
---- a/libxfs/xfs_health.h
-+++ b/libxfs/xfs_health.h
-@@ -111,24 +111,45 @@ struct xfs_fsop_geom;
- 				 XFS_SICK_INO_DIR_ZAPPED | \
- 				 XFS_SICK_INO_SYMLINK_ZAPPED)
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 8cea0c150..26339171f 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -728,3 +728,4 @@ xfs_fs_mark_healthy(
+ }
  
--/* These functions must be provided by the xfs implementation. */
-+/*
-+ * These functions must be provided by the xfs implementation.  Function
-+ * behavior with respect to the first argument should be as follows:
-+ *
-+ * xfs_*_mark_sick:        Set the sick flags and do not set checked flags.
-+ *                         Runtime code should call this upon encountering
-+ *                         a corruption.
-+ *
-+ * xfs_*_mark_corrupt:     Set the sick and checked flags simultaneously.
-+ *                         Fsck tools should call this when corruption is
-+ *                         found.
-+ *
-+ * xfs_*_mark_healthy:     Clear the sick flags and set the checked flags.
-+ *                         Fsck tools should call this after correcting errors.
-+ *
-+ * xfs_*_measure_sickness: Return the sick and check status in the provided
-+ *                         out parameters.
-+ */
- 
- void xfs_fs_mark_sick(struct xfs_mount *mp, unsigned int mask);
-+void xfs_fs_mark_corrupt(struct xfs_mount *mp, unsigned int mask);
- void xfs_fs_mark_healthy(struct xfs_mount *mp, unsigned int mask);
- void xfs_fs_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
- 		unsigned int *checked);
- 
- void xfs_rt_mark_sick(struct xfs_mount *mp, unsigned int mask);
-+void xfs_rt_mark_corrupt(struct xfs_mount *mp, unsigned int mask);
- void xfs_rt_mark_healthy(struct xfs_mount *mp, unsigned int mask);
- void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
- 		unsigned int *checked);
- 
- void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask);
-+void xfs_ag_mark_corrupt(struct xfs_perag *pag, unsigned int mask);
- void xfs_ag_mark_healthy(struct xfs_perag *pag, unsigned int mask);
- void xfs_ag_measure_sickness(struct xfs_perag *pag, unsigned int *sick,
- 		unsigned int *checked);
- 
- void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask);
-+void xfs_inode_mark_corrupt(struct xfs_inode *ip, unsigned int mask);
- void xfs_inode_mark_healthy(struct xfs_inode *ip, unsigned int mask);
- void xfs_inode_measure_sickness(struct xfs_inode *ip, unsigned int *sick,
- 		unsigned int *checked);
+ void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo) { }
++void xfs_fs_mark_sick(struct xfs_mount *mp, unsigned int mask) { }
+diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
+index 86024ddfd..e001ac11c 100644
+--- a/libxfs/xfs_ag.c
++++ b/libxfs/xfs_ag.c
+@@ -215,6 +215,7 @@ xfs_initialize_perag_data(
+ 	 */
+ 	if (fdblocks > sbp->sb_dblocks || ifree > ialloc) {
+ 		xfs_alert(mp, "AGF corruption. Please run xfs_repair.");
++		xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
+ 		error = -EFSCORRUPTED;
+ 		goto out;
+ 	}
 
