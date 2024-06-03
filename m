@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D014F9E9
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:51:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1618F9E9
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:51:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717440661; cv=none; b=nBfqmLaIhCXQHpk96udAptKTdGlmEhlaFpTBIBotF3RSGzCtfsut1snzkKs7ZmyUGOV8zGgtRDa0CxmzUY8O/bfPUwZBW6M+fpMNVHl2ydGNlhvk+HJkJN8NpEHpTISzZjJfEM0SaZgU1vAuASQU3LPFZvl8Ek8XeZLtjc9AGIg=
+	t=1717440676; cv=none; b=RAsW/278ykiJ7BhvdAMfbXkl9F/Oq2abdLkDOF+JvJBg7zN5mGS08QiQfWCliiB/MwWmZS5q4MJ9+87qcARnJdfctWcw2R8mYksimBVdOz8hEMzmaTF8FJGqSPKnevJbCWLo3ytynr6jpeAG7wzEWzPdgSpqlac1Rx2JLuvpZd4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717440661; c=relaxed/simple;
-	bh=JLxAAe3wi+MtCemo1NZKmwbQpdREA9zf57aO/8VIjqI=;
+	s=arc-20240116; t=1717440676; c=relaxed/simple;
+	bh=v7K5vlRgSuh8iVZvQE2EOFW+3L/lMyVchCaQqMlAHWo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kRhcxFmjy2KZmUuD2FjPql7OyeH5OSw5sRICxk6lF3bZ44FNcd8xfQRyVPB6qxAC5g5Woz0/SZ3J2Y+lfJYppql8s12I+GKOvcmlDZKOzQGk1NdKO/yO+a28fovg5EnelRrz7zq1omMHmqdPVsPOHfa9lDlW4Brws+ObZxRMxX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOxsYdQR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KZXp05WxUgKUZIJLnip4LCorcgDJaqxTZK4m1jXAwg8EefoFxy1uCfueX8mgZVcBCLl7c9ek5g9WTz1gQEqj4cUek6Als/m2B8VcthuScMM4e8THJiLkKVWu7R4mE3qrPTL8wJh3qCuBHyyJv+KlDjqCp0xTJIQddoFGoXklLLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rs+M9W1K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOxsYdQR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 054BDC2BD10;
-	Mon,  3 Jun 2024 18:51:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rs+M9W1K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7F9DC2BD10;
+	Mon,  3 Jun 2024 18:51:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717440661;
-	bh=JLxAAe3wi+MtCemo1NZKmwbQpdREA9zf57aO/8VIjqI=;
+	s=k20201202; t=1717440676;
+	bh=v7K5vlRgSuh8iVZvQE2EOFW+3L/lMyVchCaQqMlAHWo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TOxsYdQRLvSd+3MT3TcWpsV26dZ394fFrXpFH+m7vBz0IgEFOmDxDb5kECM4arSTr
-	 wrdzp9NarVN2ZMLVreyJM3EUoc+Wf4hK/V70W7h3xkVgpmjIAcEVA50UyS7lV9uQKo
-	 0gWJ6X+nSmh+/QolJcipQq3vAO3y3ruqDY+ee3FAQVtSZ3Fr/rRXbg5vtGvretnkrM
-	 lbmYTLsCf3NOxhLeNF6R31wKeSNqma+G2l1k2YbXILiz5xNXaDCOoQSzPPnD916Kqa
-	 GVrAvLiEossMvT+Nuqmv4q1t4jfCQ6wzX6wWAn81QPcPtNZVJw3hRTurfTRVjRqCRV
-	 O5cPDo7UYvUcg==
-Date: Mon, 03 Jun 2024 11:51:00 -0700
-Subject: [PATCHSET v30.5 09/10] xfs_repair: reduce refcount repair memory
- usage
+	b=Rs+M9W1K2zkix/VdsVgHvLSFq9BPMBqL89gC3wUaHcn475h249qzfGBzRFi3FpMK9
+	 qiW9VICePxavWfBRD0DTXtsJaXKJhTDKGZ6wn5YLrisTPIcTtD5kNVjgBjbXAK2tGe
+	 lamxnbu+O7bn9JK9QXoDCuFEPkvTwoKFsqwdeCXNfka9Plj+LCVbrDwxUcuYxQIzTj
+	 qvY+2TjHNjKKrIeF+30XUHnSvcdJFQ+jryZYsY/f8yNtmEtvtnpCG7mP+/tW/lzOBV
+	 80Caa+LEUAghefpRwX7ojhNV4dvhKgdhXgZghbFqcpISOu3St4nrMfkGyWXrEelW+1
+	 oV5XctB1Ms7zg==
+Date: Mon, 03 Jun 2024 11:51:16 -0700
+Subject: [PATCHSET v30.5 10/10] mkfs: cleanups for 6.9
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171744043484.1450408.1711608371281603052.stgit@frogsfrogsfrogs>
+Message-ID: <171744043839.1450599.5227191261879163757.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240603184512.GD52987@frogsfrogsfrogs>
 References: <20240603184512.GD52987@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,43 +46,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-The refcountbt repair code has serious memory usage problems when the
-block sharing factor of the filesystem is very high.  This can happen if
-a deduplication tool has been run against the filesystem, or if the fs
-stores reflinked VM images that have been aging for a long time.
-
-Recall that the original reference counting algorithm walks the reverse
-mapping records of the filesystem to generate reference counts.  For any
-given block in the AG, the rmap bag structure contains the all rmap
-records that cover that block; the refcount is the size of that bag.
-
-For online repair, the bag doesn't need the owner, offset, or state flag
-information, so it discards those.  This halves the record size, but the
-bag structure still stores one excerpted record for each reverse
-mapping.  If the sharing count is high, this will use a LOT of memory
-storing redundant records.  In the extreme case, 100k mappings to the
-same piece of space will consume 100k*16 bytes = 1.6M of memory.
-
-For offline repair, the bag stores the owner values so that we know
-which inodes need to be marked as being reflink inodes.  If a
-deduplication tool has been run and there are many blocks within a file
-pointing to the same physical space, this will stll use a lot of memory
-to store redundant records.
-
-The solution to this problem is to deduplicate the bag records when
-possible by adding a reference count to the bag record, and changing the
-bag add function to detect an existing record to bump the refcount.  In
-the above example, the 100k mappings will now use 24 bytes of memory.
-These lookups can be done efficiently with a btree, so we create a new
-refcount bag btree type (inside of online repair).  This is why we
-refactored the btree code in the previous patchset.
-
-The btree conversion also dramatically reduces the runtime of the
-refcount generation algorithm, because the code to delete all bag
-records that end at a given agblock now only has to delete one record
-instead of (using the example above) 100k records.  As an added benefit,
-record deletion now gives back the unused xfile space, which it did not
-do previously.
+Clean up mkfs' open-coded symlink handling code.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -91,31 +54,13 @@ from my git trees, which are linked below.
 This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-refcount-scalability-6.9
-
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-refcount-scalability-6.9
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-cleanups-6.9
 ---
 Commits in this patchset:
- * xfs_repair: define an in-memory btree for storing refcount bag info
- * xfs_repair: create refcount bag
- * xfs_repair: port to the new refcount bag structure
- * xfs_repair: remove the old bag implementation
+ * mkfs: use libxfs to create symlinks
 ---
- libxfs/libxfs_api_defs.h |    9 +
- repair/Makefile          |    4 
- repair/rcbag.c           |  371 ++++++++++++++++++++++++++++++++++++++++++++
- repair/rcbag.h           |   32 ++++
- repair/rcbag_btree.c     |  390 ++++++++++++++++++++++++++++++++++++++++++++++
- repair/rcbag_btree.h     |   77 +++++++++
- repair/rmap.c            |  157 +++++--------------
- repair/slab.c            |  130 ---------------
- repair/slab.h            |   19 --
- repair/xfs_repair.c      |    6 +
- 10 files changed, 934 insertions(+), 261 deletions(-)
- create mode 100644 repair/rcbag.c
- create mode 100644 repair/rcbag.h
- create mode 100644 repair/rcbag_btree.c
- create mode 100644 repair/rcbag_btree.h
+ libxfs/libxfs_api_defs.h |    1 +
+ mkfs/proto.c             |   72 ++++++++++++++++++++++++----------------------
+ 2 files changed, 39 insertions(+), 34 deletions(-)
 
