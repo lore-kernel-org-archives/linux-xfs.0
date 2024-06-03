@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B904D13B59B
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:09:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F379513B59B
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:09:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717441756; cv=none; b=fLzHMbPdfqbqHLvcnnh1AoHgmpazR3kdHHk3dTkALijOd2RDDumUv60gAfC1PSrMhSZaDT2xQoOiM/DKPw4EUhZ3vCQwLL+X5ysPUWAwjK41VTeunmzBMRPQN/UFaVbGhUl3GB0F/KFHko644yUnGILLJ0FSYESYEnsGuVLLVhE=
+	t=1717441772; cv=none; b=VSbjSKSZhYb3XI64EOUbaueVS2XuCluJyQHqOgVAoXORQpjdU1vjlgcLaopG5sbiYhDo0ZAuXHkZmldfagsdPbO/lq/MHB9LURUBzavhJOSSQWsoSX9KRcsdyKBOhmvP3ciM/JeJOHXS1xkBW3tP0fPfVBCeXZMPoMS7+M46IEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717441756; c=relaxed/simple;
-	bh=e3VBRO1YucLe9GzJwDrnbivrMTRaky65MKWis82z47Q=;
+	s=arc-20240116; t=1717441772; c=relaxed/simple;
+	bh=p6mu0GMB1G9uYBGQ5Lbc78+2mu068Bh0Ek57TpXaDyk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GIazDm5Yum6Lp2GvFz5SAsbtl0qzKkI6fH0SE7sx7atb7y2gbUvGsPHim/68FN2Gfmg14VEVs+iuHs3yluU0FKQ7vyKbMVgRiWu9hY9INtyrjgurHFUBK2s9e2hD7xXsmKRD7LbklBgSphVMamQTIOS8ABQ9LAI1nSPum2rrhfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y8mNEFfa; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kRtqroHYH6UFeYeH3FCx9Vgz/d3vfgiXMN5a7zDHHJTmZs7gCmfwvsuMkK7c0n9u+V2hUS0ipQdUS/65RNhyNLel4cGzr/RQLVMno96nN3eBwoEstCp++oaaTOaLXPJIlQhiIOxwqvnx+PA80L25nYRS8hoDdbbNC2SLJyZuwSI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iz1Jyklz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y8mNEFfa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27DDFC2BD10;
-	Mon,  3 Jun 2024 19:09:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iz1Jyklz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4899C2BD10;
+	Mon,  3 Jun 2024 19:09:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717441756;
-	bh=e3VBRO1YucLe9GzJwDrnbivrMTRaky65MKWis82z47Q=;
+	s=k20201202; t=1717441771;
+	bh=p6mu0GMB1G9uYBGQ5Lbc78+2mu068Bh0Ek57TpXaDyk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Y8mNEFfacF/HWEb+AvIG9Dka1eBFihPe1FdZHgeFKH+gyQN2znHXdA6bz2G7l/NqP
-	 XpJtzY2+NIQF9r7QRfQzRAbwLOl13MIyJOcQDEZhmXWQQwQOLNTroFC1oMh7mizqOd
-	 y0Md/cNvHZ9XB085dNFNrRk2+U2/eBwZyUJz0QR3iBr3gZ78SS7/++s287lWa2GtQM
-	 Wd/bkafnm1j4d28uha2E1NngQo3yzcaC90vIT3175Cs1MCjLFAjA1pU3Y+HfPhXXTM
-	 H0iI5or1uofElWRhQtKRZqq4KXYBLw8k1USOP6q597egh0T5y5ocPmyvNc3Anf/58y
-	 tYT4F2UugkJXg==
-Date: Mon, 03 Jun 2024 12:09:15 -0700
-Subject: [PATCH 066/111] xfs: add a name field to struct xfs_btree_ops
+	b=iz1JyklzvTbpJp2QHx9lEC0+eiSylGM+78xoHz7T+QH7oGI6H//2GqfF8SNLayQyv
+	 JpWsoQR6LwbvghVh2dOhHuuSrUbrT6eexSw01TJ+TyAObN7iXgvE99h+p07G2PSi1E
+	 0LGq8M2OTYlPwHr3/KyQlMW9svIVtyI/1EtF/Rz1rZvIOehS2ZOYWUOO4H8bZtUQwP
+	 msTa37igGJccgCrs4Tvxvi4muS9Xi4c2jHbaQlyfzK4hK/+0E9J4EY44bGdy8PIVVu
+	 bRjQ/5Ahh17dATKBmaUMGULmBLxMmvzaLfe05Tu2OEGRYJUvHSHQT02wehlk/zeLtL
+	 2x3APitsGbLrA==
+Date: Mon, 03 Jun 2024 12:09:31 -0700
+Subject: [PATCH 067/111] xfs: add a sick_mask to struct xfs_btree_ops
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744040366.1443973.17973796985441421490.stgit@frogsfrogsfrogs>
+Message-ID: <171744040380.1443973.15898930705602622111.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,219 +47,132 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 77953b97bb19dc031673d055c811a5ba7df92307
+Source kernel commit: 7f47734ad61af77a001b1e24691dcbfcb008c938
 
-The btnum in struct xfs_btree_ops is often used for printing a symbolic
-name for the btree.  Add a name field to the ops structure and use that
-directly.
+Clean up xfs_btree_mark_sick by adding a sick_mask to the btree-ops
+for all AG-root btrees.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- include/xfs_trace.h         |    2 +-
- libxfs/xfs_alloc.c          |    8 +++-----
- libxfs/xfs_alloc_btree.c    |    2 ++
- libxfs/xfs_bmap_btree.c     |    1 +
- libxfs/xfs_btree.c          |    8 ++++----
- libxfs/xfs_btree.h          |    2 ++
- libxfs/xfs_ialloc.c         |    5 ++---
- libxfs/xfs_ialloc_btree.c   |    2 ++
- libxfs/xfs_refcount_btree.c |    1 +
- libxfs/xfs_rmap_btree.c     |    1 +
- libxfs/xfs_types.h          |    9 ---------
- 11 files changed, 19 insertions(+), 22 deletions(-)
+ libxfs/xfs_alloc_btree.c    |    3 +++
+ libxfs/xfs_btree.h          |    3 +++
+ libxfs/xfs_ialloc_btree.c   |    3 +++
+ libxfs/xfs_refcount_btree.c |    2 ++
+ libxfs/xfs_rmap_btree.c     |    2 ++
+ 5 files changed, 13 insertions(+)
 
 
-diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-index e7cbd0d9d..df25dc2a9 100644
---- a/include/xfs_trace.h
-+++ b/include/xfs_trace.h
-@@ -8,7 +8,7 @@
- 
- #define trace_xfs_agfl_reset(a,b,c,d)		((void) 0)
- #define trace_xfs_agfl_free_defer(a,b,c,d,e)	((void) 0)
--#define trace_xfs_alloc_cur_check(a,b,c,d,e,f)	((void) 0)
-+#define trace_xfs_alloc_cur_check(...)		((void) 0)
- #define trace_xfs_alloc_cur(a)			((void) 0)
- #define trace_xfs_alloc_cur_left(a)		((void) 0)
- #define trace_xfs_alloc_cur_lookup(a)		((void) 0)
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 1fdd7d44c..b7690dfde 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -269,9 +269,8 @@ xfs_alloc_complain_bad_rec(
- 	struct xfs_mount		*mp = cur->bc_mp;
- 
- 	xfs_warn(mp,
--		"%s Freespace BTree record corruption in AG %d detected at %pS!",
--		cur->bc_btnum == XFS_BTNUM_BNO ? "Block" : "Size",
--		cur->bc_ag.pag->pag_agno, fa);
-+		"%sbt record corruption in AG %d detected at %pS!",
-+		cur->bc_ops->name, cur->bc_ag.pag->pag_agno, fa);
- 	xfs_warn(mp,
- 		"start block 0x%x block count 0x%x", irec->ar_startblock,
- 		irec->ar_blockcount);
-@@ -992,8 +991,7 @@ xfs_alloc_cur_check(
- out:
- 	if (deactivate)
- 		cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
--	trace_xfs_alloc_cur_check(args->mp, cur->bc_btnum, bno, len, diff,
--				  *new);
-+	trace_xfs_alloc_cur_check(cur, bno, len, diff, *new);
- 	return 0;
- }
- 
 diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index dd9584269..d9e9ba53a 100644
+index d9e9ba53a..6ad44c146 100644
 --- a/libxfs/xfs_alloc_btree.c
 +++ b/libxfs/xfs_alloc_btree.c
-@@ -466,6 +466,7 @@ xfs_allocbt_keys_contiguous(
- }
+@@ -17,6 +17,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_trans.h"
+ #include "xfs_ag.h"
++#include "xfs_health.h"
  
- const struct xfs_btree_ops xfs_bnobt_ops = {
-+	.name			= "bno",
- 	.type			= XFS_BTREE_TYPE_AG,
+ static struct kmem_cache	*xfs_allocbt_cur_cache;
  
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
-@@ -495,6 +496,7 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
- };
+@@ -475,6 +476,7 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
  
- const struct xfs_btree_ops xfs_cntbt_ops = {
-+	.name			= "cnt",
- 	.type			= XFS_BTREE_TYPE_AG,
- 	.geom_flags		= XFS_BTGEO_LASTREC_UPDATE,
+ 	.lru_refs		= XFS_ALLOC_BTREE_REF,
+ 	.statoff		= XFS_STATS_CALC_INDEX(xs_abtb_2),
++	.sick_mask		= XFS_SICK_AG_BNOBT,
  
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 828dfb7d4..12b94c74e 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -516,6 +516,7 @@ xfs_bmbt_keys_contiguous(
- }
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
+ 	.set_root		= xfs_allocbt_set_root,
+@@ -506,6 +508,7 @@ const struct xfs_btree_ops xfs_cntbt_ops = {
  
- const struct xfs_btree_ops xfs_bmbt_ops = {
-+	.name			= "bmap",
- 	.type			= XFS_BTREE_TYPE_INODE,
+ 	.lru_refs		= XFS_ALLOC_BTREE_REF,
+ 	.statoff		= XFS_STATS_CALC_INDEX(xs_abtc_2),
++	.sick_mask		= XFS_SICK_AG_CNTBT,
  
- 	.rec_len		= sizeof(xfs_bmbt_rec_t),
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 42a1ed786..95f77fbe7 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -295,17 +295,17 @@ xfs_btree_check_ptr(
- 				level))
- 			return 0;
- 		xfs_err(cur->bc_mp,
--"Inode %llu fork %d: Corrupt btree %d pointer at level %d index %d.",
-+"Inode %llu fork %d: Corrupt %sbt pointer at level %d index %d.",
- 				cur->bc_ino.ip->i_ino,
--				cur->bc_ino.whichfork, cur->bc_btnum,
-+				cur->bc_ino.whichfork, cur->bc_ops->name,
- 				level, index);
- 	} else {
- 		if (xfs_btree_check_sptr(cur, be32_to_cpu((&ptr->s)[index]),
- 				level))
- 			return 0;
- 		xfs_err(cur->bc_mp,
--"AG %u: Corrupt btree %d pointer at level %d index %d.",
--				cur->bc_ag.pag->pag_agno, cur->bc_btnum,
-+"AG %u: Corrupt %sbt pointer at level %d index %d.",
-+				cur->bc_ag.pag->pag_agno, cur->bc_ops->name,
- 				level, index);
- 	}
- 
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
+ 	.set_root		= xfs_allocbt_set_root,
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 99194ae94..6bc609620 100644
+index 6bc609620..6e5fd0c06 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -123,6 +123,8 @@ enum xfs_btree_type {
- };
+@@ -142,6 +142,9 @@ struct xfs_btree_ops {
+ 	/* offset of btree stats array */
+ 	unsigned int		statoff;
  
- struct xfs_btree_ops {
-+	const char		*name;
++	/* sick mask for health reporting (only for XFS_BTREE_TYPE_AG) */
++	unsigned int		sick_mask;
 +
- 	/* Type of btree - AG-rooted or inode-rooted */
- 	enum xfs_btree_type	type;
- 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 21577a50f..94f4f8690 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -136,9 +136,8 @@ xfs_inobt_complain_bad_rec(
- 	struct xfs_mount		*mp = cur->bc_mp;
- 
- 	xfs_warn(mp,
--		"%s Inode BTree record corruption in AG %d detected at %pS!",
--		cur->bc_btnum == XFS_BTNUM_INO ? "Used" : "Free",
--		cur->bc_ag.pag->pag_agno, fa);
-+		"%sbt record corruption in AG %d detected at %pS!",
-+		cur->bc_ops->name, cur->bc_ag.pag->pag_agno, fa);
- 	xfs_warn(mp,
- "start inode 0x%x, count 0x%x, free 0x%x freemask 0x%llx, holemask 0x%x",
- 		irec->ir_startino, irec->ir_count, irec->ir_freecount,
+ 	/* cursor operations */
+ 	struct xfs_btree_cur *(*dup_cursor)(struct xfs_btree_cur *);
+ 	void	(*update_cursor)(struct xfs_btree_cur *src,
 diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 6a34de282..5e8a47563 100644
+index 5e8a47563..08076ef12 100644
 --- a/libxfs/xfs_ialloc_btree.c
 +++ b/libxfs/xfs_ialloc_btree.c
-@@ -398,6 +398,7 @@ xfs_inobt_keys_contiguous(
- }
+@@ -20,6 +20,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
++#include "xfs_health.h"
  
- const struct xfs_btree_ops xfs_inobt_ops = {
-+	.name			= "ino",
- 	.type			= XFS_BTREE_TYPE_AG,
+ static struct kmem_cache	*xfs_inobt_cur_cache;
  
- 	.rec_len		= sizeof(xfs_inobt_rec_t),
-@@ -426,6 +427,7 @@ const struct xfs_btree_ops xfs_inobt_ops = {
- };
+@@ -407,6 +408,7 @@ const struct xfs_btree_ops xfs_inobt_ops = {
  
- const struct xfs_btree_ops xfs_finobt_ops = {
-+	.name			= "fino",
- 	.type			= XFS_BTREE_TYPE_AG,
+ 	.lru_refs		= XFS_INO_BTREE_REF,
+ 	.statoff		= XFS_STATS_CALC_INDEX(xs_ibt_2),
++	.sick_mask		= XFS_SICK_AG_INOBT,
  
- 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_inobt_set_root,
+@@ -436,6 +438,7 @@ const struct xfs_btree_ops xfs_finobt_ops = {
+ 
+ 	.lru_refs		= XFS_INO_BTREE_REF,
+ 	.statoff		= XFS_STATS_CALC_INDEX(xs_fibt_2),
++	.sick_mask		= XFS_SICK_AG_FINOBT,
+ 
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_finobt_set_root,
 diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index 760163ca4..397ce2131 100644
+index 397ce2131..31ef879ba 100644
 --- a/libxfs/xfs_refcount_btree.c
 +++ b/libxfs/xfs_refcount_btree.c
-@@ -317,6 +317,7 @@ xfs_refcountbt_keys_contiguous(
- }
+@@ -20,6 +20,7 @@
+ #include "xfs_bit.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
++#include "xfs_health.h"
  
- const struct xfs_btree_ops xfs_refcountbt_ops = {
-+	.name			= "refcount",
- 	.type			= XFS_BTREE_TYPE_AG,
+ static struct kmem_cache	*xfs_refcountbt_cur_cache;
  
- 	.rec_len		= sizeof(struct xfs_refcount_rec),
+@@ -326,6 +327,7 @@ const struct xfs_btree_ops xfs_refcountbt_ops = {
+ 
+ 	.lru_refs		= XFS_REFC_BTREE_REF,
+ 	.statoff		= XFS_STATS_CALC_INDEX(xs_refcbt_2),
++	.sick_mask		= XFS_SICK_AG_REFCNTBT,
+ 
+ 	.dup_cursor		= xfs_refcountbt_dup_cursor,
+ 	.set_root		= xfs_refcountbt_set_root,
 diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index 82052ce78..5bf5340c8 100644
+index 5bf5340c8..c7ca20043 100644
 --- a/libxfs/xfs_rmap_btree.c
 +++ b/libxfs/xfs_rmap_btree.c
-@@ -470,6 +470,7 @@ xfs_rmapbt_keys_contiguous(
- }
+@@ -19,6 +19,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_health.h"
  
- const struct xfs_btree_ops xfs_rmapbt_ops = {
-+	.name			= "rmap",
- 	.type			= XFS_BTREE_TYPE_AG,
- 	.geom_flags		= XFS_BTGEO_OVERLAPPING,
+ static struct kmem_cache	*xfs_rmapbt_cur_cache;
  
-diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
-index a1004fb3c..f577247b7 100644
---- a/libxfs/xfs_types.h
-+++ b/libxfs/xfs_types.h
-@@ -125,15 +125,6 @@ typedef enum {
- 	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
- } xfs_btnum_t;
+@@ -481,6 +482,7 @@ const struct xfs_btree_ops xfs_rmapbt_ops = {
  
--#define XFS_BTNUM_STRINGS \
--	{ XFS_BTNUM_BNOi,	"bnobt" }, \
--	{ XFS_BTNUM_CNTi,	"cntbt" }, \
--	{ XFS_BTNUM_RMAPi,	"rmapbt" }, \
--	{ XFS_BTNUM_BMAPi,	"bmbt" }, \
--	{ XFS_BTNUM_INOi,	"inobt" }, \
--	{ XFS_BTNUM_FINOi,	"finobt" }, \
--	{ XFS_BTNUM_REFCi,	"refcbt" }
--
- struct xfs_name {
- 	const unsigned char	*name;
- 	int			len;
+ 	.lru_refs		= XFS_RMAP_BTREE_REF,
+ 	.statoff		= XFS_STATS_CALC_INDEX(xs_rmap_2),
++	.sick_mask		= XFS_SICK_AG_RMAPBT,
+ 
+ 	.dup_cursor		= xfs_rmapbt_dup_cursor,
+ 	.set_root		= xfs_rmapbt_set_root,
 
