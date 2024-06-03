@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C34B31386D8
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:55:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24730127B62
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:56:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717440958; cv=none; b=PdYlyjqY2mtFGJUt5KGyYIY41erDmCwpRMceo2jLP6A1kGf0GorgtphflqNCHFe9meD6ptOrC5K//PIiaRLyE91vUpdbByPuxfo8MB/WlO/Zv00ARlVj3+7pcqnh/iQN6oU+31/IjYqR7Fa64K5LlMeNy+GrbE4vUaZG5ykM/+I=
+	t=1717440974; cv=none; b=GPfYLVkdjeZs9hkmyIb6HtGJrjPA3dwFLVwW24+q94io49EKFLx++1hqO7K5OS3/4M0Fk3Ld1g7551szFQ3gky36rsNELSIRqoFq0PPCELE5vRg+0TGMCHYmBIvpWJ1NTZKgLuit/H+WMbO0OSzYqTmZQmwL49C1gBt7eiySmq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717440958; c=relaxed/simple;
-	bh=wdOdwusWdTtBQqUlnMyLhe0QCZEihyxe+axQOi/rfNE=;
+	s=arc-20240116; t=1717440974; c=relaxed/simple;
+	bh=uGzv+R5Anm06IQLHIUP3RAjBOACIGxtOswt9zRY/MUA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BnIIj4AdlAN3iRGWWxKWuo0ntISpvyrlWC0N9zyEkAQPs7gmuf0/QTcJiM4Y0juzKfhXtrhSV4Z7YkFcH2hN95Jfq5gnp/USg1xIqxJzevEeXjr2ulK000zyYs/Wk/dP0njVtI2/O6k3cfEq4j5BygBb+LVaKz6VSvyXjfblOv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kerdEilR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jXRW9rr3ESr1AxZRW59X+/2uNWjeMRMW85xuLdEuIXqCQ0+waybsfcZcHBWBKFSv9NhX8zZjhjI28N7lJNrCWkff5e4Cc+7y8afMz5GWF2NDFZtaPRWOkO9km6Q4GX7zlyMitmMGfT7atDBylh23ikAWWw16y+3kYUQch6NX+tE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ITUQPlsG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kerdEilR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FDAAC2BD10;
-	Mon,  3 Jun 2024 18:55:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ITUQPlsG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFBE6C2BD10;
+	Mon,  3 Jun 2024 18:56:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717440958;
-	bh=wdOdwusWdTtBQqUlnMyLhe0QCZEihyxe+axQOi/rfNE=;
+	s=k20201202; t=1717440974;
+	bh=uGzv+R5Anm06IQLHIUP3RAjBOACIGxtOswt9zRY/MUA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kerdEilReB8GpZKADosU753ZouPqEPTFuj+rP7WkwM3FJ5yNtcaVUPWS+IrbUC5aV
-	 p9fu0G7e/lXoRx3c28Vy9c8rxguEN9Di8WQv/QMPoX0HXesTUvj1thZzD0gS2y5f6j
-	 lTJ4j/T4WuvX8PiY1+lZAsxZ3+Yc6mIM+EjnorssjPZ5TpnrAiccKXxhWfPNAyJqqs
-	 WQXLJZD5DNFo+C/ZhSru5zcKLsgDqkkVG5cigzZP+4+Q+iPgTGO8toUNGTbl1OI7h2
-	 MWxfMyEm95UU7ew4WD2gTujtTXWxONpgCiGJl1T12wQ4NF6DGTiy60C9YaGiH6PhCS
-	 iZRgHCo3ul7Zg==
-Date: Mon, 03 Jun 2024 11:55:57 -0700
-Subject: [PATCH 015/111] xfs: teach scrub to check file nlinks
+	b=ITUQPlsGPVskAXSAz5RyFT3TupajIraV+az/PxyjDH6BrpMDCGXIvzInaIhAXTTFY
+	 t9oPpCqbxCqr31oUblOSMFCHLhoPu0zY5mdgOYxH9rQXNrm39sLc9ufRbrXslh30js
+	 VKg1a6cwvDnYAIktFGxPGZ5V7uhIhsHioRrsThZpke+7rIT84U0DMqhvW3vZ962qdq
+	 VjrFqHLdwD4H+SB0k7Qggx6Bl2Ou7tVTR8bfMc00L0yrsjWsgNvPS5R7CUJrZKsS7o
+	 jmQg3B2T9wHpal/kFrFCij1+s6syjg5xHn7E5MqqCKl0aBgeb0JF1MaZLKmf8oMqRg
+	 BDEWcmpz9w7JA==
+Date: Mon, 03 Jun 2024 11:56:13 -0700
+Subject: [PATCH 016/111] xfs: separate the marking of sick and checked
+ metadata
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744039593.1443973.3385702264293426629.stgit@frogsfrogsfrogs>
+Message-ID: <171744039608.1443973.8324087218491764495.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,37 +48,71 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: f1184081ac97625d30c59851944f4c59ae7ddc2b
+Source kernel commit: 0b8686f19879d896bbe2d3e893f433a08160452d
 
-Create the necessary scrub code to walk the filesystem's directory tree
-so that we can compute file link counts.  Similar to quotacheck, we
-create an incore shadow array of link count information and then we walk
-the filesystem a second time to compare the link counts.  We need live
-updates to keep the information up to date during the lengthy scan, so
-this scrubber remains disabled until the next patch.
+Split the setting of the sick and checked masks into separate functions
+as part of preparing to add the ability for regular runtime fs code
+(i.e. not scrub) to mark metadata structures sick when corruptions are
+found.  Improve the documentation of libxfs' requirements for helper
+behavior.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_fs.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ libxfs/xfs_health.h |   23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index f10d0aa0e..515cd27d3 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -712,9 +712,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_PQUOTA	23	/* project quotas */
- #define XFS_SCRUB_TYPE_FSCOUNTERS 24	/* fs summary counters */
- #define XFS_SCRUB_TYPE_QUOTACHECK 25	/* quota counters */
-+#define XFS_SCRUB_TYPE_NLINKS	26	/* inode link counts */
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index 2bfe2dc40..bec7adf9f 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -111,24 +111,45 @@ struct xfs_fsop_geom;
+ 				 XFS_SICK_INO_DIR_ZAPPED | \
+ 				 XFS_SICK_INO_SYMLINK_ZAPPED)
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	26
-+#define XFS_SCRUB_TYPE_NR	27
+-/* These functions must be provided by the xfs implementation. */
++/*
++ * These functions must be provided by the xfs implementation.  Function
++ * behavior with respect to the first argument should be as follows:
++ *
++ * xfs_*_mark_sick:        Set the sick flags and do not set checked flags.
++ *                         Runtime code should call this upon encountering
++ *                         a corruption.
++ *
++ * xfs_*_mark_corrupt:     Set the sick and checked flags simultaneously.
++ *                         Fsck tools should call this when corruption is
++ *                         found.
++ *
++ * xfs_*_mark_healthy:     Clear the sick flags and set the checked flags.
++ *                         Fsck tools should call this after correcting errors.
++ *
++ * xfs_*_measure_sickness: Return the sick and check status in the provided
++ *                         out parameters.
++ */
  
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
+ void xfs_fs_mark_sick(struct xfs_mount *mp, unsigned int mask);
++void xfs_fs_mark_corrupt(struct xfs_mount *mp, unsigned int mask);
+ void xfs_fs_mark_healthy(struct xfs_mount *mp, unsigned int mask);
+ void xfs_fs_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
+ 		unsigned int *checked);
+ 
+ void xfs_rt_mark_sick(struct xfs_mount *mp, unsigned int mask);
++void xfs_rt_mark_corrupt(struct xfs_mount *mp, unsigned int mask);
+ void xfs_rt_mark_healthy(struct xfs_mount *mp, unsigned int mask);
+ void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
+ 		unsigned int *checked);
+ 
+ void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask);
++void xfs_ag_mark_corrupt(struct xfs_perag *pag, unsigned int mask);
+ void xfs_ag_mark_healthy(struct xfs_perag *pag, unsigned int mask);
+ void xfs_ag_measure_sickness(struct xfs_perag *pag, unsigned int *sick,
+ 		unsigned int *checked);
+ 
+ void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask);
++void xfs_inode_mark_corrupt(struct xfs_inode *ip, unsigned int mask);
+ void xfs_inode_mark_healthy(struct xfs_inode *ip, unsigned int mask);
+ void xfs_inode_measure_sickness(struct xfs_inode *ip, unsigned int *sick,
+ 		unsigned int *checked);
 
