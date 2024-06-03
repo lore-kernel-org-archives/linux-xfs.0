@@ -1,223 +1,192 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B05919F;
-	Mon,  3 Jun 2024 10:43:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0807884A35;
+	Mon,  3 Jun 2024 11:22:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717411382; cv=none; b=i3CUoKQF9CVZY3WGCjFadLqzG6AYYiYX0/eiaKKgMm46tU8oo9OfWLtAO/0HeLqem9QhAc7L6mi/7Ypd/ylR+2GL0NGgnrtrzK4cTGp3LhtfNf1UC6KcH2vBG2eVuMv07UB8qOF89NJ3bdoeZQ+D5XkBJ4hVX+plEG58xbWlX6Q=
+	t=1717413759; cv=none; b=R8FHZW4LB2oMjNFMYDOXOR7aR7DWvPpFB+id0DpLY44vmqNq5sdUfYpE8U9U5E8YsF04gW3N3AHNJS4Kr1iuSP1qWGKuQksFnt/dGEX4Hea0WwJTnG6U512IHHGUYeviFL4Tyz0Ofeyl1UWnCSRVgDThmwyA9wwW556p7+gZe7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717411382; c=relaxed/simple;
-	bh=QsyrXgK09ZdGKR3ba9FPn812tFkoX7Xmgb9ph5tGBHM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qJGb+veZtLemmJ41gzG9wpTgrpBR0KwNn3A2LS9JYuURvrhWoghCjYLzGLbFvKY1aGDXHDF2motqOIaRJ7IwJsotRfaZzf3gMFZc8bkiFOH0/YHYc1sQZn69JEo1A4b2/U7iT3EdYZclK4cH6i6e7uhRSQDkN3oM6hU55t74sEI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=0cpttzZx; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=KCTAZqXq; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=0cpttzZx; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=KCTAZqXq; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0cpttzZx";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="KCTAZqXq";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0cpttzZx";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="KCTAZqXq"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 68AFE20031;
-	Mon,  3 Jun 2024 10:42:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1717411379; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
-	b=0cpttzZxplYkfynItzcVOSeXXn4ssigAeOt6fhs1DGOaiiKwjwEN5TfjE/TobvHwKc1Tyt
-	jBphXyy32LlDnGNDhAR6+u1l89mJg+BogYEaMVDlFqbcPVojJXeQe3TzliJXZPJOI1RZIS
-	y2i3K5d+oWuQStvge4ia737vW1i9Pss=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1717411379;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
-	b=KCTAZqXq95iVD0ltVqfWpXfN9fUXZnG1LnhP2xVdESpFEZhwbaftnRDbkWyFHwHg7xM8Dq
-	EqWTr5wqsPEPkDAw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1717411379; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
-	b=0cpttzZxplYkfynItzcVOSeXXn4ssigAeOt6fhs1DGOaiiKwjwEN5TfjE/TobvHwKc1Tyt
-	jBphXyy32LlDnGNDhAR6+u1l89mJg+BogYEaMVDlFqbcPVojJXeQe3TzliJXZPJOI1RZIS
-	y2i3K5d+oWuQStvge4ia737vW1i9Pss=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1717411379;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
-	b=KCTAZqXq95iVD0ltVqfWpXfN9fUXZnG1LnhP2xVdESpFEZhwbaftnRDbkWyFHwHg7xM8Dq
-	EqWTr5wqsPEPkDAw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5AB5913A93;
-	Mon,  3 Jun 2024 10:42:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id +qAfFjOeXWY2GgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 03 Jun 2024 10:42:59 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 122F1A087F; Mon,  3 Jun 2024 12:42:59 +0200 (CEST)
-Date: Mon, 3 Jun 2024 12:42:59 +0200
-From: Jan Kara <jack@suse.cz>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Andrey Albershteyn <aalbersh@redhat.com>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
- FS_IOC_FSGETXATTRAT
-Message-ID: <20240603104259.gii7lfz2fg7lyrcw@quack3>
-References: <20240520164624.665269-2-aalbersh@redhat.com>
- <20240520164624.665269-4-aalbersh@redhat.com>
- <20240522100007.zqpa5fxsele5m7wo@quack3>
- <snhvkg3lm2lbdgswfzyjzmlmtcwcb725madazkdx4kd6ofqmw6@hiunsuigmq6f>
- <20240523074828.7ut55rhhbawsqrn4@quack3>
- <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
- <20240524161101.yyqacjob42qjcbnb@quack3>
- <20240531145204.GJ52987@frogsfrogsfrogs>
+	s=arc-20240116; t=1717413759; c=relaxed/simple;
+	bh=+1yO6XiLifIlUjN1yQiYVIst+aMZZ4COwNUTz0Nb4JQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=e02K0Jag1NgQHjgYMpB/LNV2NGaqT+KmxdhAH8zQCtfJnNWpp9yPtuqaqZ2sQV5dru3dkmFb8ju7C6Tm1oK1ejdFGHz4rZn/CM3gdwJBosuG5UlAafEU0X4wWTwaRV/vCkqvdWyX9BPwFKM6u80jMFsu3zIMHIQfoRwMC+IStnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VtBCL0Pmlz4f3nbl;
+	Mon,  3 Jun 2024 19:22:22 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 195A01A0A25;
+	Mon,  3 Jun 2024 19:22:33 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgAXKwRop11mWbbQOQ--.26657S4;
+	Mon, 03 Jun 2024 19:22:31 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org,
+	brauner@kernel.org,
+	david@fromorbit.com,
+	chandanbabu@kernel.org,
+	jack@suse.cz,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com
+Subject: [PATCH] iomap: keep on increasing i_size in iomap_write_end()
+Date: Mon,  3 Jun 2024 19:22:22 +0800
+Message-Id: <20240603112222.2109341-1-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240531145204.GJ52987@frogsfrogsfrogs>
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[7];
-	RCVD_COUNT_THREE(0.00)[3];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RCVD_TLS_LAST(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
-X-Spam-Score: -3.80
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAXKwRop11mWbbQOQ--.26657S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF1kZFyUtw1xKr4xuF4UArb_yoWrtr47pr
+	ZF93y8CFs7tw47Wr1kAF98ZryYya4fKrW7Cry7Wr4avFn0yr17Kr1rWayYkFyrJ3srCr4S
+	qF4kA348WF1UAr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+	AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
+	E_M3UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Fri 31-05-24 07:52:04, Darrick J. Wong wrote:
-> On Fri, May 24, 2024 at 06:11:01PM +0200, Jan Kara wrote:
-> > On Thu 23-05-24 13:16:48, Andrey Albershteyn wrote:
-> > > On 2024-05-23 09:48:28, Jan Kara wrote:
-> > > > Hi!
-> > > > 
-> > > > On Wed 22-05-24 12:45:09, Andrey Albershteyn wrote:
-> > > > > On 2024-05-22 12:00:07, Jan Kara wrote:
-> > > > > > Hello!
-> > > > > > 
-> > > > > > On Mon 20-05-24 18:46:21, Andrey Albershteyn wrote:
-> > > > > > > XFS has project quotas which could be attached to a directory. All
-> > > > > > > new inodes in these directories inherit project ID set on parent
-> > > > > > > directory.
-> > > > > > > 
-> > > > > > > The project is created from userspace by opening and calling
-> > > > > > > FS_IOC_FSSETXATTR on each inode. This is not possible for special
-> > > > > > > files such as FIFO, SOCK, BLK etc. as opening them returns a special
-> > > > > > > inode from VFS. Therefore, some inodes are left with empty project
-> > > > > > > ID. Those inodes then are not shown in the quota accounting but
-> > > > > > > still exist in the directory.
-> > > > > > > 
-> > > > > > > This patch adds two new ioctls which allows userspace, such as
-> > > > > > > xfs_quota, to set project ID on special files by using parent
-> > > > > > > directory to open FS inode. This will let xfs_quota set ID on all
-> > > > > > > inodes and also reset it when project is removed. Also, as
-> > > > > > > vfs_fileattr_set() is now will called on special files too, let's
-> > > > > > > forbid any other attributes except projid and nextents (symlink can
-> > > > > > > have one).
-> > > > > > > 
-> > > > > > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > > > > > 
-> > > > > > I'd like to understand one thing. Is it practically useful to set project
-> > > > > > IDs for special inodes? There is no significant disk space usage associated
-> > > > > > with them so wrt quotas we are speaking only about the inode itself. So is
-> > > > > > the concern that user could escape inode project quota accounting and
-> > > > > > perform some DoS? Or why do we bother with two new somewhat hairy ioctls
-> > > > > > for something that seems as a small corner case to me?
-> > > > > 
-> > > > > So there's few things:
-> > > > > - Quota accounting is missing only some special files. Special files
-> > > > >   created after quota project is setup inherit ID from the project
-> > > > >   directory.
-> > > > > - For special files created after the project is setup there's no
-> > > > >   way to make them project-less. Therefore, creating a new project
-> > > > >   over those will fail due to project ID miss match.
-> > > > > - It wasn't possible to hardlink/rename project-less special files
-> > > > >   inside a project due to ID miss match. The linking is fixed, and
-> > > > >   renaming is worked around in first patch.
-> > > > > 
-> > > > > The initial report I got was about second and last point, an
-> > > > > application was failing to create a new project after "restart" and
-> > > > > wasn't able to link special files created beforehand.
-> > > > 
-> > > > I see. OK, but wouldn't it then be an easier fix to make sure we *never*
-> > > > inherit project id for special inodes? And make sure inodes with unset
-> > > > project ID don't fail to be linked, renamed, etc...
-> > > 
-> > > But then, in set up project, you can cross-link between projects and
-> > > escape quota this way. During linking/renaming if source inode has
-> > > ID but target one doesn't, we won't be able to tell that this link
-> > > is within the project.
-> > 
-> > Well, I didn't want to charge these special inodes to project quota at all
-> > so "escaping quota" was pretty much what I suggested to do. But my point
-> > was that since the only thing that's really charged for these inodes is the
-> > inodes itself then does this small inaccuracy really matter in practice?
-> > Are we afraid the user is going to fill the filesystem with symlinks?
-> 
-> I thought the worry here is that you can't fully reassign the project
-> id for a directory tree unless you have an *at() version of the ioctl
-> to handle the special files that you can't open directly?
-> 
-> So you start with a directory tree that's (say) 2% symlinks and project
-> id 5.  Later you want to set project id 7 on that subtree, but after the
-> incomplete change, projid 7 is charged for 98% of the tree, and 2% are
-> still stuck on projid 5.  This is a mess, and if enforcement is enabled
-> you've just broken it in a way that can't be fixed aside from recreating
-> those files.
+From: Zhang Yi <yi.zhang@huawei.com>
 
-So the idea I'm trying to propose (and apparently I'm failing to explain it
-properly) is:
+Commit '943bc0882ceb ("iomap: don't increase i_size if it's not a write
+operation")' breaks xfs with realtime device on generic/561, the problem
+is when unaligned truncate down a xfs realtime inode with rtextsize > 1
+fs block, xfs only zero out the EOF block but doesn't zero out the tail
+blocks that aligned to rtextsize, so if we don't increase i_size in
+iomap_write_end(), it could expose stale data after we do an append
+write beyond the aligned EOF block.
 
-When creating special inode, set i_projid = 0 regardless of directory
-settings.
+xfs should zero out the tail blocks when truncate down, but before we
+finish that, let's fix the issue by just revert the changes in
+iomap_write_end().
 
-When creating hardlink or doing rename, if i_projid of dentry is 0, we
-allow the operation.
+Fixes: 943bc0882ceb ("iomap: don't increase i_size if it's not a write operation")
+Reported-by: Chandan Babu R <chandanbabu@kernel.org>
+Link: https://lore.kernel.org/linux-xfs/0b92a215-9d9b-3788-4504-a520778953c2@huaweicloud.com
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+ fs/iomap/buffered-io.c | 53 +++++++++++++++++++-----------------------
+ 1 file changed, 24 insertions(+), 29 deletions(-)
 
-Teach fsck to set i_projid to 0 when inode is special.
-
-As a result, AFAICT no problem with hardlinks, renames or similar. No need
-for special new ioctl or syscall. The downside is special inodes escape
-project quota accounting. Do we care?
-
-								Honza
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index c5802a459334..bd70fcbc168e 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -877,22 +877,37 @@ static bool iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+ 		size_t copied, struct folio *folio)
+ {
+ 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
++	loff_t old_size = iter->inode->i_size;
++	size_t written;
+ 
+ 	if (srcmap->type == IOMAP_INLINE) {
+ 		iomap_write_end_inline(iter, folio, pos, copied);
+-		return true;
++		written = copied;
++	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
++		written = block_write_end(NULL, iter->inode->i_mapping, pos,
++					len, copied, &folio->page, NULL);
++		WARN_ON_ONCE(written != copied && written != 0);
++	} else {
++		written = __iomap_write_end(iter->inode, pos, len, copied,
++					    folio) ? copied : 0;
+ 	}
+ 
+-	if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
+-		size_t bh_written;
+-
+-		bh_written = block_write_end(NULL, iter->inode->i_mapping, pos,
+-					len, copied, &folio->page, NULL);
+-		WARN_ON_ONCE(bh_written != copied && bh_written != 0);
+-		return bh_written == copied;
++	/*
++	 * Update the in-memory inode size after copying the data into the page
++	 * cache.  It's up to the file system to write the updated size to disk,
++	 * preferably after I/O completion so that no stale data is exposed.
++	 * Only once that's done can we unlock and release the folio.
++	 */
++	if (pos + written > old_size) {
++		i_size_write(iter->inode, pos + written);
++		iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+ 	}
++	__iomap_put_folio(iter, pos, written, folio);
+ 
+-	return __iomap_write_end(iter->inode, pos, len, copied, folio);
++	if (old_size < pos)
++		pagecache_isize_extended(iter->inode, old_size, pos);
++
++	return written == copied;
+ }
+ 
+ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+@@ -907,7 +922,6 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 
+ 	do {
+ 		struct folio *folio;
+-		loff_t old_size;
+ 		size_t offset;		/* Offset into folio */
+ 		size_t bytes;		/* Bytes to write to folio */
+ 		size_t copied;		/* Bytes copied from user */
+@@ -959,23 +973,6 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		written = iomap_write_end(iter, pos, bytes, copied, folio) ?
+ 			  copied : 0;
+ 
+-		/*
+-		 * Update the in-memory inode size after copying the data into
+-		 * the page cache.  It's up to the file system to write the
+-		 * updated size to disk, preferably after I/O completion so that
+-		 * no stale data is exposed.  Only once that's done can we
+-		 * unlock and release the folio.
+-		 */
+-		old_size = iter->inode->i_size;
+-		if (pos + written > old_size) {
+-			i_size_write(iter->inode, pos + written);
+-			iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+-		}
+-		__iomap_put_folio(iter, pos, written, folio);
+-
+-		if (old_size < pos)
+-			pagecache_isize_extended(iter->inode, old_size, pos);
+-
+ 		cond_resched();
+ 		if (unlikely(written == 0)) {
+ 			/*
+@@ -1346,7 +1343,6 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+ 			bytes = folio_size(folio) - offset;
+ 
+ 		ret = iomap_write_end(iter, pos, bytes, bytes, folio);
+-		__iomap_put_folio(iter, pos, bytes, folio);
+ 		if (WARN_ON_ONCE(!ret))
+ 			return -EIO;
+ 
+@@ -1412,7 +1408,6 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 		folio_mark_accessed(folio);
+ 
+ 		ret = iomap_write_end(iter, pos, bytes, bytes, folio);
+-		__iomap_put_folio(iter, pos, bytes, folio);
+ 		if (WARN_ON_ONCE(!ret))
+ 			return -EIO;
+ 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.39.2
+
