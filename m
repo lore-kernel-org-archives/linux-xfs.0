@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF39A13B28D
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:10:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B0AC13A252
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:10:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717441818; cv=none; b=k2AAXR2xZt5eP7voNb+kS+9aCfNnUox1WjDvO+J2MX9Q7XztK0FvY0k6ySNydZTgzwcb+U6pmGXWJAtpsU0IxAk09u8U+tzAsql4R/NwLrEJ27bxH1yBmEO/0Xq7vbSlaVUu8ibfjPtYpVo8Q/6PQf7OFtX5uguu951UZ//SWoA=
+	t=1717441834; cv=none; b=HyMFerYEDYYO0Omo1/c+hr+LTF57CwUpnKCX+2W+IJ4znz4HqXzB9PsF0YbYE9b6yf55klH2VA7rP1Z0/kBeoFeYrwY8oqvoogBF6EEnKv+A9nfxoe+n5lUgvM83c1+7+gLgNa96Hhaud4x3zdEVI0BtTWvhX36GIh0WijRZ/88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717441818; c=relaxed/simple;
-	bh=/m+iIMwP5yI88UzYhuprBeEkVpzZXi2LUmcyauuDdrk=;
+	s=arc-20240116; t=1717441834; c=relaxed/simple;
+	bh=typvhAeDon1JFTcfEsyswTpmw2ce/x4ItL7zh0NnGB0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TBGroZgIFvZ9v3GUCiclcHfT2jny9FsGZv/SJwtij9bDnImxgZOV8lI/lRa7VqNBGyHyUJPSDxER2pS1IQ5fgqDT5FGQXqt3fOQqFu1vKUatM5r1iYRX4hv3KcHly3SrsiYJhejsV6julR/uSe1BW4qJq+J7bqsltS4c6jgV054=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKgoELA9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VhYG7GdzuSnPqpy2NyqT0FidBpopqAStWS02v7cV7zcf4G6peQyouVW2vIoEm+pd/ZtIl/ypDZ1AqkPJFZee3/zL4RCtCcmAM1BUKL9tStv2ph0xKlsCfJYE9Vv5NQjYR+47mQ8vo2RHwIDeL/jYvh6TXy2zVdKX48/EzWUPdEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bdHNgVzd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKgoELA9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F660C2BD10;
-	Mon,  3 Jun 2024 19:10:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bdHNgVzd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52E53C2BD10;
+	Mon,  3 Jun 2024 19:10:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717441818;
-	bh=/m+iIMwP5yI88UzYhuprBeEkVpzZXi2LUmcyauuDdrk=;
+	s=k20201202; t=1717441834;
+	bh=typvhAeDon1JFTcfEsyswTpmw2ce/x4ItL7zh0NnGB0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BKgoELA9+19XxA7YG0k/SMcl9IAk5zkMCxgAF4Bcgk8I0LznCF/Hl84s1jfjWjo9R
-	 Ifj2lnk5vgiYaJ4LYyHLuzI1HMaFvPBX5taAqm+76JHjpmWydzKorhuz4ktWU8xZp1
-	 6mvn/cJeE43TFIWCBv55nt4RlkAzZheOpfU+KjZWuAaAvbMIbyi54OVATbc4Y1G47C
-	 ScnR2WZbQ1a5ZeFahWdh/2JT+IpPr5FeTzY9+R7CGoou3C2QmzJ+irJcGNI/jxvOvQ
-	 GuffON6spz8FCxmq8KHduQNfeKAMG9I6y0gCnkp/UuTa0va8O+AwbUbKxUvUjMb3lu
-	 hrBJbfE4cI2sg==
-Date: Mon, 03 Jun 2024 12:10:18 -0700
-Subject: [PATCH 070/111] xfs: remove the btnum argument to
- xfs_inobt_count_blocks
+	b=bdHNgVzd8fUIee7S6YLl/YVVtstfiAqb1ymn6rbYhcFskmJMyXBJocIB5njgT8yUC
+	 O53ew8m17C1A/ow5gncniPhXbsLASWZvCMQuav/qJhGijGOYeTnNCv54jmDDnkZTay
+	 Ox3zT/Lb+whuuuHPDKvWgE3a9mncsvJq4flezsWHRgx9JFrVA6/StnP0P2hxk/sANH
+	 /p0Ieh9vs6K7Uk/I+L6oK6BaR2DM9SH/mWYDW/5C0A2DpQFLWChI/aK0lAejrIQE/m
+	 osZ2lnxQTihp2jRYkf40VfaoNy8SYOa9eB97KDxrIuTQfIPrunQxWZhCO18oZqL6au
+	 PindZKoQF0T1A==
+Date: Mon, 03 Jun 2024 12:10:33 -0700
+Subject: [PATCH 071/111] xfs: split xfs_inobt_insert_sprec
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744040425.1443973.7596464567743410849.stgit@frogsfrogsfrogs>
+Message-ID: <171744040441.1443973.9605347310833814622.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,53 +47,227 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 4bfb028a4c00d0a079a625d7867325efb3c37de2
+Source kernel commit: 8541a7d9da2dd6e44f401f2363b21749b7413fc9
 
-xfs_inobt_count_blocks is only used for the finobt.  Hardcode the btnum
-argument and rename the function to match that.
+Split the finobt version that never merges and uses a different cursor
+out of xfs_inobt_insert_sprec to prepare for removing xfs_btnum_t.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_ialloc_btree.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ libxfs/xfs_ialloc.c |  148 +++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 96 insertions(+), 52 deletions(-)
 
 
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index cf59530ea..609f62c65 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -710,10 +710,9 @@ xfs_inobt_max_size(
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 94f4f8690..4f3d7d4dc 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -524,16 +524,14 @@ __xfs_inobt_rec_merge(
  }
  
- static int
--xfs_inobt_count_blocks(
-+xfs_finobt_count_blocks(
- 	struct xfs_perag	*pag,
- 	struct xfs_trans	*tp,
--	xfs_btnum_t		btnum,
- 	xfs_extlen_t		*tree_blocks)
+ /*
+- * Insert a new sparse inode chunk into the associated inode btree. The inode
+- * record for the sparse chunk is pre-aligned to a startino that should match
+- * any pre-existing sparse inode record in the tree. This allows sparse chunks
+- * to fill over time.
++ * Insert a new sparse inode chunk into the associated inode allocation btree.
++ * The inode record for the sparse chunk is pre-aligned to a startino that
++ * should match any pre-existing sparse inode record in the tree. This allows
++ * sparse chunks to fill over time.
+  *
+- * This function supports two modes of handling preexisting records depending on
+- * the merge flag. If merge is true, the provided record is merged with the
++ * If no preexisting record exists, the provided record is inserted.
++ * If there is a preexisting record, the provided record is merged with the
+  * existing record and updated in place. The merged record is returned in nrec.
+- * If merge is false, an existing record is replaced with the provided record.
+- * If no preexisting record exists, the provided record is always inserted.
+  *
+  * It is considered corruption if a merge is requested and not possible. Given
+  * the sparse inode alignment constraints, this should never happen.
+@@ -543,9 +541,7 @@ xfs_inobt_insert_sprec(
+ 	struct xfs_perag		*pag,
+ 	struct xfs_trans		*tp,
+ 	struct xfs_buf			*agbp,
+-	int				btnum,
+-	struct xfs_inobt_rec_incore	*nrec,	/* in/out: new/merged rec. */
+-	bool				merge)	/* merge or replace */
++	struct xfs_inobt_rec_incore	*nrec)	/* in/out: new/merged rec. */
  {
- 	struct xfs_buf		*agbp = NULL;
-@@ -724,7 +723,7 @@ xfs_inobt_count_blocks(
- 	if (error)
- 		return error;
+ 	struct xfs_mount		*mp = pag->pag_mount;
+ 	struct xfs_btree_cur		*cur;
+@@ -553,7 +549,7 @@ xfs_inobt_insert_sprec(
+ 	int				i;
+ 	struct xfs_inobt_rec_incore	rec;
  
 -	cur = xfs_inobt_init_cursor(pag, tp, agbp, btnum);
-+	cur = xfs_inobt_init_cursor(pag, tp, agbp, XFS_BTNUM_FINO);
- 	error = xfs_btree_count_blocks(cur, tree_blocks);
- 	xfs_btree_del_cursor(cur, error);
- 	xfs_trans_brelse(tp, agbp);
-@@ -772,8 +771,7 @@ xfs_finobt_calc_reserves(
- 	if (xfs_has_inobtcounts(pag->pag_mount))
- 		error = xfs_finobt_read_blocks(pag, tp, &tree_len);
- 	else
--		error = xfs_inobt_count_blocks(pag, tp, XFS_BTNUM_FINO,
--				&tree_len);
-+		error = xfs_finobt_count_blocks(pag, tp, &tree_len);
- 	if (error)
- 		return error;
++	cur = xfs_inobt_init_cursor(pag, tp, agbp, XFS_BTNUM_INO);
  
+ 	/* the new record is pre-aligned so we know where to look */
+ 	error = xfs_inobt_lookup(cur, nrec->ir_startino, XFS_LOOKUP_EQ, &i);
+@@ -576,48 +572,45 @@ xfs_inobt_insert_sprec(
+ 	}
+ 
+ 	/*
+-	 * A record exists at this startino. Merge or replace the record
+-	 * depending on what we've been asked to do.
++	 * A record exists at this startino.  Merge the records.
+ 	 */
+-	if (merge) {
+-		error = xfs_inobt_get_rec(cur, &rec, &i);
+-		if (error)
+-			goto error;
+-		if (XFS_IS_CORRUPT(mp, i != 1)) {
+-			xfs_btree_mark_sick(cur);
+-			error = -EFSCORRUPTED;
+-			goto error;
+-		}
+-		if (XFS_IS_CORRUPT(mp, rec.ir_startino != nrec->ir_startino)) {
+-			xfs_btree_mark_sick(cur);
+-			error = -EFSCORRUPTED;
+-			goto error;
+-		}
++	error = xfs_inobt_get_rec(cur, &rec, &i);
++	if (error)
++		goto error;
++	if (XFS_IS_CORRUPT(mp, i != 1)) {
++		xfs_btree_mark_sick(cur);
++		error = -EFSCORRUPTED;
++		goto error;
++	}
++	if (XFS_IS_CORRUPT(mp, rec.ir_startino != nrec->ir_startino)) {
++		xfs_btree_mark_sick(cur);
++		error = -EFSCORRUPTED;
++		goto error;
++	}
+ 
+-		/*
+-		 * This should never fail. If we have coexisting records that
+-		 * cannot merge, something is seriously wrong.
+-		 */
+-		if (XFS_IS_CORRUPT(mp, !__xfs_inobt_can_merge(nrec, &rec))) {
+-			xfs_btree_mark_sick(cur);
+-			error = -EFSCORRUPTED;
+-			goto error;
+-		}
++	/*
++	 * This should never fail. If we have coexisting records that
++	 * cannot merge, something is seriously wrong.
++	 */
++	if (XFS_IS_CORRUPT(mp, !__xfs_inobt_can_merge(nrec, &rec))) {
++		xfs_btree_mark_sick(cur);
++		error = -EFSCORRUPTED;
++		goto error;
++	}
+ 
+-		trace_xfs_irec_merge_pre(mp, pag->pag_agno, rec.ir_startino,
+-					 rec.ir_holemask, nrec->ir_startino,
+-					 nrec->ir_holemask);
++	trace_xfs_irec_merge_pre(mp, pag->pag_agno, rec.ir_startino,
++				 rec.ir_holemask, nrec->ir_startino,
++				 nrec->ir_holemask);
+ 
+-		/* merge to nrec to output the updated record */
+-		__xfs_inobt_rec_merge(nrec, &rec);
++	/* merge to nrec to output the updated record */
++	__xfs_inobt_rec_merge(nrec, &rec);
+ 
+-		trace_xfs_irec_merge_post(mp, pag->pag_agno, nrec->ir_startino,
+-					  nrec->ir_holemask);
++	trace_xfs_irec_merge_post(mp, pag->pag_agno, nrec->ir_startino,
++				  nrec->ir_holemask);
+ 
+-		error = xfs_inobt_rec_check_count(mp, nrec);
+-		if (error)
+-			goto error;
+-	}
++	error = xfs_inobt_rec_check_count(mp, nrec);
++	if (error)
++		goto error;
+ 
+ 	error = xfs_inobt_update(cur, nrec);
+ 	if (error)
+@@ -631,6 +624,59 @@ xfs_inobt_insert_sprec(
+ 	return error;
+ }
+ 
++/*
++ * Insert a new sparse inode chunk into the free inode btree. The inode
++ * record for the sparse chunk is pre-aligned to a startino that should match
++ * any pre-existing sparse inode record in the tree. This allows sparse chunks
++ * to fill over time.
++ *
++ * The new record is always inserted, overwriting a pre-existing record if
++ * there is one.
++ */
++STATIC int
++xfs_finobt_insert_sprec(
++	struct xfs_perag		*pag,
++	struct xfs_trans		*tp,
++	struct xfs_buf			*agbp,
++	struct xfs_inobt_rec_incore	*nrec)	/* in/out: new rec. */
++{
++	struct xfs_mount		*mp = pag->pag_mount;
++	struct xfs_btree_cur		*cur;
++	int				error;
++	int				i;
++
++	cur = xfs_inobt_init_cursor(pag, tp, agbp, XFS_BTNUM_FINO);
++
++	/* the new record is pre-aligned so we know where to look */
++	error = xfs_inobt_lookup(cur, nrec->ir_startino, XFS_LOOKUP_EQ, &i);
++	if (error)
++		goto error;
++	/* if nothing there, insert a new record and return */
++	if (i == 0) {
++		error = xfs_inobt_insert_rec(cur, nrec->ir_holemask,
++					     nrec->ir_count, nrec->ir_freecount,
++					     nrec->ir_free, &i);
++		if (error)
++			goto error;
++		if (XFS_IS_CORRUPT(mp, i != 1)) {
++			xfs_btree_mark_sick(cur);
++			error = -EFSCORRUPTED;
++			goto error;
++		}
++	} else {
++		error = xfs_inobt_update(cur, nrec);
++		if (error)
++			goto error;
++	}
++
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	return 0;
++error:
++	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	return error;
++}
++
++
+ /*
+  * Allocate new inodes in the allocation group specified by agbp.  Returns 0 if
+  * inodes were allocated in this AG; -EAGAIN if there was no space in this AG so
+@@ -857,8 +903,7 @@ xfs_ialloc_ag_alloc(
+ 		 * if necessary. If a merge does occur, rec is updated to the
+ 		 * merged record.
+ 		 */
+-		error = xfs_inobt_insert_sprec(pag, tp, agbp,
+-				XFS_BTNUM_INO, &rec, true);
++		error = xfs_inobt_insert_sprec(pag, tp, agbp, &rec);
+ 		if (error == -EFSCORRUPTED) {
+ 			xfs_alert(args.mp,
+ 	"invalid sparse inode record: ino 0x%llx holemask 0x%x count %u",
+@@ -882,8 +927,7 @@ xfs_ialloc_ag_alloc(
+ 		 * existing record with this one.
+ 		 */
+ 		if (xfs_has_finobt(args.mp)) {
+-			error = xfs_inobt_insert_sprec(pag, tp, agbp,
+-				       XFS_BTNUM_FINO, &rec, false);
++			error = xfs_finobt_insert_sprec(pag, tp, agbp, &rec);
+ 			if (error)
+ 				return error;
+ 		}
 
