@@ -1,174 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62B8D7BAE5
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 12:49:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C694A12D1F4;
+	Mon,  3 Jun 2024 13:23:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717418989; cv=none; b=AMHunpDMwpuFqlLh1vthBwJ2yUH9vLkknSpvQ9fuYP/QVL1045kXAErqkIDjRCxDA1xD6hD6wsUlgZk4QdJW6qnDKGBKBLZ2DRY9/JpLHWZ0+awCrvO2grSL93qVV+Xj6Agqfh40kb7wCXg1Ju5UcWsLg6IYZXF7A0C2cjSeHow=
+	t=1717421040; cv=none; b=WcvcxMePdq35M/Wv4gogFpUpCvncf0bVqxSzE/u+E+diMmiBa+Q2RMp929eF2cXSdIoybCYDgYpZQnol6VHCntra3zClCAEObKGXJ6iFSZ98SEx/KHG/9aTyBTV5U4+5yoGI5IgDPPew7l2pA7RA4Y9N/uLkfxyqA+D3z365tKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717418989; c=relaxed/simple;
-	bh=qmB158ssDQDBsl72Xzg6xftkU5db/0o5sr1RtXRGUMs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ivkNs74GJF/XDTDuxrOXZ+UaQxP00H0XXXSeDqQytnkQRqN2EZF/wORl6tNGUM6c/oAZS06DkQnoGDq26mG3+rmjxu+uTJZ4a33bHVBsNLXMFIZKAzUUQjFyTrTArs8ay6zJkaFz1x4DB7aMp3pWcTw+WRTr6GeXqBNr8rU9+U0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nr4BFwRo; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nr4BFwRo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA826C32789;
-	Mon,  3 Jun 2024 12:49:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717418988;
-	bh=qmB158ssDQDBsl72Xzg6xftkU5db/0o5sr1RtXRGUMs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nr4BFwRoinR4gHbt3MuyRz1UYi6GKTOfs46yz8jwZJF8QYkVZcXAZITlTLETeig3l
-	 9znPNtCQpk6dNrSGC8/49gOIuCOVt/IWNYJbVhCpO9EdtVElcgq0SKLOW6X6acXU0s
-	 /smKDm1iSIxkZnd+/SKsA7sXOOxCEEQL35cKCKr2+cFPgZEz4+6IP5OauamKWQYtwS
-	 cf2qYpslQqvA9QYRt3UfcW0EiU9mX1LTWu70lJvdVydTXhQLL9tdDN09v5gvHnsUed
-	 fFie/mEBS7igbHZekSng8pephNV49iz1V441y2E7mq1mwWaN/6m+usFfr0Xt9QJH26
-	 4zFdD8nGLsJDQ==
-Date: Mon, 3 Jun 2024 14:49:44 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Kent Overstreet <kent.overstreet@linux.dev>, 
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_io: print sysfs paths of mounted filesystems
-Message-ID: <vtzm5kcbdwdutfrpvyng6xm66fahxnzst2fb53xxn52ph7zbvz@pzcjrvqeo6o2>
-References: <1om_d115LQlficlrvs8z5v0InzJMyVDs_WfIJ1ttxO6uOL4FNNGJWtpebpaOoO0MIL7ZUgh7Xm224Eb-aKVaAg==@protonmail.internalid>
- <20240602232949.GZ52987@frogsfrogsfrogs>
+	s=arc-20240116; t=1717421040; c=relaxed/simple;
+	bh=udMEuk2A2ogGiCDA9gXwFSBeuO3i5em6Eu0uB+qAV04=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=hugLxGvCjY9s7UfWFJC+ihD9examJcBrxMyZgxs82XnJ4LDU+p0JetePTgSdhxendRk/ooaBiWf4GoZ5SjC9Oqc4iTXP1/WcoZUwNcfUhySRrzMkPSD70YNtMemDimsaw/JST4WthVS/A6rP9hQp2nA0va0tw+ubPRUv3nVLIGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VtDvM17rCz4f3m75;
+	Mon,  3 Jun 2024 21:23:43 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 340D41A0170;
+	Mon,  3 Jun 2024 21:23:54 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP2 (Coremail) with SMTP id Syh0CgCnyw7ow11mnudLOw--.43837S3;
+	Mon, 03 Jun 2024 21:23:54 +0800 (CST)
+Subject: Re: [RFC PATCH v4 3/8] iomap: pass blocksize to iomap_truncate_page()
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, djwong@kernel.org, brauner@kernel.org,
+ david@fromorbit.com, chandanbabu@kernel.org, jack@suse.cz,
+ willy@infradead.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com
+References: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
+ <20240529095206.2568162-4-yi.zhang@huaweicloud.com>
+ <ZlnE7vrk_dmrqUxC@infradead.org>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <4dad0661-fad4-cac3-ffcc-0485ae62b823@huaweicloud.com>
+Date: Mon, 3 Jun 2024 21:23:52 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240602232949.GZ52987@frogsfrogsfrogs>
+In-Reply-To: <ZlnE7vrk_dmrqUxC@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:Syh0CgCnyw7ow11mnudLOw--.43837S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrZw43uFy5tr43urW8Jr4DXFb_yoWDKrg_u3
+	92qFyvq3W8CrnxZF43Cr13JrZxtF1q9r9xWFZ8X3y2vasxWFZrAFZ29F97CFn5ta1IkrnI
+	yryYgF48Cry7ujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbI8YFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+	j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI
+	1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
+	ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
+	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
+	xUrR6zUUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Sun, Jun 02, 2024 at 04:29:49PM GMT, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On 2024/5/31 20:39, Christoph Hellwig wrote:
+>> -		const struct iomap_ops *ops)
+>> +iomap_truncate_page(struct inode *inode, loff_t pos, unsigned int blocksize,
+>> +		bool *did_zero, const struct iomap_ops *ops)
+>>  {
+>> -	unsigned int blocksize = i_blocksize(inode);
+>> -	unsigned int off = pos & (blocksize - 1);
+>> +	unsigned int off = rem_u64(pos, blocksize);
+>>  
+>>  	/* Block boundary? Nothing to do */
+>>  	if (!off)
 > 
-> Enable users to print the sysfs or debugfs path for the filesystems
-> backing the open files.
+> Instad of passing yet another argument here, can we just kill
+> iomap_truncate_page?
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> I.e. just open code the rem_u64 and 0 offset check in the only caller
+> and call iomap_zero_range.  Same for the DAX variant and it's two
+> callers.
+> 
 
+Yeah, we could drop iomap_truncate_page() and dax_truncate_page(), but
+that means we have to open code the zeroing length calculation or add a
+fs private helper to do that in every filesystems. Now we only have xfs
+and ext2 two caller, so it looks fine, but if the caller becomes more in
+the future, this could becomes repetitive, if we keep them, all
+filesystems could don't pay attention to these details.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Thanks,
+Yi.
 
-
-> ---
->  io/fsuuid.c       |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  man/man8/xfs_io.8 |    7 +++++
->  2 files changed, 75 insertions(+)
-> 
-> diff --git a/io/fsuuid.c b/io/fsuuid.c
-> index af2f87a20209..8e50ec14c8fd 100644
-> --- a/io/fsuuid.c
-> +++ b/io/fsuuid.c
-> @@ -12,6 +12,7 @@
->  #include "libfrog/logging.h"
-> 
->  static cmdinfo_t fsuuid_cmd;
-> +static cmdinfo_t sysfspath_cmd;
-> 
->  static int
->  fsuuid_f(
-> @@ -35,6 +36,62 @@ fsuuid_f(
->  	return 0;
->  }
-> 
-> +#ifndef FS_IOC_GETFSSYSFSPATH
-> +struct fs_sysfs_path {
-> +	__u8			len;
-> +	__u8			name[128];
-> +};
-> +#define FS_IOC_GETFSSYSFSPATH		_IOR(0x15, 1, struct fs_sysfs_path)
-> +#endif
-> +
-> +static void
-> +sysfspath_help(void)
-> +{
-> +	printf(_(
-> +"\n"
-> +" print the sysfs path for the open file\n"
-> +"\n"
-> +" Prints the path in sysfs where one might find information about the\n"
-> +" filesystem backing the open files.  The path is not required to exist.\n"
-> +" -d	-- return the path in debugfs, if any\n"
-> +"\n"));
-> +}
-> +
-> +static int
-> +sysfspath_f(
-> +	int			argc,
-> +	char			**argv)
-> +{
-> +	struct fs_sysfs_path	path;
-> +	bool			debugfs = false;
-> +	int			c;
-> +	int			ret;
-> +
-> +	while ((c = getopt(argc, argv, "d")) != EOF) {
-> +		switch (c) {
-> +		case 'd':
-> +			debugfs = true;
-> +			break;
-> +		default:
-> +			exitcode = 1;
-> +			return command_usage(&sysfspath_cmd);
-> +		}
-> +	}
-> +
-> +	ret = ioctl(file->fd, FS_IOC_GETFSSYSFSPATH, &path);
-> +	if (ret) {
-> +		xfrog_perror(ret, "FS_IOC_GETSYSFSPATH");
-> +		exitcode = 1;
-> +		return 0;
-> +	}
-> +
-> +	if (debugfs)
-> +		printf("/sys/kernel/debug/%.*s\n", path.len, path.name);
-> +	else
-> +		printf("/sys/fs/%.*s\n", path.len, path.name);
-> +	return 0;
-> +}
-> +
->  void
->  fsuuid_init(void)
->  {
-> @@ -46,4 +103,15 @@ fsuuid_init(void)
->  	fsuuid_cmd.oneline = _("get mounted filesystem UUID");
-> 
->  	add_command(&fsuuid_cmd);
-> +
-> +	sysfspath_cmd.name = "sysfspath";
-> +	sysfspath_cmd.cfunc = sysfspath_f;
-> +	sysfspath_cmd.argmin = 0;
-> +	sysfspath_cmd.argmax = -1;
-> +	sysfspath_cmd.args = _("-d");
-> +	sysfspath_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_FOREIGN_OK;
-> +	sysfspath_cmd.oneline = _("get mounted filesystem sysfs path");
-> +	sysfspath_cmd.help = sysfspath_help;
-> +
-> +	add_command(&sysfspath_cmd);
->  }
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 56abe000f235..3ce280a75b4a 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -1464,6 +1464,13 @@ flag.
->  .TP
->  .B fsuuid
->  Print the mounted filesystem UUID.
-> +.TP
-> +.B sysfspath
-> +Print the sysfs or debugfs path for the mounted filesystem.
-> +
-> +The
-> +.B -d
-> +option selects debugfs instead of sysfs.
-> 
-> 
->  .SH OTHER COMMANDS
-> 
