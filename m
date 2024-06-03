@@ -1,116 +1,115 @@
-Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
+Received: from mail-io1-f52.google.com (mail-io1-f52.google.com [209.85.166.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4755C3AC0C
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 07:08:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6C9C482D8
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 08:02:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717398514; cv=none; b=MOk/EYIeHvtF1AXIwMpj7RULMPhabS5fWNEvIJKNajVdz+1CweemLxMGf7J+WVh9V9CNxwRWE4C5e2UVmDW38k0K4TjPOt0yYjfeF7jUhPQSqZR3gMVDcvZVtWU2vImpsouHJuvv0Y1N+9rGTQl0TTLUjEKbmlhA5lWvSF7xO5I=
+	t=1717401751; cv=none; b=YBuM1kQCm7ZfEvc/vW5lu8JTxfT9tCgX5XnRybiL+W79MHKwKupj8g9ObdrVlqZ6kEXsRf71Jv5XPs+HIcgVlDeLSRXJS4JexJ443XpWL+x7vXDO6/Zol3wnfO5IM3YAJo6hoqLchheE1lCtX5dZtgTW/293lLLqjMv+fORSdQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717398514; c=relaxed/simple;
-	bh=SE+o1rEGCqj/qkQMBoTIrXRvJlXnl93yOBoFpvQwKfM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=MmOGTIyRUCCNM1qHsAmaK+zjnTQexE04kOxV2BDtC2vVbzrtRgwXJqtJ4ysex0jdok6RFZt1sboMH5TrR62vnoQkBDlCwtdsWc/w5S1kC4n2xHnWjdPK0AM18VwvLxYnSYYTV1o7ksqnBQlKPcQSiB0iNLrRDt36IPg9iOT8Kug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XS4/ZMNM; arc=none smtp.client-ip=209.85.219.175
+	s=arc-20240116; t=1717401751; c=relaxed/simple;
+	bh=+XozhzG1+nj2GVfs5bFyd3hPBSoQvH46y8RI2MDmPng=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=q99TsTd6gsar9rTzjlvt8YCEnFvhaQkhVdnfHGwF3LxEmyFUa2d8vipLqd0c8A5c1SgENiXOgVhKfCzGmzXc0uK/1sLSR/G21+vC4PBkgn3eTb/54jnpwV43SRU6tHu1C/8AkrbRwmLIRMbSmpIIRuxfFQgawuGFdrFz0R9eHG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dZY0m2r3; arc=none smtp.client-ip=209.85.166.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XS4/ZMNM"
-Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-dfa7790b11aso2626799276.3
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Jun 2024 00:08:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dZY0m2r3"
+Received: by mail-io1-f52.google.com with SMTP id ca18e2360f4ac-7ea7d9b1d69so126620039f.1
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Jun 2024 01:02:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1717398511; x=1718003311; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=s6+8RHiPBbfpsl0IHI1QwyO6YCZwwc/aC//eUrmLbKI=;
-        b=XS4/ZMNMiogOUwDt5l8Dthb3n3sYPG0I7ED57DIvY35jqXB9sYpHKLyu/GnvPWUeUz
-         l/pJXaiZ4Z3rJDeVBPxdLkqxbSWituAHQWAIz2jSnMLEnO2d1jytIzfabXXo6VowDDkV
-         etB0pQ6I8cO4y6jL5tShZkWMUBA8T9YaCKdZnmGxDCXZYtcd9hx/3HWYbkH1Mpa9mnUA
-         TDiQx1pm9C6R9IsHs0I/EFT5oQeGf+eecjbsjnScuTw9RkNb8wZwEoA3CaYpCEj51MDt
-         VhwTyJCBre5h+/0JMnqhtLVDaOVWKWDbr6vffmxz2q0gAi3113+GFl8ZJX9c+zhr/ons
-         7omQ==
+        d=gmail.com; s=20230601; t=1717401749; x=1718006549; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=/xEWiTgCnbXnrNN8C5qV2U8YeqYeOwSv2GOlmlrAiKg=;
+        b=dZY0m2r3pICR52ODUKIA6c1fj0R2W4JpjruDZ+KMf9OLNDaBIBY8H6uFlnNYAn571s
+         YPJ+FFGuV86zxW6xXtpnskjEWv/fPXhOhMSTzUirAtHJjiAOyQbXCpeQQQC0YOr54pvJ
+         vxEFys5xhbEBe7TPAYpM8xKoDRiafsQBjt6WLEhdPtNkEIDxUidHtTXehSdFLeFvqCEM
+         SGKghZPdu9by234q8U2NOHaysy9wf1GTQOzx1+Laiebh3lVWqF8iybXMyKXd8NDxcAeu
+         cL8Y3w4R0sRZji8vw9/dvLVr2Vkg3CpnZDej1Wvzsoy/vsGh142xikx2RaQnuzN8Oxar
+         iBoA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717398511; x=1718003311;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=s6+8RHiPBbfpsl0IHI1QwyO6YCZwwc/aC//eUrmLbKI=;
-        b=SN4LnqL/btH+azNNPoOkvY0XQmDsPz28faxq4GG1g16mojfgTuU8MDAemalopVJcTi
-         BP5XJDq82dE6EDGwPhBjZpOMUsMYLLbhfVdqds+F7+GMc7vCbx1YuAGmIFiyvJNKlmwQ
-         38pUJqOPMgzeLD+YVFAspA4EORbo1ZYTbxbEpy/alHnQn+IkUrCN+cekvcyzxrXSc4EF
-         MIL3QkYxQfospR9C5EBKQE9YYWtDBrQ7dUdyFFEA2rxqmp0t8ymMHrqnt6q0EpHuvUsf
-         fscDuNrmpRLxkVOo7ruVfTe17Y7pBgp2/J7W4X2ZYHZ7vZz8oxRPN/WZKzJzmbI6FHyh
-         gYhw==
-X-Forwarded-Encrypted: i=1; AJvYcCWvj0LnVOsAFb7Zch+t/SplMW1eLuD0toTRJZ8Ddkgj7ccyMYH+GwTntrtIEsUViAwMPUVhxV1+kkayhfqHkMO+amCtiAtQYcAh
-X-Gm-Message-State: AOJu0Yx6jwn9V7dKqc7UEsK2iSf3HVY4DNF7EyJ5gVitHLi3gpv0N3YY
-	7gu9p7DYf9bwD1Li2teOBXkZN8XvYmHm7I75feD/ZX/400V7BxD06b7VOaewPCWTVUaZ+Ho/ASl
-	/1JUwGdnQkfgzJpaEqbH2LqbNjNo=
-X-Google-Smtp-Source: AGHT+IE3GkVjEVmCgvnYKyn3z841ekjpqT5WBYdd2UKouk1UUreAQfbUMXPLzaRMN/J4Eib5UXYVHiGKAPeZ9NsTJ1A=
-X-Received: by 2002:a25:d682:0:b0:dfa:4780:2990 with SMTP id
- 3f1490d57ef6-dfa73dbfe8emr7567688276.56.1717398511174; Mon, 03 Jun 2024
- 00:08:31 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1717401749; x=1718006549;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=/xEWiTgCnbXnrNN8C5qV2U8YeqYeOwSv2GOlmlrAiKg=;
+        b=vNOrfZIN0jgAtZgb4h7Q9OYDiyx5w7WV+rrn47ciQEDizDOLGhymS7eodxemkFrgh1
+         Qjs5lcq6qwbbll02Ih6F/YTdG2FZG+bdTPVHZufoCSknuwXNduBYoifSDv9OOCN8BpLQ
+         /NQ8aqepaM7bRA0sGUsh8BcsBNMzyTNF6a5znAK0yehK/lVB7Qel8/5YZW+SkPxJ9V1J
+         QJ0UjiQBsmfz5Dd3S4WTw5PfS225PEFtsjxNQXj7PDhfDRBCPAVVZtCikCtMUEQtXTf7
+         MagTbx+ACB+c1wXgf4K/7Qu26T3t4nValDmgFxfA9ueAEvLETqKzoY8RKoQfeTLxs5Dp
+         2dFw==
+X-Gm-Message-State: AOJu0Yw0yxjyTbJzju521BEW9dchfPUgRjmy4ojYGPNXnVwd/5T4CiZg
+	ETK4MD9/sbcrJhsOR/rhLYHhonZWsYSRcM1fyzMGOmRiIwHZFHeRd5GucImTBqk=
+X-Google-Smtp-Source: AGHT+IHCWwHOPLiQCOCi1EQ6KVhVyDQv5FHdoJSGnKhhIJVDyPcT0iIM4oV4IVSV2btNwIyR5Hkpgg==
+X-Received: by 2002:a05:6602:2c95:b0:7de:cb15:1b17 with SMTP id ca18e2360f4ac-7eaffed1911mr1044074339f.9.1717401748770;
+        Mon, 03 Jun 2024 01:02:28 -0700 (PDT)
+Received: from localhost.localdomain ([47.238.252.167])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70242b09133sm5140154b3a.178.2024.06.03.01.02.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Jun 2024 01:02:28 -0700 (PDT)
+From: lei lu <llfamsec@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: lei lu <llfamsec@gmail.com>
+Subject: [PATCH v2] xfs: don't walk off the end of a directory data block
+Date: Mon,  3 Jun 2024 16:01:46 +0800
+Message-Id: <20240603080146.81563-1-llfamsec@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240529225736.21028-1-llfamsec@gmail.com> <Zlfmu4/kVJxZ/J7B@dread.disaster.area>
- <CAEBF3_ayLsCJVPdZQCb=gHtiFCNG9C3xcGv4_cnUpmS8TQRdYw@mail.gmail.com> <Zl1bequjV5u9QjXD@dread.disaster.area>
-In-Reply-To: <Zl1bequjV5u9QjXD@dread.disaster.area>
-From: lei lu <llfamsec@gmail.com>
-Date: Mon, 3 Jun 2024 15:08:19 +0800
-Message-ID: <CAEBF3_bwJZfr6NQNzgxLb4cNah5isG=Z7sLGjikwKfeDZRDGGA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: don't walk off the end of a directory data block
-To: Dave Chinner <david@fromorbit.com>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, chandan.babu@oracle.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Got it. I will send a V2 patch to do a proper validation.
+This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entry
+to make sure don'y stray beyond valid memory region. Before patching, the
+loop simply checks that the start offset of the dup and dep is within the
+range. So in a crafted image, if last entry is xfs_dir2_data_unused, we
+can change dup->length to dup->length-1 and leave 1 byte of space. In the
+next traversal, this space will be considered as dup or dep. We may
+encounter an out of bound read when accessing the fixed members.
 
-On Mon, Jun 3, 2024 at 1:58=E2=80=AFPM Dave Chinner <david@fromorbit.com> w=
-rote:
->
-> On Thu, May 30, 2024 at 11:10:57AM +0800, lei lu wrote:
-> > Thanks for your time.
-> >
-> > I just add check for the fixed members because I see after the patch
-> > code there is some checks for dup and dep. "offset +
-> > be16_to_cpu(dup->length) > end" for dup and "offset +
-> > xfs_dir2_data_entsize(mp, dep->namelen) > end" for dep.
-> > =E2=80=9Cxfs_dir2_data_entsize(mp, dep->namelen)=E2=80=9D ensures the a=
-lignment of the
-> > dep.
->
-> Sure, but go back and read what I said.
->
-> Detect the actual object corruption, not the downstream symptom.
->
-> IOWs, the verifier should be detecting the exact corruption you
-> induced.
->
-> Catching all the object corruptions prevents a buffer overrun.
-> We abort processing before we move beyond the end of the buffer.
->
-> IOWs, we need to:
->
-> 1. verify dup->length is a multiple of XFS_DIR2_DATA_ALIGN; and
-> 2. verify that if the last object in the buffer is less than
->    xfs_dir2_data_entsize(mp, 1) bytes in size it must be a dup
->    entry of exactly XFS_DIR2_DATA_ALIGN bytes in length.
->
-> If either of these checks fail, then the block is corrupt.
-> #1 will catch your induced corruption and fail immediately.
-> #2 will catch the runt entry in the structure without derefencing
-> past the end of the structure.
->
-> Can you now see how properly validating that the objects within the
-> structure will prevent buffer overruns from occurring without
-> needing generic buffer overrun checks?
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+In the patch, we check dup->length % XFS_DIR2_DATA_ALIGN != 0 to make
+sure that dup is 8 byte aligned. And we also check the size of each entry
+is greater than xfs_dir2_data_entsize(mp, 1) which ensures that there is
+sufficient space to access fixed members. It should be noted that if the
+last object in the buffer is less than xfs_dir2_data_entsize(mp, 1) bytes
+in size it must be a dup entry of exactly XFS_DIR2_DATA_ALIGN bytes in
+length.
+
+Signed-off-by: lei lu <llfamsec@gmail.com>
+---
+ fs/xfs/libxfs/xfs_dir2_data.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index dbcf58979a59..dd6d43cdf0c5 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -178,6 +178,11 @@ __xfs_dir3_data_check(
+ 		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+ 		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
+ 
++		if (offset > end - xfs_dir2_data_entsize(mp, 1))
++			if (end - offset != XFS_DIR2_DATA_ALIGN ||
++			    be16_to_cpu(dup->freetag) != XFS_DIR2_DATA_FREE_TAG)
++				return __this_address;
++
+ 		/*
+ 		 * If it's unused, look for the space in the bestfree table.
+ 		 * If we find it, account for that, else make sure it
+@@ -188,6 +193,8 @@ __xfs_dir3_data_check(
+ 
+ 			if (lastfree != 0)
+ 				return __this_address;
++			if (be16_to_cpu(dup->length) % XFS_DIR2_DATA_ALIGN != 0)
++				return __this_address;
+ 			if (offset + be16_to_cpu(dup->length) > end)
+ 				return __this_address;
+ 			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+-- 
+2.34.1
+
