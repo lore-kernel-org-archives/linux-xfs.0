@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D501F135A5A;
-	Mon,  3 Jun 2024 20:12:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43610250EC;
+	Mon,  3 Jun 2024 20:12:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717445526; cv=none; b=X3UciRrvVRD15w75Rlf3QDOjBGR+/dKi2Yq5qRLV/PY/QY1nq8XdTu7mWVT+3S2L357WNaxCCdWBMZATCv0WA8/PY0pkR5mooXqmfebboFjMrIQVtziJKsTa+OHEpEOxKGeD7TQXjN2SjYHynELqJiUN7h/acUmLgLHpu7xR1p8=
+	t=1717445532; cv=none; b=u7QS7v0nYs6pSWDdUqCXDAM7v9x32Yr74aoMvk0vuuu9485d+Glu7i77hr+aKWcfhDyHlP5qlwNwBV0P9H43rgQ6IKSIsCCV5RTdmd9vOv3r3vvxhgFpb2odjFvD/rSMt8NyPNX6b0SskTgOWLb+Jv7Pq8eNiiw8vm9ZbrA+6Q4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717445526; c=relaxed/simple;
-	bh=jgnX/e+HdTPalEi/ZQCH9hRit7BptaKyY6o/+R0/YC4=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=AYPjM/rEjansNFUo0b0zvEpFzJ+l+h+LLewpfuuqX2Ks7Sx0W/bNi+igBKtJJ/6GJeX1JyCrWRCFwCO/H5yF0okXUSdaE7fnD2ogt/mAAI7jqDpeEkP8ORssMYXZfjD1qWBniNOODtCcfekujZvveRIsjLaM/G8/G0S1eAFT8ko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lDlQK/am; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717445532; c=relaxed/simple;
+	bh=+yvJ+R6LqINWme+roZSNBamGx4+9puu38wcqUkzAnTI=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=g4/ZTIfDatmdCJMOvM+R3Vf+JjTDP6PBLATHLGmGuSwQsOPC/EKc7/MNh6vUlYxFWdKCFFJuiobwCbjEPn7GOP6IRlQhX4r7iJcL4f9sSHmMs9dKl+KoI3O1P1erP8n7G2rhfD1Zknvn4JTx9y8nQ9w/yL2E1mO3Eehyio3x7MI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=arfiGh/H; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lDlQK/am"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E6C5C32782;
-	Mon,  3 Jun 2024 20:12:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="arfiGh/H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17B3CC2BD10;
+	Mon,  3 Jun 2024 20:12:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717445526;
-	bh=jgnX/e+HdTPalEi/ZQCH9hRit7BptaKyY6o/+R0/YC4=;
-	h=Date:Subject:From:To:Cc:From;
-	b=lDlQK/amuwF1Cu6tKMSRDmD1qHJdEHQ+pyEwwxOu5cxvbjJLmBUe+Yhipeoiv2sy1
-	 br+wns1MAujPjRUcpfR/PPEuD5wI9nrrDx5wiRpeOa1zpQb1blbZ+XnZokGrZ1mUMg
-	 CBiJb3NhfnTRJwso5ZVdJpCQ3vJD5WfiOK+0IQg6CmQRskKEDqVkcIOGf3iZpnVKtO
-	 hlsE/Hfo6d8aw3P6iBBPawPmoYVikOKKrs32vyARXyrfezuZ34gI1AO/7CDJNOskm3
-	 fmEhoek7so7gB3pN4+aX4yNmaWjC8i/Qwkl1po0CpGF1J1KJCtcGIyV07hP2IrdCK1
-	 zIoeQ3viqnBzA==
-Date: Mon, 03 Jun 2024 13:12:05 -0700
-Subject: [PATCHSET 3/3] xfsprogs: scale shards on ssds
+	s=k20201202; t=1717445532;
+	bh=+yvJ+R6LqINWme+roZSNBamGx4+9puu38wcqUkzAnTI=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=arfiGh/H5aywaoNWF2VNBj35SHKwlSgJ22Na9dUZG0BpzcZAc8mNgemPsHuBZB4cu
+	 fu26LUnIgtF0T2sJdrojIUwOEmgrj8TOmbfA8BmzVZn2iD8I4XPceQkMpOn/9NqLF+
+	 NN/jNnKB6qA9ncA7DJ1V3povyPmGyJJWJgNp5LPHAkd90EgTiSExPvf6nJacBjk2j7
+	 OUzgSNnqNvkZ6JETdmtJ+hMcQOTl9C43IIxo3km3NmTP+dQEQzlVio/VogoAI5Ht65
+	 p+eEzQAACgEuzBerotilIKoIfLaHNaCLN2igWbcWhc7O/obix62YrTAukdVE3Gd4cG
+	 qUWftB85uaaPw==
+Date: Mon, 03 Jun 2024 13:12:11 -0700
+Subject: [PATCH 1/1] generic/747: redirect mkfs stderr to seqres.full
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, guan@eryu.me
-Message-ID: <171744525781.1532193.10780995744079593607.stgit@frogsfrogsfrogs>
+Message-ID: <171744525128.1531941.8755552045266618674.stgit@frogsfrogsfrogs>
+In-Reply-To: <171744525112.1531941.9108432191411440408.stgit@frogsfrogsfrogs>
+References: <171744525112.1531941.9108432191411440408.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -41,53 +44,41 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-For a long time, the maintainers have had a gut feeling that we could
-optimize performance of XFS filesystems on non-mechanical storage by
-scaling the number of allocation groups to be a multiple of the CPU
-count.
+ext4 fails on this test with:
 
-With modern ~2022 hardware, it is common for systems to have more than
-four CPU cores and non-striped SSDs ranging in size from 256GB to 4TB.
-The default mkfs geometry still defaults to 4 AGs regardless of core
-count, which was settled on in the age of spinning rust.
+--- /tmp/fstests/tests/generic/747.out	2024-05-13 06:05:59.727025928 -0700
++++ /var/tmp/fstests/generic/747.out.bad	2024-05-21 18:34:51.836000000 -0700
+@@ -1,4 +1,5 @@
+ QA output created by 747
++mke2fs 1.47.2~WIP-2024-05-21 (21-May-2024)
+ Starting fillup using direct IO
+ Starting mixed write/delete test using direct IO
+ Starting mixed write/delete test using buffered IO
 
-This patchset adds a different computation for AG count and log size
-that is based entirely on a desired level of concurrency.  If we detect
-storage that is non-rotational (or the sysadmin provides a CLI option),
-then we will try to match the AG count to the CPU count to minimize AGF
-contention and make the log large enough to minimize grant head
-contention.
+The reason for this is that mke2fs annoyingly prints the program version
+to stderr, which messes up the golden output.  Fix this by redirecting
+stderr like all the othe tests, even though this doesn't seem like a
+great solution...
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-scale-geo-on-ssds
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=mkfs-scale-geo-on-ssds
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Commits in this patchset:
- * xfs: test scaling of the mkfs concurrency options
----
- tests/xfs/1842             |   55 ++++++++++++++
- tests/xfs/1842.cfg         |    4 +
- tests/xfs/1842.out.lba1024 |  177 ++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1842.out.lba2048 |  177 ++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1842.out.lba4096 |  177 ++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1842.out.lba512  |  177 ++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 767 insertions(+)
- create mode 100755 tests/xfs/1842
- create mode 100644 tests/xfs/1842.cfg
- create mode 100644 tests/xfs/1842.out.lba1024
- create mode 100644 tests/xfs/1842.out.lba2048
- create mode 100644 tests/xfs/1842.out.lba4096
- create mode 100644 tests/xfs/1842.out.lba512
+ tests/generic/747 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/tests/generic/747 b/tests/generic/747
+index 50b7ae1160..bae1c84237 100755
+--- a/tests/generic/747
++++ b/tests/generic/747
+@@ -99,7 +99,7 @@ seed=$RANDOM
+ RANDOM=$seed
+ echo "Running test with seed=$seed" >>$seqres.full
+ 
+-_scratch_mkfs_sized $((8 * 1024 * 1024 * 1024)) >>$seqres.full
++_scratch_mkfs_sized $((8 * 1024 * 1024 * 1024)) &>>$seqres.full
+ _scratch_mount
+ 
+ echo "Starting fillup using direct IO"
 
