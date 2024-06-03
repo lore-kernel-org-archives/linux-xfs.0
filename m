@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C72E130492
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:03:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F0E6259C
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:03:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717441412; cv=none; b=aOEavHprOAW2hIUIyqfhFUcP1msu2cGWcpS/s1uaJlysGAkeMdmsc7OR2KNti4xZGNHY0qRbKa5DdCgzbeqXlzLusOQVdHBnpidaNdODowelhmS/MNAuORITS7ByONGYUzZuq4ko7wqJ2lRTXxouqUqkWV2Y+nbW7532GdEJ0EI=
+	t=1717441428; cv=none; b=ceoNisDT+mOXN33M23KGJVLIzE+I/dHBS1gEEQRkg1n96dxD3EHMZO+UPk0wQ8WsTcIuBSHjcok8gwhbs3vAN2MoEVGccvALSvkI6nXRBdW0fmE5lD2FbFBVAHs1ep428RmiQx38KcHYeBL7pB+PUC0qf0tO6wMKt00sLPq9b3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717441412; c=relaxed/simple;
-	bh=uuY280bq8SCwjHuT/QJ1yQEOmnJ0MIaX+qs5qFJ9KKw=;
+	s=arc-20240116; t=1717441428; c=relaxed/simple;
+	bh=nCZc025rod3zV8hhTmm3sBDUxRoAsSJnpKVhbTj97hc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mBQC6B1YOrYHABMvdIiT7Aykr/hGN6P58YPxviGWOv4uVzs29jvH/mLVh57QRaN0V26ADAMpc0OaXl2ZBCu3zUmjon4TcD0VGSCSOW4oJ/yrm7uOwItBpUuYc7gXnxSZubBte1zRgjc6BGzmWugmSuhHlUucEfLLFjh91PP452U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QyCcLz5k; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=q6SA4j5V/PwH9QR4IC50EMmQVJYmyas5m9InXFBCUyKeo0dlSko9VsvkJv9PJ/8h8ZacIKZEKw/sHIi4GZH83eIINi8Iy+zwtFaRC3eaY/iib64rhO6YAQqReUC33XywH0sMLyNyawEvvJt35Iker6TA2FBbpCkIekPGeth3JDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HBw6cZte; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QyCcLz5k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 176A2C2BD10;
-	Mon,  3 Jun 2024 19:03:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HBw6cZte"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6BA7C2BD10;
+	Mon,  3 Jun 2024 19:03:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717441412;
-	bh=uuY280bq8SCwjHuT/QJ1yQEOmnJ0MIaX+qs5qFJ9KKw=;
+	s=k20201202; t=1717441427;
+	bh=nCZc025rod3zV8hhTmm3sBDUxRoAsSJnpKVhbTj97hc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QyCcLz5kXTOL31eOJ5RR0AUc/RtOu5uiW/8RwcA3sJiwNbN1ug1cmBP9fd21FjQ5R
-	 sGjJLtQJ5/G2Gubgtls8/5sL6scyn+UYuU/wkBGrXZYov1rQ/Zkojj7Wd05XhJYVkY
-	 9whPN+gKStrQTtFF2OrLwiVxVzbtBamKOZtsapx8X/dsjod6+Dak751PbB0fKFnpcS
-	 R8R8+FStq5CDuW+kS89CZD/SYkVOo70WPdawjxsb1hu23me3md+KPD7y1ZC/x2Ek3C
-	 LixKko+2H0dhD4qqrp49n9gdY958ZLnrGq6d6XKCVLEnS8whJV9YbhyLQJkO0uxl+D
-	 jPVDaNUfkfvgA==
-Date: Mon, 03 Jun 2024 12:03:31 -0700
-Subject: [PATCH 044/111] xfs: factor out a xfs_btree_owner helper
+	b=HBw6cZtec8Ie4+KunY/knc53bVxSVl/9pCIMJxqpWfo0yJGfYqdvDTHtEftX7Wh8W
+	 fSRcm+N37nVWK71wnP5GNn+JFNSjbg0zInYvcafPqo4dtnoJr2QhftkWliAzDZAtEv
+	 VcIWeRO/0ZxetUe/NFVmKiqYaZTmml2El4AkxKmhcCmB7ty0oLJtPniTkZmGMir+3N
+	 paimAJnp9jhWl4jnCocGh2QI15FLA6YVY+boRy+GFNgtAa2dofPCeqN8AYV4u/M2L2
+	 fgpFUF/izfaeLIMBzZePrMzTMC0q+05SirIS+fm41vyAVdogJwp0ysgZWFEZgD4nRA
+	 VeqlccBsGSmvw==
+Date: Mon, 03 Jun 2024 12:03:47 -0700
+Subject: [PATCH 045/111] xfs: factor out a btree block owner check
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744040034.1443973.10880126220687851966.stgit@frogsfrogsfrogs>
+Message-ID: <171744040049.1443973.11808273760696345845.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,63 +47,68 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 2054cf051698d30cc9479678c2b807a364248f38
+Source kernel commit: 186f20c003199824eb3eb3b78e4eb7c2535a8ffc
 
-Split out a helper to calculate the owner for a given btree instead of
-duplicating the logic in two places.  While we're at it, make the
-bc_ag/bc_ino switch logic depend on the correct geometry flag.
+Hoist the btree block owner check into a separate helper so that we
+don't have an ugly multiline if statement.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: break this up into two patches for the owner check]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_btree.c |   25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+ libxfs/xfs_btree.c |   33 ++++++++++++++++++++++++++++-----
+ 1 file changed, 28 insertions(+), 5 deletions(-)
 
 
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 150f8ac23..dab571222 100644
+index dab571222..5f132e336 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -1219,6 +1219,15 @@ xfs_btree_init_buf(
- 	bp->b_ops = ops->buf_ops;
+@@ -1774,6 +1774,33 @@ xfs_btree_decrement(
+ 	return error;
  }
  
-+static inline __u64
-+xfs_btree_owner(
-+	struct xfs_btree_cur    *cur)
++/*
++ * Check the btree block owner now that we have the context to know who the
++ * real owner is.
++ */
++static inline xfs_failaddr_t
++xfs_btree_check_block_owner(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block)
 +{
-+	if (cur->bc_ops->geom_flags & XFS_BTGEO_ROOT_IN_INODE)
-+		return cur->bc_ino.ip->i_ino;
-+	return cur->bc_ag.pag->pag_agno;
++	__u64			owner;
++
++	if (!xfs_has_crc(cur->bc_mp) ||
++	    (cur->bc_flags & XFS_BTREE_BMBT_INVALID_OWNER))
++		return NULL;
++
++	owner = xfs_btree_owner(cur);
++	if (cur->bc_ops->geom_flags & XFS_BTGEO_LONG_PTRS) {
++		if (be64_to_cpu(block->bb_u.l.bb_owner) != owner)
++			return __this_address;
++	} else {
++		if (be32_to_cpu(block->bb_u.s.bb_owner) != owner)
++			return __this_address;
++	}
++
++	return NULL;
 +}
 +
- void
- xfs_btree_init_block_cur(
- 	struct xfs_btree_cur	*cur,
-@@ -1226,20 +1235,8 @@ xfs_btree_init_block_cur(
- 	int			level,
- 	int			numrecs)
- {
--	__u64			owner;
--
--	/*
--	 * we can pull the owner from the cursor right now as the different
--	 * owners align directly with the pointer size of the btree. This may
--	 * change in future, but is safe for current users of the generic btree
--	 * code.
--	 */
--	if (cur->bc_ops->geom_flags & XFS_BTGEO_LONG_PTRS)
--		owner = cur->bc_ino.ip->i_ino;
--	else
--		owner = cur->bc_ag.pag->pag_agno;
--
--	xfs_btree_init_buf(cur->bc_mp, bp, cur->bc_ops, level, numrecs, owner);
-+	xfs_btree_init_buf(cur->bc_mp, bp, cur->bc_ops, level, numrecs,
-+			xfs_btree_owner(cur));
- }
+ int
+ xfs_btree_lookup_get_block(
+ 	struct xfs_btree_cur		*cur,	/* btree cursor */
+@@ -1812,11 +1839,7 @@ xfs_btree_lookup_get_block(
+ 		return error;
  
- /*
+ 	/* Check the inode owner since the verifiers don't. */
+-	if (xfs_has_crc(cur->bc_mp) &&
+-	    !(cur->bc_flags & XFS_BTREE_BMBT_INVALID_OWNER) &&
+-	    (cur->bc_ops->geom_flags & XFS_BTGEO_LONG_PTRS) &&
+-	    be64_to_cpu((*blkp)->bb_u.l.bb_owner) !=
+-			cur->bc_ino.ip->i_ino)
++	if (xfs_btree_check_block_owner(cur, *blkp) != NULL)
+ 		goto out_bad;
+ 
+ 	/* Did we get the level we were looking for? */
 
