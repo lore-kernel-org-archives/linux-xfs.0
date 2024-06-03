@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D1354411
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:56:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C6A64411
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:56:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717444578; cv=none; b=rB/eHPQ45MfCr73bvII3p4YUHoGxY9/oWn31kaO0WYVccMNdJmqfFAHRaQQYB4Vw0LnpLWiSLVy/SntjJwcWIG9wQKuCObCKNHvA0nmE9uVm6fjE1z7j6E/VSOOMmYB1YuFmVOwGANbaPrkEFEpAVD90OqJslhKSDJH5ZevFqqk=
+	t=1717444594; cv=none; b=aSPHvr+HjmCSTLGk9Xi6CSgrykdtucl170/kIVZc29mh8ETq9QLyq834PxjoonlJ3Yg6hixsRImJCsWBhpvFFKx3ZJXdV+xY0NhcnAh1/vKkVU7X7hzRvHU/Iy5hQp1pFB8aCHqTLhtgjAOHyu0qCE7wJ0/OGLsuKUhTWiZ4Qvc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717444578; c=relaxed/simple;
-	bh=VD22EBrW8a59gaaUg2zpshRG2KzI2rA2N6MfESeIudM=;
+	s=arc-20240116; t=1717444594; c=relaxed/simple;
+	bh=XzWef1aVlPGgUqU4kgnnrPwZQPSfbc4TOSaVYDUO3oI=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=M47V/gkfHk6BGxRrp2a6PlTB+4i+JpN//LVdGSOk1pVsFtPIT4+lulKJoeMaEq5CxJbl8oxYThyCN3EcUL346Ll8ANiemtLWPwTCCl0ojBp1U9SIcZvn2x+xjrUEn7XKrmSZv2cAfWH6gMCq8kkj5uNasqXT/0I193StJfWKp6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AaKE9Ne7; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=cAt/7qQJz8owHVA/yD8X/66rKJTseLNbGO2fNizPpofclMqjo/LbKiBfNUjOWX/0UWZ65N8UGVorKlCPahoV6LVd136FPOXzaTfKsXxXTfjsh396WoR8aYDj9DGN6bWnvkSoVS7OcJMRFEZ8X3Q/iPioP1bg16fNH1dce4skrbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s1RrsZ1h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AaKE9Ne7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20E65C2BD10;
-	Mon,  3 Jun 2024 19:56:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s1RrsZ1h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45D3C2BD10;
+	Mon,  3 Jun 2024 19:56:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717444578;
-	bh=VD22EBrW8a59gaaUg2zpshRG2KzI2rA2N6MfESeIudM=;
+	s=k20201202; t=1717444593;
+	bh=XzWef1aVlPGgUqU4kgnnrPwZQPSfbc4TOSaVYDUO3oI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AaKE9Ne7Y2QlKwiLfEkz0eZO1uyUHGxUuc9wuxQIttmFVnvzOq6HQS1D1qjDbq7o3
-	 FRxixzJlMZ5ssqoeRN3A5Gd14PezUA9dk0iNZQQ3wOu6I2aWYMy+uvCnn7BBAyTYM6
-	 Drmw07u6bZmXRapbuh3AXSVvlV7MODSpz1SpPqR/wJKadb5BIAAeenxRXUKQNA/foc
-	 hRtfjTnAmdWPNh4YK5zx31DuGn46GTrhxZ3dSYvBG1w47vi7vAqmeL441abAvDue1S
-	 DHD/ANMVIz3JQfSruAJzPCY3C5+OqMO9ervZzndDpvoeno1+Ox7NMJwrc+ujCamkNC
-	 MuqkMcJTRTaxw==
-Date: Mon, 03 Jun 2024 12:56:17 -0700
-Subject: [GIT PULL 07/10] xfs_repair: minor fixes
+	b=s1RrsZ1hGPZBOqhiGrdqb9/7P5kZ80z0MB21Wu59g2t1UqZNFCie1+Fgw4yjRGkwR
+	 4eLmkWY1v2wCSa3G9tOpgP7Mzdp1Cm0i4EX0axRnuwZYgTBDMsWf+BNArtf0HYu/Ii
+	 JPtB++fcR4nqID1ThDwjlyOWaVhEOSHntwKtYO7pGQwklxQ4kQV8C3+R9laiJq5iJN
+	 CWLTtLQvVqb7ZUa8TzErDzZDo2RIErW4MiJa2VkfrEoWyn+ZaTbPNMbIQK9BaXiDvk
+	 BIynTLLlW6sq8b8NQWdtHk/bNjwmDkvHUDScGusrSMiB0s0s9ig7Ok3JcXAco1EEut
+	 c1B6KqdR82T5A==
+Date: Mon, 03 Jun 2024 12:56:33 -0700
+Subject: [GIT PULL 08/10] xfs_repair: use in-memory rmap btrees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171744443970.1510943.8198430699020167993.stg-ugh@frogsfrogsfrogs>
+Message-ID: <171744444077.1510943.14031140831445039.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,35 +51,60 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 2025aa7a29e60c89047711922c1340a8b3c9d99e:
-
-xfs_scrub: upload clean bills of health (2024-06-03 11:37:42 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/repair-fixes-6.9_2024-06-03
-
-for you to fetch changes up to 842676ed999f0baae79c3de3ad6e2d3b90733f49:
+The following changes since commit 842676ed999f0baae79c3de3ad6e2d3b90733f49:
 
 xfs_repair: check num before bplist[num] (2024-06-03 11:37:42 -0700)
 
-----------------------------------------------------------------
-xfs_repair: minor fixes [v30.5 07/35]
+are available in the Git repository at:
 
-Fix some random minor problems in xfs_repair.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/repair-use-in-memory-btrees-6.9_2024-06-03
+
+for you to fetch changes up to 47307ecef44599b2caf0546c7e518b544e14d9c8:
+
+xfs_repair: remove the old rmap collection slabs (2024-06-03 11:37:42 -0700)
+
+----------------------------------------------------------------
+xfs_repair: use in-memory rmap btrees [v30.5 08/35]
+
+Now that we've ported support for in-memory btrees to userspace, port
+xfs_repair to use them instead of the clunky slab interface that we
+currently use.  This has the effect of moving memory consumption for
+tracking reverse mappings into a memfd file, which means that we could
+(theoretically) reduce the memory requirements by pointing it at an
+on-disk file or something.  It also enables us to remove the sorting
+step and to avoid having to coalesce adjacent contiguous bmap records
+into a single rmap record.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (2):
-xfs_repair: log when buffers fail CRC checks even if we just recompute it
-xfs_repair: check num before bplist[num]
+Christoph Hellwig (1):
+libxfs: provide a kernel-compatible kasprintf
 
-repair/attr_repair.c | 15 ++++++++++++---
-repair/da_util.c     | 12 ++++++++----
-repair/dir2.c        | 28 +++++++++++++++++++++-------
-repair/prefetch.c    |  2 +-
-4 files changed, 42 insertions(+), 15 deletions(-)
+Darrick J. Wong (5):
+xfs_repair: convert regular rmap repair to use in-memory btrees
+xfs_repair: verify on-disk rmap btrees with in-memory btree data
+xfs_repair: compute refcount data from in-memory rmap btrees
+xfs_repair: reduce rmap bag memory usage when creating refcounts
+xfs_repair: remove the old rmap collection slabs
+
+include/kmem.h           |   3 +
+include/libxfs.h         |   3 +
+libxfs/buf_mem.h         |   5 +
+libxfs/kmem.c            |  13 +
+libxfs/libxfs_api_defs.h |  13 +
+repair/agbtree.c         |  18 +-
+repair/agbtree.h         |   1 +
+repair/dinode.c          |   9 +-
+repair/phase4.c          |  25 +-
+repair/phase5.c          |   2 +-
+repair/rmap.c            | 762 ++++++++++++++++++++++++++++++-----------------
+repair/rmap.h            |  25 +-
+repair/scan.c            |   7 +-
+repair/slab.c            |  49 +--
+repair/slab.h            |   2 +-
+repair/xfs_repair.c      |   6 +
+16 files changed, 602 insertions(+), 341 deletions(-)
 
