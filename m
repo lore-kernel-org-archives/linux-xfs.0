@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32BA113B5B7
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:10:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF39A13B28D
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:10:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717441803; cv=none; b=fiREz7hOLPq4UUE/00nQsad7sJ5KhRuANDcWMdfX9+YiYE8n6oMD9wb35TVIcISE/VHX1slPq3WjOdSAEo0uXxe9FhrBoE+TzUMITfgnDm6gXKuUc3Kkbhkh9Vyh1Fyf93ASHppDU2ShO3FiD4XqOgD1TXlALi5Kgd0tab4XeKY=
+	t=1717441818; cv=none; b=k2AAXR2xZt5eP7voNb+kS+9aCfNnUox1WjDvO+J2MX9Q7XztK0FvY0k6ySNydZTgzwcb+U6pmGXWJAtpsU0IxAk09u8U+tzAsql4R/NwLrEJ27bxH1yBmEO/0Xq7vbSlaVUu8ibfjPtYpVo8Q/6PQf7OFtX5uguu951UZ//SWoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717441803; c=relaxed/simple;
-	bh=CYU8DRtg03/Z96rteunuawRv06fPL5N6uRIudG7wrpA=;
+	s=arc-20240116; t=1717441818; c=relaxed/simple;
+	bh=/m+iIMwP5yI88UzYhuprBeEkVpzZXi2LUmcyauuDdrk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FHVrqxQ++3XYovTW899jH5NNna3GONTFua9iPdtEE9P6URnctW83Nd1Z6T28pidu9+a5eevwJTP+mQ+IK1jlEuNNX3SxZyL+jxMZAtE0NB1YpyUGVWSYoxc8NCeLvTNYzuksD9OJgkfpwWy+hx3j3ldge8eYc/qTivxRqmx43cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pRzH3iL0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TBGroZgIFvZ9v3GUCiclcHfT2jny9FsGZv/SJwtij9bDnImxgZOV8lI/lRa7VqNBGyHyUJPSDxER2pS1IQ5fgqDT5FGQXqt3fOQqFu1vKUatM5r1iYRX4hv3KcHly3SrsiYJhejsV6julR/uSe1BW4qJq+J7bqsltS4c6jgV054=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKgoELA9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pRzH3iL0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C7CCC2BD10;
-	Mon,  3 Jun 2024 19:10:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKgoELA9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F660C2BD10;
+	Mon,  3 Jun 2024 19:10:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717441803;
-	bh=CYU8DRtg03/Z96rteunuawRv06fPL5N6uRIudG7wrpA=;
+	s=k20201202; t=1717441818;
+	bh=/m+iIMwP5yI88UzYhuprBeEkVpzZXi2LUmcyauuDdrk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pRzH3iL0xz1GDzw6gy6CTGf9rHCKVlICioFSrEjqNamBqFBNg6To70jJCW0Y5J4On
-	 GQoG027mDlhPhI/STTg0k4U2WKQKbG0FKvcAb/m2/IHsLwazLmSjmP3I3FYTQafHeZ
-	 pgC5pTHLxrrtGqqSQzXR4CqRNN4/AW4e0M4fsu38zwQhHnPXf66oQRflykV4cljZuE
-	 N+zh6x2RzOKvEFa8aDI+eErkbyFw1JP9lS1uDSTWI+yZ0leKKjiwQ5v14oYplnOuzQ
-	 ibZqnsmdRA5M1nAuu2WFrQYhh3deAyLiIWs8jIOThJNa0TesElXo1vn+BCKunjoaOI
-	 uPSFzNdqKP0JQ==
-Date: Mon, 03 Jun 2024 12:10:02 -0700
-Subject: [PATCH 069/111] xfs: remove xfs_inobt_cur
+	b=BKgoELA9+19XxA7YG0k/SMcl9IAk5zkMCxgAF4Bcgk8I0LznCF/Hl84s1jfjWjo9R
+	 Ifj2lnk5vgiYaJ4LYyHLuzI1HMaFvPBX5taAqm+76JHjpmWydzKorhuz4ktWU8xZp1
+	 6mvn/cJeE43TFIWCBv55nt4RlkAzZheOpfU+KjZWuAaAvbMIbyi54OVATbc4Y1G47C
+	 ScnR2WZbQ1a5ZeFahWdh/2JT+IpPr5FeTzY9+R7CGoou3C2QmzJ+irJcGNI/jxvOvQ
+	 GuffON6spz8FCxmq8KHduQNfeKAMG9I6y0gCnkp/UuTa0va8O+AwbUbKxUvUjMb3lu
+	 hrBJbfE4cI2sg==
+Date: Mon, 03 Jun 2024 12:10:18 -0700
+Subject: [PATCH 070/111] xfs: remove the btnum argument to
+ xfs_inobt_count_blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744040411.1443973.14896503273816942122.stgit@frogsfrogsfrogs>
+Message-ID: <171744040425.1443973.7596464567743410849.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,85 +48,53 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 3038fd8129384c64946c17198229ee61f6f2c8e1
+Source kernel commit: 4bfb028a4c00d0a079a625d7867325efb3c37de2
 
-This helper provides no real advantage over just open code the two
-calls in it in the callers.
+xfs_inobt_count_blocks is only used for the finobt.  Hardcode the btnum
+argument and rename the function to match that.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_ialloc_btree.c |   29 +++--------------------------
- libxfs/xfs_ialloc_btree.h |    3 ---
- 2 files changed, 3 insertions(+), 29 deletions(-)
+ libxfs/xfs_ialloc_btree.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 
 diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 08076ef12..cf59530ea 100644
+index cf59530ea..609f62c65 100644
 --- a/libxfs/xfs_ialloc_btree.c
 +++ b/libxfs/xfs_ialloc_btree.c
-@@ -709,30 +709,6 @@ xfs_inobt_max_size(
- 					XFS_INODES_PER_CHUNK);
+@@ -710,10 +710,9 @@ xfs_inobt_max_size(
  }
  
--/* Read AGI and create inobt cursor. */
--int
--xfs_inobt_cur(
--	struct xfs_perag	*pag,
--	struct xfs_trans	*tp,
--	xfs_btnum_t		which,
--	struct xfs_btree_cur	**curpp,
--	struct xfs_buf		**agi_bpp)
--{
--	struct xfs_btree_cur	*cur;
--	int			error;
--
--	ASSERT(*agi_bpp == NULL);
--	ASSERT(*curpp == NULL);
--
--	error = xfs_ialloc_read_agi(pag, tp, agi_bpp);
--	if (error)
--		return error;
--
--	cur = xfs_inobt_init_cursor(pag, tp, *agi_bpp, which);
--	*curpp = cur;
--	return 0;
--}
--
  static int
- xfs_inobt_count_blocks(
+-xfs_inobt_count_blocks(
++xfs_finobt_count_blocks(
  	struct xfs_perag	*pag,
-@@ -741,13 +717,14 @@ xfs_inobt_count_blocks(
+ 	struct xfs_trans	*tp,
+-	xfs_btnum_t		btnum,
  	xfs_extlen_t		*tree_blocks)
  {
  	struct xfs_buf		*agbp = NULL;
--	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_btree_cur	*cur;
- 	int			error;
- 
--	error = xfs_inobt_cur(pag, tp, btnum, &cur, &agbp);
-+	error = xfs_ialloc_read_agi(pag, tp, &agbp);
+@@ -724,7 +723,7 @@ xfs_inobt_count_blocks(
  	if (error)
  		return error;
  
-+	cur = xfs_inobt_init_cursor(pag, tp, agbp, btnum);
+-	cur = xfs_inobt_init_cursor(pag, tp, agbp, btnum);
++	cur = xfs_inobt_init_cursor(pag, tp, agbp, XFS_BTNUM_FINO);
  	error = xfs_btree_count_blocks(cur, tree_blocks);
  	xfs_btree_del_cursor(cur, error);
  	xfs_trans_brelse(tp, agbp);
-diff --git a/libxfs/xfs_ialloc_btree.h b/libxfs/xfs_ialloc_btree.h
-index 40f0fc0e8..2f1552d65 100644
---- a/libxfs/xfs_ialloc_btree.h
-+++ b/libxfs/xfs_ialloc_btree.h
-@@ -64,9 +64,6 @@ int xfs_finobt_calc_reserves(struct xfs_perag *perag, struct xfs_trans *tp,
- 		xfs_extlen_t *ask, xfs_extlen_t *used);
- extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
--int xfs_inobt_cur(struct xfs_perag *pag, struct xfs_trans *tp,
--		xfs_btnum_t btnum, struct xfs_btree_cur **curpp,
--		struct xfs_buf **agi_bpp);
+@@ -772,8 +771,7 @@ xfs_finobt_calc_reserves(
+ 	if (xfs_has_inobtcounts(pag->pag_mount))
+ 		error = xfs_finobt_read_blocks(pag, tp, &tree_len);
+ 	else
+-		error = xfs_inobt_count_blocks(pag, tp, XFS_BTNUM_FINO,
+-				&tree_len);
++		error = xfs_finobt_count_blocks(pag, tp, &tree_len);
+ 	if (error)
+ 		return error;
  
- void xfs_inobt_commit_staged_btree(struct xfs_btree_cur *cur,
- 		struct xfs_trans *tp, struct xfs_buf *agbp);
 
