@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF27013B29F
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:55:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C48137748
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:55:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717444516; cv=none; b=RL0gQkbVp7z9ODhjUI36cAp0RheXeg8p5Q/Jdwkoq7xd3oHYIjXWpBFhjoQ4bO/jya1cLpTXx24K3fu7zNpH5FXbzEx2vQQugshjQifad0mx9h3QKarPF/LTVVnVXo6gAEecJj7vHmkhCLiY04aowGxPyyVvy86c7ebvzoJXVpI=
+	t=1717444531; cv=none; b=EpxVooA8RWxAqXQzzbCoGNCK39l2YZ8j4tlNbDvY6HF1lL4NfnrvBNm/AU60duQXj7hzXfKEeBba6dhQHzceZmH+3SF1kftyeYa68JRjNf41l3XW0iJPFXravsymocDzgn/Q0lIkLU8GYpjjq7ILoLF2mQgG3+3NMx6KjNAsJak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717444516; c=relaxed/simple;
-	bh=655hj8+jQVAcPCeiT3sNNQ+vQ/vcXc/+SGEf/fMJWmM=;
+	s=arc-20240116; t=1717444531; c=relaxed/simple;
+	bh=j2Y74+rOZLy4+hu1a6H6SPHElUzqvEsCHCjFPoCN0W4=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=CLLwex5BQBGKZljq/4eAhehI+w5D99phHxiH2jHl9vN3LirUVWQeCJj3JLLhfEo3jM512K/3SOmTgdNP1+Fyzt3GV6zNRFVlC0IUp6BFgTspTyA2qeMt6HUL8CGcU1GeYhJgh5Ta4bDTA6CCAEwpcOMZmIvSearcPK5bEIzqtO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lmm95o6/; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=XqeHRhAqajV2MqcPWSDahn35246AVSEyBHKRbSB0P5DTi9EgeFWXy8Gpi+/tOU8/GYpTZ7EAX7emWonZwfme90wdKA8VJLOviHNtVUg9TVBQ6lgAcw8oXyFGVmWYbjlzzhm3TGKMAL+1/xmgSeO8W/xy5lYfvUuvbZ14JBOlWOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gfCrJFzP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lmm95o6/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B100C2BD10;
-	Mon,  3 Jun 2024 19:55:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gfCrJFzP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F06E2C4AF08;
+	Mon,  3 Jun 2024 19:55:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717444515;
-	bh=655hj8+jQVAcPCeiT3sNNQ+vQ/vcXc/+SGEf/fMJWmM=;
+	s=k20201202; t=1717444531;
+	bh=j2Y74+rOZLy4+hu1a6H6SPHElUzqvEsCHCjFPoCN0W4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Lmm95o6/fwkl7l3QrNQEQr22A5v70UGb81tCuKCdJu48Mikq8Mu5QyOxsP3mnKDws
-	 a74B9Qkt6zt4y+d0qQAGHwEfnVEtCyBPJqcz68emNsLIetq3hSdIPocU78MiqeGA5x
-	 gkwCb0f0ONFJvGmC6OIJWJiZBiz0mq9p7Kf6cf67WHWwLgHKJt9xmLg89PSup55EMh
-	 B6AsKPfy201TI6RTblMkDLpcnYB8DqXeFFN4uptUAt3lFGV7H4NbUadNnGxUeWlUgH
-	 M//v2730bQLtFkd2I/NYFUpocm706VxXpwqP0eeHtNppQOwjswqFtkwt2oCRViWf3X
-	 zNHfpdUmUGiMg==
-Date: Mon, 03 Jun 2024 12:55:14 -0700
-Subject: [GIT PULL 03/10] xfsprogs: bmap log intent cleanups
+	b=gfCrJFzPQNN0vK2tP9e9753awDL/mK8F9LxMJgZNINW6ye5kDZaWO06tmZkkFMwm9
+	 4xKrv36eMWztTHAg8LSdUNl34gv1mL4GLYqXboPZ14uZJaOTGwd52gJTh0N4UzVfNe
+	 HZbXV3rKt/13PvmCqTQ33TOl3rjc1h4l0fYt1J+0l+AcbNT0AE8cGrWQjHHUUrfoci
+	 sqgbseCR+Izuf7VRinbQCEcKbXI2dQslOcnBX5rCBJa6QBO2OkC7uCs/iVTWdiR8UP
+	 +oHrp/UEDqKM+0t5x8DXulg3sngzplYX/N0svhdcXwbnFDSxyiY1J/Fm3Hy9pruhwF
+	 MAuYu+3OAnVGw==
+Date: Mon, 03 Jun 2024 12:55:30 -0700
+Subject: [GIT PULL 04/10] xfsprogs: widen BUI formats to support realtime
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171744443541.1510943.8970030122235049349.stg-ugh@frogsfrogsfrogs>
+Message-ID: <171744443650.1510943.12114794070776476838.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,57 +51,35 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit a5974a2d10bdbfbfff9a870b832f2ca2b711ec14:
-
-xfs: allow sunit mount option to repair bad primary sb stripe values (2024-06-03 11:37:41 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/bmap-intent-cleanups-6.9_2024-06-03
-
-for you to fetch changes up to 5ac16998a64422509f3123304891aae905e1ff04:
+The following changes since commit 5ac16998a64422509f3123304891aae905e1ff04:
 
 libxfs: add a xattr_entry helper (2024-06-03 11:37:41 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/realtime-bmap-intents-6.9_2024-06-03
+
+for you to fetch changes up to a552c62f50207db2346732f8171de992f61ef894:
+
+libxfs: add a realtime flag to the bmap update log redo items (2024-06-03 11:37:41 -0700)
+
 ----------------------------------------------------------------
-xfsprogs: bmap log intent cleanups [v30.5 03/35]
+xfsprogs: widen BUI formats to support realtime [v30.5 04/35]
 
-The next major target of online repair are metadata that are persisted
-in blocks mapped by a file fork.  In other words, we want to repair
-directories, extended attributes, symbolic links, and the realtime free
-space information.  For file-based metadata, we assume that the space
-metadata is correct, which enables repair to construct new versions of
-the metadata in a temporary file.  We then need to swap the file fork
-mappings of the two files atomically.  With this patchset, we begin
-constructing such a facility based on the existing bmap log items and a
-new extent swap log item.
-
-This series cleans up a few parts of the file block mapping log intent
-code before we start adding support for realtime bmap intents.  Most of
-it involves cleaning up tracepoints so that more of the data extraction
-logic ends up in the tracepoint code and not the tracepoint call site,
-which should reduce overhead further when tracepoints are disabled.
-There is also a change to pass bmap intents all the way back to the bmap
-code instead of unboxing the intent values and re-boxing them after the
-_finish_one function completes.
+Atomic extent swapping (and later, reverse mapping and reflink) on the
+realtime device needs to be able to defer file mapping and extent
+freeing work in much the same manner as is required on the data volume.
+Make the BUI log items operate on rt extents in preparation for atomic
+swapping and realtime rmap.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (4):
-libxfs: remove kmem_alloc, kmem_zalloc, and kmem_free
-libxfs: add a bi_entry helper
-libxfs: reuse xfs_bmap_update_cancel_item
-libxfs: add a xattr_entry helper
+Darrick J. Wong (1):
+libxfs: add a realtime flag to the bmap update log redo items
 
-db/bmap_inflate.c         |  2 +-
-include/kmem.h            | 10 +-------
-libxfs/defer_item.c       | 58 +++++++++++++++++++++++++----------------------
-libxfs/init.c             |  2 +-
-libxfs/kmem.c             | 32 ++++++++------------------
-libxlog/xfs_log_recover.c | 19 ++++++++--------
-repair/bmap_repair.c      |  4 ++--
-7 files changed, 55 insertions(+), 72 deletions(-)
+libxfs/defer_item.c | 8 +++++++-
+1 file changed, 7 insertions(+), 1 deletion(-)
 
