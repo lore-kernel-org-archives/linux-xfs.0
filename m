@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A05A13C677
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:11:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04EC513C693
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:11:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717441897; cv=none; b=i+QxFfPCnzfVhUwTLj91HNJvhJloK7m1INrCTAADOuiycIiviN0oRfOxYuDiSNQm1leVLw2JZ5L51i9d6Ed6jBASronbMhLWUUGr4RQhkwhEf/B8g8qO8kbXoJrVYc2pWhoi3UCfEh58K0tSpEELsxWVgSWD3m/6F5W5cz3aH6A=
+	t=1717441913; cv=none; b=BcefOn4vYoQYZ0evncLAr70Dm/taN0qg3xNfnK6aQZ++qKerHypiLAdffkB2ysU680d+G0tD9YNFmT2g3IvabJo83iY9K6/bmOwDmCZojFx/zPl7I8JKLAU3jmIT+FFHS2l0ZSyTmUamHLyPA9PiQK44w01dM+XVpY/4nbtIxoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717441897; c=relaxed/simple;
-	bh=1bMrgCjUNpuSCWi826yh2h2+UEUdZSPBuorPnRFA49U=;
+	s=arc-20240116; t=1717441913; c=relaxed/simple;
+	bh=fYnTt0v7pQj6GKro+QaCcPDW7A5fNI4PA7QRCA7DRXE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HtHkf4z3Zthzt617sBTUeR3rs2FYTcOEnv29IkjFQ2Yv80cUMw5i/ZXTMUkdfF4heJ6BYJfn3cRH+yFBLazxnEWb6mzf5K8dch4NL3XSnbihGKRMZ90hVMuX9It5IjVamrE4dbCkA9s0gHd+Ag5eg5lEH+mZNmJ1fwCRW7xHwp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cGxIdt4o; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YWCXDswSYEfDyacsbqZWEqsCPG505hfzbUA0MyYmGaTdoUV0aJHDL6xazrVE/8PWevbz62CFefe8txAj6XnaEXzIK0oyZk8thbZMdlMJPXkFoXRmTugjIgVYl9+/im7clf2QGnjN2LfuQJtbA1VHvxMqsp2JbqgJWkGy50S4NU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ap1wPTcs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cGxIdt4o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D833DC2BD10;
-	Mon,  3 Jun 2024 19:11:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ap1wPTcs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75EB9C2BD10;
+	Mon,  3 Jun 2024 19:11:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717441896;
-	bh=1bMrgCjUNpuSCWi826yh2h2+UEUdZSPBuorPnRFA49U=;
+	s=k20201202; t=1717441912;
+	bh=fYnTt0v7pQj6GKro+QaCcPDW7A5fNI4PA7QRCA7DRXE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cGxIdt4oUMlUCFB8mx6kC1iF0I5A0mVBhOJlL58uaCq0UcjUBHeNsvNUFM8kXBwy7
-	 fpHQ9ZyPmHDpOIO8V2wInURmNitwZvVVERbGE6nr+E7BiYLiAZJHulhcQNWocHq5zW
-	 uM1Fo1FtbHKbxXxiGArk2eop3v7Lz18wQaGCiM99x5beFewEuGgUCm3UgWVG6mX1PW
-	 Kjq7W5x32/B2xQXdbJOB/FNgcnk3tN3+6hY98iXcVK6xrJiWholWN+tVz/m8MaHuSn
-	 LReVxVcjtW0Pk9yMJne+QziEdlnbMpXLqD1cYgSW9SgX7nmfyA5UZRKX5HitKhzwLu
-	 +mlHdqbUBpvRg==
-Date: Mon, 03 Jun 2024 12:11:36 -0700
-Subject: [PATCH 075/111] xfs: simplify xfs_btree_check_sblock_siblings
+	b=Ap1wPTcswM1hcWhTmVdAMvqoPJMLvbjBi5LB/F+2riqeXj6gBqG+6NG7hrBUDCcoF
+	 Qn/gRwrfY+4KLVlcHRL560RvYs3XIhi1ueGVlWYVy3t4fAsw6KTAeGVR7OlwLbekZB
+	 EajwbuLlgKkNcfbGbTHo8R7Ypuse7hzMBo1oRST50sl4vnCSHyn1/n2m7jn7sERsi0
+	 ywiImNMAqeWUU2FpG7dRiOK7Y6K0MjHUyWvXM+Oqyyu/smTveXMfMPwT1nDF7gzdUJ
+	 AXISiq/mmd+SXyPIbUVp7a4vVBlH+mWIdwtOyWQ6X4Egwi0ZK1s+VCz/stHFvBycwl
+	 0GJ9C9AaLRDAg==
+Date: Mon, 03 Jun 2024 12:11:52 -0700
+Subject: [PATCH 076/111] xfs: simplify xfs_btree_check_lblock_siblings
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744040501.1443973.3776458988656413137.stgit@frogsfrogsfrogs>
+Message-ID: <171744040515.1443973.16973118386515709956.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,10 +47,10 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 4bc94bf640e08cf970354036683ec143a7ae974e
+Source kernel commit: 8b8ada973cacff338a0e817a97dd0afa301798c0
 
-Stop using xfs_btree_check_sptr in xfs_btree_check_sblock_siblings,
-as it only duplicates the xfs_verify_agbno call in the other leg of
+Stop using xfs_btree_check_lptr in xfs_btree_check_lblock_siblings,
+as it only duplicates the xfs_verify_fsbno call in the other leg of
 if / else besides adding a tautological level check.
 
 With this the cur and level arguments can be removed as they are
@@ -61,63 +61,64 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_btree.c |   19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+ libxfs/xfs_btree.c |   22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
 
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 0b6d8d6f1..4ba36ecbb 100644
+index 4ba36ecbb..55775ddf0 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -83,8 +83,6 @@ xfs_btree_check_lblock_siblings(
+@@ -56,8 +56,6 @@ xfs_btree_magic(
  static inline xfs_failaddr_t
- xfs_btree_check_sblock_siblings(
- 	struct xfs_perag	*pag,
+ xfs_btree_check_lblock_siblings(
+ 	struct xfs_mount	*mp,
 -	struct xfs_btree_cur	*cur,
 -	int			level,
- 	xfs_agblock_t		agbno,
- 	__be32			dsibling)
+ 	xfs_fsblock_t		fsb,
+ 	__be64			dsibling)
  {
-@@ -96,13 +94,8 @@ xfs_btree_check_sblock_siblings(
- 	sibling = be32_to_cpu(dsibling);
- 	if (sibling == agbno)
+@@ -69,14 +67,8 @@ xfs_btree_check_lblock_siblings(
+ 	sibling = be64_to_cpu(dsibling);
+ 	if (sibling == fsb)
  		return __this_address;
 -	if (level >= 0) {
--		if (!xfs_btree_check_sptr(cur, sibling, level + 1))
+-		if (!xfs_btree_check_lptr(cur, sibling, level + 1))
 -			return __this_address;
 -	} else {
--		if (!xfs_verify_agbno(pag, sibling))
+-		if (!xfs_verify_fsbno(mp, sibling))
 -			return __this_address;
 -	}
-+	if (!xfs_verify_agbno(pag, sibling))
+-
++	if (!xfs_verify_fsbno(mp, sibling))
 +		return __this_address;
  	return NULL;
  }
  
-@@ -209,10 +202,10 @@ __xfs_btree_check_sblock(
+@@ -136,10 +128,9 @@ __xfs_btree_check_lblock(
  	if (bp)
- 		agbno = xfs_daddr_to_agbno(mp, xfs_buf_daddr(bp));
+ 		fsb = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
  
--	fa = xfs_btree_check_sblock_siblings(pag, cur, level, agbno,
-+	fa = xfs_btree_check_sblock_siblings(pag, agbno,
- 			block->bb_u.s.bb_leftsib);
+-	fa = xfs_btree_check_lblock_siblings(mp, cur, level, fsb,
+-			block->bb_u.l.bb_leftsib);
++	fa = xfs_btree_check_lblock_siblings(mp, fsb, block->bb_u.l.bb_leftsib);
  	if (!fa)
--		fa = xfs_btree_check_sblock_siblings(pag, cur, level, agbno,
-+		fa = xfs_btree_check_sblock_siblings(pag, agbno,
- 				block->bb_u.s.bb_rightsib);
+-		fa = xfs_btree_check_lblock_siblings(mp, cur, level, fsb,
++		fa = xfs_btree_check_lblock_siblings(mp, fsb,
+ 				block->bb_u.l.bb_rightsib);
  	return fa;
  }
-@@ -4710,10 +4703,10 @@ xfs_btree_sblock_verify(
+@@ -4648,10 +4639,9 @@ xfs_btree_lblock_verify(
  
  	/* sibling pointer verification */
- 	agbno = xfs_daddr_to_agbno(mp, xfs_buf_daddr(bp));
--	fa = xfs_btree_check_sblock_siblings(bp->b_pag, NULL, -1, agbno,
-+	fa = xfs_btree_check_sblock_siblings(bp->b_pag, agbno,
- 			block->bb_u.s.bb_leftsib);
+ 	fsb = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
+-	fa = xfs_btree_check_lblock_siblings(mp, NULL, -1, fsb,
+-			block->bb_u.l.bb_leftsib);
++	fa = xfs_btree_check_lblock_siblings(mp, fsb, block->bb_u.l.bb_leftsib);
  	if (!fa)
--		fa = xfs_btree_check_sblock_siblings(bp->b_pag, NULL, -1, agbno,
-+		fa = xfs_btree_check_sblock_siblings(bp->b_pag, agbno,
- 				block->bb_u.s.bb_rightsib);
+-		fa = xfs_btree_check_lblock_siblings(mp, NULL, -1, fsb,
++		fa = xfs_btree_check_lblock_siblings(mp, fsb,
+ 				block->bb_u.l.bb_rightsib);
  	return fa;
  }
 
