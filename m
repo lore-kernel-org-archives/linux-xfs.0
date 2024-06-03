@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13255259C
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:02:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADDDF259C
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:02:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717441334; cv=none; b=kemN6AkgldqFo4Vkrt6CHio4NfyxjMs8AppVgFxfcZAjQFVxuepqlepXNKLbCkLOaGCo7fGaziYjIOdBqyEdJEUskA0DYQ7B4DAdBmOaghbmI1twPsqOwY2pETrOEtrZUEwW4JUuPb6Z/WMbwZ/X/4uCUOuurNeXhXhMNxf0kio=
+	t=1717441349; cv=none; b=lGQ9HbA3fR6xBqFPq1x4P25CzBHDg3xE68NoKgQ29dkOOmm9wxybGvdAVknViqGsXz2azEp4hNwoKN/GKO4Qwmd21X/0MSKL4CkKjHqioMRZlZSHcyk1loLWG5gxwwFAK1htFDdQXQWXMFWWxkaNy7U0qcWkwbn99aeAsFqAUYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717441334; c=relaxed/simple;
-	bh=+GlWnCb+Nv09399QUt5Ha6Vz73iftcJPfPL3b0XObZA=;
+	s=arc-20240116; t=1717441349; c=relaxed/simple;
+	bh=JCjMln1/QCpo/82ZBzWrwZYtKaCJcm9g6B5j7bDwP/o=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PiBJIgt0hsi+SYaL2uxxfAiPdp3/IdPpnSpkShyRTIaHjjyDD6y3fE2qArhxLDEU5sDpPAeOMH5mN/Vfz799GnjWldXjzAGeqwIPsviE56tU7gCblGzGVAuI09+NdJh8M29GEWgzFmDawn/yJC7CNTLWv6NbHa6/mzi1oBrOSCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WFCXGDWX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=q1RIOU8X/g96T42FleA+9V2Zsn5kSrlHJist1Wxj4cIBcT/1LNW9PR122ggIQQST2V4cDq4E7SdgEYY6HrvOPVZrWuDFW8GWXjJnJh4U4kftahL+InaHz6nT0ZdfXFp35bmz3+BVEAVXBnrlr1rOPsYRNNjppXV2wKs7MdVzv7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hnXVyuRU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WFCXGDWX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E06DDC2BD10;
-	Mon,  3 Jun 2024 19:02:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hnXVyuRU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88AD6C2BD10;
+	Mon,  3 Jun 2024 19:02:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717441334;
-	bh=+GlWnCb+Nv09399QUt5Ha6Vz73iftcJPfPL3b0XObZA=;
+	s=k20201202; t=1717441349;
+	bh=JCjMln1/QCpo/82ZBzWrwZYtKaCJcm9g6B5j7bDwP/o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WFCXGDWXVCrNeE/hrd2jgDn+Dy0w6w0oPoY9e1Gwd3OwjOAPjqXqeyajtlmNzBDvJ
-	 /mMom/4uhu3+gzFcnvZQwS9X78Vd7hoSDT6ORBg9qnDeYLnyx82531q3DFy6LdEikG
-	 aXdx6u9g3kMbYwRJKGyZ416hCmOtQ4XS1iPWNXqfq6TPZc0QL828GRZTn1ZJQ2Pta1
-	 JK1oXMZMwKjCkob9plizOgBPeDOh4UzK9aLpWI2hgP+0aNGgL0TGuGsyLa0WqTAC9r
-	 sz6IndKh5hfS0ML8PulRCuGsjGuJl/3nqHbRGo7MUzP9c7sOeStcAQk5j4j9qQx2dr
-	 DtGhDY/o+15LQ==
-Date: Mon, 03 Jun 2024 12:02:13 -0700
-Subject: [PATCH 039/111] xfs: btree convert xfs_btree_init_block to
- xfs_btree_init_buf calls
+	b=hnXVyuRU9L5Hhe2xZYHOIPHdKr7RE5IoM9w9XWemzAFAD3M0q5PtfX9BflF4b3kpj
+	 QX5p1CE6hHzetNBPMk6i0D9MaeAdN90l3axzZxaBjcl8O3j6HV1Nq8/Kz/ycUwIGQT
+	 vSeb18EMRr7sChGmWD1hulO9QV87XyuEq/dq79pT20DrbJ3Ef2w5GyzedY1oGDex2E
+	 ZrqFj694XL+kO92vT/VDn/ILwhdS0Gz4L20EbCkfP1Oy1CrKCbXdtyMwesd/J+jpui
+	 d7eTG+D7PDg5d2o9WNxTeMQ7fBwDBZEldNYK7snX/UmgxFTJT/HllsVHAhqA8qo8Ff
+	 jTTtdVNDoHDRQ==
+Date: Mon, 03 Jun 2024 12:02:29 -0700
+Subject: [PATCH 040/111] xfs: remove the unnecessary daddr paramter to
+ _init_block
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744039958.1443973.213812311787619621.stgit@frogsfrogsfrogs>
+Message-ID: <171744039974.1443973.7121388776320866379.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,31 +48,108 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 7771f7030007e3faa6906864d01b504b590e1ca2
+Source kernel commit: 11388f6581f40e7d5a69ce5f8b13264eca7c2c5c
 
-Convert any place we call xfs_btree_init_block with a buffer to use the
-_init_buf function.
+Now that all of the callers pass XFS_BUF_DADDR_NULL as the daddr
+parameter, we can elide that too.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_btree.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ libxfs/xfs_bmap_btree.c    |    4 ++--
+ libxfs/xfs_btree.c         |   19 ++++++++++++++++---
+ libxfs/xfs_btree.h         |    2 +-
+ libxfs/xfs_btree_staging.c |    5 ++---
+ 4 files changed, 21 insertions(+), 9 deletions(-)
 
 
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 541f2336c..372a521c1 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -1225,8 +1225,7 @@ xfs_btree_init_block_cur(
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 65ba3ae8a..2d8411809 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -37,8 +37,8 @@ xfs_bmbt_init_block(
+ 		xfs_btree_init_buf(ip->i_mount, bp, &xfs_bmbt_ops, level,
+ 				numrecs, ip->i_ino);
  	else
- 		owner = cur->bc_ag.pag->pag_agno;
- 
--	xfs_btree_init_block(cur->bc_mp, XFS_BUF_TO_BLOCK(bp), cur->bc_ops,
--			xfs_buf_daddr(bp), level, numrecs, owner);
-+	xfs_btree_init_buf(cur->bc_mp, bp, cur->bc_ops, level, numrecs, owner);
+-		xfs_btree_init_block(ip->i_mount, buf, &xfs_bmbt_ops,
+-				XFS_BUF_DADDR_NULL, level, numrecs, ip->i_ino);
++		xfs_btree_init_block(ip->i_mount, buf, &xfs_bmbt_ops, level,
++				numrecs, ip->i_ino);
  }
  
  /*
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 372a521c1..2386084a5 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -1150,8 +1150,8 @@ xfs_btree_set_sibling(
+ 	}
+ }
+ 
+-void
+-xfs_btree_init_block(
++static void
++__xfs_btree_init_block(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_btree_block	*buf,
+ 	const struct xfs_btree_ops *ops,
+@@ -1192,6 +1192,19 @@ xfs_btree_init_block(
+ 	}
+ }
+ 
++void
++xfs_btree_init_block(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*block,
++	const struct xfs_btree_ops *ops,
++	__u16			level,
++	__u16			numrecs,
++	__u64			owner)
++{
++	__xfs_btree_init_block(mp, block, ops, XFS_BUF_DADDR_NULL, level,
++			numrecs, owner);
++}
++
+ void
+ xfs_btree_init_buf(
+ 	struct xfs_mount		*mp,
+@@ -1201,7 +1214,7 @@ xfs_btree_init_buf(
+ 	__u16				numrecs,
+ 	__u64				owner)
+ {
+-	xfs_btree_init_block(mp, XFS_BUF_TO_BLOCK(bp), ops,
++	__xfs_btree_init_block(mp, XFS_BUF_TO_BLOCK(bp), ops,
+ 			xfs_buf_daddr(bp), level, numrecs, owner);
+ }
+ 
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 56901d259..80be40ca8 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -440,7 +440,7 @@ void xfs_btree_init_buf(struct xfs_mount *mp, struct xfs_buf *bp,
+ 		__u64 owner);
+ void xfs_btree_init_block(struct xfs_mount *mp,
+ 		struct xfs_btree_block *buf, const struct xfs_btree_ops *ops,
+-		xfs_daddr_t blkno, __u16 level, __u16 numrecs, __u64 owner);
++		__u16 level, __u16 numrecs, __u64 owner);
+ 
+ /*
+  * Common btree core entry points.
+diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
+index 47ef8e23a..39e95a771 100644
+--- a/libxfs/xfs_btree_staging.c
++++ b/libxfs/xfs_btree_staging.c
+@@ -410,9 +410,8 @@ xfs_btree_bload_prep_block(
+ 		ifp->if_broot_bytes = (int)new_size;
+ 
+ 		/* Initialize it and send it out. */
+-		xfs_btree_init_block(cur->bc_mp, ifp->if_broot,
+-				cur->bc_ops, XFS_BUF_DADDR_NULL, level,
+-				nr_this_block, cur->bc_ino.ip->i_ino);
++		xfs_btree_init_block(cur->bc_mp, ifp->if_broot, cur->bc_ops,
++				level, nr_this_block, cur->bc_ino.ip->i_ino);
+ 
+ 		*bpp = NULL;
+ 		*blockp = ifp->if_broot;
 
