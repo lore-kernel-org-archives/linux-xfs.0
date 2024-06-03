@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F044A13A402
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:58:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37132139587
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 18:59:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717441131; cv=none; b=Lf7VpGooZiMkA/ZB8crBTR9fzfMKoKJPvdHJl9uWfOhXaYiYtvP9hICMrHiBSYFic75mxc9IAWGc4HovH+QLG11isi86NsiL7sDB4Ryddad+OVlgpxf4PyFkcu5q/bacd0sBlP7QMwqfKlEzI9/Q7nn0QxfDDaHoxmMjBdP7wAw=
+	t=1717441146; cv=none; b=Mw1hk2eXW/OIF1YgHEX0I4UUdB/9lpxoOnz3/DUm/lYuUgcpj9ybkfkZqTKdlsSrSClEf5jkebsgGzRvL3+3xfpajDt/cvJ6QN+N2cazP2VzJvs0pZopICFrjUzLg3DFHYLQnWNqn7qjjma4oYP+tP+EfT32nCQnnovWS12CwPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717441131; c=relaxed/simple;
-	bh=IbD85zCOTmOvEUJeLcQy8+IhZk/nadMjI/+gy8Bj+IY=;
+	s=arc-20240116; t=1717441146; c=relaxed/simple;
+	bh=3yDl2/7nyBG+dbytDepTZTr+ZuCj50SqYg2duQmQ+P8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=t+Tugc7Ok6gRR40gQ/dkMTV9c/QK/QRQ0npUzTFLz9Ag41dp67CX1z2v7EptwLzqnp0q3hVNbMfs6l2oLwu1ATSrhLTFZwROb6osrSgyV2Wl9PhnSuhP6qpyEjd75JPtaGK377TqbmrDs+PUmHIAWCLLu3cPTD6FyyPd8YkBL7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ILyJ2gp2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tWmQx8IZGmaTVnMmCRIHjeqF3RdqexHgeX13PpN2ifhT9EEmRY00vwTu2thEOCseeBq78QBv3RkAa4JCBFM9EfHdJJtRSQz1czQRJEtrYRkzIsfyOhORiLMld/dSXPvfdbC3CSOf59JResnVVFZUMtFN4JsC8XXh8cMzIolxyJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mJk4XCdD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ILyJ2gp2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60124C2BD10;
-	Mon,  3 Jun 2024 18:58:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mJk4XCdD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12B26C2BD10;
+	Mon,  3 Jun 2024 18:59:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717441130;
-	bh=IbD85zCOTmOvEUJeLcQy8+IhZk/nadMjI/+gy8Bj+IY=;
+	s=k20201202; t=1717441146;
+	bh=3yDl2/7nyBG+dbytDepTZTr+ZuCj50SqYg2duQmQ+P8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ILyJ2gp2bNhI/yXzePgG2Pr4suzAJZM4aYYAfRkvyF6fjFHS5/q2ajB2kXVajzcsz
-	 nqh142zmTQlmXU8lg2csae3xMo51LyrcwJNoVy19vztOm+SVColiV77dVbeZezwRk1
-	 4sAqkzLyZ7n1jpowUz+OCcpzZ5a38RPU58tjWV8tWDPX0DuRSKBJi99r71kXePiT5V
-	 WRD0ax2Nmt2T/M2a6N5c7mdb4oJOE0pRmzFrGZrUXh2KAv/pHPXX6KGVDsfosX/7Zz
-	 g4zOy73x7/OifQs+ZEtq53VpYxfH72u+LW4AWjzEJ0IrQqlTICjDco7bhAmhNJXH4S
-	 F/w/79zwiVB8w==
-Date: Mon, 03 Jun 2024 11:58:49 -0700
-Subject: [PATCH 026/111] xfs: remember sick inodes that get inactivated
+	b=mJk4XCdDRfJglmKaGTxn1nThpwuxAYJDAYQhMpOj4OgyAGvnMWEftwQSN3caB5oyG
+	 fTD/jy/Sn8FJM6x3+uGSEZvmYkwDrpQP0GHb7wamITp5L6UMmeinSj9PqoxFcIT/Gn
+	 dzeDQ1QT5qRyQDZyPqsXsilvh11b2XJeTRy/tmGBflcc1ODFRZ91on+6f/IzQUJS7o
+	 xwFU5t2xp1E/zDaI/5HCUq6AT2MkxmZqB2oLov84/h4ZPLJkbOnHCrbhQZVDcZ5Gyf
+	 EzlcBWoGeA2enQEyh6ZrH+q5R+udSaFFEAWroNI4cHYrweSIbyVUBSzMHhFast/3Eu
+	 KwWaarSQqyFOA==
+Date: Mon, 03 Jun 2024 11:59:05 -0700
+Subject: [PATCH 027/111] xfs: update health status if we get a clean bill of
+ health
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171744039761.1443973.1881665188275821661.stgit@frogsfrogsfrogs>
+Message-ID: <171744039776.1443973.17387346283529970854.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 References: <171744039240.1443973.5959953049110025783.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,81 +48,35 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 0e24ec3c56fbc797b34fc94073320c336336b4f9
+Source kernel commit: a1f3e0cca41036c3c66abb6a2ed8fedc214e9a4c
 
-If an unhealthy inode gets inactivated, remember this fact in the
-per-fs health summary.
+If scrub finds that everything is ok with the filesystem, we need a way
+to tell the health tracking that it can let go of indirect health flags,
+since indirect flags only mean that at some point in the past we lost
+some context.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/xfs_fs.h        |    1 +
- libxfs/xfs_health.h    |    8 ++++++--
- libxfs/xfs_inode_buf.c |    2 +-
- 3 files changed, 8 insertions(+), 3 deletions(-)
+ libxfs/xfs_fs.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 515cd27d3..b5c8da7e6 100644
+index b5c8da7e6..ca1b17d01 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -294,6 +294,7 @@ struct xfs_ag_geometry {
- #define XFS_AG_GEOM_SICK_FINOBT	(1 << 7)  /* free inode index */
- #define XFS_AG_GEOM_SICK_RMAPBT	(1 << 8)  /* reverse mappings */
- #define XFS_AG_GEOM_SICK_REFCNTBT (1 << 9)  /* reference counts */
-+#define XFS_AG_GEOM_SICK_INODES	(1 << 10) /* bad inodes were seen */
+@@ -714,9 +714,10 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_FSCOUNTERS 24	/* fs summary counters */
+ #define XFS_SCRUB_TYPE_QUOTACHECK 25	/* quota counters */
+ #define XFS_SCRUB_TYPE_NLINKS	26	/* inode link counts */
++#define XFS_SCRUB_TYPE_HEALTHY	27	/* everything checked out ok */
  
- /*
-  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
-diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index 032d45fcb..3c64b5f9b 100644
---- a/libxfs/xfs_health.h
-+++ b/libxfs/xfs_health.h
-@@ -76,6 +76,7 @@ struct xfs_da_args;
- #define XFS_SICK_AG_FINOBT	(1 << 7)  /* free inode index */
- #define XFS_SICK_AG_RMAPBT	(1 << 8)  /* reverse mappings */
- #define XFS_SICK_AG_REFCNTBT	(1 << 9)  /* reference counts */
-+#define XFS_SICK_AG_INODES	(1 << 10) /* inactivated bad inodes */
+ /* Number of scrub subcommands. */
+-#define XFS_SCRUB_TYPE_NR	27
++#define XFS_SCRUB_TYPE_NR	28
  
- /* Observable health issues for inode metadata. */
- #define XFS_SICK_INO_CORE	(1 << 0)  /* inode core */
-@@ -92,6 +93,9 @@ struct xfs_da_args;
- #define XFS_SICK_INO_DIR_ZAPPED		(1 << 10) /* directory erased */
- #define XFS_SICK_INO_SYMLINK_ZAPPED	(1 << 11) /* symlink erased */
- 
-+/* Don't propagate sick status to ag health summary during inactivation */
-+#define XFS_SICK_INO_FORGET	(1 << 12)
-+
- /* Primary evidence of health problems in a given group. */
- #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
- 				 XFS_SICK_FS_UQUOTA | \
-@@ -132,12 +136,12 @@ struct xfs_da_args;
- #define XFS_SICK_FS_SECONDARY	(0)
- #define XFS_SICK_RT_SECONDARY	(0)
- #define XFS_SICK_AG_SECONDARY	(0)
--#define XFS_SICK_INO_SECONDARY	(0)
-+#define XFS_SICK_INO_SECONDARY	(XFS_SICK_INO_FORGET)
- 
- /* Evidence of health problems elsewhere. */
- #define XFS_SICK_FS_INDIRECT	(0)
- #define XFS_SICK_RT_INDIRECT	(0)
--#define XFS_SICK_AG_INDIRECT	(0)
-+#define XFS_SICK_AG_INDIRECT	(XFS_SICK_AG_INODES)
- #define XFS_SICK_INO_INDIRECT	(0)
- 
- /* All health masks. */
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 83d936981..82cf64db9 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -136,7 +136,7 @@ xfs_imap_to_bp(
- 			imap->im_len, XBF_UNMAPPED, bpp, &xfs_inode_buf_ops);
- 	if (xfs_metadata_is_sick(error))
- 		xfs_agno_mark_sick(mp, xfs_daddr_to_agno(mp, imap->im_blkno),
--				XFS_SICK_AG_INOBT);
-+				XFS_SICK_AG_INODES);
- 	return error;
- }
- 
+ /* i: Repair this metadata. */
+ #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
 
