@@ -1,110 +1,223 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 759B584D2E
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 09:48:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B05919F;
+	Mon,  3 Jun 2024 10:43:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717408120; cv=none; b=MtTLcYIrJEorYA/4IARpta2vdg2rEgy6cioCUECPKkrlCQBbxQj3ArPg4cXll//3svEe3pFS0L/DwwB+Ng8KEGzHyWMp3dmahsZu7YeNSD/oZ3KzYGLoNlKta/Y8ZH/lYOCta2Pm3iPe68s2BZR/IPJE48k9CPGQtn7GW3poOeE=
+	t=1717411382; cv=none; b=i3CUoKQF9CVZY3WGCjFadLqzG6AYYiYX0/eiaKKgMm46tU8oo9OfWLtAO/0HeLqem9QhAc7L6mi/7Ypd/ylR+2GL0NGgnrtrzK4cTGp3LhtfNf1UC6KcH2vBG2eVuMv07UB8qOF89NJ3bdoeZQ+D5XkBJ4hVX+plEG58xbWlX6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717408120; c=relaxed/simple;
-	bh=Yf2aodGBUEcMEBK38cdgpqW6kZhpkUNdCdFzFXoVr4A=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=U5huSxnqjF/5quQ2iuAvACjt0+b9WEFKSEL+3HOZ0kEJxqqSpcXMCC8flvd3V41KOlelWhNFpgzRTqghIPqRndaDOOuPA2ncmzXsnUANozNzb+4BT8xSuXiyM7KVwDmeyKgDON8/Lo1EvS5SpS/4RWhy+EkGw8SEyG5WXYVK9Ew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AHiRDrVP; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1717411382; c=relaxed/simple;
+	bh=QsyrXgK09ZdGKR3ba9FPn812tFkoX7Xmgb9ph5tGBHM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qJGb+veZtLemmJ41gzG9wpTgrpBR0KwNn3A2LS9JYuURvrhWoghCjYLzGLbFvKY1aGDXHDF2motqOIaRJ7IwJsotRfaZzf3gMFZc8bkiFOH0/YHYc1sQZn69JEo1A4b2/U7iT3EdYZclK4cH6i6e7uhRSQDkN3oM6hU55t74sEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=0cpttzZx; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=KCTAZqXq; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=0cpttzZx; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=KCTAZqXq; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AHiRDrVP"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-7025e7a42dcso952726b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Jun 2024 02:48:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1717408118; x=1718012918; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=rQK0UzY6zulkVmCQbxCNwZl+c7wvzqywbBNaeUhiHnM=;
-        b=AHiRDrVPeK9Za5aBzA/9CR29IYHV2w/lIz7/Mglf1bYTCSvWRf2OLogrGrhztdjedH
-         TPgGrfQYUYkkvSLm5XEQwq8I5SN4xP/gr1E/fLGWMw3DhZV4s4w64YBxAyj4E6g4XTmW
-         lT7U1jqyBQG+ClJklwpwoWErKZvNeS4390VydNkgRl8bV2umvwYXdCSy09VOk284NT45
-         W2Fbdz0EpjfUrv0fmb3Sv6i+lesvOiL9FKzlCO5IVejrK30T6zV93L8V9cz32ESqDqvj
-         ljYhY4QXsVy9wHMffAZp1M+uLWWCuJzhy9on29RsuIzX83lj4X43qrWlE5Spc27KkMq0
-         D+ZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717408118; x=1718012918;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=rQK0UzY6zulkVmCQbxCNwZl+c7wvzqywbBNaeUhiHnM=;
-        b=lmr4uPN0aEAZuXzp6Y10950V8MpgvBSdFQIz2ufWHYToedqA3VDXN/IRXeRRNoSWk7
-         tU0JK6Lu9EX/bkvISqA+ZQSZ0xxy+NfyHSSdKWPOYxpu/ezi6jgmUeqtyXEbgrKXeyfx
-         vYpLW/r7C/0gZMs7xsCT4dvpWXbBAP8Wxn9AG9xKz5fVOYc/afwVfMoyIbnus12hIPPr
-         NWDyGSm0+qQ0PLympKzwpS6Jh/8qeRvQnYxdzmx3FyQobsY6K8/9Ixa7D7Rjbp5zDyNB
-         TMPZNi1AMlItROrA0Xh8Wc1M3YRBEQD4RgUxHr5IRonU9Hc9Qi1cY8yPHHt6PyKCouK5
-         HccA==
-X-Gm-Message-State: AOJu0YyvBxEihD307T6DZ5zpah+01TDOiIdigtcR1DILgLpD1ne4E2zO
-	QuIdkkdx8iUaWNbZbBIq/op0lGAI4txk9no5xwZbxGZSnZlJ3mt95RD+TwoGB0w=
-X-Google-Smtp-Source: AGHT+IFPyNRQsemA7NBfU1I4bRvouNbDcNhpFhvNepiQVQBJkfCpgQ38BKWfhekIdx5YV+2pwR72JA==
-X-Received: by 2002:a05:6a20:4327:b0:1b2:7b13:ea7b with SMTP id adf61e73a8af0-1b27b13ec2emr5392949637.44.1717408118496;
-        Mon, 03 Jun 2024 02:48:38 -0700 (PDT)
-Received: from localhost.localdomain ([47.238.252.167])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70242b03ffasm5309111b3a.141.2024.06.03.02.48.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Jun 2024 02:48:38 -0700 (PDT)
-From: lei lu <llfamsec@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: lei lu <llfamsec@gmail.com>
-Subject: [PATCH] xfs: add bounds checking to xlog_recover_process_data
-Date: Mon,  3 Jun 2024 17:46:08 +0800
-Message-Id: <20240603094608.83491-1-llfamsec@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0cpttzZx";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="KCTAZqXq";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0cpttzZx";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="KCTAZqXq"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 68AFE20031;
+	Mon,  3 Jun 2024 10:42:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1717411379; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
+	b=0cpttzZxplYkfynItzcVOSeXXn4ssigAeOt6fhs1DGOaiiKwjwEN5TfjE/TobvHwKc1Tyt
+	jBphXyy32LlDnGNDhAR6+u1l89mJg+BogYEaMVDlFqbcPVojJXeQe3TzliJXZPJOI1RZIS
+	y2i3K5d+oWuQStvge4ia737vW1i9Pss=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1717411379;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
+	b=KCTAZqXq95iVD0ltVqfWpXfN9fUXZnG1LnhP2xVdESpFEZhwbaftnRDbkWyFHwHg7xM8Dq
+	EqWTr5wqsPEPkDAw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1717411379; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
+	b=0cpttzZxplYkfynItzcVOSeXXn4ssigAeOt6fhs1DGOaiiKwjwEN5TfjE/TobvHwKc1Tyt
+	jBphXyy32LlDnGNDhAR6+u1l89mJg+BogYEaMVDlFqbcPVojJXeQe3TzliJXZPJOI1RZIS
+	y2i3K5d+oWuQStvge4ia737vW1i9Pss=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1717411379;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LgmW/P4BVMbnqcSwEIT0tbMiQvfXmL7hU8HZLIni90k=;
+	b=KCTAZqXq95iVD0ltVqfWpXfN9fUXZnG1LnhP2xVdESpFEZhwbaftnRDbkWyFHwHg7xM8Dq
+	EqWTr5wqsPEPkDAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5AB5913A93;
+	Mon,  3 Jun 2024 10:42:59 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id +qAfFjOeXWY2GgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 03 Jun 2024 10:42:59 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 122F1A087F; Mon,  3 Jun 2024 12:42:59 +0200 (CEST)
+Date: Mon, 3 Jun 2024 12:42:59 +0200
+From: Jan Kara <jack@suse.cz>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Andrey Albershteyn <aalbersh@redhat.com>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
+ FS_IOC_FSGETXATTRAT
+Message-ID: <20240603104259.gii7lfz2fg7lyrcw@quack3>
+References: <20240520164624.665269-2-aalbersh@redhat.com>
+ <20240520164624.665269-4-aalbersh@redhat.com>
+ <20240522100007.zqpa5fxsele5m7wo@quack3>
+ <snhvkg3lm2lbdgswfzyjzmlmtcwcb725madazkdx4kd6ofqmw6@hiunsuigmq6f>
+ <20240523074828.7ut55rhhbawsqrn4@quack3>
+ <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
+ <20240524161101.yyqacjob42qjcbnb@quack3>
+ <20240531145204.GJ52987@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240531145204.GJ52987@frogsfrogsfrogs>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Spam-Score: -3.80
+X-Spam-Flag: NO
 
-There is a lack of verification of the space occupied by fixed members
-of xlog_op_header in the xlog_recover_process_data.
+On Fri 31-05-24 07:52:04, Darrick J. Wong wrote:
+> On Fri, May 24, 2024 at 06:11:01PM +0200, Jan Kara wrote:
+> > On Thu 23-05-24 13:16:48, Andrey Albershteyn wrote:
+> > > On 2024-05-23 09:48:28, Jan Kara wrote:
+> > > > Hi!
+> > > > 
+> > > > On Wed 22-05-24 12:45:09, Andrey Albershteyn wrote:
+> > > > > On 2024-05-22 12:00:07, Jan Kara wrote:
+> > > > > > Hello!
+> > > > > > 
+> > > > > > On Mon 20-05-24 18:46:21, Andrey Albershteyn wrote:
+> > > > > > > XFS has project quotas which could be attached to a directory. All
+> > > > > > > new inodes in these directories inherit project ID set on parent
+> > > > > > > directory.
+> > > > > > > 
+> > > > > > > The project is created from userspace by opening and calling
+> > > > > > > FS_IOC_FSSETXATTR on each inode. This is not possible for special
+> > > > > > > files such as FIFO, SOCK, BLK etc. as opening them returns a special
+> > > > > > > inode from VFS. Therefore, some inodes are left with empty project
+> > > > > > > ID. Those inodes then are not shown in the quota accounting but
+> > > > > > > still exist in the directory.
+> > > > > > > 
+> > > > > > > This patch adds two new ioctls which allows userspace, such as
+> > > > > > > xfs_quota, to set project ID on special files by using parent
+> > > > > > > directory to open FS inode. This will let xfs_quota set ID on all
+> > > > > > > inodes and also reset it when project is removed. Also, as
+> > > > > > > vfs_fileattr_set() is now will called on special files too, let's
+> > > > > > > forbid any other attributes except projid and nextents (symlink can
+> > > > > > > have one).
+> > > > > > > 
+> > > > > > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > > > > > 
+> > > > > > I'd like to understand one thing. Is it practically useful to set project
+> > > > > > IDs for special inodes? There is no significant disk space usage associated
+> > > > > > with them so wrt quotas we are speaking only about the inode itself. So is
+> > > > > > the concern that user could escape inode project quota accounting and
+> > > > > > perform some DoS? Or why do we bother with two new somewhat hairy ioctls
+> > > > > > for something that seems as a small corner case to me?
+> > > > > 
+> > > > > So there's few things:
+> > > > > - Quota accounting is missing only some special files. Special files
+> > > > >   created after quota project is setup inherit ID from the project
+> > > > >   directory.
+> > > > > - For special files created after the project is setup there's no
+> > > > >   way to make them project-less. Therefore, creating a new project
+> > > > >   over those will fail due to project ID miss match.
+> > > > > - It wasn't possible to hardlink/rename project-less special files
+> > > > >   inside a project due to ID miss match. The linking is fixed, and
+> > > > >   renaming is worked around in first patch.
+> > > > > 
+> > > > > The initial report I got was about second and last point, an
+> > > > > application was failing to create a new project after "restart" and
+> > > > > wasn't able to link special files created beforehand.
+> > > > 
+> > > > I see. OK, but wouldn't it then be an easier fix to make sure we *never*
+> > > > inherit project id for special inodes? And make sure inodes with unset
+> > > > project ID don't fail to be linked, renamed, etc...
+> > > 
+> > > But then, in set up project, you can cross-link between projects and
+> > > escape quota this way. During linking/renaming if source inode has
+> > > ID but target one doesn't, we won't be able to tell that this link
+> > > is within the project.
+> > 
+> > Well, I didn't want to charge these special inodes to project quota at all
+> > so "escaping quota" was pretty much what I suggested to do. But my point
+> > was that since the only thing that's really charged for these inodes is the
+> > inodes itself then does this small inaccuracy really matter in practice?
+> > Are we afraid the user is going to fill the filesystem with symlinks?
+> 
+> I thought the worry here is that you can't fully reassign the project
+> id for a directory tree unless you have an *at() version of the ioctl
+> to handle the special files that you can't open directly?
+> 
+> So you start with a directory tree that's (say) 2% symlinks and project
+> id 5.  Later you want to set project id 7 on that subtree, but after the
+> incomplete change, projid 7 is charged for 98% of the tree, and 2% are
+> still stuck on projid 5.  This is a mess, and if enforcement is enabled
+> you've just broken it in a way that can't be fixed aside from recreating
+> those files.
 
-We can create a crafted image to trigger an out of bounds read by
-following these steps:
-    1) Mount an image of xfs, and do some file operations to leave records
-    2) Before umounting, copy the image for subsequent steps to simulate
-       abnormal exit. Because umount will ensure that tail_blk and
-       head_blk are the same, which will result in the inability to enter
-       xlog_recover_process_data
-    3) Write a tool to parse and modify the copied image in step 2
-    4) Make the end of the xlog_op_header entries only 1 byte away from
-       xlog_rec_header->h_size
-    5) xlog_rec_header->h_num_logops++
-    6) Modify xlog_rec_header->h_crc
+So the idea I'm trying to propose (and apparently I'm failing to explain it
+properly) is:
 
-Fix:
-Add a check to make sure there is sufficient space to access fixed members
-of xlog_op_header.
+When creating special inode, set i_projid = 0 regardless of directory
+settings.
 
-Signed-off-by: lei lu <llfamsec@gmail.com>
----
- fs/xfs/xfs_log_recover.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+When creating hardlink or doing rename, if i_projid of dentry is 0, we
+allow the operation.
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1251c81e55f9..14609ce212db 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2456,7 +2456,10 @@ xlog_recover_process_data(
- 
- 		ohead = (struct xlog_op_header *)dp;
- 		dp += sizeof(*ohead);
--		ASSERT(dp <= end);
-+		if (dp > end) {
-+			xfs_warn(log->l_mp, "%s: op header overrun", __func__);
-+			return -EFSCORRUPTED;
-+		}
- 
- 		/* errors will abort recovery */
- 		error = xlog_recover_process_ophdr(log, rhash, rhead, ohead,
+Teach fsck to set i_projid to 0 when inode is special.
+
+As a result, AFAICT no problem with hardlinks, renames or similar. No need
+for special new ioctl or syscall. The downside is special inodes escape
+project quota accounting. Do we care?
+
+								Honza
 -- 
-2.34.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
