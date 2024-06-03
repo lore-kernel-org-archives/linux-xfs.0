@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 165C8405D8
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:23:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD9E423A0
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 19:23:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717442618; cv=none; b=oRAF2WDje41Sg3FB/kcFFrn0PWBWJdQ/NaJXI1eEo91ZPSKxMTp0gML8mca5HMFI5gJv5Wn2WwNPCl7oZOt8iIj/46a2DwaVfzRo9VOmI4Sbp8YNURHXo+V+1kBuusM/Z+AhRVLOzKIz8YJFje4MK0z8+LeKbBHhxORiJq9JfRQ=
+	t=1717442633; cv=none; b=A8T2OaCLCxLhkLfa9f+1838JfQKInPlQjC9aEDQ8AWR5DqFrXmqSyKYp9+b1ZQACI9kBacpPtFGPAlUNvaoLKTdtsj5Ibcgk+kwrayem1b8dBubVtfIb5XmXZndiNPwedeTSPZJstJTFEjRnGh615G41xaJbdEThOuIIpZ6x05I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717442618; c=relaxed/simple;
-	bh=aZwhe3ZhywT4Od5QgWwbYcqIYrymTGf7G6C5NYTENkQ=;
+	s=arc-20240116; t=1717442633; c=relaxed/simple;
+	bh=qGllsgsbXSyVOfa2OO635v2rKSP6lTwkeGzMj0wlfQc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LP2kNMbyaelXP/fLkiH9trGFvdWwpVAaaCveuhMgnUTwKLSskDeMfC3x3OdFA8u19oAc/itLXh+0pzTaW6Glie+4LSMi2C4ykj8y7Ouz0hSIu6O+3wMKFVCwwjmwW1DtfycQBbVTaSfR/KdXI/YMzpSQJNmXPGFQHkSIZ/vkI/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aDcWFV5Y; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kO30p2Vp4MjKmnH2hYbCkPv1IwVCQTwaVcwVMZHNbBIfa6gfJkhhSugM5i6ft19GwN+6TaXzNA4jtj/ETZSez1pwIZkrwtN8eIxubGxJzo75fjtlRIMtnRNQCAzi2rmTIoj3Igh1GhpCVcZY/SeUdsTVtYVZBKELK4K9NLn/23k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i/+fRnUZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aDcWFV5Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3094C2BD10;
-	Mon,  3 Jun 2024 19:23:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i/+fRnUZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57174C2BD10;
+	Mon,  3 Jun 2024 19:23:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717442617;
-	bh=aZwhe3ZhywT4Od5QgWwbYcqIYrymTGf7G6C5NYTENkQ=;
+	s=k20201202; t=1717442633;
+	bh=qGllsgsbXSyVOfa2OO635v2rKSP6lTwkeGzMj0wlfQc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aDcWFV5YyIEd1wZqcUrf+wuGxeTrKj5MAHwaDMvtBHMdP1uanvYzqN10j7ZgcIals
-	 VKJPoMZE9SAUm5kSBgakOoj+ECkHujzF13vJ2nHkd8WeNcKOGj8h4KAK++BhZsvLhC
-	 fdAa8mbS8mgkVXYi80HxJdDYTbmRY3zEIGmxt+0xgWzvQ++TIYTwl2lTu693fdn8Fa
-	 0Xw1hnt7NXhlOH2q+KF0b1v6V6Ip8CFcUtX34iak25GWElQh42//6MVu6mn28BkdYl
-	 mdXPCPL9O6HYYCeq/nXg3B3OTetL/z3wTyy9B8PhqsBZGcm6Hx5DX8GIcbz/6PkZzW
-	 3k1xhwyNuYRRw==
-Date: Mon, 03 Jun 2024 12:23:37 -0700
-Subject: [PATCH 3/5] xfs_scrub: update health status if we get a clean bill of
- health
+	b=i/+fRnUZm8GxdjF/EJA/nrF85pP1TBMc2kWHu1Ss3FRFWsfoHj4y8XaHUYPemn0tp
+	 KekxGlKLDym/D26yybhuqgR7HzR+1foo4+4NaurAjUFKXskkYBIdAROic9jGa+aFLI
+	 ZiLRT6GIP9cvY3lLZU2p4ezWlUf0H9NSLISFI5oMckVheVmHi+IQrNqk3IbB/BtTDe
+	 efGlnbtPlNV9j/mXbjXquUHO/CO3n6c0jMejgBpsew7FmfHr5lwWD7Lpox4Qd/RnzP
+	 1yt81N4M4TDEAVf9aOxR5dYqucoo9QJbCyjmBc6ZxonIYjNj+E6jwz6y0DU2auTT3T
+	 oumDuf/R6/qzw==
+Date: Mon, 03 Jun 2024 12:23:52 -0700
+Subject: [PATCH 4/5] xfs_scrub: use multiple threads to run in-kernel metadata
+ scrubs that scan inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171744042419.1449803.4492026477850863110.stgit@frogsfrogsfrogs>
+Message-ID: <171744042434.1449803.5302846007407701824.stgit@frogsfrogsfrogs>
 In-Reply-To: <171744042368.1449803.3300792972803173625.stgit@frogsfrogsfrogs>
 References: <171744042368.1449803.3300792972803173625.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,75 +47,239 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we checked a filesystem and it turned out to be clean, upload that
-information into the kernel.
+Instead of running the inode link count and quotacheck scanners in
+serial, run them in parallel, with a slight delay to stagger the work to
+reduce inode resource contention.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/scrub.c                     |    5 +++++
- man/man2/ioctl_xfs_scrub_metadata.2 |    6 ++++++
- scrub/scrub.c                       |    7 +------
- 3 files changed, 12 insertions(+), 6 deletions(-)
+ scrub/phase5.c |  150 ++++++++++++++++++++++++++++++++++++++++++++++++++------
+ scrub/scrub.c  |   18 +++----
+ scrub/scrub.h  |    1 
+ 3 files changed, 145 insertions(+), 24 deletions(-)
 
 
-diff --git a/libfrog/scrub.c b/libfrog/scrub.c
-index b6b8ae042..1df2965fe 100644
---- a/libfrog/scrub.c
-+++ b/libfrog/scrub.c
-@@ -144,6 +144,11 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
- 		.descr	= "inode link counts",
- 		.group	= XFROG_SCRUB_GROUP_ISCAN,
- 	},
-+	[XFS_SCRUB_TYPE_HEALTHY] = {
-+		.name	= "healthy",
-+		.descr	= "retained health records",
-+		.group	= XFROG_SCRUB_GROUP_NONE,
-+	},
- };
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 0a91e4f06..b4c635d34 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -384,26 +384,146 @@ check_fs_label(
+ 	return error;
+ }
  
- /* Invoke the scrub ioctl.  Returns zero or negative error code. */
-diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
-index 8e8bb72fb..9963f1913 100644
---- a/man/man2/ioctl_xfs_scrub_metadata.2
-+++ b/man/man2/ioctl_xfs_scrub_metadata.2
-@@ -168,6 +168,12 @@ count) for errors.
- .TP
- .B XFS_SCRUB_TYPE_NLINKS
- Scan all inodes in the filesystem to verify each file's link count.
+-/* Check directory connectivity. */
+-int
+-phase5_func(
+-	struct scrub_ctx	*ctx)
+-{
++typedef int (*fs_scan_item_fn)(struct scrub_ctx *, struct action_list *);
 +
-+.TP
-+.B XFS_SCRUB_TYPE_HEALTHY
-+Mark everything healthy after a clean scrub run.
-+This clears out all the indirect health problem markers that might remain
-+in the system.
- .RE
++struct fs_scan_item {
+ 	struct action_list	alist;
+-	bool			aborted = false;
++	bool			*abortedp;
++	fs_scan_item_fn		scrub_fn;
++};
++
++/* Run one full-fs scan scrubber in this thread. */
++static void
++fs_scan_worker(
++	struct workqueue	*wq,
++	xfs_agnumber_t		nr,
++	void			*arg)
++{
++	struct timespec		tv;
++	struct fs_scan_item	*item = arg;
++	struct scrub_ctx	*ctx = wq->wq_ctx;
+ 	int			ret;
  
- .PD 1
+ 	/*
+-	 * Check and fix anything that requires a full inode scan.  We do this
+-	 * after we've checked all inodes and repaired anything that could get
+-	 * in the way of a scan.
++	 * Delay each successive fs scan by a second so that the threads are
++	 * less likely to contend on the inobt and inode buffers.
+ 	 */
+-	action_list_init(&alist);
+-	ret = scrub_iscan_metadata(ctx, &alist);
+-	if (ret)
+-		return ret;
+-	ret = action_list_process(ctx, ctx->mnt.fd, &alist,
++	if (nr) {
++		tv.tv_sec = nr;
++		tv.tv_nsec = 0;
++		nanosleep(&tv, NULL);
++	}
++
++	ret = item->scrub_fn(ctx, &item->alist);
++	if (ret) {
++		str_liberror(ctx, ret, _("checking fs scan metadata"));
++		*item->abortedp = true;
++		goto out;
++	}
++
++	ret = action_list_process(ctx, ctx->mnt.fd, &item->alist,
+ 			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
++	if (ret) {
++		str_liberror(ctx, ret, _("repairing fs scan metadata"));
++		*item->abortedp = true;
++		goto out;
++	}
++
++out:
++	free(item);
++	return;
++}
++
++/* Queue one full-fs scan scrubber. */
++static int
++queue_fs_scan(
++	struct workqueue	*wq,
++	bool			*abortedp,
++	xfs_agnumber_t		nr,
++	fs_scan_item_fn		scrub_fn)
++{
++	struct fs_scan_item	*item;
++	struct scrub_ctx	*ctx = wq->wq_ctx;
++	int			ret;
++
++	item = malloc(sizeof(struct fs_scan_item));
++	if (!item) {
++		ret = ENOMEM;
++		str_liberror(ctx, ret, _("setting up fs scan"));
++		return ret;
++	}
++	action_list_init(&item->alist);
++	item->scrub_fn = scrub_fn;
++	item->abortedp = abortedp;
++
++	ret = -workqueue_add(wq, fs_scan_worker, nr, item);
++	if (ret)
++		str_liberror(ctx, ret, _("queuing fs scan work"));
++
++	return ret;
++}
++
++/* Run multiple full-fs scan scrubbers at the same time. */
++static int
++run_kernel_fs_scan_scrubbers(
++	struct scrub_ctx	*ctx)
++{
++	struct workqueue	wq_fs_scan;
++	unsigned int		nr_threads = scrub_nproc_workqueue(ctx);
++	xfs_agnumber_t		nr = 0;
++	bool			aborted = false;
++	int			ret, ret2;
++
++	ret = -workqueue_create(&wq_fs_scan, (struct xfs_mount *)ctx,
++			nr_threads);
++	if (ret) {
++		str_liberror(ctx, ret, _("setting up fs scan workqueue"));
++		return ret;
++	}
++
++	/*
++	 * The nlinks scanner is much faster than quotacheck because it only
++	 * walks directories, so we start it first.
++	 */
++	ret = queue_fs_scan(&wq_fs_scan, &aborted, nr, scrub_nlinks);
++	if (ret)
++		goto wait;
++
++	if (nr_threads > 1)
++		nr++;
++
++	ret = queue_fs_scan(&wq_fs_scan, &aborted, nr, scrub_quotacheck);
++	if (ret)
++		goto wait;
++
++wait:
++	ret2 = -workqueue_terminate(&wq_fs_scan);
++	if (ret2) {
++		str_liberror(ctx, ret2, _("joining fs scan workqueue"));
++		if (!ret)
++			ret = ret2;
++	}
++	if (aborted && !ret)
++		ret = ECANCELED;
++
++	workqueue_destroy(&wq_fs_scan);
++	return ret;
++}
++
++/* Check directory connectivity. */
++int
++phase5_func(
++	struct scrub_ctx	*ctx)
++{
++	bool			aborted = false;
++	int			ret;
++
++	/*
++	 * Check and fix anything that requires a full filesystem scan.  We do
++	 * this after we've checked all inodes and repaired anything that could
++	 * get in the way of a scan.
++	 */
++	ret = run_kernel_fs_scan_scrubbers(ctx);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -436,7 +556,7 @@ phase5_estimate(
+ 	int			*rshift)
+ {
+ 	*items = scrub_estimate_iscan_work(ctx);
+-	*nr_threads = scrub_nproc(ctx);
++	*nr_threads = scrub_nproc(ctx) * 2;
+ 	*rshift = 0;
+ 	return 0;
+ }
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index a22633a81..436ccb0ca 100644
+index 436ccb0ca..cf0567795 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -39,20 +39,15 @@ format_scrub_descr(
- 	case XFROG_SCRUB_GROUP_PERAG:
- 		return snprintf(buf, buflen, _("AG %u %s"), meta->sm_agno,
- 				_(sc->descr));
--		break;
- 	case XFROG_SCRUB_GROUP_INODE:
- 		return scrub_render_ino_descr(ctx, buf, buflen,
- 				meta->sm_ino, meta->sm_gen, "%s",
- 				_(sc->descr));
--		break;
- 	case XFROG_SCRUB_GROUP_FS:
- 	case XFROG_SCRUB_GROUP_SUMMARY:
- 	case XFROG_SCRUB_GROUP_ISCAN:
--		return snprintf(buf, buflen, _("%s"), _(sc->descr));
--		break;
- 	case XFROG_SCRUB_GROUP_NONE:
--		assert(0);
--		break;
-+		return snprintf(buf, buflen, _("%s"), _(sc->descr));
- 	}
- 	return -1;
+@@ -417,15 +417,6 @@ scrub_summary_metadata(
+ 	return scrub_group(ctx, XFROG_SCRUB_GROUP_SUMMARY, 0, alist);
  }
+ 
+-/* Scrub all metadata requiring a full inode scan. */
+-int
+-scrub_iscan_metadata(
+-	struct scrub_ctx		*ctx,
+-	struct action_list		*alist)
+-{
+-	return scrub_group(ctx, XFROG_SCRUB_GROUP_ISCAN, 0, alist);
+-}
+-
+ /* Scrub /only/ the superblock summary counters. */
+ int
+ scrub_fs_counters(
+@@ -444,6 +435,15 @@ scrub_quotacheck(
+ 	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_QUOTACHECK, 0, alist);
+ }
+ 
++/* Scrub /only/ the file link counters. */
++int
++scrub_nlinks(
++	struct scrub_ctx		*ctx,
++	struct action_list		*alist)
++{
++	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_NLINKS, 0, alist);
++}
++
+ /* How many items do we have to check? */
+ unsigned int
+ scrub_estimate_ag_work(
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 927f86de9..5e3f40bf1 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -28,6 +28,7 @@ int scrub_iscan_metadata(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_quotacheck(struct scrub_ctx *ctx, struct action_list *alist);
++int scrub_nlinks(struct scrub_ctx *ctx, struct action_list *alist);
+ 
+ bool can_scrub_fs_metadata(struct scrub_ctx *ctx);
+ bool can_scrub_inode(struct scrub_ctx *ctx);
 
