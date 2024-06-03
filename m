@@ -1,115 +1,204 @@
-Received: from mail-io1-f52.google.com (mail-io1-f52.google.com [209.85.166.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6C9C482D8
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Jun 2024 08:02:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 205CB537E7;
+	Mon,  3 Jun 2024 09:07:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717401751; cv=none; b=YBuM1kQCm7ZfEvc/vW5lu8JTxfT9tCgX5XnRybiL+W79MHKwKupj8g9ObdrVlqZ6kEXsRf71Jv5XPs+HIcgVlDeLSRXJS4JexJ443XpWL+x7vXDO6/Zol3wnfO5IM3YAJo6hoqLchheE1lCtX5dZtgTW/293lLLqjMv+fORSdQA=
+	t=1717405633; cv=none; b=vGM6IT8z2WRxJaGjobTm9HM1nTANxrAoeWrpcrAZTRMOiBQ1osyy++1aSd6xB36BxXhAGEZpgfbwqs6lr5mEgsWOfpNEQd0FQbjWGBFJ7TxqUCOthzXcKiETG63gzV5mWXw6PUOlxAVFQZMy/Ni6xA2jeg092I5MfPBBI/3b7ms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717401751; c=relaxed/simple;
-	bh=+XozhzG1+nj2GVfs5bFyd3hPBSoQvH46y8RI2MDmPng=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=q99TsTd6gsar9rTzjlvt8YCEnFvhaQkhVdnfHGwF3LxEmyFUa2d8vipLqd0c8A5c1SgENiXOgVhKfCzGmzXc0uK/1sLSR/G21+vC4PBkgn3eTb/54jnpwV43SRU6tHu1C/8AkrbRwmLIRMbSmpIIRuxfFQgawuGFdrFz0R9eHG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dZY0m2r3; arc=none smtp.client-ip=209.85.166.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dZY0m2r3"
-Received: by mail-io1-f52.google.com with SMTP id ca18e2360f4ac-7ea7d9b1d69so126620039f.1
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Jun 2024 01:02:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1717401749; x=1718006549; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=/xEWiTgCnbXnrNN8C5qV2U8YeqYeOwSv2GOlmlrAiKg=;
-        b=dZY0m2r3pICR52ODUKIA6c1fj0R2W4JpjruDZ+KMf9OLNDaBIBY8H6uFlnNYAn571s
-         YPJ+FFGuV86zxW6xXtpnskjEWv/fPXhOhMSTzUirAtHJjiAOyQbXCpeQQQC0YOr54pvJ
-         vxEFys5xhbEBe7TPAYpM8xKoDRiafsQBjt6WLEhdPtNkEIDxUidHtTXehSdFLeFvqCEM
-         SGKghZPdu9by234q8U2NOHaysy9wf1GTQOzx1+Laiebh3lVWqF8iybXMyKXd8NDxcAeu
-         cL8Y3w4R0sRZji8vw9/dvLVr2Vkg3CpnZDej1Wvzsoy/vsGh142xikx2RaQnuzN8Oxar
-         iBoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717401749; x=1718006549;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/xEWiTgCnbXnrNN8C5qV2U8YeqYeOwSv2GOlmlrAiKg=;
-        b=vNOrfZIN0jgAtZgb4h7Q9OYDiyx5w7WV+rrn47ciQEDizDOLGhymS7eodxemkFrgh1
-         Qjs5lcq6qwbbll02Ih6F/YTdG2FZG+bdTPVHZufoCSknuwXNduBYoifSDv9OOCN8BpLQ
-         /NQ8aqepaM7bRA0sGUsh8BcsBNMzyTNF6a5znAK0yehK/lVB7Qel8/5YZW+SkPxJ9V1J
-         QJ0UjiQBsmfz5Dd3S4WTw5PfS225PEFtsjxNQXj7PDhfDRBCPAVVZtCikCtMUEQtXTf7
-         MagTbx+ACB+c1wXgf4K/7Qu26T3t4nValDmgFxfA9ueAEvLETqKzoY8RKoQfeTLxs5Dp
-         2dFw==
-X-Gm-Message-State: AOJu0Yw0yxjyTbJzju521BEW9dchfPUgRjmy4ojYGPNXnVwd/5T4CiZg
-	ETK4MD9/sbcrJhsOR/rhLYHhonZWsYSRcM1fyzMGOmRiIwHZFHeRd5GucImTBqk=
-X-Google-Smtp-Source: AGHT+IHCWwHOPLiQCOCi1EQ6KVhVyDQv5FHdoJSGnKhhIJVDyPcT0iIM4oV4IVSV2btNwIyR5Hkpgg==
-X-Received: by 2002:a05:6602:2c95:b0:7de:cb15:1b17 with SMTP id ca18e2360f4ac-7eaffed1911mr1044074339f.9.1717401748770;
-        Mon, 03 Jun 2024 01:02:28 -0700 (PDT)
-Received: from localhost.localdomain ([47.238.252.167])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70242b09133sm5140154b3a.178.2024.06.03.01.02.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Jun 2024 01:02:28 -0700 (PDT)
-From: lei lu <llfamsec@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: lei lu <llfamsec@gmail.com>
-Subject: [PATCH v2] xfs: don't walk off the end of a directory data block
-Date: Mon,  3 Jun 2024 16:01:46 +0800
-Message-Id: <20240603080146.81563-1-llfamsec@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1717405633; c=relaxed/simple;
+	bh=871het3VtC7LTGp81p5U+w2hz47qYXgg7Ly20kzRsmg=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=tmmkOChtcFLVP2lyGDBZeYc2YM2+zwCvSmJrLtFd86/sZdEyBZWGIqSQA2gsxw2XTmkI2IV92GU5oaXBXpmJFLx6eN9NRtW3v56+I8WmWgrOjmCr7Lv3XeknJgbkJyXNj//TQaA196etV7JPMhzP9ms9R0G370ki8vADanQdja8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vt7C76gv2z4f3kpq;
+	Mon,  3 Jun 2024 17:06:59 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 2D9151A0840;
+	Mon,  3 Jun 2024 17:07:06 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP2 (Coremail) with SMTP id Syh0CgAXOQy2h11mYAk7Ow--.23407S3;
+	Mon, 03 Jun 2024 17:07:04 +0800 (CST)
+Subject: Re: [RFC PATCH v4 1/8] iomap: zeroing needs to be pagecache aware
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
+ brauner@kernel.org, david@fromorbit.com, chandanbabu@kernel.org,
+ jack@suse.cz, willy@infradead.org, yi.zhang@huawei.com,
+ chengzhihao1@huawei.com, yukuai3@huawei.com
+References: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
+ <20240529095206.2568162-2-yi.zhang@huaweicloud.com>
+ <ZlxRz9LPNuoOZOtl@bfoster>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <cc7e0a68-185f-a3e0-d60a-989b8b014608@huaweicloud.com>
+Date: Mon, 3 Jun 2024 17:07:02 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZlxRz9LPNuoOZOtl@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:Syh0CgAXOQy2h11mYAk7Ow--.23407S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJw1UtryxXryrKFWUZF45GFg_yoWrZFWUpF
+	yftFnrKr48Ja47J3ZFyFyUXryrGwn5AFW7Gw15GasYvw1rZF1rtF47Gr40kFWUWrW5Gr1U
+	Zr45t342vryUAaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
+	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07UWE__UUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entry
-to make sure don'y stray beyond valid memory region. Before patching, the
-loop simply checks that the start offset of the dup and dep is within the
-range. So in a crafted image, if last entry is xfs_dir2_data_unused, we
-can change dup->length to dup->length-1 and leave 1 byte of space. In the
-next traversal, this space will be considered as dup or dep. We may
-encounter an out of bound read when accessing the fixed members.
+On 2024/6/2 19:04, Brian Foster wrote:
+> On Wed, May 29, 2024 at 05:51:59PM +0800, Zhang Yi wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
+>>
+>> Unwritten extents can have page cache data over the range being
+>> zeroed so we can't just skip them entirely. Fix this by checking for
+>> an existing dirty folio over the unwritten range we are zeroing
+>> and only performing zeroing if the folio is already dirty.
+>>
+>> XXX: how do we detect a iomap containing a cow mapping over a hole
+>> in iomap_zero_iter()? The XFS code implies this case also needs to
+>> zero the page cache if there is data present, so trigger for page
+>> cache lookup only in iomap_zero_iter() needs to handle this case as
+>> well.
+>>
+>> Before:
+>>
+>> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+>> path /mnt/scratch/foo, 50000 iters
+>>
+>> real    0m14.103s
+>> user    0m0.015s
+>> sys     0m0.020s
+>>
+>> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+>> path /mnt/scratch/foo, 50000 iters
+>> % time     seconds  usecs/call     calls    errors syscall
+>> ------ ----------- ----------- --------- --------- ----------------
+>>  85.90    0.847616          16     50000           ftruncate
+>>  14.01    0.138229           2     50000           pwrite64
+>> ....
+>>
+>> After:
+>>
+>> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+>> path /mnt/scratch/foo, 50000 iters
+>>
+>> real    0m0.144s
+>> user    0m0.021s
+>> sys     0m0.012s
+>>
+>> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+>> path /mnt/scratch/foo, 50000 iters
+>> % time     seconds  usecs/call     calls    errors syscall
+>> ------ ----------- ----------- --------- --------- ----------------
+>>  53.86    0.505964          10     50000           ftruncate
+>>  46.12    0.433251           8     50000           pwrite64
+>> ....
+>>
+>> Yup, we get back all the performance.
+>>
+>> As for the "mmap write beyond EOF" data exposure aspect
+>> documented here:
+>>
+>> https://lore.kernel.org/linux-xfs/20221104182358.2007475-1-bfoster@redhat.com/
+>>
+>> With this command:
+>>
+>> $ sudo xfs_io -tfc "falloc 0 1k" -c "pwrite 0 1k" \
+>>   -c "mmap 0 4k" -c "mwrite 3k 1k" -c "pwrite 32k 4k" \
+>>   -c fsync -c "pread -v 3k 32" /mnt/scratch/foo
+>>
+>> Before:
+>>
+>> wrote 1024/1024 bytes at offset 0
+>> 1 KiB, 1 ops; 0.0000 sec (34.877 MiB/sec and 35714.2857 ops/sec)
+>> wrote 4096/4096 bytes at offset 32768
+>> 4 KiB, 1 ops; 0.0000 sec (229.779 MiB/sec and 58823.5294 ops/sec)
+>> 00000c00:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58
+>> XXXXXXXXXXXXXXXX
+>> 00000c10:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58
+>> XXXXXXXXXXXXXXXX
+>> read 32/32 bytes at offset 3072
+>> 32.000000 bytes, 1 ops; 0.0000 sec (568.182 KiB/sec and 18181.8182
+>>    ops/sec
+>>
+>> After:
+>>
+>> wrote 1024/1024 bytes at offset 0
+>> 1 KiB, 1 ops; 0.0000 sec (40.690 MiB/sec and 41666.6667 ops/sec)
+>> wrote 4096/4096 bytes at offset 32768
+>> 4 KiB, 1 ops; 0.0000 sec (150.240 MiB/sec and 38461.5385 ops/sec)
+>> 00000c00:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> ................
+>> 00000c10:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> ................
+>> read 32/32 bytes at offset 3072
+>> 32.000000 bytes, 1 ops; 0.0000 sec (558.036 KiB/sec and 17857.1429
+>>    ops/sec)
+>>
+>> We see that this post-eof unwritten extent dirty page zeroing is
+>> working correctly.
+>>
+> 
+> I've pointed this out in the past, but IIRC this implementation is racy
+> vs. reclaim. Specifically, relying on folio lookup after mapping lookup
+> doesn't take reclaim into account, so if we look up an unwritten mapping
+> and then a folio flushes and reclaims by the time the scan reaches that
+> offset, it incorrectly treats that subrange as already zero when it
+> actually isn't (because the extent is actually stale by that point, but
+> the stale extent check is skipped).
+> 
 
-In the patch, we check dup->length % XFS_DIR2_DATA_ALIGN != 0 to make
-sure that dup is 8 byte aligned. And we also check the size of each entry
-is greater than xfs_dir2_data_entsize(mp, 1) which ensures that there is
-sufficient space to access fixed members. It should be noted that if the
-last object in the buffer is less than xfs_dir2_data_entsize(mp, 1) bytes
-in size it must be a dup entry of exactly XFS_DIR2_DATA_ALIGN bytes in
-length.
+Hello, Brian!
 
-Signed-off-by: lei lu <llfamsec@gmail.com>
----
- fs/xfs/libxfs/xfs_dir2_data.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+I'm confused, how could that happen? We do stale check under folio lock,
+if the folio flushed and reclaimed before we get&lock that folio in
+iomap_zero_iter()->iomap_write_begin(), the ->iomap_valid() would check
+this stale out and zero again in the next iteration. Am I missing
+something?
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index dbcf58979a59..dd6d43cdf0c5 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -178,6 +178,11 @@ __xfs_dir3_data_check(
- 		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
- 		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
- 
-+		if (offset > end - xfs_dir2_data_entsize(mp, 1))
-+			if (end - offset != XFS_DIR2_DATA_ALIGN ||
-+			    be16_to_cpu(dup->freetag) != XFS_DIR2_DATA_FREE_TAG)
-+				return __this_address;
-+
- 		/*
- 		 * If it's unused, look for the space in the bestfree table.
- 		 * If we find it, account for that, else make sure it
-@@ -188,6 +193,8 @@ __xfs_dir3_data_check(
- 
- 			if (lastfree != 0)
- 				return __this_address;
-+			if (be16_to_cpu(dup->length) % XFS_DIR2_DATA_ALIGN != 0)
-+				return __this_address;
- 			if (offset + be16_to_cpu(dup->length) > end)
- 				return __this_address;
- 			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
--- 
-2.34.1
+Thanks,
+Yi.
+
+> A simple example to demonstrate this is something like the following:
+> 
+> # looping truncate zeroing
+> while [ true ]; do
+> 	xfs_io -fc "truncate 0" -c "falloc 0 32K" -c "pwrite 0 4k" -c "truncate 2k" <file>
+> 	xfs_io -c "mmap 0 4k" -c "mread -v 2k 16" <file> | grep cd && break
+> done
+> 
+> vs.
+> 
+> # looping writeback and reclaim
+> while [ true ]; do
+> 	xfs_io -c "sync_range -a 0 0" -c "fadvise -d 0 0" <file>
+> done
+> 
+> If I ran that against this patch, the first loop will eventually detect
+> stale data exposed past eof.
+> 
+> Brian
+> 
 
