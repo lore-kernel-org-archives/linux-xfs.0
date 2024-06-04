@@ -1,66 +1,75 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7F5114D43D
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Jun 2024 23:08:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1801814EC44
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Jun 2024 23:38:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717542507; cv=none; b=p5/o5tx6nskgicVD7pdMUkzDhlxMRovxg/r0P1JNal56WR0ynRHUSJzcBY0IQnV41vCOyUBP3sRBnj1ogNK9Guzfvi68bfSJNJUje5RWTZHQbeUBt/f6saLRm7hVfmXwmAEpw2vDJv5jwKUEbGYVKB3sLCUgj49nva/vI2exJtk=
+	t=1717544304; cv=none; b=WOycstdZn+Jrw32uSeE90Endu4TkLGtOlMmewlM9xsoajPy6Le0w0Xe/on2yntGPwyAg2nwg7ieLajl4ZBfengXJ8jhNulvdxAnt2b+0a6AM12v9BgyRP8cbt/hbF7eToRbOslXWzj8Bg+uU4tPW5MCLAbJhQcBUeWnGY1b8Ss8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717542507; c=relaxed/simple;
-	bh=0vZGBYo+uYy2wtlaepnU2yztsmkDMb6mLHZonpHH8Y4=;
+	s=arc-20240116; t=1717544304; c=relaxed/simple;
+	bh=ca+wPik1uOiAzqp5kmKAVjchH0HdPECP6GFtThndtPk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bOJd58g6mPAzpEPCRh13J90hQsxcoa1b+GGB/U38pfrtSIOB/hYu41RjZlH8iU3m2L9NYZ7GQ3iN+b11n8ZTKDqV31ls6ROfbt/DeYymwRePySbuo5j2pfBlJ4Aamy4+wNAnB79Adh4ituFtQcJrW3sorb53IIRQu/A9aojK+64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=AG7IomBG; arc=none smtp.client-ip=209.85.216.50
+	 Content-Type:Content-Disposition:In-Reply-To; b=X9rjlQae6N+KDkraUZcfUQgDmOUDkQXLv/vtlTR5ZNC1r1tZlJylGM7PzX0DsGXG+cPDzgudCPSG9luGSUfdS2eS6HIlDaAo9EMY+DfQ0bz50C3ipXNy29y8S0eIW2HYfajUzp1fLwxTemjioZX6kskAUdLhu5/ay3GeSHNHfUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=PF5JQpZv; arc=none smtp.client-ip=209.85.214.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="AG7IomBG"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2c20eed350fso2550798a91.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2024 16:08:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="PF5JQpZv"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1f44b45d6abso15255955ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2024 16:38:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717542505; x=1718147305; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717544302; x=1718149102; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IC/xTVBNFTgVmMry2eRcaW98QzdigW5fBfGayStC56Q=;
-        b=AG7IomBGUttHzlVRQLcSTZvd4FZZWv/I61J0QBMWzGJ0XgIXahsXQJK8YXE4oO3IDx
-         UIxDO6VxR1OCoCDSMdYIM6r0Xpcz+AFiTNs4eyLq8DP4A3l4wX93rmk/83p0jBEwIOqT
-         5qe7b8Zp9tkQdurkfhSPphkmYtQdkV9KryB+tjCIWEQQ7to+BQgz1t0yJskWOwN4cRyr
-         AvmdYZDtTN4I5/w10NJif7+yba8Q0/xJVsy6suHuSWV54pG7lardHDCjUfbv7I1iYIWx
-         FrFvL0VtAOSDxk3FvXyZ2qTi3FRoqrmIRZdMgdFo1XsYauuSTh9qdR1EzrJ03FbG/LFX
-         lSBQ==
+        bh=N0aCZBQtCU83mtJ7BQNmsemGUrA8Pwn3mZJbsHt/hUM=;
+        b=PF5JQpZvpS1wNAP4XFsEIJFVgRj0QkMBw7fkTmyMt8zebhS9zfqccFFFGR6ZCTE1fp
+         KN673JL3b92gDyA7qtxGe2jAPd9dZ4Q5QoRMPiPtOBIspFE5hW4f2aebQpIkjtioSDSA
+         RWtn2ObZ7H0pwceKmJM0OA8mYGvncUm3YD9WvBnk7RzRcEIqoZcsZ5HQMNXEE+Q8zrS4
+         fMP93R2BUYDZ/+UDoDPArWPiffa/smll1JQiE8jjg30jBY/lnEshsNOK5CITpXXvGY0A
+         OI6V570x4QdugSqa3+s7tNR02maHww7TOmD7OCclC5gwk5O9nsSxRwk4DzXfD50v+959
+         fMpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717542505; x=1718147305;
+        d=1e100.net; s=20230601; t=1717544302; x=1718149102;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=IC/xTVBNFTgVmMry2eRcaW98QzdigW5fBfGayStC56Q=;
-        b=t+poQtRd6wmJlnS5qc7X272aFWKKPneTDqXWn5jG1qwwQYhdEAO+bL7y8JQO4ChRMO
-         uznAT/jb+4k5FWdJWdBCa3g4VpMbFUTHVkVTsiPEe4/VFRL5XPnqr+GK92AD3dMqG+Af
-         Zt/rASHlDeWmpx0P3T00Bd/F0jeg3iUUs7NBJ7KIloGGZdY9FU3TxF3KHGgUkCwzZpx5
-         lmmGhwprealuT499pRpbDjBvQ8fhTRHG0u9u7WmKlcBMyhMXFeWrORFnLSdlFRvANuIh
-         RTmOqs4PXZY6nbKj5PgssjRNzgwNzHbbHFME1EEz/2/6JdIJteVr+w8hom3vuj+9mU8B
-         GFOQ==
-X-Gm-Message-State: AOJu0YxvarXi7tSaCeJOvr9N3lq4hNnAI14KQrXBGlKC1VRiU7mu9xQk
-	wF9K6qbgIawvCsM250x/eACOTLEJYmj+2XLI/ZUvPU+BzIaJlQ9IKgRtOXA0d/k=
-X-Google-Smtp-Source: AGHT+IFgqHfHhrbdm3xbUBcj41zfs3TqTj0Dc36meOpkBcVqQZRiZz7xX6wGTi+hmt4dt4G4k0Zoaw==
-X-Received: by 2002:a17:90a:b383:b0:2c2:4134:51cc with SMTP id 98e67ed59e1d1-2c27db11924mr880171a91.18.1717542504827;
-        Tue, 04 Jun 2024 16:08:24 -0700 (PDT)
+        bh=N0aCZBQtCU83mtJ7BQNmsemGUrA8Pwn3mZJbsHt/hUM=;
+        b=X3B+VNOyxVxNs8l8J0ygfm/AtYaET98UqoC0E6oc0PJhAVCajmDINQQnG2V2cXLOsn
+         Kgo7xKr/VqJyLqVhJlI4OZ6T9nrLr/YeQY/hv94xcAq1XFs2pbXUPxVf7MJS4WJRWXex
+         vSWYgiOaz6U99if2RWl/TkPMGbrSpu/TlUdKpM2SpeHXgzbexto2izlD4jFkAJIAKaE+
+         q01Tf5DYXvJeKp7/tKgp+N6FhNoU8B4Uwgw+y3WnK3mRS+/Abcy+ZNeXnO17nsXX6gXU
+         LGw6BHD6semOjlOWlqD/r1XXSQ3SnKuu1QaDlhhD0HMCcQYJnXFrcFhyUTw5GsWzQVEw
+         IY7w==
+X-Forwarded-Encrypted: i=1; AJvYcCV7cFXipBscJ+V8c5Vv/uMFUyNN91t7Vut7ZXGJmGDoPapRXNl/w198gg37a53r853zWr6tATf8CG2bijuamCLI1aXCxNmWWvnC
+X-Gm-Message-State: AOJu0YynJPJA8ay0wwYg7Uk9fdqTfjaTol5JoL0Hao4zRgtp0z/j3z2H
+	AztHXmfcXLuMqVkHxMXhHe8VYd8NcidLjcFZ3olHgDIjWZ+N8JhTRMlfh6b71/o=
+X-Google-Smtp-Source: AGHT+IEKmRhZJswXWNpPWzjD5VxSqHIUYsSj148xPMfo2/HFBa3XHAJNKZNKM0XpWv5O7SYcklEy5g==
+X-Received: by 2002:a17:902:f545:b0:1f6:91a1:88a0 with SMTP id d9443c01a7336-1f6a5a26f3amr12387925ad.35.1717544302135;
+        Tue, 04 Jun 2024 16:38:22 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c280697d88sm67330a91.30.2024.06.04.16.08.23
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f6323ddac9sm91405275ad.173.2024.06.04.16.38.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Jun 2024 16:08:24 -0700 (PDT)
+        Tue, 04 Jun 2024 16:38:21 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sEdGP-004XTY-0r;
-	Wed, 05 Jun 2024 09:08:21 +1000
-Date: Wed, 5 Jun 2024 09:08:21 +1000
+	id 1sEdjO-004YyF-0a;
+	Wed, 05 Jun 2024 09:38:18 +1000
+Date: Wed, 5 Jun 2024 09:38:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Wengang Wang <wen.gang.wang@oracle.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, hch@lst.de
-Subject: Re: [PATCH V3] xfs: make sure sb_fdblocks is non-negative
-Message-ID: <Zl+eZVhmLaHwmQgY@dread.disaster.area>
-References: <20240603183011.2690-1-wen.gang.wang@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	djwong@kernel.org, hch@infradead.org, brauner@kernel.org,
+	chandanbabu@kernel.org, jack@suse.cz, willy@infradead.org,
+	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
+Subject: Re: [RFC PATCH v4 1/8] iomap: zeroing needs to be pagecache aware
+Message-ID: <Zl+lanp0K1N7yCcG@dread.disaster.area>
+References: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
+ <20240529095206.2568162-2-yi.zhang@huaweicloud.com>
+ <ZlxRz9LPNuoOZOtl@bfoster>
+ <cc7e0a68-185f-a3e0-d60a-989b8b014608@huaweicloud.com>
+ <Zl3VPA5mVUP4iC3R@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -69,45 +78,174 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240603183011.2690-1-wen.gang.wang@oracle.com>
+In-Reply-To: <Zl3VPA5mVUP4iC3R@bfoster>
 
-On Mon, Jun 03, 2024 at 11:30:11AM -0700, Wengang Wang wrote:
-> A user with a completely full filesystem experienced an unexpected
-> shutdown when the filesystem tried to write the superblock during
-> runtime.
-> kernel shows the following dmesg:
+On Mon, Jun 03, 2024 at 10:37:48AM -0400, Brian Foster wrote:
+> On Mon, Jun 03, 2024 at 05:07:02PM +0800, Zhang Yi wrote:
+> > On 2024/6/2 19:04, Brian Foster wrote:
+> > > On Wed, May 29, 2024 at 05:51:59PM +0800, Zhang Yi wrote:
+> > >> From: Dave Chinner <dchinner@redhat.com>
+> > >>
+> > >> Unwritten extents can have page cache data over the range being
+> > >> zeroed so we can't just skip them entirely. Fix this by checking for
+> > >> an existing dirty folio over the unwritten range we are zeroing
+> > >> and only performing zeroing if the folio is already dirty.
+> > >>
+> > >> XXX: how do we detect a iomap containing a cow mapping over a hole
+> > >> in iomap_zero_iter()? The XFS code implies this case also needs to
+> > >> zero the page cache if there is data present, so trigger for page
+> > >> cache lookup only in iomap_zero_iter() needs to handle this case as
+> > >> well.
+> > >>
+> > >> Before:
+> > >>
+> > >> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+> > >> path /mnt/scratch/foo, 50000 iters
+> > >>
+> > >> real    0m14.103s
+> > >> user    0m0.015s
+> > >> sys     0m0.020s
+> > >>
+> > >> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+> > >> path /mnt/scratch/foo, 50000 iters
+> > >> % time     seconds  usecs/call     calls    errors syscall
+> > >> ------ ----------- ----------- --------- --------- ----------------
+> > >>  85.90    0.847616          16     50000           ftruncate
+> > >>  14.01    0.138229           2     50000           pwrite64
+> > >> ....
+> > >>
+> > >> After:
+> > >>
+> > >> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+> > >> path /mnt/scratch/foo, 50000 iters
+> > >>
+> > >> real    0m0.144s
+> > >> user    0m0.021s
+> > >> sys     0m0.012s
+> > >>
+> > >> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+> > >> path /mnt/scratch/foo, 50000 iters
+> > >> % time     seconds  usecs/call     calls    errors syscall
+> > >> ------ ----------- ----------- --------- --------- ----------------
+> > >>  53.86    0.505964          10     50000           ftruncate
+> > >>  46.12    0.433251           8     50000           pwrite64
+> > >> ....
+> > >>
+> > >> Yup, we get back all the performance.
+> > >>
+> > >> As for the "mmap write beyond EOF" data exposure aspect
+> > >> documented here:
+> > >>
+> > >> https://lore.kernel.org/linux-xfs/20221104182358.2007475-1-bfoster@redhat.com/
+> > >>
+> > >> With this command:
+> > >>
+> > >> $ sudo xfs_io -tfc "falloc 0 1k" -c "pwrite 0 1k" \
+> > >>   -c "mmap 0 4k" -c "mwrite 3k 1k" -c "pwrite 32k 4k" \
+> > >>   -c fsync -c "pread -v 3k 32" /mnt/scratch/foo
+> > >>
+> > >> Before:
+> > >>
+> > >> wrote 1024/1024 bytes at offset 0
+> > >> 1 KiB, 1 ops; 0.0000 sec (34.877 MiB/sec and 35714.2857 ops/sec)
+> > >> wrote 4096/4096 bytes at offset 32768
+> > >> 4 KiB, 1 ops; 0.0000 sec (229.779 MiB/sec and 58823.5294 ops/sec)
+> > >> 00000c00:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58
+> > >> XXXXXXXXXXXXXXXX
+> > >> 00000c10:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58
+> > >> XXXXXXXXXXXXXXXX
+> > >> read 32/32 bytes at offset 3072
+> > >> 32.000000 bytes, 1 ops; 0.0000 sec (568.182 KiB/sec and 18181.8182
+> > >>    ops/sec
+> > >>
+> > >> After:
+> > >>
+> > >> wrote 1024/1024 bytes at offset 0
+> > >> 1 KiB, 1 ops; 0.0000 sec (40.690 MiB/sec and 41666.6667 ops/sec)
+> > >> wrote 4096/4096 bytes at offset 32768
+> > >> 4 KiB, 1 ops; 0.0000 sec (150.240 MiB/sec and 38461.5385 ops/sec)
+> > >> 00000c00:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > >> ................
+> > >> 00000c10:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > >> ................
+> > >> read 32/32 bytes at offset 3072
+> > >> 32.000000 bytes, 1 ops; 0.0000 sec (558.036 KiB/sec and 17857.1429
+> > >>    ops/sec)
+> > >>
+> > >> We see that this post-eof unwritten extent dirty page zeroing is
+> > >> working correctly.
+> > >>
+> > > 
+> > > I've pointed this out in the past, but IIRC this implementation is racy
+> > > vs. reclaim. Specifically, relying on folio lookup after mapping lookup
+> > > doesn't take reclaim into account, so if we look up an unwritten mapping
+> > > and then a folio flushes and reclaims by the time the scan reaches that
+> > > offset, it incorrectly treats that subrange as already zero when it
+> > > actually isn't (because the extent is actually stale by that point, but
+> > > the stale extent check is skipped).
+> > > 
+> > 
+> > Hello, Brian!
+> > 
+> > I'm confused, how could that happen? We do stale check under folio lock,
+> > if the folio flushed and reclaimed before we get&lock that folio in
+> > iomap_zero_iter()->iomap_write_begin(), the ->iomap_valid() would check
+> > this stale out and zero again in the next iteration. Am I missing
+> > something?
+> > 
 > 
-> [    8.176281] XFS (dm-4): Metadata corruption detected at xfs_sb_write_verify+0x60/0x120 [xfs], xfs_sb block 0x0
-> [    8.177417] XFS (dm-4): Unmount and run xfs_repair
-> [    8.178016] XFS (dm-4): First 128 bytes of corrupted metadata buffer:
-> [    8.178703] 00000000: 58 46 53 42 00 00 10 00 00 00 00 00 01 90 00 00  XFSB............
-> [    8.179487] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [    8.180312] 00000020: cf 12 dc 89 ca 26 45 29 92 e6 e3 8d 3b b8 a2 c3  .....&E)....;...
-> [    8.181150] 00000030: 00 00 00 00 01 00 00 06 00 00 00 00 00 00 00 80  ................
-> [    8.182003] 00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
-> [    8.182004] 00000050: 00 00 00 01 00 64 00 00 00 00 00 04 00 00 00 00  .....d..........
-> [    8.182004] 00000060: 00 00 64 00 b4 a5 02 00 02 00 00 08 00 00 00 00  ..d.............
-> [    8.182005] 00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 17 00 00 19  ................
-> [    8.182008] XFS (dm-4): Corruption of in-memory data detected.  Shutting down filesystem
-> [    8.182010] XFS (dm-4): Please unmount the filesystem and rectify the problem(s)
+> Hi Yi,
 > 
-> When xfs_log_sb writes super block to disk, b_fdblocks is fetched from
-> m_fdblocks without any lock. As m_fdblocks can experience a positive -> negative
->  -> positive changing when the FS reaches fullness (see xfs_mod_fdblocks)
-> So there is a chance that sb_fdblocks is negative, and because sb_fdblocks is
-> type of unsigned long long, it reads super big. And sb_fdblocks being bigger
-> than sb_dblocks is a problem during log recovery, xfs_validate_sb_write()
-> complains.
+> Yep, that is my understanding of how the revalidation thing works in
+> general as well. The nuance in this particular case is that no folio
+> exists at the associated offset. Therefore, the reval is skipped in
+> iomap_write_begin(), iomap_zero_iter() skips over the range as well, and
+> the operation carries on as normal.
+>> 
+> Have you tried the test sequence above? I just retried on latest master
+> plus this series and it still trips for me. I haven't redone the low
+> level analysis, but in general what this is trying to show is something
+> like the following...
+> 
+> Suppose we start with an unwritten block on disk with a dirty folio in
+> cache:
+> 
+> - iomap looks up the extent and finds the unwritten mapping.
+> - Reclaim kicks in and writes back the page and removes it from cache.
 
-As I explained in the previous review thread, this "summing can be
-transiently negative" behaviour is "native" to percpu counters. i.e.
-percpu_counter_sum() does not require the xfs_mod_fdblocks()
-behaviour to return negative values because the sum's guaranteed
-accuracy is only +/-(batch size * nrcpus).
+To be pedantic, reclaim doesn't write folios back - we haven't done
+that for the best part of a decade on XFS. We don't even have a
+->writepage method for reclaim to write back pages anymore.
 
-Hence all the percpu_counter_sum() counter calls in xfs_log_sb()
-need to use percpu_counter_sum_positive() to avoid logging transient
-engative values to the journal, not just the mp->m_fdblocks counter.
+Hence writeback has to come from background flusher threads hitting
+that specific folio, then IO completion running and converting the
+unwritten extent, then reclaim hitting that folio, all while the
+zeroing of the current iomap is being walked and zeroed.
+
+That makes it an extremely rare and difficult condition to hit. Yes,
+it's possible, but it's also something we can easily detect. So as
+long as detection is low cost, the cost of resolution when such a
+rare event is detected isn't going to be noticed by anyone.
+
+>   The underlying block is no longer unwritten (current mapping is now
+>   stale).
+> - iomap_zero_iter() processes the associated offset. iomap_get_folio()
+>   clears FGP_CREAT, no folio is found.
+
+Actually, this is really easy to fix - we simply revalidate the
+mapping at this point rather than just skipping the folio range. If
+the mapping has changed because it's now written, the zeroing code
+backs out and gets a new mapping that reflects the changed state of
+this range.
+
+However, with the above cost analysis in mind, a lower overhead
+common case alternative might be to only revalidate the mapping at
+->iomap_end() time. If the mapping has changed while zeroing, we
+return -EBUSY/-ESTALE and that triggers the zeroing to restart from
+the offset at the beginning of the "stale" iomap.  The runtime cost
+is one extra mapping revalidation call per mapping, and the
+resolution cost is refetching and zeroing the range of a single
+unwritten iomap.
 
 -Dave.
 -- 
