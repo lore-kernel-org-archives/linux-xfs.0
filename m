@@ -1,38 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 061833236;
-	Tue,  4 Jun 2024 15:56:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7BD14C5A6
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Jun 2024 23:00:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717516610; cv=none; b=mgxocLGQ9xGJs666Z3EBZ0Y8ht7bu4kOQUhkcaBZgppcC2S8XEu0XczrLU1dlM6Thj2CIsSKeSJ+TBU54fsaIiHCM9ifMJFcbNv7+viiLu9IW1XDojLNLAzC/UVld9706p0JRF82p5XPqNlv3X/ZkCytnAy/NEHDEyurUKk6x8E=
+	t=1717542035; cv=none; b=quuUbmjZzEz8wVF9q95vWNJQ7+Qy2jmkYKV5zOeDng/jxK7M37Ev95Wevo9qob4Slpv3BCV+u3PA86no6t9apBd4KZCMM5vdXE+RE7LyHEe99G1rvSNeaddu1WruW0EMB0XDYZZk6sXRa9wdWfNftqZ0MzBYS5HRmxuQXWZs+dg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717516610; c=relaxed/simple;
-	bh=OjqQLm6ztta8QrQg9UbvZS7LmKeXUKHD0lmi31Sk8PE=;
+	s=arc-20240116; t=1717542035; c=relaxed/simple;
+	bh=NqZy1jvUQgEP7snWSqJcHkFugUnn0xW0HZuaW2kAbWo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qSOhlaumU2o2iXRAIJ9rOqipNGM7yruAfkVNvsAeGK33oRjEPOZddMdaiXcEAwYlGZleMzqvsWmKY8tzm1ZY4rBXDHTPDbbDdABjNW7hBCjUR74XRJCZqbQSKGR9tHxJisIcEuY5JTJ6Uk+c8Rh9Xwvhm9JbrD/QuJZdVBp/I6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kw7yXs5d; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mC5rUfJJ8RkVEo+Z3CejYZqaz3H8cPJD1Evyjc6CWUTOwIZhFzeGBE8/YaijVJ2RHAK+dtYW9TmD0am4fTPtgkQz1V0MpHZ4RgO9Det9adIfNYV5qFBhhruIDuYaTVUJ3KvBEZTKotIjgZrTgK8BM2G9A//e6l2k6DehTo9/M5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KVcMNi/7; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kw7yXs5d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 871E9C2BBFC;
-	Tue,  4 Jun 2024 15:56:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717516609;
-	bh=OjqQLm6ztta8QrQg9UbvZS7LmKeXUKHD0lmi31Sk8PE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kw7yXs5dyNJ02LttL0xvKphFeSOAsXCidZH93L1hIL27xrOpq1no3Vu3Ip6CgUl12
-	 pUgFj45rKJO/3j+Mpa20tlUtBwLmxgRf6eDO/4BbtHIg5b3on2MXtbeFP3Q0d1qNIj
-	 Y2nZkQJPK1eBlt5fzCrGsBfLCB+mZFmKB2tuCAj2SdJQ78T8lpOAIGFw4amxIbtJs4
-	 JISAHzGiocUXSdYOGFP1GJrGfgFBWbEhmt1DotCYco3T5+lT8B67tMhrm/0B1bhKIQ
-	 wlYS83m5/xto6wEfNHnFuNG/jkPC6X3DANRFq/bkOHZb8CkkTG+7BrcxRAPx9YuW9T
-	 CWuZNfc1r7ikA==
-Date: Tue, 4 Jun 2024 08:56:48 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KVcMNi/7"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-2c21574d8ddso2674108a91.0
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2024 16:00:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717542033; x=1718146833; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=SyNw4VRNcfHDMvQsdXF+ZQvFjDdNPI4HLjI8WPyoIyg=;
+        b=KVcMNi/7JFtXCgR35uFsWeOcGvFYlyiSh7QU8BxTWejObgHL9ruezh9DsG8GU4g40h
+         D6mAQTbqAC8fFPGpXZuSsQd36sq4W84oqEzUmLdKvLS4T2klaSDnmHvwevx+EGTapycD
+         LkhiZPuy4xOGa/0TRtCEtMohqJ51dn64Q4fn0DSSVYq9v6c2vup111iRbuzRszIaVzg+
+         krAbFzlnfLBiH+EdA1UixY99TeTMBJQH7rbnnTl7Gcbxx9OLCzTEWkiOyd/jao2jS7o+
+         KfjmOAUdIMYf6FU7tkG1Dy+1TX8H3n92yOa1Be2f5ttD/VHDQpjzT4S2qnooofS0DbAp
+         /lTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717542033; x=1718146833;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SyNw4VRNcfHDMvQsdXF+ZQvFjDdNPI4HLjI8WPyoIyg=;
+        b=Y9x7YnbJLe79O7DVUhyZiyVTz/iUDPD5hj+QTLqdFY7Mncz5DL9TzX6tb12XF5KKaR
+         yfeB4/aVpG5vAWDmewL+3iKUizjg9zfKyGO/kFas+SECAejxQYIecFA+CdMuryVdx/gf
+         LIQLExFqLyXgn8lG3Sew799UaFc3uTcTVYJEcHDaN+vDE9IOp5kJHIShhdIJ56B+egG2
+         pP+Ch6Q1iqrNRdpSdokgnAuCNttjMGxvs4Rtu97KhQGXza5tuxwVkvJ66mvGJvDGoaRa
+         ppaVLu6QJUhsA5egANBvtKdjKXi8v78UN6mP4ERnoRm56sHVtTf6JibfNJLc4y/CXaP5
+         DEZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX6biyrcjkVv8Ndw3lks/loJIFYCwlFuEZfDLHETcrZlMZxdN+LM6YUFgCsLvnrGqYP+mBtPKRpR+wmj++dRUQrNN14MjYZfkKG
+X-Gm-Message-State: AOJu0YyvEeQrRMxgD1uNLVE4JIdLBaE2prCe1LO/PMJcZHxwtVnV415v
+	9jS6bqYsoQv4N5Xk5PO6l039PVgTcrBddgL8+0j/nZefSbe5ukcgJMvV4rl+njA=
+X-Google-Smtp-Source: AGHT+IHTfKmeAc2D7p/DFTZnK5Zo0Wq56sQd0cY51pqUlU0i0kwnRgZDU7hjzj/lw/o9qHMJkwJjVw==
+X-Received: by 2002:a17:90b:4ad0:b0:2c1:ad46:7133 with SMTP id 98e67ed59e1d1-2c27dafd1d8mr891271a91.8.1717542032399;
+        Tue, 04 Jun 2024 16:00:32 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c28066cfe2sm57278a91.14.2024.06.04.16.00.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Jun 2024 16:00:31 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sEd8m-004X8n-37;
+	Wed, 05 Jun 2024 09:00:28 +1000
+Date: Wed, 5 Jun 2024 09:00:28 +1000
+From: Dave Chinner <david@fromorbit.com>
 To: Zizhi Wo <wozizhi@huawei.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, yangerkun@huawei.com
+Cc: chandan.babu@oracle.com, djwong@kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	yangerkun@huawei.com
 Subject: Re: [PATCH] xfs: Fix file creation failure
-Message-ID: <20240604155648.GF52987@frogsfrogsfrogs>
+Message-ID: <Zl+cjKxrncOKbas7@dread.disaster.area>
 References: <20240604071121.3981686-1-wozizhi@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -91,14 +121,47 @@ On Tue, Jun 04, 2024 at 03:11:21PM +0800, Zizhi Wo wrote:
 > 					       xfs_alloc_space_available
 > 					-> as longest=0, it will return
 > 					false, no space for inode alloc.
-> 
+
+Ok, so this is a another attempt to address the problem Ye Bin
+attempted to fix here:
+
+https://lore.kernel.org/linux-xfs/20240419061848.1032366-1-yebin10@huawei.com/
+
 > Fix this issue by adding the bc_free_longest field to the xfs_btree_cur_t
 > structure to store the potential longest count that will be updated. The
 > assignment is done in xfs_alloc_fixup_trees() and xfs_free_ag_extent().
 
-This is going to be a reverse-order review due to the way that diff
-ordered the chunks, which means that the bulk of my questions are at the
-end.
+I outlined how this should be fixed in the above thread:
+
+https://lore.kernel.org/linux-xfs/ZiWgRGWVG4aK1165@dread.disaster.area/
+
+This is what I said:
+
+| What we actually want is for pag->pagf_longest not to change
+| transiently to zero in xfs_alloc_fixup_trees(). If the delrec that
+| zeroes the pagf_longest field is going to follow it up with an
+| insrec that will set it back to a valid value, we really should not
+| be doing the zeroing in the first place.
+| 
+| Further, the only btree that tracks the right edge of the btree is
+| the by-count allocbt. This isn't "generic" functionality, even
+| though it is implemented through the generic btree code. If we lift
+| ->update_lastrec from the generic code and do it directly in
+| xfs_alloc.c whenever we are finished with a by-count tree update
+| and the cursor points to a record in the right-most leaf of the
+| tree, then we run the lastrec update directly at that point. 
+| By decoupling the lastrec updates from the individual record
+| manipulations, we can make the transients disappear completely.
+
+I'm not sure if this patch is an attempt to implement this - there
+is no reference in the commit description to this previous attempt
+to fix the issue, nor is the any discussion of why this particular
+solution was chosen.
+
+In future, when you are trying to fix an issue that has previously
+been discussed/presented on the list, please reference it and
+provide a link to the previous discussions in the changelog for the
+new version of the patchset fixing the issue.
 
 > Reported by: Ye Bin <yebin10@huawei.com>
 > Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
@@ -122,19 +185,13 @@ end.
 > +	 */
 > +	if (nfbno1 != NULLAGBLOCK || nfbno2 != NULLAGBLOCK)
 > +		cnt_cur->bc_ag.bc_free_longest = XFS_EXTLEN_MAX(nflen1, nflen2);
-
-Ok, so if we're allocating space then this sets bc_free_longest to the
-longer of the two remaining sections, if any.  But if we just allocated
-the entirety of the longest extent in the cntbt, then we don't set
-bc_free_longest, which means its zero, right?  I guess that's ok because
-that implies there's zero space left in the AG, so the longest freespace
-is indeed zero.
-
-If we just allocated the entirety of a non-longest extent in the cntbt
-then we don't call ->lastrec_update so the value of bc_free_longest
-doesn't matter?
-
 > +
+
+Why do we store the length of a random extent being freed here?
+nflen1/2 almost always have nothing to do with the longest free
+space extent in the tree, they are just the new free space extents
+we are insering into a random location in the free space tree.
+
 >  	/*
 >  	 * Delete the entry from the by-size btree.
 >  	 */
@@ -150,9 +207,23 @@ doesn't matter?
 > +	if (haveright)
 > +		cnt_cur->bc_ag.bc_free_longest = gtlen;
 
-What happens in the haveleft && haveright case?  Shouldn't
-bc_free_longest be set to ltlen + len + gtlen?  You could just push the
-setting of bc_free_longest into the haveleft/haveright code below.
+That doesn't look correct. At this point in the code, ltlen/gtlen
+are the sizes of the physically adjacent freespace extents that we
+are going to merge the newly freed extent with. i.e. the new
+freespace extent is going to have one of 4 possible values:
+
+	no merge: len
+	left merge: ltlen + len
+	right merge: gtlen + len
+	both merge: ltlen + gtlen + len
+
+So regardless of anything else, this code isn't setting the longest
+freespace extent in teh AGF to the lenght of the longest freespace
+extent in the filesystem.
+
+Which leads me to ask: how did you test this code? This bug should
+have been triggering verifier, repair and scrub failures quite
+quickly with fstests....
 
 >  	/*
 >  	 * Have both left and right contiguous neighbors.
@@ -174,57 +245,40 @@ setting of bc_free_longest into the haveleft/haveright code below.
 > +			 * less than bc_free_longest will be inserted later.
 > +			 */
 > +			len = cpu_to_be32(cur->bc_ag.bc_free_longest);
-
-Humm.  In this case, we've called ->update_lastrec on the cntbt cursor
-having deleted all the records in this record block.  Presumably that
-means that we're going to add rec->alloc.ar_blockcount blocks to the
-rightmost record in the left sibling of @block?  Or already have?
-
-Ahh, right, the pagf_longest checks are done without holding AGF lock.
-The concurrent creat call sees this intermediate state (DELREC sets
-pagf_longest to zero, a moment later INSREC/UPDATE set it to the correct
-nonzero value) and decides to ENOSPC because "nobody" has sufficient
-free space.
-
-I think this phony zero never gets written to disk because although
-we're logging zero into the ondisk and incore agf_longest here, the next
-btree operation will reset it to the correct value.  Right?
-
-Would it be simpler to handle this case by duplicating the cntbt cursor
-and walking one record leftward in the tree to find the longest extent,
-rather than using this "bc_free_longest" variable?
-
 >  		}
->  
->  		break;
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index f93374278aa1..985b1885a643 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -281,6 +281,7 @@ struct xfs_btree_cur
->  			struct xfs_perag	*pag;
->  			struct xfs_buf		*agbp;
->  			struct xbtree_afakeroot	*afake;	/* for staging cursor */
-> +			xfs_extlen_t		bc_free_longest; /* potential longest free space */
 
-This is only used for bnobt/cntbt trees, put it in the per-format
-private data area, please.
+So this is in the LASTREC_DELREC case when the last record is
+removed from the btree. This is what causes the transient state
+as we do this when deleting a record to trim it and then re-insert
+the remainder back into the by-count btree.
 
-If the answer to the question about duplicating the btree cursor is "no"
-then I think this deserves a much longer comment that captures the fact
-that the variable exists to avoid setting pagf_longest to zero for
-benefit of the code that does unlocked scanning of AGs for free space.
+Writing some random transient value into the AGF *and journalling
+it* means we creating a transient on-disk format structure
+corruption and potentially writing it to persistent storage (i.e.
+the journal). The structure is, at least, not consistent in memory
+because the free space tree is empty at this point in time, whilst
+the agf->longest field says it has a free space available. This
+could trip verifiers, be flagged as corruption by xfs_scrub/repair,
+etc.
 
-I also wonder if the unlocked ag scan should just note that it observed
-a zero pagf_longest and if no space can be found across all the AGs, to
-try again with locks?
+Now, this *might be safe* because we *may* clean it up later in the
+transaction, but if this really is the last extent being removed
+from the btree and a cursor has previously been used to do other
+insert and free operations that set this field, then we trip over
+this stale inforamtion and write a corrupt structure to disk. That's
+not good.
 
---D
+As I said above, this "last record tracking" needs to be ripped out
+of the generic btree code because only the by-count btree uses it.
+Then it can be updated at the end of the by-count btree update
+process in the allocation code (i.e. after all record manipulations
+are done in the transaction) and that avoids this transient caused
+by updating the last record on every btree record update that is
+done.
 
->  		} bc_ag;
->  		struct {
->  			struct xfbtree		*xfbtree;
-> -- 
-> 2.39.2
-> 
-> 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
