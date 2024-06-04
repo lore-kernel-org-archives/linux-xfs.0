@@ -1,96 +1,54 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BB3513F429;
-	Tue,  4 Jun 2024 08:58:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA00F12B17B;
+	Tue,  4 Jun 2024 09:42:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717491528; cv=none; b=nXIaO1P9l5P2lVe8v7Ye9YLzC/4iLC+YL0rcZITREluRKGDDMQKh6Z4z/RL91II69yTY8tBQKZCNbzXwZzKZnFCUptDo72ZH1XE4rrvkT2xBL++FvYl8M3E7Y70AJ+2jRop2zpz/75aDwzMntOXuwimEbcketm3FhfLYrSrKXSw=
+	t=1717494181; cv=none; b=omglR+4pu6aIoyRYLgE9HMTJKDtyDP9CvkUi5hT2SCh0vVczP6JrK32CtB3p2UFv7LXpgvAsFulTk4O6RbgwOveM1vB4hFP+89VsELF0ylDDk6wxR4pRhI3XDUSH/4hKfZK9+NfYr9XSTv7ACpwaZvynONXAxYk0ea8bAHtiZEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717491528; c=relaxed/simple;
-	bh=A1Lu4/Qfn3NaKUnBD6gKWsAe453CczOZvm5HrikI3ew=;
+	s=arc-20240116; t=1717494181; c=relaxed/simple;
+	bh=MA1mKVUFSQbibfU52Ruzr7yQn+NzA2FeGtM1hmfDuTo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eKmUtNssYtFQDQqDrOBquH3qWX4tRjlBvm9WNuYYapM1yk91zgSAgW6Gso0QFifzyIeuVq42TFy/FPcJOamyM7XQB3t3ntJe/qa76rqJfIXuqU4akJS8FQ9g6/pY/7K2m20m1Vr8ZrsadaVtwVHGkgvy9JtxN1NBV8LWglplX/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=kqhKiiDx; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=Ae1ke9fs; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=kqhKiiDx; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=Ae1ke9fs; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=ML7StcBJ2SGpzGbOvAjQzLIqGONh1UZx6Kv1whUj2NyieRXDmKBi1XmpO7X6LcJsT3A0jJxEKRS3xgHBPeAy26MQGELt1lIJm7q7KM1LCCaemtNE0zzgWuEwozNiUSmSPN8a5zKpsKaDTuBgNNJJqQ+janJLNzFIBiaHm5jxs1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=BhxBAtgY; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="kqhKiiDx";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="Ae1ke9fs";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="kqhKiiDx";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="Ae1ke9fs"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="BhxBAtgY"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 49BA21F7DA;
-	Tue,  4 Jun 2024 08:58:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1717491524; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4Vtly2399bz9swF;
+	Tue,  4 Jun 2024 11:42:50 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1717494170;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YtUXYNhFm70jM6gspgn60VvPHtybnGMW4KH/IuVSUgo=;
-	b=kqhKiiDx3OHD3PK0kbxs7as3MW9UmY1GVDcZyJ1VqT8T5t0Yni7sOP0XF6nvh5ufuKqId8
-	a6aOZWAHsuVAtLykwB+tS3VqAJGP5d+DKO1y9Bog12U1JH1cXxD7IIBTPm0qpDbTzmbMyO
-	Jl490vmsrTJOxcVwNCcOua3PITMNQu8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1717491524;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YtUXYNhFm70jM6gspgn60VvPHtybnGMW4KH/IuVSUgo=;
-	b=Ae1ke9fsASUD/Xxpx6bjIVpNbnemMaNqfx8bvHyyZuIHA3jrGYIrg/XvhjxyjkNq9lN/ub
-	4O1+DEF0aDuEVVBg==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1717491524; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YtUXYNhFm70jM6gspgn60VvPHtybnGMW4KH/IuVSUgo=;
-	b=kqhKiiDx3OHD3PK0kbxs7as3MW9UmY1GVDcZyJ1VqT8T5t0Yni7sOP0XF6nvh5ufuKqId8
-	a6aOZWAHsuVAtLykwB+tS3VqAJGP5d+DKO1y9Bog12U1JH1cXxD7IIBTPm0qpDbTzmbMyO
-	Jl490vmsrTJOxcVwNCcOua3PITMNQu8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1717491524;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YtUXYNhFm70jM6gspgn60VvPHtybnGMW4KH/IuVSUgo=;
-	b=Ae1ke9fsASUD/Xxpx6bjIVpNbnemMaNqfx8bvHyyZuIHA3jrGYIrg/XvhjxyjkNq9lN/ub
-	4O1+DEF0aDuEVVBg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3CDAB1398F;
-	Tue,  4 Jun 2024 08:58:44 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id KyrZDkTXXmZuIgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 04 Jun 2024 08:58:44 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id AC9F4A086D; Tue,  4 Jun 2024 10:58:43 +0200 (CEST)
-Date: Tue, 4 Jun 2024 10:58:43 +0200
-From: Jan Kara <jack@suse.cz>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
- FS_IOC_FSGETXATTRAT
-Message-ID: <20240604085843.q6qtmtitgefioj5m@quack3>
-References: <20240520164624.665269-4-aalbersh@redhat.com>
- <20240522100007.zqpa5fxsele5m7wo@quack3>
- <snhvkg3lm2lbdgswfzyjzmlmtcwcb725madazkdx4kd6ofqmw6@hiunsuigmq6f>
- <20240523074828.7ut55rhhbawsqrn4@quack3>
- <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
- <20240524161101.yyqacjob42qjcbnb@quack3>
- <20240531145204.GJ52987@frogsfrogsfrogs>
- <20240603104259.gii7lfz2fg7lyrcw@quack3>
- <vbiskxttukwzhjoiic6toscqc6b2qekuwumfpzqp5vkxf6l6ia@pby5fjhlobrb>
- <20240603174259.GB52987@frogsfrogsfrogs>
+	bh=BwfviVSUVjyzK7z0Oz8qcwUlgiOXWr8u7z2/yepDw0E=;
+	b=BhxBAtgYhyhzPeOgmDqd34ZmUeefBR+MfK7CU65OVl+qKZoeSu7FVj9jW2Yr2xBqz9f+r9
+	3ex9Ri1OiQGpL1UkdDImUVZUWHGVarixU1UKzZU9mfn2DHPiB6XHxoeeFKXEe/a40KTUxg
+	sNFnRK149QKjw64Sa1vXgM2HIWt1zD9v+cxhjKCXMDBY+d3Q5/0wmj8vA5AbtfSoVDThLp
+	igxWkSSOnahjECeHmWBYZFdIQxY8Ks1o1YVDyoVau8Hs8SyOKqbOT4t6IrIfgBW/9wYKet
+	5BV2x1wNgCjnHAXATAQjCl4SiKrI+C+rBAuScByIpi7TjNNMCFQJMEya2imJaA==
+Date: Tue, 4 Jun 2024 09:42:45 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: david@fromorbit.com, chandan.babu@oracle.com, akpm@linux-foundation.org,
+	brauner@kernel.org, djwong@kernel.org, linux-kernel@vger.kernel.org,
+	hare@suse.de, john.g.garry@oracle.com, gost.dev@samsung.com,
+	yang@os.amperecomputing.com, p.raghav@samsung.com,
+	cl@os.amperecomputing.com, linux-xfs@vger.kernel.org, hch@lst.de,
+	mcgrof@kernel.org, linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v6 03/11] filemap: allocate mapping_min_order folios in
+ the page cache
+Message-ID: <20240604094245.zn5hqezd5q5eoehv@quentin>
+References: <20240529134509.120826-1-kernel@pankajraghav.com>
+ <20240529134509.120826-4-kernel@pankajraghav.com>
+ <Zl20pc-YlIWCSy6Z@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -99,154 +57,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240603174259.GB52987@frogsfrogsfrogs>
-X-Spam-Flag: NO
-X-Spam-Score: -3.80
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	ARC_NA(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[7];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email]
+In-Reply-To: <Zl20pc-YlIWCSy6Z@casper.infradead.org>
 
-On Mon 03-06-24 10:42:59, Darrick J. Wong wrote:
-> On Mon, Jun 03, 2024 at 06:28:47PM +0200, Andrey Albershteyn wrote:
-> > On 2024-06-03 12:42:59, Jan Kara wrote:
-> > > On Fri 31-05-24 07:52:04, Darrick J. Wong wrote:
-> > > > On Fri, May 24, 2024 at 06:11:01PM +0200, Jan Kara wrote:
-> > > > > On Thu 23-05-24 13:16:48, Andrey Albershteyn wrote:
-> > > > > > On 2024-05-23 09:48:28, Jan Kara wrote:
-> > > > > > > Hi!
-> > > > > > > 
-> > > > > > > On Wed 22-05-24 12:45:09, Andrey Albershteyn wrote:
-> > > > > > > > On 2024-05-22 12:00:07, Jan Kara wrote:
-> > > > > > > > > Hello!
-> > > > > > > > > 
-> > > > > > > > > On Mon 20-05-24 18:46:21, Andrey Albershteyn wrote:
-> > > > > > > > > > XFS has project quotas which could be attached to a directory. All
-> > > > > > > > > > new inodes in these directories inherit project ID set on parent
-> > > > > > > > > > directory.
-> > > > > > > > > > 
-> > > > > > > > > > The project is created from userspace by opening and calling
-> > > > > > > > > > FS_IOC_FSSETXATTR on each inode. This is not possible for special
-> > > > > > > > > > files such as FIFO, SOCK, BLK etc. as opening them returns a special
-> > > > > > > > > > inode from VFS. Therefore, some inodes are left with empty project
-> > > > > > > > > > ID. Those inodes then are not shown in the quota accounting but
-> > > > > > > > > > still exist in the directory.
-> > > > > > > > > > 
-> > > > > > > > > > This patch adds two new ioctls which allows userspace, such as
-> > > > > > > > > > xfs_quota, to set project ID on special files by using parent
-> > > > > > > > > > directory to open FS inode. This will let xfs_quota set ID on all
-> > > > > > > > > > inodes and also reset it when project is removed. Also, as
-> > > > > > > > > > vfs_fileattr_set() is now will called on special files too, let's
-> > > > > > > > > > forbid any other attributes except projid and nextents (symlink can
-> > > > > > > > > > have one).
-> > > > > > > > > > 
-> > > > > > > > > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > > > > > > > > 
-> > > > > > > > > I'd like to understand one thing. Is it practically useful to set project
-> > > > > > > > > IDs for special inodes? There is no significant disk space usage associated
-> > > > > > > > > with them so wrt quotas we are speaking only about the inode itself. So is
-> > > > > > > > > the concern that user could escape inode project quota accounting and
-> > > > > > > > > perform some DoS? Or why do we bother with two new somewhat hairy ioctls
-> > > > > > > > > for something that seems as a small corner case to me?
-> > > > > > > > 
-> > > > > > > > So there's few things:
-> > > > > > > > - Quota accounting is missing only some special files. Special files
-> > > > > > > >   created after quota project is setup inherit ID from the project
-> > > > > > > >   directory.
-> > > > > > > > - For special files created after the project is setup there's no
-> > > > > > > >   way to make them project-less. Therefore, creating a new project
-> > > > > > > >   over those will fail due to project ID miss match.
-> > > > > > > > - It wasn't possible to hardlink/rename project-less special files
-> > > > > > > >   inside a project due to ID miss match. The linking is fixed, and
-> > > > > > > >   renaming is worked around in first patch.
-> > > > > > > > 
-> > > > > > > > The initial report I got was about second and last point, an
-> > > > > > > > application was failing to create a new project after "restart" and
-> > > > > > > > wasn't able to link special files created beforehand.
-> > > > > > > 
-> > > > > > > I see. OK, but wouldn't it then be an easier fix to make sure we *never*
-> > > > > > > inherit project id for special inodes? And make sure inodes with unset
-> > > > > > > project ID don't fail to be linked, renamed, etc...
-> > > > > > 
-> > > > > > But then, in set up project, you can cross-link between projects and
-> > > > > > escape quota this way. During linking/renaming if source inode has
-> > > > > > ID but target one doesn't, we won't be able to tell that this link
-> > > > > > is within the project.
-> > > > > 
-> > > > > Well, I didn't want to charge these special inodes to project quota at all
-> > > > > so "escaping quota" was pretty much what I suggested to do. But my point
-> > > > > was that since the only thing that's really charged for these inodes is the
-> > > > > inodes itself then does this small inaccuracy really matter in practice?
-> > > > > Are we afraid the user is going to fill the filesystem with symlinks?
-> > > > 
-> > > > I thought the worry here is that you can't fully reassign the project
-> > > > id for a directory tree unless you have an *at() version of the ioctl
-> > > > to handle the special files that you can't open directly?
-> > > > 
-> > > > So you start with a directory tree that's (say) 2% symlinks and project
-> > > > id 5.  Later you want to set project id 7 on that subtree, but after the
-> > > > incomplete change, projid 7 is charged for 98% of the tree, and 2% are
-> > > > still stuck on projid 5.  This is a mess, and if enforcement is enabled
-> > > > you've just broken it in a way that can't be fixed aside from recreating
-> > > > those files.
-> > > 
-> > > So the idea I'm trying to propose (and apparently I'm failing to explain it
-> > > properly) is:
-> > > 
-> > > When creating special inode, set i_projid = 0 regardless of directory
-> > > settings.
-> > > 
-> > > When creating hardlink or doing rename, if i_projid of dentry is 0, we
-> > > allow the operation.
-> > > 
-> > > Teach fsck to set i_projid to 0 when inode is special.
-> > > 
-> > > As a result, AFAICT no problem with hardlinks, renames or similar. No need
-> > > for special new ioctl or syscall. The downside is special inodes escape
-> > > project quota accounting. Do we care?
-> > 
-> > I see. But is it fine to allow fill filesystem with special inodes?
-> > Don't know if it can be used somehow but this is exception from
-> > isoft/ihard limits then.
-> > 
-> > I don't see issues with this approach also, if others don't have
-> > other points or other uses for those new syscalls, I can go with
-> > this approach.
+On Mon, Jun 03, 2024 at 01:18:45PM +0100, Matthew Wilcox wrote:
+> On Wed, May 29, 2024 at 03:45:01PM +0200, Pankaj Raghav (Samsung) wrote:
+> > @@ -1919,8 +1921,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+> >  		folio_wait_stable(folio);
+> >  no_page:
+> >  	if (!folio && (fgp_flags & FGP_CREAT)) {
+> > -		unsigned order = FGF_GET_ORDER(fgp_flags);
+> > +		unsigned int min_order = mapping_min_folio_order(mapping);
+> > +		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
+> >  		int err;
+> > +		index = mapping_align_start_index(mapping, index);
+> >  
+> >  		if ((fgp_flags & FGP_WRITE) && mapping_can_writeback(mapping))
+> >  			gfp |= __GFP_WRITE;
+> > @@ -1958,7 +1962,7 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+> >  				break;
+> >  			folio_put(folio);
+> >  			folio = NULL;
+> > -		} while (order-- > 0);
+> > +		} while (order-- > min_order);
 > 
-> I do -- allowing unpriviledged users to create symlinks that consume
-> icount (and possibly bcount) in the root project breaks the entire
-> enforcement mechanism.  That's not the way that project quota has worked
-> on xfs and it would be quite rude to nullify the PROJINHERIT flag bit
-> only for these special cases.
+> I'd argue you also need to change:
+> 
+> -                       if (order > 0)
+> +			if (order > min_order)
+>                                 alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
+> 
+> since that is the last point at which we can fall back.  If we can't
+> immediately allocate a min_order folio, we want to retry, and we
+> want to warn if we can't get it.
 
-OK, fair enough. I though someone will hate this. I'd just like to
-understand one thing: Owner of the inode can change the project ID to 0
-anyway so project quotas are more like a cooperative space tracking scheme
-anyway. If you want to escape it, you can. So what are you exactly worried
-about? Is it the container usecase where from within the user namespace you
-cannot change project IDs?
+That is a good point. It is also a feedback to the admin if they start
+using LBS and assess the memory requirement based on memory alloc
+warning?
 
-Anyway I just wanted to have an explicit decision that the simple solution
-is not good enough before we go the more complex route ;).
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--
+Pankaj
