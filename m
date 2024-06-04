@@ -1,75 +1,41 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1801814EC44
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Jun 2024 23:38:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA591D535;
+	Tue,  4 Jun 2024 23:53:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717544304; cv=none; b=WOycstdZn+Jrw32uSeE90Endu4TkLGtOlMmewlM9xsoajPy6Le0w0Xe/on2yntGPwyAg2nwg7ieLajl4ZBfengXJ8jhNulvdxAnt2b+0a6AM12v9BgyRP8cbt/hbF7eToRbOslXWzj8Bg+uU4tPW5MCLAbJhQcBUeWnGY1b8Ss8=
+	t=1717545234; cv=none; b=p5nBrAMbHK/7w4Cp1iL3toYnHH7k7GPz/rt1vwTDuxbjoXgZqXCEYyL+4x4ahhGnSbx1EiXxn8iwaU0OfXzgl7oTXOtAcQhP7Jv9to4WQu4+BUE2CQOQTQrIcUnp6J//dq8dJXt4590Wf9eXcLUm5PHoM1fUVafDo6+E4Ce5u4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717544304; c=relaxed/simple;
-	bh=ca+wPik1uOiAzqp5kmKAVjchH0HdPECP6GFtThndtPk=;
+	s=arc-20240116; t=1717545234; c=relaxed/simple;
+	bh=FZh/FIXyEigTjCFJyIyylMlixwHk6vrOpwsPnd7fovE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X9rjlQae6N+KDkraUZcfUQgDmOUDkQXLv/vtlTR5ZNC1r1tZlJylGM7PzX0DsGXG+cPDzgudCPSG9luGSUfdS2eS6HIlDaAo9EMY+DfQ0bz50C3ipXNy29y8S0eIW2HYfajUzp1fLwxTemjioZX6kskAUdLhu5/ay3GeSHNHfUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=PF5JQpZv; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=TaUR399c0U+wQmtq0ZSOzFnzU0q5KuDCKbJWYFsp8Ao5/TwCOBq7EwlWJVIej+EdHfqU88q2nrWFwB/+WUGuNbboCnMJhrsIszBOe61EuNde1TszDStuBxJ0sSwm5KXbCLEk5/prKbs99lnc9OY9o4+Sq85eM1+1AEq2sXe4hU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N63wcX3K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="PF5JQpZv"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1f44b45d6abso15255955ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2024 16:38:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717544302; x=1718149102; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=N0aCZBQtCU83mtJ7BQNmsemGUrA8Pwn3mZJbsHt/hUM=;
-        b=PF5JQpZvpS1wNAP4XFsEIJFVgRj0QkMBw7fkTmyMt8zebhS9zfqccFFFGR6ZCTE1fp
-         KN673JL3b92gDyA7qtxGe2jAPd9dZ4Q5QoRMPiPtOBIspFE5hW4f2aebQpIkjtioSDSA
-         RWtn2ObZ7H0pwceKmJM0OA8mYGvncUm3YD9WvBnk7RzRcEIqoZcsZ5HQMNXEE+Q8zrS4
-         fMP93R2BUYDZ/+UDoDPArWPiffa/smll1JQiE8jjg30jBY/lnEshsNOK5CITpXXvGY0A
-         OI6V570x4QdugSqa3+s7tNR02maHww7TOmD7OCclC5gwk5O9nsSxRwk4DzXfD50v+959
-         fMpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717544302; x=1718149102;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=N0aCZBQtCU83mtJ7BQNmsemGUrA8Pwn3mZJbsHt/hUM=;
-        b=X3B+VNOyxVxNs8l8J0ygfm/AtYaET98UqoC0E6oc0PJhAVCajmDINQQnG2V2cXLOsn
-         Kgo7xKr/VqJyLqVhJlI4OZ6T9nrLr/YeQY/hv94xcAq1XFs2pbXUPxVf7MJS4WJRWXex
-         vSWYgiOaz6U99if2RWl/TkPMGbrSpu/TlUdKpM2SpeHXgzbexto2izlD4jFkAJIAKaE+
-         q01Tf5DYXvJeKp7/tKgp+N6FhNoU8B4Uwgw+y3WnK3mRS+/Abcy+ZNeXnO17nsXX6gXU
-         LGw6BHD6semOjlOWlqD/r1XXSQ3SnKuu1QaDlhhD0HMCcQYJnXFrcFhyUTw5GsWzQVEw
-         IY7w==
-X-Forwarded-Encrypted: i=1; AJvYcCV7cFXipBscJ+V8c5Vv/uMFUyNN91t7Vut7ZXGJmGDoPapRXNl/w198gg37a53r853zWr6tATf8CG2bijuamCLI1aXCxNmWWvnC
-X-Gm-Message-State: AOJu0YynJPJA8ay0wwYg7Uk9fdqTfjaTol5JoL0Hao4zRgtp0z/j3z2H
-	AztHXmfcXLuMqVkHxMXhHe8VYd8NcidLjcFZ3olHgDIjWZ+N8JhTRMlfh6b71/o=
-X-Google-Smtp-Source: AGHT+IEKmRhZJswXWNpPWzjD5VxSqHIUYsSj148xPMfo2/HFBa3XHAJNKZNKM0XpWv5O7SYcklEy5g==
-X-Received: by 2002:a17:902:f545:b0:1f6:91a1:88a0 with SMTP id d9443c01a7336-1f6a5a26f3amr12387925ad.35.1717544302135;
-        Tue, 04 Jun 2024 16:38:22 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f6323ddac9sm91405275ad.173.2024.06.04.16.38.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Jun 2024 16:38:21 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sEdjO-004YyF-0a;
-	Wed, 05 Jun 2024 09:38:18 +1000
-Date: Wed, 5 Jun 2024 09:38:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	djwong@kernel.org, hch@infradead.org, brauner@kernel.org,
-	chandanbabu@kernel.org, jack@suse.cz, willy@infradead.org,
-	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [RFC PATCH v4 1/8] iomap: zeroing needs to be pagecache aware
-Message-ID: <Zl+lanp0K1N7yCcG@dread.disaster.area>
-References: <20240529095206.2568162-1-yi.zhang@huaweicloud.com>
- <20240529095206.2568162-2-yi.zhang@huaweicloud.com>
- <ZlxRz9LPNuoOZOtl@bfoster>
- <cc7e0a68-185f-a3e0-d60a-989b8b014608@huaweicloud.com>
- <Zl3VPA5mVUP4iC3R@bfoster>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N63wcX3K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29B05C2BBFC;
+	Tue,  4 Jun 2024 23:53:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717545234;
+	bh=FZh/FIXyEigTjCFJyIyylMlixwHk6vrOpwsPnd7fovE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=N63wcX3KpIZBgWVJEQrRpqqETuhjgPOFNBBZwn3H2Tj+IYLlPO9ftmUGEWFMvzKQy
+	 qacq6mf87l+Dayqb+cEM5KoEVGDV4pyolAC1E4S/zlDjz5ZB8fgTajzSC1FUbA9cYI
+	 kYmHAZA/xi9Xd9LMCgwu1EK5Nsl5nswavO9aAYMNeNrY8kc6ANl43c9TLUMqs5LlCO
+	 dzJeM8zRgt3zObsFYQ6j9z3DrGU28TH5HbmJHL8a67xVz1jRlHsQb8MAv1g4EBQHyv
+	 325ISWJWBhwIcc/IeEkk5XXmrreTValL4m3LTGfKXiTrUfNO9AltXLjP6bq0srGuG8
+	 Sq7MrWHYS6Fzw==
+Date: Tue, 4 Jun 2024 16:53:53 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Zizhi Wo <wozizhi@huawei.com>, chandan.babu@oracle.com,
+	dchinner@redhat.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, yangerkun@huawei.com
+Subject: Re: [PATCH] xfs: Fix file creation failure
+Message-ID: <20240604235353.GG52987@frogsfrogsfrogs>
+References: <20240604071121.3981686-1-wozizhi@huawei.com>
+ <Zl+cjKxrncOKbas7@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,176 +44,219 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zl3VPA5mVUP4iC3R@bfoster>
+In-Reply-To: <Zl+cjKxrncOKbas7@dread.disaster.area>
 
-On Mon, Jun 03, 2024 at 10:37:48AM -0400, Brian Foster wrote:
-> On Mon, Jun 03, 2024 at 05:07:02PM +0800, Zhang Yi wrote:
-> > On 2024/6/2 19:04, Brian Foster wrote:
-> > > On Wed, May 29, 2024 at 05:51:59PM +0800, Zhang Yi wrote:
-> > >> From: Dave Chinner <dchinner@redhat.com>
-> > >>
-> > >> Unwritten extents can have page cache data over the range being
-> > >> zeroed so we can't just skip them entirely. Fix this by checking for
-> > >> an existing dirty folio over the unwritten range we are zeroing
-> > >> and only performing zeroing if the folio is already dirty.
-> > >>
-> > >> XXX: how do we detect a iomap containing a cow mapping over a hole
-> > >> in iomap_zero_iter()? The XFS code implies this case also needs to
-> > >> zero the page cache if there is data present, so trigger for page
-> > >> cache lookup only in iomap_zero_iter() needs to handle this case as
-> > >> well.
-> > >>
-> > >> Before:
-> > >>
-> > >> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
-> > >> path /mnt/scratch/foo, 50000 iters
-> > >>
-> > >> real    0m14.103s
-> > >> user    0m0.015s
-> > >> sys     0m0.020s
-> > >>
-> > >> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
-> > >> path /mnt/scratch/foo, 50000 iters
-> > >> % time     seconds  usecs/call     calls    errors syscall
-> > >> ------ ----------- ----------- --------- --------- ----------------
-> > >>  85.90    0.847616          16     50000           ftruncate
-> > >>  14.01    0.138229           2     50000           pwrite64
-> > >> ....
-> > >>
-> > >> After:
-> > >>
-> > >> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
-> > >> path /mnt/scratch/foo, 50000 iters
-> > >>
-> > >> real    0m0.144s
-> > >> user    0m0.021s
-> > >> sys     0m0.012s
-> > >>
-> > >> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
-> > >> path /mnt/scratch/foo, 50000 iters
-> > >> % time     seconds  usecs/call     calls    errors syscall
-> > >> ------ ----------- ----------- --------- --------- ----------------
-> > >>  53.86    0.505964          10     50000           ftruncate
-> > >>  46.12    0.433251           8     50000           pwrite64
-> > >> ....
-> > >>
-> > >> Yup, we get back all the performance.
-> > >>
-> > >> As for the "mmap write beyond EOF" data exposure aspect
-> > >> documented here:
-> > >>
-> > >> https://lore.kernel.org/linux-xfs/20221104182358.2007475-1-bfoster@redhat.com/
-> > >>
-> > >> With this command:
-> > >>
-> > >> $ sudo xfs_io -tfc "falloc 0 1k" -c "pwrite 0 1k" \
-> > >>   -c "mmap 0 4k" -c "mwrite 3k 1k" -c "pwrite 32k 4k" \
-> > >>   -c fsync -c "pread -v 3k 32" /mnt/scratch/foo
-> > >>
-> > >> Before:
-> > >>
-> > >> wrote 1024/1024 bytes at offset 0
-> > >> 1 KiB, 1 ops; 0.0000 sec (34.877 MiB/sec and 35714.2857 ops/sec)
-> > >> wrote 4096/4096 bytes at offset 32768
-> > >> 4 KiB, 1 ops; 0.0000 sec (229.779 MiB/sec and 58823.5294 ops/sec)
-> > >> 00000c00:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58
-> > >> XXXXXXXXXXXXXXXX
-> > >> 00000c10:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58
-> > >> XXXXXXXXXXXXXXXX
-> > >> read 32/32 bytes at offset 3072
-> > >> 32.000000 bytes, 1 ops; 0.0000 sec (568.182 KiB/sec and 18181.8182
-> > >>    ops/sec
-> > >>
-> > >> After:
-> > >>
-> > >> wrote 1024/1024 bytes at offset 0
-> > >> 1 KiB, 1 ops; 0.0000 sec (40.690 MiB/sec and 41666.6667 ops/sec)
-> > >> wrote 4096/4096 bytes at offset 32768
-> > >> 4 KiB, 1 ops; 0.0000 sec (150.240 MiB/sec and 38461.5385 ops/sec)
-> > >> 00000c00:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> > >> ................
-> > >> 00000c10:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> > >> ................
-> > >> read 32/32 bytes at offset 3072
-> > >> 32.000000 bytes, 1 ops; 0.0000 sec (558.036 KiB/sec and 17857.1429
-> > >>    ops/sec)
-> > >>
-> > >> We see that this post-eof unwritten extent dirty page zeroing is
-> > >> working correctly.
-> > >>
-> > > 
-> > > I've pointed this out in the past, but IIRC this implementation is racy
-> > > vs. reclaim. Specifically, relying on folio lookup after mapping lookup
-> > > doesn't take reclaim into account, so if we look up an unwritten mapping
-> > > and then a folio flushes and reclaims by the time the scan reaches that
-> > > offset, it incorrectly treats that subrange as already zero when it
-> > > actually isn't (because the extent is actually stale by that point, but
-> > > the stale extent check is skipped).
-> > > 
+On Wed, Jun 05, 2024 at 09:00:28AM +1000, Dave Chinner wrote:
+> On Tue, Jun 04, 2024 at 03:11:21PM +0800, Zizhi Wo wrote:
+> > We have an xfs image that contains only 2 AGs, the first AG is full and
+> > the second AG is empty, then a concurrent file creation and little writing
+> > could unexpectedly return -ENOSPC error since there is a race window that
+> > the allocator could get the wrong agf->agf_longest.
 > > 
-> > Hello, Brian!
+> > Write file process steps:
+> > 1) Find the entry that best meets the conditions, then calculate the start
+> > address and length of the remaining part of the entry after allocation.
+> > 2) Delete this entry. Because the second AG is empty, the btree in its agf
+> > has only one record, and agf->agf_longest will be set to 0 after deletion.
+> > 3) Insert the remaining unused parts of this entry based on the
+> > calculations in 1), and update the agf->agf_longest.
 > > 
-> > I'm confused, how could that happen? We do stale check under folio lock,
-> > if the folio flushed and reclaimed before we get&lock that folio in
-> > iomap_zero_iter()->iomap_write_begin(), the ->iomap_valid() would check
-> > this stale out and zero again in the next iteration. Am I missing
-> > something?
+> > Create file process steps:
+> > 1) Check whether there are free inodes in the inode chunk.
+> > 2) If there is no free inode, check whether there has space for creating
+> > inode chunks, perform the no-lock judgment first.
+> > 3) If the judgment succeeds, the judgment is performed again with agf lock
+> > held. Otherwire, an error is returned directly.
 > > 
+> > If the write process is in step 2) but not go to 3) yet, the create file
+> > process goes to 2) at this time, it will be mistaken for no space,
+> > resulting in the file system still has space but the file creation fails.
+> > 
+> > 	Direct write				Create file
+> > xfs_file_write_iter
+> >  ...
+> >  xfs_direct_write_iomap_begin
+> >   xfs_iomap_write_direct
+> >    ...
+> >    xfs_alloc_ag_vextent_near
+> >     xfs_alloc_cur_finish
+> >      xfs_alloc_fixup_trees
+> >       xfs_btree_delete
+> >        xfs_btree_delrec
+> > 	xfs_allocbt_update_lastrec
+> > 	// longest = 0 because numrec == 0.
+> > 	 agf->agf_longest = len = 0
+> > 					   xfs_create
+> > 					    ...
+> > 					     xfs_dialloc
+> > 					      ...
+> > 					      xfs_alloc_fix_freelist
+> > 					       xfs_alloc_space_available
+> > 					-> as longest=0, it will return
+> > 					false, no space for inode alloc.
 > 
-> Hi Yi,
+> Ok, so this is a another attempt to address the problem Ye Bin
+> attempted to fix here:
 > 
-> Yep, that is my understanding of how the revalidation thing works in
-> general as well. The nuance in this particular case is that no folio
-> exists at the associated offset. Therefore, the reval is skipped in
-> iomap_write_begin(), iomap_zero_iter() skips over the range as well, and
-> the operation carries on as normal.
->> 
-> Have you tried the test sequence above? I just retried on latest master
-> plus this series and it still trips for me. I haven't redone the low
-> level analysis, but in general what this is trying to show is something
-> like the following...
+> https://lore.kernel.org/linux-xfs/20240419061848.1032366-1-yebin10@huawei.com/
 > 
-> Suppose we start with an unwritten block on disk with a dirty folio in
-> cache:
+> > Fix this issue by adding the bc_free_longest field to the xfs_btree_cur_t
+> > structure to store the potential longest count that will be updated. The
+> > assignment is done in xfs_alloc_fixup_trees() and xfs_free_ag_extent().
 > 
-> - iomap looks up the extent and finds the unwritten mapping.
-> - Reclaim kicks in and writes back the page and removes it from cache.
+> I outlined how this should be fixed in the above thread:
+> 
+> https://lore.kernel.org/linux-xfs/ZiWgRGWVG4aK1165@dread.disaster.area/
+> 
+> This is what I said:
+> 
+> | What we actually want is for pag->pagf_longest not to change
+> | transiently to zero in xfs_alloc_fixup_trees(). If the delrec that
+> | zeroes the pagf_longest field is going to follow it up with an
+> | insrec that will set it back to a valid value, we really should not
+> | be doing the zeroing in the first place.
+> | 
+> | Further, the only btree that tracks the right edge of the btree is
+> | the by-count allocbt. This isn't "generic" functionality, even
+> | though it is implemented through the generic btree code. If we lift
+> | ->update_lastrec from the generic code and do it directly in
+> | xfs_alloc.c whenever we are finished with a by-count tree update
+> | and the cursor points to a record in the right-most leaf of the
+> | tree, then we run the lastrec update directly at that point. 
+> | By decoupling the lastrec updates from the individual record
+> | manipulations, we can make the transients disappear completely.
+> 
+> I'm not sure if this patch is an attempt to implement this - there
+> is no reference in the commit description to this previous attempt
+> to fix the issue, nor is the any discussion of why this particular
+> solution was chosen.
+> 
+> In future, when you are trying to fix an issue that has previously
+> been discussed/presented on the list, please reference it and
+> provide a link to the previous discussions in the changelog for the
+> new version of the patchset fixing the issue.
 
-To be pedantic, reclaim doesn't write folios back - we haven't done
-that for the best part of a decade on XFS. We don't even have a
-->writepage method for reclaim to write back pages anymore.
+Aha, that's why this seemed oddly familiar.
 
-Hence writeback has to come from background flusher threads hitting
-that specific folio, then IO completion running and converting the
-unwritten extent, then reclaim hitting that folio, all while the
-zeroing of the current iomap is being walked and zeroed.
+--D
 
-That makes it an extremely rare and difficult condition to hit. Yes,
-it's possible, but it's also something we can easily detect. So as
-long as detection is low cost, the cost of resolution when such a
-rare event is detected isn't going to be noticed by anyone.
-
->   The underlying block is no longer unwritten (current mapping is now
->   stale).
-> - iomap_zero_iter() processes the associated offset. iomap_get_folio()
->   clears FGP_CREAT, no folio is found.
-
-Actually, this is really easy to fix - we simply revalidate the
-mapping at this point rather than just skipping the folio range. If
-the mapping has changed because it's now written, the zeroing code
-backs out and gets a new mapping that reflects the changed state of
-this range.
-
-However, with the above cost analysis in mind, a lower overhead
-common case alternative might be to only revalidate the mapping at
-->iomap_end() time. If the mapping has changed while zeroing, we
-return -EBUSY/-ESTALE and that triggers the zeroing to restart from
-the offset at the beginning of the "stale" iomap.  The runtime cost
-is one extra mapping revalidation call per mapping, and the
-resolution cost is refetching and zeroing the range of a single
-unwritten iomap.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > Reported by: Ye Bin <yebin10@huawei.com>
+> > Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_alloc.c       | 14 ++++++++++++++
+> >  fs/xfs/libxfs/xfs_alloc_btree.c |  9 ++++++++-
+> >  fs/xfs/libxfs/xfs_btree.h       |  1 +
+> >  3 files changed, 23 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index 6c55a6e88eba..86ba873d57a8 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -577,6 +577,13 @@ xfs_alloc_fixup_trees(
+> >  		nfbno2 = rbno + rlen;
+> >  		nflen2 = (fbno + flen) - nfbno2;
+> >  	}
+> > +
+> > +	/*
+> > +	 * Record the potential maximum free length in advance.
+> > +	 */
+> > +	if (nfbno1 != NULLAGBLOCK || nfbno2 != NULLAGBLOCK)
+> > +		cnt_cur->bc_ag.bc_free_longest = XFS_EXTLEN_MAX(nflen1, nflen2);
+> > +
+> 
+> Why do we store the length of a random extent being freed here?
+> nflen1/2 almost always have nothing to do with the longest free
+> space extent in the tree, they are just the new free space extents
+> we are insering into a random location in the free space tree.
+> 
+> >  	/*
+> >  	 * Delete the entry from the by-size btree.
+> >  	 */
+> > @@ -2044,6 +2051,13 @@ xfs_free_ag_extent(
+> >  	 * Now allocate and initialize a cursor for the by-size tree.
+> >  	 */
+> >  	cnt_cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
+> > +	/*
+> > +	 * Record the potential maximum free length in advance.
+> > +	 */
+> > +	if (haveleft)
+> > +		cnt_cur->bc_ag.bc_free_longest = ltlen;
+> > +	if (haveright)
+> > +		cnt_cur->bc_ag.bc_free_longest = gtlen;
+> 
+> That doesn't look correct. At this point in the code, ltlen/gtlen
+> are the sizes of the physically adjacent freespace extents that we
+> are going to merge the newly freed extent with. i.e. the new
+> freespace extent is going to have one of 4 possible values:
+> 
+> 	no merge: len
+> 	left merge: ltlen + len
+> 	right merge: gtlen + len
+> 	both merge: ltlen + gtlen + len
+> 
+> So regardless of anything else, this code isn't setting the longest
+> freespace extent in teh AGF to the lenght of the longest freespace
+> extent in the filesystem.
+> 
+> Which leads me to ask: how did you test this code? This bug should
+> have been triggering verifier, repair and scrub failures quite
+> quickly with fstests....
+> 
+> >  	/*
+> >  	 * Have both left and right contiguous neighbors.
+> >  	 * Merge all three into a single free block.
+> > diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+> > index 6ef5ddd89600..8e7d1e0f1a63 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+> > @@ -161,7 +161,14 @@ xfs_allocbt_update_lastrec(
+> >  			rrp = XFS_ALLOC_REC_ADDR(cur->bc_mp, block, numrecs);
+> >  			len = rrp->ar_blockcount;
+> >  		} else {
+> > -			len = 0;
+> > +			/*
+> > +			 * Update in advance to prevent file creation failure
+> > +			 * for concurrent processes even though there is no
+> > +			 * numrec currently.
+> > +			 * And there's no need to worry as the value that no
+> > +			 * less than bc_free_longest will be inserted later.
+> > +			 */
+> > +			len = cpu_to_be32(cur->bc_ag.bc_free_longest);
+> >  		}
+> 
+> So this is in the LASTREC_DELREC case when the last record is
+> removed from the btree. This is what causes the transient state
+> as we do this when deleting a record to trim it and then re-insert
+> the remainder back into the by-count btree.
+> 
+> Writing some random transient value into the AGF *and journalling
+> it* means we creating a transient on-disk format structure
+> corruption and potentially writing it to persistent storage (i.e.
+> the journal). The structure is, at least, not consistent in memory
+> because the free space tree is empty at this point in time, whilst
+> the agf->longest field says it has a free space available. This
+> could trip verifiers, be flagged as corruption by xfs_scrub/repair,
+> etc.
+> 
+> Now, this *might be safe* because we *may* clean it up later in the
+> transaction, but if this really is the last extent being removed
+> from the btree and a cursor has previously been used to do other
+> insert and free operations that set this field, then we trip over
+> this stale inforamtion and write a corrupt structure to disk. That's
+> not good.
+> 
+> As I said above, this "last record tracking" needs to be ripped out
+> of the generic btree code because only the by-count btree uses it.
+> Then it can be updated at the end of the by-count btree update
+> process in the allocation code (i.e. after all record manipulations
+> are done in the transaction) and that avoids this transient caused
+> by updating the last record on every btree record update that is
+> done.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
