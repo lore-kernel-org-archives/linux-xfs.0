@@ -1,31 +1,31 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D35F4F5;
-	Wed,  5 Jun 2024 02:52:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D7292207A;
+	Wed,  5 Jun 2024 03:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717555940; cv=none; b=KLjAy+BmpHiBFWIMs8B/dmal8eAAf5YK+MPagQa4iVKDhv4INyl0UWWqGpIwONa/abXt7LinxEyYwuRzVT6CTRoVAU7ngu28D1tBloWXVsixxIrLxQXg5sSIqlldaDbokzQ2k9S3OxpHqKviddoQfHLVMuCye4X6+UIeJ+Eo/ZU=
+	t=1717558707; cv=none; b=d9fBOL9w15dsDO3R+vuF7SdjcuoeOKWm2IP3y4Gsjvz2leKedScSGigsneMcIysuNnI1G3jVmRBfuSLsSXdkArrM54XnxeJrK/qKJxT+k/ZLNBRLWxA2kRB5301heuTligEI+rSoaJXeJlOhrGBXGZne1aVRsyO1orU3wHCtDqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717555940; c=relaxed/simple;
-	bh=wXKxS3UPolIUVUt+HRGtpBp5s+0V5rWlPEcP7qkoA88=;
+	s=arc-20240116; t=1717558707; c=relaxed/simple;
+	bh=Kh/BhKlMN69BHMHjF2WDbTITZdz1qKhM7c02xREeMeI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=hHuNXmxzzsSkiBnBnWQkICqPAPukYp/d0g1qxQBS4h8CzhEjic8eU1tWVfKI4hkewq1JWDt+HrriPUw3HJEdyanLovW3XPJWi6+4rFLq+nteasZFG1xcXadcI2P4lCAQ/BhcXA3DHQSLbuc8qpyw7CtkdsGnfGid1pvmpn9bGPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+	 In-Reply-To:Content-Type; b=abvlqgaPFBqRzjlr337PBqlJ5B1xlEyde18Zw4o6DI8T9HB6lcHtslphE72m/LpoExw0ftucAq/eCCSvb1PDzGVw6OJiCs6DwKEFabB0/z5JabznD3tPRy32tE+INqrUlwvnzw7/oHJ30QKHjUjwW0gsVymqHBvH4GvN/ko2Jhk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4VvBjF3tBnz1S9Tl;
-	Wed,  5 Jun 2024 10:48:17 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4VvCnM29byzclbT;
+	Wed,  5 Jun 2024 11:36:55 +0800 (CST)
 Received: from canpemm500010.china.huawei.com (unknown [7.192.105.118])
-	by mail.maildlp.com (Postfix) with ESMTPS id 9429F18007E;
-	Wed,  5 Jun 2024 10:52:13 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 40D40180085;
+	Wed,  5 Jun 2024 11:38:19 +0800 (CST)
 Received: from [10.174.176.88] (10.174.176.88) by
  canpemm500010.china.huawei.com (7.192.105.118) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Wed, 5 Jun 2024 10:51:32 +0800
-Message-ID: <ba3cb00b-1d05-4ac9-b14e-e73e65cc4017@huawei.com>
-Date: Wed, 5 Jun 2024 10:51:31 +0800
+ 15.1.2507.39; Wed, 5 Jun 2024 11:38:18 +0800
+Message-ID: <f42d35b8-7c04-4d69-b6fe-07b9e149d262@huawei.com>
+Date: Wed, 5 Jun 2024 11:38:18 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,22 +34,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] xfs: Fix file creation failure
-To: Dave Chinner <david@fromorbit.com>
-CC: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <chandan.babu@oracle.com>, <dchinner@redhat.com>,
 	<linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<yangerkun@huawei.com>
 References: <20240604071121.3981686-1-wozizhi@huawei.com>
- <Zl+cjKxrncOKbas7@dread.disaster.area>
+ <20240604155648.GF52987@frogsfrogsfrogs>
 From: Zizhi Wo <wozizhi@huawei.com>
-In-Reply-To: <Zl+cjKxrncOKbas7@dread.disaster.area>
+In-Reply-To: <20240604155648.GF52987@frogsfrogsfrogs>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  canpemm500010.china.huawei.com (7.192.105.118)
 
 
 
-在 2024/6/5 7:00, Dave Chinner 写道:
+在 2024/6/4 23:56, Darrick J. Wong 写道:
 > On Tue, Jun 04, 2024 at 03:11:21PM +0800, Zizhi Wo wrote:
 >> We have an xfs image that contains only 2 AGs, the first AG is full and
 >> the second AG is empty, then a concurrent file creation and little writing
@@ -97,51 +97,14 @@ X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
 >> 					       xfs_alloc_space_available
 >> 					-> as longest=0, it will return
 >> 					false, no space for inode alloc.
-> 
-> Ok, so this is a another attempt to address the problem Ye Bin
-> attempted to fix here:
-> 
-> https://lore.kernel.org/linux-xfs/20240419061848.1032366-1-yebin10@huawei.com/
-> 
+>>
 >> Fix this issue by adding the bc_free_longest field to the xfs_btree_cur_t
 >> structure to store the potential longest count that will be updated. The
 >> assignment is done in xfs_alloc_fixup_trees() and xfs_free_ag_extent().
 > 
-> I outlined how this should be fixed in the above thread:
-> 
-> https://lore.kernel.org/linux-xfs/ZiWgRGWVG4aK1165@dread.disaster.area/
-> 
-> This is what I said:
-> 
-> | What we actually want is for pag->pagf_longest not to change
-> | transiently to zero in xfs_alloc_fixup_trees(). If the delrec that
-> | zeroes the pagf_longest field is going to follow it up with an
-> | insrec that will set it back to a valid value, we really should not
-> | be doing the zeroing in the first place.
-> |
-> | Further, the only btree that tracks the right edge of the btree is
-> | the by-count allocbt. This isn't "generic" functionality, even
-> | though it is implemented through the generic btree code. If we lift
-> | ->update_lastrec from the generic code and do it directly in
-> | xfs_alloc.c whenever we are finished with a by-count tree update
-> | and the cursor points to a record in the right-most leaf of the
-> | tree, then we run the lastrec update directly at that point.
-> | By decoupling the lastrec updates from the individual record
-> | manipulations, we can make the transients disappear completely.
-> 
-> I'm not sure if this patch is an attempt to implement this - there
-> is no reference in the commit description to this previous attempt
-> to fix the issue, nor is the any discussion of why this particular
-> solution was chosen.
-> 
-> In future, when you are trying to fix an issue that has previously
-> been discussed/presented on the list, please reference it and
-> provide a link to the previous discussions in the changelog for the
-> new version of the patchset fixing the issue.
-
-Oh, I'm sorry for the confusion I caused you. And I will reference it
-next time.
-
+> This is going to be a reverse-order review due to the way that diff
+> ordered the chunks, which means that the bulk of my questions are at the
+> end.
 > 
 >> Reported by: Ye Bin <yebin10@huawei.com>
 >> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
@@ -165,27 +128,22 @@ next time.
 >> +	 */
 >> +	if (nfbno1 != NULLAGBLOCK || nfbno2 != NULLAGBLOCK)
 >> +		cnt_cur->bc_ag.bc_free_longest = XFS_EXTLEN_MAX(nflen1, nflen2);
+> 
+> Ok, so if we're allocating space then this sets bc_free_longest to the
+> longer of the two remaining sections, if any.  But if we just allocated
+> the entirety of the longest extent in the cntbt, then we don't set
+> bc_free_longest, which means its zero, right?  I guess that's ok because
+> that implies there's zero space left in the AG, so the longest freespace
+> is indeed zero.
+> 
+> If we just allocated the entirety of a non-longest extent in the cntbt
+> then we don't call ->lastrec_update so the value of bc_free_longest
+> doesn't matter?
+
+Yes, absolutely right! Thank you!φ(゜▽゜*)♪
+
+> 
 >> +
-> 
-> Why do we store the length of a random extent being freed here?
-> nflen1/2 almost always have nothing to do with the longest free
-> space extent in the tree, they are just the new free space extents
-> we are insering into a random location in the free space tree.
-> 
-
-First of all, there may be ambiguity in the name of the bc_free_longest
-field. I'm sorry for that. Its only role is to give the longest non-0 in
-a particular scenario.
-
-Yes, nflen1/2 can't determine the subsequent operation, but they are
-used to update the longest record only if the numrec in cntbt is zero,
-the last has been deleted and a new record will be added soon (that is,
-there is still space left on the file system), and that is their only
-function. So at this time nflen1/2 are not random extent, they indicate
-the maximum value to be inserted later. If cntbt does not need to be
-updated longest or the numrec is not zero, then bc_free_longest will not
-be used to update the longest.
-
 >>   	/*
 >>   	 * Delete the entry from the by-size btree.
 >>   	 */
@@ -201,41 +159,16 @@ be used to update the longest.
 >> +	if (haveright)
 >> +		cnt_cur->bc_ag.bc_free_longest = gtlen;
 > 
-> That doesn't look correct. At this point in the code, ltlen/gtlen
-> are the sizes of the physically adjacent freespace extents that we
-> are going to merge the newly freed extent with. i.e. the new
-> freespace extent is going to have one of 4 possible values:
+> What happens in the haveleft && haveright case?  Shouldn't
+> bc_free_longest be set to ltlen + len + gtlen?  You could just push the
+> setting of bc_free_longest into the haveleft/haveright code below.
+
+Oh, as I wrote to Dave, the logic I considered here is that the record
+is less than or equal to the maximum value. And no need to worry about
+that because it will soon be updated in xfs_btree_insert in the problem
+triggering scenario.
+
 > 
-> 	no merge: len
-> 	left merge: ltlen + len
-> 	right merge: gtlen + len
-> 	both merge: ltlen + gtlen + len
-> 
-> So regardless of anything else, this code isn't setting the longest
-> freespace extent in teh AGF to the lenght of the longest freespace
-> extent in the filesystem.
-
-> Which leads me to ask: how did you test this code? This bug should
-> have been triggering verifier, repair and scrub failures quite
-> quickly with fstests....
-> 
-
-The logic I'm considering here is that the record is less than or equal
-to the maximum value that will be updated soon, as I wrote "potentially"
-in the comment. And consider the following two scenarios:
-1) If it is no merge, then haveleft == 0 && haveright == 0, and
-bc_free_longest will not be assigned, and is no need to worry about the
-longest update at this time.
-2) If it is in merge scenario, only updating the original values here,
-and the actual updates are put into the subsequent xfs_btree_insert().
-There is no need to worry about atomicity, both are carried out in the
-same transaction. All we have to do is the longest non-0. As long as the
-fast path judgment without locking passes, the longest must be updated
-to the correct value during the second lock judgment.
-
-I tested this part of the code, passed xfstests, and local validation
-found no problems.
-
 >>   	/*
 >>   	 * Have both left and right contiguous neighbors.
 >>   	 * Merge all three into a single free block.
@@ -256,59 +189,90 @@ found no problems.
 >> +			 * less than bc_free_longest will be inserted later.
 >> +			 */
 >> +			len = cpu_to_be32(cur->bc_ag.bc_free_longest);
+> 
+> Humm.  In this case, we've called ->update_lastrec on the cntbt cursor
+> having deleted all the records in this record block.  Presumably that
+> means that we're going to add rec->alloc.ar_blockcount blocks to the
+> rightmost record in the left sibling of @block?  Or already have?
+> 
+
+In normal delete operations, cntbt will have a balancing process, moving
+data from other nodes or merging to ensure that numrecs >= get_minrecs.
+In this scenario, the cntbt is already an -empty- tree, and is in a
+temporary state, new values will be inserted later.
+
+> Ahh, right, the pagf_longest checks are done without holding AGF lock.
+> The concurrent creat call sees this intermediate state (DELREC sets
+> pagf_longest to zero, a moment later INSREC/UPDATE set it to the correct
+> nonzero value) and decides to ENOSPC because "nobody" has sufficient
+> free space.
+> 
+> I think this phony zero never gets written to disk because although
+> we're logging zero into the ondisk and incore agf_longest here, the next
+> btree operation will reset it to the correct value.  Right?
+
+Yes, this phony zero will not be recorded to disk. It is just a
+temporary condition.
+
+> 
+> Would it be simpler to handle this case by duplicating the cntbt cursor
+> and walking one record leftward in the tree to find the longest extent,
+> rather than using this "bc_free_longest" variable?
+> 
+
+In my opinion, this does not solve the problem. As mentioned above, at
+this point the cntbt is an -empty- tree with no records.
+
 >>   		}
+>>   
+>>   		break;
+>> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+>> index f93374278aa1..985b1885a643 100644
+>> --- a/fs/xfs/libxfs/xfs_btree.h
+>> +++ b/fs/xfs/libxfs/xfs_btree.h
+>> @@ -281,6 +281,7 @@ struct xfs_btree_cur
+>>   			struct xfs_perag	*pag;
+>>   			struct xfs_buf		*agbp;
+>>   			struct xbtree_afakeroot	*afake;	/* for staging cursor */
+>> +			xfs_extlen_t		bc_free_longest; /* potential longest free space */
 > 
-> So this is in the LASTREC_DELREC case when the last record is
-> removed from the btree. This is what causes the transient state
-> as we do this when deleting a record to trim it and then re-insert
-> the remainder back into the by-count btree.
-> 
-> Writing some random transient value into the AGF *and journalling
-> it* means we creating a transient on-disk format structure
-> corruption and potentially writing it to persistent storage (i.e.
-> the journal). The structure is, at least, not consistent in memory
-> because the free space tree is empty at this point in time, whilst
-> the agf->longest field says it has a free space available. This
-> could trip verifiers, be flagged as corruption by xfs_scrub/repair,
-> etc.
+> This is only used for bnobt/cntbt trees, put it in the per-format
+> private data area, please.
 > 
 
-I'm sorry, but I didn't find the problem during my own screening. In my 
-opinion, because the trigger scenario for the current problem is only to 
-delete the last node and be updated shortly, and bc_free_longest is used
-only in the following two scenarios:
-1) cntbt has only one extent and remains after being used, so nflen 1/2
-will be inserted later.
-2) cntbt has only one extent and the released extent is adjacent to this
-record. This unique record will be deleted firstly, and then the two
-extents are merged and inserted.
+OK, I will modify it. More specifically, it is only used for cntbt,
+because currently only cntbt can set the XFS_BTGEO_LASTREC_UPDATE flag,
+and can call ->update_lastrec.
 
-The above two scenarios are both within the same transaction, and both
-are guaranteed by a xfs_buf lock. When run xfs_trans_commit, code have
-gone through the delete and insert process, or merge and update process.
-So the longest value written to the disk is already the correct value
-and matches the cntbt state at this time. In other scenarios, the numrec
-of cntbt cannot be 0, so the longest cannot be updated through
-bc_free_longest.
+> If the answer to the question about duplicating the btree cursor is "no"
+> then I think this deserves a much longer comment that captures the fact
+> that the variable exists to avoid setting pagf_longest to zero for
+> benefit of the code that does unlocked scanning of AGs for free space.
+> 
+> I also wonder if the unlocked ag scan should just note that it observed
+> a zero pagf_longest and if no space can be found across all the AGs, to
+> try again with locks?
+> 
+> --D
+
+Currently xfs checks the space using the "check-lock-check again"
+algorithm, which I understand to be more efficient. If there are a large
+number of AG's and there is no free space in front of them, the
+performance may be affected by checking the lock again. So I think
+targeting specific AG might be more effective. Although the current code
+process has a retry mechanism (in xfs_dialloc), it still can't
+completely solve the problem: for example, there is no space for the
+first scan, and the second scan has space but the longest is 0 in the
+temporary state and return -ENOSPC, etc...
 
 Thanks,
 Zizhi Wo
 
-> Now, this *might be safe* because we *may* clean it up later in the
-> transaction, but if this really is the last extent being removed
-> from the btree and a cursor has previously been used to do other
-> insert and free operations that set this field, then we trip over
-> this stale inforamtion and write a corrupt structure to disk. That's
-> not good.
 > 
-> As I said above, this "last record tracking" needs to be ripped out
-> of the generic btree code because only the by-count btree uses it.
-> Then it can be updated at the end of the by-count btree update
-> process in the allocation code (i.e. after all record manipulations
-> are done in the transaction) and that avoids this transient caused
-> by updating the last record on every btree record update that is
-> done.
-> 
-> Cheers,
-> 
-> Dave.
+>>   		} bc_ag;
+>>   		struct {
+>>   			struct xfbtree		*xfbtree;
+>> -- 
+>> 2.39.2
+>>
+>>
