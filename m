@@ -1,299 +1,133 @@
-Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com [209.85.222.175])
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07B3261FCC;
-	Wed,  5 Jun 2024 05:13:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12D9219046D
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Jun 2024 06:39:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717564410; cv=none; b=kO69LZiAKfnWlbjX/o+/MqL6FLzJ6zOYKic/NWUAsTDVlcm2G2BL/0kmlNQxrqoT88KplgO47fGg48d5PZC7tDgG7aexN154wa9MIDZ6znTSzkgaj5/WeMg4oZPBvNDl7VzqgWZXCVDmPZ7wzorCbFThGm1pphm9ZWcVg7vN6JE=
+	t=1717569569; cv=none; b=JwAnDlP3yacd7vIUN3VOdGOVn/ZtwiJyQH8fw8q86509jZicriaPGeKPV37/HkZ3MjoUEVOWlKx3asRWLoj7nrCBaTkydh/6ktC0MP6p5tKwmUdKvXMBBt8efXtnTORJ9V5f/TDsvC/kOxKbDZRXa+U1mTt0kYKFQS0Kn8LXXz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717564410; c=relaxed/simple;
-	bh=/WVRDzCHg3spCSYzjmwfS99jR3K/kGEpHbQyQHzTcBo=;
+	s=arc-20240116; t=1717569569; c=relaxed/simple;
+	bh=rutAPEixhDDHpdwwpk/nkL/cUqGqseT7TwLEZWbafOw=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Mt9jZZ0cBE46+iOzzJDbT8uTAdAl8VX+jHUrwvU/6TGFzYbT5obdoGyQ9Xqhg9WcG7uYDGgMJv9jtfPABj0vhRAOA3zEXEedwQHRJ69UYsy0wtXOVNN1Kj1ZdHUdwAX7jmjEfwlIF/gyrRgYF0zjgKS6H4xK9amgsYyTvpMh3zI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iL5Mq06L; arc=none smtp.client-ip=209.85.222.175
+	 To:Cc:Content-Type; b=OgUdiU7KuM2xybOQDOh7xzZRNdFxTWHQd6dizhiNUwIkusg/24gU/oZrCGyfmgbGCTzghxqYYWTRBmaHjIg+GYR2FrBCwoQtraTd5K32kQabatVKfslZgXVwU/aSrKFsG8yg/ioaOxya+wzrVa/vJKG0xWz67w/7zxd/7pS1n54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ccUPESKt; arc=none smtp.client-ip=209.85.219.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iL5Mq06L"
-Received: by mail-qk1-f175.google.com with SMTP id af79cd13be357-795186ae3e9so90575285a.0;
-        Tue, 04 Jun 2024 22:13:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ccUPESKt"
+Received: by mail-yb1-f171.google.com with SMTP id 3f1490d57ef6-dfa7790b11aso1931804276.3
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2024 23:39:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1717564408; x=1718169208; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1717569567; x=1718174367; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Bj8i7BUJHGXOxgUitUFf3swEznue+es0pSHh18YprwA=;
-        b=iL5Mq06LIRGymN3mU1+QbDE8MRjAuUPdy4e6N6r3KIbjn/aFWQFQTy/4ociY1nIF+/
-         AagrnSTE/rLVut1U/Te45WXKVLkvNWwNyUDy6hjntEQyQ6z9YKWpseezAx6rajX33k47
-         micP5ILr+23sFNToQqQbUujIS2ALR/CIP9/ZCjtKp+MfACVcjpxL0nTARIOiG7Zy+hWe
-         s0SpcLChOGi+U95ktZkGq+k0GFjMsuLVkNdcsrfacMebwSU6d5YId0cmygTexMkXbGnj
-         cK6geslFJuB8ZSQKetm25mkpo1PmgKYGqNKjERK+atuXHCsN9uf8bpPLfUahceTjBgQq
-         KoXQ==
+        bh=rPO83kU/5Un6J1bCh7FWKo6xEXCmQrwshkeoeQAnEV8=;
+        b=ccUPESKtD2j+NWMLTkncZjXO05YDrrAGB29DGd12eY/dnDjIn0Y7gbInh5QS/0TK4N
+         xDsNy2CUJRlK1yH8aWDBw2n41Aty6MwsdJ2D0YIxwYbQoaBRbRo8ah7QYqK6iVAcRMlP
+         QO68Lrougqi9cpny3t0L3veUuTZvicUq0O9rjhyoDSXXO/goPzKJncAqb6b/W/hDLSXd
+         UVlaYqsS3+FUNLSXiKJ9G2BAiNn9Wy0bMB0i82XJbZI2i3dJfbL2fAFgDyFdk1ysZ0Dk
+         zLxP8uT257JHl1Q/sJoedUp3eWlzJaZnpnzawfAPAtMiIuXwkD9MwHH3NzAvl6C8R+SK
+         5Q/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717564408; x=1718169208;
+        d=1e100.net; s=20230601; t=1717569567; x=1718174367;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Bj8i7BUJHGXOxgUitUFf3swEznue+es0pSHh18YprwA=;
-        b=EUt760DFwc2A6T1pkQjHoeFXSkPEeEFkCt+poudwq5ENCw5wXrCpZb9rFoKwxNhr3L
-         UH+nmKoZW2dB2C9abaQ9A1N48gnCd/NdF4yKIkQ3ZlNCCQKi/B5zpn6HmhN4dUz79u+Q
-         wcEg7s+L0U0rpsGPWLo8UoorSgdPACw1Ogpc7c3ZTsomj0Dw17T+PpQVRsF7GSn0bZVE
-         ZhZWXOghzCy4sYzuwbWCU8FKQTmXy3obFXr6clSATmCTl6WMw5BW6R3dIMpXn2kvmvtJ
-         oafNyIRh0j7MzJbAmpNvVmgiB9kH9LJUjXoIbQB0aCMdOhcVMTn4Lrs6jm7K1ylNd2IB
-         f5Dw==
-X-Forwarded-Encrypted: i=1; AJvYcCVdayPzqJQxyJhpI8mdn1Eaq7T2BG7a4qWbS7sVf3tZ2WtBc4ReXepJJScTqz2OTWDyEuI6+d4AaHhoeHVJ3VpF57iyJu28U0kdF9UM3fRvGVZ8s5cOFMba0t3e1RWbDxHYQl8GpobT8Q==
-X-Gm-Message-State: AOJu0Yylk5s96k7ml0opgFehRo+vL4IfoDtStvzfIFuD8zFsW7aNPY6y
-	1tQ5/v4HRNWX/7k69JuV//kHQD3AsWQTWoPznm4tQGthtNT4ojvaGL7+KRx30r/haAxc/1dfQvg
-	cblqA74JNJK/iXG50gIYh4mcOSic=
-X-Google-Smtp-Source: AGHT+IEEkpCi9Lb2dXtRVSV4paKGuy9g5zjd45iq/bGDj3XkX5dBWF9gcv8hwRL+C0jcL37HnWuBavOC2Ommo4XDwqE=
-X-Received: by 2002:a05:620a:40c9:b0:792:9248:c2e9 with SMTP id
- af79cd13be357-79523ec257bmr203705785a.48.1717564407378; Tue, 04 Jun 2024
- 22:13:27 -0700 (PDT)
+        bh=rPO83kU/5Un6J1bCh7FWKo6xEXCmQrwshkeoeQAnEV8=;
+        b=dQfoI6nOLa8vKCNRVrZQXVXGCbvn4EsY6SJHV1zogzLKYBDA+vf73B3eCT0vrD+oUo
+         mMXsCyTFiMomGZNGcqENSxmEwu+wyeurZGzd4jb9tpuIlz5tnDczkxHl1rcvvk0I4Bya
+         Li2CJQ0JmML4cVhfu9HggJhwNTS0vgj/TgHrZlqpGxDP7fQPvlVdCplgIhlem82CWtrb
+         zijzukA67cpVEPh4dz3VRW/yetcQ/lpfWMZStPW1x8ERogivKgDaD+H8yfraEFmGk9nz
+         Ky+sJdF/08TGQmMZFrM5UY6bZA7cOLylsFkSf8lpnUFbLP9l0TWMpJDFIA8A11dnoF4W
+         k/DA==
+X-Gm-Message-State: AOJu0Yw+R7aTp2Esm/3oU4yq8lYxk6H3J7ljGJmmZozsBgN0a44jcPPc
+	2e1DkG8xa5QnbHfISVmbrbqBuYA2t4oXO+zc3gM4y+B07KjCd8aIt/zhzJ72b/50TSUFOvbZNo1
+	eh7GMvZlFdcGNmqEFt/xClLeeAU2z4YCuC/3SjttV
+X-Google-Smtp-Source: AGHT+IHNArxnYwBLjsrumi8Wr1/FtfchpVJNTnw8ZG0r073k+jYs2TqV7PgEoyo6hqgKvMIvYnfKMrICYvg3n7uIcXA=
+X-Received: by 2002:a25:9385:0:b0:dfa:a86a:c007 with SMTP id
+ 3f1490d57ef6-dfaca9bd893mr1647493276.23.1717569566936; Tue, 04 Jun 2024
+ 23:39:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240522100007.zqpa5fxsele5m7wo@quack3> <snhvkg3lm2lbdgswfzyjzmlmtcwcb725madazkdx4kd6ofqmw6@hiunsuigmq6f>
- <20240523074828.7ut55rhhbawsqrn4@quack3> <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
- <20240524161101.yyqacjob42qjcbnb@quack3> <20240531145204.GJ52987@frogsfrogsfrogs>
- <20240603104259.gii7lfz2fg7lyrcw@quack3> <vbiskxttukwzhjoiic6toscqc6b2qekuwumfpzqp5vkxf6l6ia@pby5fjhlobrb>
- <20240603174259.GB52987@frogsfrogsfrogs> <20240604085843.q6qtmtitgefioj5m@quack3>
- <20240605003756.GH52987@frogsfrogsfrogs>
-In-Reply-To: <20240605003756.GH52987@frogsfrogsfrogs>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 5 Jun 2024 08:13:15 +0300
-Message-ID: <CAOQ4uxiVVL+9DEn9iJuWRixVNFKJchJHBB8otH8PjuC+j8ii4g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and FS_IOC_FSGETXATTRAT
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Andrey Albershteyn <aalbersh@redhat.com>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>
+References: <20240603080146.81563-1-llfamsec@gmail.com>
+In-Reply-To: <20240603080146.81563-1-llfamsec@gmail.com>
+From: lei lu <llfamsec@gmail.com>
+Date: Wed, 5 Jun 2024 14:39:15 +0800
+Message-ID: <CAEBF3_b3WCmzUipNsebFMZgUhdv8C7gSq_Gs-dhbLJi6kQ=xFw@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs: don't walk off the end of a directory data block
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jun 5, 2024 at 3:38=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
-wrote:
->
-> On Tue, Jun 04, 2024 at 10:58:43AM +0200, Jan Kara wrote:
-> > On Mon 03-06-24 10:42:59, Darrick J. Wong wrote:
-> > > On Mon, Jun 03, 2024 at 06:28:47PM +0200, Andrey Albershteyn wrote:
-> > > > On 2024-06-03 12:42:59, Jan Kara wrote:
-> > > > > On Fri 31-05-24 07:52:04, Darrick J. Wong wrote:
-> > > > > > On Fri, May 24, 2024 at 06:11:01PM +0200, Jan Kara wrote:
-> > > > > > > On Thu 23-05-24 13:16:48, Andrey Albershteyn wrote:
-> > > > > > > > On 2024-05-23 09:48:28, Jan Kara wrote:
-> > > > > > > > > Hi!
-> > > > > > > > >
-> > > > > > > > > On Wed 22-05-24 12:45:09, Andrey Albershteyn wrote:
-> > > > > > > > > > On 2024-05-22 12:00:07, Jan Kara wrote:
-> > > > > > > > > > > Hello!
-> > > > > > > > > > >
-> > > > > > > > > > > On Mon 20-05-24 18:46:21, Andrey Albershteyn wrote:
-> > > > > > > > > > > > XFS has project quotas which could be attached to a=
- directory. All
-> > > > > > > > > > > > new inodes in these directories inherit project ID =
-set on parent
-> > > > > > > > > > > > directory.
-> > > > > > > > > > > >
-> > > > > > > > > > > > The project is created from userspace by opening an=
-d calling
-> > > > > > > > > > > > FS_IOC_FSSETXATTR on each inode. This is not possib=
-le for special
-> > > > > > > > > > > > files such as FIFO, SOCK, BLK etc. as opening them =
-returns a special
-> > > > > > > > > > > > inode from VFS. Therefore, some inodes are left wit=
-h empty project
-> > > > > > > > > > > > ID. Those inodes then are not shown in the quota ac=
-counting but
-> > > > > > > > > > > > still exist in the directory.
-> > > > > > > > > > > >
-> > > > > > > > > > > > This patch adds two new ioctls which allows userspa=
-ce, such as
-> > > > > > > > > > > > xfs_quota, to set project ID on special files by us=
-ing parent
-> > > > > > > > > > > > directory to open FS inode. This will let xfs_quota=
- set ID on all
-> > > > > > > > > > > > inodes and also reset it when project is removed. A=
-lso, as
-> > > > > > > > > > > > vfs_fileattr_set() is now will called on special fi=
-les too, let's
-> > > > > > > > > > > > forbid any other attributes except projid and nexte=
-nts (symlink can
-> > > > > > > > > > > > have one).
-> > > > > > > > > > > >
-> > > > > > > > > > > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.=
-com>
-> > > > > > > > > > >
-> > > > > > > > > > > I'd like to understand one thing. Is it practically u=
-seful to set project
-> > > > > > > > > > > IDs for special inodes? There is no significant disk =
-space usage associated
-> > > > > > > > > > > with them so wrt quotas we are speaking only about th=
-e inode itself. So is
-> > > > > > > > > > > the concern that user could escape inode project quot=
-a accounting and
-> > > > > > > > > > > perform some DoS? Or why do we bother with two new so=
-mewhat hairy ioctls
-> > > > > > > > > > > for something that seems as a small corner case to me=
-?
-> > > > > > > > > >
-> > > > > > > > > > So there's few things:
-> > > > > > > > > > - Quota accounting is missing only some special files. =
-Special files
-> > > > > > > > > >   created after quota project is setup inherit ID from =
-the project
-> > > > > > > > > >   directory.
-> > > > > > > > > > - For special files created after the project is setup =
-there's no
-> > > > > > > > > >   way to make them project-less. Therefore, creating a =
-new project
-> > > > > > > > > >   over those will fail due to project ID miss match.
-> > > > > > > > > > - It wasn't possible to hardlink/rename project-less sp=
-ecial files
-> > > > > > > > > >   inside a project due to ID miss match. The linking is=
- fixed, and
-> > > > > > > > > >   renaming is worked around in first patch.
-> > > > > > > > > >
-> > > > > > > > > > The initial report I got was about second and last poin=
-t, an
-> > > > > > > > > > application was failing to create a new project after "=
-restart" and
-> > > > > > > > > > wasn't able to link special files created beforehand.
-> > > > > > > > >
-> > > > > > > > > I see. OK, but wouldn't it then be an easier fix to make =
-sure we *never*
-> > > > > > > > > inherit project id for special inodes? And make sure inod=
-es with unset
-> > > > > > > > > project ID don't fail to be linked, renamed, etc...
-> > > > > > > >
-> > > > > > > > But then, in set up project, you can cross-link between pro=
-jects and
-> > > > > > > > escape quota this way. During linking/renaming if source in=
-ode has
-> > > > > > > > ID but target one doesn't, we won't be able to tell that th=
-is link
-> > > > > > > > is within the project.
-> > > > > > >
-> > > > > > > Well, I didn't want to charge these special inodes to project=
- quota at all
-> > > > > > > so "escaping quota" was pretty much what I suggested to do. B=
-ut my point
-> > > > > > > was that since the only thing that's really charged for these=
- inodes is the
-> > > > > > > inodes itself then does this small inaccuracy really matter i=
-n practice?
-> > > > > > > Are we afraid the user is going to fill the filesystem with s=
-ymlinks?
-> > > > > >
-> > > > > > I thought the worry here is that you can't fully reassign the p=
-roject
-> > > > > > id for a directory tree unless you have an *at() version of the=
- ioctl
-> > > > > > to handle the special files that you can't open directly?
-> > > > > >
-> > > > > > So you start with a directory tree that's (say) 2% symlinks and=
- project
-> > > > > > id 5.  Later you want to set project id 7 on that subtree, but =
-after the
-> > > > > > incomplete change, projid 7 is charged for 98% of the tree, and=
- 2% are
-> > > > > > still stuck on projid 5.  This is a mess, and if enforcement is=
- enabled
-> > > > > > you've just broken it in a way that can't be fixed aside from r=
-ecreating
-> > > > > > those files.
-> > > > >
-> > > > > So the idea I'm trying to propose (and apparently I'm failing to =
-explain it
-> > > > > properly) is:
-> > > > >
-> > > > > When creating special inode, set i_projid =3D 0 regardless of dir=
-ectory
-> > > > > settings.
-> > > > >
-> > > > > When creating hardlink or doing rename, if i_projid of dentry is =
-0, we
-> > > > > allow the operation.
-> > > > >
-> > > > > Teach fsck to set i_projid to 0 when inode is special.
-> > > > >
-> > > > > As a result, AFAICT no problem with hardlinks, renames or similar=
-. No need
-> > > > > for special new ioctl or syscall. The downside is special inodes =
-escape
-> > > > > project quota accounting. Do we care?
-> > > >
-> > > > I see. But is it fine to allow fill filesystem with special inodes?
-> > > > Don't know if it can be used somehow but this is exception from
-> > > > isoft/ihard limits then.
-> > > >
-> > > > I don't see issues with this approach also, if others don't have
-> > > > other points or other uses for those new syscalls, I can go with
-> > > > this approach.
-> > >
-> > > I do -- allowing unpriviledged users to create symlinks that consume
-> > > icount (and possibly bcount) in the root project breaks the entire
-> > > enforcement mechanism.  That's not the way that project quota has wor=
-ked
-> > > on xfs and it would be quite rude to nullify the PROJINHERIT flag bit
-> > > only for these special cases.
-> >
-> > OK, fair enough. I though someone will hate this. I'd just like to
-> > understand one thing: Owner of the inode can change the project ID to 0
-> > anyway so project quotas are more like a cooperative space tracking sch=
-eme
-> > anyway. If you want to escape it, you can. So what are you exactly worr=
-ied
-> > about? Is it the container usecase where from within the user namespace=
- you
-> > cannot change project IDs?
->
-> Yep.
->
-> > Anyway I just wanted to have an explicit decision that the simple solut=
-ion
-> > is not good enough before we go the more complex route ;).
->
-> Also, every now and then someone comes along and half-proposes making it
-> so that non-root cannot change project ids anymore.  Maybe some day that
-> will succeed.
->
+Hi, Dave,
 
-I'd just like to point out that the purpose of the project quotas feature
-as I understand it, is to apply quotas to subtrees, where container storage
-is a very common private case of project subtree.
-
-The purpose is NOT to create a "project" of random files in random
-paths.
-
-My point is that changing the project id of a non-dir child to be different
-from the project id of its parent is a pretty rare use case (I think?).
-
-If changing the projid of non-dir is needed for moving it to a
-different subtree,
-we could allow renameat2(2) of non-dir with no hardlinks to implicitly
-change its
-inherited project id or explicitly with a flag for a hardlink, e.g.:
-renameat2(olddirfd, name, newdirfd, name, RENAME_NEW_PROJID).
-
-Which leaves us only with the use cases of:
-1. Share some inode (as hardlinks) among projects
-2. Recursively changing a subtree projid
-
-#1 could be allowed with a flag to linkat(2) or hardlink within a shared
-project subtree and rename the hardlink out of the shared project
-subtree with renameat2(2) and explicit flag, e.g.:
-renameat2(olddirfd, name, newdirfd, name, RENAME_OLD_PROJID).
-
-#2 *could technically* be done by the same rename flag that
-will allow rename to the same path, e.g:
-renameat2(dirfd, name, dirfd, name, RENAME_NEW_PROJID).
-
-It's not pretty and I personally prefer the syscall solution.
-Just wanted to put it out there.
+Do you have further comments and/or suggestions?
 
 Thanks,
-Amir.
+LL
+
+On Mon, Jun 3, 2024 at 4:02=E2=80=AFPM lei lu <llfamsec@gmail.com> wrote:
+>
+> This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entry
+> to make sure don'y stray beyond valid memory region. Before patching, the
+> loop simply checks that the start offset of the dup and dep is within the
+> range. So in a crafted image, if last entry is xfs_dir2_data_unused, we
+> can change dup->length to dup->length-1 and leave 1 byte of space. In the
+> next traversal, this space will be considered as dup or dep. We may
+> encounter an out of bound read when accessing the fixed members.
+>
+> In the patch, we check dup->length % XFS_DIR2_DATA_ALIGN !=3D 0 to make
+> sure that dup is 8 byte aligned. And we also check the size of each entry
+> is greater than xfs_dir2_data_entsize(mp, 1) which ensures that there is
+> sufficient space to access fixed members. It should be noted that if the
+> last object in the buffer is less than xfs_dir2_data_entsize(mp, 1) bytes
+> in size it must be a dup entry of exactly XFS_DIR2_DATA_ALIGN bytes in
+> length.
+>
+> Signed-off-by: lei lu <llfamsec@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_dir2_data.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+>
+> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.=
+c
+> index dbcf58979a59..dd6d43cdf0c5 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> @@ -178,6 +178,11 @@ __xfs_dir3_data_check(
+>                 struct xfs_dir2_data_unused     *dup =3D bp->b_addr + off=
+set;
+>                 struct xfs_dir2_data_entry      *dep =3D bp->b_addr + off=
+set;
+>
+> +               if (offset > end - xfs_dir2_data_entsize(mp, 1))
+> +                       if (end - offset !=3D XFS_DIR2_DATA_ALIGN ||
+> +                           be16_to_cpu(dup->freetag) !=3D XFS_DIR2_DATA_=
+FREE_TAG)
+> +                               return __this_address;
+> +
+>                 /*
+>                  * If it's unused, look for the space in the bestfree tab=
+le.
+>                  * If we find it, account for that, else make sure it
+> @@ -188,6 +193,8 @@ __xfs_dir3_data_check(
+>
+>                         if (lastfree !=3D 0)
+>                                 return __this_address;
+> +                       if (be16_to_cpu(dup->length) % XFS_DIR2_DATA_ALIG=
+N !=3D 0)
+> +                               return __this_address;
+>                         if (offset + be16_to_cpu(dup->length) > end)
+>                                 return __this_address;
+>                         if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup))=
+ !=3D
+> --
+> 2.34.1
+>
