@@ -1,121 +1,119 @@
-Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D35CF2C853
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Jun 2024 02:30:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9CAFC13C
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Jun 2024 03:14:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717641045; cv=none; b=suPMDp40kLH71XSww3q9d7vErKgCJdofup4+/oLFK37XltcBQyv378v41QRh0TXRTOEP6HkuMakkMoXd60eebhNzXBn7ca/D9aOSWsv+wo6MX2Y6cUK5pZq3fccRksa+mpBMfUHJsPq2qUMhB7KlDhNIJZkep0XM0UOBedLufQA=
+	t=1717643685; cv=none; b=Ep7bvw4I+9hNyuuJBDdh8L+ZkmLik/MUEyfUdABV/RpxwwGRn8fJcXPA3n6zEWDIuGJ2pxsnHVKw9DgpBnHZcRvaa0os0EpbK/IqPFvt0TFoF1lqBK45j5K7uPdixbG96Y2TKIVvQrggXdHUfx8KVJIIhTT+jU7cLo6GOiCUQXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717641045; c=relaxed/simple;
-	bh=i+7S1vRPcGSA7nDng2dCq3jxvemu3HRbYmR0uZ1C46c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QgZMo0XXFMTvLWfvA7xFMejGceaAJac0OgbyhAz3xeNe8LrZhi2hcrFq2HYDsbCoZCKiJSdxIhV1hDLOkYPEF5AHXUbVprNC5Iei4HlY5HoIkiiGnWfJpH6GjKUF/NHgd9O5bDQRZjJzMr/f6n0d1hcf34SYdlahyhztnLdOP58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ChxizVT+; arc=none smtp.client-ip=209.85.161.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1717643685; c=relaxed/simple;
+	bh=YH+wQYETa0lXD6o5PXpj45h9EZdLrUDItNVwWiD4ZiE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XZ1eGlZ3wPPlC/oJsA16eqO7tjzkOe9/zGK/GHN8o3mnfdbJNlz0xsK9Nm39QxNIvIxaJCMW5FvgpX2DcHr6uuA2Ffbwl5HkCJuW7fxOGKbRIse9AfPlBnU+5gFeXHu1lI7+/K0Szms6hwl+yJ4Ak9ZEJkH+e93XnHGigLWDD+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Slf++1/L; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ChxizVT+"
-Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-5ba6dd7b976so237673eaf.1
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Jun 2024 19:30:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Slf++1/L"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-70276322ad8so500852b3a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Jun 2024 20:14:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717641043; x=1718245843; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7cZm3oCfHJnoUzoVhEH1Ub7kGBKks5yQE+FU+nrpKfE=;
-        b=ChxizVT+C8jpR8maftu2lHZmE4DKILDeJFKOHEEs5hd6TighBjrCztK4RdRi95IrOt
-         s+UTzhTKA2pyV65SgVRuzTaiohdspDmB4BT14a05CzYPmt93Zpv1WfSIvy5SeP+oMeMR
-         olNyor1O+7oiuK7LjUgObrqwF96HAAA8ILya3tSTWbjqxRD0VnXdRk6eszFsynNE7+bD
-         rcNb8ZuFeCkBwBo/IihdvxqKdK1fNDsvRzdf357lfVddgpOO9DdmfSsEt9gZ01AgZjXB
-         6SObr57MRLCOOwnbTZtqRJ4o6uefWIRr86jtA2DtxT/z+6CavyaoFdQNnHUWsKf/Xzp/
-         wUtw==
+        d=gmail.com; s=20230601; t=1717643683; x=1718248483; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6Oqy5CCWLXP7ZhHc0UGby/SOa4BMyRjulF8zBUzOgmM=;
+        b=Slf++1/LVolwG1w8C75gJ6XDaYBn9dX/r5JgBgQGDdbGIJRBA3rShgl3ZXay7PnN48
+         Bi35imBrmSkPIIidyhMbtWfaPrhtgTeaxBJWFzeC0UoCw34kAJs8yNo9S5taHI5rrhJq
+         RFeQYEJhXTT9ZvcmDd3yTixRtJ7Vc3MKX3Oq9mP0yE0N0pF/59AV2ZpzwOyEwm8ArFUr
+         atviMWWGu9E9JFMSeyQWebv3yn7yNFXmIvyfKS+BHNzXKrwwXMKUVsyLneb/MayPItXL
+         Y3BHAMvQu9KSfjrsna3bMAFV6jYG079n//o6dNr7eR3rlcDEkEd7WZ26AGe+wjVmnQCN
+         T9EA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717641043; x=1718245843;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7cZm3oCfHJnoUzoVhEH1Ub7kGBKks5yQE+FU+nrpKfE=;
-        b=vCsOzVRiLop3EblEEoAIv89OdN5oO1v7BhsYZ4/X3ftFMGWh2Fh0UjNwsKGgP9LbwK
-         sN6AWZoEjRS5FQZdd3R47GB6upRJF4x8yPL8H5Ga4JZTuYFpzN3LQfzV/0gnLpCJpoX8
-         ZCz7wAfMv45P60howwIpeSlM7+fSjsmjiFW8TktO6akVVaIEjPkvLiPle/vOZvnyCgS/
-         6Rk3Tr31qHkG+bkF+OLoSiDsRShf77FQeIsEKrwmCRLqP+2o/H17tvQRiZqb8i6g9Xbp
-         h4k9+h65SpVYZedYkUxuHFYhneITP/CfbVISuUckLTQk+m7PhIkMxQSujJAKD3rJEULv
-         +AMQ==
-X-Gm-Message-State: AOJu0YyQpIorUlqsvIUVSWfjXXoxRwVuxloCLGMlAauo2kprLaAagVJQ
-	RBh5R6v8FGvXjXQK1cOs5GAZST0jeSfMfwUnr+csIxEnUN2ytLJyvq7SV9Rl0mw1TU41pb0ulWB
-	9
-X-Google-Smtp-Source: AGHT+IG0AJiRRk5WPn6Ii7lt1shesAfENud4fdNJ/eysSNRN6g6ieIuIDgf793GSYpKVgxljHJvVOg==
-X-Received: by 2002:a05:6358:2810:b0:19c:277f:ef37 with SMTP id e5c5f4694b2df-19c6cb1924emr525367855d.28.1717641042560;
-        Wed, 05 Jun 2024 19:30:42 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-6de20180426sm195737a12.4.2024.06.05.19.30.42
+        d=1e100.net; s=20230601; t=1717643683; x=1718248483;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6Oqy5CCWLXP7ZhHc0UGby/SOa4BMyRjulF8zBUzOgmM=;
+        b=HgUQDsxByPR12oO32AHlJk0T2Pk2lGbzQ0W2cM7Drfb6hSiytxlC6TxN8Bdo8hOplC
+         1Kz5qnDqV5LrGHY/Dl3IPOIeRAk7a2ASDlqD7Ezp21xXKMie8E4IRPpru+MPtHL1BfNT
+         T8Cn/FqPITb+zYATR8pjCeBMM/bE4jz9qyKCZc2oBEBWM50Wx9VMwRS2mmcsT2oVUG1N
+         F6xb9ZmuHjfJK5hzGHyUklAo1Q3jfuuq4w89T4KyhfzXUiKj6Fv2FW/1gRQZmjxV2Xme
+         qBxrVA3jPdsY0qF35wTOGIbHIJkBPgopU3yv7kuo50RcyPua7Gq+y6oi5qbe1dyFwbP+
+         i6QQ==
+X-Gm-Message-State: AOJu0Yzhv0/3VNAom/rYc8r+lpSCCG8S+xagM75a3JsBhYMSsuzw5jbc
+	l3vJ/ewYKQKc3dx5ao+b0SLqXX844xhMTALibxx69q6F2uGJxDIfNP7FtSDhJuI=
+X-Google-Smtp-Source: AGHT+IFT63y3jdMlYaxMqDQLpii+CW8Og5ECmafgGyiQx3dgeNfp2LKDL/17VNVbwnBRz8yQjDmTcA==
+X-Received: by 2002:a05:6a00:1903:b0:702:58a0:25ab with SMTP id d2e1a72fcca58-703e5a42cb8mr4908621b3a.31.1717643682801;
+        Wed, 05 Jun 2024 20:14:42 -0700 (PDT)
+Received: from localhost.localdomain ([47.238.252.167])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-703fd52c316sm229633b3a.208.2024.06.05.20.14.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Jun 2024 19:30:42 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sF2tj-005rqi-2S;
-	Thu, 06 Jun 2024 12:30:39 +1000
-Date: Thu, 6 Jun 2024 12:30:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: lei lu <llfamsec@gmail.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: add bounds checking to xlog_recover_process_data
-Message-ID: <ZmEfT43mf/RAkvLH@dread.disaster.area>
-References: <20240603094608.83491-1-llfamsec@gmail.com>
+        Wed, 05 Jun 2024 20:14:42 -0700 (PDT)
+From: lei lu <llfamsec@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com,
+	lei lu <llfamsec@gmail.com>,
+	Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH v3] xfs: don't walk off the end of a directory data block
+Date: Thu,  6 Jun 2024 11:14:16 +0800
+Message-Id: <20240606031416.90900-1-llfamsec@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240603094608.83491-1-llfamsec@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jun 03, 2024 at 05:46:08PM +0800, lei lu wrote:
-> There is a lack of verification of the space occupied by fixed members
-> of xlog_op_header in the xlog_recover_process_data.
-> 
-> We can create a crafted image to trigger an out of bounds read by
-> following these steps:
->     1) Mount an image of xfs, and do some file operations to leave records
->     2) Before umounting, copy the image for subsequent steps to simulate
->        abnormal exit. Because umount will ensure that tail_blk and
->        head_blk are the same, which will result in the inability to enter
->        xlog_recover_process_data
->     3) Write a tool to parse and modify the copied image in step 2
->     4) Make the end of the xlog_op_header entries only 1 byte away from
->        xlog_rec_header->h_size
->     5) xlog_rec_header->h_num_logops++
->     6) Modify xlog_rec_header->h_crc
-> 
-> Fix:
-> Add a check to make sure there is sufficient space to access fixed members
-> of xlog_op_header.
-> 
-> Signed-off-by: lei lu <llfamsec@gmail.com>
-> ---
->  fs/xfs/xfs_log_recover.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 1251c81e55f9..14609ce212db 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2456,7 +2456,10 @@ xlog_recover_process_data(
->  
->  		ohead = (struct xlog_op_header *)dp;
->  		dp += sizeof(*ohead);
-> -		ASSERT(dp <= end);
-> +		if (dp > end) {
-> +			xfs_warn(log->l_mp, "%s: op header overrun", __func__);
-> +			return -EFSCORRUPTED;
-> +		}
+This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entry
+to make sure don't stray beyond valid memory region. Before patching, the
+loop simply checks that the start offset of the dup and dep is within the
+range. So in a crafted image, if last entry is xfs_dir2_data_unused, we
+can change dup->length to dup->length-1 and leave 1 byte of space. In the
+next traversal, this space will be considered as dup or dep. We may
+encounter an out of bound read when accessing the fixed members.
 
-looks fine.
+In the patch, we check dup->length % XFS_DIR2_DATA_ALIGN != 0 to make
+sure that dup is 8 byte aligned. And we also check the size of each entry
+is greater than xfs_dir2_data_entsize(mp, 1) which ensures that there is
+sufficient space to access fixed members. It should be noted that if the
+last object in the buffer is less than xfs_dir2_data_entsize(mp, 1) bytes
+in size it must be a dup entry of exactly XFS_DIR2_DATA_ALIGN bytes in
+length.
 
+Signed-off-by: lei lu <llfamsec@gmail.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_dir2_data.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index dbcf58979a59..71398ce0225f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -178,6 +178,12 @@ __xfs_dir3_data_check(
+ 		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+ 		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
+ 
++		if (offset > end - xfs_dir2_data_entsize(mp, 1)) {
++			if (end - offset != XFS_DIR2_DATA_ALIGN ||
++			    be16_to_cpu(dup->freetag) != XFS_DIR2_DATA_FREE_TAG)
++				return __this_address;
++		}
++
+ 		/*
+ 		 * If it's unused, look for the space in the bestfree table.
+ 		 * If we find it, account for that, else make sure it
+@@ -188,6 +194,8 @@ __xfs_dir3_data_check(
+ 
+ 			if (lastfree != 0)
+ 				return __this_address;
++			if (be16_to_cpu(dup->length) % XFS_DIR2_DATA_ALIGN != 0)
++				return __this_address;
+ 			if (offset + be16_to_cpu(dup->length) > end)
+ 				return __this_address;
+ 			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
 -- 
-Dave Chinner
-david@fromorbit.com
+2.34.1
+
