@@ -1,80 +1,213 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF155256
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Jun 2024 00:26:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1268718AF9
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Jun 2024 02:27:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717633603; cv=none; b=mS4nI0Y7ZDMaZTQ2ME8jc/zOmynV+oteaS39/1crfx64ZU6uKIJYLJbH5295VEifMrV2+zSPjwudWAkPEursdGPGoMe/Ps0Q7rU/B8SL9ONRO7dIPG/BYl/S0MRUFrDT7AYybSY639v9J+aM2xkMMmm989NgnKi1K26c/F7aEQE=
+	t=1717640864; cv=none; b=kgA4LfXBJTH8qrxqsKLQ7HmkuVXbSn1djPT4BFjBEzOmeEirOD8jtaMNHbjLgSE/sOG3DsV+45qEglj7l0qzO1ASTbDLHpCw5zr45BjE4ur+Asn4uoGLtChjmSBActW+8BGXbexiYFhIunOXTHf6mJ/FNka8+RFw/91EdBeht7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717633603; c=relaxed/simple;
-	bh=EvahCWUU3uI6ScLr8pYbodIFXpTT6JDrsz7E4QmsjMM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=mAGy+Wv6XWfjV6Z7+1OMvEQ+TzGJ/iv9b14xYnBl1AX43K7unwm+YFPbrpZ0KstySyBdLWGuejE5h8Ek0aUq1MZpUAHzU0xVQ/b1rRAdg53KHfyxDFjFTKShXkM4Bp/ihDBHWbdFA9LmvZxE3UMSEqwLdFsiFZxm5I9xeCgEdxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JA6CJevy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717640864; c=relaxed/simple;
+	bh=1LDL86QubPpmoCbk76dksUFSkh9K84fHfc7HHJImPGM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cJzTKhlVyL6w6HE6tlmrkaSMVtldaNPF8vfoJVCZl5FXBbBMq9Ub3Ma9kfpDJImSdpXKG/GWlcIahgM2fhu5TaH6sYlqrG9wArLJK3W4PBfIim1z6fQrN8cmSUKn9+D2fM5m4eW7TRFhI2CsjjaOEGg+HI+ZgpijXjguj9i85Vk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Fp7tuXZm; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JA6CJevy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C474C2BD11;
-	Thu,  6 Jun 2024 00:26:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717633602;
-	bh=EvahCWUU3uI6ScLr8pYbodIFXpTT6JDrsz7E4QmsjMM=;
-	h=Date:From:To:Cc:Subject:From;
-	b=JA6CJevy+tLluffwjcDEQMYIe7+hdOY/tumbCTIiyTnjxzV5nJimlEu5RF/zpqkxM
-	 leATOXRMKEkSBE1TgF/QpzfVW+8tJcOKWngfrFjBaSmnNQ+SXbtfJqdjYdbspj9vFL
-	 9yHDodW0JNtW9xprJ26RU6Op9mFDkGlxbGRVlfM2K0QPUgxmkvErVWyedJuTUKKzwf
-	 CqsU9eKwC5DSDXqACutdg9NmCDOhbwBz8mZIIW/1oFQc6aEWFfSZCIqlpqj0xeql0F
-	 qQMT+nZcW13nHiOZCm/BlB+B7LnO4JhhciQdBqwlAQMpxmI+jY3/vCR3aB6e8Bp1or
-	 kiFbD+y2s7T4Q==
-Date: Wed, 5 Jun 2024 17:26:41 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: sweettea@dorminy.me, Leah Rumancik <lrumancik@google.com>,
-	neal@gompa.dev, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Shirley Ma <shirley.ma@oracle.com>,
-	Eric Sandeen <sandeen@redhat.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: setting up xfs office hours
-Message-ID: <20240606002641.GJ52987@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Fp7tuXZm"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-703ed5d37acso370533b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Jun 2024 19:27:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717640862; x=1718245662; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=5TJAdD8GmJxvj8pKuF8QnnhaTXzIe7Tat0a8Ot2Rm1I=;
+        b=Fp7tuXZm1xkj8VT/ICSRidbJrnvv0Z+TEgqrFSXzp7lMQTlRKYIqIR0h3520DJos96
+         YPCbyaXE9QY/C7z9xlycFK3D6w0C6U5rU63nEBDJtXemZLUUMxQj1fUS4noT2Hns/4rW
+         CZk+YwqLIloR3h9QIrpC1rUZ5jgod0BfAiGeZ/i8JttRCFRh8/P1r0bdv90DNkH6sFg+
+         VkNlBuKX2wzvd4gz2bSMdsFFsqPZU3C2EQ7nwswDZV3bsGv9vFIiI3NbEZDScxDH3jDv
+         Mq9W37ebrOww5EbL54LtFKDwd8RwGp2qVcJQO2PBDpDKXMlQsTKd6LYVXyZAnq3hc2QY
+         qtPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717640862; x=1718245662;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5TJAdD8GmJxvj8pKuF8QnnhaTXzIe7Tat0a8Ot2Rm1I=;
+        b=ek3gJ/DJ32GeZBiTZViQPqkeaBeTVeeONC/vKieBc+YhKGvl7La42UwPcWXFQzWfs2
+         BNIH1ULIKzbQXTo+t6yk8R5+2vwC3YPiDQADsB3UYg33++2UuAiORPRwQF8dmJxBIAPg
+         rfekqS6a7hmlC5XGsG5rWmnHJl/v6PyXijWeAmnY9ctm+c6AZa/j7jeuOq6CF9V0ka3W
+         zh3fIRfaexE6pPJBOqb+Jniy9lrqiksIb6vZryvWkmak/vXst7wRNgzXThmr+qDNzAPU
+         iz6/dSPmU0WnakPh6K5Njp3uth0JHJAtCnXfNq0AFkP4fSrVOKWFwFWx6iTvNe8qVI2N
+         mlIQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVxqDPNMPm77ygQR3EjU1Bmzl4VCkz++2/zLDs4fKmTomtM27VeJtVssniWZrg/cGKDJuqzA+xJYaH+WvquhC1F1pNXOUmrAoOb
+X-Gm-Message-State: AOJu0YxwlTLYo1WNUE/GBZCh9KWKUY1K9qP3oaA8CecVyHojFqCz1qcr
+	kQmv/lOWUu3cBZHbbjsTi9TpdDxqDGZXIABCVhwS+reP1MsJ8CfE39Ggovhy5a4=
+X-Google-Smtp-Source: AGHT+IFOvqMOhYBsTyN+11L2HRn+hiKCTEcw/AH1ihwa0CkjXcJ8VasEd4Lj0Q7OqcxYZKylvjJcqQ==
+X-Received: by 2002:a05:6a20:7488:b0:1b2:66c6:7787 with SMTP id adf61e73a8af0-1b2b7019e45mr5171795637.35.1717640862099;
+        Wed, 05 Jun 2024 19:27:42 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-703fd52b623sm179184b3a.207.2024.06.05.19.27.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Jun 2024 19:27:41 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sF2qo-005rfQ-2A;
+	Thu, 06 Jun 2024 12:27:38 +1000
+Date: Thu, 6 Jun 2024 12:27:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
+ FS_IOC_FSGETXATTRAT
+Message-ID: <ZmEemh4++vMEwLNg@dread.disaster.area>
+References: <20240523074828.7ut55rhhbawsqrn4@quack3>
+ <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
+ <20240524161101.yyqacjob42qjcbnb@quack3>
+ <20240531145204.GJ52987@frogsfrogsfrogs>
+ <20240603104259.gii7lfz2fg7lyrcw@quack3>
+ <vbiskxttukwzhjoiic6toscqc6b2qekuwumfpzqp5vkxf6l6ia@pby5fjhlobrb>
+ <20240603174259.GB52987@frogsfrogsfrogs>
+ <20240604085843.q6qtmtitgefioj5m@quack3>
+ <20240605003756.GH52987@frogsfrogsfrogs>
+ <CAOQ4uxiVVL+9DEn9iJuWRixVNFKJchJHBB8otH8PjuC+j8ii4g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxiVVL+9DEn9iJuWRixVNFKJchJHBB8otH8PjuC+j8ii4g@mail.gmail.com>
 
-Hi everyone,
+On Wed, Jun 05, 2024 at 08:13:15AM +0300, Amir Goldstein wrote:
+> On Wed, Jun 5, 2024 at 3:38 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> > On Tue, Jun 04, 2024 at 10:58:43AM +0200, Jan Kara wrote:
+> > > On Mon 03-06-24 10:42:59, Darrick J. Wong wrote:
+> > > > I do -- allowing unpriviledged users to create symlinks that consume
+> > > > icount (and possibly bcount) in the root project breaks the entire
+> > > > enforcement mechanism.  That's not the way that project quota has worked
+> > > > on xfs and it would be quite rude to nullify the PROJINHERIT flag bit
+> > > > only for these special cases.
+> > >
+> > > OK, fair enough. I though someone will hate this. I'd just like to
+> > > understand one thing: Owner of the inode can change the project ID to 0
+> > > anyway so project quotas are more like a cooperative space tracking scheme
+> > > anyway. If you want to escape it, you can. So what are you exactly worried
+> > > about? Is it the container usecase where from within the user namespace you
+> > > cannot change project IDs?
+> >
+> > Yep.
+> >
+> > > Anyway I just wanted to have an explicit decision that the simple solution
+> > > is not good enough before we go the more complex route ;).
+> >
+> > Also, every now and then someone comes along and half-proposes making it
+> > so that non-root cannot change project ids anymore.  Maybe some day that
+> > will succeed.
+> >
+> 
+> I'd just like to point out that the purpose of the project quotas feature
+> as I understand it, is to apply quotas to subtrees, where container storage
+> is a very common private case of project subtree.
 
-At the XFS BoF during LSFMMBPF last month, I restated my longstanding
-opinion that given my experiences trying to get online fsck designed and
-merged, our feedback cycles are far too long; and my lament that we do
-not have a community conference call where people can discuss what
-they're working on, ask for new projects, etc.
+That is the most modern use case, yes.
 
-As part of stepping back from an active development role to focus on
-leading my team, I declare that I will host open office hours for
-people to:
+[ And for a walk down history lane.... ]
 
- 0. Run down the bug list and QA testing results
- 1. Drop by and talk about whatever xfs-related issues they have
- 2. Find things for themselves to work on
- 3. Inquire about adjacent work being done by other people
- 4. Engage in transfers of information and institutional knowledge
+> The purpose is NOT to create a "project" of random files in random
+> paths.
 
-My intent is to have a defined hour every week where anyone can drop in.
-However, given the global scope of the xfs participants, I declare that
-anyone who cannot make whatever time I pick should contact me to
-schedule an appointment.
+This is *exactly* the original use case that project quotas were
+designed for back on Irix in the early 1990s and is the original
+behaviour project quotas brought to Linux.
 
-The first office hours will be on 11 June 2024 at 8am PDT (aka 1500 GMT)
-https://oracle.zoom.us/j/92930934955?pwd=wsEYPkj7WOpvIT0E1Bb0cCBaHvj8JW.1
+Project quota inheritance didn't come along until 2005:
 
-Immediate topics: I want to give away a bunch of projects: the ones that
-have been festering in djwong-dev; and the ones merely written down on
-paper.  Also the actual scheduling for this meeting since the biggest
-blocker has been the near impossibility of finding any good timeslot.
+commit 65f1866a3a8e512d43795c116bfef262e703b789
+Author: Nathan Scott <nathans@sgi.com>
+Date:   Fri Jun 3 06:04:22 2005 +0000
 
---Darrick
+    Add support for project quota inheritance, a merge of Glens changes.
+    Merge of xfs-linux-melb:xfs-kern:22806a by kenmcd.
+
+And full support for directory tree quotas using project IDs wasn't
+fully introduced until a year later in 2006:
+
+commit 4aef4de4d04bcc36a1461c100eb940c162fd5ee6
+Author: Nathan Scott <nathans@sgi.com>
+Date:   Tue May 30 15:54:53 2006 +0000
+
+    statvfs component of directory/project quota support, code originally by Glen.
+    Merge of xfs-linux-melb:xfs-kern:26105a by kenmcd.
+
+These changes were largely done for an SGI NAS product that allowed
+us to create one great big XFS filesystem and then create
+arbitrarily sized, thin provisoned  "NFS volumes"  as directory
+quota controlled subdirs instantenously. The directory tree quota
+defined the size of the volume, and so we could also grow and shrink
+them instantenously, too. And we could remove them instantenously
+via background garbage collection after the export was removed and
+the user had been told it had been destroyed.
+
+So that was the original use case for directory tree quotas on XFS -
+providing scalable, fast management of "thin" storage for a NAS
+product. Projects quotas had been used for accounting random
+colections of files for over a decade before this directory quota
+construct was created, and the "modern" container use cases for
+directory quotas didn't come along until almost a decade after this
+capability was added.
+
+> My point is that changing the project id of a non-dir child to be different
+> from the project id of its parent is a pretty rare use case (I think?).
+
+Not if you are using project quotas as they were originally intended
+to be used.
+
+> If changing the projid of non-dir is needed for moving it to a
+> different subtree,
+> we could allow renameat2(2) of non-dir with no hardlinks to implicitly
+> change its
+> inherited project id or explicitly with a flag for a hardlink, e.g.:
+> renameat2(olddirfd, name, newdirfd, name, RENAME_NEW_PROJID).
+
+Why?
+
+The only reason XFS returns -EXDEV to rename across project IDs is
+because nobody wanted to spend the time to work out how to do the
+quota accounting of the metadata changed in the rename operation
+accurately. So for that rare case (not something that would happen
+on the NAS product) we returned -EXDEV to trigger the mv command to
+copy the file to the destination and then unlink the source instead,
+thereby handling all the quota accounting correctly.
+
+IOWs, this whole "-EXDEV on rename across parent project quota
+boundaries" is an implementation detail and nothing more.
+Filesystems that implement project quotas and the directory tree
+sub-variant don't need to behave like this if they can accurately
+account for the quota ID changes during an atomic rename operation.
+If that's too hard, then the fallback is to return -EXDEV and let
+userspace do it the slow way which will always acocunt the resource
+usage correctly to the individual projects.
+
+Hence I think we should just fix the XFS kernel behaviour to do the
+right thing in this special file case rather than return -EXDEV and
+then forget about the rest of it. Sure, update xfs_repair to fix the
+special file project id issue if it trips over it, but other than
+that I don't think we need anything more. If fixing it requires new
+syscalls and tools, then that's much harder to backport to old
+kernels and distros than just backporting a couple of small XFS
+kernel patches...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
