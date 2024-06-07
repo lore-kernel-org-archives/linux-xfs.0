@@ -1,140 +1,93 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3FE3F188CBB
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Jun 2024 15:24:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717773896; cv=none; b=uUBSJAP+tV1j4433nPlP5tf0voR98Kj00wO3jNB0wsD76FYZm0gXJmeLWA6R6jtqE62ujM3TLTbLjsWsH/BCGZ44pEI19zXNhNfCeV15VlmilFfIn1Lm49X1/KXIMz+1yG0tEXRXXuuABP/yCNSdTjOONuStAq9nDZWJcvJCFEE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717773896; c=relaxed/simple;
-	bh=ksvBLldepftFrxYQ5LoW3zznQ6bbYR378jWhEzfGFGE=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=a2O+zRFXqo4d3Iz238lTxB7x6sIdxxPpjjKaF3oXfblGgTSumBMrZ+3TSxrIIRWs3rj7lCMlJNLXb+Uex202PZL1SeQIcRKTAc6Q8chY3BmBNfDwNiXTCWpsDK5ZG5jv01cwOP96GyUTkErP2rDrkt7IQzF13rthdYO4CNpkSZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=rPjVeZek; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="rPjVeZek"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 00B2448C707;
-	Fri,  7 Jun 2024 10:24:52 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 00B2448C707
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1717773893;
-	bh=p/5D+rr93Zh+0chkKlYaGiKj8IYcMuosSG1iBBBaAoE=;
-	h=Date:To:Cc:From:Subject:From;
-	b=rPjVeZekN+FPZu3SyKpBX3+NuxnYIGsyqclLyaWYR3RVbqcq7BU9nhVFJtCJgsh0N
-	 hsblp0H9Z1SYyUQFYt9ON/K2TYxRh9aq/qUw9cPwgpwmrROp45k4Xb10Kz3spf0scc
-	 LUmoMJeBYt4xY8VV8NGvv+X0MYBoOtepIpxb0tPGW/v6kI9D+lOM3p57GxY+GcF+9s
-	 1LtrSNkcpZJC2dSErRz9lDLDe5L9zDUFWI3B4Q/Tkb06MKypFnCx+gcsd3U/6A1NXF
-	 8Vj2KyIBzBeZ/SN5eJG77bSNVGNq6LnJObZiRRNUn/iUmu4PUhOdYO/KoSN3Y5ncTI
-	 3+M8rbSGM3RSA==
-Message-ID: <be7f0845-5d5f-4af5-9ca9-3e4370b47d97@sandeen.net>
-Date: Fri, 7 Jun 2024 10:24:52 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5493F188CA1
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Jun 2024 16:12:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1717776738; cv=none; b=TZNbP+7GJug5ojbCf3V5kW1BOLmJHu/91OOeQA5rOpeeTBq4Wwpiht88FeH0E8bgG62hHbAwTDqgnjf8mThgl8bhyHW6MccHJ4IACeL601Nn93jB3UtmCBBFsqBUBIfNMdtq6MzXg9cFlc56Oln9OlW2z1pG3BuEatHfghg+WIA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1717776738; c=relaxed/simple;
+	bh=5qa8VS3V/4udlgPEvhsK6bqYE77ijHJV3T8LC1D07no=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=sweDNxkZliJjjXickC8Ed6gPoDMqM9Nc8AYMob2v7kbETFrfXc97Qb6CTpMSQgcoQ575XL6ShL7res/PbnPJ/7YfesZDNMdSl5ZJFDX7k7uRW2F2r2FP4ywb2l186PuARUBb+S/svs5teCiBaXG/sPFp5Mcp3EWS4+GCIxXJBOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NJLCvwFJ; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NJLCvwFJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA10CC2BBFC;
+	Fri,  7 Jun 2024 16:12:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717776737;
+	bh=5qa8VS3V/4udlgPEvhsK6bqYE77ijHJV3T8LC1D07no=;
+	h=Date:From:To:Cc:Subject:From;
+	b=NJLCvwFJ/hAaOYYlZ1oN6G5zsu1vIPmqgCzI1uNxXDUjgSEMxr0w9LOCJv0Tye1aq
+	 PCRzo3V3sb0wy/YdtlcgfDKAMc8g+wL/x7Upj78pg2sVp8EXwWUMt+bL2rtMbBe96I
+	 AHMHE8Rr0Ytsk+HtAx2fqUrmXwSKqf72TlmozW6I+6eAwqA8twJQt4fE/07ACzX6J0
+	 d0MVJm5edn/Ja74oM87u2gE4CY2fMRLIwbm91tCS6vn+Ut1GgodEmxXWkHCQwEFPqg
+	 5RN1PnLHMsmhA4AmIZORO+ymRcRGgCDAEK/9zt54ehEgVrA69wSEEdd4E5arxrjKtG
+	 mYBq2DPtKk3kQ==
+Date: Fri, 7 Jun 2024 09:12:17 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: allow unlinked symlinks and dirs with zero size
+Message-ID: <20240607161217.GR52987@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>,
- Christoph Hellwig <hch@infradead.org>, Zorro Lang <zlang@redhat.com>,
- "Darrick J. Wong" <djwong@kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH V3] xfsprogs: remove platform_zero_range wrapper
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Now that the HAVE_FALLOCATE guard around including
-<linux/falloc.h> in linux/xfs.h has been removed via
-15fb447f ("configure: don't check for fallocate"),
-bad things can happen because we reference fallocate in
-<xfs/linux.h> without defining _GNU_SOURCE:
+From: Darrick J. Wong <djwong@kernel.org>
 
-$ cat test.c
-#include <xfs/linux.h>
+For a very very long time, inode inactivation has set the inode size to
+zero before unmapping the extents associated with the data fork.
+Unfortunately, newer commit 3c6f46eacd876 changed the inode verifier to
+prohibit zero-length symlinks and directories.  If an inode happens to
+get logged in this state and the system crashes before freeing the
+inode, log recovery will also fail on the broken inode.
 
-int main(void)
-{
-	return 0;
-}
+Therefore, allow zero-size symlinks and directories as long as the link
+count is zero; nobody will be able to open these files by handle so
+there isn't any risk of data exposure.
 
-$ gcc -o test test.c
-In file included from test.c:1:
-/usr/include/xfs/linux.h: In function ‘platform_zero_range’:
-/usr/include/xfs/linux.h:186:15: error: implicit declaration of function ‘fallocate’ [-Wimplicit-function-declaration]
-  186 |         ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, start, len);
-      |               ^~~~~~~~~
-
-i.e. xfs/linux.h includes fcntl.h without _GNU_SOURCE, so we
-don't get an fallocate prototype.
-
-Rather than playing games with header files, just remove the
-platform_zero_range() wrapper - we have only one platform, and
-only one caller after all - and simply call fallocate directly
-if we have the FALLOC_FL_ZERO_RANGE flag defined.
-
-(LTP also runs into this sort of problem at configure time ...)
-
-Darrick points out that this changes a public header, but
-platform_zero_range() has only been exposed by default
-(without the oddball / internal xfsprogs guard) for a couple
-of xfsprogs releases, so it's quite unlikely that anyone is
-using this oddball fallocate wrapper.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 3c6f46eacd876 ("xfs: sanity check directory inode di_size")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
+ fs/xfs/libxfs/xfs_inode_buf.c |   20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-V2: remove error variable, add to commit msg
-V3: Drop FALLOC_FL_ZERO_RANGE #ifdef per hch's suggestion and
-    add his RVB from V2, with changes.
-
-NOTE: compile tested only
-
-diff --git a/include/linux.h b/include/linux.h
-index 95a0deee..a13072d2 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -174,24 +174,6 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
- 	endmntent(cursor->mtabp);
- }
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 9caf9aa2221d3..afe06cfd6f0cc 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -612,9 +612,23 @@ xfs_dinode_verify(
+ 	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
+ 		return __this_address;
  
--#if defined(FALLOC_FL_ZERO_RANGE)
--static inline int
--platform_zero_range(
--	int		fd,
--	xfs_off_t	start,
--	size_t		len)
--{
--	int ret;
--
--	ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, start, len);
--	if (!ret)
--		return 0;
--	return -errno;
--}
--#else
--#define platform_zero_range(fd, s, l)	(-EOPNOTSUPP)
--#endif
--
- /*
-  * Use SIGKILL to simulate an immediate program crash, without a chance to run
-  * atexit handlers.
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 153007d5..b54505b5 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -73,7 +73,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+-	/* No zero-length symlinks/dirs. */
+-	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
+-		return __this_address;
++	/*
++	 * No zero-length symlinks/dirs unless they're unlinked and hence being
++	 * inactivated.
++	 */
++	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0) {
++		if (dip->di_version > 1) {
++			if (dip->di_nlink)
++				return __this_address;
++			else
++				ASSERT(0);
++		} else {
++			if (dip->di_onlink)
++				return __this_address;
++			else
++				ASSERT(0);
++		}
++	}
  
- 	/* try to use special zeroing methods, fall back to writes if needed */
- 	len_bytes = LIBXFS_BBTOOFF64(len);
--	error = platform_zero_range(fd, start_offset, len_bytes);
-+	error = fallocate(fd, FALLOC_FL_ZERO_RANGE, start_offset, len_bytes);
- 	if (!error) {
- 		xfs_buftarg_trip_write(btp);
- 		return 0;
-
+ 	fa = xfs_dinode_verify_nrext64(mp, dip);
+ 	if (fa)
