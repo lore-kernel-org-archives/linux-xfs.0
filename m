@@ -1,224 +1,232 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7FCE33EE
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Jun 2024 01:17:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0260212B73
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Jun 2024 03:25:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717723036; cv=none; b=gKJk/avIzq7iEean+O6KqYqD+8Wgj3pZtrNdkOSwalQTixlWKR83oAtyfLqZjXRQTObhmf6kyZ8/rDp2q+vwiZ1pdOS27Mb3AQIcbdbIRJMO7EXPZWe2JDhmXB80FGQE56/KZroAT/Q+2HV2gKBUxerHeeYM3ytEtngKykb6ue0=
+	t=1717730719; cv=none; b=mWNRl5HLszaUXc7QpP6ZhxhevKoJ1hOInwwYz7573AnjOUNqtiDuXXqL+bx5jE9woPVX/XT/d5PbcYpl5zGWiFB2fZAXuHeqVHrnpDMWPgAck/dfWkJUns32yV4N+34o8AqWR96k5A5njXYbjOT7hbw4Xe6JQseqMfvQyuM8MYs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717723036; c=relaxed/simple;
-	bh=DovYnwYT4FzFjJ3w0InElQ6EvbPy+Qb4at2AEQQAMeM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c8VGnFqaNCwicvJPHuVJ7WDomSrvFtZxZMG8rffnEZnG9kJSVheIg4ZLoSd+9ZkUvAnIyvokvIqatnMhz/ULZLi+YjPLQQoqfvCIZKrcgsoICejUs/vygb3/pdzBOuPI+M097Dfx5PdlFVtfr6LEFltZop3qjOKJ2mvIJvQ6iYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ROep8PmD; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1717730719; c=relaxed/simple;
+	bh=X6mSpjjqrU3vOMQPWO7r6eKQNR6aEirHSSJqXa2X6oE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Ps0ZtY9+zT7gOwmWjJ++K1mriMx5bso0/OzQFurA/KADAkOLiMw9bpdZHnc29JAv8uHOU5Uki4pyzS/RXpf1dUVhov+dTpYGg4ym305z8SuD/wyLUYZEHB+E/mJJ/hjtLb3NIY6rG7bligxDXhbiBt/k4vl6UUCJYnsCQyXk3Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RDFFR44O; arc=none smtp.client-ip=209.85.219.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ROep8PmD"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2c1fccb7557so1219146a91.2
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2024 18:17:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RDFFR44O"
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-dfa6e0add60so1827780276.3
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2024 20:25:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1717723034; x=1718327834; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=olrDnaSNC3Z4ntMBoxthDCPsygKyrFeWKYp2o48rvgU=;
-        b=ROep8PmDh7Vc2cDH7JpKJuUjpBh2nOVWw9//L/z+zxgume/5C0GGZWOEHIPl6qLxfB
-         n+cyEppe/13pnQxGFjL/Rjlpyfw3sFCc5bG2g1sFl3prZuaMmNmpD8Ig/j3L4KdKqbP5
-         PAC7+xtH+UCdNHJFXu/QpIWhkSqWFi7edNy6A0v8/01HAC2IHWTvG5QR040J1Mo4bc3i
-         nqu8y+Io4LM7nTOPIC1i5FwvO0zzRgomvjeFW9V1cEpsswhBttCu+2SczbkMi4DNvoMy
-         ue3cg9p2TXuY0VMA/9IFWG7GHLu/NXrRycm4jG/83ggfFMkhM1OnMFjQWpVaeWHYRZKv
-         RK3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717723034; x=1718327834;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1717730717; x=1718335517; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=olrDnaSNC3Z4ntMBoxthDCPsygKyrFeWKYp2o48rvgU=;
-        b=ASMsUo2tAr36y+KS+/7ZnqzFRBP/Yirir5P3Fv9yxZCXbjlu1gHxOH5UkUUZXh4mrn
-         ViWCQnzy2pyjyMXjJsjISXTdKRNJV9c8AgdtcZ68cy013Pm+5GdItJZQrN3Yc+4KGylV
-         KzaFAF/OjzrL8oBFk3uDSyqqv7+9He/hnqHPtoV0Af6zaTPg2ATj2yWrv5No4JB6EYz+
-         M4od6MQFcbYxuGrW7sxA3bwQIDXYkmriO5zqIPPebSYUwy7PWOisBdBUJ/zHQseakF5e
-         MeQmF5gzQtOLMuieVeHMvgms0uGeiL3NHbWZmXeAVjDjAaYFjdGfjaly8wUJwIBxyxOK
-         kZ4Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXssTqGL+Jh67opiXkm4vb2/2K7LhvOOe8l14OgmjpmTaUHfN5TjsD2aXCoX9xbvT2NxxjUld9IUrBKmxYYIjM8wzG9YudC1fkG
-X-Gm-Message-State: AOJu0YyxdBS6KhsMrEZa7x8WGmZ0UgXp2XKR3wqA0T1JxQumCzUhg/bc
-	N3g1nAZQqNCH1COkLhvWhHJ9HAiVDD1hS8z9u37AVroUTFNy7m3i9zTc06mLw2c=
-X-Google-Smtp-Source: AGHT+IHE6LiDxuhpJ2q/G+ownXgxj4n5zJ1nRpZcPTGBixeeGJWQQzjMTTpLXQq7vlkoBnS7V/E2ZA==
-X-Received: by 2002:a17:90a:66c6:b0:2c0:29d5:350b with SMTP id 98e67ed59e1d1-2c2bcc7b6cemr1199277a91.48.1717723033963;
-        Thu, 06 Jun 2024 18:17:13 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c29c384c8bsm2333845a91.46.2024.06.06.18.17.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Jun 2024 18:17:13 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sFOEA-006yCT-1E;
-	Fri, 07 Jun 2024 11:17:10 +1000
-Date: Fri, 7 Jun 2024 11:17:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Zack Weinberg <zack@owlfolio.org>
-Cc: dm-devel@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: Reproducible system lockup, extracting files into XFS on
- dm-raid5 on dm-integrity on HDD
-Message-ID: <ZmJfloJyB4PCaZyK@dread.disaster.area>
-References: <1eb0ef1c-9703-43fd-9a51-bda24b9d2f1b@app.fastmail.com>
- <ZmDvT/oWgVBiCw9o@dread.disaster.area>
- <a9625e9f-e08c-4b2e-995d-693b2a992281@app.fastmail.com>
+        bh=rqrBn0BSn4ZPxhv/+FneVuMqUGXf1tF/D4m45A73YBw=;
+        b=RDFFR44OcuIuImT6nm9g1a4OQhHC6ikGWyiQukBcv5wmqCzoEhSaVBZJqFkwR8vZbr
+         5zxHj5dTmqz46LT9IQH9j3k7/44nZP1lwfJHsqieXZ0sdNYy578tRX3tTh9IA8g+EdXD
+         x6WjEL+lwBIfS73/SHWlOqw8344q+Zsg+xOJSDcrUPHloqCz26vMFVQPO3meus4CMfYB
+         hHOEZu60pPZyjk+w36bgbT8U+QdwlG0KnP6Aqjs+2aXSvATcBSuE0GnU/79kLSwlcXBJ
+         WTpYnOvGJCmFE8sC2cyktEbfosfple5xvqGwJ6GMTyPZpEtqKUM/IhKgTZ4rBOvoLm+O
+         /qMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717730717; x=1718335517;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rqrBn0BSn4ZPxhv/+FneVuMqUGXf1tF/D4m45A73YBw=;
+        b=CK7gynUTAJQ6UOPziTXwfRQo+DDQ9mox+WguOUbp9wHe2YoKo6I/xPNVctzQYnJV7s
+         UySV09T79OS1S3lec0PHQTgOa2Po6F0p2y3rsKfrufEshMzinoiLqVws9bKbfwqe8YL3
+         mVuhyI6jofMMwbraLsCqj9vrX25dzmYFZtWp3Rt2wCnQznCHuGV2zbSyDyp+Rsjv4FJ+
+         RpEi10q1Gz/oe71mScFvKtGpn8X/9RM3Ckqs7+YX5TaWOArR68nsBQ2kTUJQNoV/3/5G
+         9yEbKroFNxYLkIAFQMmOl4dUGwdzxeKEgsnkXOlzzNX/nKjMHkDpevt075LQsHikh6cw
+         qCOw==
+X-Gm-Message-State: AOJu0YzoHaj1RlNkcwdrIfGXrW8HYPtKd4tOzxsQSV6PSZfIcd7ezNXj
+	tyK+aFZ9Ni6BryECiEa8si2IOaVKprV45+A+ir0rE83XAZCwQc4mOWUOuOv8VK6JUDrxUSvpO47
+	cZv60e1CXhI8GalTdyMLDeF7YeOc=
+X-Google-Smtp-Source: AGHT+IGZLVKIPrba2NuAA9iT7DvSdw1RX72+yujsvoSVKE2cMtENquhL8jU/rxhUVzNyihxWMNRIwzq0Bevk0lJUByw=
+X-Received: by 2002:a05:6902:52a:b0:de5:4f12:7ea0 with SMTP id
+ 3f1490d57ef6-dfaf6492747mr1447079276.8.1717730716668; Thu, 06 Jun 2024
+ 20:25:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a9625e9f-e08c-4b2e-995d-693b2a992281@app.fastmail.com>
+References: <20240606031416.90900-1-llfamsec@gmail.com> <20240606163121.GM52987@frogsfrogsfrogs>
+In-Reply-To: <20240606163121.GM52987@frogsfrogsfrogs>
+From: lei lu <llfamsec@gmail.com>
+Date: Fri, 7 Jun 2024 11:25:04 +0800
+Message-ID: <CAEBF3_aspPkAp0Q17Qz8_eyOLtT0EFMYjSzPM-19D-enNF8ayQ@mail.gmail.com>
+Subject: Re: [PATCH v3] xfs: don't walk off the end of a directory data block
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, 
+	Dave Chinner <dchinner@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jun 06, 2024 at 11:48:57AM -0400, Zack Weinberg wrote:
-> On Wed, Jun 5, 2024, at 7:05 PM, Dave Chinner wrote:
-> > On Wed, Jun 05, 2024 at 02:40:45PM -0400, Zack Weinberg wrote:
-> >> I am experimenting with the use of dm-integrity underneath dm-raid,
-> >> to get around the problem where, if a RAID 1 or RAID 5 array is
-> >> inconsistent, you may not know which copy is the good one.  I have
-> >> found a reproducible hard lockup involving XFS, RAID 5 and dm-
-> >> integrity.
+On Fri, Jun 7, 2024 at 12:31=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> On Thu, Jun 06, 2024 at 11:14:16AM +0800, lei lu wrote:
+> > This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entr=
+y
+> > to make sure don't stray beyond valid memory region. Before patching, t=
+he
+> > loop simply checks that the start offset of the dup and dep is within t=
+he
+> > range. So in a crafted image, if last entry is xfs_dir2_data_unused, we
+> > can change dup->length to dup->length-1 and leave 1 byte of space. In t=
+he
+> > next traversal, this space will be considered as dup or dep. We may
+> > encounter an out of bound read when accessing the fixed members.
 > >
-> > I don't think there's any lockup or kernel bug here - this just looks
-> > to be a case of having a really, really slow storage setup and
-> > everything waiting for a huge amount of IO to complete to make
-> > forwards progress.
-> ...
-> > Userspace stalls on on writes because there are too many dirty pages
-> > in RAM. It throttles all incoming writes, waiting for background
-> > writeback to clean dirty pages.  Data writeback requires block
-> > allocation which requires metadata modification. Metadata modification
-> > requires journal space reservations which block waiting for metadata
-> > writeback IO to complete. There are hours of metadata writeback needed
-> > to free journal space, so everything pauses waiting for metadata IO
-> > completion.
-> 
-> This makes a lot of sense.
-> 
-> > RAID 5 writes are slow with spinning disks. dm-integrity makes writes
-> > even slower.  If you storage array can sustain more than 50 random 4kB
-> > writes a second, I'd be very surprised. It's going to be -very slow-.
-> 
-> I wiped the contents of the filesystem and ran bonnie++ on it in direct
-
-Wow, that's is sooooo 2000's :) 
-
-> I/O mode with 4k block writes, skipping the one-character write and
-> small file creation tests.  This is what I got:
-> 
-> Version  2.00       ------Sequential Output------ --Sequential Input- --Random-
->                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-> Name:Size etc        /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-> 64G:4k::65536                 15.8m  19 60.5m  26            218m  31 279.1  13
-> Latency                         659ms     517ms             61146us    3052ms
-> 
-> I think this is doing seek-and-read, not seek-and-write, but 300 random
-> reads per second is still really damn slow compared to the sequential
-> performance.  And it didn't lock up (with unchanged hung task timeout of
-> two minutes) so that also tends to confirm your hypothesis -- direct I/O
-> means no write backlog.
-> 
-> (Do you know of a good way to benchmark seek-and-write
-> performance, ideally directly on a block device instead of having
-> a filesystem present?)
-
-fio.
-
-Use it with direct=1, bs=4k, rw=randwrite and you can point it at
-either a file or a block device.
-
-> I don't actually care how slow it is to write things to this array,
-> because (if I can ever get it working) it's meant to be archival
-> storage, written to only rarely.  But I do need to get this tarball
-> unpacked, I'd prefer it if the runtime of 'tar' would correspond closely
-> to the actual time required to get the data all the way to stable
-> storage, and disabling the hung task timeout seems like a kludge.
-
-The hung task timeout is intended to capture deadlocks that are
-forever, not something that is blocking because it has to wait for
-a hundred thousand IOs to complete at 50 IOPS. When you have storage
-this slow and data sets this big, you have to tune these detectors
-so they don't report false positives. What you are doing is so far
-out of the "normal operation" window that it's no surprise that
-you're getting false positive ahng detections like this.
-
-> ...
-> > So a 1.6GB journal can buffer hundreds of thousands of dirty 4kb
-> > metadata blocks with writeback pending. Once the journal is full,
-> > however, the filesystem has to start writing them back to make space
-> > in the journal for new incoming changes. At this point, the filesystem
-> > with throttle incoming metadata modifications to the rate at which it
-> > can remove dirty metadata from the journal. i.e. it will throttle
-> > incoming modifications to the sustained random 4kB write rate of your
-> > storage hardware.
+> > In the patch, we check dup->length % XFS_DIR2_DATA_ALIGN !=3D 0 to make
+> > sure that dup is 8 byte aligned. And we also check the size of each ent=
+ry
+> > is greater than xfs_dir2_data_entsize(mp, 1) which ensures that there i=
+s
+> > sufficient space to access fixed members. It should be noted that if th=
+e
+> > last object in the buffer is less than xfs_dir2_data_entsize(mp, 1) byt=
+es
+> > in size it must be a dup entry of exactly XFS_DIR2_DATA_ALIGN bytes in
+> > length.
 > >
-> > With at least a quarter of a million random 4kB writes pending in the
-> > journal when it starts throttling, I'd suggest that you're looking at
-> > several hours of waiting just to flush the journal, let alone complete
-> > the untar process which will be generating new metadata all the
-> > time....
-> 
-> This reminds me of the 'bufferbloat' phenomenon over in networking land.
+> > Signed-off-by: lei lu <llfamsec@gmail.com>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_dir2_data.c | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> >
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_dat=
+a.c
+> > index dbcf58979a59..71398ce0225f 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> > +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> > @@ -178,6 +178,12 @@ __xfs_dir3_data_check(
+> >               struct xfs_dir2_data_unused     *dup =3D bp->b_addr + off=
+set;
+> >               struct xfs_dir2_data_entry      *dep =3D bp->b_addr + off=
+set;
+> >
+> > +             if (offset > end - xfs_dir2_data_entsize(mp, 1)) {
+> > +                     if (end - offset !=3D XFS_DIR2_DATA_ALIGN ||
+> > +                         be16_to_cpu(dup->freetag) !=3D XFS_DIR2_DATA_=
+FREE_TAG)
+> > +                             return __this_address;
+> > +             }
+>
+> Let me work through the logic here.  If @offset is too close to @end to
+> contain a dep for a single-byte name, then you check if it's an 8-byte
+> dup.  If it's not a an 8-byte dup, then you bail out.  Is that correct?
+>
+> So if we get to this point in the function, either @offset is far enough
+> away from @end to contain a possibly valid dep; or it's an 8-byte
+> FREE_TAG region that's possibly correct.
+>
+> I think the logic is correct, though I think it would be clearer if
+> you'd add this to xfs_dir2_priv.h:
+>
+> static inline unsigned int
+> xfs_dir2_data_unusedsize(
+>         unsigned int            len)
+> {
+>         return round_up(len, XFS_DIR2_DATA_ALIGN);
+> }
+>
+> and modify the loop to read like this:
+>
+>         /*
+>          * Loop over the data/unused entries.
+>          */
+>         while (offset < end) {
+>                 struct xfs_dir2_data_unused     *dup =3D bp->b_addr + off=
+set;
+>                 struct xfs_dir2_data_entry      *dep =3D bp->b_addr + off=
+set;
+>                 unsigned int                    reclen;
+>
+>                 /*
+>                  * Are the remaining bytes large enough to hold an
+>                  * unused entry?
+>                  */
+>                 if (offset > end - xfs_dir2_data_unusedsize(1))
+>                         return __this_address;
+>
+>                 /*
+>                  * If it's unused, look for the space in the bestfree tab=
+le.
+>                  * If we find it, account for that, else make sure it
+>                  * doesn't need to be there.
+>                  */
+>                 if (be16_to_cpu(dup->freetag) =3D=3D XFS_DIR2_DATA_FREE_T=
+AG) {
+>                         xfs_failaddr_t  fa;
+>
+>                         reclen =3D xfs_dir2_data_unusedsize(be16_to_cpu(d=
+up->length));
+>                         if (lastfree !=3D 0)
+>                                 return __this_address;
+>                         if (be16_to_cpu(dup->length) !=3D reclen)
+>                                 return __this_address;
+>                         if (offset + reclen > end)
+>                                 return __this_address;
+>                         ...
+>                         offset +=3D reclen;
+>                         continue;
+>                 }
+>
+>                 /*
+>                  * This is not an unused entry.  Are the remaining bytes
+>                  * large enough for a dirent with a single-byte name?
+>                  */
+>                 if (offset > end - xfs_dir2_data_entsize(mp, 1))
+>                         return __this_address;
+>
+>                 /*
+>                  * It's a real entry.  Validate the fields.
+>                  * If this is a block directory then make sure it's
+>                  * in the leaf section of the block.
+>                  * The linear search is crude but this is DEBUG code.
+>                  */
+>                 if (dep->namelen =3D=3D 0)
+>                         return __this_address;
+>                 reclen =3D xfs_dir2_data_entsize(mp, dep->namelen);
+>                 if (offset + reclen > end)
+>                         return __this_address;
+>                 if (!xfs_verify_dir_ino(mp, be64_to_cpu(dep->inumber)))
+>                         return __this_address;
+>                 ...
+>                 offset +=3D reclen;
+>         }
+>
+> What do you all think?
 
-Yes, exactly.
+it looks clearer.
 
-Storage has a bandwidth delay product, just like networks, and when
-you put huge buffers in front of something with low bandwidth and
-long round trip latencies to try to maintain high throughput, it
-generally goes really bad the moemnt interactivity is required.
-
-> Would it help to reduce the size of the journal to something like 6MB,
-> which (assuming 50 random writes per second) would take only 30s to
-> flush?
-
-That's taking journal sizes to the other extreme.
-
-> Is a journal that small, for a filesystem this large, likely to
-> cause other problems?
-
-Definitely. e.g. not having enough journal space to allow
-aggregation of changes to the same structures in
-memory before they are written to disk. this alone will increase the
-required journal bandwidth for any given workload by 1-2 orders of
-magnitude. It will also increase the amount of metadata writeback by
-similar amounts because the window for relogging already dirty
-objects is now tiny compared to the dataset you are creating.
-
-IOWs, when you have low bandwidth, seek limited storage, making the
-journal too small can be much worse for performance than having a
-really large journal and hitting the problems you are seeing.
-
-A current mkfs.xfs defaults to a minimum log size of 64MB - that's
-probably a good choice for this particular storage setup as it's
-large enough to soak up short bursts of metadata activity, but no so
-large it pins GBs of dirty metadata in RAM that stuff will stall on.
-
-> Are there any other tuning knobs you can think of
-> that might restrict the rate of incoming metadata modifications from
-> 'tar' to a sustainable level from the get-go, instead of barging ahead
-> and then hitting a wall?
-
-> I'm inclined to doubt that VM-level writeback
-> controls (as suggested elsethread) will help much, since they would not
-> change how much data can pile up in the filesystem's journal, but I
-> could be wrong.
-
-No matter what you do you are going to have the workload throttled
-to disk speed -somewhere-. Reducing the dirty limits on the page
-cache will help in the same way that reducing the journal size will,
-and that should help improve interactivity a bit. But,
-fundamentally, the data set is much larger than RAM and so it
-will get written at disk speed and that means worst case latencies
-for anything the kernel does can be very high.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>
+> --D
+>
+> > +
+> >               /*
+> >                * If it's unused, look for the space in the bestfree tab=
+le.
+> >                * If we find it, account for that, else make sure it
+> > @@ -188,6 +194,8 @@ __xfs_dir3_data_check(
+> >
+> >                       if (lastfree !=3D 0)
+> >                               return __this_address;
+> > +                     if (be16_to_cpu(dup->length) % XFS_DIR2_DATA_ALIG=
+N !=3D 0)
+> > +                             return __this_address;
+> >                       if (offset + be16_to_cpu(dup->length) > end)
+> >                               return __this_address;
+> >                       if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup))=
+ !=3D
+> > --
+> > 2.34.1
+> >
+> >
