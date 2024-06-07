@@ -1,248 +1,316 @@
-Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com [209.85.210.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C1301BC2F;
-	Fri,  7 Jun 2024 06:17:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.48
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717741069; cv=none; b=QWugc8cPlkXUsABLc7BoO/K60tZVEOZv2vMvMF3NwVS144u8rDNstjMYn4Qf0npk0iK+KU76V08VtIgGPAvfAWjgnCO+kyNU5wpfKCnKro8GH1arTZRdOpkbKihL5ooRRA06XjaAMF03m9TSIbAol0MYBDmNc+p3KVebGy57j6k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717741069; c=relaxed/simple;
-	bh=dFhnXTuFhcPGbC5RdO3RlyAEksvW4vfRvB/ArJrZHH8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SzX36Jhfz9hxuNLPjhznCtjvh32tINMGfdb3kDGz/4UHLL/jLD1Aor/Je8j7qOkUvVR5Xkw9J2YvWfT2a7KDuLL9eaq0JQiiH1FAzCzZTn/+Z806HI7XxAbvIRAaRWJHpHYKAWc83cIZnYgNAauyM7uCaPrIlkLDBdOBNOxWavU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i6w66ZT0; arc=none smtp.client-ip=209.85.210.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC87519309E;
+	Fri,  7 Jun 2024 14:40:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1717771238; cv=fail; b=uYi6X0PRbbwvIfJkgEFtLOTBhUvh7sOwYbulSNDl3OsCW/bGFWlNQhFFJJRgjMHZtNdcT80oY5+vEjL7+dujHC1sQ30TKiITHY5P5mYIuG8JV7BamRENpX9t+CmB07Z0TcIguWUN+lCiO61BwPPhxGzNyM1AiOR/4M4PQbcMumQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1717771238; c=relaxed/simple;
+	bh=L9dF2xDJ6FmD5uB4WpUF55fw0shwrYmOjf1ia+iPP1o=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=tiuZmUKagSkkWfAlCfzu9hekQGJpAeD76k8O8pgvVSmFR6JecrYOfxDLcjTtsR+IQLTb8h/raObgDq1upvnWkWAdp4xghGWkg9v8GB1s1t+1Xdv+0Qw1HckARE579Saklk8iwYskxyr3Scsoh+FUyuahZEDhFkbaHbfA0Iy1cto=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=gRLsCFTo; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=zYUxkujx; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i6w66ZT0"
-Received: by mail-ot1-f48.google.com with SMTP id 46e09a7af769-6f938c18725so1083551a34.1;
-        Thu, 06 Jun 2024 23:17:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gRLsCFTo";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="zYUxkujx"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 457CublM015431;
+	Fri, 7 Jun 2024 14:40:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc :
+ content-transfer-encoding : content-type : date : from : message-id :
+ mime-version : subject : to; s=corp-2023-11-20;
+ bh=CDgjNMLV2JAAJGgydZEWnatLy2EIo/Wv9fvbYe4nn7M=;
+ b=gRLsCFToZlZg44uG55LiY/tIgkl6GOimBOkcHMXhJq5iPx4JNKFR7WZAWA07GxRs/v3T
+ vbiRdTjOT1H2tPiKcMBfZ46HzGEkG3OJo9LH5PpA4xS3iUhQXM3kpJ6q6SnHJa9Oj4ia
+ ZXH+owkkjXEb3bllzyO0ATFwkHg9S2vncrJpE4/Oyjr1oW/C0t4dsnrisWAXZECdnzzL
+ J302HLZ/8nXshUeGy5IhBzW+AcbM/05IbQFt6aSQzgcTZIAE7FCpSr9/UnFCTYfRhgCE
+ IvfMYVbcrMxc9MGgKX/zLrAUTMJWx7OkvbOGjmcEU2V/ZWBhlN6MntJmDrO0TGjH1xff Hg== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3yjvwd3ted-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 07 Jun 2024 14:40:02 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 457DHEgB024059;
+	Fri, 7 Jun 2024 14:40:02 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ygrr2abeh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 07 Jun 2024 14:40:01 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ONmmBolru0dx9S8wDGMPj/Ky4p5HuALPweKMXhxKXfHMCmKwSgxSG+j7ipPB09jgtKkICEbp0tHvoJFCilpTC6yXIGWJp2QMCua6HS5wPN+1kmTIYjj8Aemvxddsy9UxnvigmoNf5I7Rv0kM1cXV9lXPpedI7tMch4LHfNwQGdjV8kJi6dwrBkmxWWKpnNakv7nR8Yfg+2EY9GAfTnrRFDNkBCUfDQzLk79Kj5SONVT7s81sWnaDWlXX6Sz7M4AofTXQtcuXfirgDd/yCv1hV5fCo3ggBqubwzaZVWFgTIEtgwS3at9NxAPVMTr+ATqzSAdzoWi3Prchrikl5G81Iw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=CDgjNMLV2JAAJGgydZEWnatLy2EIo/Wv9fvbYe4nn7M=;
+ b=DpRLaWnJ3HWMQ0+qdvnEVRb0WKWOiJNd8LzzUfKx2HyQG3NHS+xeF4/vGoetE8pI/wxHO5raE3L5NX9VjKRKrIwEL1y5oDgJ0nKIfP7z5IrxXJ+UCd80Ehl9FhXNXiP+TCrSMfSMQVxOHWD4j+RXbm1Lk8v5r/LsOEQahI6jCXOOgMOZhRnWCpHvQVQ+BhBPkcGG7McqtJzcHp1k1QAB46JiS8aeixnzavxo8q8oOPdzkk+m0gig+EVUJ7MX6XVeC9SzPRv4CC3W5Bsbz9bIupKcJmi3ppM0BBU4N3dCsTXdXssssaiHrY51jPyd+SjbRMsrfvOUOyje4dywHm4LEA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1717741066; x=1718345866; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KvJC0MUVYlfew8euTODGE/fyHK2X4xCRlVW3U2IH814=;
-        b=i6w66ZT0eJtU4zEoZDEmtcNpaa54oHQbGdXLun8Ie+0/g49ueUQFZIdAIS/EiJn58x
-         6wt6ihuAFEAnR26d+UZ1ps5eL/LgCn5UgCpRNRT8c91mHK605Tg1KWsqYOsEoiGyGorn
-         0bkIwUHa9PJrOPXv4hxWamuMhwjmbP/8Tquk1rVIxZK1A5gkucknZhyodDQ2S7gkWLka
-         wvE4P6oeBVy0YwKervpCHWItjhQAnLudv+cwP663usp8Qc68dGZ9C/f+3qoEFdDP0nj6
-         RXCIYEGlhRe7pWKYvP3ojQREl6E46Z6kL/1nOYVZmOdfn6KpCd7yhOSRhYsOZQj8tLpP
-         lncg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717741066; x=1718345866;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KvJC0MUVYlfew8euTODGE/fyHK2X4xCRlVW3U2IH814=;
-        b=mNR/ZPrrtkohxj5y+UrSeKNLPqxWeJIgWtdG15+2mA260dLyoKD00umHLhucTEQmGx
-         fXweDWwRgpTPCeArvwKcAwD5IgtzXPobe+3vzaTpFpMZOAec3m3dUHhaktkrosbvk7OO
-         dh50QxKQpi+VIWA+7tVXOJTKC55LlRw1PTQiVhlsWsj3YVM3CbhXIFp+cr5in+AUABhO
-         5VniskXWvw/0RzGqfC+b5Q7j4sYBgchGZrK/JLSQzmlZ5xNKnrbVdtFH0ko7FQv1u3DF
-         qcrmBnYA84DsH+MhfIAk3vOGzVo/76S8ITIYr6vbobnEFPtVwHzXBtbnUl69WTmalf6m
-         ROrQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXoZv6kPzy9/8grSNtP/da2LAo0h1ncmR0fHLOhmMUo/OWns4rsxNRd+KmiJXYE4v9fXBXqck0U8ok771s+mjt0JwRAyLI33DV1TxDUv7/xehuF9pVNE6QC6qUn3k6uSDBPqvXQwoMXZA==
-X-Gm-Message-State: AOJu0YwGFkhI9rehm1OxliVCDV3qOqJ+mh8De4kxMRzAbg/vFnIbDF7p
-	RLG7+Cxv6OA904Kfh1iNpC4kR6DLKSaM2hTp5GxcIjDSfzapGq9z9fEtkraNjK3Y+6SP0Boea7H
-	M9vop6tYuvVzMxNkJm4j7Kj/sbWg=
-X-Google-Smtp-Source: AGHT+IErVPUvfa7FPveK4gqnv2VsPauJIiIaa2g+pRmfRsiGQ7Ucpv1Sqtjb0uQf/10rjJryVJFvPyo51Xn8Cd9j8ZU=
-X-Received: by 2002:a9d:7545:0:b0:6f9:3fab:f9b8 with SMTP id
- 46e09a7af769-6f9572c7cd8mr1559661a34.25.1717741066365; Thu, 06 Jun 2024
- 23:17:46 -0700 (PDT)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CDgjNMLV2JAAJGgydZEWnatLy2EIo/Wv9fvbYe4nn7M=;
+ b=zYUxkujxr7Tw0ZqtMWkn8zlWosR80LWrz7prpjaAskjey3Z07dYqVPvOSMAUWH6ElrgoBHb/SoNkR/i2XR26Lw8g2WmrNT8mHaxteWJtf/LUtxuoqjw08DELtc8DDfVQbK/P0/Yr7ynC15JO+/IpfBZ4gzqKZ64mWL93uRipKks=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by BY5PR10MB4226.namprd10.prod.outlook.com (2603:10b6:a03:210::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.34; Fri, 7 Jun
+ 2024 14:39:58 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7633.033; Fri, 7 Jun 2024
+ 14:39:58 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: axboe@kernel.dk, tytso@mit.edu, dchinner@redhat.com,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, djwong@kernel.org,
+        jack@suse.com, chandan.babu@oracle.com, hch@lst.de
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, gfs2@lists.linux.dev,
+        linux-xfs@vger.kernel.org, catherine.hoang@oracle.com,
+        ritesh.list@gmail.com, mcgrof@kernel.org,
+        mikulas@artax.karlin.mff.cuni.cz, agruenba@redhat.com,
+        miklos@szeredi.hu, martin.petersen@oracle.com,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH v4 00/22] block atomic writes for xfs
+Date: Fri,  7 Jun 2024 14:38:57 +0000
+Message-Id: <20240607143919.2622319-1-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MN2PR08CA0029.namprd08.prod.outlook.com
+ (2603:10b6:208:239::34) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240523074828.7ut55rhhbawsqrn4@quack3> <xne47dpalyqpstasgoepi4repm44b6g6rsntk2ln3aqhn4putw@4cen74g6453o>
- <20240524161101.yyqacjob42qjcbnb@quack3> <20240531145204.GJ52987@frogsfrogsfrogs>
- <20240603104259.gii7lfz2fg7lyrcw@quack3> <vbiskxttukwzhjoiic6toscqc6b2qekuwumfpzqp5vkxf6l6ia@pby5fjhlobrb>
- <20240603174259.GB52987@frogsfrogsfrogs> <20240604085843.q6qtmtitgefioj5m@quack3>
- <20240605003756.GH52987@frogsfrogsfrogs> <CAOQ4uxiVVL+9DEn9iJuWRixVNFKJchJHBB8otH8PjuC+j8ii4g@mail.gmail.com>
- <ZmEemh4++vMEwLNg@dread.disaster.area>
-In-Reply-To: <ZmEemh4++vMEwLNg@dread.disaster.area>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 7 Jun 2024 09:17:34 +0300
-Message-ID: <CAOQ4uxgV5V0TmbZk1vqn=bYfSsdLofDRKvBT4O60zU+jXo0YMQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and FS_IOC_FSGETXATTRAT
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Andrey Albershteyn <aalbersh@redhat.com>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BY5PR10MB4226:EE_
+X-MS-Office365-Filtering-Correlation-Id: 76d7ed52-f2e2-4681-ccb0-08dc86ffb46b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230031|376005|1800799015|7416005|366007;
+X-Microsoft-Antispam-Message-Info: 
+	=?us-ascii?Q?YbjtOl9LtLb79198k2b7FIk1eeHGXbCeUV/6duOy4+9ipddhDCrnALNLAXvN?=
+ =?us-ascii?Q?WLx1M5ObkTlUGLOmBIUG1d4x9CvUzurP6vt1dsUK4GSFbQVax1oM6pq77dYl?=
+ =?us-ascii?Q?PHC44U307r1qhq3iPsUTgbYEmU3a6vCNn5EZbf7u9zAd4bvxaIufEHD+GtGc?=
+ =?us-ascii?Q?cJsMac1z95tWNy4/APR631kvDk9VMN+gMbFNkyQ9RTmHvUcD6xHlu0mn5CCO?=
+ =?us-ascii?Q?WcbVBgREv1k6ojbBtFcWhdFVh2hemI0RSCbe9y/1S+MXZQd7SysxCjHC0opj?=
+ =?us-ascii?Q?amveh0zHstfDsa6t9oCp4midRzIzR/QgvNFzq4Z0yuoNHK56XN49FgEYT7ef?=
+ =?us-ascii?Q?3iJpzu9ejVN5EVx7tfMaxWA09nukI8iUGLMy8gfgPB2G5OicZURXAysySsTJ?=
+ =?us-ascii?Q?SBay6PRV+Efx15KBVrnNDLVMRbY4HWnik+dyhZ4bHt/7HmJOglUEUg0zymtI?=
+ =?us-ascii?Q?1L/FxkSvgzhmoaMfyjqLf/eFfC6R8j7b7H+tRV1o9vqTZbQMlv9Kdlb4UnqN?=
+ =?us-ascii?Q?8W2cm49nLOZENwykNZg+BnXdxPwyvL0xkUvvhc/eU8z+M8QxLd1QrHr2xsjb?=
+ =?us-ascii?Q?BRzLIlh8iY0P6zG9mK42apgH81qFczE7aV/+kD8/bAHAqW9/FuBbn9PVYyjd?=
+ =?us-ascii?Q?rHk2esJXzBD9q94T8vZSeTzqMnO79p4LGFeV1AqSnaMP72rotFj2HDJiKYyT?=
+ =?us-ascii?Q?2Zo/uQZaTfzZPXo3TRD72KYcUafYbupviHLkslb/nynf+PI010spYiYfZInw?=
+ =?us-ascii?Q?XN/364BWkDRn2/eHhHyP69uESJHdkKPqlG3FO9mzIewZp3pGND3zsmjJ+MK/?=
+ =?us-ascii?Q?J7uxZ3s0Qngb3/Q1Fneo7MdgP9WvzYBgLuDxIfCl6BI0sIo4ivxnU6/fRPXU?=
+ =?us-ascii?Q?rFbXiTH8oV50MIBxgEIdfhpZDKL9NMjfd6V+M9n5MHUngV4NICd/QSjNfyJw?=
+ =?us-ascii?Q?ZtXd049qdmyccJ3jh5Y9kod5WKNp+g2qqDhwN9GP+oGlyxZpTDyapkykb+Q9?=
+ =?us-ascii?Q?ls+e4fIyoB6qXEwDbEsi2bLvKmQ9i96VEqvi3kPBGzmAMLDf1hI/B3q3bZGv?=
+ =?us-ascii?Q?vWcspWo6zVfmv97bdID/fjCdOYMKj7h4JyQ7jr/7IzuMPw51A7uIBI3mzdVC?=
+ =?us-ascii?Q?OJnxhuAw+VcznE9aDn44Hs1zwBdbnXj1FQKXDNMmh2Qird8/XSrj15vmKa7u?=
+ =?us-ascii?Q?O7VzzSm9hHpai+MsJJAopPOv+aFPpJ2kc8xBP+0IHVR5ual0nUoMrjV5zY1w?=
+ =?us-ascii?Q?taMEYEuIj0O8pLSwXdrvdLKt4Tc6s7RXR6nc8APJkA=3D=3D?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(1800799015)(7416005)(366007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?us-ascii?Q?E46hFAxm47w+Y/4KJiz6jKDWHGDICHO0v9A7Iqqk9mGKBtZphxjewMXknTOB?=
+ =?us-ascii?Q?ugEmIVcGb5nV1F04SlOyYT1V3nFkkQpTXIhvQhg5R82Ixs0iQUtv6GhIR5Zr?=
+ =?us-ascii?Q?XmzYLzwkMMJrES436ipR7ysL7lBszo5rq6on4/lziXeUjlFBPpNRG3m0T4Mu?=
+ =?us-ascii?Q?w2bO/dHe5ZgMX+kAwBL/GILY7TvtXWskz5oM1d4EnkFbg6GEnl/baoHSMsqc?=
+ =?us-ascii?Q?ZgD8iiEwGnEYz2IddFm4NTVdOrBx8XO0Xs2799FjEVS2coIJT6iyPKAvz3sP?=
+ =?us-ascii?Q?j/CIOqDGwffOlxVtry9EkLL3zhX0VmtJTPcbeHKTzsRoWsfZ+dWzJ1DyMUM7?=
+ =?us-ascii?Q?ck6fey22RZHuPC2pFHgsfvPPzFGAD0v+IFzjdulMgItSO+XwB2xsAPuE26FZ?=
+ =?us-ascii?Q?YSRdP+N5w4o6CNR184IuQoIPj41vNUAFb54P+RgaQ/k1AViuty+X5FV/ty0y?=
+ =?us-ascii?Q?178GhG6vgUqJgscwRpd/ZFl8sil6QSqHV7q8Ggak2fwZtoSSMMzeMHdRyV+o?=
+ =?us-ascii?Q?XF0rOyN70qTWZ5WFkrUzliEOy6uuvWzSEHiFBb1npFkmHCt2O5nAJRfyTJ+C?=
+ =?us-ascii?Q?1nOQY4ttB1Uqv1tw+Gx3IbzUzj98IMMZzfIEmUNu3LHbD+4tUJHm1yMBMERr?=
+ =?us-ascii?Q?wTbRvpf92t6ySxdYYV4/baPraL6fd9ephuw98trYJRkIm6umnc4N2QOYLGAg?=
+ =?us-ascii?Q?jtnDRzl1lgoct6gDI3rDyk8XTfUclBMQNrv7zS0ZiQB8H1ntGv6pVGsxm8VN?=
+ =?us-ascii?Q?ZotEmYqmOrp7HFvZhmOi+wK/iNhnzjPPOmrW4kXdbVOyoqVJPX4GZDbkFzQg?=
+ =?us-ascii?Q?9Sk88lTPO1k7JAkiehEQcKfeoXx0cas1uPdZHKX4khQyQLzFzWSbYU7Oo1fu?=
+ =?us-ascii?Q?5ZMoZFpLO1QkIr+4f9isD5Iz3KiOujGsSsASR3QGJ8A1RzTirUS8BjMUbl5n?=
+ =?us-ascii?Q?qFcaMux2rDbjeuceQ8SeyWpkqhQe6n3lIxuoOY9+/ocLenTx/mPa4MaLEuRV?=
+ =?us-ascii?Q?IuuIcY4ThbSiZgP0/sZuXm37hvDy8KlPeJDpOcfAsSnWycCL91tDGeOPdZhj?=
+ =?us-ascii?Q?0GrP8SkHq4JwZGc9B8aJXa1MLPupzIQQRMlOgcbqOPqMsGVVzM7uGkwqU1N9?=
+ =?us-ascii?Q?67dZBPshDEz9yfgD9LObYrec7QWpxhe/6smGDqzIljvzJOjoNn3dUKG6R28F?=
+ =?us-ascii?Q?eyPokbPuq/sJg+knNx95oV9zRaYj6WkqM6TwTh83iJL92vhfN38/MJ2p6+24?=
+ =?us-ascii?Q?C0Xv3kocawhw9DtBl4TZL1d6j0yEAQeulfhwE/iLjjPOR/dzW/flZvLB5KU6?=
+ =?us-ascii?Q?/lg/6PNzkLtFgoWs6e78QncHJB5gLrPWEWhshWLT2FwVSe+XSDWNHdcC2+EC?=
+ =?us-ascii?Q?4dU4zCr87GGsKCGOX9xV/l6Jv7NU7WZcK/qWsDn8MxFC0bSKFsX1iBc0aqLN?=
+ =?us-ascii?Q?y7jyACpzJCIzn636VQY+lKl4GmEqqhsJH5S+XNIWyENagA3gZ74+HjTQ37lR?=
+ =?us-ascii?Q?VKRzHWvZ2Q4rICn1tWNWnkDNgLBWOyO7UJfPOfmTBnzcLB4IKdZPQ4jdA9TX?=
+ =?us-ascii?Q?dDO8+SQ9Ip548dnIT785AXhwUjv1d+0W+wcP+UEEOvbosaz8X60P/wGgEq8f?=
+ =?us-ascii?Q?Ow=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	boxWpLx+YbhJyuNJavY7X2hYG/MzyPIRZFTsml4xm1dL6E8cm0lLUKThj+BD9bca7O4NiWbmwUT/VuqKlsQBsxw5WGt8NakDPm6Aidjspq53gc8he2zFpTmXuw8+ooBWxn99nU1B4+7AbDugtpnjLg5vb9CTtgpw6yJqM/w0Hn79xafWqjTYAiP8EBBwT2vVluiC1MaU3PZ+xqC8wrhwh5NmDZiSiBGIoQFkdlh42BA+V+yhAruKSLQ5aZI7CGcEcEPxJ+ENX2vcC/DntRz5Gl3FjvdyLI1HeL4/9a0RjC8e4O+8uwz3XHJ9rM4FFWuInE83qpa849lAEQtqwtpdxIMmPrc4sld/o4GXd2VkFRyOEw7QN+8aq/0WsAJFc6uNX5tGnfbwSgNXga+fFe8Pwbu3CFO/FkfjmJAafoClAE5lXSmRlHTbJvax9/2ecPS0S9o4rnBT/+E7u3Sl3UKWa2ATglrNd/OX4c1FAl7th1jhmFhMZ7itAmh98Q3B7uldoRkQVfzskS4ILcjslW9XSGqzYXsK6Eo9qAjJcOJsiVcUgrfVUfPDK+FMmQj7BF4Rvo/mUzyvfudVqWJUg9pTbwU4QKa+wF/W0L4eF4/bh80=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 76d7ed52-f2e2-4681-ccb0-08dc86ffb46b
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jun 2024 14:39:58.3658
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: jFSmQ2Ja+3a/9+S8Yziz7Emib2yq242zrz+HfmecH7ADc2dtzXP8/LYcYtUsUDspqYQQr5V8CLbt8NMB8QSOzA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4226
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-07_08,2024-06-06_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 adultscore=0
+ phishscore=0 suspectscore=0 bulkscore=0 spamscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2405010000
+ definitions=main-2406070108
+X-Proofpoint-ORIG-GUID: pWKg5bk5OVz7_rP0evL03ywWomXmMy5S
+X-Proofpoint-GUID: pWKg5bk5OVz7_rP0evL03ywWomXmMy5S
 
-On Thu, Jun 6, 2024 at 5:27=E2=80=AFAM Dave Chinner <david@fromorbit.com> w=
-rote:
->
-> On Wed, Jun 05, 2024 at 08:13:15AM +0300, Amir Goldstein wrote:
-> > On Wed, Jun 5, 2024 at 3:38=E2=80=AFAM Darrick J. Wong <djwong@kernel.o=
-rg> wrote:
-> > > On Tue, Jun 04, 2024 at 10:58:43AM +0200, Jan Kara wrote:
-> > > > On Mon 03-06-24 10:42:59, Darrick J. Wong wrote:
-> > > > > I do -- allowing unpriviledged users to create symlinks that cons=
-ume
-> > > > > icount (and possibly bcount) in the root project breaks the entir=
-e
-> > > > > enforcement mechanism.  That's not the way that project quota has=
- worked
-> > > > > on xfs and it would be quite rude to nullify the PROJINHERIT flag=
- bit
-> > > > > only for these special cases.
-> > > >
-> > > > OK, fair enough. I though someone will hate this. I'd just like to
-> > > > understand one thing: Owner of the inode can change the project ID =
-to 0
-> > > > anyway so project quotas are more like a cooperative space tracking=
- scheme
-> > > > anyway. If you want to escape it, you can. So what are you exactly =
-worried
-> > > > about? Is it the container usecase where from within the user names=
-pace you
-> > > > cannot change project IDs?
-> > >
-> > > Yep.
-> > >
-> > > > Anyway I just wanted to have an explicit decision that the simple s=
-olution
-> > > > is not good enough before we go the more complex route ;).
-> > >
-> > > Also, every now and then someone comes along and half-proposes making=
- it
-> > > so that non-root cannot change project ids anymore.  Maybe some day t=
-hat
-> > > will succeed.
-> > >
-> >
-> > I'd just like to point out that the purpose of the project quotas featu=
-re
-> > as I understand it, is to apply quotas to subtrees, where container sto=
-rage
-> > is a very common private case of project subtree.
->
-> That is the most modern use case, yes.
->
-> [ And for a walk down history lane.... ]
->
-> > The purpose is NOT to create a "project" of random files in random
-> > paths.
->
-> This is *exactly* the original use case that project quotas were
-> designed for back on Irix in the early 1990s and is the original
-> behaviour project quotas brought to Linux.
->
-> Project quota inheritance didn't come along until 2005:
->
-> commit 65f1866a3a8e512d43795c116bfef262e703b789
-> Author: Nathan Scott <nathans@sgi.com>
-> Date:   Fri Jun 3 06:04:22 2005 +0000
->
->     Add support for project quota inheritance, a merge of Glens changes.
->     Merge of xfs-linux-melb:xfs-kern:22806a by kenmcd.
->
-> And full support for directory tree quotas using project IDs wasn't
-> fully introduced until a year later in 2006:
->
-> commit 4aef4de4d04bcc36a1461c100eb940c162fd5ee6
-> Author: Nathan Scott <nathans@sgi.com>
-> Date:   Tue May 30 15:54:53 2006 +0000
->
->     statvfs component of directory/project quota support, code originally=
- by Glen.
->     Merge of xfs-linux-melb:xfs-kern:26105a by kenmcd.
->
-> These changes were largely done for an SGI NAS product that allowed
-> us to create one great big XFS filesystem and then create
-> arbitrarily sized, thin provisoned  "NFS volumes"  as directory
-> quota controlled subdirs instantenously. The directory tree quota
-> defined the size of the volume, and so we could also grow and shrink
-> them instantenously, too. And we could remove them instantenously
-> via background garbage collection after the export was removed and
-> the user had been told it had been destroyed.
->
-> So that was the original use case for directory tree quotas on XFS -
-> providing scalable, fast management of "thin" storage for a NAS
-> product. Projects quotas had been used for accounting random
-> colections of files for over a decade before this directory quota
-> construct was created, and the "modern" container use cases for
-> directory quotas didn't come along until almost a decade after this
-> capability was added.
->
+This series expands atomic write support to filesystems, specifically
+XFS. Extent alignment is based on new feature forcealign.
 
-Cool. Didn't know all of this.
-Lucky for us, those historic use cases are well distinguished from
-the modern subtree use case by the opt-in PROJINHERIT bit.
-So as long as PROJINHERIT is set, my assumptions mostly hold(?)
+Flag FS_XFLAG_ATOMICWRITES is added as an enabling flag for atomic writes.
 
-> > My point is that changing the project id of a non-dir child to be diffe=
-rent
-> > from the project id of its parent is a pretty rare use case (I think?).
->
-> Not if you are using project quotas as they were originally intended
-> to be used.
->
+XFS can be formatted for atomic writes as follows:
+mkfs.xfs -i forcealign=1 -d extsize=16384 -d atomic-writes=1  /dev/sda
 
-Rephrase then:
+atomic-writes=1 just enables atomic writes in the SB, but does not auto-
+enable atomic writes for each file.
 
-Changing the projid of a non-dir child to be different from the projid
-of its parent, which has PROJINHERIT bit set, is a pretty rare use case(?)
+Support can be enabled through xfs_io command:
+$xfs_io -c "lsattr -v" filename
+[extsize, force-align]
+$xfs_io -c "extsize" filename
+[16384] filename
+$xfs_io -c "chattr +W" filename
+$xfs_io -c "lsattr -v" filename
+[extsize, force-align, atomic-writes] filename
+$xfs_io -c statx filename
+...
+stat.stx_atomic_write_unit_min = 4096
+stat.stx_atomic_write_unit_max = 16384
+stat.stx_atomic_write_segments_max = 1
+...
 
-> > If changing the projid of non-dir is needed for moving it to a
-> > different subtree,
-> > we could allow renameat2(2) of non-dir with no hardlinks to implicitly
-> > change its
-> > inherited project id or explicitly with a flag for a hardlink, e.g.:
-> > renameat2(olddirfd, name, newdirfd, name, RENAME_NEW_PROJID).
->
-> Why?
->
-> The only reason XFS returns -EXDEV to rename across project IDs is
-> because nobody wanted to spend the time to work out how to do the
-> quota accounting of the metadata changed in the rename operation
-> accurately. So for that rare case (not something that would happen
-> on the NAS product) we returned -EXDEV to trigger the mv command to
-> copy the file to the destination and then unlink the source instead,
-> thereby handling all the quota accounting correctly.
->
-> IOWs, this whole "-EXDEV on rename across parent project quota
-> boundaries" is an implementation detail and nothing more.
-> Filesystems that implement project quotas and the directory tree
-> sub-variant don't need to behave like this if they can accurately
-> account for the quota ID changes during an atomic rename operation.
-> If that's too hard, then the fallback is to return -EXDEV and let
-> userspace do it the slow way which will always acocunt the resource
-> usage correctly to the individual projects.
->
-> Hence I think we should just fix the XFS kernel behaviour to do the
-> right thing in this special file case rather than return -EXDEV and
-> then forget about the rest of it. Sure, update xfs_repair to fix the
-> special file project id issue if it trips over it, but other than
-> that I don't think we need anything more. If fixing it requires new
-> syscalls and tools, then that's much harder to backport to old
-> kernels and distros than just backporting a couple of small XFS
-> kernel patches...
->
+A known issue - as reported in
+https://urldefense.com/v3/__https://lore.kernel.org/linux-xfs/20240429174746.2132161-1-john.g.garry@oracle.com/T/*m7093bc85a8e0cbe13c111284768476d294aa077a__;Iw!!ACWV5N9M2RV99hQ!NbuQfXN8ZuUf_an3A6jHUXg3L1oCzefzyTYl0QWgJP1WbQCO8J_NPT9GHdGothSf36d0vxzJAjVUvcIB6IoU9nq3XExF$ 
+-
+is that forcealign is broken for !power-of-2 sizes. That needs fixing.
 
-I assume that by "fix the XFS behavior" you mean
-"we could allow renameat2(2) of non-dir with no hardlinks to implicitly
- change its inherited project id"?
-(in case the new parent has the PROJINHERIT bit)
-so that the RENAME_NEW_PROJID behavior would be implicit.
+New in this series is a re-work of the iomap extent granularity zeroing
+code. In the earlier series, iomap would consider a larger block zeroing
+size when a member is set in struct iomap. Now each fs is responsible for
+setting this size, which is i_blocksize(inode) when we just want regular
+sub-fs block zeroing. All relevant FSes which use iomap are fixing up for
+this.
 
-Unlike rename() from one parent to the other, link()+unlink()
-is less obvious.
+Baseline is following series (which is based on Jens' block-6.10 branch):
+https://lore.kernel.org/linux-nvme/96cb2069-a8e2-4723-802c-3ad4ba3e3d42@oracle.com/T/#mb980c084be402472601831c47fb2b66d0bfa8f0e
 
-The "modern" use cases that I listed where implicit change of projid
-does not suffice are:
+Basic xfsprogs support at:
+https://github.com/johnpgarry/xfsprogs-dev/tree/forcealign_and_atomicwrites_for_v4_xfs_block_atomic_writes
 
-1. Share some inodes (as hardlinks) among projects
-2. Recursively changing a subtree projid
+Patches for this series can be found at:
+https://github.com/johnpgarry/linux/commits/atomic-writes-v6.10-v7-fs-v4/
 
-They could be implemented by explicit flags to renameat2()/linkat() and
-they could be implemented by [gs]etfsxattrat(2) syscalls.
+Changes since v3:
+https://lore.kernel.org/linux-xfs/20240429174746.2132161-1-john.g.garry@oracle.com/T/#m9424b3cd1ccfde795d04474fdb4456520b6b4242
+- Only enforce forcealign extsize is power-of-2 for atomic writes
+- Re-org some validation code
+- Fix xfs_bmap_process_allocated_extent() for forcealign
+- Support iomap->io_block_size and make each fs support it
+- Add !power-of-2 iomap support for io_block_size
+- Make iomap dio iter handle atomic write failure properly by zeroing the
+  remaining io_block_size
 
-Thanks,
-Amir.
+Changes since v2:
+https://lore.kernel.org/linux-xfs/20240304130428.13026-1-john.g.garry@oracle.com/
+- Incorporate forcealign patches from
+  https://lore.kernel.org/linux-xfs/20240402233006.1210262-1-david@fromorbit.com/
+- Put bdev awu min and max in buftarg
+- Extra forcealign patches to deal with truncate and fallocate punch,
+  insert, collapse
+- Add generic_atomic_write_valid_size()
+- Change iomap.extent_shift -> .extent_size
+
+Darrick J. Wong (2):
+  xfs: Introduce FORCEALIGN inode flag
+  xfs: Enable file data forcealign feature
+
+Dave Chinner (6):
+  xfs: only allow minlen allocations when near ENOSPC
+  xfs: always tail align maxlen allocations
+  xfs: simplify extent allocation alignment
+  xfs: make EOF allocation simpler
+  xfs: introduce forced allocation alignment
+  xfs: align args->minlen for forced allocation alignment
+
+John Garry (14):
+  fs: Add generic_atomic_write_valid_size()
+  iomap: Allow filesystems set IO block zeroing size
+  xfs: Use extent size granularity for iomap->io_block_size
+  xfs: Do not free EOF blocks for forcealign
+  xfs: Update xfs_inode_alloc_unitsize_fsb() for forcealign
+  xfs: Unmap blocks according to forcealign
+  xfs: Only free full extents for forcealign
+  xfs: Don't revert allocated offset for forcealign
+  fs: Add FS_XFLAG_ATOMICWRITES flag
+  iomap: Atomic write support
+  xfs: Support FS_XFLAG_ATOMICWRITES for forcealign
+  xfs: Support atomic write for statx
+  xfs: Validate atomic writes
+  xfs: Support setting FMODE_CAN_ATOMIC_WRITE
+
+ block/fops.c                  |   1 +
+ fs/btrfs/inode.c              |   1 +
+ fs/erofs/data.c               |   1 +
+ fs/erofs/zmap.c               |   1 +
+ fs/ext2/inode.c               |   1 +
+ fs/ext4/extents.c             |   1 +
+ fs/ext4/inode.c               |   1 +
+ fs/f2fs/data.c                |   1 +
+ fs/fuse/dax.c                 |   1 +
+ fs/gfs2/bmap.c                |   1 +
+ fs/hpfs/file.c                |   1 +
+ fs/iomap/direct-io.c          |  41 ++++-
+ fs/xfs/libxfs/xfs_alloc.c     |  33 ++--
+ fs/xfs/libxfs/xfs_alloc.h     |   3 +-
+ fs/xfs/libxfs/xfs_bmap.c      | 308 ++++++++++++++++++----------------
+ fs/xfs/libxfs/xfs_format.h    |  16 +-
+ fs/xfs/libxfs/xfs_ialloc.c    |  12 +-
+ fs/xfs/libxfs/xfs_inode_buf.c | 105 ++++++++++++
+ fs/xfs/libxfs/xfs_inode_buf.h |   5 +
+ fs/xfs/libxfs/xfs_sb.c        |   4 +
+ fs/xfs/xfs_bmap_util.c        |  14 +-
+ fs/xfs/xfs_buf.c              |  15 +-
+ fs/xfs/xfs_buf.h              |   4 +-
+ fs/xfs/xfs_buf_mem.c          |   2 +-
+ fs/xfs/xfs_file.c             |  49 +++++-
+ fs/xfs/xfs_inode.c            |  41 ++++-
+ fs/xfs/xfs_inode.h            |  29 ++++
+ fs/xfs/xfs_ioctl.c            |  83 ++++++++-
+ fs/xfs/xfs_iomap.c            |   7 +
+ fs/xfs/xfs_iops.c             |  28 ++++
+ fs/xfs/xfs_mount.h            |   4 +
+ fs/xfs/xfs_reflink.h          |  10 --
+ fs/xfs/xfs_super.c            |   8 +
+ fs/xfs/xfs_trace.h            |   8 +-
+ fs/zonefs/file.c              |   2 +
+ include/linux/fs.h            |  12 ++
+ include/linux/iomap.h         |   2 +
+ include/uapi/linux/fs.h       |   3 +
+ 38 files changed, 656 insertions(+), 203 deletions(-)
+
+-- 
+2.31.1
+
