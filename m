@@ -1,69 +1,69 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58311199E9E;
-	Fri,  7 Jun 2024 14:41:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C9219AA6A;
+	Fri,  7 Jun 2024 14:42:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717771310; cv=fail; b=AO3geOMjhcgPO6IlpXLOT4Uo5qX8dP+wBcITDKlM7aYoIvhqORuQzSh9/g2+J+Sltz/4LG8JS0vc/cqWwG8YegImdgRWMcHT515jdVfmjS6ndx1F1T0/DspRSwfkDQye0vMrN9DxN8EYd2NZ47MFQcomGd1QkJDCGn4BgFvebwU=
+	t=1717771349; cv=fail; b=ZdVhzbVSTpCUI4nES7UGKfTGl638/kqFJWplDKQfAJV6fyRopV6IIZBBAkEXd3DrQQmQA0qRqC0oG82J24L/VJ46k4zo2tQmorsOuL8Hoz7tuia7IUX+eNfS1TKHKo//ZpQXF5wwJHM3WIjyI2oVEk3wXiAYEVy9LPk9II6qqD0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717771310; c=relaxed/simple;
-	bh=aw9d4afd8lwuqDYD2x1U3Ri61kjDZBuk2RzVIu1WCag=;
+	s=arc-20240116; t=1717771349; c=relaxed/simple;
+	bh=bL2oBmVL4iPYHdjS45fFikHQtS/e8hIvkvpHUVF55sY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=uVqq/sMfvvVuR7moVK71Zn+ddNTTml5aciUR7bG8aYb5NsRk7dglpFmj5JxAfgKQ8Zu4RPljG+1ol2+I8kt+D+sogv5dHrzYhOZ47U8SfPd6zvSWCZxVrcvlSNJMI779E+q6O6p2ySCRbnohDuJDLV0KY+KTcIThBsWkLgFR7+k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Jvyh2i+i; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=IVXPkTC0; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=V0Pv3Kek5AP95i9e7+Gh6kMj8nYn+E3uuTOVKoc9fSI6C46lysCF1t2oltrDU++igBwOdyD5mKOFuXE3KpcOdRWKp2C6IHnoZ6635LHLzsMSRSpK4mPFZ45r7ZucYruTLRD4BNQYPRufPCB9FFZHCDmdohZA2IhQZ+m4OJBKWjQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=acw4LpAm; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=VebdbKfp; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Jvyh2i+i";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="IVXPkTC0"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 457CurdS021572;
-	Fri, 7 Jun 2024 14:40:15 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="acw4LpAm";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="VebdbKfp"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 457CucN9029337;
+	Fri, 7 Jun 2024 14:40:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc :
  content-transfer-encoding : content-type : date : from : in-reply-to :
  message-id : mime-version : references : subject : to; s=corp-2023-11-20;
- bh=2bBnIMTJZOgEyaz8lMBZrhqIN0h1912L5QOhkJKC2ek=;
- b=Jvyh2i+ibVZagT58/C7uNh8sXi5oxRkDKzt514tiCcxnGMF9soZ50VHzVD614O7JnqBv
- 5pK0CP8MM7vD+L/YN/B/h0h24qByYL++I0QkMhI3POG8wBYgL2f7vB1OXmKxNmtndG6H
- TsYcmFW9ZK6fXU3eNme5+lX2MSrCsw1bVeejQwj7bU+qM3wSf153FfhvbBUh08DA2533
- kcNLBh69bM1bn7xWoQbNL0bW6khHvY9lgu3Ilm728KVh5/DkP+acl2YjS82ezU5kT7Ci
- CeGiuLPGGoZQLppDiqhNqhaaMeKe8y52C/W/ZprfHQtTC+6g89gUpn7rP/RaDfww2+ZF cA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3yjbrhdufh-1
+ bh=pbuJieUHeIJKuEeuAPi1iy/X8kPk0uhgoHjgil0VAIE=;
+ b=acw4LpAm2NhUSKQ+HDCaYwWPYtgperjmgMLCpBBt5YkSxnJgxr1rhNIaRsxyom+kJp6o
+ D+UpEbbcyKw1HuW0p+E0a3G5Koia0yk8+9OcfpMN0+7kcxknKXLW+NWfz1UQHsinW3TP
+ BAvxpkClywMiKFFyf2KbMu05ZeUgyTk66rWnSrNtM+9v2ARCDOUeNrh3myi8VO6DmfjR
+ jNv/kndkTaKy6SPy6UFffsSj7nDHbw74FaHzELoOYqoCjc1PxoL3HkGIcTj6sFYwRPPp
+ zUa/xkxB0OzenH8NR42zaX/lZTolUyAwXYeDtimNi+9EhF5b3Fkp9J9M+cy4o8uS7nSb OA== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3yjbuswskt-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 07 Jun 2024 14:40:15 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 457EClXa015806;
-	Fri, 7 Jun 2024 14:40:14 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2169.outbound.protection.outlook.com [104.47.56.169])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ygrjgqm80-1
+	Fri, 07 Jun 2024 14:40:57 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 457DxuKf016121;
+	Fri, 7 Jun 2024 14:40:56 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2169.outbound.protection.outlook.com [104.47.57.169])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ygrsejfap-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 07 Jun 2024 14:40:14 +0000
+	Fri, 07 Jun 2024 14:40:56 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IgOE03M1DIIKdZ7jS8wmuvRlB5LMqHzU5Qp2ZMp1Z+7ER5TpK21LkdpMmzxWiOT3iYTM/5Z2H9YXCHoto8Ru0Lp+6oezufZEnPTuMjCa6hGDczK4erWkleLRtgWkYNQF48WCrQupzLnR3jlv3cE2p6tDIkAu6CM7Mij1utuSyC4nLgcSlcVa2JfI7pCn9yLHkeOrRrbxqyqxlLLem1WbRhN4huwZdpTV30dARjoR+FBHMK748SZ/GZs3I/L/AIFAC95YypVswgk9qK1P3BOeN5q/Y5JoEb2l/v4i3rv+TBYvv9uTScVqLXN/wvS9HyXPYUe6vJojAPJIHP1/GNbkzg==
+ b=KFLonHX8qmCiItTjFSRUBxpm7r4+e21eyn9WD5hj/0PivZX/yQnKutKv/GRme0Y6X/bT1+PQiwZWMScIPX+PRhyaDq8LpU3ej44uvIpKkw0KxUmuXX07mn/35Q1bz2mTxT3G8+plBwOGntEwOmVk7VyT6UeUOjZ3b9uWWRJqHWA4N0PKFG+W6ELWAqasMQwKdC6nF26OmBG1ug9vcnceev4535J2UUueHAWDuP8BrIgSgg1zcSKMcmr52DwS6wcYooyglK9/vN7GDphxVhjgNBimpwbC/ytVLhjavamPloQMHCjx8vA5jt0QuSYcikZK0H1fhPs2TNASPZBiw51oYA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2bBnIMTJZOgEyaz8lMBZrhqIN0h1912L5QOhkJKC2ek=;
- b=gs8HBrknKw6aH4gKoYbqYgfLG+r9+L14LAtnvWr4o6kCtfoCVu/FgmoLqFZsaiUBXMkGrUVzXEfuOw5xCkQkmrXJSmEGpLLe8wLAftrCUerP3daKOz1cJQSZ76329cfiX4lhw7tbozkW3zP+4oJ6vNX9e60xIhHJUW3Gcv14q1g7LDrzqbImpJa3X3fgxN34/NRacaPpdzT+TZTZp9Wtl9YX7BIznyPnlq/Ihtz57nG1eVp6t+y4P9LNP/CzJYOeb5gVVDtWkTel99HYu9EXhYkmkcn+0M3kYYY+GtBOwDd+BLTjG/++fqWfEciiBcGI42K7u/rYnv9ZM9OwaOw6bg==
+ bh=pbuJieUHeIJKuEeuAPi1iy/X8kPk0uhgoHjgil0VAIE=;
+ b=HC4JGq/3QCjc4HRFRgKgfeR7H8HFrz0eMJ2qOiz+lImtlGslM6DdgEQOp61onKO3tjpxMOs0U9qkWK1yyi0Suy6WsYHHGaYJV3r+yDf18ytMRRxuv9I8w/BrwM93/liUdMXqgjGnTINFWSLlxh9utN1KcWRiorpPl78vxHLdok8z2y7Tu00TB+ukHP7vKZnd4y+S1NxD3sGb8C+HbGtYK2kxpF5jq8YCxDprMJUW/2AfPZ9aao/TPgKI62In/neWig2z3Bm8mxeOVRu9NEjfITtixi8AuxJMixhniCXP99N0xmY+vvWYPgUq4DwqqShJ0DkSULI1Koug06W89zG69A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2bBnIMTJZOgEyaz8lMBZrhqIN0h1912L5QOhkJKC2ek=;
- b=IVXPkTC0jRyDE1ISB3hfmsk7Z9LEKh/ecERjmEmQEUHnMYkU/O6do9P2G0KrWOy7cplu/TpiiR18iDBVe4Czj0JYR5KRWkrKQ0AtTkZIagq2Jvily/bf67unjU/2AI2HucpTWBSs41f/XhjjZkfUxWJCYYH9xs5IASDWMAhutpc=
+ bh=pbuJieUHeIJKuEeuAPi1iy/X8kPk0uhgoHjgil0VAIE=;
+ b=VebdbKfpGBnplAF85Gly61BLJeFFyU1mEg3giojkdbLAybuEpq6u+DU2wExhgAf+VkZob9CVcQqGI2U3drGXKWU+Pl4VgU+0Zlwjmhu0cJ4Gs3nH3Vu+1NXJVmd0G6p81Z1PWvAMpQJyLPS9I9XL+0HLrv/KohhbkfsVCuWxYpU=
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by BY5PR10MB4226.namprd10.prod.outlook.com (2603:10b6:a03:210::20) with
+ by DM6PR10MB4170.namprd10.prod.outlook.com (2603:10b6:5:213::23) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.34; Fri, 7 Jun
- 2024 14:40:08 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.35; Fri, 7 Jun
+ 2024 14:40:54 +0000
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7633.033; Fri, 7 Jun 2024
- 14:40:08 +0000
+ 14:40:54 +0000
 From: John Garry <john.g.garry@oracle.com>
 To: axboe@kernel.dk, tytso@mit.edu, dchinner@redhat.com,
         viro@zeniv.linux.org.uk, brauner@kernel.org, djwong@kernel.org,
@@ -77,16 +77,16 @@ Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         mikulas@artax.karlin.mff.cuni.cz, agruenba@redhat.com,
         miklos@szeredi.hu, martin.petersen@oracle.com,
         John Garry <john.g.garry@oracle.com>
-Subject: [PATCH v4 06/22] xfs: simplify extent allocation alignment
-Date: Fri,  7 Jun 2024 14:39:03 +0000
-Message-Id: <20240607143919.2622319-7-john.g.garry@oracle.com>
+Subject: [PATCH v4 20/22] xfs: Support atomic write for statx
+Date: Fri,  7 Jun 2024 14:39:17 +0000
+Message-Id: <20240607143919.2622319-21-john.g.garry@oracle.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240607143919.2622319-1-john.g.garry@oracle.com>
 References: <20240607143919.2622319-1-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BYAPR02CA0059.namprd02.prod.outlook.com
- (2603:10b6:a03:54::36) To DM6PR10MB4313.namprd10.prod.outlook.com
+X-ClientProxiedBy: LO4P123CA0391.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:18f::18) To DM6PR10MB4313.namprd10.prod.outlook.com
  (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -95,487 +95,151 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BY5PR10MB4226:EE_
-X-MS-Office365-Filtering-Correlation-Id: 56afbaff-5673-492b-39ec-08dc86ffba46
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DM6PR10MB4170:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4f3da1ca-b84e-4559-19fe-08dc86ffd5cb
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230031|376005|1800799015|7416005|366007;
+X-Microsoft-Antispam: BCL:0;ARA:13230031|366007|376005|7416005|1800799015;
 X-Microsoft-Antispam-Message-Info: 
-	=?us-ascii?Q?ktaWuM2ky5JK+2JB4IXRUoMkb7KlNFXOGRstHUHFOPkXnjIT4ZKWs/o0VnGn?=
- =?us-ascii?Q?F3i0lpFxp7a8I7TwQd7kweyA03Ww8hbmIcvxeUtgDnafaj/OZ00v2kAVtFQD?=
- =?us-ascii?Q?rzVr57d5dOQtiFwlUB6JShzSBz9cBkxHVrFx4zQQuujMeWwC2txHIZvL/tLz?=
- =?us-ascii?Q?rKS9UH7/awC/ZibCTSn/xwsm7Awrwig0ipyLeDP1M7p1G/QPM+reVRpS8DMH?=
- =?us-ascii?Q?lhayKJ+CET71Pvssl6f6HOf5pCA9hxVpYrHhB/YvG++2k9vNxernjhVvqMhp?=
- =?us-ascii?Q?a36hsgvIA75DTb95jofbK9Nd/qSICbvTCmCGHR9usKUpGi1DG5xRcKie84+F?=
- =?us-ascii?Q?/jTUQDTmtVYbibdkyaxkspvwor4B4KNQjvwqKQslM/H5+uBvJMouKUDWLg6l?=
- =?us-ascii?Q?OEGTc8qxdUzCockVCpeo3/lnFISiGTiTxE3fZw3oZjiGfHCNhzP3PvPwTb2c?=
- =?us-ascii?Q?ox+dKBt5g0tWnwlVqcyFVwTVxVdT3ryI+kf6Vrb/WqSORHNEHkvZU2yTZ+ow?=
- =?us-ascii?Q?9BqPSv+E6Py0BJuLmJ28I1kFzNX+ry1lanY8Oz7DJ4pqa0tzppn3OJK8Hft3?=
- =?us-ascii?Q?9gKt2VCh1/gRQ8aDvMVryFhFZiuTMekZ0sLwAvWrLrEr6aVC09ezmNO1/I3J?=
- =?us-ascii?Q?9sh9AC+JL+Mh4VTXZXyQ2iNn1C3LSYVmBqWXlsshENkxRnM4pIaJy5+deOYl?=
- =?us-ascii?Q?iqj5AewBLYu3Gm4buSOqlO2SQ/y3bBdK70ylAxCYBB2GvCfK2FO279VkJ9AY?=
- =?us-ascii?Q?gZ7f5Vvd2D7+YXF9PUffVtYXc6F8ljXQtetF42JrOavPU+Plt9hw8709ztal?=
- =?us-ascii?Q?N+C+2Y8MMHN7rx4iy9jCR0ZZYvoWtK7AZVN6rWoJrinmUTFBYeIjrXcLY6Or?=
- =?us-ascii?Q?AGs+zHRj3Oq2j4sApAUWjwV73KbJxH00Cae6eDQFYnZhxVoHR7XFmYeinjV1?=
- =?us-ascii?Q?JmrHZFm16LhDheti+lWycb8wHF/2/b8mcxSgRDeVb73sYMAVZFpypseXsCTZ?=
- =?us-ascii?Q?80SGgbTBiaH04qQ+6Va1nAVAN/PfYUwsITNgXhajih94URhWcOmthq1KQrg9?=
- =?us-ascii?Q?7DR+R3sTPDkjG3rhxWrDt971AFUQO+dYiVT/qfR4xwJtZeb66bwdpp6I1wzU?=
- =?us-ascii?Q?8IdyqTWetu67ncWAiYSU8S2wukknNdHM2KPMksP+F+2812xkWVKcEt3Ro7Bw?=
- =?us-ascii?Q?MUoDGwXxemrZhr0/X32ATJB2xYcGVA9QtF+c4gUGzr88D7FSj7AlQ79i9R/D?=
- =?us-ascii?Q?S2NITQd+2dN92hfC+vcwgmU8oXdeL/GcZfYCN7QafCW3jXVw23jWhFQgDLut?=
- =?us-ascii?Q?dZItqkJ4Y3PD/yVmsWMSfVVr?=
+	=?us-ascii?Q?jU0woAAfiN/eilkxVxR5v1k73JZ3EuuxzKbFiFWdJxFbYyB1+AxrVkhnjJtN?=
+ =?us-ascii?Q?hIGQ797ks6qnldkepGoN2ryv8jmIJRQ87LJRnqleFcl19TOWd1VQVVATeLlI?=
+ =?us-ascii?Q?qPNl6E+cdIy+k6T2WHnC/BLQlXDIm2v3gY8x1e+OWpCmSJ1Cfuk0Wm8x84H6?=
+ =?us-ascii?Q?o1Eja0Xugps1ZafmrJgNVO/yiyVzXNjdxvHyahUpDmsSmzqT775UM0i8bRhz?=
+ =?us-ascii?Q?F0g4lxvabbnuFOtsKF2jeJ8k/CkUXWsU5aX4SaIH54wvUgoF5NjgmsTrJ51X?=
+ =?us-ascii?Q?U7My2rLSQ114aY/YvnxhR91+rgVSEV9PPoqvfueVFc98cpqVs/q7+zizAQhh?=
+ =?us-ascii?Q?8Eajkf+0kj5Hod1yBx7vXwX1P1T/yXOp+BKqpwU+xDScUy9Tvi6Y93W7oxF3?=
+ =?us-ascii?Q?JYvQZC5OC1IGDsNxV3tquFEBZ/7UqOE9ccWKM88Pa3xgHDcoIkqvA0WeJjni?=
+ =?us-ascii?Q?AJyNvDdz7KzLB/0wz5Ibyz8OmWjiNb0UmilRq0OfzFQ7r8UHcTmqfHFVfRpz?=
+ =?us-ascii?Q?vheV5c3SqlP8ABPxU5rc5oWfGtkte+iATqYb0zScjZy58p3zc4xQggqxxEV1?=
+ =?us-ascii?Q?7e0zVTZHMT5Vi4A2lxVp6qjVuO6Q+nbvWk4FHSjmAzQZp0Ll/bHk3Jfms4g+?=
+ =?us-ascii?Q?SRrYaRBBxMNPqWR6TsiHzyx58uEKEcsTqx4Px14PKj0UTQBIGue44Uq2iguK?=
+ =?us-ascii?Q?PQq4mw+Udowh0ktpMaqBni6tZViTW+/9cNRd7kO5gJghkp1Tn7YoPkwFvsHs?=
+ =?us-ascii?Q?XBkjJUXK/3RR03uqWey18F+8tWwt+po17RXhKWr0RojoazIScW96H3o/h8Su?=
+ =?us-ascii?Q?MwqgUrxZRgST08hwrkfoBt+MFfw2EqreZBsKzMNvLXEvZhJ3wAFpLUhZ77tu?=
+ =?us-ascii?Q?42G63BBJujo7Gaz3aqO4Zqv0T6LF3t5N32696Blkg4qAvDuhP6WRcFUpfIQF?=
+ =?us-ascii?Q?a9QJznehYZw7id9oG4NARDBfNYegmzJXeRHAagxpv9wlpyTBwEjYB7ZFnin+?=
+ =?us-ascii?Q?0p12ePb9z+8Kxibsolw7Zf/4G44oWuLTjUYf71ROc1TUO+s40uzzwGybtA73?=
+ =?us-ascii?Q?d2kDdh2+MvZHB4RCcoW9MWR+ZbbHXZR/YxEnAh0fuUImHx1Xu5Wvf1yHZak+?=
+ =?us-ascii?Q?S8GSMcOJkekab3P6ZB9pv9SHUlbDSsV9Y8eYAyMVHozlIr0p9NBoP6XhuLF/?=
+ =?us-ascii?Q?Q3aquOWPYaUJFb6qpduKmMXphfymwQxxCgspHPKS3ZGIi6uFOSKsBc8TbtQM?=
+ =?us-ascii?Q?uZtBvT3yj/ImDv5NsKUB8gwZsl8bCYoIP5EJixH+1qDWmcUciEc6osSGriC3?=
+ =?us-ascii?Q?THfYQOSbMMVx3FPFl6mTVf/f?=
 X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(1800799015)(7416005)(366007);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(7416005)(1800799015);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?NH2ih1yoCQCcSTDBX5BoOhEkG4LtZdv3/W3ObWzhrSXgFTBdxRs83/SNx5Lz?=
- =?us-ascii?Q?hxRSfHxBryNwqpq7Dh7VmxwwdJsUeocDpKSjlC9NQUUNkTcK3dD+JZKeYKEK?=
- =?us-ascii?Q?ymD3kEzGXnBgkClFOW04P2NBrpjb0B9xkJsQUShzxEQuR4h8Gr840+BWgTiY?=
- =?us-ascii?Q?shZT129zZOZ9mPyBSpeqLuBgS1EUxxLlBNZyab8QLVA1mN+WbVs61H2fkH/3?=
- =?us-ascii?Q?OES3VeQ2Q+TUAmVrNs8nXOZHBsczbRw135H9IP2bdmyLI3dwkF1TgBNSLTfk?=
- =?us-ascii?Q?j9ffnRQp9Nv4mSlADNNvJI+ZULzBua1CRqsmOKIk7664cHta5DLn/HpPr5bK?=
- =?us-ascii?Q?t5r21L0PV6cOIlBWSs99KM69Z4xDSe22Rvlf8xSZzAg7B93XeNJcLnk1P77y?=
- =?us-ascii?Q?b1d7E1IIWIznxgS1QQqGdkO+IU0wYABBJ43YONufP+la1IqDPd5fe88Yo9ic?=
- =?us-ascii?Q?7vPodmJM04lwJ+/QQLqwQ4jDKE1BeCA7eKAl8wlvsAO9dzrUnyvUG9XuC+Ei?=
- =?us-ascii?Q?suWkj9w6pc5DP43vXZsIFBeo7H45wz1snOruKlDvfqJVAj+Nv50gAwXAWC0P?=
- =?us-ascii?Q?qDhi+cmrATtQY5lPyioow17htiERkEoTVnzZLWoODD9NHsHi6KqN6CHu83Yz?=
- =?us-ascii?Q?Jsf7Ss2vxwQJOqxt8FvkhxRKviKBh7YoQmrlAAF+QAfGA7xTm9rlcTA2OwJt?=
- =?us-ascii?Q?NMoI2bysEUqt4pNtHI82lVxIKYk1swIiuX7F+QEUuAoq3JZW5YcxvVOTIYld?=
- =?us-ascii?Q?1pauzlDMnMEE+tPeDaNxDRdpitD8xm+a75BjW2UA8opIC0SHY6TfeK2YS597?=
- =?us-ascii?Q?A1/iLGDlABaYulYzxXDcGXwmtFBBbkDgqCAuBumNF87MFAVA1lvIoK2A/RVY?=
- =?us-ascii?Q?GujTA+pFmRhldhf/9QMFU30G1g1u1vqpHqi+1IyugP3Rf73mp1JkshkiIMHi?=
- =?us-ascii?Q?FK9ZLedU4as3nz+5ysj8UABBzkOt9zbDkQQ1JSzmc90NY3Gbg/pUi29pjM6h?=
- =?us-ascii?Q?7uqXX+iK//VJvomjUUSmNMQ9xQYvqpCFiGzdDU8sQmy3x+0V0ZjclktBZ3s3?=
- =?us-ascii?Q?nTyx98JgyUcS6P1vOk/AoXMf5KlgtRNeuqro58pi61lOgFOqbeBU2aWvtIgm?=
- =?us-ascii?Q?V1sGlfd32AbVvGMPcy/sOjFC2PPdJfh9O6p1ORLhkvOXzuwrUArYkHz4w+hu?=
- =?us-ascii?Q?MHcma9EWb0fNlMbQsI1e4kG/CbQwezLWiJQtLFrvjBE468/OQ0ab0/nkOjkm?=
- =?us-ascii?Q?whSf44AEXuBl0IEccIhUu7ZITTtJf9LPaiO9t5mbMFxrl3VgIH2uLmWS7JIg?=
- =?us-ascii?Q?BoyUM7UYayYJeW7yviVWoM5F+mtob333fuHw0CzW8l5xkdqTvfFgoUH8Muko?=
- =?us-ascii?Q?0hwwy5iZIlvTMF8612YikEaeHvW57G70N4MU6Hk4GT996nWzTdi7R9ex59Kk?=
- =?us-ascii?Q?MqZKFomSy1wa1rGyV7ETC4svan3d3T8Xu2uxpZVrdtd4nA8Gv/i/tXJT/7KJ?=
- =?us-ascii?Q?1lAbYhkrf0na+sKk4YdFf6bQybnK9jzfdSy3Ns81rjYHH3uN7lIT/CRKISVt?=
- =?us-ascii?Q?/DRnlGsTL1t9421xU1dQ0s2mLM14Z29TIkT1ti28CkS6vjrANOLUadNmvNMU?=
- =?us-ascii?Q?Iw=3D=3D?=
+	=?us-ascii?Q?h0GEm1qX8YUTvJHrIIRGj4cdhVJbEuJC4XQbiWcY4Yh++Oi9lD65OY9ECx4b?=
+ =?us-ascii?Q?zQO2IwbUWpZ1BK7NVKhtxSQ6bJ9Z/1ttynOdT1u3p8tb0qsPp8l2RdSDMFEn?=
+ =?us-ascii?Q?vtX/eN/gZmawFx52QysqhFrxGHFdx2s8F8/1QIwhQ4sfJ/sQlXg/uqyhWtTq?=
+ =?us-ascii?Q?Yn4+uH/R/ogG9lOChr1SalxGH9+cd+/C5PnPyoNRHlw080wrL+2IhrhRpMGi?=
+ =?us-ascii?Q?mdTwI2KSx/bNj3JZ1y7WLJrBWRhACMjIKxGfTEeB631keP5ckcXU2bbDYzUp?=
+ =?us-ascii?Q?kk8iz4kHhx2rWjaVlH4WbwoOFtrzHzOfDXqMFZ9EwHpXB6DVUispY1yjV4TL?=
+ =?us-ascii?Q?hKew3Hv3oWQdNw8lalM92Ed1/gJNF8fLtJwxj4uuwh0+F9nNSE0HFOZ+2xvD?=
+ =?us-ascii?Q?LxriJUHhqhoL8wYN4IyECDbEEPmlUeaBS7RdbkDJsyje00/g6vavK4jJVQLb?=
+ =?us-ascii?Q?gStA1F2MtrkozUVoEGH+s/NqWLHwD9AVXaQPLBMQCIQNi85zKwp8nhXT7P15?=
+ =?us-ascii?Q?vTYRyBCw45rWdqG3yTVlVZElQXge7t/wTKSWl9JAyXnZuOmAjBZADXRRpiEl?=
+ =?us-ascii?Q?LMgQlH2DknLzxZnO/5FZOiP1ok2z1aCU+ldls45/LZ1EJUcrrPeEDNn24AvW?=
+ =?us-ascii?Q?PfHFCuDy1fSp97hHNMu9Z193RlqCztoQzBjTLTNNfmhcY/Cd9Tu2oTUSSsZk?=
+ =?us-ascii?Q?7sPDuUeUi5f++SiYXTFpHzAyW2zIZNV31AlD1bCeBVGEgtF49Fl/AlXhcG++?=
+ =?us-ascii?Q?DSVH9CgpxMhZNAjuqPZUjccD9V8Ji5Y1xOMc2vvjzDPvcPTWYCQAV6Q7c1gH?=
+ =?us-ascii?Q?etrm9B0e0stqj7NseUrvP+6PZmHp8/+DGQ+5BT0zqUJ4KPnU3VJiALliF3se?=
+ =?us-ascii?Q?lmt11dAbURcxGsNqkhJNdzVD8Yt22EhrpSQI5iFXmIDAEeLMz/Lx7zLPDokN?=
+ =?us-ascii?Q?gNn9m9yxkHQM9utssPfdS9aEKKAUUDLjJlSThtGJmc70P7aFh5i/KP9B3WE+?=
+ =?us-ascii?Q?uI01FuJPQA3Pjxw2FVaUI8g2/4oFeEzDVU3wAAryHOXttG987QEtxO0DO0EO?=
+ =?us-ascii?Q?SYYT1CQrI5ZOZCTMtQloSATqlo7McvLmnzpwYnAE568VecybT62YLLoVSOWj?=
+ =?us-ascii?Q?eDsD6Q0fu9hrNJ809LRCxzZU5RhhFhQrDIt0XMwOoh27gU+I87G8BCR5Yp+b?=
+ =?us-ascii?Q?0AsbtFQwfwRuB8Xsxs8+oH4a5Rgz6SrhI2pWDlykC34H9JR9MGO4RpR+cZnV?=
+ =?us-ascii?Q?rPJEwRpfLF7O9cGydgNl5n1qHgE7EIzxDiQkBfpQTPi78KbWN1VM0jjbPrgn?=
+ =?us-ascii?Q?0Ye9HankYOVmC8Yj+Zf6rhZKMhMnwUSrqKI9jD44mDzVnqzoQ065HIG1UEz8?=
+ =?us-ascii?Q?Ql8fomC/wLyvG4ORnzcyVCko18gY3yZamhmVbBKqNjP8HtVyE9dc26ihoezu?=
+ =?us-ascii?Q?JYSWJub+P7cCz7gUQETZlrSSV0DnOQgEBTUaimdD8Lvx9A/frUwPXdaUo8VD?=
+ =?us-ascii?Q?TY4QiOqDiHMLiwMrFw4l0bg6D5Ja2iJ+3E/PUUMCnQukgVsLGTfhgjvUn6Nw?=
+ =?us-ascii?Q?n2CQA00s0WrtWJ2lMxvqrVNLNczs7fzVxoVrzrGHZfrxlOaay7+QgEymvsHd?=
+ =?us-ascii?Q?vA=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	L50sBHpho0wZsLxJKDsA1kOGRMOKXDCle1KJfoRXTUYFsJTbVAltUcxcd9F/aM44oVulEaaESNiTgoryKET8Bm5po5nsMKTLx/4Y1bYN22sBrPO5Ut7WMPkClB4Y+qqCiTiRlAEDLHwSrudIsvUpUktq7Ug+kPSbD8L8eaSl+Ec8ZMUERVy/ZwtYb2c6+PaRTSN/5g3pBY6csHqagHsOdJWpaDnyXiEg+sqFjjks90Fn34nA6Uly/HFhMfr5Zk9Skp80XDxo7h3DXHg7iEinnXfCbaZ3pyS4eNgJriaQkIL80tN4Xdwp4k8CNq1jtRpDfQyeGY5XK6hT5anMfZQXpL+YaxtWudRKMC/mMTRAUzCSE6l097TL8uEm1IJeKxOx2RW3k0Z/IG+laAnyxfZVfrqAvfZJCoBol3t9Rw/w0S8YEqq3+z4BfsKfrsNvuGxDEwYc69F1kje+p5IetjhL0k7OiKtfZWQXtnxGwuT5P0CjGrFhyhpvn9nCbEL1FFMQrG/0Dmik9UOzE6FbYgor12CCCGsFQtO1duJgMXqBsMXY3kM0i0tocMy6JCre+SMl/nm3J91no560zM6NwqCWFRyAOdrbL/CgFEsOTFBAS1A=
+	GD4AE/Dp0mn1VpXbM+ocqQFZCfO2KXePGjAdx/hHAglOjaxDcxNYT3B+f/dDRCgRWQBh4bwjXid6HKGwYSo4lWHj1AYXkbsjkVSADYAbLK2BD0so6z3jqPLv3rdxQVdjrhfyEHNy9fZk/GnS3bd5iAy7d5yJj8mW0G4pFPOTqaE2jow9GfFtsKO3+sRF+Orl8+lE45AGNdtzBMiIQr7ilYyMFncnymH6pjB11cJByqFsBg7JEFnFIRfhtaRewgaBZVYMt+1JmXLWn33A0CK/yO+0/i4WCG9dBEyUkc+TDRBXEhgQH4Bl7AwC7+8yjWwHyajeOfvzm/s4LDhrN7MZtZ5oxfJITkdUrBrcC/sVDCk8Z41Ynrfu4RoZmzuyrk55fP2v8YwXivoyKoleCbcKZ7Jg9M+XD5sL7YvsUE6R5+nYUHTo6z7/VCFgdIc+uQJw9w6orsmHwUdFakmmGwvEodkf0kxlTd32yPEpby19rV+TIOyY5Fb8iBt+ydVdJgtB762ZfIkvLITy8sQHE21XKanaLS0PBszproNL0pNT5D64Zw6+BJpnWwi6MWkcqXjmW924mnNfFlQOzOXX9LUwbVCKUPflXWzQ1n03j084OjU=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 56afbaff-5673-492b-39ec-08dc86ffba46
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4f3da1ca-b84e-4559-19fe-08dc86ffd5cb
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jun 2024 14:40:08.1547
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jun 2024 14:40:54.3412
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: OxzIOHIPASjqyiVf6ZcZ7qabS0FPi+T6earj5zDFZwyl/xSKGZK/TE6/K+neescqU6MhCUX+JXvZF9dB21q6zw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4226
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2qWRHCG6zgBrsLOhnT5A42zRLlcS6FFNHwMMQ1Tvo3edKJuQNViGpjKWkl1c6IygDiT/6d4O05zECYsERT6X/Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB4170
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-06-07_08,2024-06-06_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2405010000 definitions=main-2406070108
-X-Proofpoint-GUID: svGL-qEYkZjh3jrpwGjasuCLoVHyrWLs
-X-Proofpoint-ORIG-GUID: svGL-qEYkZjh3jrpwGjasuCLoVHyrWLs
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
+ malwarescore=0 suspectscore=0 phishscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2405010000
+ definitions=main-2406070108
+X-Proofpoint-ORIG-GUID: 5_Uv58yUnDuYbH8vwW50e3ZOwXv-GluO
+X-Proofpoint-GUID: 5_Uv58yUnDuYbH8vwW50e3ZOwXv-GluO
 
-From: Dave Chinner <dchinner@redhat.com>
+Support providing info on atomic write unit min and max for an inode.
 
-We currently align extent allocation to stripe unit or stripe width.
-That is specified by an external parameter to the allocation code,
-which then manipulates the xfs_alloc_args alignment configuration in
-interesting ways.
+For simplicity, currently we limit the min at the FS block size, but a
+lower limit could be supported in future. This is required by iomap
+DIO.
 
-The args->alignment field specifies extent start alignment, but
-because we may be attempting non-aligned allocation first there are
-also slop variables that allow for those allocation attempts to
-account for aligned allocation if they fail.
+The atomic write unit min and max is limited by the guaranteed extent
+alignment for the inode.
 
-This gets much more complex as we introduce forced allocation
-alignment, where extent size hints are used to generate the extent
-start alignment. extent size hints currently only affect extent
-lengths (via args->prod and args->mod) and so with this change we
-will have two different start alignment conditions.
-
-Avoid this complexity by always using args->alignment to indicate
-extent start alignment, and always using args->prod/mod to indicate
-extent length adjustment.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-jpg: fixup alignslop references in xfs_trace.h and xfs_ialloc.c
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  |  4 +-
- fs/xfs/libxfs/xfs_alloc.h  |  2 +-
- fs/xfs/libxfs/xfs_bmap.c   | 96 +++++++++++++++++---------------------
- fs/xfs/libxfs/xfs_ialloc.c | 10 ++--
- fs/xfs/xfs_trace.h         |  8 ++--
- 5 files changed, 54 insertions(+), 66 deletions(-)
+ fs/xfs/xfs_iops.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 32f72217c126..35fbd6b19682 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2391,7 +2391,7 @@ xfs_alloc_space_available(
- 	reservation = xfs_ag_resv_needed(pag, args->resv);
- 
- 	/* do we have enough contiguous free space for the allocation? */
--	alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
-+	alloc_len = args->minlen + (args->alignment - 1) + args->alignslop;
- 	longest = xfs_alloc_longest_free_extent(pag, min_free, reservation);
- 	if (longest < alloc_len)
- 		return false;
-@@ -2420,7 +2420,7 @@ xfs_alloc_space_available(
- 	 * allocation as we know that will definitely succeed and match the
- 	 * callers alignment constraints.
- 	 */
--	alloc_len = args->maxlen + (args->alignment - 1) + args->minalignslop;
-+	alloc_len = args->maxlen + (args->alignment - 1) + args->alignslop;
- 	if (longest < alloc_len) {
- 		args->maxlen = args->minlen;
- 		ASSERT(args->maxlen > 0);
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 0b956f8b9d5a..aa2c103d98f0 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -46,7 +46,7 @@ typedef struct xfs_alloc_arg {
- 	xfs_extlen_t	minleft;	/* min blocks must be left after us */
- 	xfs_extlen_t	total;		/* total blocks needed in xaction */
- 	xfs_extlen_t	alignment;	/* align answer to multiple of this */
--	xfs_extlen_t	minalignslop;	/* slop for minlen+alignment calcs */
-+	xfs_extlen_t	alignslop;	/* slop for alignment calcs */
- 	xfs_agblock_t	min_agbno;	/* set an agbno range for NEAR allocs */
- 	xfs_agblock_t	max_agbno;	/* ... */
- 	xfs_extlen_t	len;		/* output: actual size of extent */
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c101cf266bc4..7f8c8e4dd244 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3285,6 +3285,10 @@ xfs_bmap_select_minlen(
- 	xfs_extlen_t		blen)
- {
- 
-+	/* Adjust best length for extent start alignment. */
-+	if (blen > args->alignment)
-+		blen -= args->alignment;
-+
- 	/*
- 	 * Since we used XFS_ALLOC_FLAG_TRYLOCK in _longest_free_extent(), it is
- 	 * possible that there is enough contiguous free space for this request.
-@@ -3300,6 +3304,7 @@ xfs_bmap_select_minlen(
- 	if (blen < args->maxlen)
- 		return blen;
- 	return args->maxlen;
-+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index ff222827e550..d4c957793e07 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -563,6 +563,27 @@ xfs_stat_blksize(
+ 	return PAGE_SIZE;
  }
  
- static int
-@@ -3393,35 +3398,43 @@ xfs_bmap_alloc_account(
- 	xfs_trans_mod_dquot_byino(ap->tp, ap->ip, fld, ap->length);
- }
- 
--static int
-+/*
-+ * Calculate the extent start alignment and the extent length adjustments that
-+ * constrain this allocation.
-+ *
-+ * Extent start alignment is currently determined by stripe configuration and is
-+ * carried in args->alignment, whilst extent length adjustment is determined by
-+ * extent size hints and is carried by args->prod and args->mod.
-+ *
-+ * Low level allocation code is free to either ignore or override these values
-+ * as required.
-+ */
 +static void
- xfs_bmap_compute_alignments(
- 	struct xfs_bmalloca	*ap,
- 	struct xfs_alloc_arg	*args)
- {
- 	struct xfs_mount	*mp = args->mp;
- 	xfs_extlen_t		align = 0; /* minimum allocation alignment */
--	int			stripe_align = 0;
- 
- 	/* stripe alignment for allocation is determined by mount parameters */
- 	if (mp->m_swidth && xfs_has_swalloc(mp))
--		stripe_align = mp->m_swidth;
-+		args->alignment = mp->m_swidth;
- 	else if (mp->m_dalign)
--		stripe_align = mp->m_dalign;
-+		args->alignment = mp->m_dalign;
- 
- 	if (ap->flags & XFS_BMAPI_COWFORK)
- 		align = xfs_get_cowextsz_hint(ap->ip);
- 	else if (ap->datatype & XFS_ALLOC_USERDATA)
- 		align = xfs_get_extsz_hint(ap->ip);
++xfs_get_atomic_write_attr(
++	struct xfs_inode	*ip,
++	unsigned int		*unit_min,
++	unsigned int		*unit_max)
++{
++	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_sb		*sbp = &mp->m_sb;
++	unsigned int		extsz_bytes = XFS_FSB_TO_B(mp, ip->i_extsize);
 +
- 	if (align) {
- 		if (xfs_bmap_extsize_align(mp, &ap->got, &ap->prev, align, 0,
- 					ap->eof, 0, ap->conv, &ap->offset,
- 					&ap->length))
- 			ASSERT(0);
- 		ASSERT(ap->length);
--	}
- 
--	/* apply extent size hints if obtained earlier */
--	if (align) {
- 		args->prod = align;
- 		div_u64_rem(ap->offset, args->prod, &args->mod);
- 		if (args->mod)
-@@ -3436,7 +3449,6 @@ xfs_bmap_compute_alignments(
- 			args->mod = args->prod - args->mod;
- 	}
- 
--	return stripe_align;
- }
- 
- static void
-@@ -3508,7 +3520,7 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	args.total = ap->total;
- 
- 	args.alignment = 1;
--	args.minalignslop = 0;
-+	args.alignslop = 0;
- 
- 	args.minleft = ap->minleft;
- 	args.wasdel = ap->wasdel;
-@@ -3548,7 +3560,6 @@ xfs_bmap_btalloc_at_eof(
- 	struct xfs_bmalloca	*ap,
- 	struct xfs_alloc_arg	*args,
- 	xfs_extlen_t		blen,
--	int			stripe_align,
- 	bool			ag_only)
- {
- 	struct xfs_mount	*mp = args->mp;
-@@ -3562,23 +3573,15 @@ xfs_bmap_btalloc_at_eof(
- 	 * allocation.
- 	 */
- 	if (ap->offset) {
--		xfs_extlen_t	nextminlen = 0;
-+		xfs_extlen_t	alignment = args->alignment;
- 
- 		/*
--		 * Compute the minlen+alignment for the next case.  Set slop so
--		 * that the value of minlen+alignment+slop doesn't go up between
--		 * the calls.
-+		 * Compute the alignment slop for the fallback path so we ensure
-+		 * we account for the potential alignemnt space required by the
-+		 * fallback paths before we modify the AGF and AGFL here.
- 		 */
- 		args->alignment = 1;
--		if (blen > stripe_align && blen <= args->maxlen)
--			nextminlen = blen - stripe_align;
--		else
--			nextminlen = args->minlen;
--		if (nextminlen + stripe_align > args->minlen + 1)
--			args->minalignslop = nextminlen + stripe_align -
--					args->minlen - 1;
--		else
--			args->minalignslop = 0;
-+		args->alignslop = alignment - args->alignment;
- 
- 		if (!caller_pag)
- 			args->pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, ap->blkno));
-@@ -3596,19 +3599,8 @@ xfs_bmap_btalloc_at_eof(
- 		 * Exact allocation failed. Reset to try an aligned allocation
- 		 * according to the original allocation specification.
- 		 */
--		args->alignment = stripe_align;
--		args->minlen = nextminlen;
--		args->minalignslop = 0;
--	} else {
--		/*
--		 * Adjust minlen to try and preserve alignment if we
--		 * can't guarantee an aligned maxlen extent.
--		 */
--		args->alignment = stripe_align;
--		if (blen > args->alignment &&
--		    blen <= args->maxlen + args->alignment)
--			args->minlen = blen - args->alignment;
--		args->minalignslop = 0;
-+		args->alignment = alignment;
-+		args->alignslop = 0;
- 	}
- 
- 	if (ag_only) {
-@@ -3626,9 +3618,8 @@ xfs_bmap_btalloc_at_eof(
- 		return 0;
- 
- 	/*
--	 * Allocation failed, so turn return the allocation args to their
--	 * original non-aligned state so the caller can proceed on allocation
--	 * failure as if this function was never called.
-+	 * Aligned allocation failed, so all fallback paths from here drop the
-+	 * start alignment requirement as we know it will not succeed.
- 	 */
- 	args->alignment = 1;
- 	return 0;
-@@ -3636,7 +3627,9 @@ xfs_bmap_btalloc_at_eof(
- 
- /*
-  * We have failed multiple allocation attempts so now are in a low space
-- * allocation situation. Try a locality first full filesystem minimum length
-+ * allocation situation. We give up on any attempt at aligned allocation here.
-+ *
-+ * Try a locality first full filesystem minimum length
-  * allocation whilst still maintaining necessary total block reservation
-  * requirements.
-  *
-@@ -3653,6 +3646,7 @@ xfs_bmap_btalloc_low_space(
- {
- 	int			error;
- 
-+	args->alignment = 1;
- 	if (args->minlen > ap->minlen) {
- 		args->minlen = ap->minlen;
- 		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
-@@ -3672,13 +3666,11 @@ xfs_bmap_btalloc_low_space(
- static int
- xfs_bmap_btalloc_filestreams(
- 	struct xfs_bmalloca	*ap,
--	struct xfs_alloc_arg	*args,
--	int			stripe_align)
-+	struct xfs_alloc_arg	*args)
- {
- 	xfs_extlen_t		blen = 0;
- 	int			error = 0;
- 
--
- 	error = xfs_filestream_select_ag(ap, args, &blen);
- 	if (error)
- 		return error;
-@@ -3697,8 +3689,7 @@ xfs_bmap_btalloc_filestreams(
- 
- 	args->minlen = xfs_bmap_select_minlen(ap, args, blen);
- 	if (ap->aeof)
--		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align,
--				true);
-+		error = xfs_bmap_btalloc_at_eof(ap, args, blen, true);
- 
- 	if (!error && args->fsbno == NULLFSBLOCK)
- 		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
-@@ -3722,8 +3713,7 @@ xfs_bmap_btalloc_filestreams(
- static int
- xfs_bmap_btalloc_best_length(
- 	struct xfs_bmalloca	*ap,
--	struct xfs_alloc_arg	*args,
--	int			stripe_align)
-+	struct xfs_alloc_arg	*args)
- {
- 	xfs_extlen_t		blen = 0;
- 	int			error;
-@@ -3747,8 +3737,7 @@ xfs_bmap_btalloc_best_length(
- 	 * trying.
- 	 */
- 	if (ap->aeof && !(ap->tp->t_flags & XFS_TRANS_LOWMODE)) {
--		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align,
--				false);
-+		error = xfs_bmap_btalloc_at_eof(ap, args, blen, false);
- 		if (error || args->fsbno != NULLFSBLOCK)
- 			return error;
- 	}
-@@ -3775,27 +3764,26 @@ xfs_bmap_btalloc(
- 		.resv		= XFS_AG_RESV_NONE,
- 		.datatype	= ap->datatype,
- 		.alignment	= 1,
--		.minalignslop	= 0,
-+		.alignslop	= 0,
- 	};
- 	xfs_fileoff_t		orig_offset;
- 	xfs_extlen_t		orig_length;
- 	int			error;
--	int			stripe_align;
- 
- 	ASSERT(ap->length);
- 	orig_offset = ap->offset;
- 	orig_length = ap->length;
- 
--	stripe_align = xfs_bmap_compute_alignments(ap, &args);
-+	xfs_bmap_compute_alignments(ap, &args);
- 
- 	/* Trim the allocation back to the maximum an AG can fit. */
- 	args.maxlen = min(ap->length, mp->m_ag_max_usable);
- 
- 	if ((ap->datatype & XFS_ALLOC_USERDATA) &&
- 	    xfs_inode_is_filestream(ap->ip))
--		error = xfs_bmap_btalloc_filestreams(ap, &args, stripe_align);
-+		error = xfs_bmap_btalloc_filestreams(ap, &args);
- 	else
--		error = xfs_bmap_btalloc_best_length(ap, &args, stripe_align);
-+		error = xfs_bmap_btalloc_best_length(ap, &args);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 14c81f227c5b..9f71a9a3a65e 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -758,12 +758,12 @@ xfs_ialloc_ag_alloc(
- 		 *
- 		 * For an exact allocation, alignment must be 1,
- 		 * however we need to take cluster alignment into account when
--		 * fixing up the freelist. Use the minalignslop field to
--		 * indicate that extra blocks might be required for alignment,
--		 * but not to use them in the actual exact allocation.
-+		 * fixing up the freelist. Use the alignslop field to indicate
-+		 * that extra blocks might be required for alignment, but not
-+		 * to use them in the actual exact allocation.
- 		 */
- 		args.alignment = 1;
--		args.minalignslop = igeo->cluster_align - 1;
-+		args.alignslop = igeo->cluster_align - 1;
- 
- 		/* Allow space for the inode btree to split. */
- 		args.minleft = igeo->inobt_maxlevels;
-@@ -783,7 +783,7 @@ xfs_ialloc_ag_alloc(
- 		 * on, so reset minalignslop to ensure it is not included in
- 		 * subsequent requests.
- 		 */
--		args.minalignslop = 0;
-+		args.alignslop = 0;
- 	}
- 
- 	if (unlikely(args.fsbno == NULLFSBLOCK)) {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 25ff6fe1eb6c..0b2a2a1379bd 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1808,7 +1808,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__field(xfs_extlen_t, minleft)
- 		__field(xfs_extlen_t, total)
- 		__field(xfs_extlen_t, alignment)
--		__field(xfs_extlen_t, minalignslop)
-+		__field(xfs_extlen_t, alignslop)
- 		__field(xfs_extlen_t, len)
- 		__field(char, wasdel)
- 		__field(char, wasfromfl)
-@@ -1827,7 +1827,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__entry->minleft = args->minleft;
- 		__entry->total = args->total;
- 		__entry->alignment = args->alignment;
--		__entry->minalignslop = args->minalignslop;
-+		__entry->alignslop = args->alignslop;
- 		__entry->len = args->len;
- 		__entry->wasdel = args->wasdel;
- 		__entry->wasfromfl = args->wasfromfl;
-@@ -1836,7 +1836,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__entry->highest_agno = args->tp->t_highest_agno;
- 	),
- 	TP_printk("dev %d:%d agno 0x%x agbno 0x%x minlen %u maxlen %u mod %u "
--		  "prod %u minleft %u total %u alignment %u minalignslop %u "
-+		  "prod %u minleft %u total %u alignment %u alignslop %u "
- 		  "len %u wasdel %d wasfromfl %d resv %d "
- 		  "datatype 0x%x highest_agno 0x%x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-@@ -1849,7 +1849,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		  __entry->minleft,
- 		  __entry->total,
- 		  __entry->alignment,
--		  __entry->minalignslop,
-+		  __entry->alignslop,
- 		  __entry->len,
- 		  __entry->wasdel,
- 		  __entry->wasfromfl,
++	if (!xfs_inode_has_atomicwrites(ip)) {
++		*unit_min = 0;
++		*unit_max = 0;
++		return;
++	}
++
++	*unit_min = sbp->sb_blocksize;
++	*unit_max = min(target->bt_bdev_awu_max, extsz_bytes);
++}
++
+ STATIC int
+ xfs_vn_getattr(
+ 	struct mnt_idmap	*idmap,
+@@ -636,6 +657,13 @@ xfs_vn_getattr(
+ 			stat->dio_mem_align = bdev_dma_alignment(bdev) + 1;
+ 			stat->dio_offset_align = bdev_logical_block_size(bdev);
+ 		}
++		if (request_mask & STATX_WRITE_ATOMIC) {
++			unsigned int unit_min, unit_max;
++
++			xfs_get_atomic_write_attr(ip, &unit_min, &unit_max);
++			generic_fill_statx_atomic_writes(stat,
++				unit_min, unit_max);
++		}
+ 		fallthrough;
+ 	default:
+ 		stat->blksize = xfs_stat_blksize(ip);
 -- 
 2.31.1
 
