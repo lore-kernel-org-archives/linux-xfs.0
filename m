@@ -1,42 +1,53 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E88FF20328;
-	Fri,  7 Jun 2024 18:16:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D4514E2FF;
+	Fri,  7 Jun 2024 20:30:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717784184; cv=none; b=aMF9uuevRYRAyxMZXJV5P3D/qF9fapoh+dl3D51yu/yUzB9+be7oDAXPBGJEGdpBJHlvVJzHz9S/iZQp9acjyharyz9/KP4gHF74pY8pU02ykvpPFgrHohDKtjzkFunglh/ezBLP+IvYZWb4lUGnftVyVxsvoosjwAF0cD5uVCk=
+	t=1717792239; cv=none; b=gnM5yfokh5xi4+kGhS+kkZRln2cgJGNAO/hiXRUd55qWNoiegIve0ixnJKNrb4wIuwlIyPSYiJN7eBnA+shXF62q9ybGD6G+4MI68BQ1af6YaqfDj3POtq9VWjkFYQB2RC2HbL6/Lepr/Hp/YDrW+dhE/YAdGhzF556W4h7BeMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717784184; c=relaxed/simple;
-	bh=JXZUAF1M4vQTr6VpW3B38YSyXXvILfMnD0BrpTGqeGs=;
+	s=arc-20240116; t=1717792239; c=relaxed/simple;
+	bh=qTB7GJxp/BAurCOzmcWyP5VlAdBqLtL22rzuMxd5mic=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BeOlQZlfb+sUAliJ5N8GyGlq9w/vn4mRbFzJJVqPnCyz1/yOGMLk8ONiRngQNnZaATet8u6FVxvDJJ2ENlbY7k8nElL4SaHinECbZd47m2GFDLaQMGAQhJcJgxHj8qA2vhDb+wyF+Ydck4Y9Ccg/5SGBW3A1NVlTax3BRzN9QLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvOkCDMo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ACLlc1gk1gU+R7/7TB8v60ajlTXwtAhLinAMmtjHVJXy+FDV3BRgmtuvmndimBWrXrP5XntobtZJA4APFSJp700EtdKCwgqRJYxzEDauk49rHb2EwUVMQyjH18Pj5vZLWlUZ3AzHFGCTGY7B0EdHSyXiyMdv/52dA79RkzZhgxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=fByf2Gpr; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvOkCDMo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8059AC2BBFC;
-	Fri,  7 Jun 2024 18:16:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717784183;
-	bh=JXZUAF1M4vQTr6VpW3B38YSyXXvILfMnD0BrpTGqeGs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LvOkCDMoMpKx862D90b+AnbUfo7K3a1eCgDByvp9Bu8OfR24sCsy9bteluiU1FTMQ
-	 Ww1USi9P2Zu9deWwHAwgNqbofkW7P2/uLbGwrjIdv7pR2PWd5exFTljJKkI8dHYoV8
-	 xfdNNxlAHQIFzW+aghpJUzSLLCxiUgn8dL3YfVRdRRGUIqiNA4oEmA7xd5fAgULAXx
-	 /0y7gm7xffOzDtO2aB+ihn8oIjdAEiJkfMplDZbZbvfYSvRWlmgcfg2uGqjcayiKt7
-	 +8ppsqd4ZZIW477OFkyTW1DxDAdZQEiHHuoyVI/ZLLqERSXnYLP65gc1o9XqdfvwNT
-	 z+kGSiM9tJHJA==
-Date: Fri, 7 Jun 2024 11:16:22 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-	guan@eryu.me
-Subject: Re: [PATCHSET 3/3] xfsprogs: scale shards on ssds
-Message-ID: <20240607181622.GN53013@frogsfrogsfrogs>
-References: <171744525781.1532193.10780995744079593607.stgit@frogsfrogsfrogs>
- <Zl6hdo1ZXQwg2aM0@infradead.org>
- <20240605005636.GI52987@frogsfrogsfrogs>
- <ZmKVYsgIkh-h5PG5@infradead.org>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="fByf2Gpr"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4VwtB06wNcz9sjn;
+	Fri,  7 Jun 2024 22:30:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1717792233;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zayrHH/z5RIcd0P8fXfRYa45JHnjwR22LFwlmddRB1I=;
+	b=fByf2GprKvSs9RDKyKm8QidRaXMK/eMvdvXxEJgsugRtXHziRyz7h1fpXuOJF08fQFThPU
+	VYKrDF8P/uUWJ/IkwJyGDQAPcE7I5dE/vKK6VToCwmy5gEW59Ly1setDhG6tHesTY99V+2
+	ZCFtAAcvM0sbIQ3GmwTuw7g+jegI+VRHhG3147VOjBsZTKWR9cQR3PffAd7M3zAhDsjrIf
+	vXZQYhEIUx7V2foDlryJPwA2vbXkicc0z5poVHJu4pZdiHTmZC/TOicmvU/u8uoQOqQGNU
+	xMIk0wR0n/9aXVxymhi6ixRI26bcZB9FlUCwrjn5gL5004atn+lqv6c913eFDw==
+Date: Fri, 7 Jun 2024 20:30:26 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Zi Yan <ziy@nvidia.com>
+Cc: david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
+	brauner@kernel.org, akpm@linux-foundation.org, willy@infradead.org,
+	mcgrof@kernel.org, linux-mm@kvack.org, hare@suse.de,
+	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
+	linux-xfs@vger.kernel.org, p.raghav@samsung.com,
+	linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
+	cl@os.amperecomputing.com, john.g.garry@oracle.com
+Subject: Re: [PATCH v7 05/11] mm: split a folio in minimum folio order chunks
+Message-ID: <20240607203026.zj3akxdjeykchnnf@quentin>
+References: <20240607145902.1137853-1-kernel@pankajraghav.com>
+ <20240607145902.1137853-6-kernel@pankajraghav.com>
+ <75CCE180-EC90-4BDC-B5D8-0ED1B710BE49@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,28 +56,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZmKVYsgIkh-h5PG5@infradead.org>
+In-Reply-To: <75CCE180-EC90-4BDC-B5D8-0ED1B710BE49@nvidia.com>
 
-On Thu, Jun 06, 2024 at 10:06:42PM -0700, Christoph Hellwig wrote:
-> On Tue, Jun 04, 2024 at 05:56:36PM -0700, Darrick J. Wong wrote:
-> > Not much other than the AG[IF] and log grant heads becoming less hot.
-> > That pushes the bottlenecks to the storage device, which indeed is about
-> > 8 per device.  More if you can raid0 them.
-> > 
-> > *Fortunately* for metadata workloads the logging code is decent about
-> > deduplicating repeated updates, so unless you're doing something truly
-> > nasty like synchronous direct writes to a directory tree with parent
-> > pointers that is being modified heavily, it takes some effort to
-> > overload the ssd.
-> > 
-> > (Or a crappy ssd, I guess.  Maybe I'll pull out the 860 QVO and see how
-> > it does.)
+On Fri, Jun 07, 2024 at 12:58:33PM -0400, Zi Yan wrote:
+> Hi Pankaj,
 > 
-> Ok.  I'm also a little worried about creating lots of AGs for tiny
-> file systems.  Then again I've not actually been able to find the code
-> yet which I should probably look at first.
+> Can you use ziy@nvidia.com instead of zi.yan@sent.com? Since I just use the latter
+> to send patches. Thanks.
 
-It shouldn't create fewer AGs than what the default algorithm would have
-calculated, and it won't create AGs smaller than 4GB.
+Got it!
 
---D
+> 
+> On 7 Jun 2024, at 10:58, Pankaj Raghav (Samsung) wrote:
+> 
+> > From: Luis Chamberlain <mcgrof@kernel.org>
+> >
+> > split_folio() and split_folio_to_list() assume order 0, to support
+> > minorder for non-anonymous folios, we must expand these to check the
+> > folio mapping order and use that.
+> >
+> > Set new_order to be at least minimum folio order if it is set in
+> > split_huge_page_to_list() so that we can maintain minimum folio order
+> > requirement in the page cache.
+> >
+> > Update the debugfs write files used for testing to ensure the order
+> > is respected as well. We simply enforce the min order when a file
+> > mapping is used.
+> >
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> > ---
+> >  include/linux/huge_mm.h | 14 ++++++++---
+> >  mm/huge_memory.c        | 55 ++++++++++++++++++++++++++++++++++++++---
+> >  2 files changed, 61 insertions(+), 8 deletions(-)
+> >
+> 
+> <snip>
+> 
+> >
+> > +int split_folio_to_list(struct folio *folio, struct list_head *list)
+> > +{
+> > +	unsigned int min_order = 0;
+> > +
+> > +	if (!folio_test_anon(folio)) {
+> > +		if (!folio->mapping) {
+> > +			count_vm_event(THP_SPLIT_PAGE_FAILED);
+> 
+> You should only increase this counter when the input folio is a THP, namely
+> folio_test_pmd_mappable(folio) is true. For other large folios, we will
+> need a separate counter. Something like MTHP_STAT_FILE_SPLIT_FAILED.
+> See enum mthp_stat_item in include/linux/huge_mm.h.
+> 
+Hmm, but we don't have mTHP support for non-anonymous memory right? In
+that case it won't be applicable for file backed memory? 
+
+I am not an expert there so correct me if I am wrong.
+
+--
+Regards,
+Pankaj
+
