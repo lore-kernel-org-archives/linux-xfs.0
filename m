@@ -1,50 +1,42 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72305190687;
-	Fri,  7 Jun 2024 17:02:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E88FF20328;
+	Fri,  7 Jun 2024 18:16:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717779733; cv=none; b=r5uWpRb4mlJc415iGIaG4hNeGr5TOlH0Vpr9pE3WB/AjVLoZetQjCUfMJXVa5oYP7Dbs+KSMBhYUtdf1zARZY4kkxITKDtT38CGb7w+W3+J5E2MjEZUintPNN+MhxGw1muN0bEV7d2eH2lYGMVKjX/Av8AGlijgSRPTmu3jr2h4=
+	t=1717784184; cv=none; b=aMF9uuevRYRAyxMZXJV5P3D/qF9fapoh+dl3D51yu/yUzB9+be7oDAXPBGJEGdpBJHlvVJzHz9S/iZQp9acjyharyz9/KP4gHF74pY8pU02ykvpPFgrHohDKtjzkFunglh/ezBLP+IvYZWb4lUGnftVyVxsvoosjwAF0cD5uVCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717779733; c=relaxed/simple;
-	bh=quBBbYGeceOQJUlGHVUTHvQoaAdeTEZZ3DjSYwTtiEQ=;
+	s=arc-20240116; t=1717784184; c=relaxed/simple;
+	bh=JXZUAF1M4vQTr6VpW3B38YSyXXvILfMnD0BrpTGqeGs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pw9Yz08CSYtEKF0ANeoresSpEFd1v6vfEDfPH2tQVzzbqeqRnGWaj+ud+7id1VKe5kNvy+vi+FDgYpBd3i+2/mmNAx/i8kAp2LRUYja1buyUUzndtjPSnYevV4pGXaZdPFnKOYy4JaaLnrLHOUnmQYkdksyzUFdWc1aOd50OiuE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CXEE3Q2z; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=BeOlQZlfb+sUAliJ5N8GyGlq9w/vn4mRbFzJJVqPnCyz1/yOGMLk8ONiRngQNnZaATet8u6FVxvDJJ2ENlbY7k8nElL4SaHinECbZd47m2GFDLaQMGAQhJcJgxHj8qA2vhDb+wyF+Ydck4Y9Ccg/5SGBW3A1NVlTax3BRzN9QLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvOkCDMo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CXEE3Q2z"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=+Y+uz+t7CBd5q+ju0YXmF1lWX1OcZxpsLTsUly2lYtQ=; b=CXEE3Q2zfrYvMDNLN5EMRpwIMW
-	iVfV2dKW3HVxXGKAzJ4TxHof/Pj4V76QQmcHc4tBPZyWkLZuwLE06HWRSRXzGqH5xYdeaIx1l6oCH
-	XGsrvzpLyPutIV5vIEQSxLf4A0QJtmDTZ5LnwWyRmAwpb/3yEcZAklvltriXPEtjYfQetseyuv3JT
-	mVwVR+jV5wEZM6m/GQxWcbOzfwrfBcjIEUNVWMY8o7gTbts7tKaJT9fKDAMPCM3a/maSUKKUKZ8vz
-	uYYl3Fr5FBSvkeXuU2vVyc93vMF5KabF0N79vQmtdIo0MRfpBpiRBqqdklv1pdaPK9dvmWbE5r45x
-	pDjCUUVQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sFcyS-00000006PkX-3vg9;
-	Fri, 07 Jun 2024 17:01:56 +0000
-Date: Fri, 7 Jun 2024 18:01:56 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Zi Yan <ziy@nvidia.com>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
-	david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
-	brauner@kernel.org, akpm@linux-foundation.org, mcgrof@kernel.org,
-	linux-mm@kvack.org, hare@suse.de, linux-kernel@vger.kernel.org,
-	yang@os.amperecomputing.com, linux-xfs@vger.kernel.org,
-	p.raghav@samsung.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
-	gost.dev@samsung.com, cl@os.amperecomputing.com,
-	john.g.garry@oracle.com
-Subject: Re: [PATCH v7 05/11] mm: split a folio in minimum folio order chunks
-Message-ID: <ZmM9BBzU4ySqvxjV@casper.infradead.org>
-References: <20240607145902.1137853-1-kernel@pankajraghav.com>
- <20240607145902.1137853-6-kernel@pankajraghav.com>
- <75CCE180-EC90-4BDC-B5D8-0ED1B710BE49@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvOkCDMo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8059AC2BBFC;
+	Fri,  7 Jun 2024 18:16:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717784183;
+	bh=JXZUAF1M4vQTr6VpW3B38YSyXXvILfMnD0BrpTGqeGs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LvOkCDMoMpKx862D90b+AnbUfo7K3a1eCgDByvp9Bu8OfR24sCsy9bteluiU1FTMQ
+	 Ww1USi9P2Zu9deWwHAwgNqbofkW7P2/uLbGwrjIdv7pR2PWd5exFTljJKkI8dHYoV8
+	 xfdNNxlAHQIFzW+aghpJUzSLLCxiUgn8dL3YfVRdRRGUIqiNA4oEmA7xd5fAgULAXx
+	 /0y7gm7xffOzDtO2aB+ihn8oIjdAEiJkfMplDZbZbvfYSvRWlmgcfg2uGqjcayiKt7
+	 +8ppsqd4ZZIW477OFkyTW1DxDAdZQEiHHuoyVI/ZLLqERSXnYLP65gc1o9XqdfvwNT
+	 z+kGSiM9tJHJA==
+Date: Fri, 7 Jun 2024 11:16:22 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+	guan@eryu.me
+Subject: Re: [PATCHSET 3/3] xfsprogs: scale shards on ssds
+Message-ID: <20240607181622.GN53013@frogsfrogsfrogs>
+References: <171744525781.1532193.10780995744079593607.stgit@frogsfrogsfrogs>
+ <Zl6hdo1ZXQwg2aM0@infradead.org>
+ <20240605005636.GI52987@frogsfrogsfrogs>
+ <ZmKVYsgIkh-h5PG5@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,25 +45,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <75CCE180-EC90-4BDC-B5D8-0ED1B710BE49@nvidia.com>
+In-Reply-To: <ZmKVYsgIkh-h5PG5@infradead.org>
 
-On Fri, Jun 07, 2024 at 12:58:33PM -0400, Zi Yan wrote:
-> > +int split_folio_to_list(struct folio *folio, struct list_head *list)
-> > +{
-> > +	unsigned int min_order = 0;
-> > +
-> > +	if (!folio_test_anon(folio)) {
-> > +		if (!folio->mapping) {
-> > +			count_vm_event(THP_SPLIT_PAGE_FAILED);
+On Thu, Jun 06, 2024 at 10:06:42PM -0700, Christoph Hellwig wrote:
+> On Tue, Jun 04, 2024 at 05:56:36PM -0700, Darrick J. Wong wrote:
+> > Not much other than the AG[IF] and log grant heads becoming less hot.
+> > That pushes the bottlenecks to the storage device, which indeed is about
+> > 8 per device.  More if you can raid0 them.
+> > 
+> > *Fortunately* for metadata workloads the logging code is decent about
+> > deduplicating repeated updates, so unless you're doing something truly
+> > nasty like synchronous direct writes to a directory tree with parent
+> > pointers that is being modified heavily, it takes some effort to
+> > overload the ssd.
+> > 
+> > (Or a crappy ssd, I guess.  Maybe I'll pull out the 860 QVO and see how
+> > it does.)
 > 
-> You should only increase this counter when the input folio is a THP, namely
-> folio_test_pmd_mappable(folio) is true. For other large folios, we will
-> need a separate counter. Something like MTHP_STAT_FILE_SPLIT_FAILED.
-> See enum mthp_stat_item in include/linux/huge_mm.h.
+> Ok.  I'm also a little worried about creating lots of AGs for tiny
+> file systems.  Then again I've not actually been able to find the code
+> yet which I should probably look at first.
 
-Also, why should this count as a split failure?  If we see a NULL
-mapping, the folio has been truncated and so no longer needs to be
-split.  I understand we currently count it as a failure, but I
-don't think we should.
+It shouldn't create fewer AGs than what the default algorithm would have
+calculated, and it won't create AGs smaller than 4GB.
 
-
+--D
