@@ -1,42 +1,49 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DA8EAD5
-	for <linux-xfs@vger.kernel.org>; Sun,  9 Jun 2024 06:33:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E2FE33DF;
+	Sun,  9 Jun 2024 06:36:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717914787; cv=none; b=EvOAMFv1bfSz9NyxdgXlfZX6sCYBJgAg4NlWQAR1fF/xGyRcpvlRmJcEW29neptw6+iRUq7FkkYUVv4UiZkOArh3y8I/jHPUS2kOIahC6jUMQuZ1T5fzKgDTl1i+y1LYfPgsCEO6w0x0eCmunSHCavybQ1nb54GJue276XKrZXo=
+	t=1717914993; cv=none; b=uyRKVpv6hF/V7bcy7gdBZ3QibdMRs715CN0MH1SBCM9isHtGTKEg0OiHQAb7FjQfnVZKBGKQP1dksAPqyRp9eNTbc9GaAQqajzSWibn36ISGHuFxEmBDNJU/ogDJkIYLXzFdcfDuVCdMUrZWVmHOZdToJZNPNgxcJBiQ0cFwlhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717914787; c=relaxed/simple;
-	bh=amqnp3ihUj3ks4kuRQ1uohjuccJFRYFEEvX6i8gUZ8o=;
+	s=arc-20240116; t=1717914993; c=relaxed/simple;
+	bh=7e1yKWqgL1IkgIai0KdZxRqFboXzW14N69sTXKFYQ1A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dHAk1/jA1hsmuMpk1kL3gTDIIauYUJgnCzhIOBKZwK1Vd9csuset8Rg3oReCKpbkJGJUQj72U58E3z6/uPV6RQ10r439e/+n6dvP/aI1qu4EkUXfr2gAeT+dvLvumdH45IudpN5baZXm5roijoSK5rOJeHb3FfiGmvQ7mcJXJ14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SH3CnTJA; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=CbqqCJ3c1R5kszrIOnJYDCtkIezIJp2frw8k6xZGJMe+/TnRHPAeYJMsCs7ZCGTFdO09WBHp6CkmapcaJmsB5gpxxvtjEH+d6UFMpVbW23ZTr6yIbYdwXaH4OsSzfuXP+n06dl6KOG4T5vF9se32ckAvVoAKAMnbYrP5sDpLWOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=I9ueLAZj; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SH3CnTJA"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="I9ueLAZj"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=lrgaYtSMkJ0QvFZuHSnyJRUuFMPLPvn+Znm7/4E/XYY=; b=SH3CnTJAmjfKjf1+YwOig9XJ9u
-	Sg7/WeImt2mN2aMZ/ND/dFk75yFs37KUe5uLQx7Z2hbSibaamuJq1AtZ/nOr7fa3MnQkRrBrkIyk/
-	8DGR9R0JmjUQZF/vBSoNlBaz6jMm8l9fva5N9uj7X45A1qpD0Wd8ZAB8f/vKSDtIQ3ab7MkaKZbi3
-	DwZA/PIrS5AtXK4lLPt+ckSRDABLnPTIkh4ZUQx4BDZczFepavOP+4eNMJ+JZydDAcaDX78hLN8eo
-	NTBw88cHWyKGp032YAG/l3ybggnPDRc4kaD0z5tYaO0bqE7TQu8GzaSNGVtkSjTo71AvWWAyTVN7Q
-	a5d41U0A==;
+	bh=Qyul2gs29s1sQcX8rU+rTWeCqHIpXyYpZGZrXjUfM1E=; b=I9ueLAZjDjowWeljLjTonCqvH5
+	1SKRiRaxAYn8kt4vKXd3CwSzpBqywvFL8ARS+XXwB6ba1OU0KA9Mr5tYPax9lj4154+h3HvofN0ia
+	1hET4sDG9dab7y5ZgnlH/iuO3iNS0duWvmK4Pqve/4gOuShusnbL76S7euEvLWraUIh27M9SMu4KV
+	+XB/Xj0Y7p90vrYTZqIoYU//6zrERW7NaodqEwPCSsU3Spv11k1VCfT2bHltzXURPFP2UnWO/B+dt
+	eUGQykrltZwuGzsDOOoKQ9N23KG461pLfazeDeP4LJ1WAyJizVx/GgM7h5oHa1+XhLejlhRZdL5tT
+	iFcKbJWw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sGC6x-000000020Bv-2D0a;
-	Sun, 09 Jun 2024 06:33:03 +0000
-Date: Sat, 8 Jun 2024 23:33:03 -0700
+	id 1sGCAI-000000020qx-36mp;
+	Sun, 09 Jun 2024 06:36:30 +0000
+Date: Sat, 8 Jun 2024 23:36:30 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: allow unlinked symlinks and dirs with zero size
-Message-ID: <ZmVMn3Gu-hP3AMEI@infradead.org>
-References: <20240607161217.GR52987@frogsfrogsfrogs>
+Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, Jan Kara <jack@suse.cz>,
+	Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH] Documentation: document the design of iomap and how to
+ port
+Message-ID: <ZmVNblggFRgR8bnJ@infradead.org>
+References: <20240608001707.GD52973@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,35 +52,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240607161217.GR52987@frogsfrogsfrogs>
+In-Reply-To: <20240608001707.GD52973@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Jun 07, 2024 at 09:12:17AM -0700, Darrick J. Wong wrote:
+On Fri, Jun 07, 2024 at 05:17:07PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> For a very very long time, inode inactivation has set the inode size to
-> zero before unmapping the extents associated with the data fork.
-> Unfortunately, newer commit 3c6f46eacd876 changed the inode verifier to
-> prohibit zero-length symlinks and directories.  If an inode happens to
+> This is the fourth attempt at documenting the design of iomap and how to
 
-", newer commit" above reads really odd.  Maybe just drop the "newer "?
+The number of attempts should go out of the final commit version..
 
-> +	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0) {
-> +		if (dip->di_version > 1) {
-> +			if (dip->di_nlink)
-> +				return __this_address;
-> +			else
-> +				ASSERT(0);
-> +		} else {
-> +			if (dip->di_onlink)
-> +				return __this_address;
-> +			else
-> +				ASSERT(0);
-> +		}
+> port filesystems to use it.  Apologies for all the rst formatting, but
+> it's necessary to distinguish code from regular text.
 
-No need for else after a return.
+Maybe we should do this as a normal text file and not rst then?
 
-With that fixed:
+> +.. SPDX-License-Identifier: GPL-2.0
+> +.. _iomap:
+> +
+> +..
+> +        Dumb style notes to maintain the author's sanity:
+> +        Please try to start sentences on separate lines so that
+> +        sentence changes don't bleed colors in diff.
+> +        Heading decorations are documented in sphinx.rst.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Should this be in the document and not a README in the directory?
+
+That being said starting every sentence on a new line makes the text
+really hard to read.  To the point that I'll really need to go off
+and reformat it before making it beyond the first few paragraphs.
+I'll try to do that and will return to it later, sorry for just
+dropping these procedural notes for now.
 
