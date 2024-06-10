@@ -1,150 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D0CB3E47E;
-	Mon, 10 Jun 2024 20:26:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E624D8DD
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Jun 2024 21:07:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718051193; cv=none; b=VZ6EwmltB6kqO2yCSzOqvaoQ5bFUKeXS3QEAA/il2wK64zoaQ37d5ZHRVzdOImBHDxy62WFYsUNq6dakpfMLbVEZi5R/baJ8sUnlCKM3ZLeB5RHgtRm7my2JiCUsbr1WYjRCr7Sfen8/p3VNrvw+FwnAzxOOwM9WLQabjZ2Gy7Q=
+	t=1718053644; cv=none; b=NcnZWH2WAGvlaeX8mPJ9yFX4kfXgbtc+gBU9KOrA6G8KM6SZs0or5CxC/pweF98Vg7A/lHeNI3d0sEmMj07UljRZLDlZdcb+3uNxZQ7tSXWzyse8C8c1vm/d7cB6WXQIF3esI3Yl1QckydZsZFj5ITdpwl9YK+z5fPM0UPBuzQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718051193; c=relaxed/simple;
-	bh=eJJNSK7gg98XBwHB8BD+dbA2UaQ/zT2zFikjypkU7Us=;
+	s=arc-20240116; t=1718053644; c=relaxed/simple;
+	bh=5xjpVn1J8WiZ9nqk6zB437NrrEFADQUvY5vh2zmD4dM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CSvlOhX0qTguwrejvdUpomvEXnA5MaHIv7u3C2ckqYiy/E22FAG+hRupCAcMC5WE7qOPiAnmh4pAA1le5iuN3xLjGHFAgJTpDx9GAT2mF0hZ+g3hKd26uoW8SzXB6T93H1oHb7sWM/ra7d42hRkBE/uIqxnqcpfYb428+hxkH0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mFiMzK6C; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=f+rEwjRIqeYAJXiteR3pPQ2ynJCLCd0TjahddI+JfxfI7By72D0ZwQGncI0qaw1YhUA54UnbaFBWXn0A0m7w08DDxp1KCvEwo6DcJe7zFC0dPtAjzSWgBgc5Wp8rg2TM+Hda3NGQdQM7NJzql8L2jn9BBq8gvCXganQrIqeRft4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rgUhQpTo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mFiMzK6C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84253C2BBFC;
-	Mon, 10 Jun 2024 20:26:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rgUhQpTo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4942EC2BBFC;
+	Mon, 10 Jun 2024 21:07:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718051192;
-	bh=eJJNSK7gg98XBwHB8BD+dbA2UaQ/zT2zFikjypkU7Us=;
+	s=k20201202; t=1718053644;
+	bh=5xjpVn1J8WiZ9nqk6zB437NrrEFADQUvY5vh2zmD4dM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mFiMzK6CcGZPYc3CmHrVx79zWom1T3BV/HoHg8TpxAkMJiWYG4VuMrMkOSZd/t2AF
-	 wp+80U+mtAptttVinfMGJqABtCs2caVk9579JbUdEp5qdvJlJ70hy0yIHPL2ZnU/k8
-	 F4nqdXKB22d6D+BdY28fhQeRoiukmMdsbvT6WSrYs9POaBzxO1d4nnWc9w/lO86UfP
-	 nhjzTfbwSWJNkLCSm6loI4zVlpikPItJRdPNHOoOCsZmljge8lhUIUGGi4H/FFj0T2
-	 BrrYlaEbm2y9cU2av8pQuhfbB7Zo5bIMg5pRhckNnJSgku/9E93Vj6YQ+k5yEmCYb7
-	 8xqddoybUIPTQ==
-Date: Mon, 10 Jun 2024 13:26:31 -0700
+	b=rgUhQpToqucYPMcgb0DvASH7MKHsc0Y0g66qL4lK6Oxp7cOg4tWV/d2VCg/2gas/D
+	 ZEVuOLF5XIBHNqgmIhkSinojUQBa8PxaRsWWlxUSK9Rhrkw9xnDQ5uvo1wW9CinnzJ
+	 hfhFwMUUNN5Ot9R/DSIEKWJE5lo5EIoWEbdZDXxp56OMWj6iHZRlk30Re7hCY7jFOK
+	 8LuO/9AeNNvuNjBXafaPCR5X2fU4zMG6c8vl4cX1qr27ZDSiLaJkEp3IPJs35ysdSQ
+	 piW58icYqCDmf02oZriQUITzvPFBA3TYDqoZSMeAr57A0gWHrpCdt0g/aXo03Cvm51
+	 j8Eyw6hVlf5DA==
+Date: Mon, 10 Jun 2024 14:07:23 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>
-Subject: Re: Re: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
- FS_IOC_FSGETXATTRAT
-Message-ID: <20240610202631.GE52973@frogsfrogsfrogs>
-References: <vbiskxttukwzhjoiic6toscqc6b2qekuwumfpzqp5vkxf6l6ia@pby5fjhlobrb>
- <20240603174259.GB52987@frogsfrogsfrogs>
- <20240604085843.q6qtmtitgefioj5m@quack3>
- <20240605003756.GH52987@frogsfrogsfrogs>
- <CAOQ4uxiVVL+9DEn9iJuWRixVNFKJchJHBB8otH8PjuC+j8ii4g@mail.gmail.com>
- <ZmEemh4++vMEwLNg@dread.disaster.area>
- <tnj5nqca7ewg5igfvhwhmjigpg3nxeic4pdqecac3azjsvcdev@plebr5ozlvmb>
- <CAOQ4uxg6qihDRS1c11KUrrANrxJ2XvFUtC2gHY0Bf3TQjS0y4A@mail.gmail.com>
- <kh5z3o4wj2mxx45cx3v2p6osbgn5bd2sdexksmwio5ad5biiru@wglky7rxvj6l>
- <CAOQ4uxgLbXHYxhgtLByDyMcEwFGfg548AmJj7A99kwFkS_qTmw@mail.gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chandan Babu R <chandanbabu@kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: allow unlinked symlinks and dirs with zero size
+Message-ID: <20240610210723.GU52987@frogsfrogsfrogs>
+References: <20240607161217.GR52987@frogsfrogsfrogs>
+ <ZmVMn3Gu-hP3AMEI@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxgLbXHYxhgtLByDyMcEwFGfg548AmJj7A99kwFkS_qTmw@mail.gmail.com>
+In-Reply-To: <ZmVMn3Gu-hP3AMEI@infradead.org>
 
-On Mon, Jun 10, 2024 at 04:21:39PM +0300, Amir Goldstein wrote:
-> On Mon, Jun 10, 2024 at 2:50 PM Andrey Albershteyn <aalbersh@redhat.com> wrote:
-> >
-> > On 2024-06-10 12:19:50, Amir Goldstein wrote:
-> > > On Mon, Jun 10, 2024 at 11:17 AM Andrey Albershteyn <aalbersh@redhat.com> wrote:
-> > > >
-> > > > On 2024-06-06 12:27:38, Dave Chinner wrote:
-> > > ...
-> > > > >
-> > > > > The only reason XFS returns -EXDEV to rename across project IDs is
-> > > > > because nobody wanted to spend the time to work out how to do the
-> > > > > quota accounting of the metadata changed in the rename operation
-> > > > > accurately. So for that rare case (not something that would happen
-> > > > > on the NAS product) we returned -EXDEV to trigger the mv command to
-> > > > > copy the file to the destination and then unlink the source instead,
-> > > > > thereby handling all the quota accounting correctly.
-> > > > >
-> > > > > IOWs, this whole "-EXDEV on rename across parent project quota
-> > > > > boundaries" is an implementation detail and nothing more.
-> > > > > Filesystems that implement project quotas and the directory tree
-> > > > > sub-variant don't need to behave like this if they can accurately
-> > > > > account for the quota ID changes during an atomic rename operation.
-> > > > > If that's too hard, then the fallback is to return -EXDEV and let
-> > > > > userspace do it the slow way which will always acocunt the resource
-> > > > > usage correctly to the individual projects.
-> > > > >
-> > > > > Hence I think we should just fix the XFS kernel behaviour to do the
-> > > > > right thing in this special file case rather than return -EXDEV and
-> > > > > then forget about the rest of it.
-> > > >
-> > > > I see, I will look into that, this should solve the original issue.
-> > >
-> > > I see that you already got Darrick's RVB on the original patch:
-> > > https://lore.kernel.org/linux-xfs/20240315024826.GA1927156@frogsfrogsfrogs/
-> > >
-> > > What is missing then?
-> > > A similar patch for rename() that allows rename of zero projid special
-> > > file as long as (target_dp->i_projid == src_dp->i_projid)?
-> > >
-> > > In theory, it would have been nice to fix the zero projid during the
-> > > above link() and rename() operations, but it would be more challenging
-> > > and I see no reason to do that if all the other files remain with zero
-> > > projid after initial project setup (i.e. if not implementing the syscalls).
-> >
-> > I think Dave suggests to get rid of this if-guard and allow
-> > link()/rename() for special files but with correct quota calculation.
-> >
-> > >
-> > > >
-> > > > But those special file's inodes still will not be accounted by the
-> > > > quota during initial project setup (xfs_quota will skip them), would
-> > > > it worth it adding new syscalls anyway?
-> > > >
-> > >
-> > > Is it worth it to you?
-> > >
-> > > Adding those new syscalls means adding tests and documentation
-> > > and handle all the bugs later.
-> > >
-> > > If nobody cared about accounting of special files inodes so far,
-> > > there is no proof that anyone will care that you put in all this work.
-> >
-> > I already have patch and some simple man-pages prepared, I'm
-> > wondering if this would be useful for any other usecases
+On Sat, Jun 08, 2024 at 11:33:03PM -0700, Christoph Hellwig wrote:
+> On Fri, Jun 07, 2024 at 09:12:17AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > For a very very long time, inode inactivation has set the inode size to
+> > zero before unmapping the extents associated with the data fork.
+> > Unfortunately, newer commit 3c6f46eacd876 changed the inode verifier to
+> > prohibit zero-length symlinks and directories.  If an inode happens to
 > 
-> Yes, I personally find it useful.
-> I have applications that query the fsx_xflags and would rather
-> be able to use O_PATH to query/set those flags, since
-> internally in vfs, fileattr_[gs]et() do not really need an open file.
+> ", newer commit" above reads really odd.  Maybe just drop the "newer "?
 > 
-> > which would
-> > require setting extended attributes on spec indodes.
+> > +	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0) {
+> > +		if (dip->di_version > 1) {
+> > +			if (dip->di_nlink)
+> > +				return __this_address;
+> > +			else
+> > +				ASSERT(0);
+> > +		} else {
+> > +			if (dip->di_onlink)
+> > +				return __this_address;
+> > +			else
+> > +				ASSERT(0);
+> > +		}
 > 
-> Please do not use the terminology "extended attributes" in the man page
-> to describe struct fsxattr.
+> No need for else after a return.
+> 
+> With that fixed:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-"XFS file attributes" perhaps?
-
-Though that's anachronistic since ext4 supports /some/ of them now.
+It turns out that even this is still buggy because directories that are
+being inactivated (e.g. after repair has replaced the contents) can have
+zero isize.  Sooo I'll have a new patch in a day or two.
 
 --D
-
-> Better follow the "additional attributes" terminology of xfs ioctl man page [1],
-> even though it is already confusing enough w.r.t "extended attributes" IMO.
-> 
-> Thanks,
-> Amir.
-> 
-> [1] https://man7.org/linux/man-pages/man2/ioctl_xfs_fsgetxattr.2.html
-> 
