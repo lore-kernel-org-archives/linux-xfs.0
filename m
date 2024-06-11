@@ -1,52 +1,48 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A351150992;
-	Tue, 11 Jun 2024 20:29:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3647D15445F;
+	Tue, 11 Jun 2024 21:43:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718137796; cv=none; b=BWK+jsJ+r44D+mczBahpfzizm7vVcMVfELDwCepmVWSMYtIUbx7u6cedcVBrr/4AbsrAQ+vdBw+b5EGBwWD4xjRAFe1JyLj43Wy14jHW7vcwpgNaILRY3XFxNRuSTGIgiCHz4w4F/cDnPrYtaP/3FHYFGQF4m3ahds4EUDiCMlA=
+	t=1718142236; cv=none; b=RFlrri9Lmi05ZhkeVZLzfSeGjgJFGQHYYo5RUFT16mWDWRc5tBjdqMqLj3qOXyTHsp6/j5R2cGiH1XqyUaVJqdW/ktZiBrIpBdFF64QEfIFw5Toa/2pApJDGOAgtpYHgQ5dgH8Ppm2dBykEsFtrZa7zF0O/VgJfOIM1h9peYewA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718137796; c=relaxed/simple;
-	bh=nEolDgKDErGZBB7tKOsfxS/IbFXltUDKzh24roXfRlc=;
+	s=arc-20240116; t=1718142236; c=relaxed/simple;
+	bh=KlHIgNvDyZC9MtN2GZoUqn6aV2oBNClS6zkq5k/Kvi4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mg0l1CeClyKZhHfU80BxOvuA0cmiIA127kYU9yStItDYN+VAecf7AMr/MTTmqyxkHCHO3+s7TDsxIRtNK2FqNTsH3dRizNhAkO5ApLe21axfnK3r68mEeCZ0ZAIVSpDiwbFF+n7z8AcAaF8y3F1/nz0JkzRms/2xFNnOKXd1Vbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uA/KgJ8Y; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lbv9GYAmRtQcyZ3AJRugWVyBQOLhMcyvtNJYmxgEPJ2ittX4tCXKq0SQQgJH/gZKT/DjV4XLzGh9xr8Q3qoDe0xELOR6oNFLLEDNSFSpB9GHRFm4ll5gnieYEHDiGwqky4FsJeyedlfBKa7FRXPVeRxmwIYOJcxbUDtyU9acn0U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AlrXhgN+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uA/KgJ8Y"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=HHzIStUOi1BlV4wZTTFPN76eG154vJPSJLDHU9Auc44=; b=uA/KgJ8YREtF6OVuaY9TnG905E
-	PDJi0R8oAMwiEe/Dm8lxtKIRVml1NvCqfp4Lfueb7dwt8LKtfCyEwblg/XskJKdlr4KzPec1plzJp
-	qMBiHeC3I6lN0ZreVNVi4CWRbhrV50jXkRJiJ3lOA6IOXw9IsO51W8l1sqzAxlQ4WZ4Gsw85LU5xA
-	jaIapNkFvtI++2amxryf5Sq1KbXnzNxUXbQYvs9vVk3RlHRXy0IBv7lMXe1rtlUMIlt252WUheX5G
-	lN33sZx/Re4m6YLn85oOGyz0VCAnuVTg129NzISLFi6DpTv6ZBG270XmQz/iW1uisYx9ilRHRv0UG
-	OvxWTTLQ==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sH87r-0000000AAtM-3xS6;
-	Tue, 11 Jun 2024 20:29:51 +0000
-Date: Tue, 11 Jun 2024 13:29:51 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>, hughd@google.com
-Cc: patches@lists.linux.dev, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org,
-	ziy@nvidia.com, vbabka@suse.cz, seanjc@google.com,
-	willy@infradead.org, david@redhat.com, hughd@google.com,
-	linmiaohe@huawei.com, muchun.song@linux.dev, osalvador@suse.de,
-	p.raghav@samsung.com, da.gomez@samsung.com, hare@suse.de,
-	john.g.garry@oracle.com
-Subject: Re: [PATCH 2/5] fstests: add mmap page boundary tests
-Message-ID: <Zmizv_g728OwNFrg@bombadil.infradead.org>
-References: <20240611030203.1719072-1-mcgrof@kernel.org>
- <20240611030203.1719072-3-mcgrof@kernel.org>
- <20240611164811.GL52977@frogsfrogsfrogs>
- <ZmiTBZLQ8uOGS5i8@bombadil.infradead.org>
- <20240611184603.GA52987@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AlrXhgN+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DD2FC2BD10;
+	Tue, 11 Jun 2024 21:43:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718142235;
+	bh=KlHIgNvDyZC9MtN2GZoUqn6aV2oBNClS6zkq5k/Kvi4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AlrXhgN+tImDEj8BhwYCLJVBaeCpEN2s3VdkI0kSsXxSjOlyoHcOcCCYYQtbgsE7b
+	 3JNpEZnDofkDMMxqXMUdbUO/lxEs210S+CP9mx4c+aMv5XIoyPj/ix4DUC3+Y8W70a
+	 pVlGSZBjg0UfNwBi632p0OisVrOIEkP1ePbYCBFpRbzDgSIoSM+HpCQb8da8hhz39O
+	 NhiWHjzYYK9FVTNsVqQRbbzpCchV3gO+9dK9eep+miFiK2dGTbS0Qm+zC857AiKKT0
+	 ZgMKBEWoLKUU8hdXFxZz7BWvUfTx0pronIdiol1/rsE/BxF7V2kz1jfX4pkkQuB6Ih
+	 BPnEOQzdLZbNA==
+Date: Tue, 11 Jun 2024 14:43:55 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, Jan Kara <jack@suse.cz>,
+	Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH] Documentation: document the design of iomap and how to
+ port
+Message-ID: <20240611214355.GB52987@frogsfrogsfrogs>
+References: <20240608001707.GD52973@frogsfrogsfrogs>
+ <ZmVNblggFRgR8bnJ@infradead.org>
+ <20240609155506.GT52987@frogsfrogsfrogs>
+ <Zmh3XTDLM1TToQ2g@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,118 +51,194 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240611184603.GA52987@frogsfrogsfrogs>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <Zmh3XTDLM1TToQ2g@infradead.org>
 
-On Tue, Jun 11, 2024 at 11:46:03AM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 11, 2024 at 11:10:13AM -0700, Luis Chamberlain wrote:
-> > On Tue, Jun 11, 2024 at 09:48:11AM -0700, Darrick J. Wong wrote:
-> > > On Mon, Jun 10, 2024 at 08:01:59PM -0700, Luis Chamberlain wrote:
-> > > > +# As per POSIX NOTES mmap(2) maps multiples of the system page size, but if the
-> > > > +# data mapped is not multiples of the page size the remaining bytes are zeroed
-> > > > +# out when mapped and modifications to that region are not written to the file.
-> > > > +# On Linux when you write data to such partial page after the end of the
-> > > > +# object, the data stays in the page cache even after the file is closed and
-> > > > +# unmapped and  even  though  the data  is never written to the file itself,
-> > > > +# subsequent mappings may see the modified content. If you go *beyond* this
-> > > 
-> > > Does this happen (mwrite data beyond eof sticks around) with large
-> > > folios as well?
-> > 
-> > That corner case of checking to see if it stays is not tested by this
-> > test, but we could / should extend this test later for that. But then
-> > the question becomes, what is right, given we are in grey area, if we
-> > don't have any defined standard for it, it seems odd to test for it.
-> > 
-> > So the test currently only tests for correctness of what we expect for
-> > POSIX and what we all have agreed for Linux.
-> > 
-> > Hurding everyone to follow suit for the other corner cases is something
-> > perhaps we should do. Do we have a "strict fail" ? So that perhaps we can
-> > later add a test case for it and so that onnce and if we get consensus
-> > on what we do we can enable say a "strict-Linux" mode where we are
-> > pedantic about a new world order?
+On Tue, Jun 11, 2024 at 09:12:13AM -0700, Christoph Hellwig wrote:
+> On Sun, Jun 09, 2024 at 08:55:06AM -0700, Darrick J. Wong wrote:
+> > HTML version here, text version below.
 > 
-> I doubt there's an easy way to guarantee more than "initialized to zero,
-> contents may stay around in memory but will not be written to disk".
-> You could do asinine things like fault on every access and manually
-> inject zero bytes, but ... yuck.
-
-Sure, but I suspect the real issue is if it does something like leak
-data which it should not. The test as-is does test to ensure the data
-is zeroed.
-
-If we want to add a test to close the mmap and ensure the data beyond
-the file content up to PAGE_SIZE is still zeroed out, it's easy to do,
-it was just that it seems that *could* end up with different results
-depending on the filesystem.
-
-> That said -- let's say you have a 33k file, and a space mapping for
-> 0-63k 
-
-What block size filesystem in this example? If the lengh is 33k, whether
-or not it was truncated does not matter, the file size is what matters.
-The block size is what we use for the minimum order folio, and sincee we
-start at offset 0, a 33k sized file on a 64k block size filesystem will
-get a 64k folio. On a 32k block size filesystem, it will get two 32k
-foios.
-
-> (e.g. it was preallocated).
-
-Do you mean sparse or what? Because if its a sparse file it will still
-change the size of the file, so just wanted to check.
-
-> Can the pagecache grab (say) a 64k folio for the EOF part of the pagecache?
-
-It depends on the block size of the filesystem. If 4k, we'd go up to
-36k, and 33k-46k would be zereod.
-
-With min order, we'd have a folio of 8k, 32k, or 64k. For 8k we'd have
-5 folios of 8k size each, the last one have only 1k of data, and 3k
-zeroed out. No PTEs would be assigned for that folio beyond 36k boundary
-and so we'd SIGBUS on access beyond it. We test for this in this test.
-
-> And can you mmap that whole region?
-
-No, we test for this too here. You can  only mmap up to the aligned
-PAGE_SIZE of the file size.
-
-> And see even more grey area mmapping?
-
-No, we limit up to PAGE_SIZE alignement.
-
-> Or does mmap always cut
-> off the mapping at roundup(i_size_read(), PAGE_SIZE) ?
-
-That's right, we do this, without LBS this was implied, but with LBS
-we have to be explicit about using the PAGE_SIZE alignment restriction.
-
-This test checks for all that, and checks for both integrity of the contents
-and file size even if you muck with the extra fluff allowed by mmap().
-
-> > > What other data?
-> > 
-> > Beats me, got that from the man page bible on mmap. I think its homework
-> > for us to find out who is spewing that out, which gives a bit more value
-> > to the idea of that strict-linux thing. How else will we find out?
+> That is so much nicer than all the RST stuff..
 > 
-> Oh, ok.  I couldn't tell if *you* had seen "other" data emerging from
-> the murk, or if that was merely what a spec says.  Please cite the
-> particular bible you were reading. ;)
+> >    iomap is a filesystem library for handling various filesystem
+> >    operations that involves mapping of file's logical offset ranges
+> >    to physical extents. This origins of this library is the file I/O
+> >    path that XFS once used; it has now been extended to cover several
+> >    other operations. The library provides various APIs for
+> >    implementing various file and pagecache operations, such as:
+> 
+> Does anyone care about the origin?
 
-From the mmap(2) man page: "subsequent mappings may see the modified content."
-so I extended this with the implications of it using *may*.
+I do; occasionally people who are totally new to iomap wonder why
+suchandsuch works in the odd way it does, and I can point them at its
+XFS origins.
 
-Speaking of the man page, I see also that huge pages are addressed there
-and when a huge page is used it says:
+> > 
+> >        * Pagecache reads and writes
+> > 
+> >        * Folio write faults to the pagecache
+> > 
+> >        * Writeback of dirty folios
+> > 
+> >        * Direct I/O reads and writes
+> > 
+> >        * FIEMAP
+> > 
+> >        * lseek SEEK_DATA and SEEK_HOLE
+> > 
+> >        * swapfile activation
+> 
+> One useful bit might be that there are two layer in iomap.
+> 
+>  1) the very simply underlying layer in iter.c that just provides
+>     a nicer iteration over logical file offsets
+>  2) anything built on top.  That's the things mentioned above plus
+>     DAX.
+> 
+> What is also kinda interesting as it keeps confusing people is that
+> nothing in the iterator is block device specific.  In fact the DAX
+> code now has no block device dependencies, as does the lseek and
+> FIEMAP code.
 
-"The system automatically aligns length to be a multiple of the
-underlying huge page size"
+<nod>
 
-And so I believes that means we need to check for the huge page on
-filemap_map_pages() and also the test and adjust it to align to the
-specific huge page size if used...
+> Because of that it might make sense to split this document up a bit
+> for the different layers and libraries.  Or maybe not if too many
+> documents are too confusing.
 
-Or just skip tmpfs / hugetlbfs for now...
+Hmm.  The internal design is about ~400 lines of text.  The actual
+operations iomap implements are another ~600 LoT, and the porting
+guidelines at the end are about 140 LoT.  Maybe that's a reasonable
+length for splitting?
 
-  Luis
+> >          2. For each sub-unit of work...
+> > 
+> >               1. Revalidate the mapping and go back to (1) above, if
+> >                  necessary
+> 
+> That's something only really done in the buffered write path.
+
+Yeah.
+
+> >    Each iomap operation will be covered in more detail below. This
+> >    library was covered previously by an LWN article and a
+> >    KernelNewbies page.
+> 
+> Maybe these are links in other formats, but if not this information
+> isn't very useful.  Depending on how old that information is it
+> probably isn't even with links.
+
+There are links, which are visible in the HTML version.  Maybe I
+should've run links in whichever mode spits out all the links as
+footnotes.  (rst2html -> links is how I made the text version in the
+first place).
+
+> >    The filesystem returns the mappings via the following structure.
+> >    For documentation purposes, the structure has been reordered to
+> >    group fields that go together logically.
+> 
+> I don't think putting a different layout in here is a good idea.
+> In fact duplicating the definition means it will be out of sync
+> rather sooner than later.  Given that we have to deal with RST anyway
+> we might as well want to pull this in as kerneldoc comments.
+> And maybe reorder the actual definition while we're at it,
+> as the version below still packs nicely.
+
+Ok, I'll copy struct iomap as is.
+
+> >      struct block_device          *bdev;
+> >      struct dax_device            *dax_dev;
+> >      void                         *inline_data;
+> 
+> Note: The could become a union these days.  I tried years ago
+> before fully decoupling the DAX code and that didn't work,
+> but we should be fine now.
+
+You and Ritesh have both suggested that today.
+
+> >        * type describes the type of the space mapping:
+> > 
+> >             * IOMAP_HOLE: No storage has been allocated. This type
+> >               must never be returned in response to an IOMAP_WRITE
+> >               operation because writes must allocate and map space,
+> >               and return the mapping. The addr field must be set to
+> >               IOMAP_NULL_ADDR. iomap does not support writing
+> >               (whether via pagecache or direct I/O) to a hole.
+> 
+> ...
+> 
+> These should probably also be kerneldoc comments instead of being
+> away from the definitions?
+
+I don't like how kerneldoc makes it hard to associate iomap::type with
+the IOMAP_* constants that go in it.  This would probably be ok for
+::type if we turned it into an actual enum, but as C doesn't actually
+have a bitset type, the only way to tell the reader which flags go where
+is either strong namespacing (we blew it on that) or writing linking
+text into the kerneldoc.
+
+With this format I can lay out the document with relevant topics
+adjacent and indented, so the association is obvious.  The oneline
+comments in the header file can jog readers' memories, without us
+needing to stuff a whole ton of documentation into a C header.
+
+Besides, kerneldoc only tells the reader what the interfaces are, not
+how all those pieces fit together.
+
+> >             * IOMAP_F_XATTR: The mapping is for extended attribute
+> >               data, not regular file data. This is only useful for
+> >               FIEMAP.
+> 
+> .. and only used inside XFS.  Maybe we should look into killing it.
+
+Yeah.
+
+> >    These struct kiocb flags are significant for buffered I/O with
+> >    iomap:
+> > 
+> >        * IOCB_NOWAIT: Only proceed with the I/O if mapping data are
+> >          already in memory, we do not have to initiate other I/O, and
+> >          we acquire all filesystem locks without blocking. Neither
+> >          this flag nor its definition RWF_NOWAIT actually define what
+> >          this flag means, so this is the best the author could come
+> >          up with.
+> 
+> I don't think that's true.  But if it feels true to you submitting
+> a patch to describe it better is probably more helpful than this.
+
+I think Dave just told me off for this, so I'll probably replace the
+whole section with what he and Jan wrote.
+
+> >    iomap internally tracks two state bits per fsblock:
+> > 
+> >        * uptodate: iomap will try to keep folios fully up to date. If
+> >          there are read(ahead) errors, those fsblocks will not be
+> >          marked uptodate. The folio itself will be marked uptodate
+> >          when all fsblocks within the folio are uptodate.
+> > 
+> >        * dirty: iomap will set the per-block dirty state when
+> >          programs write to the file. The folio itself will be marked
+> >          dirty when any fsblock within the folio is dirty.
+> > 
+> >    iomap also tracks the amount of read and write disk IOs that are
+> >    in flight. This structure is much lighter weight than struct
+> >    buffer_head.
+> 
+> Is this really something that should go into an API documentation?
+
+Strictly speaking, no.  It should be in a separate internals document.
+
+> Note that the structure not only is lighter weight than a buffer_head,
+> but more importantly there are a lot less of them as there is only
+> one per folio and not one per FSB.
+> 
+> >   Why Convert to iomap?
+> 
+> Make this a separate document?
+
+I was pondering splitting these into two pieces:
+
+Documentation/iomap/{design,porting}.rst
+
+Though the porting guide is 10% of the document.  Maybe that's worth it.
+
+--D
