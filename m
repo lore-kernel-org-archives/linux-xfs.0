@@ -1,118 +1,64 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 435D616F8E0;
-	Tue, 11 Jun 2024 03:10:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4076C140E30
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Jun 2024 04:50:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718075456; cv=none; b=qg7lWtuDL6ZKzdgry1xt4XtzSiO0u4nsZ62cfEA2QFK86Z52ELCWvXgin/f4Ze6+ZZ/jLbfuqyQUTTFst7Qt5+wufmYDVRK2J2bC24MNpTCMPNc6WKBf3c9YdgQT9Si9wWHAIDdGgrkXYiijgJUqw4rPJ7LG4bR7qeZOp2X1WhY=
+	t=1718081435; cv=none; b=rRCJHVLtugzKX5JQRYTJH+3pjyKDDVMaIsz8h1vlQ92KUftG01VN/tZP2LuqjOUO2GHYcRTz+5RkEezDJGwgEU08HzfZ5ChJFfjmxl+mXFwapUeWmZyhw6gPsi2AouCmDgJDXv1/4eM+V3bkKfptIGfdbXD5BOidGLaIrf5lILk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718075456; c=relaxed/simple;
-	bh=n9N1QyGzD8ltpsE0Cnq0l1cexAGqiukqlDno4lTCv1E=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DjPaEDwUiYDoF+f+S8gH54b5O/BsRI8qdZHTD+xJyL2EPqdcLhW4zpaPpG5AZJC8fegEhIR/+ofBG5NK/Gw8GOqeofMQiQPZZJhoKU9qk8AUYgH5KFkDXTPmYacUnd3GMTuVO7S2+rW4XXakTDElsP2flFUCdaHfnAF2WckRo4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Vytr73HGJz1X3Xn;
-	Tue, 11 Jun 2024 11:07:03 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 31A6E14022E;
-	Tue, 11 Jun 2024 11:10:50 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Tue, 11 Jun
- 2024 11:10:49 +0800
-Date: Tue, 11 Jun 2024 11:10:09 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: John Garry <john.g.garry@oracle.com>, <david@fromorbit.com>,
-	<djwong@kernel.org>, <hch@lst.de>, <viro@zeniv.linux.org.uk>,
-	<brauner@kernel.org>, <jack@suse.cz>, <chandan.babu@oracle.com>,
-	<willy@infradead.org>
-CC: <axboe@kernel.dk>, <martin.petersen@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<tytso@mit.edu>, <jbongio@google.com>, <ojaswin@linux.ibm.com>,
-	<ritesh.list@gmail.com>, <mcgrof@kernel.org>, <p.raghav@samsung.com>,
-	<linux-xfs@vger.kernel.org>, <catherine.hoang@oracle.com>
-Subject: Re: [PATCH v3 14/21] iomap: Sub-extent zeroing
-Message-ID: <20240611031009.GA3408983@ceph-admin>
-References: <20240429174746.2132161-1-john.g.garry@oracle.com>
- <20240429174746.2132161-15-john.g.garry@oracle.com>
+	s=arc-20240116; t=1718081435; c=relaxed/simple;
+	bh=w3J7ftvzHIAIjswG7XFcbeRAdUE2qxbRxZ5o4snt8HY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TathOsJeeyb9mPONJEoSTRDnTY0poX3gJJO2F/kyJkuqfTJ2ex3eaRoXoXK0qvpWxDUMK+G9iGO7YTpLz4rk6tBmmlVPYNH1sJMa+dXqO6Ot+aoVUrwW9T+3niGxFMay+aUeIzgZVxHZ0B3iT38Mp3NbEYhICmheH6j5UEEK3L0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KRKrCGar; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KRKrCGar"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=yDhuPjAZ/8pkZLzks/NlSrLJKIPPUVemNdXiYTswsWI=; b=KRKrCGardHEU7QubCWbPxIKMYv
+	8NtfkD0zTa6UBmTTCzopow5ht8uLH/TQ9EBnWJeJCrZ7mJKP26rlcp+jmw8CtIxs2oXR/Q6wc2evZ
+	SMBZBgDQjRlHEfAPpBmGs6sJq6qVOoKLvmL0rjbG11V8oMXzYNmNqfv/ZoCrjQmRGnDhrfNMVQase
+	hUHdfibG1v2v1YszKh5kP0EJyZ6VMxvfcxNzyQ6L6YIrH5km4gusGLPQYodYCpBmTyMfD7iI41doj
+	5IZ6uh0sRjCDPjravKCPbka4W1qj9ovEjGFmiNdP7O+bEwhEEq837UbQyKFHi0JRaL+AFO3mUk9Sf
+	+slfY7oA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sGtSr-00000007NyI-3BXN;
+	Tue, 11 Jun 2024 04:50:33 +0000
+Date: Mon, 10 Jun 2024 21:50:33 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Chandan Babu R <chandanbabu@kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: allow unlinked symlinks and dirs with zero size
+Message-ID: <ZmfXmebrxnQy3OWI@infradead.org>
+References: <20240607161217.GR52987@frogsfrogsfrogs>
+ <ZmVMn3Gu-hP3AMEI@infradead.org>
+ <20240610210723.GU52987@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240429174746.2132161-15-john.g.garry@oracle.com>
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemi500009.china.huawei.com (7.221.188.199)
+In-Reply-To: <20240610210723.GU52987@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Apr 29, 2024 at 05:47:39PM +0000, John Garry wrote:
-> For FS_XFLAG_FORCEALIGN support, we want to treat any sub-extent IO like
-> sub-fsblock DIO, in that we will zero the sub-extent when the mapping is
-> unwritten.
-> 
-> This will be important for atomic writes support, in that atomically
-> writing over a partially written extent would mean that we would need to
-> do the unwritten extent conversion write separately, and the write could
-> no longer be atomic.
-> 
-> It is the task of the FS to set iomap.extent_size per iter to indicate
-> sub-extent zeroing required.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/iomap/direct-io.c  | 17 +++++++++++------
->  include/linux/iomap.h |  1 +
->  2 files changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index f3b43d223a46..a3ed7cfa95bc 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -277,7 +277,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  {
->  	const struct iomap *iomap = &iter->iomap;
->  	struct inode *inode = iter->inode;
-> -	unsigned int fs_block_size = i_blocksize(inode), pad;
-> +	unsigned int zeroing_size, pad;
->  	loff_t length = iomap_length(iter);
->  	loff_t pos = iter->pos;
->  	blk_opf_t bio_opf;
-> @@ -288,6 +288,11 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  	size_t copied = 0;
->  	size_t orig_count;
->  
-> +	if (iomap->extent_size)
-> +		zeroing_size = iomap->extent_size;
-> +	else
-> +		zeroing_size = i_blocksize(inode);
-> +
->  	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
->  	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
->  		return -EINVAL;
-> @@ -354,8 +359,8 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  		dio->iocb->ki_flags &= ~IOCB_HIPRI;
->  
->  	if (need_zeroout) {
-> -		/* zero out from the start of the block to the write offset */
-> -		pad = pos & (fs_block_size - 1);
-> +		/* zero out from the start of the region to the write offset */
-> +		pad = pos & (zeroing_size - 1);
->  		if (pad)
->  			iomap_dio_zero(iter, dio, pos - pad, pad);
- 
-Hi, John
+On Mon, Jun 10, 2024 at 02:07:23PM -0700, Darrick J. Wong wrote:
+> It turns out that even this is still buggy because directories that are
+> being inactivated (e.g. after repair has replaced the contents) can have
+> zero isize.  Sooo I'll have a new patch in a day or two.
 
-I've been testing and using your atomic write patch series recently. I noticed
-that if zeroing_size is larger than a single page, the length passed to
-iomap_dio_zero() could also be larger than a page size. This seems incorrect
-because iomap_dio_zero() utilizes ZERO_PAGE(0), which is only a single page
-in size.
+Isn't that what this patch checks for?  Or do you mean inactivated
+with non-zero nlink?
 
-Thanks,
-Long Li
+Btw, it might make sense to add a helper or local variable to check
+for an unlinked dinode instead of open coding the v1 check twice in
+this function.
