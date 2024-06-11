@@ -1,46 +1,51 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8368111A1;
-	Tue, 11 Jun 2024 14:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D82311720;
+	Tue, 11 Jun 2024 16:12:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718117296; cv=none; b=ZvWDig5og29S+htKNuoDob257SE3MsFI7TxNcpVSHx4tkXUj1SrGexrhL9xUSQb2mwWUcDqetPxfDTjayO7fo1/r6ecr1AxiTeCYqUSYZbhtD/wNivMJygJJiilsYE4f5XGxe9Xnlea3Gjbhkex43qbWdHhRGHeIW81Hte09xyY=
+	t=1718122337; cv=none; b=Zk4Obtfnoz8jwFqAIDPMYev5G/JLTOASPxM1OtaHQMLl6JmoHJJlMQ+yBC2vo1pAbQguZP4Y8cT+BsZO0jVNesC/QCVXVQz6WbS6lBsjlPR3cA41ofTAWkk7BkJ7WbSp8AblRsSqMZChG5H/UcXWuw7XbSszghDZVG9QMC82aCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718117296; c=relaxed/simple;
-	bh=tSXLhE5A82AHcFb1qYX6yXouGrFwwmpKyD2aNdbGHFs=;
+	s=arc-20240116; t=1718122337; c=relaxed/simple;
+	bh=VZ0o54UMcw140gZRar2GtS++P8hw9v8NeCtiUWYIIiw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AjJrnO/2Ym1mkco5wU/inkB/hKsrUJtUOsoo2TXsp5x0INzk13BX9q2TIdZCRabe9QiuL+WGV+EfqZGayPA/nuJztBXm2y0kfAJUH3ac+ecu/NqhbJEGYjyl8QsGbLza0IMntlVxqnUjeX6OIa/Ax7saCioSUO9zPK1Fek125WY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YbegQu1I; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DgQrkuGcIUzjCx8drlQz51ogIpWveny4qMFvoROkSzyalHVb4+fOI2Xigpz/xh21jgCZHyrqRFzj+hkjhw+uE+eIuxR9SEaV0+EhT391zmPbGmV0FSdhFsoFbHOqn6OljzUOmRYraRjqNMgsQeyEDbxg4Rk9X7L8eDfSnhYAxJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uWm/x20H; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YbegQu1I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3840CC2BD10;
-	Tue, 11 Jun 2024 14:48:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718117296;
-	bh=tSXLhE5A82AHcFb1qYX6yXouGrFwwmpKyD2aNdbGHFs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YbegQu1IyCSdxxTgJxE8Tvgx00EkdJzoV2KkT7n7a+ibty13ulDI+4grnMt5b5Nyh
-	 ujcQL3T9REjvw4gMDqSRSfl1DkDw2ZyVTglUrJPQTnEhpCufdgggwbdUe+h4K447L9
-	 z9kCAJT9/ogX4VwumaT2wdYNrWjkpzLlFF81AWdDuM6JyeHF42S9BBh6b1UgQY487V
-	 ykT+q4mGatOfl3FmUCY2nlPHxKqOQFe+o26/E1JnT7x0yHPDM67v0SlPfEwWrwFKIF
-	 YgBVVsPOUWRCrvYrL7ZThJjmpb9p7vTjUQ2bIglNhPysjc5ooOWPHj/2ZtC6rpCRxd
-	 v9ZC4t0Qf6FpA==
-Date: Tue, 11 Jun 2024 07:48:15 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: patches@lists.linux.dev, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org,
-	ziy@nvidia.com, vbabka@suse.cz, seanjc@google.com,
-	willy@infradead.org, david@redhat.com, hughd@google.com,
-	linmiaohe@huawei.com, muchun.song@linux.dev, osalvador@suse.de,
-	p.raghav@samsung.com, da.gomez@samsung.com, hare@suse.de,
-	john.g.garry@oracle.com
-Subject: Re: [PATCH 3/5] fstests: add fsstress + compaction test
-Message-ID: <20240611144815.GJ52977@frogsfrogsfrogs>
-References: <20240611030203.1719072-1-mcgrof@kernel.org>
- <20240611030203.1719072-4-mcgrof@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uWm/x20H"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Jthpn0A2/AheIVgcEBsmw1C6QM5gdAWip+PnRxD96Do=; b=uWm/x20HC7l7eoUlhohfqUhpm6
+	jWAxPdTCXI0pSbEVlK2Lt64TbCI0B4rlztIx0VF1rLe6oU/r2beMUfwCjmN1WH63db13FufQAI4Ff
+	t+nMYrYzIN1ewn7LnFh9bi7yQtFFc0D7CuZWdj5A7fVH+gaXdOyLPg1TgxjoiFb/03Kq08Sx1JFxM
+	c3kH09dJZOaNNl3KRTNT2Ri9MVrmYlLRLCVqLurR8iLMARTU+EI+UJkob6lgGCpg+P1roQc+kEa98
+	AVA9XeK5k1wnCtRy9RsjW20ZP0J6oVU9KxKwUT/AOWM3/vW3c36YuCFObPjWl7FB6OVLHmyHJfw7+
+	w1qjpS0Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sH46X-00000009SX8-2xUq;
+	Tue, 11 Jun 2024 16:12:13 +0000
+Date: Tue, 11 Jun 2024 09:12:13 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, Jan Kara <jack@suse.cz>,
+	Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH] Documentation: document the design of iomap and how to
+ port
+Message-ID: <Zmh3XTDLM1TToQ2g@infradead.org>
+References: <20240608001707.GD52973@frogsfrogsfrogs>
+ <ZmVNblggFRgR8bnJ@infradead.org>
+ <20240609155506.GT52987@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,144 +54,144 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240611030203.1719072-4-mcgrof@kernel.org>
+In-Reply-To: <20240609155506.GT52987@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jun 10, 2024 at 08:02:00PM -0700, Luis Chamberlain wrote:
-> Running compaction while we run fsstress can crash older kernels as per
-> korg#218227 [0], the fix for that [0] has been posted [1] that patch
-> was merged on v6.9-rc6 fixed by commit d99e3140a4d3 ("mm: turn
-> folio_test_hugetlb into a PageType"). However even on v6.10-rc2 where
-> this kernel commit is already merged we can still deadlock when running
-> fsstress and at the same time triggering compaction, this is a new
-> issue being reported now this through patch, but this patch also
-> serves as a reproducer with a high confidence. It always deadlocks.
-> If you enable CONFIG_PROVE_LOCKING with the defaults you will end up
-> with a complaint about increasing MAX_LOCKDEP_CHAIN_HLOCKS [1], if
-> you adjust that you then end up with a few soft lockup complaints and
-> some possible deadlock candidates to evaluate [2].
-> 
-> Provide a simple reproducer and pave the way so we keep on testing this.
-> 
-> Without lockdep enabled we silently deadlock on the first run of the
-> test without the fix applied. With lockdep enabled you get a splat about
-> the possible deadlock on the first run of the test.
-> 
-> [0] https://bugzilla.kernel.org/show_bug.cgi?id=218227
-> [1] https://gist.github.com/mcgrof/824913b645892214effeb1631df75072
-> [2] https://gist.github.com/mcgrof/926e183d21c5c4c55d74ec90197bd77a
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
->  common/rc             |  7 +++++
->  tests/generic/750     | 62 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/750.out |  2 ++
->  3 files changed, 71 insertions(+)
->  create mode 100755 tests/generic/750
->  create mode 100644 tests/generic/750.out
-> 
-> diff --git a/common/rc b/common/rc
-> index e812a2f7cc67..18ad25662d5c 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -151,6 +151,13 @@ _require_hugepages()
->  		_notrun "Kernel does not report huge page size"
->  }
->  
-> +# Requires CONFIG_COMPACTION
-> +_require_vm_compaction()
-> +{
-> +	if [ ! -f /proc/sys/vm/compact_memory ]; then
-> +	    _notrun "Need compaction enabled CONFIG_COMPACTION=y"
-> +	fi
-> +}
->  # Get hugepagesize in bytes
->  _get_hugepagesize()
->  {
-> diff --git a/tests/generic/750 b/tests/generic/750
-> new file mode 100755
-> index 000000000000..334ab011dfa0
-> --- /dev/null
-> +++ b/tests/generic/750
-> @@ -0,0 +1,62 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2024 Luis Chamberlain.  All Rights Reserved.
-> +#
-> +# FS QA Test 750
-> +#
-> +# fsstress + memory compaction test
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto rw long_rw stress soak smoketest
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $runfile
-> +	rm -f $tmp.*
-> +	kill -9 $trigger_compaction_pid > /dev/null 2>&1
-> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +
-> +	wait > /dev/null 2>&1
-> +}
-> +
-> +# Import common functions.
-> +
-> +# real QA test starts here
-> +
-> +_supported_fs generic
-> +
-> +_require_scratch
-> +_require_vm_compaction
-> +_require_command "$KILLALL_PROG" "killall"
-> +
-> +# We still deadlock with this test on v6.10-rc2, we need more work.
-> +# but the below makes things better.
-> +_fixed_by_git_commit kernel d99e3140a4d3 \
-> +	"mm: turn folio_test_hugetlb into a PageType"
-> +
-> +echo "Silence is golden"
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount >> $seqres.full 2>&1
-> +
-> +nr_cpus=$((LOAD_FACTOR * 4))
-> +nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
-> +fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus)
-> +
-> +# start a background trigger for memory compaction
-> +runfile="$tmp.compaction"
-> +touch $runfile
-> +while [ -e $runfile ]; do
-> +	echo 1 > /proc/sys/vm/compact_memory
-> +	sleep 5
-> +done &
-> +trigger_compaction_pid=$!
-> +
-> +test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
+On Sun, Jun 09, 2024 at 08:55:06AM -0700, Darrick J. Wong wrote:
+> HTML version here, text version below.
 
-Maybe put this with the other fsstress_args definition above, but
-otherwise this looks reasonable.
+That is so much nicer than all the RST stuff..
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>    iomap is a filesystem library for handling various filesystem
+>    operations that involves mapping of file's logical offset ranges
+>    to physical extents. This origins of this library is the file I/O
+>    path that XFS once used; it has now been extended to cover several
+>    other operations. The library provides various APIs for
+>    implementing various file and pagecache operations, such as:
 
---D
+Does anyone care about the origin?
 
-> +
-> +$FSSTRESS_PROG $FSSTRESS_AVOID "${fsstress_args[@]}" >> $seqres.full
-> +wait > /dev/null 2>&1
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/750.out b/tests/generic/750.out
-> new file mode 100644
-> index 000000000000..bd79507b632e
-> --- /dev/null
-> +++ b/tests/generic/750.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 750
-> +Silence is golden
-> -- 
-> 2.43.0
 > 
+>        * Pagecache reads and writes
 > 
+>        * Folio write faults to the pagecache
+> 
+>        * Writeback of dirty folios
+> 
+>        * Direct I/O reads and writes
+> 
+>        * FIEMAP
+> 
+>        * lseek SEEK_DATA and SEEK_HOLE
+> 
+>        * swapfile activation
+
+One useful bit might be that there are two layer in iomap.
+
+ 1) the very simply underlying layer in iter.c that just provides
+    a nicer iteration over logical file offsets
+ 2) anything built on top.  That's the things mentioned above plus
+    DAX.
+
+What is also kinda interesting as it keeps confusing people is that
+nothing in the iterator is block device specific.  In fact the DAX
+code now has no block device dependencies, as does the lseek and
+FIEMAP code.
+
+Because of that it might make sense to split this document up a bit
+for the different layers and libraries.  Or maybe not if too many
+documents are too confusing.
+
+>          2. For each sub-unit of work...
+> 
+>               1. Revalidate the mapping and go back to (1) above, if
+>                  necessary
+
+That's something only really done in the buffered write path.
+
+>    Each iomap operation will be covered in more detail below. This
+>    library was covered previously by an LWN article and a
+>    KernelNewbies page.
+
+Maybe these are links in other formats, but if not this information
+isn't very useful.  Depending on how old that information is it
+probably isn't even with links.
+
+>    The filesystem returns the mappings via the following structure.
+>    For documentation purposes, the structure has been reordered to
+>    group fields that go together logically.
+
+I don't think putting a different layout in here is a good idea.
+In fact duplicating the definition means it will be out of sync
+rather sooner than later.  Given that we have to deal with RST anyway
+we might as well want to pull this in as kerneldoc comments.
+And maybe reorder the actual definition while we're at it,
+as the version below still packs nicely.
+
+>      struct block_device          *bdev;
+>      struct dax_device            *dax_dev;
+>      void                         *inline_data;
+
+Note: The could become a union these days.  I tried years ago
+before fully decoupling the DAX code and that didn't work,
+but we should be fine now.
+
+>        * type describes the type of the space mapping:
+> 
+>             * IOMAP_HOLE: No storage has been allocated. This type
+>               must never be returned in response to an IOMAP_WRITE
+>               operation because writes must allocate and map space,
+>               and return the mapping. The addr field must be set to
+>               IOMAP_NULL_ADDR. iomap does not support writing
+>               (whether via pagecache or direct I/O) to a hole.
+
+...
+
+These should probably also be kerneldoc comments instead of being
+away from the definitions?
+
+> 
+>             * IOMAP_F_XATTR: The mapping is for extended attribute
+>               data, not regular file data. This is only useful for
+>               FIEMAP.
+
+.. and only used inside XFS.  Maybe we should look into killing it.
+
+>    These struct kiocb flags are significant for buffered I/O with
+>    iomap:
+> 
+>        * IOCB_NOWAIT: Only proceed with the I/O if mapping data are
+>          already in memory, we do not have to initiate other I/O, and
+>          we acquire all filesystem locks without blocking. Neither
+>          this flag nor its definition RWF_NOWAIT actually define what
+>          this flag means, so this is the best the author could come
+>          up with.
+
+I don't think that's true.  But if it feels true to you submitting
+a patch to describe it better is probably more helpful than this.
+
+>    iomap internally tracks two state bits per fsblock:
+> 
+>        * uptodate: iomap will try to keep folios fully up to date. If
+>          there are read(ahead) errors, those fsblocks will not be
+>          marked uptodate. The folio itself will be marked uptodate
+>          when all fsblocks within the folio are uptodate.
+> 
+>        * dirty: iomap will set the per-block dirty state when
+>          programs write to the file. The folio itself will be marked
+>          dirty when any fsblock within the folio is dirty.
+> 
+>    iomap also tracks the amount of read and write disk IOs that are
+>    in flight. This structure is much lighter weight than struct
+>    buffer_head.
+
+Is this really something that should go into an API documentation?
+
+Note that the structure not only is lighter weight than a buffer_head,
+but more importantly there are a lot less of them as there is only
+one per folio and not one per FSB.
+
+>   Why Convert to iomap?
+
+Make this a separate document?
+
