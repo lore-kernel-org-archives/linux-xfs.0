@@ -1,133 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E198474BE2;
-	Tue, 11 Jun 2024 18:30:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4211657CA7;
+	Tue, 11 Jun 2024 18:30:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718130601; cv=none; b=PyITepaDUWUYDPo2qAs+S9ShJMMlec2HfoVrVGfDvucsxT4wU5irnhkHADKsV6EiNPQhmjtLxT7TDzIzBO7AJ9AVlD/TWbw2Qozwg6AzYeOe8vEiCS7qpdXPUEGCafT9pAD7W5Gq4jrjgHaaGzJ+sjZmQ7V7bXiO1Pk5imivlQk=
+	t=1718130610; cv=none; b=h/CPjuDKGibT/nvmtvvwClVP4A6ywyjt5M3hqGDUtO1Qeuf3avDSNKvuDJy2QoZRZGSimKE21q2pPPHndeu1+iTlKbUZDXfL2PJaYBgfQOCAUA7ld27enZKHRQt6jOKRIpAPLOPKZCYXUh/F2zQ0ac1RMSt106MiOMzbUZ4D9bI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718130601; c=relaxed/simple;
-	bh=5EOvWQp68RIcBOSg4YFAnSWecjOyMMJj7nDme+d1s/4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=auuj4b2Z5UwEYT2LZ59dX3VKiPg6YcM5PhsbcViPKv+V/e7mDkxF5p0uMSpvMSgQrSV8Sr0erf8oFAe7RBjmkStEXU6XUODTFy0Roij9s0DtmekOTf7mAbnw20+V7KOtIQv5+/v2GflV5Pzzxi9KhIpyH5GFpp3vaww3qTci2D4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u4wHn2wb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718130610; c=relaxed/simple;
+	bh=vJdx8v8sntfz3gfNWSEq8B5ZAdWB4ukm3vEn+UDhOS4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZFzv+FxbbNJ39bSQrrniMyXEhNewDEwzXEE2tR9DrOHT6lIdRJvzlIPOPZabZE5R6GEzaIPxUK3TvUwaohXamrEinCUMN5aHXcUSOUANqQWtmgM+RDkw3LwfXA37UJQ2iRUjKFg3jSmGl+6mTxKVZFzKigrdPlGYjcx7F0r8ZeE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IO79M3JG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u4wHn2wb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 621C7C4AF67;
-	Tue, 11 Jun 2024 18:30:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IO79M3JG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC639C4AF1C;
+	Tue, 11 Jun 2024 18:30:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718130600;
-	bh=5EOvWQp68RIcBOSg4YFAnSWecjOyMMJj7nDme+d1s/4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=u4wHn2wbBtiahaV8uAu5b30r04/E1lT2osRrSUQBMYaGr0T87eN7bAdoA3h2cA8yH
-	 EpzxeJ+aRGrEzrH9vvXzpTsTEdaOFQk7lwUG9n/jmjSm+WHXy0mV1LaPNhnjslIcsi
-	 dJOftjE0a3kmEAanBAk53b3DVsMnc4axdHAFl6CkAzoJ60coBQ75YkAXQEESseXAIU
-	 E61FXNtkztNh/m97ZI43UX9iIiAMpngeZe7gXFXrZiWdEbkq6P+wqCRcEDVwRaAUvw
-	 vRlLJQMqG9e4HWPtNF4/7SidJm7zmZGC79zFpMniPHMKO5R/9Epgx/SvIo0lqmSgbS
-	 6Om99EnfMpTRg==
-Date: Tue, 11 Jun 2024 11:29:59 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: patches@lists.linux.dev, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org,
-	ziy@nvidia.com, vbabka@suse.cz, seanjc@google.com,
-	willy@infradead.org, david@redhat.com, hughd@google.com,
-	linmiaohe@huawei.com, muchun.song@linux.dev, osalvador@suse.de,
-	p.raghav@samsung.com, da.gomez@samsung.com, hare@suse.de,
-	john.g.garry@oracle.com
-Subject: Re: [PATCH 5/5] fstests: add stress truncation + writeback test
-Message-ID: <20240611182959.GZ52987@frogsfrogsfrogs>
-References: <20240611030203.1719072-1-mcgrof@kernel.org>
- <20240611030203.1719072-6-mcgrof@kernel.org>
- <20240611144503.GI52977@frogsfrogsfrogs>
- <ZmiUWCPcmtFSdrBG@bombadil.infradead.org>
+	s=k20201202; t=1718130609;
+	bh=vJdx8v8sntfz3gfNWSEq8B5ZAdWB4ukm3vEn+UDhOS4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=IO79M3JG8VsurNX2+G7/7uZJwTfKoKZuaPKjI4KKXXSvbX8f0uxeQvjmXAFauVXNu
+	 DzMtnfwHUBM7Gd/mqewVaTzo0WLySO/iOLopi/vX3kensUu5AjCDJvGo/HqHplLlkM
+	 /m9fv8/KcCrM6YLelCjS2vQYLA1QgS13QOXgMqK9AiUWtnFjB8OdcG/L1lKrVqK5HH
+	 sF6/N8/cAsWz02Gljp60ylcqYVQCSFKIOS1B+6qDPZ2iuqhQHuEfkGEyZuLcVWiLFe
+	 x1AXXFFh6TvURyzgxwwxzQ7o2bxE7ruDhPO/ptdLxu85CVa2xwlMTyWKZZd9lqrFfw
+	 POAn7ikxTOe4w==
+From: Eric Biggers <ebiggers@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org
+Subject: [xfsprogs PATCH] xfs_io: fix mread with length 1 mod page size
+Date: Tue, 11 Jun 2024 11:29:28 -0700
+Message-ID: <20240611182928.12813-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.45.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZmiUWCPcmtFSdrBG@bombadil.infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jun 11, 2024 at 11:15:52AM -0700, Luis Chamberlain wrote:
-> On Tue, Jun 11, 2024 at 07:45:03AM -0700, Darrick J. Wong wrote:
-> > On Mon, Jun 10, 2024 at 08:02:02PM -0700, Luis Chamberlain wrote:
-> > > +# Requires CONFIG_DEBUGFS and truncation knobs
-> > > +_require_split_debugfs()
-> > 
-> > Er... I thought "split" referred to debugfs itself.
-> > 
-> > _require_split_huge_pages_knob?
-> 
-> Much better, thanks.
-> 
-> > > +# This aims at trying to reproduce a difficult to reproduce bug found with
-> > > +# min order. The issue was root caused to an xarray bug when we split folios
-> > > +# to another order other than 0. This functionality is used to support min
-> > > +# order. The crash:
-> > > +#
-> > > +# https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
-> > 
-> > You might want to paste the stacktrace in here directly, in case the
-> > gist ever goes away.
-> 
-> Its not a simple crash trace, it is pretty enourmous considering I
-> decoded it, and it has all locking candidates. Even including it after
-> the "---" lines of the patch might make someone go: TLDR. Thoughts?
+From: Eric Biggers <ebiggers@google.com>
 
-I'd paste it in, even if it's quite lengthy.  I don't even think it's all that
-much if you remove some of the less useful bits of the unwind:
+Fix a weird bug in mread where if you passed it a length that was 1
+modulo the page size, for example
 
-"Crash excerpt is as follows:
+        xfs_io -r file -c "mmap -r 0 8192" -c "mread -v 0 4097"
 
-"BUG: kernel NULL pointer dereference, address: 0000000000000036
-#PF: supervisor read access in kernel mode
-#PF: error_code(0x0000) - not-present page
-PGD 0 P4D 0
-Oops: 0000 [#1] PREEMPT SMP NOPTI
-CPU: 7 PID: 2190 Comm: kworker/u38:5 Not tainted 6.9.0-rc5+ #14
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-Workqueue: writeback wb_workfn (flush-7:5)
-RIP: 0010:filemap_get_folios_tag+0xa9/0x200
-Call Trace:
- <TASK>
- writeback_iter+0x17d/0x310
- write_cache_pages+0x42/0xa0
- iomap_writepages+0x33/0x50
- xfs_vm_writepages+0x63/0x90 [xfs]
- do_writepages+0xcc/0x260
- __writeback_single_inode+0x3d/0x340
- writeback_sb_inodes+0x1ed/0x4b0
- __writeback_inodes_wb+0x4c/0xe0
- wb_writeback+0x267/0x2d0
- wb_workfn+0x2a4/0x440
- process_one_work+0x189/0x3b0
- worker_thread+0x273/0x390
- kthread+0xda/0x110
- ret_from_fork+0x2d/0x50
- ret_from_fork_asm+0x1a/0x30
- </TASK>"
+... it never reset its pointer into the buffer into which it copies the
+data from the memory map.  This caused an out-of-bounds write, which
+depending on the length passed could be very large and reliably
+segfault.  Also nothing was printed, despite the use of -v option.
 
---D
+(I don't know if this case gets reached by any existing xfstest, but
+presumably not.  I noticed it while working on a patch to an xfstest.)
 
-> > > +if grep -q thp_split_page /proc/vmstat; then
-> > > +	split_count_after=$(grep ^thp_split_page /proc/vmstat | head -1 | awk '{print $2}')
-> > > +	split_count_failed_after=$(grep ^thp_split_page_failed /proc/vmstat | head -1 | awk '{print $2}')
-> > 
-> > I think this ought to be a separate function for cleanliness?
-> > 
-> > _proc_vmstat()
-> > {
-> > 	awk -v name="$1" '{if ($1 ~ name) {print($2)}}' /proc/vmstat
-> > }
-> 
-> > Otherwise this test looks fine to me.
-> 
-> Thanks!
-> 
->   Luis
-> 
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ io/mmap.c | 20 ++++++--------------
+ 1 file changed, 6 insertions(+), 14 deletions(-)
+
+diff --git a/io/mmap.c b/io/mmap.c
+index 85087f57..4c03e3d5 100644
+--- a/io/mmap.c
++++ b/io/mmap.c
+@@ -469,38 +469,30 @@ mread_f(
+ 	dumplen = length % pagesize;
+ 	if (!dumplen)
+ 		dumplen = pagesize;
+ 
+ 	if (rflag) {
+-		for (tmp = length - 1, c = 0; tmp >= 0; tmp--, c = 1) {
+-			*bp = *(((char *)mapping->addr) + dumpoffset + tmp);
+-			cnt++;
+-			if (c && cnt == dumplen) {
++		for (tmp = length - 1; tmp >= 0; tmp--) {
++			bp[cnt++] = ((char *)mapping->addr)[dumpoffset + tmp];
++			if (cnt == dumplen) {
+ 				if (dump) {
+ 					dump_buffer(printoffset, dumplen);
+ 					printoffset += dumplen;
+ 				}
+-				bp = (char *)io_buffer;
+ 				dumplen = pagesize;
+ 				cnt = 0;
+-			} else {
+-				bp++;
+ 			}
+ 		}
+ 	} else {
+-		for (tmp = 0, c = 0; tmp < length; tmp++, c = 1) {
+-			*bp = *(((char *)mapping->addr) + dumpoffset + tmp);
+-			cnt++;
+-			if (c && cnt == dumplen) {
++		for (tmp = 0; tmp < length; tmp++) {
++			bp[cnt++] = ((char *)mapping->addr)[dumpoffset + tmp];
++			if (cnt == dumplen) {
+ 				if (dump)
+ 					dump_buffer(printoffset + tmp -
+ 						(dumplen - 1), dumplen);
+-				bp = (char *)io_buffer;
+ 				dumplen = pagesize;
+ 				cnt = 0;
+-			} else {
+-				bp++;
+ 			}
+ 		}
+ 	}
+ 	return 0;
+ }
+
+base-commit: df4bd2d27189a98711fd35965c18bee25a25a9ea
+-- 
+2.45.1
+
