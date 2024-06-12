@@ -1,64 +1,77 @@
-Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 920591DFF0
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 16:29:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9942D3209;
+	Wed, 12 Jun 2024 17:25:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718209755; cv=none; b=XmxKA0mE3yFeQGKGsmXhZxtBsGoBwR5wZCcx7n4WK19Gn/9VwQAFDn+PwlmlzDxxMSRHX9YDG8HP3PafjJKyGF/6BEKVK2jZEtYolQ73RI/WcGfTjLM51RpzN6sqJDxR2mx04niE5kL4nniedf6cbtb4ymI6NvieAFgIqqUqsRw=
+	t=1718213104; cv=none; b=cGoupNk7jFHkoptSGiAG9SthIOucSFipmplyxWgzfV7wdCBrgTZd71FOVVgcF8L1E3sSo/ZiwbgRHJlirJNp6yw/5YuYjw7ICce6cf90reRu8TKkExEMnXZXuIOIPtTVy1kpXxm3J0zDroEZ5Ctt5EAOgu6tbcGqPahw69VM9Dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718209755; c=relaxed/simple;
-	bh=1THzU9EpfQewaCtYnTUvUZVEc5LdFhIQeE/mVknXsrc=;
-	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
-	 Message-ID:References:Date; b=ZXjuJQJ9iRpOBEo1BPIg/B5svB+AwZ46VnsaB7w465lc8eUR/CaJYb71RyGmQfzhVBHl2naPP+sdxbpwrSGwid5nWTdhBrdwgbzguINsnZ4RFu07khYHYjW3Z7PwHMaO9AILDRbOuaiG1mxbalAKATYicz6XWyPfCMvanDHyJHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=PItCwVuQ; arc=none smtp.client-ip=209.87.16.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
+	s=arc-20240116; t=1718213104; c=relaxed/simple;
+	bh=j9Ce3yFE3sDH+2AWEO7WyDZ03Ns8tASD/cdNexiiKsI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fICQ5P5VAABrRgVArnct5Cjz4dZJFRh9kINT02DqSzQt8DSARxjHa1CL+TdTqjalTfBizgpJ+3b5jMgOJUlauwf21XLAz9RSiLNXxjWpnMPTgJ7GsUZYdbiBU0P4n34sIFk5xOsQEH0p4Vy8BC4VShbEUXPCaxtfz8h2uw9S308=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JSC2fm/3; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="PItCwVuQ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JSC2fm/3"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
-	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
-	Content-ID:Content-Description:In-Reply-To;
-	bh=1THzU9EpfQewaCtYnTUvUZVEc5LdFhIQeE/mVknXsrc=; b=PItCwVuQP+s5LyCpRbtqFywHcf
-	vqq7/+aBiVbq7k/50S49+ExwNCLmi4zWZKdC1xAad39sVGLSAH1LaNehiVsDnwx/vOj2PHLZ6biq/
-	IT2T2V9+qSG90XsNTHTBajSa5Vdd9QrohN8Ki3nLq4YqRmYHHFNMe6kRfdFQyw38QtJTsLVs56JRu
-	Crh0Vp6bVzc/rLHwo5AvHdwck7K0GYiG4NVWv0yrbns+B0FVsINIiSDQN5GbOIQ9dH/iOC7nEAhFp
-	pI8gaLgYeJZK6xpAtS4UaXxQroMMm+Xq1VQkoV+9MFr/v0Y+NomiAusMUK+f5AQ79hgUXWCkP36BW
-	OQM4fp/Q==;
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
-	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1sHQLP-008bLH-Q2; Wed, 12 Jun 2024 15:57:03 +0000
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=amAeSiLiL/5PV3oMw3RYgelQ4VzuG/TJzfRKgkx8h+U=; b=JSC2fm/350AJHGVYIofS85JA6l
+	LAB1PwbyUL7UlyrhGj6j0lN6XGLmXnNr9CehZfuT4tL4bUqAyS2HwvyrKZD/vS8o7ZGHgfP8ZVqhQ
+	R0j+9U7YosceH9go477TzkPVw4QH3k9iRLsCKqBf554QA7Jv6FfFqVxuLytZzSNiGbSy73lYR8mZT
+	+JHCegogZmo81skCsmDHCauhcSUov+i+itmhCvWzsbG+sPMbWn0b5ad3bdmxZ+3Wrmtts9zrfsdB+
+	/nr2xxTwpe/N8z5Pf4R0KLlkKXjAGQjwDt5ZJmBRwxgrPDq/mx+Lb6LIPIOynB9mgJn6n4PWkORlQ
+	w7uQhO4A==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sHRiN-0000000Ev4s-1apg;
+	Wed, 12 Jun 2024 17:24:51 +0000
+Date: Wed, 12 Jun 2024 18:24:51 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
+	brauner@kernel.org, akpm@linux-foundation.org, mcgrof@kernel.org,
+	linux-mm@kvack.org, hare@suse.de, linux-kernel@vger.kernel.org,
+	yang@os.amperecomputing.com, Zi Yan <zi.yan@sent.com>,
+	linux-xfs@vger.kernel.org, p.raghav@samsung.com,
+	linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
+	cl@os.amperecomputing.com, john.g.garry@oracle.com
+Subject: Re: [PATCH v7 03/11] filemap: allocate mapping_min_order folios in
+ the page cache
+Message-ID: <ZmnZ49dqeJkCJNYE@casper.infradead.org>
+References: <20240607145902.1137853-1-kernel@pankajraghav.com>
+ <20240607145902.1137853-4-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Mailer: MIME-tools 5.509 (Entity 5.509)
-Content-Type: text/plain; charset=utf-8
-From: "Debian Bug Tracking System" <owner@bugs.debian.org>
-To: Chris Hofstaedtler <zeha@debian.org>
-CC: linux-xfs@vger.kernel.org
-Subject: Processed: xfsprogs: diff for NMU version 6.8.0-2.1
-Message-ID: <handler.s.B1060352.17182077542049929.transcript@bugs.debian.org>
-References: <20240612155550.gabqzku3mz6pq2pw@debian.org>
- <20240109215755.6qcrx2w5fckvyz6t@cl.home.arpa>
-X-Debian-PR-Package: src:xfsprogs
-X-Debian-PR-Source: xfsprogs
-X-Debian-PR-Message: transcript
-X-Loop: owner@bugs.debian.org
-Date: Wed, 12 Jun 2024 15:57:03 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240607145902.1137853-4-kernel@pankajraghav.com>
 
-Processing control commands:
+On Fri, Jun 07, 2024 at 02:58:54PM +0000, Pankaj Raghav (Samsung) wrote:
+> +/**
+> + * mapping_align_start_index() - Align starting index based on the min
+> + * folio order of the page cache.
 
-> tags 1060352 + pending
-Bug #1060352 [src:xfsprogs] xfsprogs: install all files into /usr (DEP17 M2)
-Added tag(s) pending.
+_short_ description.  "Align index appropriately for this mapping".
+And maybe that means we should call it "mapping_align_index" instead
+of mapping_align_start_index?
 
---=20
-1060352: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1060352
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
+> + * @mapping: The address_space.
+> + *
+> + * Ensure the index used is aligned to the minimum folio order when adding
+> + * new folios to the page cache by rounding down to the nearest minimum
+> + * folio number of pages.
+
+How about:
+
+ * The index of a folio must be naturally aligned.  If you are adding a
+ * new folio to the page cache and need to know what index to give it,
+ * call this function.
+
