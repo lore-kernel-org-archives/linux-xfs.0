@@ -1,127 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 148361802D7;
-	Wed, 12 Jun 2024 15:43:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8729181312;
+	Wed, 12 Jun 2024 15:55:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718207024; cv=none; b=gSbbVer5HOmpEuusFNkVfVYCUWMNPA5zzMgIyAXNsMPThYUp1mRxeK2qVjHik0PQqoNXjngfPxp8JtfVWWcc/Z92EkyuQh80fAg+bv55MG1UZlYL5OrWQnsm4eO3NIK6wD8YMEw4zC2Or76wnRvw0bxQsNyWL6miLbimYA3YU3s=
+	t=1718207758; cv=none; b=TqXTeEeTAyXVbweCTjoWfBrrGZJUwDrCPyIDjVgVE3FZ26jyM9Z3RPxx6/LeAjEp3TsP95CT+n6UP0CUMsRsB8M3+YQyKDh1oR2OoF1wnWNVpe8KaS7+09BcaDD6vEo2GpIVOIzC3TiLZ1xqA9gNc9zEuyE5KGmvuf/A4EuNMZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718207024; c=relaxed/simple;
-	bh=viWgeyD653r31MiLWhNh3LFZNvBZzTGpeJJoQhAvSz4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l+VMZEtQAaPUPcLfBPJnHW4Hm4sgPD3TcHXjIzrp2On4FgxOMVU+IbKA95yiyFlhobHtxzTtmIBsmC1VTFIxYUpNTSODA4HhHfq3HLIkET/7oj+MWbtO/fRaHIv/icd107FMesO7AiOTeV0KASAQPpJ5LMkmWGyqVUI8ua5VrW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Usgv+C/e; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718207758; c=relaxed/simple;
+	bh=OGohKvk0MjWf9+Q8+mvrBX+1BAlKKRyUXLbfH75xyb4=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=aVOTTwsJpcctQuUjdTM8dhm19LLOc1Dt6AuwIhKCXrejUHcYcJPE5H4DC9Fzyw6QCAdYqEK0nP0ui81Knrinl0W7LiaUbPTrmLHR1XPSyo1uTsFW2/6YtmNxiP9jkihUCMxy7nnZMPsyNeMQ5f1h0fnSNwiH7kbWlovFqnKdm34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kYWVzenO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Usgv+C/e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84387C116B1;
-	Wed, 12 Jun 2024 15:43:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kYWVzenO"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7AEC7C4DDE4;
+	Wed, 12 Jun 2024 15:55:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718207023;
-	bh=viWgeyD653r31MiLWhNh3LFZNvBZzTGpeJJoQhAvSz4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Usgv+C/eWKPNVB/O70oZtRo7hZ1YUmaavo22jrWBVrIBUr+0SA8gMhgwRRMtfBvLH
-	 ncSICA4si0AJgTjQoXpGrai5D/sZRz6pQCHJpYNWuas4ZclFuORK04RbVDobc+2/Iw
-	 0Zz/bZuxg01mNo6ffpOtgrID37SxaPf2QIF39XOzWnE+Hk4sqC0HegVnNjo7TGl4Tc
-	 hrW8BT1zN5o1XZqmfFVmZUJa4O08515lRI035ztq0ZG7xgb6cybUHYQHgrt1EhLnm6
-	 gZhqsBWH3qv5Q+Wj27xW5mXGiXcWIK3c/Y0ngyWiZeYzl1oCjjQ9msCs4NLUN7kSRX
-	 Nn2LXiCSfn9aw==
-Date: Wed, 12 Jun 2024 08:43:42 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Long Li <leo.lilong@huawei.com>, david@fromorbit.com, hch@lst.de,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	chandan.babu@oracle.com, willy@infradead.org, axboe@kernel.dk,
-	martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com, mcgrof@kernel.org,
-	p.raghav@samsung.com, linux-xfs@vger.kernel.org,
-	catherine.hoang@oracle.com
-Subject: Re: [PATCH v3 08/21] xfs: Introduce FORCEALIGN inode flag
-Message-ID: <20240612154342.GC2764752@frogsfrogsfrogs>
-References: <20240429174746.2132161-1-john.g.garry@oracle.com>
- <20240429174746.2132161-9-john.g.garry@oracle.com>
- <20240612021058.GA729527@ceph-admin>
- <82269717-ab49-4a02-aaad-e25a01f15768@oracle.com>
+	s=k20201202; t=1718207757;
+	bh=OGohKvk0MjWf9+Q8+mvrBX+1BAlKKRyUXLbfH75xyb4=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=kYWVzenO6v46dav7m+6VeeBQvWtkfZ2ijSROLzZNF2xhVox8NT4g6D7nEQ7Yr1CvD
+	 QbMqbzoNwKvtHxN4oOUSJGsdzFSOiqxLCA02gKqMCQ7TCsZzzusBONx5M/RWdCVpV3
+	 EiLccKqgRHfAnZUsG10WiKCsIr5ffuOoIqg1qhcsU6IhDG8FGsX5pkowWNVMy10FlC
+	 cn2EJB/8N7UtSBq02dCqRuSQs3PZ1MDiLAg7XtxdpzyjShLg11I47hWenlonizyvmL
+	 MeVPPNyid+I2VhiIZBpPj5WbK56sRWz78MH6UY8PKtaaCMSFrdgOOixPo+5vEX+bSG
+	 8/iqEXeUVgsUQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 61107C43618;
+	Wed, 12 Jun 2024 15:55:57 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <82269717-ab49-4a02-aaad-e25a01f15768@oracle.com>
+Content-Transfer-Encoding: 8bit
+Subject: Re: [f2fs-dev] [PATCH] tracing/treewide: Remove second parameter of
+ __assign_str()
+From: patchwork-bot+f2fs@kernel.org
+Message-Id: 
+ <171820775738.32393.13116890369510221266.git-patchwork-notify@kernel.org>
+Date: Wed, 12 Jun 2024 15:55:57 +0000
+References: <20240516133454.681ba6a0@rorschach.local.home>
+In-Reply-To: <20240516133454.681ba6a0@rorschach.local.home>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-hyperv@vger.kernel.org, kvm@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, ath10k@lists.infradead.org,
+ Julia.Lawall@inria.fr, linux-s390@vger.kernel.org, dev@openvswitch.org,
+ linux-cifs@vger.kernel.org, linux-bcachefs@vger.kernel.org,
+ linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+ io-uring@vger.kernel.org, torvalds@linux-foundation.org,
+ iommu@lists.linux.dev, ath11k@lists.infradead.org,
+ linux-media@vger.kernel.org, linux-wpan@vger.kernel.org,
+ linux-pm@vger.kernel.org, selinux@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+ linux-erofs@lists.ozlabs.org, virtualization@lists.linux.dev,
+ linux-sound@vger.kernel.org, linux-block@vger.kernel.org,
+ ocfs2-devel@lists.linux.dev, mathieu.desnoyers@efficios.com,
+ linux-cxl@vger.kernel.org, linux-tegra@vger.kernel.org,
+ intel-xe@lists.freedesktop.org, linux-edac@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+ linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org,
+ linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+ linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+ ath12k@lists.infradead.org, tipc-discussion@lists.sourceforge.net,
+ mhiramat@kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
+ freedreno@lists.freedesktop.org, linux-nfs@vger.kernel.org,
+ linux-btrfs@vger.kernel.org
 
-On Wed, Jun 12, 2024 at 07:55:31AM +0100, John Garry wrote:
-> On 12/06/2024 03:10, Long Li wrote:
-> > On Mon, Apr 29, 2024 at 05:47:33PM +0000, John Garry wrote:
-> > > From: "Darrick J. Wong"<djwong@kernel.org>
-> > > 
-> > > Add a new inode flag to require that all file data extent mappings must
-> > > be aligned (both the file offset range and the allocated space itself)
-> > > to the extent size hint.  Having a separate COW extent size hint is no
-> > > longer allowed.
-> > > 
-> > > The goal here is to enable sysadmins and users to mandate that all space
-> > > mappings in a file must have a startoff/blockcount that are aligned to
-> > > (say) a 2MB alignment and that the startblock/blockcount will follow the
-> > > same alignment.
-> > > 
-> > > jpg: Enforce extsize is a power-of-2 and aligned with afgsize + stripe
-> > >       alignment for forcealign
-> > > Signed-off-by: "Darrick J. Wong"<djwong@kernel.org>
-> > > Co-developed-by: John Garry<john.g.garry@oracle.com>
-> > > Signed-off-by: John Garry<john.g.garry@oracle.com>
-> > > ---
-> > >   fs/xfs/libxfs/xfs_format.h    |  6 ++++-
-> > >   fs/xfs/libxfs/xfs_inode_buf.c | 50 +++++++++++++++++++++++++++++++++++
-> > >   fs/xfs/libxfs/xfs_inode_buf.h |  3 +++
-> > >   fs/xfs/libxfs/xfs_sb.c        |  2 ++
-> > >   fs/xfs/xfs_inode.c            | 12 +++++++++
-> > >   fs/xfs/xfs_inode.h            |  2 +-
-> > >   fs/xfs/xfs_ioctl.c            | 34 +++++++++++++++++++++++-
-> > >   fs/xfs/xfs_mount.h            |  2 ++
-> > >   fs/xfs/xfs_super.c            |  4 +++
-> > >   include/uapi/linux/fs.h       |  2 ++
-> > >   10 files changed, 114 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > > index 2b2f9050fbfb..4dd295b047f8 100644
-> > > --- a/fs/xfs/libxfs/xfs_format.h
-> > > +++ b/fs/xfs/libxfs/xfs_format.h
-> > > @@ -353,6 +353,7 @@ xfs_sb_has_compat_feature(
-> > >   #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
-> > >   #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-> > >   #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
-> > > +#define XFS_SB_FEAT_RO_COMPAT_FORCEALIGN (1 << 30)	/* aligned file data extents */
-> > Hi, John
-> > 
-> > You know I've been using and testing your atomic writes patch series recently,
-> > and I'm particularly interested in the changes to the on-disk format. I noticed
-> > that XFS_SB_FEAT_RO_COMPAT_FORCEALIGN uses bit 30 instead of bit 4, which would
-> > be the next available bit in sequence.
-> > 
-> > I'm wondering if using bit 30 is just a temporary solution to avoid conflicts,
-> > and if the plan is to eventually use bits sequentially, for example, using bit 4?
-> > I'm looking forward to your explanation.
-> 
-> I really don't know. I'm looking through the history and it has been like
-> that this the start of my source control records.
-> 
-> Maybe it was a copy-and-paste error from XFS_FEAT_FORCEALIGN, whose value
-> has changed since.
-> 
-> Anyway, I'll ask a bit more internally, and I'll look to change to (1 << 4)
-> if ok.
+Hello:
 
-I tend to use upper bits for ondisk features that are still under
-development so that (a) there won't be collisions with other features
-getting merged and (b) after the feature I'm working on gets merged, any
-old fs images in my zoo will no longer mount.
+This patch was applied to jaegeuk/f2fs.git (dev)
+by Steven Rostedt (Google) <rostedt@goodmis.org>:
 
---D
-
-> Thanks,
-> John
+On Thu, 16 May 2024 13:34:54 -0400 you wrote:
+> From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
 > 
+> [
+>    This is a treewide change. I will likely re-create this patch again in
+>    the second week of the merge window of v6.10 and submit it then. Hoping
+>    to keep the conflicts that it will cause to a minimum.
+> ]
+> 
+> [...]
+
+Here is the summary with links:
+  - [f2fs-dev] tracing/treewide: Remove second parameter of __assign_str()
+    https://git.kernel.org/jaegeuk/f2fs/c/2c92ca849fcc
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
