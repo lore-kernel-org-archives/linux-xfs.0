@@ -1,77 +1,72 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9942D3209;
-	Wed, 12 Jun 2024 17:25:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF9DEBB
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 17:35:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718213104; cv=none; b=cGoupNk7jFHkoptSGiAG9SthIOucSFipmplyxWgzfV7wdCBrgTZd71FOVVgcF8L1E3sSo/ZiwbgRHJlirJNp6yw/5YuYjw7ICce6cf90reRu8TKkExEMnXZXuIOIPtTVy1kpXxm3J0zDroEZ5Ctt5EAOgu6tbcGqPahw69VM9Dw=
+	t=1718213758; cv=none; b=bLbbM3t4Elpk8DCIsXGHWe6IbwllobDk3wa0SH6wKyLm7EVhGXfHvx5Xlb5HtZ7L1qDFkBKALCcfzTh+kiSCZJGCq2mCL83ydII+eOkpMuYWZaR16U6A4NcmQWSvfMQ6EJuFzII9meewK5olyt7QorCYxJL8gxyF3VTWZ5ufXBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718213104; c=relaxed/simple;
-	bh=j9Ce3yFE3sDH+2AWEO7WyDZ03Ns8tASD/cdNexiiKsI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fICQ5P5VAABrRgVArnct5Cjz4dZJFRh9kINT02DqSzQt8DSARxjHa1CL+TdTqjalTfBizgpJ+3b5jMgOJUlauwf21XLAz9RSiLNXxjWpnMPTgJ7GsUZYdbiBU0P4n34sIFk5xOsQEH0p4Vy8BC4VShbEUXPCaxtfz8h2uw9S308=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JSC2fm/3; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1718213758; c=relaxed/simple;
+	bh=MH66XaqTJyGafg/UGdgoY2jHCBMOps3AGKGxPvqMuv0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PW/5o5FhoD3hXwZcIN3Zbkd+4z7YeqGyTsDDXe+ld9hTUheh2bwbBBrr7LpVtw18NKNwKq6cexU1RcC/O4kDgKAW4Nk3Clewgwx8a78mq3yg593A5SUf8l/zMFeJBqC0kLPvjV1iZHSiJIEd3m6Yv6k3EJhU7Yow8Qba3dF0bwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=OV/BoOHc; arc=none smtp.client-ip=82.195.75.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JSC2fm/3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=amAeSiLiL/5PV3oMw3RYgelQ4VzuG/TJzfRKgkx8h+U=; b=JSC2fm/350AJHGVYIofS85JA6l
-	LAB1PwbyUL7UlyrhGj6j0lN6XGLmXnNr9CehZfuT4tL4bUqAyS2HwvyrKZD/vS8o7ZGHgfP8ZVqhQ
-	R0j+9U7YosceH9go477TzkPVw4QH3k9iRLsCKqBf554QA7Jv6FfFqVxuLytZzSNiGbSy73lYR8mZT
-	+JHCegogZmo81skCsmDHCauhcSUov+i+itmhCvWzsbG+sPMbWn0b5ad3bdmxZ+3Wrmtts9zrfsdB+
-	/nr2xxTwpe/N8z5Pf4R0KLlkKXjAGQjwDt5ZJmBRwxgrPDq/mx+Lb6LIPIOynB9mgJn6n4PWkORlQ
-	w7uQhO4A==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sHRiN-0000000Ev4s-1apg;
-	Wed, 12 Jun 2024 17:24:51 +0000
-Date: Wed, 12 Jun 2024 18:24:51 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
-	brauner@kernel.org, akpm@linux-foundation.org, mcgrof@kernel.org,
-	linux-mm@kvack.org, hare@suse.de, linux-kernel@vger.kernel.org,
-	yang@os.amperecomputing.com, Zi Yan <zi.yan@sent.com>,
-	linux-xfs@vger.kernel.org, p.raghav@samsung.com,
-	linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
-	cl@os.amperecomputing.com, john.g.garry@oracle.com
-Subject: Re: [PATCH v7 03/11] filemap: allocate mapping_min_order folios in
- the page cache
-Message-ID: <ZmnZ49dqeJkCJNYE@casper.infradead.org>
-References: <20240607145902.1137853-1-kernel@pankajraghav.com>
- <20240607145902.1137853-4-kernel@pankajraghav.com>
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="OV/BoOHc"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:MIME-Version
+	:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=rN0GmLURdzc+hXzBrKZwl+oeCsX1TD3T3YQ3Bu6ntwg=; b=OV/BoOHcea7GhEGIKi7K3QeVeP
+	lOrasklqIuG3DPw8qWzyvo9i9hpBDQfQup2xCPdGBK/3rSDXD39Ng2m3vPmAi8ofunNCdwE0Nc6T2
+	rUMpkoTcM42HUCfOay8vNaebn4aenKbPQ4ABE0+06ussPn9Tv0RhLjZZHmU40q01KyC/nK7K1wRUm
+	RNtUDaYgmUJrkrrvpCsjQp1mXSRrBDul8g1uxBI6N6hZI7A0CIDrvBF3lPPMEKImG85L7PbboF/1r
+	3VoWxGXdVXYOpI1RYLETrAhngJaO9kWE7DWN5OfyC+Tx5Zkz2wD4m0BcG/gNNUtza0Gj7YBjB8oHl
+	T0uFzxQw==;
+Received: from authenticated user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <bage@debian.org>)
+	id 1sHRt4-008094-UR; Wed, 12 Jun 2024 17:35:55 +0000
+From: Bastian Germann <bage@debian.org>
+To: linux-xfs@vger.kernel.org
+Cc: Bastian Germann <bage@debian.org>
+Subject: [PATCH 0/1] Forward: Install files into UsrMerged layout
+Date: Wed, 12 Jun 2024 19:35:04 +0200
+Message-ID: <20240612173551.6510-1-bage@debian.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240607145902.1137853-4-kernel@pankajraghav.com>
+Content-Transfer-Encoding: 8bit
+X-Debian-User: bage
 
-On Fri, Jun 07, 2024 at 02:58:54PM +0000, Pankaj Raghav (Samsung) wrote:
-> +/**
-> + * mapping_align_start_index() - Align starting index based on the min
-> + * folio order of the page cache.
+Hi,
 
-_short_ description.  "Align index appropriately for this mapping".
-And maybe that means we should call it "mapping_align_index" instead
-of mapping_align_start_index?
+I am forwarding a patch by Chris Hofstaedtler that is in the deferred
+upload queue and is going to arrive in sid in 5 days.
 
-> + * @mapping: The address_space.
-> + *
-> + * Ensure the index used is aligned to the minimum folio order when adding
-> + * new folios to the page cache by rounding down to the nearest minimum
-> + * folio number of pages.
+The patch was sent by Christ in January as attachment so I guess it did
+not make it to the list.
 
-How about:
+As most distributions are now /usr merged it might be a good idea to
+include it generally.
 
- * The index of a folio must be naturally aligned.  If you are adding a
- * new folio to the page cache and need to know what index to give it,
- * call this function.
+Cheers,
+Bastian
+
+Chris Hofstaedtler (1):
+  Install files into UsrMerged layout
+
+ configure.ac                | 19 ++-----------------
+ debian/local/initramfs.hook |  2 +-
+ 2 files changed, 3 insertions(+), 18 deletions(-)
+
+-- 
+2.45.2
 
