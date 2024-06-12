@@ -1,266 +1,185 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9E7F1C14
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 20:10:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 031F784D29;
+	Wed, 12 Jun 2024 20:40:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718223052; cv=none; b=Y3IQKUwRsGCBXY5GXp56IOGW77ggPqFaUsPUpIJyNupt89fkHUfv6aeUM/0Ac1bN59QUMo0Yj5AdLxq49tetM3WbecDW9aeVNtRVV/2BLrgli4WHbLmLva6FC+mAdUFQTcJLZ9cdytvrSWT1IH0KLKFleoBJ/eaUzK6kqFWfzQo=
+	t=1718224827; cv=none; b=ooCQhX6ntPoBK2IjECfpjYchVPcUwrC1qr1v+M8pmW8LCuvOhLvrr5o4+sKU241E2u/SL48GH/HZoJ7qW9VYe8Q2hUtwJk6qGCJp8nN7N29x93zTGN6XxRpeH7nocnSuufe4/hGQlftK8awyJo8oGqG1ja1HIFfDnfkur57RDJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718223052; c=relaxed/simple;
-	bh=7Klferuksa5+wLkbLsnnh/Pt6ScjpybrpoPxWxNkZ/0=;
+	s=arc-20240116; t=1718224827; c=relaxed/simple;
+	bh=SZUB4FY1/4Uc5DKQFanz8Q8mDAcnM64BMP2Z067yeq0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LTRGXb/thEqCxXVjR/61kYYXXIJQJyv1CzD0wLJVtc/92N9GPT37KIM9raYQYXFTKESgqZkmVdbO1w1cmMGX898mpA5OtnNgCRKbuhcSGXqSsJtOIlM3bX6UjuhIxLzqStdv7Vfxo/sO89KIS1tYhCzsQjTSDG/n+UKB/HEhjFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=a+upZIZF; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=i3ikOxxHrPsoeDm33fsKeosPB3eCe3ZfUTEBe0hshBurFJTHu8jOU6ohl4jeqg4UQL2yY19gcxKe2LDI5f7q3tYdXMvBJjYnZ6R2jEgg9wlMHeHlUpDYNQBGEgRiiARid5mc5Js131w6gCOOENB4BermmKvq3NPDkwftMRGwwYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oWWFMwJk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="a+upZIZF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=od20rVavSBEeNtqsWMXurWR6Y5spRUVQ3WkJpD/y3OQ=; b=a+upZIZFH1jVJtUR661O0/y8hJ
-	61BuCqP2Qf4+B2OQVE2r2ng3MUgTdZ1Thn9mMIXO7ms8oVqRuQmwDwfeXD+1xNPOodeCfO5TU7msl
-	PPKc6gO0Z250fmvRnPuK9wb9h5GYjvthT5Fl9zuEIHPIN6a9/268+/3Whj/f2/uC3oICPKecknpBA
-	ZjSMiUgov+AK5P7amv0nxzzEjg2rmTa5lkksXzllBUEoGKtDBM7B5eRnG87uWdQLFe+hRFLlnVMxu
-	gTgIU3zhMNsNbmy4E5cDAjX45yTIuuDXLNDUgHpouHG/SO5XMIhn/Teo0OAX5NcbmL4FrjXonQasE
-	BgXe/9SA==;
-Received: from authenticated user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <zeha@debian.org>)
-	id 1sHUIv-0086HA-BE; Wed, 12 Jun 2024 20:10:45 +0000
-Date: Wed, 12 Jun 2024 22:10:44 +0200
-From: Chris Hofstaedtler <zeha@debian.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Bastian Germann <bage@debian.org>
-Subject: Re: [PATCH v2 1/1] Install files into UsrMerged layout
-Message-ID: <q7yy4jvq656nqszzcadqzef5f6k7yvhhpmpvkoe3swxav6gder@yjdmdo26ltap>
-References: <20240612173551.6510-2-bage@debian.org>
- <xs47xj5jfbbap3324fwt753eimbe265i6wa2uhafcz5hsi6wnt@k6m3cwfvi4zh>
- <20240612200330.GG2764752@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oWWFMwJk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 924EAC116B1;
+	Wed, 12 Jun 2024 20:40:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718224826;
+	bh=SZUB4FY1/4Uc5DKQFanz8Q8mDAcnM64BMP2Z067yeq0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oWWFMwJk0F9C3vPy/4z2yYg/eBLF+FDqdqcufPDLGeU8cFFPlTKiAs2n6JlGmxRD2
+	 6oTW1oVv0iBpWPUT6/LJhqVwVwqtG3i9Vqa43TQ5Rj7n4LD9HHG0DYwUwJM471gczc
+	 gnhRVFJ/gGVIrjBH8mzkO02ZGbaendNNx8ww597L6QIKrXVEjchj4S3icJ74AIHUSy
+	 YaIkyj2jvGICtBcPxklwL4AVOJ+3aBNCwgqSFdv2mKNyfMxEQyIqLeNbZeB0riMtA8
+	 zcj1Fm9Tc4/uBw2kZbker/r8V1tydETAnhQOKiLYmXyVOTpeFFUWiwEIRoq/8ObKCb
+	 cK5S5yPFwZEwQ==
+Date: Wed, 12 Jun 2024 13:40:25 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: david@fromorbit.com, chandan.babu@oracle.com, brauner@kernel.org,
+	akpm@linux-foundation.org, willy@infradead.org, mcgrof@kernel.org,
+	linux-mm@kvack.org, hare@suse.de, linux-kernel@vger.kernel.org,
+	yang@os.amperecomputing.com, Zi Yan <zi.yan@sent.com>,
+	linux-xfs@vger.kernel.org, p.raghav@samsung.com,
+	linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
+	cl@os.amperecomputing.com, john.g.garry@oracle.com
+Subject: Re: [PATCH v7 07/11] iomap: fix iomap_dio_zero() for fs bs > system
+ page size
+Message-ID: <20240612204025.GI2764752@frogsfrogsfrogs>
+References: <20240607145902.1137853-1-kernel@pankajraghav.com>
+ <20240607145902.1137853-8-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240612200330.GG2764752@frogsfrogsfrogs>
-X-Debian-User: zeha
+In-Reply-To: <20240607145902.1137853-8-kernel@pankajraghav.com>
 
-* Darrick J. Wong <djwong@kernel.org> [240612 22:03]:
-> On Wed, Jun 12, 2024 at 09:00:19PM +0200, Chris Hofstaedtler wrote:
-> > From: Chris Hofstaedtler <zeha@debian.org>
-> > 
-> > Signed-off-by: Chris Hofstaedtler <zeha@debian.org>
+On Fri, Jun 07, 2024 at 02:58:58PM +0000, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
 > 
-> Hmm.  From what I can tell from the systemd.pc file in (Debian) sid, all
-> the systemd services and udev files will get put in
-> /usr/lib/systemd/system/ and /usr/lib/udev/.  Since those directories
-> are picked up by the xfsprogs build system via pkgconfig, there's no
-> need to patch that separately, right?
-
-Yes, correct.
-
-> Also, this commit could use a brief message to acknowledge that we're
-> breaking the usecase of / and /usr being different filesystems:
+> iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+> < fs block size. iomap_dio_zero() has an implicit assumption that fs block
+> size < page_size. This is true for most filesystems at the moment.
 > 
-> "Always install binaries and other files under /usr, not /.  This will
-> break any distribution that hasn't yet merged the two, which are
-> vanishingly small these days.  This breaks the usecase of needing to
-> repair the /usr partition when there is no initramfs or livecd
-> available and / is the only option."
+> If the block size > page size, this will send the contents of the page
+> next to zero page(as len > PAGE_SIZE) to the underlying block device,
+> causing FS corruption.
 > 
-> If the answer to the first question is 'yes' and
-
-> the commit message is acceptable,
-
-Yeah.
-
-I'll note that, on Debian, this usecase was already broken. On
-Debian stable, /sbin/xfs_repair links /usr/lib/<triplet>/liburcu.so.8.
-
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> iomap is a generic infrastructure and it should not make any assumptions
+> about the fs block size and the page size of the system.
 > 
-> --D
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  fs/internal.h          |  5 +++++
+>  fs/iomap/buffered-io.c |  6 ++++++
+>  fs/iomap/direct-io.c   | 26 ++++++++++++++++++++++++--
+>  3 files changed, 35 insertions(+), 2 deletions(-)
 > 
-> > ---
-> > V1 -> V2: remove root_sbindir, root_libdir, PKG_ROOT_SBIN_DIR,
-> >           PKG_ROOT_LIB_DIR
-> > 
-> >  configure.ac                | 21 ---------------------
-> >  debian/Makefile             |  4 ++--
-> >  debian/local/initramfs.hook |  2 +-
-> >  fsck/Makefile               |  4 ++--
-> >  include/builddefs.in        |  2 --
-> >  include/buildmacros         | 20 ++++++++++----------
-> >  mkfs/Makefile               |  4 ++--
-> >  repair/Makefile             |  4 ++--
-> >  8 files changed, 19 insertions(+), 42 deletions(-)
-> > 
-> > diff --git a/configure.ac b/configure.ac
-> > index da30fc5c..4530f387 100644
-> > --- a/configure.ac
-> > +++ b/configure.ac
-> > @@ -113,27 +113,6 @@ esac
-> >  #
-> >  test -n "$multiarch" && enable_lib64=no
-> >  
-> > -#
-> > -# Some important tools should be installed into the root partitions.
-> > -#
-> > -# Check whether exec_prefix=/usr: and install them to /sbin in that
-> > -# case.  If the user chooses a different prefix assume they just want
-> > -# a local install for testing and not a system install.
-> > -#
-> > -case $exec_prefix:$prefix in
-> > -NONE:NONE | NONE:/usr | /usr:*)
-> > -  root_sbindir='/sbin'
-> > -  root_libdir="/${base_libdir}"
-> > -  ;;
-> > -*)
-> > -  root_sbindir="${sbindir}"
-> > -  root_libdir="${libdir}"
-> > -  ;;
-> > -esac
-> > -
-> > -AC_SUBST([root_sbindir])
-> > -AC_SUBST([root_libdir])
-> > -
-> >  # Find localized files.  Don't descend into any "dot directories"
-> >  # (like .git or .pc from quilt).  Strangely, the "-print" argument
-> >  # to "find" is required, to avoid including such directories in the
-> > diff --git a/debian/Makefile b/debian/Makefile
-> > index cafe8bbb..2f9cd38c 100644
-> > --- a/debian/Makefile
-> > +++ b/debian/Makefile
-> > @@ -31,6 +31,6 @@ endif
-> >  
-> >  install-d-i: default
-> >  ifeq ($(PKG_DISTRIBUTION), debian)
-> > -	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
-> > -	$(INSTALL) -m 755 $(BOOT_MKFS_BIN) $(PKG_ROOT_SBIN_DIR)/mkfs.xfs
-> > +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-> > +	$(INSTALL) -m 755 $(BOOT_MKFS_BIN) $(PKG_SBIN_DIR)/mkfs.xfs
-> >  endif
-> > diff --git a/debian/local/initramfs.hook b/debian/local/initramfs.hook
-> > index 5b24eaec..eac7e79e 100644
-> > --- a/debian/local/initramfs.hook
-> > +++ b/debian/local/initramfs.hook
-> > @@ -45,7 +45,7 @@ rootfs_type() {
-> >  . /usr/share/initramfs-tools/hook-functions
-> >  
-> >  if [ "$(rootfs_type)" = "xfs" ]; then
-> > -	copy_exec /sbin/xfs_repair
-> > +	copy_exec /usr/sbin/xfs_repair
-> >  	copy_exec /usr/sbin/xfs_db
-> >  	copy_exec /usr/sbin/xfs_metadump
-> >  fi
-> > diff --git a/fsck/Makefile b/fsck/Makefile
-> > index da9b6ded..5ca529f5 100644
-> > --- a/fsck/Makefile
-> > +++ b/fsck/Makefile
-> > @@ -12,6 +12,6 @@ default: $(LTCOMMAND)
-> >  include $(BUILDRULES)
-> >  
-> >  install: default
-> > -	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
-> > -	$(INSTALL) -m 755 xfs_fsck.sh $(PKG_ROOT_SBIN_DIR)/fsck.xfs
-> > +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-> > +	$(INSTALL) -m 755 xfs_fsck.sh $(PKG_SBIN_DIR)/fsck.xfs
-> >  install-dev:
-> > diff --git a/include/builddefs.in b/include/builddefs.in
-> > index 644ed1cb..6ac36c14 100644
-> > --- a/include/builddefs.in
-> > +++ b/include/builddefs.in
-> > @@ -48,8 +48,6 @@ datarootdir	= @datarootdir@
-> >  top_builddir	= @top_builddir@
-> >  
-> >  PKG_SBIN_DIR	= @sbindir@
-> > -PKG_ROOT_SBIN_DIR = @root_sbindir@
-> > -PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
-> >  PKG_LIB_DIR	= @libdir@@libdirsuffix@
-> >  PKG_LIBEXEC_DIR	= @libexecdir@/@pkg_name@
-> >  PKG_INC_DIR	= @includedir@/xfs
-> > diff --git a/include/buildmacros b/include/buildmacros
-> > index 6f34d7c5..9183e5bc 100644
-> > --- a/include/buildmacros
-> > +++ b/include/buildmacros
-> > @@ -50,16 +50,16 @@ LTINSTALL = $(LIBTOOL) --quiet --mode=install $(INSTALL)
-> >  LTCOMPILE = $(LIBTOOL) --quiet --tag=CC --mode=compile $(CCF)
-> >  
-> >  ifeq ($(ENABLE_SHARED),yes)
-> > -LTLDFLAGS += -rpath $(PKG_ROOT_LIB_DIR)
-> > +LTLDFLAGS += -rpath $(PKG_LIB_DIR)
-> >  LTLDFLAGS += -version-info $(LTVERSION)
-> >  endif
-> >  
-> >  ifeq ($(ENABLE_SHARED),yes)
-> >  INSTALL_LTLIB = \
-> >  	cd $(TOPDIR)/$(LIBNAME)/.libs; \
-> > -	../$(INSTALL) -m 755 -d $(PKG_ROOT_LIB_DIR); \
-> > -	../$(INSTALL) -m 755 -T so_dot_version $(LIBNAME).lai $(PKG_ROOT_LIB_DIR); \
-> > -	../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_ROOT_LIB_DIR)
-> > +	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-> > +	../$(INSTALL) -m 755 -T so_dot_version $(LIBNAME).lai $(PKG_LIB_DIR); \
-> > +	../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_LIB_DIR)
-> >  endif
-> >  
-> >  # Libtool thinks the static and shared libs should be in the same dir, so
-> > @@ -74,13 +74,13 @@ INSTALL_LTLIB_DEV = \
-> >  	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-> >  	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_LIB_DIR); \
-> >  	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la ; \
-> > -	../$(INSTALL) -m 755 -d $(PKG_ROOT_LIB_DIR); \
-> > -	../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_ROOT_LIB_DIR); \
-> > +	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-> > +	../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_LIB_DIR); \
-> >  	if [ "x$(shell readlink -f $(PKG_LIB_DIR))" != \
-> > -	     "x$(shell readlink -f $(PKG_ROOT_LIB_DIR))" ]; then \
-> > -		../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).a $(PKG_ROOT_LIB_DIR)/$(LIBNAME).a; \
-> > -		../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).la $(PKG_ROOT_LIB_DIR)/$(LIBNAME).la; \
-> > -		../$(INSTALL) -S $(PKG_ROOT_LIB_DIR)/$(LIBNAME).so $(PKG_LIB_DIR)/$(LIBNAME).so; \
-> > +	     "x$(shell readlink -f $(PKG_LIB_DIR))" ]; then \
-> > +		../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).a $(PKG_LIB_DIR)/$(LIBNAME).a; \
-> > +		../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).la $(PKG_LIB_DIR)/$(LIBNAME).la; \
-> > +		../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).so $(PKG_LIB_DIR)/$(LIBNAME).so; \
-> >  	fi
-> >  else
-> >  INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
-> > diff --git a/mkfs/Makefile b/mkfs/Makefile
-> > index a0c168e3..a6173083 100644
-> > --- a/mkfs/Makefile
-> > +++ b/mkfs/Makefile
-> > @@ -28,8 +28,8 @@ default: depend $(LTCOMMAND) $(CFGFILES)
-> >  include $(BUILDRULES)
-> >  
-> >  install: default
-> > -	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
-> > -	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-> > +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-> > +	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
-> >  	$(INSTALL) -m 755 -d $(MKFS_CFG_DIR)
-> >  	$(INSTALL) -m 644 $(CFGFILES) $(MKFS_CFG_DIR)
-> >  
-> > diff --git a/repair/Makefile b/repair/Makefile
-> > index e5014deb..c5b0d4cb 100644
-> > --- a/repair/Makefile
-> > +++ b/repair/Makefile
-> > @@ -99,8 +99,8 @@ include $(BUILDRULES)
-> >  #CFLAGS += ...
-> >  
-> >  install: default
-> > -	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
-> > -	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-> > +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-> > +	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
-> >  install-dev:
-> >  
-> >  -include .dep
-> > -- 
-> > 2.39.2
-> > 
-> > 
+> diff --git a/fs/internal.h b/fs/internal.h
+> index 84f371193f74..30217f0ff4c6 100644
+> --- a/fs/internal.h
+> +++ b/fs/internal.h
+> @@ -35,6 +35,11 @@ static inline void bdev_cache_init(void)
+>  int __block_write_begin_int(struct folio *folio, loff_t pos, unsigned len,
+>  		get_block_t *get_block, const struct iomap *iomap);
+>  
+> +/*
+> + * iomap/direct-io.c
+> + */
+> +int iomap_dio_init(void);
+> +
+>  /*
+>   * char_dev.c
+>   */
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 49938419fcc7..9f791db473e4 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1990,6 +1990,12 @@ EXPORT_SYMBOL_GPL(iomap_writepages);
+>  
+>  static int __init iomap_init(void)
+>  {
+> +	int ret;
+> +
+> +	ret = iomap_dio_init();
+> +	if (ret)
+> +		return ret;
+> +
+>  	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+>  			   offsetof(struct iomap_ioend, io_bio),
+>  			   BIOSET_NEED_BVECS);
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index f3b43d223a46..b95600b254a3 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -27,6 +27,13 @@
+>  #define IOMAP_DIO_WRITE		(1U << 30)
+>  #define IOMAP_DIO_DIRTY		(1U << 31)
+>  
+> +/*
+> + * Used for sub block zeroing in iomap_dio_zero()
+> + */
+> +#define ZERO_FSB_SIZE (65536)
+> +#define ZERO_FSB_ORDER (get_order(ZERO_FSB_SIZE))
+> +static struct page *zero_fs_block;
+
+Er... zero_page_64k ?
+
+Since it's a permanent allocation, can we also mark the memory ro?
+
+> +
+>  struct iomap_dio {
+>  	struct kiocb		*iocb;
+>  	const struct iomap_dio_ops *dops;
+> @@ -52,6 +59,16 @@ struct iomap_dio {
+>  	};
+>  };
+>  
+> +int iomap_dio_init(void)
+> +{
+> +	zero_fs_block = alloc_pages(GFP_KERNEL | __GFP_ZERO, ZERO_FSB_ORDER);
+> +
+> +	if (!zero_fs_block)
+> +		return -ENOMEM;
+> +
+> +	return 0;
+> +}
+
+Can't we just turn this into another fs_initcall() instead of exporting
+it just so we can call it from iomap_init?  And maybe rename the
+existing iomap_init to iomap_pagecache_init or something, for clarity's
+sake?
+
+--D
+
+> +
+>  static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
+>  		struct iomap_dio *dio, unsigned short nr_vecs, blk_opf_t opf)
+>  {
+> @@ -236,17 +253,22 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+>  		loff_t pos, unsigned len)
+>  {
+>  	struct inode *inode = file_inode(dio->iocb->ki_filp);
+> -	struct page *page = ZERO_PAGE(0);
+>  	struct bio *bio;
+>  
+> +	/*
+> +	 * Max block size supported is 64k
+> +	 */
+> +	WARN_ON_ONCE(len > ZERO_FSB_SIZE);
+> +
+>  	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+>  	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
+>  				  GFP_KERNEL);
+> +
+>  	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
+>  	bio->bi_private = dio;
+>  	bio->bi_end_io = iomap_dio_bio_end_io;
+>  
+> -	__bio_add_page(bio, page, len, 0);
+> +	__bio_add_page(bio, zero_fs_block, len, 0);
+>  	iomap_dio_submit_bio(iter, dio, bio, pos);
+>  }
+>  
+> -- 
+> 2.44.1
+> 
+> 
