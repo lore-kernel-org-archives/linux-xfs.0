@@ -1,187 +1,357 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E3516D9C6;
-	Wed, 12 Jun 2024 09:27:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5F116F0D6;
+	Wed, 12 Jun 2024 11:24:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718184427; cv=none; b=ir2g/KHCeSuZx/GGVHGGiKltb8RDM8PazXGOrXpXUM8qpq1Kdb4vo9HpqA+rOUR3O08AWE3Vu2AqI3T42S9LRbsYj0lEUqzjqkKRBjcfh0exNupyeultlIl1vv0KKOw1ONyJcs30OzM+Ak/R8y8vv24yCkatUKkuGz5qRk6yoGk=
+	t=1718191464; cv=none; b=afNozXTgV1YrqYX2MN8+Rt24r8y4m+oEyXPsWu3awEhUcYO2P3UfzUWRqZFTW6DISy2KBLh7vUlYRl/cW8A6cLzH/lqENmSCzVFoXNqsG/Re2/UVuUEppG0HMbNHPxivcC8MkWhonWNdFZ2ZS1ShmW1qdXAZBIB0hNnSMVkrXJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718184427; c=relaxed/simple;
-	bh=Xu299l6Ta8mKb4nVWFkojbWgWy2H6Gu131pvTyWxq+4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qVaAu/44apXQVu5dIJtYFYwKA689zAM+CDVm7poHWVLlAErZTTj6gbrKCsusT+TXA0rBaHquYrJKNErHeQBFcy+jBjcginyyUJaOTS4JBjdoCwrphFUW0oFkRnjjXc4gLYiG8uV1GFijUAifZ+pkq1TCMkf8ZWBRl8kBpxzvAAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=0eUc1FPJ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=tdrX+aHq; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Q0YNd/FY; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=c0RJ1UZB; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1718191464; c=relaxed/simple;
+	bh=t3t5MWO0ICuW3sXXD04RvPPdmQ+TjJEAKo3O2TyNJJY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UNYFkA0zevda9i046ZAwwbz5L/+jhdpOQWoS9OMQmzzRHS+ohloRdVZlQB2T7OSrc3pn60GFfbGN5ZH0WNcBtlD3LDfvIzbUP7sHRAq0+oyhKZbpoM/szTcOHmH6l6HnZKH4AoEnqzLzY3m7ZkyBkPUSHXw83zN1d3HUYIsC0UE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U5R1ehBD; arc=none smtp.client-ip=209.85.222.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0eUc1FPJ";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="tdrX+aHq";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Q0YNd/FY";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="c0RJ1UZB"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id D6F6D34229;
-	Wed, 12 Jun 2024 09:27:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1718184424; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gYE6wHsRVZXT/1LfXcwYHZ1w+B8WavL0Dr06xOj6qzs=;
-	b=0eUc1FPJGOj6WoK8oXDEims9dtSdfB4tHJ5NmUgKoG8Qk5osNOiNBK4F5cV+TmttLXb4Le
-	dSk8mqhBYbv0OmvhjPBHY5DtIvxZssoxXjuPs9jwHagI8UHe9BTgkeorPQM9J27DJjT4xR
-	ISU5w32fcbn3R1NIJiU0PE/dzFciU9c=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1718184424;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gYE6wHsRVZXT/1LfXcwYHZ1w+B8WavL0Dr06xOj6qzs=;
-	b=tdrX+aHqkWE78c9fv8+pVzfCsTeAvy1/VPvtHh2JfTbqVh++eMNuR3bhVjAwIokylspKpg
-	oz5+VuLTTEmBJKAg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="Q0YNd/FY";
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=c0RJ1UZB
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1718184423; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gYE6wHsRVZXT/1LfXcwYHZ1w+B8WavL0Dr06xOj6qzs=;
-	b=Q0YNd/FYoLuhXfhES+rir1Y5nkpZ+fg5wrgqDat3NF5TBj6VntjYSKOTCXHBycemuiUWNz
-	r8UUAjA0yW9CdZQZlNg0oljC/AjWE3uki0OHp7r9vzkPKkjtK+Jf0tDgWvImkCVbUvSDkV
-	WNvzIUlSJWPiwlCdfmlwK+Ugx7r6YGo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1718184423;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gYE6wHsRVZXT/1LfXcwYHZ1w+B8WavL0Dr06xOj6qzs=;
-	b=c0RJ1UZBQdVp7g62ngUI5LbfCq5ofkcHpZv0C+sCOn75I3cRG505lzvXrExkE9jo1oV1Gu
-	1gSh4weIny6JyqBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C2050137DF;
-	Wed, 12 Jun 2024 09:27:03 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ZRUcL+dpaWaCbQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 12 Jun 2024 09:27:03 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 847DEA0884; Wed, 12 Jun 2024 11:27:03 +0200 (CEST)
-Date: Wed, 12 Jun 2024 11:27:03 +0200
-From: Jan Kara <jack@suse.cz>
-To: Mateusz Guzik <mjguzik@gmail.com>
-Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
-	linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v2 2/4] vfs: partially sanitize i_state zeroing on inode
- creation
-Message-ID: <20240612092703.u5ialfzz74pfnafk@quack3>
-References: <20240611120626.513952-1-mjguzik@gmail.com>
- <20240611120626.513952-3-mjguzik@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U5R1ehBD"
+Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-7955dc86cacso196553285a.0;
+        Wed, 12 Jun 2024 04:24:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718191461; x=1718796261; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/ZrOsFWvan+NvZizFQf+yZHV16x+sb5kT5yYbhjfnOQ=;
+        b=U5R1ehBDAKDFoJpxHfSaMKCzdQ+2YsAjgvHdfiiA2SPYJPhqbIjaQLUWcwLOnMijrM
+         my6wiL2SZ3M6fq/K/7L37fhdOtN7t6gPVgnJi19iUfgb/ML8MtNZTkTNypb7+KoAFauv
+         zu3rJAvJq0GJeoPc9MuvlKsXA8JB4eUB0kdwb6CkOZnzBLVxmWjN6aQpQ411i7Ytj0Se
+         7TtW+dmtFenGBcygEMEmmOey+3nlHdK+KSbTCpMQtIJDBubjMozphcLwZZhkfHAcu0N6
+         gVtCJlL92yr/9rcj++aoNLLnytndA4jt1xxBWrOJRPc2rMGDrEuCUDrD8FZYEWuSQi7H
+         LEcw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718191461; x=1718796261;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/ZrOsFWvan+NvZizFQf+yZHV16x+sb5kT5yYbhjfnOQ=;
+        b=CZOZK9zSp6x5aWhHadjLXpDeD37PAObpDGhRlXmb1CeZsEJDvt4XDRueUPyPpX7IBU
+         ASZtxtWwbGhf9VRqw2LqLPRGMphR69CD3VtlhSl/ME8vhaChkHjtVLhgkPOyy944WuEQ
+         B80e40WI36ox+bySZ+uZpiTNUW2hpJ8/75X2e6eZu5ibY+6jtpgFDZqCOECNzZKU40ga
+         IWNJBl0lp+JiqZapsf8a9MXo2XpbL9Lm89VNsbftFc0Xk/RvlMvBtKtzaCjuXFP1hq8K
+         6IJnWDOFP5mc5p07Rwni8Cey5y0YYQEPO+ajhMidyF8M03HVu6Vtkz+DfBKm5cCCzZE9
+         Bztw==
+X-Forwarded-Encrypted: i=1; AJvYcCXhZEVHgC8Mp6jZO9n09ysnZGSmEORfBOzZmA7RxDLOWspvgzpNEXDbIovAycJrfSSTAX770YMjJu1fOzmUxbUdOwO2lgfjB+j5kO/6u5owCyKoCnmd1HFVbThdgxzzRrjbd56gR6yuPQ==
+X-Gm-Message-State: AOJu0YxaOPxwXzFiGYVxCycO4tL2CgDKC4Mh5EWsN+Lk0X4sg9qzddEA
+	/QDadwt8Ci95u0zX/WR1ABdQdxkz/4njeMscsGp3fDtqGvPbi+I5ON0fpDqeP+MPtNeWvvpP/x5
+	NDrTrD8PKu0qXlK1abS+saUvwOdMPzshW
+X-Google-Smtp-Source: AGHT+IGQRVErb2rjwPFlzC31ejyEigK7eBe7AJ19lYcEqH4+w0FNe7hOBHTv9OnvJblszjcjRW2keQqqEzZUjy09N8w=
+X-Received: by 2002:a05:6214:33c2:b0:6b0:91a4:ecdf with SMTP id
+ 6a1803df08f44-6b1a6d4d875mr18338976d6.42.1718191461132; Wed, 12 Jun 2024
+ 04:24:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240611120626.513952-3-mjguzik@gmail.com>
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FREEMAIL_TO(0.00)[gmail.com];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:email,suse.cz:dkim];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: D6F6D34229
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Spam-Level: 
+References: <20240524161101.yyqacjob42qjcbnb@quack3> <20240531145204.GJ52987@frogsfrogsfrogs>
+ <20240603104259.gii7lfz2fg7lyrcw@quack3> <vbiskxttukwzhjoiic6toscqc6b2qekuwumfpzqp5vkxf6l6ia@pby5fjhlobrb>
+ <20240603174259.GB52987@frogsfrogsfrogs> <20240604085843.q6qtmtitgefioj5m@quack3>
+ <20240605003756.GH52987@frogsfrogsfrogs> <CAOQ4uxiVVL+9DEn9iJuWRixVNFKJchJHBB8otH8PjuC+j8ii4g@mail.gmail.com>
+ <ZmEemh4++vMEwLNg@dread.disaster.area> <CAOQ4uxgV5V0TmbZk1vqn=bYfSsdLofDRKvBT4O60zU+jXo0YMQ@mail.gmail.com>
+ <ZmjgbJcjQeejYeOB@dread.disaster.area>
+In-Reply-To: <ZmjgbJcjQeejYeOB@dread.disaster.area>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 12 Jun 2024 14:24:09 +0300
+Message-ID: <CAOQ4uxizWXnnHszVCrh=5DscdA3_GzGztJaruZ-ocNTdubNQhA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and FS_IOC_FSGETXATTRAT
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Andrey Albershteyn <aalbersh@redhat.com>, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue 11-06-24 14:06:24, Mateusz Guzik wrote:
-> new_inode used to have the following:
-> 	spin_lock(&inode_lock);
-> 	inodes_stat.nr_inodes++;
-> 	list_add(&inode->i_list, &inode_in_use);
-> 	list_add(&inode->i_sb_list, &sb->s_inodes);
-> 	inode->i_ino = ++last_ino;
-> 	inode->i_state = 0;
-> 	spin_unlock(&inode_lock);
-> 
-> over time things disappeared, got moved around or got replaced (global
-> inode lock with a per-inode lock), eventually this got reduced to:
-> 	spin_lock(&inode->i_lock);
-> 	inode->i_state = 0;
-> 	spin_unlock(&inode->i_lock);
-> 
-> But the lock acquire here does not synchronize against anyone.
-> 
-> Additionally iget5_locked performs i_state = 0 assignment without any
-> locks to begin with, the two combined look confusing at best.
-> 
-> It looks like the current state is a leftover which was not cleaned up.
-> 
-> Ideally it would be an invariant that i_state == 0 to begin with, but
-> achieving that would require dealing with all filesystem alloc handlers
-> one by one.
-> 
-> In the meantime drop the misleading locking and move i_state zeroing to
-> inode_init_always so that others don't need to deal with it by hand.
-> 
-> Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
+On Wed, Jun 12, 2024 at 2:40=E2=80=AFAM Dave Chinner <david@fromorbit.com> =
+wrote:
+>
+> On Fri, Jun 07, 2024 at 09:17:34AM +0300, Amir Goldstein wrote:
+> > On Thu, Jun 6, 2024 at 5:27=E2=80=AFAM Dave Chinner <david@fromorbit.co=
+m> wrote:
+> > >
+> > > On Wed, Jun 05, 2024 at 08:13:15AM +0300, Amir Goldstein wrote:
+> > > > On Wed, Jun 5, 2024 at 3:38=E2=80=AFAM Darrick J. Wong <djwong@kern=
+el.org> wrote:
+> > > > > On Tue, Jun 04, 2024 at 10:58:43AM +0200, Jan Kara wrote:
+> > > > > > On Mon 03-06-24 10:42:59, Darrick J. Wong wrote:
+> > > > > > > I do -- allowing unpriviledged users to create symlinks that =
+consume
+> > > > > > > icount (and possibly bcount) in the root project breaks the e=
+ntire
+> > > > > > > enforcement mechanism.  That's not the way that project quota=
+ has worked
+> > > > > > > on xfs and it would be quite rude to nullify the PROJINHERIT =
+flag bit
+> > > > > > > only for these special cases.
+> > > > > >
+> > > > > > OK, fair enough. I though someone will hate this. I'd just like=
+ to
+> > > > > > understand one thing: Owner of the inode can change the project=
+ ID to 0
+> > > > > > anyway so project quotas are more like a cooperative space trac=
+king scheme
+> > > > > > anyway. If you want to escape it, you can. So what are you exac=
+tly worried
+> > > > > > about? Is it the container usecase where from within the user n=
+amespace you
+> > > > > > cannot change project IDs?
+> > > > >
+> > > > > Yep.
+> > > > >
+> > > > > > Anyway I just wanted to have an explicit decision that the simp=
+le solution
+> > > > > > is not good enough before we go the more complex route ;).
+> > > > >
+> > > > > Also, every now and then someone comes along and half-proposes ma=
+king it
+> > > > > so that non-root cannot change project ids anymore.  Maybe some d=
+ay that
+> > > > > will succeed.
+> > > > >
+> > > >
+> > > > I'd just like to point out that the purpose of the project quotas f=
+eature
+> > > > as I understand it, is to apply quotas to subtrees, where container=
+ storage
+> > > > is a very common private case of project subtree.
+> > >
+> > > That is the most modern use case, yes.
+> > >
+> > > [ And for a walk down history lane.... ]
+> > >
+> > > > The purpose is NOT to create a "project" of random files in random
+> > > > paths.
+> > >
+> > > This is *exactly* the original use case that project quotas were
+> > > designed for back on Irix in the early 1990s and is the original
+> > > behaviour project quotas brought to Linux.
+> > >
+> > > Project quota inheritance didn't come along until 2005:
+> > >
+> > > commit 65f1866a3a8e512d43795c116bfef262e703b789
+> > > Author: Nathan Scott <nathans@sgi.com>
+> > > Date:   Fri Jun 3 06:04:22 2005 +0000
+> > >
+> > >     Add support for project quota inheritance, a merge of Glens chang=
+es.
+> > >     Merge of xfs-linux-melb:xfs-kern:22806a by kenmcd.
+> > >
+> > > And full support for directory tree quotas using project IDs wasn't
+> > > fully introduced until a year later in 2006:
+> > >
+> > > commit 4aef4de4d04bcc36a1461c100eb940c162fd5ee6
+> > > Author: Nathan Scott <nathans@sgi.com>
+> > > Date:   Tue May 30 15:54:53 2006 +0000
+> > >
+> > >     statvfs component of directory/project quota support, code origin=
+ally by Glen.
+> > >     Merge of xfs-linux-melb:xfs-kern:26105a by kenmcd.
+> > >
+> > > These changes were largely done for an SGI NAS product that allowed
+> > > us to create one great big XFS filesystem and then create
+> > > arbitrarily sized, thin provisoned  "NFS volumes"  as directory
+> > > quota controlled subdirs instantenously. The directory tree quota
+> > > defined the size of the volume, and so we could also grow and shrink
+> > > them instantenously, too. And we could remove them instantenously
+> > > via background garbage collection after the export was removed and
+> > > the user had been told it had been destroyed.
+> > >
+> > > So that was the original use case for directory tree quotas on XFS -
+> > > providing scalable, fast management of "thin" storage for a NAS
+> > > product. Projects quotas had been used for accounting random
+> > > colections of files for over a decade before this directory quota
+> > > construct was created, and the "modern" container use cases for
+> > > directory quotas didn't come along until almost a decade after this
+> > > capability was added.
+> > >
+> >
+> > Cool. Didn't know all of this.
+> > Lucky for us, those historic use cases are well distinguished from
+> > the modern subtree use case by the opt-in PROJINHERIT bit.
+> > So as long as PROJINHERIT is set, my assumptions mostly hold(?)
+>
+> I'm not sure what assumptions you are making, so I can't really
+> make any binding statement on this except to say that the existance
+> of PROJINHERIT on directories does not mean strict directory quotas
+> are being used.
+>
+> i.e.  PROJINHERIT is just a flag to automatically tag inodes with
+> aproject ID on creation. It -can- be used as a directory tree quota
+> if specific restrictions in the use of the projinherit flag are
+> enforced, but it can also be used for the original project ID use
+> case so users don't have to manually tag files they create or move
+> to a projet directory with the right project ID after the fact.
+>
+> IOWs, directories that have the same projid and PROJINHERIT set
+> do not need to be in a single hierarchy, and hence  do not fit the
+> definition of a directory tree quota. e.g:
+>
+> /projects/docs/project1
+> /projects/docs/project2
+> /projects/docs/project3
+> /projects/src/project1
+> /projects/src/project2
+> /projects/src/project3
+> /projects/build/project1
+> /projects/build/project2
+> /projects/build/project3
+> .....
+> /home/user1/project1
+> /home/user2/project3
+> /home/user6/project2
+>
+> Now we have multiple different disjoint directory heirarchies with
+> the same project ID because they contain files belonging to a
+> specific project. This is still a random collection of files in
+> random paths that are accounted to a project ID, but it's also using
+> PROJINHERIT to assign the default project ID to files created in the
+> respective project directories.
+>
+> The kernel has no idea that a project ID is associated with a single
+> directory tree. The kernel quota accounting itself simple sees
+> project IDs on inodes and accounts to that project ID. The create
+> and rename code simply see the parent PROJINHERIT bit and so need to
+> set up the new directory entry to be accounted to that different
+> project ID. It's all just mechanism in the kernel - applying project
+> quotas to enforce directory tree quotas is entirely a userspace
+> administration constraint....
+>
+> The only thing we do to help userspace administration is restrict
+> changing project IDs to the init namespace, thereby preventing
+> containers from being able to manipulate project IDs. This allows
+> the init namespace to set the policy for project quota use and hence
+> allow it to be used for directory tree quotas for container space
+> management. This is essentially an extension of the original NAS
+> use case, in that NFS exports were the isolation barrier that hid
+> the underlying filesystem structure and project ID quota usage
+> from the end users....
+>
+> > > > My point is that changing the project id of a non-dir child to be d=
+ifferent
+> > > > from the project id of its parent is a pretty rare use case (I thin=
+k?).
+> > >
+> > > Not if you are using project quotas as they were originally intended
+> > > to be used.
+> > >
+> >
+> > Rephrase then:
+> >
+> > Changing the projid of a non-dir child to be different from the projid
+> > of its parent, which has PROJINHERIT bit set, is a pretty rare use case=
+(?)
+>
+> I have no data to indicate how rare it might be - the kernel has
+> never enforced a policy that disallows changing project IDs when
+> PROJINHERIT is set and any user with write permission can change
+> project IDs even when PROJINHERIT is set. Hence we have to assume
+> that there are people out there that rely on this behaviour,
+> regardless of how rare it is...
+>
+> > > > If changing the projid of non-dir is needed for moving it to a
+> > > > different subtree,
+> > > > we could allow renameat2(2) of non-dir with no hardlinks to implici=
+tly
+> > > > change its
+> > > > inherited project id or explicitly with a flag for a hardlink, e.g.=
+:
+> > > > renameat2(olddirfd, name, newdirfd, name, RENAME_NEW_PROJID).
+> > >
+> > > Why?
+> > >
+> > > The only reason XFS returns -EXDEV to rename across project IDs is
+> > > because nobody wanted to spend the time to work out how to do the
+> > > quota accounting of the metadata changed in the rename operation
+> > > accurately. So for that rare case (not something that would happen
+> > > on the NAS product) we returned -EXDEV to trigger the mv command to
+> > > copy the file to the destination and then unlink the source instead,
+> > > thereby handling all the quota accounting correctly.
+> > >
+> > > IOWs, this whole "-EXDEV on rename across parent project quota
+> > > boundaries" is an implementation detail and nothing more.
+> > > Filesystems that implement project quotas and the directory tree
+> > > sub-variant don't need to behave like this if they can accurately
+> > > account for the quota ID changes during an atomic rename operation.
+> > > If that's too hard, then the fallback is to return -EXDEV and let
+> > > userspace do it the slow way which will always acocunt the resource
+> > > usage correctly to the individual projects.
+> > >
+> > > Hence I think we should just fix the XFS kernel behaviour to do the
+> > > right thing in this special file case rather than return -EXDEV and
+> > > then forget about the rest of it. Sure, update xfs_repair to fix the
+> > > special file project id issue if it trips over it, but other than
+> > > that I don't think we need anything more. If fixing it requires new
+> > > syscalls and tools, then that's much harder to backport to old
+> > > kernels and distros than just backporting a couple of small XFS
+> > > kernel patches...
+> > >
+> >
+> > I assume that by "fix the XFS behavior" you mean
+> > "we could allow renameat2(2) of non-dir with no hardlinks to implicitly
+> >  change its inherited project id"?
+> > (in case the new parent has the PROJINHERIT bit)
+> > so that the RENAME_NEW_PROJID behavior would be implicit.
+>
+> No, I meant "fix the original hardlink of an inode with no project ID
+> within a PROJINHERIT directory always gets -EXDEV" by allowing
+> hard links when the source file has no project ID specified.
+>
+> Actually, looking at 6.10-rc3, this has been merged already. So IMO
+> there's nothing more we need to do here.
+>
 
-Just one nit below:
+I don't see it.
+Which commit is that?
+I agree that would be enough to address the original report.
 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 3a4c67bfe085..8f05d79de01d 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -231,6 +231,8 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
->  
->  	if (unlikely(security_inode_alloc(inode)))
->  		return -ENOMEM;
-> +
-> +	inode->i_state = 0;
->  	this_cpu_inc(nr_inodes);
+> > Unlike rename() from one parent to the other, link()+unlink()
+> > is less obvious.
+> >
+> > The "modern" use cases that I listed where implicit change of projid
+> > does not suffice are:
+> >
+> > 1. Share some inodes (as hardlinks) among projects
+> > 2. Recursively changing a subtree projid
+> >
+> > They could be implemented by explicit flags to renameat2()/linkat() and
+> > they could be implemented by [gs]etfsxattrat(2) syscalls.
+>
+> What are you expecting to happen when you hardlink an inode across
+> multiple PROJINHERIT directories?  I mean, an inode can only have
+> one project ID, so you can't link it into mulitple projects at once
+> if you are using PROJINHERIT (xfs_link() expressly forbids it).
+>
+> So I'm really not sure what problem you are trying to describe or
+> solve here. Can you elaborate more?
 
-This would be more logical above where inode content is initialized (and
-less errorprone just in case security_inode_alloc() grows dependency on
-i_state value) - like just after:
+The problem that Andrey described started with a subtree
+that has no projid and then projid was applied to all non-special files.
+The suggested change to relax hardlink of projid 0 solves this case.
 
-	inode->i_flags = 0;
+But a subtree could also be changed by user, say from projid P1
+to projid P2 and in that case inherited projid P1 will remain on
+the special files, causing a similar failure to link() without the
+projid 0 relax rule.
 
-With that fixed feel free to add:
+Anyway, this discussion has wandered off too far from the original problem.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+If the simple fix is enough for Andrey, it's fine by me.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+If other people are interested in syscall or other means to change
+fsxattr on special files, it's fine by me as well.
+
+Thanks,
+Amir.
