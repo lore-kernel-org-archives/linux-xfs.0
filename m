@@ -1,46 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 031F784D29;
-	Wed, 12 Jun 2024 20:40:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7C0E381D1;
+	Wed, 12 Jun 2024 21:10:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718224827; cv=none; b=ooCQhX6ntPoBK2IjECfpjYchVPcUwrC1qr1v+M8pmW8LCuvOhLvrr5o4+sKU241E2u/SL48GH/HZoJ7qW9VYe8Q2hUtwJk6qGCJp8nN7N29x93zTGN6XxRpeH7nocnSuufe4/hGQlftK8awyJo8oGqG1ja1HIFfDnfkur57RDJ0=
+	t=1718226642; cv=none; b=unwALY3nChCQ4TJL2QTm1d4wAZMOjlzEps4wFLs+2mZtn69DpJxx4ssp8Qbm1Py1TVvf3d2Tshq9JNl05+4n6Mw8eQLvzQ6B/zuzd5fH7hEnOzpdpyhqtYwXq4f1K0UJlrAITEEMVnAQm82e32yKyf9oOnF1sfGXGCJuPzakm8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718224827; c=relaxed/simple;
-	bh=SZUB4FY1/4Uc5DKQFanz8Q8mDAcnM64BMP2Z067yeq0=;
+	s=arc-20240116; t=1718226642; c=relaxed/simple;
+	bh=dqLO371b1vPErmMYi4CgWyvSUCQn8of4qGwTdEMzEhk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i3ikOxxHrPsoeDm33fsKeosPB3eCe3ZfUTEBe0hshBurFJTHu8jOU6ohl4jeqg4UQL2yY19gcxKe2LDI5f7q3tYdXMvBJjYnZ6R2jEgg9wlMHeHlUpDYNQBGEgRiiARid5mc5Js131w6gCOOENB4BermmKvq3NPDkwftMRGwwYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oWWFMwJk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cYZRf0uCnWnQSM6TjSEoHLMs122iF4srQ6UIWWY6tlZGY2zzjxOBufoGz5aBDXYlfPzjFuT64Rc6jiFc5i6DgyX6PG2Cyg8FM1oAUJpPCgT4/XXJzf+IgFdGvf3RBq/mQfjFrVBVcScBUyPyUrUzOw1NG4rXyIVHMVCeFjq0yt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DIXhgPtR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oWWFMwJk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 924EAC116B1;
-	Wed, 12 Jun 2024 20:40:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DIXhgPtR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A2F4C116B1;
+	Wed, 12 Jun 2024 21:10:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718224826;
-	bh=SZUB4FY1/4Uc5DKQFanz8Q8mDAcnM64BMP2Z067yeq0=;
+	s=k20201202; t=1718226641;
+	bh=dqLO371b1vPErmMYi4CgWyvSUCQn8of4qGwTdEMzEhk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oWWFMwJk0F9C3vPy/4z2yYg/eBLF+FDqdqcufPDLGeU8cFFPlTKiAs2n6JlGmxRD2
-	 6oTW1oVv0iBpWPUT6/LJhqVwVwqtG3i9Vqa43TQ5Rj7n4LD9HHG0DYwUwJM471gczc
-	 gnhRVFJ/gGVIrjBH8mzkO02ZGbaendNNx8ww597L6QIKrXVEjchj4S3icJ74AIHUSy
-	 YaIkyj2jvGICtBcPxklwL4AVOJ+3aBNCwgqSFdv2mKNyfMxEQyIqLeNbZeB0riMtA8
-	 zcj1Fm9Tc4/uBw2kZbker/r8V1tydETAnhQOKiLYmXyVOTpeFFUWiwEIRoq/8ObKCb
-	 cK5S5yPFwZEwQ==
-Date: Wed, 12 Jun 2024 13:40:25 -0700
+	b=DIXhgPtR71kSyV6/epJDyqhWKsEQEX5yhhZda5PPHpZ+0ARYCCiAtnRSNR1FnlC7P
+	 nPXkJq/SepET7ym8thpR7yujnnQ7ZHn3iRsMoIfGobXMy1OJxAIzKKtD9ftmAGl8KN
+	 kUltI84OFlF1WwDhedAy43xrdUjP8vTB+P26BCEb3a2HConB/TZUMHytqEARmpH8ln
+	 QCY5BssR28eFz1T409YzepxwR+K2C6Zp7Uo+S9MDDNObxIJC8bTjFUTi06cTVT7OeC
+	 lTnaI5hdCh11uuYSK3xj94QxhxrNjmNwqI7uE46+z3EGyJoGClyLogjejeb9r2ihDk
+	 QMYN4T27nFHOw==
+Date: Wed, 12 Jun 2024 14:10:40 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: david@fromorbit.com, chandan.babu@oracle.com, brauner@kernel.org,
-	akpm@linux-foundation.org, willy@infradead.org, mcgrof@kernel.org,
-	linux-mm@kvack.org, hare@suse.de, linux-kernel@vger.kernel.org,
-	yang@os.amperecomputing.com, Zi Yan <zi.yan@sent.com>,
-	linux-xfs@vger.kernel.org, p.raghav@samsung.com,
-	linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
-	cl@os.amperecomputing.com, john.g.garry@oracle.com
-Subject: Re: [PATCH v7 07/11] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Message-ID: <20240612204025.GI2764752@frogsfrogsfrogs>
-References: <20240607145902.1137853-1-kernel@pankajraghav.com>
- <20240607145902.1137853-8-kernel@pankajraghav.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, tytso@mit.edu, dchinner@redhat.com,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.com,
+	chandan.babu@oracle.com, hch@lst.de, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, gfs2@lists.linux.dev,
+	linux-xfs@vger.kernel.org, catherine.hoang@oracle.com,
+	ritesh.list@gmail.com, mcgrof@kernel.org,
+	mikulas@artax.karlin.mff.cuni.cz, agruenba@redhat.com,
+	miklos@szeredi.hu, martin.petersen@oracle.com
+Subject: Re: [PATCH v4 01/22] fs: Add generic_atomic_write_valid_size()
+Message-ID: <20240612211040.GJ2764752@frogsfrogsfrogs>
+References: <20240607143919.2622319-1-john.g.garry@oracle.com>
+ <20240607143919.2622319-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,137 +52,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240607145902.1137853-8-kernel@pankajraghav.com>
+In-Reply-To: <20240607143919.2622319-2-john.g.garry@oracle.com>
 
-On Fri, Jun 07, 2024 at 02:58:58PM +0000, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
+On Fri, Jun 07, 2024 at 02:38:58PM +0000, John Garry wrote:
+> Add a generic helper for FSes to validate that an atomic write is
+> appropriately sized (along with the other checks).
 > 
-> iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
-> < fs block size. iomap_dio_zero() has an implicit assumption that fs block
-> size < page_size. This is true for most filesystems at the moment.
-> 
-> If the block size > page size, this will send the contents of the page
-> next to zero page(as len > PAGE_SIZE) to the underlying block device,
-> causing FS corruption.
-> 
-> iomap is a generic infrastructure and it should not make any assumptions
-> about the fs block size and the page size of the system.
-> 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/internal.h          |  5 +++++
->  fs/iomap/buffered-io.c |  6 ++++++
->  fs/iomap/direct-io.c   | 26 ++++++++++++++++++++++++--
->  3 files changed, 35 insertions(+), 2 deletions(-)
+>  include/linux/fs.h | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
 > 
-> diff --git a/fs/internal.h b/fs/internal.h
-> index 84f371193f74..30217f0ff4c6 100644
-> --- a/fs/internal.h
-> +++ b/fs/internal.h
-> @@ -35,6 +35,11 @@ static inline void bdev_cache_init(void)
->  int __block_write_begin_int(struct folio *folio, loff_t pos, unsigned len,
->  		get_block_t *get_block, const struct iomap *iomap);
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 069cbab62700..e13d34f8c24e 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -3645,4 +3645,16 @@ bool generic_atomic_write_valid(loff_t pos, struct iov_iter *iter)
+>  	return true;
+>  }
 >  
-> +/*
-> + * iomap/direct-io.c
-> + */
-> +int iomap_dio_init(void);
-> +
->  /*
->   * char_dev.c
->   */
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 49938419fcc7..9f791db473e4 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1990,6 +1990,12 @@ EXPORT_SYMBOL_GPL(iomap_writepages);
->  
->  static int __init iomap_init(void)
->  {
-> +	int ret;
-> +
-> +	ret = iomap_dio_init();
-> +	if (ret)
-> +		return ret;
-> +
->  	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
->  			   offsetof(struct iomap_ioend, io_bio),
->  			   BIOSET_NEED_BVECS);
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index f3b43d223a46..b95600b254a3 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -27,6 +27,13 @@
->  #define IOMAP_DIO_WRITE		(1U << 30)
->  #define IOMAP_DIO_DIRTY		(1U << 31)
->  
-> +/*
-> + * Used for sub block zeroing in iomap_dio_zero()
-> + */
-> +#define ZERO_FSB_SIZE (65536)
-> +#define ZERO_FSB_ORDER (get_order(ZERO_FSB_SIZE))
-> +static struct page *zero_fs_block;
-
-Er... zero_page_64k ?
-
-Since it's a permanent allocation, can we also mark the memory ro?
-
-> +
->  struct iomap_dio {
->  	struct kiocb		*iocb;
->  	const struct iomap_dio_ops *dops;
-> @@ -52,6 +59,16 @@ struct iomap_dio {
->  	};
->  };
->  
-> +int iomap_dio_init(void)
+> +static inline
+> +bool generic_atomic_write_valid_size(loff_t pos, struct iov_iter *iter,
+> +				unsigned int unit_min, unsigned int unit_max)
 > +{
-> +	zero_fs_block = alloc_pages(GFP_KERNEL | __GFP_ZERO, ZERO_FSB_ORDER);
+> +	size_t len = iov_iter_count(iter);
 > +
-> +	if (!zero_fs_block)
-> +		return -ENOMEM;
+> +	if (len < unit_min || len > unit_max)
+> +		return false;
 > +
-> +	return 0;
+> +	return generic_atomic_write_valid(pos, iter);
 > +}
 
-Can't we just turn this into another fs_initcall() instead of exporting
-it just so we can call it from iomap_init?  And maybe rename the
-existing iomap_init to iomap_pagecache_init or something, for clarity's
-sake?
+Now that I look back at "fs: Initial atomic write support" I wonder why
+not pass the iocb and the iov_iter instead of pos and the iov_iter?
+And can these be collapsed into a single generic_atomic_write_checks()
+function?
 
 --D
 
 > +
->  static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
->  		struct iomap_dio *dio, unsigned short nr_vecs, blk_opf_t opf)
->  {
-> @@ -236,17 +253,22 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
->  		loff_t pos, unsigned len)
->  {
->  	struct inode *inode = file_inode(dio->iocb->ki_filp);
-> -	struct page *page = ZERO_PAGE(0);
->  	struct bio *bio;
->  
-> +	/*
-> +	 * Max block size supported is 64k
-> +	 */
-> +	WARN_ON_ONCE(len > ZERO_FSB_SIZE);
-> +
->  	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
->  	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
->  				  GFP_KERNEL);
-> +
->  	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
->  	bio->bi_private = dio;
->  	bio->bi_end_io = iomap_dio_bio_end_io;
->  
-> -	__bio_add_page(bio, page, len, 0);
-> +	__bio_add_page(bio, zero_fs_block, len, 0);
->  	iomap_dio_submit_bio(iter, dio, bio, pos);
->  }
->  
+>  #endif /* _LINUX_FS_H */
 > -- 
-> 2.44.1
+> 2.31.1
 > 
 > 
