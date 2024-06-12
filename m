@@ -1,107 +1,115 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A298F72;
-	Wed, 12 Jun 2024 01:59:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90FF912B170;
+	Wed, 12 Jun 2024 06:55:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718157556; cv=none; b=MZaDZh8u8CUGUx2LY4Qg9It+MqnBAb89w04FwJeRiixpt8qXA75cmNhig5ypB75W68Gffy80dliWnvE4LH5vt0Y+ds8LiwKe053zQQP+gVtK4mV72IHlVfhTSxGMSTzR4mQFFdkjF9WaYnEKw2r8YVjuXTNHuUj1QDJfBiD3AIo=
+	t=1718175320; cv=none; b=P9SuHIR+AtWo7ni+qenRt9CIJIFcH45JhyGcohYhEqrlkXjoH0o3qXmK6voLXCSGvglZVQEjvZh8UCYbzcR0Zk097fEL6ShFLCh8SF5pkRKG6MmDqep5zKDxXefOFRUPiDeYNlH15vxau4b0C7HneS+5u1LWk0CXA/1vszOVjCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718157556; c=relaxed/simple;
-	bh=m/9CniaJyW8JNpE0fIuzwkYnQ2cyl64QD9V3J9ZowtY=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bRlH8qkf2q7OA+OGZ3aFLZAJckQuQ/eRAWcZ3cFBFkkcE9GEVpPxTwGSsLUruc4b2kwpEdDnoBZaqLQiD7xCnwPR/7ur6K8tcabUz9Q8ZFCg0IbD2+Fl1WC+KEMgXmStORs7SmaZRC5GWX9R0un7qIbGGHNoJn3dG1yi839hTBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4VzTC05tKxz2CkTM;
-	Wed, 12 Jun 2024 09:55:24 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 13F1E140257;
-	Wed, 12 Jun 2024 09:59:12 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 12 Jun
- 2024 09:59:11 +0800
-Date: Wed, 12 Jun 2024 10:10:58 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: John Garry <john.g.garry@oracle.com>, <david@fromorbit.com>,
-	<djwong@kernel.org>, <hch@lst.de>, <viro@zeniv.linux.org.uk>,
-	<brauner@kernel.org>, <jack@suse.cz>, <chandan.babu@oracle.com>,
-	<willy@infradead.org>
-CC: <axboe@kernel.dk>, <martin.petersen@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<tytso@mit.edu>, <jbongio@google.com>, <ojaswin@linux.ibm.com>,
-	<ritesh.list@gmail.com>, <mcgrof@kernel.org>, <p.raghav@samsung.com>,
-	<linux-xfs@vger.kernel.org>, <catherine.hoang@oracle.com>
-Subject: Re: [PATCH v3 08/21] xfs: Introduce FORCEALIGN inode flag
-Message-ID: <20240612021058.GA729527@ceph-admin>
-References: <20240429174746.2132161-1-john.g.garry@oracle.com>
- <20240429174746.2132161-9-john.g.garry@oracle.com>
+	s=arc-20240116; t=1718175320; c=relaxed/simple;
+	bh=QL5AzMylb6sWTFFYjKRwgICCtOPS5GZejRXyfM61FcI=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=mdUGCPrlkfLDlT/vUWAiJlKZP9Mvm0FFI9suxYs1+9qknhSJrpBWZ3cbT1KTOfLAGK4CNHdBK7QgekC7/nAfpBQWzi/m8MevsM1jk3jp0pUO6hTHv1zAgBmF8J1cZA3JqUe+k52iZFrOO07CdIOfr+FmSxZcBtJIHONDP1nz5Gc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VvGNB8Ym; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VvGNB8Ym"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1f6fd08e0f2so27500395ad.3;
+        Tue, 11 Jun 2024 23:55:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718175319; x=1718780119; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=wMu3Q0pXDLFy7A1/gaz15NZUnR2H8RHdoTmM1JvyEeU=;
+        b=VvGNB8YmiW0itQScaMwe74YCQktWKTbDqfVb1qNME9IU6IzYzoBbRqQlHCfdI7+gbV
+         Y7Occq3jmikBmCKABpE+YltSN9zQcoYq4x+dWSUQsRH6IHfUFsRvmXT4jOcuFNBYES0m
+         SDu2T1Ntrm2WTm8NSsD1ZdvVDZpX/bjPIk3UNNkZ/N2FNwMIFw7Nz3IDFR6uah6E/JQl
+         1Q+KfoenL/aJlq2bNXkbFmXJn5YJiNQKcc8woLIxSyZojpdl/pISPtEy5yK9s1mFAcRO
+         z3hUSENwgLt9p0mwratERknmLNMpovn+otz40zOiWgB+sEdKxsWRJAlA1Lia5OMTbA71
+         LO7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718175319; x=1718780119;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wMu3Q0pXDLFy7A1/gaz15NZUnR2H8RHdoTmM1JvyEeU=;
+        b=HvPQmL3DTJdt+x5Sp1yuUW0h9bo3AuvlZ7AtvWsbSIjZNJlguOXK6sdFknB7uwHUVy
+         TNqgrtVxnnG3pkjCmuiQ3vT29BWm1ts2U82JxD66Q6hbpMSS6o7AqUCZhssS0lpfaWOt
+         1dPiSSHjWHZke3zhkjL7FkfLdn2AhOnmYoGmBGfZzVTGlEVfuFDTJgdUCMuz+N2jAzkz
+         bPzWC7ysBvDEam3HID/qPXS0NYGM2aQowtQjdsPyEZ190hZL98aPMPvw5vwJ63pPVEji
+         hbhiDvNqiEqKWwvbJDCfi3PSJdqtA/yEYGhKWjlUEgRTyAzRp2QZCO+2fhPX+jADazLT
+         FfeA==
+X-Forwarded-Encrypted: i=1; AJvYcCXbXn2+7e9lr/b6kw4GkxnXZt7QEdWctvkUHNDvq39qZRuu3mIDluASB7DbqDtWBokADfO8XmXVF4YafbSjj1dtTo2orbO6A7qzTT8D9GGGdmFc1tKWysojNdKieuHRdGDF7MSzyM6tuw==
+X-Gm-Message-State: AOJu0YxoYX9/J1fuFHhfv1lDNrpjxXJWmDndU2hn7Xt3iGhTRBwOH5q3
+	nVi54FdVC8qCg4vFHArWj0XeY8HVUjv61gKIgNs35F8gfS1qWri30y0ciA==
+X-Google-Smtp-Source: AGHT+IGYJlnOtKjPo7MDUrhZBOGuuZo7X4JJfOtZfHIsHFUCOh5szXE5Q0XDASNaKtzB0eCJTX9RjQ==
+X-Received: by 2002:a17:902:ced1:b0:1f7:13ac:e80e with SMTP id d9443c01a7336-1f83b567e73mr10470975ad.4.1718175318685;
+        Tue, 11 Jun 2024 23:55:18 -0700 (PDT)
+Received: from dw-tp ([171.76.84.72])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f71be78473sm43982375ad.287.2024.06.11.23.55.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Jun 2024 23:55:18 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@infradead.org>, Christian Brauner <brauner@kernel.org>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, Jan Kara <jack@suse.cz>, Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH] Documentation: document the design of iomap and how to port
+In-Reply-To: <20240611234745.GD52987@frogsfrogsfrogs>
+Date: Wed, 12 Jun 2024 12:07:40 +0530
+Message-ID: <8734piacp7.fsf@gmail.com>
+References: <20240608001707.GD52973@frogsfrogsfrogs> <874j9zahch.fsf@gmail.com> <20240611234745.GD52987@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <20240429174746.2132161-9-john.g.garry@oracle.com>
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemi500009.china.huawei.com (7.221.188.199)
 
-On Mon, Apr 29, 2024 at 05:47:33PM +0000, John Garry wrote:
-> From: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> Add a new inode flag to require that all file data extent mappings must
-> be aligned (both the file offset range and the allocated space itself)
-> to the extent size hint.  Having a separate COW extent size hint is no
-> longer allowed.
-> 
-> The goal here is to enable sysadmins and users to mandate that all space
-> mappings in a file must have a startoff/blockcount that are aligned to
-> (say) a 2MB alignment and that the startblock/blockcount will follow the
-> same alignment.
-> 
-> jpg: Enforce extsize is a power-of-2 and aligned with afgsize + stripe
->      alignment for forcealign
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> Co-developed-by: John Garry <john.g.garry@oracle.com>
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_format.h    |  6 ++++-
->  fs/xfs/libxfs/xfs_inode_buf.c | 50 +++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_inode_buf.h |  3 +++
->  fs/xfs/libxfs/xfs_sb.c        |  2 ++
->  fs/xfs/xfs_inode.c            | 12 +++++++++
->  fs/xfs/xfs_inode.h            |  2 +-
->  fs/xfs/xfs_ioctl.c            | 34 +++++++++++++++++++++++-
->  fs/xfs/xfs_mount.h            |  2 ++
->  fs/xfs/xfs_super.c            |  4 +++
->  include/uapi/linux/fs.h       |  2 ++
->  10 files changed, 114 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 2b2f9050fbfb..4dd295b047f8 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -353,6 +353,7 @@ xfs_sb_has_compat_feature(
->  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
->  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
->  #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
-> +#define XFS_SB_FEAT_RO_COMPAT_FORCEALIGN (1 << 30)	/* aligned file data extents */
- 
-Hi, John
 
-You know I've been using and testing your atomic writes patch series recently,
-and I'm particularly interested in the changes to the on-disk format. I noticed
-that XFS_SB_FEAT_RO_COMPAT_FORCEALIGN uses bit 30 instead of bit 4, which would
-be the next available bit in sequence.
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-I'm wondering if using bit 30 is just a temporary solution to avoid conflicts, 
-and if the plan is to eventually use bits sequentially, for example, using bit 4?
-I'm looking forward to your explanation.
+> On Tue, Jun 11, 2024 at 04:15:02PM +0530, Ritesh Harjani wrote:
+>> 
+>> Hi Darrick,
+>> 
+>> Resuming my review from where I left off yesterday.
+>
 
-Thanks,
-Long Li
+<snip>
+>> > +Writes
+>> > +~~~~~~
+>> > +
+>> > +The ``iomap_file_buffered_write`` function writes an ``iocb`` to the
+>> > +pagecache.
+>> > +``IOMAP_WRITE`` or ``IOMAP_WRITE`` | ``IOMAP_NOWAIT`` will be passed as
+>> > +the ``flags`` argument to ``->iomap_begin``.
+>> > +Callers commonly take ``i_rwsem`` in either shared or exclusive mode.
+>> 
+>> shared(e.g. aligned overwrites) 
+>
+
+Ok, I see we were in buffered I/O section (Sorry, I misunderstood
+thinking this was for direct-io)
+
+> That's a matter of debate -- xfs locks out concurrent reads by taking
+> i_rwsem in exclusive mode, whereas (I think?) ext4 and most other
+> filesystems take it in shared mode and synchronizes readers and writers
+> with folio locks.
+
+Ext4 too takes inode lock in exclusive mode in case of
+buffered-write. It's the DIO writes/overwrites in ext4 which has special
+casing for shared/exclusive mode locking.
+
+But ext4 buffered-read does not take any inode lock (it uses
+generic_file_read_iter()). So the synchronization must happen via folio
+lock w.r.t buffered-writes.
+
+However, I am not sure if we have any filesystem taking VFS inode lock in
+shared more for buffered-writes.
+
+
+BTW -
+I really like all of the other updates that you made w.r.t the review
+comments. All of those looks more clear to me. (so not commenting on them
+individually).
+
+Thanks!
+-ritesh
