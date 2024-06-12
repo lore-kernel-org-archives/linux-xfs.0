@@ -1,42 +1,46 @@
 Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF9DEBB
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 17:35:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71BEF1822C9
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 17:35:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718213758; cv=none; b=bLbbM3t4Elpk8DCIsXGHWe6IbwllobDk3wa0SH6wKyLm7EVhGXfHvx5Xlb5HtZ7L1qDFkBKALCcfzTh+kiSCZJGCq2mCL83ydII+eOkpMuYWZaR16U6A4NcmQWSvfMQ6EJuFzII9meewK5olyt7QorCYxJL8gxyF3VTWZ5ufXBE=
+	t=1718213758; cv=none; b=LzQFQ0rUz2fBw1jpr3mGppZ2nG9uIdGU7jw2zy/9WAKPsRVUYBmgcB6ZisFKTghW+bLRIeuv4FTWZDl8zr7u6BoSV/Fpf9/zAWb2apnV/tSoBn1bgQwJ7YNm4NfXyd267g0Sdsohgz3Fciu/U75L/AbHnnWCF2gBgX9N91hD3vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1718213758; c=relaxed/simple;
-	bh=MH66XaqTJyGafg/UGdgoY2jHCBMOps3AGKGxPvqMuv0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PW/5o5FhoD3hXwZcIN3Zbkd+4z7YeqGyTsDDXe+ld9hTUheh2bwbBBrr7LpVtw18NKNwKq6cexU1RcC/O4kDgKAW4Nk3Clewgwx8a78mq3yg593A5SUf8l/zMFeJBqC0kLPvjV1iZHSiJIEd3m6Yv6k3EJhU7Yow8Qba3dF0bwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=OV/BoOHc; arc=none smtp.client-ip=82.195.75.108
+	bh=UC7Y9McedkNTi8JqfN3wECu+LZAlC2Nw6EAR/vfpvpw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=iwvqJk904kFJaqkK6b5W/QfBouRgAAFtbdvCv5mwJOFSJmWAfssn6uVasmlojh/WDHu8md3FC2I+hD3Fy0/2BFiQM5iWE8ibP5EpgGwRq/et7GXxU0DpXLNTYlZn868A5myfgz4kMfM11CpYPw5sVdXB+1+g8qr+SWUHl8lR/zo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=I+AlDfvy; arc=none smtp.client-ip=82.195.75.108
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="OV/BoOHc"
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="I+AlDfvy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
 	s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:MIME-Version
-	:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=rN0GmLURdzc+hXzBrKZwl+oeCsX1TD3T3YQ3Bu6ntwg=; b=OV/BoOHcea7GhEGIKi7K3QeVeP
-	lOrasklqIuG3DPw8qWzyvo9i9hpBDQfQup2xCPdGBK/3rSDXD39Ng2m3vPmAi8ofunNCdwE0Nc6T2
-	rUMpkoTcM42HUCfOay8vNaebn4aenKbPQ4ABE0+06ussPn9Tv0RhLjZZHmU40q01KyC/nK7K1wRUm
-	RNtUDaYgmUJrkrrvpCsjQp1mXSRrBDul8g1uxBI6N6hZI7A0CIDrvBF3lPPMEKImG85L7PbboF/1r
-	3VoWxGXdVXYOpI1RYLETrAhngJaO9kWE7DWN5OfyC+Tx5Zkz2wD4m0BcG/gNNUtza0Gj7YBjB8oHl
-	T0uFzxQw==;
+	:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To:
+	Content-Type:Content-ID:Content-Description;
+	bh=i2fXGcXkyjtZP0fLCROAbXUOkPy1sjFn7SV6gZ1D7Go=; b=I+AlDfvyzdrGwqdnCD3x1Zxl7t
+	6Ute5TMFx722J62zs+0JrocS/TYjcIpfPbhob2skGHXi4O2Wm7rKA1wy+StlL3kcYj3WZHTMcxzfi
+	vgEUImHvADrYOhfv/2xRwQpbv2X/px8i/+m2VijEdht67qt47LJpJGsynYsdnq0SB2WbTT1TYPp5c
+	yg8IddlZQLWOA+Ujgz3iJFIzcI/HCTZGou7iNJD3jY1IVXK7KvLbPwZTNO7JX1mpX35/oiFgFVFDd
+	YZ11CsIxmZH0lGG8Guw7ORxkmIbjerxaOTEKj1rmttfHqttxMrI1B/7LrjlKrSP9YJgB4Bb+nIxoX
+	95pnpL1A==;
 Received: from authenticated user
 	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.94.2)
 	(envelope-from <bage@debian.org>)
-	id 1sHRt4-008094-UR; Wed, 12 Jun 2024 17:35:55 +0000
+	id 1sHRt5-008094-Ct; Wed, 12 Jun 2024 17:35:55 +0000
 From: Bastian Germann <bage@debian.org>
 To: linux-xfs@vger.kernel.org
-Cc: Bastian Germann <bage@debian.org>
-Subject: [PATCH 0/1] Forward: Install files into UsrMerged layout
-Date: Wed, 12 Jun 2024 19:35:04 +0200
-Message-ID: <20240612173551.6510-1-bage@debian.org>
+Cc: Chris Hofstaedtler <zeha@debian.org>,
+	Bastian Germann <bage@debian.org>
+Subject: [PATCH 1/1] Install files into UsrMerged layout
+Date: Wed, 12 Jun 2024 19:35:05 +0200
+Message-ID: <20240612173551.6510-2-bage@debian.org>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240612173551.6510-1-bage@debian.org>
+References: <20240612173551.6510-1-bage@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,27 +50,58 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Debian-User: bage
 
-Hi,
+From: Chris Hofstaedtler <zeha@debian.org>
 
-I am forwarding a patch by Chris Hofstaedtler that is in the deferred
-upload queue and is going to arrive in sid in 5 days.
-
-The patch was sent by Christ in January as attachment so I guess it did
-not make it to the list.
-
-As most distributions are now /usr merged it might be a good idea to
-include it generally.
-
-Cheers,
-Bastian
-
-Chris Hofstaedtler (1):
-  Install files into UsrMerged layout
-
+Signed-off-by: Chris Hofstaedtler <zeha@debian.org>
+Signed-off-by: Bastian Germann <bage@debian.org>
+---
  configure.ac                | 19 ++-----------------
  debian/local/initramfs.hook |  2 +-
  2 files changed, 3 insertions(+), 18 deletions(-)
 
+diff --git a/configure.ac b/configure.ac
+index da30fc5c..a532d90d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -113,23 +113,8 @@ esac
+ #
+ test -n "$multiarch" && enable_lib64=no
+ 
+-#
+-# Some important tools should be installed into the root partitions.
+-#
+-# Check whether exec_prefix=/usr: and install them to /sbin in that
+-# case.  If the user chooses a different prefix assume they just want
+-# a local install for testing and not a system install.
+-#
+-case $exec_prefix:$prefix in
+-NONE:NONE | NONE:/usr | /usr:*)
+-  root_sbindir='/sbin'
+-  root_libdir="/${base_libdir}"
+-  ;;
+-*)
+-  root_sbindir="${sbindir}"
+-  root_libdir="${libdir}"
+-  ;;
+-esac
++root_sbindir="${sbindir}"
++root_libdir="${libdir}"
+ 
+ AC_SUBST([root_sbindir])
+ AC_SUBST([root_libdir])
+diff --git a/debian/local/initramfs.hook b/debian/local/initramfs.hook
+index 5b24eaec..eac7e79e 100644
+--- a/debian/local/initramfs.hook
++++ b/debian/local/initramfs.hook
+@@ -45,7 +45,7 @@ rootfs_type() {
+ . /usr/share/initramfs-tools/hook-functions
+ 
+ if [ "$(rootfs_type)" = "xfs" ]; then
+-	copy_exec /sbin/xfs_repair
++	copy_exec /usr/sbin/xfs_repair
+ 	copy_exec /usr/sbin/xfs_db
+ 	copy_exec /usr/sbin/xfs_metadump
+ fi
 -- 
 2.45.2
 
