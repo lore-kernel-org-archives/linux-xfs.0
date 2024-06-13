@@ -1,86 +1,64 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA82D14A62B
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2024 18:18:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E10C12FB39
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2024 18:35:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718302695; cv=none; b=Tyv+vySjcf38FrI+njLFa00RtcGUQdoplSL9DM1zucHH8BHtNWlFdMWE889cmTbmVa6qHzqDDX+tn6th82aFoZV/XTfQe5BWdYiPiOA504vI3LLQ2ngRhCa5epGLaz03UTjmBP3nqNLL6KdcUaIqGdqNwYqV2aIz8+71sJ8wLVc=
+	t=1718303736; cv=none; b=cPL/ROzv9upvm6QThv7AwQfh4vRKfhNUQm7RyRph+snj7hFPHi02FLHT/lcnabHYqvV+/Y/zut1pOYS2zLUvykYHegddt/0T98i6nQd/UjfF2Yqhs8ZO40LQ/G6iP9esVUIwSS7LJu/LTY08CIbJN894ZKeqzbl2L17OOMCJrFQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718302695; c=relaxed/simple;
-	bh=hcgP6moRKDZpupzvJuP5HEtlh8u9Gky/DxONTuAjDWU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Jvys2oTyxcaOoYEVuhnyBtpGxZZnY1ueS1Lk/pD6Bx5OhwBipLGgfD71H+R7nrZTRdIsZPzpmV3w/tuiQgC8fzxv5mfU7Wiq+FLnn64aQ7OL/oOoPgY/d0MNiAF20oaalG8v369iwaYoiy9mfjEAwNwj/0w1m+E7d9PQqVHimdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SHXWanoJ; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1718303736; c=relaxed/simple;
+	bh=08KmIanXenDZPVXxfz2uvO5EQceJXFkcraxWPIjgyco=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R3rH1E0lrjlwo/tEyay/w5PZijn/xe/zgxoPJLxXLbUpTCbNbbWCz6DiuFuYUC/TC9hqx1JcuaTA5nNY3ZjSZbgjQgz7qEQ9iymfm9A1y0fJPnzKwiMvy78nbxFPoyVBdc1ghpuJt6ZA/NHByck8raX6Xz7f0qQ00h29Cpt5z5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YYtcAAsl; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SHXWanoJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1718302689;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=snThJpWDNgNHCNOl6uD91ooMEJ1Wr3g9bkc7QeOUZT8=;
-	b=SHXWanoJe89s621z1gz+QGevdb5AE+lYt9UVTjyp3R0ZpKPy3Us7upHrMnmdzolwgjll1E
-	0iKfidO/yZLYFkcLyPvWOHrYhuaTQ9zKzsoHTOkYbRp4O/VEgWABEEjlrsIF+uCGltuHg5
-	kN4QsjPKHr1IzGiCSGbkVwQxnvYc7hk=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-16-vBcWyfq4NWKgG8Qx282JXQ-1; Thu,
- 13 Jun 2024 14:18:08 -0400
-X-MC-Unique: vBcWyfq4NWKgG8Qx282JXQ-1
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5677C19560B9
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2024 18:18:07 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.22.34.24])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 026531956056;
-	Thu, 13 Jun 2024 18:18:04 +0000 (UTC)
-From: Bill O'Donnell <bodonnel@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: cmaiolino@redhat.com,
-	Bill O'Donnell <bodonnel@redhat.com>
-Subject: [PATCH 4/4] xfs_repair: correct type of variable global_msgs.interval to time_t
-Date: Thu, 13 Jun 2024 13:07:08 -0500
-Message-ID: <20240613181745.1052423-5-bodonnel@redhat.com>
-In-Reply-To: <20240613181745.1052423-1-bodonnel@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YYtcAAsl"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=0H0diF+ZnR8n0YjbWhBU7CLBvI3+PNmRyeRgvM0tt8A=; b=YYtcAAsloyVfJ3Ar9ZGNgNIxqQ
+	sM2dqgPp3t6+A/uPZw14SCFUAa1qoPo0bZm/+cUBZuAXOmqDoau2+NaMiTnI09/WCelqVAaREPgd9
+	wq8mDR3n55KfgRRB7gVDewseF8Zl8Ep+0mMDj7RSbnuaTOhqUdywPOq98K+s5f9mferJR30SGcLP9
+	G4L0RIY+rOWOgQPje6xEMZs/RdbIIqaBeb5sbqTjuk7Uo+2WzL6lFem/+namq6LNa9qJRLB8sRcj8
+	XOj+CqoRAr8kNUaGolnv43Oyl8PEPzq3DKOxDbXg2Vap5//sgozKG1IgIKuFo4AYmRMDYqTDp4Xch
+	6miOYC3g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sHpIM-000000007ed-1xpv;
+	Thu, 13 Jun 2024 18:35:34 +0000
+Date: Thu, 13 Jun 2024 11:35:34 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Bill O'Donnell <bodonnel@redhat.com>
+Cc: linux-xfs@vger.kernel.org, cmaiolino@redhat.com
+Subject: Re: [PATCH 1/4] mkfs.xfs: avoid potential overflowing expression in
+ xfs_mkfs.c
+Message-ID: <Zms79pN-ijC5Zu-V@infradead.org>
 References: <20240613181745.1052423-1-bodonnel@redhat.com>
+ <20240613181745.1052423-2-bodonnel@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240613181745.1052423-2-bodonnel@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Use time_t instead of int for interval field.
+Looks good:
 
-Coverity-id: 1596599
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
----
- repair/progress.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/repair/progress.c b/repair/progress.c
-index 2ce36cef..15455a99 100644
---- a/repair/progress.c
-+++ b/repair/progress.c
-@@ -91,7 +91,7 @@ typedef struct msg_block_s {
- 	uint64_t	*done;
- 	uint64_t	*total;
- 	int		count;
--	int		interval;
-+	time_t		interval;
- } msg_block_t;
- static msg_block_t 	global_msgs;
- 
--- 
-2.45.2
-
+> +	log_bytes = (uint64_t)max_tx_bytes * 3 * cli->log_concurrency / 2;
+>  	new_logblocks = min(XFS_MAX_LOG_BYTES >> cfg->blocklog,
+>  				log_bytes >> cfg->blocklog);
+>  
+> -- 
+> 2.45.2
+> 
+> 
+---end quoted text---
