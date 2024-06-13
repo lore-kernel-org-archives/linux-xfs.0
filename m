@@ -1,246 +1,126 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E380A34
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 22:51:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79C57F9;
+	Thu, 13 Jun 2024 01:53:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718232715; cv=none; b=ZFGWnZgEUV00aMRekeUGZO4cojxAEjxvsT8LanKEfGtB0dsV1ycBhsVA5k6atwIQkQIKkym1ff1Jeijso58MkXmZ9uSA5deFN23grRcxrCJRtMHkBMSydBcmlFe0t+e4afjTVpMcz2zoUmuww4wIkJ+zX/Qkmh+GoS6sW4BTlDs=
+	t=1718243600; cv=none; b=g4E+HSpf60PRCUYPE+1FSpj7zpWBaiCWmAcp6AQN2PO1gG+st86L0yufA8cH3fwEZUi1OlX90244MxAosD30naCQNQyrznY4ew+MEkrOTeeTeLSaqhrLtpE79clsrMDEtgUM2LL3Ak9299VyZSwTrc9yELaGlqq0qYFsSXcazGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718232715; c=relaxed/simple;
-	bh=j+7WWTxB3DWN3W0J1QiPAAfjf0XykOCnJ1GyYJ77PE4=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=Ikd8fAhFqFClTbB1jTdo9HbEAt22bagoI9osBo1DczzaJ7RgYyMejZnjlNZcO2Dv3H1/3oCMn5SV0EzTrGWf6LIFvP+bTtp0oaJ53dDP/ob1E1xeLCL1DTYrNkS1EOHbqU48/yUo2Pt+DVmbSyZyz9OazwC0GTwOSHrOPNH429o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=nDgo1XLA; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="nDgo1XLA"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-6f8ec7e054dso244513b3a.2
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 15:51:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1718232712; x=1718837512; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=3WPet2QcfxN2s49jN9Tpg7q1vnD3NjCpgWIH0MVUM3I=;
-        b=nDgo1XLApsZPesHzPQmYuZAv05dxr5Sk5+diW5NTEn0cj2v46kdRcsDpmFRYErkmqr
-         kSEHHQpyVn/4MLxzE8g4DLuFr3cd3tyV4gIj5AUq1W9CK9Oz084/9fmtMnB1DdkXS/4/
-         70gGY4Eqj3c+RP40BjbA46h8KCqiJm+nYvj8vsu5fuhQ/2iSQlDjwfdBxCaYBr2jttMT
-         kANsdLxmNv91unJhM/rh22bAqsaLj9treooFfs0ydbYIyxqRogbGqBsEX4FGcFu4iVs0
-         6FJLZm+PPwfDQa0UlamYQfMoBlsEZQ3K5SUzCjjG6jlYxIuOBhZ4h6YTmYyalRsZVMR3
-         ZLDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718232712; x=1718837512;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3WPet2QcfxN2s49jN9Tpg7q1vnD3NjCpgWIH0MVUM3I=;
-        b=FQTdCbCQbKstq8XVyyQoTQoFzLYuqo0m7os29lrWtY1hitsc+RFcmnpb7DD3OcsY1r
-         9xx7qOgkCiqSYSr+qrvWIKz0tta247DfAqgT7PIqw4IaI5GjnuAtOyDPBnDdz1w/cucW
-         /s279kkYFM1ydXqj3LtincWRZFtZ+7iVJvZBO3KwgaYtyFtu+GozQVPRgxMTYAgAVL0Y
-         yFowiBwJhB2+s3FuZ11FhIOGtu5soJiWlAvQQXSnb99JWfUxBKLhMuYf/zHB7EKN1ZNR
-         4SAGQMSXPd3RXeZxvPnYZT9Kg1MzG0U8dIBRpfPuDiY86DvN2W5FlT/tR1xsWPM4yJC3
-         Ezmg==
-X-Gm-Message-State: AOJu0YyaGZm9rvFkfcUAZ3Fs9RF+AvvIRZn7eYG1t0Zm6J2j3rOEmqJ3
-	ZeI2km5qvo4j7FH+CDlDZ3e3J5vxI5i6Uq2tMOg7bGuilOQGLp2wFzbD6COgXzhEhd604b/rzCD
-	A
-X-Google-Smtp-Source: AGHT+IGo02t3kmhVivr16s14XF05FC2JpgSlJLOuwAxwrKp4/IE42tEe5XD+x1lsMdw0OVGSBD2r3w==
-X-Received: by 2002:aa7:8893:0:b0:705:ac54:2dd0 with SMTP id d2e1a72fcca58-705bce62858mr3997327b3a.18.1718232711920;
-        Wed, 12 Jun 2024 15:51:51 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ccb3bfc8sm73738b3a.123.2024.06.12.15.51.51
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Jun 2024 15:51:51 -0700 (PDT)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-	by dread.disaster.area with esmtp (Exim 4.96)
-	(envelope-from <dave@fromorbit.com>)
-	id 1sHWom-00Dq4E-2T
-	for linux-xfs@vger.kernel.org;
-	Thu, 13 Jun 2024 08:51:48 +1000
-Received: from dave by devoid.disaster.area with local (Exim 4.97)
-	(envelope-from <dave@devoid.disaster.area>)
-	id 1sHWom-0000000GjuQ-13Dv
-	for linux-xfs@vger.kernel.org;
-	Thu, 13 Jun 2024 08:51:48 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix unlink vs cluster buffer instantiation race
-Date: Thu, 13 Jun 2024 08:51:48 +1000
-Message-ID: <20240612225148.3989713-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.45.1
+	s=arc-20240116; t=1718243600; c=relaxed/simple;
+	bh=08mouqv6dBOKj5PdWDUTOovkDkaA1fRX+axPfgiUQWY=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YF+2jA1v4ofLLwhkL24Xy/zL/RM24YW/cq4vbJRnNhT940ecJSqO41NY9V8dMerYh+pjnye/v1orxq9w9Szg0+Sw+nw0s4Wie1ohoqHVmhuG8LjuMhAHSjNanqy07gZnlnGw8KZHdBw1ZPAb6Co2vaW66FdQE4RNNf9QG3CA4c0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4W051y6q1czPqTg;
+	Thu, 13 Jun 2024 09:49:42 +0800 (CST)
+Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id ABD9A18007E;
+	Thu, 13 Jun 2024 09:53:08 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Thu, 13 Jun
+ 2024 09:53:08 +0800
+Date: Thu, 13 Jun 2024 10:04:53 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: "Darrick J. Wong" <djwong@kernel.org>, John Garry
+	<john.g.garry@oracle.com>
+CC: <david@fromorbit.com>, <hch@lst.de>, <viro@zeniv.linux.org.uk>,
+	<brauner@kernel.org>, <jack@suse.cz>, <chandan.babu@oracle.com>,
+	<willy@infradead.org>, <axboe@kernel.dk>, <martin.petersen@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<tytso@mit.edu>, <jbongio@google.com>, <ojaswin@linux.ibm.com>,
+	<ritesh.list@gmail.com>, <mcgrof@kernel.org>, <p.raghav@samsung.com>,
+	<linux-xfs@vger.kernel.org>, <catherine.hoang@oracle.com>
+Subject: Re: [PATCH v3 08/21] xfs: Introduce FORCEALIGN inode flag
+Message-ID: <20240613020453.GA2926743@ceph-admin>
+References: <20240429174746.2132161-1-john.g.garry@oracle.com>
+ <20240429174746.2132161-9-john.g.garry@oracle.com>
+ <20240612021058.GA729527@ceph-admin>
+ <82269717-ab49-4a02-aaad-e25a01f15768@oracle.com>
+ <20240612154342.GC2764752@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20240612154342.GC2764752@frogsfrogsfrogs>
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jun 12, 2024 at 08:43:42AM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 12, 2024 at 07:55:31AM +0100, John Garry wrote:
+> > On 12/06/2024 03:10, Long Li wrote:
+> > > On Mon, Apr 29, 2024 at 05:47:33PM +0000, John Garry wrote:
+> > > > From: "Darrick J. Wong"<djwong@kernel.org>
+> > > > 
+> > > > Add a new inode flag to require that all file data extent mappings must
+> > > > be aligned (both the file offset range and the allocated space itself)
+> > > > to the extent size hint.  Having a separate COW extent size hint is no
+> > > > longer allowed.
+> > > > 
+> > > > The goal here is to enable sysadmins and users to mandate that all space
+> > > > mappings in a file must have a startoff/blockcount that are aligned to
+> > > > (say) a 2MB alignment and that the startblock/blockcount will follow the
+> > > > same alignment.
+> > > > 
+> > > > jpg: Enforce extsize is a power-of-2 and aligned with afgsize + stripe
+> > > >       alignment for forcealign
+> > > > Signed-off-by: "Darrick J. Wong"<djwong@kernel.org>
+> > > > Co-developed-by: John Garry<john.g.garry@oracle.com>
+> > > > Signed-off-by: John Garry<john.g.garry@oracle.com>
+> > > > ---
+> > > >   fs/xfs/libxfs/xfs_format.h    |  6 ++++-
+> > > >   fs/xfs/libxfs/xfs_inode_buf.c | 50 +++++++++++++++++++++++++++++++++++
+> > > >   fs/xfs/libxfs/xfs_inode_buf.h |  3 +++
+> > > >   fs/xfs/libxfs/xfs_sb.c        |  2 ++
+> > > >   fs/xfs/xfs_inode.c            | 12 +++++++++
+> > > >   fs/xfs/xfs_inode.h            |  2 +-
+> > > >   fs/xfs/xfs_ioctl.c            | 34 +++++++++++++++++++++++-
+> > > >   fs/xfs/xfs_mount.h            |  2 ++
+> > > >   fs/xfs/xfs_super.c            |  4 +++
+> > > >   include/uapi/linux/fs.h       |  2 ++
+> > > >   10 files changed, 114 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > > > index 2b2f9050fbfb..4dd295b047f8 100644
+> > > > --- a/fs/xfs/libxfs/xfs_format.h
+> > > > +++ b/fs/xfs/libxfs/xfs_format.h
+> > > > @@ -353,6 +353,7 @@ xfs_sb_has_compat_feature(
+> > > >   #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+> > > >   #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+> > > >   #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
+> > > > +#define XFS_SB_FEAT_RO_COMPAT_FORCEALIGN (1 << 30)	/* aligned file data extents */
+> > > Hi, John
+> > > 
+> > > You know I've been using and testing your atomic writes patch series recently,
+> > > and I'm particularly interested in the changes to the on-disk format. I noticed
+> > > that XFS_SB_FEAT_RO_COMPAT_FORCEALIGN uses bit 30 instead of bit 4, which would
+> > > be the next available bit in sequence.
+> > > 
+> > > I'm wondering if using bit 30 is just a temporary solution to avoid conflicts,
+> > > and if the plan is to eventually use bits sequentially, for example, using bit 4?
+> > > I'm looking forward to your explanation.
+> > 
+> > I really don't know. I'm looking through the history and it has been like
+> > that this the start of my source control records.
+> > 
+> > Maybe it was a copy-and-paste error from XFS_FEAT_FORCEALIGN, whose value
+> > has changed since.
+> > 
+> > Anyway, I'll ask a bit more internally, and I'll look to change to (1 << 4)
+> > if ok.
+> 
+> I tend to use upper bits for ondisk features that are still under
+> development so that (a) there won't be collisions with other features
+> getting merged and (b) after the feature I'm working on gets merged, any
+> old fs images in my zoo will no longer mount.
+> 
 
-Luis has been reporting an assert failure when freeing an inode
-cluster during inode inactivation for a while. The assert looks
-like:
-
- XFS: Assertion failed: bp->b_flags & XBF_DONE, file: fs/xfs/xfs_trans_buf.c, line: 241
- ------------[ cut here ]------------
- kernel BUG at fs/xfs/xfs_message.c:102!
- Oops: invalid opcode: 0000 [#1] PREEMPT SMP KASAN NOPTI
- CPU: 4 PID: 73 Comm: kworker/4:1 Not tainted 6.10.0-rc1 #4
- Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
- Workqueue: xfs-inodegc/loop5 xfs_inodegc_worker [xfs]
- RIP: 0010:assfail (fs/xfs/xfs_message.c:102) xfs
- RSP: 0018:ffff88810188f7f0 EFLAGS: 00010202
- RAX: 0000000000000000 RBX: ffff88816e748250 RCX: 1ffffffff844b0e7
- RDX: 0000000000000004 RSI: ffff88810188f558 RDI: ffffffffc2431fa0
- RBP: 1ffff11020311f01 R08: 0000000042431f9f R09: ffffed1020311e9b
- R10: ffff88810188f4df R11: ffffffffac725d70 R12: ffff88817a3f4000
- R13: ffff88812182f000 R14: ffff88810188f998 R15: ffffffffc2423f80
- FS:  0000000000000000(0000) GS:ffff8881c8400000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 000055fe9d0f109c CR3: 000000014426c002 CR4: 0000000000770ef0
- DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
- DR3: 0000000000000000 DR6: 00000000fffe07f0 DR7: 0000000000000400
- PKRU: 55555554
- Call Trace:
-  <TASK>
- xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:241 (discriminator 1)) xfs
- xfs_imap_to_bp (fs/xfs/xfs_trans.h:210 fs/xfs/libxfs/xfs_inode_buf.c:138) xfs
- xfs_inode_item_precommit (fs/xfs/xfs_inode_item.c:145) xfs
- xfs_trans_run_precommits (fs/xfs/xfs_trans.c:931) xfs
- __xfs_trans_commit (fs/xfs/xfs_trans.c:966) xfs
- xfs_inactive_ifree (fs/xfs/xfs_inode.c:1811) xfs
- xfs_inactive (fs/xfs/xfs_inode.c:2013) xfs
- xfs_inodegc_worker (fs/xfs/xfs_icache.c:1841 fs/xfs/xfs_icache.c:1886) xfs
- process_one_work (kernel/workqueue.c:3231)
- worker_thread (kernel/workqueue.c:3306 (discriminator 2) kernel/workqueue.c:3393 (discriminator 2))
- kthread (kernel/kthread.c:389)
- ret_from_fork (arch/x86/kernel/process.c:147)
- ret_from_fork_asm (arch/x86/entry/entry_64.S:257)
-  </TASK>
-
-And occurs when the the inode precommit handlers is attempt to look
-up the inode cluster buffer to attach the inode for writeback.
-
-The trail of logic that I can reconstruct is as follows.
-
-	1. the inode is clean when inodegc runs, so it is not
-	   attached to a cluster buffer when precommit runs.
-
-	2. #1 implies the inode cluster buffer may be clean and not
-	   pinned by dirty inodes when inodegc runs.
-
-	3. #2 implies that the inode cluster buffer can be reclaimed
-	   by memory pressure at any time.
-
-	4. The assert failure implies that the cluster buffer was
-	   attached to the transaction, but not marked done. It had
-	   been accessed earlier in the transaction, but not marked
-	   done.
-
-	5. #4 implies the cluster buffer has been invalidated (i.e.
-	   marked stale).
-
-	6. #5 implies that the inode cluster buffer was instantiated
-	   uninitialised in the transaction in xfs_ifree_cluster(),
-	   which only instantiates the buffers to invalidate them
-	   and never marks them as done.
-
-Given factors 1-3, this issue is highly dependent on timing and
-environmental factors. Hence the issue can be very difficult to
-reproduce in some situations, but highly reliable in others. Luis
-has an environment where it can be reproduced easily by g/531 but,
-OTOH, I've reproduced it only once in ~2000 cycles of g/531.
-
-I think the fix is to have xfs_ifree_cluster() set the XBF_DONE flag
-on the cluster buffers, even though they may not be initialised. The
-reasons why I think this is safe are:
-
-	1. A buffer cache lookup hit on a XBF_STALE buffer will
-	   clear the XBF_DONE flag. Hence all future users of the
-	   buffer know they have to re-initialise the contents
-	   before use and mark it done themselves.
-
-	2. xfs_trans_binval() sets the XFS_BLI_STALE flag, which
-	   means the buffer remains locked until the journal commit
-	   completes and the buffer is unpinned. Hence once marked
-	   XBF_STALE/XFS_BLI_STALE by xfs_ifree_cluster(), the only
-	   context that can access the freed buffer is the currently
-	   running transaction.
-
-	3. #2 implies that future buffer lookups in the currently
-	   running transaction will hit the transaction match code
-	   and not the buffer cache. Hence XBF_STALE and
-	   XFS_BLI_STALE will not be cleared unless the transaction
-	   initialises and logs the buffer with valid contents
-	   again. At which point, the buffer will be marked marked
-	   XBF_DONE again, so having XBF_DONE already set on the
-	   stale buffer is a moot point.
-
-	4. #2 also implies that any concurrent access to that
-	   cluster buffer will block waiting on the buffer lock
-	   until the inode cluster has been fully freed and is no
-	   longer an active inode cluster buffer.
-
-	5. #4 + #1 means that any future user of the disk range of
-	   that buffer will always see the range of disk blocks
-	   covered by the cluster buffer as not done, and hence must
-	   initialise the contents themselves.
-
-	6. Setting XBF_DONE in xfs_ifree_cluster() then means the
-	   unlinked inode precommit code will see a XBF_DONE buffer
-	   from the transaction match as it expects. It can then
-	   attach the stale but newly dirtied inode to the stale
-	   but newly dirtied cluster buffer without unexpected
-	   failures. The stale buffer will then sail through the
-	   journal and do the right thing with the attached stale
-	   inode during unpin.
-
-Hence the fix is just one line of extra code. The explanation of
-why we have to set XBF_DONE in xfs_ifree_cluster, OTOH, is long and
-complex....
-
-Fixes: 82842fee6e59 ("xfs: fix AGF vs inode cluster buffer deadlock")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Tested-by: Luis Chamberlain <mcgrof@kernel.org>
----
- fs/xfs/xfs_inode.c | 23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 58fb7a5062e1..f36091e1e7f5 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2548,11 +2548,26 @@ xfs_ifree_cluster(
- 		 * This buffer may not have been correctly initialised as we
- 		 * didn't read it from disk. That's not important because we are
- 		 * only using to mark the buffer as stale in the log, and to
--		 * attach stale cached inodes on it. That means it will never be
--		 * dispatched for IO. If it is, we want to know about it, and we
--		 * want it to fail. We can acheive this by adding a write
--		 * verifier to the buffer.
-+		 * attach stale cached inodes on it.
-+		 *
-+		 * For the inode that triggered the cluster freeing, this
-+		 * attachment may occur in xfs_inode_item_precommit() after we
-+		 * have marked this buffer stale.  If this buffer was not in
-+		 * memory before xfs_ifree_cluster() started, it will not be
-+		 * marked XBF_DONE and this will cause problems later in
-+		 * xfs_inode_item_precommit() when we trip over a (stale, !done)
-+		 * buffer to attached to the transaction.
-+		 *
-+		 * Hence we have to mark the buffer as XFS_DONE here. This is
-+		 * safe because we are also marking the buffer as XBF_STALE and
-+		 * XFS_BLI_STALE. That means it will never be dispatched for
-+		 * IO and it won't be unlocked until the cluster freeing has
-+		 * been committed to the journal and the buffer unpinned. If it
-+		 * is written, we want to know about it, and we want it to
-+		 * fail. We can acheive this by adding a write verifier to the
-+		 * buffer.
- 		 */
-+		bp->b_flags |= XBF_DONE;
- 		bp->b_ops = &xfs_inode_buf_ops;
- 
- 		/*
--- 
-2.45.1
-
+I get it, thank you very much for your response.
