@@ -1,382 +1,434 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3130513F44A;
-	Thu, 13 Jun 2024 11:08:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718276933; cv=none; b=Q3+m6DBbOyjOoxtIAtQqj4sWqpv1ievqrO/m919jWborc3n1TK//MRSGuKpNgyZP4SRrq0H668HiNfXIQatVnbbiwZnbR8cBG7UUZJv5DP15SfnMMlHIdWy+KAS+VQ7VHVyXAC6mnsnpd1Mqc900m29ILqnIkycFlsrfGFI1tlU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718276933; c=relaxed/simple;
-	bh=nFKjSa+qoAdp6+2qGmT1+JMqYxAJPvmA+E5gTIr0yhA=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=DyTyBcPy1WwlRqYRGYZFl4uKUasltLq0t4s2MahKNEuZMAAyz62VspUHu756hnSIih5rOPSToLrYOn8gdr4W9BPiX3IMXLHtzSwjSBR0lU53OBsjRO2YmoXDQUsM3kXC1qcYFALzr57lRvi4F8ff5rNTeoOLAmr2iHgOAetxkFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eJ5aMBmU; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A77DB142649;
+	Thu, 13 Jun 2024 11:14:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1718277267; cv=fail; b=jaIYYRJ4WfBb0fOo6JrLFI7ks/sq187GKzsTJHhCKiBMiqcGNRF4goiNv5uvxNs1h4R+N6bKWkdrGywumE5uN/IDPLwMDbjEL575hRuD8FqHZRGQxV01jPoex15QbSa6+a904KXKPopgvYMrB3ZqN/Oppzz5w/v8ruU/Sl0dhl8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1718277267; c=relaxed/simple;
+	bh=LhYS0p0hoKPnLrDZD/fIOIk1LUy84b9T9iytlklonts=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=mPWy0V3weFvhm9TgNjqDJyIVurOEzEkFxmI/D2ZyHbUm8YdEiQgInXH2QCXrOC1EVq6MbnTUEf6TWQUWLObmjMB1ZHqYuxY5EwF/8foaMd1vM46jwlRfzLuMR3w8Lozw6H7MwZ/ZVteKAgId0h8E32hAMQbUhJfJp3GU53GlBUE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=lLOYgMW5; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=njTYj5jK; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eJ5aMBmU"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-705c1220a52so862275b3a.1;
-        Thu, 13 Jun 2024 04:08:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lLOYgMW5";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="njTYj5jK"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45D7tQwv017478;
+	Thu, 13 Jun 2024 11:13:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=ftJiQrMllmcbn9kxivav4B6Je9boWQ1vWAeJ5Ji4tmI=; b=
+	lLOYgMW5Fp6+YBtrLcoTCUSh84w5b696XBrF90aaIqEa8VSEPPSbCE4rDOmUOW96
+	dxaQJ16GDkU1Me5l0Z0syCsuS4BQ6eqYcercFC0OK+g/Yk7r2DQDohhtJUJ69Cg7
+	Is03yYZhbvsP/72dW1G9F5+zB/v1j9G+XnwhyEHJuqtSoHkxoXMZQPSyrFj8AQw7
+	7KYrjDmcElMuG4X7C3IfIKGIwvM3UtmQeNRSwLUzbFqEuSrC8Yzc3AZqDD40rTx1
+	DojlFNsSsy2N5IxMvBt/Hh/onaFLvzSJTau3DnEhiMSa2goxf2K0Mu2+TEOxwLrw
+	aC01XegWUQ6CmxL2wXwMpQ==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ymhaj9abu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 13 Jun 2024 11:13:54 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 45DA53CR020035;
+	Thu, 13 Jun 2024 11:13:54 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ync9108aa-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 13 Jun 2024 11:13:54 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HSewSqzebT8ItMdzWJZtWkFIvM6T1M3ik3qDdy65/LEt1i+MAMDV2V0Fj8XaPEZlRIQV4sIRWYSfFRxeGJZ8bK+29GKxyuB5BEawhvy8YDWIDR0wMmAijkrh++eoh5QuaexYgRHK9EBemAO4cyZD2e+QNueN5h75W8IfMOch2EBVAZEVliXpvf+y+Ru2LeGzE+2lHSSTgQSA25lVetil93Civfwb1lxuBQOZmDneGTv7YW4RPWzLLL/VU1/5GayRiF3SpRNaxly8x+I5h79aktEzSLDyKc3o528OfBZCDCxIxIghGxsnHC4tEVXsk5qb5TR8dsZD2dGancqO144gqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ftJiQrMllmcbn9kxivav4B6Je9boWQ1vWAeJ5Ji4tmI=;
+ b=nl6KnAYLNrh5f6CcQCNnSDiixJOkgzpER4EqE/AZvUqWc8leQy+xNQ0MJ6k3ppnjXTdOfNoKuQvBh6ooA9o01sYKN1KE/Yvv/z7dPpNiuCyzk8BexmhPshMJm/PdOLmeb+6tbViGMPAWxlLWSAOHImGkmLFmnryAH8xk8Qt12sd1VGGjY3ljpsbMGZfotKxQB1x4Gwz+mqAonQRBLhTFdxPvQoZUlt7JuceU3lp331Y+HMfo9ORw7Nhl+8VFbuYKR4TzdDlVYzItorqZsni4a1rml9/i4Vr7LLZFVoB2TIgd0I/o64dKTZQ7AjlFEhpOlQvWa0255jPHFNOEmWSfGg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718276931; x=1718881731; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=jJasjnMgrYZ7K8WEVnoCc4Z6TujXkc1RvD922MbCs8E=;
-        b=eJ5aMBmUgMWR3rwwQQ2S6moKRZYSyVrgnRZWu+3J/Pef0JpEtpVgFbZGxH39oYinha
-         W/boil00d2U+mwfX4/Wu9uwAu8AWLYTYzHpjup9ldJeLKy28EoSPN2CCjI0SC+mVgTn8
-         VnoXO/nkSO85K0booG0+uICOjguEjtjRfNfI7S0U7NhlDTdZKwovEYW35xdFCKFsbRkn
-         m53IaR0+QIu7WdpX2cmMFElUprAvrBTILMvGpHo4Vx7XcEI/+qnaFzMtDnq5ljSuXpcu
-         SpfjRZl/yy9fIGpPjwSQ2vyntJq/2yQfKtjoQ5j2pWFTSR1bxJRfT8rWeCyDoUuTvwZ0
-         +h4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718276931; x=1718881731;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jJasjnMgrYZ7K8WEVnoCc4Z6TujXkc1RvD922MbCs8E=;
-        b=ouMlaeDHJxwVb9QHyWLy11PSVqbpiuUba1MHIEJOnVTgZMbLSn0/JwUrLsqZPEf7qv
-         qjuXNcstsMvFbhqm5lfkNlSutX3FWKnSw1V81zkVvHAcBhjykeM0x1jPUTB135npP/9d
-         U2ihJeVKp/qbA0trimbqcIb4zJmRBusHpWpzZ8E7GYa0ZOlPrHtH/O55XYbSLSSlJE3x
-         ZJVyj/23j6oCONwYsC3a/dBHnCSA4SHJdzQensrjXfacBe1tCAmb+kranmy7+PL0XZji
-         DtbCgR4RTZguoeIRkWnIViK1cnVY3ziNyA4m4BFwlK4N+FzihSJqpK3q+06sjRiXaoOV
-         Bkow==
-X-Forwarded-Encrypted: i=1; AJvYcCUmZphc88IOHsFHfZ9FxCOZFFAS5fU15j9z2oy1/QgMFsRHLxwySeOtvP2OnVw3ygxbyOrmHkBkBKUTrvSHVXn9LDvTvTF2irc9K25TvQC/UlznjPBY1NwZHaQwfiuNQsiXDU3brVPK2w==
-X-Gm-Message-State: AOJu0YxK/A513VYmzNz9UmGnRO6BZkTj6HUVvIymyqcXnzJCEPSm6JVf
-	l8aB+lIwTxKPSKDpVE8yVsdkTfFDqExLyBQoLg71yMYm/B2RNI95
-X-Google-Smtp-Source: AGHT+IGGbR6SG1aOBIrjbi07FeTGKyiVAASfm0L070OqrFw7PnycPJYdYZ1rvjnKrRTr6RT9Vgt/ag==
-X-Received: by 2002:a05:6a21:9988:b0:1b4:82db:26ef with SMTP id adf61e73a8af0-1b8a9ba6deemr5279989637.24.1718276930833;
-        Thu, 13 Jun 2024 04:08:50 -0700 (PDT)
-Received: from dw-tp ([171.76.81.52])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855e72203sm11242305ad.98.2024.06.13.04.08.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Jun 2024 04:08:50 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ftJiQrMllmcbn9kxivav4B6Je9boWQ1vWAeJ5Ji4tmI=;
+ b=njTYj5jKE3Frs/JXqvFlLHGFb0BSjxcozDNUNyIgXghuAsKgzy70gdnjnBjS9evlDmUy2AJY46p3WluJTj0h/GCNEa9gGtTBlx8H5hrOWCT46KW6ylG7MSVE9RCi0DOrGPStfLUaIpRz+DqAGAOJkyK+1pEYd3THk+Xdx/0Xyfo=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CO1PR10MB4593.namprd10.prod.outlook.com (2603:10b6:303:91::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.37; Thu, 13 Jun
+ 2024 11:13:51 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7633.036; Thu, 13 Jun 2024
+ 11:13:51 +0000
+Message-ID: <a7caf7f2-837d-4cfd-afd0-123a99f6fee5@oracle.com>
+Date: Thu, 13 Jun 2024 12:13:45 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 03/22] xfs: Use extent size granularity for
+ iomap->io_block_size
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@infradead.org>, Christian Brauner <brauner@kernel.org>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, Jan Kara <jack@suse.cz>, Luis Chamberlain <mcgrof@kernel.org>
-Subject: Re: [PATCH] Documentation: document the design of iomap and how to port
-In-Reply-To: <20240608001707.GD52973@frogsfrogsfrogs>
-Date: Wed, 12 Jun 2024 18:54:02 +0530
-Message-ID: <878qza2t1p.fsf@gmail.com>
-References: <20240608001707.GD52973@frogsfrogsfrogs>
+Cc: axboe@kernel.dk, tytso@mit.edu, dchinner@redhat.com,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.com,
+        chandan.babu@oracle.com, hch@lst.de, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org,
+        gfs2@lists.linux.dev, linux-xfs@vger.kernel.org,
+        catherine.hoang@oracle.com, ritesh.list@gmail.com, mcgrof@kernel.org,
+        mikulas@artax.karlin.mff.cuni.cz, agruenba@redhat.com,
+        miklos@szeredi.hu, martin.petersen@oracle.com
+References: <20240607143919.2622319-1-john.g.garry@oracle.com>
+ <20240607143919.2622319-4-john.g.garry@oracle.com>
+ <20240612214729.GL2764752@frogsfrogsfrogs>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240612214729.GL2764752@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO2P265CA0469.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:a2::25) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CO1PR10MB4593:EE_
+X-MS-Office365-Filtering-Correlation-Id: d0dc1245-8032-4102-f242-08dc8b99e7e0
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230034|376008|1800799018|366010|7416008;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?V09MYzJoVDhpYkVlM2ZUbTR0bEM0Q1FIRElVblgyNjcyd3VaalBLWVVKTlZh?=
+ =?utf-8?B?UnBZMkpOUzVCNUh1bFJLRXNiN0NVSHhETmh4eUZseElvZ0RIcmsyWHhsQm90?=
+ =?utf-8?B?NDZFeVZXTytYUEQ1THZSVkJ2VnJGUVpiZWlBQjc2YzRDY0x1cU5PTm0vdzFW?=
+ =?utf-8?B?aytVa0hZc0VnQlF5QzVQYWhRMVRxSVk4aVl2TTZsdkxvVC9YNzJmc1NlM3Nl?=
+ =?utf-8?B?MnVXU3dtajhaRlI5bythMjZ5OU05dWEzU25aVlJENXNCVUNxa08vaCszUklY?=
+ =?utf-8?B?YUV4QmhjL0lUdzd0TldRcVpENytTdHIxdjlMY3gvdDFXa25IWGpVSktDanZ0?=
+ =?utf-8?B?ODZCaEZMS3RZcHNGVVYvV3BMT0NGd1ZrZm9IWXFiT0hIc2crU3hOQVZiMnMv?=
+ =?utf-8?B?Vk5VU0xaOHU4aWxhMmVHUTVXVER5L0RtL1R6bElKMmRINW55aThrN2Zha1pi?=
+ =?utf-8?B?WEdwcFRvbzloK3lFTGRYa0R6U211NjZXeTAyU1NjYmRHRGJqSUhBUmQxcWlr?=
+ =?utf-8?B?bE44SDNWZjVrNmIzNEdDVzIrL3VSQUIxbzFHc3BIRXU4c3luV2Q2Unl3cTRE?=
+ =?utf-8?B?dm9rUVMvREJBVjRSTDRTNW1WejVpOEZGREcrbnFScFYzK3JRbmRiRHFpQXNX?=
+ =?utf-8?B?dUxpWDlTbk5iaXJvUFFENVF6WW9rZ0lDeWlXdjNPWXlMZzNtaVJjbWhQTVNR?=
+ =?utf-8?B?dm1JOUN4WUtEZzlCK1BlOGc0OUc3WkdhMFUwd2FKbmxxY2ZaR2dQK0FyUXp0?=
+ =?utf-8?B?ejVCMXhMRGY2VFI2VW5hbWRmT2Nrc3JwK3VHVC9ibS9ISnVhNUhPeUlJUnIx?=
+ =?utf-8?B?T2lWc1RlMVMySjc4OFZib3dTbHlhUksrdDJ2QzNZbm5wZWh3cTRsMFZqNlZD?=
+ =?utf-8?B?ZHFraFRSZnExTlZRQkkzNmE5OXpTN08ydCt6S0wzTnozS1B1b0ZBRU5SM3gw?=
+ =?utf-8?B?aTlBRlZWZlRYQlpvUU4vUGV4U1JmSTBXY3pHREh6SDdoS1lPN1hSNTA4TWZj?=
+ =?utf-8?B?cEl6RzNFeFpWR0hIbUlnWFVWOTBuVmJPQ3haMFRGa2VlcmNDYklhVE1pVk4x?=
+ =?utf-8?B?TERXZzdCTTlkekVHS0JlNm96VExicTdVSDdhcGlWdHlNdmxlK3VyZVFmVlM5?=
+ =?utf-8?B?ZU1rcSs5N3F1UVUzMGtYS2NqOTJZaXNKam8veG13bVhxalVPemtrVTRFU3dF?=
+ =?utf-8?B?QWdQb1ZyLzEvWjA0c0h2UFVnaHR3TTV5ZENjdWpWUnZOTW5vbVNuby9mdTRS?=
+ =?utf-8?B?UTJMaXN2V0dOUnJyQXpuVm9lTUY3V3I2b3V0QnpMZVNST2pRdWJEMEpFVFJS?=
+ =?utf-8?B?dWdFWmhBYXBXMDRYYmNYZEtiTXlBUW1JbjArNkQrbWV6TEtIL1JuanU0NFA3?=
+ =?utf-8?B?TGNoRnMrN3JNY0w4OVpDcm9HdXNhQ0JUTGd4WjlDVjVDNjVUeGZXbG1hUjhT?=
+ =?utf-8?B?WUs0UmdTNmczdmxQTFk0VTkzbURYemgxa1l2Y1A4TFJvblduY2htZzBLVU5w?=
+ =?utf-8?B?Si9kYzVMa2RLTnRYOWUrY3pmUEpwVGVKRjdBdW5NbXQzWWwzVkxyWnNram9w?=
+ =?utf-8?B?bGttQVlveHd1MUJtN2dUVERrb3FIRVBpRzArVTFiU0JzUExISVRoWjY1QmN0?=
+ =?utf-8?B?MFRsOGlWYlN3bTNSUXFIcHhFV1p6OWtvTFAzMy9QVGt5amxseitBN2o1clc1?=
+ =?utf-8?B?RmdtYUV6SEt2K1dqdnBzWHkrMm1UcEFYSTVnd3VLQnlmQVp2NXF6Mmhtb2ZI?=
+ =?utf-8?Q?c3+R02zaXDp7uh5il000vsL6j+fgNdwI0u0aUAD?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230034)(376008)(1800799018)(366010)(7416008);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?eEo4ZUlHeEpKU2F4dHZ0TEFmeDFxM1gzTkRUVXZYRkVOLyt4dkxUejE2cUdk?=
+ =?utf-8?B?S21wYk81WG8xb0tGTFJzTmhkTWt1R2tLdnIrSFVmQ1BjRk5UOU5TZE95bGYv?=
+ =?utf-8?B?bnljWnl3ZVkzRjlBUFZqcjZlUy9OUERQZFJwSzRoMWF6TmcrWHVLeEVaeUV4?=
+ =?utf-8?B?Mjh4SXJubGl5WEVrUHc4UFNXdzU1VVpITm1qZGF3OVl6cjZxWWxwYkc1S3NG?=
+ =?utf-8?B?YnVTWkJOYW9FazVvbXVkU3pmUFh6ZjRkWU1nZWpMSVVaWWJlR3N5OG84REhT?=
+ =?utf-8?B?b0Ewa0tKWGU2Qm9COE9mcEY4ZWowelM1Q3NRVm9CYXdFSTZZaVl3T0t3SW5t?=
+ =?utf-8?B?TngvZmY0ZVRSZUF6NzRnWlRoTHFqSmV4b0lucXJ2aFN6eWNEVVdqTk1Lb0Fr?=
+ =?utf-8?B?N2M2UGRWRUpvbllGSzNQWTJwRGw5ZTNCYjJCemlmRnhRR0dBYVBGTnhRQS9h?=
+ =?utf-8?B?N2lLRTZyT0pBL3JmWGZaTnVOMXZ6amZPYVhWUUJCVUt5YlBuTWVEbWtxZVJ4?=
+ =?utf-8?B?T2J1WWpEWE9qYUROWWlNMGFZcmVVWTFrZmt3REtaUSt1dW56bGxaVHZjWWdw?=
+ =?utf-8?B?Wk81QzBZbEpYM3ZocVJBV2s1Z2ErbTZudlNQZU8wNGpFMm82NUJsKzRvQnp2?=
+ =?utf-8?B?RnFpbmEyeWxjUGRGMzV4SHFzY2FkeU14cWU3MWlSL1pOc1VjNGlzQWRVQ1hC?=
+ =?utf-8?B?Zk9VUmEwVmRQMDkyU3MyQ1ZkTHNiZUpKYmdRUERnOUNMYlB4ZTRRWnVicTZQ?=
+ =?utf-8?B?OWt6eFB2bDZjak5VSWcxWjE3Mm5Cckd4N2pKOWZFQXFuWHE2TjRZRzF6Titi?=
+ =?utf-8?B?SnFnZzNkTzhURlR3Z01QNkhMQ2xNOTdud0xvV3dGeGZ5cDFsbmZMSUtRMFhY?=
+ =?utf-8?B?cXNuQi93aVcyR0x2NE1hNXArMmFObHpuUytCbU53V0d5dFY1ZTFCcEhkeTc3?=
+ =?utf-8?B?N2l4cTNEVlJpS3FkMlM5ZXhld0Z4MzlvckdaU1Y1RFJPalBEU0RrcFlJcHVP?=
+ =?utf-8?B?RGZOMU9XdGFMTk5CalR3WmlQbGxWNFh5ZURSTXhGRU8ycTFUdDhtWXprUTdC?=
+ =?utf-8?B?eVp5eFBPaks5SVJxNWtZbmt2QVE2aFM3VjlKYm4yZzM0cElBWXh0ZlgzRElU?=
+ =?utf-8?B?QVc3TEVQak42RHpKVnpOVXZ4MSs3RnJ2UkczU0Y0OGo1d2t4MDEwcWlpKzNH?=
+ =?utf-8?B?THg1V2F3SXYwbXRKa3JNdnQ2NUhCQUsyN0NIK2c4MGpxM2dqd3V2dHlpTEZM?=
+ =?utf-8?B?VlljU3FBTzRuWHh5bEJGQ2psQjF2TzNVTC85cFpCVEw5aDRSVU5waklHN04x?=
+ =?utf-8?B?SFpZOElJUWpCdjZlUlJhUGVLbTdXS1RIeVV2VUUzY2dqcVhqN0hlU29nai85?=
+ =?utf-8?B?b0hLYWk4NWNOcHN2NjNGZDRvWmVTQ1FmQ3VYUEcvdjlQODdzTUxjRkxxNHJh?=
+ =?utf-8?B?eWw1SHNIL0NMZXZLMHZzUzBkbTVCQ3ExQnVjem9mb2JhM0NMdmQzb3l4eEI0?=
+ =?utf-8?B?bGNvMTAxTVRFV2U4RXlISmVVYUs2bENZU21uN0dwSXdVMU1zMUd0L29HMzg3?=
+ =?utf-8?B?ZFlOZk1iTC9JNWpkMXpkeGlSakEwMUNxcnkxQU4zVXVFOFVRamhsTWlPVkdD?=
+ =?utf-8?B?L1lKdzhXam5PUFVFWXJvVG16ZldaYTZQcFI3VVQ2dGpwUjZEdGhZRWVTSGVD?=
+ =?utf-8?B?dmtFWGJzVldwajJUMGJHdTRSaXVlRFNodUcrUDg4ZElhZnlMS1RoNDJGanlW?=
+ =?utf-8?B?QmF0bklFaGRWdDlnTm1obHlIZElLSFFsaHRuNTFLRFNwY2xmSFpqQm1xVE5x?=
+ =?utf-8?B?S09EVTMvRnlUL1JaZHp4V1V0MkdBWGl5cHgxbVdxVVMwZjl6Q2tTa0FFUWdR?=
+ =?utf-8?B?bDRtWi9Vb1J6ODI2RXAyejFOa2IxLzFHNW5TdHh6NXVUaks1ckpaV1dySVV6?=
+ =?utf-8?B?MHJrNGtpMFRDS0wyeExSb29iczEzOG52blVmaWxWeFlBU1lsUGNsaVFXSXFE?=
+ =?utf-8?B?YjdZZDhENWhha2taNFovMnFuYmRjQ2FVYWw3MUw4U0dKV3JZZFNYSWMwRWRH?=
+ =?utf-8?B?Yko4b0s1QlBVdGV4bEhPQ3RyaDNraGV2S0daclJEVy9FUk1EU0xvWVpNODVK?=
+ =?utf-8?B?a0ZUdEVQQXFlbklsbzBuczJLUE5ML2NvRDdyN0QxaTRPZVg5YzcrK2JsM0U4?=
+ =?utf-8?B?VFE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	0/qrisWI/NDarmQWFmDWQYbWDEc4RiO3Ye+NBzQYtgixAb0IBjHvgiqg20yLcjH4zq6+UhAM20RYuVvkuYqocTbfpnns04fOxERLs2VN4cZ7kZJD6rIY4vAC6L/I3cIgObtL3f5vh2+pWMgCvMredYhb6K+ZWogszOZ3U76J3/1RYy2Acnomc9RKb69UC0bwMWflxABfQMB6g1fJU6C7n7mJeGreOn/7dqJuxebJncJo4ksLAyb2g8Q9E60sgsmTgxGKencP9AxzOL4qTsERdAiSAAYQP8leE3W5Zq6NBg2J10R4W97IG3R3ClBVT4uNbjPTjW1S6X4JZQ0sFSe2RGJvCKWA/jt00DDlbGjo1vYwadEZaD26t0/hUV/2WWcPVZrdSOsBhxY58WeN3qRPymIRR4JWF3O3gxUNoh/o+FujaC0CFLB5OmTeIxpbg+J69kwEbjjQV3aYdVkKY5BZI8z0UcEhUJe454q4KBynZPTC6GS0zO/OIdbqmIG3hgEFdo0t4CUyoKsKOtEVSNji07I3dStN0pLimixMxna2a6MjM6yAiWOJmNu2nvgTT++caLBFSfUt7TPJlkBzkS3+5q3ykf9akEyb/Uj1X2suJo4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d0dc1245-8032-4102-f242-08dc8b99e7e0
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jun 2024 11:13:51.8326
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Rv5/2oJbva/50Bi5HFdAYAR5ybmdn1FUIljEH3caXEj+Dx38cWoSXGh2rzanb5v2HlPm9S4U/Zkh9jZtf9st7g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4593
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-13_03,2024-06-13_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ bulkscore=0 malwarescore=0 spamscore=0 phishscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2405010000 definitions=main-2406130081
+X-Proofpoint-GUID: JyFrl4dpQG0o0TFf4LlRANQtmzxKdCbV
+X-Proofpoint-ORIG-GUID: JyFrl4dpQG0o0TFf4LlRANQtmzxKdCbV
 
+On 12/06/2024 22:47, Darrick J. Wong wrote:
+> On Fri, Jun 07, 2024 at 02:39:00PM +0000, John Garry wrote:
+>> Currently iomap->io_block_size is set to the i_blocksize() value for the
+>> inode.
+>>
+>> Expand the sub-fs block size zeroing to now cover RT extents, by calling
+>> setting iomap->io_block_size as xfs_inode_alloc_unitsize().
+>>
+>> In xfs_iomap_write_unwritten(), update the unwritten range fsb to cover
+>> this extent granularity.
+>>
+>> In xfs_file_dio_write(), handle a write which is not aligned to extent
+>> size granularity as unaligned. Since the extent size granularity need not
+>> be a power-of-2, handle this also.
+>>
+>> Signed-off-by: John Garry <john.g.garry@oracle.com>
+>> ---
+>>   fs/xfs/xfs_file.c  | 24 +++++++++++++++++++-----
+>>   fs/xfs/xfs_inode.c | 17 +++++++++++------
+>>   fs/xfs/xfs_inode.h |  1 +
+>>   fs/xfs/xfs_iomap.c |  8 +++++++-
+>>   4 files changed, 38 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index b240ea5241dc..24fe3c2e03da 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -601,7 +601,7 @@ xfs_file_dio_write_aligned(
+>>   }
+>>   
+>>   /*
+>> - * Handle block unaligned direct I/O writes
+>> + * Handle unaligned direct IO writes.
+>>    *
+>>    * In most cases direct I/O writes will be done holding IOLOCK_SHARED, allowing
+>>    * them to be done in parallel with reads and other direct I/O writes.  However,
+>> @@ -630,9 +630,9 @@ xfs_file_dio_write_unaligned(
+>>   	ssize_t			ret;
+>>   
+>>   	/*
+>> -	 * Extending writes need exclusivity because of the sub-block zeroing
+>> -	 * that the DIO code always does for partial tail blocks beyond EOF, so
+>> -	 * don't even bother trying the fast path in this case.
+>> +	 * Extending writes need exclusivity because of the sub-block/extent
+>> +	 * zeroing that the DIO code always does for partial tail blocks
+>> +	 * beyond EOF, so don't even bother trying the fast path in this case.
+> 
+> Hummm.  So let's say the fsblock size is 4k, the rt extent size is 16k,
+> and you want to write bytes 8192-12287 of a file.  Currently we'd use
+> xfs_file_dio_write_aligned for that, but now we'd use
+> xfs_file_dio_write_unaligned?  Even though we don't need zeroing or any
+> of that stuff?
 
-<snip>
-> +Direct I/O
-> +----------
-> +
-> +In Linux, direct I/O is defined as file I/O that is issued directly to
-> +storage, bypassing the pagecache.
-> +
-> +The ``iomap_dio_rw`` function implements O_DIRECT (direct I/O) reads and
-> +writes for files.
-> +An optional ``ops`` parameter can be passed to change the behavior of
-> +direct I/O.
+Right, this is something which I mentioned in response to the previous 
+patch.
 
-Did you mean "dops" iomap_dio_ops (instead of ops)?
+I doubt whether we should only do this for atomic writes inodes, or also 
+RT and forcealign-only inodes.
 
-ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-		unsigned int dio_flags, void *private, size_t done_before);
+I got the impression from Dave in review of the previous version of this 
+series that it should include RT and forcealign-only.
 
-1. Also can you please explain what you meant by "change the behavior of
-direct-io"?
+> 
+>>   	 */
+>>   	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
+>>   		if (iocb->ki_flags & IOCB_NOWAIT)
+>> @@ -698,11 +698,25 @@ xfs_file_dio_write(
+>>   	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+>>   	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
+>>   	size_t			count = iov_iter_count(from);
+>> +	bool			unaligned;
+>> +	u64			unitsize;
+>>   
+>>   	/* direct I/O must be aligned to device logical sector size */
+>>   	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+>>   		return -EINVAL;
+>> -	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
+>> +
+>> +	unitsize = xfs_inode_alloc_unitsize(ip);
+>> +	if (!is_power_of_2(unitsize)) {
+>> +		if (isaligned_64(iocb->ki_pos, unitsize) &&
+>> +		    isaligned_64(count, unitsize))
+>> +			unaligned = false;
+>> +		else
+>> +			unaligned = true;
+>> +	} else {
+>> +		unaligned = (iocb->ki_pos | count) & (unitsize - 1);
+>> +	}
+> 
+> Didn't I already write this?
 
-2. Do you think we should add the function declaration of
-iomap_dio_rw() here, given it has so many arguments?
+It's from xfs_is_falloc_aligned(). Let's reuse that fully here. I did 
+look at doing that before, though...
 
+> 
+>> +	if (unaligned)
+> 
+> 	if (!xfs_is_falloc_aligned(ip, iocb->ki_pos, count))
+> 
+>>   		return xfs_file_dio_write_unaligned(ip, iocb, from);
+>>   	return xfs_file_dio_write_aligned(ip, iocb, from);
+>>   }
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index 58fb7a5062e1..93ad442f399b 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -4264,15 +4264,20 @@ xfs_break_layouts(
+>>   	return error;
+>>   }
+>>   
+>> -/* Returns the size of fundamental allocation unit for a file, in bytes. */
+> 
+> Don't delete the comment, it has useful return type information.
 
-> +The ``done_before`` parameter should be set if writes have been
-> +initiated prior to the call.
+It wasn't deleted, it is still below.
 
-I don't think this is specific to "writes" alone. 
+> 
+> /*
+>   * Returns the size of fundamental allocation unit for a file, in
+>   * fsblocks.
+>   */
+> 
+>>   unsigned int
+>> -xfs_inode_alloc_unitsize(
+>> +xfs_inode_alloc_unitsize_fsb(
+>>   	struct xfs_inode	*ip)
+>>   {
+>> -	unsigned int		blocks = 1;
+>> -
+>>   	if (XFS_IS_REALTIME_INODE(ip))
+>> -		blocks = ip->i_mount->m_sb.sb_rextsize;
+>> +		return ip->i_mount->m_sb.sb_rextsize;
+>> +
+>> +	return 1;
+>> +}
+>>   
+>> -	return XFS_FSB_TO_B(ip->i_mount, blocks);
+>> +/* Returns the size of fundamental allocation unit for a file, in bytes. */
+>> +unsigned int
+>> +xfs_inode_alloc_unitsize(
+>> +	struct xfs_inode	*ip)
+>> +{
+>> +	return XFS_FSB_TO_B(ip->i_mount, xfs_inode_alloc_unitsize_fsb(ip));
+>>   }
+>> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+>> index 292b90b5f2ac..90d2fa837117 100644
+>> --- a/fs/xfs/xfs_inode.h
+>> +++ b/fs/xfs/xfs_inode.h
+>> @@ -643,6 +643,7 @@ int xfs_inode_reload_unlinked(struct xfs_inode *ip);
+>>   bool xfs_ifork_zapped(const struct xfs_inode *ip, int whichfork);
+>>   void xfs_inode_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+>>   		xfs_filblks_t *dblocks, xfs_filblks_t *rblocks);
+>> +unsigned int xfs_inode_alloc_unitsize_fsb(struct xfs_inode *ip);
+>>   unsigned int xfs_inode_alloc_unitsize(struct xfs_inode *ip);
+>>   
+>>   struct xfs_dir_update_params {
+>> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+>> index ecb4cae88248..fbe69f747e30 100644
+>> --- a/fs/xfs/xfs_iomap.c
+>> +++ b/fs/xfs/xfs_iomap.c
+>> @@ -127,7 +127,7 @@ xfs_bmbt_to_iomap(
+>>   	}
+>>   	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
+>>   	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
+>> -	iomap->io_block_size = i_blocksize(VFS_I(ip));
+>> +	iomap->io_block_size = xfs_inode_alloc_unitsize(ip);
+> 
+> Oh, I see.  So io_block_size causes iomap to write zeroes to the storage
+> backing surrounding areas of the file range. 
+Yes
 
-Maybe this?
+> In this case, for direct
+> writes to the unwritten middle 4k of an otherwise written 16k extent,
+> we'll write zeroes to 0-4k and 8k-16k even though that wasn't what the
+> caller asked for?
 
-The ``done_before`` parameter tells the how much of the request has
-already been transferred. It gets used for finishing a request
-asynchronously when part of the request has already been complete
-synchronously.
+We would only do that for a newly allocated extent. We should not 
+overwrite existing data.
 
-Maybe please also add a the link to this (for easy reference).
-[1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c03098d4b9ad76bca2966a8769dcfe59f7f85103
+> 
+> IOWs, if you start with:
+> 
+> WWuW
+> 
+> write to the "U", then it'll write zeroes to the "W" areas?  That
+> doesn't sound good...
 
-> +The direction of the I/O is determined from the ``iocb`` passed in.
-> +
-> +The ``flags`` argument can be any of the following values:
+No, that definitely should not happen.
 
-Callers of iomap_dio_rw() can set the flags argument which can be any of
-the following values:
+We only would zero once when do a sub-extent granule write to an 
+unallocated extent.
 
-Just a bit more descriptive ^^^
+In iomap_dio_bio_iter(), we only zero for IOMAP_UNWRITTEN or IOMAP_F_NEW.
 
-> +
-> + * ``IOMAP_DIO_FORCE_WAIT``: Wait for the I/O to complete even if the
-> +   kiocb is not synchronous.
+> 
+>>   	if (mapping_flags & IOMAP_DAX)
+>>   		iomap->dax_dev = target->bt_daxdev;
+>>   	else
+>> @@ -577,11 +577,17 @@ xfs_iomap_write_unwritten(
+>>   	xfs_fsize_t	i_size;
+>>   	uint		resblks;
+>>   	int		error;
+>> +	unsigned int	rounding;
+>>   
+>>   	trace_xfs_unwritten_convert(ip, offset, count);
+>>   
+>>   	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>>   	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+>> +	rounding = xfs_inode_alloc_unitsize_fsb(ip);
+>> +	if (rounding > 1) {
+>> +		offset_fsb = rounddown_64(offset_fsb, rounding);
+>> +		count_fsb = roundup_64(count_fsb, rounding);
+>> +	}
+> 
+> ...and then the ioend handler is supposed to be smart enough to know
+> that iomap quietly wrote to other parts of the disk.
 
-Adding an example would be nice.
+iomap_io_complete() only knows about the non-zeroing written data. I am 
+not changing that really.
 
-e.g. callers might want to consider setting this flag for extending writes.
+> 
+> Um, does this cause unwritten extent conversion for entire rtextents
+> after writeback to a rtextsize > 1fsb file?
 
-> +
-> + * ``IOMAP_DIO_OVERWRITE_ONLY``: Allocating blocks, zeroing partial
-> +   blocks, and extensions of the file size are not allowed.
-> +   The entire file range must to map to a single written or unwritten
-                                ^^^ an extra to
+Yes.
 
-> +   extent.
-> +   This flag exists to enable issuing concurrent direct IOs with only
-> +   the shared ``i_rwsem`` held when the file I/O range is not aligned to
-> +   the filesystem block size.
-> +   ``-EAGAIN`` will be returned if the operation cannot proceed.
+> 
+> Or am I really misunderstanding what's going on here with the io paths?
 
-Can we please add these below details too. I would rather avoid wasting
-my time in searching the history about, why EXT4 does not use this flag :)
-
-Currently XFS uses this flag. EXT4 does not use it since it checks for
-overwrites or unaligned overwrites and uses appropriate locking
-up front rather than on a retry response to -EAGAIN [1] [2].
-
-[1]: https://lore.kernel.org/linux-ext4/20230810165559.946222-1-bfoster@redhat.com/
-[2]: https://lore.kernel.org/linux-ext4/20230314130759.642710-1-bfoster@redhat.com/
-
-> +
-> + * ``IOMAP_DIO_PARTIAL``: If a page fault occurs, return whatever
-> +   progress has already been made.
-> +   The caller may deal with the page fault and retry the operation.
-
-Callers use ``dio_before`` argument along with ``IOMAP_DIO_PARTIAL`` to
-tell the iomap subsystem about how much of the requested I/O was already
-done.
-
-> +
-> +These ``struct kiocb`` flags are significant for direct I/O with iomap:
-> +
-> + * ``IOCB_NOWAIT``: Only proceed with the I/O if mapping data are
-> +   already in memory, we do not have to initiate other I/O, and we
-> +   acquire all filesystem locks without blocking.
-> +
-
-Maybe explicitly mentioning about "no block allocation"?
-
-* ``IOCB_NOWAIT``: Only proceed with the I/O if mapping data are
-  already in memory, we do not have to initiate other I/O or do any
-  block allocations, and we acquire all filesystem locks without
-  blocking.
-  
-> + * ``IOCB_SYNC``: Ensure that the device has persisted data to disk
-> +   BEFORE completing the call.
-> +   In the case of pure overwrites, the I/O may be issued with FUA
-> +   enabled.
-> +
-> + * ``IOCB_HIPRI``: Poll for I/O completion instead of waiting for an
-> +   interrupt.
-> +   Only meaningful for asynchronous I/O, and only if the entire I/O can
-> +   be issued as a single ``struct bio``.
-> +
-> + * ``IOCB_DIO_CALLER_COMP``: Try to run I/O completion from the caller's
-> +   process context.
-> +   See ``linux/fs.h`` for more details.
-> +
-> +Filesystems should call ``iomap_dio_rw`` from ``->read_iter`` and
-> +``->write_iter``, and set ``FMODE_CAN_ODIRECT`` in the ``->open``
-> +function for the file.
-> +They should not set ``->direct_IO``, which is deprecated.
-> +
-
-Return value: 
-~~~~~~~~~~~~~
-On success it will return the number of bytes transferred. On failure it
-will return a negative error value. 
-
-Note:
--ENOTBLK is a magic return value which callers may use for falling back
-to buffered-io. ->iomap_end()/->iomap_begin() can decide to return this
-magic return value if it decides to fallback to buffered-io. iomap
-subsystem return this value in case if it fails to invalidate the
-pagecache pages belonging to the direct-io range before initiating the
-direct-io.
-
--EIOCBQUEUED is returned when an async direct-io request is queued for I/O. 
-
-> +If a filesystem wishes to perform its own work before direct I/O
-> +completion, it should call ``__iomap_dio_rw``.
-> +If its return value is not an error pointer or a NULL pointer, the
-> +filesystem should pass the return value to ``iomap_dio_complete`` after
-> +finishing its internal work.
-> +
-> +Direct Reads
-> +~~~~~~~~~~~~
-> +
-> +A direct I/O read initiates a read I/O from the storage device to the
-> +caller's buffer.
-> +Dirty parts of the pagecache are flushed to storage before initiating
-> +the read io.
-> +The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DIRECT`` with
-> +any combination of the following enhancements:
-> +
-> + * ``IOMAP_NOWAIT``: Read if mapping data are already in memory.
-> +   Does not initiate other I/O or block on filesystem locks.
-> +
-> +Callers commonly hold ``i_rwsem`` in shared mode.
-> +
-> +Direct Writes
-> +~~~~~~~~~~~~~
-> +
-> +A direct I/O write initiates a write I/O to the storage device to the
-> +caller's buffer.
-
-to the storage device "from" the caller's buffer.
-
-> +Dirty parts of the pagecache are flushed to storage before initiating
-> +the write io.
-> +The pagecache is invalidated both before and after the write io.
-> +The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DIRECT |
-> +IOMAP_WRITE`` with any combination of the following enhancements:
-> +
-> + * ``IOMAP_NOWAIT``: Write if mapping data are already in memory.
-> +   Does not initiate other I/O or block on filesystem locks.
-> + * ``IOMAP_OVERWRITE_ONLY``: Allocating blocks and zeroing partial
-> +   blocks is not allowed.
-> +   The entire file range must to map to a single written or unwritten
-> +   extent.
-> +   The file I/O range must be aligned to the filesystem block size.
-> +
-> +Callers commonly hold ``i_rwsem`` in shared or exclusive mode.
-> +
-> +struct iomap_dio_ops:
-> +~~~~~~~~~~~~~~~~~~~~~
-> +.. code-block:: c
-> +
-> + struct iomap_dio_ops {
-> +     void (*submit_io)(const struct iomap_iter *iter, struct bio *bio,
-> +                       loff_t file_offset);
-> +     int (*end_io)(struct kiocb *iocb, ssize_t size, int error,
-> +                   unsigned flags);
-> +     struct bio_set *bio_set;
-> + };
-> +
-> +The fields of this structure are as follows:
-> +
-> +  - ``submit_io``: iomap calls this function when it has constructed a
-> +    ``struct bio`` object for the I/O requested, and wishes to submit it
-> +    to the block device.
-> +    If no function is provided, ``submit_bio`` will be called directly.
-> +    Filesystems that would like to perform additional work before (e.g.
-> +    data replication for btrfs) should implement this function.
-> +
-> +  - ``end_io``: This is called after the ``struct bio`` completes.
-> +    This function should perform post-write conversions of unwritten
-> +    extent mappings, handle write failures, etc.
-> +    The ``flags`` argument may be set to a combination of the following:
-> +
-> +    * ``IOMAP_DIO_UNWRITTEN``: The mapping was unwritten, so the ioend
-> +      should mark the extent as written.
-> +
-> +    * ``IOMAP_DIO_COW``: Writing to the space in the mapping required a
-> +      copy on write operation, so the ioend should switch mappings.
-> +
-> +  - ``bio_set``: This allows the filesystem to provide a custom bio_set
-> +    for allocating direct I/O bios.
-> +    This enables filesystems to `stash additional per-bio information
-> +    <https://lore.kernel.org/all/20220505201115.937837-3-hch@lst.de/>`_
-> +    for private use.
-> +    If this field is NULL, generic ``struct bio`` objects will be used.
-> +
-> +Filesystems that want to perform extra work after an I/O completion
-> +should set a custom ``->bi_end_io`` function via ``->submit_io``.
-> +Afterwards, the custom endio function must call
-> +``iomap_dio_bio_end_io`` to finish the direct I/O.
-> +
-> +DAX I/O
-> +-------
-> +
-> +Storage devices that can be directly mapped as memory support a new
-> +access mode known as "fsdax".
-
-Added a comma before "support" for better readability.
-
-Storage devices that can be directly mapped as memory, support a new
-access mode known as "fsdax".
-
-
-> +
-> +fsdax Reads
-> +~~~~~~~~~~~
-> +
-> +A fsdax read performs a memcpy from storage device to the caller's
-> +buffer.
-> +The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DAX`` with any
-> +combination of the following enhancements:
-> +
-> + * ``IOMAP_NOWAIT``: Read if mapping data are already in memory.
-> +   Does not initiate other I/O or block on filesystem locks.
-> +
-> +Callers commonly hold ``i_rwsem`` in shared mode.
->   +
-> +fsdax Writes
-> +~~~~~~~~~~~~
-> +
-> +A fsdax write initiates a memcpy to the storage device to the caller's
-
-"from" the storage device
-
-> +buffer.
-> +The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DAX |
-> +IOMAP_WRITE`` with any combination of the following enhancements:
-> +
-> + * ``IOMAP_NOWAIT``: Write if mapping data are already in memory.
-> +   Does not initiate other I/O or block on filesystem locks.
-> +
-> + * ``IOMAP_OVERWRITE_ONLY``: Allocating blocks and zeroing partial
-> +   blocks is not allowed.
-> +   The entire file range must to map to a single written or unwritten
-> +   extent.
-> +   The file I/O range must be aligned to the filesystem block size.
-> +
-> +Callers commonly hold ``i_rwsem`` in exclusive mode.
-> +
-> +mmap Faults
-> +~~~~~~~~~~~
-> +
-> +The ``dax_iomap_fault`` function handles read and write faults to fsdax
-> +storage.
-> +For a read fault, ``IOMAP_DAX | IOMAP_FAULT`` will be passed as the
-> +``flags`` argument to ``->iomap_begin``.
-> +For a write fault, ``IOMAP_DAX | IOMAP_FAULT | IOMAP_WRITE`` will be
-> +passed as the ``flags`` argument to ``->iomap_begin``.
-> +
-> +Callers commonly hold the same locks as they do to call their iomap
-> +pagecache counterparts.
-> +
-> +Truncation, fallocate, and Unsharing
-> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> +
-> +For fsdax files, the following functions are provided to replace their
-> +iomap pagecache I/O counterparts.
-> +The ``flags`` argument to ``->iomap_begin`` are the same as the
-> +pagecache counterparts, with ``IOMAP_DIO`` added.
-
-with "IOMAP_DAX"
-
-
-> +
-> + * ``dax_file_unshare``
-> + * ``dax_zero_range``
-> + * ``dax_truncate_page``
-
-Shall we mention
-"dax_remap_file_range_prep()/dax_dedupe_file_range_compare()" ?
-
-> +
-> +Callers commonly hold the same locks as they do to call their iomap
-> +pagecache counterparts.
-> +
-
-Stopping here for now. Will resume the rest of the document review
-later.
-
--ritesh
+Thanks,
+John
