@@ -1,126 +1,183 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f181.google.com (mail-il1-f181.google.com [209.85.166.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79C57F9;
-	Thu, 13 Jun 2024 01:53:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8903612CDB1
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2024 03:05:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718243600; cv=none; b=g4E+HSpf60PRCUYPE+1FSpj7zpWBaiCWmAcp6AQN2PO1gG+st86L0yufA8cH3fwEZUi1OlX90244MxAosD30naCQNQyrznY4ew+MEkrOTeeTeLSaqhrLtpE79clsrMDEtgUM2LL3Ak9299VyZSwTrc9yELaGlqq0qYFsSXcazGM=
+	t=1718247948; cv=none; b=BTSmGA4hJ9z2i6jI6igOPDDJG8tnakp5Wcca8saC1IL2Lcz9qVcixDa7WgisliNyISKIPVArwM+QFiV1i1VzghF9o/c+6fbq3ml03FDAZHPvl+tC4+wH+spk7siwfP/3NDbQjjnkJ1vycFwLV+jKgf4y/KiG8Az8b6cqb7nFtUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718243600; c=relaxed/simple;
-	bh=08mouqv6dBOKj5PdWDUTOovkDkaA1fRX+axPfgiUQWY=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YF+2jA1v4ofLLwhkL24Xy/zL/RM24YW/cq4vbJRnNhT940ecJSqO41NY9V8dMerYh+pjnye/v1orxq9w9Szg0+Sw+nw0s4Wie1ohoqHVmhuG8LjuMhAHSjNanqy07gZnlnGw8KZHdBw1ZPAb6Co2vaW66FdQE4RNNf9QG3CA4c0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4W051y6q1czPqTg;
-	Thu, 13 Jun 2024 09:49:42 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id ABD9A18007E;
-	Thu, 13 Jun 2024 09:53:08 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Thu, 13 Jun
- 2024 09:53:08 +0800
-Date: Thu, 13 Jun 2024 10:04:53 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: "Darrick J. Wong" <djwong@kernel.org>, John Garry
-	<john.g.garry@oracle.com>
-CC: <david@fromorbit.com>, <hch@lst.de>, <viro@zeniv.linux.org.uk>,
-	<brauner@kernel.org>, <jack@suse.cz>, <chandan.babu@oracle.com>,
-	<willy@infradead.org>, <axboe@kernel.dk>, <martin.petersen@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<tytso@mit.edu>, <jbongio@google.com>, <ojaswin@linux.ibm.com>,
-	<ritesh.list@gmail.com>, <mcgrof@kernel.org>, <p.raghav@samsung.com>,
-	<linux-xfs@vger.kernel.org>, <catherine.hoang@oracle.com>
-Subject: Re: [PATCH v3 08/21] xfs: Introduce FORCEALIGN inode flag
-Message-ID: <20240613020453.GA2926743@ceph-admin>
-References: <20240429174746.2132161-1-john.g.garry@oracle.com>
- <20240429174746.2132161-9-john.g.garry@oracle.com>
- <20240612021058.GA729527@ceph-admin>
- <82269717-ab49-4a02-aaad-e25a01f15768@oracle.com>
- <20240612154342.GC2764752@frogsfrogsfrogs>
+	s=arc-20240116; t=1718247948; c=relaxed/simple;
+	bh=sh0+FsSCfhEzNKHLY96EitL1MDAyukCSyBJzom2zmFg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oN13GroIU4+lbS6y5l85HJV3a4hwFo2L7ynZEcT7echpE0TbZPDg1syoIackQWIRx1NHIvasn3VPinYdpyrni2qN9iqSm+rBf1G2h447mIwHGiPYeH4GhpxOfkteUKvR6g197Ma11QIDhZBJEDD+uNmx6C1teAHbScuzwDLjA9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FLr7Z0BH; arc=none smtp.client-ip=209.85.166.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FLr7Z0BH"
+Received: by mail-il1-f181.google.com with SMTP id e9e14a558f8ab-375932c953aso2512005ab.0
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2024 20:05:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718247945; x=1718852745; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lH9bJtteDn4yQ1wJCG4AuCFr/QlkR3V86staQBxMpsU=;
+        b=FLr7Z0BHgcD1RJ9XgHbaBZ3udzOosaDjRMStKUsr5NBd5aho6U+SfhO0ifaaMjfhzx
+         7OzWtHglARp0v0ujttIqKtjYCQlwkrYb5aUMI9Mwyg5jU6pa0Rj9mQu8OVFpdu/e9uSD
+         3cB+PcxMAjX6F43jLjMHbWpAxHELb4KY/p5w19POeLolahpPFXER3sCgIPvJ3vtC++fh
+         4NBVPW731BUJTlvH0TGHq9yXZh4WgeX3o6XkfttRzBOHpt6BRY0eeFpUe/nP3+P/cIEe
+         lOSZnan9BiACaoCmtv2EaeQ2HZa8WGl93Vlm+AVcydN7dtVH1kn6z4XPqhKVVQ3dOhsP
+         4N9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718247945; x=1718852745;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lH9bJtteDn4yQ1wJCG4AuCFr/QlkR3V86staQBxMpsU=;
+        b=M7V8jkbwEs6on1ofkfcSvbI7leNXuD8GZ6gG8iuksblGeZXyIV/qGjA0Hsbm+MkIy3
+         ZpofCa/vI8ajrp6PUoGN8PHrpWXqWmrbZvA1v+SNqt+RmvmUd2PNyQVfJVYV6AAXqdLG
+         tXQ8SzUi9oAyEM3nScHa3Nsy29I4VkwN301FTZ+kjcV7rRamOi7+0EJaYSLZBsdSsDGk
+         80VPGiT1pH2tQYy161plEW6BZztYISAMQ1MTfCBSEhFU2zDf3vwpEWcmEMINXV5lKFk3
+         P63mmZ8i+VFtfacrjNwLLzJnLuXcQSFD9wIHikuQYjwCgObMG6K61zOvMbLLzqW7xXJK
+         fakg==
+X-Gm-Message-State: AOJu0YzxHTFvkYnOKFwduz2zd+1B5GBv9vUtfyd2hm5iTDYgOj9xErJz
+	GjCOJkbiEYW9q/tGIb3Z+KrolsBKxvD7L+ixTGv6DQgf1qkuOP0XTC12puunyiw=
+X-Google-Smtp-Source: AGHT+IHAtkRNW6IF2jYj217TTjNumYHXxR1ZDpKKucMqi7sSiUpduBRHhvrK7IUq4tLG1AL1AgbNHA==
+X-Received: by 2002:a05:6e02:13a9:b0:375:cac4:54e0 with SMTP id e9e14a558f8ab-375cd1525b2mr41968225ab.2.1718247945326;
+        Wed, 12 Jun 2024 20:05:45 -0700 (PDT)
+Received: from localhost.localdomain ([47.238.252.167])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-6ff19a06b58sm145538a12.49.2024.06.12.20.05.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jun 2024 20:05:45 -0700 (PDT)
+From: lei lu <llfamsec@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com,
+	djwong@kernel.org
+Subject: [PATCH v4] xfs: don't walk off the end of a directory data block
+Date: Thu, 13 Jun 2024 11:05:09 +0800
+Message-Id: <20240613030509.124873-1-llfamsec@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <20240612154342.GC2764752@frogsfrogsfrogs>
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemi500009.china.huawei.com (7.221.188.199)
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 12, 2024 at 08:43:42AM -0700, Darrick J. Wong wrote:
-> On Wed, Jun 12, 2024 at 07:55:31AM +0100, John Garry wrote:
-> > On 12/06/2024 03:10, Long Li wrote:
-> > > On Mon, Apr 29, 2024 at 05:47:33PM +0000, John Garry wrote:
-> > > > From: "Darrick J. Wong"<djwong@kernel.org>
-> > > > 
-> > > > Add a new inode flag to require that all file data extent mappings must
-> > > > be aligned (both the file offset range and the allocated space itself)
-> > > > to the extent size hint.  Having a separate COW extent size hint is no
-> > > > longer allowed.
-> > > > 
-> > > > The goal here is to enable sysadmins and users to mandate that all space
-> > > > mappings in a file must have a startoff/blockcount that are aligned to
-> > > > (say) a 2MB alignment and that the startblock/blockcount will follow the
-> > > > same alignment.
-> > > > 
-> > > > jpg: Enforce extsize is a power-of-2 and aligned with afgsize + stripe
-> > > >       alignment for forcealign
-> > > > Signed-off-by: "Darrick J. Wong"<djwong@kernel.org>
-> > > > Co-developed-by: John Garry<john.g.garry@oracle.com>
-> > > > Signed-off-by: John Garry<john.g.garry@oracle.com>
-> > > > ---
-> > > >   fs/xfs/libxfs/xfs_format.h    |  6 ++++-
-> > > >   fs/xfs/libxfs/xfs_inode_buf.c | 50 +++++++++++++++++++++++++++++++++++
-> > > >   fs/xfs/libxfs/xfs_inode_buf.h |  3 +++
-> > > >   fs/xfs/libxfs/xfs_sb.c        |  2 ++
-> > > >   fs/xfs/xfs_inode.c            | 12 +++++++++
-> > > >   fs/xfs/xfs_inode.h            |  2 +-
-> > > >   fs/xfs/xfs_ioctl.c            | 34 +++++++++++++++++++++++-
-> > > >   fs/xfs/xfs_mount.h            |  2 ++
-> > > >   fs/xfs/xfs_super.c            |  4 +++
-> > > >   include/uapi/linux/fs.h       |  2 ++
-> > > >   10 files changed, 114 insertions(+), 3 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > > > index 2b2f9050fbfb..4dd295b047f8 100644
-> > > > --- a/fs/xfs/libxfs/xfs_format.h
-> > > > +++ b/fs/xfs/libxfs/xfs_format.h
-> > > > @@ -353,6 +353,7 @@ xfs_sb_has_compat_feature(
-> > > >   #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
-> > > >   #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-> > > >   #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
-> > > > +#define XFS_SB_FEAT_RO_COMPAT_FORCEALIGN (1 << 30)	/* aligned file data extents */
-> > > Hi, John
-> > > 
-> > > You know I've been using and testing your atomic writes patch series recently,
-> > > and I'm particularly interested in the changes to the on-disk format. I noticed
-> > > that XFS_SB_FEAT_RO_COMPAT_FORCEALIGN uses bit 30 instead of bit 4, which would
-> > > be the next available bit in sequence.
-> > > 
-> > > I'm wondering if using bit 30 is just a temporary solution to avoid conflicts,
-> > > and if the plan is to eventually use bits sequentially, for example, using bit 4?
-> > > I'm looking forward to your explanation.
-> > 
-> > I really don't know. I'm looking through the history and it has been like
-> > that this the start of my source control records.
-> > 
-> > Maybe it was a copy-and-paste error from XFS_FEAT_FORCEALIGN, whose value
-> > has changed since.
-> > 
-> > Anyway, I'll ask a bit more internally, and I'll look to change to (1 << 4)
-> > if ok.
-> 
-> I tend to use upper bits for ondisk features that are still under
-> development so that (a) there won't be collisions with other features
-> getting merged and (b) after the feature I'm working on gets merged, any
-> old fs images in my zoo will no longer mount.
-> 
+This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entry
+to make sure don't stray beyond valid memory region. Before patching, the
+loop simply checks that the start offset of the dup and dep is within the
+range. So in a crafted image, if last entry is xfs_dir2_data_unused, we
+can change dup->length to dup->length-1 and leave 1 byte of space. In the
+next traversal, this space will be considered as dup or dep. We may
+encounter an out of bound read when accessing the fixed members.
 
-I get it, thank you very much for your response.
+In the patch, we make sure that the remaining bytes large enough to hold
+an unused entry before accessing xfs_dir2_data_unused and
+xfs_dir2_data_unused is XFS_DIR2_DATA_ALIGN byte aligned. We also make
+sure that the remaining bytes large enough to hold a dirent with a
+single-byte name before accessing xfs_dir2_data_entry.
+
+Signed-off-by: lei lu <llfamsec@gmail.com>
+---
+ fs/xfs/libxfs/xfs_dir2_data.c | 30 +++++++++++++++++++++++++-----
+ fs/xfs/libxfs/xfs_dir2_priv.h |  7 +++++++
+ 2 files changed, 32 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index dbcf58979a59..feb4499f70e2 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -177,6 +177,14 @@ __xfs_dir3_data_check(
+ 	while (offset < end) {
+ 		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+ 		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
++		unsigned int	reclen;
++
++		/*
++		 * Are the remaining bytes large enough to hold an
++		 * unused entry?
++		 */
++		if (offset > end - xfs_dir2_data_unusedsize(1))
++			return __this_address;
+ 
+ 		/*
+ 		 * If it's unused, look for the space in the bestfree table.
+@@ -186,9 +194,12 @@ __xfs_dir3_data_check(
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+ 			xfs_failaddr_t	fa;
+ 
++			reclen = xfs_dir2_data_unusedsize(be16_to_cpu(dup->length));
+ 			if (lastfree != 0)
+ 				return __this_address;
+-			if (offset + be16_to_cpu(dup->length) > end)
++			if (be16_to_cpu(dup->length) != reclen)
++				return __this_address;
++			if (offset + reclen > end)
+ 				return __this_address;
+ 			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+ 			    offset)
+@@ -206,10 +217,18 @@ __xfs_dir3_data_check(
+ 				    be16_to_cpu(bf[2].length))
+ 					return __this_address;
+ 			}
+-			offset += be16_to_cpu(dup->length);
++			offset += reclen;
+ 			lastfree = 1;
+ 			continue;
+ 		}
++
++		/*
++		 * This is not an unused entry. Are the remaining bytes
++		 * large enough for a dirent with a single-byte name?
++		 */
++		if (offset > end - xfs_dir2_data_entsize(mp, 1))
++			return __this_address;
++
+ 		/*
+ 		 * It's a real entry.  Validate the fields.
+ 		 * If this is a block directory then make sure it's
+@@ -218,9 +237,10 @@ __xfs_dir3_data_check(
+ 		 */
+ 		if (dep->namelen == 0)
+ 			return __this_address;
+-		if (!xfs_verify_dir_ino(mp, be64_to_cpu(dep->inumber)))
++		reclen = xfs_dir2_data_entsize(mp, dep->namelen);
++		if (offset + reclen > end)
+ 			return __this_address;
+-		if (offset + xfs_dir2_data_entsize(mp, dep->namelen) > end)
++		if (!xfs_verify_dir_ino(mp, be64_to_cpu(dep->inumber)))
+ 			return __this_address;
+ 		if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(mp, dep)) != offset)
+ 			return __this_address;
+@@ -244,7 +264,7 @@ __xfs_dir3_data_check(
+ 			if (i >= be32_to_cpu(btp->count))
+ 				return __this_address;
+ 		}
+-		offset += xfs_dir2_data_entsize(mp, dep->namelen);
++		offset += reclen;
+ 	}
+ 	/*
+ 	 * Need to have seen all the entries and all the bestfree slots.
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 1db2e60ba827..263f77bc4cf8 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -188,6 +188,13 @@ void xfs_dir2_sf_put_ftype(struct xfs_mount *mp,
+ extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		       struct dir_context *ctx, size_t bufsize);
+ 
++static inline unsigned int
++xfs_dir2_data_unusedsize(
++	unsigned int	len)
++{
++	return round_up(len, XFS_DIR2_DATA_ALIGN);
++}
++
+ static inline unsigned int
+ xfs_dir2_data_entsize(
+ 	struct xfs_mount	*mp,
+-- 
+2.34.1
+
