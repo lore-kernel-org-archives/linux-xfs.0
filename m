@@ -1,30 +1,36 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94FFB13D524
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2024 08:29:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBA1A13777D;
+	Thu, 13 Jun 2024 08:44:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718267342; cv=none; b=K0FBE9VoMX1R4PH0jP75qxsSaUuBsz0bWwDgBbGm6pu6DyzNnvoq4O5dLb4vjHDYNwAbRV+LQbGua0zHkX0NoMRLmdBqRZlVON/3RciqrW0DB6+V8fm2IHjZeS7SKxukqEu5PvOJh0SOr7zgQXnkUU/z65TSdfaOu5rD9wl2iNc=
+	t=1718268258; cv=none; b=WBmQomqJNTfkvzFQKnppImVFJkwZwLBo6drfWoh831iTDrnK2Jl1hoKklK7hFvmcmij7VNH9Z+0wgzFQ9O/KKncCgSNH+dgYApReDigMBFX9Uf/lLBgr9mcyFhz3QlMVqe9+gjiwDGmx9ePCrSjyOEerXk/DcauBQceGIspQG08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718267342; c=relaxed/simple;
-	bh=wjjf0fUcX1W9HTYNhXqxtFVJMOtaz/KSaR1869AP72E=;
+	s=arc-20240116; t=1718268258; c=relaxed/simple;
+	bh=NSrOqHEzu2xbZAdhX9ligMyBTflH4RGvPxAtZPprF1A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JbVxPT7DptzK8OaneODbK0xzwJRd2gB4J1mgOcFlOeg5eIr/QNljB/iHlrCH9MxThMe/zntu9C3uNNhL/ZMgAdIfB8xhcMK+fMOVM6K3pPxJ/b7fdCoOcFUBfeBYwHUYmMl7gvwsPXPTiCVsNCSH/rYZzsc9EgnKcifr7pfVfsc=
+	 Content-Type:Content-Disposition:In-Reply-To; b=NqjrALJKls8RG3T0GLRt0PmPXteNVazjwq3lMymodNUo5M3F6QQ5m7WEUMoSoGQBZ2aGhLRFLD9R/VUAmUdUOH5RE+fiW7Jrig5Xo8zQ909pVbPMbBzQ9a8z4vpjhjKV+aFfQHZaDlAuGLUrLSQHoSB0/fVMppcdE3YcQO1uKik=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 20A7268B05; Thu, 13 Jun 2024 10:28:56 +0200 (CEST)
-Date: Thu, 13 Jun 2024 10:28:55 +0200
+	id B74A468AFE; Thu, 13 Jun 2024 10:44:10 +0200 (CEST)
+Date: Thu, 13 Jun 2024 10:44:10 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, hch@lst.de,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] xfs: don't treat append-only files as having
- preallocations
-Message-ID: <20240613082855.GA22403@lst.de>
-References: <171821431745.3202459.12391135011047294097.stgit@frogsfrogsfrogs> <171821431777.3202459.4876836906447539030.stgit@frogsfrogsfrogs> <ZmqLyfdH5KGzSYDY@dread.disaster.area>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
+	brauner@kernel.org, akpm@linux-foundation.org, willy@infradead.org,
+	mcgrof@kernel.org, linux-mm@kvack.org, hare@suse.de,
+	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
+	Zi Yan <zi.yan@sent.com>, linux-xfs@vger.kernel.org,
+	p.raghav@samsung.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
+	gost.dev@samsung.com, cl@os.amperecomputing.com,
+	john.g.garry@oracle.com
+Subject: Re: [PATCH v7 03/11] filemap: allocate mapping_min_order folios in
+ the page cache
+Message-ID: <20240613084409.GA23371@lst.de>
+References: <20240607145902.1137853-1-kernel@pankajraghav.com> <20240607145902.1137853-4-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,35 +39,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZmqLyfdH5KGzSYDY@dread.disaster.area>
+In-Reply-To: <20240607145902.1137853-4-kernel@pankajraghav.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jun 13, 2024 at 04:03:53PM +1000, Dave Chinner wrote:
-> I disagree, there was a very good reason for this behaviour:
-> preventing append-only log files from getting excessively fragmented
-> because speculative prealloc would get removed on close().
+On Fri, Jun 07, 2024 at 02:58:54PM +0000, Pankaj Raghav (Samsung) wrote:
+> +static inline unsigned long mapping_min_folio_nrpages(struct address_space *mapping)
+> +{
+> +	return 1UL << mapping_min_folio_order(mapping);
+> +}
 
-Where is that very clear intent documented?  Not in the original
-commit message (which is very sparse) and no where in any documentation
-I can find.
+Overly long line here, just line break after the return type.
 
-> i.e. applications that slowly log messages to append only files
-> with the pattern open(O_APPEND); write(a single line to the log);
-> close(); caused worst case file fragmentation because the close()
-> always removed the speculative prealloc beyond EOF.
+Then again it only has a single user just below and no documentation
+so maybe just fold it into the caller?
 
-That case should be covered by the XFS_IDIRTY_RELEASE, at least
-except for O_SYNC workloads. 
+>  no_page:
+>  	if (!folio && (fgp_flags & FGP_CREAT)) {
+> -		unsigned order = FGF_GET_ORDER(fgp_flags);
+> +		unsigned int min_order = mapping_min_folio_order(mapping);
+> +		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
+>  		int err;
+> +		index = mapping_align_start_index(mapping, index);
 
-> 
-> The fix for this pessimisitic XFS behaviour is for the application
-> to use chattr +A (like they would for ext3/4) hence triggering the
-> existence of XFS_DIFLAG_APPEND and that avoided the removal
-> speculative delalloc removed when the file is closed. hence the
-> fragmentation problems went away.
+I wonder if at some point splitting this block that actually allocates
+a new folio into a separate helper would be nice.  It just keep growing
+in size and complexity.
 
-For ext4 the EXT4_APPEND_FL flag does not cause any difference
-in allocation behavior.  For the historic ext2 driver it apparently
-did just, with an XXX comment marking this as a bug, but for ext3 it
-also never did looking back quite a bit in history.
+> -	folio = filemap_alloc_folio(mapping_gfp_mask(mapping), 0);
+> +	folio = filemap_alloc_folio(mapping_gfp_mask(mapping),
+> +				    min_order);
+
+Nit: no need to split this into multiple lines.
+
+>  	if (!folio)
+>  		return -ENOMEM;
+>  
+> @@ -2471,6 +2478,8 @@ static int filemap_create_folio(struct file *file,
+>  	 * well to keep locking rules simple.
+>  	 */
+>  	filemap_invalidate_lock_shared(mapping);
+> +	/* index in PAGE units but aligned to min_order number of pages. */
+
+in PAGE_SIZE units?  Maybe also make this a complete sentence?
 
