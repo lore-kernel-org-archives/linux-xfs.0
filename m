@@ -1,40 +1,37 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B0518E0E
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Jun 2024 16:46:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD72C383
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Jun 2024 17:24:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718383605; cv=none; b=JYrQNmpDDHDZOf50C3L5XbymhBRlX543FlazFRkG3+2IapnZimEa5jGorWw9mw5pSNbc6x+k+sDmTlqvA5FNkc1ObBYDn5Dwp5iJpG1AHf8Ao0ubaJATdJej++KCAR8bYzAtPxe49Rjil+ZY5f3hZojUHlDO20KSQaCVAEnl1l8=
+	t=1718385884; cv=none; b=FUavAt5bgC85qHpAfsCsX2nljwx4yARrHz759UHzu3ZRAP4CVZ2we+FqlZO0HCd9mk2o8h7bCVpkW0e4SZhvGQxQe/LxihwJx7/Rst95Sf4BO3Ab4Yxy34vQWBYY+YHRRNdFs2Or4L/t9ZQ8uVCN2t0CZLh5HD6gACZuiITYvlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718383605; c=relaxed/simple;
-	bh=a5JpdgBmZCFK5bANRGGcWd66/OX6/nSDQ5a5AbZ9POM=;
+	s=arc-20240116; t=1718385884; c=relaxed/simple;
+	bh=rGjTJbSeCG/iiy01WBlQsIc1PIiox/HIRzoJSWH+nAo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MybuYycCiWkSbcAjwpeuF2sbH/c/30/UhvH0BnieoOkxzlrC/NmxK2+Q8XxqDoa0qfnt7g2W4I8/Xj4+MgXKKut7+HcZomLM2eo7lyEHsP6EpZRyVxTetmPhXbE2MCLV9sHynlFIh1xMGu1P3xnhvpVYmReoc4rTgikGWsCmLUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JEZRmpGk; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=NCZGI4oenBkIsG/+qT86A4Kgm/SqL4kJuBhOoGgI328V6z7s4W+aoo1AX3McxtA8q0EuSsvirCjVkAi+GDX3aPyervcmbiew/VM456l9x2eQit1rj7C6o+0r8pZF61CoDVjxEOPf3ZxD4/4vm44qk8iuRgbYDQ4GW/V7WBybgg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uzr9RdGB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JEZRmpGk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=HEqD/0cp5+HSjdHIQXoE4CbIsJpQ52TSJOfclthzLbo=; b=JEZRmpGkPQCuTfykeyECsbfpwd
-	SeobsEZ0dUl3X2OcAgdAchQTQdz+oOT3Kk/VpyJmroBQ4mUlA32geH/Ip8jKtJC8EUHdRKOtQPQf2
-	LQrfljFMVLAlM7qT4zopd0UqyEB/Tjm/yS0EWzGLrii40Iryg3r38PvVD2o21gdFM4ovv7Qs2ZDUt
-	qmA1pEBEraFcoAqL6HjIquTkGbz7DUvgHu8O0KOmoEGeoAvtSV/MQsWLUXMtrzBLlslfmT/jN6BGy
-	NSjghc5X/h5LCkdV5EsoKO7JbOMY6nlo84Ts2rIuA2J0sC3hny4Q6mzshQtVqXwQ4CD8Bd46sCICw
-	aYsWUh5w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sIA4Y-00000003Vx7-10Ed;
-	Fri, 14 Jun 2024 16:46:42 +0000
-Date: Fri, 14 Jun 2024 09:46:42 -0700
-From: Christoph Hellwig <hch@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uzr9RdGB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67111C2BD10;
+	Fri, 14 Jun 2024 17:24:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718385883;
+	bh=rGjTJbSeCG/iiy01WBlQsIc1PIiox/HIRzoJSWH+nAo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uzr9RdGBJSoM7mFB5LOU180hCtliAVg7MqBjlFBAZFKspT133Cv73qXJRhxuQy5NA
+	 pdnrSRHp+Yp/ZAHTWzGx6AR2044kJwBfWliNOG7loyiq4HxJLcwgEIEqc8q5gcKVaI
+	 UdzF298vprR/90XPYXZ5plhBd6YifUwI2nxN6YKDTWq948+2gq5GXlyUyNGa4v7/P0
+	 OkpXdxlsZTdN7Tssup654rz8OJjryM1RI7TfDMcBm1JcGdlcLpRCdAzqX/L4YczmzR
+	 s+4aH5Pwaxrnen4vCA8yqeiETEzpiRYpsxcuPJB0CqfpYr3xqpJywppJJoUhTng0gJ
+	 WppZB7YWKJeIQ==
+Date: Fri, 14 Jun 2024 10:24:42 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Bill O'Donnell <bodonnel@redhat.com>
 Cc: linux-xfs@vger.kernel.org, cmaiolino@redhat.com
 Subject: Re: [PATCH v3 3/4] xfs_fsr: correct type in fsrprintf() call
-Message-ID: <Zmxz8jDbUSCdRzVT@infradead.org>
+Message-ID: <20240614172442.GH6125@frogsfrogsfrogs>
 References: <20240614160643.1879156-1-bodonnel@redhat.com>
  <20240614160643.1879156-4-bodonnel@redhat.com>
 Precedence: bulk
@@ -46,7 +43,6 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20240614160643.1879156-4-bodonnel@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
 On Fri, Jun 14, 2024 at 11:00:15AM -0500, Bill O'Donnell wrote:
 > Use %lld instead of %d for howlong variable.
@@ -55,6 +51,30 @@ On Fri, Jun 14, 2024 at 11:00:15AM -0500, Bill O'Donnell wrote:
 > 
 > Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
 
-Looks good:
+Looks good now,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
+
+> ---
+>  fsr/xfs_fsr.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index fdd37756..06cc0552 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -426,7 +426,8 @@ fsrallfs(char *mtab, time_t howlong, char *leftofffile)
+>  	fsdesc_t *fsp;
+>  	struct stat sb, sb2;
+>  
+> -	fsrprintf("xfs_fsr -m %s -t %d -f %s ...\n", mtab, howlong, leftofffile);
+> +	fsrprintf("xfs_fsr -m %s -t %lld -f %s ...\n", mtab,
+> +		  (long long)howlong, leftofffile);
+>  
+>  	endtime = starttime + howlong;
+>  	fs = fsbase;
+> -- 
+> 2.45.2
+> 
+> 
