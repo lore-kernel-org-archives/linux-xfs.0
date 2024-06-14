@@ -1,55 +1,55 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB4C215F41D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B7C15FA73
 	for <linux-xfs@vger.kernel.org>; Fri, 14 Jun 2024 16:07:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718381236; cv=none; b=pp0M/wTNWVw8l5SqRbHad6j7O4lOEyZqF/7t5W4/ZNJR4svAlohXiLso0xa3QSiErFpEmeWzVB6NTPt3TzdvKV79SwmePMetp+PBM5bdHeumbOBMFQSR0BE/A3uvCwN/FBNjQx3Kqoyb0bj/tA7fQiw2dhg3lHru0hBag8YCsLQ=
+	t=1718381236; cv=none; b=MlttqHzuq7QtLLPo1tdlDmb80gBARLdk6TERntwFVX7PBqiBlEr5aWK0gYdHSdnKlWqqZ+Fi0jwC+cJpGUvwV8Z46lx2lkZoAKZv7oK8+diOEPoB2Sf5t00WRhKh49BPv3eIEM8X42Gd6x+N7GD8erT1v2IR3jjVdgB1eNQKf/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1718381236; c=relaxed/simple;
-	bh=cegaVVSne7+vtUTFtDiscA8vJJUMFLEvP8aDaQ9mGII=;
+	bh=XYMuT9GJrVKXvr/NqfPnXmIHzJIajSiZCb3ATD8A59E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lDpzi7CbM0Qca1AUE39u2uzCOtsi+y7uP4QjT60fZnqb3FsiEcyI0QHyAEucMlxQU11hEMT2/6+U8hXoKlrD2gshKsbUF/qAKygscCeaoKwIV111LAHghwbV5AZvNONVJQyLlDPhPwVBjLFNahTNkhoDIaNdqvUhWz1FQ8WuaXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eePqvnVu; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=JhhRLrMuWODKGrn+FZJBajriMmJemuQ5VQbd3qk4NZ+gdMA6FPV14DfyypR+gT5wy/bV6jsGZifYOqPPCrr9T+OgWtZKO21NaZ9poLIoG+/pbD4lPvcZA2pH0BpsNg8UyLI5MqKrMuPn3B4EokdrL6wkTUGns4xJcDKKNLb87+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=a2Lzmmv3; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eePqvnVu"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="a2Lzmmv3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1718381233;
+	s=mimecast20190719; t=1718381234;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZomfkoVq0suL2c8mJWdTAIMC632vfRZrJwPBlAjNVJo=;
-	b=eePqvnVufos3xWIjz7YuRSTieBnjb+aNcibgOKJfjYNz9oIGDnJt+a4jyDMpV23Pv5eQ0F
-	xb7Wvp2LmOWIYO0qIZAuac7c8rHG1IOeIyy76eFd4QJrYJJVGavpy+mmR5YdaPlUt6lN/H
-	BA150Z/1Y7KXZ3tF+/Rgt5jsZHKnxQE=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	bh=aUlYbVOQDqfN6smUHD74NPUgX6Wbz3CUTP7zc3W/Xn0=;
+	b=a2Lzmmv3gAz6Cmb6+DH5AAO7N53kg42VlUN8PbvSEdRIsk/JXsmSA+C7UO2G6m8JyXmSzk
+	Uqxyei2ParuAD7XiSwdWc8Lkk7UiasYC2LdTvrWAKNztNKdlaWZIAhgFRVdJxuX+pWdXFO
+	1DKx0Rfmmct9hZ/p6UguFzPfFAKTIN8=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-394-M2k544CfPVGk_Xqg2PI7yw-1; Fri,
- 14 Jun 2024 12:07:10 -0400
-X-MC-Unique: M2k544CfPVGk_Xqg2PI7yw-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-64-grIl4KdLPze5o9irBeXRpA-1; Fri,
+ 14 Jun 2024 12:07:12 -0400
+X-MC-Unique: grIl4KdLPze5o9irBeXRpA-1
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 31968195608B;
-	Fri, 14 Jun 2024 16:07:09 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E654419560B1;
+	Fri, 14 Jun 2024 16:07:10 +0000 (UTC)
 Received: from fedora.redhat.com (unknown [10.22.34.24])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A39511955E74;
-	Fri, 14 Jun 2024 16:07:07 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 558B319560BF;
+	Fri, 14 Jun 2024 16:07:09 +0000 (UTC)
 From: Bill O'Donnell <bodonnel@redhat.com>
 To: linux-xfs@vger.kernel.org
 Cc: cmaiolino@redhat.com,
 	Bill O'Donnell <bodonnel@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v3 1/4] mkfs.xfs: avoid potential overflowing expression in xfs_mkfs.c
-Date: Fri, 14 Jun 2024 11:00:13 -0500
-Message-ID: <20240614160643.1879156-2-bodonnel@redhat.com>
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3 2/4] xfs_db: fix unitialized automatic struct ifake to 0.
+Date: Fri, 14 Jun 2024 11:00:14 -0500
+Message-ID: <20240614160643.1879156-3-bodonnel@redhat.com>
 In-Reply-To: <20240614160643.1879156-1-bodonnel@redhat.com>
 References: <20240614160643.1879156-1-bodonnel@redhat.com>
 Precedence: bulk
@@ -61,30 +61,38 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Cast max_tx_bytes to uint64_t to avoid overflowing expression in
-calc_concurrency_logblocks().
+Ensure automatic struct ifake is properly initialized.
 
-Coverity-id: 1596603
+Coverity-id: 1596600, 1596597
 
 Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- mkfs/xfs_mkfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ db/bmap_inflate.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f4a9bf20..2f801dd4 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3678,7 +3678,7 @@ calc_concurrency_logblocks(
- 	 * without blocking for space.  Increase the figure by 50% so that
- 	 * background threads can also run.
- 	 */
--	log_bytes = max_tx_bytes * 3 * cli->log_concurrency / 2;
-+	log_bytes = (uint64_t)max_tx_bytes * 3 * cli->log_concurrency / 2;
- 	new_logblocks = min(XFS_MAX_LOG_BYTES >> cfg->blocklog,
- 				log_bytes >> cfg->blocklog);
+diff --git a/db/bmap_inflate.c b/db/bmap_inflate.c
+index 33b0c954..219f9bbf 100644
+--- a/db/bmap_inflate.c
++++ b/db/bmap_inflate.c
+@@ -340,7 +340,7 @@ build_new_datafork(
+ 	const struct xfs_bmbt_irec	*irec,
+ 	xfs_extnum_t			nextents)
+ {
+-	struct xbtree_ifakeroot		ifake;
++	struct xbtree_ifakeroot		ifake = {};
+ 	struct xfs_btree_cur		*bmap_cur;
+ 	int				error;
+ 
+@@ -394,7 +394,7 @@ estimate_size(
+ 		.leaf_slack		= 1,
+ 		.node_slack		= 1,
+ 	};
+-	struct xbtree_ifakeroot		ifake;
++	struct xbtree_ifakeroot		ifake = {};
+ 	struct xfs_btree_cur		*bmap_cur;
+ 	int				error;
  
 -- 
 2.45.2
