@@ -1,157 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 304D22032A;
-	Fri, 14 Jun 2024 21:47:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA234139D;
+	Sat, 15 Jun 2024 00:29:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718401671; cv=none; b=lRB3q71fuWRv3/eUCfm/eWbZxSLt1nSQrvJVqGgYy+kgKvoCGJNDAfxQ98xw1c2QbD/rg5yE5KjaIxO2Mjx6sQrlNaN2vTwphp+vIkw3fkQNQtwdiPlr7BLHlkndnqNcJwDwTsj038homuH0xH7AS+Z0/uBIOdz6Fh1DagNfhfw=
+	t=1718411381; cv=none; b=kkzqypFR4HW9VLYfJ8XjQjkEMJhTgAqwXqAlqAp8XZPfHfNm6Hirn4q5ChK0JWHlwRQiiXhujJzyNgHDgUDAFSu1MnJjJsfZlsykbHvdDlWoveSurdezYE/W8r4dJjch9FhDywDJIHGkDV0tGgjCxY50tPYPzq4ztfo1mXIx9uE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718401671; c=relaxed/simple;
-	bh=QzLUVCGd/IwfRy9XRwM8Zt5WYb9nFWEzZiraamlAO9Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dVJrrQehpsfJggkF8AJV47oDY/l+xSBUjBelMI9PwA1SfgiJ0DwN/6ohHR1cP9F4ytQcofGSLIJcP8kO/GNvajLldF7OeA4xATjfcnO4WF0CPYxS2ejYG7SHJtFXPCNZ8t2x5YDKhkOW1I+1BsXKl+rygpMOu0LaW18S7cO/Zn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rYkTGNFk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718411381; c=relaxed/simple;
+	bh=LzR4xBIKFgw30BDJnPo+hLkxRjT06zyi3GD1pJgn8HQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=frVOOQoVXRm9K4P40SypDB23GDwnZ6dGGTzxiQy1KWbsN8BjO0xHfqwiH24j0Bq2VBtjZAlEp+RVz/1dt+21fS5Z5zasTJnjl5OasKr19PRkp2mx8H8edKTnKCSdby5D3aThaTRFirCmTulEdMAcRN3HZCvzj6p29NmUUVcwhgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=sQQroqgX; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rYkTGNFk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A183DC2BD10;
-	Fri, 14 Jun 2024 21:47:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718401670;
-	bh=QzLUVCGd/IwfRy9XRwM8Zt5WYb9nFWEzZiraamlAO9Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rYkTGNFkD36aJM7RCXZB1yQmhEZeUAH58YooPQKwPT3DfWasaEbVzniv/3VQdUOHw
-	 yi0bd04n+gHUWTvdrlcPv3BJZ9JeNM7InpuMAzWpJTgf3bTGLD+gmv0MRzgy+nU/XC
-	 A1iu0ebyXR8NR79bVQrTQHXHl5XFT/5OlKG61UdM8LjTVpDdQ4bJPSHnC7/c+mFdN7
-	 od5ZZdZEhuB7+ydTK9NzQM2O6smJPIdjA8QtcPPffcUlXfLhz/1Gj5et9HVb4WEf9t
-	 LTrmZlMnSU3exqAfFkgR7devvkb9NUH4vbQSLvDBGqwhDtDprJmy0xrYygd9Dxt+4z
-	 9gVyz3X0KPwkw==
-Date: Fri, 14 Jun 2024 14:47:50 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Christian Brauner <brauner@kernel.org>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>, Jan Kara <jack@suse.cz>,
-	Luis Chamberlain <mcgrof@kernel.org>
-Subject: [TEXT 3/3] porting iomap
-Message-ID: <20240614214750.GN6125@frogsfrogsfrogs>
-References: <20240614214347.GK6125@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sQQroqgX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
+	Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=N5wlEbcwTNotl6BI6h68OGk4bntX7UNNJ7n+lTWI9O0=; b=sQQroqgXiXfa/w7n73MO9X1bIh
+	Xndg6p5VnAvGUWJpgnZghDl5ruJZV8Sq6LWVYX+eDhakAxG7xkalLeEdyG5lb/k3un30/7EGGnK1S
+	Jst6fB/me/2r2XtIttl7reG3MwSIW7z+LrgRxG67HxCiOgSAd61bEwUApV4/lK6nLrGplPh+/oudM
+	IvvKWcdoFcxoqAguQNbBwNY7wlVj7fNaxrxI8xdXIBfyVMr7SrU1EAmOh2mkCQNMzdRQm0gCjZ/CJ
+	nZJ6F7zEYNnuNl6ELTvDxZrkpcZLGhucB2hdtM873cerRDkGks7hOkOg0IMyysHzWXM7og9ZXUzEv
+	EaY90eRw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sIHIW-00000004KkO-00RZ;
+	Sat, 15 Jun 2024 00:29:36 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: patches@lists.linux.dev,
+	fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org,
+	akpm@linux-foundation.org,
+	ziy@nvidia.com,
+	vbabka@suse.cz,
+	seanjc@google.com,
+	willy@infradead.org,
+	david@redhat.com,
+	hughd@google.com,
+	linmiaohe@huawei.com,
+	muchun.song@linux.dev,
+	osalvador@suse.de,
+	p.raghav@samsung.com,
+	da.gomez@samsung.com,
+	hare@suse.de,
+	john.g.garry@oracle.com,
+	mcgrof@kernel.org,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v2 4/5] _require_debugfs(): simplify and fix for debian
+Date: Fri, 14 Jun 2024 17:29:33 -0700
+Message-ID: <20240615002935.1033031-5-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240615002935.1033031-1-mcgrof@kernel.org>
+References: <20240615002935.1033031-1-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240614214347.GK6125@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-And the final part is the porting guide.
-https://djwong.org/docs/iomap/porting.html
+Using findmnt -S debugfs arguments does not really output anything on
+debian, and is not needed, fix that.
 
---D
+Fixes: 8e8fb3da709e ("fstests: fix _require_debugfs and call it properly")
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ common/rc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-                        Porting Your Filesystem
+diff --git a/common/rc b/common/rc
+index 18ad25662d5c..30beef4e5c02 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3025,7 +3025,7 @@ _require_debugfs()
+ 	local type
+ 
+ 	if [ -d "$DEBUGFS_MNT" ];then
+-		type=$(findmnt -rncv -T $DEBUGFS_MNT -S debugfs -o FSTYPE)
++		type=$(findmnt -rncv -T $DEBUGFS_MNT -o FSTYPE)
+ 		[ "$type" = "debugfs" ] && return 0
+ 	fi
+ 
+-- 
+2.43.0
 
-   Table of Contents
-
-     * Why Convert?
-     * How Do I Convert a Filesystem?
-
-                              Why Convert?
-
-   There are several reasons to convert a filesystem to iomap:
-
-      1. The classic Linux I/O path is not terribly efficient.
-         Pagecache operations lock a single base page at a time and
-         then call into the filesystem to return a mapping for only
-         that page. Direct I/O operations build I/O requests a single
-         file block at a time. This worked well enough for
-         direct/indirect-mapped filesystems such as ext2, but is very
-         inefficient for extent-based filesystems such as XFS.
-      2. Large folios are only supported via iomap; there are no
-         plans to convert the old buffer_head path to use them.
-      3. Direct access to storage on memory-like devices (fsdax) is
-         only supported via iomap.
-      4. Lower maintenance overhead for individual filesystem
-         maintainers. iomap handles common pagecache related
-         operations itself, such as allocating, instantiating,
-         locking, and unlocking of folios. No ->write_begin(),
-         ->write_end() or direct_IO address_space_operations are
-         required to be implemented by filesystem using iomap.
-
-                     How Do I Convert a Filesystem?
-
-   First, add #include <linux/iomap.h> from your source code and add
-   select FS_IOMAP to your filesystem's Kconfig option. Build the
-   kernel, run fstests with the -g all option across a wide variety
-   of your filesystem's supported configurations to build a baseline
-   of which tests pass and which ones fail.
-
-   The recommended approach is first to implement ->iomap_begin (and
-   ->iomap_end if necessary) to allow iomap to obtain a read-only
-   mapping of a file range. In most cases, this is a relatively
-   trivial conversion of the existing get_block() function for
-   read-only mappings. FS_IOC_FIEMAP is a good first target because
-   it is trivial to implement support for it and then to determine
-   that the extent map iteration is correct from userspace. If FIEMAP
-   is returning the correct information, it's a good sign that other
-   read-only mapping operations will do the right thing.
-
-   Next, modify the filesystem's get_block(create = false)
-   implementation to use the new ->iomap_begin implementation to map
-   file space for selected read operations. Hide behind a debugging
-   knob the ability to switch on the iomap mapping functions for
-   selected call paths. It is necessary to write some code to fill
-   out the bufferhead-based mapping information from the iomap
-   structure, but the new functions can be tested without needing to
-   implement any iomap APIs.
-
-   Once the read-only functions are working like this, convert each
-   high level file operation one by one to use iomap native APIs
-   instead of going through get_block(). Done one at a time,
-   regressions should be self evident. You do have a regression test
-   baseline for fstests, right? It is suggested to convert swap file
-   activation, SEEK_DATA, and SEEK_HOLE before tackling the I/O
-   paths. A likely complexity at this point will be converting the
-   buffered read I/O path because of bufferheads. The buffered read
-   I/O paths doesn't need to be converted yet, though the direct I/O
-   read path should be converted in this phase.
-
-   At this point, you should look over your ->iomap_begin function.
-   If it switches between large blocks of code based on dispatching
-   of the flags argument, you should consider breaking it up into
-   per-operation iomap ops with smaller, more cohesive functions. XFS
-   is a good example of this.
-
-   The next thing to do is implement get_blocks(create == true)
-   functionality in the ->iomap_begin/->iomap_end methods. It is
-   strongly recommended to create separate mapping functions and
-   iomap ops for write operations. Then convert the direct I/O write
-   path to iomap, and start running fsx w/ DIO enabled in earnest on
-   filesystem. This will flush out lots of data integrity corner case
-   bugs that the new write mapping implementation introduces.
-
-   Now, convert any remaining file operations to call the iomap
-   functions. This will get the entire filesystem using the new
-   mapping functions, and they should largely be debugged and working
-   correctly after this step.
-
-   Most likely at this point, the buffered read and write paths will
-   still need to be converted. The mapping functions should all work
-   correctly, so all that needs to be done is rewriting all the code
-   that interfaces with bufferheads to interface with iomap and
-   folios. It is much easier first to get regular file I/O (without
-   any fancy features like fscrypt, fsverity, compression, or
-   data=journaling) converted to use iomap. Some of those fancy
-   features (fscrypt and compression) aren't implemented yet in
-   iomap. For unjournalled filesystems that use the pagecache for
-   symbolic links and directories, you might also try converting
-   their handling to iomap.
-
-   The rest is left as an exercise for the reader, as it will be
-   different for every filesystem. If you encounter problems, email
-   the people and lists in get_maintainers.pl for help.
