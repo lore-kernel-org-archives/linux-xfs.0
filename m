@@ -1,133 +1,125 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB45B1361;
-	Sat, 15 Jun 2024 00:29:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4BDC374F1;
+	Sat, 15 Jun 2024 11:44:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718411382; cv=none; b=EYAX0yd0KfC94YdXyeJfaNhISXMbDXktWRCDBDSmeq/Hp0YCuHsgEfX8YEvNDiqIIuLNfRlUMQpK52SwZCbzeLXlN6TGM6+qLhiS8tXoikdKWfozFzqBBqySSHym7jPSotgSKwniCFspyeBENfxXuQ2As8C5mdkLFyy9RKb4FY4=
+	t=1718451876; cv=none; b=nTkRSe8IX9lwaSu7gdtfqxYsMrC5UWli73P57r6Ln0Km3bZyG0kzpJ5Z1DFKUTr1eU+pj8+Fz9ZQRQ16SEeP8+DqJvqd2V0dheZCw+g/atY6PseB8Tfg/ukdlIJBYMssdP+Jh8WxduvN2NT7XZ3fUScfKFpfV7gt1TcFHvWRZBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718411382; c=relaxed/simple;
-	bh=vtz42luEAJn0VhLOUkv2/QP5NNZipfjnEVBsxy/fZy0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ueDgwav9MN9ObFoh28PiD097ywH7hFdfrrli9xfwdOEXsJ0mvNbAI3FmcslFeV+m3oQNY4K7lVvoVsmjsnT/3N37yeaScLAbw6MDPKVVC0zSRtDQsbLilfUIssmX3k95G4R4FkIPwRPgAr+vRuXnzCgSc1TXbKq1/ivUzzcePkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bixN2wSh; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bixN2wSh"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=KMlKjNaY/F8QL3qECnT8EKms3WZs5CznUIuEAKsL0wI=; b=bixN2wShYjRMBjSUYnaQovwNZk
-	EEqsZMmtJGDJBNqorl/0WokkuKb8uhDH+ctYRXT2Cxc2cx32L98paVDX2qpolK0cPMIPcz6Ilpymb
-	KD6FYBQFvNwNhpsl5fdtdvw1CKziq78+ykStUytje7gPA2Xqm5WQvPA8HfCTUt8tQ5bnrO1QpJ4TV
-	JHCU1kWSzBgrxKujcf2nydpnuTEy6geOcIr7UynmlkCtTQ4gfJ+zz6gI5vRvYpGsVSFY1wZCySEfr
-	GDb4cToeKC+23QpY9TGiqK85ZZNvJkLf7bxx6XIoelh7dIJvmEVtqbq/4uSF/zM/i2F4OJ3hFe81g
-	sluCwWBw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sIHIV-00000004KkG-3N4C;
-	Sat, 15 Jun 2024 00:29:35 +0000
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: patches@lists.linux.dev,
-	fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org,
-	akpm@linux-foundation.org,
-	ziy@nvidia.com,
-	vbabka@suse.cz,
-	seanjc@google.com,
-	willy@infradead.org,
-	david@redhat.com,
-	hughd@google.com,
-	linmiaohe@huawei.com,
-	muchun.song@linux.dev,
-	osalvador@suse.de,
-	p.raghav@samsung.com,
-	da.gomez@samsung.com,
-	hare@suse.de,
-	john.g.garry@oracle.com,
-	mcgrof@kernel.org
-Subject: [PATCH v2 0/5] fstests: add some new LBS inspired tests
-Date: Fri, 14 Jun 2024 17:29:29 -0700
-Message-ID: <20240615002935.1033031-1-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.44.0
+	s=arc-20240116; t=1718451876; c=relaxed/simple;
+	bh=68lts4Ju0T7CR+5pmBNYENZcBYUucTr+vBM8YPISqOI=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=YBebKmPcmPLnrzYRNQZQUgiOYjTgjoLB7pMSi71qenblQ6A9shyu6zU3mwwgEPGETp76cFHelOGILsIfRzHKRnEHTGQcrfbdJwsp6cJXH7NEQb80JkYhTPBa3ElwQO6m4KtkWJyt3A6j6Ht5YbR+5SAWEKjmao9Yv2nMrHeUi7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4W1Z713vqfz4f3jdr;
+	Sat, 15 Jun 2024 19:44:13 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id B7FFB1A0568;
+	Sat, 15 Jun 2024 19:44:23 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP1 (Coremail) with SMTP id cCh0CgBnGw2Vfm1m91gAAA--.148S3;
+	Sat, 15 Jun 2024 19:44:23 +0800 (CST)
+Subject: Re: [PATCH -next v5 7/8] xfs: speed up truncating down a big realtime
+ inode
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, djwong@kernel.org, brauner@kernel.org,
+ david@fromorbit.com, chandanbabu@kernel.org, jack@suse.cz,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+ John Garry <john.g.garry@oracle.com>
+References: <20240613090033.2246907-1-yi.zhang@huaweicloud.com>
+ <20240613090033.2246907-8-yi.zhang@huaweicloud.com>
+ <ZmveZolfY0Q0--1k@infradead.org>
+ <399680eb-cd60-4c27-ef2b-2704e470d228@huaweicloud.com>
+ <ZmwJuiMHQ8qgkJDS@infradead.org>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <ecd7a5cf-4939-947a-edd4-0739dc73870b@huaweicloud.com>
+Date: Sat, 15 Jun 2024 19:44:21 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <ZmwJuiMHQ8qgkJDS@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+X-CM-TRANSID:cCh0CgBnGw2Vfm1m91gAAA--.148S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tr15KF1xJr1kJFWxGF4kJFb_yoW8Zr47pr
+	W5ua4DAr9Yq345C3srA3Z7Xa4Fkw1Fka18XF15Zr4UAF9xWFy3CFnaqa15Xa1ku3y8uFW0
+	vF4qqF9xGr17AFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
+	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07UWE__UUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-While working on LBS we've come accross some existing issues, some of them deal
-existing kernels without LBS, while the only new corner case specific to LBS is
-the xarray bug Willy fixed to help with truncation to larger order folios and
-races with writeback.                                                                                                                                                                         
-                                                                                                                                                                                              
-This adds 3 new tests to help reproduce these issues right away. One test
-reproduces an otherwise extremely difficult to reproduce deadlock, we have one
-patch fix already merged to help with that deadlock, however the test also
-also gives us more homework todo, as more deadlocks are still possible with that
-test even on v6.10-rc2.
+On 2024/6/14 17:13, Christoph Hellwig wrote:
+> On Fri, Jun 14, 2024 at 03:18:07PM +0800, Zhang Yi wrote:
+>> Thanks for your suggestion.
+>>
+>> Yeah, we could fix the realtime inode problem by just drop this part, but
+>> for the upcoming forcealign feature and atomic feature by John, IIUC, we
+>> couldn't split and convert the tail extent like RT inode does, we should
+>> zero out the entire tail force aligned extent, if not, atomic write could
+>> be broken by submitting unaligned bios.
+> 
+> Let's worry about that if/when those actually land.
 
-The 3 tests are:
+OK, if we don't consider the upcoming forcealign feature and atomic feature,
+I think only path 6 is needed to fix the issue.
 
-1) mmap():
+> I also see no
+> rason why those couldn't just use partially convert to unwritten path
+> offhand (but without having looked into the details).
+> 
 
-The mmap page boundary test let's us discover that a patch on the LBS series
-fixes the mmap page boundary restriction when huge pages are enabled on tmpfs
-with a 4k base page size system (x86). This is a corner case POSIX semantic
-issue, so likley not critical to most users.
+The reason why atomic feature can't split and convert the tail extent on truncate
+down now is the dio write iter loop will split an atomic dio which covers the
+whole allocation unit(extsize) since there are two extents in on allocation unit.
 
-2) fsstress + compaction
+Please see this code:
+__iomap_dio_rw()
+{
+	...
+	while ((ret = iomap_iter(&iomi, ops)) > 0) {
+		iomi.processed = iomap_dio_iter(&iomi, dio);
+	...
+}
 
-The fsstress + compaction test reproduces a really difficult to reproduce hang
-which is possible without some recent fixes. However the test reveals there is
-yet more work is left to do to fix all posssible deadlocks. To be clear these
-issues are reproducible without LBS, on a plain 4k block size XFS filesystem.
+The first loop find and submit the frist extent and the second loop submit the
+second extent, this breaks the atomic property.
 
-3) stress truncation + writeback                                                                                                                                                                                              
-The stress truncation + writeback test is the only test in this series specific
-to LBS, but likely will be useful later for other future uses in the kernel.
+For example, we have a file with only one extszie length，if we truncate down
+and split the extent, the file becomes below,
 
-Changes on this v2:
+  |   forced extsize (one atomic IO unit)  |
+  wwwwwwwwwwwwww+uuuuuuuuuuuuuuuuuuuuuuuuuuu
+                ^new size A                ^old size B
 
-- Few cleanups suggested
-- Renamed routines as suggested
-- Used helpers for proc vmstat as suggested
-- Made the mmap() test continue so we can just count the number of failures
-  of the test
-- Made the fio test ignore out of space issues, we care to just blast
-  the page cache, and detect write errors or crashes. This test now goes also
-  tested with tmpfs.
-- Minor commit log enhancements
+Then if we submit a DIO from 0 to B, xfs should submit it in one bio, but it
+will submit to two bios, since there are two extents. So, unless we find
+another way to guarantee submit one bio even we have two extents in one atomic
+write unit (I guess it may complicated), we have to zero out the whole unit
+when truncate down(I'd prefer this solution), we need consider this in the near
+future.
 
-Luis Chamberlain (5):
-  common: move mread() to generic helper _mread()
-  fstests: add mmap page boundary tests
-  fstests: add fsstress + compaction test
-  _require_debugfs(): simplify and fix for debian
-  fstests: add stress truncation + writeback test
-
- common/rc             |  54 ++++++++-
- tests/generic/574     |  36 +-----
- tests/generic/749     | 256 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/749.out |   2 +
- tests/generic/750     |  63 +++++++++++
- tests/generic/750.out |   2 +
- tests/generic/751     | 170 ++++++++++++++++++++++++++++
- tests/generic/751.out |   2 +
- 8 files changed, 552 insertions(+), 33 deletions(-)
- create mode 100755 tests/generic/749
- create mode 100644 tests/generic/749.out
- create mode 100755 tests/generic/750
- create mode 100644 tests/generic/750.out
- create mode 100755 tests/generic/751
- create mode 100644 tests/generic/751.out
-
--- 
-2.43.0
+Thanks,
+Yi.
 
