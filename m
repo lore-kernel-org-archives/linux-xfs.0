@@ -1,125 +1,81 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4BDC374F1;
-	Sat, 15 Jun 2024 11:44:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2751DFC7;
+	Sat, 15 Jun 2024 16:04:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718451876; cv=none; b=nTkRSe8IX9lwaSu7gdtfqxYsMrC5UWli73P57r6Ln0Km3bZyG0kzpJ5Z1DFKUTr1eU+pj8+Fz9ZQRQ16SEeP8+DqJvqd2V0dheZCw+g/atY6PseB8Tfg/ukdlIJBYMssdP+Jh8WxduvN2NT7XZ3fUScfKFpfV7gt1TcFHvWRZBg=
+	t=1718467468; cv=none; b=Dggi4rVQsORxP4tsmeUBQ4tLUjNX4MFkWYwE0uBbZttnzId+V7DBUOXOUn8+5rzAFaMgOkABnJbA5cD02W5M0Fvy1OgbO/935oFmFQBsnT4H1sFDgWVBUjGZhq36sPa2wzEnhLkiW2Jw5PidnsZQTlPEEJvwjy3hqOrsHyogRSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718451876; c=relaxed/simple;
-	bh=68lts4Ju0T7CR+5pmBNYENZcBYUucTr+vBM8YPISqOI=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=YBebKmPcmPLnrzYRNQZQUgiOYjTgjoLB7pMSi71qenblQ6A9shyu6zU3mwwgEPGETp76cFHelOGILsIfRzHKRnEHTGQcrfbdJwsp6cJXH7NEQb80JkYhTPBa3ElwQO6m4KtkWJyt3A6j6Ht5YbR+5SAWEKjmao9Yv2nMrHeUi7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4W1Z713vqfz4f3jdr;
-	Sat, 15 Jun 2024 19:44:13 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id B7FFB1A0568;
-	Sat, 15 Jun 2024 19:44:23 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP1 (Coremail) with SMTP id cCh0CgBnGw2Vfm1m91gAAA--.148S3;
-	Sat, 15 Jun 2024 19:44:23 +0800 (CST)
-Subject: Re: [PATCH -next v5 7/8] xfs: speed up truncating down a big realtime
- inode
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, djwong@kernel.org, brauner@kernel.org,
- david@fromorbit.com, chandanbabu@kernel.org, jack@suse.cz,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
- John Garry <john.g.garry@oracle.com>
-References: <20240613090033.2246907-1-yi.zhang@huaweicloud.com>
- <20240613090033.2246907-8-yi.zhang@huaweicloud.com>
- <ZmveZolfY0Q0--1k@infradead.org>
- <399680eb-cd60-4c27-ef2b-2704e470d228@huaweicloud.com>
- <ZmwJuiMHQ8qgkJDS@infradead.org>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <ecd7a5cf-4939-947a-edd4-0739dc73870b@huaweicloud.com>
-Date: Sat, 15 Jun 2024 19:44:21 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1718467468; c=relaxed/simple;
+	bh=/pH+QGKRdc8Q2dh2z4DgFcC4sJ4dEUpDKJ8AryJ6txY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HT6RtBYotiYvHrzl4r15c3TuZY4flxrHlroLRXB75UxwOWYPdTCmyrZjcSkLjh4ayKRQSvLfFrzt/n3dPo5koef52hylW+ghqLzsScr93X+4R+O1DqKajWOULyLtcn3jZ6dyp+AwS4csypnHPo8EiK/pe27BffXhgb0Clb4HZdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8GCStk0; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8GCStk0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC108C116B1;
+	Sat, 15 Jun 2024 16:04:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718467467;
+	bh=/pH+QGKRdc8Q2dh2z4DgFcC4sJ4dEUpDKJ8AryJ6txY=;
+	h=From:To:Cc:Subject:Date:From;
+	b=A8GCStk0nc/NyZGFLUxaYmLb4gEj8STk67U8fqeT/8owCW0ynBUgPLqCPXfnhUccS
+	 6Fofv6Yd5rXUqxusa2Nuk/JM6X+Ybo+u+nNt7Eg2HHPBXL7L/qmtdxzi4LaDfMvSks
+	 NFZWdlVTfi9Hh/otV/bh5VEiErMtp5tcsP/hC7ZU30m1VOGEBx2R8F1UDghQH3HrCX
+	 bwqu6NnGTI9vzMW4TZ9WcGaq7uIO2kAmG6RGrPNlbKu9xHV1fK84joKRCmGBjHl6eo
+	 D7JLw2D1PtmJ8EHrfqYpw0qu/lDzCnJSEjrbQpQR4aO3ZveqJ/YBvR2va/nKSKqeSs
+	 73n+iQB6sEfBA==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: chandanbabu@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: bug fix for 6.10
+Date: Sat, 15 Jun 2024 21:30:28 +0530
+Message-ID: <871q4yfb08.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZmwJuiMHQ8qgkJDS@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBnGw2Vfm1m91gAAA--.148S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tr15KF1xJr1kJFWxGF4kJFb_yoW8Zr47pr
-	W5ua4DAr9Yq345C3srA3Z7Xa4Fkw1Fka18XF15Zr4UAF9xWFy3CFnaqa15Xa1ku3y8uFW0
-	vF4qqF9xGr17AFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
-	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
-	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-	9x07UWE__UUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain
 
-On 2024/6/14 17:13, Christoph Hellwig wrote:
-> On Fri, Jun 14, 2024 at 03:18:07PM +0800, Zhang Yi wrote:
->> Thanks for your suggestion.
->>
->> Yeah, we could fix the realtime inode problem by just drop this part, but
->> for the upcoming forcealign feature and atomic feature by John, IIUC, we
->> couldn't split and convert the tail extent like RT inode does, we should
->> zero out the entire tail force aligned extent, if not, atomic write could
->> be broken by submitting unaligned bios.
-> 
-> Let's worry about that if/when those actually land.
+Hi Linus,
 
-OK, if we don't consider the upcoming forcealign feature and atomic feature,
-I think only path 6 is needed to fix the issue.
+Please pull this branch which contains an XFS bug fix for 6.10-rc4. A brief
+description of the bug fix is provided below.
 
-> I also see no
-> rason why those couldn't just use partially convert to unwritten path
-> offhand (but without having looked into the details).
-> 
+I did a test-merge with the main upstream branch as of a few minutes ago and
+didn't see any conflicts.  Please let me know if you encounter any problems.
 
-The reason why atomic feature can't split and convert the tail extent on truncate
-down now is the dio write iter loop will split an atomic dio which covers the
-whole allocation unit(extsize) since there are two extents in on allocation unit.
+The following changes since commit 83a7eefedc9b56fe7bfeff13b6c7356688ffa670:
 
-Please see this code:
-__iomap_dio_rw()
-{
-	...
-	while ((ret = iomap_iter(&iomi, ops)) > 0) {
-		iomi.processed = iomap_dio_iter(&iomi, dio);
-	...
-}
+  Linux 6.10-rc3 (2024-06-09 14:19:43 -0700)
 
-The first loop find and submit the frist extent and the second loop submit the
-second extent, this breaks the atomic property.
+are available in the Git repository at:
 
-For example, we have a file with only one extszie length，if we truncate down
-and split the extent, the file becomes below,
+  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-6.10-fixes-3
 
-  |   forced extsize (one atomic IO unit)  |
-  wwwwwwwwwwwwww+uuuuuuuuuuuuuuuuuuuuuuuuuuu
-                ^new size A                ^old size B
+for you to fetch changes up to 58f880711f2ba53fd5e959875aff5b3bf6d5c32e:
 
-Then if we submit a DIO from 0 to B, xfs should submit it in one bio, but it
-will submit to two bios, since there are two extents. So, unless we find
-another way to guarantee submit one bio even we have two extents in one atomic
-write unit (I guess it may complicated), we have to zero out the whole unit
-when truncate down(I'd prefer this solution), we need consider this in the near
-future.
+  xfs: make sure sb_fdblocks is non-negative (2024-06-10 11:38:12 +0530)
 
-Thanks,
-Yi.
+----------------------------------------------------------------
+Bug fixes for 6.10-rc4:
+
+  * Ensure xfs incore superblock's
+    1. Allocated inode counter
+    2. Free inode counter
+    3. Free data block counter
+    are zero or positive when they are copied over from
+    xfs_mount->m_[icount,ifree,fdblocks] respectively.
+
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+
+----------------------------------------------------------------
+Wengang Wang (1):
+      xfs: make sure sb_fdblocks is non-negative
+
+ fs/xfs/libxfs/xfs_sb.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
