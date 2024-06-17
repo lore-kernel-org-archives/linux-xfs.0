@@ -1,74 +1,55 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7938119307F
-	for <linux-xfs@vger.kernel.org>; Mon, 17 Jun 2024 09:34:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBB6192B7B;
+	Mon, 17 Jun 2024 09:58:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718616862; cv=none; b=sUl5RTsHUZP/zZ/S4GxG+wQItZnnfj6PcDTM5NFAAQlWg5gOFLzH+lpVFT0MKmfGeyBu67IfuaDlNo5eG+T4fRg+IL0X7POxf3xkiICUdT9ekLBgPjx9IVmL+ISy48Dxg5z8dNzIdjLTQjH+jXV9rs6LZ435oLyG0Vj5SYzQm18=
+	t=1718618335; cv=none; b=J42plPLkFeVGW0WlR6tM6oBb8G0slN8hYtatQqhEyof4dIJtek76ZWgmrOtfBOcUdoJP8CAEfQQWk5UzeF2rbk6TqPtEGkwEK2KAJgO6uNG5+z0qoMCcPomBXBcLHbTuqmknqrJxhd4E0Nti0H3YA4UgPLFLxGTVWi5X5srHThU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718616862; c=relaxed/simple;
-	bh=GhvOab+mCRok04/yA9hiMIiPytkHb/9U93weDvXdevw=;
+	s=arc-20240116; t=1718618335; c=relaxed/simple;
+	bh=HvhKIusqhv0QYOohu6wIC1VtGHOpgCgrv0aENa/RRGs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TdqnEGkbRjatubkS3UMK5CjMDqvnlhkzs+DDyx+wW0hqzDL8MoBXFfA+mbFtjOYoKdOWRD8aIcEgmfyWTQK+3M0bfT5moYOI4vtxYZeC+cJookz5h5flN3/tc/03BUrnDgODksq8NkQhXixFFcrMi1tfH6Lq54a4UL2e90MH6IE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=S1F1UKsM; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=hoNUd1wowjMqP2A7Olv8IZnWXwaj4GvOXT4SmUzZTzMTmR5rsWOPaud3uGTWaFXuOcv5qkvMQcmU1IWZV4FKM8f4OWpkETuB//mwohslEre2hKjnSlFz8b3sXx3pMM0dRVZlWig+RBfJQcMuJ5pif8rbr6g9zK7nXIkcqZAReno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=umgAJ6Pd; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S1F1UKsM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1718616858;
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="umgAJ6Pd"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4W2lhN23x4z9spd;
+	Mon, 17 Jun 2024 11:58:44 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1718618324;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=roSRF/l+UjSsOxWpFV+d4iz/3ho6cXj+v4kuJWoKNWI=;
-	b=S1F1UKsMK3HlJdOWNiR55dVAIMWY1upY3p75PJz+3WHTGHizNN+HQZhWGTOzHCCrCw3aZd
-	sfXKmn9XMUuZBRUBu0mPo38J0/vxB9kyB9jFjnW8FBU4NgEuNpaiy2nnm1EEzC7hn/3nSJ
-	gSYZpBCtPdtjwjjvoVx6vjTQmsQo4Fs=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-80-0evKAn0XPKCelfP6xvODCA-1; Mon, 17 Jun 2024 05:34:17 -0400
-X-MC-Unique: 0evKAn0XPKCelfP6xvODCA-1
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-421292df2adso25647445e9.3
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jun 2024 02:34:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718616856; x=1719221656;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=roSRF/l+UjSsOxWpFV+d4iz/3ho6cXj+v4kuJWoKNWI=;
-        b=ZLkUgYDe7KLlcJ6B5H4d7chM66mPsvMmPoLw25oMGswlqmDWl4UiSwu3lGOsJsynZO
-         u4cIeNgviEpKZGBWI64vOROStep/m34Qjk0rYqQBVe/v8ckxNOHaICj+JTD0W/I3sb8Z
-         NS9xSOWq6a4xcGoK47XeWzusqB8IMxIlUC4KSxFpYYnq7Oekm66lUCTrYiHmAvkgs3+v
-         cZlqKxUlpCddj38zbZHJoHju5n7oYAWiGOwmZxH++AsCTcT3MQItQzABWJcDkaaWV17O
-         EN1Lymb3nsRHUgN6HjOKbU7Uh20FC1WdqpQN5Wn5BCM/Ip3HPIicAPsPoXXwLQagtoNS
-         th1A==
-X-Forwarded-Encrypted: i=1; AJvYcCX+vQwE7aDIB+hXRbLLFa51xQyaXb+Mji254bJoh2O3iCNtXBO2UcD6E8Jt+hUS8FPMkoNY+Angb7d7q0sfFFnuS0XJs3HL9sb1
-X-Gm-Message-State: AOJu0Yx36NZwxgo5Xk+4Bw8Fg4gvRAUQp/Pjv1eh9oAmnRez22J3mEcO
-	XQO9O/oTC/beJsPNGAK/vEzKw8vGHmHKXxRYL9/1LYGzMQG2BJXgZoM5axNNKFkfJqvujNkGiLI
-	SecpypXU06PGFdXGZQDISXu2t75Jph0VEM6ntyMH/hzZ4hWeAZ89qhIhn
-X-Received: by 2002:a05:600c:4b23:b0:422:47a:15c8 with SMTP id 5b1f17b1804b1-42304820d71mr75071065e9.12.1718616855765;
-        Mon, 17 Jun 2024 02:34:15 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG1T8BzPKLN6V32qh0IOTwR3BvWw2RR4kRiN/3ni0sUSBYk+kKMtHY4PTXjTwDBDi9nWAHssQ==
-X-Received: by 2002:a05:600c:4b23:b0:422:47a:15c8 with SMTP id 5b1f17b1804b1-42304820d71mr75070745e9.12.1718616855122;
-        Mon, 17 Jun 2024 02:34:15 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4246bddc59bsm17147185e9.5.2024.06.17.02.34.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Jun 2024 02:34:14 -0700 (PDT)
-Date: Mon, 17 Jun 2024 11:34:13 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, 
-	Christoph Hellwig <hch@infradead.org>, Eric Biggers <ebiggers@kernel.org>, 
-	xfs <linux-xfs@vger.kernel.org>, Sweet Tea Dorminy <sweettea-kernel@dorminy.me>, 
-	Matthew Wilcox <willy@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, 
-	fsverity@lists.linux.dev, Eric Sandeen <sandeen@redhat.com>, 
-	Shirley Ma <shirley.ma@oracle.com>
-Subject: Re: Handing xfs fsverity development back to you
-Message-ID: <vg3n7rusjj2cnkdfm45bnsgf4jacts5elc2umbyxcfhcatmtvc@z7u64a5n4wc6>
-References: <20240612190644.GA3271526@frogsfrogsfrogs>
+	bh=SRAO++uIw1OUPfCgvfEWhKZYeaVhnnf0jX/BR+wX6Vs=;
+	b=umgAJ6PdVIvo1wrvo40xC9EWOxHYypeWr0lw6BtV9NA/2Me5+5OvAtUc1A/Nnk9QDeWBj/
+	zW2B9Y7M6R+mc40tNnuCFKX5VK7/51W50WOtQK2diJavDG9ddfhPZwv/Pt22DKvS9eda9U
+	TNQFQ+xejRkMez8YcZe65whPPPBpNlvGvLnoclr5yT0rJNrO4XXwTBt62Y2XgIoa6mZ+42
+	zKFgtPvP0zFDKKv/kuv2xANddBq3awOf+OHay7/HAFWtKW1MWMu7GnIHGwa2tujZ9j5c90
+	X0wWDh6Z7bxCpIak+bkdqfPusHr62lqpAnjaxqj+eonmTPYwVoZxK9KNh49oKA==
+Date: Mon, 17 Jun 2024 09:58:37 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
+	brauner@kernel.org, akpm@linux-foundation.org, willy@infradead.org,
+	mcgrof@kernel.org, linux-mm@kvack.org, hare@suse.de,
+	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
+	Zi Yan <zi.yan@sent.com>, linux-xfs@vger.kernel.org,
+	p.raghav@samsung.com, linux-fsdevel@vger.kernel.org,
+	gost.dev@samsung.com, cl@os.amperecomputing.com,
+	john.g.garry@oracle.com
+Subject: Re: [PATCH v7 03/11] filemap: allocate mapping_min_order folios in
+ the page cache
+Message-ID: <20240617095837.bzf4xiv2jxv6j7vt@quentin>
+References: <20240607145902.1137853-1-kernel@pankajraghav.com>
+ <20240607145902.1137853-4-kernel@pankajraghav.com>
+ <20240613084409.GA23371@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,78 +58,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240612190644.GA3271526@frogsfrogsfrogs>
+In-Reply-To: <20240613084409.GA23371@lst.de>
+X-Rspamd-Queue-Id: 4W2lhN23x4z9spd
 
-On 2024-06-12 12:06:44, Darrick J. Wong wrote:
-> Hi Andrey,
+On Thu, Jun 13, 2024 at 10:44:10AM +0200, Christoph Hellwig wrote:
+> On Fri, Jun 07, 2024 at 02:58:54PM +0000, Pankaj Raghav (Samsung) wrote:
+> > +static inline unsigned long mapping_min_folio_nrpages(struct address_space *mapping)
+> > +{
+> > +	return 1UL << mapping_min_folio_order(mapping);
+> > +}
 > 
-> Yesterday during office hours I mentioned that I was going to hand the
-> xfs fsverity patchset back to you once I managed to get a clean fstests
-> run on my 6.10 tree.  I've finally gotten there, so I'm ready to
-> transfer control of this series back to you:
+> Overly long line here, just line break after the return type.
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fsverity_2024-06-12
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=fsverity_2024-06-12
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsverity_2024-06-12
+> Then again it only has a single user just below and no documentation
+> so maybe just fold it into the caller?
+
+I do use it in later patches. I will adjust the long line here :)
+
 > 
-> At this point, we have a mostly working implementation of fsverity
-> that's still based on your original design of stuffing merkle data into
-> special ATTR_VERITY extended attributes, and a lightweight buffer cache
-> for merkle data that can track verified status.  No contiguously
-> allocated bitmap required, etc.  At this point I've done all the design
-> and coding work that I care to do, EXCEPT:
+> >  no_page:
+> >  	if (!folio && (fgp_flags & FGP_CREAT)) {
+> > -		unsigned order = FGF_GET_ORDER(fgp_flags);
+> > +		unsigned int min_order = mapping_min_folio_order(mapping);
+> > +		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
+> >  		int err;
+> > +		index = mapping_align_start_index(mapping, index);
 > 
-> Unfortunately, the v5.6 review produced a major design question that has
-> not been resolved, and that is the question of where to store the ondisk
-> merkle data.  Someone (was it hch?) pointed out that if xfs were to
-> store that fsverity data in some post-eof range of the file (ala
-> ext4/f2fs) then the xfs fsverity port wouldn't need the large number of
-> updates to fs/verity; and that a future xfs port to fscrypt could take
-> advantage of the encryption without needing to figure out how to encrypt
-> the verity xattrs.
-> 
-> On the other side of the fence, I'm guessing you and Dave are much more
-> in favor of the xattr method since that was (and still is) the original
-> design of the ondisk metadata.  I could be misremembering this, but I
-> think willy isn't a fan of the post-eof pagecache use either.
-> 
-> I don't have the expertise to make this decision because I don't know
-> enough (or anything) about cryptography to know just how difficult it
-> actually would be to get fscrypt to encrypt merkle tree data that's not
-> simply located in the posteof range of a file.  I'm aware that btrfs
-> uses the pagecache for caching merkle data but stores that data
-> elsewhere, and that they are contemplating an fscrypt implementation,
-> which is why Sweet Tea is on the cc list.  Any thoughts?
-> 
-> (This is totally separate from fscrypt'ing regular xattrs.)
-> 
-> If it's easy to adapt fscrypt to encrypt fsverity data stored in xattrs
-> then I think we can keep the current design of the patchset and try to
-> merge it for 6.11.  If not, then I think the rest of you need to think
-> hard about the tradeoffs and make a decision.  Either way, the depth of
-> my knowledge about this decision is limited to thinking that I have a
-> good enough idea about whom to cc.
-> 
-> Other notes about the branches I linked to:
-> 
-> I think it's safe to skip all the patches that mention disabling
-> fsverity because that's likely DOA anyway.
-> 
-> Christoph also has a patch to convert the other fsverity implementations
-> (btrfs/ext4/f2fs) to use the read/drop_merkle_tree_block interfaces:
-> https://lore.kernel.org/linux-xfs/ZjMZnxgFZ_X6c9aB@infradead.org/
-> 
-> I'm not sure if it actually handles PageChecked for the case that the
-> merkle tree block size != base page size.
-> 
-> If you prefer I can patchbomb the list with this v5.7 series.
-> 
-> --Darrick
+> I wonder if at some point splitting this block that actually allocates
+> a new folio into a separate helper would be nice.  It just keep growing
+> in size and complexity.
 > 
 
-Thanks, I will look into fscrypt and if it's feasible to make it
-work with xattrs in XFS or not.
+I agree with that. I will put it in my future todo backlog.
 
--- 
-- Andrey
+> > -	folio = filemap_alloc_folio(mapping_gfp_mask(mapping), 0);
+> > +	folio = filemap_alloc_folio(mapping_gfp_mask(mapping),
+> > +				    min_order);
+> 
+> Nit: no need to split this into multiple lines.
 
+Ok.
+> 
+> >  	if (!folio)
+> >  		return -ENOMEM;
+> >  
+> > @@ -2471,6 +2478,8 @@ static int filemap_create_folio(struct file *file,
+> >  	 * well to keep locking rules simple.
+> >  	 */
+> >  	filemap_invalidate_lock_shared(mapping);
+> > +	/* index in PAGE units but aligned to min_order number of pages. */
+> 
+> in PAGE_SIZE units?  Maybe also make this a complete sentence?
+Yes, will do.
+> 
