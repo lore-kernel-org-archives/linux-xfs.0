@@ -1,42 +1,51 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD6719309C
-	for <linux-xfs@vger.kernel.org>; Mon, 17 Jun 2024 11:44:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B471940BD;
+	Mon, 17 Jun 2024 12:32:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718624655; cv=none; b=K+G7chDqpAFOWbZchd8b1JTuIZaAcc5jASlm56xXlqYhu+af0byYSpiLJWDEkkDJ8LryTgPyM/oxUBBY810z0n0lz1/yl6FBIn2NRHolbDFLnOV8lQJXh3H5WlEIPvagyE/1imzK/dNryRhgKWkPDw0r70SAJWDT3u57aa7hKkk=
+	t=1718627575; cv=none; b=ISw4L1KVntVZbTUkqm6Gv7z5/AFqlQyZYsL4YVk0Q1iVgYXJGxmjyJQHeZjQLC/XlASY3mAODDwf0QKcVuCVD6SkRalOXUGSqCUb+sk113CaO5ij1CyF8grlgRgxz96MN1C4HKnl2UrG53NKn7ygCDX5fRpm3JUKOFoERlApqMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718624655; c=relaxed/simple;
-	bh=ZtD/Ej6Qxhz40Ye8Uf7SHRyQeIxWHNhaooy3sQumPj0=;
+	s=arc-20240116; t=1718627575; c=relaxed/simple;
+	bh=JrgP3nuNPPlZxwTwNTbYb+dbgkGqzU8nc9dLNwncdHI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gnqBy+98jPVVAWbURC4fq4A0GEW8hbv5FTjIbtZaBt9F+PQfFAbaPa4xXrJ4nmJQq2OF3j8ViOblmkrWafr7ak1Ho3Eq3esxu59u8QLu1NopkWgV+URgAqVrK8SHhYS6SJSiE/iF67LZEj1HfuLRys3a39YDgixWkNxeRJ9EEFs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n+54pj+x; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GzNr61BhrVf8DRgZoXRmAWUpLjXgp/MakELan+pbSW3rzNGb8hFG0owD86tZutOHuNpZKZgA0RrrRUwTg7l159upK5ZHIRIpEVdxuVrkbpmHMEjOds/QlkbU0+rdmvNfWbs32/xbcQx/N89Ownl9MxoaqQZjLriImvYgKcEPNys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=W96L0WwC; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n+54pj+x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B781C2BD10;
-	Mon, 17 Jun 2024 11:44:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718624654;
-	bh=ZtD/Ej6Qxhz40Ye8Uf7SHRyQeIxWHNhaooy3sQumPj0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=n+54pj+xsYRTbqRVDzmV7xD4KGq8eHBAtKwGI0qLB4ZnzXjC07CoNsVkJMNMcHONS
-	 /ZX6QGCGPH/pVlylgzzosFsWYjTIbze/cgkHS33WoD0tPv57xIBAI/JyXVNtL711zn
-	 ykPwljqXwHFtQOKmjgpAtGWkf6c78vnPyqU/eqx74GwYXbVJIldpT5s/qU/iGpE2Dq
-	 ARsyuYfXvuNT8sNpbibyav9a50VnHyBHxEJVG5ybLE5VY9OeEX4lm5oIT6/K1tKqTg
-	 bZWkTDP8OcC8YkQnUbRQm3g0CClSfobk7v5xGayo5SO/6tUqHZ8hbX8veU4Yc2ijL0
-	 bf01E9DxnoHQA==
-Date: Mon, 17 Jun 2024 13:44:10 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bastian Germann <bage@debian.org>, linux-xfs@vger.kernel.org, 
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v3 1/1] xfs_io: make MADV_SOFT_OFFLINE conditional
-Message-ID: <hzjj2qebc3aavltys2g3uqvuoxb3l6nviywujk7t5mr6kfktni@jis77afrm3ns>
-References: <20240531195751.15302-1-bage@debian.org>
- <20240531195751.15302-2-bage@debian.org>
- <qoYaXWsiqCq-eMNbKd8enPEiLX-SsHxWz8Bhsr8rMBI8SWV4hD1zJ1pdJUirIyRK6xVb0525mayHy0Tpyzm0Xw==@protonmail.internalid>
- <ZlqoBUiK9WBpDTMr@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W96L0WwC"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Q8GG92Q9B0EsVOVzS3VVMf3oPjlHCw7Vaw6WrjeC1Pw=; b=W96L0WwCEW7Lp/+PdB61gXqpg6
+	ZXi7JmFiZDoF/iVT8B3Rytk4p0JLEcKF+AzY580QR1h3gvepl7odgiNXhFCiwxX1SSrmmaBr/tXwH
+	xNJltFs3xvnkM3QOtqCVbLsts6aQRRwE/gKhv6p+kzAVuCehEv8nsUvJHcwPtslnkPG1qtiIitudd
+	PV9w488a62geVr73R2jrY1jjKwsLGG3/CEGD0I6Lt/2FctQWpc5JQc4Pn3mLKOjjMRoOOZgMYcatY
+	c3chijfe8YooXVkDy+SerDBpmaLVTYjCmp4N1hxfcE4ehu1LsyXDIPKQxwjDamfN5UlL4iM2OF6am
+	nFWQVgjQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sJBXO-000000027Ft-3j5X;
+	Mon, 17 Jun 2024 12:32:43 +0000
+Date: Mon, 17 Jun 2024 13:32:42 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
+	brauner@kernel.org, akpm@linux-foundation.org, mcgrof@kernel.org,
+	linux-mm@kvack.org, hare@suse.de, linux-kernel@vger.kernel.org,
+	yang@os.amperecomputing.com, Zi Yan <zi.yan@sent.com>,
+	linux-xfs@vger.kernel.org, p.raghav@samsung.com,
+	linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
+	cl@os.amperecomputing.com, john.g.garry@oracle.com
+Subject: Re: [PATCH v7 04/11] readahead: allocate folios with
+ mapping_min_order in readahead
+Message-ID: <ZnAs6lyMuHyk2wxI@casper.infradead.org>
+References: <20240607145902.1137853-1-kernel@pankajraghav.com>
+ <20240607145902.1137853-5-kernel@pankajraghav.com>
+ <ZmnuCQriFLdHKHkK@casper.infradead.org>
+ <20240614092602.jc5qeoxy24xj6kl7@quentin>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,22 +54,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZlqoBUiK9WBpDTMr@infradead.org>
+In-Reply-To: <20240614092602.jc5qeoxy24xj6kl7@quentin>
 
-On Fri, May 31, 2024 at 09:48:05PM GMT, Christoph Hellwig wrote:
-> On Fri, May 31, 2024 at 09:57:51PM +0200, Bastian Germann wrote:
-> > +#ifdef MADV_SOFT_OFFLINE
-> > +/* MADV_SOFT_OFFLINE is undefined on mips */
+On Fri, Jun 14, 2024 at 09:26:02AM +0000, Pankaj Raghav (Samsung) wrote:
+> > Hm, but we don't have a reference on this folio.  So this isn't safe.
 > 
-> ... as of Linux 6.9 */
+> That is why I added a check for mapping after read_pages(). You are
+> right, we can make it better.
 
-no problem.
+That's not enoughh.
 
-Carlos
+> > > +			if (mapping != folio->mapping)
+> > > +				nr_pages = min_nrpages;
+> > > +
+> > > +			VM_BUG_ON_FOLIO(nr_pages < min_nrpages, folio);
+> > > +			ractl->_index += nr_pages;
+> > 
+> > Why not just:
+> > 			ractl->_index += min_nrpages;
+> 
+> Then we will only move min_nrpages even if the folio we found had a
+> bigger order. Hannes patches (first patch) made sure we move the
+> ractl->index by folio_nr_pages instead of 1 and making this change will
+> defeat the purpose because without mapping order set, min_nrpages will
+> be 1.
 
-> 
-> With that (can probably just be fixed when applying):
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
+Hannes' patch is wrong.  It's not safe to call folio_nr_pages() unless
+you have a reference to the folio.
+
+> @@ -266,10 +266,8 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+>                          * alignment constraint in the page cache.
+>                          *
+>                          */
+> -                       if (mapping != folio->mapping)
+> -                               nr_pages = min_nrpages;
+> +                       nr_pages = max(folio_nr_pages(folio), (long)min_nrpages);
+
+No.
+
+> Now we will still move respecting the min order constraint but if we had
+> a bigger folio and we do have a reference, then we move folio_nr_pages.
+
+You don't have a reference, so it's never safe.
