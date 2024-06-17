@@ -1,83 +1,83 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1099E196455;
-	Mon, 17 Jun 2024 23:04:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38A02196455;
+	Mon, 17 Jun 2024 23:04:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718665453; cv=fail; b=MbNvhVERhiLPuaRkVGh3c0kHVPMUonll9FUhcxh+lNL7pS+CZTFPPPKzKTFIu9BFJtp92RRHjddKg9JSJlmBON98tE2J6ZBu/38Amyhz6EdVvqlcAd37ZcRcAcSTzBUrsGVCQSXXTnOvpKerbvQvFoq5ABler5ECugKZf1jcp68=
+	t=1718665456; cv=fail; b=VYlx+f7WVucreZqLFvvRfz32ghriXV6QV2hL9rIv1DxfmC4Rci8XjYVDpasqF57uQ5N2FmDGTWXc/31LTVfIrmUnqjkg/CBxVbaq3jtsJ2PMvwSOuZwIMEniewsfIZNhJdO5BOpGQNZfdhvjQz6DUknAdhASH0Vdi9UPs4JYt2g=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718665453; c=relaxed/simple;
-	bh=6YDLqBx+tKqWfK8VvpXaxyKJjGgmNYvyu+607u/sQs8=;
+	s=arc-20240116; t=1718665456; c=relaxed/simple;
+	bh=nDC3bUj+Mt8NJRilcPLi4FbhySkxOLKWNI5go5LklVE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Nb+6P8HKmZrx/wD7cZ78cEksOo8APMJ9hhTJ4y1YembypazTKSN6MpF3hVoAKRhO6v1FNDfXWglYhG9Z+sz3lInl5rxpV3urkmOhmYORO0PdXtWghaKMxCCyGEDmjFiwPdyuHz5e8N113D7M56Yaf/i/TP0zz9NI0UL9JpPL1ZA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Q0NslNs8; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=czIw8qZ6; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=fyLpPCdrAlGXti7lfxGCHvfuaLvYpLjLlr4AEe9t5JEJgOmIyG4ugwLzxupTLtIvKBlU3qgZfXxVZr1HHCIL11WM8HuqkrY9rcolTHigLZkrNHTYLRs+dEsjjfwgLewDHfH8dXorfEErdX1PsMY1pCLOF9h9unw5Yy27HcAARTQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=dTEsawd7; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=pEgZfCs0; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Q0NslNs8";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="czIw8qZ6"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45HMXTbq010519;
-	Mon, 17 Jun 2024 23:04:11 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dTEsawd7";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="pEgZfCs0"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45HMXX2h023622;
+	Mon, 17 Jun 2024 23:04:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:content-transfer-encoding:content-type:mime-version; s=
-	corp-2023-11-20; bh=TMBZenXHmNrZJ3tRTtEcmvKpcixYc8k0CTDmCY00Ae8=; b=
-	Q0NslNs8w0Fd1XojkVdQ58CqsHRshNQLPro+AkwFm+MATHG8ngqbPrrw6bjMc8af
-	EF9K+7ZWtLiSRqxX31NK13bq68YNxIOns6cuHPeZub6g+zsT4jOzjf+YspaQZwvr
-	R/JvKtvl9FGohSXE71Jci8Kmxbo+LxuXHvNo+WHDXf+EbLKZDhsdhDh65CDxBg5l
-	/nE+mxUVwMC8TpLJytyY91VFFSS9lwiFskAm62EjTOeoZ3okjPV+1iey4fzKWfFq
-	RapyAtJ1X+Pj9C2PRSylu7Qh7Yc+VjENPQigoKUfxV7rI7bJ+nDM+d88biluo4Rd
-	rIGWsveIXELFFSgYVQZBcw==
+	corp-2023-11-20; bh=xRbeq7bNG51EHGx5h3o5Ighc2Is5rR4P6AlM/mnylWU=; b=
+	dTEsawd7HCfk5jSxiGpg6NPdA2/iiGOSTXEuF9zxS0dy3dpqDzHrEBj4jItZMA4e
+	v6kK0NhFAN5LXJzzeD6ZbgPd3lUicTrtf/GvDo8BBYdLcuM1AIDiI+dMtDm59rVq
+	j6NtvkI9PteR/X9gpjnQdwQh8Ou87T7PaZ/GEZlOqbpaFA+QIlQLp5hkHXpKKqNz
+	Wt9UgvrDl9r66/Q6h7/tcCFK5E1Hmuj5VORk2cQIdduX4N6QWAlJLgtkOeC8pYcz
+	zeiDEWVLHT9FPCa7+qJh/9b/MQyEv0QguU/wsLUjaNXL+AaSjN5qcg69xr4Rmifl
+	0vA+dTqWhXe8YcbzMbsvnA==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ys2u8kpyp-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ys1cc3sb9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 17 Jun 2024 23:04:11 +0000 (GMT)
+	Mon, 17 Jun 2024 23:04:12 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 45HL4G4I032868;
-	Mon, 17 Jun 2024 23:04:10 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 45HMXQMN032918;
+	Mon, 17 Jun 2024 23:04:11 GMT
 Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ys1d73k30-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ys1d73k3t-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 17 Jun 2024 23:04:10 +0000
+	Mon, 17 Jun 2024 23:04:11 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=U5tIG2zrmTfMhidPmgby0Kxr7QnxQA8RgXZkqqfUz2D6h9F5Qqy3H17Etz52td/7HgwMdg3DqSimWjPr5eERmrziR+di7eFQ/O0lTV8G+nj3/5A4FGV26NxafKDzrOB+YEamAxS8wP18Vvd1pHN3j/3Tp2d1M3u1nAm58qjiO/Pt1qhsDTifgB6iaGzLeW8VIuKkF7ZRFHLjDMnL6XdnwyKtOnuy6utWw/Xext1RXzHzsAjWA/w3SsspxLuHn/MIzePQ8nGMcgPgAE1y1I72nV1GxNgn41+QZkLKijURmJxWmr9YgpT1E6g57wFXdT+U82yNi/a6d2uTfTpD1JoFIw==
+ b=WGUGgCsHYk8jZS/lJOJauxgr7nxpkorPuTdRqbxUIp9mHdCIJ72bJzNV1hI1egvfqYHbpvvZUWgjLnF56sxIYVRaobgmApRTpaIgdAjfqVVcVfprptECpsXV4aGeQpxqQgP+sjmuo25pj0euzG2pGObtwiSqRQEJ6xA+h3dsW6EeLb5FMgV38SkfePA92miXxv24j5VUSkWLtz6nPqhhqvYEbqUYHy55/Q+DdcR87Praf30Zd09+wVd9QeahZaaaQ4WjGvjUuvCdJ+VZ1d6oxmyBziO+mbXT1Ulds4921FLw0RBuVGx8DaftkTA9TWC5fg41YRodlloZq2x1wpgYbA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=TMBZenXHmNrZJ3tRTtEcmvKpcixYc8k0CTDmCY00Ae8=;
- b=mIipxdcpo9j238CKOdVPzOyTi1YZj2tUwJ+/qcZrHmmFabialtNzOYfUFcPTNC+O0DAUvkw5vhe3/GTN7f8hsLinCLOZoLOjpJjOI82TRbH3hEdoquOpvmpUuXUZq8VSZQGleqJLE+83mgtTAC0BRsoZ7h4C28PKVzIAVE0Fx+R+MPbjqv7kQM76RlEUnRVzErvRleqFZYzllHkyg5hY9NXVvUii6SekL1iDhtuLOq5zHpfG9vaPtaVqvSx//Qhe1TlH0RWj4xhXjFX+tXXZ7aai5TQ3LnJ7+FteEaB/u6WQJXiR2MiZh4CsU7MuouvmFoWRhSpOT2OXzHXnw9E73A==
+ bh=xRbeq7bNG51EHGx5h3o5Ighc2Is5rR4P6AlM/mnylWU=;
+ b=Kq7fiVyCL6nrdVXcO42V7xiSZhfrMItb2QULsR8m3diVoZ7F+lnfydnjH0L44sUiniu4C4GKJsmdbyDSMBBRFwai1g2kuGVNSreyIg5wBr/GqM8HnMGhGyHDPFxnJmEP1u9Fx9F41KqPqHL16VNRIYR75d+8R14uACktp9HLMpnGPoGVfYpCGM9jTVX7ANHz1OTnltMLz+CB/4aPwYWw1sKznNPi3gqQfxIilZeD1EgD78r7iaurNA9/a9zHvsf0PAI6oBHqK4Hm+ndfzhRwKZqDuZKVuSCn3E4JYxT7n643Jlg1/WFVNuYQiGgDtOFoqIfmc9lHf6uwG9XK6pD1OA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TMBZenXHmNrZJ3tRTtEcmvKpcixYc8k0CTDmCY00Ae8=;
- b=czIw8qZ6UuzySdKIc+9Bl8ppyBwYCegEeeTWUu1OKt5+GhcQRgvM0SKJ4RFLLjQwxRR5zJWR+VWILbLyuLwkntwCDt18/HBctvGpAB7ACzQCoS3cbWwO5kweI9PlInAKBIAkBFAlKpJrgwjHqx6dQetGEt0tvGaZkmYzivZLDuA=
+ bh=xRbeq7bNG51EHGx5h3o5Ighc2Is5rR4P6AlM/mnylWU=;
+ b=pEgZfCs0Qjms8hsTvyHWgYBAwSIo42TxcqU/OiM9bHkFkdEBjNk/PSLIxlEBVaFR3A4A+8aVuqh2+fw5HfV1C1PivPT33RhDQvmLB6Hx83/53LOgjh2pTQkCQq2D4bve0ZdXgiJOGSFMIN6tODY74g1Ahtxw//Oj8XWPJJeoVtc=
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
  by DS0PR10MB7398.namprd10.prod.outlook.com (2603:10b6:8:135::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7677.30; Mon, 17 Jun
- 2024 23:04:07 +0000
+ 2024 23:04:09 +0000
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::a63b:c94b:7ed8:4142]) by BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::a63b:c94b:7ed8:4142%5]) with mapi id 15.20.7677.030; Mon, 17 Jun 2024
- 23:04:07 +0000
+ 23:04:09 +0000
 From: Catherine Hoang <catherine.hoang@oracle.com>
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 6.6 5/8] xfs: ensure submit buffers on LSN boundaries in error handlers
-Date: Mon, 17 Jun 2024 16:03:52 -0700
-Message-Id: <20240617230355.77091-6-catherine.hoang@oracle.com>
+Subject: [PATCH 6.6 6/8] xfs: allow sunit mount option to repair bad primary sb stripe values
+Date: Mon, 17 Jun 2024 16:03:53 -0700
+Message-Id: <20240617230355.77091-7-catherine.hoang@oracle.com>
 X-Mailer: git-send-email 2.39.3 (Apple Git-146)
 In-Reply-To: <20240617230355.77091-1-catherine.hoang@oracle.com>
 References: <20240617230355.77091-1-catherine.hoang@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0336.namprd03.prod.outlook.com
- (2603:10b6:a03:39c::11) To BLAPR10MB5316.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR03CA0355.namprd03.prod.outlook.com
+ (2603:10b6:a03:39c::30) To BLAPR10MB5316.namprd10.prod.outlook.com
  (2603:10b6:208:326::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -87,80 +87,80 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|DS0PR10MB7398:EE_
-X-MS-Office365-Filtering-Correlation-Id: 156f35b7-06f7-43db-6036-08dc8f21cabb
+X-MS-Office365-Filtering-Correlation-Id: 72cc1d04-9299-49c6-1902-08dc8f21cbc8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230037|366013|1800799021|376011;
 X-Microsoft-Antispam-Message-Info: 
-	=?us-ascii?Q?zLhuL//vxcItJvf1DMtCQRC1NvEmx9HSf1Lp2vCdAUEKN4t32IWxf2kdcTIF?=
- =?us-ascii?Q?VB5LXw3G76pPtRMrfLWA5awkDwVsmy8Nlnv/Zk40R6pAnBrytaJtjQGKv8wM?=
- =?us-ascii?Q?TQmEti0CbVQRfbENVwVdbVnCKkiuZ8AJCoeuH9aigEe3yGxlv3sYkpJcjrRN?=
- =?us-ascii?Q?rODo6dYd+Eh2WDPXWZzXMBT8M4v+yHzEdJ7NYzwAR0r0OhTYOvNu4Xkbtrza?=
- =?us-ascii?Q?JW+n2+G2S8LHmQnVFoSKlnWywAtBQ19sImUWbuhWLO6aPU+q5JS2JdlbtV1h?=
- =?us-ascii?Q?argH48n3FJAeJ3yPk0b69BPvdFIsVch1iUhrn+VWMXI7OGg1aeNzXyT/g5BV?=
- =?us-ascii?Q?bK5AYsfHWCN0pxCEi8ggGs1LoH2oJFN1O13OUj7Vb294Y6mNTs3N2FLi8iG6?=
- =?us-ascii?Q?GXSFmCIrrxNAQwOg+icXPkZn8zSONvaGd8Qh1TU2CpF640+dKLyFyxiU3lnw?=
- =?us-ascii?Q?kwwSFIvOK8eI6CxFCyiW6VrC+NPA9teGmDVeiJfN2/npzu0d8RHEDYYiEs9h?=
- =?us-ascii?Q?cEs6w3mWGkjlXeQtWfUNxHJ8RA2PTccYpVA+bJ1vMslMrDjj6ZYhJH5Hy8c+?=
- =?us-ascii?Q?ZfA4vg7kU0USQyu0FepfJ4fawHfmcIa6AucjN/Q8y5gRMNNZNonQz0u+uc7P?=
- =?us-ascii?Q?iSwUku3DxyrOdrST+96W2axt8vaxdHnfRdUdtyREQHSMxMh7zj/QzxRjGCLR?=
- =?us-ascii?Q?FI4VN6hkeK4QIood8Ed5VY5blKu5m4Qo3puCgAY5SjD9vMc84GJYEWduL3SX?=
- =?us-ascii?Q?INjFGgfdUyUBjAHxONofRxYNN3fGh0tIGyBhrtC56x8S6o0RufmNzcwVEdXU?=
- =?us-ascii?Q?8lc+XOYktPK+M03GeE35ogjHRgAh2e3iShGYrh8cVNMROVWMnb7weNRVEM65?=
- =?us-ascii?Q?ET6ESrPszrnLuEG1tytBDaWdewc9fp8uwStJXsx/GArTUihSdRVXVJjJjJAZ?=
- =?us-ascii?Q?TJYjSuaNwkiuGkayFCvatYnswUvZNHZuH8fMI1gQ9gJFn1bsMy6Ltuq5Efm3?=
- =?us-ascii?Q?W6zVIIAFvGzJsXnhnqDKHJEJXM+fXmfmKI02mocnfuhKzksMUHnyPW4Ygzv5?=
- =?us-ascii?Q?8ZkR2C1bD0xiyYN7qqTGMAXimvMj+8OkR/CGU/PY4ZE3ncgtguqynh9ZckZp?=
- =?us-ascii?Q?qjeKq94YhA/xqEI7siOkJMoHgc5NFRpeU0VJirGGrkMsq/fFM2MOPfwtOXvi?=
- =?us-ascii?Q?NXGI50x2f/37h0Ujj2u1UoRPLp6XBjmtqw2p/2s13fskoDE3ZVVgzuebX7ZJ?=
- =?us-ascii?Q?hll4cigvzvEihKDJxdkAquKcSqotkmLVxiBPxE5wwovn4pPeyw8yknrNqgCR?=
- =?us-ascii?Q?w0g3tWXFc7sF2S68RQQrMB98?=
+	=?us-ascii?Q?mcqJkIq9AwKNmUAem/0SwqRQaSaQrB0odMPC0+ciY2t2S7VIdzNtLWZk6FCV?=
+ =?us-ascii?Q?9wCnQ1iQjyAKy1AkXUt9khLvN0w5ZfKHKpjcLXX38WGkXaHGhVjV23i3AKpk?=
+ =?us-ascii?Q?4W4cL+kuB3Dp+Am9cP7xff5OmRjABzW2LSM9aJ9A8k9VI0kNHUmqkxxp0Hcv?=
+ =?us-ascii?Q?4oRJ/Avz5jQlDXiXSsAL5gAJhUAlqW3W1wAveQddeezPAceDQqzuZ2vEO3oy?=
+ =?us-ascii?Q?g3IJcrSEVamz4NRlb7xunvCfFVEu2VbJb77li0B/cfNMRfCSWbjjFFsNZOMf?=
+ =?us-ascii?Q?OSOOhd8qY4Im+T3fQu+YJIZOTthPELIHuGPYW/Tjal+uuLOXCkkRFElVRFPk?=
+ =?us-ascii?Q?BZ9PX2vs5HrfUwikekQbt01OU8Kqe4yN9GQA00n9+BlGkpgC7ZJzAUyrl6ZK?=
+ =?us-ascii?Q?B/mwEOSbZgQRkw5q1EGMMWkiZ83OQwJa4buIgJe+L1QVD1lZzGbut6NBDa73?=
+ =?us-ascii?Q?gIV3Lw3Vf6pMw5EG/YXPUPKsdfNQapJrG2XIoNzeLzexn4unQWeRvBMPKS9X?=
+ =?us-ascii?Q?qaTDTeDzY9mafcA3gyM5Ax/EezT58wRYsLG3wk+SdqkKaAO7FlA7cc8/1hlE?=
+ =?us-ascii?Q?nIG7ePTAiP5lssmSHQ/0Bgkc4/FI5NscA/CifmT8qakhAuc+E9proXfUA9tO?=
+ =?us-ascii?Q?U0NtLhxREyu4oTSIQ+uYdpTr53QdEtgakOf0vSJ6QCDZLLPwLd23GvRj8Kbs?=
+ =?us-ascii?Q?2nE0PYyMRVnq7LHAX07JVtgK7kY6HDuwpQuxCUR2mLxISten/ffJvoSknaiZ?=
+ =?us-ascii?Q?0H+OCFhIrwo0v8oM2o7Zfz/TP7iaeiIhQ4GNjD1vAs8FS6lRiRLuPl4NMDzm?=
+ =?us-ascii?Q?dMh2UqBNe6Dd2pt8+NE13h/SSfew5jmdJlZJupGYeDMsbxirf+1Nd0HJbtLs?=
+ =?us-ascii?Q?IKL+l5MK5BDo+6zSZU79rzZTUkKW96ayqJ24FZ7PykoZDPRmoU2eXzJT5Xyi?=
+ =?us-ascii?Q?MbDXJKTw2O9TfOvN/iRfQOH/yf03REaW/R9LiCgzxhy+YhFaDuoEKcnQO7ms?=
+ =?us-ascii?Q?TdtVchSee0rSJEkH0bxh3ENahzgfxsdbHKQCmwtF7y6Lo71dBNm2+d2Q6dn3?=
+ =?us-ascii?Q?It4deVbAhDIx2MwTD9vNpCpXeZJEL+1p9G8IIW9L6LDhw1CL5q/bmDFVy5Ka?=
+ =?us-ascii?Q?pHvvRKgncBW0U4kZL4bJy/f50yYARnXiKf4DKgOJlejTD6hXQbzzc0zKEYtx?=
+ =?us-ascii?Q?A/MlAHOj2d5E311S0iDiu9TukgF6Ducw/jTvDbceSlXATUW2Y6ARSzjBghlC?=
+ =?us-ascii?Q?e8B7NOGTVs5B0TNG9qnvnjeIA5m46d/BMnwZNjdOtV/FAeuw1j3I+zAtC7nA?=
+ =?us-ascii?Q?eJ53JOFGS1ffEMRQtT+XLnKL?=
 X-Forefront-Antispam-Report: 
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230037)(366013)(1800799021)(376011);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?Nm/LSiZEyGY7OKH1yTbcMByOuydSSi522UC/HsiMhgivfUknoXt98NqJpWFX?=
- =?us-ascii?Q?pHiPv67vwNRNC1qiQI/arz1EBPWDWxrSqZkMUaTRm0GxVdZxmRq90CVdNE4g?=
- =?us-ascii?Q?ump/GtlyNrSpTctA/zd69SUT+5Bc2N/q2WS2mYYz3VJvGfF0RdiRfm0Mq0mn?=
- =?us-ascii?Q?RsV6O0j8LshNLjrrsPCRTO6Ad02eDvjHsXxcKT/tyS/t+tMcPXj0xdiF0HMj?=
- =?us-ascii?Q?8eo2PQA+QXn7A8vEC1qw98qkgbaeJMVPU5ud9gUU4NuvLIe2R2Rp7M0B2a61?=
- =?us-ascii?Q?Y0gPRp0Us2MBowJM5LtjhCoTT19+qaxMXfYiOSyVLBKoHu3DQuHu8iwIKdRu?=
- =?us-ascii?Q?pTVuy5FR4dxlS+QENh0+MhYtibVVdEHz06HdMAf4S9mcHketRUdcR7IaNsND?=
- =?us-ascii?Q?i9pwgYVjPqF+6lwK/cNuIZwPxSgnyGjJGiPEpVAhcYdcwx53OQKIrLRAQvaX?=
- =?us-ascii?Q?EAfMfSUD4XeVfJjlSDmvdgAs+rY9sVUJ8K6phtXAPNMHpVYaLzeNs4Pa8dqX?=
- =?us-ascii?Q?UW1iZz0/u5PIq5ULFu9KNTeMpSZFDsImoiOQAnPssDisqfIvw4sZZZk2KLgg?=
- =?us-ascii?Q?2KJm+GanU+hOBXsNX8QI+c1EHTbpk6XIodxZiSD4bjh0/c06N+0vd0+1Opk/?=
- =?us-ascii?Q?EE3R5MiDleILlYFS0RBBd8cnaWxJHd7coDs9PHoRk4KRAFXlGTSvqujUQTp+?=
- =?us-ascii?Q?BQJXJ1x0CGZlp0MtFRash+9vKwMsxyK3icz+bowhI+PIhcq0idKo4YhHgAnN?=
- =?us-ascii?Q?Q382Yq8pNewy960j43HfaAeH5atK3vwmA1yW/hwSpuDqUUrrCzCE2sDgPs9Q?=
- =?us-ascii?Q?nRt+s6iF5DGw9IVTL1V1czEoy91fXBh4QvyCl1EYQ/2LNnf/Be03m+1PcrJh?=
- =?us-ascii?Q?fqxvgJtOCL5R5g66VRuO9OfPNnyfBkklVXjmHNyIU3iPb8j9/zw+F70mkFw2?=
- =?us-ascii?Q?C1M5TALZU1bhcY1s2OV9bWQBO9ALDBWZ2mROfxgbes9q/B6JyyDHGQMPK7ZW?=
- =?us-ascii?Q?N0N8dohAJcgg7/vYYucuRux/xXuZoeUDFG871cTXHLPjmzopwO15mLs5Wkkz?=
- =?us-ascii?Q?c2xSxPn4CCvYoe9AEOjMk3SJ0JngIHgnPbSppbbmJ6QHpPZtv3M6A2uzIoE+?=
- =?us-ascii?Q?d0NlRoqgL39oagi5EbGRTI2rw4Tp4fXL0FNnvNqu7PjDoddgSnNw9gbqeIMG?=
- =?us-ascii?Q?xHVuWnYPUOxk1B0m/SDgvixu+vAnNd0qVs/xbpkg1pOIWDjYxBTSQgy59o7Z?=
- =?us-ascii?Q?NFeEwQ6wW1EUfC7tYj4+Sm3xM6W9dqxL1gwglfcXxQ+bGr0teIRmc7glPokR?=
- =?us-ascii?Q?lTr9F1UzGZCI4q5T1sKuQj1RJzq45wklnoYgKsRZyHo10SUAwMF+Zc6As3SM?=
- =?us-ascii?Q?Eh2Iti84Ri5SO7vmH4jmS5IFxKHFL+ReDGADt/NBMdv0pMasUsfkcHCh+8mg?=
- =?us-ascii?Q?pFBW2UgW8doP4UdEOi3H3Fah6+IONK5FXcitGiBQo2hqq41i69SZng3CAq2v?=
- =?us-ascii?Q?4TYkxbAVXVuk4GKXzJs82ozJczb1WFXgSUKfN6ggKmECbdVzkAqjILCjzH5O?=
- =?us-ascii?Q?VgzxfZLn3gMmfS4rPfiHQ2LGO+jk0/s/2bpv0J60KVMEbXAli+5N4rlrYOia?=
- =?us-ascii?Q?FD1QRk5iJhAB5t4yRrg5eySkJ5k1d3uKJNtAGnvB0GK6dFaErdcwJHu+PtP2?=
- =?us-ascii?Q?bVXshg=3D=3D?=
+	=?us-ascii?Q?k1xljW7Xoh4JcsM6gaaJfWec4yKX7Ypc+RwzpsBt5pc2Z1S3F5Zr/YF/Dbfq?=
+ =?us-ascii?Q?k5Lfn3mRoS5KNaLeoyPDJpCoLYZ0vYNqAF9DtPV/28R0V0nT05KYE+Me4sNc?=
+ =?us-ascii?Q?H8+AtYeew2jBOZu92iNQu949X9AIhWP3zQwXwpcF44/YpPVf63SltsbMDVqu?=
+ =?us-ascii?Q?VbXBimMfVAZ0YVyt3SDhIGjMObdOvOWgfwwMgaxKKGgaiUBn13vjLdOJ6Kya?=
+ =?us-ascii?Q?/XarmmBvJ72PKOF4WbBiee9BQSt3+NwC9xrhMlS1pcqKdCfRn0N8tS1pQfy3?=
+ =?us-ascii?Q?ZfYw18+LO4PyATgOfkcbSVcNWKJ1kvLIBpoVIpdjS6WBpfNzP6ZKMDA98dr9?=
+ =?us-ascii?Q?EWTgZLe7vJp28g9DG7G2MKu6EUzHHWqOlvCRdL+KEBse6wLrewel+yVkRSuV?=
+ =?us-ascii?Q?6Rf65IW1I+vMO7hH/XlAW6L8s3RGbdyUpsiMgMu/QUniiJzSLgz/LHy9trcD?=
+ =?us-ascii?Q?w6hOrrACnKxIDXsRidqNmkLKx5VjrtKemsDH6UvpjlwC8H3c743V7wtYxNoK?=
+ =?us-ascii?Q?DVsntB3GYuXGbzXG3w/XOuSSE+1mJLwcBg/78PLMzuthEtXBL7LpQoGrViOr?=
+ =?us-ascii?Q?ix79C37hv76K+/NvbZlDIA47lGECF3eB+78t1KkxrgHYLVLUTpOIZD6CgFJQ?=
+ =?us-ascii?Q?Ax7j9o0HWMqZTvGOvc80qUHsGumQh6noA0A94O8O5Yo2oCZMJ5LqvHwXyFt6?=
+ =?us-ascii?Q?iY0V4MKtQRzPy6wVnTq1tTRgZtq1e3eLtbBcyaNjRY4EN8ogtEY0NCRtls9S?=
+ =?us-ascii?Q?Crn/k+Ba+uouol91RUnMHhFb/J12m9X6OluYRxbGk6d1PiyIZ9x3siHrYFvk?=
+ =?us-ascii?Q?1V2QwtPnNue7Qy4Wt7tQx7QPASJw4nIv5rjUCWiMinogUrJ5QgT9VpYwiEqo?=
+ =?us-ascii?Q?FQC5ZKhZR/+MbGhBRG2BKm2l5jwmGEBWYRso/gSp7snbWlJPkzs049GcKW2Y?=
+ =?us-ascii?Q?N2HOOJqng9QQ6zyVAtlb+hTFS4Pr2mFmQBR2R24faMf0eVecSmQusreCXFIw?=
+ =?us-ascii?Q?ZylnLMMqHieZlMgTOXA5H74ZaOY/8LTrkgXDM2IN04X+kqjgg+MUC1Knho8D?=
+ =?us-ascii?Q?5UTe1nJdfw1Ng8TiPLCdvPzMSiRSYnHz7WSPfmNPsDO8x654481F0zpQE2Nr?=
+ =?us-ascii?Q?MWdV3HmFkhhdQD6kR6eU8Ftn5CHONTc4MEGZLeR6snqiqXomt8w/yV1t5C1j?=
+ =?us-ascii?Q?Cu0D4cxycmmZXhiGfhTwh026FZDbBPCf2d/lt0jJH0NuVQqqbezxvUxdh9cq?=
+ =?us-ascii?Q?6kRewbN4QhxV+1td9cqIboFoHpnUoFNGzorz6ioEfKw9bw/KxnnKritcd6S2?=
+ =?us-ascii?Q?if15brqWcvrML2vIE0zm+2VBYqv6+Uxn3wxY40AS5wjQYc7+2Nf0ShT9b014?=
+ =?us-ascii?Q?80BC0mEfV8RnmJkN6tNgTQAQAEHwuoL8xYPcMnJD92NPYpaKzDsU66UM+SRK?=
+ =?us-ascii?Q?0uZV0uyZf4iGrLeWw8rnHj8b9//Z0KOEOTc1XOYjP9qH8OcNTRKecFBU8Lxl?=
+ =?us-ascii?Q?JUDsC9rJXFz87wDniA1og6t06Woks+NMyMVQVTfw+pUDLdlPVWPazIN8c3oo?=
+ =?us-ascii?Q?rQPYeDOhwBXNs9HrevYWdV6nZrRBzFTEx+ff1UoBfTpNq5sMZk2OsGVAqSgy?=
+ =?us-ascii?Q?0T1pWFRUVpO2BflT+k77mIcczqv5xkyUpCoOqOyEtrpDdDd0Hc3qSI3UJiyo?=
+ =?us-ascii?Q?2EAF/g=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	dnsMrXx7SyndtUatoBEna6b+Z4ABNuiJqBcU4XUtaiSOlrNABnuiXKgddmW34R6YmvByVjso0X8dQNeeLrzYEx5FzdHoF0vIi4cDwGAwmSirDVW83/p6ythK/HW4ays5OIGhkBqU7nFlkqTQ8dAlHhuNkNP0U0Gdc5StHdK+k8UlokYGdEheKr3x/uJsuGa8Wr40Ovu0/d6STJTKc19dgf1Jkd0c/m/xrR1Zo/CCtItU8Nzul/W8wEzROh9uAYB4ADal6LCuTCohhVBEUkoc+5go/M+vwXEUrFZM8xOG11YGdggdVjn7X8JrC/O6cULDGOak0TnWLQp7/AH4kr0LkgJdbKEiWzskbRniMAdcbySZLgsxCFYwyS1HYIflxiiL7ZkjD6sWn0IEeb6rc6xJN1M/pj8UoZ1b14ufikGpzRl8bT4nVfKiUQZ04bT0XB2Iv0qkr1Kmua/ZRnFcojNAltqi7r7yItTsWLI/thyACUcxmYggSFsrX9hTmAovJsgz16gkIjNFFB5OSmg1AMAubW3/n/eqS9R+XDx4icl14IKiyEerRqEgkwNqbI2zEM21a594uD/smHJgi3H54QJfZV1EJGvQ1rvbrTwzMjcj0nw=
+	ETFET2rQ5XJc8c/6idtfe8a64DZmDE6t3pg8Snk+dZKkAxtMk7Hogrh23S6Y9Ze1jAp3Hs2dA4JRTAa5xFqHZkxk1ZKwgAeHv0ogdcWyh8pczdAFKCf6byFTmD2+NzZEyMRWqdZgVsdMXqdCRcgw8r9mSEx/P74zfXY4wHOHbsaR6I2IB35G5qZtw0nw/Hk/KlO+Iw11a4uWYD1mwr09sxZGIlcQ7Dc5ywZ/NfuRp+COX1okXdk0SAZHNNcouqhiXZ6VQ8hRkgc4EmnAzQp8AGGJNGytJHra5kHZsaz1Q5IBKjuM48XvyBFVEKDUw5leMBTJAVumqW8MbSF/2BmoMeaqi+VcUBVXTcm+55is2bcCtw3Wrup9SGvfFVX2yRzbOT2Ubm++p9/sN0bxl8karNglW3/gE5cpuNxvfc5nHQj5bsCeaKXS3EqxRLTNDAq2C0yPtK4GLF1ZHVQ7ZTmTBasujnDngL7L279iCyCXccdwZRLvwO1xORnCdJfDlyRWwuHX4rWzaH4585IjsuzkAUPjf/1LmBhaC4GVb/wGrf50XnQGi/XmGkm4dIolhkDJKlZrOI135OSGdNiQsmPWhBkkaicYZL3ZhDcnKWoAcl0=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 156f35b7-06f7-43db-6036-08dc8f21cabb
+X-MS-Exchange-CrossTenant-Network-Message-Id: 72cc1d04-9299-49c6-1902-08dc8f21cbc8
 X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2024 23:04:07.8988
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2024 23:04:09.6777
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Pna6w+mXiwsD8bpdOHvNOVGvHc68Jrw/ujnkTCvYiG3S6oQcPVuZJf6MZyhiH59T0nI8PXIjF7l81sA0sC1w/H/Sw0crYBWVak4M2bd9YNk=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 3qFgMiGpS6vBE2uZWAhcKbQJuYraz+k29xTT5A6UnuR0aYNP+PlPfKAOvNTxEpCZJxbrMA6B9x6qnLe4UuG75tqbjyZLPQrs0o++4Y/rk4g=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7398
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
@@ -169,177 +169,174 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malw
  mlxlogscore=999 mlxscore=0 phishscore=0 suspectscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2405010000
  definitions=main-2406170179
-X-Proofpoint-GUID: mtc4inRGYYEaeaky6qIUquEzij5ctPCH
-X-Proofpoint-ORIG-GUID: mtc4inRGYYEaeaky6qIUquEzij5ctPCH
+X-Proofpoint-ORIG-GUID: 60hzcz7qFKTRMtuNdVP_bn0_kHTeuw7s
+X-Proofpoint-GUID: 60hzcz7qFKTRMtuNdVP_bn0_kHTeuw7s
 
-From: Long Li <leo.lilong@huawei.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit e4c3b72a6ea93ed9c1815c74312eee9305638852 upstream.
+commit 15922f5dbf51dad334cde888ce6835d377678dc9 upstream.
 
-While performing the IO fault injection test, I caught the following data
-corruption report:
+If a filesystem has a busted stripe alignment configuration on disk
+(e.g. because broken RAID firmware told mkfs that swidth was smaller
+than sunit), then the filesystem will refuse to mount due to the
+stripe validation failing. This failure is triggering during distro
+upgrades from old kernels lacking this check to newer kernels with
+this check, and currently the only way to fix it is with offline
+xfs_db surgery.
 
- XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
- CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
- Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_corruption_error+0x134/0x150
-  xfs_free_ag_extent+0x7d3/0x1130
-  __xfs_free_extent+0x201/0x3c0
-  xfs_trans_free_extent+0x29b/0xa10
-  xfs_extent_free_finish_item+0x2a/0xb0
-  xfs_defer_finish_noroll+0x8d1/0x1b40
-  xfs_defer_finish+0x21/0x200
-  xfs_itruncate_extents_flags+0x1cb/0x650
-  xfs_free_eofblocks+0x18f/0x250
-  xfs_inactive+0x485/0x570
-  xfs_inodegc_worker+0x207/0x530
-  process_scheduled_works+0x24a/0xe10
-  worker_thread+0x5ac/0xc60
-  kthread+0x2cd/0x3c0
-  ret_from_fork+0x4a/0x80
-  ret_from_fork_asm+0x11/0x20
-  </TASK>
- XFS (dm-0): Corruption detected. Unmount and run xfs_repair
+This runtime validity checking occurs when we read the superblock
+for the first time and causes the mount to fail immediately. This
+prevents the rewrite of stripe unit/width via
+mount options that occurs later in the mount process. Hence there is
+no way to recover this situation without resorting to offline xfs_db
+rewrite of the values.
 
-After analyzing the disk image, it was found that the corruption was
-triggered by the fact that extent was recorded in both inode datafork
-and AGF btree blocks. After a long time of reproduction and analysis,
-we found that the reason of free sapce btree corruption was that the
-AGF btree was not recovered correctly.
+However, we parse the mount options long before we read the
+superblock, and we know if the mount has been asked to re-write the
+stripe alignment configuration when we are reading the superblock
+and verifying it for the first time. Hence we can conditionally
+ignore stripe verification failures if the mount options specified
+will correct the issue.
 
-Consider the following situation, Checkpoint A and Checkpoint B are in
-the same record and share the same start LSN1, buf items of same object
-(AGF btree block) is included in both Checkpoint A and Checkpoint B. If
-the buf item in Checkpoint A has been recovered and updates metadata LSN
-permanently, then the buf item in Checkpoint B cannot be recovered,
-because log recovery skips items with a metadata LSN >= the current LSN
-of the recovery item. If there is still an inode item in Checkpoint B
-that records the Extent X, the Extent X will be recorded in both inode
-datafork and AGF btree block after Checkpoint B is recovered. Such
-transaction can be seen when allocing enxtent for inode bmap, it record
-both the addition of extent to the inode extent list and the removing
-extent from the AGF.
+We validate that the new stripe unit/width are valid before we
+overwrite the superblock values, so we can ignore the invalid config
+at verification and fail the mount later if the new values are not
+valid. This, at least, gives users the chance of correcting the
+issue after a kernel upgrade without having to resort to xfs-db
+hacks.
 
-  |------------Record (LSN1)------------------|---Record (LSN2)---|
-  |-------Checkpoint A----------|----------Checkpoint B-----------|
-  |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
-  |     Extent X is freed       |     Extent X is allocated       |
-
-After commit 12818d24db8a ("xfs: rework log recovery to submit buffers
-on LSN boundaries") was introduced, we submit buffers on lsn boundaries
-during log recovery. The above problem can be avoided under normal paths,
-but it's not guaranteed under abnormal paths. Consider the following
-process, if an error was encountered after recover buf item in Checkpoint
-A and before recover buf item in Checkpoint B, buffers that have been
-added to the buffer_list will still be submitted, this violates the
-submits rule on lsn boundaries. So buf item in Checkpoint B cannot be
-recovered on the next mount due to current lsn of transaction equal to
-metadata lsn on disk. The detailed process of the problem is as follows.
-
-First Mount:
-
-  xlog_do_recovery_pass
-    error = xlog_recover_process
-      xlog_recover_process_data
-        xlog_recover_process_ophdr
-          xlog_recovery_process_trans
-            ...
-              /* recover buf item in Checkpoint A */
-              xlog_recover_buf_commit_pass2
-                xlog_recover_do_reg_buffer
-                /* add buffer of agf btree block to buffer_list */
-                xfs_buf_delwri_queue(bp, buffer_list)
-            ...
-            ==> Encounter read IO error and return
-    /* submit buffers regardless of error */
-    if (!list_empty(&buffer_list))
-      xfs_buf_delwri_submit(&buffer_list);
-
-    <buf items of agf btree block in Checkpoint A recovery success>
-
-Second Mount:
-
-  xlog_do_recovery_pass
-    error = xlog_recover_process
-      xlog_recover_process_data
-        xlog_recover_process_ophdr
-          xlog_recovery_process_trans
-            ...
-              /* recover buf item in Checkpoint B */
-              xlog_recover_buf_commit_pass2
-                /* buffer of agf btree block wouldn't added to
-                   buffer_list due to lsn equal to current_lsn */
-                if (XFS_LSN_CMP(lsn, current_lsn) >= 0)
-                  goto out_release
-
-    <buf items of agf btree block in Checkpoint B wouldn't recovery>
-
-In order to make sure that submits buffers on lsn boundaries in the
-abnormal paths, we need to check error status before submit buffers that
-have been added from the last record processed. If error status exist,
-buffers in the bufffer_list should not be writen to disk.
-
-Canceling the buffers in the buffer_list directly isn't correct, unlike
-any other place where write list was canceled, these buffers has been
-initialized by xfs_buf_item_init() during recovery and held by buf item,
-buf items will not be released in xfs_buf_delwri_cancel(), it's not easy
-to solve.
-
-If the filesystem has been shut down, then delwri list submission will
-error out all buffers on the list via IO submission/completion and do
-all the correct cleanup automatically. So shutting down the filesystem
-could prevents buffers in the bufffer_list from being written to disk.
-
-Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_recover.c | 23 ++++++++++++++++++++---
- 1 file changed, 20 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c | 40 +++++++++++++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_sb.h |  5 +++--
+ 2 files changed, 34 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index cc14cd1c2282..57f366c3d355 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3203,11 +3203,28 @@ xlog_do_recovery_pass(
- 	kmem_free(hbp);
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 571bb2a770ac..59c4804e4d79 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -530,7 +530,8 @@ xfs_validate_sb_common(
+ 	}
+ 
+ 	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
+-			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
++			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
++			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
+ 		return -EFSCORRUPTED;
  
  	/*
--	 * Submit buffers that have been added from the last record processed,
--	 * regardless of error status.
-+	 * Submit buffers that have been dirtied by the last record recovered.
- 	 */
--	if (!list_empty(&buffer_list))
-+	if (!list_empty(&buffer_list)) {
-+		if (error) {
-+			/*
-+			 * If there has been an item recovery error then we
-+			 * cannot allow partial checkpoint writeback to
-+			 * occur.  We might have multiple checkpoints with the
-+			 * same start LSN in this buffer list, and partial
-+			 * writeback of a checkpoint in this situation can
-+			 * prevent future recovery of all the changes in the
-+			 * checkpoints at this start LSN.
-+			 *
-+			 * Note: Shutting down the filesystem will result in the
-+			 * delwri submission marking all the buffers stale,
-+			 * completing them and cleaning up _XBF_LOGRECOVERY
-+			 * state without doing any IO.
-+			 */
-+			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-+		}
- 		error2 = xfs_buf_delwri_submit(&buffer_list);
-+	}
+@@ -1319,8 +1320,10 @@ xfs_sb_get_secondary(
+ }
  
- 	if (error && first_bad)
- 		*first_bad = rhead_blk;
+ /*
+- * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
+- * so users won't be confused by values in error messages.
++ * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
++ * won't be confused by values in error messages.  This function returns false
++ * if the stripe geometry is invalid and the caller is unable to repair the
++ * stripe configuration later in the mount process.
+  */
+ bool
+ xfs_validate_stripe_geometry(
+@@ -1328,20 +1331,21 @@ xfs_validate_stripe_geometry(
+ 	__s64			sunit,
+ 	__s64			swidth,
+ 	int			sectorsize,
++	bool			may_repair,
+ 	bool			silent)
+ {
+ 	if (swidth > INT_MAX) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "stripe width (%lld) is too large", swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit > swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sectorsize && (int)sunit % sectorsize) {
+@@ -1349,21 +1353,21 @@ xfs_validate_stripe_geometry(
+ 			xfs_notice(mp,
+ "stripe unit (%lld) must be a multiple of the sector size (%d)",
+ 				   sunit, sectorsize);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit && !swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "invalid stripe unit (%lld) and stripe width of 0", sunit);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (!sunit && swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "invalid stripe width (%lld) and stripe unit of 0", swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit && (int)swidth % (int)sunit) {
+@@ -1371,9 +1375,27 @@ xfs_validate_stripe_geometry(
+ 			xfs_notice(mp,
+ "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
+ 				   swidth, sunit);
+-		return false;
++		goto check_override;
+ 	}
+ 	return true;
++
++check_override:
++	if (!may_repair)
++		return false;
++	/*
++	 * During mount, mp->m_dalign will not be set unless the sunit mount
++	 * option was set. If it was set, ignore the bad stripe alignment values
++	 * and allow the validation and overwrite later in the mount process to
++	 * attempt to overwrite the bad stripe alignment values with the values
++	 * supplied by mount options.
++	 */
++	if (!mp->m_dalign)
++		return false;
++	if (!silent)
++		xfs_notice(mp,
++"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
++			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
++	return true;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index 2e8e8d63d4eb..37b1ed1bc209 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -35,8 +35,9 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+ 				struct xfs_trans *tp, xfs_agnumber_t agno,
+ 				struct xfs_buf **bpp);
+ 
+-extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+-		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
++bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
++		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
++		bool silent);
+ 
+ uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+ 
 -- 
 2.39.3
 
