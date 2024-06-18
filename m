@@ -1,190 +1,90 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAFD715E5DC;
-	Tue, 18 Jun 2024 14:22:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED68113792B;
+	Tue, 18 Jun 2024 14:33:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718720532; cv=none; b=EmhW9YvNVc2tieWkY5s+U/7ajYbbbKfWy1E8WvAwf1ndgEX7AlvE4mQVirZyIIlHBlJcO39c0sHTdOsByMxVsB47FuJSPLL4ek4/dAjLhUg5mjAjrLpOfmXi0LvdcQQlw0Xp1rxHwJbROlKie409ZINifFlVVzWjaJHqg0/iRUk=
+	t=1718721181; cv=none; b=S/n21bMd2Ie6TGJXxEY/ccF4tahd5qkL8BVsLaQ5s4+LhBn+8lOf60svpVmyt9khF4hHNMuOtMPTbNht3qZI2vLk63Z4DeUD7W8eXBIvXz/D8VGsfT43vVDNhjqf9M3LqWGSFTYokX9sjJdiVew/1clwpF1eYrxmRQBo2uIrmPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718720532; c=relaxed/simple;
-	bh=ug/qQNK60ThJr6Wmrm9eMouW+oYEz5AG/qVXhu9+0z0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=m5gEblcsy0DmZOExhEtm/XUp4gNDze89pBUF8GvRLLAZRQNvSJ6HY7Zbq5+Pv6FLDyE9kL8dBVcva6C3S6mgG3HKwvAAix2AnFOUnFLKKW6DN2QCFiV8OXBX7DJVBXPXnnmtskc9Wht+K60q2B5KUJGZX6BUnTNc1N/9qgQvvns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4W3TTb6Vt2z4f3nTP;
-	Tue, 18 Jun 2024 22:21:55 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A7CA01A112A;
-	Tue, 18 Jun 2024 22:22:07 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB34A0ImHFmVDEoAQ--.31709S6;
-	Tue, 18 Jun 2024 22:22:07 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	brauner@kernel.org,
-	david@fromorbit.com,
-	chandanbabu@kernel.org,
-	jack@suse.cz,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com
-Subject: [PATCH -next v6 2/2] iomap: don't increase i_size in iomap_write_end()
-Date: Tue, 18 Jun 2024 22:21:12 +0800
-Message-Id: <20240618142112.1315279-3-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240618142112.1315279-1-yi.zhang@huaweicloud.com>
-References: <20240618142112.1315279-1-yi.zhang@huaweicloud.com>
+	s=arc-20240116; t=1718721181; c=relaxed/simple;
+	bh=A+79vWupD/VxycvUwB64PrvqaBGUAPzK3N53rHfZBRg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ng7Mmkm0oW4CviM9qwjr7U5cBYxehTt+3kOTDEbBH/sH2KcjwzxZtx9iiq12k+2LHNRf23Xl7CvM7miMauAhgpeexU3TkgxsiiuKQhbhWRrwWEmYZFR5Wd11bI8mJEGtvrFryBb2j+0oKD0YoM9tePTasbvqSdPLqjy09pGGPQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E8ZyEDqg; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E8ZyEDqg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D86BFC3277B;
+	Tue, 18 Jun 2024 14:32:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718721180;
+	bh=A+79vWupD/VxycvUwB64PrvqaBGUAPzK3N53rHfZBRg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=E8ZyEDqgCkax/DcpF4nYawuGeBCkOGglsQey0GtiKZyzdjR9wfku2fmVVxAe4UbXg
+	 i4MvVm45faIZbSa4F2gN42i2jo+l5ignHDQu8NtBMGOvd2dKHEIVDIjbwUobEWOZuV
+	 3SCdqn8zdENPBjbwAKVsfmRx5J0YLx3P2HqtM8H8kD1yg7ADtxLHH/5vKs5xm0oyfB
+	 LO5tHelB36Dmy/X06+rWzBgQ/xd4SXCxkZx4cicrKTnq0KQiQJUAFPH4L1eBWh7nZL
+	 km52cuewrPce/lYK46EtMvBw1ZmcMB3gEy1hiQ7NetG8dwxeX8xGTWGe6Kd06wKAv9
+	 HEyQ59J/wvVkA==
+From: Christian Brauner <brauner@kernel.org>
+To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	Dave Chinner <david@fromorbit.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+	Jan Kara <jack@suse.cz>,
+	Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH v2] Documentation: the design of iomap and how to port
+Date: Tue, 18 Jun 2024 16:32:30 +0200
+Message-ID: <20240618-kundig-kredenzen-f8e4a2dfda72@brauner>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240614214347.GK6125@frogsfrogsfrogs>
+References: <20240614214347.GK6125@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1491; i=brauner@kernel.org; h=from:subject:message-id; bh=A+79vWupD/VxycvUwB64PrvqaBGUAPzK3N53rHfZBRg=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQVzpqqvaVPWFP4ws97my+3Lqy34zI7lcJydPP2ZZpbV srKKV+/21HKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCR4xsY/rskbbibt0Fn3oy1 F5M/uqw5+HzDAtsCzcn7uPnj3HQuM7oz/JWsLvJeqGFiOmn6kv6lM5ZMvBJZuLyU1676i6Usi/G FbQwA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB34A0ImHFmVDEoAQ--.31709S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxCrW3CFWxCFWUWr48Cw4DJwb_yoWrAF45pr
-	9F9ayrCan7tw17Wr1kAF98ZryYkayfKFW7CrW7WrWavFn0yr1xKF1ruayYyFyrJ3s3AF4f
-	Xr4kA34rWF1UAr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUAGYLUUUUU
-	=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On Fri, 14 Jun 2024 14:43:47 -0700, Darrick J. Wong wrote:
+> Capture the design of iomap and how to port filesystems to use it.
+> Apologies for all the rst formatting, but it's necessary to distinguish
+> code from regular text.
+> 
+> A lot of this has been collected from various email conversations, code
+> comments, commit messages, my own understanding of iomap, and
+> Ritesh/Luis' previous efforts to create a document.  Please note a large
+> part of this has been taken from Dave's reply to last iomap doc
+> patchset. Thanks to Ritesh, Luis, Dave, Darrick, Matthew, Christoph and
+> other iomap developers who have taken time to explain the iomap design
+> in various emails, commits, comments etc.
+> 
+> [...]
 
-This reverts commit '0841ea4a3b41 ("iomap: keep on increasing i_size in
-iomap_write_end()")'.
+Applied to the vfs.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs.iomap branch should appear in linux-next soon.
 
-After xfs could zero out the tail blocks aligned to the allocation
-unitsize and convert the tail blocks to unwritten for realtime inode on
-truncate down, it couldn't expose any stale data when unaligned truncate
-down realtime inodes, so we could keep on keeping i_size for
-IOMAP_UNSHARE and IOMAP_ZERO in iomap_write_end().
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
----
- fs/iomap/buffered-io.c | 53 +++++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 24 deletions(-)
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index d46558990279..99bedc3f7c39 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -878,37 +878,22 @@ static bool iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
- 		size_t copied, struct folio *folio)
- {
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
--	loff_t old_size = iter->inode->i_size;
--	size_t written;
- 
- 	if (srcmap->type == IOMAP_INLINE) {
- 		iomap_write_end_inline(iter, folio, pos, copied);
--		written = copied;
--	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
--		written = block_write_end(NULL, iter->inode->i_mapping, pos,
--					len, copied, &folio->page, NULL);
--		WARN_ON_ONCE(written != copied && written != 0);
--	} else {
--		written = __iomap_write_end(iter->inode, pos, len, copied,
--					    folio) ? copied : 0;
-+		return true;
- 	}
- 
--	/*
--	 * Update the in-memory inode size after copying the data into the page
--	 * cache.  It's up to the file system to write the updated size to disk,
--	 * preferably after I/O completion so that no stale data is exposed.
--	 * Only once that's done can we unlock and release the folio.
--	 */
--	if (pos + written > old_size) {
--		i_size_write(iter->inode, pos + written);
--		iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
--	}
--	__iomap_put_folio(iter, pos, written, folio);
-+	if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
-+		size_t bh_written;
- 
--	if (old_size < pos)
--		pagecache_isize_extended(iter->inode, old_size, pos);
-+		bh_written = block_write_end(NULL, iter->inode->i_mapping, pos,
-+					len, copied, &folio->page, NULL);
-+		WARN_ON_ONCE(bh_written != copied && bh_written != 0);
-+		return bh_written == copied;
-+	}
- 
--	return written == copied;
-+	return __iomap_write_end(iter->inode, pos, len, copied, folio);
- }
- 
- static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
-@@ -923,6 +908,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 
- 	do {
- 		struct folio *folio;
-+		loff_t old_size;
- 		size_t offset;		/* Offset into folio */
- 		size_t bytes;		/* Bytes to write to folio */
- 		size_t copied;		/* Bytes copied from user */
-@@ -974,6 +960,23 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 		written = iomap_write_end(iter, pos, bytes, copied, folio) ?
- 			  copied : 0;
- 
-+		/*
-+		 * Update the in-memory inode size after copying the data into
-+		 * the page cache.  It's up to the file system to write the
-+		 * updated size to disk, preferably after I/O completion so that
-+		 * no stale data is exposed.  Only once that's done can we
-+		 * unlock and release the folio.
-+		 */
-+		old_size = iter->inode->i_size;
-+		if (pos + written > old_size) {
-+			i_size_write(iter->inode, pos + written);
-+			iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
-+		}
-+		__iomap_put_folio(iter, pos, written, folio);
-+
-+		if (old_size < pos)
-+			pagecache_isize_extended(iter->inode, old_size, pos);
-+
- 		cond_resched();
- 		if (unlikely(written == 0)) {
- 			/*
-@@ -1344,6 +1347,7 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
- 			bytes = folio_size(folio) - offset;
- 
- 		ret = iomap_write_end(iter, pos, bytes, bytes, folio);
-+		__iomap_put_folio(iter, pos, bytes, folio);
- 		if (WARN_ON_ONCE(!ret))
- 			return -EIO;
- 
-@@ -1409,6 +1413,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		folio_mark_accessed(folio);
- 
- 		ret = iomap_write_end(iter, pos, bytes, bytes, folio);
-+		__iomap_put_folio(iter, pos, bytes, folio);
- 		if (WARN_ON_ONCE(!ret))
- 			return -EIO;
- 
--- 
-2.39.2
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.iomap
+
+[1/1] Documentation: the design of iomap and how to port
+      https://git.kernel.org/vfs/vfs/c/549c1f8d490e
