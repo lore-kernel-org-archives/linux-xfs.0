@@ -1,166 +1,92 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED31813AA5E;
-	Tue, 18 Jun 2024 06:56:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A608F139D11
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2024 11:28:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718693821; cv=none; b=lsW5mBezLyZO439YOr/TFTlED4PetoXOny4IhqdT99816FPXWsNest0co9NVYLMFRbQ8wFRKw/UCJLG4lLWDOve5V7kjUO+EYrCX3AptgPxSWA40xFQtePFpxzDM8TPNdcn/twnQoiFpbKNX627neYKuDZSnK61TkDQQo5rtvps=
+	t=1718710083; cv=none; b=i0uvV5qoN116rmsZlDss4ow3tFeDWJfQdQDvkOZloaWJhA8yyXUjfJY6HFj3ufAt61VAeIj4csuOYCLMz2fankBKOcIxXYiI/p26iSqvUnXzuiYWX8B6MweQm/TfG8JBAwAs6RA7VQjoVnRFxN9cfiTpylJ1kyN++lZD0mRdS60=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718693821; c=relaxed/simple;
-	bh=mCT+lRo19SYdPPmeF1jKr36h1RCMo1ewSc4P5xMJyec=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XB5q9GMb7unOsHKhn/5BXYLL23yHbZCR5ul/PBUxwoLmieui3upC22JT3RXDipFYL7HINqNf1o6OgNAHQVTAKaIG4417WW/DMBg2/5WEdlE4KyE47czQntdl92Nwlzt7N4YBOwE/riQ52pGXq+1r9QKJoJmUUBCs70yyz32O7DE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=hmiQTA09; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4H4/l+xW; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GYfee203; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=6QDwu9Ll; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1718710083; c=relaxed/simple;
+	bh=hH3U5mloyPCXlpzKoNAyMV6TR1moh+rnmnZvyo4bS58=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OSr8IUQiiNlfyF9Hp/UIYsdNdbaltWoNscZcpfSJ6rYGDOKQFrc1cjWmVHtFvUY25BJus3SFDwAUa1iaMV7velZgDBbRxyebUDj+bV2SlDvvbvL5q92wkBfsXzhubHbAXDhT01b21PbvRtSykYc0QWMIQXYNCF8heIn/m0T0Mws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M5ACLMi+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="hmiQTA09";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4H4/l+xW";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GYfee203";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="6QDwu9Ll"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id E6B22219F9;
-	Tue, 18 Jun 2024 06:56:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718693817; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+Y4IEo+0BCAfVtmTwp25/ON1j1FWc+fWfSBByJ2vQjU=;
-	b=hmiQTA09n3cjaBFLpn/ZRRx3oGVIx7UdjssLQcVB20EKrWkusAxqjGg9IbGxjH//4fkFZs
-	GH140FavkAqsJi7teviWWE2LN8KJ5kQIWP0XsXGctvz5q/Q8/3pobSs21yQpw/HnJMfWBU
-	5RxyeWKFvhZf6tF9BwNyIt35Gu6pbVo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718693817;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+Y4IEo+0BCAfVtmTwp25/ON1j1FWc+fWfSBByJ2vQjU=;
-	b=4H4/l+xW9WhOEXRF6mJYGd9jB8Gf31NpLoa0FQl22moEXIniPo+3Vlxm635xaO22YHuiI0
-	jXAbRGOrVlNoJmAA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718693816; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+Y4IEo+0BCAfVtmTwp25/ON1j1FWc+fWfSBByJ2vQjU=;
-	b=GYfee203pZGXTDaQzZHRoNPY84ww+D+XWRXmQZwQ5vgpTuE351IY61rZY+qDhYR6uDARDX
-	u55z7Ehmxlw3GZwBUD3H9kxvXTNcun5jPlsYyWOqYkrKIK4uCIDeSLFPrOcxAZUQF67e30
-	zTGH9IztNSQspvWTRS1zIGl/injeQFI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718693816;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+Y4IEo+0BCAfVtmTwp25/ON1j1FWc+fWfSBByJ2vQjU=;
-	b=6QDwu9LlFFj2jgPxC30eYLJ051WOxJxCkpB/Os2nsgaxHGwvasASmmL1LRk1gzlEcjeMQd
-	JrUGPKxxpn4ypvAQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DCB291369F;
-	Tue, 18 Jun 2024 06:56:55 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id cKsXM7cvcWY/ZwAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 18 Jun 2024 06:56:55 +0000
-Message-ID: <ac136000-1ae0-4cab-9858-abb68ff53b66@suse.de>
-Date: Tue, 18 Jun 2024 08:56:53 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M5ACLMi+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81F6FC32786;
+	Tue, 18 Jun 2024 11:28:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718710083;
+	bh=hH3U5mloyPCXlpzKoNAyMV6TR1moh+rnmnZvyo4bS58=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=M5ACLMi+1r7J3XGNGCXK0ekS89dGW6xx8VA913PyFO17XvbdkRbDFPVy0cicy+/0w
+	 DBgnxWFhk7A8V4QA6jQneEV8wnZ7+iVzXzPi34zuwDQhvzBGQscX1HrKFFov0eOHpD
+	 9WD2zMPCghG8WozA4uptx/4R3zILzca+1ydQH5Yw9Y5MPQN7mH3ZFRjArcuMvnXC/z
+	 jcRrmDNkhSulumyEfHDPf4ZOmecbGsU66QvyKmPrqun5n7WZiGxjtYqXFKfhaPm8q4
+	 zR7wtd4AX/YjcK4FB0CswUPd4jRtwgUad2LjjU4IyEWgyjHG6bUMc40RG+ZTNVRds4
+	 AkN7WPAiy+p/Q==
+Date: Tue, 18 Jun 2024 13:27:59 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfile: fix missing error unlock in xfile_fcb_find
+Message-ID: <3vvawog6q36sacc7swbg4vv7wuazpvuk564ob4m2kacqwjs2ka@wv3oj6kvszfy>
+References: <A7t-EBUq9-H5Sajvoq6mgbeRxHUyOpyu0OzoCm9hEPzYSxku7_DEwUlAZcUHRA8DoatghRew8uwcIN9iWADZ7w==@protonmail.internalid>
+ <20240618005703.GD103034@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 04/11] readahead: allocate folios with
- mapping_min_order in readahead
-Content-Language: en-US
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
- Matthew Wilcox <willy@infradead.org>
-Cc: david@fromorbit.com, djwong@kernel.org, chandan.babu@oracle.com,
- brauner@kernel.org, akpm@linux-foundation.org, mcgrof@kernel.org,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- yang@os.amperecomputing.com, Zi Yan <zi.yan@sent.com>,
- linux-xfs@vger.kernel.org, p.raghav@samsung.com,
- linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
- cl@os.amperecomputing.com, john.g.garry@oracle.com
-References: <20240607145902.1137853-1-kernel@pankajraghav.com>
- <20240607145902.1137853-5-kernel@pankajraghav.com>
- <ZmnuCQriFLdHKHkK@casper.infradead.org>
- <20240614092602.jc5qeoxy24xj6kl7@quentin>
- <ZnAs6lyMuHyk2wxI@casper.infradead.org>
- <20240617160420.ifwlqsm5yth4g7eo@quentin>
- <ZnBf5wXMOBWNl52x@casper.infradead.org>
- <20240617163931.wvxgqdxdbwsbqtrx@quentin>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240617163931.wvxgqdxdbwsbqtrx@quentin>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -4.29
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.29 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[sent.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[fromorbit.com,kernel.org,oracle.com,linux-foundation.org,kvack.org,vger.kernel.org,os.amperecomputing.com,sent.com,samsung.com,lst.de];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240618005703.GD103034@frogsfrogsfrogs>
 
-On 6/17/24 18:39, Pankaj Raghav (Samsung) wrote:
-> On Mon, Jun 17, 2024 at 05:10:15PM +0100, Matthew Wilcox wrote:
->> On Mon, Jun 17, 2024 at 04:04:20PM +0000, Pankaj Raghav (Samsung) wrote:
->>> On Mon, Jun 17, 2024 at 01:32:42PM +0100, Matthew Wilcox wrote:
->>> So the following can still be there from Hannes patch as we have a
->>> stable reference:
->>>
->>>   		ractl->_workingset |= folio_test_workingset(folio);
->>> -		ractl->_nr_pages++;
->>> +		ractl->_nr_pages += folio_nr_pages(folio);
->>> +		i += folio_nr_pages(folio);
->>>   	}
->>
->> We _can_, but we just allocated it, so we know what size it is already.
-> Yes.
+On Mon, Jun 17, 2024 at 05:57:03PM GMT, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
->> I'm starting to feel that Hannes' patch should be combined with this
->> one.
+> Fix a missing mutex pthread_mutex_unlock and uninitialized return value
+> in xfile_fcb_find.
 > 
-> Fine by me. @Hannes, is that ok with you?
+> Coverity-id: 1604113
+> Coverity-id: 1604099
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-Sure. I was about to re-send my patchset anyway, so feel free to wrap it in.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Cheers,
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
-
+> ---
+>  libxfs/xfile.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/libxfs/xfile.c b/libxfs/xfile.c
+> index fdb76f406647..6e0fa809a296 100644
+> --- a/libxfs/xfile.c
+> +++ b/libxfs/xfile.c
+> @@ -179,7 +179,7 @@ xfile_fcb_find(
+>  {
+>  	struct xfile_fcb	*fcb;
+>  	int			ret;
+> -	int			error;
+> +	int			error = 0;
+> 
+>  	/* No maximum range means that the caller gets a private memfd. */
+>  	if (maxbytes == 0) {
+> @@ -222,13 +222,13 @@ xfile_fcb_find(
+>  	/* Otherwise, open a new memfd and add it to our list. */
+>  	error = xfile_fcb_create(description, &fcb);
+>  	if (error)
+> -		return error;
+> +		goto out_unlock;
+> 
+>  	ret = ftruncate(fcb->fd, maxbytes);
+>  	if (ret) {
+>  		error = -errno;
+>  		xfile_fcb_irele(fcb, 0, maxbytes);
+> -		return error;
+> +		goto out_unlock;
+>  	}
+> 
+>  	list_add_tail(&fcb->fcb_list, &fcb_list);
