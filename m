@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 701C34C8F;
-	Tue, 18 Jun 2024 00:53:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0BD95C89;
+	Tue, 18 Jun 2024 00:53:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718671997; cv=none; b=L8gYsWeHLPuQz3cX6q9lsFfNzEtPR/xu3lDX6k5rzCm6nNh/ySePIDuWH2c69Yd9hGEEtJc0rW3nreG7X/Zp8w1CvbSqOx8I5kidTDzUhzneyNDsfpzTwnb08Z5sKhdqamjkbhVPhPkO2ISb4aZb0OJTm64b40tbXQ+eW2dA60Q=
+	t=1718672012; cv=none; b=Ad+10UaUw7bnT/14cL6xxoY7mkUzJZ/LJzBH207bwKbPBIFZhAjyL0wsu4N3aIPalAkZeTobbHzuf5FlcuDoGIwndaeU4/wTa1eifna13dHl0xSVNdl1rsIKwGqL8a3RchEiXcHAYiW04yUQbCc7FY1oAsggL0CnYWhnoFg1hnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718671997; c=relaxed/simple;
-	bh=b57VUNRoeDJyWhSqyJ9kLR1dE7J/DKI92hDKx876Jbo=;
+	s=arc-20240116; t=1718672012; c=relaxed/simple;
+	bh=+FwNxz3sQfGy3wOFs4WpoRRqrPKNMX1XYftI14P5GYo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cFdqmBDR5XO73TdjaDveB2wjt/ONv9S5ozTp2TkahGiNZLqbXyDGvmtUIGxLDUrB77SlsQLaoYE04YXFtV8o2znityPgzVa9p2BluSedbSMq54rDuBnR0dsHgvncor8svC5E8sJLngEXfI9ACkcinw83Nnb02jBYB+7VzBx61lg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LX+tCJ6M; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EMiiaS6TrRZd/vWitrUUYR8i4+ViW4QWs/5dIpxPTdgfETKR9bGMxxE+FAYdi5CAKOz0NPiQrde4ziexJTMBuLeoqSu0Gih2D7ilfkYIfax5km+YS2DHmyjB6vOr9fy0JB7MIfRCUJH61beBhkTImajfFWNXJUEDzqVB8sqkz2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZ/0P1xl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LX+tCJ6M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3470C4AF1D;
-	Tue, 18 Jun 2024 00:53:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZ/0P1xl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 839BAC2BD10;
+	Tue, 18 Jun 2024 00:53:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718671996;
-	bh=b57VUNRoeDJyWhSqyJ9kLR1dE7J/DKI92hDKx876Jbo=;
+	s=k20201202; t=1718672012;
+	bh=+FwNxz3sQfGy3wOFs4WpoRRqrPKNMX1XYftI14P5GYo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LX+tCJ6MdO8JT5MWNBvdJkqZpffytnVfCoEk/vBOwD+FU7fqM7hsvenhmg5y8R/WU
-	 4d8oLwVnI3OzfYtpRKGGXW4xYlKdfnMpYOgfahnrdaX5d6gyldGj/4BRtvutbKq63t
-	 GRaxiO3T22ot6+gJ1YQj6wq2+c89/drHszIb87dhY5+3zQS9pJZG6qtejOj9fZ2eUs
-	 yaxDaIKNFRECRSJi5h+riQ6F//oLxCd8qgRjLT+Y4xlFJ3N04842IUqK8w3Yn6iTjK
-	 8F2JiKTfiZM5D6vdFVyLleTkD4i5Lg4Ev8fJFUYkmFqM/999PJ0eaThdaZUKi27yBm
-	 UmFzGn5w38YpQ==
-Date: Mon, 17 Jun 2024 17:53:16 -0700
-Subject: [PATCH 1/2] xfs/348: partially revert dbcc549317 ("xfs/348: golden
- output is not correct")
+	b=dZ/0P1xlmUiafotyny5fu0pv55qduWJwsVdVu5Wvy6WvPOyTW6upKVBygXHMCNK3G
+	 WlyT5pPedIsfNW46j0fb80XsNw2Fgo/L853KGx1V1mRff/zoRglqsZIZyHQsKpUF64
+	 CaoB7lmThdcTeiOrhHrLQMMbNZvnU9QIa0r6nxBucOAH/6MASgsxdDvWj7OOp1vCw/
+	 Ew6DCx3tg2xys/1k+SNb3cYatPZiVsmjoUx9Qc+Df5Hvmofo2uswiwxLS0pYnmlFGM
+	 eKszuop4Atff1l8K8YbefvsmiJMnH9lfV4L64YcacheEFNkhmws+DwNyDFPu/fjShH
+	 AjBI7XelxLJmw==
+Date: Mon, 17 Jun 2024 17:53:32 -0700
+Subject: [PATCH 2/2] generic: test creating and removing symlink xattrs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: fstests@vger.kernel.org, guan@eryu.me, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <171867147055.794588.9928537254200607808.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, guan@eryu.me,
+ hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171867147069.794588.2239729030835992352.stgit@frogsfrogsfrogs>
 In-Reply-To: <171867147038.794588.4969508881704066442.stgit@frogsfrogsfrogs>
 References: <171867147038.794588.4969508881704066442.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,36 +45,98 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-In kernel commit 1eb70f54c445f ("xfs: validate inode fork size against
-fork format"), we incorrectly started flagging as corrupt symlinks with
-short targets that would fit in the inode core but are remote.  The
-kernel has historically written out symlinks this way and read them back
-in, so we're fixing that.
+This began as a regression test for the issues identified in "xfs: allow
+symlinks with short remote targets".  To summarize, the kernel XFS code
+does not convert a remote symlink back to a shortform symlink after
+deleting the attr fork.  Recent attempts to tighten validation have
+flagged this incorrectly, so we need a regression test to focus on this
+dusty corner of the codebase.
 
-The 1eb70 change came with change dbcc to fstests to adjust the golden
-output; since we're adjusting the kernel back to old behavior, we need
-to adjust the test too.
+However, there's nothing in here that's xfs-specific so it's a generic
+test.
 
-Fixes: dbcc549317 ("xfs/348: golden output is not correct")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/348.out |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/generic/1836     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/1836.out |    2 ++
+ 2 files changed, 60 insertions(+)
+ create mode 100755 tests/generic/1836
+ create mode 100644 tests/generic/1836.out
 
 
-diff --git a/tests/xfs/348.out b/tests/xfs/348.out
-index 9130f42af7..591b1a77a6 100644
---- a/tests/xfs/348.out
-+++ b/tests/xfs/348.out
-@@ -240,7 +240,7 @@ would have junked entry "DIR" in directory PARENT_INO
- would have junked entry "EMPTY" in directory PARENT_INO
- would have junked entry "FIFO" in directory PARENT_INO
- stat: cannot statx 'SCRATCH_MNT/test/DIR': Structure needs cleaning
--stat: cannot statx 'SCRATCH_MNT/test/DATA': Structure needs cleaning
-+stat: 'SCRATCH_MNT/test/DATA' is a symbolic link
- stat: cannot statx 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
- stat: 'SCRATCH_MNT/test/SYMLINK' is a symbolic link
- stat: cannot statx 'SCRATCH_MNT/test/CHRDEV': Structure needs cleaning
+diff --git a/tests/generic/1836 b/tests/generic/1836
+new file mode 100755
+index 0000000000..1778e207ab
+--- /dev/null
++++ b/tests/generic/1836
+@@ -0,0 +1,58 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1836
++#
++# Test that we can add xattrs to a symbolic link, remove all the xattrs, and
++# that the symbolic link doesn't get corrupted.  This is a regression test for
++# some incorrect checks in the xfs inode verifier.
++#
++. ./common/preamble
++_begin_fstest auto
++
++_supported_fs generic
++_require_scratch
++
++test $FSTYP = "xfs" && \
++	_fixed_by_git_commit kernel XXXXXXXXXXXXX \
++			"xfs: allow symlinks with short remote targets"
++
++_scratch_mkfs >> $seqres.full
++_scratch_mount >> $seqres.full
++
++SYMLINK_ADD="0123456789ABCDEF01234567890ABCDEF"
++
++# test from 32 to MAXPATHLEN sized symlink. This should make sure that
++# 256-1024 byte version 2 and 3 inodes are covered.
++SYMLINK=""
++for ((SIZE = 32; SIZE < 1024; SIZE += 32)); do
++	SYMLINK_FILE="$SCRATCH_MNT/symlink.$SIZE"
++	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
++	ln -s $SYMLINK $SYMLINK_FILE > /dev/null 2>&1
++
++# add the extended attributes
++	attr  -Rs 1234567890ab $SYMLINK_FILE < /dev/null > /dev/null 2>&1
++	attr  -Rs 1234567890ac $SYMLINK_FILE < /dev/null > /dev/null 2>&1
++	attr  -Rs 1234567890ad $SYMLINK_FILE < /dev/null > /dev/null 2>&1
++# remove the extended attributes
++	attr  -Rr 1234567890ab $SYMLINK_FILE > /dev/null 2>&1
++	attr  -Rr 1234567890ac $SYMLINK_FILE > /dev/null 2>&1
++	attr  -Rr 1234567890ad $SYMLINK_FILE > /dev/null 2>&1
++done
++
++_scratch_cycle_mount
++
++# Now check the symlink target contents
++SYMLINK=""
++for ((SIZE = 32; SIZE < 1024; SIZE += 32)); do
++	SYMLINK_FILE="$SCRATCH_MNT/symlink.$SIZE"
++	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
++
++	target="$(readlink $SYMLINK_FILE)"
++	test "$target" = "$SYMLINK" || echo "$SYMLINK_FILE: target is corrupt"
++done
++
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/generic/1836.out b/tests/generic/1836.out
+new file mode 100644
+index 0000000000..cf78922dea
+--- /dev/null
++++ b/tests/generic/1836.out
+@@ -0,0 +1,2 @@
++QA output created by 1836
++Silence is golden
 
