@@ -1,37 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EEAD26A;
-	Tue, 18 Jun 2024 00:46:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51BB9DDA0;
+	Tue, 18 Jun 2024 00:46:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718671601; cv=none; b=p8UV+ryEIiMlXTZvnThQTIdVFQipvO6ZRr5L2aC31+lLKXuUhajDkYUl1bLePjzHTBhKY6Gi5PclNYsEeNS4GUHWSAkHraFrPtAFqO69R395neO/1hqKLbKIqIiu7Oi/P2r1LDFiLiE5FsoCRg1+9fMjah4irMQZVv04kkBve7o=
+	t=1718671606; cv=none; b=rIgAAfNgPx9YcmexwBlhIWPWanESWCyv3hxLRxYmoAf93WCakpEowoCcPOUJYjviojDafF7AulRLYRqiWRwh+qzwNlYj+e0PeDVR2UCRbK0s3LPMVkxebiez9MolYS3e0BbxUgltwHRkLQyXbdod+6k5NYrg1cdQK73WqIsa6WU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718671601; c=relaxed/simple;
-	bh=VZIKT9Sh1wYygAzuAXzmINhXjWd+LX5b3abfdDh6XlQ=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=ggaxEkURmmJ5sYzLXTGGDzlIKRQMBq0MYVN69J1W7d2o1fWfOrQ85UpY38pslWKTOz4ZHV6VqdaRPlT/GjY7aZ28LTkdtBJVZQdtyV7qh7vSWpm1aAExFytctrJAcm0IpHEBlrGAc6B0cm9RzHGHYJOBUEx/wwuns2E3lIaA7lY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TA+Bv9p+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718671606; c=relaxed/simple;
+	bh=7tUFExFFrwVGCxUHxtN46M5lZc+GUPmoyi6VKsgnbUc=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=j5nSdSSo4I49pachUGc7oXAluUSykBQlwC7PDAzvmvGVo6HkLG7KjYDp3voiu+1I+S8RgwrQPomuE3iCKRt/GF3Spm6C5gAIkO3BU2ZRWtcm6S8BW0vr/t9q6FLtJkO6t9cdW9VugIwGKawymfw1Pb2V63GkAIqdqb3fYH53OcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brvhwj3+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TA+Bv9p+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8576BC2BD10;
-	Tue, 18 Jun 2024 00:46:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brvhwj3+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20173C2BD10;
+	Tue, 18 Jun 2024 00:46:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718671600;
-	bh=VZIKT9Sh1wYygAzuAXzmINhXjWd+LX5b3abfdDh6XlQ=;
-	h=Date:Subject:From:To:Cc:From;
-	b=TA+Bv9p+VaGBIuiTCE8qNP4/uuaUJchyvCE1BG5yhmsQ7M6CvRRExBQ76x4WawzRw
-	 VQiXxrWSiANqEZbxBajmGR6mKQh6S/duqXr15U1tqZDGa9WZ2zrFSOpXJV1jM+BI2c
-	 mZ9xYdRnxf9uFMB+conmPRdaEEu+KeZLid5IGahtGiRq7qy1IZzp48KLQfsH3zHcKU
-	 f+oRTTTbMkShrVaNZk2UZRitH3GsdVE+e7yhD/cw+8hsRpailrMlziL9qnlnmPpW2V
-	 aM+4YMB0Q9sX2mh7/yuaR/L/9E39y6hA7rCAv4yo7oWldT4HgudCt8EEETI9Q0YVe1
-	 AenzFDdoo4QSg==
-Date: Mon, 17 Jun 2024 17:46:39 -0700
-Subject: [PATCHSET 6/6] fstests: minor fixes for 6.10-rc1
+	s=k20201202; t=1718671606;
+	bh=7tUFExFFrwVGCxUHxtN46M5lZc+GUPmoyi6VKsgnbUc=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=brvhwj3+4FJjG9qQsa0+/Cn6pKi11/TEAhV+boUffsM00wv/X9+1GjVtgM4dPcMop
+	 Wisq9CJC4sr/oQs0vosYmgecahnhOH/7wSnwhCpZWFCpOXXh9ILY4VxenWATAFfWgs
+	 Z0rMedhX3F1Z1bUJvRCSwL0cV1lVkJQULARfyoRbYYFV4lbNDuvYYpLMQhLFyVK/Sd
+	 5bxKIbQ7UndPxCuNbHIW2+tD2/8Ylx8G5WH7PGY6CjTZ3lTgcxp9J+FABUXP8485F8
+	 9en9IbgJ9DhpqztYIafQ7B46Nw9oiHi2yZJKzdJwwx5KfwlUMi4K1K1ilkr3ZMFQ5v
+	 d3z0X6DIxwVWQ==
+Date: Mon, 17 Jun 2024 17:46:45 -0700
+Subject: [PATCH 1/1] xfs: test scaling of the mkfs concurrency options
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, guan@eryu.me,
- hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171867147038.794588.4969508881704066442.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, guan@eryu.me, linux-xfs@vger.kernel.org
+Message-ID: <171867144932.793370.9007901197841846249.stgit@frogsfrogsfrogs>
+In-Reply-To: <171867144916.793370.13284581064185044269.stgit@frogsfrogsfrogs>
+References: <171867144916.793370.13284581064185044269.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -42,35 +44,829 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here are some fixes for the stuff that just got merged for 6.10-rc1.
+Make sure that the AG count and log size scale up with the new
+concurrency options to mkfs.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-6.10-fixes
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs-6.10-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xfs-6.10-fixes
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Commits in this patchset:
- * xfs/348: partially revert dbcc549317 ("xfs/348: golden output is not correct")
- * generic: test creating and removing symlink xattrs
----
- tests/generic/1836     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/1836.out |    2 ++
- tests/xfs/348.out      |    2 +-
- 3 files changed, 61 insertions(+), 1 deletion(-)
- create mode 100755 tests/generic/1836
- create mode 100644 tests/generic/1836.out
+ tests/xfs/1842             |   55 ++++++++++++++
+ tests/xfs/1842.cfg         |    4 +
+ tests/xfs/1842.out.lba1024 |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1842.out.lba2048 |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1842.out.lba4096 |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1842.out.lba512  |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 767 insertions(+)
+ create mode 100755 tests/xfs/1842
+ create mode 100644 tests/xfs/1842.cfg
+ create mode 100644 tests/xfs/1842.out.lba1024
+ create mode 100644 tests/xfs/1842.out.lba2048
+ create mode 100644 tests/xfs/1842.out.lba4096
+ create mode 100644 tests/xfs/1842.out.lba512
+
+
+diff --git a/tests/xfs/1842 b/tests/xfs/1842
+new file mode 100755
+index 0000000000..8180ca7a6e
+--- /dev/null
++++ b/tests/xfs/1842
+@@ -0,0 +1,55 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1842
++#
++# mkfs concurrency test - ensure the log and agsize scaling works for various
++# concurrency= parameters
++#
++. ./common/preamble
++_begin_fstest log metadata auto quick
++
++# Import common functions.
++. ./common/filter
++. ./common/reflink
++
++_cleanup()
++{
++	cd /
++	rm -r -f $tmp.* $loop_file
++}
++
++# real QA test starts here
++_supported_fs xfs
++
++_require_test
++_require_loop
++$MKFS_XFS_PROG 2>&1 | grep -q concurrency || \
++	_notrun "mkfs does not support concurrency options"
++
++test_dev_lbasize=$(blockdev --getss $TEST_DEV)
++seqfull=$0
++_link_out_file "lba${test_dev_lbasize}"
++
++loop_file=$TEST_DIR/$seq.loop
++
++rm -f "$loop_file"
++for sz in 16M 512M 1G 2G 16G 64G 256G 512G 1T 2T 4T 16T 64T 256T 512T 1P; do
++	for cpus in 2 4 8 16 32 40 64 96 160 512; do
++		truncate -s "$sz" "$loop_file"
++		echo "sz $sz cpus $cpus" >> $seqres.full
++		echo "-----------------" >> $seqres.full
++
++		$MKFS_XFS_PROG -f -N "$loop_file" -d concurrency=$cpus -l concurrency=$cpus &> $tmp.mkfsout
++		cat $tmp.mkfsout >> $seqres.full
++
++		_filter_mkfs > /dev/null 2> $tmp.mkfs < $tmp.mkfsout
++		. $tmp.mkfs
++		echo "sz $sz cpus $cpus agcount $agcount logblocks $lblocks"
++	done
++	echo "-----------------"
++done
++
++status=0
++exit
+diff --git a/tests/xfs/1842.cfg b/tests/xfs/1842.cfg
+new file mode 100644
+index 0000000000..0678032432
+--- /dev/null
++++ b/tests/xfs/1842.cfg
+@@ -0,0 +1,4 @@
++lba512: lba512
++lba1024: lba1024
++lba2048: lba2048
++lba4096: lba4096
+diff --git a/tests/xfs/1842.out.lba1024 b/tests/xfs/1842.out.lba1024
+new file mode 100644
+index 0000000000..76cb98bb9c
+--- /dev/null
++++ b/tests/xfs/1842.out.lba1024
+@@ -0,0 +1,177 @@
++QA output created by 1842
++sz 16M cpus 2 agcount 1 logblocks 2766
++sz 16M cpus 4 agcount 1 logblocks 2766
++sz 16M cpus 8 agcount 1 logblocks 2766
++sz 16M cpus 16 agcount 1 logblocks 2766
++sz 16M cpus 32 agcount 1 logblocks 2766
++sz 16M cpus 40 agcount 1 logblocks 2766
++sz 16M cpus 64 agcount 1 logblocks 2766
++sz 16M cpus 96 agcount 1 logblocks 2766
++sz 16M cpus 160 agcount 1 logblocks 2766
++sz 16M cpus 512 agcount 1 logblocks 2766
++-----------------
++sz 512M cpus 2 agcount 4 logblocks 16384
++sz 512M cpus 4 agcount 4 logblocks 16384
++sz 512M cpus 8 agcount 4 logblocks 16384
++sz 512M cpus 16 agcount 4 logblocks 16384
++sz 512M cpus 32 agcount 4 logblocks 16384
++sz 512M cpus 40 agcount 4 logblocks 16384
++sz 512M cpus 64 agcount 4 logblocks 16384
++sz 512M cpus 96 agcount 4 logblocks 16384
++sz 512M cpus 160 agcount 4 logblocks 16384
++sz 512M cpus 512 agcount 4 logblocks 16384
++-----------------
++sz 1G cpus 2 agcount 4 logblocks 16384
++sz 1G cpus 4 agcount 4 logblocks 16384
++sz 1G cpus 8 agcount 4 logblocks 16384
++sz 1G cpus 16 agcount 4 logblocks 22698
++sz 1G cpus 32 agcount 4 logblocks 45396
++sz 1G cpus 40 agcount 4 logblocks 56745
++sz 1G cpus 64 agcount 4 logblocks 65524
++sz 1G cpus 96 agcount 4 logblocks 65524
++sz 1G cpus 160 agcount 4 logblocks 65524
++sz 1G cpus 512 agcount 4 logblocks 65524
++-----------------
++sz 2G cpus 2 agcount 4 logblocks 16384
++sz 2G cpus 4 agcount 4 logblocks 16384
++sz 2G cpus 8 agcount 4 logblocks 16384
++sz 2G cpus 16 agcount 4 logblocks 25866
++sz 2G cpus 32 agcount 4 logblocks 51732
++sz 2G cpus 40 agcount 4 logblocks 64665
++sz 2G cpus 64 agcount 4 logblocks 103464
++sz 2G cpus 96 agcount 4 logblocks 131060
++sz 2G cpus 160 agcount 4 logblocks 131060
++sz 2G cpus 512 agcount 4 logblocks 131060
++-----------------
++sz 16G cpus 2 agcount 4 logblocks 16384
++sz 16G cpus 4 agcount 4 logblocks 16384
++sz 16G cpus 8 agcount 4 logblocks 16384
++sz 16G cpus 16 agcount 4 logblocks 25866
++sz 16G cpus 32 agcount 4 logblocks 51732
++sz 16G cpus 40 agcount 4 logblocks 64665
++sz 16G cpus 64 agcount 4 logblocks 103464
++sz 16G cpus 96 agcount 4 logblocks 155196
++sz 16G cpus 160 agcount 4 logblocks 258660
++sz 16G cpus 512 agcount 4 logblocks 303424
++-----------------
++sz 64G cpus 2 agcount 4 logblocks 16384
++sz 64G cpus 4 agcount 4 logblocks 16384
++sz 64G cpus 8 agcount 8 logblocks 16384
++sz 64G cpus 16 agcount 16 logblocks 25866
++sz 64G cpus 32 agcount 16 logblocks 51732
++sz 64G cpus 40 agcount 16 logblocks 64665
++sz 64G cpus 64 agcount 16 logblocks 103464
++sz 64G cpus 96 agcount 16 logblocks 155196
++sz 64G cpus 160 agcount 16 logblocks 258660
++sz 64G cpus 512 agcount 16 logblocks 303424
++-----------------
++sz 256G cpus 2 agcount 4 logblocks 32768
++sz 256G cpus 4 agcount 4 logblocks 32768
++sz 256G cpus 8 agcount 8 logblocks 32768
++sz 256G cpus 16 agcount 16 logblocks 32768
++sz 256G cpus 32 agcount 32 logblocks 51732
++sz 256G cpus 40 agcount 40 logblocks 64665
++sz 256G cpus 64 agcount 64 logblocks 103464
++sz 256G cpus 96 agcount 64 logblocks 155196
++sz 256G cpus 160 agcount 64 logblocks 258660
++sz 256G cpus 512 agcount 64 logblocks 303424
++-----------------
++sz 512G cpus 2 agcount 4 logblocks 65536
++sz 512G cpus 4 agcount 4 logblocks 65536
++sz 512G cpus 8 agcount 8 logblocks 65536
++sz 512G cpus 16 agcount 16 logblocks 65536
++sz 512G cpus 32 agcount 32 logblocks 65536
++sz 512G cpus 40 agcount 40 logblocks 65535
++sz 512G cpus 64 agcount 64 logblocks 103464
++sz 512G cpus 96 agcount 96 logblocks 155196
++sz 512G cpus 160 agcount 128 logblocks 258660
++sz 512G cpus 512 agcount 128 logblocks 303424
++-----------------
++sz 1T cpus 2 agcount 4 logblocks 131072
++sz 1T cpus 4 agcount 4 logblocks 131072
++sz 1T cpus 8 agcount 8 logblocks 131072
++sz 1T cpus 16 agcount 16 logblocks 131072
++sz 1T cpus 32 agcount 32 logblocks 131072
++sz 1T cpus 40 agcount 40 logblocks 131071
++sz 1T cpus 64 agcount 64 logblocks 131072
++sz 1T cpus 96 agcount 96 logblocks 155196
++sz 1T cpus 160 agcount 160 logblocks 258660
++sz 1T cpus 512 agcount 256 logblocks 303424
++-----------------
++sz 2T cpus 2 agcount 4 logblocks 262144
++sz 2T cpus 4 agcount 4 logblocks 262144
++sz 2T cpus 8 agcount 8 logblocks 262144
++sz 2T cpus 16 agcount 16 logblocks 262144
++sz 2T cpus 32 agcount 32 logblocks 262144
++sz 2T cpus 40 agcount 40 logblocks 262143
++sz 2T cpus 64 agcount 64 logblocks 262144
++sz 2T cpus 96 agcount 96 logblocks 262143
++sz 2T cpus 160 agcount 160 logblocks 262143
++sz 2T cpus 512 agcount 512 logblocks 303424
++-----------------
++sz 4T cpus 2 agcount 4 logblocks 521728
++sz 4T cpus 4 agcount 4 logblocks 521728
++sz 4T cpus 8 agcount 8 logblocks 521728
++sz 4T cpus 16 agcount 16 logblocks 521728
++sz 4T cpus 32 agcount 32 logblocks 521728
++sz 4T cpus 40 agcount 40 logblocks 521728
++sz 4T cpus 64 agcount 64 logblocks 521728
++sz 4T cpus 96 agcount 96 logblocks 521728
++sz 4T cpus 160 agcount 160 logblocks 521728
++sz 4T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 16T cpus 2 agcount 16 logblocks 521728
++sz 16T cpus 4 agcount 16 logblocks 521728
++sz 16T cpus 8 agcount 16 logblocks 521728
++sz 16T cpus 16 agcount 16 logblocks 521728
++sz 16T cpus 32 agcount 32 logblocks 521728
++sz 16T cpus 40 agcount 40 logblocks 521728
++sz 16T cpus 64 agcount 64 logblocks 521728
++sz 16T cpus 96 agcount 96 logblocks 521728
++sz 16T cpus 160 agcount 160 logblocks 521728
++sz 16T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 64T cpus 2 agcount 64 logblocks 521728
++sz 64T cpus 4 agcount 64 logblocks 521728
++sz 64T cpus 8 agcount 64 logblocks 521728
++sz 64T cpus 16 agcount 64 logblocks 521728
++sz 64T cpus 32 agcount 64 logblocks 521728
++sz 64T cpus 40 agcount 64 logblocks 521728
++sz 64T cpus 64 agcount 64 logblocks 521728
++sz 64T cpus 96 agcount 96 logblocks 521728
++sz 64T cpus 160 agcount 160 logblocks 521728
++sz 64T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 256T cpus 2 agcount 256 logblocks 521728
++sz 256T cpus 4 agcount 256 logblocks 521728
++sz 256T cpus 8 agcount 256 logblocks 521728
++sz 256T cpus 16 agcount 256 logblocks 521728
++sz 256T cpus 32 agcount 256 logblocks 521728
++sz 256T cpus 40 agcount 256 logblocks 521728
++sz 256T cpus 64 agcount 256 logblocks 521728
++sz 256T cpus 96 agcount 256 logblocks 521728
++sz 256T cpus 160 agcount 256 logblocks 521728
++sz 256T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 512T cpus 2 agcount 512 logblocks 521728
++sz 512T cpus 4 agcount 512 logblocks 521728
++sz 512T cpus 8 agcount 512 logblocks 521728
++sz 512T cpus 16 agcount 512 logblocks 521728
++sz 512T cpus 32 agcount 512 logblocks 521728
++sz 512T cpus 40 agcount 512 logblocks 521728
++sz 512T cpus 64 agcount 512 logblocks 521728
++sz 512T cpus 96 agcount 512 logblocks 521728
++sz 512T cpus 160 agcount 512 logblocks 521728
++sz 512T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 1P cpus 2 agcount 1024 logblocks 521728
++sz 1P cpus 4 agcount 1024 logblocks 521728
++sz 1P cpus 8 agcount 1024 logblocks 521728
++sz 1P cpus 16 agcount 1024 logblocks 521728
++sz 1P cpus 32 agcount 1024 logblocks 521728
++sz 1P cpus 40 agcount 1024 logblocks 521728
++sz 1P cpus 64 agcount 1024 logblocks 521728
++sz 1P cpus 96 agcount 1024 logblocks 521728
++sz 1P cpus 160 agcount 1024 logblocks 521728
++sz 1P cpus 512 agcount 1024 logblocks 521728
++-----------------
+diff --git a/tests/xfs/1842.out.lba2048 b/tests/xfs/1842.out.lba2048
+new file mode 100644
+index 0000000000..21c6d9114e
+--- /dev/null
++++ b/tests/xfs/1842.out.lba2048
+@@ -0,0 +1,177 @@
++QA output created by 1842
++sz 16M cpus 2 agcount 1 logblocks 2820
++sz 16M cpus 4 agcount 1 logblocks 2820
++sz 16M cpus 8 agcount 1 logblocks 2820
++sz 16M cpus 16 agcount 1 logblocks 2820
++sz 16M cpus 32 agcount 1 logblocks 2820
++sz 16M cpus 40 agcount 1 logblocks 2820
++sz 16M cpus 64 agcount 1 logblocks 2820
++sz 16M cpus 96 agcount 1 logblocks 2820
++sz 16M cpus 160 agcount 1 logblocks 2820
++sz 16M cpus 512 agcount 1 logblocks 2820
++-----------------
++sz 512M cpus 2 agcount 4 logblocks 16384
++sz 512M cpus 4 agcount 4 logblocks 16384
++sz 512M cpus 8 agcount 4 logblocks 16384
++sz 512M cpus 16 agcount 4 logblocks 16384
++sz 512M cpus 32 agcount 4 logblocks 16384
++sz 512M cpus 40 agcount 4 logblocks 16384
++sz 512M cpus 64 agcount 4 logblocks 16384
++sz 512M cpus 96 agcount 4 logblocks 16384
++sz 512M cpus 160 agcount 4 logblocks 16384
++sz 512M cpus 512 agcount 4 logblocks 16384
++-----------------
++sz 1G cpus 2 agcount 4 logblocks 16384
++sz 1G cpus 4 agcount 4 logblocks 16384
++sz 1G cpus 8 agcount 4 logblocks 16384
++sz 1G cpus 16 agcount 4 logblocks 23130
++sz 1G cpus 32 agcount 4 logblocks 46260
++sz 1G cpus 40 agcount 4 logblocks 57825
++sz 1G cpus 64 agcount 4 logblocks 65523
++sz 1G cpus 96 agcount 4 logblocks 65523
++sz 1G cpus 160 agcount 4 logblocks 65523
++sz 1G cpus 512 agcount 4 logblocks 65523
++-----------------
++sz 2G cpus 2 agcount 4 logblocks 16384
++sz 2G cpus 4 agcount 4 logblocks 16384
++sz 2G cpus 8 agcount 4 logblocks 16384
++sz 2G cpus 16 agcount 4 logblocks 26298
++sz 2G cpus 32 agcount 4 logblocks 52596
++sz 2G cpus 40 agcount 4 logblocks 65745
++sz 2G cpus 64 agcount 4 logblocks 105192
++sz 2G cpus 96 agcount 4 logblocks 131059
++sz 2G cpus 160 agcount 4 logblocks 131059
++sz 2G cpus 512 agcount 4 logblocks 131059
++-----------------
++sz 16G cpus 2 agcount 4 logblocks 16384
++sz 16G cpus 4 agcount 4 logblocks 16384
++sz 16G cpus 8 agcount 4 logblocks 16384
++sz 16G cpus 16 agcount 4 logblocks 26298
++sz 16G cpus 32 agcount 4 logblocks 52596
++sz 16G cpus 40 agcount 4 logblocks 65745
++sz 16G cpus 64 agcount 4 logblocks 105192
++sz 16G cpus 96 agcount 4 logblocks 157788
++sz 16G cpus 160 agcount 4 logblocks 262980
++sz 16G cpus 512 agcount 4 logblocks 317248
++-----------------
++sz 64G cpus 2 agcount 4 logblocks 16384
++sz 64G cpus 4 agcount 4 logblocks 16384
++sz 64G cpus 8 agcount 8 logblocks 16384
++sz 64G cpus 16 agcount 16 logblocks 26298
++sz 64G cpus 32 agcount 16 logblocks 52596
++sz 64G cpus 40 agcount 16 logblocks 65745
++sz 64G cpus 64 agcount 16 logblocks 105192
++sz 64G cpus 96 agcount 16 logblocks 157788
++sz 64G cpus 160 agcount 16 logblocks 262980
++sz 64G cpus 512 agcount 16 logblocks 317248
++-----------------
++sz 256G cpus 2 agcount 4 logblocks 32768
++sz 256G cpus 4 agcount 4 logblocks 32768
++sz 256G cpus 8 agcount 8 logblocks 32768
++sz 256G cpus 16 agcount 16 logblocks 32768
++sz 256G cpus 32 agcount 32 logblocks 52596
++sz 256G cpus 40 agcount 40 logblocks 65745
++sz 256G cpus 64 agcount 64 logblocks 105192
++sz 256G cpus 96 agcount 64 logblocks 157788
++sz 256G cpus 160 agcount 64 logblocks 262980
++sz 256G cpus 512 agcount 64 logblocks 317248
++-----------------
++sz 512G cpus 2 agcount 4 logblocks 65536
++sz 512G cpus 4 agcount 4 logblocks 65536
++sz 512G cpus 8 agcount 8 logblocks 65536
++sz 512G cpus 16 agcount 16 logblocks 65536
++sz 512G cpus 32 agcount 32 logblocks 65536
++sz 512G cpus 40 agcount 40 logblocks 65745
++sz 512G cpus 64 agcount 64 logblocks 105192
++sz 512G cpus 96 agcount 96 logblocks 157788
++sz 512G cpus 160 agcount 128 logblocks 262980
++sz 512G cpus 512 agcount 128 logblocks 317248
++-----------------
++sz 1T cpus 2 agcount 4 logblocks 131072
++sz 1T cpus 4 agcount 4 logblocks 131072
++sz 1T cpus 8 agcount 8 logblocks 131072
++sz 1T cpus 16 agcount 16 logblocks 131072
++sz 1T cpus 32 agcount 32 logblocks 131072
++sz 1T cpus 40 agcount 40 logblocks 131071
++sz 1T cpus 64 agcount 64 logblocks 131072
++sz 1T cpus 96 agcount 96 logblocks 157788
++sz 1T cpus 160 agcount 160 logblocks 262980
++sz 1T cpus 512 agcount 256 logblocks 317248
++-----------------
++sz 2T cpus 2 agcount 4 logblocks 262144
++sz 2T cpus 4 agcount 4 logblocks 262144
++sz 2T cpus 8 agcount 8 logblocks 262144
++sz 2T cpus 16 agcount 16 logblocks 262144
++sz 2T cpus 32 agcount 32 logblocks 262144
++sz 2T cpus 40 agcount 40 logblocks 262143
++sz 2T cpus 64 agcount 64 logblocks 262144
++sz 2T cpus 96 agcount 96 logblocks 262143
++sz 2T cpus 160 agcount 160 logblocks 262980
++sz 2T cpus 512 agcount 512 logblocks 317248
++-----------------
++sz 4T cpus 2 agcount 4 logblocks 521728
++sz 4T cpus 4 agcount 4 logblocks 521728
++sz 4T cpus 8 agcount 8 logblocks 521728
++sz 4T cpus 16 agcount 16 logblocks 521728
++sz 4T cpus 32 agcount 32 logblocks 521728
++sz 4T cpus 40 agcount 40 logblocks 521728
++sz 4T cpus 64 agcount 64 logblocks 521728
++sz 4T cpus 96 agcount 96 logblocks 521728
++sz 4T cpus 160 agcount 160 logblocks 521728
++sz 4T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 16T cpus 2 agcount 16 logblocks 521728
++sz 16T cpus 4 agcount 16 logblocks 521728
++sz 16T cpus 8 agcount 16 logblocks 521728
++sz 16T cpus 16 agcount 16 logblocks 521728
++sz 16T cpus 32 agcount 32 logblocks 521728
++sz 16T cpus 40 agcount 40 logblocks 521728
++sz 16T cpus 64 agcount 64 logblocks 521728
++sz 16T cpus 96 agcount 96 logblocks 521728
++sz 16T cpus 160 agcount 160 logblocks 521728
++sz 16T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 64T cpus 2 agcount 64 logblocks 521728
++sz 64T cpus 4 agcount 64 logblocks 521728
++sz 64T cpus 8 agcount 64 logblocks 521728
++sz 64T cpus 16 agcount 64 logblocks 521728
++sz 64T cpus 32 agcount 64 logblocks 521728
++sz 64T cpus 40 agcount 64 logblocks 521728
++sz 64T cpus 64 agcount 64 logblocks 521728
++sz 64T cpus 96 agcount 96 logblocks 521728
++sz 64T cpus 160 agcount 160 logblocks 521728
++sz 64T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 256T cpus 2 agcount 256 logblocks 521728
++sz 256T cpus 4 agcount 256 logblocks 521728
++sz 256T cpus 8 agcount 256 logblocks 521728
++sz 256T cpus 16 agcount 256 logblocks 521728
++sz 256T cpus 32 agcount 256 logblocks 521728
++sz 256T cpus 40 agcount 256 logblocks 521728
++sz 256T cpus 64 agcount 256 logblocks 521728
++sz 256T cpus 96 agcount 256 logblocks 521728
++sz 256T cpus 160 agcount 256 logblocks 521728
++sz 256T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 512T cpus 2 agcount 512 logblocks 521728
++sz 512T cpus 4 agcount 512 logblocks 521728
++sz 512T cpus 8 agcount 512 logblocks 521728
++sz 512T cpus 16 agcount 512 logblocks 521728
++sz 512T cpus 32 agcount 512 logblocks 521728
++sz 512T cpus 40 agcount 512 logblocks 521728
++sz 512T cpus 64 agcount 512 logblocks 521728
++sz 512T cpus 96 agcount 512 logblocks 521728
++sz 512T cpus 160 agcount 512 logblocks 521728
++sz 512T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 1P cpus 2 agcount 1024 logblocks 521728
++sz 1P cpus 4 agcount 1024 logblocks 521728
++sz 1P cpus 8 agcount 1024 logblocks 521728
++sz 1P cpus 16 agcount 1024 logblocks 521728
++sz 1P cpus 32 agcount 1024 logblocks 521728
++sz 1P cpus 40 agcount 1024 logblocks 521728
++sz 1P cpus 64 agcount 1024 logblocks 521728
++sz 1P cpus 96 agcount 1024 logblocks 521728
++sz 1P cpus 160 agcount 1024 logblocks 521728
++sz 1P cpus 512 agcount 1024 logblocks 521728
++-----------------
+diff --git a/tests/xfs/1842.out.lba4096 b/tests/xfs/1842.out.lba4096
+new file mode 100644
+index 0000000000..6d76970903
+--- /dev/null
++++ b/tests/xfs/1842.out.lba4096
+@@ -0,0 +1,177 @@
++QA output created by 1842
++sz 16M cpus 2 agcount 1 logblocks 2928
++sz 16M cpus 4 agcount 1 logblocks 2928
++sz 16M cpus 8 agcount 1 logblocks 2928
++sz 16M cpus 16 agcount 1 logblocks 2928
++sz 16M cpus 32 agcount 1 logblocks 2928
++sz 16M cpus 40 agcount 1 logblocks 2928
++sz 16M cpus 64 agcount 1 logblocks 2928
++sz 16M cpus 96 agcount 1 logblocks 2928
++sz 16M cpus 160 agcount 1 logblocks 2928
++sz 16M cpus 512 agcount 1 logblocks 2928
++-----------------
++sz 512M cpus 2 agcount 4 logblocks 16384
++sz 512M cpus 4 agcount 4 logblocks 16384
++sz 512M cpus 8 agcount 4 logblocks 16384
++sz 512M cpus 16 agcount 4 logblocks 16384
++sz 512M cpus 32 agcount 4 logblocks 16384
++sz 512M cpus 40 agcount 4 logblocks 16384
++sz 512M cpus 64 agcount 4 logblocks 16384
++sz 512M cpus 96 agcount 4 logblocks 16384
++sz 512M cpus 160 agcount 4 logblocks 16384
++sz 512M cpus 512 agcount 4 logblocks 16384
++-----------------
++sz 1G cpus 2 agcount 4 logblocks 16384
++sz 1G cpus 4 agcount 4 logblocks 16384
++sz 1G cpus 8 agcount 4 logblocks 16384
++sz 1G cpus 16 agcount 4 logblocks 23994
++sz 1G cpus 32 agcount 4 logblocks 47988
++sz 1G cpus 40 agcount 4 logblocks 59985
++sz 1G cpus 64 agcount 4 logblocks 65521
++sz 1G cpus 96 agcount 4 logblocks 65521
++sz 1G cpus 160 agcount 4 logblocks 65521
++sz 1G cpus 512 agcount 4 logblocks 65521
++-----------------
++sz 2G cpus 2 agcount 4 logblocks 16384
++sz 2G cpus 4 agcount 4 logblocks 16384
++sz 2G cpus 8 agcount 4 logblocks 16384
++sz 2G cpus 16 agcount 4 logblocks 27162
++sz 2G cpus 32 agcount 4 logblocks 54324
++sz 2G cpus 40 agcount 4 logblocks 67905
++sz 2G cpus 64 agcount 4 logblocks 108648
++sz 2G cpus 96 agcount 4 logblocks 131057
++sz 2G cpus 160 agcount 4 logblocks 131057
++sz 2G cpus 512 agcount 4 logblocks 131057
++-----------------
++sz 16G cpus 2 agcount 4 logblocks 16384
++sz 16G cpus 4 agcount 4 logblocks 16384
++sz 16G cpus 8 agcount 4 logblocks 16384
++sz 16G cpus 16 agcount 4 logblocks 27162
++sz 16G cpus 32 agcount 4 logblocks 54324
++sz 16G cpus 40 agcount 4 logblocks 67905
++sz 16G cpus 64 agcount 4 logblocks 108648
++sz 16G cpus 96 agcount 4 logblocks 162972
++sz 16G cpus 160 agcount 4 logblocks 271620
++sz 16G cpus 512 agcount 4 logblocks 344896
++-----------------
++sz 64G cpus 2 agcount 4 logblocks 16384
++sz 64G cpus 4 agcount 4 logblocks 16384
++sz 64G cpus 8 agcount 8 logblocks 16384
++sz 64G cpus 16 agcount 16 logblocks 27162
++sz 64G cpus 32 agcount 16 logblocks 54324
++sz 64G cpus 40 agcount 16 logblocks 67905
++sz 64G cpus 64 agcount 16 logblocks 108648
++sz 64G cpus 96 agcount 16 logblocks 162972
++sz 64G cpus 160 agcount 16 logblocks 271620
++sz 64G cpus 512 agcount 16 logblocks 344896
++-----------------
++sz 256G cpus 2 agcount 4 logblocks 32768
++sz 256G cpus 4 agcount 4 logblocks 32768
++sz 256G cpus 8 agcount 8 logblocks 32768
++sz 256G cpus 16 agcount 16 logblocks 32768
++sz 256G cpus 32 agcount 32 logblocks 54324
++sz 256G cpus 40 agcount 40 logblocks 67905
++sz 256G cpus 64 agcount 64 logblocks 108648
++sz 256G cpus 96 agcount 64 logblocks 162972
++sz 256G cpus 160 agcount 64 logblocks 271620
++sz 256G cpus 512 agcount 64 logblocks 344896
++-----------------
++sz 512G cpus 2 agcount 4 logblocks 65536
++sz 512G cpus 4 agcount 4 logblocks 65536
++sz 512G cpus 8 agcount 8 logblocks 65536
++sz 512G cpus 16 agcount 16 logblocks 65536
++sz 512G cpus 32 agcount 32 logblocks 65536
++sz 512G cpus 40 agcount 40 logblocks 67905
++sz 512G cpus 64 agcount 64 logblocks 108648
++sz 512G cpus 96 agcount 96 logblocks 162972
++sz 512G cpus 160 agcount 128 logblocks 271620
++sz 512G cpus 512 agcount 128 logblocks 344896
++-----------------
++sz 1T cpus 2 agcount 4 logblocks 131072
++sz 1T cpus 4 agcount 4 logblocks 131072
++sz 1T cpus 8 agcount 8 logblocks 131072
++sz 1T cpus 16 agcount 16 logblocks 131072
++sz 1T cpus 32 agcount 32 logblocks 131072
++sz 1T cpus 40 agcount 40 logblocks 131071
++sz 1T cpus 64 agcount 64 logblocks 131072
++sz 1T cpus 96 agcount 96 logblocks 162972
++sz 1T cpus 160 agcount 160 logblocks 271620
++sz 1T cpus 512 agcount 256 logblocks 344896
++-----------------
++sz 2T cpus 2 agcount 4 logblocks 262144
++sz 2T cpus 4 agcount 4 logblocks 262144
++sz 2T cpus 8 agcount 8 logblocks 262144
++sz 2T cpus 16 agcount 16 logblocks 262144
++sz 2T cpus 32 agcount 32 logblocks 262144
++sz 2T cpus 40 agcount 40 logblocks 262143
++sz 2T cpus 64 agcount 64 logblocks 262144
++sz 2T cpus 96 agcount 96 logblocks 262143
++sz 2T cpus 160 agcount 160 logblocks 271620
++sz 2T cpus 512 agcount 512 logblocks 344896
++-----------------
++sz 4T cpus 2 agcount 4 logblocks 521728
++sz 4T cpus 4 agcount 4 logblocks 521728
++sz 4T cpus 8 agcount 8 logblocks 521728
++sz 4T cpus 16 agcount 16 logblocks 521728
++sz 4T cpus 32 agcount 32 logblocks 521728
++sz 4T cpus 40 agcount 40 logblocks 521728
++sz 4T cpus 64 agcount 64 logblocks 521728
++sz 4T cpus 96 agcount 96 logblocks 521728
++sz 4T cpus 160 agcount 160 logblocks 521728
++sz 4T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 16T cpus 2 agcount 16 logblocks 521728
++sz 16T cpus 4 agcount 16 logblocks 521728
++sz 16T cpus 8 agcount 16 logblocks 521728
++sz 16T cpus 16 agcount 16 logblocks 521728
++sz 16T cpus 32 agcount 32 logblocks 521728
++sz 16T cpus 40 agcount 40 logblocks 521728
++sz 16T cpus 64 agcount 64 logblocks 521728
++sz 16T cpus 96 agcount 96 logblocks 521728
++sz 16T cpus 160 agcount 160 logblocks 521728
++sz 16T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 64T cpus 2 agcount 64 logblocks 521728
++sz 64T cpus 4 agcount 64 logblocks 521728
++sz 64T cpus 8 agcount 64 logblocks 521728
++sz 64T cpus 16 agcount 64 logblocks 521728
++sz 64T cpus 32 agcount 64 logblocks 521728
++sz 64T cpus 40 agcount 64 logblocks 521728
++sz 64T cpus 64 agcount 64 logblocks 521728
++sz 64T cpus 96 agcount 96 logblocks 521728
++sz 64T cpus 160 agcount 160 logblocks 521728
++sz 64T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 256T cpus 2 agcount 256 logblocks 521728
++sz 256T cpus 4 agcount 256 logblocks 521728
++sz 256T cpus 8 agcount 256 logblocks 521728
++sz 256T cpus 16 agcount 256 logblocks 521728
++sz 256T cpus 32 agcount 256 logblocks 521728
++sz 256T cpus 40 agcount 256 logblocks 521728
++sz 256T cpus 64 agcount 256 logblocks 521728
++sz 256T cpus 96 agcount 256 logblocks 521728
++sz 256T cpus 160 agcount 256 logblocks 521728
++sz 256T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 512T cpus 2 agcount 512 logblocks 521728
++sz 512T cpus 4 agcount 512 logblocks 521728
++sz 512T cpus 8 agcount 512 logblocks 521728
++sz 512T cpus 16 agcount 512 logblocks 521728
++sz 512T cpus 32 agcount 512 logblocks 521728
++sz 512T cpus 40 agcount 512 logblocks 521728
++sz 512T cpus 64 agcount 512 logblocks 521728
++sz 512T cpus 96 agcount 512 logblocks 521728
++sz 512T cpus 160 agcount 512 logblocks 521728
++sz 512T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 1P cpus 2 agcount 1024 logblocks 521728
++sz 1P cpus 4 agcount 1024 logblocks 521728
++sz 1P cpus 8 agcount 1024 logblocks 521728
++sz 1P cpus 16 agcount 1024 logblocks 521728
++sz 1P cpus 32 agcount 1024 logblocks 521728
++sz 1P cpus 40 agcount 1024 logblocks 521728
++sz 1P cpus 64 agcount 1024 logblocks 521728
++sz 1P cpus 96 agcount 1024 logblocks 521728
++sz 1P cpus 160 agcount 1024 logblocks 521728
++sz 1P cpus 512 agcount 1024 logblocks 521728
++-----------------
+diff --git a/tests/xfs/1842.out.lba512 b/tests/xfs/1842.out.lba512
+new file mode 100644
+index 0000000000..9d1e22120b
+--- /dev/null
++++ b/tests/xfs/1842.out.lba512
+@@ -0,0 +1,177 @@
++QA output created by 1842
++sz 16M cpus 2 agcount 1 logblocks 3075
++sz 16M cpus 4 agcount 1 logblocks 3075
++sz 16M cpus 8 agcount 1 logblocks 3075
++sz 16M cpus 16 agcount 1 logblocks 3075
++sz 16M cpus 32 agcount 1 logblocks 3075
++sz 16M cpus 40 agcount 1 logblocks 3075
++sz 16M cpus 64 agcount 1 logblocks 3075
++sz 16M cpus 96 agcount 1 logblocks 3075
++sz 16M cpus 160 agcount 1 logblocks 3075
++sz 16M cpus 512 agcount 1 logblocks 3075
++-----------------
++sz 512M cpus 2 agcount 4 logblocks 16384
++sz 512M cpus 4 agcount 4 logblocks 16384
++sz 512M cpus 8 agcount 4 logblocks 16384
++sz 512M cpus 16 agcount 4 logblocks 16384
++sz 512M cpus 32 agcount 4 logblocks 16384
++sz 512M cpus 40 agcount 4 logblocks 16384
++sz 512M cpus 64 agcount 4 logblocks 16384
++sz 512M cpus 96 agcount 4 logblocks 16384
++sz 512M cpus 160 agcount 4 logblocks 16384
++sz 512M cpus 512 agcount 4 logblocks 16384
++-----------------
++sz 1G cpus 2 agcount 4 logblocks 16384
++sz 1G cpus 4 agcount 4 logblocks 16384
++sz 1G cpus 8 agcount 4 logblocks 16384
++sz 1G cpus 16 agcount 4 logblocks 22482
++sz 1G cpus 32 agcount 4 logblocks 44964
++sz 1G cpus 40 agcount 4 logblocks 56205
++sz 1G cpus 64 agcount 4 logblocks 65524
++sz 1G cpus 96 agcount 4 logblocks 65524
++sz 1G cpus 160 agcount 4 logblocks 65524
++sz 1G cpus 512 agcount 4 logblocks 65524
++-----------------
++sz 2G cpus 2 agcount 4 logblocks 16384
++sz 2G cpus 4 agcount 4 logblocks 16384
++sz 2G cpus 8 agcount 4 logblocks 16384
++sz 2G cpus 16 agcount 4 logblocks 25650
++sz 2G cpus 32 agcount 4 logblocks 51300
++sz 2G cpus 40 agcount 4 logblocks 64125
++sz 2G cpus 64 agcount 4 logblocks 102600
++sz 2G cpus 96 agcount 4 logblocks 131060
++sz 2G cpus 160 agcount 4 logblocks 131060
++sz 2G cpus 512 agcount 4 logblocks 131060
++-----------------
++sz 16G cpus 2 agcount 4 logblocks 16384
++sz 16G cpus 4 agcount 4 logblocks 16384
++sz 16G cpus 8 agcount 4 logblocks 16384
++sz 16G cpus 16 agcount 4 logblocks 25650
++sz 16G cpus 32 agcount 4 logblocks 51300
++sz 16G cpus 40 agcount 4 logblocks 64125
++sz 16G cpus 64 agcount 4 logblocks 102600
++sz 16G cpus 96 agcount 4 logblocks 153900
++sz 16G cpus 160 agcount 4 logblocks 256500
++sz 16G cpus 512 agcount 4 logblocks 296512
++-----------------
++sz 64G cpus 2 agcount 4 logblocks 16384
++sz 64G cpus 4 agcount 4 logblocks 16384
++sz 64G cpus 8 agcount 8 logblocks 16384
++sz 64G cpus 16 agcount 16 logblocks 25650
++sz 64G cpus 32 agcount 16 logblocks 51300
++sz 64G cpus 40 agcount 16 logblocks 64125
++sz 64G cpus 64 agcount 16 logblocks 102600
++sz 64G cpus 96 agcount 16 logblocks 153900
++sz 64G cpus 160 agcount 16 logblocks 256500
++sz 64G cpus 512 agcount 16 logblocks 296512
++-----------------
++sz 256G cpus 2 agcount 4 logblocks 32768
++sz 256G cpus 4 agcount 4 logblocks 32768
++sz 256G cpus 8 agcount 8 logblocks 32768
++sz 256G cpus 16 agcount 16 logblocks 32768
++sz 256G cpus 32 agcount 32 logblocks 51300
++sz 256G cpus 40 agcount 40 logblocks 64125
++sz 256G cpus 64 agcount 64 logblocks 102600
++sz 256G cpus 96 agcount 64 logblocks 153900
++sz 256G cpus 160 agcount 64 logblocks 256500
++sz 256G cpus 512 agcount 64 logblocks 296512
++-----------------
++sz 512G cpus 2 agcount 4 logblocks 65536
++sz 512G cpus 4 agcount 4 logblocks 65536
++sz 512G cpus 8 agcount 8 logblocks 65536
++sz 512G cpus 16 agcount 16 logblocks 65536
++sz 512G cpus 32 agcount 32 logblocks 65536
++sz 512G cpus 40 agcount 40 logblocks 65535
++sz 512G cpus 64 agcount 64 logblocks 102600
++sz 512G cpus 96 agcount 96 logblocks 153900
++sz 512G cpus 160 agcount 128 logblocks 256500
++sz 512G cpus 512 agcount 128 logblocks 296512
++-----------------
++sz 1T cpus 2 agcount 4 logblocks 131072
++sz 1T cpus 4 agcount 4 logblocks 131072
++sz 1T cpus 8 agcount 8 logblocks 131072
++sz 1T cpus 16 agcount 16 logblocks 131072
++sz 1T cpus 32 agcount 32 logblocks 131072
++sz 1T cpus 40 agcount 40 logblocks 131071
++sz 1T cpus 64 agcount 64 logblocks 131072
++sz 1T cpus 96 agcount 96 logblocks 153900
++sz 1T cpus 160 agcount 160 logblocks 256500
++sz 1T cpus 512 agcount 256 logblocks 296512
++-----------------
++sz 2T cpus 2 agcount 4 logblocks 262144
++sz 2T cpus 4 agcount 4 logblocks 262144
++sz 2T cpus 8 agcount 8 logblocks 262144
++sz 2T cpus 16 agcount 16 logblocks 262144
++sz 2T cpus 32 agcount 32 logblocks 262144
++sz 2T cpus 40 agcount 40 logblocks 262143
++sz 2T cpus 64 agcount 64 logblocks 262144
++sz 2T cpus 96 agcount 96 logblocks 262143
++sz 2T cpus 160 agcount 160 logblocks 262143
++sz 2T cpus 512 agcount 512 logblocks 296512
++-----------------
++sz 4T cpus 2 agcount 4 logblocks 521728
++sz 4T cpus 4 agcount 4 logblocks 521728
++sz 4T cpus 8 agcount 8 logblocks 521728
++sz 4T cpus 16 agcount 16 logblocks 521728
++sz 4T cpus 32 agcount 32 logblocks 521728
++sz 4T cpus 40 agcount 40 logblocks 521728
++sz 4T cpus 64 agcount 64 logblocks 521728
++sz 4T cpus 96 agcount 96 logblocks 521728
++sz 4T cpus 160 agcount 160 logblocks 521728
++sz 4T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 16T cpus 2 agcount 16 logblocks 521728
++sz 16T cpus 4 agcount 16 logblocks 521728
++sz 16T cpus 8 agcount 16 logblocks 521728
++sz 16T cpus 16 agcount 16 logblocks 521728
++sz 16T cpus 32 agcount 32 logblocks 521728
++sz 16T cpus 40 agcount 40 logblocks 521728
++sz 16T cpus 64 agcount 64 logblocks 521728
++sz 16T cpus 96 agcount 96 logblocks 521728
++sz 16T cpus 160 agcount 160 logblocks 521728
++sz 16T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 64T cpus 2 agcount 64 logblocks 521728
++sz 64T cpus 4 agcount 64 logblocks 521728
++sz 64T cpus 8 agcount 64 logblocks 521728
++sz 64T cpus 16 agcount 64 logblocks 521728
++sz 64T cpus 32 agcount 64 logblocks 521728
++sz 64T cpus 40 agcount 64 logblocks 521728
++sz 64T cpus 64 agcount 64 logblocks 521728
++sz 64T cpus 96 agcount 96 logblocks 521728
++sz 64T cpus 160 agcount 160 logblocks 521728
++sz 64T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 256T cpus 2 agcount 256 logblocks 521728
++sz 256T cpus 4 agcount 256 logblocks 521728
++sz 256T cpus 8 agcount 256 logblocks 521728
++sz 256T cpus 16 agcount 256 logblocks 521728
++sz 256T cpus 32 agcount 256 logblocks 521728
++sz 256T cpus 40 agcount 256 logblocks 521728
++sz 256T cpus 64 agcount 256 logblocks 521728
++sz 256T cpus 96 agcount 256 logblocks 521728
++sz 256T cpus 160 agcount 256 logblocks 521728
++sz 256T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 512T cpus 2 agcount 512 logblocks 521728
++sz 512T cpus 4 agcount 512 logblocks 521728
++sz 512T cpus 8 agcount 512 logblocks 521728
++sz 512T cpus 16 agcount 512 logblocks 521728
++sz 512T cpus 32 agcount 512 logblocks 521728
++sz 512T cpus 40 agcount 512 logblocks 521728
++sz 512T cpus 64 agcount 512 logblocks 521728
++sz 512T cpus 96 agcount 512 logblocks 521728
++sz 512T cpus 160 agcount 512 logblocks 521728
++sz 512T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 1P cpus 2 agcount 1024 logblocks 521728
++sz 1P cpus 4 agcount 1024 logblocks 521728
++sz 1P cpus 8 agcount 1024 logblocks 521728
++sz 1P cpus 16 agcount 1024 logblocks 521728
++sz 1P cpus 32 agcount 1024 logblocks 521728
++sz 1P cpus 40 agcount 1024 logblocks 521728
++sz 1P cpus 64 agcount 1024 logblocks 521728
++sz 1P cpus 96 agcount 1024 logblocks 521728
++sz 1P cpus 160 agcount 1024 logblocks 521728
++sz 1P cpus 512 agcount 1024 logblocks 521728
++-----------------
 
