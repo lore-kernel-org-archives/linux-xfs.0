@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7183CEEA5;
-	Tue, 18 Jun 2024 00:47:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBBA4EEA5;
+	Tue, 18 Jun 2024 00:47:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718671653; cv=none; b=AsQdi5+cFRdLVM9mlqtTUosiW/Hjc6mqaGHRhmWlbEL7GY0A4oVAh+w+DdcZREvdLQmann8B+60tv1bok6QaW9IJqe8UWICm0sdQCoiIR0TAjcsUle+UhAzd4TJ2JI5KJldVN/tXAg53RMGpwVCNP4lWFydh/37aFGhJiTJ982g=
+	t=1718671668; cv=none; b=AZxj8VDwxiPX/iIprgUHIK+z0Kf/o0dY0yvotHLHC6lCoQHjrUv3tLFsw/Dg9UdDUZs1JK00igCMCOZM1ZEiTlC7M3Ehr8Qg0U9dVJsAcDn6V043GSL3cm4GlGBjbRuQCjkcvWZ1hJqNtiIEVNbwR/n5zYn8Nty//gXqqOoiPZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718671653; c=relaxed/simple;
-	bh=V9gOnn5BI/UZmY8z2G5WlT1v9755M5sAcx7olObhYMo=;
+	s=arc-20240116; t=1718671668; c=relaxed/simple;
+	bh=2OzCVDM1pd8yg0t/scKdigkMce1yBY1X6EplPmmVspA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fsifp75fm9LbD2zLdkdt33bnPv1n1AypojR0UV43ymrkKH3s2SVb/7cIIskh83pXVFiKnBEcjs39P6AzivxroqfI2R4QXWtWZG6D8Fky0EFf4LB6aA6mvTXM4lcEsCg1IdkNOO5C08GJ4MDamwgtunkqPhujV3n+cCRJt5Yif00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V/W5WLh8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=F9jLwJiK8XhOcZimnhGIyHJnxRFMpK/+gwAPc9kA1nDbslgMlP+3Yn+7ApJDWAX2uSTu/oC+CAevTcl/p0UmP9h00icSmlLRa9xCUj+C++dVv64s/f23cX7+n6QD+jbFoYxTHxxhUFNc7UdCa7lEoTHGtXYp6bIGfDfYOQawD/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eMFxvL3i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V/W5WLh8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0346EC2BD10;
-	Tue, 18 Jun 2024 00:47:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eMFxvL3i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96A1BC2BD10;
+	Tue, 18 Jun 2024 00:47:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718671653;
-	bh=V9gOnn5BI/UZmY8z2G5WlT1v9755M5sAcx7olObhYMo=;
+	s=k20201202; t=1718671668;
+	bh=2OzCVDM1pd8yg0t/scKdigkMce1yBY1X6EplPmmVspA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=V/W5WLh8IIIoz1M0vvhWh3HsqJBKOaOAUoz05ZyFpvL3N0RfXV5rP7xYy/jCY2CnV
-	 6NcU09gLE8HiqXxqyfzNQ1AHbIKeWHAbLvIReBbbTXrNyNYqTCVuen7zKWBuKLPPn4
-	 KsS7AYDpC9IEgdbyHXu0SHlz5zjuqXmFdmMQdGGQN3MsLTToBYUmEgYru6i/AwUG0Q
-	 94mrykPXsuCJnNHw+oQq0RFCUfrzE7pub0jM9AaxkkMEMmqFEXfKK1Va7ks7yWcOqX
-	 Ug6os0JLhbw2Rom6BaRL/B3hUSd8sCNCn7RB/FOu4Wu2YX8FfFwMw77iOE0YrvYQDK
-	 5z07ZCv/0Y3iw==
-Date: Mon, 17 Jun 2024 17:47:32 -0700
-Subject: [PATCH 03/10] generic/710: repurpose this for exchangerange vs. quota
- testing
+	b=eMFxvL3iNs7iyhgHp3BOtbXEJ174kNW1clzOVGjm6KX1i9iq5OvGCHSOLwu2b2hnj
+	 9vinSqgWVRdJOzqtvHoOX2Yaou9vcLfYV1inGo+Y54fz24/OJ37vZK5yYgIvk6Pdoc
+	 3MipiEb52feB3PHaHE9Q9kvDkyKmj9cR4bnIdsxtGtwoWe3NKr+2BRjlRfUYCuvzyU
+	 HbsRpWNaattDj52Uc5hCODnWCm2YF93JLQyapmfx4cjaelfGbHUFF4Q8Amt9eVSEug
+	 uqGcHPktFwUoRiMaQpCmO3RYPeIDSgWqsgFuUX5gqGOosn55Yx7x/10yQ/KjcLY20J
+	 9xfZRbkFJ/w/Q==
+Date: Mon, 17 Jun 2024 17:47:48 -0700
+Subject: [PATCH 04/10] generic/717: remove obsolete check
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, guan@eryu.me, linux-xfs@vger.kernel.org
-Message-ID: <171867145344.793463.2045134533110555641.stgit@frogsfrogsfrogs>
+Message-ID: <171867145359.793463.11533521582429286273.stgit@frogsfrogsfrogs>
 In-Reply-To: <171867145284.793463.16426642605476089750.stgit@frogsfrogsfrogs>
 References: <171867145284.793463.16426642605476089750.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,69 +46,45 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The exchange-range implementation is now completely separate from the
-old swapext ioctl.  We're deprecating the old swapext ioctl, so let's
-move this test to use exchangerange.
+The latest draft of the EXCHANGERANGE ioctl has dropped the flag that
+enforced that the two files being operated upon were exactly the same
+length as was specified in the ioctl parameters.  Remove this check
+since it's now defunct.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/710     |   14 +++++++-------
- tests/generic/710.out |    2 +-
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ tests/generic/717     |    5 -----
+ tests/generic/717.out |    2 --
+ 2 files changed, 7 deletions(-)
 
 
-diff --git a/tests/generic/710 b/tests/generic/710
-index 6c6aa08f63..c344bd898b 100755
---- a/tests/generic/710
-+++ b/tests/generic/710
-@@ -4,17 +4,17 @@
- #
- # FS QA Test No. 710
- #
--# Can we use swapext to exceed the quota enforcement?
-+# Can we use exchangerange to exceed the quota enforcement?
+diff --git a/tests/generic/717 b/tests/generic/717
+index ffabe2eaa1..7bc917e555 100755
+--- a/tests/generic/717
++++ b/tests/generic/717
+@@ -77,11 +77,6 @@ $XFS_IO_PROG -c "exchangerange -d 0 -s $(( blksz * nrblks )) -l 37 $dir/b" $dir/
+ echo file2 unaligned EOF to file1 nowhere near EOF
+ $XFS_IO_PROG -c "exchangerange -s 0 -d $(( blksz * nrblks )) -l 37 $dir/b" $dir/a
  
- . ./common/preamble
--_begin_fstest auto quick fiexchange swapext quota
-+_begin_fstest auto quick fiexchange quota
- 
- # Import common functions.
- . ./common/filter
- . ./common/quota
- 
- # real QA test starts here
--_require_xfs_io_command swapext
-+_require_xfs_io_command exchangerange
- _require_user
- _require_nobody
- _require_quota
-@@ -35,14 +35,14 @@ chown nobody $SCRATCH_MNT/b
- # Set up a quota limit
- $XFS_QUOTA_PROG -x -c "limit -u bhard=70k nobody" $SCRATCH_MNT
- 
--echo before swapext >> $seqres.full
-+echo before exchangerange >> $seqres.full
- $XFS_QUOTA_PROG -x -c 'report -a' $SCRATCH_MNT >> $seqres.full
- stat $SCRATCH_MNT/* >> $seqres.full
- 
--# Now try to swapext
--$XFS_IO_PROG -c "swapext $SCRATCH_MNT/b" $SCRATCH_MNT/a
-+# Now try to exchangerange
-+$XFS_IO_PROG -c "exchangerange $SCRATCH_MNT/b" $SCRATCH_MNT/a
- 
--echo after swapext >> $seqres.full
-+echo after exchangerange >> $seqres.full
- $XFS_QUOTA_PROG -x -c 'report -a' $SCRATCH_MNT >> $seqres.full
- stat $SCRATCH_MNT/* >> $seqres.full
- 
-diff --git a/tests/generic/710.out b/tests/generic/710.out
-index a2aa981919..fcc006c279 100644
---- a/tests/generic/710.out
-+++ b/tests/generic/710.out
-@@ -1,4 +1,4 @@
- QA output created by 710
--swapext: Disk quota exceeded
-+exchangerange: Disk quota exceeded
- Comparing user usage
- Comparing group usage
+-echo Files of unequal length
+-_pwrite_byte 0x58 $((blksz * nrblks)) $((blksz * 2)) $dir/a >> $seqres.full
+-_pwrite_byte 0x59 $((blksz * nrblks)) $blksz $dir/b >> $seqres.full
+-$XFS_IO_PROG -c "exchangerange $dir/b" $dir/a
+-
+ echo Files on different filesystems
+ _pwrite_byte 0x58 0 $((blksz * nrblks)) $SCRATCH_MNT/c >> $seqres.full
+ $XFS_IO_PROG -c "exchangerange $SCRATCH_MNT/c" $dir/a
+diff --git a/tests/generic/717.out b/tests/generic/717.out
+index 85137bf412..e2c630d6d9 100644
+--- a/tests/generic/717.out
++++ b/tests/generic/717.out
+@@ -23,8 +23,6 @@ file1 unaligned EOF to file2 nowhere near EOF
+ exchangerange: Invalid argument
+ file2 unaligned EOF to file1 nowhere near EOF
+ exchangerange: Invalid argument
+-Files of unequal length
+-exchangerange: Bad address
+ Files on different filesystems
+ exchangerange: Invalid cross-device link
+ Files on different mounts
 
