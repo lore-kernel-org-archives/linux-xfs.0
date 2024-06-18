@@ -1,494 +1,409 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74B62154C02;
-	Tue, 18 Jun 2024 13:33:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95EE7768E1
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2024 14:07:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718717583; cv=none; b=oex9pITPvWftNs4AqCBfcgZkMwO/HAldjzwN47nHTF5rMpF/MFpXhA4ud99Kog8aoSAXWycrQJutn0cF+kdS74xcfk1kd9C1owTWGDiU9nuHesZCk64Z0HrEn0bS+cl+RKy1rMvwXb0r5DURI7VvttcBQziPFP3OnoYS7dqNWr4=
+	t=1718719658; cv=none; b=AyAw+B1NtZOFRvwzyBMq6AVj6YZqDcofzUfVngMF4DLCwDhOajrjQJUlVxYPOZGCjJrfHzvHdzAA8Ry7oh2/4J1M4iFVQwkNf6uunDW1BQ3MelErSO4toRVy4KQ/NU6/VvYruwvw8IkGZrrhM0dthc4AJ4Uva2AaMVdE6dki0Bk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718717583; c=relaxed/simple;
-	bh=1Zju983biVsVR+oNPvEyeokk4Lp6/Hf8kO2lDoaApcA=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=O///8ZX2597NANdjTerD7g5wNNpa9b9PVTo9pPVNRWkDcSrG6i4fJG8Ez0YwX7tOFbyYQb04JdOGH831hq6IBS73QOIUdQy9cYWdQ7b51a/8MBPw1YttzbA0v6YiZHI6rPMBZTo1Ls4exBSSpJ4izirFlM9r4MTL4ksp3RLedDc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4W3SMM3RS6zdcBy;
-	Tue, 18 Jun 2024 21:31:27 +0800 (CST)
-Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id AC1AB18007A;
-	Tue, 18 Jun 2024 21:32:57 +0800 (CST)
-Received: from localhost.localdomain (10.175.104.67) by
- kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 18 Jun 2024 21:32:56 +0800
-From: Zizhi Wo <wozizhi@huawei.com>
-To: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
-	<wozizhi@huawei.com>
-CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<yangerkun@huawei.com>
-Subject: [PATCH] xfs: Avoid races with cnt_btree lastrec updates
-Date: Tue, 18 Jun 2024 21:32:08 +0800
-Message-ID: <20240618133208.1161794-1-wozizhi@huawei.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1718719658; c=relaxed/simple;
+	bh=o6oOS9AoziaCRsYt1FDiUVPorMdX4OHyekN8d7TdfEg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s+O/MD+8jvEbgm07ACMDJbDWOASHvsF0H9SAU05sRrtaAo5uAoFXcfPbYOnZal6Y4R58X46IGOHbUXtcyyptmK+5gEDbVzxK3R4KRQWB4fdm7AcLRZcAP3y8z0iv7dLiKdr4k0ybv766VF7zGL8Z6TPeaibrJD3HcHg9jsOSKww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Qipe4oRu; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qipe4oRu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718719654;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YDk9d1DZJVHFFhAA1PLcQoEXVG1f199ilHyv9gpJapw=;
+	b=Qipe4oRu8tmh8pfxTmSrMyBBw6teIp6dTsrBTHzmnR5wktftcsZYv+qNFipEAd41rmezXZ
+	lOsTzGw4eBc0ZVIKTcjNGSLNWtk82iSTY7ZKixw6McbL5q8hCNxk714KkbYRSPbaNvsjMb
+	laf3iB6QZjvBvNDR6QY2wePwB8OudN0=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-397-tZTp6LlgOFmqdbmBe5_8Og-1; Tue, 18 Jun 2024 10:07:33 -0400
+X-MC-Unique: tZTp6LlgOFmqdbmBe5_8Og-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1f84619fce8so58504085ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2024 07:07:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718719652; x=1719324452;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YDk9d1DZJVHFFhAA1PLcQoEXVG1f199ilHyv9gpJapw=;
+        b=ogD6S/+jUsSD84HiRlYlXMVMVpTNBTdbPoD0tt7mEgum10cMZRDuk4kQDMDEhlxsU9
+         KuPPfccJ+RmWaPmaj1qwVDCubSgpfbdzBIEmI7PNVoB9dd6Bjp7oggqIvpuVYP8Jnlt1
+         U+lyxI8/TKSRG9uOdc89UBxcc/CUHZAaok5T1tCISTrC4lUHBg1ShLF2XYffU7FslFhk
+         gWAziOUoHwf8gMdQnrXqFvl1E7hzm0hLn7I+OhkuWL9jAPGyHyOVtMIxtqS2kx8wH74R
+         vCDfE1a3thbv8qglB9H8XkVuUicrZTjBuwf1x1ffGDhQrn510UYLVXGJHcy79ZNCuvJ4
+         +BEw==
+X-Forwarded-Encrypted: i=1; AJvYcCU+BS9BG9a5hKkZ7Tuu4qR7YBBU3UpsFXKmFtboXKk7/V+2VPP1zFe4/4GNCVcHJDKGigpJ7D5C599rNFhGWb2z3mkjCzD6H5RC
+X-Gm-Message-State: AOJu0YwcpYBlDDL8V4k9EDNuaXM8Hg8LVAvufEoKqSGZD6EoerThXFva
+	3go+q6gai6hO90hs17QgfBFCNtqzp8wNy0fVy+U7gIfZ0CgmXWa645A5DSyZDzY2OlwyZBUK5MU
+	DYTC3smAmUXsXEvUqTIjAZtGppzFfnrg3XQHfuB5WAB934OR8YzibaAhXDtZNh9bn0xKL/ck=
+X-Received: by 2002:a17:902:d4c5:b0:1f8:3b20:3813 with SMTP id d9443c01a7336-1f8625c1762mr151927185ad.12.1718719651666;
+        Tue, 18 Jun 2024 07:07:31 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFc+ZgPAUrHnzwloSnonOmgLjLc4twZCmIxdgyHOk4Kjx8I09Imk6T3PfAjRYw2n/4WCiPIOg==
+X-Received: by 2002:a17:902:d4c5:b0:1f8:3b20:3813 with SMTP id d9443c01a7336-1f8625c1762mr151926555ad.12.1718719650994;
+        Tue, 18 Jun 2024 07:07:30 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f99b5740dbsm11773375ad.299.2024.06.18.07.07.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Jun 2024 07:07:30 -0700 (PDT)
+Date: Tue, 18 Jun 2024 22:07:23 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: patches@lists.linux.dev, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org,
+	ziy@nvidia.com, vbabka@suse.cz, seanjc@google.com,
+	willy@infradead.org, david@redhat.com, hughd@google.com,
+	linmiaohe@huawei.com, muchun.song@linux.dev, osalvador@suse.de,
+	p.raghav@samsung.com, da.gomez@samsung.com, hare@suse.de,
+	john.g.garry@oracle.com
+Subject: Re: [PATCH v2 2/5] fstests: add mmap page boundary tests
+Message-ID: <20240618140723.r2g3vbsevjl67753@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240615002935.1033031-1-mcgrof@kernel.org>
+ <20240615002935.1033031-3-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemf100017.china.huawei.com (7.202.181.16)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240615002935.1033031-3-mcgrof@kernel.org>
 
-A concurrent file creation and little writing could unexpectedly return
--ENOSPC error since there is a race window that the allocator could get
-the wrong agf->agf_longest.
+On Fri, Jun 14, 2024 at 05:29:31PM -0700, Luis Chamberlain wrote:
+> mmap() POSIX compliance says we should zero fill data beyond a file
+> size up to page boundary, and issue a SIGBUS if we go beyond. While fsx
+> helps us test zero-fill sometimes, fsstress also let's us sometimes test
+> for SIGBUS however that is based on a random value and its not likely we
+> always test it. Dedicate a specic test for this to make testing for
+> this specific situation and to easily expand on other corner cases.
+> 
+> The only filesystem currently known to fail is tmpfs with huge pages on
+> a 4k base page size system, on 64k base page size it does not fail.
+> The pending upstream patch "filemap: cap PTE range to be created to
+> allowed zero fill in folio_map_range()" fixes this issue for tmpfs on
+> 4k base page size with huge pages and it also fixes it for LBS support.
+> 
+> Suggested-by: Matthew Wilcox <willy@infradead.org>
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> ---
 
-Write file process steps:
-1) Find the entry that best meets the conditions, then calculate the start
-   address and length of the remaining part of the entry after allocation.
-2) Delete this entry and update the agf->agf_longest.
-3) Insert the remaining unused parts of this entry based on the
-   calculations in 1), and update the agf->agf_longest again if necessary.
+Good to me,
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-Create file process steps:
-1) Check whether there are free inodes in the inode chunk.
-2) If there is no free inode, check whether there has space for creating
-   inode chunks, perform the no-lock judgment first.
-3) If the judgment succeeds, the judgment is performed again with agf lock
-   held. Otherwire, an error is returned directly.
-
-If the write process is in step 2) but not go to 3) yet, the create file
-process goes to 2) at this time, it will be mistaken for no space,
-resulting in the file system still has space but the file creation fails.
-
-We have sent two different commits to the community in order to fix this
-problem[1][2]. Unfortunately, both solutions have flaws. In [2], I
-discussed with Dave and Darrick, realized that a better solution to this
-problem requires the "last cnt record tracking" to be ripped out of the
-generic btree code. And surprisingly, Dave directly provided his fix code.
-This patch includes appropriate modifications based on his tmp-code to
-address this issue.
-
-The entire fix can be roughly divided into two parts:
-1) Delete the code related to lastrec-update in the generic btree code.
-2) Place the process of updating longest freespace with cntbt separately
-   to the end of the cntbt modifications. And only these two scenarios
-   need to be considered:
-   2.1) In the deletion scenario, directly update the longest to the
-        rightmost record of the cntbt.
-   2.2) In the insertion scenario, determine whether the cntbt has the
-        record that larger than the previous longest.
-
-[1] https://lore.kernel.org/all/20240419061848.1032366-2-yebin10@huawei.com
-[2] https://lore.kernel.org/all/20240604071121.3981686-1-wozizhi@huawei.com
-
-Reported by: Ye Bin <yebin10@huawei.com>
-Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
----
- fs/xfs/libxfs/xfs_alloc.c       | 116 ++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_alloc_btree.c |  64 ------------------
- fs/xfs/libxfs/xfs_btree.c       |  51 --------------
- fs/xfs/libxfs/xfs_btree.h       |  16 ++---
- 4 files changed, 120 insertions(+), 127 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 6c55a6e88eba..74e40f75a278 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -465,6 +465,99 @@ xfs_alloc_fix_len(
- 	args->len = rlen;
- }
- 
-+/*
-+ * Determine if the cursor points to the block that contains the right-most
-+ * block of records in the by-count btree. This block contains the largest
-+ * contiguous free extent in the AG, so if we modify ia record in this block we
-+ * need to call xfs_alloc_fixup_longest() once the modifications are done to
-+ * ensure the agf->agf_longest field is kept up to date with the longest free
-+ * extent tracked by the by-count btree.
-+ */
-+static bool
-+xfs_alloc_cursor_at_lastrec(
-+	struct xfs_btree_cur	*cnt_cur)
-+{
-+	struct xfs_btree_block	*block;
-+	union xfs_btree_ptr	ptr;
-+	struct xfs_buf		*bp;
-+
-+	block = xfs_btree_get_block(cnt_cur, 0, &bp);
-+
-+	xfs_btree_get_sibling(cnt_cur, block, &ptr, XFS_BB_RIGHTSIB);
-+	if (!xfs_btree_ptr_is_null(cnt_cur, &ptr))
-+		return false;
-+	return true;
-+}
-+
-+/*
-+ * Update the longest contiguous free extent in the AG from the by-count cursor
-+ * that is passed to us. This should be done at the end of any allocation or
-+ * freeing operation that touches the longest extent in the btree.
-+ *
-+ * Needing to update the longest extent can be determined by calling
-+ * xfs_alloc_cursor_at_lastrec() after the cursor is positioned for record
-+ * modification but before the modification begins.
-+ */
-+static int
-+xfs_alloc_fixup_longest(
-+	struct xfs_btree_cur	*cnt_cur,
-+	int			reason)
-+{
-+	struct xfs_perag	*pag = cnt_cur->bc_ag.pag;
-+	struct xfs_agf		*agf;
-+	struct xfs_buf		*bp;
-+	struct xfs_btree_block	*block;
-+	int			error;
-+	int			i;
-+	int			numrecs;
-+
-+	/*
-+	 * Lookup last rec and update AGF.
-+	 *
-+	 * In case of LASTREC_DELREC, after called xfs_alloc_lookup_ge(), the
-+	 * ptr is in the rightmost edge, and we need to update the last record
-+	 * of this block as the longest free extent.
-+	 *
-+	 * In case of LASTREC_INSREC, because only one new record is inserted
-+	 * each time, only need to check whether the cntbt has a record that
-+	 * larger than the previous longest. Note that we can't update the
-+	 * longest with xfs_alloc_get_rec() as the xfs_verify_agbno() may not
-+	 * pass because pag->block_count is updated on the outside.
-+	 */
-+	error = xfs_alloc_lookup_ge(cnt_cur, 0, pag->pagf_longest + 1, &i);
-+	if (error)
-+		return error;
-+
-+	if (i == 1 || reason == LASTREC_DELREC) {
-+		if (XFS_IS_CORRUPT(pag->pag_mount,
-+				   i == 1 && reason == LASTREC_DELREC)) {
-+			xfs_btree_mark_sick(cnt_cur);
-+			return -EFSCORRUPTED;
-+		}
-+
-+		block = xfs_btree_get_block(cnt_cur, 0, &bp);
-+		numrecs = xfs_btree_get_numrecs(block);
-+
-+		if (numrecs) {
-+			xfs_alloc_rec_t *rrp;
-+
-+			rrp = XFS_ALLOC_REC_ADDR(cnt_cur->bc_mp, block,
-+						 numrecs);
-+			pag->pagf_longest = be32_to_cpu(rrp->ar_blockcount);
-+		} else {
-+			/* empty tree */
-+			pag->pagf_longest = 0;
-+		}
-+	}
-+
-+	bp = cnt_cur->bc_ag.agbp;
-+	agf = bp->b_addr;
-+	agf->agf_longest = cpu_to_be32(pag->pagf_longest);
-+	xfs_alloc_log_agf(cnt_cur->bc_tp, bp, XFS_AGF_LONGEST);
-+
-+	return 0;
-+}
-+
- /*
-  * Update the two btrees, logically removing from freespace the extent
-  * starting at rbno, rlen blocks.  The extent is contained within the
-@@ -489,6 +582,7 @@ xfs_alloc_fixup_trees(
- 	xfs_extlen_t	nflen1=0;	/* first new free length */
- 	xfs_extlen_t	nflen2=0;	/* second new free length */
- 	struct xfs_mount *mp;
-+	bool		fixup_longest = false;
- 
- 	mp = cnt_cur->bc_mp;
- 
-@@ -577,6 +671,10 @@ xfs_alloc_fixup_trees(
- 		nfbno2 = rbno + rlen;
- 		nflen2 = (fbno + flen) - nfbno2;
- 	}
-+
-+	if (xfs_alloc_cursor_at_lastrec(cnt_cur))
-+		fixup_longest = true;
-+
- 	/*
- 	 * Delete the entry from the by-size btree.
- 	 */
-@@ -654,6 +752,10 @@ xfs_alloc_fixup_trees(
- 			return -EFSCORRUPTED;
- 		}
- 	}
-+
-+	if (fixup_longest)
-+		return xfs_alloc_fixup_longest(cnt_cur, LASTREC_DELREC);
-+
- 	return 0;
- }
- 
-@@ -1956,6 +2058,7 @@ xfs_free_ag_extent(
- 	int				i;
- 	int				error;
- 	struct xfs_perag		*pag = agbp->b_pag;
-+	bool				fixup_longest = false;
- 
- 	bno_cur = cnt_cur = NULL;
- 	mp = tp->t_mountp;
-@@ -2219,8 +2322,13 @@ xfs_free_ag_extent(
- 	}
- 	xfs_btree_del_cursor(bno_cur, XFS_BTREE_NOERROR);
- 	bno_cur = NULL;
-+
- 	/*
- 	 * In all cases we need to insert the new freespace in the by-size tree.
-+	 *
-+	 * If this new freespace is being inserted in the block that contains
-+	 * the largest free space in the btree, make sure we also fix up the
-+	 * agf->agf-longest tracker field.
- 	 */
- 	if ((error = xfs_alloc_lookup_eq(cnt_cur, nbno, nlen, &i)))
- 		goto error0;
-@@ -2229,6 +2337,8 @@ xfs_free_ag_extent(
- 		error = -EFSCORRUPTED;
- 		goto error0;
- 	}
-+	if (xfs_alloc_cursor_at_lastrec(cnt_cur))
-+		fixup_longest = true;
- 	if ((error = xfs_btree_insert(cnt_cur, &i)))
- 		goto error0;
- 	if (XFS_IS_CORRUPT(mp, i != 1)) {
-@@ -2236,6 +2346,12 @@ xfs_free_ag_extent(
- 		error = -EFSCORRUPTED;
- 		goto error0;
- 	}
-+	if (fixup_longest) {
-+		error = xfs_alloc_fixup_longest(cnt_cur, LASTREC_INSREC);
-+		if (error)
-+			goto error0;
-+	}
-+
- 	xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 	cnt_cur = NULL;
- 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 6ef5ddd89600..585e98e87ef9 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -115,67 +115,6 @@ xfs_allocbt_free_block(
- 	return 0;
- }
- 
--/*
-- * Update the longest extent in the AGF
-- */
--STATIC void
--xfs_allocbt_update_lastrec(
--	struct xfs_btree_cur		*cur,
--	const struct xfs_btree_block	*block,
--	const union xfs_btree_rec	*rec,
--	int				ptr,
--	int				reason)
--{
--	struct xfs_agf		*agf = cur->bc_ag.agbp->b_addr;
--	struct xfs_perag	*pag;
--	__be32			len;
--	int			numrecs;
--
--	ASSERT(!xfs_btree_is_bno(cur->bc_ops));
--
--	switch (reason) {
--	case LASTREC_UPDATE:
--		/*
--		 * If this is the last leaf block and it's the last record,
--		 * then update the size of the longest extent in the AG.
--		 */
--		if (ptr != xfs_btree_get_numrecs(block))
--			return;
--		len = rec->alloc.ar_blockcount;
--		break;
--	case LASTREC_INSREC:
--		if (be32_to_cpu(rec->alloc.ar_blockcount) <=
--		    be32_to_cpu(agf->agf_longest))
--			return;
--		len = rec->alloc.ar_blockcount;
--		break;
--	case LASTREC_DELREC:
--		numrecs = xfs_btree_get_numrecs(block);
--		if (ptr <= numrecs)
--			return;
--		ASSERT(ptr == numrecs + 1);
--
--		if (numrecs) {
--			xfs_alloc_rec_t *rrp;
--
--			rrp = XFS_ALLOC_REC_ADDR(cur->bc_mp, block, numrecs);
--			len = rrp->ar_blockcount;
--		} else {
--			len = 0;
--		}
--
--		break;
--	default:
--		ASSERT(0);
--		return;
--	}
--
--	agf->agf_longest = len;
--	pag = cur->bc_ag.agbp->b_pag;
--	pag->pagf_longest = be32_to_cpu(len);
--	xfs_alloc_log_agf(cur->bc_tp, cur->bc_ag.agbp, XFS_AGF_LONGEST);
--}
--
- STATIC int
- xfs_allocbt_get_minrecs(
- 	struct xfs_btree_cur	*cur,
-@@ -493,7 +432,6 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
- 	.set_root		= xfs_allocbt_set_root,
- 	.alloc_block		= xfs_allocbt_alloc_block,
- 	.free_block		= xfs_allocbt_free_block,
--	.update_lastrec		= xfs_allocbt_update_lastrec,
- 	.get_minrecs		= xfs_allocbt_get_minrecs,
- 	.get_maxrecs		= xfs_allocbt_get_maxrecs,
- 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-@@ -511,7 +449,6 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
- const struct xfs_btree_ops xfs_cntbt_ops = {
- 	.name			= "cnt",
- 	.type			= XFS_BTREE_TYPE_AG,
--	.geom_flags		= XFS_BTGEO_LASTREC_UPDATE,
- 
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
- 	.key_len		= sizeof(xfs_alloc_key_t),
-@@ -525,7 +462,6 @@ const struct xfs_btree_ops xfs_cntbt_ops = {
- 	.set_root		= xfs_allocbt_set_root,
- 	.alloc_block		= xfs_allocbt_alloc_block,
- 	.free_block		= xfs_allocbt_free_block,
--	.update_lastrec		= xfs_allocbt_update_lastrec,
- 	.get_minrecs		= xfs_allocbt_get_minrecs,
- 	.get_maxrecs		= xfs_allocbt_get_maxrecs,
- 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index d29547572a68..a5c4af148853 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1331,30 +1331,6 @@ xfs_btree_init_block_cur(
- 			xfs_btree_owner(cur));
- }
- 
--/*
-- * Return true if ptr is the last record in the btree and
-- * we need to track updates to this record.  The decision
-- * will be further refined in the update_lastrec method.
-- */
--STATIC int
--xfs_btree_is_lastrec(
--	struct xfs_btree_cur	*cur,
--	struct xfs_btree_block	*block,
--	int			level)
--{
--	union xfs_btree_ptr	ptr;
--
--	if (level > 0)
--		return 0;
--	if (!(cur->bc_ops->geom_flags & XFS_BTGEO_LASTREC_UPDATE))
--		return 0;
--
--	xfs_btree_get_sibling(cur, block, &ptr, XFS_BB_RIGHTSIB);
--	if (!xfs_btree_ptr_is_null(cur, &ptr))
--		return 0;
--	return 1;
--}
--
- STATIC void
- xfs_btree_buf_to_ptr(
- 	struct xfs_btree_cur	*cur,
-@@ -2420,15 +2396,6 @@ xfs_btree_update(
- 	xfs_btree_copy_recs(cur, rp, rec, 1);
- 	xfs_btree_log_recs(cur, bp, ptr, ptr);
- 
--	/*
--	 * If we are tracking the last record in the tree and
--	 * we are at the far right edge of the tree, update it.
--	 */
--	if (xfs_btree_is_lastrec(cur, block, 0)) {
--		cur->bc_ops->update_lastrec(cur, block, rec,
--					    ptr, LASTREC_UPDATE);
--	}
--
- 	/* Pass new key value up to our parent. */
- 	if (xfs_btree_needs_key_update(cur, ptr)) {
- 		error = xfs_btree_update_keys(cur, 0);
-@@ -3617,15 +3584,6 @@ xfs_btree_insrec(
- 			goto error0;
- 	}
- 
--	/*
--	 * If we are tracking the last record in the tree and
--	 * we are at the far right edge of the tree, update it.
--	 */
--	if (xfs_btree_is_lastrec(cur, block, level)) {
--		cur->bc_ops->update_lastrec(cur, block, rec,
--					    ptr, LASTREC_INSREC);
--	}
--
- 	/*
- 	 * Return the new block number, if any.
- 	 * If there is one, give back a record value and a cursor too.
-@@ -3983,15 +3941,6 @@ xfs_btree_delrec(
- 	xfs_btree_set_numrecs(block, --numrecs);
- 	xfs_btree_log_block(cur, bp, XFS_BB_NUMRECS);
- 
--	/*
--	 * If we are tracking the last record in the tree and
--	 * we are at the far right edge of the tree, update it.
--	 */
--	if (xfs_btree_is_lastrec(cur, block, level)) {
--		cur->bc_ops->update_lastrec(cur, block, NULL,
--					    ptr, LASTREC_DELREC);
--	}
--
- 	/*
- 	 * We're at the root level.  First, shrink the root block in-memory.
- 	 * Try to get rid of the next level down.  If we can't then there's
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index f93374278aa1..670470874630 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -154,12 +154,6 @@ struct xfs_btree_ops {
- 			       int *stat);
- 	int	(*free_block)(struct xfs_btree_cur *cur, struct xfs_buf *bp);
- 
--	/* update last record information */
--	void	(*update_lastrec)(struct xfs_btree_cur *cur,
--				  const struct xfs_btree_block *block,
--				  const union xfs_btree_rec *rec,
--				  int ptr, int reason);
--
- 	/* records in block/level */
- 	int	(*get_minrecs)(struct xfs_btree_cur *cur, int level);
- 	int	(*get_maxrecs)(struct xfs_btree_cur *cur, int level);
-@@ -222,15 +216,13 @@ struct xfs_btree_ops {
- };
- 
- /* btree geometry flags */
--#define XFS_BTGEO_LASTREC_UPDATE	(1U << 0) /* track last rec externally */
--#define XFS_BTGEO_OVERLAPPING		(1U << 1) /* overlapping intervals */
-+#define XFS_BTGEO_OVERLAPPING		(1U << 0) /* overlapping intervals */
- 
- /*
-- * Reasons for the update_lastrec method to be called.
-+ * Reasons for the xfs_alloc_fixup_longest() to be called.
-  */
--#define LASTREC_UPDATE	0
--#define LASTREC_INSREC	1
--#define LASTREC_DELREC	2
-+#define LASTREC_INSREC	0
-+#define LASTREC_DELREC	1
- 
- 
- union xfs_btree_irec {
--- 
-2.39.2
+>  common/rc             |   5 +-
+>  tests/generic/749     | 256 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/749.out |   2 +
+>  3 files changed, 262 insertions(+), 1 deletion(-)
+>  create mode 100755 tests/generic/749
+>  create mode 100644 tests/generic/749.out
+> 
+> diff --git a/common/rc b/common/rc
+> index fa7942809d6c..e812a2f7cc67 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -60,12 +60,15 @@ _round_up_to_page_boundary()
+>  	echo $(( (n + page_size - 1) & ~(page_size - 1) ))
+>  }
+>  
+> +# You can override the $map_len but its optional, by default we use the
+> +# max allowed size. If you use a length greater than the default you can
+> +# expect a SIBGUS and test for it.
+>  _mread()
+>  {
+>  	local file=$1
+>  	local offset=$2
+>  	local length=$3
+> -	local map_len=$(_round_up_to_page_boundary $(_get_filesize $file))
+> +	local map_len=${4:-$(_round_up_to_page_boundary $(_get_filesize $file)) }
+>  
+>  	# Some callers expect xfs_io to crash with SIGBUS due to the mread,
+>  	# causing the shell to print "Bus error" to stderr.  To allow this
+> diff --git a/tests/generic/749 b/tests/generic/749
+> new file mode 100755
+> index 000000000000..2dcced4e3c13
+> --- /dev/null
+> +++ b/tests/generic/749
+> @@ -0,0 +1,256 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) Luis Chamberlain. All Rights Reserved.
+> +#
+> +# FS QA Test 749
+> +#
+> +# As per POSIX NOTES mmap(2) maps multiples of the system page size, but if the
+> +# data mapped is not multiples of the page size the remaining bytes are zeroed
+> +# out when mapped and modifications to that region are not written to the file.
+> +# On Linux when you write data to such partial page after the end of the
+> +# object, the data stays in the page cache even after the file is closed and
+> +# unmapped and  even  though  the data  is never written to the file itself,
+> +# subsequent mappings may see the modified content. If you go *beyond* this
+> +# page, you should get a SIGBUS. This test verifies we zero-fill to page
+> +# boundary and ensures we get a SIGBUS if we write to data beyond the system
+> +# page size even if the block size is greater than the system page size.
+> +. ./common/preamble
+> +. ./common/rc
+> +_begin_fstest auto quick prealloc
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_require_scratch_nocheck
+> +_require_test
+> +_require_xfs_io_command "truncate"
+> +_require_xfs_io_command "falloc"
+> +
+> +# _fixed_by_git_commit kernel <pending-upstream> \
+> +#        "filemap: cap PTE range to be created to allowed zero fill in folio_map_range()"
+> +
+> +filter_xfs_io_data_unique()
+> +{
+> +    _filter_xfs_io_offset | sed -e 's| |\n|g' | grep -E -v "\.|XX|\*" | \
+> +	sort -u | tr -d '\n'
+> +}
+> +
+> +
+> +setup_zeroed_file()
+> +{
+> +	local file_len=$1
+> +	local sparse=$2
+> +
+> +	if $sparse; then
+> +		$XFS_IO_PROG -f -c "truncate $file_len" $test_file
+> +	else
+> +		$XFS_IO_PROG -f -c "falloc 0 $file_len" $test_file
+> +	fi
+> +}
+> +
+> +mwrite()
+> +{
+> +       local file=$1
+> +       local offset=$2
+> +       local length=$3
+> +       local map_len=${4:-$(_round_up_to_page_boundary $(_get_filesize $file)) }
+> +
+> +       # Some callers expect xfs_io to crash with SIGBUS due to the mread,
+> +       # causing the shell to print "Bus error" to stderr.  To allow this
+> +       # message to be redirected, execute xfs_io in a new shell instance.
+> +       # However, for this to work reliably, we also need to prevent the new
+> +       # shell instance from optimizing out the fork and directly exec'ing
+> +       # xfs_io.  The easiest way to do that is to append 'true' to the
+> +       # commands, so that xfs_io is no longer the last command the shell sees.
+> +       bash -c "trap '' SIGBUS; ulimit -c 0; \
+> +		$XFS_IO_PROG $file \
+> +               -c 'mmap -w 0 $map_len' \
+> +               -c 'mwrite $offset $length'; \
+> +	       true"
+> +}
+> +
+> +do_mmap_tests()
+> +{
+> +	local block_size=$1
+> +	local file_len=$2
+> +	local offset=$3
+> +	local len=$4
+> +	local use_sparse_file=${5:-false}
+> +	local new_filelen=0
+> +	local map_len=0
+> +	local csum=0
+> +	local fs_block_size=$(_get_file_block_size $SCRATCH_MNT)
+> +	local failed=0
+> +
+> +	echo -en "\n\n==> Testing blocksize $block_size " >> $seqres.full
+> +	echo -en "file_len: $file_len offset: $offset " >> $seqres.full
+> +	echo -e "len: $len sparse: $use_sparse_file" >> $seqres.full
+> +
+> +	if ((fs_block_size != block_size)); then
+> +		_fail "Block size created ($block_size) doesn't match _get_file_block_size on mount ($fs_block_size)"
+> +	fi
+> +
+> +	rm -f $SCRATCH_MNT/file
+> +
+> +	# This let's us also test against sparse files
+> +	setup_zeroed_file $file_len $use_sparse_file
+> +
+> +	# This will overwrite the old data, the file size is the
+> +	# delta between offset and len now.
+> +	$XFS_IO_PROG -f -c "pwrite -S 0xaa -b 512 $offset $len" \
+> +		$test_file >> $seqres.full
+> +
+> +	sync
+> +	new_filelen=$(_get_filesize $test_file)
+> +	map_len=$(_round_up_to_page_boundary $new_filelen)
+> +	csum_orig="$(_md5_checksum $test_file)"
+> +
+> +	# A couple of mmap() tests:
+> +	#
+> +	# We are allowed to mmap() up to the boundary of the page size of a
+> +	# data object, but there a few rules to follow we must check for:
+> +	#
+> +	# a) zero-fill test for the data: POSIX says we should zero fill any
+> +	#    partial page after the end of the object. Verify zero-fill.
+> +	# b) do not write this bogus data to disk: on Linux, if we write data
+> +	#    to a partially filled page, it will stay in the page cache even
+> +	#    after the file is closed and unmapped even if it never reaches the
+> +	#    file. As per mmap(2) subsequent mappings *may* see the modified
+> +	#    content. This means that it also can get other data and we have
+> +	#    no rules about what this data should be. Since the data read after
+> +	#    the actual object data can vary this test just verifies that the
+> +	#    filesize does not change.
+> +	if [[ $map_len -gt $new_filelen ]]; then
+> +		zero_filled_data_len=$((map_len - new_filelen))
+> +		_scratch_cycle_mount
+> +		expected_zero_data="00"
+> +		zero_filled_data=$($XFS_IO_PROG -r $test_file \
+> +			-c "mmap -r 0 $map_len" \
+> +			-c "mread -v $new_filelen $zero_filled_data_len" \
+> +			-c "munmap" | \
+> +			filter_xfs_io_data_unique)
+> +		if [[ "$zero_filled_data" != "$expected_zero_data" ]]; then
+> +			let failed=$failed+1
+> +			echo "Expected data: $expected_zero_data"
+> +			echo "  Actual data: $zero_filled_data"
+> +			echo "Zero-fill expectations with mmap() not respected"
+> +		fi
+> +
+> +		_scratch_cycle_mount
+> +		$XFS_IO_PROG $test_file \
+> +			-c "mmap -w 0 $map_len" \
+> +			-c "mwrite $new_filelen $zero_filled_data_len" \
+> +			-c "munmap"
+> +		sync
+> +		csum_post="$(_md5_checksum $test_file)"
+> +		if [[ "$csum_orig" != "$csum_post" ]]; then
+> +			let failed=$failed+1
+> +			echo "Expected csum: $csum_orig"
+> +			echo " Actual  csum: $csum_post"
+> +			echo "mmap() write up to page boundary should not change actual file contents"
+> +		fi
+> +
+> +		local filelen_test=$(_get_filesize $test_file)
+> +		if [[ "$filelen_test" != "$new_filelen" ]]; then
+> +			let failed=$failed+1
+> +			echo "Expected file length: $new_filelen"
+> +			echo " Actual  file length: $filelen_test"
+> +			echo "mmap() write up to page boundary should not change actual file size"
+> +		fi
+> +	fi
+> +
+> +	# Now lets ensure we get SIGBUS when we go beyond the page boundary
+> +	_scratch_cycle_mount
+> +	new_filelen=$(_get_filesize $test_file)
+> +	map_len=$(_round_up_to_page_boundary $new_filelen)
+> +	csum_orig="$(_md5_checksum $test_file)"
+> +	_mread $test_file 0 $map_len >> $seqres.full  2>$tmp.err
+> +	if grep -q 'Bus error' $tmp.err; then
+> +		failed=1
+> +		cat $tmp.err
+> +		echo "Not expecting SIGBUS when reading up to page boundary"
+> +	fi
+> +
+> +	# This should just work
+> +	_mread $test_file 0 $map_len >> $seqres.full  2>$tmp.err
+> +	if [[ $? -ne 0 ]]; then
+> +		let failed=$failed+1
+> +		echo "mmap() read up to page boundary should work"
+> +	fi
+> +
+> +	# This should just work
+> +	mwrite $map_len 0 $map_len >> $seqres.full  2>$tmp.err
+> +	if [[ $? -ne 0 ]]; then
+> +		let failed=$failed+1
+> +		echo "mmap() write up to page boundary should work"
+> +	fi
+> +
+> +	# If we mmap() on the boundary but try to read beyond it just
+> +	# fails, we don't get a SIGBUS
+> +	$XFS_IO_PROG -r $test_file \
+> +		-c "mmap -r 0 $map_len" \
+> +		-c "mread 0 $((map_len + 10))" >> $seqres.full  2>$tmp.err
+> +	local mread_err=$?
+> +	if [[ $mread_err -eq 0 ]]; then
+> +		let failed=$failed+1
+> +		echo "mmap() to page boundary works as expected but reading beyond should fail: $mread_err"
+> +	fi
+> +
+> +	$XFS_IO_PROG -w $test_file \
+> +		-c "mmap -w 0 $map_len" \
+> +		-c "mwrite 0 $((map_len + 10))" >> $seqres.full  2>$tmp.err
+> +	local mwrite_err=$?
+> +	if [[ $mwrite_err -eq 0 ]]; then
+> +		let failed=$failed+1
+> +		echo "mmap() to page boundary works as expected but writing beyond should fail: $mwrite_err"
+> +	fi
+> +
+> +	# Now let's go beyond the allowed mmap() page boundary
+> +	_mread $test_file 0 $((map_len + 10)) $((map_len + 10)) >> $seqres.full  2>$tmp.err
+> +	if ! grep -q 'Bus error' $tmp.err; then
+> +		let failed=$failed+1
+> +		echo "Expected SIGBUS when mmap() reading beyond page boundary"
+> +	fi
+> +
+> +	mwrite $test_file 0 $((map_len + 10)) $((map_len + 10))  >> $seqres.full  2>$tmp.err
+> +	if ! grep -q 'Bus error' $tmp.err; then
+> +		let failed=$failed+1
+> +		echo "Expected SIGBUS when mmap() writing beyond page boundary"
+> +	fi
+> +
+> +	local filelen_test=$(_get_filesize $test_file)
+> +	if [[ "$filelen_test" != "$new_filelen" ]]; then
+> +		let failed=$failed+1
+> +		echo "Expected file length: $new_filelen"
+> +		echo " Actual  file length: $filelen_test"
+> +		echo "reading or writing beyond file size up to mmap() page boundary should not change file size"
+> +	fi
+> +
+> +	if [[ $failed -eq 1 ]]; then
+> +		_fail "Test had $failed failures..."
+> +	fi
+> +}
+> +
+> +test_block_size()
+> +{
+> +	local block_size=$1
+> +
+> +	do_mmap_tests $block_size 512 3 5
+> +	do_mmap_tests $block_size 11k 0 $((4096 * 3 + 3))
+> +	do_mmap_tests $block_size 16k 0 $((16384+3))
+> +	do_mmap_tests $block_size 16k $((16384-10)) $((16384+20))
+> +	do_mmap_tests $block_size 64k 0 $((65536+3))
+> +	do_mmap_tests $block_size 4k 4090 30 true
+> +}
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+> +_scratch_mount
+> +test_file=$SCRATCH_MNT/file
+> +block_size=$(_get_file_block_size "$SCRATCH_MNT")
+> +test_block_size $block_size
+> +
+> +echo "Silence is golden"
+> +status=0
+> +exit
+> diff --git a/tests/generic/749.out b/tests/generic/749.out
+> new file mode 100644
+> index 000000000000..24658deddb99
+> --- /dev/null
+> +++ b/tests/generic/749.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 749
+> +Silence is golden
+> -- 
+> 2.43.0
+> 
+> 
 
