@@ -1,104 +1,68 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C9FF14F113;
-	Tue, 18 Jun 2024 11:35:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E50982139B2;
+	Tue, 18 Jun 2024 12:36:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718710521; cv=none; b=u2nxp5cD7se51nbqDNAxd6ZtFzR28sZNGCliKyikCqM3hUdPxqn08akEtywCZ9TXXit70DmLxrifviTiJEtB8HpkCDwZr4o/dfFZEohKZYFO6Fd3mxwIoT/FnN2mUTW5SqE1Zmtyy3+JSHwTn/bOfTDO+awTvVwd4SNDeVOw4l0=
+	t=1718714164; cv=none; b=YkoiAdquNutrlT6UXdwpUc1ZpwgUGJzdbtIMJJzdWH4acjaf/3s0y8O+lRSSCFSsV+qsg6LWxq1cTDkH3WFYOplG0Zl3HHMr9VZjizqPEtYgQrjZ2B1BYusVAXYHXeRcPSBZFKz8KzJm0MlkGu97DSPFsHEpS5fkVRPtSHhlO3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718710521; c=relaxed/simple;
-	bh=n47kLEmQKieXHan4dWpUnWxQFa+g8WSINLqmwH5d7P8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=N9nseXq//5trdJvVJUV+KtQx0R0nOJVwbnvUEK7VTj2SAC8GMNTDgW7yzxS1eUE8vCgzHOz1sckmAUT62f9AotUYL22524hwmdnX5Z9iNWJ+244TmNTmR42xCJM6rcPzDPu7oNWZLgkbqL0Kg9T04nAWBfGYQhhsMlXVxJF7kBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JUsSTUQV; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718714164; c=relaxed/simple;
+	bh=F+bFk9dickmFOawd5Pn7aBTqChq06jSCg6S6Xw6BLzU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=T/sskjqEBdbKlyh16pzVhAR6H3Kmf8AHzIglzoEdL1rEAn/GgSYqRRIsW6d0T1GlgQW7R7EvqbCPN1EukcuJHhN+mvnnJ8UJSRHw4wvoA6POZNFqnFU7sbaVac358/o/AVIvHsmTvTKcv+IRgvJlj5t4Enx2GUS85K+MM3qHbCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ez2X5qHQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JUsSTUQV"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-70423e8e6c9so4661205b3a.0;
-        Tue, 18 Jun 2024 04:35:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718710519; x=1719315319; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=z7flslpC78LMU2Bq6YkuOUsByOSqBWx2+Qe6VdxlJ3Y=;
-        b=JUsSTUQVe5TRty4P1gPHCMbMGt1tLWOzBxAWkdkXEcZSCDwhow6ICkuSydiSc1hf4r
-         VtFWzrKyvcGfiqkZIPRvs9udc5z2Dw5ylGA13Rd3BiTtfE/wB4oFHECDa1qwZSF+2hJI
-         szooNibkjaEyaJ4W9OVrAXCb1/F0rQvLnRmw4z/hLAquOaDMp7BPJGYeS/lLUDvtPes4
-         LDN3sIan3aspNqT6yFhyb0tf3180sz64lH8+jUp41F1RfCllCr58CWxm4EbTKWy81Nfz
-         45JVu8+ixkd9HhmaB+Xsiy9/ruX179XAL6Yz+Lzx2WU8oo4eN+d1brfcC4ya4MlnfZ/f
-         tyaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718710519; x=1719315319;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=z7flslpC78LMU2Bq6YkuOUsByOSqBWx2+Qe6VdxlJ3Y=;
-        b=SqFN164dHHzJvS3WNY2g/k29oHW3np5madcBXuEgs8pi8CNQoZ1GKh7hFRQe7a8CFx
-         5VUL2SNSvF/NiOWE7BVvCT8Eo7rS3H4edYkSlt1WKxSX1GOnbHC0WdHvgjzcV33aTLBW
-         yUwJcZbv+MnZcYgH6FpphzZ9FmGb0rmf7meLjHdRxhy3kQw5V6H/y0XzgWXiDXzKU30X
-         xFXKc2vnQksvgNNL9Wlom/bJjJCzOaezsfqjdW4ECIzhEN3xRLj95J647R7GryXmDZMe
-         kjGtON9u20/QtJveuCVkTdHYdhGKRz6dskS9SAU2emdGWrj32PQN17gdpYUQ67A2BHw8
-         40Cg==
-X-Forwarded-Encrypted: i=1; AJvYcCXdKlr419FMQSv5g90gI13odEq6ikWQgckXd2AYoqnHLNWgrdWBj9G6iw6Mp1qL+qpxB1s27C5AWhTjwE1rpaCBvgQ9jL70trPc
-X-Gm-Message-State: AOJu0Yzg7+WCkTZc/AlAtPoBycBvBzZ+uKFvDTNdVOd3lqIO9+/RyiSR
-	1kvdw2Wf0NZDYV4kgerfnhL3/koQiDHa83BnjD1Fjqc7cySW5/nZVYBGAH1H
-X-Google-Smtp-Source: AGHT+IF7g4VV0x1ZRFkMEt5reEs/zVN0Cj794QAaeGopj7qQO5Kzs6GXfWDzfFOHCHkqR2yd9wP67g==
-X-Received: by 2002:a05:6a00:4e51:b0:705:bd25:dcb5 with SMTP id d2e1a72fcca58-705d71cc2f5mr11296934b3a.28.1718710518670;
-        Tue, 18 Jun 2024 04:35:18 -0700 (PDT)
-Received: from localhost ([114.242.33.243])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-6fee3013f51sm7862210a12.61.2024.06.18.04.35.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Jun 2024 04:35:18 -0700 (PDT)
-From: Junchao Sun <sunjunchao2870@gmail.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Cc: viro@zeniv.linux.org.uk,
-	brauner@kernel.org,
-	jack@suse.cz,
-	chandan.babu@oracle.com,
-	djwong@kernel.org,
-	Junchao Sun <sunjunchao2870@gmail.com>
-Subject: [PATCH 2/2] vfs: reorder struct file structure elements to remove unneeded padding.
-Date: Tue, 18 Jun 2024 19:35:05 +0800
-Message-Id: <20240618113505.476072-2-sunjunchao2870@gmail.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240618113505.476072-1-sunjunchao2870@gmail.com>
-References: <20240618113505.476072-1-sunjunchao2870@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ez2X5qHQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF68FC3277B;
+	Tue, 18 Jun 2024 12:36:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718714163;
+	bh=F+bFk9dickmFOawd5Pn7aBTqChq06jSCg6S6Xw6BLzU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Ez2X5qHQvWPom/GaSXuluAG/BWijvnGN4XC00rRLYwlz7nLe1P/JIm3alxmcbNfz7
+	 nJjFErJ9/2LvD6FIGgmRaEgn6C2fA+wpc7s2HDiMg12biWVQ1+RMRo6S/GgK+IFH5e
+	 ecj3A+ajNheHkPbVYBHrB4Taaf0N4U2iWI8XC77tNiLenRJbWOV0isiOsRVYk7tGxD
+	 GH2VbqfS0gWi3ez0HnTpjdOzlh0ZlzjTf62k87FiSmuqefr5FTkBdrVaFc/QGCENA2
+	 zUQJ7MlocpAnHBsREwXaMD/i+nIN1g2mvUFFE/vAY3Epxj/oCL5dEY3O6dPdxHZd0N
+	 dRf/g/H0F2oIw==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: dchinner@redhat.com,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,mcgrof@kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 348a1983cf4c
+Date: Tue, 18 Jun 2024 18:04:30 +0530
+Message-ID: <87sexaqvgv.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-By reordering the elements in the struct file structure, we can
-reduce the padding needed on an x86_64 system by 8 bytes.
+Hi folks,
 
-Signed-off-by: Junchao Sun <sunjunchao2870@gmail.com>
----
- include/linux/fs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The for-next branch of the xfs-linux repository at:
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0283cf366c2a..9235b7a960d3 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -999,10 +999,10 @@ struct file {
- 	 */
- 	spinlock_t		f_lock;
- 	fmode_t			f_mode;
-+	unsigned int		f_flags;
- 	atomic_long_t		f_count;
- 	struct mutex		f_pos_lock;
- 	loff_t			f_pos;
--	unsigned int		f_flags;
- 	struct fown_struct	f_owner;
- 	const struct cred	*f_cred;
- 	struct file_ra_state	f_ra;
--- 
-2.39.2
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+348a1983cf4c xfs: fix unlink vs cluster buffer instantiation race
+
+1 new commit:
+
+Dave Chinner (1):
+      [348a1983cf4c] xfs: fix unlink vs cluster buffer instantiation race
+
+Code Diffstat:
+
+ fs/xfs/xfs_inode.c | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
