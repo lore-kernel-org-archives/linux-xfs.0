@@ -1,142 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0BD95C89;
-	Tue, 18 Jun 2024 00:53:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB640322B;
+	Tue, 18 Jun 2024 00:55:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718672012; cv=none; b=Ad+10UaUw7bnT/14cL6xxoY7mkUzJZ/LJzBH207bwKbPBIFZhAjyL0wsu4N3aIPalAkZeTobbHzuf5FlcuDoGIwndaeU4/wTa1eifna13dHl0xSVNdl1rsIKwGqL8a3RchEiXcHAYiW04yUQbCc7FY1oAsggL0CnYWhnoFg1hnM=
+	t=1718672102; cv=none; b=U9/a58w18KHkf1NaLAFxDZFhdT/ENwt8w8a7MZqc1DL/x28qhqfG0nrCVshbi0GPlTxWQA7NzDlrp4z8ae+unZD67S8Qos40MrGp4rsAeZEh3xc8TdoEbKyDB3AmSuHgMGMRKpUj70ajCUXs20qG6DpAy5/bMcCQXPZVSk6F/o8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718672012; c=relaxed/simple;
-	bh=+FwNxz3sQfGy3wOFs4WpoRRqrPKNMX1XYftI14P5GYo=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EMiiaS6TrRZd/vWitrUUYR8i4+ViW4QWs/5dIpxPTdgfETKR9bGMxxE+FAYdi5CAKOz0NPiQrde4ziexJTMBuLeoqSu0Gih2D7ilfkYIfax5km+YS2DHmyjB6vOr9fy0JB7MIfRCUJH61beBhkTImajfFWNXJUEDzqVB8sqkz2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZ/0P1xl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718672102; c=relaxed/simple;
+	bh=B2/b1isobI7kYHVmPp0Ow8YfRNx6sz9Sbr08YhjCMF0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CGYMkGsVxtCH6Lhit1M5/fbVKhI9K1NGEmAfJyTKi8ZT75O6CegYwuVMUnYPArq6JX9vZYMZM3BejhbpwrQY92y+PHtHU4llEbTLH7MeleYTmSQYs5HzUWalkvYw6GfLpIzjAY3/7uekY5I5HiBXmK6FRFEdLdOxnVr6jD5a6Uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vu4K7UAE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZ/0P1xl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 839BAC2BD10;
-	Tue, 18 Jun 2024 00:53:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vu4K7UAE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 593DAC2BD10;
+	Tue, 18 Jun 2024 00:55:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718672012;
-	bh=+FwNxz3sQfGy3wOFs4WpoRRqrPKNMX1XYftI14P5GYo=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dZ/0P1xlmUiafotyny5fu0pv55qduWJwsVdVu5Wvy6WvPOyTW6upKVBygXHMCNK3G
-	 WlyT5pPedIsfNW46j0fb80XsNw2Fgo/L853KGx1V1mRff/zoRglqsZIZyHQsKpUF64
-	 CaoB7lmThdcTeiOrhHrLQMMbNZvnU9QIa0r6nxBucOAH/6MASgsxdDvWj7OOp1vCw/
-	 Ew6DCx3tg2xys/1k+SNb3cYatPZiVsmjoUx9Qc+Df5Hvmofo2uswiwxLS0pYnmlFGM
-	 eKszuop4Atff1l8K8YbefvsmiJMnH9lfV4L64YcacheEFNkhmws+DwNyDFPu/fjShH
-	 AjBI7XelxLJmw==
-Date: Mon, 17 Jun 2024 17:53:32 -0700
-Subject: [PATCH 2/2] generic: test creating and removing symlink xattrs
+	s=k20201202; t=1718672101;
+	bh=B2/b1isobI7kYHVmPp0Ow8YfRNx6sz9Sbr08YhjCMF0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Vu4K7UAEeExW/FiIT+KEFVU/fc0I5fcJWixzELeSpJBTLCM0l99lGBlIIv3OClb41
+	 pCg6W+tKBtwj/ARWfX3u7Ju4o1rantrXFOot4GaXUvcFc8l3e/iQi8AtIH0xjp8Wfn
+	 acTqilFZBkRoDfUHflOn47eLPiH0Yn1vCXNzkCv+qzBgzWQc1skmFJaKkcfGwuha+5
+	 AdRo+xHNcJZmLGtH28E5hapxzQYOd8Jzdh2CvEriUXmfLb1SGYLRaQK+uGhTpXWBBB
+	 2lqdYnmVevryPcwT5vVflI2trX/YArzze38nn1M9yes8LIC3ZUcKin7EpfnNVikEoK
+	 jsgZ/XwWypsUA==
+Date: Mon, 17 Jun 2024 17:55:00 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, zlang@redhat.com
-Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, guan@eryu.me,
- hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171867147069.794588.2239729030835992352.stgit@frogsfrogsfrogs>
-In-Reply-To: <171867147038.794588.4969508881704066442.stgit@frogsfrogsfrogs>
-References: <171867147038.794588.4969508881704066442.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To: kernel test robot <oliver.sang@intel.com>
+Cc: oe-lkp@lists.linux.dev, lkp@intel.com, linux-kernel@vger.kernel.org,
+	Chandan Babu R <chandanbabu@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [linus:master] [xfs]  38de567906: xfstests.xfs.348.fail
+Message-ID: <20240618005500.GC103057@frogsfrogsfrogs>
+References: <202406171629.fa23d1c3-oliver.sang@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202406171629.fa23d1c3-oliver.sang@intel.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jun 17, 2024 at 04:49:07PM +0800, kernel test robot wrote:
+> 
+> 
+> Hello,
+> 
+> kernel test robot noticed "xfstests.xfs.348.fail" on:
+> 
+> commit: 38de567906d95c397d87f292b892686b7ec6fbc3 ("xfs: allow symlinks with short remote targets")
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
 
-This began as a regression test for the issues identified in "xfs: allow
-symlinks with short remote targets".  To summarize, the kernel XFS code
-does not convert a remote symlink back to a shortform symlink after
-deleting the attr fork.  Recent attempts to tighten validation have
-flagged this incorrectly, so we need a regression test to focus on this
-dusty corner of the codebase.
+Known bug in fstests, will send patch asap...
 
-However, there's nothing in here that's xfs-specific so it's a generic
-test.
+--D
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- tests/generic/1836     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/1836.out |    2 ++
- 2 files changed, 60 insertions(+)
- create mode 100755 tests/generic/1836
- create mode 100644 tests/generic/1836.out
-
-
-diff --git a/tests/generic/1836 b/tests/generic/1836
-new file mode 100755
-index 0000000000..1778e207ab
---- /dev/null
-+++ b/tests/generic/1836
-@@ -0,0 +1,58 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 1836
-+#
-+# Test that we can add xattrs to a symbolic link, remove all the xattrs, and
-+# that the symbolic link doesn't get corrupted.  This is a regression test for
-+# some incorrect checks in the xfs inode verifier.
-+#
-+. ./common/preamble
-+_begin_fstest auto
-+
-+_supported_fs generic
-+_require_scratch
-+
-+test $FSTYP = "xfs" && \
-+	_fixed_by_git_commit kernel XXXXXXXXXXXXX \
-+			"xfs: allow symlinks with short remote targets"
-+
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+SYMLINK_ADD="0123456789ABCDEF01234567890ABCDEF"
-+
-+# test from 32 to MAXPATHLEN sized symlink. This should make sure that
-+# 256-1024 byte version 2 and 3 inodes are covered.
-+SYMLINK=""
-+for ((SIZE = 32; SIZE < 1024; SIZE += 32)); do
-+	SYMLINK_FILE="$SCRATCH_MNT/symlink.$SIZE"
-+	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
-+	ln -s $SYMLINK $SYMLINK_FILE > /dev/null 2>&1
-+
-+# add the extended attributes
-+	attr  -Rs 1234567890ab $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+	attr  -Rs 1234567890ac $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+	attr  -Rs 1234567890ad $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+# remove the extended attributes
-+	attr  -Rr 1234567890ab $SYMLINK_FILE > /dev/null 2>&1
-+	attr  -Rr 1234567890ac $SYMLINK_FILE > /dev/null 2>&1
-+	attr  -Rr 1234567890ad $SYMLINK_FILE > /dev/null 2>&1
-+done
-+
-+_scratch_cycle_mount
-+
-+# Now check the symlink target contents
-+SYMLINK=""
-+for ((SIZE = 32; SIZE < 1024; SIZE += 32)); do
-+	SYMLINK_FILE="$SCRATCH_MNT/symlink.$SIZE"
-+	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
-+
-+	target="$(readlink $SYMLINK_FILE)"
-+	test "$target" = "$SYMLINK" || echo "$SYMLINK_FILE: target is corrupt"
-+done
-+
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/generic/1836.out b/tests/generic/1836.out
-new file mode 100644
-index 0000000000..cf78922dea
---- /dev/null
-+++ b/tests/generic/1836.out
-@@ -0,0 +1,2 @@
-+QA output created by 1836
-+Silence is golden
-
+> [test failed on linus/master      8a92980606e3585d72d510a03b59906e96755b8a]
+> [test failed on linux-next/master d35b2284e966c0bef3e2182a5c5ea02177dd32e4]
+> 
+> in testcase: xfstests
+> version: xfstests-x86_64-98379713-1_20240603
+> with following parameters:
+> 
+> 	disk: 4HDD
+> 	fs: xfs
+> 	test: xfs-348
+> 
+> 
+> 
+> compiler: gcc-13
+> test machine: 4 threads Intel(R) Xeon(R) CPU E3-1225 v5 @ 3.30GHz (Skylake) with 16G memory
+> 
+> (please refer to attached dmesg/kmsg for entire log/backtrace)
+> 
+> 
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <oliver.sang@intel.com>
+> | Closes: https://lore.kernel.org/oe-lkp/202406171629.fa23d1c3-oliver.sang@intel.com
+> 
+> 
+> 
+> The kernel config and materials to reproduce are available at:
+> https://download.01.org/0day-ci/archive/20240617/202406171629.fa23d1c3-oliver.sang@intel.com
+> 
+> 
+> 2024-06-07 08:32:34 export TEST_DIR=/fs/sda1
+> 2024-06-07 08:32:34 export TEST_DEV=/dev/sda1
+> 2024-06-07 08:32:34 export FSTYP=xfs
+> 2024-06-07 08:32:34 export SCRATCH_MNT=/fs/scratch
+> 2024-06-07 08:32:34 mkdir /fs/scratch -p
+> 2024-06-07 08:32:34 export SCRATCH_DEV=/dev/sda4
+> 2024-06-07 08:32:34 export SCRATCH_LOGDEV=/dev/sda2
+> 2024-06-07 08:32:34 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
+> 2024-06-07 08:32:34 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
+> 2024-06-07 08:32:34 echo xfs/348
+> 2024-06-07 08:32:34 ./check xfs/348
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 lkp-skl-d06 6.10.0-rc1-00005-g38de567906d9 #1 SMP PREEMPT_DYNAMIC Fri Jun  7 04:48:02 CST 2024
+> MKFS_OPTIONS  -- -f /dev/sda4
+> MOUNT_OPTIONS -- /dev/sda4 /fs/scratch
+> 
+> xfs/348       - output mismatch (see /lkp/benchmarks/xfstests/results//xfs/348.out.bad)
+>     --- tests/xfs/348.out	2024-06-03 12:10:00.000000000 +0000
+>     +++ /lkp/benchmarks/xfstests/results//xfs/348.out.bad	2024-06-07 08:33:19.134137710 +0000
+>     @@ -240,7 +240,7 @@
+>      would have junked entry "EMPTY" in directory PARENT_INO
+>      would have junked entry "FIFO" in directory PARENT_INO
+>      stat: cannot statx 'SCRATCH_MNT/test/DIR': Structure needs cleaning
+>     -stat: cannot statx 'SCRATCH_MNT/test/DATA': Structure needs cleaning
+>     +stat: 'SCRATCH_MNT/test/DATA' is a symbolic link
+>      stat: cannot statx 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
+>      stat: 'SCRATCH_MNT/test/SYMLINK' is a symbolic link
+>     ...
+>     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/348.out /lkp/benchmarks/xfstests/results//xfs/348.out.bad'  to see the entire diff)
+> Ran: xfs/348
+> Failures: xfs/348
+> Failed 1 of 1 tests
+> 
+> -- 
+> 0-DAY CI Kernel Test Service
+> https://github.com/intel/lkp-tests/wiki
+> 
