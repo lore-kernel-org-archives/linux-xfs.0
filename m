@@ -1,97 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF77D51E
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2024 00:33:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02684A1A;
+	Tue, 18 Jun 2024 00:46:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718670794; cv=none; b=Tu0wimrGfJvRAegP+CGjV0oe04ga5kyzaa/ZNMlq+2/zeRdBodwc1no7W7OlfDjZKSCHZzKbCdaD0XcdSmKkCBOFKp7yMKt0KeEpzKO6WswC4D8vsG7znwC/3vgEWyGSrhqwmHdongMU5MTSby5RBi2MtLbgfDuxF9lHinZIBbk=
+	t=1718671572; cv=none; b=HO3AtvWgkofsn4NkYe1/+8wT82UQcV/n8etJtll2cgAPbuUzA/XqDEJ5KHFdl+IviFGFpn17qIoPf37J9j4XckbFZuMAk0Eazj0CW381VStBpiL0RNisK/HhaX54RVvaz9JsTuaz3Bib9BpsSGoGGhI/4jD6RnXK8XmQtp9V+Gk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718670794; c=relaxed/simple;
-	bh=sU+hihjZSykBiULwHrMEpgfArL2tedwLpg7rHHXekc8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j8pKBWVPQvtSl4lVFuJOLDlNXrzbBJZ8euhf2IBwXz7fOqcDwwoPRCQ+eSIBoh6BYQAqAStxcV2xTPPG//AT2rVfuPvwZIwgaQIoyxEddRWOouv6kGugLwVWE/PV1gEGOM2RF56CnsLXBY/B+bai+mj9He91T2Bc6tkokA+GYZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rWilLv/y; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718671572; c=relaxed/simple;
+	bh=jgnX/e+HdTPalEi/ZQCH9hRit7BptaKyY6o/+R0/YC4=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=fkEvSrGM8LSyknKUrIeShXHgk7V+DAnAe7cbBuuzdg0zZijwRf2RadEGp1FqYEQ3Fl4vUZ4rJt4ThfP4AMY5Bh8TNexs8F0i3FxjLQIcZ5sSPgtdb73NwdXSTW4rqsxxP30lp2Wlk1XThbF7S9fMJs8JUnTab5EljyoS2iWAv8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AVhDBFu0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rWilLv/y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F1D8C2BD10;
-	Tue, 18 Jun 2024 00:33:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AVhDBFu0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21E88C2BD10;
+	Tue, 18 Jun 2024 00:46:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718670793;
-	bh=sU+hihjZSykBiULwHrMEpgfArL2tedwLpg7rHHXekc8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rWilLv/yJTSe5h0dKZTLPNyMLUlr3k+DOPcIlzS8svu9XiAueMPjqm3NeL/3hhxK1
-	 ZQ25CAAjprmdPvT4fvhlFTwUCXKa+/GyirkDDA1dvkdjb6gnzsXkZYzqGuCYvy+yC5
-	 JRDZr35ozdQ5YP8DRUm+MbNZuXNwKJglvF1b8tEYp3WhrM5amaz56us9Cb8/QCDj8/
-	 lIqbQZ7SWO+8jvJDcEvsvWJVmt2ui09WGKxuPetY3HVgSFwr8ZRChdT6Q00L/IIVbP
-	 uul4FXrANQIUAHiRpLWDRKLWBpbokUE+wiaEoeggrRqmwufjAN20gNWPpTEg1vaG12
-	 lDagcPCrW3hpA==
-Date: Mon, 17 Jun 2024 17:33:12 -0700
+	s=k20201202; t=1718671572;
+	bh=jgnX/e+HdTPalEi/ZQCH9hRit7BptaKyY6o/+R0/YC4=;
+	h=Date:Subject:From:To:Cc:From;
+	b=AVhDBFu0oUS4SRt0Ds9K5u5PsSMUh3FlLGgUJHJM3sVwU5EKvLaE3BGuLtCsnkgX9
+	 uJIMbMBS7WrJZWj5df57aIMvUrzw0sM3X1S20vpiDWgzZH2VRUJYGIPamIhZj0HHDc
+	 VhxSsJf5NP4iqnGcnBlslHUkpUCZymCwn4AJJvl0fOBzqT4n0aeorYH0KOhuKfT2Jm
+	 sLtoe8IjYe+9XJwcjdfe0fi8L62j+ZV16v0EU+yhAwPjSemObV9uaLB+ilZ+4CXFHz
+	 W9GrcKQOy194bpkmQ6TThot8otyHiuJq8WL284EDkoGhD6YYhTUvA4OfNOPXlqkpFJ
+	 gXUNvRqRBR+9A==
+Date: Mon, 17 Jun 2024 17:46:11 -0700
+Subject: [PATCHSET 1/6] xfsprogs: scale shards on ssds
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: sweettea@dorminy.me, Leah Rumancik <lrumancik@google.com>,
-	neal@gompa.dev, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Shirley Ma <shirley.ma@oracle.com>,
-	Eric Sandeen <sandeen@redhat.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: xfs office hours 18 June 2024
-Message-ID: <20240618003312.GB103034@frogsfrogsfrogs>
-References: <20240606002641.GJ52987@frogsfrogsfrogs>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: fstests@vger.kernel.org, guan@eryu.me, linux-xfs@vger.kernel.org
+Message-ID: <171867144916.793370.13284581064185044269.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240606002641.GJ52987@frogsfrogsfrogs>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-Last week's office hours went pretty well, so let's do it again.
+Hi all,
 
-The second set of office hours will be tomorrow, 18 June 2024 at 8am and
-repeating 10 hours later at 6pm PDT.  We're using the same URL as last
-time.
+For a long time, the maintainers have had a gut feeling that we could
+optimize performance of XFS filesystems on non-mechanical storage by
+scaling the number of allocation groups to be a multiple of the CPU
+count.
 
-https://oracle.zoom.us/j/92930934955?pwd=wsEYPkj7WOpvIT0E1Bb0cCBaHvj8JW.1
+With modern ~2022 hardware, it is common for systems to have more than
+four CPU cores and non-striped SSDs ranging in size from 256GB to 4TB.
+The default mkfs geometry still defaults to 4 AGs regardless of core
+count, which was settled on in the age of spinning rust.
 
-This time I'll poke #xfs on oftc a few minutes beforehand, to try to
-avoid some of the waiting room issues last week.
+This patchset adds a different computation for AG count and log size
+that is based entirely on a desired level of concurrency.  If we detect
+storage that is non-rotational (or the sysadmin provides a CLI option),
+then we will try to match the AG count to the CPU count to minimize AGF
+contention and make the log large enough to minimize grant head
+contention.
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-On Wed, Jun 05, 2024 at 05:26:41PM -0700, Darrick J. Wong wrote:
-> Hi everyone,
-> 
-> At the XFS BoF during LSFMMBPF last month, I restated my longstanding
-> opinion that given my experiences trying to get online fsck designed and
-> merged, our feedback cycles are far too long; and my lament that we do
-> not have a community conference call where people can discuss what
-> they're working on, ask for new projects, etc.
-> 
-> As part of stepping back from an active development role to focus on
-> leading my team, I declare that I will host open office hours for
-> people to:
-> 
->  0. Run down the bug list and QA testing results
->  1. Drop by and talk about whatever xfs-related issues they have
->  2. Find things for themselves to work on
->  3. Inquire about adjacent work being done by other people
->  4. Engage in transfers of information and institutional knowledge
-> 
-> My intent is to have a defined hour every week where anyone can drop in.
-> However, given the global scope of the xfs participants, I declare that
-> anyone who cannot make whatever time I pick should contact me to
-> schedule an appointment.
-> 
-> The first office hours will be on 11 June 2024 at 8am PDT (aka 1500 GMT)
-> https://oracle.zoom.us/j/92930934955?pwd=wsEYPkj7WOpvIT0E1Bb0cCBaHvj8JW.1
-> 
-> Immediate topics: I want to give away a bunch of projects: the ones that
-> have been festering in djwong-dev; and the ones merely written down on
-> paper.  Also the actual scheduling for this meeting since the biggest
-> blocker has been the near impossibility of finding any good timeslot.
-> 
-> --Darrick
-> 
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-scale-geo-on-ssds
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=mkfs-scale-geo-on-ssds
+---
+Commits in this patchset:
+ * xfs: test scaling of the mkfs concurrency options
+---
+ tests/xfs/1842             |   55 ++++++++++++++
+ tests/xfs/1842.cfg         |    4 +
+ tests/xfs/1842.out.lba1024 |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1842.out.lba2048 |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1842.out.lba4096 |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1842.out.lba512  |  177 ++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 767 insertions(+)
+ create mode 100755 tests/xfs/1842
+ create mode 100644 tests/xfs/1842.cfg
+ create mode 100644 tests/xfs/1842.out.lba1024
+ create mode 100644 tests/xfs/1842.out.lba2048
+ create mode 100644 tests/xfs/1842.out.lba4096
+ create mode 100644 tests/xfs/1842.out.lba512
+
