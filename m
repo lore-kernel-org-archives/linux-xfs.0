@@ -1,64 +1,42 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9B228248C
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 10:07:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5F9C824BB
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 11:54:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718791642; cv=none; b=SuTDUZ32xlrlyjLrMPpkFV6RlTgT3Z75fh7ErPKTNbUyychVOvJXU8IP3QHjrSBkZ1bdAjMgTHT87/XdWlRJVhRw8lbY/n0e+yPDS2aL9ZHuvyloUal2jGH6uu4o2IihikPb6nW74/Si4HN3UskpA+AyBKksKMNZoeztyKrJiNI=
+	t=1718798074; cv=none; b=M5p2Df0tX/DXBXcAfE18U5kfQOQDwo3sLJHU62e6DM8Azg56EmOXVMQD8+73ugGbejiW2iww71YdFOHlf2qca4tMz3TAkBMYuDWqiOe/l8DzCbq9Z7WgZaRpuczNP41tH9nsbNGnQvWVtqwQNddUqEJe0/j2VHKLjgkA6MBVBLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718791642; c=relaxed/simple;
-	bh=twyqrx/CE2OPi8Q85P2P/UZ8KtlTCtC2Gs3Acvkb3vs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qx5/TFPSQ4BgQx5C+RBqDXUbRM5sf6wF/blgRAu27kuznKNnlRsZwR7eucoi+82LAfZEdaH9EeHEpxB6bor8Nsrxwd74BeeDaPwp2kSoFF96vUs9ynFJFeI9TaDaOPeWoZejbJYzxUy3XxGn8AKgUJTkgUv5Fb6mAIttr1b2dPE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nMo7KZCm; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718798074; c=relaxed/simple;
+	bh=3B0oXb0SWsAZFAbTylL5M+aBUJ4PXyRE917JENglLsU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Frb6022csbkB6zaAMqmUButPXsTyaDhlfgjXMwLtvBeybbdDpLko46Skd/eaoj93oawoD6nv1xETfFtejFm+sNiXGlJHcRuyZzRSfqYOqygLHTy4jZyUm/jEmGKgBKXJaWmpC7HAcSDgKW9QVg63fSSgtDKKc7ysf25HzIWGmuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dJwhq8L8; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nMo7KZCm"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-70631cd9e50so517477b3a.0
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 03:07:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718791639; x=1719396439; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7MlN1Nd85/VRCwil5Mwq2nQYEf2Vi7uJ8bpCaOOvuHg=;
-        b=nMo7KZCmxwuw2Z4q5D1e2r0aNJgqCw4C/T6tw0O4hD9JR28Re+i0EB8e2cZo/OmBI7
-         uR457kVTjHQGwxFeCKyUK+0+Qigs7nWrVRyqKSoFz+QtQW80iCKGxR10wXZbkskg8nmz
-         Q3xGuJ52KQDnie3kHNxny7eww/921x9yM6M3kIHljeh+o7Q/xMBBT6JtzKkWBLKy8kJj
-         QFKNpT452ynYr06wMLw4nTHKsMA5aCW7QHkuyKQM8JmRmzo0ET1YbAgh9Y+2SWLnUcRW
-         uYhzOXGe7u4XN9CpdoNvr/9AEqkS49V18ubFv3Lrlxr5ACW9ZQuc+ebP0HOA+M71/EY9
-         vN1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718791639; x=1719396439;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7MlN1Nd85/VRCwil5Mwq2nQYEf2Vi7uJ8bpCaOOvuHg=;
-        b=P4ub3cBowdB0/a1MUGLVAxF033TEcU7rdL+vTDttVi/nVphzBNZg0dtCESV6Dx4hQd
-         R2c0dS7yn6GafGgRv7mV1vdFYPQ9QlWTUUlfXZ6XGa3dGJzI+eH6Jib2YrljIvXIKzI6
-         uxqB9780Gf/iKrQORRoi4HXDMzmkB0TslayeCQ5gLHMgpZXvrqb/JLaODfd4PeELM5Gh
-         06LsyPeb6HL/jQuOzS/D6vwX5e/dzxYp1drBZQAZV2Eul9iHOekCsIPMGLZ2wu3zykB3
-         VVjJryXwH3GAOFitq13bqDnBAMquOlEqQ3aQ9hvp5hL6z+0XRQdwZ5HHLXfv/i3Z/YM5
-         aEpA==
-X-Gm-Message-State: AOJu0Yw/psu7oxtXAur3fcyBN0ZSfm510uQUQAVxEzGSO4geXwhTWm37
-	RVJ9xlg7NCfh2JQUEZi8nVHXcB6fYqZMImf6pi1x814w8gbDarb+nvEiYtz+9y4=
-X-Google-Smtp-Source: AGHT+IHye+0qLXdVvOaBABeqk2pK4uwtA14PbsEmt6MNZmlTcttgZH/fxvbUIZmybyzGCMDYOD/6Ng==
-X-Received: by 2002:a05:6a20:2a2f:b0:1b8:6ed5:a92 with SMTP id adf61e73a8af0-1bcbb655bb8mr1883298637.39.1718791639479;
-        Wed, 19 Jun 2024 03:07:19 -0700 (PDT)
-Received: from localhost ([123.113.109.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855ee7f04sm113088225ad.151.2024.06.19.03.07.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Jun 2024 03:07:18 -0700 (PDT)
-From: Junchao Sun <sunjunchao2870@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: chandan.babu@oracle.com,
-	djwong@kernel.org,
-	willy@infradead.org,
-	Junchao Sun <sunjunchao2870@gmail.com>
-Subject: [PATCH v2] xfs: reorder xfs_inode structure elements to remove unneeded padding.
-Date: Wed, 19 Jun 2024 18:06:37 +0800
-Message-Id: <20240619100637.392329-1-sunjunchao2870@gmail.com>
-X-Mailer: git-send-email 2.39.2
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dJwhq8L8"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=j8gKlD3/aJiPkWDlgQG9ZNrBgFH4FoS0o3ZtUOT3c8g=; b=dJwhq8L88comqkNHCLbivZdZkD
+	ft0/4YiHuXCtyxZa/8Pyrg/5zT4BBjripxcGWnCK1sl/nEcZTcO4sPXi5ElyyPtZ7v4qyGx+NVvXM
+	eGydKdov0fALUJimNrk9NEqrHTnJ8lcKgiMD3tDzkozvXQZQWkuXrb2haO3lF5BLNlWggukXrbWh/
+	q4sGdlQSAd58yYJ27hMZH3hdXmDM/YwNAE6WPnQqRRPnM4BSI3tfTdPeHJ4N++tXms5nhGERewnP0
+	0T/GR+xt6QW+ejm9xo6WkgGTickvfAYOSpBOclreFBqHF5EhXwCua56IA4TsQYgKwJEyDrgLpiYLQ
+	5W/5E/+Q==;
+Received: from 2a02-8389-2341-5b80-3836-7e72-cede-2f46.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:3836:7e72:cede:2f46] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sJttV-000000014Np-2CHb;
+	Wed, 19 Jun 2024 11:54:29 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: clean up I/O path inode locking helpers and the page fault handler
+Date: Wed, 19 Jun 2024 13:53:50 +0200
+Message-ID: <20240619115426.332708-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -66,56 +44,17 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-By reordering the elements in the xfs_inode structure, we can
-reduce the padding needed on an x86_64 system by 8 bytes.
+Hi all,
 
-Furthermore, it also enables denser packing of xfs_inode
-structures within slab pages. In the Debian 6.8.12-amd64,
-before applying the patch, the size of xfs_inode is 1000 bytes,
-allowing 32 xfs_inode structures to be allocated from an
-order-3 slab. After applying the patch, the size of
-xfs_inode is reduced to 992 bytes, allowing 33 xfs_inode
-structures to be allocated from an order-3 slab.
+a while ago I started wondering about some of the I/O path locking,
+and ended up wading through the various helpers.  This series refactors
+them an improves comments to help understanding.  To get there I also
+took a hard look at the page fault handler and ended up refactoring it
+as well.
 
-This improvement is also observed in the mainline kernel
-with the same config.
-
-Signed-off-by: Junchao Sun <sunjunchao2870@gmail.com>
----
- fs/xfs/xfs_inode.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 292b90b5f2ac..fedac2792a38 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -37,12 +37,6 @@ typedef struct xfs_inode {
- 	struct xfs_ifork	i_df;		/* data fork */
- 	struct xfs_ifork	i_af;		/* attribute fork */
- 
--	/* Transaction and locking information. */
--	struct xfs_inode_log_item *i_itemp;	/* logging information */
--	struct rw_semaphore	i_lock;		/* inode lock */
--	atomic_t		i_pincount;	/* inode pin count */
--	struct llist_node	i_gclist;	/* deferred inactivation list */
--
- 	/*
- 	 * Bitsets of inode metadata that have been checked and/or are sick.
- 	 * Callers must hold i_flags_lock before accessing this field.
-@@ -88,6 +82,12 @@ typedef struct xfs_inode {
- 	/* VFS inode */
- 	struct inode		i_vnode;	/* embedded VFS inode */
- 
-+	/* Transaction and locking information. */
-+	struct xfs_inode_log_item *i_itemp;	/* logging information */
-+	struct rw_semaphore	i_lock;		/* inode lock */
-+	struct llist_node	i_gclist;	/* deferred inactivation list */
-+	atomic_t		i_pincount;	/* inode pin count */
-+
- 	/* pending io completions */
- 	spinlock_t		i_ioend_lock;
- 	struct work_struct	i_ioend_work;
--- 
-2.39.2
-
+Diffstat:
+ xfs_file.c  |  139 ++++++++++++++++++++++++++++++++----------------------------
+ xfs_iomap.c |   71 ++++++++++++++----------------
+ 2 files changed, 109 insertions(+), 101 deletions(-)
