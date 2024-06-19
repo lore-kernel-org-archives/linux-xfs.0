@@ -1,34 +1,35 @@
 Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DC377F7D3
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 22:09:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949D678B4C
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 22:09:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718834947; cv=none; b=IizXA/gA1afhnijfomSj80SSr9NydX5QdpbUXSpxtg6yyVmH+il+gwxt6gW3VO9uFOCScvGHuPcV9Wf1EB6GbQLym2UpXB/iyoRmDQt5CVGYLJZCIaccpm9aapGtoaPfUDbSaH6zIpXTfsQdJ2n3HKibfoU8gRK9yaKvnkXW8r8=
+	t=1718834949; cv=none; b=GQ1JzVJi5ggnwkbrKtldGG+v6vYmtYVE7eJ9S2RXcOBpFddoapX94EDZOA2TikelPZnKCI1QoGX+b3hy9oWUbaxEJRLQWgYdj14wMEGv2TA2TeND9/QzNOQ2cXvJzPOWt2I68CxvpocDP9sYgdZKMLCe1hiaYY/hjS3LtJyZOXM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718834947; c=relaxed/simple;
-	bh=UhbIfLF1iydY66hrLtq7za0/hHRvB/ju4rQPFeUHr9Y=;
+	s=arc-20240116; t=1718834949; c=relaxed/simple;
+	bh=1Ku6yYJ6o/MEjJp1P4COEL9iPG3DF104aXJidZUiXAg=;
 	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
-	 Message-ID:References:Date; b=iFs8TCJzlCHX7AyVwIirrjHd+byCYW2hg8OyNwe8bkX//OsK60geZYNOsO5rDvx9GVrtqv5TzikBE2U/qViOXAvqqfWYhVy5ObNJrWjKjSN58mxg8OkqUlJGRHWHLfTFcWy8aQu/+qOGCj1HJjKYpNnfMTf+gwHz6P1LIg9ssog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=U3Rw0syC; arc=none smtp.client-ip=209.87.16.39
+	 Message-ID:References:Date; b=BJCkzb9ON50mw3UtsKgHqzRiYE6g+HG+ogtKciTJ6LP/PeweQoWSwWz8beT1cS0J2FP50n/x2JIXydkG2kTcKDlOt3RYJO7AMm2u5stjP63mqYMR8M3RCAsgg6prrUxePL3TNL++GgsKFE8Rn+BFZv6zs/PrRFnBw7RBkI6XJjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=ndbBrpeJ; arc=none smtp.client-ip=209.87.16.39
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="U3Rw0syC"
+	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="ndbBrpeJ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
 	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=UhbIfLF1iydY66hrLtq7za0/hHRvB/ju4rQPFeUHr9Y=; b=U3Rw0syCLwZi2x05kycpvi2Sw7
-	XIynjOYPjWRph3kAPT2STbgf8V2wRjP5gedbVkhmCZb3FdPsBaxZ4EP9NgMcvLKKWwuFfDLqEQe3l
-	41dPv/EMnwGhxITf7PaZaOpxPHWFbIACRyxuvt/MgmyVW7gu4zS4unL6bUDfJs9ifD6CEwdVDFPQe
-	kRXPa7iIe+Hfh1ZWtHEROHHZCsgMwzL3w1JLcQopAL5aU/EpmlP0dXFNoq2ZuZrGDDvfucYfWrQhQ
-	ulUGRoalllyYVn5wNHw6SJQmH8jBGcDFCC7uaEa5IbDfR6w75Xa+N90fUoByTqn1zaXgLEM2LE8BH
-	UFc7atQg==;
+	bh=1Ku6yYJ6o/MEjJp1P4COEL9iPG3DF104aXJidZUiXAg=; b=ndbBrpeJ4Iim4rHd4FvGlJuNs1
+	lhVzKByIYsHZ7cVwhDvBSb8HAgdQIDEyICvUmdijKdBdsTbwXUeLXusjPk+ThNUtu58RdWFpEk87Y
+	X8CjvlDADjX/9JVuCF8lgKXWX4dOGtgENB6lLuWOgylcNWK7wRA81NRaFYOpy6mB8ucsix3yYpOjZ
+	AhpbtKp8rkF4C5ZEDF5QKtI4CSSAip/vUwm9kZUim92sPpxCa+UeXIuSAf8Y1AEQufw+C4Qbq4rZe
+	VTfLof5xMriUr84HcJF4zKY4yBLyFDXQNL15T7AXtDUmNmf76Z+rYoiwoIACKYDdRCft6WlOamOd/
+	jqLxd/mg==;
 Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
 	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1sK3UG-00BwKi-Qw; Wed, 19 Jun 2024 22:09:04 +0000
+	id 1sK3UI-00BwKw-Ln; Wed, 19 Jun 2024 22:09:06 +0000
+X-Loop: owner@bugs.debian.org
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
@@ -42,31 +43,25 @@ Content-Type: text/plain; charset=utf-8
 From: "Debian Bug Tracking System" <owner@bugs.debian.org>
 To: Chris Hofstaedtler <zeha@debian.org>
 CC: linux-xfs@vger.kernel.org
-Subject: Processed: xfsprogs: diff for NMU version 6.8.0-2.2
-Message-ID: <handler.s.B1073831.17188347522843853.transcript@bugs.debian.org>
-References: <20240619220547.sjywgljd2ziwxjh6@debian.org>
- <20240619112859.26ekvlxkt4sb5jt2@debian>
+Subject: Processed: tagging 1073831
+Message-ID: <handler.s.C.17188348112844082.transcript@bugs.debian.org>
+References: <1718834772-2889-bts-zeha@debian.org>
 X-Debian-PR-Package: xfslibs-dev
 X-Debian-PR-Source: xfsprogs
 X-Debian-PR-Message: transcript
 X-Loop: owner@bugs.debian.org
-Date: Wed, 19 Jun 2024 22:09:04 +0000
+Date: Wed, 19 Jun 2024 22:09:06 +0000
 
-Processing control commands:
+Processing commands for control@bugs.debian.org:
 
-> tags 1073831 + patch
+> tags 1073831 + ftbfs
 Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
 S handle library
-Added tag(s) patch.
-> tags 1073831 + pending
-Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
-S handle library
-Added tag(s) pending.
-> affects -1 + src:partclone
-Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
-S handle library
-Added indication that 1073831 affects src:partclone
+Added tag(s) ftbfs.
+> thanks
+Stopping processing here.
 
+Please contact me if you need assistance.
 --=20
 1073831: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1073831
 Debian Bug Tracking System
