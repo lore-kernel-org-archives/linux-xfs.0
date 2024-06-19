@@ -1,63 +1,73 @@
-Received: from mitropoulos.debian.org (mitropoulos.debian.org [194.177.211.212])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9037A7F7D3
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 22:08:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.177.211.212
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DC377F7D3
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 22:09:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718834891; cv=none; b=a1JhpuPLVEFUMH/WoAeYFd0caYEiGwrx7JmaETGYp+MbLVfmjBfVSmZNEuTZVXClEbFBaWaB3ZHdVWPSXiv88M2qgX+aMxNBzAkf5I4DY9P7cHpv38fZ8mesXmXhGAI3a6/9SOcLZg5Tar/qaGxlzQRd1U1plUYvjcyYvGkLpXE=
+	t=1718834947; cv=none; b=IizXA/gA1afhnijfomSj80SSr9NydX5QdpbUXSpxtg6yyVmH+il+gwxt6gW3VO9uFOCScvGHuPcV9Wf1EB6GbQLym2UpXB/iyoRmDQt5CVGYLJZCIaccpm9aapGtoaPfUDbSaH6zIpXTfsQdJ2n3HKibfoU8gRK9yaKvnkXW8r8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718834891; c=relaxed/simple;
-	bh=5bWnWOYu+qWTkCymLQmnwWwgtNKxZ0ZJ7eTrWhMMYVw=;
-	h=To:From:Subject:Date:Message-Id; b=j22pQ5juP43OeptACpAr1njUUJEs3yXEZJhP4aHFDIJpwBkRXzedWef+D4eItw03d76UKYotlDqXdNnU7aIVAs8h8+GQCxSWKhNT26x2x7kMnMnsTNS5vOzMfHiKjQl9fiWW/4dGZDaGSGkstX2ZWdFQbES0klyfM28DZ+y0AJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=tpP12d/+; arc=none smtp.client-ip=194.177.211.212
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
+	s=arc-20240116; t=1718834947; c=relaxed/simple;
+	bh=UhbIfLF1iydY66hrLtq7za0/hHRvB/ju4rQPFeUHr9Y=;
+	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
+	 Message-ID:References:Date; b=iFs8TCJzlCHX7AyVwIirrjHd+byCYW2hg8OyNwe8bkX//OsK60geZYNOsO5rDvx9GVrtqv5TzikBE2U/qViOXAvqqfWYhVy5ObNJrWjKjSN58mxg8OkqUlJGRHWHLfTFcWy8aQu/+qOGCj1HJjKYpNnfMTf+gwHz6P1LIg9ssog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=U3Rw0syC; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="tpP12d/+"
-Received: from usper.debian.org ([2603:400a:ffff:bb8::801f:45]:37718)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
-	by mitropoulos.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <ftpmaster@ftp-master.debian.org>)
-	id 1sK3TK-00Gcfx-NO
-	for linux-xfs@vger.kernel.org; Wed, 19 Jun 2024 22:08:06 +0000
+	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="U3Rw0syC"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
-	Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=+mjwBiCrPnt8GjmX3ITL3eS2ECd24voHrsi3+h5h+Bc=; b=tpP12d/+MVLHKFDJtYvC39Eoqg
-	hJVYNpF3DGzjy6ahZyyg6iC9t1nuC74YYny9ynf3zMuWf8wkMYo+6ix0TRPRfPKha6ZDE2hlpiD1y
-	73cnye91fPiXVfRWqClnNgFl9JLvOi8y19Jw8+VII7yX3/1RJAAWK96UlIOtcpbTYkTmjz0Qt4X/k
-	YyA+SHnluj6iqCrLtYDxRk7eErTiyq1om4tZlcuaQFwOyYI6Iji0Q0ao7cPettEfAkJwYJr7aXX5X
-	BRtUFk6fTqbQ4bJcMTAsp4GETK0qcz+3XUGoyxrFZ8iydUrJdfpRwH4ZaWtldvQ4JyOZ8nFCfW7F4
-	u/sWF5+w==;
-Received: from dak-unpriv by usper.debian.org with local (Exim 4.94.2)
-	(envelope-from <ftpmaster@ftp-master.debian.org>)
-	id 1sK3TJ-000xqq-7J
-	for linux-xfs@vger.kernel.org; Wed, 19 Jun 2024 22:08:05 +0000
-To: linux-xfs@vger.kernel.org
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-Subject: Processing of xfsprogs_6.8.0-2.2_source.changes
-Date: Wed, 19 Jun 2024 22:08:05 +0000
-X-Debian: DAK
-X-DAK: DAK
-Precedence: bulk
-Auto-Submitted: auto-generated
-X-Debian-Package: xfsprogs
-Message-Id: <E1sK3TJ-000xqq-7J@usper.debian.org>
+	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
+	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
+	Content-ID:Content-Description:In-Reply-To;
+	bh=UhbIfLF1iydY66hrLtq7za0/hHRvB/ju4rQPFeUHr9Y=; b=U3Rw0syCLwZi2x05kycpvi2Sw7
+	XIynjOYPjWRph3kAPT2STbgf8V2wRjP5gedbVkhmCZb3FdPsBaxZ4EP9NgMcvLKKWwuFfDLqEQe3l
+	41dPv/EMnwGhxITf7PaZaOpxPHWFbIACRyxuvt/MgmyVW7gu4zS4unL6bUDfJs9ifD6CEwdVDFPQe
+	kRXPa7iIe+Hfh1ZWtHEROHHZCsgMwzL3w1JLcQopAL5aU/EpmlP0dXFNoq2ZuZrGDDvfucYfWrQhQ
+	ulUGRoalllyYVn5wNHw6SJQmH8jBGcDFCC7uaEa5IbDfR6w75Xa+N90fUoByTqn1zaXgLEM2LE8BH
+	UFc7atQg==;
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1sK3UG-00BwKi-Qw; Wed, 19 Jun 2024 22:09:04 +0000
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Mailer: MIME-tools 5.509 (Entity 5.509)
+Content-Type: text/plain; charset=utf-8
+From: "Debian Bug Tracking System" <owner@bugs.debian.org>
+To: Chris Hofstaedtler <zeha@debian.org>
+CC: linux-xfs@vger.kernel.org
+Subject: Processed: xfsprogs: diff for NMU version 6.8.0-2.2
+Message-ID: <handler.s.B1073831.17188347522843853.transcript@bugs.debian.org>
+References: <20240619220547.sjywgljd2ziwxjh6@debian.org>
+ <20240619112859.26ekvlxkt4sb5jt2@debian>
+X-Debian-PR-Package: xfslibs-dev
+X-Debian-PR-Source: xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date: Wed, 19 Jun 2024 22:09:04 +0000
 
-xfsprogs_6.8.0-2.2_source.changes uploaded successfully to localhost
-along with the files:
-  xfsprogs_6.8.0-2.2.dsc
-  xfsprogs_6.8.0-2.2.debian.tar.xz
-  xfsprogs_6.8.0-2.2_arm64.buildinfo
+Processing control commands:
 
-Greetings,
+> tags 1073831 + patch
+Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
+S handle library
+Added tag(s) patch.
+> tags 1073831 + pending
+Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
+S handle library
+Added tag(s) pending.
+> affects -1 + src:partclone
+Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
+S handle library
+Added indication that 1073831 affects src:partclone
 
-	Your Debian queue daemon (running on host usper.debian.org)
+--=20
+1073831: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1073831
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
