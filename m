@@ -1,41 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F598143C65;
-	Wed, 19 Jun 2024 13:09:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB9F13F426;
+	Wed, 19 Jun 2024 13:09:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718802550; cv=none; b=IhFQugWdiy7bmnukxEGLc/3VoQDWW2u86mdnUOJ/+WCNxcKMqnD+bKvvK68NJm3e5JkLmtfiUDVgOKn7WHKz81hn9+ecnpn6sx7wZQy2d7p9dHwqvWd/EbgeeEG1YpTMvFCu5cxjJrfieEpyIiQ5SxrYwMUZ5YYUA6F+9zN4Apw=
+	t=1718802553; cv=none; b=lx9mPLzb6H1mKqNUM0xQbwfPATmRNdktxM/DoeAEOVmo+7jDs2dFZ+zDK3f3e8PRCgLa34CNfaX8XRdplCr6t+9DzuRn2zovLP5/P4PiAF39ETxC8L756XLcFGcck5b48r/LoHBRY4GBCEYSgFx+3MAqGLzYnR9JXr1/9sMe7iU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718802550; c=relaxed/simple;
-	bh=uufU/yDy8njaMpWxmCpa01KyjI4YrqRdRnS4tGqUK3k=;
+	s=arc-20240116; t=1718802553; c=relaxed/simple;
+	bh=ns9a4Bk17N1wCRRvvsiyJMeBaBVJcLWOHgiWFRWp+1Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y9elFTY2TAlSf2VVEjrLa1SzX89KrIky5JMXcIiqzN3a1fpNlOq8Fe2dhBoSlcRcga858tsuGfEKgDZH867GCAD8wiGqU2AAPxu0GzwMFiJL/2X/Ql52ljsK9VyIXqENYVATzRCWcoKKt6HZhTNc39nTMJDPfrdC5RlCuai3t0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=vtKzvoiO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=fwLnXV5aOpgqFEix+SwDsmnFIxk7qxUnOszvzZT20BubSl6BXtcxN/BTPaBEGYsJ3SG7r3W8GbBM+QrrpKztxqh+joqccCq/c821Ki21pY5CAi14dMNpyuC0DCnGO0m9pQRoaSC54Yh/BGqsj8f1eVlTi9ZzlNK6Ip8bP3/LQgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=y9D45IZP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="vtKzvoiO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC0F1C2BBFC;
-	Wed, 19 Jun 2024 13:09:09 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="y9D45IZP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5BE5C2BBFC;
+	Wed, 19 Jun 2024 13:09:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1718802550;
-	bh=uufU/yDy8njaMpWxmCpa01KyjI4YrqRdRnS4tGqUK3k=;
+	s=korg; t=1718802553;
+	bh=ns9a4Bk17N1wCRRvvsiyJMeBaBVJcLWOHgiWFRWp+1Y=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=vtKzvoiOB33IInPsWjsf9Dm3sKCSyWjEtGA7gnmCAf3CR8OqYJLRm2Jndz4bF2DZD
-	 /gqbMjNXTgOMF8DIVVVzplN8m5WClnUDI+5C5uAef1Dj1/Nvr6OwUCtv4SnSKB0AXR
-	 BAUcACoN2Khoex4+Y2CGxzrfP5oGoJlAccE+qqCI=
+	b=y9D45IZPvLi3BSzpMXBIuouu2qKayiapGOxqzPEGakOpvTa6l2N1fHD176s16Z1s9
+	 qgTxMuEMY9ugdHzqX2fntcWem5gxPKP2kUQ6u5V8mNtgsTX/vnVo4WWwzydwqeEGRj
+	 TSYZsBA4+1ZeGAApa//0rrU5rLq0GWNK5c96LWGk=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
+	syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com,
 	Dave Chinner <dchinner@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
 	"Darrick J. Wong" <djwong@kernel.org>,
+	Mark Tinguely <mark.tinguely@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
 	Chandan Babu R <chandanbabu@kernel.org>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 235/267] xfs: allow sunit mount option to repair bad primary sb stripe values
-Date: Wed, 19 Jun 2024 14:56:26 +0200
-Message-ID: <20240619125615.343040594@linuxfoundation.org>
+Subject: [PATCH 6.6 236/267] xfs: dont use current->journal_info
+Date: Wed, 19 Jun 2024 14:56:27 +0200
+Message-ID: <20240619125615.380778326@linuxfoundation.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240619125606.345939659@linuxfoundation.org>
 References: <20240619125606.345939659@linuxfoundation.org>
@@ -56,165 +58,163 @@ Content-Transfer-Encoding: 8bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-commit 15922f5dbf51dad334cde888ce6835d377678dc9 upstream.
+commit f2e812c1522dab847912309b00abcc762dd696da upstream.
 
-If a filesystem has a busted stripe alignment configuration on disk
-(e.g. because broken RAID firmware told mkfs that swidth was smaller
-than sunit), then the filesystem will refuse to mount due to the
-stripe validation failing. This failure is triggering during distro
-upgrades from old kernels lacking this check to newer kernels with
-this check, and currently the only way to fix it is with offline
-xfs_db surgery.
+syzbot reported an ext4 panic during a page fault where found a
+journal handle when it didn't expect to find one. The structure
+it tripped over had a value of 'TRAN' in the first entry in the
+structure, and that indicates it tripped over a struct xfs_trans
+instead of a jbd2 handle.
 
-This runtime validity checking occurs when we read the superblock
-for the first time and causes the mount to fail immediately. This
-prevents the rewrite of stripe unit/width via
-mount options that occurs later in the mount process. Hence there is
-no way to recover this situation without resorting to offline xfs_db
-rewrite of the values.
+The reason for this is that the page fault was taken during a
+copy-out to a user buffer from an xfs bulkstat operation. XFS uses
+an "empty" transaction context for bulkstat to do automated metadata
+buffer cleanup, and so the transaction context is valid across the
+copyout of the bulkstat info into the user buffer.
 
-However, we parse the mount options long before we read the
-superblock, and we know if the mount has been asked to re-write the
-stripe alignment configuration when we are reading the superblock
-and verifying it for the first time. Hence we can conditionally
-ignore stripe verification failures if the mount options specified
-will correct the issue.
+We are using empty transaction contexts like this in XFS to reduce
+the risk of failing to release objects we reference during the
+operation, especially during error handling. Hence we really need to
+ensure that we can take page faults from these contexts without
+leaving landmines for the code processing the page fault to trip
+over.
 
-We validate that the new stripe unit/width are valid before we
-overwrite the superblock values, so we can ignore the invalid config
-at verification and fail the mount later if the new values are not
-valid. This, at least, gives users the chance of correcting the
-issue after a kernel upgrade without having to resort to xfs-db
-hacks.
+However, this same behaviour could happen from any other filesystem
+that triggers a page fault or any other exception that is handled
+on-stack from within a task context that has current->journal_info
+set.  Having a page fault from some other filesystem bounce into XFS
+where we have to run a transaction isn't a bug at all, but the usage
+of current->journal_info means that this could result corruption of
+the outer task's journal_info structure.
 
+The problem is purely that we now have two different contexts that
+now think they own current->journal_info. IOWs, no filesystem can
+allow page faults or on-stack exceptions while current->journal_info
+is set by the filesystem because the exception processing might use
+current->journal_info itself.
+
+If we end up with nested XFS transactions whilst holding an empty
+transaction, then it isn't an issue as the outer transaction does
+not hold a log reservation. If we ignore the current->journal_info
+usage, then the only problem that might occur is a deadlock if the
+exception tries to take the same locks the upper context holds.
+That, however, is not a problem that setting current->journal_info
+would solve, so it's largely an irrelevant concern here.
+
+IOWs, we really only use current->journal_info for a warning check
+in xfs_vm_writepages() to ensure we aren't doing writeback from a
+transaction context. Writeback might need to do allocation, so it
+can need to run transactions itself. Hence it's a debug check to
+warn us that we've done something silly, and largely it is not all
+that useful.
+
+So let's just remove all the use of current->journal_info in XFS and
+get rid of all the potential issues from nested contexts where
+current->journal_info might get misused by another filesystem
+context.
+
+Reported-by: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Mark Tinguely <mark.tinguely@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_sb.c |   40 +++++++++++++++++++++++++++++++---------
- fs/xfs/libxfs/xfs_sb.h |    5 +++--
- 2 files changed, 34 insertions(+), 11 deletions(-)
+ fs/xfs/scrub/common.c |    4 +---
+ fs/xfs/xfs_aops.c     |    7 -------
+ fs/xfs/xfs_icache.c   |    8 +++++---
+ fs/xfs/xfs_trans.h    |    9 +--------
+ 4 files changed, 7 insertions(+), 21 deletions(-)
 
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -530,7 +530,8 @@ xfs_validate_sb_common(
- 	}
- 
- 	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
--			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
-+			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
-+			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
- 		return -EFSCORRUPTED;
- 
- 	/*
-@@ -1319,8 +1320,10 @@ xfs_sb_get_secondary(
- }
- 
- /*
-- * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
-- * so users won't be confused by values in error messages.
-+ * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
-+ * won't be confused by values in error messages.  This function returns false
-+ * if the stripe geometry is invalid and the caller is unable to repair the
-+ * stripe configuration later in the mount process.
-  */
- bool
- xfs_validate_stripe_geometry(
-@@ -1328,20 +1331,21 @@ xfs_validate_stripe_geometry(
- 	__s64			sunit,
- 	__s64			swidth,
- 	int			sectorsize,
-+	bool			may_repair,
- 	bool			silent)
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -978,9 +978,7 @@ xchk_irele(
+ 	struct xfs_scrub	*sc,
+ 	struct xfs_inode	*ip)
  {
- 	if (swidth > INT_MAX) {
- 		if (!silent)
- 			xfs_notice(mp,
- "stripe width (%lld) is too large", swidth);
--		return false;
-+		goto check_override;
- 	}
+-	if (current->journal_info != NULL) {
+-		ASSERT(current->journal_info == sc->tp);
+-
++	if (sc->tp) {
+ 		/*
+ 		 * If we are in a transaction, we /cannot/ drop the inode
+ 		 * ourselves, because the VFS will trigger writeback, which
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -502,13 +502,6 @@ xfs_vm_writepages(
+ {
+ 	struct xfs_writepage_ctx wpc = { };
  
- 	if (sunit > swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
--		return false;
-+		goto check_override;
- 	}
+-	/*
+-	 * Writing back data in a transaction context can result in recursive
+-	 * transactions. This is bad, so issue a warning and get out of here.
+-	 */
+-	if (WARN_ON_ONCE(current->journal_info))
+-		return 0;
+-
+ 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
+ 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
+ }
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -2031,8 +2031,10 @@ xfs_inodegc_want_queue_work(
+  *  - Memory shrinkers queued the inactivation worker and it hasn't finished.
+  *  - The queue depth exceeds the maximum allowable percpu backlog.
+  *
+- * Note: If the current thread is running a transaction, we don't ever want to
+- * wait for other transactions because that could introduce a deadlock.
++ * Note: If we are in a NOFS context here (e.g. current thread is running a
++ * transaction) the we don't want to block here as inodegc progress may require
++ * filesystem resources we hold to make progress and that could result in a
++ * deadlock. Hence we skip out of here if we are in a scoped NOFS context.
+  */
+ static inline bool
+ xfs_inodegc_want_flush_work(
+@@ -2040,7 +2042,7 @@ xfs_inodegc_want_flush_work(
+ 	unsigned int		items,
+ 	unsigned int		shrinker_hits)
+ {
+-	if (current->journal_info)
++	if (current->flags & PF_MEMALLOC_NOFS)
+ 		return false;
  
- 	if (sectorsize && (int)sunit % sectorsize) {
-@@ -1349,21 +1353,21 @@ xfs_validate_stripe_geometry(
- 			xfs_notice(mp,
- "stripe unit (%lld) must be a multiple of the sector size (%d)",
- 				   sunit, sectorsize);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sunit && !swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "invalid stripe unit (%lld) and stripe width of 0", sunit);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (!sunit && swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "invalid stripe width (%lld) and stripe unit of 0", swidth);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sunit && (int)swidth % (int)sunit) {
-@@ -1371,9 +1375,27 @@ xfs_validate_stripe_geometry(
- 			xfs_notice(mp,
- "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
- 				   swidth, sunit);
--		return false;
-+		goto check_override;
- 	}
- 	return true;
-+
-+check_override:
-+	if (!may_repair)
-+		return false;
-+	/*
-+	 * During mount, mp->m_dalign will not be set unless the sunit mount
-+	 * option was set. If it was set, ignore the bad stripe alignment values
-+	 * and allow the validation and overwrite later in the mount process to
-+	 * attempt to overwrite the bad stripe alignment values with the values
-+	 * supplied by mount options.
-+	 */
-+	if (!mp->m_dalign)
-+		return false;
-+	if (!silent)
-+		xfs_notice(mp,
-+"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
-+			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
-+	return true;
+ 	if (shrinker_hits > 0)
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -277,19 +277,14 @@ static inline void
+ xfs_trans_set_context(
+ 	struct xfs_trans	*tp)
+ {
+-	ASSERT(current->journal_info == NULL);
+ 	tp->t_pflags = memalloc_nofs_save();
+-	current->journal_info = tp;
  }
  
- /*
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -35,8 +35,9 @@ extern int	xfs_sb_get_secondary(struct x
- 				struct xfs_trans *tp, xfs_agnumber_t agno,
- 				struct xfs_buf **bpp);
+ static inline void
+ xfs_trans_clear_context(
+ 	struct xfs_trans	*tp)
+ {
+-	if (current->journal_info == tp) {
+-		memalloc_nofs_restore(tp->t_pflags);
+-		current->journal_info = NULL;
+-	}
++	memalloc_nofs_restore(tp->t_pflags);
+ }
  
--extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
--		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
-+bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
-+		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
-+		bool silent);
+ static inline void
+@@ -297,10 +292,8 @@ xfs_trans_switch_context(
+ 	struct xfs_trans	*old_tp,
+ 	struct xfs_trans	*new_tp)
+ {
+-	ASSERT(current->journal_info == old_tp);
+ 	new_tp->t_pflags = old_tp->t_pflags;
+ 	old_tp->t_pflags = 0;
+-	current->journal_info = new_tp;
+ }
  
- uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
- 
+ #endif	/* __XFS_TRANS_H__ */
 
 
