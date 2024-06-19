@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C54513F426;
-	Wed, 19 Jun 2024 13:09:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559FD13F426;
+	Wed, 19 Jun 2024 13:09:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718802544; cv=none; b=mXOJNY9r5E9wbqh8iY1iJ2Rey4JdXGLsppO2uJou104pg9L3Eq6O+p90b1h+BFnAto0LNWAz/BzBZoIFsheLloNOzJN6LF1mGcAiS8Ak592N5Sfp9cogJfRsLrJvsNQipj/9496kj5AQkhTnpsqe+DeeKooII9NfY0fCnKIEKGI=
+	t=1718802547; cv=none; b=tP+T1fqpjxYN11UZpPHY47v1HMj9kX8SKS4ZsWhZWgFfyMzDoTNAwhHAppQtEEHDcHIKgurmKFFqgm6+XojWoio9HonYRhww6sLw315fqtPqBBU7Fmh9YFgdYSnJFWqVzarrmPGIU6phqIZfnjFgY7oR7Hxpo7eX92fNTFG/bRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718802544; c=relaxed/simple;
-	bh=UM+/6Zmk6L7AyyhKwP/dTL3iV+ggR8L0ar4wJ/0DGnk=;
+	s=arc-20240116; t=1718802547; c=relaxed/simple;
+	bh=Ydi1W9/d9ssEhM/t27cFQnhkQVTCxznELPAjEe68L78=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HHtjlTWc9sjUX2EpO/gvPUbIuwzseFcTZRlUE5UZ2sZ/dSNGSCcdcWl9E3AsJytj0oK9vE1pNzzKdkujQmHDCqF1ZLQdnUodN8HC4lKAt/mY+g6HhZM2+nZ+Is/auFcNXYZHLPaQjcWOrbMXI0yuMOR+fRR2p8UDROlQ2qS2eNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=OOE0Rw7+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=jclaSp7YNBbdNGlc8CRAg7i9KamQr5H5zvC+PucEBrXfW/HhxhTf9/sl2Bp3b87eqlY0tIKZl9UvREa54wRbvAgzcrfUJvRl1eYVyZE0OGFsPu4Ht/mPQi27Fmi9gk1P9vD3aR1lSVj+yzepKEtV/4omOE/kp+FzJIHmXOsTTYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AKiCGdu/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="OOE0Rw7+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2C5EC2BBFC;
-	Wed, 19 Jun 2024 13:09:03 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AKiCGdu/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4484C2BBFC;
+	Wed, 19 Jun 2024 13:09:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1718802544;
-	bh=UM+/6Zmk6L7AyyhKwP/dTL3iV+ggR8L0ar4wJ/0DGnk=;
+	s=korg; t=1718802547;
+	bh=Ydi1W9/d9ssEhM/t27cFQnhkQVTCxznELPAjEe68L78=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OOE0Rw7+bUR6icGD46DSEZvR9GHOcnGEKoi1Q6DUkN1pSLZPUYcTDlau8i2SuAdu/
-	 ndvOETA671MTqIQtsFF7W4Jjojszs5xIccZxcBjonKrUrIWffZ3kpQwmb5BrGSCxWk
-	 b3VEajXHfyVOAM3zc5gLV8aZ7Qk4Cv3iR5NXgj60=
+	b=AKiCGdu/aEPumf2p19CwjJM43ef0GJSRz6Iis9lSZJZkS5CHDgKWYBTh3Px3kT2m2
+	 3eqR7JEIvj9LIwupGEKuXHjar/JSgg1zrdXEYw6jCLvyq5hBVoSZj0to7EtrqO7XPr
+	 Oy+wUkhX1axTOaglGDkq09OpYTyyHoGZIP0KBDWM=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
+	Long Li <leo.lilong@huawei.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
 	Chandan Babu R <chandanbabu@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Gao Xiang <hsiangkao@linux.alibaba.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Catherine Hoang <catherine.hoang@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 6.6 233/267] xfs: shrink failure needs to hold AGI buffer
-Date: Wed, 19 Jun 2024 14:56:24 +0200
-Message-ID: <20240619125615.267123185@linuxfoundation.org>
+	Catherine Hoang <catherine.hoang@oracle.com>
+Subject: [PATCH 6.6 234/267] xfs: ensure submit buffers on LSN boundaries in error handlers
+Date: Wed, 19 Jun 2024 14:56:25 +0200
+Message-ID: <20240619125615.305245443@linuxfoundation.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240619125606.345939659@linuxfoundation.org>
 References: <20240619125606.345939659@linuxfoundation.org>
@@ -55,84 +53,172 @@ Content-Transfer-Encoding: 8bit
 
 ------------------
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Long Li <leo.lilong@huawei.com>
 
-commit 75bcffbb9e7563259b7aed0fa77459d6a3a35627 upstream.
+commit e4c3b72a6ea93ed9c1815c74312eee9305638852 upstream.
 
-Chandan reported a AGI/AGF lock order hang on xfs/168 during recent
-testing. The cause of the problem was the task running xfs_growfs
-to shrink the filesystem. A failure occurred trying to remove the
-free space from the btrees that the shrink would make disappear,
-and that meant it ran the error handling for a partial failure.
+While performing the IO fault injection test, I caught the following data
+corruption report:
 
-This error path involves restoring the per-ag block reservations,
-and that requires calculating the amount of space needed to be
-reserved for the free inode btree. The growfs operation hung here:
+ XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
+ CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+ Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x50/0x70
+  xfs_corruption_error+0x134/0x150
+  xfs_free_ag_extent+0x7d3/0x1130
+  __xfs_free_extent+0x201/0x3c0
+  xfs_trans_free_extent+0x29b/0xa10
+  xfs_extent_free_finish_item+0x2a/0xb0
+  xfs_defer_finish_noroll+0x8d1/0x1b40
+  xfs_defer_finish+0x21/0x200
+  xfs_itruncate_extents_flags+0x1cb/0x650
+  xfs_free_eofblocks+0x18f/0x250
+  xfs_inactive+0x485/0x570
+  xfs_inodegc_worker+0x207/0x530
+  process_scheduled_works+0x24a/0xe10
+  worker_thread+0x5ac/0xc60
+  kthread+0x2cd/0x3c0
+  ret_from_fork+0x4a/0x80
+  ret_from_fork_asm+0x11/0x20
+  </TASK>
+ XFS (dm-0): Corruption detected. Unmount and run xfs_repair
 
-[18679.536829]  down+0x71/0xa0
-[18679.537657]  xfs_buf_lock+0xa4/0x290 [xfs]
-[18679.538731]  xfs_buf_find_lock+0xf7/0x4d0 [xfs]
-[18679.539920]  xfs_buf_lookup.constprop.0+0x289/0x500 [xfs]
-[18679.542628]  xfs_buf_get_map+0x2b3/0xe40 [xfs]
-[18679.547076]  xfs_buf_read_map+0xbb/0x900 [xfs]
-[18679.562616]  xfs_trans_read_buf_map+0x449/0xb10 [xfs]
-[18679.569778]  xfs_read_agi+0x1cd/0x500 [xfs]
-[18679.573126]  xfs_ialloc_read_agi+0xc2/0x5b0 [xfs]
-[18679.578708]  xfs_finobt_calc_reserves+0xe7/0x4d0 [xfs]
-[18679.582480]  xfs_ag_resv_init+0x2c5/0x490 [xfs]
-[18679.586023]  xfs_ag_shrink_space+0x736/0xd30 [xfs]
-[18679.590730]  xfs_growfs_data_private.isra.0+0x55e/0x990 [xfs]
-[18679.599764]  xfs_growfs_data+0x2f1/0x410 [xfs]
-[18679.602212]  xfs_file_ioctl+0xd1e/0x1370 [xfs]
+After analyzing the disk image, it was found that the corruption was
+triggered by the fact that extent was recorded in both inode datafork
+and AGF btree blocks. After a long time of reproduction and analysis,
+we found that the reason of free sapce btree corruption was that the
+AGF btree was not recovered correctly.
 
-trying to get the AGI lock. The AGI lock was held by a fstress task
-trying to do an inode allocation, and it was waiting on the AGF
-lock to allocate a new inode chunk on disk. Hence deadlock.
+Consider the following situation, Checkpoint A and Checkpoint B are in
+the same record and share the same start LSN1, buf items of same object
+(AGF btree block) is included in both Checkpoint A and Checkpoint B. If
+the buf item in Checkpoint A has been recovered and updates metadata LSN
+permanently, then the buf item in Checkpoint B cannot be recovered,
+because log recovery skips items with a metadata LSN >= the current LSN
+of the recovery item. If there is still an inode item in Checkpoint B
+that records the Extent X, the Extent X will be recorded in both inode
+datafork and AGF btree block after Checkpoint B is recovered. Such
+transaction can be seen when allocing enxtent for inode bmap, it record
+both the addition of extent to the inode extent list and the removing
+extent from the AGF.
 
-The fix for this is for the growfs code to hold the AGI over the
-transaction roll it does in the error path. It already holds the AGF
-locked across this, and that is what causes the lock order inversion
-in the xfs_ag_resv_init() call.
+  |------------Record (LSN1)------------------|---Record (LSN2)---|
+  |-------Checkpoint A----------|----------Checkpoint B-----------|
+  |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
+  |     Extent X is freed       |     Extent X is allocated       |
 
-Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-Fixes: 46141dc891f7 ("xfs: introduce xfs_ag_shrink_space()")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+After commit 12818d24db8a ("xfs: rework log recovery to submit buffers
+on LSN boundaries") was introduced, we submit buffers on lsn boundaries
+during log recovery. The above problem can be avoided under normal paths,
+but it's not guaranteed under abnormal paths. Consider the following
+process, if an error was encountered after recover buf item in Checkpoint
+A and before recover buf item in Checkpoint B, buffers that have been
+added to the buffer_list will still be submitted, this violates the
+submits rule on lsn boundaries. So buf item in Checkpoint B cannot be
+recovered on the next mount due to current lsn of transaction equal to
+metadata lsn on disk. The detailed process of the problem is as follows.
+
+First Mount:
+
+  xlog_do_recovery_pass
+    error = xlog_recover_process
+      xlog_recover_process_data
+        xlog_recover_process_ophdr
+          xlog_recovery_process_trans
+            ...
+              /* recover buf item in Checkpoint A */
+              xlog_recover_buf_commit_pass2
+                xlog_recover_do_reg_buffer
+                /* add buffer of agf btree block to buffer_list */
+                xfs_buf_delwri_queue(bp, buffer_list)
+            ...
+            ==> Encounter read IO error and return
+    /* submit buffers regardless of error */
+    if (!list_empty(&buffer_list))
+      xfs_buf_delwri_submit(&buffer_list);
+
+    <buf items of agf btree block in Checkpoint A recovery success>
+
+Second Mount:
+
+  xlog_do_recovery_pass
+    error = xlog_recover_process
+      xlog_recover_process_data
+        xlog_recover_process_ophdr
+          xlog_recovery_process_trans
+            ...
+              /* recover buf item in Checkpoint B */
+              xlog_recover_buf_commit_pass2
+                /* buffer of agf btree block wouldn't added to
+                   buffer_list due to lsn equal to current_lsn */
+                if (XFS_LSN_CMP(lsn, current_lsn) >= 0)
+                  goto out_release
+
+    <buf items of agf btree block in Checkpoint B wouldn't recovery>
+
+In order to make sure that submits buffers on lsn boundaries in the
+abnormal paths, we need to check error status before submit buffers that
+have been added from the last record processed. If error status exist,
+buffers in the bufffer_list should not be writen to disk.
+
+Canceling the buffers in the buffer_list directly isn't correct, unlike
+any other place where write list was canceled, these buffers has been
+initialized by xfs_buf_item_init() during recovery and held by buf item,
+buf items will not be released in xfs_buf_delwri_cancel(), it's not easy
+to solve.
+
+If the filesystem has been shut down, then delwri list submission will
+error out all buffers on the list via IO submission/completion and do
+all the correct cleanup automatically. So shutting down the filesystem
+could prevents buffers in the bufffer_list from being written to disk.
+
+Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_ag.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_log_recover.c |   23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -979,14 +979,23 @@ xfs_ag_shrink_space(
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3203,11 +3203,28 @@ xlog_do_recovery_pass(
+ 	kmem_free(hbp);
  
- 	if (error) {
- 		/*
--		 * if extent allocation fails, need to roll the transaction to
-+		 * If extent allocation fails, need to roll the transaction to
- 		 * ensure that the AGFL fixup has been committed anyway.
-+		 *
-+		 * We need to hold the AGF across the roll to ensure nothing can
-+		 * access the AG for allocation until the shrink is fully
-+		 * cleaned up. And due to the resetting of the AG block
-+		 * reservation space needing to lock the AGI, we also have to
-+		 * hold that so we don't get AGI/AGF lock order inversions in
-+		 * the error handling path.
- 		 */
- 		xfs_trans_bhold(*tpp, agfbp);
-+		xfs_trans_bhold(*tpp, agibp);
- 		err2 = xfs_trans_roll(tpp);
- 		if (err2)
- 			return err2;
- 		xfs_trans_bjoin(*tpp, agfbp);
-+		xfs_trans_bjoin(*tpp, agibp);
- 		goto resv_init_out;
- 	}
+ 	/*
+-	 * Submit buffers that have been added from the last record processed,
+-	 * regardless of error status.
++	 * Submit buffers that have been dirtied by the last record recovered.
+ 	 */
+-	if (!list_empty(&buffer_list))
++	if (!list_empty(&buffer_list)) {
++		if (error) {
++			/*
++			 * If there has been an item recovery error then we
++			 * cannot allow partial checkpoint writeback to
++			 * occur.  We might have multiple checkpoints with the
++			 * same start LSN in this buffer list, and partial
++			 * writeback of a checkpoint in this situation can
++			 * prevent future recovery of all the changes in the
++			 * checkpoints at this start LSN.
++			 *
++			 * Note: Shutting down the filesystem will result in the
++			 * delwri submission marking all the buffers stale,
++			 * completing them and cleaning up _XBF_LOGRECOVERY
++			 * state without doing any IO.
++			 */
++			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
++		}
+ 		error2 = xfs_buf_delwri_submit(&buffer_list);
++	}
  
+ 	if (error && first_bad)
+ 		*first_bad = rhead_blk;
 
 
