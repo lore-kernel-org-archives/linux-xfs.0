@@ -1,122 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13CC312FB31;
-	Wed, 19 Jun 2024 13:09:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C7C0D26A;
+	Wed, 19 Jun 2024 14:01:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718802559; cv=none; b=NoS+kOVxlM7u6IM/uzBXontNJOMk4sjpucNT1AFa45pajP4PrmPFkEp2k+LH+Z5jpmWh1efsk3fPE90s4N/eLXopljLIHt6xXwxe9NGOJBr9mLhAEbV1Xlncom/kdPcsM61B3z/teOKUNRQwSqNrjwMjzJ+3Cv2r5mcn6kEalT8=
+	t=1718805698; cv=none; b=NrRXLixU9mQcse3gpm3JyNBV4+gsG6xwaGMHETU1a6y6f3uSZU3+DHgVw+VYybJKXgP5GaPiX+5X1CEbg8qqPaNyDR4+2toFol+ZGdntsf6VuBOiq7i6OYetInAgiwekyHyNkuoZAx5xSyomEKscNC96ytEoNxXKJizvMIilZQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718802559; c=relaxed/simple;
-	bh=NutqWhcBYtrzNiyfNxdTN8Do55ak/ok2AhTzyYtBKR0=;
+	s=arc-20240116; t=1718805698; c=relaxed/simple;
+	bh=CEgOzGB7LClupNgDDq0D815zenWO1JkO/EBzHOwsrME=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CRdbiaD+uz59WiwORqlUGaGHygzoy4V9jdm4f/pex+s1acfkOJ/WiiCGGD9tyKWvuaROZexO9/y3fslbOoZ3vUtq+RpFj2bvcQslzvBZVNXYdgJwlQFCJfd+1/ohU+2jNkoo4epT8yQW7IxEONlnqFKyHqJVNvAD2PC7Sh/jPaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=On4QzqX5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XEyzyyjJSX2KnLmg4vw4uQFJHRcXsbca6n9mxUe2Mdc9xcNaNy+jAxrLyvLSDE6Bu0mXz/ox/BjMqrHjME0FSQL83YNbBQoxn80P0wq8jV3UzQJyiErM8TKw+PQZIWxE7GceoVx0ksrQxWJW/M/1Q2LC4dbGdSaB/m6I15DP+jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oNlSj1K3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="On4QzqX5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FADAC2BBFC;
-	Wed, 19 Jun 2024 13:09:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1718802559;
-	bh=NutqWhcBYtrzNiyfNxdTN8Do55ak/ok2AhTzyYtBKR0=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oNlSj1K3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E92F4C2BBFC;
+	Wed, 19 Jun 2024 14:01:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718805698;
+	bh=CEgOzGB7LClupNgDDq0D815zenWO1JkO/EBzHOwsrME=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=On4QzqX5fBWjdUCM8/mbFVbBCPPpfvONsKaEHZfVYK9Qq5qygxuvXy7WTyznzXBuL
-	 5kcW8UoeiD+tp3FCM+QrVT/A5eWkOwd4CQ+zqGfyCu2vKIwv1qLmj+mpRCUxEozqj8
-	 85XqbWyHpn7pL+0N2VC4pD/onzSGuJAyl3dkzzes=
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	patches@lists.linux.dev,
+	b=oNlSj1K3HpYLwsgbrm7zxDdxWjqdGCVO+92QAXmVtEtZPVdLbI5ZURMT7kRT++WM/
+	 hFU9sZFraYvulrCDTuKvMU1dTWfIKv3SJwG9NJOeBL+anoJwaaCOJqHlQxDE7j52kg
+	 l4rzvoJuSxjqz+Cv9VwFHvIDQ9HjNCe9VU1EYqq/nmx1sJE/gFhrbHSgNnNRJmrjCv
+	 DyXAR12d/ngMDKfb3x6ixX0dgm3Ip2PgLQDDbabovZL33JlHFpEcf6Ocsm4ICug1EE
+	 UILSLGuL1e+wo5yBchqX4gmVdAwGpImmjxicRpEJB45SMuis0uIIxPxsf7VDyCMTj9
+	 LvOzpPVPUHfdg==
+From: Christian Brauner <brauner@kernel.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org,
+	david@fromorbit.com,
+	chandanbabu@kernel.org,
+	jack@suse.cz,
+	yi.zhang@huawei.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com,
 	linux-xfs@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 237/267] xfs: allow cross-linking special files without project quota
-Date: Wed, 19 Jun 2024 14:56:28 +0200
-Message-ID: <20240619125615.418224801@linuxfoundation.org>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240619125606.345939659@linuxfoundation.org>
-References: <20240619125606.345939659@linuxfoundation.org>
-User-Agent: quilt/0.67
-X-stable: review
-X-Patchwork-Hint: ignore
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH -next v6 0/2] iomap/xfs: fix stale data exposure when truncating realtime inodes
+Date: Wed, 19 Jun 2024 16:01:29 +0200
+Message-ID: <20240619-umliegenden-original-ece354ddc842@brauner>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240618142112.1315279-1-yi.zhang@huaweicloud.com>
+References: <20240618142112.1315279-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1467; i=brauner@kernel.org; h=from:subject:message-id; bh=CEgOzGB7LClupNgDDq0D815zenWO1JkO/EBzHOwsrME=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQVPdm1lFl1oua3Ewv2KilkH24Tt5r5snNvg8232Ng53 Slun/87dJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzEpo+RYYnq3K9f9/7Pa5j5 5q3Bj+A7PpOsWi1mv1687U7T86fpRvcZ/hf+LXBMujvNeV7ndL85YnViEdrbM3ILsu+LvP67bFs UGy8A
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-6.6-stable review patch.  If anyone has any objections, please let me know.
+On Tue, 18 Jun 2024 22:21:10 +0800, Zhang Yi wrote:
+> Changes since v5:
+>  - Drop all the code about zeroing out the whole allocation unitsize
+>    on truncate down in xfs_setattr_size() as Christoph suggested, let's
+>    just fix this issue for RT file by converting tail blocks to
+>    unwritten now, and we could think about forced aligned extent and
+>    atomic write later until it needs, so only pick patch 6 and 8 in
+>    previous version, do some minor git log changes.
+> 
+> [...]
 
-------------------
+I've put this into vfs.iomap for testing which should end up in fs-next asap.
 
-From: Andrey Albershteyn <aalbersh@redhat.com>
-
-commit e23d7e82b707d1d0a627e334fb46370e4f772c11 upstream.
-
-There's an issue that if special files is created before quota
-project is enabled, then it's not possible to link this file. This
-works fine for normal files. This happens because xfs_quota skips
-special files (no ioctls to set necessary flags). The check for
-having the same project ID for source and destination then fails as
-source file doesn't have any ID.
-
-mkfs.xfs -f /dev/sda
-mount -o prjquota /dev/sda /mnt/test
-
-mkdir /mnt/test/foo
-mkfifo /mnt/test/foo/fifo1
-
-xfs_quota -xc "project -sp /mnt/test/foo 9" /mnt/test
-> Setting up project 9 (path /mnt/test/foo)...
-> xfs_quota: skipping special file /mnt/test/foo/fifo1
-> Processed 1 (/etc/projects and cmdline) paths for project 9 with recursion depth infinite (-1).
-
-ln /mnt/test/foo/fifo1 /mnt/test/foo/fifo1_link
-> ln: failed to create hard link '/mnt/test/testdir/fifo1_link' => '/mnt/test/testdir/fifo1': Invalid cross-device link
-
-mkfifo /mnt/test/foo/fifo2
-ln /mnt/test/foo/fifo2 /mnt/test/foo/fifo2_link
-
-Fix this by allowing linking of special files to the project quota
-if special files doesn't have any ID set (ID = 0).
-
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/xfs_inode.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
 
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1239,8 +1239,19 @@ xfs_link(
- 	 */
- 	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
- 		     tdp->i_projid != sip->i_projid)) {
--		error = -EXDEV;
--		goto error_return;
-+		/*
-+		 * Project quota setup skips special files which can
-+		 * leave inodes in a PROJINHERIT directory without a
-+		 * project ID set. We need to allow links to be made
-+		 * to these "project-less" inodes because userspace
-+		 * expects them to succeed after project ID setup,
-+		 * but everything else should be rejected.
-+		 */
-+		if (!special_file(VFS_I(sip)->i_mode) ||
-+		    sip->i_projid != 0) {
-+			error = -EXDEV;
-+			goto error_return;
-+		}
- 	}
- 
- 	if (!resblks) {
+Applied to the vfs.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs.iomap branch should appear in linux-next soon.
 
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.iomap
+
+[1/2] xfs: reserve blocks for truncating large realtime inode
+      https://git.kernel.org/vfs/vfs/c/d048945150b7
+[2/2] iomap: don't increase i_size in iomap_write_end()
+      https://git.kernel.org/vfs/vfs/c/602f09f4029c
