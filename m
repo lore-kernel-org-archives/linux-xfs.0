@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559FD13F426;
-	Wed, 19 Jun 2024 13:09:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F598143C65;
+	Wed, 19 Jun 2024 13:09:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718802547; cv=none; b=tP+T1fqpjxYN11UZpPHY47v1HMj9kX8SKS4ZsWhZWgFfyMzDoTNAwhHAppQtEEHDcHIKgurmKFFqgm6+XojWoio9HonYRhww6sLw315fqtPqBBU7Fmh9YFgdYSnJFWqVzarrmPGIU6phqIZfnjFgY7oR7Hxpo7eX92fNTFG/bRM=
+	t=1718802550; cv=none; b=IhFQugWdiy7bmnukxEGLc/3VoQDWW2u86mdnUOJ/+WCNxcKMqnD+bKvvK68NJm3e5JkLmtfiUDVgOKn7WHKz81hn9+ecnpn6sx7wZQy2d7p9dHwqvWd/EbgeeEG1YpTMvFCu5cxjJrfieEpyIiQ5SxrYwMUZ5YYUA6F+9zN4Apw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718802547; c=relaxed/simple;
-	bh=Ydi1W9/d9ssEhM/t27cFQnhkQVTCxznELPAjEe68L78=;
+	s=arc-20240116; t=1718802550; c=relaxed/simple;
+	bh=uufU/yDy8njaMpWxmCpa01KyjI4YrqRdRnS4tGqUK3k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jclaSp7YNBbdNGlc8CRAg7i9KamQr5H5zvC+PucEBrXfW/HhxhTf9/sl2Bp3b87eqlY0tIKZl9UvREa54wRbvAgzcrfUJvRl1eYVyZE0OGFsPu4Ht/mPQi27Fmi9gk1P9vD3aR1lSVj+yzepKEtV/4omOE/kp+FzJIHmXOsTTYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AKiCGdu/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Y9elFTY2TAlSf2VVEjrLa1SzX89KrIky5JMXcIiqzN3a1fpNlOq8Fe2dhBoSlcRcga858tsuGfEKgDZH867GCAD8wiGqU2AAPxu0GzwMFiJL/2X/Ql52ljsK9VyIXqENYVATzRCWcoKKt6HZhTNc39nTMJDPfrdC5RlCuai3t0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=vtKzvoiO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AKiCGdu/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4484C2BBFC;
-	Wed, 19 Jun 2024 13:09:06 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="vtKzvoiO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC0F1C2BBFC;
+	Wed, 19 Jun 2024 13:09:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1718802547;
-	bh=Ydi1W9/d9ssEhM/t27cFQnhkQVTCxznELPAjEe68L78=;
+	s=korg; t=1718802550;
+	bh=uufU/yDy8njaMpWxmCpa01KyjI4YrqRdRnS4tGqUK3k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=AKiCGdu/aEPumf2p19CwjJM43ef0GJSRz6Iis9lSZJZkS5CHDgKWYBTh3Px3kT2m2
-	 3eqR7JEIvj9LIwupGEKuXHjar/JSgg1zrdXEYw6jCLvyq5hBVoSZj0to7EtrqO7XPr
-	 Oy+wUkhX1axTOaglGDkq09OpYTyyHoGZIP0KBDWM=
+	b=vtKzvoiOB33IInPsWjsf9Dm3sKCSyWjEtGA7gnmCAf3CR8OqYJLRm2Jndz4bF2DZD
+	 /gqbMjNXTgOMF8DIVVVzplN8m5WClnUDI+5C5uAef1Dj1/Nvr6OwUCtv4SnSKB0AXR
+	 BAUcACoN2Khoex4+Y2CGxzrfP5oGoJlAccE+qqCI=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
-	Long Li <leo.lilong@huawei.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	Christoph Hellwig <hch@lst.de>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Chandan Babu R <chandanbabu@kernel.org>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 234/267] xfs: ensure submit buffers on LSN boundaries in error handlers
-Date: Wed, 19 Jun 2024 14:56:25 +0200
-Message-ID: <20240619125615.305245443@linuxfoundation.org>
+Subject: [PATCH 6.6 235/267] xfs: allow sunit mount option to repair bad primary sb stripe values
+Date: Wed, 19 Jun 2024 14:56:26 +0200
+Message-ID: <20240619125615.343040594@linuxfoundation.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240619125606.345939659@linuxfoundation.org>
 References: <20240619125606.345939659@linuxfoundation.org>
@@ -53,172 +54,167 @@ Content-Transfer-Encoding: 8bit
 
 ------------------
 
-From: Long Li <leo.lilong@huawei.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit e4c3b72a6ea93ed9c1815c74312eee9305638852 upstream.
+commit 15922f5dbf51dad334cde888ce6835d377678dc9 upstream.
 
-While performing the IO fault injection test, I caught the following data
-corruption report:
+If a filesystem has a busted stripe alignment configuration on disk
+(e.g. because broken RAID firmware told mkfs that swidth was smaller
+than sunit), then the filesystem will refuse to mount due to the
+stripe validation failing. This failure is triggering during distro
+upgrades from old kernels lacking this check to newer kernels with
+this check, and currently the only way to fix it is with offline
+xfs_db surgery.
 
- XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
- CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
- Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_corruption_error+0x134/0x150
-  xfs_free_ag_extent+0x7d3/0x1130
-  __xfs_free_extent+0x201/0x3c0
-  xfs_trans_free_extent+0x29b/0xa10
-  xfs_extent_free_finish_item+0x2a/0xb0
-  xfs_defer_finish_noroll+0x8d1/0x1b40
-  xfs_defer_finish+0x21/0x200
-  xfs_itruncate_extents_flags+0x1cb/0x650
-  xfs_free_eofblocks+0x18f/0x250
-  xfs_inactive+0x485/0x570
-  xfs_inodegc_worker+0x207/0x530
-  process_scheduled_works+0x24a/0xe10
-  worker_thread+0x5ac/0xc60
-  kthread+0x2cd/0x3c0
-  ret_from_fork+0x4a/0x80
-  ret_from_fork_asm+0x11/0x20
-  </TASK>
- XFS (dm-0): Corruption detected. Unmount and run xfs_repair
+This runtime validity checking occurs when we read the superblock
+for the first time and causes the mount to fail immediately. This
+prevents the rewrite of stripe unit/width via
+mount options that occurs later in the mount process. Hence there is
+no way to recover this situation without resorting to offline xfs_db
+rewrite of the values.
 
-After analyzing the disk image, it was found that the corruption was
-triggered by the fact that extent was recorded in both inode datafork
-and AGF btree blocks. After a long time of reproduction and analysis,
-we found that the reason of free sapce btree corruption was that the
-AGF btree was not recovered correctly.
+However, we parse the mount options long before we read the
+superblock, and we know if the mount has been asked to re-write the
+stripe alignment configuration when we are reading the superblock
+and verifying it for the first time. Hence we can conditionally
+ignore stripe verification failures if the mount options specified
+will correct the issue.
 
-Consider the following situation, Checkpoint A and Checkpoint B are in
-the same record and share the same start LSN1, buf items of same object
-(AGF btree block) is included in both Checkpoint A and Checkpoint B. If
-the buf item in Checkpoint A has been recovered and updates metadata LSN
-permanently, then the buf item in Checkpoint B cannot be recovered,
-because log recovery skips items with a metadata LSN >= the current LSN
-of the recovery item. If there is still an inode item in Checkpoint B
-that records the Extent X, the Extent X will be recorded in both inode
-datafork and AGF btree block after Checkpoint B is recovered. Such
-transaction can be seen when allocing enxtent for inode bmap, it record
-both the addition of extent to the inode extent list and the removing
-extent from the AGF.
+We validate that the new stripe unit/width are valid before we
+overwrite the superblock values, so we can ignore the invalid config
+at verification and fail the mount later if the new values are not
+valid. This, at least, gives users the chance of correcting the
+issue after a kernel upgrade without having to resort to xfs-db
+hacks.
 
-  |------------Record (LSN1)------------------|---Record (LSN2)---|
-  |-------Checkpoint A----------|----------Checkpoint B-----------|
-  |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
-  |     Extent X is freed       |     Extent X is allocated       |
-
-After commit 12818d24db8a ("xfs: rework log recovery to submit buffers
-on LSN boundaries") was introduced, we submit buffers on lsn boundaries
-during log recovery. The above problem can be avoided under normal paths,
-but it's not guaranteed under abnormal paths. Consider the following
-process, if an error was encountered after recover buf item in Checkpoint
-A and before recover buf item in Checkpoint B, buffers that have been
-added to the buffer_list will still be submitted, this violates the
-submits rule on lsn boundaries. So buf item in Checkpoint B cannot be
-recovered on the next mount due to current lsn of transaction equal to
-metadata lsn on disk. The detailed process of the problem is as follows.
-
-First Mount:
-
-  xlog_do_recovery_pass
-    error = xlog_recover_process
-      xlog_recover_process_data
-        xlog_recover_process_ophdr
-          xlog_recovery_process_trans
-            ...
-              /* recover buf item in Checkpoint A */
-              xlog_recover_buf_commit_pass2
-                xlog_recover_do_reg_buffer
-                /* add buffer of agf btree block to buffer_list */
-                xfs_buf_delwri_queue(bp, buffer_list)
-            ...
-            ==> Encounter read IO error and return
-    /* submit buffers regardless of error */
-    if (!list_empty(&buffer_list))
-      xfs_buf_delwri_submit(&buffer_list);
-
-    <buf items of agf btree block in Checkpoint A recovery success>
-
-Second Mount:
-
-  xlog_do_recovery_pass
-    error = xlog_recover_process
-      xlog_recover_process_data
-        xlog_recover_process_ophdr
-          xlog_recovery_process_trans
-            ...
-              /* recover buf item in Checkpoint B */
-              xlog_recover_buf_commit_pass2
-                /* buffer of agf btree block wouldn't added to
-                   buffer_list due to lsn equal to current_lsn */
-                if (XFS_LSN_CMP(lsn, current_lsn) >= 0)
-                  goto out_release
-
-    <buf items of agf btree block in Checkpoint B wouldn't recovery>
-
-In order to make sure that submits buffers on lsn boundaries in the
-abnormal paths, we need to check error status before submit buffers that
-have been added from the last record processed. If error status exist,
-buffers in the bufffer_list should not be writen to disk.
-
-Canceling the buffers in the buffer_list directly isn't correct, unlike
-any other place where write list was canceled, these buffers has been
-initialized by xfs_buf_item_init() during recovery and held by buf item,
-buf items will not be released in xfs_buf_delwri_cancel(), it's not easy
-to solve.
-
-If the filesystem has been shut down, then delwri list submission will
-error out all buffers on the list via IO submission/completion and do
-all the correct cleanup automatically. So shutting down the filesystem
-could prevents buffers in the bufffer_list from being written to disk.
-
-Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/xfs_log_recover.c |   23 ++++++++++++++++++++---
- 1 file changed, 20 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c |   40 +++++++++++++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_sb.h |    5 +++--
+ 2 files changed, 34 insertions(+), 11 deletions(-)
 
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3203,11 +3203,28 @@ xlog_do_recovery_pass(
- 	kmem_free(hbp);
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -530,7 +530,8 @@ xfs_validate_sb_common(
+ 	}
+ 
+ 	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
+-			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
++			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
++			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
+ 		return -EFSCORRUPTED;
  
  	/*
--	 * Submit buffers that have been added from the last record processed,
--	 * regardless of error status.
-+	 * Submit buffers that have been dirtied by the last record recovered.
- 	 */
--	if (!list_empty(&buffer_list))
-+	if (!list_empty(&buffer_list)) {
-+		if (error) {
-+			/*
-+			 * If there has been an item recovery error then we
-+			 * cannot allow partial checkpoint writeback to
-+			 * occur.  We might have multiple checkpoints with the
-+			 * same start LSN in this buffer list, and partial
-+			 * writeback of a checkpoint in this situation can
-+			 * prevent future recovery of all the changes in the
-+			 * checkpoints at this start LSN.
-+			 *
-+			 * Note: Shutting down the filesystem will result in the
-+			 * delwri submission marking all the buffers stale,
-+			 * completing them and cleaning up _XBF_LOGRECOVERY
-+			 * state without doing any IO.
-+			 */
-+			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-+		}
- 		error2 = xfs_buf_delwri_submit(&buffer_list);
-+	}
+@@ -1319,8 +1320,10 @@ xfs_sb_get_secondary(
+ }
  
- 	if (error && first_bad)
- 		*first_bad = rhead_blk;
+ /*
+- * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
+- * so users won't be confused by values in error messages.
++ * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
++ * won't be confused by values in error messages.  This function returns false
++ * if the stripe geometry is invalid and the caller is unable to repair the
++ * stripe configuration later in the mount process.
+  */
+ bool
+ xfs_validate_stripe_geometry(
+@@ -1328,20 +1331,21 @@ xfs_validate_stripe_geometry(
+ 	__s64			sunit,
+ 	__s64			swidth,
+ 	int			sectorsize,
++	bool			may_repair,
+ 	bool			silent)
+ {
+ 	if (swidth > INT_MAX) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "stripe width (%lld) is too large", swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit > swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sectorsize && (int)sunit % sectorsize) {
+@@ -1349,21 +1353,21 @@ xfs_validate_stripe_geometry(
+ 			xfs_notice(mp,
+ "stripe unit (%lld) must be a multiple of the sector size (%d)",
+ 				   sunit, sectorsize);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit && !swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "invalid stripe unit (%lld) and stripe width of 0", sunit);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (!sunit && swidth) {
+ 		if (!silent)
+ 			xfs_notice(mp,
+ "invalid stripe width (%lld) and stripe unit of 0", swidth);
+-		return false;
++		goto check_override;
+ 	}
+ 
+ 	if (sunit && (int)swidth % (int)sunit) {
+@@ -1371,9 +1375,27 @@ xfs_validate_stripe_geometry(
+ 			xfs_notice(mp,
+ "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
+ 				   swidth, sunit);
+-		return false;
++		goto check_override;
+ 	}
+ 	return true;
++
++check_override:
++	if (!may_repair)
++		return false;
++	/*
++	 * During mount, mp->m_dalign will not be set unless the sunit mount
++	 * option was set. If it was set, ignore the bad stripe alignment values
++	 * and allow the validation and overwrite later in the mount process to
++	 * attempt to overwrite the bad stripe alignment values with the values
++	 * supplied by mount options.
++	 */
++	if (!mp->m_dalign)
++		return false;
++	if (!silent)
++		xfs_notice(mp,
++"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
++			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
++	return true;
+ }
+ 
+ /*
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -35,8 +35,9 @@ extern int	xfs_sb_get_secondary(struct x
+ 				struct xfs_trans *tp, xfs_agnumber_t agno,
+ 				struct xfs_buf **bpp);
+ 
+-extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+-		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
++bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
++		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
++		bool silent);
+ 
+ uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+ 
 
 
