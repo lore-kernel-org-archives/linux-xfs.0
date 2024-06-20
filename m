@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA6BA4778C
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 19:51:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A331E3D575;
+	Thu, 20 Jun 2024 19:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718913103; cv=none; b=uYzVKzvQIu6o4zv6OruUm0buBNQH1HgL4XGf/tI+u10I/k2vXiNQbWUnLMa9eW7fXKW4bu6TOJqeYnc+F92MSMizQvV8N07sUaSSXsVAgdRORVJP9p2wi5GRAyq7xDxgq5h7IWfvhv8PMII9/bU4Oh2khY+e0wpsip3VzUNWSxo=
+	t=1718913367; cv=none; b=HMOTOFmuBjZYaZz/C7eOC0+nwuflVLub6Zp4bAAr8/DTxYawWddCeXKJ1q2i2lCjS26hkOn4IEtK3M3Ab9fZ01jAQCQEf95iDDU70jzScRTX1OusMj1GlIG67V7Mj1W4294tNg1u0x+qd/WoPrzy2/v80RJIk4OEc0zCAcw1k/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718913103; c=relaxed/simple;
-	bh=I0J91rHQeh9NLSKXRcNvTVHg5UWt+YmLw8HLLbN1Dvs=;
+	s=arc-20240116; t=1718913367; c=relaxed/simple;
+	bh=O9KrET2rYlUDognz8T9X/UNOBU1TrAnZN7RGSIRx30o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UOdKoiJgj/Xw9cf9wBxBy69dHSTq8VAx0oRkYftZzZFF5WUyMs3mELD3t1Mb5OllUKZBdambRl2FNKnnsCRatJZQHHs6KtbnMBmQPHiwfsVcSj6T/TBNzAgM314IGcyjhhhuGNhbsOG0PeHDctL0KM479tvwcDltebOZDS/hfYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F3pYXFAr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XQmIegG5pE4JseB5+fepJV3IYUbnBcgMKla6zJpV7YCYWqsoFryhqR4zysqg4OZVNgIWaBFDd2H7XJ5Mh9l6L3Wcr1Urx0M9U/5ajfV32N2yvYrpH8Oo+0I9W1H8hVJH8Wy07vyzjRfZ/yZivSsQLUHb22DHa5NmjjDPe5PxkqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TFBm2yaI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F3pYXFAr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81BDEC2BD10;
-	Thu, 20 Jun 2024 19:51:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TFBm2yaI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30BE7C2BD10;
+	Thu, 20 Jun 2024 19:56:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718913103;
-	bh=I0J91rHQeh9NLSKXRcNvTVHg5UWt+YmLw8HLLbN1Dvs=;
+	s=k20201202; t=1718913367;
+	bh=O9KrET2rYlUDognz8T9X/UNOBU1TrAnZN7RGSIRx30o=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=F3pYXFAro2p10tnLsoqZDO3kdzvGf6x7AlOHwGWXhc9yX/vCNhmYGQuCzw/LJ6GRS
-	 49yMYWJFAHuzApjmYe9YQRSsoEPt8/rFOh4KgGWR1x2JKuXtCWAs4dsURwvo6+pQJ1
-	 onurthwbhmpsCvXZYi9Mipuq3ABpVotiBPEFIyfj07rRqi1OsoBYHH2/AEUxQ+p21Y
-	 SxBUyLBmKw+eCarqhEzn8e4dLCfHBa+5N6ZXG24qWOeU7ddmMZmgkG5wMdB449iqjq
-	 1I+zhqGUMpYanSLrci0j4Q9Th+Cy9TUeVZw2o8PgXT+Ygvw/sLm3c0q6jeCNhcZkyd
-	 sQPMW56GhVdDQ==
-Date: Thu, 20 Jun 2024 12:51:42 -0700
+	b=TFBm2yaIvi58fVCOILYRH0DaiSoOkZce9sUPRaCANADX+pK5/SSEjvDRbdkLf5Qvh
+	 jiQPj/i64l6aCIrACuk4phMS0ps8ukIvfpNBAyBg7BBTq2QWWiq9EHWdMm06Waro0P
+	 l8mu7zMfgIkI5lHK6Jq8dpsx2oIg3xttX58HUzECbCv5XaMvebMLxq9f6IawmXfVky
+	 z+wkfpc2CRsERYgfsJO92wS7UKN4I+ANo0rtYPbKH6mEifL8P8kzfbdLzLiDL6XDPa
+	 FJPX3t3qUhnkHiJ5u2nTeEOE0J+AM3K9RwqRqA/hDYVE8M6fVjuYKJoCAfIsjZIm0M
+	 VQQdf9JdhKdmA==
+Date: Thu, 20 Jun 2024 12:56:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-	Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 11/11] xfs: skip flushing log items during push
-Message-ID: <20240620195142.GG103034@frogsfrogsfrogs>
-References: <20240620072146.530267-1-hch@lst.de>
- <20240620072146.530267-12-hch@lst.de>
+Cc: zlang@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs/011: support byte-based grant heads are stored in
+ bytes now
+Message-ID: <20240620195606.GH103034@frogsfrogsfrogs>
+References: <20240620072309.533010-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,168 +43,132 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240620072146.530267-12-hch@lst.de>
+In-Reply-To: <20240620072309.533010-1-hch@lst.de>
 
-On Thu, Jun 20, 2024 at 09:21:28AM +0200, Christoph Hellwig wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Jun 20, 2024 at 09:23:09AM +0200, Christoph Hellwig wrote:
+> New kernels where reservation grant track the actual reservation space
+> consumed in bytes instead of LSNs in cycle/block tuples export different
+> sysfs files for this information.
 > 
-> The AIL pushing code spends a huge amount of time skipping over
-> items that are already marked as flushing. It is not uncommon to
-> see hundreds of thousands of items skipped every second due to inode
-> clustering marking all the inodes in a cluster as flushing when the
-> first one is flushed.
+> Adapt the test to detect which version is exported, and simply check
+> for a near-zero reservation space consumption for the byte based version.
 > 
-> However, to discover an item is already flushing and should be
-> skipped we have to call the iop_push() method for it to try to flush
-> the item. For inodes (where this matters most), we have to first
-> check that inode is flushable first.
+> Based on work from Dave Chinner.
 > 
-> We can optimise this overhead away by tracking whether the log item
-> is flushing internally. This allows xfsaild_push() to check the log
-> item directly for flushing state and immediately skip the log item.
-> Whilst this doesn't remove the CPU cache misses for loading the log
-> item, it does avoid the overhead of an indirect function call
-> and the cache misses involved in accessing inode and
-> backing cluster buffer structures to determine flushing state. When
-> trying to flush hundreds of thousands of inodes each second, this
-> CPU overhead saving adds up quickly.
-> 
-> It's so noticeable that the biggest issue with pushing on the AIL on
-> fast storage becomes the 10ms back-off wait when we hit enough
-> pinned buffers to break out of the push loop but not enough for the
-> AIL pushing to be considered stuck. This limits the xfsaild to about
-> 70% total CPU usage, and on fast storage this isn't enough to keep
-> the storage 100% busy.
-> 
-> The xfsaild will block on IO submission on slow storage and so is
-> self throttling - it does not need a backoff in the case where we
-> are really just breaking out of the walk to submit the IO we have
-> gathered.
-> 
-> Further with no backoff we don't need to gather huge delwri lists to
-> mitigate the impact of backoffs, so we can submit IO more frequently
-> and reduce the time log items spend in flushing state by breaking
-> out of the item push loop once we've gathered enough IO to batch
-> submission effectively.
-
-Is that what the new count > 1000 branch does?
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_inode.c      | 1 +
->  fs/xfs/xfs_inode_item.c | 6 +++++-
+>  tests/xfs/011 | 67 +++++++++++++++++++++++++++++++++------------------
+>  1 file changed, 44 insertions(+), 23 deletions(-)
+> 
+> diff --git a/tests/xfs/011 b/tests/xfs/011
+> index ed44d074b..ef2366adf 100755
+> --- a/tests/xfs/011
+> +++ b/tests/xfs/011
+> @@ -11,7 +11,18 @@
+>  . ./common/preamble
+>  _begin_fstest auto freeze log metadata quick
+>  
+> -# Import common functions.
+> +# real QA test starts here
+> +_supported_fs xfs
+> +
+> +_require_scratch
+> +_require_freeze
+> +_require_xfs_sysfs $(_short_dev $TEST_DEV)/log
+> +_require_command "$KILLALL_PROG" killall
+> +
+> +. ./common/filter
+> +
+> +devname=`_short_dev $SCRATCH_DEV`
+> +attrprefix="/sys/fs/xfs/$devname/log"
+>  
+>  # Override the default cleanup function.
+>  _cleanup()
+> @@ -24,27 +35,29 @@ _cleanup()
+>  	rm -f $tmp.*
+>  }
+>  
+> -# Use the information exported by XFS to sysfs to determine whether the log has
+> -# active reservations after a filesystem freeze.
+> -_check_scratch_log_state()
+> +_check_scratch_log_state_new()
+>  {
+> -	devname=`_short_dev $SCRATCH_DEV`
+> -	attrpath="/sys/fs/xfs/$devname/log"
+> -
+> -	# freeze the fs to ensure data is synced and the log is flushed. this
+> -	# means no outstanding transactions, and thus no outstanding log
+> -	# reservations, should exist
+> -	xfs_freeze -f $SCRATCH_MNT
+> +	# The grant heads record reservations in bytes.  For complex reasons
+> +	# beyond the scope fo this test, these aren't going to be exactly zero
 
-Does it make sense to do this for buffer or dquot items too?
+                           of
 
-Modulo my questions, the rest of the changes in this series look sensible.
+Why aren't they going to be exactly zero?
 
 --D
 
->  fs/xfs/xfs_trans.h      | 4 +++-
->  fs/xfs/xfs_trans_ail.c  | 8 +++++++-
->  4 files changed, 16 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 58fb7a5062e1e6..da611ec56f1be0 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3713,6 +3713,7 @@ xfs_iflush(
->  	iip->ili_last_fields = iip->ili_fields;
->  	iip->ili_fields = 0;
->  	iip->ili_fsync_fields = 0;
-> +	set_bit(XFS_LI_FLUSHING, &iip->ili_item.li_flags);
->  	spin_unlock(&iip->ili_lock);
+> +	# for frozen filesystems. Hence just check the value is between 0 and
+> +	# the maximum iclog size (256kB).
+> +	for attr in "reserve_grant_head_bytes" "write_grant_head_bytes"; do
+> +		space=`cat $attrprefix/$attr`
+> +		_within_tolerance $space 1024 0 $((256 * 1024))
+> +	done
+> +}
 >  
->  	/*
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index f28d653300d124..ba49e56820f0a7 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -933,6 +933,7 @@ xfs_iflush_finish(
->  		}
->  		iip->ili_last_fields = 0;
->  		iip->ili_flush_lsn = 0;
-> +		clear_bit(XFS_LI_FLUSHING, &lip->li_flags);
->  		spin_unlock(&iip->ili_lock);
->  		xfs_iflags_clear(iip->ili_inode, XFS_IFLUSHING);
->  		if (drop_buffer)
-> @@ -991,8 +992,10 @@ xfs_buf_inode_io_fail(
->  {
->  	struct xfs_log_item	*lip;
+> +_check_scratch_log_state_old()
+> +{
+>  	# the log head is exported in basic blocks and the log grant heads in
+>  	# bytes. convert the log head to bytes for precise comparison
+> -	log_head_cycle=`awk -F : '{ print $1 }' $attrpath/log_head_lsn`
+> -	log_head_bytes=`awk -F : '{ print $2 }' $attrpath/log_head_lsn`
+> +	log_head_cycle=`awk -F : '{ print $1 }' $attrprefix/log_head_lsn`
+> +	log_head_bytes=`awk -F : '{ print $2 }' $attrprefix/log_head_lsn`
+>  	log_head_bytes=$((log_head_bytes * 512))
 >  
-> -	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
-> +	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
->  		set_bit(XFS_LI_FAILED, &lip->li_flags);
-> +		clear_bit(XFS_LI_FLUSHING, &lip->li_flags);
-> +	}
+>  	for attr in "reserve_grant_head" "write_grant_head"; do
+> -		cycle=`cat $attrpath/$attr | awk -F : '{ print $1 }'`
+> -		bytes=`cat $attrpath/$attr | awk -F : '{ print $2 }'`
+> +		cycle=`cat $attrprefix/$attr | awk -F : '{ print $1 }'`
+> +		bytes=`cat $attrprefix/$attr | awk -F : '{ print $2 }'`
+>  
+>  		if [ $cycle != $log_head_cycle ] ||
+>  		   [ $bytes != $log_head_bytes ]
+> @@ -54,17 +67,25 @@ _check_scratch_log_state()
+>  				"possible leak detected."
+>  		fi
+>  	done
+> -
+> -	xfs_freeze -u $SCRATCH_MNT
 >  }
 >  
->  /*
-> @@ -1011,6 +1014,7 @@ xfs_iflush_abort_clean(
->  	iip->ili_flush_lsn = 0;
->  	iip->ili_item.li_buf = NULL;
->  	list_del_init(&iip->ili_item.li_bio_list);
-> +	clear_bit(XFS_LI_FLUSHING, &iip->ili_item.li_flags);
->  }
+> -# real QA test starts here
+> -_supported_fs xfs
+> +# Use the information exported by XFS to sysfs to determine whether the log has
+> +# active reservations after a filesystem freeze.
+> +_check_scratch_log_state()
+> +{
+> +	# freeze the fs to ensure data is synced and the log is flushed. this
+> +	# means no outstanding transactions, and thus no outstanding log
+> +	# reservations, should exist
+> +	xfs_freeze -f $SCRATCH_MNT
 >  
->  /*
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 1636663707dc04..20eb6ea7ebaa04 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -58,13 +58,15 @@ struct xfs_log_item {
->  #define	XFS_LI_FAILED	2
->  #define	XFS_LI_DIRTY	3
->  #define	XFS_LI_WHITEOUT	4
-> +#define	XFS_LI_FLUSHING	5
->  
->  #define XFS_LI_FLAGS \
->  	{ (1u << XFS_LI_IN_AIL),	"IN_AIL" }, \
->  	{ (1u << XFS_LI_ABORTED),	"ABORTED" }, \
->  	{ (1u << XFS_LI_FAILED),	"FAILED" }, \
->  	{ (1u << XFS_LI_DIRTY),		"DIRTY" }, \
-> -	{ (1u << XFS_LI_WHITEOUT),	"WHITEOUT" }
-> +	{ (1u << XFS_LI_WHITEOUT),	"WHITEOUT" }, \
-> +	{ (1u << XFS_LI_FLUSHING),	"FLUSHING" }
->  
->  struct xfs_item_ops {
->  	unsigned flags;
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 6a106a05fae017..0fafcc9f3dbe44 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -512,6 +512,9 @@ xfsaild_push(
->  	while ((XFS_LSN_CMP(lip->li_lsn, ailp->ail_target) <= 0)) {
->  		int	lock_result;
->  
-> +		if (test_bit(XFS_LI_FLUSHING, &lip->li_flags))
-> +			goto next_item;
+> -_require_scratch
+> -_require_freeze
+> -_require_xfs_sysfs $(_short_dev $TEST_DEV)/log
+> -_require_command "$KILLALL_PROG" killall
+> +	if [ -f "${attrprefix}/reserve_grant_head_bytes" ]; then
+> +	    _check_scratch_log_state_new
+> +	else
+> +	    _check_scratch_log_state_old
+> +	fi
 > +
->  		/*
->  		 * Note that iop_push may unlock and reacquire the AIL lock.  We
->  		 * rely on the AIL cursor implementation to be able to deal with
-> @@ -581,9 +584,12 @@ xfsaild_push(
->  		if (stuck > 100)
->  			break;
+> +	xfs_freeze -u $SCRATCH_MNT
+> +}
 >  
-> +next_item:
->  		lip = xfs_trans_ail_cursor_next(ailp, &cur);
->  		if (lip == NULL)
->  			break;
-> +		if (lip->li_lsn != lsn && count > 1000)
-> +			break;
->  		lsn = lip->li_lsn;
->  	}
+>  echo "Silence is golden."
 >  
-> @@ -620,7 +626,7 @@ xfsaild_push(
->  		/*
->  		 * Assume we have more work to do in a short while.
->  		 */
-> -		tout = 10;
-> +		tout = 0;
->  	}
->  
->  	return tout;
 > -- 
 > 2.43.0
 > 
