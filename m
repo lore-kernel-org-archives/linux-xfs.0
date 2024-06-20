@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34B587C6EB
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:07:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68B687C6EB
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:07:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924821; cv=none; b=WyDkEH/3jFrG+TVDTh+mWjVCa0p1OfmCAHKSyXH5DZHh+LI8ET4Hf+zDDJKacvc5Wn67AkW7R+Tr1xKHG/MYAWXjK+QEK5uMdgGg7aocVXOvaV+JzByeNS/C4cmmq+vMkrOBN1QZZoLFEPOYNDDlfIHF3hHB9Lrh7oZXop5k6OA=
+	t=1718924836; cv=none; b=i/5d6PcrpnolytdWcMLvNe3JmLfdhBpax5tr7qNeabsAyRRpnIdXrGgYxKlRdT3/RI2l9tFSjCUCO7eQvoWQjMbnpNtNeFw4pzTB4+FdZrfANmieCqK3zbJTNgwYpFN/JEg6KC/NIzM7acWAtnyMQ+ju5brYNACfNZwIAfZFxHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924821; c=relaxed/simple;
-	bh=ipH+LjaEyd7YV9zo3UzFCkKS5kOYLesbbeJhOw5fnmc=;
+	s=arc-20240116; t=1718924836; c=relaxed/simple;
+	bh=7zKln5jeLNM/PRHw+EmwB21dmBk0y/zoK0ZJa8Cf/ZU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QJee0J+B4l93g4YvrlJoSi0WCbluZ5JU4vj+1mmmk6AhcCChgiDEvM8iiy3Imbo4nVvP2S6zj3JURV8wcGvPqmG3aTRB+9AjtX0FRcBBdDACuRfrotqrSfAPWrOtQLhlpUEdqD3TgeW2UsSit8BMf1rn6SF2V7NNeK/rBYUchfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D91KCTD0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=c3rMi6wISkWkEsmU7dcPn2elsltf/nGKsjx+Dyn+qmJQhKfHpPL0AzN7UCm1S+U+y4UgoEL+y4k4+dCZFx62izghAwaF8fUj1i8HNfh/N1ekieFifwgau+AsOdGqa59WRsfiKW1GDo8msd4nC7BwGQhpjKy/yQVwPGsAgu3AJa0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MkLFLyOf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D91KCTD0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA1B7C2BD10;
-	Thu, 20 Jun 2024 23:07:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MkLFLyOf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41968C2BD10;
+	Thu, 20 Jun 2024 23:07:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924820;
-	bh=ipH+LjaEyd7YV9zo3UzFCkKS5kOYLesbbeJhOw5fnmc=;
+	s=k20201202; t=1718924836;
+	bh=7zKln5jeLNM/PRHw+EmwB21dmBk0y/zoK0ZJa8Cf/ZU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=D91KCTD0qN/MfuyT/ro+G7gugNJUmiEXKG7LCv5J7Svidgnkwv7sCzQT1NXd0aFaL
-	 pUWat6PwURk6K9+A1gEkx3+nzvpqUQZMqzknt7JIdvaNxV6jZrpHJbElxMeI6NcBrB
-	 B/gZKnmy7PDSS0qBA/H11WRss973dr+YMRkKEtf+DF2ljllXfNqh5stmQvOz1sIjJK
-	 HDmM57MLNBbwocRBCnLhlbaC4o48wWJ6R7NvW36kKeTp2Z7v9/1hEpV1YAZZLWONg+
-	 LSnbh+QTYRf6Z1XoDPEzHqoxMSGAASdvhUSnkgU9CE/GAg05kvFsN3QG8oCJDqp1dy
-	 Wm3qh8GsQ8Dog==
-Date: Thu, 20 Jun 2024 16:07:00 -0700
-Subject: [PATCH 9/9] xfs: move xfs_extent_free_defer_add to xfs_extfree_item.c
+	b=MkLFLyOfSe/Yr8A4I/NSyRCyngO7G0zhBmerS8eH/7wQnwRpafup1cqal0yfdqpyX
+	 wcf3c2doOII4SHw/8BubRa8MZV8k0z7Z8/yyCwYYv4ZJ+/feRq70QyWhoUlPtqs444
+	 8Fqp+d8NKotdcTdGWJHarTOZryCPGKusAX7Wxl7+0yjk7XXr9FHAY4dtFqADV1QSAD
+	 fNr7z162/eN3UoMemKas9d/Q6X8HgzjdJmwYTzF6YwEouQCUhpdQNYQL7Va+OO/Wx6
+	 WLrBHl5ZQmx1l5BpIMO2rR8DfqtzJh+lqnr5FdE//KkN7fhSMMjIH7aSqWdNScFz6k
+	 VJJ1wo6QYpKdw==
+Date: Thu, 20 Jun 2024 16:07:15 -0700
+Subject: [PATCH 1/9] xfs: give rmap btree cursor error tracepoints their own
+ class
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892418851.3183906.15855078165036440030.stgit@frogsfrogsfrogs>
-In-Reply-To: <171892418670.3183906.4770669498640039656.stgit@frogsfrogsfrogs>
-References: <171892418670.3183906.4770669498640039656.stgit@frogsfrogsfrogs>
+Message-ID: <171892419249.3184396.641039011881838280.stgit@frogsfrogsfrogs>
+In-Reply-To: <171892419209.3184396.10441735798864910501.stgit@frogsfrogsfrogs>
+References: <171892419209.3184396.10441735798864910501.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,138 +47,296 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move the code that adds the incore xfs_extent_free_item deferred work
-data to a transaction live with the EFI log item code.  This means that
-the allocator code no longer has to know about the inner workings of the
-EFI log items.
-
-As a consequence, we can get rid of the _{get,put}_group helpers.
+Create a new tracepoint class for btree-related errors, then convert all
+the rmap tracepoints to use it.  Also fix the one tracepoint that was
+abusing the old class by making it a separate tracepoint.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   12 ++----------
- fs/xfs/libxfs/xfs_alloc.h |    3 ---
- fs/xfs/xfs_extfree_item.c |   31 +++++++++++++++++--------------
- fs/xfs/xfs_extfree_item.h |    6 ++++++
- 4 files changed, 25 insertions(+), 27 deletions(-)
+ fs/xfs/libxfs/xfs_rmap.c |   33 ++++---------
+ fs/xfs/xfs_trace.h       |  117 +++++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 110 insertions(+), 40 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 1da3b1f741300..f711fce8767f4 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -27,6 +27,7 @@
- #include "xfs_ag_resv.h"
- #include "xfs_bmap.h"
- #include "xfs_health.h"
-+#include "xfs_extfree_item.h"
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index ef16f6f9cef67..bf047cdb95a4e 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -111,8 +111,7 @@ xfs_rmap_update(
+ 			xfs_rmap_irec_offset_pack(irec));
+ 	error = xfs_btree_update(cur, &rec);
+ 	if (error)
+-		trace_xfs_rmap_update_error(cur->bc_mp,
+-				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
++		trace_xfs_rmap_update_error(cur, error, _RET_IP_);
+ 	return error;
+ }
  
- struct kmem_cache	*xfs_extfree_item_cache;
- 
-@@ -2579,16 +2580,7 @@ xfs_defer_extent_free(
- 		xefi->xefi_owner = XFS_RMAP_OWN_NULL;
+@@ -155,8 +154,7 @@ xfs_rmap_insert(
  	}
- 
--	trace_xfs_extent_free_defer(mp, xefi);
--
--	xfs_extent_free_get_group(mp, xefi);
--
--	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
--		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
--				&xfs_agfl_free_defer_type);
--	else
--		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
--				&xfs_extent_free_defer_type);
-+	xfs_extent_free_defer_add(tp, xefi, dfpp);
- 	return 0;
+ done:
+ 	if (error)
+-		trace_xfs_rmap_insert_error(rcur->bc_mp,
+-				rcur->bc_ag.pag->pag_agno, error, _RET_IP_);
++		trace_xfs_rmap_insert_error(rcur, error, _RET_IP_);
+ 	return error;
  }
  
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 2da543fb90ecd..0ed71a31fe7ce 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -254,9 +254,6 @@ struct xfs_extent_free_item {
- 	enum xfs_ag_resv_type	xefi_agresv;
- };
- 
--void xfs_extent_free_get_group(struct xfs_mount *mp,
--		struct xfs_extent_free_item *xefi);
--
- #define XFS_EFI_SKIP_DISCARD	(1U << 0) /* don't issue discard */
- #define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
- #define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index c1b6e12decdab..11066b5eb9176 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -436,21 +436,24 @@ xfs_extent_free_create_done(
- 	return &efdp->efd_item;
+@@ -194,8 +192,7 @@ xfs_rmap_delete(
+ 	}
+ done:
+ 	if (error)
+-		trace_xfs_rmap_delete_error(rcur->bc_mp,
+-				rcur->bc_ag.pag->pag_agno, error, _RET_IP_);
++		trace_xfs_rmap_delete_error(rcur, error, _RET_IP_);
+ 	return error;
  }
  
--/* Take a passive ref to the AG containing the space we're freeing. */
-+/* Add this deferred EFI to the transaction. */
- void
--xfs_extent_free_get_group(
--	struct xfs_mount		*mp,
--	struct xfs_extent_free_item	*xefi)
-+xfs_extent_free_defer_add(
-+	struct xfs_trans		*tp,
-+	struct xfs_extent_free_item	*xefi,
-+	struct xfs_defer_pending	**dfpp)
- {
-+	struct xfs_mount		*mp = tp->t_mountp;
+@@ -816,8 +813,7 @@ xfs_rmap_unmap(
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+-		trace_xfs_rmap_unmap_error(mp, cur->bc_ag.pag->pag_agno,
+-				error, _RET_IP_);
++		trace_xfs_rmap_unmap_error(cur, error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -1148,8 +1144,7 @@ xfs_rmap_map(
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+-		trace_xfs_rmap_map_error(mp, cur->bc_ag.pag->pag_agno,
+-				error, _RET_IP_);
++		trace_xfs_rmap_map_error(cur, error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -1344,8 +1339,7 @@ xfs_rmap_convert(
+ 	     RIGHT.rm_blockcount > XFS_RMAP_LEN_MAX)
+ 		state &= ~RMAP_RIGHT_CONTIG;
+ 
+-	trace_xfs_rmap_convert_state(mp, cur->bc_ag.pag->pag_agno, state,
+-			_RET_IP_);
++	trace_xfs_rmap_convert_state(cur, state, _RET_IP_);
+ 
+ 	/* reset the cursor back to PREV */
+ 	error = xfs_rmap_lookup_le(cur, bno, owner, offset, oldext, NULL, &i);
+@@ -1698,8 +1692,7 @@ xfs_rmap_convert(
+ 			unwritten, oinfo);
+ done:
+ 	if (error)
+-		trace_xfs_rmap_convert_error(cur->bc_mp,
+-				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
++		trace_xfs_rmap_convert_error(cur, error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -1822,8 +1815,7 @@ xfs_rmap_convert_shared(
+ 	     RIGHT.rm_blockcount > XFS_RMAP_LEN_MAX)
+ 		state &= ~RMAP_RIGHT_CONTIG;
+ 
+-	trace_xfs_rmap_convert_state(mp, cur->bc_ag.pag->pag_agno, state,
+-			_RET_IP_);
++	trace_xfs_rmap_convert_state(cur, state, _RET_IP_);
+ 	/*
+ 	 * Switch out based on the FILLING and CONTIG state bits.
+ 	 */
+@@ -2125,8 +2117,7 @@ xfs_rmap_convert_shared(
+ 			unwritten, oinfo);
+ done:
+ 	if (error)
+-		trace_xfs_rmap_convert_error(cur->bc_mp,
+-				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
++		trace_xfs_rmap_convert_error(cur, error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -2325,8 +2316,7 @@ xfs_rmap_unmap_shared(
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+-		trace_xfs_rmap_unmap_error(cur->bc_mp,
+-				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
++		trace_xfs_rmap_unmap_error(cur, error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -2486,8 +2476,7 @@ xfs_rmap_map_shared(
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+-		trace_xfs_rmap_map_error(cur->bc_mp,
+-				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
++		trace_xfs_rmap_map_error(cur, error, _RET_IP_);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 438e88a9fd1d3..7527db2c04426 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2797,46 +2797,98 @@ DEFINE_EVENT(xfs_rmap_class, name, \
+ 		 const struct xfs_owner_info *oinfo), \
+ 	TP_ARGS(mp, agno, agbno, len, unwritten, oinfo))
+ 
+-/* simple AG-based error/%ip tracepoint class */
+-DECLARE_EVENT_CLASS(xfs_ag_error_class,
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error,
++/* btree cursor error/%ip tracepoint class */
++DECLARE_EVENT_CLASS(xfs_btree_error_class,
++	TP_PROTO(struct xfs_btree_cur *cur, int error,
+ 		 unsigned long caller_ip),
+-	TP_ARGS(mp, agno, error, caller_ip),
++	TP_ARGS(cur, error, caller_ip),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
+ 		__field(int, error)
+ 		__field(unsigned long, caller_ip)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = mp->m_super->s_dev;
+-		__entry->agno = agno;
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		switch (cur->bc_ops->type) {
++		case XFS_BTREE_TYPE_INODE:
++			__entry->agno = 0;
++			__entry->ino = cur->bc_ino.ip->i_ino;
++			break;
++		case XFS_BTREE_TYPE_AG:
++			__entry->agno = cur->bc_ag.pag->pag_agno;
++			__entry->ino = 0;
++			break;
++		case XFS_BTREE_TYPE_MEM:
++			__entry->agno = 0;
++			__entry->ino = 0;
++			break;
++		}
+ 		__entry->error = error;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d agno 0x%x error %d caller %pS",
++	TP_printk("dev %d:%d agno 0x%x ino 0x%llx error %d caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
++		  __entry->ino,
+ 		  __entry->error,
+ 		  (char *)__entry->caller_ip)
+ );
+ 
+-#define DEFINE_AG_ERROR_EVENT(name) \
+-DEFINE_EVENT(xfs_ag_error_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error, \
++#define DEFINE_BTREE_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_btree_error_class, name, \
++	TP_PROTO(struct xfs_btree_cur *cur, int error, \
+ 		 unsigned long caller_ip), \
+-	TP_ARGS(mp, agno, error, caller_ip))
++	TP_ARGS(cur, error, caller_ip))
+ 
+ DEFINE_RMAP_EVENT(xfs_rmap_unmap);
+ DEFINE_RMAP_EVENT(xfs_rmap_unmap_done);
+-DEFINE_AG_ERROR_EVENT(xfs_rmap_unmap_error);
++DEFINE_BTREE_ERROR_EVENT(xfs_rmap_unmap_error);
+ DEFINE_RMAP_EVENT(xfs_rmap_map);
+ DEFINE_RMAP_EVENT(xfs_rmap_map_done);
+-DEFINE_AG_ERROR_EVENT(xfs_rmap_map_error);
++DEFINE_BTREE_ERROR_EVENT(xfs_rmap_map_error);
+ DEFINE_RMAP_EVENT(xfs_rmap_convert);
+ DEFINE_RMAP_EVENT(xfs_rmap_convert_done);
+-DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_error);
+-DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_state);
++DEFINE_BTREE_ERROR_EVENT(xfs_rmap_convert_error);
 +
-+	trace_xfs_extent_free_defer(mp, xefi);
++TRACE_EVENT(xfs_rmap_convert_state,
++	TP_PROTO(struct xfs_btree_cur *cur, int state,
++		 unsigned long caller_ip),
++	TP_ARGS(cur, state, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(int, state)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		switch (cur->bc_ops->type) {
++		case XFS_BTREE_TYPE_INODE:
++			__entry->agno = 0;
++			__entry->ino = cur->bc_ino.ip->i_ino;
++			break;
++		case XFS_BTREE_TYPE_AG:
++			__entry->agno = cur->bc_ag.pag->pag_agno;
++			__entry->ino = 0;
++			break;
++		case XFS_BTREE_TYPE_MEM:
++			__entry->agno = 0;
++			__entry->ino = 0;
++			break;
++		}
++		__entry->state = state;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d agno 0x%x ino 0x%llx state %d caller %pS",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->ino,
++		  __entry->state,
++		  (char *)__entry->caller_ip)
++);
+ 
+ DECLARE_EVENT_CLASS(xfs_rmapbt_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+@@ -2937,9 +2989,9 @@ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_deferred);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_update);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_insert);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_delete);
+-DEFINE_AG_ERROR_EVENT(xfs_rmap_insert_error);
+-DEFINE_AG_ERROR_EVENT(xfs_rmap_delete_error);
+-DEFINE_AG_ERROR_EVENT(xfs_rmap_update_error);
++DEFINE_BTREE_ERROR_EVENT(xfs_rmap_insert_error);
++DEFINE_BTREE_ERROR_EVENT(xfs_rmap_delete_error);
++DEFINE_BTREE_ERROR_EVENT(xfs_rmap_update_error);
+ 
+ DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_candidate);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_query);
+@@ -3065,6 +3117,35 @@ DEFINE_AG_RESV_EVENT(xfs_ag_resv_free_extent);
+ DEFINE_AG_RESV_EVENT(xfs_ag_resv_critical);
+ DEFINE_AG_RESV_EVENT(xfs_ag_resv_needed);
+ 
++/* simple AG-based error/%ip tracepoint class */
++DECLARE_EVENT_CLASS(xfs_ag_error_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error,
++		 unsigned long caller_ip),
++	TP_ARGS(mp, agno, error, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, error)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->error = error;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d agno 0x%x error %d caller %pS",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->error,
++		  (char *)__entry->caller_ip)
++);
 +
- 	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
--}
--
--/* Release a passive AG ref after some freeing work. */
--static inline void
--xfs_extent_free_put_group(
--	struct xfs_extent_free_item	*xefi)
--{
--	xfs_perag_intent_put(xefi->xefi_pag);
-+	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
-+		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
-+				&xfs_agfl_free_defer_type);
-+	else
-+		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
-+				&xfs_extent_free_defer_type);
- }
++#define DEFINE_AG_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_ag_error_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, agno, error, caller_ip))
+ DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
  
- /* Cancel a free extent. */
-@@ -460,7 +463,7 @@ xfs_extent_free_cancel_item(
- {
- 	struct xfs_extent_free_item	*xefi = xefi_entry(item);
- 
--	xfs_extent_free_put_group(xefi);
-+	xfs_perag_intent_put(xefi->xefi_pag);
- 	kmem_cache_free(xfs_extfree_item_cache, xefi);
- }
- 
-@@ -575,7 +578,7 @@ xfs_efi_recover_work(
- 	xefi->xefi_blockcount = extp->ext_len;
- 	xefi->xefi_agresv = XFS_AG_RESV_NONE;
- 	xefi->xefi_owner = XFS_RMAP_OWN_UNKNOWN;
--	xfs_extent_free_get_group(mp, xefi);
-+	xefi->xefi_pag = xfs_perag_intent_get(mp, extp->ext_start);
- 
- 	xfs_defer_add_item(dfp, &xefi->xefi_list);
- }
-diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-index da6a5afa607cf..41b7c43060799 100644
---- a/fs/xfs/xfs_extfree_item.h
-+++ b/fs/xfs/xfs_extfree_item.h
-@@ -88,4 +88,10 @@ xfs_efd_log_item_sizeof(
- extern struct kmem_cache	*xfs_efi_cache;
- extern struct kmem_cache	*xfs_efd_cache;
- 
-+struct xfs_extent_free_item;
-+
-+void xfs_extent_free_defer_add(struct xfs_trans *tp,
-+		struct xfs_extent_free_item *xefi,
-+		struct xfs_defer_pending **dfpp);
-+
- #endif	/* __XFS_EXTFREE_ITEM_H__ */
+ /* refcount tracepoint classes */
 
