@@ -1,40 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E24F8381B9
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 18:57:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BE6C39855
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 18:58:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718909834; cv=none; b=rxx/My2KnAdglKndMgnw4aCVaoWS+69am3PZKS5SsCk5Y/pgDhjuefOihdny9CDUlS130l/jKX+dAEgnH4z6LB3E+QQ2BdT/BdfOp1ZmSnhY8fTEnOY4a3uxA9BmiEP3IbD79+Da5SJio8Swlsa/HQB5Pn7K21c7QsLLy+QRdCk=
+	t=1718909941; cv=none; b=kw6f8tCpCqkxgO/NoFCgkjF68RmJ6iPkNHLZ/6iIVH5re207JYoavHSZETRKuifg+A0fyxAQBUIweUbaGeoArTTFz1S8nQAKtcmvmzINDXup6O0rMf66RPSLdmcZ7Vlgo8KCZGNTptJ5U7em7FBpLrt4BhRxilF9HbGKwXEiVeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718909834; c=relaxed/simple;
-	bh=BXdguldct67sxoXkEtvhsogT9FlvbcYDqiqcePMaf1s=;
+	s=arc-20240116; t=1718909941; c=relaxed/simple;
+	bh=qbk7oYZyc1nJBU2j1vFktpd4NnvyyvOmTJcKBouuD5w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r1Sp45u5WLbiGpbNLW6va33dWcf+hXKJ6rUWlPLUUG0SNK9As/yaHnY2pobnkedyFoQ7bQgYBOSJ1m7vtWqrroqxUTRZJRMDNNaDxKgMEd9NRGbtxdoeKBrDEB+N6j0l3CG2i9/TTYSjUzVmZNngZe176sx8dLt8wqDNjPX43XY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sp6T8KkQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PsjiTixDCtD9xhmkhVfyPqDvmyRn94C+sdWB7papofGCElxQRuxJhx6VT6PjK+MeBDnyhfO/No8OZbbM6uA5LzJl7GR0QQhuRDtQNe9wDd8NvtZdx+pURi2JGpgvoJPTBPvf7oTWHB1fG9WJqhHw1YzZgi9hkkOaPiKMZstbo+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QNFedg79; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sp6T8KkQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A51C2BD10;
-	Thu, 20 Jun 2024 18:57:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718909833;
-	bh=BXdguldct67sxoXkEtvhsogT9FlvbcYDqiqcePMaf1s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Sp6T8KkQYcez/Ke2cBKmlSffHbdcO64Msu/sxu+HEWmuPxHOD9dKDXK0mHSx8XKPW
-	 avAXia63dW/uEUbC1H4YygZNOdnrTMvLNUVpuxdfa4zJZbmYcfwIi+8FdE2QvhvZWp
-	 wn5ZOPJR9a6n+HrfQCi/Vwtpjsm/r5nGOei1kflc08D3BULe5oNa5VbNCoL2aMRo0e
-	 4jxA7zXZREv+T4yKjQheMcT64bloSRTEA+yOFh0iccwsnSaESO+4Igd1ekjjovfw/6
-	 7IEPr3ONDGILIaCpnubqIdFsfWnrONRh/mLdwcIH4G3Jqpa58PYqvKxGqlFEW+Qjgu
-	 9K2+6l/k97qBw==
-Date: Thu, 20 Jun 2024 11:57:12 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: fold xfs_ilock_for_write_fault into
- xfs_write_fault
-Message-ID: <20240620185712.GD103034@frogsfrogsfrogs>
-References: <20240619115426.332708-1-hch@lst.de>
- <20240619115426.332708-7-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QNFedg79"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718909938;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jH/1STGevSI3JAsnqyhpNLSvcx5qg0QdYjDNlIqmlUw=;
+	b=QNFedg79lacgtjRAvPmY6plbl4R7v7U/a6+Bc4v52hxgsHXt824u2chMGvDey4PJcftyte
+	4vuP7F/d1alBT99Bn4oiTE/kcn0MEown1eeoRlRwHJTc3diZWZN6VmhnocAqE5McUHqqm6
+	G7ULFeClJRYzLtJWsVzGmOQYsbHX/VE=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-573-hGOzF-zZNMmrPLfR6rQNlQ-1; Thu, 20 Jun 2024 14:58:57 -0400
+X-MC-Unique: hGOzF-zZNMmrPLfR6rQNlQ-1
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1f66f2e4cc7so18206555ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 11:58:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718909936; x=1719514736;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jH/1STGevSI3JAsnqyhpNLSvcx5qg0QdYjDNlIqmlUw=;
+        b=ObPle+SL8WZnCkoDnaFi1ifvdn/zK/qYUs/KthoaKPrxdT8kJ40VbF3JLjgeG+Q/qp
+         FuwXoUUA8uPkSrpPQKuSaPqq2uXGOoKBYIyo5xnz76OZSQwQhIxCS/r/9QXixBkxu85W
+         IoZojTnBpIde3DwHQ1ICVigNxj0MN1bA/6FXPBXq1CpZ562IsXVq5myp568oK9DzyKxz
+         up5aY1LLhobhpKaV9C8Ck/KRNoKd5PXxgQMMlU/xui6RoEsN1hFnQyxais35kYnippym
+         yqlqCWyKvq9+aj/EpBbfl8PStcT7Mse/c4D3/19txtlZBhpWqhbOnCta8B/3s3JBOQkC
+         brjw==
+X-Forwarded-Encrypted: i=1; AJvYcCUtqakjhRsUd6p1lTUL/cg/fyXOq3gv7YaNbN6IdE27G23RCH42NVKTfFSLueChHXRBIMos1IIxtPQFfgX9nD+i/LOOVi9z6/Ok
+X-Gm-Message-State: AOJu0YwVf2ueDJ5AiIB3wqE2nr2Ac+Os0OiSLBYRPPrrq6ALdp/QbJVS
+	jrmH5FjwuNFCWw0DKqikt2chInyA3Enu7vLLMT36YOGEGv0FJ7ue0gz0p5QF5C+USfQaTgylw42
+	5fap9t5Ifwxgv1w72G7R01WYDSyG9qNbwSfR2Q7ryjbVlEEA9FsJ8VMId7g==
+X-Received: by 2002:a17:902:f546:b0:1f9:ae6d:5697 with SMTP id d9443c01a7336-1f9ae6d5ac1mr60547255ad.35.1718909935819;
+        Thu, 20 Jun 2024 11:58:55 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGUqsYkzeltcUKvcT+Qbx8lhqtSk0mACAOpJV3i8spyZLxlcSTnj4E2BeSlbL9PEJfMkQRRkw==
+X-Received: by 2002:a17:902:f546:b0:1f9:ae6d:5697 with SMTP id d9443c01a7336-1f9ae6d5ac1mr60547085ad.35.1718909935351;
+        Thu, 20 Jun 2024 11:58:55 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855f5c039sm140841785ad.306.2024.06.20.11.58.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Jun 2024 11:58:55 -0700 (PDT)
+Date: Fri, 21 Jun 2024 02:58:51 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org,
+	guan@eryu.me, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/10] generic/717: remove obsolete check
+Message-ID: <20240620185851.nchu3nlllehnqvmk@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <171867145284.793463.16426642605476089750.stgit@frogsfrogsfrogs>
+ <171867145359.793463.11533521582429286273.stgit@frogsfrogsfrogs>
+ <ZnJ2Ehz8PIcQ5m6R@infradead.org>
+ <20240619163148.GN103034@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,85 +76,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240619115426.332708-7-hch@lst.de>
+In-Reply-To: <20240619163148.GN103034@frogsfrogsfrogs>
 
-On Wed, Jun 19, 2024 at 01:53:56PM +0200, Christoph Hellwig wrote:
-> Now that the page fault handler has been refactored, the only caller
-> of xfs_ilock_for_write_fault is simple enough and calls it
-> unconditionally.  Fold the logic and expand the comments explaining it.
+On Wed, Jun 19, 2024 at 09:31:48AM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 18, 2024 at 11:09:22PM -0700, Christoph Hellwig wrote:
+> > On Mon, Jun 17, 2024 at 05:47:48PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > The latest draft of the EXCHANGERANGE ioctl has dropped the flag that
+> > > enforced that the two files being operated upon were exactly the same
+> > > length as was specified in the ioctl parameters.  Remove this check
+> > > since it's now defunct.
+> > 
+> > The last draft is what got merged into 6.10-rc as far as I can tell,
+> > so maybe update the commit message for that?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> "The final version of the EXCHANGERANGE ioctl..."
 
-Makes sense to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Will change "The latest draft" to "The final version" when I merge it.
 
---D
+Thanks,
+Zorro
 
-> ---
->  fs/xfs/xfs_file.c | 33 +++++++++++++++------------------
->  1 file changed, 15 insertions(+), 18 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 62a69ed796f2fd..05ea96661c475f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -227,21 +227,6 @@ xfs_ilock_iocb_for_write(
->  	return 0;
->  }
->  
-> -static unsigned int
-> -xfs_ilock_for_write_fault(
-> -	struct xfs_inode	*ip)
-> -{
-> -	/* get a shared lock if no remapping in progress */
-> -	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> -	if (!xfs_iflags_test(ip, XFS_IREMAPPING))
-> -		return XFS_MMAPLOCK_SHARED;
-> -
-> -	/* wait for remapping to complete */
-> -	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> -	return XFS_MMAPLOCK_EXCL;
-> -}
-> -
->  STATIC ssize_t
->  xfs_file_dio_read(
->  	struct kiocb		*iocb,
-> @@ -1294,18 +1279,30 @@ xfs_write_fault(
->  	unsigned int		order)
->  {
->  	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	unsigned int		lock_mode;
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	unsigned int		lock_mode = XFS_MMAPLOCK_SHARED;
->  	vm_fault_t		ret;
->  
->  	sb_start_pagefault(inode->i_sb);
->  	file_update_time(vmf->vma->vm_file);
->  
-> -	lock_mode = xfs_ilock_for_write_fault(XFS_I(inode));
-> +	/*
-> +	 * Normally we only need the shared mmaplock, but if a reflink remap is
-> +	 * in progress we take the exclusive lock to wait for the remap to
-> +	 * finish before taking a write fault.
-> +	 */
-> +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> +	if (xfs_iflags_test(ip, XFS_IREMAPPING)) {
-> +		xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-> +		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> +		lock_mode = XFS_MMAPLOCK_EXCL;
-> +	}
-> +
->  	if (IS_DAX(inode))
->  		ret = xfs_dax_fault_locked(vmf, order, true);
->  	else
->  		ret = iomap_page_mkwrite(vmf, &xfs_page_mkwrite_iomap_ops);
-> -	xfs_iunlock(XFS_I(inode), lock_mode);
-> +	xfs_iunlock(ip, lock_mode);
->  
->  	sb_end_pagefault(inode->i_sb);
->  	return ret;
-> -- 
-> 2.43.0
+> > Otherwise looks good:
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
+> Thanks!
 > 
+> --D
+> 
+
