@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91CF113777F
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:04:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A9817C6EB
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:04:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924664; cv=none; b=E+xIkYuMtKA8bN2W0v4cENQsO4zaQoP0IAq9M60pc0DRv8AL4TjNdzgzSeJETL+O9kbcSPAieBkEbqARb296WCC8ZGBqM+pULi+fJ04+TKCZT+fWD/WW/FcLq59QTrROxdfKHv7fBBxCn1b12A91eoiw3xfJcg13vaIOuWsfAXw=
+	t=1718924680; cv=none; b=mtOkg+H41cCrK6Yjbpp8C4kGxdk3ENMoH/7OAYXYEmiBihBDwZPfX3E+WQYIJGxBOtUTLi2LsYKYTJIbjQyduPQ0Azz0KlkN8DeBN5EstVBTO1mlZRi2Ld7SieLo0F/WlrZxYZbxv+jDdDNpUTSbcm8KYzg0le/A6jT/9ImcJmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924664; c=relaxed/simple;
-	bh=3uv/90NBPGOYh60PeL/bnMAOzUV9APwK5o7t5SORifA=;
+	s=arc-20240116; t=1718924680; c=relaxed/simple;
+	bh=Jdx5Pof0QpUZzwBzRZIpyPHYnekiR0WJ97ylwZUG3bs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u8caioorfrCYpDtQL0XZMYrkq/IvHRn4E9YxTQRW85bIcQbZ6mo21xl8Pbr9C/WoevsDeseKBSJ9D+AL+jYij9HXrdwugsMitX9D7H+9uKp2oYxNdrJSCubPaKFbqNOBI3BtfjNj1ptDROZUXcfVteeXbY0c0y7UvhDx4QnrB9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uAuDfxlb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JfPD/kBd+v1w+JeEwl3oqorWW4VIZ6gtUoY03W9cHEyF26/oAfIAr2Rypkk0FLHrRr8dyt4H2xkOVXgYqhVaI7xlCWoA45rOCCM+GzzDF98794E0DduZfliJRc+X9YkDADNXb5EYAocENZ467T8aIw6AU4IT0Qhdnkt+VBWcsT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OX7gIO5/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uAuDfxlb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D7D7C2BD10;
-	Thu, 20 Jun 2024 23:04:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OX7gIO5/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 103FBC2BD10;
+	Thu, 20 Jun 2024 23:04:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924664;
-	bh=3uv/90NBPGOYh60PeL/bnMAOzUV9APwK5o7t5SORifA=;
+	s=k20201202; t=1718924680;
+	bh=Jdx5Pof0QpUZzwBzRZIpyPHYnekiR0WJ97ylwZUG3bs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uAuDfxlbkazAZhsKSSj0fUWZzqywFWzp+4zITiL8tedxSB/dlZl4JYOm3748bwJD8
-	 z2zgoqTwKATl43eDu0suMQo6nQr0G7UKlemuaBRl4VsVqxtesq14xnEFZ55GQAe5Dq
-	 ULdpA6eaG0wYm4tpZSFAViRdWYCAnzOYX9x+B99fP9PpCmzRVxFjdykrtPJwAxI9X/
-	 gwGePqwkxqQvcRkOgmgxLtJReXyrREKwwLLkOXdUZAXzq+upgfLONWC63RkxtL+Uxk
-	 qa0zWjEIKn04QQ6PQ9jUq1ogH7puI0pWIYlC5eRjedCBNkBDje4YDZPSjSHOOaLDww
-	 kjiTRXA+4USog==
-Date: Thu, 20 Jun 2024 16:04:23 -0700
-Subject: [PATCH 23/24] xfs: get rid of trivial rename helpers
+	b=OX7gIO5/F4WyzHeBqv8seRPEhuoeBgehmq8Isd/WBdZCuEPXzzrJkDMqe1mOah+bl
+	 Qr2LRL93utQYIcHmzBHh2G0XzDE4OQfPk+Cael2o8cLZUv6wpXLeGt7wPwuCt3Er1O
+	 hCzGb8EckYN1RIuUHaVDj6ngEzcXWkd0C/KkS12hKwj2Ao8xg3ySyD+6vxMdvDVYfn
+	 rj+TIWRiggHjZodx79RNpy/ybzp5MxMrnuoDQAv9HiDdEWB9Jraii6iuJ7GOAN/XAt
+	 BtFRhv2ogQpnanTwhcVKiZZWtkcx135eQEQ/11stwXKYzIqTQEKVMoySl/1LRHRrzU
+	 WzlGpI1zwkXJQ==
+Date: Thu, 20 Jun 2024 16:04:39 -0700
+Subject: [PATCH 24/24] xfs: don't use the incore struct xfs_sb for offsets
+ into struct xfs_dsb
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892418295.3183075.6650817239063763087.stgit@frogsfrogsfrogs>
+Message-ID: <171892418312.3183075.2680579805332636419.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 References: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,115 +47,64 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Get rid of the largely pointless xfs_cross_rename and xfs_finish_rename
-now that we've refactored its parent.
+Currently, the XFS_SB_CRC_OFF macro uses the incore superblock struct
+(xfs_sb) to compute the address of sb_crc within the ondisk superblock
+struct (xfs_dsb).  This is a landmine if we ever change the layout of
+the incore superblock (as we're about to do), so redefine the macro
+to use xfs_dsb to compute the layout of xfs_dsb.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   77 +++++++++-------------------------------------------
- 1 file changed, 14 insertions(+), 63 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |    9 ++++-----
+ fs/xfs/libxfs/xfs_ondisk.h |    1 +
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d79a191ed6068..d73e6d843f85d 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2102,63 +2102,6 @@ xfs_sort_inodes(
- 	}
- }
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 61f51becff4f7..e1bfee0c3b1a8 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -90,8 +90,7 @@ struct xfs_ifork;
+ #define XFSLABEL_MAX			12
  
--static int
--xfs_finish_rename(
--	struct xfs_trans	*tp)
--{
--	/*
--	 * If this is a synchronous mount, make sure that the rename transaction
--	 * goes to disk before returning to the user.
--	 */
--	if (xfs_has_wsync(tp->t_mountp) || xfs_has_dirsync(tp->t_mountp))
--		xfs_trans_set_sync(tp);
--
--	return xfs_trans_commit(tp);
--}
--
--/*
-- * xfs_cross_rename()
-- *
-- * responsible for handling RENAME_EXCHANGE flag in renameat2() syscall
-- */
--STATIC int
--xfs_cross_rename(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*dp1,
--	struct xfs_name		*name1,
--	struct xfs_inode	*ip1,
--	struct xfs_parent_args	*ip1_ppargs,
--	struct xfs_inode	*dp2,
--	struct xfs_name		*name2,
--	struct xfs_inode	*ip2,
--	struct xfs_parent_args	*ip2_ppargs,
--	int			spaceres)
--{
--	struct xfs_dir_update	du1 = {
--		.dp		= dp1,
--		.name		= name1,
--		.ip		= ip1,
--		.ppargs		= ip1_ppargs,
--	};
--	struct xfs_dir_update	du2 = {
--		.dp		= dp2,
--		.name		= name2,
--		.ip		= ip2,
--		.ppargs		= ip2_ppargs,
--	};
--	int			error;
--
--	error = xfs_dir_exchange_children(tp, &du1, &du2, spaceres);
--	if (error)
--		goto out_trans_abort;
--
--	return xfs_finish_rename(tp);
--
--out_trans_abort:
--	xfs_trans_cancel(tp);
--	return error;
--}
+ /*
+- * Superblock - in core version.  Must match the ondisk version below.
+- * Must be padded to 64 bit alignment.
++ * Superblock - in core version.  Must be padded to 64 bit alignment.
+  */
+ typedef struct xfs_sb {
+ 	uint32_t	sb_magicnum;	/* magic number == XFS_SB_MAGIC */
+@@ -178,10 +177,8 @@ typedef struct xfs_sb {
+ 	/* must be padded to 64 bit alignment */
+ } xfs_sb_t;
+ 
+-#define XFS_SB_CRC_OFF		offsetof(struct xfs_sb, sb_crc)
 -
  /*
-  * xfs_rename_alloc_whiteout()
-  *
-@@ -2351,11 +2294,11 @@ xfs_rename(
+- * Superblock - on disk version.  Must match the in core version above.
++ * Superblock - on disk version.
+  * Must be padded to 64 bit alignment.
+  */
+ struct xfs_dsb {
+@@ -265,6 +262,8 @@ struct xfs_dsb {
+ 	/* must be padded to 64 bit alignment */
+ };
  
- 	/* RENAME_EXCHANGE is unique from here on. */
- 	if (flags & RENAME_EXCHANGE) {
--		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
--				du_src.ppargs, target_dp, target_name,
--				target_ip, du_tgt.ppargs, spaceres);
--		nospace_error = 0;
--		goto out_unlock;
-+		error = xfs_dir_exchange_children(tp, &du_src, &du_tgt,
-+				spaceres);
-+		if (error)
-+			goto out_trans_cancel;
-+		goto out_commit;
- 	}
- 
- 	/*
-@@ -2433,7 +2376,15 @@ xfs_rename(
- 		VFS_I(du_wip.ip)->i_state &= ~I_LINKABLE;
- 	}
- 
--	error = xfs_finish_rename(tp);
-+out_commit:
-+	/*
-+	 * If this is a synchronous mount, make sure that the rename
-+	 * transaction goes to disk before returning to the user.
-+	 */
-+	if (xfs_has_wsync(tp->t_mountp) || xfs_has_dirsync(tp->t_mountp))
-+		xfs_trans_set_sync(tp);
++#define XFS_SB_CRC_OFF		offsetof(struct xfs_dsb, sb_crc)
 +
-+	error = xfs_trans_commit(tp);
- 	nospace_error = 0;
- 	goto out_unlock;
+ /*
+  * Misc. Flags - warning - these will be cleared by xfs_repair unless
+  * a feature bit is set when the flag is used.
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index e8cdd77d03fa8..23c133fd36f5b 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -85,6 +85,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+ 	 */
  
++	XFS_CHECK_OFFSET(struct xfs_dsb, sb_crc,		224);
+ 	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
+ 	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
+ 	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
 
