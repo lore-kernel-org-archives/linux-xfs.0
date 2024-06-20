@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AC9F6BB58;
-	Thu, 20 Jun 2024 20:57:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BBD374E25;
+	Thu, 20 Jun 2024 20:58:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718917079; cv=none; b=Vd8Amm9TITRxula23zBeKzBbwsg39JvUjD+fo5N6X+sKpVx2kULJ+MKr20xhTMFGQ5pO3SVcnsdZiXOEOHxwOMxmmNlcP6RwbLj5s5qyDLhzMJqRAY/mtSLQdDfS4kI5Jlmcxx0Q7i0kSlMXIapdE+imlZZ5G0QmujN0vo5lI1M=
+	t=1718917094; cv=none; b=oVob7UiINyXggF/p82KT8nNiLM8X2OS+fdZN06gaYLFqcPcEyVGVAvyi8Ajw2ryplwcAmSrvqQMOq3HnLayc1b7DVRt5L46vRGjeCXgBdtiUha8an5Wg5HEN1nE09DkbkSnsSGCegi7fRxnk3tQm7KSfhGGih0+7d0aCvvYrj6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718917079; c=relaxed/simple;
-	bh=cBn6zD2gwi6O3iHZGfgj6C7EYqbk/x9FJpyavpGY0N8=;
+	s=arc-20240116; t=1718917094; c=relaxed/simple;
+	bh=Za9AEA4uAeuyk09l4ZP59WjqUqJL0iO/BSD6VL2TI/8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fzZqobCO7T6ydoM/jBSkcC+G7NsZf1ZFrju/J+e2fYinJTLRgz2t0IsgN56Egp9lqlp5s9oM9B3jk9FA1e7on0SgyLWRMehGsx9IlG7ZGJbADw85JpMQwhFgzCXGDcqPUZvrUwmTUHV1+TuB4Qb0tDHqJr3jKWq/Dh6JJesYAcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LuKZkJV2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JORgmoy2y2SpDkQvZGq/bxO+KHBjZhsZSgrs8kKqxegeB0b/HUNaj2TjL+WmI6VlpRIF7mwlsWuA7UAYjt2PVdtdUM1EG6eoDiWXZi29iWfVcgHIko0EPRohhzBzI9TSrMnnmw5wtZ4ZLcYBLtRs7egzYcvMRBozpM71Yd8D6Bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BcgnrWak; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LuKZkJV2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6723C2BD10;
-	Thu, 20 Jun 2024 20:57:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BcgnrWak"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67D7AC2BD10;
+	Thu, 20 Jun 2024 20:58:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718917078;
-	bh=cBn6zD2gwi6O3iHZGfgj6C7EYqbk/x9FJpyavpGY0N8=;
+	s=k20201202; t=1718917094;
+	bh=Za9AEA4uAeuyk09l4ZP59WjqUqJL0iO/BSD6VL2TI/8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LuKZkJV2pBwWGNBJLm5nBgx8tKvmr3l1CPpOR1qVz5qGVXgNGWNbl6PeFJBWV/2Ci
-	 bkEAxnpktsZD3Ke43Hh9M12L8/HydyV/nwaavlCmVPiaR7qJErmBs9RZ0mpAOzt8oa
-	 FPEoUs4NK4jksFi9vwn2QFexApDhmJe7g0ytNjDYuxiUSX3/0nVXQl632ChaDjqf4O
-	 nKRXEDNDXS6mT1gvMNuykuCJu1cqPNTsKya9Mskx1QyA7L2DeRanbctxNlI4UcVFBy
-	 GtMFXn6z3c9yJtZZ22/QzP66C5n7PeMegAJAEE0BkRXY7o8zFowlaAYEIUvFvXBmLL
-	 GQDSYjwMAYCcQ==
-Date: Thu, 20 Jun 2024 13:57:58 -0700
-Subject: [PATCH 04/11] populate: create hardlinks for parent pointers
+	b=BcgnrWakFsSZEne19ea6TKcpesgnitIa6NLiEepTCNVDIQD3TYQ/0nZAms6yBvTHP
+	 VN7rkzxplMU2tzgvSE3JVgBMdZwmxXxvczs1HUpske/yEEvYYOHXWYwcF5rhIdlCnD
+	 tqHbw3beNzdNZtFQwgBWaqn6H9/ereOwdWh5LusKKg6y+Ne9UnAA/yLjzEiP5P3U1B
+	 7BywYj3ChfMo79H5YtpgVI6XRPdMv3EwaGeh9HlbUSZ8Nk44A0oNE7f09jTFXy5rfe
+	 JN9FK25i7lghMZmu4dGA77ENFGIL1M+TV3XH2ho3gY7zPkc82ur+GJUmE9iVPV9t/I
+	 2n2Ot6n9SaEnQ==
+Date: Thu, 20 Jun 2024 13:58:13 -0700
+Subject: [PATCH 05/11] xfs/021: adapt golden output files for parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org,
  allison.henderson@oracle.com, catherine.hoang@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171891669701.3035255.7311693728768644513.stgit@frogsfrogsfrogs>
+Message-ID: <171891669717.3035255.10688612555103531295.stgit@frogsfrogsfrogs>
 In-Reply-To: <171891669626.3035255.15795876594098866722.stgit@frogsfrogsfrogs>
 References: <171891669626.3035255.15795876594098866722.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,109 +48,169 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create some hardlinked files so that we can exercise parent pointers.
+Parent pointers change the xattr structure dramatically, so fix this
+test to handle them.  For the most part we can get away with filtering
+out the parent pointer fields (which xfs_db decodes for us), but the
+namelen/valuelen/attr_filter fields still show through.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- common/populate |   42 ++++++++++++++++++++++++++++++++++++++++++
- src/popdir.pl   |   11 +++++++++++
- 2 files changed, 53 insertions(+)
+ common/rc                 |    4 +++
+ tests/xfs/021             |   15 +++++++++--
+ tests/xfs/021.cfg         |    1 +
+ tests/xfs/021.out.default |    0 
+ tests/xfs/021.out.parent  |   64 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 82 insertions(+), 2 deletions(-)
+ create mode 100644 tests/xfs/021.cfg
+ rename tests/xfs/{021.out => 021.out.default} (100%)
+ create mode 100644 tests/xfs/021.out.parent
 
 
-diff --git a/common/populate b/common/populate
-index 15f8055c2c..9fda19df06 100644
---- a/common/populate
-+++ b/common/populate
-@@ -464,6 +464,48 @@ _scratch_xfs_populate() {
- 		cp --reflink=always "${SCRATCH_MNT}/REFCOUNTBT" "${SCRATCH_MNT}/REFCOUNTBT2"
- 	fi
+diff --git a/common/rc b/common/rc
+index 9e69af1527..ba26fda6e6 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3472,6 +3472,8 @@ _get_os_name()
  
-+	# Parent pointers
-+	is_pptr="$(_xfs_has_feature "$SCRATCH_MNT" parent -v)"
-+	if [ $is_pptr -gt 0 ]; then
-+		echo "+ parent pointers"
+ _link_out_file_named()
+ {
++	test -n "$seqfull" || _fail "need to set seqfull"
 +
-+		# Create a couple of parent pointers
-+		__populate_create_dir "${SCRATCH_MNT}/PPTRS" 1 '' \
-+			--hardlink --format "two_%d"
-+
-+		# Create one xattr leaf block of parent pointers
-+		nr="$((blksz * 2 / 16))"
-+		__populate_create_dir "${SCRATCH_MNT}/PPTRS" ${nr} '' \
-+			--hardlink --format "many%04d"
-+
-+		# Create multiple xattr leaf blocks of large parent pointers
-+		nr="$((blksz * 16 / 16))"
-+		__populate_create_dir "${SCRATCH_MNT}/PPTRS" ${nr} '' \
-+			--hardlink --format "y%0254d"
-+
-+		# Create multiple paths to a file
-+		local moof="${SCRATCH_MNT}/PPTRS/moofile"
-+		touch "${moof}"
-+		for ((i = 0; i < 4; i++)); do
-+			mkdir -p "${SCRATCH_MNT}/PPTRS/SUB${i}"
-+			ln "${moof}" "${SCRATCH_MNT}/PPTRS/SUB${i}/moofile"
-+		done
-+
-+		# Create parent pointers of various lengths
-+		touch "${SCRATCH_MNT}/PPTRS/vlength"
-+		local len_len
-+		local tst
-+		local fname
-+		ln "${SCRATCH_MNT}/PPTRS/vlength" "${SCRATCH_MNT}/PPTRS/b"
-+		for len in 32 64 96 128 160 192 224 250 255; do
-+			len_len="${#len}"
-+			tst="$(perl -e "print \"b\" x (${len} - (${len_len} + 1))")"
-+			fname="v${tst}${len}"
-+			ln "${SCRATCH_MNT}/PPTRS/vlength" \
-+				"${SCRATCH_MNT}/PPTRS/${fname}"
-+		done
-+	fi
-+
- 	# Copy some real files (xfs tests, I guess...)
- 	echo "+ real files"
- 	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
-diff --git a/src/popdir.pl b/src/popdir.pl
-index e89095aafe..0104957a3c 100755
---- a/src/popdir.pl
-+++ b/src/popdir.pl
-@@ -17,6 +17,7 @@ GetOptions("start=i" => \$start,
- 	   "dir=s" => \$dir,
- 	   "remove!" => \$remove,
- 	   "help!" => \$help,
-+	   "hardlink!" => \$hardlink,
- 	   "verbose!" => \$verbose);
+ 	local features=$2
+ 	local suffix=$(FEATURES="$features" perl -e '
+ 		my %feathash;
+@@ -3507,6 +3509,8 @@ _link_out_file()
+ {
+ 	local features
  
- 
-@@ -35,6 +36,7 @@ Options:
-   --format=str      printf formatting string for file name ("%08d")
-   --verbose         verbose output
-   --help            this help screen
-+  --hardlink        hardlink subsequent files to the first one created
- EOF
-   exit(1) unless defined $help;
-   # otherwise...
-@@ -56,12 +58,21 @@ if ($file_pct < 0) {
- 	$file_pct = 100;
- }
- 
-+if ($hardlink) {
-+	$file_pct = 100;
-+	$link_fname = sprintf($format, $start);
-+}
++	test -n "$seqfull" || _fail "need to set seqfull"
 +
- for ($i = $start; $i <= $end; $i += $incr) {
- 	$fname = sprintf($format, $i);
+ 	if [ $# -eq 0 ]; then
+ 		features="$(_get_os_name),$FSTYP"
+ 		if [ -n "$MOUNT_OPTIONS" ]; then
+diff --git a/tests/xfs/021 b/tests/xfs/021
+index 9432e2acb0..ef307fc064 100755
+--- a/tests/xfs/021
++++ b/tests/xfs/021
+@@ -67,6 +67,13 @@ _scratch_mkfs_xfs >/dev/null \
+ echo "*** mount FS"
+ _scratch_mount
  
- 	if ($remove) {
- 		$verbose && print "rm $fname\n";
- 		unlink($fname) or rmdir($fname) or die("unlink $fname");
-+	} elsif ($hardlink && $i > $start) {
-+		# hardlink everything after the first file
-+		$verbose && print "ln $link_fname $fname\n";
-+		link $link_fname, $fname;
- 	} elsif (($i % 100) < $file_pct) {
- 		# create a file
- 		$verbose && print "touch $fname\n";
++seqfull=$0
++if _xfs_has_feature $SCRATCH_MNT parent; then
++	_link_out_file "parent"
++else
++	_link_out_file ""
++fi
++
+ testfile=$SCRATCH_MNT/testfile
+ echo "*** make test file 1"
+ 
+@@ -108,7 +115,10 @@ _scratch_unmount >>$seqres.full 2>&1 \
+ echo "*** dump attributes (1)"
+ 
+ _scratch_xfs_db -r -c "inode $inum_1" -c "print a.sfattr"  | \
+-	sed -e '/secure = /d' | sed -e '/parent = /d'
++	perl -ne '
++/\.secure/ && next;
++/\.parent/ && next;
++	print unless /^\d+:\[.*/;'
+ 
+ echo "*** dump attributes (2)"
+ 
+@@ -124,10 +134,11 @@ s/info.hdr/info/;
+ /hdr.info.uuid/ && next;
+ /hdr.info.lsn/ && next;
+ /hdr.info.owner/ && next;
++/\.parent/ && next;
+ s/^(hdr.info.magic =) 0x3bee/\1 0xfbee/;
+ s/^(hdr.firstused =) (\d+)/\1 FIRSTUSED/;
+ s/^(hdr.freemap\[0-2] = \[base,size]).*/\1 [FREEMAP..]/;
+-s/^(entries\[0-2] = \[hashval,nameidx,incomplete,root,local]).*/\1 [ENTRIES..]/;
++s/^(entries\[0-[23]] = \[hashval,nameidx,incomplete,root,local]).*/\1 [ENTRIES..]/;
+ 	print unless /^\d+:\[.*/;'
+ 
+ echo "*** done"
+diff --git a/tests/xfs/021.cfg b/tests/xfs/021.cfg
+new file mode 100644
+index 0000000000..73b127260c
+--- /dev/null
++++ b/tests/xfs/021.cfg
+@@ -0,0 +1 @@
++parent: parent
+diff --git a/tests/xfs/021.out b/tests/xfs/021.out.default
+similarity index 100%
+rename from tests/xfs/021.out
+rename to tests/xfs/021.out.default
+diff --git a/tests/xfs/021.out.parent b/tests/xfs/021.out.parent
+new file mode 100644
+index 0000000000..34f120c713
+--- /dev/null
++++ b/tests/xfs/021.out.parent
+@@ -0,0 +1,64 @@
++QA output created by 021
++*** mkfs
++*** mount FS
++*** make test file 1
++# file: <TESTFILE>.1
++user.a1
++user.a2--
++
++*** make test file 2
++1+0 records in
++1+0 records out
++# file: <TESTFILE>.2
++user.a1
++user.a2-----
++user.a3
++
++Attribute "a3" had a 65535 byte value for <TESTFILE>.2:
++size of attr value = 65536
++
++*** unmount FS
++*** dump attributes (1)
++a.sfattr.hdr.totsize = 49
++a.sfattr.hdr.count = 3
++a.sfattr.list[0].namelen = 10
++a.sfattr.list[0].valuelen = 12
++a.sfattr.list[0].root = 0
++a.sfattr.list[0].name = "testfile.1"
++a.sfattr.list[1].namelen = 2
++a.sfattr.list[1].valuelen = 3
++a.sfattr.list[1].root = 0
++a.sfattr.list[1].name = "a1"
++a.sfattr.list[1].value = "v1\d"
++a.sfattr.list[2].namelen = 4
++a.sfattr.list[2].valuelen = 5
++a.sfattr.list[2].root = 0
++a.sfattr.list[2].name = "a2--"
++a.sfattr.list[2].value = "v2--\d"
++*** dump attributes (2)
++hdr.info.forw = 0
++hdr.info.back = 0
++hdr.info.magic = 0xfbee
++hdr.count = 4
++hdr.usedbytes = 80
++hdr.firstused = FIRSTUSED
++hdr.holes = 0
++hdr.freemap[0-2] = [base,size] [FREEMAP..]
++entries[0-3] = [hashval,nameidx,incomplete,root,local] [ENTRIES..]
++nvlist[0].valuelen = 8
++nvlist[0].namelen = 2
++nvlist[0].name = "a1"
++nvlist[0].value = "value_1\d"
++nvlist[1].valueblk = 0x1
++nvlist[1].valuelen = 65535
++nvlist[1].namelen = 2
++nvlist[1].name = "a3"
++nvlist[2].valuelen = 8
++nvlist[2].namelen = 7
++nvlist[2].name = "a2-----"
++nvlist[2].value = "value_2\d"
++nvlist[3].valuelen = 12
++nvlist[3].namelen = 10
++nvlist[3].name = "testfile.2"
++*** done
++*** unmount
 
