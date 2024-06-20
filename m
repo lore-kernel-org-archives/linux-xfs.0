@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC0E313777F
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:13:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 729B914291E
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:13:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718925220; cv=none; b=ZGkO/05CsygaJGZPhxLpYCLLALrXeSjSTOq9ROTOFj+8d+2fEcqkpF/UdZvAJgaSFgUztH+CLDbmyu3rHAlJcfklIHEnbPD4opcmkJKcKlcNmfC/KK+3WOYnAD36I52vIeB1Mg204RyY5vift0Jq8rSadkqRlONlS3T0DZnlC8E=
+	t=1718925236; cv=none; b=q2ukX/brtAtyIfl6qkFmRaYWyFrj7z1073XktPIoURdm/ArkybbTtH6Lv/veRpBj0BK+oHfhgeK9mFkpGwvrvZC9jou1hKPLIdr1sCj50aFTO3FbAHM4E2NuyfhTUuFq4XGdM7mlhRpEpQB30284/OHaDz42rkuYO/2Xc+KZ9JI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718925220; c=relaxed/simple;
-	bh=PWSqt5aRXt22+xVPnrevZ5FuqnkmI/rrl5r9cIFLhpY=;
+	s=arc-20240116; t=1718925236; c=relaxed/simple;
+	bh=CiGnqyRdeOrYVGB3i1PZbKS029WkUukuxgSpx4e8nbs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NmgHWW70d6NSi2C8nK/SkuWzlAQYJAfQooBJXTZY3Z5lywBqcgUYOLYjS6/XyF5wXACbbzkGe8qb+yrCbvnr3XZNARBBwigfoktTuzkeu66y4LGtXefUDBu6Y+Jygf6yJvhGXbEmSbHPeBe/aeZzYClqYyqx5JPkzh8S0o2lkx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TJIDsJSh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VrAbUfC+/AHDEdGvuoLGFlAGiKgpZ6IgOd48sS/10lz26x43sv/xIvUUvLicEHrFp5hPpp+GsPLLQtwhQSbh+Mb5HulA7/Pd70zxZx8/pPxBTryy0yeWIt5VF6ta5PGfrbv2ksZeyKCcWNL/RU2RaXgS0q3maZy+12/ANHFcIJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TsbUkz2w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TJIDsJSh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E4F6C2BD10;
-	Thu, 20 Jun 2024 23:13:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TsbUkz2w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3AAAC2BD10;
+	Thu, 20 Jun 2024 23:13:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718925220;
-	bh=PWSqt5aRXt22+xVPnrevZ5FuqnkmI/rrl5r9cIFLhpY=;
+	s=k20201202; t=1718925236;
+	bh=CiGnqyRdeOrYVGB3i1PZbKS029WkUukuxgSpx4e8nbs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TJIDsJShA3I8JBB1Axfc7SLBkw2VD2VnLecqXxP2TBI9qxV46u+dUQZtpgVfNrl/f
-	 3f31Y0MWo3pLeLXX0CEv2UzeYRF8XtsPNe7EuLeTSZjBl24jsbz6oVZb8Df0Nr7teG
-	 Gj7n2oaq1RrE3J1+lMiaS6N4IOWIJ0dZHxpg54pzkQWQCVcTf4JQxZYNwfY7BBqbTj
-	 fFY5uRdXT76Yr0NKkla7hWTxomH5nOXzHWDUmYkGZzlZ/jp2YhfBsEcnRJgx+Mpvxf
-	 XwmeKVKUAA57m5yd+ajaXmazpt5kzEn20TyW89yHeEGSDPqlfCBMj1aUOAKkIPPHlr
-	 vQI0Vt/6Qvubg==
-Date: Thu, 20 Jun 2024 16:13:39 -0700
-Subject: [PATCH 1/6] xfs: fix freeing speculative preallocations for
- preallocated files
+	b=TsbUkz2w0Z0mZAGpzT4eV0M6ram4xz2VB5Uc0NkBOS9+MXl4yyo59KxCrQcB2Hue9
+	 vCoqNPpB7kYZ0zqElKIDtl3Nu7s7sqneQwaB6COt4dE0bxdEJRytnUB2Cp9ANP1AGh
+	 3Ydsm3WjEcoYd+SvYdIcI1TvXsWrHqlKiwVN7C/GveIpJunfkwmTQRBuA7QyfxLuZR
+	 I+YDLB4WQ6i7Xv2wnt7yTDzlpnVfRtGgDV2OzNuL06ChOUnrjEtL3XwEe59YAZLqW8
+	 66d+jqZp4diN5h72DHAWrhXYjytYXu2LcgoVGVSL9MDCr3RF9mDVDJB73+ws6tnS2B
+	 RqZ4y4KjzV0aQ==
+Date: Thu, 20 Jun 2024 16:13:55 -0700
+Subject: [PATCH 2/6] xfs: restrict when we try to align cow fork delalloc to
+ cowextsz hints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: hch@lst.de, chandanbabu@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171892459249.3192151.18355050838100323730.stgit@frogsfrogsfrogs>
+Message-ID: <171892459267.3192151.207856272423876675.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892459218.3192151.10366641366672957906.stgit@frogsfrogsfrogs>
 References: <171892459218.3192151.10366641366672957906.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,169 +45,169 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-xfs_can_free_eofblocks returns false for files that have persistent
-preallocations unless the force flag is passed and there are delayed
-blocks.  This means it won't free delalloc reservations for files
-with persistent preallocations unless the force flag is set, and it
-will also free the persistent preallocations if the force flag is
-set and the file happens to have delayed allocations.
+xfs/205 produces the following failure when always_cow is enabled:
 
-Both of these are bad, so do away with the force flag and always free
-only post-EOF delayed allocations for files with the XFS_DIFLAG_PREALLOC
-or APPEND flags set.
+  --- a/tests/xfs/205.out	2024-02-28 16:20:24.437887970 -0800
+  +++ b/tests/xfs/205.out.bad	2024-06-03 21:13:40.584000000 -0700
+  @@ -1,4 +1,5 @@
+   QA output created by 205
+   *** one file
+  +   !!! disk full (expected)
+   *** one file, a few bytes at a time
+   *** done
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+This is the result of overly aggressive attempts to align cow fork
+delalloc reservations to the CoW extent size hint.  Looking at the trace
+data, we're trying to append a single fsblock to the "fred" file.
+Trying to create a speculative post-eof reservation fails because
+there's not enough space.
+
+We then set @prealloc_blocks to zero and try again, but the cowextsz
+alignment code triggers, which expands our request for a 1-fsblock
+reservation into a 39-block reservation.  There's not enough space for
+that, so the whole write fails with ENOSPC even though there's
+sufficient space in the filesystem to allocate the single block that we
+need to land the write.
+
+There are two things wrong here -- first, we shouldn't be attempting
+speculative preallocations beyond what was requested when we're low on
+space.  Second, if we've already computed a posteof preallocation, we
+shouldn't bother trying to align that to the cowextsize hint.
+
+Fix both of these problems by adding a flag that only enables the
+expansion of the delalloc reservation to the cowextsize if we're doing a
+non-extending write, and only if we're not doing an ENOSPC retry.  This
+requires us to move the ENOSPC retry logic to xfs_bmapi_reserve_delalloc.
+
+I probably should have caught this six years ago when 6ca30729c206d was
+being reviewed, but oh well.  Update the comments to reflect what the
+code does now.
+
+Fixes: 6ca30729c206d ("xfs: bmap code cleanup")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |   30 ++++++++++++++++++++++--------
- fs/xfs/xfs_bmap_util.h |    2 +-
- fs/xfs/xfs_icache.c    |    2 +-
- fs/xfs/xfs_inode.c     |   14 ++++----------
- 4 files changed, 28 insertions(+), 20 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |   31 +++++++++++++++++++++++++++----
+ fs/xfs/xfs_iomap.c       |   34 ++++++++++++----------------------
+ 2 files changed, 39 insertions(+), 26 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index ac2e77ebb54c..a4d9fbc21b83 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -486,13 +486,11 @@ xfs_bmap_punch_delalloc_range(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index c101cf266bc4..6af6f744fdd6 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4058,20 +4058,32 @@ xfs_bmapi_reserve_delalloc(
+ 	xfs_extlen_t		indlen;
+ 	uint64_t		fdblocks;
+ 	int			error;
+-	xfs_fileoff_t		aoff = off;
++	xfs_fileoff_t		aoff;
++	bool			use_cowextszhint =
++					whichfork == XFS_COW_FORK && !prealloc;
  
- /*
-  * Test whether it is appropriate to check an inode for and free post EOF
-- * blocks. The 'force' parameter determines whether we should also consider
-- * regular files that are marked preallocated or append-only.
-+ * blocks.
-  */
- bool
- xfs_can_free_eofblocks(
--	struct xfs_inode	*ip,
--	bool			force)
-+	struct xfs_inode	*ip)
- {
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -526,11 +524,11 @@ xfs_can_free_eofblocks(
- 		return false;
- 
++retry:
  	/*
--	 * Do not free real preallocated or append-only files unless the file
--	 * has delalloc blocks and we are forced to remove them.
-+	 * Only free real extents for inodes with persistent preallocations or
-+	 * the append-only flag.
+ 	 * Cap the alloc length. Keep track of prealloc so we know whether to
+ 	 * tag the inode before we return.
  	 */
- 	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
--		if (!force || ip->i_delayed_blks == 0)
-+		if (ip->i_delayed_blks == 0)
- 			return false;
++	aoff = off;
+ 	alen = XFS_FILBLKS_MIN(len + prealloc, XFS_MAX_BMBT_EXTLEN);
+ 	if (!eof)
+ 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
+ 	if (prealloc && alen >= len)
+ 		prealloc = alen - len;
  
- 	/*
-@@ -584,6 +582,22 @@ xfs_free_eofblocks(
- 	/* Wait on dio to ensure i_size has settled. */
- 	inode_dio_wait(VFS_I(ip));
- 
+-	/* Figure out the extent size, adjust alen */
+-	if (whichfork == XFS_COW_FORK) {
 +	/*
-+	 * For preallocated files only free delayed allocations.
++	 * If we're targetting the COW fork but aren't creating a speculative
++	 * posteof preallocation, try to expand the reservation to align with
++	 * the COW extent size hint if there's sufficient free space.
 +	 *
-+	 * Note that this means we also leave speculative preallocations in
-+	 * place for preallocated files.
++	 * Unlike the data fork, the CoW cancellation functions will free all
++	 * the reservations at inactivation, so we don't require that every
++	 * delalloc reservation have a dirty pagecache.
 +	 */
-+	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
-+		if (ip->i_delayed_blks) {
-+			xfs_bmap_punch_delalloc_range(ip,
-+				round_up(XFS_ISIZE(ip), mp->m_sb.sb_blocksize),
-+				LLONG_MAX);
-+		}
-+		xfs_inode_clear_eofblocks_tag(ip);
-+		return 0;
-+	}
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
- 	if (error) {
- 		ASSERT(xfs_is_shutdown(mp));
-@@ -891,7 +905,7 @@ xfs_prepare_shift(
- 	 * Trim eofblocks to avoid shifting uninitialized post-eof preallocation
- 	 * into the accessible region of the file.
++	if (use_cowextszhint) {
+ 		struct xfs_bmbt_irec	prev;
+ 		xfs_extlen_t		extsz = xfs_get_cowextsz_hint(ip);
+ 
+@@ -4090,7 +4102,7 @@ xfs_bmapi_reserve_delalloc(
  	 */
--	if (xfs_can_free_eofblocks(ip, true)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		error = xfs_free_eofblocks(ip);
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 51f84d8ff372..eb0895bfb9da 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -63,7 +63,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- 
- /* EOF block manipulation functions */
--bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-+bool	xfs_can_free_eofblocks(struct xfs_inode *ip);
- int	xfs_free_eofblocks(struct xfs_inode *ip);
- 
- int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0953163a2d84..9967334ea99f 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1155,7 +1155,7 @@ xfs_inode_free_eofblocks(
- 	}
- 	*lockflags |= XFS_IOLOCK_EXCL;
- 
--	if (xfs_can_free_eofblocks(ip, false))
-+	if (xfs_can_free_eofblocks(ip))
- 		return xfs_free_eofblocks(ip);
- 
- 	/* inode could be preallocated or append-only */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 58fb7a5062e1..b699fa6ee3b6 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1595,7 +1595,7 @@ xfs_release(
- 	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
- 		return 0;
- 
--	if (xfs_can_free_eofblocks(ip, false)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		/*
- 		 * Check if the inode is being opened, written and closed
- 		 * frequently and we have delayed allocation blocks outstanding
-@@ -1856,15 +1856,13 @@ xfs_inode_needs_inactive(
+ 	error = xfs_quota_reserve_blkres(ip, alen);
+ 	if (error)
+-		return error;
++		goto out;
  
  	/*
- 	 * This file isn't being freed, so check if there are post-eof blocks
--	 * to free.  @force is true because we are evicting an inode from the
--	 * cache.  Post-eof blocks must be freed, lest we end up with broken
--	 * free space accounting.
-+	 * to free.
- 	 *
- 	 * Note: don't bother with iolock here since lockdep complains about
- 	 * acquiring it in reclaim context. We have the only reference to the
- 	 * inode at this point anyways.
- 	 */
--	return xfs_can_free_eofblocks(ip, true);
-+	return xfs_can_free_eofblocks(ip);
+ 	 * Split changing sb for alen and indlen since they could be coming
+@@ -4140,6 +4152,17 @@ xfs_bmapi_reserve_delalloc(
+ out_unreserve_quota:
+ 	if (XFS_IS_QUOTA_ON(mp))
+ 		xfs_quota_unreserve_blkres(ip, alen);
++out:
++	if (error == -ENOSPC || error == -EDQUOT) {
++		trace_xfs_delalloc_enospc(ip, off, len);
++
++		if (prealloc || use_cowextszhint) {
++			/* retry without any preallocation */
++			use_cowextszhint = false;
++			prealloc = 0;
++			goto retry;
++		}
++	}
+ 	return error;
  }
  
- /*
-@@ -1947,15 +1945,11 @@ xfs_inactive(
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 378342673925..414903885ab9 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1148,33 +1148,23 @@ xfs_buffered_write_iomap_begin(
+ 		}
+ 	}
  
- 	if (VFS_I(ip)->i_nlink != 0) {
- 		/*
--		 * force is true because we are evicting an inode from the
--		 * cache. Post-eof blocks must be freed, lest we end up with
--		 * broken free space accounting.
--		 *
- 		 * Note: don't bother with iolock here since lockdep complains
- 		 * about acquiring it in reclaim context. We have the only
- 		 * reference to the inode at this point anyways.
- 		 */
--		if (xfs_can_free_eofblocks(ip, true))
-+		if (xfs_can_free_eofblocks(ip))
- 			error = xfs_free_eofblocks(ip);
+-retry:
+-	error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
+-			end_fsb - offset_fsb, prealloc_blocks,
+-			allocfork == XFS_DATA_FORK ? &imap : &cmap,
+-			allocfork == XFS_DATA_FORK ? &icur : &ccur,
+-			allocfork == XFS_DATA_FORK ? eof : cow_eof);
+-	switch (error) {
+-	case 0:
+-		break;
+-	case -ENOSPC:
+-	case -EDQUOT:
+-		/* retry without any preallocation */
+-		trace_xfs_delalloc_enospc(ip, offset, count);
+-		if (prealloc_blocks) {
+-			prealloc_blocks = 0;
+-			goto retry;
+-		}
+-		fallthrough;
+-	default:
+-		goto out_unlock;
+-	}
+-
+ 	if (allocfork == XFS_COW_FORK) {
++		error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
++				end_fsb - offset_fsb, prealloc_blocks, &cmap,
++				&ccur, cow_eof);
++		if (error)
++			goto out_unlock;
++
+ 		trace_xfs_iomap_alloc(ip, offset, count, allocfork, &cmap);
+ 		goto found_cow;
+ 	}
  
- 		goto out;
++	error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
++			end_fsb - offset_fsb, prealloc_blocks, &imap, &icur,
++			eof);
++	if (error)
++		goto out_unlock;
++
+ 	/*
+ 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
+ 	 * them out if the write happens to fail.
 
