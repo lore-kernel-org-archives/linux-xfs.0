@@ -1,38 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36D7E2BAF3;
-	Thu, 20 Jun 2024 20:52:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C32C62BAF3;
+	Thu, 20 Jun 2024 20:53:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718916766; cv=none; b=sD5kabgfCVLqp1tMLS9QFakdZBCyfnU/M8IkHV9tdW1dixxVYPIhKm7Ww9ntgVE4tuq3bS7K12rBGDhqwfpKC7BcFLhCWotlOtDOvm2ZZJZ28vxksAEYMvy1UfwJCUhKuwE74ong/AQBhDv8zo63wDd94jMv/TtQZCZwvfxnNHc=
+	t=1718916781; cv=none; b=aRxexEmn4ixdKMUsFhVZw/R9xopkwqAYLhvlTRDD3WTa5D97R0jVoqFUzVA48yfobQzg8MSsyVzxQeseSryw6LxTC6rEr+Z5V3kONEPhgWL7uwy5FsXNUxbtG3Ho2/zre1l7AYn/YZz/qovTZseKzt3bXowZMI3ZfjQys6LULfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718916766; c=relaxed/simple;
-	bh=MuvWHe6OEO+lg+sJwo05GpEuAV4k50LRxR3fr63a2q4=;
+	s=arc-20240116; t=1718916781; c=relaxed/simple;
+	bh=r9lm1+2e+kfy1IjXBgbW103WzQYuVX7KxS0VP8w7X6I=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HlGonriJ8ohvkX9SdoDTCKuhe4vhhfoW9wMN1DO1NuJszTzZE+DT09f8wLbSMDwAGbOu2NKp8zVXAFerzCFR5pImQ3/Xn1rncUhdOwrRP52NWuJE4NDO4x5UiWDxdZfKW+4DeWtp5CyoRJUU101BbpWcxIzD998Zpp+9Bvo1NGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WKUxl1sH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WxDY+B3V+dQD0hUf2eqCkHTejSVng1zHBIJ9gK/9DkpxO7PCHQYMJY1Kr8FD+tLG7BQOiX7m1XhoWTwje6dpH4MC4je6bng8YDnYmq7AJQxtI3lTPgxgIf+ejypqC5gqto4rZ1SJlrpJisEneJ9jMqs4Iq28OcsuERkG8Xh42/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ik32ijop; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WKUxl1sH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0E88C2BD10;
-	Thu, 20 Jun 2024 20:52:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ik32ijop"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6115CC2BD10;
+	Thu, 20 Jun 2024 20:53:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718916765;
-	bh=MuvWHe6OEO+lg+sJwo05GpEuAV4k50LRxR3fr63a2q4=;
+	s=k20201202; t=1718916781;
+	bh=r9lm1+2e+kfy1IjXBgbW103WzQYuVX7KxS0VP8w7X6I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WKUxl1sHmVN6bWahcAZ2D9xEdj0gJf6phegUyrh0ECZ7eQWspY+q2k4AbbN+b/FyM
-	 oD6XfYuAZD80iyLQiIdewUoWJew4YoPq5mDUXqWhuLs8AWhjfiO0+AFjtYkACiDX+u
-	 E8lsuOWQ6NISfG8Y10YuefIKPLbirJbVJkO94jvrwKT2CEq4EIz7K+vnpZXy/FePv8
-	 5KUpegN0iFjNcwty9Dv/AHu8Q4Gr4miTPSzxvid6PPC2WSUo182MN6xMAP4jT8XH37
-	 t5xKBucx08U57ArznqvYO75Gn2mQy55mVoSUSJeLzgmDGAN/pcvIUywdeXG+zI7GK2
-	 253TEtbqL/r0w==
-Date: Thu, 20 Jun 2024 13:52:45 -0700
-Subject: [PATCHSET v30.7 2/6] fstests: atomic file updates
+	b=Ik32ijopJtpUhJjhqcy/cNED9Vs+f9znfWRwTn8DCf3rkVn1R+FRy+NpS5KJnMDRT
+	 8Mlx/153GmoFihPR807Obj1NjQXu3vY75cwLshm/vJZKotx8a3IODh3nEJnIFwc6I7
+	 uw1TWCKVzoysFeqVxwLZdS6ZSp2zyKxnakTlq+tL2qtNd+uVasWw65UfcXg6ZMqjjM
+	 zfOXgQdqw7QVvEVTBGmIyywwulJBgnGKz5xEdspMvV9yeYDKKRxLm9C1qs6xC8Whjh
+	 WXa5vLRy0SEJRYdDSr+9KQCd7/Sjn75MEEZemP5s/crnnRI0vqCJCgq7g7yXE22htV
+	 oDgWLP6DUnn4Q==
+Date: Thu, 20 Jun 2024 13:53:00 -0700
+Subject: [PATCHSET v13.6 3/6] fstests: adjust tests for xfs parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <171891669099.3034840.18163174628307465231.stgit@frogsfrogsfrogs>
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Catherine Hoang <catherine.hoang@oracle.com>,
+ fstests@vger.kernel.org, allison.henderson@oracle.com,
+ catherine.hoang@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <171891669626.3035255.15795876594098866722.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240620205017.GC103020@frogsfrogsfrogs>
 References: <20240620205017.GC103020@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,74 +49,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series creates a new XFS_IOC_EXCHANGE_RANGE ioctl to exchange
-ranges of bytes between two files atomically.
+These are the test adjustments that are required for parent pointers.
+There's also a few new tests to ensure that the GETPARENTS ioctl (and
+ file extent can cross an rtgroup boundary.
 
-This new functionality enables data storage programs to stage and commit
-file updates such that reader programs will see either the old contents
-or the new contents in their entirety, with no chance of torn writes.  A
-successful call completion guarantees that the new contents will be seen
-even if the system fails.
-
-The ability to exchange file fork mappings between files in this manner
-is critical to supporting online filesystem repair, which is built upon
-the strategy of constructing a clean copy of a damaged structure and
-committing the new structure into the metadata file atomically.  The
-ioctls exist to facilitate testing of the new functionality and to
-enable future application program designs.
-
-User programs will be able to update files atomically by opening an
-O_TMPFILE, reflinking the source file to it, making whatever updates
-they want to make, and exchange the relevant ranges of the temp file
-with the original file.  If the updates are aligned with the file block
-size, a new (since v2) flag provides for exchanging only the written
-areas.  Note that application software must quiesce writes to the file
-while it stages an atomic update.  This will be addressed by a
-subsequent series.
-
-This mechanism solves the clunkiness of two existing atomic file update
-mechanisms: for O_TRUNC + rewrite, this eliminates the brief period
-where other programs can see an empty file.  For create tempfile +
-rename, the need to copy file attributes and extended attributes for
-each file update is eliminated.
-
-However, this method introduces its own awkwardness -- any program
-initiating an exchange now needs to have a way to signal to other
-programs that the file contents have changed.  For file access mediated
-via read and write, fanotify or inotify are probably sufficient.  For
-mmaped files, that may not be fast enough.
-
-The reference implementation in XFS creates a new log incompat feature
-and log intent items to track high level progress of swapping ranges of
-two files and finish interrupted work if the system goes down.  Sample
-code can be found in the corresponding changes to xfs_io to exercise the
-use case mentioned above.
-
-Note that this function is /not/ the O_DIRECT atomic untorn file writes
-concept that has also been floating around for years.  It is also not
-the RWF_ATOMIC patchset that has been shared.  This RFC is constructed
-entirely in software, which means that there are no limitations other
-than the general filesystem limits.
-
-As a side note, the original motivation behind the kernel functionality
-is online repair of file-based metadata.  The atomic file content
-exchange is implemented as an atomic exchange of file fork mappings,
-which means that we can implement online reconstruction of extended
-attributes and directories by building a new one in another inode and
-exchanging the contents.
-
-Subsequent patchsets adapt the online filesystem repair code to use
-atomic file exchanges.  This enables repair functions to construct a
-clean copy of a directory, xattr information, symbolic links, realtime
-bitmaps, and realtime summary information in a temporary inode.  If this
-completes successfully, the new contents can be committed atomically
-into the inode being repaired.  This is essential to avoid making
-corruption problems worse if the system goes down in the middle of
-running repair.
-
-For userspace, this series also includes the userspace pieces needed to
-test the new functionality, and a sample implementation of atomic file
-updates.
+The best advantage for rtgroups will become evident later when we get to
+adding rmap and reflink to the realtime volume, since the geometry
+constraints are the same for rt groups and AGs.  Hence we can reuse all
+that code directly.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -125,94 +67,65 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=atomic-file-updates
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=atomic-file-updates
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=pptrs
 
 xfsdocs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=atomic-file-updates
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=pptrs
 ---
 Commits in this patchset:
- * misc: split swapext and exchangerange
- * misc: change xfs_io -c swapext to exchangerange
- * generic/709,710: rework these for exchangerange vs. quota testing
- * generic/711,xfs/537: actually fork these tests for exchange-range
- * generic/717: remove obsolete check
- * ltp/{fsstress,fsx}: make the exchangerange naming consistent
- * misc: flip HAVE_XFS_IOC_EXCHANGE_RANGE logic
- * src/fiexchange.h: update XFS_IOC_EXCHANGE_RANGE definitions
- * xfs/122: fix for exchrange conversion
- * xfs/206: screen out exchange-range from golden output
- * exchangerange: make sure that we don't swap unwritten extents unless they're part of a rt extent
+ * generic: test recovery of extended attribute updates
+ * xfs/206: filter out the parent= status from mkfs
+ * xfs/122: update for parent pointers
+ * populate: create hardlinks for parent pointers
+ * xfs/021: adapt golden output files for parent pointers
+ * xfs/{018,191,288}: disable parent pointers for these tests
+ * xfs/306: fix formatting failures with parent pointers
+ * common: add helpers for parent pointer tests
+ * xfs: add parent pointer test
+ * xfs: add multi link parent pointer test
+ * xfs: add parent pointer inject test
 ---
- common/rc              |    2 
- common/xfs             |    2 
- configure.ac           |    2 
- include/builddefs.in   |    2 
- ltp/Makefile           |    4 -
- ltp/fsstress.c         |   34 +++----
- ltp/fsx.c              |   43 +++------
- m4/package_xfslibs.m4  |   15 ++-
- src/Makefile           |    4 -
- src/fiexchange.h       |   84 ++++-------------
- src/global.h           |   12 ++
- src/vfs/Makefile       |    4 -
- src/xfsfind.c          |    1 
- tests/generic/1221     |   45 +++++++++
- tests/generic/1221.out |    2 
- tests/generic/709      |   12 +-
- tests/generic/710      |   14 +--
- tests/generic/710.out  |    2 
- tests/generic/711      |    4 -
- tests/generic/712      |   10 +-
- tests/generic/713      |   42 ++++-----
- tests/generic/713.out  |   38 ++++----
- tests/generic/714      |   40 ++++----
- tests/generic/714.out  |   34 ++++---
- tests/generic/715      |   26 +++--
- tests/generic/715.out  |   14 +--
- tests/generic/716      |    4 -
- tests/generic/717      |   39 ++++----
- tests/generic/717.out  |   32 +++----
- tests/generic/718      |   12 +-
- tests/generic/718.out  |    2 
- tests/generic/719      |    4 -
- tests/generic/720      |   10 +-
- tests/generic/721      |    2 
- tests/generic/722      |    8 +-
- tests/generic/723      |   12 +-
- tests/generic/724      |   10 +-
- tests/generic/725      |    4 -
- tests/generic/726      |    4 -
- tests/generic/727      |    4 -
- tests/xfs/1213         |   73 +++++++++++++++
- tests/xfs/1213.out     |    2 
- tests/xfs/1214         |  232 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1214.out     |    2 
- tests/xfs/1215         |   89 ++++++++++++++++++
- tests/xfs/1215.out     |   13 +++
- tests/xfs/122.out      |    6 +
- tests/xfs/206          |    1 
- tests/xfs/300          |    2 
- tests/xfs/443          |    4 -
- tests/xfs/789          |    4 -
- tests/xfs/790          |   10 +-
- tests/xfs/790.out      |    2 
- tests/xfs/791          |   10 +-
- tests/xfs/791.out      |    2 
- tests/xfs/792          |    4 -
- tests/xfs/795          |    2 
- 57 files changed, 748 insertions(+), 349 deletions(-)
- create mode 100755 tests/generic/1221
- create mode 100644 tests/generic/1221.out
- create mode 100755 tests/xfs/1213
- create mode 100644 tests/xfs/1213.out
- create mode 100755 tests/xfs/1214
- create mode 100644 tests/xfs/1214.out
- create mode 100755 tests/xfs/1215
- create mode 100644 tests/xfs/1215.out
+ common/parent             |  209 +++++++++
+ common/populate           |   42 ++
+ common/rc                 |    7 
+ common/xfs                |   28 +
+ doc/group-names.txt       |    1 
+ src/popdir.pl             |   11 
+ tests/generic/1834        |   93 ++++
+ tests/generic/1834.out    |    2 
+ tests/xfs/018             |    4 
+ tests/xfs/021             |   15 +
+ tests/xfs/021.cfg         |    1 
+ tests/xfs/021.out.default |    0 
+ tests/xfs/021.out.parent  |   64 +++
+ tests/xfs/122.out         |    4 
+ tests/xfs/1851            |  116 +++++
+ tests/xfs/1851.out        |   69 +++
+ tests/xfs/1852            |   69 +++
+ tests/xfs/1852.out        | 1002 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1853            |   85 ++++
+ tests/xfs/1853.out        |   14 +
+ tests/xfs/191             |    3 
+ tests/xfs/206             |    1 
+ tests/xfs/288             |    4 
+ tests/xfs/306             |    9 
+ 24 files changed, 1846 insertions(+), 7 deletions(-)
+ create mode 100644 common/parent
+ create mode 100755 tests/generic/1834
+ create mode 100644 tests/generic/1834.out
+ create mode 100644 tests/xfs/021.cfg
+ rename tests/xfs/{021.out => 021.out.default} (100%)
+ create mode 100644 tests/xfs/021.out.parent
+ create mode 100755 tests/xfs/1851
+ create mode 100644 tests/xfs/1851.out
+ create mode 100755 tests/xfs/1852
+ create mode 100644 tests/xfs/1852.out
+ create mode 100755 tests/xfs/1853
+ create mode 100644 tests/xfs/1853.out
 
