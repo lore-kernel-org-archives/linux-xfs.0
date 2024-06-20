@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB6631494B9
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:01:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BBC2C8FB
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:01:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924477; cv=none; b=d8v37Micw0XkQXPMnhBMK3kmwqtPtElAA5ETEiJFhOGYGetCFiXVTSj2Z1TqYiwtLZZQrRCisXyBMRJOKrGQM/Y8kIy0T5WO3sA/zXzUCx4fXEULL6kgQsOl+2Kq8/Tj7lbuDjzYhaEYNp75S4LuwfchzEhtooNaE2DwHS5X/+0=
+	t=1718924492; cv=none; b=TE6XUjwTMXDpR0siI4APFdM38Y+sdpXTpYib1q5V+ccnI9K+x4SYA4+rFjx8MKFxgJ9DRkfRlu9viwDUgdOaKoM8y8pl3i+bT+R7294OM5bmkEEoAnxqFg/HSMj/KekQosDqNBBi9AShBbHn2mgjvOK4oDyEUl7stDY2Rf5VK5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924477; c=relaxed/simple;
-	bh=zuXFRQE/KdRiQ2SpDZDGE/pEaGGqaVrHySmLCJcTrOE=;
+	s=arc-20240116; t=1718924492; c=relaxed/simple;
+	bh=T6aaSSnnBFWBsxF82yfPMTtNsqkivfUqPVXFYKZ54Ns=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dtO6nFZfeEMrODNm3y6Fbafr9ZrPLga8tLBwjhSI6h5akhez+rVY06dG0ZZFNYYYQAMGgy7LnpnpQOs9mHyGdv0XlfV8Dz7A2UIm2iCvVkyd3YxrgWWPz1bOS/YjhfEDBZaT+eqiO5vNo9GpqGWWZFGZC4GKpM4z8JmvNmrX42M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sfZhYzj4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CUJJj8BJovEHHoX4mI3ynNUF+o9zErzQerW7FJyTmG2u3njeW24C4CbKxRaFor9HrXiYhWRbNJh9nCAcArN9siQRpCABy/etstLdRFzg5KtvmhSLufbsId3Ewp0hic15ajkRm/zlxol49ET58jgoDj4o7UaGh28nYw3VVB1e/Wg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fabK/nnv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sfZhYzj4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C10C8C2BD10;
-	Thu, 20 Jun 2024 23:01:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fabK/nnv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 665C8C2BD10;
+	Thu, 20 Jun 2024 23:01:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924476;
-	bh=zuXFRQE/KdRiQ2SpDZDGE/pEaGGqaVrHySmLCJcTrOE=;
+	s=k20201202; t=1718924492;
+	bh=T6aaSSnnBFWBsxF82yfPMTtNsqkivfUqPVXFYKZ54Ns=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sfZhYzj46nnd8c64cuQ1MkeSu7aZtetLGhxKnwMVwocigpWTx6FVhuujBP9qRN4IR
-	 QDGKD1ClJsrDBl/4zTbAKd/bQRfgpR3U1iIKVQXLfGduPSTAQDLm1+oQ0nLrybz2N0
-	 xW/nsszum3tmHXx+OSOYiU5Rs7NPNUFXX8EbrgvKrNGSJHB3ptFd1EcHRVVo04e/Cc
-	 AYGcjoG4CV4kOqslzUlWruyfUw5d6F1GSqPIxa5gMZUiCQS+qkD6XJ9pXvhfKU0f6G
-	 5B5nYl01GsZiHpTEi9iEvIbzU8dqFfFDjmdkHfC1AEyToMvfYgqwnUpi7LoS7/tVji
-	 LbFZQmXCbEA5A==
-Date: Thu, 20 Jun 2024 16:01:16 -0700
-Subject: [PATCH 11/24] xfs: push xfs_icreate_args creation out of xfs_create*
+	b=fabK/nnvsxzsJlVuxEO93PJTLOIYR3nA2y/uMW9NkteVqUKerkzGl6b56FdukrjVm
+	 5HszZEjkSSRTtZ6L5I50eDxk/JXb7DjaBJkp9FPydZnS506IuVNauQwy18FPCR1v0K
+	 slij/CCodelmyeO/Jgo4rfctGPi3o5zoxm1jfe7ODxFGtyz1YXZCgHotb9oojXdPvw
+	 +3ldcaNgHd2+Uk8a711uEmxLr/LPPnLKB7UqFMGUeGBSJDIjGhcBGdslVRZhw8npn9
+	 C+u4Z3Mqjpf20kV19MlalTPPD9pWrBzo82sU1Ws3WDWOb4iaph2F1WvYqNOew98/fh
+	 sWz6LQ/+pFGDg==
+Date: Thu, 20 Jun 2024 16:01:31 -0700
+Subject: [PATCH 12/24] xfs: wrap inode creation dqalloc calls
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892418085.3183075.6634714056147736408.stgit@frogsfrogsfrogs>
+Message-ID: <171892418102.3183075.3384829090907441660.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 References: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,281 +46,214 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move the initialization of the xfs_icreate_args structure out of
-xfs_create and xfs_create_tempfile into their callers so that we can set
-the new inode's attributes in one place and pass that through instead of
-open coding the collection of attributes all over the code.
+Create a helper that calls dqalloc to allocate and grab a reference to
+dquots for the user, group, and project ids listed in an icreate
+structure.  This simplifies the creat-related dqalloc callsites
+scattered around the code base.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   86 ++++++++++++++++++++++++----------------------------
- fs/xfs/xfs_inode.h |    9 ++---
- fs/xfs/xfs_iops.c  |   41 +++++++++++++++----------
- 3 files changed, 66 insertions(+), 70 deletions(-)
+ fs/xfs/scrub/tempfile.c |    9 +++---
+ fs/xfs/xfs_inode.c      |   74 +++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_inode.h      |    4 +++
+ fs/xfs/xfs_symlink.c    |   20 +++----------
+ 4 files changed, 55 insertions(+), 52 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e8d4ddbfbb925..d026e377fcafa 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -730,35 +730,25 @@ xfs_dir_hook_setup(
- 
- int
- xfs_create(
--	struct mnt_idmap	*idmap,
--	struct xfs_inode	*dp,
-+	const struct xfs_icreate_args *args,
- 	struct xfs_name		*name,
--	umode_t			mode,
--	dev_t			rdev,
--	bool			init_xattrs,
--	xfs_inode_t		**ipp)
-+	struct xfs_inode	**ipp)
- {
--	struct xfs_icreate_args	args = {
--		.idmap		= idmap,
--		.pip		= dp,
--		.rdev		= rdev,
--		.mode		= mode,
--		.flags		= init_xattrs ? XFS_ICREATE_INIT_XATTRS : 0,
--	};
--	int			is_dir = S_ISDIR(mode);
-+	struct xfs_inode	*dp = args->pip;
- 	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_inode	*ip = NULL;
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index ee6f93e9f7cba..523971a15a72a 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -47,9 +47,9 @@ xrep_tempfile_create(
+ 	};
+ 	struct xfs_mount	*mp = sc->mp;
  	struct xfs_trans	*tp = NULL;
--	int			error;
-+	struct xfs_dquot	*udqp = NULL;
-+	struct xfs_dquot	*gdqp = NULL;
-+	struct xfs_dquot	*pdqp = NULL;
-+	struct xfs_trans_res	*tres;
-+	struct xfs_parent_args	*ppargs;
-+	xfs_ino_t		ino;
-+	prid_t			prid;
- 	bool			unlock_dp_on_error = false;
--	prid_t			prid;
 -	struct xfs_dquot	*udqp = NULL;
 -	struct xfs_dquot	*gdqp = NULL;
 -	struct xfs_dquot	*pdqp = NULL;
--	struct xfs_trans_res	*tres;
-+	bool			is_dir = S_ISDIR(args->mode);
- 	uint			resblks;
--	xfs_ino_t		ino;
--	struct xfs_parent_args	*ppargs;
-+	int			error;
- 
- 	trace_xfs_create(dp, name);
- 
-@@ -774,8 +764,9 @@ xfs_create(
- 	 * computation code must match what the VFS uses to assign i_[ug]id.
- 	 * INHERIT adjusts the gid computation for setgid/grpid systems.
++	struct xfs_dquot	*udqp;
++	struct xfs_dquot	*gdqp;
++	struct xfs_dquot	*pdqp;
+ 	struct xfs_trans_res	*tres;
+ 	struct xfs_inode	*dp = mp->m_rootip;
+ 	xfs_ino_t		ino;
+@@ -70,8 +70,7 @@ xrep_tempfile_create(
+ 	 * inode should be completely root owned so that we don't fail due to
+ 	 * quota limits.
  	 */
--	error = xfs_qm_vop_dqalloc(dp, mapped_fsuid(idmap, i_user_ns(VFS_I(dp))),
--			mapped_fsgid(idmap, i_user_ns(VFS_I(dp))), prid,
-+	error = xfs_qm_vop_dqalloc(dp,
-+			mapped_fsuid(args->idmap, i_user_ns(VFS_I(dp))),
-+			mapped_fsgid(args->idmap, i_user_ns(VFS_I(dp))), prid,
- 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
- 			&udqp, &gdqp, &pdqp);
+-	error = xfs_qm_vop_dqalloc(dp, GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, 0,
+-			XFS_QMOPT_QUOTALL, &udqp, &gdqp, &pdqp);
++	error = xfs_icreate_dqalloc(&args, &udqp, &gdqp, &pdqp);
  	if (error)
-@@ -818,9 +809,9 @@ xfs_create(
- 	 * entry pointing to them, but a directory also the "." entry
- 	 * pointing to itself.
- 	 */
--	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
-+	error = xfs_dialloc(&tp, dp->i_ino, args->mode, &ino);
- 	if (!error)
--		error = xfs_icreate(tp, ino, &args, &ip);
-+		error = xfs_icreate(tp, ino, args, &ip);
- 	if (error)
- 		goto out_trans_cancel;
+ 		return error;
  
-@@ -922,44 +913,37 @@ xfs_create(
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d026e377fcafa..1d7febda38c16 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -728,6 +728,38 @@ xfs_dir_hook_setup(
+ }
+ #endif /* CONFIG_XFS_LIVE_HOOKS */
  
++/* Return dquots for the ids that will be assigned to a new file. */
++int
++xfs_icreate_dqalloc(
++	const struct xfs_icreate_args	*args,
++	struct xfs_dquot		**udqpp,
++	struct xfs_dquot		**gdqpp,
++	struct xfs_dquot		**pdqpp)
++{
++	struct inode			*dir = VFS_I(args->pip);
++	kuid_t				uid = GLOBAL_ROOT_UID;
++	kgid_t				gid = GLOBAL_ROOT_GID;
++	prid_t				prid = 0;
++	unsigned int			flags = XFS_QMOPT_QUOTALL;
++
++	if (args->idmap) {
++		/*
++		 * The uid/gid computation code must match what the VFS uses to
++		 * assign i_[ug]id.  INHERIT adjusts the gid computation for
++		 * setgid/grpid systems.
++		 */
++		uid = mapped_fsuid(args->idmap, i_user_ns(dir));
++		gid = mapped_fsgid(args->idmap, i_user_ns(dir));
++		prid = xfs_get_initial_prid(args->pip);
++		flags |= XFS_QMOPT_INHERIT;
++	}
++
++	*udqpp = *gdqpp = *pdqpp = NULL;
++
++	return xfs_qm_vop_dqalloc(args->pip, uid, gid, prid, flags, udqpp,
++			gdqpp, pdqpp);
++}
++
  int
- xfs_create_tmpfile(
--	struct mnt_idmap	*idmap,
--	struct xfs_inode	*dp,
--	umode_t			mode,
--	bool			init_xattrs,
-+	const struct xfs_icreate_args *args,
- 	struct xfs_inode	**ipp)
- {
--	struct xfs_icreate_args	args = {
--		.idmap		= idmap,
--		.pip		= dp,
--		.mode		= mode,
--		.flags		= XFS_ICREATE_TMPFILE,
--	};
-+	struct xfs_inode	*dp = args->pip;
+ xfs_create(
+ 	const struct xfs_icreate_args *args,
+@@ -738,13 +770,12 @@ xfs_create(
  	struct xfs_mount	*mp = dp->i_mount;
  	struct xfs_inode	*ip = NULL;
  	struct xfs_trans	*tp = NULL;
--	int			error;
--	prid_t			prid;
- 	struct xfs_dquot	*udqp = NULL;
- 	struct xfs_dquot	*gdqp = NULL;
- 	struct xfs_dquot	*pdqp = NULL;
+-	struct xfs_dquot	*udqp = NULL;
+-	struct xfs_dquot	*gdqp = NULL;
+-	struct xfs_dquot	*pdqp = NULL;
++	struct xfs_dquot	*udqp;
++	struct xfs_dquot	*gdqp;
++	struct xfs_dquot	*pdqp;
  	struct xfs_trans_res	*tres;
--	uint			resblks;
+ 	struct xfs_parent_args	*ppargs;
  	xfs_ino_t		ino;
-+	prid_t			prid;
-+	uint			resblks;
-+	int			error;
-+
-+	ASSERT(args->flags & XFS_ICREATE_TMPFILE);
+-	prid_t			prid;
+ 	bool			unlock_dp_on_error = false;
+ 	bool			is_dir = S_ISDIR(args->mode);
+ 	uint			resblks;
+@@ -757,18 +788,8 @@ xfs_create(
+ 	if (xfs_ifork_zapped(dp, XFS_DATA_FORK))
+ 		return -EIO;
  
+-	prid = xfs_get_initial_prid(dp);
+-
+-	/*
+-	 * Make sure that we have allocated dquot(s) on disk.  The uid/gid
+-	 * computation code must match what the VFS uses to assign i_[ug]id.
+-	 * INHERIT adjusts the gid computation for setgid/grpid systems.
+-	 */
+-	error = xfs_qm_vop_dqalloc(dp,
+-			mapped_fsuid(args->idmap, i_user_ns(VFS_I(dp))),
+-			mapped_fsgid(args->idmap, i_user_ns(VFS_I(dp))), prid,
+-			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+-			&udqp, &gdqp, &pdqp);
++	/* Make sure that we have allocated dquot(s) on disk. */
++	error = xfs_icreate_dqalloc(args, &udqp, &gdqp, &pdqp);
+ 	if (error)
+ 		return error;
+ 
+@@ -920,12 +941,11 @@ xfs_create_tmpfile(
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_inode	*ip = NULL;
+ 	struct xfs_trans	*tp = NULL;
+-	struct xfs_dquot	*udqp = NULL;
+-	struct xfs_dquot	*gdqp = NULL;
+-	struct xfs_dquot	*pdqp = NULL;
++	struct xfs_dquot	*udqp;
++	struct xfs_dquot	*gdqp;
++	struct xfs_dquot	*pdqp;
+ 	struct xfs_trans_res	*tres;
+ 	xfs_ino_t		ino;
+-	prid_t			prid;
+ 	uint			resblks;
+ 	int			error;
+ 
+@@ -934,18 +954,8 @@ xfs_create_tmpfile(
  	if (xfs_is_shutdown(mp))
  		return -EIO;
  
- 	prid = xfs_get_initial_prid(dp);
--	if (init_xattrs)
--		args.flags |= XFS_ICREATE_INIT_XATTRS;
- 
- 	/*
- 	 * Make sure that we have allocated dquot(s) on disk.  The uid/gid
- 	 * computation code must match what the VFS uses to assign i_[ug]id.
- 	 * INHERIT adjusts the gid computation for setgid/grpid systems.
- 	 */
--	error = xfs_qm_vop_dqalloc(dp, mapped_fsuid(idmap, i_user_ns(VFS_I(dp))),
--			mapped_fsgid(idmap, i_user_ns(VFS_I(dp))), prid,
-+	error = xfs_qm_vop_dqalloc(dp,
-+			mapped_fsuid(args->idmap, i_user_ns(VFS_I(dp))),
-+			mapped_fsgid(args->idmap, i_user_ns(VFS_I(dp))), prid,
- 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
- 			&udqp, &gdqp, &pdqp);
- 	if (error)
-@@ -973,9 +957,9 @@ xfs_create_tmpfile(
- 	if (error)
- 		goto out_release_dquots;
- 
--	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
-+	error = xfs_dialloc(&tp, dp->i_ino, args->mode, &ino);
- 	if (!error)
--		error = xfs_icreate(tp, ino, &args, &ip);
-+		error = xfs_icreate(tp, ino, args, &ip);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -2839,12 +2823,20 @@ xfs_rename_alloc_whiteout(
- 	struct xfs_inode	*dp,
- 	struct xfs_inode	**wip)
- {
-+	struct xfs_icreate_args	args = {
-+		.idmap		= idmap,
-+		.pip		= dp,
-+		.mode		= S_IFCHR | WHITEOUT_MODE,
-+		.flags		= XFS_ICREATE_TMPFILE,
-+	};
- 	struct xfs_inode	*tmpfile;
- 	struct qstr		name;
- 	int			error;
- 
--	error = xfs_create_tmpfile(idmap, dp, S_IFCHR | WHITEOUT_MODE,
--			xfs_has_parent(dp->i_mount), &tmpfile);
-+	if (xfs_has_parent(dp->i_mount))
-+		args.flags |= XFS_ICREATE_INIT_XATTRS;
-+
-+	error = xfs_create_tmpfile(&args, &tmpfile);
+-	prid = xfs_get_initial_prid(dp);
+-
+-	/*
+-	 * Make sure that we have allocated dquot(s) on disk.  The uid/gid
+-	 * computation code must match what the VFS uses to assign i_[ug]id.
+-	 * INHERIT adjusts the gid computation for setgid/grpid systems.
+-	 */
+-	error = xfs_qm_vop_dqalloc(dp,
+-			mapped_fsuid(args->idmap, i_user_ns(VFS_I(dp))),
+-			mapped_fsgid(args->idmap, i_user_ns(VFS_I(dp))), prid,
+-			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+-			&udqp, &gdqp, &pdqp);
++	/* Make sure that we have allocated dquot(s) on disk. */
++	error = xfs_icreate_dqalloc(args, &udqp, &gdqp, &pdqp);
  	if (error)
  		return error;
  
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 7d3fea66e069e..bc48e81829b5a 100644
+index bc48e81829b5a..a905929494bd5 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -516,12 +516,9 @@ int		xfs_release(struct xfs_inode *ip);
- int		xfs_inactive(struct xfs_inode *ip);
- int		xfs_lookup(struct xfs_inode *dp, const struct xfs_name *name,
- 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
--int		xfs_create(struct mnt_idmap *idmap,
--			   struct xfs_inode *dp, struct xfs_name *name,
--			   umode_t mode, dev_t rdev, bool need_xattr,
--			   struct xfs_inode **ipp);
--int		xfs_create_tmpfile(struct mnt_idmap *idmap,
--			   struct xfs_inode *dp, umode_t mode, bool init_xattrs,
-+int		xfs_create(const struct xfs_icreate_args *iargs,
-+			   struct xfs_name *name, struct xfs_inode **ipp);
-+int		xfs_create_tmpfile(const struct xfs_icreate_args *iargs,
- 			   struct xfs_inode **ipp);
- int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 35a84790d26e6..4563ba440570b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -173,38 +173,46 @@ xfs_generic_create(
- 	dev_t			rdev,
- 	struct file		*tmpfile)	/* unnamed file */
- {
--	struct inode	*inode;
--	struct xfs_inode *ip = NULL;
--	struct posix_acl *default_acl, *acl;
--	struct xfs_name	name;
--	int		error;
-+	struct xfs_icreate_args	args = {
-+		.idmap		= idmap,
-+		.pip		= XFS_I(dir),
-+		.rdev		= rdev,
-+		.mode		= mode,
-+	};
-+	struct inode		*inode;
-+	struct xfs_inode	*ip = NULL;
-+	struct posix_acl	*default_acl, *acl;
-+	struct xfs_name		name;
-+	int			error;
+@@ -660,4 +660,8 @@ void xfs_dir_hook_setup(struct xfs_dir_hook *hook, notifier_fn_t mod_fn);
+ # define xfs_dir_update_hook(dp, ip, delta, name)	((void)0)
+ #endif /* CONFIG_XFS_LIVE_HOOKS */
  
- 	/*
- 	 * Irix uses Missed'em'V split, but doesn't want to see
- 	 * the upper 5 bits of (14bit) major.
- 	 */
--	if (S_ISCHR(mode) || S_ISBLK(mode)) {
--		if (unlikely(!sysv_valid_dev(rdev) || MAJOR(rdev) & ~0x1ff))
-+	if (S_ISCHR(args.mode) || S_ISBLK(args.mode)) {
-+		if (unlikely(!sysv_valid_dev(args.rdev) ||
-+			     MAJOR(args.rdev) & ~0x1ff))
- 			return -EINVAL;
- 	} else {
--		rdev = 0;
-+		args.rdev = 0;
- 	}
++int xfs_icreate_dqalloc(const struct xfs_icreate_args *args,
++		struct xfs_dquot **udqpp, struct xfs_dquot **gdqpp,
++		struct xfs_dquot **pdqpp);
++
+ #endif	/* __XFS_INODE_H__ */
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 3b797a39950d5..6ff736e5c4e7f 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -101,10 +101,9 @@ xfs_symlink(
+ 	int			pathlen;
+ 	bool                    unlock_dp_on_error = false;
+ 	xfs_filblks_t		fs_blocks;
+-	prid_t			prid;
+-	struct xfs_dquot	*udqp = NULL;
+-	struct xfs_dquot	*gdqp = NULL;
+-	struct xfs_dquot	*pdqp = NULL;
++	struct xfs_dquot	*udqp;
++	struct xfs_dquot	*gdqp;
++	struct xfs_dquot	*pdqp;
+ 	uint			resblks;
+ 	xfs_ino_t		ino;
+ 	struct xfs_parent_args	*ppargs;
+@@ -127,17 +126,8 @@ xfs_symlink(
+ 		return -ENAMETOOLONG;
+ 	ASSERT(pathlen > 0);
  
--	error = posix_acl_create(dir, &mode, &default_acl, &acl);
-+	error = posix_acl_create(dir, &args.mode, &default_acl, &acl);
+-	prid = xfs_get_initial_prid(dp);
+-
+-	/*
+-	 * Make sure that we have allocated dquot(s) on disk.  The uid/gid
+-	 * computation code must match what the VFS uses to assign i_[ug]id.
+-	 * INHERIT adjusts the gid computation for setgid/grpid systems.
+-	 */
+-	error = xfs_qm_vop_dqalloc(dp, mapped_fsuid(idmap, i_user_ns(VFS_I(dp))),
+-			mapped_fsgid(idmap, i_user_ns(VFS_I(dp))), prid,
+-			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+-			&udqp, &gdqp, &pdqp);
++	/* Make sure that we have allocated dquot(s) on disk. */
++	error = xfs_icreate_dqalloc(&args, &udqp, &gdqp, &pdqp);
  	if (error)
  		return error;
  
- 	/* Verify mode is valid also for tmpfile case */
--	error = xfs_dentry_mode_to_name(&name, dentry, mode);
-+	error = xfs_dentry_mode_to_name(&name, dentry, args.mode);
- 	if (unlikely(error))
- 		goto out_free_acl;
- 
- 	if (!tmpfile) {
--		error = xfs_create(idmap, XFS_I(dir), &name, mode, rdev,
--				xfs_create_need_xattr(dir, default_acl, acl),
--				&ip);
-+		if (xfs_create_need_xattr(dir, default_acl, acl))
-+			args.flags |= XFS_ICREATE_INIT_XATTRS;
-+
-+		error = xfs_create(&args, &name, &ip);
- 	} else {
--		bool	init_xattrs = false;
-+		args.flags |= XFS_ICREATE_TMPFILE;
- 
- 		/*
- 		 * If this temporary file will be linkable, set up the file
-@@ -212,10 +220,9 @@ xfs_generic_create(
- 		 */
- 		if (!(tmpfile->f_flags & O_EXCL) &&
- 		    xfs_has_parent(XFS_I(dir)->i_mount))
--			init_xattrs = true;
-+			args.flags |= XFS_ICREATE_INIT_XATTRS;
- 
--		error = xfs_create_tmpfile(idmap, XFS_I(dir), mode,
--				init_xattrs, &ip);
-+		error = xfs_create_tmpfile(&args, &ip);
- 	}
- 	if (unlikely(error))
- 		goto out_free_acl;
 
