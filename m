@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE53384A4D
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 22:57:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612646F085
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 22:58:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924273; cv=none; b=a3HM+MWU0xmPTFXXpEAFQVTvmJafKe7Pw4zN9S1gA7A1cUgvQZUvC989nVCegMgqmZuL8CUVZ5NE6nKnUmcI40Loyq3HaEDJFt1myv1wlS9CB+w3WXmyAKYWAwItC1qxx9auSO6rDsqDOCV3TrP4tXtKERtLVoT5leOUe4aJuaY=
+	t=1718924289; cv=none; b=WtDP07ygBp6EJxuWPkAi0+wgGE53yTCTrzAGgorPSR2wjppSdKmRlqeRaE8lc0WyNReXty8XKUuJLgGqOYEWWstZEcX8mYQY6N1w2WOzfFstGjVEhWYjblw6X35TFWRkKqvqDJzWusib+g/VhoKUluehM1wQtuzv1jh4lGwVWT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924273; c=relaxed/simple;
-	bh=QpBo9v63SkJywsP6TEP9PuHTVaDVG0P2KU3PYWz40vw=;
+	s=arc-20240116; t=1718924289; c=relaxed/simple;
+	bh=xyEz3vRaT5asH8L7eju0igVF5DjwtA+Pc04k1hluBRQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IqVOzxWf6wsbJObRzGwf1QwrispnYDQTt5QfWavhw6qTMtsKBQRaXh6Ozre8/XNwYok3J7KLCa2sT59scY/WQCqOhtq8R13sFVw/qev46Y4VBeSq34YFPUIZEu925G5qi3E2JSm48/+rHbrYYd5p1QrMdHE/rxXGqTgfF/M8CzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O7UFD0XU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CmF5Lq7YOfan4j9H9uSfITeSl1pDjuzFDYMi0l+TClncNkO2NJkkxP2m9iiKfhpck7CCEeQYhk/TWKoSWmbNAoloTz1BTWnPt6FsIU49HbU4p5Hd5iwVU4LS/goCPQF/hDEVnIxlzQAuoI38aPTuzehoJY1TjgUCYd0kpgvuGkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rkjtQRup; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O7UFD0XU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53048C32781;
-	Thu, 20 Jun 2024 22:57:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rkjtQRup"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDBCFC2BD10;
+	Thu, 20 Jun 2024 22:58:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924273;
-	bh=QpBo9v63SkJywsP6TEP9PuHTVaDVG0P2KU3PYWz40vw=;
+	s=k20201202; t=1718924289;
+	bh=xyEz3vRaT5asH8L7eju0igVF5DjwtA+Pc04k1hluBRQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=O7UFD0XUcnacvxDWhv3MP54KafHVEMpwd2LUrDUCecv7BO48Q3kMcWeta/9IgKDAP
-	 4dyaJ8+2P/72evQSq8BT41TndTDO+hR/24CmRixFU1sYOrUMc97F0XLIKJLzC2Ge5n
-	 bItJQhRggXc/xKBBcQkyiGeEawlAF8jxLpfe/XuIbIsJxHZthlCufVIVc5mOrk9KCv
-	 HNgi/8P2G0pdRrdR/HrIJQjFvrVQqV2JICm4+QbwyVlODDIPSQmB5qEp5lIWVBpEl3
-	 St/AQMP6ef0BdVS9amXK1hbX50ek4qCcK+XJAawUFDT5cgH0HP/7grdXpvw8sUYung
-	 prmSN7WjIEmMg==
-Date: Thu, 20 Jun 2024 15:57:52 -0700
-Subject: [PATCHSET v3.0 3/5] xfs: rmap log intent cleanups
+	b=rkjtQRupMjj+7A5NQGUEx68SaJtlLcYhDRCCLbXfnVbxUgZjeTJ95o+GxWH05c/DS
+	 l080Mnz8QJvYeDxNZDki7pw2eu07Pf4PzEa9Tg/+qEXzJVBUP5jP/eMBfK0WGXGFLt
+	 lRM4TWcJLlW7HJM5CWCRVG3PlXyjAO0dylCeYR55C+RRjQrm/IOL/RXpfLPXsSSoYB
+	 cqu2qy4Q+he3iczQPYGYE8gCm9XPrD425PbC+K83n/BoDsNOaUxgbZbAaUaQEHtRJn
+	 QuholI6xomVMJ33FDWg63RyvRzdL5tdNBjq1YYO3qOsKHYMAl/LrbuxckmXvKWD/5V
+	 5FbLU4QKi34Kg==
+Date: Thu, 20 Jun 2024 15:58:08 -0700
+Subject: [PATCHSET v3.0 4/5] xfs: refcount log intent cleanups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892419209.3184396.10441735798864910501.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <171892419746.3184748.6406153597005839426.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240620225033.GD103020@frogsfrogsfrogs>
 References: <20240620225033.GD103020@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,7 +46,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series cleans up the rmap intent code before we start adding
+This series cleans up the refcount intent code before we start adding
 support for realtime devices.  Similar to previous intent cleanup
 patchsets, we start transforming the tracepoints so that the data
 extraction are done inside the tracepoint code, and then we start
@@ -62,27 +62,28 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=rmap-intent-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=refcount-intent-cleanups
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=rmap-intent-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=refcount-intent-cleanups
 ---
 Commits in this patchset:
- * xfs: give rmap btree cursor error tracepoints their own class
- * xfs: prepare rmap btree tracepoints for widening
- * xfs: clean up rmap log intent item tracepoint callsites
- * xfs: remove xfs_trans_set_rmap_flags
- * xfs: add a ri_entry helper
- * xfs: reuse xfs_rmap_update_cancel_item
- * xfs: don't bother calling xfs_rmap_finish_one_cleanup in xfs_rmap_finish_one
- * xfs: simplify usage of the rcur local variable in xfs_rmap_finish_one
- * xfs: move xfs_rmap_update_defer_add to xfs_rmap_item.c
+ * xfs: give refcount btree cursor error tracepoints their own class
+ * xfs: create specialized classes for refcount tracepoints
+ * xfs: prepare refcount btree tracepoints for widening
+ * xfs: clean up refcount log intent item tracepoint callsites
+ * xfs: remove xfs_trans_set_refcount_flags
+ * xfs: add a ci_entry helper
+ * xfs: reuse xfs_refcount_update_cancel_item
+ * xfs: don't bother calling xfs_refcount_finish_one_cleanup in xfs_refcount_finish_one
+ * xfs: simplify usage of the rcur local variable in xfs_refcount_finish_one
+ * xfs: move xfs_refcount_update_defer_add to xfs_refcount_item.c
 ---
- fs/xfs/libxfs/xfs_rmap.c |  268 ++++++++++++++++------------------------------
- fs/xfs/libxfs/xfs_rmap.h |   15 ++-
- fs/xfs/xfs_rmap_item.c   |  148 +++++++++++++------------
- fs/xfs/xfs_rmap_item.h   |    4 +
- fs/xfs/xfs_trace.c       |    1 
- fs/xfs/xfs_trace.h       |  198 ++++++++++++++++++++++++----------
- 6 files changed, 321 insertions(+), 313 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |  150 ++++++++--------------------
+ fs/xfs/libxfs/xfs_refcount.h |   11 +-
+ fs/xfs/xfs_refcount_item.c   |  107 ++++++++++----------
+ fs/xfs/xfs_refcount_item.h   |    5 +
+ fs/xfs/xfs_trace.c           |    1 
+ fs/xfs/xfs_trace.h           |  229 ++++++++++++++++++++----------------------
+ 6 files changed, 222 insertions(+), 281 deletions(-)
 
