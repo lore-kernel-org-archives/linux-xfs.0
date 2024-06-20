@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 569F87C6EB
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:03:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC207C6EB
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:04:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924633; cv=none; b=lqh8X42ltQEuoAIOTRMmq8pJjZxv8QX09zS+HVzLLpN/3NbieUH4MUE2eUC2F85WSRnpzgzEh/UZzsM/EeiEK2bdQm4hLOhh3oFyPm6HVJqNq3kUTHR7TiiiXRIzqXN14qCRbWEyaGx3ciHSy1d5P39nfwnbNpiU4LQ2EBbLE9Y=
+	t=1718924649; cv=none; b=JdIpG94xyzF4TlbJ9zSPJVwrGea1ToOF5mX7eJhNY93k9nQ6E0bGMf1f4ONPbIDs64FxtCKzbCVc94BBhBHvnMWWJXf+FTnWOfuLmN6QsehkT41ooNzV8tFTERDNdhy+Vu0KPORf94eNQUmWh8lHejoP1AR4wXNWN3/Z4Yo0aEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924633; c=relaxed/simple;
-	bh=52sAslYHwjKb55YV4McTB6nxrsdvESOqq9ppOCTa7p0=;
+	s=arc-20240116; t=1718924649; c=relaxed/simple;
+	bh=VfmA4h1asL7/Ph1DfPkpRVX/H/BLGhWETEqoUSqHK04=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MMW85Ht9YBHVRMzsmjy5rou4HWnRAQD8DC7nShA+Biv6VGXifdkmP0oKE55J2qdhK7iSpMXBPkC1u9pR65/qc9dQCSvRwAjsRHoP5CRenS6PmtK9vfbKGV+6kuQcWi7lJ16ZhPYHpaupUZ1QivFJrUArz+DV5dE3tVi9cewfWzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pk4BtJUl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AB8dTijP5dvX1LfuiQbApP5p5eo4NEzjUyv1jKLge2qO+J7hW6cFAyY5OwmOy72ZjkXC/YM5L/dBMB6+lrzSx3834/oDCsUBg4GiVe7BHN5i8UuP0TPRW+SOZwKvFaLtsL0yqinrsWRZBTId5kriVV7cuOBjNWSLyPF6jjMDVaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vi6Ec0XT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pk4BtJUl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 299ADC32781;
-	Thu, 20 Jun 2024 23:03:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vi6Ec0XT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6C65C2BD10;
+	Thu, 20 Jun 2024 23:04:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924633;
-	bh=52sAslYHwjKb55YV4McTB6nxrsdvESOqq9ppOCTa7p0=;
+	s=k20201202; t=1718924648;
+	bh=VfmA4h1asL7/Ph1DfPkpRVX/H/BLGhWETEqoUSqHK04=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Pk4BtJUlfbiCjO/KgDhRWtwwpSKJsUDLF3I5rl03ls6LPTeqqgDWoqCnvaC53Rqtn
-	 jcbp0vORTP+idwdUMRtDvoun08Fz4hI0UwdXY7C/IxZvCag76ii7JX32kLvsd3TkaF
-	 PTpr/VFW9Jfi15cgExblMj1FoFQf0BryFDfnR468dlHZfE71iiIB+n7u0KaBB2GGRn
-	 wYbOh9NfHQ0wv2rqMrbXBLItmokoIMzMFcIx0hVuEdmJRl3IaN6m/Kfi2S1T6c9aLt
-	 xcEIVvGayV4hudbtLJw/esbsXJum1sdY1SqwdDCxv95lHLaOWFL959TduaMst8tQcU
-	 hK0GWwwShplPg==
-Date: Thu, 20 Jun 2024 16:03:52 -0700
-Subject: [PATCH 21/24] xfs: create libxfs helper to rename two directory
- entries
+	b=Vi6Ec0XTgjleWj83LblMJWWJVkPZQa/nPADRU9fjBbQB3S7lwmJm4rHGDR0tzlDkP
+	 FVWOw7yX+nCERhnmj+tdJoJV+4SOQx5NrARiYgrbHa3pbv5toGZBTarsi+1vDTCRRm
+	 oguOxiRjaVzX/H15q1u/VDoPPzUHwqfQdUeK311LFMjseolMUfPuvIl+KaOy1mIFFd
+	 JySeAnby+RuQKL8eMZtGTJEGkyCgmkYvm6kPq1oZ7AAKudDN3+TsGoKpeg6xuJYJ56
+	 bW/jLVjuJ5ZTa7fizn8KM6DzaNElSqOq4l9O7L1epovzN7/P6/TwVLEXt9SBHn8iep
+	 Wjmfp3mEvGT8g==
+Date: Thu, 20 Jun 2024 16:04:08 -0700
+Subject: [PATCH 22/24] xfs: move dirent update hooks to xfs_dir2.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892418260.3183075.5528355196436694451.stgit@frogsfrogsfrogs>
+Message-ID: <171892418278.3183075.2874879886308264652.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 References: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,641 +46,429 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new libxfs function to rename two directory entries.  The
-upcoming metadata directory feature will need this to replace a metadata
-inode directory entry.
+Move the directory entry update hook code to xfs_dir2 so that it is
+mostly consolidated with the higher level directory functions.  Retain
+the exports so that online fsck can still send notifications through the
+hooks.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_dir2.c |  227 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_dir2.h |    3 +
- fs/xfs/xfs_inode.c       |  258 ++++++++--------------------------------------
- 3 files changed, 273 insertions(+), 215 deletions(-)
+ fs/xfs/libxfs/xfs_dir2.c |  104 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2.h |   25 ++++++++++
+ fs/xfs/scrub/common.c    |    1 
+ fs/xfs/xfs_inode.c       |  117 ----------------------------------------------
+ fs/xfs/xfs_inode.h       |   25 ----------
+ fs/xfs/xfs_symlink.c     |    2 -
+ 6 files changed, 130 insertions(+), 144 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index d650cfa023fdb..34b63ba2e4f71 100644
+index 34b63ba2e4f71..202468223bf94 100644
 --- a/fs/xfs/libxfs/xfs_dir2.c
 +++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -23,6 +23,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_parent.h"
- #include "xfs_ag.h"
-+#include "xfs_ialloc.h"
+@@ -762,6 +762,81 @@ xfs_dir2_compname(
+ 	return xfs_da_compname(args, name, len);
+ }
  
- const struct xfs_name xfs_name_dotdot = {
- 	.name	= (const unsigned char *)"..",
-@@ -1080,3 +1081,229 @@ xfs_dir_exchange_children(
++#ifdef CONFIG_XFS_LIVE_HOOKS
++/*
++ * Use a static key here to reduce the overhead of directory live update hooks.
++ * If the compiler supports jump labels, the static branch will be replaced by
++ * a nop sled when there are no hook users.  Online fsck is currently the only
++ * caller, so this is a reasonable tradeoff.
++ *
++ * Note: Patching the kernel code requires taking the cpu hotplug lock.  Other
++ * parts of the kernel allocate memory with that lock held, which means that
++ * XFS callers cannot hold any locks that might be used by memory reclaim or
++ * writeback when calling the static_branch_{inc,dec} functions.
++ */
++DEFINE_STATIC_XFS_HOOK_SWITCH(xfs_dir_hooks_switch);
++
++void
++xfs_dir_hook_disable(void)
++{
++	xfs_hooks_switch_off(&xfs_dir_hooks_switch);
++}
++
++void
++xfs_dir_hook_enable(void)
++{
++	xfs_hooks_switch_on(&xfs_dir_hooks_switch);
++}
++
++/* Call hooks for a directory update relating to a child dirent update. */
++inline void
++xfs_dir_update_hook(
++	struct xfs_inode		*dp,
++	struct xfs_inode		*ip,
++	int				delta,
++	const struct xfs_name		*name)
++{
++	if (xfs_hooks_switched_on(&xfs_dir_hooks_switch)) {
++		struct xfs_dir_update_params	p = {
++			.dp		= dp,
++			.ip		= ip,
++			.delta		= delta,
++			.name		= name,
++		};
++		struct xfs_mount	*mp = ip->i_mount;
++
++		xfs_hooks_call(&mp->m_dir_update_hooks, 0, &p);
++	}
++}
++
++/* Call the specified function during a directory update. */
++int
++xfs_dir_hook_add(
++	struct xfs_mount	*mp,
++	struct xfs_dir_hook	*hook)
++{
++	return xfs_hooks_add(&mp->m_dir_update_hooks, &hook->dirent_hook);
++}
++
++/* Stop calling the specified function during a directory update. */
++void
++xfs_dir_hook_del(
++	struct xfs_mount	*mp,
++	struct xfs_dir_hook	*hook)
++{
++	xfs_hooks_del(&mp->m_dir_update_hooks, &hook->dirent_hook);
++}
++
++/* Configure directory update hook functions. */
++void
++xfs_dir_hook_setup(
++	struct xfs_dir_hook	*hook,
++	notifier_fn_t		mod_fn)
++{
++	xfs_hook_setup(&hook->dirent_hook, mod_fn);
++}
++#endif /* CONFIG_XFS_LIVE_HOOKS */
++
+ /*
+  * Given a directory @dp, a newly allocated inode @ip, and a @name, link @ip
+  * into @dp under the given @name.  If @ip is a directory, it will be
+@@ -809,6 +884,7 @@ xfs_dir_create_child(
+ 			return error;
+ 	}
  
++	xfs_dir_update_hook(dp, ip, 1, name);
  	return 0;
  }
-+
-+/*
-+ * Given an entry (@src_name, @src_ip) in directory @src_dp, make the entry
-+ * @target_name in directory @target_dp point to @src_ip and remove the
-+ * original entry, cleaning up everything left behind.
-+ *
-+ * Cleanup involves dropping a link count on @target_ip, and either removing
-+ * the (@src_name, @src_ip) entry from @src_dp or simply replacing the entry
-+ * with (@src_name, @wip) if a whiteout inode @wip is supplied.
-+ *
-+ * All inodes must have the ILOCK held.  We assume that if @src_ip is a
-+ * directory then its '..' doesn't already point to @target_dp, and that @wip
-+ * is a freshly allocated whiteout.
-+ */
-+int
-+xfs_dir_rename_children(
-+	struct xfs_trans	*tp,
-+	struct xfs_dir_update	*du_src,
-+	struct xfs_dir_update	*du_tgt,
-+	unsigned int		spaceres,
-+	struct xfs_dir_update	*du_wip)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_inode	*src_dp = du_src->dp;
-+	const struct xfs_name	*src_name = du_src->name;
-+	struct xfs_inode	*src_ip = du_src->ip;
-+	struct xfs_inode	*target_dp = du_tgt->dp;
-+	const struct xfs_name	*target_name = du_tgt->name;
-+	struct xfs_inode	*target_ip = du_tgt->ip;
-+	bool			new_parent = (src_dp != target_dp);
-+	bool			src_is_directory;
-+	int			error;
-+
-+	src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
-+
+ 
+@@ -873,6 +949,7 @@ xfs_dir_add_child(
+ 			return error;
+ 	}
+ 
++	xfs_dir_update_hook(dp, ip, 1, name);
+ 	return 0;
+ }
+ 
+@@ -954,6 +1031,7 @@ xfs_dir_remove_child(
+ 			return error;
+ 	}
+ 
++	xfs_dir_update_hook(dp, ip, -1, name);
+ 	return 0;
+ }
+ 
+@@ -1079,6 +1157,18 @@ xfs_dir_exchange_children(
+ 			return error;
+ 	}
+ 
 +	/*
-+	 * Check for expected errors before we dirty the transaction
-+	 * so we can return an error without a transaction abort.
++	 * Inform our hook clients that we've finished an exchange operation as
++	 * follows: removed the source and target files from their directories;
++	 * added the target to the source directory; and added the source to
++	 * the target directory.  All inodes are locked, so it's ok to model a
++	 * rename this way so long as we say we deleted entries before we add
++	 * new ones.
 +	 */
-+	if (target_ip == NULL) {
-+		/*
-+		 * If there's no space reservation, check the entry will
-+		 * fit before actually inserting it.
-+		 */
-+		if (!spaceres) {
-+			error = xfs_dir_canenter(tp, target_dp, target_name);
-+			if (error)
-+				return error;
-+		}
-+	} else {
-+		/*
-+		 * If target exists and it's a directory, check that whether
-+		 * it can be destroyed.
-+		 */
-+		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
-+		    (!xfs_dir_isempty(target_ip) ||
-+		     (VFS_I(target_ip)->i_nlink > 2)))
-+			return -EEXIST;
-+	}
-+
++	xfs_dir_update_hook(dp1, ip1, -1, name1);
++	xfs_dir_update_hook(dp2, ip2, -1, name2);
++	xfs_dir_update_hook(dp1, ip2, 1, name1);
++	xfs_dir_update_hook(dp2, ip1, 1, name2);
+ 	return 0;
+ }
+ 
+@@ -1305,5 +1395,19 @@ xfs_dir_rename_children(
+ 			return error;
+ 	}
+ 
 +	/*
-+	 * Directory entry creation below may acquire the AGF. Remove
-+	 * the whiteout from the unlinked list first to preserve correct
-+	 * AGI/AGF locking order. This dirties the transaction so failures
-+	 * after this point will abort and log recovery will clean up the
-+	 * mess.
-+	 *
-+	 * For whiteouts, we need to bump the link count on the whiteout
-+	 * inode. After this point, we have a real link, clear the tmpfile
-+	 * state flag from the inode so it doesn't accidentally get misused
-+	 * in future.
++	 * Inform our hook clients that we've finished a rename operation as
++	 * follows: removed the source and target files from their directories;
++	 * that we've added the source to the target directory; and finally
++	 * that we've added the whiteout, if there was one.  All inodes are
++	 * locked, so it's ok to model a rename this way so long as we say we
++	 * deleted entries before we add new ones.
 +	 */
-+	if (du_wip->ip) {
-+		struct xfs_perag	*pag;
-+
-+		ASSERT(VFS_I(du_wip->ip)->i_nlink == 0);
-+
-+		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, du_wip->ip->i_ino));
-+		error = xfs_iunlink_remove(tp, pag, du_wip->ip);
-+		xfs_perag_put(pag);
-+		if (error)
-+			return error;
-+
-+		xfs_bumplink(tp, du_wip->ip);
-+	}
-+
-+	/*
-+	 * Set up the target.
-+	 */
-+	if (target_ip == NULL) {
-+		/*
-+		 * If target does not exist and the rename crosses
-+		 * directories, adjust the target directory link count
-+		 * to account for the ".." reference from the new entry.
-+		 */
-+		error = xfs_dir_createname(tp, target_dp, target_name,
-+					   src_ip->i_ino, spaceres);
-+		if (error)
-+			return error;
-+
-+		xfs_trans_ichgtime(tp, target_dp,
-+					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+
-+		if (new_parent && src_is_directory) {
-+			xfs_bumplink(tp, target_dp);
-+		}
-+	} else { /* target_ip != NULL */
-+		/*
-+		 * Link the source inode under the target name.
-+		 * If the source inode is a directory and we are moving
-+		 * it across directories, its ".." entry will be
-+		 * inconsistent until we replace that down below.
-+		 *
-+		 * In case there is already an entry with the same
-+		 * name at the destination directory, remove it first.
-+		 */
-+		error = xfs_dir_replace(tp, target_dp, target_name,
-+					src_ip->i_ino, spaceres);
-+		if (error)
-+			return error;
-+
-+		xfs_trans_ichgtime(tp, target_dp,
-+					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+
-+		/*
-+		 * Decrement the link count on the target since the target
-+		 * dir no longer points to it.
-+		 */
-+		error = xfs_droplink(tp, target_ip);
-+		if (error)
-+			return error;
-+
-+		if (src_is_directory) {
-+			/*
-+			 * Drop the link from the old "." entry.
-+			 */
-+			error = xfs_droplink(tp, target_ip);
-+			if (error)
-+				return error;
-+		}
-+	} /* target_ip != NULL */
-+
-+	/*
-+	 * Remove the source.
-+	 */
-+	if (new_parent && src_is_directory) {
-+		/*
-+		 * Rewrite the ".." entry to point to the new
-+		 * directory.
-+		 */
-+		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
-+					target_dp->i_ino, spaceres);
-+		ASSERT(error != -EEXIST);
-+		if (error)
-+			return error;
-+	}
-+
-+	/*
-+	 * We always want to hit the ctime on the source inode.
-+	 *
-+	 * This isn't strictly required by the standards since the source
-+	 * inode isn't really being changed, but old unix file systems did
-+	 * it and some incremental backup programs won't work without it.
-+	 */
-+	xfs_trans_ichgtime(tp, src_ip, XFS_ICHGTIME_CHG);
-+	xfs_trans_log_inode(tp, src_ip, XFS_ILOG_CORE);
-+
-+	/*
-+	 * Adjust the link count on src_dp.  This is necessary when
-+	 * renaming a directory, either within one parent when
-+	 * the target existed, or across two parent directories.
-+	 */
-+	if (src_is_directory && (new_parent || target_ip != NULL)) {
-+
-+		/*
-+		 * Decrement link count on src_directory since the
-+		 * entry that's moved no longer points to it.
-+		 */
-+		error = xfs_droplink(tp, src_dp);
-+		if (error)
-+			return error;
-+	}
-+
-+	/*
-+	 * For whiteouts, we only need to update the source dirent with the
-+	 * inode number of the whiteout inode rather than removing it
-+	 * altogether.
-+	 */
++	if (target_ip)
++		xfs_dir_update_hook(target_dp, target_ip, -1, target_name);
++	xfs_dir_update_hook(src_dp, src_ip, -1, src_name);
++	xfs_dir_update_hook(target_dp, src_ip, 1, target_name);
 +	if (du_wip->ip)
-+		error = xfs_dir_replace(tp, src_dp, src_name, du_wip->ip->i_ino,
-+					spaceres);
-+	else
-+		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
-+					   spaceres);
-+	if (error)
-+		return error;
-+
-+	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
-+	if (new_parent)
-+		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
-+
-+	/* Schedule parent pointer updates. */
-+	if (du_wip->ppargs) {
-+		error = xfs_parent_addname(tp, du_wip->ppargs, src_dp,
-+				src_name, du_wip->ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	if (du_src->ppargs) {
-+		error = xfs_parent_replacename(tp, du_src->ppargs, src_dp,
-+				src_name, target_dp, target_name, src_ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	if (du_tgt->ppargs) {
-+		error = xfs_parent_removename(tp, du_tgt->ppargs, target_dp,
-+				target_name, target_ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
++		xfs_dir_update_hook(src_dp, du_wip->ip, 1, src_name);
+ 	return 0;
+ }
 diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 8b1e192bd7a83..df6d4bbe3d6f9 100644
+index df6d4bbe3d6f9..576068ed81fac 100644
 --- a/fs/xfs/libxfs/xfs_dir2.h
 +++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -327,5 +327,8 @@ int xfs_dir_remove_child(struct xfs_trans *tp, unsigned int resblks,
+@@ -309,6 +309,31 @@ static inline unsigned char xfs_ascii_ci_xfrm(unsigned char c)
+ 	return c;
+ }
  
- int xfs_dir_exchange_children(struct xfs_trans *tp, struct xfs_dir_update *du1,
- 		struct xfs_dir_update *du2, unsigned int spaceres);
-+int xfs_dir_rename_children(struct xfs_trans *tp, struct xfs_dir_update *du_src,
-+		struct xfs_dir_update *du_tgt, unsigned int spaceres,
-+		struct xfs_dir_update *du_wip);
++struct xfs_dir_update_params {
++	const struct xfs_inode	*dp;
++	const struct xfs_inode	*ip;
++	const struct xfs_name	*name;
++	int			delta;
++};
++
++#ifdef CONFIG_XFS_LIVE_HOOKS
++void xfs_dir_update_hook(struct xfs_inode *dp, struct xfs_inode *ip,
++		int delta, const struct xfs_name *name);
++
++struct xfs_dir_hook {
++	struct xfs_hook		dirent_hook;
++};
++
++void xfs_dir_hook_disable(void);
++void xfs_dir_hook_enable(void);
++
++int xfs_dir_hook_add(struct xfs_mount *mp, struct xfs_dir_hook *hook);
++void xfs_dir_hook_del(struct xfs_mount *mp, struct xfs_dir_hook *hook);
++void xfs_dir_hook_setup(struct xfs_dir_hook *hook, notifier_fn_t mod_fn);
++#else
++# define xfs_dir_update_hook(dp, ip, delta, name)	((void)0)
++#endif /* CONFIG_XFS_LIVE_HOOKS */
++
+ struct xfs_parent_args;
  
- #endif	/* __XFS_DIR2_H__ */
+ struct xfs_dir_update {
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 1ad8ec63a7f44..22f5f1a9d3f09 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -26,6 +26,7 @@
+ #include "xfs_da_format.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_priv.h"
++#include "xfs_dir2.h"
+ #include "xfs_attr.h"
+ #include "xfs_reflink.h"
+ #include "xfs_ag.h"
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d65c2dc3af145..99bd811b309d8 100644
+index 99bd811b309d8..d79a191ed6068 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2326,13 +2326,20 @@ xfs_rename(
- 	struct xfs_inode	*target_ip,
- 	unsigned int		flags)
- {
-+	struct xfs_dir_update	du_src = {
-+		.dp		= src_dp,
-+		.name		= src_name,
-+		.ip		= src_ip,
-+	};
-+	struct xfs_dir_update	du_tgt = {
-+		.dp		= target_dp,
-+		.name		= target_name,
-+		.ip		= target_ip,
-+	};
-+	struct xfs_dir_update	du_wip = { };
- 	struct xfs_mount	*mp = src_dp->i_mount;
- 	struct xfs_trans	*tp;
--	struct xfs_inode	*wip = NULL;		/* whiteout inode */
- 	struct xfs_inode	*inodes[__XFS_SORT_INODES];
--	struct xfs_parent_args	*src_ppargs = NULL;
--	struct xfs_parent_args	*tgt_ppargs = NULL;
--	struct xfs_parent_args	*wip_ppargs = NULL;
- 	int			i;
- 	int			num_inodes = __XFS_SORT_INODES;
- 	bool			new_parent = (src_dp != target_dp);
-@@ -2352,8 +2359,8 @@ xfs_rename(
- 	 * appropriately.
- 	 */
- 	if (flags & RENAME_WHITEOUT) {
--		error = xfs_rename_alloc_whiteout(idmap, src_name,
--						  target_dp, &wip);
-+		error = xfs_rename_alloc_whiteout(idmap, src_name, target_dp,
-+				&du_wip.ip);
- 		if (error)
- 			return error;
+@@ -600,81 +600,6 @@ xfs_icreate(
+ 	return 0;
+ }
  
-@@ -2361,21 +2368,21 @@ xfs_rename(
- 		src_name->type = XFS_DIR3_FT_CHRDEV;
- 	}
- 
--	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, wip,
--				inodes, &num_inodes);
-+	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, du_wip.ip,
-+			inodes, &num_inodes);
- 
--	error = xfs_parent_start(mp, &src_ppargs);
-+	error = xfs_parent_start(mp, &du_src.ppargs);
- 	if (error)
- 		goto out_release_wip;
- 
--	if (wip) {
--		error = xfs_parent_start(mp, &wip_ppargs);
-+	if (du_wip.ip) {
-+		error = xfs_parent_start(mp, &du_wip.ppargs);
- 		if (error)
- 			goto out_src_ppargs;
- 	}
- 
- 	if (target_ip) {
--		error = xfs_parent_start(mp, &tgt_ppargs);
-+		error = xfs_parent_start(mp, &du_tgt.ppargs);
- 		if (error)
- 			goto out_wip_ppargs;
- 	}
-@@ -2383,7 +2390,7 @@ xfs_rename(
- retry:
- 	nospace_error = 0;
- 	spaceres = xfs_rename_space_res(mp, src_name->len, target_ip != NULL,
--			target_name->len, wip != NULL);
-+			target_name->len, du_wip.ip != NULL);
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_rename, spaceres, 0, 0, &tp);
- 	if (error == -ENOSPC) {
- 		nospace_error = error;
-@@ -2398,7 +2405,7 @@ xfs_rename(
- 	 * We don't allow reservationless renaming when parent pointers are
- 	 * enabled because we can't back out if the xattrs must grow.
- 	 */
--	if (src_ppargs && nospace_error) {
-+	if (du_src.ppargs && nospace_error) {
- 		error = nospace_error;
- 		xfs_trans_cancel(tp);
- 		goto out_tgt_ppargs;
-@@ -2430,8 +2437,8 @@ xfs_rename(
- 	xfs_trans_ijoin(tp, src_ip, 0);
- 	if (target_ip)
- 		xfs_trans_ijoin(tp, target_ip, 0);
--	if (wip)
--		xfs_trans_ijoin(tp, wip, 0);
-+	if (du_wip.ip)
-+		xfs_trans_ijoin(tp, du_wip.ip, 0);
- 
- 	/*
- 	 * If we are using project inheritance, we only allow renames
-@@ -2447,8 +2454,8 @@ xfs_rename(
- 	/* RENAME_EXCHANGE is unique from here on. */
- 	if (flags & RENAME_EXCHANGE) {
- 		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
--				src_ppargs, target_dp, target_name, target_ip,
--				tgt_ppargs, spaceres);
-+				du_src.ppargs, target_dp, target_name,
-+				target_ip, du_tgt.ppargs, spaceres);
- 		nospace_error = 0;
- 		goto out_unlock;
- 	}
-@@ -2483,38 +2490,11 @@ xfs_rename(
- 	 * We don't allow quotaless renaming when parent pointers are enabled
- 	 * because we can't back out if the xattrs must grow.
- 	 */
--	if (src_ppargs && nospace_error) {
-+	if (du_src.ppargs && nospace_error) {
- 		error = nospace_error;
- 		goto out_trans_cancel;
- 	}
- 
--	/*
--	 * Check for expected errors before we dirty the transaction
--	 * so we can return an error without a transaction abort.
--	 */
--	if (target_ip == NULL) {
--		/*
--		 * If there's no space reservation, check the entry will
--		 * fit before actually inserting it.
--		 */
--		if (!spaceres) {
--			error = xfs_dir_canenter(tp, target_dp, target_name);
--			if (error)
--				goto out_trans_cancel;
--		}
--	} else {
--		/*
--		 * If target exists and it's a directory, check that whether
--		 * it can be destroyed.
--		 */
--		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
--		    (!xfs_dir_isempty(target_ip) ||
--		     (VFS_I(target_ip)->i_nlink > 2))) {
--			error = -EEXIST;
--			goto out_trans_cancel;
--		}
+-#ifdef CONFIG_XFS_LIVE_HOOKS
+-/*
+- * Use a static key here to reduce the overhead of directory live update hooks.
+- * If the compiler supports jump labels, the static branch will be replaced by
+- * a nop sled when there are no hook users.  Online fsck is currently the only
+- * caller, so this is a reasonable tradeoff.
+- *
+- * Note: Patching the kernel code requires taking the cpu hotplug lock.  Other
+- * parts of the kernel allocate memory with that lock held, which means that
+- * XFS callers cannot hold any locks that might be used by memory reclaim or
+- * writeback when calling the static_branch_{inc,dec} functions.
+- */
+-DEFINE_STATIC_XFS_HOOK_SWITCH(xfs_dir_hooks_switch);
+-
+-void
+-xfs_dir_hook_disable(void)
+-{
+-	xfs_hooks_switch_off(&xfs_dir_hooks_switch);
+-}
+-
+-void
+-xfs_dir_hook_enable(void)
+-{
+-	xfs_hooks_switch_on(&xfs_dir_hooks_switch);
+-}
+-
+-/* Call hooks for a directory update relating to a child dirent update. */
+-inline void
+-xfs_dir_update_hook(
+-	struct xfs_inode		*dp,
+-	struct xfs_inode		*ip,
+-	int				delta,
+-	const struct xfs_name		*name)
+-{
+-	if (xfs_hooks_switched_on(&xfs_dir_hooks_switch)) {
+-		struct xfs_dir_update_params	p = {
+-			.dp		= dp,
+-			.ip		= ip,
+-			.delta		= delta,
+-			.name		= name,
+-		};
+-		struct xfs_mount	*mp = ip->i_mount;
+-
+-		xfs_hooks_call(&mp->m_dir_update_hooks, 0, &p);
 -	}
+-}
 -
- 	/*
- 	 * Lock the AGI buffers we need to handle bumping the nlink of the
- 	 * whiteout inode off the unlinked list and to handle dropping the
-@@ -2526,7 +2506,7 @@ xfs_rename(
- 	 * target_ip is either null or an empty directory.
- 	 */
- 	for (i = 0; i < num_inodes && inodes[i] != NULL; i++) {
--		if (inodes[i] == wip ||
-+		if (inodes[i] == du_wip.ip ||
- 		    (inodes[i] == target_ip &&
- 		     (VFS_I(target_ip)->i_nlink == 1 || src_is_directory))) {
- 			struct xfs_perag	*pag;
-@@ -2541,172 +2521,20 @@ xfs_rename(
- 		}
- 	}
- 
--	/*
--	 * Directory entry creation below may acquire the AGF. Remove
--	 * the whiteout from the unlinked list first to preserve correct
--	 * AGI/AGF locking order. This dirties the transaction so failures
--	 * after this point will abort and log recovery will clean up the
--	 * mess.
--	 *
--	 * For whiteouts, we need to bump the link count on the whiteout
--	 * inode. After this point, we have a real link, clear the tmpfile
--	 * state flag from the inode so it doesn't accidentally get misused
--	 * in future.
--	 */
--	if (wip) {
--		struct xfs_perag	*pag;
+-/* Call the specified function during a directory update. */
+-int
+-xfs_dir_hook_add(
+-	struct xfs_mount	*mp,
+-	struct xfs_dir_hook	*hook)
+-{
+-	return xfs_hooks_add(&mp->m_dir_update_hooks, &hook->dirent_hook);
+-}
 -
--		ASSERT(VFS_I(wip)->i_nlink == 0);
+-/* Stop calling the specified function during a directory update. */
+-void
+-xfs_dir_hook_del(
+-	struct xfs_mount	*mp,
+-	struct xfs_dir_hook	*hook)
+-{
+-	xfs_hooks_del(&mp->m_dir_update_hooks, &hook->dirent_hook);
+-}
 -
--		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, wip->i_ino));
--		error = xfs_iunlink_remove(tp, pag, wip);
--		xfs_perag_put(pag);
--		if (error)
--			goto out_trans_cancel;
+-/* Configure directory update hook functions. */
+-void
+-xfs_dir_hook_setup(
+-	struct xfs_dir_hook	*hook,
+-	notifier_fn_t		mod_fn)
+-{
+-	xfs_hook_setup(&hook->dirent_hook, mod_fn);
+-}
+-#endif /* CONFIG_XFS_LIVE_HOOKS */
 -
--		xfs_bumplink(tp, wip);
--		VFS_I(wip)->i_state &= ~I_LINKABLE;
--	}
--
--	/*
--	 * Set up the target.
--	 */
--	if (target_ip == NULL) {
--		/*
--		 * If target does not exist and the rename crosses
--		 * directories, adjust the target directory link count
--		 * to account for the ".." reference from the new entry.
--		 */
--		error = xfs_dir_createname(tp, target_dp, target_name,
--					   src_ip->i_ino, spaceres);
--		if (error)
--			goto out_trans_cancel;
--
--		xfs_trans_ichgtime(tp, target_dp,
--					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--
--		if (new_parent && src_is_directory) {
--			xfs_bumplink(tp, target_dp);
--		}
--	} else { /* target_ip != NULL */
--		/*
--		 * Link the source inode under the target name.
--		 * If the source inode is a directory and we are moving
--		 * it across directories, its ".." entry will be
--		 * inconsistent until we replace that down below.
--		 *
--		 * In case there is already an entry with the same
--		 * name at the destination directory, remove it first.
--		 */
--		error = xfs_dir_replace(tp, target_dp, target_name,
--					src_ip->i_ino, spaceres);
--		if (error)
--			goto out_trans_cancel;
--
--		xfs_trans_ichgtime(tp, target_dp,
--					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--
--		/*
--		 * Decrement the link count on the target since the target
--		 * dir no longer points to it.
--		 */
--		error = xfs_droplink(tp, target_ip);
--		if (error)
--			goto out_trans_cancel;
--
--		if (src_is_directory) {
--			/*
--			 * Drop the link from the old "." entry.
--			 */
--			error = xfs_droplink(tp, target_ip);
--			if (error)
--				goto out_trans_cancel;
--		}
--	} /* target_ip != NULL */
--
--	/*
--	 * Remove the source.
--	 */
--	if (new_parent && src_is_directory) {
--		/*
--		 * Rewrite the ".." entry to point to the new
--		 * directory.
--		 */
--		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
--					target_dp->i_ino, spaceres);
--		ASSERT(error != -EEXIST);
--		if (error)
--			goto out_trans_cancel;
--	}
--
--	/*
--	 * We always want to hit the ctime on the source inode.
--	 *
--	 * This isn't strictly required by the standards since the source
--	 * inode isn't really being changed, but old unix file systems did
--	 * it and some incremental backup programs won't work without it.
--	 */
--	xfs_trans_ichgtime(tp, src_ip, XFS_ICHGTIME_CHG);
--	xfs_trans_log_inode(tp, src_ip, XFS_ILOG_CORE);
--
--	/*
--	 * Adjust the link count on src_dp.  This is necessary when
--	 * renaming a directory, either within one parent when
--	 * the target existed, or across two parent directories.
--	 */
--	if (src_is_directory && (new_parent || target_ip != NULL)) {
--
--		/*
--		 * Decrement link count on src_directory since the
--		 * entry that's moved no longer points to it.
--		 */
--		error = xfs_droplink(tp, src_dp);
--		if (error)
--			goto out_trans_cancel;
--	}
--
--	/*
--	 * For whiteouts, we only need to update the source dirent with the
--	 * inode number of the whiteout inode rather than removing it
--	 * altogether.
--	 */
--	if (wip)
--		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					spaceres);
--	else
--		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
--					   spaceres);
--
-+	error = xfs_dir_rename_children(tp, &du_src, &du_tgt, spaceres,
-+			&du_wip);
+ /* Return dquots for the ids that will be assigned to a new file. */
+ int
+ xfs_icreate_dqalloc(
+@@ -798,12 +723,6 @@ xfs_create(
  	if (error)
  		goto out_trans_cancel;
  
--	/* Schedule parent pointer updates. */
--	if (wip_ppargs) {
--		error = xfs_parent_addname(tp, wip_ppargs, src_dp, src_name,
--				wip);
--		if (error)
--			goto out_trans_cancel;
-+	if (du_wip.ip) {
-+		/*
-+		 * Now we have a real link, clear the "I'm a tmpfile" state
-+		 * flag from the inode so it doesn't accidentally get misused in
-+		 * future.
-+		 */
-+		VFS_I(du_wip.ip)->i_state &= ~I_LINKABLE;
- 	}
- 
--	if (src_ppargs) {
--		error = xfs_parent_replacename(tp, src_ppargs, src_dp,
--				src_name, target_dp, target_name, src_ip);
--		if (error)
--			goto out_trans_cancel;
--	}
--
--	if (tgt_ppargs) {
--		error = xfs_parent_removename(tp, tgt_ppargs, target_dp,
--				target_name, target_ip);
--		if (error)
--			goto out_trans_cancel;
--	}
--
--	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
--	if (new_parent)
--		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+-	/*
+-	 * Create ip with a reference from dp, and add '.' and '..' references
+-	 * if it's a directory.
+-	 */
+-	xfs_dir_update_hook(dp, du.ip, 1, name);
 -
  	/*
- 	 * Inform our hook clients that we've finished a rename operation as
- 	 * follows: removed the source and target files from their directories;
-@@ -2719,8 +2547,8 @@ xfs_rename(
- 		xfs_dir_update_hook(target_dp, target_ip, -1, target_name);
- 	xfs_dir_update_hook(src_dp, src_ip, -1, src_name);
- 	xfs_dir_update_hook(target_dp, src_ip, 1, target_name);
--	if (wip)
--		xfs_dir_update_hook(src_dp, wip, 1, src_name);
-+	if (du_wip.ip)
-+		xfs_dir_update_hook(src_dp, du_wip.ip, 1, src_name);
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * create transaction goes to disk before returning to
+@@ -1025,8 +944,6 @@ xfs_link(
+ 	if (error)
+ 		goto error_return;
  
+-	xfs_dir_update_hook(tdp, sip, 1, target_name);
+-
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * link transaction goes to disk before returning to
+@@ -2079,12 +1996,6 @@ xfs_remove(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	/*
+-	 * Drop the link from dp to ip, and if ip was a directory, remove the
+-	 * '.' and '..' references since we freed the directory.
+-	 */
+-	xfs_dir_update_hook(dp, ip, -1, name);
+-
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * remove transaction goes to disk before returning to
+@@ -2241,19 +2152,6 @@ xfs_cross_rename(
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+-	/*
+-	 * Inform our hook clients that we've finished an exchange operation as
+-	 * follows: removed the source and target files from their directories;
+-	 * added the target to the source directory; and added the source to
+-	 * the target directory.  All inodes are locked, so it's ok to model a
+-	 * rename this way so long as we say we deleted entries before we add
+-	 * new ones.
+-	 */
+-	xfs_dir_update_hook(dp1, ip1, -1, name1);
+-	xfs_dir_update_hook(dp2, ip2, -1, name2);
+-	xfs_dir_update_hook(dp1, ip2, 1, name1);
+-	xfs_dir_update_hook(dp2, ip1, 1, name2);
+-
+ 	return xfs_finish_rename(tp);
+ 
+ out_trans_abort:
+@@ -2535,21 +2433,6 @@ xfs_rename(
+ 		VFS_I(du_wip.ip)->i_state &= ~I_LINKABLE;
+ 	}
+ 
+-	/*
+-	 * Inform our hook clients that we've finished a rename operation as
+-	 * follows: removed the source and target files from their directories;
+-	 * that we've added the source to the target directory; and finally
+-	 * that we've added the whiteout, if there was one.  All inodes are
+-	 * locked, so it's ok to model a rename this way so long as we say we
+-	 * deleted entries before we add new ones.
+-	 */
+-	if (target_ip)
+-		xfs_dir_update_hook(target_dp, target_ip, -1, target_name);
+-	xfs_dir_update_hook(src_dp, src_ip, -1, src_name);
+-	xfs_dir_update_hook(target_dp, src_ip, 1, target_name);
+-	if (du_wip.ip)
+-		xfs_dir_update_hook(src_dp, du_wip.ip, 1, src_name);
+-
  	error = xfs_finish_rename(tp);
  	nospace_error = 0;
-@@ -2731,14 +2559,14 @@ xfs_rename(
- out_unlock:
- 	xfs_iunlock_rename(inodes, num_inodes);
- out_tgt_ppargs:
--	xfs_parent_finish(mp, tgt_ppargs);
-+	xfs_parent_finish(mp, du_tgt.ppargs);
- out_wip_ppargs:
--	xfs_parent_finish(mp, wip_ppargs);
-+	xfs_parent_finish(mp, du_wip.ppargs);
- out_src_ppargs:
--	xfs_parent_finish(mp, src_ppargs);
-+	xfs_parent_finish(mp, du_src.ppargs);
- out_release_wip:
--	if (wip)
--		xfs_irele(wip);
-+	if (du_wip.ip)
-+		xfs_irele(du_wip.ip);
- 	if (error == -ENOSPC && nospace_error)
- 		error = nospace_error;
- 	return error;
+ 	goto out_unlock;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 5ee044674c3ab..51defdebef30e 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -632,31 +632,6 @@ void xfs_inode_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_filblks_t *dblocks, xfs_filblks_t *rblocks);
+ unsigned int xfs_inode_alloc_unitsize(struct xfs_inode *ip);
+ 
+-struct xfs_dir_update_params {
+-	const struct xfs_inode	*dp;
+-	const struct xfs_inode	*ip;
+-	const struct xfs_name	*name;
+-	int			delta;
+-};
+-
+-#ifdef CONFIG_XFS_LIVE_HOOKS
+-void xfs_dir_update_hook(struct xfs_inode *dp, struct xfs_inode *ip,
+-		int delta, const struct xfs_name *name);
+-
+-struct xfs_dir_hook {
+-	struct xfs_hook		dirent_hook;
+-};
+-
+-void xfs_dir_hook_disable(void);
+-void xfs_dir_hook_enable(void);
+-
+-int xfs_dir_hook_add(struct xfs_mount *mp, struct xfs_dir_hook *hook);
+-void xfs_dir_hook_del(struct xfs_mount *mp, struct xfs_dir_hook *hook);
+-void xfs_dir_hook_setup(struct xfs_dir_hook *hook, notifier_fn_t mod_fn);
+-#else
+-# define xfs_dir_update_hook(dp, ip, delta, name)	((void)0)
+-#endif /* CONFIG_XFS_LIVE_HOOKS */
+-
+ int xfs_icreate_dqalloc(const struct xfs_icreate_args *args,
+ 		struct xfs_dquot **udqpp, struct xfs_dquot **gdqpp,
+ 		struct xfs_dquot **pdqpp);
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index c0f5c2e1f215b..77f19e2f66e07 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -200,8 +200,6 @@ xfs_symlink(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	xfs_dir_update_hook(dp, du.ip, 1, link_name);
+-
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * symlink transaction goes to disk before returning to
 
