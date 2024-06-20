@@ -1,214 +1,133 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B34B224CE
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 04:27:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 154731859
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 05:33:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718857628; cv=none; b=An/wkhIGAQx9Y0tD5brTHZ5wBSDJvMk2l29mKDOhSK7dNBRbBmjBUw/acSAq2yiCJWSnuwpX9WdN1/dsPAp2cajH5GyqSvh+kea3f69IBEvWvQieSEg89z1ctvZH2Q24DHKXhEzcjWvBbwmsrmFRhd2uPxXDdLQVo1tWHZ+BcKU=
+	t=1718861610; cv=none; b=XyMDtcHVS4sc6XWuXVIAe/17Adm5BcQRw0m8aWJGI7eQcMcDXmuwCxlQheyhWpk24gZ2aBTeL3uUn2yq9J6HdJftW28hX/RfGxo3TurYhsKBd42ZtZvzilLQS8IUNcbMbnsXxsxa337ujSou9hI0IHwCCHwrXA7AVSSr1JeJfw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718857628; c=relaxed/simple;
-	bh=H4hIOd5ay3z3w8QBanlH3gcgFoOzOvb7jCYUQ30WafY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DM7f+XbJmvDv7QzSmm3EhheXfYaGaBWBJlhLb1HooMLK7NvJ7xzycLgNru42/B3GSh1m0fub1AgTsEbjdKbYWJZiUzx8+JIVK4wf+PaQY6Prv2j5dm7/5SuLBtquwce/mSQtMsLsvWv+RWpGcC/dk7PqCuQAgsGFu+TwxOeF8ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3blxpilT; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1718861610; c=relaxed/simple;
+	bh=bjDZ2rErWH0QQycFh0RuypRIzSU1rMV0xh1swFLCFwk=;
+	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
+	 Message-ID:References:Date; b=qVQPh7Ty4ZVXr4eggZelsEYK7txhHQ99OYEYEmQNKjsQzXKQ3BzXooYXdAmGpZRizeomjcKnnpGihgHp2Qrfmwq7S+SMR2nz88vV0c3LRU5AR+knmqU9hBpdnbMTQBYh6h6Gpc5sED4de3UhvNQ/NWkI4ED3qp5etLdlLMECxDc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=V32S70vJ; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3blxpilT"
+	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="V32S70vJ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=r27vird2fv0sgGt2Rg38qpc7j5zH0KcXm8LzCCvrNok=; b=3blxpilTZHuVwXmyN1su1LWVeo
-	oRKOAPYVtqwUl5fQ+ozPa2JGk1ckzHrvNauUptehk8MVd55jgg3Q8RK51ZO7ZkTZUxLwbAH4z1zLD
-	cdoBX0T6gg77cOFOsJ28bN7vK+7Vnhi6H63VJ30MzqMqMPBDREcSqvAIpWjSFvPJynNycX2XjK+kh
-	pCC3stLaQUkQ0kkoG6U7TFG8d3AR8US0MnhGBNMJE8N96hGrk0ZYS+lMuJ+YzOiwTFYZquK0NxPv9
-	GhETFER0L0sf7YNb36wcopphpXB07IFiyYQ9VKQjJYI04+bP67OhkmG4eTPl2UtSY8KYbWbKcytd6
-	FVu5s60w==;
-Received: from 2a02-8389-2341-5b80-3a9c-dc0d-9615-f1ed.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:3a9c:dc0d:9615:f1ed] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sK9O4-00000003ZvP-225h;
-	Thu, 20 Jun 2024 04:27:05 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: chandan.babu@oracle.com
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix freeing speculative preallocations for preallocated files
-Date: Thu, 20 Jun 2024 06:26:18 +0200
-Message-ID: <20240620042701.482510-1-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
+	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
+	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
+	Content-ID:Content-Description:In-Reply-To;
+	bh=bjDZ2rErWH0QQycFh0RuypRIzSU1rMV0xh1swFLCFwk=; b=V32S70vJoCOs4HT4vu21MRBgJi
+	F59XmmGpx6OVXs45ss4PdT1UxdUE4BDgwIZNoBr50ClRXQLsKO6+NYPemEkVJuQf/g2zk/H4D9qzB
+	RAMNVMsRvSySYDUGt/ilL6Wt5vMMLlvNTwiFzxj7EYIdHd8BDqLFBmscUB1LeAt30C4qaakkyTmHJ
+	fzyfKcrR/GdpNSjQI+4k7xk2kDFn6QelXOevWzwL32Yu0BQOsm6ici4sGk4M6mBDROW59ajYBjrXw
+	C5sHmHAomXHo8sophBuW1Kj//3MZyqurq6z3V/LyzCY/NGN7yybfxCR0rigBzGnkQx9xI26uBmBcI
+	ux644/vQ==;
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1sKAQ1-00CoT7-7U; Thu, 20 Jun 2024 05:33:09 +0000
+X-Loop: owner@bugs.debian.org
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Mailer: MIME-tools 5.509 (Entity 5.509)
+Content-Type: text/plain; charset=utf-8
+From: "Debian Bug Tracking System" <owner@bugs.debian.org>
+To: Andreas Beckmann <anbe@debian.org>
+CC: debian-on-mobile-maintainers@alioth-lists.debian.net,
+ linux-xfs@vger.kernel.org, jfs@debian.org, agx@sigxcpu.org,
+ bernat@debian.org, debian-med-packaging@lists.alioth.debian.org,
+ debian-multimedia@lists.debian.org, dr@jones.dk,
+ pkg-privacy-maintainers@lists.alioth.debian.org,
+ debian-xml-sgml-pkgs@lists.alioth.debian.org,
+ team+pkg-security@tracker.debian.org
+Subject: Processed: tagging 1071837, tagging 1071931, tagging 1071934,
+ tagging 1071838, tagging 1071832, tagging 1071860 ...
+Message-ID: <handler.s.C.17188615123053551.transcript@bugs.debian.org>
+References: <1718861509-739-bts-anbe@debian.org>
+X-Debian-PR-Package: src:libpam-ccreds src:libxslt src:aircrack-ng
+ xfslibs-dev src:axc src:monkeysphere src:clamz src:chntpw src:libaacs
+ src:libbdplus src:fis-gtm src:abiword
+X-Debian-PR-Source: abiword aircrack-ng axc chntpw clamz fis-gtm libaacs
+ libbdplus libpam-ccreds libxslt monkeysphere xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date: Thu, 20 Jun 2024 05:33:09 +0000
 
-xfs_can_free_eofblocks returns false for files that have persistent
-preallocations unless the force flag is passed and there are delayed
-blocks.  This means it won't free delalloc reservations for files
-with persistent preallocations unless the force flag is set, and it
-will also free the persistent preallocations if the force flag is
-set and the file happens to have delayed allocations.
+Processing commands for control@bugs.debian.org:
 
-Both of these are bad, so do away with the force flag and always
-free post-EOF delayed allocations only for files with the
-XFS_DIFLAG_PREALLOC flag set.
+> tags 1071837 + sid trixie
+Bug #1071837 [src:chntpw] chntpw: Please use pkg-config instead of libgcryp=
+t-config to locate libgcrypt
+Added tag(s) sid and trixie.
+> tags 1071931 + sid trixie
+Bug #1071931 [src:libaacs] libaacs: FTBFS against libgcrypt 1.11
+Added tag(s) trixie and sid.
+> tags 1071934 + sid trixie
+Bug #1071934 [src:libpam-ccreds] libpam-ccreds: FTBFS against libgcrypt 1.11
+Added tag(s) sid and trixie.
+> tags 1071838 + sid trixie
+Bug #1071838 [src:clamz] clamz: FTBFS against libgcrypt 1.11
+Added tag(s) sid and trixie.
+> tags 1071832 + sid trixie
+Bug #1071832 [src:aircrack-ng] aircrack-ng: FTBFS against libgcrypt 1.11
+Added tag(s) sid and trixie.
+> tags 1071860 + sid trixie
+Bug #1071860 [src:fis-gtm] fis-gtm: Searches for libgcrypt with libgcrypt-c=
+onfig
+Added tag(s) trixie and sid.
+> tags 1071932 + sid trixie
+Bug #1071932 [src:libbdplus] libbdplus: FTBFS against libgcrypt 1.11
+Added tag(s) sid and trixie.
+> tags 1071937 + sid trixie experimental
+Bug #1071937 [src:libxslt] libxslt: FTBFS against libgcrypt 1.11
+Added tag(s) trixie, experimental, and sid.
+> tags 1070892 + sid trixie
+Bug #1070892 [src:abiword] abiword: Please use pkg-config instead of libgcr=
+ypt-config to locate libgcrypt
+Added tag(s) sid and trixie.
+> tags 1070903 + sid trixie
+Bug #1070903 [src:axc] axc: Please use pkg-config instead of libgcrypt-conf=
+ig to locate libgcrypt
+Added tag(s) trixie and sid.
+> notfound 1073831 xfslibs-dev/6.8.0-2.1
+Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
+S handle library
+The source xfslibs-dev and version 6.8.0-2.1 do not appear to match any bin=
+ary packages
+No longer marked as found in versions xfslibs-dev/6.8.0-2.1.
+> found 1073831 6.8.0-2.1
+Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
+S handle library
+Marked as found in versions xfsprogs/6.8.0-2.1.
+> tags 1071941 + sid trixie experimental
+Bug #1071941 [src:monkeysphere] monkeysphere: FTBFS against libgcrypt 1.11 =
+(and next libassuan)
+Added tag(s) experimental, sid, and trixie.
+> thanks
+Stopping processing here.
 
-While these are old issues, the only started to reliably triggering
-asserts in 6.10-rc.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_bmap_util.c | 30 ++++++++++++++++++++++--------
- fs/xfs/xfs_bmap_util.h |  2 +-
- fs/xfs/xfs_icache.c    |  2 +-
- fs/xfs/xfs_inode.c     | 14 ++++----------
- 4 files changed, 28 insertions(+), 20 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index ac2e77ebb54c73..a4d9fbc21b8343 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -486,13 +486,11 @@ xfs_bmap_punch_delalloc_range(
- 
- /*
-  * Test whether it is appropriate to check an inode for and free post EOF
-- * blocks. The 'force' parameter determines whether we should also consider
-- * regular files that are marked preallocated or append-only.
-+ * blocks.
-  */
- bool
- xfs_can_free_eofblocks(
--	struct xfs_inode	*ip,
--	bool			force)
-+	struct xfs_inode	*ip)
- {
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -526,11 +524,11 @@ xfs_can_free_eofblocks(
- 		return false;
- 
- 	/*
--	 * Do not free real preallocated or append-only files unless the file
--	 * has delalloc blocks and we are forced to remove them.
-+	 * Only free real extents for inodes with persistent preallocations or
-+	 * the append-only flag.
- 	 */
- 	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
--		if (!force || ip->i_delayed_blks == 0)
-+		if (ip->i_delayed_blks == 0)
- 			return false;
- 
- 	/*
-@@ -584,6 +582,22 @@ xfs_free_eofblocks(
- 	/* Wait on dio to ensure i_size has settled. */
- 	inode_dio_wait(VFS_I(ip));
- 
-+	/*
-+	 * For preallocated files only free delayed allocations.
-+	 *
-+	 * Note that this means we also leave speculative preallocations in
-+	 * place for preallocated files.
-+	 */
-+	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
-+		if (ip->i_delayed_blks) {
-+			xfs_bmap_punch_delalloc_range(ip,
-+				round_up(XFS_ISIZE(ip), mp->m_sb.sb_blocksize),
-+				LLONG_MAX);
-+		}
-+		xfs_inode_clear_eofblocks_tag(ip);
-+		return 0;
-+	}
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
- 	if (error) {
- 		ASSERT(xfs_is_shutdown(mp));
-@@ -891,7 +905,7 @@ xfs_prepare_shift(
- 	 * Trim eofblocks to avoid shifting uninitialized post-eof preallocation
- 	 * into the accessible region of the file.
- 	 */
--	if (xfs_can_free_eofblocks(ip, true)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		error = xfs_free_eofblocks(ip);
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 51f84d8ff372fa..eb0895bfb9dae4 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -63,7 +63,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- 
- /* EOF block manipulation functions */
--bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-+bool	xfs_can_free_eofblocks(struct xfs_inode *ip);
- int	xfs_free_eofblocks(struct xfs_inode *ip);
- 
- int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0953163a2d8492..9967334ea99f1a 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1155,7 +1155,7 @@ xfs_inode_free_eofblocks(
- 	}
- 	*lockflags |= XFS_IOLOCK_EXCL;
- 
--	if (xfs_can_free_eofblocks(ip, false))
-+	if (xfs_can_free_eofblocks(ip))
- 		return xfs_free_eofblocks(ip);
- 
- 	/* inode could be preallocated or append-only */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 58fb7a5062e1e6..b699fa6ee3b64e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1595,7 +1595,7 @@ xfs_release(
- 	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
- 		return 0;
- 
--	if (xfs_can_free_eofblocks(ip, false)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		/*
- 		 * Check if the inode is being opened, written and closed
- 		 * frequently and we have delayed allocation blocks outstanding
-@@ -1856,15 +1856,13 @@ xfs_inode_needs_inactive(
- 
- 	/*
- 	 * This file isn't being freed, so check if there are post-eof blocks
--	 * to free.  @force is true because we are evicting an inode from the
--	 * cache.  Post-eof blocks must be freed, lest we end up with broken
--	 * free space accounting.
-+	 * to free.
- 	 *
- 	 * Note: don't bother with iolock here since lockdep complains about
- 	 * acquiring it in reclaim context. We have the only reference to the
- 	 * inode at this point anyways.
- 	 */
--	return xfs_can_free_eofblocks(ip, true);
-+	return xfs_can_free_eofblocks(ip);
- }
- 
- /*
-@@ -1947,15 +1945,11 @@ xfs_inactive(
- 
- 	if (VFS_I(ip)->i_nlink != 0) {
- 		/*
--		 * force is true because we are evicting an inode from the
--		 * cache. Post-eof blocks must be freed, lest we end up with
--		 * broken free space accounting.
--		 *
- 		 * Note: don't bother with iolock here since lockdep complains
- 		 * about acquiring it in reclaim context. We have the only
- 		 * reference to the inode at this point anyways.
- 		 */
--		if (xfs_can_free_eofblocks(ip, true))
-+		if (xfs_can_free_eofblocks(ip))
- 			error = xfs_free_eofblocks(ip);
- 
- 		goto out;
--- 
-2.43.0
-
+Please contact me if you need assistance.
+--=20
+1070892: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1070892
+1070903: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1070903
+1071832: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071832
+1071837: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071837
+1071838: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071838
+1071860: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071860
+1071931: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071931
+1071932: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071932
+1071934: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071934
+1071937: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071937
+1071941: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1071941
+1073831: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1073831
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
