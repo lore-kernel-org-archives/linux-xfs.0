@@ -1,91 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FE401B0120;
-	Thu, 20 Jun 2024 15:23:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B403A1CAAD
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 15:49:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718896988; cv=none; b=ar+s2NvWqWtBXxFrh9JXHWp3ZDur7vccKEeljY0yjA8S/cYDFow91THCmjjCGABsIG9MQEP+DK0L3cHMo5wbhWJclHD512SYOO/6w/9SawUy20xhMVVoDeY/UYkilr42Nzr1ytsg5bhA/+0zGnGqZbGbjHXT6fzOGlzVZANJpPw=
+	t=1718898584; cv=none; b=mMCHQNXItjU1ILhjpMULnOohkjJtbpS+ZyBjorfioqt2SxBRpz+sR2gxIDNr+vJN3BWusq1lkkGaV0tRu21dJcC27hcB0LEYT1PaRei6sJJFY56zQdzFAqMM4wu22nAux5NOVfQ6ElCHgTYIolmyY2HySOqJf48GFKn2FEmsWPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718896988; c=relaxed/simple;
-	bh=713UnYvca8N+2HdeEUO+m7CICnb8uLx0hJlWox5RUhs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UXCfRDBIlq1zfG8km3iG0xaUMaWPub1GRuTZ6UwfAPvPqQ4xkiI4sjVaz1vGJtAMUHy7lRRqeDOubo5isqa+BFhA98E+V1own9MfmoYW/wgwE5cDJQytT9oq6Z9STLJiqkKEAOE5diCPzHIz7du60JGr1YNTgi3t4kALPhBXsjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aChOhXn+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718898584; c=relaxed/simple;
+	bh=EwvF/8jOvWy6bXSeasb7zxsDPivhiLPA7kupSqjUM8s=;
+	h=Date:To:From:Message-Id; b=D8dRhJ1Cpdg+ivoISSkSGDl2Gwi8BRgS8n1Y9rqQFszvmq8oAS9E85acAjJt3C6q64L+uqqarTdStr+0XVn3hrUavVpTkqiTxdGXw0NN+KFB5K9XmpAq48nJPwjwY0u40VSk0gumjFp5/4IHVIxo7A4LRiyVPw+HYoabSEA8oU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fysieQkA; arc=none smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aChOhXn+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BA74C32786;
-	Thu, 20 Jun 2024 15:23:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718896987;
-	bh=713UnYvca8N+2HdeEUO+m7CICnb8uLx0hJlWox5RUhs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aChOhXn+RhOtj24I/4za/LE0soQ2iwB+WxS7w/XkEbZZNabXx69G3/YPr0RmlSk4G
-	 zHv1PwRLXn1VKGNBmYIjH7421tY+sGUbhCVu0ZS9cblq3w8gNPBHOax5K7SvCfBcWM
-	 LrygPRjX+uwoNsWHt8iV+FdrnBy+RDxbIOQg5F6MS16WddnDsKN0QoU7CYulHzcxyP
-	 tqgfX0rfsHgf/V+cACjpB9FYnzoWYXMeblHJm6W0AlrzCW3JICNrPfJiJTs4iI1xqk
-	 6cyFgzyELI1Tvuu0Fw4o6uG5J1hDfheffR1Bm6WPbcTp2ygyXaqM1pAh+ab+y+98Zf
-	 xvxxF/Wz4viPg==
-Date: Thu, 20 Jun 2024 08:23:06 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH] xfs/073: avoid large recurise diff
-Message-ID: <20240620152306.GV103034@frogsfrogsfrogs>
-References: <20240620124844.558637-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fysieQkA"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-70627716174so952739b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 08:49:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718898581; x=1719503381; darn=vger.kernel.org;
+        h=message-id:from:to:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=EwvF/8jOvWy6bXSeasb7zxsDPivhiLPA7kupSqjUM8s=;
+        b=fysieQkAUFNBbkDb+JIBOnfK9ONETuZUXfGnsmYianuX1mxTrvsIIM9+LRcDuWsARy
+         umwJ+WaX7jc7zz+1KKZGPuOkHl7eoYfpxhwSfwhsWh4PfxZXDUeaBNj4WYGf9PbahD2i
+         KfkNcLN//dYYK4M1Y90VUh4GOV0g5pZ7XLSko6ySm28b8ZLCuDseO9IOA92fqPe56ok9
+         XDadguZ11F6EDswseQ87K+Mlu9JYzsE0YJ9AGP5wsGS67c8BiW6Q2qUejGHHXQK9dHGp
+         ES3q+4LQYsu19RIPSooyyVFlgIRMbg4/LgwN6XDwmP1CSkVrVKacg+236cLN1UtBTf8u
+         3M1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718898581; x=1719503381;
+        h=message-id:from:to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=EwvF/8jOvWy6bXSeasb7zxsDPivhiLPA7kupSqjUM8s=;
+        b=ILhi4EPqT/4andghZqCgO+a+3dUmQ659K1QikFn1UaQGN0X8I9b//Gwm7Sm9d4DHTg
+         MiONV7GegKrqIKvsqQzI5Xcy0740/9BkBd6YZhnxGUnB380HZOA7pdrTu/G4/y74UIcp
+         8UtZG0Dgl+1G4qx4aH0izAADeYKpFnjOmVXkSDI7KbBr11LKsCB0GyZA+s7P0Dzx/C3d
+         B/vlnZX5PE8iz8uQf3WAw7Pqtt4KIZT5WT/R0DQBb1I4EvLiQZwYl7fBZUruTpklOsHn
+         zfOleGJsT3kQbim78BkvmUGqh+hFOrEfORsU7AGeBDZYiipYg1cPBoMYwG+tD0QtD0V1
+         2hpw==
+X-Gm-Message-State: AOJu0YwjHtPT3U1tDLjAp0SglOLeQqxreRk3+MEgms/VHwVmz3Au0qbR
+	G0L18NRCkZ4M3OYZxVCdZ1ipXYktyy9wItsVdReHqkC1Ypgz5sD+SiJ3MQ==
+X-Google-Smtp-Source: AGHT+IEZ5JfS06A9iBIZjg1GZ9GTB0t62FmXp15kMfRuhtwwrzJ+N2lv9ewDSWhAl0cNhh7ZlWzOIQ==
+X-Received: by 2002:a05:6a20:f394:b0:1b8:d79:55f3 with SMTP id adf61e73a8af0-1bcbb663a68mr5180275637.54.1718898581398;
+        Thu, 20 Jun 2024 08:49:41 -0700 (PDT)
+Received: from localhost (mx-ll-171.4.222-32.dynamic.3bb.co.th. [171.4.222.32])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ccba620fsm12541750b3a.220.2024.06.20.08.49.39
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Jun 2024 08:49:40 -0700 (PDT)
+Date: Thu, 20 Jun 2024 22:49:32 +0700
+To: linux-xfs@vger.kernel.org
+From: Konst Mayer <cdlscpmv@gmail.com>
+Message-Id: <2UXR5417C74F3.27N1XQP68WXAD@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240620124844.558637-1-hch@lst.de>
 
-On Thu, Jun 20, 2024 at 02:48:44PM +0200, Christoph Hellwig wrote:
-> xfs/073 has been failing for me for a while on most of my test setups
-> with:
-> 
-> diff: memory exhausted
-> 
-> from the large recursive diff it does.  Replace that with a pipe using
-> md5sum to reduce the memory usage.
-> 
-> Based on a snipplet from Darrick Wong.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hello,
 
-LGTM
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+In our setup, we created a dedicated real-time section on top of RAID0
+(backed by multiple SSDs). The rest of the filesystem resides on another
+device.
 
-> ---
->  tests/xfs/073 | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/tests/xfs/073 b/tests/xfs/073
-> index c7616b9e9..0f96fdb09 100755
-> --- a/tests/xfs/073
-> +++ b/tests/xfs/073
-> @@ -76,7 +76,8 @@ _verify_copy()
->  	fi
->  
->  	echo comparing new image files to old
-> -	diff -Naur $source_dir $target_dir
-> +	(cd $source_dir; find . -type f -print0 | xargs -0 md5sum) | \
-> +	(cd $target_dir ; md5sum -c --quiet)
+When we ran the "fstrim" command on the mountpoint (mounted with -o
+rtdev=/dev/md/raid), the discard does not propogate to the real-time
+partition, and only the partition with metadata gets trimmed.
 
-Dumb nit: shellcheck   ^^ tells me these semicolons should be a '&&' so
-that the find/md5sum won't run if the cd fails, but the incorrect file
-list and whatever error messages cd coughs up will be enough to fail the
-test anyway.
+Is there a solution to this?
 
---D
-
->  
->  	echo comparing new image directories to old
->  	find $source_dir | _filter_path $source_dir > $tmp.manifest1
-> -- 
-> 2.43.0
-> 
-> 
+Best regards,
+Konst
