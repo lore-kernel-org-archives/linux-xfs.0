@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37709C8FB
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:02:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2FE039856
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:02:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924524; cv=none; b=Dm5SCOzJRLaNAweo1awg1siXN5UlE6b3oMdQCkd4rCsiHyoTLb+Em3nfcl/DLxFmnIpF5puAYlq9/YYIszYom3u3v6mmq3LdM9UEpbF0zLMaKkU03Yo76dbRpq20LQ57LXptZwd5YOKnmu2XVSRIpxy6skVpKxCTIakaJogOWwE=
+	t=1718924539; cv=none; b=o7/XIAdNOihpfP7cFEYYbU1EiJCEMbWS7Uxrmoq9v1RqpEHbCime9asiHtR5rdzPd5vEynQLaHJpeMJzY8lMAXvzWPGKmhqPoT3WGib9AhA2Lx6bgFG105KmGM1Qt3b0wY7VoXnAIh5MGfpNN9ib1RJejMKAsmMrZOd1yAJxMBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924524; c=relaxed/simple;
-	bh=p278gOk07vy+VZJd/sZRA2hso2U/29H7TWSZHiKcdVk=;
+	s=arc-20240116; t=1718924539; c=relaxed/simple;
+	bh=EiMC1Mxil1ldr7UujNtMLHhzc2+sSi0OdZ9pg212Qn0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fwQJ8hBHf+y1HcMeF9GAQ475X18Y3C/bfYmBb1i8uOp14Ir0gw/1O2JNrtO+1Uj2htqBFbIZOqjLgz6Vi7HmthFVq9GVljZe1WP2/8gx7fBART2dGdmYDKkTVQjUwDuqqTNUX3Gqkq/rde/gE5CKx/qwvS7kgUrnZRhWOGUrWOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VEhZewIX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=g+YBmkjV6UVXSZc411E4S7RsDY8WZEQ1H/z0G6LGBDDSpPcA6RYYSJdoetvePwq908cwfMju1uYhcXQFloFaRrK1Dmvar60dYBLkgQq78TapROiMLM4sjv5osKLu1R4yeq7tA2q8+4fNT1kJNQCnLoYAwqBV9JI3GRC2XWvDOmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VxvXtL0T; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VEhZewIX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6912C32781;
-	Thu, 20 Jun 2024 23:02:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VxvXtL0T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C413C2BD10;
+	Thu, 20 Jun 2024 23:02:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924523;
-	bh=p278gOk07vy+VZJd/sZRA2hso2U/29H7TWSZHiKcdVk=;
+	s=k20201202; t=1718924539;
+	bh=EiMC1Mxil1ldr7UujNtMLHhzc2+sSi0OdZ9pg212Qn0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VEhZewIX5XdQQUJnvrkrwhSiFf14TPohpROh4mio2Xt0I6er7yP056e2SuEM6VUsS
-	 CdShBbjYIcB4eSF7AHk3ESDzK/bIj8DT9cYWcC9gHRRHGq98DxGfhrqrrvjrD56bgB
-	 NdgExlBig0s3TrFrsAggCPZCUfEoxR/jio1vHt6cQpvjHgj4YJ46jsV4acBONOJHV4
-	 By8A87BdbMvDcFMLbC6SWqAqvKp+zTl5ed6TK7+aI9pb7TQ1RivH0U+q6F7UF7V0+k
-	 /S2oNePPuiILbuzH1SkZSDS9rsfDL3giKJRgn+DgBQIBzyq1YArGw4joYmGfVyp4yX
-	 XCsUmkW0sajbA==
-Date: Thu, 20 Jun 2024 16:02:03 -0700
-Subject: [PATCH 14/24] xfs: hoist xfs_{bump,drop}link to libxfs
+	b=VxvXtL0TzldQuXbkVcGVBE2E1Zdnfn85axJSdPlryHHuGMpzF4oqe3xbJtyv06qH6
+	 0YjpLN0VpMrP+CvLxCzx7woobuCgngCfFwK10C5Vp28ShYv4ed5xLBsB3+/syMOJ5q
+	 SAHcHs/ZbWFd/Omy+lnyIYdSLxQdpriNMFbyGzDbT/t03+Sxkr6eQ92mU78RgOxhwX
+	 25rZ/4Kcl24LvOBkFI3yQJ9OuXTLFhr2K2GTMZQKGo5MoHIF8HrclCzl/2mVVCq/CS
+	 U5GpWOAMPcPnYWgkJv3rzwbNXWLUCJHiiXq7fRrqFdZtDRZYkxYCAwfNVs/2Sb1XAP
+	 Zil4aa65fXacA==
+Date: Thu, 20 Jun 2024 16:02:18 -0700
+Subject: [PATCH 15/24] xfs: separate the icreate logic around INIT_XATTRS
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892418137.3183075.9161813667351346245.stgit@frogsfrogsfrogs>
+Message-ID: <171892418155.3183075.2421928430504613482.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 References: <171892417831.3183075.10759987417835165626.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,165 +46,178 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move xfs_bumplink and xfs_droplink to libxfs.
+INIT_XATTRS is overloaded here -- it's set during the creat process when
+we think that we're immediately going to set some ACL xattrs to save
+time.  However, it's also used by the parent pointers code to enable the
+attr fork in preparation to receive ppptr xattrs.  This results in
+xfs_has_parent() branches scattered around the codebase to turn on
+INIT_XATTRS.
+
+Linkable files are created far more commonly than unlinkable temporary
+files or directory tree roots, so we should centralize this logic in
+xfs_inode_init.  For the three callers that don't want parent pointers
+(online repiar tempfiles, unlinkable tempfiles, rootdir creation) we
+provide an UNLINKABLE flag to skip attr fork initialization.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_inode_util.c |   53 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_util.h |    2 ++
- fs/xfs/xfs_inode.c             |   53 ----------------------------------------
- fs/xfs/xfs_inode.h             |    2 --
- 4 files changed, 55 insertions(+), 55 deletions(-)
+ fs/xfs/libxfs/xfs_inode_util.c |   36 ++++++++++++++++++++++++++----------
+ fs/xfs/libxfs/xfs_inode_util.h |    1 +
+ fs/xfs/scrub/tempfile.c        |    2 +-
+ fs/xfs/xfs_inode.c             |    3 ---
+ fs/xfs/xfs_iops.c              |   11 ++++-------
+ fs/xfs/xfs_qm.c                |    1 +
+ fs/xfs/xfs_symlink.c           |    3 ---
+ 7 files changed, 33 insertions(+), 24 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
-index 5739871ac3705..214976ecefd77 100644
+index 214976ecefd77..5795445ef4bd2 100644
 --- a/fs/xfs/libxfs/xfs_inode_util.c
 +++ b/fs/xfs/libxfs/xfs_inode_util.c
-@@ -626,3 +626,56 @@ xfs_iunlink_remove(
- 
- 	return xfs_iunlink_remove_inode(tp, pag, agibp, ip);
+@@ -233,6 +233,31 @@ xfs_inode_inherit_flags2(
+ 	}
  }
-+
+ 
 +/*
-+ * Decrement the link count on an inode & log the change.  If this causes the
-+ * link count to go to zero, move the inode to AGI unlinked list so that it can
-+ * be freed when the last active reference goes away via xfs_inactive().
++ * If we need to create attributes immediately after allocating the inode,
++ * initialise an empty attribute fork right now. We use the default fork offset
++ * for attributes here as we don't know exactly what size or how many
++ * attributes we might be adding. We can do this safely here because we know
++ * the data fork is completely empty and this saves us from needing to run a
++ * separate transaction to set the fork offset in the immediate future.
++ *
++ * If we have parent pointers and the caller hasn't told us that the file will
++ * never be linked into a directory tree, we /must/ create the attr fork.
 + */
-+int
-+xfs_droplink(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
++static inline bool
++xfs_icreate_want_attrfork(
++	struct xfs_mount		*mp,
++	const struct xfs_icreate_args	*args)
 +{
-+	struct inode		*inode = VFS_I(ip);
++	if (args->flags & XFS_ICREATE_INIT_XATTRS)
++		return true;
 +
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
++	if (!(args->flags & XFS_ICREATE_UNLINKABLE) && xfs_has_parent(mp))
++		return true;
 +
-+	if (inode->i_nlink == 0) {
-+		xfs_info_ratelimited(tp->t_mountp,
-+ "Inode 0x%llx link count dropped below zero.  Pinning link count.",
-+				ip->i_ino);
-+		set_nlink(inode, XFS_NLINK_PINNED);
-+	}
-+	if (inode->i_nlink != XFS_NLINK_PINNED)
-+		drop_nlink(inode);
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	if (inode->i_nlink)
-+		return 0;
-+
-+	return xfs_iunlink(tp, ip);
++	return false;
 +}
 +
-+/*
-+ * Increment the link count on an inode & log the change.
-+ */
-+void
-+xfs_bumplink(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-+
-+	if (inode->i_nlink == XFS_NLINK_PINNED - 1)
-+		xfs_info_ratelimited(tp->t_mountp,
-+ "Inode 0x%llx link count exceeded maximum.  Pinning link count.",
-+				ip->i_ino);
-+	if (inode->i_nlink != XFS_NLINK_PINNED)
-+		inc_nlink(inode);
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+}
+ /* Initialise an inode's attributes. */
+ void
+ xfs_inode_init(
+@@ -325,16 +350,7 @@ xfs_inode_init(
+ 		ASSERT(0);
+ 	}
+ 
+-	/*
+-	 * If we need to create attributes immediately after allocating the
+-	 * inode, initialise an empty attribute fork right now. We use the
+-	 * default fork offset for attributes here as we don't know exactly what
+-	 * size or how many attributes we might be adding. We can do this
+-	 * safely here because we know the data fork is completely empty and
+-	 * this saves us from needing to run a separate transaction to set the
+-	 * fork offset in the immediate future.
+-	 */
+-	if (args->flags & XFS_ICREATE_INIT_XATTRS) {
++	if (xfs_icreate_want_attrfork(mp, args)) {
+ 		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
+ 		xfs_ifork_init_attr(ip, XFS_DINODE_FMT_EXTENTS, 0);
+ 
 diff --git a/fs/xfs/libxfs/xfs_inode_util.h b/fs/xfs/libxfs/xfs_inode_util.h
-index 42a032afe3cac..50c14ba6ca5a2 100644
+index 50c14ba6ca5a2..1c54c3b0cf262 100644
 --- a/fs/xfs/libxfs/xfs_inode_util.h
 +++ b/fs/xfs/libxfs/xfs_inode_util.h
-@@ -50,5 +50,7 @@ void xfs_inode_init(struct xfs_trans *tp, const struct xfs_icreate_args *args,
- int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
- int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
- 		struct xfs_inode *ip);
-+int xfs_droplink(struct xfs_trans *tp, struct xfs_inode *ip);
-+void xfs_bumplink(struct xfs_trans *tp, struct xfs_inode *ip);
+@@ -32,6 +32,7 @@ struct xfs_icreate_args {
  
- #endif /* __XFS_INODE_UTIL_H__ */
+ #define XFS_ICREATE_TMPFILE	(1U << 0)  /* create an unlinked file */
+ #define XFS_ICREATE_INIT_XATTRS	(1U << 1)  /* will set xattrs immediately */
++#define XFS_ICREATE_UNLINKABLE	(1U << 2)  /* cannot link into dir tree */
+ 	uint16_t		flags;
+ };
+ 
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 523971a15a72a..d390d56cd8751 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -43,7 +43,7 @@ xrep_tempfile_create(
+ 	struct xfs_icreate_args	args = {
+ 		.pip		= sc->mp->m_rootip,
+ 		.mode		= mode,
+-		.flags		= XFS_ICREATE_TMPFILE,
++		.flags		= XFS_ICREATE_TMPFILE | XFS_ICREATE_UNLINKABLE,
+ 	};
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xfs_trans	*tp = NULL;
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 182c63ee36b0e..c59c6321e361a 100644
+index c59c6321e361a..dd8e189175d53 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -600,59 +600,6 @@ xfs_icreate(
- 	return 0;
+@@ -2512,9 +2512,6 @@ xfs_rename_alloc_whiteout(
+ 	struct qstr		name;
+ 	int			error;
+ 
+-	if (xfs_has_parent(dp->i_mount))
+-		args.flags |= XFS_ICREATE_INIT_XATTRS;
+-
+ 	error = xfs_create_tmpfile(&args, &tmpfile);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 4563ba440570b..07f736c42460b 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -158,8 +158,6 @@ xfs_create_need_xattr(
+ 	if (dir->i_sb->s_security)
+ 		return true;
+ #endif
+-	if (xfs_has_parent(XFS_I(dir)->i_mount))
+-		return true;
+ 	return false;
  }
  
--/*
-- * Decrement the link count on an inode & log the change.  If this causes the
-- * link count to go to zero, move the inode to AGI unlinked list so that it can
-- * be freed when the last active reference goes away via xfs_inactive().
-- */
--int
--xfs_droplink(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*ip)
--{
--	struct inode		*inode = VFS_I(ip);
--
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	if (inode->i_nlink == 0) {
--		xfs_info_ratelimited(tp->t_mountp,
-- "Inode 0x%llx link count dropped below zero.  Pinning link count.",
--				ip->i_ino);
--		set_nlink(inode, XFS_NLINK_PINNED);
--	}
--	if (inode->i_nlink != XFS_NLINK_PINNED)
--		drop_nlink(inode);
--
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--	if (inode->i_nlink)
--		return 0;
--
--	return xfs_iunlink(tp, ip);
--}
--
--/*
-- * Increment the link count on an inode & log the change.
-- */
--void
--xfs_bumplink(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*ip)
--{
--	struct inode		*inode = VFS_I(ip);
--
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	if (inode->i_nlink == XFS_NLINK_PINNED - 1)
--		xfs_info_ratelimited(tp->t_mountp,
-- "Inode 0x%llx link count exceeded maximum.  Pinning link count.",
--				ip->i_ino);
--	if (inode->i_nlink != XFS_NLINK_PINNED)
--		inc_nlink(inode);
--
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--}
--
- #ifdef CONFIG_XFS_LIVE_HOOKS
- /*
-  * Use a static key here to reduce the overhead of directory live update hooks.
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 47d3a11a0e7ef..5ee044674c3ab 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -615,8 +615,6 @@ void xfs_end_io(struct work_struct *work);
- int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
- void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
- void xfs_iunlock2_remapping(struct xfs_inode *ip1, struct xfs_inode *ip2);
--int xfs_droplink(struct xfs_trans *tp, struct xfs_inode *ip);
--void xfs_bumplink(struct xfs_trans *tp, struct xfs_inode *ip);
- void xfs_lock_inodes(struct xfs_inode **ips, int inodes, uint lock_mode);
- void xfs_sort_inodes(struct xfs_inode **i_tab, unsigned int num_inodes);
+@@ -215,12 +213,11 @@ xfs_generic_create(
+ 		args.flags |= XFS_ICREATE_TMPFILE;
  
+ 		/*
+-		 * If this temporary file will be linkable, set up the file
+-		 * with an attr fork to receive a parent pointer.
++		 * If this temporary file will not be linkable, don't bother
++		 * creating an attr fork to receive a parent pointer.
+ 		 */
+-		if (!(tmpfile->f_flags & O_EXCL) &&
+-		    xfs_has_parent(XFS_I(dir)->i_mount))
+-			args.flags |= XFS_ICREATE_INIT_XATTRS;
++		if (tmpfile->f_flags & O_EXCL)
++			args.flags |= XFS_ICREATE_UNLINKABLE;
+ 
+ 		error = xfs_create_tmpfile(&args, &ip);
+ 	}
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 78f839630c624..9490b913a4ab4 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -795,6 +795,7 @@ xfs_qm_qino_alloc(
+ 	if (need_alloc) {
+ 		struct xfs_icreate_args	args = {
+ 			.mode		= S_IFREG,
++			.flags		= XFS_ICREATE_UNLINKABLE,
+ 		};
+ 		xfs_ino_t	ino;
+ 
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 6ff736e5c4e7f..e471369f6b634 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -115,9 +115,6 @@ xfs_symlink(
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+ 
+-	if (xfs_has_parent(mp))
+-		args.flags |= XFS_ICREATE_INIT_XATTRS;
+-
+ 	/*
+ 	 * Check component lengths of the target path name.
+ 	 */
 
