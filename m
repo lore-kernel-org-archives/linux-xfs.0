@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A15E7C6EB
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:06:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34B587C6EB
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:07:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924805; cv=none; b=ujF4gHKzkH8BzN+FUUOkoeJAGTf3/Sq1vWN6jmqzrfGqfyVd71cLaVCQPkUWsB8xg5sKeUQjiCSCNluR91b4ZGvYep/FL8Yw8qXmWGY3nlZF9l25hCnoZBkDL87vbr+zcp+Oux4AXP6+FMYLo5rGZvWFUcWXADwP1Omkp4Ac1OA=
+	t=1718924821; cv=none; b=WyDkEH/3jFrG+TVDTh+mWjVCa0p1OfmCAHKSyXH5DZHh+LI8ET4Hf+zDDJKacvc5Wn67AkW7R+Tr1xKHG/MYAWXjK+QEK5uMdgGg7aocVXOvaV+JzByeNS/C4cmmq+vMkrOBN1QZZoLFEPOYNDDlfIHF3hHB9Lrh7oZXop5k6OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924805; c=relaxed/simple;
-	bh=Smyf0902YMxrV6i6WZnO3PM1L6SGk19BOZLi41QOZTw=;
+	s=arc-20240116; t=1718924821; c=relaxed/simple;
+	bh=ipH+LjaEyd7YV9zo3UzFCkKS5kOYLesbbeJhOw5fnmc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TjjTPPUiY7/cYTRMu2bZjB/W5p69FUW2pWRNGJQdV5hVXmMFMXKMB+zCw2HZBDPk1SAU+HeQBHcpyG0BRTY22JJCVbQLPMgSn3uTj/aD0RKYQSknCaf2tZv6XN3+koFDsCsDT2cCLcw0RuBN7SUnw11YU0CS6CA+QRajHm5gmPE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=go/WoFoT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QJee0J+B4l93g4YvrlJoSi0WCbluZ5JU4vj+1mmmk6AhcCChgiDEvM8iiy3Imbo4nVvP2S6zj3JURV8wcGvPqmG3aTRB+9AjtX0FRcBBdDACuRfrotqrSfAPWrOtQLhlpUEdqD3TgeW2UsSit8BMf1rn6SF2V7NNeK/rBYUchfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D91KCTD0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="go/WoFoT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 188B7C2BD10;
-	Thu, 20 Jun 2024 23:06:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D91KCTD0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA1B7C2BD10;
+	Thu, 20 Jun 2024 23:07:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924805;
-	bh=Smyf0902YMxrV6i6WZnO3PM1L6SGk19BOZLi41QOZTw=;
+	s=k20201202; t=1718924820;
+	bh=ipH+LjaEyd7YV9zo3UzFCkKS5kOYLesbbeJhOw5fnmc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=go/WoFoTGUnWiroYAwRiSzfYmebJ2aQXrqOTHS1a6Ncf8tEOKoWmD4aDDmGqsYOjG
-	 zs3or8zwqIIK03zKYy2vepwTdt180lAFwJBjO99+kMfPI71xlPQbuM/3F5gjIdyU2O
-	 A+PY3f83l4L6D/siKcGyayRCsUECgMZdhx/rHKmoyfTWh7nY3a3g+FvEbVAAmrQwVY
-	 I7CrrHIGjcl6pSKnhhlBgNQ9GaGrfJ6Yy5bjZ41eQd99HGDqWLnJIUG1RLVPDzv68k
-	 e6XfgrHIRPS4W0YjZEdBMZdrWoOWbUpHwg/tMR5lNuhmhzCQKT0MclfaekRgT7k1wa
-	 ecKSqPRIIF5Iw==
-Date: Thu, 20 Jun 2024 16:06:44 -0700
-Subject: [PATCH 8/9] xfs: remove xfs_defer_agfl_block
+	b=D91KCTD0qN/MfuyT/ro+G7gugNJUmiEXKG7LCv5J7Svidgnkwv7sCzQT1NXd0aFaL
+	 pUWat6PwURk6K9+A1gEkx3+nzvpqUQZMqzknt7JIdvaNxV6jZrpHJbElxMeI6NcBrB
+	 B/gZKnmy7PDSS0qBA/H11WRss973dr+YMRkKEtf+DF2ljllXfNqh5stmQvOz1sIjJK
+	 HDmM57MLNBbwocRBCnLhlbaC4o48wWJ6R7NvW36kKeTp2Z7v9/1hEpV1YAZZLWONg+
+	 LSnbh+QTYRf6Z1XoDPEzHqoxMSGAASdvhUSnkgU9CE/GAg05kvFsN3QG8oCJDqp1dy
+	 Wm3qh8GsQ8Dog==
+Date: Thu, 20 Jun 2024 16:07:00 -0700
+Subject: [PATCH 9/9] xfs: move xfs_extent_free_defer_add to xfs_extfree_item.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892418834.3183906.376857417040987772.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <171892418851.3183906.15855078165036440030.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892418670.3183906.4770669498640039656.stgit@frogsfrogsfrogs>
 References: <171892418670.3183906.4770669498640039656.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,109 +44,140 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-xfs_free_extent_later can handle the extra AGFL special casing with
-very little extra logic.
+Move the code that adds the incore xfs_extent_free_item deferred work
+data to a transaction live with the EFI log item code.  This means that
+the allocator code no longer has to know about the inner workings of the
+EFI log items.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+As a consequence, we can get rid of the _{get,put}_group helpers.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   67 +++++++++++++++------------------------------
- 1 file changed, 22 insertions(+), 45 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c |   12 ++----------
+ fs/xfs/libxfs/xfs_alloc.h |    3 ---
+ fs/xfs/xfs_extfree_item.c |   31 +++++++++++++++++--------------
+ fs/xfs/xfs_extfree_item.h |    6 ++++++
+ 4 files changed, 25 insertions(+), 27 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 03a0a4289d943..1da3b1f741300 100644
+index 1da3b1f741300..f711fce8767f4 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2535,48 +2535,6 @@ xfs_agfl_reset(
- 	clear_bit(XFS_AGSTATE_AGFL_NEEDS_RESET, &pag->pag_opstate);
- }
+@@ -27,6 +27,7 @@
+ #include "xfs_ag_resv.h"
+ #include "xfs_bmap.h"
+ #include "xfs_health.h"
++#include "xfs_extfree_item.h"
  
--/*
-- * Defer an AGFL block free. This is effectively equivalent to
-- * xfs_free_extent_later() with some special handling particular to AGFL blocks.
-- *
-- * Deferring AGFL frees helps prevent log reservation overruns due to too many
-- * allocation operations in a transaction. AGFL frees are prone to this problem
-- * because for one they are always freed one at a time. Further, an immediate
-- * AGFL block free can cause a btree join and require another block free before
-- * the real allocation can proceed. Deferring the free disconnects freeing up
-- * the AGFL slot from freeing the block.
-- */
--static int
--xfs_defer_agfl_block(
--	struct xfs_trans		*tp,
--	xfs_agnumber_t			agno,
--	xfs_agblock_t			agbno,
--	struct xfs_owner_info		*oinfo)
--{
--	struct xfs_mount		*mp = tp->t_mountp;
--	struct xfs_extent_free_item	*xefi;
--	xfs_fsblock_t			fsbno = XFS_AGB_TO_FSB(mp, agno, agbno);
--
--	ASSERT(xfs_extfree_item_cache != NULL);
--	ASSERT(oinfo != NULL);
--
--	if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbno(mp, fsbno)))
--		return -EFSCORRUPTED;
--
--	xefi = kmem_cache_zalloc(xfs_extfree_item_cache,
--			       GFP_KERNEL | __GFP_NOFAIL);
--	xefi->xefi_startblock = fsbno;
--	xefi->xefi_blockcount = 1;
--	xefi->xefi_owner = oinfo->oi_owner;
--	xefi->xefi_agresv = XFS_AG_RESV_AGFL;
--
--	trace_xfs_agfl_free_defer(mp, xefi);
+ struct kmem_cache	*xfs_extfree_item_cache;
+ 
+@@ -2579,16 +2580,7 @@ xfs_defer_extent_free(
+ 		xefi->xefi_owner = XFS_RMAP_OWN_NULL;
+ 	}
+ 
+-	trace_xfs_extent_free_defer(mp, xefi);
 -
 -	xfs_extent_free_get_group(mp, xefi);
--	xfs_defer_add(tp, &xefi->xefi_list, &xfs_agfl_free_defer_type);
--	return 0;
+-
+-	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
+-		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
+-				&xfs_agfl_free_defer_type);
+-	else
+-		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
+-				&xfs_extent_free_defer_type);
++	xfs_extent_free_defer_add(tp, xefi, dfpp);
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 2da543fb90ecd..0ed71a31fe7ce 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -254,9 +254,6 @@ struct xfs_extent_free_item {
+ 	enum xfs_ag_resv_type	xefi_agresv;
+ };
+ 
+-void xfs_extent_free_get_group(struct xfs_mount *mp,
+-		struct xfs_extent_free_item *xefi);
+-
+ #define XFS_EFI_SKIP_DISCARD	(1U << 0) /* don't issue discard */
+ #define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
+ #define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index c1b6e12decdab..11066b5eb9176 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -436,21 +436,24 @@ xfs_extent_free_create_done(
+ 	return &efdp->efd_item;
+ }
+ 
+-/* Take a passive ref to the AG containing the space we're freeing. */
++/* Add this deferred EFI to the transaction. */
+ void
+-xfs_extent_free_get_group(
+-	struct xfs_mount		*mp,
+-	struct xfs_extent_free_item	*xefi)
++xfs_extent_free_defer_add(
++	struct xfs_trans		*tp,
++	struct xfs_extent_free_item	*xefi,
++	struct xfs_defer_pending	**dfpp)
+ {
++	struct xfs_mount		*mp = tp->t_mountp;
++
++	trace_xfs_extent_free_defer(mp, xefi);
++
+ 	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
 -}
 -
- /*
-  * Add the extent to the list of extents to be free at transaction end.
-  * The list is maintained sorted (by block number).
-@@ -2624,7 +2582,13 @@ xfs_defer_extent_free(
- 	trace_xfs_extent_free_defer(mp, xefi);
- 
- 	xfs_extent_free_get_group(mp, xefi);
--	*dfpp = xfs_defer_add(tp, &xefi->xefi_list, &xfs_extent_free_defer_type);
-+
+-/* Release a passive AG ref after some freeing work. */
+-static inline void
+-xfs_extent_free_put_group(
+-	struct xfs_extent_free_item	*xefi)
+-{
+-	xfs_perag_intent_put(xefi->xefi_pag);
 +	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
 +		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
 +				&xfs_agfl_free_defer_type);
 +	else
 +		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
 +				&xfs_extent_free_defer_type);
- 	return 0;
  }
  
-@@ -2882,8 +2846,21 @@ xfs_alloc_fix_freelist(
- 		if (error)
- 			goto out_agbp_relse;
+ /* Cancel a free extent. */
+@@ -460,7 +463,7 @@ xfs_extent_free_cancel_item(
+ {
+ 	struct xfs_extent_free_item	*xefi = xefi_entry(item);
  
--		/* defer agfl frees */
--		error = xfs_defer_agfl_block(tp, args->agno, bno, &targs.oinfo);
-+		/*
-+		 * Defer the AGFL block free.
-+		 *
-+		 * This helps to prevent log reservation overruns due to too
-+		 * many allocation operations in a transaction. AGFL frees are
-+		 * prone to this problem because for one they are always freed
-+		 * one at a time.  Further, an immediate AGFL block free can
-+		 * cause a btree join and require another block free before the
-+		 * real allocation can proceed.
-+		 * Deferring the free disconnects freeing up the AGFL slot from
-+		 * freeing the block.
-+		 */
-+		error = xfs_free_extent_later(tp,
-+				XFS_AGB_TO_FSB(mp, args->agno, bno), 1,
-+				&targs.oinfo, XFS_AG_RESV_AGFL, 0);
- 		if (error)
- 			goto out_agbp_relse;
- 	}
+-	xfs_extent_free_put_group(xefi);
++	xfs_perag_intent_put(xefi->xefi_pag);
+ 	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ }
+ 
+@@ -575,7 +578,7 @@ xfs_efi_recover_work(
+ 	xefi->xefi_blockcount = extp->ext_len;
+ 	xefi->xefi_agresv = XFS_AG_RESV_NONE;
+ 	xefi->xefi_owner = XFS_RMAP_OWN_UNKNOWN;
+-	xfs_extent_free_get_group(mp, xefi);
++	xefi->xefi_pag = xfs_perag_intent_get(mp, extp->ext_start);
+ 
+ 	xfs_defer_add_item(dfp, &xefi->xefi_list);
+ }
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index da6a5afa607cf..41b7c43060799 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -88,4 +88,10 @@ xfs_efd_log_item_sizeof(
+ extern struct kmem_cache	*xfs_efi_cache;
+ extern struct kmem_cache	*xfs_efd_cache;
+ 
++struct xfs_extent_free_item;
++
++void xfs_extent_free_defer_add(struct xfs_trans *tp,
++		struct xfs_extent_free_item *xefi,
++		struct xfs_defer_pending **dfpp);
++
+ #endif	/* __XFS_EXTFREE_ITEM_H__ */
 
