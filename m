@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2CFF143865
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:09:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D200114387F
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:09:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718924946; cv=none; b=M5dmeCImjEoDXYYErGnMpzMNxfY1ZrBR+zHCXFTAt2B5M1LNY24RzmV4pVNyIHl+kKuGYUQbFUgETvEU7eMbeoPrri8yJ3uWuvTqx0k+OPz14PyPsOxxbPJZJq7FkdZqx+1XfyzELbgjMZJ6pUnsoMv9InCLuaJI8ug8fth/HSM=
+	t=1718924961; cv=none; b=WrrfZ2nDl6/RH8apOc9j63inJx85cia67flcGxoyGY8pEtpooXwUp3+rTpUciyiFHPjKJiDyY4Iour/c8s69Y5SKAWt+gUquGY7mHVNx4Ksr4Kd6GKCmGRyEVCnYXksQGoHeHOQFRp16SGGS+bSncaKbEH2tqcqadaXfx3HyWh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718924946; c=relaxed/simple;
-	bh=G3Yg58hE2Wm2bF31wFksPDVdg5cCiKM25HqvaYT6oBI=;
+	s=arc-20240116; t=1718924961; c=relaxed/simple;
+	bh=B//99HLyMlmLZ+NyRuPuYcumC/U0t2Oc4moB2y/F8qY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HOGsKgIB0jIteVm2TX2BULEZLxXpOQBVo1C/eShhwG1TtqDgD1E/W98FcXZ+Gpsjmu1sOhRaKvpdIxVpO+Zt2fIz102YsmnuOVC3QXBCwr7jVQJVdXXNqS6o1lcjz6ho0hpXiHdwkbuUlTFnCQPxLb1ALbi7bEgUR3ZFup7ksvQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h5500klR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KhN37XctjTGyCkgIcct+NLcpiFIeN/NhpVGCva8r1ZvWRnbmbD+VrTKMSujEZ7xc6apIDHnDhLa5fBd1th4yG1R5GbnKUW2KINPUpl1FY0CvX/XBP4vYGmhkQMB+MKe0Z0ell3L+/FS91IKkRDQAluDBnWtvjZc8LtfsddCjdYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nf/MxxdL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h5500klR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCA3AC2BD10;
-	Thu, 20 Jun 2024 23:09:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nf/MxxdL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75C53C2BD10;
+	Thu, 20 Jun 2024 23:09:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718924945;
-	bh=G3Yg58hE2Wm2bF31wFksPDVdg5cCiKM25HqvaYT6oBI=;
+	s=k20201202; t=1718924961;
+	bh=B//99HLyMlmLZ+NyRuPuYcumC/U0t2Oc4moB2y/F8qY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=h5500klRdiHHQ0yKG0qoLBr/O8nuM6RJ5/D+U9SywXjDkldTGc9IrCqLEMlNqLGtg
-	 wArgiYjR2mjAX34xBt4Tj6X2sdj2XQMo3UmbfvvlVoUrzRHTPh8z438reeP3vgvFld
-	 LfDRwrBKh4vcl4mTsU5tdkJwj8mCndp5d/tJkGvIelNcu3yq5KaHVUF9Y56cfVZF+x
-	 FThJDGUwAzcW0IrG5D3FxRK9FqiexsanNLOd35gODD0VANqHHBfnzFeiRlp/wKeGUd
-	 PDQrZwSkM2olnchi9IzmMs/Ps9siNFOnZI7QtXjwws31MjXQ60UJFcjMB9EbhvODw/
-	 ENwZUcPbWLaMA==
-Date: Thu, 20 Jun 2024 16:09:05 -0700
-Subject: [PATCH 8/9] xfs: simplify usage of the rcur local variable in
- xfs_rmap_finish_one
+	b=nf/MxxdLoEaGKHWBNnxDWHIpkJhJFf7syBDg/AA3J86yGKLphc7kNY67Rz97cqCDF
+	 U4NEmNrXuLElCcBvwr4qn0+8nW4zQGLn6/W4f9c9dS0ZotUEcysm3ejPEuOAqA+kwF
+	 04yR1HiBWYrMLWGYzaBY+Pk2KLD0LfcPTfCTRExCOA78xUJlEI47LwyuUU11qpxZVJ
+	 AFI+cmeHkaVGr0aE9X9S/aLHGhnXqYIHO2asOivzSiPBgiDsx1VYpteOQ1f6X+ul1i
+	 +jkoQtbl8REaCNXOeEJF3UdoTWRsig1Q/FVl2QA5kP4Y0zes9cnNm7OFyFBqFVT452
+	 8nyebZ15aWnmA==
+Date: Thu, 20 Jun 2024 16:09:21 -0700
+Subject: [PATCH 9/9] xfs: move xfs_rmap_update_defer_add to xfs_rmap_item.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892419370.3184396.10850586111347123188.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <171892419387.3184396.13324698821553289330.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892419209.3184396.10441735798864910501.stgit@frogsfrogsfrogs>
 References: <171892419209.3184396.10441735798864910501.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,49 +44,133 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Only update rcur when we know the final *pcur value.
+Move the code that adds the incore xfs_rmap_update_item deferred work
+data to a transaction live with the RUI log item code.  This means that
+the rmap code no longer has to know about the inner workings of the RUI
+log items.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-[djwong: don't leave the caller with a dangling ref]
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+As a consequence, we can get rid of the _{get,put}_group helpers.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
  fs/xfs/libxfs/xfs_rmap.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_rmap.h |    3 ---
+ fs/xfs/xfs_rmap_item.c   |   24 +++++++++++-------------
+ fs/xfs/xfs_rmap_item.h   |    4 ++++
+ 4 files changed, 17 insertions(+), 20 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 0ee97f1698e9d..a5a0fa6a5b5dc 100644
+index a5a0fa6a5b5dc..6ef4687b3aba8 100644
 --- a/fs/xfs/libxfs/xfs_rmap.c
 +++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2570,7 +2570,7 @@ xfs_rmap_finish_one(
+@@ -24,6 +24,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_ag.h"
+ #include "xfs_health.h"
++#include "xfs_rmap_item.h"
+ 
+ struct kmem_cache	*xfs_rmap_intent_cache;
+ 
+@@ -2656,10 +2657,7 @@ __xfs_rmap_add(
+ 	ri->ri_whichfork = whichfork;
+ 	ri->ri_bmap = *bmap;
+ 
+-	trace_xfs_rmap_defer(tp->t_mountp, ri);
+-
+-	xfs_rmap_update_get_group(tp->t_mountp, ri);
+-	xfs_defer_add(tp, &ri->ri_list, &xfs_rmap_update_defer_type);
++	xfs_rmap_defer_add(tp, ri);
+ }
+ 
+ /* Map an extent into a file. */
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 9d85dd2a6553c..b783dd4dd95d1 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -176,9 +176,6 @@ struct xfs_rmap_intent {
+ 	struct xfs_perag			*ri_pag;
+ };
+ 
+-void xfs_rmap_update_get_group(struct xfs_mount *mp,
+-		struct xfs_rmap_intent *ri);
+-
+ /* functions for updating the rmapbt based on bmbt map/unmap operations */
+ void xfs_rmap_map_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		int whichfork, struct xfs_bmbt_irec *imap);
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 44a9b77c17639..88b5580e1e19f 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -22,6 +22,7 @@
+ #include "xfs_log_recover.h"
+ #include "xfs_ag.h"
+ #include "xfs_btree.h"
++#include "xfs_trace.h"
+ 
+ struct kmem_cache	*xfs_rui_cache;
+ struct kmem_cache	*xfs_rud_cache;
+@@ -342,21 +343,18 @@ xfs_rmap_update_create_done(
+ 	return &rudp->rud_item;
+ }
+ 
+-/* Take a passive ref to the AG containing the space we're rmapping. */
++/* Add this deferred RUI to the transaction. */
+ void
+-xfs_rmap_update_get_group(
+-	struct xfs_mount	*mp,
++xfs_rmap_defer_add(
++	struct xfs_trans	*tp,
+ 	struct xfs_rmap_intent	*ri)
  {
- 	struct xfs_owner_info		oinfo;
- 	struct xfs_mount		*mp = tp->t_mountp;
--	struct xfs_btree_cur		*rcur;
-+	struct xfs_btree_cur		*rcur = *pcur;
- 	struct xfs_buf			*agbp = NULL;
- 	xfs_agblock_t			bno;
- 	bool				unwritten;
-@@ -2585,7 +2585,6 @@ xfs_rmap_finish_one(
- 	 * If we haven't gotten a cursor or the cursor AG doesn't match
- 	 * the startblock, get one now.
- 	 */
--	rcur = *pcur;
- 	if (rcur != NULL && rcur->bc_ag.pag != ri->ri_pag) {
- 		xfs_btree_del_cursor(rcur, 0);
- 		rcur = NULL;
-@@ -2607,9 +2606,8 @@ xfs_rmap_finish_one(
- 			return -EFSCORRUPTED;
- 		}
++	struct xfs_mount	*mp = tp->t_mountp;
++
++	trace_xfs_rmap_defer(mp, ri);
++
+ 	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_bmap.br_startblock);
+-}
+-
+-/* Release a passive AG ref after finishing rmapping work. */
+-static inline void
+-xfs_rmap_update_put_group(
+-	struct xfs_rmap_intent	*ri)
+-{
+-	xfs_perag_intent_put(ri->ri_pag);
++	xfs_defer_add(tp, &ri->ri_list, &xfs_rmap_update_defer_type);
+ }
  
--		rcur = xfs_rmapbt_init_cursor(mp, tp, agbp, ri->ri_pag);
-+		*pcur = rcur = xfs_rmapbt_init_cursor(mp, tp, agbp, ri->ri_pag);
- 	}
--	*pcur = rcur;
+ /* Cancel a deferred rmap update. */
+@@ -366,7 +364,7 @@ xfs_rmap_update_cancel_item(
+ {
+ 	struct xfs_rmap_intent		*ri = ri_entry(item);
  
- 	xfs_rmap_ino_owner(&oinfo, ri->ri_owner, ri->ri_whichfork,
- 			ri->ri_bmap.br_startoff);
+-	xfs_rmap_update_put_group(ri);
++	xfs_perag_intent_put(ri->ri_pag);
+ 	kmem_cache_free(xfs_rmap_intent_cache, ri);
+ }
+ 
+@@ -496,7 +494,7 @@ xfs_rui_recover_work(
+ 	ri->ri_bmap.br_blockcount = map->me_len;
+ 	ri->ri_bmap.br_state = (map->me_flags & XFS_RMAP_EXTENT_UNWRITTEN) ?
+ 			XFS_EXT_UNWRITTEN : XFS_EXT_NORM;
+-	xfs_rmap_update_get_group(mp, ri);
++	ri->ri_pag = xfs_perag_intent_get(mp, map->me_startblock);
+ 
+ 	xfs_defer_add_item(dfp, &ri->ri_list);
+ }
+diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
+index 802e5119eacaa..40d331555675b 100644
+--- a/fs/xfs/xfs_rmap_item.h
++++ b/fs/xfs/xfs_rmap_item.h
+@@ -71,4 +71,8 @@ struct xfs_rud_log_item {
+ extern struct kmem_cache	*xfs_rui_cache;
+ extern struct kmem_cache	*xfs_rud_cache;
+ 
++struct xfs_rmap_intent;
++
++void xfs_rmap_defer_add(struct xfs_trans *tp, struct xfs_rmap_intent *ri);
++
+ #endif	/* __XFS_RMAP_ITEM_H__ */
 
