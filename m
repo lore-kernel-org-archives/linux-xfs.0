@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77A51B9AAC
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 18:50:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22C481B5839
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 18:54:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718909428; cv=none; b=sTZA502dGlf4VKa2t/5cboRDCFd76nDZPQ/io1k64qswKvThE9SAAyttxOU9CR/9Detye7xQ6IyGj3VSGBsPIOrKVg6EXSdJxDIYxDEqUVed0sPBxErMAUqt7Fngwd894hU7ZV1hjS+LxZ23Yc0sUm46m824zUyr35a/dO1BGaI=
+	t=1718909647; cv=none; b=SLErsOe5udai4nBlDB81HZGsyirGMsKokpUiFMd06uGnZNURA9TwUPxm0NN+oBC10Flm+YjBP1XCvjdWJiA2mCwUxXRj+k8uZc41FfEur9ok2yxytUQ8hK0hTMY4VXfa/avO9Jxo8vT+12R4lKcnKF4BQm7ZA9II/I+CWXNbKwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718909428; c=relaxed/simple;
-	bh=jwHHimXc1Qr80kcV7zV8PGhoUof7r/Nibli/42rj3QI=;
+	s=arc-20240116; t=1718909647; c=relaxed/simple;
+	bh=OelMIHbfvbfp2JLElKt7pxSGZE8PFgjptstO1zW7228=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gDACpYsm52A3XjdwiEdFJB6q0WgtbIOrfSOwaytK7zTIgWr0fwkUrH9+VTvDF99MJV4E+ljdXg5tSGvB7HS6RyDxVZUssZbIOBOmcTgkvLiY6idAGS4yzH6Mam8nCv/hqDE9tq7Bk7cYXAoYtXxVSpN0v3DQBM6t5P6skAHpEiA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eDf6YyqV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=oyl/KrN+KxKvJHzTkFVmqkZNFYA5U14EvXlkRiAToC3H+LFldFDKy53h8fNes2/luDhJlikOFpl/73E6XebL2EJytmrEGU88IqDDwXQPLhJZJ6f1atWPYqUKRIJsXa0My3oDFmnuNPzy51/oTMk3/DJvPGaME2tT97Pfx7bLZA8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J5yseO4T; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eDf6YyqV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71E96C4AF0A;
-	Thu, 20 Jun 2024 18:50:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J5yseO4T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B330AC32786;
+	Thu, 20 Jun 2024 18:54:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718909427;
-	bh=jwHHimXc1Qr80kcV7zV8PGhoUof7r/Nibli/42rj3QI=;
+	s=k20201202; t=1718909646;
+	bh=OelMIHbfvbfp2JLElKt7pxSGZE8PFgjptstO1zW7228=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eDf6YyqVDylF7i+6lfyGViiO7JCVv+I/59Kdqizd9IGDWn8wczvrzkIhCS88DfusU
-	 zUokk0MiJu3VaMhiwku1e6RS4y4fv4xOWbcbXPZVsyrTo9AVGlOXYVhb8rU/DbTkWD
-	 SW67EGODd+vqtYpIPxmuhKn2Yu4ox9f4dadrWPsyfl2+RK1GEXj2itTsMBqlmQdnga
-	 cqsBVr844wEH3lXnwRB07zXYJsZ/5gdhh0UMkyZ7DfP4QI4HM00WRQfVhZhaHuEcSA
-	 jMZc4H6Oll7AqK6phCl5HIv6idbh0LIPFmLfhAh/khwMDx6qncKwKEPEQ+P6QMY8v/
-	 lkSLYLEdhn9nQ==
-Date: Thu, 20 Jun 2024 11:50:26 -0700
+	b=J5yseO4TDJWe5MPRAd9FcF4NvtZlto8aZ1mhqDFG5O/i/aziOFngSwbS3pt4q8Xs4
+	 RDgQN59wBA9KvXU/0Z9rTPUBHL4wGV8fRJWHMN96HTZWj2zmRMiJaTvto6k0TPcfis
+	 JkMJC/IwnY+5t1qeWG9zkZJ39H3AJ39NW0hsp6UV2LDu1HCTATtuIF7ipsphY+o3yc
+	 7EyUWJw/z0XZ82h92ca4Vuy2/oD1PhlpOXZkekXhYQ0ZQPZeBgOfTM5v1hEHoLyWzp
+	 tC5qFIGZzkPhANXjVUwwE+pspUnkf6fzS5me9itVUBrLNettIO8k4IGJfLEprgzVA/
+	 QH6l3ZqgnF3sg==
+Date: Thu, 20 Jun 2024 11:54:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: simplify xfs_dax_fault
-Message-ID: <20240620185026.GA103034@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/6] xfs: refactor __xfs_filemap_fault
+Message-ID: <20240620185406.GB103034@frogsfrogsfrogs>
 References: <20240619115426.332708-1-hch@lst.de>
- <20240619115426.332708-4-hch@lst.de>
+ <20240619115426.332708-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,90 +42,127 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240619115426.332708-4-hch@lst.de>
+In-Reply-To: <20240619115426.332708-5-hch@lst.de>
 
-On Wed, Jun 19, 2024 at 01:53:53PM +0200, Christoph Hellwig wrote:
-> Replace the separate stub with an IS_ENABLED check, and take the call to
-> dax_finish_sync_fault into xfs_dax_fault instead of leaving it in the
-> caller.
+On Wed, Jun 19, 2024 at 01:53:54PM +0200, Christoph Hellwig wrote:
+> Split the write fault and DAX fault handling into separate helpers
+> so that the main fault handler is easier to follow.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_file.c | 34 +++++++++++++---------------------
->  1 file changed, 13 insertions(+), 21 deletions(-)
+>  fs/xfs/xfs_file.c | 71 ++++++++++++++++++++++++++++++-----------------
+>  1 file changed, 45 insertions(+), 26 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 74c2c8d253e69b..8aab2f66fe016f 100644
+> index 8aab2f66fe016f..51e50afd935895 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -1251,31 +1251,27 @@ xfs_file_llseek(
->  	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+> @@ -1252,7 +1252,7 @@ xfs_file_llseek(
 >  }
 >  
-> -#ifdef CONFIG_FS_DAX
 >  static inline vm_fault_t
->  xfs_dax_fault(
+> -xfs_dax_fault(
+> +xfs_dax_fault_locked(
 >  	struct vm_fault		*vmf,
 >  	unsigned int		order,
-> -	bool			write_fault,
-> -	pfn_t			*pfn)
-> +	bool			write_fault)
->  {
-> -	return dax_iomap_fault(vmf, order, pfn, NULL,
-> +	vm_fault_t		ret;
-> +	pfn_t			pfn;
-> +
-> +	if (!IS_ENABLED(CONFIG_FS_DAX)) {
-> +		ASSERT(0);
-> +		return VM_FAULT_SIGBUS;
+>  	bool			write_fault)
+> @@ -1273,6 +1273,45 @@ xfs_dax_fault(
+>  	return ret;
+>  }
+>  
+> +static vm_fault_t
+> +xfs_dax_fault(
 
-Does this actually work if FS_DAX=n?  AFAICT there's no !DAX stub for
-dax_iomap_fault, so won't that cause a linker error?
+Oh, hey, you /did/ split the dax handling into two helpers.
 
-> +	}
-> +	ret = dax_iomap_fault(vmf, order, &pfn, NULL,
->  			(write_fault && !vmf->cow_page) ?
->  				&xfs_dax_write_iomap_ops :
->  				&xfs_read_iomap_ops);
-> +	if (ret & VM_FAULT_NEEDDSYNC)
-> +		ret = dax_finish_sync_fault(vmf, order, pfn);
-> +	return ret;
+Would you mind renaming this xfs_dax_read_fault since this doesn't
+handle write faults?
 
-I /almost/ wondered if these ought to be separate helpers for read and
-write faults, but then I realized the (write && cow_page) case is a
-"read" and ... lol.  So the only question I have is about linker errors.
+With that changed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  }
-> -#else
-> -static inline vm_fault_t
-> -xfs_dax_fault(
-> -	struct vm_fault		*vmf,
-> -	unsigned int		order,
-> -	bool			write_fault,
-> -	pfn_t			*pfn)
-> -{
-> -	ASSERT(0);
-> -	return VM_FAULT_SIGBUS;
-> -}
-> -#endif
->  
+> +	struct vm_fault		*vmf,
+> +	unsigned int		order)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(file_inode(vmf->vma->vm_file));
+> +	unsigned int		lock_mode;
+> +	vm_fault_t		ret;
+> +
+> +	lock_mode = xfs_ilock_for_write_fault(ip);
+> +	ret = xfs_dax_fault_locked(vmf, order, false);
+> +	xfs_iunlock(ip, lock_mode);
+> +
+> +	return ret;
+> +}
+> +
+> +static vm_fault_t
+> +xfs_write_fault(
+> +	struct vm_fault		*vmf,
+> +	unsigned int		order)
+> +{
+> +	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> +	unsigned int		lock_mode;
+> +	vm_fault_t		ret;
+> +
+> +	sb_start_pagefault(inode->i_sb);
+> +	file_update_time(vmf->vma->vm_file);
+> +
+> +	lock_mode = xfs_ilock_for_write_fault(XFS_I(inode));
+> +	if (IS_DAX(inode))
+> +		ret = xfs_dax_fault_locked(vmf, order, true);
+> +	else
+> +		ret = iomap_page_mkwrite(vmf, &xfs_page_mkwrite_iomap_ops);
+> +	xfs_iunlock(XFS_I(inode), lock_mode);
+> +
+> +	sb_end_pagefault(inode->i_sb);
+> +	return ret;
+> +}
+> +
 >  /*
 >   * Locking for serialisation of IO during page faults. This results in a lock
-> @@ -1309,11 +1305,7 @@ __xfs_filemap_fault(
->  		lock_mode = xfs_ilock_for_write_fault(XFS_I(inode));
+>   * ordering of:
+> @@ -1290,34 +1329,14 @@ __xfs_filemap_fault(
+>  	bool			write_fault)
+>  {
+>  	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> -	vm_fault_t		ret;
+> -	unsigned int		lock_mode = 0;
 >  
->  	if (IS_DAX(inode)) {
-> -		pfn_t pfn;
+> -	trace_xfs_filemap_fault(ip, order, write_fault);
 > -
-> -		ret = xfs_dax_fault(vmf, order, write_fault, &pfn);
-> -		if (ret & VM_FAULT_NEEDDSYNC)
-> -			ret = dax_finish_sync_fault(vmf, order, pfn);
-> +		ret = xfs_dax_fault(vmf, order, write_fault);
->  	} else if (write_fault) {
->  		ret = iomap_page_mkwrite(vmf, &xfs_page_mkwrite_iomap_ops);
->  	} else {
+> -	if (write_fault) {
+> -		sb_start_pagefault(inode->i_sb);
+> -		file_update_time(vmf->vma->vm_file);
+> -	}
+> -
+> -	if (IS_DAX(inode) || write_fault)
+> -		lock_mode = xfs_ilock_for_write_fault(XFS_I(inode));
+> -
+> -	if (IS_DAX(inode)) {
+> -		ret = xfs_dax_fault(vmf, order, write_fault);
+> -	} else if (write_fault) {
+> -		ret = iomap_page_mkwrite(vmf, &xfs_page_mkwrite_iomap_ops);
+> -	} else {
+> -		ret = filemap_fault(vmf);
+> -	}
+> -
+> -	if (lock_mode)
+> -		xfs_iunlock(XFS_I(inode), lock_mode);
+> +	trace_xfs_filemap_fault(XFS_I(inode), order, write_fault);
+>  
+>  	if (write_fault)
+> -		sb_end_pagefault(inode->i_sb);
+> -	return ret;
+> +		return xfs_write_fault(vmf, order);
+> +	if (IS_DAX(inode))
+> +		return xfs_dax_fault(vmf, order);
+> +	return filemap_fault(vmf);
+>  }
+>  
+>  static inline bool
 > -- 
 > 2.43.0
 > 
