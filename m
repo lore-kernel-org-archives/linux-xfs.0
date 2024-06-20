@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40A382D83
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:11:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B122514374E
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2024 23:11:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718925086; cv=none; b=duKSdE3G60r88Kb5dVPwfcTq19wq3lp6+2sTX7hdVYiRZ48d4yXra3hlr+cMM+0FOo6mY5hngHcUcDEzwX1qsJXWktMjHOB1nKuDKQxZIJRbNkOZCAQqJqrlLG+uxm9F2OhvCi6az3OOlu7nHgE3DsSRD3znv8a7SRSWuYwGg6w=
+	t=1718925102; cv=none; b=Fr/c4f5tisMAv/g0fDZlRx1+oaPYO+tatfgHjsZg1IYLzsDpnJxVky1ROOOvieSQD8ntECLhcoon/bhypu1BRw51UitfHxZhwqMbk1/xSbGQAvkr6CK35tUy2OXf7Q/x5AQpDozbWQeyPcZJ46D3Zb4nkIPRXjaRvUDLvsqxEyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718925086; c=relaxed/simple;
-	bh=/Q1OwaAfuVGdlUoqHTbnrKABYbiBYOT+F40/JVBzEGE=;
+	s=arc-20240116; t=1718925102; c=relaxed/simple;
+	bh=eR2jrI5Q9F2z0pcvj2CigA1FRfkeZRMFnOa+Zez2BJw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=W58LNsdJ+g7J9BhScW0lSpSdcZ0xcAFAJZNQ0mgnxPX5C/BezoerhDtCnO9YqQDyTmhLinbHTCu75ZWvOCJuncTn8rUeqhx9sA1Hhg0npScZ6kaJAUtepgLSfb3xHEL6h3uYwsAF+bYQKHGY+gZrhQFeUl4wEuMRMj95TQaFVFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rRnDwVLP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XMcCJ5gVxUEBBYa5qBe8K7NpqWbqcRwm26d9jSPgRZ7vQIjsF3+cUzUeyDDcx1asgM5tELuLwrv7AbjqHncK7alWShYPy0cMi1UIDY8dE/WsIJjD9ReSAtIxEjOq+qZtulycYvQw6Q+z/ABTI5upl7Nz9LWUqsrtdkPYR0CM/dM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ITL2G88c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rRnDwVLP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA7DCC2BD10;
-	Thu, 20 Jun 2024 23:11:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ITL2G88c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46E99C2BD10;
+	Thu, 20 Jun 2024 23:11:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718925086;
-	bh=/Q1OwaAfuVGdlUoqHTbnrKABYbiBYOT+F40/JVBzEGE=;
+	s=k20201202; t=1718925102;
+	bh=eR2jrI5Q9F2z0pcvj2CigA1FRfkeZRMFnOa+Zez2BJw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rRnDwVLPmU30SJBMGeqIHFKokQC3f0oC0gvJI81Qljm49XLvsx0kPtokHbUTfvEZ0
-	 omAYdXiGvNMyebyWdDePgHA4FY2oOLqwLKEPXuFBUrzck1VdFjcwPr6EMCJLfGfmKt
-	 dvA4RVVmy9NY2hoiuoMbG5ZgnsPv98sBsZqN/CTQqODikv5k+mDzZP4rkmAk9qsH7F
-	 IQ0dbbx24R5Rj0icWMzPgWuUjEbkbjR7V7cZsJP9bgOKeHp4kASxO5wuwJn1DPC6mH
-	 noYhg+Kd339ZyNWT2WZgUHqlkGqf2MT7bGwBquVydOcPeIDpgoFHdsKSWCRbswzG8+
-	 wMZwojy/2y9yA==
-Date: Thu, 20 Jun 2024 16:11:26 -0700
-Subject: [PATCH 08/10] xfs: don't bother calling
- xfs_refcount_finish_one_cleanup in xfs_refcount_finish_one
+	b=ITL2G88cVuNTKZzzKLKLTUYX5TUz7U/K/SBclInPxL4RqSKKbzxtUK8noLg+Ih9++
+	 stYnN9HSm7QqeM5t+z85YE3eWeFp1WB3XuTRtTCazoK/60oTJMnwGo8qFKhZBzhsG2
+	 ptWYSNLcFyoHJCz7exleVQ+iL5tziAcQtrgYvhEORgJZasLTPIgLu0pVqPppJZNtSK
+	 h0SJ8qcQD/HkAUkL7ZyUmI6yVJYwdYePNytKcN9jVuTLC8BunZ0HASDRTfRGuS6LO3
+	 xif3qOfLou0aJ+X+p+dkA5ss9ONGC0ID8mOOaRcCxJR0VlAjLa8cqZEibKW13pKcfM
+	 8IG40ZW7CTufw==
+Date: Thu, 20 Jun 2024 16:11:41 -0700
+Subject: [PATCH 09/10] xfs: simplify usage of the rcur local variable in
+ xfs_refcount_finish_one
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171892419908.3184748.15491155401473010232.stgit@frogsfrogsfrogs>
+Message-ID: <171892419926.3184748.7669666442192075027.stgit@frogsfrogsfrogs>
 In-Reply-To: <171892419746.3184748.6406153597005839426.stgit@frogsfrogsfrogs>
 References: <171892419746.3184748.6406153597005839426.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,107 +47,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In xfs_refcount_finish_one we know the cursor is non-zero when calling
-xfs_refcount_finish_one_cleanup and we pass a 0 error variable.  This
-means xfs_refcount_finish_one_cleanup is just doing a
-xfs_btree_del_cursor.
-
-Open code that and move xfs_refcount_finish_one_cleanup to
-fs/xfs/xfs_refcount_item.c.
+Only update rcur when we know the final *pcur value.
 
 Inspired-by: Christoph Hellwig <hch@lst.de>
+[djwong: don't leave the caller with a dangling ref]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_refcount.c |   19 +------------------
- fs/xfs/libxfs/xfs_refcount.h |    2 --
- fs/xfs/xfs_refcount_item.c   |   18 ++++++++++++++++++
- 3 files changed, 19 insertions(+), 20 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index c0572bb86cdb8..10a16635d93f2 100644
+index 10a16635d93f2..4137a8d1ac13d 100644
 --- a/fs/xfs/libxfs/xfs_refcount.c
 +++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1300,23 +1300,6 @@ xfs_refcount_adjust(
- 	return error;
- }
- 
--/* Clean up after calling xfs_refcount_finish_one. */
--void
--xfs_refcount_finish_one_cleanup(
--	struct xfs_trans	*tp,
--	struct xfs_btree_cur	*rcur,
--	int			error)
--{
--	struct xfs_buf		*agbp;
--
--	if (rcur == NULL)
--		return;
--	agbp = rcur->bc_ag.agbp;
--	xfs_btree_del_cursor(rcur, error);
--	if (error)
--		xfs_trans_brelse(tp, agbp);
--}
--
- /*
-  * Set up a continuation a deferred refcount operation by updating the intent.
-  * Checks to make sure we're not going to run off the end of the AG.
-@@ -1380,7 +1363,7 @@ xfs_refcount_finish_one(
+@@ -1341,7 +1341,7 @@ xfs_refcount_finish_one(
+ 	struct xfs_btree_cur		**pcur)
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_btree_cur		*rcur;
++	struct xfs_btree_cur		*rcur = *pcur;
+ 	struct xfs_buf			*agbp = NULL;
+ 	int				error = 0;
+ 	xfs_agblock_t			bno;
+@@ -1359,7 +1359,6 @@ xfs_refcount_finish_one(
+ 	 * If we haven't gotten a cursor or the cursor AG doesn't match
+ 	 * the startblock, get one now.
+ 	 */
+-	rcur = *pcur;
  	if (rcur != NULL && rcur->bc_ag.pag != ri->ri_pag) {
  		nr_ops = rcur->bc_refc.nr_ops;
  		shape_changes = rcur->bc_refc.shape_changes;
--		xfs_refcount_finish_one_cleanup(tp, rcur, 0);
-+		xfs_btree_del_cursor(rcur, 0);
- 		rcur = NULL;
- 		*pcur = NULL;
+@@ -1373,11 +1372,11 @@ xfs_refcount_finish_one(
+ 		if (error)
+ 			return error;
+ 
+-		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, ri->ri_pag);
++		*pcur = rcur = xfs_refcountbt_init_cursor(mp, tp, agbp,
++							  ri->ri_pag);
+ 		rcur->bc_refc.nr_ops = nr_ops;
+ 		rcur->bc_refc.shape_changes = shape_changes;
  	}
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 01a20621192ed..c94b8f71d407b 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -82,8 +82,6 @@ void xfs_refcount_increase_extent(struct xfs_trans *tp,
- void xfs_refcount_decrease_extent(struct xfs_trans *tp,
- 		struct xfs_bmbt_irec *irec);
+-	*pcur = rcur;
  
--extern void xfs_refcount_finish_one_cleanup(struct xfs_trans *tp,
--		struct xfs_btree_cur *rcur, int error);
- extern int xfs_refcount_finish_one(struct xfs_trans *tp,
- 		struct xfs_refcount_intent *ri, struct xfs_btree_cur **pcur);
- 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 90a019ddcc1f4..4e06cadb924d3 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -21,6 +21,7 @@
- #include "xfs_log_priv.h"
- #include "xfs_log_recover.h"
- #include "xfs_ag.h"
-+#include "xfs_btree.h"
- 
- struct kmem_cache	*xfs_cui_cache;
- struct kmem_cache	*xfs_cud_cache;
-@@ -369,6 +370,23 @@ xfs_refcount_update_finish_item(
- 	return error;
- }
- 
-+/* Clean up after calling xfs_refcount_finish_one. */
-+STATIC void
-+xfs_refcount_finish_one_cleanup(
-+	struct xfs_trans	*tp,
-+	struct xfs_btree_cur	*rcur,
-+	int			error)
-+{
-+	struct xfs_buf		*agbp;
-+
-+	if (rcur == NULL)
-+		return;
-+	agbp = rcur->bc_ag.agbp;
-+	xfs_btree_del_cursor(rcur, error);
-+	if (error)
-+		xfs_trans_brelse(tp, agbp);
-+}
-+
- /* Abort all pending CUIs. */
- STATIC void
- xfs_refcount_update_abort_intent(
+ 	switch (ri->ri_type) {
+ 	case XFS_REFCOUNT_INCREASE:
 
