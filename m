@@ -1,70 +1,81 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2804A16F857;
-	Thu, 20 Jun 2024 08:09:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B671AD3F0;
+	Thu, 20 Jun 2024 12:48:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718870951; cv=none; b=avcdM2gO9EX7ogCheqf7/lyLxtd5m9CmnLBiUTEXCntFUCF3PoCgkWoWpNnThxi9zc4WhJkg1JgmUb42t1gwUMnxAmJfOMpVLF9C0Ip23w9y4XsMlPB2dcdFlLaW+09IhAuYM3jcTq4fIpoaOiTxlTaWpzJIaOxm90fMlN6Be74=
+	t=1718887732; cv=none; b=dPl56KeWrFGCyNtBnjhJqbydDiJrrNS4o3nxCUoTMUvMVgZxCLJ912oX1+7Am2scLtXXhzk3JuUqF+LS3wFrKcSclY6ZkbH5LcyVStwN7dtKkBAPQSwcLNqIBpZTbbcEmG6ATUxsEP/3W3ZuEJhK/rz+JkjFl9XP3Vs/2vtnThs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718870951; c=relaxed/simple;
-	bh=tNd5kAQQ6BHYFQdW/Qq5UxZejqIDHg2m3FuyRDnq+8Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fdUG5GXk7W20kwYTqtyAheBplHW2hGbNGtD9Ya3HqE+OFzaqibrJiHQrOobV2oeFVSPg8ntaDsrGuBLm0OcFVD+ZzboqQsjaRSyIM8F327XXTiw/gfbLLp0q9aJ2Z4HlwAA0ujqk6ZIPSfg6D4tnXetItZR4G5Pa8cBEXM32tjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wax9kbsb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1718887732; c=relaxed/simple;
+	bh=Znz1/WticofOJ4kp6T68erovnD49x4LoIDe/CILNMak=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l1PDpo9sc/ZBveT4PXALm/lKJ/mjy0i1n7CzqVdNk+rZPWMunUq4lZRVqibhTfUHspE8vpZ16jt9D25Q79RH/p8wdasfY9ZtwVj3V3+mzhE7hN9Tujqeme5XOYFhubD8wDExGDk+elrCtesBnQ0behylWL3p5DJsZ9Y6qxgNIhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yEXhsE0M; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wax9kbsb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yEXhsE0M"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=XE6kznpYga8rkUPgu+YFYh3IX4ghmGe4Vm92oGUX9UE=; b=wax9kbsbeXsL81bO/yk37aFllh
-	uPE7tBs/akLfAlj9FZUA8usbjNZnOyTsLEgIlVWoUCIhs7TJqZb5zaIdDHNg7c2oo/GFh5sSnPWFi
-	3ng/YV0AR7pfFoh7ttxboYCx77c+Gdv+wVRQqiYVZrNMP8PcEUL9LSUx70A9s32iEtmDr+Et6OhoP
-	S180LT1jXF0SaTFaKTQdqdjagqxIVpd1neMjeCS9ukUSCQoN73JTStWO55HfD3bko37UfgXGnqzVN
-	GNM3XJ1Vz4pnWY41Oh08TSuIG43DYbJCay1nh2uKvsBXSwLHPIyPSb74TwUo58MjGbJImuPZyAxge
-	BMzh6VXA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sKCqy-000000045te-42G2;
-	Thu, 20 Jun 2024 08:09:08 +0000
-Date: Thu, 20 Jun 2024 01:09:08 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: shaozongfan <shaozongfan@kylinos.cn>
-Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix a NULL pointer problem
-Message-ID: <ZnPjpCovlQq7_ptP@infradead.org>
-References: <20240620074312.646085-1-shaozongfan@kylinos.cn>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=TmzJIS8IzqHs61XSR7pFF8ecgSFjDgMf1Y8mHznNTek=; b=yEXhsE0M/SlUsDBd+YEgQjGNWL
+	z/2KWQQUi9thZQsFQXRvw9cNRJEYIhMCsufeZQqp32AAv+BFU3+Sj966hjfi08QgXDCJ4kU10AaAX
+	RKAZ/hFs02v0tdE3yWWIdpDw7UET9wWLMZJsZ/g6V4KcN/2Vnryx0tYQadoaW6K3Imq3g7olt5MI1
+	Rge5Kwxk8btBqkPVAoo0NLIA8atZm601Ts88plWdMQvgr5yEKrm8v4sVi3F+3hLWrj+RB9nF9ijZr
+	/4c6ShQgja8ZgnH+vJPI/8DAJl3qLcZYAPN0j+OLa2ouO5qpeMJ3wCOGDjW4PQyWKPbWIgQvvW07I
+	a+ugOWLg==;
+Received: from 2a02-8389-2341-5b80-1453-b431-46b2-cdf7.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:1453:b431:46b2:cdf7] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sKHDc-00000005034-0eog;
+	Thu, 20 Jun 2024 12:48:48 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: djwong@kernel.org,
+	zlang@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: [PATCH] xfs/073: avoid large recurise diff
+Date: Thu, 20 Jun 2024 14:48:44 +0200
+Message-ID: <20240620124844.558637-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240620074312.646085-1-shaozongfan@kylinos.cn>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jun 20, 2024 at 03:43:13PM +0800, shaozongfan wrote:
-> when a process using getdents64() api to get a Folder inside
-> the file directory,meantime other process delete the file
-> directory.it would cause an error like this:
+xfs/073 has been failing for me for a while on most of my test setups
+with:
 
-Can you share your reproducer?
+diff: memory exhausted
 
->  	if (ctx->pos <= dotdot_offset) {
-> -		ino = xfs_dir2_sf_get_parent_ino(sfp);
-> +		sfp1 = sfp;
-> +		if (sfp1 == NULL)
-> +			return 0;
-> +		ino = xfs_dir2_sf_get_parent_ino(sfp1);
+from the large recursive diff it does.  Replace that with a pipe using
+md5sum to reduce the memory usage.
 
-This looks ... odd.  Assigning one pointer variable to another
-doesn't revalidate anything.  And xfs_dir2_sf_getdents is called
-with the iolock held, which should prevent xfs_idestroy_fork
-from racing with it.  And if for some reason it doesn't we need
-to fix the synchronization.
+Based on a snipplet from Darrick Wong.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ tests/xfs/073 | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tests/xfs/073 b/tests/xfs/073
+index c7616b9e9..0f96fdb09 100755
+--- a/tests/xfs/073
++++ b/tests/xfs/073
+@@ -76,7 +76,8 @@ _verify_copy()
+ 	fi
+ 
+ 	echo comparing new image files to old
+-	diff -Naur $source_dir $target_dir
++	(cd $source_dir; find . -type f -print0 | xargs -0 md5sum) | \
++	(cd $target_dir ; md5sum -c --quiet)
+ 
+ 	echo comparing new image directories to old
+ 	find $source_dir | _filter_path $source_dir > $tmp.manifest1
+-- 
+2.43.0
 
