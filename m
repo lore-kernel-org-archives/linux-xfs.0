@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF3612BAF3;
-	Thu, 20 Jun 2024 20:53:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 084C02BAF3;
+	Thu, 20 Jun 2024 20:53:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718916813; cv=none; b=Xodm9VIZBoJYP1bnDjhgenTTjD42PraNI0bqeNRnej8MqAqgh/DeyW+RBOeV/wHm14rWwksFnekb2onXYeuQ/aFRNgwLgdBGcOt+Qj8fZ9apxF4vXUTxurPiQb2CqlOtrH3IZ7h3M22pIEl7FxamDu2A8MUlehc/NOrZwFc0W5g=
+	t=1718916829; cv=none; b=J7Fe4VhpU3yIQt6rqFeVleP22V1OTMAlZyzhiDp6v9PpE1/8aI2yf4hpDzNr7ddPetaqr/Qt7wh9wdRB3m7/aJApimhFRkTmSTT9vmPuwf0XLheTQ0VqC3cs1vIdxCSLOLtkeIvkl977AvV0+JB/54OAcNq/sh5m64xlwZfXqvY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718916813; c=relaxed/simple;
-	bh=wf7R1ORnurTAZP9wWfMnUf2F6Fg4KJumz1Jn7j2fhcI=;
+	s=arc-20240116; t=1718916829; c=relaxed/simple;
+	bh=VZIKT9Sh1wYygAzuAXzmINhXjWd+LX5b3abfdDh6XlQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m6fkc/3ezbnmKkAqH3nFEqXGVQFmtrjsA9pxvYdj4xU3vF0bKbkRdqVMa4W3+xIozqy7BgQnFp1rcBnTLMPcWCeNFQ/SKlOpwITtVXzYdSjHomHwUPjAUaIdhBnbqgM3Jw+R9MM2jVFDIUqXehRO1ds6wbEHy9UQFkny/hdroGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MTKsR82i; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=PJt3fIsavY7jBZUZAw/XRSLd+1B7j4hG/vSiP6Zw6COVcjiY8+ryNq52O7tGaDUZNkGxtmdtbjnY35NDcwyzgSzRn7/FmSppSGk1thiuiDkK9XasN9SPcte6xJQyPpM/BnGFkt5gI3U+sfd+QbMviYeYgmUOF/0DMCTiulQZAL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VckN1Gux; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MTKsR82i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8662C2BD10;
-	Thu, 20 Jun 2024 20:53:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VckN1Gux"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71C25C2BD10;
+	Thu, 20 Jun 2024 20:53:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718916812;
-	bh=wf7R1ORnurTAZP9wWfMnUf2F6Fg4KJumz1Jn7j2fhcI=;
+	s=k20201202; t=1718916828;
+	bh=VZIKT9Sh1wYygAzuAXzmINhXjWd+LX5b3abfdDh6XlQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MTKsR82iHSJmjss4gaPpH2iLxbp9tSkX7FZE0hUWXMryjJAyvpptKG+gFc6ZV3P0n
-	 4ytZ7Cd5KBfTfsJroJS/dXuYyOcvtmJzAISIbfjpNDSB2XTgxGM70WujvJz0lZ7EnQ
-	 aP4db5jFz7HFqzXhgvEB0gAdAIYiLZVgl60nQKpZlNKd5NeOGZqhlNUJMJ3I3KUVIg
-	 sUR6Asdk8l4h5q4MeL/scAuTppo7veeJZpyC88cN4fj6ntGFxK9ePCHhR/V1tNojLc
-	 FIqkdvZdeeW95qi6zdr34xme3vXX6oTDMBtHK3T1gxMhNj5oig8bW3AVRCF957ZpUN
-	 02eixvxLfDdEw==
-Date: Thu, 20 Jun 2024 13:53:32 -0700
-Subject: [PATCHSET v30.7 5/6] xfs_scrub: vectorize kernel calls
+	b=VckN1GuxxuJUPy1yOnr/MCcxLgxa45RB6/1WPXqu3kLWuwOrkLEqeNXgKzVGhTodw
+	 qPMOdMb//nng37LMSXcPPjsKSTMCQpgMDtvmE577p/oVmWGeI3fUEFm4qSUOubvRXp
+	 BMnDlK1+J4gJ6zLCWDSOtZEUyQNXn0znWjPx9uVTeONk+GGCFaB+/ctN7WhB2T5IzM
+	 jsErokkZJYrUcyy80HWlW0EEmVAT0u1vZoeYezKgJcazTkk5ldXCcBxQzCQEtur/wP
+	 X1GDMO0BgOtOia7xPL2zSmvYtI10ThyYT8EdIGp1spKMVjSsUAkWm328zK1ePORTzq
+	 uwdsrQ/e8Djsw==
+Date: Thu, 20 Jun 2024 13:53:47 -0700
+Subject: [PATCHSET 6/6] fstests: minor fixes for 6.10-rc1
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org,
+Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, hch@lst.de,
  linux-xfs@vger.kernel.org
-Message-ID: <171891670520.3035797.9407325539574639419.stgit@frogsfrogsfrogs>
+Message-ID: <171891670876.3035892.9416209648004785171.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240620205017.GC103020@frogsfrogsfrogs>
 References: <20240620205017.GC103020@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,9 +47,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Create a vectorized version of the metadata scrub and repair ioctl, and
-adapt xfs_scrub to use that.  This is an experiment to measure overhead
-and to try refactoring xfs_scrub.
+Here are some fixes for the stuff that just got merged for 6.10-rc1.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -60,17 +58,22 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=vectorized-scrub
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-6.10-fixes
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=vectorized-scrub
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs-6.10-fixes
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=vectorized-scrub
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xfs-6.10-fixes
 ---
 Commits in this patchset:
- * xfs/122: update for vectored scrub
+ * xfs/348: partially revert dbcc549317 ("xfs/348: golden output is not correct")
+ * generic: test creating and removing symlink xattrs
 ---
- tests/xfs/122.out |    2 ++
- 1 file changed, 2 insertions(+)
+ tests/generic/1836     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/1836.out |    2 ++
+ tests/xfs/348.out      |    2 +-
+ 3 files changed, 61 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/1836
+ create mode 100644 tests/generic/1836.out
 
