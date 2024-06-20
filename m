@@ -1,68 +1,61 @@
-Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949D678B4C
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2024 22:09:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC01622EED;
+	Thu, 20 Jun 2024 04:24:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718834949; cv=none; b=GQ1JzVJi5ggnwkbrKtldGG+v6vYmtYVE7eJ9S2RXcOBpFddoapX94EDZOA2TikelPZnKCI1QoGX+b3hy9oWUbaxEJRLQWgYdj14wMEGv2TA2TeND9/QzNOQ2cXvJzPOWt2I68CxvpocDP9sYgdZKMLCe1hiaYY/hjS3LtJyZOXM=
+	t=1718857450; cv=none; b=WTrAGSb5043cj75pz3zNytRS9UgL0+Xflv74kkPKsV4eXxzdYgosGASUZsVMFIrvRm/IgyXMh3/KKqISi4fJC5uE9PKU6/dH5eQDM94kK1J3ktWQVcJ+8WXy2AB+aYWiMKCvS514QDpMMeoKLtMBNnO+Y5tS0UQFP+kZ/GI1oqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718834949; c=relaxed/simple;
-	bh=1Ku6yYJ6o/MEjJp1P4COEL9iPG3DF104aXJidZUiXAg=;
-	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
-	 Message-ID:References:Date; b=BJCkzb9ON50mw3UtsKgHqzRiYE6g+HG+ogtKciTJ6LP/PeweQoWSwWz8beT1cS0J2FP50n/x2JIXydkG2kTcKDlOt3RYJO7AMm2u5stjP63mqYMR8M3RCAsgg6prrUxePL3TNL++GgsKFE8Rn+BFZv6zs/PrRFnBw7RBkI6XJjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=ndbBrpeJ; arc=none smtp.client-ip=209.87.16.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
+	s=arc-20240116; t=1718857450; c=relaxed/simple;
+	bh=f2DFG6vZJ60Ax7go0aaPBpe1Khb11/hAyDxSM/4OXNY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oXMk1UFPJoZ2pU2oXe8V/UB0/SxOsX2TFUtJyqAMdnA2I+ssz9HIWTjFPH7M4bPlol2r46+ZNutBlOctjayWiW8nKW+ubcwd7Ghrc6eObi0BVMXMzdFugsVzHTGq++t9m5KLt2ZbDPqOAKA5Cg957KI8F79LS2omTqlILr1FfyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=d1hOptpS; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="ndbBrpeJ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="d1hOptpS"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
-	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
-	Content-ID:Content-Description:In-Reply-To;
-	bh=1Ku6yYJ6o/MEjJp1P4COEL9iPG3DF104aXJidZUiXAg=; b=ndbBrpeJ4Iim4rHd4FvGlJuNs1
-	lhVzKByIYsHZ7cVwhDvBSb8HAgdQIDEyICvUmdijKdBdsTbwXUeLXusjPk+ThNUtu58RdWFpEk87Y
-	X8CjvlDADjX/9JVuCF8lgKXWX4dOGtgENB6lLuWOgylcNWK7wRA81NRaFYOpy6mB8ucsix3yYpOjZ
-	AhpbtKp8rkF4C5ZEDF5QKtI4CSSAip/vUwm9kZUim92sPpxCa+UeXIuSAf8Y1AEQufw+C4Qbq4rZe
-	VTfLof5xMriUr84HcJF4zKY4yBLyFDXQNL15T7AXtDUmNmf76Z+rYoiwoIACKYDdRCft6WlOamOd/
-	jqLxd/mg==;
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
-	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1sK3UI-00BwKw-Ln; Wed, 19 Jun 2024 22:09:06 +0000
-X-Loop: owner@bugs.debian.org
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=BxwRK6GeIQ3hYlngKOYsJinxxdBWzFWXM0LA77NIGjE=; b=d1hOptpSckiM61rrpP6Ks92nWb
+	UKiBHPeBk0QavI6BazJU+8isFybm4iQVkceYZ8PR8482kib9MkmnT8fNR3nYEGeXD6YM5de8kbr1J
+	tkxpMtOS53PGoVCJv/xdatORt33LWP2yTaUil5tE7Gc+e4zJin8SL0l3fMsM9p6v8eKkC2Oib6/jl
+	hAOOw1PbA060Ka8CCtfbpuPeR+NjLr0iuKhZgK2xQVrYM0Bbo6FMInglcMYVw7IGcrTF0FTGDhyJu
+	+Rt0OO7DS3Rjt8NwGS8ZxO73PnrZYhKwdjIUoVo/LGfghtsJpxduuU7+aEQ6+g3i0kOXitcXRos8e
+	0tcFrj3Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sK9LD-00000003ZPk-11nv;
+	Thu, 20 Jun 2024 04:24:07 +0000
+Date: Wed, 19 Jun 2024 21:24:07 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
+	fstests@vger.kernel.org, guan@eryu.me, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: test scaling of the mkfs concurrency options
+Message-ID: <ZnOu537W5S9Ic6dK@infradead.org>
+References: <171867144916.793370.13284581064185044269.stgit@frogsfrogsfrogs>
+ <171867144932.793370.9007901197841846249.stgit@frogsfrogsfrogs>
+ <ZnJ5mfiqfnur5lFc@infradead.org>
+ <20240619162808.GL103034@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Mailer: MIME-tools 5.509 (Entity 5.509)
-Content-Type: text/plain; charset=utf-8
-From: "Debian Bug Tracking System" <owner@bugs.debian.org>
-To: Chris Hofstaedtler <zeha@debian.org>
-CC: linux-xfs@vger.kernel.org
-Subject: Processed: tagging 1073831
-Message-ID: <handler.s.C.17188348112844082.transcript@bugs.debian.org>
-References: <1718834772-2889-bts-zeha@debian.org>
-X-Debian-PR-Package: xfslibs-dev
-X-Debian-PR-Source: xfsprogs
-X-Debian-PR-Message: transcript
-X-Loop: owner@bugs.debian.org
-Date: Wed, 19 Jun 2024 22:09:06 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240619162808.GL103034@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Processing commands for control@bugs.debian.org:
+On Wed, Jun 19, 2024 at 09:28:08AM -0700, Darrick J. Wong wrote:
+> Weird failure case?  If we don't have an output file to link, fstests
+> spits out:
+> 
+> 1842.lba268433408: could not setup output file
 
-> tags 1073831 + ftbfs
-Bug #1073831 [xfslibs-dev] xfsdump:FATAL ERROR: could not find a current XF=
-S handle library
-Added tag(s) ftbfs.
-> thanks
-Stopping processing here.
+Not pretty, but not as weird as I expected it from a quick glance.
 
-Please contact me if you need assistance.
---=20
-1073831: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1073831
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
