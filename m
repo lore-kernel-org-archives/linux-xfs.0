@@ -1,233 +1,91 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A4551586CB;
-	Fri, 21 Jun 2024 13:28:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A886D15D5CD
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2024 15:51:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718976490; cv=none; b=P5VXHB309NUPVWp4aUsVrh20+oF0JB/bwpdr3OGXNl1nLehz6guEp/ypFrrpF8cpdVoyQOA2A39wi29NdZPQ9jThFa+I+0sA8Gtr6Vmf3k/SD1Ql+hYriyncuvI5NSFhJFabJ7LltCE6FJe7zvVRegEfVY7kc8ZM0ahsLWgKSc0=
+	t=1718985081; cv=none; b=fhg0IA8o+46YSQ2bY+RacvAZ5WnnZ+LjCAbUIXWF6KfUe95oqkLH+KYOMERYRx2s/aBxgybAKAKIPIbSeMEDd35uJO6bUG0/T/ZXTHvlmawtnYmsBnlXXbd1UJ5162cWc0lX6AQ5G/L2zcm0Hea4bX7Zi9/yJ3IvvGtk8349kwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718976490; c=relaxed/simple;
-	bh=9sUiGG1pdsYhTI5e99Pry3JMsbAJCkFt5Cx5Twn+El0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UvZ9F29Utsmo26U8TdbyHrtkqwYpBOHqn93dm7dPu2EPlGZFxTj6EhcSsj7rKSBuu1GOEEyt+NMaasFyIQ9L4iKFneaFWGmIXnQOO0biK4JKIyFvDbgVJqhQx853diZqbc2ChCyMkco6YC7F6llYUvkeXYZAPAfUlpvblzyoBBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=T5iKPGsh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=/Dq6fTzn; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=T5iKPGsh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=/Dq6fTzn; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1718985081; c=relaxed/simple;
+	bh=Q4JeixHt095+wHwE6exyIhpYWKk1DKaTAnNiLr2llZc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=l+LiWZZZcq786KdErXWcKe+7gtnJmX4X+OzglN1qKWWXWXLooxQvt5QExqKEX2xMAAi191xKlptCXYMO0ndUD+zWPdblLqL/uJjWfN5/wGq0N3GsTVu1cka34sc/a8v88ho7PQHpkXX1X8leA/g98Y4nZB2XSTvNXkqUTv7pPC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fzUDwFhy; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="T5iKPGsh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="/Dq6fTzn";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="T5iKPGsh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="/Dq6fTzn"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 31326210F0;
-	Fri, 21 Jun 2024 13:28:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718976486; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fzUDwFhy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718985078;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=BJCuq+h5u3aPiWrkexa1qYa0vicdpzfh6UYJP9LV0a4=;
-	b=T5iKPGshDECy3ig2kF+G9FsBsOQ2KN6xZjXV+C3GxzI4s5wJTv5Yz4zlIIZZrc5iBmPwQt
-	DY12WSbrERDETH3qye3KLnfKQJmjqA103giLa5q93YvB06Yd+fvxSIfHJx/3ZA2qxNi8Xn
-	BJilSOrydVDXT4uG+ArcYegO3PY7yRA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718976486;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BJCuq+h5u3aPiWrkexa1qYa0vicdpzfh6UYJP9LV0a4=;
-	b=/Dq6fTzniVTfsGx5mdV1MQh1MJcoZa+vH0uXFNbRwXRbnS4vbhZVGyFzkSxOPdlaI2hVYf
-	TOZ0fuH3RNglGRDQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=T5iKPGsh;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="/Dq6fTzn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718976486; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BJCuq+h5u3aPiWrkexa1qYa0vicdpzfh6UYJP9LV0a4=;
-	b=T5iKPGshDECy3ig2kF+G9FsBsOQ2KN6xZjXV+C3GxzI4s5wJTv5Yz4zlIIZZrc5iBmPwQt
-	DY12WSbrERDETH3qye3KLnfKQJmjqA103giLa5q93YvB06Yd+fvxSIfHJx/3ZA2qxNi8Xn
-	BJilSOrydVDXT4uG+ArcYegO3PY7yRA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718976486;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BJCuq+h5u3aPiWrkexa1qYa0vicdpzfh6UYJP9LV0a4=;
-	b=/Dq6fTzniVTfsGx5mdV1MQh1MJcoZa+vH0uXFNbRwXRbnS4vbhZVGyFzkSxOPdlaI2hVYf
-	TOZ0fuH3RNglGRDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E875E13AAA;
-	Fri, 21 Jun 2024 13:28:05 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 0y/EN+V/dWZ4FAAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 21 Jun 2024 13:28:05 +0000
-Message-ID: <a5b472de-6918-4bcc-b33f-9d9f43f83e92@suse.de>
-Date: Fri, 21 Jun 2024 15:28:05 +0200
+	bh=9aJsinrpnEoi0dQhdnv8mnMovyrI1s2WrKlR7ZpEdJE=;
+	b=fzUDwFhylVHflaer3QIhS31/6ODRDWNHxQ6j2z5pFkf6coh5z1kRZ51Hg44yos8KX4TiMq
+	zl193uOXLRvYbdSxVxGnQP6DPRAvXsiNQfr++8kVuoLvlPEs3Fyi1THu2yeiVOasxBlZtN
+	qUlnDm6bxLeHqc0dpd2+/wlW22J39O8=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-78-PY1nWJeLMhuplu3j1bIDCw-1; Fri, 21 Jun 2024 11:51:15 -0400
+X-MC-Unique: PY1nWJeLMhuplu3j1bIDCw-1
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-705bebaac2cso2051124b3a.3
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2024 08:51:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718985074; x=1719589874;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9aJsinrpnEoi0dQhdnv8mnMovyrI1s2WrKlR7ZpEdJE=;
+        b=hVsENJ1jjtgmhIH6RNZtPVzSm3OAC3/IO1XSeVh1kP0lBqlkH/Tkb++VC8MiUzxXhK
+         NeXXYqEYM/cariFRduFYMgTh+3jV6ykT5s2tB9/jBEcUMmDlfzexDMNo73Gyx5SNlJ7a
+         Xjlg9m09mqkgaMDpeLFalvJHLtxvV/PnK4pwTk1o4Sg5CXM8yUotAvpsoNnjQdX2jp/2
+         crU7znGl/wzT/oLxMGfuh1XWScUt0seDXGn2sEcQ9qhUYc+xZcZosEW2dDrKJEQCHsdq
+         tc27sa9mDL7/o2qqyyadBUGcwKwEVyTN0KB8ozGb16JLUUnf27EfegTCURLX0NONbNy8
+         79/Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVh9IYZez73KARwD1tamikQuODA+vd76s7i1bxEb9GKWlJSWGPyzZtHYWYvQtge+KyLmMSS1ARErNseL873AQhSqOI5MG6MnsVd
+X-Gm-Message-State: AOJu0YzzPbRdxh8JoHYWLgdpMcDCALK+ibwH+wB+yfpsNIX2/QB8z2zK
+	jHGTOdYiyiuhVLEehGKghBtinAEX8Jam6abbFWhEopvA+K5J5AkGjlbvVdlj3vf9tTrbvbX7d5F
+	wBunezl5v+ZEV19FEevvSghnH7FmWZpr6pKM1ekLG77iL3/AOWokNsfy44w==
+X-Received: by 2002:aa7:80cb:0:b0:705:b922:280c with SMTP id d2e1a72fcca58-7062c0d8a6dmr8706769b3a.18.1718985073603;
+        Fri, 21 Jun 2024 08:51:13 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGLPAgqnXqB16whRL57ynbbybQgiy2QW4UGSNGoba344QeMOOBsJkjsH946c2CHWnsyoILDIQ==
+X-Received: by 2002:aa7:80cb:0:b0:705:b922:280c with SMTP id d2e1a72fcca58-7062c0d8a6dmr8706731b3a.18.1718985073046;
+        Fri, 21 Jun 2024 08:51:13 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7065130078dsm1554019b3a.204.2024.06.21.08.51.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 Jun 2024 08:51:12 -0700 (PDT)
+Date: Fri, 21 Jun 2024 23:51:09 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, zlang@kernel.org,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs/073: avoid large recurise diff
+Message-ID: <20240621155109.6ckzs7mfzgsej442@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240620124844.558637-1-hch@lst.de>
+ <20240620152306.GV103034@frogsfrogsfrogs>
+ <20240621050416.GA15463@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 04/11] readahead: allocate folios with
- mapping_min_order in readahead
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Matthew Wilcox <willy@infradead.org>, david@fromorbit.com,
- djwong@kernel.org, chandan.babu@oracle.com, brauner@kernel.org,
- akpm@linux-foundation.org, mcgrof@kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
- Zi Yan <zi.yan@sent.com>, linux-xfs@vger.kernel.org, p.raghav@samsung.com,
- linux-fsdevel@vger.kernel.org, hch@lst.de, gost.dev@samsung.com,
- cl@os.amperecomputing.com, john.g.garry@oracle.com
-References: <20240607145902.1137853-1-kernel@pankajraghav.com>
- <20240607145902.1137853-5-kernel@pankajraghav.com>
- <ZmnuCQriFLdHKHkK@casper.infradead.org>
- <20240614092602.jc5qeoxy24xj6kl7@quentin>
- <ZnAs6lyMuHyk2wxI@casper.infradead.org>
- <20240617160420.ifwlqsm5yth4g7eo@quentin>
- <ZnBf5wXMOBWNl52x@casper.infradead.org>
- <20240617163931.wvxgqdxdbwsbqtrx@quentin>
- <ac136000-1ae0-4cab-9858-abb68ff53b66@suse.de>
- <20240621121903.xbw4j2ijy4k32owv@quentin>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240621121903.xbw4j2ijy4k32owv@quentin>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-6.50 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	DWL_DNSWL_MED(-2.00)[suse.de:dkim];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	MIME_TRACE(0.00)[0:+];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[sent.com];
-	FREEMAIL_CC(0.00)[infradead.org,fromorbit.com,kernel.org,oracle.com,linux-foundation.org,kvack.org,vger.kernel.org,os.amperecomputing.com,sent.com,samsung.com,lst.de];
-	RCVD_COUNT_TWO(0.00)[2];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 31326210F0
-X-Spam-Flag: NO
-X-Spam-Score: -6.50
-X-Spam-Level: 
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240621050416.GA15463@lst.de>
 
-On 6/21/24 14:19, Pankaj Raghav (Samsung) wrote:
-> On Tue, Jun 18, 2024 at 08:56:53AM +0200, Hannes Reinecke wrote:
->> On 6/17/24 18:39, Pankaj Raghav (Samsung) wrote:
->>> On Mon, Jun 17, 2024 at 05:10:15PM +0100, Matthew Wilcox wrote:
->>>> On Mon, Jun 17, 2024 at 04:04:20PM +0000, Pankaj Raghav (Samsung) wrote:
->>>>> On Mon, Jun 17, 2024 at 01:32:42PM +0100, Matthew Wilcox wrote:
->>>>> So the following can still be there from Hannes patch as we have a
->>>>> stable reference:
->>>>>
->>>>>    		ractl->_workingset |= folio_test_workingset(folio);
->>>>> -		ractl->_nr_pages++;
->>>>> +		ractl->_nr_pages += folio_nr_pages(folio);
->>>>> +		i += folio_nr_pages(folio);
->>>>>    	}
->>>>
->>>> We _can_, but we just allocated it, so we know what size it is already.
->>> Yes.
->>>
->>>> I'm starting to feel that Hannes' patch should be combined with this
->>>> one.
->>>
->>> Fine by me. @Hannes, is that ok with you?
->>
->> Sure. I was about to re-send my patchset anyway, so feel free to wrap it in.
-> Is it ok if I add your Co-developed and Signed-off tag?
-> This is what I have combining your patch with mine and making willy's
-> changes:
+On Fri, Jun 21, 2024 at 07:04:16AM +0200, Christoph Hellwig wrote:
+> Looking at the reply I noticed I misspelled recursive in the subject,
+> so maybe this can get fixed up when applying the patch?
+
+Sure, I've noticed that and have changed it in my local branch :)
+
+Thanks,
+Zorro
+
 > 
-> diff --git a/mm/readahead.c b/mm/readahead.c
-> index 389cd802da63..f56da953c130 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -247,9 +247,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
->                  struct folio *folio = xa_load(&mapping->i_pages, index + i);
->                  int ret;
->   
-> -
->                  if (folio && !xa_is_value(folio)) {
-> -                       long nr_pages = folio_nr_pages(folio);
->                          /*
->                           * Page already present?  Kick off the current batch
->                           * of contiguous pages before continuing with the
-> @@ -259,18 +257,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
->                           * not worth getting one just for that.
->                           */
->                          read_pages(ractl);
-> -
-> -                       /*
-> -                        * Move the ractl->_index by at least min_pages
-> -                        * if the folio got truncated to respect the
-> -                        * alignment constraint in the page cache.
-> -                        *
-> -                        */
-> -                       if (mapping != folio->mapping)
-> -                               nr_pages = min_nrpages;
-> -
-> -                       VM_BUG_ON_FOLIO(nr_pages < min_nrpages, folio);
-> -                       ractl->_index += nr_pages;
-> +                       ractl->_index += min_nrpages;
->                          i = ractl->_index + ractl->_nr_pages - index;
->                          continue;
->                  }
-> @@ -293,8 +280,8 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
->                  if (i == mark)
->                          folio_set_readahead(folio);
->                  ractl->_workingset |= folio_test_workingset(folio);
-> -               ractl->_nr_pages += folio_nr_pages(folio);
-> -               i += folio_nr_pages(folio);
-> +               ractl->_nr_pages += min_nrpages;
-> +               i += min_nrpages;
->          }
->   
->          /*
 > 
-Yes, that looks fine.
-Go.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
