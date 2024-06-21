@@ -1,70 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DB1315D1
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2024 17:20:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD6DC15D1;
+	Fri, 21 Jun 2024 17:27:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718990443; cv=none; b=BCtIPXBGZByhPtJ1tKWO9okAL7Q7nAiE9FsVcsq0csvl+AmRSH0uxDyAkJbsPOkSIlnsDJV8P7UTAH5CC4S9/hNLn0C5G9BpfaqCdaliTKl0PvhFeY2ZOs+Nj3OHTfRfnfCbwX/yAPLAwGYyADrOmrsUq+2dTiczcXqwF0pQKz4=
+	t=1718990841; cv=none; b=XHGyI4a/NMntipJdBlMaR7gJ2PNyIz01SqA1Yba/LrYQtWbLgLIfdVx4P5unQzJqP2W8MI37AhbZFhBR6/S3g9Yo2K7g+4jOGnuEKn8bC/+vDK6X2QbEfxRlLTy0FDyUX44CaZ27vb9D21KHFswLbmEC+zV3m4tcf/1G99u8zew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718990443; c=relaxed/simple;
-	bh=s76fpLFLMOfLJ1wET/nz6mIX5hz2pLZweUGOogB6bwU=;
+	s=arc-20240116; t=1718990841; c=relaxed/simple;
+	bh=triNaJ4tVG0Fzjp2eD2BMj9aq4hcFHgsAZSxR8X33Z8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fjq3fLsKQ5Dbu207cnVqZwZ91vDdrPueJk5sQBfSJ9UZq8QaOoNYzZ0+/kj9hMiZVpG3Fg0AtTVt1XMpJmKJIKdNXhvDypoZ1oyYV0hYvN0Ddj1NjYxAkmflmMzDu4dgU9ORb9IHXA2aZLjk+boj0tw9yZjUb4vGk2W6+YtDozo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Fb8+n6hw; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=HTUE39B/R1q/H3BjezCm6D935YwLtK1IOJNFXbxycIj/G07c6GuStclmRptfujDBLjSfsEp3nWCxt/yPZHhpLDt/0TIxPa7mbY2czGK8Lwdc5naOuaRIofBP2Jd5cMLW2o23vSPk9sn7fVFK7JrhNxUJgre/hoaqekg0brbhfKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYSThMFJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Fb8+n6hw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1718990441;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Kc+WxK4RSwvbDVXPwUm+KwbPzHMSQoYdxMjYxRV3o8o=;
-	b=Fb8+n6hwjCWi3XxhOJp7XOAeOwzHZ5lCDzfwlP3hC22VZ5ZrlRtt3nxtrjVCMCGS7r5VR6
-	JZdPkxKJqnZR5dSIXQvhsKgHt/odit9xISR9CXAP9O3AqtjcY1BZLfWaquxRiinaHnXh0N
-	HdWnE50UW8SdQhf65w/U0+Qn06utSrs=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-449-iK9CRa78PXefUlawNIan4g-1; Fri, 21 Jun 2024 13:20:40 -0400
-X-MC-Unique: iK9CRa78PXefUlawNIan4g-1
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1f70b2475e7so21336895ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2024 10:20:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718990439; x=1719595239;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Kc+WxK4RSwvbDVXPwUm+KwbPzHMSQoYdxMjYxRV3o8o=;
-        b=EMFAZmrZ8mZWsAPIVRpt8dVmUXH3lC54pUnrTX574uuYrtU+iEXt6xL9l69Rv/NfFg
-         QLOvq+TbFIOO/oOx6UTYKH2+M24lDqloN3Imb9WpV4NiYYDkReTzTmBFCstFF/sbxKSf
-         06FwIGeVm/WJRPPK/XNtBDWnMl5O/tDmd30pDQCf1IqSnH6oSGZ2hnk/LtRAfaMuYBx0
-         Ppv4FsDELAag/2Mas3yeqXI2jEySCzxedJcCNnLQ94LCul6ChWI5qIddWDbTWLeNVZgU
-         6Oy+ncLNTAvVHbykd61ZcrNTUc5Vkeb2MyC+NefRq7pGpeMn90FKBtz7Rt/sS0MfT4hA
-         FUiQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVz45BI6QLwP6IfLSSAkHC1fU3LYShdVeQF4VF/urvw1IyuQdekPkiGzm8Fe/yZ5ux/FCI1qgsF0Dd6m/sdxXbXYXBhDYAiIh1/
-X-Gm-Message-State: AOJu0YyPipbiJjtgH+41RL3EhQV+s+e2Pk2ZCuP8WWgVYgTBbl3CyHLe
-	e1zS7KpKccvjqgjJLUr5iEmx6vIOMnJdttCWh82ZDQK1+FW4O2l7uZaVYMCQeQshbAMN1yNS1LV
-	13iS1aYXXXUv4Bs8H2D3S1106hnBopkuARyN7XmthNtNWvOWpHXF6jJloeg==
-X-Received: by 2002:a17:902:e844:b0:1fa:449:1dd6 with SMTP id d9443c01a7336-1fa04492142mr7378535ad.48.1718990438698;
-        Fri, 21 Jun 2024 10:20:38 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHgh6rbfZ+cOajX/3iN6CBi2KP2Z5fU8wSFfRO3yhV/EuTGpEcYYCkAvO3EXLnRz6fldt61nQ==
-X-Received: by 2002:a17:902:e844:b0:1fa:449:1dd6 with SMTP id d9443c01a7336-1fa04492142mr7378295ad.48.1718990438166;
-        Fri, 21 Jun 2024 10:20:38 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9eb2f0505sm16553745ad.12.2024.06.21.10.20.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jun 2024 10:20:37 -0700 (PDT)
-Date: Sat, 22 Jun 2024 01:20:34 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCHBOMB] fstests: catch us up to 6.10
-Message-ID: <20240621172034.qemkrzrpxif37tot@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240620205017.GC103020@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYSThMFJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 474C3C4AF07;
+	Fri, 21 Jun 2024 17:27:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718990841;
+	bh=triNaJ4tVG0Fzjp2eD2BMj9aq4hcFHgsAZSxR8X33Z8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VYSThMFJ7CUI/Xj3h1VsQlxZry41CbfCn00lJKcAZ9PrH1HFdjcs45rps2Q3UfiGn
+	 fyh+4PuLXwOnm2SaKwx7vrPRBUu8cRwPDysx87ibZ/3NOFT8NBLa1pL4hd0nwsKTb6
+	 qU58xZCgrBS0sh98neG5kOQbc61yPk17GwPXUDc8PV2CzDdS3142ZrR2J1ICXgi38n
+	 PQwLWMmdHf2WN5jv/Npf43tXw8B2E94bqKkproLLLrkTIHWeGAF/NuO6TWq7DyWPxg
+	 XlRCryjMCXfLf+PTk0+TPj92i22yr8lMH+CqyMOAtvKXB6L6kvEFpCobz0wVJa6SlL
+	 S0Ag9KfW49M8g==
+Date: Fri, 21 Jun 2024 10:27:20 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	Dave Chinner <david@fromorbit.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	Sweet Tea Dorminy <sweettea-kernel@dorminy.me>,
+	Matthew Wilcox <willy@infradead.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	fsverity@lists.linux.dev, Eric Sandeen <sandeen@redhat.com>,
+	Shirley Ma <shirley.ma@oracle.com>
+Subject: Re: Handing xfs fsverity development back to you
+Message-ID: <20240621172720.GD3058325@frogsfrogsfrogs>
+References: <20240612190644.GA3271526@frogsfrogsfrogs>
+ <vg3n7rusjj2cnkdfm45bnsgf4jacts5elc2umbyxcfhcatmtvc@z7u64a5n4wc6>
+ <20240621043511.GB4362@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,32 +51,109 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240620205017.GC103020@frogsfrogsfrogs>
+In-Reply-To: <20240621043511.GB4362@sol.localdomain>
 
-On Thu, Jun 20, 2024 at 01:50:17PM -0700, Darrick J. Wong wrote:
-> Hi everyone,
+On Thu, Jun 20, 2024 at 09:35:11PM -0700, Eric Biggers wrote:
+> On Mon, Jun 17, 2024 at 11:34:13AM +0200, Andrey Albershteyn wrote:
+> > On 2024-06-12 12:06:44, Darrick J. Wong wrote:
+> > > Hi Andrey,
+> > > 
+> > > Yesterday during office hours I mentioned that I was going to hand the
+> > > xfs fsverity patchset back to you once I managed to get a clean fstests
+> > > run on my 6.10 tree.  I've finally gotten there, so I'm ready to
+> > > transfer control of this series back to you:
+> > > 
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fsverity_2024-06-12
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=fsverity_2024-06-12
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsverity_2024-06-12
+> > > 
+> > > At this point, we have a mostly working implementation of fsverity
+> > > that's still based on your original design of stuffing merkle data into
+> > > special ATTR_VERITY extended attributes, and a lightweight buffer cache
+> > > for merkle data that can track verified status.  No contiguously
+> > > allocated bitmap required, etc.  At this point I've done all the design
+> > > and coding work that I care to do, EXCEPT:
+> > > 
+> > > Unfortunately, the v5.6 review produced a major design question that has
+> > > not been resolved, and that is the question of where to store the ondisk
+> > > merkle data.  Someone (was it hch?) pointed out that if xfs were to
+> > > store that fsverity data in some post-eof range of the file (ala
+> > > ext4/f2fs) then the xfs fsverity port wouldn't need the large number of
+> > > updates to fs/verity; and that a future xfs port to fscrypt could take
+> > > advantage of the encryption without needing to figure out how to encrypt
+> > > the verity xattrs.
+> > > 
+> > > On the other side of the fence, I'm guessing you and Dave are much more
+> > > in favor of the xattr method since that was (and still is) the original
+> > > design of the ondisk metadata.  I could be misremembering this, but I
+> > > think willy isn't a fan of the post-eof pagecache use either.
+> > > 
+> > > I don't have the expertise to make this decision because I don't know
+> > > enough (or anything) about cryptography to know just how difficult it
+> > > actually would be to get fscrypt to encrypt merkle tree data that's not
+> > > simply located in the posteof range of a file.  I'm aware that btrfs
+> > > uses the pagecache for caching merkle data but stores that data
+> > > elsewhere, and that they are contemplating an fscrypt implementation,
+> > > which is why Sweet Tea is on the cc list.  Any thoughts?
+> > > 
+> > > (This is totally separate from fscrypt'ing regular xattrs.)
+> > > 
+> > > If it's easy to adapt fscrypt to encrypt fsverity data stored in xattrs
+> > > then I think we can keep the current design of the patchset and try to
+> > > merge it for 6.11.  If not, then I think the rest of you need to think
+> > > hard about the tradeoffs and make a decision.  Either way, the depth of
+> > > my knowledge about this decision is limited to thinking that I have a
+> > > good enough idea about whom to cc.
 > 
-> This patchbomb are all the fixes that xfs needs to bring fstests up to
-> date with what's in 6.10-rc.  Except for these two patches:
+> Assuming that you'd like to make the Merkle tree be totally separate from the
+> file contents stream (which would preclude encrypting it as part of that stream
+> even if it was stored separately), I think the logical way to encrypt it would
+> be to derive a Merkle tree encryption key for each file and encrypt the Merkle
+> tree using that key, using the same algorithm as file contents.  These days
+> fscrypt uses HKDF, so it's relatively straightforward to derive new keys.
 > 
-> [PATCHSET v30.7 2/6] fstests: atomic file updates
-> [PATCH 03/11] generic/709,710: rework these for exchangerange vs.
-> [PATCH 04/11] generic/711,xfs/537: actually fork these tests for
+> > > 
+> > > Other notes about the branches I linked to:
+> > > 
+> > > I think it's safe to skip all the patches that mention disabling
+> > > fsverity because that's likely DOA anyway.
+> > > 
+> > > Christoph also has a patch to convert the other fsverity implementations
+> > > (btrfs/ext4/f2fs) to use the read/drop_merkle_tree_block interfaces:
+> > > https://lore.kernel.org/linux-xfs/ZjMZnxgFZ_X6c9aB@infradead.org/
+> > > 
+> > > I'm not sure if it actually handles PageChecked for the case that the
+> > > merkle tree block size != base page size.
+> > > 
 > 
-> everything else in here is fully reviewed and ready for PRs.
+> Note that I worked on this more at
+> https://lore.kernel.org/fsverity/20240515015320.323443-1-ebiggers@kernel.org/
+> 
+> As I said: my reworked patch seems good to me, but it only makes sense to apply
+> it if XFS is going to use it.
+> 
+> Though, now I'm wondering if ->read_merkle_tree_block should hand back a (page,
+> offset) pair instead of a virtual address, and let fs/verity/ handle the
+> kmap_local_page() and kunmap_local().  Currently verify_data_block() does want
+> the kmap of each block to live as long as the reference to the block itself, for
+> up to FS_VERITY_MAX_LEVELS blocks at a time.  The virtual address based
+> interface works well for that.  But I realized recently that there's a slightly
+> more efficient way to implement verify_data_block() that would also have the
+> side effect of there being only one kmap needed at a time.
 
-Thanks for big updates!
+(I'm only responding to the part for which I think I can answer
+reasonably.)
 
-This patchset is big, I've merged and pushed all these patches to
-fstests' 'patches-in-queue' branch, feel free to check that.
+That sounds like a good approach for ext4 which will likely be feeding
+you folios from the pagecache anyway.  If Andrey sticks with the buffer
+cache that I wrote, then the virtual address is a slab allocation which
+is already mapped.
 
-I need more time to give them more tests, will try to release fstests
-at this weekend or middle of next week.
+I guess you could return (folio, offset_in_folio, vaddr) and have
+fs/verity do kmap_local if !vaddr.
 
-Thanks,
-Zorro
+--D
 
 > 
-> --D
+> - Eric
 > 
-
