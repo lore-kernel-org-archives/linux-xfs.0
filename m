@@ -1,57 +1,73 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1329FBF3
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2024 05:37:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE2B13BC05
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2024 05:48:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718948253; cv=none; b=tHhXsKSv7+H2x4tefvbKHnx6xLks+uR8CuemEdLXyB8DAGjjPKxSJVl2uXtIAmkajj8bueBhC/5AwYxd/5Ltxf3pwp5x1trKerbrCJBe738KleP8nii+hfsW4Se+owSexvEdPspe9/9YvgOe5IKhdtUKzLjH0kNzH8Fs+sUwhGg=
+	t=1718948895; cv=none; b=a8r6+h+4GwPE9/p7KRu1JOMipOZEudidBXaLgzepb22d4yA4JMVRZmucxK367UsGnDf+MEodHmlXkxnL4I2ofRDhawqKss7e2rup1gDwb1+DqkdMheDiI8aWIdV+U1R6dVKuD3Sc+flY9kW7TD2CpZIlsPS+64njluuAbY44ATQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718948253; c=relaxed/simple;
-	bh=fW37THnnsOfQGAzfPo997B8IQdu43L4hyxXZV0UWizM=;
+	s=arc-20240116; t=1718948895; c=relaxed/simple;
+	bh=0d/UFVcXhUMpeIb3JEQDUNk0YBWcCa6pg1baWrzSkTA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vEi8DEGlZAl4GgfZkJJ6WLwYfe9iPMeI0fm1YS6lW2LDyczWIqDMHgGBjgS50SviHwCuoBbRTVF0mdyXtp/fkLe2ceG6WDxq6vsT+a29fNnqxxdE1GdbiOKAJH2VncWyUlGEAg0BkY57ux/7254TOoMF0QRpkvTJtfgCJKSkJrE=
+	 Content-Type:Content-Disposition:In-Reply-To; b=IbsZz4gZX7PDTIzP/5XLmmNrhrDyeOdM0U3/LP+Y82f8KlYghwKbv7Rs0TvPZ4K0UNn6GWFCvNeRxjbQHXoYINhlnxb3w8DacbWieYAKBymwZKyUVypFnuIh66IhIGdYC+qxLHiJnEj+w4PtSWi/hgD0OwUnVsqa7ZJQR3GwCYQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 04A1968AFE; Fri, 21 Jun 2024 07:37:27 +0200 (CEST)
-Date: Fri, 21 Jun 2024 07:37:26 +0200
+	id 3F51E68AFE; Fri, 21 Jun 2024 07:48:09 +0200 (CEST)
+Date: Fri, 21 Jun 2024 07:48:08 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>,
 	Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
 	Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 04/11] xfs: background AIL push should target physical
- space
-Message-ID: <20240621053726.GA15738@lst.de>
-References: <20240620072146.530267-1-hch@lst.de> <20240620072146.530267-5-hch@lst.de> <20240620194226.GF103034@frogsfrogsfrogs>
+Subject: Re: [PATCH 11/11] xfs: skip flushing log items during push
+Message-ID: <20240621054808.GB15738@lst.de>
+References: <20240620072146.530267-1-hch@lst.de> <20240620072146.530267-12-hch@lst.de> <20240620195142.GG103034@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240620194226.GF103034@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240620195142.GG103034@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jun 20, 2024 at 12:42:26PM -0700, Darrick J. Wong wrote:
-> > transaction need to be pushed or re-logged to simply sample the
-> > current target - they don't need to calculate the current target
-> > themselves. This avoids the need for any locking when doing such
-> > checks.
+On Thu, Jun 20, 2024 at 12:51:42PM -0700, Darrick J. Wong wrote:
+> > Further with no backoff we don't need to gather huge delwri lists to
+> > mitigate the impact of backoffs, so we can submit IO more frequently
+> > and reduce the time log items spend in flushing state by breaking
+> > out of the item push loop once we've gathered enough IO to batch
+> > submission effectively.
 > 
-> Ok, so I guess now the AIL kthread maintains the push target in
-> ailp->ail_target all of the time?
+> Is that what the new count > 1000 branch does?
 
-Yes.
+That's my interpreation anyway.  I'll let Dave chime in if he disagrees.
 
-> I think this makes sense to me, but I'm wondering that I've never seen
-> it on the list before.  This is a later revision to the earlier posting,
-> right?
+> 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_inode.c      | 1 +
+> >  fs/xfs/xfs_inode_item.c | 6 +++++-
+> 
+> Does it make sense to do this for buffer or dquot items too?
 
-I started dusting off the last posted version and then Dave gave me
-his latests working copy which hadn't been posted so far.
+Not having written this here is my 2 unqualified cents:
+
+For dquots it looks like it could be easily ported over, but I guess no
+one has been bothering with dquot performance work for a while as it's
+also missing a bunch of other things we did to the inode.  But given that
+according to Dave's commit log the іnode cluster flushing is a big part
+of this dquots probably aren't as affected anyway as we flush them
+individually (and there generally are a lot fewer dquot items in the AIL
+anyway).
+
+For buf items the buffers are queued up on the on-stack delwri list
+and written when we flush them.  So we won't ever find already
+flushing items.
+
