@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CD3168482
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2024 18:26:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33EA48820;
+	Fri, 21 Jun 2024 18:38:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718994417; cv=none; b=Wjwvlpu25h0A45dsiPiGO47T1hB8DlEC2DHmlIHbzFWoCfQNr+2j/3KkdZcVtnMZmyfIkOXEBV9hGNCeBMCHRSC73PZDvHr256K2ghNPCW1xYaLP6EnfxdsaiI7amWQmrjhxhMV1r38SFFaUoU+rgFSmcPs24sWG9YMEBA8lQrg=
+	t=1718995106; cv=none; b=h8qdWa8bTijqMiOJF3bfqLCt1HZxiZfh45CqUqWioTuak4hRroqirAiDke7mr1f/92a8ZMh9N3G+UwKRmAWkm+0U8CGsidX8cyBhmbWBGUsOGj0cRADy8TuqJP1xl6ebmnXK+XNddBZkGcbqXBr2vpGgw0KKBRZy+czlpZ7EndY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718994417; c=relaxed/simple;
-	bh=8fCGsl8LMwopvWl91fAtTlatTgK79nhWItlzSwRrJoo=;
+	s=arc-20240116; t=1718995106; c=relaxed/simple;
+	bh=Ok8swI1SCA/tBODdfv/m74RxTes/0LQxUWZeMddygOo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sgIe93w1kg7VW1+I3Guvj8Xlco00/b4XfuxRoWoCWQvxuBDK2gpaUa6YbaYrz67xknwg9mt62XY7i5OxpLJ+AieyCGtl+Qowm0DClc5bMqvfmBmlyvx4hvBtzQME1N2AWAYrD8PLUrjFIjro1E1a7nq9y+m0/ndO49YMv6S9Ob8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mNHao139; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=j3+JoVTNwPKemt5d5si0Or3nEJ7FoQ25fl44YkrSbjkyaxPAABOnP5WRSEVtBIgIbgTE3MLfo3mnj3UpFw5/1bpuSf3t7BanlYyEY1VDA4jyQfn6fVWeT68XBNO0zVn8qVMjwEB8W5Q3FsCHsI/ZO6Yv+vRyI9A0MdxligBRXV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iQhyQpE1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mNHao139"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6383AC2BBFC;
-	Fri, 21 Jun 2024 18:26:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iQhyQpE1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8012C2BBFC;
+	Fri, 21 Jun 2024 18:38:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718994416;
-	bh=8fCGsl8LMwopvWl91fAtTlatTgK79nhWItlzSwRrJoo=;
+	s=k20201202; t=1718995104;
+	bh=Ok8swI1SCA/tBODdfv/m74RxTes/0LQxUWZeMddygOo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mNHao139PslZc8lwNLmGFf/Ptb382yMWbjjMtRmoW6wgOLQN9Eaovd9Q2+VIw3JIe
-	 NnKpK9NAFWtSD8DZzAtWn95eC43DLm1ukpXzCOzMOSV/MpYM8J5Lyc1VGD1dmtTsab
-	 2eAs/hc04bcVSQinZBiB0aVFWAu2NM7wU1DpsD54nzM+SOXxlOUTgJy/sqfXzjUJ93
-	 hp1DrGMLZlCsk67aQZsvDh36NqakXAnDcY+YWt9bIXQGZY0sqwoN7n4DAofhQ4y5zb
-	 LQ9wd/WVPDW4RyG7oWqIvCjlqykR73eCRScKEoGpVhypdqTLwH1Tl1tv7lvgNFqi4/
-	 4pCQLvsQUrHcg==
-Date: Fri, 21 Jun 2024 11:26:55 -0700
+	b=iQhyQpE1AIEy0Dp1mfxsrm1/69xt6rgau9+W/UWCVWJjyG4xllLUH8IoiNT1qTfye
+	 X9DYgCJzTrC/OFtJrgc164n1Xd1bMIuZ49zT8l8MoHGGZZGw9DYdSJCPw33iFhRvAL
+	 KTqFnEH0gfhRF5vXWiqR+ydmn4A0hdxsRS3l4gAxThZt0FwNcoBck3IPjU90FeqaqC
+	 PXTYOpdjkiq30HI5BLo6n4BwU5jlL8ypjVYHVUWz0LTN39V4NAtgg1vzPQ+nUf91Oc
+	 cjM8yqVoyU1SUXEmuv3g8VV8HvWU3f3uFRZHvrnBsBSlfXlLbD3z5ITL71fN0cALG0
+	 QeSSWEtqB/6Hw==
+Date: Fri, 21 Jun 2024 11:38:24 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Konst Mayer <cdlscpmv@gmail.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCHSET v3.0 5/5] xfs: enable FITRIM for the realtime section
-Message-ID: <20240621182655.GK3058325@frogsfrogsfrogs>
-References: <20240620225033.GD103020@frogsfrogsfrogs>
- <171892420288.3185132.3927361357396911761.stgit@frogsfrogsfrogs>
- <3UX9HUQVFM4SL.33XVNIAMTWYDJ@gmail.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
+	martin.petersen@oracle.com
+Subject: Re: [PATCH 09/13] xfs: Update xfs_inode_alloc_unitsize_fsb() for
+ forcealign
+Message-ID: <20240621183824.GL3058325@frogsfrogsfrogs>
+References: <20240621100540.2976618-1-john.g.garry@oracle.com>
+ <20240621100540.2976618-10-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,51 +47,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3UX9HUQVFM4SL.33XVNIAMTWYDJ@gmail.com>
+In-Reply-To: <20240621100540.2976618-10-john.g.garry@oracle.com>
 
-On Fri, Jun 21, 2024 at 10:09:07AM +0700, Konst Mayer wrote:
-> Hi Darrick,
+On Fri, Jun 21, 2024 at 10:05:36AM +0000, John Garry wrote:
+> For forcealign enabled, the allocation unit size is in ip->i_extsize, and
+> this must never be zero.
 > 
-> Thanks for the patch. Is there a reason why it is not in the mainline yet?
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  fs/xfs/xfs_inode.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 994fb7e184d9..cd07b15478ac 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -4299,6 +4299,8 @@ xfs_inode_alloc_unitsize(
+>  {
+>  	unsigned int		blocks = 1;
+>  
+> +	if (xfs_inode_has_forcealign(ip))
+> +		return ip->i_extsize;
 
-Lack of review bandwidth, I'm sorry to say.
+i_extsize is in units of fsblocks, whereas this function returns bytes.
+I think you need XFS_FSB_TO_B here?
 
 --D
 
-> Best regards,
-> Konst
-> 
-> "Darrick J. Wong" <djwong@kernel.org> wrote:
-> > Hi all,
-> > 
-> > One thing that's been missing for a long time is the ability to tell
-> > underlying storage that it can unmap the unused space on the realtime
-> > device.  This short series exposes this functionality through FITRIM.
-> > Callers that want ranged FITRIM should be aware that the realtime space
-> > exists in the offset range after the data device.  However, it is
-> > anticipated that most callers pass in offset=0 len=-1ULL and will not
-> > notice or care.
-> > 
-> > If you're going to start using this code, I strongly recommend pulling
-> > from my git trees, which are linked below.
-> > 
-> > This has been running on the djcloud for months with no problems.  Enjoy!
-> > Comments and questions are, as always, welcome.
-> > 
-> > --D
-> > 
-> > kernel git tree:
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-discard
-> > 
-> > fstests git tree:
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-discard
-> > ---
-> > Commits in this patchset:
-> >  * xfs: enable FITRIM on the realtime device
-> > ---
-> >  fs/xfs/xfs_discard.c |  252 +++++++++++++++++++++++++++++++++++++++++++++++++-
-> >  fs/xfs/xfs_trace.h   |   29 ++++++
-> >  2 files changed, 274 insertions(+), 7 deletions(-)
-> 
+>  	if (XFS_IS_REALTIME_INODE(ip))
+>  		blocks = ip->i_mount->m_sb.sb_rextsize;
+>  
+> -- 
+> 2.31.1
 > 
 > 
