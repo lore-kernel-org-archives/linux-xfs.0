@@ -1,70 +1,75 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55F9273FE;
-	Sat, 22 Jun 2024 05:19:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6125114C587
+	for <linux-xfs@vger.kernel.org>; Sat, 22 Jun 2024 08:27:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719033553; cv=none; b=iEBVn3VZXWiArIeiLNYMjq7IA4yRK4tLoTWShI011UabPdue+3WDOrHZeiNuTOt/2mvPh5UMVFL+jcUxfy7CLGdz9T0id7m59EPibt9G3rSWyauPsV4f/y9uadZtmmeiB+gvFTelUOykDriVCSI1EXT6HuEIiUfSPPIDDj0ZgWg=
+	t=1719044881; cv=none; b=B5zXYsPc737ITUbnTRvW63WofRNW9EyZzjkmxhwEQTQlokVaiT18DAUBXLnGInMpiP3OjxvLDVji1gHjH3hXIybB4mhyfhSlI0dIodgGNGjqpm1w6HzjtiLGYJoUHXU+DdxnKq/zJIclVfKiF9Zx4M2X8U22BGMuqNwqE7I9itA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719033553; c=relaxed/simple;
-	bh=unfZ6xHIh8OTUujtOq3+fBHT0LUHUTuPqbFOHN7UAYE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C9CEGjJ1C42ds3Bp6wdhw7062nl0pnoIeQ5rjZonoilIG0Ytq9q+VRJ4AWS22KXKxyukzhPRjQ+YpTPfh4hvRzUDkcnvUgTN82I65K9LWOP9xj1r4Ij7ktFWvka1ly9lGZTk988DXWOvPgQCLntOk9KAlrhxPg6g50wBAi/jksM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vCbRsdey; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vCbRsdey"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=bPXBrH9ln0Qs9gRrnExlKlHWl4LYgq9/5kBdLz3ri4Q=; b=vCbRsdeyzNGPyeNzVT1EXcxnrw
-	nIjIuSxk0d3Kps6bCygkxFbiKG8sc3ERHWF//di7pCogE8Y2hxlsNn4X6ranwugvXAK/Azq49BeLq
-	/dzc+typzNa6t/o28KtFKVfHo3wRcet8SYihSkUPKTSKaW10tAPmZQydrDyczcYCofVgrn+A40Yuj
-	ZMv1OyBe9Hekd1YafGBDRQk9hQtvuTr8e81Jb/3zBvBSmALO8u0qfFMt9G9SE9XLiwXamcmMWJsJc
-	CrYCNo+y94xLLhpmyuM7Ww9WfeJRDH6UDJQbkty6hx9vO3WXPtLVygzeUPI3an2Nq8riD813fPfwc
-	jdILDqQQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sKt9Z-0000000BR14-1YMM;
-	Sat, 22 Jun 2024 05:19:09 +0000
-Date: Fri, 21 Jun 2024 22:19:09 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Eric Biggers <ebiggers@kernel.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	Dave Chinner <david@fromorbit.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	Sweet Tea Dorminy <sweettea-kernel@dorminy.me>,
-	Matthew Wilcox <willy@infradead.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	fsverity@lists.linux.dev, Eric Sandeen <sandeen@redhat.com>,
-	Shirley Ma <shirley.ma@oracle.com>
-Subject: Re: Handing xfs fsverity development back to you
-Message-ID: <ZnZezSymGy2VyeeG@infradead.org>
-References: <20240612190644.GA3271526@frogsfrogsfrogs>
- <vg3n7rusjj2cnkdfm45bnsgf4jacts5elc2umbyxcfhcatmtvc@z7u64a5n4wc6>
- <20240621043511.GB4362@sol.localdomain>
- <20240621172720.GD3058325@frogsfrogsfrogs>
+	s=arc-20240116; t=1719044881; c=relaxed/simple;
+	bh=odwjcLc/tptYob+CvG8KtvjyFrme85YpPqVsTljQjTM=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=SbhZW+byd1SLR4nJBhjtVwn3nOwR4TOw7c2mubhB11N8JzeC99N4gZGjKlOd31MAiYFWlkaeyLHtHqME2iYuMTQh5IR0xVxQADLxfPfgv65Gz1KQN3nB21543uH27LNaoovDsyGFKXZ9bboe4WDHEKwbCaaJI7tGKIpFR29eLrg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4W5nKW6CHTznVbP;
+	Sat, 22 Jun 2024 16:22:55 +0800 (CST)
+Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id BC06B1800CD;
+	Sat, 22 Jun 2024 16:27:39 +0800 (CST)
+Received: from localhost.localdomain (10.175.104.67) by
+ kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Sat, 22 Jun 2024 16:27:38 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <chandanbabu@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>
+Subject: [PATCH] xfs: eliminate lockdep false positives in xfs_attr_shortform_list
+Date: Sat, 22 Jun 2024 16:26:31 +0800
+Message-ID: <20240622082631.2661148-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240621172720.GD3058325@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
 
-On Fri, Jun 21, 2024 at 10:27:20AM -0700, Darrick J. Wong wrote:
-> That sounds like a good approach for ext4 which will likely be feeding
-> you folios from the pagecache anyway.  If Andrey sticks with the buffer
-> cache that I wrote, then the virtual address is a slab allocation which
-> is already mapped.
+xfs_attr_shortform_list() only called from a non-transactional context, it
+hold ilock before alloc memory and maybe trapped in memory reclaim. Since
+commit 204fae32d5f7("xfs: clean up remaining GFP_NOFS users") removed
+GFP_NOFS flag, lockdep warning will be report as [1]. Eliminate lockdep
+false positives by use __GFP_NOLOCKDEP to alloc memory
+in xfs_attr_shortform_list().
 
-... yet another reasons to not be pointleslly different code and create
-special cases and extra code in every layer of the stack..
+[1] https://lore.kernel.org/linux-xfs/000000000000e33add0616358204@google.com/
+Reported-by: syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+ fs/xfs/xfs_attr_list.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 5c947e5ce8b8..8cd6088e6190 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -114,7 +114,8 @@ xfs_attr_shortform_list(
+ 	 * It didn't all fit, so we have to sort everything on hashval.
+ 	 */
+ 	sbsize = sf->count * sizeof(*sbuf);
+-	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
++	sbp = sbuf = kmalloc(sbsize,
++			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+ 
+ 	/*
+ 	 * Scan the attribute list for the rest of the entries, storing
+-- 
+2.39.2
 
