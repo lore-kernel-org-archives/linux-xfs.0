@@ -1,42 +1,39 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3C282492
-	for <linux-xfs@vger.kernel.org>; Sat, 22 Jun 2024 16:00:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF31714B078;
+	Sat, 22 Jun 2024 16:00:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719072007; cv=none; b=rvQr/gG0EmtYkQsM2IQ4g6q1q0ECLqzbG7AANGyWjVlTwQTTcFqf+fcq7+3958QV360Fa6BM7zVaVf2IOkbP0rX45VU+TxXg8gco1HWVXjAfnLNun2QeaCMMjjqqqn0ob1bJESl+DrOlBFxjpGq8/IBlmvENjIt0vtRTcXHQcW4=
+	t=1719072060; cv=none; b=jgIARetz9GtxNv6K3+T7ME+P2wc5WaSutne7YXkokkm//ud7LsCwcyWnx0945zKiQTdyxnFDiEbRlyCxtSJbKUy2fHarMHFPqQTY5HNqinGCrNngzEH1mmqzI4IAglfYMBEmQtpSQbIafffg+Oqe8MqSgSZGzm4perBmi+yA7QU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719072007; c=relaxed/simple;
-	bh=Rcd943jQWfhldyBHF2IKHqqZejJwDi8fgk5+RKEXEbA=;
+	s=arc-20240116; t=1719072060; c=relaxed/simple;
+	bh=Cqft6o4pJm38G9E48IRUjh5mW5myfKbq0sUEt0bKQH4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FyySv7fKbovfVnyesMUdWzFMfgK5pKoqns+zuThmNESPu4kWf5Ibs9SPF0h603fwoZR1kYJgCVcv5Kqz+CB0QZKM/jgdW7EgQc1vhy635P+5VMYMpduqaXR3VhNxpTG8mcoOWHQHFVhoLjE+o5jvmIoq+xNiiG3zgkTYghShCHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BCOxuQ6a; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=dk5DRUSgC0bEwXTDJVztj9FPqYhlpJXAbWiNcRuTqC8/vrz+p7fHbyYCYbTF5BUU6CqO0V8E9LWxbZg2QkI318W/KiO0OsRui1deuWCQxE4w7SqMMjpfrVh5j7T1ee/uVbtj6tHsh8IgFdveQnC+bwITJA6WR39Uy6FMD+/xf88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oRe8k3Ru; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BCOxuQ6a"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=u65w0IseHkZmk+iFs3YjReGZ0cwituZadHQSjMLXuNA=; b=BCOxuQ6au+aY4x380evK9QQv2N
-	vUfUPBcqsqtXx05MZ5AYy79edjzxk+PUSZLSftRzQr5tP1hvdfkfDE5AetDN0fjQuWb1OIAfxpIhC
-	6BzABsWhw+LOnWLLf3a/aY/XFV+NMpIoVTvsHXoW8xwnND+ukc4OkjFp+5afhlQAp5dYuEEpOWjKr
-	BYMHf/doStAwjIt01S4IxVWnMi9cUukTz/PmeYFXy1B9TsbK8tdjueUgPu8yRdNKIk8vXXqcJl9QF
-	q+1uvrjFWMaWWyMXpaINCc6zzdbcvv6XpngUW8bbFjCHd73C2tmn13jiQSZiyFJ+1Xhf6MA+JJXzM
-	A1PnZOpQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sL39n-0000000CNjq-2D1G;
-	Sat, 22 Jun 2024 16:00:03 +0000
-Date: Sat, 22 Jun 2024 09:00:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: chandanbabu@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL] xfs: random fixes for 6.10
-Message-ID: <Znb1A0ZWI7Hw3X9f@infradead.org>
-References: <None>
- <171907190998.4005061.17863344358205284728.stg-ugh@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oRe8k3Ru"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F455C3277B;
+	Sat, 22 Jun 2024 16:00:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719072059;
+	bh=Cqft6o4pJm38G9E48IRUjh5mW5myfKbq0sUEt0bKQH4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oRe8k3Ru1gvdsT5/n80kpNafErHY/F4Di7B5bA2HAXW7Y9zCjmE8M9hB0y7F7Vtfs
+	 AuqkhZdvz8s0eqVa/XBU9pTSgPWN/QPycDBGV4mcjVT1jVA/RGt4qvb2PBH4FD18Gz
+	 gwOp69M4sA9ueEiHxLFRsnSpvYx5oKJVT+M/G9lCbxEaqTHkQ38TcwhF/ndqoksJic
+	 DZm8oVL0Odem0MKcGWeNUu0uZaZ0vLoyBu9T+586V7MsxwOPO5PF3HbyadC9P9iPiQ
+	 Kr5hMGSyOX5WBRo90vwExBC0RowVO0otdOF/vw8Wt1IF12FZ6hM/q08IViIsga0Elh
+	 4YBqneEaLhmLQ==
+Date: Sat, 22 Jun 2024 09:00:58 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL] xfs: bug fix for 6.10
+Message-ID: <20240622160058.GZ3058325@frogsfrogsfrogs>
+References: <87r0cpw104.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,11 +42,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171907190998.4005061.17863344358205284728.stg-ugh@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <87r0cpw104.fsf@debian-BULLSEYE-live-builder-AMD64>
 
-On Sat, Jun 22, 2024 at 08:59:00AM -0700, Darrick J. Wong wrote:
-> Here are some bugfixes for 6.10.  The first two patches are from hch,
+On Sat, Jun 22, 2024 at 07:05:49PM +0530, Chandan Babu R wrote:
+> Hi Linus,
 
-There's actually just one left now :)
+Drat, I ran the wrong script, please ignore this email, Linus.
+I guess I now have weekend work to go figure out why this happened.
 
+> Please pull this branch which contains an XFS bug fix for 6.10-rc5. A brief
+> description of the bug fix is provided below.
+
+Chandan: Would _you_ mind pulling this branch with 6.10 fixes and
+sending them on to Linus?
+
+--D
+
+> 
+> I did a test-merge with the main upstream branch as of a few minutes ago and
+> didn't see any conflicts.  Please let me know if you encounter any problems.
+> 
+> The following changes since commit 6ba59ff4227927d3a8530fc2973b80e94b54d58f:
+> 
+>   Linux 6.10-rc4 (2024-06-16 13:40:16 -0700)
+> 
+> are available in the Git repository at:
+> 
+>   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.10-fixes-4
+> 
+> for you to fetch changes up to 348a1983cf4cf5099fc398438a968443af4c9f65:
+> 
+>   xfs: fix unlink vs cluster buffer instantiation race (2024-06-17 11:17:09 +0530)
+> 
+> ----------------------------------------------------------------
+> Bug fixes for 6.10-rc5:
+> 
+>   * Fix assertion failure due to a race between unlink and cluster buffer
+>     instantiation.
+> 
+> Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+> 
+> ----------------------------------------------------------------
+> Dave Chinner (1):
+>       xfs: fix unlink vs cluster buffer instantiation race
+> 
+>  fs/xfs/xfs_inode.c | 23 +++++++++++++++++++----
+>  1 file changed, 19 insertions(+), 4 deletions(-)
+> 
