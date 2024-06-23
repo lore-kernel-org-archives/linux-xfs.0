@@ -1,63 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1CF716FF2D;
-	Sat, 22 Jun 2024 16:10:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 469D820E3
+	for <linux-xfs@vger.kernel.org>; Sun, 23 Jun 2024 05:35:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719072606; cv=none; b=h5LsydWu1xNvgWKdSbg9/h5eyNZLbOmFblpBi/tRi54fnkFYTrsP/rHxsI4HFRRg8L/sWmhRyc5Gbgn3eWuIp/hK6ztf//V70Gyy6byNWHDQ4cn5m1cOSBqAhuVOMtH0i7+1y1qfOyeKjN8X5Ck/j8RjeiI8hRRB6bwMDcEZqyw=
+	t=1719120940; cv=none; b=QuBp/kV9hcxjL++IHby/Jv0bwFQc01KRQ6/Mm/dzAVM1tJXfhdSKOqFEKt7e0m+SQI5GMTi+/johDMsFG0IgF6TO92C0l6xrnZneL5PFN35Ih2SEiBp9yDXCH/zH2sQaIOMs80krRyFvZnJbFVr47//7nBb8PhRm2T4yHbFhk40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719072606; c=relaxed/simple;
-	bh=SVXWBJJ7k9PvXMwnH22ryPi7eMbcdRNKrI14RkZ1FBs=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=cWYTmJnm6vgMySqkQqHKFbCcs2h8gv2WUDDu4roUP1j0jCLarzmfi6v+98JlBXjqDN1yrc3njOIlhA4ghYx3+LoyA2SmpIXtyvXvGVwZ+YKd1kRnpL6qs7Ndmw2YokTVR10PRd4akQKKPcf+oHM3swnBtBF56AU5/SYQQG+z8vc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pqCIsvKq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719120940; c=relaxed/simple;
+	bh=h/Pb4m2nL+q9qEjpD5QAoV0ts52vxvcjWKPoVQ229BM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PEuR/cR+staUWSTCrehGvOS9QnNTpUuK7ZzzU2h74tF7w2ScXQ8vqALrRPKdJzJAFRkO7z0wwdEZuDJfN3ADtHiSUK7cFOE9I4dtIMpbUxL+40ZqH2WAuOv8aOVWNbcVuY7Ep4p/cVcTqQ0rmz2awGy8RbJRqL+SmxbTyD3oEbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GezRkaRQ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pqCIsvKq"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B32E7C3277B;
-	Sat, 22 Jun 2024 16:10:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719072606;
-	bh=SVXWBJJ7k9PvXMwnH22ryPi7eMbcdRNKrI14RkZ1FBs=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=pqCIsvKq8bIoQ73GNn+gY7GcHNHOGkyVmAFuDPeVfUGDa79cnf2UKmHc/CicqaDel
-	 UbD2NN9mxc9R+Y+GdbtnO/vhWx6ZTVyiuGOZT63jAyb32wh98WEujKMPqev14kVCk/
-	 1UcNutHnAToh8w3z6JwxM8tZVy+6GiDYh4oKxfM6C3PkwpsFXjFHKrBQ7oaCkahy33
-	 DHt8c5mPaYy+RJfYc/77AHAF4lok5qmLsQIxJTWcweZ8SEh5/gCIrj06E9k7lj5KZj
-	 Ng7393GyM4jgjy41xa//9Ta2hAhlI3hZjFMh9OhruhWcOAxOAq1SwBOCTTdJkmUpws
-	 MArqneFavOe8g==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 9AEB2D328B9;
-	Sat, 22 Jun 2024 16:10:06 +0000 (UTC)
-Subject: Re: [GIT PULL] xfs: bug fix for 6.10
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <87r0cpw104.fsf@debian-BULLSEYE-live-builder-AMD64>
-References: <87r0cpw104.fsf@debian-BULLSEYE-live-builder-AMD64>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <87r0cpw104.fsf@debian-BULLSEYE-live-builder-AMD64>
-X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.10-fixes-4
-X-PR-Tracked-Commit-Id: 348a1983cf4cf5099fc398438a968443af4c9f65
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 563a50672d8a86ec4b114a4a2f44d6e7ff855f5b
-Message-Id: <171907260662.30765.2165082552286692137.pr-tracker-bot@kernel.org>
-Date: Sat, 22 Jun 2024 16:10:06 +0000
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: torvalds@linux-foundation.org, chandanbabu@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GezRkaRQ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=w8D+fJaDCz9jW8WXfbAgpc2GhLIYhUEqE49fm6Pup8U=; b=GezRkaRQHtUVt1xi2a3Zd1sN8+
+	Ruf3GCPTFIGQYbeDbYEt8nYZK5uLNAyVJrboHtP9+egvc8MYyfQr/C6U21d9O3FMXo6LHvDbraYQF
+	jtMvrwsazwyEITXRlA3s+AJ52zHrkkRycaOyX2CUAUOVMZdgIi3wWvlDgQZOVAbUQ72KbjzD/rWlH
+	C3u2urxg2NxvdUtr+Dc8stMrAbvxRcYrMYIDFeD7hdT4K4rO+/vM/wROZGlyUVIm+NMUfWccOhrBF
+	YcJ5uZOI67yN9gModiWOh5riTCY2OKxGW6MBe+3/VceUwW5wR6DjayU7xVpH9sApNLeiftKydUucD
+	Dq1S4L/w==;
+Received: from 2a02-8389-2341-5b80-9456-578d-194f-dacd.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9456:578d:194f:dacd] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sLFt1-0000000DODa-2VAo;
+	Sun, 23 Jun 2024 05:35:36 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: post-EOF block handling revamp
+Date: Sun, 23 Jun 2024 07:34:45 +0200
+Message-ID: <20240623053532.857496-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The pull request you sent on Sat, 22 Jun 2024 19:05:49 +0530:
+Hi all,
 
-> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.10-fixes-4
+this series reworks handling of post-EOF blocks, primarily in ->release.
+This takes over the work originally started by Dave in:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/563a50672d8a86ec4b114a4a2f44d6e7ff855f5b
+    https://marc.info/?l=linux-xfs&m=154951612101291&w=2
+ 
+and lingering in Darricks's tree:
 
-Thank you!
+    https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=reduce-eofblocks-gc-on-close
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+for years to ensure ->release doesn't too eagerly kill post-EOF block
+speculative preallocation and then goes on to not let preallocation
+on inodes with the append only flag set linger forever.
+
+I'll also post a rebased version of Dave's patches from back then.
+
+The first patch has already been sent standalone and as part of Darrick's
+fixes series, but as the rest of the series depends on it I'm sending it
+here again - third time's a charm.
+
+Diffstat:
+ xfs_bmap_util.c |   58 ++++++++++++++++++----------------
+ xfs_bmap_util.h |    2 -
+ xfs_file.c      |   73 +++++++++++++++++++++++++++++++++++++++++--
+ xfs_icache.c    |    4 +-
+ xfs_inode.c     |   94 +-------------------------------------------------------
+ xfs_inode.h     |    5 +-
+ 6 files changed, 109 insertions(+), 127 deletions(-)
