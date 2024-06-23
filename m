@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7001719308A;
-	Sun, 23 Jun 2024 13:45:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB86B19A29E;
+	Sun, 23 Jun 2024 13:45:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719150306; cv=none; b=KhFmvaqhrlZ9NGewa3nCocwmDbAY2xrLyUQpzWWAoSTf3rf8XC7wmjvht4kN4klF0PocD1YAsg9qZsPRsD7ZoZiV5NTC81jat39wQOjyVPIUL+FjyJc57N9r27E7anAqD3bMlsF8syMS+6xJCvDx7qGxzqcoTxRg1xjWU7Emy08=
+	t=1719150333; cv=none; b=Si1JiutcVKGkIG+p1ijGje1OUPqn+1wSyF+yJtoizx+wbR9eqxcVVhpRY7C1m3PnFkJRSmC2BZnkDQJ+aWevG2cFoz55PYKrY3or7XFepYFjAjEDNpR9NZac18olKoD2DQ+txhQXcEzNhYTQkc2cxHZ1c0TzbeKxfqgevTr/KTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719150306; c=relaxed/simple;
-	bh=Z0o+PpSYbQAdYjRFyAKGeoFs8grNJbIhab7koImLDDg=;
+	s=arc-20240116; t=1719150333; c=relaxed/simple;
+	bh=F67RnmI+jkofkly71Rolh+kSsp4d9JMNis+yTNfDAuo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mb7Q/nqe1G9oJ1GaRLUcCtPmuzvi7wanbkP4c8yCU0npcAmAv89Z6Lx3WpxfypqfEaVyALaRbZjnSPNlJrQN+uEOGyFcNkrARQ8rxz1OtymW9rEW8yQ7EzKo6N/T7tGOjf5LsQjVmdPr0g/tjGoGKBdIjQWijT2x/M9VfQRPFF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TRGaXpQn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=PET2xpmElGJzUIz/lSIscxhJb2E+ivdrbTFQhkvEsw00MJDYUoLUV68L/dyR06nz6sFPG3VhYBRDb5mNo0GQP3VwdAsMljlWHHG5hkj0fb8ZVnlt4YJYlzaycxEu2etUOVn7Eb+PhGk/ptxSIXM87HMv0aBOEvwyTrTrRNIz0xU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DxaaOFCk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TRGaXpQn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB682C4AF09;
-	Sun, 23 Jun 2024 13:45:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DxaaOFCk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3267FC32781;
+	Sun, 23 Jun 2024 13:45:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719150306;
-	bh=Z0o+PpSYbQAdYjRFyAKGeoFs8grNJbIhab7koImLDDg=;
+	s=k20201202; t=1719150332;
+	bh=F67RnmI+jkofkly71Rolh+kSsp4d9JMNis+yTNfDAuo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=TRGaXpQnRv4L/BaaTrO4LXefGOF0BjfTas6r7DOu11nydrTtF/O5VUxLeuf9xne6q
-	 vjBR7ryC9bg4AkENdlElg4rDopWPq1B8T/DtxQKO/m9YhWrZjOGwh+VvxfCyKxI0KP
-	 tN2jPM0PULhLYB9ZN6FFuAx4X+35FbvPoebtBPe2S/JCWfrLJSEhnlGZ8AH+VslaAC
-	 d3MRE3P938K6jbOYMJylilTIcYdUV7VS9v8QVBQnv/HAhFtULGCD88eqIVi2vXVxOF
-	 XoNQiwtfkApuZeu9pCQC9HWlH7Be4sUd/dNmPduzwFkuveM997uQhc7Vb2gxi9KRER
-	 Z6EwPImT3NL0A==
+	b=DxaaOFCkO8nyX41ESIgjkSEF8JW/rBWPREpcstx6GXVa/Hqi7PxDK1f6mwFyUHaAy
+	 APokLg1uYaKROvi8E1s2yz2nLR0+z27ks1FJKXW4zAoRHW5bYNBascaERrDWvAIz9I
+	 RosHfnubuE37aSsA0n08pJXOQmIJ1Av0BunlVpn8kKAJFmHDUz0SJ5ea0ws779JY01
+	 qvipmlkCmYRQvcv4oGXj/GBd16zX3y/7Re58kDEadMtGE1GUCohKIX4yuoZNl09cmf
+	 ZcOg7GQ5wbVncoulrPOIZQqCGrE0F8Dap4HKBJRhi1rWzI19n/bW1SOORQglVup6PF
+	 9TScPkId7Vx9Q==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -38,12 +38,12 @@ Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 11/16] iomap: Fix iomap_adjust_read_range for plen calculation
-Date: Sun, 23 Jun 2024 09:44:40 -0400
-Message-ID: <20240623134448.809470-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 09/12] iomap: Fix iomap_adjust_read_range for plen calculation
+Date: Sun, 23 Jun 2024 09:45:12 -0400
+Message-ID: <20240623134518.809802-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240623134448.809470-1-sashal@kernel.org>
-References: <20240623134448.809470-1-sashal@kernel.org>
+In-Reply-To: <20240623134518.809802-1-sashal@kernel.org>
+References: <20240623134518.809802-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,7 +52,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.35
+X-stable-base: Linux 6.1.95
 Content-Transfer-Encoding: 8bit
 
 From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
@@ -82,10 +82,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 129a85633797a..975fd88c1f0f4 100644
+index dac1a5c110c0e..0f7dabc6c764e 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -201,6 +201,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+@@ -97,6 +97,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
  	unsigned block_size = (1 << block_bits);
  	size_t poff = offset_in_folio(folio, *pos);
  	size_t plen = min_t(loff_t, folio_size(folio) - poff, length);
@@ -93,7 +93,7 @@ index 129a85633797a..975fd88c1f0f4 100644
  	unsigned first = poff >> block_bits;
  	unsigned last = (poff + plen - 1) >> block_bits;
  
-@@ -237,7 +238,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+@@ -133,7 +134,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
  	 * handle both halves separately so that we properly zero data in the
  	 * page cache for blocks that are entirely outside of i_size.
  	 */
