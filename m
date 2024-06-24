@@ -1,41 +1,31 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C480E19D092
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Jun 2024 15:51:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0404919CD14
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Jun 2024 15:51:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719244264; cv=none; b=SBXGEbN4qVMDe2U2ChF175xZr6mA5p+ULwm4o90a1jDUuxxVXfemsplq27hK1a/cUYCwguT9Pj2SNmJHEyV8xbUz4O4tuQJvcV1PzpmNOoQ2g7A9YbOpd0A1AFZ5LCkBhthR90vZq8fILzHRqFb6sc5XdCmNpbTKRcCMHAbOnLs=
+	t=1719244290; cv=none; b=EwzuDvtxmfDd0KH/Mxf6ElHyANjXU8qkA27m8eQ7mJbSnfBQ6D50OCC3nNai2W8RDv6eNGWZcDGUvHf6/eP8b7XVPY4Zuvq2ckzTeBe9SbA4qnyxA776xfRV81v/6OjVbYsC9+ARSDF1sS5I6mVoT7QckZPIR2EWwTOPVNsTLAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719244264; c=relaxed/simple;
-	bh=BrNCIaxIHCshGhwemwH3Kv8ms28XERjnFiWnvdd649I=;
+	s=arc-20240116; t=1719244290; c=relaxed/simple;
+	bh=c8kl6bA63AB/N8UeMpwWv2vnwxHHHQo6kVU2leCUuRA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B1F0QZt6yC3Ctxakv5Gx0YPwTWv5n0YAfr16MvWIAchxenn8Wx3uq7kwQcj9U0ftjZJ3FFnQ5QG7vrCG3ppq+hsKi3V3fB/1MTrxpc2iVShWxtkH71ZDPt+ZGtdEjLOunY4iJjvf+n7/ZOri4r0ruFNkRKMVSgnZRz/QkrNoNj4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QGeAr0qR; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QGeAr0qR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 305D8C32782;
-	Mon, 24 Jun 2024 15:51:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719244264;
-	bh=BrNCIaxIHCshGhwemwH3Kv8ms28XERjnFiWnvdd649I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QGeAr0qREEVUl7MfGl5pNf9D4VahbIh4srfdKpPushj1HHhGFBaAm6biK/owyUrOj
-	 vyh584ECEaKm2/ko+543tG6WxFpwVqqRaWm9hGKj0UzdcspVa+4R+2jD5t7jwNJQkF
-	 tYPQtuTLKEua74G9kkH4WKKqTcwOfbS3gUohwBEY9n0brpCvnu3pDEyZwd9VYT/VK1
-	 pHzZHfqLG+PwQPjUWps9E4G6qB0Gm9sjWXrDlNakLRjG0eaGQN0A2RqMozefD6W8P5
-	 lSNehZJQf9LnCJ4umOKRC/833uvphArbOWn6UwMjKVKFMk6xmvUqQf5U1Y5bHCQELT
-	 OsgJP53R6KPEQ==
-Date: Mon, 24 Jun 2024 08:51:03 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uvg9NL6TW2hWWQ3yn5l2ZW8DFr8H7S9ZapWh49F/jeCGljhzelRK9Gl4tqXTXqUcENPu5XACSNVI5Vy5VYEPbxCNUqb3W5NvXbJ+Ic4+f90/+7ULEw9UUP8XRs15JZ/RB6+X7kT7FsMDpeXZyubjEcZExz8FkprFDCR8m4aGf88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0A25068D05; Mon, 24 Jun 2024 17:51:25 +0200 (CEST)
+Date: Mon, 24 Jun 2024 17:51:24 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs: simplify extent lookup in
- xfs_can_free_eofblocks
-Message-ID: <20240624155103.GM3058325@frogsfrogsfrogs>
-References: <20240623053532.857496-1-hch@lst.de>
- <20240623053532.857496-10-hch@lst.de>
+Subject: Re: [PATCH 04/10] xfs: don't bother returning errors from
+ xfs_file_release
+Message-ID: <20240624155124.GB14874@lst.de>
+References: <20240623053532.857496-1-hch@lst.de> <20240623053532.857496-5-hch@lst.de> <20240624153951.GH3058325@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,71 +34,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240623053532.857496-10-hch@lst.de>
+In-Reply-To: <20240624153951.GH3058325@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Sun, Jun 23, 2024 at 07:34:54AM +0200, Christoph Hellwig wrote:
-> xfs_can_free_eofblocks just cares if there is an extent beyond EOF.
-> Replace the call to xfs_bmapi_read with a xfs_iext_lookup_extent
-> as we've already checked that extents are read in earlier.
+On Mon, Jun 24, 2024 at 08:39:51AM -0700, Darrick J. Wong wrote:
+> > +/*
+> > + * Don't bother propagating errors.  We're just doing cleanup, and the caller
+> > + * ignores the return value anyway.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Shouldn't we drop the int return from the function declaration, then?
+> 
+> (Is that also a cleanup that's you're working on?)
 
-I guess that works :)
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+We can't drop it without changing the f_ops->release signature and
+updates to the many instance of it.  That would still be worthwhile
+project, but it's something for someone who is better at scripting
+than me.
 
---D
-
-> ---
->  fs/xfs/xfs_bmap_util.c | 22 +++++++---------------
->  1 file changed, 7 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index a4d9fbc21b8343..52863b784b023f 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -492,12 +492,12 @@ bool
->  xfs_can_free_eofblocks(
->  	struct xfs_inode	*ip)
->  {
-> -	struct xfs_bmbt_irec	imap;
->  	struct xfs_mount	*mp = ip->i_mount;
-> +	bool			found_blocks = false;
->  	xfs_fileoff_t		end_fsb;
->  	xfs_fileoff_t		last_fsb;
-> -	int			nimaps = 1;
-> -	int			error;
-> +	struct xfs_bmbt_irec	imap;
-> +	struct xfs_iext_cursor	icur;
->  
->  	/*
->  	 * Caller must either hold the exclusive io lock; or be inactivating
-> @@ -544,21 +544,13 @@ xfs_can_free_eofblocks(
->  		return false;
->  
->  	/*
-> -	 * Look up the mapping for the first block past EOF.  If we can't find
-> -	 * it, there's nothing to free.
-> +	 * Check if there is an post-EOF extent to free.
->  	 */
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
-> -	error = xfs_bmapi_read(ip, end_fsb, last_fsb - end_fsb, &imap, &nimaps,
-> -			0);
-> +	if (xfs_iext_lookup_extent(ip, &ip->i_df, end_fsb, &icur, &imap))
-> +		found_blocks = true;
->  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> -	if (error || nimaps == 0)
-> -		return false;
-> -
-> -	/*
-> -	 * If there's a real mapping there or there are delayed allocation
-> -	 * reservations, then we have post-EOF blocks to try to free.
-> -	 */
-> -	return imap.br_startblock != HOLESTARTBLOCK || ip->i_delayed_blks;
-> +	return found_blocks;
->  }
->  
->  /*
-> -- 
-> 2.43.0
-> 
-> 
