@@ -1,49 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D4AE71B5B
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Jun 2024 09:42:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB56071B5B
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Jun 2024 09:42:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719222171; cv=none; b=p1EmQLG3ObOwJmAohl5p/ZH9/Pk2+RITaTxEQgswlpiGeyGPRZauoeOU8y/A8aOBEM9M2U8lcRY1GTZAjMsdNAVfMjh0Dsp2Wt9zh1qS0cHk/FaKG4vbg8ADT4WwYbo4jg42jzyEnKyTbuVZ3e9FO9VQHP7S1wa9hWnNzdxSmFs=
+	t=1719222173; cv=none; b=kkTuxOcJkOu5Tq/wLJ+LaNCxXT/qm1pXh1aWyDgDTjUQcA92af1674R57u6v8h0Rq7XtGbW+7LiF9F3MLBkcSWr3GaXLUmzAcNv7p4Yriqy1Vw1iFGupKUVo9EHSglwJEwgKmF9GhuTRxPZckhDc1BVaxvHT2ZdDQmdt+ZCjEUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719222171; c=relaxed/simple;
-	bh=b6gQ/a0uNEuWCGf2JCpEZusFOXvzrkdfUntDZuwUXMo=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=uhhs4vgBcDHCS6Rm0+miH5+f5GcKj5TN+XzaWZ1lF75MSlauk0+uQo9LK9D8La1b32UI5Qi8iQBJvIX+DgiyuZmgtGLtI4WBSqRIhC8KshdnmykVhnGpDiIiGmKpQgxGf0G4oJFgYese4XMy47rnoaQtH26/RPWh4d2FBlzA1Jk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tsrd/T1s; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719222173; c=relaxed/simple;
+	bh=a5TncNxc9pRUO3ZIUW5FwbUV55+KpglcShg/4IsZkI4=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=U5b/zhv0rMeRKoq6BxxCf4/oyZQ9+IMQ4+80x59ZUwbj1xMUDpzPgu1CdG7fdCQC0zbuYTjWX2jPjZxI2ZEs3HonrObsPZvc/hcKYFCYRRhcZH/ok4MclSnlB4p1RQng8lTTLOg8oKHiaFbUe4oywMepfwEGwTPuVQ5r8KYTGk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j14FdHx3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tsrd/T1s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66722C2BBFC;
-	Mon, 24 Jun 2024 09:42:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j14FdHx3"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 67662C4AF0D
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Jun 2024 09:42:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719222170;
-	bh=b6gQ/a0uNEuWCGf2JCpEZusFOXvzrkdfUntDZuwUXMo=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=tsrd/T1sq2fPLbAuAJ5FQPogkj7a34sz+PjP8HcZopNYmXcBPhFjAN7Ezv4GaL2G3
-	 LjyzRCfbu98UI3uLSKp+TqEN68V35MCVKzMCiFJrvxWIwho592oaetdqa87UFQ7Dib
-	 HxUcsHq9rf4gpPWRXtTkB4YSaDGV3mpKvig3oGynNeqRZCk6+C6rwoddeOI1qNDnMo
-	 g4XU+y2sNO18VyQacvU5x4ziwoEmQitfY5AzpkZ6GeqfFF5lnKXVnWGwbLeX6fITHO
-	 tEmCLwnKTHjLkimSX4w0gyrToPsqo42ZOPb2n2rUu1ip+eTKrOrrV5uAqrYxHDEtSG
-	 EbCzfcgGnqQFw==
+	s=k20201202; t=1719222172;
+	bh=a5TncNxc9pRUO3ZIUW5FwbUV55+KpglcShg/4IsZkI4=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=j14FdHx32RsUY5qKsD/6hfYzxH3bm1hqDW37B4cTmg0oRl/lVp1jlgDfEviEPVIPD
+	 qYBrHX9MFZPKXyFV49D+Y78Ua2kLO9WDSx6SpC/G2tp36DBXqjGAMqjJszuPDqEcgy
+	 grnlDgNesFDTg7dRL/2ZMte160/KCOqFz3izDrrYVxdsTSzyJIqYvCpmQDmtjJbvgx
+	 Brkx6+KwMFpib6KrgP623JLkmztJ98aGEpA23CaEKcV81+shGS3uwjrwtLv6DjKtRo
+	 tfc4Ujf/miKW3KV8GJ338Z09QsX3bmuPY2LDx80GZbWtf3aEmeH0F4mTt/innpHCxS
+	 knx4oX+EcZUow==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 61524C53BB9; Mon, 24 Jun 2024 09:42:52 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-xfs@vger.kernel.org
+Subject: [Bug 218230] xfstests xfs/538 hung
+Date: Mon, 24 Jun 2024 09:42:51 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: chandanbabu@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-218230-201763-U2vMSafKRz@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-218230-201763@https.bugzilla.kernel.org/>
 References: <bug-218230-201763@https.bugzilla.kernel.org/>
- <bug-218230-201763-FKGdPQu2af@https.bugzilla.kernel.org/>
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: bugzilla-daemon@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [Bug 218230] xfstests xfs/538 hung
-Date: Mon, 24 Jun 2024 15:09:13 +0530
-In-reply-to: <bug-218230-201763-FKGdPQu2af@https.bugzilla.kernel.org/>
-Message-ID: <87bk3qoew9.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218230
+
+--- Comment #2 from chandanbabu@kernel.org ---
 >
 > I have root caused the bug and hope to post the patches soon.
 
@@ -67,7 +87,7 @@ deadlock,
    | Wait for lock on |                  |                  |
    | AG 3's AGF       |                  |                  |
    |------------------+------------------+------------------|
-   
+
 As illustrated above, Task B and C are violating the AG locking order
 rule i.e. AGI/AGF must be locked in increasing AG order and that
 within an AG, AGI must be locked before an AGF.
@@ -149,7 +169,10 @@ Task C above was trying to allocate an inode chunk to serve a mkdir()
 syscall request. Task C locked AG 3's AGF and searched for the
 required extent. However, the only suitable extent was found to be
 straddling xfs_alloc_arg->max_agbno. Hence, it moved to the next AG
-and ended up wrapping around the AG list. 
+and ended up wrapping around the AG list.
 
--- 
-Chandan
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
