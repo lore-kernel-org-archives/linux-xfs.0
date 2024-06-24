@@ -1,471 +1,218 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 901B019B3EA
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Jun 2024 15:04:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719241462; cv=none; b=uVDdBpODuLi7MBJb/HaUTmn9hQ5qoeQDXCmQqOPWCAfVjYN9LBYJoF66b2TACZ7ncDhyRDy2vqNSrYwaHJRTjAcYaH5gbb2NedA0IqEydUS4s0aNNp0f4FPsF5FbYOtfc5Nwd5y3C+Lfik6umWB4QZ1sevb0iMJEaLN5o4m7bVo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719241462; c=relaxed/simple;
-	bh=z1gV/0BR++zdB7Vd6f8a938LkMNIeYDJXy7ugly9NSs=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P8DgJ2YriQRGu4NSBiV+tYsBsZzCBpzG+ib/CDGt5InHjT67w5zxZlRfU2fQrlpJpXouJuURk5VmF7SIkP7eYg1d7DR5Vmn4jLKwMICwjEzlOrLDIk0h84YZMaP/5OJKGyYdKLX1pETiPA0RhQOtIhO9fzaqC4Go59i24F6mfMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nhf31ue8; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D17919B3DB;
+	Mon, 24 Jun 2024 15:04:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1719241479; cv=fail; b=dNOUKllDask6XGI7oKhiPyKmV51OtsisgOYDd3MoP9v++dkwgtFkIALhZah/xWVycNG7EK2UBupo3kRcKS+pWjBZDKskmAaKwb/dTBnxKZGDDTAg2WpGyVqhG2dOnNfD9Hot5qSzVdb827/2NzSSdMd5OhzGRC4AqBnW1YtIpJg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1719241479; c=relaxed/simple;
+	bh=uCfglO/slurqXYaGsLE4t+Y+PLXy4GAwX5+znML2sKM=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=G2p86CAYzgx4fwT3r4Shk70OgPACcDhHOZannv0BJJg1aEqheP13y5pUpjYbuWEyCjMSGstgTE7lhp9nFXqaPf6LVOEtpOJsbSaQd/ZIOKYVcHzunlNDJv0zlVbliGTJVnrZK1vl8Ln+exMpcKKjVdxYFxpozOxOmhmyb/C9ers=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Bu+Va2Dv; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=s29XrQ3F; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nhf31ue8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8ECEC2BBFC;
-	Mon, 24 Jun 2024 15:04:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719241462;
-	bh=z1gV/0BR++zdB7Vd6f8a938LkMNIeYDJXy7ugly9NSs=;
-	h=Date:From:To:Subject:References:In-Reply-To:From;
-	b=nhf31ue8c2RdnIe/pCSKr9qLRnf2xZzynXEQ7lTnu1LwmUO0TOOjnP+1gG7mzYbkI
-	 trSOZyQ/ESO1M6NevF9Uc0et47lPJRiTdfNpvLTigg5UnVdMugnThENfFx6z2OH9TN
-	 HS0s95G6xIjZmgWL5+QcYPF8SighgeOdbblnX3nV1x1eN0vY2pAhX/piIGiLKU8GM9
-	 fFHbwcBXiybit+0PKqh4bbKWrMEPu7ZUgGGytOAF1HEOQK5yitLvFU+XpkN7oQCPjR
-	 BXWR506DFeOPXzjctBOuZy8+EMrOeP2DVioKEw3y+e7ltBvXwdjOHpI5tI0eD4KZ+g
-	 BnwyNh1Hp9MOA==
-Date: Mon, 24 Jun 2024 08:04:21 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Konst Mayer <cdlscpmv@gmail.com>, linux-xfs@vger.kernel.org, hch@lst.de
-Subject: [PATCH v2 1/1] xfs: enable FITRIM on the realtime device
-Message-ID: <20240624150421.GC3058325@frogsfrogsfrogs>
-References: <171892420288.3185132.3927361357396911761.stgit@frogsfrogsfrogs>
- <171892420308.3185132.6252829732531290655.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bu+Va2Dv";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="s29XrQ3F"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45OEtQrH012566;
+	Mon, 24 Jun 2024 15:04:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=D2bhk4BFD3hA/DVrYlYnoWYqPhnD7wiFtvvtzM68610=; b=
+	Bu+Va2DvC4EAB0432VOVoKCCFAbI/JkzeOORX/WDZ6hfLbfFj8c2Y/h9dUhlQife
+	0IDGwpzgjKuO15y9wKz+gprhzdrpc3fwDtBntDLK9WE6VjirKN/UVViGJb1SWXhW
+	U0Gc4IwzG7vTvpGVUNsDIpVgS25dsqqPGUVMmZUMI1U6CKGgnlKq28CBzci4li1C
+	LaKZFMNyutWJwZ+fuOYSTAT/B8Z1l8dXadHja/NBtMASJSkdcA5ZsqlcroXktyQx
+	t3Ss0yn1EMpJkW9ErdMljyuKfY2Ylp2kbuEfKRoEo02LtcbrmX0qjQj5mDup9Ohi
+	u86vBOfDtZ33j9IvD9v51Q==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ywnhatx2v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 24 Jun 2024 15:04:26 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 45OE1tih010741;
+	Mon, 24 Jun 2024 15:04:25 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2041.outbound.protection.outlook.com [104.47.55.41])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ywn2cjg4r-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 24 Jun 2024 15:04:25 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=C5sPGJ++RVBq1C4vs8L/feomMVRMKngOsZr+j+6ro6IZUNJqSqRQdOpnaOsthjwQDFVUZs9fYcG0vPccrmE4ltbGATrCcy5bf3rPI9oSufV/8AtY9AsNLe5bohKrzSnzKgEQRDnwnPyj+fdeJpSxH+yUh5766q4JIuCJCJAHp5eWReDEelqLLK9wgGirmxltv0GU3Sk3JbyHJ8CWofIB4Ie6RwPqZlqQHjtS3LVkTjsTP65zriN5/7dY3znlaH4q8HGpH8eiMNvif9DMUDsJ0S/5Rg3gUbemiy0PQEyYJIBzpmmTBfHbQqy4tqkL9PsMJFqNGFyV7S0a/ZdASoV9PQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=D2bhk4BFD3hA/DVrYlYnoWYqPhnD7wiFtvvtzM68610=;
+ b=XyRSRZSrzn2nOyqXDexcHycOVBqCg8huzSu+1IHNGs9ewS3v2wNfQ5eT79SNlZuOFK3v8wCquAz0emS0qeFeTT9KlV9GglWhvESvsvXvFrubB6Fh6Tkf+JUPrvu/Iq5IJJKFTIJe2J0A0OjJXTcVdfWmYUnlW4EYmGRUq5Jy1q6qxJNtrlMFj2tvx1upVCVHmnZ3iG97cEC/4NYEBDymZcZjqWw2KUP9dq5QH+ON0ZskapTf7kHdxuXDziYFaBKXhcwq7fPqTCFJFARLDNAKVtt8LLWiEsdVY9Cty9g0kU5tW9B1fklHV1LGhVcd6Kpdh8rv+3iNb0b4yQd3HV1+HA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=D2bhk4BFD3hA/DVrYlYnoWYqPhnD7wiFtvvtzM68610=;
+ b=s29XrQ3FCUZ4XCS3Y2201IZq9hrXZDkO4zho5I59Th/CPPc0B4DmA7kXNPs8pA1kI2QX184exabtQ/hh2VOj6rWHXRLl3yspD4MCY54KV6ZpuM+kQ2XJccdYxOmfoB6MY7etDqNAtgMPn5elG78DmoFyOLFoCzq0Ar6y7nBY0s4=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by SJ2PR10MB7111.namprd10.prod.outlook.com (2603:10b6:a03:4c6::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7698.28; Mon, 24 Jun
+ 2024 15:04:22 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7698.025; Mon, 24 Jun 2024
+ 15:04:22 +0000
+Message-ID: <f0fe2e28-3a08-4bf2-9446-5d93aa961e07@oracle.com>
+Date: Mon, 24 Jun 2024 16:04:18 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 08/13] xfs: Do not free EOF blocks for forcealign
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
+        martin.petersen@oracle.com
+References: <20240621100540.2976618-1-john.g.garry@oracle.com>
+ <20240621100540.2976618-9-john.g.garry@oracle.com>
+ <20240621190842.GN3058325@frogsfrogsfrogs>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240621190842.GN3058325@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0150.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:2c7::10) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <171892420308.3185132.6252829732531290655.stgit@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SJ2PR10MB7111:EE_
+X-MS-Office365-Filtering-Correlation-Id: 575c85bf-63a1-4c13-cb0f-08dc945eedc4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230037|376011|366013|1800799021;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?eGxjRHpHSGZ5a0VEcU9LUTRYbXoxcXlWQ1AvRDQwNzB6UFYxSDZKSVBDRjJE?=
+ =?utf-8?B?bWRxMVpxbGpUV0pOdWdCRmM4NDdyLzNpOG82L0NnZ3FidzROcFZQM0JwUjN1?=
+ =?utf-8?B?ckk3d2FYZGtCNWdWODlmb25tNmdoOUppNkZINDhVVEc2c00ycEpjeGdCZmR2?=
+ =?utf-8?B?TGViUjlybjFQenludkUraTlWQ05kLzR4M3FsUE1UQUhQR2p6WmNNaTZXMkcr?=
+ =?utf-8?B?QVpjQ0k3anNRY3pTQ0V6aklJcndBUmdCVUQ5UXZJYWpkbGt4Q2JBOGlTcFk1?=
+ =?utf-8?B?OHdBNGJMR0I5RzBmblVxM0JFRWJHTXljZTNSQXZVdC9NZ0M3NFVCQ1AzZkNM?=
+ =?utf-8?B?c0lLUEd5N0JaN3JkT2RpYnBUMjFkT0RrQjd0bmcwekpZMndwVEhqSmhzZnV6?=
+ =?utf-8?B?U0E5NzgvOEJKMXNQQlpHVFpkWFhTM3psVjlFWEE2STFnNzlzUTVzT2x2TDFI?=
+ =?utf-8?B?U3R6L0Jzam00QkgwKzRjZkYxMDdNZTV3TWVZZzVFaWdaaDg1VmU1bkxCN0g2?=
+ =?utf-8?B?dmVLMEhkWitoRzBSWi9pNzZmeWRnclpZcC9CTUtPdGZFYkdnZkFVVHdUbjNa?=
+ =?utf-8?B?TW90NEFjZ05heHJlVEc0UlVGYjdzUnRVem9MY0ZuZHVRWGZhVkg2TTlnaVZV?=
+ =?utf-8?B?YmpZQlRoVlBNczFaZ09VTUc2eE5lTnBrZ1JZUjFjc0FVNm9ONndJSGJRSDNu?=
+ =?utf-8?B?dTQrN3FvK2VhSUV1anVubU9ONFI5Z1hJektobTd5SzRCNzhpb0JoWWRWTWtj?=
+ =?utf-8?B?YUFELy83NmRqMzJkWXV6cEswNlJkWmluNHNZeGlFcU9TWmc2MFMrWFdDU2FP?=
+ =?utf-8?B?S0dpTFZTaGpCdDA4WVFCbkVBY0EvT21DWkNQNnE5ZjRGYzRoMXE3dGljN2ZM?=
+ =?utf-8?B?KzNYV3pENC84UVQ2WkhscU1ZSHdyd01Mb1daT0xNUytVNkQ2Tm9Gekc5NTlP?=
+ =?utf-8?B?MXVMSmdNb3BkaUhpeXpNdjlMc0NJVTJUd293TVBlRXlQOFkxR080N2E3amo0?=
+ =?utf-8?B?TERiK0pKV2lsV1pPOVNJWSs5NzhKOHdYaGVEUDAxME94SHFKTGNSeEczYVdD?=
+ =?utf-8?B?aThiODBySU9jNkJqekwwS3JKckZEZlRaTk9uZmJjL2Z3REtYcWtNRkVCdGRT?=
+ =?utf-8?B?S1hJNS81UnVTMENXVVlsc253NWkvakFBNlBlQW4yNkxzYks1NlRIRkd0OEZQ?=
+ =?utf-8?B?ZzZOak1oRm9weDZVd0J4Y28vOFRKQWJTdVB0Q1dyb1E4emN5VVR0S3E2a25L?=
+ =?utf-8?B?NDJOOVZ2ZUVxVkZlVjBKeDFvTU1jNktMRzVqNDJsYmZPN0QxYm5JMU82SzhR?=
+ =?utf-8?B?VUEycTFkdW1xbWhVcS9oVzlkL2haRXFNUkNpRGU1UHlxNlcvQjdBR3dEM2l3?=
+ =?utf-8?B?SjZiVDBxdERhOEFYMmx1ZUxZUE5zQmNPZXVseWxCM2prZ25QZGxTYU1qeDdK?=
+ =?utf-8?B?VlI2dEdxdmpkY20rZi84YzN6Nmt4VmlCZ3dJYUhSaEo3d3g5NS94cTJhcnRy?=
+ =?utf-8?B?ZVBJZnVxaS8yb3hzWUhRNXJ2VWJ1NldUSEZ1YkFWT3dBN1BLZUNSVGdTcFBH?=
+ =?utf-8?B?Z2JENUVpL1dQL0FFVTZlYUxNN2ZJNGNmZzBJejJ1ZXVyS2FzMWxrWUxJaDRy?=
+ =?utf-8?B?UE01NkRTNVBtWWJMOGxZMXlwTGVvZ3BDTTU1OGxmam5MWlFoZ2FjVlJhNVJK?=
+ =?utf-8?B?U2VES2F5RWVybUJZN3ZENTRGdzN2a2Y0YmlPVDNlVzVDaGpneTE5TGx6RXN6?=
+ =?utf-8?Q?NlhNqVCV95V47Fiyy2pL/XP7eJSUcZ6GcwrWWJK?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230037)(376011)(366013)(1800799021);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?dld0UXR1K1lGT2xLVHJkVUhoWk1zUlg2dVUyY253eVdQblRzRW4vZm9DUyta?=
+ =?utf-8?B?V3RiY0t2bkRtUVcxMWppVENFTjFMVzM5ODQ5RS9LLzJSVi9ibUkrZ1VKMjRQ?=
+ =?utf-8?B?b3pCbXNpMUZLdEJTTVhVek40N0lxNjFVc29TMExTYjgxNHhwaUhjMzkzdU9I?=
+ =?utf-8?B?cjhLaVRIL2sxTGsrN3NmeDJYMUdhZVVIendDdG8zQ2ZnNDh0M3o5cWRZaGNh?=
+ =?utf-8?B?d3I5YXViRnZMSjdzZE9JellFNTFieTg3bHZIR3JXbHZaVm95TWMwakZhcXdL?=
+ =?utf-8?B?TUxmVCtuTFVsZWY0bzkwVnlzRUtkbEthRXlEYkVJLzBydHlCbGp4WUJvbjRR?=
+ =?utf-8?B?bkNlR3VzaGtqL1k4MElNL0g3ZkVvN1FOSWVSYTN1VHhQT0hlUHB6S0Y0cXht?=
+ =?utf-8?B?Qi84Ymo4Sk9EMUhwNDFLY21TT3luRk5Ram1IbFB3SEpVRGN6TmRSdnZLbHF1?=
+ =?utf-8?B?Myt3WENUc2JTM1lCeDFHeWkrQ1FnbnErcU15QzE4M05ES0sweURzbmhsMlpL?=
+ =?utf-8?B?dHN0ZTkvMUNtRld4SkpXKzladlp1OWR4Yjd1cUFveUd6N3pvVjVZZ3kwSlFk?=
+ =?utf-8?B?YVFpK0c3YTErLzVkcUF3SU8rZTFWWFFvVFhNL2JodURCbFZJN2JDY3dFdHlk?=
+ =?utf-8?B?YWQ1NE4zWHB1ek1rZDc5MEVoK2Z5N3RuejNmeTVuTjZCWExIaVVheVkzQXBl?=
+ =?utf-8?B?RVdKaWZqWDVRcHB5L0ZMenQ4dUR6a3BURWNEQlhNYXl3T2FuUFNQUFF4Z1l0?=
+ =?utf-8?B?VVo0NDB4Vk5EWnk5RUNGeDFPY0ZDaFlCT2JxazRIdFk3aktyd2VlVjN3Rmlz?=
+ =?utf-8?B?L0dtUTdhRk9XWjlrQUNGdTZKSG9oaFp4QlZUR0xES1ZIbDlvbnhacUgzRkZ1?=
+ =?utf-8?B?eFlDUVp2cy9MNHc3WmhyaUFnRUw1N3l2dE9hekhwbkNqcDVFelNJTVB5ZjdW?=
+ =?utf-8?B?WnE0YWg1cnFCcW15RnVzSTZRTjd6OS9ES0VRdVBTUWRGS0V2SmlDenlPcTRL?=
+ =?utf-8?B?NFFQME1FVkcxd09GbTdCbmRsOUhhOEdlTHRGSkxGd0xDZUNjUjJGN1o2MU1U?=
+ =?utf-8?B?VEpzRjE0d0dKM3FmMXBBb01oVDZCb3FYZ0hqOGJDOXhBaDZlUGVreC9lNlRO?=
+ =?utf-8?B?RWlORWY4bk1DcmJyN3pnd3pOSTg2YkVRRThMT29sSk83NWNlUGNaMWlHaGx1?=
+ =?utf-8?B?dDJkV1FEU0tzVkR4Yyt6OTVGQTJIS2d2NkVHb2w1NWdreHlEZFUrQmRwSlRz?=
+ =?utf-8?B?TE5uU3RYNWNxVS8yQ0hUOFdmeWtLaWwza2ZaaXVabzJZdXpNR213SmtOc3Z1?=
+ =?utf-8?B?a09qZEMvVWJYRVhEN2EzUUJFd3NBVCtqOGE5NnAzb095cEFxaml4MGZCeXlq?=
+ =?utf-8?B?dnorOGFzWlluNWZPS2QzeXFoaWNzbkVwSXZEa3Zld3JLVDNlbDdvODV5YWp4?=
+ =?utf-8?B?all2K2lmazVFL24xa1ozNHZpaXJyeGgrV0RxQ28xeEtXZWNmQU40VStkc1Zn?=
+ =?utf-8?B?NFJFQ0dKRnprd0l2eHBhUnc1VThjTzRVMnpIYTBrYWRZT0JuNmFzZWgwV0tC?=
+ =?utf-8?B?V0YvZUFmbHdBb3hXb3J1OEsrbWU5aEdISkZUSkw5TGxSMFJyc3c5UERkNWND?=
+ =?utf-8?B?ckM2dzF4R0ZyZHBKb3N6ZUU4cXJFTFI5Uyt4bnVjbVlKSXN1TjRpK2N5VXlC?=
+ =?utf-8?B?NFREdXR6NG1Pb0E0NW5tOCtYeEhVWFVKSkNsZmpuN1lyQTVzTkprZ0daMUZw?=
+ =?utf-8?B?eU1YYUlSaEFIRkRoY0hPL2J0N095WEptRlJJdjdEc29xVHp5M3p2QUtENEZL?=
+ =?utf-8?B?LzcwWEV2a3hQQ1lCNWVWVmVKUndhTHpSTWRsMFQxTE02VWM0cklpQ1FxcEhK?=
+ =?utf-8?B?MTRNSXBURmt5U3dUZ1B1M0lKU0kzQmdkRkx6NEJnRGxhKzBRN3VrRm9zbFJX?=
+ =?utf-8?B?VTJmTlpoM25nSHJneHI5bUg1MXFmZmRMTEs3VjNGTjdMVVo0VFdvM1dIdCt6?=
+ =?utf-8?B?YVNmRzdLRXdYaitSMjVWMzV1WWJjbklSa3UyckRvTVlHbUVMMW5WT1NlUUhk?=
+ =?utf-8?B?WUJJMDh0RE5WUXh3ZmdINHZnblYvM1BzTUQwMThPZWt3Rmc5ODVzWDAySzJx?=
+ =?utf-8?Q?Pyco0LGhX4MoszYSGA89c3462?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	9YZjBB6R9LEq4I4yHKS1Cu4RXFr98uM7I6770t/Fj8GW9vpZLBgIkiLkgkwzg+Bd34FjON04H9Yi89cPDSuMyDoXtMc8sO3hW1b0lzE2iLq2Jo1yZlAmxH3E/AyjIYYwtOPdKDKu1rNVhsNweOETyq177iRXFuqslIHixxG2FsRlUdjPba2OwRzfvcOkxR6PehYAPWGD8GKRGC5P5wlz2eY51HrYzc32cgS3nviaNLbkBzuDwT6zKp6Fu4t1OwUyFhb2f2nHyKlq51JBBoxlqeIjJQFCfocTtDKm5xuJJDO/FlaIlKdxG7lQactTjsgrCpNXsbE2lNBvaCYWXwKtACnxsH3y5ShRRSWrSWGZ2wJ9gd9PEorwYWZpR5EY9TY37KdiOBIMX9mK9Wb2epO8aotF0LDI9REHI+zGzWkbUwZxWqrs4oxOPKIJ3RjGJw5jG+o3bYGAbUQP/12XVAlExKITagYMNedEEwwfjQ9YPke37ngxo6lP0FjG9pP4VK2ioZIHWGUOYilZes/PYm8uVsKsUCyj9sGu0x9CzrZ7R5PPi940VAHMdIAfi7NKEm4hFUW5H5e6IUncNoDtzH1ciKPd91TOeAbfRyoUVlj6XKI=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 575c85bf-63a1-4c13-cb0f-08dc945eedc4
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Jun 2024 15:04:21.9480
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 7PJPnHTUFOXdAruSpS+QDFa7+L0qviUrbuN5Iw02Upb43+iTa4fXPG0mIJz+8hrCj4Sv6hXo+coZk50XlZC8XA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR10MB7111
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-24_11,2024-06-24_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ spamscore=0 suspectscore=0 adultscore=0 phishscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2406180000 definitions=main-2406240121
+X-Proofpoint-GUID: pMOFRNeDjf7t4Q6XYbYnqBjJpKEW-qu4
+X-Proofpoint-ORIG-GUID: pMOFRNeDjf7t4Q6XYbYnqBjJpKEW-qu4
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 21/06/2024 20:08, Darrick J. Wong wrote:
+>> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+>> index e5d893f93522..56b80a7c0992 100644
+>> --- a/fs/xfs/xfs_bmap_util.c
+>> +++ b/fs/xfs/xfs_bmap_util.c
+>> @@ -539,8 +539,13 @@ xfs_can_free_eofblocks(
+>>   	 * forever.
+>>   	 */
+>>   	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+>> -	if (xfs_inode_has_bigrtalloc(ip))
+>> +
+>> +	/* Do not free blocks when forcing extent sizes */
+> "Only try to free blocks beyond the allocation unit that crosses EOF" ?
 
-Implement FITRIM for the realtime device by pretending that it's
-"space" immediately after the data device.  We have to hold the
-rtbitmap ILOCK while the discard operations are ongoing because there's
-no busy extent tracking for the rt volume to prevent reallocations.
+ok, fine
 
-Cc: Konst Mayer <cdlscpmv@gmail.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
-v2: split out the datadev discard code into separate helpers
----
- fs/xfs/xfs_discard.c |  303 ++++++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trace.h   |   29 +++++
- 2 files changed, 308 insertions(+), 24 deletions(-)
+> 
+> Otherwise seems fine to me
+> Reviewed-by: Darrick J. Wong<djwong@kernel.org>
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 25fe3b932b5a6..6f0fc7fe1f2ba 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -20,6 +20,7 @@
- #include "xfs_log.h"
- #include "xfs_ag.h"
- #include "xfs_health.h"
-+#include "xfs_rtbitmap.h"
- 
- /*
-  * Notes on an efficient, low latency fstrim algorithm
-@@ -322,7 +323,7 @@ xfs_trim_should_stop(void)
-  * we found in the last batch as the key to start the next.
-  */
- static int
--xfs_trim_extents(
-+xfs_trim_perag_extents(
- 	struct xfs_perag	*pag,
- 	xfs_agblock_t		start,
- 	xfs_agblock_t		end,
-@@ -383,6 +384,259 @@ xfs_trim_extents(
- 
- }
- 
-+static int
-+xfs_trim_datadev_extents(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		start,
-+	xfs_daddr_t		end,
-+	xfs_extlen_t		minlen,
-+	uint64_t		*blocks_trimmed)
-+{
-+	xfs_agnumber_t		start_agno, end_agno;
-+	xfs_agblock_t		start_agbno, end_agbno;
-+	xfs_daddr_t		ddev_end;
-+	struct xfs_perag	*pag;
-+	int			last_error = 0, error;
-+
-+	ddev_end = min_t(xfs_daddr_t, end,
-+			 XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1);
-+
-+	start_agno = xfs_daddr_to_agno(mp, start);
-+	start_agbno = xfs_daddr_to_agbno(mp, start);
-+	end_agno = xfs_daddr_to_agno(mp, ddev_end);
-+	end_agbno = xfs_daddr_to_agbno(mp, ddev_end);
-+
-+	for_each_perag_range(mp, start_agno, end_agno, pag) {
-+		xfs_agblock_t	agend = pag->block_count;
-+
-+		if (start_agno == end_agno)
-+			agend = end_agbno;
-+		error = xfs_trim_perag_extents(pag, start_agbno, agend, minlen,
-+				blocks_trimmed);
-+		if (error)
-+			last_error = error;
-+
-+		if (xfs_trim_should_stop()) {
-+			xfs_perag_rele(pag);
-+			break;
-+		}
-+		start_agbno = 0;
-+	}
-+
-+	return last_error;
-+}
-+
-+#ifdef CONFIG_XFS_RT
-+struct xfs_trim_rtdev {
-+	/* list of rt extents to free */
-+	struct list_head	extent_list;
-+
-+	/* pointer to count of blocks trimmed */
-+	uint64_t		*blocks_trimmed;
-+
-+	/* minimum length that caller allows us to trim */
-+	xfs_rtblock_t		minlen_fsb;
-+
-+	/* restart point for the rtbitmap walk */
-+	xfs_rtxnum_t		restart_rtx;
-+
-+	/* stopping point for the current rtbitmap walk */
-+	xfs_rtxnum_t		stop_rtx;
-+};
-+
-+struct xfs_rtx_busy {
-+	struct list_head	list;
-+	xfs_rtblock_t		bno;
-+	xfs_rtblock_t		length;
-+};
-+
-+static void
-+xfs_discard_free_rtdev_extents(
-+	struct xfs_trim_rtdev	*tr)
-+{
-+	struct xfs_rtx_busy	*busyp, *n;
-+
-+	list_for_each_entry_safe(busyp, n, &tr->extent_list, list) {
-+		list_del_init(&busyp->list);
-+		kfree(busyp);
-+	}
-+}
-+
-+/*
-+ * Walk the discard list and issue discards on all the busy extents in the
-+ * list. We plug and chain the bios so that we only need a single completion
-+ * call to clear all the busy extents once the discards are complete.
-+ */
-+static int
-+xfs_discard_rtdev_extents(
-+	struct xfs_mount	*mp,
-+	struct xfs_trim_rtdev	*tr)
-+{
-+	struct block_device	*bdev = mp->m_rtdev_targp->bt_bdev;
-+	struct xfs_rtx_busy	*busyp;
-+	struct bio		*bio = NULL;
-+	struct blk_plug		plug;
-+	xfs_rtblock_t		start = NULLRTBLOCK, length = 0;
-+	int			error = 0;
-+
-+	blk_start_plug(&plug);
-+	list_for_each_entry(busyp, &tr->extent_list, list) {
-+		if (start == NULLRTBLOCK)
-+			start = busyp->bno;
-+		length += busyp->length;
-+
-+		trace_xfs_discard_rtextent(mp, busyp->bno, busyp->length);
-+
-+		error = __blkdev_issue_discard(bdev,
-+				XFS_FSB_TO_BB(mp, busyp->bno),
-+				XFS_FSB_TO_BB(mp, busyp->length),
-+				GFP_NOFS, &bio);
-+		if (error)
-+			break;
-+	}
-+	xfs_discard_free_rtdev_extents(tr);
-+
-+	if (bio) {
-+		error = submit_bio_wait(bio);
-+		if (error == -EOPNOTSUPP)
-+			error = 0;
-+		if (error)
-+			xfs_info(mp,
-+	 "discard failed for rtextent [0x%llx,%llu], error %d",
-+				 (unsigned long long)start,
-+				 (unsigned long long)length,
-+				 error);
-+		bio_put(bio);
-+	}
-+	blk_finish_plug(&plug);
-+
-+	return error;
-+}
-+
-+static int
-+xfs_trim_gather_rtextent(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	const struct xfs_rtalloc_rec	*rec,
-+	void				*priv)
-+{
-+	struct xfs_trim_rtdev		*tr = priv;
-+	struct xfs_rtx_busy		*busyp;
-+	xfs_rtblock_t			rbno, rlen;
-+
-+	if (rec->ar_startext > tr->stop_rtx) {
-+		/*
-+		 * If we've scanned a large number of rtbitmap blocks, update
-+		 * the cursor to point at this extent so we restart the next
-+		 * batch from this extent.
-+		 */
-+		tr->restart_rtx = rec->ar_startext;
-+		return -ECANCELED;
-+	}
-+
-+	rbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
-+	rlen = xfs_rtx_to_rtb(mp, rec->ar_extcount);
-+
-+	/* Ignore too small. */
-+	if (rlen < tr->minlen_fsb) {
-+		trace_xfs_discard_rttoosmall(mp, rbno, rlen);
-+		return 0;
-+	}
-+
-+	busyp = kzalloc(sizeof(struct xfs_rtx_busy), GFP_KERNEL);
-+	if (!busyp)
-+		return -ENOMEM;
-+
-+	busyp->bno = rbno;
-+	busyp->length = rlen;
-+	INIT_LIST_HEAD(&busyp->list);
-+	list_add_tail(&busyp->list, &tr->extent_list);
-+	*tr->blocks_trimmed += rlen;
-+
-+	tr->restart_rtx = rec->ar_startext + rec->ar_extcount;
-+	return 0;
-+}
-+
-+static int
-+xfs_trim_rtdev_extents(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		start,
-+	xfs_daddr_t		end,
-+	xfs_daddr_t		minlen,
-+	uint64_t		*blocks_trimmed)
-+{
-+	struct xfs_rtalloc_rec	low = { };
-+	struct xfs_rtalloc_rec	high = { };
-+	struct xfs_trim_rtdev	tr = {
-+		.blocks_trimmed	= blocks_trimmed,
-+		.minlen_fsb	= XFS_BB_TO_FSB(mp, minlen),
-+	};
-+	struct xfs_trans	*tp;
-+	xfs_daddr_t		rtdev_daddr;
-+	int			error;
-+
-+	INIT_LIST_HEAD(&tr.extent_list);
-+
-+	/* Shift the start and end downwards to match the rt device. */
-+	rtdev_daddr = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (start > rtdev_daddr)
-+		start -= rtdev_daddr;
-+	else
-+		start = 0;
-+
-+	if (end <= rtdev_daddr)
-+		return 0;
-+	end -= rtdev_daddr;
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	end = min_t(xfs_daddr_t, end,
-+			XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks) - 1);
-+
-+	/* Convert the rt blocks to rt extents */
-+	low.ar_startext = xfs_rtb_to_rtxup(mp, XFS_BB_TO_FSB(mp, start));
-+	high.ar_startext = xfs_rtb_to_rtx(mp, XFS_BB_TO_FSBT(mp, end));
-+
-+	/*
-+	 * Walk the free ranges between low and high.  The query_range function
-+	 * trims the extents returned.
-+	 */
-+	do {
-+		tr.stop_rtx = low.ar_startext + (mp->m_sb.sb_blocksize * NBBY);
-+		xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
-+		error = xfs_rtalloc_query_range(mp, tp, &low, &high,
-+				xfs_trim_gather_rtextent, &tr);
-+
-+		if (error == -ECANCELED)
-+			error = 0;
-+		if (error) {
-+			xfs_rtbitmap_unlock_shared(mp, XFS_RBMLOCK_BITMAP);
-+			xfs_discard_free_rtdev_extents(&tr);
-+			break;
-+		}
-+
-+		if (list_empty(&tr.extent_list)) {
-+			xfs_rtbitmap_unlock_shared(mp, XFS_RBMLOCK_BITMAP);
-+			break;
-+		}
-+
-+		error = xfs_discard_rtdev_extents(mp, &tr);
-+		xfs_rtbitmap_unlock_shared(mp, XFS_RBMLOCK_BITMAP);
-+		if (error)
-+			break;
-+
-+		low.ar_startext = tr.restart_rtx;
-+	} while (!xfs_trim_should_stop() && low.ar_startext <= high.ar_startext);
-+
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+#else
-+# define xfs_trim_rtdev_extents(m,s,e,n,b)	(-EOPNOTSUPP)
-+#endif /* CONFIG_XFS_RT */
-+
- /*
-  * trim a range of the filesystem.
-  *
-@@ -391,28 +645,37 @@ xfs_trim_extents(
-  * addressing. FSB addressing is sparse (AGNO|AGBNO), while the incoming format
-  * is a linear address range. Hence we need to use DADDR based conversions and
-  * comparisons for determining the correct offset and regions to trim.
-+ *
-+ * The realtime device is mapped into the FITRIM "address space" immediately
-+ * after the data device.
-  */
- int
- xfs_ioc_trim(
- 	struct xfs_mount		*mp,
- 	struct fstrim_range __user	*urange)
- {
--	struct xfs_perag	*pag;
- 	unsigned int		granularity =
- 		bdev_discard_granularity(mp->m_ddev_targp->bt_bdev);
-+	struct block_device	*rt_bdev = NULL;
- 	struct fstrim_range	range;
- 	xfs_daddr_t		start, end;
- 	xfs_extlen_t		minlen;
--	xfs_agnumber_t		start_agno, end_agno;
--	xfs_agblock_t		start_agbno, end_agbno;
-+	xfs_rfsblock_t		max_blocks;
- 	uint64_t		blocks_trimmed = 0;
- 	int			error, last_error = 0;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
--	if (!bdev_max_discard_sectors(mp->m_ddev_targp->bt_bdev))
-+	if (mp->m_rtdev_targp &&
-+	    bdev_max_discard_sectors(mp->m_rtdev_targp->bt_bdev))
-+		rt_bdev = mp->m_rtdev_targp->bt_bdev;
-+	if (!bdev_max_discard_sectors(mp->m_ddev_targp->bt_bdev) && !rt_bdev)
- 		return -EOPNOTSUPP;
- 
-+	if (rt_bdev)
-+		granularity = max(granularity,
-+				  bdev_discard_granularity(rt_bdev));
-+
- 	/*
- 	 * We haven't recovered the log, so we cannot use our bnobt-guided
- 	 * storage zapping commands.
-@@ -433,35 +696,27 @@ xfs_ioc_trim(
- 	 * used by the fstrim application.  In the end it really doesn't
- 	 * matter as trimming blocks is an advisory interface.
- 	 */
--	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
-+	max_blocks = mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks;
-+	if (range.start >= XFS_FSB_TO_B(mp, max_blocks) ||
- 	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
- 	    range.len < mp->m_sb.sb_blocksize)
- 		return -EINVAL;
- 
- 	start = BTOBB(range.start);
--	end = min_t(xfs_daddr_t, start + BTOBBT(range.len),
--		    XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)) - 1;
-+	end = start + BTOBBT(range.len) - 1;
- 
--	start_agno = xfs_daddr_to_agno(mp, start);
--	start_agbno = xfs_daddr_to_agbno(mp, start);
--	end_agno = xfs_daddr_to_agno(mp, end);
--	end_agbno = xfs_daddr_to_agbno(mp, end);
--
--	for_each_perag_range(mp, start_agno, end_agno, pag) {
--		xfs_agblock_t	agend = pag->block_count;
--
--		if (start_agno == end_agno)
--			agend = end_agbno;
--		error = xfs_trim_extents(pag, start_agbno, agend, minlen,
-+	if (bdev_max_discard_sectors(mp->m_ddev_targp->bt_bdev)) {
-+		error = xfs_trim_datadev_extents(mp, start, end, minlen,
- 				&blocks_trimmed);
- 		if (error)
- 			last_error = error;
-+	}
- 
--		if (xfs_trim_should_stop()) {
--			xfs_perag_rele(pag);
--			break;
--		}
--		start_agbno = 0;
-+	if (rt_bdev && !xfs_trim_should_stop()) {
-+		error = xfs_trim_rtdev_extents(mp, start, end, minlen,
-+				&blocks_trimmed);
-+		if (error)
-+			last_error = error;
- 	}
- 
- 	if (last_error)
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 654ad6f574680..56c8333a470bb 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2463,6 +2463,35 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
- DEFINE_DISCARD_EVENT(xfs_discard_exclude);
- DEFINE_DISCARD_EVENT(xfs_discard_busy);
- 
-+DECLARE_EVENT_CLASS(xfs_rtdiscard_class,
-+	TP_PROTO(struct xfs_mount *mp,
-+		 xfs_rtblock_t rtbno, xfs_rtblock_t len),
-+	TP_ARGS(mp, rtbno, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_rtblock_t, rtbno)
-+		__field(xfs_rtblock_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_rtdev_targp->bt_dev;
-+		__entry->rtbno = rtbno;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d rtbno 0x%llx rtbcount 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->rtbno,
-+		  __entry->len)
-+)
-+
-+#define DEFINE_RTDISCARD_EVENT(name) \
-+DEFINE_EVENT(xfs_rtdiscard_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, \
-+		 xfs_rtblock_t rtbno, xfs_rtblock_t len), \
-+	TP_ARGS(mp, rtbno, len))
-+DEFINE_RTDISCARD_EVENT(xfs_discard_rtextent);
-+DEFINE_RTDISCARD_EVENT(xfs_discard_rttoosmall);
-+DEFINE_RTDISCARD_EVENT(xfs_discard_rtrelax);
-+
- DECLARE_EVENT_CLASS(xfs_btree_cur_class,
- 	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp),
- 	TP_ARGS(cur, level, bp),
+cheers
+
