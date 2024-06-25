@@ -1,49 +1,53 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82ECF16C68B;
-	Tue, 25 Jun 2024 15:52:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EFAE1487E9;
+	Tue, 25 Jun 2024 17:20:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719330733; cv=none; b=UwNVIVWbZny/au9OFApt1MwEeHP/7fGSjiZ2Y/pwSI9t4I8oXhD1/YbkIFBWZltFMf/eC0EoqfLWPqN/xSUq4LW2LECWfAgVlkBZTAkDttVhjlb7yWl+dIfUQlO9yLx+ioD6b1Qw0IcNosvkORwyPcRZQoNO/l+zm2dY5Fl3TMo=
+	t=1719336043; cv=none; b=e6UuLcInAeLXvUnEjef3AZmo8UrPIbDcYgP4+E8+3nZE9brf3ijlYWlvUszk+mZmJ0hst87VwjFA0H5iBHIO/zs/ESYPYhdZTaosaJylEyKmBhainRtMhw/eJ9qlfM/mFI23x+Y6rao3xEL+zis0dd6dEjQLN0l0wzaMmzvlkwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719330733; c=relaxed/simple;
-	bh=X0jmIyIPh1W9m4kEceQUttmnpBYHpgQNokutD/esj/E=;
+	s=arc-20240116; t=1719336043; c=relaxed/simple;
+	bh=TLiCDBlNhJeY858vWS6sfaY2ITG/SSXEtUs2hIiC62w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fl43As/2x5DOIPupy/jyTUAd7JRxbdXu8yqU1nGcwwmtnJfHpEcVnhUCWSMHbfm9QZ5F+V/e++kBGFJ2sYe2K/Fh8fhEjPEwEMG2bitD01LituzukvvvttJwMjrjo+o9MAwQLG42TbDyxXmpxTXIlhuptTSIT7Q7FB7WYS7dh24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dsY/v5Sq; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=SdMKEzcXUEWRvvYmY6N3Pyyns4nhrTMXX/BQ3OY2YSl0/vw3fJfZQizx0XP7rDOfzpSgg/DEhbeqPpNEDAHBRV9diwXHnFV70z6w5aoq6naKCl83LVQepogpEiN82RIU/pmndlHdB/kS8VHWKpA9jZVcp3iGo58yF5MJaky0scE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=NbFLQKnc; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dsY/v5Sq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=YLsgCo5mZCWyV+0LgwK8z9FDMC5L3Jf20O6mHZiQ8gQ=; b=dsY/v5Sq61qwbM7R6F+sukc/5F
-	s4pfkym86Ioii1ii/qPd5ZqDZkuY9WsN7UoMvQY4lfJ1lcZzBtW6itoMxdSn5Ub+HH/tx4xHNov6m
-	QGudwmzCdubFhgmb0f+BNB+nLfijhUGE5CX9l0G0wAK70y7f8/1WWveqep28w5Zu3ew/qt4OkvZC/
-	4T56yO2ivoaK2M419qqC/0vYp92diIr1H9nkDDhhBPQo0X9k2rwoFy02miSlQOzFYWPPtE+rgfVnm
-	0kIQUAZN8kOkQq6vmukUW0D/p13DhJ/Bzgwe3O0+9o65RwpCOeNUI6CI/y0C25q4GL0h9fJPjXjbO
-	OVf9HL6Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sM8Si-0000000BHaO-06Hw;
-	Tue, 25 Jun 2024 15:52:04 +0000
-Date: Tue, 25 Jun 2024 16:52:03 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: david@fromorbit.com, chandan.babu@oracle.com, djwong@kernel.org,
-	brauner@kernel.org, akpm@linux-foundation.org,
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="NbFLQKnc"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4W7s6Y0nJ7z9shY;
+	Tue, 25 Jun 2024 19:20:37 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1719336037;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5sRWgIsDN9rxxK/fFSv124QkLdHj/Xm1vNPLxyytvHg=;
+	b=NbFLQKncW0PDy/nuxq7Qj2mWHIOZmfmzKWUYbHxAcG3KETJdt8sa33BCfGHmXSfOVFQvrM
+	1qnBIvI0tOS8yRKFcipEMRuyw0/KogZXNqLFqc6sfg9vopGxoci7uTq/CJrAQ9JVv94qiM
+	+LtspHT+K83wtDVVyPr1lNFdnPtRD5+JAXMHK3C3tBdD0iXynEpTbKlXxUWE4mBcVHNlIV
+	4W/FqcDOHE0GDo4ISYViERy9biN5rKmRS+4mUMu52duVNFbvqHjheOPBlgbxzug6RQYg6B
+	I3ezacJV7fsESDZtPNmZ+YHrFifPplxNiTu309eyBx8Vpr9i+iA/oX4nb0i1Kw==
+Date: Tue, 25 Jun 2024 17:20:31 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Zi Yan <ziy@nvidia.com>
+Cc: david@fromorbit.com, willy@infradead.org, chandan.babu@oracle.com,
+	djwong@kernel.org, brauner@kernel.org, akpm@linux-foundation.org,
 	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
 	linux-mm@kvack.org, john.g.garry@oracle.com,
 	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
 	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
 	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
-Subject: Re: [PATCH v8 02/10] filemap: allocate mapping_min_order folios in
- the page cache
-Message-ID: <ZnrnozlE0EggQ_w3@casper.infradead.org>
+Subject: Re: [PATCH v8 04/10] mm: split a folio in minimum folio order chunks
+Message-ID: <20240625172031.y5yyukeudinescxk@quentin>
 References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-3-kernel@pankajraghav.com>
+ <20240625114420.719014-5-kernel@pankajraghav.com>
+ <D296GAEAQVJB.3FXBQ0WEUJ384@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,34 +56,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240625114420.719014-3-kernel@pankajraghav.com>
+In-Reply-To: <D296GAEAQVJB.3FXBQ0WEUJ384@nvidia.com>
 
-On Tue, Jun 25, 2024 at 11:44:12AM +0000, Pankaj Raghav (Samsung) wrote:
-> Co-developed-by: Luis Chamberlain <mcgrof@kernel.org>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jun 25, 2024 at 10:45:09AM -0400, Zi Yan wrote:
+> On Tue Jun 25, 2024 at 7:44 AM EDT, Pankaj Raghav (Samsung) wrote:
+> > From: Luis Chamberlain <mcgrof@kernel.org>
+> >
+> > split_folio() and split_folio_to_list() assume order 0, to support
+> > minorder for non-anonymous folios, we must expand these to check the
+> > folio mapping order and use that.
+> >
+> > Set new_order to be at least minimum folio order if it is set in
+> > split_huge_page_to_list() so that we can maintain minimum folio order
+> > requirement in the page cache.
+> >
+> > Update the debugfs write files used for testing to ensure the order
+> > is respected as well. We simply enforce the min order when a file
+> > mapping is used.
+> >
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> > Reviewed-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> > There was a discussion about whether we need to consider truncation of
+> > folio to be considered a split failure or not [1]. The new code has
+> > retained the existing behaviour of returning a failure if the folio was
+> > truncated. I think we need to have a separate discussion whethere or not
+> > to consider it as a failure.
+> 
+> <snip>
+> 
+> >
+> > +int split_folio_to_list(struct folio *folio, struct list_head *list)
+> > +{
+> > +	unsigned int min_order = 0;
+> > +
+> > +	if (!folio_test_anon(folio)) {
+> > +		if (!folio->mapping) {
+> > +			count_vm_event(THP_SPLIT_PAGE_FAILED);
+> 
+> Regardless this folio split is from a truncation or not, you should not
+> count every folio split as a THP_SPLIT_PAGE_FAILED. Since not every
+> folio is a THP. You need to do:
+> 
+> if (folio_test_pmd_mappable(folio))
+> 	count_vm_event(THP_SPLIT_PAGE_FAILED);
+> 
+> See commit 835c3a25aa37 ("mm: huge_memory: add the missing
+> folio_test_pmd_mappable() for THP split statistics")
 
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+You are right, I will change that. I didn't notice this commit. 
 
-after fixing the nits below
+> 	
+> > +			return -EBUSY;
+> > +		}
+> > +		min_order = mapping_min_folio_order(folio->mapping);
+> > +	}
+> > +
+> > +	return split_huge_page_to_list_to_order(&folio->page, list, min_order);
+> > +}
+> > +
+> 
+> -- 
+> Best Regards,
+> Yan, Zi
+> 
 
-> +/**
-> + * mapping_align_index() - Align index based on the min
-> + * folio order of the page cache.
-
-+ * mapping_align_index - Align index for this mapping.
-
-> @@ -1165,7 +1186,7 @@ static inline vm_fault_t folio_lock_or_retry(struct folio *folio,
->  void folio_wait_bit(struct folio *folio, int bit_nr);
->  int folio_wait_bit_killable(struct folio *folio, int bit_nr);
->  
-> -/* 
-> +/*
->   * Wait for a folio to be unlocked.
->   *
->   * This must be called with the caller "holding" the folio,
-
-Unnecessary whitespace change
 
