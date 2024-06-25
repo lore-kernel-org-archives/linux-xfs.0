@@ -1,108 +1,104 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF0C146A83;
-	Tue, 25 Jun 2024 11:45:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A362E16DEB8
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2024 13:59:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719315911; cv=none; b=Q/xNd3Uul+ZgHL5M2F5eI1V9voaT5PEO3T0LfD1XJN38d8ARuCu0gUJ/mDTjwr8c0p3c5nHzgZ4aP1Ml6Hi1IKQ/AQ1BR80tyvW/kjozqar7VS1vaerxuv4aR46R0If+HgghMU6R6Jaqyg3Shy2ukuG83g3QOIVO+M0RiSycrxA=
+	t=1719323943; cv=none; b=lwMl8GSCUSZOsycdYJJdEmnMj9gCfbsZqmZ3F7bMssvOyt4UY/klyP/MMr+56TSNUo6N/9yyoK+lVniuL13xwQ+WjJKDr30LqWeclr18uSwq8U2tULTTE2kZUACZIb/56MHfnKLk+/nz2x6nv2iDCHrHGjOfozXFph8sFIKAlIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719315911; c=relaxed/simple;
-	bh=AyfrCN4n2Ja8kvvlvILLd5RRFqJZdgITUeVkIqY60WY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j+UzYfZ63qgE1g2OlF3uw1TJYr75TwyvC6rA1Mdv0x+QIJHuEo9ac4tzBGeHYcV2ZJdo9Oj9IXG1tRN6WosYRIiMzJ3ifZr4JnvgyoaefDd2STYJsJrXB4uggWYrVCF0Qfgb7rpl0uBQOEkx9LGDuK8L353wpJbyuxHpTRUvMz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=vx1oCSPH; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="vx1oCSPH"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4W7jgJ6MTzz9t2m;
-	Tue, 25 Jun 2024 13:45:00 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1719315900;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iyy/Uh+tbYC9uCouyOUGcxbKb95j1x/VN4vR3SasgEQ=;
-	b=vx1oCSPHzXDRQPX8b0i9M9281m8Y9dOOLXEh58esfpUZkeQ8qW28s1hIC0KrbYg1kLnsh3
-	oWAiH1+XP/YA/DwPHuXNj43HGL7MdYMm2In3JAiadupkUDFJk3eOXtt76e4Mwno0lT9WIM
-	tPxEcF5ic88JEn7ZdwQvrgVwZYYFUpapyatVmWb/i90WXIE0dkAH/2UeIu9rwYItsz5eEh
-	V72EssyWBjmBHvM3d+1n6usIDunh1o3k0ckFx7HIjSpWWYfwDMQLxYN20hEC4xE9uj4MAx
-	V0CSExZkXvwCFAwmg8uJYqzFOhAD8rJovBw3MTipYl/qPFf/NFZTdyLHUBYB3Q==
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: david@fromorbit.com,
-	willy@infradead.org,
-	chandan.babu@oracle.com,
-	djwong@kernel.org,
-	brauner@kernel.org,
-	akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org,
-	yang@os.amperecomputing.com,
-	linux-mm@kvack.org,
-	john.g.garry@oracle.com,
-	linux-fsdevel@vger.kernel.org,
-	hare@suse.de,
-	p.raghav@samsung.com,
-	mcgrof@kernel.org,
-	gost.dev@samsung.com,
-	cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org,
-	kernel@pankajraghav.com,
-	hch@lst.de,
-	Zi Yan <zi.yan@sent.com>
-Subject: [PATCH v8 09/10] xfs: make the calculation generic in xfs_sb_validate_fsb_count()
-Date: Tue, 25 Jun 2024 11:44:19 +0000
-Message-ID: <20240625114420.719014-10-kernel@pankajraghav.com>
-In-Reply-To: <20240625114420.719014-1-kernel@pankajraghav.com>
-References: <20240625114420.719014-1-kernel@pankajraghav.com>
+	s=arc-20240116; t=1719323943; c=relaxed/simple;
+	bh=Ub8lGMTV/5+jycOvPUfmD9QGMF72G9xiQIUZFWScg5g=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gGaPWad42+XSksLjWP2Ln4TGTuPVg4KVKyN3oGe7L+N5kxb/v0zucqAEQCtIvDvhICeMmpZwkiJaRgHf3zNsOnNmoEo84y0MDb9C0jclsp7ANBBcjfrisYVpQdDP2HSlJr66Ikn8lzI+QmDgG/HClObHWFLFkm3gJ6CCNjjn8lo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4W7mXw50DdzxTb2;
+	Tue, 25 Jun 2024 21:54:40 +0800 (CST)
+Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 86EBA18006C;
+	Tue, 25 Jun 2024 21:58:59 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Tue, 25 Jun
+ 2024 21:58:58 +0800
+Date: Tue, 25 Jun 2024 22:10:26 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <chandanbabu@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<david@fromorbit.com>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<yangerkun@huawei.com>
+Subject: Re: [PATCH] xfs: eliminate lockdep false positives in
+ xfs_attr_shortform_list
+Message-ID: <20240625141026.GA986685@ceph-admin>
+References: <20240622082631.2661148-1-leo.lilong@huawei.com>
+ <20240624160342.GP3058325@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4W7jgJ6MTzz9t2m
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20240624160342.GP3058325@frogsfrogsfrogs>
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+On Mon, Jun 24, 2024 at 09:03:42AM -0700, Darrick J. Wong wrote:
+> On Sat, Jun 22, 2024 at 04:26:31PM +0800, Long Li wrote:
+> > xfs_attr_shortform_list() only called from a non-transactional context, it
+> > hold ilock before alloc memory and maybe trapped in memory reclaim. Since
+> > commit 204fae32d5f7("xfs: clean up remaining GFP_NOFS users") removed
+> > GFP_NOFS flag, lockdep warning will be report as [1]. Eliminate lockdep
+> > false positives by use __GFP_NOLOCKDEP to alloc memory
+> > in xfs_attr_shortform_list().
+> > 
+> > [1] https://lore.kernel.org/linux-xfs/000000000000e33add0616358204@google.com/
+> > Reported-by: syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > ---
+> >  fs/xfs/xfs_attr_list.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> > index 5c947e5ce8b8..8cd6088e6190 100644
+> > --- a/fs/xfs/xfs_attr_list.c
+> > +++ b/fs/xfs/xfs_attr_list.c
+> > @@ -114,7 +114,8 @@ xfs_attr_shortform_list(
+> >  	 * It didn't all fit, so we have to sort everything on hashval.
+> >  	 */
+> >  	sbsize = sf->count * sizeof(*sbuf);
+> > -	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
+> > +	sbp = sbuf = kmalloc(sbsize,
+> > +			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+> 
+> Why wouldn't we memalloc_nofs_save any time we take an ILOCK when we're
+> not in transaction context?  Surely you'd want to NOFS /any/ allocation
+> when the ILOCK is held, right?
+> 
+> --D
+> 
+> 
 
-Instead of assuming that PAGE_SHIFT is always higher than the blocklog,
-make the calculation generic so that page cache count can be calculated
-correctly for LBS.
+I believe using memalloc_nofs_save could solve the problem, sometimes it may be 
+more effective than using the __GFP_NOLOCKDEP flag. However, looking at similar
+functions, for example xfs_btree_alloc_cursor, it uses __GFP_NOLOCKDEP to prevent
+ABBA deadlock false positive warnings.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
- fs/xfs/xfs_mount.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+xfs_attr_list_ilocked
+  xfs_iread_extents
+    xfs_bmbt_init_cursor
+      xfs_btree_alloc_cursor
+        kmem_cache_zalloc(cache, GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 09eef1721ef4..3949f720b535 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -132,11 +132,16 @@ xfs_sb_validate_fsb_count(
- 	xfs_sb_t	*sbp,
- 	uint64_t	nblocks)
- {
-+	uint64_t		max_bytes;
-+
- 	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
- 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
- 
-+	if (check_shl_overflow(nblocks, sbp->sb_blocklog, &max_bytes))
-+		return -EFBIG;
-+
- 	/* Limited by ULONG_MAX of page cache index */
--	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-+	if (max_bytes >> PAGE_SHIFT > ULONG_MAX)
- 		return -EFBIG;
- 	return 0;
- }
--- 
-2.44.1
+After thinking a little more, I found out that just using __GFP_NOLOCKDEP may
+not be enough, AA deadlock false positive warnings [1] still exist in the
+mainline kernel if my understanding is correct.
 
+[1] https://lore.kernel.org/linux-xfs/20240622094411.GA830005@ceph-admin/T/#m6f7ab8438bf82f0dc44c6d42d183ae08c07dcd5f
+
+thanks,
+Long Li
