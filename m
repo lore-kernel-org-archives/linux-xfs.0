@@ -1,55 +1,57 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C4C17C211;
-	Tue, 25 Jun 2024 18:28:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A90717C7D0;
+	Tue, 25 Jun 2024 18:28:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719340130; cv=none; b=gLgh+qnxZKurNMvtT3w1gDP6nKy+H67WHh4iKN+/MRq5Mwnr+CQXozazicSapIWKU4ERq4jlRitNwcXJYmf8bKNIL9MG1Dl0c5VASJo19j/LQaUjbESuQyu0+BLW+rvzyee9/o3FTFWzkghPIsue0pOR49uCKkEME9L6nI/KHPM=
+	t=1719340135; cv=none; b=EbVQvtjv6DbMWmnb1s2ZcU2W9v9YyazIl3IbbOiaj08FpY5TFizFjkIOirIcHNvqq3N7F1tOyl1xLTTI1EBxwCIPDetqyci9kvM+h30V4gUwhm0MHx4n+IVlRnQF7Rh8ck1udMb/XwRbZvMfix3szf9l4qU5l2dTti6Y8OGEcLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719340130; c=relaxed/simple;
-	bh=CM2iH9mXGomSC7nlHDF14QKGppezrhMjXLfegpwPYcA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Gfh15X39l3UcGuQTu5EWBHpfbkOKYyzkWxmDONtXLXva5929d7Ou+lvKtvM8A++0W9KkmWioaKO2qKc+LueI12t53V0X8UNI0BMfYCR2Dz6JBMGNxNx8XEmWXCnEFFp66J+NNZzn/TliItaJvxwpCVQ91DT6B/ClmSp3spGQ4iw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H49UZXM4; arc=none smtp.client-ip=209.85.214.176
+	s=arc-20240116; t=1719340135; c=relaxed/simple;
+	bh=r34+NkBjnqYSLz5JiYQOZc7LdjFOXtY+UI22sjL5X/M=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=UgT8qzEz0mz5zzTHa98x1FPmGyIxt9svjwNNkCDnpXSQ5sl73rK8fuj0CLRK5cSozMVea9cubJylPK4VCtjwsRzP/bRGdLt65LC59WwseV/HEh/6gzINUst1v8aDSJ+Be0iot6o6zCPkBhtrQQO/vJlovdA0IPo9MUtQXxxIKqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FMGv/WNk; arc=none smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H49UZXM4"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1f480624d0fso46069865ad.1;
-        Tue, 25 Jun 2024 11:28:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FMGv/WNk"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1f480624d0dso49395775ad.1;
+        Tue, 25 Jun 2024 11:28:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719340128; x=1719944928; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=tpX0xeSIQSy3UCzH7IXtPcZMZx7uLWqIqcJDea4EQY4=;
-        b=H49UZXM4dbVcZW/KQVi8PSZN72YykKxC9zAtzU3Mep/xKnk+rNhfmieobamFZkXPAQ
-         9/2Y6czyIE04xriRvkmMlN+PZowttt8EDu7rKXRvXwS5jrqrs1DvCqc6/VVy9AA4luBH
-         S6a9NKGVOJwU99jbkMBmGMjde0I0XA8ycGtceUP5gmf6nGYq42u7PhNwiSfk2xDp3jJj
-         NQlS0t3MGe/eAinrBH5laKt0x0vbamdXbTA4AyEvenJBT3HaHPo+Mi/vrYlZ2xMJG/GD
-         gTAWPi7trb+hIY5zmzu+RhqcmRgdIKLX1QtZw/Ut0zUq0T2ZqWc6JRqGc6vnJtmk3YJc
-         i+bg==
+        d=gmail.com; s=20230601; t=1719340134; x=1719944934; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Tti8tfUni+jo0pgZ1UkC8BRXUh3kKnbvv76kUo1ZzXQ=;
+        b=FMGv/WNk5UE4nhH5GIzwrr0TGgnShhAegVu/FFADqRqNJeEueIQtWWd8ZSq1/cVnhT
+         2eSjFk+aennf9QYQFOx9hq9B5ljIoStIH4Cu+ctWtWZk++pWb/U0BEP2GxIQEWDMKGvq
+         d2Vh/MKVScrHERZjAiQvObLwSmmbeOoqb4RDFVgWcpVCisLdlN5YFyvcK8t3IaJkfK5j
+         H059fqt5GEYekUoO5ThZMxM1/cdj0umWtqSBvgKhyl+OOAwujojA8BBFpO7lUGwAh3ld
+         LR2O6E/kkHx2Owat75wi+jIxDncFBJDe5i/HxQ1onAaFVvXX7gu+KLRme7jMngeoAjae
+         N1TA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719340128; x=1719944928;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tpX0xeSIQSy3UCzH7IXtPcZMZx7uLWqIqcJDea4EQY4=;
-        b=cnXftbaOVawNuwGJmImDzyRcGmBg5+KqAnSZlngq0f60f//JpLgk88cEQb3uBeIAm1
-         eevmQSrP+qd/eASEQnWxx6vTANlyjv4DyUT6aDGUS+UYn9fYiVV4WmkOGJ4DyTnIzn6N
-         k+CsOsJqggvSyGPKplKsWxgd92XlrkohHhHKc8YGrzuIBONQezHm3PytXzSG1gN+DaBZ
-         vLPyD1tjTnyA1z1ym/jQxG3aHqaF0g+ifyJUE5owLe/dHhTrVYlOgOgHxJv+5iTlLqdx
-         Fmfpq1YKk/yGfQLtgLPYI3kh+8bH7JlqJtxLTdWhtGrd0AD+acfKvu5pLwJTs5X11Oke
-         ZfuA==
-X-Forwarded-Encrypted: i=1; AJvYcCVv8DpAP9NI0IRmzQZ6vp5ZBQxVT/YMvbgOqvBYtL0Ozu+s6A8AQ9sGGZSyGK9Fzp2f1xb930Frpggeck1rITn+2sIMCvfopqmnUjPzthyU4wCtrDp/mJoPFyysHrbb75T/Mpj49Mbq
-X-Gm-Message-State: AOJu0Yz2LhKTXHlN1z4hdz6Lk58l/3kktkQxWxHg87Sgsc9wNsj9qgif
-	pmFUKvLCnLiixeDOBYWS3gl1YL+61Gv7BA5eCKz7FY5iMiLrbdU3
-X-Google-Smtp-Source: AGHT+IGbt7eIbNjWmgynrWAQBgrmJkThoBEKR8VXrWEhtnxue8mTrGlS0G+cMHKM/5HXDCsvxEL8GA==
-X-Received: by 2002:a17:902:c943:b0:1fa:2210:4562 with SMTP id d9443c01a7336-1fa23fd8a00mr98999775ad.29.1719340127998;
-        Tue, 25 Jun 2024 11:28:47 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1719340134; x=1719944934;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Tti8tfUni+jo0pgZ1UkC8BRXUh3kKnbvv76kUo1ZzXQ=;
+        b=eSsro+gy0XbK9aQBhh0rwsmhu4GUDsbcdHZfDYwme2v3pwrkntSyD5orPrsFUN9J7a
+         svVYrADVRjk6fDNW7CqQVoBkp3yL7bfOaLq/YAH0tCiro+WnY8/CyzmNloK3taCmWZo0
+         8VkxR7xaih3uLPP+q/96lcR66sCfWcnyBtYgxzHyIy4gqiL6pYqIxPV0HWAryeiO3ouQ
+         F6tyMtt9pGpZXmMZKP/tt6rFcUP6jxSdSAb+oppJK7Bae+fC1xdQ3foGESrsuOMUKkDC
+         NBK6+D/SwAVVNMQopmMIpWGsnevLIepIEIknWwiE4IiohtYlgtrmBnwkKyU3HIraW/Bd
+         7OYg==
+X-Forwarded-Encrypted: i=1; AJvYcCVm7HYln4u1tA04av/cYnAqgR2jqxmBBVpsdXdactoTHFCC6mEBhMuAgkzqRfb8aK8W1pmIhIY+1AHZxQbfZj38SqkQAkSsYuJdMXNaGliyxwOAsbpx07WP1jnfWLUvByOzzPMkxMfl
+X-Gm-Message-State: AOJu0YyE0UlFikVoV34U9AouG/UzTc9KE06oXKjZRKVmPIhavMB1EuFO
+	G3kSvdI6ACI0weaoYBJsW2VNH4fWkethTMeVxK2k8Y7BR/E/CxRN
+X-Google-Smtp-Source: AGHT+IEmlcT3TsRk/DWUOLT5RLzBfBeh2YkFR61NnBmyhYdmWOe9EIm6Ah7rQW2alYm7N9ImRfXssQ==
+X-Received: by 2002:a17:902:cec1:b0:1fa:2d1:1071 with SMTP id d9443c01a7336-1fa23ec9866mr106396905ad.19.1719340133657;
+        Tue, 25 Jun 2024 11:28:53 -0700 (PDT)
 Received: from localhost.localdomain ([43.135.72.207])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9eb320917sm84690555ad.75.2024.06.25.11.28.46
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9eb320917sm84690555ad.75.2024.06.25.11.28.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Jun 2024 11:28:47 -0700 (PDT)
+        Tue, 25 Jun 2024 11:28:53 -0700 (PDT)
 From: alexjlzheng@gmail.com
 X-Google-Original-From: alexjlzheng@tencent.com
 To: chandan.babu@oracle.com,
@@ -59,10 +61,12 @@ Cc: david@fromorbit.com,
 	linux-kernel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	alexjlzheng@tencent.com
-Subject: [PATCH xfs v2 0/2] Separate xfs_log_vec/iovec to save memory
-Date: Wed, 26 Jun 2024 02:28:40 +0800
-Message-ID: <20240625182842.1038809-1-alexjlzheng@tencent.com>
+Subject: [PATCH xfs v2 1/2] xfs: add xfs_log_vec_cache for separate xfs_log_vec/xfs_log_iovec
+Date: Wed, 26 Jun 2024 02:28:41 +0800
+Message-ID: <20240625182842.1038809-2-alexjlzheng@tencent.com>
 X-Mailer: git-send-email 2.41.1
+In-Reply-To: <20240625182842.1038809-1-alexjlzheng@tencent.com>
+References: <20240625182842.1038809-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,29 +77,67 @@ Content-Transfer-Encoding: 8bit
 
 From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-xfs_log_iovec dominates the memory usage of the
-xfs_log_vec/xfs_log_iovec combination, and it is no longer useful after
-the data is flushed to the iclog. This patchset separates xfs_log_iovec
-from xfs_log_vec and releases them early to save memory.
+Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+---
+ fs/xfs/xfs_log.c   | 1 +
+ fs/xfs/xfs_log.h   | 2 ++
+ fs/xfs/xfs_super.c | 9 +++++++++
+ 3 files changed, 12 insertions(+)
 
-Changelog:
-V1:
-- https://lore.kernel.org/linux-xfs/20240623123119.3562031-1-alexjlzheng@tencent.com/
-
-V2:
-- add kmem_cache for small object xfs_log_vec
-- reduce redundant free and allocation of xfs_log_vec
-
-Jinliang Zheng (2):
-  xfs: add xfs_log_vec_cache for separate xfs_log_vec/xfs_log_iovec
-  xfs: make xfs_log_iovec independent from xfs_log_vec and free it early
-
- fs/xfs/xfs_log.c     |  3 +++
- fs/xfs/xfs_log.h     | 10 ++++++++--
- fs/xfs/xfs_log_cil.c | 33 ++++++++++++++++++++-------------
- fs/xfs/xfs_super.c   |  9 +++++++++
- 4 files changed, 40 insertions(+), 15 deletions(-)
-
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 416c15494983..49e676061f2f 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -21,6 +21,7 @@
+ #include "xfs_sb.h"
+ #include "xfs_health.h"
+ 
++struct kmem_cache	*xfs_log_vec_cache;
+ struct kmem_cache	*xfs_log_ticket_cache;
+ 
+ /* Local miscellaneous function prototypes */
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index d69acf881153..9cc10acf7bcd 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -20,6 +20,8 @@ struct xfs_log_vec {
+ 	int			lv_size;	/* size of allocated lv */
+ };
+ 
++extern struct kmem_cache *xfs_log_vec_cache;
++
+ #define XFS_LOG_VEC_ORDERED	(-1)
+ 
+ /*
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 27e9f749c4c7..7e94f9439a8f 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -2222,8 +2222,16 @@ xfs_init_caches(void)
+ 	if (!xfs_parent_args_cache)
+ 		goto out_destroy_xmi_cache;
+ 
++	xfs_log_vec_cache = kmem_cache_create("xfs_log_vec",
++						sizeof(struct xfs_log_vec),
++						0, 0, NULL);
++	if (!xfs_log_vec_cache)
++		goto out_destroy_args_cache;
++
+ 	return 0;
+ 
++ out_destroy_args_cache:
++	kmem_cache_destroy(xfs_parent_args_cache);
+  out_destroy_xmi_cache:
+ 	kmem_cache_destroy(xfs_xmi_cache);
+  out_destroy_xmd_cache:
+@@ -2286,6 +2294,7 @@ xfs_destroy_caches(void)
+ 	 * destroy caches.
+ 	 */
+ 	rcu_barrier();
++	kmem_cache_destroy(xfs_log_vec_cache);
+ 	kmem_cache_destroy(xfs_parent_args_cache);
+ 	kmem_cache_destroy(xfs_xmd_cache);
+ 	kmem_cache_destroy(xfs_xmi_cache);
 -- 
 2.39.3
 
