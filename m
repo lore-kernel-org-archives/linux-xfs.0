@@ -1,167 +1,101 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63682158D84;
-	Tue, 25 Jun 2024 18:07:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C4C17C211;
+	Tue, 25 Jun 2024 18:28:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719338850; cv=none; b=E++q1ubZAbGhOG6ChlGrTiv8MfmIYFBD+DDLE4LCjk6VxUP/WBe6DjIk39sN2LkMjME+Y98mR3EQHzaKvuOiM7pt/j8YU0sLfqv0NN/Uq/7fKHIiCf0ITy7MPY8PmdSRI3GCpLqO63XziPVwPTtEzlDHk72N5tc5VsKe8HpIwUU=
+	t=1719340130; cv=none; b=gLgh+qnxZKurNMvtT3w1gDP6nKy+H67WHh4iKN+/MRq5Mwnr+CQXozazicSapIWKU4ERq4jlRitNwcXJYmf8bKNIL9MG1Dl0c5VASJo19j/LQaUjbESuQyu0+BLW+rvzyee9/o3FTFWzkghPIsue0pOR49uCKkEME9L6nI/KHPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719338850; c=relaxed/simple;
-	bh=nGkQ2sVVVsXNW3MPE20jh/XVZFKZnSfNcTCAJh7RbC0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jc+pGuhlTGuxVSASAI4yO15lrPHI7AA/WEDBOXq882IuabqhGAXq9M3X8qVxj+uecSYdN+ot9Y2BKVfmfI87TIZ+nd0JGVtUqnhp6fEEaKf7dHxG+T8OquWul5oQ7u/iM86ED5yangt1IjiCrwmdxipYH/59k0UszFAiGs4NdvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=vSe2sDHF; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1719340130; c=relaxed/simple;
+	bh=CM2iH9mXGomSC7nlHDF14QKGppezrhMjXLfegpwPYcA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Gfh15X39l3UcGuQTu5EWBHpfbkOKYyzkWxmDONtXLXva5929d7Ou+lvKtvM8A++0W9KkmWioaKO2qKc+LueI12t53V0X8UNI0BMfYCR2Dz6JBMGNxNx8XEmWXCnEFFp66J+NNZzn/TliItaJvxwpCVQ91DT6B/ClmSp3spGQ4iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H49UZXM4; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="vSe2sDHF"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4W7t8X471xz9spX;
-	Tue, 25 Jun 2024 20:07:24 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1719338844;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LzWBYB2Gv7p9oshvlsKyQsodiqzS1M8ZSWboiFntUYM=;
-	b=vSe2sDHFQLJAI2F32jwY/9aqW9fO4IhYAUQw8hSEDq5R4aIt2It3K61jhJC1EglU9M0AY7
-	JkUsyCIpukvFE6g2oRaAh7ds1J6Smwu7sqcsWIEFUCSlB/aGvUVYQb5usf6/K3mS+FJbr5
-	AibDi6KTwCI91f40QVKQOK0EmVAQVHFllW3mu1F3drbhzmOnGRSrqLxqJFQKMhngLinij4
-	32n1Ui7nKfS64z7gewXlECNAqCkcWnEpvkK25pf2RfaPwCqacsv2eNd36TSq2m6eY//NTG
-	XUQuuNd7VPpcGss4hSidOh5HOagE5Dl5P8cvLm+V/PRuIpquJDdTD8Xvpvo+6Q==
-Date: Tue, 25 Jun 2024 18:07:20 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: david@fromorbit.com, willy@infradead.org, chandan.babu@oracle.com,
-	djwong@kernel.org, brauner@kernel.org, akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
-	linux-mm@kvack.org, john.g.garry@oracle.com,
-	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
-	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>,
-	Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH v8 07/10] xfs: use kvmalloc for xattr buffers
-Message-ID: <20240625180720.ali2zno6f62u3pi7@quentin>
-References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-8-kernel@pankajraghav.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H49UZXM4"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1f480624d0fso46069865ad.1;
+        Tue, 25 Jun 2024 11:28:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1719340128; x=1719944928; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=tpX0xeSIQSy3UCzH7IXtPcZMZx7uLWqIqcJDea4EQY4=;
+        b=H49UZXM4dbVcZW/KQVi8PSZN72YykKxC9zAtzU3Mep/xKnk+rNhfmieobamFZkXPAQ
+         9/2Y6czyIE04xriRvkmMlN+PZowttt8EDu7rKXRvXwS5jrqrs1DvCqc6/VVy9AA4luBH
+         S6a9NKGVOJwU99jbkMBmGMjde0I0XA8ycGtceUP5gmf6nGYq42u7PhNwiSfk2xDp3jJj
+         NQlS0t3MGe/eAinrBH5laKt0x0vbamdXbTA4AyEvenJBT3HaHPo+Mi/vrYlZ2xMJG/GD
+         gTAWPi7trb+hIY5zmzu+RhqcmRgdIKLX1QtZw/Ut0zUq0T2ZqWc6JRqGc6vnJtmk3YJc
+         i+bg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719340128; x=1719944928;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=tpX0xeSIQSy3UCzH7IXtPcZMZx7uLWqIqcJDea4EQY4=;
+        b=cnXftbaOVawNuwGJmImDzyRcGmBg5+KqAnSZlngq0f60f//JpLgk88cEQb3uBeIAm1
+         eevmQSrP+qd/eASEQnWxx6vTANlyjv4DyUT6aDGUS+UYn9fYiVV4WmkOGJ4DyTnIzn6N
+         k+CsOsJqggvSyGPKplKsWxgd92XlrkohHhHKc8YGrzuIBONQezHm3PytXzSG1gN+DaBZ
+         vLPyD1tjTnyA1z1ym/jQxG3aHqaF0g+ifyJUE5owLe/dHhTrVYlOgOgHxJv+5iTlLqdx
+         Fmfpq1YKk/yGfQLtgLPYI3kh+8bH7JlqJtxLTdWhtGrd0AD+acfKvu5pLwJTs5X11Oke
+         ZfuA==
+X-Forwarded-Encrypted: i=1; AJvYcCVv8DpAP9NI0IRmzQZ6vp5ZBQxVT/YMvbgOqvBYtL0Ozu+s6A8AQ9sGGZSyGK9Fzp2f1xb930Frpggeck1rITn+2sIMCvfopqmnUjPzthyU4wCtrDp/mJoPFyysHrbb75T/Mpj49Mbq
+X-Gm-Message-State: AOJu0Yz2LhKTXHlN1z4hdz6Lk58l/3kktkQxWxHg87Sgsc9wNsj9qgif
+	pmFUKvLCnLiixeDOBYWS3gl1YL+61Gv7BA5eCKz7FY5iMiLrbdU3
+X-Google-Smtp-Source: AGHT+IGbt7eIbNjWmgynrWAQBgrmJkThoBEKR8VXrWEhtnxue8mTrGlS0G+cMHKM/5HXDCsvxEL8GA==
+X-Received: by 2002:a17:902:c943:b0:1fa:2210:4562 with SMTP id d9443c01a7336-1fa23fd8a00mr98999775ad.29.1719340127998;
+        Tue, 25 Jun 2024 11:28:47 -0700 (PDT)
+Received: from localhost.localdomain ([43.135.72.207])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9eb320917sm84690555ad.75.2024.06.25.11.28.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Jun 2024 11:28:47 -0700 (PDT)
+From: alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
+To: chandan.babu@oracle.com,
+	djwong@kernel.org
+Cc: david@fromorbit.com,
+	hch@infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	alexjlzheng@tencent.com
+Subject: [PATCH xfs v2 0/2] Separate xfs_log_vec/iovec to save memory
+Date: Wed, 26 Jun 2024 02:28:40 +0800
+Message-ID: <20240625182842.1038809-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.41.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240625114420.719014-8-kernel@pankajraghav.com>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jun 25, 2024 at 11:44:17AM +0000, Pankaj Raghav (Samsung) wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Pankaj Raghav reported that when filesystem block size is larger
-> than page size, the xattr code can use kmalloc() for high order
-> allocations. This triggers a useless warning in the allocator as it
-> is a __GFP_NOFAIL allocation here:
-> 
-> static inline
-> struct page *rmqueue(struct zone *preferred_zone,
->                         struct zone *zone, unsigned int order,
->                         gfp_t gfp_flags, unsigned int alloc_flags,
->                         int migratetype)
-> {
->         struct page *page;
-> 
->         /*
->          * We most definitely don't want callers attempting to
->          * allocate greater than order-1 page units with __GFP_NOFAIL.
->          */
-> >>>>    WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
-> ...
-> 
-> Fix this by changing all these call sites to use kvmalloc(), which
-> will strip the NOFAIL from the kmalloc attempt and if that fails
-> will do a __GFP_NOFAIL vmalloc().
-> 
-> This is not an issue that productions systems will see as
-> filesystems with block size > page size cannot be mounted by the
-> kernel; Pankaj is developing this functionality right now.
-> 
-> Reported-by: Pankaj Raghav <kernel@pankajraghav.com>
-> Fixes: f078d4ea8276 ("xfs: convert kmem_alloc() to kmalloc()")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-@Chandan: As we discussed today, do you want to pick this up for 6.11?
-Then I can drop it from my patch series.
+xfs_log_iovec dominates the memory usage of the
+xfs_log_vec/xfs_log_iovec combination, and it is no longer useful after
+the data is flushed to the iclog. This patchset separates xfs_log_iovec
+from xfs_log_vec and releases them early to save memory.
 
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
->  1 file changed, 6 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index b9e98950eb3d..09f4cb061a6e 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -1138,10 +1138,7 @@ xfs_attr3_leaf_to_shortform(
->  
->  	trace_xfs_attr_leaf_to_sf(args);
->  
-> -	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
-> -	if (!tmpbuffer)
-> -		return -ENOMEM;
-> -
-> +	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
->  	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
->  
->  	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
-> @@ -1205,7 +1202,7 @@ xfs_attr3_leaf_to_shortform(
->  	error = 0;
->  
->  out:
-> -	kfree(tmpbuffer);
-> +	kvfree(tmpbuffer);
->  	return error;
->  }
->  
-> @@ -1613,7 +1610,7 @@ xfs_attr3_leaf_compact(
->  
->  	trace_xfs_attr_leaf_compact(args);
->  
-> -	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
-> +	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
->  	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
->  	memset(bp->b_addr, 0, args->geo->blksize);
->  	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
-> @@ -1651,7 +1648,7 @@ xfs_attr3_leaf_compact(
->  	 */
->  	xfs_trans_log_buf(trans, bp, 0, args->geo->blksize - 1);
->  
-> -	kfree(tmpbuffer);
-> +	kvfree(tmpbuffer);
->  }
->  
->  /*
-> @@ -2330,7 +2327,7 @@ xfs_attr3_leaf_unbalance(
->  		struct xfs_attr_leafblock *tmp_leaf;
->  		struct xfs_attr3_icleaf_hdr tmphdr;
->  
-> -		tmp_leaf = kzalloc(state->args->geo->blksize,
-> +		tmp_leaf = kvzalloc(state->args->geo->blksize,
->  				GFP_KERNEL | __GFP_NOFAIL);
->  
->  		/*
-> @@ -2371,7 +2368,7 @@ xfs_attr3_leaf_unbalance(
->  		}
->  		memcpy(save_leaf, tmp_leaf, state->args->geo->blksize);
->  		savehdr = tmphdr; /* struct copy */
-> -		kfree(tmp_leaf);
-> +		kvfree(tmp_leaf);
->  	}
->  
->  	xfs_attr3_leaf_hdr_to_disk(state->args->geo, save_leaf, &savehdr);
-> -- 
-> 2.44.1
-> 
+Changelog:
+V1:
+- https://lore.kernel.org/linux-xfs/20240623123119.3562031-1-alexjlzheng@tencent.com/
+
+V2:
+- add kmem_cache for small object xfs_log_vec
+- reduce redundant free and allocation of xfs_log_vec
+
+Jinliang Zheng (2):
+  xfs: add xfs_log_vec_cache for separate xfs_log_vec/xfs_log_iovec
+  xfs: make xfs_log_iovec independent from xfs_log_vec and free it early
+
+ fs/xfs/xfs_log.c     |  3 +++
+ fs/xfs/xfs_log.h     | 10 ++++++++--
+ fs/xfs/xfs_log_cil.c | 33 ++++++++++++++++++++-------------
+ fs/xfs/xfs_super.c   |  9 +++++++++
+ 4 files changed, 40 insertions(+), 15 deletions(-)
+
+-- 
+2.39.3
+
