@@ -1,39 +1,39 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7044A15ECE5;
-	Tue, 25 Jun 2024 11:44:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9927114AD38;
+	Tue, 25 Jun 2024 11:45:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719315898; cv=none; b=VzgotbUO/RIwElnUreaSWWRHw+19U6qmDejUKpZeG3q3qlsH+AwE2BSgdB/RrpcblSh7x0wnzvAUAFaHpST/SL44vrqgt3k/PVsg4UT6X76k8I2y8gVmzP2pN9223pERy4Fmr1utzZpNO5Hyxx6I9qUQnDbvELTwcvGHLFPiWRs=
+	t=1719315910; cv=none; b=gZ3p5a3+P3mIkaxiDlr1MTn2xu5w5o1OhdUc6fzeKtCTrFHP3R6RzVtIxnMj7sRnCVLAUTfH8mF5EzemMrenjkdJ72tX3kfjepFMCLjVuTHN/YSgWcSSRlRgawDqZXWhqS5TORLhoTNhUjDhdowN8Q/MgsTwMtzxoEplR/cwWN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719315898; c=relaxed/simple;
-	bh=Sv9E3U1vrEuoSMMHMwfb5YdKHNu1CJKxciCkR7PpDe4=;
+	s=arc-20240116; t=1719315910; c=relaxed/simple;
+	bh=O0/2LUKfYiFUblD3u9m7Y13StU5ozfkcPwrLPBl3W0s=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MrPrdNXuEWyzZoNdVzpeCbwyk6fkh9v+IaJqXNwxGpQoMAiT9W1RdkZk8D9o4QQ93r1ufv0Zv+s9BBOzqsfaDbxtGDv6AkvUOo21vFW6J2Ma4R/K1bkjaLsqyEGYEb0z+nFsHo3YNr0257Dp+X6H+OGUqyE3hEUVOOpA8g+xj58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=kipkGJg1; arc=none smtp.client-ip=80.241.56.151
+	 MIME-Version; b=AGHYDSeqPaFwelrIymKB42ReuVOIhoAsxHTc/eMLV7ve7QiuuF5T5p2S73pq6gqFVd+cJ70coLeDK7iakaSIThlzope4t2Vvec3uXdpP/1CUWhy8RLj+lSNd2wusgvuaJHj0QVnw4zLFP92xW2tslLCUk2P6tXrzBldcRDBOfVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=JUEjC0St; arc=none smtp.client-ip=80.241.56.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="kipkGJg1"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="JUEjC0St"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4W7jg86wgjz9sss;
-	Tue, 25 Jun 2024 13:44:52 +0200 (CEST)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4W7jgN6pNYz9spK;
+	Tue, 25 Jun 2024 13:45:04 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1719315893;
+	s=MBO0001; t=1719315905;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kZG/lL31K25//iaIAV7jBbt1MNjj987Sk8ll7Dxjdts=;
-	b=kipkGJg13H64tB3xNiHrnDUQlknoj9SB5UwPL7W747iM43EClbh9mwGs/CrYevYpL7dwy5
-	yCNI2/rrK1OKsdZopIkCOHXT0eQ6Cqxr9v6msmK6G6JfpTTj1qEENLSiThEgtM/qhXGYMX
-	GaWME0bvdKddSrBN8BOmm6NEQdQb4JpLcTqhPcYf2UJjmDDA2Xp3FaeTfjicWVxjfRpSkH
-	nGUAu9grTCZ5xhJqILNQJrmMUyBu58f462EuVQDsqJF1tezZUcNuXmDw0tb/2iO5yXZCA3
-	qC/qL2yIXVEpw0zMc8ARKspky8n5jArAa6O92MNAB1BYNhkxgeYOBO/aixYVcw==
+	bh=fyS4GVf4PvByyE0IUbrr3l1s3P7v70XANt/sXrYXYDk=;
+	b=JUEjC0StwOgXBgGlDaXdgJYKqaINIckvwir1VzS6vaPsaIuGOoRoH4bIEBnAPSiFaBTsij
+	Wg2CeEeSf29wU8MOtLW7DEWlkJx7/q2myVSyUGY5xc9IZvT+AKXe2l99KwhqW1jGBua1DY
+	PO4ofn3aJAnp4NBPB0RiKD2wMATzgAVn0gOz1gYoxGohcI4Odo85hvIEI/JYspGsH/3XKh
+	bgJrG01RH+pzSMq8l41ho4jHg0lItICn8DvmfnmldRRQAMKy7e/U573JD1xzBsoh4GFzkh
+	Pii6SUSGTYeX37Tx0bkk7i3xlrnBQ5+9hkU5tj7xhJ8HJ/fGXAPpPx5/7kqEzA==
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: david@fromorbit.com,
 	willy@infradead.org,
@@ -54,11 +54,10 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	kernel@pankajraghav.com,
 	hch@lst.de,
-	Zi Yan <zi.yan@sent.com>,
-	Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH v8 07/10] xfs: use kvmalloc for xattr buffers
-Date: Tue, 25 Jun 2024 11:44:17 +0000
-Message-ID: <20240625114420.719014-8-kernel@pankajraghav.com>
+	Zi Yan <zi.yan@sent.com>
+Subject: [PATCH v8 10/10] xfs: enable block size larger than page size support
+Date: Tue, 25 Jun 2024 11:44:20 +0000
+Message-ID: <20240625114420.719014-11-kernel@pankajraghav.com>
 In-Reply-To: <20240625114420.719014-1-kernel@pankajraghav.com>
 References: <20240625114420.719014-1-kernel@pankajraghav.com>
 Precedence: bulk
@@ -68,108 +67,124 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4W7jg86wgjz9sss
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-Pankaj Raghav reported that when filesystem block size is larger
-than page size, the xattr code can use kmalloc() for high order
-allocations. This triggers a useless warning in the allocator as it
-is a __GFP_NOFAIL allocation here:
+Page cache now has the ability to have a minimum order when allocating
+a folio which is a prerequisite to add support for block size > page
+size.
 
-static inline
-struct page *rmqueue(struct zone *preferred_zone,
-                        struct zone *zone, unsigned int order,
-                        gfp_t gfp_flags, unsigned int alloc_flags,
-                        int migratetype)
-{
-        struct page *page;
-
-        /*
-         * We most definitely don't want callers attempting to
-         * allocate greater than order-1 page units with __GFP_NOFAIL.
-         */
->>>>    WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
-...
-
-Fix this by changing all these call sites to use kvmalloc(), which
-will strip the NOFAIL from the kmalloc attempt and if that fails
-will do a __GFP_NOFAIL vmalloc().
-
-This is not an issue that productions systems will see as
-filesystems with block size > page size cannot be mounted by the
-kernel; Pankaj is developing this functionality right now.
-
-Reported-by: Pankaj Raghav <kernel@pankajraghav.com>
-Fixes: f078d4ea8276 ("xfs: convert kmem_alloc() to kmalloc()")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+@hch and @Dave I have retained the min_folio_order to be in the inode
+struct as the discussion about moving this to xfs_mount is still open.
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b9e98950eb3d..09f4cb061a6e 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -1138,10 +1138,7 @@ xfs_attr3_leaf_to_shortform(
+ fs/xfs/libxfs/xfs_ialloc.c |  5 +++++
+ fs/xfs/libxfs/xfs_shared.h |  3 +++
+ fs/xfs/xfs_icache.c        |  6 ++++--
+ fs/xfs/xfs_mount.c         |  1 -
+ fs/xfs/xfs_super.c         | 18 ++++++++++--------
+ 5 files changed, 22 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 14c81f227c5b..1e76431d75a4 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -3019,6 +3019,11 @@ xfs_ialloc_setup_geometry(
+ 		igeo->ialloc_align = mp->m_dalign;
+ 	else
+ 		igeo->ialloc_align = 0;
++
++	if (mp->m_sb.sb_blocksize > PAGE_SIZE)
++		igeo->min_folio_order = mp->m_sb.sb_blocklog - PAGE_SHIFT;
++	else
++		igeo->min_folio_order = 0;
+ }
  
- 	trace_xfs_attr_leaf_to_sf(args);
+ /* Compute the location of the root directory inode that is laid out by mkfs. */
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index 34f104ed372c..e67a1c7cc0b0 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -231,6 +231,9 @@ struct xfs_ino_geometry {
+ 	/* precomputed value for di_flags2 */
+ 	uint64_t	new_diflags2;
  
--	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
--	if (!tmpbuffer)
--		return -ENOMEM;
--
-+	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
- 	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
++	/* minimum folio order of a page cache allocation */
++	unsigned int	min_folio_order;
++
+ };
  
- 	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
-@@ -1205,7 +1202,7 @@ xfs_attr3_leaf_to_shortform(
- 	error = 0;
+ #endif /* __XFS_SHARED_H__ */
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 088ac200b026..e0f911f326e6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -88,7 +88,8 @@ xfs_inode_alloc(
  
- out:
--	kfree(tmpbuffer);
-+	kvfree(tmpbuffer);
+ 	/* VFS doesn't initialise i_mode! */
+ 	VFS_I(ip)->i_mode = 0;
+-	mapping_set_large_folios(VFS_I(ip)->i_mapping);
++	mapping_set_folio_min_order(VFS_I(ip)->i_mapping,
++				    M_IGEO(mp)->min_folio_order);
+ 
+ 	XFS_STATS_INC(mp, vn_active);
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+@@ -325,7 +326,8 @@ xfs_reinit_inode(
+ 	inode->i_uid = uid;
+ 	inode->i_gid = gid;
+ 	inode->i_state = state;
+-	mapping_set_large_folios(inode->i_mapping);
++	mapping_set_folio_min_order(inode->i_mapping,
++				    M_IGEO(mp)->min_folio_order);
  	return error;
  }
  
-@@ -1613,7 +1610,7 @@ xfs_attr3_leaf_compact(
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 3949f720b535..c6933440f806 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -134,7 +134,6 @@ xfs_sb_validate_fsb_count(
+ {
+ 	uint64_t		max_bytes;
  
- 	trace_xfs_attr_leaf_compact(args);
+-	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+ 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
  
--	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
-+	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
- 	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
- 	memset(bp->b_addr, 0, args->geo->blksize);
- 	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
-@@ -1651,7 +1648,7 @@ xfs_attr3_leaf_compact(
- 	 */
- 	xfs_trans_log_buf(trans, bp, 0, args->geo->blksize - 1);
- 
--	kfree(tmpbuffer);
-+	kvfree(tmpbuffer);
- }
- 
- /*
-@@ -2330,7 +2327,7 @@ xfs_attr3_leaf_unbalance(
- 		struct xfs_attr_leafblock *tmp_leaf;
- 		struct xfs_attr3_icleaf_hdr tmphdr;
- 
--		tmp_leaf = kzalloc(state->args->geo->blksize,
-+		tmp_leaf = kvzalloc(state->args->geo->blksize,
- 				GFP_KERNEL | __GFP_NOFAIL);
- 
- 		/*
-@@ -2371,7 +2368,7 @@ xfs_attr3_leaf_unbalance(
- 		}
- 		memcpy(save_leaf, tmp_leaf, state->args->geo->blksize);
- 		savehdr = tmphdr; /* struct copy */
--		kfree(tmp_leaf);
-+		kvfree(tmp_leaf);
+ 	if (check_shl_overflow(nblocks, sbp->sb_blocklog, &max_bytes))
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 27e9f749c4c7..b8a93a8f35ca 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1638,16 +1638,18 @@ xfs_fs_fill_super(
+ 		goto out_free_sb;
  	}
  
- 	xfs_attr3_leaf_hdr_to_disk(state->args->geo, save_leaf, &savehdr);
+-	/*
+-	 * Until this is fixed only page-sized or smaller data blocks work.
+-	 */
+ 	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
+-		xfs_warn(mp,
+-		"File system with blocksize %d bytes. "
+-		"Only pagesize (%ld) or less will currently work.",
++		if (!xfs_has_crc(mp)) {
++			xfs_warn(mp,
++"V4 Filesystem with blocksize %d bytes. Only pagesize (%ld) or less is supported.",
+ 				mp->m_sb.sb_blocksize, PAGE_SIZE);
+-		error = -ENOSYS;
+-		goto out_free_sb;
++			error = -ENOSYS;
++			goto out_free_sb;
++		}
++
++		xfs_warn(mp,
++"EXPERIMENTAL: V5 Filesystem with Large Block Size (%d bytes) enabled.",
++			mp->m_sb.sb_blocksize);
+ 	}
+ 
+ 	/* Ensure this filesystem fits in the page cache limits */
 -- 
 2.44.1
 
