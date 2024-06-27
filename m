@@ -1,44 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52BC5197A69
-	for <linux-xfs@vger.kernel.org>; Thu, 27 Jun 2024 20:54:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A811A0B1A;
+	Thu, 27 Jun 2024 22:27:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719521661; cv=none; b=UnYx+RRF7/UXclSkubLMBOzcMooTVDrmkSZs2S/k8te5WK8Fi7mAxH5H6wxO5zwjaCpCdikYMQvxF71A8FL7PST8Pp3NQv2oz2ccf0UghxCY4YNOtarZErzM2N52hmyGf03cDp7LfUgmMvkm0HeuU/JkHZRqUZ3iN63AT3T+cLY=
+	t=1719527239; cv=none; b=YT1XbLcO8bDK7TFDG3l8QSsfye2kGfsfJs5dAmZ1Zqwz8/IhVJEudq/5J679fJNQ0VJ+mKgsMt1qhe0qDQl9l2f0M5W11HiXbbqOusOIL65BWiBBIxUcMaNkcf569gtoiN+YLIBFj9MXTWAbSkhIKH2I/LdFxu8PqMpO6KYjRkw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719521661; c=relaxed/simple;
-	bh=S5kpsKUA760oBfksIxZImnjnle7WVz+EDeOigirg4W0=;
+	s=arc-20240116; t=1719527239; c=relaxed/simple;
+	bh=6ZRjC23wobObDdFfd8zFQZZ9Z3PFbjqgjYHg7T/vNQU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q37aDsYt0YNl/0jZo4U+WhRYP0jqc7wsPpMOQKU60k6Kba+ALHZBTWmqBrAH50tnkOAL3e69ZVTkSllpAiE+QXtAuLr7gbp9iOfHllSgPI1dxxitH/cbjSV1uogrd9JnS1Mz8srpbc+qHwRTWaA9dydURt32H+Cr55E93lilDiQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQFs1lF8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=a3tRlmK9locKzllgeKTYnqqAGZBEgMOyR85QBastr6v6CW3uCynoyPDvmItjonLNCKCFTjlN+j/StE7GC/wj89LjMAAcnOlLdlSeT5zf1wtqO7d9qr+eH6Sa3rnoZtx6iUhDZSDoyUCUHQbwAHyOg35pIg2Vic/w17gRILsblfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fdGaOk7T; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQFs1lF8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8074C2BBFC;
-	Thu, 27 Jun 2024 20:54:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719521660;
-	bh=S5kpsKUA760oBfksIxZImnjnle7WVz+EDeOigirg4W0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nQFs1lF8iUGRPNTa0o09XkzxudRUFMDpxnCeSQABdO8e4QwtLqvNgyrZkp3XyjOPT
-	 rOGLFBXsF0OmbVnsEfjyehDrfaTQ+bLTkL6pJRiSLDoH4sKpNY6jDswB3MDnhjLpxg
-	 JHV1bCb3Rq2FRsHClxUG/HFvVMzyl9BWWdL/NDzIH5hPz9OJ6U+Y5Eo+bnGdDZdGTi
-	 xIjPnghwiRT5ovZ+FOABuW0VJ3sGnt5D1mOcrzEC4mCIoSnc2MvU5MAioKgDDbVJAB
-	 hpPYD1sy8SaMwmpAR6bMQB853gifk9s6q6oz5O12+1Auozsz+UAXc4umO0OBkgOcys
-	 jubD6kUnrCEoA==
-Date: Thu, 27 Jun 2024 13:54:20 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
-	Konst Mayer <cdlscpmv@gmail.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 1/1] xfs: enable FITRIM on the realtime device
-Message-ID: <20240627205420.GC612460@frogsfrogsfrogs>
-References: <171892420288.3185132.3927361357396911761.stgit@frogsfrogsfrogs>
- <171892420308.3185132.6252829732531290655.stgit@frogsfrogsfrogs>
- <20240624150421.GC3058325@frogsfrogsfrogs>
- <87y16qhp4a.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20240627063538.GA16531@lst.de>
- <20240627063800.GA16609@lst.de>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fdGaOk7T"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1719527238; x=1751063238;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=6ZRjC23wobObDdFfd8zFQZZ9Z3PFbjqgjYHg7T/vNQU=;
+  b=fdGaOk7TauulQ2l/YNo97fXu0aFQxvtFw3EOuRxdQa9FwvjCk054Z0xL
+   8Ti4IaU56K7y/Jk8/hKmbgRSHfNHALle0L1F7Gew5EOzceKqMEw5Jt918
+   +XJu2A8asLzmCxmSTHAW3j7KQ8RpgeR8e93LQPyEXLRRvl1eenjABYLxg
+   dUCvT6yhpjflRTQTB4kjKiozDkvNDX4gqQ/oN76MEC8bWGGz+zIGd7WY7
+   jjcwvSCgKWW6kJAVRXKdBgppMyqMIjjWIcZQwBeDynEeGwvQ5KmK/s454
+   m26I30sUUoOAsD36Adymlj3LvKsnsVpLEawraNmCm4b6ueCYyc0p1Cpde
+   Q==;
+X-CSE-ConnectionGUID: JGpX81p4QiyXlcNTi6+wOw==
+X-CSE-MsgGUID: i5cLKlcRQn2IIYmfAyVBCA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11116"; a="16369833"
+X-IronPort-AV: E=Sophos;i="6.09,167,1716274800"; 
+   d="scan'208";a="16369833"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2024 15:27:17 -0700
+X-CSE-ConnectionGUID: zkBVUXQWQjyqQHVWEEfu0Q==
+X-CSE-MsgGUID: fngSrsCqRteimFpQDSTiSw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,167,1716274800"; 
+   d="scan'208";a="44625380"
+Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 27 Jun 2024 15:27:10 -0700
+Received: from kbuild by 68891e0c336b with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sMxa7-000Gb0-24;
+	Thu, 27 Jun 2024 22:27:07 +0000
+Date: Fri, 28 Jun 2024 06:26:36 +0800
+From: kernel test robot <lkp@intel.com>
+To: Alistair Popple <apopple@nvidia.com>, dan.j.williams@intel.com,
+	vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
+	bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au,
+	npiggin@gmail.com, dave.hansen@linux.intel.com, ira.weiny@intel.com,
+	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
+	linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	jhubbard@nvidia.com
+Subject: Re: [PATCH 07/13] huge_memory: Allow mappings of PUD sized pages
+Message-ID: <202406280637.147dyRrV-lkp@intel.com>
+References: <bd332b0d3971b03152b3541f97470817c5147b51.1719386613.git-series.apopple@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,23 +74,100 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240627063800.GA16609@lst.de>
+In-Reply-To: <bd332b0d3971b03152b3541f97470817c5147b51.1719386613.git-series.apopple@nvidia.com>
 
-On Thu, Jun 27, 2024 at 08:38:00AM +0200, Christoph Hellwig wrote:
-> On Thu, Jun 27, 2024 at 08:35:38AM +0200, Christoph Hellwig wrote:
-> > On Thu, Jun 27, 2024 at 11:43:42AM +0530, Chandan Babu R wrote:
-> > > Darrick, This patch causes generic/260 to fail in configuration using a
-> > > realtime device as shown below,
-> > 
-> > It'll need "generic/{251,260}: compute maximum fitrim offset" from
-> > Darrick's xfstests stack.
-> 
-> Actually that one is already merged, it needs
-> 
-> common/xfs: FITRIM now supports realtime volumes
-> 
-> on top of that.
+Hi Alistair,
 
-Correct.
+kernel test robot noticed the following build errors:
 
---D
+[auto build test ERROR on f2661062f16b2de5d7b6a5c42a9a5c96326b8454]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Alistair-Popple/mm-gup-c-Remove-redundant-check-for-PCI-P2PDMA-page/20240627-191709
+base:   f2661062f16b2de5d7b6a5c42a9a5c96326b8454
+patch link:    https://lore.kernel.org/r/bd332b0d3971b03152b3541f97470817c5147b51.1719386613.git-series.apopple%40nvidia.com
+patch subject: [PATCH 07/13] huge_memory: Allow mappings of PUD sized pages
+config: x86_64-allnoconfig (https://download.01.org/0day-ci/archive/20240628/202406280637.147dyRrV-lkp@intel.com/config)
+compiler: clang version 18.1.5 (https://github.com/llvm/llvm-project 617a15a9eac96088ae5e9134248d8236e34b91b1)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240628/202406280637.147dyRrV-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202406280637.147dyRrV-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> mm/rmap.c:1513:37: error: call to '__compiletime_assert_279' declared with 'error' attribute: BUILD_BUG failed
+    1513 |         __folio_add_file_rmap(folio, page, HPAGE_PUD_NR, vma, RMAP_LEVEL_PUD);
+         |                                            ^
+   include/linux/huge_mm.h:111:26: note: expanded from macro 'HPAGE_PUD_NR'
+     111 | #define HPAGE_PUD_NR (1<<HPAGE_PUD_ORDER)
+         |                          ^
+   include/linux/huge_mm.h:110:26: note: expanded from macro 'HPAGE_PUD_ORDER'
+     110 | #define HPAGE_PUD_ORDER (HPAGE_PUD_SHIFT-PAGE_SHIFT)
+         |                          ^
+   include/linux/huge_mm.h:97:28: note: expanded from macro 'HPAGE_PUD_SHIFT'
+      97 | #define HPAGE_PUD_SHIFT ({ BUILD_BUG(); 0; })
+         |                            ^
+   note: (skipping 3 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+   include/linux/compiler_types.h:498:2: note: expanded from macro '_compiletime_assert'
+     498 |         __compiletime_assert(condition, msg, prefix, suffix)
+         |         ^
+   include/linux/compiler_types.h:491:4: note: expanded from macro '__compiletime_assert'
+     491 |                         prefix ## suffix();                             \
+         |                         ^
+   <scratch space>:72:1: note: expanded from here
+      72 | __compiletime_assert_279
+         | ^
+   mm/rmap.c:1660:35: error: call to '__compiletime_assert_280' declared with 'error' attribute: BUILD_BUG failed
+    1660 |         __folio_remove_rmap(folio, page, HPAGE_PUD_NR, vma, RMAP_LEVEL_PUD);
+         |                                          ^
+   include/linux/huge_mm.h:111:26: note: expanded from macro 'HPAGE_PUD_NR'
+     111 | #define HPAGE_PUD_NR (1<<HPAGE_PUD_ORDER)
+         |                          ^
+   include/linux/huge_mm.h:110:26: note: expanded from macro 'HPAGE_PUD_ORDER'
+     110 | #define HPAGE_PUD_ORDER (HPAGE_PUD_SHIFT-PAGE_SHIFT)
+         |                          ^
+   include/linux/huge_mm.h:97:28: note: expanded from macro 'HPAGE_PUD_SHIFT'
+      97 | #define HPAGE_PUD_SHIFT ({ BUILD_BUG(); 0; })
+         |                            ^
+   note: (skipping 3 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+   include/linux/compiler_types.h:498:2: note: expanded from macro '_compiletime_assert'
+     498 |         __compiletime_assert(condition, msg, prefix, suffix)
+         |         ^
+   include/linux/compiler_types.h:491:4: note: expanded from macro '__compiletime_assert'
+     491 |                         prefix ## suffix();                             \
+         |                         ^
+   <scratch space>:79:1: note: expanded from here
+      79 | __compiletime_assert_280
+         | ^
+   2 errors generated.
+
+
+vim +1513 mm/rmap.c
+
+  1498	
+  1499	/**
+  1500	 * folio_add_file_rmap_pud - add a PUD mapping to a page range of a folio
+  1501	 * @folio:	The folio to add the mapping to
+  1502	 * @page:	The first page to add
+  1503	 * @vma:	The vm area in which the mapping is added
+  1504	 *
+  1505	 * The page range of the folio is defined by [page, page + HPAGE_PUD_NR)
+  1506	 *
+  1507	 * The caller needs to hold the page table lock.
+  1508	 */
+  1509	void folio_add_file_rmap_pud(struct folio *folio, struct page *page,
+  1510			struct vm_area_struct *vma)
+  1511	{
+  1512	#ifdef CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD
+> 1513		__folio_add_file_rmap(folio, page, HPAGE_PUD_NR, vma, RMAP_LEVEL_PUD);
+  1514	#else
+  1515		WARN_ON_ONCE(true);
+  1516	#endif
+  1517	}
+  1518	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
