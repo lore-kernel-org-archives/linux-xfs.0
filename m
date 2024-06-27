@@ -1,241 +1,238 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from APC01-PSA-obe.outbound.protection.outlook.com (mail-psaapc01olkn2017.outbound.protection.outlook.com [40.92.52.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 930BC148820;
-	Thu, 27 Jun 2024 11:33:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719488020; cv=none; b=VgUkakwS7gy1tzHjiFNtiXx1uLV24tUtcx4EE4xMl7Ji+u7v3U1OKHboR9jJJmOlH6K+r8yPi9RdzWd0ajdMw+gKmVtRPG1/mu7Z71ywq/jCwSH+6yia0G4murUHcbTt1V7eIvyIvIWhFlPqMfbdOcabkfwQrAzUDKVrGq+k0pE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719488020; c=relaxed/simple;
-	bh=u+k5a/2uqKJqfAihXtIvotddpIjx40GhhPHNZ53sBA4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pIgJbEsaeh1uUE6rfZzSA/kj4h4fmadO6EmcBNPkbesjL7OnZJ3Ja6c+0cn6hn56ijnSjGTD2IbSPYQ64o6tdX79KoY8ea8NAfPL7X0YbodP5XoCli4BAnkraHoz4lR0mjEQZetd0KPg46KFhqfD9uv/EKOICvO3Y/ZLE6nRLhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=luN+Tp9s; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=FU/ogiTf; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=luN+Tp9s; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=FU/ogiTf; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D9418732E;
+	Thu, 27 Jun 2024 13:13:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.52.17
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1719493984; cv=fail; b=TsMGZ8Z/+5TPtm92PL15MAyZeSPBzVhiFQQkgrCM2f/9loSBPKOJQ9guA+z57FapBhisgcwpMTbWNu5IZa46eKsL2z9EU8LSFXLLvDNx3Liznvd9W9vRVcvMtKqjaUSVKcaF8+UMGKHv6syrOit+auKyAyEmCBRoEL5djJbzDhY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1719493984; c=relaxed/simple;
+	bh=k3m3QXaXSBhwANZeDyLrJIeSjkXCLZFIBl8f0FpodEQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=aogEQLKfr+7oJs+IL02CqhUcM8GckM4T9yf5G2T7FWeq/Mlbc8IM4FvCq6qg+FdQ8ZE3FgNl2aKSD9Ds5epZ0RG8VDx107qHZmbnE+goEbKh6dS/jo3IogpL0sCUdp1PN4mduru1BrxMlI9XgbuP99TjSMfWb2//DM7Vs0QRu1Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=BckfsBgg; arc=fail smtp.client-ip=40.92.52.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="luN+Tp9s";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="FU/ogiTf";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="luN+Tp9s";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="FU/ogiTf"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 63CBB210E4;
-	Thu, 27 Jun 2024 11:33:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1719488010; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=t01R90XdldGO7anUbxHaqX31mDL54qz2uJ5POgVrV3w=;
-	b=luN+Tp9sneSe5aIFXVa7+ZSq0Oicz+3+MOwfHde/chD8438+KoisRUxzvb8D1z4WP3bOQz
-	VxJXxQobcBj2OgTk3kz6J+e5QHxwgaxsWTIxJyPUOxJrU9S0zo664JUIdm1g2C1oMaT2Eo
-	5OG+LDM1yT8dr4qZJCGZuc9F2nevJak=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1719488010;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=t01R90XdldGO7anUbxHaqX31mDL54qz2uJ5POgVrV3w=;
-	b=FU/ogiTfDgFmO7Vi9yS/KUQgM4cVEziltRx8Qob1nx8hoAQ2muOpZewJqlBhXE0NAdErzT
-	HKrH1hm28QpHz1Bg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=luN+Tp9s;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b="FU/ogiTf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1719488010; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=t01R90XdldGO7anUbxHaqX31mDL54qz2uJ5POgVrV3w=;
-	b=luN+Tp9sneSe5aIFXVa7+ZSq0Oicz+3+MOwfHde/chD8438+KoisRUxzvb8D1z4WP3bOQz
-	VxJXxQobcBj2OgTk3kz6J+e5QHxwgaxsWTIxJyPUOxJrU9S0zo664JUIdm1g2C1oMaT2Eo
-	5OG+LDM1yT8dr4qZJCGZuc9F2nevJak=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1719488010;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=t01R90XdldGO7anUbxHaqX31mDL54qz2uJ5POgVrV3w=;
-	b=FU/ogiTfDgFmO7Vi9yS/KUQgM4cVEziltRx8Qob1nx8hoAQ2muOpZewJqlBhXE0NAdErzT
-	HKrH1hm28QpHz1Bg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4A5F81384C;
-	Thu, 27 Jun 2024 11:33:30 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id AmAgEgpOfWYhPwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 27 Jun 2024 11:33:30 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 988C8A08A2; Thu, 27 Jun 2024 13:33:28 +0200 (CEST)
-Date: Thu, 27 Jun 2024 13:33:28 +0200
-From: Jan Kara <jack@suse.cz>
-To: Alistair Popple <apopple@nvidia.com>
-Cc: dan.j.williams@intel.com, vishal.l.verma@intel.com,
-	dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com,
-	jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
-	will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
-	dave.hansen@linux.intel.com, ira.weiny@intel.com,
-	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
-	linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	jhubbard@nvidia.com, hch@lst.de, david@fromorbit.com
-Subject: Re: [PATCH 06/13] mm/memory: Add dax_insert_pfn
-Message-ID: <20240627113328.ozqkzhloufrpsdcr@quack3>
-References: <cover.66009f59a7fe77320d413011386c3ae5c2ee82eb.1719386613.git-series.apopple@nvidia.com>
- <50013c1ee52b5bb1213571bff66780568455f54c.1719386613.git-series.apopple@nvidia.com>
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="BckfsBgg"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gRZ4VKaPR35ycILQ06rZxzqIMAY7ZSvgEP9oRx+Ti8qVdGZH3lBX1xC5IlTBZGQgetKBUnX+B2Ls2o2GxJKhvxbHJN4IWR8Oo39gLOOXyl/RNX7J3uJAsaIxrHJdSmu+xQ9JNY9eoUo0xON8CxLyMo1vPpsHeGjK5t2H+pFmq4w0EfAfWzmFElrhX0DQs9nzAFERXSAbjAGpmtmV8kXOGmvnitLLNS7Zi4QJo+CbRyINDyjjgrGIQF+2miarDwy6Rh/aVQb9IbPR/4DrQYGj651sRd9gAFe1ExFuU7CJu0UwpOge0gXi9N1OAPWB8wmrC2/oWmo+Aj/POMaBuPHMwQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8J4FSctWAAr0U0SeioLR2RqdkRneW9Hy3GT3hfzwksk=;
+ b=Ox6jSJLSNGSXU5/NBnx2BpiZwOKXDMaZtD33TrqzWNcZVZ8phJvtUJmOEDkmb89QaQHMiRaWTXyMzV4ds6+xQ6F7zeMuRGLXO0gaOuf41AkJvjjx8TXp4wqFa9PnuUD7nt19GTHft+7vDtVZmUr3X6YQogehD7wVJhUt6tix0lE26U7HXJRoLcqV3/g12WMxyGt11BOObwF1Wyb4WW3g23UjNpVsxzsgTOVx9Vub5A2FdYV8L9jrGgDYTY94Wby3/tXWnPF4KVS8hI8PGlzVlPpO4QZiRzEgrR5z/GSLR0xk+ZDcBIlAJWn5cy6gGxqLr+sWBNa3tCyIPau7O3T0Bg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8J4FSctWAAr0U0SeioLR2RqdkRneW9Hy3GT3hfzwksk=;
+ b=BckfsBggBS6QepT1sFG7I4OGFzrS4rL4/c3VCqQ4mtKJZO1QVIfNozsrjuLPINJIJ8smVzMhKZxa9hbwAy8Iz30CtjJ+xCHkH2EYE8u5uLwfJ9J04AYKDB+VMtC+JxKoGgZfEKMVKN75opN0ujRTYfAp/o/H9pnA3c8uMbD2aRy7XkpHV9FEqFw6F1mvUoM+OiPcNDJL+ADV9H6AHJmFO31WErBRpDbHhmuBGdyqqYWgQmzc/zU6IKSbCBTM1GiwQK2LvRSQRp+fkL7rBtB8IRdwtkpjMH6Wq4fM7rqnKFBp84HuMwdKOCABMsmOdvpsXJ6c2G5RXWsbmdvD3xjt6g==
+Received: from SEZPR01MB4527.apcprd01.prod.exchangelabs.com
+ (2603:1096:101:76::5) by SEYPR01MB4127.apcprd01.prod.exchangelabs.com
+ (2603:1096:101:53::10) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7698.32; Thu, 27 Jun
+ 2024 13:12:59 +0000
+Received: from SEZPR01MB4527.apcprd01.prod.exchangelabs.com
+ ([fe80::653b:3492:9140:d2bf]) by SEZPR01MB4527.apcprd01.prod.exchangelabs.com
+ ([fe80::653b:3492:9140:d2bf%5]) with mapi id 15.20.7698.025; Thu, 27 Jun 2024
+ 13:12:59 +0000
+From: Jiwei Sun <sunjw10@outlook.com>
+To: chandan.babu@oracle.com,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	sunjw10@lenovo.com,
+	ahuang12@lenovo.com,
+	sunjw10@outlook.com
+Subject: [PATCH] xfs: add __GFP_NOLOCKDEP when allocating memory in xfs_attr_shortform_list()
+Date: Thu, 27 Jun 2024 21:12:43 +0800
+Message-ID:
+ <SEZPR01MB45270BCD2BC28813FCB39AEDA8D72@SEZPR01MB4527.apcprd01.prod.exchangelabs.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-TMN: [8ZQkJ5M+9k38emuQehRRgWfrcGN6BYN2]
+X-ClientProxiedBy: SI2P153CA0016.APCP153.PROD.OUTLOOK.COM
+ (2603:1096:4:140::17) To SEZPR01MB4527.apcprd01.prod.exchangelabs.com
+ (2603:1096:101:76::5)
+X-Microsoft-Original-Message-ID: <20240627131243.3388-1-sunjw10@outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <50013c1ee52b5bb1213571bff66780568455f54c.1719386613.git-series.apopple@nvidia.com>
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[33];
-	RCVD_TLS_LAST(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RL7pfqg7h1m44jupjp7nguhfec)];
-	MISSING_XM_UA(0.00)[];
-	FREEMAIL_CC(0.00)[intel.com,deltatee.com,google.com,suse.cz,ziepe.ca,arm.com,kernel.org,ellerman.id.au,gmail.com,linux.intel.com,infradead.org,mit.edu,huawei.com,redhat.com,vger.kernel.org,lists.infradead.org,lists.ozlabs.org,lists.linux.dev,kvack.org,nvidia.com,lst.de,fromorbit.com];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 63CBB210E4
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Spam-Level: 
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SEZPR01MB4527:EE_|SEYPR01MB4127:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9318a6af-4fcf-4e3c-48db-08dc96aadb57
+X-MS-Exchange-SLBlob-MailProps:
+	ZILSnhm0P3kCfS/wDx1XBPWRyocQNckBeJ6wAn71A4mWqYziwyKT5y2Tb17zQfhJMD3L29TtOLsDdujyaCruREAgTqLiHrCOYk8sZ+oI+vs+tpwAah/VXH0+RaqTzxNtSJKOMD62HNL4d+hh8SDOKVTgcDsMFi4UNdyZN0/EG/NFjVDkWbkeCIdFxPDUuifmjGjBWG59o5aN92jgQ0NCcuIC7npwyLa9JNkV7QiCRJXp08vLYOZ70Ira3Y0UkCj/ZYD4e9gdWbZBc1GDm4HQ0Iej5h5yaVldo7enoJJfI/7ImRKgpHlsLDWzpkfKiUJ8MsiXIoMrQ2HjrEYF7zjEGz2rjJ6mZIpL8PEEThjkBwWBpmdeBKn3twqpXuSrIp1YxNo2A86yPxAYLIQdmh+KKS7x6hmdzDXJhaVCzffAHEdttDz2dLdZ4dPsEhI/f0ipCJoyG6L6K7HAg+I15LYRcPrAihqr1Qqqn9koXxqnDoyIlIQXWXRnMXATeG+G2nT/5GxN0QN7kvl8oHad3WbLic9RREquMvS+VQAon500ddhiSaVkPW3BhMD2SGY9ujqggANpXN2HvvPSy4qDl5w4tmRSuXt/UzzBcXR/khh+o6dXwyRg9YP3HuyHvTol8Oqz3+/DscUtG+vf8JrqE4n2Z98vBnd212o+IVyagV7vvFZH5cpaka86qGaDJhmZyKPkLQiVgn8PxbyyBmRmrDKJuGAjnP6iXTXu5KBxUaS1gOVYEck2qgVcrCKIK8l4phIxyIHiKssYv9lc03ALlxztXcM7Um2BuwnG
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|461199028|3412199025|3420499032|440099028|1710799026;
+X-Microsoft-Antispam-Message-Info:
+	cTBEHcoDt9t+dY61lH4FtHI5CBj99UYnsRc+9+EoOKHCrmi2Lfmulr7crL1MAebc83XFNSY0mUKE9WH2qvfYz5d9uyMy3jOeN40Gp51+YkfDWpsFoizUvagS5xmuUVUQxmuSe7VodDGEIxUMoSuOXSSdVINoe1Mm/ljj6pKOFgjfT1y80IGBPDY+usgHAZQp1S0SO5KdR2fgiVHl+DR2cHAgEH30kLDpjYLzU/j/ZPCiKUfommyf2wX/nGjxhRcOsNSRMhvaq4bD87uo+dFSgKRbILnlHv6FdebnMb0ePbquImN3xcdnGNPGVDlLsdXugbVvr9EMiDjvWwSo3++9m6skS59O482HHbIsjcbb+eUG6uTUVwmctC1Hy6sWoe0ZMWLXlYuUELrZ73hYn+nCPwoZyeztSAEXeX/0B6F1P92yCyVa+sdUuwb/2CqDjsFXH63QorqkVzBOmRQUzkBFYpMs3bjRG8mTAopsmA/HPySYV26bOoawWEDBPxs6cSYrEwxahBWAmJ1OgskunXZwEnaecoPygYD3N3j3mrgOQPg8dc9IqmHFvJHafu1NzSJXoaci33SJsuY84kwxDG7DLA+AHKICkCxRtUKWnxnh1ik=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?/Z9SiGI5cuIzwczpHJN8sKCECMAg+Udno5RU1Rvj1H4twaXksiKkoSCyDpB8?=
+ =?us-ascii?Q?uo5FFt3Ov4yvC4WC0siKHUJvWsY+oyUgLDvqsF+N0eEinut3OT3wyBi2e8Tn?=
+ =?us-ascii?Q?0wnirx6fHOctheEwAyCyQly+nYCwVYgiXQGhMOyl7EKYFYuw9Z+qyMzrJBEM?=
+ =?us-ascii?Q?zmGJWoiaDNkgVZ3ToSQ5EYqljoX/FV6Ftlt9BsNGls9BbPnsIgw8nOKJVhbO?=
+ =?us-ascii?Q?NDdC+LeqaEdUhrW0CC+FSZoyb0Z5mPKEyg4m3wAo8o6tVgVS5hr6+pjXL3eT?=
+ =?us-ascii?Q?hLx2Wonw+lOcKFYvWtGwB6FjQAnASsy/1k0FNwC41C8SfN5RTGC1HuVaL3D+?=
+ =?us-ascii?Q?XTV2b4twU+KWHW4Ul4G3SE8Qv0FwS3t0A9Rb6Po0Zr1hjiuN486kXtjUWvaR?=
+ =?us-ascii?Q?4Ou7taoiLjxV371hq5o0R86jOV74isPAXnEte3Zy6+hmHgcSpPqjtuJSVLpW?=
+ =?us-ascii?Q?WaXb/YRIAC3Mc2Ox0dnd3o44eLAyjnxMUyMtt51G+wCe55KjWkB97RA5fYmq?=
+ =?us-ascii?Q?joRXltgmrX7EIbQu8Xgqf3bhHVxCjPFZAQb3b7GaLIqxEuPI1HXLpsQfh6Qc?=
+ =?us-ascii?Q?4TieLCPDa1rO+yVk7LtWIh4wC9itlZKINpikoBUR/mwQagaPRVygsg/QOn9I?=
+ =?us-ascii?Q?5dzVxPUW7vXs+WVnu2RazQgA7psf+fLI3BAm1T7LUZAc0PzOBZ7dofbvKaK2?=
+ =?us-ascii?Q?ubPZiYC7eXRxFCKlZayA4XUEWFqkL7xwC1IiIUOGtTsiNmCpY43nddyV3Qol?=
+ =?us-ascii?Q?S82OVT48bXE+x6rWmhzuL1dDJzpTYm2J7Lq5ffFM5IownVJOvkuIk7PPPcaj?=
+ =?us-ascii?Q?cZeibVTCFDCvpw6E25Jbdrqloi+Uu0mmrrUjOEl7vcA7yClRfJy9G11+UvTH?=
+ =?us-ascii?Q?HaGx5FA1gXSS4rql4D3wxNfMGYKjj/Mo3dAWWFZI1owkG9RK8Pqsid5ljbFk?=
+ =?us-ascii?Q?5k+83450UvgZQdizgl76PfL74iYQcRIITbFzgeVnnmHhVytJL66uXlIQiJrY?=
+ =?us-ascii?Q?jpl2MV+7fju/wJmcW4VVHyh9No/FOFvhYUg6kZ1QoL7+1bghZbZ6O3iuv9z+?=
+ =?us-ascii?Q?q4ubbmV+Q5H9y7t+FSPay5moomI4XLgCHVy8JQOLSEr0ZfIzAH9FV5Lam3/N?=
+ =?us-ascii?Q?9fc8rvte0pZpY2UeszGanHfFAmlsKtXgxHTFSpuWrE3dF09yr/GBs1dRADNv?=
+ =?us-ascii?Q?7ft3USKin2viVUN4aQSEle3SMXYqjYV+MIcIy2DP/uzJFUVrBm0TcDoYbxs?=
+ =?us-ascii?Q?=3D?=
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9318a6af-4fcf-4e3c-48db-08dc96aadb57
+X-MS-Exchange-CrossTenant-AuthSource: SEZPR01MB4527.apcprd01.prod.exchangelabs.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jun 2024 13:12:58.9914
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR01MB4127
 
-On Thu 27-06-24 10:54:21, Alistair Popple wrote:
-> Currently to map a DAX page the DAX driver calls vmf_insert_pfn. This
-> creates a special devmap PTE entry for the pfn but does not take a
-> reference on the underlying struct page for the mapping. This is
-> because DAX page refcounts are treated specially, as indicated by the
-> presence of a devmap entry.
-> 
-> To allow DAX page refcounts to be managed the same as normal page
-> refcounts introduce dax_insert_pfn. This will take a reference on the
-> underlying page much the same as vmf_insert_page, except it also
-> permits upgrading an existing mapping to be writable if
-> requested/possible.
-> 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+From: Jiwei Sun <sunjw10@lenovo.com>
 
-Overall this looks good to me. Some comments below.
+If the following configuration is set
+CONFIG_LOCKDEP=y
 
-> ---
->  include/linux/mm.h |  4 ++-
->  mm/memory.c        | 79 ++++++++++++++++++++++++++++++++++++++++++-----
->  2 files changed, 76 insertions(+), 7 deletions(-)
-> 
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index 9a5652c..b84368b 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -1080,6 +1080,8 @@ int vma_is_stack_for_current(struct vm_area_struct *vma);
->  struct mmu_gather;
->  struct inode;
->  
-> +extern void prep_compound_page(struct page *page, unsigned int order);
-> +
+The following warning log appears,
 
-You don't seem to use this function in this patch?
+======================================================
+WARNING: possible circular locking dependency detected
+6.10.0-rc4-dirty #81 Not tainted
+------------------------------------------------------
+kswapd1/1465 is trying to acquire lock:
+ff11000928da0160 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_icwalk_ag+0x7cd/0x14c0 [xfs]
 
-> diff --git a/mm/memory.c b/mm/memory.c
-> index ce48a05..4f26a1f 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -1989,14 +1989,42 @@ static int validate_page_before_insert(struct page *page)
->  }
->  
->  static int insert_page_into_pte_locked(struct vm_area_struct *vma, pte_t *pte,
-> -			unsigned long addr, struct page *page, pgprot_t prot)
-> +			unsigned long addr, struct page *page, pgprot_t prot, bool mkwrite)
->  {
->  	struct folio *folio = page_folio(page);
-> +	pte_t entry = ptep_get(pte);
->  
-> -	if (!pte_none(ptep_get(pte)))
-> +	if (!pte_none(entry)) {
-> +		if (mkwrite) {
-> +			/*
-> +			 * For read faults on private mappings the PFN passed
-> +			 * in may not match the PFN we have mapped if the
-> +			 * mapped PFN is a writeable COW page.  In the mkwrite
-> +			 * case we are creating a writable PTE for a shared
-> +			 * mapping and we expect the PFNs to match. If they
-> +			 * don't match, we are likely racing with block
-> +			 * allocation and mapping invalidation so just skip the
-> +			 * update.
-> +			 */
-> +			if (pte_pfn(entry) != page_to_pfn(page)) {
-> +				WARN_ON_ONCE(!is_zero_pfn(pte_pfn(entry)));
-> +				return -EFAULT;
-> +			}
-> +			entry = maybe_mkwrite(entry, vma);
-> +			entry = pte_mkyoung(entry);
-> +			if (ptep_set_access_flags(vma, addr, pte, entry, 1))
-> +				update_mmu_cache(vma, addr, pte);
-> +			return 0;
-> +		}
->  		return -EBUSY;
+but task is already holding lock:
+ffffffff9fd44100 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat+0x856/0x11a0
 
-If you do this like:
+which lock already depends on the new lock.
 
-		if (!mkwrite)
-			return -EBUSY;
+the existing dependency chain (in reverse order) is:
 
-You can reduce indentation of the big block and also making the flow more
-obvious...
+-> #1 (fs_reclaim){+.+.}-{0:0}:
+       lock_acquire+0x194/0x490
+       fs_reclaim_acquire+0x103/0x160
+       __kmalloc_noprof+0x9b/0x430
+       xfs_attr_shortform_list+0x56a/0x15d0 [xfs]
+       xfs_attr_list+0x1cb/0x250 [xfs]
+       xfs_vn_listxattr+0xee/0x170 [xfs]
+       listxattr+0x5b/0xf0
+       __x64_sys_flistxattr+0x126/0x1b0
+       do_syscall_64+0x8a/0x170
+       entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-> +	}
-> +
->  	/* Ok, finally just insert the thing.. */
->  	folio_get(folio);
-> +	if (mkwrite)
-> +		entry = maybe_mkwrite(mk_pte(page, prot), vma);
-> +	else
-> +		entry = mk_pte(page, prot);
+-> #0 (&xfs_nondir_ilock_class){++++}-{4:4}:
+       validate_chain+0x171c/0x3270
+       __lock_acquire+0xecd/0x1ed0
+       lock_acquire+0x194/0x490
+       down_write_nested+0xa2/0x510
+       xfs_icwalk_ag+0x7cd/0x14c0 [xfs]
+       xfs_icwalk+0x4f/0xd0 [xfs]
+       xfs_reclaim_inodes_nr+0x144/0x1f0 [xfs]
+       super_cache_scan+0x305/0x430
+       do_shrink_slab+0x2f3/0xce0
+       shrink_slab+0x507/0xcb0
+       shrink_one+0x400/0x6d0
+       shrink_many+0x2d5/0xc10
+       shrink_node+0x1a0b/0x2110
+       balance_pgdat+0x7a2/0x11a0
+       kswapd+0x518/0x9c0
+       kthread+0x2e9/0x3d0
+       ret_from_fork+0x2d/0x60
+       ret_from_fork_asm+0x1a/0x30
 
-I'd prefer:
+other info that might help us debug this:
 
-	entry = mk_pte(page, prot);
-	if (mkwrite)
-		entry = maybe_mkwrite(entry, vma);
+ Possible unsafe locking scenario:
 
-but I don't insist. Also insert_pfn() additionally has pte_mkyoung() and
-pte_mkdirty(). Why was it left out here?
+       CPU0                    CPU1
+       ----                    ----
+  lock(fs_reclaim);
+                               lock(&xfs_nondir_ilock_class);
+                               lock(fs_reclaim);
+  lock(&xfs_nondir_ilock_class);
 
-								Honza
+ *** DEADLOCK ***
+
+2 locks held by kswapd1/1465:
+ #0: ffffffff9fd44100 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat+0x856/0x11a0
+ #1: ff110001d1dec0e8 (&type->s_umount_key#62){++++}-{4:4}, at: super_trylock_shared+0x18/0xa0
+
+stack backtrace:
+CPU: 182 PID: 1465 Comm: kswapd1 Kdump: loaded Not tainted 6.10.0-rc4-dirty #81 d8f3b21024b789e635a9c2daea46fdb7762f1b50
+Hardware name: Lenovo ThinkServer SR660 V3/SR660 V3, BIOS T8E166X-2.54 05/30/2024
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x7c/0xc0
+ check_noncircular+0x31f/0x3f0
+ validate_chain+0x171c/0x3270
+ __lock_acquire+0xecd/0x1ed0
+ lock_acquire+0x194/0x490
+ down_write_nested+0xa2/0x510
+ xfs_icwalk_ag+0x7cd/0x14c0 [xfs 681f3433bed0d714083e513d149a819b095e6e51]
+ xfs_icwalk+0x4f/0xd0 [xfs 681f3433bed0d714083e513d149a819b095e6e51]
+ xfs_reclaim_inodes_nr+0x144/0x1f0 [xfs 681f3433bed0d714083e513d149a819b095e6e51]
+ super_cache_scan+0x305/0x430
+ do_shrink_slab+0x2f3/0xce0
+ shrink_slab+0x507/0xcb0
+ shrink_one+0x400/0x6d0
+ shrink_many+0x2d5/0xc10
+ shrink_node+0x1a0b/0x2110
+ balance_pgdat+0x7a2/0x11a0
+ kswapd+0x518/0x9c0
+ kthread+0x2e9/0x3d0
+ ret_from_fork+0x2d/0x60
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+
+This is a false positive. If a node is getting reclaimed, it cannot be
+the target of a flistxattr operation. Commit 6dcde60efd94 ("xfs: more
+lockdep whackamole with kmem_alloc*") has the similar root cause.
+
+Fix the issue by adding __GFP_NOLOCKDEP in order to shut up lockdep.
+
+Signed-off-by: Jiwei Sun <sunjw10@lenovo.com>
+Suggested-by: Adrian Huang <ahuang12@lenovo.com>
+---
+ fs/xfs/xfs_attr_list.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 5c947e5ce8b8..506ade0befa4 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -114,7 +114,8 @@ xfs_attr_shortform_list(
+ 	 * It didn't all fit, so we have to sort everything on hashval.
+ 	 */
+ 	sbsize = sf->count * sizeof(*sbuf);
+-	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
++	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL |
++			     __GFP_NOLOCKDEP);
+ 
+ 	/*
+ 	 * Scan the attribute list for the rest of the entries, storing
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.27.0
+
