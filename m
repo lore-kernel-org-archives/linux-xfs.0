@@ -1,677 +1,261 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF5401990AD;
-	Thu, 27 Jun 2024 15:35:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719502551; cv=none; b=oYIgZdZM6FzJ5GqExVT3USBjcRe0u6sYWbeAgzZ5kttE1sux/3z78yFbOsml/EaaDy6yVjIk+XbFm0t0XTL3a3NDCqTDbEKxK73vdwj7+e6X2iHN+8MHWZZy7rZXJg6I3atrExkENo2ENzggr3HiMqjQC6V7ZXfIAaT0Pp1Pu4k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719502551; c=relaxed/simple;
-	bh=3d+ajZj2euzfXWW4x2ZVNbEbE/hiWAhLUJ05o+3lc94=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EuW7mjY0eydCX4YOz0n9k+HqvjRoLtB8gKu8J9Hor8YtN1O1IaWsxGHIYgM5PyLMXqallhgFUpIYlZVbDwIZWFB8eYeYw0mp3i5E/RUIlNVWYHXOaT8UL2FJphtnr8AxLiybfpFjvi/l4o/0dPFEdnS0ASx7XQzBQZFsFmDWaUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NC1H/10N; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DDBD19B5BB;
+	Thu, 27 Jun 2024 20:24:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.16
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1719519853; cv=fail; b=uPPvuCU5l2fCEYrmXCnRDmUDRCicvyn0dikh4x6ol4eoiZxdT6HaNVzFJL9j31fTMzrY3WIck6FXby5UFXLVpVc2G1z9ZZ6rlRXLazKEh0yewteJ0C/oz74RDPAK8nJUWcXjR6Z5wftJhFjRrROzZUm2CFBG4NVkMflaHVXsx6Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1719519853; c=relaxed/simple;
+	bh=ujPBEfxzAdLtCL5AEYUnQkt1XfMgJQK8RMByLLYBPFc=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=PguPkGkGcJe0M7LWLglD4abImL2HVihDMMmmuqSbuMYPXh4CURnQoaGemZLrxvoJPf0cZTAcHdl+aA/+jYL2CdFNVrWVP74TkjXbmOR8XclsbSQytCJCRTlZ+19SPqZlJLllMxiL3Wz3iUbCmvgjk6Iu6gj+bXVumQ0vaJufa7E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AGZerlIA; arc=fail smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NC1H/10N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CAB1C2BBFC;
-	Thu, 27 Jun 2024 15:35:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719502551;
-	bh=3d+ajZj2euzfXWW4x2ZVNbEbE/hiWAhLUJ05o+3lc94=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=NC1H/10NXcID8rY9p89rWEAilDyHattVM/B3S+cB3nevhfH2M8Hlv8SgNjn/6dZJC
-	 sRWB8/Rw8VzseX+Nbw5GcoeuBBZqKzg0fjYr1tbnFOj7RIiCIxo8VIYkepm1BXl7qQ
-	 srlkLW/NyhucsDg8cgElhVTp+lgSdl8sd1nao7ii6y4Y8kF5pVIQ/Da3OcJZS8yIVA
-	 vcib8biIamy9bwaOsNRscLh2IR17ooEqQaBMpnuh9UIYbXaE+8CuG3B0jLqqay37dl
-	 Xfk3VAPKYStIu6GGEw/El657VGTfBuUw+Z0d8iNzcL17Qr+3l2b/CSrxDrZ7L4PSHK
-	 AwkS+1XzKVvtg==
-Message-ID: <4470c858a2a9056a9a26bb48ce36dbfc52a463e2.camel@kernel.org>
-Subject: Re: [PATCH 04/10] fs: add infrastructure for multigrain timestamps
-From: Jeff Layton <jlayton@kernel.org>
-To: Chuck Lever <chuck.lever@oracle.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner
- <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Steven Rostedt
- <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, Mathieu
- Desnoyers <mathieu.desnoyers@efficios.com>, Chandan Babu R
- <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, Theodore
- Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Chris
- Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, David Sterba
- <dsterba@suse.com>, Hugh Dickins <hughd@google.com>, Andrew Morton
- <akpm@linux-foundation.org>,  kernel-team@fb.com,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
- linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-mm@kvack.org,  linux-nfs@vger.kernel.org
-Date: Thu, 27 Jun 2024 11:35:47 -0400
-In-Reply-To: <Zn1/FVS4NrAwEBwz@tissot.1015granger.net>
-References: <20240626-mgtime-v1-0-a189352d0f8f@kernel.org>
-	 <20240626-mgtime-v1-4-a189352d0f8f@kernel.org>
-	 <Zn1/FVS4NrAwEBwz@tissot.1015granger.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.4 (3.50.4-1.fc39) 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AGZerlIA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1719519851; x=1751055851;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=ujPBEfxzAdLtCL5AEYUnQkt1XfMgJQK8RMByLLYBPFc=;
+  b=AGZerlIA0AGItbeLMnoc4eiVJZmC/TvzdHHRWfTNizR87hynEYYxcPmo
+   /Fb3WQRKP9a+/hgRt/0iohVj6hZmZuYquU50dNfsTAu2yIHPKOATk1QTo
+   EcOu6gKAGQ4sGzzOMcrjooCKL7pE5+nMgTlZSj8Ohby+tMaQSkQXjbQtv
+   HdRYZTagPAjIMZ02V3JnBkV3PiDpghF0eZELGv0Y+nAFRfaPbRaSfRvAU
+   2OHUuCQE04h4G8DzzUG3LtWYAjVW2PYfxU3cQ2vv8YlgtsDGNGEj9KbZ2
+   oYpbfc9s8VpOUW2rVwt8tZJ2ZWnZRnPOLKilpDGQb6IgQWZFEY0mxH/bV
+   w==;
+X-CSE-ConnectionGUID: pG+yUK1fTFuDADdct0PBug==
+X-CSE-MsgGUID: r6ShbAvaQxKtT9+qMeRpfA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11116"; a="12288469"
+X-IronPort-AV: E=Sophos;i="6.09,167,1716274800"; 
+   d="scan'208";a="12288469"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2024 13:24:10 -0700
+X-CSE-ConnectionGUID: T7WWb5LwRYaROFdY5wTSnQ==
+X-CSE-MsgGUID: 9zQcIHh+RTiDkyKHMPsUrw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,167,1716274800"; 
+   d="scan'208";a="44570892"
+Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
+  by fmviesa009.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 27 Jun 2024 13:24:10 -0700
+Received: from fmsmsx602.amr.corp.intel.com (10.18.126.82) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Thu, 27 Jun 2024 13:24:10 -0700
+Received: from fmsedg601.ED.cps.intel.com (10.1.192.135) by
+ fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39 via Frontend Transport; Thu, 27 Jun 2024 13:24:10 -0700
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.44) by
+ edgegateway.intel.com (192.55.55.70) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Thu, 27 Jun 2024 13:24:08 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Xe6VI6yQi/se06pujXXFoVoiSdcFhMb3PVjbmDeIqpQ/MxG43gULKIvHyNR993k3w0gPZ/yDXRdpzXuywnR+9QsM2vgfJB0m5xqDpRbkX+4VBWKFVRItJwW1MVnWsEblgOWNj+v/gjG2Hvnh9V5IjfaU20NycSTLRRYvMY+eMRz4BMdAsSHxPuCOeNrGEE7ub3gl1KS/LFa+4PtO9nR+WqQQEDtd2yRqbE6dRRacKU16En8eecTipBPURFTq57sY1esEov1B0q1bDsHQxuLe7dPe7VH3HQWW7nnMnZHhgZMj4SbIg1WSHWUqSNhnf+DuOOQvHoFOylkZOUF96kR8yw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wD7/ZeYBRDgY8CYXPE2jgQjbDufqOwpetlCBLRRL9yE=;
+ b=IDiToqaWyrODDHGEIOgIh6rP9PIRYup05E3qbAnBQRjJjO62kKWZOrYiFzcZ8rQQRn2PWJq1fqtOw3h4pbPKUQ9gjvLc4fAE8lj2o6l7RVkC1T0p5neTSQplqfAnq54rJ1zO4CACxO1to2eljF74qO54eMqGQk+P6SCkFmjaDzA9jYMClurYZx4XKxDkMdof5hnAHbcEKbDFDSM+O28ECiPVKBQeIVX5t6O8eo2/ATh44iG12N5WluVtILFvmlznrJ1meVYRYO4MNHYVnPxQzmtNyY8lK2xuhJIV+1VW4gAkAaO6jViab1pYe8Ya9qpU7IDxWJjAOW6uOxM9khIg/w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by PH0PR11MB5127.namprd11.prod.outlook.com (2603:10b6:510:3c::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7719.26; Thu, 27 Jun
+ 2024 20:24:06 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6b05:74cf:a304:ecd8%4]) with mapi id 15.20.7719.022; Thu, 27 Jun 2024
+ 20:24:06 +0000
+Date: Thu, 27 Jun 2024 13:24:02 -0700
+From: Dan Williams <dan.j.williams@intel.com>
+To: Alistair Popple <apopple@nvidia.com>, Dan Williams
+	<dan.j.williams@intel.com>
+CC: <vishal.l.verma@intel.com>, <dave.jiang@intel.com>, <logang@deltatee.com>,
+	<bhelgaas@google.com>, <jack@suse.cz>, <jgg@ziepe.ca>,
+	<catalin.marinas@arm.com>, <will@kernel.org>, <mpe@ellerman.id.au>,
+	<npiggin@gmail.com>, <dave.hansen@linux.intel.com>, <ira.weiny@intel.com>,
+	<willy@infradead.org>, <djwong@kernel.org>, <tytso@mit.edu>,
+	<linmiaohe@huawei.com>, <david@redhat.com>, <peterx@redhat.com>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<nvdimm@lists.linux.dev>, <linux-cxl@vger.kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
+	<linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+	<jhubbard@nvidia.com>, <hch@lst.de>, <david@fromorbit.com>
+Subject: Re: [PATCH 00/13] fs/dax: Fix FS DAX page reference counts
+Message-ID: <667dca6259bc8_57ac2946e@dwillia2-xfh.jf.intel.com.notmuch>
+References: <cover.66009f59a7fe77320d413011386c3ae5c2ee82eb.1719386613.git-series.apopple@nvidia.com>
+ <667d0da3572c_5be92947f@dwillia2-mobl3.amr.corp.intel.com.notmuch>
+ <87a5j67szs.fsf@nvdebian.thelocal>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <87a5j67szs.fsf@nvdebian.thelocal>
+X-ClientProxiedBy: MW4PR03CA0359.namprd03.prod.outlook.com
+ (2603:10b6:303:dc::34) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|PH0PR11MB5127:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2d05c744-cf49-4733-1730-08dc96e717c6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?2bs77Jw8YryZhi07QFcWe+G2B70sHjUwfUxocD/aRLvRJq74s89uhkWF6RVW?=
+ =?us-ascii?Q?ztE+DdUtQz+HEmu4w+V/7F0y0RTiSRh7LCw/UBRG4HLrCBj34sKtuAHVf//k?=
+ =?us-ascii?Q?ITv5TNVvyyBOFtnpqreD2DKnOX1TvD9cTWu8wjvXxhfhSlaItCcacpMLa0L1?=
+ =?us-ascii?Q?g1EpTUxQB5zlTjYYvasQkXBbroNXy/KwqLAJlZOAuz3ViSDbsU1hgeklMQqX?=
+ =?us-ascii?Q?UXurR2Xhg+D6NAeeDzWqGCGuSJMCnTnoP07+L4X/ZffocU/AMbjLFiWvNi3x?=
+ =?us-ascii?Q?BkqjCRM9zk5+4jNvVLY/AbCVCYyuNJEQ2D/fK9RdATbdyq256NelhpFGrWkR?=
+ =?us-ascii?Q?2S6zW+adIDuxgUYBwBf7KvuL4cc/uZ4yw778MC/YxGdTegIMidZD9eszJQ8S?=
+ =?us-ascii?Q?541Z61TPnRNCsYlKhDjC5GJbGiZCqMIcMRnOrHK/24osTKwfWdiSfGWnj20J?=
+ =?us-ascii?Q?InUU2dEEtDgrPihCVfteK8p/fx97W0f/tJqEY4umVvg0t3MtSZn+e7oThEW/?=
+ =?us-ascii?Q?0zN3eydyVa7UYWCpR8Otjm3wNwCPUKnZ8nZSgoJl5gHjiqAoJmI5+bvfggKA?=
+ =?us-ascii?Q?/CkyLo4H08c2NXU5fdhR1XIZo7hebcfqRvk31T1U+K89cPJoo3EvyV+1sDoH?=
+ =?us-ascii?Q?zJNUveOibo/zFUxKa6nfFTZ+L6cBWejC2hdjQ/p/AvrK6Oz5egJAOmj/Dmmb?=
+ =?us-ascii?Q?kSscSSjw98BnqF1+5hAfZst+3mdjhamwVFcks5eL1p/5dUUwNzroImNNlpfx?=
+ =?us-ascii?Q?J2eKHp8+SYdXTlFI2Y3dTPbsIHMGf3NMiiA9DeXms7D0VHeLIT3ha3WPCqrh?=
+ =?us-ascii?Q?n1ZCteNtJDlJ3OhNIepeQSeyyyeS8EBHn2HpaBGG8lhli9wr7vq/lXMBB3pY?=
+ =?us-ascii?Q?1/nSv2TD53ba4/JagE1OH+eSMOIQ2WZ+Jr8JWHkCbj1yhNtLSnEmwcnAYd/z?=
+ =?us-ascii?Q?yxgNqOkhPMTrEKD0t4VCttqEPTi3eJEqjLCvxwZKsiUvcjTcoJTYJHfrB17X?=
+ =?us-ascii?Q?gTTJMwNMru0vXktq4q69f1MNIKRgIaxCXkhQNSA3Vf+drYct7/+qc+q74I/E?=
+ =?us-ascii?Q?BZ9srmkhYivacSi0nOFPxgu6MCWQLvinDkP5d5jduD47nOLNlhrVvU81BRWq?=
+ =?us-ascii?Q?r9pcLOl0zz/a7cLqrHGQIfQRGwNpOJNEayvOzBN3PH7IwN+lIiA0q13IFIkK?=
+ =?us-ascii?Q?BH/YrJMbhwOpipnFxzNN162mpWWSIdGacFr4UyMRmqtFoXc7Htd65sku+kYG?=
+ =?us-ascii?Q?HqdZ+SbvR7PvSzwFqdGUFZRGGY1ZrP2a8dqt3hoV7WXbIum5z3ynkP2S8fQM?=
+ =?us-ascii?Q?T40=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?gDP5ySHXrRjE8RSdnT/EFvS0PjcwmqgxeA/Nk2Y+zM6rOdp/ThaJJybPrVbf?=
+ =?us-ascii?Q?l2btv0ZiBGmn3WfWbUbl3rvmfR2unss/5cV3v9vMwb26O3Xax5O0udIEuwJ9?=
+ =?us-ascii?Q?Ke0OAB7M7g/p4BPmfkGehr0jmaE6ylGCLng0JzWLmnlEAOKNGPJF25m3ToAO?=
+ =?us-ascii?Q?qR6CnOqBiivDaezPIYQZ6na8CxF/PoSPTtKuMKGy7jsbfwYKeujAP0OcuuZj?=
+ =?us-ascii?Q?47GjBxuLksDiJ6ojssd9otaQ/BHYhXCFoVjz7VpjOIkAMY44TdCN2Zsm63rn?=
+ =?us-ascii?Q?WbRAOBXHLNt8s2ICCFc5hhlGlz9ADcjZxzeg5O47Q2h4FjRM5eH22bdBNJ6Z?=
+ =?us-ascii?Q?w8sIPx41kvKv0uaiD2fQOInVTwFb+/WfXs+GHoJgE6EU1eTKLUhKpVSM1pqp?=
+ =?us-ascii?Q?VF747NrPTtYdjxuLZ0NRFdkd6yIHNhtw3OfrZjAgXf8MsDkqEprpbuwiUa35?=
+ =?us-ascii?Q?c/KfPrzf4/CGRKEVKwH+pus2GRqSiMl6IQpPD/N4qE2e3RdgYlhF3pBxJbbb?=
+ =?us-ascii?Q?ogdlkaJANtu0+QOXw99U+PvA4RYfwxPgwHgqgjaCoFsocQlv5M00v6pIJYbf?=
+ =?us-ascii?Q?d8VoZ5fESGRR4yKFl8dHc4tIMLmk4D4B2OwfDjUVzTlZZeeGuLCHHtO4D5Wu?=
+ =?us-ascii?Q?BTvlaC1mnfLTQ1h9ZyvMSnZl72wuLOPnICqsEMRPVTIZa0W30mkMQgq9QEs3?=
+ =?us-ascii?Q?9EeD00xb0OT4Oa7o3BGxbB3vcBri5czYO8nW/KFc0IbWl+/LPtFUhS9PcISJ?=
+ =?us-ascii?Q?7AWgsCuxO5RJAqQE8Rp5BPkxu1iL81Zm+nIIi1L/L6FE7YhdyMghiyW7gwMG?=
+ =?us-ascii?Q?VfQTGvi/vc8PPd1dOQgUML2ym2DrNK2aRetc9nrPoLYdx73wGWEWZy1MsJV0?=
+ =?us-ascii?Q?bgRM72j7lY9LvRr3mX7Um0/bRIo5JaBHREF+wx4V1TBz1H6ad2+6qntw4oDg?=
+ =?us-ascii?Q?vVzativMqrCOBv9pXLCssE8rq4M9p9zS/49o1mZ/p92b69zxNslEbTkKhYW8?=
+ =?us-ascii?Q?mpxca7eHI5QTCPq4krkxH5CzF9K7bhTp8p3LfUC9Gixg9/CVci+nIcR2ysZg?=
+ =?us-ascii?Q?i2f8WwiwjSg2YUuuQTIUpMYysecuO5ufAF1hyQHlZI5uAUknENtgGpXvtrw3?=
+ =?us-ascii?Q?q+xJRpgQ1/KsL9J1OufldMippM4Czt/26rE7dbuikvzK6737OM0L/HHLGbeo?=
+ =?us-ascii?Q?MFto9M3wy8OqYHGRNXpoit9QV3LL3wsC0IkjXDBrCnqAv732xnrXlfEviMIg?=
+ =?us-ascii?Q?CNP8D9DoXgrTXGbJd9+IT+tYfT5IOuVD6XEloqoisbjvWlnVLsNgjSmpA0Mk?=
+ =?us-ascii?Q?D2ea0JJB0iU/PePZZo3mkYi8/GpOh48aCHlwqPMK0A20sNGPhpaEPXJwEbY3?=
+ =?us-ascii?Q?B4hYrXi+pR53F0m1AIw/fV07GJkCUOzIEWaVQo38c8+Sls1R387xvgdKUKJA?=
+ =?us-ascii?Q?PEUhMyeu2yNEYczYEgZy+3EVPwoSf4pFHDpZSWPN4wUaYNhTsWQW5K6OAzpK?=
+ =?us-ascii?Q?5TCtdjrN6DGQJ58Gg6NNGX4thiYIq4MxBKQaMgnJldXgf4gE6mCW92BxO/+p?=
+ =?us-ascii?Q?8T5Q3nCy2fJwBYRIcYRGhDkf2j/dYjrEhWYuDirrddyiWFsWVmghn45Ms0UM?=
+ =?us-ascii?Q?hQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2d05c744-cf49-4733-1730-08dc96e717c6
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jun 2024 20:24:06.1490
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Zk5DTxLr4IqWNLruzISG7oJJfm2DtYREwTqgqm3S+zDJPmUdvsXpDhD4EGfqfHhRHwuN6PimJWJrSx67zkyaBoKxMlXFqIJDVO1eJX2thbc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB5127
+X-OriginatorOrg: intel.com
 
-On Thu, 2024-06-27 at 11:02 -0400, Chuck Lever wrote:
-> On Wed, Jun 26, 2024 at 09:00:24PM -0400, Jeff Layton wrote:
-> > The VFS always uses coarse-grained timestamps when updating the ctime
-> > and mtime after a change. This has the benefit of allowing filesystems
-> > to optimize away a lot metadata updates, down to around 1 per jiffy,
-> > even when a file is under heavy writes.
-> >=20
-> > Unfortunately, this has always been an issue when we're exporting via
-> > NFSv3, which relies on timestamps to validate caches. A lot of changes
-> > can happen in a jiffy, so timestamps aren't sufficient to help the
-> > client decide to invalidate the cache. Even with NFSv4, a lot of
-> > exported filesystems don't properly support a change attribute and are
-> > subject to the same problems with timestamp granularity. Other
-> > applications have similar issues with timestamps (e.g backup
-> > applications).
-> >=20
-> > If we were to always use fine-grained timestamps, that would improve th=
-e
-> > situation, but that becomes rather expensive, as the underlying
-> > filesystem would have to log a lot more metadata updates.
-> >=20
-> > What we need is a way to only use fine-grained timestamps when they are
-> > being actively queried. Now that the ctime is stored as a ktime_t, we
-> > can sacrifice the lowest bit in the word to act as a flag marking
-> > whether the current timestamp has been queried via stat() or the like.
-> >=20
-> > This solves the problem of being able to distinguish the timestamp
-> > between updates, but introduces a new problem: it's now possible for a
-> > file being changed to get a fine-grained timestamp and then a file that
-> > was altered later to get a coarse-grained one that appears older than
-> > the earlier fine-grained time. To remedy this, keep a global ktime_t
-> > value that acts as a timestamp floor.
-> >=20
-> > When we go to stamp a file, we first get the latter of the current floo=
-r
-> > value and the current coarse-grained time (call this "now"). If the
-> > current inode ctime hasn't been queried then we just attempt to stamp i=
-t
-> > with that value using a cmpxchg() operation.
-> >=20
-> > If it has been queried, then first see whether the current coarse time
-> > appears later than what we have. If it does, then we accept that value.
-> > If it doesn't, then we get a fine-grained time and try to swap that int=
-o
-> > the global floor. Whether that succeeds or fails, we take the resulting
-> > floor time and try to swap that into the ctime.
-> >=20
-> > There is still one remaining problem:
-> >=20
-> > All of this works as long as the realtime clock is monotonically
-> > increasing. If the clock ever jumps backwards, then we could end up in =
-a
-> > situation where the floor value is "stuck" far in advance of the clock.
-> >=20
-> > To remedy this, sanity check the floor value and if it's more than 6ms
-> > (~2 jiffies) ahead of the current coarse-grained clock, disregard the
-> > floor value, and just accept the current coarse-grained clock.
-> >=20
-> > Filesystems opt into this by setting the FS_MGTIME fstype flag.=C2=A0 O=
-ne
-> > caveat: those that do will always present ctimes that have the lowest
-> > bit unset, even when the on-disk ctime has it set.
-> >=20
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > ---
-> > =C2=A0fs/inode.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 | 168 +++++++++++++++++++++++++++++++++------
-> > =C2=A0fs/stat.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 |=C2=A0 39 ++++++++-
-> > =C2=A0include/linux/fs.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 30 +++++++
-> > =C2=A0include/trace/events/timestamp.h |=C2=A0 97 +++++++++++++++++++++=
-+
-> > =C2=A04 files changed, 306 insertions(+), 28 deletions(-)
-> >=20
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index 5d2b0dfe48c3..12790a26102c 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -62,6 +62,8 @@ static unsigned int i_hash_shift __ro_after_init;
-> > =C2=A0static struct hlist_head *inode_hashtable __ro_after_init;
-> > =C2=A0static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock=
-);
-> > =C2=A0
-> > +/* Don't send out a ctime lower than this (modulo backward clock jumps=
-). */
-> > +static __cacheline_aligned_in_smp ktime_t ctime_floor;
->=20
-> This is piece of memory that will be hit pretty hard (and you
-> obviously recognize that because of the alignment attribute).
->=20
-> Would it be of any benefit to keep a distinct ctime_floor in each
-> super block instead?
->=20
+Alistair Popple wrote:
+> 
+> Dan Williams <dan.j.williams@intel.com> writes:
+> 
+> > Alistair Popple wrote:
+> >> FS DAX pages have always maintained their own page reference counts
+> >> without following the normal rules for page reference counting. In
+> >> particular pages are considered free when the refcount hits one rather
+> >> than zero and refcounts are not added when mapping the page.
+> >> 
+> >> Tracking this requires special PTE bits (PTE_DEVMAP) and a secondary
+> >> mechanism for allowing GUP to hold references on the page (see
+> >> get_dev_pagemap). However there doesn't seem to be any reason why FS
+> >> DAX pages need their own reference counting scheme.
+> >> 
+> >> By treating the refcounts on these pages the same way as normal pages
+> >> we can remove a lot of special checks. In particular pXd_trans_huge()
+> >> becomes the same as pXd_leaf(), although I haven't made that change
+> >> here. It also frees up a valuable SW define PTE bit on architectures
+> >> that have devmap PTE bits defined.
+> >> 
+> >> It also almost certainly allows further clean-up of the devmap managed
+> >> functions, but I have left that as a future improvment.
+> >> 
+> >> This is an update to the original RFC rebased onto v6.10-rc5. Unlike
+> >> the original RFC it passes the same number of ndctl test suite
+> >> (https://github.com/pmem/ndctl) tests as my current development
+> >> environment does without these patches.
+> >
+> > Are you seeing the 'mmap.sh' test fail even without these patches?
+> 
+> No. But I also don't see it failing with these patches :)
+> 
+> For reference this is what I see on my test machine with or without:
+> 
+> [1/70] Generating version.h with a custom command
+>  1/13 ndctl:dax / daxdev-errors.sh          SKIP             0.06s   exit status 77
+>  2/13 ndctl:dax / multi-dax.sh              SKIP             0.05s   exit status 77
+>  3/13 ndctl:dax / sub-section.sh            SKIP             0.14s   exit status 77
 
-Good question. Dave Chinner suggested the same thing, but I think it's
-a potential problem:
+I really need to get this test built as a service as this shows a
+pre-req is missing, and it's not quite fair to expect submitters to put
+it all together.
 
-The first series had to be reverted because inodes that had been
-modified in order could appear to be modified in reverse order with the
-right combination of fine and coarse grained timestamps. With the new
-floor value, that's no longer possible, but if we were to make it per-
-sb then it becomes possible again with files in different filesystems.
+>  4/13 ndctl:dax / dax-dev                   OK               0.02s
+>  5/13 ndctl:dax / dax-ext4.sh               OK              12.97s
+>  6/13 ndctl:dax / dax-xfs.sh                OK              12.44s
+>  7/13 ndctl:dax / device-dax                OK              13.40s
+>  8/13 ndctl:dax / revoke-devmem             FAIL             0.31s   (exit status 250 or signal 122 SIGinvalid)
+> >>> TEST_PATH=/home/apopple/ndctl/build/test LD_LIBRARY_PATH=/home/apopple/ndctl/build/cxl/lib:/home/apopple/ndctl/build/daxctl/lib:/home/apopple/ndctl/build/ndctl/lib NDCTL=/home/apopple/ndctl/build/ndctl/ndctl MALLOC_PERTURB_=227 DATA_PATH=/home/apopple/ndctl/test DAXCTL=/home/apopple/ndctl/build/daxctl/daxctl /home/apopple/ndctl/build/test/revoke_devmem
+> 
+>  9/13 ndctl:dax / device-dax-fio.sh         OK              32.43s
+> 10/13 ndctl:dax / daxctl-devices.sh         SKIP             0.07s   exit status 77
+> 11/13 ndctl:dax / daxctl-create.sh          SKIP             0.04s   exit status 77
+> 12/13 ndctl:dax / dm.sh                     FAIL             0.08s   exit status 1
+> >>> MALLOC_PERTURB_=209 TEST_PATH=/home/apopple/ndctl/build/test LD_LIBRARY_PATH=/home/apopple/ndctl/build/cxl/lib:/home/apopple/ndctl/build/daxctl/lib:/home/apopple/ndctl/build/ndctl/lib NDCTL=/home/apopple/ndctl/build/ndctl/ndctl DATA_PATH=/home/apopple/ndctl/test DAXCTL=/home/apopple/ndctl/build/daxctl/daxctl /home/apopple/ndctl/test/dm.sh
+> 
+> 13/13 ndctl:dax / mmap.sh                   OK             107.57s
 
-This sort of timestamp comparison is done by tools like "make", and
-it's rather common to keep built objects in one location and generate
-or copy source files to another. My worry is that managing the floor as
-anything but a global value could cause regressions in those sorts of
-workloads.
+I need to think through why this one might false succeed, but that can
+wait until we get this series reviewed. For now my failure is stable
+which allows it to be bisected.
 
->=20
-> > =C2=A0/*
-> > =C2=A0 * Empty aops. Can be used for the cases where the user does not
-> > =C2=A0 * define any of the address_space operations.
-> > @@ -2077,19 +2079,86 @@ int file_remove_privs(struct file *file)
-> > =C2=A0}
-> > =C2=A0EXPORT_SYMBOL(file_remove_privs);
-> > =C2=A0
-> > +/*
-> > + * The coarse-grained clock ticks once per jiffy (every 2ms or so). If=
- the
-> > + * current floor is >6ms in the future, assume that the clock has jump=
-ed
-> > + * backward.
-> > + */
-> > +#define CTIME_FLOOR_MAX_NS	6000000
-> > +
-> > +/**
-> > + * coarse_ctime - return the current coarse-grained time
-> > + * @floor: current ctime_floor value
-> > + *
-> > + * Get the coarse-grained time, and then determine whether to
-> > + * return it or the current floor value. Returns the later of the
-> > + * floor and coarse grained time, unless the floor value is too
-> > + * far into the future. If that happens, assume the clock has jumped
-> > + * backward, and that the floor should be ignored.
-> > + */
-> > +static ktime_t coarse_ctime(ktime_t floor)
-> > +{
-> > +	ktime_t now =3D ktime_get_coarse_real() & ~I_CTIME_QUERIED;
-> > +
-> > +	/* If coarse time is already newer, return that */
-> > +	if (ktime_before(floor, now))
-> > +		return now;
-> > +
-> > +	/* Ensure floor is not _too_ far in the future */
-> > +	if (ktime_after(floor, now + CTIME_FLOOR_MAX_NS))
-> > +		return now;
-> > +
-> > +	return floor;
-> > +}
-> > +
-> > +/**
-> > + * current_time - Return FS time (possibly fine-grained)
-> > + * @inode: inode.
-> > + *
-> > + * Return the current time truncated to the time granularity supported=
- by
-> > + * the fs, as suitable for a ctime/mtime change. If the ctime is flagg=
-ed
-> > + * as having been QUERIED, get a fine-grained timestamp.
-> > + */
-> > +struct timespec64 current_time(struct inode *inode)
-> > +{
-> > +	ktime_t ctime, floor =3D smp_load_acquire(&ctime_floor);
-> > +	ktime_t now =3D coarse_ctime(floor);
-> > +	struct timespec64 now_ts =3D ktime_to_timespec64(now);
-> > +
-> > +	if (!is_mgtime(inode))
-> > +		goto out;
-> > +
-> > +	/* If nothing has queried it, then coarse time is fine */
-> > +	ctime =3D smp_load_acquire(&inode->__i_ctime);
-> > +	if (ctime & I_CTIME_QUERIED) {
-> > +		/*
-> > +		 * If there is no apparent change, then
-> > +		 * get a fine-grained timestamp.
-> > +		 */
-> > +		if ((now | I_CTIME_QUERIED) =3D=3D ctime) {
-> > +			ktime_get_real_ts64(&now_ts);
-> > +			now_ts.tv_nsec &=3D ~I_CTIME_QUERIED;
-> > +		}
-> > +	}
-> > +out:
-> > +	return timestamp_truncate(now_ts, inode);
-> > +}
-> > +EXPORT_SYMBOL(current_time);
-> > +
-> > =C2=A0static int inode_needs_update_time(struct inode *inode)
-> > =C2=A0{
-> > +	struct timespec64 now, ts;
-> > =C2=A0	int sync_it =3D 0;
-> > -	struct timespec64 now =3D current_time(inode);
-> > -	struct timespec64 ts;
-> > =C2=A0
-> > =C2=A0	/* First try to exhaust all avenues to not sync */
-> > =C2=A0	if (IS_NOCMTIME(inode))
-> > =C2=A0		return 0;
-> > =C2=A0
-> > +	now =3D current_time(inode);
-> > +
-> > =C2=A0	ts =3D inode_get_mtime(inode);
-> > =C2=A0	if (!timespec64_equal(&ts, &now))
-> > -		sync_it =3D S_MTIME;
-> > +		sync_it |=3D S_MTIME;
-> > =C2=A0
-> > =C2=A0	ts =3D inode_get_ctime(inode);
-> > =C2=A0	if (!timespec64_equal(&ts, &now))
-> > @@ -2485,25 +2554,6 @@ struct timespec64 timestamp_truncate(struct time=
-spec64 t, struct inode *inode)
-> > =C2=A0}
-> > =C2=A0EXPORT_SYMBOL(timestamp_truncate);
-> > =C2=A0
-> > -/**
-> > - * current_time - Return FS time
-> > - * @inode: inode.
-> > - *
-> > - * Return the current time truncated to the time granularity supported=
- by
-> > - * the fs.
-> > - *
-> > - * Note that inode and inode->sb cannot be NULL.
-> > - * Otherwise, the function warns and returns time without truncation.
-> > - */
-> > -struct timespec64 current_time(struct inode *inode)
-> > -{
-> > -	struct timespec64 now;
-> > -
-> > -	ktime_get_coarse_real_ts64(&now);
-> > -	return timestamp_truncate(now, inode);
-> > -}
-> > -EXPORT_SYMBOL(current_time);
-> > -
-> > =C2=A0/**
-> > =C2=A0 * inode_get_ctime - fetch the current ctime from the inode
-> > =C2=A0 * @inode: inode from which to fetch ctime
-> > @@ -2518,12 +2568,18 @@ struct timespec64 inode_get_ctime(const struct =
-inode *inode)
-> > =C2=A0{
-> > =C2=A0	ktime_t ctime =3D inode->__i_ctime;
-> > =C2=A0
-> > +	if (is_mgtime(inode))
-> > +		ctime &=3D ~I_CTIME_QUERIED;
-> > =C2=A0	return ktime_to_timespec64(ctime);
-> > =C2=A0}
-> > =C2=A0EXPORT_SYMBOL(inode_get_ctime);
-> > =C2=A0
-> > =C2=A0struct timespec64 inode_set_ctime_to_ts(struct inode *inode, stru=
-ct timespec64 ts)
-> > =C2=A0{
-> > +	trace_inode_set_ctime_to_ts(inode, &ts);
-> > +
-> > +	if (is_mgtime(inode))
-> > +		ts.tv_nsec &=3D ~I_CTIME_QUERIED;
-> > =C2=A0	inode->__i_ctime =3D ktime_set(ts.tv_sec, ts.tv_nsec);
-> > =C2=A0	trace_inode_set_ctime_to_ts(inode, &ts);
-> > =C2=A0	return ts;
-> > @@ -2535,14 +2591,74 @@ EXPORT_SYMBOL(inode_set_ctime_to_ts);
-> > =C2=A0 * @inode: inode
-> > =C2=A0 *
-> > =C2=A0 * Set the inode->i_ctime to the current value for the inode. Ret=
-urns
-> > - * the current value that was assigned to i_ctime.
-> > + * the current value that was assigned to i_ctime. If this is a not
-> > + * multigrain inode, then we just set it to whatever the coarse time i=
-s.
-> > + *
-> > + * If it is multigrain, then we first see if the coarse-grained
-> > + * timestamp is distinct from what we have. If so, then we'll just use
-> > + * that. If we have to get a fine-grained timestamp, then do so, and
-> > + * try to swap it into the floor. We accept the new floor value
-> > + * regardless of the outcome of the cmpxchg. After that, we try to
-> > + * swap the new value into __i_ctime. Again, we take the resulting
-> > + * ctime, regardless of the outcome of the swap.
-> > =C2=A0 */
-> > =C2=A0struct timespec64 inode_set_ctime_current(struct inode *inode)
-> > =C2=A0{
-> > -	struct timespec64 now =3D current_time(inode);
-> > +	ktime_t ctime, now, cur, floor =3D smp_load_acquire(&ctime_floor);
-> > +
-> > +	now =3D coarse_ctime(floor);
-> > =C2=A0
-> > -	inode_set_ctime_to_ts(inode, now);
-> > -	return now;
-> > +	/* Just return that if this is not a multigrain fs */
-> > +	if (!is_mgtime(inode)) {
-> > +		inode->__i_ctime =3D now;
-> > +		goto out;
-> > +	}
-> > +
-> > +	/*
-> > +	 * We only need a fine-grained time if someone has queried it,
-> > +	 * and the current coarse grained time isn't later than what's
-> > +	 * already there.
-> > +	 */
-> > +	ctime =3D smp_load_acquire(&inode->__i_ctime);
-> > +	if ((ctime & I_CTIME_QUERIED) && !ktime_after(now, ctime & ~I_CTIME_Q=
-UERIED)) {
-> > +		ktime_t old;
-> > +
-> > +		/* Get a fine-grained time */
-> > +		now =3D ktime_get_real() & ~I_CTIME_QUERIED;
-> > +
-> > +		/*
-> > +		 * If the cmpxchg works, we take the new floor value. If
-> > +		 * not, then that means that someone else changed it after we
-> > +		 * fetched it but before we got here. That value is just
-> > +		 * as good, so keep it.
-> > +		 */
-> > +		old =3D cmpxchg(&ctime_floor, floor, now);
-> > +		trace_ctime_floor_update(inode, floor, now, old);
-> > +		if (old !=3D floor)
-> > +			now =3D old;
-> > +	}
-> > +retry:
-> > +	/* Try to swap the ctime into place. */
-> > +	cur =3D cmpxchg(&inode->__i_ctime, ctime, now);
-> > +	trace_ctime_inode_update(inode, ctime, now, cur);
-> > +
-> > +	/* If swap occurred, then we're done */
-> > +	if (cur !=3D ctime) {
-> > +		/*
-> > +		 * Was the change due to someone marking the old ctime QUERIED?
-> > +		 * If so then retry the swap. This can only happen once since
-> > +		 * the only way to clear I_CTIME_QUERIED is to stamp the inode
-> > +		 * with a new ctime.
-> > +		 */
-> > +		if (!(ctime & I_CTIME_QUERIED) && (ctime | I_CTIME_QUERIED) =3D=3D c=
-ur) {
-> > +			ctime =3D cur;
-> > +			goto retry;
-> > +		}
-> > +		/* Otherwise, take the new ctime */
-> > +		now =3D cur & ~I_CTIME_QUERIED;
-> > +	}
-> > +out:
-> > +	return timestamp_truncate(ktime_to_timespec64(now), inode);
-> > =C2=A0}
-> > =C2=A0EXPORT_SYMBOL(inode_set_ctime_current);
-> > =C2=A0
-> > diff --git a/fs/stat.c b/fs/stat.c
-> > index 6f65b3456cad..7e9bd16b553b 100644
-> > --- a/fs/stat.c
-> > +++ b/fs/stat.c
-> > @@ -22,10 +22,39 @@
-> > =C2=A0
-> > =C2=A0#include <linux/uaccess.h>
-> > =C2=A0#include <asm/unistd.h>
-> > +#include <trace/events/timestamp.h>
-> > =C2=A0
-> > =C2=A0#include "internal.h"
-> > =C2=A0#include "mount.h"
-> > =C2=A0
-> > +/**
-> > + * fill_mg_cmtime - Fill in the mtime and ctime and flag ctime as QUER=
-IED
-> > + * @stat: where to store the resulting values
-> > + * @request_mask: STATX_* values requested
-> > + * @inode: inode from which to grab the c/mtime
-> > + *
-> > + * Given @inode, grab the ctime and mtime out if it and store the resu=
-lt
-> > + * in @stat. When fetching the value, flag it as queried so the next w=
-rite
-> > + * will ensure a distinct timestamp.
-> > + */
-> > +void fill_mg_cmtime(struct kstat *stat, u32 request_mask, struct inode=
- *inode)
-> > +{
-> > +	atomic_long_t *pc =3D (atomic_long_t *)&inode->__i_ctime;
-> > +
-> > +	/* If neither time was requested, then don't report them */
-> > +	if (!(request_mask & (STATX_CTIME|STATX_MTIME))) {
-> > +		stat->result_mask &=3D ~(STATX_CTIME|STATX_MTIME);
-> > +		return;
-> > +	}
-> > +
-> > +	stat->mtime.tv_sec =3D inode->i_mtime_sec;
-> > +	stat->mtime.tv_nsec =3D inode->i_mtime_nsec;
-> > +	stat->ctime =3D ktime_to_timespec64(atomic_long_fetch_or(I_CTIME_QUER=
-IED, pc) &
-> > +						~I_CTIME_QUERIED);
-> > +	trace_fill_mg_cmtime(inode, atomic_long_read(pc));
-> > +}
-> > +EXPORT_SYMBOL(fill_mg_cmtime);
-> > +
-> > =C2=A0/**
-> > =C2=A0 * generic_fillattr - Fill in the basic attributes from the inode=
- struct
-> > =C2=A0 * @idmap:		idmap of the mount the inode was found from
-> > @@ -58,8 +87,14 @@ void generic_fillattr(struct mnt_idmap *idmap, u32 r=
-equest_mask,
-> > =C2=A0	stat->rdev =3D inode->i_rdev;
-> > =C2=A0	stat->size =3D i_size_read(inode);
-> > =C2=A0	stat->atime =3D inode_get_atime(inode);
-> > -	stat->mtime =3D inode_get_mtime(inode);
-> > -	stat->ctime =3D inode_get_ctime(inode);
-> > +
-> > +	if (is_mgtime(inode)) {
-> > +		fill_mg_cmtime(stat, request_mask, inode);
-> > +	} else {
-> > +		stat->ctime =3D inode_get_ctime(inode);
-> > +		stat->mtime =3D inode_get_mtime(inode);
-> > +	}
-> > +
-> > =C2=A0	stat->blksize =3D i_blocksize(inode);
-> > =C2=A0	stat->blocks =3D inode->i_blocks;
-> > =C2=A0
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 4b10db12725d..5694cb6c4dc2 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -1608,6 +1608,23 @@ static inline struct timespec64 inode_set_mtime(=
-struct inode *inode,
-> > =C2=A0	return inode_set_mtime_to_ts(inode, ts);
-> > =C2=A0}
-> > =C2=A0
-> > +/*
-> > + * Multigrain timestamps
-> > + *
-> > + * Conditionally use fine-grained ctime and mtime timestamps when ther=
-e
-> > + * are users actively observing them via getattr. The primary use-case
-> > + * for this is NFS clients that use the ctime to distinguish between
-> > + * different states of the file, and that are often fooled by multiple
-> > + * operations that occur in the same coarse-grained timer tick.
-> > + *
-> > + * We use the least significant bit of the ktime_t to track the QUERIE=
-D
-> > + * flag. This means that filesystems with multigrain timestamps effect=
-ively
-> > + * have 2ns resolution for the ctime, even if they advertise 1ns s_tim=
-e_gran.
-> > + */
-> > +#define I_CTIME_QUERIED		(1LL)
-> > +
-> > +static inline bool is_mgtime(const struct inode *inode);
-> > +
-> > =C2=A0struct timespec64 inode_get_ctime(const struct inode *inode);
-> > =C2=A0struct timespec64 inode_set_ctime_to_ts(struct inode *inode, stru=
-ct timespec64 ts);
-> > =C2=A0
-> > @@ -2477,6 +2494,7 @@ struct file_system_type {
-> > =C2=A0#define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
-> > =C2=A0#define FS_DISALLOW_NOTIFY_PERM	16	/* Disable fanotify permission=
- events */
-> > =C2=A0#define FS_ALLOW_IDMAP=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 32=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* FS has been updated to handle vf=
-s idmappings. */
-> > +#define FS_MGTIME		64	/* FS uses multigrain timestamps */
-> > =C2=A0#define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() du=
-ring rename() internally. */
-> > =C2=A0	int (*init_fs_context)(struct fs_context *);
-> > =C2=A0	const struct fs_parameter_spec *parameters;
-> > @@ -2500,6 +2518,17 @@ struct file_system_type {
-> > =C2=A0
-> > =C2=A0#define MODULE_ALIAS_FS(NAME) MODULE_ALIAS("fs-" NAME)
-> > =C2=A0
-> > +/**
-> > + * is_mgtime: is this inode using multigrain timestamps
-> > + * @inode: inode to test for multigrain timestamps
-> > + *
-> > + * Return true if the inode uses multigrain timestamps, false otherwis=
-e.
-> > + */
-> > +static inline bool is_mgtime(const struct inode *inode)
-> > +{
-> > +	return inode->i_sb->s_type->fs_flags & FS_MGTIME;
-> > +}
-> > +
-> > =C2=A0extern struct dentry *mount_bdev(struct file_system_type *fs_type=
-,
-> > =C2=A0	int flags, const char *dev_name, void *data,
-> > =C2=A0	int (*fill_super)(struct super_block *, void *, int));
-> > @@ -3234,6 +3263,7 @@ extern void page_put_link(void *);
-> > =C2=A0extern int page_symlink(struct inode *inode, const char *symname,=
- int len);
-> > =C2=A0extern const struct inode_operations page_symlink_inode_operation=
-s;
-> > =C2=A0extern void kfree_link(void *);
-> > +void fill_mg_cmtime(struct kstat *stat, u32 request_mask, struct inode=
- *inode);
-> > =C2=A0void generic_fillattr(struct mnt_idmap *, u32, struct inode *, st=
-ruct kstat *);
-> > =C2=A0void generic_fill_statx_attr(struct inode *inode, struct kstat *s=
-tat);
-> > =C2=A0extern int vfs_getattr_nosec(const struct path *, struct kstat *,=
- u32, unsigned int);
-> > diff --git a/include/trace/events/timestamp.h b/include/trace/events/ti=
-mestamp.h
-> > index 35ff875d3800..1f71738aa38c 100644
-> > --- a/include/trace/events/timestamp.h
-> > +++ b/include/trace/events/timestamp.h
-> > @@ -8,6 +8,78 @@
-> > =C2=A0#include <linux/tracepoint.h>
-> > =C2=A0#include <linux/fs.h>
-> > =C2=A0
-> > +TRACE_EVENT(ctime_floor_update,
-> > +	TP_PROTO(struct inode *inode,
-> > +		 ktime_t old,
-> > +		 ktime_t new,
-> > +		 ktime_t cur),
-> > +
-> > +	TP_ARGS(inode, old, new, cur),
-> > +
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t,				dev)
-> > +		__field(ino_t,				ino)
-> > +		__field(ktime_t,			old)
-> > +		__field(ktime_t,			new)
-> > +		__field(ktime_t,			cur)
-> > +	),
-> > +
-> > +	TP_fast_assign(
-> > +		__entry->dev		=3D inode->i_sb->s_dev;
-> > +		__entry->ino		=3D inode->i_ino;
-> > +		__entry->old		=3D old;
-> > +		__entry->new		=3D new;
-> > +		__entry->cur		=3D cur;
-> > +	),
-> > +
-> > +	TP_printk("ino=3D%d:%d:%lu old=3D%llu.%lu new=3D%llu.%lu cur=3D%llu.%=
-lu swp=3D%c",
-> > +		MAJOR(__entry->dev), MINOR(__entry->dev), __entry->ino,
-> > +		ktime_to_timespec64(__entry->old).tv_sec,
-> > +		ktime_to_timespec64(__entry->old).tv_nsec,
-> > +		ktime_to_timespec64(__entry->new).tv_sec,
-> > +		ktime_to_timespec64(__entry->new).tv_nsec,
-> > +		ktime_to_timespec64(__entry->cur).tv_sec,
-> > +		ktime_to_timespec64(__entry->cur).tv_nsec,
-> > +		(__entry->old =3D=3D __entry->cur) ? 'Y' : 'N'
-> > +	)
-> > +);
-> > +
-> > +TRACE_EVENT(ctime_inode_update,
-> > +	TP_PROTO(struct inode *inode,
-> > +		 ktime_t old,
-> > +		 ktime_t new,
-> > +		 ktime_t cur),
-> > +
-> > +	TP_ARGS(inode, old, new, cur),
-> > +
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t,				dev)
-> > +		__field(ino_t,				ino)
-> > +		__field(ktime_t,			old)
-> > +		__field(ktime_t,			new)
-> > +		__field(ktime_t,			cur)
-> > +	),
-> > +
-> > +	TP_fast_assign(
-> > +		__entry->dev		=3D inode->i_sb->s_dev;
-> > +		__entry->ino		=3D inode->i_ino;
-> > +		__entry->old		=3D old;
-> > +		__entry->new		=3D new;
-> > +		__entry->cur		=3D cur;
-> > +	),
-> > +
-> > +	TP_printk("ino=3D%d:%d:%ld old=3D%llu.%ld new=3D%llu.%ld cur=3D%llu.%=
-ld swp=3D%c",
-> > +		MAJOR(__entry->dev), MINOR(__entry->dev), __entry->ino,
-> > +		ktime_to_timespec64(__entry->old).tv_sec,
-> > +		ktime_to_timespec64(__entry->old).tv_nsec,
-> > +		ktime_to_timespec64(__entry->new).tv_sec,
-> > +		ktime_to_timespec64(__entry->new).tv_nsec,
-> > +		ktime_to_timespec64(__entry->cur).tv_sec,
-> > +		ktime_to_timespec64(__entry->cur).tv_nsec,
-> > +		(__entry->old =3D=3D __entry->cur ? 'Y' : 'N')
-> > +	)
-> > +);
-> > +
-> > =C2=A0TRACE_EVENT(inode_needs_update_time,
-> > =C2=A0	TP_PROTO(struct inode *inode,
-> > =C2=A0		 struct timespec64 *now,
-> > @@ -70,6 +142,31 @@ TRACE_EVENT(inode_set_ctime_to_ts,
-> > =C2=A0		__entry->ts_sec, __entry->ts_nsec
-> > =C2=A0	)
-> > =C2=A0);
-> > +
-> > +TRACE_EVENT(fill_mg_cmtime,
-> > +	TP_PROTO(struct inode *inode,
-> > +		 ktime_t ctime),
-> > +
-> > +	TP_ARGS(inode, ctime),
-> > +
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t,			dev)
-> > +		__field(ino_t,			ino)
-> > +		__field(ktime_t,		ctime)
-> > +	),
-> > +
-> > +	TP_fast_assign(
-> > +		__entry->dev		=3D inode->i_sb->s_dev;
-> > +		__entry->ino		=3D inode->i_ino;
-> > +		__entry->ctime		=3D ctime;
-> > +	),
-> > +
-> > +	TP_printk("ino=3D%d:%d:%ld ctime=3D%llu.%lu",
-> > +		MAJOR(__entry->dev), MINOR(__entry->dev), __entry->ino,
-> > +		ktime_to_timespec64(__entry->ctime).tv_sec,
-> > +		ktime_to_timespec64(__entry->ctime).tv_nsec
-> > +	)
-> > +);
-> > =C2=A0#endif /* _TRACE_TIMESTAMP_H */
-> > =C2=A0
-> > =C2=A0/* This part must be outside protection */
-> >=20
-> > --=20
-> > 2.45.2
-> >=20
-> >=20
->=20
+> 
+> Ok:                 6   
+> Expected Fail:      0   
+> Fail:               2   
+> Unexpected Pass:    0   
+> Skipped:            5   
+> Timeout:            0   
+> 
+> I have been using QEMU for my testing. Maybe I missed some condition in
+> the unmap path though so will take another look.
 
---=20
-Jeff Layton <jlayton@kernel.org>
+I was able to bisect to:
+
+[PATCH 10/13] fs/dax: Properly refcount fs dax pages
+
+...I will prioritize that one in my review queue.
