@@ -1,253 +1,120 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BDDBD15747A;
-	Fri, 28 Jun 2024 16:42:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719592967; cv=none; b=P7XAO+wxoUsxunFuVPgpAJsMVDIFlpjoGzxgubyD1cJg4BCZarNhIOsw/jXi44l6KMaEEoV3eJBE1K/wzb3MbWa1/weNS4MVCm7kJtLmO/zZf0REPyFBeZgDAhPirnz/8M59DPeL8FM/tglmyh+mNMK0L7GN0zNMo2cmI1Grnkc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719592967; c=relaxed/simple;
-	bh=Nj8+f1W9R0bWGVyNrv2Z/8coThS7hJJJ1R+iHMUmQ1c=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=areeY//TqGsVRLMLVj9Nr8nXt3IzQ5l9SVZpnAGgfAPWtE327/DpTXG3zmMq5n4louKWiGid+Sb2s8AFOTi8pUPkyqSJbOmBhy1JzLxfI8C/XlNjFDre62CKPwfIh2C3p4Z1+alwwuEbmDeQsThBmyCW+US5O9j2DWAlsP0Iu6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=c5Npm9HS; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="c5Npm9HS"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id DB8FD479AE7;
-	Fri, 28 Jun 2024 11:42:44 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net DB8FD479AE7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1719592965;
-	bh=S1HJOZiof72M2aJeogSsY6seWoOEXLyd4gpOgbXzhls=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=c5Npm9HSfcRBHwAp1Pqy19IWi+o9GRJIIJ7skBfvyK0+wEzWyi2DIBQsHOxYNn33J
-	 FoTJOvb+4zXBQu8tz5Vpp4czbc88mbV2xLQPQUkSapC4eZqDTaS4vcpcI1blC5wmih
-	 +Uc8Cd8DwQuE7eVVGxpKf9ecQ1OFl1lQ7ZFaj8GmodeS6lkURmv5TJjKHR//5l0KYO
-	 AsbsrnsJ5VqdciBMaMuJ5Lk3JEJPTtI3p98rAg2m4ropX7LQMvqD0OvkmQeD0u1jIs
-	 is3TE3XrFDzixxmaPpz5xc6imCioGhcwvT9nfsVLqj7gG9tOiE638yXlN3vMALW+/Z
-	 HRm4e1pwQ+r5w==
-Message-ID: <8154df14-8f07-4fa6-b12e-c4ce8e3c4411@sandeen.net>
-Date: Fri, 28 Jun 2024 11:42:43 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 007E11CE09B;
+	Fri, 28 Jun 2024 17:01:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1719594079; cv=none; b=PioCb2NzX5lWU0qSbewqncXUXesMUe6FefHzzaMSTULEIY6aQMDgsfrQAhVx6z+ChE6+9fAhSpjMr2VjmMBzCfJcpa4Lmd7m40xr5WR3G+Jflrq3jhVJSVnU2zf2Wi1JaCSO3N9FwSW5LS9hQcZycSBlEr/TBEbQS072rM7/QCI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1719594079; c=relaxed/simple;
+	bh=p7XecSFWemJziWOM6nnkfXSrciddlpO1NrCyTpT36gk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mO6RIgQFJ9ldouXwbYcLan+I9WNbsq6R2hthNG89/LhU8ul4dB3zZtk0DDXFUwpnSnLDWcgoe9TXf1OfEE1vtSuDAIQrrvV243xxyq7guCEhCJxp2EqbC2jNWsFv3Q+YUlogtI+l4dL7YyqpqT4AqYrBWJug/sqw+/VzeHjIUJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cViiUIpm; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cViiUIpm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3EDFC2BD10;
+	Fri, 28 Jun 2024 17:01:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719594078;
+	bh=p7XecSFWemJziWOM6nnkfXSrciddlpO1NrCyTpT36gk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cViiUIpm7GccXdL91WYZwBA6vfIz3FXP1EP+Z5hH2nFw0YIyF/aqMO7xHbPJGTpGs
+	 Mvp8C6rIrzM/ip4FiZGH2egfAkMnibx/3yqfPf+QwvAkBqQ5KRGGTk5OCEq6TB0PYq
+	 lfRlGspaupX89aewme8yAhS3qz64pAlp6mAEdHusddcsLXT0OBupGilhevgOn3JAId
+	 7z/0oX9D06jXIjS11cpdtc7Zjb1LEpriCSz3lD05v2cAEvA7J9lv89rTmE5HYMYrN8
+	 /JqB9Fxz6kBnCRr5YJOpWhsqQ6VNeFP1iyd5AQB/3KKK/qo6iE8/VVdBwM10Pp51h0
+	 34rZPJiQMvi5g==
+Date: Fri, 28 Jun 2024 10:01:18 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jiwei Sun <sunjw10@outlook.com>, chandan.babu@oracle.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sunjw10@lenovo.com, ahuang12@lenovo.com, yi.zhang@redhat.com
+Subject: Re: [PATCH] xfs: add __GFP_NOLOCKDEP when allocating memory in
+ xfs_attr_shortform_list()
+Message-ID: <20240628170118.GD612460@frogsfrogsfrogs>
+References: <SEZPR01MB45270BCD2BC28813FCB39AEDA8D72@SEZPR01MB4527.apcprd01.prod.exchangelabs.com>
+ <9b8357bf-a1bf-43d0-b617-030882540b34@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_can_free_eofblocks
-To: syzbot <syzbot+1ac5b398842451b74cec@syzkaller.appspotmail.com>,
- chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-References: <000000000000cd1e8b06181d6198@google.com>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <000000000000cd1e8b06181d6198@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9b8357bf-a1bf-43d0-b617-030882540b34@sandeen.net>
 
-On 5/10/24 1:05 PM, syzbot wrote:
-> Hello,
+On Fri, Jun 28, 2024 at 11:25:10AM -0500, Eric Sandeen wrote:
+> On 6/27/24 8:12 AM, Jiwei Sun wrote:
+> > From: Jiwei Sun <sunjw10@lenovo.com>
+> > 
+> > If the following configuration is set
+> > CONFIG_LOCKDEP=y
+> > 
+> > The following warning log appears,
 > 
-> syzbot found the following issue on:
+> Was just about to send this. :)
 > 
-> HEAD commit:    dd5a440a31fa Linux 6.9-rc7
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=11059824980000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=6d14c12b661fb43
-> dashboard link: https://syzkaller.appspot.com/bug?extid=1ac5b398842451b74cec
-> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> I had talked to dchinner about this and he also suggested that this was 
+> missed in the series that removed GFP_NOFS, i.e.
 > 
-> Unfortunately, I don't have any reproducer for this issue yet.
+> [PATCH 00/12] xfs: remove remaining kmem interfaces and GFP_NOFS usage
+> at https://lore.kernel.org/linux-mm/20240622094411.GA830005@ceph-admin/T/
 > 
-> Downloadable assets:
-> disk image: https://storage.googleapis.com/syzbot-assets/58e2a4900479/disk-dd5a440a.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/246a109c32d6/vmlinux-dd5a440a.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/d2719f7eb672/bzImage-dd5a440a.xz
+> So, I think this could also use one or both of:
 > 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+1ac5b398842451b74cec@syzkaller.appspotmail.com
+> Fixes: 204fae32d5f7 ("xfs: clean up remaining GFP_NOFS users")
+> Fixes: 94a69db2367e ("xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS")
+> 
+> ...
+> 
+> > This is a false positive. If a node is getting reclaimed, it cannot be
+> > the target of a flistxattr operation. Commit 6dcde60efd94 ("xfs: more
+> > lockdep whackamole with kmem_alloc*") has the similar root cause.
+> > 
+> > Fix the issue by adding __GFP_NOLOCKDEP in order to shut up lockdep.
+> > 
+> > Signed-off-by: Jiwei Sun <sunjw10@lenovo.com>
+> > Suggested-by: Adrian Huang <ahuang12@lenovo.com>
+> > ---
+> >  fs/xfs/xfs_attr_list.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> > index 5c947e5ce8b8..506ade0befa4 100644
+> > --- a/fs/xfs/xfs_attr_list.c
+> > +++ b/fs/xfs/xfs_attr_list.c
+> > @@ -114,7 +114,8 @@ xfs_attr_shortform_list(
+> >  	 * It didn't all fit, so we have to sort everything on hashval.
+> >  	 */
+> >  	sbsize = sf->count * sizeof(*sbuf);
+> > -	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
+> > +	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL |
+> > +			     __GFP_NOLOCKDEP);
+> 
+> Minor nitpick, style-wise we seem to do:
+> 
+>         sbp = sbuf = kmalloc(sbsize,
+>                         GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+> 
+> in most other places, and not split the flags onto 2 lines, since you need
+> to add a line anyway.
+> 
+> Otherwise,
+> 
+> Acked-by: Eric Sandeen <sandeen@redhat.com>
 
-This looks like it was resolved by 6fe60465e1d5 - stack_depot_save_flags was
-losing __GFP_NOLOCKDEP
+Hey, could you all please read the list before sending duplicate
+patches?
 
-#syz fix stackdepot: respect __GFP_NOLOCKDEP allocation flag
+https://lore.kernel.org/linux-xfs/20240622082631.2661148-1-leo.lilong@huawei.com/
 
-(does this make syzbot re-test?)
+--D
 
-> ======================================================
-> WARNING: possible circular locking dependency detected
-> 6.9.0-rc7-syzkaller #0 Not tainted
-> ------------------------------------------------------
-> kswapd0/89 is trying to acquire lock:
-> ffff8880540b9858
->  (&xfs_nondir_ilock_class#3){++++}-{3:3}, at: xfs_can_free_eofblocks+0x645/0x910 fs/xfs/xfs_bmap_util.c:555
-> 
-> but task is already holding lock:
-> ffffffff8e42a780 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6782 [inline]
-> ffffffff8e42a780 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbe8/0x38a0 mm/vmscan.c:7164
-> 
-> which lock already depends on the new lock.
+> >  	/*
+> >  	 * Scan the attribute list for the rest of the entries, storing
 > 
 > 
-> the existing dependency chain (in reverse order) is:
-> 
-> -> #1 (fs_reclaim){+.+.}-{0:0}:
->        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
->        __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
->        fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
->        might_alloc include/linux/sched/mm.h:312 [inline]
->        slab_pre_alloc_hook mm/slub.c:3746 [inline]
->        slab_alloc_node mm/slub.c:3827 [inline]
->        kmalloc_trace+0x47/0x360 mm/slub.c:3992
->        kmalloc include/linux/slab.h:628 [inline]
->        add_stack_record_to_list mm/page_owner.c:177 [inline]
->        inc_stack_record_count mm/page_owner.c:219 [inline]
->        __set_page_owner+0x561/0x810 mm/page_owner.c:334
->        set_page_owner include/linux/page_owner.h:32 [inline]
->        post_alloc_hook+0x1ea/0x210 mm/page_alloc.c:1534
->        prep_new_page mm/page_alloc.c:1541 [inline]
->        get_page_from_freelist+0x3410/0x35b0 mm/page_alloc.c:3317
->        __alloc_pages+0x256/0x6c0 mm/page_alloc.c:4575
->        alloc_pages_mpol+0x3e8/0x680 mm/mempolicy.c:2264
->        stack_depot_save_flags+0x666/0x830 lib/stackdepot.c:635
->        kasan_save_stack mm/kasan/common.c:48 [inline]
->        kasan_save_track+0x51/0x80 mm/kasan/common.c:68
->        poison_kmalloc_redzone mm/kasan/common.c:370 [inline]
->        __kasan_kmalloc+0x98/0xb0 mm/kasan/common.c:387
->        kasan_kmalloc include/linux/kasan.h:211 [inline]
->        kmalloc_trace+0x1db/0x360 mm/slub.c:3997
->        kmalloc include/linux/slab.h:628 [inline]
->        kzalloc include/linux/slab.h:749 [inline]
->        xfs_iext_alloc_node fs/xfs/libxfs/xfs_iext_tree.c:401 [inline]
->        xfs_iext_alloc_root fs/xfs/libxfs/xfs_iext_tree.c:593 [inline]
->        xfs_iext_insert_raw+0x206/0x23d0 fs/xfs/libxfs/xfs_iext_tree.c:645
->        xfs_iext_insert+0x38/0x250 fs/xfs/libxfs/xfs_iext_tree.c:684
->        xfs_bmap_add_extent_hole_delay+0x573/0xc20 fs/xfs/libxfs/xfs_bmap.c:2686
->        xfs_bmapi_reserve_delalloc+0x897/0x9b0 fs/xfs/libxfs/xfs_bmap.c:4128
->        xfs_buffered_write_iomap_begin+0x1243/0x1b40 fs/xfs/xfs_iomap.c:1130
->        iomap_iter+0x693/0xf60 fs/iomap/iter.c:91
->        iomap_zero_range+0x16e/0x6e0 fs/iomap/buffered-io.c:1426
->        xfs_setattr_size+0x384/0xc80 fs/xfs/xfs_iops.c:858
->        xfs_vn_setattr+0x25d/0x320 fs/xfs/xfs_iops.c:1020
->        notify_change+0xb9f/0xe70 fs/attr.c:497
->        do_truncate fs/open.c:65 [inline]
->        do_ftruncate+0x46b/0x590 fs/open.c:181
->        do_sys_ftruncate fs/open.c:199 [inline]
->        __do_sys_ftruncate fs/open.c:207 [inline]
->        __se_sys_ftruncate fs/open.c:205 [inline]
->        __x64_sys_ftruncate+0x95/0xf0 fs/open.c:205
->        do_syscall_x64 arch/x86/entry/common.c:52 [inline]
->        do_syscall_64+0xf5/0x240 arch/x86/entry/common.c:83
->        entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> 
-> -> #0 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
->        check_prev_add kernel/locking/lockdep.c:3134 [inline]
->        check_prevs_add kernel/locking/lockdep.c:3253 [inline]
->        validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
->        __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
->        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
->        down_read_nested+0xb5/0xa50 kernel/locking/rwsem.c:1651
->        xfs_can_free_eofblocks+0x645/0x910 fs/xfs/xfs_bmap_util.c:555
->        xfs_inode_mark_reclaimable+0x1bb/0xf60 fs/xfs/xfs_icache.c:2149
->        destroy_inode fs/inode.c:311 [inline]
->        evict+0x54b/0x630 fs/inode.c:682
->        dispose_list fs/inode.c:700 [inline]
->        prune_icache_sb+0x239/0x2f0 fs/inode.c:885
->        super_cache_scan+0x38c/0x4b0 fs/super.c:223
->        do_shrink_slab+0x707/0x1160 mm/shrinker.c:435
->        shrink_slab_memcg mm/shrinker.c:548 [inline]
->        shrink_slab+0x883/0x14d0 mm/shrinker.c:626
->        shrink_one+0x453/0x880 mm/vmscan.c:4774
->        shrink_many mm/vmscan.c:4835 [inline]
->        lru_gen_shrink_node mm/vmscan.c:4935 [inline]
->        shrink_node+0x3b17/0x4310 mm/vmscan.c:5894
->        kswapd_shrink_node mm/vmscan.c:6704 [inline]
->        balance_pgdat mm/vmscan.c:6895 [inline]
->        kswapd+0x1882/0x38a0 mm/vmscan.c:7164
->        kthread+0x2f2/0x390 kernel/kthread.c:388
->        ret_from_fork+0x4d/0x80 arch/x86/kernel/process.c:147
->        ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-> 
-> other info that might help us debug this:
-> 
->  Possible unsafe locking scenario:
-> 
->        CPU0                    CPU1
->        ----                    ----
->   lock(fs_reclaim);
->                                lock(&xfs_nondir_ilock_class#3);
->                                lock(fs_reclaim);
->   rlock(&xfs_nondir_ilock_class#3);
-> 
->  *** DEADLOCK ***
-> 
-> 2 locks held by kswapd0/89:
->  #0: ffffffff8e42a780 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6782 [inline]
->  #0: ffffffff8e42a780 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbe8/0x38a0 mm/vmscan.c:7164
->  #1: ffff8880796d20e0 (&type->s_umount_key#66){++++}-{3:3}, at: super_trylock_shared fs/super.c:561 [inline]
->  #1: ffff8880796d20e0 (&type->s_umount_key#66){++++}-{3:3}, at: super_cache_scan+0x94/0x4b0 fs/super.c:196
-> 
-> stack backtrace:
-> CPU: 0 PID: 89 Comm: kswapd0 Not tainted 6.9.0-rc7-syzkaller #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
-> Call Trace:
->  <TASK>
->  __dump_stack lib/dump_stack.c:88 [inline]
->  dump_stack_lvl+0x241/0x360 lib/dump_stack.c:114
->  check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2187
->  check_prev_add kernel/locking/lockdep.c:3134 [inline]
->  check_prevs_add kernel/locking/lockdep.c:3253 [inline]
->  validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
->  __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
->  lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
->  down_read_nested+0xb5/0xa50 kernel/locking/rwsem.c:1651
->  xfs_can_free_eofblocks+0x645/0x910 fs/xfs/xfs_bmap_util.c:555
->  xfs_inode_mark_reclaimable+0x1bb/0xf60 fs/xfs/xfs_icache.c:2149
->  destroy_inode fs/inode.c:311 [inline]
->  evict+0x54b/0x630 fs/inode.c:682
->  dispose_list fs/inode.c:700 [inline]
->  prune_icache_sb+0x239/0x2f0 fs/inode.c:885
->  super_cache_scan+0x38c/0x4b0 fs/super.c:223
->  do_shrink_slab+0x707/0x1160 mm/shrinker.c:435
->  shrink_slab_memcg mm/shrinker.c:548 [inline]
->  shrink_slab+0x883/0x14d0 mm/shrinker.c:626
->  shrink_one+0x453/0x880 mm/vmscan.c:4774
->  shrink_many mm/vmscan.c:4835 [inline]
->  lru_gen_shrink_node mm/vmscan.c:4935 [inline]
->  shrink_node+0x3b17/0x4310 mm/vmscan.c:5894
->  kswapd_shrink_node mm/vmscan.c:6704 [inline]
->  balance_pgdat mm/vmscan.c:6895 [inline]
->  kswapd+0x1882/0x38a0 mm/vmscan.c:7164
->  kthread+0x2f2/0x390 kernel/kthread.c:388
->  ret_from_fork+0x4d/0x80 arch/x86/kernel/process.c:147
->  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
->  </TASK>
-> 
-> 
-> ---
-> This report is generated by a bot. It may contain errors.
-> See https://goo.gl/tpsmEJ for more information about syzbot.
-> syzbot engineers can be reached at syzkaller@googlegroups.com.
-> 
-> syzbot will keep track of this issue. See:
-> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-> 
-> If the report is already addressed, let syzbot know by replying with:
-> #syz fix: exact-commit-title
-> 
-> If you want to overwrite report's subsystems, reply with:
-> #syz set subsystems: new-subsystem
-> (See the list of subsystem names on the web dashboard)
-> 
-> If the report is a duplicate of another one, reply with:
-> #syz dup: exact-subject-of-another-report
-> 
-> If you want to undo deduplication, reply with:
-> #syz undup
-> 
-
