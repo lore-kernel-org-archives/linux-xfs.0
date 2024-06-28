@@ -1,173 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 715441514DD
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2024 12:21:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1C67157E91;
+	Fri, 28 Jun 2024 16:18:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719577293; cv=none; b=A9NJKAm2yNO+0tZb71S0cAv0H5JAobqpDfi04R+fK7ZunGIMzh7rUmoFXo3KCtRjvCSWcwenjyR86pkuCS+Emx0cXdn6GocJejXpEVQfzcAWI7HeFkBWmD7vd9D4Ot0J4Fe0DZwaFpw0ZiPTifwjVprK7MeAg735v5Ld5Aes+vQ=
+	t=1719591538; cv=none; b=fAccDhU4eVTicEfOgG9Oxi85R17Jwyp+mFVImQ/4rJxTq6/zty4WzOWbDW+vkwEE8n+A6jGb6CcygwyLaGGCTSACIuWPB5dPiPxnZQGatpIg7kI0xD5zO0YVGyWx+tN7awJO3tEhWX8DUUeJdI+kjVkZCfI3mS2bvWIeAEBdL5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719577293; c=relaxed/simple;
-	bh=l3UuQ/Xs7mMBfFP6McRp76NZQKDtnUD27WD2nH+H6zA=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=gGGd6DYtxpcInUA5yke4ER86ICokVzaHsIREp1JuKv6afs+exqorteDIBuW29ndjN3y8KnCTKLj8l82zavn6qlYFGR9OTIHl82EsVWCqAOloCgWJMre3o1GkXrsZvf8wVSjZ/VkY30b1hIfRiyMsJTaV0XD/Q74h/iDM62HnOH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iel0dnSr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719591538; c=relaxed/simple;
+	bh=vhbHqn0waWFUdaNqCqmKkeJzJtjPhQtwtdAd8Y6Wwe0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=mBxgmtuy1yTHoQW+84IhsvUojhXecOaP2ekdytr3SSYzttjfdTjn2gJPJkZoitjkJZmQ61VTxil0UD8kN5DFFFgObMC6A8tRpuUhMiGpjCxogsbif8gYzEWzAyX09A7kGqssdRnOy3LF/cf62Hhw8ZVbONfJfXPsJqVU6FuCLoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FC9aAub2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iel0dnSr"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D9C39C4AF0D
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2024 12:21:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FC9aAub2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2EC3C116B1;
+	Fri, 28 Jun 2024 16:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719577291;
-	bh=l3UuQ/Xs7mMBfFP6McRp76NZQKDtnUD27WD2nH+H6zA=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=iel0dnSrQ8xA4aluWBNBCTod5chGd/VuRJUUrO23RC9xMKECjlSIU65XLK4I3Aim3
-	 nc+DyNPABGyg4Oc/MmXr0aX2EMBAWmuiR28qcm5svHGi0hXeOXaDtJeIRSAPQQiRNm
-	 7jAhoc0qyX6xADgY3NcXIzixnDPixTKlXgtzkXnhFBxCXUXGgFGqdwq4055rqdvMd4
-	 dwZBJ1PESxERct6Ang1iYQR6VvNla+j+Bx4IQIveCQ3rk4MSDTi/w1xr9PdxdcEtXN
-	 MjpC6BSUKFYHSAxKADgSLWej5aZODCtmuhRh6r7gWtIo1WDbQTL/oxKCpaWvshy5Z2
-	 ZMltenPfOe04A==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id D16A8C53B73; Fri, 28 Jun 2024 12:21:31 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
+	s=k20201202; t=1719591538;
+	bh=vhbHqn0waWFUdaNqCqmKkeJzJtjPhQtwtdAd8Y6Wwe0=;
+	h=Date:From:To:Cc:Subject:From;
+	b=FC9aAub2yVhFBPeNJyB2zdaJb0aGk1GmA6cd41+vXKxLnyp+h2uET/1orQ5glehkQ
+	 b+Ya5wPBLhHIOke5YW/qyNvT4CYmzWhhjRxSDZCC83CEiAK3bFGm2vtWrNPJMihVge
+	 FmVdTlfndZVvZNOFYic+17AEGuYWjY1/BBxnFNzsmylcwtNd/WfiQWfLinFTbASTK3
+	 yFus9OwmmLuhVjULnkAAgeQQcTLSowYWeMT4I2U4lkOz2m0vA7prvgEUitouiFtaxQ
+	 o66ep4kP60oNCdW7vqvrfEAGjjvAk2jOhzqB+7yxK9813xFWiJF+BInQJ37lhBkvLR
+	 S1UVHSLSn/LyA==
+Date: Fri, 28 Jun 2024 12:18:56 -0400
+From: Mike Snitzer <snitzer@kernel.org>
 To: linux-xfs@vger.kernel.org
-Subject: [Bug 215851] gcc 12.0.1 LATEST: -Wdangling-pointer= triggers
-Date: Fri, 28 Jun 2024 12:21:31 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: laraditta691@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-215851-201763-IbijtebOTT@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215851-201763@https.bugzilla.kernel.org/>
-References: <bug-215851-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Cc: linux-nfs@vger.kernel.org
+Subject: [RFC PATCH] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
+Message-ID: <Zn7icFF_NxqkoOHR@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215851
+I'm developing an NFS feature called "localio" that bypasses the
+network, if both the client and server are on the same host, see:
+https://git.kernel.org/pub/scm/linux/kernel/git/snitzer/linux.git/log/?h=nfs-localio-for-6.11
 
-LinnDa (laraditta691@gmail.com) changed:
+Because NFS's nfsiod_workqueue enables WQ_MEM_RECLAIM, writeback will
+call into NFS and if localio is enabled the NFS client will call
+directly into xfs_file_write_iter, this causes the following
+backtrace:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |laraditta691@gmail.com
+00573 workqueue: WQ_MEM_RECLAIM writeback:wb_workfn is flushing !WQ_MEM_RECLAIM xfs-sync/vdc:xfs_flush_inodes_worker
+00573 WARNING: CPU: 6 PID: 8525 at kernel/workqueue.c:3706 check_flush_dependency+0x2a4/0x328
+00573 Modules linked in:
+00573 CPU: 6 PID: 8525 Comm: kworker/u71:5 Not tainted 6.10.0-rc3-ktest-00032-g2b0a133403ab #18502
+00573 Hardware name: linux,dummy-virt (DT)
+00573 Workqueue: writeback wb_workfn (flush-0:33)
+00573 pstate: 400010c5 (nZcv daIF -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+0573 pc : check_flush_dependency+0x2a4/0x328
+00573 lr : check_flush_dependency+0x2a4/0x328
+00573 sp : ffff0000c5f06bb0
+00573 x29: ffff0000c5f06bb0 x28: ffff0000c998a908 x27: 1fffe00019331521
+00573 x26: ffff0000d0620900 x25: ffff0000c5f06ca0 x24: ffff8000828848c0
+00573 x23: 1fffe00018be0d8e x22: ffff0000c1210000 x21: ffff0000c75fde00
+00573 x20: ffff800080bfd258 x19: ffff0000cad63400 x18: ffff0000cd3a4810
+00573 x17: 0000000000000000 x16: 0000000000000000 x15: ffff800080508d98
+00573 x14: 0000000000000000 x13: 204d49414c434552 x12: 1fffe0001b6eeab2
+00573 x11: ffff60001b6eeab2 x10: dfff800000000000 x9 : ffff60001b6eeab3
+00573 x8 : 0000000000000001 x7 : 00009fffe491154e x6 : ffff0000db775593
+00573 x5 : ffff0000db775590 x4 : ffff0000db775590 x3 : 0000000000000000
+00573 x2 : 0000000000000027 x1 : ffff600018be0d62 x0 : dfff800000000000
+00573 Call trace:
+00573  check_flush_dependency+0x2a4/0x328
+00573  __flush_work+0x184/0x5c8
+00573  flush_work+0x18/0x28
+00573  xfs_flush_inodes+0x68/0x88
+00573  xfs_file_buffered_write+0x128/0x6f0
+00573  xfs_file_write_iter+0x358/0x448
+00573  nfs_local_doio+0x854/0x1568
+00573  nfs_initiate_pgio+0x214/0x418
+00573  nfs_generic_pg_pgios+0x304/0x480
+00573  nfs_pageio_doio+0xe8/0x240
+00573  nfs_pageio_complete+0x160/0x480
+00573  nfs_writepages+0x300/0x4f0
+00573  do_writepages+0x12c/0x4a0
+00573  __writeback_single_inode+0xd4/0xa68
+00573  writeback_sb_inodes+0x470/0xcb0
+00573  __writeback_inodes_wb+0xb0/0x1d0
+00573  wb_writeback+0x594/0x808
+00573  wb_workfn+0x5e8/0x9e0
+00573  process_scheduled_works+0x53c/0xd90
+00573  worker_thread+0x370/0x8c8
+00573  kthread+0x258/0x2e8
+00573  ret_from_fork+0x10/0x20
 
---- Comment #3 from LinnDa (laraditta691@gmail.com) ---
-(In reply to Dave Chinner from comment #1)
-> On Mon, Apr 18, 2022 at 08:02:41AM +0000, bugzilla-daemon@kernel.org wrot=
-e:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D215851
-> >=20
-> >             Bug ID: 215851
-> >            Summary: gcc 12.0.1 LATEST: -Wdangling-pointer=3D triggers
-> >            Product: File System
-> >            Version: 2.5
-> >     Kernel Version: 5.17.3
-> >           Hardware: All
-> >                 OS: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: XFS
-> >           Assignee: https://myteamz.co.uk/linnworks/
-> >           Reporter: Erich.Loew@outlook.com
-> >         Regression: No
-> >=20
-> > Date:    20220415
-> > Kernel:  5.17.3
-> > Compiler gcc.12.0.1
-> > File:    linux-5.17.3/fs/xfs/libxfs/xfs_attr_remote.c
-> > Line:    141
-> > Issue:   Linux kernel compiling enables all warnings, this has consequn=
-ces:
-> >          -Wdangling-pointer=3D triggers because assignment of an address
-> >          pointing
-> >          to something inside of the local stack=20
-> >          of a function/method is returned to the caller.
-> >          Doing such things is tricky but legal, however gcc 12.0.1
-> complains
-> >          deeply on this.
-> >          Mitigation: disabling with pragmas temporarily inlined the
-> compiler
-> >          triggered advises.
-> > Interesting: clang-15.0.0 does not complain.
-> > Remark: this occurence is reprsentative; the compiler warns at many pla=
-ces
->=20
-> The actual warning message is this:
->=20
-> fs/xfs/libxfs/xfs_attr_remote.c: In function =E2=80=98__xfs_attr3_rmt_rea=
-d_verify=E2=80=99:
-> fs/xfs/libxfs/xfs_attr_remote.c:140:35: warning: storing the address of
-> local variable =E2=80=98__here=E2=80=99 in =E2=80=98*failaddr=E2=80=99 [-=
-Wdangling-pointer=3D]
->   140 |                         *failaddr =3D __this_address;
-> In file included from ./fs/xfs/xfs.h:22,
->                  from fs/xfs/libxfs/xfs_attr_remote.c:7:
-> ./fs/xfs/xfs_linux.h:133:46: note: =E2=80=98__here=E2=80=99 declared here
->   133 | #define __this_address  ({ __label__ __here; __here: barrier();
-> &&__here; })
->       |                                              ^~~~~~
-> fs/xfs/libxfs/xfs_attr_remote.c:140:37: note: in expansion of macro
-> =E2=80=98__this_address=E2=80=99
->   140 |                         *failaddr =3D __this_address;
->       |                                     ^~~~~~~~~~~~~~
-> ./fs/xfs/xfs_linux.h:133:46: note: =E2=80=98failaddr=E2=80=99 declared he=
-re
->   133 | #define __this_address  ({ __label__ __here; __here: barrier();
-> &&__here; })
->       |                                              ^~~~~~
-> fs/xfs/libxfs/xfs_attr_remote.c:140:37: note: in expansion of macro
-> =E2=80=98__this_address=E2=80=99
->   140 |                         *failaddr =3D __this_address;
->       |                                     ^~~~~~~~~~~~~~
->=20
-> I think this is a compiler bug. __here is declared as a *label*, not
-> a local variable:
->=20
-> #define __this_address ({ __label__ __here; __here: barrier(); &&__here; =
-})
->=20
-> and it is valid to return the address of a label in the code as the
-> address must be a constant instruction address and not a local stack
-> variable. If the compiler is putting *executable code* on the stack,
-> we've got bigger problems...
->=20
-> We use __this_address extensively in XFS (indeed, there
-> are 8 separate uses in __xfs_attr3_rmt_read_verify() and
-> xfs_attr3_rmt_verify() alone) and it is the same as _THIS_IP_ used
-> across the rest of the kernel for the same purpose. The above is the
-> only warning that gets generated for any of (the hundreds of) sites
-> that use either _THIS_IP_ or __this_address is the only warning that
-> gets generated like this, it points to the problem being compiler
-> related, not an XFS problem.
->=20
-> Cheers,
->=20
-> Dave.
+Fix this by enabling WQ_MEM_RECLAIM on XFS's m_sync_workqueue.
 
-Does the gcc warns here?
+It could be this change is a non-starter due to WQ_MEM_RECLAIM no
+longer allowing m_sync_workqueue to be "sync"?  All comments and
+suggestions welcome!
 
---=20
-You may reply to this email to add a comment.
+Signed-off-by: Mike Snitzer <snitzer@kernel.org>
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 27e9f749c4c7..dbe6af00708b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -574,7 +574,8 @@ xfs_init_mount_workqueues(
+ 		goto out_destroy_blockgc;
+ 
+ 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s",
+-			XFS_WQFLAGS(WQ_FREEZABLE), 0, mp->m_super->s_id);
++			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
++			0, mp->m_super->s_id);
+ 	if (!mp->m_sync_workqueue)
+ 		goto out_destroy_inodegc;
+ 
