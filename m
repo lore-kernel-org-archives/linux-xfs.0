@@ -1,96 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 803AB2574F;
-	Sat, 29 Jun 2024 14:24:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B25C1EB2C;
+	Sat, 29 Jun 2024 16:31:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719671072; cv=none; b=m/30gA0xfx6eW73jHM1JK3qGfXgQyob3I0z4c9Pxq5Ar8+21npG6xo1sWmAiMtcVJ253/Zb10RaBposSLeUctD7ynQ3cnDtXPmcwufUKZ0nT+vN0+1g4/Kx4LZkCIp81ce6tO7kMQxyfCBjlyeZJNNqL4tOy62vRbguIPOSexso=
+	t=1719678662; cv=none; b=Q5k8mQeMUm2ticwfF8zPW2nBXsbZq0ayROxefwRuFEhp46ISnuOrh/9efIXsyH2AFc7wCD0B1QwoPrp+8HMqmoh5Lm5tSBMcGBvahnYe/KLho3JuHsH7dG5EN++02YWbiF11LHQ03lev4W3apoHEKlodutwIUIkHxpXqw2d1cyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719671072; c=relaxed/simple;
-	bh=GKP181QfnLc37jOb5dVzgW6gsfixgVBOW1/c/ngQOPY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UeMBm7snpLoOV54UBYsy/+1k7nXKo+1cmLIDNx2Q55pFE968Pgkwqm5Bu7vEwRyD1I0DfyX+0W67LviFR76+R/qgSvihvkILMeSoTCUAYwiekgJYn5GAqiINCcthRG1NEb3Ai3pjDKLqDN2QtJH6i7tqZvjamiYANZi0pH5ZlpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gfITD69x; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719678662; c=relaxed/simple;
+	bh=KqvoRw6McuYplQl+xWwA/O9yNyYsG2lmWyoa2c29pBA=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=BySeVrorkbgmZ/a3QO2vlTS/gCsUM+1cBSqdcQSWIHIhQxYltRVcQEEYkvasQJ4059alSKw3PLX54CTcCk385ZR34xP8+/LQ3GuTVjzNhVJgQ2MJbm22loY0/1n5Mv9OWVKy5o2qLgOHhSRHyktMQdXFsGOQzPyAOAwt0r9Xumw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jDGK/5FB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gfITD69x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652C0C2BBFC;
-	Sat, 29 Jun 2024 14:24:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jDGK/5FB"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E872BC2BBFC;
+	Sat, 29 Jun 2024 16:31:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719671072;
-	bh=GKP181QfnLc37jOb5dVzgW6gsfixgVBOW1/c/ngQOPY=;
-	h=From:To:Cc:Subject:Date:From;
-	b=gfITD69xdkRVp8FwTEGph4JDR4neNMgKfYDDM+so+snZVhoHO4P9vvwERwWunO2Dw
-	 iGE27PEvgYsvb2YYjnMe6wwKQqLg2o9CG+xs5yUp9QCG0zFYxzKGK3dhthI1p0szCR
-	 bgHgeLKh3hGTZg540vDlQ31ZCh2iazXnCm+S/S9NsiLC45IHwhSaHe6EFBKPOyHgSZ
-	 r0orBn3+IDiYIi6rZuqqMPpb1JQmC7yw3RKJfRClLRqH6EwtckdiQPJFWJUYss4QdS
-	 1u2023Q6SQCE9VVwk+X6szDc2frJzZtpTN4yEw4+C8kBh0qUS/aoxvtp1Sie7bnxiW
-	 SeAjCnq8r+WYA==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: chandanbabu@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: bug fixes for 6.10
-Date: Sat, 29 Jun 2024 19:40:16 +0530
-Message-ID: <8734ov3jz8.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=k20201202; t=1719678661;
+	bh=KqvoRw6McuYplQl+xWwA/O9yNyYsG2lmWyoa2c29pBA=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=jDGK/5FBwYlsg9n0pvMJ9ywW+x1QO1H1jQZgpy0+BBCloYAwlachGwA9u1ka8nWZF
+	 NLvNAK9AMVS6fOwOrkNAY4+RyedX3XFQmrmWFV+aRMop6AQeDvJHWneUQvT55Aww0x
+	 LaWPE9bmkOyHcZ8MeNSlplH4Y7x2sYHcoVtwr52gZpmMCAE1mdAj8NoxqLzyyeE5h3
+	 kQVKQLv2bHiF5vjDOngmFzjJKdDVS36j6hCdeLMMmazWJoJc+fyAliS30WzDtwbk3o
+	 Xr4OeZ4gZwiehEzI0IgnFg9Xt7vdiytIQpVqZ0bIE9yIHBaCiSVw5+OcOrijSYFu87
+	 kkmBlDkGV1NfQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id D6ACFC433A2;
+	Sat, 29 Jun 2024 16:31:01 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 6.10
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <8734ov3jz8.fsf@debian-BULLSEYE-live-builder-AMD64>
+References: <8734ov3jz8.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <8734ov3jz8.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.10-fixes-5
+X-PR-Tracked-Commit-Id: 673cd885bbbfd873aa6983ce2363a813b7826425
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 27b31deb900dfcec60820d8d3e48f6de9ae9a18e
+Message-Id: <171967866186.13735.18073058379173068862.pr-tracker-bot@kernel.org>
+Date: Sat, 29 Jun 2024 16:31:01 +0000
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: torvalds@linux-foundation.org, chandanbabu@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Hi Linus,
+The pull request you sent on Sat, 29 Jun 2024 19:40:16 +0530:
 
-Please pull this branch which contains XFS bug fixes for 6.10-rc6. A brief
-description of the fixes is provided below.
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.10-fixes-5
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any problems.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/27b31deb900dfcec60820d8d3e48f6de9ae9a18e
 
-The following changes since commit f2661062f16b2de5d7b6a5c42a9a5c96326b8454:
+Thank you!
 
-  Linux 6.10-rc5 (2024-06-23 17:08:54 -0400)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.10-fixes-5
-
-for you to fetch changes up to 673cd885bbbfd873aa6983ce2363a813b7826425:
-
-  xfs: honor init_xattrs in xfs_init_new_inode for !ATTR fs (2024-06-26 14:29:25 +0530)
-
-----------------------------------------------------------------
-Bug fixes for 6.10-rc6:
-
-  * Always free only post-EOF delayed allocations for files with the
-    XFS_DIFLAG_PREALLOC or APPEND flags set.
-  * Do not align cow fork delalloc to cowextsz hint when running low on space.
-  * Allow zero-size symlinks and directories as long as the link count is
-    zero.
-  * Change XFS_IOC_EXCHANGE_RANGE to be a _IOW only ioctl. This was ioctl was
-    introduced during v6.10 developement cycle.
-  * xfs_init_new_inode() now creates an attribute fork on a newly created
-    inode even if ATTR feature flag is not enabled.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      xfs: fix freeing speculative preallocations for preallocated files
-
-Darrick J. Wong (4):
-      xfs: restrict when we try to align cow fork delalloc to cowextsz hints
-      xfs: allow unlinked symlinks and dirs with zero size
-      xfs: fix direction in XFS_IOC_EXCHANGE_RANGE
-      xfs: honor init_xattrs in xfs_init_new_inode for !ATTR fs
-
- fs/xfs/libxfs/xfs_bmap.c      | 31 +++++++++++++++++++++++++++----
- fs/xfs/libxfs/xfs_fs.h        |  2 +-
- fs/xfs/libxfs/xfs_inode_buf.c | 23 ++++++++++++++++++-----
- fs/xfs/xfs_bmap_util.c        | 30 ++++++++++++++++++++++--------
- fs/xfs/xfs_bmap_util.h        |  2 +-
- fs/xfs/xfs_icache.c           |  2 +-
- fs/xfs/xfs_inode.c            | 24 +++++++++++++-----------
- fs/xfs/xfs_iomap.c            | 34 ++++++++++++----------------------
- 8 files changed, 95 insertions(+), 53 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
