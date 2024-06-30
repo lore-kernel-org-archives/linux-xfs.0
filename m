@@ -1,39 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E71082576F;
-	Sun, 30 Jun 2024 16:35:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008E226AC9
+	for <linux-xfs@vger.kernel.org>; Sun, 30 Jun 2024 23:46:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719765319; cv=none; b=dx+6+G5y3559fY1VHosJ6j6bZ06oL/j9vQvIJ9qvyTzzpmDzhrahqQW711ZynZQxYltMAiPu/WEbZsiyLJWsQAn+x4/LdQivGOHdYddnd+3uQe2EiMIeYIET2eM7AvBTttKZ1UzhL3mONFmTgtoJE0Z9xS8yN2qiMkC94juhY9A=
+	t=1719791204; cv=none; b=IDMbzrLUCNXqi6aG9ro4Tz4P+b3kp2DxAFIlVGSCHyPayWxI4Rv7+48X99v9i7ZQ7p8Fs9bT8FR7AXd4/uxGy6ctTFzpvp0y2HWbRLQ8+W6t1lkTJWfRIlaYTFx6PH9PbGge5mzaHMffeBetlTEEvJ5PT6nbAdIZFovgFx891ac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719765319; c=relaxed/simple;
-	bh=2bf++5UDQOoC0sEB+AovidW641I2CY7+1sDzoVvDMug=;
+	s=arc-20240116; t=1719791204; c=relaxed/simple;
+	bh=uFa3qZD+UxFsW343nUcGj9ThG75aYCoN4WVg+OLm6KA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DxxPEv7ZC4goyjIkBdm5YWb5wYp/F1bygrK9o27zSYppDIYNUFkp1Bz1BCy1x8iiWN4+z+cHHP2NGovQEVQtPYMK946wHmbbHsPnimR5kVMQUZfbHFDssuN6WdF1ey1XUU0Yre/VwMs+BUcAUKW7CBbaZ7PUzN3Us39J3PPKHco=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bAADRqYx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=SUi3yz3T9cywdoZ4f6VZgO23Gr0HCtw4rgyGzV1D7r2e7MKx27KGgw9bGr7VKoK0KI0Ccya9SMiHpXCgYArnv4OtkWI+vziUEfcWuwFKBuokw6O2UXI7Fsz38ZxShE68LeBgvDBorb+RLYMKZPvOHNkOtcpHaRe3nNK5fz0XLcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=H5etN6Cm; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bAADRqYx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EA06C2BD10;
-	Sun, 30 Jun 2024 16:35:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719765318;
-	bh=2bf++5UDQOoC0sEB+AovidW641I2CY7+1sDzoVvDMug=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=bAADRqYxAcftgoAjtvfat/sEsJHStnPGM3hf+YLiAkMDDfGTsIP6rqXmgSTHssQLB
-	 +rfrZJRGQx1c9x9n6UWE2DRrgG6AfW4frWKEFk4gu3KoX0HWmh9O8LTFUWH/L8xWeC
-	 +MzMSX4d2jOvTItPHqh2cys6+J8asUKEoFJdhXRTJcZ/krsH2Km+q5w4RYDnuo08Af
-	 lCrtKkeJ8BCewRXqxu828Y5y58jHODDK5kPSEan8mj5V5ys2IvFkYzGgXTqLqJPk89
-	 7zBaUnh43XmNG0MCmplR1dd3arcVuhIUvZEK5v0i6UiqHObHuhCP/SGmFPi0yfet7V
-	 cIuzKTcProPzQ==
-Date: Sun, 30 Jun 2024 12:35:17 -0400
-From: Mike Snitzer <snitzer@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>,
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="H5etN6Cm"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1f9ffd24262so11723815ad.0
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Jun 2024 16:46:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1719791201; x=1720396001; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=reQJU41ulBPt7YDuq8gy3UexUN01jSa9o9ncbG8kw30=;
+        b=H5etN6CmlVoRixQfGLWZWguAk909v2B7p49Y2Jmixvqoj+O9OJiVarv6GKeAmDgFo6
+         XOVugblzk/KuIo7ufUyA5DnxRY4lf2hC7lj+eIaaC2zwI4+OJUu4YzV3xLGUXc06bpAb
+         ft99/hdeaVhZ6mKlfebKgweoVVmLtOuqQ8tvAv9QgnJXLchgMdu6caxl33PwS0K5cGMK
+         Ww+TjK/89m667byETPceFAkyHLhn5JQ8LZwe0edLoVDTC2n8IzuMEM9Wy2f2+bSSFGBG
+         PoK9JW64UW6oigwiVjM+mV5D9Xt8lEWN018lpQQonoaX9dju+NiCo5BmEdPy1qRDnPSQ
+         P72Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719791201; x=1720396001;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=reQJU41ulBPt7YDuq8gy3UexUN01jSa9o9ncbG8kw30=;
+        b=haqlCjTwNErISGocWoux2Oc72OL3p0I/jgRxBLGvFpAObjnJ2J61diQA8M58xst2jU
+         rwHMO569m8nbDhhk7T2pCcaIZqmGQS0F0cBKA1ECDyEA8U71j+x6mJXyO6D8V8UIdRCO
+         Ts5vXVJhjFeUOcQAJELYqxn8FAO8lQkgxtsHARFEGo+VLcy3hVKCL43i4r46vcnRwy1V
+         HhqoMwgwLS8ifCJjnYYIxGJRv/UTEkYEEFNrXuI5f0dPV6s6cq4p/iG7BYiTtvWDwPoo
+         2XU/1Zfe3g28zVsnChux0W0cFSsHyeFf9QX4m3ybfg6srco2L/fBaRdoh+ldPbQc6k3b
+         dbMw==
+X-Gm-Message-State: AOJu0YwIPdOajU3a3zx/ZJM5e+nDu8U8rwDLNJ4KLDq96DoQ8UR9gNGC
+	1oO+Fv7FV62rfYHjBjwuAGLYPR+Zc6hvHjCZBcqbVnHMgPfHkP2mnTv60B0Yxzk=
+X-Google-Smtp-Source: AGHT+IGjoYmpCv/zLBG38MDTqxDDrkMQt6C79KjF41/PWFSsckdF2nw6eVT2nhda8ZvF/YMsxLjQUQ==
+X-Received: by 2002:a17:902:ce8e:b0:1f9:9768:ea88 with SMTP id d9443c01a7336-1fadbcb2001mr18342375ad.38.1719791199973;
+        Sun, 30 Jun 2024 16:46:39 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fac11d8ae4sm51596165ad.104.2024.06.30.16.46.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 30 Jun 2024 16:46:39 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sO4Fg-00HIRu-1B;
+	Mon, 01 Jul 2024 09:46:36 +1000
+Date: Mon, 1 Jul 2024 09:46:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Mike Snitzer <snitzer@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
 	linux-nfs@vger.kernel.org
-Subject: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
-Message-ID: <ZoGJRSe98wZFDK36@kernel.org>
+Subject: Re: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
+Message-ID: <ZoHuXHMEuMrem73H@dread.disaster.area>
 References: <Zn7icFF_NxqkoOHR@kernel.org>
+ <ZoGJRSe98wZFDK36@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,85 +71,158 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zn7icFF_NxqkoOHR@kernel.org>
+In-Reply-To: <ZoGJRSe98wZFDK36@kernel.org>
 
-The need for this fix was exposed while developing a new NFS feature
-called "localio" which bypasses the network, if both the client and
-server are on the same host, see:
-https://git.kernel.org/pub/scm/linux/kernel/git/snitzer/linux.git/log/?h=nfs-localio-for-6.11
+On Sun, Jun 30, 2024 at 12:35:17PM -0400, Mike Snitzer wrote:
+> The need for this fix was exposed while developing a new NFS feature
+> called "localio" which bypasses the network, if both the client and
+> server are on the same host, see:
+> https://git.kernel.org/pub/scm/linux/kernel/git/snitzer/linux.git/log/?h=nfs-localio-for-6.11
+> 
+> Because NFS's nfsiod_workqueue enables WQ_MEM_RECLAIM, writeback will
+> call into NFS and if localio is enabled the NFS client will call
+> directly into xfs_file_write_iter, this causes the following
+> backtrace when running xfstest generic/476 against NFS with localio:
 
-Because NFS's nfsiod_workqueue enables WQ_MEM_RECLAIM, writeback will
-call into NFS and if localio is enabled the NFS client will call
-directly into xfs_file_write_iter, this causes the following
-backtrace when running xfstest generic/476 against NFS with localio:
+Oh, that's nasty.
 
-  workqueue: WQ_MEM_RECLAIM writeback:wb_workfn is flushing !WQ_MEM_RECLAIM xfs-sync/vdc:xfs_flush_inodes_worker
-  WARNING: CPU: 6 PID: 8525 at kernel/workqueue.c:3706 check_flush_dependency+0x2a4/0x328
-  Modules linked in:
-  CPU: 6 PID: 8525 Comm: kworker/u71:5 Not tainted 6.10.0-rc3-ktest-00032-g2b0a133403ab #18502
-  Hardware name: linux,dummy-virt (DT)
-  Workqueue: writeback wb_workfn (flush-0:33)
-  pstate: 400010c5 (nZcv daIF -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
-  pc : check_flush_dependency+0x2a4/0x328
-  lr : check_flush_dependency+0x2a4/0x328
-  sp : ffff0000c5f06bb0
-  x29: ffff0000c5f06bb0 x28: ffff0000c998a908 x27: 1fffe00019331521
-  x26: ffff0000d0620900 x25: ffff0000c5f06ca0 x24: ffff8000828848c0
-  x23: 1fffe00018be0d8e x22: ffff0000c1210000 x21: ffff0000c75fde00
-  x20: ffff800080bfd258 x19: ffff0000cad63400 x18: ffff0000cd3a4810
-  x17: 0000000000000000 x16: 0000000000000000 x15: ffff800080508d98
-  x14: 0000000000000000 x13: 204d49414c434552 x12: 1fffe0001b6eeab2
-  x11: ffff60001b6eeab2 x10: dfff800000000000 x9 : ffff60001b6eeab3
-  x8 : 0000000000000001 x7 : 00009fffe491154e x6 : ffff0000db775593
-  x5 : ffff0000db775590 x4 : ffff0000db775590 x3 : 0000000000000000
-  x2 : 0000000000000027 x1 : ffff600018be0d62 x0 : dfff800000000000
-  Call trace:
-   check_flush_dependency+0x2a4/0x328
-   __flush_work+0x184/0x5c8
-   flush_work+0x18/0x28
-   xfs_flush_inodes+0x68/0x88
-   xfs_file_buffered_write+0x128/0x6f0
-   xfs_file_write_iter+0x358/0x448
-   nfs_local_doio+0x854/0x1568
-   nfs_initiate_pgio+0x214/0x418
-   nfs_generic_pg_pgios+0x304/0x480
-   nfs_pageio_doio+0xe8/0x240
-   nfs_pageio_complete+0x160/0x480
-   nfs_writepages+0x300/0x4f0
-   do_writepages+0x12c/0x4a0
-   __writeback_single_inode+0xd4/0xa68
-   writeback_sb_inodes+0x470/0xcb0
-   __writeback_inodes_wb+0xb0/0x1d0
-   wb_writeback+0x594/0x808
-   wb_workfn+0x5e8/0x9e0
-   process_scheduled_works+0x53c/0xd90
-   worker_thread+0x370/0x8c8
-   kthread+0x258/0x2e8
-   ret_from_fork+0x10/0x20
+We now have to change every path in every filesystem that NFS can
+call that might defer work to a workqueue.
 
-Fix this by enabling WQ_MEM_RECLAIM on XFS's m_sync_workqueue.
+IOWs, this makes WQ_MEM_RECLAIM pretty much mandatory for front end
+workqueues in the filesystem and block layers regardless of whether
+the filesystem or block layer path runs under memory reclaim context
+or not.
 
-Signed-off-by: Mike Snitzer <snitzer@kernel.org>
----
- fs/xfs/xfs_super.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+All WQ_MEM_RECLAIM does is create a rescuer thread at workqueue
+creation that is used as a "worker of last resort" when forking new
+worker threads fail due to ENOMEM. This prevents deadlocks when
+doing GFP_KERNEL allocations in workqueue context and potentially
+deadlocking because a GFP_KERNEL allocation is blocking waiting for
+this workqueue to allocate workers to make progress.
 
-[v2: dropped RFC, this fixes xfstests generic/476, resubmitting with more feeling]
+>   workqueue: WQ_MEM_RECLAIM writeback:wb_workfn is flushing !WQ_MEM_RECLAIM xfs-sync/vdc:xfs_flush_inodes_worker
+>   WARNING: CPU: 6 PID: 8525 at kernel/workqueue.c:3706 check_flush_dependency+0x2a4/0x328
+>   Modules linked in:
+>   CPU: 6 PID: 8525 Comm: kworker/u71:5 Not tainted 6.10.0-rc3-ktest-00032-g2b0a133403ab #18502
+>   Hardware name: linux,dummy-virt (DT)
+>   Workqueue: writeback wb_workfn (flush-0:33)
+>   pstate: 400010c5 (nZcv daIF -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+>   pc : check_flush_dependency+0x2a4/0x328
+>   lr : check_flush_dependency+0x2a4/0x328
+>   sp : ffff0000c5f06bb0
+>   x29: ffff0000c5f06bb0 x28: ffff0000c998a908 x27: 1fffe00019331521
+>   x26: ffff0000d0620900 x25: ffff0000c5f06ca0 x24: ffff8000828848c0
+>   x23: 1fffe00018be0d8e x22: ffff0000c1210000 x21: ffff0000c75fde00
+>   x20: ffff800080bfd258 x19: ffff0000cad63400 x18: ffff0000cd3a4810
+>   x17: 0000000000000000 x16: 0000000000000000 x15: ffff800080508d98
+>   x14: 0000000000000000 x13: 204d49414c434552 x12: 1fffe0001b6eeab2
+>   x11: ffff60001b6eeab2 x10: dfff800000000000 x9 : ffff60001b6eeab3
+>   x8 : 0000000000000001 x7 : 00009fffe491154e x6 : ffff0000db775593
+>   x5 : ffff0000db775590 x4 : ffff0000db775590 x3 : 0000000000000000
+>   x2 : 0000000000000027 x1 : ffff600018be0d62 x0 : dfff800000000000
+>   Call trace:
+>    check_flush_dependency+0x2a4/0x328
+>    __flush_work+0x184/0x5c8
+>    flush_work+0x18/0x28
+>    xfs_flush_inodes+0x68/0x88
+>    xfs_file_buffered_write+0x128/0x6f0
+>    xfs_file_write_iter+0x358/0x448
+>    nfs_local_doio+0x854/0x1568
+>    nfs_initiate_pgio+0x214/0x418
+>    nfs_generic_pg_pgios+0x304/0x480
+>    nfs_pageio_doio+0xe8/0x240
+>    nfs_pageio_complete+0x160/0x480
+>    nfs_writepages+0x300/0x4f0
+>    do_writepages+0x12c/0x4a0
+>    __writeback_single_inode+0xd4/0xa68
+>    writeback_sb_inodes+0x470/0xcb0
+>    __writeback_inodes_wb+0xb0/0x1d0
+>    wb_writeback+0x594/0x808
+>    wb_workfn+0x5e8/0x9e0
+>    process_scheduled_works+0x53c/0xd90
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 27e9f749c4c7..dbe6af00708b 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -574,7 +574,8 @@ xfs_init_mount_workqueues(
- 		goto out_destroy_blockgc;
- 
- 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s",
--			XFS_WQFLAGS(WQ_FREEZABLE), 0, mp->m_super->s_id);
-+			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
-+			0, mp->m_super->s_id);
- 	if (!mp->m_sync_workqueue)
- 		goto out_destroy_inodegc;
- 
+Ah, this is just the standard backing device flusher thread that is
+running. This is the back end of filesystem writeback, not the front
+end. It was never intended to be able to directly do loop back IO
+submission to the front end filesystem IO paths like this - they are
+very different contexts and have very different constraints.
+
+This particular situation occurs when XFS is near ENOSPC.  There's a
+very high probability it is going to fail these writes, and so it's
+doing slow path work that involves blocking and front end filesystem
+processing is allowed to block on just about anything in the
+filesystem as long as it can guarantee it won't deadlock.
+
+Fundamentally, doing IO submission in WQ_MEM_RECLAIM context changes
+the submission context for -all- filesystems, not just XFS.
+If we have to make this change to XFS, then -every-
+workqueue in XFS (not just this one) must be converted to
+WQ_MEM_RECLAIM, and then many workqueues in all the other
+filesystems will need to have the same changes made, too.
+
+That doesn't smell right to me.
+
+----
+
+So let's look at how back end filesystem IO currently submits new
+front end filesystem IO: the loop block device does this, and it
+uses workqueues to defer submitted IO so that the lower IO
+submission context can be directly controlled and made with the
+front end filesystem IO submission path behaviours.
+
+The loop device does not use rescuer threads - that's not needed
+when you have a queue based submission and just use the workqueues
+to run the queues until they are empty. So the loop device uses
+a standard unbound workqueue for it's IO submission path, and
+then when the work is running it sets the task flags to say "this is
+a nested IO worker thread" before it starts processing the
+submission queue and submitting new front end filesystem IO:
+
+static void loop_process_work(struct loop_worker *worker,
+                        struct list_head *cmd_list, struct loop_device *lo)
+{
+        int orig_flags = current->flags;
+        struct loop_cmd *cmd;
+
+        current->flags |= PF_LOCAL_THROTTLE | PF_MEMALLOC_NOIO;
+
+PF_LOCAL_THROTTLE prevents deadlocks in balance_dirty_pages() by
+lifting the dirty ratio for this thread a little, hence giving it
+priority over the upper filesystem. i.e. the upper filesystem will
+throttle incoming writes first, then the back end IO submission
+thread can still submit new front end IOs to the lower filesystem
+and they won't block in balance_dirty_pages() because the lower
+filesystem has a higher limit. hence the lower filesystem can always
+drain the dirty pages on the upper filesystem, and the system won't
+deadlock in balance_dirty_pages().
+
+Using WQ_MEM_RECLAIM context for IO submission does not address this
+deadlock.
+
+The PF_MEMALLOC_NOIO flag prevents the lower filesystem IO from
+causing memory reclaim to re-enter filesystems or IO devices and so
+prevents deadlocks from occuring where IO that cleans pages is
+waiting on IO to complete.
+
+Using WQ_MEM_RECLAIM context for IO submission does not address this
+deadlock either.
+
+IOWs, doing front IO submission like this from the BDI flusher
+thread is guaranteed to deadlock sooner or later, regardless of
+whether WQ_MEM_RECLAIM is set or not on workqueues that are flushed
+during IO submission. The WQ_MEM_RECLAIM warning is effectively your
+canary in the coal mine. And the canary just carked it.
+
+IMO, the only sane way to ensure this sort of nested "back-end page
+cleaning submits front-end IO filesystem IO" mechanism works is to
+do something similar to the loop device. You most definitely don't
+want to be doing buffered IO (double caching is almost always bad)
+and you want to be doing async direct IO so that the submission
+thread is not waiting on completion before the next IO is
+submitted.
+
+-Dave.
 -- 
-2.44.0
-
+Dave Chinner
+david@fromorbit.com
