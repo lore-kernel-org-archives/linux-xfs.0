@@ -1,49 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95FE374FA;
-	Sat, 29 Jun 2024 21:28:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E71082576F;
+	Sun, 30 Jun 2024 16:35:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719696533; cv=none; b=ZmmPN+DDth5AUs+dVA3Zy1q67VoTFIY6mqLgXd4HHgCf9QwTljhM2adx2t7uPxdkhpYtnUWkdtHxKWWaFrOykx9JocDNXDjfMO6yC+iLsXuFghAbFrIPrwa36gjMkhFPB0PLk1d6FneoxAVHahetaID1BAG+DVaoUWzZv2MbOMI=
+	t=1719765319; cv=none; b=dx+6+G5y3559fY1VHosJ6j6bZ06oL/j9vQvIJ9qvyTzzpmDzhrahqQW711ZynZQxYltMAiPu/WEbZsiyLJWsQAn+x4/LdQivGOHdYddnd+3uQe2EiMIeYIET2eM7AvBTttKZ1UzhL3mONFmTgtoJE0Z9xS8yN2qiMkC94juhY9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719696533; c=relaxed/simple;
-	bh=HtXt70x632jQVkvZVa5+viDAiEo/vLpbpyG46HWBjMw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=moRBVwhoy0/uBa4JVJZd8I9XbLatM31IwIrc27PcHBuyN3hDwIKJRgCQOLAhonAiTxO+IGqEjh9svFvk5m+cm64fLp1Xs971OLHI74lRWhy8YNv3UwfdSqLx1dmTK5eCOH1hkxTUgvb/9cRo0KxeiOhfuAfqHip7Xn5Tss+jTHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VnqFJx5g; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719765319; c=relaxed/simple;
+	bh=2bf++5UDQOoC0sEB+AovidW641I2CY7+1sDzoVvDMug=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DxxPEv7ZC4goyjIkBdm5YWb5wYp/F1bygrK9o27zSYppDIYNUFkp1Bz1BCy1x8iiWN4+z+cHHP2NGovQEVQtPYMK946wHmbbHsPnimR5kVMQUZfbHFDssuN6WdF1ey1XUU0Yre/VwMs+BUcAUKW7CBbaZ7PUzN3Us39J3PPKHco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bAADRqYx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VnqFJx5g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07CE9C2BBFC;
-	Sat, 29 Jun 2024 21:28:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bAADRqYx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EA06C2BD10;
+	Sun, 30 Jun 2024 16:35:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719696533;
-	bh=HtXt70x632jQVkvZVa5+viDAiEo/vLpbpyG46HWBjMw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=VnqFJx5ghuBk4Ih3CVJjWYCN0/ZeQE4bA9dgueRtqlOBnEj9bpHIblRRQS9pvQOq9
-	 e1eHFjHr5+rNv2dGIMrkk3IAZlqwsKX7p+rD1r1vmjoqPl5r2aEZGCjwsQpiy3/x6B
-	 ysyxPdOQzeo0ZX9VEzv6T9NJsfU8dcWOxpkFNYAWzY/LBU0zuLZ2xf3++9jGcptCb1
-	 Xp8Voz7uHR8O3pq3w/ncYUPGbyyGG5MBfyicJ+oqDiGO1BzaG9nKTI9pT87K9/QPad
-	 WGmS2gB4YANsUc/hqolrWiMuZCznLg98Ov/R1hZ8gbO540njo89EbUIDosTqYlZeua
-	 vy2FDJBTYP9+A==
-Date: Sat, 29 Jun 2024 16:28:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alistair Popple <apopple@nvidia.com>
-Cc: dan.j.williams@intel.com, vishal.l.verma@intel.com,
-	dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com,
-	jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
-	will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
-	dave.hansen@linux.intel.com, ira.weiny@intel.com,
-	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
-	linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	jhubbard@nvidia.com, hch@lst.de, david@fromorbit.com
-Subject: Re: [PATCH 02/13] pci/p2pdma: Don't initialise page refcount to one
-Message-ID: <20240629212851.GA1484889@bhelgaas>
+	s=k20201202; t=1719765318;
+	bh=2bf++5UDQOoC0sEB+AovidW641I2CY7+1sDzoVvDMug=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bAADRqYxAcftgoAjtvfat/sEsJHStnPGM3hf+YLiAkMDDfGTsIP6rqXmgSTHssQLB
+	 +rfrZJRGQx1c9x9n6UWE2DRrgG6AfW4frWKEFk4gu3KoX0HWmh9O8LTFUWH/L8xWeC
+	 +MzMSX4d2jOvTItPHqh2cys6+J8asUKEoFJdhXRTJcZ/krsH2Km+q5w4RYDnuo08Af
+	 lCrtKkeJ8BCewRXqxu828Y5y58jHODDK5kPSEan8mj5V5ys2IvFkYzGgXTqLqJPk89
+	 7zBaUnh43XmNG0MCmplR1dd3arcVuhIUvZEK5v0i6UiqHObHuhCP/SGmFPi0yfet7V
+	 cIuzKTcProPzQ==
+Date: Sun, 30 Jun 2024 12:35:17 -0400
+From: Mike Snitzer <snitzer@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>,
+	linux-nfs@vger.kernel.org
+Subject: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
+Message-ID: <ZoGJRSe98wZFDK36@kernel.org>
+References: <Zn7icFF_NxqkoOHR@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,90 +42,85 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c66cc5c5142813049ffdf9af75302f5064048241.1719386613.git-series.apopple@nvidia.com>
+In-Reply-To: <Zn7icFF_NxqkoOHR@kernel.org>
 
-On Thu, Jun 27, 2024 at 10:54:17AM +1000, Alistair Popple wrote:
-> The reference counts for ZONE_DEVICE private pages should be
-> initialised by the driver when the page is actually allocated by the
-> driver allocator, not when they are first created. This is currently
-> the case for MEMORY_DEVICE_PRIVATE and MEMORY_DEVICE_COHERENT pages
-> but not MEMORY_DEVICE_PCI_P2PDMA pages so fix that up.
+The need for this fix was exposed while developing a new NFS feature
+called "localio" which bypasses the network, if both the client and
+server are on the same host, see:
+https://git.kernel.org/pub/scm/linux/kernel/git/snitzer/linux.git/log/?h=nfs-localio-for-6.11
 
-If you tag the subject line with PCI, please run "git log --oneline
-drivers/pci/p2pdma.c" and make yours look like previous ones
-("PCI/P2PDMA").
+Because NFS's nfsiod_workqueue enables WQ_MEM_RECLAIM, writeback will
+call into NFS and if localio is enabled the NFS client will call
+directly into xfs_file_write_iter, this causes the following
+backtrace when running xfstest generic/476 against NFS with localio:
 
-Also recast it to say something semantically useful about what it
-*does*, not what it *doesn't* do.  Maybe something about initializing
-the refcount where the page is allocated?  Especially since the only
-p2pdma.c change here is to "set_page_count(..., 1)", which looks like
-exactly the opposite of "don't initialize refcount to one".
+  workqueue: WQ_MEM_RECLAIM writeback:wb_workfn is flushing !WQ_MEM_RECLAIM xfs-sync/vdc:xfs_flush_inodes_worker
+  WARNING: CPU: 6 PID: 8525 at kernel/workqueue.c:3706 check_flush_dependency+0x2a4/0x328
+  Modules linked in:
+  CPU: 6 PID: 8525 Comm: kworker/u71:5 Not tainted 6.10.0-rc3-ktest-00032-g2b0a133403ab #18502
+  Hardware name: linux,dummy-virt (DT)
+  Workqueue: writeback wb_workfn (flush-0:33)
+  pstate: 400010c5 (nZcv daIF -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+  pc : check_flush_dependency+0x2a4/0x328
+  lr : check_flush_dependency+0x2a4/0x328
+  sp : ffff0000c5f06bb0
+  x29: ffff0000c5f06bb0 x28: ffff0000c998a908 x27: 1fffe00019331521
+  x26: ffff0000d0620900 x25: ffff0000c5f06ca0 x24: ffff8000828848c0
+  x23: 1fffe00018be0d8e x22: ffff0000c1210000 x21: ffff0000c75fde00
+  x20: ffff800080bfd258 x19: ffff0000cad63400 x18: ffff0000cd3a4810
+  x17: 0000000000000000 x16: 0000000000000000 x15: ffff800080508d98
+  x14: 0000000000000000 x13: 204d49414c434552 x12: 1fffe0001b6eeab2
+  x11: ffff60001b6eeab2 x10: dfff800000000000 x9 : ffff60001b6eeab3
+  x8 : 0000000000000001 x7 : 00009fffe491154e x6 : ffff0000db775593
+  x5 : ffff0000db775590 x4 : ffff0000db775590 x3 : 0000000000000000
+  x2 : 0000000000000027 x1 : ffff600018be0d62 x0 : dfff800000000000
+  Call trace:
+   check_flush_dependency+0x2a4/0x328
+   __flush_work+0x184/0x5c8
+   flush_work+0x18/0x28
+   xfs_flush_inodes+0x68/0x88
+   xfs_file_buffered_write+0x128/0x6f0
+   xfs_file_write_iter+0x358/0x448
+   nfs_local_doio+0x854/0x1568
+   nfs_initiate_pgio+0x214/0x418
+   nfs_generic_pg_pgios+0x304/0x480
+   nfs_pageio_doio+0xe8/0x240
+   nfs_pageio_complete+0x160/0x480
+   nfs_writepages+0x300/0x4f0
+   do_writepages+0x12c/0x4a0
+   __writeback_single_inode+0xd4/0xa68
+   writeback_sb_inodes+0x470/0xcb0
+   __writeback_inodes_wb+0xb0/0x1d0
+   wb_writeback+0x594/0x808
+   wb_workfn+0x5e8/0x9e0
+   process_scheduled_works+0x53c/0xd90
+   worker_thread+0x370/0x8c8
+   kthread+0x258/0x2e8
+   ret_from_fork+0x10/0x20
 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> ---
->  drivers/pci/p2pdma.c | 2 ++
->  mm/memremap.c        | 8 ++++----
->  mm/mm_init.c         | 4 +++-
->  3 files changed, 9 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 4f47a13..1e9ea32 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -128,6 +128,8 @@ static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
->  		goto out;
->  	}
->  
-> +	set_page_count(virt_to_page(kaddr), 1);
-> +
->  	/*
->  	 * vm_insert_page() can sleep, so a reference is taken to mapping
->  	 * such that rcu_read_unlock() can be done before inserting the
-> diff --git a/mm/memremap.c b/mm/memremap.c
-> index 40d4547..caccbd8 100644
-> --- a/mm/memremap.c
-> +++ b/mm/memremap.c
-> @@ -488,15 +488,15 @@ void free_zone_device_folio(struct folio *folio)
->  	folio->mapping = NULL;
->  	folio->page.pgmap->ops->page_free(folio_page(folio, 0));
->  
-> -	if (folio->page.pgmap->type != MEMORY_DEVICE_PRIVATE &&
-> -	    folio->page.pgmap->type != MEMORY_DEVICE_COHERENT)
-> +	if (folio->page.pgmap->type == MEMORY_DEVICE_PRIVATE ||
-> +	    folio->page.pgmap->type == MEMORY_DEVICE_COHERENT)
-> +		put_dev_pagemap(folio->page.pgmap);
-> +	else if (folio->page.pgmap->type != MEMORY_DEVICE_PCI_P2PDMA)
->  		/*
->  		 * Reset the refcount to 1 to prepare for handing out the page
->  		 * again.
->  		 */
->  		folio_set_count(folio, 1);
-> -	else
-> -		put_dev_pagemap(folio->page.pgmap);
->  }
->  
->  void zone_device_page_init(struct page *page)
-> diff --git a/mm/mm_init.c b/mm/mm_init.c
-> index 3ec0493..b7e1599 100644
-> --- a/mm/mm_init.c
-> +++ b/mm/mm_init.c
-> @@ -6,6 +6,7 @@
->   * Author Mel Gorman <mel@csn.ul.ie>
->   *
->   */
-> +#include "linux/memremap.h"
->  #include <linux/kernel.h>
->  #include <linux/init.h>
->  #include <linux/kobject.h>
-> @@ -1014,7 +1015,8 @@ static void __ref __init_zone_device_page(struct page *page, unsigned long pfn,
->  	 * which will set the page count to 1 when allocating the page.
->  	 */
->  	if (pgmap->type == MEMORY_DEVICE_PRIVATE ||
-> -	    pgmap->type == MEMORY_DEVICE_COHERENT)
-> +	    pgmap->type == MEMORY_DEVICE_COHERENT ||
-> +	    pgmap->type == MEMORY_DEVICE_PCI_P2PDMA)
->  		set_page_count(page, 0);
->  }
->  
-> -- 
-> git-series 0.9.1
+Fix this by enabling WQ_MEM_RECLAIM on XFS's m_sync_workqueue.
+
+Signed-off-by: Mike Snitzer <snitzer@kernel.org>
+---
+ fs/xfs/xfs_super.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+[v2: dropped RFC, this fixes xfstests generic/476, resubmitting with more feeling]
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 27e9f749c4c7..dbe6af00708b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -574,7 +574,8 @@ xfs_init_mount_workqueues(
+ 		goto out_destroy_blockgc;
+ 
+ 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s",
+-			XFS_WQFLAGS(WQ_FREEZABLE), 0, mp->m_super->s_id);
++			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
++			0, mp->m_super->s_id);
+ 	if (!mp->m_sync_workqueue)
+ 		goto out_destroy_inodegc;
+ 
+-- 
+2.44.0
+
