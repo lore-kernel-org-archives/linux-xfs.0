@@ -1,43 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D10B62F29
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jul 2024 23:37:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 093212F29;
+	Mon,  1 Jul 2024 23:39:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719877070; cv=none; b=EInMeqeX+N/HLk9CN1Lbm+GkuUuoYnZXUgt0MJgWbDNejWm3jBrcqlf91bT3oEurkIeqzk84oWPbuYhE/ORepK+BpX9H/SRH2L+st46zSX5sq7f7RLY4pWFDCkz2mctHI1yPyeTpPKp6hoseISUlEnXYcmk/EcSfHZi1/7yUGd8=
+	t=1719877165; cv=none; b=doEQHgtAN3mbiPN4KgQUoRKQIyIsLmdtVPFvKuDJd/mov3uLG2+Ts4S2GvXBsf/JtqOx3A9xjk96J8vHXaq6Z2gtSFDVGHcgabii0+rjGHJf86up2DRdJ4WzS0Mw4AaZNz//LbdgNEiMFObfSDFJzpN1TDmdEuBCbg2UpzQIMxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719877070; c=relaxed/simple;
-	bh=7He6HTyS2IrRQ4w/F6K49rMGqQNJshY5m+mOTu8FOEs=;
+	s=arc-20240116; t=1719877165; c=relaxed/simple;
+	bh=Cv3qHuSFe/yVQvVRlGehTCuG/jEU/jarDzlAQwq1gJo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GLR0owhZfSB96lrvJ+XsRS7B7o4JmQekFV0RCguolkXAkageJg04V+cecyQ+K7buPrftCk3h6esfnDH0pcPwS8EuuLL/sMslKiO3oDFFBzGITK5xEbFoqG/iRY1Bx/M/Iq0d3OLxOsHhL5z1tdFcUjtPRDNYlFzrNSOJI8oreTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nBvhdQ1Z; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=o2JKU5CSIYnYyklfGUyZt+Dgwg3bi7ZXKalD1XyIDKMiNSMS/oVFvJ1A3Dz7K85YL7uPhIAKdHX2nKCb9hPFHvTzyD965YbwhG36HA/PGTyscsbWzBXETATHyo9f1jjvEbOharbz8NNYXH5j1A538cbuqK8aZkbOqvbXEeadY30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QOnc4HW5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nBvhdQ1Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CFC8C116B1;
-	Mon,  1 Jul 2024 23:37:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QOnc4HW5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A18CC116B1;
+	Mon,  1 Jul 2024 23:39:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719877070;
-	bh=7He6HTyS2IrRQ4w/F6K49rMGqQNJshY5m+mOTu8FOEs=;
+	s=k20201202; t=1719877164;
+	bh=Cv3qHuSFe/yVQvVRlGehTCuG/jEU/jarDzlAQwq1gJo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nBvhdQ1Z6EA3O+ech6QP7JnaCXw/NL/HbeWCK5YZm9eylXq9ukUd28Ez+klPksMlc
-	 lufpbROQRm9nIiliTr1DX6BDo2qgiqGH92c8sutRU/5o6ehx9QPs0qX4Hu4mpVLNxq
-	 oaKQh7FiZQ3EEZK8Lk6bxYG62kV5MC9W9hxVAmjoSlu9dzfLPiZ81U0z6UR4MQ7v0V
-	 KCPNlxJXhxWVu0AhrAJXNjljdvGp5A16pQOjvi//1eFTUZ+6fQWGg3f9rLRUi5XUzT
-	 NGelBqluvwzJI5defLTtGTf70Vwz2rL+FRmLMnspu6VNnY4G0ktfQjblvSafsnYDjo
-	 hQ+LxsOd1Uj2w==
-Date: Mon, 1 Jul 2024 16:37:49 -0700
+	b=QOnc4HW5e/Wt9HcHyUf/XtkqA49cKXve/njNs8bznoh3+Ck5rDoSQ0aXg2jN8EPPp
+	 6BupjT8Az/AvpKVt8H/DXrMor31cn3uTB0I+lylT8WY+iNaQLbbkr/bBaeNsC/Krs6
+	 pfX5aM/1wAV02IkyPmSKNLNm1LG/SJ7y9HIeSMTElJSb2tCVy81Wq8rNSLraeJ0mfD
+	 79jFcIoOrgZZlzJZdXL9DQJj1I6S2nAtV0nnFbjKNSB4yzXTMz+A3Rgz4sPsufRtq8
+	 3ohiDqiZ4gV7wuHjE5soapu6fsfQiGLN490krm3XW2Lzv9m8duYrFGW8yPhw0Jzrsr
+	 K3jUBIXrivWpg==
+Date: Mon, 1 Jul 2024 16:39:24 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: honor init_xattrs in xfs_init_new_inode for !attr
- && attr2 fs
-Message-ID: <20240701233749.GF612460@frogsfrogsfrogs>
-References: <20240618232112.GF103034@frogsfrogsfrogs>
- <20240619010622.GI103034@frogsfrogsfrogs>
- <ZoIF7dEBkd4YPlSh@dread.disaster.area>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: david@fromorbit.com, willy@infradead.org, chandan.babu@oracle.com,
+	brauner@kernel.org, akpm@linux-foundation.org,
+	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
+	linux-mm@kvack.org, john.g.garry@oracle.com,
+	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
+	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
+	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
+Subject: Re: [PATCH v8 05/10] filemap: cap PTE range to be created to allowed
+ zero fill in folio_map_range()
+Message-ID: <20240701233924.GG612460@frogsfrogsfrogs>
+References: <20240625114420.719014-1-kernel@pankajraghav.com>
+ <20240625114420.719014-6-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,84 +49,74 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZoIF7dEBkd4YPlSh@dread.disaster.area>
+In-Reply-To: <20240625114420.719014-6-kernel@pankajraghav.com>
 
-On Mon, Jul 01, 2024 at 11:27:09AM +1000, Dave Chinner wrote:
-> On Tue, Jun 18, 2024 at 06:06:22PM -0700, Darrick J. Wong wrote:
-> > On Tue, Jun 18, 2024 at 04:21:12PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > xfs_init_new_inode ignores the init_xattrs parameter for filesystems
-> > > that have ATTR2 enabled but not ATTR.  As a result, the first file to be
-> > > created by the kernel will not have an attr fork created to store acls.
-> > > Storing that first acl will add ATTR to the superblock flags, so chances
-> > > are nobody has noticed this previously.
-> > > 
-> > > However, this is disastrous on a filesystem with parent pointers because
-> > > it requires that a new linkable file /must/ have a pre-existing attr
-> > > fork.
+On Tue, Jun 25, 2024 at 11:44:15AM +0000, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
 > 
-> How are we creating a parent pointer filesystem that doesn't have
-> XFS_SB_VERSION_ATTRBIT set in it? I thought that mkfs.xfs was going
-> to always set this....
-
-<shrug> The first three versions didn't set ATTRBIT; somewhere between
-v4 and v5 Allison changed mkfs to set ATTRBIT; and as of v13 it still
-does.
-
-That said, there aren't actually any parent pointers on an empty
-filesystem because the root dir is empty and the rt/quota inode are
-children of the superblock.  So, technically speaking, it's not
-*required* for mkfs to set it, at least not until we start adding
-metadir inodes.
-
-At no point during the development of parent pointers has xfs_repair
-ever validated that ATTRBIT is set if PARENT is enabled -- it only
-checks that ATTRBIT is set if any attr forks are found.
-
-> > > The preproduction version of mkfs.xfs have always set this, but
-> > > as xfs_sb.c doesn't validate that pptrs filesystems have ATTR set, we
-> > > must catch this case.
+> Usually the page cache does not extend beyond the size of the inode,
+> therefore, no PTEs are created for folios that extend beyond the size.
 > 
-> Which is sounds like it is supposed to - how is parent pointers
-> getting enabled such that XFS_SB_VERSION_ATTRBIT is not actually
-> set?
-
-Someone who fuzzes the filesystem could turn off ATTRBIT on an empty fs.
-That's a valid configuration since there are also no parent pointers.
-
-Or at least I'm assuming it is since xfs_repair has never complained
-about ATTRBIT being set on a filesystem with no attr forks, and nobody's
-suggested adding that enforcement in the 6 years the parent pointer
-series has been out for review.
-
-Getting back to the story, if someone mounts that empty filesystem and
-tries to create a directory structure, the fs blows up.  This patch
-fixes that situation without adding more ways that mount can fail.
-
-> > > Note that the sb verifier /does/ require ATTR2 for V5 filesystems, so we
-> > > can fix both problems by amending xfs_init_new_inode to set up the attr
-> > > fork for either ATTR or ATTR2.
+> But with LBS support, we might extend page cache beyond the size of the
+> inode as we need to guarantee folios of minimum order. While doing a
+> read, do_fault_around() can create PTEs for pages that lie beyond the
+> EOF leading to incorrect error return when accessing a page beyond the
+> mapped file.
 > 
-> True, but it still seems to me like we should be fixing mkfs.xfs and
-> the superblock verifier to do the right thing given this is all
-> still experimental and we're allowed to fix on-disk format bugs
-> like this.
+> Cap the PTE range to be created for the page cache up to the end of
+> file(EOF) in filemap_map_pages() so that return error codes are consistent
+> with POSIX[1] for LBS configurations.
 > 
-> Can we add that to the superblock verifier so that the parent
-> pointer filesystems will not mount if mkfs is not setting the 
-> XFS_SB_VERSION_ATTRBIT correctly when the parent pointer feature is
-> enabled?
+> generic/749(currently in xfstest-dev patches-in-queue branch [0]) has
+> been created to trigger this edge case. This also fixes generic/749 for
+> tmpfs with huge=always on systems with 4k base page size.
 > 
-> Worst case is that early testers will need to use xfs_db to set the
-> XFS_SB_VERSION_ATTRBIT and then the filesystem will mount again...
+> [0] https://lore.kernel.org/all/20240615002935.1033031-3-mcgrof@kernel.org/
+> [1](from mmap(2))  SIGBUS
+>     Attempted access to a page of the buffer that lies beyond the end
+>     of the mapped file.  For an explanation of the treatment  of  the
+>     bytes  in  the  page that corresponds to the end of a mapped file
+>     that is not a multiple of the page size, see NOTES.
+> 
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-Patches welcome.
+Heh, another fun mmap wart!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> -Dave.
+> ---
+>  mm/filemap.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 8eafbd4a4d0c..56ff1d936aa8 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3612,7 +3612,7 @@ vm_fault_t filemap_map_pages(struct vm_fault *vmf,
+>  	struct vm_area_struct *vma = vmf->vma;
+>  	struct file *file = vma->vm_file;
+>  	struct address_space *mapping = file->f_mapping;
+> -	pgoff_t last_pgoff = start_pgoff;
+> +	pgoff_t file_end, last_pgoff = start_pgoff;
+>  	unsigned long addr;
+>  	XA_STATE(xas, &mapping->i_pages, start_pgoff);
+>  	struct folio *folio;
+> @@ -3638,6 +3638,10 @@ vm_fault_t filemap_map_pages(struct vm_fault *vmf,
+>  		goto out;
+>  	}
+>  
+> +	file_end = DIV_ROUND_UP(i_size_read(mapping->host), PAGE_SIZE) - 1;
+> +	if (end_pgoff > file_end)
+> +		end_pgoff = file_end;
+> +
+>  	folio_type = mm_counter_file(folio);
+>  	do {
+>  		unsigned long end;
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.44.1
+> 
 > 
