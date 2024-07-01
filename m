@@ -1,68 +1,71 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008E226AC9
-	for <linux-xfs@vger.kernel.org>; Sun, 30 Jun 2024 23:46:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B84A510F9
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jul 2024 00:51:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719791204; cv=none; b=IDMbzrLUCNXqi6aG9ro4Tz4P+b3kp2DxAFIlVGSCHyPayWxI4Rv7+48X99v9i7ZQ7p8Fs9bT8FR7AXd4/uxGy6ctTFzpvp0y2HWbRLQ8+W6t1lkTJWfRIlaYTFx6PH9PbGge5mzaHMffeBetlTEEvJ5PT6nbAdIZFovgFx891ac=
+	t=1719795079; cv=none; b=ehRl/UCJBbLs/tDVhO1Mpe8YxvPT5eqjTRsjVHdQvLg64N9j6pAIGTwbogKvFj7RPJ7LpJcjKFT86pIN3jm3G5CsU+4o8Di78E+prvShsgAKpKJOuvIBnCKEQeGVweP6ISJA+ctPlFxF5dMl6rNTgXxZZwix/EDmgo5j0ZDmJts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719791204; c=relaxed/simple;
-	bh=uFa3qZD+UxFsW343nUcGj9ThG75aYCoN4WVg+OLm6KA=;
+	s=arc-20240116; t=1719795079; c=relaxed/simple;
+	bh=hr9gdzshpFzQmPvL3ZRAUjLw+TmTlbHROzGD/vC5ciI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SUi3yz3T9cywdoZ4f6VZgO23Gr0HCtw4rgyGzV1D7r2e7MKx27KGgw9bGr7VKoK0KI0Ccya9SMiHpXCgYArnv4OtkWI+vziUEfcWuwFKBuokw6O2UXI7Fsz38ZxShE68LeBgvDBorb+RLYMKZPvOHNkOtcpHaRe3nNK5fz0XLcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=H5etN6Cm; arc=none smtp.client-ip=209.85.214.171
+	 Content-Type:Content-Disposition:In-Reply-To; b=GDeuUPCVw/z9cZG3OJPcwrZD/qvQ3dZRYMhHfQcFv/8COqZlwXPq8PoViGTKSpg+QwYAifcWOPNVX7wfd1ksyuNYqgF2WlTQQnTgWwmtNIgIieHulOGROIHB/QUaX/pyKp1YBuYYB4pw7gJ7L8Fh7RRsCCGG0Dv/t4CM1d0BnRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RdOfQywN; arc=none smtp.client-ip=209.85.210.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="H5etN6Cm"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1f9ffd24262so11723815ad.0
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Jun 2024 16:46:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RdOfQywN"
+Received: by mail-ot1-f51.google.com with SMTP id 46e09a7af769-701fb69e406so900777a34.3
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Jun 2024 17:51:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1719791201; x=1720396001; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1719795077; x=1720399877; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=reQJU41ulBPt7YDuq8gy3UexUN01jSa9o9ncbG8kw30=;
-        b=H5etN6CmlVoRixQfGLWZWguAk909v2B7p49Y2Jmixvqoj+O9OJiVarv6GKeAmDgFo6
-         XOVugblzk/KuIo7ufUyA5DnxRY4lf2hC7lj+eIaaC2zwI4+OJUu4YzV3xLGUXc06bpAb
-         ft99/hdeaVhZ6mKlfebKgweoVVmLtOuqQ8tvAv9QgnJXLchgMdu6caxl33PwS0K5cGMK
-         Ww+TjK/89m667byETPceFAkyHLhn5JQ8LZwe0edLoVDTC2n8IzuMEM9Wy2f2+bSSFGBG
-         PoK9JW64UW6oigwiVjM+mV5D9Xt8lEWN018lpQQonoaX9dju+NiCo5BmEdPy1qRDnPSQ
-         P72Q==
+        bh=BRy9gpTqjPsDTNmbbMNYv903/wEg0NdHPwtiMwt6OR4=;
+        b=RdOfQywNWLM3IDMLN/Pn2D3qgf7QTv51iPV+SCwJlXDFerFX/Ngtgu3D4J4jU8IaGf
+         HQeumdjGt56H/TqJaU3Qaf5hIWgHEFkAk2Tir/jje7sYzoOi0VaivEEfuc86/F6ClKUO
+         pnvk9/8c0CJiVHEYDWxrbCBu8PVgclW0Gc5O5kKj1hcGR57Go7GKckCN0lfmguAWmzeV
+         cDRoBfg3BOSL7e52BbAvPxhm9HPB8Bx/aIoMXmpK2cFLUtqrBIKAe+vJbjJwFdNuNSKN
+         xonezYuvkYMc4MRzdnlMuDNhgwwjjeO+5neNSTjH7mdGU+L17GSzXLEE962ypRBlQiA2
+         xIrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719791201; x=1720396001;
+        d=1e100.net; s=20230601; t=1719795077; x=1720399877;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=reQJU41ulBPt7YDuq8gy3UexUN01jSa9o9ncbG8kw30=;
-        b=haqlCjTwNErISGocWoux2Oc72OL3p0I/jgRxBLGvFpAObjnJ2J61diQA8M58xst2jU
-         rwHMO569m8nbDhhk7T2pCcaIZqmGQS0F0cBKA1ECDyEA8U71j+x6mJXyO6D8V8UIdRCO
-         Ts5vXVJhjFeUOcQAJELYqxn8FAO8lQkgxtsHARFEGo+VLcy3hVKCL43i4r46vcnRwy1V
-         HhqoMwgwLS8ifCJjnYYIxGJRv/UTEkYEEFNrXuI5f0dPV6s6cq4p/iG7BYiTtvWDwPoo
-         2XU/1Zfe3g28zVsnChux0W0cFSsHyeFf9QX4m3ybfg6srco2L/fBaRdoh+ldPbQc6k3b
-         dbMw==
-X-Gm-Message-State: AOJu0YwIPdOajU3a3zx/ZJM5e+nDu8U8rwDLNJ4KLDq96DoQ8UR9gNGC
-	1oO+Fv7FV62rfYHjBjwuAGLYPR+Zc6hvHjCZBcqbVnHMgPfHkP2mnTv60B0Yxzk=
-X-Google-Smtp-Source: AGHT+IGjoYmpCv/zLBG38MDTqxDDrkMQt6C79KjF41/PWFSsckdF2nw6eVT2nhda8ZvF/YMsxLjQUQ==
-X-Received: by 2002:a17:902:ce8e:b0:1f9:9768:ea88 with SMTP id d9443c01a7336-1fadbcb2001mr18342375ad.38.1719791199973;
-        Sun, 30 Jun 2024 16:46:39 -0700 (PDT)
+        bh=BRy9gpTqjPsDTNmbbMNYv903/wEg0NdHPwtiMwt6OR4=;
+        b=dumSSq1E0ttE9XyMNpie2SP/EBYb6GsZcfJjqtywEkxu/J0bt/DroNUM+EACUKjlMX
+         L08P5Xhz4pXqHlVD4iCr9Y8sTqsawYFchUeOOWhCSVL3DaMx76ibzICnvne11/4cGQQF
+         VeimVMEvn1PEuGW1lwsEbh/2xk+HaQrC98F8PoCi5rAkAzdQUwlc0H8TqNl3aoBzqXYW
+         AWGF4XU7ApWj/7E1w0OjDja3fKOtr96wRfswaJUs2aOtpsqdyi5KTUytmyHkkpZRE3HH
+         oziHbn84pdaU41I/DReJdgHbNBgs9BmviS5ioujLYWJq76r30yDeOb7/fACZgf3XQKGX
+         7poQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW4Qh1+KnTIA7pPRzpIG48yYT5ioglkmHQpOffSaQOzLGTzVF4kJlhXES+D3W+Af/fCGA0yRsODz8CpDYmqyWHNxYZT4jiTPHo4
+X-Gm-Message-State: AOJu0YwLXlMB9JZ1blA76eoOWsolOptwfEbF6fmwLKb5wyHsAOAJJzxj
+	vJDq1Yw1bEPJOunIY/3NMZrDzb+LYkbyuItoD7Tli8SaYoNz2xaTPxG/I9M1Lr0=
+X-Google-Smtp-Source: AGHT+IHwf+hkdxjvEUS1SSgOqiQynwxq7WtMiWRzYfBDFBW3X2YyYuAHnU7Wo8v0yTr7hdPVqncAKA==
+X-Received: by 2002:a05:6870:1584:b0:259:8463:43a6 with SMTP id 586e51a60fabf-25db35870cdmr2243202fac.34.1719795076526;
+        Sun, 30 Jun 2024 17:51:16 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fac11d8ae4sm51596165ad.104.2024.06.30.16.46.39
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70801f584b2sm5220058b3a.43.2024.06.30.17.51.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 30 Jun 2024 16:46:39 -0700 (PDT)
+        Sun, 30 Jun 2024 17:51:16 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sO4Fg-00HIRu-1B;
-	Mon, 01 Jul 2024 09:46:36 +1000
-Date: Mon, 1 Jul 2024 09:46:36 +1000
+	id 1sO5GD-00HLeT-0g;
+	Mon, 01 Jul 2024 10:51:13 +1000
+Date: Mon, 1 Jul 2024 10:51:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Mike Snitzer <snitzer@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-	linux-nfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
-Message-ID: <ZoHuXHMEuMrem73H@dread.disaster.area>
-References: <Zn7icFF_NxqkoOHR@kernel.org>
- <ZoGJRSe98wZFDK36@kernel.org>
+To: alexjlzheng@gmail.com
+Cc: chandan.babu@oracle.com, djwong@kernel.org, hch@infradead.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	alexjlzheng@tencent.com
+Subject: Re: [PATCH v3 2/2] xfs: make xfs_log_iovec independent from
+ xfs_log_vec and free it early
+Message-ID: <ZoH9gVVlwMkQO1dm@dread.disaster.area>
+References: <20240626044909.15060-1-alexjlzheng@tencent.com>
+ <20240626044909.15060-3-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,156 +74,128 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZoGJRSe98wZFDK36@kernel.org>
+In-Reply-To: <20240626044909.15060-3-alexjlzheng@tencent.com>
 
-On Sun, Jun 30, 2024 at 12:35:17PM -0400, Mike Snitzer wrote:
-> The need for this fix was exposed while developing a new NFS feature
-> called "localio" which bypasses the network, if both the client and
-> server are on the same host, see:
-> https://git.kernel.org/pub/scm/linux/kernel/git/snitzer/linux.git/log/?h=nfs-localio-for-6.11
+On Wed, Jun 26, 2024 at 12:49:09PM +0800, alexjlzheng@gmail.com wrote:
+> From: Jinliang Zheng <alexjlzheng@tencent.com>
 > 
-> Because NFS's nfsiod_workqueue enables WQ_MEM_RECLAIM, writeback will
-> call into NFS and if localio is enabled the NFS client will call
-> directly into xfs_file_write_iter, this causes the following
-> backtrace when running xfstest generic/476 against NFS with localio:
+> When the contents of the xfs_log_vec/xfs_log_iovec combination are
+> written to iclog, xfs_log_iovec loses its meaning in continuing to exist
+> in memory, because iclog already has a copy of its contents. We only
+> need to keep xfs_log_vec that takes up very little memory to find the
+> xfs_log_item that needs to be added to AIL after we flush the iclog into
+> the disk log space.
+> 
+> Because xfs_log_iovec dominates most of the memory in the
+> xfs_log_vec/xfs_log_iovec combination, retaining xfs_log_iovec until
+> iclog is flushed into the disk log space and releasing together with
+> xfs_log_vec is a significant waste of memory.
 
-Oh, that's nasty.
+Have you measured this? Please provide numbers and the workload that
+generates them, because when I did this combined structure the
+numbers and performance measured came out decisively on the side of
+"almost no difference in memory usage, major performance cost to
+doing a second allocation"...
 
-We now have to change every path in every filesystem that NFS can
-call that might defer work to a workqueue.
+Here's the logic - the iovec array is largely "free" with the larger
+data allocation.
 
-IOWs, this makes WQ_MEM_RECLAIM pretty much mandatory for front end
-workqueues in the filesystem and block layers regardless of whether
-the filesystem or block layer path runs under memory reclaim context
-or not.
+------
 
-All WQ_MEM_RECLAIM does is create a rescuer thread at workqueue
-creation that is used as a "worker of last resort" when forking new
-worker threads fail due to ENOMEM. This prevents deadlocks when
-doing GFP_KERNEL allocations in workqueue context and potentially
-deadlocking because a GFP_KERNEL allocation is blocking waiting for
-this workqueue to allocate workers to make progress.
+Look at how the heap is structured - it is in power of 2 slab sizes:
 
->   workqueue: WQ_MEM_RECLAIM writeback:wb_workfn is flushing !WQ_MEM_RECLAIM xfs-sync/vdc:xfs_flush_inodes_worker
->   WARNING: CPU: 6 PID: 8525 at kernel/workqueue.c:3706 check_flush_dependency+0x2a4/0x328
->   Modules linked in:
->   CPU: 6 PID: 8525 Comm: kworker/u71:5 Not tainted 6.10.0-rc3-ktest-00032-g2b0a133403ab #18502
->   Hardware name: linux,dummy-virt (DT)
->   Workqueue: writeback wb_workfn (flush-0:33)
->   pstate: 400010c5 (nZcv daIF -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
->   pc : check_flush_dependency+0x2a4/0x328
->   lr : check_flush_dependency+0x2a4/0x328
->   sp : ffff0000c5f06bb0
->   x29: ffff0000c5f06bb0 x28: ffff0000c998a908 x27: 1fffe00019331521
->   x26: ffff0000d0620900 x25: ffff0000c5f06ca0 x24: ffff8000828848c0
->   x23: 1fffe00018be0d8e x22: ffff0000c1210000 x21: ffff0000c75fde00
->   x20: ffff800080bfd258 x19: ffff0000cad63400 x18: ffff0000cd3a4810
->   x17: 0000000000000000 x16: 0000000000000000 x15: ffff800080508d98
->   x14: 0000000000000000 x13: 204d49414c434552 x12: 1fffe0001b6eeab2
->   x11: ffff60001b6eeab2 x10: dfff800000000000 x9 : ffff60001b6eeab3
->   x8 : 0000000000000001 x7 : 00009fffe491154e x6 : ffff0000db775593
->   x5 : ffff0000db775590 x4 : ffff0000db775590 x3 : 0000000000000000
->   x2 : 0000000000000027 x1 : ffff600018be0d62 x0 : dfff800000000000
->   Call trace:
->    check_flush_dependency+0x2a4/0x328
->    __flush_work+0x184/0x5c8
->    flush_work+0x18/0x28
->    xfs_flush_inodes+0x68/0x88
->    xfs_file_buffered_write+0x128/0x6f0
->    xfs_file_write_iter+0x358/0x448
->    nfs_local_doio+0x854/0x1568
->    nfs_initiate_pgio+0x214/0x418
->    nfs_generic_pg_pgios+0x304/0x480
->    nfs_pageio_doio+0xe8/0x240
->    nfs_pageio_complete+0x160/0x480
->    nfs_writepages+0x300/0x4f0
->    do_writepages+0x12c/0x4a0
->    __writeback_single_inode+0xd4/0xa68
->    writeback_sb_inodes+0x470/0xcb0
->    __writeback_inodes_wb+0xb0/0x1d0
->    wb_writeback+0x594/0x808
->    wb_workfn+0x5e8/0x9e0
->    process_scheduled_works+0x53c/0xd90
+$ grep kmalloc /proc/slabinfo |tail -13
+kmalloc-8k           949    976   8192    4    8 : tunables    0    0    0 : slabdata    244    244      0
+kmalloc-4k          1706   1768   4096    8    8 : tunables    0    0    0 : slabdata    221    221      0
+kmalloc-2k          3252   3312   2048   16    8 : tunables    0    0    0 : slabdata    207    207      0
+kmalloc-1k         76110  96192   1024   32    8 : tunables    0    0    0 : slabdata   3006   3006      0
+kmalloc-512        71753  98656    512   32    4 : tunables    0    0    0 : slabdata   3083   3083      0
+kmalloc-256        71006  71520    256   32    2 : tunables    0    0    0 : slabdata   2235   2235      0
+kmalloc-192        10304  10458    192   42    2 : tunables    0    0    0 : slabdata    249    249      0
+kmalloc-128         8889   9280    128   32    1 : tunables    0    0    0 : slabdata    290    290      0
+kmalloc-96         13583  13902     96   42    1 : tunables    0    0    0 : slabdata    331    331      0
+kmalloc-64         63116  64640     64   64    1 : tunables    0    0    0 : slabdata   1010   1010      0
+kmalloc-32        552726 582272     32  128    1 : tunables    0    0    0 : slabdata   4549   4549      0
+kmalloc-16        444768 445440     16  256    1 : tunables    0    0    0 : slabdata   1740   1740      0
+kmalloc-8          18178  18432      8  512    1 : tunables    0    0    0 : slabdata     36     36      0
 
-Ah, this is just the standard backing device flusher thread that is
-running. This is the back end of filesystem writeback, not the front
-end. It was never intended to be able to directly do loop back IO
-submission to the front end filesystem IO paths like this - they are
-very different contexts and have very different constraints.
+IOws, if we do a 260 byte allocation, we get the same sized memory
+chunk as a 512 byte allocation as they come from the same slab
+cache.
 
-This particular situation occurs when XFS is near ENOSPC.  There's a
-very high probability it is going to fail these writes, and so it's
-doing slow path work that involves blocking and front end filesystem
-processing is allowed to block on just about anything in the
-filesystem as long as it can guarantee it won't deadlock.
+If we now look at structure sizes - the common ones are buffers
+and inodes so we'll look at then.
 
-Fundamentally, doing IO submission in WQ_MEM_RECLAIM context changes
-the submission context for -all- filesystems, not just XFS.
-If we have to make this change to XFS, then -every-
-workqueue in XFS (not just this one) must be converted to
-WQ_MEM_RECLAIM, and then many workqueues in all the other
-filesystems will need to have the same changes made, too.
+For an inode, we typically log something like this for an extent
+allocation (or free) on mostly contiguous inode (say less than 10
+extents)
 
-That doesn't smell right to me.
+vec 1:	inode log format item
+vec 2:	inode core
+vec 3:	inode data fork
 
-----
+Each of these vectors has a 12 byte log op header built into them,
+and some padding to round them out to 8 byte alignment.
 
-So let's look at how back end filesystem IO currently submits new
-front end filesystem IO: the loop block device does this, and it
-uses workqueues to defer submitted IO so that the lower IO
-submission context can be directly controlled and made with the
-front end filesystem IO submission path behaviours.
+vec 1:	inode log format item:	12 + 56 + 4 (pad)
+vec 2:	inode core:		12 + 176 + 4 (pad)
+vec 3:	inode data fork:	12 + 16 (minimum) + 4 (pad)
+				12 + 336 (maximum for 512 byte inode)
 
-The loop device does not use rescuer threads - that's not needed
-when you have a queue based submission and just use the workqueues
-to run the queues until they are empty. So the loop device uses
-a standard unbound workqueue for it's IO submission path, and
-then when the work is running it sets the task flags to say "this is
-a nested IO worker thread" before it starts processing the
-submission queue and submitting new front end filesystem IO:
+If we are just logging the inode core, we are allocating
+12 + 56 + 4 + 12 + 176 + 4 = 264 bytes.
 
-static void loop_process_work(struct loop_worker *worker,
-                        struct list_head *cmd_list, struct loop_device *lo)
-{
-        int orig_flags = current->flags;
-        struct loop_cmd *cmd;
+It should be obvious now that this must be allocated from the 512
+byte slab, and that means we have another 248 bytes of unused space
+in that allocated region we can actually use -for free-.
 
-        current->flags |= PF_LOCAL_THROTTLE | PF_MEMALLOC_NOIO;
+IOWs, the fact that we add 32 bytes for the 2 iovecs for to index
+this inode log item doesn't matter at all - it's free space on the
+heap. Indeed, it's not until the inode data fork gets to a couple of
+hundred bytes in length that we overflow the 512 byte slab and have
+to use the 1kB slab. Again, we get the iovec array space for free.
 
-PF_LOCAL_THROTTLE prevents deadlocks in balance_dirty_pages() by
-lifting the dirty ratio for this thread a little, hence giving it
-priority over the upper filesystem. i.e. the upper filesystem will
-throttle incoming writes first, then the back end IO submission
-thread can still submit new front end IOs to the lower filesystem
-and they won't block in balance_dirty_pages() because the lower
-filesystem has a higher limit. hence the lower filesystem can always
-drain the dirty pages on the upper filesystem, and the system won't
-deadlock in balance_dirty_pages().
+If we are logging the entire inode with the data fork, then the
+size of the data being logged is 264 + 12 + 336 + 4 = 616 bytes.
+This is well over the 512 byte slab, so we are always going to be
+allocating from the 1kB slab. We get the iovec array for free the
+moment we go over the 512 byte threshold again.
 
-Using WQ_MEM_RECLAIM context for IO submission does not address this
-deadlock.
+IOWs, all the separation of the iovec array does is slightly change
+the data/attr fork size thresholds where we go from using the 512
+byte slab to the 1kB slab.
 
-The PF_MEMALLOC_NOIO flag prevents the lower filesystem IO from
-causing memory reclaim to re-enter filesystems or IO devices and so
-prevents deadlocks from occuring where IO that cleans pages is
-waiting on IO to complete.
+A similar pattern holds out for the buffer log items.  The minimum
+it will be is:
 
-Using WQ_MEM_RECLAIM context for IO submission does not address this
-deadlock either.
+vec 1:	buf log format item
+vec 2:	single 128 byte chunk
 
-IOWs, doing front IO submission like this from the BDI flusher
-thread is guaranteed to deadlock sooner or later, regardless of
-whether WQ_MEM_RECLAIM is set or not on workqueues that are flushed
-during IO submission. The WQ_MEM_RECLAIM warning is effectively your
-canary in the coal mine. And the canary just carked it.
+This requires 12 + 40B + 4 + 12 + 128B + 4 = 200 bytes. For two
+vectors, we need 32 bytes for the iovec array, so a total of 232
+bytes is needed, and this will fit in a 256 byte slab with or
+without the iovec array attached.
 
-IMO, the only sane way to ensure this sort of nested "back-end page
-cleaning submits front-end IO filesystem IO" mechanism works is to
-do something similar to the loop device. You most definitely don't
-want to be doing buffered IO (double caching is almost always bad)
-and you want to be doing async direct IO so that the submission
-thread is not waiting on completion before the next IO is
-submitted.
+The same situation occurs are we increase the number of logged
+regions or the size of the logged regions - in almost all cases we
+get the iovec array for free because we log 128 byte regions out of
+buffers and they will put us into the next largest size slab
+regardless of the memory used by the iovec array.
+
+Hence we should almost always get the space for the iovec array for
+free from the slab allocator, and separating it out doesn't actually
+reduce slab cache memory usage. If anything, it increases it,
+because now we are allocating the iovec array out of small slabs and
+so instead of it being "free" the memory usage is now accounted to
+smaller slabs...
+
+-----
+
+Hence before we go any further with this patch set, I'd like to see
+see numbers that quantify how much extra memory the embedded iovec
+array is actually costing us. And from that, an explanation of why
+the above "iovec array space should be cost-free" logic isn't
+working as intended....
 
 -Dave.
 -- 
