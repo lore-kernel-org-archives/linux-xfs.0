@@ -1,74 +1,80 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD4EB13D24D
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jul 2024 12:35:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 111B715B542
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jul 2024 13:46:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719837313; cv=none; b=QqyxjhCbYyxE3qHM65fLa0BPHo8f6aDRLn6dyVcfXXdaOEQpTMGpQBiXyxQkexyOph4Cx36oQE9pwKp1kZ5oT0pb6NfgjxHkx5vzgnddEEWNiYkImXTHt/RKLweKR6v8NrAlx5cuqwhpOtWBpRmEIB/rlOxAl+cryl+TaebrYSM=
+	t=1719841618; cv=none; b=iw0SkE0FfeVCYNte49Q/U8gOJ6i6x2F+VSFrdADPh2B8uMbinIyQpAN3eNjUiBQOPSQD8S11CkzIlap644NGt51xqC/znh//j6JFEOP7Ab024fZ8Uhcoa9VMIgkQwzC/QSZg1jeKO8fHT7aQVYuy7lbKproHMVKkvacU9IU19Qs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719837313; c=relaxed/simple;
-	bh=mZeO1f7tTznVKqOD4SvW+UN628jwmIqb6IO7RYHEuNo=;
+	s=arc-20240116; t=1719841618; c=relaxed/simple;
+	bh=Ww3zO2BWA6CNrPfVjdCQ8/edKcVa8UvzDOn/+wZVrEM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g2ZSP1B6mrmAGKqCIHA5Hhgb3tn72MboaJyu7+1GejW9WcSVqoaycRULFWJFw5fJnnI15h1JrKWZf4YGNLV80k6goForfhqQBz1ms0z00M0xyt+gPTwsFDVnsKWce/32XqK4jDBeTYIyFZR7UvE5z3rww63Ah703DpLxN/P8Nk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=pAfHIgjF; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=bWqoZT2wZ/5e12uI7vm9hOtI4dd/QE1Wmw0LoqCnLyfy0ZstPHf+/zn/QXzYU5B2AKDGnIzORh6NTMPMqAsMOmexjt3kdO2MXhK1460nAFmYK/5hyri6dLsZRQebSRW2HIYekrLInWWdj5wbVv3JYJAFwxX/7CTMrzdl66doUys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=rAqstR5h; arc=none smtp.client-ip=209.85.219.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="pAfHIgjF"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1f9de13d6baso15809785ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2024 05:35:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="rAqstR5h"
+Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-6adc63c2ee0so8424636d6.3
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2024 06:46:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1719837311; x=1720442111; darn=vger.kernel.org;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1719841615; x=1720446415; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8Srvua/8GiZk2f1lRDes3KQDNlajTOwOOiszOgYhtkE=;
-        b=pAfHIgjFp9YUT8lsILQhKGdJNkOLEeH4L8svf4d7mBWVb59VOY3lbu9C/Z1NNsk2us
-         jvlz9Goy9AqnLoTwfqdsFBOUpoL48O0ve9S9guulN7+IwahnQLJRRdHbTwAklM5knKmb
-         jTRPBEv9DUtSETpgv1AVNa74gsPS2TR0+AGrrCjxn/XBceocNim3OrAIWAedMk6jZSfP
-         1sqaDRQYZ2LtmFjo+OE1LZxHtgz/e4kFrNGjZyNGQfwvs08n30ZwUosJfGYD9N6emHmk
-         UJkzRuJLYvs1ZFpPQ558CgrO03/VplZ9uVgHRZDMAg59xSH23RYkhcOgvYRoZbQPkbH6
-         tnxw==
+        bh=/7pK8M+T679Mr4Uw1+2PXZ/iLLD0jN5yzRREJHhd/M8=;
+        b=rAqstR5haeuwUowCfxCsQJIDf2qieHtgMh+/eTl2ebv8mkMM1HXvwROMApDpg6OG1m
+         RqgsLoF652BqZbYRaiiuBfUxYrkv6/Oz5JDzyZma2wEKP7wTY/o3LltyoHd5HUXIo4fl
+         0XSjC+XbKoPv58qG/XCotkfE7uut/wF1fCpRDqMY1MUEUtOwWDD6d7xy8pup9hVypChg
+         /eRTAcd3ablPgl7txgWWcymn5qj10yEu1EkddYON84Q+tIl3mjdQOtYRv73QjZ1EqjsU
+         IhU8ztbaR+NKHNO4lDc/gY6CB1waiKLXBNviHrfW4CRsj5QMny+jwXgvjjO4Td8ar6r0
+         dHwg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719837311; x=1720442111;
+        d=1e100.net; s=20230601; t=1719841615; x=1720446415;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=8Srvua/8GiZk2f1lRDes3KQDNlajTOwOOiszOgYhtkE=;
-        b=CbBIJeg3Xxz8JteaDnZzqGIl9byhmoa5THCA5sAW/jRE1ZER4ETKefQ/kaGMqiH2Sm
-         wGCqn23uVFTF06Lfe09oDmsKHYp4Hx8utSkTvNQnYoSNuVO+zY6JUsqW6qUltHCsClCb
-         iNAum7TPRAgQKQp+6UvZV/s8/EQSNCFpaSE9ztH29J8n/pLrZBNuuKOW7/juSu782FSp
-         hUvvWt7IzooDuccz4uuW/cwWHC8g7l7vyWt3pzAgLXiRZ+uzrGw5S96d1VW9GsSaBLzE
-         0SEb9FYWbO/4UyPNMUJ2bSF2594YgDZQUu0ofE8LaDar3WHh6OgRiE+HDjxvmPaDEGtl
-         91dg==
-X-Gm-Message-State: AOJu0YyhY/Ml5m5uLx0PBgJ54S0vjZIoCB/wtQ/JwwcgXbMYz9t/kRrM
-	k9GwazLzpQ5r2lW+1OIM37C8RhP8pv/U1hpZcZJ9SniSR1Fhi2Qj/HKXjbVnuzQ=
-X-Google-Smtp-Source: AGHT+IEDTYyht4xal4sRk0Ri79tyKeyIeWLDUvtqY7rzls4XH1cjLoNZcE3nJnryOV0CB94f4AEujg==
-X-Received: by 2002:a17:902:cec5:b0:1fa:95d6:1584 with SMTP id d9443c01a7336-1fadbca398dmr31822695ad.37.1719837310840;
-        Mon, 01 Jul 2024 05:35:10 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fac11d8cbbsm63560625ad.106.2024.07.01.05.35.10
+        bh=/7pK8M+T679Mr4Uw1+2PXZ/iLLD0jN5yzRREJHhd/M8=;
+        b=Maef7Fjw9Za/OFpxuP0VPZXGBBrxYKbyNQDIoBAQKr3H9z5Rj1wyAj6N1gxBA8zdS3
+         scEHcPYSAVJyOzXZD902mRm8UAHGPhBnzYkmSTWwJM8wutDB+mWZBpeCsAH5689X3nKF
+         chgMnUKkCkL50Y8A/mEGPex0z8FTklNNrsueHG7MEK3rY8dBwbUmVhYR15oT1HQt53kA
+         +H81aJlgInCUjVmD3ZsA6Cr6OnV6kLeXEwe/RDKJ0Lx0AXx6RoHGaNR3Xaoqv9eC+RLQ
+         XM9BCLD+kXmXH8T72Rm+5Ru5e0i+wH7fLgOS8LFA2XcaR5tA+e0Wc2xq7Us4ytjFf3l3
+         sPhA==
+X-Forwarded-Encrypted: i=1; AJvYcCW72WxhHhcKEBZxOwsnb2Sh1n0QO7LlkGrUP3cL3cNqdHhTtYCjy8M/PMQ98qc8ft6BribQ/Sr4sM0+l3aqG+WDKu1ucpIaNxG6
+X-Gm-Message-State: AOJu0Yyj5B53TVeZDIV1qsZzIwc3suwxqrSKo4jdH9K+tFTSS8AUmKLC
+	rHGtkSwGvphnXmkzk1KrQ1j3tlNysVaAwsfiD+CLyk5NylSrVU+qW/7eWJo6H1qfIp+WDRrhbRP
+	rtjo=
+X-Google-Smtp-Source: AGHT+IG8OekqgNnErri1uZBaOEWN7EF2UDkAF5obMoo6PPyjxSiFbWfhXRMS/kv2BHuTbAr7oS5ICw==
+X-Received: by 2002:a05:6214:f03:b0:6b5:47b0:8f09 with SMTP id 6a1803df08f44-6b5b70cde0fmr83155356d6.36.1719841615063;
+        Mon, 01 Jul 2024 06:46:55 -0700 (PDT)
+Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6b59e5f5f51sm33227276d6.75.2024.07.01.06.46.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Jul 2024 05:35:10 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sOGFP-000KA4-33;
-	Mon, 01 Jul 2024 22:35:07 +1000
-Date: Mon, 1 Jul 2024 22:35:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
-	brauner@kernel.org, chandanbabu@kernel.org,
-	John Garry <john.g.garry@oracle.com>, jack@suse.cz,
-	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH -next v6 1/2] xfs: reserve blocks for truncating large
- realtime inode
-Message-ID: <ZoKie9aZV0sHIbA8@dread.disaster.area>
-References: <20240618142112.1315279-1-yi.zhang@huaweicloud.com>
- <20240618142112.1315279-2-yi.zhang@huaweicloud.com>
- <ZoIDVHaS8xjha1mA@dread.disaster.area>
- <b27977d3-3764-886d-7067-483cea203fbe@huaweicloud.com>
+        Mon, 01 Jul 2024 06:46:54 -0700 (PDT)
+Date: Mon, 1 Jul 2024 09:46:53 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
+	David Sterba <dsterba@suse.com>, Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Andi Kleen <ak@linux.intel.com>, kernel-team@fb.com,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v2 07/11] xfs: switch to multigrain timestamps
+Message-ID: <20240701134653.GA504479@perftesting>
+References: <20240701-mgtime-v2-0-19d412a940d9@kernel.org>
+ <20240701-mgtime-v2-7-19d412a940d9@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,55 +83,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b27977d3-3764-886d-7067-483cea203fbe@huaweicloud.com>
+In-Reply-To: <20240701-mgtime-v2-7-19d412a940d9@kernel.org>
 
-On Mon, Jul 01, 2024 at 10:26:18AM +0800, Zhang Yi wrote:
-> On 2024/7/1 9:16, Dave Chinner wrote:
-> > On Tue, Jun 18, 2024 at 10:21:11PM +0800, Zhang Yi wrote:
-> >> @@ -917,7 +920,17 @@ xfs_setattr_size(
-> >>  			return error;
-> >>  	}
-> >>  
-> >> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-> >> +	/*
-> >> +	 * For realtime inode with more than one block rtextsize, we need the
-> >> +	 * block reservation for bmap btree block allocations/splits that can
-> >> +	 * happen since it could split the tail written extent and convert the
-> >> +	 * right beyond EOF one to unwritten.
-> >> +	 */
-> >> +	if (xfs_inode_has_bigrtalloc(ip))
-> >> +		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
-> > 
-> > .... should this be doing this generic check instead:
-> > 
-> > 	if (xfs_inode_alloc_unitsize(ip) > 1)
+On Mon, Jul 01, 2024 at 06:26:43AM -0400, Jeff Layton wrote:
+> Enable multigrain timestamps, which should ensure that there is an
+> apparent change to the timestamp whenever it has been written after
+> being actively observed via getattr.
 > 
->         if (xfs_inode_alloc_unitsize(ip) > i_blocksize(inode)) ?
+> Also, anytime the mtime changes, the ctime must also change, and those
+> are now the only two options for xfs_trans_ichgtime. Have that function
+> unconditionally bump the ctime, and ASSERT that XFS_ICHGTIME_CHG is
+> always set.
 > 
-> > 		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
-> > 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_trans_inode.c | 6 +++---
+>  fs/xfs/xfs_iops.c               | 6 ++++--
+>  fs/xfs/xfs_super.c              | 2 +-
+>  3 files changed, 8 insertions(+), 6 deletions(-)
 > 
-> Yeah, it makes sense to me, but Christoph suggested to think about force
-> aligned allocations later, so I only dealt with the big RT inode case here.
-> I can revise it if John and Christoph don't object.
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index 69fc5b981352..1f3639bbf5f0 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -62,12 +62,12 @@ xfs_trans_ichgtime(
+>  	ASSERT(tp);
+>  	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+>  
+> -	tv = current_time(inode);
+> +	/* If the mtime changes, then ctime must also change */
+> +	ASSERT(flags & XFS_ICHGTIME_CHG);
+>  
+> +	tv = inode_set_ctime_current(inode);
+>  	if (flags & XFS_ICHGTIME_MOD)
+>  		inode_set_mtime_to_ts(inode, tv);
+> -	if (flags & XFS_ICHGTIME_CHG)
+> -		inode_set_ctime_to_ts(inode, tv);
+>  	if (flags & XFS_ICHGTIME_CREATE)
+>  		ip->i_crtime = tv;
+>  }
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index ff222827e550..ed6e6d9507df 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -590,10 +590,12 @@ xfs_vn_getattr(
+>  	stat->gid = vfsgid_into_kgid(vfsgid);
+>  	stat->ino = ip->i_ino;
+>  	stat->atime = inode_get_atime(inode);
+> -	stat->mtime = inode_get_mtime(inode);
+> -	stat->ctime = inode_get_ctime(inode);
+> +
+> +	fill_mg_cmtime(stat, request_mask, inode);
+> +
+>  	stat->blocks = XFS_FSB_TO_BB(mp, ip->i_nblocks + ip->i_delayed_blks);
+>  
+> +
 
-Sorry, but I don't really care what either John or Christoph say on
-this matter: xfs_inode_has_bigrtalloc() is recently introduced
-technical debt that should not be propagated further.
+Stray newline.  Thanks,
 
-xfs_inode_has_bigrtalloc() needs to be replaced completely with
-xfs_inode_alloc_unitsize() and any conditional behaviour needed can
-be based on the return value from xfs_inode_alloc_unitsize(). That
-works for everything that has an allocation block size larger than
-one filesystem block, not just one specific RT case.
-
-Don't force John to have fix all these same RT bugs that are being
-fixed with xfs_inode_has_bigrtalloc() just because forced alignment
-stuff is not yet merged. Don't make John's life harder than it needs
-to be to get that stuff merged, and don't waste my time arguing
-about it: just fix the problem the right way the first time.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Josef
