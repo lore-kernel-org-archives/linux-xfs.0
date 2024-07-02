@@ -1,143 +1,154 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39D70372
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 07:49:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90DE8156F5D;
+	Tue,  2 Jul 2024 09:56:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719906549; cv=none; b=FeimSjM2eAchuqr5BVDe0sG9eOstFXxahxUWpHqdv6/r4209HPAo8LoQdoCgxwIUudy8gi+/M0WPlCBNipodjceg9jv/qiVk2UEHaF1abSGlGCk7BdKzEC4f0rQM8VK4LXVOXqRLGtlEeRZpop6ZV4dzzsmVO9RAU0tSa0cbLOk=
+	t=1719914200; cv=none; b=tTLS4D2wPmHc8Wg/xMeNLFLr9C6vnpx/9xhLRl42RBxg8YBCMQLB3VwAbVQ13pLTBQ3wB/bYxgMKh7wDBZZTMIpzQIpnxFjoifdjA9MhzgNNjQVqni1dUbj5sMZKhxw4eUzWaHSUtlhHBCyDC/uM9+JZXzr2tZ/sRXPvvQLNAwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719906549; c=relaxed/simple;
-	bh=qBPWd1AnEa/9hxw1AukoIVsnR7PMALxEPGdATAOlDgw=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oMpLIDoNCTlrkthayxMtbuSkJENbaIEi3VtHbdapOxOUtfT0EBK+7hBNhQnjubMVyOvjD34oibKc4QzLWl9keohl9+S1GsLagvS5wyFwFcvcwKCnueezBkG11Xu7yeNCcjcAUBVlSvo6YW2KUQGEfFUPaWq5l4SPAcjR4p1+lHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.252])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4WCw1S4g0QzQjxl;
-	Tue,  2 Jul 2024 15:45:16 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8ACAB18007E;
-	Tue,  2 Jul 2024 15:49:03 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Tue, 2 Jul
- 2024 15:49:03 +0800
-Date: Tue, 2 Jul 2024 16:00:21 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Dave Chinner <david@fromorbit.com>
-CC: <willy@infradead.org>, <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 07/12] xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS
-Message-ID: <20240702080021.GA794461@ceph-admin>
-References: <20240115230113.4080105-1-david@fromorbit.com>
- <20240115230113.4080105-8-david@fromorbit.com>
- <20240622094411.GA830005@ceph-admin>
- <ZoOWPj2ICDIjCA80@dread.disaster.area>
+	s=arc-20240116; t=1719914200; c=relaxed/simple;
+	bh=pAljwEDmLaRmfiPg1XH99/cA8uh/mBQdKDu+LcW9NY4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Ly8pbI7XNF/Em6/M4qDfCkWvSX4gVCosZgpSQMHBZbx5/at4i+OGnjEjQZrCgDM2RH1PF74l7YM630mqVcMQQnvLHU4ZQQJyAZRLj0b4M5AOsfu7t3ciTERlDIZeQPjqi129Mc7frlqxqVPO7A1NNacj770vDiv7Hc5NrFcYg8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKXryCrs; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKXryCrs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BAF8C2BD10;
+	Tue,  2 Jul 2024 09:56:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719914200;
+	bh=pAljwEDmLaRmfiPg1XH99/cA8uh/mBQdKDu+LcW9NY4=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=MKXryCrsnQqzCogxiyohhVTVVBUU8ONqFsfYzHdw17KpGMxJ3ZHnfYhHQorMxprEI
+	 rPAV6mYaqguKavfb0w2g+fTLDNqewjPLx60NOstGFWtsTToaFMME0CxZ4OQ7+stgvs
+	 +RQFqO3R/p6AGhpXBcmuT3sXpfmGwYQArL/T0uPV0ZM7csyi9AQWQ67Kaw98mP1ESC
+	 fn2OOZFflpANm/Q7c7t9Ggy6RrAUBnX/ngygctkOvlY/DUOMVGRpMhjbH7FJOrB3Dm
+	 7FLCeAVj/u/LG1N8QcE+5DI/mHro50ahCZcXowhPVEgEhucOlLXFOsCwrPH6p3il1E
+	 NVVJYITZ8mw7g==
+Message-ID: <d91a29f0e600793917b73ac23175e02dafd56beb.camel@kernel.org>
+Subject: Re: [PATCH 01/10] fs: turn inode ctime fields into a single ktime_t
+From: Jeff Layton <jlayton@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Alexander Viro
+ <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara
+ <jack@suse.cz>, Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu
+ <mhiramat@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
+ Chandan Babu R <chandan.babu@oracle.com>, Theodore Ts'o <tytso@mit.edu>,
+ Andreas Dilger <adilger.kernel@dilger.ca>,  Chris Mason <clm@fb.com>, Josef
+ Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,  Hugh
+ Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>,
+ kernel-team@fb.com,  linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org,  linux-trace-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org,  linux-ext4@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-mm@kvack.org,  linux-nfs@vger.kernel.org
+Date: Tue, 02 Jul 2024 05:56:37 -0400
+In-Reply-To: <ZoOuSxRlvEQ5rOqn@infradead.org>
+References: <20240626-mgtime-v1-0-a189352d0f8f@kernel.org>
+	 <20240626-mgtime-v1-1-a189352d0f8f@kernel.org>
+	 <20240701224941.GE612460@frogsfrogsfrogs>
+	 <3042db2f803fbc711575ec4f1c4a273912a50904.camel@kernel.org>
+	 <ZoOuSxRlvEQ5rOqn@infradead.org>
+Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
+ keydata=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
+ QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.2 (3.52.2-1.fc40app2) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <ZoOWPj2ICDIjCA80@dread.disaster.area>
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500009.china.huawei.com (7.221.188.199)
 
-On Tue, Jul 02, 2024 at 03:55:10PM +1000, Dave Chinner wrote:
-> On Sat, Jun 22, 2024 at 05:44:11PM +0800, Long Li wrote:
-> > On Tue, Jan 16, 2024 at 09:59:45AM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > In the past we've had problems with lockdep false positives stemming
-> > > from inode locking occurring in memory reclaim contexts (e.g. from
-> > > superblock shrinkers). Lockdep doesn't know that inodes access from
-> > > above memory reclaim cannot be accessed from below memory reclaim
-> > > (and vice versa) but there has never been a good solution to solving
-> > > this problem with lockdep annotations.
-> > > 
-> > > This situation isn't unique to inode locks - buffers are also locked
-> > > above and below memory reclaim, and we have to maintain lock
-> > > ordering for them - and against inodes - appropriately. IOWs, the
-> > > same code paths and locks are taken both above and below memory
-> > > reclaim and so we always need to make sure the lock orders are
-> > > consistent. We are spared the lockdep problems this might cause
-> > > by the fact that semaphores and bit locks aren't covered by lockdep.
-> > > 
-> > > In general, this sort of lockdep false positive detection is cause
-> > > by code that runs GFP_KERNEL memory allocation with an actively
-> > > referenced inode locked. When it is run from a transaction, memory
-> > > allocation is automatically GFP_NOFS, so we don't have reclaim
-> > > recursion issues. So in the places where we do memory allocation
-> > > with inodes locked outside of a transaction, we have explicitly set
-> > > them to use GFP_NOFS allocations to prevent lockdep false positives
-> > > from being reported if the allocation dips into direct memory
-> > > reclaim.
-> > > 
-> > > More recently, __GFP_NOLOCKDEP was added to the memory allocation
-> > > flags to tell lockdep not to track that particular allocation for
-> > > the purposes of reclaim recursion detection. This is a much better
-> > > way of preventing false positives - it allows us to use GFP_KERNEL
-> > > context outside of transactions, and allows direct memory reclaim to
-> > > proceed normally without throwing out false positive deadlock
-> > > warnings.
-> > 
-> > Hi Dave,
-> > 
-> > I recently encountered the following AA deadlock lockdep warning
-> > in Linux-6.9.0. This version of the kernel has currently merged
-> > your patch set. I believe this is a lockdep false positive warning.
-> 
-> Yes, it is.
-> 
-> > The xfs_dir_lookup_args() function is in a non-transactional context
-> > and allocates memory with the __GFP_NOLOCKDEP flag in xfs_buf_alloc_pages().
-> > Even though __GFP_NOLOCKDEP can tell lockdep not to track that particular
-> > allocation for the purposes of reclaim recursion detection, it cannot
-> > completely replace __GFP_NOFS.
-> 
-> We are not trying to replace GFP_NOFS with __GFP_NOLOCKDEP. What we
-> are trying to do is annotate the allocation sites where lockdep
-> false positives will occur. That way if we get a lockdep report from
-> a location that uses __GFP_NOLOCKDEP, we know that it is either a
-> false positive or there is some nested allocation that did not honor
-> __GFP_NOLOCKDEP.
-> 
-> We've already fixed a bunch of nested allocations (e.g. kasan,
-> kmemleak, etc) to propagate the __GFP_NOLOCKDEP flag so they don't
-> generate false positives, either. So the amount of noise has already
-> been reduced.
-> 
-> > Getting trapped in direct memory reclaim
-> > maybe trigger the AA deadlock warning as shown below.
-> 
-> No, it can't. xfs_dir_lookup() can only lock referenced inodes.
-> xfs_reclaim_inodes_nr() can only lock unreferenced inodes. It is not
-> possible for the same inode to be both referenced and unreferenced
-> at the same time, therefore memory reclaim cannot self deadlock
-> through this path.
+On Tue, 2024-07-02 at 00:37 -0700, Christoph Hellwig wrote:
+> On Mon, Jul 01, 2024 at 08:22:07PM -0400, Jeff Layton wrote:
+> > 2) the filesystem has been altered (fuzzing? deliberate doctoring?).
+> >=20
+> > None of these seem like legitimate use cases so I'm arguing that we
+> > shouldn't worry about them.
+>=20
+> Not worry seems like the wrong answer here.  Either we decide they
+> are legitimate enough and we preserve them, or we decide they are
+> bogus and refuse reading the inode.  But we'll need to consciously
+> deal with the case.
+>=20
 
-Yes, I know. An AA deadlock couldn't happen in this situation because
-it's not the same inode, so it's just a lockdep false positive warning.
-
-> 
-> I expected to see some situations like this when getting rid of
-> GFP_NOFS (because now memory reclaim runs in places it never used
-> to). Once I have an idea of the sorts of false positives that are
-> still being tripped over, I can formulate a plan to eradicate them,
-> too.
-
-Ok, memory reclaim may run in those places where GFP_NOFS is removed.
-Some new lockdep false positive warnings may appear. I hope this report
-can help you eradicate them in the future.
-
-Thanks for your reply. :)
-
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+Is there a problem with consciously dealing with it by clamping the
+time at KTIME_MAX? If I had a fs with corrupt timestamps, the last
+thing I'd want is the filesystem refusing to let me at my data because
+of them.
+--=20
+Jeff Layton <jlayton@kernel.org>
