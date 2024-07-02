@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06522119
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:10:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B7144A06
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:10:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719882626; cv=none; b=Daqyr72JzSo951eJJnztCxMSp62ea84fRSlVaAIc7lbP6Y7JKXugi2LE+TkQT1jcDsJ1zT1f69LTYvm+PSGQiZboLDE6X5Mrukfbj08xpiFXoGGnfjjvHU51vRmZGQKeZrGUN351d8RtHjM5Cr5dgH3v1kPC10rDuwkGfgy9Adc=
+	t=1719882642; cv=none; b=q9tHlcAUeWiTyqJR1JLBJ9m5yEBFmXn/NVPVNtQiFHi10zgn0AvK6dT8PU4p0ONoMn1YgkHglG7OKlOZ8gJgeLx9AUABF49zs7ERkSjztlifVF1cKUPftU/XOFoSVnNz+jnfSI0ZzbfSCBfm3KSmXRYe29rxqqy/4HRFJTO+Ngk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719882626; c=relaxed/simple;
-	bh=rODyl56E8htbf3lOKTO39Qh9sP+UbS7aIu+ceyIXP4U=;
+	s=arc-20240116; t=1719882642; c=relaxed/simple;
+	bh=ZijNAFIw9BfoqldwYmZYmLawlKhw+pUiiC27o8aDyRM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Py1yHQLOPtOpaj61IHQvo1r8PpcKt8Q/jSkRnkj5l3UYN3Flz8Mfc/fJFCMUTlnkbQorO+wNjNVeSMYgdJRvqBK9UTKkmLOMhUOKyT6wQ0ZlvtKECDoeA5rcCBm4d5KgIoYxfJLKgdtwQKBkI7ehM7IiRb3b6EHZg1/klgQhQPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uFnNo+Ll; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=FT3zwmB9oCGjVyI6jYizA/d9anK2wA74AwG/NtEEQx6iskh77xg+BNVKOeaIC3j25Mon6Wt6s0UUeMbOX/945gcbbUtu0vMASfhKMRWK3GbMymnNTTiSlZ30NvQLANe6VqzkYlaJtG1ET/sBLLMIyOkMD1XmT6v/wIidU6X8EaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mv0l1nT7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uFnNo+Ll"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B8C2C116B1;
-	Tue,  2 Jul 2024 01:10:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mv0l1nT7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E606EC116B1;
+	Tue,  2 Jul 2024 01:10:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719882626;
-	bh=rODyl56E8htbf3lOKTO39Qh9sP+UbS7aIu+ceyIXP4U=;
+	s=k20201202; t=1719882642;
+	bh=ZijNAFIw9BfoqldwYmZYmLawlKhw+pUiiC27o8aDyRM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uFnNo+Ll4gyXKIxv+QxdQFPrkXJO/tjLRnvM1g+2AXJI6rkdRggmRYNZp+L7oHv7G
-	 mPewGW8arLmSoomHKiojmO4MjIiKYQZ6hx1k1EP742Ydj9P7/N2/RfkbSa1m2Euu7+
-	 jXJN5hj+kU8Yt6ofUCbisrdSNQH9UXnJ7YHjzAfOgDYAuDdchDpVl5nnr4OX9n0+xC
-	 7w3ysDb4owNxd+9vRsmJvkLdz4votPMtV6V+uCONivkuqH9+Ebkoz4kISCZBV2DH4M
-	 5EJvf0BAwdQ0GokG/zo6UMGPW8MCDMARteINwuuu/IsefkqgcVk/9tC3IL9mXCnFxN
-	 0uTWp/0Z16Lhg==
-Date: Mon, 01 Jul 2024 18:10:25 -0700
-Subject: [PATCH 2/3] xfs_repair: enforce one namespace bit per extended
- attribute
+	b=mv0l1nT7pSzXxBqzZtwtI8mCHVx73wcE1vv01zpjZjiRrNNjb8Yp+ia04QCJhPIJz
+	 xZuUSQ70C0qgH5ZrsgXQAhpkB9GV6ZWpbENsYqKTx+d8ypm7OH7QTOcVz8ogtCzcxX
+	 RumvKtLodfYrIqWmYQtiYPt8GQrk4DMg5NVLMxybAkLviPnZsPQfUXtXaIM90aE35b
+	 rVzfygtNv/3K1XseatRAfLOGHdyJKkZIGEY2mfS7GWZiOZY4EeOIVgtBU3yaTUFWsn
+	 OEzvD9MWnhA4Z70pFYymAHLq8EQZzA2ODSWlGfgSOOJ1sQ3pE3yjfq1p0Q+fb98Nrg
+	 3KcPTQlBN0eCw==
+Date: Mon, 01 Jul 2024 18:10:41 -0700
+Subject: [PATCH 3/3] xfs_repair: check for unknown flags in attr entries
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988120632.2009101.8080215211983761365.stgit@frogsfrogsfrogs>
+Message-ID: <171988120647.2009101.16639921173241660983.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988120597.2009101.16960117804604964893.stgit@frogsfrogsfrogs>
 References: <171988120597.2009101.16960117804604964893.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,58 +46,46 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enforce that all extended attributes have at most one namespace bit.
+Explicitly check for unknown bits being set in the shortform and leaf
+attr entries.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    1 +
- repair/attr_repair.c     |   15 +++++++++++++++
- 2 files changed, 16 insertions(+)
+ repair/attr_repair.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index cc670d93a9f2..2d858580abfe 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -36,6 +36,7 @@
- 
- #define xfs_ascii_ci_hashname		libxfs_ascii_ci_hashname
- 
-+#define xfs_attr_check_namespace	libxfs_attr_check_namespace
- #define xfs_attr_get			libxfs_attr_get
- #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
- #define xfs_attr_namecheck		libxfs_attr_namecheck
 diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 0f2f7a284bdd..a756a40db9b0 100644
+index a756a40db9b0..37b5852b885e 100644
 --- a/repair/attr_repair.c
 +++ b/repair/attr_repair.c
 @@ -291,6 +291,13 @@ process_shortform_attr(
  			}
  		}
  
-+		if (!libxfs_attr_check_namespace(currententry->flags)) {
++		if (currententry->flags & ~XFS_ATTR_ONDISK_MASK) {
 +			do_warn(
-+	_("multiple namespaces for shortform attribute %d in inode %" PRIu64 "\n"),
-+				i, ino);
++	_("unknown flags 0x%x in shortform attribute %d in inode %" PRIu64 "\n"),
++				currententry->flags, i, ino);
 +			junkit = 1;
 +		}
 +
- 		/* namecheck checks for null chars in attr names. */
- 		if (!libxfs_attr_namecheck(currententry->flags,
- 					   currententry->nameval,
-@@ -641,6 +648,14 @@ process_leaf_attr_block(
+ 		if (!libxfs_attr_check_namespace(currententry->flags)) {
+ 			do_warn(
+ 	_("multiple namespaces for shortform attribute %d in inode %" PRIu64 "\n"),
+@@ -648,6 +655,14 @@ process_leaf_attr_block(
  			break;
  		}
  
-+		if (!libxfs_attr_check_namespace(entry->flags)) {
++		if (entry->flags & ~XFS_ATTR_ONDISK_MASK) {
 +			do_warn(
-+	_("multiple namespaces for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
-+				i, da_bno, ino);
++	_("unknown flags 0x%x in attribute entry #%d in attr block %u, inode %" PRIu64 "\n"),
++				entry->flags, i, da_bno, ino);
 +			clearit = 1;
 +			break;
 +		}
 +
- 		if (entry->flags & XFS_ATTR_INCOMPLETE) {
- 			/* we are inconsistent state. get rid of us */
+ 		if (!libxfs_attr_check_namespace(entry->flags)) {
  			do_warn(
+ 	_("multiple namespaces for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
 
