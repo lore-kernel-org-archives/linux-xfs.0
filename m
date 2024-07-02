@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C3A34084E
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 19:53:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F0521A28C
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 20:02:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719949981; cv=none; b=rbWeVZ6LGTliiiaF4tQshyy/6am2sP4ZuJplFFPrYjJVtrMOAhHwxn9AnCj6PkQLFFKhIWyB85VcJnq54Rnuz45d5j548Z4Racgq/64kdPbCrCh7oKaljwpGScKsAF0k8nGcKfzMQRyPow8fho+KJ1vTgFzumGRIfXdQAA1bGjc=
+	t=1719950560; cv=none; b=lmQo8kc88XJX9loi9I0r5O7O0P88ZKD/byzvy4KujrVUfO36tLzmutMayHfW5ZQUQAxuYpAH4Eis5qslXkSx78lY0YXDGHBe71Gl1jqqvhDd8PPk3RynVnGT/gzn5ArTknJR/gSU1w7bcXtKWZMHBMbC49nQXgDKYMm+g0aiVrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719949981; c=relaxed/simple;
-	bh=AhKBgKkOKuwFCM0gCb1KZuuevY26btmfNxN9xL7fOew=;
+	s=arc-20240116; t=1719950560; c=relaxed/simple;
+	bh=e0uzpdCxlw29WKBNGSI7pwvAHe03CeGHj6AYlsEwXHY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lcjp3Or6sNNNIhrLVAOXqhZc4sM3jH4fS6UuYpDZYCUKy09YoOYsDZPtnEAdouOkk01Km1uMSYxlytq70VtX/Xt/IPqW4mmY2dh7czzc3YbpjBk+iZ4kVMlCTxYf0y+GXkHm8qItpsbOhQ5L/8KkbDoWs3OY+rEYHcohSRzuTJc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YY5n4C7p; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uk2UXdOb3JVbwTB81Elj9cTREAmewtr1fCMKB5Hg9mOMvrz8l8NfLVvvQIKBBjfxg9tXEeub9rJzcJKgGI5D/zDeEWLObVUXIlaVUiWvIj8dBHLuZ5QG43lSJ+paDhgCQhG3OIdugvxU2cv4FvjPPOzEBd9yD0LWFFFpOtkp7s0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mhwn7mGb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YY5n4C7p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18FC1C116B1;
-	Tue,  2 Jul 2024 19:53:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mhwn7mGb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13CEBC116B1;
+	Tue,  2 Jul 2024 20:02:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719949981;
-	bh=AhKBgKkOKuwFCM0gCb1KZuuevY26btmfNxN9xL7fOew=;
+	s=k20201202; t=1719950560;
+	bh=e0uzpdCxlw29WKBNGSI7pwvAHe03CeGHj6AYlsEwXHY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YY5n4C7py1fibWcGQi0S09fcq/b6NFCtR6IiU1DuUqViv1RAr3ijmRsRKe6NWInaE
-	 FlQ8ztmn9hmNPYoiJWrcHralBFKvxUMti5PXENfSaCLy19Q/09oId3DCiDf3t8+oFm
-	 ZojozF/jaNmsw+L6emo2VgUYoJXw1pk27YvXnNsOOrVYLavqwfj5/dE5mMapZkCmMz
-	 ME3FiWruiHyhujIHggNh9vW671Pn8ictehUCV6HWhp0T3HwuntlS+Q7x6RIItgosRY
-	 0whvz4c1haitWgjj1b5mDhR/We39thYPoiFnMhsX6k3vJXdAH/9Zisxm123xS29pO4
-	 n2ul+ezewffYQ==
-Date: Tue, 2 Jul 2024 12:53:00 -0700
+	b=mhwn7mGbfKqXtRT+HgcBeRWwMLFPMpBSTyratDekB/8iK4utss+EOX37TREEWo2mL
+	 WSeu3TA81XhW+ULZ/kvn4fIdfnBIB6TxTVjzG/fISdxlzU/mCfgJT6k7ChD8u6r+5m
+	 kEY+xd5v85SR0NsS0BfEfCr8AtiJNYKJ8koT/EW/VJC/HLnaYBx9vGVGEtC7f9mOmf
+	 dbLA8HH5R9Eltlwwl1Vjv10TCRxHabM7PMiunOPPXRNuPf/90/8tVwvUP8Ulw23JHK
+	 rt1J2ofZcXzU+NOtetEC2zYOoAc9ZERL6ASBZHfRejsqQpxWKjwdSuDZqwHoMQ3xEl
+	 lZXoHdK+40uXQ==
+Date: Tue, 2 Jul 2024 13:02:39 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/12] xfs_io: create exchangerange command to test file
- range exchange ioctl
-Message-ID: <20240702195300.GQ612460@frogsfrogsfrogs>
-References: <171988116691.2006519.4962618271620440482.stgit@frogsfrogsfrogs>
- <171988116847.2006519.4476289388418471452.stgit@frogsfrogsfrogs>
- <20240702051510.GI22284@lst.de>
+Cc: cem@kernel.org, catherine.hoang@oracle.com, linux-xfs@vger.kernel.org,
+	allison.henderson@oracle.com
+Subject: Re: [PATCH 03/24] xfs_logprint: dump new attr log item fields
+Message-ID: <20240702200239.GR612460@frogsfrogsfrogs>
+References: <171988121023.2009260.1161835936170460985.stgit@frogsfrogsfrogs>
+ <171988121108.2009260.6026012075133524751.stgit@frogsfrogsfrogs>
+ <20240702062503.GC24089@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,24 +44,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240702051510.GI22284@lst.de>
+In-Reply-To: <20240702062503.GC24089@lst.de>
 
-On Tue, Jul 02, 2024 at 07:15:10AM +0200, Christoph Hellwig wrote:
-> On Mon, Jul 01, 2024 at 05:55:49PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Create a new xfs_Io command to make raw calls to the
+On Tue, Jul 02, 2024 at 08:25:03AM +0200, Christoph Hellwig wrote:
+> > +extern int xlog_print_trans_attri_name(char **ptr, uint src_len,
+> > +		const char *tag);
+> > +extern int xlog_print_trans_attri_value(char **ptr, uint src_len, int value_len,
+> > +		const char *tag);
 > 
-> s/xfs_Io/xfs_io/ ?
-> 
-> > +extern void		exchangerange_init(void);
-> 
-> No need for the extern.
+> Maybe drop the pointless externs?
 > 
 > Otherwise looks good:
 > 
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Both fixed, thanks!
+Done, thanks.
 
 --D
