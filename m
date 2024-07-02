@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12AC29449
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:10:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06522119
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:10:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719882611; cv=none; b=iyW+Pzxe4DciS3Mq/kMxBbsyF7nHJdFLgJz1RZVASLGNgTamY6ILPkE1R/ZvqsqdJoOP8IGfunftxmq2l7m9Kfa0UcvDiWiwJfl16ZxnIC150hZXoEZ3vqeEGj0NmRbadW4DvoZKbIWVOyBpZppD/uauv03aCdbI7/VW3V9U+Qg=
+	t=1719882626; cv=none; b=Daqyr72JzSo951eJJnztCxMSp62ea84fRSlVaAIc7lbP6Y7JKXugi2LE+TkQT1jcDsJ1zT1f69LTYvm+PSGQiZboLDE6X5Mrukfbj08xpiFXoGGnfjjvHU51vRmZGQKeZrGUN351d8RtHjM5Cr5dgH3v1kPC10rDuwkGfgy9Adc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719882611; c=relaxed/simple;
-	bh=U7oR+UuEtfyq2H2W1E3FJVRm9KnyNUe5K13MSxYAmIM=;
+	s=arc-20240116; t=1719882626; c=relaxed/simple;
+	bh=rODyl56E8htbf3lOKTO39Qh9sP+UbS7aIu+ceyIXP4U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PBL888uXFh/frySwlOo9CIt/EE8BZbfSOrVSCkxXzfSZcPzFbC2D0hPUAAiqwv1RYx++Xvfht4wEjWDgJCbznwavwsJ8rr+gTBPcD7eBjlb7W1IWLBVgUdp5IoXQkJO4UzCQeYy5lHttfvUn76J8jrLnJH/tf4+Fq77DaQeKcvQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DtEVRzdx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Py1yHQLOPtOpaj61IHQvo1r8PpcKt8Q/jSkRnkj5l3UYN3Flz8Mfc/fJFCMUTlnkbQorO+wNjNVeSMYgdJRvqBK9UTKkmLOMhUOKyT6wQ0ZlvtKECDoeA5rcCBm4d5KgIoYxfJLKgdtwQKBkI7ehM7IiRb3b6EHZg1/klgQhQPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uFnNo+Ll; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DtEVRzdx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AA40C116B1;
-	Tue,  2 Jul 2024 01:10:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uFnNo+Ll"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B8C2C116B1;
+	Tue,  2 Jul 2024 01:10:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719882610;
-	bh=U7oR+UuEtfyq2H2W1E3FJVRm9KnyNUe5K13MSxYAmIM=;
+	s=k20201202; t=1719882626;
+	bh=rODyl56E8htbf3lOKTO39Qh9sP+UbS7aIu+ceyIXP4U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DtEVRzdxybI0VtWutliZfAHHbeWh6l8hahMQO2CLfTENXM7aHZSl+TBqqonw3X2tQ
-	 0ba9IJ4ZnviMMalX45kaVadK/+zeCiniXd8VB2yuD+Y8ifoKVASuecFlwMXN/nrKk1
-	 S55KMYiIOs4GLRjmt6GUkejdjic/DzgrwyojqBKYWR5e3+CycXS32Bu//2fbuxCmGC
-	 D+0GYjTScxNAT409EYOnamUPsJ/MwKaYzs3KgnuhG7GZrsOegKhWVUuNTI+HYtig6l
-	 IUafgiWDXqN+Sb1bmAnvdDU2miBzAIgvXDen8Mbxu7CmqXCJX/gqPLyv1O7rvQD7iu
-	 X/XWLeYHDdI/A==
-Date: Mon, 01 Jul 2024 18:10:10 -0700
-Subject: [PATCH 1/3] xfs_repair: check free space requirements before allowing
- upgrades
+	b=uFnNo+Ll4gyXKIxv+QxdQFPrkXJO/tjLRnvM1g+2AXJI6rkdRggmRYNZp+L7oHv7G
+	 mPewGW8arLmSoomHKiojmO4MjIiKYQZ6hx1k1EP742Ydj9P7/N2/RfkbSa1m2Euu7+
+	 jXJN5hj+kU8Yt6ofUCbisrdSNQH9UXnJ7YHjzAfOgDYAuDdchDpVl5nnr4OX9n0+xC
+	 7w3ysDb4owNxd+9vRsmJvkLdz4votPMtV6V+uCONivkuqH9+Ebkoz4kISCZBV2DH4M
+	 5EJvf0BAwdQ0GokG/zo6UMGPW8MCDMARteINwuuu/IsefkqgcVk/9tC3IL9mXCnFxN
+	 0uTWp/0Z16Lhg==
+Date: Mon, 01 Jul 2024 18:10:25 -0700
+Subject: [PATCH 2/3] xfs_repair: enforce one namespace bit per extended
+ attribute
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
- Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988120616.2009101.967817870917595096.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <171988120632.2009101.8080215211983761365.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988120597.2009101.16960117804604964893.stgit@frogsfrogsfrogs>
 References: <171988120597.2009101.16960117804604964893.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,187 +47,58 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, the V5 feature upgrades permitted by xfs_repair do not affect
-filesystem space usage, so we haven't needed to verify the geometry.
-
-However, this will change once we start to allow the sysadmin to add new
-metadata indexes to existing filesystems.  Add all the infrastructure we
-need to ensure that there's enough space for metadata space reservations
-and per-AG reservations the next time the filesystem will be mounted.
+Enforce that all extended attributes have at most one namespace bit.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-[david: Recompute transaction reservation values; Exit with error if upgrade fails]
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-[djwong: Refuse to upgrade if any part of the fs has < 10% free]
 ---
- include/libxfs.h |    1 
- repair/phase2.c  |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 135 insertions(+)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/attr_repair.c     |   15 +++++++++++++++
+ 2 files changed, 16 insertions(+)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index e760a46d8950..bb00b71b17e1 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -91,6 +91,7 @@ struct iomap;
- #include "libxfs/buf_mem.h"
- #include "xfs_btree_mem.h"
- #include "xfs_parent.h"
-+#include "xfs_ag_resv.h"
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index cc670d93a9f2..2d858580abfe 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -36,6 +36,7 @@
  
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 83f0c539bb5d..3418da523a67 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -249,6 +249,137 @@ install_new_state(
- 	libxfs_trans_init(mp);
- }
+ #define xfs_ascii_ci_hashname		libxfs_ascii_ci_hashname
  
-+#define GIGABYTES(count, blog)     ((uint64_t)(count) << (30 - (blog)))
-+static inline bool
-+check_free_space(
-+	struct xfs_mount	*mp,
-+	unsigned long long	avail,
-+	unsigned long long	total)
-+{
-+	/* Ok if there's more than 10% free. */
-+	if (avail >= total / 10)
-+		return true;
-+
-+	/* Not ok if there's less than 5% free. */
-+	if (avail < total / 5)
-+		return false;
-+
-+	/* Let it slide if there's at least 10GB free. */
-+	return avail > GIGABYTES(10, mp->m_sb.sb_blocklog);
-+}
-+
-+static void
-+check_fs_free_space(
-+	struct xfs_mount		*mp,
-+	const struct check_state	*old,
-+	struct xfs_sb			*new_sb)
-+{
-+	struct xfs_perag		*pag;
-+	xfs_agnumber_t			agno;
-+	int				error;
-+
-+	/* Make sure we have enough space for per-AG reservations. */
-+	for_each_perag(mp, agno, pag) {
-+		struct xfs_trans	*tp;
-+		struct xfs_agf		*agf;
-+		struct xfs_buf		*agi_bp, *agf_bp;
-+		unsigned int		avail, agblocks;
-+
-+		/* Put back the old super so that we can read AG headers. */
-+		restore_old_state(mp, old);
-+
-+		/*
-+		 * Create a dummy transaction so that we can load the AGI and
-+		 * AGF buffers in memory with the old fs geometry and pin them
-+		 * there while we try to make a per-AG reservation with the new
-+		 * geometry.
-+		 */
-+		error = -libxfs_trans_alloc_empty(mp, &tp);
-+		if (error)
-+			do_error(
-+	_("Cannot reserve resources for upgrade check, err=%d.\n"),
-+					error);
-+
-+		error = -libxfs_ialloc_read_agi(pag, tp, 0, &agi_bp);
-+		if (error)
-+			do_error(
-+	_("Cannot read AGI %u for upgrade check, err=%d.\n"),
-+					pag->pag_agno, error);
-+
-+		error = -libxfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-+		if (error)
-+			do_error(
-+	_("Cannot read AGF %u for upgrade check, err=%d.\n"),
-+					pag->pag_agno, error);
-+		agf = agf_bp->b_addr;
-+		agblocks = be32_to_cpu(agf->agf_length);
-+
-+		/*
-+		 * Install the new superblock and try to make a per-AG space
-+		 * reservation with the new geometry.  We pinned the AG header
-+		 * buffers to the transaction, so we shouldn't hit any
-+		 * corruption errors on account of the new geometry.
-+		 */
-+		install_new_state(mp, new_sb);
-+
-+		error = -libxfs_ag_resv_init(pag, tp);
-+		if (error == ENOSPC) {
-+			printf(
-+	_("Not enough free space would remain in AG %u for metadata.\n"),
-+					pag->pag_agno);
-+			exit(1);
++#define xfs_attr_check_namespace	libxfs_attr_check_namespace
+ #define xfs_attr_get			libxfs_attr_get
+ #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
+ #define xfs_attr_namecheck		libxfs_attr_namecheck
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 0f2f7a284bdd..a756a40db9b0 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -291,6 +291,13 @@ process_shortform_attr(
+ 			}
+ 		}
+ 
++		if (!libxfs_attr_check_namespace(currententry->flags)) {
++			do_warn(
++	_("multiple namespaces for shortform attribute %d in inode %" PRIu64 "\n"),
++				i, ino);
++			junkit = 1;
 +		}
-+		if (error)
-+			do_error(
-+	_("Error %d while checking AG %u space reservation.\n"),
-+					error, pag->pag_agno);
 +
-+		/*
-+		 * Would the post-upgrade filesystem have enough free space in
-+		 * this AG after making per-AG reservations?
-+		 */
-+		avail = pag->pagf_freeblks + pag->pagf_flcount;
-+		avail -= pag->pag_meta_resv.ar_reserved;
-+		avail -= pag->pag_rmapbt_resv.ar_asked;
-+
-+		if (!check_free_space(mp, avail, agblocks)) {
-+			printf(
-+	_("AG %u will be low on space after upgrade.\n"),
-+					pag->pag_agno);
-+			exit(1);
-+		}
-+		libxfs_trans_cancel(tp);
-+	}
-+
-+	/*
-+	 * Would the post-upgrade filesystem have enough free space on the data
-+	 * device after making per-AG reservations?
-+	 */
-+	if (!check_free_space(mp, mp->m_sb.sb_fdblocks, mp->m_sb.sb_dblocks)) {
-+		printf(_("Filesystem will be low on space after upgrade.\n"));
-+		exit(1);
-+	}
-+
-+	/*
-+	 * Release the per-AG reservations and mark the per-AG structure as
-+	 * uninitialized so that we don't trip over stale cached counters
-+	 * after the upgrade/
-+	 */
-+	for_each_perag(mp, agno, pag) {
-+		libxfs_ag_resv_free(pag);
-+		clear_bit(XFS_AGSTATE_AGF_INIT, &pag->pag_opstate);
-+		clear_bit(XFS_AGSTATE_AGI_INIT, &pag->pag_opstate);
-+	}
-+}
-+
-+static bool
-+need_check_fs_free_space(
-+	struct xfs_mount		*mp,
-+	const struct check_state	*old)
-+{
-+	return false;
-+}
-+
- /*
-  * Make sure we can actually upgrade this (v5) filesystem without running afoul
-  * of root inode or log size requirements that would prevent us from mounting
-@@ -291,6 +422,9 @@ install_new_geometry(
- 		exit(1);
- 	}
+ 		/* namecheck checks for null chars in attr names. */
+ 		if (!libxfs_attr_namecheck(currententry->flags,
+ 					   currententry->nameval,
+@@ -641,6 +648,14 @@ process_leaf_attr_block(
+ 			break;
+ 		}
  
-+	if (need_check_fs_free_space(mp, &old))
-+		check_fs_free_space(mp, &old, new_sb);
++		if (!libxfs_attr_check_namespace(entry->flags)) {
++			do_warn(
++	_("multiple namespaces for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
++				i, da_bno, ino);
++			clearit = 1;
++			break;
++		}
 +
- 	/*
- 	 * Restore the old state to get everything back to a clean state,
- 	 * upgrade the featureset one more time, and recompute the btree max
+ 		if (entry->flags & XFS_ATTR_INCOMPLETE) {
+ 			/* we are inconsistent state. get rid of us */
+ 			do_warn(
 
