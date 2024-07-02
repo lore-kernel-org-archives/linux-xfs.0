@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CE98D50F
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:52:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596C4D50F
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:53:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719881578; cv=none; b=Pq142oPrMiVe8laHANM0b5mHNR1nu+gp/cUQ3FM7IFrJ/EEi/z54qv8Ytz3xpyiSc9f1YTL4W/KycC52F2M5lEOrbYP+1nv0yCNeZ74Judzde7rzgUMCA//ZfE1p/gtCkmGtqPw/aM3AkPvZT8UjlShSR6cD4LtUJue194OeWkk=
+	t=1719881594; cv=none; b=ai/H1+lApvu28GfhnZUE1Ndq25IOTbnPXVEb7sncwqaPQHU1DsHqLf1+RzjMGRee9bYwCA99zBXGxWKw5pDTKzfmtUn1Q3uUvRtM0fh0A0xTT0BY6jvrjMUbtoTfUEpa/pfTRb8sjpQd0Jn91ntQv04g/wJxA0un5w1/wf0aSt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719881578; c=relaxed/simple;
-	bh=TCab/TtBDuvmrhO+c0DWhGhDML9RCR4sTY1hx2bFOgM=;
+	s=arc-20240116; t=1719881594; c=relaxed/simple;
+	bh=8gvUDH7jjSua95MCwVPPCpjYbuGIdRnqTr+regVQkdI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fFzpS4bLfnG+QBSgUV7yzYF6oUG4Veqwd6Hm3OEEVTYGDVIY2+6Y8HN40ntRHzVz/o9c0VuYKHpVskAYA6V6G4xi9a/j2OMyu4WWiJNkK5/cJFhtqXef1vqaYrjpXYXLz7CWSgbPA210ocR1P1IwsmZcrO2X43oY5RyXfAzhkBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b0GluoWA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VTAmP0S35tdrV51aii6E8ZPZtgCPMiIPgRnGo5123qJGIUVk3ep6LBiAB74MOiK9LDtFTZt9pv9ai9K4aCFBhPIO5lKrZKnj5u4PFGeOHHO741RrtSIbnXp4wAM6rKgIxLCJ+GWfdDy5ZGOKUlQzlL6/MRjXDha+YsEkKFI6hLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQnqEldl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b0GluoWA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38383C116B1;
-	Tue,  2 Jul 2024 00:52:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQnqEldl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1205C116B1;
+	Tue,  2 Jul 2024 00:53:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719881578;
-	bh=TCab/TtBDuvmrhO+c0DWhGhDML9RCR4sTY1hx2bFOgM=;
+	s=k20201202; t=1719881593;
+	bh=8gvUDH7jjSua95MCwVPPCpjYbuGIdRnqTr+regVQkdI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=b0GluoWAIpUeNwk/Tt6kjbSaINCqRkFRXoMQ5eRzSXVgAcB5jjFypBP6CrH7it3cR
-	 1MAI9L+XwhS5r11/7zlRwwnsotSSri2O0yJglqvtwFuqi0F4VJ8gjuwJRUSSSqRiVH
-	 Osa43y1Y/xbyPhrCDITaSq9sUdaUC9g8jijOxUK/mTwKAlhH4dqczRZ3uIdqeiFgWl
-	 +gQ7eQ7uNPGtWwJ6Bcy2Cb/YW/YgsKopmSwFO5m4lBCQjgInaOXIX0TYBOsLcFiCxn
-	 P68WEgdRjdRkMKKZzYL5VX2JEMF2S3q1tBJTlIJgEtz7DMRezeExNhgueALdj24uyz
-	 Al+ev6c+japTA==
-Date: Mon, 01 Jul 2024 17:52:57 -0700
-Subject: [PATCHSET v13.7 14/16] xfsprogs: detect and correct directory tree
- problems
+	b=nQnqEldlr7pUsDxnCgAJHFpGk7i4T8Lx+1QkXgorRcKvuTfxpt+g4N24YDgoTWA82
+	 +FaLudgdha737J2AOSkRLyFyHB6Zeo01NFB3DQhv9bVcLvSsVRHbhyuCmGekR3ZV6j
+	 AnE5C/1Iq8uu04WC9btii9I6OR2CTAX1ZnLCgQW8m6DAuSqiTPmGypIuMhRDEXGFu7
+	 kR0dqdMY4ptOsIdrudyd7s3tfn8RfaKn688ZOaUFSCd9fUUbrZbo+gop67DNFH82uB
+	 tTqe7XYDZB0eXNdGaL8pV1djGP3XNXEHQ2mbb+o6j4GUiLJPq0N8YxozY+ZAkelqoD
+	 l5wrelUzh2wvQ==
+Date: Mon, 01 Jul 2024 17:53:13 -0700
+Subject: [PATCHSET v30.7 15/16] xfs_scrub: vectorize kernel calls
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988122691.2012320.13207835630113271818.stgit@frogsfrogsfrogs>
+Message-ID: <171988123120.2012546.17403096510880884928.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240702004322.GJ612460@frogsfrogsfrogs>
 References: <20240702004322.GJ612460@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,22 +46,9 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Historically, checking the tree-ness of the directory tree structure has
-not been complete.  Cycles of subdirectories break the tree properties,
-as do subdirectories with multiple parents.  It's easy enough for DFS to
-detect problems as long as one of the participants is reachable from the
-root, but this technique cannot find unconnected cycles.
-
-Directory parent pointers change that, because we can discover all of
-these problems from a simple walk from a subdirectory towards the root.
-For each child we start with, if the walk terminates without reaching
-the root, we know the path is disconnected and ought to be attached to
-the lost and found.  If we find ourselves, we know this is a cycle and
-can delete an incoming edge.  If we find multiple paths to the root, we
-know to delete an incoming edge.
-
-Even better, once we've finished walking paths, we've identified the
-good ones and know which other path(s) to remove.
+Create a vectorized version of the metadata scrub and repair ioctl, and
+adapt xfs_scrub to use that.  This is an experiment to measure overhead
+and to try refactoring xfs_scrub.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -73,28 +59,40 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-directory-tree
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=vectorized-scrub
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-directory-tree
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=vectorized-scrub
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-directory-tree
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=vectorized-scrub
 ---
 Commits in this patchset:
- * libfrog: add directory tree structure scrubber to scrub library
- * xfs_spaceman: report directory tree corruption in the health information
- * xfs_scrub: fix erroring out of check_inode_names
- * xfs_scrub: detect and repair directory tree corruptions
- * xfs_scrub: defer phase5 file scans if dirloop fails
+ * man: document vectored scrub mode
+ * libfrog: support vectored scrub
+ * xfs_io: support vectored scrub
+ * xfs_scrub: split the scrub epilogue code into a separate function
+ * xfs_scrub: split the repair epilogue code into a separate function
+ * xfs_scrub: convert scrub and repair epilogues to use xfs_scrub_vec
+ * xfs_scrub: vectorize scrub calls
+ * xfs_scrub: vectorize repair calls
+ * xfs_scrub: use scrub barriers to reduce kernel calls
+ * xfs_scrub: try spot repairs of metadata items to make scrub progress
 ---
- libfrog/scrub.c                     |    5 +
- man/man2/ioctl_xfs_bulkstat.2       |    3 
- man/man2/ioctl_xfs_fsbulkstat.2     |    3 
- man/man2/ioctl_xfs_scrub_metadata.2 |   14 ++
- scrub/phase5.c                      |  271 +++++++++++++++++++++++++++++++++--
- scrub/repair.c                      |   13 ++
- scrub/repair.h                      |    2 
- spaceman/health.c                   |    4 +
- 8 files changed, 301 insertions(+), 14 deletions(-)
+ io/scrub.c                           |  368 ++++++++++++++++++++++++++++++----
+ libfrog/fsgeom.h                     |    6 +
+ libfrog/scrub.c                      |  137 +++++++++++++
+ libfrog/scrub.h                      |   35 +++
+ man/man2/ioctl_xfs_scrubv_metadata.2 |  171 ++++++++++++++++
+ man/man8/xfs_io.8                    |   51 +++++
+ scrub/phase1.c                       |    2 
+ scrub/phase2.c                       |   93 +++++++--
+ scrub/phase3.c                       |   84 ++++++--
+ scrub/repair.c                       |  355 +++++++++++++++++++++------------
+ scrub/scrub.c                        |  360 +++++++++++++++++++++++++--------
+ scrub/scrub.h                        |   19 ++
+ scrub/scrub_private.h                |   55 +++--
+ scrub/xfs_scrub.c                    |    1 
+ 14 files changed, 1431 insertions(+), 306 deletions(-)
+ create mode 100644 man/man2/ioctl_xfs_scrubv_metadata.2
 
