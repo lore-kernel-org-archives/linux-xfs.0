@@ -1,101 +1,103 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2661B15218A;
-	Tue,  2 Jul 2024 17:10:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C32CA1C8FDD
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 18:51:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719940227; cv=none; b=IY7rBRGssnEHH1zdV1X0a1hvEfw2LjaYNaVGq5lCh0pr2RUAocQ3rzv3DE0G6x4VoKKxaX+FPJmbeWs518nO98EODHBy0mrPmGriOR9DTf1h4D6Rv7wFUz0AQ3yo6MRBGOgNJtd8zHs777Q9TG+em098RiR+sR+Ckpzq6TQxdLU=
+	t=1719946281; cv=none; b=dVIEdSm6t5KPR6T+8r1zqRJScBV2HmCtb1vOh2eLJ6Vb/0ksXjgD7MWQqKeQpf5Ntm/5hhOqa/Q/53g6NrNgcDLoHlHiOLmh7JeeWmVVwWTvyIvxQ0mcGEA2UZjhaFF85thnfbGmEjJGEGVw6PZMdbh4QAXlSH7CYZHJEV4Da6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719940227; c=relaxed/simple;
-	bh=8RGz1J85NAvvoYDxp27n3BmZiz19OrcrON1hQUubgrk=;
+	s=arc-20240116; t=1719946281; c=relaxed/simple;
+	bh=EeAMfPqPWzYXeOEW9000X8vhzgMhyZN+eh5n8crqCAM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kkOldYzHh+41mFdXRO980I6I1M0d54XvTmPCyKVavu+d7XN7I500ZJy+Xu1BLe+VqrfkEAqBYB+Kv+Ee6JJx94MeSnTR4+JZkGKjBD5BE6zn2GceXTYxEZlS9MBqhOCBGRPqXykZy5YlNOOVSHACIH7e6G5xNipYLsV2kQFT6AA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=eayMpLs3; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=XTLZy/zjthVvtMoNmy4x9UUynB85FhDi5hnFZikLUj1GTi0nNjMN+dT+ISBxc3wE/bjZ+OrvcPCFt0KS82VFhpNGabQoRyDn7d42AfGEMYCS/VhUrna8wld65S/ScnSb+c2zyN6RV86kG64UzekWO9wxSqltXCwNJnmDE7LwpmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FN+pdyYJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="eayMpLs3"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4WD8YT4Cmhz9sTd;
-	Tue,  2 Jul 2024 19:10:21 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1719940221;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=x7S8VUQYyvA/hYjxf+VcnjpFycomG4Q9npc7KT3Na+A=;
-	b=eayMpLs3XwLuC/DdNErQ6ZCv5mfKT5+W0WH+14922V/+zVlk7DAIc5Qhilq6qnJhn3vzpV
-	Per+4UR5bylBDnITjTpBuZxRtlYpRhw5AQeljJpeHHodVSalpAu52j5syGpjBz5zOBZ9yx
-	zkdq15e9ib2r3erwIovYKrQ5nOP4WpcDHMU8cRaMtLfcHbTZRhNuO/X86KVi2sftEEjYfU
-	MuUTYP7dwCIyN6raWrXNI5Q3IT+Ma0hzhttMFteYHQwXEC7z9Q8EXfgB/JuB8Nwhx1EawL
-	mCOf4CtVW/gYrv6XnjrKRCMiGDStEaadznZMZn8bI5LrLVV5WDBlfGj9c2fj+Q==
-Date: Tue, 2 Jul 2024 17:10:14 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, david@fromorbit.com,
-	chandan.babu@oracle.com, djwong@kernel.org, brauner@kernel.org,
-	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	yang@os.amperecomputing.com, linux-mm@kvack.org,
-	john.g.garry@oracle.com, linux-fsdevel@vger.kernel.org,
-	hare@suse.de, p.raghav@samsung.com, mcgrof@kernel.org,
-	gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, Zi Yan <zi.yan@sent.com>
-Subject: Re: [PATCH v8 06/10] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Message-ID: <20240702171014.reknnw3smasylbtc@quentin>
-References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-7-kernel@pankajraghav.com>
- <20240702074203.GA29410@lst.de>
- <20240702101556.jdi5anyr3v5zngnv@quentin>
- <20240702120250.GA17373@lst.de>
- <20240702140123.emt2gz5kbigth2en@quentin>
- <20240702154216.GA1037@lst.de>
- <20240702161329.i4w6ipfs7jg5rpwx@quentin>
- <ZoQwKlYkI5oik32m@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FN+pdyYJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F733C32781;
+	Tue,  2 Jul 2024 18:51:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719946281;
+	bh=EeAMfPqPWzYXeOEW9000X8vhzgMhyZN+eh5n8crqCAM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FN+pdyYJ/himrgohmir8hHAzuYJWP5Lee+uAWS1qJib4Rb309UciXzmOaCwL63fjz
+	 H1X22pDh9O+s3+7dPJzpQ+VLIy7c3BYe4OO1LBepsxhGIuQpQSuL4S18EMbihnlqmf
+	 wVTzNXxIknQCMSaFnn5rhuNcDpRubUktSnXyaT4zj+vJT7g/ua/S+wbzvLRxOyOuvh
+	 mjJewDxBTMGtNGQ/pSXvm7U8D+QsEMz4acn36DNkj83loHEEdNOPzFhvbBlegZ/r45
+	 2xfaBSyrjOxruKb/o3kmtrKMpo8olvEumekdQNDRHuaS8N2vt4SDvyHcQtuPJIvgD1
+	 zcl43/4ugxqqw==
+Date: Tue, 2 Jul 2024 11:51:20 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+	Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 11/11] xfs: skip flushing log items during push
+Message-ID: <20240702185120.GL612460@frogsfrogsfrogs>
+References: <20240620072146.530267-1-hch@lst.de>
+ <20240620072146.530267-12-hch@lst.de>
+ <20240620195142.GG103034@frogsfrogsfrogs>
+ <20240621054808.GB15738@lst.de>
+ <20240621174645.GF3058325@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZoQwKlYkI5oik32m@casper.infradead.org>
-X-Rspamd-Queue-Id: 4WD8YT4Cmhz9sTd
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240621174645.GF3058325@frogsfrogsfrogs>
 
-On Tue, Jul 02, 2024 at 05:51:54PM +0100, Matthew Wilcox wrote:
-> On Tue, Jul 02, 2024 at 04:13:29PM +0000, Pankaj Raghav (Samsung) wrote:
-> > On Tue, Jul 02, 2024 at 05:42:16PM +0200, Christoph Hellwig wrote:
-> > > On Tue, Jul 02, 2024 at 02:01:23PM +0000, Pankaj Raghav (Samsung) wrote:
-> > > +static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
-> > > >                 loff_t pos, unsigned len)
-> > > >  {
-> > > >         struct inode *inode = file_inode(dio->iocb->ki_filp);
-> > > >         struct bio *bio;
-> > > >  
-> > > > +       if (!len)
-> > > > +               return 0;
-> > > >         /*
-> > > >          * Max block size supported is 64k
-> > > >          */
-> > > > -       WARN_ON_ONCE(len > ZERO_PAGE_64K_SIZE);
-> > > > +       if (len > ZERO_PAGE_64K_SIZE)
-> > > > +               return -EINVAL;
+On Fri, Jun 21, 2024 at 10:46:45AM -0700, Darrick J. Wong wrote:
+> On Fri, Jun 21, 2024 at 07:48:08AM +0200, Christoph Hellwig wrote:
+> > On Thu, Jun 20, 2024 at 12:51:42PM -0700, Darrick J. Wong wrote:
+> > > > Further with no backoff we don't need to gather huge delwri lists to
+> > > > mitigate the impact of backoffs, so we can submit IO more frequently
+> > > > and reduce the time log items spend in flushing state by breaking
+> > > > out of the item push loop once we've gathered enough IO to batch
+> > > > submission effectively.
 > > > 
-> > > The should probably be both WARN_ON_ONCE in addition to the error
-> > > return (and ZERO_PAGE_64K_SIZE really needs to go away..)
+> > > Is that what the new count > 1000 branch does?
 > > 
-> > Yes, I will rename it to ZERO_PAGE_SZ_64K as you suggested.
+> > That's my interpreation anyway.  I'll let Dave chime in if he disagrees.
 > 
-> No.  It needs a symbolic name that doesn't include the actual size.
-> Maybe ZERO_PAGE_IO_MAX.  Christoph suggested using SZ_64K to define
-> it, not to include it in the name.
+> <nod> I'll await a response on this...
 
-Initially I kept the name as ZERO_FSB_PAGE as it is used to do sub-block
-zeroing. But I know John from Oracle is already working on using it for
-rt extent zeroing. So I will just go with ZERO_PAGE_IO_MAX for now.
-Understood about the SZ_64K part. Thanks for the clarification.
+<shrug> No response after 11 days, I'll not hold this up further over a
+minor point.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+
+> > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_inode.c      | 1 +
+> > > >  fs/xfs/xfs_inode_item.c | 6 +++++-
+> > > 
+> > > Does it make sense to do this for buffer or dquot items too?
+> > 
+> > Not having written this here is my 2 unqualified cents:
+> > 
+> > For dquots it looks like it could be easily ported over, but I guess no
+> > one has been bothering with dquot performance work for a while as it's
+> > also missing a bunch of other things we did to the inode.  But given that
+> > according to Dave's commit log the іnode cluster flushing is a big part
+> > of this dquots probably aren't as affected anyway as we flush them
+> > individually (and there generally are a lot fewer dquot items in the AIL
+> > anyway).
+> 
+> It probably helps that dquot "clusters" are also single fsblocks too.
+> 
+> > For buf items the buffers are queued up on the on-stack delwri list
+> > and written when we flush them.  So we won't ever find already
+> > flushing items.
+> 
+> Oh right, because only the AIL flushes logged buffers to disk.
+> 
+> --D
+> 
