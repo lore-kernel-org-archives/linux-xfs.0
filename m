@@ -1,118 +1,197 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2115.outbound.protection.outlook.com [40.107.220.115])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E90AC38F83
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 13:50:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719928239; cv=none; b=dYTxkw9/WiJbTqwiOgfv3ZY4pakfzcPiwrUvBriDhosOir0BNPPi5YHZLggoBSJEMuB8FWVNZM5wwgvHMsRRaKj9sHPKpKT9svQSk8Q399Ky0hq9IBkWV6GwZcSeoL79pZxOMYxH+gvB7jqZXTpmr3fH72kOzmaJ4m9c4bM/pZE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719928239; c=relaxed/simple;
-	bh=r1XH6WaXJ2tVDrvGyc16H0EoAUJqoMtLXhduEQbg7tc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QEtlsZmORpyCtMY5sdBCSaYuftEtShRpcSv9A3CTsw7+4yY10cpDF9c//Cy/YcGlh2jN5XSUEQyMnnZ1LjiLL3ruiVE6vAS7djtaNBOlKc1fcYjBtSXuLPmqp4SKmAK0Tp57WddeB+MfBAoavoEeFiyOnas1ShZR10lOat9J4/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.252])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WD46f1MNLznYqw;
-	Tue,  2 Jul 2024 21:50:18 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id B4AE318007E;
-	Tue,  2 Jul 2024 21:50:33 +0800 (CST)
-Received: from localhost.localdomain (10.175.104.67) by
- kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Tue, 2 Jul 2024 21:50:32 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <chandanbabu@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH] xfs: get rid of xfs_ag_resv_rmapbt_alloc
-Date: Tue, 2 Jul 2024 21:48:51 +0800
-Message-ID: <20240702134851.2654558-1-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43FB25601;
+	Tue,  2 Jul 2024 14:00:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.220.115
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1719928855; cv=fail; b=MgkuIPNJlLLPzE5T1UB5yMDByjwEL1ZGY7VollgpsXpgXt2WydIqWjtu5qBs4rATXw4xF9LOmdTFYkkq236gsDX+0ugUjxD2anqaLkG7ZO/LMbqfzA11ppiGMM1vrDCA6nmfQzudBrpEN5W5i6c7dHhBW72DKzc87Dy3V8HsW+k=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1719928855; c=relaxed/simple;
+	bh=pNWxORAqHGDMXOoILvyvni8KEoy7fAghEV9aG3kgw4M=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=tA2DI0eB/LLzpIiKMX3Wh5h6yYxoce9hxBDBexOaMvDVcrI8NNvOt6xr+zuHzlLz7MpLQeXMY2EgkoFOAxrJI4Of+bbpEpl3647QS/VJWMechnLAR/qZaXaBem7FnUuTGorL398k1DquaHqp5x3JSq01JGuSmSXPKVC5i+gXJT8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hammerspace.com; spf=pass smtp.mailfrom=hammerspace.com; dkim=pass (1024-bit key) header.d=hammerspace.com header.i=@hammerspace.com header.b=KmzWvX8F; arc=fail smtp.client-ip=40.107.220.115
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hammerspace.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hammerspace.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=hammerspace.com header.i=@hammerspace.com header.b="KmzWvX8F"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ae+kOCpB9DqxVhKzY4VWQWrSf/gmvJZzKrBovqvtB8/ifzOuK83neF0XoG+UThdO5CnLqy29wx0Pfj0piwNw2v/Gn1DWP2FrbpjRMMjYXj9V/Ik+1plqZeawnsG2rCVpquJ5+ZCMXM9OPIDHfehSxvD2VrZY29tmPPGkDXiomXLHyeWNbNQfM9Yx6eYCFNzMHX8mIrLixjOKhJfLxWZjjMNFQMn6OMJGulncmZnM8BTRo10LGwaSBqzmAh/TSGQiAF6DC63ySTdA9P7UaoZ/1cKmZe+ISXhtORczruCEjdCXOVn9+yrsl0Do1+dtw+l0aHZO3OOMnm4hTWkKTti0gQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pNWxORAqHGDMXOoILvyvni8KEoy7fAghEV9aG3kgw4M=;
+ b=NnjSWt1hukiqeWXM/2SOfprdop/6hWIaEoC3/5/c1+HelG8xPVwWO8TpNdan1/wIagYe63Is+wq8RwhxefCFp6uftA2xcO/o4TqJhiDlz4qmLDR3qIUM0gLKvvOfcgJQFX3Z2VGBb86rbIn2f8kD6xJ8KQi/jcpXbwObIJyjmOzZECnZqC5ngMe3KHTRjomfyZPLIgdCtinug1erPD6sbbHTiKPzeED6Bd7mMb2ldGXF9Hf/lQ+nO4sbTe7gbklDga14YJMEVKSzGp5QOeFyEifWojGatU0tNvgu5ZoOUdsSeBvgWv7UuOAOObJKjuWNa8/0qrQahwx1esbGxwAz4g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=hammerspace.com; dmarc=pass action=none
+ header.from=hammerspace.com; dkim=pass header.d=hammerspace.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hammerspace.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pNWxORAqHGDMXOoILvyvni8KEoy7fAghEV9aG3kgw4M=;
+ b=KmzWvX8FYTF0DP/nJvBJpd7AQyktO+Cv704ySrFaGMdQV+gWz32XbRN+VN7XrL5EGPiBB7aBL4Iqdwqn/Fjex9yzjwrprE2RCoP/iSZkI67ObfyI82msbFpOmYvhavHtb79Zpensdi5qn42Z2bsVihdS9CCDuChus5YHg1C33Dg=
+Received: from CH0PR13MB5084.namprd13.prod.outlook.com (2603:10b6:610:111::7)
+ by BY5PR13MB3652.namprd13.prod.outlook.com (2603:10b6:a03:226::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7719.32; Tue, 2 Jul
+ 2024 14:00:48 +0000
+Received: from CH0PR13MB5084.namprd13.prod.outlook.com
+ ([fe80::67bb:bacd:2321:1ecb]) by CH0PR13MB5084.namprd13.prod.outlook.com
+ ([fe80::67bb:bacd:2321:1ecb%6]) with mapi id 15.20.7741.017; Tue, 2 Jul 2024
+ 14:00:46 +0000
+From: Trond Myklebust <trondmy@hammerspace.com>
+To: "david@fromorbit.com" <david@fromorbit.com>
+CC: "bfoster@redhat.com" <bfoster@redhat.com>, "snitzer@kernel.org"
+	<snitzer@kernel.org>, "linux-nfs@vger.kernel.org"
+	<linux-nfs@vger.kernel.org>, "linux-xfs@vger.kernel.org"
+	<linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
+Thread-Topic: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
+Thread-Index: AQHaywuEBap/iEadlEORNNEJmrHSZLHh65UlgAF2hACAAAimgIAAD6GA
+Date: Tue, 2 Jul 2024 14:00:46 +0000
+Message-ID: <d1af795e3aa83477f90e4521af7ade3a7aed5d4b.camel@hammerspace.com>
+References: <Zn7icFF_NxqkoOHR@kernel.org> <ZoGJRSe98wZFDK36@kernel.org>
+	 <ZoHuXHMEuMrem73H@dread.disaster.area> <ZoK5fEz6HSU5iUSH@kernel.org>
+	 <f54618f78737bab3388a6bb747e8509311bf8d93.camel@hammerspace.com>
+	 <ZoP68e8Ib2wIRLRC@dread.disaster.area>
+In-Reply-To: <ZoP68e8Ib2wIRLRC@dread.disaster.area>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=hammerspace.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: CH0PR13MB5084:EE_|BY5PR13MB3652:EE_
+x-ms-office365-filtering-correlation-id: f46cca07-f27f-4617-ae16-08dc9a9f5f12
+x-ms-exchange-atpmessageproperties: SA
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|376014|366016|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?Ky9pUWR5MFdZR010TVc5WUY1d2xMbVNvem84aVVYdWpnVjliYUk1N1RkeVZh?=
+ =?utf-8?B?eVQvTE5nSzUzc3Flemo5QjJXOS95WC9uMnBjUVVvaUI2bXZCRmRnVmlkRnRl?=
+ =?utf-8?B?aFZoWkI4dC82R2hqQndWT1R0bFZ1RWMvQUg2WUl0d3NtaGFvVE1NUFFjdHVk?=
+ =?utf-8?B?amlETWkvOGFmdFlKOUdCZTNPaTRmbE5UNUg4QVA1V1BhTWxRbTl1RDFzaUlj?=
+ =?utf-8?B?eHAzWEZQY0hXNzQrcS9rbmtrMkZmNWk5U2N1M3M5QXRBcS9wMkYwVlBCNU14?=
+ =?utf-8?B?NG4raGNKZllYbEhndlkxdnlxc2kzeXBQVUJ6NldnbUNJVFRwUG50UUNKNGhN?=
+ =?utf-8?B?ZDZSdXdsb3M0aHRlVGVhVVF1NWx2WFFhTElHWHJXSk1qSEtUd21oQXlvWVJS?=
+ =?utf-8?B?aENVaE1sSXNnTkxpNHlXeWt0RTJ2VEhDRVc0YTlLOG53UjA3dER2NDNWSTdr?=
+ =?utf-8?B?b3c3TVVabnNwS1Q1eGlrY0V5V1hxSFRWbVFLT29YZ25SbWRUeFVlS2lRQUwx?=
+ =?utf-8?B?SHZra0k5YmRFTS95ZFBtbDBPVzhqSDhmZ0l6YXlUWnd2UnZwTy82RGxXZnh6?=
+ =?utf-8?B?dFBtTFpwclhlVDNpaTBOSFZOcDhBbUxrNEh6cVR6cFBQOUl1NE93UHlmc1Y3?=
+ =?utf-8?B?Y2pIWWtTMVdVaUp1TzQyVmFrS3JZb2thcEMvckpISlNWWVdWb3Q3akJ0WGky?=
+ =?utf-8?B?TEhxQnc3ZGx4Y2JxUWZlQ1p6Zit1QUFQeHNodXVLdk1lTTczLzZKNlQvMHFJ?=
+ =?utf-8?B?RXp1UHU2KzA0U0taQW0yaTk3VU13YmpCaEpnUDdnU0xlTXUyZXVtN3A4amNQ?=
+ =?utf-8?B?cXFmMG9qdUNEd1RIaWhXSHZoaWZFSm9keEpFU1BkejQ0NElGRDUvbHlxcjZm?=
+ =?utf-8?B?d1RVa1lxNkkvYmZPL1BiTG5WMC85UWROSW52UXl1K21leDI0Q2s1MmhLdUp3?=
+ =?utf-8?B?YmlyVDdFWkVUM0FaMmFLancyUWFTeEdrMmJNckdrK1FzYjZmQWxUMUxyZGtS?=
+ =?utf-8?B?U2lMdDZNRERidEdHTGJ6blNLb2tDN0g3VkFzZnJ1WmQ3M1Rmbk1xTHhTWlhG?=
+ =?utf-8?B?QVZFZGduZWM3TXNNYitQUTRSajkydnNzQUNJa2g1M3FmZWFxcm5Xazlka1d0?=
+ =?utf-8?B?bDNOSTEyZ3ZiczJudk1yMVhFandPcVFMbVVaQXY0RDgzSkZOUnpsUE5RbDY1?=
+ =?utf-8?B?ajBpbTRVejRETDJIMW8xMnJFU0xyVDB0Qzg3Um5lb2pLQncvdHVja2R6RUdH?=
+ =?utf-8?B?NUJXVlVPTXMxd0c2aVhINVZ6S1VRcU9BSENuOHZKUG5zSkUwSGRWL3dnblRU?=
+ =?utf-8?B?T093RWh1UkZQNEZpWVp3RCtGZDdFb3VxZXVHZjlFZ3VOTmd2RERZM0lITU1o?=
+ =?utf-8?B?Qk1kbi8wMEJaRmZwdWJVYjZ6SFgxVWpGenJzVjRrWDcvVnJyQ1ZubmRqYnRj?=
+ =?utf-8?B?RGlSTjlMTkZCR2kwcEp3dWN6dW5UckJPTHBlTGl5K3prWlNtV0VkcWQ2c1c0?=
+ =?utf-8?B?YS9qVDhBMXRvSHNpK0IrSmRwdzhmdU0wY3VBRGRvekQxSUFoRXoxRFpDSVdG?=
+ =?utf-8?B?SU1kc2pQNkVvbC9BcXdJZWxQOHdBSEFPQm4vQUxvVHpWNUNGYWpCcERGdDBL?=
+ =?utf-8?B?ZXdEc2xwenoza2ZVMWdickt1ZGxLWTkwWkIzMG1GdzRyUExENnhHR0E5WlFT?=
+ =?utf-8?B?eENSeGROV2llQVlVQzdGRG5oNGtmT0VMUXViVnlnaThKOGVla25TbFcyRUhx?=
+ =?utf-8?B?SitzY20rUjhWbUlPNk1sODB0ZnluMnNHemlmNW14YVkyYlBuRGo2MXU0ZFZ5?=
+ =?utf-8?Q?XYK4oEqRG7chN6GRAoiDxIRgE6lHUuTWEevbM=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR13MB5084.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?eUxzcDMwTFNPYXFVR3VGM2duTmRNdDJqSWYxazJ4eFV4MjhGUnVadW81SWFX?=
+ =?utf-8?B?KzlETmdCZ3FTYlJBZmhZbHhObnhuRkZNelJwbHI0dHJKMWNpUWNIUDVZNjJD?=
+ =?utf-8?B?R2dmZmNKZzN6TDZTMmI2UytHcUFFTG5xOUw5V0RBWjFHczVZYXFwSlRKL2J6?=
+ =?utf-8?B?cGpjbFRrOWhFbUlGNGNYc25ST3NLZzFPekVjVXBXYXBRRktGcTFqNjR5Yzls?=
+ =?utf-8?B?RDRvZldpWE9YNHowUTR5Ni9zRHBzVndVcEJaRWlrS3NUNE9vZ2lxUHdEa1ls?=
+ =?utf-8?B?WldLUnM5VGpybGJlWUJNclNPL3ZGSzM5RG1Mdjl3aENMSUE4KzlwUHJpaEdM?=
+ =?utf-8?B?TVFXREpQRXNXVUk2SDFwcnhxZmRIeWRyWG5Fa0NKeURLM2l3OEF4ZHZtdWN5?=
+ =?utf-8?B?ZkdUV1VVWG84Q01xOVFmc05WekxnQVdXaHAySmlnelRkZ3lJNkJrK1Q5TWk3?=
+ =?utf-8?B?ZHJVVGdBb3ZMNGNoWC9JaGp1MzFVc1VYL3BuTlFYcCtaci91aHkyYStZakha?=
+ =?utf-8?B?WXhyZ3ljZG1uRVlnc3dySUQ5L3doWW9lUytGS1pOd0svaDVsQm05OHAyL3d3?=
+ =?utf-8?B?RFpxRGFCQnZUaWdOVFJZVEpEamcvRUpvdTRhYmUvT2JaWGdnN2lYaGVDT0k0?=
+ =?utf-8?B?dGt3M2NpT3B2K216c2RrenY2T0M2MzN4SlBISiswNWlOQXhkUTcwWU1XQWVT?=
+ =?utf-8?B?WUVCdHloTDdDcHFZQnh6UUdLWENnRWZIazlwTENOVTRSNW96eTZSM0tXc09J?=
+ =?utf-8?B?ZzVWOThQZ052VGQ1aEE1ckY0dzdQUVAzYTBWMXdJek1QbEx3WHdQYzM4SU1k?=
+ =?utf-8?B?MkorcGRxd29qUUtDdG80R210Myt2T0lkNXUzZHlPT0JETXNBd0VybE11TS9i?=
+ =?utf-8?B?SWhMcnpsR2pKNTRlTmlRVVZFRjF1WDl0SmZpYlNsRW13bnExZzRnbzhybDgx?=
+ =?utf-8?B?WE12d04vNmpKR3NOVUs3U1Q5Z3ROcUhFbzZQb1R4TnpxL25kTTg2cWVRdjZN?=
+ =?utf-8?B?Qld4TmNTMWREK3p5bVhpZGZSQTJLcFkxZU1JMkxWMkVoT2F6UHhIZzRGeis0?=
+ =?utf-8?B?OFJWRGpSK0lRY1pBWWJ5c0o3dmNmTVBib2ROZGhxeXlERlNaOWxuRkEzcC9r?=
+ =?utf-8?B?elB6Rjk4WXZocFRvZnNNWE00M2Z3dFpHa2cwektuUENVcElkTWVqVFhuanlX?=
+ =?utf-8?B?WmQwbkI4NWdTNmpvaXg3emJDQ1Q2eGVsMHRTYkNkNndmVU1GbUNLc2FXckhC?=
+ =?utf-8?B?R1hFTE0xaVEvSFpXZHJwTW5qbnBXOXlha1oxR0JhdDRnVi92NnZwSXZzL045?=
+ =?utf-8?B?NTl4dDRNY2R2dHArandGalc0TTB2OU5PaWk0OEtoRFBiaXlYUHNiV0tSdTRC?=
+ =?utf-8?B?Z0JnejJjK2wya01ydlZ2aS9kVnJOMmlmeUxTUzZQMjcxT1IrNi9IM0FGSlJq?=
+ =?utf-8?B?OWs5QjI0TjBNckxMRXg3cnV3RFVWVmRST2R4K1EvSXFnMGNKb09hVWx1Z3dR?=
+ =?utf-8?B?SDBpNkE1R200VEZMOWZDV0Z1YjU5Z3pxYVlqWWExRzJUSFNCQ0phblY2RlJG?=
+ =?utf-8?B?YURuUU9XTlV6ZlEyRUd5d2c3K2g5VDM4Ykkwbnk3YkpJYTNldHNzQnNUYTRM?=
+ =?utf-8?B?QmFGbTdKdjJrNFZxQlQxcjMybEJmM0djdUhkQU1UckNlYVFKUWtsS2NaYXY4?=
+ =?utf-8?B?UVo2YkxBVENQdThFVlBEOVZkQ1pRdWY2RThVQnNKNE1xWGRWdFpmSFZzVXI1?=
+ =?utf-8?B?ZWxGN2dtV1p3MWkrTFJWeUlWVWV1UE1VeUpMUldXcjdnbnhma29aYU05akVS?=
+ =?utf-8?B?RTJMNFQ3elNFTjVncWgzK2hTWWZwN3ZoaDV2WHNDUEFRdDZqbHVKTlllS2hO?=
+ =?utf-8?B?bGRZVk9XalRqTmJpRUtQeDlHeUsxV3FaY3RTcEhBWUtmWnpoWVFDb2dtSmNL?=
+ =?utf-8?B?NEVVNlZXODhmWTFoNVU3a1lONnF2YU80N09kN0JJeDl4V0tISEhsdUdzK3NM?=
+ =?utf-8?B?TnNScUg0a21WWlNhUisySndNUE5UVkFVR2dLQk81ZjhyL3ZjRHhXOFNhc3Nz?=
+ =?utf-8?B?c2RCOXVaZ0V1b09ZOXN3RlJ6RUEvWW1VUXVqelZydEtTRzdJcnF3T0J3bVVv?=
+ =?utf-8?B?L254MHdmR0cxT0IybURka2VOWUlubEg1UWZOekUzYndRN3B6eW9TR2x4R01H?=
+ =?utf-8?B?TXU0dzdRZUZWQW5KV2pwa1pkdHUyMndtQ2x0aFpjVW1mMVZQK25kYXJranNX?=
+ =?utf-8?B?SVJhV1EwY3RUcXlGaG9EakpLdSt3PT0=?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <19CD26E68A512845BDC8DBA7215889A1@namprd13.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemi500009.china.huawei.com (7.221.188.199)
+X-OriginatorOrg: hammerspace.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR13MB5084.namprd13.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f46cca07-f27f-4617-ae16-08dc9a9f5f12
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Jul 2024 14:00:46.4817
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 0d4fed5c-3a70-46fe-9430-ece41741f59e
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: w4yZ5QHjoK4SdXWbXT63C4Wkeq5amp+pUuwe/rGhlJyMXGTNjzcYi+No/chObWffHNHxkdS0pCXOuSrzzUXU/A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR13MB3652
 
-The pag in xfs_ag_resv_rmapbt_alloc() is already held when the struct
-xfs_btree_cur is initialized in xfs_rmapbt_init_cursor(), so there is no
-need to get pag again.
-
-On the other hand, in xfs_rmapbt_free_block(), the similar function
-xfs_ag_resv_rmapbt_free() was removed in commit 92a005448f6f ("xfs: get
-rid of unnecessary xfs_perag_{get,put} pairs"), xfs_ag_resv_rmapbt_alloc()
-was left because scrub used it, but now scrub has removed it. Therefore,
-we could get rid of xfs_ag_resv_rmapbt_alloc() just like the rmap free
-block, make the code cleaner.
-
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/libxfs/xfs_ag_resv.h    | 19 -------------------
- fs/xfs/libxfs/xfs_rmap_btree.c |  8 +++++++-
- 2 files changed, 7 insertions(+), 20 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-index ff20ed93de77..f247eeff7358 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.h
-+++ b/fs/xfs/libxfs/xfs_ag_resv.h
-@@ -33,23 +33,4 @@ xfs_perag_resv(
- 	}
- }
- 
--/*
-- * RMAPBT reservation accounting wrappers. Since rmapbt blocks are sourced from
-- * the AGFL, they are allocated one at a time and the reservation updates don't
-- * require a transaction.
-- */
--static inline void
--xfs_ag_resv_rmapbt_alloc(
--	struct xfs_mount	*mp,
--	xfs_agnumber_t		agno)
--{
--	struct xfs_alloc_arg	args = { NULL };
--	struct xfs_perag	*pag;
--
--	args.len = 1;
--	pag = xfs_perag_get(mp, agno);
--	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
--	xfs_perag_put(pag);
--}
--
- #endif	/* __XFS_AG_RESV_H__ */
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 9e759efa81cc..aa1d29814b74 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -88,6 +88,7 @@ xfs_rmapbt_alloc_block(
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agf		*agf = agbp->b_addr;
- 	struct xfs_perag	*pag = cur->bc_ag.pag;
-+	struct xfs_alloc_arg    args = { NULL };
- 	int			error;
- 	xfs_agblock_t		bno;
- 
-@@ -107,7 +108,12 @@ xfs_rmapbt_alloc_block(
- 	be32_add_cpu(&agf->agf_rmap_blocks, 1);
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
- 
--	xfs_ag_resv_rmapbt_alloc(cur->bc_mp, pag->pag_agno);
-+	/*
-+	 * Since rmapbt blocks are sourced from the AGFL, they are allocated one
-+	 * at a time and the reservation updates don't require a transaction.
-+	 */
-+	args.len = 1;
-+	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
- 
- 	*stat = 1;
- 	return 0;
--- 
-2.39.2
-
+T24gVHVlLCAyMDI0LTA3LTAyIGF0IDIzOjA0ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
+IE9uIFR1ZSwgSnVsIDAyLCAyMDI0IGF0IDEyOjMzOjUzUE0gKzAwMDAsIFRyb25kIE15a2xlYnVz
+dCB3cm90ZToNCj4gPiBPbiBNb24sIDIwMjQtMDctMDEgYXQgMTA6MTMgLTA0MDAsIE1pa2UgU25p
+dHplciB3cm90ZToNCj4gPiA+IE9uIE1vbiwgSnVsIDAxLCAyMDI0IGF0IDA5OjQ2OjM2QU0gKzEw
+MDAsIERhdmUgQ2hpbm5lciB3cm90ZToNCj4gPiA+ID4gSU1PLCB0aGUgb25seSBzYW5lIHdheSB0
+byBlbnN1cmUgdGhpcyBzb3J0IG9mIG5lc3RlZCAiYmFjay1lbmQNCj4gPiA+ID4gcGFnZQ0KPiA+
+ID4gPiBjbGVhbmluZyBzdWJtaXRzIGZyb250LWVuZCBJTyBmaWxlc3lzdGVtIElPIiBtZWNoYW5p
+c20gd29ya3MgaXMNCj4gPiA+ID4gdG8NCj4gPiA+ID4gZG8gc29tZXRoaW5nIHNpbWlsYXIgdG8g
+dGhlIGxvb3AgZGV2aWNlLiBZb3UgbW9zdCBkZWZpbml0ZWx5DQo+ID4gPiA+IGRvbid0DQo+ID4g
+PiA+IHdhbnQgdG8gYmUgZG9pbmcgYnVmZmVyZWQgSU8gKGRvdWJsZSBjYWNoaW5nIGlzIGFsbW9z
+dCBhbHdheXMNCj4gPiA+ID4gYmFkKQ0KPiA+ID4gPiBhbmQgeW91IHdhbnQgdG8gYmUgZG9pbmcg
+YXN5bmMgZGlyZWN0IElPIHNvIHRoYXQgdGhlIHN1Ym1pc3Npb24NCj4gPiA+ID4gdGhyZWFkIGlz
+IG5vdCB3YWl0aW5nIG9uIGNvbXBsZXRpb24gYmVmb3JlIHRoZSBuZXh0IElPIGlzDQo+ID4gPiA+
+IHN1Ym1pdHRlZC4NCj4gPiA+IA0KPiA+ID4gWWVzLCBmb2xsb3ctb24gd29yayBpcyBmb3IgbWUg
+dG8gcmV2aXZlIHRoZSBkaXJlY3RpbyBwYXRoIGZvcg0KPiA+ID4gbG9jYWxpbw0KPiA+ID4gdGhh
+dCB1bHRpbWF0ZWx5IHdhc24ndCBwdXJzdWVkIChvciBwcm9wZXJseSB3aXJlZCB1cCkgYmVjYXVz
+ZSBpdA0KPiA+ID4gY3JlYXRlcyBESU8gYWxpZ25tZW50IHJlcXVpcmVtZW50cyBvbiBORlMgY2xp
+ZW50IElPOg0KPiA+ID4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5l
+bC9naXQvc25pdHplci9saW51eC5naXQvY29tbWl0Lz9oPW5mcy1sb2NhbGlvLWZvci02LjExLXRl
+c3RpbmcmaWQ9ZjZjOWY1MWZjYTgxOWE4YWY1OTVhNGViOTQ4MTFjMWY5MDA1MWVhYg0KPiANCj4g
+SSBkb24ndCBmb2xsb3cgLSB0aGlzIGlzIHBhZ2UgY2FjaGUgd3JpdGViYWNrLiBBbGwgdGhlIHdy
+aXRlIElPIGZyb20NCj4gdGhlIGJkaSBmbHVzaGVyIHRocmVhZCBzaG91bGQgYmUgcGFnZSBhbGln
+bmVkLCByaWdodD8gU28gd2h5IGRvZXMgRElPDQo+IGFsaWdubWVudCBtYXR0ZXIgaGVyZT8NCj4g
+DQoNClRoZXJlIGlzIG5vIGd1YXJhbnRlZSBpbiBORlMgdGhhdCB3cml0ZXMgZnJvbSB0aGUgZmx1
+c2hlciB0aHJlYWQgYXJlDQpwYWdlIGFsaWduZWQuIElmIGEgcGFnZS9mb2xpbyBpcyBrbm93biB0
+byBiZSB1cCB0byBkYXRlLCB3ZSB3aWxsDQp1c3VhbGx5IGFsaWduIHdyaXRlcyB0byB0aGUgYm91
+bmRhcmllcywgYnV0IHdlIHdvbid0IGd1YXJhbnRlZSB0byBkbyBhDQpyZWFkLW1vZGlmeS13cml0
+ZSBpZiB0aGF0J3Mgbm90IHRoZSBjYXNlLiBTcGVjaWZpY2FsbHksIHdlIHdpbGwgbm90IGRvDQpz
+byBpZiB0aGUgZmlsZSBpcyBvcGVuIGZvciB3cml0ZS1vbmx5Lg0KDQotLSANClRyb25kIE15a2xl
+YnVzdA0KTGludXggTkZTIGNsaWVudCBtYWludGFpbmVyLCBIYW1tZXJzcGFjZQ0KdHJvbmQubXlr
+bGVidXN0QGhhbW1lcnNwYWNlLmNvbQ0KDQoNCg==
