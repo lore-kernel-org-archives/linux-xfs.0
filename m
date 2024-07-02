@@ -1,97 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4CB615B11D;
-	Tue,  2 Jul 2024 16:19:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5511BC08A;
+	Tue,  2 Jul 2024 16:50:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719937146; cv=none; b=cLayFQonFoT0r5aV3qNq25Enrs6c0UqngtzbWhg4qUmnEaNcOorJWP9CgyRRe3gpnNUDNooWGm4myuJs0dRAEeow/foi4gVhDyrYVDXrdz2Npzt2ykxIgiNrYi2NWqUvHs67+wFrlFAml3bCqP5T90kQmt9XIKwYDXg7Ss8Nchc=
+	t=1719939020; cv=none; b=dKP/CfdY5wd+sCjAPZIONg/K+sQHx7KItLyOIF7DYZG6a9HK/VhqrQRL1vwLhtPDXaBoMioIjbNZSn2JPRTnZNNTK/xP4PnmLyfrzC5XUOJsoqWeD9mlyc24BY0OLfTkxpXo+L620yhl77R5KH2XTbQBwHNPpJl4172yZcqbHFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719937146; c=relaxed/simple;
-	bh=f/Lt6TGAChQhJDo1d9S1C9KYvC+2NSkWdhgXVkkdLDw=;
+	s=arc-20240116; t=1719939020; c=relaxed/simple;
+	bh=NBU8FpE3Irj66yKw+4xwB67VdXxsBFU30+zKXbrRKJ8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pEljVPxeReaao268QOPZbdgc3ZoiY1hmRDBA6GIKVJhDJq/lMLrmXbZaR7/iFna54t18AQrAsxcRybtuwExHGX+KYeFJXyNnaKsD/3lOnMNuDMAOk5BYKFPN71epdFWpnEXKNV/PbgHhGHvymCdygI6yZ4LW7eTwYTlmPE4A5ss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oWe8+4vr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uPnx4rlLgBgJZMufSulbt0a2nmbCTiKnKhvxZTMYH7AIkp9fHvedLb06Hh8xmOz6rc42D5hhVusuapoA78tIQ8jmlPOqDP6YmedM7Sud2bD1+u0niYNZbn468HeLQMMuaLGt4W6iZeiC0vTHagPmtrXmJjRgP6mQZNYEBL3YWTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gdEun3Yo; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oWe8+4vr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47053C116B1;
-	Tue,  2 Jul 2024 16:18:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719937146;
-	bh=f/Lt6TGAChQhJDo1d9S1C9KYvC+2NSkWdhgXVkkdLDw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oWe8+4vrZ82aLpFmQ/xxCaJvhq1zmz0VUCOjwx+pO4joEWaTNHfWjLRMGZoaPiVDt
-	 budCT+VnEcgyoSf2Ab8MdsbVsBFm77eny8iEcIwJQ8JyEGL4+bTuUEjbENlNcYIpp/
-	 gL3SnCOgO6dZZl8vgmgZ762DzwQodDtcRzBW6kItR6KjM163XwjU2Lgn7iM5pgI6/7
-	 XBsh3uDkaMZxoYbbDoDEcrrpMrlrSldQO/fACxHAu6ntHbLUVC4HHK5mhcmY/NpEBF
-	 XVA4ga3Rk7WIXoZ0aUPw+mEDsMkvhR1DhZmouNn2Tfi29hI2nY5C6cVQ0Pr5Mz7q2M
-	 Il08gNdV6QXbQ==
-Date: Tue, 2 Jul 2024 18:18:57 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Chandan Babu R <chandan.babu@oracle.com>, 
-	Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, 
-	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
-	David Sterba <dsterba@suse.com>, Hugh Dickins <hughd@google.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-nfs@vger.kernel.org
-Subject: Re: [PATCH 01/10] fs: turn inode ctime fields into a single ktime_t
-Message-ID: <20240702-inwiefern-beraten-cc4b5efce8ef@brauner>
-References: <20240701224941.GE612460@frogsfrogsfrogs>
- <3042db2f803fbc711575ec4f1c4a273912a50904.camel@kernel.org>
- <ZoOuSxRlvEQ5rOqn@infradead.org>
- <d91a29f0e600793917b73ac23175e02dafd56beb.camel@kernel.org>
- <20240702101902.qcx73xgae2sqoso7@quack3>
- <958080f6de517cf9d0a1994e3ca500f23599ca33.camel@kernel.org>
- <ZoPs0TfTEktPaCHo@infradead.org>
- <09ad82419eb78a2f81dda5dca9caae10663a2a19.camel@kernel.org>
- <ZoPvR39vGeluD5T2@infradead.org>
- <a11d84a3085c6a6920d086bf8fae1625ceff5764.camel@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gdEun3Yo"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=DyQD/12RCuPa/pHvJFloMLSkNit2iJNd6Y55+8X+S9o=; b=gdEun3Yo7nq+uQsT+MfWgV2pI0
+	NHKpEb0uH816likmx6uDX2hKw+Uc1cgxWuJzGWdM0N2ToOKGE37jkxuzGKaHDc56W+fqj7rKhaUap
+	NZ6wzMLKNNHlKgNOfy07Fmma9XVs3WvxXNZo9XIZc6hM9rE8E8YXjAEV8QTKm7nhNynBKr0xGhfw/
+	81zSiGZJlgL0iwa/YVtUsnEZfKvD1d21JVYUa+FWbJxHtji1EBsNmd04aAg7jmyorIlSoqDO3dqi4
+	OWNJ9Z6aOIkh37x35qi0IT0MhNYZzaSVujIMrIvDDj6wcl91BkUS03IR0zOXzV7eZswDOjHcc/0Hw
+	5QXNhjFQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sOghm-00000000xck-3ywy;
+	Tue, 02 Jul 2024 16:50:10 +0000
+Date: Tue, 2 Jul 2024 17:50:10 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+	david@fromorbit.com, chandan.babu@oracle.com, djwong@kernel.org,
+	brauner@kernel.org, akpm@linux-foundation.org,
+	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
+	linux-mm@kvack.org, john.g.garry@oracle.com,
+	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
+	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
+	linux-xfs@vger.kernel.org, Zi Yan <zi.yan@sent.com>
+Subject: Re: [PATCH v8 06/10] iomap: fix iomap_dio_zero() for fs bs > system
+ page size
+Message-ID: <ZoQvwkcL3uWONfzV@casper.infradead.org>
+References: <20240625114420.719014-1-kernel@pankajraghav.com>
+ <20240625114420.719014-7-kernel@pankajraghav.com>
+ <20240702074203.GA29410@lst.de>
+ <20240702101556.jdi5anyr3v5zngnv@quentin>
+ <20240702120250.GA17373@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a11d84a3085c6a6920d086bf8fae1625ceff5764.camel@kernel.org>
+In-Reply-To: <20240702120250.GA17373@lst.de>
 
-On Tue, Jul 02, 2024 at 08:21:42AM GMT, Jeff Layton wrote:
-> On Tue, 2024-07-02 at 05:15 -0700, Christoph Hellwig wrote:
-> > On Tue, Jul 02, 2024 at 08:09:46AM -0400, Jeff Layton wrote:
-> > > > > corrupt timestamps like this?
-> > > > 
-> > > > inode_set_ctime_to_ts should return an error if things are out of
-> > > > range.
-> > > 
-> > > Currently it just returns the timespec64 we're setting it to (which
-> > > makes it easy to do several assignments), so we'd need to change
-> > > its
-> > > prototype to handle this case, and fix up the callers to recognize
-> > > the
-> > > error.
-> > > 
-> > > Alternately it may be easier to just add in a test for when
-> > > __i_ctime == KTIME_MAX in the appropriate callers and have them
-> > > error
-> > > out. I'll have a look and see what makes sense.
-> > 
-> > The seems like a more awkward interface vs one that explicitly
-> > checks.
-> > 
+On Tue, Jul 02, 2024 at 02:02:50PM +0200, Christoph Hellwig wrote:
+> On Tue, Jul 02, 2024 at 10:15:56AM +0000, Pankaj Raghav (Samsung) wrote:
+> > Willy suggested we could use raw pages as we don't need the metadata
+> > from using a folio. [0]
 > 
-> Many of the existing callers of inode_ctime_to_ts are in void return
-> functions. They're just copying data from an internal representation to
-> struct inode and assume it always succeeds. For those we'll probably
-> have to catch bad ctime values earlier.
-> 
-> So, I think I'll probably have to roll bespoke error handling in all of
-> the relevant filesystems if we go this route. There are also
+> Ok, that feels weird but I'll defer to his opinion in that case.
 
-Shudder, let's try and avoid that.
+Let me see if I can make you feel less weird about it, since I think
+this is something that people should have a clear feeling about.
+
+In the Glorious Future, when we've separated pages and folios from each
+other, folios are conceptually memory that gets mapped to userspace.
+They have refcounts, mapcounts, a pointer to a file's mapping or an anon
+vma's anon_vma, an index within that object, an LRU list, a dirty flag,
+a lock bit, and so on.
+
+We don't need any of that here.  We might choose to use a special memdesc
+for accounting purposes, but there's no need to allocate a folio for it.
+For now, leaving it as a plain allocation of pages seems like the smartest
+option, and we can revisit in the future.
