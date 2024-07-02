@@ -1,119 +1,106 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2806285C74
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 13:04:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F20D38F83;
+	Tue,  2 Jul 2024 13:47:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719925495; cv=none; b=hWrEKVbH3jgD3LeVJgSGcg7Z1a7NxCr6ZBBcm+PtJ2GJ8xxTe4lt68FF6E3gNTotf6Vu4DIMLTGuPe9EuF+CnE2S4+39OSLWfXsvC4T0FbqJtlEIbWTzUoFNViUVHKDPB7YdI0XVTxPB9b8UW6QDXk2HjeGd+CQ+zDBYIqkUeBc=
+	t=1719928072; cv=none; b=kPTlhllrjlSSYSoRt2UcJQbqUwajfMV/JSdUnRNh7dacEBOSihDx55hVswMglOHVqmYPjltwP7OVA/e0TuOdwrVsiwCuNrtijZVt6GrM4kzfPfTs1os14ezxM/DgBYFSI69pFo1z1qQUGAff94snArQzaZnoaC8YsG33ni+z/Mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719925495; c=relaxed/simple;
-	bh=2ba5zC4nFi1Ed7n+ilW+b+NppWtTr+8BGra23dw6gPI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZhIB6Z/k7SCk7l2IVwjaFa4Q/hRY8PO/4TWe/89r2G8Nq7p+BQ6T+4zV6LvCwFrVr+AG+gaY4WC5222hTbFbwjotZ57lZeOfcvzXrkHdoKV7k89HV7KqUDYscYYe3P9cJAY2FbITZ5GUPhzBupEfC/10zSjVsgyAp/pWqiBhiwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=mbJBlOH6; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1719928072; c=relaxed/simple;
+	bh=wTAGGPz5RZwwOrDI5MiT8Qlab3A7rVI4fdnHkNtqt+k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eAjl8ubzpkreyFYe0ulGRENJpNRGXfqZ2pWm+tTrDcc2hSjLeK6Ii+D6uGPwAM19/qH1t/zSEWMfSjd6/oFaQwGurHcQ3gGu4tK3pyDZBs2o/W9f/ECm72x0SqaICU8LVnkrBp6cZlTRYnf8clZBDhYnqJ6dmv/uedrrTrFqEYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X3xZmkLP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="mbJBlOH6"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-706b53ee183so3543908b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Jul 2024 06:04:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1719925492; x=1720530292; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=mCUKJtxjiVHBrnRFpZSTwe0fkpTf7lz1L5LAQ0jpucY=;
-        b=mbJBlOH6JALXKhEKbeuIWMvF8LmVeRZjHjnJAj7ejHMMAz0P0eHpf7RM1ktfOpyPWq
-         9ELRU70O5n49qzLCWNVuNa85zXxoVpxjpdxIJL78zfFU6ILjNLULqWiJNF5MgZkXh1A3
-         1NIrCNPGkDHatILvQKUydC/7bF+8iehvK1IVbHvXjZS2kGyp/nxXG6Wy/mS+M8+vAC81
-         HTJgwPe6eDeaTgQtkkqXt6AMu/E0+iwXtBmzDhe4c9jYe3hp6Sjgh2hIuHcBgiRiJdY8
-         37L/fLJMW1XbM88/YD+TKTVCzAwcxYW7mNoyKmUwbIEjP4uSsE5DtxWVq02CSTKgEaq+
-         rGAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719925492; x=1720530292;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mCUKJtxjiVHBrnRFpZSTwe0fkpTf7lz1L5LAQ0jpucY=;
-        b=LRG2Ewtl13sWNafkn3irOFqCrYZ2h5RvOYwBY+V/DSL96Ps7fEEvYKCQvIT96yYbA8
-         EDuERySZyBAeZXTI97+EmzGHCo/q9WDJLlRoYYwA7Fz5ogRzb0wCmXFNGAreLrFenN+z
-         uFP68WbL2X/biNu3m60cYlxuOJCuNk9DrMoRYKgsuM1Qp6kN8Ka9o5ctHHNFdfHO7uwn
-         Sv26fw2mb8MC24S/g5hXj6EmAPcxrBqO942AL+ut8CHG/9UAPGC9DBYx0j8hYm+8umiu
-         sPNT35F+o+qFfl4Iov3tU/1To3NsMgo4PEoOQLM+2l79OkklnTg3FgonyMNqrQ/+n2Q7
-         rk4w==
-X-Forwarded-Encrypted: i=1; AJvYcCXUFQA/h3pAs9T5eaRJnQcvRClz+nZq7wpobxp5ukLZ5km53B7JuxnYjjfPRZGhaJy0iozO9ztkVy3CAZTw1NniccXKP2+Tjda+
-X-Gm-Message-State: AOJu0YwqCUrXM6tDF2fvg3aIAyXKu0FQyCkWxqz9/SIazbYosUQffOn7
-	GphZNvmjuvTmiVmo4N4cBGbwFe1Vh6yMBtZooLtIju1dolg6Yk4xoULrwAC6z4E=
-X-Google-Smtp-Source: AGHT+IHRMG8haob/98+FO+t2UO8ASY0vn12OW1IElLmLKDK4EpZ0lzqW0mh73cVdUSgNn0L5QHWK5A==
-X-Received: by 2002:a05:6a20:9711:b0:1b5:cc1f:38d4 with SMTP id adf61e73a8af0-1bee4927f8fmr15938594637.17.1719925492374;
-        Tue, 02 Jul 2024 06:04:52 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72c6d00b5aasm6614155a12.83.2024.07.02.06.04.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Jul 2024 06:04:51 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sOdBh-001WSP-0j;
-	Tue, 02 Jul 2024 23:04:49 +1000
-Date: Tue, 2 Jul 2024 23:04:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Trond Myklebust <trondmy@hammerspace.com>
-Cc: "snitzer@kernel.org" <snitzer@kernel.org>,
-	"bfoster@redhat.com" <bfoster@redhat.com>,
-	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
-Message-ID: <ZoP68e8Ib2wIRLRC@dread.disaster.area>
-References: <Zn7icFF_NxqkoOHR@kernel.org>
- <ZoGJRSe98wZFDK36@kernel.org>
- <ZoHuXHMEuMrem73H@dread.disaster.area>
- <ZoK5fEz6HSU5iUSH@kernel.org>
- <f54618f78737bab3388a6bb747e8509311bf8d93.camel@hammerspace.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X3xZmkLP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E538C116B1;
+	Tue,  2 Jul 2024 13:47:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719928071;
+	bh=wTAGGPz5RZwwOrDI5MiT8Qlab3A7rVI4fdnHkNtqt+k=;
+	h=From:To:Cc:Subject:Date:From;
+	b=X3xZmkLPtLvQZTk7vM6AQznn+4LFam3xDpSzHKw0e1bwGxES2LixXIq2Vn66f4nHF
+	 ck6Ls11PXT3lDzNNU0397TrTzbYmxdfcCsXd9UlRaM79ZerIczGEOmmiIXmR/2GypS
+	 M38afacAV6x27r1gtlPPVMuchzKHTbBX+wLFFLqedGKn/+vpW5S8NnHfOgxhfjdBho
+	 OiD6npM9IMLJZAOdg/Vsoi05NbPodY5krZZNoeyOXKpO8esDwh1rww7RCDBPHclPIT
+	 WA3x6NBxNt726ERYKkVj1DR960Hdazx0n6xEc96RwYSTGA75OZtPUTXnP3iEOvP4f8
+	 xKGCIS2aoP73Q==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: Christoph Hellwig
+ <hch@lst.de>4,cdlscpmv@gmail.com,dchinner@redhat.com,djwong@kernel.org,haowenchao22@gmail.com,hch@lst.de,hsiangkao@linux.alibaba.com,john.g.garry@oracle.com,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,llfamsec@gmail.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 3ba3ab1f6719
+Date: Tue, 02 Jul 2024 19:16:47 +0530
+Message-ID: <8734orc3cr.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f54618f78737bab3388a6bb747e8509311bf8d93.camel@hammerspace.com>
+Content-Type: text/plain
 
-On Tue, Jul 02, 2024 at 12:33:53PM +0000, Trond Myklebust wrote:
-> On Mon, 2024-07-01 at 10:13 -0400, Mike Snitzer wrote:
-> > On Mon, Jul 01, 2024 at 09:46:36AM +1000, Dave Chinner wrote:
-> > > IMO, the only sane way to ensure this sort of nested "back-end page
-> > > cleaning submits front-end IO filesystem IO" mechanism works is to
-> > > do something similar to the loop device. You most definitely don't
-> > > want to be doing buffered IO (double caching is almost always bad)
-> > > and you want to be doing async direct IO so that the submission
-> > > thread is not waiting on completion before the next IO is
-> > > submitted.
-> > 
-> > Yes, follow-on work is for me to revive the directio path for localio
-> > that ultimately wasn't pursued (or properly wired up) because it
-> > creates DIO alignment requirements on NFS client IO:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/snitzer/linux.git/commit/?h=nfs-localio-for-6.11-testing&id=f6c9f51fca819a8af595a4eb94811c1f90051eab
+Hi folks,
 
-I don't follow - this is page cache writeback. All the write IO from
-the bdi flusher thread should be page aligned, right? So why does DIO
-alignment matter here?
+The for-next branch of the xfs-linux repository at:
 
-> > But underlying filesystems (like XFS) have the appropriate checks, we
-> > just need to fail gracefully and disable NFS localio if the IO is
-> > misaligned.
-> > 
-> 
-> Just a reminder to everyone that this is replacing a configuration
-> which would in any case result in double caching, because without the
-> localio change, it would end up being a loopback mount through the NFS
-> server.
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Sure. That doesn't mean double caching is desirable and it's
-something we try should avoid if we trying to design a fast
-server bypass mechanism.
+has just been updated.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+3ba3ab1f6719 xfs: enable FITRIM on the realtime device
+
+13 new commits:
+
+Christoph Hellwig (6):
+      [8626b67acfa4] xfs: move the dio write relocking out of xfs_ilock_for_iomap
+      [29bc0dd0a2f6] xfs: cleanup xfs_ilock_iocb_for_write
+      [9092b1de35a4] xfs: simplify xfs_dax_fault
+      [6a39ec1d3944] xfs: refactor __xfs_filemap_fault
+      [4e82fa11fbbc] xfs: always take XFS_MMAPLOCK shared in xfs_dax_read_fault
+      [4818fd60db5f] xfs: fold xfs_ilock_for_write_fault into xfs_write_fault
+
+Darrick J. Wong (1):
+      [3ba3ab1f6719] xfs: enable FITRIM on the realtime device
+
+Gao Xiang (1):
+      [d40c2865bdbb] xfs: avoid redundant AGFL buffer invalidation
+
+John Garry (2):
+      [d3b689d7c711] xfs: Fix xfs_flush_unmap_range() range for RT
+      [f23660f05947] xfs: Fix xfs_prepare_shift() range for RT
+
+Wenchao Hao (1):
+      [a330cae8a714] xfs: Remove header files which are included more than once
+
+lei lu (2):
+      [fb63435b7c7d] xfs: add bounds checking to xlog_recover_process_data
+      [0c7fcdb6d06c] xfs: don't walk off the end of a directory data block
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_alloc.c      |  28 +--------
+ fs/xfs/libxfs/xfs_alloc.h      |   6 +-
+ fs/xfs/libxfs/xfs_dir2_data.c  |  31 ++++++++--
+ fs/xfs/libxfs/xfs_dir2_priv.h  |   7 +++
+ fs/xfs/libxfs/xfs_trans_resv.c |   1 -
+ fs/xfs/scrub/quota_repair.c    |   1 -
+ fs/xfs/xfs_bmap_util.c         |  22 ++++---
+ fs/xfs/xfs_discard.c           | 303 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_extfree_item.c      |   4 +-
+ fs/xfs/xfs_file.c              | 141 ++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_handle.c            |   1 -
+ fs/xfs/xfs_iomap.c             |  71 +++++++++++-----------
+ fs/xfs/xfs_log_recover.c       |   5 +-
+ fs/xfs/xfs_qm_bhv.c            |   1 -
+ fs/xfs/xfs_trace.c             |   1 -
+ fs/xfs/xfs_trace.h             |  29 +++++++++
+ 16 files changed, 476 insertions(+), 176 deletions(-)
