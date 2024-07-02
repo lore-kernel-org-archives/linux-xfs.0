@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D728F44
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:07:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FA4A9449
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:07:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719882423; cv=none; b=QvF9F9nXNsJtvoWSxKi6/S7knbVZRe7mN2B62M55QfbPAWKQfwFdNo7hAmjNAutpuKCODC1JoII4ed185JJ1zyJ93iNiTX8uO9FbC+MjL+SmO+y6tdabR4NAZpmC5PZCW1Bc+Q7fYREU6eQ2XBQcGey9P1B3YHhw/UeJvhUnLLY=
+	t=1719882439; cv=none; b=oIqyMPrMVyXzeyIpaBlE8bOphxqGmjM/+Y6M54QET8qe4rzcEU3j4XzotnT4nVCxgCtBDxyZ9H52ifqjkumet8n70JfsqrQLMFiaLN6B93BoR6I723OErpZBlBfL6Z/7SBIfPhJg3B4VEtQ0Ar5ynBomoi3ibdY969KCAIQwsgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719882423; c=relaxed/simple;
-	bh=6f0+yJ9NVI0vgGQmS7bCiNmjnYKo1O5swES9sMshVLI=;
+	s=arc-20240116; t=1719882439; c=relaxed/simple;
+	bh=Ak/et9pSioe89DtoOx7fnpo0qp3kUDzjNTvEGtJkHoM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DLZzetdruyUIV+65Wpi499QfT0IFUaiPWlyECHY/AhXFO0k+OQoDEQWxV7k8l3FtVBS0dLvhYJtzho+RNkPQt2bdHRVoc2iu/VzcvB18wF3CuGAHlPmb6m4jrtJUWo3oL5AxW2YlNVFc/qehLsUJ1ebUrnrx9Bst10wffymuYMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PdmuZy2q; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CX0Ypij5BkAKZDP0cfU8i4I9GNekf6pUpBRL8VEd9gcjc/xHZEQIT1VwBOzDU5nb7VvDttrWkTn8jDeFB9A1iuIYYLs8cKzBi6bElGVGSSVuWI7oBbUUfItO5iuTHMO/lx+zqfLG0bxysmODBDc2y1dylexNS1l4CZ7JFARSlxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FYDwsyNO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PdmuZy2q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEAA6C116B1;
-	Tue,  2 Jul 2024 01:07:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FYDwsyNO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 893A7C116B1;
+	Tue,  2 Jul 2024 01:07:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719882423;
-	bh=6f0+yJ9NVI0vgGQmS7bCiNmjnYKo1O5swES9sMshVLI=;
+	s=k20201202; t=1719882438;
+	bh=Ak/et9pSioe89DtoOx7fnpo0qp3kUDzjNTvEGtJkHoM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PdmuZy2qQ9/TMc6aa0gpGWjRfGmtN+nexkJCgw10H/ew3LofW6JodF8xTyQfVlURu
-	 hQ5bW3KHyIOb/xNsO7eFyz/iS/ChoxjEFY/EEMAjXR3LFpi4nkwYVfY0gwhTmFYAGc
-	 AQ0yKbTvA5vVRbDlevrCO28EMuMcGlAS3L+TJ7/QT0o0G5DpZi5pzQ3vDLv3YtHah3
-	 W3p9Fu0NQkZ3AlppjDRAG5bRCBjDtPYKszMeDrlWjydWzVD0IRre3A5KWpfdMm8Dxr
-	 700vVzG07IO4x//W9i7TUGRsJy0AGpKzmAKblDwuu/2OV8GcFy7FbQLVT4vbrbwY7s
-	 R/FSpuxtJT/Bg==
-Date: Mon, 01 Jul 2024 18:07:02 -0700
-Subject: [PATCH 3/6] xfs_scrub_all: support metadata+media scans of all
- filesystems
+	b=FYDwsyNOY47JXwga8pWWtbIX7/ksC0c7VioTYrdrRtxWtKaMCJ+qskKT/k7poYZPa
+	 5WXw1M6EogXiLlHn0YfuUXQ2491JxN4QY+JX/UrhT3kTgJJv/l5Hq8hfwpNB5LpFz6
+	 OQdH27qYy7EJixjAQ3iNA+y1KoNs8+GkIn4ItK1jmcjNk6Nozc9akwHHFp8L9gWqP/
+	 SHJlzonamNp0ujh94nCPAT5vg3cotKIo0Na4fBCRmabSQcgpK6L9nrbQFmrDFvb2+W
+	 MwWsLlWGD+0M9iOSkQM4Lg0jtJdWi1eBJqOiW/yJIQS+B1Xc+k/bAP6jKY/OrN+mYc
+	 I8AS/hY/02tmQ==
+Date: Mon, 01 Jul 2024 18:07:18 -0700
+Subject: [PATCH 4/6] xfs_scrub_all: enable periodic file data scrubs
+ automatically
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988119454.2008463.33463397057054094.stgit@frogsfrogsfrogs>
+Message-ID: <171988119470.2008463.14610381676308637018.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988119402.2008463.10432604765226555660.stgit@frogsfrogsfrogs>
 References: <171988119402.2008463.10432604765226555660.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,394 +47,261 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add the necessary systemd services and control bits so that
-xfs_scrub_all can kick off a metadata+media scan of a filesystem.
+Enhance xfs_scrub_all with the ability to initiate a file data scrub
+periodically.  The user must specify the period, and they may optionally
+specify the path to a file that will record the last time the file data
+was scrubbed.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- man/man8/xfs_scrub_all.8               |    5 +-
- scrub/Makefile                         |    4 +
- scrub/xfs_scrub_all.in                 |   23 +++++--
- scrub/xfs_scrub_fail.in                |   13 +++-
- scrub/xfs_scrub_fail@.service.in       |    2 -
- scrub/xfs_scrub_media@.service.in      |  100 ++++++++++++++++++++++++++++++++
- scrub/xfs_scrub_media_fail@.service.in |   76 ++++++++++++++++++++++++
- 7 files changed, 210 insertions(+), 13 deletions(-)
- create mode 100644 scrub/xfs_scrub_media@.service.in
- create mode 100644 scrub/xfs_scrub_media_fail@.service.in
+ debian/rules                   |    3 +-
+ include/builddefs.in           |    3 ++
+ man/man8/Makefile              |    7 +++-
+ man/man8/xfs_scrub_all.8.in    |   15 ++++++++
+ scrub/Makefile                 |    3 ++
+ scrub/xfs_scrub_all.in         |   76 +++++++++++++++++++++++++++++++++++++++-
+ scrub/xfs_scrub_all.service.in |    6 ++-
+ 7 files changed, 108 insertions(+), 5 deletions(-)
+ rename man/man8/{xfs_scrub_all.8 => xfs_scrub_all.8.in} (63%)
 
 
-diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
-index 74548802eda0..86a9b3eced28 100644
+diff --git a/debian/rules b/debian/rules
+index 0db0ed8e7543..69a79fc67405 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -38,7 +38,8 @@ configure_options = \
+ 	--disable-ubsan \
+ 	--disable-addrsan \
+ 	--disable-threadsan \
+-	--enable-lto
++	--enable-lto \
++	--localstatedir=/var
+ 
+ options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+ 	  INSTALL_USER=root INSTALL_GROUP=root \
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 6ac36c149238..734bd95ecb0b 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -57,6 +57,9 @@ PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
+ PKG_LOCALE_DIR	= @datadir@/locale
+ PKG_DATA_DIR	= @datadir@/@pkg_name@
+ MKFS_CFG_DIR	= @datadir@/@pkg_name@/mkfs
++PKG_STATE_DIR	= @localstatedir@/lib/@pkg_name@
++
++XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP=$(PKG_STATE_DIR)/xfs_scrub_all_media.stamp
+ 
+ CC		= @cc@
+ BUILD_CC	= @BUILD_CC@
+diff --git a/man/man8/Makefile b/man/man8/Makefile
+index 272e45aebc20..5be76ab727a1 100644
+--- a/man/man8/Makefile
++++ b/man/man8/Makefile
+@@ -11,11 +11,12 @@ ifneq ("$(ENABLE_SCRUB)","yes")
+   MAN_PAGES = $(filter-out xfs_scrub%,$(shell echo *.$(MAN_SECTION)))
+ else
+   MAN_PAGES = $(shell echo *.$(MAN_SECTION))
++  MAN_PAGES += xfs_scrub_all.8
+ endif
+ MAN_PAGES	+= mkfs.xfs.8
+ MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
+ LSRCFILES	= $(MAN_PAGES)
+-DIRT		= mkfs.xfs.8
++DIRT		= mkfs.xfs.8 xfs_scrub_all.8
+ 
+ default : $(MAN_PAGES)
+ 
+@@ -29,4 +30,8 @@ mkfs.xfs.8: mkfs.xfs.8.in
+ 	@echo "    [SED]    $@"
+ 	$(Q)$(SED) -e 's|@mkfs_cfg_dir@|$(MKFS_CFG_DIR)|g' < $^ > $@
+ 
++xfs_scrub_all.8: xfs_scrub_all.8.in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e 's|@stampfile@|$(XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP)|g' < $^ > $@
++
+ install-dev :
+diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8.in
+similarity index 63%
+rename from man/man8/xfs_scrub_all.8
+rename to man/man8/xfs_scrub_all.8.in
+index 86a9b3eced28..0aa87e237165 100644
 --- a/man/man8/xfs_scrub_all.8
-+++ b/man/man8/xfs_scrub_all.8
-@@ -4,7 +4,7 @@ xfs_scrub_all \- scrub all mounted XFS filesystems
- .SH SYNOPSIS
- .B xfs_scrub_all
- [
--.B \-hV
-+.B \-hxV
- ]
- .SH DESCRIPTION
- .B xfs_scrub_all
-@@ -21,6 +21,9 @@ the same device simultaneously.
++++ b/man/man8/xfs_scrub_all.8.in
+@@ -18,6 +18,21 @@ operations can be run in parallel so long as no two scrubbers access
+ the same device simultaneously.
+ .SH OPTIONS
+ .TP
++.B \--auto-media-scan-interval
++Automatically enable the file data scan (i.e. the
++.B -x
++flag) if it has not been run in the specified interval.
++The interval must be a floating point number with an optional unit suffix.
++Supported unit suffixes are
++.IR y ", " q ", " mo ", " w ", " d ", " h ", " m ", and " s
++for years, 90-day quarters, 30-day months, weeks, days, hours, minutes, and
++seconds, respectively.
++If no units are specified, the default is seconds.
++.TP
++.B \--auto-media-scan-stamp
++Path to a file that will record the last time the media scan was run.
++Defaults to @stampfile@.
++.TP
  .B \-h
  Display help.
  .TP
-+.B \-x
-+Read all file data extents to look for disk errors.
-+.TP
- .B \-V
- Prints the version number and exits.
- .SH EXIT CODE
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 2050fe28fc75..5567ec061e82 100644
+index 5567ec061e82..091a5c94baa1 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -9,6 +9,7 @@ include $(builddefs)
- SCRUB_PREREQS=$(HAVE_GETFSMAP)
- 
- scrub_svcname=xfs_scrub@.service
-+scrub_media_svcname=xfs_scrub_media@.service
- 
- ifeq ($(SCRUB_PREREQS),yes)
- LTCOMMAND = xfs_scrub
-@@ -22,6 +23,8 @@ INSTALL_SCRUB += install-systemd
- SYSTEMD_SERVICES=\
- 	$(scrub_svcname) \
- 	xfs_scrub_fail@.service \
-+	$(scrub_media_svcname) \
-+	xfs_scrub_media_fail@.service \
- 	xfs_scrub_all.service \
- 	xfs_scrub_all.timer \
- 	system-xfs_scrub.slice
-@@ -113,6 +116,7 @@ xfs_scrub_all: xfs_scrub_all.in $(builddefs)
- 	@echo "    [SED]    $@"
- 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
+@@ -118,6 +118,7 @@ xfs_scrub_all: xfs_scrub_all.in $(builddefs)
  		   -e "s|@scrub_svcname@|$(scrub_svcname)|g" \
-+		   -e "s|@scrub_media_svcname@|$(scrub_media_svcname)|g" \
+ 		   -e "s|@scrub_media_svcname@|$(scrub_media_svcname)|g" \
  		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
++		   -e "s|@stampfile@|$(XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP)|g" \
  		   -e "s|@scrub_service_args@|$(XFS_SCRUB_SERVICE_ARGS)|g" \
  		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
+ 	$(Q)chmod a+x $@
+@@ -141,6 +142,7 @@ install: $(INSTALL_SCRUB)
+ 		   -e "s|@scrub_service_args@|$(XFS_SCRUB_SERVICE_ARGS)|g" \
+ 		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
+ 		   -e "s|@pkg_libexec_dir@|$(PKG_LIBEXEC_DIR)|g" \
++		   -e "s|@pkg_state_dir@|$(PKG_STATE_DIR)|g" \
+ 		   < $< > $@
+ 
+ %.cron: %.cron.in $(builddefs)
+@@ -161,6 +163,7 @@ install-scrub: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ 	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_SBIN_DIR)
++	$(INSTALL) -m 755 -d $(PKG_STATE_DIR)
+ 
+ install-udev: $(UDEV_RULES)
+ 	$(INSTALL) -m 755 -d $(UDEV_RULE_DIR)
 diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index fc7a2e637efa..afba0dbe8912 100644
+index afba0dbe8912..9d5cbd2a6487 100644
 --- a/scrub/xfs_scrub_all.in
 +++ b/scrub/xfs_scrub_all.in
-@@ -19,6 +19,7 @@ from io import TextIOWrapper
+@@ -16,6 +16,10 @@ import os
+ import argparse
+ import signal
+ from io import TextIOWrapper
++from pathlib import Path
++from datetime import timedelta
++from datetime import datetime
++from datetime import timezone
  
  retcode = 0
  terminate = False
-+scrub_media = False
+@@ -248,6 +252,65 @@ def wait_for_termination(cond, killfuncs):
+ 		fn()
+ 	return True
  
- def DEVNULL():
- 	'''Return /dev/null in subprocess writable format.'''
-@@ -88,11 +89,15 @@ def run_killable(cmd, stdout, killfuncs):
- # systemd doesn't like unit instance names with slashes in them, so it
- # replaces them with dashes when it invokes the service.  Filesystem paths
- # need a special --path argument so that dashes do not get mangled.
--def path_to_serviceunit(path):
-+def path_to_serviceunit(path, scrub_media):
- 	'''Convert a pathname into a systemd service unit name.'''
- 
--	cmd = ['systemd-escape', '--template', '@scrub_svcname@',
--	       '--path', path]
-+	if scrub_media:
-+		svcname = '@scrub_media_svcname@'
-+	else:
-+		svcname = '@scrub_svcname@'
-+	cmd = ['systemd-escape', '--template', svcname, '--path', path]
++def scan_interval(string):
++	'''Convert a textual scan interval argument into a time delta.'''
 +
- 	try:
- 		proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
- 		proc.wait()
-@@ -153,7 +158,7 @@ def systemctl_start(unitname, killfuncs):
- 
- def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 	'''Run a scrub process.'''
--	global retcode, terminate
-+	global retcode, terminate, scrub_media
- 
- 	print("Scrubbing %s..." % mnt)
- 	sys.stdout.flush()
-@@ -164,7 +169,7 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 
- 		# Run per-mount systemd xfs_scrub service only if we ourselves
- 		# are running as a systemd service.
--		unitname = path_to_serviceunit(path)
-+		unitname = path_to_serviceunit(path, scrub_media)
- 		if unitname is not None and 'SERVICE_MODE' in os.environ:
- 			ret = systemctl_start(unitname, killfuncs)
- 			if ret == 0 or ret == 1:
-@@ -183,6 +188,8 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 		if 'SERVICE_MODE' in os.environ:
- 			cmd += '@scrub_service_args@'.split()
- 		cmd += '@scrub_args@'.split()
-+		if scrub_media:
-+			cmd += '-x'
- 		cmd += [mnt]
- 		ret = run_killable(cmd, None, killfuncs)
- 		if ret >= 0:
-@@ -247,18 +254,22 @@ def main():
- 		a = (mnt, cond, running_devs, devs, killfuncs)
- 		thr = threading.Thread(target = run_scrub, args = a)
- 		thr.start()
--	global retcode, terminate
-+	global retcode, terminate, scrub_media
- 
- 	parser = argparse.ArgumentParser( \
- 			description = "Scrub all mounted XFS filesystems.")
- 	parser.add_argument("-V", help = "Report version and exit.", \
++	if string.endswith('y'):
++		year = timedelta(seconds = 31556952)
++		return year * float(string[:-1])
++	if string.endswith('q'):
++		return timedelta(days = 90 * float(string[:-1]))
++	if string.endswith('mo'):
++		return timedelta(days = 30 * float(string[:-2]))
++	if string.endswith('w'):
++		return timedelta(weeks = float(string[:-1]))
++	if string.endswith('d'):
++		return timedelta(days = float(string[:-1]))
++	if string.endswith('h'):
++		return timedelta(hours = float(string[:-1]))
++	if string.endswith('m'):
++		return timedelta(minutes = float(string[:-1]))
++	if string.endswith('s'):
++		return timedelta(seconds = float(string[:-1]))
++	return timedelta(seconds = int(string))
++
++def utcnow():
++	'''Create a representation of the time right now, in UTC.'''
++
++	dt = datetime.utcnow()
++	return dt.replace(tzinfo = timezone.utc)
++
++def enable_automatic_media_scan(args):
++	'''Decide if we enable media scanning automatically.'''
++	already_enabled = args.x
++
++	try:
++		interval = scan_interval(args.auto_media_scan_interval)
++	except Exception as e:
++		raise Exception('%s: Invalid media scan interval.' % \
++				args.auto_media_scan_interval)
++
++	p = Path(args.auto_media_scan_stamp)
++	if already_enabled:
++		res = True
++	else:
++		try:
++			last_run = p.stat().st_mtime
++			now = utcnow().timestamp()
++			res = last_run + interval.total_seconds() < now
++		except FileNotFoundError:
++			res = True
++
++	if res:
++		# Truncate the stamp file to update its mtime
++		with p.open('w') as f:
++			pass
++		if not already_enabled:
++			print('Automatically enabling file data scrub.')
++			sys.stdout.flush()
++
++	return res
++
+ def main():
+ 	'''Find mounts, schedule scrub runs.'''
+ 	def thr(mnt, devs):
+@@ -262,13 +325,24 @@ def main():
  			action = "store_true")
-+	parser.add_argument("-x", help = "Scrub file data after filesystem metadata.", \
-+			action = "store_true")
+ 	parser.add_argument("-x", help = "Scrub file data after filesystem metadata.", \
+ 			action = "store_true")
++	parser.add_argument("--auto-media-scan-interval", help = "Automatically scrub file data at this interval.", \
++			default = None)
++	parser.add_argument("--auto-media-scan-stamp", help = "Stamp file for automatic file data scrub.", \
++			default = '@stampfile@')
  	args = parser.parse_args()
  
  	if args.V:
  		print("xfs_scrub_all version @pkg_version@")
  		sys.exit(0)
  
-+	scrub_media = args.x
-+
+-	scrub_media = args.x
++	if args.auto_media_scan_interval is not None:
++		try:
++			scrub_media = enable_automatic_media_scan(args)
++		except Exception as e:
++			print(e)
++			sys.exit(16)
++	else:
++		scrub_media = args.x
+ 
  	fs = find_mounts()
  
- 	# Schedule scrub jobs...
-diff --git a/scrub/xfs_scrub_fail.in b/scrub/xfs_scrub_fail.in
-index 9437b0327e7c..e420917f699f 100755
---- a/scrub/xfs_scrub_fail.in
-+++ b/scrub/xfs_scrub_fail.in
-@@ -9,8 +9,11 @@
+diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
+index 478cd8d057a2..9ecc3af0c1f6 100644
+--- a/scrub/xfs_scrub_all.service.in
++++ b/scrub/xfs_scrub_all.service.in
+@@ -34,11 +34,13 @@ CapabilityBoundingSet=
+ NoNewPrivileges=true
+ RestrictSUIDSGID=true
  
- recipient="$1"
- test -z "${recipient}" && exit 0
--mntpoint="$2"
-+service="$2"
-+test -z "${service}" && exit 0
-+mntpoint="$3"
- test -z "${mntpoint}" && exit 0
-+
- hostname="$(hostname -f 2>/dev/null)"
- test -z "${hostname}" && hostname="${HOSTNAME}"
+-# Make the entire filesystem readonly.  We don't want to hide anything because
+-# we need to find all mounted XFS filesystems in the host.
++# Make the entire filesystem readonly except for the media scan stamp file
++# directory.  We don't want to hide anything because we need to find all
++# mounted XFS filesystems in the host.
+ ProtectSystem=strict
+ ProtectHome=read-only
+ PrivateTmp=false
++BindPaths=@pkg_state_dir@
  
-@@ -21,16 +24,16 @@ if [ ! -x "${mailer}" ]; then
- fi
- 
- # Turn the mountpoint into a properly escaped systemd instance name
--scrub_svc="$(systemd-escape --template "@scrub_svcname@" --path "${mntpoint}")"
-+scrub_svc="$(systemd-escape --template "${service}@.service" --path "${mntpoint}")"
- 
- (cat << ENDL
- To: $1
--From: <xfs_scrub@${hostname}>
--Subject: xfs_scrub failure on ${mntpoint}
-+From: <${service}@${hostname}>
-+Subject: ${service} failure on ${mntpoint}
- Content-Transfer-Encoding: 8bit
- Content-Type: text/plain; charset=UTF-8
- 
--So sorry, the automatic xfs_scrub of ${mntpoint} on ${hostname} failed.
-+So sorry, the automatic ${service} of ${mntpoint} on ${hostname} failed.
- Please do not reply to this mesage.
- 
- A log of what happened follows:
-diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
-index 2c879afd6d8e..16077888df33 100644
---- a/scrub/xfs_scrub_fail@.service.in
-+++ b/scrub/xfs_scrub_fail@.service.in
-@@ -10,7 +10,7 @@ Documentation=man:xfs_scrub(8)
- [Service]
- Type=oneshot
- Environment=EMAIL_ADDR=root
--ExecStart=@pkg_libexec_dir@/xfs_scrub_fail "${EMAIL_ADDR}" %f
-+ExecStart=@pkg_libexec_dir@/xfs_scrub_fail "${EMAIL_ADDR}" xfs_scrub %f
- User=mail
- Group=mail
- SupplementaryGroups=systemd-journal
-diff --git a/scrub/xfs_scrub_media@.service.in b/scrub/xfs_scrub_media@.service.in
-new file mode 100644
-index 000000000000..e670748ced51
---- /dev/null
-+++ b/scrub/xfs_scrub_media@.service.in
-@@ -0,0 +1,100 @@
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Copyright (c) 2018-2024 Oracle.  All Rights Reserved.
-+# Author: Darrick J. Wong <djwong@kernel.org>
-+
-+[Unit]
-+Description=Online XFS Metadata and Media Check for %f
-+OnFailure=xfs_scrub_media_fail@%i.service
-+Documentation=man:xfs_scrub(8)
-+
-+# Explicitly require the capabilities that this program needs
-+ConditionCapability=CAP_SYS_ADMIN
-+ConditionCapability=CAP_FOWNER
-+ConditionCapability=CAP_DAC_OVERRIDE
-+ConditionCapability=CAP_DAC_READ_SEARCH
-+ConditionCapability=CAP_SYS_RAWIO
-+
-+# Must be a mountpoint
-+ConditionPathIsMountPoint=%f
-+RequiresMountsFor=%f
-+
-+[Service]
-+Type=oneshot
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub @scrub_service_args@ @scrub_args@ -M /tmp/scrub/ -x %f
-+SyslogIdentifier=%N
-+
-+# Run scrub with minimal CPU and IO priority so that nothing else will starve.
-+IOSchedulingClass=idle
-+CPUSchedulingPolicy=idle
-+CPUAccounting=true
-+Nice=19
-+
-+# Create the service underneath the scrub background service slice so that we
-+# can control resource usage.
-+Slice=system-xfs_scrub.slice
-+
-+# No realtime CPU scheduling
-+RestrictRealtime=true
-+
-+# Dynamically create a user that isn't root
-+DynamicUser=true
-+
-+# Make the entire filesystem readonly and /home inaccessible, then bind mount
-+# the filesystem we're supposed to be checking into our private /tmp dir.
-+# 'norbind' means that we don't bind anything under that original mount.
-+ProtectSystem=strict
-+ProtectHome=yes
-+PrivateTmp=true
-+BindPaths=%f:/tmp/scrub:norbind
-+
-+# Don't let scrub complain about paths in /etc/projects that have been hidden
-+# by our sandboxing.  scrub doesn't care about project ids anyway.
-+InaccessiblePaths=-/etc/projects
-+
-+# No network access
-+PrivateNetwork=true
-+ProtectHostname=true
-+RestrictAddressFamilies=none
-+IPAddressDeny=any
-+
-+# Don't let the program mess with the kernel configuration at all
-+ProtectKernelLogs=true
-+ProtectKernelModules=true
-+ProtectKernelTunables=true
-+ProtectControlGroups=true
-+ProtectProc=invisible
-+RestrictNamespaces=true
-+
-+# Hide everything in /proc, even /proc/mounts
-+ProcSubset=pid
-+
-+# Only allow the default personality Linux
-+LockPersonality=true
-+
-+# No writable memory pages
-+MemoryDenyWriteExecute=true
-+
-+# Don't let our mounts leak out to the host
-+PrivateMounts=true
-+
-+# Restrict system calls to the native arch and only enough to get things going
-+SystemCallArchitectures=native
-+SystemCallFilter=@system-service
-+SystemCallFilter=~@privileged
-+SystemCallFilter=~@resources
-+SystemCallFilter=~@mount
-+
-+# xfs_scrub needs these privileges to run, and no others
-+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-+AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-+NoNewPrivileges=true
-+
-+# xfs_scrub doesn't create files
-+UMask=7777
-+
-+# No access to hardware /dev files except for block devices
-+ProtectClock=true
-+DevicePolicy=closed
-+DeviceAllow=block-*
-diff --git a/scrub/xfs_scrub_media_fail@.service.in b/scrub/xfs_scrub_media_fail@.service.in
-new file mode 100644
-index 000000000000..97c0e090721d
---- /dev/null
-+++ b/scrub/xfs_scrub_media_fail@.service.in
-@@ -0,0 +1,76 @@
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Copyright (c) 2018-2024 Oracle.  All Rights Reserved.
-+# Author: Darrick J. Wong <djwong@kernel.org>
-+
-+[Unit]
-+Description=Online XFS Metadata and Media Check Failure Reporting for %f
-+Documentation=man:xfs_scrub(8)
-+
-+[Service]
-+Type=oneshot
-+Environment=EMAIL_ADDR=root
-+ExecStart=@pkg_libexec_dir@/xfs_scrub_fail "${EMAIL_ADDR}" xfs_scrub_media %f
-+User=mail
-+Group=mail
-+SupplementaryGroups=systemd-journal
-+
-+# Create the service underneath the scrub background service slice so that we
-+# can control resource usage.
-+Slice=system-xfs_scrub.slice
-+
-+# No realtime scheduling
-+RestrictRealtime=true
-+
-+# Make the entire filesystem readonly and /home inaccessible, then bind mount
-+# the filesystem we're supposed to be checking into our private /tmp dir.
-+ProtectSystem=full
-+ProtectHome=yes
-+PrivateTmp=true
-+RestrictSUIDSGID=true
-+
-+# Emailing reports requires network access, but not the ability to change the
-+# hostname.
-+ProtectHostname=true
-+
-+# Don't let the program mess with the kernel configuration at all
-+ProtectKernelLogs=true
-+ProtectKernelModules=true
-+ProtectKernelTunables=true
-+ProtectControlGroups=true
-+ProtectProc=invisible
-+RestrictNamespaces=true
-+
-+# Can't hide /proc because journalctl needs it to find various pieces of log
-+# information
-+#ProcSubset=pid
-+
-+# Only allow the default personality Linux
-+LockPersonality=true
-+
-+# No writable memory pages
-+MemoryDenyWriteExecute=true
-+
-+# Don't let our mounts leak out to the host
-+PrivateMounts=true
-+
-+# Restrict system calls to the native arch and only enough to get things going
-+SystemCallArchitectures=native
-+SystemCallFilter=@system-service
-+SystemCallFilter=~@privileged
-+SystemCallFilter=~@resources
-+SystemCallFilter=~@mount
-+
-+# xfs_scrub needs these privileges to run, and no others
-+CapabilityBoundingSet=
-+NoNewPrivileges=true
-+
-+# Failure reporting shouldn't create world-readable files
-+UMask=0077
-+
-+# Clean up any IPC objects when this unit stops
-+RemoveIPC=true
-+
-+# No access to hardware device files
-+PrivateDevices=true
-+ProtectClock=true
+ # No network access except to the systemd control socket
+ PrivateNetwork=true
 
