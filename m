@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89C8F7462
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:50:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA725393
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:50:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719881406; cv=none; b=kOBpsJsLD3Vwv6VM1twJ9sUkc+6SJvfOONo3IuwYpE2PpvIed1lO3APYXgEW6A7Q8w493sycVD4UMUINoq22kh5jn+G7zo662+f+ERjAUQEseEyw9pCTKvOOxbDrgAA7at7qRZ9bpqN3S6vJJuI//obJwoaKj6koPJP/i7F+J4c=
+	t=1719881422; cv=none; b=A9umf52Rn/dwtzpR3YkaCbWI0dvw0mFDziTZcaRyROinCnrPZbBzVOQowCVOZMtBVXNDFAN+6AseG+zeWSVMxZYQhQrE1mrjDlI7JmUPP3pjI6L8RGf49jY6hRbouRbKqP6yiG1qSSttHiiwitZenLYQjIdUlR4WixVB9bFvZCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719881406; c=relaxed/simple;
-	bh=wY42YlcPExz/z5TGKQzVesHl8Vow1ag3PtLhQYpa0hU=;
+	s=arc-20240116; t=1719881422; c=relaxed/simple;
+	bh=qqvw0jerX22UcCAuKU6NNIhRUXqvtH82XpAFyjdRoYI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aS4ijGC6ypDCuA5TVmndkIVlV2bvYF1fcI+8x1HYbVTEBFFGJlpsqE+FrjKYyWWIUSzb//O/IXwcAvEfkN8Ba1bkQQybnfCBnyfKa+gRDfXY6x5TwECgYYZ9Ksoc7paZfZQWzfMfDf5m4hMEjmLNdg7jMKyBKL1f72ehnGG9gLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SiUIdaYx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ahfk6zawlepYPbGn2cvV3xTlB8Hy8kjE0t2emBBmFrVBFAYwsGfvvsC69MK/6qXE25UT3/X3G2Hd3ZkWfVbeGSzopn2w8fdKSaIsqzlQFEev8Wsj/ODkRqORlXCjlp3jjuRMX/tZLjJeY8tiBvOXKpW+YQzKNxesqezjzlbaeYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YFuNpHiJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SiUIdaYx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29F86C116B1;
-	Tue,  2 Jul 2024 00:50:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YFuNpHiJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCB82C116B1;
+	Tue,  2 Jul 2024 00:50:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719881406;
-	bh=wY42YlcPExz/z5TGKQzVesHl8Vow1ag3PtLhQYpa0hU=;
+	s=k20201202; t=1719881421;
+	bh=qqvw0jerX22UcCAuKU6NNIhRUXqvtH82XpAFyjdRoYI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SiUIdaYx9dEgXKGM6FsTBY1UqdE4vlF3co1PrLIK4ZWI6sex24TBRBznQa2Ttn4vf
-	 KrCFyZUb7sxp6ftuClh0lzoF0h6UKZkdoyWCsTLwrHQB1KO//yBFsJIAsKACrDphIW
-	 ZlArlDZCGYw2Fi2zHsTA+q0PePqH67qYcfsfVcPB0/tpQYFkVN2Wafwx4VHhzNTT90
-	 hv0nnak41lbi1FUwGmekOy4Sw74YOIzSzaqkCXqlg7O5FCx+jOFQNVgVtFrRTLDVIm
-	 r+dHatDv2RC3z/w/mXbTdPh0LuO0eQ13hjtLs9QYuQg7JD4gL2wD9rn1g1H8QcTit5
-	 P816jnVbE9qvA==
-Date: Mon, 01 Jul 2024 17:50:05 -0700
-Subject: [PATCHSET v30.7 03/16] xfs_scrub: detect deceptive filename
- extensions
+	b=YFuNpHiJ+2XotOiKd9cLESTl7tBukCD5hAo7ETHqxr60TQKHF0vmm2jo6eC8pOmD5
+	 0z1gFKlK7F5ySSVUz8CMvHAlLQg5iwcH7uDDMyjXLPowp/owWeWmIFs28o6EPg5ant
+	 4N4sMaWe1SK4Cta8Llyu9RkTaWGkkqDgFg5t8wLJv6OjUMLTs5uJDB15s4zxO5KkvR
+	 rPpiNl+wUfenERZgqsARn+QUzM5Fsquo7BMvY+ID5eTcqsCpZZWTwv7tK3qp6nS+Hn
+	 DH7xwjWG43Nl+QR+kbx4LC/xNSu/aDLHkHEtIyz3L5JgFUB2d0yc9YU0FzlmnGakdJ
+	 166WlOFKnNqTQ==
+Date: Mon, 01 Jul 2024 17:50:21 -0700
+Subject: [PATCHSET v30.7 04/16] xfs_scrub: move fstrim to a separate phase
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988117591.2007123.4966781934074641923.stgit@frogsfrogsfrogs>
+Message-ID: <171988118118.2007602.12196117098152792537.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240702004322.GJ612460@frogsfrogsfrogs>
 References: <20240702004322.GJ612460@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,12 +46,24 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-In early 2023, malware researchers disclosed a phishing attack that was
-targeted at people running Linux workstations.  The attack vector
-involved the use of filenames containing what looked like a file
-extension but instead contained a lookalike for the full stop (".")
-and a common extension ("pdf").  Enhance xfs_scrub phase 5 to detect
-these types of attacks and warn the system administrator.
+Back when I originally designed xfs_scrub, all filesystem metadata
+checks were complete by the end of phase 3, and phase 4 was where all
+the metadata repairs occurred.  On the grounds that the filesystem
+should be fully consistent by then, I made a call to FITRIM at the end
+of phase 4 to discard empty space in the filesystem.
+
+Unfortunately, that's no longer the case -- summary counters, link
+counts, and quota counters are not checked until phase 7.  It's not safe
+to instruct the storage to unmap "empty" areas if we don't know where
+those empty areas are, so we need to create a phase 8 to trim the fs.
+While we're at it, make it more obvious that fstrim only gets to run if
+there are no unfixed corruptions and no other runtime errors have
+occurred.
+
+Finally, reduce the latency impacts on the rest of the system by
+breaking up the fstrim work into a loop that targets only 16GB per call.
+This enables better progress reporting for interactive runs and cgroup
+based resource constraints for background runs.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -63,26 +74,25 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-detect-deceptive-extensions
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-detect-deceptive-extensions
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fstrim-phase
 ---
 Commits in this patchset:
- * xfs_scrub: use proper UChar string iterators
- * xfs_scrub: hoist code that removes ignorable characters
- * xfs_scrub: add a couple of omitted invisible code points
- * xfs_scrub: avoid potential UAF after freeing a duplicate name entry
- * xfs_scrub: guard against libicu returning negative buffer lengths
- * xfs_scrub: hoist non-rendering character predicate
- * xfs_scrub: store bad flags with the name entry
- * xfs_scrub: rename UNICRASH_ZERO_WIDTH to UNICRASH_INVISIBLE
- * xfs_scrub: type-coerce the UNICRASH_* flags
- * xfs_scrub: reduce size of struct name_entry
- * xfs_scrub: rename struct unicrash.normalizer
- * xfs_scrub: report deceptive file extensions
- * xfs_scrub: dump unicode points
+ * xfs_scrub: move FITRIM to phase 8
+ * xfs_scrub: ignore phase 8 if the user disabled fstrim
+ * xfs_scrub: collapse trim_filesystem
+ * xfs_scrub: fix the work estimation for phase 8
+ * xfs_scrub: report FITRIM errors properly
+ * xfs_scrub: don't call FITRIM after runtime errors
+ * xfs_scrub: don't trim the first agbno of each AG for better performance
+ * xfs_scrub: improve progress meter for phase 8 fstrimming
 ---
- scrub/unicrash.c |  530 +++++++++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 424 insertions(+), 106 deletions(-)
+ scrub/Makefile    |    1 
+ scrub/phase4.c    |   30 +---------
+ scrub/phase8.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/vfs.c       |   22 +++++---
+ scrub/vfs.h       |    2 -
+ scrub/xfs_scrub.c |   11 +++-
+ scrub/xfs_scrub.h |    3 +
+ 7 files changed, 184 insertions(+), 37 deletions(-)
+ create mode 100644 scrub/phase8.c
 
