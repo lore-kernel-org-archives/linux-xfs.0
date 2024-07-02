@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35CC09449
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:09:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFCB9449
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:09:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719882548; cv=none; b=lwMl5JWxbHlMBcrRLWYICFtTZctjujAR8QZNtMPfwtSak7hCi8TsxPXzXYr1whsTJcdkvEcylEqA0AB/TgYDs32m3HVmSssFnRddz319Fav20raXt71GXTOEphRQ1+1w9ZJNVOVwnjzMwtjsjZriYVwzrLCQFGE+ANrGQF8Cnuo=
+	t=1719882563; cv=none; b=nN0obY5PeNBe6USrkR4WbOvSNLeCugsDuqFCOqwhG565jwNgHG8Hy2BpWNmL+n5UIGw3ykIWk0HgfRqEQJWbBY90od37yYLsNOXr/ou94uPBl2d96ekow67i2/gHAlx56CNd6WEIg+d4+HsBSrQnlzkZmRnr+ifdUR0GxeMwIy8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719882548; c=relaxed/simple;
-	bh=/13cmUZH5qZFXt1bOtFOHM3T3iDqZDEV3kKDJmvf6RE=;
+	s=arc-20240116; t=1719882563; c=relaxed/simple;
+	bh=C063k6+XDbR3spQkrqxf6rxZ3QaGatcs1/1WBH4rJmQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JMfJuFKRPzRruxRpHoXxs7V7lZmrAm8YqCQU9Ax8ce+9Ed9voek1BY6ekIC+cq2PLXscy6ytBAVD7yQxoUm6J6Isz1FSBSkawNqtqT00+Y5DdVnFuJ7sloerLLcuXfeAdgCTXgXz/xnADtnxVP8u3PAYKxLcPx+UkKfhKTzuEWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=epnl5NEk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Vmun1VxwkkExpcU70gAnZVP4Rqkl4wuNVYDT5/mwzgIXWo/u9BQDxV+9PvinKj0uT1HxhGMxJwaIK1J/JhguBPP9TudPuXsqSs9sN3Eo8MMaR851ckJYDt4n8FjQWhLADrW1qtcx2Brg9B1Y24A4r+uCsYerHrxdOBAVgaZ9Jz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sBEww7XB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="epnl5NEk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09669C116B1;
-	Tue,  2 Jul 2024 01:09:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sBEww7XB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A37ACC116B1;
+	Tue,  2 Jul 2024 01:09:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719882548;
-	bh=/13cmUZH5qZFXt1bOtFOHM3T3iDqZDEV3kKDJmvf6RE=;
+	s=k20201202; t=1719882563;
+	bh=C063k6+XDbR3spQkrqxf6rxZ3QaGatcs1/1WBH4rJmQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=epnl5NEk6+6ASLYh8s2RZC2UVPy/2qMLF6sWbfsT1VZsEgleH1OxB7Hu582NeEzc8
-	 avF8wforRbbOSXDhNgQ+P2ig+/48qNoNQA6mjDAEtWE+/EZXENNbiQEaPzm7eABwxT
-	 q++9L9XS0PA9Bq4BOByko6EUlUvGvFTSuCtRqLmC6LDLWsJRR18DRmrgauJag7Ql4B
-	 6ygC0yuJn1b3OMcQzoRSYn8kw9mMthHLiJ0J+jKxw5w695dxuSR8xIik4t+NdXqBBb
-	 SwP3WwuR3tDh6GgSXUB2dM2K6y5vEhLprHSS6TlQP+ZbC13E39mfH8zafRnMiNyu8u
-	 c+ysgY+Y1qrJg==
-Date: Mon, 01 Jul 2024 18:09:07 -0700
-Subject: [PATCH 5/5] xfs_scrub_all: implement retry and backoff for dbus calls
+	b=sBEww7XBmXxkawStKGhmDqQDdysxDvncjekOknZIhHcUNkw6mI8jmvj8Sl3wIouNA
+	 ObfpwzNgeAAHoVgSi2LLWxIQ4vMpBlo6wN64K5ciLszbttYue4BlI9RVx2ocYXyZYi
+	 MoKs9MtRyFuaJwYwTKV+C5ZsCyBWDql69J6IBEN10eIQ4tIF/D1SWc8vEsGXXishdB
+	 wvWSacBhQ9jpHhZLErOtAD3HBEG8Digu0qWs4Rfb3KUxbG05TFbBvIYcSLGa5lUV7X
+	 eqR5SXTH5AM9qYYABtYCwJ/6X5P5nfJvdWdLdDBqEvQlXGZaajhXmuiGAAbPi7AQ7B
+	 noNmzqfhpGUOQ==
+Date: Mon, 01 Jul 2024 18:09:23 -0700
+Subject: [PATCH 1/3] xfs_scrub: automatic downgrades to dry-run mode in
+ service mode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988119890.2008718.14517701027636602626.stgit@frogsfrogsfrogs>
-In-Reply-To: <171988119806.2008718.11057954097670233571.stgit@frogsfrogsfrogs>
-References: <171988119806.2008718.11057954097670233571.stgit@frogsfrogsfrogs>
+Message-ID: <171988120228.2008941.5724994724680390658.stgit@frogsfrogsfrogs>
+In-Reply-To: <171988120209.2008941.9839121054654380693.stgit@frogsfrogsfrogs>
+References: <171988120209.2008941.9839121054654380693.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,99 +47,98 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Calls to systemd across dbus are remote procedure calls, which means
-that they're subject to transitory connection failures (e.g. systemd
-re-exec itself).  We don't want to fail at the *first* sign of what
-could be temporary trouble, so implement a limited retry with fibonacci
-backoff before we resort to invoking xfs_scrub as a subprocess.
+When service mode is enabled, xfs_scrub is being run within the context
+of a systemd service.  The service description language doesn't have any
+particularly good constructs for adding in a '-n' argument if the
+filesystem is readonly, which means that xfs_scrub is passed a path, and
+needs to switch to dry-run mode on its own if the fs is mounted
+readonly or the kernel doesn't support repairs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/xfs_scrub_all.in |   43 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 40 insertions(+), 3 deletions(-)
+ scrub/phase1.c |   13 +++++++++++++
+ scrub/repair.c |   33 +++++++++++++++++++++++++++++++++
+ scrub/repair.h |    2 ++
+ 3 files changed, 48 insertions(+)
 
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index a09566efdcd8..71726cdf36d5 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -165,6 +165,22 @@ def path_to_serviceunit(path, scrub_media):
- 	for line in proc.stdout:
- 		return line.decode(sys.stdout.encoding).strip()
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 516d929d6268..095c045915a7 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -216,6 +216,19 @@ _("Kernel metadata scrubbing facility is not available."));
+ 		return ECANCELED;
+ 	}
  
-+def fibonacci(max_ret):
-+	'''Yield fibonacci sequence up to but not including max_ret.'''
-+	if max_ret < 1:
-+		return
++	/*
++	 * Normally, callers are required to pass -n if the provided path is a
++	 * readonly filesystem or the kernel wasn't built with online repair
++	 * enabled.  However, systemd services are not scripts and cannot
++	 * determine either of these conditions programmatically.  Change the
++	 * behavior to dry-run mode if either condition is detected.
++	 */
++	if (repair_want_service_downgrade(ctx)) {
++		str_info(ctx, ctx->mntpoint,
++_("Filesystem cannot be repaired in service mode, downgrading to dry-run mode."));
++		ctx->mode = SCRUB_MODE_DRY_RUN;
++	}
 +
-+	x = 0
-+	y = 1
-+	yield 1
-+
-+	z = x + y
-+	while z <= max_ret:
-+		yield z
-+		x = y
-+		y = z
-+		z = x + y
-+
- class scrub_service(scrub_control):
- 	'''Control object for xfs_scrub systemd service.'''
- 	def __init__(self, mnt, scrub_media):
-@@ -188,6 +204,25 @@ class scrub_service(scrub_control):
- 		self.unit = dbus.Interface(svc_obj,
- 				'org.freedesktop.systemd1.Unit')
+ 	/* Do we need kernel-assisted metadata repair? */
+ 	if (ctx->mode != SCRUB_MODE_DRY_RUN && !can_repair(ctx)) {
+ 		str_error(ctx, ctx->mntpoint,
+diff --git a/scrub/repair.c b/scrub/repair.c
+index 19f5c9052aff..2883f98af4ab 100644
+--- a/scrub/repair.c
++++ b/scrub/repair.c
+@@ -45,6 +45,39 @@ static const unsigned int repair_deps[XFS_SCRUB_TYPE_NR] = {
+ };
+ #undef DEP
  
-+	def __dbusrun(self, lambda_fn):
-+		'''Call the lambda function to execute something on dbus.  dbus
-+		exceptions result in retries with Fibonacci backoff, and the
-+		bindings will be rebuilt every time.'''
-+		global debug
++/*
++ * Decide if we want an automatic downgrade to dry-run mode.  This is only
++ * for service mode, where we are fed a path and have to figure out if the fs
++ * is repairable or not.
++ */
++bool
++repair_want_service_downgrade(
++	struct scrub_ctx		*ctx)
++{
++	struct xfs_scrub_metadata	meta = {
++		.sm_type		= XFS_SCRUB_TYPE_PROBE,
++		.sm_flags		= XFS_SCRUB_IFLAG_REPAIR,
++	};
++	int				error;
 +
-+		fatal_ex = None
++	if (ctx->mode == SCRUB_MODE_DRY_RUN)
++		return false;
++	if (!is_service)
++		return false;
++	if (debug_tweak_on("XFS_SCRUB_NO_KERNEL"))
++		return false;
 +
-+		for i in fibonacci(30):
-+			try:
-+				return lambda_fn()
-+			except dbus.exceptions.DBusException as e:
-+				if debug:
-+					print(e)
-+				fatal_ex = e
-+				time.sleep(i)
-+				self.bind()
-+		raise fatal_ex
++	error = -xfrog_scrub_metadata(&ctx->mnt, &meta);
++	switch (error) {
++	case EROFS:
++	case ENOTRECOVERABLE:
++	case EOPNOTSUPP:
++		return true;
++	}
 +
- 	def state(self):
- 		'''Retrieve the active state for a systemd service.  As of
- 		systemd 249, this is supposed to be one of the following:
-@@ -195,8 +230,10 @@ class scrub_service(scrub_control):
- 		or "deactivating".  These strings are not localized.'''
- 		global debug
++	return false;
++}
++
+ /* Repair some metadata. */
+ static int
+ xfs_repair_metadata(
+diff --git a/scrub/repair.h b/scrub/repair.h
+index a685e90374cb..411a379f6faa 100644
+--- a/scrub/repair.h
++++ b/scrub/repair.h
+@@ -102,4 +102,6 @@ repair_item_completely(
+ 	return repair_item(ctx, sri, XRM_FINAL_WARNING | XRM_NOPROGRESS);
+ }
  
-+		l = lambda: self.prop.Get('org.freedesktop.systemd1.Unit',
-+				'ActiveState')
- 		try:
--			return self.prop.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
-+			return self.__dbusrun(l)
- 		except Exception as e:
- 			if debug:
- 				print(e, file = sys.stderr)
-@@ -231,7 +268,7 @@ class scrub_service(scrub_control):
- 			print('starting %s' % self.unitname)
- 
- 		try:
--			self.unit.Start('replace')
-+			self.__dbusrun(lambda: self.unit.Start('replace'))
- 			return self.wait()
- 		except Exception as e:
- 			print(e, file = sys.stderr)
-@@ -245,7 +282,7 @@ class scrub_service(scrub_control):
- 			print('stopping %s' % self.unitname)
- 
- 		try:
--			self.unit.Stop('replace')
-+			self.__dbusrun(lambda: self.unit.Stop('replace'))
- 			return self.wait()
- 		except Exception as e:
- 			print(e, file = sys.stderr)
++bool repair_want_service_downgrade(struct scrub_ctx *ctx);
++
+ #endif /* XFS_SCRUB_REPAIR_H_ */
 
