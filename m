@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA725393
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:50:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C9916FC3
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:50:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719881422; cv=none; b=A9umf52Rn/dwtzpR3YkaCbWI0dvw0mFDziTZcaRyROinCnrPZbBzVOQowCVOZMtBVXNDFAN+6AseG+zeWSVMxZYQhQrE1mrjDlI7JmUPP3pjI6L8RGf49jY6hRbouRbKqP6yiG1qSSttHiiwitZenLYQjIdUlR4WixVB9bFvZCc=
+	t=1719881437; cv=none; b=V3AX2tStXgxKREd3cE6uUpADxDkw9ytDtxgYYvxHzAJJIhdxccKhDnKYhs0vc+bvcxvhwvzur3OFT0boQj+kpl9VOD1/72Ly1dUd9lc3LxdGzAGjYcZJzPgz/JNEyPjEtAdTRuWMv8Kl8VikN1wdHwioHQaVKm11PwgYPP6ICHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719881422; c=relaxed/simple;
-	bh=qqvw0jerX22UcCAuKU6NNIhRUXqvtH82XpAFyjdRoYI=;
+	s=arc-20240116; t=1719881437; c=relaxed/simple;
+	bh=rCNI1vLg1xS42yhtMGYSQP99D23y6iHQy6QKg36SmU8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ahfk6zawlepYPbGn2cvV3xTlB8Hy8kjE0t2emBBmFrVBFAYwsGfvvsC69MK/6qXE25UT3/X3G2Hd3ZkWfVbeGSzopn2w8fdKSaIsqzlQFEev8Wsj/ODkRqORlXCjlp3jjuRMX/tZLjJeY8tiBvOXKpW+YQzKNxesqezjzlbaeYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YFuNpHiJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Ff8vs88phjNzbgc6YtZThAPbItVABmDRu9ZuleI0KbdW6IDK2avThEsKGKsov2CTIFmqkgvq6GYU7/WOA8Mcw7XDjZ+fLZ9KExyWjpCmoDmZRTphRxLBmFtYmqQaOOfD6KjPuHGPwAC+0fG7JJcaSZJEtu780fcNDyUs3hpe188=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rL6IrfeG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YFuNpHiJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCB82C116B1;
-	Tue,  2 Jul 2024 00:50:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rL6IrfeG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53455C116B1;
+	Tue,  2 Jul 2024 00:50:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719881421;
-	bh=qqvw0jerX22UcCAuKU6NNIhRUXqvtH82XpAFyjdRoYI=;
+	s=k20201202; t=1719881437;
+	bh=rCNI1vLg1xS42yhtMGYSQP99D23y6iHQy6QKg36SmU8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YFuNpHiJ+2XotOiKd9cLESTl7tBukCD5hAo7ETHqxr60TQKHF0vmm2jo6eC8pOmD5
-	 0z1gFKlK7F5ySSVUz8CMvHAlLQg5iwcH7uDDMyjXLPowp/owWeWmIFs28o6EPg5ant
-	 4N4sMaWe1SK4Cta8Llyu9RkTaWGkkqDgFg5t8wLJv6OjUMLTs5uJDB15s4zxO5KkvR
-	 rPpiNl+wUfenERZgqsARn+QUzM5Fsquo7BMvY+ID5eTcqsCpZZWTwv7tK3qp6nS+Hn
-	 DH7xwjWG43Nl+QR+kbx4LC/xNSu/aDLHkHEtIyz3L5JgFUB2d0yc9YU0FzlmnGakdJ
-	 166WlOFKnNqTQ==
-Date: Mon, 01 Jul 2024 17:50:21 -0700
-Subject: [PATCHSET v30.7 04/16] xfs_scrub: move fstrim to a separate phase
+	b=rL6IrfeG0WG+eQeqHJ2QCyJtAHqPytGVqgKz9+FHXipYQe743/WlN6V3DU+cdK6ki
+	 rpLKT3pMaOyaxHQ1D+hyRZM/rOmb/BcguLVsDNYyyzzeJIE4LGRYTJeXUI7QRHO66k
+	 noyxA0wZiq1gJ0voniQ+rXpY+fGUvs6HeiMtbIvfVjB5u4dssBsoRkA9se7Utu6NBT
+	 +MYNe5FL4YIBcCR+OTO4hxbWsKVQ7VCILWnwaS8rn+nY7KEnuf2pcjfLFRF6IawKon
+	 xRQQZESHtRNZRMSsVHeGPn9wO9QwLlkWSNWqRK9yyoNwZcaNkX28YBIsjwPwGanLSy
+	 GOCp+OA2AEM4A==
+Date: Mon, 01 Jul 2024 17:50:36 -0700
+Subject: [PATCHSET v30.7 05/16] xfs_scrub: use free space histograms to reduce
+ fstrim runtime
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988118118.2007602.12196117098152792537.stgit@frogsfrogsfrogs>
+Message-ID: <171988118569.2007921.18066484659815583228.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240702004322.GJ612460@frogsfrogsfrogs>
 References: <20240702004322.GJ612460@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,24 +47,25 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Back when I originally designed xfs_scrub, all filesystem metadata
-checks were complete by the end of phase 3, and phase 4 was where all
-the metadata repairs occurred.  On the grounds that the filesystem
-should be fully consistent by then, I made a call to FITRIM at the end
-of phase 4 to discard empty space in the filesystem.
+This patchset dramatically reduces the runtime of the FITRIM calls made
+during phase 8 of xfs_scrub.  It turns out that phase 8 can really get
+bogged down if the free space contains a large number of very small
+extents.  In these cases, the runtime can increase by an order of
+magnitude to free less than 1% of the free space.  This is not worth the
+time, since we're spending a lot of time to do very little work.  The
+FITRIM ioctl allows us to specify a minimum extent length, so we can use
+statistical methods to compute a minlen parameter.
 
-Unfortunately, that's no longer the case -- summary counters, link
-counts, and quota counters are not checked until phase 7.  It's not safe
-to instruct the storage to unmap "empty" areas if we don't know where
-those empty areas are, so we need to create a phase 8 to trim the fs.
-While we're at it, make it more obvious that fstrim only gets to run if
-there are no unfixed corruptions and no other runtime errors have
-occurred.
+It turns out xfs_db/spaceman already have the code needed to create
+histograms of free space extent lengths.  We add the ability to compute
+a CDF of the extent lengths, which make it easy to pick a minimum length
+corresponding to 99% of the free space.  In most cases, this results in
+dramatic reductions in phase 8 runtime.  Hence, move the histogram code
+to libfrog, and wire up xfs_scrub, since phase 7 already walks the
+fsmap.
 
-Finally, reduce the latency impacts on the rest of the system by
-breaking up the fstrim work into a loop that targets only 16GB per call.
-This enables better progress reporting for interactive runs and cgroup
-based resource constraints for background runs.
+We also add a new -o suboption to xfs_scrub so that people who /do/ want
+to examine every free extent can do so.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -74,25 +76,34 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fstrim-phase
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fstrim-minlen-freesp-histogram
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-fstrim-minlen-freesp-histogram
 ---
 Commits in this patchset:
- * xfs_scrub: move FITRIM to phase 8
- * xfs_scrub: ignore phase 8 if the user disabled fstrim
- * xfs_scrub: collapse trim_filesystem
- * xfs_scrub: fix the work estimation for phase 8
- * xfs_scrub: report FITRIM errors properly
- * xfs_scrub: don't call FITRIM after runtime errors
- * xfs_scrub: don't trim the first agbno of each AG for better performance
- * xfs_scrub: improve progress meter for phase 8 fstrimming
+ * libfrog: hoist free space histogram code
+ * libfrog: print wider columns for free space histogram
+ * libfrog: print cdf of free space buckets
+ * xfs_scrub: don't close stdout when closing the progress bar
+ * xfs_scrub: remove pointless spacemap.c arguments
+ * xfs_scrub: collect free space histograms during phase 7
+ * xfs_scrub: tune fstrim minlen parameter based on free space histograms
 ---
- scrub/Makefile    |    1 
- scrub/phase4.c    |   30 +---------
- scrub/phase8.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/vfs.c       |   22 +++++---
- scrub/vfs.h       |    2 -
- scrub/xfs_scrub.c |   11 +++-
- scrub/xfs_scrub.h |    3 +
- 7 files changed, 184 insertions(+), 37 deletions(-)
- create mode 100644 scrub/phase8.c
+ db/freesp.c          |   83 +++-------------
+ libfrog/Makefile     |    2 
+ libfrog/histogram.c  |  252 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ libfrog/histogram.h  |   54 +++++++++++
+ man/man8/xfs_scrub.8 |   16 +++
+ scrub/phase7.c       |   47 +++++++++
+ scrub/phase8.c       |   75 ++++++++++++++-
+ scrub/spacemap.c     |   11 +-
+ scrub/vfs.c          |    4 +
+ scrub/vfs.h          |    2 
+ scrub/xfs_scrub.c    |   45 +++++++++
+ scrub/xfs_scrub.h    |   16 +++
+ spaceman/freesp.c    |   93 +++++-------------
+ 13 files changed, 544 insertions(+), 156 deletions(-)
+ create mode 100644 libfrog/histogram.c
+ create mode 100644 libfrog/histogram.h
 
