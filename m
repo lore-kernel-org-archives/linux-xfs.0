@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596C4D50F
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:53:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09AC5D50F
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:53:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719881594; cv=none; b=ai/H1+lApvu28GfhnZUE1Ndq25IOTbnPXVEb7sncwqaPQHU1DsHqLf1+RzjMGRee9bYwCA99zBXGxWKw5pDTKzfmtUn1Q3uUvRtM0fh0A0xTT0BY6jvrjMUbtoTfUEpa/pfTRb8sjpQd0Jn91ntQv04g/wJxA0un5w1/wf0aSt4=
+	t=1719881610; cv=none; b=lcRgVSMY/p1O7sPKFxqgfOTioeGOaEs5QZpXroSNqY7dXZiw9OHD6tBqEM3cvRgQnBMGQmFyCuHckYfRtf2l1qU4XEVccc1ldUc/4X+tY9ak/5/ORd2ciH6Fwdqqt/J6+ClJ++9fVMmaoBPke53EUALMlXAUdOjFqfIueziH/Yo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719881594; c=relaxed/simple;
-	bh=8gvUDH7jjSua95MCwVPPCpjYbuGIdRnqTr+regVQkdI=;
+	s=arc-20240116; t=1719881610; c=relaxed/simple;
+	bh=gsLOgsogGoaRKaxaqVG56bohta7sgJTqEfhE4i8UiQQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VTAmP0S35tdrV51aii6E8ZPZtgCPMiIPgRnGo5123qJGIUVk3ep6LBiAB74MOiK9LDtFTZt9pv9ai9K4aCFBhPIO5lKrZKnj5u4PFGeOHHO741RrtSIbnXp4wAM6rKgIxLCJ+GWfdDy5ZGOKUlQzlL6/MRjXDha+YsEkKFI6hLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQnqEldl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=DBN+ansa/7ytSut+tC+QhY9WFgq9VCIocyYvGOF7EkU6WS4rAy7StKNYRm1JVha4UEy5x1wAdlf/x6DJ0FAyhzKAGRQO3GzYhfDXcx6rumN85Un7LWxAo00JLM+//YB2Ckgxyu3E1szkpIBlsbgjaFmwQfRAdEEgHNfmgdxDvGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MtuvsksP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQnqEldl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1205C116B1;
-	Tue,  2 Jul 2024 00:53:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MtuvsksP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FFBDC116B1;
+	Tue,  2 Jul 2024 00:53:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719881593;
-	bh=8gvUDH7jjSua95MCwVPPCpjYbuGIdRnqTr+regVQkdI=;
+	s=k20201202; t=1719881609;
+	bh=gsLOgsogGoaRKaxaqVG56bohta7sgJTqEfhE4i8UiQQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nQnqEldlr7pUsDxnCgAJHFpGk7i4T8Lx+1QkXgorRcKvuTfxpt+g4N24YDgoTWA82
-	 +FaLudgdha737J2AOSkRLyFyHB6Zeo01NFB3DQhv9bVcLvSsVRHbhyuCmGekR3ZV6j
-	 AnE5C/1Iq8uu04WC9btii9I6OR2CTAX1ZnLCgQW8m6DAuSqiTPmGypIuMhRDEXGFu7
-	 kR0dqdMY4ptOsIdrudyd7s3tfn8RfaKn688ZOaUFSCd9fUUbrZbo+gop67DNFH82uB
-	 tTqe7XYDZB0eXNdGaL8pV1djGP3XNXEHQ2mbb+o6j4GUiLJPq0N8YxozY+ZAkelqoD
-	 l5wrelUzh2wvQ==
-Date: Mon, 01 Jul 2024 17:53:13 -0700
-Subject: [PATCHSET v30.7 15/16] xfs_scrub: vectorize kernel calls
+	b=MtuvsksPTtQhZiW2DSVa1+nvIX1WILYx57bV3mC+Of7zzsvfgcXdlUdu6QBK/03d0
+	 MTADxFCnzGq4cVHZloJ6w88NmD6qnHHvBjm+4Jzz84ZClKzlH9en6zkrjCv5ewPglC
+	 L2hpnPlAiXSTi98+UVC/gQhVqog8TQuX3N5TExHkOcvoe7wn6PBEe6yo/PQ0xgg1AY
+	 OmerXFwesvFakmo3pIZbsL5OSiGqPL3JQTw3Y1N1KVB8UGn4KggZlyngOF6m0FetnO
+	 r6YBoTHQF6TFPRMhLX+1qOHtN6dUFmwFOsuCuu4pbpgNE2yuUKBoHf3wO9vclYWmzF
+	 YJbZ3DQnYbHKg==
+Date: Mon, 01 Jul 2024 17:53:29 -0700
+Subject: [PATCHSET v30.7 16/16] xfs_repair: small remote symlinks are ok
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988123120.2012546.17403096510880884928.stgit@frogsfrogsfrogs>
+Message-ID: <171988123583.2012930.12584359346392356391.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240702004322.GJ612460@frogsfrogsfrogs>
 References: <20240702004322.GJ612460@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,9 +46,11 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Create a vectorized version of the metadata scrub and repair ioctl, and
-adapt xfs_scrub to use that.  This is an experiment to measure overhead
-and to try refactoring xfs_scrub.
+Fix some incorrect validation problems in xfs_repair where it would flag
+a symlink with a target that is small enough to fit inside the inode but
+is in extents format anyway.  The kernel has written out filesystems
+this way for a long time and used to be ok with reading such things, so
+repair must not flag that as corruption.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,41 +60,12 @@ Comments and questions are, as always, welcome.
 
 --D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=vectorized-scrub
-
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=vectorized-scrub
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=vectorized-scrub
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-symlink-fixes
 ---
 Commits in this patchset:
- * man: document vectored scrub mode
- * libfrog: support vectored scrub
- * xfs_io: support vectored scrub
- * xfs_scrub: split the scrub epilogue code into a separate function
- * xfs_scrub: split the repair epilogue code into a separate function
- * xfs_scrub: convert scrub and repair epilogues to use xfs_scrub_vec
- * xfs_scrub: vectorize scrub calls
- * xfs_scrub: vectorize repair calls
- * xfs_scrub: use scrub barriers to reduce kernel calls
- * xfs_scrub: try spot repairs of metadata items to make scrub progress
+ * xfs_repair: allow symlinks with short remote targets
 ---
- io/scrub.c                           |  368 ++++++++++++++++++++++++++++++----
- libfrog/fsgeom.h                     |    6 +
- libfrog/scrub.c                      |  137 +++++++++++++
- libfrog/scrub.h                      |   35 +++
- man/man2/ioctl_xfs_scrubv_metadata.2 |  171 ++++++++++++++++
- man/man8/xfs_io.8                    |   51 +++++
- scrub/phase1.c                       |    2 
- scrub/phase2.c                       |   93 +++++++--
- scrub/phase3.c                       |   84 ++++++--
- scrub/repair.c                       |  355 +++++++++++++++++++++------------
- scrub/scrub.c                        |  360 +++++++++++++++++++++++++--------
- scrub/scrub.h                        |   19 ++
- scrub/scrub_private.h                |   55 +++--
- scrub/xfs_scrub.c                    |    1 
- 14 files changed, 1431 insertions(+), 306 deletions(-)
- create mode 100644 man/man2/ioctl_xfs_scrubv_metadata.2
+ repair/dinode.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
