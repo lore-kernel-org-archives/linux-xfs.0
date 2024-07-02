@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 095B6883D
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:11:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F381CBE5A
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:11:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719882689; cv=none; b=Bz6hJXKsT+w2fzgmMg+x1a3BbXQS7cRY3eeC02wuuSf6hEGdrbDo0nJHL0IULpYEeaVqwH1jaSdlY+GBvhLH6/lZIw7SlldpD4kpWhS4CGKAt+laQfxt7n/TmVd4BY1iuFBMYwUZ07aThkS+H/asHqVaR4wgVFMXkFzpRMxD5Ns=
+	t=1719882705; cv=none; b=uuCKvUoVv7U5ivhdWa49zGNQccToDNz6HmYbTdzOxiIYK4tF007ToNXpEr1bLQp2Y/QNMS0KqjIov5G7pReaAltZ/IQHAMWg0geg4wt/6ovENhCoshDhItnBcSJzchJf5CNXzwNrCSmuaog8c/Gahc7keGwTZ62tf3pXbPOMPzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719882689; c=relaxed/simple;
-	bh=k3/E8ahruVyWCLFc4xS1M1AXmAmXhrcmBhNaJt4WCFs=;
+	s=arc-20240116; t=1719882705; c=relaxed/simple;
+	bh=kM0sA3rB2LBZtgEhnYrAPe2vtkHPzHg+8/hQeQoXnXk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BnK2p/j+Lmivwzb0wtdsXZVcOfVio3LITbuIIMKO3MDbGiCMClu4pRkBbYmsxLbQshiB1JO1nvMgseVmntcanzNMzzCJQyo4wWgRaUtN0zn1ZKqFXNEqVjkLE/+pd9u36seCb+HBvPG2hMAiZpAU6Jdw2geaislk2BwLu1h0p/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rJKtbEVV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YXgCW8hIcs+MhD21GyjTkrRvRBYSGDPnRUFtuaVBtbmRYo8SzVOAJdD/GWFJPm98XmqPC2lXjoKE+qBtGB19+O6IhjYNgK46e3gSRdzxnla+uZDonyqU7mFXziYbkcrbOTDs1iciQ4nBwDHWgDuwn2c96N3RcP0E3Kr2DCN9qLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WILGoIo1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rJKtbEVV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4519C116B1;
-	Tue,  2 Jul 2024 01:11:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WILGoIo1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A507C116B1;
+	Tue,  2 Jul 2024 01:11:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719882688;
-	bh=k3/E8ahruVyWCLFc4xS1M1AXmAmXhrcmBhNaJt4WCFs=;
+	s=k20201202; t=1719882704;
+	bh=kM0sA3rB2LBZtgEhnYrAPe2vtkHPzHg+8/hQeQoXnXk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rJKtbEVVU6jj68YPfwAFGszMao2kIy0Huhl4vXUpmRfs3BOKSmaZWeqRchgBnjeQp
-	 zkhAaMadykp00kK7/CGuNVFVvu1xJCj4/dQmTS3ateB4KaVC768SXMQBBbwpBPzva4
-	 QqIRaejyFtPaCJFK5GuceKpfTrT+h0f3jErhLk9qckjrNh0vVa/LCNG4tPz+IwC76V
-	 lpBCJV6qdZ6L6KV/WTh8xsRbn6SM7gUfspZYAjtCno1IwQRDp6kuhPrlnr17sUp+ET
-	 3hZ2VYKe05hEZcggNFNYjMEz1f16jlgTqGoOYB/520c0k48Qr0NsFO+JNvlFTeqVX3
-	 Z3PkU+uMzlNCw==
-Date: Mon, 01 Jul 2024 18:11:28 -0700
-Subject: [PATCH 03/24] xfs_logprint: dump new attr log item fields
+	b=WILGoIo1JDn1QYNd25nAOk5R9UQITgkIoU1WodHMheWzHQS8hjBLgMTS2keqGfb+Y
+	 Q72yyP9io9xXsb6kI5QWBLogmQRhtzHuytrwQigRx9SbaBpFgmx6LkhCwxytI3W6zc
+	 yZc/Wc3pO3wauyqp0RnrsKbR2VNjRD6soc3Z5ESAcTomFLooRwdFDW2307NiXIfKME
+	 llGn3Gt5vH0rgN6XMkwYCV3Q0TFdWmk3cesrXD+b/iZ/AY0MQbNnjpkB8OuLtL2vCT
+	 D05SLTlvy7CFpNZ/iuDfaQtIxeEzPh0s+JfSCdJ6ZJm6wmW9c8yY4LIGsb8lf0dLUy
+	 zxWFvTXk+W9dg==
+Date: Mon, 01 Jul 2024 18:11:44 -0700
+Subject: [PATCH 04/24] man: document the XFS_IOC_GETPARENTS ioctl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: catherine.hoang@oracle.com, linux-xfs@vger.kernel.org,
  allison.henderson@oracle.com, hch@lst.de
-Message-ID: <171988121108.2009260.6026012075133524751.stgit@frogsfrogsfrogs>
+Message-ID: <171988121124.2009260.4591726766214900623.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988121023.2009260.1161835936170460985.stgit@frogsfrogsfrogs>
 References: <171988121023.2009260.1161835936170460985.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,259 +47,231 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Dump the new extended attribute log item fields.  This was split out
-from the previous patch to make libxfs resyncing easier.  This code
-needs more cleaning, which we'll do in the next few patches before
-moving on to the parent pointer code.
+Document how this new ioctl works.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- logprint/log_redo.c |  140 ++++++++++++++++++++++++++++++++++++++++++---------
- logprint/logprint.h |    6 +-
- 2 files changed, 119 insertions(+), 27 deletions(-)
+ man/man2/ioctl_xfs_getparents.2 |  212 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 212 insertions(+)
+ create mode 100644 man/man2/ioctl_xfs_getparents.2
 
 
-diff --git a/logprint/log_redo.c b/logprint/log_redo.c
-index ca6dadd7551a..1d55164a90ff 100644
---- a/logprint/log_redo.c
-+++ b/logprint/log_redo.c
-@@ -674,6 +674,12 @@ xfs_attri_copy_log_format(
- 	return 1;
- }
- 
-+static inline unsigned int
-+xfs_attr_log_item_op(const struct xfs_attri_log_format *attrp)
-+{
-+	return attrp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
-+}
+diff --git a/man/man2/ioctl_xfs_getparents.2 b/man/man2/ioctl_xfs_getparents.2
+new file mode 100644
+index 000000000000..5bb9b96a0c95
+--- /dev/null
++++ b/man/man2/ioctl_xfs_getparents.2
+@@ -0,0 +1,212 @@
++.\" Copyright (c) 2019-2024 Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0-or-later
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-GETPARENTS 2 2024-04-09 "XFS"
++.SH NAME
++ioctl_xfs_getparents \- query XFS directory parent information
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_GETPARENTS, struct xfs_getparents *" arg );
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_GETPARENTS_BY_HANDLE, struct xfs_getparents_by_handle *" arg );
++.SH DESCRIPTION
++This command is used to retrieve the directory parent pointers of either the
++currently opened file or a file handle.
++Parent pointers point upwards in the directory tree from a child file towards a
++parent directories.
++Each entry in a parent directory must have a corresponding parent pointer in
++the child.
 +
- int
- xlog_print_trans_attri(
- 	char				**ptr,
-@@ -683,6 +689,10 @@ xlog_print_trans_attri(
- 	struct xfs_attri_log_format	*src_f = NULL;
- 	xlog_op_header_t		*head = NULL;
- 	uint				dst_len;
-+	unsigned int			name_len = 0;
-+	unsigned int			new_name_len = 0;
-+	unsigned int			value_len = 0;
-+	unsigned int			new_value_len = 0;
- 	int				error = 0;
- 
- 	dst_len = sizeof(struct xfs_attri_log_format);
-@@ -705,27 +715,71 @@ xlog_print_trans_attri(
- 	memmove((char*)src_f, *ptr, src_len);
- 	*ptr += src_len;
- 
--	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
--		src_f->alfi_size, src_f->alfi_name_len, src_f->alfi_value_len,
--				(unsigned long long)src_f->alfi_id);
-+	if (xfs_attr_log_item_op(src_f) == XFS_ATTRI_OP_FLAGS_PPTR_REPLACE) {
-+		name_len      = src_f->alfi_old_name_len;
-+		new_name_len  = src_f->alfi_new_name_len;
-+		value_len     = src_f->alfi_value_len;
-+		new_value_len = src_f->alfi_value_len;
-+	} else {
-+		name_len      = src_f->alfi_name_len;
-+		value_len     = src_f->alfi_value_len;
++Calling programs should allocate a large memory buffer and initialize a header
++of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_getparents {
++	struct xfs_attrlist_cursor  gp_cursor;
++	__u16                       gp_iflags;
++	__u16                       gp_oflags;
++	__u32                       gp_bufsize;
++	__u64                       __pad;
++	__u64                       gp_buffer;
++};
++
++struct xfs_getparents {
++	struct xfs_handle           gph_handle;
++	struct xfs_getparents       gph_request;
++};
++.fi
++.in
++
++.PP
++The field
++.I gp_cursor
++tracks the progress of iterating through the parent pointers.
++Calling programs must initialize this to zero before the first system call
++and must not touch it after that.
++
++.PP
++The field
++.I gp_iflags
++control the behavior of the query operation and provide more information
++about the outcome of the operation.
++There are no input flags currently defined; this field must be zero.
++
++.PP
++The field
++.I gp_oflags
++contains information about the query itself.
++Possibly output flags are:
++.RS 0.4i
++.TP
++.B XFS_GETPARENTS_OFLAG_ROOT
++The file queried was the root directory.
++.TP
++.B XFS_GETPARENTS_OFLAG_DONE
++There are no more parent pointers to query.
++.RE
++
++.PP
++The field
++.I __pad
++must be zero.
++
++.PP
++The field
++.I gp_bufsize
++should be set to the size of the buffer, in bytes.
++
++.PP
++The field
++.I gp_buffer
++should point to an output buffer for the parent pointer records.
++
++Parent pointer records are returned in the following form:
++.PP
++.in +4n
++.nf
++
++struct xfs_getparents_rec {
++	struct xfs_handle           gpr_parent;
++	__u16                       gpr_reclen;
++	char                        gpr_name[];
++};
++.fi
++.in
++
++.PP
++The field
++.I gpr_parent
++is a file handle that can be used to open the parent directory.
++
++.PP
++The field
++.I gpr_reclen
++will be set to the number of bytes used by this parent record.
++
++.PP
++The array
++.I gpr_name
++will be set to a NULL-terminated byte sequence representing the filename
++stored in the parent pointer.
++If the name is a zero-length string, the file queried has no parents.
++
++.SH SAMPLE PROGRAM
++Calling programs should allocate a large memory buffer, initialize the head
++structure to zeroes, set gp_bufsize to the size of the buffer, and call the
++ioctl.
++The XFS_GETPARENTS_OFLAG_DONE flag will be set in gp_flags when there are no
++more parent pointers to be read.
++The below code is an example of XFS_IOC_GETPARENTS usage:
++
++.nf
++#include <stdio.h>
++#include <string.h>
++#include <errno.h>
++#include <xfs/linux.h>
++#include <xfs/xfs.h>
++#include <xfs/xfs_types.h>
++#include <xfs/xfs_fs.h>
++
++int main() {
++	struct xfs_getparents gp = { };
++	struct xfs_getparents_rec *gpr;
++	int error, fd;
++
++	gp.gp_buffer = (uintptr_t)malloc(65536);
++	if (!gp.gp_buffer) {
++		perror("malloc");
++		return 1;
 +	}
++	gp->gp_bufsize = 65536;
 +
-+	printf(_("ATTRI:  #regs: %d	f: 0x%x, ino: 0x%llx, igen: 0x%x, attr_filter: 0x%x, name_len: %u, new_name_len: %u, value_len: %u, new_value_len: %u  id: 0x%llx\n"),
-+			src_f->alfi_size,
-+			src_f->alfi_op_flags,
-+			(unsigned long long)src_f->alfi_ino,
-+			(unsigned int)src_f->alfi_igen,
-+			src_f->alfi_attr_filter,
-+			name_len,
-+			new_name_len,
-+			value_len,
-+			new_value_len,
-+			(unsigned long long)src_f->alfi_id);
++	fd = open("/mnt/test/foo.txt", O_RDONLY | O_CREAT);
++	if (fd  == -1)
++		return errno;
 +
-+	if (name_len > 0) {
-+		printf(_("\n"));
-+		(*i)++;
-+		head = (xlog_op_header_t *)*ptr;
-+		xlog_print_op_header(head, *i, ptr);
-+		error = xlog_print_trans_attri_name(ptr,
-+				be32_to_cpu(head->oh_len), "name");
++	do {
++		error = ioctl(fd, XFS_IOC_GETPARENTS, gp);
 +		if (error)
-+			goto error;
-+	}
- 
--	if (src_f->alfi_name_len > 0) {
-+	if (new_name_len > 0) {
- 		printf(_("\n"));
- 		(*i)++;
- 		head = (xlog_op_header_t *)*ptr;
- 		xlog_print_op_header(head, *i, ptr);
--		error = xlog_print_trans_attri_name(ptr, be32_to_cpu(head->oh_len));
-+		error = xlog_print_trans_attri_name(ptr,
-+				be32_to_cpu(head->oh_len), "newname");
- 		if (error)
- 			goto error;
- 	}
- 
--	if (src_f->alfi_value_len > 0) {
-+	if (value_len > 0) {
- 		printf(_("\n"));
- 		(*i)++;
- 		head = (xlog_op_header_t *)*ptr;
- 		xlog_print_op_header(head, *i, ptr);
--		error = xlog_print_trans_attri_value(ptr, be32_to_cpu(head->oh_len),
--				src_f->alfi_value_len);
-+		error = xlog_print_trans_attri_value(ptr,
-+				be32_to_cpu(head->oh_len), value_len, "value");
-+		if (error)
-+			goto error;
-+	}
++			return error;
 +
-+	if (new_value_len > 0) {
-+		printf(_("\n"));
-+		(*i)++;
-+		head = (xlog_op_header_t *)*ptr;
-+		xlog_print_op_header(head, *i, ptr);
-+		error = xlog_print_trans_attri_value(ptr,
-+				be32_to_cpu(head->oh_len), new_value_len,
-+				"newvalue");
-+		if (error)
-+			goto error;
- 	}
- error:
- 	free(src_f);
-@@ -736,31 +790,33 @@ xlog_print_trans_attri(
- int
- xlog_print_trans_attri_name(
- 	char				**ptr,
--	uint				src_len)
-+	uint				src_len,
-+	const char			*tag)
- {
--	printf(_("ATTRI:  name len:%u\n"), src_len);
-+	printf(_("ATTRI:  %s len:%u\n"), tag, src_len);
- 	print_or_dump(*ptr, src_len);
- 
- 	*ptr += src_len;
- 
- 	return 0;
--}	/* xlog_print_trans_attri */
++		for (gpr = xfs_getparents_first_rec(&gp);
++		     gpr != NULL;
++		     gpr = xfs_getparents_next_rec(&gp, gpr)) {
++			if (gpr->gpr_name[0] == 0)
++				break;
++
++			printf("inode		= %llu\\n",
++					gpr->gpr_parent.ha_fid.fid_ino);
++			printf("generation	= %u\\n",
++					gpr->gpr_parent.ha_fid.fid_gen);
++			printf("name		= \\"%s\\"\\n\\n",
++					gpr->gpr_name);
++		}
++	} while (!(gp.gp_flags & XFS_GETPARENTS_OFLAG_DONE));
++
++	return 0;
 +}
- 
- int
- xlog_print_trans_attri_value(
- 	char				**ptr,
- 	uint				src_len,
--	int				value_len)
-+	int				value_len,
-+	const char			*tag)
- {
- 	int len = min(value_len, src_len);
- 
--	printf(_("ATTRI:  value len:%u\n"), value_len);
-+	printf(_("ATTRI:  %s len:%u\n"), tag, value_len);
- 	print_or_dump(*ptr, len);
- 
- 	*ptr += src_len;
- 
- 	return 0;
--}	/* xlog_print_trans_attri_value */
-+}
- 
- void
- xlog_recover_print_attri(
-@@ -768,7 +824,10 @@ xlog_recover_print_attri(
- {
- 	struct xfs_attri_log_format	*f, *src_f = NULL;
- 	uint				src_len, dst_len;
--
-+	unsigned int			name_len = 0;
-+	unsigned int			new_name_len = 0;
-+	unsigned int			value_len = 0;
-+	unsigned int			new_value_len = 0;
- 	int				region = 0;
- 
- 	src_f = (struct xfs_attri_log_format *)item->ri_buf[0].i_addr;
-@@ -788,24 +847,55 @@ xlog_recover_print_attri(
- 	if (xfs_attri_copy_log_format((char*)src_f, src_len, f))
- 		goto out;
- 
--	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
--		f->alfi_size, f->alfi_name_len, f->alfi_value_len, (unsigned long long)f->alfi_id);
-+	if (xfs_attr_log_item_op(f) == XFS_ATTRI_OP_FLAGS_PPTR_REPLACE) {
-+		name_len      = f->alfi_old_name_len;
-+		new_name_len  = f->alfi_new_name_len;
-+		value_len     = f->alfi_value_len;
-+		new_value_len = f->alfi_value_len;
-+	} else {
-+		name_len      = f->alfi_name_len;
-+		value_len     = f->alfi_value_len;
-+	}
++.fi
 +
-+	printf(_("ATTRI:  #regs: %d	f: 0x%x, ino: 0x%llx, igen: 0x%x, attr_filter: 0x%x, name_len: %u, new_name_len: %u, value_len: %d, new_value_len: %u  id: 0x%llx\n"),
-+			f->alfi_size,
-+			f->alfi_op_flags,
-+			(unsigned long long)f->alfi_ino,
-+			(unsigned int)f->alfi_igen,
-+			f->alfi_attr_filter,
-+			name_len,
-+			new_name_len,
-+			value_len,
-+			new_value_len,
-+			(unsigned long long)f->alfi_id);
- 
--	if (f->alfi_name_len > 0) {
-+	if (name_len > 0) {
- 		region++;
--		printf(_("ATTRI:  name len:%u\n"), f->alfi_name_len);
-+		printf(_("ATTRI:  name len:%u\n"), name_len);
- 		print_or_dump((char *)item->ri_buf[region].i_addr,
--			       f->alfi_name_len);
-+			       name_len);
- 	}
- 
--	if (f->alfi_value_len > 0) {
--		int len = f->alfi_value_len;
-+	if (new_name_len > 0) {
-+		region++;
-+		printf(_("ATTRI:  newname len:%u\n"), new_name_len);
-+		print_or_dump((char *)item->ri_buf[region].i_addr,
-+			       new_name_len);
-+	}
-+
-+	if (value_len > 0) {
-+		int	len = min(MAX_ATTR_VAL_PRINT, value_len);
-+
-+		region++;
-+		printf(_("ATTRI:  value len:%u\n"), value_len);
-+		print_or_dump((char *)item->ri_buf[region].i_addr, len);
-+	}
- 
--		if (len > MAX_ATTR_VAL_PRINT)
--			len = MAX_ATTR_VAL_PRINT;
-+	if (new_value_len > 0) {
-+		int	len = min(MAX_ATTR_VAL_PRINT, new_value_len);
- 
- 		region++;
--		printf(_("ATTRI:  value len:%u\n"), f->alfi_value_len);
-+		printf(_("ATTRI:  newvalue len:%u\n"), new_value_len);
- 		print_or_dump((char *)item->ri_buf[region].i_addr, len);
- 	}
- 
-diff --git a/logprint/logprint.h b/logprint/logprint.h
-index 8867b110ecaf..9715cdb9e27b 100644
---- a/logprint/logprint.h
-+++ b/logprint/logprint.h
-@@ -59,8 +59,10 @@ extern void xlog_recover_print_bud(struct xlog_recover_item *item);
- #define MAX_ATTR_VAL_PRINT	128
- 
- extern int xlog_print_trans_attri(char **ptr, uint src_len, int *i);
--extern int xlog_print_trans_attri_name(char **ptr, uint src_len);
--extern int xlog_print_trans_attri_value(char **ptr, uint src_len, int value_len);
-+extern int xlog_print_trans_attri_name(char **ptr, uint src_len,
-+		const char *tag);
-+extern int xlog_print_trans_attri_value(char **ptr, uint src_len, int value_len,
-+		const char *tag);
- extern void xlog_recover_print_attri(struct xlog_recover_item *item);
- extern int xlog_print_trans_attrd(char **ptr, uint len);
- extern void xlog_recover_print_attrd(struct xlog_recover_item *item);
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EFSBADCRC
++Metadata checksum validation failed while performing the query.
++.TP
++.B EFSCORRUPTED
++Metadata corruption was encountered while performing the query.
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B EMSGSIZE
++The record buffer was not large enough to store even a single record.
++.TP
++.B ENOMEM
++Not enough memory to retrieve parent pointers.
++.TP
++.B EOPNOTSUPP
++Repairs of the requested metadata object are not supported.
++.TP
++.B EROFS
++Filesystem is read-only and a repair was requested.
++.TP
++.B ESHUTDOWN
++Filesystem is shut down due to previous errors.
++.TP
++.B EIO
++An I/O error was encountered while performing the query.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl (2)
 
