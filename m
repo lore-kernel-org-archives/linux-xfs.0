@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29B158830
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:21:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78EDC8BFA
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:21:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719883268; cv=none; b=cUdvkcNwvv0pAIpa4WmHTXMFEThSiTJazyYUL/pEN1cLxxp9gUeoQ9pX5HzeGztZqggjWjhRt7turyJZs63D339fL7aXrJp0/Uam8parqJLWE5kO6/d9VZQzFF9/Z0R7KeLuKg7QBjExkDY7nY70Q6dSMPDQyWBeuiPnmoL0akE=
+	t=1719883283; cv=none; b=DXIPgYN/4wmv7c38bzsfH0mqPmFQM94PlpeW6b4zbrftl4WOkgE6SzvHxYMwMOdRlvOnK4sxNqfVjSPXvMdIfJCXFvnhwg8U32qHfeir2hwgkF4KDeYa7YoD+KxHX/1BwJawhafv7XuEv8Uk20uoVRlmnEwOojt2a/frwhTz0Eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719883268; c=relaxed/simple;
-	bh=+VixRE9pqsB5eW8ueESvKjr9fdo43XK2IoQ4eThEqo0=;
+	s=arc-20240116; t=1719883283; c=relaxed/simple;
+	bh=kWBuzrfN2kzwsXSEL8+0dWlUfQgf9bgCZk0Pug+BcBM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FTD9ilrE9lR1dWvUdSANvcfqWjxwtt7nR6rQBAzyuALbYhxwBXPbQHrW4yrJI6JH7t0jsquYn3cJFE/QymuMFeaVmuQOP4ABiuL7U5RNAx4IlzeB1mQTj9RJL4utl7ltb8EnJ7786aAMzRJFQydiS4PZKJcVmVQhLG1IDPj3JSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZ0Ezn8P; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=h9jNYovtcd5shmUvvziMlYdQl04cqn42pcIS18glO8bkJZIwh2+W2lYkn9v2KkOafUAY+7wZ5k9fFcgQtNvLBiyvQKHY3JDFEMhwsVKVuoHXeFc+iPmH2OXyhg7XUU9GCiIHIUgH9Tb8H8C3LIBpL7Zq0mYLLc/nXdn7ztY636s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ubM6Tn21; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZ0Ezn8P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3114C116B1;
-	Tue,  2 Jul 2024 01:21:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ubM6Tn21"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56BB2C116B1;
+	Tue,  2 Jul 2024 01:21:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719883267;
-	bh=+VixRE9pqsB5eW8ueESvKjr9fdo43XK2IoQ4eThEqo0=;
+	s=k20201202; t=1719883283;
+	bh=kWBuzrfN2kzwsXSEL8+0dWlUfQgf9bgCZk0Pug+BcBM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dZ0Ezn8Pzbt2++ZyWzZa1cWvsleduWFqlx6YMqFE6vy9sGgJk0gY7bhkK79gLZNaj
-	 1wIWVsM+j4En3RM6A8OaQnCUXTOXAL86hzwsZKgb93EBP+TXpI409gESv9KFuAm+fV
-	 b+Fowh2+1KnnHVJFL+nUYIKQBIWM9s0qAXiZnC5wg0MLFTyPGJ2kDtEAIN7bARAtMp
-	 AbjG1gADYBieEnHbnhejk5iCEK3oW1cNTUDbuNrXE727Nb/WpE6zYQzMwYvU+9p0bg
-	 1oeXOHC/GIxQhqMFiOP0dvqLFfBmSoez0N/xpJ+qgUtbyTvHrwBhrZTkdjyV+yOyhS
-	 STQfDlGy8dM/A==
-Date: Mon, 01 Jul 2024 18:21:07 -0700
-Subject: [PATCH 2/5] xfs_spaceman: report directory tree corruption in the
- health information
+	b=ubM6Tn21nCcdhx82lmcDTdCb6KwqJso3E2naxoxMaflN/xVSzCJv/Td4UeaN02tWE
+	 c+XzvSEcLTHqLfXPaOqA9jSAG59vmiJ1/+7ei868852CzBWPmgpmcH1e354NRw30Iq
+	 sOeDiBGITyRy/UrGUd9OtrtRXHRlYVwTz/d6vh5iqxWvdz86T47DF7XpaH4A05/4R4
+	 8KvSI3HvVUmahaI/mw05PrTISVYqxIO6VT3ZxmD0KVrheEdQEImmPTMRuftbUnMTnC
+	 J7qrRbdMPpfYdpRYewhxCoLX0wTgN1AdbU1poWeyj748cRA3jaUI+yr53DRwYpQ+Tz
+	 jjiWBxcenn1Lg==
+Date: Mon, 01 Jul 2024 18:21:22 -0700
+Subject: [PATCH 3/5] xfs_scrub: fix erroring out of check_inode_names
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988122726.2012320.799724181764249157.stgit@frogsfrogsfrogs>
+Message-ID: <171988122742.2012320.2358555456931426968.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988122691.2012320.13207835630113271818.stgit@frogsfrogsfrogs>
 References: <171988122691.2012320.13207835630113271818.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,59 +46,58 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Report directories that are the source of corruption in the directory
-tree.  While we're at it, add the documentation updates for the new
-reporting flags and scrub type.
+The early exit logic in this function is a bit suboptimal -- we don't
+need to close the @fd if we haven't even opened it, and since all errors
+are fatal, we don't need to bump the progress counter.  The logic in
+this function is about to get more involved due to the addition of the
+directory tree structure checker, so clean up these warts.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- man/man2/ioctl_xfs_bulkstat.2   |    3 +++
- man/man2/ioctl_xfs_fsbulkstat.2 |    3 +++
- spaceman/health.c               |    4 ++++
- 3 files changed, 10 insertions(+)
+ scrub/phase5.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/man/man2/ioctl_xfs_bulkstat.2 b/man/man2/ioctl_xfs_bulkstat.2
-index 3203ca0c5d27..b6d51aa43811 100644
---- a/man/man2/ioctl_xfs_bulkstat.2
-+++ b/man/man2/ioctl_xfs_bulkstat.2
-@@ -326,6 +326,9 @@ Symbolic link target.
- .TP
- .B XFS_BS_SICK_PARENT
- Parent pointers.
-+.TP
-+.B XFS_BS_SICK_DIRTREE
-+Directory is the source of corruption in the directory tree.
- .RE
- .SH ERRORS
- Error codes can be one of, but are not limited to, the following:
-diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
-index 3f059942a219..cd38d2fd6f26 100644
---- a/man/man2/ioctl_xfs_fsbulkstat.2
-+++ b/man/man2/ioctl_xfs_fsbulkstat.2
-@@ -239,6 +239,9 @@ Symbolic link target.
- .TP
- .B XFS_BS_SICK_PARENT
- Parent pointers.
-+.TP
-+.B XFS_BS_SICK_DIRTREE
-+Directory is the source of corruption in the directory tree.
- .RE
- .SH RETURN VALUE
- On error, \-1 is returned, and
-diff --git a/spaceman/health.c b/spaceman/health.c
-index 6722babf5888..d88a7f6c6e53 100644
---- a/spaceman/health.c
-+++ b/spaceman/health.c
-@@ -165,6 +165,10 @@ static const struct flag_map inode_flags[] = {
- 		.mask = XFS_BS_SICK_PARENT,
- 		.descr = "parent pointers",
- 	},
-+	{
-+		.mask = XFS_BS_SICK_DIRTREE,
-+		.descr = "directory tree structure",
-+	},
- 	{0},
- };
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 0df8c46e9f5b..b37196277554 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -279,7 +279,7 @@ check_inode_names(
+ 	if (bstat->bs_xflags & FS_XFLAG_HASATTR) {
+ 		error = check_xattr_names(ctx, &dsc, handle, bstat);
+ 		if (error)
+-			goto out;
++			goto err;
+ 	}
  
+ 	/*
+@@ -295,16 +295,16 @@ check_inode_names(
+ 			if (error == ESTALE)
+ 				return ESTALE;
+ 			str_errno(ctx, descr_render(&dsc));
+-			goto out;
++			goto err;
+ 		}
+ 
+ 		error = check_dirent_names(ctx, &dsc, &fd, bstat);
+ 		if (error)
+-			goto out;
++			goto err_fd;
+ 	}
+ 
+-out:
+ 	progress_add(1);
++err_fd:
+ 	if (fd >= 0) {
+ 		err2 = close(fd);
+ 		if (err2)
+@@ -312,7 +312,7 @@ check_inode_names(
+ 		if (!error && err2)
+ 			error = err2;
+ 	}
+-
++err:
+ 	if (error)
+ 		*aborted = true;
+ 	if (!error && *aborted)
 
