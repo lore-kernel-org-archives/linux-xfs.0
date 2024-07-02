@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFCB9449
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:09:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E809449
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:09:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719882563; cv=none; b=nN0obY5PeNBe6USrkR4WbOvSNLeCugsDuqFCOqwhG565jwNgHG8Hy2BpWNmL+n5UIGw3ykIWk0HgfRqEQJWbBY90od37yYLsNOXr/ou94uPBl2d96ekow67i2/gHAlx56CNd6WEIg+d4+HsBSrQnlzkZmRnr+ifdUR0GxeMwIy8=
+	t=1719882579; cv=none; b=DmA9HrpS8acw0oAm5LlU8/A/SDPSjrmjpIFZ17U5Lc3PTJK50oIAnGTp2IJjlBvgBqqVFKC+vEireUqCwoUIouAvMoNMvxHIXVKix07zVNsHEf9+BLIkhQ6NtH6qpjx5MbAIj3+5YDi7OxzwcaN3Sb6ZsduaIOsqxuqJKUIk1UE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719882563; c=relaxed/simple;
-	bh=C063k6+XDbR3spQkrqxf6rxZ3QaGatcs1/1WBH4rJmQ=;
+	s=arc-20240116; t=1719882579; c=relaxed/simple;
+	bh=h0FtgCksvKvi7oq0CzO0yfRGqYk5akb8pK6N+1igZjs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Vmun1VxwkkExpcU70gAnZVP4Rqkl4wuNVYDT5/mwzgIXWo/u9BQDxV+9PvinKj0uT1HxhGMxJwaIK1J/JhguBPP9TudPuXsqSs9sN3Eo8MMaR851ckJYDt4n8FjQWhLADrW1qtcx2Brg9B1Y24A4r+uCsYerHrxdOBAVgaZ9Jz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sBEww7XB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tiUBUpL4kl5ephcdgvHT4jeXtMHE/llA1/BiQS6M0tmSWSjTAjdTTpzU5vtbSLF5Keq99mJXgPf8Ob2CoMIL+yvLoJSQY4QBVfk3O55M6BY26utiIK8+4mkSvgxHe7SDEUVuMBfEFXsrfXdGixTrmyvzaCAmj4KJMZb0hs+vPFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/VGJG84; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sBEww7XB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A37ACC116B1;
-	Tue,  2 Jul 2024 01:09:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/VGJG84"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B7BBC116B1;
+	Tue,  2 Jul 2024 01:09:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719882563;
-	bh=C063k6+XDbR3spQkrqxf6rxZ3QaGatcs1/1WBH4rJmQ=;
+	s=k20201202; t=1719882579;
+	bh=h0FtgCksvKvi7oq0CzO0yfRGqYk5akb8pK6N+1igZjs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sBEww7XBmXxkawStKGhmDqQDdysxDvncjekOknZIhHcUNkw6mI8jmvj8Sl3wIouNA
-	 ObfpwzNgeAAHoVgSi2LLWxIQ4vMpBlo6wN64K5ciLszbttYue4BlI9RVx2ocYXyZYi
-	 MoKs9MtRyFuaJwYwTKV+C5ZsCyBWDql69J6IBEN10eIQ4tIF/D1SWc8vEsGXXishdB
-	 wvWSacBhQ9jpHhZLErOtAD3HBEG8Digu0qWs4Rfb3KUxbG05TFbBvIYcSLGa5lUV7X
-	 eqR5SXTH5AM9qYYABtYCwJ/6X5P5nfJvdWdLdDBqEvQlXGZaajhXmuiGAAbPi7AQ7B
-	 noNmzqfhpGUOQ==
-Date: Mon, 01 Jul 2024 18:09:23 -0700
-Subject: [PATCH 1/3] xfs_scrub: automatic downgrades to dry-run mode in
- service mode
+	b=R/VGJG84DOd6VFOEnBQbRvW3FP5NjRe0xzax/m0fItzL92Dkld78s/Scy/GalXmcZ
+	 tnXfMZ/DJH9iOCsBg9dGihmRKwIzGJ2r2A7g8H/aWmdmKGXswVic6TthOH6jQ0gyvp
+	 AE1HwviytLJh5WTEx4tZTMzMvL/TAfiD7wD9PZwi6u/czHFJiqVMRtbfvSPMxKMG5X
+	 ibUyUSmS84Ct/gdQOct8qWA2ZHiDLUjp+IHgnS6g44MQPAW5sRAWwMI9dnAXicUHgY
+	 MyVD3JHSGUMApr/hLegTkgtfPtOPoOAnEiRnWqQwHMBPwOYfdMTxzlz6JekH6mX118
+	 jOh9ePTKuN8lw==
+Date: Mon, 01 Jul 2024 18:09:38 -0700
+Subject: [PATCH 2/3] xfs_scrub: add an optimization-only mode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988120228.2008941.5724994724680390658.stgit@frogsfrogsfrogs>
+Message-ID: <171988120244.2008941.17128913512937380737.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988120209.2008941.9839121054654380693.stgit@frogsfrogsfrogs>
 References: <171988120209.2008941.9839121054654380693.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,98 +46,187 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When service mode is enabled, xfs_scrub is being run within the context
-of a systemd service.  The service description language doesn't have any
-particularly good constructs for adding in a '-n' argument if the
-filesystem is readonly, which means that xfs_scrub is passed a path, and
-needs to switch to dry-run mode on its own if the fs is mounted
-readonly or the kernel doesn't support repairs.
+Add a "preen" mode in which we only optimize filesystem metadata.
+Repairs will result in early exits.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase1.c |   13 +++++++++++++
- scrub/repair.c |   33 +++++++++++++++++++++++++++++++++
- scrub/repair.h |    2 ++
- 3 files changed, 48 insertions(+)
+ man/man8/xfs_scrub.8 |    6 +++++-
+ scrub/Makefile       |    2 +-
+ scrub/phase4.c       |    6 ++++++
+ scrub/repair.c       |    4 +++-
+ scrub/scrub.c        |    4 ++--
+ scrub/xfs_scrub.c    |   21 +++++++++++++++++++--
+ scrub/xfs_scrub.h    |    1 +
+ 7 files changed, 37 insertions(+), 7 deletions(-)
 
 
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 516d929d6268..095c045915a7 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -216,6 +216,19 @@ _("Kernel metadata scrubbing facility is not available."));
- 		return ECANCELED;
- 	}
+diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
+index 6154011271e6..1fd122f2a242 100644
+--- a/man/man8/xfs_scrub.8
++++ b/man/man8/xfs_scrub.8
+@@ -4,7 +4,7 @@ xfs_scrub \- check and repair the contents of a mounted XFS filesystem
+ .SH SYNOPSIS
+ .B xfs_scrub
+ [
+-.B \-abCeMmnTvx
++.B \-abCeMmnpTvx
+ ]
+ .I mount-point
+ .br
+@@ -128,6 +128,10 @@ Treat informational messages as warnings.
+ This will result in a nonzero return code, and a higher logging level.
+ .RE
+ .TP
++.B \-p
++Only optimize filesystem metadata.
++If repairs are required, report them and exit.
++.TP
+ .BI \-T
+ Print timing and memory usage information for each phase.
+ .TP
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 7e6882450d54..885b43e9948d 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -16,7 +16,7 @@ LTCOMMAND = xfs_scrub
+ INSTALL_SCRUB = install-scrub
+ XFS_SCRUB_ALL_PROG = xfs_scrub_all
+ XFS_SCRUB_FAIL_PROG = xfs_scrub_fail
+-XFS_SCRUB_ARGS = -n
++XFS_SCRUB_ARGS = -p
+ XFS_SCRUB_SERVICE_ARGS = -b
+ ifeq ($(HAVE_SYSTEMD),yes)
+ INSTALL_SCRUB += install-systemd
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 451101811c9b..88cb53aeac90 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -240,6 +240,12 @@ phase4_func(
+ 	    action_list_empty(ctx->file_repair_list))
+ 		return 0;
  
-+	/*
-+	 * Normally, callers are required to pass -n if the provided path is a
-+	 * readonly filesystem or the kernel wasn't built with online repair
-+	 * enabled.  However, systemd services are not scripts and cannot
-+	 * determine either of these conditions programmatically.  Change the
-+	 * behavior to dry-run mode if either condition is detected.
-+	 */
-+	if (repair_want_service_downgrade(ctx)) {
++	if (ctx->mode == SCRUB_MODE_PREEN && ctx->corruptions_found) {
 +		str_info(ctx, ctx->mntpoint,
-+_("Filesystem cannot be repaired in service mode, downgrading to dry-run mode."));
-+		ctx->mode = SCRUB_MODE_DRY_RUN;
++ _("Corruptions found; will not optimize.  Re-run without -p.\n"));
++		return 0;
 +	}
 +
- 	/* Do we need kernel-assisted metadata repair? */
- 	if (ctx->mode != SCRUB_MODE_DRY_RUN && !can_repair(ctx)) {
- 		str_error(ctx, ctx->mntpoint,
+ 	/*
+ 	 * Check the resource usage counters early.  Normally we do this during
+ 	 * phase 7, but some of the cross-referencing requires fairly accurate
 diff --git a/scrub/repair.c b/scrub/repair.c
-index 19f5c9052aff..2883f98af4ab 100644
+index 2883f98af4ab..0258210722ba 100644
 --- a/scrub/repair.c
 +++ b/scrub/repair.c
-@@ -45,6 +45,39 @@ static const unsigned int repair_deps[XFS_SCRUB_TYPE_NR] = {
- };
- #undef DEP
+@@ -651,7 +651,9 @@ repair_item_class(
+ 	unsigned int			scrub_type;
+ 	int				error = 0;
  
-+/*
-+ * Decide if we want an automatic downgrade to dry-run mode.  This is only
-+ * for service mode, where we are fed a path and have to figure out if the fs
-+ * is repairable or not.
-+ */
-+bool
-+repair_want_service_downgrade(
-+	struct scrub_ctx		*ctx)
-+{
-+	struct xfs_scrub_metadata	meta = {
-+		.sm_type		= XFS_SCRUB_TYPE_PROBE,
-+		.sm_flags		= XFS_SCRUB_IFLAG_REPAIR,
-+	};
-+	int				error;
-+
+-	if (ctx->mode < SCRUB_MODE_REPAIR)
 +	if (ctx->mode == SCRUB_MODE_DRY_RUN)
-+		return false;
-+	if (!is_service)
-+		return false;
-+	if (debug_tweak_on("XFS_SCRUB_NO_KERNEL"))
-+		return false;
-+
-+	error = -xfrog_scrub_metadata(&ctx->mnt, &meta);
-+	switch (error) {
-+	case EROFS:
-+	case ENOTRECOVERABLE:
-+	case EOPNOTSUPP:
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- /* Repair some metadata. */
- static int
- xfs_repair_metadata(
-diff --git a/scrub/repair.h b/scrub/repair.h
-index a685e90374cb..411a379f6faa 100644
---- a/scrub/repair.h
-+++ b/scrub/repair.h
-@@ -102,4 +102,6 @@ repair_item_completely(
- 	return repair_item(ctx, sri, XRM_FINAL_WARNING | XRM_NOPROGRESS);
- }
++		return 0;
++	if (ctx->mode == SCRUB_MODE_PREEN && !(repair_mask & SCRUB_ITEM_PREEN))
+ 		return 0;
  
-+bool repair_want_service_downgrade(struct scrub_ctx *ctx);
-+
- #endif /* XFS_SCRUB_REPAIR_H_ */
+ 	/*
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 2b6b6274e382..1b0609e7418b 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -174,7 +174,7 @@ _("Filesystem is shut down, aborting."));
+ 	 * repair if desired, otherwise complain.
+ 	 */
+ 	if (is_corrupt(&meta) || xref_disagrees(&meta)) {
+-		if (ctx->mode < SCRUB_MODE_REPAIR) {
++		if (ctx->mode != SCRUB_MODE_REPAIR) {
+ 			/* Dry-run mode, so log an error and forget it. */
+ 			str_corrupt(ctx, descr_render(&dsc),
+ _("Repairs are required."));
+@@ -192,7 +192,7 @@ _("Repairs are required."));
+ 	 * otherwise complain.
+ 	 */
+ 	if (is_unoptimized(&meta)) {
+-		if (ctx->mode != SCRUB_MODE_REPAIR) {
++		if (ctx->mode == SCRUB_MODE_DRY_RUN) {
+ 			/* Dry-run mode, so log an error and forget it. */
+ 			if (group != XFROG_SCRUB_GROUP_INODE) {
+ 				/* AG or FS metadata, always warn. */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index d7cef115deea..bb316f73e02c 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -183,6 +183,7 @@ usage(void)
+ 	fprintf(stderr, _("  -k           Do not FITRIM the free space.\n"));
+ 	fprintf(stderr, _("  -m path      Path to /etc/mtab.\n"));
+ 	fprintf(stderr, _("  -n           Dry run.  Do not modify anything.\n"));
++	fprintf(stderr, _("  -p           Only optimize, do not fix corruptions.\n"));
+ 	fprintf(stderr, _("  -T           Display timing/usage information.\n"));
+ 	fprintf(stderr, _("  -v           Verbose output.\n"));
+ 	fprintf(stderr, _("  -V           Print version.\n"));
+@@ -463,6 +464,11 @@ run_scrub_phases(
+ 			sp->descr = _("Repair filesystem.");
+ 			sp->fn = phase4_func;
+ 			sp->must_run = true;
++		} else if (sp->fn == REPAIR_DUMMY_FN &&
++			   ctx->mode == SCRUB_MODE_PREEN) {
++			sp->descr = _("Optimize filesystem.");
++			sp->fn = phase4_func;
++			sp->must_run = true;
+ 		}
+ 
+ 		/* Skip certain phases unless they're turned on. */
+@@ -601,7 +607,7 @@ report_outcome(
+ 	if (ctx->scrub_setup_succeeded && actionable_errors > 0) {
+ 		char		*msg;
+ 
+-		if (ctx->mode == SCRUB_MODE_DRY_RUN)
++		if (ctx->mode != SCRUB_MODE_REPAIR)
+ 			msg = _("%s: Re-run xfs_scrub without -n.\n");
+ 		else
+ 			msg = _("%s: Unmount and run xfs_repair.\n");
+@@ -725,7 +731,7 @@ main(
+ 	pthread_mutex_init(&ctx.lock, NULL);
+ 	ctx.mode = SCRUB_MODE_REPAIR;
+ 	ctx.error_action = ERRORS_CONTINUE;
+-	while ((c = getopt(argc, argv, "a:bC:de:kM:m:no:TvxV")) != EOF) {
++	while ((c = getopt(argc, argv, "a:bC:de:kM:m:no:pTvxV")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			ctx.max_errors = cvt_u64(optarg, 10);
+@@ -776,11 +782,22 @@ main(
+ 			mtab = optarg;
+ 			break;
+ 		case 'n':
++			if (ctx.mode != SCRUB_MODE_REPAIR) {
++				fprintf(stderr, _("Cannot use -n with -p.\n"));
++				usage();
++			}
+ 			ctx.mode = SCRUB_MODE_DRY_RUN;
+ 			break;
+ 		case 'o':
+ 			parse_o_opts(&ctx, optarg);
+ 			break;
++		case 'p':
++			if (ctx.mode != SCRUB_MODE_REPAIR) {
++				fprintf(stderr, _("Cannot use -p with -n.\n"));
++				usage();
++			}
++			ctx.mode = SCRUB_MODE_PREEN;
++			break;
+ 		case 'T':
+ 			display_rusage = true;
+ 			break;
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index b0aa9fcc67b7..4d9a028921b5 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -27,6 +27,7 @@ extern bool			info_is_warning;
+ 
+ enum scrub_mode {
+ 	SCRUB_MODE_DRY_RUN,
++	SCRUB_MODE_PREEN,
+ 	SCRUB_MODE_REPAIR,
+ };
+ 
 
