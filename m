@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 716D29441
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:18:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A5AB9441
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 01:18:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719883111; cv=none; b=UbvyHhDuvbT57bKdE3bqdoqhbgnP7Moo+JGuHHErQOy5llCg2/7fHBDRDIRN6/vmJtCANtkEnZsAW0SrwppHfpLArKu2KfdffS5i4QY9Smyy+XPWoewG7nlQ9t7u0wKNlg8N42UZj2vJ39KxUAqaGCIFb9io99yT8ejK8FJ4f60=
+	t=1719883127; cv=none; b=nI7X1fMTYy1hf1TMZjJKOmT8P1BQ86QaoKB1R8DkfCfB4ckDwFsc1JfsaYhWb8JKmOqYBS91ilb/GqmSzr9JfHDA3hb+D9NzqB+FuUb4LOmw9mAPmHJsxFFVSzkGioK8gZWw7hip2nrt1kXh4gfC7BVhfcScM2K+N+PxC2ajklE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719883111; c=relaxed/simple;
-	bh=e2qt/IoH35gJdraxnMyAzvVBxCKaalV4Z+JOGoo9ifI=;
+	s=arc-20240116; t=1719883127; c=relaxed/simple;
+	bh=kplgIM4rEH+cKd18bV5k0EYgBt96QWYrQORfj5l9g+4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=t+9+1F93mvpIFfjjj9hTE88BLHBSbxA9k83TO1U+U1yjVTwDkJgQ87KTSkzI5CtuftWdI6AqWK64kNNvD02ESXWDmwLIrGj7b9z3Alm2lZzGRUaF3AuCn5BDRTkiOvJ0lmmSs3PUYH9k2Wpj7hHVCKPRIWiDaEGFLovQNkbaxvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cAcO8JPn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=e360QROHF+C6tJak/ZSFOGCo8Or6x/ChXEOoGnpHei2dPMt71kAMPpsL6z4YzINEVszoSfmCmJxfcRXZejii7SQ7zIq/6hrVzb4R69DZALciJgTndy2CCNmSdnunrt9PQmc/rSsIuaGb69AE7zUYYuJZliakOXc/jbwA8cdVl+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZqlLvkyt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cAcO8JPn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C46FC116B1;
-	Tue,  2 Jul 2024 01:18:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZqlLvkyt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8FCFC116B1;
+	Tue,  2 Jul 2024 01:18:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719883111;
-	bh=e2qt/IoH35gJdraxnMyAzvVBxCKaalV4Z+JOGoo9ifI=;
+	s=k20201202; t=1719883127;
+	bh=kplgIM4rEH+cKd18bV5k0EYgBt96QWYrQORfj5l9g+4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cAcO8JPn8Sg/iUZp+5Dx/79kNAPztk10IB3gR5q5fR14Ak86NNeAmzM0Iqo4/TgjT
-	 GNmY2/cdJAnXteHdtwtObFa+IrSxB0nLKN8m9LNmSSifU9W2iY6BpuV1nffPC2Qsa6
-	 fRcg8i2wzgCY+qS7xfgrE4H0L/yjOoGHwuuu/UqEPHyoRG11zGCOwbz5Cd1xEX8y/D
-	 OipTOunbpoOef1GiLffdehCVbK6eeqoPY1aL+MlQQ31JS4mibOJkDOh4PhjNf2uYuk
-	 ZHmicQwjsG/VMtKmM4NrxIgEdoKbARPAkKdJfGS6omppMhjSREXiWDL6RcLnY157Up
-	 QJ3MjQjEio3lw==
-Date: Mon, 01 Jul 2024 18:18:30 -0700
-Subject: [PATCH 04/12] xfs_repair: add parent pointers when messing with
- /lost+found
+	b=ZqlLvkytqtzU815g92H/FWg7XwK+BnogAHkIvSQnZSd7ucIIjpFOcHdLMRhxkTyt6
+	 7pe3o5diQ1wRQL/niHFA9y3+CojpKN5zNzsIpFvOWiTXXVFdzJjnGIr3WzMQhXDa3D
+	 C4uiQ/6RRHvNW+w10Zejy87Xpv67WCTWUXx/UgHPXEwmAc8txlIw1k78aOqJHUCXEN
+	 qVfjTjO7nOVw5sWWGXkm9w6ljF7Il7/ThetOPApQ2Lvc5h69ngevP67Qrdh3C7UDIb
+	 oj597ytCay+aotxo+SlMdY1L06HW26xGeYe5JwBi80lyJU7UUWL8TEDqPj8k/Q9+dc
+	 pc2niMeaOYo7A==
+Date: Mon, 01 Jul 2024 18:18:46 -0700
+Subject: [PATCH 05/12] xfs_repair: junk duplicate hashtab entries when
+ processing sf dirents
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: catherine.hoang@oracle.com, linux-xfs@vger.kernel.org,
  allison.henderson@oracle.com, hch@lst.de
-Message-ID: <171988122227.2010218.6936061653638637272.stgit@frogsfrogsfrogs>
+Message-ID: <171988122243.2010218.604571260560807315.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988122147.2010218.8997075209577453030.stgit@frogsfrogsfrogs>
 References: <171988122147.2010218.8997075209577453030.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,174 +48,60 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that the /lost+found gets created with parent pointers, and
-that lost children being put in there get new parent pointers.
+dir_hash_add() adds the passed-in dirent to the directory hashtab even
+if there's already a duplicate.  Therefore, if we detect a duplicate or
+a garbage entry while processing the a shortform directory's entries, we
+need to junk the newly added entry, just like we do when processing
+directory data blocks.
+
+This will become particularly relevant in the next patch, where we
+generate a master index of parent pointers from the non-junked hashtab
+entries of each directory that phase6 scans.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    2 +
- repair/phase6.c          |   76 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 78 insertions(+)
+ repair/phase6.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index bf1d3c9d37f6..d3611e05bade 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -52,6 +52,7 @@
- #define xfs_attr_shortform_verify	libxfs_attr_shortform_verify
- 
- #define __xfs_bmap_add_free		__libxfs_bmap_add_free
-+#define xfs_bmap_add_attrfork		libxfs_bmap_add_attrfork
- #define xfs_bmap_validate_extent	libxfs_bmap_validate_extent
- #define xfs_bmapi_read			libxfs_bmapi_read
- #define xfs_bmapi_remap			libxfs_bmapi_remap
-@@ -205,6 +206,7 @@
- #define xfs_parent_addname		libxfs_parent_addname
- #define xfs_parent_finish		libxfs_parent_finish
- #define xfs_parent_hashval		libxfs_parent_hashval
-+#define xfs_parent_lookup		libxfs_parent_lookup
- #define xfs_parent_removename		libxfs_parent_removename
- #define xfs_parent_start		libxfs_parent_start
- #define xfs_parent_from_attr		libxfs_parent_from_attr
 diff --git a/repair/phase6.c b/repair/phase6.c
-index 47dd9de2741c..791f7d36fa8a 100644
+index 791f7d36fa8a..9d41aad784a1 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -903,6 +903,12 @@ mk_orphanage(xfs_mount_t *mp)
- 	const int	mode = 0755;
- 	int		nres;
- 	struct xfs_name	xname;
-+	struct xfs_parent_args *ppargs = NULL;
-+
-+	i = -libxfs_parent_start(mp, &ppargs);
-+	if (i)
-+		do_error(_("%d - couldn't allocate parent pointer for %s\n"),
-+			i, ORPHANAGE);
- 
- 	/*
- 	 * check for an existing lost+found first, if it exists, return
-@@ -994,6 +1000,14 @@ mk_orphanage(xfs_mount_t *mp)
- 		_("can't make %s, createname error %d\n"),
- 			ORPHANAGE, error);
- 
-+	if (ppargs) {
-+		error = -libxfs_parent_addname(tp, ppargs, pip, &xname, ip);
-+		if (error)
-+			do_error(
-+ _("can't make %s, parent addname error %d\n"),
-+					ORPHANAGE, error);
-+	}
-+
- 	/*
- 	 * bump up the link count in the root directory to account
- 	 * for .. in the new directory, and update the irec copy of the
-@@ -1016,10 +1030,52 @@ mk_orphanage(xfs_mount_t *mp)
- 	libxfs_irele(ip);
- out_pip:
- 	libxfs_irele(pip);
-+	libxfs_parent_finish(mp, ppargs);
- 
- 	return(ino);
- }
- 
-+/*
-+ * Add a parent pointer back to the orphanage for any file we're moving into
-+ * the orphanage, being careful not to trip over any existing parent pointer.
-+ * You never know when the orphanage might get corrupted.
-+ */
-+static void
-+add_orphan_pptr(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*orphanage_ip,
-+	const struct xfs_name	*xname,
-+	struct xfs_inode	*ip,
-+	struct xfs_parent_args	*ppargs)
-+{
-+	struct xfs_parent_rec	pptr = { };
-+	struct xfs_da_args	scratch;
-+	int			error;
-+
-+	xfs_inode_to_parent_rec(&pptr, orphanage_ip);
-+	error = -libxfs_parent_lookup(tp, ip, xname, &pptr, &scratch);
-+	if (!error)
-+		return;
-+	if (error != ENOATTR)
-+		do_log(
-+ _("cannot look up parent pointer for '%.*s', err %d\n"),
-+				xname->len, xname->name, error);
-+
-+	if (!xfs_inode_has_attr_fork(ip)) {
-+		error = -libxfs_bmap_add_attrfork(tp, ip,
-+				sizeof(struct xfs_attr_sf_hdr), true);
-+		if (error)
-+			do_error(_("can't add attr fork to inode 0x%llx\n"),
-+					(unsigned long long)ip->i_ino);
-+	}
-+
-+	error = -libxfs_parent_addname(tp, ppargs, orphanage_ip, xname, ip);
-+	if (error)
-+		do_error(
-+ _("can't add parent pointer for '%.*s', error %d\n"),
-+				xname->len, xname->name, error);
-+}
-+
- /*
-  * move a file to the orphange.
-  */
-@@ -1040,6 +1096,13 @@ mv_orphanage(
- 	ino_tree_node_t		*irec;
- 	int			ino_offset = 0;
- 	struct xfs_name		xname;
-+	struct xfs_parent_args	*ppargs;
-+
-+	err = -libxfs_parent_start(mp, &ppargs);
-+	if (err)
-+		do_error(
-+ _("%d - couldn't allocate parent pointer for lost inode\n"),
-+			err);
- 
- 	xname.name = fname;
- 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
-@@ -1091,6 +1154,10 @@ mv_orphanage(
- 				do_error(
- 	_("name create failed in %s (%d)\n"), ORPHANAGE, err);
- 
-+			if (ppargs)
-+				add_orphan_pptr(tp, orphanage_ip, &xname,
-+						ino_p, ppargs);
-+
- 			if (irec)
- 				add_inode_ref(irec, ino_offset);
- 			else
-@@ -1125,6 +1192,10 @@ mv_orphanage(
- 				do_error(
- 	_("name create failed in %s (%d)\n"), ORPHANAGE, err);
- 
-+			if (ppargs)
-+				add_orphan_pptr(tp, orphanage_ip, &xname,
-+						ino_p, ppargs);
-+
- 			if (irec)
- 				add_inode_ref(irec, ino_offset);
- 			else
-@@ -1173,6 +1244,10 @@ mv_orphanage(
- 	_("name create failed in %s (%d)\n"), ORPHANAGE, err);
- 		ASSERT(err == 0);
- 
-+		if (ppargs)
-+			add_orphan_pptr(tp, orphanage_ip, &xname, ino_p,
-+					ppargs);
-+
- 		set_nlink(VFS_I(ino_p), 1);
- 		libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
- 		err = -libxfs_trans_commit(tp);
-@@ -1182,6 +1257,7 @@ mv_orphanage(
- 	}
- 	libxfs_irele(ino_p);
- 	libxfs_irele(orphanage_ip);
-+	libxfs_parent_finish(mp, ppargs);
- }
- 
- static int
+@@ -2562,6 +2562,7 @@ shortform_dir2_entry_check(
+ 	struct xfs_dir2_sf_entry *next_sfep;
+ 	struct xfs_ifork	*ifp;
+ 	struct ino_tree_node	*irec;
++	xfs_dir2_dataptr_t	diroffset;
+ 	int			max_size;
+ 	int			ino_offset;
+ 	int			i;
+@@ -2739,8 +2740,9 @@ shortform_dir2_entry_check(
+ 		/*
+ 		 * check for duplicate names in directory.
+ 		 */
+-		dup_inum = dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
+-				(sfep - xfs_dir2_sf_firstentry(sfp)),
++		diroffset = xfs_dir2_byte_to_dataptr(
++				xfs_dir2_sf_get_offset(sfep));
++		dup_inum = dir_hash_add(mp, hashtab, diroffset,
+ 				lino, sfep->namelen, sfep->name,
+ 				libxfs_dir2_sf_get_ftype(mp, sfep));
+ 		if (dup_inum != NULLFSINO) {
+@@ -2775,6 +2777,7 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " already points to ino %" PR
+ 				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
+ 						lino, &max_size, &i,
+ 						&bytes_deleted, ino_dirty);
++				dir_hash_junkit(hashtab, diroffset);
+ 				continue;
+ 			} else if (parent == ino)  {
+ 				add_inode_reached(irec, ino_offset);
+@@ -2799,6 +2802,7 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " already points to ino %" PR
+ 				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
+ 						lino, &max_size, &i,
+ 						&bytes_deleted, ino_dirty);
++				dir_hash_junkit(hashtab, diroffset);
+ 				continue;
+ 			}
+ 		}
 
