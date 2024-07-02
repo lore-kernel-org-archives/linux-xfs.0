@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3BB7464
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:56:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02A973209
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:56:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719881766; cv=none; b=VyGjDch1XxXLz0e+2Ns4Ny6zbqZtiml9RZTwwG/NRTbvxzEqf0ecIkUHP73plmcM8lz/2MvAuBk55TcPiqKtIwOzNOXxxWdxLX/KtLYd2csGIBePdzXcLx1cXp9SdCzNMe6rfOD9y8dxkTYqiH5pugYIsOSpEZsohdV+8yETAj0=
+	t=1719881782; cv=none; b=utohG443nbcEgczQnpo/NPB+31xj14/QPaDXRAkcArgDSF5QFJlb4+CbuO1/kNF8wNF1UfM6Lz5RnXRY9rheA6RvQg0eHmVwUCRIZEUCSt4Fji7pUD8BVMCspcfyiJrqEIRNu0zRX/8kcgRCv5RhkTy1IV34cDc4JSBh5+U+XXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719881766; c=relaxed/simple;
-	bh=hCIaWNVWJUOdrIjZxqUz7KdboLbT84wdBK3De7iRoPA=;
+	s=arc-20240116; t=1719881782; c=relaxed/simple;
+	bh=wRPbY3jMYtkFyz4ATCQsOqF3eexuCauivPgiA9vncVc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=J9LVv962aXJrVqtpyNKwzw6N/IaJNsD8IVS5Gm+4IM2HfOlMrXXwRqDP6a2al5faz8uh2AICvO7jX+pUGEJk6wl+w0FSo1Fpg3ZDGHbU5BqNlz7TQlqxzmauzu4ppozVD+lCrwq/eaYSCBn8DUbMEIoXXpj43fS4yEdihzZ/qVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bX57iwb5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bWO+EE1jxTpxHh56tD5BEqF+lMluMeSYXC5Pzpz33G0rdEgmpU8mchd/kp0ZA2pTXHXnm3fWmmBN3/h0AXpX+u75h9WcLHIZmccv7hOPhKA2lzwFt7ZiTuk636zsUcF5PkvSiqEoQAVRqY+YzfJjRUmUb/ndRyKKp4nyNQS2whk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u0wTtdO3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bX57iwb5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4274C116B1;
-	Tue,  2 Jul 2024 00:56:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u0wTtdO3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8257BC116B1;
+	Tue,  2 Jul 2024 00:56:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719881766;
-	bh=hCIaWNVWJUOdrIjZxqUz7KdboLbT84wdBK3De7iRoPA=;
+	s=k20201202; t=1719881781;
+	bh=wRPbY3jMYtkFyz4ATCQsOqF3eexuCauivPgiA9vncVc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bX57iwb5LV8xlEdcZY6cEH5tFFeHGPIg7B6YSDQuPbpPyTOxKvfMn1VZaoUrav6tb
-	 LZICUtRwNetLLGGWHxWU+/u+xIh7qvCK7sA4lP95gt2DLXwUTaRW4ZzTACMxvWF9/y
-	 lq1MK8h/fMbaVTrAfwt/fQz9ypKAvZDloohZXywEdhQJQrCVarQOfF0idz4OJQL/uc
-	 +zBUKYhcMjRbo5ZhMpppGQOmCVTs12oxrlJ08IwD29PDye/9x8givFZB/O+NTj5OHn
-	 lW5QsyVcmqnZ3toi+FVKkUsb1w6oVt0R/uAVZvAJ+/dNBA6XIOhU9m+J9mXDbFjMjQ
-	 V1q2F7GDWgDHA==
-Date: Mon, 01 Jul 2024 17:56:05 -0700
-Subject: [PATCH 10/12] libfrog: advertise exchange-range support
+	b=u0wTtdO3H9o89r/7T5VTgMhEYoW6+vwBi45ZR2Zn3Fi2cc4/FpCryOOKaG3jfNCwL
+	 6Tw2iUeUklwBjxgFAZsgzZz2oCeABNGyWYuUUP0Tubu52ZyrdxrxjuWXLkYdwPE8ja
+	 AMR2g1oinjYmFF0ytzG76hSz3hAFcZQ5/wMUdzkNq8IBztdq2pJ969z2MO5qi987wq
+	 1en/n5Wcc4IdsoerrSeohuEAe/alpUrGtxC5X1Bq+Y4Ccl97wE2QeIrRzHRZW2H3yr
+	 d4rHqXhsxpC+OS9qZfIbtZpSAnvtjuaRahrbpx65YPXKxtLrKoE8w65cfwiHMLKzHd
+	 FkyL4pyiVGAhA==
+Date: Mon, 01 Jul 2024 17:56:21 -0700
+Subject: [PATCH 11/12] xfs_repair: add exchange-range to file systems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988116862.2006519.2459746611478539000.stgit@frogsfrogsfrogs>
+Message-ID: <171988116878.2006519.18408749679790867720.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988116691.2006519.4962618271620440482.stgit@frogsfrogsfrogs>
 References: <171988116691.2006519.4962618271620440482.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,47 +46,143 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Report the presence of exchange range for a given filesystem.
+Enable upgrading existing filesystems to support the file exchange range
+feature.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/fsgeom.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ man/man8/xfs_admin.8 |    7 +++++++
+ repair/globals.c     |    1 +
+ repair/globals.h     |    1 +
+ repair/phase2.c      |   30 ++++++++++++++++++++++++++++++
+ repair/xfs_repair.c  |   11 +++++++++++
+ 5 files changed, 50 insertions(+)
 
 
-diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-index 6980d3ffab69..71a8e4bb9980 100644
---- a/libfrog/fsgeom.c
-+++ b/libfrog/fsgeom.c
-@@ -31,6 +31,7 @@ xfs_report_geom(
- 	int			bigtime_enabled;
- 	int			inobtcount;
- 	int			nrext64;
-+	int			exchangerange;
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index 4794d6774ede..63f8ee90307b 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -156,6 +156,13 @@ data fork extent count will be 2^48 - 1, while the maximum attribute fork
+ extent count will be 2^32 - 1. The filesystem cannot be downgraded after this
+ feature is enabled. Once enabled, the filesystem will not be mountable by
+ older kernels.  This feature was added to Linux 5.19.
++.TP 0.4i
++.B exchange
++Upgrade a filesystem to support atomic file content exchanges through the
++XFS_IOC_EXCHANGE_RANGE ioctl, and to support online repairs of directories,
++extended attributes, symbolic links, and realtime free space metadata.
++The filesystem cannot be downgraded after this feature is enabled.
++Once enabled, the filesystem will not be mountable by older kernels.
+ .RE
+ .TP
+ .BI \-U " uuid"
+diff --git a/repair/globals.c b/repair/globals.c
+index 24f720c46afb..c0c45df51d56 100644
+--- a/repair/globals.c
++++ b/repair/globals.c
+@@ -52,6 +52,7 @@ bool	features_changed;	/* did we change superblock feature bits? */
+ bool	add_inobtcount;		/* add inode btree counts to AGI */
+ bool	add_bigtime;		/* add support for timestamps up to 2486 */
+ bool	add_nrext64;
++bool	add_exchrange;		/* add file content exchange support */
  
- 	isint = geo->logstart > 0;
- 	lazycount = geo->flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
-@@ -49,12 +50,14 @@ xfs_report_geom(
- 	bigtime_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_BIGTIME ? 1 : 0;
- 	inobtcount = geo->flags & XFS_FSOP_GEOM_FLAGS_INOBTCNT ? 1 : 0;
- 	nrext64 = geo->flags & XFS_FSOP_GEOM_FLAGS_NREXT64 ? 1 : 0;
-+	exchangerange = geo->flags & XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE ? 1 : 0;
+ /* misc status variables */
  
- 	printf(_(
- "meta-data=%-22s isize=%-6d agcount=%u, agsize=%u blks\n"
- "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
- "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
- "         =%-22s reflink=%-4u bigtime=%u inobtcount=%u nrext64=%u\n"
-+"         =%-22s exchange=%-3u\n"
- "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- "         =%-22s sunit=%-6u swidth=%u blks\n"
- "naming   =version %-14u bsize=%-6u ascii-ci=%d, ftype=%d\n"
-@@ -65,6 +68,7 @@ xfs_report_geom(
- 		"", geo->sectsize, attrversion, projid32bit,
- 		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
- 		"", reflink_enabled, bigtime_enabled, inobtcount, nrext64,
-+		"", exchangerange,
- 		"", geo->blocksize, (unsigned long long)geo->datablocks,
- 			geo->imaxpct,
- 		"", geo->sunit, geo->swidth,
+diff --git a/repair/globals.h b/repair/globals.h
+index b83a8ae65942..1eadfdbf9ae4 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -93,6 +93,7 @@ extern bool	features_changed;	/* did we change superblock feature bits? */
+ extern bool	add_inobtcount;		/* add inode btree counts to AGI */
+ extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
+ extern bool	add_nrext64;
++extern bool	add_exchrange;		/* add file content exchange support */
+ 
+ /* misc status variables */
+ 
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 06374817964c..83f0c539bb5d 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -182,6 +182,34 @@ set_nrext64(
+ 	return true;
+ }
+ 
++static bool
++set_exchrange(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
++{
++	if (xfs_has_exchange_range(mp)) {
++		printf(_("Filesystem already supports exchange-range.\n"));
++		exit(0);
++	}
++
++	if (!xfs_has_crc(mp)) {
++		printf(
++	_("File exchange-range feature only supported on V5 filesystems.\n"));
++		exit(0);
++	}
++
++	if (!xfs_has_reflink(mp)) {
++		printf(
++	_("File exchange-range feature cannot be added without reflink.\n"));
++		exit(0);
++	}
++
++	printf(_("Adding file exchange-range support to filesystem.\n"));
++	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_INCOMPAT_EXCHRANGE;
++	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++	return true;
++}
++
+ struct check_state {
+ 	struct xfs_sb		sb;
+ 	uint64_t		features;
+@@ -290,6 +318,8 @@ upgrade_filesystem(
+ 		dirty |= set_bigtime(mp, &new_sb);
+ 	if (add_nrext64)
+ 		dirty |= set_nrext64(mp, &new_sb);
++	if (add_exchrange)
++		dirty |= set_exchrange(mp, &new_sb);
+ 	if (!dirty)
+ 		return;
+ 
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index cf774964381e..39884015300a 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -69,6 +69,7 @@ enum c_opt_nums {
+ 	CONVERT_INOBTCOUNT,
+ 	CONVERT_BIGTIME,
+ 	CONVERT_NREXT64,
++	CONVERT_EXCHRANGE,
+ 	C_MAX_OPTS,
+ };
+ 
+@@ -77,6 +78,7 @@ static char *c_opts[] = {
+ 	[CONVERT_INOBTCOUNT]	= "inobtcount",
+ 	[CONVERT_BIGTIME]	= "bigtime",
+ 	[CONVERT_NREXT64]	= "nrext64",
++	[CONVERT_EXCHRANGE]	= "exchange",
+ 	[C_MAX_OPTS]		= NULL,
+ };
+ 
+@@ -360,6 +362,15 @@ process_args(int argc, char **argv)
+ 		_("-c nrext64 only supports upgrades\n"));
+ 					add_nrext64 = true;
+ 					break;
++				case CONVERT_EXCHRANGE:
++					if (!val)
++						do_abort(
++		_("-c exchange requires a parameter\n"));
++					if (strtol(val, NULL, 0) != 1)
++						do_abort(
++		_("-c exchange only supports upgrades\n"));
++					add_exchrange = true;
++					break;
+ 				default:
+ 					unknown('c', val);
+ 					break;
 
