@@ -1,158 +1,401 @@
-Received: from mail-oi1-f172.google.com (mail-oi1-f172.google.com [209.85.167.172])
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5E0079CC
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 05:55:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863FF8BFA
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 06:15:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719899716; cv=none; b=B92MQn7TjYgZfYCzC8DHGYO0SNAn0m0WXZVYeWqdUIvtVWg6al/Nmpctf8j7/zjGnxKCLXKIcao6uWSGGzjXdl0Eo5H3h56RaU7To9ryqlJMvsgguOzVfNrGES7+bcZoFXcqmVRa1RD1z3PGtbamIZa3yRcPyCHZ721XSpLLwyI=
+	t=1719900944; cv=none; b=qAXzk/RiPwU77iX08RlRlf+yb+CgY660qgeqlJfKf70rlIftP41CLHFQs4fQBj88CLmFCWj7LCUy+RzCt5zje4YOMtvkv317KkbeHFUEx9tSyUv5YVMbTVz534Nvfa8D7Aa27G6bVl8IKfhg+beAO3mYqwZVAi23+jfHo8uMqlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719899716; c=relaxed/simple;
-	bh=yfGpAmUuZ/JzdJPBUzoc+k4evKWHlRekGFVQouPZ/s4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LiKNzitJjDhU+bdmw8UQggW0tltzLJsAOREYz90LTop7CN0AvDYqdHtDXqKKnBlOlLyKN5/13naDUUNzjrvDQiSuspiEHP2e0voNfMhjJHJdoEZz/hCC3eI7qpFDR5FTL3EvwPXK+8KCVZDnpeRkEx4t5OUmXS3+7By+0gVE8g8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=eriWc7+N; arc=none smtp.client-ip=209.85.167.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1719900944; c=relaxed/simple;
+	bh=JlvRu72DeJXwLSfxVNgCIUToRieGZkm1Nl7gorVRvNk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jJ83Q9XGLv+5s1YsOwrXnt285QtyVTFNICHHZu8a2vGeO0wF07+NjJyeqZ68GILe36itZtCNT54v7WzLXv3M+zxwmM8g6vDp1sT170X3Xrb9krL3loQqbhKnHA0l8LpEbeUSsA6Uy/RnQF3IkLUVbRZGXogupcjIQAv+r9Uc3Wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Cp30ScGZ; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="eriWc7+N"
-Received: by mail-oi1-f172.google.com with SMTP id 5614622812f47-3d55e2e0327so2044895b6e.0
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2024 22:55:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Cp30ScGZ"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-57d106e69a2so1589452a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2024 23:15:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1719899713; x=1720504513; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=rmkheATIgV0EPHSlh+7AbFF8dPmUkG6VN5nv2fkaE3U=;
-        b=eriWc7+NlEcMqIRFxiQTSd0O5dP+Ml7I7h5A29DPAabWAnR91q24fbbnH6gUmKA0uN
-         GRdru7tNqeJ0l/PgjgzU+BuRWa5aCb0Mq51CGSZTZTsULRFdiGk3FB/Yx4DG29xFp+TG
-         TEI5u+qXCvp4orr5xvjQHooyboxZ8fx/7hriomn9xlQcwqSGW0GrG6LLFF1+KTU3oZq+
-         lL0AyCBxPw8t0SPrs1i6hd1X2SrGvbiHi/EXhlIbC35Jsq5jBDHYTY2Qne+KHNt0e9X6
-         Qa6FR8jpbasVz6Yic5g2ldvX84HUkvUCuVtMavR/2iV+1BCQk5gQJdksP8pWzIX0Al/b
-         m42Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719899713; x=1720504513;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1719900941; x=1720505741; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=rmkheATIgV0EPHSlh+7AbFF8dPmUkG6VN5nv2fkaE3U=;
-        b=eoJ/xlhLpXY6BdioRalFhPG3OM9zWJaBZfE7f0Vuzl0YreFajVesBJFQFriuUMsBJi
-         Ny+jgCyeAcv6oB63YE6RRQyh3T5NqaHZqd8c0IxCOGx/PvzNQjOJw9cmonFcb2DAQ+gw
-         xTA3g1FrtDYfxWuJrwBAxTHqG05phFV5Pp3XHZqEk3kln8HaKc3wIz+SP3rWHLjkmAy2
-         +L3pAmBXcX61J6oyWyaYltl9OZg6U9XDsGNaE6GcpLjCa7JJrTvtsQDPETO+hBSWBebR
-         SIm+ObmytMSpeZhwyuOF9k1tySt52DSJWP6ftWmsl6RCJSDjYRpyQKirO83PSyyvBVWu
-         MwVw==
-X-Forwarded-Encrypted: i=1; AJvYcCWhOTx/sdEPv8XeT17Hsm/O7qI1BzukHVR3IgK9XmG6BdHjiblWkjEQfgcri7LaJ5HSKYaMwOpUZbC14ZL0ZRCV1aaOAsCvduPa
-X-Gm-Message-State: AOJu0YwZ9SqzqrLbHyFZMNshTcAr2zYcg1BVJFDYs4ikAVst6gU7FPre
-	nSImGD9G9sNACeFRI50ITsSoId5BTQPXnYO75WA3Hj2zvo59D3PrZwja78GFc0A=
-X-Google-Smtp-Source: AGHT+IHO+SY1lPsx22bhXTxjoF9rc12IRcJ6e6RBMW6DYu0rPxhqZVKyeW0SpRsj7vAzXwaovFUXig==
-X-Received: by 2002:a05:6808:1909:b0:3d5:6312:a017 with SMTP id 5614622812f47-3d6b32e5a46mr10244393b6e.29.1719899713463;
-        Mon, 01 Jul 2024 22:55:13 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-708044b1112sm7566445b3a.182.2024.07.01.22.55.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Jul 2024 22:55:13 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sOWTu-001Adu-29;
-	Tue, 02 Jul 2024 15:55:10 +1000
-Date: Tue, 2 Jul 2024 15:55:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Long Li <leo.lilong@huawei.com>
-Cc: willy@infradead.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/12] xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS
-Message-ID: <ZoOWPj2ICDIjCA80@dread.disaster.area>
-References: <20240115230113.4080105-1-david@fromorbit.com>
- <20240115230113.4080105-8-david@fromorbit.com>
- <20240622094411.GA830005@ceph-admin>
+        bh=t4ychy9oU0CuOPYToe2Yspwjx9cgrP/Ge8Pe+YDhn5U=;
+        b=Cp30ScGZHmCwMlASkbI5Q0E6SK/tiL9g/aJ0jQFdTXoCCkmnZa9IU5XlLBUM+AZuYP
+         cjBxaBFACBeI1ZYunlE7alW3dN0l5KxxZvkztVexTHdVkOf7BB6O2x5Am6uOCIYx85TQ
+         LmIiWl7Z315URM7XOEIBIgq/EAwjFl4IuuyH8YhiuhvtGmyddXznSs0gSQ+XvZMXwHeJ
+         Am7JygXA38B8cHo/Z8LScP71eIkilZSHNQMoRlmHxL7vH1y2RzL+g4c1AT4SWw1cssd9
+         PbHwHtZl+XF5ItKHWHvXRuAHhh8n0dZbmLcHxe3NFCFV/LVt0XANeGiRppcURfmYfWSS
+         ORMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719900941; x=1720505741;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=t4ychy9oU0CuOPYToe2Yspwjx9cgrP/Ge8Pe+YDhn5U=;
+        b=LdA6dWNP+bqqWDE+2R0AwqOwf8D68iR4RhYbgEXyi5FPCfqCNLLLHY0J/AncwLkzEu
+         veWxNrtOsDFVFeuFBjv6NUXfGj+n7LAhirYKFkmaz2iYv+HLt2cb7ikmH6JVsYeXfjje
+         Kk/Zprafs0L79pdsgOlDVCNZi6LxzuBGPzao9qCHLvBLcKrOwdACLQTWuY2Iexwaqsks
+         MYYt/lw9fNIDw36ifZkRy/f4ga9fcLL8fzJmpmFQooMUCePqNHIWNBImXNPUQ3UU2Koh
+         fG9D7BT4VeImcQiS2E69cBZ5YxzDh5zRaF3JqVUBR5AP8YG40D2D90yWui5hnsRD5xTl
+         IkJw==
+X-Gm-Message-State: AOJu0YwMzg8AVOsjvk/o9MFeGfHiD6HG634Da/+LKMLVxr5za9Jt6boD
+	vespXzbV9JEMQBBi8y2q1ZEfPomcCwEorfoKLD1gZSgyB+uCYax1FxFbj0xMnSdvatLMlLmQ08o
+	zf9Z/2+ZM4BeRVA9hTWGIS82urECx3czP
+X-Google-Smtp-Source: AGHT+IEE1s0xeKu76zg0sbwieyCapUj79mhYzkBvfq//uwuEVMxyqy2xP7T9YHyNdr5N80z5Inli2OQzrKKfApa/bHg=
+X-Received: by 2002:a05:6402:3592:b0:57d:6bb:d264 with SMTP id
+ 4fb4d7f45d1cf-5865b56a1b0mr10063249a12.1.1719900940464; Mon, 01 Jul 2024
+ 23:15:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240622094411.GA830005@ceph-admin>
+References: <20240619100637.392329-1-sunjunchao2870@gmail.com> <ZoIRhNzqutslLAeP@dread.disaster.area>
+In-Reply-To: <ZoIRhNzqutslLAeP@dread.disaster.area>
+From: JunChao Sun <sunjunchao2870@gmail.com>
+Date: Tue, 2 Jul 2024 14:15:28 +0800
+Message-ID: <CAHB1Nah2tJK42B03cTgHXaPotOeL6kXP9aDfFLn3V3JYh15ShQ@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs: reorder xfs_inode structure elements to remove
+ unneeded padding.
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	willy@infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Jun 22, 2024 at 05:44:11PM +0800, Long Li wrote:
-> On Tue, Jan 16, 2024 at 09:59:45AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > In the past we've had problems with lockdep false positives stemming
-> > from inode locking occurring in memory reclaim contexts (e.g. from
-> > superblock shrinkers). Lockdep doesn't know that inodes access from
-> > above memory reclaim cannot be accessed from below memory reclaim
-> > (and vice versa) but there has never been a good solution to solving
-> > this problem with lockdep annotations.
-> > 
-> > This situation isn't unique to inode locks - buffers are also locked
-> > above and below memory reclaim, and we have to maintain lock
-> > ordering for them - and against inodes - appropriately. IOWs, the
-> > same code paths and locks are taken both above and below memory
-> > reclaim and so we always need to make sure the lock orders are
-> > consistent. We are spared the lockdep problems this might cause
-> > by the fact that semaphores and bit locks aren't covered by lockdep.
-> > 
-> > In general, this sort of lockdep false positive detection is cause
-> > by code that runs GFP_KERNEL memory allocation with an actively
-> > referenced inode locked. When it is run from a transaction, memory
-> > allocation is automatically GFP_NOFS, so we don't have reclaim
-> > recursion issues. So in the places where we do memory allocation
-> > with inodes locked outside of a transaction, we have explicitly set
-> > them to use GFP_NOFS allocations to prevent lockdep false positives
-> > from being reported if the allocation dips into direct memory
-> > reclaim.
-> > 
-> > More recently, __GFP_NOLOCKDEP was added to the memory allocation
-> > flags to tell lockdep not to track that particular allocation for
-> > the purposes of reclaim recursion detection. This is a much better
-> > way of preventing false positives - it allows us to use GFP_KERNEL
-> > context outside of transactions, and allows direct memory reclaim to
-> > proceed normally without throwing out false positive deadlock
-> > warnings.
-> 
-> Hi Dave,
-> 
-> I recently encountered the following AA deadlock lockdep warning
-> in Linux-6.9.0. This version of the kernel has currently merged
-> your patch set. I believe this is a lockdep false positive warning.
+Dave Chinner <david@fromorbit.com> =E4=BA=8E2024=E5=B9=B47=E6=9C=881=E6=97=
+=A5=E5=91=A8=E4=B8=80 10:16=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Wed, Jun 19, 2024 at 06:06:37PM +0800, Junchao Sun wrote:
+> > By reordering the elements in the xfs_inode structure, we can
+> > reduce the padding needed on an x86_64 system by 8 bytes.
+> >
+> > Furthermore, it also enables denser packing of xfs_inode
+> > structures within slab pages. In the Debian 6.8.12-amd64,
+> > before applying the patch, the size of xfs_inode is 1000 bytes,
+>
+>
+> > Please use pahole to show where the holes are in the current TOT
+> > structure, not reference a distro kernel build that has a largely
+> > unknown config.
 
-Yes, it is.
+Ok.
+>
+> > allowing 32 xfs_inode structures to be allocated from an
+> > order-3 slab. After applying the patch, the size of
+> > xfs_inode is reduced to 992 bytes, allowing 33 xfs_inode
+> > structures to be allocated from an order-3 slab.
+> >
+> > This improvement is also observed in the mainline kernel
+> > with the same config.
+> >
+> > Signed-off-by: Junchao Sun <sunjunchao2870@gmail.com>
+> > ---
+> >  fs/xfs/xfs_inode.h | 12 ++++++------
+> >  1 file changed, 6 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > index 292b90b5f2ac..fedac2792a38 100644
+> > --- a/fs/xfs/xfs_inode.h
+> > +++ b/fs/xfs/xfs_inode.h
+> > @@ -37,12 +37,6 @@ typedef struct xfs_inode {
+> >       struct xfs_ifork        i_df;           /* data fork */
+> >       struct xfs_ifork        i_af;           /* attribute fork */
+> >
+> > -     /* Transaction and locking information. */
+> > -     struct xfs_inode_log_item *i_itemp;     /* logging information */
+> > -     struct rw_semaphore     i_lock;         /* inode lock */
+> > -     atomic_t                i_pincount;     /* inode pin count */
+> > -     struct llist_node       i_gclist;       /* deferred inactivation =
+list */
+>
+> There's lots of 4 byte holes in the structure due to stuff like
+> xfs_ifork and xfs_imap being 4 byte aligned structures.
+>
+> This only addresses a coupel fo them, and in doing so destroys the
+> attempt at creating locality of access to the inode structure.
+>
+> > -
+> >       /*
+> >        * Bitsets of inode metadata that have been checked and/or are si=
+ck.
+> >        * Callers must hold i_flags_lock before accessing this field.
+> > @@ -88,6 +82,12 @@ typedef struct xfs_inode {
+> >       /* VFS inode */
+> >       struct inode            i_vnode;        /* embedded VFS inode */
+> >
+> > +     /* Transaction and locking information. */
+> > +     struct xfs_inode_log_item *i_itemp;     /* logging information */
+> > +     struct rw_semaphore     i_lock;         /* inode lock */
+> > +     struct llist_node       i_gclist;       /* deferred inactivation =
+list */
+> > +     atomic_t                i_pincount;     /* inode pin count */
+>
+>
+> > This separates the items commonly accessed together in the core XFS
+> > code and so should be located near to each other (on the same
+> > cachelines if possible). It places them on the side of the VFS inode
+> > (at least 700 bytes further down the structure) and places them on
+> > the same cacheline as IO completion marshalling structures. These
+> > shouldn't be on the same cacheline as IO completion variables as
+> > they run concurrently and independently and so need to be separated.
+> >
+> > really, if we are going to optimise the layout of the xfs_inode,
+> > let's just do it properly the first time. See the patch below, it
+> > reduces the struct xfs_inode to 960 bytes without changing much in
+> > it's layout at all.
 
-> The xfs_dir_lookup_args() function is in a non-transactional context
-> and allocates memory with the __GFP_NOLOCKDEP flag in xfs_buf_alloc_pages().
-> Even though __GFP_NOLOCKDEP can tell lockdep not to track that particular
-> allocation for the purposes of reclaim recursion detection, it cannot
-> completely replace __GFP_NOFS.
+Ok, I see. Really appreciate for your detailed explanation and suggestions!
+>
+> -Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+> xfs: repack the xfs_inode to reduce space.
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> pahole reports several 4 byte holes in the xfs_inode with a size of
+> 1000 bytes. We can reduce that by packing holes better without
+> affecting the data access patterns to the inode structure.
+>
+> Some of these holes are a result of 4 byte aligned tail structures
+> being padded out to 16 bytes in the xfs_inode. These structures are
+> already tightly packed and 8 byte aligned, so if we are careful with
+> the layout we can add __attribute(packed) to them so their tail
+> padding gets. This allows us to add a 4 byte variable into the hole
+> that they would have left with 8 byte alignment padding.
+>
+> This reduces the struct xfs_inode to 960 bytes, a 4% reduction from
+> the original 1000 bytes, and it largely doesn't change access
+> patterns or data cache footprint as the alignment of all the
+> critical structures is completely unchanged.
+>
+> pahole output now reports:
+>
+> struct xfs_inode {
+>         struct xfs_mount *         i_mount;              /*     0     8 *=
+/
+>         struct xfs_dquot *         i_udquot;             /*     8     8 *=
+/
+>         struct xfs_dquot *         i_gdquot;             /*    16     8 *=
+/
+>         struct xfs_dquot *         i_pdquot;             /*    24     8 *=
+/
+>         xfs_ino_t                  i_ino;                /*    32     8 *=
+/
+>         struct xfs_imap            i_imap;               /*    40    12 *=
+/
+>         spinlock_t                 i_flags_lock;         /*    52     4 *=
+/
+>         unsigned long              i_flags;              /*    56     8 *=
+/
+>         /* --- cacheline 1 boundary (64 bytes) --- */
+>         struct xfs_ifork *         i_cowfp;              /*    64     8 *=
+/
+>         struct xfs_ifork           i_df;                 /*    72    44 *=
+/
+>         xfs_extlen_t               i_extsize;            /*   116     4 *=
+/
+>         struct xfs_ifork           i_af;                 /*   120    44 *=
+/
+>         /* --- cacheline 2 boundary (128 bytes) was 36 bytes ago --- */
+>         union {
+>                 xfs_extlen_t       i_cowextsize;         /*   164     4 *=
+/
+>                 uint16_t           i_flushiter;          /*   164     2 *=
+/
+>         };                                               /*   164     4 *=
+/
+>         union {
+>                 xfs_extlen_t               i_cowextsize;         /*     0=
+     4 */
+>                 uint16_t                   i_flushiter;          /*     0=
+     2 */
+>         };
+>
+>         struct xfs_inode_log_item * i_itemp;             /*   168     8 *=
+/
+>         struct rw_semaphore        i_lock;               /*   176    40 *=
+/
+>         /* --- cacheline 3 boundary (192 bytes) was 24 bytes ago --- */
+>         struct llist_node          i_gclist;             /*   216     8 *=
+/
+>         atomic_t                   i_pincount;           /*   224     4 *=
+/
+>         uint16_t                   i_checked;            /*   228     2 *=
+/
+>         uint16_t                   i_sick;               /*   230     2 *=
+/
+>         uint64_t                   i_delayed_blks;       /*   232     8 *=
+/
+>         xfs_fsize_t                i_disk_size;          /*   240     8 *=
+/
+>         xfs_rfsblock_t             i_nblocks;            /*   248     8 *=
+/
+>         /* --- cacheline 4 boundary (256 bytes) --- */
+>         prid_t                     i_projid;             /*   256     4 *=
+/
+>         uint8_t                    i_forkoff;            /*   260     1 *=
+/
+>
+>         /* XXX 1 byte hole, try to pack */
+>
+>         uint16_t                   i_diflags;            /*   262     2 *=
+/
+>         uint64_t                   i_diflags2;           /*   264     8 *=
+/
+>         struct timespec64          i_crtime;             /*   272    16 *=
+/
+>         xfs_agino_t                i_next_unlinked;      /*   288     4 *=
+/
+>         xfs_agino_t                i_prev_unlinked;      /*   292     4 *=
+/
+>         struct inode               i_vnode;              /*   296   608 *=
+/
+>         /* --- cacheline 14 boundary (896 bytes) was 8 bytes ago --- */
+>         struct work_struct         i_ioend_work;         /*   904    32 *=
+/
+>         struct list_head           i_ioend_list;         /*   936    16 *=
+/
+>         spinlock_t                 i_ioend_lock;         /*   952     4 *=
+/
+>
+>         /* size: 960, cachelines: 15, members: 33 */
+>         /* sum members: 955, holes: 1, sum holes: 1 */
+>         /* padding: 4 */
+> };
+>
+> We have a 1 byte hole in the middle, and 4 bytes of tail padding.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.h  |  2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+>  fs/xfs/xfs_inode.h             | 21 +++++++++++----------
+>  3 files changed, 13 insertions(+), 12 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.=
+h
+> index 585ed5a110af..28760973d809 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> @@ -17,7 +17,7 @@ struct xfs_imap {
+>         xfs_daddr_t     im_blkno;       /* starting BB of inode chunk */
+>         unsigned short  im_len;         /* length in BBs of inode chunk *=
+/
+>         unsigned short  im_boffset;     /* inode offset in block in bytes=
+ */
+> -};
+> +} __attribute__((packed));
+>
+>  int    xfs_imap_to_bp(struct xfs_mount *mp, struct xfs_trans *tp,
+>                        struct xfs_imap *imap, struct xfs_buf **bpp);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_for=
+k.h
+> index 2373d12fd474..63780b3542c6 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -23,7 +23,7 @@ struct xfs_ifork {
+>         short                   if_broot_bytes; /* bytes allocated for ro=
+ot */
+>         int8_t                  if_format;      /* format of this fork */
+>         uint8_t                 if_needextents; /* extents have not been =
+read */
+> -};
+> +} __attribute__((packed));
+>
+>  /*
+>   * Worst-case increase in the fork extent count when we're adding a sing=
+le
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 292b90b5f2ac..bbc73fd56fa2 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -32,16 +32,25 @@ typedef struct xfs_inode {
+>         xfs_ino_t               i_ino;          /* inode number (agno/agi=
+no)*/
+>         struct xfs_imap         i_imap;         /* location for xfs_imap(=
+) */
+>
+> +       spinlock_t              i_flags_lock;   /* inode i_flags lock */
+> +       unsigned long           i_flags;        /* see defined flags belo=
+w */
+> +
+>         /* Extent information. */
+>         struct xfs_ifork        *i_cowfp;       /* copy on write extents =
+*/
+>         struct xfs_ifork        i_df;           /* data fork */
+> +       xfs_extlen_t            i_extsize;      /* basic/minimum extent s=
+ize */
+>         struct xfs_ifork        i_af;           /* attribute fork */
+> +       /* cowextsize is only used for v3 inodes, flushiter for v1/2 */
+> +       union {
+> +               xfs_extlen_t    i_cowextsize;   /* basic cow extent size =
+*/
+> +               uint16_t        i_flushiter;    /* incremented on flush *=
+/
+> +       };
+>
+>         /* Transaction and locking information. */
+>         struct xfs_inode_log_item *i_itemp;     /* logging information */
+>         struct rw_semaphore     i_lock;         /* inode lock */
+> -       atomic_t                i_pincount;     /* inode pin count */
+>         struct llist_node       i_gclist;       /* deferred inactivation =
+list */
+> +       atomic_t                i_pincount;     /* inode pin count */
+>
+>         /*
+>          * Bitsets of inode metadata that have been checked and/or are si=
+ck.
+> @@ -50,19 +59,11 @@ typedef struct xfs_inode {
+>         uint16_t                i_checked;
+>         uint16_t                i_sick;
+>
+> -       spinlock_t              i_flags_lock;   /* inode i_flags lock */
+>         /* Miscellaneous state. */
+> -       unsigned long           i_flags;        /* see defined flags belo=
+w */
+>         uint64_t                i_delayed_blks; /* count of delay alloc b=
+lks */
+>         xfs_fsize_t             i_disk_size;    /* number of bytes in fil=
+e */
+>         xfs_rfsblock_t          i_nblocks;      /* # of direct & btree bl=
+ocks */
+>         prid_t                  i_projid;       /* owner's project id */
+> -       xfs_extlen_t            i_extsize;      /* basic/minimum extent s=
+ize */
+> -       /* cowextsize is only used for v3 inodes, flushiter for v1/2 */
+> -       union {
+> -               xfs_extlen_t    i_cowextsize;   /* basic cow extent size =
+*/
+> -               uint16_t        i_flushiter;    /* incremented on flush *=
+/
+> -       };
+>         uint8_t                 i_forkoff;      /* attr fork offset >> 3 =
+*/
+>         uint16_t                i_diflags;      /* XFS_DIFLAG_... */
+>         uint64_t                i_diflags2;     /* XFS_DIFLAG2_... */
+> @@ -89,9 +90,9 @@ typedef struct xfs_inode {
+>         struct inode            i_vnode;        /* embedded VFS inode */
+>
+>         /* pending io completions */
+> -       spinlock_t              i_ioend_lock;
+>         struct work_struct      i_ioend_work;
+>         struct list_head        i_ioend_list;
+> +       spinlock_t              i_ioend_lock;
+>  } xfs_inode_t;
+>
+>  static inline bool xfs_inode_on_unlinked_list(const struct xfs_inode *ip=
+)
 
-We are not trying to replace GFP_NOFS with __GFP_NOLOCKDEP. What we
-are trying to do is annotate the allocation sites where lockdep
-false positives will occur. That way if we get a lockdep report from
-a location that uses __GFP_NOLOCKDEP, we know that it is either a
-false positive or there is some nested allocation that did not honor
-__GFP_NOLOCKDEP.
 
-We've already fixed a bunch of nested allocations (e.g. kasan,
-kmemleak, etc) to propagate the __GFP_NOLOCKDEP flag so they don't
-generate false positives, either. So the amount of noise has already
-been reduced.
 
-> Getting trapped in direct memory reclaim
-> maybe trigger the AA deadlock warning as shown below.
-
-No, it can't. xfs_dir_lookup() can only lock referenced inodes.
-xfs_reclaim_inodes_nr() can only lock unreferenced inodes. It is not
-possible for the same inode to be both referenced and unreferenced
-at the same time, therefore memory reclaim cannot self deadlock
-through this path.
-
-I expected to see some situations like this when getting rid of
-GFP_NOFS (because now memory reclaim runs in places it never used
-to). Once I have an idea of the sorts of false positives that are
-still being tripped over, I can formulate a plan to eradicate them,
-too.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--=20
+Junchao Sun <sunjunchao2870@gmail.com>
