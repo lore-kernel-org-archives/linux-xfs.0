@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3468D50F
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:54:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E525D50F
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:54:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719881657; cv=none; b=tYw5xG3R909URXt6raXMuPzGkzrRjbavhsHH3tdtHBxv9vRW7YWNu4xZkRWIn6UIuHhFq9l+epnjQp5JVeI5Pv5x9zYri+f4u/kJe3/kRNjuAm53UXWjTSAhB/l2E++9jJz+n0IlGrbrPRR9uW8SgkmkmoDaF7OrqjvVJfmgIWg=
+	t=1719881672; cv=none; b=ra7sQeqhl5gSPuYms2KI04BHJeIweukBqrEaCf0nzdHbA3HF84EXaCpGxUU7F9LDZEU+IETz6C0gUE++K6d9/YwzBStmaGcMht/PGuiapk9Nv9d8Kn0vCd6zYWAQMsYaZYLk4wZ+KfMeb0avoKmurEJ9jUxXrOdVUrXjbaBXg7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719881657; c=relaxed/simple;
-	bh=yY4T8VhpKvz+9XmPpMI9zDFb48sJjKsY/z1dVD6kkNw=;
+	s=arc-20240116; t=1719881672; c=relaxed/simple;
+	bh=f62pDQoKp+ZtYgKFLAMpi3/rOqRQzJXs15f4rp7RjDE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JcYhjQ8geAxANRVAuRnRi/q6t15oi3fJhtsLDEdZig0kZkO7ZJL0eDeODeNujlceAW7LwGebui52yelPKjxakiCE7xOFnqfl8rHy0Y3m46BDuJJffL1rM9jmBeDMWx/mmAmiO14ZwYyddbZYjunqEgr53LnaFAs1p7ULaRo0Xj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nhiPKYSu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nGOH/Mv10Ks2+Gk9Ey/xNJjdnbQL/9Jl7fNqFfnOWNt3KQU3FI6C8Q47n20k5twhld/RpYC7pfOR7IbJzlsyZQQ1+x9TvKq7e2S3RbXj8b0pepVzcaFGIsTdM/97r0N/7SZWr8z8TwBBB7M2nmE8S7ccseJm7EABDVF4vayWjtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=onc6RzYL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nhiPKYSu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 777A5C116B1;
-	Tue,  2 Jul 2024 00:54:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="onc6RzYL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1ACC9C116B1;
+	Tue,  2 Jul 2024 00:54:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719881656;
-	bh=yY4T8VhpKvz+9XmPpMI9zDFb48sJjKsY/z1dVD6kkNw=;
+	s=k20201202; t=1719881672;
+	bh=f62pDQoKp+ZtYgKFLAMpi3/rOqRQzJXs15f4rp7RjDE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nhiPKYSuOfA5x4RuO0kdaK2Z2alEhozRNPrJqoelpJ4RqdcEhAQpiJRf5bl/j8vRN
-	 Nb5hB40wFXeby4IZRMMhcf6J8mr2LJ8fINFo6UYH7K+RkrESoCbrIdV0BIMpmyz/Bb
-	 BIIHw5/Yuy+ZAixLkhyOxb/mx5pmi+AuibZuGpKp2U9A3tyMkUwyEKZpDZoN/r5RVt
-	 rjF2ktJL/j3rRrK2MuaQKh6/Gwtdtb5zYXfTftj8I6DHu+GtGYYF5UJdIXWZ60Sa7s
-	 FHVl2zcLK1iriuNPrRwO0sHjEuzCw/6kqF0jXOM6ihpl67qCKuCVVkgxK3E8+aCW3d
-	 X8pn9kGqXTLcg==
-Date: Mon, 01 Jul 2024 17:54:16 -0700
-Subject: [PATCH 03/12] libhandle: add support for bulkstat v5
+	b=onc6RzYLAx7zkV5HLFeOFA/ehrZpsWnwRvd8wwOcOtOImz0R8G84j8OyENtbOwyjf
+	 F3DSJYWKpFvy8rAHpSo3XknjovN9jJB9QGobhf1G4BuCUF8JxrwO1NyZjMi5PUlWqq
+	 9fMxcTWu0AlwjG9FEFlPU1WG+4VU0YcOk56Swsc93UsMdqBUTE6Kj62hh3hOvI6iBS
+	 Nwxple8tZVM0/8EUNNO+wRGKOKqycYvjf6UHUbfdTdZesaOr6RNiUZJrzBkAEGkJ5C
+	 ktUvRx1CIa/NH8fGX9tJT4fnUEtrYp2rMVju9vTltk+0HYyHvNJm6poiRnHEBfFcye
+	 O4BzhhLWWlxZw==
+Date: Mon, 01 Jul 2024 17:54:31 -0700
+Subject: [PATCH 04/12] libfrog: add support for exchange range ioctl family
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988116756.2006519.10115349070206614078.stgit@frogsfrogsfrogs>
+Message-ID: <171988116771.2006519.532946760546599337.stgit@frogsfrogsfrogs>
 In-Reply-To: <171988116691.2006519.4962618271620440482.stgit@frogsfrogsfrogs>
 References: <171988116691.2006519.4962618271620440482.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,268 +46,116 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add support to libhandle for generating file handles with bulkstat v5
-structures.  xfs_fsr will need this to be able to interface with the new
-vfs range swap ioctl, and other client programs will probably want this
-over time.
+Add some library code to support the new file range exchange and commit
+ioctls.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/jdm.h   |   24 +++++++++++
- libhandle/jdm.c |  117 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 141 insertions(+)
+ libfrog/Makefile        |    2 ++
+ libfrog/file_exchange.c |   52 +++++++++++++++++++++++++++++++++++++++++++++++
+ libfrog/file_exchange.h |   15 ++++++++++++++
+ 3 files changed, 69 insertions(+)
+ create mode 100644 libfrog/file_exchange.c
+ create mode 100644 libfrog/file_exchange.h
 
 
-diff --git a/include/jdm.h b/include/jdm.h
-index c57fcae7fcac..445737a6b5f8 100644
---- a/include/jdm.h
-+++ b/include/jdm.h
-@@ -11,6 +11,7 @@ typedef void	jdm_fshandle_t;		/* filesystem handle */
- typedef void	jdm_filehandle_t;	/* filehandle */
- 
- struct xfs_bstat;
-+struct xfs_bulkstat;
- struct attrlist_cursor;
- struct parent;
- 
-@@ -23,6 +24,9 @@ jdm_new_filehandle( jdm_filehandle_t **handlep,	/* new filehandle */
- 		    jdm_fshandle_t *fshandlep,	/* filesystem filehandle */
- 		    struct xfs_bstat *sp);	/* bulkstat info */
- 
-+extern void jdm_new_filehandle_v5(jdm_filehandle_t **handlep, size_t *hlen,
-+		jdm_fshandle_t *fshandlep, struct xfs_bulkstat *sp);
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index cafee073fe3c..53e3c3492377 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -18,6 +18,7 @@ bitmap.c \
+ bulkstat.c \
+ convert.c \
+ crc32.c \
++file_exchange.c \
+ fsgeom.c \
+ list_sort.c \
+ linux.c \
+@@ -42,6 +43,7 @@ crc32defs.h \
+ crc32table.h \
+ dahashselftest.h \
+ div64.h \
++file_exchange.h \
+ fsgeom.h \
+ logging.h \
+ paths.h \
+diff --git a/libfrog/file_exchange.c b/libfrog/file_exchange.c
+new file mode 100644
+index 000000000000..29fdc17e598c
+--- /dev/null
++++ b/libfrog/file_exchange.c
+@@ -0,0 +1,52 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2020-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/ioctl.h>
++#include <unistd.h>
++#include <string.h>
++#include "xfs.h"
++#include "fsgeom.h"
++#include "bulkstat.h"
++#include "libfrog/file_exchange.h"
 +
- extern void
- jdm_delete_filehandle( jdm_filehandle_t *handlep,/* filehandle to delete */
- 		       size_t hlen);		/* filehandle size */
-@@ -32,35 +36,55 @@ jdm_open( jdm_fshandle_t *fshandlep,
- 	  struct xfs_bstat *sp,
- 	  intgen_t oflags);
- 
-+extern intgen_t jdm_open_v5(jdm_fshandle_t *fshandlep, struct xfs_bulkstat *sp,
-+		intgen_t oflags);
-+
- extern intgen_t
- jdm_readlink( jdm_fshandle_t *fshandlep,
- 	      struct xfs_bstat *sp,
- 	      char *bufp,
- 	      size_t bufsz);
- 
-+extern intgen_t jdm_readlink_v5(jdm_fshandle_t *fshandlep,
-+		struct xfs_bulkstat *sp, char *bufp, size_t bufsz);
-+
- extern intgen_t
- jdm_attr_multi(	jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
- 		char *bufp, int rtrvcnt, int flags);
- 
-+extern intgen_t jdm_attr_multi_v5(jdm_fshandle_t *fshp,
-+		struct xfs_bulkstat *statp, char *bufp, int rtrvcnt,
-+		int flags);
-+
- extern intgen_t
- jdm_attr_list(	jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
- 		char *bufp, size_t bufsz, int flags,
- 		struct attrlist_cursor *cursor);
- 
-+extern intgen_t jdm_attr_list_v5(jdm_fshandle_t *fshp,
-+		struct xfs_bulkstat *statp, char *bufp, size_t bufsz, int
-+		flags, struct attrlist_cursor *cursor);
-+
- extern int
- jdm_parents( jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
- 		struct parent *bufp, size_t bufsz,
- 		unsigned int *count);
- 
-+extern int jdm_parents_v5(jdm_fshandle_t *fshp, struct xfs_bulkstat *statp,
-+		struct parent *bufp, size_t bufsz, unsigned int *count);
-+
- extern int
- jdm_parentpaths( jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
- 		struct parent *bufp, size_t bufsz,
- 		unsigned int *count);
- 
-+extern int jdm_parentpaths_v5(jdm_fshandle_t *fshp, struct xfs_bulkstat *statp,
-+		struct parent *bufp, size_t bufsz, unsigned int *count);
-+
- /* macro for determining the size of a structure member */
- #define sizeofmember( t, m )	sizeof( ( ( t * )0 )->m )
- 
-diff --git a/libhandle/jdm.c b/libhandle/jdm.c
-index 07b0c60985ee..e21aff2b2c19 100644
---- a/libhandle/jdm.c
-+++ b/libhandle/jdm.c
-@@ -41,6 +41,19 @@ jdm_fill_filehandle( filehandle_t *handlep,
- 	handlep->fh_ino = statp->bs_ino;
- }
- 
-+static void
-+jdm_fill_filehandle_v5(
-+	struct filehandle	*handlep,
-+	struct fshandle		*fshandlep,
-+	struct xfs_bulkstat	*statp)
-+{
-+	handlep->fh_fshandle = *fshandlep;
-+	handlep->fh_sz_following = FILEHANDLE_SZ_FOLLOWING;
-+	memset(handlep->fh_pad, 0, FILEHANDLE_SZ_PAD);
-+	handlep->fh_gen = statp->bs_gen;
-+	handlep->fh_ino = statp->bs_ino;
-+}
-+
- jdm_fshandle_t *
- jdm_getfshandle( char *mntpnt )
- {
-@@ -90,6 +103,22 @@ jdm_new_filehandle( jdm_filehandle_t **handlep,
- 		jdm_fill_filehandle(*handlep, (fshandle_t *) fshandlep, statp);
- }
- 
++/* Prepare for a file contents exchange. */
 +void
-+jdm_new_filehandle_v5(
-+	jdm_filehandle_t	**handlep,
-+	size_t			*hlen,
-+	jdm_fshandle_t		*fshandlep,
-+	struct xfs_bulkstat	*statp)
++xfrog_exchangerange_prep(
++	struct xfs_exchange_range	*fxr,
++	off_t				file2_offset,
++	int				file1_fd,
++	off_t				file1_offset,
++	uint64_t			length)
 +{
-+	/* allocate and fill filehandle */
-+	*hlen = sizeof(filehandle_t);
-+	*handlep = (filehandle_t *) malloc(*hlen);
-+	if (!*handlep)
-+		return;
++	memset(fxr, 0, sizeof(*fxr));
 +
-+	jdm_fill_filehandle_v5(*handlep, (struct fshandle *)fshandlep, statp);
++	fxr->file1_fd			= file1_fd;
++	fxr->file1_offset		= file1_offset;
++	fxr->length			= length;
++	fxr->file2_offset		= file2_offset;
 +}
 +
- /* ARGSUSED */
- void
- jdm_delete_filehandle( jdm_filehandle_t *handlep, size_t hlen )
-@@ -111,6 +140,19 @@ jdm_open( jdm_fshandle_t *fshp, struct xfs_bstat *statp, intgen_t oflags )
- 	return fd;
- }
- 
-+intgen_t
-+jdm_open_v5(
-+	jdm_fshandle_t		*fshp,
-+	struct xfs_bulkstat	*statp,
-+	intgen_t		oflags)
-+{
-+	struct fshandle		*fshandlep = (struct fshandle *)fshp;
-+	struct filehandle	filehandle;
-+
-+	jdm_fill_filehandle_v5(&filehandle, fshandlep, statp);
-+	return open_by_fshandle(&filehandle, sizeof(filehandle), oflags);
-+}
-+
- intgen_t
- jdm_readlink( jdm_fshandle_t *fshp,
- 	      struct xfs_bstat *statp,
-@@ -128,6 +170,20 @@ jdm_readlink( jdm_fshandle_t *fshp,
- 	return rval;
- }
- 
-+intgen_t
-+jdm_readlink_v5(
-+	jdm_fshandle_t		*fshp,
-+	struct xfs_bulkstat	*statp,
-+	char			*bufp,
-+	size_t			bufsz)
-+{
-+	struct fshandle		*fshandlep = (struct fshandle *)fshp;
-+	struct filehandle	filehandle;
-+
-+	jdm_fill_filehandle_v5(&filehandle, fshandlep, statp);
-+	return readlink_by_handle(&filehandle, sizeof(filehandle), bufp, bufsz);
-+}
-+
- int
- jdm_attr_multi(	jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
-@@ -145,6 +201,22 @@ jdm_attr_multi(	jdm_fshandle_t *fshp,
- 	return rval;
- }
- 
++/*
++ * Execute an exchange-range operation.  Returns 0 for success or a negative
++ * errno.
++ */
 +int
-+jdm_attr_multi_v5(
-+	jdm_fshandle_t		*fshp,
-+	struct xfs_bulkstat	*statp,
-+	char			*bufp,
-+	int			rtrvcnt,
-+	int			flags)
++xfrog_exchangerange(
++	int				file2_fd,
++	struct xfs_exchange_range	*fxr,
++	uint64_t			flags)
 +{
-+	struct fshandle		*fshandlep = (struct fshandle *)fshp;
-+	struct filehandle	filehandle;
++	int				ret;
 +
-+	jdm_fill_filehandle_v5(&filehandle, fshandlep, statp);
-+	return attr_multi_by_handle(&filehandle, sizeof(filehandle), bufp,
-+			rtrvcnt, flags);
++	fxr->flags = flags;
++
++	ret = ioctl(file2_fd, XFS_IOC_EXCHANGE_RANGE, fxr);
++	if (ret)
++		return -errno;
++
++	return 0;
 +}
+diff --git a/libfrog/file_exchange.h b/libfrog/file_exchange.h
+new file mode 100644
+index 000000000000..b6f6f9f698a8
+--- /dev/null
++++ b/libfrog/file_exchange.h
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (c) 2020-2024 Oracle.  All rights reserved.
++ * All Rights Reserved.
++ */
++#ifndef __LIBFROG_FILE_EXCHANGE_H__
++#define __LIBFROG_FILE_EXCHANGE_H__
 +
- int
- jdm_attr_list(	jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
-@@ -166,6 +238,27 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
- 	return rval;
- }
- 
-+int
-+jdm_attr_list_v5(
-+	jdm_fshandle_t		*fshp,
-+	struct xfs_bulkstat	*statp,
-+	char			*bufp,
-+	size_t			bufsz,
-+	int			flags,
-+	struct attrlist_cursor	*cursor)
-+{
-+	struct fshandle		*fshandlep = (struct fshandle *)fshp;
-+	struct filehandle	filehandle;
++void xfrog_exchangerange_prep(struct xfs_exchange_range *fxr,
++		off_t file2_offset, int file1_fd,
++		off_t file1_offset, uint64_t length);
++int xfrog_exchangerange(int file2_fd, struct xfs_exchange_range *fxr,
++		uint64_t flags);
 +
-+	/* prevent needless EINVAL from the kernel */
-+	if (bufsz > XFS_XATTR_LIST_MAX)
-+		bufsz = XFS_XATTR_LIST_MAX;
-+
-+	jdm_fill_filehandle_v5(&filehandle, fshandlep, statp);
-+	return attr_list_by_handle(&filehandle, sizeof(filehandle), bufp,
-+			bufsz, flags, cursor);
-+}
-+
- int
- jdm_parents( jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
-@@ -176,6 +269,18 @@ jdm_parents( jdm_fshandle_t *fshp,
- 	return -1;
- }
- 
-+int
-+jdm_parents_v5(
-+	jdm_fshandle_t		*fshp,
-+	struct xfs_bulkstat	*statp,
-+	struct parent		*bufp,
-+	size_t			bufsz,
-+	unsigned int		*count)
-+{
-+	errno = EOPNOTSUPP;
-+	return -1;
-+}
-+
- int
- jdm_parentpaths( jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
-@@ -185,3 +290,15 @@ jdm_parentpaths( jdm_fshandle_t *fshp,
- 	errno = EOPNOTSUPP;
- 	return -1;
- }
-+
-+int
-+jdm_parentpaths_v5(
-+	jdm_fshandle_t		*fshp,
-+	struct xfs_bulkstat	*statp,
-+	struct parent		*bufp,
-+	size_t			bufsz,
-+	unsigned int		*count)
-+{
-+	errno = EOPNOTSUPP;
-+	return -1;
-+}
++#endif	/* __LIBFROG_FILE_EXCHANGE_H__ */
 
