@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A0C9EDE
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:49:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89C8F7462
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jul 2024 00:50:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719881391; cv=none; b=UYFUm11EhBk6leMkbuty/3qzBybuxlmQ00J2R6PyR34mJvxS/VimuBWjckUbwVEnEjvOZJv9LoDf3tmavOphss32MtNANtOy6AtEGrtaLskrhDG9vHoj/EDec1AnY7uoYs2oiG1L5IJZfkXxqNrd21m1spN+ISYj9RWIVvblQ1E=
+	t=1719881406; cv=none; b=kOBpsJsLD3Vwv6VM1twJ9sUkc+6SJvfOONo3IuwYpE2PpvIed1lO3APYXgEW6A7Q8w493sycVD4UMUINoq22kh5jn+G7zo662+f+ERjAUQEseEyw9pCTKvOOxbDrgAA7at7qRZ9bpqN3S6vJJuI//obJwoaKj6koPJP/i7F+J4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719881391; c=relaxed/simple;
-	bh=uU0ruwiEnIGmrWdttxTebryCoIsGWJmOdUbR4+VSztI=;
+	s=arc-20240116; t=1719881406; c=relaxed/simple;
+	bh=wY42YlcPExz/z5TGKQzVesHl8Vow1ag3PtLhQYpa0hU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GuieKmNylMcG13Pgu33wGbvkEiXa0TIIZSQh6nTDktHsll0Msga6OcAIunW67g01BwNYXH1N/+Df+aI3MzTh8T+COg+ZVoNXnGROO1r5IDKg9F4EwROqPhzkhn5p2nHB5W4jKrbK2ka7w2tzCWAnx1gPlL3dCXPCQ+zAdiRCxvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b6eU8gb5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=aS4ijGC6ypDCuA5TVmndkIVlV2bvYF1fcI+8x1HYbVTEBFFGJlpsqE+FrjKYyWWIUSzb//O/IXwcAvEfkN8Ba1bkQQybnfCBnyfKa+gRDfXY6x5TwECgYYZ9Ksoc7paZfZQWzfMfDf5m4hMEjmLNdg7jMKyBKL1f72ehnGG9gLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SiUIdaYx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b6eU8gb5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AD84C116B1;
-	Tue,  2 Jul 2024 00:49:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SiUIdaYx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29F86C116B1;
+	Tue,  2 Jul 2024 00:50:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719881390;
-	bh=uU0ruwiEnIGmrWdttxTebryCoIsGWJmOdUbR4+VSztI=;
+	s=k20201202; t=1719881406;
+	bh=wY42YlcPExz/z5TGKQzVesHl8Vow1ag3PtLhQYpa0hU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=b6eU8gb5SE9NT0MZFzV/ilZ2XBpNGraGl8WYP0t0JpWl3N5le6Jt6rp1VKc7sjr7M
-	 5FZBh/WPFiKhHjzqk7JVbvAEYIQMvr8vEYSnc7nGOleHeIqwJ3h0bUXex+56uxOh7/
-	 +WXrv9h+Tdt2BL2LMNNr6/I3KDM7EhsBP2IiiJflNsg6ezJfoO5+vl2v9Z7UBJ1cDY
-	 Ttu4zjlMlOvqp3BivADirZfDIuEqm0nDt9DDzQrorRxH5lqYmyAfhSqDVVsAtpALqq
-	 SMofNJmYGIblRRfir1FrJ/frt51n0K7s98bbl/9dA9iRP4/HCBv1viea2QrtqYrcmk
-	 egy/3U7JlzKlA==
-Date: Mon, 01 Jul 2024 17:49:50 -0700
-Subject: [PATCHSET v30.7 02/16] xfsprogs: inode-related repair fixes
+	b=SiUIdaYx9dEgXKGM6FsTBY1UqdE4vlF3co1PrLIK4ZWI6sex24TBRBznQa2Ttn4vf
+	 KrCFyZUb7sxp6ftuClh0lzoF0h6UKZkdoyWCsTLwrHQB1KO//yBFsJIAsKACrDphIW
+	 ZlArlDZCGYw2Fi2zHsTA+q0PePqH67qYcfsfVcPB0/tpQYFkVN2Wafwx4VHhzNTT90
+	 hv0nnak41lbi1FUwGmekOy4Sw74YOIzSzaqkCXqlg7O5FCx+jOFQNVgVtFrRTLDVIm
+	 r+dHatDv2RC3z/w/mXbTdPh0LuO0eQ13hjtLs9QYuQg7JD4gL2wD9rn1g1H8QcTit5
+	 P816jnVbE9qvA==
+Date: Mon, 01 Jul 2024 17:50:05 -0700
+Subject: [PATCHSET v30.7 03/16] xfs_scrub: detect deceptive filename
+ extensions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171988117219.2006964.1550137506522221205.stgit@frogsfrogsfrogs>
+Message-ID: <171988117591.2007123.4966781934074641923.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240702004322.GJ612460@frogsfrogsfrogs>
 References: <20240702004322.GJ612460@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,14 +47,12 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-While doing QA of the online fsck code, I made a few observations:
-First, nobody was checking that the di_onlink field is actually zero;
-Second, that allocating a temporary file for repairs can fail (and
-thus bring down the entire fs) if the inode cluster is corrupt; and
-Third, that file link counts do not pin at ~0U to prevent integer
-overflows.
-
-This scattered patchset fixes those three problems.
+In early 2023, malware researchers disclosed a phishing attack that was
+targeted at people running Linux workstations.  The attack vector
+involved the use of filenames containing what looked like a file
+extension but instead contained a lookalike for the full stop (".")
+and a common extension ("pdf").  Enhance xfs_scrub phase 5 to detect
+these types of attacks and warn the system administrator.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -63,22 +62,27 @@ Comments and questions are, as always, welcome.
 
 --D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=inode-repair-improvements
-
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=inode-repair-improvements
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-detect-deceptive-extensions
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-detect-deceptive-extensions
 ---
 Commits in this patchset:
- * xfs_{db,repair}: add an explicit owner field to xfs_da_args
- * libxfs: port the bumplink function from the kernel
- * mkfs/repair: pin inodes that would otherwise overflow link count
+ * xfs_scrub: use proper UChar string iterators
+ * xfs_scrub: hoist code that removes ignorable characters
+ * xfs_scrub: add a couple of omitted invisible code points
+ * xfs_scrub: avoid potential UAF after freeing a duplicate name entry
+ * xfs_scrub: guard against libicu returning negative buffer lengths
+ * xfs_scrub: hoist non-rendering character predicate
+ * xfs_scrub: store bad flags with the name entry
+ * xfs_scrub: rename UNICRASH_ZERO_WIDTH to UNICRASH_INVISIBLE
+ * xfs_scrub: type-coerce the UNICRASH_* flags
+ * xfs_scrub: reduce size of struct name_entry
+ * xfs_scrub: rename struct unicrash.normalizer
+ * xfs_scrub: report deceptive file extensions
+ * xfs_scrub: dump unicode points
 ---
- db/namei.c          |    1 +
- include/xfs_inode.h |    2 ++
- libxfs/util.c       |   18 ++++++++++++++++++
- mkfs/proto.c        |    4 ++--
- repair/incore_ino.c |    3 ++-
- repair/phase6.c     |   13 ++++++++-----
- 6 files changed, 33 insertions(+), 8 deletions(-)
+ scrub/unicrash.c |  530 +++++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 424 insertions(+), 106 deletions(-)
 
