@@ -1,117 +1,54 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27EB13210B
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 06:44:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C7D4DA04
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 06:53:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719989063; cv=none; b=Dd7dqcyBKPZrmHsPyKSLWot5LirnBAs9to/HwMI9qrQqtzwObdXFoZsBfqzUpt/cofFk8R7UHgBhr8oZ2IwXdnjFIKKyR7BqMLOBXEKbKdDJYGb2YcFGU6Jol4jS2U7JiNcoi/Zw7eWZSp0V6+yCXtgzOzBPaJQMLpKcw3CMgm4=
+	t=1719989584; cv=none; b=BcQ9Wloag0wW1N4NcJESAW2Xa/UMhEpda2yV3ss7QsxOAizHDQpkTx8DcCas3zMaC4Q7eSC9zFc5IjD37XrfN1o2i8B6hR5ssmAAJnKYLgAlsIBLA+h231BIG3J86/aeHRIUsDfExvlJqrppz3KQ4tyl9UuEA2EGiUVm02PIE4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719989063; c=relaxed/simple;
-	bh=e7W++zVSejYbhhGXxpu9A3kOpS/W9Ky44l6BkhuegDI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Qw/XOIwqmu+MV76clHHITOH768DuPLDy1ty/iWdBLTuMURRLZOtJQj+h5ZQ9beo2SFS5hSYfr2Wgs6PlviXtW6WcslmlZABPC9ncTJlyYuEQEg1I+yWBcRfjcJqH9GfSfl5bJ2RmAbl9xNRZiJ7zXkyvpR02IPIn1DVAfYRutQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WDVcC2r2ZznZ4s;
-	Wed,  3 Jul 2024 14:43:55 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0223618006C;
-	Wed,  3 Jul 2024 14:44:12 +0800 (CST)
-Received: from localhost.localdomain (10.175.104.67) by
- kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Wed, 3 Jul 2024 14:44:11 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <chandanbabu@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH v2] xfs: get rid of xfs_ag_resv_rmapbt_alloc
-Date: Wed, 3 Jul 2024 14:42:26 +0800
-Message-ID: <20240703064226.229599-1-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1719989584; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s/NMciQVYJeVF8B7pU4y5uF0Q7CiLQ1u2CIdd6aHuty64GVRFxPlRBz0bArL8JQ/BMe/TlJ9dfKTX1eTo//I4PDvUVSsDnI10PTkrtasLQdoqCoRg/y1ZxOQrgKBpSPENRloL6vKpMy8jW27FOcyXRijhQGSOFzxzFF/KE8Jp2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EUnkvEDr; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EUnkvEDr"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=EUnkvEDrhbWbqWXAF4DxLZBC8R
+	MV5Imtm+RvMRLezRuNv1UCa2gPxiJOoweiDk8ASt4HhBZlyZ9aDn3FeVukvSGZvAmAeXSM9PnFIsU
+	ussnQBL48j+CB3oS0vqc8c+WGJ/IQoc3S6T3A0ILfsh3NEk9uut7OGNHOmRrP+5BLfDKaqXsGKNVR
+	PSvB95AXQ4LBJTffWWPWgvILiuZVWYi3icyxPr0Bbqi/sryDzSLFeD5+NQ1Rr1R/1TYEDSdfseKg5
+	F5z9CQZNP0+QBwDBzcg5iWZMJmgVK3EuXTL5DVIwAxd7nUEWfZBn9wql96IV/v11UGwDb5RP+Ihmy
+	iWedNUog==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sOtrQ-00000009G96-0RZO;
+	Wed, 03 Jul 2024 06:53:00 +0000
+Date: Tue, 2 Jul 2024 23:53:00 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Long Li <leo.lilong@huawei.com>
+Cc: djwong@kernel.org, chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
+	david@fromorbit.com, yi.zhang@huawei.com, houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: Re: [PATCH v2] xfs: get rid of xfs_ag_resv_rmapbt_alloc
+Message-ID: <ZoT1TFvXniMFgLBD@infradead.org>
+References: <20240703064226.229599-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500009.china.huawei.com (7.221.188.199)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240703064226.229599-1-leo.lilong@huawei.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The pag in xfs_ag_resv_rmapbt_alloc() is already held when the struct
-xfs_btree_cur is initialized in xfs_rmapbt_init_cursor(), so there is no
-need to get pag again.
+Looks good:
 
-On the other hand, in xfs_rmapbt_free_block(), the similar function
-xfs_ag_resv_rmapbt_free() was removed in commit 92a005448f6f ("xfs: get
-rid of unnecessary xfs_perag_{get,put} pairs"), xfs_ag_resv_rmapbt_alloc()
-was left because scrub used it, but now scrub has removed it. Therefore,
-we could get rid of xfs_ag_resv_rmapbt_alloc() just like the rmap free
-block, make the code cleaner.
-
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/libxfs/xfs_ag_resv.h    | 19 -------------------
- fs/xfs/libxfs/xfs_rmap_btree.c |  7 ++++++-
- 2 files changed, 6 insertions(+), 20 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-index ff20ed93de77..f247eeff7358 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.h
-+++ b/fs/xfs/libxfs/xfs_ag_resv.h
-@@ -33,23 +33,4 @@ xfs_perag_resv(
- 	}
- }
- 
--/*
-- * RMAPBT reservation accounting wrappers. Since rmapbt blocks are sourced from
-- * the AGFL, they are allocated one at a time and the reservation updates don't
-- * require a transaction.
-- */
--static inline void
--xfs_ag_resv_rmapbt_alloc(
--	struct xfs_mount	*mp,
--	xfs_agnumber_t		agno)
--{
--	struct xfs_alloc_arg	args = { NULL };
--	struct xfs_perag	*pag;
--
--	args.len = 1;
--	pag = xfs_perag_get(mp, agno);
--	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
--	xfs_perag_put(pag);
--}
--
- #endif	/* __XFS_AG_RESV_H__ */
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 9e759efa81cc..56fd6c4bd8b4 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -88,6 +88,7 @@ xfs_rmapbt_alloc_block(
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agf		*agf = agbp->b_addr;
- 	struct xfs_perag	*pag = cur->bc_ag.pag;
-+	struct xfs_alloc_arg    args = { .len = 1 };
- 	int			error;
- 	xfs_agblock_t		bno;
- 
-@@ -107,7 +108,11 @@ xfs_rmapbt_alloc_block(
- 	be32_add_cpu(&agf->agf_rmap_blocks, 1);
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
- 
--	xfs_ag_resv_rmapbt_alloc(cur->bc_mp, pag->pag_agno);
-+	/*
-+	 * Since rmapbt blocks are sourced from the AGFL, they are allocated one
-+	 * at a time and the reservation updates don't require a transaction.
-+	 */
-+	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
- 
- 	*stat = 1;
- 	return 0;
--- 
-2.39.2
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
