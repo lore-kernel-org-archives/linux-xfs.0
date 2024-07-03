@@ -1,47 +1,66 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8005A17C60
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 05:17:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4047017C60;
+	Wed,  3 Jul 2024 05:27:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719983854; cv=none; b=pBgQl4JQkVncXjKQcLkP8DNTa1KaY0i67NQSTZNp+2CXEtkulGiJx8NvrNQhGd6UyyhZGA/jXEhGA/+V/mdrwReOsEUbRJlj0w9EzBda7mUG1Z9hLvR1YO0UnnpqwFKe6hl5R0i1D2w0zIfRM+QVMVmmBOoBtUz0HNMXBSru4vM=
+	t=1719984425; cv=none; b=pws6zvZOqJh4KYX3g0l4Dcv2RkEZ3Jh+ar36Q8P2M/1zW/koWC+Y7GVFITwrkPv18TyqTWkyO6lCt/GewD0ek5K7WuE+0Pxaqd31jPNy/KSEqiLwrDuMmPFv4Ju3FY0ovMDr5WadqoyzAA8RdvLy16t83L7RXIhP/pNGoSiLq6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719983854; c=relaxed/simple;
-	bh=lN2Odru+0OnOFtcpJhZg0AiGTtQK9UB+4RO+LHusBjY=;
+	s=arc-20240116; t=1719984425; c=relaxed/simple;
+	bh=mZHTDOjfNldNq9pm83st4/J9NEm34dK9p7Q7e6Vj96w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nc8UfhcwlQqNwzJdbeZdmYOVvniUWebXgYWglS7VU4+FXs7qT5oapcKZwcd7OH7KZBh7c9AY4luukDSTNIq65SEtJdM/h/Uh9Xn27Iz0kobaNZYNlIoTJlBQ9flcFbhnTVzbfxrcXW0+lltMODb9R2ZwFlZMRDUJtxfCnXVNMyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tnBAfDRy; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=S+AMSGIkZEDfAuVaDdIv8/fvTD+KvvPZ2UtsUJE/bKyeBlQke/jOJ1UAo6kGs3a08VatfRtGzd/kvkvbU23X3rpXV1I19EW3GY2A9IW3fmZP4urOXXgqena0SBjt86hCAixUzgmC7JTvhnJvSfFzyqKFppe8xKqJwWqVV7ncd8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uhVnfzsl; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tnBAfDRy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 145C6C32781;
-	Wed,  3 Jul 2024 05:17:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719983854;
-	bh=lN2Odru+0OnOFtcpJhZg0AiGTtQK9UB+4RO+LHusBjY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tnBAfDRyVPI8yU9s98P36P00eMOUklFsootd3wQMZGTGtdaVunOnnVsEAdqgYK9PM
-	 WgYU0pqY9LPPqPu24insa1XqiJ4cmw2Q7/JZLqpSQDLHLNVBzw6teIZjphmnAtPJMB
-	 AjNW2FVw9+quT/C5VezHfj7Zn02wvkcyaDohMcGMre0rkRvSk8szz6iiX/CeuqhXG5
-	 I7vhUObLyWAzVYDM0l/hFKRqScW2kZGHjmFn/yt2P3O0YHOxcVHEACgIFiVxozrlS1
-	 yu/DPmdfsPYQ+QqibDc/0HewpKVgECzgOIzNIYuV1EHnC5q5u/3mOrxV2UWYn0uV1+
-	 njUvlWhszuFbQ==
-Date: Tue, 2 Jul 2024 22:17:33 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs_scrub: tune fstrim minlen parameter based on
- free space histograms
-Message-ID: <20240703051733.GG612460@frogsfrogsfrogs>
-References: <171988118569.2007921.18066484659815583228.stgit@frogsfrogsfrogs>
- <171988118687.2007921.1260012940783338117.stgit@frogsfrogsfrogs>
- <20240702053627.GN22804@lst.de>
- <20240703022914.GT612460@frogsfrogsfrogs>
- <20240703042922.GB24160@lst.de>
- <20240703045539.GZ612460@frogsfrogsfrogs>
- <20240703045812.GA24691@lst.de>
- <20240703050422.GD612460@frogsfrogsfrogs>
- <20240703051150.GA24923@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uhVnfzsl"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=B2QFWmmtnzG9/Nt7IO4g9fzoajf9ZPOHUxGkfqY/0Fk=; b=uhVnfzsl8Ss5ByDBA//ACjebHe
+	jorQN3OuDLkgxctOg56Sg6djOeDxfc7ypq0RjIwaSmmPFXDEUZ/TW5UWehQr/LfVoSlFkiaAC6pRA
+	WvgJeI4zFNwfDNZlzqcdkrJT9lGakvlV4LUKGqpz60aa64GQRq7tKAemE2ILOcCM62/kioq5QTKqv
+	xL2lvZFiMCrBvDaEoHNlgd2xoA3eHdmqrwffMGPTrPWwyP1HwbKBsmqlZP+Z0fNJWZhXRpK2wYiLL
+	aI/5wqPGpdtMm3LxwtISeJZIpmVQmcTBWUE5NDVOMGGK/Sm4+IAz+HiFlxcI8UJmYUzaxk/mGUo26
+	CAFHPolQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sOsW7-000000092xA-20k6;
+	Wed, 03 Jul 2024 05:26:55 +0000
+Date: Tue, 2 Jul 2024 22:26:55 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>, kernel-team@fb.com,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 01/10] fs: turn inode ctime fields into a single ktime_t
+Message-ID: <ZoThH9fWsdzq7IXR@infradead.org>
+References: <ZoOuSxRlvEQ5rOqn@infradead.org>
+ <d91a29f0e600793917b73ac23175e02dafd56beb.camel@kernel.org>
+ <20240702101902.qcx73xgae2sqoso7@quack3>
+ <958080f6de517cf9d0a1994e3ca500f23599ca33.camel@kernel.org>
+ <ZoPs0TfTEktPaCHo@infradead.org>
+ <09ad82419eb78a2f81dda5dca9caae10663a2a19.camel@kernel.org>
+ <ZoPvR39vGeluD5T2@infradead.org>
+ <a11d84a3085c6a6920d086bf8fae1625ceff5764.camel@kernel.org>
+ <ZoQY4jdTc5dHPGGG@infradead.org>
+ <4ec1fbdc6568e16da40f41789081805e764fd83e.camel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,24 +69,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240703051150.GA24923@lst.de>
+In-Reply-To: <4ec1fbdc6568e16da40f41789081805e764fd83e.camel@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Jul 03, 2024 at 07:11:50AM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 02, 2024 at 10:04:22PM -0700, Darrick J. Wong wrote:
-> > > I know people like to fetishize file access (and to be honest from a
-> > > shell it is really nice), but from a C program would you rather do
-> > > one ioctl to find a sysfs base path, then do string manipulation to
-> > > find the actual attribute, then open + read + close it, or do a single
-> > > ioctl and read a bunch of values from a struct?
-> > 
-> > Single ioctl and read from a struct.
-> > 
-> > Or single ioctl and read a bunch of json (LOL)
-> > 
-> > I wish the BLK* ioctls had kept pace with the spread of queue limits.
+On Tue, Jul 02, 2024 at 11:58:02AM -0400, Jeff Layton wrote:
+> Yeah, mostly. We shrink struct inode by 8 bytes with that patch, and we
+> (probably) get a better cache footprint, since i_version ends up in the
+> same cacheline as the ctime. That's really a separate issue though, so
+> I'm not too worked up about dropping that patch.
 > 
-> Let me propose a new BLKLIMITS ioctl, and then we'll work from there?
+> As a bonus, leaving it split across separate fields means that we can
+> use unused bits in the nsec field for the flag, so we don't need to
+> sacrifice any timestamp granularity either.
+> 
+> I've got a draft rework that does this that I'm testing now. Assuming
+> it works OK, I'll resend in a few days.
 
-Ok!
+So while shrinking the inodes sounds nice, the tradeoff to have to
+check all timestamps from disk / the server for validity doesn't
+sound as positive.  So I'm glade we're avoiding this at least for.
 
---D
