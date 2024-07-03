@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F328F40
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 01:59:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7565804
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 02:29:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719971997; cv=none; b=ISC/nyqIUmQYzaDtshVAMyEE+jpBSFTUeczNP2XUWfdpwnxA3NSqBfUSnQv/CD4rq3I7w+Lw0/zi9x7MXg0fk1ulY+RPGiKPMCQxgwyqlNkbdXjATeFk+0RKetwTi2J2p7xL5aKdVC46nzYrn9e9BM4BkztmDgGaTKAhJ7lw5E0=
+	t=1719973755; cv=none; b=oW5nwe0RyHJR+i103ayqPO+22helpMP6ke9acFK0QpplnFIosZFRwQGl7Fa+vpt5PEXgjqt0BEEMWnnavxmA0tVjTlZ5sePTCZ0eXBRKuQ4ZT3/TQind/PbAiyG1ZXEQjWBE2409Lo816MQO0esVEaCrNyZVEJDuJfFRoyFvoAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719971997; c=relaxed/simple;
-	bh=ktU4K/sWvHg60FKDKGtBg1WUb74EN8BBU5gD1GvMdCU=;
+	s=arc-20240116; t=1719973755; c=relaxed/simple;
+	bh=MJijvm3ITVrGolxVcyY+KOj0/84mqUZSer1zYg+p8z0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L3l+HjbGIRvvVYDgWtEw4RL8kyBMQZcK15h3M6nK4DPerYgQ+2nu8kvw8DE71V4ksFsOgkB0Z3JZHzwowKgQ1dXYnrUNLPuvqrdgD8jUxdBUFgiFKngxJEdS5a13qRlQLEKe8TJuljhJsG1DpR1SvYCXF8IqH90kENzNFgZto+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=enkHCN6Z; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bTUu42S261Joi8Td2vFFriWR63XaZtpitUimBe2643FxSkh0ZUqL8uZq9dxLjH097r1Jxupa3bo6saRZW8bmyZjhV4aib/xLPXxwsWfS5EwPkB4v/Hy34+QbLIJKFRPJFVsytIYedJCzwfa7/cziX1HoAtGmzzpY5C6cQNTO7QE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cQID0QVh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="enkHCN6Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 232DCC116B1;
-	Wed,  3 Jul 2024 01:59:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cQID0QVh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E0FDC116B1;
+	Wed,  3 Jul 2024 02:29:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719971997;
-	bh=ktU4K/sWvHg60FKDKGtBg1WUb74EN8BBU5gD1GvMdCU=;
+	s=k20201202; t=1719973755;
+	bh=MJijvm3ITVrGolxVcyY+KOj0/84mqUZSer1zYg+p8z0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=enkHCN6Zx6GtAFo211Gkt3h6IU7vmm5jCL52aR8IY8+qDwG6htc+CNfs8AxtbfpNa
-	 XeWXvVwxjVKkR1QOd8hu7I2c0xNTynEFywoGxpgerD5GFxjHR4ZoAUUPsfaCEC6cfs
-	 EKyTZFVP/OJCJicVCgFxqoJUUbWTeHcK6j9dPlum+eZKuhDDWJoRojHL0t/JbyPBx/
-	 UGTTTneJ5puAVs/1pPEslKTzmLmDykiNRrdKoGEER1G0zrZ58zOzjySrlzp0CHgfI3
-	 LjsUmz1r3+Nkrp3KYp5CyvhJgdbXYY690CBCDoOdyjgp3MVHCpgIWEO2bEplJydYYj
-	 H3mDaXmpn5kog==
-Date: Tue, 2 Jul 2024 18:59:56 -0700
+	b=cQID0QVhDK6JvMyIcJz2dFrRO3ydYr7Zrvqn/BOGpOTUQchVgnNBOjJOaQ2kGSd9J
+	 vPf03AMc5FkCtv08N3JDmuTOcZSt4AuGdKMKPw1tTOu+6DbyJBlXkb8n9iVMWgBM7r
+	 pjvizi6RQ8EshZWTO7XTkKlRiCzABzPcOMrbwf8hqPK3TRgcEwtDCFq456RslkCWqt
+	 8YjbRnp28pO3kUtDY+RRYXus6ikqtWeYYrpkfsDSY72ov2cZ7/jWxTF3VzZUOJ7cq7
+	 OnBNhN6QvAvcup7iUhlPY3DSfCPj45RXu7bFltzSgPDbghw3KrnJpxxdyB5eYwH3mj
+	 N6/nop/fpASjg==
+Date: Tue, 2 Jul 2024 19:29:14 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/13] xfs_scrub: add a couple of omitted invisible code
- points
-Message-ID: <20240703015956.GS612460@frogsfrogsfrogs>
-References: <171988117591.2007123.4966781934074641923.stgit@frogsfrogsfrogs>
- <171988117657.2007123.5376979485947307326.stgit@frogsfrogsfrogs>
- <20240702052225.GF22536@lst.de>
+Subject: Re: [PATCH 7/7] xfs_scrub: tune fstrim minlen parameter based on
+ free space histograms
+Message-ID: <20240703022914.GT612460@frogsfrogsfrogs>
+References: <171988118569.2007921.18066484659815583228.stgit@frogsfrogsfrogs>
+ <171988118687.2007921.1260012940783338117.stgit@frogsfrogsfrogs>
+ <20240702053627.GN22804@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,50 +44,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240702052225.GF22536@lst.de>
+In-Reply-To: <20240702053627.GN22804@lst.de>
 
-On Tue, Jul 02, 2024 at 07:22:25AM +0200, Christoph Hellwig wrote:
-> On Mon, Jul 01, 2024 at 05:58:10PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > I missed a few non-rendering code points in the "zero width"
-> > classification code.  Add them now, and sort the list.
-> > 
-> > $ wget https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
-> > $ grep -E '(zero width|invisible|joiner|application)' -i UnicodeData.txt
+On Tue, Jul 02, 2024 at 07:36:27AM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 01, 2024 at 06:04:41PM -0700, Darrick J. Wong wrote:
+> > Add a new -o fstrim_pct= option to xfs_scrub just in case there are
+> > users out there who want a different percentage.  For example, accepting
+> > a 95% trim would net us a speed increase of nearly two orders of
+> > magnitude, ignoring system call overhead.  Setting it to 100% will trim
+> > everything, just like fstrim(8).
 > 
-> Should this be automated?
+> It might also make sense to default the parameter to the
+> discard_granularity reported in sysfs.  While a lot of devices don't
+> report a useful value there, it avoids pointless work for those that
+> do.
 
-That will require a bit more thought -- many distro build systems these
-days operate in a sealed box with no network access, so you can't really
-automate this.  libicu (the last time I looked) didn't have a predicate
-to tell you if a particular code point was one of the invisible ones.
+Oooh, that's a good idea.  Let me fiddle with that & tack it on the end?
 
-Here's what I get from running the commands right now:
+Hmm.  How do we query the discard granularity from a userspace program?
+I can try to guess the /sys/block/XXX root from the devices passed in,
+or maybe libblkid will tell me?  And then I'd have to go open
+queue/discard_granularity underneath that to read that.
 
-009F;<control>;Cc;0;BN;;;;;N;APPLICATION PROGRAM COMMAND;;;;
-034F;COMBINING GRAPHEME JOINER;Mn;0;NSM;;;;;N;;;;;
-200B;ZERO WIDTH SPACE;Cf;0;BN;;;;;N;;;;;
-200C;ZERO WIDTH NON-JOINER;Cf;0;BN;;;;;N;;;;;
-200D;ZERO WIDTH JOINER;Cf;0;BN;;;;;N;;;;;
-2060;WORD JOINER;Cf;0;BN;;;;;N;;;;;
-2061;FUNCTION APPLICATION;Cf;0;BN;;;;;N;;;;;
-2062;INVISIBLE TIMES;Cf;0;BN;;;;;N;;;;;
-2063;INVISIBLE SEPARATOR;Cf;0;BN;;;;;N;;;;;
-2064;INVISIBLE PLUS;Cf;0;BN;;;;;N;;;;;
-2D7F;TIFINAGH CONSONANT JOINER;Mn;9;NSM;;;;;N;;;;;
-FEFF;ZERO WIDTH NO-BREAK SPACE;Cf;0;BN;;;;;N;BYTE ORDER MARK;;;;
-1107F;BRAHMI NUMBER JOINER;Mn;9;NSM;;;;;N;;;;;
-11A47;ZANABAZAR SQUARE SUBJOINER;Mn;9;NSM;;;;;N;;;;;
-11A99;SOYOMBO SUBJOINER;Mn;9;NSM;;;;;N;;;;;
-11F42;KAWI CONJOINER;Mn;9;NSM;;;;;N;;;;;
-13430;EGYPTIAN HIEROGLYPH VERTICAL JOINER;Cf;0;L;;;;;N;;;;;
-13431;EGYPTIAN HIEROGLYPH HORIZONTAL JOINER;Cf;0;L;;;;;N;;;;;
+That's going to take a day or so, I suspect. :/
 
-The five-digit ones are new to me; I'll go have a look at how the
-noto(fu) fonts render those.
-
-> Otherwise looks good:
+> Otherwise this looks good:
 > 
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 
