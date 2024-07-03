@@ -1,36 +1,47 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC74C2C95;
-	Wed,  3 Jul 2024 05:16:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8005A17C60
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 05:17:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719983784; cv=none; b=g9+HKZvK5V61+fVvFV5/5bD7ZHdo9pVwBRaAseGZI9LxGGvpEbFqzpMjwc1X6BsGZE0/IA0GTp8EjHNeZi0uenvBCH+4ZUmLXDUb9ujgfuNX+AG9fu3+vNJjJUK1tuUGmIq1MPJfE6OLnoPNC4R+D+7bOG5I6ouY78uNesy0k7k=
+	t=1719983854; cv=none; b=pBgQl4JQkVncXjKQcLkP8DNTa1KaY0i67NQSTZNp+2CXEtkulGiJx8NvrNQhGd6UyyhZGA/jXEhGA/+V/mdrwReOsEUbRJlj0w9EzBda7mUG1Z9hLvR1YO0UnnpqwFKe6hl5R0i1D2w0zIfRM+QVMVmmBOoBtUz0HNMXBSru4vM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719983784; c=relaxed/simple;
-	bh=zBM/OwFTXglD9n4ThuEV7Jg/PFbcp1z2kFMxyIINViY=;
+	s=arc-20240116; t=1719983854; c=relaxed/simple;
+	bh=lN2Odru+0OnOFtcpJhZg0AiGTtQK9UB+4RO+LHusBjY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ow67PN11BS41GgdP3CaWMU6gN7Pr0EYE8p9TBgSrL1Wm5RrVfOpjA/0GUB+5CJUxRv3iN7XYDWCL5QT30oosDL4ZBknP6L0ZJZwWtXnee6S7lPYMd0NmRR51fhMTBB9jOgJeQyYs6C7rxo1aHJo6PAKW4zMnnGNsyG429RRcGk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 788DD227A87; Wed,  3 Jul 2024 07:16:16 +0200 (CEST)
-Date: Wed, 3 Jul 2024 07:16:16 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@lst.de>,
-	david@fromorbit.com, chandan.babu@oracle.com, djwong@kernel.org,
-	brauner@kernel.org, akpm@linux-foundation.org,
-	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
-	linux-mm@kvack.org, john.g.garry@oracle.com,
-	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
-	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, Zi Yan <zi.yan@sent.com>
-Subject: Re: [PATCH v8 06/10] iomap: fix iomap_dio_zero() for fs bs >
- system page size
-Message-ID: <20240703051616.GA25052@lst.de>
-References: <20240625114420.719014-1-kernel@pankajraghav.com> <20240625114420.719014-7-kernel@pankajraghav.com> <20240702074203.GA29410@lst.de> <20240702101556.jdi5anyr3v5zngnv@quentin> <20240702120250.GA17373@lst.de> <20240702140123.emt2gz5kbigth2en@quentin> <20240702154216.GA1037@lst.de> <20240702161329.i4w6ipfs7jg5rpwx@quentin> <ZoQwKlYkI5oik32m@casper.infradead.org> <20240702171014.reknnw3smasylbtc@quentin>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Nc8UfhcwlQqNwzJdbeZdmYOVvniUWebXgYWglS7VU4+FXs7qT5oapcKZwcd7OH7KZBh7c9AY4luukDSTNIq65SEtJdM/h/Uh9Xn27Iz0kobaNZYNlIoTJlBQ9flcFbhnTVzbfxrcXW0+lltMODb9R2ZwFlZMRDUJtxfCnXVNMyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tnBAfDRy; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tnBAfDRy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 145C6C32781;
+	Wed,  3 Jul 2024 05:17:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719983854;
+	bh=lN2Odru+0OnOFtcpJhZg0AiGTtQK9UB+4RO+LHusBjY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tnBAfDRyVPI8yU9s98P36P00eMOUklFsootd3wQMZGTGtdaVunOnnVsEAdqgYK9PM
+	 WgYU0pqY9LPPqPu24insa1XqiJ4cmw2Q7/JZLqpSQDLHLNVBzw6teIZjphmnAtPJMB
+	 AjNW2FVw9+quT/C5VezHfj7Zn02wvkcyaDohMcGMre0rkRvSk8szz6iiX/CeuqhXG5
+	 I7vhUObLyWAzVYDM0l/hFKRqScW2kZGHjmFn/yt2P3O0YHOxcVHEACgIFiVxozrlS1
+	 yu/DPmdfsPYQ+QqibDc/0HewpKVgECzgOIzNIYuV1EHnC5q5u/3mOrxV2UWYn0uV1+
+	 njUvlWhszuFbQ==
+Date: Tue, 2 Jul 2024 22:17:33 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] xfs_scrub: tune fstrim minlen parameter based on
+ free space histograms
+Message-ID: <20240703051733.GG612460@frogsfrogsfrogs>
+References: <171988118569.2007921.18066484659815583228.stgit@frogsfrogsfrogs>
+ <171988118687.2007921.1260012940783338117.stgit@frogsfrogsfrogs>
+ <20240702053627.GN22804@lst.de>
+ <20240703022914.GT612460@frogsfrogsfrogs>
+ <20240703042922.GB24160@lst.de>
+ <20240703045539.GZ612460@frogsfrogsfrogs>
+ <20240703045812.GA24691@lst.de>
+ <20240703050422.GD612460@frogsfrogsfrogs>
+ <20240703051150.GA24923@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,23 +50,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240702171014.reknnw3smasylbtc@quentin>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240703051150.GA24923@lst.de>
 
-On Tue, Jul 02, 2024 at 05:10:14PM +0000, Pankaj Raghav (Samsung) wrote:
-> > > Yes, I will rename it to ZERO_PAGE_SZ_64K as you suggested.
+On Wed, Jul 03, 2024 at 07:11:50AM +0200, Christoph Hellwig wrote:
+> On Tue, Jul 02, 2024 at 10:04:22PM -0700, Darrick J. Wong wrote:
+> > > I know people like to fetishize file access (and to be honest from a
+> > > shell it is really nice), but from a C program would you rather do
+> > > one ioctl to find a sysfs base path, then do string manipulation to
+> > > find the actual attribute, then open + read + close it, or do a single
+> > > ioctl and read a bunch of values from a struct?
 > > 
-> > No.  It needs a symbolic name that doesn't include the actual size.
-> > Maybe ZERO_PAGE_IO_MAX.  Christoph suggested using SZ_64K to define
-> > it, not to include it in the name.
+> > Single ioctl and read from a struct.
+> > 
+> > Or single ioctl and read a bunch of json (LOL)
+> > 
+> > I wish the BLK* ioctls had kept pace with the spread of queue limits.
 > 
-> Initially I kept the name as ZERO_FSB_PAGE as it is used to do sub-block
-> zeroing. But I know John from Oracle is already working on using it for
-> rt extent zeroing. So I will just go with ZERO_PAGE_IO_MAX for now.
-> Understood about the SZ_64K part. Thanks for the clarification.
+> Let me propose a new BLKLIMITS ioctl, and then we'll work from there?
 
-IOMAP_ZERO_PAGE_SIZE ?
+Ok!
 
-(I kind regret not going for just adding zero page as originally
-suggested, but then we'd keep arguing about the nr_vecs sizing and
-naming :))
+--D
