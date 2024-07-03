@@ -1,42 +1,30 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE08F381D9
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 04:55:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60F29381D9
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 04:58:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719982559; cv=none; b=dV4TAWSdhWidlNqJsJwMk3d+jb0QI8Qr3AsVztBtIq6d3m1JMCVu3dLZdjQL798+h5NIR7UOpfngTiteX6ihop7k3B8mSHLbKYElyYOTlxokyyQr/mb/mv14Ht4/RWL4Htxdm1EYBDeL7ZAawajHqgtEN9Qncl9ar9ZBzNfEDXI=
+	t=1719982698; cv=none; b=EmCwJHr1BoyTkRKXXdHsIIQvdLLDhGGoN5qQWEKGQX5XK5whyHDketdZrjTWkPdVYT/fwQznGE6fqAytH8EWtwF3NIVto55fvit2GivynyrO4PkDQzMCJAIvYQbDkNIiwQ/GWYzGxXr2DXS/PF18x05iyJtlnDIDZSq+LPhOPQo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719982559; c=relaxed/simple;
-	bh=WaSbek0vJTTKDuf45DkPzagNeZCg8G6+pdL0Hps4XeI=;
+	s=arc-20240116; t=1719982698; c=relaxed/simple;
+	bh=e/gTV0Wam79UmCx1DIpW5twN2dIA+34/FKLvZ7y713E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EwrdN8u9jvh5hXGbqJ2wXaOH2r2usGq7fdDqKzy6ABqxm7EpU+xauM1MB428KOAKwfzpjUU8Ml8BGS48EhCykm7W/iXmAVY/E2HJPLwToqBQLf2tYTl9g9ndyaRnjNPM3byYer2gkhqpiVx5a8CJrOecZY2Ov8D/mJ2ldeGbcn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HqwCn237; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HqwCn237"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DA45C32781;
-	Wed,  3 Jul 2024 04:55:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719982559;
-	bh=WaSbek0vJTTKDuf45DkPzagNeZCg8G6+pdL0Hps4XeI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HqwCn237jDGJLhhVCEX8hy0iOOl+fvEmbUUdWPTMeID9DnXi+ibgFh9Cu0T7J0NMx
-	 baffze2EB54++SdB5vL0vfUvb/EAXzztFxb1xRmNYNrhzoHPOGASHLdjaTIavRdW5i
-	 7ehdukmLmcNTkmRMclkl+5KHd7XUpCwFoZX4+a/KaJrsVysUTTXSyDducsXW9dPCWK
-	 OZnfkssANhNKj3zMSI7cShkADT8vF1Dvya9OFQ1B4Ggs67N95CImBkc2hBvk0IPoZE
-	 wgEoKilFYVv5PvSt9XhyfRajt3vOwt6qrTuMx/OmPU1o5NhovBoYFfK8IWhlkq/bp2
-	 jeEmawHSGf1bw==
-Date: Tue, 2 Jul 2024 21:55:59 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] libfrog: hoist free space histogram code
-Message-ID: <20240703045559.GA612460@frogsfrogsfrogs>
-References: <171988118569.2007921.18066484659815583228.stgit@frogsfrogsfrogs>
- <171988118595.2007921.8810266640574883670.stgit@frogsfrogsfrogs>
- <20240702053238.GH22804@lst.de>
- <20240703024738.GU612460@frogsfrogsfrogs>
- <20240703043009.GC24160@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=MN8INAZ97ClnWMPz2v+VZTCWMjwb7xAKwKtdPxmZZY0LxNGX1DkVG8kHP359EjhEeE5fLfruri6h4sa41Pl8QX9RBGd2dlRuE+n21cblYSv704c1aLNqWBNyX///lHcjZNEmGwKQ9kgU3qQ5QxlFgWN2BjrGmr7gV7fxEpprc3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 004C768AA6; Wed,  3 Jul 2024 06:58:12 +0200 (CEST)
+Date: Wed, 3 Jul 2024 06:58:12 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] xfs_scrub: tune fstrim minlen parameter based on
+ free space histograms
+Message-ID: <20240703045812.GA24691@lst.de>
+References: <171988118569.2007921.18066484659815583228.stgit@frogsfrogsfrogs> <171988118687.2007921.1260012940783338117.stgit@frogsfrogsfrogs> <20240702053627.GN22804@lst.de> <20240703022914.GT612460@frogsfrogsfrogs> <20240703042922.GB24160@lst.de> <20240703045539.GZ612460@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,20 +33,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240703043009.GC24160@lst.de>
+In-Reply-To: <20240703045539.GZ612460@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jul 03, 2024 at 06:30:09AM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 02, 2024 at 07:47:38PM -0700, Darrick J. Wong wrote:
-> > Or change "blocks" to "value" and "extents" to "observations":
+On Tue, Jul 02, 2024 at 09:55:39PM -0700, Darrick J. Wong wrote:
+> > Good question.  As far as I can tell there is no simply ioctl for it.
+> > I really wonder if we need an extensible block topology ioctl that we
+> > can keep adding files for new queue limits, to make it easy to query
+> > them from userspace without all that sysfs mess..
 > 
-> > The first option is a bit lazy since there's nothing really diskspace
-> > specific about the histogram other than the printf labels; and the
-> > second option is more generic but maybe we should let the first
-> > non-space histogram user figure out how to do that?
+> Yeah.  Or implement FS_IOC_GETSYSFSPATH for block devices? :P
+
+I know people like to fetishize file access (and to be honest from a
+shell it is really nice), but from a C program would you rather do
+one ioctl to find a sysfs base path, then do string manipulation to
+find the actual attribute, then open + read + close it, or do a single
+ioctl and read a bunch of values from a struct?
+
+> > > That's going to take a day or so, I suspect. :/
+> > 
+> > No rush, just noticed it.  Note that for the discard granularity
+> > we should also look at the alignment and not just the size.
 > 
-> Actually the second sounds easy enough even if we never end up using
-> it for anything but space tracking.
+> <nod> AFAICT the xfs discard code doesn't check the alignment.  Maybe
+> the block layer does, but ..
 
-Ok, will do that tomorrow.
+The block layer checks the alignment and silently skips anything not
+matching it.  So not adhering it isn't an error, it might just cause
+pointless work.
 
---D
