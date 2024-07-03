@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 136AF1822F8
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 21:47:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06BEC194138
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jul 2024 21:48:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720043278; cv=none; b=jNU/CjrWT3vWymaq3QDGCwXmTD3vylN63SdHKztCMV3Hppsy7a9dksPQe4gpd9bjHx10mAJ8oAK3hmbiZ/JrCrRTD2VmS//uFqrO58pFsdGp/RYfBg9rMUf6D1jI/NgJMtPfnWfMGNTMhuarQoRdpwn6jP6caq7+k1LlvY/5WzM=
+	t=1720043294; cv=none; b=pJ4dJruDSK6o2iMEQOpfS7ZgmPULQsUJdAgNrdfKT+dV6Y9RuGD6c138SVLyDqYZkQ7zHZ78l+N79a/rYKE3ukHN31nnh7Siq1b0KZg08SrLMtBYnQKNCrY2PLYho3jB3tWPCCHxkGhdBpkAMdc2lnTnmEfFxtXtqcXngesiITU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720043278; c=relaxed/simple;
-	bh=I2dop7/ryR51VbZf6FCb11xJ9P8cVtzGQcpPxT2H3FE=;
+	s=arc-20240116; t=1720043294; c=relaxed/simple;
+	bh=aTMDkRgYaVo9ArqPd454SvW7rAU3hz520D7Vrg4eJJM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=p9ceQjjL9fcvYaY/W/bkZVrS1mZdMlF5DRKIIHVgQG2zTa5+Wki/T+Fej7xg7qSSIJOSeabHszM82JrKsmqiCwzdizfHLH2f+lZl/CxZcoc3rZGD2LjzxSRodRO/0Mo7B5RrTsOtz+MQgS+HqvjzLl99N1yKhowCW4GfwEyfm8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N0/cjP0Z; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MYS5tpDj4mAQD5F+w00ohvrz1aiJvjywXH5px+1Pb+X/D1aF4PXbwMbQZXaVzSJmIWUZBTjylCrnhpBColGDbiTi6c6eXLRXC3VI4oze9pDbRLF6Ko3do26etXJalsHwRG8+9tHBUZpf7muwmPziG99yARg6bs41n0QtoPRd8RM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ChmPnHSB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N0/cjP0Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEB01C2BD10;
-	Wed,  3 Jul 2024 21:47:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ChmPnHSB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F59FC4AF0F;
+	Wed,  3 Jul 2024 21:48:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720043277;
-	bh=I2dop7/ryR51VbZf6FCb11xJ9P8cVtzGQcpPxT2H3FE=;
+	s=k20201202; t=1720043293;
+	bh=aTMDkRgYaVo9ArqPd454SvW7rAU3hz520D7Vrg4eJJM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=N0/cjP0ZH9E0Z9VEuM2KZDr284NNKcHgy17fiy2ipfeAif3Uc80B5OmqkJO3FijrX
-	 sHXrkfPDtmjiaDZ2ZkUc7zXK2uMV+24PGZ3R1dmi2mnBn4fiZn4HMr1E98Wobhk5LY
-	 V1Gz32jCwb2LksoM/PhAS6Sn6VMiV9vmMN/Q8bV23lfS9E9UTdEH7u3qGlgdUt1sx1
-	 uGoWDIBKQhmRgqT2uvL+h+01qHuANSn23qg5ElBSu2nhfhlFtAVrxnUE1s7mqZC7gV
-	 p38f1wVARSRTI9D++ixkn0cgDfbZQNUHJZT6QBb+IM7uOugVXvfhItZo1HbJf7nEr9
-	 1WqEFRfDljZPw==
-Date: Wed, 03 Jul 2024 14:47:57 -0700
-Subject: [PATCH 4/7] xfs_scrub: don't close stdout when closing the progress
- bar
+	b=ChmPnHSBMN0GcVISLaYirr8OI8szDcZ3u6e13SA1Fbgg4ShyH9Y0hA7L1FnCPe6mA
+	 mvpdRaICnf01k+3SoQmZlKWRE9jsTJsXtTwgFhict6LtUfFy/l0GJQ3NsHMtJMAGYa
+	 OhIu/FIiO1P3isCkmOjq7gpD3DDBMQOTdPzE7j7RdpS1Tx8wvNJdm1mnkMkFd2Js8K
+	 2NColufPIzkSI71F07qc9tzUUQJ/MgY2XQlYP1cYHlpPI4uVL6iCe1OPM5e6Dm/idd
+	 vqt9N0hbfBqsWQ24DPJvT/74037Z2PbRlG91K0TweoHSC4RCHovjXM8U9yzI24+XFW
+	 aDb6HG86NjsbA==
+Date: Wed, 03 Jul 2024 14:48:13 -0700
+Subject: [PATCH 5/7] xfs_scrub: remove pointless spacemap.c arguments
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172004320065.3392477.4411028502281535259.stgit@frogsfrogsfrogs>
+Message-ID: <172004320078.3392477.5123786167352450693.stgit@frogsfrogsfrogs>
 In-Reply-To: <172004320006.3392477.3715065852637381644.stgit@frogsfrogsfrogs>
 References: <172004320006.3392477.3715065852637381644.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,27 +46,63 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're tearing down the progress bar file stream, check that it's
-not an alias of stdout before closing it.
+Remove unused parameters from the full-device spacemap scan functions.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/xfs_scrub.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ scrub/spacemap.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index edf58d07bde2..adf9d13e5090 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -878,7 +878,7 @@ main(
- 	if (ctx.runtime_errors)
- 		ret |= SCRUB_RET_OPERROR;
- 	phase_end(&all_pi, 0);
--	if (progress_fp)
-+	if (progress_fp && fileno(progress_fp) != 1)
- 		fclose(progress_fp);
- out_unicrash:
- 	unicrash_unload();
+diff --git a/scrub/spacemap.c b/scrub/spacemap.c
+index 9cefe074c6f6..e35756db2eed 100644
+--- a/scrub/spacemap.c
++++ b/scrub/spacemap.c
+@@ -132,7 +132,6 @@ scan_ag_rmaps(
+ static void
+ scan_dev_rmaps(
+ 	struct scrub_ctx	*ctx,
+-	int			idx,
+ 	dev_t			dev,
+ 	struct scan_blocks	*sbx)
+ {
+@@ -170,7 +169,7 @@ scan_rt_rmaps(
+ {
+ 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 
+-	scan_dev_rmaps(ctx, agno, ctx->fsinfo.fs_rtdev, arg);
++	scan_dev_rmaps(ctx, ctx->fsinfo.fs_rtdev, arg);
+ }
+ 
+ /* Iterate all the reverse mappings of the log device. */
+@@ -182,7 +181,7 @@ scan_log_rmaps(
+ {
+ 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 
+-	scan_dev_rmaps(ctx, agno, ctx->fsinfo.fs_logdev, arg);
++	scan_dev_rmaps(ctx, ctx->fsinfo.fs_logdev, arg);
+ }
+ 
+ /*
+@@ -210,8 +209,7 @@ scrub_scan_all_spacemaps(
+ 		return ret;
+ 	}
+ 	if (ctx->fsinfo.fs_rt) {
+-		ret = -workqueue_add(&wq, scan_rt_rmaps,
+-				ctx->mnt.fsgeom.agcount + 1, &sbx);
++		ret = -workqueue_add(&wq, scan_rt_rmaps, 0, &sbx);
+ 		if (ret) {
+ 			sbx.aborted = true;
+ 			str_liberror(ctx, ret, _("queueing rtdev fsmap work"));
+@@ -219,8 +217,7 @@ scrub_scan_all_spacemaps(
+ 		}
+ 	}
+ 	if (ctx->fsinfo.fs_log) {
+-		ret = -workqueue_add(&wq, scan_log_rmaps,
+-				ctx->mnt.fsgeom.agcount + 2, &sbx);
++		ret = -workqueue_add(&wq, scan_log_rmaps, 0, &sbx);
+ 		if (ret) {
+ 			sbx.aborted = true;
+ 			str_liberror(ctx, ret, _("queueing logdev fsmap work"));
 
