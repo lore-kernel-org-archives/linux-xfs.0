@@ -1,78 +1,77 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFF4213C3D3
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jul 2024 22:06:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FD7F13E8A5
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jul 2024 22:13:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720130817; cv=none; b=rVSeMJ9Pdx+XbsoiZfHTgyaZdZ2yrOEGZZrYYTJMQsESnt32SE/a9TmaTuT6gMMc57jZuD2nU01Vi9+8hg6fBPZSIY5Qi6aGRSjY0Jx6wzAW5Kvq7Dq127Vrkxq8KbVEhEvXQ2O4q1GzJMKwFGcM9iPJihURt1R8dKYFjEir6jw=
+	t=1720131216; cv=none; b=c9iiZsxDu5/vilQuwIvaDKL/ImoosUJJLJ9KPaxLXqlUHjHP3MXEU3hg5cM3Zb9dXgywnfs6Hc7QUkrSy0GoLRxIsMcbAEEn9+0eTBoa5Sok429a/z0f/aJEoAUCxteQ/XFilGvG2JpnksRMyppHUl9SFB2GDE99jBl39aHRVwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720130817; c=relaxed/simple;
-	bh=mZWYBHWu0K1vkg+3iBgLKc9nAwYn0+EgBHt5aroVdT8=;
+	s=arc-20240116; t=1720131216; c=relaxed/simple;
+	bh=kDaqPnBFIvUQeR2+H9HpTQwmPMC9L+ing0oAJYJfI4Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IyGnYt8Uaq/Ae3tXo4i+Xz86InnvwPJ+UW1OLcYFGNPyWwl6IpbIenVm+Y4B6JpGFrbyFrN3Uqkaog7wiQFs37SRWhY4bWxGJeyvs1KwdaJfnpCZww5oPJJ5RE7+LqJP2N7vEIIDe+lcXFn0MmrtnS0PtfIg1MQyvq2mx1ROUlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=DVwxZxWd; arc=none smtp.client-ip=209.85.215.172
+	 Content-Type:Content-Disposition:In-Reply-To; b=V+Ds7v2JMGEfLGv57cekPJMjqvlA43j3CYtkzslvHc+Ehju6jUIXbxAxevqsSczel76au78xTM0Ftmjz3rC1CBM4POdUpTQ9LpC4z5IlTWEJNJEysnlYSLXHCbje1A5s2CRBx1SgsxsUnSZHHMk4i70/UeVHP+JSqHmEabNZebQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=UwrLnUIL; arc=none smtp.client-ip=209.85.216.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="DVwxZxWd"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-72ed1fbc5d9so667131a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 04 Jul 2024 15:06:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="UwrLnUIL"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-2c95ca60719so732514a91.3
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Jul 2024 15:13:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720130815; x=1720735615; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720131213; x=1720736013; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=dFaYOWLt8is5D9As9aNtsr+qR/ekBHXt5qOy8aEh680=;
-        b=DVwxZxWdkRmvk5lNv4/blNvEJNSj0PPptPDtvEqTiB2yr4Xh2lyDcreo7X2z7E5vZS
-         R3+dzHfdFb8/1XrmXxdx+iLqK4K8pE0QdhUK1BEFAXBi2H9jiSVgxhUfrkMzKU9XaY/d
-         OboHG6fL2cPaHzPF+Hta5NZDhY8xHlcraXreiAfFBc0h4rgxbJyCPcHpwuxxg76A5RWj
-         BMqUQfRsa/zOFIrfnmTefZyqV+ez9xdK/P9g0KSREjVS/A8Zph2It6XtFghthbiOW1lt
-         lvkrhdhBIAnXjjhzgc5SJm+m8jaT68kjeKwkIYTaj2G/Sq+GoHsDlJr8TUV++JrZDRi6
-         cnlA==
+        bh=Nt1pnpCk1KfQaN+YgEj1HaWaKfx+85yAEH2SJic0Se0=;
+        b=UwrLnUILWTManJmFRIKAt5HaKxruH9Zo4trDinb5SwCuo6LoprkghwqeMhb/n7wKxz
+         IyoPBeM2i3+oF74fSeItorHYKxpXgLNRrGH3u0UwJQfXKWB7gd1LSQ41qcOZQsm1ARng
+         bdu0dxgQK2NMvmDXvyV+rQEhFvc4WQktO/Yqlr8xpG8FeCdT12DJS4mJaiqkMC+XElR4
+         xizdzXf3zFisMQwRKFsqDzaekcCopvbHXjav1+UU9fNWEeznqHenMgUjsNj4nxwkH0tW
+         FdUmNTAoIQakMBGVTjryI++Xw/P5J3wsCTduwA30tWom+D44bMWyN5oEmTiaw0pdWIee
+         5PQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720130815; x=1720735615;
+        d=1e100.net; s=20230601; t=1720131213; x=1720736013;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=dFaYOWLt8is5D9As9aNtsr+qR/ekBHXt5qOy8aEh680=;
-        b=cc9TH5Pcdna2hWpsM05aNfxxKWTgxKOV8ppnuhyKWdzP+mq3X7M/e9ZGvQJvtSt7QC
-         T7kpTYI1j1Nzu5W4N1wXW2j/ecRhh43OjIVV5c85wmaYY7WugL/9WzQcjBpiwzqqxJkx
-         Vo9zU3o83rZVIPHLB1hpTPccMMogRCRPDriKJ/iDsKJqeH4FAy3XLH/j9D1Mm1vwIz78
-         AZ7SVPIp+yRJYUQIsiQwJ0F+dSiBdzZ+rAFMJC1fRW8fbnVodJ/ZZshfDpjArhnI6eQA
-         a15XwYKZTRdbWzDf48PwY1lgU9L/3vEdrtevpa5mHiNqSv0YF7xjTcSORYmCSaS8jjon
-         /bvg==
-X-Forwarded-Encrypted: i=1; AJvYcCVLu2qm9aFjMNPaB/f3PZVpRxvA4N72lx7kywnPbV/+BSIh+e987EGVxDat442wSfg8hIHK4xYJPsrsXEHpY9ZZtp3KeJIxapaD
-X-Gm-Message-State: AOJu0YyrcKyCbrqnEloPX2lkZAqzK2Zli+SpHpxex/YM1k+qKWBmeOiR
-	vGSapNbCeYPiU17n4t7PMA6STN8mcTrZs6XaB64WAj3ZZb7gGkEs1y89EL4v4X0=
-X-Google-Smtp-Source: AGHT+IEOXSukNyvdE753A9kN0wqOEG5BGZAWJFOPOuA3R3Nb5xT1OF4tfyv4M/ulUNm/JE9XRrkSIA==
-X-Received: by 2002:a05:6a20:842a:b0:1bd:feed:c031 with SMTP id adf61e73a8af0-1c0cc88ee9fmr3464693637.28.1720130814939;
-        Thu, 04 Jul 2024 15:06:54 -0700 (PDT)
+        bh=Nt1pnpCk1KfQaN+YgEj1HaWaKfx+85yAEH2SJic0Se0=;
+        b=us/WlU/9WRp9C5Fh1N89sVirXgGSydcK1x3ta3tjQwyZODFTk4oMeoXp2xoebBSNlY
+         Ji88oRQIDboz3S7VGgAPy6KZEOvjhg/pH6LvL4GiSjpCxxWcSnApIXSUgoJYwA0uXjfN
+         RLrIaiw4eIm/7Byml8dxFNnl4VYRTLeD9bN471DfybPciqdxZ7uHtEbAN2T3TL+XfvWu
+         aGPcpnRIZQZeCFqa04OH6ky1ObWQtCgrYf3gD3+2BeNC9FFqb2jQueu89G9Iq5S9JEUp
+         pQN6dUD2w7n74ZmKK1m7InDCKDthZQahRF32Pvv5a5a7JcBr//8yCDRv9ZgBwS2nMHoy
+         L98w==
+X-Forwarded-Encrypted: i=1; AJvYcCWZCqgxZ870HPK+hJVcSidksCHmezUIsHLP/FnbmRdpe4nZ3n4x1/ZFB65kDOlvF0rhV65Af22HoJIVfW5yjr5W0KEObpPAY24T
+X-Gm-Message-State: AOJu0Yzcxp2vTS1XQ7GRkQK1m8thSMES7NI+1iH1CCthsq46ioiFYhwx
+	gcl6B6wcdc83fFC9rFMIEQwrnij2YkbWad7MtjiqiGUBuiDSicHK1r+5Jq79l0s=
+X-Google-Smtp-Source: AGHT+IGqzAnayF06dHh/ly76CeJIvdvLTHzY9adBh22u0N8/+/Xrrmia4PfBDw7CTW+ANd7wUSoKiw==
+X-Received: by 2002:a17:90a:348b:b0:2c8:a8f:c97 with SMTP id 98e67ed59e1d1-2c99c80b2aemr2034402a91.37.1720131213291;
+        Thu, 04 Jul 2024 15:13:33 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72c6c9e1634sm10211352a12.58.2024.07.04.15.06.54
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c99a95624dsm2040861a91.20.2024.07.04.15.13.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jul 2024 15:06:54 -0700 (PDT)
+        Thu, 04 Jul 2024 15:13:32 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sPUbL-004J02-0V;
-	Fri, 05 Jul 2024 08:06:51 +1000
-Date: Fri, 5 Jul 2024 08:06:51 +1000
+	id 1sPUhm-004JHs-1V;
+	Fri, 05 Jul 2024 08:13:30 +1000
+Date: Fri, 5 Jul 2024 08:13:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Ryan Roberts <ryan.roberts@arm.com>,
-	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
-	chandan.babu@oracle.com, djwong@kernel.org, brauner@kernel.org,
-	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	yang@os.amperecomputing.com, linux-mm@kvack.org,
-	john.g.garry@oracle.com, linux-fsdevel@vger.kernel.org,
-	hare@suse.de, p.raghav@samsung.com, mcgrof@kernel.org,
-	gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
-Subject: Re: [PATCH v8 01/10] fs: Allow fine-grained control of folio sizes
-Message-ID: <Zocc+6nIQzfUTPpd@dread.disaster.area>
-References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-2-kernel@pankajraghav.com>
- <cb644a36-67a7-4692-b002-413e70ac864a@arm.com>
- <Zoa9rQbEUam467-q@casper.infradead.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+	willy@infradead.org, chandan.babu@oracle.com, djwong@kernel.org,
+	brauner@kernel.org, akpm@linux-foundation.org,
+	yang@os.amperecomputing.com, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, john.g.garry@oracle.com,
+	linux-fsdevel@vger.kernel.org, p.raghav@samsung.com,
+	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
+	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH v9 06/10] iomap: fix iomap_dio_zero() for fs bs > system
+ page size
+Message-ID: <ZoceivBuLIcylaxk@dread.disaster.area>
+References: <20240704112320.82104-1-kernel@pankajraghav.com>
+ <20240704112320.82104-7-kernel@pankajraghav.com>
+ <2c09ebbd-1704-46e3-a453-b4cd07940325@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,72 +80,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zoa9rQbEUam467-q@casper.infradead.org>
+In-Reply-To: <2c09ebbd-1704-46e3-a453-b4cd07940325@suse.de>
 
-On Thu, Jul 04, 2024 at 04:20:13PM +0100, Matthew Wilcox wrote:
-> On Thu, Jul 04, 2024 at 01:23:20PM +0100, Ryan Roberts wrote:
-> > > -	AS_LARGE_FOLIO_SUPPORT = 6,
+On Thu, Jul 04, 2024 at 05:37:32PM +0200, Hannes Reinecke wrote:
+> On 7/4/24 13:23, Pankaj Raghav (Samsung) wrote:
+> > From: Pankaj Raghav <p.raghav@samsung.com>
 > > 
-> > nit: this removed enum is still referenced in a comment further down the file.
-> 
-> Thanks.  Pankaj, let me know if you want me to send you a patch or if
-> you'll do it directly.
-> 
-> > > +	/* Bits 16-25 are used for FOLIO_ORDER */
-> > > +	AS_FOLIO_ORDER_BITS = 5,
-> > > +	AS_FOLIO_ORDER_MIN = 16,
-> > > +	AS_FOLIO_ORDER_MAX = AS_FOLIO_ORDER_MIN + AS_FOLIO_ORDER_BITS,
+> > iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+> > < fs block size. iomap_dio_zero() has an implicit assumption that fs block
+> > size < page_size. This is true for most filesystems at the moment.
 > > 
-> > nit: These 3 new enums seem a bit odd.
-> 
-> Yes, this is "too many helpful suggestions" syndrome.  It made a lot
-> more sense originally.
-> 
-> https://lore.kernel.org/linux-fsdevel/ZlUQcEaP3FDXpCge@dread.disaster.area/
-> 
-> > > +static inline void mapping_set_folio_order_range(struct address_space *mapping,
-> > > +						 unsigned int min,
-> > > +						 unsigned int max)
-> > > +{
-> > > +	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-> > > +		return;
-> > > +
-> > > +	if (min > MAX_PAGECACHE_ORDER)
-> > > +		min = MAX_PAGECACHE_ORDER;
-> > > +	if (max > MAX_PAGECACHE_ORDER)
-> > > +		max = MAX_PAGECACHE_ORDER;
-> > > +	if (max < min)
-> > > +		max = min;
+> > If the block size > page size, this will send the contents of the page
+> > next to zero page(as len > PAGE_SIZE) to the underlying block device,
+> > causing FS corruption.
 > > 
-> > It seems strange to silently clamp these? Presumably for the bs>ps usecase,
-> > whatever values are passed in are a hard requirement? So wouldn't want them to
-> > be silently reduced. (Especially given the recent change to reduce the size of
-> > MAX_PAGECACHE_ORDER to less then PMD size in some cases).
+> > iomap is a generic infrastructure and it should not make any assumptions
+> > about the fs block size and the page size of the system.
+> > 
+> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> > ---
+> >   fs/iomap/buffered-io.c |  4 ++--
+> >   fs/iomap/direct-io.c   | 45 ++++++++++++++++++++++++++++++++++++------
+> >   2 files changed, 41 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index f420c53d86acc..d745f718bcde8 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -2007,10 +2007,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+> >   }
+> >   EXPORT_SYMBOL_GPL(iomap_writepages);
+> > -static int __init iomap_init(void)
+> > +static int __init iomap_buffered_init(void)
+> >   {
+> >   	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+> >   			   offsetof(struct iomap_ioend, io_bio),
+> >   			   BIOSET_NEED_BVECS);
+> >   }
+> > -fs_initcall(iomap_init);
+> > +fs_initcall(iomap_buffered_init);
+> > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> > index f3b43d223a46e..c02b266bba525 100644
+> > --- a/fs/iomap/direct-io.c
+> > +++ b/fs/iomap/direct-io.c
+> > @@ -11,6 +11,7 @@
+> >   #include <linux/iomap.h>
+> >   #include <linux/backing-dev.h>
+> >   #include <linux/uio.h>
+> > +#include <linux/set_memory.h>
+> >   #include <linux/task_io_accounting_ops.h>
+> >   #include "trace.h"
+> > @@ -27,6 +28,13 @@
+> >   #define IOMAP_DIO_WRITE		(1U << 30)
+> >   #define IOMAP_DIO_DIRTY		(1U << 31)
+> > +/*
+> > + * Used for sub block zeroing in iomap_dio_zero()
+> > + */
+> > +#define IOMAP_ZERO_PAGE_SIZE (SZ_64K)
+> > +#define IOMAP_ZERO_PAGE_ORDER (get_order(IOMAP_ZERO_PAGE_SIZE))
+> > +static struct page *zero_page;
+> > +
 > 
-> Hm, yes.  We should probably make this return an errno.  Including
-> returning an errno for !IS_ENABLED() and min > 0.
+> There are other users of ZERO_PAGE, most notably in fs/direct-io.c and
+> block/blk-lib.c. Any chance to make this available to them?
 
-What are callers supposed to do with an error? In the case of
-setting up a newly allocated inode in XFS, the error would be
-returned in the middle of a transaction and so this failure would
-result in a filesystem shutdown.
+Please, no.
 
-Regardless, the filesystem should never be passing min >
-MAX_PAGECACHE_ORDER any time soon for bs > ps configurations. block
-sizes go up to 64kB, which is a lot smaller than
-MAX_PAGECACHE_ORDER.  IOWs, seeing min > MAX_PAGECACHE_ORDER is
-indicative of a severe bug, should be considered a fatal developer
-mistake and the kernel terminated immediately. Such mistakes should
--never, ever- happen on productions systems. IOWs, this is a
-situation where we should assert or bug and kill the kernel
-immediately, or at minimum warn-on-once() and truncate the value and
-hope things don't get immediately worse.
-
-If we kill the kernel because min is out of range, the system will
-fail on the first inode instantiation on that filesystem.
-Filesystem developers should notice that sort of failure pretty
-quickly and realise they've done something that isn't currently
-supported...
+We need to stop feature creeping this patchset and bring it to a
+close. If changing code entirely unrelated to this patchset is
+desired, please do it as a separate independent set of patches.
 
 -Dave.
 -- 
