@@ -1,35 +1,35 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63ABB1AE0AB;
-	Thu,  4 Jul 2024 14:29:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8A131B0122;
+	Thu,  4 Jul 2024 15:20:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720103401; cv=none; b=T9YjfrTBEquS5MWTQlu1wUh7USduLV6dHJX0TNS1+HjgykJNFMPoOJg5O0gtcLbGCqAxQL6BDjmArJ13PdtsccRZ2Cb8AqT4qFRzXrdPiBqtgQUagqMBMysOa8Mwq+A+QG3c7tL5Sg93zYXn2Effg+LKEpJjnCCZOZ0/LfQBods=
+	t=1720106438; cv=none; b=R14qL7qQIZiICA92+s380FKaw1o4ppwrLoqGB/8NrTmyggEIR91E3PM74ZtlAmztCNVG4Kd1ZfHYQVy2mbvQ49KhULYcNzr8Tgs8dhwL8DoWC+heV0+GcDyESiMfzI2zeYLzDgoqD7QG3WNXbR3Kni84FVllTTOEmBlRvnicv+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720103401; c=relaxed/simple;
-	bh=eSy8SYdM2M3cyMC6FwpAcsaHVc53RoA/LXllcgBPfIY=;
+	s=arc-20240116; t=1720106438; c=relaxed/simple;
+	bh=uLrqDxpb+tvF7mkqkCnn0LFKeFwLUAS1XvCZnPc3+hk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TtaWYQ+6teJ3fwCaLoUICmfhyZQ9+EdviKDmMeSEVC3i0y/R9Sv8WynnEv27rcdRXC2acKPhgl99pKOJ+k6NigWY+xCWvw77GYNd+L7x+DKZg5q5zFvXfOdJ62eQoHfsXXb3rvcuubgSGcOE9d6w2A2e4r5EC0O/6UqFDT7DR/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vm8Ngrou; arc=none smtp.client-ip=90.155.50.34
+	 Content-Type:Content-Disposition:In-Reply-To; b=nDYplMEcYZz0COENriFvP7U3AaVURNeaYDwp4gSlM7PeVIHFvPC+YPhwPH1q7g96l9jO0lH9a2VA90gyzWiCvwsCOhMa0vY3JQbe1UnAfgHUVSL1ERY2coI3/C2outVWdSupjwUoJwzmIUM6KXPt/g5UkcfPc+qEvD9TgZr4M/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hUt/QK6Q; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vm8Ngrou"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hUt/QK6Q"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
 	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Enu1N6gk1voQoov0gxRGHrtuHCfIvfGXa28Px1K5WpM=; b=vm8Ngrou02qz4Ib5mffZwNGQZl
-	IyaFQ3g17dLdwT8o+mc8kq8K1iuGCFU6/DwMXKkWeDCu+ln7bMJyl/jMqN6i1dynQImA/pHHP4pvY
-	2Ktm0BxsEy5JnNZGDr7GViK1/fQrzlJzPW5+ildcGB1eGQKdtvUd4Ga1R635z9bSN9RlbUIE6njyq
-	KSoyUFoDFIobHWvVBF1jV1SgwqI2ys7PU8eNZbofKaLcAt0kx3PfCXT+eXVyDcBImMt1IHXGRcP+K
-	lYYl5L6DjuSSj7LtgWvc2YAonwrhpJRSseSgkJ+jNHELCIY2TsAIP5L99YQX66FYVBsUB8O2TKGhQ
-	+9vF92DQ==;
+	bh=T1W+cwrYdEZzgH6Ohx8queoWljwDE94ghf7And0NMPQ=; b=hUt/QK6QIkaT0GDYXczMay3Z5A
+	pmDxONmeAqHPE6Ljy1yY/Vm91+/doA5NrrDK0Qwhwytnxn7Ylg0sFitz55Gm0ZLgPkMCwAvCfjr6n
+	3a1HI8Dn9MsAoLjYVdcTyGWA2WIn8fmctH4PCnIbpZ3hX41eDAdm8bUziFfCU6z7OCmo3Mn1mzZaI
+	vnSZj65ciww3h03aGnLAS30sfEl1Bm5eCEC/HSZZ6Hy3FFxu/3HcekPS0lfRLoUwNGfuYjqu26tCL
+	/myW50CvKTFe+tNi0TCOWfObPVA4DuLa2NhuatSohg5GHb39arRD1HzbIvryZZcBQOMCd3LMo4T5u
+	1Gt5maMg==;
 Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sPNSZ-00000002vlv-41mX;
-	Thu, 04 Jul 2024 14:29:20 +0000
-Date: Thu, 4 Jul 2024 15:29:19 +0100
+	id 1sPOFp-00000002yac-1247;
+	Thu, 04 Jul 2024 15:20:13 +0000
+Date: Thu, 4 Jul 2024 16:20:13 +0100
 From: Matthew Wilcox <willy@infradead.org>
 To: Ryan Roberts <ryan.roberts@arm.com>
 Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
@@ -40,12 +40,11 @@ Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
 	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
 	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
 	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
-Subject: Re: [PATCH v8 03/10] readahead: allocate folios with
- mapping_min_order in readahead
-Message-ID: <Zoaxv23qdu4T84Sm@casper.infradead.org>
+Subject: Re: [PATCH v8 01/10] fs: Allow fine-grained control of folio sizes
+Message-ID: <Zoa9rQbEUam467-q@casper.infradead.org>
 References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-4-kernel@pankajraghav.com>
- <98790338-0f86-4658-8dec-95e94b6d5c18@arm.com>
+ <20240625114420.719014-2-kernel@pankajraghav.com>
+ <cb644a36-67a7-4692-b002-413e70ac864a@arm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,16 +53,60 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <98790338-0f86-4658-8dec-95e94b6d5c18@arm.com>
+In-Reply-To: <cb644a36-67a7-4692-b002-413e70ac864a@arm.com>
 
-On Thu, Jul 04, 2024 at 03:24:10PM +0100, Ryan Roberts wrote:
-> > @@ -240,12 +257,13 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
-> >  			 * not worth getting one just for that.
-> >  			 */
+On Thu, Jul 04, 2024 at 01:23:20PM +0100, Ryan Roberts wrote:
+> > -	AS_LARGE_FOLIO_SUPPORT = 6,
 > 
-> For the case that the folio is already in the xarray, perhaps its worth
-> asserting that the folio is at least min_nrpages?
+> nit: this removed enum is still referenced in a comment further down the file.
 
-We'd have to get a reference on the folio to be able to do that safely.
-Not worth it.
+Thanks.  Pankaj, let me know if you want me to send you a patch or if
+you'll do it directly.
 
+> > +	/* Bits 16-25 are used for FOLIO_ORDER */
+> > +	AS_FOLIO_ORDER_BITS = 5,
+> > +	AS_FOLIO_ORDER_MIN = 16,
+> > +	AS_FOLIO_ORDER_MAX = AS_FOLIO_ORDER_MIN + AS_FOLIO_ORDER_BITS,
+> 
+> nit: These 3 new enums seem a bit odd.
+
+Yes, this is "too many helpful suggestions" syndrome.  It made a lot
+more sense originally.
+
+https://lore.kernel.org/linux-fsdevel/ZlUQcEaP3FDXpCge@dread.disaster.area/
+
+> > +static inline void mapping_set_folio_order_range(struct address_space *mapping,
+> > +						 unsigned int min,
+> > +						 unsigned int max)
+> > +{
+> > +	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
+> > +		return;
+> > +
+> > +	if (min > MAX_PAGECACHE_ORDER)
+> > +		min = MAX_PAGECACHE_ORDER;
+> > +	if (max > MAX_PAGECACHE_ORDER)
+> > +		max = MAX_PAGECACHE_ORDER;
+> > +	if (max < min)
+> > +		max = min;
+> 
+> It seems strange to silently clamp these? Presumably for the bs>ps usecase,
+> whatever values are passed in are a hard requirement? So wouldn't want them to
+> be silently reduced. (Especially given the recent change to reduce the size of
+> MAX_PAGECACHE_ORDER to less then PMD size in some cases).
+
+Hm, yes.  We should probably make this return an errno.  Including
+returning an errno for !IS_ENABLED() and min > 0.
+
+> > -	if (new_order < MAX_PAGECACHE_ORDER) {
+> > +	if (new_order < mapping_max_folio_order(mapping)) {
+> >  		new_order += 2;
+> > -		new_order = min_t(unsigned int, MAX_PAGECACHE_ORDER, new_order);
+> > +		new_order = min(mapping_max_folio_order(mapping), new_order);
+> >  		new_order = min_t(unsigned int, new_order, ilog2(ra->size));
+> 
+> I wonder if its possible that ra->size could ever be less than
+> mapping_min_folio_order()? Do you need to handle that?
+
+I think we take care of that in later patches?  This patch is mostly
+about honouring the max properly and putting in the infrastructure for
+the min, but not doing all the necessary work for min.
