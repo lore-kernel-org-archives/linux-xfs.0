@@ -1,39 +1,39 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782481AD9CA;
-	Thu,  4 Jul 2024 11:23:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 707C11AD9D9;
+	Thu,  4 Jul 2024 11:23:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720092238; cv=none; b=eVbIHm28FK1B1v9Tokvs+oZAoTJ4ZNlPGD3oZb8qiS9XxNhw+7Zu706GDY1oRvWg2fpggglztSM2xbCV8WE4lChWEGs+OFrwe+aGT+BvU0C3BuaVUeEEYvSKmRl8W7JLn8wwvY1Hug4aGhL2U9TRuWBRAzvIjEhv2Tfrbmorl9o=
+	t=1720092239; cv=none; b=LD2lKmouIqzK77yt8tIQmOi03uNSfzrtsA/kO/HNZyMCp8QxfIkII9JJSlx99X/k88R2fleG70v4j5/M0bE1JDHq3X4HoPBCG/aZEmCJJt+UQkDtSAe91i0iS+tHmMfRbkzcZmESQDqdDSTPwHdmhVA1XWBhz15T+bd0Cf3/CaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720092238; c=relaxed/simple;
-	bh=Y6wnkr9YicCwKOn6q4dbs0j5MDwg7izxrtZViWy+w08=;
+	s=arc-20240116; t=1720092239; c=relaxed/simple;
+	bh=2GhI+azvlVmJ+XNkvELFCX60TvrX+df0OCxGC4NRcjY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FukPhH9/n4NNUFLOLgaK6XPKaqx/FDvfCeNXizdboqPAV418lZBtaYlYU7DTWuFvAVqOJgYKmTq4kG8nxF+JpklojuNOXAZSR5yVwsEvWVPULxJx3mAeGG4GXwKCflsqvShgdJbyrIAMgnFk7uK9LNi4DdZsQdg4tpCJnXV7ZW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=Y9I71uW1; arc=none smtp.client-ip=80.241.56.171
+	 MIME-Version; b=CR2V1OyvnbhWZ3n4hyPG+y1FcvutXlCA6VdAYpVG0NQFHPAqmkT520ATiMQ5g3NZXTUhhSveAaumnsrWRf4izSd867gW9LNRNv3YtQI10yEboxn+CjvgoEo6xO31Op1Thsg5ezFEv3UgVWFzlvyRhMFpGdFtddSHoyguRen5ZPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=RqsX1L+R; arc=none smtp.client-ip=80.241.56.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="Y9I71uW1"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="RqsX1L+R"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4WFDmg3MR7z9tVf;
-	Thu,  4 Jul 2024 13:23:47 +0200 (CEST)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4WFDmn5pzdz9sqG;
+	Thu,  4 Jul 2024 13:23:53 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1720092227;
+	s=MBO0001; t=1720092233;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xbld/pizLMEJfrPYBqwQ81gjcSKIsZj5n7TDu8kDUY0=;
-	b=Y9I71uW1qPx88w5xzTVV6UMtblN7zGG5xvC8xb6Mz8YbcDkhM23RoZtzGBKmOssWQWqr5e
-	N6p5+KEKnZsKkXHz3za1P9qz7JBW77U+ZFe7QzIJO+J0nJ+V0mnEaDOs3CFqZYzpgmtYcm
-	E+MIyO1Go3GbYRC2VFtt+CyVFvNEE0u/TW7ll43usBLUFNcNXfQeiPY25ndN7uRo0g4jAD
-	G1//e2FtVmsyQLz0x6pcNksViZ1gK9tFOppFcYZ7sFI5rjPhYBDhK9UkBn0jay5rTelnLO
-	smWW/vns2NyOtHQs56Cts2K2VIKIPMjrJsOQ+gug2XmGzfm/7PoYv2Dv9l+DOA==
+	bh=D613TVQCptAW9VynAGuVSOK0s4oeJXQu1SypShzHmM4=;
+	b=RqsX1L+RvCdjBZycaeWBvEWTaV3SYjEP7XegGBKhcmMCtOiOSmxoMzmYYuCkvFVshaczSy
+	PQnwsecosj2dPaGVL6Y4I1/FJqCLOsarUwSnwjfB2FDVtLuAt6/Inww2x3vpbmwQhpJroF
+	vgtUaC7DfS8locLUgvYuaecnTEHrwYKREpRna5EypLLSaEXJhYFoaZcenAITFqyev+BWpd
+	J6cuoxBI7poy5xGJ21ERYEOUtKn+3O8aowAOjCKwXwJSwAeyRUj99QeDntaATsCMBe7Iwy
+	5YAOpzBaeAc6DcTyi9dXZruGWF9rCgPwsvKlPMkiAW5SBQOU9tnyCCITPgSOQA==
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: david@fromorbit.com,
 	willy@infradead.org,
@@ -54,10 +54,11 @@ Cc: yang@os.amperecomputing.com,
 	linux-xfs@vger.kernel.org,
 	kernel@pankajraghav.com,
 	hch@lst.de,
-	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH v9 05/10] filemap: cap PTE range to be created to allowed zero fill in folio_map_range()
-Date: Thu,  4 Jul 2024 11:23:15 +0000
-Message-ID: <20240704112320.82104-6-kernel@pankajraghav.com>
+	Zi Yan <ziy@nvidia.com>,
+	Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH v9 07/10] xfs: use kvmalloc for xattr buffers
+Date: Thu,  4 Jul 2024 11:23:17 +0000
+Message-ID: <20240704112320.82104-8-kernel@pankajraghav.com>
 In-Reply-To: <20240704112320.82104-1-kernel@pankajraghav.com>
 References: <20240704112320.82104-1-kernel@pankajraghav.com>
 Precedence: bulk
@@ -67,67 +68,107 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4WFDmg3MR7z9tVf
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Usually the page cache does not extend beyond the size of the inode,
-therefore, no PTEs are created for folios that extend beyond the size.
+Pankaj Raghav reported that when filesystem block size is larger
+than page size, the xattr code can use kmalloc() for high order
+allocations. This triggers a useless warning in the allocator as it
+is a __GFP_NOFAIL allocation here:
 
-But with LBS support, we might extend page cache beyond the size of the
-inode as we need to guarantee folios of minimum order. While doing a
-read, do_fault_around() can create PTEs for pages that lie beyond the
-EOF leading to incorrect error return when accessing a page beyond the
-mapped file.
+static inline
+struct page *rmqueue(struct zone *preferred_zone,
+                        struct zone *zone, unsigned int order,
+                        gfp_t gfp_flags, unsigned int alloc_flags,
+                        int migratetype)
+{
+        struct page *page;
 
-Cap the PTE range to be created for the page cache up to the end of
-file(EOF) in filemap_map_pages() so that return error codes are consistent
-with POSIX[1] for LBS configurations.
+        /*
+         * We most definitely don't want callers attempting to
+         * allocate greater than order-1 page units with __GFP_NOFAIL.
+         */
+>>>>    WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
+...
 
-generic/749(currently in xfstest-dev patches-in-queue branch [0]) has
-been created to trigger this edge case. This also fixes generic/749 for
-tmpfs with huge=always on systems with 4k base page size.
+Fix this by changing all these call sites to use kvmalloc(), which
+will strip the NOFAIL from the kmalloc attempt and if that fails
+will do a __GFP_NOFAIL vmalloc().
 
-[0] https://lore.kernel.org/all/20240615002935.1033031-3-mcgrof@kernel.org/
-[1](from mmap(2))  SIGBUS
-    Attempted access to a page of the buffer that lies beyond the end
-    of the mapped file.  For an explanation of the treatment  of  the
-    bytes  in  the  page that corresponds to the end of a mapped file
-    that is not a multiple of the page size, see NOTES.
+This is not an issue that productions systems will see as
+filesystems with block size > page size cannot be mounted by the
+kernel; Pankaj is developing this functionality right now.
 
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reported-by: Pankaj Raghav <kernel@pankajraghav.com>
+Fixes: f078d4ea8276 ("xfs: convert kmem_alloc() to kmalloc()")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- mm/filemap.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d27e9ac54309d..d322109274532 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3608,7 +3608,7 @@ vm_fault_t filemap_map_pages(struct vm_fault *vmf,
- 	struct vm_area_struct *vma = vmf->vma;
- 	struct file *file = vma->vm_file;
- 	struct address_space *mapping = file->f_mapping;
--	pgoff_t last_pgoff = start_pgoff;
-+	pgoff_t file_end, last_pgoff = start_pgoff;
- 	unsigned long addr;
- 	XA_STATE(xas, &mapping->i_pages, start_pgoff);
- 	struct folio *folio;
-@@ -3634,6 +3634,10 @@ vm_fault_t filemap_map_pages(struct vm_fault *vmf,
- 		goto out;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index b9e98950eb3d8..09f4cb061a6e0 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1138,10 +1138,7 @@ xfs_attr3_leaf_to_shortform(
+ 
+ 	trace_xfs_attr_leaf_to_sf(args);
+ 
+-	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+-	if (!tmpbuffer)
+-		return -ENOMEM;
+-
++	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+ 	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
+ 
+ 	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
+@@ -1205,7 +1202,7 @@ xfs_attr3_leaf_to_shortform(
+ 	error = 0;
+ 
+ out:
+-	kfree(tmpbuffer);
++	kvfree(tmpbuffer);
+ 	return error;
+ }
+ 
+@@ -1613,7 +1610,7 @@ xfs_attr3_leaf_compact(
+ 
+ 	trace_xfs_attr_leaf_compact(args);
+ 
+-	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
++	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+ 	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
+ 	memset(bp->b_addr, 0, args->geo->blksize);
+ 	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
+@@ -1651,7 +1648,7 @@ xfs_attr3_leaf_compact(
+ 	 */
+ 	xfs_trans_log_buf(trans, bp, 0, args->geo->blksize - 1);
+ 
+-	kfree(tmpbuffer);
++	kvfree(tmpbuffer);
+ }
+ 
+ /*
+@@ -2330,7 +2327,7 @@ xfs_attr3_leaf_unbalance(
+ 		struct xfs_attr_leafblock *tmp_leaf;
+ 		struct xfs_attr3_icleaf_hdr tmphdr;
+ 
+-		tmp_leaf = kzalloc(state->args->geo->blksize,
++		tmp_leaf = kvzalloc(state->args->geo->blksize,
+ 				GFP_KERNEL | __GFP_NOFAIL);
+ 
+ 		/*
+@@ -2371,7 +2368,7 @@ xfs_attr3_leaf_unbalance(
+ 		}
+ 		memcpy(save_leaf, tmp_leaf, state->args->geo->blksize);
+ 		savehdr = tmphdr; /* struct copy */
+-		kfree(tmp_leaf);
++		kvfree(tmp_leaf);
  	}
  
-+	file_end = DIV_ROUND_UP(i_size_read(mapping->host), PAGE_SIZE) - 1;
-+	if (end_pgoff > file_end)
-+		end_pgoff = file_end;
-+
- 	folio_type = mm_counter_file(folio);
- 	do {
- 		unsigned long end;
+ 	xfs_attr3_leaf_hdr_to_disk(state->args->geo, save_leaf, &savehdr);
 -- 
 2.44.1
 
