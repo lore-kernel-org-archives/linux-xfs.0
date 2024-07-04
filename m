@@ -1,39 +1,39 @@
 Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F7B1AC439;
-	Thu,  4 Jul 2024 11:23:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 048181AC43F;
+	Thu,  4 Jul 2024 11:23:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720092234; cv=none; b=qx9hys1U8BowypMsi/SqDbo9HR+vWNvwoZ6kbQlyJceQNNG9Lsg4oQ0GV7QnWAnSxpc5+FYLbBGECaipSL3y776MTE5XIGnuFpb0s6TT74ghR6eK35rtx5OrhpZxUGZbnw+5JtHM5we1owXiCGnhHrcJ6xBnscygZOBEwkxTihM=
+	t=1720092235; cv=none; b=slFPtlppT9oqEXeqJgBI/mHquVZutKl5mEtVVt3QHytEhaNCq8GnGml16LVzzpziQmOcLoXUP2xWqlvlFi1nRnP2OxtR+OHxGmX7eFB4yWvldbV/ycFb+l6WlSaaklmjV7TXANwRUGaYMcW4Xq0mZWOJYqyy7rRxzl0oWmHn4aM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720092234; c=relaxed/simple;
-	bh=ykuHeCgdfskMcua/wKSJla1pOIn+bCHPrMH2YpuF4XU=;
+	s=arc-20240116; t=1720092235; c=relaxed/simple;
+	bh=h9SwZAF8T3W6a3A73CQ/TGpqRC7QSmSLRaQojleMiqg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DR6TV9dAvea5KNxSSqZiDxDuLQJbOKPevsqTg1GhuyyAtUt7e1bq+K3WWnv6JgOVbqJ7XOiIuLC4qsmdusnY3NWqKteye1sCDz2QziYfyM83lTZT0JcVl6R0RI6H4+74hqQiniC1Brbr6d2LkNX05YrjbaIcFaBpvFSkSRuEaYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=niHhGXXL; arc=none smtp.client-ip=80.241.56.171
+	 MIME-Version; b=bRcFhjhe3ED50uw5qEW+IKP3mgJmUoT+YypLRix2OWrXrsLvYSK1uFRPP2pFEZpacWIFy67MfV+M3M8UzG74AaPvoxld6onXGITCIy9GdIyLiSnlvIZjSERW8/FCkn6EGSB1BUGvTRBuq2owZUvY7vZqPJoggv7WCgIyBlSVlGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=1c/bZo2D; arc=none smtp.client-ip=80.241.56.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="niHhGXXL"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="1c/bZo2D"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4WFDmb3QZCz9tVW;
-	Thu,  4 Jul 2024 13:23:43 +0200 (CEST)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4WFDmk32Xtz9tVk;
+	Thu,  4 Jul 2024 13:23:50 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1720092223;
+	s=MBO0001; t=1720092230;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/8WfUkcPSa7GHZg7/Pn66GCljLM5KeUQHmwEzlJNP7Q=;
-	b=niHhGXXLlGfBFEJjR7uSrNiVvSPbFHkCpsbWC7Q43zY0FGd9RzTzh0H9SncE1I//MU/tM8
-	lZUFPg1YI2YDmp2QSUggek1zSomko9Z9Rx9j15dDPqJ+nYQRytcbL5pffF6zoyfyE9+x5y
-	V/kEZW5KC9gJJy7fBzJ4zaoW8xKsJGB6E5+JVx23Uy9gJKV1KYySvp2kP/5DVS6frkfHSo
-	+7uD3pxnLlSluHwxygKmybygOmxpTqlBP9iKKWtPf2KhdThATzmJnXKvEM5c17VQVGXPZq
-	AVdpjRWG2HM+18T8ruhyhr1v9DseqUimBzIa+yfipmogY1CwvXDG5/RQgRGZVw==
+	bh=Gfht+/mcjWMyUHlg9kllIj+qSNuX0vmSWQJZg9AkiWg=;
+	b=1c/bZo2DFVFSh00aNqJfY3XUAtqix7N6b+uVXOKdORYGdc1xjJy3rTLQ5W8llczuo5DVgR
+	/QYzeBYGO9EZUMHjLGiOg9T/NSGNIRjczm0WXDKG8IY4TiXehlnoyXlL1Xg/cef9ImXWtv
+	3paeM8k5/0NdSc1jmbFS2KNDToj0ZgKnnmY8x6qe47cVI9S+owu51lBGQM7rHZrg+vXQuz
+	IqGwrPi+6BUvEh5AuiJF/DDwXDM8pFo00jsT9wD5G2xyaL6zb3lYAx6JxmPqluUU2mJGv0
+	7o/1N6pOtzmJ6yTRQZdO8lezDbwD4sJfBkA83zROIyjkuulMCleUtdZlft397w==
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: david@fromorbit.com,
 	willy@infradead.org,
@@ -55,9 +55,9 @@ Cc: yang@os.amperecomputing.com,
 	kernel@pankajraghav.com,
 	hch@lst.de,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH v9 04/10] mm: split a folio in minimum folio order chunks
-Date: Thu,  4 Jul 2024 11:23:14 +0000
-Message-ID: <20240704112320.82104-5-kernel@pankajraghav.com>
+Subject: [PATCH v9 06/10] iomap: fix iomap_dio_zero() for fs bs > system page size
+Date: Thu,  4 Jul 2024 11:23:16 +0000
+Message-ID: <20240704112320.82104-7-kernel@pankajraghav.com>
 In-Reply-To: <20240704112320.82104-1-kernel@pankajraghav.com>
 References: <20240704112320.82104-1-kernel@pankajraghav.com>
 Precedence: bulk
@@ -67,220 +67,145 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4WFDmb3QZCz9tVW
+X-Rspamd-Queue-Id: 4WFDmk32Xtz9tVk
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-split_folio() and split_folio_to_list() assume order 0, to support
-minorder for non-anonymous folios, we must expand these to check the
-folio mapping order and use that.
+iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+< fs block size. iomap_dio_zero() has an implicit assumption that fs block
+size < page_size. This is true for most filesystems at the moment.
 
-Set new_order to be at least minimum folio order if it is set in
-split_huge_page_to_list() so that we can maintain minimum folio order
-requirement in the page cache.
+If the block size > page size, this will send the contents of the page
+next to zero page(as len > PAGE_SIZE) to the underlying block device,
+causing FS corruption.
 
-Update the debugfs write files used for testing to ensure the order
-is respected as well. We simply enforce the min order when a file
-mapping is used.
+iomap is a generic infrastructure and it should not make any assumptions
+about the fs block size and the page size of the system.
 
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- include/linux/huge_mm.h | 14 ++++++++---
- mm/huge_memory.c        | 55 ++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 61 insertions(+), 8 deletions(-)
+ fs/iomap/buffered-io.c |  4 ++--
+ fs/iomap/direct-io.c   | 45 ++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 41 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-index 4d155c7a47922..b320a246293ec 100644
---- a/include/linux/huge_mm.h
-+++ b/include/linux/huge_mm.h
-@@ -90,6 +90,8 @@ extern struct kobj_attribute thpsize_shmem_enabled_attr;
- #define thp_vma_allowable_order(vma, vm_flags, tva_flags, order) \
- 	(!!thp_vma_allowable_orders(vma, vm_flags, tva_flags, BIT(order)))
- 
-+#define split_folio(f) split_folio_to_list(f, NULL)
-+
- #ifdef CONFIG_PGTABLE_HAS_HUGE_LEAVES
- #define HPAGE_PMD_SHIFT PMD_SHIFT
- #define HPAGE_PUD_SHIFT PUD_SHIFT
-@@ -327,9 +329,10 @@ unsigned long thp_get_unmapped_area_vmflags(struct file *filp, unsigned long add
- bool can_split_folio(struct folio *folio, int *pextra_pins);
- int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
- 		unsigned int new_order);
-+int split_folio_to_list(struct folio *folio, struct list_head *list);
- static inline int split_huge_page(struct page *page)
- {
--	return split_huge_page_to_list_to_order(page, NULL, 0);
-+	return split_folio(page_folio(page));
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index f420c53d86acc..d745f718bcde8 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -2007,10 +2007,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
  }
- void deferred_split_folio(struct folio *folio);
+ EXPORT_SYMBOL_GPL(iomap_writepages);
  
-@@ -501,6 +504,12 @@ static inline int split_huge_page(struct page *page)
+-static int __init iomap_init(void)
++static int __init iomap_buffered_init(void)
  {
- 	return 0;
+ 	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+ 			   offsetof(struct iomap_ioend, io_bio),
+ 			   BIOSET_NEED_BVECS);
  }
+-fs_initcall(iomap_init);
++fs_initcall(iomap_buffered_init);
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index f3b43d223a46e..c02b266bba525 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -11,6 +11,7 @@
+ #include <linux/iomap.h>
+ #include <linux/backing-dev.h>
+ #include <linux/uio.h>
++#include <linux/set_memory.h>
+ #include <linux/task_io_accounting_ops.h>
+ #include "trace.h"
+ 
+@@ -27,6 +28,13 @@
+ #define IOMAP_DIO_WRITE		(1U << 30)
+ #define IOMAP_DIO_DIRTY		(1U << 31)
+ 
++/*
++ * Used for sub block zeroing in iomap_dio_zero()
++ */
++#define IOMAP_ZERO_PAGE_SIZE (SZ_64K)
++#define IOMAP_ZERO_PAGE_ORDER (get_order(IOMAP_ZERO_PAGE_SIZE))
++static struct page *zero_page;
 +
-+static inline int split_folio_to_list(struct folio *folio, struct list_head *list)
+ struct iomap_dio {
+ 	struct kiocb		*iocb;
+ 	const struct iomap_dio_ops *dops;
+@@ -232,13 +240,20 @@ void iomap_dio_bio_end_io(struct bio *bio)
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_bio_end_io);
+ 
+-static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
++static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+ 		loff_t pos, unsigned len)
+ {
+ 	struct inode *inode = file_inode(dio->iocb->ki_filp);
+-	struct page *page = ZERO_PAGE(0);
+ 	struct bio *bio;
+ 
++	if (!len)
++		return 0;
++	/*
++	 * Max block size supported is 64k
++	 */
++	if (WARN_ON_ONCE(len > IOMAP_ZERO_PAGE_SIZE))
++		return -EINVAL;
++
+ 	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+ 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
+ 				  GFP_KERNEL);
+@@ -246,8 +261,9 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+ 	bio->bi_private = dio;
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
+ 
+-	__bio_add_page(bio, page, len, 0);
++	__bio_add_page(bio, zero_page, len, 0);
+ 	iomap_dio_submit_bio(iter, dio, bio, pos);
++	return 0;
+ }
+ 
+ /*
+@@ -356,8 +372,10 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 	if (need_zeroout) {
+ 		/* zero out from the start of the block to the write offset */
+ 		pad = pos & (fs_block_size - 1);
+-		if (pad)
+-			iomap_dio_zero(iter, dio, pos - pad, pad);
++
++		ret = iomap_dio_zero(iter, dio, pos - pad, pad);
++		if (ret)
++			goto out;
+ 	}
+ 
+ 	/*
+@@ -431,7 +449,8 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 		/* zero out from the end of the write to the end of the block */
+ 		pad = pos & (fs_block_size - 1);
+ 		if (pad)
+-			iomap_dio_zero(iter, dio, pos, fs_block_size - pad);
++			ret = iomap_dio_zero(iter, dio, pos,
++					     fs_block_size - pad);
+ 	}
+ out:
+ 	/* Undo iter limitation to current extent */
+@@ -753,3 +772,17 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return iomap_dio_complete(dio);
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_rw);
++
++static int __init iomap_dio_init(void)
 +{
++	zero_page = alloc_pages(GFP_KERNEL | __GFP_ZERO,
++				IOMAP_ZERO_PAGE_ORDER);
++
++	if (!zero_page)
++		return -ENOMEM;
++
++	set_memory_ro((unsigned long)page_address(zero_page),
++		      1U << IOMAP_ZERO_PAGE_ORDER);
 +	return 0;
 +}
-+
- static inline void deferred_split_folio(struct folio *folio) {}
- #define split_huge_pmd(__vma, __pmd, __address)	\
- 	do { } while (0)
-@@ -615,7 +624,4 @@ static inline int split_folio_to_order(struct folio *folio, int new_order)
- 	return split_folio_to_list_to_order(folio, NULL, new_order);
- }
- 
--#define split_folio_to_list(f, l) split_folio_to_list_to_order(f, l, 0)
--#define split_folio(f) split_folio_to_order(f, 0)
--
- #endif /* _LINUX_HUGE_MM_H */
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index a633206375af1..2fd45d8730bab 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -3062,6 +3062,9 @@ bool can_split_folio(struct folio *folio, int *pextra_pins)
-  * released, or if some unexpected race happened (e.g., anon VMA disappeared,
-  * truncation).
-  *
-+ * Callers should ensure that the order respects the address space mapping
-+ * min-order if one is set for non-anonymous folios.
-+ *
-  * Returns -EINVAL when trying to split to an order that is incompatible
-  * with the folio. Splitting to order 0 is compatible with all folios.
-  */
-@@ -3143,6 +3146,7 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
- 		mapping = NULL;
- 		anon_vma_lock_write(anon_vma);
- 	} else {
-+		unsigned int min_order;
- 		gfp_t gfp;
- 
- 		mapping = folio->mapping;
-@@ -3153,6 +3157,14 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
- 			goto out;
- 		}
- 
-+		min_order = mapping_min_folio_order(folio->mapping);
-+		if (new_order < min_order) {
-+			VM_WARN_ONCE(1, "Cannot split mapped folio below min-order: %u",
-+				     min_order);
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
- 		gfp = current_gfp_context(mapping_gfp_mask(mapping) &
- 							GFP_RECLAIM_MASK);
- 
-@@ -3265,6 +3277,21 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
- 	return ret;
- }
- 
-+int split_folio_to_list(struct folio *folio, struct list_head *list)
-+{
-+	unsigned int min_order = 0;
-+
-+	if (!folio_test_anon(folio)) {
-+		if (!folio->mapping && folio_test_pmd_mappable(folio)) {
-+			count_vm_event(THP_SPLIT_PAGE_FAILED);
-+			return -EBUSY;
-+		}
-+		min_order = mapping_min_folio_order(folio->mapping);
-+	}
-+
-+	return split_huge_page_to_list_to_order(&folio->page, list, min_order);
-+}
-+
- void __folio_undo_large_rmappable(struct folio *folio)
- {
- 	struct deferred_split *ds_queue;
-@@ -3496,6 +3523,8 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
- 		struct vm_area_struct *vma = vma_lookup(mm, addr);
- 		struct page *page;
- 		struct folio *folio;
-+		struct address_space *mapping;
-+		unsigned int target_order = new_order;
- 
- 		if (!vma)
- 			break;
-@@ -3516,7 +3545,13 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
- 		if (!is_transparent_hugepage(folio))
- 			goto next;
- 
--		if (new_order >= folio_order(folio))
-+		if (!folio_test_anon(folio)) {
-+			mapping = folio->mapping;
-+			target_order = max(new_order,
-+					   mapping_min_folio_order(mapping));
-+		}
-+
-+		if (target_order >= folio_order(folio))
- 			goto next;
- 
- 		total++;
-@@ -3532,9 +3567,13 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
- 		if (!folio_trylock(folio))
- 			goto next;
- 
--		if (!split_folio_to_order(folio, new_order))
-+		if (!folio_test_anon(folio) && folio->mapping != mapping)
-+			goto unlock;
-+
-+		if (!split_folio_to_order(folio, target_order))
- 			split++;
- 
-+unlock:
- 		folio_unlock(folio);
- next:
- 		folio_put(folio);
-@@ -3559,6 +3598,7 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
- 	pgoff_t index;
- 	int nr_pages = 1;
- 	unsigned long total = 0, split = 0;
-+	unsigned int min_order;
- 
- 	file = getname_kernel(file_path);
- 	if (IS_ERR(file))
-@@ -3572,9 +3612,11 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
- 		 file_path, off_start, off_end);
- 
- 	mapping = candidate->f_mapping;
-+	min_order = mapping_min_folio_order(mapping);
- 
- 	for (index = off_start; index < off_end; index += nr_pages) {
- 		struct folio *folio = filemap_get_folio(mapping, index);
-+		unsigned int target_order = new_order;
- 
- 		nr_pages = 1;
- 		if (IS_ERR(folio))
-@@ -3583,18 +3625,23 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
- 		if (!folio_test_large(folio))
- 			goto next;
- 
-+		target_order = max(new_order, min_order);
- 		total++;
- 		nr_pages = folio_nr_pages(folio);
- 
--		if (new_order >= folio_order(folio))
-+		if (target_order >= folio_order(folio))
- 			goto next;
- 
- 		if (!folio_trylock(folio))
- 			goto next;
- 
--		if (!split_folio_to_order(folio, new_order))
-+		if (folio->mapping != mapping)
-+			goto unlock;
-+
-+		if (!split_folio_to_order(folio, target_order))
- 			split++;
- 
-+unlock:
- 		folio_unlock(folio);
- next:
- 		folio_put(folio);
++fs_initcall(iomap_dio_init);
 -- 
 2.44.1
 
