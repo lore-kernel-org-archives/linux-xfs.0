@@ -1,81 +1,25 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFEFE13C909;
-	Fri,  5 Jul 2024 06:15:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4FCBA146595;
+	Fri,  5 Jul 2024 09:03:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720160103; cv=none; b=BBFHp1QW32sW9vGopyfjH7IoA4Poofoab9+E8W+mu3CJA5NjdE86jEH5xDtdVbFL603fMjWEkKKaIMGfONLcKhM6at5CxYikCD8ZKhyEPhRSixcdwDpp4fMY1bYmT7fwbMmFnOUqsLXWRBn333suwUrDeukoSLhGL7/pGbcDiRU=
+	t=1720170219; cv=none; b=PvHs8TpOGarB5rFvhj7OyKA6RhoFXVyYsTpEQIAes7apeQCFV5WZtwXdvlYWxkScYNmiBxomOsXJCiyKKMq5uFj8xvYYoBIa3zKYgnEqdBpwoxc7NZM1neBJdaylS/yCZK8k0ISBVokA9WtpThRKtHOx6ThFcqnM88fxaRgPTBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720160103; c=relaxed/simple;
-	bh=jPR2JjDMNfCATNoOd2r4Sll4jrYq4wIustIOFyUqzA0=;
+	s=arc-20240116; t=1720170219; c=relaxed/simple;
+	bh=yNvAgV4SPQTtkN8fNXBGOMuGF0J3NFl0Do+tQqT3Igs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LIJzQ7I0aN5x0vD/w6wK99dcGBWTOSmGbVBun1PMsa0Qlia6TqnOjyvDi4WkUqJ3/kuZ0ubVHES5wtmah/RT4eMvwx0X0NH2cCuqjv5BvC5eMarMU42OPrk3ZSwO4qbbi2XWWGDAndVE1Y0scQrkaR6cH/Qi5nuJdUZCUezsABQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Go5sj04F; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=pJvs4FWV; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xImNMRwl; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JDzDTsdd; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Go5sj04F";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="pJvs4FWV";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xImNMRwl";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JDzDTsdd"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id BE2DA1F7E2;
-	Fri,  5 Jul 2024 06:14:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1720160100; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
-	b=Go5sj04FniVBY8pReFosHfdGNt0tJY/05WEWhhGISGY/9QLTMCrAlksUnZk94jOFIvLgaV
-	MwJB6VXm3CM8IsNcCG+63VEE3YTNua8/3YNPoBX88JxIoi4JXx3Ad0DAH9r/3SDVu7V6jm
-	xTnv4UWKukfjfWhjbzR5NIGYlGmrI3g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1720160100;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
-	b=pJvs4FWVfFzNpCwuVLANVCiW7x+8fb4wF2WOLrd5rHzDBQUpoNHIGmwI7oeTser3S9It0y
-	UnnpAFlDtVwaqUBg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=xImNMRwl;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=JDzDTsdd
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1720160099; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
-	b=xImNMRwlFRhcIOmUHyxv8kFpjUtEPuEStUOVPVRncG+LL7JfPge/SMWNa/N4R2xjo0SET+
-	QZ6IzkrMAgfskNiOUHt/+VidPWUywMuZvWcwOtdQlHcG41BFP8hjKiVI9obDTDkvVEGJr/
-	A56IyTun5g2PDBRbEq2ORYR2O61/G7I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1720160099;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
-	b=JDzDTsddavshDpmDdbJUGB67L8yDTKnZZbgiTw5KaNADHgdQN2P3dxIOOH1BI+CG8pgsEU
-	YqOJhmJIPka/vLBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EF5C713974;
-	Fri,  5 Jul 2024 06:14:58 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id TNLcN2KPh2a1FQAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 05 Jul 2024 06:14:58 +0000
-Message-ID: <da1d2eea-b7b1-467c-84e0-623d4ec3af55@suse.de>
-Date: Fri, 5 Jul 2024 08:14:57 +0200
+	 In-Reply-To:Content-Type; b=B7imWMB2zKN5iVnlkdIwAe4hkiZvkGP+0bdWgH80NcM/eFO0T9Bp6HdDwheFIXzDBeT8DOechzei69mJK7zJNN8Lq9PdT7frCgXPQ6tZBQzGgt/w3dlpawW5I70b5XiidyjahduP1PL4z6J/kisCCnd/PT9CbTggPZCCECWJC/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B5AD8367;
+	Fri,  5 Jul 2024 02:04:01 -0700 (PDT)
+Received: from [10.57.74.223] (unknown [10.57.74.223])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 813DD3F762;
+	Fri,  5 Jul 2024 02:03:33 -0700 (PDT)
+Message-ID: <03b9ea6c-a3c4-41e8-ad47-4e82344da419@arm.com>
+Date: Fri, 5 Jul 2024 10:03:31 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,140 +27,104 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 06/10] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Content-Language: en-US
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, willy@infradead.org,
+Subject: Re: [PATCH v8 01/10] fs: Allow fine-grained control of folio sizes
+Content-Language: en-GB
+To: Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
  chandan.babu@oracle.com, djwong@kernel.org, brauner@kernel.org,
- akpm@linux-foundation.org, yang@os.amperecomputing.com,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, john.g.garry@oracle.com,
- linux-fsdevel@vger.kernel.org, p.raghav@samsung.com, mcgrof@kernel.org,
- gost.dev@samsung.com, cl@os.amperecomputing.com, linux-xfs@vger.kernel.org,
- hch@lst.de, Zi Yan <ziy@nvidia.com>
-References: <20240704112320.82104-1-kernel@pankajraghav.com>
- <20240704112320.82104-7-kernel@pankajraghav.com>
- <2c09ebbd-1704-46e3-a453-b4cd07940325@suse.de>
- <ZoceivBuLIcylaxk@dread.disaster.area>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <ZoceivBuLIcylaxk@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: BE2DA1F7E2
-X-Spam-Score: -4.50
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.50 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	MX_GOOD(-0.01)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	MIME_TRACE(0.00)[0:+];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,samsung.com:email]
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+ akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+ yang@os.amperecomputing.com, linux-mm@kvack.org, john.g.garry@oracle.com,
+ linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
+ mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
+ linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
+References: <20240625114420.719014-1-kernel@pankajraghav.com>
+ <20240625114420.719014-2-kernel@pankajraghav.com>
+ <cb644a36-67a7-4692-b002-413e70ac864a@arm.com>
+ <Zoa9rQbEUam467-q@casper.infradead.org>
+ <Zocc+6nIQzfUTPpd@dread.disaster.area>
+ <Zoc2rCPC5thSIuoR@casper.infradead.org>
+ <Zod3ZQizBL7MyWEA@dread.disaster.area>
+From: Ryan Roberts <ryan.roberts@arm.com>
+In-Reply-To: <Zod3ZQizBL7MyWEA@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 7/5/24 00:13, Dave Chinner wrote:
-> On Thu, Jul 04, 2024 at 05:37:32PM +0200, Hannes Reinecke wrote:
->> On 7/4/24 13:23, Pankaj Raghav (Samsung) wrote:
->>> From: Pankaj Raghav <p.raghav@samsung.com>
+On 05/07/2024 05:32, Dave Chinner wrote:
+> On Fri, Jul 05, 2024 at 12:56:28AM +0100, Matthew Wilcox wrote:
+>> On Fri, Jul 05, 2024 at 08:06:51AM +1000, Dave Chinner wrote:
+>>>>> It seems strange to silently clamp these? Presumably for the bs>ps usecase,
+>>>>> whatever values are passed in are a hard requirement? So wouldn't want them to
+>>>>> be silently reduced. (Especially given the recent change to reduce the size of
+>>>>> MAX_PAGECACHE_ORDER to less then PMD size in some cases).
+>>>>
+>>>> Hm, yes.  We should probably make this return an errno.  Including
+>>>> returning an errno for !IS_ENABLED() and min > 0.
 >>>
->>> iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
->>> < fs block size. iomap_dio_zero() has an implicit assumption that fs block
->>> size < page_size. This is true for most filesystems at the moment.
->>>
->>> If the block size > page size, this will send the contents of the page
->>> next to zero page(as len > PAGE_SIZE) to the underlying block device,
->>> causing FS corruption.
->>>
->>> iomap is a generic infrastructure and it should not make any assumptions
->>> about the fs block size and the page size of the system.
->>>
->>> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
->>> ---
->>>    fs/iomap/buffered-io.c |  4 ++--
->>>    fs/iomap/direct-io.c   | 45 ++++++++++++++++++++++++++++++++++++------
->>>    2 files changed, 41 insertions(+), 8 deletions(-)
->>>
->>> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
->>> index f420c53d86acc..d745f718bcde8 100644
->>> --- a/fs/iomap/buffered-io.c
->>> +++ b/fs/iomap/buffered-io.c
->>> @@ -2007,10 +2007,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
->>>    }
->>>    EXPORT_SYMBOL_GPL(iomap_writepages);
->>> -static int __init iomap_init(void)
->>> +static int __init iomap_buffered_init(void)
->>>    {
->>>    	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
->>>    			   offsetof(struct iomap_ioend, io_bio),
->>>    			   BIOSET_NEED_BVECS);
->>>    }
->>> -fs_initcall(iomap_init);
->>> +fs_initcall(iomap_buffered_init);
->>> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
->>> index f3b43d223a46e..c02b266bba525 100644
->>> --- a/fs/iomap/direct-io.c
->>> +++ b/fs/iomap/direct-io.c
->>> @@ -11,6 +11,7 @@
->>>    #include <linux/iomap.h>
->>>    #include <linux/backing-dev.h>
->>>    #include <linux/uio.h>
->>> +#include <linux/set_memory.h>
->>>    #include <linux/task_io_accounting_ops.h>
->>>    #include "trace.h"
->>> @@ -27,6 +28,13 @@
->>>    #define IOMAP_DIO_WRITE		(1U << 30)
->>>    #define IOMAP_DIO_DIRTY		(1U << 31)
->>> +/*
->>> + * Used for sub block zeroing in iomap_dio_zero()
->>> + */
->>> +#define IOMAP_ZERO_PAGE_SIZE (SZ_64K)
->>> +#define IOMAP_ZERO_PAGE_ORDER (get_order(IOMAP_ZERO_PAGE_SIZE))
->>> +static struct page *zero_page;
->>> +
+>>> What are callers supposed to do with an error? In the case of
+>>> setting up a newly allocated inode in XFS, the error would be
+>>> returned in the middle of a transaction and so this failure would
+>>> result in a filesystem shutdown.
 >>
->> There are other users of ZERO_PAGE, most notably in fs/direct-io.c and
->> block/blk-lib.c. Any chance to make this available to them?
+>> I suggest you handle it better than this.  If the device is asking for a
+>> blocksize > PMD_SIZE, you should fail to mount it.
+
+A detail, but MAX_PAGECACHE_ORDER may be smaller than PMD_SIZE even on systems
+with CONFIG_TRANSPARENT_HUGEPAGE as of a fix that is currently in mm-unstable:
+
+	#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	#define PREFERRED_MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+	#else
+	#define PREFERRED_MAX_PAGECACHE_ORDER	8
+	#endif
+
+	/*
+	 * xas_split_alloc() does not support arbitrary orders. This implies no
+	 * 512MB THP on ARM64 with 64KB base page size.
+	 */
+	#define MAX_XAS_ORDER		(XA_CHUNK_SHIFT * 2 - 1)
+	#define MAX_PAGECACHE_ORDER	min(MAX_XAS_ORDER,
+					    PREFERRED_MAX_PAGECACHE_ORDER)
+
+But that also implies that the page cache can handle up to order-8 without
+CONFIG_TRANSPARENT_HUGEPAGE so sounds like there isn't a dependcy on
+CONFIG_TRANSPARENT_HUGEPAGE in this respect?
+
+
+
 > 
-> Please, no.
+> That's my point: we already do that.
 > 
-> We need to stop feature creeping this patchset and bring it to a
-> close. If changing code entirely unrelated to this patchset is
-> desired, please do it as a separate independent set of patches.
+> The largest block size we support is 64kB and that's way smaller
+> than PMD_SIZE on all platforms and we always check for bs > ps 
+> support at mount time when the filesystem bs > ps.
 > 
-Agree; it was a suggestion only.
-
-Pankaj, you can add my:
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+> Hence we're never going to set the min value to anything unsupported
+> unless someone makes a massive programming mistake. At which point,
+> we want a *hard, immediate fail* so the developer notices their
+> mistake immediately. All filesystems and block devices need to
+> behave this way so the limits should be encoded as asserts in the
+> function to trigger such behaviour.
+> 
+>> If the device is
+>> asking for a blocksize > PAGE_SIZE and CONFIG_TRANSPARENT_HUGEPAGE is
+>> not set, you should also decline to mount the filesystem.
+> 
+> What does CONFIG_TRANSPARENT_HUGEPAGE have to do with filesystems
+> being able to use large folios?
+> 
+> If that's an actual dependency of using large folios, then we're at
+> the point where the mm side of large folios needs to be divorced
+> from CONFIG_TRANSPARENT_HUGEPAGE and always supported.
+> Alternatively, CONFIG_TRANSPARENT_HUGEPAGE needs to selected by the
+> block layer and also every filesystem that wants to support
+> sector/blocks sizes larger than PAGE_SIZE.  IOWs, large folio
+> support needs to *always* be enabled on systems that say
+> CONFIG_BLOCK=y.
+> 
+> I'd much prefer the former occurs, because making the block layer
+> and filesystems dependent on an mm feature they don't actually use
+> is kinda weird...
+> 
+> -Dave.
+> 
 
