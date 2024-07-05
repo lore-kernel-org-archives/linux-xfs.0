@@ -1,143 +1,222 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E14381A1
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Jul 2024 04:32:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFEFE13C909;
+	Fri,  5 Jul 2024 06:15:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720153962; cv=none; b=mSYcyF3qi/W4Et5YipOK1rWPn09S7Pj05IMlo9HzpnM7ljlrGxeGWtR7lWXpDKkIYS+nWHp8X04KBKbuv0Aq91T9rcGD7r7tS7KEcb+ICC0z56ctWxetvJKS4g2CnHTT4kx2JblOvrPf78WU3V5C32fNx0AEvqZiUQrhxafibbE=
+	t=1720160103; cv=none; b=BBFHp1QW32sW9vGopyfjH7IoA4Poofoab9+E8W+mu3CJA5NjdE86jEH5xDtdVbFL603fMjWEkKKaIMGfONLcKhM6at5CxYikCD8ZKhyEPhRSixcdwDpp4fMY1bYmT7fwbMmFnOUqsLXWRBn333suwUrDeukoSLhGL7/pGbcDiRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720153962; c=relaxed/simple;
-	bh=7zH4BhtmNC75bo3uUQp74pwP+kO9q4th0+RwpYErCt4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HL5/9JJYPoNrcyA5CZmXCKpvTmuZFYIyAv+ySUGfSjmkx8JMlT1/jWpLp74MQS/KVm5Caq5PA4itGR+PG5N1ePfc3HdOHaWc5DHIjEm2Jb6f2v6d4G3rnc/QyKCx1hu3N4kvWYx5Vf2y3wXHFmAIlqAvw798ysV+hx8IKIqsXvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=2DmhlNE6; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1720160103; c=relaxed/simple;
+	bh=jPR2JjDMNfCATNoOd2r4Sll4jrYq4wIustIOFyUqzA0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LIJzQ7I0aN5x0vD/w6wK99dcGBWTOSmGbVBun1PMsa0Qlia6TqnOjyvDi4WkUqJ3/kuZ0ubVHES5wtmah/RT4eMvwx0X0NH2cCuqjv5BvC5eMarMU42OPrk3ZSwO4qbbi2XWWGDAndVE1Y0scQrkaR6cH/Qi5nuJdUZCUezsABQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Go5sj04F; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=pJvs4FWV; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xImNMRwl; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JDzDTsdd; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="2DmhlNE6"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-70af2b1a35aso829424b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 04 Jul 2024 21:32:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720153960; x=1720758760; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=JaNUdVKAXYAbRIpln8ABSTH2bFgFz52Xo4pVr+BWnIk=;
-        b=2DmhlNE6waTrp1CxTfKmxrRnc1HIg5N06aEZIz1pcO9IE553AA751y/QERrZTohUIc
-         fE1nYNXWYTYMDW+nhRrQf9J5uuWWilLJfKNWi1xWSs4dkOujNQUW+lxTltEWmyzMnLH0
-         6A/jdd1vADBcLhcXFZIMA+c+GoYfftnbFYkIn34C1+zOhS7BdqZo8eO4o8+eSZCnSX3m
-         4dgCncx0Vywm77ObFgIV/8sV4aZOPuMI50aX3fRFGaetM/de/tWvOYYvEH5+/tI27M3D
-         4Ewf0m78SQftRMhZAsKH7z+Ghv8CIkfzir/U98aQMJ/om+vfaFbTbK3vdDA/qKOciDLO
-         e2ew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720153960; x=1720758760;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JaNUdVKAXYAbRIpln8ABSTH2bFgFz52Xo4pVr+BWnIk=;
-        b=bbMYgU2Mx58ygloOwFAlFz2h+7PM/KAiNJ6Wrp7qDMlJ85WlOwpf8pOIE3JfiHxCaO
-         HVvk91JHXJytivKFLXTkcyXDsNo2AragGUuXS1RFGi+y+GRJd1FbXZhzBD5WRfO9Zh7t
-         szbglzPP0emcPGzauhTmP7ZL4hc6uMunC1IGPP5EBXkZvK7NJiQrd0ePTv9kmJe+62d5
-         pvYym4MwZ7wCFqXX8/Ycs5q9jFb6lKcUvt0lxAT0FEci1Hpk0zBSXNJE+DAZ762BqRty
-         E9CQBn5pC1VC2TVSoQc9oU5oCP0WX0ukuUBdbsHPJv98hUpmwBOBgWfdOIsxD2OltAci
-         sxQQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUIsCeKtR6OB626bhlNzQYamcRL5pyrlYhNndNiajR/nFFRn60/oc5/y9g2gp7sFnbQ1E87AnL8XgP8A1o/3WqFj2+W33yGeHe4
-X-Gm-Message-State: AOJu0YzAjNdsMAWsGfpGIXJ36QEP5EuAVLMoj2wElhKSl0jv3DiRMPsL
-	c3dtBZ7Y9vbB9eb9yW3rKem9UlVR/adb7NfK4kxr2X9d4sw/BQolwHNHpZVK/1c=
-X-Google-Smtp-Source: AGHT+IGNNipKdGsi4XWy+dedlny7ElaFdUH7HAl5rueUaHfHmRKLnG/xTRjlLs78fkLSEdOgSoy6rQ==
-X-Received: by 2002:a05:6a00:4601:b0:705:cade:1f50 with SMTP id d2e1a72fcca58-70b00b0413bmr3372631b3a.34.1720153960020;
-        Thu, 04 Jul 2024 21:32:40 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-708044ae395sm13437861b3a.144.2024.07.04.21.32.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jul 2024 21:32:39 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sPacf-004cOB-0b;
-	Fri, 05 Jul 2024 14:32:37 +1000
-Date: Fri, 5 Jul 2024 14:32:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Ryan Roberts <ryan.roberts@arm.com>,
-	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
-	chandan.babu@oracle.com, djwong@kernel.org, brauner@kernel.org,
-	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	yang@os.amperecomputing.com, linux-mm@kvack.org,
-	john.g.garry@oracle.com, linux-fsdevel@vger.kernel.org,
-	hare@suse.de, p.raghav@samsung.com, mcgrof@kernel.org,
-	gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
-Subject: Re: [PATCH v8 01/10] fs: Allow fine-grained control of folio sizes
-Message-ID: <Zod3ZQizBL7MyWEA@dread.disaster.area>
-References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-2-kernel@pankajraghav.com>
- <cb644a36-67a7-4692-b002-413e70ac864a@arm.com>
- <Zoa9rQbEUam467-q@casper.infradead.org>
- <Zocc+6nIQzfUTPpd@dread.disaster.area>
- <Zoc2rCPC5thSIuoR@casper.infradead.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Go5sj04F";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="pJvs4FWV";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xImNMRwl";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JDzDTsdd"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id BE2DA1F7E2;
+	Fri,  5 Jul 2024 06:14:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1720160100; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
+	b=Go5sj04FniVBY8pReFosHfdGNt0tJY/05WEWhhGISGY/9QLTMCrAlksUnZk94jOFIvLgaV
+	MwJB6VXm3CM8IsNcCG+63VEE3YTNua8/3YNPoBX88JxIoi4JXx3Ad0DAH9r/3SDVu7V6jm
+	xTnv4UWKukfjfWhjbzR5NIGYlGmrI3g=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1720160100;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
+	b=pJvs4FWVfFzNpCwuVLANVCiW7x+8fb4wF2WOLrd5rHzDBQUpoNHIGmwI7oeTser3S9It0y
+	UnnpAFlDtVwaqUBg==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=xImNMRwl;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=JDzDTsdd
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1720160099; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
+	b=xImNMRwlFRhcIOmUHyxv8kFpjUtEPuEStUOVPVRncG+LL7JfPge/SMWNa/N4R2xjo0SET+
+	QZ6IzkrMAgfskNiOUHt/+VidPWUywMuZvWcwOtdQlHcG41BFP8hjKiVI9obDTDkvVEGJr/
+	A56IyTun5g2PDBRbEq2ORYR2O61/G7I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1720160099;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KKKwDM99yHwrFJ4TWN0+ebIfjwuCQsHJVHVl1aMGz+w=;
+	b=JDzDTsddavshDpmDdbJUGB67L8yDTKnZZbgiTw5KaNADHgdQN2P3dxIOOH1BI+CG8pgsEU
+	YqOJhmJIPka/vLBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EF5C713974;
+	Fri,  5 Jul 2024 06:14:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id TNLcN2KPh2a1FQAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 05 Jul 2024 06:14:58 +0000
+Message-ID: <da1d2eea-b7b1-467c-84e0-623d4ec3af55@suse.de>
+Date: Fri, 5 Jul 2024 08:14:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zoc2rCPC5thSIuoR@casper.infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 06/10] iomap: fix iomap_dio_zero() for fs bs > system
+ page size
+Content-Language: en-US
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, willy@infradead.org,
+ chandan.babu@oracle.com, djwong@kernel.org, brauner@kernel.org,
+ akpm@linux-foundation.org, yang@os.amperecomputing.com,
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, john.g.garry@oracle.com,
+ linux-fsdevel@vger.kernel.org, p.raghav@samsung.com, mcgrof@kernel.org,
+ gost.dev@samsung.com, cl@os.amperecomputing.com, linux-xfs@vger.kernel.org,
+ hch@lst.de, Zi Yan <ziy@nvidia.com>
+References: <20240704112320.82104-1-kernel@pankajraghav.com>
+ <20240704112320.82104-7-kernel@pankajraghav.com>
+ <2c09ebbd-1704-46e3-a453-b4cd07940325@suse.de>
+ <ZoceivBuLIcylaxk@dread.disaster.area>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <ZoceivBuLIcylaxk@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: BE2DA1F7E2
+X-Spam-Score: -4.50
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCPT_COUNT_TWELVE(0.00)[19];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,samsung.com:email]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-On Fri, Jul 05, 2024 at 12:56:28AM +0100, Matthew Wilcox wrote:
-> On Fri, Jul 05, 2024 at 08:06:51AM +1000, Dave Chinner wrote:
-> > > > It seems strange to silently clamp these? Presumably for the bs>ps usecase,
-> > > > whatever values are passed in are a hard requirement? So wouldn't want them to
-> > > > be silently reduced. (Especially given the recent change to reduce the size of
-> > > > MAX_PAGECACHE_ORDER to less then PMD size in some cases).
-> > > 
-> > > Hm, yes.  We should probably make this return an errno.  Including
-> > > returning an errno for !IS_ENABLED() and min > 0.
-> > 
-> > What are callers supposed to do with an error? In the case of
-> > setting up a newly allocated inode in XFS, the error would be
-> > returned in the middle of a transaction and so this failure would
-> > result in a filesystem shutdown.
+On 7/5/24 00:13, Dave Chinner wrote:
+> On Thu, Jul 04, 2024 at 05:37:32PM +0200, Hannes Reinecke wrote:
+>> On 7/4/24 13:23, Pankaj Raghav (Samsung) wrote:
+>>> From: Pankaj Raghav <p.raghav@samsung.com>
+>>>
+>>> iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+>>> < fs block size. iomap_dio_zero() has an implicit assumption that fs block
+>>> size < page_size. This is true for most filesystems at the moment.
+>>>
+>>> If the block size > page size, this will send the contents of the page
+>>> next to zero page(as len > PAGE_SIZE) to the underlying block device,
+>>> causing FS corruption.
+>>>
+>>> iomap is a generic infrastructure and it should not make any assumptions
+>>> about the fs block size and the page size of the system.
+>>>
+>>> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+>>> ---
+>>>    fs/iomap/buffered-io.c |  4 ++--
+>>>    fs/iomap/direct-io.c   | 45 ++++++++++++++++++++++++++++++++++++------
+>>>    2 files changed, 41 insertions(+), 8 deletions(-)
+>>>
+>>> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+>>> index f420c53d86acc..d745f718bcde8 100644
+>>> --- a/fs/iomap/buffered-io.c
+>>> +++ b/fs/iomap/buffered-io.c
+>>> @@ -2007,10 +2007,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+>>>    }
+>>>    EXPORT_SYMBOL_GPL(iomap_writepages);
+>>> -static int __init iomap_init(void)
+>>> +static int __init iomap_buffered_init(void)
+>>>    {
+>>>    	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+>>>    			   offsetof(struct iomap_ioend, io_bio),
+>>>    			   BIOSET_NEED_BVECS);
+>>>    }
+>>> -fs_initcall(iomap_init);
+>>> +fs_initcall(iomap_buffered_init);
+>>> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+>>> index f3b43d223a46e..c02b266bba525 100644
+>>> --- a/fs/iomap/direct-io.c
+>>> +++ b/fs/iomap/direct-io.c
+>>> @@ -11,6 +11,7 @@
+>>>    #include <linux/iomap.h>
+>>>    #include <linux/backing-dev.h>
+>>>    #include <linux/uio.h>
+>>> +#include <linux/set_memory.h>
+>>>    #include <linux/task_io_accounting_ops.h>
+>>>    #include "trace.h"
+>>> @@ -27,6 +28,13 @@
+>>>    #define IOMAP_DIO_WRITE		(1U << 30)
+>>>    #define IOMAP_DIO_DIRTY		(1U << 31)
+>>> +/*
+>>> + * Used for sub block zeroing in iomap_dio_zero()
+>>> + */
+>>> +#define IOMAP_ZERO_PAGE_SIZE (SZ_64K)
+>>> +#define IOMAP_ZERO_PAGE_ORDER (get_order(IOMAP_ZERO_PAGE_SIZE))
+>>> +static struct page *zero_page;
+>>> +
+>>
+>> There are other users of ZERO_PAGE, most notably in fs/direct-io.c and
+>> block/blk-lib.c. Any chance to make this available to them?
 > 
-> I suggest you handle it better than this.  If the device is asking for a
-> blocksize > PMD_SIZE, you should fail to mount it.
+> Please, no.
+> 
+> We need to stop feature creeping this patchset and bring it to a
+> close. If changing code entirely unrelated to this patchset is
+> desired, please do it as a separate independent set of patches.
+> 
+Agree; it was a suggestion only.
 
-That's my point: we already do that.
+Pankaj, you can add my:
 
-The largest block size we support is 64kB and that's way smaller
-than PMD_SIZE on all platforms and we always check for bs > ps 
-support at mount time when the filesystem bs > ps.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Hence we're never going to set the min value to anything unsupported
-unless someone makes a massive programming mistake. At which point,
-we want a *hard, immediate fail* so the developer notices their
-mistake immediately. All filesystems and block devices need to
-behave this way so the limits should be encoded as asserts in the
-function to trigger such behaviour.
+Cheers,
 
-> If the device is
-> asking for a blocksize > PAGE_SIZE and CONFIG_TRANSPARENT_HUGEPAGE is
-> not set, you should also decline to mount the filesystem.
-
-What does CONFIG_TRANSPARENT_HUGEPAGE have to do with filesystems
-being able to use large folios?
-
-If that's an actual dependency of using large folios, then we're at
-the point where the mm side of large folios needs to be divorced
-from CONFIG_TRANSPARENT_HUGEPAGE and always supported.
-Alternatively, CONFIG_TRANSPARENT_HUGEPAGE needs to selected by the
-block layer and also every filesystem that wants to support
-sector/blocks sizes larger than PAGE_SIZE.  IOWs, large folio
-support needs to *always* be enabled on systems that say
-CONFIG_BLOCK=y.
-
-I'd much prefer the former occurs, because making the block layer
-and filesystems dependent on an mm feature they don't actually use
-is kinda weird...
-
--Dave.
-
+Hannes
 -- 
-Dave Chinner
-david@fromorbit.com
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+
