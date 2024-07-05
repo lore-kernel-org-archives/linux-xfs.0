@@ -1,37 +1,63 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC9E1442E8;
-	Thu,  4 Jul 2024 23:56:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E14381A1
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Jul 2024 04:32:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720137400; cv=none; b=e8B2FCIBmdVMk52068kgokgcOtkUVbt+Y4DOvp+c3YFPVSwV19tgb2HP5lEOE2APTf1WrMeYYozI0eXvs9xE5xRFluEEHb6mSBDFwleEoC7OY5PB/XwXuwxU7Sav+THS+godwcBmAO8fDRh6UhBU011Dfha83a8wfr0KXugbVxQ=
+	t=1720153962; cv=none; b=mSYcyF3qi/W4Et5YipOK1rWPn09S7Pj05IMlo9HzpnM7ljlrGxeGWtR7lWXpDKkIYS+nWHp8X04KBKbuv0Aq91T9rcGD7r7tS7KEcb+ICC0z56ctWxetvJKS4g2CnHTT4kx2JblOvrPf78WU3V5C32fNx0AEvqZiUQrhxafibbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720137400; c=relaxed/simple;
-	bh=Xs46nOwYHJgTIupLsnCjY/fzgBTYbfF9hkb/20rxUWo=;
+	s=arc-20240116; t=1720153962; c=relaxed/simple;
+	bh=7zH4BhtmNC75bo3uUQp74pwP+kO9q4th0+RwpYErCt4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=peq/eUT7aEJShF+fv8aMIY/MqqVfkETahYho3C5G6w5LtxtWD165sIqANSFC9/mnRVQUsz80b3uPOopDymGWJOS+ehHVIuVJj3XA+cS9l5KfKkAM8pI3yF0CpNWCBQnDh5okh7VNflwtB4QwafyOlS93G1XmMeIhwgG1g72ftGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=i3UJVn4O; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=HL5/9JJYPoNrcyA5CZmXCKpvTmuZFYIyAv+ySUGfSjmkx8JMlT1/jWpLp74MQS/KVm5Caq5PA4itGR+PG5N1ePfc3HdOHaWc5DHIjEm2Jb6f2v6d4G3rnc/QyKCx1hu3N4kvWYx5Vf2y3wXHFmAIlqAvw798ysV+hx8IKIqsXvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=2DmhlNE6; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="i3UJVn4O"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=4RxnX5dG7TVykPcShsgjuHYL9eFLAVZdu3tr/LHBW7w=; b=i3UJVn4O5dAMVdhCht3dXBnhOy
-	WsY/cAA4hHyjzGtrmCdt8bkRXNnNyLk4H8crFOG1YMEy5dZ99Q3xfyPn+DWbVdOH6AFxDPWAdthOU
-	QFzC9+L/8oMMwdxR6yXarHEZzEzFiefH2zEffWrkEqYgK+3fhRQVC3pAY/wmGqjrnMRyWyBBhgSoD
-	YsC4d5zkPtyrRL/pr17skDLdar1dfKxyD231dV0Bgl0TxG+RKrrD+nBfWWiopZhRY1wE/y5WtjMSk
-	MXLSjw6FripgICfXYHGRyXQn8OP5qKBRW8zIZv2+Z0hGnlEZhav81Wevs4yX0UCAIAu9jLRgan6dA
-	HGRAEbBA==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sPWJQ-00000003N58-190o;
-	Thu, 04 Jul 2024 23:56:28 +0000
-Date: Fri, 5 Jul 2024 00:56:28 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="2DmhlNE6"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-70af2b1a35aso829424b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Jul 2024 21:32:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720153960; x=1720758760; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=JaNUdVKAXYAbRIpln8ABSTH2bFgFz52Xo4pVr+BWnIk=;
+        b=2DmhlNE6waTrp1CxTfKmxrRnc1HIg5N06aEZIz1pcO9IE553AA751y/QERrZTohUIc
+         fE1nYNXWYTYMDW+nhRrQf9J5uuWWilLJfKNWi1xWSs4dkOujNQUW+lxTltEWmyzMnLH0
+         6A/jdd1vADBcLhcXFZIMA+c+GoYfftnbFYkIn34C1+zOhS7BdqZo8eO4o8+eSZCnSX3m
+         4dgCncx0Vywm77ObFgIV/8sV4aZOPuMI50aX3fRFGaetM/de/tWvOYYvEH5+/tI27M3D
+         4Ewf0m78SQftRMhZAsKH7z+Ghv8CIkfzir/U98aQMJ/om+vfaFbTbK3vdDA/qKOciDLO
+         e2ew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720153960; x=1720758760;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JaNUdVKAXYAbRIpln8ABSTH2bFgFz52Xo4pVr+BWnIk=;
+        b=bbMYgU2Mx58ygloOwFAlFz2h+7PM/KAiNJ6Wrp7qDMlJ85WlOwpf8pOIE3JfiHxCaO
+         HVvk91JHXJytivKFLXTkcyXDsNo2AragGUuXS1RFGi+y+GRJd1FbXZhzBD5WRfO9Zh7t
+         szbglzPP0emcPGzauhTmP7ZL4hc6uMunC1IGPP5EBXkZvK7NJiQrd0ePTv9kmJe+62d5
+         pvYym4MwZ7wCFqXX8/Ycs5q9jFb6lKcUvt0lxAT0FEci1Hpk0zBSXNJE+DAZ762BqRty
+         E9CQBn5pC1VC2TVSoQc9oU5oCP0WX0ukuUBdbsHPJv98hUpmwBOBgWfdOIsxD2OltAci
+         sxQQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUIsCeKtR6OB626bhlNzQYamcRL5pyrlYhNndNiajR/nFFRn60/oc5/y9g2gp7sFnbQ1E87AnL8XgP8A1o/3WqFj2+W33yGeHe4
+X-Gm-Message-State: AOJu0YzAjNdsMAWsGfpGIXJ36QEP5EuAVLMoj2wElhKSl0jv3DiRMPsL
+	c3dtBZ7Y9vbB9eb9yW3rKem9UlVR/adb7NfK4kxr2X9d4sw/BQolwHNHpZVK/1c=
+X-Google-Smtp-Source: AGHT+IGNNipKdGsi4XWy+dedlny7ElaFdUH7HAl5rueUaHfHmRKLnG/xTRjlLs78fkLSEdOgSoy6rQ==
+X-Received: by 2002:a05:6a00:4601:b0:705:cade:1f50 with SMTP id d2e1a72fcca58-70b00b0413bmr3372631b3a.34.1720153960020;
+        Thu, 04 Jul 2024 21:32:40 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-708044ae395sm13437861b3a.144.2024.07.04.21.32.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Jul 2024 21:32:39 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sPacf-004cOB-0b;
+	Fri, 05 Jul 2024 14:32:37 +1000
+Date: Fri, 5 Jul 2024 14:32:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: Ryan Roberts <ryan.roberts@arm.com>,
 	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
 	chandan.babu@oracle.com, djwong@kernel.org, brauner@kernel.org,
@@ -42,12 +68,13 @@ Cc: Ryan Roberts <ryan.roberts@arm.com>,
 	gost.dev@samsung.com, cl@os.amperecomputing.com,
 	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
 Subject: Re: [PATCH v8 01/10] fs: Allow fine-grained control of folio sizes
-Message-ID: <Zoc2rCPC5thSIuoR@casper.infradead.org>
+Message-ID: <Zod3ZQizBL7MyWEA@dread.disaster.area>
 References: <20240625114420.719014-1-kernel@pankajraghav.com>
  <20240625114420.719014-2-kernel@pankajraghav.com>
  <cb644a36-67a7-4692-b002-413e70ac864a@arm.com>
  <Zoa9rQbEUam467-q@casper.infradead.org>
  <Zocc+6nIQzfUTPpd@dread.disaster.area>
+ <Zoc2rCPC5thSIuoR@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,24 +83,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zocc+6nIQzfUTPpd@dread.disaster.area>
+In-Reply-To: <Zoc2rCPC5thSIuoR@casper.infradead.org>
 
-On Fri, Jul 05, 2024 at 08:06:51AM +1000, Dave Chinner wrote:
-> > > It seems strange to silently clamp these? Presumably for the bs>ps usecase,
-> > > whatever values are passed in are a hard requirement? So wouldn't want them to
-> > > be silently reduced. (Especially given the recent change to reduce the size of
-> > > MAX_PAGECACHE_ORDER to less then PMD size in some cases).
+On Fri, Jul 05, 2024 at 12:56:28AM +0100, Matthew Wilcox wrote:
+> On Fri, Jul 05, 2024 at 08:06:51AM +1000, Dave Chinner wrote:
+> > > > It seems strange to silently clamp these? Presumably for the bs>ps usecase,
+> > > > whatever values are passed in are a hard requirement? So wouldn't want them to
+> > > > be silently reduced. (Especially given the recent change to reduce the size of
+> > > > MAX_PAGECACHE_ORDER to less then PMD size in some cases).
+> > > 
+> > > Hm, yes.  We should probably make this return an errno.  Including
+> > > returning an errno for !IS_ENABLED() and min > 0.
 > > 
-> > Hm, yes.  We should probably make this return an errno.  Including
-> > returning an errno for !IS_ENABLED() and min > 0.
+> > What are callers supposed to do with an error? In the case of
+> > setting up a newly allocated inode in XFS, the error would be
+> > returned in the middle of a transaction and so this failure would
+> > result in a filesystem shutdown.
 > 
-> What are callers supposed to do with an error? In the case of
-> setting up a newly allocated inode in XFS, the error would be
-> returned in the middle of a transaction and so this failure would
-> result in a filesystem shutdown.
+> I suggest you handle it better than this.  If the device is asking for a
+> blocksize > PMD_SIZE, you should fail to mount it.
 
-I suggest you handle it better than this.  If the device is asking for a
-blocksize > PMD_SIZE, you should fail to mount it.  If the device is
-asking for a blocksize > PAGE_SIZE and CONFIG_TRANSPARENT_HUGEPAGE is
-not set, you should also decline to mount the filesystem.
+That's my point: we already do that.
 
+The largest block size we support is 64kB and that's way smaller
+than PMD_SIZE on all platforms and we always check for bs > ps 
+support at mount time when the filesystem bs > ps.
+
+Hence we're never going to set the min value to anything unsupported
+unless someone makes a massive programming mistake. At which point,
+we want a *hard, immediate fail* so the developer notices their
+mistake immediately. All filesystems and block devices need to
+behave this way so the limits should be encoded as asserts in the
+function to trigger such behaviour.
+
+> If the device is
+> asking for a blocksize > PAGE_SIZE and CONFIG_TRANSPARENT_HUGEPAGE is
+> not set, you should also decline to mount the filesystem.
+
+What does CONFIG_TRANSPARENT_HUGEPAGE have to do with filesystems
+being able to use large folios?
+
+If that's an actual dependency of using large folios, then we're at
+the point where the mm side of large folios needs to be divorced
+from CONFIG_TRANSPARENT_HUGEPAGE and always supported.
+Alternatively, CONFIG_TRANSPARENT_HUGEPAGE needs to selected by the
+block layer and also every filesystem that wants to support
+sector/blocks sizes larger than PAGE_SIZE.  IOWs, large folio
+support needs to *always* be enabled on systems that say
+CONFIG_BLOCK=y.
+
+I'd much prefer the former occurs, because making the block layer
+and filesystems dependent on an mm feature they don't actually use
+is kinda weird...
+
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
