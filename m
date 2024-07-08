@@ -1,141 +1,227 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32CFE1CD06
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Jul 2024 07:43:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720424633; cv=none; b=LupA4s7dLh6BvKZP74Ppht0yBXZviD5R1HzxYGPleLwTPX+iP8uEiIzi6cUeJ977LN//N3pVm/1rPhh3Hme5bPNSN6vin4h9S4sbtzGj0qqIuGG0qZh3dAvf2mrxz5TSkVKS6O3u7aVy0ZhvqJkGGn4ZxJJrkyrn+hlMIqPsUjE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720424633; c=relaxed/simple;
-	bh=199U0J9R4sSAofBAbrDBAsmOc9E1s51Z2EA3CA308rY=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uz5MdIT9FiyBfdoTigaQM1jkNCZsV5yz5K2N/ARm1X5i1G2Jyw4DiZ42VrGg0taXyxM+DwiG+x69KpsdbnUht/tNxNFKZS6My/x5x8n08G2UlCbnn9TjNFlt87gZaD9y6TMZqpW5MmxZBYaqIrjDtZ45Rm6/faAdx2xdA5DGBOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOGgiCeP; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 810E23BB22;
+	Mon,  8 Jul 2024 07:48:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1720424922; cv=fail; b=nKqy99cxw9gq+8YUE8AcZfq7jkYJ0qgI19a9x4J2tNoduGQZU0Ttv+O6fdVT36nRz2RVTTlVmi37bs5x65U2eXg3Z/RKyR0VYW6ncYhuSnMTbIbo6M/kPVlJXKX/tpfZEEar5mqdoGs8qtDSj4iCsS0/TZk2Rr6aTAFdkYxJvCs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1720424922; c=relaxed/simple;
+	bh=e0I+z7yL1lZgq8TmLw2wzW3ENKQZ+pvTxZNHr3Ocx0U=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=oC7gv9tHtSEFlj1wkeyQrpuDUPjMpGzWmMQmtnqb1lMJ83vd2XyLInrRG0vpbmYwpWx7uortFnVrcv6vQsOFonCFnU5gOLfaYSm5kg5XegXjnEFIpQamNtNzrgnu3vPWmbwAXLCC3QNjx9WISNw8ZqSQqmw6r5TVnwXBrW4aCBM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=AKKGj2g9; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=CSShP/+n; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOGgiCeP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FB9FC116B1
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Jul 2024 07:43:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720424632;
-	bh=199U0J9R4sSAofBAbrDBAsmOc9E1s51Z2EA3CA308rY=;
-	h=From:To:Subject:Date:From;
-	b=TOGgiCePNP+FbO6wLEIO2dxvORd7kieCjF1Kzb7Jyz9HvrBzfmitgQObq+zNc8yMn
-	 XI0f5NrTbiRbwa5nZmneYRjC0Vy0MYzHDe7tPMTJcjz7yQ7Ce/hZ7L3bzvjpejM1op
-	 yjO58BUprnoYIKwebp6gnmlEBDXlS9acYmKhY9AZvKwtSF3KjJ+1LwzE0+NnL57xRB
-	 y+AZ5OPqjqJ5hhG3XdXsd8PiIgpLjZwTOoqcpTPA/TRMYdIFoIG114j0U7V+1Jo4wa
-	 WqnMTd+tDy/4XctWNPei491A3QsmPKuKz4OxUnLguOHOF7ROwkrzcJ3iaamTDi/Ch8
-	 DtJqeRm7xaFSA==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: xfs <linux-xfs@vger.kernel.org>
-Subject: [BUG REPORT] xfs/057: Unable to reclaim inodes during fs unmount
-Date: Mon, 08 Jul 2024 12:56:27 +0530
-Message-ID: <87wmlwib0x.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AKKGj2g9";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="CSShP/+n"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4687fXIX016786;
+	Mon, 8 Jul 2024 07:48:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=/twAviXBzuGMehFWIwEx0EeHK0drtR655/LHbHw981o=; b=
+	AKKGj2g9AebhCgkyZV0LuK2eny+gndzoKCM64VOASTDodKocWU9l4qVZsal0NCz8
+	u8JQXi6LEWp9Kg8ItIuR5UhnsS2RM0MAUlXllQ23k3S1K0nJZw9eFXnJ8rAPqV8K
+	sIREy8tHm7gUc9Lp9BkXDx8Gh/lpPnzyw8kfPOVh4J5iK9edewuAo1y9tPY2R0Dt
+	VLE1HVim3RliE6wfuiq8x33E+wa2MirMBFeg74wy/+NtX1IUJjmxB9/Qn/DthtGP
+	FTewT4j+TDiDVo1rCXsJjkPRqmNglSSazdQ2ADKHOZ+KmZvbVCJ9CRtn0wPWSuH2
+	BH2bFlQQTZESOH5PKQlk6Q==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 406wky20x4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Jul 2024 07:48:29 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4686u6tR029822;
+	Mon, 8 Jul 2024 07:48:29 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 407ttrsxa4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Jul 2024 07:48:29 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DL4wxjdl4ExyiOfPxG6gKW0zX7pBPW++1YHN+4VVfDgdq4MEFsRxI1Cyp9mTqYueuV+Q5zigyiBch41Q8ap7J/0xMJxQ1d+ndf5agkLMMss2O6/tp3NT66RVlnUCdQFT0unL5oRuF65yXQSpoEFuCFfDBSdgGOoNb56rWBcn5dFRY8N747vyyRBO9xVHqql6TKSYjcYpYG8h+wAWQzK16HjPrWr/7OoQ8FidNTr64uYDyEkZQntPrZVrsLkvYFiRC9YhcahzWYdum8wewFTw/sdw0XyQ1HDBtP2Fp16pnsyEoF911kC+DMiNt8MUG4MixSWbWJxXAmrasktQ3/myVw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/twAviXBzuGMehFWIwEx0EeHK0drtR655/LHbHw981o=;
+ b=JzaE21AhkGLYR/DGbx3jWq2auZpHHK1ConJkMT8QOmV5WSs1zFacPw7zEwY+x2gl3ENP8aPIvOw9yIwLhwlnOKYjBKLXadl/BzQlE2/Qh36ltIqqWZ07ZpaJBdiXHU0stZgYYjQqtrGYQluGVgV+gGiYgO7osrVDc2LPbzEO0z7HaT+nZI9ydmiV1EE5aMiTt/z28JXQ1YfbwqBx1VU1L++MOXsw5M0Cp8+PaOUiJtxJJWj0er0Y6Tf8K4zyX+hmTqxU5bQOZh4VYqjUHKu01sMqH19ncNSQ8vW4wfvE9xZdoTrwA7LrGTkCcZPAbrTcZYGEnigOOrcP402xaD2lgA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/twAviXBzuGMehFWIwEx0EeHK0drtR655/LHbHw981o=;
+ b=CSShP/+nHYyw0m+wZ11waRmgzGwyGc24AS7R8yflLEdA1DTKb2rldS5aslRMB76kyUGamS8+4bf+g5KB7RNFS9Kjw9j2Y8emLaOn2SqZWq2v1cnCtA072j0Ax+1y+KTql8GPNytamxFTBauxSZJd9LWeXZrF6w8E/GelKD90Lbs=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by IA3PR10MB8091.namprd10.prod.outlook.com (2603:10b6:208:510::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7741.35; Mon, 8 Jul
+ 2024 07:48:27 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7741.033; Mon, 8 Jul 2024
+ 07:48:27 +0000
+Message-ID: <e2799d3e-734e-4909-ba90-931799ef486a@oracle.com>
+Date: Mon, 8 Jul 2024 08:48:19 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/13] forcealign for xfs
+To: Christoph Hellwig <hch@lst.de>
+Cc: chandan.babu@oracle.com, djwong@kernel.org, dchinner@redhat.com,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
+        martin.petersen@oracle.com
+References: <20240705162450.3481169-1-john.g.garry@oracle.com>
+ <20240706075353.GA15212@lst.de>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240706075353.GA15212@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AM9P193CA0025.EURP193.PROD.OUTLOOK.COM
+ (2603:10a6:20b:21e::30) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|IA3PR10MB8091:EE_
+X-MS-Office365-Filtering-Correlation-Id: 71aac632-253f-4e1c-93f9-08dc9f225a02
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?WUQ5SzZaMENMRlArb3diRkMwZXZEZnlrdnYyQ1IvQW56MDNXNkNyWE9XajJK?=
+ =?utf-8?B?NTdiWFM0VVBFR01qeGUxdVI1ZmRML3ZEWUJFMUYzK2k2Y1QvR3hqdFV4b1dM?=
+ =?utf-8?B?ZWlpOTdVRzJEYW11YmdyQm43NTdHejdZdzNTOFZGWEZNNVJMMEpLcXM4VDRv?=
+ =?utf-8?B?cWdJZzlOUkt5OEdCOXY1eFFEUEJnNDR3d0k5aHdQVEF2ZkFFMGdMNVlwbzd1?=
+ =?utf-8?B?Q3VrTlJuWDB6U2x5S0JLVXlJUU91cXBlU1BPREhMT0U1R3pid04rVndOaTFp?=
+ =?utf-8?B?TmtydTZPS1ZGS3Y1SWdLTWlqSk1vZDdpbHlWSWJHb2tYK2VHOENacUtVSTNm?=
+ =?utf-8?B?Q0VpallVMG5mbWJ3aVg0dDBPOHpGOXlvRG8zcFRRajNGRG5IS1Uvb1FQVkZy?=
+ =?utf-8?B?Y3ZyYjFBSlBTalovSktlNWJxNWNkRW5uR3EybDlNZmczL25mWnE5T0RVUlFt?=
+ =?utf-8?B?aDVvTTl3c3Z1VGpidmVzekNOTXZLZm1xR0NaeG0xS0pkYW95a08zNTRQTjVx?=
+ =?utf-8?B?OHpkYkgva0ZZT3JGamRVOWhPRWpkajRVY0tIYU1ZME5UbVFOU2FML2hZTWVu?=
+ =?utf-8?B?dkpxZ1d3SkFEMGduRTM5cnM3Mm1SZnFEVFBrWVU3blJFaml5RVo1SnAxWXU4?=
+ =?utf-8?B?ek8wSWd1d1FpR2RGVU9Za0Z4eElXekIxYlFSVUZ0ckIzMzVkVkRXSUxTNkt0?=
+ =?utf-8?B?cHEzVkxGajlXOGRZNmd5UkZFRXdLRlkzV0wxNmhEdnd6YVBydCtPKzNyOC82?=
+ =?utf-8?B?VXljQXduK01jcWhrKzJBQXpkQkFYOWFzall3NTUrcTRrTHdrckFMZVpIbW5r?=
+ =?utf-8?B?N0ZoMlJSck5sMjF0V0ZwUVJaajdieEJMNE9aQUxNbTJwbnRTa3NtNmZVMTZx?=
+ =?utf-8?B?VU0zZ0EyWWp0OUFmeTB4MjlhZDBXbEtidTRjajdpS0VkOUQyUWRkcmNGNDFh?=
+ =?utf-8?B?MDVjeG9pdWt3ZGdhQm16U0E4RzV1TitDY0J2WmtMOFhuVW53ai8rNWZuakU5?=
+ =?utf-8?B?K2tqbS9zU1o1T01FK08xTEU1RGx5R0lScmJ5MXoxb0JLci8vWmk1Nm9HcTBN?=
+ =?utf-8?B?V1FoMHhyZ1VWOERYRWowOGVDZG9FR3pmcUdKekVCT2l5L254Wk1nM2hmSkpi?=
+ =?utf-8?B?RzB2QzA2WFRWcFBYdStsYjZWeFowWmZ6YmNjVW1adld3cTNOQ01vSTVNZ0l3?=
+ =?utf-8?B?UEhlbkIyNFNkbjlDZk5CdGlERHA1U1VZcnVHb28rNWs1cXhIN2EwZlozSzFa?=
+ =?utf-8?B?TjkwejlSOS9RcGROV01maHJmQUdnc1pWZGNjTU1rTDVIUnJJMldFUEdwRitZ?=
+ =?utf-8?B?N081S1pEY2w1OEZVcnFiWFRTa293K2kzM2JZK2NpN1RFZVZFWHVObjBtUG5B?=
+ =?utf-8?B?cmNzOGRLZlhxUmdGdWJ2WTE2YzN6N3VnNksydGFnR24reDVXMXAyN1VwWjRa?=
+ =?utf-8?B?cnNKc0hXSGNVeVVpcS9RcGV3VUM2N3Y5VHFuOEhVQklHV1NJQmtOL1NVZ3F6?=
+ =?utf-8?B?T3VrNzNXcjNCZkFVTWQvQ1F2b3J4T1ZVU0xPRkgxcy85MDdDcjBZNWpuMEhB?=
+ =?utf-8?B?cm1qTHNBSWFZK2w4UllCZUxGaFZxdlBlWTU3aVFKa0haYXkxYkRNOUFTMlBN?=
+ =?utf-8?B?ZzJKb1lYTHhWQW85WEYrQkVPZGhJYWtUdG5pRzZEZ2k2N2tLY3NHc0tkNVNx?=
+ =?utf-8?B?WnF4KzZqcVVFWmd2UGRyQTN5bk9OMENsb0g3bUJabDRwVjJsbzRRWUNscXNk?=
+ =?utf-8?B?REZmR2ZXRFNtb3VPd1BJKzhNaGpBQXcxQmxHU3pkU2hZWEVpSWpLcHBEOXNk?=
+ =?utf-8?B?ZHJ2U3doMGZ6TG1JNzBXZz09?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?Mzdva3M4MS9iMkxjZnI1QWpNSnFXeStHTDdrdkhveDJLdlh2dGsyK1FGL0Nz?=
+ =?utf-8?B?SEJiS2krM3NsdkVOZjROZzNTeDFtdHRJMFV0UXNWc00zYlgzNitPd0xSV0x4?=
+ =?utf-8?B?a2hwMEdEcW5sbXR6cDhkdW1jZnJhcTJCY0h6MmY4VzQwK0t1aldEYVpUR0tm?=
+ =?utf-8?B?REFqUVRRSzFWeGVHODZEcHFxTytNNWlBVU1oL0NuN1luVGdXbGhwOGdmdTZF?=
+ =?utf-8?B?eEtuekFQRkJ0U1JiSHlsQTZLRnNNV0d5R0MxSTZwQnNXYUlpRE84YlRENlZ6?=
+ =?utf-8?B?MjZ2TWlSMlhqaVlja1M5bFZjQTF2eFdOZTJOUTl1Yi9DQktvenlpRWx6NUpv?=
+ =?utf-8?B?clB0K3pCWmg5c2crMko3UGFYUzd0RTdEOVRUNG9yOUdzT0piMzdUZDl4ZW03?=
+ =?utf-8?B?QnczQkYxMG96UVJmK3d1czUzOVJnS0pPSWIzV0dFdE5sNEpPdSs5NjNFWHBZ?=
+ =?utf-8?B?ZUpXemcvSFkyeVVnaCs1TDBrZnplbUMvS2VBQmc4UEhUcGxjYkJSY2o5Q2dF?=
+ =?utf-8?B?SUV0MklPL0Z4Sy8zYnRTMjg0aWNWZjdZWGVBYzRwcmlKR2xjNXQ5ZUg5R3Mr?=
+ =?utf-8?B?bGVEelQxZHc0WEV6UUpRZFpjQWRWWU9Pb0ZZVm4reFBud3NBdU1IcCt2alJB?=
+ =?utf-8?B?UEVaTTVMWVphMm4zLzFraEtpcG9BQm9uZXAzUTdTeTdBSW54RW1KSEFHVStq?=
+ =?utf-8?B?UDNQWnhNaVNXRHU1UE9tUGxvZkpZajVnNzhNOE5neUFoOFdRbUg1YmlEV2d6?=
+ =?utf-8?B?dWx5MHJMWFYxbGx2Tm5nck9xSWhQR0JIcHdiMjZ3Zk1POUdqNXFHdUtVaWcr?=
+ =?utf-8?B?djRxdml6SjlpTnQvQTFzNit3bi8yWHZmK0ZWcG1GWHRLcXdHcEIxNDlHNTF2?=
+ =?utf-8?B?MHpZTmc0K0hwRWdoT2Q1UDRSalF4TktlcXdpUmdsOUIwQTNMTjdSaEE1eUc5?=
+ =?utf-8?B?blNpR3VWNnlNTzJLdUpydHVYVVpMTzlkajdxeFZSaU1FVGFkN3VVbHRqNU1n?=
+ =?utf-8?B?ZUJ0RTlwY040cnRkY1JXdUlncmlMM3Y3VkhqNzFET292TUdHTHU3RURsaVZS?=
+ =?utf-8?B?Y096VURGOUltQTMwOHErWitQc01hS0pmcDhRdHl2NGRjYUtOTjBDenk0YkdN?=
+ =?utf-8?B?UUY1aVY5RC9pT2Q0cGt4TnplMGpZUk5GSTdndDVXd2o5M25RQXhJNm5IcUU3?=
+ =?utf-8?B?d2RpcGw4cFI5WUlTMTRFZjVSbWkzZHZJK2h0RDg5aVJvL3d0L2NhVStDcWUz?=
+ =?utf-8?B?aXZkVWFFWDlZeHcvdEdhNHZIRHd1cVYrNG85VUc3NUdTaDVuWXdCSHR6NTBF?=
+ =?utf-8?B?dGxXamhmci83NHpXU1p6bXU1eVNqTWVZc0Q3TjJUTlpJNVB3a0pZY1kwV1d5?=
+ =?utf-8?B?TStxaTQwTnZTNDlSMTEwMElyWWJkV1U1dXZmMFhxZFE5bGs0UEVMNFhoalRB?=
+ =?utf-8?B?MGdpYXJWYWFnOG1SanVvbUlaU1YwNnVKeDRwTUZZVnV5azZIcEdDUGdLZnlk?=
+ =?utf-8?B?SEVkQlhWbkZESGFYYjV0NlI3cDdvZnA2T2Zqb2ZpMVVUd0tBWHA2WDd3TjNi?=
+ =?utf-8?B?ekFhYTF5dC9Edjg0V3dhSGNXL21OTTZQVDNMbDVWUy9aekZJUGhpd0N0dFB3?=
+ =?utf-8?B?NHhGYnJ3VzhsRjRlcWFEU0kzQ29hSHdYc2h0emlROGkwdkhpZWs3ZGVRbGRu?=
+ =?utf-8?B?Y25DL0ZzSzJoMy8rUGJENks0WGN1ZGRFNkl3cWdQV0I0YUpLQjJwbmJscmZ2?=
+ =?utf-8?B?Wi9qQ2tLaFg2UVBRYTJOLzh2ajQvOXBsWXZzQWVtbUxmQUlZd3BaUG1KTHRn?=
+ =?utf-8?B?Z0dkODNFUm5pbWprc0NGb3p4MmMwRllPbGh0SEN5bDZrTmFNWDE3RE55bXM5?=
+ =?utf-8?B?WHB4cGs5S3ZMZis0UUxpS1phOEhVUUk0RnNkTXRjQ1VLcDVlbGhta1BxcXUz?=
+ =?utf-8?B?NDI1bk1zZ2U1d1kxWHJHVzVnTHdPTGNOYXloSTJGMHRRZnZDcXM1Yks5bTdY?=
+ =?utf-8?B?cXFEQVA0MndBOW1GOGlLZzBibldOdjRKNFdWbnFBZWt1RmF0ZExMRW5yL2Qw?=
+ =?utf-8?B?a1UxaHlBT29TME5tNW84c25yU21sRXU0RUhQMEdOK04xRDJ5WGtXT0V1ZGl0?=
+ =?utf-8?B?U3Vwd1F3d2VJczVtb3VFeTNseHJ0UWhlTkZ2aFBCVE5kQk9iaTBWckY0Snht?=
+ =?utf-8?B?OEE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	6IpSeZNWTefAYJ4k9sqE7ABYpG8jcp4YIaByYlb9thaF/bX9WoWlPGSV8hzsDqgu6GO9+3kAB6tHGiaeSwOubUSpdIC3WG7CVrgWVCnm59dgbfFuEhTHWljkpC/pw/xwy8eWKesJlRBsGeCQWAfbg0HHmDkitt6AHBe35ybIJMwOT9gDhroom2EEEpxSgt98nslh5SeFGVa5zEr4Uvds4ClZSAoQeIvxwE2RKVXnmWW3DqkqD9E+iIViG5EDB2814sfN4rRyPkUshEAFZlVG/BNCdQuXCN6Ox8X+4EYkOKQ57pjduyu6Mpi9o2WJeySfebPZzVCZJ3b8BsVIlbbJKWo+5z/qlgIFmGlBYR4LBu3i0EDuOT2EYvii7SwybyBelP+0Sx5i8zNE7dOuIhxJmbtzq8CHtQHLpunVm3Q7rlDvjscFLyoT0C0DHowL1xL+gxN/FTkgi9ZO3z1oa53i5rUfCk0sCRUXjrZrNY9W/HNhr95lB2CLQfc2VyvYHLxROXMANGP1mCp3lrstwsGcw9HdTtdqvTew8c6FBT1mRJG3Bihf5B8uajYzm5YzmLunxlJs1qV6fOz4dn8yvC8LG1s+aAokyC2YsxxkIiYzDLg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 71aac632-253f-4e1c-93f9-08dc9f225a02
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2024 07:48:26.9749
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 411vPRkCvgHkvJCwWU4tNDfTo6e1/y97YGWQxfxHT+nbSDJwiQgaKCVQWg6zssocZW80dX0p5zL6NnXGviDR2w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA3PR10MB8091
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-07-08_02,2024-07-05_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 suspectscore=0
+ malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=867 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2406180000
+ definitions=main-2407080060
+X-Proofpoint-ORIG-GUID: _-jSmq9esgSoFAyzzRkaVQ3T0au8KX3s
+X-Proofpoint-GUID: _-jSmq9esgSoFAyzzRkaVQ3T0au8KX3s
 
-Hi,
+On 06/07/2024 08:53, Christoph Hellwig wrote:
+> On Fri, Jul 05, 2024 at 04:24:37PM +0000, John Garry wrote:
+>> The actual forcealign patches are the same in this series, modulo an
+>> attempt for a fix in xfs_bunmapi_align().
+>>
+>> Why forcealign?
+>> In some scenarios to may be required to guarantee extent alignment and
+>> granularity.
+>>
+>> For example, for atomic writes, the maximum atomic write unit size would
+>> be limited at the extent alignment and granularity, guaranteeing that an
+>> atomic write would not span data present in multiple extents.
+>>
+>> forcealign may be useful as a performance tuning optimization in other
+>> scenarios.
+> 
+>  From previous side discussion I know Dave disagrees, but given how
+> much pain the larger than FSB rtextents have caused I'm very skeptical
+> if taking this on is the right tradeoff.
+> 
 
-On current xfs-linux' for-next (i.e. commit
-49cdc4e834e46d7c11a91d7adcfa04f56d19efaf), xfs/057 caused umount to execute in
-an infinite loop inside the kernel. The following was obtained by 'perf
-record/report',
+I am not sure what that pain is, but I guess it's the maintainability 
+and scalability of the scattered "if RT" checks for rounding up and down 
+to larger extent size, right?
 
+For forcealign, at least we can factor that stuff mostly into common 
+forcealign+RT helpers, to keep the checks common. That is apart from the 
+block allocator code.
+> 
 
-24.39%  [kernel.kallsyms]                      [k] __lock_acquire.constprop.0
-        |          
-         --24.13%--0
-                   |          
-                    --24.12%--0x7f939ab4e8ab
-                              entry_SYSCALL_64
-                              do_syscall_64
-                              syscall_exit_to_user_mode
-                              task_work_run
-                              cleanup_mnt
-                              deactivate_locked_super
-                              xfs_kill_sb
-                              kill_block_super
-                              generic_shutdown_super
-                              xfs_fs_put_super
-                              xfs_unmountfs
-                              xfs_unmount_flush_inodes
-                              xfs_reclaim_inodes
-                              |          
-                               --24.01%--xfs_icwalk
-                                         |          
-                                          --23.79%--xfs_icwalk_ag
-                                                    |          
-                                                    |--17.47%--xfs_reclaim_inode
-                                                    |          |          
-                                                    |          |--11.71%--_raw_spin_lock
-                                                    |          |          |          
-                                                    |          |           --11.71%--lock_acquire.part.0.isra.0
-                                                    |          |                     |          
-                                                    |          |                      --11.70%--__lock_acquire.constprop.0
-                                                    |          |          
-                                                    |           --5.72%--xfs_ilock_nowait
-                                                    |                     down_write_trylock
-                                                    |                     |          
-                                                    |                      --5.71%--lock_acquire.part.0.isra.0
-                                                    |                                |          
-                                                    |                                 --5.71%--__lock_acquire.constprop.0
-                                                    |          
-                                                     --5.98%--_raw_spin_lock
-                                                               |          
-                                                                --5.98%--lock_acquire.part.0.isra.0
-                                                                          __lock_acquire.constprop.0
-
-I noticed that 66 xfs inodes had XFS_IFLUSHING flag set and the flag is never
-cleared. This causes xfs_reclaim_inode() to return back to the caller without
-freeing these inodes.
-
-Unfortunately, I am unable to recreate the bug.
-
-The following is from the dmesg log:
-  [11154.874186] run fstests xfs/057 at 2024-07-05 04:23:26
-  [11155.685899] XFS (loop16): Mounting V5 Filesystem 0313cedd-1cea-4c58-9fde-6cf7896ac67c
-  [11155.700962] XFS (loop16): Ending clean mount
-  [11155.971856] XFS (loop5): Mounting V5 Filesystem 7c161a2e-e85a-4f29-91c3-5ef1bbd92f14
-  [11155.981646] XFS (loop5): Ending clean mount
-  [11155.984130] XFS (loop5): Quotacheck needed: Please wait.
-  [11155.997672] XFS (loop5): Quotacheck: Done.
-  [11188.028961] XFS (loop5): Unmounting Filesystem 7c161a2e-e85a-4f29-91c3-5ef1bbd92f14
-  [11191.038552] XFS (loop5): Mounting V5 Filesystem 7c161a2e-e85a-4f29-91c3-5ef1bbd92f14
-  [11191.052389] XFS (loop5): Ending clean mount
-  [11221.299133] XFS (loop5): Injecting error (false) at file fs/xfs/xfs_log.c, line 1849, on filesystem "loop5"
-  [11221.302411] XFS (loop5): Intentionally corrupted log record at LSN 0x1000250d3. Shutdown imminent.
-  [11221.304993] XFS (loop5): Injecting error (false) at file fs/xfs/xfs_log.c, line 1849, on filesystem "loop5"
-  [11221.307158] XFS (loop5): Intentionally corrupted log record at LSN 0x100025113. Shutdown imminent.
-  [11221.309697] XFS (loop5): log I/O error -5
-  [11221.309807] XFS (loop5): Injecting error (false) at file fs/xfs/xfs_log.c, line 1849, on filesystem "loop5"
-  [11221.311068] XFS (loop5): log I/O error -5
-  [11221.311076] XFS (loop5): Filesystem has been shut down due to log error (0x2).
-  [11221.311081] XFS (loop5): Please unmount the filesystem and rectify the problem(s).
-  [11221.321602] XFS (loop5): Intentionally corrupted log record at LSN 0x100025153. Shutdown imminent.
-  [11222.109007] XFS (loop5): Unmounting Filesystem 7c161a2e-e85a-4f29-91c3-5ef1bbd92f14
-
-The following is the fstests configuration used for testing:
-  FSTYP=xfs
-  TEST_DIR=/media/test
-  SCRATCH_MNT=/media/scratch
-  DUMP_CORRUPT_FS=1
-  RECREATE_TEST_DEV=true
-  
-  TEST_DEV=/dev/loop16
-  TEST_LOGDEV=/dev/loop13
-  SCRATCH_DEV_POOL="/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop9 /dev/loop10 /dev/loop11 /dev/loop12"
-  MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0 -lsize=1g'
-  TEST_FS_MOUNT_OPTS="-o logdev=/dev/loop13"
-  MOUNT_OPTIONS='-o usrquota,grpquota,prjquota'
-  TEST_FS_MOUNT_OPTS="$TEST_FS_MOUNT_OPTS -o usrquota,grpquota,prjquota"
-  SCRATCH_LOGDEV=/dev/loop15
-  USE_EXTERNAL=yes
-  LOGWRITES_DEV=/dev/loop15
-
--- 
-Chandan
