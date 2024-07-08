@@ -1,158 +1,121 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41A6BA46
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Jul 2024 22:38:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9247BA46;
+	Mon,  8 Jul 2024 22:40:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720478320; cv=none; b=Msz0PVbrNAQ5ilaXfDlOFgtRalbIbvOlIhAHtiyKfPwMexk+PdS71By1mSjpsKpnpnHobRSIbifzJLqPyBwaENFq7h8A+cegURcXIZArgOseD740MRrrUli2mbxTU/QTP5fq0JqTe2LNqyaiJhlOQkKieVTrrC94e/UDGFrc2iM=
+	t=1720478431; cv=none; b=IZ6Y1DunAGYN+qQCXlxivL+STO0B528d3fL65/BrkV0oxvoKcs/Wf9nb+4hHIIilO7QZlTuDLWZ42TIQDIY4slccxsmnA9IkamCWkVbW+oTN07D25w+ByU4ZF5oncWWs8Vjf4ncoNv8ofvkIn+G2GlMk3AXbZbWd6gaTmTRua+A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720478320; c=relaxed/simple;
-	bh=/h5xetnvSvdxCRVaDlSxL6PNJ7PWtn/RFVmLv6NDpdw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YIYzCaq784lfkkhAk711809Q+p8UkhQTibkajFIhN+Y+of2VjvdN4uw8vDMxlu59tv7oEg4oyvAvUzIkRvZo7ZC9sJg4k24AxNrrA0bkZbfm5wpCe8tkINGDYbgpcDyMSUIhhjT5HEmzA0oodsKg6mfk5Sf//qittUzI71yfacU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=uPMDm9Xk; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1720478431; c=relaxed/simple;
+	bh=Y+fx4fpIucpE9e+Cawa83tszGtQwTDdtG4YO9idMM2k=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=SDRfo5QZb/sWx1rEhWGyXQM+FHxnTqfkWk5Oi2WVMyy2SOWMH53uk3GkWxW11aOXIMf1a+Uf5EuXpQZ14E5WkTmFg9gEW8Sg44PY5jla3L/j4fITCakn7W5BqgPgPlMiTCbqHVpXlB57PoBE2oh8TcOni5G3jmzP0awNhPbdK7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=dpwvwY/U; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="uPMDm9Xk"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-70af48692bcso2751096b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Jul 2024 15:38:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720478318; x=1721083118; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MJM7f+Jo6hJoZKJWYLuy6O2cBhS7ua9fFa68S3H6JXM=;
-        b=uPMDm9Xkgeg+4iK2FYJ4uFo+6SCvnoeTYdJfAEOGct/0O2sfBGu8lA6R0eMyKIJ805
-         aCrNS3kSgoprfNO+had5lzgAR6V5POE0zg8gDGYm6mWjTy2+xCX764ZXr7YOeo1nCAy/
-         gAjys08GQf4lbZalGCv2NcJmX1bZcolW8EasLCu9dAyauXn9KWGBbuAwhxtupO1RcLIT
-         kFGtDe/1M0nf8bUhFoJeskDokmkrjng/wUSwg/kp33I29eavbx//rpsqMjl83rxyR4rZ
-         Hyd1HpP0i4rDVb9xOHpZwu3yT8kMGa+GQP1FJfY3ig0AqnAUXYrEMP+f3THLkuNHoUj1
-         fxbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720478318; x=1721083118;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MJM7f+Jo6hJoZKJWYLuy6O2cBhS7ua9fFa68S3H6JXM=;
-        b=rH+LtumKiTbgmSDiOaz+7vBxCxWL3l5dfdiYBhPiGhFNbExIgWZRlRdp5BXtp2e8SF
-         QChmMXG5a2X+K74K20onmxke3foCCrmGPbVhtcrC9FyWml8r1mTukM4+w7ACrWLvDBOo
-         +BC9xqC/pYM6UNll/H2Fgcjm/ogDkUKqcbPjLCNlSopv+EjYClyiv0I7+VDTI1rhi3Ly
-         +qZ3WqKeyOVMJlrx6MkASzv49UxuXPXE4NYFv+YAX5H+E43WX3vPRiVNRl1jykrxCHf4
-         pv5LQv7Ohqv7oU70cFYmqGCb+C6PX3IsQ9F/a/XV1ILuIJg6R+2VWWKB/yTzSBPuMPvj
-         8gKw==
-X-Forwarded-Encrypted: i=1; AJvYcCWZFGxlUcYD70evrv7lR+kiHNbYrd74D2sR0huibufBkP+0ZGphln84Vkb79Eexea3B+It3RzCA/4LGBQJpw8gRKqGjdjBRjRdO
-X-Gm-Message-State: AOJu0Yx22nLKwUC+ZXwto5UK7tOtAsI72Oslot5Q9NvJmy+hEb50qNbd
-	3arZ4+GwFi21uuJphBzBrsOPc+kIXMl+MsMMrOvKPiqlkgvmdihWs7NXkMQcoQ4=
-X-Google-Smtp-Source: AGHT+IFGyZ3UEDh9XdJG0H3OObqiEOVEjm6gvnUyVJW/H5Djwsz+kEeS3sCtPggRn1451giXplBlAQ==
-X-Received: by 2002:a05:6a00:1a94:b0:706:6962:4b65 with SMTP id d2e1a72fcca58-70b43565ea5mr1249975b3a.14.1720478317837;
-        Mon, 08 Jul 2024 15:38:37 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b439ab788sm391306b3a.167.2024.07.08.15.38.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Jul 2024 15:38:37 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sQx0E-0090yY-2K;
-	Tue, 09 Jul 2024 08:38:34 +1000
-Date: Tue, 9 Jul 2024 08:38:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Long Li <leo.lilong@huawei.com>,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH] xfs: eliminate lockdep false positives in
- xfs_attr_shortform_list
-Message-ID: <ZoxqanGtyNsYh0XC@dread.disaster.area>
-References: <20240622082631.2661148-1-leo.lilong@huawei.com>
- <20240624160342.GP3058325@frogsfrogsfrogs>
- <5ce25a1a-51d7-4cf3-a118-91eeeefe29a4@sandeen.net>
- <20240708190005.GQ612460@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="dpwvwY/U"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1720478426;
+	bh=QQAQQkdk8Jaqn94wbZ45muQhBVLtRyyS92LUavUzSI0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=dpwvwY/Uckp8RCxdV3v3xlCsEoznj31uOKBJ0RuxXvtKzimrsYSed9Dkduzhhur2Y
+	 Yf9RWVvZEJQp/KIIgS994y/6SL6VgNyaAuRscJICWOpjFsJce1bIBQXc+oM7cDOAWJ
+	 CzFwzxKZ7DICiM4+XTZRxY9dOWhWGvqwLJhOGsSieudl9nr4CfDnmHZIqvi0atTqhS
+	 t4gPkYkIFwmseelHYKh2A9d7xtMVOyPUyZxVf7H6+pBuI/PaVMyKr5WPJHY+Jex6D2
+	 2xSEAp2c/+5J1DFdXwQDTf2UeO2LWTLkx7baL2cuB6cMZUpgqPz4fWj0w1yo72HrVI
+	 ViBB1tS2xLH0Q==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4WHzbX3TQXz4w2R;
+	Tue,  9 Jul 2024 08:40:24 +1000 (AEST)
+Date: Tue, 9 Jul 2024 08:40:23 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, Chandan Babu R
+ <chandan.babu@oracle.com>, djwong@kernel.org, david@fromorbit.com,
+ willy@infradead.org, Christian Brauner <brauner@kernel.org>, Stephen
+ Rothwell <sfr@canb.auug.org.au>, Linux Next Mailing List
+ <linux-next@vger.kernel.org>, akpm@linux-foundation.org,
+ yang@os.amperecomputing.com, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, john.g.garry@oracle.com, linux-fsdevel@vger.kernel.org,
+ hare@suse.de, p.raghav@samsung.com, gost.dev@samsung.com,
+ cl@os.amperecomputing.com, linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan
+ <ziy@nvidia.com>
+Subject: Re: [PATCH v9 00/10] enable bs > ps in XFS
+Message-ID: <20240709084023.585109fe@canb.auug.org.au>
+In-Reply-To: <Zoxkap1DtwZ-1tjI@bombadil.infradead.org>
+References: <20240704112320.82104-1-kernel@pankajraghav.com>
+	<Zoxkap1DtwZ-1tjI@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240708190005.GQ612460@frogsfrogsfrogs>
+Content-Type: multipart/signed; boundary="Sig_/4M_36_MgTLNnz/OVpJR=2TC";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-On Mon, Jul 08, 2024 at 12:00:05PM -0700, Darrick J. Wong wrote:
-> On Mon, Jul 08, 2024 at 10:40:37AM -0500, Eric Sandeen wrote:
-> > On 6/24/24 11:03 AM, Darrick J. Wong wrote:
-> > > On Sat, Jun 22, 2024 at 04:26:31PM +0800, Long Li wrote:
-> > >> xfs_attr_shortform_list() only called from a non-transactional context, it
-> > >> hold ilock before alloc memory and maybe trapped in memory reclaim. Since
-> > >> commit 204fae32d5f7("xfs: clean up remaining GFP_NOFS users") removed
-> > >> GFP_NOFS flag, lockdep warning will be report as [1]. Eliminate lockdep
-> > >> false positives by use __GFP_NOLOCKDEP to alloc memory
-> > >> in xfs_attr_shortform_list().
-> > >>
-> > >> [1] https://lore.kernel.org/linux-xfs/000000000000e33add0616358204@google.com/
-> > >> Reported-by: syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com
-> > >> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > >> ---
-> > >>  fs/xfs/xfs_attr_list.c | 3 ++-
-> > >>  1 file changed, 2 insertions(+), 1 deletion(-)
-> > >>
-> > >> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> > >> index 5c947e5ce8b8..8cd6088e6190 100644
-> > >> --- a/fs/xfs/xfs_attr_list.c
-> > >> +++ b/fs/xfs/xfs_attr_list.c
-> > >> @@ -114,7 +114,8 @@ xfs_attr_shortform_list(
-> > >>  	 * It didn't all fit, so we have to sort everything on hashval.
-> > >>  	 */
-> > >>  	sbsize = sf->count * sizeof(*sbuf);
-> > >> -	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
-> > >> +	sbp = sbuf = kmalloc(sbsize,
-> > >> +			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
-> > > 
-> > > Why wouldn't we memalloc_nofs_save any time we take an ILOCK when we're
-> > > not in transaction context?  Surely you'd want to NOFS /any/ allocation
-> > > when the ILOCK is held, right?
-> > 
-> > I'm not sure I understand this. AFAICT, this is indeed a false positive, and can
-> > be fixed by applying exactly the same pattern used elsewhere in
-> > 94a69db2367e ("xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS")
-> > 
-> > Using memalloc_nofs_save implies that this really /would/ deadlock without
-> > GFP_NOFS, right? Is that the case?
-> > 
-> > I was under the impression that this was simply a missed callsite in 94a69db2367e
-> > and as Long Li points out, other allocations under xfs_attr_list_ilocked()
-> > use the exact same (GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL) pattern
-> > proposed in this change.
-> 
-> Oh, now I see that the alleged deadlock is between the ILOCK of a
-> directory that we're accessing, and a different inode that we're trying
-> to reclaim.  Lockdep doesn't know that these two contexts are mutually
-> exclusive since reclaim cannot target an inode with an active ref.  NOFS
-> is a big hammer, which is why the proposal is to turn off lockdep for
-> the allocation?  Why not fix lockdep's tracking?
-> 
-> <sees another thread>
-> https://lore.kernel.org/linux-xfs/Zou8FCgPKqqWXKyS@dread.disaster.area/
-> 
-> We can't use an ILOCK subclass for the reclaim code because we've run
-> out of lockdep subclasses.  I guess you could abuse lockdep_set_class to
-> change the lockdep class of an ILOCK when the inode enters reclaim (and
-> change it back if the inode gets recycled) but that's a bit gross.
-> 
-> What if we got rid of XFS_ILOCK_RT{BITMAP,SUMMARY} to free up subclass
-> bits?
-> 
-> https://lore.kernel.org/linux-xfs/?q=xfs%3A+remove+XFS_ILOCK_RT
+--Sig_/4M_36_MgTLNnz/OVpJR=2TC
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Yes, that would probably work - all we need is a single subclass for
-the ilock to say reclaim locking is a different context. There
-should only be one lock site that we need that annotation for
-(the final xfs_ilock() in xfs_reclaim_inode() after the inode has
-been removed from the radix tree), and we don't need nesting because
-we are only locking a single inode at a time.
+Hi Luis,
 
--Dave.
+On Mon, 8 Jul 2024 15:12:58 -0700 Luis Chamberlain <mcgrof@kernel.org> wrot=
+e:
+>
+> On Thu, Jul 04, 2024 at 11:23:10AM +0000, Pankaj Raghav (Samsung) wrote:
+> > From: Pankaj Raghav <p.raghav@samsung.com>
+> >=20
+> > This is the ninth version of the series that enables block size > page =
+size
+> > (Large Block Size) in XFS. =20
+>=20
+> It's too late to get this in for v6.11, but I'd like to get it more expos=
+ure
+> for testing. Anyone oppose getting this to start being merged now into
+> linux-next so we can start testing for *more* than a kernel release cycle?
 
--- 
-Dave Chinner
-david@fromorbit.com
+Yes :-)
+
+The rules for linux-next look like this:
+
+You will need to ensure that the patches/commits in your tree/series have
+been:
+     * submitted under GPL v2 (or later) and include the Contributor's
+        Signed-off-by,
+     * posted to the relevant mailing list,
+     * reviewed by you (or another maintainer of your subsystem tree),
+     * successfully unit tested, and=20
+     * destined for the current or next Linux merge window.
+
+We don't want code that is not going into the next merge window
+creating conflicts and possible run time problems wasting time for
+people who are trying to stabilise code that is destined for the next
+merge window.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/4M_36_MgTLNnz/OVpJR=2TC
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmaMatcACgkQAVBC80lX
+0GzrKQgAon1mNs85HS22XfZW+bm6lIq/viWGZS/25DNtt88oTXKK/u943VepJ9p5
+ROeymG6GQZvOH3WOj2zclQDnw6QwcuY4hW6QpSNB4+Hebl8h8QIxysYheQvv0m8I
+lP0t4TzSbXgjHWfEtAj1pNSo9eknneN/4AxE+8I+IQCT4ZnUzc0ay72bbUM5/RQo
+IY+eQP9sDSnWa6pb7ts7Q7VaoXZExOms4wBLWsPUIel87l74Xnq7Eh0v/OgII/6v
+6yN0oovtRSsMlh26F0u9vFraZJer3ku7bAGVJdsYeT8cVx2U3bhumc6tNPRUh76a
+f1gq9HK7WAaroxb4nr8ZJy9KztDLxQ==
+=EBTm
+-----END PGP SIGNATURE-----
+
+--Sig_/4M_36_MgTLNnz/OVpJR=2TC--
