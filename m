@@ -1,100 +1,185 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EA27113B7A3
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Jul 2024 15:40:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720453248; cv=none; b=aOvaM93jau0DELUXL6giUppKV1iR9yUVlM3FHXvg52DFyBj4aFVGJBSPjskYm5nfBt22Pyu6I/vWacnNGKjaRqG/1exKctBxKS2/2kC9Ntequ+9/6xQJt91ofOdVVgWb8jjQfhaxGB9PFQ4R/jk00WKsZyffkaUAp8DWyOBqiDw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720453248; c=relaxed/simple;
-	bh=aY9Pc65V9gEl7WDsLdL9Gc23C4yD1e61EAsgZ3L/6cM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F5HCsxGbUodoRV6ALVzkoAOl/nXVknSbni8xhAcVunaYgoNUOzBa1xaNHAV8geU81pEq+GnZBpLOo7+LJ2YVQgcuiphX4txUYfjk+bbLzaq5dZD452KLkBk9g3P+9nK1OuJ9uRmWxxt0iotia1mjCmEc1nv+TJ4N7FxK2Tlesdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=ppbwTKdi; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="ppbwTKdi"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id BD4D31164F;
-	Mon,  8 Jul 2024 10:40:38 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net BD4D31164F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1720453238;
-	bh=GtdZZ1k/6e7EBvkHU/jaYxE3tY+rhPRfQFM5TRnpVXQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ppbwTKdiVXSQjTJfV0EOPxcXfFDsX55o1wlJFrCHYUcVwduRTNFFobOq4+AcJpSRf
-	 qtxqLpZMbxJaiyWKzU2VYaKeWDoxbxGvljir6QxSeDyLBxXfxLqus0d2Lhb47V+HC1
-	 C9QPMHdmbxjbBQv+xFiO1noCTZswx+6+INnZniOfPS0ZH7yQYYxsXK+qP1ZngtL56y
-	 P6gcuRWu/LQmqCGOeHNzTL9XHeVEsOGFYymQPfnkLOQCt0knSa0S7FyDjeem1bLBGZ
-	 BtFW+CW2xNmziuZU94NAJzvsd6rOyHiqbFvapRvg2cyYsWBLl26wVwkGuxeZki8GBm
-	 GdSWOlnSQfmPQ==
-Message-ID: <5ce25a1a-51d7-4cf3-a118-91eeeefe29a4@sandeen.net>
-Date: Mon, 8 Jul 2024 10:40:37 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F13B379FD;
+	Mon,  8 Jul 2024 15:53:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1720454024; cv=none; b=aEaj7uPqqhJdEjNZCiUqnECVWzWfui0AjcqGZ64/qLurP5Fr/HNrFBohfrZzo2CpxjmTCPtTtDZUyTwo7u3GoKMVh8bvou3j4Fw8ylz8HkOurPuHJZl0on67G/3NVlTRVjJJc3kN1S02jXJ3C57Imkzq9tk4NehxQ83pnkwUzc4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1720454024; c=relaxed/simple;
+	bh=/Qo+XgpQAPTVv2ENVXGfWkHZ6t/gHiaFQGx6jJSjGuk=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Bom8it5OFRcK16r00EDYI9XBl0Ecr9YIMJPSO1u5GovLnfS8JRgTNmxR5K7iMw2xQKBUaIOJg3t+N3Z5GxqaHBYtLJWlu/GxAgil1RCIXFoO9flqr5OqY4jd++IyI+0mSe9bxvdKeuXUK3BQs8+ZYgjRnxoMvwcrKLnwSSL2l1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A0NW7vG5; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A0NW7vG5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E79D2C116B1;
+	Mon,  8 Jul 2024 15:53:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720454023;
+	bh=/Qo+XgpQAPTVv2ENVXGfWkHZ6t/gHiaFQGx6jJSjGuk=;
+	h=From:Subject:Date:To:Cc:From;
+	b=A0NW7vG5u18AaljqIcp/PI7side45mWsryE6bAsbuZkS/1FKrNBC9ExduJamUMwB+
+	 gg5N2ChhRVpDY8Ps4PP/2OYC+CQUn7oiUQzJkgCFYCZu2yCAJWX7w91CbwwEyRW/Iq
+	 Wjo/Cq3mj8SF7Y3wsEGd9jlLXyeAcJcgaqMKEE2KwU7xo66C49a3X3B3oAtnANNSjx
+	 QTAXd0W0K49h0Neusi2mtw35KnDan+ZDFmqR9LayZCzuOWFw4lFlSKVXnOzXLzizx6
+	 4W2VqRpeWdugmv4iqjHayqi6pNOSL0p3HD6BO5K7YrNSk8Oc34f/Ok9JG0wA9xGFpc
+	 RtusarUeZxQKw==
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v4 0/9] fs: multigrain timestamp redux
+Date: Mon, 08 Jul 2024 11:53:33 -0400
+Message-Id: <20240708-mgtime-v4-0-a0f3c6fb57f3@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: eliminate lockdep false positives in
- xfs_attr_shortform_list
-To: "Darrick J. Wong" <djwong@kernel.org>, Long Li <leo.lilong@huawei.com>
-Cc: chandanbabu@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
- yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-References: <20240622082631.2661148-1-leo.lilong@huawei.com>
- <20240624160342.GP3058325@frogsfrogsfrogs>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20240624160342.GP3058325@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAH0LjGYC/2XMQQ6CMBCF4auQrq2ZTim2rryHcVFogUYB05JGQ
+ 7i7hQVqWL7JfP9EgvXOBnLOJuJtdMENfRr5ISNVq/vGUmfSJgiYQ4EF7ZrRdZaKykgomTSSAUn
+ PT29r91pD11varQvj4N9rN7LluktERoFqJhUXaKCW9eVufW8fx8E3ZGlE/LoTsM1hckyZnKFWO
+ Ri1c/zXic3x5KQo0WitSs7Fn5vn+QOI+y9bDQEAAA==
+To: Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+ Steven Rostedt <rostedt@goodmis.org>, 
+ Masami Hiramatsu <mhiramat@kernel.org>, 
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
+ Chandan Babu R <chandan.babu@oracle.com>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, 
+ Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, 
+ Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
+ Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+ Jonathan Corbet <corbet@lwn.net>
+Cc: Dave Chinner <david@fromorbit.com>, Andi Kleen <ak@linux.intel.com>, 
+ Christoph Hellwig <hch@infradead.org>, Uros Bizjak <ubizjak@gmail.com>, 
+ Kent Overstreet <kent.overstreet@linux.dev>, kernel-team@fb.com, 
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
+ linux-nfs@vger.kernel.org, linux-doc@vger.kernel.org, 
+ Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4929; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=/Qo+XgpQAPTVv2ENVXGfWkHZ6t/gHiaFQGx6jJSjGuk=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBmjAt/CnMEDSLOzDGP+T2D9l4n9SgWCIRmvivvu
+ Qqs7X+/L9qJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZowLfwAKCRAADmhBGVaC
+ FemsD/9OZBThulyqsLrBeTcPfDI+8Cp+Mgvc+tQwq0KteeeutP42tNFEScTTI0FnBDfTso4sQLF
+ E/LtkS3M9fxs9ERAdS8t7BdWdySnpOEES7MaLYB9r4ugJygp7lZXw9QS/pJn6a/TZqm3x0CJVhC
+ 0ejqcyyzTXFQjRphzCJRAQiVSH10aiJZMqenYGW5mGrlv+wizycFUD3NAlXyu8UGESAaSJJUy1p
+ YbMnwjZsZHIvMwTMMvih7zJLt7kIfATA27YZd8soS2Z3pBdyMSpykHStPftQ7+u76BZFhs/Mtzj
+ 2Lo+t+Mca7gqtmP2D+9Iix4Sb3BcwJgdxjGq0ZSZCaOBUShgZnCKru3BBV3jyXTpEcZGwnjuG3B
+ lw4rnZYGyt6Gw8nRUDlpDiUUK2SvW7vKIQ5JuonWwYntQPwacszf3OnCJIG5pPM/wbnRNMexFfF
+ pP3e90++d98/v3dvq/guzN8h0zwL9Jiv/VEUlahBN273VnTFQFcfoPub+Eu3jTa2vkhTSRebUk+
+ 4bFfj88eLZQU4kkOgii1ZjU+tM8nnjHPncrKv16gsR9l8i1x9uEv/2ZWP+NvRUcJCscjm5Go1rr
+ G6SnW9BwN79EP9fRZaH/9tF6Z8Sws+Rdb3YOn641ejS+QkA87Gvf/urXCKKSDMOWoyhXcQx0dsK
+ o2IkUML09NA2kLg==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 
-On 6/24/24 11:03 AM, Darrick J. Wong wrote:
-> On Sat, Jun 22, 2024 at 04:26:31PM +0800, Long Li wrote:
->> xfs_attr_shortform_list() only called from a non-transactional context, it
->> hold ilock before alloc memory and maybe trapped in memory reclaim. Since
->> commit 204fae32d5f7("xfs: clean up remaining GFP_NOFS users") removed
->> GFP_NOFS flag, lockdep warning will be report as [1]. Eliminate lockdep
->> false positives by use __GFP_NOLOCKDEP to alloc memory
->> in xfs_attr_shortform_list().
->>
->> [1] https://lore.kernel.org/linux-xfs/000000000000e33add0616358204@google.com/
->> Reported-by: syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com
->> Signed-off-by: Long Li <leo.lilong@huawei.com>
->> ---
->>  fs/xfs/xfs_attr_list.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
->> index 5c947e5ce8b8..8cd6088e6190 100644
->> --- a/fs/xfs/xfs_attr_list.c
->> +++ b/fs/xfs/xfs_attr_list.c
->> @@ -114,7 +114,8 @@ xfs_attr_shortform_list(
->>  	 * It didn't all fit, so we have to sort everything on hashval.
->>  	 */
->>  	sbsize = sf->count * sizeof(*sbuf);
->> -	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
->> +	sbp = sbuf = kmalloc(sbsize,
->> +			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
-> 
-> Why wouldn't we memalloc_nofs_save any time we take an ILOCK when we're
-> not in transaction context?  Surely you'd want to NOFS /any/ allocation
-> when the ILOCK is held, right?
+tl;dr for those who have been following along:
 
-I'm not sure I understand this. AFAICT, this is indeed a false positive, and can
-be fixed by applying exactly the same pattern used elsewhere in
-94a69db2367e ("xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS")
+There are several changes in this version. The conversion of ctime to
+be a ktime_t value has been dropped, and we now use an unused bit in
+the nsec field as the QUERIED flag (like the earlier patchset did).
 
-Using memalloc_nofs_save implies that this really /would/ deadlock without
-GFP_NOFS, right? Is that the case?
+The floor value is now tracked as a monotonic clock value, and is
+converted to a realtime value on an as-needed basis. This eliminates the
+problem of trying to detect when the realtime clock jumps backward.
 
-I was under the impression that this was simply a missed callsite in 94a69db2367e
-and as Long Li points out, other allocations under xfs_attr_list_ilocked()
-use the exact same (GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL) pattern
-proposed in this change.
+Longer patch description for those just joining in:
 
-Thanks,
--Eric
+At LSF/MM this year, we had a discussion about the inode change
+attribute. At the time I mentioned that I thought I could salvage the
+multigrain timestamp work that had to be reverted last year [1].
+
+That version had to be reverted because it was possible for a file to
+get a coarse grained timestamp that appeared to be earlier than another
+file that had recently gotten a fine-grained stamp.
+
+This version corrects the problem by establishing a per-time_namespace
+ctime_floor value that should prevent this from occurring. In the above
+situation, the two files might end up with the same timestamp value, but
+they won't appear to have been modified in the wrong order.
+
+That problem was discovered by the test-stat-time gnulib test. Note that
+that test still fails on multigrain timestamps, but that's because its
+method of determining the minimum delay that will show a timestamp
+change will no longer work with multigrain timestamps. I have a patch to
+change the testcase to use a different method that is in the process of
+being merged.
+
+The testing I've done seems to show performance parity with multigrain
+timestamps enabled vs. disabled, but it's hard to rule this out
+regressing some workload.
+
+This set is based on top of Christian's vfs.misc branch (which has the
+earlier change to track inode timestamps as discrete integers). If there
+are no major objections, I'd like to have this considered for v6.12,
+after a nice long full-cycle soak in linux-next.
+
+PS: I took a stab at a conversion for bcachefs too, but it's not
+trivial. bcachefs handles timestamps backward from the way most
+block-based filesystems do. Instead of updating them in struct inode and
+eventually copying them to a disk-based representation, it does the
+reverse and updates the timestamps in its in-core image of the on-disk
+inode, and then copies that into struct inode. Either that will need to
+be changed, or we'll need to come up with a different way to do this for
+bcachefs.
+
+[1]: https://lore.kernel.org/linux-fsdevel/20230807-mgctime-v7-0-d1dec143a704@kernel.org/
+
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+Changes in v4:
+- reordered tracepoint fields for better packing
+- rework percpu counters again to also count fine grained timestamps
+- switch to try_cmpxchg for better efficiency
+- Link to v3: https://lore.kernel.org/r/20240705-mgtime-v3-0-85b2daa9b335@kernel.org
+
+Changes in v3:
+- Drop the conversion of i_ctime fields to ktime_t, and use an unused bit
+  of the i_ctime_nsec field as QUERIED flag.
+- Better tracepoints for tracking floor and ctime updates
+- Reworked percpu counters to be more useful
+- Track floor as monotonic value, which eliminates clock-jump problem
+
+Changes in v2:
+- Added Documentation file
+- Link to v1: https://lore.kernel.org/r/20240626-mgtime-v1-0-a189352d0f8f@kernel.org
+
+---
+Jeff Layton (9):
+      fs: add infrastructure for multigrain timestamps
+      fs: tracepoints around multigrain timestamp events
+      fs: add percpu counters for significant multigrain timestamp events
+      fs: have setattr_copy handle multigrain timestamps appropriately
+      Documentation: add a new file documenting multigrain timestamps
+      xfs: switch to multigrain timestamps
+      ext4: switch to multigrain timestamps
+      btrfs: convert to multigrain timestamps
+      tmpfs: add support for multigrain timestamps
+
+ Documentation/filesystems/multigrain-ts.rst | 120 ++++++++++++++
+ fs/attr.c                                   |  52 ++++++-
+ fs/btrfs/file.c                             |  25 +--
+ fs/btrfs/super.c                            |   3 +-
+ fs/ext4/super.c                             |   2 +-
+ fs/inode.c                                  | 234 ++++++++++++++++++++++++----
+ fs/stat.c                                   |  39 ++++-
+ fs/xfs/libxfs/xfs_trans_inode.c             |   6 +-
+ fs/xfs/xfs_iops.c                           |  10 +-
+ fs/xfs/xfs_super.c                          |   2 +-
+ include/linux/fs.h                          |  34 +++-
+ include/trace/events/timestamp.h            | 109 +++++++++++++
+ mm/shmem.c                                  |   2 +-
+ 13 files changed, 560 insertions(+), 78 deletions(-)
+---
+base-commit: 49cb2d11beee730253f6f87263602a8c75f81f9b
+change-id: 20240626-mgtime-5cd80b18d810
+
+Best regards,
+-- 
+Jeff Layton <jlayton@kernel.org>
+
