@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62A01B86DD
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 20:46:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5503D1B86DD
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 20:51:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720557967; cv=none; b=i7Lnd43YHg5dEaFMwwIaJF3BOyssHNUYSnhr7TMEgzjhH3NvITNmb64S6GZU7WjY+PwVyGYL7kX1POKwFZAHEA/sxHCrFtyreiYryGZCKTJ2j1lE57rQ8Fo3B8+nWymMynuiUuRZCC0FeBmda78Zv5LS9KTZ8oVfRD1gUURwezQ=
+	t=1720558282; cv=none; b=FXb1A+cvZfx1zlMHQgr5EDjS4nH9ykKhRV2ToDzH4ghkRZnPwMtL3xRK0vbtOIqIh8RoJMs4HOgum2iDQ/bpSgpL26z3WkuHyLqvlrg/NUMPAVpKjr42S4juIMqgLAgAM8wePDcgyGSHocHEyGWzMt2ZX9dgQf9uSo0JXZ5oR8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720557967; c=relaxed/simple;
-	bh=iWKZ5OceOd5uCU/vbIrx6qaP8s6L64KahvT3ByyJk0U=;
+	s=arc-20240116; t=1720558282; c=relaxed/simple;
+	bh=yIR7RcUyE5kmnxE22lm4QrDMm1vG/gqPJGkG0cVhQSQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gIobxpQKls1bFL+D7KRbT27R9v2jghudR3FR1iTzshTGB8Kz0HA6K11upDcUX6o+fKkYF7H5Ii6OjG9iqJfBMVA/HC8LPHJs568Jm1I5JihP7/n7YG0tYI4lZ5xZixYUOdJ9CAgb60ii2HSaNcjEDIxgwqO54tQAf3c384RFMko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G0TPYLlW; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bZnG8t4yitK+expjEBtqa8CeyakYDwRpFrbBna5VxIsFex8sgEuS1w9bIjou2r4rRZOkpSHPq8C6nioYuz/HBPid9kuunQAqjyADu6+JIoi/6acXE7yW5XLSvDzVMxlAePx13f0KTFTnJ2ZqTAnyd8rKYJW2dmKBZW4siQwsD8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WZrPnaRQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G0TPYLlW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C503C3277B;
-	Tue,  9 Jul 2024 20:46:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WZrPnaRQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEF59C3277B;
+	Tue,  9 Jul 2024 20:51:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720557967;
-	bh=iWKZ5OceOd5uCU/vbIrx6qaP8s6L64KahvT3ByyJk0U=;
+	s=k20201202; t=1720558282;
+	bh=yIR7RcUyE5kmnxE22lm4QrDMm1vG/gqPJGkG0cVhQSQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=G0TPYLlWORaZfhRrUq3iZ+snDDk2qgIpqesWAjqgy9FhgDx54FVm8PZyR8GVYanaI
-	 sW9kYaeD5TquQflxqomsqAGuOBMHAf/2dc6DDrrekvn8ldoXXtyEUGCbPiBGeniZ8d
-	 yZ6UjyyzcO9DuC0nAZ+PUZqVhoXhG1HRpFM68I2f0JDSDtG8MC+Ikg9+YlHWECidnY
-	 bDIcJyU0CdREZyIPl3Sf4ieSusTZ8sF+PRkfT7EpmbvQuj+lndUfkl1BYNiqe5UaGF
-	 vwp7e8e0JFWNoxhxykzNJPQ2S1oxZamcDVvf9AnOGJYSGWdXK1hc00wWJ7/0658jEw
-	 Ha9tDz9qqU1LA==
-Date: Tue, 9 Jul 2024 13:46:06 -0700
+	b=WZrPnaRQJ6ezwEj3uDpUXL47SaE2mJlP/WmOyNjg2aeH5juh80HN+eLHgVFu94T17
+	 od0s/aKFQyghtuXYGNMkdjda27l/oZk+T8BH+7WZo6X+nSbxOGhk0G6U2KVtxeG0fl
+	 Ja4ocksnfJEb8E72MdqcA/yCNMn9zbn4njm0feWvLmxRR+EH4EXhxVWHprDUsUMF5L
+	 klFnHjm6aoZ9VHFc7W3OUK3gmOZn4KIb9e6c2A3juaERQ3i1Sf1NdHL+Bdn+Z2QC7B
+	 qyv4reDjfVABQ16JGjLyV3Kb3YVdDWYRJCQ/DnC7aBc3JMGFHZYdFitQ8+i7qCUg1K
+	 Mz1BW5uRgIjcQ==
+Date: Tue, 9 Jul 2024 13:51:21 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Wengang Wang <wen.gang.wang@oracle.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/9] spaceman/defrag: sleeps between segments
-Message-ID: <20240709204606.GU612460@frogsfrogsfrogs>
+Subject: Re: [PATCH 6/9] spaceman/defrag: workaround kernel
+ xfs_reflink_try_clear_inode_flag()
+Message-ID: <20240709205121.GV612460@frogsfrogsfrogs>
 References: <20240709191028.2329-1-wen.gang.wang@oracle.com>
- <20240709191028.2329-8-wen.gang.wang@oracle.com>
+ <20240709191028.2329-7-wen.gang.wang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,133 +43,251 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240709191028.2329-8-wen.gang.wang@oracle.com>
+In-Reply-To: <20240709191028.2329-7-wen.gang.wang@oracle.com>
 
-On Tue, Jul 09, 2024 at 12:10:26PM -0700, Wengang Wang wrote:
-> Let user contol the time to sleep between segments (file unlocked) to
-> balance defrag performance and file IO servicing time.
+On Tue, Jul 09, 2024 at 12:10:25PM -0700, Wengang Wang wrote:
+> xfs_reflink_try_clear_inode_flag() takes very long in case file has huge number
+> of extents and none of the extents are shared.
 > 
-> Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
-> ---
->  spaceman/defrag.c | 26 ++++++++++++++++++++++++--
->  1 file changed, 24 insertions(+), 2 deletions(-)
-> 
-> diff --git a/spaceman/defrag.c b/spaceman/defrag.c
-> index b5c5b187..415fe9c2 100644
-> --- a/spaceman/defrag.c
-> +++ b/spaceman/defrag.c
-> @@ -311,6 +311,9 @@ void defrag_sigint_handler(int dummy)
->   */
->  static long	g_limit_free_bytes = 1024 * 1024 * 1024;
->  
-> +/* sleep time in us between segments, overwritten by paramter */
-> +static int		g_idle_time = 250 * 1000;
-> +
->  /*
->   * check if the free space in the FS is less than the _limit_
->   * return true if so, false otherwise
-> @@ -487,6 +490,7 @@ defrag_xfs_defrag(char *file_path) {
->  	int	scratch_fd = -1, defrag_fd = -1;
->  	char	tmp_file_path[PATH_MAX+1];
->  	struct file_clone_range clone;
-> +	int	sleep_time_us = 0;
->  	char	*defrag_dir;
->  	struct fsxattr	fsx;
->  	int	ret = 0;
-> @@ -574,6 +578,9 @@ defrag_xfs_defrag(char *file_path) {
->  
->  		/* checks for EoF and fix up clone */
->  		stop = defrag_clone_eof(&clone);
-> +		if (sleep_time_us > 0)
-> +			usleep(sleep_time_us);
-> +
->  		gettimeofday(&t_clone, NULL);
->  		ret = ioctl(scratch_fd, FICLONERANGE, &clone);
->  		if (ret != 0) {
-> @@ -587,6 +594,10 @@ defrag_xfs_defrag(char *file_path) {
->  		if (time_delta > max_clone_us)
->  			max_clone_us = time_delta;
->  
-> +		/* sleeps if clone cost more than 500ms, slow FS */
+> workaround:
+> share the first real extent so that xfs_reflink_try_clear_inode_flag() returns
+> quickly to save cpu times and speed up defrag significantly.
 
-Why half a second?  I sense that what you're getting at is that you want
-to limit file io latency spikes in other programs by relaxing the defrag
-program, right?  But the help screen doesn't say anything about "only if
-the clone lasts more than 500ms".
-
-> +		if (time_delta >= 500000 && g_idle_time > 0)
-> +			usleep(g_idle_time);
-
-These days, I wonder if it makes more sense to provide a CPU utilization
-target and let the kernel figure out how much sleeping that is:
-
-$ systemd-run -p 'CPUQuota=60%' xfs_spaceman -c 'defrag' /path/to/file
-
-The tradeoff here is that we as application writers no longer have to
-implement these clunky sleeps ourselves, but then one has to turn on cpu
-accounting in systemd (if there even /is/ a systemd).  Also I suppose we
-don't want this program getting throttled while it's holding a file
-lock.
+I wonder if a better solution would be to change xfs_reflink_unshare
+only to try to clear the reflink iflag if offset/len cover the entire
+file?  It's a pity we can't set time budgets on fallocate requests.
 
 --D
 
-> +
->  		/* for defrag stats */
->  		nr_ext_defrag += segment.ds_nr;
+> Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+> ---
+>  spaceman/defrag.c | 174 +++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 172 insertions(+), 2 deletions(-)
+> 
+> diff --git a/spaceman/defrag.c b/spaceman/defrag.c
+> index f8e6713c..b5c5b187 100644
+> --- a/spaceman/defrag.c
+> +++ b/spaceman/defrag.c
+> @@ -327,6 +327,155 @@ defrag_fs_limit_hit(int fd)
+>  	return statfs_s.f_bsize * statfs_s.f_bavail < g_limit_free_bytes;
+>  }
 >  
-> @@ -641,6 +652,12 @@ defrag_xfs_defrag(char *file_path) {
->  
->  		if (stop || usedKilled)
->  			break;
+> +static bool g_enable_first_ext_share = true;
 > +
+> +static int
+> +defrag_get_first_real_ext(int fd, struct getbmapx *mapx)
+> +{
+> +	int			err;
+> +
+> +	while (1) {
+> +		err = defrag_get_next_extent(fd, mapx);
+> +		if (err)
+> +			break;
+> +
+> +		defrag_move_next_extent();
+> +		if (!(mapx->bmv_oflags & BMV_OF_PREALLOC))
+> +			break;
+> +	}
+> +	return err;
+> +}
+> +
+> +static __u64 g_share_offset = -1ULL;
+> +static __u64 g_share_len = 0ULL;
+> +#define SHARE_MAX_SIZE 32768  /* 32KiB */
+> +
+> +/* share the first real extent with scrach */
+> +static void
+> +defrag_share_first_extent(int defrag_fd, int scratch_fd)
+> +{
+> +#define OFFSET_1PB 0x4000000000000LL
+> +	struct file_clone_range clone;
+> +	struct getbmapx mapx;
+> +	int	err;
+> +
+> +	if (g_enable_first_ext_share == false)
+> +		return;
+> +
+> +	err = defrag_get_first_real_ext(defrag_fd, &mapx);
+> +	if (err)
+> +		return;
+> +
+> +	clone.src_fd = defrag_fd;
+> +	clone.src_offset = mapx.bmv_offset * 512;
+> +	clone.src_length = mapx.bmv_length * 512;
+> +	/* shares at most SHARE_MAX_SIZE length */
+> +	if (clone.src_length > SHARE_MAX_SIZE)
+> +		clone.src_length = SHARE_MAX_SIZE;
+> +	clone.dest_offset = OFFSET_1PB + clone.src_offset;
+> +	/* if the first is extent is reaching the EoF, no need to share */
+> +	if (clone.src_offset + clone.src_length >= g_defrag_file_size)
+> +		return;
+> +	err = ioctl(scratch_fd, FICLONERANGE, &clone);
+> +	if (err != 0) {
+> +		fprintf(stderr, "cloning first extent failed: %s\n",
+> +			strerror(errno));
+> +		return;
+> +	}
+> +
+> +	/* safe the offset and length for re-share */
+> +	g_share_offset = clone.src_offset;
+> +	g_share_len = clone.src_length;
+> +}
+> +
+> +/* re-share the blocks we shared previous if then are no longer shared */
+> +static void
+> +defrag_reshare_blocks_in_front(int defrag_fd, int scratch_fd)
+> +{
+> +#define NR_GET_EXT 9
+> +	struct getbmapx mapx[NR_GET_EXT];
+> +	struct file_clone_range clone;
+> +	__u64	new_share_len;
+> +	int	idx, err;
+> +
+> +	if (g_enable_first_ext_share == false)
+> +		return;
+> +
+> +	if (g_share_len == 0ULL)
+> +		return;
+> +
+> +	/*
+> +	 * check if previous shareing still exist
+> +	 * we are done if (partially) so.
+> +	 */
+> +	mapx[0].bmv_offset = g_share_offset;
+> +	mapx[0].bmv_length = g_share_len;
+> +	mapx[0].bmv_count = NR_GET_EXT;
+> +	mapx[0].bmv_iflags = BMV_IF_NO_HOLES | BMV_IF_PREALLOC;
+> +	err = ioctl(defrag_fd, XFS_IOC_GETBMAPX, mapx);
+> +	if (err) {
+> +		fprintf(stderr, "XFS_IOC_GETBMAPX failed %s\n",
+> +			strerror(errno));
+> +		/* won't try share again */
+> +		g_share_len = 0ULL;
+> +		return;
+> +	}
+> +
+> +	if (mapx[0].bmv_entries == 0) {
+> +		/* shared blocks all became hole, won't try share again */
+> +		g_share_len = 0ULL;
+> +		return;
+> +	}
+> +
+> +	if (g_share_offset != 512 * mapx[1].bmv_offset) {
+> +		/* first shared block became hole, won't try share again */
+> +		g_share_len = 0ULL;
+> +		return;
+> +	}
+> +
+> +	/* we check up to only the first NR_GET_EXT - 1 extents */
+> +	for (idx = 1; idx <= mapx[0].bmv_entries; idx++) {
+> +		if (mapx[idx].bmv_oflags & BMV_OF_SHARED) {
+> +			/* some blocks still shared, done */
+> +			return;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * The previously shared blocks are no longer shared, re-share.
+> +	 * deallocate the blocks in scrath file first
+> +	 */
+> +	err = fallocate(scratch_fd,
+> +		FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE,
+> +		OFFSET_1PB + g_share_offset, g_share_len);
+> +	if (err != 0) {
+> +		fprintf(stderr, "punch hole failed %s\n",
+> +			strerror(errno));
+> +		g_share_len = 0;
+> +		return;
+> +	}
+> +
+> +	new_share_len = 512 * mapx[1].bmv_length;
+> +	if (new_share_len > SHARE_MAX_SIZE)
+> +		new_share_len = SHARE_MAX_SIZE;
+> +
+> +	clone.src_fd = defrag_fd;
+> +	/* keep starting offset unchanged */
+> +	clone.src_offset = g_share_offset;
+> +	clone.src_length = new_share_len;
+> +	clone.dest_offset = OFFSET_1PB + clone.src_offset;
+> +
+> +	err = ioctl(scratch_fd, FICLONERANGE, &clone);
+> +	if (err) {
+> +		fprintf(stderr, "FICLONERANGE failed %s\n",
+> +			strerror(errno));
+> +		g_share_len = 0;
+> +		return;
+> +	}
+> +
+> +	g_share_len = new_share_len;
+> + }
+> +
+>  /*
+>   * defragment a file
+>   * return 0 if successfully done, 1 otherwise
+> @@ -377,6 +526,12 @@ defrag_xfs_defrag(char *file_path) {
+>  
+>  	signal(SIGINT, defrag_sigint_handler);
+>  
+> +	/*
+> +	 * share the first extent to work around kernel consuming time
+> +	 * in xfs_reflink_try_clear_inode_flag()
+> +	 */
+> +	defrag_share_first_extent(defrag_fd, scratch_fd);
+> +
+>  	do {
+>  		struct timeval t_clone, t_unshare, t_punch_hole;
+>  		struct defrag_segment segment;
+> @@ -454,6 +609,15 @@ defrag_xfs_defrag(char *file_path) {
+>  		if (time_delta > max_unshare_us)
+>  			max_unshare_us = time_delta;
+>  
 > +		/*
-> +		 * no lock on target file when punching hole from scratch file,
-> +		 * so minus the time used for punching hole
+> +		 * if unshare used more than 1 second, time is very possibly
+> +		 * used in checking if the file is sharing extents now.
+> +		 * to avoid that happen again we re-share the blocks in front
+> +		 * to workaround that.
 > +		 */
-> +		sleep_time_us = g_idle_time - time_delta;
->  	} while (true);
->  out:
->  	if (scratch_fd != -1) {
-> @@ -678,6 +695,7 @@ static void defrag_help(void)
+> +		if (time_delta > 1000000)
+> +			defrag_reshare_blocks_in_front(defrag_fd, scratch_fd);
+> +
+>  		/*
+>  		 * Punch out the original extents we shared to the
+>  		 * scratch file so they are returned to free space.
+> @@ -514,6 +678,8 @@ static void defrag_help(void)
 >  " -f free_space      -- specify shrethod of the XFS free space in MiB, when\n"
 >  "                       XFS free space is lower than that, shared segments \n"
 >  "                       are excluded from defragmentation, 1024 by default\n"
-> +" -i idle_time       -- time in ms to be idle between segments, 250ms by default\n"
->  " -n                 -- disable the \"share first extent\" featue, it's\n"
->  "                       enabled by default to speed up\n"
+> +" -n                 -- disable the \"share first extent\" featue, it's\n"
+> +"                       enabled by default to speed up\n"
 >  	));
-> @@ -691,7 +709,7 @@ defrag_f(int argc, char **argv)
+>  }
+>  
+> @@ -525,7 +691,7 @@ defrag_f(int argc, char **argv)
 >  	int	i;
 >  	int	c;
 >  
-> -	while ((c = getopt(argc, argv, "s:f:n")) != EOF) {
-> +	while ((c = getopt(argc, argv, "s:f:ni")) != EOF) {
+> -	while ((c = getopt(argc, argv, "s:f:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "s:f:n")) != EOF) {
 >  		switch(c) {
 >  		case 's':
 >  			g_segment_size_lmt = atoi(optarg) * 1024 * 1024 / 512;
-> @@ -709,6 +727,10 @@ defrag_f(int argc, char **argv)
->  			g_enable_first_ext_share = false;
+> @@ -539,6 +705,10 @@ defrag_f(int argc, char **argv)
+>  			g_limit_free_bytes = atol(optarg) * 1024 * 1024;
 >  			break;
 >  
-> +		case 'i':
-> +			g_idle_time = atoi(optarg) * 1000;
-
-Should we complain if optarg is non-integer garbage?  Or if g_idle_time
-is larger than 1s?
-
---D
-
+> +		case 'n':
+> +			g_enable_first_ext_share = false;
 > +			break;
 > +
 >  		default:
 >  			command_usage(&defrag_cmd);
 >  			return 1;
-> @@ -726,7 +748,7 @@ void defrag_init(void)
+> @@ -556,7 +726,7 @@ void defrag_init(void)
 >  	defrag_cmd.cfunc	= defrag_f;
 >  	defrag_cmd.argmin	= 0;
 >  	defrag_cmd.argmax	= 4;
-> -	defrag_cmd.args		= "[-s segment_size] [-f free_space] [-n]";
-> +	defrag_cmd.args		= "[-s segment_size] [-f free_space] [-i idle_time] [-n]";
+> -	defrag_cmd.args		= "[-s segment_size] [-f free_space]";
+> +	defrag_cmd.args		= "[-s segment_size] [-f free_space] [-n]";
 >  	defrag_cmd.flags	= CMD_FLAG_ONESHOT;
 >  	defrag_cmd.oneline	= _("Defragment XFS files");
 >  	defrag_cmd.help		= defrag_help;
