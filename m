@@ -1,69 +1,73 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76EF3153824
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 09:48:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 803DF155382
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 09:57:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720518513; cv=none; b=KE+PRqAzRqDhbzPxm01Z4Y2txOXnwgWzso50rzM2bKcLHHOGAdHEegf2jEI+ITxQGSNenGvA1iaHdAEw7Z2pFVrqwQJh2MAW8FVWh5WeLwi60SpE3Xt2UFg8evZLaQu/YIQrG1vRJX2HdF6ACaWtrCn+yl51r7ADkdZ9ezbXCRw=
+	t=1720519047; cv=none; b=I5SuZAuTEujUPUXDcj+Z9kIavSEFiuIk98j4VddtffsYsJbf2xiaMAnOGlBAcAQxSLD/E374S1gK3NeqOmeDYeaknDTU4CQUmKFdkuscyTAz/Nlas6cRznqEbVbQ7K2Xjhm+CBazkmOewyM/I+5Gmw8hlKNr+AB85smnJBN2jy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720518513; c=relaxed/simple;
-	bh=i8zt4DAnWtOXimsaVZjikxi0p1/GN50isftCI114Zpo=;
+	s=arc-20240116; t=1720519047; c=relaxed/simple;
+	bh=aEPWqt4EkE+1dZwNyihdiQTNmdiVdPEo/G9muf2rBrY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RBfsG2hA2FE98s/a5al06+78r/zvsYTb3kB6f+guCC8Vf9lrx1hQwKrmWiVMrd7rCTHYi4BnsrIbRoyRNWOCWmusAwsQDbpF87b4wWfu6QLCoEPsojxldb+lNneQacL9ARGbrt8vjDxCvAMN4AkZxGqnUCXxBc7goz6ItfF+RsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=lY3A5Dzv; arc=none smtp.client-ip=209.85.210.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=OXv2rWk1oY2jlDZ3at0bOkIQgJ3hD29Gbe6q9N4g487TKqXTccKZ/u71KAXXhmaRZAmN1LYvtbtdFLRByeCW2qe02vdovNxmVd0iVDhO8kt4GTvCbpn7rKQCutM/1WJPuMk7VzDH45D5v5E32EJ2L6A+omiIpS/dVTRpDR+Jm6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=X+yZjLrZ; arc=none smtp.client-ip=209.85.210.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="lY3A5Dzv"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-70b4a8a5587so149188b3a.2
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Jul 2024 02:48:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="X+yZjLrZ"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-70b0e7f6f8bso3389013b3a.3
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Jul 2024 02:57:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720518511; x=1721123311; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720519046; x=1721123846; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=n8P8BhJ/KagIZvInbiBh6jabDNh9gowUgzOmEdjkYkM=;
-        b=lY3A5DzvpVfu9orNOjX1lZXswDV006o3g/a6ciVqubKH9xsjVR+egoc5FibCqRsSP0
-         xPyM7y6IvmdeoHzOosovzqA+I6sdtJdSsyK5uT0cPH5Evtbd3t9AcQwpkUpZdAGLP6mz
-         AipjFFLnlusKt0gbvlZEAIlU2+puOaEVi626jRfrcaa6bQUpB959wnTormW/tC2lm3/8
-         Yn42qNRTTZlhj6tFwdPgEkV7Vk4mtPo65kvfG5gfTGdCT/qehMwKClRzH7pUqAj3W6rq
-         ZOTPEPoIlr42/t/9Ok+UnIbcEIE1Fxu9K093WTnK3ih2i3jT/AHfdPsYIdLidYyFwXJf
-         f8VQ==
+        bh=oOyqcxyb5IwP9Eq+BrWEYtwo3uCUMmyhSGduwVBkBvQ=;
+        b=X+yZjLrZuZAeWg27u4qroP5kWgGzhHjBF8gBIFzVldSEc2Kxae/Z8wQAK2xr9GKY31
+         6CHC0VinoYGpSJ8NGCWrtRBRh1XXS3Uzy3i6UgI+7kjD7oWZiSbbmy35cjnhvupGyE4T
+         sp0mp1yirmxg3T1IgK5QI5Gx38zUkbRZP+HXFmX+JP38XFJb/T/7DCuY1Ck7hrPUBF1R
+         fVnghyHdOfEQhi5exZFVgx0Xd9zsVWTk6Fm29jeepqCsvnPoEvsaeEk+rN3FU4Tnm9ND
+         6txOO7/rRJOGyTYoWsgasGhGq1h3af1A2txDkgXnCxsj0eq+kDdj/uEAElXduqOMVozP
+         V8QA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720518511; x=1721123311;
+        d=1e100.net; s=20230601; t=1720519046; x=1721123846;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=n8P8BhJ/KagIZvInbiBh6jabDNh9gowUgzOmEdjkYkM=;
-        b=a4R9N1LUuxDoEktf4AQJ6if4FwtDiSpGdUgppTW44lVI7YkVwY807GNVwrLIdAdwiw
-         sxwiFoN6NeEeOcF3o17riaOkc94xEsPVGAdx53tfQkMtRKzr1K689qv+xrbqhOVoIhO3
-         vIoisuFfV045MT3fgdAf5BoJGc2zcQGZZuEup/8tNF1Q+R+5Z+8LfqEt8q0lmrtvqDs/
-         ogn93a59oWOuB41OpoPBc7m9LAp4GMF8p0hEZexR4VoO2cB27pANnyhbxSTrcxdPsVvl
-         J0/vRctg8671PcqIMvwCNp51uvGxm9ha0oUmv+QfZBwbbSvlyBqSLq0i5Nd1q+mMfN+o
-         dT7w==
-X-Forwarded-Encrypted: i=1; AJvYcCXUTTpcAWQqFWonV4Slyoo+AFE8ZKvGvRj/AZSf7phVTYHrVZ2UL6cvBOpIqI29hbFwDx/iYq9akG3mwCLBw+s46vhFt8V5y7EY
-X-Gm-Message-State: AOJu0Yy7znX4iOZv+Omo1pjYgMIhVW1mqeEyprfESf68HnvvClSiwNUc
-	sW2bA0oixsy/icVHf5dn92Sj1H2r1uC/JEUe3cmTavte1K1hypvKab5p98hb+5JqbIRpND/ZKj6
-	B
-X-Google-Smtp-Source: AGHT+IGy3P86/LRYaPxfo6lZdqPZkMj4TTo84Oi4SJeUfk80I4Ocamb+8luUE0yGqfaUj7vNLTDWow==
-X-Received: by 2002:a05:6a00:23c6:b0:705:c029:c9a7 with SMTP id d2e1a72fcca58-70b4357d888mr2560459b3a.15.1720518510785;
-        Tue, 09 Jul 2024 02:48:30 -0700 (PDT)
+        bh=oOyqcxyb5IwP9Eq+BrWEYtwo3uCUMmyhSGduwVBkBvQ=;
+        b=BQs+e3mQd95Xjbamqa8jWHhcjtlR3nOgzGNw1s5pK2Os/1Q44SPKC7WAotQ2zrDvJU
+         eEUzP4sqfhX0nrulGh7nde66/IVd33l1a8czNvqk9wvEVUrvlYGA+bVYnWRAUYVXX37S
+         1Rncc26LYc4gXpj8yU8WVnnql00hXXcyoIXcIMQZWKOCG1QSH3HRLg2yEEYRMysJfFof
+         vjs3S2+FPQRu17wLA4kQgVBtkI44Vm1vgXKKrabilbFwaDsLLYT8pfMGPXyYth8DSUzy
+         LUAzDEai15KmMWoGrJum2ee1ecaIX48Sx86t0U15wVZj2BgBXnEA127SgOEnhurxETN0
+         kkZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUIxO/4TY2OtiNuG50jZqS5aOmhy5eZIBOrk57S08ycLYm4JWqxdJWG0lEFBr6j7TNGPVyx3mr9qNwSHjhZ6vnitjnwOu9H8k5a
+X-Gm-Message-State: AOJu0Yy0Oh/t0GHVih7SvxG15VDj73WHSQ+oFCimld/nG9cg5BVJ7WzF
+	ssXoBDDLl/BJL5D8gP/Pn13evN15zcRh7wEx1lb8jln64iHQD3Xu5xEKZyKxTuw=
+X-Google-Smtp-Source: AGHT+IFMGvAPzINU+Gs4ZFgsoFRoQvo0clRLF0utSQEN97hfaP88j88mC5MzvN9RYzCJoVB3MRsbWg==
+X-Received: by 2002:a05:6a20:734c:b0:1c0:f6b7:a897 with SMTP id adf61e73a8af0-1c2982285f2mr2354821637.32.1720519045687;
+        Tue, 09 Jul 2024 02:57:25 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b438e6d4fsm1413836b3a.91.2024.07.09.02.48.30
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-77d5f0aaf55sm1096674a12.11.2024.07.09.02.57.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jul 2024 02:48:30 -0700 (PDT)
+        Tue, 09 Jul 2024 02:57:25 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sR7SV-009Ybk-2G;
-	Tue, 09 Jul 2024 19:48:27 +1000
-Date: Tue, 9 Jul 2024 19:48:27 +1000
+	id 1sR7b8-009ZB3-2w;
+	Tue, 09 Jul 2024 19:57:22 +1000
+Date: Tue, 9 Jul 2024 19:57:22 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] libxfs: remove duplicate rtalloc declarations in
- libxfs.h
-Message-ID: <Zo0Ha9nSs7UrKhSz@dread.disaster.area>
-References: <20240709073444.3023076-1-hch@lst.de>
+Cc: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com,
+	djwong@kernel.org, dchinner@redhat.com, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	catherine.hoang@oracle.com, martin.petersen@oracle.com
+Subject: Re: [PATCH v2 10/13] xfs: Unmap blocks according to forcealign
+Message-ID: <Zo0JghFEaqxBs41l@dread.disaster.area>
+References: <20240705162450.3481169-1-john.g.garry@oracle.com>
+ <20240705162450.3481169-11-john.g.garry@oracle.com>
+ <20240706075858.GC15212@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,40 +76,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240709073444.3023076-1-hch@lst.de>
+In-Reply-To: <20240706075858.GC15212@lst.de>
 
-On Tue, Jul 09, 2024 at 09:34:31AM +0200, Christoph Hellwig wrote:
-> These already come from xfs_rtbitmap.h.
+On Sat, Jul 06, 2024 at 09:58:58AM +0200, Christoph Hellwig wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> > +			if (isforcealign) {
+> > +				off = ip->i_extsize - mod;
+> > +			} else {
+> > +				ASSERT(isrt);
+> > +				off = mp->m_sb.sb_rextsize - mod;
+> > +			}
 > 
-> Changes since v1:
->  - now without spurious man page removal
-> 
->  include/libxfs.h | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index fb8efb696..40e41ea77 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -220,11 +220,6 @@ libxfs_bmbt_disk_get_all(
->  		irec->br_state = XFS_EXT_NORM;
->  }
->  
-> -/* XXX: this is clearly a bug - a shared header needs to export this */
-> -/* xfs_rtalloc.c */
-> -int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
-> -bool libxfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
-> -
->  #include "xfs_attr.h"
->  #include "topology.h"
+> And we'll really need proper helpers so that we don't have to
+> open code the i_extsize vs sb_rextsize logic all over.
 
-Looks good now.
+We already have that: xfs_inode_alloc_unitsize().
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Have the code get that value, then do all the alignment based on
+whether it is allocation unit size > mp->m_sb.sb_blocksize. Then all
+the calculations are generic and not dependent on forcealign or rt,
+but on whether the inode requires multi-block contiguous extent
+alignment....
 
+i.e.
+	alloc_size = xfs_inode_alloc_unitsize(ip);
+	if (alloc_size > mp->m_sb.sb_blocksize) {
+		/* do aligned allocation setup stuff */
+		.....
+	}
+	....
+
+No code should be doing "if (forcealign) ... else if (realtime) ..."
+branching for alignment purposes. All the code should all be
+generic based on the value xfs_inode_alloc_unitsize() returns.
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
