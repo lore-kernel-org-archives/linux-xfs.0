@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AEFA18562D
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 21:50:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F286F187849
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 21:57:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720561823; cv=none; b=IKF1lvBn4S5WVw6TjN2X0JizB2zdh1d1cCAVEWrH/+nf58zUlc4AtZmmKuP1FRdElxWedhQdeBUzu84++oQmU85u08EbkdVEkISEyUr1kVXWjJEBomIf4HWeSvBm2fXsI7APwo6himgHothj6uObKM4DPCjOPdl0eFYROrcIH3s=
+	t=1720562245; cv=none; b=bBRCUJ0DHF0rJ74aB1JIGcnNocK6CUu+yNl03VND4a7Fm8AjGm3iv5UcDa9o7wAVXzACu7NU5DXie+RWfIzoj7hNipP2QIPSLhCmhK2UshcQePufH96Yjib0jE+Fr+02sGOjLLv8vx06bWcmKiAlT2I6dJnpRj60YE37DxwB0RM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720561823; c=relaxed/simple;
-	bh=fo7YLv+blm2HrQc5uhJSSReCx/NkxcwaP79TfadgjwA=;
+	s=arc-20240116; t=1720562245; c=relaxed/simple;
+	bh=yQWJZEAbeCVrgqDp9yyRDqToVqzM9iNQ73w9LiMVMYY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RLNsWeJSDkWkkFSsA6W7NKSRXzkdnStLnvsOjufjTvOcfyaGk84TpsesdSeBffueWJJB/BL+hsEhzVlNBDJqpuA2bcNIOWSho41LFNVYI2hJ/YAZdbo6J1GrMqntivHl/CvyM+uOTIxjATiaF763xdnLIAejUwmtyQhNrXlx+aI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=If7NBT+k; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DjHuviZIwZCNS/xepSKoA+wVFL2h+P4A8mxX9Cv62cowJ5AD4K74DyL+bwuLlGY4CGT55sZa7/bTKhYwet0byqNffGQZQLDo0dkQFv2WxsMMC8pS6fF8ixzO0WnHpMiLvsMXCHkDgw+/X9z/9v5/5mAyHFLv3Y+zag4Tx6UcQV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H4ioXi3+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="If7NBT+k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B69A1C3277B;
-	Tue,  9 Jul 2024 21:50:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H4ioXi3+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75205C4AF0F;
+	Tue,  9 Jul 2024 21:57:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720561822;
-	bh=fo7YLv+blm2HrQc5uhJSSReCx/NkxcwaP79TfadgjwA=;
+	s=k20201202; t=1720562243;
+	bh=yQWJZEAbeCVrgqDp9yyRDqToVqzM9iNQ73w9LiMVMYY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=If7NBT+kGxj9P0LmziSMU9KUOmIhsjUZPFkKs0IFwpwdTAeUWBv27rcy+BowIeEV2
-	 BtLyz1MVoAfBsGgKXc+tRXwC0VtbkAaDJ+tY1gA26O09M4xiitVoXs+ucrpppCClS4
-	 nvJdnHzNiIoD0NLSDXVLm40faIV7XFnTn5HoVQ9NClzC2/k4sjTS0CfX8rOyAtoesN
-	 ezCVgL8pHUor+Uq6Yifpk95EkhEYHqIP0Wjjkn/vr7eg0uEHHAghFj33Rc3f6+er9C
-	 xy0bhn9rVJgGSqAuzaLn14yRVZHpgjLOhaVek5AnHQmfDIKduUvBqYha1g7Xnyo381
-	 viEkFwzro2K6Q==
-Date: Tue, 9 Jul 2024 14:50:22 -0700
+	b=H4ioXi3+AWB7PdMJEC5akvoxeYRUqN4e3hChf5cSsWg7f+bIz1qf72V71+Hr5xaJI
+	 L6nIv3TKtxt/h/+/D5g8kQgRmGH35YZ4BgD8ppW7xzcdxuZ//KnuHX266HELMYwwut
+	 Geace1XGtsEp8SkEIigSE8tDsT1kyHsPN9m3XNy82ryYiFDDMC0dRyxai1kfSbgndX
+	 P0EcckLWbAT3Xz2EsAD+e88YuxICvdwzdkUjB/3GF+8E/TKeaa0/N/8JKSYOLVmXbA
+	 v1M5iQM0CVEVe2OAEZnmozgXDwuaWVY97MzPmbBgVXsupTJFU+JHI9a2SUqR/LvwUw
+	 eLjNNB5Qnl2iQ==
+Date: Tue, 9 Jul 2024 14:57:21 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Wengang Wang <wen.gang.wang@oracle.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/9] spaceman/defrag: pick up segments from target fileOM
-Message-ID: <20240709215022.GZ612460@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/9] spaceman/defrag: defrag segments
+Message-ID: <20240709215721.GA612460@frogsfrogsfrogs>
 References: <20240709191028.2329-1-wen.gang.wang@oracle.com>
- <20240709191028.2329-3-wen.gang.wang@oracle.com>
+ <20240709191028.2329-4-wen.gang.wang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,315 +42,202 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240709191028.2329-3-wen.gang.wang@oracle.com>
+In-Reply-To: <20240709191028.2329-4-wen.gang.wang@oracle.com>
 
-On Tue, Jul 09, 2024 at 12:10:21PM -0700, Wengang Wang wrote:
-> segments are the smallest unit to defragment.
+On Tue, Jul 09, 2024 at 12:10:22PM -0700, Wengang Wang wrote:
+> For each segment, the following steps are done trying to defrag it:
 > 
-> A segment
-> 1. Can't exceed size limit
-
-What size limit?  Do you mean a segment can't extend beyond EOF?  Or did
-you actually mean RLIMIT_FSIZE?
-
-> 2. contains some extents
-> 3. the contained extents can't be "unwritten"
-> 4. the contained extents must be contigous in file blocks
-
-As in the segment cannot contain sparse holes?
-
-I think what I"m reading here is that a segment cannot extend beyond EOF
-and must be completely filled with written extent mappings?
-
-Is there an upper limit on the number of mappings per segment?
-
+> 1. share the segment with a temporary file
+> 2. unshare the segment in the target file. kernel simulates Cow on the whole
+>    segment complete the unshare (defrag).
+> 3. release blocks from the tempoary file.
+> 
 > Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
 > ---
->  spaceman/defrag.c | 204 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 204 insertions(+)
+>  spaceman/defrag.c | 114 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 114 insertions(+)
 > 
 > diff --git a/spaceman/defrag.c b/spaceman/defrag.c
-> index c9732984..175cf461 100644
+> index 175cf461..9f11e36b 100644
 > --- a/spaceman/defrag.c
 > +++ b/spaceman/defrag.c
-> @@ -14,6 +14,32 @@
->  #include "space.h"
->  #include "input.h"
->  
-> +#define MAPSIZE 512
-> +/* used to fetch bmap */
-> +struct getbmapx	g_mapx[MAPSIZE];
-
-Each of these global arrays increases the bss segment size, which
-increases the overall footprint of xfs_spaceman, even when it's not
-being used to defragment files.
-
-Could you switch this data to be dynamically allocated at the start of
-defrag_f and freed at the end?
-
-> +/* current offset of the file in units of 512 bytes, used to fetch bmap */
-> +static long long 	g_offset = 0;
-
-Unnecessary space after the 'long long'.
-
-> +/* index to indentify next extent, used to get next extent */
-> +static int		g_ext_next_idx = -1;
-> +
-> +/*
-> + * segment, the smallest unit to defrag
-> + * it includes some contiguous extents.
-> + * no holes included,
-> + * no unwritten extents included
-> + * the size is limited by g_segment_size_lmt
-> + */
-> +struct defrag_segment {
-> +	/* segment offset in units of 512 bytes */
-> +	long long	ds_offset;
-> +	/* length of segment in units of 512 bytes */
-> +	long long	ds_length;
-> +	/* number of extents in this segment */
-> +	int		ds_nr;
-> +	/* flag indicating if segment contains shared blocks */
-> +	bool		ds_shared;
-
-Maybe g_mapx belongs in here?  Wait, does a bunch of contiguous written
-bmapx records comprise a segment, or is a segment created from (possibly
-a subection of) a particular written bmapx record?
-
-> +};
-> +
->  /* defrag segment size limit in units of 512 bytes */
->  #define MIN_SEGMENT_SIZE_LIMIT 8192 /* 4MiB */
->  #define DEFAULT_SEGMENT_SIZE_LIMIT 32768 /* 16MiB */
-> @@ -78,6 +104,165 @@ defrag_check_file(char *path)
->  	return true;
+> @@ -263,6 +263,40 @@ add_ext:
+>  	return ret;
 >  }
 >  
 > +/*
-> + * get next extent in the file.
-> + * Note: next call will get the same extent unless move_next_extent() is called.
-> + * returns:
-> + * -1:	error happened.
-> + * 0:	extent returned
-> + * 1:	no more extent left
+> + * check if the segment exceeds EoF.
+> + * fix up the clone range and return true if EoF happens,
+> + * return false otherwise.
 > + */
-> +static int
-> +defrag_get_next_extent(int fd, struct getbmapx *map_out)
+> +static bool
+> +defrag_clone_eof(struct file_clone_range *clone)
 > +{
-> +	int err = 0, i;
+> +	off_t delta;
 > +
-> +	/* when no extents are cached in g_mapx, fetch from kernel */
-> +	if (g_ext_next_idx == -1) {
-> +		g_mapx[0].bmv_offset = g_offset;
-> +		g_mapx[0].bmv_length = -1LL;
-> +		g_mapx[0].bmv_count = MAPSIZE;
-> +		g_mapx[0].bmv_iflags = BMV_IF_NO_HOLES | BMV_IF_PREALLOC;
-> +		err = ioctl(fd, XFS_IOC_GETBMAPX, g_mapx);
-> +		if (err == -1) {
-> +			perror("XFS_IOC_GETBMAPX failed");
-> +			goto out;
-> +		}
-> +		/* for stats */
-> +		g_ext_stats.nr_ext_total += g_mapx[0].bmv_entries;
-> +
-> +		/* no more extents */
-> +		if (g_mapx[0].bmv_entries == 0) {
-> +			err = 1;
-> +			goto out;
-> +		}
-> +
-> +		/* for stats */
-> +		for (i = 1; i <= g_mapx[0].bmv_entries; i++) {
-> +			if (g_mapx[i].bmv_oflags & BMV_OF_PREALLOC)
-> +				g_ext_stats.nr_ext_unwritten++;
-> +			if (g_mapx[i].bmv_oflags & BMV_OF_SHARED)
-> +				g_ext_stats.nr_ext_shared++;
-> +		}
-> +
-> +		g_ext_next_idx = 1;
-> +		g_offset = g_mapx[g_mapx[0].bmv_entries].bmv_offset +
-> +				g_mapx[g_mapx[0].bmv_entries].bmv_length;
+> +	delta = clone->src_offset + clone->src_length - g_defrag_file_size;
+> +	if (delta > 0) {
+> +		clone->src_length = 0; // to the end
+> +		return true;
 > +	}
-
-Huh.  AFAICT, g_ext_next_idx/g_mapx effectively act as a cursor over the
-mappings for this file segment.  In that case, shouldn't
-defrag_move_next_extent (which actually advances the cursor) be in
-charge of grabbing bmapx records from the kernel, and
-defrag_get_next_extent be the trivial helper to pass mappings to the
-consumer of the bmapx objects (aka defrag_get_next_segment)?
-
-> +
-> +	map_out->bmv_offset = g_mapx[g_ext_next_idx].bmv_offset;
-> +	map_out->bmv_length = g_mapx[g_ext_next_idx].bmv_length;
-> +	map_out->bmv_oflags = g_mapx[g_ext_next_idx].bmv_oflags;
-> +out:
-> +	return err;
+> +	return false;
 > +}
 > +
 > +/*
-> + * move to next extent
+> + * get the time delta since pre_time in ms.
+> + * pre_time should contains values fetched by gettimeofday()
+> + * cur_time is used to store current time by gettimeofday()
 > + */
-> +static void
-> +defrag_move_next_extent()
+> +static long long
+> +get_time_delta_us(struct timeval *pre_time, struct timeval *cur_time)
 > +{
-> +	if (g_ext_next_idx == g_mapx[0].bmv_entries)
-> +		g_ext_next_idx = -1;
-> +	else
-> +		g_ext_next_idx += 1;
-> +}
+> +	long long us;
 > +
-> +/*
-> + * check if the given extent is a defrag target.
-> + * no need to check for holes as we are using BMV_IF_NO_HOLES
-> + */
-> +static bool
-> +defrag_is_target(struct getbmapx *mapx)
-> +{
-> +	/* unwritten */
-> +	if (mapx->bmv_oflags & BMV_OF_PREALLOC)
-> +		return false;
-> +	return mapx->bmv_length < g_segment_size_lmt;
-> +}
-> +
-> +static bool
-> +defrag_is_extent_shared(struct getbmapx *mapx)
-> +{
-> +	return !!(mapx->bmv_oflags & BMV_OF_SHARED);
-> +}
-> +
-> +/*
-> + * get next segment to defragment.
-> + * returns:
-> + * -1	error happened.
-> + * 0	segment returned.
-> + * 1	no more segments to return
-> + */
-> +static int
-> +defrag_get_next_segment(int fd, struct defrag_segment *out)
-> +{
-> +	struct getbmapx mapx;
-> +	int	ret;
-> +
-> +	out->ds_offset = 0;
-> +	out->ds_length = 0;
-> +	out->ds_nr = 0;
-> +	out->ds_shared = false;
-> +
-> +	do {
-> +		ret = defrag_get_next_extent(fd, &mapx);
-> +		if (ret != 0) {
-> +			/*
-> +			 * no more extetns, return current segment if its not
-> +			 * empty
-> +			*/
-> +			if (ret == 1 && out->ds_nr > 0)
-> +				ret = 0;
-> +			/* otherwise, error heppened, stop */
-> +			break;
-> +		}
-> +
-> +		/*
-> +		 * If the extent is not a defrag target, skip it.
-> +		 * go to next extent if the segment is empty;
-> +		 * otherwise return the segment.
-> +		 */
-> +		if (!defrag_is_target(&mapx)) {
-> +			defrag_move_next_extent();
-> +			if (out->ds_nr == 0)
-> +				continue;
-> +			else
-> +				break;
-> +		}
-> +
-> +		/* check for segment size limitation */
-> +		if (out->ds_length + mapx.bmv_length > g_segment_size_lmt)
-> +			break;
-> +
-> +		/* the segment is empty now, add this extent to it for sure */
-> +		if (out->ds_nr == 0) {
-> +			out->ds_offset = mapx.bmv_offset;
-> +			goto add_ext;
-> +		}
-> +
-> +		/*
-> +		 * the segment is not empty, check for hole since the last exent
-> +		 * if a hole exist before this extent, this extent can't be
-> +		 * added to the segment. return the segment
-> +		 */
-> +		if (out->ds_offset + out->ds_length != mapx.bmv_offset)
-> +			break;
-> +
-> +add_ext:
-> +		if (defrag_is_extent_shared(&mapx))
-> +			out->ds_shared = true;
-> +
-> +		out->ds_length += mapx.bmv_length;
-> +		out->ds_nr += 1;
-
-OH, ok.  So we walk the mappings for a file.  If we can identify a run
-of contiguous written mappings, we define a segment to be the file range
-described by that run, up to whatever the maximum is (~4-16M).  Each of
-these segments is defragmented (somehow).  Is that correct?
-
-> +		defrag_move_next_extent();
-> +
-> +	} while (true);
-> +
-> +	return ret;
+> +	gettimeofday(cur_time, NULL);
+> +	us = (cur_time->tv_sec - pre_time->tv_sec) * 1000000;
+> +	us += (cur_time->tv_usec - pre_time->tv_usec);
+> +	return us;
 > +}
 > +
 >  /*
 >   * defragment a file
 >   * return 0 if successfully done, 1 otherwise
-> @@ -92,6 +277,9 @@ defrag_xfs_defrag(char *file_path) {
+> @@ -273,6 +307,7 @@ defrag_xfs_defrag(char *file_path) {
+>  	long	nr_seg_defrag = 0, nr_ext_defrag = 0;
+>  	int	scratch_fd = -1, defrag_fd = -1;
+>  	char	tmp_file_path[PATH_MAX+1];
+> +	struct file_clone_range clone;
+>  	char	*defrag_dir;
 >  	struct fsxattr	fsx;
 >  	int	ret = 0;
->  
-> +	g_offset = 0;
-> +	g_ext_next_idx = -1;
-> +
->  	fsx.fsx_nextents = 0;
->  	memset(&g_ext_stats, 0, sizeof(g_ext_stats));
->  
-> @@ -119,6 +307,22 @@ defrag_xfs_defrag(char *file_path) {
->  		ret = 1;
+
+Now that I see this, you might want to straighten up the lines:
+
+	struct fsxattr	fsx = { };
+	long		nr_seg_defrag = 0, nr_ext_defrag = 0;
+
+etc.  Note the "= { }" bit that means you don't have to memset them to
+zero explicitly.
+
+> @@ -296,6 +331,8 @@ defrag_xfs_defrag(char *file_path) {
 >  		goto out;
 >  	}
+>  
+> +	clone.src_fd = defrag_fd;
 > +
-> +	do {
-> +		struct defrag_segment segment;
+>  	defrag_dir = dirname(file_path);
+>  	snprintf(tmp_file_path, PATH_MAX, "%s/.xfsdefrag_%d", defrag_dir,
+>  		getpid());
+> @@ -309,7 +346,11 @@ defrag_xfs_defrag(char *file_path) {
+>  	}
+>  
+>  	do {
+> +		struct timeval t_clone, t_unshare, t_punch_hole;
+>  		struct defrag_segment segment;
+> +		long long seg_size, seg_off;
+> +		int time_delta;
+> +		bool stop;
+>  
+>  		ret = defrag_get_next_segment(defrag_fd, &segment);
+>  		/* no more segments, we are done */
+> @@ -322,6 +363,79 @@ defrag_xfs_defrag(char *file_path) {
+>  			ret = 1;
+>  			break;
+>  		}
 > +
-> +		ret = defrag_get_next_segment(defrag_fd, &segment);
-> +		/* no more segments, we are done */
-> +		if (ret == 1) {
-> +			ret = 0;
+> +		/* we are done if the segment contains only 1 extent */
+> +		if (segment.ds_nr < 2)
+> +			continue;
+> +
+> +		/* to bytes */
+> +		seg_off = segment.ds_offset * 512;
+> +		seg_size = segment.ds_length * 512;
+> +
+> +		clone.src_offset = seg_off;
+> +		clone.src_length = seg_size;
+> +		clone.dest_offset = seg_off;
+> +
+> +		/* checks for EoF and fix up clone */
+> +		stop = defrag_clone_eof(&clone);
+> +		gettimeofday(&t_clone, NULL);
+> +		ret = ioctl(scratch_fd, FICLONERANGE, &clone);
+
+Hm, should the top-level defrag_f function check in the
+filetable[i].fsgeom structure that the fs supports reflink?
+
+> +		if (ret != 0) {
+> +			fprintf(stderr, "FICLONERANGE failed %s\n",
+> +				strerror(errno));
+
+Might be useful to include the file_path in the error message:
+
+/opt/a: FICLONERANGE failed Software caused connection abort
+
+(maybe also put a semicolon before the strerror message?)
+
 > +			break;
 > +		}
+> +
+> +		/* for time stats */
+> +		time_delta = get_time_delta_us(&t_clone, &t_unshare);
+> +		if (time_delta > max_clone_us)
+> +			max_clone_us = time_delta;
+> +
+> +		/* for defrag stats */
+> +		nr_ext_defrag += segment.ds_nr;
+> +
+> +		/*
+> +		 * For the shared range to be unshared via a copy-on-write
+> +		 * operation in the file to be defragged. This causes the
+> +		 * file needing to be defragged to have new extents allocated
+> +		 * and the data to be copied over and written out.
+> +		 */
+> +		ret = fallocate(defrag_fd, FALLOC_FL_UNSHARE_RANGE, seg_off,
+> +				seg_size);
+> +		if (ret != 0) {
+> +			fprintf(stderr, "UNSHARE_RANGE failed %s\n",
+> +				strerror(errno));
+> +			break;
+> +		}
+> +
+> +		/* for time stats */
+> +		time_delta = get_time_delta_us(&t_unshare, &t_punch_hole);
+> +		if (time_delta > max_unshare_us)
+> +			max_unshare_us = time_delta;
+> +
+> +		/*
+> +		 * Punch out the original extents we shared to the
+> +		 * scratch file so they are returned to free space.
+> +		 */
+> +		ret = fallocate(scratch_fd,
+> +			FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, seg_off,
+> +			seg_size);
 
-If you reverse the polarity of the 0/1 return values (aka return 1 if
-there is a segment and 0 if there is none) then you can shorten this
-loop to:
-
-	struct defrag_segment	segment;
-	int			ret;
-
-	while ((ret = defrag_get_next_segment(...)) == 1) {
-		/* process segment */
-	}
-
-	return ret;
+Indentation here (two tabs for a continuation).  Or just ftruncate
+scratch_fd to zero bytes?  I think you have to do that for the EOF stuff
+to work, right?
 
 --D
 
-> +		/* error happened when reading bmap, stop here */
-> +		if (ret == -1) {
-> +			ret = 1;
+> +		if (ret != 0) {
+> +			fprintf(stderr, "PUNCH_HOLE failed %s\n",
+> +				strerror(errno));
 > +			break;
 > +		}
-> +	} while (true);
+> +
+> +		/* for defrag stats */
+> +		nr_seg_defrag += 1;
+> +
+> +		/* for time stats */
+> +		time_delta = get_time_delta_us(&t_punch_hole, &t_clone);
+> +		if (time_delta > max_punch_us)
+> +			max_punch_us = time_delta;
+> +
+> +		if (stop)
+> +			break;
+>  	} while (true);
 >  out:
 >  	if (scratch_fd != -1) {
->  		close(scratch_fd);
 > -- 
 > 2.39.3 (Apple Git-146)
 > 
