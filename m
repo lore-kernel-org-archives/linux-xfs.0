@@ -1,189 +1,352 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF50E12E1E9;
-	Tue,  9 Jul 2024 21:08:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FDB77CF18
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 21:18:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720559326; cv=none; b=HvugQ6d1psg6dW2pM0Er3sIwKtaTQ02nK5ka7fm+2fGoO/BwMRiMVZAMA1b+QuuArP8wDk2xR8PwsLMV51jZLK9iqy9T+WRQJ4CUo4qSyRs2pdolQRvrZGzww2a32A6eMfj7QDgXPsGDDjK9hW5MlZOpi3SbYmkwjxxPXsIJeAA=
+	t=1720559938; cv=none; b=aAz3N7WX9lYH4spVlbNRfwbwNhCqhjRc+4VF5SuFHRA0to/GzBigHu8v9B5RXqOY4B/7h7rC7Irq9aNSl+a2FI99+m9A1J65+MWdMvfITKIDzj4HRqY6d1O5uO9mdXyYU8SUwNWRoKP+KrKxpzPZCCIgAeUPpTRsW2NUzD47L9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720559326; c=relaxed/simple;
-	bh=Q9YZ4dMO4FrcXEYd8kqmrues+YkMLPsOb9HS455Udr4=;
+	s=arc-20240116; t=1720559938; c=relaxed/simple;
+	bh=ZX+qRsjwJGp0gLrBV4AcXL8KAG2lIBSg1C5IQ5Gw+FU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MCPS1+nOa3lHQSu6DMEnJe5KGw89nh+m+/r8TdoRpS9uQr5D+TVxL9jSq7c63O+hm+SZFAMb49UbR4w/ZIMeK7hKOHkGkM/x7pI2kaVlURz5M4CHGtmyk1C2ePjSP3OPB/nMOJUT0ooZNogLCZ6OynFRQ6tnpzmVfJk3xON9VW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=fU0YrPQt; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=sr3lu9hmkDQsyIGYFNwiUfoV1FvJ6ptawr8Yhz4oXPlFsF2RIvEw9YKB/HQCOLBkvkb/+yxo4nGiV7EK2Ilc4RzqZcve/ybOfDD7H1DE00N1o86+2phLS0UNI17BvEMgRArsxSWmBy1yaFQVJlqaYqinZTiZ6BwBMVdVHMx5Yjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RwCdW9Qn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="fU0YrPQt"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4WJYW61S9Cz9scJ;
-	Tue,  9 Jul 2024 23:08:34 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1720559314;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iVjuijbIr/b7fVxDSSOmDOpSaFlx4V8o7i65KF3sL+E=;
-	b=fU0YrPQtSaMiHdH59A/z/WbCWtgL0Gd/ubUJnDLi2lbwjYRFYc8YzmqEiJz27+ZLPOU0FF
-	LqJodweJikQZgbdVSSdCBNMnMQTeP/nUQku5UEuzhJ+zVSnSmWUNA18D4O5VQdi9+EbJV4
-	/v5sGpyGDyS0JgB7wWmM7s3xx3CyuzS/7VyTsWQE3iX3GyMKduF8PLWILwyaWoiqmrM+NF
-	uCm2KCrNmitAmVV6ZOPKNmlN8t50hMo+jsE0M05OrbaEgvjfc+OPqvPcVkkSSHaUG/BpVl
-	f/VEqIz9YlUiOLjkxZ0J0OxqxVugHxAjssgPPP2ITzAVVnUO9QYLCjVv+vA6hQ==
-Date: Tue, 9 Jul 2024 21:08:29 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: david@fromorbit.com, willy@infradead.org, ryan.roberts@arm.com,
-	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
-	linux-mm@kvack.org, john.g.garry@oracle.com,
-	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
-	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>,
-	akpm@linux-foundation.org, chandan.babu@oracle.com
-Subject: Re: [PATCH v8 01/10] fs: Allow fine-grained control of folio sizes
-Message-ID: <20240709210829.dgm6dsirkry3fgu6@quentin>
-References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-2-kernel@pankajraghav.com>
- <20240709162907.gsd5nf33teoss5ir@quentin>
- <20240709165047.GS1998502@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RwCdW9Qn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E75E3C3277B;
+	Tue,  9 Jul 2024 21:18:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720559938;
+	bh=ZX+qRsjwJGp0gLrBV4AcXL8KAG2lIBSg1C5IQ5Gw+FU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RwCdW9QnuFlbC+7nR4GGnTkJDQ+ScdvyvV8ZPsa5T+NEa/SL1Env6Kiplpka7ddvi
+	 1mbqypAtIN2L883SMSL/R9kdRr3tqYC8GdDXurT2XrYQynqID2EsX0S4SYCDuiRkT2
+	 OsD7rRblTLBiymxqstzIrCkbYIEwn4Qnc9UKa7SCR8EVVh8Q5DjB8WM8yi98SIUJgC
+	 HbqU6PBmtjEeI6hmoQ/CAlfXpTQJFYr6tZmMTKgLA0x8/0Sa1QvotzAexDTwRDDmFw
+	 FqEMvQVHp7kVSMO8Jmvsx/xT6dnhJXLdCBUFGtzBaAhLaWflamoU32biLzZAAsBAqt
+	 gSjoFuqqnDLtA==
+Date: Tue, 9 Jul 2024 14:18:57 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Wengang Wang <wen.gang.wang@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfsprogs: introduce defrag command to spaceman
+Message-ID: <20240709211857.GY612460@frogsfrogsfrogs>
+References: <20240709191028.2329-1-wen.gang.wang@oracle.com>
+ <20240709191028.2329-2-wen.gang.wang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240709165047.GS1998502@frogsfrogsfrogs>
-X-Rspamd-Queue-Id: 4WJYW61S9Cz9scJ
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240709191028.2329-2-wen.gang.wang@oracle.com>
 
-> > 
-> > - We make THP an explicit dependency for XFS:
-> > 
-> > diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> > index d41edd30388b7..be2c1c0e9fe8b 100644
-> > --- a/fs/xfs/Kconfig
-> > +++ b/fs/xfs/Kconfig
-> > @@ -5,6 +5,7 @@ config XFS_FS
-> >         select EXPORTFS
-> >         select LIBCRC32C
-> >         select FS_IOMAP
-> > +       select TRANSPARENT_HUGEPAGE
-> >         help
-> >           XFS is a high performance journaling filesystem which originated
-> >           on the SGI IRIX platform.  It is completely multi-threaded, can
-> > 
-> > OR
-> > 
-> > We create a helper in page cache that FSs can use to check if a specific
-> > order can be supported at mount time:
+On Tue, Jul 09, 2024 at 12:10:20PM -0700, Wengang Wang wrote:
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
 > 
-> I like this solution better; if XFS is going to drop support for o[ld]d
-> architectures I think we need /some/ sort of notice period.  Or at least
-> a better story than "we want to support 64k fsblocks on x64 so we're
-> withdrawing support even for 4k fsblocks and smallish filesystems on
-> m68k".
+> Non-exclusive defragment
+> Here we are introducing the non-exclusive manner to defragment a file,
+> especially for huge files, without blocking IO to it long.
+> Non-exclusive defragmentation divides the whole file into small segments.
+> For each segment, we lock the file, defragment the segment and unlock the file.
+> Defragmenting the small segment doesn’t take long. File IO requests can get
+> served between defragmenting segments before blocked long.  Also we put
+> (user adjustable) idle time between defragmenting two consecutive segments to
+> balance the defragmentation and file IOs.
 > 
-> You probably don't want bs>ps support to block on some arcane discussion
-> about 32-bit, right? ;)
+> The first patch in the set checks for valid target files
 > 
+> Valid target files to defrag must:
+> 1. be accessible for read/write
+> 2. be regular files
+> 3. be in XFS filesystem
+> 4. the containing XFS has reflink enabled. This is not checked
+>    before starting defragmentation, but error would be reported
+>    later.
+> 
+> Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+> ---
+>  spaceman/Makefile |   2 +-
+>  spaceman/defrag.c | 198 ++++++++++++++++++++++++++++++++++++++++++++++
+>  spaceman/init.c   |   1 +
+>  spaceman/space.h  |   1 +
+>  4 files changed, 201 insertions(+), 1 deletion(-)
+>  create mode 100644 spaceman/defrag.c
+> 
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> index 1f048d54..9c00b20a 100644
+> --- a/spaceman/Makefile
+> +++ b/spaceman/Makefile
+> @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+>  
+>  LTCOMMAND = xfs_spaceman
+>  HFILES = init.h space.h
+> -CFILES = info.c init.c file.c health.c prealloc.c trim.c
+> +CFILES = info.c init.c file.c health.c prealloc.c trim.c defrag.c
+>  LSRCFILES = xfs_info.sh
+>  
+>  LLDLIBS = $(LIBXCMD) $(LIBFROG)
+> diff --git a/spaceman/defrag.c b/spaceman/defrag.c
+> new file mode 100644
+> index 00000000..c9732984
+> --- /dev/null
+> +++ b/spaceman/defrag.c
+> @@ -0,0 +1,198 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2024 Oracle.
+> + * All Rights Reserved.
+> + */
+> +
+> +#include "libxfs.h"
+> +#include <linux/fiemap.h>
+> +#include <linux/fsmap.h>
+> +#include "libfrog/fsgeom.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "libfrog/paths.h"
+> +#include "space.h"
+> +#include "input.h"
+> +
+> +/* defrag segment size limit in units of 512 bytes */
+> +#define MIN_SEGMENT_SIZE_LIMIT 8192 /* 4MiB */
+> +#define DEFAULT_SEGMENT_SIZE_LIMIT 32768 /* 16MiB */
+> +static int g_segment_size_lmt = DEFAULT_SEGMENT_SIZE_LIMIT;
+> +
+> +/* size of the defrag target file */
+> +static off_t g_defrag_file_size = 0;
+> +
+> +/* stats for the target file extents before defrag */
+> +struct ext_stats {
+> +	long	nr_ext_total;
+> +	long	nr_ext_unwritten;
+> +	long	nr_ext_shared;
+> +};
+> +static struct ext_stats	g_ext_stats;
+> +
+> +/*
+> + * check if the target is a valid file to defrag
+> + * also store file size
+> + * returns:
+> + * true for yes and false for no
+> + */
+> +static bool
+> +defrag_check_file(char *path)
+> +{
+> +	struct statfs statfs_s;
+> +	struct stat stat_s;
+> +
+> +	if (access(path, F_OK|W_OK) == -1) {
+> +		if (errno == ENOENT)
+> +			fprintf(stderr, "file \"%s\" doesn't exist\n", path);
+> +		else
+> +			fprintf(stderr, "no access to \"%s\", %s\n", path,
+> +				strerror(errno));
+> +		return false;
+> +	}
+> +
+> +	if (stat(path, &stat_s) == -1) {
+> +		fprintf(stderr, "failed to get file info on \"%s\":  %s\n",
+> +			path, strerror(errno));
+> +		return false;
+> +	}
+> +
+> +	g_defrag_file_size = stat_s.st_size;
+> +
+> +	if (!S_ISREG(stat_s.st_mode)) {
+> +		fprintf(stderr, "\"%s\" is not a regular file\n", path);
+> +		return false;
+> +	}
+> +
+> +	if (statfs(path, &statfs_s) == -1) {
 
-:)
+statfs is deprecated, please use fstatvfs.
 
-> > diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> > index 14e1415f7dcf..9be775ef11a5 100644
-> > --- a/include/linux/pagemap.h
-> > +++ b/include/linux/pagemap.h
-> > @@ -374,6 +374,14 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
-> >  #define MAX_XAS_ORDER          (XA_CHUNK_SHIFT * 2 - 1)
-> >  #define MAX_PAGECACHE_ORDER    min(MAX_XAS_ORDER, PREFERRED_MAX_PAGECACHE_ORDER)
-> >  
-> > +
-> > +static inline unsigned int mapping_max_folio_order_supported()
-> > +{
-> > +    if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-> > +      return 0;
-> 
-> Shouldn't this line be indented by two tabs, not six spaces?
-> 
-> > +    return MAX_PAGECACHE_ORDER;
-> > +}
-> 
-> Alternately, should this return the max folio size in bytes?
-> 
-> static inline size_t mapping_max_folio_size(void)
-> {
-> 	if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-> 		return 1U << (PAGE_SHIFT + MAX_PAGECACHE_ORDER);
-> 	return PAGE_SIZE;
-> }
+> +		fprintf(stderr, "failed to get FS info on \"%s\":  %s\n",
+> +			path, strerror(errno));
+> +		return false;
+> +	}
+> +
+> +	if (statfs_s.f_type != XFS_SUPER_MAGIC) {
+> +		fprintf(stderr, "\"%s\" is not a xfs file\n", path);
+> +		return false;
+> +	}
+> +
+> +	return true;
+> +}
+> +
+> +/*
+> + * defragment a file
+> + * return 0 if successfully done, 1 otherwise
+> + */
+> +static int
+> +defrag_xfs_defrag(char *file_path) {
 
-We already have mapping_max_folio_size(mapping) which returns the
-maximum folio order set for that mapping. So this could be called as
-mapping_max_folio_size_supported().
+defrag_xfs_path() ?
 
-So we could just have mapping_max_folio_size_supported() instead of
-having mapping_max_folio_order_supported as you suggest.
+> +	int	max_clone_us = 0, max_unshare_us = 0, max_punch_us = 0;
+> +	long	nr_seg_defrag = 0, nr_ext_defrag = 0;
+> +	int	scratch_fd = -1, defrag_fd = -1;
+> +	char	tmp_file_path[PATH_MAX+1];
+> +	char	*defrag_dir;
+> +	struct fsxattr	fsx;
+> +	int	ret = 0;
+> +
+> +	fsx.fsx_nextents = 0;
+> +	memset(&g_ext_stats, 0, sizeof(g_ext_stats));
+> +
+> +	if (!defrag_check_file(file_path)) {
+> +		ret = 1;
+> +		goto out;
+> +	}
+> +
+> +	defrag_fd = open(file_path, O_RDWR);
+> +	if (defrag_fd == -1) {
 
-> 
-> Then the validation looks like:
-> 
-> 	const size_t	max_folio_size = mapping_max_folio_size();
-> 
-> 	if (mp->m_sb.sb_blocksize > max_folio_size) {
-> 		xfs_warn(mp,
->  "block size (%u bytes) not supported; maximum folio size is %u.",
-> 				mp->m_sb.sb_blocksize, max_folio_size);
-> 		error = -ENOSYS;
-> 		goto out_free_sb;
-> 	}
-> 
-> (Don't mind me bikeshedding here.)
-> 
-> > +
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index b8a93a8f35cac..e2be8743c2c20 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1647,6 +1647,15 @@ xfs_fs_fill_super(
-> >                         goto out_free_sb;
-> >                 }
-> >  
-> > +               if (mp->m_sb.sb_blocklog - PAGE_SHIFT >
-> > +                   mapping_max_folio_order_supported()) {
-> > +                       xfs_warn(mp,
-> > +"Block Size (%d bytes) is not supported. Check MAX_PAGECACHE_ORDER",
-> > +                       mp->m_sb.sb_blocksize);
-> 
-> You might as well print MAX_PAGECACHE_ORDER here to make analysis
-> easier on less-familiar architectures:
+Not sure why you check the path before opening it -- all those file and
+statvfs attributes that you collect there can change (or the entire fs
+gets unmounted) until you've pinned the fs by opening the file.
 
-Yes!
+> +		fprintf(stderr, "Opening %s failed. %s\n", file_path,
+> +			strerror(errno));
+> +		ret = 1;
+> +		goto out;
+> +	}
+> +
+> +	defrag_dir = dirname(file_path);
+> +	snprintf(tmp_file_path, PATH_MAX, "%s/.xfsdefrag_%d", defrag_dir,
+> +		getpid());
+> +	tmp_file_path[PATH_MAX] = 0;
+> +	scratch_fd = open(tmp_file_path, O_CREAT|O_EXCL|O_RDWR, 0600);
 
-> 
-> 			xfs_warn(mp,
->  "block size (%d bytes) is not supported; max folio size is %u.",
-> 					mp->m_sb.sb_blocksize,
-> 					1U << mapping_max_folio_order_supported());
-> 
-> (I wrote this comment first.)
+O_TMPFILE?  Then you don't have to do this .xfsdefrag_XXX stuff.
 
+> +	if (scratch_fd == -1) {
+> +		fprintf(stderr, "Opening temporary file %s failed. %s\n",
+> +			tmp_file_path, strerror(errno));
+> +		ret = 1;
+> +		goto out;
+> +	}
+> +out:
+> +	if (scratch_fd != -1) {
+> +		close(scratch_fd);
+> +		unlink(tmp_file_path);
+> +	}
+> +	if (defrag_fd != -1) {
+> +		ioctl(defrag_fd, FS_IOC_FSGETXATTR, &fsx);
+> +		close(defrag_fd);
+> +	}
+> +
+> +	printf("Pre-defrag %ld extents detected, %ld are \"unwritten\","
+> +		"%ld are \"shared\"\n",
+> +		g_ext_stats.nr_ext_total, g_ext_stats.nr_ext_unwritten,
+> +		g_ext_stats.nr_ext_shared);
+> +	printf("Tried to defragment %ld extents in %ld segments\n",
+> +		nr_ext_defrag, nr_seg_defrag);
+> +	printf("Time stats(ms): max clone: %d, max unshare: %d,"
+> +	       " max punch_hole: %d\n",
+> +	       max_clone_us/1000, max_unshare_us/1000, max_punch_us/1000);
+> +	printf("Post-defrag %u extents detected\n", fsx.fsx_nextents);
+> +	return ret;
+> +}
+> +
+> +
+> +static void defrag_help(void)
+> +{
+> +	printf(_(
+> +"\n"
+> +"Defragemnt files on XFS where reflink is enabled. IOs to the target files \n"
+
+"Defragment"
+
+> +"can be served durning the defragmentations.\n"
+> +"\n"
+> +" -s segment_size    -- specify the segment size in MiB, minmum value is 4 \n"
+> +"                       default is 16\n"));
+> +}
+> +
+> +static cmdinfo_t defrag_cmd;
+> +
+> +static int
+> +defrag_f(int argc, char **argv)
+> +{
+> +	int	i;
+> +	int	c;
+> +
+> +	while ((c = getopt(argc, argv, "s:")) != EOF) {
+> +		switch(c) {
+> +		case 's':
+> +			g_segment_size_lmt = atoi(optarg) * 1024 * 1024 / 512;
+> +			if (g_segment_size_lmt < MIN_SEGMENT_SIZE_LIMIT) {
+> +				g_segment_size_lmt = MIN_SEGMENT_SIZE_LIMIT;
+> +				printf("Using minimium segment size %d\n",
+> +					g_segment_size_lmt);
+> +			}
+> +			break;
+> +		default:
+> +			command_usage(&defrag_cmd);
+> +			return 1;
+> +		}
+> +	}
+> +
+> +	for (i = 0; i < filecount; i++)
+> +		defrag_xfs_defrag(filetable[i].name);
+
+Pass in the whole filetable[i] and then you've already got an open fd
+and some validation that it's an xfs filesystem.
+
+> +	return 0;
+> +}
+> +void defrag_init(void)
+> +{
+> +	defrag_cmd.name		= "defrag";
+> +	defrag_cmd.altname	= "dfg";
+> +	defrag_cmd.cfunc	= defrag_f;
+> +	defrag_cmd.argmin	= 0;
+> +	defrag_cmd.argmax	= 4;
+> +	defrag_cmd.args		= "[-s segment_size]";
+> +	defrag_cmd.flags	= CMD_FLAG_ONESHOT;
+
+IIRC if you don't set CMD_FLAG_FOREIGN_OK then the command processor
+won't let this command get run against a non-xfs file.
+
+--D
+
+> +	defrag_cmd.oneline	= _("Defragment XFS files");
+> +	defrag_cmd.help		= defrag_help;
+> +
+> +	add_command(&defrag_cmd);
+> +}
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index cf1ff3cb..396f965c 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -35,6 +35,7 @@ init_commands(void)
+>  	trim_init();
+>  	freesp_init();
+>  	health_init();
+> +	defrag_init();
+>  }
+>  
+>  static int
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> index 723209ed..c288aeb9 100644
+> --- a/spaceman/space.h
+> +++ b/spaceman/space.h
+> @@ -26,6 +26,7 @@ extern void	help_init(void);
+>  extern void	prealloc_init(void);
+>  extern void	quit_init(void);
+>  extern void	trim_init(void);
+> +extern void	defrag_init(void);
+>  #ifdef HAVE_GETFSMAP
+>  extern void	freesp_init(void);
+>  #else
+> -- 
+> 2.39.3 (Apple Git-146)
 > 
-> --D
 > 
-> > +                       error = -ENOSYS;
-> > +                       goto out_free_sb;
-> > +               }
-> > +
-> >                 xfs_warn(mp,
-> >  "EXPERIMENTAL: V5 Filesystem with Large Block Size (%d bytes) enabled.",
-> >                         mp->m_sb.sb_blocksize);
-> > 
-> > 
-> > --
-> > Pankaj
