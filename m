@@ -1,152 +1,186 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B495E15ECCC;
-	Tue,  9 Jul 2024 13:08:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD83158A0D
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2024 15:56:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720530528; cv=none; b=FLTIGT0AHxYyeXodzTkJysAx7DgKQ2otJI9TycLBLX+c8j9K2ZwJAxEGRcbLD81rlsU0X+BcWB+hN2PnqnxDDwrdiHyO/dIc4GBtQdfSAILDQ3RsqZPX0i2YjDRRA0nYWCgsiELhIF4ZLS53EKrUXCO5kB5ojW0W+9XAoV92+8U=
+	t=1720540595; cv=none; b=tvT2kQchbzXJgUs0LfgkUHEACgn+UKNZdU2H7t0zlYGC9M2B9t9gOdt9WZkYJgGWjPpZuLFYO9VDdZu4t1pbr0gpofkrcOuf5XFa08OS/UCI7gov9ODak9Ia4brAwkvKk5nHHc5fDaoXZWnFxb42TT2P8lEFSTgnU06Gk2QRAWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720530528; c=relaxed/simple;
-	bh=oBqg1HWvx9VQJgCxwdtvSjPNgabEY0G/wHeFdZGNcvE=;
+	s=arc-20240116; t=1720540595; c=relaxed/simple;
+	bh=YsGddLcuzluGh1Z2I/0xBj1FmM9qYjQTWUTyhEnA6/Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CmuoSrYlmpSPP3n2xJIlCm5LtP5433mFo0vS+wnqDX5v0dh3/U8lBDbAWVzIGzYxeLn8wgZ6onW20qfzwyFWWMpvuzwtGD3YLe+uC+wxEuiD/IJSApcYdjbTzCudlL19zzcbCmQZOs+JsASVb3dkHTtqIpAGeeoC9t5deP4Kt34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=rnbT/omf; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=CqXSOdk5yDT+MeLN9hI7OGulyowBUMN1w6IchodPXVjSpAZnbf31QzC4MRSc9S6x8X8Ih5YAD+Pd1aZf/MeFN9Vv53IkAm9x0I5mdbWWrKflE0W1e3/i4NwqljUAcSvmVYvAwLTAyk4Qa/9iAKbQ9G8Z1bsthWUkgIU77BrxhYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WhAxepTV; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="rnbT/omf"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4WJLsJ3lh3z9svX;
-	Tue,  9 Jul 2024 15:08:36 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1720530516;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WhAxepTV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1720540592;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=67waOcRdhuokGC1VsAI1CleG4DFk7wy8/plFNIGbEQs=;
-	b=rnbT/omfpIWc1cek0uLglNB0CURzcvikih+bJ3m6P/4wM6UjSyplrz4+ochoizAsH5se0w
-	wMEdrtgnPu7x3OvUpcLKPl0CY6ALJyWxR2ED/M2Md6tiZhzgBMQ3JSB16Sf1xTmr86OdLh
-	JPVtQTjmadQc3jkabF4vTfdwjznCGQVRc+F2rrzM48h4WP29rwBVOw7+mEs0/lbnO9wa/T
-	LDaGSNh5Y525D/WXzWpp0vkUdXjt7/4TVXuVnRvwGR2aTfuL5r4jaOAmvMBzxJTAOM5cfI
-	cyx08zOgyd1HczCYcjOUSFxHFGMzHlIDkXrrX7kYOH0+EYNno+VgEx8mp7PYVg==
-Date: Tue, 9 Jul 2024 13:08:31 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ryan Roberts <ryan.roberts@arm.com>,
-	Matthew Wilcox <willy@infradead.org>, chandan.babu@oracle.com,
-	djwong@kernel.org, brauner@kernel.org, akpm@linux-foundation.org,
-	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
-	linux-mm@kvack.org, john.g.garry@oracle.com,
-	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
-	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <zi.yan@sent.com>
-Subject: Re: [PATCH v8 01/10] fs: Allow fine-grained control of folio sizes
-Message-ID: <20240709130831.5qdozpts44igmsn6@quentin>
-References: <20240625114420.719014-1-kernel@pankajraghav.com>
- <20240625114420.719014-2-kernel@pankajraghav.com>
- <cb644a36-67a7-4692-b002-413e70ac864a@arm.com>
- <Zoa9rQbEUam467-q@casper.infradead.org>
- <Zocc+6nIQzfUTPpd@dread.disaster.area>
- <Zoc2rCPC5thSIuoR@casper.infradead.org>
- <Zod3ZQizBL7MyWEA@dread.disaster.area>
- <20240705132418.gk7oeucdisat3sq5@quentin>
- <1e0e89ea-3130-42b0-810d-f52da2affe51@arm.com>
- <ZoxvzXA1wcGDlQS2@dread.disaster.area>
+	bh=Xk2zHQ/YE20jgxtFEdO755E5YwPG0ZQdb2j69TcOV+0=;
+	b=WhAxepTVjSu2GiMejjfqoRtbeI5bS2ZoT7U9578ALVaY1atRgue4MB2aIQQACOv6W9kuAh
+	MubNNPpCe2S0Zpc3v/h7Vrjsk+ClPXrBNQC5c1qpnSX/4fLhclAZLtVEnsUPzHZZi/wadp
+	A6ElXRJ4F4Q0m8taml5pwz92hqJ+cfE=
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com
+ [209.85.167.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-55-vamuG1QsMHqb0W7imMPr2g-1; Tue, 09 Jul 2024 11:56:31 -0400
+X-MC-Unique: vamuG1QsMHqb0W7imMPr2g-1
+Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-3d91995a3c6so119309b6e.2
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Jul 2024 08:56:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720540591; x=1721145391;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Xk2zHQ/YE20jgxtFEdO755E5YwPG0ZQdb2j69TcOV+0=;
+        b=kNjjCLsIiF0PHPvIM2UWcciQXEt2clMXOGzuSvWs4r9FciQcFvMWvKy+W3oMg3CvIe
+         VcH8FNuUQXK2Nkv3aluu+eiCGC9sN2GM2gYHDNaBK0TqbTHqFCDutJx3XP4p3CUhcKsd
+         GbGTmzy6XH0NdcRffAbFS5bdjsAIR/LR2s83T3gV/5w/YHJNIkNiu678Hrd3lQK1Tbnx
+         0MAoM4sG+9/EqmDETfcGrfRie4sOYJMhUYP8n2QrRXEyQw0y4QzgMKdJuOeF8hJRKUvb
+         SdjzWzN2mGJIA/2PnA5yrW09y3D7tRK3IhsULh6t3jl9XzAwu13ND/wFI8LNPtJ8HBAk
+         Npkw==
+X-Forwarded-Encrypted: i=1; AJvYcCWlQ1J4cX9U6vRZjofF4Xqwqm0GBfhi78G4YaNZnqrNv5uYGWVyi1GzhqtLXMEY+9qPy7qZjooM4OrWMVRapEPtBI5J7eSAjuiz
+X-Gm-Message-State: AOJu0Yxx1wNnuGfqZQEuftyuP6UX46wqUzf/cYaDljoLi3gyvyt2dcIB
+	AfnFh3Zb43VFiwfdR4b3DGJ7POQ6985OoVnbA7hpjoP/ZYE4+O8pwD216ZyRqpP3fX8yf1BN9mD
+	1jc1UGOa4Sfc/mp07IBZijfDqd5IdYte3sMCOnPleznTY8XBsXNe6pXdQBg==
+X-Received: by 2002:a05:6808:148b:b0:3d9:2e1d:2543 with SMTP id 5614622812f47-3d93c0fe45amr2848534b6e.5.1720540590683;
+        Tue, 09 Jul 2024 08:56:30 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE1Ma1rQrmj4Xg5pyldsO8p97ImEEKrUWOUqeogODHc73Oz0DxK2TC+nXJTsvBMv1FTSng1jg==
+X-Received: by 2002:a05:6808:148b:b0:3d9:2e1d:2543 with SMTP id 5614622812f47-3d93c0fe45amr2848435b6e.5.1720540589482;
+        Tue, 09 Jul 2024 08:56:29 -0700 (PDT)
+Received: from x1n (pool-99-254-121-117.cpe.net.cable.rogers.com. [99.254.121.117])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-447f9b26f7bsm11708091cf.6.2024.07.09.08.56.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Jul 2024 08:56:29 -0700 (PDT)
+Date: Tue, 9 Jul 2024 11:56:25 -0400
+From: Peter Xu <peterx@redhat.com>
+To: Alistair Popple <apopple@nvidia.com>
+Cc: dan.j.williams@intel.com, vishal.l.verma@intel.com,
+	dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com,
+	jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
+	will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
+	dave.hansen@linux.intel.com, ira.weiny@intel.com,
+	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
+	linmiaohe@huawei.com, david@redhat.com, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, nvdimm@lists.linux.dev,
+	linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
+	david@fromorbit.com, Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 11/13] huge_memory: Remove dead vmf_insert_pXd code
+Message-ID: <Zo1dqTPLn_gosrSO@x1n>
+References: <cover.66009f59a7fe77320d413011386c3ae5c2ee82eb.1719386613.git-series.apopple@nvidia.com>
+ <400a4584f6f628998a7093aee49d9f86c592754b.1719386613.git-series.apopple@nvidia.com>
+ <ZogCDpfSyCcjVXWH@x1n>
+ <87zfqrw69i.fsf@nvdebian.thelocal>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZoxvzXA1wcGDlQS2@dread.disaster.area>
+In-Reply-To: <87zfqrw69i.fsf@nvdebian.thelocal>
 
-> > > 
-> > > Why CONFIG_BLOCK? I think it is enough if it comes from the FS side
-> > > right? And for now, the only FS that needs that sort of bs > ps 
-> > > guarantee is XFS with this series. Other filesystems such as bcachefs 
-> > > that call mapping_set_large_folios() only enable it as an optimization
-> > > and it is not needed for the filesystem to function.
-> > > 
-> > > So this is my conclusion from the conversation:
-> > > - Add a dependency in Kconfig on THP for XFS until we fix the dependency
-> > >   of large folios on THP
-> > 
-> > THP isn't supported on some arches, so isn't this effectively saying XFS can no
-> > longer be used with those arches, even if the bs <= ps?
+On Tue, Jul 09, 2024 at 02:07:31PM +1000, Alistair Popple wrote:
 > 
-> I'm good with that - we're already long past the point where we try
-
-From my cursory review, I can see that the following arch supports THP
-(* indicates it has some dependency on other Kconfig parameter):
-
-arc*, arm*, arm64, loongarch, mips*, powerpc*, riscv*, s390, sparc, x86.
-
-and the following do not have THP support:
-
-alpha, csky, hexagon, m68k, microblaze, nios2, openrisc, parisc, sh, um,
-xtensa.
-
-Looks like the arch that do not THP support are either old or embedded
-processor that target mainly 32-bit architecture.
-
-So are we OK with?
-
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index d41edd30388b7..be2c1c0e9fe8b 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -5,6 +5,7 @@ config XFS_FS
-        select EXPORTFS
-        select LIBCRC32C
-        select FS_IOMAP
-+       select TRANSPARENT_HUGEPAGE
-        help
-          XFS is a high performance journaling filesystem which originated
-          on the SGI IRIX platform.  It is completely multi-threaded, can
-
-> to support XFS on every linux platform. Indeed, we've recent been
-> musing about making XFS depend on 64 bit only - 32 bit systems don't
-> have the memory capacity to run the full xfs tool chain (e.g.
-> xfs_repair) on filesystems over about a TB in size, and they are
-> greatly limited in kernel memory and vmap areas, both of which XFS
-> makes heavy use of. Basically, friends don't let friends use XFS on
-> 32 bit systems, and that's been true for about 20 years now.
+> Peter Xu <peterx@redhat.com> writes:
 > 
-> Our problem is the test matrix - if we now have to explicitly test
-> XFS both with and without large folios enabled to support these
-> platforms, we've just doubled our test matrix. The test matrix is
-> already far too large to robustly cover, so anything that requires
-> doubling the number of kernel configs we have to test is, IMO, a
-> non-starter.
+> > Hi, Alistair,
+> >
+> > On Thu, Jun 27, 2024 at 10:54:26AM +1000, Alistair Popple wrote:
+> >> Now that DAX is managing page reference counts the same as normal
+> >> pages there are no callers for vmf_insert_pXd functions so remove
+> >> them.
+> >> 
+> >> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> >> ---
+> >>  include/linux/huge_mm.h |   2 +-
+> >>  mm/huge_memory.c        | 165 +-----------------------------------------
+> >>  2 files changed, 167 deletions(-)
+> >> 
+> >> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
+> >> index 9207d8e..0fb6bff 100644
+> >> --- a/include/linux/huge_mm.h
+> >> +++ b/include/linux/huge_mm.h
+> >> @@ -37,8 +37,6 @@ int change_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
+> >>  		    pmd_t *pmd, unsigned long addr, pgprot_t newprot,
+> >>  		    unsigned long cp_flags);
+> >>  
+> >> -vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write);
+> >> -vm_fault_t vmf_insert_pfn_pud(struct vm_fault *vmf, pfn_t pfn, bool write);
+> >>  vm_fault_t dax_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write);
+> >>  vm_fault_t dax_insert_pfn_pud(struct vm_fault *vmf, pfn_t pfn, bool write);
+> >
+> > There's a plan to support huge pfnmaps in VFIO, which may still make good
+> > use of these functions.  I think it's fine to remove them but it may mean
+> > we'll need to add them back when supporting pfnmaps with no memmap.
 > 
-> That's why we really don't support XFS on 32 bit systems anymore and
-> why we're talking about making that official with a config option.
-> If we're at the point where XFS will now depend on large folios (i.e
-> THP), then we need to seriously consider reducing the supported
-> arches to just those that support both 64 bit and THP. If niche
-> arches want to support THP, or enable large folios without the need
-> for THP, then they can do that work and then they get XFS for
-> free.
+> I'm ok with that. If we need them back in future it shouldn't be too
+> hard to add them back again. I just couldn't find any callers of them
+> once DAX stopped using them and the usual policy is to remove unused
+> functions.
+
+True.  Currently the pmd/pud helpers are only used in dax.
+
 > 
-> Just because an arch might run a Linux kernel, it doesn't mean we
-> have to support XFS on it....
+> > Is it still possible to make the old API generic to both service the new
+> > dax refcount plan, but at the meantime working for pfn injections when
+> > there's no page struct?
+> 
+> I don't think so - this new dax refcount plan relies on having a struct
+> page to take references on so I don't think it makes much sense to
+> combine it with something that doesn't have a struct page. It sounds
+> like the situation is the analogue of vm_insert_page()
+> vs. vmf_insert_pfn() - it's possible for both to exist but there's not
+> really anything that can be shared between the two APIs as one has a
+> page and the other is just a raw PFN.
 
-The other option is we can expose a simple helper from page cache as
-follows:
+I still think most of the codes should be shared on e.g. most of sanity
+checks, pgtable injections, pgtable deposits (for pmd) and so on.
 
-static inline unsigned int mapping_max_folio_order_supported()
-{
-    if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-      return 0;
-    return MAX_PAGECACHE_ORDER;
-}
+To be explicit, I wonder whether something like below diff would be
+applicable on top of the patch "huge_memory: Allow mappings of PMD sized
+pages" in this series, which introduced dax_insert_pfn_pmd() for dax:
 
-This could be used to know the maximum order supported at mount time and
-deny mounting for LBS configs if max folio supported is less than the
-block size being requested.
+$ diff origin new
+1c1
+< vm_fault_t dax_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write)
+---
+> vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write)
+55,58c55,60
+<       folio = page_folio(page);
+<       folio_get(folio);
+<       folio_add_file_rmap_pmd(folio, page, vma);
+<       add_mm_counter(mm, mm_counter_file(folio), HPAGE_PMD_NR);
+---
+>         if (page) {
+>                 folio = page_folio(page);
+>                 folio_get(folio);
+>                 folio_add_file_rmap_pmd(folio, page, vma);
+>                 add_mm_counter(mm, mm_counter_file(folio), HPAGE_PMD_NR);
+>         }
+
+As most of the rest look very similar to what pfn injections would need..
+and in the PoC of ours we're using vmf_insert_pfn_pmd/pud().
+
+That also reminds me on whether it'll be easier to implement the new dax
+support for page struct on top of vmf_insert_pfn_pmd/pud, rather than
+removing the 1st then adding the new one.  Maybe it'll reduce code churns,
+and would that also make reviews easier?
+
+It's also possible I missed something important so the old function must be
+removed.
+
+Thanks,
+
+-- 
+Peter Xu
+
