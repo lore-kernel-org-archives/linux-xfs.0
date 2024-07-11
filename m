@@ -1,68 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8A41C3D;
-	Thu, 11 Jul 2024 05:20:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74C2912B171
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 05:43:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720675246; cv=none; b=GxBt44l83e/0xEiM/0zVh5dAhkmjmiMGgBorPNfPJfqpKTag9jLiVE8Zrvci1QENMmtjSF8nuNoGJ6MVd2P2c2OtyDNEfEdOiJlIJqRpBTzp5gh8PF5+lGy6ovDZuUa9HYRC2aZT5O5zga6eSjwZe2M/mFsDziH1ULn5VOp4Rj0=
+	t=1720676634; cv=none; b=DBMEK2V7uYN/N9y9hfGgToOGPVMJ9mXSDPFUBYpJT1KBzQe0EWSCEv3pflkeVst9hKPevay9et8e0yJTCi4afCEGx0PSKJM4q7H9DK3724V5YhbcE57xW6ES1udDqhzOZF73c8Q4nY6Btm4M/evTPZkws4Y+wVXjohDz3Z+/Jrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720675246; c=relaxed/simple;
-	bh=aSNxE3Xll7MWeaRzcJnR2/P7JxUky4COV+pcf6yolUc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kBTZKTTX/RkSojwU9GleIbwG4S/h4Tbqz8VQrT8zyIvhQgRkQQzdzHdSI5PdGSziKtGwWdEColtB1T+4zn6Dal9iiO4KGp0oP9MyvjyziwFoP83GRBXIM0Fgi+y+DT7PJTjIbcQSaaESgtZGbedtYyDuR3KUMwM86JFhzGKl0Us=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WZqOA3NN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720676634; c=relaxed/simple;
+	bh=LzoHxBHVne+sPY21yTnWgf+Y6Nwal/dCPPGmuDf/NF8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=KYBb4LhqhdEwc+l/aNjj+TTnaSnFQ059e6wwpJQBVUiUjoC7ngTHuslrEEhZeK3mYR/e5332+at7HZYJlRMt/7TmdLSnCnX9CT4+0PDML2hrFD+j9W4E0RUQku4Q1mc01RLKy4wfu9R/4PXAzTUAFCBmIfhqlxD8L9VGtgOmYCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o/55dv9m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WZqOA3NN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E7F8C116B1;
-	Thu, 11 Jul 2024 05:20:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o/55dv9m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A5C1C116B1;
+	Thu, 11 Jul 2024 05:43:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720675245;
-	bh=aSNxE3Xll7MWeaRzcJnR2/P7JxUky4COV+pcf6yolUc=;
-	h=From:To:Cc:Subject:Date:From;
-	b=WZqOA3NNnpegKNCLyHHv6jSoorganWkPYNwqoNZDv+Q2uA0jI6uPeApUJLn3a8XSc
-	 0hCwDi5FSr+0VmaK298H60zH2zpFefdjsIIsUPdKAzH82tk2dAgTA6gu06dStMZOx6
-	 MbYNh1tEBQTGqbr0yI0s1ITNcPGLwxkGDaoAXMg3K/DWktS5cIKk3V4DR+gSKhjSfv
-	 t5FO9Dt72xqDKcoIW8pRRINJC8XHvNsziMQZ7PZeRSr/PMELrGcvBC6iqpsymB9FM7
-	 w9NG9yhuc7QdZgqiSeDpNA/bgTwZfyh0xDcJ6Q8GPAm1JzutMgg3D6IwCD261n7lXa
-	 aisrE3gZpHsFQ==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 2bf6e353542d
-Date: Thu, 11 Jul 2024 10:48:56 +0530
-Message-ID: <874j8wa4ic.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=k20201202; t=1720676634;
+	bh=LzoHxBHVne+sPY21yTnWgf+Y6Nwal/dCPPGmuDf/NF8=;
+	h=Date:From:To:Cc:Subject:From;
+	b=o/55dv9mArn+CXPJWYQJ3iFlt/EY8OljkBasMTQogFqXs2fIjJRyAn64XfpwuUt/B
+	 CNojUzs9abAXemdJy+HhxYu9AqWWhRer4T2YKf1dIG+ZE2hMR8yX+TED/BSGIkqxRd
+	 NQ2osHoxNRsmpSYfnmLO13WmFAvLM3Ke6dhBf1YCwFP9LedYbYUmHVv4wR5o/Hs9cl
+	 x2adcTUnmaD/YwxSCB9i2U2ut8iM2LJrjlranR82LGRG+5zHXMNSVcJ+/UKTks4SWo
+	 gX5l6NduRVIHOK/ZVP5wo5yE0mZ24yaNCe2hYPCBQZ49yJghFSrfTlQoPsHqA5bKnz
+	 2MCuC3d7mtkBg==
+Date: Wed, 10 Jul 2024 22:43:53 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: fix file_path handling in tracepoints
+Message-ID: <20240711054353.GM612460@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Hi folks,
+From: Darrick J. Wong <djwong@kernel.org>
 
-The for-next branch of the xfs-linux repository at:
+Since file_path() takes the output buffer as one of its arguments, we
+might as well have it format directly into the tracepoint's char array
+instead of wasting stack space.
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Fixes: 3934e8ebb7cc6 ("xfs: create a big array data structure")
+Fixes: 5076a6040ca16 ("xfs: support in-memory buffer cache targets")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202403290419.HPcyvqZu-lkp@intel.com/
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/scrub/trace.h |   10 ++++------
+ fs/xfs/xfs_trace.h   |   10 ++++------
+ 2 files changed, 8 insertions(+), 12 deletions(-)
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-2bf6e353542d xfs: fix rtalloc rotoring when delalloc is in use
-
-1 new commit:
-
-Christoph Hellwig (1):
-      [2bf6e353542d] xfs: fix rtalloc rotoring when delalloc is in use
-
-Code Diffstat:
-
- fs/xfs/xfs_rtalloc.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 92ef4cdc486e9..c886d5d0eb021 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -959,18 +959,16 @@ TRACE_EVENT(xfile_create,
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(unsigned long, ino)
+-		__array(char, pathname, 256)
++		__array(char, pathname, MAXNAMELEN)
+ 	),
+ 	TP_fast_assign(
+-		char		pathname[257];
+ 		char		*path;
+ 
+ 		__entry->ino = file_inode(xf->file)->i_ino;
+-		memset(pathname, 0, sizeof(pathname));
+-		path = file_path(xf->file, pathname, sizeof(pathname) - 1);
++		path = file_path(xf->file, __entry->pathname, MAXNAMELEN);
+ 		if (IS_ERR(path))
+-			path = "(unknown)";
+-		strncpy(__entry->pathname, path, sizeof(__entry->pathname));
++			strncpy(__entry->pathname, "(unknown)",
++					sizeof(__entry->pathname));
+ 	),
+ 	TP_printk("xfino 0x%lx path '%s'",
+ 		  __entry->ino,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 56c8333a470bb..0dfb698a43aa4 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -4715,20 +4715,18 @@ TRACE_EVENT(xmbuf_create,
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(unsigned long, ino)
+-		__array(char, pathname, 256)
++		__array(char, pathname, MAXNAMELEN)
+ 	),
+ 	TP_fast_assign(
+-		char		pathname[257];
+ 		char		*path;
+ 		struct file	*file = btp->bt_file;
+ 
+ 		__entry->dev = btp->bt_mount->m_super->s_dev;
+ 		__entry->ino = file_inode(file)->i_ino;
+-		memset(pathname, 0, sizeof(pathname));
+-		path = file_path(file, pathname, sizeof(pathname) - 1);
++		path = file_path(file, __entry->pathname, MAXNAMELEN);
+ 		if (IS_ERR(path))
+-			path = "(unknown)";
+-		strncpy(__entry->pathname, path, sizeof(__entry->pathname));
++			strncpy(__entry->pathname, "(unknown)",
++					sizeof(__entry->pathname));
+ 	),
+ 	TP_printk("dev %d:%d xmino 0x%lx path '%s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
