@@ -1,60 +1,68 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68D263D
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 04:44:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8A41C3D;
+	Thu, 11 Jul 2024 05:20:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720673099; cv=none; b=ilVOlLws464dPoNYh8CeTc5TSiDDAEWUq+lJctBMMRxjL0DQ0mgtl2jhjEYIcsDlgQBTD7BbNC7kV+A8CxmfWId3xT5Y7/SCNDaPC18KsxVxgcsp0gnkSSaqd7+hU8bimccm7dOIw/ixM1KygTDxx2I68nUaHmeiak3O7uKPGwg=
+	t=1720675246; cv=none; b=GxBt44l83e/0xEiM/0zVh5dAhkmjmiMGgBorPNfPJfqpKTag9jLiVE8Zrvci1QENMmtjSF8nuNoGJ6MVd2P2c2OtyDNEfEdOiJlIJqRpBTzp5gh8PF5+lGy6ovDZuUa9HYRC2aZT5O5zga6eSjwZe2M/mFsDziH1ULn5VOp4Rj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720673099; c=relaxed/simple;
-	bh=uTwdKVJJRkY3HkCYx3vpHXbXs5vWMvhyxkOQkaLw3T8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pG92W12RoxPwFlRi3KOijeLETY1W5RNUh0lpAmdtotQMRm8AskMw4WPz7NkQ/7L3EjbzFunVliwZIqSmNVJV8qMM7VDJjJjEm6XrHzr0z3SA2q1UdGbuunQTkU2FKUKrd2vX3oIzaNDJoPHc74+59OguD15497JeNoDd01Z4Akk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=du155tz+; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1720675246; c=relaxed/simple;
+	bh=aSNxE3Xll7MWeaRzcJnR2/P7JxUky4COV+pcf6yolUc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kBTZKTTX/RkSojwU9GleIbwG4S/h4Tbqz8VQrT8zyIvhQgRkQQzdzHdSI5PdGSziKtGwWdEColtB1T+4zn6Dal9iiO4KGp0oP9MyvjyziwFoP83GRBXIM0Fgi+y+DT7PJTjIbcQSaaESgtZGbedtYyDuR3KUMwM86JFhzGKl0Us=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WZqOA3NN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="du155tz+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uTwdKVJJRkY3HkCYx3vpHXbXs5vWMvhyxkOQkaLw3T8=; b=du155tz+ldKXEUEEgJ8U1Ef0BD
-	EdAxIINpOlolT45OmEMBrtmzj5n+NRKL5N+S5OwwXALXAAx52RduEVkW2E3Xv6Xd4AFZPgzXs/4yd
-	dAccg5MhyJ4eP1WDFeXGxnwaTtkf3hVqfnHl/oGn6yE/6Qz8+7tQXMJLVTyUOUedekkp7/ANOjhzr
-	bL1ioTJe2qvS5Kd5D09cygBzKTi2nw8utKCxbMMICl527D8WOVRFWnl2B5S2Mpc0FwqWzZbcbYOc+
-	jpCejeQKmTcaS1kIx9haQCapni2JIw2k2rYJXy4T2vexnrKZI4CVolgvpewsqjcNKXkX5xOfdVoHf
-	856jH0Og==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sRlft-0000000ChRD-0nuF;
-	Thu, 11 Jul 2024 04:44:57 +0000
-Date: Wed, 10 Jul 2024 21:44:57 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: update XFS_IOC_DIOINFO memory alignment value
-Message-ID: <Zo9jSWWE4fP9Icdx@infradead.org>
-References: <20240711003637.2979807-1-david@fromorbit.com>
- <20240711025206.GG612460@frogsfrogsfrogs>
- <Zo9Zg762urtBzY1w@infradead.org>
- <20240711043614.GL612460@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WZqOA3NN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E7F8C116B1;
+	Thu, 11 Jul 2024 05:20:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720675245;
+	bh=aSNxE3Xll7MWeaRzcJnR2/P7JxUky4COV+pcf6yolUc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=WZqOA3NNnpegKNCLyHHv6jSoorganWkPYNwqoNZDv+Q2uA0jI6uPeApUJLn3a8XSc
+	 0hCwDi5FSr+0VmaK298H60zH2zpFefdjsIIsUPdKAzH82tk2dAgTA6gu06dStMZOx6
+	 MbYNh1tEBQTGqbr0yI0s1ITNcPGLwxkGDaoAXMg3K/DWktS5cIKk3V4DR+gSKhjSfv
+	 t5FO9Dt72xqDKcoIW8pRRINJC8XHvNsziMQZ7PZeRSr/PMELrGcvBC6iqpsymB9FM7
+	 w9NG9yhuc7QdZgqiSeDpNA/bgTwZfyh0xDcJ6Q8GPAm1JzutMgg3D6IwCD261n7lXa
+	 aisrE3gZpHsFQ==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 2bf6e353542d
+Date: Thu, 11 Jul 2024 10:48:56 +0530
+Message-ID: <874j8wa4ic.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240711043614.GL612460@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
 
-On Wed, Jul 10, 2024 at 09:36:14PM -0700, Darrick J. Wong wrote:
-> <shrug> Is there anything that DIOINFO provides that statx doesn't?
-> AFAICT XFS is the only fs that implements DIOINFO, so why expand that?
+Hi folks,
 
-Because it'll just make all the existing software using it do the right
-thing everywhere?
+The for-next branch of the xfs-linux repository at:
 
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+2bf6e353542d xfs: fix rtalloc rotoring when delalloc is in use
+
+1 new commit:
+
+Christoph Hellwig (1):
+      [2bf6e353542d] xfs: fix rtalloc rotoring when delalloc is in use
+
+Code Diffstat:
+
+ fs/xfs/xfs_rtalloc.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
