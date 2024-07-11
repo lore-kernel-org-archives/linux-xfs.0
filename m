@@ -1,129 +1,88 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C905215531B
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 22:26:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1AD815531B
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 22:27:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720736800; cv=none; b=MWogjh8WZkMX7rVYtmmOYK19gF0zfN3dFplZuR/+TbNYhKR3XReebIpKfoXSb6TJvEXMR2PjWQdA3zrIGuoCm4aO/54ZASkqyAHZmDfy0PJDxIePrKgck/4mKA0cwULM1aRlDadERZ39zB7Sw3zZ4SlJjL9pC/I3DDgssC57Tok=
+	t=1720736848; cv=none; b=bX+Q1VRM7B0mPH4igkpaYyoNVDOA+xZVszBUdU/1x6mFdOEMLJgBQRPOVmuuprDdJoQeJ/b6B30Te2yW3KD1k69kVOg3HNBSrEMkFLETujHyFKEHTMGPI4dHoG4atUbba8fhmLXKjGPePFRh+ZzqrTir03/r6G70LZelh9nbixw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720736800; c=relaxed/simple;
-	bh=ZNjJ99i29mWpXemb25I6kT7UoYapxyZAsBWwprarwoU=;
+	s=arc-20240116; t=1720736848; c=relaxed/simple;
+	bh=ruEMrtZ43w0PtddQcu/RZD/GlACQGTwlxLorYt05Mm0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mqtc9IJji2fo8h9VUQT7tKp3fpXlCAZ2rJSGzbQ4vPbjcQUgFLVCuNjiY7tp/X0H1HdT1aJAHpxn8owykudxSNRLPnECGJ8czAScLVk0lP3+j1Bc6ZX3aYbMnI4Cax0G1P5Qk3XwxPDJwx98gbLQ670b0gl/GZEtO+aT+Ru9580=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=M3KVSzNr; arc=none smtp.client-ip=209.85.214.178
+	 Content-Type:Content-Disposition:In-Reply-To; b=B1lrIxFschVrspFCDDcHdU48gVQnQnfyors5Lxn9YP8F5sDbOsOvyOFHoOaS4D/TeBq9/zdX3L5yQmrdBn0hoKLJgzAuf9gBxe8sWJyqGnff975xbFvQYDSYURPN+LdjZLfrSJ8M0FK2+8VTK4dvtgar491yERyTv2M42vTHY0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Eh1c/+bu; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="M3KVSzNr"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1fa2ea1c443so11592255ad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 15:26:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Eh1c/+bu"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-70af8128081so1176933b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 15:27:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720736798; x=1721341598; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=YsuiOBusLRDWI99QW9bV16tHkAO5K+vCBNIughlrrA0=;
-        b=M3KVSzNrQhqJcOSMP1y9X+uduW3/30NBS2Z5vPduxfSuSJ8JcxfT1AK9UYt+pLZCRL
-         KbQH+NB28qc1mDG2/wUmCfSovKQiarOZYjyfrE+dclukE5/8vlFEJUxVx5JeN09Gj1UJ
-         UHnXL7sDMp7YSleLIpALCvZ67sM4slDAnj+eSfSkC+pUdBwx5zGVaocnSvSZQicAkrFr
-         eRyZdSj9Pk9Z5syhQt0zP4nwzDeR3yUfJ9g0CZUpqNOSR4CJAespGlhq97jiqBsVXYUs
-         NS5ftshjdzk6gw9TOniThaPyRZZ1giAGyX8N4OLAvA3jvICDjEb67TauYCHtremCfqWF
-         0DtA==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720736846; x=1721341646; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=qkzk7iO/cCR26Su6zm61bOZOViK3EE9yqYftxgKDkXQ=;
+        b=Eh1c/+buqn3f5YM6nvkrsf4VSAwBrbDQNx7TmM9ucjuy0sGbG7VbuCh978fo3P0S7Z
+         n4fOecd5lNDBBblFZ3/+asbVHW9gvt1yJ1Nn6WGYVT3HFNriTWMBACl/Vy1vuOzE+l7d
+         35SnkG3dDHy0Ag4A89H1/Yx5R54UjgWO+/GRo+t0sOYc1VBrvde7YzGy8560A0TVnF3Y
+         PrvjtC7RCmKB2g5RbZW+625Y4Sc8M6GcvJ7/o46fuMja/QiPWveH8sbcnFvuHb9sxOs4
+         IPKLbjQA4tDb218+E/lZyEyfAd7CtpCds6aMfWw0YoFZwqqQXwWJLXAU+D0dEKQrtCAD
+         d2aA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720736798; x=1721341598;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YsuiOBusLRDWI99QW9bV16tHkAO5K+vCBNIughlrrA0=;
-        b=wGYtMpyRCJnf7LJ0xuBKvBIUTv8YgoQNHOM6U1l7konmNFa+Mq7aTJEiewdEETA/HK
-         XQ0QGGwQ29z2rPw2xoPADPFcg3n2FX42sfk6zozhU3Zh+3os+PCgE0r8wtjtkr6nvAvi
-         JbBt7cU+e3GSTG2zm/6kMjvRP1Ejn0/wW7nVj+ByOY5yV02gAolSCXoKxbqEUNSuLIBw
-         OkFN6+tzaI3QKyKvY0gpQwHUMPib0ZtJckirwJTUWFeH05ggnMrPD2GcPhCb2MMGqeq5
-         rqf3l/bBJv7fueUtOQE7xlfcVyzIoezceqPA4KHVCqPTF4qEFpCZikisL6fgjC/oe2UX
-         IY6Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUlxYTYgK659aUeF9mo9zhE1/iBe2uz+md2Dh9fwXqasYc5FUKyVvT9VJ3vv/MmeKdhbWD7W73EuOZ1pyrIBMh1Y9KwOCVN0yFb
-X-Gm-Message-State: AOJu0YwJOzSaGrzfKgaujzpDxyYUfSuQ4A2iUckGIzByWuUsl6AGed/9
-	7UardEe6MD2PpL3PfUIsOfCsn6xf8PHKHVQcoNdGVtm4nxkZexWICC7uaXe/v/0=
-X-Google-Smtp-Source: AGHT+IET6FaCTxzISPW5bh3OZAtCu3S0k+pjz/14SbMrLU6oTB1Hrgolgk4KCNDxcuTsNlwiOwlxCA==
-X-Received: by 2002:a17:902:f541:b0:1fb:8864:e20 with SMTP id d9443c01a7336-1fbb6d03e33mr82007115ad.23.1720736798082;
-        Thu, 11 Jul 2024 15:26:38 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1720736846; x=1721341646;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qkzk7iO/cCR26Su6zm61bOZOViK3EE9yqYftxgKDkXQ=;
+        b=aD3lsq/+cTe4KVmJ0PykYIr3OhFjNsuzOv6KsJhaMuEN089Gcjw0WEaFMidWLjBZrW
+         rgaPiVNViqiPAxLdPtH+3XDwO/HKyZZcv4+h1gi4akEIYvWzJT0oP4XmkqIA83cc3es8
+         oG2YymrPGCWiOVu+PHDyz7U4ZnUXFzXy207n6YPPmxq48TW4UTL6r57HWLZ/JyHGWSNQ
+         cP+mGCY0ivrJ7kEdBU+JS4ZQ0BhqZN5ISh4Qs1pVhV8gTLtufWH/H89CzPP+Hmz9lMZA
+         bnNGGhZgux7qIvMft50nKkXiYq1p+ChvClAtUkK11DA96jiTzLOKUBbtgVdmSoTdInD7
+         eM+A==
+X-Forwarded-Encrypted: i=1; AJvYcCUNeEUO1odv2HDXPJZ8ekoGcBemEiVp4GF+Ma2kcqgIT3dAYSO8F0F9XPXW4l9Heptsc9m7vrtQMI2tSBH8dVQEDdKyP4OF78if
+X-Gm-Message-State: AOJu0YzJLwibSk774L6CYFVGa8HgFTL6PWqerF1yojmO0Xxh0BZwcofZ
+	k16idXyU+OeN3cRz+9+7e8rQXDi5wxiSTqLMg35tXNk71hr/nfE7xgLEsCmh1vcmf5NKQVpQKX4
+	6
+X-Google-Smtp-Source: AGHT+IGSLCnDSySwqbHOfciXHSGVQMP4G/XOU35cytWLcOyxIIHON0YsNokkIHOocw8kj8Q6erUuJQ==
+X-Received: by 2002:a05:6a00:2394:b0:706:742a:1c3b with SMTP id d2e1a72fcca58-70b43545404mr11534000b3a.8.1720736845874;
+        Thu, 11 Jul 2024 15:27:25 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fbb6ac5c9fsm55037955ad.231.2024.07.11.15.26.37
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b4389c175sm6400578b3a.12.2024.07.11.15.27.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jul 2024 15:26:37 -0700 (PDT)
+        Thu, 11 Jul 2024 15:27:25 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sS2FH-00CWOQ-0I;
-	Fri, 12 Jul 2024 08:26:35 +1000
-Date: Fri, 12 Jul 2024 08:26:35 +1000
+	id 1sS2G3-00CWQn-0y;
+	Fri, 12 Jul 2024 08:27:23 +1000
+Date: Fri, 12 Jul 2024 08:27:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Andre Noll <maan@tuebingen.mpg.de>
-Cc: Paul Menzel <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, it+linux-raid@molgen.mpg.de
-Subject: Re: How to debug intermittent increasing md/inflight but no disk
- activity?
-Message-ID: <ZpBcG1HPeahYqwDd@dread.disaster.area>
-References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
- <Zo8VXAy5jTavSIO8@dread.disaster.area>
- <Zo_AoEPrCl0SfK1Z@tuebingen.mpg.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: validate inumber in xfs_iget
+Message-ID: <ZpBcS1P2B3Xe1+HH@dread.disaster.area>
+References: <20240711054430.GN612460@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <Zo_AoEPrCl0SfK1Z@tuebingen.mpg.de>
+In-Reply-To: <20240711054430.GN612460@frogsfrogsfrogs>
 
-On Thu, Jul 11, 2024 at 01:23:12PM +0200, Andre Noll wrote:
-> On Thu, Jul 11, 09:12, Dave Chinner wrote
+On Wed, Jul 10, 2024 at 10:44:30PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > > Of course it’s not reproducible, but any insight how to debug this next time
-> > > is much welcomed.
-> > 
-> > Probably not a lot you can do short of reconfiguring your RAID6
-> > storage devices to handle small IOs better. However, in general,
-> > RAID6 /always sucks/ for small IOs, and the only way to fix this
-> > problem is to use high performance SSDs to give you a massive excess
-> > of write bandwidth to burn on write amplification....
+> Actually use the inumber validator to check the argument passed in here.
 > 
-> FWIW, our approach to mitigate the write amplification suckage of large
-> HDD-backed raid6 arrays for small I/Os is to set up a bcache device
-> by combining such arrays with two small SSDs (configured as raid1).
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-Which is effectively the same sort of setup as having a NVRAM cache
-in front of the RAID6 volume (i.e. hardware RAID controller).
+looks good.
 
-That can work if the cache is large enough to soak up bursts of
-small writes followed by enough idle time for the back end RAID6
-device to do all it's RMW cycles to clean the cache.
-
-However, if the cache fills up with small writes, then slowdowns and
-IO latencies get even worse than if you are just using a plain RAID6
-device. Think about a cache with several million cached random 4kB
-writes, and how long that will take to flush to the RAID6 volume
-that might only be able to do 100 IOPS.
-
-It's not uncommon to see such setups stall for *hours* in situations
-like this. We get stalls like this on hardware RAID reported to us
-at least a couple of times a year. There's little we can do about it
-because writeback caching mode is being used to boost burst
-performance and there's not enough idle time between the bursts to
-drain the cache. Yes, they could use write-through caching, but that
-doesn't improve the performance of bursty workloads.
-
-Hence deploying a fast cache in front of a very slow drive is not
-exactly straight forward. Making it work reliably requires
-awareness of workload IO patterns. Special attention needs to be
-paid to the amount of idle time. If there isn't enough idle time,
-the cache will eventually stall and it will take much longer to
-recover than a stall on a plain RAID volume.
-
--Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
