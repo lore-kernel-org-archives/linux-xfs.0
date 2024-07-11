@@ -1,72 +1,84 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6222515F3FF
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 11:55:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E89A16A923
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 14:44:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720698907; cv=none; b=YKM3Lu3Yx0oeS0jSoi/KNm37MIRieLwVB8QWWExgAZig8j3ZsTFxTP+ngqGwfA2/eKM8+b3tS3t4WUD2mcxcQcZNXZ8CXXB6eQCwpc8BKD/F7wslNA11Xe+oajsgG5OeEyEfh+Ha2MvOZl/RKV+wGSezXgykJUgfX1pEcXDt6Gk=
+	t=1720709078; cv=none; b=m6/SqIoA4oql3chQRpfMEXJso5YvBejV1ViUqxsxK3W6cKe06J3R27cTJtv+AWbl23euHIthrxS1GpPNz6ybwJAErnc8x+gojotC77EbHtwhMHqBT2Y9GnUQTE6Yfu9A9BFrTRCkgzq+iCDXxdUYTILTRIrrDl/ih/96yHv8ddo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720698907; c=relaxed/simple;
-	bh=IjKBQypoiYpezQuDfjEMCysU4UpG4sxhNzaYrDgsDjo=;
+	s=arc-20240116; t=1720709078; c=relaxed/simple;
+	bh=MMu6kiGgrdyVeIGgo0o2g5ISXoiklOJgpiyd0c6Mhcg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CbEgA86BM4phcEk5l3UQqLkhGjl7noKeYysKuNtfn3p7CR6lPh4w4BQsgZLOT8UZWu7x3W0ABgvq7n9yg3vVFwxdBlj7+o+VchuDyfwFmXV334ZFrMYBs5XnmaLx2cplZxoIw5EdJPDShp3hVS5wAOKHPmY/MiVKjYGCmQ8XCpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=XcVgRhxj; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=mCWxO5ltvvmUYd1cKIezGcfprAjH8VCK1MsRQPLA2TMNGHSSLPTaXNABOERnZGbaq/UVZ3PAw2UEq7pm2hqk2PSoEhPjti2neDbIA7NlxFMuPwP0TbB1VPpg/Xp9qN7nRr+TMrmtT613MP0IvwuvoXvVdnSwEueH/BPjx+t442M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=q1PXf1Gy; arc=none smtp.client-ip=209.85.128.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="XcVgRhxj"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1fb1c69e936so4648425ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 04:55:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="q1PXf1Gy"
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-64b3655297aso9071497b3.1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 07:44:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720698905; x=1721303705; darn=vger.kernel.org;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1720709075; x=1721313875; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZjYWpoT4u/Zq2mIe8pqxx1BxwM6H3Jj1huw4voUKaZg=;
-        b=XcVgRhxjMCFJcMwD6HhIVmFgm9XBeXGn+wcClOHpgvqNnlt7u/jZzHCeLAOVEA0xO5
-         6ZgVMXX4HeNnVYdRi/SJ+qIzGAQ5eKzkeQanKJLOvDtEuwPGvx5rJtXB5wgQYV8h2CAR
-         KTyp6D2Bt1ape2i8sVeQvYG+4z2yWaYbv2jL+y876G//CcmYRY1jYsY8nW2jdeLvNGjv
-         5xnIOTxaUrIU+w2N91s1x3JejsHcX84gnOJE5k2MFV8eyIQyZqDHToxXte/J0OpT/EMZ
-         KTW6zLifKO14gvxfLxQAXzcl77m2oVNrIM/pTTqyzKiY8TqqF7PoDI6ssNt7mP3gA9P1
-         QP8A==
+        bh=p6PLNSJZMY2HBtPFlfBgNDPZWDEOAS/uY6eb53FVzXU=;
+        b=q1PXf1GybYh1aDXkOQriXh3etXHQaQvAEvEHvmjzflwesjMtmTkIcKjsvkM3cvyMew
+         1ADOSrKUCZeN1Bc6ndt1rYxk0DDfHkzu9xezqPuUzubgvhJWQPvuMkrPn/0U5ZZxfo9i
+         fctEzUyU1X+gwXWNkJGT6Qb6Rul3J21Wfk7CiQmTfo+8/rA+YGP6qKw6dLORH3DeagL/
+         y8faZ8jpGGnpY3BUumaQJl7BBvPzevdG9+6FJ6dQodNUGNJSp/gYUNCG5drWdvmjx5Mn
+         cv8yTWT0bLgjhtN0Oa3FCF0hNCixvqUBhriTBD67tVMd36sVAEQFtLzVdeP7ReM7JUpg
+         nXbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720698905; x=1721303705;
+        d=1e100.net; s=20230601; t=1720709075; x=1721313875;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ZjYWpoT4u/Zq2mIe8pqxx1BxwM6H3Jj1huw4voUKaZg=;
-        b=gh5sgWHCv6giuaml3EhQI0aAvUswhz8E4UJaWdPslR0LfCpGp1Fl26TbcoTi/oAtPU
-         8BlhM78ezJqeLEsZSvFc/kjKOuthwtWXSrNl06eVbiEcRvyCT7int3+VJa/3rrohqqV6
-         CaI5ko6iuEgqyGOJ+dZA+XjA2vMHZKvmWyolay594weDWw8/or9BqTvlTy5Tbw8+WoP5
-         Cjao+exPKwz4FfNFl+raoBqng8dHRRKbZ6vlUsBdy1mGmLg4WWr0tYsFFcqU3ozT6zmh
-         6kE9lTTAsyrfOqvQ6LVsb2c6MFSfWr9rxzb4/octB7rGUt9KJZRnZIZeYlTxCKGvPMZ3
-         U/tg==
-X-Forwarded-Encrypted: i=1; AJvYcCUmzG7mwOy1Tu1r3FiiRzu/MxZytyQXEqQUMFDR2Mposn9gLvwjdr1ZNHo1yOh5L7VnzNrg4oURfuVG5WqOFOZWmFWvl9PB0a2W
-X-Gm-Message-State: AOJu0YypSJ4amY6anD4B9gkeZ+lxQ2n//yNbxlpM+Y1XR6XExG7+Glee
-	JxzVOBDXKxSJPKnMyghsBGawtPYW5aapPRK84o2r1S6Rnh57gMFl96UFrzwwp1FFCTsFx8ywSRk
-	o
-X-Google-Smtp-Source: AGHT+IHc/2NCtrqEJg+0Imf71rTjjn0FUGUhGEF9LXOZb1eutDkZEADYESdmeMrIbVmejDdivQbvVA==
-X-Received: by 2002:a17:902:ced2:b0:1fb:6ea1:4c with SMTP id d9443c01a7336-1fbb6d3d631mr73256845ad.23.1720698905482;
-        Thu, 11 Jul 2024 04:55:05 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fbb6ab7d9csm48859965ad.157.2024.07.11.04.55.04
+        bh=p6PLNSJZMY2HBtPFlfBgNDPZWDEOAS/uY6eb53FVzXU=;
+        b=r8i3SdITJTKgi401gd64s1I7AZfwVZ92inTZfIK1Mq+F0jfYhrWDGH6Mzc/gqmhX7u
+         +FsZSRl5Ah0Kch5BR+OMNoOyl3rAEx7teQI2BnltuWdPR2p3mQgQlkNP3Uu/ug+xQDvE
+         wjwhxM+oW2c99HMrHTuasXDE5LvT+oqqOwdpsAjrTx9gP/0sTdUeMFg/hI3IJTCou8Mb
+         N5AzMKRR7WViim7wlWc3/8T3UuUdgWTWe9pIEmEpDRtV1wrT6yexhjHDP2glOVFi5zIB
+         fy21oiDmyMPlCiXFL6Lw9Df/0SemN3UEU93EtnZ6bFLI853GEuzkWJLgkpM8/bplzfc5
+         uxZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWhhdQVVoYqEBvXaX5xGFyN/U4ILydkHg5CaMRgg6rKm4fwj0bU22cn5nKVP8cv1zKGwMS7g1f34P2eRyymnvD1yyeKoSISGrEO
+X-Gm-Message-State: AOJu0YxFvE4gbVx68HHRFjFhfL+Gfb6IFJCSqzsh6N80c5LBH+Oc9VMn
+	ILRu5UKkdOXdIibXa8AomXaOiVRcKUjZLshL6tOBCAugESJQ+hp6GzkhReveI3c=
+X-Google-Smtp-Source: AGHT+IFAnEDVnsGx1tZ1AxBo1QTn+tOSC2MfALvNb6Q+MllvTQBzHLMq8T3kjDK5yp3+1lqcT3GiRg==
+X-Received: by 2002:a05:690c:3385:b0:62f:2553:d3b3 with SMTP id 00721157ae682-658ef3414eemr120805467b3.29.1720709075414;
+        Thu, 11 Jul 2024 07:44:35 -0700 (PDT)
+Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-658e4936079sm11198567b3.15.2024.07.11.07.44.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jul 2024 04:55:04 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sRsO6-00C0GN-1Q;
-	Thu, 11 Jul 2024 21:55:02 +1000
-Date: Thu, 11 Jul 2024 21:55:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: NeilBrown <neilb@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Mike Snitzer <snitzer@kernel.org>, linux-xfs@vger.kernel.org,
-	Brian Foster <bfoster@redhat.com>, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: enable WQ_MEM_RECLAIM on m_sync_workqueue
-Message-ID: <Zo/IFjI9u2E+PSW2@dread.disaster.area>
-References: <>
- <ZoVdAPusEMugHBl8@infradead.org>
- <172056677808.15471.5200774043985229799@noble.neil.brown.name>
+        Thu, 11 Jul 2024 07:44:34 -0700 (PDT)
+Date: Thu, 11 Jul 2024 10:44:34 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
+	David Sterba <dsterba@suse.com>, Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Dave Chinner <david@fromorbit.com>, Andi Kleen <ak@linux.intel.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Uros Bizjak <ubizjak@gmail.com>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	Arnd Bergmann <arnd@arndb.de>, Randy Dunlap <rdunlap@infradead.org>,
+	kernel-team@fb.com, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-nfs@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v5 0/9] fs: multigrain timestamp redux
+Message-ID: <20240711144434.GB1235314@perftesting>
+References: <20240711-mgtime-v5-0-37bb5b465feb@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,142 +87,65 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <172056677808.15471.5200774043985229799@noble.neil.brown.name>
+In-Reply-To: <20240711-mgtime-v5-0-37bb5b465feb@kernel.org>
 
-On Wed, Jul 10, 2024 at 09:12:58AM +1000, NeilBrown wrote:
-> On Thu, 04 Jul 2024, Christoph Hellwig wrote:
-> > On Wed, Jul 03, 2024 at 09:29:00PM +1000, NeilBrown wrote:
-> > > I know nothing of this stance.  Do you have a reference?
-> > 
-> > No particular one.
-> > 
-> > > I have put a modest amount of work into ensure NFS to a server on the
-> > > same machine works and last I checked it did - though I'm more
-> > > confident of NFSv3 than NFSv4 because of the state manager thread.
-> > 
-> > How do you propagate the NOFS flag (and NOIO for a loop device) to
-> > the server an the workqueues run by the server and the file system
-> > call by it?  How do you ensure WQ_MEM_RECLAIM gets propagate to
-> > all workqueues that could be called by the file system on the
-> > server (the problem kicking off this discussion)?
-> > 
+On Thu, Jul 11, 2024 at 07:08:04AM -0400, Jeff Layton wrote:
+> tl;dr for those who have been following along:
 > 
-> Do we need to propagate these?
+> There are several changes in this version. The conversion of ctime to
+> be a ktime_t value has been dropped, and we now use an unused bit in
+> the nsec field as the QUERIED flag (like the earlier patchset did).
 > 
-> NOFS is for deadlock avoidance.  A filesystem "backend" (Dave's term - I
-> think for the parts of the fs that handle write-back) might allocate
-> memory, that might block waiting for memory reclaim, memory reclaim
-> might re-enter the filesystem backend and might block on a lock (or
-> similar) held while allocating memory.  NOFS breaks that deadlock.
->
-> The important thing here isn't the NOFS flag, it is breaking any
-> possible deadlock.
-
-NOFS doesn't "break" any deadlocks. It simply prevents recursion
-from one filesystem context to another. We don't have to use
-NOFS if recursion is safe and won't deadlock.
-
-That is, it may be safe for a filesystem to use GFP_KERNEL
-allocations in it's writeback path. If the filesystem doesn't
-implement ->writepage (like most of the major filesystems these
-days) there is no way for memory reclaim to recurse back into the fs
-writeback path. Hence GFP_NOFS is not needed in writeback context to
-prevent reclaim recursion back into the filesystem writeback
-path....
-
-And the superblock shrinkers can't deadlock - they are non-blocking
-and only act on unreferenced inodes. Hence any code that has a
-locked inode is either evicting an unreferenced inode or holds a
-reference to the inode. If we are doing an allocation with eithe rof
-those sorts of inodes locked, there is no way that memory reclaim
-recursion can trip over the locked inode and deadlock.
-
-So between the removal of ->writepage, non-blocking shrinkers, and
-scoped NOIO context for loop devices, I'm not sure there are any
-generic reclaim recursion paths that can actually deadlock. i.e.
-GFP_NOFS really only needs to be used if the filesystem itself
-cannot safely recurse back into itself.
-
-> Layered filesystems introduce a new complexity.
-
-Nothing new about layered filesystems - we've been doing this for
-decades...
-
-> The backend for one
-> filesystem can call into the front end of another filesystem.  That
-> front-end is not required to use NOFS and even if we impose
-> PF_MEMALLOC_NOFS, the front-end might wait for some work-queue action
-> which doesn't inherit the NOFS flag.
+> The floor value is now tracked as a monotonic clock value, and is
+> converted to a realtime value on an as-needed basis. This eliminates the
+> problem of trying to detect when the realtime clock jumps backward.
 > 
-> But this doesn't necessarily matter.  Calling into the filesystem is not
-> the problem - blocking waiting for a reply is the problem.  It is
-> blocking that creates deadlocks.  So if the backend of one filesystem
-> queues to a separate thread the work for the front end of the other
-> filesystem and doesn't wait for the work to complete, then a deadlock
-> cannot be introduced.
->
-> /dev/loop uses the loop%d workqueue for this.  loop-back NFS hands the
-> front-end work over to nfsd.  The proposed localio implementation uses a
-> nfslocaliod workqueue for exactly the same task.  These remove the
-> possibility of deadlock and mean that there is no need to pass NOFS
-> through to the front-end of the backing filesystem.
+> Longer patch description for those just joining in:
+> 
+> At LSF/MM this year, we had a discussion about the inode change
+> attribute. At the time I mentioned that I thought I could salvage the
+> multigrain timestamp work that had to be reverted last year [1].
+> 
+> That version had to be reverted because it was possible for a file to
+> get a coarse grained timestamp that appeared to be earlier than another
+> file that had recently gotten a fine-grained stamp.
+> 
+> This version corrects the problem by establishing a per-time_namespace
+> ctime_floor value that should prevent this from occurring. In the above
+> situation, the two files might end up with the same timestamp value, but
+> they won't appear to have been modified in the wrong order.
+> 
+> That problem was discovered by the test-stat-time gnulib test. Note that
+> that test still fails on multigrain timestamps, but that's because its
+> method of determining the minimum delay that will show a timestamp
+> change will no longer work with multigrain timestamps. I have a patch to
+> change the testcase to use a different method that is in the process of
+> being merged.
+> 
+> The testing I've done seems to show performance parity with multigrain
+> timestamps enabled vs. disabled, but it's hard to rule this out
+> regressing some workload.
+> 
+> This set is based on top of Christian's vfs.misc branch (which has the
+> earlier change to track inode timestamps as discrete integers). If there
+> are no major objections, I'd like to have this considered for v6.12,
+> after a nice long full-cycle soak in linux-next.
+> 
+> PS: I took a stab at a conversion for bcachefs too, but it's not
+> trivial. bcachefs handles timestamps backward from the way most
+> block-based filesystems do. Instead of updating them in struct inode and
+> eventually copying them to a disk-based representation, it does the
+> reverse and updates the timestamps in its in-core image of the on-disk
+> inode, and then copies that into struct inode. Either that will need to
+> be changed, or we'll need to come up with a different way to do this for
+> bcachefs.
+> 
+> [1]: https://lore.kernel.org/linux-fsdevel/20230807-mgctime-v7-0-d1dec143a704@kernel.org/
+> 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-I think this logic is fundamentally flawed.
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 
-Pushing IO submission to a separate
-thread context which runs them in GFP_KERNEL context does not help
-if the deadlock occurs during IO submission. With loop devices,
-there's a "global" lock in the lower filesystem on the loop device -
-the image file inode lock.
+Thanks,
 
-The IO issued by the loop device will -always- hit the same inode
-and the same inode locks. Hence if we do memory allocation with an
-inode lock held exclusive in the lower filesystem (e.g. a page cache
-folio for a buffered write), we cannot allow memory reclaim during
-any allocation with the image file inode locked to recurse into the
-upper filesystem. If the upper filesystem then performs an operation
-that requires IO to be submitted and completed to make progress
-then we have a deadlock condition due to recursion from
-the lower to upper filesystem regardless of the fact that the
-lower IO submission is run from a different task.
-
-Hence the loop device sets up the backing file mapping as:
-
-	lo->lo_backing_file = file;
-        lo->old_gfp_mask = mapping_gfp_mask(mapping);
-        mapping_set_gfp_mask(mapping, lo->old_gfp_mask & ~(__GFP_IO|__GFP_FS));
-
-GFP_NOIO context. It also sets up worker task context as:
-
-	current->flags |= PF_LOCAL_THROTTLE | PF_MEMALLOC_NOIO;
-
-GFP_NOIO context. IOWs, all allocation in the IO submission path is
-explicitly GFP_NOIO to prevent any sort of reclaim recursion into
-filesysetms or the block layer. That's the only sane thing to do,
-because multi-filesystem deadlocks are an utter PITA to triage and
-solve...
-
-Keep in mind that PF_LOCAL_THROTTLE also prevents IO submission
-deadlocks in the lower filesystem.  If the lower filesystem IO
-submission dirties pages (i.e. buffered writes) it can get throttled
-on the dirty page threshold. If it get's throttled like this trying
-to clean dirty pages from the upper filesystem we have a deadlock.
-The localio submission task will need to prevent that deadlock,
-too.
-
-IOWs, just moving IO submission to another thread does not avoid
-the possibility of lower-to-upper filesystem recursion or lower
-filesystem dirty page throttling deadlocks.
-
-> Note that there is a separate question concerning pageout to a swap
-> file.  pageout needs more than just deadlock avoidance.  It needs
-> guaranteed progress in low memory conditions.   It needs PF_MEMALLOC (or
-> mempools) and that cannot be finessed using work queues.  I don't think
-> that Linux is able to support pageout through layered filesystems.
-
-I don't think we ever want to go there.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Josef
