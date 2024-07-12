@@ -1,270 +1,169 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam04on2084.outbound.protection.outlook.com [40.107.102.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F85916EB6A
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2024 15:52:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720799557; cv=none; b=rzlE4LbZnKw7Zw6cSmBFq94/KagKkL7y4oA/N46Wqu7h9modkpGLIaTg3qB5EVB0A7n7dZWZ2kq31hBg/FWuSd7k1+GJCD3WgeTgkYCLZLX9f30zVmLGCry7fzpOTvoHhEYtl2UJ+pyj68+9KvqiMM3n/wZUNP/OdJoQ6/2XoOM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720799557; c=relaxed/simple;
-	bh=ZnYtEwQmRhSInSuZM5bGERSfZOhYNMj6nDH2d7KOFRM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V2NzCglidZ28dQEXjKAhkGN9QCN7K+T9PjX9y6M+6eQbr/SMALn7jksR7MxJvQBhY27idrn6SG2kwWO76U4jB0UntrD7ieDHqbfcsR9RPc/YDD6cKJcEmyKrGD+mZiUUs/eKTu/Tnqel6iCC0vA4O0izihvQyThYK7gNKyBKXvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PmgWxvM6; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13076176AA1;
+	Fri, 12 Jul 2024 17:34:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.102.84
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1720805661; cv=fail; b=R5ulWlILy3XYM/2oub2JnICg0l9WlipjdG/iIOhl9YrPLHwSeoXGbpJ+OMZjwJsRNUEL9P9cigI67sRZzVNqOIFgDdSFLtNWJ1CPslUUfZs/yDoW4A48JbKm04uUX/rj7yF0ckBE3elkJOaJnXZ804aES+I3qioPvriQPDlYEls=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1720805661; c=relaxed/simple;
+	bh=1hD5QNmUjdBDYkzvnVaTeklElIfmn79ZypQhvVpwyXo=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=S9GOg2/uC9Gwe+BRlJV0OMsd4byKQGXJ+4V6vpeNLfO/ISWUdFgwy62E+5NPu1tFh3FiwjviGiw3LDP1qemuac52Xvwk0elpK02MGAHP1XxwkubUq7N+JD3Hx4wLVapxMtrzQ6VJz5XfPmD5tUFU4su9IyF6RjfAlXQzV3lJdwQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Vqfth7ba; arc=fail smtp.client-ip=40.107.102.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PmgWxvM6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1720799554;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CBPZJXhtPTYw9uGWwBpC8EVMxJRjwQ/Iz+iND+SW6sA=;
-	b=PmgWxvM6EAtMenNTAoVwv7W1mM4igF78kfNKy8xvpx2q7dWoVO4rxrJMgEE1CNP8gMpLdx
-	fxJL1qPAA1I9W9VMMFNivK/+6SxnrDYuLCmyI1Q4pnPF5K1gyayTcAIbvYbP+F2uRlIs/l
-	feDCZyHcGPHXqBMK3qGG6XtnElhqilc=
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
- [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-649-l9oiEKUdN2y8--RdMWnUyg-1; Fri, 12 Jul 2024 11:52:32 -0400
-X-MC-Unique: l9oiEKUdN2y8--RdMWnUyg-1
-Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-3d62ad9f453so22264b6e.0
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2024 08:52:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720799552; x=1721404352;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CBPZJXhtPTYw9uGWwBpC8EVMxJRjwQ/Iz+iND+SW6sA=;
-        b=g0HDNoIUJ8ih81xEKVUJ7ijyeuOUogWc7qXM1/7EJ1fQhNfeBY4/oFi2Zk1eQqDxE6
-         lL5dN+6b/d8ZZxb+YqWMCn0ngVTgdiVQfPbL6dcjr+IvPzLrQ1bYbIPF1iuNB8MOwHyf
-         J6PnmiGiEkqBX7YI9xTTnpswfVPMR2LXCVjlQJbOacGklENp9/X/0+Wk4V/PVBMUYP4T
-         bpzVkEZi7TkYYnnzHfMJ3gjDinpEEZNejXajp3l1hNjnMl/MsH49kUB4vKwRyqymQPk4
-         +i1e4mCWKTvFw+dxqy7yBM7L2kspNqX90Gz0pqRzNz/LWsJkoWq1CJuC6Cip6P+pBE02
-         wWwA==
-X-Forwarded-Encrypted: i=1; AJvYcCV85EFd1vU5tfJznITIhT9MTWqzKiB8Vfh1Vgq9Tql1Snxg/MRjdb+19u27K56RHjcvcy5/tpPlMbHrSDgZMuD+QjKsmVYVSN/U
-X-Gm-Message-State: AOJu0YyYFoBqlDVnmUgheKwH6sgaai1mMQqgROqSVERU/Wju0l/8Jkwx
-	2eAiMYX1VpjhywwoDiuM5jC0KiQchuHMNCcsTTCBbeSWnVFwPK210walwEQ/CsbTUGRtzXHGKR2
-	iKOQki+crdsXaaf5MyEtxl7Z/Ufr0+C2OqkhyEykwk757Dwgvdm3u+1+bbw==
-X-Received: by 2002:a05:6808:18a4:b0:3d9:3f72:7147 with SMTP id 5614622812f47-3daa0cc727emr5077550b6e.3.1720799551954;
-        Fri, 12 Jul 2024 08:52:31 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG/ZIrWNSDLGpdOzmVtr7gg5txILa2tK9NGlD5tHXAm+7q1klaoYYw+zZj//kgznCBpBAfzHQ==
-X-Received: by 2002:a05:6808:18a4:b0:3d9:3f72:7147 with SMTP id 5614622812f47-3daa0cc727emr5077526b6e.3.1720799551507;
-        Fri, 12 Jul 2024 08:52:31 -0700 (PDT)
-Received: from x1n (pool-99-254-121-117.cpe.net.cable.rogers.com. [99.254.121.117])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-79f19012fa9sm414621985a.46.2024.07.12.08.52.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Jul 2024 08:52:31 -0700 (PDT)
-Date: Fri, 12 Jul 2024 11:52:27 -0400
-From: Peter Xu <peterx@redhat.com>
-To: Alistair Popple <apopple@nvidia.com>
-Cc: dan.j.williams@intel.com, vishal.l.verma@intel.com,
-	dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com,
-	jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
-	will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
-	dave.hansen@linux.intel.com, ira.weiny@intel.com,
-	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
-	linmiaohe@huawei.com, david@redhat.com, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, nvdimm@lists.linux.dev,
-	linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
-	david@fromorbit.com, Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 11/13] huge_memory: Remove dead vmf_insert_pXd code
-Message-ID: <ZpFROxbDINDc43m_@x1n>
-References: <cover.66009f59a7fe77320d413011386c3ae5c2ee82eb.1719386613.git-series.apopple@nvidia.com>
- <400a4584f6f628998a7093aee49d9f86c592754b.1719386613.git-series.apopple@nvidia.com>
- <ZogCDpfSyCcjVXWH@x1n>
- <87zfqrw69i.fsf@nvdebian.thelocal>
- <Zo1dqTPLn_gosrSO@x1n>
- <87sewf48s6.fsf@nvdebian.thelocal>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Vqfth7ba"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=c0vAqX01RiznVZ40l/JzZfpcrYQ7wpwbWvpex+wRMOxktd4g1xR1cHXiMUOfO9dfMMxVy1hVbBbg/0VXq++Qnuy6njyY6Rag8KpVCSy7VFctSnSma2eTzL7GVXdajzV1ScAAatY1WLTLSFxURWYV/ASybZF2g2R1FhbwulsZO68+CmAdXBUSUb6NI5sQSqY3/EAa+MfmVl0KngOwmAl3lv0Bf68RtAIItJ0FbFnt1QcR244H2ByX11+HXlMZAhQnt5CVh7BkjT4sqe3Vde/IlScapIIAeBIqQfCwF3lfzWlyVsB/Z/OnK2fiAKMTMnBFcs75a9n25GDEQnwQXunE4w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1hD5QNmUjdBDYkzvnVaTeklElIfmn79ZypQhvVpwyXo=;
+ b=EVPq8vONK/PH9QHApar4+uF9jdOs2ttDsFfI4+8cSLqPd4ZWxYUBlXUf7YR6ISgg0SVp4WhDx+TDPuU6ObjcsBegGMQxCJHWA4XWcyuU0NGIpT62EYjBSvSaiwGpCKJvpR+iEIiYG3jJoKTzRCzuzzDYvz9F5/kwJsKPlJvwPOmEjvbUagGqjJdcN5MhXmvLO1QwANBZoeNNsg/QrcqiIncqUtxF/dWq4E1LBWUtY/V5e7ESrH/uZiyld74u4V5fdVaRljGXUBq8gvWaW69hOVD8xJb45dR8WPfDBo/7HZNk4soKTK9ienFPhOuNOBA9rK35EB7zT8Ksn1ujgK+gNg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1hD5QNmUjdBDYkzvnVaTeklElIfmn79ZypQhvVpwyXo=;
+ b=Vqfth7baJCKGa1W//pZ256FTsMMFf7BXsm8NixVwK4t9cp6Fp+vnWNY3ngzZE0pxndnRRGrNCoS879MT6K0Syhy8uhUe6Ekx9MexEgTaoLE5rLf3i6yFc3I109zVFUt2UVEitpM3FXfG+36kWA63Vxw6pU9qj0eTs5U21005ohZHU9jKZgmOiHzRZr+3fmSCBmxXaJJVrXGERG/lGFpKh49hopbj0Iel+4Z0beo1ieUGGOCUOj2bWkh3FYG2chu9CVl+Ze3CjY9avvgYf4onViU8rkju5+Gh0Sk9R1oAL2eGaDfImTutbPdSskHnFWlxQ4BTB3RsPhu7KMq7C/BXsQ==
+Received: from LV3PR12MB9404.namprd12.prod.outlook.com (2603:10b6:408:219::9)
+ by DS7PR12MB5815.namprd12.prod.outlook.com (2603:10b6:8:77::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7762.19; Fri, 12 Jul
+ 2024 17:34:14 +0000
+Received: from LV3PR12MB9404.namprd12.prod.outlook.com
+ ([fe80::57ac:82e6:1ec5:f40b]) by LV3PR12MB9404.namprd12.prod.outlook.com
+ ([fe80::57ac:82e6:1ec5:f40b%5]) with mapi id 15.20.7762.020; Fri, 12 Jul 2024
+ 17:34:14 +0000
+From: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To: Dan Carpenter <dan.carpenter@linaro.org>, Chandan Babu R
+	<chandan.babu@oracle.com>
+CC: "Darrick J. Wong" <djwong@kernel.org>, "linux-xfs@vger.kernel.org"
+	<linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org"
+	<kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH] xfs: remove unnecessary check
+Thread-Topic: [PATCH] xfs: remove unnecessary check
+Thread-Index: AQHa1GTnsArDhYMPT0eiDCdKP3cxDbHzWqSA
+Date: Fri, 12 Jul 2024 17:34:14 +0000
+Message-ID: <512241eb-2190-40f4-aeae-066d67464362@nvidia.com>
+References: <a6c945f8-b07c-4474-a603-ff360b8fb0f4@stanley.mountain>
+In-Reply-To: <a6c945f8-b07c-4474-a603-ff360b8fb0f4@stanley.mountain>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Mozilla Thunderbird
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: LV3PR12MB9404:EE_|DS7PR12MB5815:EE_
+x-ms-office365-filtering-correlation-id: b3a9e91f-7861-418c-316f-08dca298d930
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?dlhweCt0UUdZellXdGNHMWhPN0lQZ0IrTHhoQS90NENPQWJ5a2lBWWc5Rkhh?=
+ =?utf-8?B?SklYS2ZKdGtrZm45MDFUa24ySWN2RUkrc3NjNjMyMU1UdHJwZVl0enlCaTRr?=
+ =?utf-8?B?eTVtZHdjQ3IxdFY0bzh2MnRoSlNKbXRSSnhaYjBOaUd4aVZoaXhNNXhlNWhG?=
+ =?utf-8?B?djlZaUpSZHZFUmR0UktYV25VdGc5T2dLd3NCWUVvUzB2cldUcXhRemQ3dW01?=
+ =?utf-8?B?dnE4Z0xybUpMZHZtN0c5N05oTjJrUGc4NHJjZDF0TGZuSkt3OVBFbzREMmZo?=
+ =?utf-8?B?elY4bHUxdFBXVWJ6QXFLL1E2R2tkSFVKNXFQTEhvR3NpOHNaRzAyNGQvUHBp?=
+ =?utf-8?B?cDAwaHRJby8yVjJSbCt0VzRlcmRlbnFrQlNUdkVPaHFuNVZobm55N2RvQ3Jl?=
+ =?utf-8?B?VG1lUHJqZDcvemJhK2toMm5qNUgxYU9KSHB5V1BlNmlRWmNSeXcva04xR0Y4?=
+ =?utf-8?B?citzenlCakg1VDM1bUljT0xPcGVxVzI3d1VVcm5NSVY0MnNVN2FySDhGblps?=
+ =?utf-8?B?dnBTYnlMOFc2N2NTaEFudWowQlZnVWI0UU5YYWExOWdQbWRjV2orK2taTnE5?=
+ =?utf-8?B?eVJrUWh4b2hYbjhDMjd2N2IySjY1ZUM5RzNjWDVLeVo0MXhMeU5Sa0RDZ1ho?=
+ =?utf-8?B?WFhqdU5hbi9qWkVXVTVMUm9wZGh2L3RwUlJYN1N5a05zOVVXVEQ0OWVIWE1n?=
+ =?utf-8?B?YXovc21MblQwR0t1YXU2TU9mK2poYms5dnlTcVBNOXc0OTFxeTZhWktZSit3?=
+ =?utf-8?B?L1dQRTRCand0a0Y1bkFRZ0hjL0ZSdXloVlo1TnV3T3Vyd2prR002NStuaVdj?=
+ =?utf-8?B?dVhNQlF4ZVNTUURvcklBNi92bzRaSUNEdWhneWNVTnFNK0JSaHlLdVJ5WGhZ?=
+ =?utf-8?B?NytScFNxYzFTVVBuTTlTQVM3UmhMT2FsVlM3dFdvSzFJYWxFUER3Slpqa254?=
+ =?utf-8?B?WVIvdWpmdkpHUURib3ZyUkJraTZZcGl1U1hmN3hFWkYrSWdSTGtkSTdZMVBM?=
+ =?utf-8?B?eUVYOEhXYWt1dURBSk1pTTllQnE5WWtQKy9pMVBBUE5McHAxR0RxZXJ2aDFU?=
+ =?utf-8?B?NXVrS3VOaUVZd25rSHdRRzVlNWhyZzVKa05MRHVQRlE1ZndvQ05JR1NhZmpN?=
+ =?utf-8?B?RGJuczRFOXc3MWpleFJIdWgyY1V3VEpOS0JQeHoxSmEzcllwZ0FFQ0JUNXVN?=
+ =?utf-8?B?TVh4NW9hSVl6bEdpVlovVjB4dmVsT0pUQ1NOenNDMUxVMlhJWW5Kbjc4aGdr?=
+ =?utf-8?B?aXk4WFI0YnVueEFHbFNQL1hxeTlxTlBObUZNSXFuZTVrV3ZKaVFKc0E1YVJ1?=
+ =?utf-8?B?eXg2bUN5c2lMZmlpUTg3Nlg4Qi9iZWgwR01xWFdTbHJGM0hXU2Y4MkxJZVpZ?=
+ =?utf-8?B?ZUxQWHdMZEZHUDQ3TW0vUjVZYjhLenN3L0ZSWG5IdU1weFBvQkFwZTl1Skkv?=
+ =?utf-8?B?a2FScWVxbDBNNHBCREQ3OEpLNFlnamtXZis0dzJBcDFGeDE2WEFnU1U2TTV5?=
+ =?utf-8?B?NnQvQnhqL0ZYTXRsM2h5TVNnMVpBRGQ5UGZmV0VEa2QyQVJCckZadWN5cGJK?=
+ =?utf-8?B?N3VoTUNzNEt6WGxRbVk2NUVoek9jdG0xWFZrTUZvQXdJUWROOHRCaFQ0bWJP?=
+ =?utf-8?B?L09adFJOWlZNZFhoc1JpMTU3ZUFCVEhSQk5yc202RzFjK0tPc1R3ckhKWERU?=
+ =?utf-8?B?c2dySHRXZCtUMGZONUJGZ0szUUtvNkdhSGFENGJGVE50YW5wZEY3dHNLV3Ni?=
+ =?utf-8?B?YXp4R25WZkhhajZPWGZySDFsNHAxQUlDQzJyUHJ4dkluZFU5RFRHRDh4WFVt?=
+ =?utf-8?B?K0tpQWFINUNmejY4aTAvcjNaRUpuYzNxQmNnYlAyQmVSTmFOUGNLMkdoN1hh?=
+ =?utf-8?B?NWZKK2xDVUw3SkQ1eXBqQ0FsUlJpSFdHeGttamRhbm9jMWc9PQ==?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR12MB9404.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?MS9mV2tOVWRlVDZDdGU2d1pkdmlrZDJScXV6RHZkR1FTdEorVDdNMEkwU0Rv?=
+ =?utf-8?B?clpDbGhjN1l5NmhlbTFYY2lVT01CbjRFVS80a1AvZTk1b1BoNXJ3OWhIbXhp?=
+ =?utf-8?B?a25rcWluWkxrRUlHS2w5V2JJaHVicmQzQ3lsNFllbDNyMnhuV1pGVmZpTzg4?=
+ =?utf-8?B?dGhqSTREYnhMcWNtRHI1LzRsdjRFckUreXJZc0x2Yk8zSDVCT1ZLQm9tdm54?=
+ =?utf-8?B?clY4MTZHT3hxWjlMSUdYN0xHaTVtK3VJSDJYVnlMQjZ3TjNhZGRjVUc2em1r?=
+ =?utf-8?B?VEIyNGxBUWwzK3FhVjR3NlBlYXFpa1U0OVlYT0VWKzkvTWY2Z2c0eTQvTDJz?=
+ =?utf-8?B?aVlEdzB6U1F6MUNUc1kvVTVwbDB3bkxiM1BtU3lFUEN2WXM4U2IzOXBMMDZH?=
+ =?utf-8?B?ZlFaZ2ozbjg3S0NvS2dBWVZLWGFGQVcwTERBTG5JOXByYW4yaG5qTndNcVd1?=
+ =?utf-8?B?YWRhTFBvNDlIUCtjZzBLSmlCWTdmWDlVRXpNNGd3SHAwaHp6ZWt3bUQraFpr?=
+ =?utf-8?B?VkxWVEpNa1RQWWxSeUdLOTZUMnJVcDAzZEh1MEdPSnhnWC9ndDNCdEpoSlNZ?=
+ =?utf-8?B?azdHN3BaOCt3TGNSUEFIV1JmbFV4dmpLRk5UUjRpTzE5ZDlib21adG9FT3Br?=
+ =?utf-8?B?UUd6dTFCQ1Q4SCthbVhRYWh1TGZ0enZzV0hlL3F0QlY2WmdVYUxRenkxR3lD?=
+ =?utf-8?B?QWRQaEJSTlRKd0ZxakljWnZORlFaWHU0TXVnWTVJQWVoY253VnVOTVhLMDcx?=
+ =?utf-8?B?MC9iVWFXU2M5cGU2aGwyQmlGcnhkVXJlZU4zTFUwVXcwTWdWbFE1L3l6RkZt?=
+ =?utf-8?B?STNwdHIxNFJ3bGp4em9FbVZKQjVXL21lWi9jd1NtUXpxMkJwUHlQRFpIWC81?=
+ =?utf-8?B?bDV4dTBVdEFneXpNNnZPd0J6YkFZbGVUOTZtc29JdkhmVU0rd2JpQzgzMFZ6?=
+ =?utf-8?B?ZW1oZkRkZFZXNGtzWmkvNTF4ZUg5TERHWGdvcVZ1OUJPSjI4NWI1aG0vSGlq?=
+ =?utf-8?B?a0RTcXVDQW91WjhHVkR3Z0JpSkNsUjdRY09saEtobFJCYStZZGFsLzZLU3BV?=
+ =?utf-8?B?aXkyQWZtR0JNZlJ5VDJpb2cyaGtUZE41SWFsS1ptNzdmd3NSSnVvOFdVTlhn?=
+ =?utf-8?B?bEJWbWxMV3NLRFNoNWpoOG16ejhQSk52d1lQTVRQM0w0aDBab1U0YU9BWTVZ?=
+ =?utf-8?B?R3A4SFJicXpsY0NRMTRkeHFBdG5QTzlucDNIdWZvUGJZdFloVFUzcXVxSElx?=
+ =?utf-8?B?MWNUYVNMRXdtMkp2SWNScWt1RGR5YnNZTU90c3F1aytneEc0R1NJZjlpRXdG?=
+ =?utf-8?B?MU1PSzYzc0tKZElsUFBaYkl2SmdWU0EvVVEvK1diNGtRWkJkNUthUkg1YlQv?=
+ =?utf-8?B?YzBFcDVTajByUXBmMW83cFpXeDIvK2dUWjhheFpVTlprMytKTUhhN1h3Wi9h?=
+ =?utf-8?B?VFpMTEpzZFlFaE5yYjkzQnl6bFg3RFJ2YmRkalRJcFI1QjlvbzFJejBYWEZZ?=
+ =?utf-8?B?REpNZUppMnpMcC9BYVFLZHgwak0yeU5iYXIyZVVFb3hNM25LaWtQb0diVHBt?=
+ =?utf-8?B?QXd1aWxIWHZ0WGZ4eExwbnRXOUxsOFNDWEJubW85Zm14cktRVEJqSWxXVGhF?=
+ =?utf-8?B?QWE3TWRyelVoL2tHSGI5dDJveTB4Z2xDMGF1aHBMOUpzRWN0dzNqMVNuV2Yz?=
+ =?utf-8?B?R3JJbURlOEF1Qy90TDkyb0lzRVlKNVkwN1pZTTFRenBRSXc0K1VqY2QvWVNO?=
+ =?utf-8?B?UWgyak5BR2pFaUlBSndMcVg4QThlTDFUN29Bbms1c1BEbStxRjBFZ29rSmVP?=
+ =?utf-8?B?Zm5qcjUvcGNSYzBERUJWTWZnUFJmNzM3ZVVOV0s3ZDdneEZoV1l2VGpoamx1?=
+ =?utf-8?B?YXYxbXBtMVJXTFpZZ0dFbVJEVUc5V1BCMXY2T25hMXBBR1AvUXkvL2JtZWNZ?=
+ =?utf-8?B?bDQrM1QvTHJLTmNlcGZPdHdWT1BKY3FLUHIrZWFRM1N5R0ZaZmN6M1lwVDhV?=
+ =?utf-8?B?aEMxUk9pa0VOdS9nUE1vSkk5L3FxT0syM1RlandhWmlhMG1uNGRZektNWXVV?=
+ =?utf-8?B?cEpWRHpJeTZKQm0xaUlqMDFqMWpIaUtBa25nMWVVSCt4WTFKelR6S2drYko1?=
+ =?utf-8?Q?9Q+yxQDKKVMZeFwSUBFFPFr3N?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <9112666B998AA4449FEDF363875C1020@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <87sewf48s6.fsf@nvdebian.thelocal>
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR12MB9404.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b3a9e91f-7861-418c-316f-08dca298d930
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Jul 2024 17:34:14.2001
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RMSBEoTO2vkRbj63jdC1wNCSFgUVVQbx8hPuDxnGKztJEvGsOpXP2L/VXFXhiNdD0Ml044UN9yKQJ/RF7rIWwg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5815
 
-On Fri, Jul 12, 2024 at 12:40:39PM +1000, Alistair Popple wrote:
-> 
-> Peter Xu <peterx@redhat.com> writes:
-> 
-> > On Tue, Jul 09, 2024 at 02:07:31PM +1000, Alistair Popple wrote:
-> >> 
-> >> Peter Xu <peterx@redhat.com> writes:
-> >> 
-> >> > Hi, Alistair,
-> >> >
-> >> > On Thu, Jun 27, 2024 at 10:54:26AM +1000, Alistair Popple wrote:
-> >> >> Now that DAX is managing page reference counts the same as normal
-> >> >> pages there are no callers for vmf_insert_pXd functions so remove
-> >> >> them.
-> >> >> 
-> >> >> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> >> >> ---
-> >> >>  include/linux/huge_mm.h |   2 +-
-> >> >>  mm/huge_memory.c        | 165 +-----------------------------------------
-> >> >>  2 files changed, 167 deletions(-)
-> >> >> 
-> >> >> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-> >> >> index 9207d8e..0fb6bff 100644
-> >> >> --- a/include/linux/huge_mm.h
-> >> >> +++ b/include/linux/huge_mm.h
-> >> >> @@ -37,8 +37,6 @@ int change_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
-> >> >>  		    pmd_t *pmd, unsigned long addr, pgprot_t newprot,
-> >> >>  		    unsigned long cp_flags);
-> >> >>  
-> >> >> -vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write);
-> >> >> -vm_fault_t vmf_insert_pfn_pud(struct vm_fault *vmf, pfn_t pfn, bool write);
-> >> >>  vm_fault_t dax_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write);
-> >> >>  vm_fault_t dax_insert_pfn_pud(struct vm_fault *vmf, pfn_t pfn, bool write);
-> >> >
-> >> > There's a plan to support huge pfnmaps in VFIO, which may still make good
-> >> > use of these functions.  I think it's fine to remove them but it may mean
-> >> > we'll need to add them back when supporting pfnmaps with no memmap.
-> >> 
-> >> I'm ok with that. If we need them back in future it shouldn't be too
-> >> hard to add them back again. I just couldn't find any callers of them
-> >> once DAX stopped using them and the usual policy is to remove unused
-> >> functions.
-> >
-> > True.  Currently the pmd/pud helpers are only used in dax.
-> >
-> >> 
-> >> > Is it still possible to make the old API generic to both service the new
-> >> > dax refcount plan, but at the meantime working for pfn injections when
-> >> > there's no page struct?
-> >> 
-> >> I don't think so - this new dax refcount plan relies on having a struct
-> >> page to take references on so I don't think it makes much sense to
-> >> combine it with something that doesn't have a struct page. It sounds
-> >> like the situation is the analogue of vm_insert_page()
-> >> vs. vmf_insert_pfn() - it's possible for both to exist but there's not
-> >> really anything that can be shared between the two APIs as one has a
-> >> page and the other is just a raw PFN.
-> >
-> > I still think most of the codes should be shared on e.g. most of sanity
-> > checks, pgtable injections, pgtable deposits (for pmd) and so on.
-> 
-> Yeah, it was mostly the BUG_ON's that weren't applicable once pXd_devmap
-> went away.
-> 
-> > To be explicit, I wonder whether something like below diff would be
-> > applicable on top of the patch "huge_memory: Allow mappings of PMD sized
-> > pages" in this series, which introduced dax_insert_pfn_pmd() for dax:
-> >
-> > $ diff origin new
-> > 1c1
-> > < vm_fault_t dax_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write)
-> > ---
-> >> vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write)
-> > 55,58c55,60
-> > <       folio = page_folio(page);
-> > <       folio_get(folio);
-> > <       folio_add_file_rmap_pmd(folio, page, vma);
-> > <       add_mm_counter(mm, mm_counter_file(folio), HPAGE_PMD_NR);
-> > ---
-> >>         if (page) {
-> >>                 folio = page_folio(page);
-> >>                 folio_get(folio);
-> >>                 folio_add_file_rmap_pmd(folio, page, vma);
-> >>                 add_mm_counter(mm, mm_counter_file(folio), HPAGE_PMD_NR);
-> >>         }
-> 
-> We get the page from calling pfn_t_to_page(pfn). This is safe for the
-> DAX case but is it safe to use a page returned by this more generally?
-
-Good question.  I thought it should work when the caller doesn't set any
-bit in PFN_FLAGS_MASK, but it turns out it's not the case?  As I just
-notice:
-
-static inline bool pfn_t_has_page(pfn_t pfn)
-{
-	return (pfn.val & PFN_MAP) == PFN_MAP || (pfn.val & PFN_DEV) == 0;
-}
-
-So it looks like "no PFN_FLAGS" case should also fall into this category of
-"(pfn.val & PFN_DEV) == 0"..
-
-I'm not sure whether my understanding is correct, though.  Maybe we'd want
-to double check with pfn_valid() when it's a generic function.
-
-> 
-> From an API perspective it would make more sense for the DAX code to
-> pass the page rather than the pfn. I didn't do that because device DAX
-> just had the PFN and this was DAX-specific code. But if we want to make
-> it generic I'd rather have callers pass the page in.
-> 
-> Of course that probably doesn't help you, because then the call would be
-> vmf_insert_page_pmd() rather than a raw pfn, but as you point out there
-> might be some common code we could share.
-
-It'll be fine if it needs page*, then it'll be NULL for VFIO.
-
-So far it looks cleaner if it has the pgtable entry anyway to me, as that
-indeed contains the pfn.  But I'd trust you more on what should it look
-like, as I didn't read the whole series here.
-
-> 
-> >
-> > As most of the rest look very similar to what pfn injections would need..
-> > and in the PoC of ours we're using vmf_insert_pfn_pmd/pud().
-> 
-> Do you have the PoC posted anywhere so I can get an understanding of how
-> this might be used?
-
-https://github.com/xzpeter/linux/commits/vfio-pfnmap-all/
-
-Specifically Alex's commit here:
-
-https://github.com/xzpeter/linux/commit/afd05f1082bc78738e280f1fc1937da52b2572ed
-
-Just a note that it's still work in progress.  Alex did run it through (not
-this tree, but an older one) and it works pretty well so far.
-
-I think it's because so far nothing involves the pfn flags, the only one
-has it involved is (taking pmd as example):
-
-insert_pfn_pmd():
-	if (!pmd_none(*pmd)) {
-		if (write) {
-			if (pmd_pfn(*pmd) != pfn_t_to_pfn(pfn)) {
-				WARN_ON_ONCE(!is_huge_zero_pmd(*pmd));
-				goto out_unlock;
-			}
-			entry = pmd_mkyoung(*pmd);
-			entry = maybe_pmd_mkwrite(pmd_mkdirty(entry), vma);
-			if (pmdp_set_access_flags(vma, addr, pmd, entry, 1))
-				update_mmu_cache_pmd(vma, addr, pmd);
-		}
-
-		goto out_unlock;
-	}
-
-But for VFIO it'll definitely be pmd_none() here, so the whole path ignores
-pfn flags so far here, I assume.
-
-> 
-> > That also reminds me on whether it'll be easier to implement the new dax
-> > support for page struct on top of vmf_insert_pfn_pmd/pud, rather than
-> > removing the 1st then adding the new one.  Maybe it'll reduce code churns,
-> > and would that also make reviews easier?
-> 
-> Yeah, that's a good observation. I think it was just a quirk of how I
-> was developing this and also not caring about the PFN case so I'll see
-> what that looks like.
-
-Great!  I hope it'll reduce the diff for this series too, so it could be a
-win-win.
-
-Thanks,
-
--- 
-Peter Xu
-
+T24gNy8xMi8yMDI0IDc6MDcgQU0sIERhbiBDYXJwZW50ZXIgd3JvdGU6DQo+IFdlIGNoZWNrZWQg
+dGhhdCAicGlwIiBpcyBub24tTlVMTCBhdCB0aGUgc3RhcnQgb2YgdGhlIGlmIGVsc2Ugc3RhdGVt
+ZW50DQo+IHNvIHRoZXJlIGlzIG5vIG5lZWQgdG8gY2hlY2sgYWdhaW4gaGVyZS4gIERlbGV0ZSB0
+aGUgY2hlY2suDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBEYW4gQ2FycGVudGVyPGRhbi5jYXJwZW50
+ZXJAbGluYXJvLm9yZz4NCg0KTG9va3MgZ29vZC4NCg0KUmV2aWV3ZWQtYnk6IENoYWl0YW55YSBL
+dWxrYXJuaSA8a2NoQG52aWRpYS5jb20+DQoNCi1jaw0KDQoNCg==
