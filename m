@@ -1,118 +1,119 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5B5439B;
-	Fri, 12 Jul 2024 06:49:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84EE8D512;
+	Fri, 12 Jul 2024 12:13:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720766991; cv=none; b=hSyqnSWUcGu++lt5GyqgY+SvvDTwcrW4om20jBgp8kGqP28YhCPyatmnAU9suT8KYslCqEcJy49ZzKQQ2O8VLW5JKGp/hz3f5RYUeqqOEJijNwKNrbqI6EJQ17ch/zeqo2YdTUefgnmQERz0AC72iM3B+uuRgvydy5djnHIJQ6c=
+	t=1720786382; cv=none; b=W+nnrx0T4og173ZvM2OYNygWj28Qx57+vLvuNyhcIaeItSXwY/joJpd3ePJCZVLS5sOnOTxZl/kCnGQZoXzsehbocLxGYksIX4w5Y6O8nEjtjctl4E8tLqidHbi65mRwfJxXM3W/cnMnwBjjoCdYYq7bxehbpHYd1paJnkb3vRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720766991; c=relaxed/simple;
-	bh=7V0zt1PDnCfLkBjQINrJ5mzZqGDGZlY9aJuodrfp9yQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B3wDO9adIrgZEIev2dHPTZJgKIn9PdeVD8yjxQZzcwpIVsQHqmwp7h2Wg19z/R5UEc7WwI/JuIl+uewNiNgAeQ3dHHMiB+CGJjtrurPFvYZgj7cIl6gMe57KwxkYRefj2biO3zZZE9mzLSees47kcaVmAjR1rS0TGn8JrvPxILo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4WL2CL0g4nz1T5yn;
-	Fri, 12 Jul 2024 14:45:02 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0DE00140361;
-	Fri, 12 Jul 2024 14:49:47 +0800 (CST)
-Received: from localhost.localdomain (10.175.104.67) by
- kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Fri, 12 Jul 2024 14:49:46 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <zlang@redhat.com>, <djwong@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <fstests@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <leo.lilong@huawei.com>,
-	<yangerkun@huawei.com>
-Subject: [PATCH 2/2] xfs/242: fix test failure due to incorrect filtering in _filter_bmap
-Date: Fri, 12 Jul 2024 14:47:16 +0800
-Message-ID: <20240712064716.3385793-2-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240712064716.3385793-1-leo.lilong@huawei.com>
-References: <20240712064716.3385793-1-leo.lilong@huawei.com>
+	s=arc-20240116; t=1720786382; c=relaxed/simple;
+	bh=1+Yfdw6riiV8LwSEY6hqiRjwk2gF445GfiGNMNa0cJY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BF/9XA2ZBULbYjJyIYywYPN7oEMi6m/f8hooHjJdSKGR8lPIJ2DYXl7niLtL7rO9KpAPDf5X/c26+yq4BBXRqCCHr5/uuHUKVy6GF+DlOzVdlKsTjk+A9oP9fUc3TAbLput88CUusQWcQExetsT1y6g4EpS0eKv/SPSNWsCt0Yo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 526F9C32782;
+	Fri, 12 Jul 2024 12:13:01 +0000 (UTC)
+Date: Fri, 12 Jul 2024 08:14:16 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, Dan Carpenter
+ <dan.carpenter@linaro.org>, Julia Lawall <Julia.Lawall@inria.fr>
+Subject: Re: [PATCH] xfs: fix file_path handling in tracepoints
+Message-ID: <20240712081416.1e58e32d@gandalf.local.home>
+In-Reply-To: <ZpC5FTEvLDbCije6@infradead.org>
+References: <ZpAB2HU8zE41s9j6@infradead.org>
+	<20240711211754.316de618@gandalf.local.home>
+	<ZpC5FTEvLDbCije6@infradead.org>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500009.china.huawei.com (7.221.188.199)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-I got a failure in xfs/242 as follows, it can be easily reproduced
-when I run xfs/242 as a cyclic test.
+On Thu, 11 Jul 2024 22:03:17 -0700
+Christoph Hellwig <hch@infradead.org> wrote:
 
-  13. data -> unwritten -> data
-  0: [0..127]: data
-  -1: [128..511]: unwritten
-  -2: [512..639]: data
-  +1: [128..639]: unwritten
+> On Thu, Jul 11, 2024 at 09:17:54PM -0400, Steven Rostedt wrote:
+> > That "f->f_path.dentry" is a dereference of the passed in pointer. If we
+> > did that in the TP_printk(), then it would dereference that file pointer
+> > saved by the trace. This would happen at some time later from when the file
+> > pointer was saved. That is, it will dereference the pointer when the user
+> > reads the trace, not when the trace occurred. This could be seconds,
+> > minutes, hours, days even months later! So %pD would not work there.  
+> 
+> Indeed.  I'm so used to these useful format strings that I keep
+> forgetting about them doing non-trivial things.
+> 
+> Which also brings up that it would be good if we had some kind of static
+> checker that detects usage of these magic %p extensions in the trace
+> macros and warns about them.
 
-The root cause, as Dave pointed out in previous email [1], is that
-_filter_bmap may incorrectly match the AG-OFFSET in column 5 for datadev
-files. On the other hand, _filter_bmap missing a "next" to jump out when
-it matches "data" in the 5th column, otherwise it might print the result
-twice. The issue was introduced by commit 7d5d3f77154e ("xfs/242: fix
-_filter_bmap for xfs_io bmap that does rt file properly"). The failure
-disappeared when I retest xfs/242 by reverted commit 7d5d3f77154e.
+Well, at bootup there's a runtime check that is done to every trace event
+that is registered (an also on module load). It looks at the TP_printk
+string for any dereference characters. If it finds one it then tests to
+make sure the pointer points to something that would be in the ring buffer.
+That is, if you have TP_printk("%pI", &__entry->saved_ip), that would be
+OK. But if you had: TP_printk("%pI", __entry->ip_addr) it would trigger a
+big WARN_ON() on boot.
 
-Fix it by matching the 7th column first and then the 5th column in
-_filter_bmap, because the rtdev file only has 5 columns in the `bmap -vp`
-output.
+See kernel/trace/trace_events.c: test_event_printk()
 
-[1] https://lore.kernel.org/all/Zh9UkHEesvrpSQ7J@dread.disaster.area/
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- common/punch | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+> 
+> > 		__dynamic_array(char, pathname, snprintf(NULL, 0, "%pD", xf->file) + 1);
+> > 
+> > // This will allocated the space needed for the string
+> >   
+> 
+> > 		sprintf(__get_dynamic_array(pathname), "%pD", xf->file);
+> > 
+> > // and the above will copy it directly to that location.
+> > // It assumes the value of the first snprintf() will be the same as the second.
+> >   
+> 
+> > 		  (char *)__get_dynamic_array(pathname),
+> > 
+> > // for accessing the string, although yes, __get_str(pathname) would work,
+> > // but that's more by luck than design.  
+> 
+> That sounds pretty cool, but except for the dynamic sizing doesn't
+> really buy us much over the version Darrick proposed, right?
 
-diff --git a/common/punch b/common/punch
-index 9e730404..43ccab69 100644
---- a/common/punch
-+++ b/common/punch
-@@ -188,7 +188,10 @@ _filter_hole_fiemap()
- 	_coalesce_extents
- }
- 
--# Column 7 for datadev files and column 5 for rtdev files
-+# Column 7 for datadev files and column 5 for rtdev files, To prevent the
-+# 5th column in datadev files from being potentially matched incorrectly,
-+# we need to match Column 7 for datadev files first, because the rtdev
-+# file only has 5 columns in the `bmap -vp` output.
- #     10000 Unwritten preallocated extent
- #     01000 Doesn't begin on stripe unit
- #     00100 Doesn't end   on stripe unit
-@@ -201,18 +204,19 @@ _filter_bmap()
- 			print $1, $2, $3;
- 			next;
- 		}
--		$5 ~ /1[01][01][01][01]/ {
-+		$7 ~ /1[01][01][01][01]/ {
- 			print $1, $2, "unwritten";
- 			next;
- 		}
--		$5 ~ /0[01][01][01][01]/ {
-+		$7 ~ /0[01][01][01][01]/ {
- 			print $1, $2, "data"
-+			next;
- 		}
--		$7 ~ /1[01][01][01][01]/ {
-+		$5 ~ /1[01][01][01][01]/ {
- 			print $1, $2, "unwritten";
- 			next;
- 		}
--		$7 ~ /0[01][01][01][01]/ {
-+		$5 ~ /0[01][01][01][01]/ {
- 			print $1, $2, "data"
- 		}' |
- 	_coalesce_extents
--- 
-2.39.2
+The difference is that you save more space on the ring buffer. Instead of
+just allocating 256 bytes for every path, it will only allocate what is
+need, plus 4 bytes of metadata. If most of your paths are less than 248
+characters in length, you will likely get much better use out of the ring
+buffer. That is, less dropped events.
 
+> 
+> > Looking at this file, I noticed that you have some open coded __string_len()
+> > fields. Why not just use that? In fact, I think I even found a bug:
+> > 
+> > There's a:
+> > 		memcpy(__get_str(name), name, name->len);
+> > 
+> > Where I think it should have been:
+> > 
+> > 		memcpy(__get_str(name), name->name, name->len);
+> > 
+> > Hmm, I should make sure that __string() and __string_len() are passed in
+> > strings. As this is a common bug.
+> > 
+> > I can make this a formal patch if you like. Although, I haven't even tried
+> > compile testing it ;-)  
+> 
+> Without having compiled it either, this looks sensible to me.  As XFS
+> was one of the earliest adopters of event tracing I suspect these
+> predate the string helpers.
+
+Yeah, I was thinking that this was probably added before __string_len() was
+added for this exact purpose.
+
+I'll write the formal patch and test it too.
+
+-- Steve
