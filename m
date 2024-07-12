@@ -1,213 +1,417 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D73391
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2024 00:32:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97A777E6;
+	Fri, 12 Jul 2024 01:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720744321; cv=none; b=NyAPpVC5dsKDCooJmG/8yg+muy0SSPBOiYbPnMBI8ze7UvTCrICUdTneqDdhx+61tSK6JxaNNdVtBB8a4lFp4gwthN719HnbhaRHJRaA3pG6cpqlEWrmpuJgJ3So6gjdnttV+0zUoVCAOU/BvgWBk2ZnZ8bzcCLYFyJ35+h0r4Q=
+	t=1720746992; cv=none; b=fehuJcvRxLRFd+q0WakzdOWJFeWEQVuw+2ewsMT07DuhewE3NnnVDK9jTrS7jmA3l1w3d+nT6iD2DzdSyFegfuQCrwVjYgbNuo5RuJNd4CoN1aMJiGOyiILBGoJgNwa8PRFc+5+rgcoSHxVT1MVofVxOzwQ5dWwqXY1YqzyxvRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720744321; c=relaxed/simple;
-	bh=G360dXShm61Q+zIhO6OfScrfzCy32uUMRl52oDPBc1Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gIDFCMpDDl5eNWt/SSQF+VsWs7NaiyM33vlhUxYvtbqW7n0dVllwsgk1/lDRgQr/wMwVHj8g7fjvzQdGAAkz9mm5KM6YthzvhxJiz787UjWZEzbCG+EPJ3Zm7pzVQd/wG/H8zKWC5skPp/w5+jH05IojPddoP24yAYwwQ5wlWVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=XYJDLdcH; arc=none smtp.client-ip=209.85.210.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="XYJDLdcH"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-70af8128081so1228116b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2024 17:32:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720744320; x=1721349120; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RvL8Fxd5PelloxdrPEBzs8+jyIld78kHS1+ndVEpKKg=;
-        b=XYJDLdcH/IDVLy3Cl9yK5MscBqg7/60Vj66TJPcB7fl+n/j7WzmsmzLXAVCTsfwDD6
-         e8KQ/vWLflB+zArmdnA30EEjPCjUEUyy0jZmK1XAY2tCI/LgXmcsir/tFKEo+o5HZa4H
-         +C13Py7TqiVCtA34Gs4R6cjUMeccGRfMpFfqR65tgw02C5U+21M7K9NvO/gRN3T+8o26
-         rhg/GeoG3evCVO9e6GRX55DcR8PYRshjXBanSTig5TZ/ziE+PPGKg7idrfjy+554fkC0
-         k1cI5u5lBYuYKXtrI44u8xYlhvDuqZ3N1vKuT/ohoMSbjZE+XrL4Kk2NpD/CFp5D2463
-         RFtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720744320; x=1721349120;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RvL8Fxd5PelloxdrPEBzs8+jyIld78kHS1+ndVEpKKg=;
-        b=UepDVQKZiuFAhGcv4DjrfuWAXT5lXJ1NWNC+b8Kqzg58WWrj9U4Ey58gyK5U+xuMOX
-         qkuAZQdz16Ybos4esDyOU3YPI1jxVtR6dWduLt2V7yriS8Id40+Y94qdYdJehZjevLIX
-         1tInKsKGpCPnEUJLPsE99V6KgdLyw+HTkDvp6kzCwtJ7kZyLMrwfEye8o18grOUXYqN0
-         F40JNQatgqz1RmkmEgm6uPmFE611HYeNp2WJJozoEfsb8uRRtdPvC3fO7iUqTxVpvxE0
-         NdAvsovpQ14QBIn79GAo/Tw+/p3pe0+xMtOjixrWx0T12FtlUlLdLX22n0SguhWNv/HM
-         pHoQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVBDoIj4dGxY6jaJnLOl2FvT214PVBY8zd0IGSUnNkE0Ch5l8YwdseQNpHc/oX8Zs8EoxJYbRCHufMMeytGSQkbm8ZJ7j3frQJo
-X-Gm-Message-State: AOJu0YwWNoxln+bn09Zk38vyV2uLC7QCtiSzanuqRNXD1kfJfxnw9kC/
-	DZZZfJiJsMyHL6fvrf4lMdm8d+pADbUTSSZk/siRyrTnPMkl/v36OdUJseUF0EM=
-X-Google-Smtp-Source: AGHT+IEt56nLnZqNbTRO03JS0rB9hyWQhUeruUDlMkxQEBu0ilPYQnCsiPHMhENrFqi7uISi1QorPg==
-X-Received: by 2002:a05:6a00:1249:b0:70a:9672:c3a2 with SMTP id d2e1a72fcca58-70b43632384mr11263329b3a.24.1720744319565;
-        Thu, 11 Jul 2024 17:31:59 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b439c3213sm6270131b3a.194.2024.07.11.17.31.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jul 2024 17:31:59 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sS4Cb-00Ccki-05;
-	Fri, 12 Jul 2024 10:31:57 +1000
-Date: Fri, 12 Jul 2024 10:31:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: honor init_xattrs in xfs_init_new_inode for !attr
- && attr2 fs
-Message-ID: <ZpB5fS822UrP6JIs@dread.disaster.area>
-References: <20240618232112.GF103034@frogsfrogsfrogs>
- <20240619010622.GI103034@frogsfrogsfrogs>
- <ZoIF7dEBkd4YPlSh@dread.disaster.area>
- <20240701233749.GF612460@frogsfrogsfrogs>
+	s=arc-20240116; t=1720746992; c=relaxed/simple;
+	bh=ByXbfI/FrLOIKII1lwb8zymOdcPzQWc7nSGrvcdTSvI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=PZDda3mBWEcqicnDbJrZkhlZXOGk9GDxEHCqrny/mgFWomuEpmd4KWCID8kq4AifNu6qD2RbrYBfT5pBK8/RY0DPnTLkWQ6sQWSepiQuIaRpwicbI34WKGlK8bM2T3S6Qxj20RqIi8b1/TCHjjLnpshgtU136qbwncVhp+KoOL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C99EC116B1;
+	Fri, 12 Jul 2024 01:16:31 +0000 (UTC)
+Date: Thu, 11 Jul 2024 21:17:54 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix file_path handling in tracepoints
+Message-ID: <20240711211754.316de618@gandalf.local.home>
+In-Reply-To: <ZpAB2HU8zE41s9j6@infradead.org>
+References: <ZpAB2HU8zE41s9j6@infradead.org>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240701233749.GF612460@frogsfrogsfrogs>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jul 01, 2024 at 04:37:49PM -0700, Darrick J. Wong wrote:
-> On Mon, Jul 01, 2024 at 11:27:09AM +1000, Dave Chinner wrote:
-> > On Tue, Jun 18, 2024 at 06:06:22PM -0700, Darrick J. Wong wrote:
-> > > On Tue, Jun 18, 2024 at 04:21:12PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > xfs_init_new_inode ignores the init_xattrs parameter for filesystems
-> > > > that have ATTR2 enabled but not ATTR.  As a result, the first file to be
-> > > > created by the kernel will not have an attr fork created to store acls.
-> > > > Storing that first acl will add ATTR to the superblock flags, so chances
-> > > > are nobody has noticed this previously.
-> > > > 
-> > > > However, this is disastrous on a filesystem with parent pointers because
-> > > > it requires that a new linkable file /must/ have a pre-existing attr
-> > > > fork.
+On Thu, 11 Jul 2024 09:01:28 -0700
+Christoph Hellwig <hch@infradead.org> wrote:
+
+> On Wed, Jul 10, 2024 at 10:43:53PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > How are we creating a parent pointer filesystem that doesn't have
-> > XFS_SB_VERSION_ATTRBIT set in it? I thought that mkfs.xfs was going
-> > to always set this....
+> > Since file_path() takes the output buffer as one of its arguments, we
+> > might as well have it format directly into the tracepoint's char array
+> > instead of wasting stack space.  
 > 
-> <shrug> The first three versions didn't set ATTRBIT; somewhere between
-> v4 and v5 Allison changed mkfs to set ATTRBIT; and as of v13 it still
-> does.
+> This looks sensible to me, but..
 > 
-> That said, there aren't actually any parent pointers on an empty
-> filesystem because the root dir is empty and the rt/quota inode are
-> children of the superblock.  So, technically speaking, it's not
-> *required* for mkfs to set it, at least not until we start adding
-> metadir inodes.
+> The nicest way to format the interesting parts of a file path is to
+> simply use the magic %pD printk specificer, which removes the entire
+
+Would that even work? Looking at what %pD does in vsnprintf() we have:
+
+static noinline_for_stack
+char *file_dentry_name(char *buf, char *end, const struct file *f,
+			struct printf_spec spec, const char *fmt)
+{
+	if (check_pointer(&buf, end, f, spec))
+		return buf;
+
+	return dentry_name(buf, end, f->f_path.dentry, spec, fmt);
+}
+
+That "f->f_path.dentry" is a dereference of the passed in pointer. If we
+did that in the TP_printk(), then it would dereference that file pointer
+saved by the trace. This would happen at some time later from when the file
+pointer was saved. That is, it will dereference the pointer when the user
+reads the trace, not when the trace occurred. This could be seconds,
+minutes, hours, days even months later! So %pD would not work there.
+
+
+> need for an extra buffer.  It would be kinda nice to use that for
+> tracing, but I can't see how to accomodate the users of the binary
+> trace buffer with that.  Adding Steven and the trace list for
+> comments.
+
+With the above said, perhaps you could do something like:
+
+
 > 
-> At no point during the development of parent pointers has xfs_repair
-> ever validated that ATTRBIT is set if PARENT is enabled -- it only
-> checks that ATTRBIT is set if any attr forks are found.
+> > -		__array(char, pathname, 256)
+> > +		__array(char, pathname, MAXNAMELEN)
 
-Right, that's the oversight we need to correct. mkfs.xfs is already
-setting it, so adding checks to the suerpblock verifier, repair, etc
-isn't going to break anything.
+		__dynamic_array(char, pathname, snprintf(NULL, 0, "%pD", xf->file) + 1);
 
-> > > > The preproduction version of mkfs.xfs have always set this, but
-> > > > as xfs_sb.c doesn't validate that pptrs filesystems have ATTR set, we
-> > > > must catch this case.
-> > 
-> > Which is sounds like it is supposed to - how is parent pointers
-> > getting enabled such that XFS_SB_VERSION_ATTRBIT is not actually
-> > set?
-> 
-> Someone who fuzzes the filesystem could turn off ATTRBIT on an empty fs.
-> That's a valid configuration since there are also no parent pointers.
+// This will allocated the space needed for the string
 
-No, it's not. The parent pointer feature bit it set, mkfs.xfs always
-sets the ATTRBIT in that case, so the superblock feature bit checker
-needs to error out if (PARENT | ATTRBIT) == PARENT.
+> >  	),
+> >  	TP_fast_assign(
+> > -		char		pathname[257];
+> >  		char		*path;
+> >  
+> >  		__entry->ino = file_inode(xf->file)->i_ino;
 
-This is basic on-disk format verification stuff, Darrick, and you
-know this as well as I do.
+		sprintf(__get_dynamic_array(pathname), "%pD", xf->file);
 
-> Or at least I'm assuming it is since xfs_repair has never complained
-> about ATTRBIT being set on a filesystem with no attr forks, and nobody's
-> suggested adding that enforcement in the 6 years the parent pointer
-> series has been out for review.
+// and the above will copy it directly to that location.
+// It assumes the value of the first snprintf() will be the same as the second.
 
-Which is a classic demonstration of an oversight. We're not
-omniscent, and hindsight is wonderful for making things we missed
-obvious.
+> > +		path = file_path(xf->file, __entry->pathname, MAXNAMELEN);
+> >  		if (IS_ERR(path))
+> > +			strncpy(__entry->pathname, "(unknown)",
+> > +					sizeof(__entry->pathname));
+> >  	),
+> >  	TP_printk("xfino 0x%lx path '%s'",
+> >  		  __entry->ino,
 
-Also, xfs_repair failing to catch something doesn't mean the
-behaviour is correct or good. It just means we failed to consider
-that specific failure mode and so haven't added the code to catch
-it. Fixing this sort of oversight is exactly why we have
-EXPERIMENTAL tags....
+		  (char *)__get_dynamic_array(pathname),
 
-> Getting back to the story, if someone mounts that empty filesystem and
-> tries to create a directory structure, the fs blows up.  This patch
-> fixes that situation without adding more ways that mount can fail.
+// for accessing the string, although yes, __get_str(pathname) would work,
+// but that's more by luck than design.
 
-But that's the issue: we should not be working around feature bit
-bugs in core XFS code. PARENT is dependent on ATTRBIT being set, and
-the whole point of our feature bit checks is to catch on-disk format
-bugs like this at mount time. Ignoring the bad feature flag
-combination and workign around them in core code is the antithesis
-of the XFS on-disk format verification architecture.
 
-The fact is that mount *should fail* if PARENT is set and ATTRBIT is
-not. xfs_repair should flag this as an error and fix it. mkfs.xfs
-has set both PARENT and ATTRBIT for a long long time, and so we
-should be enforcing that config everywhere. We should not be working
-around an invalid feature bit combination anywhere in the XFS code,
-ever.
+Looking at this file, I noticed that you have some open coded __string_len()
+fields. Why not just use that? In fact, I think I even found a bug:
 
-> > > > Note that the sb verifier /does/ require ATTR2 for V5 filesystems, so we
-> > > > can fix both problems by amending xfs_init_new_inode to set up the attr
-> > > > fork for either ATTR or ATTR2.
-> > 
-> > True, but it still seems to me like we should be fixing mkfs.xfs and
-> > the superblock verifier to do the right thing given this is all
-> > still experimental and we're allowed to fix on-disk format bugs
-> > like this.
-> > 
-> > Can we add that to the superblock verifier so that the parent
-> > pointer filesystems will not mount if mkfs is not setting the 
-> > XFS_SB_VERSION_ATTRBIT correctly when the parent pointer feature is
-> > enabled?
-> > 
-> > Worst case is that early testers will need to use xfs_db to set the
-> > XFS_SB_VERSION_ATTRBIT and then the filesystem will mount again...
-> 
-> Patches welcome.
+There's a:
+		memcpy(__get_str(name), name, name->len);
 
-It's taken me a long time to calm down after reading these two
-words.
+Where I think it should have been:
 
-One of the reasons we have an EXPERIMENTAL period for new features
-is to provide scope for correcting on-disk format screwups like this
-properly. This means we don't need to carry hacks around stupid
-thinko's and straight out bugs in the on-disk format and initial
-implementation forever.
+		memcpy(__get_str(name), name->name, name->len);
 
-We also work under the guidelines that it is largely the
-responsibility of the engineer who asked for the new functionality
-to be merged to do most of the heavy lifting to fix such issues
-during the EXPERIMENTAL period.
+Hmm, I should make sure that __string() and __string_len() are passed in
+strings. As this is a common bug.
 
-Suggesting that someone else should do the work to tidy up the loose
-on-disk format ends in the kernel and userspace in preference to a
-one line hack that works around the problem goes against all the
-agreements we've had for bringing experimental code up to production
-quality. This isn't how to engineer high quality, robust long lived
-code...
+I can make this a formal patch if you like. Although, I haven't even tried
+compile testing it ;-)
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-- Steve
+
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 92ef4cdc486e..bbb7b0a09ffe 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -1430,14 +1430,14 @@ TRACE_EVENT(xchk_nlinks_collect_dirent,
+ 		__field(xfs_ino_t, dir)
+ 		__field(xfs_ino_t, ino)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+ 		__entry->dir = dp->i_ino;
+ 		__entry->ino = ino;
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d dir 0x%llx -> ino 0x%llx name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -1457,14 +1457,14 @@ TRACE_EVENT(xchk_nlinks_collect_pptr,
+ 		__field(xfs_ino_t, dir)
+ 		__field(xfs_ino_t, ino)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+ 		__entry->dir = dp->i_ino;
+ 		__entry->ino = be64_to_cpu(pptr->p_ino);
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d dir 0x%llx -> ino 0x%llx name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -1502,7 +1502,7 @@ TRACE_EVENT(xchk_nlinks_live_update,
+ 		__field(xfs_ino_t, ino)
+ 		__field(int, delta)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, namelen)
++		__string_len(name, name, namelen)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+@@ -1511,7 +1511,7 @@ TRACE_EVENT(xchk_nlinks_live_update,
+ 		__entry->ino = ino;
+ 		__entry->delta = delta;
+ 		__entry->namelen = namelen;
+-		memcpy(__get_str(name), name, namelen);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d dir 0x%llx ino 0x%llx nlink_delta %d name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -1630,14 +1630,14 @@ DECLARE_EVENT_CLASS(xchk_pptr_class,
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 		__field(xfs_ino_t, far_ino)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = ip->i_mount->m_super->s_dev;
+ 		__entry->ino = ip->i_ino;
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name, name->len);
++		__assign_str(name);
+ 		__entry->far_ino = far_ino;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx name '%.*s' far_ino 0x%llx",
+@@ -1672,7 +1672,7 @@ DECLARE_EVENT_CLASS(xchk_dirtree_class,
+ 		__field(xfs_ino_t, parent_ino)
+ 		__field(unsigned int, parent_gen)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = sc->mp->m_super->s_dev;
+@@ -1682,7 +1682,7 @@ DECLARE_EVENT_CLASS(xchk_dirtree_class,
+ 		__entry->parent_ino = be64_to_cpu(pptr->p_ino);
+ 		__entry->parent_gen = be32_to_cpu(pptr->p_gen);
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d path %u child_ino 0x%llx child_gen 0x%x parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -1718,7 +1718,7 @@ DECLARE_EVENT_CLASS(xchk_dirpath_class,
+ 		__field(xfs_ino_t, parent_ino)
+ 		__field(unsigned int, parent_gen)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = sc->mp->m_super->s_dev;
+@@ -1729,7 +1729,7 @@ DECLARE_EVENT_CLASS(xchk_dirpath_class,
+ 		__entry->parent_ino = be64_to_cpu(pptr->p_ino);
+ 		__entry->parent_gen = be32_to_cpu(pptr->p_gen);
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d path %u step %u child_ino 0x%llx child_gen 0x%x parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -1863,7 +1863,7 @@ TRACE_EVENT(xchk_dirpath_changed,
+ 		__field(xfs_ino_t, child_ino)
+ 		__field(xfs_ino_t, parent_ino)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, xname->len)
++		__string_len(name, xname->name, xname->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = sc->mp->m_super->s_dev;
+@@ -1872,7 +1872,7 @@ TRACE_EVENT(xchk_dirpath_changed,
+ 		__entry->child_ino = ip->i_ino;
+ 		__entry->parent_ino = dp->i_ino;
+ 		__entry->namelen = xname->len;
+-		memcpy(__get_str(name), xname->name, xname->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d path %u step %u child_ino 0x%llx parent_ino 0x%llx name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -1896,7 +1896,7 @@ TRACE_EVENT(xchk_dirtree_live_update,
+ 		__field(xfs_ino_t, child_ino)
+ 		__field(int, delta)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, xname->len)
++		__string_len(name, xname->name, xname->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = sc->mp->m_super->s_dev;
+@@ -1905,7 +1905,7 @@ TRACE_EVENT(xchk_dirtree_live_update,
+ 		__entry->child_ino = ip->i_ino;
+ 		__entry->delta = delta;
+ 		__entry->namelen = xname->len;
+-		memcpy(__get_str(name), xname->name, xname->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d parent_ino 0x%llx child_ino 0x%llx nlink_delta %d name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -2853,7 +2853,7 @@ DECLARE_EVENT_CLASS(xrep_xattr_salvage_class,
+ 		__field(xfs_ino_t, ino)
+ 		__field(unsigned int, flags)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, namelen)
++		__string_len(name, name, namelen)
+ 		__field(unsigned int, valuelen)
+ 	),
+ 	TP_fast_assign(
+@@ -2861,7 +2861,7 @@ DECLARE_EVENT_CLASS(xrep_xattr_salvage_class,
+ 		__entry->ino = ip->i_ino;
+ 		__entry->flags = flags;
+ 		__entry->namelen = namelen;
+-		memcpy(__get_str(name), name, namelen);
++		__assign_str(name);
+ 		__entry->valuelen = valuelen;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx flags %s name '%.*s' valuelen 0x%x",
+@@ -2892,7 +2892,7 @@ DECLARE_EVENT_CLASS(xrep_pptr_salvage_class,
+ 		__field(xfs_ino_t, parent_ino)
+ 		__field(unsigned int, parent_gen)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, namelen)
++		__string_len(name, name, namelen)
+ 	),
+ 	TP_fast_assign(
+ 		const struct xfs_parent_rec	*rec = value;
+@@ -2902,7 +2902,7 @@ DECLARE_EVENT_CLASS(xrep_pptr_salvage_class,
+ 		__entry->parent_ino = be64_to_cpu(rec->p_ino);
+ 		__entry->parent_gen = be32_to_cpu(rec->p_gen);
+ 		__entry->namelen = namelen;
+-		memcpy(__get_str(name), name, namelen);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -2956,7 +2956,7 @@ DECLARE_EVENT_CLASS(xrep_xattr_pptr_scan_class,
+ 		__field(xfs_ino_t, parent_ino)
+ 		__field(unsigned int, parent_gen)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = ip->i_mount->m_super->s_dev;
+@@ -2964,7 +2964,7 @@ DECLARE_EVENT_CLASS(xrep_xattr_pptr_scan_class,
+ 		__entry->parent_ino = dp->i_ino;
+ 		__entry->parent_gen = VFS_IC(dp)->i_generation;
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -3042,7 +3042,7 @@ DECLARE_EVENT_CLASS(xrep_dirent_class,
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, dir_ino)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 		__field(xfs_ino_t, ino)
+ 		__field(uint8_t, ftype)
+ 	),
+@@ -3050,7 +3050,7 @@ DECLARE_EVENT_CLASS(xrep_dirent_class,
+ 		__entry->dev = dp->i_mount->m_super->s_dev;
+ 		__entry->dir_ino = dp->i_ino;
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 		__entry->ino = ino;
+ 		__entry->ftype = name->type;
+ 	),
+@@ -3137,7 +3137,7 @@ DECLARE_EVENT_CLASS(xrep_pptr_class,
+ 		__field(xfs_ino_t, parent_ino)
+ 		__field(unsigned int, parent_gen)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = ip->i_mount->m_super->s_dev;
+@@ -3145,7 +3145,7 @@ DECLARE_EVENT_CLASS(xrep_pptr_class,
+ 		__entry->parent_ino = be64_to_cpu(pptr->p_ino);
+ 		__entry->parent_gen = be32_to_cpu(pptr->p_gen);
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -3175,7 +3175,7 @@ DECLARE_EVENT_CLASS(xrep_pptr_scan_class,
+ 		__field(xfs_ino_t, parent_ino)
+ 		__field(unsigned int, parent_gen)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, name->len)
++		__string_len(name, name->name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = ip->i_mount->m_super->s_dev;
+@@ -3183,7 +3183,7 @@ DECLARE_EVENT_CLASS(xrep_pptr_scan_class,
+ 		__entry->parent_ino = dp->i_ino;
+ 		__entry->parent_gen = VFS_IC(dp)->i_generation;
+ 		__entry->namelen = name->len;
+-		memcpy(__get_str(name), name->name, name->len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -3237,7 +3237,7 @@ DECLARE_EVENT_CLASS(xrep_dentry_class,
+ 		__field(bool, positive)
+ 		__field(unsigned long, parent_ino)
+ 		__field(unsigned int, namelen)
+-		__dynamic_array(char, name, dentry->d_name.len)
++		__string_len(name, dentry->d_name.name, dentry->d_name.len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+@@ -3249,7 +3249,7 @@ DECLARE_EVENT_CLASS(xrep_dentry_class,
+ 			__entry->parent_ino = -1UL;
+ 		__entry->ino = d_inode(dentry) ? d_inode(dentry)->i_ino : 0;
+ 		__entry->namelen = dentry->d_name.len;
+-		memcpy(__get_str(name), dentry->d_name.name, dentry->d_name.len);
++		__assign_str(name);
+ 	),
+ 	TP_printk("dev %d:%d flags 0x%x positive? %d parent_ino 0x%lx ino 0x%lx name '%.*s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -3275,13 +3275,14 @@ TRACE_EVENT(xrep_symlink_salvage_target,
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+ 		__field(unsigned int, targetlen)
++		__string_len(target, target, targetlen)
+ 		__dynamic_array(char, target, targetlen + 1)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = ip->i_mount->m_super->s_dev;
+ 		__entry->ino = ip->i_ino;
+ 		__entry->targetlen = targetlen;
+-		memcpy(__get_str(target), target, targetlen);
++		__assign_str(target);
+ 		__get_str(target)[targetlen] = 0;
+ 	),
+ 	TP_printk("dev %d:%d ip 0x%llx target '%.*s'",
