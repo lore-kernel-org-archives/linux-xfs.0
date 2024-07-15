@@ -1,37 +1,39 @@
 Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 946A7335C0;
-	Mon, 15 Jul 2024 09:45:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 513E0335C0;
+	Mon, 15 Jul 2024 09:45:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721036719; cv=none; b=NYIppNkBc3M319agk2/jxlwHwyiyNV1AMkVQBiSFIKlqnVJpgMPOMwkxVugpdJ6JP5FdmdUUl/qvqlz++HOu5z+wnGpSRtuWdVvAymZL0uT2a0brZa9jsGGMrvTiGpfNDqFDpJbS/5wNuxly4W8w706awjoYAfXfYVjstDZdyb0=
+	t=1721036734; cv=none; b=PcUOWrBJtcsnK5tQ54QkX+LCxKB6I/J3kekZPxTA1TSG1i8BpgywUVZJYQSvvvXcNxhkOlgM99y4vf8tGHPT6gINrRKWbkmN69BwP6orssADbjIGkY1ZZLFkr91TOzftA6PZFh+Mm/VWOiXItNM4l4HKkZ5tCp3eAhR0oaIuJd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721036719; c=relaxed/simple;
-	bh=aZjdIQKwdp5H79qgehJQbRr3CRk8J+dnXqZ9303YyRo=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=qKlTa4iXcpe3jhQZc/uH6EsuDILMsN0tda/+/BM2a6e1mqBcXh+baGifsmsoVJ7+rNEgmAhqIXNF5S2osBgF9PjWG8egjcoBt5T6LDFP93gMozEUGOrftVoKHu5DOnaVLog7pbf6vHfoyytDiaN0Ym3l9QQRp4b8mWXN0SHQYSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=dLRvtHhe; arc=none smtp.client-ip=80.241.56.152
+	s=arc-20240116; t=1721036734; c=relaxed/simple;
+	bh=5yAm8L3DqsYW5lZDyrhNuWRMlTEOcOvYEUCyU8BL5AM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sch7TiyRlO/Sh6vV06ddCfcFGhLWtLy6lk/KKmBX5IcAQujqX+QQO5JqDlQhjxN6bcOmdCXwoM4bzDlKpPypJDGZVO0T29wETPIzJzf07JZ8SO7unjDYHli0vlEwN3SNmuxDt8EFDbGWrpi/aZDSscVo1TZn5ZjOoLTTeZBAgZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=vKp4PhSQ; arc=none smtp.client-ip=80.241.56.152
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="dLRvtHhe"
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="vKp4PhSQ"
 Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4WMy3m2r4qz9sZh;
-	Mon, 15 Jul 2024 11:45:08 +0200 (CEST)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4WMy485Gpzz9sb6;
+	Mon, 15 Jul 2024 11:45:28 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1721036708;
+	s=MBO0001; t=1721036728;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=pnDOdJKQ2qCiJS1B5N8ch6auI8mL5/MTLJL29eG+61g=;
-	b=dLRvtHhePFRpWc7HgyCwU2mg39Q97xo2kIH6p36nZCuSFTKc7ere3aFnjxxddOHtgXUOm8
-	rD/UjzIT2KDk5lDaIqpdhuLkJshHpFWC3yXKsWE3L8Uq/ta0AnVNNCo3Srp2qCKGp7SaJR
-	35Uz/JDwE8fEeD2Bv+H+omttN3Hsz7vBsQSvtUOHtfCbXX2L0Kwq6SemZiVX5m122Rg3Mb
-	1sZWryKUj1GlLgeW6JL9YQbZ8f9uzSUNrw9SUPuXuwDNCkyD+6t9+Skp5gsgToUUnWH6u1
-	gTEluWFSBo6cP9pUm3e+/BfQPdfgcSl7t6CAHbhkIHqcTEr8+N2W/YhW/K7Jgw==
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+ToOeUI0Q85Jph7Cl2b3XbtSv31nGYoKCrXgwgV3xFo=;
+	b=vKp4PhSQp4EnJr4FcZto6if1untrb2j45gRqsxA9hWNGiIfP7AwjUhuThX9UCdDjpbCa+X
+	YuRDoyElJViodEfb747vf7vl4gSCyw+oqFYLTa34taXk5NzzdtWxjrPuqjtNjYhqPgAHAJ
+	0NsKjzQsCHSJGYnpSuYvC9PoTC8gAH+ljFUY2prftVzZaReBzJOMLl+5ptx0jhShQOrewb
+	kFuCI1kDo2rbOwY3msH/UTLJLdVFawAtJZ1hy7etNQj/Q+4iyr/Vwj5clkZBWldzdpbdfJ
+	4BanE2Jk7goXfqb6DYRsEJfUU2ZMUIh/jHb6Prv4jub7q79XsEgnlQiZ7oJ4rQ==
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: david@fromorbit.com,
 	willy@infradead.org,
@@ -54,10 +56,11 @@ Cc: linux-kernel@vger.kernel.org,
 	ryan.roberts@arm.com,
 	hch@lst.de,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH v10 00/10] enable bs > ps in XFS
-Date: Mon, 15 Jul 2024 11:44:47 +0200
-Message-ID: <20240715094457.452836-1-kernel@pankajraghav.com>
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH v10 04/10] mm: split a folio in minimum folio order chunks
+Date: Mon, 15 Jul 2024 11:44:51 +0200
+Message-ID: <20240715094457.452836-5-kernel@pankajraghav.com>
+In-Reply-To: <20240715094457.452836-1-kernel@pankajraghav.com>
+References: <20240715094457.452836-1-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -66,109 +69,223 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+From: Luis Chamberlain <mcgrof@kernel.org>
 
-This is the tenth version of the series that enables block size > page size
-(Large Block Size) in XFS.
-The context and motivation can be seen in cover letter of the RFC v1 [0].
-We also recorded a talk about this effort at LPC [1], if someone would
-like more context on this effort.
+split_folio() and split_folio_to_list() assume order 0, to support
+minorder for non-anonymous folios, we must expand these to check the
+folio mapping order and use that.
 
-A lot of emphasis has been put on testing using kdevops, starting with an XFS
-baseline [3]. The testing has been split into regression and progression.
+Set new_order to be at least minimum folio order if it is set in
+split_huge_page_to_list() so that we can maintain minimum folio order
+requirement in the page cache.
 
-Regression testing:
-In regression testing, we ran the whole test suite to check for regressions on
-existing profiles due to the page cache changes.
+Update the debugfs write files used for testing to ensure the order
+is respected as well. We simply enforce the min order when a file
+mapping is used.
 
-I also ran split_huge_page_test selftest on XFS filesystem to check for
-huge page splits in min order chunks is done correctly.
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Zi Yan <ziy@nvidia.com>
+---
+ include/linux/huge_mm.h | 14 +++++++---
+ mm/huge_memory.c        | 59 ++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 65 insertions(+), 8 deletions(-)
 
-No regressions were found with these patches added on top.
-
-Progression testing:
-For progression testing, we tested for 8k, 16k, 32k and 64k block sizes.  To
-compare it with existing support, an ARM VM with 64k base page system (without
-our patches) was used as a reference to check for actual failures due to LBS
-support in a 4k base page size system.
-
-There are some tests that assumes block size < page size that needs to be fixed.
-We have a tree with fixes for xfstests [4], most of the changes have been posted
-already, and only a few minor changes need to be posted. Already part of these
-changes has been upstreamed to fstests, and new tests have also been written and
-are out for review, namely for mmap zeroing-around corner cases, compaction
-and fsstress races on mm, and stress testing folio truncation on file mapped
-folios.
-
-No new failures were found with the LBS support.
-
-We've done some preliminary performance tests with fio on XFS on 4k block size
-against pmem and NVMe with buffered IO and Direct IO on vanilla Vs + these
-patches applied, and detected no regressions.
-
-We also wrote an eBPF tool called blkalgn [5] to see if IO sent to the device
-is aligned and at least filesystem block size in length.
-
-For those who want this in a git tree we have this up on a kdevops
-large-block-minorder-for-next-v10 tag [6].
-
-[0] https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
-[1] https://www.youtube.com/watch?v=ar72r5Xf7x4
-[2] https://lkml.kernel.org/r/20240501153120.4094530-1-willy@infradead.org
-[3] https://github.com/linux-kdevops/kdevops/blob/master/docs/xfs-bugs.md
-489 non-critical issues and 55 critical issues. We've determined and reported
-that the 55 critical issues have all fall into 5 common  XFS asserts or hung
-tasks  and 2 memory management asserts.
-[4] https://github.com/linux-kdevops/fstests/tree/lbs-fixes
-[5] https://github.com/iovisor/bcc/pull/4813
-[6] https://github.com/linux-kdevops/linux/
-[7] https://lore.kernel.org/linux-kernel/Zl20pc-YlIWCSy6Z@casper.infradead.org/#t
-
-Changes since v9:
-- Added a mapping_max_folio_size_supported() that filesystems can call
-  at mount time to check for mapping folio requirement.
-- Changed split_folio_to_list() to call THP_SPLIT_PAGE_FAILED for
-  pmd folios.
-- Formatting changes in the first patch
-- Collected RVB from Hannes, Zi yan, Darrick and Dave.
-
-Dave Chinner (1):
-  xfs: use kvmalloc for xattr buffers
-
-Luis Chamberlain (1):
-  mm: split a folio in minimum folio order chunks
-
-Matthew Wilcox (Oracle) (1):
-  fs: Allow fine-grained control of folio sizes
-
-Pankaj Raghav (7):
-  filemap: allocate mapping_min_order folios in the page cache
-  readahead: allocate folios with mapping_min_order in readahead
-  filemap: cap PTE range to be created to allowed zero fill in
-    folio_map_range()
-  iomap: fix iomap_dio_zero() for fs bs > system page size
-  xfs: expose block size in stat
-  xfs: make the calculation generic in xfs_sb_validate_fsb_count()
-  xfs: enable block size larger than page size support
-
- fs/iomap/buffered-io.c        |   4 +-
- fs/iomap/direct-io.c          |  45 ++++++++++--
- fs/xfs/libxfs/xfs_attr_leaf.c |  15 ++--
- fs/xfs/libxfs/xfs_ialloc.c    |   5 ++
- fs/xfs/libxfs/xfs_shared.h    |   3 +
- fs/xfs/xfs_icache.c           |   6 +-
- fs/xfs/xfs_iops.c             |   2 +-
- fs/xfs/xfs_mount.c            |   8 ++-
- fs/xfs/xfs_super.c            |  30 +++++---
- include/linux/huge_mm.h       |  14 ++--
- include/linux/pagemap.h       | 127 ++++++++++++++++++++++++++++++----
- mm/filemap.c                  |  36 ++++++----
- mm/huge_memory.c              |  59 ++++++++++++++--
- mm/readahead.c                |  83 ++++++++++++++++------
- 14 files changed, 353 insertions(+), 84 deletions(-)
-
-
-base-commit: 0b58e108042b0ed28a71cd7edf5175999955b233
+diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
+index cee3c5da8f0ed..b6024bf39a9fe 100644
+--- a/include/linux/huge_mm.h
++++ b/include/linux/huge_mm.h
+@@ -90,6 +90,8 @@ extern struct kobj_attribute thpsize_shmem_enabled_attr;
+ #define thp_vma_allowable_order(vma, vm_flags, tva_flags, order) \
+ 	(!!thp_vma_allowable_orders(vma, vm_flags, tva_flags, BIT(order)))
+ 
++#define split_folio(f) split_folio_to_list(f, NULL)
++
+ #ifdef CONFIG_PGTABLE_HAS_HUGE_LEAVES
+ #define HPAGE_PMD_SHIFT PMD_SHIFT
+ #define HPAGE_PUD_SHIFT PUD_SHIFT
+@@ -323,9 +325,10 @@ unsigned long thp_get_unmapped_area_vmflags(struct file *filp, unsigned long add
+ bool can_split_folio(struct folio *folio, int *pextra_pins);
+ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+ 		unsigned int new_order);
++int split_folio_to_list(struct folio *folio, struct list_head *list);
+ static inline int split_huge_page(struct page *page)
+ {
+-	return split_huge_page_to_list_to_order(page, NULL, 0);
++	return split_folio(page_folio(page));
+ }
+ void deferred_split_folio(struct folio *folio);
+ 
+@@ -490,6 +493,12 @@ static inline int split_huge_page(struct page *page)
+ {
+ 	return 0;
+ }
++
++static inline int split_folio_to_list(struct folio *folio, struct list_head *list)
++{
++	return 0;
++}
++
+ static inline void deferred_split_folio(struct folio *folio) {}
+ #define split_huge_pmd(__vma, __pmd, __address)	\
+ 	do { } while (0)
+@@ -604,7 +613,4 @@ static inline int split_folio_to_order(struct folio *folio, int new_order)
+ 	return split_folio_to_list_to_order(folio, NULL, new_order);
+ }
+ 
+-#define split_folio_to_list(f, l) split_folio_to_list_to_order(f, l, 0)
+-#define split_folio(f) split_folio_to_order(f, 0)
+-
+ #endif /* _LINUX_HUGE_MM_H */
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 251d6932130fa..af080296e11b3 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3062,6 +3062,9 @@ bool can_split_folio(struct folio *folio, int *pextra_pins)
+  * released, or if some unexpected race happened (e.g., anon VMA disappeared,
+  * truncation).
+  *
++ * Callers should ensure that the order respects the address space mapping
++ * min-order if one is set for non-anonymous folios.
++ *
+  * Returns -EINVAL when trying to split to an order that is incompatible
+  * with the folio. Splitting to order 0 is compatible with all folios.
+  */
+@@ -3143,6 +3146,7 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+ 		mapping = NULL;
+ 		anon_vma_lock_write(anon_vma);
+ 	} else {
++		unsigned int min_order;
+ 		gfp_t gfp;
+ 
+ 		mapping = folio->mapping;
+@@ -3153,6 +3157,14 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+ 			goto out;
+ 		}
+ 
++		min_order = mapping_min_folio_order(folio->mapping);
++		if (new_order < min_order) {
++			VM_WARN_ONCE(1, "Cannot split mapped folio below min-order: %u",
++				     min_order);
++			ret = -EINVAL;
++			goto out;
++		}
++
+ 		gfp = current_gfp_context(mapping_gfp_mask(mapping) &
+ 							GFP_RECLAIM_MASK);
+ 
+@@ -3265,6 +3277,25 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+ 	return ret;
+ }
+ 
++int split_folio_to_list(struct folio *folio, struct list_head *list)
++{
++	unsigned int min_order = 0;
++
++	if (folio_test_anon(folio))
++		goto out;
++
++	if (!folio->mapping) {
++		if (folio_test_pmd_mappable(folio))
++			count_vm_event(THP_SPLIT_PAGE_FAILED);
++		return -EBUSY;
++	}
++
++	min_order = mapping_min_folio_order(folio->mapping);
++out:
++	return split_huge_page_to_list_to_order(&folio->page, list,
++							min_order);
++}
++
+ void __folio_undo_large_rmappable(struct folio *folio)
+ {
+ 	struct deferred_split *ds_queue;
+@@ -3496,6 +3527,8 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+ 		struct vm_area_struct *vma = vma_lookup(mm, addr);
+ 		struct page *page;
+ 		struct folio *folio;
++		struct address_space *mapping;
++		unsigned int target_order = new_order;
+ 
+ 		if (!vma)
+ 			break;
+@@ -3516,7 +3549,13 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+ 		if (!is_transparent_hugepage(folio))
+ 			goto next;
+ 
+-		if (new_order >= folio_order(folio))
++		if (!folio_test_anon(folio)) {
++			mapping = folio->mapping;
++			target_order = max(new_order,
++					   mapping_min_folio_order(mapping));
++		}
++
++		if (target_order >= folio_order(folio))
+ 			goto next;
+ 
+ 		total++;
+@@ -3532,9 +3571,13 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+ 		if (!folio_trylock(folio))
+ 			goto next;
+ 
+-		if (!split_folio_to_order(folio, new_order))
++		if (!folio_test_anon(folio) && folio->mapping != mapping)
++			goto unlock;
++
++		if (!split_folio_to_order(folio, target_order))
+ 			split++;
+ 
++unlock:
+ 		folio_unlock(folio);
+ next:
+ 		folio_put(folio);
+@@ -3559,6 +3602,7 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+ 	pgoff_t index;
+ 	int nr_pages = 1;
+ 	unsigned long total = 0, split = 0;
++	unsigned int min_order;
+ 
+ 	file = getname_kernel(file_path);
+ 	if (IS_ERR(file))
+@@ -3572,9 +3616,11 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+ 		 file_path, off_start, off_end);
+ 
+ 	mapping = candidate->f_mapping;
++	min_order = mapping_min_folio_order(mapping);
+ 
+ 	for (index = off_start; index < off_end; index += nr_pages) {
+ 		struct folio *folio = filemap_get_folio(mapping, index);
++		unsigned int target_order = new_order;
+ 
+ 		nr_pages = 1;
+ 		if (IS_ERR(folio))
+@@ -3583,18 +3629,23 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+ 		if (!folio_test_large(folio))
+ 			goto next;
+ 
++		target_order = max(new_order, min_order);
+ 		total++;
+ 		nr_pages = folio_nr_pages(folio);
+ 
+-		if (new_order >= folio_order(folio))
++		if (target_order >= folio_order(folio))
+ 			goto next;
+ 
+ 		if (!folio_trylock(folio))
+ 			goto next;
+ 
+-		if (!split_folio_to_order(folio, new_order))
++		if (folio->mapping != mapping)
++			goto unlock;
++
++		if (!split_folio_to_order(folio, target_order))
+ 			split++;
+ 
++unlock:
+ 		folio_unlock(folio);
+ next:
+ 		folio_put(folio);
 -- 
 2.44.1
 
