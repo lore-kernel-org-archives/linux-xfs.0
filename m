@@ -1,67 +1,68 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+Received: from mail-ot1-f52.google.com (mail-ot1-f52.google.com [209.85.210.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66564140E3C
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Jul 2024 23:03:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5D6B13D502
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Jul 2024 23:40:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721084628; cv=none; b=mCznhKRJChJnoSxb4EdjRDlehs40YJvfAW8J4fjy3xA7ZFEBksA2VhSrE+Rl7IGSDk+2DY0P69dcABkOHdFv5QV7+GKCQjKJTMHSpw5ojCIxa70N3I+e5xEpvIeGIxtiVamj2GwYtlhbPI2jcwJbk+r2LIBeWAlPZl09ws3CGns=
+	t=1721086857; cv=none; b=HmpXRCRoHEOl7J/BxpN543AM7rYPv2XXP+emZ6Yq929oKm6UQRz8hyGQJvSxffrrA21+acllGJd5hQqkbM0F3uTHLqGX1Eif9xxHfC6jm046ZcItz/tW1cVWftKs/WB+sJj+1sgkxgLyXC00bI1+08ZNumSwObESklbe5MeFwag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721084628; c=relaxed/simple;
-	bh=uQUzVama8nZoHgZeOzpE7baJSxzpE2fDQ70BPJkhV/Q=;
+	s=arc-20240116; t=1721086857; c=relaxed/simple;
+	bh=3XL3Is1VILEsFVJQ9u8vhFwmWmReMeG1CX2zyH2LcQw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GAayRhvO44xIQT3XQBjnTO3/OpkWzN978cz3Wax2gKAsFhDOwMMpjmvktKT3LitW7n187sFCu3Wt9MFdPeb5HwXV+UDdwQwP2P1229UhXxFBl0Bv6GFJQIxaDgbkPVNWL40/xIEXPjd92gnGCpHy+Q4FGjPV+c5QA7hFpClmqJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=EklNDPLC; arc=none smtp.client-ip=209.85.210.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=jYK6UnA+7IzYQ9pPWKRyf9zK02PLvUX1Bl0llxEtcOKJ5Tip1P5WmQWySt9O5jRMI048ljfDYLkvq/1TeMUaX1NmVathvTUIzYo7TF3e5rfuaBooAOhfxD3OmGpt5fbw/MJnQokF1FVOQdgP9Go3fMJvtaI1Ww05STJscJwRAak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wNQKpmKx; arc=none smtp.client-ip=209.85.210.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="EklNDPLC"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-70b4267ccfcso3622209b3a.3
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Jul 2024 16:03:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wNQKpmKx"
+Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-704156d0e0dso2603879a34.1
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Jul 2024 16:40:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721084626; x=1721689426; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721086855; x=1721691655; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=sWqF3SKJO8sKFI31j17Cd7mFz7KOpaObqvnESaoqaaY=;
-        b=EklNDPLCoecK0TcePO0kHqvrioxAbOEWfhRNEnNjP1WyOc+pRG++1LR3LavkTEwyZf
-         v7Yqg00mK1E8phcIgGI2NFOsfMZhOu3w5HnP/ih0HHELYpcgWhdxFl/7eaXXwL9Nc0T5
-         gVQmxzNocwS3iwawloDXji2mGF5CGp5rgLDgzjqWjhFfnwAAt+87zYkpSYKKPBWN++lr
-         t2z7W1V9a3BqStDQ1mcV9Nj/O9+bxXGe16EbuAptzCYzu1CBsI0IURvF5WXvU7QyAb+C
-         sKoq1XM6MqDvqZt3kVChnil8Odo/efqIPKVoZUVCUdtNYlqZei524htZ29tRvg72EAAY
-         CfkQ==
+        bh=UgePRVRV5ECyu5VSKXfaN1qQQoXx4RnG5pUoy5l8eq4=;
+        b=wNQKpmKx81sk19DvE54uS8hvMnD1Cq2aIXlUt6aANEdAaJWlcm58KOeOdtczKY5//C
+         oInOfYhajBNNyyPoWXEOHDiHPlZeBn/1FHayeWURdw+GM/2SRR2h3494NyLY4hkC2ZkO
+         8fnDU3Awr/mo4BgSDBkdQgOnlhAkETd5oRC0ICE2gasOE9t2yrPkhds08Eh3KXCIpbCA
+         c4IxYJ3BedKwhxMp1QaQM52bZPWgkqTbhbs4CGO/jIgGgEWEOrrlSRE4Uzn5H8+lP1aG
+         As8r+df/kKjn5Qd6evx+biIlIn+jKiGu4T0GG/uZ/TaZv6popFBrjeehk2ZiK4LiEuVt
+         NkUw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721084626; x=1721689426;
+        d=1e100.net; s=20230601; t=1721086855; x=1721691655;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=sWqF3SKJO8sKFI31j17Cd7mFz7KOpaObqvnESaoqaaY=;
-        b=NpR4d/uL8hL/BUiy+ECyy8e2b6umMWt/RDzOfcHWartlgYqYU9WMU/78HKQ9X4Z55F
-         EnDZDgR6T1ph5Vp/y9PK7GhLLnJxXXkBv1j9KVoBhaMdHmkWwbl2aoiSphUdAG9SzxOO
-         iSKRaqGOI7KWa5RIc8K9Ar67UuY5ABqHfem5JX9issJg7Xevo+EqUJ4la5Q6vGOvaEQW
-         /NmKZyitNrHD5YkHnMwhNmTYVsRLrEWkZjcuhTQWsEXn4oLC0IEIASvcP53ehnGx9tmi
-         wMULLe+AH8Qo3TuC+nOXId1TULWyEafbDxO89OywoMU3ukJsGDlOhwoysYTbIm06HVvn
-         00PA==
-X-Gm-Message-State: AOJu0YwVDCVvE8WRKz5TwZOL8bKUTvdF0r3uQpxsCJukiUwybnrqgOfF
-	SAeUWF37ujy8jtkR2h/MtRUMt6eppAGWSYETwSOVierkmr0S4e0Ekx9QKo4cDGdVcorYP3BJyeM
-	O
-X-Google-Smtp-Source: AGHT+IHpy90QA2YeEPWHlyRSpVfZ6zI2y6tjVyYP5IA75EaQ/IKIAKOrZLmLu5r58L7lIwpzgo4FRg==
-X-Received: by 2002:a05:6a00:2443:b0:70b:30ce:dfdb with SMTP id d2e1a72fcca58-70c2e988180mr656794b3a.24.1721084625124;
-        Mon, 15 Jul 2024 16:03:45 -0700 (PDT)
+        bh=UgePRVRV5ECyu5VSKXfaN1qQQoXx4RnG5pUoy5l8eq4=;
+        b=XWvxELuS3Qe/PYoAdTAirVcsi692v6ZHQ1WvR2Ti4O1f23dwe5dE1l60Wcj8QHDL2G
+         CzM22x+0KBuRPfay7qAtzW74ekEQHI3M+dgVCRsKX8Ea8G0wvNhXP5hjn9SHst/kqHlg
+         AE/yADCy03hNi8idpy7jr1OPE0ZDl7i3UWzccfoT/Oe0gkD5GSO5Ko0E3A32QY2eZiQF
+         XwaEgfrNXsfFyE/tzWYx2arx+okWYCL1iAhphfIlU75q9+7D+MRRYNmt1DxAg94wp8oj
+         761XgQ5x/zLyDyt3eILP1UDCmiBBb07f8gqfFYukpNhAnujPx00t2wLdzlMTHeo2GCAy
+         8O5w==
+X-Gm-Message-State: AOJu0YwojHG/RYFKpXSp93PERZEbEzakYGQOFviFrF2ZPoEOHzMROpB8
+	IO05Qu3NqttDQfTfbffareFf0yrxhhQM5p/28Cu8bhllVQsohoAsL50BKYqLDUHfafy2ecdxXoL
+	D
+X-Google-Smtp-Source: AGHT+IGiJJGH+2F8jF4oMgEUcIdsRf2o86B90unQst73ONUwUGUxvxOIzSZXiAvNKRkUdOIjNjX/1Q==
+X-Received: by 2002:a05:6830:3704:b0:702:2550:4e31 with SMTP id 46e09a7af769-708d9be783amr651733a34.29.1721086854647;
+        Mon, 15 Jul 2024 16:40:54 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b7ebd0e9asm4965440b3a.89.2024.07.15.16.03.44
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b7eb9c969sm4956430b3a.35.2024.07.15.16.40.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jul 2024 16:03:44 -0700 (PDT)
+        Mon, 15 Jul 2024 16:40:53 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sTUjO-00HEak-0G;
-	Tue, 16 Jul 2024 09:03:42 +1000
-Date: Tue, 16 Jul 2024 09:03:42 +1000
+	id 1sTVJL-00HGOr-0h;
+	Tue, 16 Jul 2024 09:40:51 +1000
+Date: Tue, 16 Jul 2024 09:40:51 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: Wengang Wang <wen.gang.wang@oracle.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/9] introduce defrag to xfs_spaceman
-Message-ID: <ZpWqzsiU01mNKHC9@dread.disaster.area>
+Subject: Re: [PATCH 2/9] spaceman/defrag: pick up segments from target file
+Message-ID: <ZpWzg9Jnko76tAx5@dread.disaster.area>
 References: <20240709191028.2329-1-wen.gang.wang@oracle.com>
+ <20240709191028.2329-3-wen.gang.wang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,251 +71,344 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240709191028.2329-1-wen.gang.wang@oracle.com>
+In-Reply-To: <20240709191028.2329-3-wen.gang.wang@oracle.com>
 
-[ Please keep documentation text to 80 columns. ] 
-
-[ Please run documentation through a spell checker - there are too
-many typos in this document to point them all out... ]
-
-On Tue, Jul 09, 2024 at 12:10:19PM -0700, Wengang Wang wrote:
-> This patch set introduces defrag to xfs_spaceman command. It has the functionality and
-> features below (also subject to be added to man page, so please review):
-
-What's the use case for this?
-
->        defrag [-f free_space] [-i idle_time] [-s segment_size] [-n] [-a]
->               defrag defragments the specified XFS file online non-exclusively. The target XFS
-
-What's "non-exclusively" mean? How is this different to what xfs_fsr
-does?
-
->               doesn't have to (and must not) be unmunted.  When defragmentation is in progress, file
->               IOs are served 'in parallel'.  reflink feature must be enabled in the XFS.
-
-xfs_fsr allows IO to occur in parallel to defrag.
-
->               Defragmentation and file IOs
+On Tue, Jul 09, 2024 at 12:10:21PM -0700, Wengang Wang wrote:
+> segments are the smallest unit to defragment.
 > 
->               The target file is virtually devided into many small segments. Segments are the
->               smallest units for defragmentation. Each segment is defragmented one by one in a
->               lock->defragment->unlock->idle manner.
-
-Userspace can't easily lock the file to prevent concurrent access.
-So I'mnot sure what you are refering to here.
-
->               File IOs are blocked when the target file is locked and are served during the
->               defragmentation idle time (file is unlocked).
-
-What file IOs are being served in parallel? The defragmentation IO?
-something else?
-
->               Though
->               the file IOs can't really go in parallel, they are not blocked long. The locking time
->               basically depends on the segment size. Smaller segments usually take less locking time
->               and thus IOs are blocked shorterly, bigger segments usually need more locking time and
->               IOs are blocked longer. Check -s and -i options to balance the defragmentation and IO
->               service.
-
-How is a user supposed to know what the correct values are for their
-storage, files, and workload? Algorithms should auto tune, not
-require users and administrators to use trial and error to find the
-best numbers to feed a given operation.
-
->               Temporary file
+> A segment
+> 1. Can't exceed size limit
+> 2. contains some extents
+> 3. the contained extents can't be "unwritten"
+> 4. the contained extents must be contigous in file blocks
 > 
->               A temporary file is used for the defragmentation. The temporary file is created in the
->               same directory as the target file is and is named ".xfsdefrag_<pid>". It is a sparse
->               file and contains a defragmentation segment at a time. The temporary file is removed
->               automatically when defragmentation is done or is cancelled by ctrl-c. It remains in
->               case kernel crashes when defragmentation is going on. In that case, the temporary file
->               has to be removed manaully.
-
-O_TMPFILE, as Darrick has already requested.
-
+> Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+> ---
+>  spaceman/defrag.c | 204 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 204 insertions(+)
 > 
->               Free blocks consumption
-> 
->               Defragmenation works by (trying) allocating new (contiguous) blocks, copying data and
->               then freeing old (non-contig) blocks. Usually the number of old blocks to free equals
->               to the number the newly allocated blocks. As a finally result, defragmentation doesn't
->               consume free blocks.  Well, that is true if the target file is not sharing blocks with
->               other files.
+> diff --git a/spaceman/defrag.c b/spaceman/defrag.c
+> index c9732984..175cf461 100644
+> --- a/spaceman/defrag.c
+> +++ b/spaceman/defrag.c
+> @@ -14,6 +14,32 @@
+>  #include "space.h"
+>  #include "input.h"
+>  
+> +#define MAPSIZE 512
+> +/* used to fetch bmap */
+> +struct getbmapx	g_mapx[MAPSIZE];
+> +/* current offset of the file in units of 512 bytes, used to fetch bmap */
+> +static long long 	g_offset = 0;
+> +/* index to indentify next extent, used to get next extent */
+> +static int		g_ext_next_idx = -1;
 
-This is really hard to read. Defragmentation will -always- consume
-free space while it is progress. It will always release the
-temporary space it consumes when it completes.
+Please do not prefix global variables with "g_". This is not
+useful, and simply makes the code hard to read.
 
->               In case the target file contains shared blocks, those shared blocks won't
->               be freed back to filesystem as they are still owned by other files. So defragmenation
->               allocates more blocks than it frees.
+That said, it is much better to pass these as function parameters so
+they are specific to the mapping context and so are inherently
+thread safe.
 
-So this is doing an unshare operation as well as defrag? That seems
-... suboptimal. The whole point of sharing blocks is to minimise
-disk usage for duplicated data.
+> +/*
+> + * segment, the smallest unit to defrag
+> + * it includes some contiguous extents.
+> + * no holes included,
+> + * no unwritten extents included
+> + * the size is limited by g_segment_size_lmt
+> + */
 
->               For existing XFS, free blocks might be over-
->               committed when reflink snapshots were created. To avoid causing the XFS running into
->               low free blocks state, this defragmentation excludes (partially) shared segments when
->               the file system free blocks reaches a shreshold. Check the -f option.
+I have no idea what this comment is trying to tell me.
 
-Again, how is the user supposed to know when they need to do this?
-If the answer is "they should always avoid defrag on low free
-space", then why is this an option?
+> +struct defrag_segment {
+> +	/* segment offset in units of 512 bytes */
+> +	long long	ds_offset;
+> +	/* length of segment in units of 512 bytes */
+> +	long long	ds_length;
+> +	/* number of extents in this segment */
+> +	int		ds_nr;
+> +	/* flag indicating if segment contains shared blocks */
+> +	bool		ds_shared;
+> +};
+> +
+>  /* defrag segment size limit in units of 512 bytes */
+>  #define MIN_SEGMENT_SIZE_LIMIT 8192 /* 4MiB */
+>  #define DEFAULT_SEGMENT_SIZE_LIMIT 32768 /* 16MiB */
+> @@ -78,6 +104,165 @@ defrag_check_file(char *path)
+>  	return true;
+>  }
+>  
+> +/*
+> + * get next extent in the file.
+> + * Note: next call will get the same extent unless move_next_extent() is called.
+> + * returns:
+> + * -1:	error happened.
+> + * 0:	extent returned
+> + * 1:	no more extent left
+> + */
+> +static int
+> +defrag_get_next_extent(int fd, struct getbmapx *map_out)
+> +{
+> +	int err = 0, i;
+> +
+> +	/* when no extents are cached in g_mapx, fetch from kernel */
+> +	if (g_ext_next_idx == -1) {
+> +		g_mapx[0].bmv_offset = g_offset;
+> +		g_mapx[0].bmv_length = -1LL;
+> +		g_mapx[0].bmv_count = MAPSIZE;
+> +		g_mapx[0].bmv_iflags = BMV_IF_NO_HOLES | BMV_IF_PREALLOC;
+> +		err = ioctl(fd, XFS_IOC_GETBMAPX, g_mapx);
+> +		if (err == -1) {
+> +			perror("XFS_IOC_GETBMAPX failed");
+> +			goto out;
+> +		}
+> +		/* for stats */
+> +		g_ext_stats.nr_ext_total += g_mapx[0].bmv_entries;
+> +
+> +		/* no more extents */
+> +		if (g_mapx[0].bmv_entries == 0) {
+> +			err = 1;
+> +			goto out;
+> +		}
+> +
+> +		/* for stats */
+> +		for (i = 1; i <= g_mapx[0].bmv_entries; i++) {
+> +			if (g_mapx[i].bmv_oflags & BMV_OF_PREALLOC)
+> +				g_ext_stats.nr_ext_unwritten++;
+> +			if (g_mapx[i].bmv_oflags & BMV_OF_SHARED)
+> +				g_ext_stats.nr_ext_shared++;
+> +		}
+> +
+> +		g_ext_next_idx = 1;
+> +		g_offset = g_mapx[g_mapx[0].bmv_entries].bmv_offset +
+> +				g_mapx[g_mapx[0].bmv_entries].bmv_length;
+> +	}
+> +
+> +	map_out->bmv_offset = g_mapx[g_ext_next_idx].bmv_offset;
+> +	map_out->bmv_length = g_mapx[g_ext_next_idx].bmv_length;
+> +	map_out->bmv_oflags = g_mapx[g_ext_next_idx].bmv_oflags;
+> +out:
+> +	return err;
+> +}
 
->               Safty and consistency
-> 
->               The defragmentation file is guanrantted safe and data consistent for ctrl-c and kernel
->               crash.
+Ok, so the global variables are just a bmap cache. That's a problem,
+because this cache is stale the moment XFS_IOC_GETBMAPX returns to
+userspace. Iterating it to decide exactly waht to do next will
+race with ongoing file modifications and so it's not going to be
+accurate....
 
-Which file is the "defragmentation file"? The source or the temp
-file?
+> +
+> +/*
+> + * move to next extent
+> + */
+> +static void
+> +defrag_move_next_extent()
+> +{
+> +	if (g_ext_next_idx == g_mapx[0].bmv_entries)
+> +		g_ext_next_idx = -1;
+> +	else
+> +		g_ext_next_idx += 1;
+> +}
+> +
+> +/*
+> + * check if the given extent is a defrag target.
+> + * no need to check for holes as we are using BMV_IF_NO_HOLES
+> + */
+> +static bool
+> +defrag_is_target(struct getbmapx *mapx)
+> +{
+> +	/* unwritten */
+> +	if (mapx->bmv_oflags & BMV_OF_PREALLOC)
+> +		return false;
+> +	return mapx->bmv_length < g_segment_size_lmt;
+> +}
+> +
+> +static bool
+> +defrag_is_extent_shared(struct getbmapx *mapx)
+> +{
+> +	return !!(mapx->bmv_oflags & BMV_OF_SHARED);
+> +}
+> +
+> +/*
+> + * get next segment to defragment.
+> + * returns:
+> + * -1	error happened.
+> + * 0	segment returned.
+> + * 1	no more segments to return
+> + */
+> +static int
+> +defrag_get_next_segment(int fd, struct defrag_segment *out)
+> +{
+> +	struct getbmapx mapx;
+> +	int	ret;
+> +
+> +	out->ds_offset = 0;
+> +	out->ds_length = 0;
+> +	out->ds_nr = 0;
+> +	out->ds_shared = false;
 
->               First extent share
-> 
->               Current kernel has routine for each segment defragmentation detecting if the file is
->               sharing blocks.
+out->ds_nr is never set to anything but zero in this patch.
 
-I have no idea what this means, or what interface this refers to.
+> +
+> +	do {
+> +		ret = defrag_get_next_extent(fd, &mapx);
+> +		if (ret != 0) {
+> +			/*
+> +			 * no more extetns, return current segment if its not
 
->               It takes long in case the target file contains huge number of extents
->               and the shared ones, if there is, are at the end. The First extent share feature works
->               around above issue by making the first serveral blocks shared. Seeing the first blocks
->               are shared, the kernel routine ends quickly. The side effect is that the "share" flag
->               would remain traget file. This feature is enabled by default and can be disabled by -n
->               option.
+Typos everywhere.
 
-And from this description, I have no idea what this is doing, what
-problem it is trying to work around, or why we'd want to share
-blocks out of a file to speed up detection of whether there are
-shared blocks in the file. This description doesn't make any sense
-to me because I don't know what interface you are actually having
-performance issues with. Please reference the kernel code that is
-problematic, and explain why the existing kernel code is problematic
-and cannot be fixed.
+> +			 * empty
+> +			*/
+> +			if (ret == 1 && out->ds_nr > 0)
+> +				ret = 0;
+> +			/* otherwise, error heppened, stop */
+> +			break;
+> +		}
 
->               extsize and cowextsize
-> 
->               According to kernel implementation, extsize and cowextsize could have following impacts
->               to defragmentation: 1) non-zero extsize causes separated block allocations for each
->               extent in the segment and those blocks are not contiguous.
+> +
+> +		/*
+> +		 * If the extent is not a defrag target, skip it.
+> +		 * go to next extent if the segment is empty;
+> +		 * otherwise return the segment.
+> +		 */
+> +		if (!defrag_is_target(&mapx)) {
+> +			defrag_move_next_extent();
+> +			if (out->ds_nr == 0)
+> +				continue;
+> +			else
+> +				break;
+> +		}
+> +
+> +		/* check for segment size limitation */
+> +		if (out->ds_length + mapx.bmv_length > g_segment_size_lmt)
+> +			break;
+> +
+> +		/* the segment is empty now, add this extent to it for sure */
+> +		if (out->ds_nr == 0) {
+> +			out->ds_offset = mapx.bmv_offset;
+> +			goto add_ext;
+> +		}
 
-Extent size hints do no such thing. The simply provide extent
-alignment guidelines and do not affect things like contiguous or
-multi-block allocation lengths.
+So this is essentially a filter for the getbmapx output that strips
+away unwritten extents and anything outside/larger than the target
+range.
 
->               The segment remains same
->               number of extents after defragmention (no effect).  2) When extsize and/or cowextsize
->               are too big, a lot of pre-allocated blocks remain in memory for a while. When new IO
->               comes to whose pre-allocated blocks  Copy on Write happens and causes the file
->               fragmented.
+> +
+> +		/*
+> +		 * the segment is not empty, check for hole since the last exent
+> +		 * if a hole exist before this extent, this extent can't be
+> +		 * added to the segment. return the segment
+> +		 */
+> +		if (out->ds_offset + out->ds_length != mapx.bmv_offset)
+> +			break;
+> +
+> +add_ext:
 
-extsize based unwritten extents won't cause COW or cause
-fragmentation because they aren't shared and they are contiguous.
-I suspect that your definition of "fragmented" isn't taking into
-account that unwritten-written-unwritten over a contiguous range
-is *not* fragmentation. It's just a contiguous extent in different
-states, and this should really not be touched/changed by
-defragmentation.
+Why do you need a goto for this logic?
 
-check out xfs_fsr: it ensures that the pattern of unwritten/written
-blocks in the defragmented file is identical to the source. i.e. it
-preserves preallocation because the application/fs config wants it
-to be there....
+		/*
+		 * the segment is not empty, check for hole since the last exent
+		 * if a hole exist before this extent, this extent can't be
+		 * added to the segment. return the segment
+		 */
+		if (out->ds_nr) {
+			if (out->ds_offset + out->ds_length != mapx.bmv_offset)
+				break;
+		} else {
+			out->ds_offset = mapx.bmv_offset;
+		}
 
->               Readahead
-> 
->               Readahead tries to fetch the data blocks for next segment with less locking in
->               backgroud during idle time. This feature is disabled by default, use -a to enable it.
+> +		if (defrag_is_extent_shared(&mapx))
+> +			out->ds_shared = true;
+> +
+> +		out->ds_length += mapx.bmv_length;
+> +		out->ds_nr += 1;
+> +		defrag_move_next_extent();
+> +
+> +	} while (true);
 
-What are you reading ahead into? Kernel page cache or user buffers?
-Either way, it's hardly what I'd call "idle time" if the defrag
-process is using it to issue lots of read IO...
+> +
+> +	return ret;
+> +}
+> +
+>  /*
+>   * defragment a file
+>   * return 0 if successfully done, 1 otherwise
+> @@ -92,6 +277,9 @@ defrag_xfs_defrag(char *file_path) {
+>  	struct fsxattr	fsx;
+>  	int	ret = 0;
+>  
+> +	g_offset = 0;
+> +	g_ext_next_idx = -1;
+> +
+>  	fsx.fsx_nextents = 0;
+>  	memset(&g_ext_stats, 0, sizeof(g_ext_stats));
+>  
+> @@ -119,6 +307,22 @@ defrag_xfs_defrag(char *file_path) {
+>  		ret = 1;
+>  		goto out;
+>  	}
+> +
+> +	do {
+> +		struct defrag_segment segment;
+> +
+> +		ret = defrag_get_next_segment(defrag_fd, &segment);
+> +		/* no more segments, we are done */
+> +		if (ret == 1) {
+> +			ret = 0;
+> +			break;
+> +		}
+> +		/* error happened when reading bmap, stop here */
+> +		if (ret == -1) {
+> +			ret = 1;
+> +			break;
+> +		}
+
+ternary return values are nasty. Return a negative errno when a
+an error occurs, and -ENODATA when there are no more segments.
+Then you have
+
+		if (ret < 0) {
+			if (ret == -ENODATA)
+				exit_value = 0;
+			else
+				exit_value = 1;
+			break;
+		}
+
+> +	} while (true);
+
+Not a fan of do {} while(true) loops.
+
+WIth the above error handling changes, this becomes:
+
+	do {
+		struct defrag_segment segment;
+
+		ret = defrag_get_next_segment(defrag_fd, &segment);
+	} while (ret == 0);
+
+	if (ret == 0 || ret == -ENODATA)
+		exit_value = 0;
+	else
+		exit_value = 1;
 
 
->               The command takes the following options:
->                  -f free_space
->                      The shreshold of XFS free blocks in MiB. When free blocks are less than this
->                      number, (partially) shared segments are excluded from defragmentation. Default
->                      number is 1024
+Ok, so this is a linear iteration of all extents in the file that
+filters extents for the specific "segment" that is going to be
+processed. I still have no idea why fixed length segments are
+important, but "linear extent scan for filtering" seems somewhat
+expensive.
 
-When you are down to 4MB of free space in the filesystem, you
-shouldn't even be trying to run defrag because all the free space
-that will be left in the filesystem is single blocks. I would have
-expected this sort of number to be in a percentage of capacity,
-defaulting to something like 5% (which is where we start running low
-space algorithms in the kernel).
-
->                  -i idle_time
->                      The time in milliseconds, defragmentation enters idle state for this long after
->                      defragmenting a segment and before handing the next. Default number is TOBEDONE.
-
-Yeah, I don't think this is something anyonce whould be expected to
-use or tune. If an idle time is needed, the defrag application
-should be selecting this itself.
-> 
->                  -s segment_size
->                      The size limitation in bytes of segments. Minimium number is 4MiB, default
->                      number is 16MiB.
-
-Why were these numbers chosen? What happens if the file has ~32MB
-sized extents and the user wants the file to be returned to a single
-large contiguous extent it possible? i.e. how is the user supposed
-to know how to set this for any given file without first having
-examined the exact pattern of fragmentations in the file?
-
->                  -n  Disable the First extent share feature. Enabled by default.
-
-So confusing.  Is the "feature disable flag" enabled by default, or
-is the feature enabled by default?
-
->                  -a  Enable readahead feature, disabled by default.
-
-Same confusion, but opposite logic.
-
-I would highly recommend that you get a native english speaker to
-review, spell and grammar check the documentation before the next
-time you post it.
-
-> We tested with real customer metadump with some different 'idle_time's and found 250ms is good pratice
-> sleep time. Here comes some number of the test:
-> 
-> Test: running of defrag on the image file which is used for the back end of a block device in a
->       virtual machine. At the same time, fio is running at the same time inside virtual machine
->       on that block device.
-> block device type:   NVME
-> File size:           200GiB
-> paramters to defrag: free_space: 1024 idle_time: 250 First_extent_share: enabled readahead: disabled
-> Defrag run time:     223 minutes
-> Number of extents:   6745489(before) -> 203571(after)
-
-So and average extent size of ~32kB before, 100MB after? How much of
-these are shared extents?
-
-Runtime is 13380secs, so if we copied 200GiB in that time, the
-defrag ran at 16MB/s. That's not very fast.
-
-What's the CPU utilisation of the defrag task and kernel side
-processing? What is the difference between "first_extent_share"
-enabled and disabled (both performance numbers and CPU usage)?
-
-> Fio read latency:    15.72ms(without defrag) -> 14.53ms(during defrag)
-> Fio write latency:   32.21ms(without defrag) -> 20.03ms(during defrag)
-
-So the IO latency is *lower* when defrag is running? That doesn't
-make any sense, unless the fio throughput is massively reduced while
-defrag is running.  What's the throughput change in the fio
-workload? What's the change in worst case latency for the fio
-workload? i.e. post the actual fio results so we can see the whole
-picture of the behaviour, not just a single cherry-picked number.
-
-Really, though, I have to ask: why is this an xfs_spaceman command
-and not something built into the existing online defrag program
-we have (xfs_fsr)?
-
-I'm sure I'll hav emore questions as I go through the code - I'll
-start at the userspace IO engine part of the patchset so I have some
-idea of what the defrag algorithm actually is...
+Indeed, if you used FIEMAP, you can pass a minimum
+segment length to filter out all the small extents. Iterating that
+extent list means all the ranges you need to defrag are in the holes
+of the returned mapping information. This would be much faster
+than an entire linear mapping to find all the regions with small
+extents that need defrag. The second step could then be doing a
+fine grained mapping of each region that we now know either contains
+fragmented data or holes....
 
 -Dave.
 -- 
