@@ -1,217 +1,174 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DB141581E0
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Jul 2024 07:28:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721028503; cv=fail; b=tYAGR+x1kUKlkFoRpliTAIw7hmJcv/ewUxl4pBIPSO6jdwLEtnEe3xt0w0vN41LXElQao10O53PKD9Ka50T3cf9VT0Rux1OfHNxxao2UWsbLPPGc3kcZae15UhGuyM71/BDfNSevZcyFbcR9JUJVHH1ejRI9yyWAYCndv5GUKAI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721028503; c=relaxed/simple;
-	bh=M88BR3DXJV9DGIZ4XmT5fkDbUhmSi6/pmcCcDzxZnfI=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=OiQo8MPHBDfQv44BiQj60971IInr8r4GpJmrzc7ikQC46TH4dm/mMzdTkg42uWFFdfe4VwcRUgBrgOBWptt46Nu/CVqeDRNPCp5vSB5Hr0jvMLbXUItp/rkVMv+76mRSpD9n0r+NwJiy3qZ22teIeisM18C+oD6EyjcXaT6oARc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mC1IbMJX; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=r0tMTiMN; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 946A7335C0;
+	Mon, 15 Jul 2024 09:45:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1721036719; cv=none; b=NYIppNkBc3M319agk2/jxlwHwyiyNV1AMkVQBiSFIKlqnVJpgMPOMwkxVugpdJ6JP5FdmdUUl/qvqlz++HOu5z+wnGpSRtuWdVvAymZL0uT2a0brZa9jsGGMrvTiGpfNDqFDpJbS/5wNuxly4W8w706awjoYAfXfYVjstDZdyb0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1721036719; c=relaxed/simple;
+	bh=aZjdIQKwdp5H79qgehJQbRr3CRk8J+dnXqZ9303YyRo=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=qKlTa4iXcpe3jhQZc/uH6EsuDILMsN0tda/+/BM2a6e1mqBcXh+baGifsmsoVJ7+rNEgmAhqIXNF5S2osBgF9PjWG8egjcoBt5T6LDFP93gMozEUGOrftVoKHu5DOnaVLog7pbf6vHfoyytDiaN0Ym3l9QQRp4b8mWXN0SHQYSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=dLRvtHhe; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mC1IbMJX";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="r0tMTiMN"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46ENasMu005858;
-	Mon, 15 Jul 2024 06:56:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=
-	corp-2023-11-20; bh=nbjMpH91A67sx+uN/2JPdUTl7/ABxsyUy89VIz98ZCk=; b=
-	mC1IbMJXxiV5acNvUwBP9bdmh9jFftmYqKwBL6mhDdWeu+sTUY53sO1AWBBo7vj1
-	MKJV54Zc++cKjw/BRrTXhocN42omgNowIB0MKTnbetUW4LmGNmsPXiY9qtKB4IDY
-	tGoaer45Iunsr9+YmHcHmtdi8HD4qhZniGk9Y/SvSe66ACQikjE9qY4RNk2aoM0x
-	Tmsbq6GNOe1gmHFsvl4UudfUXoOk47/K75L1NERgE5SKtc1nGTEzDmpkhOnl/zxS
-	NSODPpusfYvPKKl/FbydsfXhA4C5WynAeT9P7ZFze/x4gWsp+SejNLTbV+4SRpKw
-	7tKMitxBn6xw1q1+qVLodw==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40bg612gap-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 15 Jul 2024 06:56:08 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46F6Uo4M013899;
-	Mon, 15 Jul 2024 06:56:07 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2049.outbound.protection.outlook.com [104.47.66.49])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 40bg166n4g-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 15 Jul 2024 06:56:07 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lTC9m8NM+BJDgvjAeKx8J3YJ3Svutb8EMy+XM+gAlE3y5NsGrZ/JEV2H16HIEOjtXo0zpl6tF3ber+K2Jic4EfG7xTgfOHvZucpXtBFPECXaoLJr/w4XCwwYMjSyVd/w/qR0ZLrjz3ObidV/hZaen1KuM9o3W1sb2FtcygVwj7J09VMbQdMQYH8AkgpGSmG6BFGvw+yJwb2GTZYlnDTR4v6Hv3rHGJWOlQlvbrYjtv+ZQL+kvGKyXFnT8mve1MB6iuzVt+4Daw1wIhzcB2JLURH9oUQAALOagN9e0hgAK9AkGcynRd5kuAHoDbLThq30fHtygpNVFiUUFBcV08RwEw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nbjMpH91A67sx+uN/2JPdUTl7/ABxsyUy89VIz98ZCk=;
- b=kzptN6DHMCFAzMK3AR+kmkkt7ZdN5HnRk79Irae8znbZchlY28zP3XR1vIPhRmuv59vsQDQKX68fypQ33Fly7BNGFXOfg5an4jTmjhrDfOZ8MBhDpcS4uD9xtwjPhEZPqY7SVlSViMVS2lg4KKKxoSP/YD5MYa5l0ElQTEvEPQYRJ1e72JgKdFbPKB7DJYv2P+x7N+49Z9msRb/fupaTL2I7+laKHcfHjoDvnS74LNOVY1x+qokg7TdfLRtJBP5EMPyVlQOOlgY97D5eXGvlfRwQjaMR1Sk3a40ZAvv/KT3uppPeiVRQkrX757ySRB1bP9VfsoJPsd+WhyQRt3tnJw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nbjMpH91A67sx+uN/2JPdUTl7/ABxsyUy89VIz98ZCk=;
- b=r0tMTiMNzT83Crqa+lnFfJxAzpYdFpihCYQgyCe/RNR/OKUutZdNj9ED2j8y9HA4+zplr99skyGnJq3Mc5W1VsdN2TUu8PHnYdX2/WxbjPSPQWpCLsI+Fkh+gnXHTS5lBeenO/Q/bcsPINJn15LWT/yAuHWMbogdmS8gYfLtpA4=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by BN0PR10MB5032.namprd10.prod.outlook.com (2603:10b6:408:122::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7762.28; Mon, 15 Jul
- 2024 06:56:05 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7762.027; Mon, 15 Jul 2024
- 06:56:04 +0000
-Message-ID: <51b70aba-0100-4735-ac91-3284a4a5a9d8@oracle.com>
-Date: Mon, 15 Jul 2024 07:56:00 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: Use xfs set and clear mp state helpers
-To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "chandan.babu@oracle.com" <chandan.babu@oracle.com>,
-        "djwong@kernel.org" <djwong@kernel.org>
-References: <20240710103119.854653-1-john.g.garry@oracle.com>
- <d3362032-e334-4e75-baf0-90e992c7314f@nvidia.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <d3362032-e334-4e75-baf0-90e992c7314f@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P123CA0319.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:197::18) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="dLRvtHhe"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4WMy3m2r4qz9sZh;
+	Mon, 15 Jul 2024 11:45:08 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1721036708;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=pnDOdJKQ2qCiJS1B5N8ch6auI8mL5/MTLJL29eG+61g=;
+	b=dLRvtHhePFRpWc7HgyCwU2mg39Q97xo2kIH6p36nZCuSFTKc7ere3aFnjxxddOHtgXUOm8
+	rD/UjzIT2KDk5lDaIqpdhuLkJshHpFWC3yXKsWE3L8Uq/ta0AnVNNCo3Srp2qCKGp7SaJR
+	35Uz/JDwE8fEeD2Bv+H+omttN3Hsz7vBsQSvtUOHtfCbXX2L0Kwq6SemZiVX5m122Rg3Mb
+	1sZWryKUj1GlLgeW6JL9YQbZ8f9uzSUNrw9SUPuXuwDNCkyD+6t9+Skp5gsgToUUnWH6u1
+	gTEluWFSBo6cP9pUm3e+/BfQPdfgcSl7t6CAHbhkIHqcTEr8+N2W/YhW/K7Jgw==
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: david@fromorbit.com,
+	willy@infradead.org,
+	chandan.babu@oracle.com,
+	djwong@kernel.org,
+	brauner@kernel.org,
+	akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org,
+	yang@os.amperecomputing.com,
+	linux-mm@kvack.org,
+	john.g.garry@oracle.com,
+	linux-fsdevel@vger.kernel.org,
+	hare@suse.de,
+	p.raghav@samsung.com,
+	mcgrof@kernel.org,
+	gost.dev@samsung.com,
+	cl@os.amperecomputing.com,
+	linux-xfs@vger.kernel.org,
+	kernel@pankajraghav.com,
+	ryan.roberts@arm.com,
+	hch@lst.de,
+	Zi Yan <ziy@nvidia.com>
+Subject: [PATCH v10 00/10] enable bs > ps in XFS
+Date: Mon, 15 Jul 2024 11:44:47 +0200
+Message-ID: <20240715094457.452836-1-kernel@pankajraghav.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BN0PR10MB5032:EE_
-X-MS-Office365-Filtering-Correlation-Id: 58354d63-5f63-4c2b-e03e-08dca49b3210
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info: 
-	=?utf-8?B?M0tOOGdtU2xiTnZoYTRxTFNlTEdSa2xMWmNteWVUS252YU1zZnJUQzB2SVJE?=
- =?utf-8?B?Ti83RzRySzZZSnN5WWdLUkFWSzJjQXkvOHE1QU4va1AzNG9keEhWc2kvTWd0?=
- =?utf-8?B?dGFwY1k2NFVmWW9neGo5eDU2RHhZVU94S091UnBMVzF6aElWWi85bXhvU1Vn?=
- =?utf-8?B?WTQyRGpKRU56MlZPWEZWYlBibS9sV0lkWHhLU3RyeEhmNms4QURuMDFhVnRE?=
- =?utf-8?B?UGx2SHl2WmFpTlJjdmNLUkxtUzcySkRHRjRHaTd6NmY2K2l4WHh4eWZOOEVi?=
- =?utf-8?B?WThOU0ZuUlptN1NuVDM2OGVQUyszTENMb1UvMk9sRnhybXpvbEJNaU16TkFS?=
- =?utf-8?B?VWNNT013TWV0cDlPQng2U21EK1g3aFZnZHlOUDUvTnhJSTNSbHFTbHNkN1Ix?=
- =?utf-8?B?MkhvczY2eEdDdHlzVG14NWRLRXZEa0JHVVB5RG9oNUEyNTNTM25qUVpXcm5N?=
- =?utf-8?B?V0o3NE13OUlqZmhqVFhBdnE2bDZkV2hneFcrQndpVENCZmxFYzdVcXJ5c3Ry?=
- =?utf-8?B?TUFVN1FOUkgxYWJrZzNWanZPRUtjWXcyYnY2c051R2FpeHhrS3Rlc21OOW5y?=
- =?utf-8?B?R1hkUm4vNEVzL3k4alc2aGtOdi9JVHNQRG1nR2o0SEo1V01kdWZEdHh3Vzlk?=
- =?utf-8?B?cTArWmNGbXdBODhDWHRCcU5HUHUwVEwwL1Q0alZlMTNYR3ZENlZ5QkRTQVRK?=
- =?utf-8?B?MXdYeWM0S2x4VDMyRkF4YnRGbHJvdlFvMUpFQmtBN2xwc1M2QlJzMHJ5ai91?=
- =?utf-8?B?TU5lOVZyZCtYYTlPSXZGeU1JRjFDdlEwOTZoNHlyaG9KazMrUWxlcDJsQi9s?=
- =?utf-8?B?aE5SU3hLTVZxVXVoV3N6c2pYSXFiYTVzSHpjTS8rUC93WUczeEtta2I5aHY3?=
- =?utf-8?B?aGlsUnpoUzRBdVRiSjAvd0sxdVNRbVdCRDZydXRGb3V4U2dEbXlmVjR3SzZk?=
- =?utf-8?B?cFJPbzB1VDl3YU9KNzRBNnlkZklWQ0Vta1ltL2xJNzdhalVYRkF3MTV1dWh1?=
- =?utf-8?B?SDc4SmcycHIyR3JkcUJvZ2xyRjJNMk9qTTdCNFZBak5paCtjN2NRY3ZDRHlW?=
- =?utf-8?B?VHkxVlJtN0gxN2drQS9NbThQc2U1OTczMkV5WW91bmNIZW9RRXB4MVhXL2RL?=
- =?utf-8?B?WE80djlQMkRSZWxndHJlZWZRMDVkN2laRXpvbWM2THlSZ2NObTBvNE9EV1hV?=
- =?utf-8?B?alMvbHFpVTJYdk5sYllEa3FFams5aVhEemcxNC9RNlNmd3NHT3BuMXdsVHRX?=
- =?utf-8?B?Tno2NThwWmxBUk5URU03UlRIcE5ZM2FlSjFwMGJwOW00cXNhenB5NC9IZHI5?=
- =?utf-8?B?Y3ZrdjJTZHBsajU0d2taVmRNOENvSzNHenV5R0htWkNHQ0lnUjhJMlBqS1gy?=
- =?utf-8?B?d3puKzAvNjB6NlZFanROVjZnZEhJaUFza1Zndzdqa1V0ZE84UTBuU2s5ZUcy?=
- =?utf-8?B?eUJZMmtDYVF4VFBwbCthQ2JsRXZCSHkwblNjSUl1NWZLeWNvdnhIaEtJMUh3?=
- =?utf-8?B?ZGZ0azE4VHk3Syt0aFZyYkNvSXYxalk2aUVBa2V2R3hTVDZpOURGVnJuL3pP?=
- =?utf-8?B?S0k1L0pvTno4TU5yMFdVUEdBUlJxUXhST1VnVGRNbFVmZ2xzSXVjRXlmaFB6?=
- =?utf-8?B?OEhMNjVtYUNBNzRvWHRVOFFZTncySGpkRmJNUjg1SDFHVHdCdnA4UjdsOGV2?=
- =?utf-8?B?Mkt2cHVXTUZQN2lNMGswbHdxemhDRmNXWkh0VGRQNXNmVndGVFFmUk5Ua3l0?=
- =?utf-8?B?bzZWUzlmUmo1TTRYUXlLSjhkZE1XdGs3ZWVWdFZLRDYrcnp0SEJxN0ZabVU1?=
- =?utf-8?B?SWlWK0ZEOE1VK2hDWFpGdz09?=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?dWpIQXVKRmVrS2IyaWNBRTRnSURnWXlPY2VIV1hyaWlyaitZUXVpTkU5OHZa?=
- =?utf-8?B?OUkxcUZpbWpGK09FTjNqQy8vZFJIZHROQXgrZ2t6NUkwZEtVNHdHSnJueWpI?=
- =?utf-8?B?TzhZUDZkaUNQV3NPNjR6dC81SzhVay91eCtrZ0d5dkM0UXJiZkR3ejM2NWMr?=
- =?utf-8?B?cWpNbFdQNGE4MGMwdEl6SVp3Z3VFSzZmRkZjWXlBRGdFcS9YMDdBSXVZVlR0?=
- =?utf-8?B?OUU1Znk1bHlXK2lkVjNjbVRKUkZvTkhmRDFBTnp2OFh0K0RxYUY1MnQ1NjVH?=
- =?utf-8?B?eG5Jcmlhbkh6SXFvUnc2WXZwdlJpVFlzZXNpK2oyWFVDUWdmVlNISnJJWEhl?=
- =?utf-8?B?NGZteWlqWmJzVzFiSm40SWU1aUtMY1d5RkhtdXMyemVVTWNlY242dXp5NnFt?=
- =?utf-8?B?QW14MnVOK2h0TXFtZXRxaUdyN1FFTVdpa0JJWnBQVVhQU0VIb3VXVVJ2QjNz?=
- =?utf-8?B?MCtUdTBTSkYwNE9PWXpsVitaQzBGb1pmd01CTk1oZHhKekVGSTA2YlZQeFFI?=
- =?utf-8?B?NHpoNGUvbkxLWmk4T2dUczJUeUs4OC9nTEt5SDVsdTBQaEp0WlB4SlJnOC9E?=
- =?utf-8?B?a1N5MjRQcmN2akxKTFlmN2UxQmlrRk9QcHBEMld2TGx5T0xrYmRMYlZVRGZG?=
- =?utf-8?B?S21HcUZFMzlabmtzeU5BajFaRDFPM1B2VmZPT2VaanFHcmRjK0Z2SjV5ZXlV?=
- =?utf-8?B?c3luZ1VGRHcwS0dvZTZjamlSU2ExYjZOejF6dkZVSllvZEYzRmwxS00wdStC?=
- =?utf-8?B?MjFZR0t5NHFLa2REbDhJbzI3T1p5OUxvOFlVQWswaDRvN0V4S2Z0akZlWkp6?=
- =?utf-8?B?WlpvZXpOaU5LMXczdE5yMExoekgzdUtwL3N1UHpDNGtBWkQ4SVp6TmdYcnRR?=
- =?utf-8?B?WWhVRlZuOUs5dHJDNFhSaEV4Y2kzaVhhZndmSkpXRFNIRFVQNUF6YzBoNWNQ?=
- =?utf-8?B?VjByS052WEVKQjN1cUtsakZaMHRBeENGOWR0dC9QTHZlTHZpU2YvZ05Ob3Ju?=
- =?utf-8?B?a1hCU1FTWTRDRnJ5eEcvWjNEL3pIMWlUY3M0QW9qQ0wzVlFuMUpYMlcyR2RP?=
- =?utf-8?B?czF3ZllUcjNOTHhYaWxkZHZsMGVXSGdIa3dSMlNiV3BJblNkVXo1eFgwMFhQ?=
- =?utf-8?B?eG02VTNZRmlXVzRIeWlPWjBUYkpTRE9ZVTZabnV5NmN3QVlaQ0EwUVZlSyt1?=
- =?utf-8?B?TUhYNlpoZVZEWGxwSG5nczdnVmhVN1pzamlOYkJMUE01MG1zaTJWWVNZRGhB?=
- =?utf-8?B?bXFmMnN4OEdueFZhK2NsN2tJcGtqMFUyVjRFOTJQWWRBSjV1U3RZQzZIMGNz?=
- =?utf-8?B?aytEL2g0RHZkUE5aam95c1NjOVJtUjk2Zko3M3d0b0xkUUowYndOQ2J4bmZ5?=
- =?utf-8?B?UGVCWm9icnR5SkU1R1RTczBZMG9aZWhDLzhJamdveGQ4UTFYazkvbVhJNkhW?=
- =?utf-8?B?LzJyOUZoWmY0aVVKVEs0cnlWVVBpazlhOENIM1QvdnZ0SHNZbVFVRzR0UE93?=
- =?utf-8?B?aTIxL2hTRnZqeFg3NGVKNm5pSFBwVDZzQlFER1NKMWhQV29rRTh4MEJHUUpI?=
- =?utf-8?B?VXFQalZiYUR3NlZrcGw5WTBqdkZLZGtNZFdlNHoyZDRndS9wY1BqM285OXhu?=
- =?utf-8?B?QXhNZE9MQVExaVcrN0hrb3VsVU5HV01RK1BRWm9LeUJOMHpoUUY2OG1XN0VR?=
- =?utf-8?B?UVdEQWR0cEwweVpBcVBySGtDTG9qTUVQODBJc3ZZdHR4MWZBc0FFb0t5TE1D?=
- =?utf-8?B?ZS8rVGNMV1VHalcwL0p6djgzZnBxYnR3dFIwemd5N0ROMWx1TGlrS2UxbjdC?=
- =?utf-8?B?R0ZIWHI1Rjk3ZHZIeXRHRHZVY1JnbXl3SnRnL0J4bVpGTHN0NGhFWUcvQlYr?=
- =?utf-8?B?cm9sajYxNUZ6U2R0SVZvSmJpMWtjdTlkRG03MFJmY1RXZzhvS3UxekRzSWZa?=
- =?utf-8?B?Mld1KzY3YllFMUh1OWFNRHNLKzQrd0lSSnREaTY5UnBPNTBrRS9pSDR5dWVB?=
- =?utf-8?B?K3FENVdFWUcrMm83ckNldXdYZ1dpcmtjRUcyUVozbE1la250cDh3WWJaQU5y?=
- =?utf-8?B?R3RlRVpjNFZoc3dVdjc5K1JuRlZxUkhhRlZILzZ3d2xIK1YxcFpoSzA5eWZm?=
- =?utf-8?Q?bsKS5QAUl2AGNzdhGNPfHiITS?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	yZWvg+/Js7Dq0Txgej/4o6H43FaAvSRlfLN2EhUaQ4Yd7LDu+RCaaweXoC6YucentMZw98Y/p5byr6f+ufvGScK0no1XnkX7CJZX6dn6LjzP4YAtbYVKM0ss+cqAGCAsCLV9Na8pRHhuJK4om/J0HxzF4opYTrR/PGBhu8Jb/EYKpqyJpEvVPQqx7U66keQXvnumjIK7ntXNSxPU2jk7TbdtDcn2a5EVs8hmz1DiDHZcbWaJfzSLRPRKA3PixUk1t9ipVLBkzBYMCJMMKjaYzWbiNmYKg2gZmrJ5aFdOx/emWBjV5sLUzkYzb9X8OpbrU53aqOcvPvggD2mFnZG8Gb3saAVwqO2F3F96KYtO/cCBnshUL3s+WNJueCjcxZ+Lbsl5lkraKVQhCbH8TjQ7a4n2N5q7vFAh5pjHzm5Z7b6jky/MTO4CJs2e0vW1uWhStINlEySAxR15hjO7yRQaix1AbM7gl3a9zZC7/gOIYRx/+dV0nkMDxNIbrUlfyywtL6u9O03LWUmEa1qNkZGxl24ldVC11QITp9+bsGeQMogxuSp8hKfFQRTwMRn44melKZXgTVsx78Lqpdlsi8usiI42c3IG/F8gzaY0yXVVDV4=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 58354d63-5f63-4c2b-e03e-08dca49b3210
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jul 2024 06:56:04.8491
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mUAGSzMhD2FD7OVfa/4ONvuSvG0LL85BpRYxpMtHDqB5DFa7/oF7WS2J1Mk8dSqZy89/nfDi2VgPXCyHZDaNlg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5032
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-07-15_03,2024-07-11_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 bulkscore=0
- phishscore=0 spamscore=0 adultscore=0 mlxlogscore=999 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2406180000
- definitions=main-2407150053
-X-Proofpoint-GUID: ut1OQ9YcAZFYZrypiDfanIutAQvEI5L3
-X-Proofpoint-ORIG-GUID: ut1OQ9YcAZFYZrypiDfanIutAQvEI5L3
+Content-Transfer-Encoding: 8bit
 
-On 12/07/2024 18:39, Chaitanya Kulkarni wrote:
->> Signed-off-by: John Garry<john.g.garry@oracle.com>
-> This patch looks good to me, however formatting of the patch seems
-> little odd to me, what I meant is section describing the number of flies
-> changes and lines per file seems to be missing, e.g. (from different
-> patch) :-
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-yeah, I often use -p (no diffstat) for generating single patches. The 
-kernel documentation for submitting patches does not mandate a diffstat 
-AFAICS, but maybe it's strongly preferred on the xfs mailing list.
+This is the tenth version of the series that enables block size > page size
+(Large Block Size) in XFS.
+The context and motivation can be seen in cover letter of the RFC v1 [0].
+We also recorded a talk about this effort at LPC [1], if someone would
+like more context on this effort.
 
-> 
-> "
-> ---
->    fs/xfs/scrub/trace.h |   10 ++++------
->    fs/xfs/xfs_trace.h   |   10 ++++------
->    2 files changed, 8 insertions(+), 12 deletions(-)
-> "
-> 
-> Reviewed-by: Chaitanya Kulkarni<kch@nvidia.com>
+A lot of emphasis has been put on testing using kdevops, starting with an XFS
+baseline [3]. The testing has been split into regression and progression.
 
-thanks.
+Regression testing:
+In regression testing, we ran the whole test suite to check for regressions on
+existing profiles due to the page cache changes.
+
+I also ran split_huge_page_test selftest on XFS filesystem to check for
+huge page splits in min order chunks is done correctly.
+
+No regressions were found with these patches added on top.
+
+Progression testing:
+For progression testing, we tested for 8k, 16k, 32k and 64k block sizes.  To
+compare it with existing support, an ARM VM with 64k base page system (without
+our patches) was used as a reference to check for actual failures due to LBS
+support in a 4k base page size system.
+
+There are some tests that assumes block size < page size that needs to be fixed.
+We have a tree with fixes for xfstests [4], most of the changes have been posted
+already, and only a few minor changes need to be posted. Already part of these
+changes has been upstreamed to fstests, and new tests have also been written and
+are out for review, namely for mmap zeroing-around corner cases, compaction
+and fsstress races on mm, and stress testing folio truncation on file mapped
+folios.
+
+No new failures were found with the LBS support.
+
+We've done some preliminary performance tests with fio on XFS on 4k block size
+against pmem and NVMe with buffered IO and Direct IO on vanilla Vs + these
+patches applied, and detected no regressions.
+
+We also wrote an eBPF tool called blkalgn [5] to see if IO sent to the device
+is aligned and at least filesystem block size in length.
+
+For those who want this in a git tree we have this up on a kdevops
+large-block-minorder-for-next-v10 tag [6].
+
+[0] https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
+[1] https://www.youtube.com/watch?v=ar72r5Xf7x4
+[2] https://lkml.kernel.org/r/20240501153120.4094530-1-willy@infradead.org
+[3] https://github.com/linux-kdevops/kdevops/blob/master/docs/xfs-bugs.md
+489 non-critical issues and 55 critical issues. We've determined and reported
+that the 55 critical issues have all fall into 5 common  XFS asserts or hung
+tasks  and 2 memory management asserts.
+[4] https://github.com/linux-kdevops/fstests/tree/lbs-fixes
+[5] https://github.com/iovisor/bcc/pull/4813
+[6] https://github.com/linux-kdevops/linux/
+[7] https://lore.kernel.org/linux-kernel/Zl20pc-YlIWCSy6Z@casper.infradead.org/#t
+
+Changes since v9:
+- Added a mapping_max_folio_size_supported() that filesystems can call
+  at mount time to check for mapping folio requirement.
+- Changed split_folio_to_list() to call THP_SPLIT_PAGE_FAILED for
+  pmd folios.
+- Formatting changes in the first patch
+- Collected RVB from Hannes, Zi yan, Darrick and Dave.
+
+Dave Chinner (1):
+  xfs: use kvmalloc for xattr buffers
+
+Luis Chamberlain (1):
+  mm: split a folio in minimum folio order chunks
+
+Matthew Wilcox (Oracle) (1):
+  fs: Allow fine-grained control of folio sizes
+
+Pankaj Raghav (7):
+  filemap: allocate mapping_min_order folios in the page cache
+  readahead: allocate folios with mapping_min_order in readahead
+  filemap: cap PTE range to be created to allowed zero fill in
+    folio_map_range()
+  iomap: fix iomap_dio_zero() for fs bs > system page size
+  xfs: expose block size in stat
+  xfs: make the calculation generic in xfs_sb_validate_fsb_count()
+  xfs: enable block size larger than page size support
+
+ fs/iomap/buffered-io.c        |   4 +-
+ fs/iomap/direct-io.c          |  45 ++++++++++--
+ fs/xfs/libxfs/xfs_attr_leaf.c |  15 ++--
+ fs/xfs/libxfs/xfs_ialloc.c    |   5 ++
+ fs/xfs/libxfs/xfs_shared.h    |   3 +
+ fs/xfs/xfs_icache.c           |   6 +-
+ fs/xfs/xfs_iops.c             |   2 +-
+ fs/xfs/xfs_mount.c            |   8 ++-
+ fs/xfs/xfs_super.c            |  30 +++++---
+ include/linux/huge_mm.h       |  14 ++--
+ include/linux/pagemap.h       | 127 ++++++++++++++++++++++++++++++----
+ mm/filemap.c                  |  36 ++++++----
+ mm/huge_memory.c              |  59 ++++++++++++++--
+ mm/readahead.c                |  83 ++++++++++++++++------
+ 14 files changed, 353 insertions(+), 84 deletions(-)
+
+
+base-commit: 0b58e108042b0ed28a71cd7edf5175999955b233
+-- 
+2.44.1
 
