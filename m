@@ -1,108 +1,202 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AEE9192B87;
-	Mon, 15 Jul 2024 12:49:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6951F17BB5;
+	Mon, 15 Jul 2024 16:46:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721047777; cv=none; b=uwpygMcF2vmKoIlHhwHwUCQU50tCA/3zigK+GT8slZfDFidEYhdMaK6ZcOeItGiCGjUbKmLdq+Itrsn/IS+3+o4Qcv1GY1PKmpH7exxNxS/uM+S+NZgneFDA9aM+ZYKx5xCgwUgyp6fvwKpXsn3Nkx4aXkaEUXByoPhW40m2nC8=
+	t=1721061993; cv=none; b=tsTBFVuOstY3VbNQA0TY6V8HbS6Wtlkag7I5kE+SrghAyUfLrs9cpla7HEjFEDmmxjcYOXwCJW00988HAj3bqpt0xLnB1kw0QoCY38MIwBO2bNLOo0laayRkF59hxvo1UBABPsFP5Gnafjlb8+8zDkGsinvuc7OAAGcsPWu2p20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721047777; c=relaxed/simple;
-	bh=EGo15KA9RzWejobFOdJXVIKVsZGyPzCyG1uwa3tZn1I=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=s9B6lq+lVLKPmuKibwIjee5i3KhVAieXkmRkfe+vx8SY/1p/cGZvEeeWRiH8QKdSeqWoS+5YckKgYFhLPiVvhg+jnUgcFJ5Q4Pj6PzjH74e/sHZy8ouz5pKhhhsesRBKi3O+P+Df0xbuvmPjsADFW9GcoiFoNgejhsONpPILqpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Op5sWagJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721061993; c=relaxed/simple;
+	bh=CKsM6X/ILuteI/53RzhvTkmwmrJCL208UsIV57Va2XI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SNuuVTdbnrUp02jBOSdpNOhioNj9EPEi6NcZFsY0Moy0M7DKxiSCSlsxbFP3dDvUOE8LWVRVIqHoPo/JXF+xwV/K51LHlsVXhVUK1yco4ge5zdbOqdmHZOpS+L/X3eGTLf6QC67X9M9zdtIfnLoLbs4bi2w3IVCYmCkFv70HG68=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fdLW+j6Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Op5sWagJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 312FFC4AF0A;
-	Mon, 15 Jul 2024 12:49:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fdLW+j6Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2C15C32782;
+	Mon, 15 Jul 2024 16:46:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721047776;
-	bh=EGo15KA9RzWejobFOdJXVIKVsZGyPzCyG1uwa3tZn1I=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Op5sWagJjl+DaoEpT6U6Roz5G+OZlHnYlPX1GVRhRCs1ph5A4POU7AelkpSydaFE1
-	 0S/6XZ5jrsy1l+pU8jT0i8xNz7C46rPcqZFpDt+RZwciCR30kKbKz24evOTitf1+Vr
-	 FzJPtBPOU5iclZk+mYyMWcBFe2aGVnk/Rn4MMAL/btOLEN7TC8VvQMsoRlssdnUhcZ
-	 RS8B6yYf90rMB3TbhzRrgFQYyqfAqu/Tv/l74Z/8C5XrCGsIXk7l2nSGlPXuk9Pf3/
-	 YnBJu+MnFdqez9L3jJ10joq8GI/5b45+aubtvZlH8RUDpFYLgxThEgXVu7Ys1oCnQc
-	 YomcYnBGoWouQ==
-From: Jeff Layton <jlayton@kernel.org>
-Date: Mon, 15 Jul 2024 08:49:00 -0400
-Subject: [PATCH v6 9/9] tmpfs: add support for multigrain timestamps
+	s=k20201202; t=1721061993;
+	bh=CKsM6X/ILuteI/53RzhvTkmwmrJCL208UsIV57Va2XI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fdLW+j6Y+Ki7ty31Vru/uvWcM/bxoTE4hvdOxHnGU07Kdd2OSMBKVf9ECGreERRqs
+	 Zi9Ek+1I4cz2tW2Vx//6jjeOgwNXNwUQ0EFxlvKz0bTEKwZvHpdp9M6X1YhDg3XWOB
+	 RKiY4IJADKm3BBoqvlFqU0/xk9ZKv5e9/lAEeGf3Se5PZ7lbaGCPHZUdGi9fSABPG8
+	 BwBKcbHj0IE6e/xujl5RVkZj4wxa6lUjkgWRxDLityGAWyPpsY2d4gMBbILfX6arRW
+	 wx/iUL/JppWzfd7b8kmn2WjqbtFaWhc/X2nyXlhBBT7PqoyESqdN7GsUgqKkpHn3Xz
+	 USjUiKDmoaENg==
+Date: Mon, 15 Jul 2024 09:46:32 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: david@fromorbit.com, willy@infradead.org, chandan.babu@oracle.com,
+	brauner@kernel.org, akpm@linux-foundation.org,
+	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
+	linux-mm@kvack.org, john.g.garry@oracle.com,
+	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
+	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
+	linux-xfs@vger.kernel.org, ryan.roberts@arm.com, hch@lst.de,
+	Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH v10 10/10] xfs: enable block size larger than page size
+ support
+Message-ID: <20240715164632.GV612460@frogsfrogsfrogs>
+References: <20240715094457.452836-1-kernel@pankajraghav.com>
+ <20240715094457.452836-11-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240715-mgtime-v6-9-48e5d34bd2ba@kernel.org>
-References: <20240715-mgtime-v6-0-48e5d34bd2ba@kernel.org>
-In-Reply-To: <20240715-mgtime-v6-0-48e5d34bd2ba@kernel.org>
-To: Alexander Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
- Steven Rostedt <rostedt@goodmis.org>, 
- Masami Hiramatsu <mhiramat@kernel.org>, 
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
- Chandan Babu R <chandan.babu@oracle.com>, 
- "Darrick J. Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, 
- Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, 
- Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
- Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
- Jonathan Corbet <corbet@lwn.net>
-Cc: Dave Chinner <david@fromorbit.com>, Andi Kleen <ak@linux.intel.com>, 
- Christoph Hellwig <hch@infradead.org>, Uros Bizjak <ubizjak@gmail.com>, 
- Kent Overstreet <kent.overstreet@linux.dev>, Arnd Bergmann <arnd@arndb.de>, 
- Randy Dunlap <rdunlap@infradead.org>, linux-fsdevel@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
- linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
- linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, 
- linux-doc@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=824; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=EGo15KA9RzWejobFOdJXVIKVsZGyPzCyG1uwa3tZn1I=;
- b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBmlRrD4m6AcCbQEbB3V0ipLp+HPBka/5rUVsmDG
- +UI6LP4LSyJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZpUawwAKCRAADmhBGVaC
- FehwEACB/2bL0lHsL7x+6a2mF1cA08ExumwGUUpjqhfW/iUJDZW8NksCANkEjZy3jkVO2UFom9k
- MsZ5dg106pC96JwTEgOw+Wz+KchU1EDu+k20LB4uv5tnPDvb/ET5ncKyvxJ5+wX90wtxidCfK4h
- TWJwKVyQsBqdLsZ9w4OXei8HGv99hsDxrY/rhQ1KaOY6CEdzPcQOpCJbSKZ0n3rRR4X3KCEm0A4
- vJv7X1XCzEgq0XUFHxamtkbmLAiGeaDng0kVnJQntBpaoFWUvbE8nUnCKwO42rKF9RgKHFMFhr9
- Hr5D7G1iySVSJQ2BR5sJDVgMk5HGd1iyI2pVyeFVC6McOAbLpkl2Q5lHCE8kJkxFjd8KLcIwiVW
- o50Xzk8xJyxBuopmF8fzBrgaXB7Vsova2nDppB4/gexJo9H/PagYElk6p9zsOndkBubvDxLfP3h
- EJ+mL8K/MHCwpTOt1Ef72Y4QbrbvjsKee5N/8O7YTpBbai8Df1rRFhQrunoWqFh94wkmlSaFm7q
- bvYRMax6wvvOUL4sKAulaMdnh/m92gAeta1TxcYbI7XC5LI0f/7NQjMaSTQW+lXe6+Um8SHiZvY
- H5DVd1+vLNraR6/Ry+rSfK0uCHPXRyQadKt9ly2ZbezoPAN3Fslo6ewd+azr8Y3pyp9SvkpysRm
- d24+EIjmNvSAjGw==
-X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
- fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240715094457.452836-11-kernel@pankajraghav.com>
 
-Enable multigrain timestamps, which should ensure that there is an
-apparent change to the timestamp whenever it has been written after
-being actively observed via getattr.
+On Mon, Jul 15, 2024 at 11:44:57AM +0200, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
+> 
+> Page cache now has the ability to have a minimum order when allocating
+> a folio which is a prerequisite to add support for block size > page
+> size.
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c |  5 +++++
+>  fs/xfs/libxfs/xfs_shared.h |  3 +++
+>  fs/xfs/xfs_icache.c        |  6 ++++--
+>  fs/xfs/xfs_mount.c         |  1 -
+>  fs/xfs/xfs_super.c         | 30 ++++++++++++++++++++++--------
+>  5 files changed, 34 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 14c81f227c5bb..1e76431d75a4b 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -3019,6 +3019,11 @@ xfs_ialloc_setup_geometry(
+>  		igeo->ialloc_align = mp->m_dalign;
+>  	else
+>  		igeo->ialloc_align = 0;
+> +
+> +	if (mp->m_sb.sb_blocksize > PAGE_SIZE)
+> +		igeo->min_folio_order = mp->m_sb.sb_blocklog - PAGE_SHIFT;
+> +	else
+> +		igeo->min_folio_order = 0;
+>  }
+>  
+>  /* Compute the location of the root directory inode that is laid out by mkfs. */
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index 34f104ed372c0..e67a1c7cc0b02 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -231,6 +231,9 @@ struct xfs_ino_geometry {
+>  	/* precomputed value for di_flags2 */
+>  	uint64_t	new_diflags2;
+>  
+> +	/* minimum folio order of a page cache allocation */
+> +	unsigned int	min_folio_order;
+> +
+>  };
+>  
+>  #endif /* __XFS_SHARED_H__ */
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index cf629302d48e7..0fcf235e50235 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -88,7 +88,8 @@ xfs_inode_alloc(
+>  
+>  	/* VFS doesn't initialise i_mode! */
+>  	VFS_I(ip)->i_mode = 0;
+> -	mapping_set_large_folios(VFS_I(ip)->i_mapping);
+> +	mapping_set_folio_min_order(VFS_I(ip)->i_mapping,
+> +				    M_IGEO(mp)->min_folio_order);
+>  
+>  	XFS_STATS_INC(mp, vn_active);
+>  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> @@ -325,7 +326,8 @@ xfs_reinit_inode(
+>  	inode->i_uid = uid;
+>  	inode->i_gid = gid;
+>  	inode->i_state = state;
+> -	mapping_set_large_folios(inode->i_mapping);
+> +	mapping_set_folio_min_order(inode->i_mapping,
+> +				    M_IGEO(mp)->min_folio_order);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 3949f720b5354..c6933440f8066 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -134,7 +134,6 @@ xfs_sb_validate_fsb_count(
+>  {
+>  	uint64_t		max_bytes;
+>  
+> -	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+>  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
+>  
+>  	if (check_shl_overflow(nblocks, sbp->sb_blocklog, &max_bytes))
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 27e9f749c4c7f..3c455ef588d48 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1638,16 +1638,30 @@ xfs_fs_fill_super(
+>  		goto out_free_sb;
+>  	}
+>  
+> -	/*
+> -	 * Until this is fixed only page-sized or smaller data blocks work.
+> -	 */
+>  	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
+> -		xfs_warn(mp,
+> -		"File system with blocksize %d bytes. "
+> -		"Only pagesize (%ld) or less will currently work.",
+> +		size_t max_folio_size = mapping_max_folio_size_supported();
+> +
+> +		if (!xfs_has_crc(mp)) {
+> +			xfs_warn(mp,
+> +"V4 Filesystem with blocksize %d bytes. Only pagesize (%ld) or less is supported.",
+>  				mp->m_sb.sb_blocksize, PAGE_SIZE);
+> -		error = -ENOSYS;
+> -		goto out_free_sb;
+> +			error = -ENOSYS;
+> +			goto out_free_sb;
+> +		}
+> +
+> +		if (mp->m_sb.sb_blocksize > max_folio_size) {
+> +			xfs_warn(mp,
+> +"block size (%u bytes) not supported; maximum folio size supported in "\
+> +"the page cache is (%ld bytes). Check MAX_PAGECACHE_ORDER (%d)",
+> +			mp->m_sb.sb_blocksize, max_folio_size,
+> +			MAX_PAGECACHE_ORDER);
+> +			error = -ENOSYS;
+> +			goto out_free_sb;
 
-tmpfs only requires the FS_MGTIME flag.
+Nit: Continuation lines should be indented, not lined up with the next
+statement:
 
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- mm/shmem.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+			xfs_warn(mp,
+"block size (%u bytes) not supported; maximum folio size supported in "\
+"the page cache is (%ld bytes). Check MAX_PAGECACHE_ORDER (%d)",
+					mp->m_sb.sb_blocksize,
+					max_folio_size,
+					MAX_PAGECACHE_ORDER);
+			error = -ENOSYS;
+			goto out_free_sb;
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 7f2b609945a5..75a9a73a769f 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -4660,7 +4660,7 @@ static struct file_system_type shmem_fs_type = {
- 	.parameters	= shmem_fs_parameters,
- #endif
- 	.kill_sb	= kill_litter_super,
--	.fs_flags	= FS_USERNS_MOUNT | FS_ALLOW_IDMAP,
-+	.fs_flags	= FS_USERNS_MOUNT | FS_ALLOW_IDMAP | FS_MGTIME,
- };
- 
- void __init shmem_init(void)
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
--- 
-2.45.2
+--D
 
+> +		}
+> +
+> +		xfs_warn(mp,
+> +"EXPERIMENTAL: V5 Filesystem with Large Block Size (%d bytes) enabled.",
+> +			mp->m_sb.sb_blocksize);
+>  	}
+>  
+>  	/* Ensure this filesystem fits in the page cache limits */
+> -- 
+> 2.44.1
+> 
+> 
