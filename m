@@ -1,47 +1,32 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95F65B05E
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Jul 2024 16:19:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4175D566A;
+	Wed, 17 Jul 2024 16:42:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721233147; cv=none; b=A0PU7WP4yN7H7pEOpbmJGHPhJkK2Orrfcjcjv0gvRnvEP3aR3VDnmncscHiWnMILefAFp/hL52rvO59Qf5EWn0hkZHkFXNM9ZBVNMBEgRa3Wgu2rFuuWRQdiswEb3dL73jhzQSUJpLT/Xpw5jI+csRXvQXj/Ixqhbf+/TwziKCE=
+	t=1721234535; cv=none; b=Q4tAnsFrV/9LyRXGL6/Sm0LUe3O5rlQBOLGbU2bRsIb6u6d9YnI5vgcSW6T2b22I7ngOvvH1nb6YeCmCWAA0BkOSvF9rJlUcR0/Opd5Jz3/+FVTUMZvENE887Hrjd8+tNYCCFy3IeLCPxQ/AEJC+BuS+dLEgefueltUpFCGXmSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721233147; c=relaxed/simple;
-	bh=/JMhknfH1jC1t4JIqDTZ9oixI56Vjgn0y74ZphsBt0M=;
+	s=arc-20240116; t=1721234535; c=relaxed/simple;
+	bh=ThJkMHF8E9fg8CiLfg11arTbFnN8zJ1I4emM39gMcCI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aCH5lQnXiToLKwCBLrsZOFaHdPWEX+jXBP7Luq3K8RP2Wr7fJyMSTV4qb08+43i1v8r3Z/WA2R7FhR3TbGSc/oSPw5grG1J+qao1k3u0WDLrOBgMxoNqw2e7XNGyBeSpLf2CaoUbe0xSqtcn90w9kZSfKDh3GGGoqe5EfeOqpg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d+czbgcG; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d+czbgcG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7467FC2BD10;
-	Wed, 17 Jul 2024 16:19:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721233146;
-	bh=/JMhknfH1jC1t4JIqDTZ9oixI56Vjgn0y74ZphsBt0M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=d+czbgcGvrUUNQRkPgLGIWAEIhIRbXrfPyj8kzMCDt3Lyer+0zAXrgCIEAZ2e5nJp
-	 ZSy5o0VAYVpFfq2icvBi5s3iZLYShFctjpve7xRzUA5+w3j9XIcajvDxK3MLS1/sHx
-	 OI+NwvM+76rA2hdItaHo1qJoLzkXlLrs6T5Lb27Pd5D88pJtasrjKdNQ11AD6o3A/h
-	 my7OKV5473XzQNkV3XusG0a4pGwHG4MQVp2MdzJU1yuKbT8Lxj1lb4knzvzyWasccE
-	 OdXK+MF/Mn3KzRQiPx7CGm3uYTPVAV4JOl69TS0Ak3DIrRhRcwopiiVGxWPfb0rGnK
-	 z+L1+55v+AFhw==
-Date: Wed, 17 Jul 2024 09:19:05 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] misc: shift install targets
-Message-ID: <20240717161905.GI612460@frogsfrogsfrogs>
-References: <171988120209.2008941.9839121054654380693.stgit@frogsfrogsfrogs>
- <171988120259.2008941.14570974653938645833.stgit@frogsfrogsfrogs>
- <20240702054419.GC23415@lst.de>
- <20240703025929.GV612460@frogsfrogsfrogs>
- <20240703043123.GD24160@lst.de>
- <20240703050154.GB612460@frogsfrogsfrogs>
- <20240709225306.GE612460@frogsfrogsfrogs>
- <20240710061838.GA25875@lst.de>
- <20240716164714.GC612460@frogsfrogsfrogs>
- <20240717050005.GB8579@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tk44xIhyQtv1W3GZmPw2GC4VgW+ijh4GuSAXb2oa7UB9leK6jEgiX+5FkthEHCdNED8o3lqmWh04czSXVdOpqqLqGRRakqdob332JJ1OvxiV8UEBR+tGIwNR+6L5WpK6Liymbx65VLESQRDAwi+qwfAhO1NTHh96Xw/6LaLtMk0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id CE73E68B05; Wed, 17 Jul 2024 18:42:04 +0200 (CEST)
+Date: Wed, 17 Jul 2024 18:42:03 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, chandan.babu@oracle.com,
+	djwong@kernel.org, dchinner@redhat.com, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	catherine.hoang@oracle.com, martin.petersen@oracle.com
+Subject: Re: [PATCH v2 10/13] xfs: Unmap blocks according to forcealign
+Message-ID: <20240717164203.GA21307@lst.de>
+References: <20240705162450.3481169-1-john.g.garry@oracle.com> <20240705162450.3481169-11-john.g.garry@oracle.com> <20240706075858.GC15212@lst.de> <5e4ec78f-42e3-47cb-bf92-eddc36078edf@oracle.com> <20240709074623.GB21491@lst.de> <9c34cf12-711e-4f36-8f65-873eaabf7283@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,23 +35,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240717050005.GB8579@lst.de>
+In-Reply-To: <9c34cf12-711e-4f36-8f65-873eaabf7283@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jul 17, 2024 at 07:00:05AM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 16, 2024 at 09:47:14AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Modify each Makefile so that "install-pkg" installs the main package
-> > contents, and "install" just invokes "install-pkg".  We'll need this
-> > indirection for the next patch where we add an install-selfheal target
-> > to build the xfsprogs-self-healing package but will still want 'make
-> > install' to install everything on a developer's workstation.
-> 
-> Maybe debian packaging foo is getting a little rusty, but wasn't the
-> a concept of pattern matching to pick what files go into what subpackage
-> without having to change install targets?
+On Wed, Jul 17, 2024 at 04:24:28PM +0100, John Garry wrote:
+>>>> new logic to it this might indeed be a good time.
+>>> ok, I'll see if can come up with something
+>> I can take a look too. 
+>
+> I was wondering what you plans are for any clean-up/refactoring here, as 
+> mentioned?
 
-It is, and modern debhelper-based packaging workflows make this easy.
-Unfortunately, xfsprogs hasn't been updated to use it. :(
+Try to split all the convert left over of large rtextent / allocation
+size logic out of __xfs_bunmapi and into a separate helper or two.
+I started on it after writing that previous mail, but it has been
+preempted by more urgent work for now.
 
---D
+> I was starting to look at the whole "if (forcealign) else if (big rt)" flow 
+> refactoring in this series to use xfs_inode_alloc_unitsize(); however, I 
+> figure that you have plans wider in scope, which affects this.
+
+It will create a bit of conflict, but nothing out of ordinary.
