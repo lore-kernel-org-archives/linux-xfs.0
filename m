@@ -1,89 +1,128 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A064911712;
-	Wed, 17 Jul 2024 06:01:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C627717A5A0;
+	Wed, 17 Jul 2024 09:46:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721196069; cv=none; b=o94Hiwgs5R9Rqeh8P1lKw8lFZH+Q2Bn6ZCl8nYmPyLnCDds3jIMhkxljZ27fU4Uve34U5zjdr9L9tpgZZVNqPDJpnX1ES8b2CiFdbFUWa0dj4ddATmxdQ/ooNXDOCbOD3ntVB98+LfmAm7BZZ1iKFR7zCU0SDKOmIaUJ46sXxH0=
+	t=1721209597; cv=none; b=ArROpbnTkWi9dzxdUn6KcKcBxM9nF1ECKOYt7U9rU1harVsy1zCoeHYeUV4QnY70u1YaMHJlyPBU+d7OfMcUk5Pz6BRQn0jpbl8ObjoNQp0kZ+H0llQGsCHLfqvWZg/j/DzLxi4ru2Pge3Y4A0Sir0CryViyUMcaeV04Ln3BK8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721196069; c=relaxed/simple;
-	bh=RFXjAgM+5/fsswwUyL7uiUhCLmR4FoPb4Hf8nYZk960=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GJHUDww6S8De/kX2o/ohpWPr+9vymwGFU83s2CIGsUgnCj+jwl4LOd0QFGEyFCTwxLDs8NVlS+XieDT0pLFAzgz/Losi1wMmr7LAhD7YDvQVEt96vbEJ4qayzHNchWzkrCQP896LJIEPjHxzdr320u9RnFYqsVXTsF5U8ZLfndg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=T2f0kHzh; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1721209597; c=relaxed/simple;
+	bh=OcFDHJ6YxtOxAvXzxzjxRNphouy5UY/lzAXnlejmOUw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XkKRfv84QGG9DuYNIB+vFa6qp667p7PygZoD4rN/6KWWeLKOgHRo/O7r5Xr7nmbz4pr1fukOdC1x7WdhEtapShmyHSMLIUrFZPYTHyw2EU68jHje1JcWc/WWgtfxmFiE3QOW1zO3BRiwytgUv6JKMt1oyiXxNnqo9LUcZILlBxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=Q5k8IyCu; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="T2f0kHzh"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=mf6/kkJicUX0q5FPWb7HFODThRUeroz1DuVg1N8KqDw=; b=T2f0kHzh4ncICrqU2OzBRJ1TBE
-	DSozUpfaSHF6jQ5mJABEqktRvZkcDaXtP9K83bXsV+Ml48DEoGnuTnNr+r2U8OXc05ebi6+S0gRmk
-	1QKIgs56iHnCkzgJeUCifl/101a/zpx+KSOpljmceVLI3WjZVfEymv8iUa1SlLDa1Gn/YEZbHwY9q
-	rVVHF8XX9vfMb8hseftIgewdvWFCiArdkHGIFAVFYL9DOp0KSl5vHjbTIqt/T2e6c/tkX3JqXzxCr
-	vvULFobdA7cTQHQ4lQPN2D7HzcH/U7lBfNcVnmmK2hWS8woyw+MPoh6IRuiTBvST0xmFvCHF2AR3s
-	1ivbwAFg==;
-Received: from [50.53.4.147] (helo=[192.168.254.15])
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sTxic-0000000CkkC-05Bv;
-	Wed, 17 Jul 2024 06:00:50 +0000
-Message-ID: <c65edd73-57b7-43d1-8012-6bdf318fcced@infradead.org>
-Date: Tue, 16 Jul 2024 23:00:45 -0700
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="Q5k8IyCu"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4WPB0Q4Trbz9snJ;
+	Wed, 17 Jul 2024 11:46:30 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1721209590;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=chHks11OcswoqogGm1l7KNdqudLDcdLYsX/xiCrSWrw=;
+	b=Q5k8IyCuR1G8bBqV6YVgMWW5NCt0dFK7ByXnl/M77lenZEsR7iG0g5nr8oLutDOp8ixZuX
+	yAzc6URez2rAKZ+sdmvx6yuVsc00jjrabunRbg4YMJjHr4ssLsE2Zxc7WZ3X/1izyB3moB
+	o5tvEyBA7gFp6ePlijMsRG74Sou+2m3F+b6zipL6lE1+dQshARM0xC27dPJ6aWG7DYRBYX
+	Bl+xO4Ync9C3n8xvRweoYRM6fO+AeLHIocUS04ieCec1pKwwyqliqTfHA7Hib/sqU3M/7t
+	2HxkEE99OIXrlBQ+Yr5nlbXYKMnNMN0i32+gxARhumo6yJ2PHCAONcv7OUT3jw==
+Date: Wed, 17 Jul 2024 09:46:21 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: david@fromorbit.com, chandan.babu@oracle.com, djwong@kernel.org,
+	brauner@kernel.org, akpm@linux-foundation.org,
+	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
+	linux-mm@kvack.org, john.g.garry@oracle.com,
+	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
+	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
+	linux-xfs@vger.kernel.org, ryan.roberts@arm.com, hch@lst.de,
+	Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH v10 01/10] fs: Allow fine-grained control of folio sizes
+Message-ID: <20240717094621.fdobfk7coyirg5e5@quentin>
+References: <20240715094457.452836-1-kernel@pankajraghav.com>
+ <20240715094457.452836-2-kernel@pankajraghav.com>
+ <ZpaRElX0HyikQ1ER@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 5/9] Documentation: add a new file documenting
- multigrain timestamps
-To: Jeff Layton <jlayton@kernel.org>, Alexander Viro
- <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
- Jan Kara <jack@suse.cz>, Steven Rostedt <rostedt@goodmis.org>,
- Masami Hiramatsu <mhiramat@kernel.org>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong"
- <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>,
- Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
- Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
- Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- Jonathan Corbet <corbet@lwn.net>
-Cc: Dave Chinner <david@fromorbit.com>, Andi Kleen <ak@linux.intel.com>,
- Christoph Hellwig <hch@infradead.org>, Uros Bizjak <ubizjak@gmail.com>,
- Kent Overstreet <kent.overstreet@linux.dev>, Arnd Bergmann <arnd@arndb.de>,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
- linux-nfs@vger.kernel.org, linux-doc@vger.kernel.org
-References: <20240715-mgtime-v6-0-48e5d34bd2ba@kernel.org>
- <20240715-mgtime-v6-5-48e5d34bd2ba@kernel.org>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20240715-mgtime-v6-5-48e5d34bd2ba@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZpaRElX0HyikQ1ER@casper.infradead.org>
+X-Rspamd-Queue-Id: 4WPB0Q4Trbz9snJ
 
-
-
-On 7/15/24 5:48 AM, Jeff Layton wrote:
-> Add a high-level document that describes how multigrain timestamps work,
-> rationale for them, and some info about implementation and tradeoffs.
+On Tue, Jul 16, 2024 at 04:26:10PM +0100, Matthew Wilcox wrote:
+> On Mon, Jul 15, 2024 at 11:44:48AM +0200, Pankaj Raghav (Samsung) wrote:
+> > +/*
+> > + * mapping_max_folio_size_supported() - Check the max folio size supported
+> > + *
+> > + * The filesystem should call this function at mount time if there is a
+> > + * requirement on the folio mapping size in the page cache.
+> > + */
+> > +static inline size_t mapping_max_folio_size_supported(void)
+> > +{
+> > +	if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
+> > +		return 1U << (PAGE_SHIFT + MAX_PAGECACHE_ORDER);
+> > +	return PAGE_SIZE;
+> > +}
 > 
-> Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  Documentation/filesystems/multigrain-ts.rst | 120 ++++++++++++++++++++++++++++
->  1 file changed, 120 insertions(+)
+> There's no need for this to be part of this patch.  I've removed stuff
+> from this patch before that's not needed, please stop adding unnecessary
+> functions.  This would logically be part of patch 10.
+
+That makes sense. I will move it to the last patch.
+
 > 
+> > +static inline void mapping_set_folio_order_range(struct address_space *mapping,
+> > +						 unsigned int min,
+> > +						 unsigned int max)
+> > +{
+> > +	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
+> > +		return;
+> > +
+> > +	if (min > MAX_PAGECACHE_ORDER) {
+> > +		VM_WARN_ONCE(1,
+> > +	"min order > MAX_PAGECACHE_ORDER. Setting min_order to MAX_PAGECACHE_ORDER");
+> > +		min = MAX_PAGECACHE_ORDER;
+> > +	}
+> 
+> This is really too much.  It's something that will never happen.  Just
+> delete the message.
+> 
+> > +	if (max > MAX_PAGECACHE_ORDER) {
+> > +		VM_WARN_ONCE(1,
+> > +	"max order > MAX_PAGECACHE_ORDER. Setting max_order to MAX_PAGECACHE_ORDER");
+> > +		max = MAX_PAGECACHE_ORDER;
+> 
+> Absolutely not.  If the filesystem declares it can support a block size
+> of 4TB, then good for it.  We just silently clamp it.
 
+Hmm, but you raised the point about clamping in the previous patches[1]
+after Ryan pointed out that we should not silently clamp the order.
 
-Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+```
+> It seems strange to silently clamp these? Presumably for the bs>ps usecase,
+> whatever values are passed in are a hard requirement? So wouldn't want them to
+> be silently reduced. (Especially given the recent change to reduce the size of
+> MAX_PAGECACHE_ORDER to less then PMD size in some cases).
 
-Thanks.
+Hm, yes.  We should probably make this return an errno.  Including
+returning an errno for !IS_ENABLED() and min > 0.
+```
 
--- 
-~Randy
+It was not clear from the conversation in the previous patches that we
+decided to just clamp the order (like it was done before).
+
+So let's just stick with how it was done before where we clamp the
+values if min and max > MAX_PAGECACHE_ORDER?
+
+[1] https://lore.kernel.org/linux-fsdevel/Zoa9rQbEUam467-q@casper.infradead.org/
