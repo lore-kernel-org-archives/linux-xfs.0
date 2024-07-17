@@ -1,50 +1,89 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 636A7BA45
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Jul 2024 05:00:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A064911712;
+	Wed, 17 Jul 2024 06:01:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721192412; cv=none; b=pJAcDp0/QI/xA9AZO/reNvpN+KscjRIoJSHnalqAlC/SQtqnRhAkzuXtvhu/T9RmszCU6HQrw3kGX4tIQrypsIiMnhcPoU/4iI3vOlPEJTOSRAd0SeCbr7JD4Php0I+QAB/2IPM39gRfVgypYgpbdqFmWi8ZBYc1pZYGbSji/oE=
+	t=1721196069; cv=none; b=o94Hiwgs5R9Rqeh8P1lKw8lFZH+Q2Bn6ZCl8nYmPyLnCDds3jIMhkxljZ27fU4Uve34U5zjdr9L9tpgZZVNqPDJpnX1ES8b2CiFdbFUWa0dj4ddATmxdQ/ooNXDOCbOD3ntVB98+LfmAm7BZZ1iKFR7zCU0SDKOmIaUJ46sXxH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721192412; c=relaxed/simple;
-	bh=3IoHP4t9Fxrhnq5JTwFvxpRzzbbt8v1K+wj24tUtM+Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JwU/YXX1I+jvREGikwPKl4EFIYmOdmeLQiGxdqEq/OkerxoCAid9seRBervGcbAoxRdHW+HCa/75mFlSJiCSWgL/L63k9SxmaqfWXDlkTAAk6SD0SyPKYM3qodommy2hoeqEZrSF3nfeAwhgN2JB32JT5Tzzp64XuJmNPNwNZgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 15E5768AFE; Wed, 17 Jul 2024 07:00:06 +0200 (CEST)
-Date: Wed, 17 Jul 2024 07:00:05 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] misc: shift install targets
-Message-ID: <20240717050005.GB8579@lst.de>
-References: <171988120209.2008941.9839121054654380693.stgit@frogsfrogsfrogs> <171988120259.2008941.14570974653938645833.stgit@frogsfrogsfrogs> <20240702054419.GC23415@lst.de> <20240703025929.GV612460@frogsfrogsfrogs> <20240703043123.GD24160@lst.de> <20240703050154.GB612460@frogsfrogsfrogs> <20240709225306.GE612460@frogsfrogsfrogs> <20240710061838.GA25875@lst.de> <20240716164714.GC612460@frogsfrogsfrogs>
+	s=arc-20240116; t=1721196069; c=relaxed/simple;
+	bh=RFXjAgM+5/fsswwUyL7uiUhCLmR4FoPb4Hf8nYZk960=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GJHUDww6S8De/kX2o/ohpWPr+9vymwGFU83s2CIGsUgnCj+jwl4LOd0QFGEyFCTwxLDs8NVlS+XieDT0pLFAzgz/Losi1wMmr7LAhD7YDvQVEt96vbEJ4qayzHNchWzkrCQP896LJIEPjHxzdr320u9RnFYqsVXTsF5U8ZLfndg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=T2f0kHzh; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="T2f0kHzh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=mf6/kkJicUX0q5FPWb7HFODThRUeroz1DuVg1N8KqDw=; b=T2f0kHzh4ncICrqU2OzBRJ1TBE
+	DSozUpfaSHF6jQ5mJABEqktRvZkcDaXtP9K83bXsV+Ml48DEoGnuTnNr+r2U8OXc05ebi6+S0gRmk
+	1QKIgs56iHnCkzgJeUCifl/101a/zpx+KSOpljmceVLI3WjZVfEymv8iUa1SlLDa1Gn/YEZbHwY9q
+	rVVHF8XX9vfMb8hseftIgewdvWFCiArdkHGIFAVFYL9DOp0KSl5vHjbTIqt/T2e6c/tkX3JqXzxCr
+	vvULFobdA7cTQHQ4lQPN2D7HzcH/U7lBfNcVnmmK2hWS8woyw+MPoh6IRuiTBvST0xmFvCHF2AR3s
+	1ivbwAFg==;
+Received: from [50.53.4.147] (helo=[192.168.254.15])
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sTxic-0000000CkkC-05Bv;
+	Wed, 17 Jul 2024 06:00:50 +0000
+Message-ID: <c65edd73-57b7-43d1-8012-6bdf318fcced@infradead.org>
+Date: Tue, 16 Jul 2024 23:00:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240716164714.GC612460@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 5/9] Documentation: add a new file documenting
+ multigrain timestamps
+To: Jeff Layton <jlayton@kernel.org>, Alexander Viro
+ <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
+ Jan Kara <jack@suse.cz>, Steven Rostedt <rostedt@goodmis.org>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong"
+ <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>,
+ Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
+ Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+ Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>,
+ Jonathan Corbet <corbet@lwn.net>
+Cc: Dave Chinner <david@fromorbit.com>, Andi Kleen <ak@linux.intel.com>,
+ Christoph Hellwig <hch@infradead.org>, Uros Bizjak <ubizjak@gmail.com>,
+ Kent Overstreet <kent.overstreet@linux.dev>, Arnd Bergmann <arnd@arndb.de>,
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+ linux-nfs@vger.kernel.org, linux-doc@vger.kernel.org
+References: <20240715-mgtime-v6-0-48e5d34bd2ba@kernel.org>
+ <20240715-mgtime-v6-5-48e5d34bd2ba@kernel.org>
+Content-Language: en-US
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20240715-mgtime-v6-5-48e5d34bd2ba@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jul 16, 2024 at 09:47:14AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+
+
+On 7/15/24 5:48 AM, Jeff Layton wrote:
+> Add a high-level document that describes how multigrain timestamps work,
+> rationale for them, and some info about implementation and tradeoffs.
 > 
-> Modify each Makefile so that "install-pkg" installs the main package
-> contents, and "install" just invokes "install-pkg".  We'll need this
-> indirection for the next patch where we add an install-selfheal target
-> to build the xfsprogs-self-healing package but will still want 'make
-> install' to install everything on a developer's workstation.
+> Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>  Documentation/filesystems/multigrain-ts.rst | 120 ++++++++++++++++++++++++++++
+>  1 file changed, 120 insertions(+)
+> 
 
-Maybe debian packaging foo is getting a little rusty, but wasn't the
-a concept of pattern matching to pick what files go into what subpackage
-without having to change install targets?
 
+Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+
+Thanks.
+
+-- 
+~Randy
