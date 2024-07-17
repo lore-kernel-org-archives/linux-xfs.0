@@ -1,126 +1,133 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6ABEA381DE;
-	Wed, 17 Jul 2024 15:26:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D5DE8C04
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Jul 2024 16:15:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721229983; cv=none; b=btc9P/ihob0zOPeV33gLiF0Kjx35GbsmukDIzfIyIZRqY5M+7rNiWIuwXPe7v6fFzDrbpPkmyRrJHJIARGWKG3dBs8G1LqITOa4/Y4ZL7FYbyIRg9aR15V/dg4pl5AAC8lh5AbgtnJi0bCkx9szkI7tJFvFBhuTYMTYkZ9wrG6A=
+	t=1721232948; cv=none; b=IqaSt+WieAD7193VdniT0nWY/v0KKDckwAV2rrkI1nutd7s7WqAK670P9awnqDt/qUVMO3nAt+CngblFVbTL8HRG5zRzfIO7Phv5Liga7N/3+DDeO8/ZFxfcLLiAH0chLEPj983rXMQhcK99lDnmsdkI7Y1IR7OL7hDxgg4RQEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721229983; c=relaxed/simple;
-	bh=IOcRkh89Ks8cunm4tMzKBSVeuDt4oSZNweCxq2oSKBU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IZoNHfbSYeeAuR7sbLCOcY9vGwgHlT1enUxQ38qzYHjZcTRORzFnHCqZlzgDg3Po4JYiyVdxIB0Ed2lEMyMZI6KiUfDqJ8qpkjcvTlUd5tKMIvGsPljDu16IgnNlY0XPjzRGq6jAyqSBjL39YH3CUt0NUNjUMNub5V9CfYZii2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id CA402106F;
-	Wed, 17 Jul 2024 08:26:44 -0700 (PDT)
-Received: from [10.57.77.222] (unknown [10.57.77.222])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9ABCE3F766;
-	Wed, 17 Jul 2024 08:26:16 -0700 (PDT)
-Message-ID: <bf9ffac5-11ff-4a1a-b31a-b9940558fe2c@arm.com>
-Date: Wed, 17 Jul 2024 16:26:15 +0100
+	s=arc-20240116; t=1721232948; c=relaxed/simple;
+	bh=PNjl72aI+/BMgSoUr1h9094Zbwux+OnKlLBck7MU8eM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UAIZwbbYziKy1ZToKiV0/tugqT/RLPS86XLw59XC9BegUrhF02V1FAXDklHo1GZwXN/SR4cwaolJP5KRUp2zyLDUbi1oqcT4uTZW/1Q5GCT+MvMAnUYngYnG+gf/P9IBL0JIBfgvT6W/ZfGcKQfungtHcu4TfAQKM1vTr9+b7Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fktVZ0l5; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fktVZ0l5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97DE6C2BD10;
+	Wed, 17 Jul 2024 16:15:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1721232947;
+	bh=PNjl72aI+/BMgSoUr1h9094Zbwux+OnKlLBck7MU8eM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fktVZ0l5T5Gv4pIY5+UesZkapgjvpAyKQV3M9tKAy8jGBEHyqt4u/uq6fzCu9+cNC
+	 BuPa/W+OunFnDS4qX/KzgJlac/rG+RUAf41gCytiFItrhUWu0u5yXDTY2UT+woRTO0
+	 C5TNpCYRZDCOm5mYEmDSPTgS0owfLa2iMggpdSPjRqBCu2tptzYLrALJVr3MVuallZ
+	 stRAMZqD6B434JJIFJRnpNJ/nqZe6aHtPiVvGB1yyuAWFmhRXStcqhi+shchpBGnBt
+	 IxLzEjXyuYPYsKPO3FPH4eBYvnvS1qMVdDxx95qptAm8NmK9Ebb9jzhK/27exjjiSR
+	 qw4JB+eTsf6jw==
+Date: Wed, 17 Jul 2024 09:15:46 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] debian: enable xfs_scrub_all systemd timer services
+ by default
+Message-ID: <20240717161546.GH612460@frogsfrogsfrogs>
+References: <171988120209.2008941.9839121054654380693.stgit@frogsfrogsfrogs>
+ <171988120259.2008941.14570974653938645833.stgit@frogsfrogsfrogs>
+ <20240702054419.GC23415@lst.de>
+ <20240703025929.GV612460@frogsfrogsfrogs>
+ <20240703043123.GD24160@lst.de>
+ <20240703050154.GB612460@frogsfrogsfrogs>
+ <20240709225306.GE612460@frogsfrogsfrogs>
+ <20240710061838.GA25875@lst.de>
+ <20240716164629.GB612460@frogsfrogsfrogs>
+ <20240717045904.GA8579@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 01/10] fs: Allow fine-grained control of folio sizes
-Content-Language: en-GB
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Matthew Wilcox <willy@infradead.org>, david@fromorbit.com,
- chandan.babu@oracle.com, djwong@kernel.org, brauner@kernel.org,
- akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
- yang@os.amperecomputing.com, linux-mm@kvack.org, john.g.garry@oracle.com,
- linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
- mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
- linux-xfs@vger.kernel.org, hch@lst.de, Zi Yan <ziy@nvidia.com>
-References: <20240715094457.452836-1-kernel@pankajraghav.com>
- <20240715094457.452836-2-kernel@pankajraghav.com>
- <ZpaRElX0HyikQ1ER@casper.infradead.org>
- <20240717094621.fdobfk7coyirg5e5@quentin>
- <61806152-3450-4a4f-b81f-acc6c6aeed29@arm.com>
- <20240717151251.x7vkwajb57pefs6m@quentin>
-From: Ryan Roberts <ryan.roberts@arm.com>
-In-Reply-To: <20240717151251.x7vkwajb57pefs6m@quentin>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240717045904.GA8579@lst.de>
 
-On 17/07/2024 16:12, Pankaj Raghav (Samsung) wrote:
->>>>
->>>> This is really too much.  It's something that will never happen.  Just
->>>> delete the message.
->>>>
->>>>> +	if (max > MAX_PAGECACHE_ORDER) {
->>>>> +		VM_WARN_ONCE(1,
->>>>> +	"max order > MAX_PAGECACHE_ORDER. Setting max_order to MAX_PAGECACHE_ORDER");
->>>>> +		max = MAX_PAGECACHE_ORDER;
->>>>
->>>> Absolutely not.  If the filesystem declares it can support a block size
->>>> of 4TB, then good for it.  We just silently clamp it.
->>>
->>> Hmm, but you raised the point about clamping in the previous patches[1]
->>> after Ryan pointed out that we should not silently clamp the order.
->>>
->>> ```
->>>> It seems strange to silently clamp these? Presumably for the bs>ps usecase,
->>>> whatever values are passed in are a hard requirement? So wouldn't want them to
->>>> be silently reduced. (Especially given the recent change to reduce the size of
->>>> MAX_PAGECACHE_ORDER to less then PMD size in some cases).
->>>
->>> Hm, yes.  We should probably make this return an errno.  Including
->>> returning an errno for !IS_ENABLED() and min > 0.
->>> ```
->>>
->>> It was not clear from the conversation in the previous patches that we
->>> decided to just clamp the order (like it was done before).
->>>
->>> So let's just stick with how it was done before where we clamp the
->>> values if min and max > MAX_PAGECACHE_ORDER?
->>>
->>> [1] https://lore.kernel.org/linux-fsdevel/Zoa9rQbEUam467-q@casper.infradead.org/
->>
->> The way I see it, there are 2 approaches we could take:
->>
->> 1. Implement mapping_max_folio_size_supported(), write a headerdoc for
->> mapping_set_folio_order_range() that says min must be lte max, max must be lte
->> mapping_max_folio_size_supported(). Then emit VM_WARN() in
->> mapping_set_folio_order_range() if the constraints are violated, and clamp to
->> make it safe (from page cache's perspective). The VM_WARN()s can just be inline
+On Wed, Jul 17, 2024 at 06:59:04AM +0200, Christoph Hellwig wrote:
+> On Tue, Jul 16, 2024 at 09:46:29AM -0700, Darrick J. Wong wrote:
+> > Hm, xfs could do that, but that would clutter up the mount options.
+> > Or perhaps the systemd service could look for $mountpoint/.autoheal or
+> > something.
+> > 
+> > It might be easier still to split the packages, let me send an RFC of
+> > what that looks like.
 > 
-> Inlining with the `if` is not possible since:
-> 91241681c62a ("include/linux/mmdebug.h: make VM_WARN* non-rvals")
+> So I think the package split makes sense no matter what we do,
+> but I really want a per file system choice and not a global one.
 
-Ahh my bad. Could use WARN_ON()?
+<nod> How might we do that?
 
+1. touch $mnt/.selfheal to opt-in to online fsck?
+2. touch $mnt/.noselfheal to opt-out?
+3. attr -s system.selfheal to opt in?
+4. attr -s system.noselfheal to opt out?
+5. compat feature to opt-in
+6. compat feature to opt-out?
+7. filesystem property that we stuff in the metadir?
+
+1-2 most resemble the old /.forcefsck knob, and systemd has
+ConditionPathExists= that we could use to turn an xfs_scrub@<path>
+service invocation into a nop.
+
+3-4 don't clutter up the root filesystem with dotfiles, but then if we
+ever reset the root directory then the selfheal property is lost.
+
+5-6 might be my preferred way, but then I think I have to add a fsgeom
+flag so that userspace can detect the selfheal preferences.
+
+7 is a special snowflake currently :P
+
+Other issues:
+
+a. Are there really two bits that we might want to store in the *heal
+attribute?
+
+   00 == never allow online fsck at all
+   01 == allow invocations of xfs_scrub but don't let xfs_scrub_all
+         invoke it
+   11 == allow all invocations of online fsck
+
+and probably useless:
+
+   10 == allow invocations of xfs_scrub only from xfs_scrub_all
+
+b. Adding these knobs means more userspace code to manage them.  1-4 can
+be done easily in xfs_admin, 5-8 involve a new ioctl and io/db code.
+
+c. 1-4 can be lost if something torches the root directory.  Is that ok?
+7 also has that problem, but as nobody's really designed a filesystem
+properties feature, I don't know if that's acceptable.
+
+> As a fіle system developer I always have scratch file systems around
+> that I definitely never want checked.  I'd also prefer scrub to not
+> randomly start checking external file system that are only temporarily
+> mounted and that I want to remove again.
+
+Another thing I need to figure out if systemd has a handy way of
+terminating a service as a "prerequisite" to "stopping" a mount.
+Right now you can unmount an fs that's being scrubbed from your mount
+hierarchy, but the service keeps running and the mount is still
+active.
+
+> Maybe we'll indeed want some kind of marker in the file system.
 > 
->> in the if statements to keep them clean. The FS is responsible for checking
->> mapping_max_folio_size_supported() and ensuring min and max meet requirements.
-> 
-> This is sort of what is done here but IIUC willy's reply to the patch,
-> he prefers silent clamping over having WARNINGS. I think because we check
-> the constraints during the mount time, so it should be safe to call
-> this I guess?
+> Btw, the code in scrub_all that parses lsblk output to find file systems
+> also looks a bit odd.  I'd expect it to use whatever is the python
+> equivalent of setmntent/getmntent on /proc/self/mounts.
 
-I don't want to put words in his mouth, but I thought he was complaining about
-the verbosity of the warnings, not their presence.
+It parses the lsblk json output so that it can trace all the xfs mounts
+back to raw block devices so that it can try to kick off as many scrubs
+in parallel as it can so long as no two scrubs will hit the same bdev.
 
-> 
->>
->> 2. Return an error from mapping_set_folio_order_range() (and the other functions
->> that set min/max). No need for warning. No state changed if error is returned.
->> FS can emit warning on error if it wants.
-> 
-> I think Chinner was not happy with this approach because this is done
-> per inode and basically we would just shutdown the filesystem in the
-> first inode allocation instead of refusing the mount as we know about
-> the MAX_PAGECACHE_ORDER even during the mount phase anyway.
-
-Ahh that makes sense. Understood.
-
-> 
-> --
-> Pankaj
-
+--D
