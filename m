@@ -1,29 +1,30 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 517FC566A
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Jul 2024 16:43:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D1CE1DFCB
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Jul 2024 16:45:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721234602; cv=none; b=riq1GJNZWjBL/x1NurJ4J35qK0DfQJbocfFsa/W9JYleEN8sbIiq2FNzeyxk7Inb5dGYhXk/Vx1ZgC7kPTzqIpY2wfkkhk6UdPY3WfnuBZ264Oy/+0gwe/9zEfDaE6yOmvPlyRcuX2mVvkK48R7mFAnEJGmiatM3ZLitYWvbbis=
+	t=1721234751; cv=none; b=f3aGbXXw3qpv2OiP/RvIT4ZE4kTV+LK/A8jcmPgolL1b8JcrWfdG7Z9anNKqqZUOoMnADz3YVYdlQJUBzZD8j9BXYvETR0Hnn0pwTzgSGg0Oavwl88AzBiSAkhtyRP1+kiIA1CJbBk17M3zrleniEPIfH3L2tBcuFGeGLmVT3Aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721234602; c=relaxed/simple;
-	bh=WZ6jI8WhqL9djugPjDLwr9hyQZnKhnURnWhxpBfj3cM=;
+	s=arc-20240116; t=1721234751; c=relaxed/simple;
+	bh=k/KKPxnr7idju25jSYsqEovbBI7yw6IV3+jIKdBE1iE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QeYgbojn71lamwG0KEhb1ljzdy/h2fGch/g089RBo/Mz2DAZEb5Kayc8fFapJQBfgc5D4cMRhf6bmiX9CaPzDcWHjR0H6gqObyxpe7WI7xLi/QfQ/cjh2yt0cZX4yHNbSqi85QwprgixQeqqmr9kpMJ8EyImpGdudBtbMqmKSLQ=
+	 Content-Type:Content-Disposition:In-Reply-To; b=CMy2EBhFBWOtp0aYHUOSiwYhKxS2e61YaOfdGZU4Kcdvs3TAmqGtUIvbzmA7MtePUCikDw7YUKNs8XIDWZpv/8wqHuUHdyflFSxyP32r8dD7pQO8u5PZ5LUeNWh1F8lrgP3PVYZ1mXU9sSYB309dadpizud0OFhw9jPyCnd6KTc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 08DC868B05; Wed, 17 Jul 2024 18:43:17 +0200 (CEST)
-Date: Wed, 17 Jul 2024 18:43:16 +0200
+	id 6951A68AA6; Wed, 17 Jul 2024 18:45:45 +0200 (CEST)
+Date: Wed, 17 Jul 2024 18:45:44 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] misc: shift install targets
-Message-ID: <20240717164316.GA21364@lst.de>
-References: <171988120259.2008941.14570974653938645833.stgit@frogsfrogsfrogs> <20240702054419.GC23415@lst.de> <20240703025929.GV612460@frogsfrogsfrogs> <20240703043123.GD24160@lst.de> <20240703050154.GB612460@frogsfrogsfrogs> <20240709225306.GE612460@frogsfrogsfrogs> <20240710061838.GA25875@lst.de> <20240716164714.GC612460@frogsfrogsfrogs> <20240717050005.GB8579@lst.de> <20240717161905.GI612460@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/3] debian: enable xfs_scrub_all systemd timer
+ services by default
+Message-ID: <20240717164544.GA21436@lst.de>
+References: <171988120259.2008941.14570974653938645833.stgit@frogsfrogsfrogs> <20240702054419.GC23415@lst.de> <20240703025929.GV612460@frogsfrogsfrogs> <20240703043123.GD24160@lst.de> <20240703050154.GB612460@frogsfrogsfrogs> <20240709225306.GE612460@frogsfrogsfrogs> <20240710061838.GA25875@lst.de> <20240716164629.GB612460@frogsfrogsfrogs> <20240717045904.GA8579@lst.de> <20240717161546.GH612460@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,25 +33,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240717161905.GI612460@frogsfrogsfrogs>
+In-Reply-To: <20240717161546.GH612460@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jul 17, 2024 at 09:19:05AM -0700, Darrick J. Wong wrote:
-> > > Modify each Makefile so that "install-pkg" installs the main package
-> > > contents, and "install" just invokes "install-pkg".  We'll need this
-> > > indirection for the next patch where we add an install-selfheal target
-> > > to build the xfsprogs-self-healing package but will still want 'make
-> > > install' to install everything on a developer's workstation.
-> > 
-> > Maybe debian packaging foo is getting a little rusty, but wasn't the
-> > a concept of pattern matching to pick what files go into what subpackage
-> > without having to change install targets?
+On Wed, Jul 17, 2024 at 09:15:46AM -0700, Darrick J. Wong wrote:
+> > So I think the package split makes sense no matter what we do,
+> > but I really want a per file system choice and not a global one.
 > 
-> It is, and modern debhelper-based packaging workflows make this easy.
-> Unfortunately, xfsprogs hasn't been updated to use it. :(
+> <nod> How might we do that?
+> 
+> 1. touch $mnt/.selfheal to opt-in to online fsck?
+> 2. touch $mnt/.noselfheal to opt-out?
+> 3. attr -s system.selfheal to opt in?
+> 4. attr -s system.noselfheal to opt out?
+> 5. compat feature to opt-in
+> 6. compat feature to opt-out?
+> 7. filesystem property that we stuff in the metadir?
+> 
+> 1-2 most resemble the old /.forcefsck knob, and systemd has
+> ConditionPathExists= that we could use to turn an xfs_scrub@<path>
+> service invocation into a nop.
+> 
+> 3-4 don't clutter up the root filesystem with dotfiles, but then if we
+> ever reset the root directory then the selfheal property is lost.
 
-Oh well.  Maybe I'll need to dust off my packaging skills and look
-into that.  Because splitting the install targets just makes it harder
-to move to a more modern build system eventually.  Another one of those
-projects I've started and need to eventually finish..
+All four of of them are kinda scary that the contents of the file systems
+affects policy.  Now maybe we should never chown the root directory to
+an untrusted or not fully trusted user, but..
+
+> 5-6 might be my preferred way, but then I think I have to add a fsgeom
+> flag so that userspace can detect the selfheal preferences.
+
+These actually sound like the most sensible to me, even if the flags
+are of course a little annoying.
+
+> b. Adding these knobs means more userspace code to manage them.  1-4 can
+> be done easily in xfs_admin, 5-8 involve a new ioctl and io/db code.
+
+Yeah, that's kindof the downside.
+
+The other option would of course be some kind of global table in /etc.
 
