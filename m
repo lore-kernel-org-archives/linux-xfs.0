@@ -1,281 +1,181 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9217D6FB6;
-	Wed, 17 Jul 2024 03:49:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E7A76116
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Jul 2024 04:11:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721188173; cv=none; b=t9Mzv9+9gysJwm4OkldIzTNJ3KdLBsYaFAXJbPsU0TKXJUKzSqnojBnnDaj+LGA/xypnxm7fO9sm5OAcn8FGKcGJtm3tE1E+qoSRho1buG7ekZc0hLH4bfgnGJFrv7nz6vV3qkcFJwv6TezhUKW0yw3KX7xCoseHXQfmV5LA/gs=
+	t=1721189482; cv=none; b=NqOFUt/wTdxM94hDxmGOvrwwKY6a5Xuo/J/6LvVQ7GdVlRKa+YeVXTrsOoa6QLt5aubbSv8Ef6gBKQNP99xh2pmQblKX663G1TFKUbhxmwwPFISHnn2Ko2YNz1PnhpT04E99vcQqtaEisTjP2/Wf5iQ/TjwldzeUxHDnK++KW+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721188173; c=relaxed/simple;
-	bh=eyyxX2J44xYKrJS7pyc4O8ajIVQgp1ln36wjZIj6Wxo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=IvEZ/C422sizDcsOvJSp3BqjW+vh+NVGgYc4vbXdWrJR18yuI4sAFbipmeUkCluxmjFvDMRfCm/DUwNawqh77hIZVUnKa2cpHv9UqkkIHSR8QEHAX57/dop0DyFnTIvoA225yWNeyFIcpSoX2D8ttZ1dlzhAFC+b6OAhVKhycLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YXEjsoCi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721189482; c=relaxed/simple;
+	bh=K81kGTlDdvziLarZQ3bGQLdwSMhVYjSSAZ0zEepXhQA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jDVAX+f4alC7VObsLUg+OKlemOdjXsiao6AbREV7SIe1XB4B+r6VzJLxVSpVFqgX6IOpWNfcV3dj1wIKyymXfNZLcvrngPRUc8tvSsRelJRIYDPFzZtRLB67L16KfGOwPzU/3PetESGG3qXmBlvYLoKrDFfcsD5azBg/Nv7zamA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=S2AxiUOs; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YXEjsoCi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B540C32782;
-	Wed, 17 Jul 2024 03:49:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721188173;
-	bh=eyyxX2J44xYKrJS7pyc4O8ajIVQgp1ln36wjZIj6Wxo=;
-	h=From:To:Cc:Subject:Date:From;
-	b=YXEjsoCibK807s+20MbEr5uxSrYuURAV6k+BlRBsHao29ss7Ff+vtfN7qCYbVrsK7
-	 Oas9k6de+7ca8jdxZt4ol6RuDZVE8aW762YvZZGxvzSBAQCGCxBpKlJ7F2ddIF+lxz
-	 /jfsoLCNqF81ziISdfNXKFbmPVCn4jheJocSYBEhW+0TXQilXC6vIsv0uWLylh7nkN
-	 QCl8Wi50JW0jpBsZEOeXMru17u7nsqTbASKCnNmymiVzQl7bTy/Q71dyTK0dG7LgZG
-	 SSajbm3KBy6dqdL8TTYQCMZPDENnY64Pey+i1JvQVpYsHyhme9P5ftXbslTwHEtKL+
-	 GDHgkuVRXWTxQ==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: chandanbabu@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: new code for 6.11
-Date: Wed, 17 Jul 2024 09:14:02 +0530
-Message-ID: <871q3sison.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="S2AxiUOs"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-70b0013cf33so4661923b3a.2
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jul 2024 21:11:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721189480; x=1721794280; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=C4BaVmQSB2jH8wxipgqcSawkmWdK3Y8uMHgAA9jglbA=;
+        b=S2AxiUOs9w5uE1MRbgnHX8Y6zbLyD2FPEwJuU4n/j06QwvuenooXGMZSrS4HuIF4qj
+         xmEQM8p6ha2jbBUCI2wLdFgfBvMihNvKtLHRAnLhnTyQUEgy5fMQ+WA20cyijmrpSlLk
+         MS2BQrgU1FNevra32B0hpwqzS0DVNjkB88ByR+iGcB5J+hz+WghJmSrbXd2c0YV4KVJq
+         BpnPdQAQWtYLIsDsTT0VTx4hMPfJNYTm1esGEIcOCJXmsGLUyPJVruAygjE8mqGpZ1rJ
+         BXe4AvpC+/JOOrEXt9zS/DC9SFCcwnRyNJRA9t9Evlb7hYqd4pRuGY1VJpcsLPCIdm4q
+         uroQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721189480; x=1721794280;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=C4BaVmQSB2jH8wxipgqcSawkmWdK3Y8uMHgAA9jglbA=;
+        b=cgruOh1AavJOjiwaQlCqR1SgmjXSljO82yWubNDG6yhWKAX02+6vWOhixndFuvvEqG
+         g+Vjwpt2fLO0/otbrdXZ1Gp09LRbK7PmGWobyZPExCpDt6IJ5Ftj1lmQ4YidhquBDuOL
+         IWQXL7vj34O2QtlSjfnN6pB4GBZLiOPi/F8qkV3Vmp5EsuvgbCkAJO5pyIG35CErf/JN
+         +fhWxQ6cWlyiyvXeAgJOWZ64AOO7DJeEoLSF9Aqz/7XQLHFv/+JGZrN4wc2ZT2x/FKH7
+         1gJR9EWzacnRM+0RuBNtfpbPVlcJr/OZnDUuLzOLN/Iz+9c0rrv9v0ETEAkRZVX6+ETi
+         dxyw==
+X-Gm-Message-State: AOJu0Yydwr4gjIjJwENzqfm0+BSwMKCeViFeY7UD3W8PemZa+kRVdqEM
+	ilVeYf9YqmQ8X1dk/unpZG6KJzjjho1eI7Ie82rmFtsZaQAYkMgKJd4SGX0s0d4=
+X-Google-Smtp-Source: AGHT+IHG1IlSuNx+HD44V05u/eBOWPQMlDmX3UuQo6VhpLEDFzFAVu9whZi4Klnznediy4tdggRo3w==
+X-Received: by 2002:a05:6a00:2450:b0:705:c0a1:61c5 with SMTP id d2e1a72fcca58-70ce507dd02mr525962b3a.20.1721189479821;
+        Tue, 16 Jul 2024 21:11:19 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b7eca6a00sm7449423b3a.142.2024.07.16.21.11.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Jul 2024 21:11:19 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sTw0a-0013eI-2u;
+	Wed, 17 Jul 2024 14:11:16 +1000
+Date: Wed, 17 Jul 2024 14:11:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Wengang Wang <wen.gang.wang@oracle.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 2/9] spaceman/defrag: pick up segments from target file
+Message-ID: <ZpdEZOWDbg5SKauo@dread.disaster.area>
+References: <20240709191028.2329-1-wen.gang.wang@oracle.com>
+ <20240709191028.2329-3-wen.gang.wang@oracle.com>
+ <ZpWzg9Jnko76tAx5@dread.disaster.area>
+ <65CF7656-6B69-47A3-90E4-462E052D2543@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <65CF7656-6B69-47A3-90E4-462E052D2543@oracle.com>
 
-Hi Linus,
+On Tue, Jul 16, 2024 at 08:23:35PM +0000, Wengang Wang wrote:
+> > Ok, so this is a linear iteration of all extents in the file that
+> > filters extents for the specific "segment" that is going to be
+> > processed. I still have no idea why fixed length segments are
+> > important, but "linear extent scan for filtering" seems somewhat
+> > expensive.
+> 
+> Hm… fixed length segments — actually not fixed length segments, but segment
+> size can’t exceed the limitation.  So segment.ds_length <=  LIMIT.
 
-Please pull this branch with changes for XFS for 6.11-rc1.
+Which is effectively fixed length segments....
 
-Major changes in this release are limited to enabling FITRIM on realtime
-devices and Byte-based grant head log reservation tracking. The remaining
-changes are limited to fixes and cleanups included in this pull request.
+> Larger segment take longer time (with filed locked) to defrag. The
+> segment size limit is a way to balance the defrag and the parallel
+> IO latency.
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any problems.
+Yes, I know why you've done it. These were the same arguments made a
+while back for a new way of cloning files on XFS. We solved those
+problems just with a small change to the locking, and didn't need
+new ioctls or lots of new code just to solve the "clone blocks
+concurrent IO" problem.
 
-The following changes since commit 22a40d14b572deb80c0648557f4bd502d7e83826:
+I'm looking at this from exactly the same POV. The code presented is
+doing lots of complex, unusable stuff to work around the fact that
+UNSHARE blocks concurrent IO. I don't see any difference between
+CLONE and UNSHARE from the IO perspective - if anything UNSHARE can
+have looser rules than CLONE, because a concurrent write will either
+do the COW of a shared block itself, or hit the exclusive block that
+has already been unshared.
 
-  Linux 6.10-rc6 (2024-06-30 14:40:44 -0700)
+So if we fix these locking issues in the kernel, then the whole need
+for working around the IO concurrency problems with UNSHARE goes
+away and the userspace code becomes much, much simpler.
 
-are available in the Git repository at:
+> > Indeed, if you used FIEMAP, you can pass a minimum
+> > segment length to filter out all the small extents. Iterating that
+> > extent list means all the ranges you need to defrag are in the holes
+> > of the returned mapping information. This would be much faster
+> > than an entire linear mapping to find all the regions with small
+> > extents that need defrag. The second step could then be doing a
+> > fine grained mapping of each region that we now know either contains
+> > fragmented data or holes....
+> 
+> Hm… just a question here:
+> As your way, say you set the filter length to 2048, all extents with 2048 or less blocks are to defragmented.
+> What if the extent layout is like this:
+> 
+> 1.    1
+> 2.    2049
+> 3.    2
+> 4.    2050
+> 5.    1
+> 6.    2051
+> 
+> In above case, do you do defrag or not?
 
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.11-merge-3
+The filtering presenting in the patch above will not defrag any of
+this with a 2048 block segment side, because the second extent in
+each segment extend beyond the configured max segment length. IOWs,
+it ends up with a single extent per "2048 block segment", and that
+won't get defragged with the current algorithm.
 
-for you to fetch changes up to 2bf6e353542d233486195953dc9c346331f82dcb:
+As it is, this really isn't a common fragmentation pattern for a
+file that does not contain shared extents, so I wouldn't expect to
+ever need to decide if this needs to be defragged or not.
 
-  xfs: fix rtalloc rotoring when delalloc is in use (2024-07-09 09:08:28 +0530)
+However, it is exactly the layout I would expect to see for cloned
+and modified filesystem image files.  That is, the common layout for
+such a "cloned from golden image" Vm images is this:
 
-----------------------------------------------------------------
-New code for 6.11:
+1.    1		written
+2.    2049	shared
+3.    2		written
+4.    2050	shared
+5.    1		written
+6.    2051	shared
 
-  * Enable FITRIM on the realtime device.
-  * Introduce byte-based grant head log reservation tracking instead of
-    physical log location tracking.
-    This allows grant head to track a full 64 bit bytes space and hence
-    overcome the limit of 4GB indexing that has been present until now.
-  * Fixes
-    - xfs_flush_unmap_range() and xfs_prepare_shift() should consider RT extents
-      in the flush unmap range.
-    - Implement bounds check when traversing log operations during log replay.
-    - Prevent out of bounds access when traversing a directory data block.
-    - Prevent incorrect ENOSPC when concurrently performing file creation and
-      file writes.
-    - Fix rtalloc rotoring when delalloc is in use
-  * Cleanups
-    - Clean up I/O path inode locking helpers and the page fault handler.
-    - xfs: hoist inode operations to libxfs in anticipation of the metadata
-      inode directory feature, which maintains a directory tree of metadata
-      inodes. This will be necessary for further enhancements to the realtime
-      feature, subvolume support.
-    - Clean up some warts in the extent freeing log intent code.
-    - Clean up the refcount and rmap intent code before adding support for
-      realtime devices.
-    - Provide the correct email address for sysfs ABI documentation.
+i.e. there are large chunks of contiguous shared extents between the
+small individual COW block modifications that have been made to
+customise the image for the deployed VM.
 
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+Either way, if the segment/filter length is 2048 blocks, then this
+isn't a pattern that should be defragmented. If the segment/filter
+length is 4096 or larger, then yes, this pattern should definitely
+be defragmented.
 
-----------------------------------------------------------------
-Chandan Babu R (4):
-      Merge tag 'inode-refactor-6.11_2024-07-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.11-mergeB
-      Merge tag 'extfree-intent-cleanups-6.11_2024-07-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.11-mergeB
-      Merge tag 'rmap-intent-cleanups-6.11_2024-07-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.11-mergeB
-      Merge tag 'refcount-intent-cleanups-6.11_2024-07-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.11-mergeB
+> As I understand the situation, performance of defrag it’s self is
+> not a critical concern here.
 
-Christoph Hellwig (18):
-      xfs: move the dio write relocking out of xfs_ilock_for_iomap
-      xfs: cleanup xfs_ilock_iocb_for_write
-      xfs: simplify xfs_dax_fault
-      xfs: refactor __xfs_filemap_fault
-      xfs: always take XFS_MMAPLOCK shared in xfs_dax_read_fault
-      xfs: fold xfs_ilock_for_write_fault into xfs_write_fault
-      xfs: pass the fsbno to xfs_perag_intent_get
-      xfs: add a xefi_entry helper
-      xfs: reuse xfs_extent_free_cancel_item
-      xfs: factor out a xfs_efd_add_extent helper
-      xfs: remove duplicate asserts in xfs_defer_extent_free
-      xfs: remove xfs_defer_agfl_block
-      xfs: add a ri_entry helper
-      xfs: reuse xfs_rmap_update_cancel_item
-      xfs: don't bother calling xfs_rmap_finish_one_cleanup in xfs_rmap_finish_one
-      xfs: simplify usage of the rcur local variable in xfs_rmap_finish_one
-      xfs: fix the contact address for the sysfs ABI documentation
-      xfs: fix rtalloc rotoring when delalloc is in use
+Sure, but implementing a low performing, high CPU consumption,
+entirely single threaded defragmentation model that requires
+specific tuning in every different environment it is run in doesn't
+seem like the best idea to me.
 
-Darrick J. Wong (44):
-      xfs: enable FITRIM on the realtime device
-      xfs: verify buffer, inode, and dquot items every tx commit
-      xfs: use consistent uid/gid when grabbing dquots for inodes
-      xfs: move inode copy-on-write predicates to xfs_inode.[ch]
-      xfs: hoist extent size helpers to libxfs
-      xfs: hoist inode flag conversion functions to libxfs
-      xfs: hoist project id get/set functions to libxfs
-      xfs: pack icreate initialization parameters into a separate structure
-      xfs: implement atime updates in xfs_trans_ichgtime
-      xfs: use xfs_trans_ichgtime to set times when allocating inode
-      xfs: split new inode creation into two pieces
-      xfs: hoist new inode initialization functions to libxfs
-      xfs: push xfs_icreate_args creation out of xfs_create*
-      xfs: wrap inode creation dqalloc calls
-      xfs: hoist xfs_iunlink to libxfs
-      xfs: hoist xfs_{bump,drop}link to libxfs
-      xfs: separate the icreate logic around INIT_XATTRS
-      xfs: create libxfs helper to link a new inode into a directory
-      xfs: create libxfs helper to link an existing inode into a directory
-      xfs: hoist inode free function to libxfs
-      xfs: create libxfs helper to remove an existing inode/name from a directory
-      xfs: create libxfs helper to exchange two directory entries
-      xfs: create libxfs helper to rename two directory entries
-      xfs: move dirent update hooks to xfs_dir2.c
-      xfs: get rid of trivial rename helpers
-      xfs: don't use the incore struct xfs_sb for offsets into struct xfs_dsb
-      xfs: clean up extent free log intent item tracepoint callsites
-      xfs: convert "skip_discard" to a proper flags bitset
-      xfs: give rmap btree cursor error tracepoints their own class
-      xfs: pass btree cursors to rmap btree tracepoints
-      xfs: clean up rmap log intent item tracepoint callsites
-      xfs: move xfs_extent_free_defer_add to xfs_extfree_item.c
-      xfs: remove xfs_trans_set_rmap_flags
-      xfs: give refcount btree cursor error tracepoints their own class
-      xfs: create specialized classes for refcount tracepoints
-      xfs: pass btree cursors to refcount btree tracepoints
-      xfs: move xfs_rmap_update_defer_add to xfs_rmap_item.c
-      xfs: clean up refcount log intent item tracepoint callsites
-      xfs: remove xfs_trans_set_refcount_flags
-      xfs: add a ci_entry helper
-      xfs: reuse xfs_refcount_update_cancel_item
-      xfs: don't bother calling xfs_refcount_finish_one_cleanup in xfs_refcount_finish_one
-      xfs: simplify usage of the rcur local variable in xfs_refcount_finish_one
-      xfs: move xfs_refcount_update_defer_add to xfs_refcount_item.c
+I'm trying to work out if there is a faster, simpler way of
+achieving the same goal....
 
-Dave Chinner (10):
-      xfs: move and rename xfs_trans_committed_bulk
-      xfs: AIL doesn't need manual pushing
-      xfs: background AIL push should target physical space
-      xfs: ensure log tail is always up to date
-      xfs: l_last_sync_lsn is really AIL state
-      xfs: collapse xlog_state_set_callback in caller
-      xfs: track log space pinned by the AIL
-      xfs: pass the full grant head to accounting functions
-      xfs: grant heads track byte counts, not LSNs
-      xfs: skip flushing log items during push
+Cheers,
 
-Gao Xiang (1):
-      xfs: avoid redundant AGFL buffer invalidation
-
-John Garry (2):
-      xfs: Fix xfs_flush_unmap_range() range for RT
-      xfs: Fix xfs_prepare_shift() range for RT
-
-Long Li (1):
-      xfs: get rid of xfs_ag_resv_rmapbt_alloc
-
-Wenchao Hao (1):
-      xfs: Remove header files which are included more than once
-
-Zizhi Wo (1):
-      xfs: Avoid races with cnt_btree lastrec updates
-
-lei lu (2):
-      xfs: add bounds checking to xlog_recover_process_data
-      xfs: don't walk off the end of a directory data block
-
- Documentation/ABI/testing/sysfs-fs-xfs |   26 +-
- fs/xfs/Kconfig                         |   12 +
- fs/xfs/Makefile                        |    1 +
- fs/xfs/libxfs/xfs_ag.c                 |    2 +-
- fs/xfs/libxfs/xfs_ag_resv.h            |   19 -
- fs/xfs/libxfs/xfs_alloc.c              |  235 ++---
- fs/xfs/libxfs/xfs_alloc.h              |   18 +-
- fs/xfs/libxfs/xfs_alloc_btree.c        |   64 --
- fs/xfs/libxfs/xfs_bmap.c               |   55 +-
- fs/xfs/libxfs/xfs_bmap.h               |    3 +
- fs/xfs/libxfs/xfs_bmap_btree.c         |    2 +-
- fs/xfs/libxfs/xfs_btree.c              |   51 --
- fs/xfs/libxfs/xfs_btree.h              |   16 +-
- fs/xfs/libxfs/xfs_defer.c              |    4 +-
- fs/xfs/libxfs/xfs_dir2.c               |  661 +++++++++++++-
- fs/xfs/libxfs/xfs_dir2.h               |   49 +-
- fs/xfs/libxfs/xfs_dir2_data.c          |   31 +-
- fs/xfs/libxfs/xfs_dir2_priv.h          |    7 +
- fs/xfs/libxfs/xfs_format.h             |    9 +-
- fs/xfs/libxfs/xfs_ialloc.c             |   20 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c       |    2 +-
- fs/xfs/libxfs/xfs_inode_util.c         |  749 ++++++++++++++++
- fs/xfs/libxfs/xfs_inode_util.h         |   62 ++
- fs/xfs/libxfs/xfs_ondisk.h             |    1 +
- fs/xfs/libxfs/xfs_refcount.c           |  156 ++--
- fs/xfs/libxfs/xfs_refcount.h           |   11 +-
- fs/xfs/libxfs/xfs_refcount_btree.c     |    2 +-
- fs/xfs/libxfs/xfs_rmap.c               |  268 ++----
- fs/xfs/libxfs/xfs_rmap.h               |   15 +-
- fs/xfs/libxfs/xfs_rmap_btree.c         |    7 +-
- fs/xfs/libxfs/xfs_shared.h             |    7 -
- fs/xfs/libxfs/xfs_trans_inode.c        |    2 +
- fs/xfs/libxfs/xfs_trans_resv.c         |    1 -
- fs/xfs/scrub/common.c                  |    1 +
- fs/xfs/scrub/newbt.c                   |    5 +-
- fs/xfs/scrub/quota_repair.c            |    1 -
- fs/xfs/scrub/reap.c                    |    7 +-
- fs/xfs/scrub/tempfile.c                |   21 +-
- fs/xfs/xfs.h                           |    4 +
- fs/xfs/xfs_bmap_item.c                 |    6 +-
- fs/xfs/xfs_bmap_util.c                 |   22 +-
- fs/xfs/xfs_buf_item.c                  |   32 +
- fs/xfs/xfs_discard.c                   |  303 ++++++-
- fs/xfs/xfs_dquot_item.c                |   31 +
- fs/xfs/xfs_drain.c                     |    8 +-
- fs/xfs/xfs_drain.h                     |    5 +-
- fs/xfs/xfs_extfree_item.c              |  119 ++-
- fs/xfs/xfs_extfree_item.h              |    6 +
- fs/xfs/xfs_file.c                      |  141 +--
- fs/xfs/xfs_handle.c                    |    1 -
- fs/xfs/xfs_inode.c                     | 1484 ++++----------------------------
- fs/xfs/xfs_inode.h                     |   70 +-
- fs/xfs/xfs_inode_item.c                |   38 +-
- fs/xfs/xfs_ioctl.c                     |   60 --
- fs/xfs/xfs_iomap.c                     |   71 +-
- fs/xfs/xfs_iops.c                      |   51 +-
- fs/xfs/xfs_linux.h                     |    2 -
- fs/xfs/xfs_log.c                       |  511 +++--------
- fs/xfs/xfs_log.h                       |    1 -
- fs/xfs/xfs_log_cil.c                   |  177 +++-
- fs/xfs/xfs_log_priv.h                  |   61 +-
- fs/xfs/xfs_log_recover.c               |   28 +-
- fs/xfs/xfs_qm.c                        |    7 +-
- fs/xfs/xfs_qm_bhv.c                    |    1 -
- fs/xfs/xfs_refcount_item.c             |  110 +--
- fs/xfs/xfs_refcount_item.h             |    5 +
- fs/xfs/xfs_reflink.c                   |    2 +-
- fs/xfs/xfs_reflink.h                   |   10 -
- fs/xfs/xfs_rmap_item.c                 |  161 ++--
- fs/xfs/xfs_rmap_item.h                 |    4 +
- fs/xfs/xfs_rtalloc.c                   |    3 +-
- fs/xfs/xfs_symlink.c                   |   70 +-
- fs/xfs/xfs_sysfs.c                     |   29 +-
- fs/xfs/xfs_trace.c                     |    4 +-
- fs/xfs/xfs_trace.h                     |  531 +++++++-----
- fs/xfs/xfs_trans.c                     |  129 ---
- fs/xfs/xfs_trans.h                     |    5 +-
- fs/xfs/xfs_trans_ail.c                 |  244 +++---
- fs/xfs/xfs_trans_priv.h                |   44 +-
- 79 files changed, 3784 insertions(+), 3410 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_inode_util.c
- create mode 100644 fs/xfs/libxfs/xfs_inode_util.h
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
