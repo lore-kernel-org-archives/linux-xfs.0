@@ -1,96 +1,72 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C57513D63D
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Jul 2024 13:01:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A2DE84DF5;
+	Thu, 18 Jul 2024 15:09:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721307698; cv=none; b=BHjvQZi3oxsdN2CjKV/Lu8JyhUyqfvuZ2GOWl6jpVs/1mbte+ZbHclOJzs8KyaWw6bKeuvMnymfhGFVWltCFxcQ9ozqjrDvrgEp1cpx8vEEugxMK7PFCYBLaWIK20ztwZL/y79QXyyw7on4e1OKEn3Llsc6iewHgX1Yfiql4FR8=
+	t=1721315351; cv=none; b=plighJAUg/QOLTMfjJYL0kbRNUa36xEeUevpfCwFEv11y+3gJhI8E6a3NuAaUX766/SWAvWq0Ia9Q1gxXiiulm7w1+wrkgIl2mAwACn5++m21fFZokATsdYYMBTqIbDwoNAqqBGQnNkLbebnmrgnhQaKpVIOsTTxzgvDWAt+t7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721307698; c=relaxed/simple;
-	bh=v1ZKdLXLM9suGBhGOVb3oYBWJmJ2zwAEsSPI7Al97kw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dexnTddcoQ7DuvMCwRjDzqNEDJZXG44GoTlvYd/l5ST7W0SyR+qSLXt+a9ny/E6YSf1KPpZbS2e7ScmecaZzPPEodCla43dUxWS1QEzjc7uQVPi4eH3pkSGXtfhGdQD21OtAR4fnFydTTrAGRLC19bZsz6oW2dXq6HquDwd5xcA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eV1Ykoc5; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1721315351; c=relaxed/simple;
+	bh=3sx6x7fX7gd9fjLp+cNqsgagpMUg1R9aeMNvU+8nLJg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iqmsGor70WXJORaWA9nG0sL27CdVo6mhTSX3OR9r4iZvCpoFz2xK4f9bEF4Uy/VGl+bi1GGUvAtBYv4vIHtYwOZyq67OAO5lIN4EqhgGvdDMLoClB0mbZPETRtMXG0f1PrjiT0wq4ouELzOQdqviBa9L+8n6+S3/KKUMS/PdAUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mGW7teYQ; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eV1Ykoc5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721307696;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bk8WncT64lzd4LgIcFxlqG71mv9F7AOrhpNIyzQF2CI=;
-	b=eV1Ykoc5f7RyMTPO0gTisO1r1KoUWDCKLaYreFq05VRJuA8avsNPSdL7pqN/H8Kn7kXn//
-	SNzjrseLyCL2SgkmYFN296gEohvdE3956ijfHkhgPD30gk6aUNOTp9xrcKz6Mmwriv0BqA
-	Y/jgHIfEWIW51wxpR0Vcrdxzz97UhF8=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-427-7098IFzjMyC3RB2-ZVHpBA-1; Thu,
- 18 Jul 2024 09:01:32 -0400
-X-MC-Unique: 7098IFzjMyC3RB2-ZVHpBA-1
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9BFC21955D60;
-	Thu, 18 Jul 2024 13:01:31 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.16.39])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C565B19560B2;
-	Thu, 18 Jul 2024 13:01:30 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mGW7teYQ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=nSlyvMPyg3jS+qwE9Mjq/Dc54Aa0BLrkXgP6ILW+ByM=; b=mGW7teYQ5oX6LPFeDfscRuL1qc
+	jE1e1ujecHyB5YGiuO16UxqFWldJYqtwi9vBRoQ9fqv5hw8z3rPChRn2A8Pk1eShBN4N+a5SFAh3H
+	czpL6l+6TxbSNaoOdpUX4Niz1vCK2Ts1t+ny1tpvLXcrkgudxLj+NQzc6lm2ear5LBsQ8H/eQ/kI1
+	YAtJ2ppXKC6OCJUN+RqxYlkCyY04ua6Fd2dWizVCEGbHUhOXGagJL5kNQZ4t1+1mtLP1E6w03Clu4
+	BXXjIiHM15/miX0FtSZoIZD881u8OTVFlSSb8+CJnMCRbFRz+BsI/gh0JxwXjJbwbnuopYLP6tdyA
+	iIkR/QiQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sUSkh-000000025ro-2kZC;
+	Thu, 18 Jul 2024 15:09:03 +0000
+Date: Thu, 18 Jul 2024 16:09:03 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 4/4] xfs: remove unnecessary flush of eof page from truncate
-Date: Thu, 18 Jul 2024 09:02:12 -0400
-Message-ID: <20240718130212.23905-5-bfoster@redhat.com>
-In-Reply-To: <20240718130212.23905-1-bfoster@redhat.com>
+Subject: Re: [PATCH 1/4] filemap: return pos of first dirty folio from
+ range_has_writeback
+Message-ID: <ZpkwD2-q9_XRfX5P@casper.infradead.org>
 References: <20240718130212.23905-1-bfoster@redhat.com>
+ <20240718130212.23905-2-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240718130212.23905-2-bfoster@redhat.com>
 
-The EOF flush was originally added to work around broken
-iomap_zero_range() handling of dirty cache over unwritten extents.
-Now that iomap handles this situation correctly, the flush can be
-removed.
+On Thu, Jul 18, 2024 at 09:02:09AM -0400, Brian Foster wrote:
+> @@ -655,6 +655,8 @@ bool filemap_range_has_writeback(struct address_space *mapping,
+>  				folio_test_writeback(folio))
+>  			break;
+>  	}
+> +	if (folio)
+> +		*start_byte = folio_pos(folio);
+>  	rcu_read_unlock();
+>  	return folio != NULL;
+>  }
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iops.c | 10 ----------
- 1 file changed, 10 deletions(-)
+Distressingly, this is unsafe.
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ff222827e550..eb0b7a88776d 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -862,16 +862,6 @@ xfs_setattr_size(
- 		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
- 				&did_zeroing);
- 	} else {
--		/*
--		 * iomap won't detect a dirty page over an unwritten block (or a
--		 * cow block over a hole) and subsequently skips zeroing the
--		 * newly post-EOF portion of the page. Flush the new EOF to
--		 * convert the block before the pagecache truncate.
--		 */
--		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
--						     newsize);
--		if (error)
--			return error;
- 		error = xfs_truncate_page(ip, newsize, &did_zeroing);
- 	}
- 
--- 
-2.45.0
+We have no reference on the folio at this point (not one that matters,
+anyway).  We have the rcu read lock, yes, but that doesn't protect enough
+to make folio_pos() safe.
 
+Since we do't have folio_get() here, the folio can be freed, sent back to
+the page allocator, and then reallocated to literally any purpose.  As I'm
+reviewing patch 1/4, I have no idea if this is just a hint and you can
+survive it being completely wrong, or if this is going to cause problems.
