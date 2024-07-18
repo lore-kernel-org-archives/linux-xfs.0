@@ -1,44 +1,39 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A2DE84DF5;
-	Thu, 18 Jul 2024 15:09:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A1077A724;
+	Thu, 18 Jul 2024 15:27:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721315351; cv=none; b=plighJAUg/QOLTMfjJYL0kbRNUa36xEeUevpfCwFEv11y+3gJhI8E6a3NuAaUX766/SWAvWq0Ia9Q1gxXiiulm7w1+wrkgIl2mAwACn5++m21fFZokATsdYYMBTqIbDwoNAqqBGQnNkLbebnmrgnhQaKpVIOsTTxzgvDWAt+t7A=
+	t=1721316466; cv=none; b=XsMNhf9kZUWeOeBR7oDLcRaF9XvoZI7tFZeASW9vbOGfm+fMjczbrTk7irExopaYX3EdYVRnqGWWtllb4MpWWQDlrP8yb2qU2zehYWQrdn6NK0iNnF3aUh5kAA5kL3EyNGC1iPoWx11c+ueEUEQegiu3Cvk+rLA9lcQrN7ThaUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721315351; c=relaxed/simple;
-	bh=3sx6x7fX7gd9fjLp+cNqsgagpMUg1R9aeMNvU+8nLJg=;
+	s=arc-20240116; t=1721316466; c=relaxed/simple;
+	bh=MNuv/64sX1eBSSghfyrFppwQrHkrxDLg53KR0a/wozM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iqmsGor70WXJORaWA9nG0sL27CdVo6mhTSX3OR9r4iZvCpoFz2xK4f9bEF4Uy/VGl+bi1GGUvAtBYv4vIHtYwOZyq67OAO5lIN4EqhgGvdDMLoClB0mbZPETRtMXG0f1PrjiT0wq4ouELzOQdqviBa9L+8n6+S3/KKUMS/PdAUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mGW7teYQ; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=CDLFNx4aUwP+bdA1P69uQxaGHltu969B2pDSiB2ZtKyEb/xQGD+mIPd7+neGJNIBSTdauyTbg1vpaeVZ+mG26k1PeepvnXTPhiguy6wbrLVDyFOzr2VgKfWQLhC6CgHmNO7jGmsMrAK0vGp3zYVYbT52BjwZTjSceTULCsOolC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcUF2b+y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mGW7teYQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=nSlyvMPyg3jS+qwE9Mjq/Dc54Aa0BLrkXgP6ILW+ByM=; b=mGW7teYQ5oX6LPFeDfscRuL1qc
-	jE1e1ujecHyB5YGiuO16UxqFWldJYqtwi9vBRoQ9fqv5hw8z3rPChRn2A8Pk1eShBN4N+a5SFAh3H
-	czpL6l+6TxbSNaoOdpUX4Niz1vCK2Ts1t+ny1tpvLXcrkgudxLj+NQzc6lm2ear5LBsQ8H/eQ/kI1
-	YAtJ2ppXKC6OCJUN+RqxYlkCyY04ua6Fd2dWizVCEGbHUhOXGagJL5kNQZ4t1+1mtLP1E6w03Clu4
-	BXXjIiHM15/miX0FtSZoIZD881u8OTVFlSSb8+CJnMCRbFRz+BsI/gh0JxwXjJbwbnuopYLP6tdyA
-	iIkR/QiQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sUSkh-000000025ro-2kZC;
-	Thu, 18 Jul 2024 15:09:03 +0000
-Date: Thu, 18 Jul 2024 16:09:03 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [PATCH 1/4] filemap: return pos of first dirty folio from
- range_has_writeback
-Message-ID: <ZpkwD2-q9_XRfX5P@casper.infradead.org>
-References: <20240718130212.23905-1-bfoster@redhat.com>
- <20240718130212.23905-2-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcUF2b+y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B984DC116B1;
+	Thu, 18 Jul 2024 15:27:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1721316465;
+	bh=MNuv/64sX1eBSSghfyrFppwQrHkrxDLg53KR0a/wozM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WcUF2b+y/SctQbri2BuPEHRPC9C7LIdukH21x2N5n4pzaKtKi5UIMgjQu1OO6CEzk
+	 fxrdBajZGpFNyKH+YEOOA6yZu6GN1FoxOTB/JFhSm5NshkqwSbHMs0pvHtWjbV7OTP
+	 i9gk6XsMYL7Sx4EYJ50GxfyDeGLqhLw61Fiw5ccg8hwPpruYfuknHmp34NzY32SomM
+	 /gnvTffz7kofZMOIBGuhfWCF0VCyYIB3lWQkQkVXadafRhzqlePkvfGAbn7nT8GPMm
+	 /MJhZ5GOuKd47VurVMU8iqlH89FSJjIA8Z/DDQpqiuoaoDMQj+BDczarPuprFIP4U1
+	 lKOnTkD62EIdQ==
+Date: Thu, 18 Jul 2024 08:27:45 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chen Ni <nichen@iscas.ac.cn>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: convert comma to semicolon
+Message-ID: <20240718152745.GK612460@frogsfrogsfrogs>
+References: <20240716080112.969170-1-nichen@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,26 +42,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240718130212.23905-2-bfoster@redhat.com>
+In-Reply-To: <20240716080112.969170-1-nichen@iscas.ac.cn>
 
-On Thu, Jul 18, 2024 at 09:02:09AM -0400, Brian Foster wrote:
-> @@ -655,6 +655,8 @@ bool filemap_range_has_writeback(struct address_space *mapping,
->  				folio_test_writeback(folio))
->  			break;
->  	}
-> +	if (folio)
-> +		*start_byte = folio_pos(folio);
->  	rcu_read_unlock();
->  	return folio != NULL;
->  }
+On Tue, Jul 16, 2024 at 04:01:12PM +0800, Chen Ni wrote:
+> Replace a comma between expression statements by a semicolon.
+> 
+> Fixes: 178b48d588ea ("xfs: remove the for_each_xbitmap_ helpers")
+> Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
 
-Distressingly, this is unsafe.
+Looks ok,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-We have no reference on the folio at this point (not one that matters,
-anyway).  We have the rcu read lock, yes, but that doesn't protect enough
-to make folio_pos() safe.
+--D
 
-Since we do't have folio_get() here, the folio can be freed, sent back to
-the page allocator, and then reallocated to literally any purpose.  As I'm
-reviewing patch 1/4, I have no idea if this is just a hint and you can
-survive it being completely wrong, or if this is going to cause problems.
+> ---
+>  fs/xfs/scrub/agheader_repair.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index 0dbc484b182f..2f98d90d7fd6 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -696,7 +696,7 @@ xrep_agfl_init_header(
+>  	 * step.
+>  	 */
+>  	xagb_bitmap_init(&af.used_extents);
+> -	af.agfl_bno = xfs_buf_to_agfl_bno(agfl_bp),
+> +	af.agfl_bno = xfs_buf_to_agfl_bno(agfl_bp);
+>  	xagb_bitmap_walk(agfl_extents, xrep_agfl_fill, &af);
+>  	error = xagb_bitmap_disunion(agfl_extents, &af.used_extents);
+>  	if (error)
+> -- 
+> 2.25.1
+> 
+> 
