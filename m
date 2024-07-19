@@ -1,59 +1,64 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D664696
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 20:21:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30FD982D69
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 22:48:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721420491; cv=none; b=k0zgQ8pygvBGs+1m5yShpoTO8oeksQVUXEOBepQS3pajT62etwqNLNA6IyXGFRuGi42WZI5Gf2ZaZw+q7VOmWaABNJrU5ozOW7KsitGlJLnDq5kNUVH16eUmK+ysU4LgXfVRlCUIwSoi19JrJ/Pg04paYb1fEf3O6neRZz/x3QQ=
+	t=1721429340; cv=none; b=B2aX84RLghEm5Ux2AdCdMA0vp8zisqpXv2fuNf81wknW7lby1sr+Ikf9DgG2kPI0pcM7ZCTjpjFuFfMeyVvt/t1upLIoDjPuQvRQS6LPrFv8Fgf/RkESHDsrWUFjuBpsO4nboIEA2/bjp2TUtLOxMsDcMVUdX5s7SxuRbiyHmQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721420491; c=relaxed/simple;
-	bh=2bdZRPhF5gtq5KfiHg0howVDk4CBQylJ5J6dEvTrmyI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LtMtAnWFF4QAexLKP3ygdeVg9d1s2b2ROqaHTOtqggZZfr6ZDt4j3pDSfoujkCiBkkjbzUY4odleh+ZuUJHNqzmNDziBwuZ48f7oQN4siZ6VRh8Ul1kjP+/oGiYn2PXgRqvtXz+In93SuvA3GmYhyYVTsq8sRU7E1x7YotD5zjY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=2TCdCt5O; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1721429340; c=relaxed/simple;
+	bh=EIUir4wQ1jDSm8IPIB4LF8aAnoqcHityx5kbX2idjjE=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=bH24m8Nu6LR9sAqksA/95rr/ELWbaMshyyrIEffJFCuzkTqI8hA4PlTsEQ9ByzpM7z9XuPXdibasLFAXhVR3eRd2x4VqjnpXpwj/kmnF50XdU2gJYxh033GEbrHjZ5bysYkPyoTfn0xOFoiM7bO719IikGZFAfQScvExOtzCSYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gVY0YZZa; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="2TCdCt5O"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1fc5c0c65bcso2266405ad.2
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 13:21:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1721420488; x=1722025288; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=7TdICET9y2kBW1nT7B+XzjYYxpouKddOEs+h65MAYd8=;
-        b=2TCdCt5OKCIS7EuMKN79vwojgMKfnqPmPPdiulB4vA2Z/lW0b+20zzTeM9BHoq4JJn
-         jfoLXqPZ5fkJbmefze9BhP6r3O7H3NvSnPqNvcn20Oa+kPhfiehj7v7658DY1PO9op5d
-         x/EelHr19/xgqDuacjgvej1chxwk4NoU5U3bxYbgNDuSNSzuUE0FkocW91fMAfZGaX61
-         SDuEVWy1+QS2gW3L87ss+X8sAh/zIsL6A63OWY05DYiozWle7k04De5K50aGRZ4y58bv
-         YtITF1dRFcRZhy5fYsSIMjOQpytLIMC91VAPkQAic89E02MsQ14BynDdS3rkFtxRCYYa
-         lAVA==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gVY0YZZa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1721429337;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=w0S5e4sGInP7z6MpD0Yn2mZL23eIBOSAJlPdbBQ+hKQ=;
+	b=gVY0YZZakZVZcMh/BPVTL96lvS4flRyDjcC7FifrTCgIen/TGsKSYDpMuQEAHSjrmkEgok
+	QR0nOREORaJBCnhr/BBMwKt2+wmYDn7yOlw98bMhXCALSpN8PWkPb138C8ge/zmUyBsTq+
+	l8qM2WZvz/zCV+/Y6eej+30fMEehNGU=
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com
+ [209.85.166.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-523-ZJiGmBqVOZOpD_lzA_zZMQ-1; Fri, 19 Jul 2024 18:48:55 -0400
+X-MC-Unique: ZJiGmBqVOZOpD_lzA_zZMQ-1
+Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-81ad0e64ff4so43261439f.2
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 15:48:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721420488; x=1722025288;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7TdICET9y2kBW1nT7B+XzjYYxpouKddOEs+h65MAYd8=;
-        b=D2Qq7x+x2nBWEB0mK3aPfyl4kXr97h9UF7xIVUqtW/mWEXtLOg3NTdFTokZLwvF7m8
-         CIQnxfeVkYQUF8ATHNFIO2PwRU89JMk8zuN2AiFkfQNNdCRl5XbiwCG+ND64VkQrz1vZ
-         lggwCISzNU7XCoKQ4DqrVdmXUEN1XisDUJBpNUnI8b9FK72Ea9OeNGH/pYURxeK2V5Ej
-         b6HXTZaGigri7yA6JOLfvaIKZ1y0U+q7xnjU6HnlyqJq9IgLZLFMcx1ZSZO+oMVpJGMv
-         Qdxi1o82spxUtKk3IgGQVPeQ2evqMR5gFhwILbspeKg36NSA0NeNuXe7K8CWJc/jJ8AO
-         BJFA==
-X-Forwarded-Encrypted: i=1; AJvYcCVGxm8pblE3ThYYkdlnEWKpARAbRH7nxBy3XZLiQ/WOOti91FBlZpjBo0KqTTjz6eeVTHN/w9wQfYu6JPetklRV9/lXYpw9HfvG
-X-Gm-Message-State: AOJu0YwPaotRbVFNJM9+L4/9wRLbnY1thmAslLj77hL6t52PNPhxZixx
-	SXziUX26o+FYJvWN4V6u7aHzH07/bXgteP545nSbhwuUX5Eb5hS1aklIu7d2ECs=
-X-Google-Smtp-Source: AGHT+IFBmO+K7zL/agidVg2Z92TSxmmwPsuaZhiJ7FdU+invzsnYzP+ED6r48gQMg6agGpkBHJtLpw==
-X-Received: by 2002:a05:6a21:6e4b:b0:1c3:b106:d293 with SMTP id adf61e73a8af0-1c42287e800mr783432637.3.1721420488617;
-        Fri, 19 Jul 2024 13:21:28 -0700 (PDT)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70cff552c39sm1565712b3a.136.2024.07.19.13.21.26
+        d=1e100.net; s=20230601; t=1721429334; x=1722034134;
+        h=content-transfer-encoding:subject:from:to:content-language
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=w0S5e4sGInP7z6MpD0Yn2mZL23eIBOSAJlPdbBQ+hKQ=;
+        b=O+lUWCaRHSF4h27PfJCFOwdgnIkJ933FWrqKwH7ESmI+Jbicpd6s7ijdI6A7oaGcr6
+         AoGYL161m6aGmRxnw4AzQDEXfpdQxPY15MSQM0ES1QuZHO/SkJVNxktIwVhU1L4hQx4c
+         o+gIT3pNmoDPpR8LuD5+PnTI+lQ+amYYEjHsrLGfbEkCmVP07eeN8EPQsO8cCTdwFUjr
+         cvhGWE+zYcykU7/gT8JiSUGh/P7b9JH9PUku75eyvgty32e0wWd6ZJ7C0HHJjWiW7P1J
+         Ou0rH2t/MbqqU3SLEB63+vrH5bmTd0o32FTp3RGuVNvrUODMsbYYrY9IMIg8ABdGekyv
+         AFtg==
+X-Gm-Message-State: AOJu0YxlChW/HJIWvd6HCcN38jgpa3tXKOCtKgZ3ZXUge/c9dPaL6YdN
+	gF7ec3t6kpIoenBO+mq4pjVc/16wQAGlcH+9B3TrwoXbnRbvAzrIcjyMEL9tuM8YOdCVwegp6d3
+	oK+r1L5UJavWAOjuh+MNX/IjqDHaO1LV3TkV79ded764HuTg3SrX5ATxxPb6EMJIVNjjAM+j61z
+	wJY6nWB+WI1NvPcEkvoLNWR5yozm9MYcYSPQhD2SKX
+X-Received: by 2002:a05:6602:154c:b0:804:c529:8601 with SMTP id ca18e2360f4ac-81aa5483347mr178664939f.3.1721429334495;
+        Fri, 19 Jul 2024 15:48:54 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHZLkqNlf9kvU+HzGjGj1r168WoV+R6bj9fETzba+qHxXikazPCmNNw6ANH7DRPO25nkfH2wA==
+X-Received: by 2002:a05:6602:154c:b0:804:c529:8601 with SMTP id ca18e2360f4ac-81aa5483347mr178662539f.3.1721429334057;
+        Fri, 19 Jul 2024 15:48:54 -0700 (PDT)
+Received: from [10.0.0.71] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4c234405c70sm510808173.167.2024.07.19.15.48.53
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Jul 2024 13:21:27 -0700 (PDT)
-Message-ID: <173c7d32-2fae-40e4-a1d8-490cee3bba15@kernel.dk>
-Date: Fri, 19 Jul 2024 14:21:25 -0600
+        Fri, 19 Jul 2024 15:48:53 -0700 (PDT)
+Message-ID: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
+Date: Fri, 19 Jul 2024 17:48:53 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,62 +66,46 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC] Slow down of LTP tests aiodio_sparse.c and dio_sparse.c in
- kernel 6.6
-To: Petr Vorel <pvorel@suse.cz>
-Cc: ltp@lists.linux.it, linux-block@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
- fstests@vger.kernel.org, Jan Kara <jack@suse.cz>,
- David Sterba <dsterba@suse.com>, Filipe Manana <fdmanana@suse.com>,
- Amir Goldstein <amir73il@gmail.com>, Cyril Hrubis <chrubis@suse.cz>,
- Andrea Cervesato <andrea.cervesato@suse.com>, Avinesh Kumar <akumar@suse.de>
-References: <20240719174325.GA775414@pevik>
- <a59b75dd-8e82-4508-a34e-230827557dcb@kernel.dk>
- <20240719201352.GA782769@pevik>
 Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20240719201352.GA782769@pevik>
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: allow SECURE namespace xattrs to use reserved pool
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/19/24 2:13 PM, Petr Vorel wrote:
-> Hi Jens, all,
-> 
->> On 7/19/24 11:43 AM, Petr Vorel wrote:
->>> Hi all,
-> 
->>> LTP AIO DIO tests aiodio_sparse.c [1] and dio_sparse.c [2] (using [3]) slowed
->>> down on kernel 6.6 on Btrfs and XFS, when run with default parameters. These
->>> tests create 100 MB sparse file and write zeros (using libaio or O_DIRECT) while
->>> 16 other processes reads the buffer and check only zero is there.
-> 
->>> Runtime of this particular setup (i.e. 100 MB file) on Btrfs and XFS on the
->>> same system slowed down 9x (6.5: ~1 min 6.6: ~9 min). Ext4 is not affected.
->>> (Non default parameter creates much smaller file, thus the change is not that
->>> obvious).
-> 
->>> Because the slowdown has been here for few kernel releases I suppose nobody
->>> complained and the test is somehow artificial (nobody uses this in a real world).
->>> But still it'd be good to double check the problem. I can bisect a particular
->>> commit.
-> 
->>> Because 2 filesystems affected, could be "Improve asynchronous iomap DIO
->>> performance" [4] block layer change somehow related?
-> 
->> No, because that got disabled before release for unrelated reasons. Why
->> don't you just bisect it, since you have a simple test case?
-> 
-> Jens, thanks for info. Sure, I'll bisect next week and report.
-> 
-> The reason I reported before bisecting is because it wouldn't be the
-> first time the test was "artificial" and therefore reported problem
-> was not fixed. If it's a real problem I would expect it would be also
-> caught by other people or even by fstests.
+We got a report from the podman folks that selinux relabels that happen
+as part of their process were returning ENOSPC when the filesystem is
+completely full. This is because xattr changes reserve about 15 blocks
+for the worst case, but the common case is for selinux contexts to be
+the sole, in-inode xattr and consume no blocks.
 
-Didn't look at the test cases, so yeah may very well be bogus. But it
-also may not... And a bisection may help shine some light on that too,
-outside of just highlighting what commit made it slower.
+We already allow reserved space consumption for XFS_ATTR_ROOT for things
+such as ACLs, and selinux / SECURE attributes are not so very different,
+so allow them to use the reserved space as well.
 
--- 
-Jens Axboe
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index ab3d22f662f2..e59193609003 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -82,6 +82,7 @@ xfs_attr_change(
+ {
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 	int			error;
++	bool			rsvd;
+ 
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+@@ -110,7 +111,8 @@ xfs_attr_change(
+ 	args->whichfork = XFS_ATTR_FORK;
+ 	xfs_attr_sethash(args);
+ 
+-	return xfs_attr_set(args, op, args->attr_filter & XFS_ATTR_ROOT);
++	rsvd = args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_SECURE);
++	return xfs_attr_set(args, op, rsvd);
+ }
+ 
+ 
 
