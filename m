@@ -1,143 +1,357 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FE58C147
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 04:59:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6CF638DC8
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 15:16:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721365167; cv=none; b=JSm8vOm/Celuk4t1uyc4VPe+dxacNV2rq+yCwdT8Rt9XHMQ/QOswx+kj7IGsA2QA0D2+bD3qg1ayYWfE6DP0xpBuZ/hNXz9KcTMGkWTDlm5KcoCX7QSyFtjBme2Qj6BlhUX4zh/H2ugSA8+HYciRDRQoso8qaXKPS3Rp6mcFPNE=
+	t=1721402201; cv=none; b=Np5FJx/GPkgavqNzSu634zF9f7hqQkIickoB6eqOmprHcdKNQwwmZsxbLgjQJtuIfD7Kcgc3VoXH5vWTh7yMnEbgCMOAeEn6HVW0FPgsy5+cKZfvx0iaFw15CuOiOwmEnUzTkoreUWIVnfrRSDBJIDPgfDIUhD774mdQd8W2wrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721365167; c=relaxed/simple;
-	bh=rddWGhrZf6BbDgj4gQVtfSTzEA5NWFOql4aQT4D0Mt4=;
+	s=arc-20240116; t=1721402201; c=relaxed/simple;
+	bh=WoIdRi7cjyVa+jPKU7Avbk6vOm/bQhg0xgUEnuSpDpQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HSNNPwLQBYHo9pxDJ/JqEygaV5BN7HE3OXElHJORFMNoj8yltCCC0QRKvjBBgAf8JcvUKGZud7TH1I3POkf+dTcKQ/ZxYiftQUmKokYHg8tZYieRNveHrRiwjSsd5cPPeCyjizggNnJxxyvvguHAUViUq1LEkBr8mQVMQuj0CwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wouDPcFc; arc=none smtp.client-ip=209.85.215.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=vFwW5v737veF5jVBby+0xRB9ATpy1ktMs2ATeP16hqCZ99ic+EUNyTf/16k5AAuQ0QuCUJb1ZoBOJRAu7qoyxuXQ87anZzpwy5gN8UeXkPge4ahLlCtvySRZudUZETggM9xvHLbYszeL6J6Ldk8x6crZ3cpa2kdENFC8aOTlEjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=db4JVisI; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wouDPcFc"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-656d8b346d2so1024796a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jul 2024 21:59:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721365165; x=1721969965; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=0tYRc4VvMXK45r7WoKemJ0UrsyCXesVpzvDjA+dvtCg=;
-        b=wouDPcFceeHCdGr8FdKx1/K3Z1xuyDAQ/v/TUhnH57/pBTvo2zp5KFWXvP7eTrKS2A
-         n0uI92gyljBQYGu/PmQBPUEUpmB2PFxoE8vKmsSnVjWLDzgVduq9gSRoGrgWccfwX5ub
-         xeZrSQC26E0ZFyxiKpSkV5oTWtfptvwy/Kyv45xv37vyZnt4r9OclDYni9LpofpUL90/
-         IEE6fF1wd6Zsrh8Jxeegd3IcW9moNuOep660rFThD/cFGd7bpfsBvZ5Y1o0jYJPbIcU9
-         pi0l1DOKod5kTrUaodCn/5urGObw48QTLhCpuybQfc9Z098a+o6fGWe5M5qXBlml18Zv
-         hNmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721365165; x=1721969965;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0tYRc4VvMXK45r7WoKemJ0UrsyCXesVpzvDjA+dvtCg=;
-        b=H5UdvIPswafrUSYNEpkHjBn+DTljj2OR/GlcACGjtJFn6bmsjfP13rC5CrAkGlQY+t
-         DY8pmiyYASh9DXAO+P1UZphUKbx9fUpa7t/jX8hc0wWpbhXY4XcHnZQHZTUHkqVTJSrz
-         vMlKdUXWhBioaN4+Q6uEmxY5FzUzFI/PI2P6nexYLKsfDWkJy8K+0mhWMDt+Ae7BBtSO
-         tEtagQNs1MojPvsdChH2EvoCt0JtL8QzYmmsDnicvwlVpXT1AFX7+fne/T3EzGz2Y3kg
-         pFVeX3RIK8/5WKdWti9upkf/jYJmmppnxZWp5corn6TH4dqjCuv+C3gdIRcfpP1NSt9t
-         r6lg==
-X-Gm-Message-State: AOJu0Yx0TV8soqsaRmoJ71eGvBHueIAcGONZF73kPgzsaPubz4eVK9M5
-	yfeNWwxnTpxtP0K0P7aKKIZG4f/lSf9yMV7bart6wVUmxVXHxRAz8Fm41RCeNNub6pvE4rrQb2D
-	y
-X-Google-Smtp-Source: AGHT+IGnWqKEHFaBfeRKZ32U59thhRVTYYs2Hg5SoEhWhFPjD18E7QgFn9SrdRCow9zoSzKm8tvpOQ==
-X-Received: by 2002:a05:6300:4043:b0:1c3:a63a:cf01 with SMTP id adf61e73a8af0-1c3fdcc8b8bmr7322457637.8.1721365164613;
-        Thu, 18 Jul 2024 21:59:24 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fd64d071dfsm4694575ad.171.2024.07.18.21.59.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Jul 2024 21:59:24 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sUfiD-003Rbj-0v;
-	Fri, 19 Jul 2024 14:59:21 +1000
-Date: Fri, 19 Jul 2024 14:59:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Wengang Wang <wen.gang.wang@oracle.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/9] spaceman/defrag: pick up segments from target file
-Message-ID: <ZpnyqVLX+7K7Xyxw@dread.disaster.area>
-References: <20240709191028.2329-1-wen.gang.wang@oracle.com>
- <20240709191028.2329-3-wen.gang.wang@oracle.com>
- <ZpWzg9Jnko76tAx5@dread.disaster.area>
- <65CF7656-6B69-47A3-90E4-462E052D2543@oracle.com>
- <ZpdEZOWDbg5SKauo@dread.disaster.area>
- <13B63D08-4EC3-48B3-B043-D38DF345611F@oracle.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="db4JVisI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1721402198;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/3gmF88nJPMuYLc1q2w2ITpkkG0+EY8lFRs3TCS3tQI=;
+	b=db4JVisIjutKKkF45Mj2yZ8K9B0RZrQ/ubBGQVIYtZuWskJncMBRKgPysuM1q7NTAkWej0
+	ij4SN42sZm2vAigGNTwtdJsFGmlTj6Ao/5bh9IH/VgAnj9tLuTfvyUOOlLjqdTj7Q0CwbU
+	F0B3lKHSoe2iAoiJrd41sfyFqR3TTBA=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-602-kVbap8H3PW-PXIwxT9yQEg-1; Fri,
+ 19 Jul 2024 11:16:35 -0400
+X-MC-Unique: kVbap8H3PW-PXIwxT9yQEg-1
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 61C981954128;
+	Fri, 19 Jul 2024 15:16:34 +0000 (UTC)
+Received: from bfoster (unknown [10.22.16.39])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4F5503000196;
+	Fri, 19 Jul 2024 15:16:33 +0000 (UTC)
+Date: Fri, 19 Jul 2024 11:17:17 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [PATCH 3/4] iomap: fix handling of dirty folios over unwritten
+ extents
+Message-ID: <ZpqDfUgcDNX3MsF-@bfoster>
+References: <20240718130212.23905-1-bfoster@redhat.com>
+ <20240718130212.23905-4-bfoster@redhat.com>
+ <ZpmycN7FraEm+jRs@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <13B63D08-4EC3-48B3-B043-D38DF345611F@oracle.com>
+In-Reply-To: <ZpmycN7FraEm+jRs@dread.disaster.area>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Thu, Jul 18, 2024 at 07:03:40PM +0000, Wengang Wang wrote:
+On Fri, Jul 19, 2024 at 10:25:20AM +1000, Dave Chinner wrote:
+> On Thu, Jul 18, 2024 at 09:02:11AM -0400, Brian Foster wrote:
+> > iomap_zero_range() does not correctly handle unwritten mappings with
+> > dirty folios in pagecache. It skips unwritten mappings
+> > unconditionally as if they were already zeroed, and thus potentially
+> > exposes stale data from a previous write if affected folios are not
+> > written back before the zero range.
+> > 
+> > Most callers already flush the target range of the zero for
+> > unrelated, context specific reasons, so this problem is not
+> > necessarily prevalent. The known outliers (in XFS) are file
+> > extension via buffered write and truncate. The truncate path issues
+> > a flush to work around this iomap problem, but the file extension
+> > path does not and thus can expose stale data if current EOF is
+> > unaligned and has a dirty folio over an unwritten block.
+> > 
+> > This patch implements a mechanism for making zero range pagecache
+> > aware for filesystems that support mapping validation (i.e.
+> > folio_ops->iomap_valid()). Instead of just skipping unwritten
+> > mappings, scan the corresponding pagecache range for dirty or
+> > writeback folios. If found, explicitly zero them via buffered write.
+> > Clean or uncached subranges of unwritten mappings are skipped, as
+> > before.
+> > 
+> > The quirk with a post-iomap_begin() pagecache scan is that it is
+> > racy with writeback and reclaim activity. Even if the higher level
+> > code holds the invalidate lock, nothing prevents a dirty folio from
+> > being written back, cleaned, and even reclaimed sometime after
+> > iomap_begin() returns an unwritten map but before a pagecache scan
+> > might find the dirty folio. To handle this situation, we can rely on
+> > the fact that writeback completion converts unwritten extents in the
+> > fs before writeback state is cleared on the folio.
+> > 
+> > This means that a pagecache scan followed by a mapping revalidate of
+> > an unwritten mapping should either find a dirty folio if it exists,
+> > or detect a mapping change if a dirty folio did exist and had been
+> > cleaned sometime before the scan but after the unwritten mapping was
+> > found. If the revalidation succeeds then we can safely assume
+> > nothing has been written back and skip the range. If the
+> > revalidation fails then we must assume any offset in the range could
+> > have been modified by writeback. In other words, we must be
+> > particularly careful to make sure that any uncached range we intend
+> > to skip does not make it into iter.processed until the mapping is
+> > revalidated.
+> > 
+> > Altogether, this allows zero range to handle dirty folios over
+> > unwritten extents without needing to flush and wait for writeback
+> > completion.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/iomap/buffered-io.c | 53 +++++++++++++++++++++++++++++++++++++++---
+> >  1 file changed, 50 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index a9425170df72..ea1d396ef445 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -1385,6 +1385,23 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+> >  }
+> >  EXPORT_SYMBOL_GPL(iomap_file_unshare);
+> >  
+> > +/*
+> > + * Scan an unwritten mapping for dirty pagecache and return the length of the
+> > + * clean or uncached range leading up to it. This is the range that zeroing may
+> > + * skip once the mapping is validated.
+> > + */
+> > +static inline loff_t
+> > +iomap_zero_iter_unwritten(struct iomap_iter *iter, loff_t pos, loff_t length)
+> > +{
+> > +	struct address_space *mapping = iter->inode->i_mapping;
+> > +	loff_t fpos = pos;
+> > +
+> > +	if (!filemap_range_has_writeback(mapping, &fpos, length))
+> > +		return length;
+> > +	/* fpos can be smaller if the start folio is dirty */
+> > +	return max(fpos, pos) - pos;
 > 
+> I'm not sure this is safe. filemap_range_has_writeback() doesn't do
+> checks for invalidation races or that the folio is actually valid.
+> It also treats locked folios as dirty and a locked folio isn't
+> necessarily dirty. IOWs, this check assumes that we'll do all these
+> checks during the actual writeback operation that would follow this
+> check and so skip anything that might have given a false positive
+> here.
 > 
-> > On Jul 16, 2024, at 9:11 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > 
-> > On Tue, Jul 16, 2024 at 08:23:35PM +0000, Wengang Wang wrote:
-> >>> Ok, so this is a linear iteration of all extents in the file that
-> >>> filters extents for the specific "segment" that is going to be
-> >>> processed. I still have no idea why fixed length segments are
-> >>> important, but "linear extent scan for filtering" seems somewhat
-> >>> expensive.
-> >> 
-> >> Hm… fixed length segments — actually not fixed length segments, but segment
-> >> size can’t exceed the limitation.  So segment.ds_length <=  LIMIT.
-> > 
-> > Which is effectively fixed length segments....
-> > 
-> >> Larger segment take longer time (with filed locked) to defrag. The
-> >> segment size limit is a way to balance the defrag and the parallel
-> >> IO latency.
-> > 
-> > Yes, I know why you've done it. These were the same arguments made a
-> > while back for a new way of cloning files on XFS. We solved those
-> > problems just with a small change to the locking, and didn't need
-> > new ioctls or lots of new code just to solve the "clone blocks
-> > concurrent IO" problem.
+
+I'm aware... I probably should have documented this somewhere, but this
+prototype implies that false positives are acceptable. I'm not worried
+about the occasional spurious unwritten block conversion, at least for a
+first variant of a fix given the constraints mentioned in the cover
+letter. If we come up with ideas to iterate and improve on that to
+eliminate false positives, then great.
+
+I thought about creating a separate lookup variant for this use case
+without the lock check, but I'm still not totally convinced that isn't
+actually racy and worth the tradeoff. That said, Willy has already
+pointed out why patch 1 is wrong so if we end up recreating something
+more bespoke for this purpose then we can probably make it work more
+predictably.
+
+> iomap_write_begin() doesn't do those sorts of check. If there's no
+> folio in the cache, it will simply instantiate a new one and dirty
+> it. If there's an existing folio, it will simply dirty it.
 > 
-> I didn’t check the code history, but I am thinking you solved the problem
-> by allow reads to go while cloning is in progress? Correct me if I'm wrong.
-> The problem we hit is (heart beat) write timeout.  
+> Hence I don't think a "is there a folio  in this range that is a
+> potential writeback candidate" check is correct here. I think we
+> need to be more robust in determining if a cached folio in the range
+> exists and needs zeroing. Ideas on that to follow...
+> 
+> >  static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+> >  {
+> >  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> > @@ -1393,16 +1410,46 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+> >  	loff_t written = 0;
+> >  
+> >  	/* already zeroed?  we're done. */
+> > -	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+> > +	if (srcmap->type == IOMAP_HOLE)
+> >  		return length;
+> >  
+> >  	do {
+> >  		struct folio *folio;
+> >  		int status;
+> >  		size_t offset;
+> > -		size_t bytes = min_t(u64, SIZE_MAX, length);
+> > +		size_t bytes;
+> > +		loff_t pending = 0;
+> >  		bool ret;
+> >  
+> > +		/*
+> > +		 * Determine the range of the unwritten mapping that is clean in
+> > +		 * pagecache. We can skip this range, but only if the mapping is
+> > +		 * still valid after the pagecache scan. This is because
+> > +		 * writeback may have cleaned folios after the mapping lookup
+> > +		 * but before we were able to find them here. If that occurs,
+> > +		 * then the mapping must now be stale and we must reprocess the
+> > +		 * range.
+> > +		 */
+> > +		if (srcmap->type == IOMAP_UNWRITTEN) {
+> > +			pending = iomap_zero_iter_unwritten(iter, pos, length);
+> > +			if (pending == length) {
+> > +				/* no dirty cache, revalidate and bounce as we're
+> > +				 * either done or the mapping is stale */
+> > +				if (iomap_revalidate(iter))
+> > +					written += pending;
+> 
+> Ok, this isn't really how the revalidation was supposed to be used
+> (i.e. it's not stabilising the data and page cache state first),
+> but it looks like works for this situation. We can use this. :)
+> 
 
-The reason this worked (allowing shared reads through and not
-writes) was that the VM infrastructure this was being done for uses
-a sidecar write channel to redirect writes while a clone is being
-done. i.e. writes are not blocked by the clone in progress because
-they are being done to a different file.
+Yeah.. the main concern I had with this was basically whether we need
+some kind of barrier or something in the case where there is no folio to
+lock.
 
-When the clone completes, those writes are folded back into the
-original image file. e.g. see the `qemu-img commit -b <backing file>
-<file with delta writes>` which will fold writes to a sidecar write
-file back into the original backing file that was just cloned....
+At the end of the day we need to be able to handle the case where the
+last part of a range is uncached and so no folio exists to lock, yet we
+need to confirm that we haven't raced with writeback and reclaim before
+the zero range operation can complete.
 
-What I'm suggesting is that when you run an backing file
-defragmentation, you use the same sidecar write setup as cloning
-whilst the defrag is done. Reads go straight through to the backing
-file, and writes get written to a delta write file. When the defrag
-is done the delta write file gets folded back into the backing file.
+> > +				break;
+> > +			}
+> > +
+> > +			/*
+> > +			 * Found a dirty folio. Update pos/length to point at
+> > +			 * it. written is updated only after the mapping is
+> > +			 * revalidated by iomap_write_begin().
+> > +			 */
+> > +			pos += pending;
+> > +			length -= pending;
+> > +		}
+> > +
+> > +		bytes = min_t(u64, SIZE_MAX, length);
+> >  		status = iomap_write_begin(iter, pos, bytes, &folio);
+> >  		if (status)
+> >  			return status;
+> 
+> We don't hold any references to the page cache between the
+> iomap_zero_iter_unwritten() and then the actual folio lookup in
+> iomap_write_begin() where we reference and lock the folio at the
+> given offset. e.g. we get a "dirty" hit because of a locked folio,
+> and that folio is clean and contains zeroes (e.g. mmap read,
+> readahead, etc). We now write zeroes to that folio and dirty it
+> when, we should actually be skipping it and leaving the range as
+> unwritten.
+> 
+> In previous patches that fixed this zeroing issue, this wasn't a
+> problem because it used the existing iomap page cache lookup
+> mechanisms from iomap_write_begin() to get referenced, locked folios
+> over the zeroing range. Instead of skipping potential page cache
+> holes, it prevented page cache instantiation over page cache holes
+> from occurring when zeroing unwritten extents and that skipped page
+> cache holes naturally.
+> 
+> https://lore.kernel.org/linux-xfs/20240529095206.2568162-2-yi.zhang@huaweicloud.com/
+> 
+> This means the iteration would skip holes but still safely
+> revalidate the iomap once it found and locked a folio in the given
+> range. It could also then check the folio is dirty to determine if
+> zeroing was necessary.  Yes, this means it iterated holes in the
+> range PAGE_SIZE by PAGE_SIZE to do lookups, so it was inefficient.
+> 
+> However, we could still use this filemap_range_has_writeback()
+> optimisation to skip unwritten extents that don't have any cached
+> pages over them completely, but ti don't think it is really safe to
+> use it during the iteration to discover regions that don't need
+> zeroing. i.e. the fast path is this:
+> 
+> 	if (srcmap->type == IOMAP_HOLE)
+> 		return length;
+> 	if (srcmap->type == IOMAP_UNWRITTEN &&
+> 	    !filemap_range_has_writeback(mapping, pos, length)) {
+> 		if (!iomap_revalidate(iter))
+> 			return 0; /* stale mapping */
+> 		return length;
+> 	}
+> 
 
-But for this to work, UNSHARE needs to use shared read locking so
-that read IO can be directed through the file at the same time as
-the UNSHARE is running. If this works for CLONE to avoid read and
-write blocking whilst the operation is in progress, the same
-mechanism should be able to be used for UNSHARE, too. At this point
-defrag using CLONE+UNSHARE shouldn't ever block read IO and
-shouldn't block write IO for any significant period of time,
-either...
+We might be able to do something like this, but this is really more of a
+behavioral tradeoff than a functional issue. With the above, if you have
+a large range with a dirty page at the start, you'll spend a significant
+amount of time chugging through the rest of the range checking each
+offset for folios (and then still ultimately may have to revalidate an
+uncached range).
 
--Dave.
+Last I played around with that it wasn't hard to reproduce a scan that
+took minutes to complete. See my replies in the thread you've linked
+above for an example (as well as another prototype variant for
+iomap_truncate_page() that more explicitly implements the tradeoff of
+writing over unwritten blocks).
 
--- 
-Dave Chinner
-david@fromorbit.com
+> And the slow path does something similar to the above patch.
+> However, I'm still not sure that filemap_range_has_writeback() is
+> the right set of checks to use here.
+> 
+
+Re: above, the _has_writeback() thing was more of an attempt to keep
+things simple and reuse existing code. I suspect we can roll our own
+lookup mechanism if need be.
+
+> I just thought of another option - after thinking about how you've
+> modified filemap_range_has_writeback() to increment the iomap
+> iterator position to skip empty ranges, I think we could actually
+> drive that inwards to the page cache lookup. We could use
+> use filemap_get_folios() instead of __filemap_get_folio() for
+> unwritten extent zeroing iteration. This would allow the page cache
+> lookup to return the first folio in the range as a referenced folio
+> which we can then lock and validate similar to __filemap_get_folio().
+> 
+> We can then increment the iterator position based on the folio
+> position, the iomap_write_begin() code will do the revalidation of
+> the iomap, and the zeroing code can then determine if zeroing is
+> needed based on whether the folio is dirty/writeback or not. As this
+> all happens under the folio lock, it is largely safe from both page
+> cache data and state and extent state changes racing with the
+> zeroing operation.
+> 
+
+I thought about something kind of similar.. do a batched folio lookup
+either in iomap or in the fs under locks (via an iomap helper) and feed
+that into the iomap operation path in place of the internal folio
+lookups, etc. Where that kind of gets annoying is dealing with trimming
+the mappings and whatnot for dealing with situations where the batch
+might be full. I don't recall ruling that out, but it didn't strike me
+as worth the complexity at the time. It occurs to me now there might be
+more simple ways around that, such as just looping out on a full batch.
+
+It sounds like what you describe above is more to push that lookup down
+in the existing iomap folio lookup path, and then essentially drive the
+range processing loop via walking the mapping xarray (via
+iomap_write_begin() -> filemap_get_folios()) rather than it being
+offset/length driven. If I follow that correctly, that sounds like a
+potentially elegant solution to avoid the per-offset lookup walk and the
+has_wb() scan.
+
+I was _kind of_ hoping to be able to just lookup the next dirty folio,
+but last I checked we couldn't easily lookup the next (dirty ||
+writeback) folio in the same lookup operation. But TBH the more I think
+about this, the batched lookup thing where we just check each present
+folio directly for (dirty||wb) might be perfectly good enough. I need to
+stare at the code and play around with it a bit. Thanks for the idea.
+
+Brian
+
+> Thoughts?
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+
