@@ -1,55 +1,86 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F07E15E97
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 15:22:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1B871B86D5;
+	Fri, 19 Jul 2024 17:43:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721402534; cv=none; b=b7xTeK0oXcWTUQppAuKSag9ElcJT7dQWbyiU/42WeNIeVc4Y+NXC8BOfKN3OcMBXn/kOXJpPF5t5QvMi7bo5smQCywtmqqaOfjINDxWGaOJuoEU25i+FPJVvjbMauzcVWVfgFIu1iMP9dgsD5xKzyuNYLgN7xIxgKvfXPIFwa34=
+	t=1721411026; cv=none; b=LLf9CIemLQftVOkk++sbfryfjonIQaKcf29loS0+37+DAnB9bHS4Vw69FFEwd60usF0sCRUr22LW2fXK2UkzFpo/SFem6uoTY9sA4LEkGEFDLP3yQLpAb2dvX4YfCfbG21NcV1ao1XhlAvbrRen70U6OvtCxo/Rkb8fPTrLepdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721402534; c=relaxed/simple;
-	bh=SHW/LwvRG1aHnO8OkolBg1JUNi3mNqYQlHdJKE64Cyo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dfhPwXq1XzTnKNlehMHe41OslY8CfKLB7txIFpRrUdGCSZ+S4KjV+bqBuamu8XPQq1IbDVF2V5VnSsjg5vF2Dt50nRYes36u6ZGd3T9JpAeryIpADWlF4w02I9ttCkuFfZO3GoAExIKJHr/QGOTd55ckK8bQiWYeByoovNNPuVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=O7PMbIDN; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1721411026; c=relaxed/simple;
+	bh=KVsBhDaO8D1jYNs6pDclEnNjXeKtbtSCS2VYT4HR+Uo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=axS7B3+LCaTdBqS5rpi++n2+J6zxKd7sMga5iGW63IBtqz8q9/+Y3TsXzb+gLjf7taDYrW0j4N8KvFum/YrXWKI6/BU/ZHEhsTBGiBlH9gynsVjisf/23teJDRwUAL9FMy2+ZpvYsqyhqQzJAp3si8wa+IgiYYYw+oUkxEFjvs8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=W9gxKBro; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DVDsbkGy; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=W9gxKBro; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DVDsbkGy; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O7PMbIDN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721402531;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PCE4O/Tp9Kmg7NnSX/TlEVAmDfV/MnD1PiAPLrlkRgk=;
-	b=O7PMbIDNLYCkw+yXN9J0A3Ag7UdAllj6OaOkQ3Mc1+oX2FU9401nPnUhzHn87vJoyLcmXc
-	IvfGZDOcXSI3+9mMKxSrg5cLj0SHd143oid7XMSeRfPYMXhXfINmF4zKx1DRFIeH9/TH0q
-	9AjfKAX31AaPaHdwq6qxtJTZXphe9r8=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-669-viQbmyEhNt6EfwlbZb8R1A-1; Fri,
- 19 Jul 2024 11:22:08 -0400
-X-MC-Unique: viQbmyEhNt6EfwlbZb8R1A-1
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="W9gxKBro";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DVDsbkGy";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="W9gxKBro";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DVDsbkGy"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 20CC619540F0;
-	Fri, 19 Jul 2024 15:22:07 +0000 (UTC)
-Received: from bfoster (unknown [10.22.16.39])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 11C231955D47;
-	Fri, 19 Jul 2024 15:22:05 +0000 (UTC)
-Date: Fri, 19 Jul 2024 11:22:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [PATCH RFC 0/4] iomap: zero dirty folios over unwritten mappings
- on zero range
-Message-ID: <ZpqEyg4m1_iRKoo4@bfoster>
-References: <20240718130212.23905-1-bfoster@redhat.com>
- <Zpm9BFLjU0DkHBWc@dread.disaster.area>
+	by smtp-out2.suse.de (Postfix) with ESMTPS id D19A71F7A5;
+	Fri, 19 Jul 2024 17:43:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1721411022;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=KVsBhDaO8D1jYNs6pDclEnNjXeKtbtSCS2VYT4HR+Uo=;
+	b=W9gxKBromI/sNsrKIOevP2RIcbkC+BCV1at+g2SUEg543FAXNyzS+atZV0v9A+c9GFghPm
+	RhMLb5gPDGoWSw6zxnhWMptQX4D81Aw13IMWI33kXHMRtJn04fMTrChOK0mCPav711Fqcy
+	OM7wFyhX33jHrWNNKjtGkg9F9Ey6Gbs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1721411022;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=KVsBhDaO8D1jYNs6pDclEnNjXeKtbtSCS2VYT4HR+Uo=;
+	b=DVDsbkGyUEW9DxctpXXrcSxh/3o9uwW4tcwZzPoPvfBvN9PwuDrOhpt1E3T1xaCc+GonZQ
+	DnIz4j3tolsM9PCA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1721411022;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=KVsBhDaO8D1jYNs6pDclEnNjXeKtbtSCS2VYT4HR+Uo=;
+	b=W9gxKBromI/sNsrKIOevP2RIcbkC+BCV1at+g2SUEg543FAXNyzS+atZV0v9A+c9GFghPm
+	RhMLb5gPDGoWSw6zxnhWMptQX4D81Aw13IMWI33kXHMRtJn04fMTrChOK0mCPav711Fqcy
+	OM7wFyhX33jHrWNNKjtGkg9F9Ey6Gbs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1721411022;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=KVsBhDaO8D1jYNs6pDclEnNjXeKtbtSCS2VYT4HR+Uo=;
+	b=DVDsbkGyUEW9DxctpXXrcSxh/3o9uwW4tcwZzPoPvfBvN9PwuDrOhpt1E3T1xaCc+GonZQ
+	DnIz4j3tolsM9PCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 05F2B13808;
+	Fri, 19 Jul 2024 17:43:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id yOZaO82lmmaiJwAAD6G6ig
+	(envelope-from <pvorel@suse.cz>); Fri, 19 Jul 2024 17:43:41 +0000
+Date: Fri, 19 Jul 2024 19:43:25 +0200
+From: Petr Vorel <pvorel@suse.cz>
+To: ltp@lists.linux.it
+Cc: linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
+	David Sterba <dsterba@suse.com>, Filipe Manana <fdmanana@suse.com>,
+	Amir Goldstein <amir73il@gmail.com>, Cyril Hrubis <chrubis@suse.cz>,
+	Andrea Cervesato <andrea.cervesato@suse.com>,
+	Avinesh Kumar <akumar@suse.de>
+Subject: [RFC] Slow down of LTP tests aiodio_sparse.c and dio_sparse.c in
+ kernel 6.6
+Message-ID: <20240719174325.GA775414@pevik>
+Reply-To: Petr Vorel <pvorel@suse.cz>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -58,154 +89,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zpm9BFLjU0DkHBWc@dread.disaster.area>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+X-Spam-Score: 0.70
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [0.70 / 50.00];
+	MID_RHS_NOT_FQDN(0.50)[];
+	HAS_REPLYTO(0.30)[pvorel@suse.cz];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MISSING_XM_UA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[vger.kernel.org,kernel.dk,suse.cz,suse.com,gmail.com,suse.de];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_EQ_ENVFROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:replyto];
+	RCVD_COUNT_TWO(0.00)[2];
+	REPLYTO_EQ_FROM(0.00)[]
+X-Spam-Level: 
 
-On Fri, Jul 19, 2024 at 11:10:28AM +1000, Dave Chinner wrote:
-> On Thu, Jul 18, 2024 at 09:02:08AM -0400, Brian Foster wrote:
-> > Hi all,
-> > 
-> > This is a stab at fixing the iomap zero range problem where it doesn't
-> > correctly handle the case of an unwritten mapping with dirty pagecache.
-> > The gist is that we scan the mapping for dirty cache, zero any
-> > already-dirty folios via buffered writes as normal, but then otherwise
-> > skip clean ranges once we have a chance to validate those ranges against
-> > races with writeback or reclaim.
-> > 
-> > This is somewhat simplistic in terms of how it scans, but that is
-> > intentional based on the existing use cases for zero range. From poking
-> > around a bit, my current sense is that there isn't any user of zero
-> > range that would ever expect to see more than a single dirty folio.
-> 
-> The current code generally only zeroes a single filesystem block or
-> less because that's all we need to zero for partial writes.  This is
-> not going to be true for very much longer with XFS forcealign
-> functionality, and I suspect it's not true right now for large rt
-> extent sizes when doing sub-extent writes. In these cases, we are
-> going to have to zero multiple filesystem blocks during truncate,
-> hole punch, unaligned writes, etc.
-> 
-> So even if we don't do this now, I think this is something we will
-> almost certainly be doing in the next kernel release or two.
-> 
-> > Most
-> > callers either straddle the EOF folio or flush in higher level code for
-> > presumably (fs) context specific reasons. If somebody has an example to
-> > the contrary, please let me know because I'd love to be able to use it
-> > for testing.
-> 
-> Check the xfs_inode_has_bigrtalloc() and xfs_inode_alloc_unitsize()
-> cases. These are currently being worked on and expanded and factored
-> so eventually these cases will all fall under
-> xfs_inode_alloc_unitsize().
-> 
-> > The caveat to this approach is that it only works for filesystems that
-> > implement folio_ops->iomap_valid(), which is currently just XFS. GFS2
-> > doesn't use ->iomap_valid() and does call zero range, but AFAICT it
-> > doesn't actually export unwritten mappings so I suspect this is not a
-> > problem. My understanding is that ext4 iomap support is in progress, but
-> > I've not yet dug into what that looks like (though I suspect similar to
-> > XFS). The concern is mainly that this leaves a landmine for fs that
-> > might grow support for unwritten mappings && zero range but not
-> > ->iomap_valid(). We'd likely never know zero range was broken for such
-> > fs until stale data exposure problems start to materialize.
-> > 
-> > I considered adding a fallback to just add a flush at the top of
-> > iomap_zero_range() so at least all future users would be correct, but I
-> > wanted to gate that on the absence of ->iomap_valid() and folio_ops
-> > isn't provided until iomap_begin() time. I suppose another way around
-> > that could be to add a flags param to iomap_zero_range() where the
-> > caller could explicitly opt out of a flush, but that's still kind of
-> > ugly. I dunno, maybe better than nothing..?
-> 
-> We want to avoid the flush in this case if we can - what XFS does is
-> a workaround for iomap not handling dirty data over unwritten
-> extents. That first flush causes performance issues with certain
-> truncate heavy workloads, so we really want to avoid it in the
-> generic code if we can.
-> 
+Hi all,
 
-Sort of.. the only complaint I've heard about this was due to reliance
-on a userspace program with a subtly dumb and repetitive truncate
-workload. We worked around this problem by fixing the userspace tool and
-I've not heard a complaint since.
+LTP AIO DIO tests aiodio_sparse.c [1] and dio_sparse.c [2] (using [3]) slowed
+down on kernel 6.6 on Btrfs and XFS, when run with default parameters. These
+tests create 100 MB sparse file and write zeros (using libaio or O_DIRECT) while
+16 other processes reads the buffer and check only zero is there.
 
-Even without that userspace fix, a conditional flush in the kernel would
-have been perfectly suitable for the same workload (as in, pretty much
-unnoticeable). So the broader point here is just that this isn't so
-black and white that flushing at all is necessarily a problem.
+Runtime of this particular setup (i.e. 100 MB file) on Btrfs and XFS on the
+same system slowed down 9x (6.5: ~1 min 6.6: ~9 min). Ext4 is not affected.
+(Non default parameter creates much smaller file, thus the change is not that
+obvious).
 
-> > So IMO, this raises the question of whether this is just unnecessarily
-> > overcomplicated. The KISS principle implies that it would also be
-> > perfectly fine to do a conditional "flush and stale" in zero range
-> > whenever we see the combination of an unwritten mapping and dirty
-> > pagecache (the latter checked before or during ->iomap_begin()). That's
-> > simple to implement and AFAICT would work/perform adequately and
-> > generically for all filesystems. I have one or two prototypes of this
-> > sort of thing if folks want to see it as an alternative.
-> 
-> If we are going to zero the range, and the range is already
-> unwritten, then why do we need to flush the data in the cache to
-> make it clean and written before running the zeroing? Why not just
-> invalidate the entire cache over the unwritten region and so return it
-> all to containing zeroes (i.e. is unwritten!) without doing any IO.
-> 
-> Yes, if some of the range is under writeback, the invalidation will
-> have to wait for that to complete - invalidate_inode_pages2_range()
-> does this for us - but after the invalidation those regions will now
-> be written and iomap revalidation after page cache invalidation will
-> detect this.
-> 
-> So maybe the solution is simply to invalidate the cache over
-> unwritten extents and then revalidate the iomap? If the iomap is
-> still valid, then we can skip the unwritten extent completely. If
-> the invalidation returned -EBUSY or the iomap is stale, then remap
-> it and try again?
-> 
-> If we don't have an iomap validation function, then we could check
-> filemap_range_needs_writeback() before calling
-> invalidate_inode_pages2_range() as that will tell us if there were
-> folios that might have been under writeback during the invalidation.
-> In that case, we can treat "needs writeback" the same as a failed
-> iomap revalidation.
-> 
-> So what am I missing? What does the flush actually accomplish that
-> simply calling invalidate_inode_pages2_range() to throw the data we
-> need to zero away doesn't?
-> 
+Because the slowdown has been here for few kernel releases I suppose nobody
+complained and the test is somehow artificial (nobody uses this in a real world).
+But still it'd be good to double check the problem. I can bisect a particular
+commit.
 
-Ugh.. when I look at invalidate I see various additional corner case
-complexities to think about, for pretty much no additional value over a
-conditional flush, especially when you start getting into some of the
-writeback complexities you've already noted above. Even if you could
-make it work technically (which I'm not sure of), it looks like it would
-be increasingly more difficult to properly test and maintain. I don't
-really see much reason to go down that path without explicit
-justification and perhaps some proving out.
+Because 2 filesystems affected, could be "Improve asynchronous iomap DIO
+performance" [4] block layer change somehow related?
 
-I think the right approach to this problem is precisely what was
-discussed up thread with Josef and Darrick. Do the simple and
-generically correct thing by lifting the unconditional flush from XFS,
-optimize to make the flush conditional to dirty+unwritten while still
-being fs generic, and then finally optimize away the flush entirely for
-filesystems that provide the proper revalidation support like XFS.
+Kind regards,
+Petr
 
-A benefit of that is we can start with a tested and veriable functional
-base to iterate from and fall back on. I think the mapping iteration
-thing from the patch 3 discussion might turn out elegant enough that
-maybe we'll come up with a generic non-flushing solution based on that
-(I have some vague thoughts that require investigation) once we have
-some code to poke around at.
-
-Brian
-
-P.S., I'm off for a week or so after today. I'll think more about the
-mapping iteration idea and then try to put something together once I'm
-back.
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+[1] https://github.com/linux-test-project/ltp/tree/master/testcases/kernel/io/ltp-aiodio/aiodio_sparse.c
+[2] https://github.com/linux-test-project/ltp/tree/master/testcases/kernel/io/ltp-aiodio/dio_sparse.c
+[3] https://github.com/linux-test-project/ltp/tree/master/testcases/kernel/io/ltp-aiodio/common.h
+[4] https://kernelnewbies.org/Linux_6.6#Block_layer
