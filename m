@@ -1,111 +1,217 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30FD982D69
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 22:48:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 338D0441D
+	for <linux-xfs@vger.kernel.org>; Sun, 21 Jul 2024 11:27:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721429340; cv=none; b=B2aX84RLghEm5Ux2AdCdMA0vp8zisqpXv2fuNf81wknW7lby1sr+Ikf9DgG2kPI0pcM7ZCTjpjFuFfMeyVvt/t1upLIoDjPuQvRQS6LPrFv8Fgf/RkESHDsrWUFjuBpsO4nboIEA2/bjp2TUtLOxMsDcMVUdX5s7SxuRbiyHmQc=
+	t=1721561248; cv=none; b=Bj5s1zNtg7ZKe0LSgRzMUYDrOlshNrrK5KcpCB4BgPMOcDabj29ecsscSlSvL+XI2R+useD2f5SB4lweGNzrt7xS5g0eU6WWm62VwC9dgOzKZA5fvOHoOq9E9gAdtI93163c7a4heMeDtotNczdY1D12t7q5BXByFc9bpnGvOgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721429340; c=relaxed/simple;
-	bh=EIUir4wQ1jDSm8IPIB4LF8aAnoqcHityx5kbX2idjjE=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=bH24m8Nu6LR9sAqksA/95rr/ELWbaMshyyrIEffJFCuzkTqI8hA4PlTsEQ9ByzpM7z9XuPXdibasLFAXhVR3eRd2x4VqjnpXpwj/kmnF50XdU2gJYxh033GEbrHjZ5bysYkPyoTfn0xOFoiM7bO719IikGZFAfQScvExOtzCSYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gVY0YZZa; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1721561248; c=relaxed/simple;
+	bh=cy30LxzsokbSJtg7YkDwVU1gwYCwn58YF59VtECVCM4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UCHLYbEi2DmaCsaDUOsy8RFJJLjwXclbsw7tpBcrzSgKR2mcEf/nb1n5zfnyZUUTlnUsHXmT6Jfe6TQ/zSwUL9VKlaQipdmJuXQTD8JH3bOAzTlbQlqQi38xShuWYTuqDHnGTmVO+/UQB3D/wn991b+DoWWCeaBZBq289t0091U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JTRwIpzG; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gVY0YZZa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721429337;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=w0S5e4sGInP7z6MpD0Yn2mZL23eIBOSAJlPdbBQ+hKQ=;
-	b=gVY0YZZakZVZcMh/BPVTL96lvS4flRyDjcC7FifrTCgIen/TGsKSYDpMuQEAHSjrmkEgok
-	QR0nOREORaJBCnhr/BBMwKt2+wmYDn7yOlw98bMhXCALSpN8PWkPb138C8ge/zmUyBsTq+
-	l8qM2WZvz/zCV+/Y6eej+30fMEehNGU=
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com
- [209.85.166.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-523-ZJiGmBqVOZOpD_lzA_zZMQ-1; Fri, 19 Jul 2024 18:48:55 -0400
-X-MC-Unique: ZJiGmBqVOZOpD_lzA_zZMQ-1
-Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-81ad0e64ff4so43261439f.2
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2024 15:48:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JTRwIpzG"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-70b0e7f6f8bso1970327b3a.3
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jul 2024 04:27:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1721561246; x=1722166046; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=MkVyRZi4tj9DgOEUIGR+D9RvRqQXblasLIhG5cmz7Cg=;
+        b=JTRwIpzGxtexruEbo+03Lv7R+TtPHOVyJbmQG0TN267sTmmvGq2qtnnqYoENFMTe10
+         FZLmSXs5LHkperIhPWGbnFybu+VBlcH1+li9IphhrUVIN+wMlakYVOTT0y9NHuK32maC
+         yeqnLIsENL2tn9mOBfSQlNP5oDR26MW+PSCRRLv2DoRVv63lJjmuU9eXt3D2CF48BmME
+         h0F7z4AUL+NKqbPjcvJr8uafVSLHHQWYwjiL4zdd/MIX7VHm8dSNSPhO4fdxsk2iVrCw
+         3u5CnN2iJliJhcwzJv/dQn3N5uHtz228mSOII+NrIXgy4ec/DgGN2CAYjFlgvptBZKaj
+         y4EQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721429334; x=1722034134;
-        h=content-transfer-encoding:subject:from:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=w0S5e4sGInP7z6MpD0Yn2mZL23eIBOSAJlPdbBQ+hKQ=;
-        b=O+lUWCaRHSF4h27PfJCFOwdgnIkJ933FWrqKwH7ESmI+Jbicpd6s7ijdI6A7oaGcr6
-         AoGYL161m6aGmRxnw4AzQDEXfpdQxPY15MSQM0ES1QuZHO/SkJVNxktIwVhU1L4hQx4c
-         o+gIT3pNmoDPpR8LuD5+PnTI+lQ+amYYEjHsrLGfbEkCmVP07eeN8EPQsO8cCTdwFUjr
-         cvhGWE+zYcykU7/gT8JiSUGh/P7b9JH9PUku75eyvgty32e0wWd6ZJ7C0HHJjWiW7P1J
-         Ou0rH2t/MbqqU3SLEB63+vrH5bmTd0o32FTp3RGuVNvrUODMsbYYrY9IMIg8ABdGekyv
-         AFtg==
-X-Gm-Message-State: AOJu0YxlChW/HJIWvd6HCcN38jgpa3tXKOCtKgZ3ZXUge/c9dPaL6YdN
-	gF7ec3t6kpIoenBO+mq4pjVc/16wQAGlcH+9B3TrwoXbnRbvAzrIcjyMEL9tuM8YOdCVwegp6d3
-	oK+r1L5UJavWAOjuh+MNX/IjqDHaO1LV3TkV79ded764HuTg3SrX5ATxxPb6EMJIVNjjAM+j61z
-	wJY6nWB+WI1NvPcEkvoLNWR5yozm9MYcYSPQhD2SKX
-X-Received: by 2002:a05:6602:154c:b0:804:c529:8601 with SMTP id ca18e2360f4ac-81aa5483347mr178664939f.3.1721429334495;
-        Fri, 19 Jul 2024 15:48:54 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHZLkqNlf9kvU+HzGjGj1r168WoV+R6bj9fETzba+qHxXikazPCmNNw6ANH7DRPO25nkfH2wA==
-X-Received: by 2002:a05:6602:154c:b0:804:c529:8601 with SMTP id ca18e2360f4ac-81aa5483347mr178662539f.3.1721429334057;
-        Fri, 19 Jul 2024 15:48:54 -0700 (PDT)
-Received: from [10.0.0.71] (sandeen.net. [63.231.237.45])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4c234405c70sm510808173.167.2024.07.19.15.48.53
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Jul 2024 15:48:53 -0700 (PDT)
-Message-ID: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
-Date: Fri, 19 Jul 2024 17:48:53 -0500
+        d=1e100.net; s=20230601; t=1721561246; x=1722166046;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=MkVyRZi4tj9DgOEUIGR+D9RvRqQXblasLIhG5cmz7Cg=;
+        b=G15iFpJed9zeOrCgAS8GqTmP971IIzpgiMAv6QRZr1TNebVgCtGG6DIlhRVnrdtjAN
+         oeF+pvG5lvsmKZ5hP0U0zJq/XR+s9pUXWoIeo/czYuXujm6ZieR2akDYZcjqCURSVXpg
+         gBmB5wkL/bMBWbVYWf6W37cMyisQLVkLy0vzTWgB8pHZqFW8evNluON7wr3QptXpvK53
+         i8bS+tKNLWAZ70t3EuPE7NKP8zwfI3URGPDmTC01WVUQ/N2CVVU/DVx6/H9ypEJ+gv/E
+         cPm+gW/YrNiHdlKgoD9BmZduLy4txMUZJyUpqwJZzhiVazabeoiOgALXQsxLBiTlWz6y
+         QhUg==
+X-Gm-Message-State: AOJu0YxzOXOBdfv1rLkmtM7Jn1dYZpoh93TAjK5vjWpsrgLlv7vLa6Ej
+	H6WqUA4tvJ78Ejvt7PROo/kZuCAH66neVuTwVtBU9NVVT1zDwml3Sy4plKpIXcdxWQ==
+X-Google-Smtp-Source: AGHT+IEEOTyOTFs/qvAxdoSopCINw2N1CFoVpj05FvTNRLq/XEJ3omakWqmy9lDnVHozajSzaFLtgw==
+X-Received: by 2002:a05:6a21:c8a:b0:1c3:ce0f:bfb2 with SMTP id adf61e73a8af0-1c4285d55a7mr5182128637.23.1721561245930;
+        Sun, 21 Jul 2024 04:27:25 -0700 (PDT)
+Received: from localhost ([60.206.64.40])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2cb77307630sm6050279a91.21.2024.07.21.04.27.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Jul 2024 04:27:25 -0700 (PDT)
+From: Julian Sun <sunjunchao2870@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: chandan.babu@oracle.com,
+	djwong@kernel.org,
+	Julian Sun <sunjunchao2870@gmail.com>
+Subject: [PATCH] xfs: remove unused parameter in macro XFS_DQUOT_LOGRES
+Date: Sun, 21 Jul 2024 07:27:01 -0400
+Message-Id: <20240721112701.212342-1-sunjunchao2870@gmail.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: allow SECURE namespace xattrs to use reserved pool
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-We got a report from the podman folks that selinux relabels that happen
-as part of their process were returning ENOSPC when the filesystem is
-completely full. This is because xattr changes reserve about 15 blocks
-for the worst case, but the common case is for selinux contexts to be
-the sole, in-inode xattr and consume no blocks.
+In the macro definition of XFS_DQUOT_LOGRES, a parameter is accepted,
+but it is not used. Hence, it should be removed.
 
-We already allow reserved space consumption for XFS_ATTR_ROOT for things
-such as ACLs, and selinux / SECURE attributes are not so very different,
-so allow them to use the reserved space as well.
+This patch has only passed compilation test, but it should be fine.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Julian Sun <sunjunchao2870@gmail.com>
 ---
+ fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c | 28 ++++++++++++++--------------
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index ab3d22f662f2..e59193609003 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -82,6 +82,7 @@ xfs_attr_change(
- {
- 	struct xfs_mount	*mp = args->dp->i_mount;
- 	int			error;
-+	bool			rsvd;
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index cb035da3f990..fb05f44f6c75 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -56,7 +56,7 @@ typedef uint8_t		xfs_dqtype_t;
+  * And, of course, we also need to take into account the dquot log format item
+  * used to describe each dquot.
+  */
+-#define XFS_DQUOT_LOGRES(mp)	\
++#define XFS_DQUOT_LOGRES	\
+ 	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
  
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-@@ -110,7 +111,8 @@ xfs_attr_change(
- 	args->whichfork = XFS_ATTR_FORK;
- 	xfs_attr_sethash(args);
+ #define XFS_IS_QUOTA_ON(mp)		((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 3dc8f785bf29..45aaf169806a 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -338,11 +338,11 @@ xfs_calc_write_reservation(
+ 					blksz);
+ 		t1 += adj;
+ 		t3 += adj;
+-		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
++		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
+ 	}
  
--	return xfs_attr_set(args, op, args->attr_filter & XFS_ATTR_ROOT);
-+	rsvd = args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_SECURE);
-+	return xfs_attr_set(args, op, rsvd);
+ 	t4 = xfs_calc_refcountbt_reservation(mp, 1);
+-	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
++	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
  }
  
+ unsigned int
+@@ -410,11 +410,11 @@ xfs_calc_itruncate_reservation(
+ 					xfs_refcountbt_block_count(mp, 4),
+ 					blksz);
  
+-		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
++		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
+ 	}
+ 
+ 	t4 = xfs_calc_refcountbt_reservation(mp, 2);
+-	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
++	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
+ }
+ 
+ unsigned int
+@@ -466,7 +466,7 @@ STATIC uint
+ xfs_calc_rename_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
++	unsigned int		overhead = XFS_DQUOT_LOGRES;
+ 	struct xfs_trans_resv	*resp = M_RES(mp);
+ 	unsigned int		t1, t2, t3 = 0;
+ 
+@@ -577,7 +577,7 @@ STATIC uint
+ xfs_calc_link_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
++	unsigned int		overhead = XFS_DQUOT_LOGRES;
+ 	struct xfs_trans_resv	*resp = M_RES(mp);
+ 	unsigned int		t1, t2, t3 = 0;
+ 
+@@ -641,7 +641,7 @@ STATIC uint
+ xfs_calc_remove_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	unsigned int            overhead = XFS_DQUOT_LOGRES(mp);
++	unsigned int            overhead = XFS_DQUOT_LOGRES;
+ 	struct xfs_trans_resv   *resp = M_RES(mp);
+ 	unsigned int            t1, t2, t3 = 0;
+ 
+@@ -729,7 +729,7 @@ xfs_calc_icreate_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	struct xfs_trans_resv	*resp = M_RES(mp);
+-	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
++	unsigned int		overhead = XFS_DQUOT_LOGRES;
+ 	unsigned int		t1, t2, t3 = 0;
+ 
+ 	t1 = xfs_calc_icreate_resv_alloc(mp);
+@@ -747,7 +747,7 @@ STATIC uint
+ xfs_calc_create_tmpfile_reservation(
+ 	struct xfs_mount        *mp)
+ {
+-	uint	res = XFS_DQUOT_LOGRES(mp);
++	uint	res = XFS_DQUOT_LOGRES;
+ 
+ 	res += xfs_calc_icreate_resv_alloc(mp);
+ 	return res + xfs_calc_iunlink_add_reservation(mp);
+@@ -829,7 +829,7 @@ STATIC uint
+ xfs_calc_ifree_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return XFS_DQUOT_LOGRES(mp) +
++	return XFS_DQUOT_LOGRES +
+ 		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_iunlink_remove_reservation(mp) +
+@@ -846,7 +846,7 @@ STATIC uint
+ xfs_calc_ichange_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return XFS_DQUOT_LOGRES(mp) +
++	return XFS_DQUOT_LOGRES +
+ 		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+ 
+@@ -955,7 +955,7 @@ STATIC uint
+ xfs_calc_addafork_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return XFS_DQUOT_LOGRES(mp) +
++	return XFS_DQUOT_LOGRES +
+ 		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
+@@ -1003,7 +1003,7 @@ STATIC uint
+ xfs_calc_attrsetm_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return XFS_DQUOT_LOGRES(mp) +
++	return XFS_DQUOT_LOGRES +
+ 		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
+@@ -1043,7 +1043,7 @@ STATIC uint
+ xfs_calc_attrrm_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return XFS_DQUOT_LOGRES(mp) +
++	return XFS_DQUOT_LOGRES +
+ 		max((xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
+ 				      XFS_FSB_TO_B(mp, 1)) +
+-- 
+2.39.2
 
