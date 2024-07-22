@@ -1,68 +1,80 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E02D21EB56
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 15:11:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6D8BA1EB56
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 15:12:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721661105; cv=none; b=tONox1rsmuSMPDqN0f3D06puG7clDNdB4VcH8FIOckV5Ts6x4cJ05ytvg8nB9+ueqp/WDc8EIc/A2n+MUP6Aqz491QQZPy2WUp91XMc/P+0kDOeJX6LEUF26KLvSc8Bs+IRnf1GtKRlA7X6u99AVgvSEEaApqf+SQ54svpSuOx8=
+	t=1721661142; cv=none; b=tXzIlipCZCh+5jcNDqZYoxXO11/4bHZouWRvINUwHJp9MrYFI7ugZnbpk9Du3yRLkE6ZLYL/tHJv15reSDkZt05EcjXDQTL2jzRCQSJFLwbHjyPXcc+PZhcuQ4virqCvtkBKonNl60R+574LfXIccTl8mitzgLIwW/wYWs7//6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721661105; c=relaxed/simple;
-	bh=m+lRA/Dkb+NSHV1hDXGxt/3PlraFJyuw5DG55BU72Ho=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=siqQoV/vBPJBE84mNkFuezSAys5vSoKObjYxodNd3ztbsvlxT9KyVuBK2GoxczoxvZU9RgTetzG1fBhHlSL+9Aur99j/BWXEN9gn+ahCgPSfZmyKco9AEpCsKrH4PMz3XESVSwqD+4kBH5t1Hr7gyaCa8TPvI5ujOwCihjlS3RQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JtGxp0sp; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1721661142; c=relaxed/simple;
+	bh=+k2KEoCipQ9RpSL3bPAs6tbDijn4F6kCqXFHLNvcJbU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=omRNFFMapDVfa9fz2eAkek+OsL2UXviP0lFNtvK0ybPgmeqOovPBOiMyDGIY7phglu6kWrBKRR0VvutPtMnyQbx4Cd96wC1wpifJdLtB32qTervMg3vcc2HkmqgUvouNSZS7mJdtAdpWCZhQfyxko/XL1U+4zBhBwOmAvh2pJVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=xFPzwNuQ; arc=none smtp.client-ip=63.231.237.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JtGxp0sp"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=x7j9Gl+4paKPRNt3BijGnzgoUNPBybaKXBmB+tcHNZQ=; b=JtGxp0sp1yBBPqbhtqmC8pLGbd
-	nTOQN6kt2Z7eiKsYTi4vQKzarRMc4W59QB3na5gDctKbQdMJWcZPJt4VT3VOdj1lCu5JoqZlCBd4t
-	HrpXpxY0a4mt5xKMhe8UkvDE2J82y5KM7qQL7xmeFajdqDDHVF1JLO+amla02tmADnJj5iyXSCaAi
-	Nknky3wtk78gJWPjjda0NlKTUI4bN/du9v2ogMN+ny/h14Vao5YqN7D6VpIlumvFrNLpO2gy8BiYu
-	MHwdaqRDDRwKNk/dyHEJK5PeOWydA6uY7N6mOINI9zpSJreTLRj5Pc95GjWFw70bScUeFYw7u1vOa
-	arDuLp7g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sVuhT-00000009tj3-1xFv;
-	Mon, 22 Jul 2024 15:11:43 +0000
-Date: Mon, 22 Jul 2024 08:11:43 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Eric Sandeen <sandeen@redhat.com>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: allow SECURE namespace xattrs to use reserved pool
-Message-ID: <Zp52r8TBTQjJP-M-@infradead.org>
-References: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
- <Zp5vq86RtodlF-d1@infradead.org>
- <da41c7f5-8542-4b8e-9e98-2c33a74ca1a9@sandeen.net>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="xFPzwNuQ"
+Received: from [10.0.0.71] (usg [10.0.0.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 7F59C5CC112;
+	Mon, 22 Jul 2024 10:05:04 -0500 (CDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 7F59C5CC112
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
+	s=default; t=1721660704;
+	bh=cfcrmzC7yB2/O6hTR6nyPhMhWCLpCzahftqGMqPpV2g=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=xFPzwNuQrsJsTuTFmFOb85EBpQOehyLHISUHvfkU/eN4kMbpM/2EFUO9hV+DKsm96
+	 6w04Ru+S8PyO4Knzv+aa1svHWy2gnac9yCwBzKYTegktJnLqjJkWbGy+2TqxHhaAjm
+	 l1U4v9v06Xw6osgqWPX0EZ+sVanTxtrbm13YkkuiQOGqk4cT7VWbtOqHHkf2Nr8z6x
+	 bY4Yw+4cI/IrSnEmT3mPBXm+hiR542vrxuxHvdUnQeChASTV+SONYJH2n9oi6g2XuN
+	 nMykOyB3k/WAoAzwq6N2vm9zVq0Pp1dG1ds8KmI6weAw9Gxmb9Ow/hmle9IJvo1vyF
+	 VyCTsWM2RxvTA==
+Message-ID: <da41c7f5-8542-4b8e-9e98-2c33a74ca1a9@sandeen.net>
+Date: Mon, 22 Jul 2024 10:05:03 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <da41c7f5-8542-4b8e-9e98-2c33a74ca1a9@sandeen.net>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: allow SECURE namespace xattrs to use reserved pool
+To: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
+ <Zp5vq86RtodlF-d1@infradead.org>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <Zp5vq86RtodlF-d1@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jul 22, 2024 at 10:05:03AM -0500, Eric Sandeen wrote:
-> Ok, I thought the local var was a little prettier but *shrug* can do it
-> either way.
+On 7/22/24 9:41 AM, Christoph Hellwig wrote:
+> On Fri, Jul 19, 2024 at 05:48:53PM -0500, Eric Sandeen wrote:
+>>  	xfs_attr_sethash(args);
+>>  
+>> -	return xfs_attr_set(args, op, args->attr_filter & XFS_ATTR_ROOT);
+>> +	rsvd = args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_SECURE);
+>> +	return xfs_attr_set(args, op, rsvd);
 > 
-> To be honest I'm not sure why it was done for ROOT; dchinnner mentioned
-> something about DMAPI requirements, long ago...
+> This looks fine, although I'd probably do without the extra local
+> variable.  More importantly though, please write a comment documenting
+> why we are dipping into the reserved pool here.  We should have had that
+> since the beginning, but this is a better time than never.
 > 
-> It seems reasonable, and it's been there forever but also not obviously
-> required, AFAICT.
 > 
-> What would your explanation be? ;) 
 
-Based on your explanation it's probably ACLs for the same reason it
-applies to the security attributes.
+Ok, I thought the local var was a little prettier but *shrug* can do it
+either way.
 
+To be honest I'm not sure why it was done for ROOT; dchinnner mentioned
+something about DMAPI requirements, long ago...
+
+It seems reasonable, and it's been there forever but also not obviously
+required, AFAICT.
+
+What would your explanation be? ;) 
+
+Thanks,
+-Eric
