@@ -1,80 +1,88 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6D8BA1EB56
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 15:12:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721661142; cv=none; b=tXzIlipCZCh+5jcNDqZYoxXO11/4bHZouWRvINUwHJp9MrYFI7ugZnbpk9Du3yRLkE6ZLYL/tHJv15reSDkZt05EcjXDQTL2jzRCQSJFLwbHjyPXcc+PZhcuQ4virqCvtkBKonNl60R+574LfXIccTl8mitzgLIwW/wYWs7//6s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721661142; c=relaxed/simple;
-	bh=+k2KEoCipQ9RpSL3bPAs6tbDijn4F6kCqXFHLNvcJbU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=omRNFFMapDVfa9fz2eAkek+OsL2UXviP0lFNtvK0ybPgmeqOovPBOiMyDGIY7phglu6kWrBKRR0VvutPtMnyQbx4Cd96wC1wpifJdLtB32qTervMg3vcc2HkmqgUvouNSZS7mJdtAdpWCZhQfyxko/XL1U+4zBhBwOmAvh2pJVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=xFPzwNuQ; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="xFPzwNuQ"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 7F59C5CC112;
-	Mon, 22 Jul 2024 10:05:04 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 7F59C5CC112
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1721660704;
-	bh=cfcrmzC7yB2/O6hTR6nyPhMhWCLpCzahftqGMqPpV2g=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=xFPzwNuQrsJsTuTFmFOb85EBpQOehyLHISUHvfkU/eN4kMbpM/2EFUO9hV+DKsm96
-	 6w04Ru+S8PyO4Knzv+aa1svHWy2gnac9yCwBzKYTegktJnLqjJkWbGy+2TqxHhaAjm
-	 l1U4v9v06Xw6osgqWPX0EZ+sVanTxtrbm13YkkuiQOGqk4cT7VWbtOqHHkf2Nr8z6x
-	 bY4Yw+4cI/IrSnEmT3mPBXm+hiR542vrxuxHvdUnQeChASTV+SONYJH2n9oi6g2XuN
-	 nMykOyB3k/WAoAzwq6N2vm9zVq0Pp1dG1ds8KmI6weAw9Gxmb9Ow/hmle9IJvo1vyF
-	 VyCTsWM2RxvTA==
-Message-ID: <da41c7f5-8542-4b8e-9e98-2c33a74ca1a9@sandeen.net>
-Date: Mon, 22 Jul 2024 10:05:03 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F58C2FD;
+	Mon, 22 Jul 2024 15:30:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1721662227; cv=none; b=p8FN06doOpvaxjdxpphp8fwlG6O/IxIkn/c6iJut3nFZAdgI6JLcbN31k7Y7LGuB9e6rGetoRLOOFZ0XA+fw6eYX1bBDGkh/GX/ogb1olU8GjJH3YxHTRAevCspNEA2rRXEY18BgZxJhq7SbdbAHc6uD7sDz4hvmwJMMhRjvHpM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1721662227; c=relaxed/simple;
+	bh=qeOMl00DgHVITw+FjVR23dUDZQ0dZ2F3RbfRASJShYY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WjkMXh2+Ieay6zEP/Wtr7UfLo4dPHN+SxoK+rirZ2t1ex+JnC55HDr6cbUYB1+fi2PG5vJbSfoVOEjouIdw5x3auBu+UTCH4DCINZW0o3Q1rJEKmmzQmC68U8fmVKQwRIG23RtRnQS68NBQquvB2ECLv2EB5xaeWPedWaQ83mLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Udibmumu; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Udibmumu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F691C116B1;
+	Mon, 22 Jul 2024 15:30:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1721662227;
+	bh=qeOMl00DgHVITw+FjVR23dUDZQ0dZ2F3RbfRASJShYY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Udibmumu7SLzxEKxqIecKZDLnygO3K9IPmsYRL3I6hL5eYqNIVWX7mLjSpajAEdtJ
+	 +34Wwg7S23Sx/TsNHnSCLXzlaT8K9BzSvT0TpzDZp4qpSIexecgt4YBIFxTyDVKdR4
+	 zoGjpH6i7DCAVXe/q3qIV7BqGL/VhVJeejTJZQ5AjoBDa5DUQ2nz2ml/skzftzqSlC
+	 5qNp9evMwxpnZuVl0mgCMoNVIFBdte25OlWnbcPfa0aHZjnWFch12yFrsCVCKAOuGg
+	 mqnhjXYfz2YA35SyHO1xRH0Y7C6QIOmi+MTocaJsucU4+99bRjM3aqFDZEN/X/Fw9k
+	 bZ6cWyiYCD1kA==
+Date: Mon, 22 Jul 2024 17:30:17 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
+	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Chandan Babu R <chandan.babu@oracle.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, 
+	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+	David Sterba <dsterba@suse.com>, Hugh Dickins <hughd@google.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>, 
+	Dave Chinner <david@fromorbit.com>, Andi Kleen <ak@linux.intel.com>, 
+	Christoph Hellwig <hch@infradead.org>, Uros Bizjak <ubizjak@gmail.com>, 
+	Kent Overstreet <kent.overstreet@linux.dev>, Arnd Bergmann <arnd@arndb.de>, 
+	Randy Dunlap <rdunlap@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, 
+	linux-doc@vger.kernel.org
+Subject: Re: [PATCH v6 0/9] fs: multigrain timestamp redux
+Message-ID: <20240722-festmachen-lehrstellen-f86d1bd28997@brauner>
+References: <20240715-mgtime-v6-0-48e5d34bd2ba@kernel.org>
+ <20240716-zerlegen-haudegen-ba86a22f4322@brauner>
+ <60af7cff6b1cf00388e932804c81ed368fcc9f02.camel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: allow SECURE namespace xattrs to use reserved pool
-To: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
- <Zp5vq86RtodlF-d1@infradead.org>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <Zp5vq86RtodlF-d1@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <60af7cff6b1cf00388e932804c81ed368fcc9f02.camel@kernel.org>
 
-On 7/22/24 9:41 AM, Christoph Hellwig wrote:
-> On Fri, Jul 19, 2024 at 05:48:53PM -0500, Eric Sandeen wrote:
->>  	xfs_attr_sethash(args);
->>  
->> -	return xfs_attr_set(args, op, args->attr_filter & XFS_ATTR_ROOT);
->> +	rsvd = args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_SECURE);
->> +	return xfs_attr_set(args, op, rsvd);
+On Tue, Jul 16, 2024 at 08:45:16AM GMT, Jeff Layton wrote:
+> On Tue, 2024-07-16 at 09:37 +0200, Christian Brauner wrote:
+> > On Mon, Jul 15, 2024 at 08:48:51AM GMT, Jeff Layton wrote:
+> > > I think this is pretty much ready for linux-next now. Since the latest
+> > > changes are pretty minimal, I've left the Reviewed-by's intact. It would
+> > > be nice to have acks or reviews from maintainers for ext4 and tmpfs too.
+> > > 
+> > > I did try to plumb this into bcachefs too, but the way it handles
+> > > timestamps makes that pretty difficult. It keeps the active copies in an
+> > > internal representation of the on-disk inode and periodically copies
+> > > them to struct inode. This is backward from the way most blockdev
+> > > filesystems do this.
+> > > 
+> > > Christian, would you be willing to pick these up  with an eye toward
+> > > v6.12 after the merge window settles?
+> > 
+> > Yup. About to queue it up. I'll try to find some time to go through it
+> > so I might have some replies later but that shouldn't hold up linux-next
+> > at all.
 > 
-> This looks fine, although I'd probably do without the extra local
-> variable.  More importantly though, please write a comment documenting
-> why we are dipping into the reserved pool here.  We should have had that
-> since the beginning, but this is a better time than never.
+> Great!
 > 
-> 
+> There is one minor update to the percpu counter patch to compile those
+> out when debugfs isn't enabled, so it may be best to pick the series
+> from the "mgtime" branch in my public git tree. Let me know if you'd
 
-Ok, I thought the local var was a little prettier but *shrug* can do it
-either way.
-
-To be honest I'm not sure why it was done for ROOT; dchinnner mentioned
-something about DMAPI requirements, long ago...
-
-It seems reasonable, and it's been there forever but also not obviously
-required, AFAICT.
-
-What would your explanation be? ;) 
-
-Thanks,
--Eric
+I did that now and pushed to vfs.mgtime. Please take a look as I rebased
+onto current master and resolved conflicts in xfs and btrfs. Thanks!
