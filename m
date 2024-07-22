@@ -1,100 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CE631EB26;
-	Mon, 22 Jul 2024 18:49:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4F2E1BF54
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 19:25:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721674188; cv=none; b=mf6KTMMru+KoBhrdBWLKFKKKfrhWG7JQ2jthrCHnHWipfmnw6uclPvt8KnNaVQZ74GYN01nLxoK86DqJO25kf2Tp5O+x0V6JS7FhzM96I2juqLXw60TbO0v8ti60B14/bAw+j3blzjj3ZzKu5/zGw6pS2GRZQgKysbMgv6AghdM=
+	t=1721676342; cv=none; b=tfCMQfEvU0r0XY/dWnnPfZtEeujvi7KzFrULG+SNTwlO7nLYijIKybBDqzC4ksXxNeO+rRhWmJDbNQXBoLZid8yCVKEquW1ClamcPyWd6Pukp/huiRKuX1t+K2IGldBrPW3QIXegQMw+OOMKv0CNHomDJdud/6dN1IoJGgPLPCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721674188; c=relaxed/simple;
-	bh=hn2upQiYP7UVVh8YpM8DoUA/iiPMNNLXkyFWhtd6TGw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K4tftU+MkGRenaTl/3WkfckGvUabqA72JBWLj3Cu4MTT9rIm8OGGnvsK5kgeKaUZ84IRNXtyX/THhvISC8EZSo3a2IidSFnpXIzUg12s/x5/acVKdLZfqgxB0v1DUiBqbBKhy+v4ggav6W6y5mAnILQD+90/rhOqDx3pCooEb2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IBms8LWs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721676342; c=relaxed/simple;
+	bh=/uU4tELWwrAP28+JXAqg4UC+8xY8di4PvpA/xOUDa6o=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
+	 In-Reply-To:Content-Type; b=mYtZ43L2wP/dXWorsRiB06Uh7lwHknY5Km4J9YhwjCUf+eP+I43ir8dmRll9Xx3YHoMerekrO2UgCAXbJHKDT5JYFKCy75XM0IWwg01xjW+afRFxPy8Dt0kmjLBQ6IVsF1SjvK7QpNBd7c8gRK/2ViBhY07XJ++gXoQPdgXC9NQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TShoOchd; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IBms8LWs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C150FC116B1;
-	Mon, 22 Jul 2024 18:49:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721674187;
-	bh=hn2upQiYP7UVVh8YpM8DoUA/iiPMNNLXkyFWhtd6TGw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IBms8LWs1INJ8qU8LQbNwfD24Z1JMH2ALkqUiz1+amOducuM+VnOFlLxwg4sSu3U+
-	 XAibCPEgvlACgIljS48g6I++6RFK+HTnm32dmMc2SAxs7M7mgMkse7vfyb61ZTX6cr
-	 zTAMengMyghWkM8APV0aumjr4Pyom8l/9PmMPZDcxfZ1WLpLAuuhEBRxl2RT4Tz/mt
-	 /C+JeFVPa1x/DwJHd110I5P/944BxoevH2giXoQGAfnNGRwi6SvyOhlP8144j1iGb4
-	 +Pq44mn9lLHInUC0ZEyG80RDIPJ34u2NNRxB82IV6hTA4NONZN7mp3xxDhxM2y4RPE
-	 AjDMvrh0QZirw==
-Date: Mon, 22 Jul 2024 11:49:47 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: david@fromorbit.com, willy@infradead.org, chandan.babu@oracle.com,
-	brauner@kernel.org, akpm@linux-foundation.org,
-	linux-kernel@vger.kernel.org, yang@os.amperecomputing.com,
-	linux-mm@kvack.org, john.g.garry@oracle.com,
-	linux-fsdevel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
-	mcgrof@kernel.org, gost.dev@samsung.com, cl@os.amperecomputing.com,
-	linux-xfs@vger.kernel.org, ryan.roberts@arm.com, hch@lst.de,
-	Zi Yan <ziy@nvidia.com>
-Subject: Re: [PATCH v10 10/10] xfs: enable block size larger than page size
- support
-Message-ID: <20240722184947.GJ103014@frogsfrogsfrogs>
-References: <20240715094457.452836-1-kernel@pankajraghav.com>
- <20240715094457.452836-11-kernel@pankajraghav.com>
- <20240715164632.GV612460@frogsfrogsfrogs>
- <20240722141220.yfxb7jder7mqwgod@quentin>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TShoOchd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1721676339;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=SBD0gDOLMP1Gxh7jm2U3Yx3HXEG+s6EhX5D8cY81Y9s=;
+	b=TShoOchde7ZpBxd2HSAkzzj4HLQcCC0pQfD5udyTYUZ4HFgaKopScQk9aODH8lFguXGejA
+	8ZP6MVvodMzqn34pY1LhsaUO8c26XdLr+G+HAvS53fH04uj90Exf+VCyBQ6JEYvehjUcXt
+	Yx403Cr6PYcsTlA1aMQXrExUuzgxwEU=
+Received: from mail-io1-f72.google.com (mail-io1-f72.google.com
+ [209.85.166.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-482-iQntwr-_NI2Ui5UfWiYe1A-1; Mon, 22 Jul 2024 15:25:35 -0400
+X-MC-Unique: iQntwr-_NI2Ui5UfWiYe1A-1
+Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-802d5953345so738040639f.3
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 12:25:35 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721676335; x=1722281135;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=SBD0gDOLMP1Gxh7jm2U3Yx3HXEG+s6EhX5D8cY81Y9s=;
+        b=CAbfbEEyMCEsUaQBk/1myW8RGPPSOG+WlPbNg9c7Y9iXX0su61fYWmjcL/cDx+trDb
+         +SGgheagd/m1tBWCigx3jq5vMq2UVGoHXwr48wungPAYcSyqjoJ0OGrsqlGaYdRDYZW8
+         Zs6QYyDBQi4xPoNGggu1fQmToWsDye5/rSYZGWkvV4xbsH1DwHeuBXBGrZt8/5UmPeEC
+         A8/Guo+WYEfL4Ub0NALjDbp7PWldZVqZCUJJRU1GMwsaQ+05BIKwFAO/np1+thPYpQ35
+         IJGK6WgYnNzpTtALmFyVJNpGO9JcUUP29vwQtptz/rUSqqvdEjK4b6vfbnqXKkQnx0o+
+         pv1Q==
+X-Gm-Message-State: AOJu0Yy4Zj1M4yIQIx+gUZqee0K7vhVaiprDeUTTXzu1EaJfSLhgyIwt
+	TDEuD896yGXVKCpBtD9kPTZ/OXChK1ZK+dce0WkUrvfAOLwoKfgHn/i8Wlvij4PPGcU5VIfLRuq
+	MoKR8EsFWNe2TUda9rHegyWdyGlt+HIwOl7ZGt+3hAN+C+1kJgWmnP2ceTBasirQyNqYuh7Ikvy
+	9XHOsKI4v40LGTr+BWjkMw4Dl45QMozYY6vpQw9fQ0
+X-Received: by 2002:a05:6602:154c:b0:805:2e94:f21f with SMTP id ca18e2360f4ac-81aa9510c71mr982564439f.2.1721676334937;
+        Mon, 22 Jul 2024 12:25:34 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE7xjoUcP5UwotwRNstbzHF9cIMHQ5ZDJ3vr+ONIj6AqMuVfreJqAxDISBF7fx7lecTTtxIZg==
+X-Received: by 2002:a05:6602:154c:b0:805:2e94:f21f with SMTP id ca18e2360f4ac-81aa9510c71mr982562639f.2.1721676334467;
+        Mon, 22 Jul 2024 12:25:34 -0700 (PDT)
+Received: from [10.0.0.71] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4c2343ab5dasm1759235173.87.2024.07.22.12.25.34
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 22 Jul 2024 12:25:34 -0700 (PDT)
+Message-ID: <7c666cfc-0478-42d0-b179-575ace474db0@redhat.com>
+Date: Mon, 22 Jul 2024 14:25:33 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240722141220.yfxb7jder7mqwgod@quentin>
+User-Agent: Mozilla Thunderbird
+Subject: [PATCH V2] xfs: allow SECURE namespace xattrs to use reserved block
+ pool
+From: Eric Sandeen <sandeen@redhat.com>
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
+Content-Language: en-US
+In-Reply-To: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jul 22, 2024 at 02:12:20PM +0000, Pankaj Raghav (Samsung) wrote:
-> > > +
-> > > +		if (mp->m_sb.sb_blocksize > max_folio_size) {
-> > > +			xfs_warn(mp,
-> > > +"block size (%u bytes) not supported; maximum folio size supported in "\
-> > > +"the page cache is (%ld bytes). Check MAX_PAGECACHE_ORDER (%d)",
-> > > +			mp->m_sb.sb_blocksize, max_folio_size,
-> > > +			MAX_PAGECACHE_ORDER);
-> > > +			error = -ENOSYS;
-> > > +			goto out_free_sb;
-> > 
-> > Nit: Continuation lines should be indented, not lined up with the next
-> > statement:
-> > 
-> > 			xfs_warn(mp,
-> > "block size (%u bytes) not supported; maximum folio size supported in "\
-> > "the page cache is (%ld bytes). Check MAX_PAGECACHE_ORDER (%d)",
-> > 					mp->m_sb.sb_blocksize,
-> > 					max_folio_size,
-> > 					MAX_PAGECACHE_ORDER);
-> > 			error = -ENOSYS;
-> > 			goto out_free_sb;
-> 
-> @Darrick: As willy pointed out, the error message is a bit long here.
-> Can we make as follows:
-> 
-> "block size (%u bytes) not supported; Only block size (%ld) or less is supported "\
->                                         mp->m_sb.sb_blocksize,
->                                         max_folio_size);
-> 
-> This is similar to the previous error and it is more concise IMO.
+We got a report from the podman folks that selinux relabels that happen
+as part of their process were returning ENOSPC when the filesystem is
+completely full. This is because xattr changes reserve about 15 blocks
+for the worst case, but the common case is for selinux contexts to be
+the sole, in-inode xattr and consume no blocks.
 
-Ah, ok.  I suppose printing max_folio_size *and* MAX_PAGECACHE_ORDER is
-redundant.  The shortened version above is ok by me.
+We already allow reserved space consumption for XFS_ATTR_ROOT for things
+such as ACLs, and selinux / SECURE attributes are not so very different,
+so allow them to use the reserved space as well.
 
---D
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> > 
-> > With that fixed,
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > --D
-> > 
-> 
+V2: Remove local variable, add comment.
+
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index ab3d22f662f2..09f004af7672 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -110,7 +110,16 @@ xfs_attr_change(
+ 	args->whichfork = XFS_ATTR_FORK;
+ 	xfs_attr_sethash(args);
+ 
+-	return xfs_attr_set(args, op, args->attr_filter & XFS_ATTR_ROOT);
++	/*
++	 * Allow xattrs for ACLs (ROOT namespace) and SELinux contexts
++	 * (SECURE namespace) to use the reserved block pool for these
++	 * security-related operations. xattrs typically reside in the inode,
++	 * so in many cases the reserved pool won't actually get consumed,
++	 * but this will help the worst-case transaction reservations to
++	 * succeed.
++	 */
++	return xfs_attr_set(args, op,
++		    args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_SECURE));
+ }
+ 
+ 
+
+
