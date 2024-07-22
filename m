@@ -1,119 +1,158 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4F2E1BF54
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 19:25:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09D002E62C
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 22:15:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721676342; cv=none; b=tfCMQfEvU0r0XY/dWnnPfZtEeujvi7KzFrULG+SNTwlO7nLYijIKybBDqzC4ksXxNeO+rRhWmJDbNQXBoLZid8yCVKEquW1ClamcPyWd6Pukp/huiRKuX1t+K2IGldBrPW3QIXegQMw+OOMKv0CNHomDJdud/6dN1IoJGgPLPCs=
+	t=1721686528; cv=none; b=W2WSmSqsSuIzB4Q1LeV9uIepbzSeEC9fn4joNb3375VguP9DVM0DhYCgUrZUGGAsrj0BfmhjaAhF9NXmDf9gvxe5SZ8kpVWEyF7pk906Sz9JSZPM5ykXwbUWD2RV6Dpxk3UAG6i+XmpPIR0KXjKtCdo1R9i6D03iu7aj7ZcLkYs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721676342; c=relaxed/simple;
-	bh=/uU4tELWwrAP28+JXAqg4UC+8xY8di4PvpA/xOUDa6o=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=mYtZ43L2wP/dXWorsRiB06Uh7lwHknY5Km4J9YhwjCUf+eP+I43ir8dmRll9Xx3YHoMerekrO2UgCAXbJHKDT5JYFKCy75XM0IWwg01xjW+afRFxPy8Dt0kmjLBQ6IVsF1SjvK7QpNBd7c8gRK/2ViBhY07XJ++gXoQPdgXC9NQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TShoOchd; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1721686528; c=relaxed/simple;
+	bh=5x8aGvC4E55sxp9PLWf5vK2tQQlG4r1BNiohxsrsZZA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LzOLW0OgqWzGnipq9R0AkssScepxjEFSrFETDkFj7YwXpminaZb9nEl9ESpWdEdJ6tUT2zQVjqr08azkDvKj/ksqO7FytpfxkRfdwoB6Yv3ndBhLQwkRivjhjnravx4H2YzFgSGbEO6V7Twya2fRPnwC4OiRmGhlQfYlLveES0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rzKf0RDM; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TShoOchd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721676339;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=SBD0gDOLMP1Gxh7jm2U3Yx3HXEG+s6EhX5D8cY81Y9s=;
-	b=TShoOchde7ZpBxd2HSAkzzj4HLQcCC0pQfD5udyTYUZ4HFgaKopScQk9aODH8lFguXGejA
-	8ZP6MVvodMzqn34pY1LhsaUO8c26XdLr+G+HAvS53fH04uj90Exf+VCyBQ6JEYvehjUcXt
-	Yx403Cr6PYcsTlA1aMQXrExUuzgxwEU=
-Received: from mail-io1-f72.google.com (mail-io1-f72.google.com
- [209.85.166.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-482-iQntwr-_NI2Ui5UfWiYe1A-1; Mon, 22 Jul 2024 15:25:35 -0400
-X-MC-Unique: iQntwr-_NI2Ui5UfWiYe1A-1
-Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-802d5953345so738040639f.3
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 12:25:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rzKf0RDM"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1fb53bfb6easo235665ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 15:15:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721686526; x=1722291326; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=vgAS2a5P2U7bAMdSkmwto9pojkelJzyHGVSfWhJLVxU=;
+        b=rzKf0RDMh54aK+fJegOdIawLzmhfOczi5V+pg0607KcoVS8QIpZlieNLRsDD0gLV0g
+         uMwd7SDBoNS1LdBQ2Rgaax2sSLyVKhEQwOHrJ61ZIocwiDpvujmlm5eug1ZA5VVSz3s8
+         xOcsv+Gf/51zVxb4XoSubYihWlQ3y/TnLb2dnESBmEjyXoKzf+qOokew1kmyUIH4yogC
+         80S1TK6lltqAxl16t7jVcVPMPiz9+hq5xWaQFkLvstKo0VGU6wm6Hog1oQ4qQukO07HD
+         pr8ViJfta2XSJT4kZR88Ki/aKOJJZAtMwaMISE9cmWKjytYpG6EAtm5WtcQ1SoUGWZnR
+         vt9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721676335; x=1722281135;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :to:from:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1721686526; x=1722291326;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SBD0gDOLMP1Gxh7jm2U3Yx3HXEG+s6EhX5D8cY81Y9s=;
-        b=CAbfbEEyMCEsUaQBk/1myW8RGPPSOG+WlPbNg9c7Y9iXX0su61fYWmjcL/cDx+trDb
-         +SGgheagd/m1tBWCigx3jq5vMq2UVGoHXwr48wungPAYcSyqjoJ0OGrsqlGaYdRDYZW8
-         Zs6QYyDBQi4xPoNGggu1fQmToWsDye5/rSYZGWkvV4xbsH1DwHeuBXBGrZt8/5UmPeEC
-         A8/Guo+WYEfL4Ub0NALjDbp7PWldZVqZCUJJRU1GMwsaQ+05BIKwFAO/np1+thPYpQ35
-         IJGK6WgYnNzpTtALmFyVJNpGO9JcUUP29vwQtptz/rUSqqvdEjK4b6vfbnqXKkQnx0o+
-         pv1Q==
-X-Gm-Message-State: AOJu0Yy4Zj1M4yIQIx+gUZqee0K7vhVaiprDeUTTXzu1EaJfSLhgyIwt
-	TDEuD896yGXVKCpBtD9kPTZ/OXChK1ZK+dce0WkUrvfAOLwoKfgHn/i8Wlvij4PPGcU5VIfLRuq
-	MoKR8EsFWNe2TUda9rHegyWdyGlt+HIwOl7ZGt+3hAN+C+1kJgWmnP2ceTBasirQyNqYuh7Ikvy
-	9XHOsKI4v40LGTr+BWjkMw4Dl45QMozYY6vpQw9fQ0
-X-Received: by 2002:a05:6602:154c:b0:805:2e94:f21f with SMTP id ca18e2360f4ac-81aa9510c71mr982564439f.2.1721676334937;
-        Mon, 22 Jul 2024 12:25:34 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IE7xjoUcP5UwotwRNstbzHF9cIMHQ5ZDJ3vr+ONIj6AqMuVfreJqAxDISBF7fx7lecTTtxIZg==
-X-Received: by 2002:a05:6602:154c:b0:805:2e94:f21f with SMTP id ca18e2360f4ac-81aa9510c71mr982562639f.2.1721676334467;
-        Mon, 22 Jul 2024 12:25:34 -0700 (PDT)
-Received: from [10.0.0.71] (sandeen.net. [63.231.237.45])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4c2343ab5dasm1759235173.87.2024.07.22.12.25.34
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 22 Jul 2024 12:25:34 -0700 (PDT)
-Message-ID: <7c666cfc-0478-42d0-b179-575ace474db0@redhat.com>
-Date: Mon, 22 Jul 2024 14:25:33 -0500
+        bh=vgAS2a5P2U7bAMdSkmwto9pojkelJzyHGVSfWhJLVxU=;
+        b=nEfEmy3v98Dy0dP0jEDnDGfn6oU8OE1We2NehT75Gzw+7PB0E9gH/+RsuyEthXpO/R
+         RGxfetBspqW9uYCz6g1UnjazBH/SAGNgt88h+tJPtYnq1BJ4cIm5pK5uZ8tMxY8ASoOV
+         PYlMVr/ZyC25teL3UHVyp/GjNtju2X0S5IzMSaAAr2rPyjmOR6eP5xOtS7qTTGRmICJL
+         IP6jmqcfL786isSUW6gTV4H+mc50Dh9OczbaIVoZXYkr5iN77h9J+L2E02QdAn9n8wlM
+         BlOOFuZETn/bY0yUV1qA/MhmmA3kMGboAVpmGqwZVYfve2yx9bhK1GDuAxPSBJt7nOQ6
+         oBTQ==
+X-Gm-Message-State: AOJu0YwU8pwS2uKafFx+YiFnHsFiYa6t6UMceWLtqH81WItExA+u2oQj
+	FUSV5+Td8Smlinq7oIWsltc+5nLbyw8iKo5SSsTJ2SJjhe+PeakqBnXruz5xA8A=
+X-Google-Smtp-Source: AGHT+IEs6ZHZifFYm0ILfbv1R6iPOVc2eB+LHyQ+QjvXCg8btqiV4D7HdK5XcJeIDGVO1ecRlHkwcQ==
+X-Received: by 2002:a17:902:db01:b0:1fb:8a61:129d with SMTP id d9443c01a7336-1fd7461ea07mr61270175ad.56.1721686526121;
+        Mon, 22 Jul 2024 15:15:26 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fd6f4533e7sm60116445ad.220.2024.07.22.15.15.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Jul 2024 15:15:25 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sW1JS-007nj6-2s;
+	Tue, 23 Jul 2024 08:15:22 +1000
+Date: Tue, 23 Jul 2024 08:15:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: "P M, Priya" <pm.priya@hpe.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: xfs issue
+Message-ID: <Zp7Z+vLH5qmyGXHV@dread.disaster.area>
+References: <MW4PR84MB1660F0405D5E26BD48C5DD7C88A82@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
+ <MW4PR84MB16604A5EE24D0CA948F1D2B488A82@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [PATCH V2] xfs: allow SECURE namespace xattrs to use reserved block
- pool
-From: Eric Sandeen <sandeen@redhat.com>
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
-Content-Language: en-US
-In-Reply-To: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <MW4PR84MB16604A5EE24D0CA948F1D2B488A82@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
 
-We got a report from the podman folks that selinux relabels that happen
-as part of their process were returning ENOSPC when the filesystem is
-completely full. This is because xattr changes reserve about 15 blocks
-for the worst case, but the common case is for selinux contexts to be
-the sole, in-inode xattr and consume no blocks.
+On Mon, Jul 22, 2024 at 02:21:40PM +0000, P M, Priya wrote:
+> Hi, 
+> 
+> Good Morning! 
+> 
+> We see the IO stall on backing disk sdh when it hangs - literally no IO, but a very few, per this sort of thing in diskstat:
+>  
+> alslater@HPE-W5P7CGPQYL collectl % grep 21354078 sdhi.out | sed 's/.*disk//'|wc -l
+>    1003
+> 
+> alslater@HPE-W5P7CGPQYL collectl % grep 21354078 sdhi.out | sed 's/.*disk//'|uniq -c
+>   1     8     112 sdh 21354078 11338 20953907501 1972079123 18657407 324050 16530008823 580990600 0 17845212 2553245350
+>   1     8     112 sdh 21354078 11338 20953907501 1972079123 18657429 324051 16530009041 580990691 0 17845254 2553245441
+>   1     8     112 sdh 21354078 11338 20953907501 1972079123 18657431 324051 16530009044 580990691 0 17845254 2553245441
+> 1000     8     112 sdh 21354078 11338 20953907501 1972079123 18657433 324051 16530009047 580990691 0 17845254 2553245441
+> ^ /very/ slight changes these write cols ->
+> (these are diskstat metrics per 3.10 era, read metrics first, then writes)
 
-We already allow reserved space consumption for XFS_ATTR_ROOT for things
-such as ACLs, and selinux / SECURE attributes are not so very different,
-so allow them to use the reserved space as well.
+What kernel are you running? What's the storage stack look like
+(i.e. storage hardware, lvm, md, xfs_info, etc).
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> And there is a spike in sleeping on logspace concurrent with fail.
+>  
+> Prior backtraces had xlog_grant_head_check hungtasks
 
-V2: Remove local variable, add comment.
+Which means the journal ran out of space, and the tasks were waiting
+on metadata writeback to make progress to free up journal space.
 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index ab3d22f662f2..09f004af7672 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -110,7 +110,16 @@ xfs_attr_change(
- 	args->whichfork = XFS_ATTR_FORK;
- 	xfs_attr_sethash(args);
- 
--	return xfs_attr_set(args, op, args->attr_filter & XFS_ATTR_ROOT);
-+	/*
-+	 * Allow xattrs for ACLs (ROOT namespace) and SELinux contexts
-+	 * (SECURE namespace) to use the reserved block pool for these
-+	 * security-related operations. xattrs typically reside in the inode,
-+	 * so in many cases the reserved pool won't actually get consumed,
-+	 * but this will help the worst-case transaction reservations to
-+	 * succeed.
-+	 */
-+	return xfs_attr_set(args, op,
-+		    args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_SECURE));
- }
- 
- 
+What do the block device stats tell you about inflight IOs
+(/sys/block/*/inflight)?
 
+> but currently with noop scheduler
+> change (from deadline which was our default), and xfssyncd dialled down to 10s, we get:
+>  
+> bc3:
+> /proc/25146  xfsaild/sdh
+> [<ffffffffc11aa9f7>] xfs_buf_iowait+0x27/0xc0 [xfs]
+> [<ffffffffc11ac320>] __xfs_buf_submit+0x130/0x250 [xfs]
+> [<ffffffffc11ac465>] _xfs_buf_read+0x25/0x30 [xfs]
+> [<ffffffffc11ac569>] xfs_buf_read_map+0xf9/0x160 [xfs]
+> [<ffffffffc11de299>] xfs_trans_read_buf_map+0xf9/0x2d0 [xfs]
+> [<ffffffffc119fe9e>] xfs_imap_to_bp+0x6e/0xe0 [xfs]
+> [<ffffffffc11c265a>] xfs_iflush+0xda/0x250 [xfs]
+> [<ffffffffc11d4f16>] xfs_inode_item_push+0x156/0x1a0 [xfs]
+> [<ffffffffc11dd1ef>] xfsaild+0x38f/0x780 [xfs]
+> [<ffffffff956c32b1>] kthread+0xd1/0xe0
+> [<ffffffff95d801dd>] ret_from_fork_nospec_begin+0x7/0x21
+> [<ffffffffffffffff>] 0xffffffffffffffff
+>  
+> bbm:
+> /proc/22022  xfsaild/sdh
+> [<ffffffffc12d09f7>] xfs_buf_iowait+0x27/0xc0 [xfs]
+> [<ffffffffc12d2320>] __xfs_buf_submit+0x130/0x250 [xfs]
+> [<ffffffffc12d2465>] _xfs_buf_read+0x25/0x30 [xfs]
+> [<ffffffffc12d2569>] xfs_buf_read_map+0xf9/0x160 [xfs]
+> [<ffffffffc1304299>] xfs_trans_read_buf_map+0xf9/0x2d0 [xfs]
+> [<ffffffffc12c5e9e>] xfs_imap_to_bp+0x6e/0xe0 [xfs]
+> [<ffffffffc12e865a>] xfs_iflush+0xda/0x250 [xfs]
+> [<ffffffffc12faf16>] xfs_inode_item_push+0x156/0x1a0 [xfs]
+> [<ffffffffc13031ef>] xfsaild+0x38f/0x780 [xfs]
+> [<ffffffffbe4c32b1>] kthread+0xd1/0xe0
+> [<ffffffffbeb801dd>] ret_from_fork_nospec_begin+0x7/0x21
+> [<ffffffffffffffff>] 0xffffffffffffffff
 
+And that's metadata writeback waiting for IO completion to occur.
+
+If this is where the filesystem is stuck, then that's why the
+journal has no space and tasks get hung up in
+xlog_grant_head_check(). i.e.  these appaer to be two symptoms of
+the same problem.
+
+> .. along with cofc threads in isr waiting for data. What that doesn't tell us yet is who's the symptom
+> versus who's the cause. Might be lack of / lost interrupt handling, might be lack of pushing the 
+> xfs log hard enough  out, might be combination of timing aspects..
+
+No idea as yet - what kernel you are running is kinda important to
+know before we look much deeper.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
