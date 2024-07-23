@@ -1,103 +1,63 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F108514D710;
-	Tue, 23 Jul 2024 10:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EBD2208A0;
+	Tue, 23 Jul 2024 13:39:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721730831; cv=none; b=Vl73APFNSK3hmVnq+KbtpNRFKxG7dhR4uF11q184ML6SPWl8fvyPeuqUaPJ9A0fk2sKyFHzove7qeULn9IcC7L5P2R+Hcg05MzxHUM0qEJa3OqWQTwjcenSToikaaU1g6YLRmQ1TYB8/Eu+y+Myevx4fHQYGFjQ2SLXzUiOhUXw=
+	t=1721741958; cv=none; b=MTYbGRhBCC13pwO3BlPVBMNFswLgrMC6YiAlLazbIzDd4Sj7BZzvyS8Hnc/LyJuNe4H0NHaWmRWIrdDI39tMnyuqblNXI0UhBW7rLmbv1yca5bHfpHqUj72LoBg2NnWN63NWjpw7XRMOa7H4r9N4LrL4621yYp+qcsO1441fvrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721730831; c=relaxed/simple;
-	bh=FgsNZLyJVQujcNgg+ovIPGVLlUHk+28zuGPLkC7ZNCs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NNT22JQLdjzcaoMvGUmKEwVvZ772gnf7UEEusqZk4nToxt7HkjNKdO+WYm4x16Z7dgyc6R8+er3seAVRM+OgkabmAcQyB6mSgR83i3MNmfPwxmiDaE+voHLA0oq/XRPrQYn20B59xiYGiPLtkJnjj76pFc0lUJFxSAf/F+aDM8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 2A6C661E5FE01;
-	Tue, 23 Jul 2024 12:33:34 +0200 (CEST)
-Message-ID: <02ceb39e-e4fb-4f62-ac40-7afafbd620c1@molgen.mpg.de>
-Date: Tue, 23 Jul 2024 12:33:33 +0200
+	s=arc-20240116; t=1721741958; c=relaxed/simple;
+	bh=R7nMFRX8BYwxqiuPvKKAQqLY9/4YpEQoFaUxlpxUrXA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sqtdSQv8nwh00TujKFJ0AE4G8WjwAkp+KxAnZdtHjmFl7OK/7cJApE+AlvirkqhTccItiSp5cQaiZnn7UjlInKJjOJfh9i5z3Oj0U5ecWrP106vo1yaSoktww1LcJEd+IfGCMNPTaT+xhYQW2kdT8/+smZuyOnw8jw0VmBQipbY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0673668AA6; Tue, 23 Jul 2024 15:39:05 +0200 (CEST)
+Date: Tue, 23 Jul 2024 15:39:04 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: RFC: don't fail tests when mkfs options collide
+Message-ID: <20240723133904.GA20005@lst.de>
+References: <20240723000042.240981-1-hch@lst.de> <20240723035016.GB3222663@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: How to debug intermittent increasing md/inflight but no disk
- activity?
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
- it+linux-raid@molgen.mpg.de
-References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
- <CAAMCDedmjyyn93V+ScRTyqd1FbW5VJmbZHGMss3iwyqxwJL3Pg@mail.gmail.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <CAAMCDedmjyyn93V+ScRTyqd1FbW5VJmbZHGMss3iwyqxwJL3Pg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240723035016.GB3222663@mit.edu>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Dear Roger,
+On Mon, Jul 22, 2024 at 11:50:16PM -0400, Theodore Ts'o wrote:
+> Yeah, it's a bit of a mess.  It's not been an issue for ext4 because
+> mkfs.ext4 allows options specified later in the command-line to
+> override earlier ones.
 
+At least in my case it's not really by overriding.  E.g. if I force
+an allocation group (or block group in extN terms) to a specific size
+and then want a log that is larger than that, changing the AG size
+is generally a bad idea, and a clear warning to the user is simply the
+better interface.
 
-Thank you for your reply.
-
-Am 10.07.24 um 13:54 schrieb Roger Heflin:
-> How long does it freeze this way?
-
-It froze up to five minutes I’d say.
-
-> The disks getting bad blocks do show up as stopping activity for 3-60
-> seconds (depending on the disks internal settings).
+> There's a third possibility, which is sometimes the test might
+> explicitly want the mkfs options to be merged together.  For example,
+> in the ext4/4k configuration we have "-b 4096", while the ext4/1k
+> confiuration option we might have "-b 1024".  And we might want to
+> have that *combined* with a test which is enabling fscrypt feature, so
+> we can test fscrypt with a 4k block size, as well as fsvrypt with a 1k
+> blocksize.
 > 
-> smartctl --xall <device> | grep -iE 'sector|reall' should show the
-> reallocation counters.
+> That being said, that doesn't always make sense, and sometimes the
+> combination doesn't make any sense.
 
-These are SAS disks, and none of the array members has any errors. Example:
+Merging the options is what we're currently doing, and it works ok
+most of the time.  The question is what to do when it doesn't.
 
-```
-@grele:~$ sudo smartctl --xall /dev/sdy
-[…]
-Error counter log:
-            Errors Corrected by           Total   Correction 
-Gigabytes    Total
-                ECC          rereads/    errors   algorithm 
-processed    uncorrected
-            fast | delayed   rewrites  corrected  invocations   [10^9 
-bytes]  errors
-read:          0        0         0         0          0     655487.372 
-          0
-write:         0        0         0         0          0      38289.771 
-          0
-```
-
-> What kind of disks does the machine have?
-
-Seagate ST16000NM004J (16 TB, SAS)
-
-> On my home machine a bad sector freezes it for 7 seconds (scterc
-> defaults to 7).  On some work large disk big raid the hang is minutes.
->     The raw disk is set to 10 (that is what the vendor told us) and
-> that 10 + having potentially a bunch of IOs against the bad sector
-> shows as minutes.
-> 
-> I wrote a script that work uses that both times how long smartctl
-> takes for each disk (the bad disk takes >5 seconds, and up to minutes)
-> and also shows the reallocated count and save a copy every hour so one
-> can see what disk incremented its counter in the last hour and replace
-> that disk.
-
-A colleague also wrote a Perl program diskcheck, that is regularly run 
-to check all the disks. Nothing suspicious here.
-
-
-Kind regards,
-
-Paul
