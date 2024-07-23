@@ -1,285 +1,550 @@
-Received: from mx0b-002e3701.pphosted.com (mx0b-002e3701.pphosted.com [148.163.143.35])
+Received: from buffalo.tulip.relay.mailchannels.net (buffalo.tulip.relay.mailchannels.net [23.83.218.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD7A613A275
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 06:53:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.143.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 465F228E8
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 06:58:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=23.83.218.24
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721717630; cv=fail; b=ZEW2cmB2jIe7CtnPSh0+fbvrGO0oQErt0qXpO6kVGg86i1t/ud4oCPAUBqdUuV9Gxhkh9UW1dUQrSoR5iC619tlilmx9i56bK1Qyi5JRSU2n+rNTai6OiJviaL0C4k2VQJpJwAp93Bcvy2576ySHtwIIkqM9+NfL7wl1MAY7Wrw=
+	t=1721717918; cv=pass; b=SJ5G4CuRUNI9QHwlTvHcgaIIEmK+VQFhKuRQh1YG2pxye6J82aMYQ462m9Ujd3QlCD4ZX+dupzvvYiYnFiflDaU07falpC/O5IHCwWhbaAr1fAVNak7iYju0PoYyRrjOjjahhsGK/UJZRqg9Auv4ZqN06VA/GfpquCK53bwHirs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721717630; c=relaxed/simple;
-	bh=6f7R8T/5buLC1pqwMY8DaoWHAweY1C71KK0+royybZo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Q2R4JdAqk/U21+Bd8i/zUwPgAsoD0w5Is8eG/7FarYbmNxjcNUH+YoojXGbpoKuJN/KWTkar5q1B/AbjaO7acLRc4vJcfIZUbwiVt4NIW5qia4aZ3Qh8JhaIxydF1JRWUIWvyBPj+F1Z4ou6gcAep44yO9Un1oWW8jmiBAPeWN0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hpe.com; spf=pass smtp.mailfrom=hpe.com; dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b=Eq+lvcSD; arc=fail smtp.client-ip=148.163.143.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hpe.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hpe.com
+	s=arc-20240116; t=1721717918; c=relaxed/simple;
+	bh=wXsajKHZhXL8bL8eRUXHOsm+kwACo2NpylUqkjDDMuk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X7PygxU0LdN3MT53ccoG1yT7GKmnXgv30EgzrAqXXYr044kKmV4y9CyOzz2Qf0QHLstekcZI2ed90kiVso3i2QmgEOQ9Chu1reGSnf0HgzWbNl1KNwYHZDJh58xoAjdz/fNxsNWkw0ijPt95gxYEUg/4uWKF4p4FIDMv/eq3vs4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=templeofstupid.com; spf=pass smtp.mailfrom=templeofstupid.com; dkim=pass (2048-bit key) header.d=templeofstupid.com header.i=@templeofstupid.com header.b=GGkcQYf4; arc=pass smtp.client-ip=23.83.218.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=templeofstupid.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=templeofstupid.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b="Eq+lvcSD"
-Received: from pps.filterd (m0150244.ppops.net [127.0.0.1])
-	by mx0b-002e3701.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46ML2vM1015578;
-	Tue, 23 Jul 2024 06:19:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=from
-	:to:cc:subject:date:message-id:references:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=pps0720;
-	 bh=idnC/PspFYBOf1oe19CxCjrg4vbts6nqKTQh3DyMtMo=; b=Eq+lvcSDSJIC
-	R8deOTOmx74YdIrPuTBN1CaqMuO/cLRJwx+9DY0/H7m/NE7WUriMlO0g8N5DHiHA
-	gEiCDU3hZnrlKGre3hEu1wAQGGqMz9NcZPVFF2lw2Tj+tWcoFH5SrbUvhDZ3IF0G
-	aVBSupR2iEleKQiVNV4mtVn7gnu1OKKS/+WfCD8FaNEWf1r9Ok3Zp2YwUT2Gv1i5
-	YjPnXSmSmMiRhBEzoS12klDvW1FO6Z9yLPoGGdSqP5bGlcA+pxw2NgJBmgycxVGy
-	IVW6JhnKH+VuiqbSwizbbnrgJ35+unM6066EKznDrqE6XR8FDhNcDx6+1bxCkoPp
-	pebCj0BBPw==
-Received: from p1lg14881.it.hpe.com ([16.230.97.202])
-	by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 40hm0x8j4a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 23 Jul 2024 06:19:36 +0000 (GMT)
-Received: from p1wg14926.americas.hpqcorp.net (unknown [10.119.18.115])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass (2048-bit key) header.d=templeofstupid.com header.i=@templeofstupid.com header.b="GGkcQYf4"
+X-Sender-Id: dreamhost|x-authsender|kjlx@templeofstupid.com
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+	by relay.mailchannels.net (Postfix) with ESMTP id E2AF184763
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 06:51:27 +0000 (UTC)
+Received: from pdx1-sub0-mail-a223.dreamhost.com (unknown [127.0.0.6])
+	(Authenticated sender: dreamhost)
+	by relay.mailchannels.net (Postfix) with ESMTPA id 890DC840BF
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 06:51:27 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1721717487; a=rsa-sha256;
+	cv=none;
+	b=T1QmMo+ML8QDDz9jCPem5T4kEMUkyBu+kZmJ0jqUwcmvkHS9bK4mUkWrZnYeqoI9qpR7Fu
+	iNVTC7BMUxGVl2loMr6cZZq9LEnRFmocab1RR/6wF46kwjJIj9MC02eTD1NfE5ptzJmmbi
+	dVF3+yComVgZx0FEwkppE3GBTsGbAtZSOyu94jnys4Swzk9nCtITOBHNKl0QV1LizKpx2/
+	qcI59Ce+yjWmoZmcj+rIQ60Cg9eH1fopgzpLWQdxNv+BKtNXQLiBCRI8+4VZbLDfNC4Q6v
+	6Jght8ZgLfNk1/pQ3tNUPyDeisZJ8A1jPhSehPT5h3YWShFYG3eI+J/fxjXTzg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+	s=arc-2022; t=1721717487;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references:dkim-signature;
+	bh=NobN3ef0kIpy9AQQC1e5rqapbjc5z98zE24+JT+yFfI=;
+	b=y7HiP8wVDRF0Q/WQ3ILovzGly7+X5PCIy5Pur6Y2kL1rtZidNZWlvDYj7OW1Hp77xwAk9P
+	naEZO+vrfe/YcrtIP33unO6UN19CNovrGDITJe2jMqMyq5fkEm0sI539K5hVRvMZp4+ttv
+	L+kKRL199ro9+4nQiYkRzL+IRAlr4urd4vw57rtkRJznLAdhDGg0TLnbtI1RuaESRQ1A18
+	qzNnb5jygyTkNXYA4HyK9XITJAGWed62iI6KKs4gMTdfgU3kqdS7kTqPlQErKXaBqvYkZv
+	Hwzeb6C7WDQFFBbS3E5/pI72OCg97ATvou64/NHvV6mz/QtXF44FVAbyl9lKGw==
+ARC-Authentication-Results: i=1;
+	rspamd-6c89c58bd7-cvhbj;
+	auth=pass smtp.auth=dreamhost smtp.mailfrom=kjlx@templeofstupid.com
+X-Sender-Id: dreamhost|x-authsender|kjlx@templeofstupid.com
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|kjlx@templeofstupid.com
+X-MailChannels-Auth-Id: dreamhost
+X-Imminent-Power: 3ea3198e613a1d64_1721717487810_271112066
+X-MC-Loop-Signature: 1721717487810:3288459392
+X-MC-Ingress-Time: 1721717487810
+Received: from pdx1-sub0-mail-a223.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+	by 100.123.56.197 (trex/7.0.2);
+	Tue, 23 Jul 2024 06:51:27 +0000
+Received: from kmjvbox.templeofstupid.com (c-73-70-109-47.hsd1.ca.comcast.net [73.70.109.47])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by p1lg14881.it.hpe.com (Postfix) with ESMTPS id 8956580566C;
-	Tue, 23 Jul 2024 06:19:35 +0000 (UTC)
-Received: from p1wg14928.americas.hpqcorp.net (10.119.18.116) by
- p1wg14926.americas.hpqcorp.net (10.119.18.115) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Mon, 22 Jul 2024 18:19:01 -1200
-Received: from p1wg14927.americas.hpqcorp.net (10.119.18.117) by
- p1wg14928.americas.hpqcorp.net (10.119.18.116) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Mon, 22 Jul 2024 18:20:16 -1200
-Received: from p1wg14921.americas.hpqcorp.net (16.230.19.124) by
- p1wg14927.americas.hpqcorp.net (10.119.18.117) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42
- via Frontend Transport; Mon, 22 Jul 2024 18:18:55 -1200
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (192.58.206.38)
- by edge.it.hpe.com (16.230.19.124) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Mon, 22 Jul 2024 18:18:57 -1200
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=iK1dG+KxZQDXELKSWQP/6RT4vpT+RCoS8JFIGcARHgsJHb2zyy2biqL36OmqNAsVAZxA1g6B+oy7gihsfNIMbYA0xva4okq4blHnPIT7JBNB3bQMFJFM6UClSgVCNc8+nRejx5aEfMuq0q0nfyafQuKsuzyupSsHrdIbA/L48MEtPtE6Yoa6aaEdaYtvhDPxAI1IoQNGl1gJxoVmyQeSvTvK3cU+1wnnnD5OXGnSJsL21ygBDN4QHmHTi3pljUrIXDkpdcbgVQ7ENk6JQ3/QpGhXbiVfXZCrVRpNL90rjegkcHD3WIbY+SlVYNPikb8AYzIcoinOICXx8aok+1brUQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=idnC/PspFYBOf1oe19CxCjrg4vbts6nqKTQh3DyMtMo=;
- b=To5FA0lbTy5wy9r8MwevJfEQfffzXzC+7X/5Nnx3tD7eM0pzZQft7ZVNwZ/Lng5KzdxBKOPwvIHHVPqfh00lIJgVHlDibLGYM4vcpXIqW5KBlp/V3vL1IB/4eYdrgb/rmOcVW8YquoP8dr56RG/GfRcbcKeVTkyuz01D2XtnpvdKItqa/nNBa0RCVIK7Tptsk50PhPTIDNLldZRD0JR5uj6cnAnrlG5+1OltvBSQ1syK5flf747iKMGcpKfkz5e66bB3eT2vGHBBNZOtrCVuIfjRGzKS4TX0YHdg/e4UAWV6J2GH/4X31vp9KV9zsrxwG6kwvi45TkUnzYOlRPIdhQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=hpe.com; dmarc=pass action=none header.from=hpe.com; dkim=pass
- header.d=hpe.com; arc=none
-Received: from MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:303:1a7::20)
- by SJ0PR84MB1435.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:a03:431::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7762.28; Tue, 23 Jul
- 2024 06:18:55 +0000
-Received: from MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM
- ([fe80::3844:7698:9b5b:55a4]) by MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM
- ([fe80::3844:7698:9b5b:55a4%5]) with mapi id 15.20.7762.027; Tue, 23 Jul 2024
- 06:18:55 +0000
-From: "P M, Priya" <pm.priya@hpe.com>
+	(Authenticated sender: kjlx@templeofstupid.com)
+	by pdx1-sub0-mail-a223.dreamhost.com (Postfix) with ESMTPSA id 4WSnqg1VL5zJD
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 23:51:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=templeofstupid.com;
+	s=dreamhost; t=1721717487;
+	bh=NobN3ef0kIpy9AQQC1e5rqapbjc5z98zE24+JT+yFfI=;
+	h=Date:From:To:Cc:Subject:Content-Type;
+	b=GGkcQYf4IbtC5wiSuT+8JZO+WLyB+XqCOAqCSQu2LBwZbWacL9jwXtz4iM/Q7KEYO
+	 JqWBdt66alzF24MZeQxoiyI6W75nKbG6BvGd9uYwJwQ7e2dlN/QnK2o6VaXbNnwXAG
+	 7d90LDURu5MPqcHa4wYpQxth4g8d0boMG6YKJjpnvhK+h6ubjc/mhLcdOxeIgzbu1z
+	 x1dtJIv81IEW0jk92cWS/OUpodqw0FxUnkrJU6Que0X4JP0Y3vjIVPTipUD2V81Wq8
+	 1HgXyJqByNiru2NE0XHH9cIrF+ZnVcKGE6iTL9fpW+5NGAr2VD9KaABOLeLIfcXOPK
+	 wMbBaWTvWxkRA==
+Received: from johansen (uid 1000)
+	(envelope-from kjlx@templeofstupid.com)
+	id e00e1
+	by kmjvbox.templeofstupid.com (DragonFly Mail Agent v0.12);
+	Mon, 22 Jul 2024 23:51:25 -0700
+Date: Mon, 22 Jul 2024 23:51:25 -0700
+From: Krister Johansen <kjlx@templeofstupid.com>
 To: Dave Chinner <david@fromorbit.com>
-CC: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: RE: xfs issue
-Thread-Topic: xfs issue
-Thread-Index: AdrcQhF5C2oUXPgHTjOszvEetVnEuQAAKJxQABB8OgAADMBcQA==
-Date: Tue, 23 Jul 2024 06:18:55 +0000
-Message-ID: <MW4PR84MB1660C7929333CE85B3EE9DF288A92@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
-References: <MW4PR84MB1660F0405D5E26BD48C5DD7C88A82@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
- <MW4PR84MB16604A5EE24D0CA948F1D2B488A82@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
- <Zp7Z+vLH5qmyGXHV@dread.disaster.area>
-In-Reply-To: <Zp7Z+vLH5qmyGXHV@dread.disaster.area>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MW4PR84MB1660:EE_|SJ0PR84MB1435:EE_
-x-ms-office365-filtering-correlation-id: 0b6060e7-b6ef-4049-a2d9-08dcaadf54b5
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700018;
-x-microsoft-antispam-message-info: =?iso-8859-1?Q?Jv0/+LxqOzupK/DSjS01+TFJpto6uyX7hSGmXelJpvWEiwWyQDp1eUqIIL?=
- =?iso-8859-1?Q?P9BTTtqJ+Ct7uGqzAa03+qSDgiQWuubbaBgre2qd8395chJtoVbMJkiVnh?=
- =?iso-8859-1?Q?R3NOUdmJx/EjrwpLlzRFJv4/5jd9hk8h/5vNgJbF2QkDKcI7Xp1W7C7Xk6?=
- =?iso-8859-1?Q?nmAUqs32squpAJDiq5Eqa6fqGpxD9IRcylT4yIayIO8K1jC4arv4lsIbui?=
- =?iso-8859-1?Q?I7zUbCSlFfUB7ExWV4SuMZ38/WVsOfa5t9gB94jXV2PvXcp+rxOi6yxxv4?=
- =?iso-8859-1?Q?R3cp3WYtmPN0/MkCmreU9l11rMgl6NaqQP+EpByPY/5lLLlOMusZAF5Ps1?=
- =?iso-8859-1?Q?R9W0F4uB6YskuP0fUVn04ZIn3Ry2Vk7fD+81c+17fYjseBDEn0GwW0uKsl?=
- =?iso-8859-1?Q?sWMLU+fPqN0NNPF2wbUVQdN8oPrQt1dKa1jN1r3qR98BxGWyRiuHx19QAE?=
- =?iso-8859-1?Q?6R/iTULgaIg4QKc4P4cZkr4tRQuYNo4N58wzq6zPpG/AePJLHvYqENbhl5?=
- =?iso-8859-1?Q?JemF2vnra2Zhr3MsES1fJSUuRMW8GwHeKa0EjLHQAMrA5wkywgo46V+js+?=
- =?iso-8859-1?Q?ccgIaEKsIRgQV7PrFzS1SOU1ItBoSsELVqSeRIZO8g+Ee/GExBrVFyf4Eh?=
- =?iso-8859-1?Q?bfR1Y7eNTJcJZJtKjjY8Imeik3VDi6Ee1iN0pGrKu3oK1h/RLgN218p5rg?=
- =?iso-8859-1?Q?A5ZeTDvtN4GwjDE1PCPZnRuJi3rq3Smdr7ycFdXfqBxTP4KMQ5oI86lCoK?=
- =?iso-8859-1?Q?ZI4WfH7KYbtTdh7SUByOB2W/sUXmXeVk+BQSNwgr+cJN2R0+9ZbxzfLjef?=
- =?iso-8859-1?Q?TYb+kt2VuP1r/fYFc06B0OLxiUpNpfTx5kWU+upF2vXCvXZGaoMNtcJgDl?=
- =?iso-8859-1?Q?gRBwAawnXk8i88sHwvv6X/cNcHL73754q0Pv4GD16EpdSmSZbYOsF6t+Af?=
- =?iso-8859-1?Q?evdSRK3AFHylUpqriAr0YnFQQmWA6Dzu98QiAoMIIK8oMmrL91c9LaiCRK?=
- =?iso-8859-1?Q?Ne/Pa85hM0mvBpXGXI1Z5c0XrXhyCFwAytc/L08jMP97QxlWL0jyfoYTl+?=
- =?iso-8859-1?Q?Lddl8HLf4Ygsx6t2KnMb+YuyMOuq0HUs7lM9AiSpRJlV9JMIt52piPvat7?=
- =?iso-8859-1?Q?Cpfm+mdONwJtSZa4HL8yAEzjGNrsZFdWVs97wAUO6ecshiI90a4yKDjskp?=
- =?iso-8859-1?Q?jcQkodQIHcbqjlv6aOoTp56eoi4vkpcrVa9T9L/eN6P88tydxjqq+DvL7J?=
- =?iso-8859-1?Q?wMm5/MwSA/Z9kk5PvsMquLi1HGrJUQDvkhYRwNeRpE2zr7aKRP45ZuwUbL?=
- =?iso-8859-1?Q?i72ApBKQ8kGEAb4rEXVpQFhLWyAkup7jh9mLg0+qMMGydBEitnYW70xdOi?=
- =?iso-8859-1?Q?BwmNQYTT/sgLe7J4Gbjq0oc79RWQ9EHdp55Wy3KTYBQz7WfvBQkfI4yqeL?=
- =?iso-8859-1?Q?+LRw3pdn8NiJBTU0SGaiCnxtXiXaGpV7rVTAMQ=3D=3D?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?BPg/gJzgABLdIXTxl6eoMoic1lw8EPfFCByWetHrvpFFkSudy3uLOS2HjT?=
- =?iso-8859-1?Q?BxqBQJQvkGTw3r2ooAAMKURUpubEa1AODvOCuMDXMZqB2ETV1RxfX4WD++?=
- =?iso-8859-1?Q?tNv3SQCIlTtQ+ZOxbz6on3uTUBDv14U2cs1FoF86sX+X7CPDpead4H21Ge?=
- =?iso-8859-1?Q?9507kDivH2aphlqT/3r3VLTWOFdpVN+zom+hT/gOhXBXzXBjZ87MiXA6/g?=
- =?iso-8859-1?Q?1TBi1R2klv8WlbZX58LnMGd+lPkcAIWnDdNqg+R4pdqFmwyYx1ntPHk5E4?=
- =?iso-8859-1?Q?Ucm1wqMkP8qgITs2mvA3r8yj3bRYUxOogBcvc15AQUJQUo1ayK5Xi2Kjyn?=
- =?iso-8859-1?Q?zVAd829WaKpaTBvQJOCMVyOk492bXWDl6rk66udUfhsZdHZAjMP4bQImKq?=
- =?iso-8859-1?Q?Rl0LrUaleWPm3f5EeezDIrb1LvIc/jPMd+rYwFMsg2yxZQnl1m3WDF1TzE?=
- =?iso-8859-1?Q?DZiu+tCgWlHGGfEgnNW743WLq8M8jyORxnYT1RP4Ifcr3w0k/7VkehudfP?=
- =?iso-8859-1?Q?yjsDS25l3rZV8gNVXhDGXLrqQk51T7sV3zMX0rRF/JSIZVoZe5TZa2p5Bh?=
- =?iso-8859-1?Q?LXu6VXc7j4U4m8MHRVah4UYdz0TbO7VgRY9yWhY9oy87jRYoB/nLV8bwh3?=
- =?iso-8859-1?Q?Mw+owDtmXvNp/WkJ7Bmli+lvqSzBvqMuUvzuvH1L1dgCLWdSbnx1JDRa9D?=
- =?iso-8859-1?Q?SymDNXLm5TLuLwpGHpWND388hyAjlMclLsdOgI03S01t7tOMv0YnyAtjgd?=
- =?iso-8859-1?Q?Dq3/WfIWZJBDfdN+KxaH7m7XzOx97McsqMbgYp1UlHEPSShIPMg5FWYVRK?=
- =?iso-8859-1?Q?k6hr2OMHRpQvrOwi4dgYaJYNclm77vv4yCow7D8JbE33PBlmjOtyQUHqrk?=
- =?iso-8859-1?Q?1s66XdiHmwC97gfT7BvQsy8dDkWVBBfxQz3dnksVtjS944ghv+i+CpIGAU?=
- =?iso-8859-1?Q?sJ48sh3mS84ZXdJga+I0VpZA+JfkxugPg6FeGAxS+NwSfhX4EF/sV7XVKA?=
- =?iso-8859-1?Q?4Ia53fE1fndDkprfkWv9fySQ+AIG2rmaZIjxBfhwV6lCTgJfixZD3Z5SGI?=
- =?iso-8859-1?Q?YqS1kFPmjl+UIGZQV655L5EEX/rS9xjAdcOGpaaCQyyQHr8/sX75Ib+w4t?=
- =?iso-8859-1?Q?3MHhiPqmeANjZjxOdKGqFHA3tIO3lvVGUGYgW86W2GGbK680FyQT7P1FbI?=
- =?iso-8859-1?Q?juh0JhaLAWRCfC6BVtdpyPl67RktfAogFm2cgVEV2dpAPtqgdBSBNTpaVx?=
- =?iso-8859-1?Q?tovrrpQNcSDrZLa5suBPhBYOYAajWU9afr6ZxWvC+/SlW7uUbHvAiGbosb?=
- =?iso-8859-1?Q?UqLoU9/MjedHkmjXnbJpDgZ4iatH2Id8xC+YM2yDAdXlQsJMexyj86vuMK?=
- =?iso-8859-1?Q?MR3cePCXF2yFaDNP47R2U56vzeSQ6b6Ftz7D8E32kQcFNzF/W96TCdRDYE?=
- =?iso-8859-1?Q?wcqJ4mrYdPc4En+ZTPCCMxYxIcCCmTgqAI+WEogjvMUUOvn/BA1ee6jaud?=
- =?iso-8859-1?Q?uZJvK2rfnGBVroM5d/46xl8/BVPGfZRFXdtJD5Dh9erPMABT6KfQNrKDWx?=
- =?iso-8859-1?Q?cJaU+ISYzUAfYH/oms3xIC965Vw55j9JT9IZYhmOqr90CDNZ/r4G6RHdgs?=
- =?iso-8859-1?Q?y3+BANT12fKxI=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>, Gao Xiang <xiang@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH 1/4] xfs: resurrect the AGFL reservation
+Message-ID: <20240723065125.GA2039@templeofstupid.com>
+References: <cover.1718232004.git.kjlx@templeofstupid.com>
+ <0dfbe8d00d2be53999b20e336641ba3d60306ffa.1718232004.git.kjlx@templeofstupid.com>
+ <ZmuyFCG/jQrrRb6N@dread.disaster.area>
+ <20240617234631.GC2044@templeofstupid.com>
+ <ZoyeYBW7CvWJdWsu@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0b6060e7-b6ef-4049-a2d9-08dcaadf54b5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jul 2024 06:18:55.5356
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 105b2061-b669-4b31-92ac-24d304d195dc
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: +6SeYomGH61cGYarTBR5tDK2QF5ovCe682GrBt7f9x1wUgC0xKzuu9mX5rh+k3wLyZGisqqkGY7LgBZ5xC6dvg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR84MB1435
-X-OriginatorOrg: hpe.com
-X-Proofpoint-GUID: jAO-Wh97wgrb7-qtSTZ72uzUfyv2XUMa
-X-Proofpoint-ORIG-GUID: jAO-Wh97wgrb7-qtSTZ72uzUfyv2XUMa
-X-HPE-SCL: -1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-07-22_18,2024-07-23_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
- lowpriorityscore=0 impostorscore=0 malwarescore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 suspectscore=0 clxscore=1011 spamscore=0
- priorityscore=1501 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2407110000 definitions=main-2407230045
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZoyeYBW7CvWJdWsu@dread.disaster.area>
 
-Thanks, David, for the quick response. The kernel version is 3.10.0-1160.11=
-4.2.=20
+[ My turn to apologize.  I had a couple of short weeks at the beginning
+of July, but have finally been able to get back to this. ]
 
------Original Message-----
-From: Dave Chinner <david@fromorbit.com>=20
-Sent: Tuesday, July 23, 2024 3:45 AM
-To: P M, Priya <pm.priya@hpe.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: xfs issue
+On Tue, Jul 09, 2024 at 12:20:16PM +1000, Dave Chinner wrote:
+> On Mon, Jun 17, 2024 at 04:46:31PM -0700, Krister Johansen wrote:
+> > On Fri, Jun 14, 2024 at 12:59:32PM +1000, Dave Chinner wrote:
+> > > On Thu, Jun 13, 2024 at 01:27:26PM -0700, Krister Johansen wrote:
+> > > > Transactions that perform multiple allocations may inadvertently run out
+> > > > of space after the first allocation selects an AG that appears to have
+> > > > enough available space.  The problem occurs when the allocation in the
+> > > > transaction splits freespace b-trees but the second allocation does not
+> > > > have enough available space to refill the AGFL.  This results in an
+> > > > aborted transaction and a filesystem shutdown.  In this author's case,
+> > > > it's frequently encountered in the xfs_bmap_extents_to_btree path on a
+> > > > write to an AG that's almost reached its limits.
+> > > > 
+> > > > The AGFL reservation allows us to save some blocks to refill the AGFL to
+> > > > its minimum level in an Nth allocation, and to prevent allocations from
+> > > > proceeding when there's not enough reserved space to accommodate the
+> > > > refill.
+> > > > 
+> > > > This patch just brings back the reservation and does the plumbing.  The
+> > > > policy decisions about which allocations to allow will be in a
+> > > > subsequent patch.
+> > > > 
+> > > > This implementation includes space for the bnobt and cnobt in the
+> > > > reserve.  This was done largely because the AGFL reserve stubs appeared
+> > > > to already be doing it this way.
+> > > > 
+> > > > Signed-off-by: Krister Johansen <kjlx@templeofstupid.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_ag.h          |  2 ++
+> > > >  fs/xfs/libxfs/xfs_ag_resv.c     | 54 ++++++++++++++++++++++--------
+> > > >  fs/xfs/libxfs/xfs_ag_resv.h     |  4 +++
+> > > >  fs/xfs/libxfs/xfs_alloc.c       | 43 +++++++++++++++++++++++-
+> > > >  fs/xfs/libxfs/xfs_alloc.h       |  3 +-
+> > > >  fs/xfs/libxfs/xfs_alloc_btree.c | 59 +++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/libxfs/xfs_alloc_btree.h |  5 +++
+> > > >  fs/xfs/libxfs/xfs_rmap_btree.c  |  5 +++
+> > > >  fs/xfs/scrub/fscounters.c       |  1 +
+> > > >  9 files changed, 161 insertions(+), 15 deletions(-)
+> > > > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> > > > index 35de09a2516c..40bff82f2b7e 100644
+> > > > --- a/fs/xfs/libxfs/xfs_ag.h
+> > > > +++ b/fs/xfs/libxfs/xfs_ag.h
+> > > > @@ -62,6 +62,8 @@ struct xfs_perag {
+> > > >  	struct xfs_ag_resv	pag_meta_resv;
+> > > >  	/* Blocks reserved for the reverse mapping btree. */
+> > > >  	struct xfs_ag_resv	pag_rmapbt_resv;
+> > > > +	/* Blocks reserved for the AGFL. */
+> > > > +	struct xfs_ag_resv	pag_agfl_resv;
+> > > 
 
-On Mon, Jul 22, 2024 at 02:21:40PM +0000, P M, Priya wrote:
-> Hi,
->=20
-> Good Morning!=20
->=20
-> We see the IO stall on backing disk sdh when it hangs - literally no IO, =
-but a very few, per this sort of thing in diskstat:
-> =A0
-> alslater@HPE-W5P7CGPQYL collectl % grep 21354078 sdhi.out | sed=20
-> 's/.*disk//'|wc -l
-> =A0=A0 1003
->=20
-> alslater@HPE-W5P7CGPQYL collectl % grep 21354078 sdhi.out | sed=20
-> 's/.*disk//'|uniq -c
-> =A0 1=A0=A0=A0=A0 8=A0=A0=A0=A0 112 sdh 21354078 11338 20953907501 197207=
-9123 18657407=20
-> 324050 16530008823 580990600 0 17845212 2553245350
-> =A0 1=A0=A0=A0=A0 8=A0=A0=A0=A0 112 sdh 21354078 11338 20953907501 197207=
-9123 18657429=20
-> 324051 16530009041 580990691 0 17845254 2553245441
-> =A0 1=A0=A0=A0=A0 8=A0=A0=A0=A0 112 sdh 21354078 11338 20953907501 197207=
-9123 18657431=20
-> 324051 16530009044 580990691 0 17845254 2553245441
-> 1000=A0=A0=A0=A0 8=A0=A0=A0=A0 112 sdh 21354078 11338 20953907501 1972079=
-123 18657433=20
-> 324051 16530009047 580990691 0 17845254 2553245441 ^ /very/ slight=20
-> changes these write cols -> (these are diskstat metrics per 3.10 era,=20
-> read metrics first, then writes)
+<snip>
 
-What kernel are you running? What's the storage stack look like (i.e. stora=
-ge hardware, lvm, md, xfs_info, etc).
+> Not quite. Btrees don't work that way - once you split the root
+> block, it can't be split again until the root block fills. That
+> means we have to split the level below the root block enough times
+> to fill the root block. And that requires splitting the level below
+> that enough times to fill and split the second level enough times to
+> fill the root block. The number of inserts needed to split the root
+> block increases exponentially with the height of the tree.
+> 
+> Hence if we've got a height of 2 and 10 records/ptrs per leaf/node,
+> a full tree looks like this:
+> 
+> Level 1			0123456789
+>                         ||.......|
+>         /---------------/|.......\---------------\
+>         |                |                       |
+> Level 0	0123456789	 0123456789	.....	0123456789
+> 
+> If we do an insert anywhere we'll get a full height split and a new
+> root at level 2. Lets insert record A in the leaf at the left edge:
+> 
+> Level 2			01
+>                         ||
+>                 /-------/\------\
+>                 |               |
+> Level 1		0A1234		56789
+>                 |||...	        ....|
+>         /-------/|\------\	....\------------\
+>         |        |        |                       |
+> Level 0	01234    A56789	 0123456789	.....	0123456789
+> 
+> It should be obvious now that a followup insertion anywhere in the
+> tree cannot split either the root node at level 2, nor the old root
+> node that was split in two at level 1.
+> 
+> Yes, we can still split at level 0, but that will only result in
+> nodes at level 1 getting updated, and only once they are full will
+> they start splitting at level 1. And then level 2 (the root) won't
+> split until level 1 has split enough to fill all the nodes in level
+> 1.
+> 
+> What this means is that for any single insertion into a btree, the
+> worst case demand for new blocks is "current height + 1". In the
+> case of BMBT, INOBT and REFCOUNBT, we're typically only doing one or
+> two adjacent record insertions in a given operation, so only one
+> split will occur during the operation. The free space trees are
+> different, however.
+> 
+> When the first allocation occurs, we split the tree as per above
+> and that consumes (start height + 1) blocks from AGFL. We then
+> get the next BMBT allocation request (because it's doing a
+> multi-level split), and the best free space we find is, this time,
+> in the leaf at the right side of the tree. Hence we split that
+> block, but we don't need to split it's parent (level 1) block
+> because it has free space in it. Hence the second allocation has
+> a worst case block requirement of (start height - 1).
+> 
+> If we then do a third allocation (level 2 of the BMBT is splitting),
+> and that lands in the middle of the tree, we split that block. That
+> can be inserted into either of the level 1 blocks without causing a
+> split there, either. Hence a worst case block requirement for that
+> is also (start height - 1).
+> 
+> It's only once we've split enough blocks at (start height - 1) that
+> to fill both blocks at start height that we'll get a larger split.
+> We had ten blocks at level 0 to begin with, 11 after the first full
+> hieght split, so we need, at minimum, another 9 splits at level 0 to
+> fill level 1. This means we then have all the leaf blocks at either
+> 5 or 6 records at the time the level 1 nodes fill. To then get
+> another insert into level 1 to split that, we need to fill a minimum
+> of -3 sibling- leaf blocks.
+> 
+> The reason we need to fill 3 leaf blocks and not 1 is that we shift
+> records between left and right siblings instead of splitting. i.e.
+> we steal space from a sibling in preference to splitting and
+> inserting a new record into the parent. Hence we only insert into
+> the parent when the insert node and both siblings are full
+> completely full.
+> 
+> When we look at a typical AG btree on a v5 filesystem, we have at
+> least 110 records/ptrs per block (1kB block size) so the minimum
+> number of record inserts needed before we need to split a parent
+> again after it was just split is at least 150 inserts.
+> 
+> Hence after a full height split, we are not going to split a node at
+> the old root level again until at least 150 inserts (1kB block size)
+> are done at the child level.
+> 
+> IOWs, we're never going to get two start height splits in a single
+> allocation chain. At most we are going to get one start height split
+> and then N (start height - 1) splits. That's the worst case AGFL we
+> need to consider, but such a split chain would be so infintesimally
+> probably that always reserving that amount of space in the AGFL is
+> just a waste of space because it will never, ever be used.
+> 
+> So the worst case AGFL requirement for a data extent allocation or
+> free will be:
+> 
+> 	1. data extent - full free space tree split * 2 + rmapbt
+> 	2. BMBT leaf split - (free space height - 2) * 2 + rmapbt
+> 	3. BMBT node split - (free space height - 2) * 2 + rmapbt
+> 	....
+> 	N. BMBT root split - (free space height - 2) * 2 + rmapbt
+> 
+> So the maximum number of chained allocations is likely going to be
+> something like:
+> 
+> 	(max AGFL for one allocation) +
+> 	((max bmbt/refcountbt height) * (max agfl for dependent allocation))
+> 
+> Which is likely to be in the order of...
+> 
+> > > So I wouldn't expect the AGFL reserve pool to be any larger than a
+> > > couple of hundred blocks in the worst case.
+> 
+> ... this.
 
-> And there is a spike in sleeping on logspace concurrent with fail.
-> =A0
-> Prior backtraces had xlog_grant_head_check hungtasks
+Thanks for the detailed explanation.  It helps.
 
-Which means the journal ran out of space, and the tasks were waiting on met=
-adata writeback to make progress to free up journal space.
+I do have a few followup questions on this part.
 
-What do the block device stats tell you about inflight IOs (/sys/block/*/in=
-flight)?
+What strategy would you recommend we use to calculate the 'rmapbt'
+portion of this equation?  I've defaulted to the same strategy of a
+single full-space rmapbt tree split, plus N (height - 2) splits, but
+instead of using the free space height I used the maxlevel in
+m_rmap_maxlevels.  Does that sound correct to you?
 
-> but currently with noop scheduler
-> change (from deadline which was our default), and xfssyncd dialled down t=
-o 10s, we get:
-> =A0
-> bc3:
-> /proc/25146=A0 xfsaild/sdh
-> [<ffffffffc11aa9f7>] xfs_buf_iowait+0x27/0xc0 [xfs]=20
-> [<ffffffffc11ac320>] __xfs_buf_submit+0x130/0x250 [xfs]=20
-> [<ffffffffc11ac465>] _xfs_buf_read+0x25/0x30 [xfs]=20
-> [<ffffffffc11ac569>] xfs_buf_read_map+0xf9/0x160 [xfs]=20
-> [<ffffffffc11de299>] xfs_trans_read_buf_map+0xf9/0x2d0 [xfs]=20
-> [<ffffffffc119fe9e>] xfs_imap_to_bp+0x6e/0xe0 [xfs]=20
-> [<ffffffffc11c265a>] xfs_iflush+0xda/0x250 [xfs] [<ffffffffc11d4f16>]=20
-> xfs_inode_item_push+0x156/0x1a0 [xfs] [<ffffffffc11dd1ef>]=20
-> xfsaild+0x38f/0x780 [xfs] [<ffffffff956c32b1>] kthread+0xd1/0xe0=20
-> [<ffffffff95d801dd>] ret_from_fork_nospec_begin+0x7/0x21
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> =A0
-> bbm:
-> /proc/22022=A0 xfsaild/sdh
-> [<ffffffffc12d09f7>] xfs_buf_iowait+0x27/0xc0 [xfs]=20
-> [<ffffffffc12d2320>] __xfs_buf_submit+0x130/0x250 [xfs]=20
-> [<ffffffffc12d2465>] _xfs_buf_read+0x25/0x30 [xfs]=20
-> [<ffffffffc12d2569>] xfs_buf_read_map+0xf9/0x160 [xfs]=20
-> [<ffffffffc1304299>] xfs_trans_read_buf_map+0xf9/0x2d0 [xfs]=20
-> [<ffffffffc12c5e9e>] xfs_imap_to_bp+0x6e/0xe0 [xfs]=20
-> [<ffffffffc12e865a>] xfs_iflush+0xda/0x250 [xfs] [<ffffffffc12faf16>]=20
-> xfs_inode_item_push+0x156/0x1a0 [xfs] [<ffffffffc13031ef>]=20
-> xfsaild+0x38f/0x780 [xfs] [<ffffffffbe4c32b1>] kthread+0xd1/0xe0=20
-> [<ffffffffbeb801dd>] ret_from_fork_nospec_begin+0x7/0x21
-> [<ffffffffffffffff>] 0xffffffffffffffff
+For trees that are short, like a free-space reservation with a max
+height of 2, this math actually yields a smaller number of blocks than
+the constants it might replace below.  In the case of a b-tree with a
+max height of 2, do we assume then that we'd only need 2 blocks to
+handle the full split, and the remaining dependent allocations would not
+consume any more space as records are added to the tree?  (It sounds like
+yes, but wanted to confirm)
 
-And that's metadata writeback waiting for IO completion to occur.
+> [ And now we disappear down the rabbit hole. ]
+> 
+> Take a look at xfs_alloc_ag_max_usable(), which is used to set
+> mp->m_ag_max_usable:
+> 
+> 	blocks = XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)); /* ag headers */
+>         blocks += XFS_ALLOCBT_AGFL_RESERVE;
+>         blocks += 3;                    /* AGF, AGI btree root blocks */
+> 	....
+> 
+> There's a number of blocks reserved for the AGFL that aren't usable
+> already. What is that value for?
+> 
+> /*
+>  * The number of blocks per AG that we withhold from xfs_dec_fdblocks to
+>  * guarantee that we can refill the AGFL prior to allocating space in a nearly
+>  * full AG.  Although the space described by the free space btrees, the
+>  * blocks used by the freesp btrees themselves, and the blocks owned by the
+>  * AGFL are counted in the ondisk fdblocks, it's a mistake to let the ondisk
+>  * free space in the AG drop so low that the free space btrees cannot refill an
+>  * empty AGFL up to the minimum level.  Rather than grind through empty AGs
+>  * until the fs goes down, we subtract this many AG blocks from the incore
+>  * fdblocks to ensure user allocation does not overcommit the space the
+>  * filesystem needs for the AGFLs.  The rmap btree uses a per-AG reservation to
+>  * withhold space from xfs_dec_fdblocks, so we do not account for that here.
+>  */
+> #define XFS_ALLOCBT_AGFL_RESERVE        4
+> 
+> What is this magic number of 4, then?
+> 
+> Remember what I said above about the free space btree blocks being
+> accounted as free space and that freeing extents are always allowed
+> to go ahead, even when the AG is full?
+> 
+> This AGFL reserve is the minimum space needed for an extent free to
+> successfully refill the AGFL at ENOSPC to allow the extent free to
+> proceed. That is, both trees have a singel level, so a full height
+> split of either tree will require 2 blocks to be allocated. 2
+> freespace trees per AG, two blocks per tree, and so we need 4 blocks
+> per AG to ensure freeing extents at ENOSPC will always succeed.
+> 
+> This "magic 4" blocks isn't valid when we have rmapbt, recountbt, or
+> finobt reservations in the AG anymore, because ENOSPC can occur when
+> we still have multi-level bno/cnt btrees in the AG. That's the first
+> thing we need to fix.
+> 
+> This AGFL set aside is taken out of the global free space pool via
+> this function:
+> 
+> /*
+>  * Compute the number of blocks that we set aside to guarantee the ability to
+>  * refill the AGFL and handle a full bmap btree split.
+>  *
+>  * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
+>  * AGF buffer (PV 947395), we place constraints on the relationship among
+>  * actual allocations for data blocks, freelist blocks, and potential file data
+>  * bmap btree blocks. However, these restrictions may result in no actual space
+>  * allocated for a delayed extent, for example, a data block in a certain AG is
+>  * allocated but there is no additional block for the additional bmap btree
+>  * block due to a split of the bmap btree of the file. The result of this may
+>  * lead to an infinite loop when the file gets flushed to disk and all delayed
+>  * extents need to be actually allocated. To get around this, we explicitly set
+>  * aside a few blocks which will not be reserved in delayed allocation.
+>  *
+>  * For each AG, we need to reserve enough blocks to replenish a totally empty
+>  * AGFL and 4 more to handle a potential split of the file's bmap btree.
+>  */
+> unsigned int
+> xfs_alloc_set_aside(
+>         struct xfs_mount        *mp)
+> {
+>         return mp->m_sb.sb_agcount * (XFS_ALLOCBT_AGFL_RESERVE + 4);
+> }
+> 
+> But where did that magic number of "4 more to handle a potential
+> split of the file's bmap btree" come from?
+> 
+> Ah, a fix I made for a ENOSPC regression back in 2006:
+> 
+> + * ..... Considering the minimum number of
+> + * needed freelist blocks is 4 fsbs _per AG_, a potential split of file's bmap
+> + * btree requires 1 fsb, so we set the number of set-aside blocks
+> + * to 4 + 4*agcount.
+> + */
+> +#define XFS_ALLOC_SET_ASIDE(mp)  (4 + ((mp)->m_sb.sb_agcount * 4))
+> 
+> That was fixing a regression caused by an ENOSPC deadlock bug fix
+> done for SGI PV 947395.
+> 
+> commit 96b336c71016a85cd193762199aa6f99f543b6fe
+> Author: Yingping Lu <yingping@sgi.com>
+> Date:   Tue May 23 19:28:08 2006 +0000
+> 
+>     In actual allocation of file system blocks and freeing extents, the transaction
+>     within each such operation may involve multiple locking of AGF buffer. While the
+>     freeing extent function has sorted the extents based on AGF number before entering
+>     into transaction, however, when the file system space is very limited, the allocation
+>     of space would try every AGF to get space allocated, this could potentially cause
+>     out-of-order locking, thus deadlock could happen. This fix mitigates the scarce space
+>     for allocation by setting aside a few blocks without reservation, and avoid deadlock
+>     by maintaining ascending order of AGF locking.
+>     Add a new flag XFS_ALLOC_FLAG_FREEING to indicate whether the caller is freeing or
+>     allocating. Add a field firstblock in structure xfs_alloc_arg to indicate whether
+>     this is the first allocation request.
+> 
+> Which included this:
+> 
+> + * ...... Considering the minimum number of
+> + * needed freelist blocks is 4 fsbs, a potential split of file's bmap
+> + * btree requires 1 fsb, so we set the number of set-aside blocks to 8.
+> +*/
+> +#define SET_ASIDE_BLOCKS 8
+> 
+> <ding!>
+> 
+> Ah, now I get it. It's only taken me 18 years to really understand
+> how this value was originally derived and why it is wrong.
+> 
+> It assumed 4 blocks for the AGFL for the initial allocation to fill
+> and empty AGFL, and then 4 more blocks for the AGFL to allow a
+> refill for the subsequent BMBT block allocation to refill the AGFL.
+> IOWs, it wasn't reserving blocks for the BMBT itself, it was
+> reserving blocks for a second AGFL refill in the allocation chain....
+> 
+> Right, so I think what we need to change is XFS_ALLOCBT_AGFL_RESERVE
+> and xfs_alloc_set_aside() to reflect the worst case size of the free
+> space trees when we hit ENOSPC for user data, not a hard coded 4 + 4.
+> 
+> The worst case free space tree size is going to be single block free
+> records when all the per-ag reservations are at their maximum
+> values. So we need to calculate maximum reservation sizes for the
+> AG, then calculate how many btree blocks that will require to index
+> as single block free space extents, then calculate the hieght of the
+> btrees needs to index that. That gives us out "free space tree
+> height at ENOSPC", and then we can calculate how many AGFL blocks we
+> need at ENOSPC to handle a split of both trees. That value replaces
+> XFS_ALLOCBT_AGFL_RESERVE.
 
-If this is where the filesystem is stuck, then that's why the journal has n=
-o space and tasks get hung up in xlog_grant_head_check(). i.e.  these appae=
-r to be two symptoms of the same problem.
+Just to confirm, this would be
+xfs_btree_compute_maxlevels(mp->m_alloc_mnr, n_perag_resvd_blocks),
+correct?
 
-> .. along with cofc threads in isr waiting for data. What that doesn't=20
-> tell us yet is who's the symptom versus who's the cause. Might be lack=20
-> of / lost interrupt handling, might be lack of pushing the xfs log hard e=
-nough=A0 out, might be combination of timing aspects..
+> As for the BMBT split requiring more AGFL refills, we need to know
+> what the maximum BMBT height the fs supports is (I think we already
+> calculate that), and that then becomes the level we feed into the
+> "how many AGFL blocks do we need in a full height BMBT split
+> allocation chain. I did that math above, and that calculation
+> should replace the "+ 4" in xfs_alloc_set_aside(). I think that
+> ends up with the calculation being something like:
+> 
+> setaside = agcount * (number of dependent allocations *
+> 			AGFL blocks for refill at ENOSPC)
+> 
+> I think we also need to make mp->m_ag_max_usable also take into
+> account the BMBT split related AGFL refills as xfs_alloc_set_aside()
+> as it only considers XFS_ALLOCBT_AGFL_RESERVE right now. That will
+> ensure we always have those blocks available for the AGFL.
 
-No idea as yet - what kernel you are running is kinda important to know bef=
-ore we look much deeper.
+Thanks, this was convincing enough that I went off to prototype
+something that tried to faithfully follow your advice.
 
--Dave.
---
-Dave Chinner
-david@fromorbit.com
+> Fair summary. this is already long, and I think what I discovered
+> above kinda comes under:
+> 
+> > 4. Implement a less ambitious AGFL reserve
+> 
+> That's what we did back in 2006 - we just carved out the smallest
+> amount of blocks we needed from the free space pool to ensure the
+> failing case worked.
+> 
+> > The draft in this thread tried to track all AGFL blocks from their
+> > allocation and continued to account for them during their lifetime in
+> > the bnobt and cnobt.  Instead of trying to build a reserve for all free
+> > space management blocks that aren't rmapbt, reduce the scope of the AGFL
+> > reserve to be just the number of blocks needed to satsify a single
+> > transaction with multiple allocations that occurs close to an AG's
+> > ENOSPC.
+> 
+> Yes, and that's what I suggest we extend xfs_alloc_set_aside() and
+> mp->m_ag_max_usable to encompass. That way we don't actually need to
+> track anything, the AGs will always have that space available to use
+> because mp->m_ag_max_usable prevents them from being used by
+> anything else.
+> 
+> > Do any of these approaches stand out as clearly better (or worse) to
+> > you?
+> 
+> I think I've convinced myself that we already use option 4 and the
+> accounting just needs extending to reserve the correct amount of
+> blocks...
+
+I've got something that sets the mp->m_ag_max_usable and
+alloc_set_aside() to the values discussed above.  For demonstration
+purposes, since I was ending up with numbers that were smaller than
+XFS_ALLOCBT_AGFL_RESERVE + 4, I just picked some slightly different math
+that inflated these numbers a bit to validate the assumptions.
+
+I'm still able to run AG low enough on space to hit the bug with these
+modifcations in place, partly because mp->m_ag_max_usable seems to place
+an upper bound on large contiguous allocations in
+xfs_alloc_space_available().  E.g. if I allocate in small chunks <
+m_ag_max_usable, I can still run pagf_freeblks down to about the per-ag
+reservation.  The test is explicit about only using space from a single
+AG, which defeats the global reservation checks, since enough space
+remains free in the other AGs that we don't hit any of the
+per-filesystem reservation limits.
+
+It seems like we've got the right general concept, but may need to make
+a few more tweaks to the implementation.
+
+In terms of where to go next, I have a few ideas, but would certainly
+appreciate additional input.
+
+One was to investigate propagating the per-AG set-aside into
+xfs_alloc_space_available() so that it's only eligible for consumption
+by a dependent allocation.  (Is the correct way to determine that by
+checking tp->t_highest_agno != NULLAGNUMBER?)
+
+The other was to determine if I needed add the quantity from
+xfs_alloc_min_freelist(free space height) to the set-aside.  The reason
+for this was that if the reserved free space can be indexed by a tree of
+height 2, then the full split only needs 2 blocks, but once we've split
+to a tree of that height, xfs_alloc_min_freelist() requires 12 blocks
+free (with rmap off) to continue the allocation chain, even if we're
+never going to allocate that many.  It's that edge case that these tests
+always manage to hit: run the pagf_freeblks within a block or two of the
+per-ag reservation, and then split a free-space b-tree right before a
+BMBT split.  IOW, I need both the blocks for the b-tree expansion and
+enough to satisfy the xfs_alloc_min_freelist() checks.  If you explained
+this earlier, and I'm reading the equations too pedantically, my
+apologies.
+
+I also ran into a bit of a snag in the testing department after merging
+with 673cd885bbbf ("xfs: honor init_xattrs in xfs_init_new_inode for !ATTR fs")
+I understand broadly why this is needed, but it does modify when an
+inode converts from extents to b-tree.  I couldn't find a way to disable
+this behavior via mkfs or a mount option for testing purposes.  Are you
+aware of a switch I may have missed?
+
+> > Thanks again for taking the time to read through these patches and
+> > provide feedback.  I appreciate all the comments, ideas, and
+> > explanations.
+> 
+> Don't thank me - I've got to thank you for taking the time and
+> effort to understand this complex code well enough to ask exactly
+> the right question.  It's not often that answering a question on how
+> to do something causes a whole bunch of not quite connected floating
+> pieces in my head to suddenly fall and land in exactly the right
+> places... :)
+
+I do very much appreciate the detailed explanations and the feedback, so
+it seemed like an expression of gratitude was appropriate.  Thanks for
+your willingness to answer these questions in such detail.
+
+-K
