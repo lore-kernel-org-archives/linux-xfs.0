@@ -1,38 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A7C614287
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 02:20:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 026A3647
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 03:50:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721701212; cv=none; b=fLz1ZlmVd3Cwhs/Yd/a2P+9iA48eXckczaeacIraYuqK1oJruWwAvTx7a6ebz9B6sz3wkv+NCir81wacEG9JW4g3mkSe/683QOs3eSwxCc+s7XCW7u1WApHxmW9Fse/DwNxgu3Y98BjVy0LVvWNg2b+jpUOPgPY42KDLuDWvz3g=
+	t=1721706634; cv=none; b=iLi/Hty/1Pp+LJZpzvsW9rJ4rDGX5BMiTwh6IRj1L7pUJrtUJ5bmYrNnG/1+WZH10n5b4BsKN3LuzuhTVZAI/vyd4j2/xb/htEkQYLTisxa2vr6lmVJRT3QQPpeHg7mpL2Rdhpz74Jcdtlb24ydp3q2LrB9o9YzlJKJjHz6awJc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721701212; c=relaxed/simple;
-	bh=ZknCh8qGx+LjpRq87QU/ndiRDOmL4nzkLLrvhsscFT4=;
+	s=arc-20240116; t=1721706634; c=relaxed/simple;
+	bh=VL+antW8I5iiercs/9/FXba3cPA2BzESZqTAC/vV92o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LWtjw1ZfsnleyOI4yJweg8qPnIrJA9FOEsGNvYXc8jce2Dex+p1aRySrGgkdZs3Ej3tKPt3jxFucpE9uxqMfVpTxNN8ZjSqGXeZ5vo5TPX0BHYvaKhpLEzXCbS37pNAlLiRYosbVAwS4bUS4UdjAx4WJAYXl/fByQXzwnplsTCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PLfH30Xx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GXio7woMFMkxonICPiHmWWOXWFTMaLYeTSsJu4tVHMZ9xuEw0Kd5IqlG1E7SftM9hhSsVArHeGpaYZx3OgWPMuICJQ3TPT4f3FGbJP4w7R+M5qbUnf4WZXKfSkaQcDT6pWtHdGGUgcqAlbQBtwzV6hcE/EozSrKWCUw9hytZGPA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=F/QkXuDB; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PLfH30Xx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4628C116B1;
-	Tue, 23 Jul 2024 02:20:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721701211;
-	bh=ZknCh8qGx+LjpRq87QU/ndiRDOmL4nzkLLrvhsscFT4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PLfH30XxUw2DYNY3ZomOkRaq5bB2tLjnNJUCGef1Q7JgbY9G+0XFmOI4DsFCFIY4O
-	 3VtagQiUTGsONSSJREa1unr7oOMoBwopdUyFGp8rDGRD+iUwoTj1KnpLa6BCYhUVDZ
-	 ptmNDAh88YVytEhvM/3HLLuzidYzfdte9x41CiLJEIHJt2HDzna8DBVGP0vy1/QVQ/
-	 tiiKJ6/3BNgczZ+iLtKIGt2Gkc7m0PKf8lRPs8CZtMTCVM8qeLo8g1PjgB/rkmEjgz
-	 kKnAU7zidTs4RCCAsnEkOj9KR/IUFv5le9qUqn0cyGa86EbOcJ/TFAgDVVccN6cP60
-	 p41pP6/Hr60rw==
-Date: Mon, 22 Jul 2024 19:20:11 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Julian Sun <sunjunchao2870@gmail.com>
-Cc: linux-xfs@vger.kernel.org, chandan.babu@oracle.com
-Subject: Re: [PATCH] xfs: remove unused parameter in macro XFS_DQUOT_LOGRES
-Message-ID: <20240723022011.GO612460@frogsfrogsfrogs>
-References: <20240721112701.212342-1-sunjunchao2870@gmail.com>
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="F/QkXuDB"
+Received: from cwcc.thunk.org (pool-173-48-115-17.bstnma.fios.verizon.net [173.48.115.17])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 46N3oHZO018818
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 22 Jul 2024 23:50:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1721706619; bh=7/wgPEIdjHjNGqUp1ggxMxPVaWpfsNlSZfq2UMcBUFs=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=F/QkXuDBCFqCo8pnF59EQJ92Obp+l+FzJFzZwo2pUiOnOoVqeKrDdluHmrVDF5jnn
+	 iws0QXqWp88+JAOThp1JrKtH5oU9mBVKcgUWacMWQgHh+MSAllgLNKoZX+KmxuIEjt
+	 RYXB7KIhUkOAFodWrkAczy0aQciL4TjU91a5tSFKgCLlNGyoAAKr92Ztp1OgvyZ5uc
+	 YzAzq4NmI8EFVohjduM9TJeYBzX3Fw3E+HPZhPUS9wO8Dr9Lg1mR6/zgWp3x8nFZoA
+	 RkxAAIZFigXXV2Dhz//U0YYv84hRzSwJN+YqAnGyzGH4tr1tVdX8jvHqCVtvuwm+iL
+	 Nh5hiUJV5NLZQ==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+	id DF2CA15C0300; Mon, 22 Jul 2024 23:50:16 -0400 (EDT)
+Date: Mon, 22 Jul 2024 23:50:16 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: RFC: don't fail tests when mkfs options collide
+Message-ID: <20240723035016.GB3222663@mit.edu>
+References: <20240723000042.240981-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,162 +49,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240721112701.212342-1-sunjunchao2870@gmail.com>
+In-Reply-To: <20240723000042.240981-1-hch@lst.de>
 
-On Sun, Jul 21, 2024 at 07:27:01AM -0400, Julian Sun wrote:
-> In the macro definition of XFS_DQUOT_LOGRES, a parameter is accepted,
-> but it is not used. Hence, it should be removed.
+On Mon, Jul 22, 2024 at 05:00:31PM -0700, Christoph Hellwig wrote:
+> Hi all,
 > 
-> This patch has only passed compilation test, but it should be fine.
-> 
-> Signed-off-by: Julian Sun <sunjunchao2870@gmail.com>
+> I've been running some tests with forced large log sizes, and forced
+> sector sizes, and get a fair amount of failures because these options
+> collide with options forced by the tests themselves.  The series here was
+> my attempt to fix this by not failing the tests in this case but _notrun
+> them and print the options that caused them to fail.
 
-Seems fine to me...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yeah, it's a bit of a mess.  It's not been an issue for ext4 because
+mkfs.ext4 allows options specified later in the command-line to
+override earlier ones.
 
---D
+> So what could we do instead?  We might distinguish better between tests
+> that just want to create a scratch file system with $MKFS_OPTIONS from
+> the xfstests config, and those (file system specific ones) that want
+> to force very specific file system configurations.  How do we get
+> there?
 
-> ---
->  fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
->  fs/xfs/libxfs/xfs_trans_resv.c | 28 ++++++++++++++--------------
->  2 files changed, 15 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-> index cb035da3f990..fb05f44f6c75 100644
-> --- a/fs/xfs/libxfs/xfs_quota_defs.h
-> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
-> @@ -56,7 +56,7 @@ typedef uint8_t		xfs_dqtype_t;
->   * And, of course, we also need to take into account the dquot log format item
->   * used to describe each dquot.
->   */
-> -#define XFS_DQUOT_LOGRES(mp)	\
-> +#define XFS_DQUOT_LOGRES	\
->  	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
->  
->  #define XFS_IS_QUOTA_ON(mp)		((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 3dc8f785bf29..45aaf169806a 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -338,11 +338,11 @@ xfs_calc_write_reservation(
->  					blksz);
->  		t1 += adj;
->  		t3 += adj;
-> -		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
-> +		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
->  	}
->  
->  	t4 = xfs_calc_refcountbt_reservation(mp, 1);
-> -	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
-> +	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
->  }
->  
->  unsigned int
-> @@ -410,11 +410,11 @@ xfs_calc_itruncate_reservation(
->  					xfs_refcountbt_block_count(mp, 4),
->  					blksz);
->  
-> -		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
-> +		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
->  	}
->  
->  	t4 = xfs_calc_refcountbt_reservation(mp, 2);
-> -	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
-> +	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
->  }
->  
->  unsigned int
-> @@ -466,7 +466,7 @@ STATIC uint
->  xfs_calc_rename_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
-> +	unsigned int		overhead = XFS_DQUOT_LOGRES;
->  	struct xfs_trans_resv	*resp = M_RES(mp);
->  	unsigned int		t1, t2, t3 = 0;
->  
-> @@ -577,7 +577,7 @@ STATIC uint
->  xfs_calc_link_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
-> +	unsigned int		overhead = XFS_DQUOT_LOGRES;
->  	struct xfs_trans_resv	*resp = M_RES(mp);
->  	unsigned int		t1, t2, t3 = 0;
->  
-> @@ -641,7 +641,7 @@ STATIC uint
->  xfs_calc_remove_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	unsigned int            overhead = XFS_DQUOT_LOGRES(mp);
-> +	unsigned int            overhead = XFS_DQUOT_LOGRES;
->  	struct xfs_trans_resv   *resp = M_RES(mp);
->  	unsigned int            t1, t2, t3 = 0;
->  
-> @@ -729,7 +729,7 @@ xfs_calc_icreate_reservation(
->  	struct xfs_mount	*mp)
->  {
->  	struct xfs_trans_resv	*resp = M_RES(mp);
-> -	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
-> +	unsigned int		overhead = XFS_DQUOT_LOGRES;
->  	unsigned int		t1, t2, t3 = 0;
->  
->  	t1 = xfs_calc_icreate_resv_alloc(mp);
-> @@ -747,7 +747,7 @@ STATIC uint
->  xfs_calc_create_tmpfile_reservation(
->  	struct xfs_mount        *mp)
->  {
-> -	uint	res = XFS_DQUOT_LOGRES(mp);
-> +	uint	res = XFS_DQUOT_LOGRES;
->  
->  	res += xfs_calc_icreate_resv_alloc(mp);
->  	return res + xfs_calc_iunlink_add_reservation(mp);
-> @@ -829,7 +829,7 @@ STATIC uint
->  xfs_calc_ifree_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return XFS_DQUOT_LOGRES(mp) +
-> +	return XFS_DQUOT_LOGRES +
->  		xfs_calc_inode_res(mp, 1) +
->  		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
->  		xfs_calc_iunlink_remove_reservation(mp) +
-> @@ -846,7 +846,7 @@ STATIC uint
->  xfs_calc_ichange_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return XFS_DQUOT_LOGRES(mp) +
-> +	return XFS_DQUOT_LOGRES +
->  		xfs_calc_inode_res(mp, 1) +
->  		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
->  
-> @@ -955,7 +955,7 @@ STATIC uint
->  xfs_calc_addafork_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return XFS_DQUOT_LOGRES(mp) +
-> +	return XFS_DQUOT_LOGRES +
->  		xfs_calc_inode_res(mp, 1) +
->  		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
->  		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
-> @@ -1003,7 +1003,7 @@ STATIC uint
->  xfs_calc_attrsetm_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return XFS_DQUOT_LOGRES(mp) +
-> +	return XFS_DQUOT_LOGRES +
->  		xfs_calc_inode_res(mp, 1) +
->  		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
->  		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
-> @@ -1043,7 +1043,7 @@ STATIC uint
->  xfs_calc_attrrm_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return XFS_DQUOT_LOGRES(mp) +
-> +	return XFS_DQUOT_LOGRES +
->  		max((xfs_calc_inode_res(mp, 1) +
->  		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
->  				      XFS_FSB_TO_B(mp, 1)) +
-> -- 
-> 2.39.2
-> 
-> 
+There's a third possibility, which is sometimes the test might
+explicitly want the mkfs options to be merged together.  For example,
+in the ext4/4k configuration we have "-b 4096", while the ext4/1k
+confiuration option we might have "-b 1024".  And we might want to
+have that *combined* with a test which is enabling fscrypt feature, so
+we can test fscrypt with a 4k block size, as well as fsvrypt with a 1k
+blocksize.
+
+That being said, that doesn't always make sense, and sometimes the
+combination doesn't make any sense.
+
+It's not clear what the best solution should be.
+
+     	       	    	     - Ted
