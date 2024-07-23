@@ -1,94 +1,202 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EFC32F5E;
-	Tue, 23 Jul 2024 00:00:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A7C614287
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 02:20:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721692848; cv=none; b=K2kWBaMwGh2EJeXFla/CAkNZFAKJbQrhNsFRFxHbSqnrhh0q9y4on9huaoF98ebMstOw91EILGdqet+xl48g950VZg8KuTIwQRn7KWnS4OvRB+RFmfCnpBB3KcrBlbeqYInWS+rq4BaIvFITiVBdh8v+6Qe+pZ8aSzE2WRLvQG0=
+	t=1721701212; cv=none; b=fLz1ZlmVd3Cwhs/Yd/a2P+9iA48eXckczaeacIraYuqK1oJruWwAvTx7a6ebz9B6sz3wkv+NCir81wacEG9JW4g3mkSe/683QOs3eSwxCc+s7XCW7u1WApHxmW9Fse/DwNxgu3Y98BjVy0LVvWNg2b+jpUOPgPY42KDLuDWvz3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721692848; c=relaxed/simple;
-	bh=CgPjykVemZ/5skHMKNcua/H1ONOlYFTk99alXXnFkMs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=t8UvI4wPSL5FiCedwq0U6RisnbSKAyAUwamLaZLHisWYvvXvwFYFzT70LsnQJ+SRpDW233XRNoLrCjhh7jXgyOdcMcwvT+QyXcWyXi1Q5TBofr55AoU//em0EBMD2hz+7LkfyNACuyHULmuv+X+5KoWvn6vcaKX5cX5163Ay+AA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1GMvS9tO; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1721701212; c=relaxed/simple;
+	bh=ZknCh8qGx+LjpRq87QU/ndiRDOmL4nzkLLrvhsscFT4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LWtjw1ZfsnleyOI4yJweg8qPnIrJA9FOEsGNvYXc8jce2Dex+p1aRySrGgkdZs3Ej3tKPt3jxFucpE9uxqMfVpTxNN8ZjSqGXeZ5vo5TPX0BHYvaKhpLEzXCbS37pNAlLiRYosbVAwS4bUS4UdjAx4WJAYXl/fByQXzwnplsTCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PLfH30Xx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1GMvS9tO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=nUUOIzjvV4cpdMPwuKFToo02eWAKgxtg3olcW5f500M=; b=1GMvS9tO7jxIqyH2Y3Hn9v9C5J
-	fgZ95eu5alfrm7kkSdUzABPgDAJhLMvEXQ/fR2lwSe6aUzoedXK5/VQYhfmmt3HmL3uw3SB/E7/iE
-	UW3gYznxfcCedpm3iezOO0ITiv2r4ZYSFrvLK/P++V6WF14wmr6UHUZoP2OgKoo92GJZHU/WX8GI6
-	asJ+jQdlhMbifp+iBU8EW8NwtFO4NmjMgpth1ntq94XOofIlxKlOYs5KEPrCQcR6MVQ1sXDzB0bSk
-	GQHMPqQpdvjEK7IYhimU8T1In/ji8Acx/NKpXrtfEGW3Ims0FWaqEH469e++Rte3vBNkG/Ll0IOrM
-	cJx/8n4Q==;
-Received: from [64.141.80.140] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sW2xR-0000000Aumy-3l8x;
-	Tue, 23 Jul 2024 00:00:46 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] xfs/516: use _scratch_mkfs_xfs
-Date: Mon, 22 Jul 2024 17:00:35 -0700
-Message-ID: <20240723000042.240981-5-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240723000042.240981-1-hch@lst.de>
-References: <20240723000042.240981-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PLfH30Xx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4628C116B1;
+	Tue, 23 Jul 2024 02:20:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1721701211;
+	bh=ZknCh8qGx+LjpRq87QU/ndiRDOmL4nzkLLrvhsscFT4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PLfH30XxUw2DYNY3ZomOkRaq5bB2tLjnNJUCGef1Q7JgbY9G+0XFmOI4DsFCFIY4O
+	 3VtagQiUTGsONSSJREa1unr7oOMoBwopdUyFGp8rDGRD+iUwoTj1KnpLa6BCYhUVDZ
+	 ptmNDAh88YVytEhvM/3HLLuzidYzfdte9x41CiLJEIHJt2HDzna8DBVGP0vy1/QVQ/
+	 tiiKJ6/3BNgczZ+iLtKIGt2Gkc7m0PKf8lRPs8CZtMTCVM8qeLo8g1PjgB/rkmEjgz
+	 kKnAU7zidTs4RCCAsnEkOj9KR/IUFv5le9qUqn0cyGa86EbOcJ/TFAgDVVccN6cP60
+	 p41pP6/Hr60rw==
+Date: Mon, 22 Jul 2024 19:20:11 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Julian Sun <sunjunchao2870@gmail.com>
+Cc: linux-xfs@vger.kernel.org, chandan.babu@oracle.com
+Subject: Re: [PATCH] xfs: remove unused parameter in macro XFS_DQUOT_LOGRES
+Message-ID: <20240723022011.GO612460@frogsfrogsfrogs>
+References: <20240721112701.212342-1-sunjunchao2870@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240721112701.212342-1-sunjunchao2870@gmail.com>
 
-Use _scratch_mkfs_xfs instead of _scratch_mkfs to get _notrun handling
-for unsupported option combinations.
+On Sun, Jul 21, 2024 at 07:27:01AM -0400, Julian Sun wrote:
+> In the macro definition of XFS_DQUOT_LOGRES, a parameter is accepted,
+> but it is not used. Hence, it should be removed.
+> 
+> This patch has only passed compilation test, but it should be fine.
+> 
+> Signed-off-by: Julian Sun <sunjunchao2870@gmail.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/516 | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Seems fine to me...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/tests/xfs/516 b/tests/xfs/516
-index e52779cf3..882ba48e8 100755
---- a/tests/xfs/516
-+++ b/tests/xfs/516
-@@ -72,7 +72,7 @@ __test_mount_opts()
- test_sunit_opts()
- {
- 	echo "Format with 4k stripe unit; 1x stripe width" >> $seqres.full
--	_scratch_mkfs -b size=4k -d sunit=8,swidth=8 >> $seqres.full 2>&1
-+	_scratch_mkfs_xfs -b size=4k -d sunit=8,swidth=8 >> $seqres.full 2>&1
- 
- 	__test_mount_opts "$@"
- }
-@@ -82,7 +82,7 @@ test_su_opts()
- 	local mounted=0
- 
- 	echo "Format with 256k stripe unit; 4x stripe width" >> $seqres.full
--	_scratch_mkfs -b size=1k -d su=256k,sw=4 >> $seqres.full 2>&1
-+	_scratch_mkfs_xfs -b size=1k -d su=256k,sw=4 >> $seqres.full 2>&1
- 
- 	__test_mount_opts "$@"
- }
-@@ -92,7 +92,7 @@ test_repair_detection()
- 	local mounted=0
- 
- 	echo "Format with 256k stripe unit; 4x stripe width" >> $seqres.full
--	_scratch_mkfs -b size=1k -d su=256k,sw=4 >> $seqres.full 2>&1
-+	_scratch_mkfs_xfs -b size=1k -d su=256k,sw=4 >> $seqres.full 2>&1
- 
- 	# Try to mount the fs with our test options.
- 	_try_scratch_mount >> $seqres.full 2>&1 && mounted=1
--- 
-2.43.0
+--D
 
+> ---
+>  fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+>  fs/xfs/libxfs/xfs_trans_resv.c | 28 ++++++++++++++--------------
+>  2 files changed, 15 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+> index cb035da3f990..fb05f44f6c75 100644
+> --- a/fs/xfs/libxfs/xfs_quota_defs.h
+> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
+> @@ -56,7 +56,7 @@ typedef uint8_t		xfs_dqtype_t;
+>   * And, of course, we also need to take into account the dquot log format item
+>   * used to describe each dquot.
+>   */
+> -#define XFS_DQUOT_LOGRES(mp)	\
+> +#define XFS_DQUOT_LOGRES	\
+>  	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
+>  
+>  #define XFS_IS_QUOTA_ON(mp)		((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 3dc8f785bf29..45aaf169806a 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -338,11 +338,11 @@ xfs_calc_write_reservation(
+>  					blksz);
+>  		t1 += adj;
+>  		t3 += adj;
+> -		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
+> +		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
+>  	}
+>  
+>  	t4 = xfs_calc_refcountbt_reservation(mp, 1);
+> -	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
+> +	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
+>  }
+>  
+>  unsigned int
+> @@ -410,11 +410,11 @@ xfs_calc_itruncate_reservation(
+>  					xfs_refcountbt_block_count(mp, 4),
+>  					blksz);
+>  
+> -		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
+> +		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
+>  	}
+>  
+>  	t4 = xfs_calc_refcountbt_reservation(mp, 2);
+> -	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
+> +	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
+>  }
+>  
+>  unsigned int
+> @@ -466,7 +466,7 @@ STATIC uint
+>  xfs_calc_rename_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
+> +	unsigned int		overhead = XFS_DQUOT_LOGRES;
+>  	struct xfs_trans_resv	*resp = M_RES(mp);
+>  	unsigned int		t1, t2, t3 = 0;
+>  
+> @@ -577,7 +577,7 @@ STATIC uint
+>  xfs_calc_link_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
+> +	unsigned int		overhead = XFS_DQUOT_LOGRES;
+>  	struct xfs_trans_resv	*resp = M_RES(mp);
+>  	unsigned int		t1, t2, t3 = 0;
+>  
+> @@ -641,7 +641,7 @@ STATIC uint
+>  xfs_calc_remove_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	unsigned int            overhead = XFS_DQUOT_LOGRES(mp);
+> +	unsigned int            overhead = XFS_DQUOT_LOGRES;
+>  	struct xfs_trans_resv   *resp = M_RES(mp);
+>  	unsigned int            t1, t2, t3 = 0;
+>  
+> @@ -729,7 +729,7 @@ xfs_calc_icreate_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+>  	struct xfs_trans_resv	*resp = M_RES(mp);
+> -	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
+> +	unsigned int		overhead = XFS_DQUOT_LOGRES;
+>  	unsigned int		t1, t2, t3 = 0;
+>  
+>  	t1 = xfs_calc_icreate_resv_alloc(mp);
+> @@ -747,7 +747,7 @@ STATIC uint
+>  xfs_calc_create_tmpfile_reservation(
+>  	struct xfs_mount        *mp)
+>  {
+> -	uint	res = XFS_DQUOT_LOGRES(mp);
+> +	uint	res = XFS_DQUOT_LOGRES;
+>  
+>  	res += xfs_calc_icreate_resv_alloc(mp);
+>  	return res + xfs_calc_iunlink_add_reservation(mp);
+> @@ -829,7 +829,7 @@ STATIC uint
+>  xfs_calc_ifree_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> +	return XFS_DQUOT_LOGRES +
+>  		xfs_calc_inode_res(mp, 1) +
+>  		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+>  		xfs_calc_iunlink_remove_reservation(mp) +
+> @@ -846,7 +846,7 @@ STATIC uint
+>  xfs_calc_ichange_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> +	return XFS_DQUOT_LOGRES +
+>  		xfs_calc_inode_res(mp, 1) +
+>  		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+>  
+> @@ -955,7 +955,7 @@ STATIC uint
+>  xfs_calc_addafork_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> +	return XFS_DQUOT_LOGRES +
+>  		xfs_calc_inode_res(mp, 1) +
+>  		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+>  		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
+> @@ -1003,7 +1003,7 @@ STATIC uint
+>  xfs_calc_attrsetm_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> +	return XFS_DQUOT_LOGRES +
+>  		xfs_calc_inode_res(mp, 1) +
+>  		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+>  		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
+> @@ -1043,7 +1043,7 @@ STATIC uint
+>  xfs_calc_attrrm_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> +	return XFS_DQUOT_LOGRES +
+>  		max((xfs_calc_inode_res(mp, 1) +
+>  		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
+>  				      XFS_FSB_TO_B(mp, 1)) +
+> -- 
+> 2.39.2
+> 
+> 
