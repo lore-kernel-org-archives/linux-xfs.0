@@ -1,152 +1,77 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E505818EB8
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 23:05:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187AC17E;
+	Tue, 23 Jul 2024 00:00:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721689522; cv=none; b=R0QEtLWIxol+Wc6IRF5yeOCVRmQ+FOgWYcP13VtQlzh4qpAmcfZAo0H15cA9CYrqKEVyKig2MCz1EMfUt74GbEhQI1DxbVMA5jxRav3r7daLLiddX0TpeHBYF+w5KIiSMwe3nxXibi+hbI4sjtValDttvmK9ePEhLCFcPJp41rQ=
+	t=1721692845; cv=none; b=BanUscUahvj3grspGJGP7mtravtxgpthCUZ3gzSvPh59a/B5AEZA3ELpAVpOrrYnALnnFFvBJv++D6y/Jc86q/EdbwfjW2Ub3f39YiRL74YYUbT6AJ2BS/ljLDKhWFYtaQXISHn2q8XyJwe93cWzDWx/qdT3aw8ZQw3C006gV5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721689522; c=relaxed/simple;
-	bh=oef0Keg4UguIfqqR/VDsMBztsvwUweTi8Mnkh2ed4+Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ACc7DcSj2bdqRMfnKy3PmjG6B8W4LTwi4plBtyVHbley60LaBvcnDxXTTtdMnmeEcQ7u/5FLjVU5TNu3XkkKin6UUilWb0eMK/jRgSwgvVZ8twhn/y2K9sppvJuh30bBnDQgvPZa1JN6EfCNMXsakfB+eJ+OnpvgBtw3ROvnSss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=OqgQbpgq; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1721692845; c=relaxed/simple;
+	bh=OWX51z58qgfwnin29Yn7MyfQ5++aw9avHBXiVsXHL7I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DptksvkJ1CruRTe2XSveYCq7y53Iw76rPfd41dJS9XDq/+2R7hBiRh+RwjT3DLVIEtS0WCrX2kVr/GdYm4ItT9UQpBp99qFrptOJ8TVA/blnUVFcgsrPZpDwHaznVv0LB3pxImwOmUO0ow1Y5M5evmnhGwQwAR+5/UMB00iH12Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jdML05t0; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="OqgQbpgq"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1fd66cddd07so1370615ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jul 2024 16:05:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721689519; x=1722294319; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=k0LVNU78Mqy232XBpjdVCQU+kdT/t22PITQu/WomBTM=;
-        b=OqgQbpgqloMiFsQkv+oFbn4GIleTtGR1KvnTjHH8/7UTrf8gdaQPYKBXIT6ZAfb5MD
-         AU/ffSCJPynLEYelA/UGXP414E7ClPvfeHH/WiKi+rdi4OVtL8MT7t9tnWhgm1oOgU76
-         mHUPyggPk3+nfOuJFBBsn9qW+9JHUZ+RSc7kP+M7Tcm/tzOHYn0S8aiMFSGG6CpsuAJT
-         j9H2uKR2FT2ohRoWCmvpqRL+6Fdy7+59cG6GXuo8IObze/Cqiw/8JIBeEFCZjdN5rFgb
-         6y698vntjsi4NZ0zKHwwIyvu1kURwoAze8FjJ6u9pgxnm0juYRMKaNZCrALGg7VDE+JL
-         yvJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721689519; x=1722294319;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k0LVNU78Mqy232XBpjdVCQU+kdT/t22PITQu/WomBTM=;
-        b=eH/OO48B5UgWH/vMdka4G3k/wjWLjI67K/Q2TCZjiUWSl4B2TIKL+aD3L7al/5ZQSP
-         rNL93dWaj/5gP9XQYyZ4c+Ge0WMXLzQlVVYepufBnozrCYijqN0lyHcuDWNeJw2LrvHW
-         PzRphHGlfXXyIL9WMvNBtNJuDucNG4+GZU6oate+qTcsCdY9Nj1Gl3vI6fasuVQQDdw3
-         n3j3etmW+Qat6IS269hFOMdxQc2RFsMTnHYR2UBC1Dl0RaQDNsHgWSiHalobKZEIR78L
-         ajOfl5wsxp3wSfEAGlAJNrbi0e8LLU7mqOXbKtG4oVdos7wgHpIJSbvz8SqLlj8tmeWC
-         cFQQ==
-X-Gm-Message-State: AOJu0Yx4rESmvfKJTKPoBdjRWzq8qaZsbdLLOnGWDWUA9o5W+Rbug+yu
-	UCJBRXvmez33eQIGDWohysAAkmIe0u4fbuQdwHWGIeBD1rRQcTYNj5tBK4SeBZU=
-X-Google-Smtp-Source: AGHT+IFwV9qKfqS2yQWWz3btrmiIpY+A7QVmzRBdVSlB4SpNtZTy4eaPcfs/PSe+kr3qRomA4Br+fQ==
-X-Received: by 2002:a17:902:ec83:b0:1fc:2e38:d3de with SMTP id d9443c01a7336-1fdb5eb14a7mr14701055ad.7.1721689519463;
-        Mon, 22 Jul 2024 16:05:19 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fd6f48f3ffsm60446675ad.285.2024.07.22.16.05.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jul 2024 16:05:19 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sW25k-007qK2-1d;
-	Tue, 23 Jul 2024 09:05:16 +1000
-Date: Tue, 23 Jul 2024 09:05:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH V2] xfs: allow SECURE namespace xattrs to use reserved
- block pool
-Message-ID: <Zp7lrCatH3Ry4PpH@dread.disaster.area>
-References: <fa801180-0229-4ea7-b8eb-eb162935d348@redhat.com>
- <7c666cfc-0478-42d0-b179-575ace474db0@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jdML05t0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=Li5TW48AyPI5gULzcTd/5FHKJ3Z1cLQvXoAp0k6TcPY=; b=jdML05t0x8EULmO8XhBI91h7/y
+	zKpJZH+Ldb8rc1yfzYFSZk1hF/RDui/q7SeLZnwLqx8OUYM+HA8Xr0N2GT2U7b1JZf/v5YstBaVGT
+	cpJvSQwTHZyDALAeX0v9NG8t11VWO5Uiiu5cyp33b9jdphBkQ+kbNXldsTbj9OawQ0Vf7EGlIa4ZN
+	6DHAZbCM3F75LQZe7AHZgjtj/ssz3B0av3SFJKAZzkVv6aOOdpJw4/KwNlklmIY8DmVf9SaUTa0K1
+	m+iWZHCu8/kbPXNzKFNZedZHcB1vXiVuMG0HlX+pADbgFqVzLywbG++uC1llNAvHmV4/sQC1YH/6J
+	PPzJoBng==;
+Received: from [64.141.80.140] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sW2xP-0000000AumW-0L8j;
+	Tue, 23 Jul 2024 00:00:43 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: RFC: don't fail tests when mkfs options collide
+Date: Mon, 22 Jul 2024 17:00:31 -0700
+Message-ID: <20240723000042.240981-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7c666cfc-0478-42d0-b179-575ace474db0@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jul 22, 2024 at 02:25:33PM -0500, Eric Sandeen wrote:
-> We got a report from the podman folks that selinux relabels that happen
-> as part of their process were returning ENOSPC when the filesystem is
-> completely full. This is because xattr changes reserve about 15 blocks
-> for the worst case, but the common case is for selinux contexts to be
-> the sole, in-inode xattr and consume no blocks.
-> 
-> We already allow reserved space consumption for XFS_ATTR_ROOT for things
-> such as ACLs, and selinux / SECURE attributes are not so very different,
-> so allow them to use the reserved space as well.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> V2: Remove local variable, add comment.
-> 
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index ab3d22f662f2..09f004af7672 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -110,7 +110,16 @@ xfs_attr_change(
->  	args->whichfork = XFS_ATTR_FORK;
->  	xfs_attr_sethash(args);
->  
-> -	return xfs_attr_set(args, op, args->attr_filter & XFS_ATTR_ROOT);
-> +	/*
-> +	 * Allow xattrs for ACLs (ROOT namespace) and SELinux contexts
+Hi all,
 
-It's not just SELinux - it's security xattrs set by LSMs in general
-that use the SECURE namespace. These come through:
+I've been running some tests with forced large log sizes, and forced
+sector sizes, and get a fair amount of failures because these options
+collide with options forced by the tests themselves.  The series here was
+my attempt to fix this by not failing the tests in this case but _notrun
+them and print the options that caused them to fail.
 
-xfs_generic_create()
-  xfs_inode_init_security()
-    security_inode_init_security()
-      <LSM>
-        xfs_initxattrs()
-          xfs_attr_change(XFS_ATTR_SECURE)
+While writing up this cover letter I realized that the scratch fs options
+are much deeper mess than that, so this approach might not be what we
+actually want, but I though to send it out for comments anyway.
 
-> +	 * (SECURE namespace) to use the reserved block pool for these
-> +	 * security-related operations. xattrs typically reside in the inode,
-> +	 * so in many cases the reserved pool won't actually get consumed,
-> +	 * but this will help the worst-case transaction reservations to
-> +	 * succeed.
-> +	 */
+So what could we do instead?  We might distinguish better between tests
+that just want to create a scratch file system with $MKFS_OPTIONS from
+the xfstests config, and those (file system specific ones) that want
+to force very specific file system configurations.  How do we get
+there?
 
-It doesn't explain why we need this - it's got the what and the
-expected behaviour, but no why. :)
+A first step might be to split up _scratch_mkfs into a plain
+_scratch_mkfs that never takes any options, and a _scratch_mkfs_opts that
+takes options.  The former should never fail as that would be a grave
+error rendering all $SCRATCH_DEV based tests useless. The latter can and
+should _notrun when the options conflict, or they might be able to do
+some limited filtering to reduce the amount of conflict, but I suspect
+that is kinda futile.
 
-> +	return xfs_attr_set(args, op,
-> +		    args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_SECURE));
->  }
-
-Perhaps it would be better to say something like:
-
-	/*
-	 * Some xattrs must be resistent to allocation failure at
-	 * ENOSPC. e.g. creating an inode with ACLs or security
-	 * attributes requires the allocation of the xattr holding
-	 * that information to succeed. Hence we allow xattrs in the
-	 * VFS TRUSTED, SYSTEM, POSIX_ACL and SECURITY (LSM xattr)
-	 * namespaces to dip into the reserve block pool to allow
-	 * manipulation of these xattrs when at ENOSPC. These VFS
-	 * xattr namespaces translate to the XFS_ATTR_ROOT and
-	 * XFS_ATTR_SECURE on-disk namespaces.
-	 *
-	 * For most of these cases, these special xattrs will fit in
-	 * the inode itself and so consume no extra space or only
-	 * require temporary extra space while an overwrite is being
-	 * made. Hence the use of the reserved pool is largely to
-	 * avoid the worst case reservation from preventing the
-	 * xattr from being created at ENOSPC.
-	 */
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Last but not least we should probably kill the separate _scratch_mkfs_xfs
+(and _scratch_mkfs_ext4) which is used rather inconsistently.
