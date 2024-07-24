@@ -1,55 +1,67 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18EC254759
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 15:36:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A8DA615B562
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 15:41:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721835385; cv=none; b=NKj+PGjT/BSH45e6fNl0T2sj6zxWi4WFR3+AAjBAtFAzg/GAfIYvsY8mS7y4s62RtIVF3LwKt2ZrhZ/vglofIRNbz+m42v/dsUqQJPVpLfQIambYlC0+RySc3W07HkXLcoS+lNDAbGg7OhHeWLeBmEjwGqiQmoLDKvmZLNnMfhw=
+	t=1721835682; cv=none; b=KtzV7KZLSC+lHXkujVfvmsDLz5/1HiZovgS/gDx1/l3oR6aUyLpOrAKq91Ktop/si+9DYg+kazvbW/e/YXtBXkvPBFfzoMhVczRSzj7k1zzhtoentvqhUjccgAi5SiAZyvABY3GJZmp8CTlSswlHixMX+Dm+E94PEJp0qX9hb24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721835385; c=relaxed/simple;
-	bh=HMf9MGgWSlZ4IVyjXB0crt97jxMPf/DkzcWq7/2jfJg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rdAbJo57igxuDlnUIcpTki+2Xq436/VAy91uaBuv/Fiho7kv6FA/BXw/TYRB/LOt56vtdWSx/I6m2FlUfHZcP0nwXZTbFRvHz9QqGy6n7Xa7TkB1CVldGCtCgew0OmboOeP42a07LZJJo0DhGRpkGWGHV6IGZfHezGjJ8p6irL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=U3s4hkeN; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1721835682; c=relaxed/simple;
+	bh=UKuJAJCjgJuoqVQ/g4EzxlOxMpuSggpwMJposD5Yydo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fygw34x0PKStzd2EFeC0V4/lFKHq/Jzyd2WudfwsmhijmszRPrxdqLepIKMopXXkRH36dSzPp/ZFcWcboVUzYlF8/v7vz//IJQa18Upu+v3VdqwXI386d8mMWX1TRvfKu3Q9/U3kUsl94JhpYvGe8JH2AWl9cAwko0IMYnuTcME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=DG4gbjw4; arc=none smtp.client-ip=63.231.237.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U3s4hkeN"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=HMf9MGgWSlZ4IVyjXB0crt97jxMPf/DkzcWq7/2jfJg=; b=U3s4hkeNizWX8iyhblbt7KJpMN
-	9GSg+A5lwxk1tnSZLrfmRL827ZmLcE8RcfS8KuPYgCkt5dR/GqQMuRYijBH8Br4cMqRp3KBlDuJv/
-	tErfT2x7Tx1Mvro97QC8uwJqkOPBsTf/9DJ2ILyycPlIOCxzXTWYGHk9LxxZ00kONwlWZkbg8sQ79
-	6N9gui34TPzCL1N3cgjO/wjgKdXejLb/aG+m8DYx+JNV9khSufk/wIkPgtUEM+ggACIl+RomhIt+3
-	jknksZVAyW8IBIm8T6ldRg7mPvJdDAOD0c/74sJEBkhwR6hbPWt0KDxNO2iKG8NFb5BNghugOFV37
-	ofsQVtbw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sWe2R-0000000Fn4K-2Q57;
-	Wed, 24 Jul 2024 15:36:23 +0000
-Date: Wed, 24 Jul 2024 08:36:23 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix file_path handling in tracepoints
-Message-ID: <ZqEfd8hJdKcjaDow@infradead.org>
-References: <20240711054353.GM612460@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="DG4gbjw4"
+Received: from [10.0.0.71] (usg [10.0.0.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 983A35CC2E1;
+	Wed, 24 Jul 2024 10:41:13 -0500 (CDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 983A35CC2E1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
+	s=default; t=1721835673;
+	bh=xSYMppAcBIth4BA01R0gtHPTkqTmfabiFuszD8eq0xg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=DG4gbjw4PAxKGShT8tk/8BFULH50dq2uSq0NLagomyc/7YZnB5UmuBqq5bDzb883a
+	 RC/eXkehrCUuU9P7lnQZiktd72GeneZZ8C2H1pSXUadJQmHcG57nMiSr8Pw14LyfWI
+	 c/NeH3DZPkBNlvIv9u3eL70J7H4OVIDuaZ4peR0dZ5uVYtJ8Ure8iz/OEZAbjNw6WI
+	 GFlRNHjML1CS9Eg0mi/rnmVVA9tKJqLluCmYc6i4edCjphpPiB08To64PslJj7COne
+	 KbY7qLXn8YwbHfGQ/KfJ1IzK/081R4psltCyLEWv+18BfH9Z2t2c1Hw21tPMvO93lU
+	 NWYe3J7XCq+VA==
+Message-ID: <f7bbde19-80b8-4118-b8ab-654df9784e13@sandeen.net>
+Date: Wed, 24 Jul 2024 10:41:13 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240711054353.GM612460@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] [RFC] xfs: filesystem expansion design documentation
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+References: <20240721230100.4159699-1-david@fromorbit.com>
+ <20240723235801.GU612460@frogsfrogsfrogs>
+ <ZqBO177pPLbovguo@dread.disaster.area>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <ZqBO177pPLbovguo@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-As the discussion didn't really conclude to anything too useful,
-except for Steven finding other opportunities to improve the xfs
-trace events I think we should go ahead with this:
+On 7/23/24 7:46 PM, Dave Chinner wrote:
+>> What about the log?  If sb_agblocks increases, that can cause
+>> transaction reservations to increase, which also increases the minimum
+>> log size.
+> Not caring, because the current default minimum of 64MB is big enough for
+> any physical filesystem size. Further, 64MB is big enough for decent
+> metadata performance even on large filesystem, so we really don't
+> need to touch the journal here.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Seems fair, but just to stir the pot, "growing the log" offline, when
+you've just added potentially gigabytes of free space to an AG, should
+be trivial, right?
 
+-Eric
