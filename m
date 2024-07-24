@@ -1,124 +1,86 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DB4E18E10;
-	Wed, 24 Jul 2024 16:29:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B79F15EFC6
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 17:23:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721838574; cv=none; b=CADor7UZJrfChLd9L29rC6U5l1ZieDarcNkx23cJqtr89d/Vj7bgiCguH9VRivtdER1nwVtQkbCMJimNWRwfLJ1F+JqFiYK1kouQQTG/MXHOV1ph/vX/Vc6f9DBR6fewAYU+Xns8raRIbDfFp1K08hoyb2CA4O5SaSP5ZdG1QQM=
+	t=1721841816; cv=none; b=KK694EbPXOSDdUj1BxOVMumDnZBHgZD4HfbjUaZcnjbx8gq83OlCi4XJxecGN1jhaXQsZKklmL/QJT3Ne73N/tK4N5VtyC7Aq7ZbdLMwIbZHTb/LgX7dkPOylC/+zLjrvs6ZAK83BsLvnnt6V0w22dxI2wUCg2a5jVTlAyZHKVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721838574; c=relaxed/simple;
-	bh=ftlPVIOI0qw+wGWV4oZk7tXzIkmFbPX/G5JK05JDslM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=YWyXtyyFDSgh677R7hJADK9eHpB8RHfRv/Wzck1klx16GNtzd2lV9ax1W8FcLAkuU9ah5g/jK8xo98hXARFy3p/1z0yhyEZhj4jbaMGrd6WEPwKkrBoLoCXWok4FBbk2mKhe6o9CWOuDItSubxemmHGZCGk1FMsljhev4WVRkXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b=GNvjCnR+; arc=none smtp.client-ip=212.227.17.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
+	s=arc-20240116; t=1721841816; c=relaxed/simple;
+	bh=jCzwhYhj1BjsQoH2+DIZOoq0JQeSEgVZx0zMa/TAJmM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qFnXjJwsMCZVuVUKmrl6PPeck4eW/DP8gfQIucFq+w8HF7pdM2FWWasTPz7w+FKk/EfKHq/skgBFoeguKjakwzxIHy3cMMX1ksZx+qmYbZzOv5mroMlyosazPxwl4AzL6tf0hF499TxsIF5uabAbyPLEnsSK98yBeTenggagfQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=er5A6XDu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b="GNvjCnR+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
-	s=s31663417; t=1721838555; x=1722443355; i=efault@gmx.de;
-	bh=BYZjEGc4YVudcgENM058UCy6tfpRPmI4j7O72IWha4A=;
-	h=X-UI-Sender-Class:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:MIME-Version:Content-Transfer-Encoding:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=GNvjCnR+JCF6N019EuyhqS7GZJiqw7uI/WKHdu7OeitiiAlnPSpS84ai86Qkg5cI
-	 9kV0VjlBd/dKiF0SIHXv2TXbgWCNC8T6TlnO+k5twJ1JGQfxG0AkHkT7dN6uuvGb8
-	 GZehGSPho95lNhXipBnF/28lg51a6lhhLMDaFb+JdioDXY/zdzy/uyMwADJNah1J5
-	 eRGRHIz6vUyGuznJZdNTdv1ikJhhK9I43E8gcTePdlKLjTQ4ENBwoC3igl8xlEFTY
-	 kwbKG3XHmhzLfredYsnRWHC53UcCXZe53DGThUv0RsRUxBZ9M6SiGI5lUp7pfexqq
-	 gyAxanys1DiMtE8mkA==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from homer.fritz.box ([185.221.149.162]) by mail.gmx.net (mrgmx105
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1N2mFY-1s9j6N2Sy4-00v2W4; Wed, 24
- Jul 2024 18:29:15 +0200
-Message-ID: <684a1811297c210c6efd46c4e3c7b35e26b03b19.camel@gmx.de>
-Subject: Re: [RFC] Slow down of LTP tests aiodio_sparse.c and dio_sparse.c
- in kernel 6.6
-From: Mike Galbraith <efault@gmx.de>
-To: Petr Vorel <pvorel@suse.cz>, Jan Kara <jack@suse.cz>
-Cc: ltp@lists.linux.it, linux-block@vger.kernel.org, 
- linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
- fstests@vger.kernel.org,  Jens Axboe <axboe@kernel.dk>, David Sterba
- <dsterba@suse.com>, Filipe Manana <fdmanana@suse.com>, Amir Goldstein
- <amir73il@gmail.com>, Cyril Hrubis <chrubis@suse.cz>, Andrea Cervesato
- <andrea.cervesato@suse.com>, Avinesh Kumar <akumar@suse.de>, Peter Zijlstra
- <peterz@infradead.org>
-Date: Wed, 24 Jul 2024 18:29:12 +0200
-In-Reply-To: <20240724131816.GA950793@pevik>
-References: <20240719174325.GA775414@pevik>
-	 <20240722090012.mlvkaenuxar2x3vr@quack3> <20240724131816.GA950793@pevik>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="er5A6XDu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA28AC32781;
+	Wed, 24 Jul 2024 17:23:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1721841816;
+	bh=jCzwhYhj1BjsQoH2+DIZOoq0JQeSEgVZx0zMa/TAJmM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=er5A6XDuvu6W8sp/xCHc6inuvuO7j4oWIm2p7Q5+dv++5yrCHXhjDt1+HvKlc1wc4
+	 fNNbEoSu/2QrU4qr900hbdoAg6RHRIhalisJy07CSNg8buKUN1mZRPNr6Db8NJW1sO
+	 wF6obMqKx9+5hjfDq0oMkEAZIcFRIgTyDf4cXniZd0mOc/D4hzQYpANq1DbFTYr2Zy
+	 XgRbahWHhYmlSmCIuyOHPmgWyKy3e9I54rLvu6MI957q+wwF2eAGJfy6UXBf+xNcN8
+	 5OQGmOEkLY//MFhII5bOOo8lAl7XMN+2rGpO5vKRXL5SopfV6I97kvzFwKvdFUrXa9
+	 QYmUjawnEeWpQ==
+Date: Wed, 24 Jul 2024 10:23:34 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] [RFC] xfs: filesystem expansion design documentation
+Message-ID: <20240724172334.GY612460@frogsfrogsfrogs>
+References: <20240721230100.4159699-1-david@fromorbit.com>
+ <20240723235801.GU612460@frogsfrogsfrogs>
+ <ZqBO177pPLbovguo@dread.disaster.area>
+ <f7bbde19-80b8-4118-b8ab-654df9784e13@sandeen.net>
+ <73173356-6914-42d4-8020-ea2f32661393@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:UWBOdxjNJyiHG2TMf8ox0PHfBtgY/mgi9HVdGVCVaJ6bAC2k80K
- pJX+y2qWZIMkIrApXkmlHL43njiMk1SVnqwxHjR1mD6s2CHI4CYeAWedhJsoj9N/TsKqKIA
- /o+NP34ZIctcH8qSVkRTCL8jD3myGESZWtJYStR9jfaZYoSh2uWVLUpNF6QOc34v1hPkaAP
- rlhhj3zSmQb/XRHBskIhg==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:w/bY2nrEeWs=;AiIwYn2wc/FW9jI/FqFfCpdARMX
- iqoRMTZi0UIEylmBl1YaRGGgPFmdn2SCXblzuV7oMvTzAKZ/kvcjPNGMONGQgv1hxfJyr+4Mo
- muDAcszKsTb2gi4E+fRsRExATUhgvw/dglYk6yTrzntZX5WzkEzS3yY8wRCvH4yBYz+dPv6td
- rqlqAeLj/iXUk3U1S46ur/yeDNAEdw2YcBNksl4FjjMKS4FuwtGYSageoV/aJcirrknlRGsLr
- f4kDKLCwhj4K5A/tz7DeKjYvbksXCHqASW0aSBAibZO/2df9CpEelRRlwXjRetMZ+xIXKJPDU
- ThqJr5UDC2NGZYnf47zhPuyvyDOaJBYzkfaracARc+LfVFolWob5aM5YF2T5Xcg1t+8sQh79A
- j5Kf6QEZFnr8j5ZAJxaDNRn9AXMCXfFMhWLSg0JLyBFlunHzlKrmuYf6069W5ZQJm4LGbYwL2
- k5FfrlwZe3LTU2/TsWfy90muX416/VIYHp8JAkD9m2h3jLuKlG6Qd8FQSarRV5ndC+GPfyVqo
- C1SOb9yIp+tvDxjHgPEIujGd3PBZE1yolF+zJbsVL5HI1SGBEP7bbWKzObzS41eX5M1+LYXD6
- dJe0w9S/Ps0A8sFdOGFqsb18yj63DsN/1AAfYmMKREdM0Ozl6S31Bowklcij9EaymWOJX8U/l
- 3djLfIQTZFO1SJTxR3Ub/DggNZXf9nNKJBjiftM2fNQg5u3q4HH/viKd52zYtH7Kxerh5R/vG
- 6DPIN2PfAsJsRtibe8zhiAhuvSdKgmZ0z52ZvVG52qf9icwwHgiu695mdhQu+KUQhxAqvxwF5
- +ZgeF1LO/BWulqYdRMbx+ErA==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <73173356-6914-42d4-8020-ea2f32661393@sandeen.net>
 
-On Wed, 2024-07-24 at 15:18 +0200, Petr Vorel wrote:
-> Hi all,
->
->
-> [ Cc Peter and Mike ]
-> > Hi!
->
-> > On Fri 19-07-24 19:43:25, Petr Vorel wrote:
-> > > LTP AIO DIO tests aiodio_sparse.c [1] and dio_sparse.c [2] (using [3=
-])
-> > > slowed down on kernel 6.6 on Btrfs and XFS, when run with default
-> > > parameters. These tests create 100 MB sparse file and write zeros (u=
-sing
-> > > libaio or O_DIRECT) while 16 other processes reads the buffer and ch=
-eck
-> > > only zero is there.
->
-> > So the performance of this test is irrelevant because combining buffer=
-ed
-> > reads with direct IO writes was always in "better don't do it" territo=
-ry.
-> > Definitely not if you care about perfomance.
->
-> > > Runtime of this particular setup (i.e. 100 MB file) on Btrfs and XFS=
- on the
-> > > same system slowed down 9x (6.5: ~1 min 6.6: ~9 min). Ext4 is not af=
-fected.
-> > > (Non default parameter creates much smaller file, thus the change is=
- not that
-> > > obvious).
->
-> > But still it's kind of curious what caused the 9x slow down. So I'd be
-> > curious to know the result of the bisection :). Thanks for report!
->
-> It looks to be the slowdown was introduced by commit 63304558ba5d
-> ("sched/eevdf: Curb wakeup-preemption") [1] from v6.6-rc1.
+On Wed, Jul 24, 2024 at 10:44:47AM -0500, Eric Sandeen wrote:
+> On 7/24/24 10:41 AM, Eric Sandeen wrote:
+> > On 7/23/24 7:46 PM, Dave Chinner wrote:
+> >>> What about the log?  If sb_agblocks increases, that can cause
+> >>> transaction reservations to increase, which also increases the minimum
+> >>> log size.
+> >> Not caring, because the current default minimum of 64MB is big enough for
+> >> any physical filesystem size. Further, 64MB is big enough for decent
+> >> metadata performance even on large filesystem, so we really don't
+> >> need to touch the journal here.
 
-That's not good, I'd rather not have over-zealous preemption back, my
-box doesn't miss that one tiny bit.
+<shrug> I think our support staff might disagree about that for the
+large machines they have to support, but log expansion doesn't need to
+be implemented in the initial proposal or programming effort.
 
-Hrm... have you tried Peter's eevdf queue?  The DELAY_DEQUEUE feature
-therein does good things for tbench, restoring pre-eevdf throughput.
+> > Seems fair, but just to stir the pot, "growing the log" offline, when
+> > you've just added potentially gigabytes of free space to an AG, should
+> > be trivial, right?
 
-	-Mike
+Possibly -- if there's free space after the end and the log is clean.
+Maybe mkfs should try to allocate the log at the /end/ of the AG to
+make this easier?
 
+> Ugh I'm sorry, read to the end before responding, Eric.
+> 
+> (I had assumed that an expand operation would require a clean log, but I
+> suppose it doesn't have to.)
+
+...why not require a clean filesystem?  Most of these 10000x XFS
+expansions are gold master cloud images coming from a vendor, which
+implies that we could hold them to slightly higher cleanliness levels.
+
+--D
+
+> -Eric
+> 
+> 
