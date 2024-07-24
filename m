@@ -1,47 +1,67 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95478EC0;
-	Wed, 24 Jul 2024 00:04:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67CFF4C62
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 00:46:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721779452; cv=none; b=Sxzx7NroahLHwxeqpwd9RbPvaoIy3sGpHqhyclfFufvWZlt3g3uL3Ms8GGojyNHo1l7Tzo9Rw2mizAJa1bAhdvdMQ8Y165ryP2ITKCPVhhkX+qcYHfXTGuibt4TU5ni0Nb6kRUGLmBwh+vbFEE+6Ddj0UYGLxzQkLUS8lW5a9Rw=
+	t=1721781982; cv=none; b=jAbSP/qS8HL6W6KWdVrHZ/5oW1oP+ym83jlBd4XbdNj5TVK06wruKIsvtvSDvLuvCPyHLbelcuXVGB8bi6eCSlvnPkcE108i41IpIrXDDh+hmOu9Li53npf+VxV2qGP+aVrDHdKkbMN0lnF9ShmvCkCth0FBQDU4tDmzURBFOhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721779452; c=relaxed/simple;
-	bh=VPV36HaGUqkbfGoYAsYx5S52gzWNBj88rNBBg/x3J1w=;
+	s=arc-20240116; t=1721781982; c=relaxed/simple;
+	bh=o78cMzoRERQ0hH4p+oi6XeUjaodZqkIaIij34jIVdV8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U9IwxV2LpFa3Egf9wocVQXJ/HexYc+qbkuoswctj8/dEre1Qw4ar6ayc89KvktOm8YhCv//DnLejvla4/houc0zAZxD+83fDlz7fVQ1OGOSyx1giMYquRA+WTa7s4Kd8HTwwuAfuapUCOzMu1VYeefbI6co80hBhy4ODpJ2ssSI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o2VMoEu+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GP519Vs6MsLUwL7Auhghf8Tz6mrvII2agFxibHyp17KVYWl8Ieuer8kOmH3MQYG3crsh43coTnwMeTh+gq+XcqOasVGNRqvXmx3QT+MFGMSdiirSqIHHaKynxAu1HdL48hHGL6STQR/x/KTjKyaU6+6zds4zR6Nl7Xq+NnsA4t4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=e1fH4FGg; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o2VMoEu+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DE9BC4AF09;
-	Wed, 24 Jul 2024 00:04:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721779452;
-	bh=VPV36HaGUqkbfGoYAsYx5S52gzWNBj88rNBBg/x3J1w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=o2VMoEu+yIw3BqE4OKhx38JpxBJE9Ca1r6V54m5NJKlxk57mbNM81lnFKln+BRchE
-	 4v7WYiWVKIF09ZEyQ4xYkFtQm1ry25xu/hY2A7T6XnrOxH5EVcE+nAloJ61p0Kr/Dz
-	 525j9iwtZAZoGkKB5Pg+ofyGdaSNNHZtZE1/sZvKbl4HFtXeAmdCBlgDMoUrK7NpxN
-	 wQv+1H5ET4WSnT0s8ucL1sqkR2aVRbDSVWWnVFk09yiX9xMllVTksYR9Tl7kqBnydh
-	 0QhZg2SM0WQJKvdFS6+cCleUoZ4QbCBnvF2h56MqCxN6uaKVD9hwwYW1/D98gm2E0j
-	 CYKqINaNMp4lQ==
-Date: Tue, 23 Jul 2024 17:04:11 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com,
-	dchinner@redhat.com, hch@lst.de, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	catherine.hoang@oracle.com, martin.petersen@oracle.com
-Subject: Re: [PATCH v2 07/13] xfs: Introduce FORCEALIGN inode flag
-Message-ID: <20240724000411.GV612460@frogsfrogsfrogs>
-References: <20240705162450.3481169-1-john.g.garry@oracle.com>
- <20240705162450.3481169-8-john.g.garry@oracle.com>
- <20240711025958.GJ612460@frogsfrogsfrogs>
- <ZpBouoiUpMgZtqMk@dread.disaster.area>
- <0c502dd9-7108-4d5f-9337-16b3c0952c04@oracle.com>
- <ZqA+6o/fRufaeQHG@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="e1fH4FGg"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1fc56fd4de1so2809685ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2024 17:46:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721781980; x=1722386780; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dBP3fJ2Twvbe3RANIUCzmSUBe7vQnImZy+x0NUPjOCI=;
+        b=e1fH4FGgZQMrgHXCKPS6woekZpZ229GSO0sG1GnIyJSh2m+QoOmfG8JkTgQiy0aeC9
+         2rN92wPefSvNeeug6nlpMvS4LQ9U9kYN9qmNypoaz04rsVSXQ7qrp6QTJ6sgWCdWSVfW
+         C88QjQVfbYTlshnmE+cFRLPzwJ/QSOcr+XX87ehnUnpwxOVuvTV4cVHAl75b0XDd/lMn
+         XSYBKT4fXgAhz+3qiihWfFg0QUxkj7FNB2h2c8oQA+PbNk67VV53QVq0hcqWj3Fom7Fc
+         sSgonE+uhl8UASbdKzWdehImAFDzjV5YTNBxLfbOI6yF2QEZSH29TVkF+XnRZiANQXmY
+         0JLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721781980; x=1722386780;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dBP3fJ2Twvbe3RANIUCzmSUBe7vQnImZy+x0NUPjOCI=;
+        b=QB22Sy6y/+noRi8xtvSTdcZehSijWzVbTzfThvjIshvY4hBj1bCkKwcHcPlKQBc3eT
+         +tSnr2Ny2BStrPEyj790eDUG9qHwhpy62JxOpFSYFotmVlpHvdOoEASrWjEcGYDFyUWP
+         RuMk0KxF1bVBI0bKS9YnJ05+80We9PvLMOUsQgkp6/alhIUp7TOzsmfr11GXmbQAJcle
+         Fyo+LgZ3h422I0G177xTUdwXpXeF1TlrwJZV+zYBVKydUt8vngRTFjBSlsawOXDok+7x
+         Mntmf8KKPXCFwZW/e5FoHU3Cn6DYLGpIPBOldF9pLSVYDeB7b6vfvOumndWPxTBSsTsl
+         1ghA==
+X-Gm-Message-State: AOJu0YwgAXDjPNtDgpGRzztWgb1HxdV1IPSY87OJEil4VjoVU7E45lqT
+	4ZsdFWtWQP3boBY+tb6Iz58mYkMSBwrjIkxxj5RsN3z0fxxG+1guKMbw5CyK9Jg=
+X-Google-Smtp-Source: AGHT+IHqVofknqMbDhqFqeeglxjORTin+hToSVWvqqgUzG3NGBvZKBgflFGTixApGNKxr0eZvNItHw==
+X-Received: by 2002:a17:903:189:b0:1fd:71cd:4431 with SMTP id d9443c01a7336-1fdd6e7a904mr4271075ad.24.1721781979466;
+        Tue, 23 Jul 2024 17:46:19 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fd6f48cd7csm81349115ad.286.2024.07.23.17.46.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 23 Jul 2024 17:46:18 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sWQ91-00967O-0K;
+	Wed, 24 Jul 2024 10:46:15 +1000
+Date: Wed, 24 Jul 2024 10:46:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] [RFC] xfs: filesystem expansion design documentation
+Message-ID: <ZqBO177pPLbovguo@dread.disaster.area>
+References: <20240721230100.4159699-1-david@fromorbit.com>
+ <20240723235801.GU612460@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,140 +70,278 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZqA+6o/fRufaeQHG@dread.disaster.area>
+In-Reply-To: <20240723235801.GU612460@frogsfrogsfrogs>
 
-On Wed, Jul 24, 2024 at 09:38:18AM +1000, Dave Chinner wrote:
-> On Thu, Jul 18, 2024 at 09:53:14AM +0100, John Garry wrote:
-> > On 12/07/2024 00:20, Dave Chinner wrote:
-> > > > > /* Reflink'ed disallowed */
-> > > > > +	if (flags2 & XFS_DIFLAG2_REFLINK)
-> > > > > +		return __this_address;
-> > > > Hmm.  If we don't support reflink + forcealign ATM, then shouldn't the
-> > > > superblock verifier or xfs_fs_fill_super fail the mount so that old
-> > > > kernels won't abruptly emit EFSCORRUPTED errors if a future kernel adds
-> > > > support for forcealign'd cow and starts writing out files with both
-> > > > iflags set?
-> > > I don't think we should error out the mount because reflink and
-> > > forcealign are enabled - that's going to be the common configuration
-> > > for every user of forcealign, right? I also don't think we should
-> > > throw a corruption error if both flags are set, either.
-> > > 
-> > > We're making an initial*implementation choice*  not to implement the
-> > > two features on the same inode at the same time. We are not making a
-> > > an on-disk format design decision that says "these two on-disk flags
-> > > are incompatible".
-> > > 
-> > > IOWs, if both are set on a current kernel, it's not corruption but a
-> > > more recent kernel that supports both flags has modified this inode.
-> > > Put simply, we have detected a ro-compat situation for this specific
-> > > inode.
-> > > 
-> > > Looking at it as a ro-compat situation rather then corruption,
-> > > what I would suggest we do is this:
-> > > 
-> > > 1. Warn at mount that reflink+force align inodes will be treated
-> > > as ro-compat inodes. i.e. read-only.
-> > > 
-> > > 2. prevent forcealign from being set if the shared extent flag is
-> > > set on the inode.
-> > > 
-> > > 3. prevent shared extents from being created if the force align flag
-> > > is set (i.e. ->remap_file_range() and anything else that relies on
-> > > shared extents will fail on forcealign inodes).
-> > > 
-> > > 4. if we read an inode with both set, we emit a warning and force
-> > > the inode to be read only so we don't screw up the force alignment
-> > > of the file (i.e. that inode operates in ro-compat mode.)
-> > > 
-> > > #1 is the mount time warning of potential ro-compat behaviour.
-> > > 
-> > > #2 and #3 prevent both from getting set on existing kernels.
-> > > 
-> > > #4 is the ro-compat behaviour that would occur from taking a
-> > > filesystem that ran on a newer kernel that supports force-align+COW.
-> > > This avoids corruption shutdowns and modifications that would screw
-> > > up the alignment of the shared and COW'd extents.
-> > > 
+On Tue, Jul 23, 2024 at 04:58:01PM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 22, 2024 at 09:01:00AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > This seems fine for dealing with forcealign and reflink.
+> > xfs-expand is an attempt to address the container/vm orchestration
+> > image issue where really small XFS filesystems are grown to massive
+> > sizes via xfs_growfs and end up with really insane, suboptimal
+> > geometries.
 > > 
-> > So what about forcealign and RT?
+> > Rather that grow a filesystem by appending AGs, expanding a
+> > filesystem is based on allowing existing AGs to be expanded to
+> > maximum sizes first. If further growth is needed, then the
+> > traditional "append more AGs" growfs mechanism is triggered.
 > > 
-> > We want to support this config in future, but the current implementation
-> > will not support it.
+> > This document describes the structure of an XFS filesystem needed to
+> > achieve this expansion, as well as the design of userspace tools
+> > needed to make the mechanism work.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  Documentation/filesystems/xfs/index.rst       |   1 +
+> >  .../filesystems/xfs/xfs-expand-design.rst     | 312 ++++++++++++++++++
+> >  2 files changed, 313 insertions(+)
+> >  create mode 100644 Documentation/filesystems/xfs/xfs-expand-design.rst
+> > 
+> > diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
+> > index ab66c57a5d18..cb570fc886b2 100644
+> > --- a/Documentation/filesystems/xfs/index.rst
+> > +++ b/Documentation/filesystems/xfs/index.rst
+> > @@ -12,3 +12,4 @@ XFS Filesystem Documentation
+> >     xfs-maintainer-entry-profile
+> >     xfs-self-describing-metadata
+> >     xfs-online-fsck-design
+> > +   xfs-expand-design
+> > diff --git a/Documentation/filesystems/xfs/xfs-expand-design.rst b/Documentation/filesystems/xfs/xfs-expand-design.rst
+> > new file mode 100644
+> > index 000000000000..fffc0b44518d
+> > --- /dev/null
+> > +++ b/Documentation/filesystems/xfs/xfs-expand-design.rst
+> > @@ -0,0 +1,312 @@
+> > +.. SPDX-License-Identifier: GPL-2.0
+> > +
+> > +===============================
+> > +XFS Filesystem Expansion Design
+> > +===============================
+> > +
+> > +Background
+> > +==========
+> > +
+> > +XFS has long been able to grow the size of the filesystem dynamically whilst
+> > +mounted. The functionality has been used extensively over the past 3 decades
+> > +for managing filesystems on expandable storage arrays, but over the past decade
+> > +there has been significant growth in filesystem image based orchestration
+> > +frameworks that require expansion of the filesystem image during deployment.
+> > +
+> > +These frameworks want the initial image to be as small as possible to minimise
+> > +the cost of deployment, but then want that image to scale to whatever size the
+> > +deployment requires. This means that the base image can be as small as a few
+> > +hundred megabytes and be expanded on deployment to tens of terabytes.
+> > +
+> > +Growing a filesystem by 4-5 orders of magnitude is a long way outside the scope
+> > +of the original xfs_growfs design requirements. It was designed for users who
+> > +were adding physical storage to already large storage arrays; a single order of
+> > +magnitude in growth was considered a very large expansion.
+> > +
+> > +As a result, we have a situation where growing a filesystem works well up to a
+> > +certain point, yet we have orchestration frameworks that allows users to expand
+> > +filesystems a long way past this point without them being aware of the issues
+> > +it will cause them further down the track.
 > 
-> What's the problem with supporting it right from the start? We
-> already support forcealign for RT, just it's a global config 
-> under the "big rt alloc" moniker rather than a per-inode flag.
+> Ok, same growfs-on-deploy problem that we have.  Though, the minimum OCI
+> boot volume size is ~47GB so at least we're not going from 2G -> 200G.
+> Usually.
 > 
-> Like all on-disk format change based features,
-> forcealign should add the EXPERIMENTAL flag to the filesystem for a
-> couple of releases after merge, so there will be plenty of time to
-> test both data and rt dev functionality before removing the
-> EXPERIMENTAL flag from it.
+> > +Scope
+> > +=====
+> > +
+> > +The need to expand filesystems with a geometry optimised for small storage
+> > +volumes onto much larger storage volumes results in a large filesystem with
+> > +poorly optimised geometry. Growing a small XFS filesystem by several orders of
+> > +magnitude results in filesystem with many small allocation groups (AGs). This is
+> > +bad for allocation effciency, contiguous free space management, allocation
+> > +performance as the filesystem fills, and so on. The filesystem will also end up
+> > +with a very small journal for the size of the filesystem which can limit the
+> > +metadata performance and concurrency in the filesystem drastically.
+> > +
+> > +These issues are a result of the filesystem growing algorithm. It is an
+> > +append-only mechanism which takes advantage of the fact we can safely initialise
+> > +the metadata for new AGs beyond the end of the existing filesystem without
+> > +impacting runtime behaviour. Those newly initialised AGs can then be enabled
+> > +atomically by running a single transaction to expose that newly initialised
+> > +space to the running filesystem.
+> > +
+> > +As a result, the growing algorithm is a fast, transparent, simple and crash-safe
+> > +algorithm that can be run while the filesystem is mounted. It's a very good
+> > +algorithm for growing a filesystem on a block device that has has new physical
+> > +storage appended to it's LBA space.
+> > +
+> > +However, this algorithm shows it's limitations when we move to system deployment
+> > +via filesystem image distribution. These deployments optimise the base
+> > +filesystem image for minimal size to minimise the time and cost of deploying
+> > +them to the newly provisioned system (be it VM or container). They rely on the
+> > +filesystem's ability to grow the filesystem to the size of the destination
+> > +storage during the first system bringup when they tailor the deployed filesystem
+> > +image for it's intented purpose and identity.
+> > +
+> > +If the deployed system has substantial storage provisioned, this means the
+> > +filesystem image will be expanded by multiple orders of magnitude during the
+> > +system initialisation phase, and this is where the existing append-based growing
+> > +algorithm falls apart. This is the issue that this design seeks to resolve.
 > 
-> So why not just enable the per-inode flag with RT right from the
-> start given that this functionality is supposed to work and be
-> globally supported by the rtdev right now? It seems like a whole lot
-> less work to just enable it for RT now than it is to disable it...
-
-What needs to be done to the rt allocator, anyway?
-
-I think it's mostly turning off the fallback to unaligned allocation,
-just like what was done for the data device allocator, right?  And
-possibly tweaking whatever this does:
-
-	/*
-	 * Only bother calculating a real prod factor if offset & length are
-	 * perfectly aligned, otherwise it will just get us in trouble.
-	 */
-	div_u64_rem(ap->offset, align, &mod);
-	if (mod || ap->length % align) {
-		prod = 1;
-	} else {
-		prod = xfs_extlen_to_rtxlen(mp, align);
-		if (prod > 1)
-			xfs_rtalloc_align_minmax(&raminlen, &ralen, &prod);
-	}
-
-
-> > In this v2 series, I just disallow a mount for forcealign and RT, similar to
-> > reflink and RT together.
-> > 
-> > Furthermore, I am also saying here that still forcealign and RT bits set is
-> > a valid inode on-disk format and we just have to enforce a sb_rextsize to
-> > extsize relationship:
-> > 
-> > xfs_inode_validate_forcealign(
-> > 	struct xfs_mount	*mp,
-> > 	uint32_t		extsize,
-> > 	uint32_t		cowextsize,
-> > 	uint16_t		mode,
-> > 	uint16_t		flags,
-> > 	uint64_t		flags2)
-> > {
-> > 	bool			rt =  flags & XFS_DIFLAG_REALTIME;
-> > ...
-> > 
-> > 
-> > 	/* extsize must be a multiple of sb_rextsize for RT */
-> > 	if (rt && mp->m_sb.sb_rextsize && extsize % mp->m_sb.sb_rextsize)
-> > 		return __this_address;
-> > 
-> > 	return NULL;
-> > }
+> I very much appreciate the scope definition here.  I also very much
+> appreciate starting off with a design document!  Thank you.
 > 
-> I suspect the logic needs tweaking, but why not just do this right
-> from the start?
-
-Do we even allow (i_extsize % mp->m_sb.sb_rextsize) != 0 for realtime
-files?  I didn't think we did.
-
---D
-
+> <snip out parts I'm already familiar with>
 > 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > +Optimising Physical AG Realignment
+> > +==================================
+> > +
+> > +The elephant in the room at this point in time is the fact that we have to
+> > +physically move data around to expand AGs. While this makes AG size expansion
+> > +prohibitive for large filesystems, they should already have large AGs and so
+> > +using the existing grow mechanism will continue to be the right tool to use for
+> > +expanding them.
+> > +
+> > +However, for small filesystems and filesystem images in the order of hundreds of
+> > +MB to a few GB in size, the cost of moving data around is much more tolerable.
+> > +If we can optimise the IO patterns to be purely sequential, offload the movement
+> > +to the hardware, or even use address space manipulation APIs to minimise the
+> > +cost of this movement, then resizing AGs via realignment becomes even more
+> > +appealing.
+> > +
+> > +Realigning AGs must avoid overwriting parts of AGs that have not yet been
+> > +realigned. That means we can't realign the AGs from AG 1 upwards - doing so will
+> > +overwrite parts of AG2 before we've realigned that data. Hence realignment must
+> > +be done from the highest AG first, and work downwards.
+> > +
+> > +Moving the data within an AG could be optimised to be space usage aware, similar
+> > +to what xfs_copy does to build sparse filesystem images. However, the space
+> > +optimised filesystem images aren't going to have a lot of free space in them,
+> > +and what there is may be quite fragmented. Hence doing free space aware copying
+> > +of relatively full small AGs may be IOPS intensive. Given we are talking about
+> > +AGs in the typical size range from 64-512MB, doing a sequential copy of the
+> > +entire AG isn't going to take very long on any storage. If we have to do several
+> > +hundred seeks in that range to skip free space, then copying the free space will
+> > +cost less than the seeks and the partial RAID stripe writes that small IOs will
+> > +cause.
+> > +
+> > +Hence the simplest, sequentially optimised data moving algorithm will be:
+> > +
+> > +.. code-block:: c
+> > +
+> > +	for (agno = sb_agcount - 1; agno > 0; agno--) {
+> > +		src = agno * sb_agblocks;
+> > +		dst = agno * new_agblocks;
+> > +		copy_file_range(src, dst, sb_agblocks);
+> > +	}
+> > +
+> > +This also leads to optimisation via server side or block device copy offload
+> > +infrastructure. Instead of streaming the data through kernel buffers, the copy
+> > +is handed to the server/hardware to moves the data internally as quickly as
+> > +possible.
+> > +
+> > +For filesystem images held in files and, potentially, on sparse storage devices
+> > +like dm-thinp, we don't even need to copy the data.  We can simply insert holes
+> > +into the underlying mapping at the appropriate place.  For filesystem images,
+> > +this is:
+> > +
+> > +.. code-block:: c
+> > +
+> > +	len = new_agblocks - sb_agblocks;
+> > +	for (agno = 1; agno < sb_agcount; agno++) {
+> > +		src = agno * sb_agblocks;
+> > +		fallocate(FALLOC_FL_INSERT_RANGE, src, len)
+> > +	}
+> > +
+> > +Then the filesystem image can be copied to the destination block device in an
+> > +efficient manner (i.e. skipping holes in the image file).
 > 
+> Does dm-thinp support insert range?
+
+No - that would be a future enhancement. I mention it simly because
+these are things we would really want sparse block devices to
+support natively.
+
+> In the worst case (copy_file_range,
+> block device doesn't support xcopy) this results in a pagecache copy of
+> nearly all of the filesystem, doesn't it?
+
+Yes, it would.
+
+> What about the log?  If sb_agblocks increases, that can cause
+> transaction reservations to increase, which also increases the minimum
+> log size.
+
+Not caring, because the current default minimum of 64MB is big enough for
+any physical filesystem size. Further, 64MB is big enough for decent
+metadata performance even on large filesystem, so we really don't
+need to touch the journal here.
+
+> If mkfs is careful, then I suppose xfs_expand could move the
+> log and make it bigger?  Or does mkfs create a log as if sb_agblocks
+> were 1TB, which will make the deployment image bigger?
+
+making the log bigger is not as straight forward as it could be.
+If the log is dirty when we expand the filesystem and the dirty
+section wraps the end of the log, expansion just got really complex.
+So I'm just going to say "make the log large enough in the image
+file to begin with" and assert that we already do this with a
+current mkfs.
+
+> Also, perhaps xfs_expand is a good opportunity to stamp a new uuid into
+> the superblock and set the metauuid bit?
+
+Isn't provisioning software is generally already doing this via
+xfs_admin? We don't do this with growfs, and I'd prefer not to
+overload an expansion tool with random other administrative
+functions that only some use cases/environments might need. 
+
+> I think the biggest difficulty for us (OCI) is that our block storage is
+> some sort of software defined storage system that exposes iscsi and
+> virtio-scsi endpoints.  For this to work, we'd have to have an
+> INSERT_RANGE SCSI command that the VM could send to the target and have
+> the device resize.  Does that exist today?
+
+Not that I know of, but it's laregely irrelevant to the operation of
+xfs_expand what go fast features the underlying
+storage devices support . If they support INSERT_RANGE, we can use
+it. If they support FICLONERANGE we can use it. If the storage
+supports copy offload, copy_file_range() can use it. If all else
+fails, the kernel will just bounce the data through internal
+buffers (page cache for buffered IO or pipe buffers for direct IO).
+
+> > +Limitations
+> > +===========
+> > +
+> > +This document describes an offline mechanism for expanding the filesystem
+> > +geometery. It doesn't add new AGs, just expands they existing AGs. If the
+> > +filesystem needs to be made larger than maximally sized AGs can address, then
+> > +a subsequent online xfs_growfs operation is still required.
+> > +
+> > +For container/vm orchestration software, this isn't a huge issue as they
+> > +generally grow the image from within the initramfs context on first boot. That
+> > +is currently a "mount; xfs_growfs" operation pair; adding expansion to this
+> > +would simply require adding expansion before the mount. i.e. first boot becomes
+> > +a "xfs_expand; mount; xfs_growfs" operation. Depending on the eventual size of
+> > +the target filesystem, the xfs-growfs operation may be a no-op.
+> 
+> I don't know about your cloud, but ours seems to optimize vm deploy
+> times very heavily.  Right now their firstboot payload calls xfs_admin
+> to change the fs uuid, mounts the fs, and then growfs's it into the
+> container.
+> 
+> Adding another pre-mount firstboot program (and one that potentially
+> might do a lot of IO) isn't going to be popular with them.
+
+There's nothing that requires xfs_expand to be done at first boot.
+First boot is just part of the deployment scripts and it may make
+sense to do the expansion as early as possible in the deployment
+process.
+
+e.g. It could be run immediately after the image file is cloned from
+the source golden image. At that point it's still just an XFS file,
+right? INSERT_RANGE won't affect the fact the extents are shared
+with the golden image, and it will be fast enough that it likely
+won't make a measurable impact on deployment speed. Four insert
+range calls on a largely contiguous file will take less than 100ms
+in most cases.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
