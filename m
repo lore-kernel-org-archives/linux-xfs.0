@@ -1,37 +1,37 @@
 Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7CD7A13A3E0
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 22:38:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B06D06F068
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 22:50:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721860730; cv=none; b=RtbpwZckba5nyDd3b+r71kMHYUlT9B1O9G2lCS8DcD5vQfgVIdf/FpwzZ/ikVcXlNYUe8TvoC5uffr1CNLrpGhQ+vtBKZXSBncFwhK7O6txdOFcJJGlrVRAr6/5IuLGBThOpx6aaZoC+2+a/e3Sp5nxCKznqnZHkIfoxqf2Yy3I=
+	t=1721861421; cv=none; b=GK75ujTUNUssO0wKI3QojZdvbUkwMHRSIOG+ZhKI3fEH8J2q8zvk7ZygDxnqw4hUGHy5ukEwdiZw/DhPA0CdbRFAB9Ddv2OiAp4r/1PRNbXKAUJYetloOtzU+ookQZDjiN1AXfWB/WM8fKp/ElkG9H1RFOmyryi/HXmL8nXNZmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721860730; c=relaxed/simple;
-	bh=3KlVcwpXFBQEHBO3vkjHI/k5eNg6fyg6gzPoyeQUFZc=;
+	s=arc-20240116; t=1721861421; c=relaxed/simple;
+	bh=PfFg7bI0qhUQv/OUqtWMYVKydwqZbPfiWq821R30bYE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s8cvOV3pN9J2V0rZOWhQpz/mKHgL8Q5WURQk86bJK/hIdZnzP8NqZr49MbteMQ5hR7WVFhEe9eQT9nyiEWVblYR+yMpqRJPnAUIY3NbZXIFksS1rZway5+Z0Yrgb5y+mO7UPQkHdEev63+LpncCGFIcO/3zp5ygk9IAj312Qigg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=frMcwp/k; arc=none smtp.client-ip=63.231.237.45
+	 In-Reply-To:Content-Type; b=PMBFiZUR9WPZLBj5jM+X1SL4LL9x/lQHVKcKWzLhk2l9rVkR2aVDqshLZyrlb9sFjtsYSuG5haNYIYfs13NqKtt1Kxju1ESnq0yaCQADuONVNE8rvPbznmJI4oV7pGwnN1CWo9V2k329WpNdy4EpYk4g07D6d0K4IBuW+Zrrn4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=cTxkG8KZ; arc=none smtp.client-ip=63.231.237.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="frMcwp/k"
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="cTxkG8KZ"
 Received: from [10.0.0.71] (usg [10.0.0.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id CBD615CCE30;
-	Wed, 24 Jul 2024 17:38:47 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net CBD615CCE30
+	by sandeen.net (Postfix) with ESMTPSA id D3A635CCE30;
+	Wed, 24 Jul 2024 17:50:18 -0500 (CDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net D3A635CCE30
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1721860727;
-	bh=peb54OYwigvFgr7WVaiKWQj/ZazkcW3538zV4ts45mw=;
+	s=default; t=1721861418;
+	bh=lUtWqvsgavK594FX+epIG8TWiXuWNREXBgeawtuPMfk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=frMcwp/kx2je9jDwfMgd9ifvJIMIWIRTP69A1/0GnDDduhhTClx2QKt1NAgyZ6C6B
-	 c2FzhSILvZydjedQ78fCxoH0VLgy4skVYep90oY/l0WCGJAuuTDPMCR/nXGSx5j31T
-	 m4SnBXtHNtOxB+gfBPGLuVjptktW9D2ll8ToOIgTYeYjfXFpSzCOvpeAl18ogxbGX7
-	 zyiFNbNEUX7eHoofnYIEc/ca+YJWpp9ECGiPDjW2shwpQEKVLoQZg9+wioyujBcv0j
-	 sl+O2bVn8XagubAvdQbS8TjV77QVuk3v/jy7Y/8oLnqrBWwSWgGstY0FLny5v8u5Sh
-	 74aGPFhzJeeuA==
-Message-ID: <5ccb5a51-75c0-41eb-92ff-a2ce5674ac0f@sandeen.net>
-Date: Wed, 24 Jul 2024 17:38:46 -0500
+	b=cTxkG8KZSO4rqUn1YR1NCnptL8IyYxBltXXTE/yXNUP0Z/PrSaGOmrbYhAK+bfyvB
+	 lo0IQuYuLAW+m9S/3kqyniwjSQQA0ROqWXqpRA9PotbcNHmSMEDLy/j2LlszGEL8ts
+	 ivUt6CMKbeJzLqKdgnq1htsfidNknj05wvLXnzRF1IoszJVQXCorNBIsKSqnoaC3db
+	 fUwghsh+qWDClYryTt0OyigBtePjqZTVBPd3a+xYVWXqSKRkMUSISgrJtCbseFWZay
+	 ZtGKXp944Hn7trWLHiyQC63nMJDNKC9D1eksXkkRwpkOmqf1BBwlXSUY5c+viIZM/H
+	 slv7eNKB74Q5w==
+Message-ID: <7c1f47f5-dbf9-4e89-9355-6adc9fad2166@sandeen.net>
+Date: Wed, 24 Jul 2024 17:50:18 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,51 +40,77 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] [RFC] xfs: filesystem expansion design documentation
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 References: <20240721230100.4159699-1-david@fromorbit.com>
- <345207bd-343a-417c-80b9-71e3c8d4ff28@sandeen.net>
- <20240724221233.GB612460@frogsfrogsfrogs>
+ <20240723235801.GU612460@frogsfrogsfrogs>
+ <ZqBO177pPLbovguo@dread.disaster.area>
+ <20240724210833.GZ612460@frogsfrogsfrogs>
 Content-Language: en-US
 From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20240724221233.GB612460@frogsfrogsfrogs>
+In-Reply-To: <20240724210833.GZ612460@frogsfrogsfrogs>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/24/24 5:12 PM, Darrick J. Wong wrote:
-> On Wed, Jul 24, 2024 at 05:06:58PM -0500, Eric Sandeen wrote:
->> On 7/21/24 6:01 PM, Dave Chinner wrote:
->>> +The solution should already be obvious: we can exploit the sparseness of FSBNO
->>> +addressing to allow AGs to grow to 1TB (maximum size) simply by configuring
->>> +sb_agblklog appropriately at mkfs.xfs time. Hence if we have 16MB AGs (minimum
->>> +size) and sb_agblklog = 30 (1TB max AG size), we can expand the AG size up
->>> +to their maximum size before we start appending new AGs.
->>
->> there's a check in xfs_validate_sb_common() that tests whether sg_agblklog is
->> really the next power of two from sb_agblklog:
->>
->> sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1
->>
->> so I think the proposed idea would require a feature flag, right?
->>
->> That might make it a little trickier as a drop-in replacement for cloud
->> providers because these new expandable filesystem images would only work on
->> kernels that understand the (trivial) new feature, unless I'm missing
->> something.
+On 7/24/24 4:08 PM, Darrick J. Wong wrote:
+> On Wed, Jul 24, 2024 at 10:46:15AM +1000, Dave Chinner wrote:
+
+...
+
+> Counter-proposal: Instead of remapping the AGs to higher LBAs, what if
+> we allowed people to create single-AG filesystems with large(ish)
+> sb_agblocks.  You could then format a 2GB image with (say) a 100G AG
+> size and copy your 2GB of data into the filesystem.  At deploy time,
+> growfs will expand AG 0 to 100G and add new AGs after that, same as it
+> does now.
+
+And that could be done oneline...
+
+> I think all we'd need is to add a switch to mkfs to tell it that it's
+> creating one of these gold master images, which would disable this
+> check:
 > 
-> agblklog and agblocks would both be set correctly if you did mkfs.xfs -d
-> agsize=1T on a small image; afaict it's only mkfs that cares that
-> dblocks >= agblocks.
+> 	if (agsize > dblocks) {
+> 		fprintf(stderr,
+> 	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
+> 			(long long)agsize, (long long)dblocks);
+> 			usage();
+> 	}
 
-Yes, in a single AG image like you've suggested.
+(plus removing the single-ag check)
 
-In Dave's proposal, with multiple AGs, I think it would need to be handled.
+> and set a largeish default AG size.  We might want to set a compat bit
+> so that xfs_repair won't complain about the single AG.
+> 
+> Yes, there are drawbacks, like the lack of redundant superblocks.  But
+> if growfs really runs at firstboot, then the deployed customer system
+> will likely have more than 1 AG and therefore be fine.
+
+Other drawbacks are that you've fixed the AG size, so if you don't grow
+past the AG size you picked at mkfs time, you've still got only one
+superblock in the deployed image.
+
+i.e. if you set it to 100G, you're OK if you're growing to 300-400G.
+If you are only growing to 50G, not so much.
+
+(and vice versa - if you optimize for gaining superblocks, you have to
+pick a fairly small AG size, then run the risk of growing thousands of them)
+
+In other words, it requires choices at mkfs time, whereas Dave's proposal
+lets those choices be made per system, at "expand" time, when the desired
+final size is known.
+
+(And, you start right out of the gate with poorly distributed data and inodes,
+though I'm not sure how much that'd matter in practice.)
+
+(I'm not sure the ideas are even mutually exclusive; I think you could have
+a single AG image with dblocks << agblocks << 2^agblocklog, and a simple
+growfs adds agblocks-sized AGs, whereas an "expand" could adjust agblocks,
+then growfs to add more?)
+
+> As for validating the integrity of the GM image, well, maybe the vendor
+> should enable fsverity. ;)
+
+And host it on ext4, LOL.
 
 -Eric
-
-> --D
-> 
->> -Eric
->>
-> 
-
