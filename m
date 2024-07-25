@@ -1,42 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D57514D8B9
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 23:48:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA56123CB
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jul 2024 00:41:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721864907; cv=none; b=nRa1o6V2+K6eXIV4W/qQCtXHuWlq7H0ifPEHJOEi3FfY75oJYz0u+bo9EBkZLhIHL7gBaEZWEEVEiQhbOk0Wy0cy6LPgC99Z172i343LeCWNAf+/u8jtxlzg5tqPXGdv2AJC6sy7Ob2lLA+Pv26e5T52DgBH7aZFiQj493KHMPY=
+	t=1721868116; cv=none; b=Cp/SZZdmEz+fQryvPwGEJ2epcAt2ZKOfzHoJR8WbH4w0MDOrBZIYrSCo+rI/r6jvFju11dMR1kZf3IfgrBHx7C9JdkDinHp/Z9dr3xww0eyFwDF1jnYPf6aKNQTyVE6BT50fRvfml4/lcvWem/E+R2HsZ7lRyMVa6gxTm97qoCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721864907; c=relaxed/simple;
-	bh=8O4GZX7yXNqld9fCvBDUo9hiKlSEh98giAA/3qs9G0c=;
+	s=arc-20240116; t=1721868116; c=relaxed/simple;
+	bh=l/MLz4UmM8iWFDSolJlEYEL8sYsw1/9b1R7ASYTacz0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XyAoODqJp0MlWVr8GGs3KIfnYa6xfq8y81XsY+WZNQeiwoSb1D9IEKQqysRF3KqHHxAjLhEF8UAFsxnq7/JKErTGSZ8g3jtwdgYiGPiYBqoPpderQksU5XsyOMTikKYml73jo8YNFYN+34d7m7eSylBJR1hmSYI2tIj9MV9AoWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=thZagmu3; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=k1I9K2KwnHSL3GZ4cKOdrlthuYp2bi/CskgaS2gCZ2NFf/36IC6jOWQxk5ik3Q07H1Ar+FEWkJfdldVTSPo4uMnIue+TZh3TuGeIQQGwRpzv6BdCz2JOHL0hgfw2Zkjy1drWVJAhsBKNBN1Eqbh2UDlaM/Ga7LBihvN+Uvhtk6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=YO6H1YQD; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="thZagmu3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62BE9C32781;
-	Wed, 24 Jul 2024 23:48:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721864907;
-	bh=8O4GZX7yXNqld9fCvBDUo9hiKlSEh98giAA/3qs9G0c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=thZagmu3OneXCciANDzac4o8kAk7kh5LnyuELKi17ZEqE+l54NzrMDJCEsBmOLQ53
-	 PwpgthQT9HZJx13s/29jmggic98gqwP8zIK+vw3nqaZMZj8P44f6he6WKYrSgRkbjh
-	 MuYD7OqIOCK2GPxtJaHFwtyiDVCwmQQxzj6uv90t6ro2aFAZj55U8uoypJNUJjXVLP
-	 VWCMM39XbxSNAnvCwtsdfh6ZyDpzflF8tOlWmWWuc/MIZzdt5zL1H7o1dHq+pqEGlk
-	 Oo/Ak7raTqCBnWBvNlvjGhINEeYPc9ad4KOqipq00+qynsb1mkbj6aqDoWaLXYx7im
-	 IZPNBtuqUInoA==
-Date: Wed, 24 Jul 2024 16:48:26 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="YO6H1YQD"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-70d24d0a8d4so293441b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2024 17:41:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1721868114; x=1722472914; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=SxWq0hghtPcaizmy1WhfhpmcuaEESQMHCgoqEJcK1A0=;
+        b=YO6H1YQDyi1LOiW68hSxQTkTZDgrtzekieIWv35XQAt5F6LECXuRoyCgyKlZl2b4Qu
+         gJ6MPNKLVfGGmGDVmHln/vehRdXMBt+tKS+qDX8aaGgcZuTF3aTFtz/N2UDqNSm2FaBN
+         h7BUivFebc4j/YyIMErpSZhvlch+m5B9eCg1pQdYxevOxq25CM2LI3aZN1RfDT17XQKV
+         aF28nazYWurp+VnbWQbC1d0JTfTKWYh/j9y57VOT46vh2LZymKys7N5WRDG5KrP+AjTw
+         LI+kkDHaH47AyApmPcJ786RVSo34QHcC3fE9C+Kq0DwblL2z028/XaeBa4f0Mj2KjdoS
+         X8cQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721868114; x=1722472914;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SxWq0hghtPcaizmy1WhfhpmcuaEESQMHCgoqEJcK1A0=;
+        b=lGjk7mOarRuoe6ofzvoxCHE25ss+Usa2Fq1r5v0KmH+0/UbRAl08kXQ9ll5iBeq9vX
+         LjTBPTmnv2tk7b6HpZsBQw6WWkSNNWyAPUjNCH/8pJgd3G0oa3/6wWgfpGkbfx2niFUk
+         hVlqL7VINTJix7E8/usxaWDJ8pyv0AeLtvh/THuYaz7brrph6HZOyLzRNPKSEsekqVXP
+         4/WL3j9U3yMA5LkQ5XQ1ra0capYFISvqWms3JcmHotaNxY6frYkQQpc71pKguN3HojYr
+         2cZ0GYWcZ7RA6vC8r+Ldg6CZnDmt+/5KqzJmyx05KBY/TBb2L3N/Xo3DOjy4SDw00wjC
+         0IGg==
+X-Gm-Message-State: AOJu0Yx5HzZZ7rZtJnfuSoRF5BuPI9zCsPfoblKZ2yVS41MLcWNdxHFU
+	32L8uM2Gp9IT3wuC6nwKDnRZsGhqSl9wsqS0MHfHnsWVC0qQoeCU2dBU39j3jZQyHGyoJFI9joJ
+	e
+X-Google-Smtp-Source: AGHT+IFTZDGfpnILL8p+4VfRxxXzd9h/aEX81sFIC+sTm+Gj/wt3HEg7GlbqhwdPe5LHLx8Yj7VcAw==
+X-Received: by 2002:a05:6a21:2d08:b0:1c2:96f1:a2ce with SMTP id adf61e73a8af0-1c47b1b56f0mr279534637.3.1721868113775;
+        Wed, 24 Jul 2024 17:41:53 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fed7f85868sm1796445ad.238.2024.07.24.17.41.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Jul 2024 17:41:53 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sWmYI-00AGl8-1W;
+	Thu, 25 Jul 2024 10:41:50 +1000
+Date: Thu, 25 Jul 2024 10:41:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 Subject: Re: [PATCH] [RFC] xfs: filesystem expansion design documentation
-Message-ID: <20240724234826.GC612460@frogsfrogsfrogs>
+Message-ID: <ZqGfTvAEzFbfe+Wa@dread.disaster.area>
 References: <20240721230100.4159699-1-david@fromorbit.com>
  <20240723235801.GU612460@frogsfrogsfrogs>
  <ZqBO177pPLbovguo@dread.disaster.area>
  <20240724210833.GZ612460@frogsfrogsfrogs>
- <7c1f47f5-dbf9-4e89-9355-6adc9fad2166@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,122 +73,210 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7c1f47f5-dbf9-4e89-9355-6adc9fad2166@sandeen.net>
+In-Reply-To: <20240724210833.GZ612460@frogsfrogsfrogs>
 
-On Wed, Jul 24, 2024 at 05:50:18PM -0500, Eric Sandeen wrote:
-> On 7/24/24 4:08 PM, Darrick J. Wong wrote:
-> > On Wed, Jul 24, 2024 at 10:46:15AM +1000, Dave Chinner wrote:
-> 
-> ...
-> 
-> > Counter-proposal: Instead of remapping the AGs to higher LBAs, what if
-> > we allowed people to create single-AG filesystems with large(ish)
-> > sb_agblocks.  You could then format a 2GB image with (say) a 100G AG
-> > size and copy your 2GB of data into the filesystem.  At deploy time,
-> > growfs will expand AG 0 to 100G and add new AGs after that, same as it
-> > does now.
-> 
-> And that could be done oneline...
-> 
-> > I think all we'd need is to add a switch to mkfs to tell it that it's
-> > creating one of these gold master images, which would disable this
-> > check:
+On Wed, Jul 24, 2024 at 02:08:33PM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 24, 2024 at 10:46:15AM +1000, Dave Chinner wrote:
+> > On Tue, Jul 23, 2024 at 04:58:01PM -0700, Darrick J. Wong wrote:
+> > > On Mon, Jul 22, 2024 at 09:01:00AM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > xfs-expand is an attempt to address the container/vm orchestration
+> > > > image issue where really small XFS filesystems are grown to massive
+> > > > sizes via xfs_growfs and end up with really insane, suboptimal
+> > > > geometries.
+....
+> > > > +Moving the data within an AG could be optimised to be space usage aware, similar
+> > > > +to what xfs_copy does to build sparse filesystem images. However, the space
+> > > > +optimised filesystem images aren't going to have a lot of free space in them,
+> > > > +and what there is may be quite fragmented. Hence doing free space aware copying
+> > > > +of relatively full small AGs may be IOPS intensive. Given we are talking about
+> > > > +AGs in the typical size range from 64-512MB, doing a sequential copy of the
+> > > > +entire AG isn't going to take very long on any storage. If we have to do several
+> > > > +hundred seeks in that range to skip free space, then copying the free space will
+> > > > +cost less than the seeks and the partial RAID stripe writes that small IOs will
+> > > > +cause.
+> > > > +
+> > > > +Hence the simplest, sequentially optimised data moving algorithm will be:
+> > > > +
+> > > > +.. code-block:: c
+> > > > +
+> > > > +	for (agno = sb_agcount - 1; agno > 0; agno--) {
+> > > > +		src = agno * sb_agblocks;
+> > > > +		dst = agno * new_agblocks;
+> > > > +		copy_file_range(src, dst, sb_agblocks);
+> > > > +	}
+> > > > +
+> > > > +This also leads to optimisation via server side or block device copy offload
+> > > > +infrastructure. Instead of streaming the data through kernel buffers, the copy
+> > > > +is handed to the server/hardware to moves the data internally as quickly as
+> > > > +possible.
+> > > > +
+> > > > +For filesystem images held in files and, potentially, on sparse storage devices
+> > > > +like dm-thinp, we don't even need to copy the data.  We can simply insert holes
+> > > > +into the underlying mapping at the appropriate place.  For filesystem images,
+> > > > +this is:
+> > > > +
+> > > > +.. code-block:: c
+> > > > +
+> > > > +	len = new_agblocks - sb_agblocks;
+> > > > +	for (agno = 1; agno < sb_agcount; agno++) {
+> > > > +		src = agno * sb_agblocks;
+> > > > +		fallocate(FALLOC_FL_INSERT_RANGE, src, len)
+> > > > +	}
+> > > > +
+> > > > +Then the filesystem image can be copied to the destination block device in an
+> > > > +efficient manner (i.e. skipping holes in the image file).
+> > > 
+> > > Does dm-thinp support insert range?
 > > 
-> > 	if (agsize > dblocks) {
-> > 		fprintf(stderr,
-> > 	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
-> > 			(long long)agsize, (long long)dblocks);
-> > 			usage();
-> > 	}
+> > No - that would be a future enhancement. I mention it simly because
+> > these are things we would really want sparse block devices to
+> > support natively.
 > 
-> (plus removing the single-ag check)
-> 
-> > and set a largeish default AG size.  We might want to set a compat bit
-> > so that xfs_repair won't complain about the single AG.
+> <nod> Should the next revision should cc -fsdevel and -block, then?
+
+No. This is purely an XFS feature at this point. If future needs
+change and we require work outside of XFS to be done, then it can be
+taken up with external teams to design and implement the optional
+acceleration functions that we desire.
+
+> > > In the worst case (copy_file_range,
+> > > block device doesn't support xcopy) this results in a pagecache copy of
+> > > nearly all of the filesystem, doesn't it?
 > > 
-> > Yes, there are drawbacks, like the lack of redundant superblocks.  But
-> > if growfs really runs at firstboot, then the deployed customer system
-> > will likely have more than 1 AG and therefore be fine.
+> > Yes, it would.
 > 
-> Other drawbacks are that you've fixed the AG size, so if you don't grow
-> past the AG size you picked at mkfs time, you've still got only one
-> superblock in the deployed image.
+> Counter-proposal: Instead of remapping the AGs to higher LBAs, what if
+> we allowed people to create single-AG filesystems with large(ish)
+> sb_agblocks.  You could then format a 2GB image with (say) a 100G AG
+> size and copy your 2GB of data into the filesystem.  At deploy time,
+> growfs will expand AG 0 to 100G and add new AGs after that, same as it
+> does now.
 
-Yes, that is a significant drawback. :)
+We can already do this with existing tools.
 
-> i.e. if you set it to 100G, you're OK if you're growing to 300-400G.
-> If you are only growing to 50G, not so much.
+All it requires is using xfs_db to rewrite the sb/ag geometry and
+adding new freespace records. Now you have a 100GB AG instead of 2GB
+and you can mount it and run growfs to add all the extra AGs you
+need.
 
-Yes, though the upside of this counter proposal is that it can be done
-today with relatively little code changes.  Dave's requires storage
-devices and the kernel to support accelerated remapping, which is going
-to take some time and conversations with vendors.
+Maybe it wasn't obvious from my descriptions of the sparse address
+space diagrams, but single AG filesystems have no restrictions of AG
+size growth because there are no high bits set in any of the sparse
+64 bit address spaces (i.e. fsbno or inode numbers). Hence we can
+expand the AG size without worrying about overwriting the address
+space used by higher AGs.
 
-That said, I agree with Dave that his proposal probably results in
-files spread more evenly around the disk.
+IOWs, the need for reserving sparse address space bits just doesn't
+exist for single AG filesystems.  The point of this proposal is to
+document a generic algorithm that avoids the problem of the higher
+AG address space limiting how large lower AGs can be made. That's
+the problem that prevents substantial resizing of AGs, and that's
+what this design document addresses.
 
-But let's think about this -- would it be advantageous for a freshly
-deployed system to have a lot of contiguous space at the end?
-
-If the expand(ed) image is a root filesystem, then the existing content
-isn't going to change a whole lot, right?  And if we're really launching
-into the nopets era, then the system gets redeployed every quarter with
-the latest OS update.
-
-(Not that I do that; I'm still a grumpy Debian greybeard with too many
-pets.)
-
-OTOH, do you (or Dave) anticipate needing to expandfs an empty data
-partition in the deployed image?  A common pattern amongst our software
-is to send out a ~16G root fs image which is deployed into a VM with a
-~250G boot volume and a 100TB data volume.  The firstboot process growfs
-the rootfs by another ~235G, then it formats a fresh xfs onto the 100TB
-volume.
-
-The performance of the freshly formatted data partition is most
-important, and we've spent years showing that layout and performance are
-better if you do the fresh format.  So I don't think we're going to go
-back to expanding data partitions.
-
-> (and vice versa - if you optimize for gaining superblocks, you have to
-> pick a fairly small AG size, then run the risk of growing thousands of them)
->
-> In other words, it requires choices at mkfs time, whereas Dave's proposal
-> lets those choices be made per system, at "expand" time, when the desired
-> final size is known.
-
-If you only have one AG, then the agnumber segment of the FSBNO will be
-zero.  IOWs, you can increase agblklog on a single-AG fs because there
-are no FSBNOs that need re-encoding.  You can even decrease it, so long
-as you don't go below the size of the fs.
-
-The ability to adjust goes away as soon as you hit two AGs.
-
-Adjusting agblklog would require some extension to the growfs ioctl.
-
-> (And, you start right out of the gate with poorly distributed data and inodes,
-> though I'm not sure how much that'd matter in practice.)
-
-On fast storage it probably doesn't matter.  OTOH, Dave's proposal does
-mean that the log stays in the middle of the disk, which might be
-advantageous if you /are/ running on spinning rust.
-
-> (I'm not sure the ideas are even mutually exclusive; I think you could have
-> a single AG image with dblocks << agblocks << 2^agblocklog, and a simple
-> growfs adds agblocks-sized AGs, whereas an "expand" could adjust agblocks,
-> then growfs to add more?)
-
-Yes.
-
-> > As for validating the integrity of the GM image, well, maybe the vendor
-> > should enable fsverity. ;)
+> > > Also, perhaps xfs_expand is a good opportunity to stamp a new uuid into
+> > > the superblock and set the metauuid bit?
+> > 
+> > Isn't provisioning software is generally already doing this via
+> > xfs_admin? We don't do this with growfs, and I'd prefer not to
+> > overload an expansion tool with random other administrative
+> > functions that only some use cases/environments might need. 
 > 
-> And host it on ext4, LOL.
+> Yeah, though it'd be awfully convenient to do it while we've already got
+> the filesystem "mounted" in one userspace program.
 
-I think we can land fsverity in the same timeframe as whatever we land
-on for implementing xfs_explode^Wexpandfs.  Probably sooner.
+"it'd be awfully convenient" isn't a technical argument. It's an
+entirely subjective observation and assumes an awful lot about the
+implementation design that hasn't been started yet.
 
---D
+Indeed, from an implementation perspective I'm considering that
+xfs_expand might even implemented as a simple shell script that
+wraps xfs_db and xfs_io. I strongly suspect that we don't need to
+write any custom C code for it at all. It's really that simple.
 
-> -Eric
+Hence talking about anything to do with optimising the whole expand
+process to take on other administration tasks before we've even
+started on a detailed implementation design is highly premature.  I
+want to make sure the high level design and algorithms are
+sufficient for all the use cases people can come up with, not define
+exactly how we are going to implement the functionality.
+
+> > > > +Limitations
+> > > > +===========
+> > > > +
+> > > > +This document describes an offline mechanism for expanding the filesystem
+> > > > +geometery. It doesn't add new AGs, just expands they existing AGs. If the
+> > > > +filesystem needs to be made larger than maximally sized AGs can address, then
+> > > > +a subsequent online xfs_growfs operation is still required.
+> > > > +
+> > > > +For container/vm orchestration software, this isn't a huge issue as they
+> > > > +generally grow the image from within the initramfs context on first boot. That
+> > > > +is currently a "mount; xfs_growfs" operation pair; adding expansion to this
+> > > > +would simply require adding expansion before the mount. i.e. first boot becomes
+> > > > +a "xfs_expand; mount; xfs_growfs" operation. Depending on the eventual size of
+> > > > +the target filesystem, the xfs-growfs operation may be a no-op.
+> > > 
+> > > I don't know about your cloud, but ours seems to optimize vm deploy
+> > > times very heavily.  Right now their firstboot payload calls xfs_admin
+> > > to change the fs uuid, mounts the fs, and then growfs's it into the
+> > > container.
+> > > 
+> > > Adding another pre-mount firstboot program (and one that potentially
+> > > might do a lot of IO) isn't going to be popular with them.
+> > 
+> > There's nothing that requires xfs_expand to be done at first boot.
+> > First boot is just part of the deployment scripts and it may make
+> > sense to do the expansion as early as possible in the deployment
+> > process.
 > 
+> Yeah, but how often do you need to do a 10000x expansion on anything
+> other than a freshly cloned image?  Is that common in your cloudworld?
+> OCI usage patterns seem to be exploding the image on firstboot and
+> incremental growfs after that.
+
+I've seen it happen many times outside of container/VMs - this was a
+even a significant problem 20+ years ago when AGs were limited to
+4GB. That specific historic case was fixed by moving to 1TB max AG
+size, but there was no way to convert an existing filesystem. This
+is the "cloud case" in a nutshell, so it's clearly not a new
+problem.
+
+Even ignoring the historic situation, we still see people have these
+problems with growing filesystems. It's especially prevalent with
+demand driven thin provisioned storage. Project starts small with
+only the space they need (e.g. for initial documentation), then as
+it ramps up and starts to generate TBs of data, the storage gets
+expanded from it's initial "few GBs" size. Same problem, different
+environment.
+
+> I think the difference between you and I here is that I see this
+> xfs_expand proposal as entirely a firstboot assistance program, whereas
+> you're looking at this more as a general operation that can happen at
+> any time.
+
+Yes. As I've done for the past 15+ years, I'm thinking about the
+best solution for the wider XFS and storage community first and
+commercial imperatives second. I've seen people use XFS features and
+storage APIs for things I've never considered when designing them.
+I'm constantly surprised by how people use the functionality we
+provide in innovative, unexpected ways because they are generic
+enough to provide building blocks that people can use to implement
+new ideas.
+
+Filesystem expansion is, IMO, one of those "generically useful"
+tools and algorithms.
+
+Perhaps it's not an obvious jump, but I'm also thinking about how we
+might be able to do the opposite of AG expansion to shrink the
+filesystem online. Not sure it is possible yet, but having the
+ability to dynamically resize AGs opens up many new possibilities.
+That's way outside the scope of this discussion, but I mention it
+simply to point out that the core of this generic expansion idea -
+decoupling the AG physical size from the internal sparse 64 bit
+addressing layout - has many potential future uses...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
