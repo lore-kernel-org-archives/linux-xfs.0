@@ -1,30 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0023121364;
-	Fri, 26 Jul 2024 17:14:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A31217CA06;
+	Fri, 26 Jul 2024 17:14:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722014045; cv=none; b=LnXTMGy8bfOhtYE5Fgu2DmAH+0+xSAn28OObaxZnJHo24eicW7XVPs0JqToSEHIdrNDQO+Uu3f8mMBJxKibnMkr30Bj2yluga6RAyeW9ipDMpVnaONdR8sUd0FC+3zUtAwj42CuMvu4I/Fi3JPqLSd4UhZUUHi0tyYfHvHR25iA=
+	t=1722014085; cv=none; b=XA21bHLXWE5LwVqDTBV3ccpJpkxh2iu7OHpGXpZtLYzIfwHKSD3nxD0pJo9jA4gyT+KnRfdB+p+nINBULuvqzFbAlOEZZBIkZvZ0fIrES5dtF+5H9khka24YwSRS+myhvbqaAiuYR9JkML8hyRTwHpK8P5mQeV1vksPwTe+CoKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722014045; c=relaxed/simple;
-	bh=vnaGRt35OXW8GrcOhfdqhoDi2Phsfws9fRC2hdplJOM=;
+	s=arc-20240116; t=1722014085; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j/TEAaO2ZA4Rxq/YY/JcFCESw6bl8RzuI+0MgY2M4WmSNFjJZlNMP+XwK7+B+yS66UpL7CsE7l7vSA16OZj7RlK1JMS1+1ko+HF8VLmL/7Kqf7+8obhCS79R8vOKfMG9kkV+zncjxxd3ZkOzfCPm8lWhVrhPMKZutmxkSFIfMok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1C3AA68B05; Fri, 26 Jul 2024 19:13:59 +0200 (CEST)
-Date: Fri, 26 Jul 2024 19:13:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, djwong@kernel.org, hch@lst.de,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 14/21] iomap: Sub-extent zeroing
-Message-ID: <20240726171358.GA27612@lst.de>
-References: <20240429174746.2132161-1-john.g.garry@oracle.com> <20240429174746.2132161-15-john.g.garry@oracle.com> <ZjGVuBi6XeJYo4Ca@dread.disaster.area> <c8be257c-833f-4394-937d-eab515ad6996@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cm+UCW4GIt03VkGUdQ+GqwmUYi6zJeHWzo7ezmpz3935vN9aBObvCw5nA7vjj0vzZ/KBT/dRSvnR4RlGXfh2+lntyAtvZMsaCK9E4+lKAGEl6aM1Sg1w/wnWuVKTlH5cEFmbTILfbPs5L4UyMK0M9FEXokiIx/1qkvC9ifcJdDw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KLZByonb; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KLZByonb"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=KLZByonbom5RryrjsiTGokPdy4
+	yIb9Ef6Sm4AEKaIjLzR+ay+9gXRkAybLWBKMLNpp6eMdKQN8Fnzf+3scpkwoG/KHwqqB2AQbJILKA
+	8xUKQpfcqxN10ZlpdHgVw2UGByqN/9xLb7CORRJzTyxCqHSwj5NVBjTKe504KJH84ffR9KFpDJsdg
+	5qci+k3H2Dt1D1/7ABJH5oDkg4IXimlK9DdOHnKWB0/z9XeU/s0/xrdXxr0ztvKkeZ4VZ73VcNC5y
+	wYINpSycAxYRp7jhhH712OI5Ur8g1Of1RYDcac9RIuQQLYyO/GlwUEd7OwyRi/va1tbNmdcdY/w/2
+	iXgdIE1A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sXOWh-00000004VBH-0F8X;
+	Fri, 26 Jul 2024 17:14:43 +0000
+Date: Fri, 26 Jul 2024 10:14:43 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zorro Lang <zlang@redhat.com>, Ma Xinjian <maxj.fnst@fujitsu.com>,
+	fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] generic/754: fix _fixed_by tags
+Message-ID: <ZqPZgxSlLgXoWI_N@infradead.org>
+References: <20240726165107.GR103020@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,29 +45,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c8be257c-833f-4394-937d-eab515ad6996@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240726165107.GR103020@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Jul 26, 2024 at 03:29:48PM +0100, John Garry wrote:
-> I have been considering another approach to solve this problem.
->
-> In this patch - as you know - we zero unwritten parts of a newly allocated 
-> extent. This is so that when we later issue an atomic write, we would not 
-> have the problem of unwritten extents and how the iomap iterator will 
-> create multiple BIOs (which is not permitted).
->
-> How about an alternate approach like this:
-> - no sub-extent zeroing
-> - iomap iter is changed to allocate a single BIO for an atomic write in 
-> first iteration
-> - each iomap extent iteration appends data to that same BIO
-> - when finished iterating, we submit the BIO
->
-> Obviously that will mean many changes to the iomap bio iterator, but is 
-> quite self-contained.
+Looks good:
 
-Yes, I also suggested that during the zeroing fix discussion.  There
-is generally no good reason to start a new direct I/O bio if the
-write is contiguous on disk and only the state of the srcmap is different.
-This will also be a big win for COW / out of place overwrites.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
