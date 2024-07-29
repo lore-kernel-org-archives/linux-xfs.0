@@ -1,233 +1,550 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic319-23.consmr.mail.gq1.yahoo.com (sonic319-23.consmr.mail.gq1.yahoo.com [98.137.66.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0D17603A;
-	Mon, 29 Jul 2024 17:02:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722272577; cv=fail; b=ugGZsU3/V4UIqX6XoWN40YVoUqSBY8da3adpUq6Aav9Ve/mrfvqltHSOvDA7SuDbg3SlyWlaCeRrh5AjEzmxftI+ge2cJpB0rxBIEpx6vAvw0iVs6DDTD8FEy0XKcU1cqmOAUpaKvcfH2AtI5f6HowPd1uSUNBDCcRjUrWolg84=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722272577; c=relaxed/simple;
-	bh=dhefZ1VTV8RPbHVSOwneL3iDPmL8t7m3KzGMxYIp/pQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=dG1gTyMfs+49Kx7TxwU5lMPgZx5noScS9pFENlOGHYd4Vb8votf/uCXXJqLiDOj0pQVq+UpU581PIFKdjpNLxnXNraRadbV7DD5/1NbVPWJ4Fb9m2HI4T4uvrmNIFBVN5IcikfIKlwvfG8iQeW0++EakLlHLdVe/RLMZdmKCn9Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RRbKlSeF; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=oxmejE+w; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4803B139CEF
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Jul 2024 18:13:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=98.137.66.204
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1722276823; cv=none; b=nG0A2mkgDN07nto7R683tgGNYeUizxpAw7C1JO2qxLrlZ+Hh7JNg0IBhpsLB532DKohMnD9frK2SBYQrvypR/ZsJX6QgBiun4oYJZld07sctd5Tn8Ni4uDHrWv8RWP/lmewFTIOiNlhzEwGPuAIgbNKcOpJPeeEjUKHQ/cW1oEA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1722276823; c=relaxed/simple;
+	bh=rtvggRtEKzsJdEuO+wclYSrK2HnYWH/R2LXAxeHPlII=;
+	h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type:
+	 References; b=CxztbmiZXUx1C7BBOdkWYMK9Y1Lb5+XsMirzzm+EJMjlHfuqPZCCSxJyj/K9FER6/6HQQSWO8KZtMeaaSNzsdih5UQqSadJo2UNwT9LdOnoDxHCj5hnmGgpGaaCTYIQg6zBDxhTh1dXgvoiH5sEPj8MII9zYeMN5J8HrhW+nR68=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=ZYMy/fBh; arc=none smtp.client-ip=98.137.66.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RRbKlSeF";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="oxmejE+w"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46TFMl2a011692;
-	Mon, 29 Jul 2024 17:02:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=
-	corp-2023-11-20; bh=9qXkBfcZAf+tpXCLs9Rw1fs+vrMRuDZ12oTZDvXVQ/Q=; b=
-	RRbKlSeF+R/7KQI9R5uElgs17SN1NpJmnuuA8S3EY7N6spFY7RjbPeWe/a/8aLFK
-	imAnhjKkqbHx0cnxr1sukqG/rmz3aziFiMM9c30f5RWLnv6nRqh6aVSffIT2CTfx
-	IwYCbmHvDbSe9dLGPw7jAUEqzi8mNOl8P+61Li8BMmmlEWVGosB8x1W451LOv0RD
-	jemriqYuBFyWymWBSS3AA/8VdLnepn5xfXkAaws/OqquOejD6A37rCe7kRAr/day
-	HaQ06rCHMMtWTuEyP0C+FqYAKkDIVVIPgAWZ9knG0wEkmLCLYCn/luDcom1BZpKU
-	C+YzQhrk0nSAgR+BHn8bSw==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40msesk3tu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 29 Jul 2024 17:02:48 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46TFjgHI037273;
-	Mon, 29 Jul 2024 17:02:47 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2169.outbound.protection.outlook.com [104.47.56.169])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 40nvnv22wa-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 29 Jul 2024 17:02:47 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Y8NHdiTl3S4oGMQaz/nIks2bfDiC5pLSwg/PavzR0V6Ej8VWzsSHgxWaxSbfb5vr1/u2QZ/6ZSTTU51YMWpVIkjhiRE/gAFo1snjCfgdkQqdc5ZeYvI0vBKdL85mC+InADO4hvmO3bQW55FEi/NeW/f40MmI2deVwg/UPGpti7Ri+c3pnSv6URQYxsPQQ79dZnWo88SjZ/26hIz6HmzneKLR6ugAkkJKJn+OzEuqFVGP7Tz/zqMLGUpBJxUoYVMYQ0NuW6AQ3rjNcCXtDiiLVLdn7anuyyYunllz+076lwSltt6KyHl4TTq0Lli/7oHXqdAzxHOlrlxF4/LQkqMxLg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9qXkBfcZAf+tpXCLs9Rw1fs+vrMRuDZ12oTZDvXVQ/Q=;
- b=tTytoJuYGKVNUXMenaMkoWahxxExzg2nzM4lci2AumSR17JqZEuQHY+zh5un1Y0NKzieeMHeAupcgHsxOGAnW88ynbciornF8+vbJM/LPAzNfdtjsXdS3d0PMU7U3ptBuuMwWKDiDcD12flVswLr5/p6BNPZHnWmVQs311y71UcaXOptUlh8Z5csPALNTJT0+Ieug75ktdHcJx+ia1aXrrwkxkgESMp39/H2cJp8luKsePci5BoysG34RzmbioNr0DZvqlw+WyRuKptbYpYchuidgQ4h3icd1JRsLzwfX8pIKz05Bi8IgmTBRkbw7k7Ipw1IwqvF2vqlj00oTC8lSg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9qXkBfcZAf+tpXCLs9Rw1fs+vrMRuDZ12oTZDvXVQ/Q=;
- b=oxmejE+wuRJS8bjWIU+tzlk800GCVqd8RyaczS7bzuGn7CukeCoJKJXl6zYoprhjUiFkX6qpVj+N0hXGd5SpbH7G+yWTAjpoQfnv0bjH0XT5OolKTirjVSgYomv66nfgN3qBOH3vauyoIoqooRGy+kFGEpGegUJwC9sQCPrQ7Dk=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by CH3PR10MB6903.namprd10.prod.outlook.com (2603:10b6:610:151::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7807.27; Mon, 29 Jul
- 2024 17:02:43 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%7]) with mapi id 15.20.7807.026; Mon, 29 Jul 2024
- 17:02:43 +0000
-Message-ID: <f740c31e-609a-443f-95d3-56fc92bb5d48@oracle.com>
-Date: Mon, 29 Jul 2024 18:02:38 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 14/21] iomap: Sub-extent zeroing
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, djwong@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-References: <20240429174746.2132161-1-john.g.garry@oracle.com>
- <20240429174746.2132161-15-john.g.garry@oracle.com>
- <ZjGVuBi6XeJYo4Ca@dread.disaster.area>
- <c8be257c-833f-4394-937d-eab515ad6996@oracle.com>
- <20240726171358.GA27612@lst.de>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20240726171358.GA27612@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO6P265CA0012.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:339::16) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="ZYMy/fBh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1722276820; bh=rtvggRtEKzsJdEuO+wclYSrK2HnYWH/R2LXAxeHPlII=; h=Date:From:To:Subject:References:From:Subject:Reply-To; b=ZYMy/fBh5tUPqW3P92YxDERoc58YJOfKX3ffUUTz4XXpjsH1p44cIcIOQUr4fSBof3xIQluDOGHwjH5EY7mbq/G3kfnxia8gkewXuCh+VyFZUC6Ks8OHjBxlt6FQe+s8i5AtW2E+J0bLfViFhkm/u9I0ZzeKXIqNfoRKi4Vbb9+hORNXol2STloncC0eYx2o93uVq2HIfs9JTzorp5fRym3Ibvqpp4qEEDM8eYeHakwk0wnq7oHp8Mtc3IZ9Mk3r5JE2nhfOvUmYApYKA0fmg1o+zz75lCp3WB4EyxJMYwbSsZWKuuECGjp0GqDShMug5o8WS5QdCp0e+B9jtj4kRQ==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1722276820; bh=s99fIanmeq9ZqCjW38gkTBaMm5XkIZm9hdnoxby2ekd=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=qeTp49lUTxOzaQUed393Cu5uWcPzqTZmolFe93e2jciYu90wlIoMcSJj1fapsWHRYD/x85LWk8dKtsqODA2fZlQa/oj/EJwwDBPU8o1oxTtaPiSx8z1coM0C9TYMtWJu1IbUqDGnOkBs1VxB6wMhFECPYXJClH9mLme3aSGL+eFEvx8ku+5wr1dVekKPojuSCKvcVWYXX8TqmmcaKgI9duhX3Q3sXpR2iNSYCd17fRowJJGr2fpAznjEbflORw+SmO85h/0Oykze5GqBnd1Xs1YVPuIU7nThf3dTW1q+X801pA0zvFsAc6x3CTvy34X5XuJN5IUF/ddCr8BaAPZD2w==
+X-YMail-OSG: 0l7FMroVM1lfRB25OkJsko0kGmNhWMVKFUdhhSd8VkDqYf.mX1CkOtLJFb8V2sf
+ 5RDvETGFLLbpWHSQbGlUitZYS3GqeHI.43FqZ.vSwZk4E2uRYKuh8kr0t.dTzgx.jOmA.VxsWoey
+ cNk7mNCN3Eb3Av6.OWtWzBIEC4VX9Apxo5mDmy_A8cgSirWEnktmYtvc4cbt3r98Zqs6hBYt_SJI
+ t7JZzsCsE4ke.y2IStI648itqTGhhQEgbxWLJtMjgWWrwcUOvfETO88TDwWYwqELdaakC5M5DADq
+ 1r5AN8Wl94lfSi8JNOkOvL2Kqaqkb48o3MRCCWbJZDflgGQD1JpPNClxBIefmexr0KNjWxLwBr7.
+ V7VwZPmIQVpLyC4hdL65yBTVsNe6S0nlkSN0Aq9IATvoSWwxPupvKbemUfdGoRitP4TG493wqqaN
+ Tk4H6MfSV9VjLbzsjdd6FJwXhnciMih4v59UZrbUaCrqt13iYGUo5wvugeuM_NU7.JgdiSs.p.FS
+ tyLcAOaagxCmNccL.Jl7.lopJzdUIYHb36CpuXnIQ8BJitiTb3A.E86LgkmEZ0z_1n8fYsjvH77q
+ vxRLorXPqfwcKDUoCkkVSGg.A.U9WhCz2G0vUIbK.aqqvdPQ5714huyUf32vTVXNHAhTLrcNP4Vr
+ c88BLrFHS8TVW6x4NxmpE_RZL3XoLi8Y0nj19AJG_0.M.JzlZvWe514pRN9H6omvq0dFLnrGBFrN
+ 1gXJn1da5qWbnPHAG763fD6zHR1JMkGxTMSUt15uMUadjXITTKLIyRe8VMdX0ZGPj1nJT7OS.jGV
+ 5tMSqb2n8J63_DbgzYwUEZMAwWfLKw0UTC7DaQwv3Qu2Ix9AUFAFOjif1fLW3rKENe7dfMr3Ccln
+ L4zJnDqN6Qu87ScH_GYuXJkSwNYS8TBf5Gk3e_aby8lktQIjSbRxYHVIRBMgzwCTjKZg9RySTs2e
+ RKF64uOfxT1rT6mxmJ_TjbXRL63fdAoBfuPwrq7VORH4Qrzd5JuxNewl3Ksre_t_F4Ig9SLTEIZ5
+ NHB.en7K7xbtaez4b3fUYIee65klNcCWnVEYzhUJW9XmNlyy2JqThitSphg5UyuN0YNgP6EBHgP7
+ w0XpSp4a1GSKvPPJtFn4Il.9BPlsMyHUfbJJ6CFsfDjyai8Og53WJe5OAOUBwuj3NvVOydQAQa8D
+ IanIDoXWB0.83rsS2lIDC._Ps9sVzTyyZtxgZD.eEfe3NzXli_byGNL_gL980.Zg_fz50gK043sg
+ 65rMVlJAfiNwEBHE9.7DUyWqIjXuxkS4Zaavf82tFm4yC0leQTXsV2WbyYw3ihHSoQN7AzojdtQr
+ nAc2S1Mw76PBZ3jj9ZOc2sSvi7cUcN7dpes9hYELZ6WWUPklt1QLWiPQHjNiWIFgGJg_2gcQylQJ
+ koaoAzGgAa5fevCtW01WhvSeOgSatirptI2yg3JTij.xebZ7ySqN0f6hGalv.ooSXtb81WUij3bU
+ l2BoeIjdmPHDUwXigASdSiDZesqHC3ntV2WlB4j0J80QQTT7On9R8tTbdCojnViQZRyACbllEIlT
+ jXmH0pRvg8u7YuOixzZJD1XjDepFM4p3qcKMgPGMIYJC6F.UXt83L7jxNbY8YBtPlp0tZ_aic0fx
+ 7P77KrQSh7xT0rhIiK94HtO6n7NjtWQSk_jVCiUz3yHFzFhQcf_rv1Q7WmHw4EV5s8XdDJmaM6A7
+ jmiKzhAOPLZli.NMKcNyhOLXQhVLaMjJxkksrKUzKf6Kqm449EeTpg2nvuwVJS7y6jgFK2qHwWZR
+ fkAQg5EFBT06huETe2AsXw52_B34WewBKrp8P4hvT2171y588iLK9rWUAVfaFrzrjlDL_YC_pT4t
+ uDNB9QpFomJn_kEi1baVOxVtXRWMkkljFdvvw3aHnoVuBqwf9Yt9hNYSbzH4PQ9Ykn_mmw91pgfF
+ 0YXUaK0JYTL6WNz1rcxwXGx96qpJC09KmIJmHxi1TxY7f22aE.p3yyxAEV2jqFR2sQ9QxBnoJzEc
+ fZZQQOPjjvCVrAzE7oma2bphRCqCoEdd_idDeviUG_AJgaF3mZaZQbpGbrRsFRyn4FmWTf8QjOy8
+ S8ds1B5JSmsdBvpdh9QUACPCqo9zUij3BsRw.1zV19ZV37R1mQjmX8Ckb_KKE.K7van0kyNJT0QJ
+ agSFeXkU22g0mHanYcNHzOaorUN.Wk5eiOyPeRUyHRx6lpaRnGpkIFEwHIbqS
+X-Sonic-MF: <santiago_kraus@yahoo.com>
+X-Sonic-ID: e59a3f5c-e744-4b2d-a56b-a2e2bd7afbc8
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic319.consmr.mail.gq1.yahoo.com with HTTP; Mon, 29 Jul 2024 18:13:40 +0000
+Date: Mon, 29 Jul 2024 18:13:37 +0000 (UTC)
+From: Santiago Kraus <santiago_kraus@yahoo.com>
+To: linux-xfs@vger.kernel.org
+Message-ID: <599054026.994781.1722276817040@mail.yahoo.com>
+Subject: : xfsprogs xfs_repair Version 6.8.0-2 versus Version 6.9.0-1 =>
+ segmentation fault line number 666 cache.c - libxfs_bcache
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH3PR10MB6903:EE_
-X-MS-Office365-Filtering-Correlation-Id: 87bce41c-9f0f-449b-6511-08dcaff0432f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?TkhnRkRXUlhsbmtnOS9TVmNvaUphN1IvK2xNaTBDUlI0QzdFdUorakI4cFE3?=
- =?utf-8?B?UlpxQjlqTVoyTDlINEV1TCtGQ3ZWVHFwMVRZaXcySkV2eEdmdWJhVkRMRkRI?=
- =?utf-8?B?NEd3UkMvYWdRS0tNTlBnc1JXOWpFZWE0eUpNdDh1RFpNU3Z5S0EvQ3ArY29S?=
- =?utf-8?B?Unl6bktYVVBoMUxNTCt5TEROby84TEtIektyanNncXlDTkw0Um5KYVoxTFhO?=
- =?utf-8?B?YmRCdVpVcGpXZGNtYzdsdHJpQWVMYmlVZVAyTnFUWmJsUFNwTlJyT0VnOTNu?=
- =?utf-8?B?R3R4NVZxb3lsRks0TU5ObkpmbU1zKytrQkVJVG80YkhHRHZsdmlZalk3VDFN?=
- =?utf-8?B?bjBueTIvRHBBWFhha3Vhakg3Rk1WYzFwUXBaR2VWOXM1Y3ppM1JzMUZIYWFR?=
- =?utf-8?B?UHBqQXNMVUViTmt6YWovd3BYQUI1NkFRdkthNDNsbW9ZK2VUUDUwZHRLSDNt?=
- =?utf-8?B?K2E5M3RDMncrZHlhSG5vNWhvREVrWmFiZ3JLeVZ6VEpRSGR6cWhRVW5GU1l4?=
- =?utf-8?B?cVdnUXZWazZjUkE3blUvN1FXSmNOSlhQSjFmVS9pQkxRK2x3UTdoQU5abEk4?=
- =?utf-8?B?Ni9WN01qbUhXbTgvc0tTbkk0a0w3SG1EeWJtV3NsY3U3eTBINCtvWGdnUXpB?=
- =?utf-8?B?UlZQL2ZvazgvdUZGYnR6M3lydWliNkUya0NZaE9qemEwYnJ4MCtEb1JIQ1pv?=
- =?utf-8?B?VGhMb3U4ak85UXNoeUVleGNNczlJNnVvc3lZTERrT2JiRGU1Z01RRklvcmFp?=
- =?utf-8?B?NzN1SzVrVjR5US9BU1hLL0hETVJNZUhuWHpsTnVSV3VTQzhwWDIranYwbDNV?=
- =?utf-8?B?OUR4ZjFKQ2N2K2tuZk41SVlCUnkxRkdQb29ya2VmMWt4VVoxL0tDdVJFWW85?=
- =?utf-8?B?Ym03V3llTVlsT0pndisrdVR0aFlKbDQwWlIrSGxDSFhNNzd3UjJwc25wQStv?=
- =?utf-8?B?Z284RXNCbktUTGU4cWJHeHBhNmJLRlRUcGJOM3l2MmNBcE1kNnQ2ZVhxaHhv?=
- =?utf-8?B?cUxuSnYySCsxb0ZoVkZUWG44SjNsaHV4QTJFOEVjbjRwY2ZSZldOOUNhWVV4?=
- =?utf-8?B?OUhGc0dEWHJDUTVyVkFqaHlwZi9vRlVRaVoyMklIZlJlQkhFZTk5S3plQ0Mw?=
- =?utf-8?B?Q0ZORHFIVGcwNnZETlRnL2hJRVVmMjNxbUhiZkZ0aGdjK09xUWFrVjBXR25G?=
- =?utf-8?B?NEp1QnFyUlN2MFkwMlFDdmUyZG5UNHNoZ01IUCtVUFlSVkJBdUJtZVFwQ2dC?=
- =?utf-8?B?T2RBT0tYaUxkZE5rN0oyWTYxbVJFZmg3dVg2cFFvb2Yxaldqb1phQmxRQlVD?=
- =?utf-8?B?N3AzcHI3SWNGODh6RjVPQ25GSUE4Yjlpa2dFRWluclNUbXlGbm9tSnFZVjE0?=
- =?utf-8?B?TGtXbXpJK0JxMlM2a2x1bGtWZ1U0NXMwRzgxdmNzYVNCUjFrMVpEczU0Ui9Q?=
- =?utf-8?B?Nk85ZmRCVzFOZ3h6VUg5LzdPMEdMTGRSYWhyeWw2cjhFV0ZqOU5VaUhwNzQr?=
- =?utf-8?B?dVhBSTZaWlVHL0VhZ1RuOEgzRkFXNitLQU1BQmlMbUVDNG1rNTVuUnV3RWNE?=
- =?utf-8?B?R3VRMjloQ0pVUzJUbXFZKzFwUno4aDRiVm9pS3ZwaVJJL1dNV0UzdjdIbzZv?=
- =?utf-8?B?cTA4bkd0QmRyK0pTVkVUY0VTYmw5SGcwQm5WTS9FSDZPSmFOcWJpN0gyMldW?=
- =?utf-8?B?T2lTcXZ2VXZ3MG9NbWNLU2xXSmxaYngxUnQ1dVQwVlpYVG1IdkdKb1ZqZzNI?=
- =?utf-8?Q?qLBdT+WZSEG37ZFeD0=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?K1lDRkVBWm9oSkxETmxiUTU0d0gzbi9MYml1UFMvOVFUbVpNR1k3WXVlN0NR?=
- =?utf-8?B?U0lYY3VHQTc2a2JaaldtYUJpaDZSQkZFY3lScEZOb0VFNjY1aGZ5Y0RJa0hr?=
- =?utf-8?B?ZmhydGRGSXIxVzJoQitMZFE1S2JSbytUWlpEallNS2NTajBEZ1NpcEFjZXQw?=
- =?utf-8?B?ODcrUU5ZTlFydy9XTDlweVMvV3BHTWtBbmZON0V1QjF3TUZXN2FmbmxKcXJD?=
- =?utf-8?B?UHUwYSs2SG1rR2dibXoyR2szQnBiY0JaaHRNK1pHZk5aZzhGdHA4cGN5MXNV?=
- =?utf-8?B?WnQ2ZFlDMFNMRHRhaElrdk55TENLbXdzR00zVHFtY1pjcW5JSjErTnk3KzlN?=
- =?utf-8?B?WTFuRnd4aS93RkwrN2dWSzNpVk1kU2JnUEIwdGhyWGhJclpTSW03cFJJV1lM?=
- =?utf-8?B?MzR0aDVmM3R0ZitsdldGRHd3QkJRY0UvL2VXaHRvY2FOSldqNmZZcUEvQTNL?=
- =?utf-8?B?QnB5ZHNUS1d5ZG9Hb3BzTXRvSWVQdjVIMlVkbGV6a2dmWmFCbW5wN0RoMjFp?=
- =?utf-8?B?MDBLM2thbGtxUnd1TmVkNTdWMlhhWFZENzRXbDRyem5EbG1WQUs4WFRnTXor?=
- =?utf-8?B?MHd0TGYwTE9MM1gwWDU4ZXBSZnNkYWxya3UvNHp3QUtvbnR2UFRMcVQxWTY2?=
- =?utf-8?B?Umtqc3ZBaG1qaHpESTNVMGp4TXJ5N2UrdHc2eVhGNmZSYTFsSWNLaVM1STFZ?=
- =?utf-8?B?djdJcW50QXBPN0FJRGQrMDRPOVpYTy9GckdzcUpKSzBPRmQwTnR2WWpRdnVW?=
- =?utf-8?B?NlYrUHpRenhGYVVxNFNnc1pkMTRiYllyS2ZtQnEvdFV2RGFsY3A3SjgrUnRB?=
- =?utf-8?B?Qm5hMUlaZFU1RFBpc1poVEF3TzkxR201NVZCcWUzQ1V4QWY0ZXI1eVRCNHRW?=
- =?utf-8?B?Tmp6NkRTSWlKSEh1VURDN2tRNXBLdFhWM28zaG5MSGN5ejFQcElGQ3NiVVlr?=
- =?utf-8?B?ZTQwQ2N6VEtHNTI5MFBnVlVuc21aZDh1dTA5ckNsc1RzaHZiWnpSUTYra0dT?=
- =?utf-8?B?cjNnS1dzRVVlZUtQbFdnYklaQjJUaitFbVN0cG01WEpoRlZhWFJrUmtTNGo3?=
- =?utf-8?B?OUJFYlpqUkpxa1V2V1VieHp6bitVemVIK09IRGdaUjNaVHNuY0swS0o1bVFw?=
- =?utf-8?B?aFF0QWJzbDZVdTRpb3FOdW1oZTFmUVRTalVnKzFPa29xN3JCVis4UEJmcVE3?=
- =?utf-8?B?YnlvZWVldlpITVUwenNhODVpVFpEam9Db2xCNWpYUVJqend0ejhxQktYdnNz?=
- =?utf-8?B?TGNHYzZFZXdaWGkzSkhVVXhxaVJvaWFyUjdkaXl5aktUY3dOTGRYT1BUR1FW?=
- =?utf-8?B?RmkvUm1NR1B0bUpZZFYvbCsyeU5QZFFEYkdqK1dSVlczQWNab2w0NVI5U1hi?=
- =?utf-8?B?QlJWcDlHY2pIeGxjNlJaVnN5U3Rpc2orbXZURThBV3c2WkpPV3pWMlZ0SXJZ?=
- =?utf-8?B?S25wa0hjS29hTXZVaTZxbWNqWlBzK3dWOTJQeXFxbWdKRFBVTmV0UjhYVUI4?=
- =?utf-8?B?UTgvM0F4bVF3bkVZWGUxUVJGd0dOTFgzMWdBbHlwbCtpUGNFcys5SlBDOXpm?=
- =?utf-8?B?L3lhOHVENEhVRzN6YVk0WHZlK1lGSEhneFVQWUxwa1d5UW0vb09XbldqdlVV?=
- =?utf-8?B?eE1vb0FlR0dZT2dhMTBSUjl4aklxeTlMbGdWS21oRWxtY280R2VpcFAxdW5O?=
- =?utf-8?B?bTVBY2FoKzZ6UlhVa1VDV0dZZVZSYVZYUTR6MUpBRUFsMTVlSkg3eGFDbWFD?=
- =?utf-8?B?emVUMm5tSG1pcDArWlVmU2wwaExXa0pGeUJVNWJYRE5vWUFOTTVERkt2eW1P?=
- =?utf-8?B?TGlSRTJYc1pzQmI2ZGE2N2pXOEQvRlpuSXJPOHorZjJ2VGR5UEFUaEFjdWly?=
- =?utf-8?B?MHRZZ2RQSzNneXcrUW1mLzRzSTZZQmF4TVJrcVVTOUF2eEg4MTlROVI0VFU0?=
- =?utf-8?B?cUJBWmRWS2pTYzc5WjNYTm1CeUE4SjRTcHVBenVMWWUyTnlqQys3UGNZUi9Z?=
- =?utf-8?B?aG1FeXhYWDNyeCtWQ1prTnFPR3Rldi9iZmpSVVRaallEdmJDQTdhczhoNVpk?=
- =?utf-8?B?K1MrbVltVUMyaC9CZWx3N1NQQlVCdGNrcjNwRVdiQjNPRmg5MW1ROVlJaTFp?=
- =?utf-8?Q?gwb4pqNuQsrijEJ9cKJ+jq1dV?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	CtWJPE9ikasfRPkQXj7hEuaY0n7TnYNkPvlATNobFw/fRiZGDu5fcGB7ZZCrt9yC4z65Zttp011cNGhsFAyOhxhKcJaxu0n7+DLO9omwFPmkCZlh8Hk/iSsg8pNKn2BsgtUdp0y3WsKv2HfiTQnW40csYE36anZ4yLpLga5abAbai0B7VQlJUaE7V46gxUyMcC4yiXW0bof5SLVStBwqwkLlOJ7jIaJODNGaWwSG5V7DsbgeTnwoactV8JkBAZtEZCcgTTHGYYYr1rZLd6Pry4ekVvdikZQJkRKCYe5zH5r0G9qO70xSRErOz72umTNKZmK17YBxFTN7wEQvkU1mbbEbt831JgkHYLSN2Md0X8orUQ3867y3/1MnW5nEzgAz18vc3cf+ZZnMBGpi2ryfFKphZ6+N12KFZ3spryAZsnWO3OYsEXdh+YnPMEQQrljD3x1oRhnQz2TO42AXNs6Qj0E7tOK6/pcdw/N+ZfeU3tt8fwN79NP4AVKOaVdLW4d1AaPHFmYnvaYSTkC6bLNzJvWG8Xml7kNP11KF9C7bvOUCAyCuEdr51bbC6ptI1FMa11rmhaxv8j+WtentRQrlSxZd9ldrQ26a40nh7pDRHcg=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 87bce41c-9f0f-449b-6511-08dcaff0432f
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jul 2024 17:02:43.6225
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: F3fEP/snibR4KvedezGwM2mvDJBPqVZP839U81a5L106IFdwQZ56xxjDZOvu+scs2nsWP82ULIt1FFW361DLzw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR10MB6903
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-07-29_15,2024-07-26_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
- mlxlogscore=951 mlxscore=0 suspectscore=0 malwarescore=0 bulkscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2407110000 definitions=main-2407290114
-X-Proofpoint-ORIG-GUID: V164JP-caM2VMhG128iuigwYhkHGIIO6
-X-Proofpoint-GUID: V164JP-caM2VMhG128iuigwYhkHGIIO6
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+References: <599054026.994781.1722276817040.ref@mail.yahoo.com>
+X-Mailer: WebService/1.1.22544 YMailNodin
 
-On 26/07/2024 18:13, Christoph Hellwig wrote:
-> On Fri, Jul 26, 2024 at 03:29:48PM +0100, John Garry wrote:
->> I have been considering another approach to solve this problem.
->>
->> In this patch - as you know - we zero unwritten parts of a newly allocated
->> extent. This is so that when we later issue an atomic write, we would not
->> have the problem of unwritten extents and how the iomap iterator will
->> create multiple BIOs (which is not permitted).
->>
->> How about an alternate approach like this:
->> - no sub-extent zeroing
->> - iomap iter is changed to allocate a single BIO for an atomic write in
->> first iteration
->> - each iomap extent iteration appends data to that same BIO
->> - when finished iterating, we submit the BIO
->>
->> Obviously that will mean many changes to the iomap bio iterator, but is
->> quite self-contained.
-> 
-> Yes, I also suggested that during the zeroing fix discussion. 
 
-Maybe missed that. I did notice 
-https://lore.kernel.org/linux-xfs/ZmwJuiMHQ8qgkJDS@infradead.org, but 
-got a different impression of your idea there (to this one).
 
-> There
-> is generally no good reason to start a new direct I/O bio if the
-> write is contiguous on disk and only the state of the srcmap is different.
 
-Sure, so we don't need to worry about partially-completed writes, if 
-that was a concern; and it would also mean dropping that unpleasant code 
-change in xfs_iomap_write_unwritten() where the start/count fsb were 
-being rounded out to the extent granule boundary.
+Hello team
 
-> This will also be a big win for COW / out of place overwrites.
-> 
+Did get that far which surpises me a a little bit especially that it fails =
+at line number 666 in cache.c :)
+What makes the difference is whether I use -vv ( -vvv -vvvv ans so on ) whi=
+ch causes the SEGV or a single -v which runs through without problems.
+
+
+Could somebody else please reproduce this?
+
+GOOD
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>
+gdb -ex=3Dr --args xfs_repair -v /dev/sda
+
+GNU gdb (GDB) 15.1
+Copyright (C) 2024 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.htm=
+l>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-pc-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from xfs_repair...
+Reading symbols from /usr/lib/debug/usr/bin/xfs_repair.debug...
+Starting program: /usr/bin/xfs_repair -v /dev/sda5
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+<https://debuginfod.archlinux.org>
+Enable debuginfod for this session? (y or [n]) y
+Debuginfod has been enabled.
+To make this setting permanent, add 'set debuginfod enabled on' to .gdbinit=
+.
+Downloading separate debug info for system-supplied DSO at 0x7ffff7fc5000
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+Phase 1 - Superblock finden und =C3=BCberpr=C3=BCfen...
+- Block-Zwischenspeichergr=C3=B6=C3=9Fe ist auf 734520 Eintr=C3=A4ge gesetz=
+t
+Phase 2 - ein internes Protokoll benutzen
+- Null-Protokoll...
+zero_log: head block 2 tail block 2
+- freier Speicher und Inode-Karten des Dateisystems werden
+gescannt...
+[New Thread 0x7ffff7459680 (LWP 460815)]
+[New Thread 0x7ffff6c58680 (LWP 460816)]
+[New Thread 0x7ffff6457680 (LWP 460817)]
+[New Thread 0x7ffff5c56680 (LWP 460818)]
+[New Thread 0x7ffff5455680 (LWP 460819)]
+[New Thread 0x7ffff4c54680 (LWP 460820)]
+[New Thread 0x7ffff4453680 (LWP 460821)]
+[New Thread 0x7ffff3c52680 (LWP 460822)]
+[New Thread 0x7ffff3451680 (LWP 460823)]
+[New Thread 0x7ffff2c50680 (LWP 460824)]
+[New Thread 0x7ffff244f680 (LWP 460825)]
+[New Thread 0x7ffff1c4e680 (LWP 460826)]
+[New Thread 0x7ffff144d680 (LWP 460827)]
+[New Thread 0x7ffff0c4c680 (LWP 460828)]
+[New Thread 0x7ffff044b680 (LWP 460829)]
+[New Thread 0x7fffefc4a680 (LWP 460830)]
+[New Thread 0x7fffef449680 (LWP 460831)]
+[New Thread 0x7fffeec48680 (LWP 460832)]
+[New Thread 0x7fffee447680 (LWP 460833)]
+[New Thread 0x7fffedc46680 (LWP 460834)]
+[New Thread 0x7fffed445680 (LWP 460835)]
+[New Thread 0x7fffecc44680 (LWP 460836)]
+[New Thread 0x7fffec443680 (LWP 460837)]
+[New Thread 0x7fffebc42680 (LWP 460838)]
+[New Thread 0x7fffeb441680 (LWP 460839)]
+[New Thread 0x7fffeac40680 (LWP 460840)]
+[New Thread 0x7fffea43f680 (LWP 460841)]
+[New Thread 0x7fffe9c3e680 (LWP 460842)]
+[New Thread 0x7fffe943d680 (LWP 460843)]
+[New Thread 0x7fffe8c3c680 (LWP 460844)]
+[New Thread 0x7fffe843b680 (LWP 460845)]
+[New Thread 0x7fffe7c3a680 (LWP 460846)]
+[Thread 0x7fffec443680 (LWP 460837) exited]
+[Thread 0x7fffecc44680 (LWP 460836) exited]
+[Thread 0x7fffee447680 (LWP 460833) exited]
+[Thread 0x7fffeec48680 (LWP 460832) exited]
+[Thread 0x7fffea43f680 (LWP 460841) exited]
+[Thread 0x7fffe7c3a680 (LWP 460846) exited]
+[Thread 0x7fffe843b680 (LWP 460845) exited]
+[Thread 0x7fffe9c3e680 (LWP 460842) exited]
+[Thread 0x7fffeb441680 (LWP 460839) exited]
+[Thread 0x7fffe943d680 (LWP 460843) exited]
+[Thread 0x7fffeac40680 (LWP 460840) exited]
+[Thread 0x7fffe8c3c680 (LWP 460844) exited]
+[Thread 0x7fffebc42680 (LWP 460838) exited]
+[Thread 0x7fffed445680 (LWP 460835) exited]
+[Thread 0x7ffff044b680 (LWP 460829) exited]
+[Thread 0x7ffff0c4c680 (LWP 460828) exited]
+[Thread 0x7ffff144d680 (LWP 460827) exited]
+[Thread 0x7ffff1c4e680 (LWP 460826) exited]
+[Thread 0x7ffff244f680 (LWP 460825) exited]
+[Thread 0x7ffff2c50680 (LWP 460824) exited]
+[Thread 0x7ffff3451680 (LWP 460823) exited]
+[Thread 0x7ffff3c52680 (LWP 460822) exited]
+[Thread 0x7ffff4453680 (LWP 460821) exited]
+[Thread 0x7ffff4c54680 (LWP 460820) exited]
+[Thread 0x7ffff5455680 (LWP 460819) exited]
+[Thread 0x7ffff5c56680 (LWP 460818) exited]
+[Thread 0x7ffff6457680 (LWP 460817) exited]
+[Thread 0x7ffff6c58680 (LWP 460816) exited]
+[Thread 0x7fffedc46680 (LWP 460834) exited]
+[Thread 0x7fffef449680 (LWP 460831) exited]
+[Thread 0x7ffff7459680 (LWP 460815) exited]
+[Thread 0x7fffefc4a680 (LWP 460830) exited]
+- Wurzel-Inode-St=C3=BCck gefunden
+Phase 3 - f=C3=BCr jedes AG...
+- agi unverkn=C3=BCpfte Listen werden gescannt und bereinigt...
+- bekannte Inodes werden behandelt und Inode-Entdeckung wird
+durchgef=C3=BChrt...
+[New Thread 0x7fffe7c3a680 (LWP 460847)]
+[New Thread 0x7fffe843b680 (LWP 460848)]
+[New Thread 0x7fffe8c3c680 (LWP 460849)]
+[New Thread 0x7fffe943d680 (LWP 460850)]
+[New Thread 0x7ffff7459680 (LWP 460851)]
+- agno =3D 0
+[Thread 0x7ffff7459680 (LWP 460851) exited]
+[Thread 0x7fffe943d680 (LWP 460850) exited]
+[Thread 0x7fffe843b680 (LWP 460848) exited]
+[Thread 0x7fffe8c3c680 (LWP 460849) exited]
+[New Thread 0x7ffff7459680 (LWP 460852)]
+[Thread 0x7fffe7c3a680 (LWP 460847) exited]
+[New Thread 0x7fffe943d680 (LWP 460853)]
+[New Thread 0x7fffe7c3a680 (LWP 460854)]
+[New Thread 0x7fffe8c3c680 (LWP 460855)]
+[New Thread 0x7fffe843b680 (LWP 460856)]
+- agno =3D 1
+[Thread 0x7fffe8c3c680 (LWP 460855) exited]
+[Thread 0x7fffe843b680 (LWP 460856) exited]
+[Thread 0x7fffe7c3a680 (LWP 460854) exited]
+[Thread 0x7fffe943d680 (LWP 460853) exited]
+[New Thread 0x7fffe843b680 (LWP 460857)]
+[New Thread 0x7fffe8c3c680 (LWP 460858)]
+[Thread 0x7ffff7459680 (LWP 460852) exited]
+[New Thread 0x7ffff7459680 (LWP 460859)]
+[New Thread 0x7fffe7c3a680 (LWP 460860)]
+[New Thread 0x7fffe943d680 (LWP 460861)]
+- agno =3D 2
+[Thread 0x7fffe943d680 (LWP 460861) exited]
+[Thread 0x7fffe7c3a680 (LWP 460860) exited]
+[Thread 0x7ffff7459680 (LWP 460859) exited]
+[Thread 0x7fffe8c3c680 (LWP 460858) exited]
+[New Thread 0x7fffe943d680 (LWP 460862)]
+[Thread 0x7fffe843b680 (LWP 460857) exited]
+[New Thread 0x7fffe843b680 (LWP 460863)]
+[New Thread 0x7fffe7c3a680 (LWP 460864)]
+[New Thread 0x7ffff7459680 (LWP 460865)]
+[New Thread 0x7fffe8c3c680 (LWP 460866)]
+- agno =3D 3
+[Thread 0x7fffe8c3c680 (LWP 460866) exited]
+- neu entdeckte Inodes werden behandelt...
+[Thread 0x7ffff7459680 (LWP 460865) exited]
+[Thread 0x7fffe7c3a680 (LWP 460864) exited]
+[Thread 0x7fffe843b680 (LWP 460863) exited]
+[Thread 0x7fffe943d680 (LWP 460862) exited]
+[New Thread 0x7fffe943d680 (LWP 460867)]
+[New Thread 0x7fffe8c3c680 (LWP 460868)]
+[New Thread 0x7ffff7459680 (LWP 460869)]
+[New Thread 0x7fffe7c3a680 (LWP 460870)]
+[New Thread 0x7ffff6c58680 (LWP 460871)]
+[New Thread 0x7ffff6457680 (LWP 460872)]
+[New Thread 0x7ffff5c56680 (LWP 460873)]
+[New Thread 0x7ffff5455680 (LWP 460874)]
+[New Thread 0x7ffff4c54680 (LWP 460875)]
+[New Thread 0x7ffff4453680 (LWP 460876)]
+[New Thread 0x7ffff3c52680 (LWP 460877)]
+[New Thread 0x7ffff3451680 (LWP 460878)]
+[New Thread 0x7ffff2c50680 (LWP 460879)]
+[New Thread 0x7ffff244f680 (LWP 460880)]
+[New Thread 0x7ffff1c4e680 (LWP 460881)]
+[New Thread 0x7ffff144d680 (LWP 460882)]
+[New Thread 0x7ffff0c4c680 (LWP 460883)]
+[New Thread 0x7ffff044b680 (LWP 460884)]
+[New Thread 0x7fffefc4a680 (LWP 460885)]
+[New Thread 0x7fffef449680 (LWP 460886)]
+[New Thread 0x7fffeec48680 (LWP 460887)]
+[New Thread 0x7fffee447680 (LWP 460888)]
+[New Thread 0x7fffedc46680 (LWP 460889)]
+[New Thread 0x7fffed445680 (LWP 460890)]
+[New Thread 0x7fffecc44680 (LWP 460891)]
+[New Thread 0x7fffec443680 (LWP 460892)]
+[New Thread 0x7fffebc42680 (LWP 460893)]
+[New Thread 0x7fffeb441680 (LWP 460894)]
+[New Thread 0x7fffeac40680 (LWP 460895)]
+[New Thread 0x7fffea43f680 (LWP 460896)]
+[New Thread 0x7fffe9c3e680 (LWP 460897)]
+[New Thread 0x7fffe843b680 (LWP 460898)]
+[Thread 0x7fffea43f680 (LWP 460896) exited]
+[Thread 0x7fffeac40680 (LWP 460895) exited]
+[Thread 0x7fffebc42680 (LWP 460893) exited]
+[Thread 0x7fffeec48680 (LWP 460887) exited]
+[Thread 0x7fffe943d680 (LWP 460867) exited]
+Phase 4 - auf doppelte Bl=C3=B6cke =C3=BCberpr=C3=BCfen...
+- Liste mit doppeltem Ausma=C3=9F wird eingerichtet...
+- es wird gepr=C3=BCft ob Inodes Blocks doppelt beanspruchen...
+[Thread 0x7fffe843b680 (LWP 460898) exited]
+[Thread 0x7fffe9c3e680 (LWP 460897) exited]
+[Thread 0x7fffeb441680 (LWP 460894) exited]
+[Thread 0x7fffec443680 (LWP 460892) exited]
+[Thread 0x7fffecc44680 (LWP 460891) exited]
+[Thread 0x7fffed445680 (LWP 460890) exited]
+[Thread 0x7fffedc46680 (LWP 460889) exited]
+[Thread 0x7fffee447680 (LWP 460888) exited]
+[Thread 0x7fffef449680 (LWP 460886) exited]
+[Thread 0x7fffefc4a680 (LWP 460885) exited]
+[Thread 0x7ffff044b680 (LWP 460884) exited]
+[Thread 0x7ffff0c4c680 (LWP 460883) exited]
+[Thread 0x7ffff144d680 (LWP 460882) exited]
+[Thread 0x7ffff1c4e680 (LWP 460881) exited]
+[Thread 0x7ffff244f680 (LWP 460880) exited]
+[Thread 0x7ffff2c50680 (LWP 460879) exited]
+[Thread 0x7ffff3451680 (LWP 460878) exited]
+[Thread 0x7ffff3c52680 (LWP 460877) exited]
+[Thread 0x7ffff4453680 (LWP 460876) exited]
+[Thread 0x7ffff4c54680 (LWP 460875) exited]
+[Thread 0x7ffff5455680 (LWP 460874) exited]
+[Thread 0x7ffff5c56680 (LWP 460873) exited]
+[Thread 0x7ffff6457680 (LWP 460872) exited]
+[Thread 0x7ffff6c58680 (LWP 460871) exited]
+[Thread 0x7fffe7c3a680 (LWP 460870) exited]
+[Thread 0x7ffff7459680 (LWP 460869) exited]
+[Thread 0x7fffe8c3c680 (LWP 460868) exited]
+[New Thread 0x7fffe843b680 (LWP 460899)]
+[New Thread 0x7fffe9c3e680 (LWP 460901)]
+[New Thread 0x7fffea43f680 (LWP 460902)]
+[New Thread 0x7fffeac40680 (LWP 460903)]
+[New Thread 0x7ffff7459680 (LWP 460904)]
+[New Thread 0x7ffff6c58680 (LWP 460905)]
+- agno =3D 0
+- agno =3D 2
+- agno =3D 3
+[Thread 0x7ffff7459680 (LWP 460904) exited]
+- agno =3D 1
+[Thread 0x7fffeac40680 (LWP 460903) exited]
+[Thread 0x7ffff6c58680 (LWP 460905) exited]
+[Thread 0x7fffea43f680 (LWP 460902) exited]
+[Thread 0x7fffe9c3e680 (LWP 460901) exited]
+[Thread 0x7fffe843b680 (LWP 460899) exited]
+[New Thread 0x7ffff6c58680 (LWP 460906)]
+[New Thread 0x7ffff7459680 (LWP 460907)]
+[New Thread 0x7fffeac40680 (LWP 460908)]
+[New Thread 0x7fffea43f680 (LWP 460909)]
+[New Thread 0x7ffff6457680 (LWP 460910)]
+[New Thread 0x7ffff5c56680 (LWP 460911)]
+[Thread 0x7ffff5c56680 (LWP 460911) exited]
+[Thread 0x7ffff6457680 (LWP 460910) exited]
+[Thread 0x7fffea43f680 (LWP 460909) exited]
+[Thread 0x7fffeac40680 (LWP 460908) exited]
+[Thread 0x7ffff7459680 (LWP 460907) exited]
+[Thread 0x7ffff6c58680 (LWP 460906) exited]
+[New Thread 0x7ffff5c56680 (LWP 460912)]
+[New Thread 0x7ffff6457680 (LWP 460913)]
+[New Thread 0x7fffea43f680 (LWP 460914)]
+[New Thread 0x7fffeac40680 (LWP 460915)]
+[New Thread 0x7ffff7459680 (LWP 460916)]
+[New Thread 0x7ffff6c58680 (LWP 460917)]
+[Thread 0x7ffff5c56680 (LWP 460912) exited]
+[Thread 0x7ffff7459680 (LWP 460916) exited]
+[Thread 0x7fffea43f680 (LWP 460914) exited]
+[Thread 0x7ffff6457680 (LWP 460913) exited]
+[Thread 0x7ffff6c58680 (LWP 460917) exited]
+[Thread 0x7fffeac40680 (LWP 460915) exited]
+[New Thread 0x7ffff6c58680 (LWP 460918)]
+[New Thread 0x7ffff7459680 (LWP 460919)]
+[New Thread 0x7fffeac40680 (LWP 460920)]
+[New Thread 0x7fffea43f680 (LWP 460921)]
+[New Thread 0x7ffff6457680 (LWP 460922)]
+[New Thread 0x7ffff5c56680 (LWP 460923)]
+[Thread 0x7ffff5c56680 (LWP 460923) exited]
+[Thread 0x7ffff6457680 (LWP 460922) exited]
+[Thread 0x7fffeac40680 (LWP 460920) exited]
+[Thread 0x7ffff7459680 (LWP 460919) exited]
+[Thread 0x7ffff6c58680 (LWP 460918) exited]
+[Thread 0x7fffea43f680 (LWP 460921) exited]
+Phase 5 - AG-K=C3=B6pfe und B=C3=A4ume werden erneut gebildet...
+- agno =3D 0
+- agno =3D 1
+- agno =3D 2
+- agno =3D 3
+- Superblock wird zur=C3=BCckgesetzt...
+Phase 6 - Inode-Verbindbarkeit wird gepr=C3=BCft...
+- Inhalte der Echtzeit-Bitmaps und Zusammenfassungs-Inodes werden zur=C3=BC=
+ckgesetzt
+- Dateisystem wird durchquert ...
+[New Thread 0x7ffff5c56680 (LWP 460924)]
+[New Thread 0x7ffff6457680 (LWP 460925)]
+[New Thread 0x7fffea43f680 (LWP 460926)]
+[New Thread 0x7fffeac40680 (LWP 460927)]
+[New Thread 0x7ffff7459680 (LWP 460928)]
+- agno =3D 0
+[Thread 0x7ffff7459680 (LWP 460928) exited]
+[Thread 0x7fffeac40680 (LWP 460927) exited]
+[Thread 0x7fffea43f680 (LWP 460926) exited]
+[Thread 0x7ffff6457680 (LWP 460925) exited]
+[New Thread 0x7ffff7459680 (LWP 460929)]
+[Thread 0x7ffff5c56680 (LWP 460924) exited]
+[New Thread 0x7fffeac40680 (LWP 460930)]
+[New Thread 0x7ffff5c56680 (LWP 460931)]
+[New Thread 0x7fffea43f680 (LWP 460932)]
+[New Thread 0x7ffff6457680 (LWP 460933)]
+- agno =3D 1
+[Thread 0x7ffff6457680 (LWP 460933) exited]
+[Thread 0x7fffea43f680 (LWP 460932) exited]
+[Thread 0x7ffff5c56680 (LWP 460931) exited]
+[Thread 0x7fffeac40680 (LWP 460930) exited]
+[New Thread 0x7ffff6457680 (LWP 460934)]
+[Thread 0x7ffff7459680 (LWP 460929) exited]
+[New Thread 0x7fffea43f680 (LWP 460935)]
+[New Thread 0x7ffff7459680 (LWP 460936)]
+[New Thread 0x7ffff5c56680 (LWP 460937)]
+[New Thread 0x7fffeac40680 (LWP 460938)]
+- agno =3D 2
+[Thread 0x7fffeac40680 (LWP 460938) exited]
+[Thread 0x7ffff5c56680 (LWP 460937) exited]
+[Thread 0x7ffff7459680 (LWP 460936) exited]
+[Thread 0x7fffea43f680 (LWP 460935) exited]
+[New Thread 0x7fffeac40680 (LWP 460939)]
+[Thread 0x7ffff6457680 (LWP 460934) exited]
+[New Thread 0x7ffff5c56680 (LWP 460940)]
+[New Thread 0x7ffff6457680 (LWP 460941)]
+[New Thread 0x7ffff7459680 (LWP 460942)]
+[New Thread 0x7fffea43f680 (LWP 460943)]
+- agno =3D 3
+[Thread 0x7fffea43f680 (LWP 460943) exited]
+[Thread 0x7ffff7459680 (LWP 460942) exited]
+[Thread 0x7ffff6457680 (LWP 460941) exited]
+[Thread 0x7ffff5c56680 (LWP 460940) exited]
+[Thread 0x7fffeac40680 (LWP 460939) exited]
+- durchqueren beendet ...
+- nicht verbundene Inodes werden nach lost+found verschoben ...
+Phase 7 - Verweisanzahl wird gepr=C3=BCft und berichtigt...
+[New Thread 0x7fffeac40680 (LWP 460944)]
+[New Thread 0x7fffea43f680 (LWP 460945)]
+[New Thread 0x7ffff7459680 (LWP 460946)]
+[New Thread 0x7ffff6457680 (LWP 460947)]
+[New Thread 0x7ffff6c58680 (LWP 460948)]
+[New Thread 0x7ffff5c56680 (LWP 460949)]
+[New Thread 0x7ffff5455680 (LWP 460950)]
+[New Thread 0x7ffff4c54680 (LWP 460951)]
+[New Thread 0x7ffff4453680 (LWP 460952)]
+[New Thread 0x7ffff3c52680 (LWP 460953)]
+[New Thread 0x7ffff3451680 (LWP 460954)]
+[New Thread 0x7ffff2c50680 (LWP 460955)]
+[New Thread 0x7ffff244f680 (LWP 460956)]
+[New Thread 0x7ffff1c4e680 (LWP 460957)]
+[New Thread 0x7ffff144d680 (LWP 460958)]
+[New Thread 0x7ffff0c4c680 (LWP 460959)]
+[New Thread 0x7ffff044b680 (LWP 460960)]
+[New Thread 0x7fffefc4a680 (LWP 460961)]
+[New Thread 0x7fffef449680 (LWP 460962)]
+[New Thread 0x7fffeec48680 (LWP 460963)]
+[New Thread 0x7fffee447680 (LWP 460964)]
+[New Thread 0x7fffedc46680 (LWP 460965)]
+[New Thread 0x7fffed445680 (LWP 460966)]
+[New Thread 0x7fffecc44680 (LWP 460967)]
+[New Thread 0x7fffec443680 (LWP 460968)]
+[New Thread 0x7fffebc42680 (LWP 460969)]
+[New Thread 0x7fffeb441680 (LWP 460970)]
+[New Thread 0x7fffe9c3e680 (LWP 460971)]
+[New Thread 0x7fffe943d680 (LWP 460972)]
+[New Thread 0x7fffe8c3c680 (LWP 460973)]
+[New Thread 0x7fffe843b680 (LWP 460974)]
+[New Thread 0x7fffe7c3a680 (LWP 460975)]
+[Thread 0x7ffff0c4c680 (LWP 460959) exited]
+[Thread 0x7fffed445680 (LWP 460966) exited]
+[Thread 0x7fffe943d680 (LWP 460972) exited]
+[Thread 0x7fffe843b680 (LWP 460974) exited]
+[Thread 0x7fffe8c3c680 (LWP 460973) exited]
+[Thread 0x7fffe7c3a680 (LWP 460975) exited]
+[Thread 0x7fffe9c3e680 (LWP 460971) exited]
+[Thread 0x7fffeb441680 (LWP 460970) exited]
+[Thread 0x7fffebc42680 (LWP 460969) exited]
+[Thread 0x7fffec443680 (LWP 460968) exited]
+[Thread 0x7fffecc44680 (LWP 460967) exited]
+[Thread 0x7fffedc46680 (LWP 460965) exited]
+[Thread 0x7fffee447680 (LWP 460964) exited]
+[Thread 0x7fffeec48680 (LWP 460963) exited]
+[Thread 0x7fffef449680 (LWP 460962) exited]
+[Thread 0x7fffefc4a680 (LWP 460961) exited]
+[Thread 0x7ffff044b680 (LWP 460960) exited]
+[Thread 0x7ffff144d680 (LWP 460958) exited]
+[Thread 0x7ffff1c4e680 (LWP 460957) exited]
+[Thread 0x7ffff244f680 (LWP 460956) exited]
+[Thread 0x7ffff2c50680 (LWP 460955) exited]
+[Thread 0x7ffff3451680 (LWP 460954) exited]
+[Thread 0x7ffff3c52680 (LWP 460953) exited]
+[Thread 0x7ffff4453680 (LWP 460952) exited]
+[Thread 0x7ffff4c54680 (LWP 460951) exited]
+[Thread 0x7ffff5455680 (LWP 460950) exited]
+[Thread 0x7ffff5c56680 (LWP 460949) exited]
+[Thread 0x7ffff6c58680 (LWP 460948) exited]
+[Thread 0x7ffff6457680 (LWP 460947) exited]
+[Thread 0x7ffff7459680 (LWP 460946) exited]
+[Thread 0x7fffea43f680 (LWP 460945) exited]
+[Thread 0x7fffeac40680 (LWP 460944) exited]
+[New Thread 0x7fffe7c3a680 (LWP 460976)]
+
+XFS_REPAIR Zusammenfassung Mon Jul 29 19:28:31 2024
+
+Phase Start Ende Dauer
+Phase 1: 07/29 19:28:31 07/29 19:28:31
+Phase 2: 07/29 19:28:31 07/29 19:28:31
+Phase 3: 07/29 19:28:31 07/29 19:28:31
+Phase 4: 07/29 19:28:31 07/29 19:28:31
+Phase 5: 07/29 19:28:31 07/29 19:28:31
+Phase 6: 07/29 19:28:31 07/29 19:28:31
+Phase 7: 07/29 19:28:31 07/29 19:28:31
+
+Gesamte Laufzeit:
+erledigt
+[Thread 0x7ffff7d32980 (LWP 460806) exited]
+[Thread 0x7fffe7c3a680 (LWP 460976) exited]
+[New process 460806]
+[Inferior 1 (process 460806) exited normally]
+(gdb) q
+
+<=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+NOT good
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>
+gdb -ex=3Dr --args xfs_repair -vv /dev/sda5=20
+GNU gdb (GDB) 15.1
+Copyright (C) 2024 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.htm=
+l>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-pc-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from xfs_repair...
+Reading symbols from /usr/lib/debug/usr/bin/xfs_repair.debug...
+Starting program: /usr/bin/xfs_repair -vv /dev/sda5
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+<https://debuginfod.archlinux.org>
+Enable debuginfod for this session? (y or [n]) y
+Debuginfod has been enabled.
+To make this setting permanent, add 'set debuginfod enabled on' to .gdbinit=
+.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+Program received signal SIGSEGV, Segmentation fault.
+cache_report (fp=3D0x7ffff7f264e0 <_IO_2_1_stderr_>, name=3Dname@entry=3D0x=
+55555560a253 "libxfs_bcache", cache=3D0x1ea834c7402a800) at cache.c:666
+666 if ((cache->c_hits + cache->c_misses) =3D=3D 0)
+(gdb) q
+A debugging session is active.
+
+Inferior 1 [process 459767] will be killed.
+
+<=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+
+
+Cheers
+Santiago Kraus
 
