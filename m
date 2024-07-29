@@ -1,90 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 376C31534EC;
-	Mon, 29 Jul 2024 16:39:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AAE37FBA8;
+	Mon, 29 Jul 2024 16:40:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722271180; cv=none; b=WjsjJNi31QGI277pVjUFlFVzWQ+jiHBNt1M6Rmlip0DWXdcAP4FLfZl/gaKJiGiS3EhtHuIxFXiGPVZb+Hc0evaHRK+soOxk1gFh8wgSSe6reHji64dm+3pQ2Y2k4MPTvjg/qehf9VthXUKyHwdiTOzqErda1pAROSy5TUaeq5Y=
+	t=1722271249; cv=none; b=gkDkg8QU1mXZbM6MmDqyqPuIkkZQ+uYBUqtdFvXZ+WhyL40BrYrEdQhizHohGhzH3wUxLr6emLQbpszAFv9lJBDt5LZgMcdc+vaowX4lF8VRLynXj7LsLCG+8a27lfnaQTgeBu9e5Qt6zdr/0DKSRUJYQR3KUhEhtTWEZHYeot8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722271180; c=relaxed/simple;
-	bh=ACOFD4CnvNQvgxH3c3fJIkYLBWpRIGrdoWdi94w0LGY=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=O9d+GNMMWs0eMqVpSe76P8lJ9WIHzvyAYEsVKRN4BTb3I2Tu90iQBbmcf+hCqGbx7BdwTkGwS2ZJADReQfE26HcRphM9LNyCDaOMHso+e+XbZ93CCtzbZFy2elwIe8GrHbChS7FJzSvP6vvcGDY/fX0R/kAUiLOAdvi1OuduckA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MxGffYre; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722271249; c=relaxed/simple;
+	bh=OQkrbk+hOnFu1OaBLJHjJq5G5WV6XLfbmN2mOM1fu2Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OnVwHlTxTQIxxYTJgGZbEDT5oNQPpTJWXX6/2YCQ8d/C9JU/a81oFNLDTNlq5z1s/1pviy/8A9ahejWMhOB7qoiBgtxbKTnYtbeWl4eSayVt03+ZUek1GBKoDg0SG43JR/dPzgxlVNsLqHHmjOYzwydGZpEE9d1FyLtgB2g2bQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HbwuoLRH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MxGffYre"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D5937C4AF0C;
-	Mon, 29 Jul 2024 16:39:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HbwuoLRH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF241C4AF09;
+	Mon, 29 Jul 2024 16:40:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722271179;
-	bh=ACOFD4CnvNQvgxH3c3fJIkYLBWpRIGrdoWdi94w0LGY=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=MxGffYremrlYV7IoL+PFdzTVghbhUmYE24NoiOXwot130hJR092fMDPljyjOFHVdc
-	 BwOk8pSOjwwKbEdqNqxYUxpql4UoUKiFJ2lsCDqaei8fiv2nLmq0phzDybvS4Ruc8d
-	 z/XfJg+CKgAclYeW7CbbQLEE7gLL/hM0xFPcU/zrpTnoN8mAo4/WHGmlPe/dDySyr4
-	 +P5sQueNRxv+PdBs1m2FMKXNsYAKLBJPpcrqn+AXFKcM9NOrWmX7bCZDnXiuc8wZZk
-	 cgjYyQYbzjQhie1m/6w7FgPL23bO3WKyoer9qNey5Cb3pqkqUfzFfvK9OYAA6SDF3G
-	 K/Q0xuxSAzaPQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id BBA0BC43613;
-	Mon, 29 Jul 2024 16:39:39 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	s=k20201202; t=1722271248;
+	bh=OQkrbk+hOnFu1OaBLJHjJq5G5WV6XLfbmN2mOM1fu2Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=HbwuoLRH6qBxRxFX9pCy1svh6uPFriGyJMlmUiAcxgGl6KUlSb3bcKMYPTcCRDs10
+	 KGYVKw6EPUjHTNAdLxd7aYSCBIyg5M2TTBIxuBImaqHl9yhj8p7VpmNQ3INuwdn4lv
+	 xGNiA5/jaOQ4B6EamKlFfC27nnn3BpywWF/waVUn1VhiQNtIPpBOla9uE2Ib007uXt
+	 MCdZVPTbqdoSRVomtO1m5tgq1XqOdoVboPeXIAxr+n3NA8qM6CSgQfBmhat+pmRdEi
+	 JzWVrjIfklACZWnFQOgnPCrCxOqLk55VqKJjLrGpE9ch1X3TdOjOZrZI1uigVePRc9
+	 sIgpj9uHAVFWg==
+Date: Mon, 29 Jul 2024 09:40:48 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] add more tests to the growfs group
+Message-ID: <20240729164048.GA6352@frogsfrogsfrogs>
+References: <20240729142027.430744-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [GIT PULL] sysctl constification changes for v6.11-rc1
-From: patchwork-bot+linux-riscv@kernel.org
-Message-Id: 
- <172227117976.3603.14526183264046270376.git-patchwork-notify@kernel.org>
-Date: Mon, 29 Jul 2024 16:39:39 +0000
-References: <20240724210014.mc6nima6cekgiukx@joelS2.panther.com>
-In-Reply-To: <20240724210014.mc6nima6cekgiukx@joelS2.panther.com>
-To: Joel Granados <j.granados@samsung.com>
-Cc: linux-riscv@lists.infradead.org, torvalds@linux-foundation.org,
- linux@weissschuh.net, mcgrof@kernel.org, kees@kernel.org, kuba@kernel.org,
- david@fromorbit.com, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
- linux-security-module@vger.kernel.org, netfilter-devel@vger.kernel.org,
- coreteam@netfilter.org, bpf@vger.kernel.org, kexec@lists.infradead.org,
- linux-hardening@vger.kernel.org, bridge@lists.linux.dev,
- mptcp@lists.linux.dev, lvs-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
- rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org,
- linux-nfs@vger.kernel.org, apparmor@lists.ubuntu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240729142027.430744-1-hch@lst.de>
 
-Hello:
-
-This pull request was applied to riscv/linux.git (fixes)
-by Linus Torvalds <torvalds@linux-foundation.org>:
-
-On Wed, 24 Jul 2024 23:00:14 +0200 you wrote:
-> Linus
+On Mon, Jul 29, 2024 at 07:20:26AM -0700, Christoph Hellwig wrote:
+> xfs/127 xfs/233 exercises growfs behavior, add them to the growfs group.
 > 
-> Constifying ctl_table structs will prevent the modification of
-> proc_handler function pointers as they would reside in .rodata. To get
-> there, the proc_handler arguments must first be const qualified which
-> requires this (fairly large) treewide PR. Sending it in the tail end of
-> of the merge window after a suggestion from Kees to avoid unneeded merge
-> conflicts. It has been rebased on top of 7a3fad30fd8b4b5e370906b3c554f64026f56c2f.
-> I can send it later if it makes more sense on your side; please tell me
-> what you prefer.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks good to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  tests/xfs/127 | 2 +-
+>  tests/xfs/233 | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> [...]
-
-Here is the summary with links:
-  - [GIT,PULL] sysctl constification changes for v6.11-rc1
-    https://git.kernel.org/riscv/c/f8a8b94d0698
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+> diff --git a/tests/xfs/127 b/tests/xfs/127
+> index b690ab0d5..4f008efdb 100755
+> --- a/tests/xfs/127
+> +++ b/tests/xfs/127
+> @@ -7,7 +7,7 @@
+>  # Tests xfs_growfs on a reflinked filesystem
+>  #
+>  . ./common/preamble
+> -_begin_fstest auto quick clone
+> +_begin_fstest auto quick clone growfs
+>  
+>  # Import common functions.
+>  . ./common/filter
+> diff --git a/tests/xfs/233 b/tests/xfs/233
+> index 1f691e20f..5d2c10e7d 100755
+> --- a/tests/xfs/233
+> +++ b/tests/xfs/233
+> @@ -7,7 +7,7 @@
+>  # Tests xfs_growfs on a rmapbt filesystem
+>  #
+>  . ./common/preamble
+> -_begin_fstest auto quick rmap
+> +_begin_fstest auto quick rmap growfs
+>  
+>  # Import common functions.
+>  . ./common/filter
+> -- 
+> 2.43.0
+> 
+> 
