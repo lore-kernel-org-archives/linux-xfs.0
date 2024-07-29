@@ -1,48 +1,90 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E03C155382;
-	Mon, 29 Jul 2024 14:27:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 376C31534EC;
+	Mon, 29 Jul 2024 16:39:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722263237; cv=none; b=CzNsLdTh1sVRDqfQYEKrhJrIGVtOoFK9zDHxqlYunn9L1qu4Q5w3oqm4RfFIQyVDQ0UGuQWJfGeEl7FkuQogNYWXaLXyQniIIAE9xWAMUI434c9uuvl8XYFq6lig7SR0yHMPtWM/8/RGYuN2+cjkIhM2cMOlZoXt6l46BXl02Cs=
+	t=1722271180; cv=none; b=WjsjJNi31QGI277pVjUFlFVzWQ+jiHBNt1M6Rmlip0DWXdcAP4FLfZl/gaKJiGiS3EhtHuIxFXiGPVZb+Hc0evaHRK+soOxk1gFh8wgSSe6reHji64dm+3pQ2Y2k4MPTvjg/qehf9VthXUKyHwdiTOzqErda1pAROSy5TUaeq5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722263237; c=relaxed/simple;
-	bh=F5zQH4vukkVnbsCzOW+qqmN7RCwJ8bdVBNj5kk31YdY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S8n5c+ZeXLgONRivHmRA0BCdadGbCJXXvU4Rm7Fx5eE7tdMSMq/rQZBXQWQQ8w/z6A3aMd3RpA4zDCL1WVvCZnMqri6O6ZhHqGBHQ9AY+E3+skG01ihxgO7plYqnFew4dwIu1KlvoYEG8CDvIlKeTXGEmFVlroACpbOolnFFo5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9E99D68D07; Mon, 29 Jul 2024 16:17:31 +0200 (CEST)
-Date: Mon, 29 Jul 2024 16:17:31 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] common: _notrun if _scratch_mkfs_xfs failed
-Message-ID: <20240729141731.GA28016@lst.de>
-References: <20240723000042.240981-1-hch@lst.de> <20240723000042.240981-3-hch@lst.de> <20240728145408.mu2hmmqmzxb2amrd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	s=arc-20240116; t=1722271180; c=relaxed/simple;
+	bh=ACOFD4CnvNQvgxH3c3fJIkYLBWpRIGrdoWdi94w0LGY=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=O9d+GNMMWs0eMqVpSe76P8lJ9WIHzvyAYEsVKRN4BTb3I2Tu90iQBbmcf+hCqGbx7BdwTkGwS2ZJADReQfE26HcRphM9LNyCDaOMHso+e+XbZ93CCtzbZFy2elwIe8GrHbChS7FJzSvP6vvcGDY/fX0R/kAUiLOAdvi1OuduckA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MxGffYre; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MxGffYre"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D5937C4AF0C;
+	Mon, 29 Jul 2024 16:39:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1722271179;
+	bh=ACOFD4CnvNQvgxH3c3fJIkYLBWpRIGrdoWdi94w0LGY=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=MxGffYremrlYV7IoL+PFdzTVghbhUmYE24NoiOXwot130hJR092fMDPljyjOFHVdc
+	 BwOk8pSOjwwKbEdqNqxYUxpql4UoUKiFJ2lsCDqaei8fiv2nLmq0phzDybvS4Ruc8d
+	 z/XfJg+CKgAclYeW7CbbQLEE7gLL/hM0xFPcU/zrpTnoN8mAo4/WHGmlPe/dDySyr4
+	 +P5sQueNRxv+PdBs1m2FMKXNsYAKLBJPpcrqn+AXFKcM9NOrWmX7bCZDnXiuc8wZZk
+	 cgjYyQYbzjQhie1m/6w7FgPL23bO3WKyoer9qNey5Cb3pqkqUfzFfvK9OYAA6SDF3G
+	 K/Q0xuxSAzaPQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id BBA0BC43613;
+	Mon, 29 Jul 2024 16:39:39 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240728145408.mu2hmmqmzxb2amrd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+Subject: Re: [GIT PULL] sysctl constification changes for v6.11-rc1
+From: patchwork-bot+linux-riscv@kernel.org
+Message-Id: 
+ <172227117976.3603.14526183264046270376.git-patchwork-notify@kernel.org>
+Date: Mon, 29 Jul 2024 16:39:39 +0000
+References: <20240724210014.mc6nima6cekgiukx@joelS2.panther.com>
+In-Reply-To: <20240724210014.mc6nima6cekgiukx@joelS2.panther.com>
+To: Joel Granados <j.granados@samsung.com>
+Cc: linux-riscv@lists.infradead.org, torvalds@linux-foundation.org,
+ linux@weissschuh.net, mcgrof@kernel.org, kees@kernel.org, kuba@kernel.org,
+ david@fromorbit.com, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
+ linux-security-module@vger.kernel.org, netfilter-devel@vger.kernel.org,
+ coreteam@netfilter.org, bpf@vger.kernel.org, kexec@lists.infradead.org,
+ linux-hardening@vger.kernel.org, bridge@lists.linux.dev,
+ mptcp@lists.linux.dev, lvs-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
+ rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org,
+ linux-nfs@vger.kernel.org, apparmor@lists.ubuntu.com
 
-On Sun, Jul 28, 2024 at 10:54:08PM +0800, Zorro Lang wrote:
-> But this line blocks the merging process. I can't find "_scratch_xfs_force_no_metadir"
-> in xfs/178, and even the whole xfstests. Could you help to rebase this patchset on
-> offical xfstests for-next branch, then send it again? This patch is too big, It's hard
-> for me to merge it manually ( I'm glad to know if there's an easy way to deal with this
-> conflict manually :)
+Hello:
 
-Sorry, I've been working off Darrick's queue to include the rt
-improvements once again.  I'll rebase it to your latest tree.
+This pull request was applied to riscv/linux.git (fixes)
+by Linus Torvalds <torvalds@linux-foundation.org>:
+
+On Wed, 24 Jul 2024 23:00:14 +0200 you wrote:
+> Linus
+> 
+> Constifying ctl_table structs will prevent the modification of
+> proc_handler function pointers as they would reside in .rodata. To get
+> there, the proc_handler arguments must first be const qualified which
+> requires this (fairly large) treewide PR. Sending it in the tail end of
+> of the merge window after a suggestion from Kees to avoid unneeded merge
+> conflicts. It has been rebased on top of 7a3fad30fd8b4b5e370906b3c554f64026f56c2f.
+> I can send it later if it makes more sense on your side; please tell me
+> what you prefer.
+> 
+> [...]
+
+Here is the summary with links:
+  - [GIT,PULL] sysctl constification changes for v6.11-rc1
+    https://git.kernel.org/riscv/c/f8a8b94d0698
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
