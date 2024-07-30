@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED1D2905
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:16:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D89E7464
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:17:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302206; cv=none; b=iV0RGtfeiMQoX+QiyOEN3FyWGLCT6BGr7h/I6QRmWXMijKHyW0tKkyC07Xsgm26w/Y5o4CdKUxOwyHcIcsJCk/bcnsmUdS7eJ1bOmEqKS7XSH50pTpWxvu+I/D/84oLhxYo+oCwanYtOZcjXNwLzYc7SDHeJwB7nWCSqWiQ7i7g=
+	t=1722302222; cv=none; b=orr8fkmSnAl28erb1n5zMFBhjHqvl5mKiSMho+aWQ/MankRHR70+SbMPY++kl2W//OT/IBYji8lQsV90ZJV+ZtctmFdIhcqz5diQ3zbptBqDzbQFbXLsSljBor9SMYRc3UxN+rS6p2CJtybRkoo3t2FVDEXo3AuMASs1iC//CRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302206; c=relaxed/simple;
-	bh=PO4ftwcXfIvkvCYKG2HDTwX3XiEF+gneYkuq5ZrVvyg=;
+	s=arc-20240116; t=1722302222; c=relaxed/simple;
+	bh=lfjtvYRmkSEbR/T6lQa31y3p8E0z9tE3pSvcLZKrAdU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qTSPXo9sJa+SYhuJvDXDaZTf1B7+Ujs+8scUlDU4nJbyh8Fpv13Rw14x8YuW3rYAxjnqJKJdhxv/deWhVTEhJYVfeL5ZRbI3KPIk2vkm4tdJ46Ro2+LNbG1jM2Vcv31Yu0E6xxYn5q3sj48Vd6SpjT1wKviZGaKbD3R6GrifMpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z4/gumw0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GYHceNT5Yms82SE/8Qq7bhXxky3Z29jrISI07IUTAl2kNKPXw2zGR4YiamKw9PiqC69/2X4iLoDJEdeMG1TyvHZZBcLg9HfGVhIwgC0NHvos9mfWXSveUFfUhTfm7ZacR12NEWeFrseOQ0qVv4ACsSCXyx/fVEr6ndwMEQw4w4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ke7iz06F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z4/gumw0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FDC8C32786;
-	Tue, 30 Jul 2024 01:16:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ke7iz06F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6364C32786;
+	Tue, 30 Jul 2024 01:17:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302206;
-	bh=PO4ftwcXfIvkvCYKG2HDTwX3XiEF+gneYkuq5ZrVvyg=;
+	s=k20201202; t=1722302221;
+	bh=lfjtvYRmkSEbR/T6lQa31y3p8E0z9tE3pSvcLZKrAdU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Z4/gumw0GudL4oPyO1BD9oFBJHKXXBoqiWG+gubswux6d0v5HZ/9IIvxCuEcwNY6M
-	 IpLYXJK46KJpL25P7/eYMBA82oz1nlmmxei9VIeQfo+/SCj0UGYWA70cVKNEbYTCAA
-	 MuM9noUOdJTPJ8VfpSduJDowJJsYM29amSe7hNV26TbpJlFyX8KqchxE2Jntn2kdYX
-	 cHPsPLb8IhgwnZxTbc+8mJpgGtzxTJvG6lgLG7GyaKri0uRF+WLnP7SW+WgvVWBQP2
-	 vfsKtDg4CGhR17E2tdd9aW6Hoe/1HHbJfNYSeEchyop79/xUV8+dCFdmT5YNVefWMS
-	 +Y3HqjtuOE4MA==
-Date: Mon, 29 Jul 2024 18:16:45 -0700
-Subject: [PATCH 3/5] xfs_scrub_all: add CLI option for easier debugging
+	b=ke7iz06FuSWjSwUXBvgSa6ffcrhGxBec/A2NIOl0o1c/w5dfN6hn5riDfczw/NDh6
+	 atMho8No0pQb6iJQZrTF84wIODRyJi7bHPbNHVnU+bGzcZM0d8AsZCj8GPij0Uc0bc
+	 6wwzSJbyyzecWdyZq6hEbBdDi267qhnCe4zpn5IKUnPuJMhjzeYEk5dK3jBzDjZs4N
+	 EF6/vXfk6m5nDyR/f4+PSAut5sU0GO8LPKMYgm2KYrnN7JQO8Yw/GJu9KXCk2H+48X
+	 r/WCrBgRMjue+SEMva4YO7DWMqjoqZliYA4Shhb6x+dnU2CKWQSLgrCJ9n0JL5aMT4
+	 Zm/D727AQ2u6g==
+Date: Mon, 29 Jul 2024 18:17:01 -0700
+Subject: [PATCH 4/5] xfs_scrub_all: convert systemctl calls to dbus
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229849688.1350420.1760902598558162682.stgit@frogsfrogsfrogs>
+Message-ID: <172229849704.1350420.15182762451486145269.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229849638.1350420.756131243612881227.stgit@frogsfrogsfrogs>
 References: <172229849638.1350420.756131243612881227.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,117 +46,163 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new CLI argument to make it easier to figure out what exactly the
-program is doing.
+Convert the systemctl invocations to direct dbus calls, which decouples
+us from the CLI in favor of direct API calls.  This spares us from some
+of the insanity of divining service state from program outputs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/xfs_scrub_all.in |   30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ debian/control         |    2 +
+ scrub/xfs_scrub_all.in |   96 +++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 63 insertions(+), 35 deletions(-)
 
 
+diff --git a/debian/control b/debian/control
+index 344466de0..31773e53a 100644
+--- a/debian/control
++++ b/debian/control
+@@ -8,7 +8,7 @@ Standards-Version: 4.0.0
+ Homepage: https://xfs.wiki.kernel.org/
+ 
+ Package: xfsprogs
+-Depends: ${shlibs:Depends}, ${misc:Depends}, python3:any
++Depends: ${shlibs:Depends}, ${misc:Depends}, python3-dbus, python3:any
+ Provides: fsck-backend
+ Suggests: xfsdump, acl, attr, quota
+ Breaks: xfsdump (<< 3.0.0)
 diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 4130a98e9..8954b4740 100644
+index 8954b4740..f2e916513 100644
 --- a/scrub/xfs_scrub_all.in
 +++ b/scrub/xfs_scrub_all.in
-@@ -24,6 +24,7 @@ from datetime import timezone
- retcode = 0
- terminate = False
- scrub_media = False
-+debug = False
- 
- def DEVNULL():
- 	'''Return /dev/null in subprocess writable format.'''
-@@ -110,6 +111,11 @@ class scrub_subprocess(scrub_control):
- 		'''Start xfs_scrub and wait for it to complete.  Returns -1 if
- 		the service was not started, 0 if it succeeded, or 1 if it
- 		failed.'''
+@@ -15,6 +15,7 @@ import sys
+ import os
+ import argparse
+ import signal
++import dbus
+ from io import TextIOWrapper
+ from pathlib import Path
+ from datetime import timedelta
+@@ -168,25 +169,57 @@ class scrub_service(scrub_control):
+ 	'''Control object for xfs_scrub systemd service.'''
+ 	def __init__(self, mnt, scrub_media):
+ 		self.unitname = path_to_serviceunit(mnt, scrub_media)
++		self.prop = None
++		self.unit = None
++		self.bind()
++
++	def bind(self):
++		'''Bind to the dbus proxy object for this service.'''
++		sysbus = dbus.SystemBus()
++		systemd1 = sysbus.get_object('org.freedesktop.systemd1',
++					    '/org/freedesktop/systemd1')
++		manager = dbus.Interface(systemd1,
++				'org.freedesktop.systemd1.Manager')
++		path = manager.LoadUnit(self.unitname)
++
++		svc_obj = sysbus.get_object('org.freedesktop.systemd1', path)
++		self.prop = dbus.Interface(svc_obj,
++				'org.freedesktop.DBus.Properties')
++		self.unit = dbus.Interface(svc_obj,
++				'org.freedesktop.systemd1.Unit')
++
++	def state(self):
++		'''Retrieve the active state for a systemd service.  As of
++		systemd 249, this is supposed to be one of the following:
++		"active", "reloading", "inactive", "failed", "activating",
++		or "deactivating".  These strings are not localized.'''
 +		global debug
 +
-+		if debug:
-+			print('run ', ' '.join(self.cmdline))
-+
- 		try:
- 			self.proc = subprocess.Popen(self.cmdline)
- 			self.proc.wait()
-@@ -122,6 +128,10 @@ class scrub_subprocess(scrub_control):
- 
- 	def stop(self):
- 		'''Stop xfs_scrub.'''
-+		global debug
-+
-+		if debug:
-+			print('kill ', ' '.join(self.cmdline))
- 		if self.proc is not None:
- 			self.proc.terminate()
- 
-@@ -182,8 +192,12 @@ class scrub_service(scrub_control):
- 		'''Start the service and wait for it to complete.  Returns -1
- 		if the service was not started, 0 if it succeeded, or 1 if it
- 		failed.'''
-+		global debug
-+
- 		cmd = ['systemctl', 'start', self.unitname]
- 		try:
++		try:
++			return self.prop.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
++		except Exception as e:
 +			if debug:
-+				print(' '.join(cmd))
- 			proc = subprocess.Popen(cmd, stdout = DEVNULL())
- 			proc.wait()
- 			ret = proc.returncode
-@@ -201,7 +215,11 @@ class scrub_service(scrub_control):
++				print(e, file = sys.stderr)
++			return 'failed'
  
+ 	def wait(self, interval = 1):
+ 		'''Wait until the service finishes.'''
++		global debug
+ 
+-		# As of systemd 249, the is-active command returns any of the
+-		# following states: active, reloading, inactive, failed,
+-		# activating, deactivating, or maintenance.  Apparently these
+-		# strings are not localized.
+-		while True:
+-			try:
+-				for l in backtick(['systemctl', 'is-active', self.unitname]):
+-					if l == 'failed':
+-						return 1
+-					if l == 'inactive':
+-						return 0
+-			except:
+-				return -1
+-
++		# Use a poll/sleep loop to wait for the service to finish.
++		# Avoid adding a dependency on python3 glib, which is required
++		# to use an event loop to receive a dbus signal.
++		s = self.state()
++		while s not in ['failed', 'inactive']:
++			if debug:
++				print('waiting %s %s' % (self.unitname, s))
+ 			time.sleep(interval)
++			s = self.state()
++		if debug:
++			print('waited %s %s' % (self.unitname, s))
++		if s == 'failed':
++			return 1
++		return 0
+ 
+ 	def start(self):
+ 		'''Start the service and wait for it to complete.  Returns -1
+@@ -194,34 +227,29 @@ class scrub_service(scrub_control):
+ 		failed.'''
+ 		global debug
+ 
+-		cmd = ['systemctl', 'start', self.unitname]
++		if debug:
++			print('starting %s' % self.unitname)
++
+ 		try:
+-			if debug:
+-				print(' '.join(cmd))
+-			proc = subprocess.Popen(cmd, stdout = DEVNULL())
+-			proc.wait()
+-			ret = proc.returncode
+-		except:
++			self.unit.Start('replace')
++			return self.wait()
++		except Exception as e:
++			print(e, file = sys.stderr)
+ 			return -1
+ 
+-		if ret != 1:
+-			return ret
+-
+-		# If systemctl-start returns 1, it's possible that the service
+-		# failed or that dbus/systemd restarted and the client program
+-		# lost its connection -- according to the systemctl man page, 1
+-		# means "unit not failed".
+-		return self.wait()
+-
  	def stop(self):
  		'''Stop the service.'''
-+		global debug
+ 		global debug
+ 
+-		cmd = ['systemctl', 'stop', self.unitname]
+ 		if debug:
+-			print(' '.join(cmd))
+-		x = subprocess.Popen(cmd)
+-		x.wait()
++			print('stopping %s' % self.unitname)
 +
- 		cmd = ['systemctl', 'stop', self.unitname]
-+		if debug:
-+			print(' '.join(cmd))
- 		x = subprocess.Popen(cmd)
- 		x.wait()
++		try:
++			self.unit.Stop('replace')
++			return self.wait()
++		except Exception as e:
++			print(e, file = sys.stderr)
++			return -1
  
-@@ -266,7 +284,8 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 
- def signal_scrubs(signum, cond):
- 	'''Handle termination signals by killing xfs_scrub children.'''
--	global debug, terminate
-+	global debug
-+	global terminate
- 
- 	if debug:
- 		print('Signal handler called with signal', signum)
-@@ -280,7 +299,8 @@ def signal_scrubs(signum, cond):
- def wait_for_termination(cond, killfuncs):
- 	'''Wait for a child thread to terminate.  Returns True if we should
- 	abort the program, False otherwise.'''
--	global debug, terminate
-+	global debug
-+	global terminate
- 
- 	if debug:
- 		print('waiting for threads to terminate')
-@@ -371,9 +391,12 @@ def main():
- 	global retcode
- 	global terminate
- 	global scrub_media
-+	global debug
- 
- 	parser = argparse.ArgumentParser( \
- 			description = "Scrub all mounted XFS filesystems.")
-+	parser.add_argument("--debug", help = "Enabling debugging messages.", \
-+			action = "store_true")
- 	parser.add_argument("-V", help = "Report version and exit.", \
- 			action = "store_true")
- 	parser.add_argument("-x", help = "Scrub file data after filesystem metadata.", \
-@@ -388,6 +411,9 @@ def main():
- 		print("xfs_scrub_all version @pkg_version@")
- 		sys.exit(0)
- 
-+	if args.debug:
-+		debug = True
-+
- 	if args.auto_media_scan_interval is not None:
- 		try:
- 			scrub_media = enable_automatic_media_scan(args)
+ def run_service(mnt, scrub_media, killfuncs):
+ 	'''Run scrub as a service.'''
 
