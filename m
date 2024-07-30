@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57DA3BA38
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:29:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5F2CC2C6
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:30:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299387; cv=none; b=EPTAVQIke25z4aYMc3lsVCYduV38pgYEMZCFk/RTNuAcj8YBqRGHg/lI/hughyzbFKWfDOl+82TS2VswjIvopVwwgCrQfyA4YaFekvT+zpmEyJLN+ss7Hv6DwysreLVd/ioV6rKhuk/NN3EaBQzimn+HchfiPVt6MUrxW7lt/TM=
+	t=1722299402; cv=none; b=Q+/rbcFXWLrbqX/b7Y/zKjzJeTFPU1xHLfO8wVHlSnEPOW5Wy2X+nz3lBkU9sJKIfoZBWhVJFXcp1iWmjnS1Vu8P35i/G9XTxmp3Hu6iGlshI+sZlxkcLfP7a5+CzIeVFxfuPlb6s8WSKPOuAamm8lQsi8GkdpVRTx9L6S2P74E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299387; c=relaxed/simple;
-	bh=kd3/Bj2B7H/L0vqTGtmxmOv1voNMgS5GKGDWNUUd6Z8=;
+	s=arc-20240116; t=1722299402; c=relaxed/simple;
+	bh=tfbpyHP6Ify91BDRWZYkb9DKk3NMNTL7sy+UkveQvFY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pllS5D8xr+76EBE7BEEFju+3hWBumBdEEfaWSFYFAdxxz3rWOhbdfZO1j78GX2y9jGQh9DnlTc9Ulz8sve+ggzhSl5l2RZE1hJ7pRHgwap7E8qoLjCisxD/J8jnfZGUS+EifHk8QkBredvpHMYAws3V/GqhqAKyD3uzBACIEUGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ki3vDSmW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=fPGC0xB8qNruu1A7Jk1uM08rdd4fSLyP9GvRvuWIYAFXBR/9ihxaQPTqeZmbsXFpdQudZBB6xFJ7BHAYlTTG6vRaUrYdNg4WY1ZiR9Y0ocNf+0pybp6i+ASK9t8I5O2JCf39bkJ2qeJJj0niIVkVS0MZ4GwPrCYwKjhMwToVit0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dHDd3PnD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ki3vDSmW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAFB6C32786;
-	Tue, 30 Jul 2024 00:29:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dHDd3PnD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F92FC32786;
+	Tue, 30 Jul 2024 00:30:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299386;
-	bh=kd3/Bj2B7H/L0vqTGtmxmOv1voNMgS5GKGDWNUUd6Z8=;
+	s=k20201202; t=1722299402;
+	bh=tfbpyHP6Ify91BDRWZYkb9DKk3NMNTL7sy+UkveQvFY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Ki3vDSmWDiPhAnkdade6zlnDGD4Qi6hfukZgKLle2jf5Aw0Ajw8z7xEl1wWv6k9+P
-	 waHXYChCnGUSKrMJKaBRoSAdOiY15ZVaHoqAyYfN3HbD81q0If8VtRVO9rcWc7fx0q
-	 ZMAYSbEN8Z+WFaCiuv56zbncY4giD2elAlYJhZtXn7IOVxo7iYyH00LbwcCxpB5HBl
-	 ZJ5Rwv5zv+Rs/O1Qx7XflQ4aXM3PSFoaXWtFHIKJvvLPfwRU19/+v1OFghUB1Nq5p9
-	 ZQPDCUD6AZVXHt3AiR6gq1/+5smbaQ/N2KMGrNtQqr02M+iNydWz13zWaND3mWlhYU
-	 OMfl3yP+ooFGw==
-Date: Mon, 29 Jul 2024 17:29:46 -0700
-Subject: [PATCH 023/115] xfs: use atomic extent swapping to fix user file fork
- data
+	b=dHDd3PnD0jGBmGiWUhAmHPAYIt1bKzB27FL2ulKeL+fRvMFm3HHP5RnbEJX+o6Bry
+	 xnOfi1JZdBS5H2X8i8fYEmpLkTkIhaW28n79xcsZplFqyKaKnaSSB4dbsrnidIAIh7
+	 +KBCLxT95w/yHDHMNIq+CkjiKs+mjBbA0gaxTPrXmrh+sH7FaCpZF4dF+y/51KpUQs
+	 iR7Ifk/YXGJOqWHrJblI0JZiZ/ADpgQ5El7O/mJ61RXZDz+jiX9YG6H/ZvwqYg4V3k
+	 d0u8WTlf6Y5DoYYPi2IvM79HlmhRT6B/FULJLLWowUnVCEIuBhgDejsiM5kEumpaDb
+	 9+WhNiMtSlJFg==
+Date: Mon, 29 Jul 2024 17:30:02 -0700
+Subject: [PATCH 024/115] xfs: repair extended attributes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229842767.1338752.13236502200324811627.stgit@frogsfrogsfrogs>
+Message-ID: <172229842782.1338752.9798387885491587085.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,51 +46,60 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 629fdaf5f5b1b7f7107ed4de04e0991a99501ced
+Source kernel commit: e47dcf113ae348678143cc935a1183059c02c9ad
 
-Build on the code that was recently added to the temporary repair file
-code so that we can atomically switch the contents of any file fork,
-even if the fork is in local format.  The upcoming functions to repair
-xattrs, directories, and symlinks will need that capability.
-
-Repair can lock out access to these user files by holding IOLOCK_EXCL on
-these user files.  Therefore, it is safe to drop the ILOCK of both the
-file being repaired and the tempfile being used for staging, and cancel
-the scrub transaction.  We do this so that we can reuse the resource
-estimation and transaction allocation functions used by a regular file
-exchange operation.
+If the extended attributes look bad, try to sift through the rubble to
+find whatever keys/values we can, stage a new attribute structure in a
+temporary file and use the atomic extent swapping mechanism to commit
+the results in bulk.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_exchmaps.c |    2 +-
- libxfs/xfs_exchmaps.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ libxfs/xfs_attr.c      |    2 +-
+ libxfs/xfs_attr.h      |    2 ++
+ libxfs/xfs_da_format.h |    5 +++++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
-index 71408d713..a8a51ce53 100644
---- a/libxfs/xfs_exchmaps.c
-+++ b/libxfs/xfs_exchmaps.c
-@@ -672,7 +672,7 @@ xfs_exchmaps_rmapbt_blocks(
- }
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index cc291cf76..07f873927 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -1053,7 +1053,7 @@ xfs_attr_set(
+  * External routines when attribute list is inside the inode
+  *========================================================================*/
  
- /* Estimate the bmbt and rmapbt overhead required to exchange mappings. */
--static int
-+int
- xfs_exchmaps_estimate_overhead(
- 	struct xfs_exchmaps_req		*req)
+-static inline int xfs_attr_sf_totsize(struct xfs_inode *dp)
++int xfs_attr_sf_totsize(struct xfs_inode *dp)
  {
-diff --git a/libxfs/xfs_exchmaps.h b/libxfs/xfs_exchmaps.h
-index d8718fca6..fa822dff2 100644
---- a/libxfs/xfs_exchmaps.h
-+++ b/libxfs/xfs_exchmaps.h
-@@ -97,6 +97,7 @@ xfs_exchmaps_reqfork(const struct xfs_exchmaps_req *req)
- 	return XFS_DATA_FORK;
- }
+ 	struct xfs_attr_sf_hdr *sf = dp->i_af.if_data;
  
-+int xfs_exchmaps_estimate_overhead(struct xfs_exchmaps_req *req);
- int xfs_exchmaps_estimate(struct xfs_exchmaps_req *req);
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index 81be9b3e4..e4f550085 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -618,4 +618,6 @@ extern struct kmem_cache *xfs_attr_intent_cache;
+ int __init xfs_attr_intent_init_cache(void);
+ void xfs_attr_intent_destroy_cache(void);
  
- extern struct kmem_cache	*xfs_exchmaps_intent_cache;
++int xfs_attr_sf_totsize(struct xfs_inode *dp);
++
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
+index 060e5c96b..aac3fe039 100644
+--- a/libxfs/xfs_da_format.h
++++ b/libxfs/xfs_da_format.h
+@@ -721,6 +721,11 @@ struct xfs_attr3_leafblock {
+ #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
+ #define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
+ 
++#define XFS_ATTR_NAMESPACE_STR \
++	{ XFS_ATTR_LOCAL,	"local" }, \
++	{ XFS_ATTR_ROOT,	"root" }, \
++	{ XFS_ATTR_SECURE,	"secure" }
++
+ /*
+  * Alignment for namelist and valuelist entries (since they are mixed
+  * there can be only one alignment value)
 
