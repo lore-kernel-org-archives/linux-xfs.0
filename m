@@ -1,37 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73517653
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:20:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD8A1653
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:20:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722298839; cv=none; b=Ezqtlld2L4RwCvLkAPNiK8a64KtthIyuCZ5lsBhvNGALo2KLZ3w39oykoDrFOUP0CEP6hBILQh2lvrWnQPDAIiuqhxv4dDc9ykApUwmi0rENJcwUU7Rgax0DWOFhlDx4iPYSxU7x63HE3H6xiSbMbfs29I0E3/IQddJAzfqFibc=
+	t=1722298854; cv=none; b=EnJUJC1qxsjc/98EaoUw68mWui5dBS8f7kK4+UkKd10JKOWWxPeaqjD3djd4JcJNDx9qDJoS4DCtWPbZ9DCw15iG7u4woVCP//+ZvIulpOunqXRwHyzcvKrJgwffJd5Jn/c5IQ3uRcbnxcpi0abA+BwDCSX1nWawNdk4+wAhmsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722298839; c=relaxed/simple;
-	bh=/HWNdKEw6G+iaQ3sJyEbYAe+azBM47ak0Blm3Ux1b5Q=;
+	s=arc-20240116; t=1722298854; c=relaxed/simple;
+	bh=5PVdtbwrAdVK+RRrbiUVH75E7tJihutKKJxwvDNAOxQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Tv5Ll7Uah5SlbkWUc4s3V6Ns9U/vNr8q3MuAnHFye8H8ugTl0iwsjIVHkhSXHKRy0i0Gnnu5jrB1uIIehqwda6u1Jp16fme7FAf9I6tVh2vwv+AcyPbesfZvEa/dOzNd00XE94eCoaSHfnAq2J9Jmw9Qb9m73AEbNKBrgsY1oEQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UILPB7Fq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=eupdYcbtMeZ/Mjtg1EXU1wGFzntNfGTNKzUWG954yQOOMX0Is5OTlTU5zqW05SxHyiS/UrLV+FU5brYLD5ALc86VcH8BX/pUxX/Y6vM0SY1kzUH+ubBKc45SHJuBXWp9PbRUsCZ2FKeWT5uxxFCsenTQAQ2MGUWLX/p6pMCgqFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zizt+8dc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UILPB7Fq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 020C3C32786;
-	Tue, 30 Jul 2024 00:20:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zizt+8dc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7B68C32786;
+	Tue, 30 Jul 2024 00:20:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722298839;
-	bh=/HWNdKEw6G+iaQ3sJyEbYAe+azBM47ak0Blm3Ux1b5Q=;
+	s=k20201202; t=1722298854;
+	bh=5PVdtbwrAdVK+RRrbiUVH75E7tJihutKKJxwvDNAOxQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UILPB7Fq93Fc/dZXrz0raQI+GKr+bH5PxsrUh2cMUce3AdIz8tPAN02Tdk5GTvlmP
-	 Cn+iHqPm7ezbNOZ4Fo1Wi0XXRtId/8AGg5KrjQMDPcTvh8mUICW/Y6IqeptIO/kY3X
-	 HCT8tGk8ZmAvhvIHUCPlQjIYS3cwhQ1IjTXK6uNknn1sQr3/NTCG2FXCrXyfA/m3G4
-	 VuI/J0vqV3czGe63V6/LXvFfNe5Z6RU+wtihT02b0pQg9j90U89PCkhSJ4SMuniblp
-	 oMIPM+Rtg2ldFCxGZIGzCV8bm6nRSibTVhiunwPSsdpqtGDAuNLxp35EMLpdPO3k1Y
-	 a2KbvjYElEbQg==
-Date: Mon, 29 Jul 2024 17:20:38 -0700
-Subject: [PATCHSET v30.9 16/23] xfs_scrub_all: improve systemd handling
+	b=Zizt+8dcuZBzvfc2Bhkzxu20TQUNNNekfzD5hygFUlmRs/ZIvWpb1uHvcmaRNC4E8
+	 VxlCK9wO7kmcM/J1L1hy4Vmrm/AD1tvGhJERbfMEu/PyXiVqQyGtDWYVd6BrZLbQqe
+	 cgiQ2nqeJdVNr1rems82Xy/rpg79EpzMqEJEMEUyj0th9H6dZdKpMjoXsoJlSSxtqs
+	 BMQcMrg33co7rPqXbtbZn5p86r02Nbo7tLlIBBy18YWiE538KYIQT+7MKmBr2STxj1
+	 pEnBN1n0P8rkaPmITYYbTirq0mRD/LdEwEiCwpd51vgp7AERhinXjHulp7pRXWtrDk
+	 Jp5+CzC2plUkw==
+Date: Mon, 29 Jul 2024 17:20:54 -0700
+Subject: [PATCHSET v13.8 17/23] xfsprogs: improve extended attribute
+ validation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229849638.1350420.756131243612881227.stgit@frogsfrogsfrogs>
+Cc: Dave Chinner <david@fromorbit.com>,
+ Chandan Babu R <chandan.babu@oracle.com>, Christoph Hellwig <hch@lst.de>,
+ hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <172229850048.1350643.5520120825070703831.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240730001021.GD6352@frogsfrogsfrogs>
 References: <20240730001021.GD6352@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,7 +49,9 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-
+Prior to introducing parent pointer extended attributes, let's spend
+some time cleaning up the attr code and strengthening the validation
+that it performs on attrs coming in from the disk.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -54,17 +59,33 @@ from my git trees, which are linked below.
 This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=improve-attr-validation-6.10
+
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-all-improve-systemd-handling-6.10
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=improve-attr-validation-6.10
 ---
 Commits in this patchset:
- * xfs_scrub_all: encapsulate all the subprocess code in an object
- * xfs_scrub_all: encapsulate all the systemctl code in an object
- * xfs_scrub_all: add CLI option for easier debugging
- * xfs_scrub_all: convert systemctl calls to dbus
- * xfs_scrub_all: implement retry and backoff for dbus calls
+ * xfs_scrub_all: fail fast on masked units
+ * xfs_scrub: automatic downgrades to dry-run mode in service mode
+ * xfs_scrub: add an optimization-only mode
+ * xfs_repair: check free space requirements before allowing upgrades
+ * xfs_repair: enforce one namespace bit per extended attribute
+ * xfs_repair: check for unknown flags in attr entries
 ---
- debian/control         |    2 
- scrub/xfs_scrub_all.in |  284 ++++++++++++++++++++++++++++++++++++------------
- 2 files changed, 213 insertions(+), 73 deletions(-)
+ include/libxfs.h         |    1 
+ libxfs/libxfs_api_defs.h |    1 
+ man/man8/xfs_scrub.8     |    6 ++
+ repair/attr_repair.c     |   30 ++++++++++
+ repair/phase2.c          |  134 ++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/Makefile           |    2 -
+ scrub/phase1.c           |   13 ++++
+ scrub/phase4.c           |    6 ++
+ scrub/repair.c           |   37 ++++++++++++-
+ scrub/repair.h           |    2 +
+ scrub/scrub.c            |    4 +
+ scrub/xfs_scrub.c        |   21 +++++++
+ scrub/xfs_scrub.h        |    1 
+ scrub/xfs_scrub_all.in   |   21 +++++++
+ 14 files changed, 272 insertions(+), 7 deletions(-)
 
