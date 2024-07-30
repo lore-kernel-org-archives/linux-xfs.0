@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 149D61361
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:41:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74D08184E
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:41:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300076; cv=none; b=QNwyDmA65qxoPmQeQdDLxNdrINJ5hSE+VL0HLrjkC7Fc0r+We7rpprosCjICXyGiNAn+BZi3g32yHL63PyjfyfCa8/RQG8u0d1gAkXEIv6nNkpobkCFHZFZ86yg4rkLNFOGCIMt3HFMJvpMxK8yjG2beSsW4BH/OgaBwZKYzcEg=
+	t=1722300091; cv=none; b=JhzsMS1ic/c3WXixThvX8zUVC0kg4ApeF9rkDJLl8vA1ej5ljqAbEo1gI3B4bUM95iUINJFl9bT8UpqsBIshHBZih0YxSpxBys0F45AsPN6UKQ9cb+yYoZHbJRkI2BqeNqeFQxoG9pcFRlPWORqJNpTsT/a3WLbgar7jEbX3XiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300076; c=relaxed/simple;
-	bh=kaLRQCp17v83jsZtJNCdGInYOkS6mN7wMxYyUremahI=;
+	s=arc-20240116; t=1722300091; c=relaxed/simple;
+	bh=8XlkJuSJdf7VN6ryXv0r7pIlDITttpcUJXqLIcjobVc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mA/HAILBqmG4/0MByd9IwiX59SMUP4HH52jTHWQXcvEHMCK/dzSAhG2bF57OSXZqJEGnqB+mPmgsbb60kynADdmJ+UY5Ws72gbMtFMRZ5CePT4e1qVtbAPKxoiDA/bBe6s2SSb7jP+HdObrfA4fYFTqrrua/djLRDmHB514rgVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ibxkqveK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=g7cCM2ktmaOKUCy4pfFl9tkChxaiHHK+I9pbN3E9+Tz5NmGiR45mwugbrX/Y1y8gJO0F5Ah9dtnjInQazGYUHvdVnCM9FCoM4nz+GQK6uU7kno+MJre/jZU41Aq8qtSskrwSk66+kNJ2ODzCf81Y9DMjn+d9bWsvrNw/liOWMqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e/VoEgyZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ibxkqveK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9970CC32786;
-	Tue, 30 Jul 2024 00:41:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e/VoEgyZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44EC5C32786;
+	Tue, 30 Jul 2024 00:41:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300075;
-	bh=kaLRQCp17v83jsZtJNCdGInYOkS6mN7wMxYyUremahI=;
+	s=k20201202; t=1722300091;
+	bh=8XlkJuSJdf7VN6ryXv0r7pIlDITttpcUJXqLIcjobVc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ibxkqveKO2zZwmiwQSZwqyHNzjIe/LeFFNuAV1h2JBSr3TxepLBrNi3XashZkfSQV
-	 voSfHlgXlBgCra+5FyQh96TO6dbuLtg+i5q+v243UAEFZofioytxZUlvJy+iFet5Sw
-	 oMn96eFO84WZ5oamSRJTIVl7qwZMTUeG6YWYva+sJgL/1lRGY2knZ+pKAcf4IHULgu
-	 +jMocxxJTu1Y4KQjio/M/6wr2Vkg1FIVdpw1bQ3foNBBO1gDCT1SSvTw7g8l4OLPt3
-	 IM03A700sUgYsO8DZF0mIVdlgQ93wGrO3L0VU0ONCz7Uo4SyZtP56163YuAblhOEtH
-	 2+IGIazKPCzTA==
-Date: Mon, 29 Jul 2024 17:41:15 -0700
-Subject: [PATCH 067/115] xfs: Add parent pointers to rename
+	b=e/VoEgyZkuLIYOsxdID0HcdByKS2QFapLajg0dEDkAqWlFMrr2OCyRdXqqKI6sv64
+	 Wus9vBdhKOg0hmhTectSfu0ACYC/u22NivruCTHXZ5ZW3xzvqeV8r5GKwbTtg5S0YO
+	 mjFZpS6bb+7phKWU4jIGhlXn8vw4pzOLIyucw+rMCMrxVsKDZmm+azx0okfDyjws94
+	 ozDBiPizE+JKMshAmfhtVp7BRtNucHcGQDUuJlXMXjXAep30V0YIvwffp3Hp1Da4Uj
+	 DCuTT+j09dDjRW7aRvu4fp3xa88//t3VRZVpUIz58XF5rQMYkOYGSIAizZgogYZx8c
+	 YchdTrt4rhR7w==
+Date: Mon, 29 Jul 2024 17:41:30 -0700
+Subject: [PATCH 068/115] xfs: don't return XFS_ATTR_PARENT attributes via
+ listxattr
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Allison Henderson <allison.henderson@oracle.com>,
  Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229843387.1338752.4325658647941757571.stgit@frogsfrogsfrogs>
+Message-ID: <172229843401.1338752.22200803405477761.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,138 +48,35 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Source kernel commit: 5a8338c88284df4e9e697225aa65f2709333a659
+Source kernel commit: daf9f884906bcfcffe26967aee9ece893fba019b
 
-This patch removes the old parent pointer attribute during the rename
-operation, and re-adds the updated parent pointer.
+Parent pointers are internal filesystem metadata.  They're not intended
+to be directly visible to userspace, so filter them out of
+xfs_xattr_put_listent so that they don't appear in listxattr.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Inspired-by: Andrey Albershteyn <aalbersh@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: adjust to new ondisk format]
+[djwong: change this to XFS_ATTR_PRIVATE_NSP_MASK per fsverity patchset]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_parent.c      |   30 ++++++++++++++++++++++++++++++
- libxfs/xfs_parent.h      |    6 ++++++
- libxfs/xfs_trans_space.c |   25 +++++++++++++++++++++++++
- libxfs/xfs_trans_space.h |    6 ++++--
- 4 files changed, 65 insertions(+), 2 deletions(-)
+ libxfs/xfs_da_format.h |    3 +++
+ 1 file changed, 3 insertions(+)
 
 
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-index 0657728e6..a53b7d13d 100644
---- a/libxfs/xfs_parent.c
-+++ b/libxfs/xfs_parent.c
-@@ -224,3 +224,33 @@ xfs_parent_removename(
- 	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_REMOVE);
- 	return 0;
- }
-+
-+/* Replace one parent pointer with another to reflect a rename. */
-+int
-+xfs_parent_replacename(
-+	struct xfs_trans	*tp,
-+	struct xfs_parent_args	*ppargs,
-+	struct xfs_inode	*old_dp,
-+	const struct xfs_name	*old_name,
-+	struct xfs_inode	*new_dp,
-+	const struct xfs_name	*new_name,
-+	struct xfs_inode	*child)
-+{
-+	int			error;
-+
-+	error = xfs_parent_iread_extents(tp, child);
-+	if (error)
-+		return error;
-+
-+	xfs_inode_to_parent_rec(&ppargs->rec, old_dp);
-+	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
-+			child->i_ino, old_name);
-+
-+	xfs_inode_to_parent_rec(&ppargs->new_rec, new_dp);
-+	ppargs->args.new_name = new_name->name;
-+	ppargs->args.new_namelen = new_name->len;
-+	ppargs->args.new_value = &ppargs->new_rec;
-+	ppargs->args.new_valuelen = sizeof(struct xfs_parent_rec);
-+	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_REPLACE);
-+	return 0;
-+}
-diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
-index 4a7fd48c2..768633b31 100644
---- a/libxfs/xfs_parent.h
-+++ b/libxfs/xfs_parent.h
-@@ -45,6 +45,7 @@ extern struct kmem_cache	*xfs_parent_args_cache;
-  */
- struct xfs_parent_args {
- 	struct xfs_parent_rec	rec;
-+	struct xfs_parent_rec	new_rec;
- 	struct xfs_da_args	args;
- };
+diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
+index 1395ad193..ebde6eb1d 100644
+--- a/libxfs/xfs_da_format.h
++++ b/libxfs/xfs_da_format.h
+@@ -726,6 +726,9 @@ struct xfs_attr3_leafblock {
+ 					 XFS_ATTR_SECURE | \
+ 					 XFS_ATTR_PARENT)
  
-@@ -84,5 +85,10 @@ int xfs_parent_addname(struct xfs_trans *tp, struct xfs_parent_args *ppargs,
- int xfs_parent_removename(struct xfs_trans *tp, struct xfs_parent_args *ppargs,
- 		struct xfs_inode *dp, const struct xfs_name *parent_name,
- 		struct xfs_inode *child);
-+int xfs_parent_replacename(struct xfs_trans *tp,
-+		struct xfs_parent_args *ppargs,
-+		struct xfs_inode *old_dp, const struct xfs_name *old_name,
-+		struct xfs_inode *new_dp, const struct xfs_name *new_name,
-+		struct xfs_inode *child);
- 
- #endif /* __XFS_PARENT_H__ */
-diff --git a/libxfs/xfs_trans_space.c b/libxfs/xfs_trans_space.c
-index 86a91a3a8..373f5cc24 100644
---- a/libxfs/xfs_trans_space.c
-+++ b/libxfs/xfs_trans_space.c
-@@ -94,3 +94,28 @@ xfs_remove_space_res(
- 
- 	return ret;
- }
++/* Private attr namespaces not exposed to userspace */
++#define XFS_ATTR_PRIVATE_NSP_MASK	(XFS_ATTR_PARENT)
 +
-+unsigned int
-+xfs_rename_space_res(
-+	struct xfs_mount	*mp,
-+	unsigned int		src_namelen,
-+	bool			target_exists,
-+	unsigned int		target_namelen,
-+	bool			has_whiteout)
-+{
-+	unsigned int		ret;
-+
-+	ret = XFS_DIRREMOVE_SPACE_RES(mp) +
-+			XFS_DIRENTER_SPACE_RES(mp, target_namelen);
-+
-+	if (xfs_has_parent(mp)) {
-+		if (has_whiteout)
-+			ret += xfs_parent_calc_space_res(mp, src_namelen);
-+		ret += 2 * xfs_parent_calc_space_res(mp, target_namelen);
-+	}
-+
-+	if (target_exists)
-+		ret += xfs_parent_calc_space_res(mp, target_namelen);
-+
-+	return ret;
-+}
-diff --git a/libxfs/xfs_trans_space.h b/libxfs/xfs_trans_space.h
-index a4490813c..1155ff2d3 100644
---- a/libxfs/xfs_trans_space.h
-+++ b/libxfs/xfs_trans_space.h
-@@ -91,8 +91,6 @@
- 	 XFS_DQUOT_CLUSTER_SIZE_FSB)
- #define	XFS_QM_QINOCREATE_SPACE_RES(mp)	\
- 	XFS_IALLOC_SPACE_RES(mp)
--#define	XFS_RENAME_SPACE_RES(mp,nl)	\
--	(XFS_DIRREMOVE_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
- #define XFS_IFREE_SPACE_RES(mp)		\
- 	(xfs_has_finobt(mp) ? M_IGEO(mp)->inobt_maxlevels : 0)
- 
-@@ -106,4 +104,8 @@ unsigned int xfs_symlink_space_res(struct xfs_mount *mp, unsigned int namelen,
- 		unsigned int fsblocks);
- unsigned int xfs_remove_space_res(struct xfs_mount *mp, unsigned int namelen);
- 
-+unsigned int xfs_rename_space_res(struct xfs_mount *mp,
-+		unsigned int src_namelen, bool target_exists,
-+		unsigned int target_namelen, bool has_whiteout);
-+
- #endif	/* __XFS_TRANS_SPACE_H__ */
+ #define XFS_ATTR_ONDISK_MASK	(XFS_ATTR_NSP_ONDISK_MASK | \
+ 				 XFS_ATTR_LOCAL | \
+ 				 XFS_ATTR_INCOMPLETE)
 
