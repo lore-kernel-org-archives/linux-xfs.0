@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36DD88F5B
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:24:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 349B2881E
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:24:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302676; cv=none; b=BwLHaYDl4wXo5LoCUMrLz1FTnv18goIsGCMHGGUjMKiAw0GgrHfZS4+t9K37zhV5AP4q6bC98yedYgFmy0pYNqZpvfGw/dYDE4j5k80pqtLoVAUZ4XVn5lWIQ1fMLSTuBTgMlV0ZKS1a/ZtHNg8tcrz15e085eVdERKsumDQEGM=
+	t=1722302692; cv=none; b=J2k63F3OHX/15Lmolwwn42qi6IZEBbmCHxKcr4OA810NhnbSQogVnDJrOT1ZKUtDhuNLKhZvYhzhZMHFnu2ND0HTl2vV3Kq0IDguy/JuV9nyu66dVz+KxQ9gLVmICK7BY6N/rUpK4+LNFI6JaqNS6KNf8mc7mr8GPS+2sWYRAg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302676; c=relaxed/simple;
-	bh=osdPGj/N7tTFM4tAjB2KxAXbdWPPkAXD26hXkuPye5g=;
+	s=arc-20240116; t=1722302692; c=relaxed/simple;
+	bh=CtiusBW9yU05l036ziRJ+mfN+oTW8dpiMDB8oQFhXrI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NOstZ/RrF060NQMJ/xc3zG/tVOWmBCGF6lvN0OA7JqvmvlDYJJfdWrYerdntNLkdnRM+keZoXZdf00+HpPkNVafWRgVMihXG7ksi+vZHLTGQcRn6Mb1RAM1jLNbZRSo7ukdjkXusVP4D5vIw06cstxT0SPcI+hVS8ORM3vg7qCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i0WAXVJV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WrBEO6BeNpmTwvhxfmI0dQy69E9lPMfKF+aZQnck6fZGhvQBhDQ6/+fZfkdpv8Sb9w90p1AbbMdIaMzB5KI9386bCmc6CxFsHQDCqFR2dRnE7mkfCO6EMTp2BLy8Iglk5N5w+h94TeJBTIo58nIJHIYZsq/eUPb1TJGGr/zqIxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jMMGuiGC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i0WAXVJV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07CC1C32786;
-	Tue, 30 Jul 2024 01:24:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jMMGuiGC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9410C32786;
+	Tue, 30 Jul 2024 01:24:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302676;
-	bh=osdPGj/N7tTFM4tAjB2KxAXbdWPPkAXD26hXkuPye5g=;
+	s=k20201202; t=1722302691;
+	bh=CtiusBW9yU05l036ziRJ+mfN+oTW8dpiMDB8oQFhXrI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=i0WAXVJVIsMJQYZqev9y6Y1ienWtWzq+PftokHzSMsKOK9auEYDF9P6H8ctf+y/Dd
-	 Bs5W2R3UUiKb9oSDe+pSUPNfrcqsDIaYnG6nsthIrEoABTG2TNCtUV5Scftt/DhWfO
-	 aeArKk0FCujsfgerWaufP8HwjN1ucmAHHHWczZynhSP/xdN0KGq5Wc8e2u8MitaisT
-	 TaZANPjh/mnSXnUN5gh6mdOOdRdSA5LGeaVNufhkQWKgkHkxJdU8VejlJbZAxKMD/I
-	 M7gnOcRinFw/pyrSXueGykjRYbq5j3d7pWbNFgpWv4s94d5sbQFtCCTN9YlnUiTO5e
-	 i2iv4R9M2RSLA==
-Date: Mon, 29 Jul 2024 18:24:35 -0700
-Subject: [PATCH 22/24] libxfs: create new files with attr forks if necessary
+	b=jMMGuiGCK30Ky5y9387QTJltLOeln/G+a3us43uoN6uyeKyPvHeZpHdEhP0oEAjBD
+	 /iF4AL77Vxbt1jf1xUsE4oXLGruFHWNsMI33C9e+4ZbsXzgKyOQBz8Q95U7/PrPAAZ
+	 kUP6dpszMAbz8ZiYWaVcyjbfnAf5IQa7YyvgM1Hmhdnbhlgoc3y4NkHWeRQhqd1QpO
+	 JNw5s/dDb/aMszRBiUUlLgudY8mKTc6OtdZFG+L3nf/LeCd1RsdIa1fmPr+Pt5AEXE
+	 cfrpVp8gI4tHUFX8bGZzrSJpueZis25LWoZ4qCOj0rLNk9Aav6hZtR1bRAuBn8+0PQ
+	 JqVEIYKJU+5fw==
+Date: Mon, 29 Jul 2024 18:24:51 -0700
+Subject: [PATCH 23/24] mkfs: Add parent pointers during protofile creation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
  catherine.hoang@oracle.com, allison.henderson@oracle.com
-Message-ID: <172229850805.1350924.11137344337326390148.stgit@frogsfrogsfrogs>
+Message-ID: <172229850818.1350924.4972291714239941056.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
 References: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,82 +46,218 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Allison Henderson <allison.henderson@oracle.com>
 
-Create new files with attr forks if they're going to have parent
-pointers.  In the next patch we'll fix mkfs to use the same parent
-creation functions as the kernel, so we're going to need this.
+Inodes created from protofile parsing will also need to add the
+appropriate parent pointers.
 
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: use xfs_parent_add from libxfs instead of open-coding xfs_attr_set]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/init.c |    4 ++++
- libxfs/util.c |   19 ++++++++++++++++++-
- 2 files changed, 22 insertions(+), 1 deletion(-)
+ mkfs/proto.c |   62 +++++++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 48 insertions(+), 14 deletions(-)
 
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 95de1e6d1..90a539e04 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -602,14 +602,18 @@ void
- libxfs_compute_all_maxlevels(
- 	struct xfs_mount	*mp)
- {
-+	struct xfs_ino_geometry *igeo = M_IGEO(mp);
-+
- 	xfs_alloc_compute_maxlevels(mp);
- 	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
- 	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
-+	igeo->attr_fork_offset = xfs_bmap_compute_attr_offset(mp);
- 	xfs_ialloc_setup_geometry(mp);
- 	xfs_rmapbt_compute_maxlevels(mp);
- 	xfs_refcountbt_compute_maxlevels(mp);
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index a9a9b704a..8e16eb150 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -348,11 +348,12 @@ newregfile(
  
- 	xfs_agbtree_compute_maxlevels(mp);
+ static void
+ newdirent(
+-	xfs_mount_t	*mp,
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*pip,
+-	struct xfs_name	*name,
+-	xfs_ino_t	inum)
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_inode	*pip,
++	struct xfs_name		*name,
++	struct xfs_inode	*ip,
++	struct xfs_parent_args	*ppargs)
+ {
+ 	int	error;
+ 	int	rsv;
+@@ -365,9 +366,15 @@ newdirent(
+ 
+ 	rsv = XFS_DIRENTER_SPACE_RES(mp, name->len);
+ 
+-	error = -libxfs_dir_createname(tp, pip, name, inum, rsv);
++	error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, rsv);
+ 	if (error)
+ 		fail(_("directory createname error"), error);
 +
++	if (ppargs) {
++		error = -libxfs_parent_addname(tp, ppargs, pip, name, ip);
++		if (error)
++			fail(_("parent addname error"), error);
++	}
  }
  
- /*
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 74eea0fcb..373749457 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -274,11 +274,12 @@ libxfs_init_new_inode(
- 	struct fsxattr		*fsx,
- 	struct xfs_inode	**ipp)
- {
-+	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xfs_inode	*ip;
- 	unsigned int		flags;
- 	int			error;
+ static void
+@@ -384,6 +391,20 @@ newdirectory(
+ 		fail(_("directory create error"), error);
+ }
  
--	error = libxfs_iget(tp->t_mountp, tp, ino, XFS_IGET_CREATE, &ip);
-+	error = libxfs_iget(mp, tp, ino, XFS_IGET_CREATE, &ip);
- 	if (error != 0)
- 		return error;
- 	ASSERT(ip != NULL);
-@@ -340,6 +341,22 @@ libxfs_init_new_inode(
- 		ASSERT(0);
++static struct xfs_parent_args *
++newpptr(
++	struct xfs_mount	*mp)
++{
++	struct xfs_parent_args	*ret;
++	int			error;
++
++	error = -libxfs_parent_start(mp, &ret);
++	if (error)
++		fail(_("initializing parent pointer"), error);
++
++	return ret;
++}
++
+ static void
+ parseproto(
+ 	xfs_mount_t	*mp,
+@@ -418,6 +439,7 @@ parseproto(
+ 	struct cred	creds;
+ 	char		*value;
+ 	struct xfs_name	xname;
++	struct xfs_parent_args *ppargs = NULL;
+ 
+ 	memset(&creds, 0, sizeof(creds));
+ 	mstr = getstr(pp);
+@@ -492,6 +514,7 @@ parseproto(
+ 	case IF_REGULAR:
+ 		buf = newregfile(pp, &len);
+ 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
++		ppargs = newpptr(mp);
+ 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
+ 					   &creds, fsxp, &ip);
+ 		if (error)
+@@ -501,7 +524,7 @@ parseproto(
+ 			free(buf);
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 		xname.type = XFS_DIR3_FT_REG_FILE;
+-		newdirent(mp, tp, pip, &xname, ip->i_ino);
++		newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 		break;
+ 
+ 	case IF_RESERVED:			/* pre-allocated space only */
+@@ -515,7 +538,7 @@ parseproto(
+ 			exit(1);
+ 		}
+ 		tp = getres(mp, XFS_B_TO_FSB(mp, llen));
+-
++		ppargs = newpptr(mp);
+ 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
+ 					  &creds, fsxp, &ip);
+ 		if (error)
+@@ -524,17 +547,19 @@ parseproto(
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 
+ 		xname.type = XFS_DIR3_FT_REG_FILE;
+-		newdirent(mp, tp, pip, &xname, ip->i_ino);
++		newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+ 		error = -libxfs_trans_commit(tp);
+ 		if (error)
+ 			fail(_("Space preallocation failed."), error);
++		libxfs_parent_finish(mp, ppargs);
+ 		rsvfile(mp, ip, llen);
+ 		libxfs_irele(ip);
+ 		return;
+ 
+ 	case IF_BLOCK:
+ 		tp = getres(mp, 0);
++		ppargs = newpptr(mp);
+ 		majdev = getnum(getstr(pp), 0, 0, false);
+ 		mindev = getnum(getstr(pp), 0, 0, false);
+ 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFBLK, 1,
+@@ -544,12 +569,13 @@ parseproto(
+ 		}
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 		xname.type = XFS_DIR3_FT_BLKDEV;
+-		newdirent(mp, tp, pip, &xname, ip->i_ino);
++		newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 		flags |= XFS_ILOG_DEV;
+ 		break;
+ 
+ 	case IF_CHAR:
+ 		tp = getres(mp, 0);
++		ppargs = newpptr(mp);
+ 		majdev = getnum(getstr(pp), 0, 0, false);
+ 		mindev = getnum(getstr(pp), 0, 0, false);
+ 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFCHR, 1,
+@@ -558,24 +584,26 @@ parseproto(
+ 			fail(_("Inode allocation failed"), error);
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 		xname.type = XFS_DIR3_FT_CHRDEV;
+-		newdirent(mp, tp, pip, &xname, ip->i_ino);
++		newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 		flags |= XFS_ILOG_DEV;
+ 		break;
+ 
+ 	case IF_FIFO:
+ 		tp = getres(mp, 0);
++		ppargs = newpptr(mp);
+ 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFIFO, 1, 0,
+ 				&creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 		xname.type = XFS_DIR3_FT_FIFO;
+-		newdirent(mp, tp, pip, &xname, ip->i_ino);
++		newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 		break;
+ 	case IF_SYMLINK:
+ 		buf = getstr(pp);
+ 		len = (int)strlen(buf);
+ 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
++		ppargs = newpptr(mp);
+ 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFLNK, 1, 0,
+ 				&creds, fsxp, &ip);
+ 		if (error)
+@@ -583,7 +611,7 @@ parseproto(
+ 		writesymlink(tp, ip, buf, len);
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 		xname.type = XFS_DIR3_FT_SYMLINK;
+-		newdirent(mp, tp, pip, &xname, ip->i_ino);
++		newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 		break;
+ 	case IF_DIRECTORY:
+ 		tp = getres(mp, 0);
+@@ -598,9 +626,10 @@ parseproto(
+ 			libxfs_log_sb(tp);
+ 			isroot = 1;
+ 		} else {
++			ppargs = newpptr(mp);
+ 			libxfs_trans_ijoin(tp, pip, 0);
+ 			xname.type = XFS_DIR3_FT_DIR;
+-			newdirent(mp, tp, pip, &xname, ip->i_ino);
++			newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 			libxfs_bumplink(tp, pip);
+ 			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+ 		}
+@@ -609,6 +638,9 @@ parseproto(
+ 		error = -libxfs_trans_commit(tp);
+ 		if (error)
+ 			fail(_("Directory inode allocation failed."), error);
++
++		libxfs_parent_finish(mp, ppargs);
++
+ 		/*
+ 		 * RT initialization.  Do this here to ensure that
+ 		 * the RT inodes get placed after the root inode.
+@@ -636,6 +668,8 @@ parseproto(
+ 		fail(_("Error encountered creating file from prototype file"),
+ 			error);
  	}
++
++	libxfs_parent_finish(mp, ppargs);
+ 	libxfs_irele(ip);
+ }
  
-+	/*
-+	 * If we're going to set a parent pointer on this file, we need to
-+	 * create an attr fork to receive that parent pointer.
-+	 */
-+	if (pip && xfs_has_parent(mp)) {
-+		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
-+		xfs_ifork_init_attr(ip, XFS_DINODE_FMT_EXTENTS, 0);
-+
-+		if (!xfs_has_attr(mp)) {
-+			spin_lock(&mp->m_sb_lock);
-+			xfs_add_attr(mp);
-+			spin_unlock(&mp->m_sb_lock);
-+			xfs_log_sb(tp);
-+		}
-+	}
-+
- 	/*
- 	 * Log the new values stuffed into the inode.
- 	 */
 
