@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6098F5B
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:28:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4803C881E
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:28:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302910; cv=none; b=WIK6YhPU6kiqj2Fia7xXVyl+y6hmxPkMi0qa5/hYr5ckmAR8n+B510TeHybEzaYe9OtbRHO9v/MytG0Q+IcoUKzKCHB2SU8hJRBZf5oeeQqGj1itZtww7m3jVGvhGqbfaYGx8NojlKZGo+lGXWmcbSgjkViA+tZ/27kT4k3vJAE=
+	t=1722302926; cv=none; b=KnvMXg+BHR/B8ra/R23y9/23bVRKlA7lF7BFw2lEJ7OChXi7hKNTaaqmN9r38wEVkqhGcEDufYSTgw2y/vsmtOXGoVbBGL+83NmBHd6LDqGY1OqFX252BHT16PhHJ+QgP0jjcl3tIfJMGD9W/0wGisrETCkOD1v8SBtx0GNYHDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302910; c=relaxed/simple;
-	bh=2fUNGrKK54NkVJ9cChuMo5LInMUbjjaT1OY1yxSRxfw=;
+	s=arc-20240116; t=1722302926; c=relaxed/simple;
+	bh=B05Bsxy/CNfQQUMk/nwB8TbTiqiQFfzCa/rVhDIKkRw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dg5I8IWg7ywXwfURFXfQub4uvZW/+To169yS1BM2eo6lBG+w1+1Kp5xdl9nZq4UcHjfECPn2CdxWYbTE17ZcZkF1iVP0bS+YER4nFO7ymKxD39Hy1EjmuYtjFOV7UqkWqCy1zp5QUb18DJjIh0n+SMZnJIemi71AQ06OBAKrnQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nCwuee40; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XRx6Fxuke9fenm3wyqUwEvFMcc9wsXiTJiIhDvqpF2BvlS+sBxw+0sbsZMycMwmnRM0uX/hQUnqkfhzVFOH7R6Uw8FE31hUb3DDEQTu0OOWnCuHY1lrv7fmyo5HiiYgd9zJTJVF5ezmtiokMZY80HH7Gzo8h+yOAIa7gtfcTdFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=USMbk3JM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nCwuee40"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76FD4C4AF0A;
-	Tue, 30 Jul 2024 01:28:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="USMbk3JM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22714C32786;
+	Tue, 30 Jul 2024 01:28:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302910;
-	bh=2fUNGrKK54NkVJ9cChuMo5LInMUbjjaT1OY1yxSRxfw=;
+	s=k20201202; t=1722302926;
+	bh=B05Bsxy/CNfQQUMk/nwB8TbTiqiQFfzCa/rVhDIKkRw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nCwuee40OjkZOUOTqJLFkQG81NKh14f13mIztL94oxljYCXs9y9EbiGU4XAvaG8/3
-	 dIa31x7orA5YLGV3QVUPGX06Vdu+F4HR9NR6X0F2WFJfigPdWcU4TqsnVdVw+Cb+Uy
-	 xw29wPGOj0KGUCZ5tjD4nP9XqznRHGgQx0VrZcmNhZQ6/eWO1Zt0gYR5IRzXLyanw9
-	 wyNpkXsblzh4WXp7M5PKcRb1yHr95f40icbAz1U2oyHwrJvp34dfn8ZWPL9GilLpcK
-	 ijb3ZlOIT7vUW6vRG1S8dTLfyHoloykjhA52K+tKSJohBXXR40HG3o94Hs6Tdlpfbr
-	 xNN1uFCjF2AbQ==
-Date: Mon, 29 Jul 2024 18:28:30 -0700
-Subject: [PATCH 11/12] xfs_repair: update ondisk parent pointer records
+	b=USMbk3JMc2Bi3z5ypJX7S8eGQg40m5/WI9ouM0IjwDr+N0E6MW5iwpqu8nRp1qKIm
+	 82eKqd1kb/77Z8iTOpVGDQbBulIrbP215Tf5EROxfKLeFKVNkZp0ktddK0WC59S5Zb
+	 0GI15KA/SCD89rq86RHrJnFoPhS+uXA9MdX+mC8OFzShUL8e913V52am3UnaMRXrvo
+	 6pbAxoCeypUA2hFIfFg5NUgaBoIRvZG/UaEqlzKdaJ1xgZJEE3fUQB+0cnr6b7w6jY
+	 bQT9TFeJ2xAIsToKn7+Urt7YDY4S+WM/YQsnHRExpb6/qkeX/QeBm6gwjGTA9qMn/U
+	 fJDPh+3k5J84g==
+Date: Mon, 29 Jul 2024 18:28:45 -0700
+Subject: [PATCH 12/12] xfs_repair: wipe ondisk parent pointers when there are
+ none
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
  catherine.hoang@oracle.com, allison.henderson@oracle.com
-Message-ID: <172229851628.1352527.106880217821874506.stgit@frogsfrogsfrogs>
+Message-ID: <172229851640.1352527.8340902280666804954.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229851481.1352527.11812121319440135994.stgit@frogsfrogsfrogs>
 References: <172229851481.1352527.11812121319440135994.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,149 +48,81 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update the ondisk parent pointer records as necessary.
+Erase all the parent pointers when there aren't any found by the
+directory entry scan.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/libxfs_api_defs.h |    2 +
- repair/pptr.c            |   88 ++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 87 insertions(+), 3 deletions(-)
+ repair/pptr.c |   41 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 3 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index e12f0a40b..df316727b 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -209,8 +209,10 @@
- #define xfs_parent_hashval		libxfs_parent_hashval
- #define xfs_parent_lookup		libxfs_parent_lookup
- #define xfs_parent_removename		libxfs_parent_removename
-+#define xfs_parent_set			libxfs_parent_set
- #define xfs_parent_start		libxfs_parent_start
- #define xfs_parent_from_attr		libxfs_parent_from_attr
-+#define xfs_parent_unset		libxfs_parent_unset
- #define xfs_perag_get			libxfs_perag_get
- #define xfs_perag_hold			libxfs_perag_hold
- #define xfs_perag_put			libxfs_perag_put
 diff --git a/repair/pptr.c b/repair/pptr.c
-index 61466009d..94d6d8346 100644
+index 94d6d8346..8ec6a51d2 100644
 --- a/repair/pptr.c
 +++ b/repair/pptr.c
-@@ -673,6 +673,44 @@ load_file_pptr_name(
- 			name, file_pptr->namelen);
- }
- 
-+/* Add an on disk parent pointer to a file. */
-+static int
-+add_file_pptr(
-+	struct xfs_inode		*ip,
-+	const struct ag_pptr		*ag_pptr,
-+	const unsigned char		*name)
-+{
-+	struct xfs_name			xname = {
-+		.name			= name,
-+		.len			= ag_pptr->namelen,
-+	};
-+	struct xfs_parent_rec		pptr_rec = { };
-+	struct xfs_da_args		scratch;
-+
-+	xfs_parent_rec_init(&pptr_rec, ag_pptr->parent_ino,
-+			ag_pptr->parent_gen);
-+	return -libxfs_parent_set(ip, ip->i_ino, &xname, &pptr_rec, &scratch);
-+}
-+
-+/* Remove an on disk parent pointer from a file. */
-+static int
-+remove_file_pptr(
-+	struct xfs_inode		*ip,
-+	const struct file_pptr		*file_pptr,
-+	const unsigned char		*name)
-+{
-+	struct xfs_name			xname = {
-+		.name			= name,
-+		.len			= file_pptr->namelen,
-+	};
-+	struct xfs_parent_rec		pptr_rec = { };
-+	struct xfs_da_args		scratch;
-+
-+	xfs_parent_rec_init(&pptr_rec, file_pptr->parent_ino,
-+			file_pptr->parent_gen);
-+	return -libxfs_parent_unset(ip, ip->i_ino, &xname, &pptr_rec, &scratch);
-+}
-+
+@@ -714,8 +714,13 @@ remove_file_pptr(
  /* Remove all pptrs from @ip. */
  static void
  clear_all_pptrs(
-@@ -729,7 +767,16 @@ add_missing_parent_ptr(
- 				name);
- 	}
- 
--	/* XXX actually do the work */
-+	error = add_file_pptr(ip, ag_pptr, name);
-+	if (error)
-+		do_error(
-+ _("adding ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
-+			(unsigned long long)ip->i_ino,
-+			(unsigned long long)ag_pptr->parent_ino,
-+			ag_pptr->parent_gen,
-+			ag_pptr->namelen,
-+			name,
-+			strerror(error));
- }
- 
- /* Remove @file_pptr from @ip. */
-@@ -771,7 +818,16 @@ remove_incorrect_parent_ptr(
- 			file_pptr->namelen,
- 			name);
- 
--	/* XXX actually do the work */
-+	error = remove_file_pptr(ip, file_pptr, name);
-+	if (error)
-+		do_error(
-+ _("removing ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
-+			(unsigned long long)ip->i_ino,
-+			(unsigned long long)file_pptr->parent_ino,
-+			file_pptr->parent_gen,
-+			file_pptr->namelen,
-+			name,
-+			strerror(error));
- }
- 
- /*
-@@ -851,7 +907,33 @@ compare_parent_ptrs(
- 			ag_pptr->namelen,
- 			name1);
- 
--	/* XXX do the work */
-+	/* Remove the parent pointer that we don't want. */
-+	error = remove_file_pptr(ip, file_pptr, name2);
-+	if (error)
-+		do_error(
-+_("erasing ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
-+			(unsigned long long)ip->i_ino,
-+			(unsigned long long)file_pptr->parent_ino,
-+			file_pptr->parent_gen,
-+			file_pptr->namelen,
-+			name2,
-+			strerror(error));
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	struct file_scan	*fscan)
+ {
++	struct xfs_slab_cursor	*cur;
++	struct file_pptr	*file_pptr;
++	int			error;
 +
-+	/*
-+	 * Add the parent pointer that we do want.  It's possible that this
-+	 * parent pointer already exists but we haven't gotten that far in the
-+	 * scan, so we'll keep going on EEXIST.
-+	 */
-+	error = add_file_pptr(ip, ag_pptr, name1);
-+	if (error && error != EEXIST)
-+		do_error(
-+ _("updating ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
-+			(unsigned long long)ip->i_ino,
-+			(unsigned long long)ag_pptr->parent_ino,
-+			ag_pptr->parent_gen,
-+			ag_pptr->namelen,
-+			name1,
-+			strerror(error));
+ 	if (no_modify) {
+ 		do_warn(_("would delete unlinked ino %llu parent pointers\n"),
+ 				(unsigned long long)ip->i_ino);
+@@ -724,7 +729,37 @@ clear_all_pptrs(
+ 
+ 	do_warn(_("deleting unlinked ino %llu parent pointers\n"),
+ 			(unsigned long long)ip->i_ino);
+-	/* XXX actually do the work */
++
++	error = -init_slab_cursor(fscan->file_pptr_recs, NULL, &cur);
++	if (error)
++		do_error(_("init ino %llu pptr cursor failed: %s\n"),
++				(unsigned long long)ip->i_ino,
++				strerror(error));
++
++	while ((file_pptr = pop_slab_cursor(cur)) != NULL) {
++		unsigned char	name[MAXNAMELEN];
++
++		error = load_file_pptr_name(fscan, file_pptr, name);
++		if (error)
++			do_error(
++  _("loading incorrect name for ino %llu parent pointer (ino %llu gen 0x%x namecookie 0x%llx) failed: %s\n"),
++					(unsigned long long)ip->i_ino,
++					(unsigned long long)file_pptr->parent_ino,
++					file_pptr->parent_gen,
++					(unsigned long long)file_pptr->name_cookie,
++					strerror(error));
++
++		error = remove_file_pptr(ip, file_pptr, name);
++		if (error)
++			do_error(
++ _("wiping ino %llu pptr (ino %llu gen 0x%x) failed: %s\n"),
++				(unsigned long long)ip->i_ino,
++				(unsigned long long)file_pptr->parent_ino,
++				file_pptr->parent_gen,
++				strerror(error));
++	}
++
++	free_slab_cursor(&cur);
  }
  
- static int
+ /* Add @ag_pptr to @ip. */
+@@ -1028,7 +1063,7 @@ crosscheck_file_parent_ptrs(
+ 		 * file.
+ 		 */
+ 		if (fscan->nr_file_pptrs > 0)
+-			clear_all_pptrs(ip);
++			clear_all_pptrs(ip, fscan);
+ 
+ 		return;
+ 	}
 
