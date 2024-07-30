@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3BF8F6A
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:59:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4433211
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:00:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301187; cv=none; b=lXSFIiFbNt2+qx/OOqA7M/k1AFBaHMltIC+/yBT4AiD7flJFh/fY8Ohex6w3Z8oGiQIyei4dgUoxLKLXL8phoaw0HMk/XI0UVwxutSVEpAh1AHyLyvxM/3j5NYZ92RWx3TBmhM8DRcFbHm8KjCTy/WVcbOIfLclrTZld3ddBA50=
+	t=1722301202; cv=none; b=YK5MzspW97bMyRg/U5B+qtrYp2VCy3z/Uz/a5+q9Yf7Bua+42GIc6+RwFsWzGc2IutQ2EykrpYWzMqs4eQkcaDkmLPSAvZPUh0Ud0abK+LO+uMgPQlV2GekRRwfxzt2riBYzEAiWAxI2qIl4rQ536GK449mqAfCZr8sU2CkREaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301187; c=relaxed/simple;
-	bh=OuH3bYTUZBvFYpIe4VVgTmhI+tRRfqLDKjx73M7N8h8=;
+	s=arc-20240116; t=1722301202; c=relaxed/simple;
+	bh=1ujHTh0zoeMl5FhAd0wscA44jd3xcn9Hf3pZrUOJ1h4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=o3Fa3DK/Jh7qApOpPXVasgRhzcPEy1wbwXfLxZ0fq9XIT6AvnquLfade0eEU7axZy1TDB4ZMBCf54Ay8iiH2B5ZiFFEID1Lfr4gQs3khUETztg+aGkz8jo7rrpkKcaG3kAVgLXOWmsYuLI8oXEyZrVt2Pe8a43EyiwE4m2Avanw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RDFnPyke; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kx9siOwiraKVKTMuHl8E1gCRRHESifktFI2Nybuc9/MsHZodP2oVKoH0IL9f/XrKljnbx5CULS4wz3qUBjPnmkDK4SpNyMDgRSaVHlwScjAPZ/+/88jtfdGWxfaUm+BqPm937Hbcg70GLAfkl718AFof4SSEf6JRT+BJLgFita0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HX3tx4Qk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RDFnPyke"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7247C32786;
-	Tue, 30 Jul 2024 00:59:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HX3tx4Qk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 704DFC32786;
+	Tue, 30 Jul 2024 01:00:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301186;
-	bh=OuH3bYTUZBvFYpIe4VVgTmhI+tRRfqLDKjx73M7N8h8=;
+	s=k20201202; t=1722301202;
+	bh=1ujHTh0zoeMl5FhAd0wscA44jd3xcn9Hf3pZrUOJ1h4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RDFnPykeF9+akQ8tVz0iQ/V0gVbl2CqdedjLTrEqirldfoSf0N+melb/CEWBL5PBD
-	 JHkFcbe082UzLhczYh5k1mbiECGRwQaTnY8Ba5EPWkguEzDBBhiaBVk7i+u/I+Dyki
-	 twHmgOFxs4EFXQFbZNGVvpc8BtvTcWwbZjGxrgS20e4JAGUItEVtRXphYcbtGgtp1b
-	 vSyB5CE4EoMlF9SDFOv2z2OPcGDgTcUelhOVRnDDYRHy+3Tn2pc3NKBmOj05mEwBoK
-	 0uwpEeg/xAXFyLYHSLLVU+Moe+KmUb5BvtaGylsOo/4rJwv2DnIPcrjQ9ozYdfVVe3
-	 RTkQOXx4l40+g==
-Date: Mon, 29 Jul 2024 17:59:46 -0700
-Subject: [PATCH 3/8] xfs_scrub: get rid of trivial fs metadata scanner helpers
+	b=HX3tx4Qk66Cqb1pwr0tu2d0E/2OlFPijAQPK4cSLvfTjHoHMthaF6DOwHruUxmsl4
+	 omc1smX857EqFBEPbauOwDkh+mHCG540aI+4gToi98/MEB25KgAXNLk/1I1uWDDQKi
+	 4T3bQlOpYY1C50UEbf9b5Sb2mE9/yIDqHBnvUk9f38o9PGGXlpBmDiKmtYVEiWku6X
+	 E6vKVNIopuH72R8SBBZwK5TrLep9rjxfuge6/Im/+83vPu8xRqkHwFVzwsIpaVHUBy
+	 hnuuXZrIUmeaHgA7X/1/5j8DLUENgyw38dv3FJlQaKDcwuy2dZhCGiJpw3g94CjDzs
+	 L8Lhm2eTX3p3w==
+Date: Mon, 29 Jul 2024 18:00:01 -0700
+Subject: [PATCH 4/8] xfs_scrub: split up the mustfix repairs and difficulty
+ assessment functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229845975.1345965.9617020583885754986.stgit@frogsfrogsfrogs>
+Message-ID: <172229845990.1345965.3538490020328377196.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229845921.1345965.6707043699978988202.stgit@frogsfrogsfrogs>
 References: <172229845921.1345965.6707043699978988202.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,187 +47,144 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Get rid of these pointless wrappers.
+Currently, action_list_find_mustfix does two things -- it figures out
+which repairs must be tried during phase 2 to enable the inode scan in
+phase 3; and it figures out if xfs_scrub should warn about secondary and
+primary metadata corruption that might make repair difficult.
+
+Split these into separate functions to make each more coherent.  A long
+time from now we'll need this to enable warnings about difficult rt
+repairs, but for now this is merely a code cleanup.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/phase1.c |    2 +-
- scrub/phase4.c |    9 +++++----
- scrub/phase5.c |   15 +++++++--------
- scrub/scrub.c  |   36 ------------------------------------
- scrub/scrub.h  |    4 ----
- 5 files changed, 13 insertions(+), 53 deletions(-)
+ scrub/phase2.c |   15 +++++++--------
+ scrub/repair.c |   38 +++++++++++++++++++++++++++-----------
+ scrub/repair.h |   10 +++++++---
+ 3 files changed, 41 insertions(+), 22 deletions(-)
 
 
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 81b0918a1..a61e154a8 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -61,7 +61,7 @@ report_to_kernel(
- 		return 0;
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index ec72bb5b7..4c0d20a8e 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -42,9 +42,8 @@ scan_ag_metadata(
+ 	struct scan_ctl			*sctl = arg;
+ 	struct action_list		alist;
+ 	struct action_list		immediate_alist;
+-	unsigned long long		broken_primaries;
+-	unsigned long long		broken_secondaries;
+ 	char				descr[DESCR_BUFSZ];
++	unsigned int			difficulty;
+ 	int				ret;
  
- 	action_list_init(&alist);
--	ret = scrub_clean_health(ctx, &alist);
-+	ret = scrub_meta_type(ctx, XFS_SCRUB_TYPE_HEALTHY, 0, &alist);
- 	if (ret)
- 		return ret;
- 
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index 0c67abf64..d01dc89f4 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -136,14 +136,14 @@ phase4_func(
- 		goto maybe_trim;
- 
- 	/*
--	 * Check the summary counters early.  Normally we do this during phase
--	 * seven, but some of the cross-referencing requires fairly accurate
-+	 * Check the resource usage counters early.  Normally we do this during
-+	 * phase 7, but some of the cross-referencing requires fairly accurate
- 	 * summary counters.  Check and try to repair them now to minimize the
- 	 * chance that repairs of primary metadata fail due to secondary
- 	 * metadata.  If repairs fails, we'll come back during phase 7.
+ 	if (sctl->aborted)
+@@ -79,12 +78,12 @@ scan_ag_metadata(
+ 	 * the inobt from rmapbt data, but if the rmapbt is broken even
+ 	 * at this early phase then we are sunk.
  	 */
- 	action_list_init(&alist);
--	ret = scrub_fs_counters(ctx, &alist);
-+	ret = scrub_meta_type(ctx, XFS_SCRUB_TYPE_FSCOUNTERS, 0, &alist);
- 	if (ret)
- 		return ret;
- 
-@@ -158,7 +158,8 @@ phase4_func(
- 		return ret;
- 
- 	if (fsgeom.sick & XFS_FSOP_GEOM_SICK_QUOTACHECK) {
--		ret = scrub_quotacheck(ctx, &alist);
-+		ret = scrub_meta_type(ctx, XFS_SCRUB_TYPE_QUOTACHECK, 0,
-+				&alist);
- 		if (ret)
- 			return ret;
- 	}
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 940e434c3..68d35cd58 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -384,12 +384,10 @@ check_fs_label(
- 	return error;
- }
- 
--typedef int (*fs_scan_item_fn)(struct scrub_ctx *, struct action_list *);
--
- struct fs_scan_item {
- 	struct action_list	alist;
- 	bool			*abortedp;
--	fs_scan_item_fn		scrub_fn;
-+	unsigned int		scrub_type;
- };
- 
- /* Run one full-fs scan scrubber in this thread. */
-@@ -414,7 +412,7 @@ fs_scan_worker(
- 		nanosleep(&tv, NULL);
- 	}
- 
--	ret = item->scrub_fn(ctx, &item->alist);
-+	ret = scrub_meta_type(ctx, item->scrub_type, 0, &item->alist);
- 	if (ret) {
- 		str_liberror(ctx, ret, _("checking fs scan metadata"));
- 		*item->abortedp = true;
-@@ -440,7 +438,7 @@ queue_fs_scan(
- 	struct workqueue	*wq,
- 	bool			*abortedp,
- 	xfs_agnumber_t		nr,
--	fs_scan_item_fn		scrub_fn)
-+	unsigned int		scrub_type)
+-	broken_secondaries = 0;
+-	broken_primaries = 0;
+-	action_list_find_mustfix(&alist, &immediate_alist,
+-			&broken_primaries, &broken_secondaries);
+-	if (broken_secondaries && !debug_tweak_on("XFS_SCRUB_FORCE_REPAIR")) {
+-		if (broken_primaries)
++	difficulty = action_list_difficulty(&alist);
++	action_list_find_mustfix(&alist, &immediate_alist);
++
++	if ((difficulty & REPAIR_DIFFICULTY_SECONDARY) &&
++	    !debug_tweak_on("XFS_SCRUB_FORCE_REPAIR")) {
++		if (difficulty & REPAIR_DIFFICULTY_PRIMARY)
+ 			str_info(ctx, descr,
+ _("Corrupt primary and secondary block mapping metadata."));
+ 		else
+diff --git a/scrub/repair.c b/scrub/repair.c
+index 50f168d24..8ee9102ab 100644
+--- a/scrub/repair.c
++++ b/scrub/repair.c
+@@ -290,9 +290,7 @@ xfs_action_item_compare(
+ void
+ action_list_find_mustfix(
+ 	struct action_list		*alist,
+-	struct action_list		*immediate_alist,
+-	unsigned long long		*broken_primaries,
+-	unsigned long long		*broken_secondaries)
++	struct action_list		*immediate_alist)
  {
- 	struct fs_scan_item	*item;
- 	struct scrub_ctx	*ctx = wq->wq_ctx;
-@@ -453,7 +451,7 @@ queue_fs_scan(
- 		return ret;
+ 	struct action_item		*n;
+ 	struct action_item		*aitem;
+@@ -301,25 +299,43 @@ action_list_find_mustfix(
+ 		if (!(aitem->flags & XFS_SCRUB_OFLAG_CORRUPT))
+ 			continue;
+ 		switch (aitem->type) {
+-		case XFS_SCRUB_TYPE_RMAPBT:
+-			(*broken_secondaries)++;
+-			break;
+ 		case XFS_SCRUB_TYPE_FINOBT:
+ 		case XFS_SCRUB_TYPE_INOBT:
+ 			alist->nr--;
+ 			list_move_tail(&aitem->list, &immediate_alist->list);
+ 			immediate_alist->nr++;
+-			fallthrough;
++			break;
++		}
++	}
++}
++
++/* Determine if primary or secondary metadata are inconsistent. */
++unsigned int
++action_list_difficulty(
++	const struct action_list	*alist)
++{
++	struct action_item		*aitem, *n;
++	unsigned int			ret = 0;
++
++	list_for_each_entry_safe(aitem, n, &alist->list, list) {
++		if (!(aitem->flags & XFS_SCRUB_OFLAG_CORRUPT))
++			continue;
++
++		switch (aitem->type) {
++		case XFS_SCRUB_TYPE_RMAPBT:
++			ret |= REPAIR_DIFFICULTY_SECONDARY;
++			break;
++		case XFS_SCRUB_TYPE_FINOBT:
++		case XFS_SCRUB_TYPE_INOBT:
+ 		case XFS_SCRUB_TYPE_BNOBT:
+ 		case XFS_SCRUB_TYPE_CNTBT:
+ 		case XFS_SCRUB_TYPE_REFCNTBT:
+-			(*broken_primaries)++;
+-			break;
+-		default:
+-			abort();
++			ret |= REPAIR_DIFFICULTY_PRIMARY;
+ 			break;
+ 		}
  	}
- 	action_list_init(&item->alist);
--	item->scrub_fn = scrub_fn;
-+	item->scrub_type = scrub_type;
- 	item->abortedp = abortedp;
- 
- 	ret = -workqueue_add(wq, fs_scan_worker, nr, item);
-@@ -485,14 +483,15 @@ run_kernel_fs_scan_scrubbers(
- 	 * The nlinks scanner is much faster than quotacheck because it only
- 	 * walks directories, so we start it first.
- 	 */
--	ret = queue_fs_scan(&wq_fs_scan, &aborted, nr, scrub_nlinks);
-+	ret = queue_fs_scan(&wq_fs_scan, &aborted, nr, XFS_SCRUB_TYPE_NLINKS);
- 	if (ret)
- 		goto wait;
- 
- 	if (nr_threads > 1)
- 		nr++;
- 
--	ret = queue_fs_scan(&wq_fs_scan, &aborted, nr, scrub_quotacheck);
-+	ret = queue_fs_scan(&wq_fs_scan, &aborted, nr,
-+			XFS_SCRUB_TYPE_QUOTACHECK);
- 	if (ret)
- 		goto wait;
- 
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index c2e56e5f1..6e857c79d 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -366,42 +366,6 @@ scrub_summary_metadata(
- 	return scrub_group(ctx, XFROG_SCRUB_GROUP_SUMMARY, 0, alist);
++
++	return ret;
  }
  
--/* Scrub /only/ the superblock summary counters. */
--int
--scrub_fs_counters(
--	struct scrub_ctx		*ctx,
--	struct action_list		*alist)
--{
--	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_FSCOUNTERS, 0, alist);
--}
--
--/* Scrub /only/ the quota counters. */
--int
--scrub_quotacheck(
--	struct scrub_ctx		*ctx,
--	struct action_list		*alist)
--{
--	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_QUOTACHECK, 0, alist);
--}
--
--/* Scrub /only/ the file link counters. */
--int
--scrub_nlinks(
--	struct scrub_ctx		*ctx,
--	struct action_list		*alist)
--{
--	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_NLINKS, 0, alist);
--}
--
--/* Update incore health records if we were clean. */
--int
--scrub_clean_health(
--	struct scrub_ctx		*ctx,
--	struct action_list		*alist)
--{
--	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_HEALTHY, 0, alist);
--}
--
- /* How many items do we have to check? */
- unsigned int
- scrub_estimate_ag_work(
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index fef8a5960..98819a25b 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -25,10 +25,6 @@ int scrub_fs_metadata(struct scrub_ctx *ctx, unsigned int scrub_type,
- 		struct action_list *alist);
- int scrub_iscan_metadata(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
--int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
--int scrub_quotacheck(struct scrub_ctx *ctx, struct action_list *alist);
--int scrub_nlinks(struct scrub_ctx *ctx, struct action_list *alist);
--int scrub_clean_health(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_meta_type(struct scrub_ctx *ctx, unsigned int type,
- 		xfs_agnumber_t agno, struct action_list *alist);
+ /*
+diff --git a/scrub/repair.h b/scrub/repair.h
+index 6b6f64691..b61bd29c8 100644
+--- a/scrub/repair.h
++++ b/scrub/repair.h
+@@ -28,9 +28,13 @@ void action_list_discard(struct action_list *alist);
+ void action_list_splice(struct action_list *dest, struct action_list *src);
  
+ void action_list_find_mustfix(struct action_list *actions,
+-		struct action_list *immediate_alist,
+-		unsigned long long *broken_primaries,
+-		unsigned long long *broken_secondaries);
++		struct action_list *immediate_alist);
++
++/* Primary metadata is corrupt */
++#define REPAIR_DIFFICULTY_PRIMARY	(1U << 0)
++/* Secondary metadata is corrupt */
++#define REPAIR_DIFFICULTY_SECONDARY	(1U << 1)
++unsigned int action_list_difficulty(const struct action_list *actions);
+ 
+ /*
+  * Only ask the kernel to repair this object if the kernel directly told us it
 
