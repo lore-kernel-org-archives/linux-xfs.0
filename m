@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D28110E3
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:06:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 201B24C97
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:06:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301579; cv=none; b=RCZMoTQecvJQHkaHnzFh1m0VoZbSvJyhch9Kl4SwGb1S7SRPKYsfWN+2HsAZhGIEM8jgmw5u82XfPHEE7nm265fMR4o+tK5F1m6FErX+MVmjV7Fr/890iIqYxOZ3mc6oetjZptcDQ21B8Uh9gyZDeNHfPNJeaXYbqIh09RRG+fI=
+	t=1722301595; cv=none; b=VynRd14IQn4GehOlajXiBSN08rGWLR6rp1+ivcVizLwqQCILx/ccbVE+OTg6EybbbQyqYQpauXs4Fn02P4DgRwM+3cOl0wmDIwuapg9kxcz/zLCI+O4C5LN2qQK4mDFHpe/HFBh3cefwKU/3ZosTHc5MFqKPE8v0QmS82BSFOaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301579; c=relaxed/simple;
-	bh=MkoONVRwz64FQqQTIhCGD7I7WiyVqX90RiC4rWsyR6c=;
+	s=arc-20240116; t=1722301595; c=relaxed/simple;
+	bh=clb0cWF+E7Yy91hZ2f4Ob0arAKmdCLfWGVgIDpqRJtI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DhMNHNB66588Am5MP7dhh90948h+SDEjjsY8qcqA+2+UIRkFGFArrm3RlHpxU6nFCBCPmgV86dqXZROqKRk5AFsblrlhGP4xRrCdCT34TuUtYC2UhdjewTebwJGoUK7JWbKaNBSZ50gt26lNvJBh98sGDS28hACPOVNLKUQ63TE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HUi+31jf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=E5ufy4RvxITaljvId8STYQ9mRm6Ct82QqjQsJxEyIos2GtA5m1N+WXbm42Dd3Zi9XfPHjfmRZbx3jerzJVa+X8/3BIjDW4SS3WxwwrlSGBXpTZZgCEJJBiH3A+YNqcCXm68GB6Uh3BNJeIf3Dg5x52ggn70D+oUUXGO2pT+TDT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M71CI13C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HUi+31jf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 512CDC32786;
-	Tue, 30 Jul 2024 01:06:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M71CI13C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F19ABC32786;
+	Tue, 30 Jul 2024 01:06:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301579;
-	bh=MkoONVRwz64FQqQTIhCGD7I7WiyVqX90RiC4rWsyR6c=;
+	s=k20201202; t=1722301595;
+	bh=clb0cWF+E7Yy91hZ2f4Ob0arAKmdCLfWGVgIDpqRJtI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HUi+31jfS5JK0pHLg2pHzd/fUeNum7lh4hwFGxbKrJ+ibEaGxMiGIPq3Uo9gaEoCg
-	 WxAmKy3j/Loyi9uG7fKsE7yHsZh9A9pk52aMWo8W1I79Exz1gZiRrgHSlgh0QcitbH
-	 Dmx0ocPZG5dlBZraJifHYaUodrRYCtYBcmqFzdCuY61N0780bKnD1ED+YScCeeqULx
-	 I4lxZL9oEvVGFH/A97u16NEJF2pthaR/+AP1tVZd/1/iyCD6vxQAPjs4wsY8KInLSF
-	 e2ixXOgrXisf+a4fNRzLuF4NdYcblHiJMVQ5tI17vqQYFgMevMYq+UEjrncYJBUXra
-	 WC0MjXRv2OYjQ==
-Date: Mon, 29 Jul 2024 18:06:18 -0700
-Subject: [PATCH 02/13] xfs_scrub: hoist code that removes ignorable characters
+	b=M71CI13CGZjSj49SCGnBs1FLmOu4JP/lyODgkXj5v00PAW8TD7BFRq5rYG6mi3Ywm
+	 Fd0NqWHiQJdDuB5ZZ30iAbt0h0Zme3kmj4A39Jlefgj7+ri9GreTb5USWRaZ9c7Gdf
+	 0tDOXUAVdUwNJL5+AMElEp1t03EFvsW8nZrOMcdtTh+yYb0fHzO7xip0Band8dmFjM
+	 K5uhDZtS6bGWi2/6U7AI342UMlhSeITGXkXB14wF/9PBLuJDd0n9+m15dKHQmU9sKA
+	 hk9pm2AE68aIXrpW+x9QfElCZfzXlX0ZfbP5XpauQFkX2VSUVLeoRTjRoqg6IlGwsn
+	 /CsuZtOEFoKmw==
+Date: Mon, 29 Jul 2024 18:06:34 -0700
+Subject: [PATCH 03/13] xfs_scrub: add a couple of omitted invisible code
+ points
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229847561.1348850.2823932170105684878.stgit@frogsfrogsfrogs>
+Message-ID: <172229847576.1348850.17804705325546372553.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229847517.1348850.11238185324580578408.stgit@frogsfrogsfrogs>
 References: <172229847517.1348850.11238185324580578408.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,80 +47,51 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Hoist the loop that removes "ignorable" code points from the skeleton
-string into a separate function and give the UChar cursors names that
-are easier to understand.  Convert the code to use the safe versions of
-the U16_ accessor functions.
+I missed a few non-rendering code points in the "zero width"
+classification code.  Add them now, and sort the list.  Finding them is
+an annoyingly manual process because there are various code points that
+are not supposed to affect the rendering of a string of text but are not
+explicitly named as such.  There are other code points that, when
+surrounded by code points from the same chart, actually /do/ affect the
+rendering.
+
+IOWs, the only way to figure this out is to grep the likely code points
+and then go figure out how each of them render by reading the Unicode
+spec or trying it.
+
+$ wget https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
+$ grep -E '(separator|zero width|invisible|joiner|application)' -i UnicodeData.txt
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/unicrash.c |   39 ++++++++++++++++++++++++++-------------
- 1 file changed, 26 insertions(+), 13 deletions(-)
+ scrub/unicrash.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 
 diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-index 02a1b94ef..96e20114c 100644
+index 96e20114c..edc32d55c 100644
 --- a/scrub/unicrash.c
 +++ b/scrub/unicrash.c
-@@ -145,6 +145,31 @@ is_utf8_locale(void)
- 	return answer;
- }
- 
-+/*
-+ * Remove control/formatting characters from this string and return its new
-+ * length.  UChar32 is required for U16_NEXT, despite the name.
-+ */
-+static int32_t
-+remove_ignorable(
-+	UChar		*ustr,
-+	int32_t		ustrlen)
-+{
-+	UChar32		uchr;
-+	int32_t		src, dest;
-+
-+	for (src = 0, dest = 0; src < ustrlen; dest = src) {
-+		U16_NEXT(ustr, src, ustrlen, uchr);
-+		if (!u_isIDIgnorable(uchr))
-+			continue;
-+		memmove(&ustr[dest], &ustr[src],
-+				(ustrlen - src + 1) * sizeof(UChar));
-+		ustrlen -= (src - dest);
-+		src = dest;
-+	}
-+
-+	return dest;
-+}
-+
- /*
-  * Generate normalized form and skeleton of the name.  If this fails, just
-  * forget everything and return false; this is an advisory checker.
-@@ -160,9 +185,6 @@ name_entry_compute_checknames(
- 	int32_t			normstrlen;
- 	int32_t			unistrlen;
- 	int32_t			skelstrlen;
--	UChar32			uchr;
--	int32_t			i, j;
--
- 	UErrorCode		uerr = U_ZERO_ERROR;
- 
- 	/* Convert bytestr to unistr for normalization */
-@@ -206,16 +228,7 @@ name_entry_compute_checknames(
- 	if (U_FAILURE(uerr))
- 		goto out_skelstr;
- 
--	/* Remove control/formatting characters from skeleton. */
--	for (i = 0, j = 0; i < skelstrlen; j = i) {
--		U16_NEXT_UNSAFE(skelstr, i, uchr);
--		if (!u_isIDIgnorable(uchr))
--			continue;
--		memmove(&skelstr[j], &skelstr[i],
--				(skelstrlen - i + 1) * sizeof(UChar));
--		skelstrlen -= (i - j);
--		i = j;
--	}
-+	skelstrlen = remove_ignorable(skelstr, skelstrlen);
- 
- 	entry->skelstr = skelstr;
- 	entry->skelstrlen = skelstrlen;
+@@ -351,15 +351,19 @@ name_entry_examine(
+ 	while ((uchr = uiter_next32(&uiter)) != U_SENTINEL) {
+ 		/* zero width character sequences */
+ 		switch (uchr) {
++		case 0x034F:	/* combining grapheme joiner */
+ 		case 0x200B:	/* zero width space */
+ 		case 0x200C:	/* zero width non-joiner */
+ 		case 0x200D:	/* zero width joiner */
+-		case 0xFEFF:	/* zero width non breaking space */
++		case 0x2028:	/* line separator */
++		case 0x2029:	/* paragraph separator */
+ 		case 0x2060:	/* word joiner */
+ 		case 0x2061:	/* function application */
+ 		case 0x2062:	/* invisible times (multiply) */
+ 		case 0x2063:	/* invisible separator (comma) */
+ 		case 0x2064:	/* invisible plus (addition) */
++		case 0x2D7F:	/* tifinagh consonant joiner */
++		case 0xFEFF:	/* zero width non breaking space */
+ 			*badflags |= UNICRASH_ZERO_WIDTH;
+ 			break;
+ 		}
 
