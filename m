@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3E48BF0
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:07:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3F18BF0
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:07:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301657; cv=none; b=SwOj69QdWaPzYYCTBayc9TTwhnZyBk1c5JGyYTZADG3Q1RxuftS7I8mSoiF1Mb3VJM2kDX4zvn/u60IEPUEgYmCRgu82D1APMkP8mdfcVeOhqAe+mdYlWJHnCqU+OElZe8IQmi4F2pwMHQn0jr0eNOsU1a/ywwjZLbxAMfBWois=
+	t=1722301673; cv=none; b=svM8kWj4KVlrPCRtFsgCAnLPEaanc4cZ171yiAenCPNgnGtc+wKJiWB2a4HAffFDQKs9I1Kba3wxC2b3dlkb0C8FcvqLOmA+8AK1nkJOXbMIrVG9Naj7VKaI6lFhYIbT1KoVfF+S3b7VMnoZ+lOskWrFQ99R0/5xmkSNqTUryIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301657; c=relaxed/simple;
-	bh=jpLr/KwytkeSaemdnI8DqHQ1S73Vk7y7pXf9ZuV9x3E=;
+	s=arc-20240116; t=1722301673; c=relaxed/simple;
+	bh=BYsCQ2kUyIy6LU2tU4ROVz/qsex4Kp3i7vMDKYyzdmk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rPj8/cRgLNyiw/fT4tpmmlxtAqyOSnrNy0SfXv59qgTSvjd09EvZUrk4jsRdTc2Lp7mciZsEvB2ghaJM0xsA/+10zC3QuDXt5wdj/4St6Mz65lCFo7KhE/l0Fm0QXdpiVx5g9GdwCNJBzvHekGpF9Wi848mQoaY3icJSIcWtY8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bGeZjkum; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ioCpXTX7Roy06zOmHsK+JuhRLu7w2z3M/NhTk12+pUIx4xWAe/s2SnyvbKUSJKqyJbWJwuBBOdV3zs81XtH1VaQpOaBPTSqLS3ViWmzNl/JTQJXnaDtcuuxJaTm9+WHSDSAbazROTcw8ROSfXP2lLYHvu758edjj7i4CC7tRpyY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MjzLn3iw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bGeZjkum"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B73AC32786;
-	Tue, 30 Jul 2024 01:07:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MjzLn3iw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62923C32786;
+	Tue, 30 Jul 2024 01:07:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301657;
-	bh=jpLr/KwytkeSaemdnI8DqHQ1S73Vk7y7pXf9ZuV9x3E=;
+	s=k20201202; t=1722301673;
+	bh=BYsCQ2kUyIy6LU2tU4ROVz/qsex4Kp3i7vMDKYyzdmk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bGeZjkumSZ3bXw8SSyNTWRpA53n8v1cqjF4e8ewuBMUVkLwotSe09izlz41VpA2b/
-	 bIphWXIbPxqsheOL7Hznny88ZY+HSATzRKSW4LoE5XcPDlB8qlMJPfTSKNw9//2wOc
-	 QosDgRppKkaJTJ8Zw+ExwEFUeXIAf15mnY7zPYciqkl2c7CgOb7xt12szj5vn81fab
-	 a7Y2OaHeeDXZiHJS5D4sBO9dsA+HzVDF4gPyGP4H6bLrqHDuskV4Lyo7IWN7qN6/mS
-	 PqGra2I4Q+/kGcKzGQGtyRS+xgGG01JjfTlbnbCruc9kr8gTny3APY3QlPy4y/rBut
-	 ulVt0kuziPIAg==
-Date: Mon, 29 Jul 2024 18:07:37 -0700
-Subject: [PATCH 07/13] xfs_scrub: store bad flags with the name entry
+	b=MjzLn3iw8wNVE+xIYEBfIKuBB+Uv8gcDs8b4uYQWyfgBu22brNPcIzD+ThKlgNDpN
+	 NSHwHUQGe0CZqFfIwmihhPD0TbjV94/9RpGiQklKo0UovCEpvCBsEuePHDE2FFXK/z
+	 dlkhyqlHtc6uta3areUa5Y6IbM2SIQOjoTrqk9mP4YIrkelPOt9eZdby+8OQtrnH6d
+	 wHfb82A1hQjPZSx2ofuFJeBHYuo2OpCM/fk4z3wpghh9f8ovDvJNruqt/YubfOgB8y
+	 taegUju47XSNAz9TUNIqeg8SgT0+DlynfWJ2yutt6bvDTrZK9x/KFtub3FXf2jFDWq
+	 qkXElpIYfyRmw==
+Date: Mon, 29 Jul 2024 18:07:52 -0700
+Subject: [PATCH 08/13] xfs_scrub: rename UNICRASH_ZERO_WIDTH to
+ UNICRASH_INVISIBLE
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229847636.1348850.13236039975048852780.stgit@frogsfrogsfrogs>
+Message-ID: <172229847652.1348850.6582462888057187832.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229847517.1348850.11238185324580578408.stgit@frogsfrogsfrogs>
 References: <172229847517.1348850.11238185324580578408.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,227 +47,45 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When scrub is checking unicode names, there are certain properties of
-the directory/attribute/label name itself that it can complain about.
-Store these in struct name_entry so that the confusable names detector
-can pick this up later.
-
-This restructuring enables a subsequent patch to detect suspicious
-sequences in the NFC normalized form of the name without needing to hang
-on to that NFC form until the end of processing.  IOWs, it's a memory
-usage optimization.
+"Zero width" doesn't fully describe what the flag represents -- it gets
+set for any codepoint that doesn't render.  Rename it accordingly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/unicrash.c |  122 ++++++++++++++++++++++++++++--------------------------
- 1 file changed, 64 insertions(+), 58 deletions(-)
+ scrub/unicrash.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
 diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-index 1a86b5f8c..e98f850ab 100644
+index e98f850ab..5447d94f0 100644
 --- a/scrub/unicrash.c
 +++ b/scrub/unicrash.c
-@@ -69,6 +69,9 @@ struct name_entry {
+@@ -109,7 +109,7 @@ struct unicrash {
+ #define UNICRASH_CONTROL_CHAR	(1 << 3)
  
- 	xfs_ino_t		ino;
+ /* Invisible characters.  Only a problem if we have collisions. */
+-#define UNICRASH_ZERO_WIDTH	(1 << 4)
++#define UNICRASH_INVISIBLE	(1 << 4)
  
-+	/* Everything that we don't like about this name. */
-+	unsigned int		badflags;
-+
- 	/* Raw dirent name */
- 	size_t			namelen;
- 	char			name[0];
-@@ -276,6 +279,55 @@ name_entry_compute_checknames(
- 	return false;
- }
+ /* Multiple names resolve to the same skeleton string. */
+ #define UNICRASH_CONFUSABLE	(1 << 5)
+@@ -298,7 +298,7 @@ name_entry_examine(
+ 	while ((uchr = uiter_next32(&uiter)) != U_SENTINEL) {
+ 		/* characters are invisible */
+ 		if (is_nonrendering(uchr))
+-			ret |= UNICRASH_ZERO_WIDTH;
++			ret |= UNICRASH_INVISIBLE;
  
-+/*
-+ * Check a name for suspicious elements that have appeared in filename
-+ * spoofing attacks.  This includes names that mixed directions or contain
-+ * direction overrides control characters, both of which have appeared in
-+ * filename spoofing attacks.
-+ */
-+static unsigned int
-+name_entry_examine(
-+	const struct name_entry	*entry)
-+{
-+	UCharIterator		uiter;
-+	UChar32			uchr;
-+	uint8_t			mask = 0;
-+	unsigned int		ret = 0;
-+
-+	uiter_setString(&uiter, entry->normstr, entry->normstrlen);
-+	while ((uchr = uiter_next32(&uiter)) != U_SENTINEL) {
-+		/* characters are invisible */
-+		if (is_nonrendering(uchr))
-+			ret |= UNICRASH_ZERO_WIDTH;
-+
-+		/* control characters */
-+		if (u_iscntrl(uchr))
-+			ret |= UNICRASH_CONTROL_CHAR;
-+
-+		switch (u_charDirection(uchr)) {
-+		case U_LEFT_TO_RIGHT:
-+			mask |= 0x01;
-+			break;
-+		case U_RIGHT_TO_LEFT:
-+			mask |= 0x02;
-+			break;
-+		case U_RIGHT_TO_LEFT_OVERRIDE:
-+			ret |= UNICRASH_BIDI_OVERRIDE;
-+			break;
-+		case U_LEFT_TO_RIGHT_OVERRIDE:
-+			ret |= UNICRASH_BIDI_OVERRIDE;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	/* mixing left-to-right and right-to-left chars */
-+	if (mask == 0x3)
-+		ret |= UNICRASH_BIDI_MIXED;
-+	return ret;
-+}
-+
- /* Create a new name entry, returns false if we could not succeed. */
- static bool
- name_entry_create(
-@@ -301,6 +353,7 @@ name_entry_create(
- 	if (!name_entry_compute_checknames(uc, new_entry))
- 		goto out;
- 
-+	new_entry->badflags = name_entry_examine(new_entry);
- 	*entry = new_entry;
- 	return true;
- 
-@@ -362,54 +415,6 @@ name_entry_hash(
- 	}
- }
- 
--/*
-- * Check a name for suspicious elements that have appeared in filename
-- * spoofing attacks.  This includes names that mixed directions or contain
-- * direction overrides control characters, both of which have appeared in
-- * filename spoofing attacks.
-- */
--static void
--name_entry_examine(
--	struct name_entry	*entry,
--	unsigned int		*badflags)
--{
--	UCharIterator		uiter;
--	UChar32			uchr;
--	uint8_t			mask = 0;
--
--	uiter_setString(&uiter, entry->normstr, entry->normstrlen);
--	while ((uchr = uiter_next32(&uiter)) != U_SENTINEL) {
--		/* characters are invisible */
--		if (is_nonrendering(uchr))
--			*badflags |= UNICRASH_ZERO_WIDTH;
--
--		/* control characters */
--		if (u_iscntrl(uchr))
--			*badflags |= UNICRASH_CONTROL_CHAR;
--
--		switch (u_charDirection(uchr)) {
--		case U_LEFT_TO_RIGHT:
--			mask |= 0x01;
--			break;
--		case U_RIGHT_TO_LEFT:
--			mask |= 0x02;
--			break;
--		case U_RIGHT_TO_LEFT_OVERRIDE:
--			*badflags |= UNICRASH_BIDI_OVERRIDE;
--			break;
--		case U_LEFT_TO_RIGHT_OVERRIDE:
--			*badflags |= UNICRASH_BIDI_OVERRIDE;
--			break;
--		default:
--			break;
--		}
--	}
--
--	/* mixing left-to-right and right-to-left chars */
--	if (mask == 0x3)
--		*badflags |= UNICRASH_BIDI_MIXED;
--}
--
- /* Initialize the collision detector. */
- static int
- unicrash_init(
-@@ -640,17 +645,17 @@ _("Unicode name \"%s\" in %s could be confused with \"%s\"."),
-  * must be skeletonized according to Unicode TR39 to detect names that
-  * could be visually confused with each other.
-  */
--static void
-+static unsigned int
- unicrash_add(
- 	struct unicrash		*uc,
- 	struct name_entry	**new_entryp,
--	unsigned int		*badflags,
- 	struct name_entry	**existing_entry)
- {
- 	struct name_entry	*new_entry = *new_entryp;
- 	struct name_entry	*entry;
- 	size_t			bucket;
- 	xfs_dahash_t		hash;
-+	unsigned int		badflags = new_entry->badflags;
- 
- 	/* Store name in hashtable. */
- 	hash = name_entry_hash(new_entry);
-@@ -671,28 +676,30 @@ unicrash_add(
- 			uc->buckets[bucket] = new_entry->next;
- 			name_entry_free(new_entry);
- 			*new_entryp = NULL;
--			return;
-+			return 0;
- 		}
- 
- 		/* Same normalization? */
- 		if (new_entry->normstrlen == entry->normstrlen &&
- 		    !u_strcmp(new_entry->normstr, entry->normstr) &&
- 		    (uc->compare_ino ? entry->ino != new_entry->ino : true)) {
--			*badflags |= UNICRASH_NOT_UNIQUE;
-+			badflags |= UNICRASH_NOT_UNIQUE;
- 			*existing_entry = entry;
--			return;
-+			break;
- 		}
- 
- 		/* Confusable? */
- 		if (new_entry->skelstrlen == entry->skelstrlen &&
- 		    !u_strcmp(new_entry->skelstr, entry->skelstr) &&
- 		    (uc->compare_ino ? entry->ino != new_entry->ino : true)) {
--			*badflags |= UNICRASH_CONFUSABLE;
-+			badflags |= UNICRASH_CONFUSABLE;
- 			*existing_entry = entry;
--			return;
-+			break;
- 		}
- 		entry = entry->next;
- 	}
-+
-+	return badflags;
- }
- 
- /* Check a name for unicode normalization problems or collisions. */
-@@ -706,14 +713,13 @@ __unicrash_check_name(
- {
- 	struct name_entry	*dup_entry = NULL;
- 	struct name_entry	*new_entry = NULL;
--	unsigned int		badflags = 0;
-+	unsigned int		badflags;
- 
- 	/* If we can't create entry data, just skip it. */
- 	if (!name_entry_create(uc, name, ino, &new_entry))
- 		return 0;
- 
--	name_entry_examine(new_entry, &badflags);
--	unicrash_add(uc, &new_entry, &badflags, &dup_entry);
-+	badflags = unicrash_add(uc, &new_entry, &dup_entry);
- 	if (new_entry && badflags)
- 		unicrash_complain(uc, dsc, namedescr, new_entry, badflags,
- 				dup_entry);
+ 		/* control characters */
+ 		if (u_iscntrl(uchr))
+@@ -582,7 +582,7 @@ _("Unicode name \"%s\" in %s renders identically to \"%s\"."),
+ 	 * confused with another name as a result, we should complain.
+ 	 * "moo<zerowidthspace>cow" and "moocow" are misleading.
+ 	 */
+-	if ((badflags & UNICRASH_ZERO_WIDTH) &&
++	if ((badflags & UNICRASH_INVISIBLE) &&
+ 	    (badflags & UNICRASH_CONFUSABLE)) {
+ 		str_warn(uc->ctx, descr_render(dsc),
+ _("Unicode name \"%s\" in %s could be confused with '%s' due to invisible characters."),
 
