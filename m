@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C2EB4A11
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:24:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E97F74A11
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:24:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299074; cv=none; b=jqHf762Fc8W+t+HabX+R3Ib5gaLiRKIUhKtaVNYFjNSZyLEN085x0Gk8jwZCaa6llUxhW0HKMgmf1hVWDedN7nmIjGrGgZTQ0ue5SEgqKDYlR2me5URh1eTF9W0Ps/ZoYkmTZnBEUe7jNyPrN0MPQiF5cm1n4/7gV0b/bWR2quY=
+	t=1722299090; cv=none; b=jVyfd3n64zxUut0wVv/Ffj7pDf9eEiPKIHZ1LQY6EOezR+ouCimHiNC8GXqQdt/GOdP2Bpf5pDTs+op2paSi69nigRd3rpHiz1Phio1uyCDqgvSwaLL+1qmG9ZmVHczZjvrZLIfbJMmkZn7SpTLKUTHzFt6jlNTMIDSoYV8jjlk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299074; c=relaxed/simple;
-	bh=8ezvH9Rp8EvFgP31Tx9/sAUwekDRHUXYad0++gA73Dw=;
+	s=arc-20240116; t=1722299090; c=relaxed/simple;
+	bh=e4hjONcryM0XHtXZ+ZWzdpvDQVEa0yi/JNxkAhiNg1o=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sojnkkR5ZHGi+IuRBNVQBYAqJ9I+EiJ77VIkliPyeH/E/sRbntvpzkJjt4Bw6sfjF4lKrX4wk8e5dDne8OZiD7ST+0f4yWiEhfXobkr0Q7qcpZ04o1ATGf/zpGd73VI4oIzChbjAnS6on6A16KI7igI1LEEGu2xaX29sRgV1IM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qnMc9TJu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=R6MncHGhxx4+fK3x+B1+GV4bHVk9yDp0xQOjxhhGX48qpNDCvalTH1MMqHQ3tFHMD91gP+8CoyKK+Sv3YUfvOj5hDPGRxRqFgAMgC75Qrycl1iXu0+Tl9mvl5KI4ZDT/qb4Hqyc+daGYaUAAtpLOQ0Qv+AqR/XR/XjzAKbGTdYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XuzFePtg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qnMc9TJu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E71DBC32786;
-	Tue, 30 Jul 2024 00:24:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XuzFePtg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89AA1C32786;
+	Tue, 30 Jul 2024 00:24:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299074;
-	bh=8ezvH9Rp8EvFgP31Tx9/sAUwekDRHUXYad0++gA73Dw=;
+	s=k20201202; t=1722299089;
+	bh=e4hjONcryM0XHtXZ+ZWzdpvDQVEa0yi/JNxkAhiNg1o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qnMc9TJuJqOz2Kub6V8S402t3OowxEcesquULebBJ3aZ9X7l8sEhciPzmQsTvRtH/
-	 90nneEnUhxGu6gXUPokVDLe2GLxdIy99QJKyaZHJdyST1q8gYJEtJ03I1KGbb+6/2t
-	 3zv6xLd+ApTwN1HvZX3UcAO1QH1tpaBLYBXhi1V2WgqaIXs8aCZoCuOqolotPcy/S2
-	 FgnDUDMEGgIpxS2fm3JIw44eAJ2tBvPgQS09Wqqug/HazYqa5K/r4P/KecX7QwL1wN
-	 aZso6DzN5ZV2GROZFazUULPGPyAwx8w370DaZXf35nYBVSIrTu3p0MblThP5Utyxam
-	 dNRIsIvUVlThw==
-Date: Mon, 29 Jul 2024 17:24:33 -0700
-Subject: [PATCH 003/115] xfs: introduce new file range exchange ioctl
+	b=XuzFePtgn9znRLT6wg6G6l8EhoyF9srlIgl+rtAgGGRvJrFJOKhnqivdhLIWt+cFe
+	 SOeyu9wg6AzQ58GdeyjaBa+tXtGuBi0nCYaSCPpRbsjxY4JDQPKeK/fWgOPEiqnagN
+	 YOHjBwde09L6uR1k9XmvuOpnoAYv7ryopXxL5EGVKWlHVKd777PpYqP7NP0o18gJ8d
+	 Jk7FHKWT7dallrdayy2RQ3jnCPKGi4E5jx7wqX3nm6o54fgeHzsYCKoN2OLqrBiK6w
+	 twn/U8DsmFgIFEmU6STh3N03jt6OaylvFi3HFgEcEFWxqyBVH0BQ8EvECqDsZH4GdE
+	 9it80ML2N+wWA==
+Date: Mon, 29 Jul 2024 17:24:49 -0700
+Subject: [PATCH 004/115] xfs: create a incompat flag for atomic file mapping
+ exchanges
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229842484.1338752.14571927597810604078.stgit@frogsfrogsfrogs>
+Message-ID: <172229842498.1338752.2972429724527989367.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,83 +47,109 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 9a64d9b3109d01cca0b83c1d36538b7a37c5284e
+Source kernel commit: 1518646eef26c220e9256906260ecaaa64503522
 
-Introduce a new ioctl to handle exchanging ranges of bytes
-between files.  The goal here is to perform the exchange atomically with
-respect to applications -- either they see the file contents before the
-exchange or they see that A-B is now B-A, even if the kernel crashes.
-
-My original goal with all this code was to make it so that online repair
-can build a replacement directory or xattr structure in a temporary file
-and commit the repair by atomically exchanging all the data blocks
-between the two files.  However, I needed a way to test this mechanism
-thoroughly, so I've been evolving an ioctl interface since then.
+Create a incompat flag so that we only attempt to process file mapping
+exchange log items if the filesystem supports it, and a geometry flag to
+advertise support if it's present.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |   41 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+ include/xfs_mount.h |    2 ++
+ libxfs/xfs_format.h |   23 ++++++++++++-----------
+ libxfs/xfs_fs.h     |    1 +
+ libxfs/xfs_sb.c     |    4 ++++
+ 4 files changed, 19 insertions(+), 11 deletions(-)
 
 
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index 9c492b8f5..a9525e4e0 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -169,6 +169,7 @@ typedef struct xfs_mount {
+ #define XFS_FEAT_BIGTIME	(1ULL << 24)	/* large timestamps */
+ #define XFS_FEAT_NEEDSREPAIR	(1ULL << 25)	/* needs xfs_repair */
+ #define XFS_FEAT_NREXT64	(1ULL << 26)	/* large extent counters */
++#define XFS_FEAT_EXCHANGE_RANGE	(1ULL << 27)	/* exchange range */
+ 
+ #define __XFS_HAS_FEAT(name, NAME) \
+ static inline bool xfs_has_ ## name (struct xfs_mount *mp) \
+@@ -213,6 +214,7 @@ __XFS_HAS_FEAT(inobtcounts, INOBTCNT)
+ __XFS_HAS_FEAT(bigtime, BIGTIME)
+ __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
+ __XFS_HAS_FEAT(large_extent_counts, NREXT64)
++__XFS_HAS_FEAT(exchange_range, EXCHANGE_RANGE)
+ 
+ /* Kernel mount features that we don't support */
+ #define __XFS_UNSUPP_FEAT(name) \
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 2b2f9050f..ff1e28316 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -367,18 +367,19 @@ xfs_sb_has_ro_compat_feature(
+ 	return (sbp->sb_features_ro_compat & feature) != 0;
+ }
+ 
+-#define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
+-#define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
+-#define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
+-#define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
+-#define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
+-#define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* large extent counters */
++#define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)  /* filetype in dirent */
++#define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)  /* sparse inode chunks */
++#define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)  /* metadata UUID */
++#define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)  /* large timestamps */
++#define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4) /* needs xfs_repair */
++#define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)  /* large extent counters */
++#define XFS_SB_FEAT_INCOMPAT_EXCHRANGE	(1 << 6)  /* exchangerange supported */
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+-		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+-		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+-		 XFS_SB_FEAT_INCOMPAT_META_UUID| \
+-		 XFS_SB_FEAT_INCOMPAT_BIGTIME| \
+-		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR| \
++		(XFS_SB_FEAT_INCOMPAT_FTYPE | \
++		 XFS_SB_FEAT_INCOMPAT_SPINODES | \
++		 XFS_SB_FEAT_INCOMPAT_META_UUID | \
++		 XFS_SB_FEAT_INCOMPAT_BIGTIME | \
++		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
+ 		 XFS_SB_FEAT_INCOMPAT_NREXT64)
+ 
+ #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index ca1b17d01..8a1e30cf4 100644
+index 8a1e30cf4..53526fca7 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -772,6 +772,46 @@ struct xfs_scrub_metadata {
- #  define XFS_XATTR_LIST_MAX 65536
- #endif
- 
-+/*
-+ * Exchange part of file1 with part of the file that this ioctl that is being
-+ * called against (which we'll call file2).  Filesystems must be able to
-+ * restart and complete the operation even after the system goes down.
-+ */
-+struct xfs_exchange_range {
-+	__s32		file1_fd;
-+	__u32		pad;		/* must be zeroes */
-+	__u64		file1_offset;	/* file1 offset, bytes */
-+	__u64		file2_offset;	/* file2 offset, bytes */
-+	__u64		length;		/* bytes to exchange */
-+
-+	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
-+};
-+
-+/*
-+ * Exchange file data all the way to the ends of both files, and then exchange
-+ * the file sizes.  This flag can be used to replace a file's contents with a
-+ * different amount of data.  length will be ignored.
-+ */
-+#define XFS_EXCHANGE_RANGE_TO_EOF	(1ULL << 0)
-+
-+/* Flush all changes in file data and file metadata to disk before returning. */
-+#define XFS_EXCHANGE_RANGE_DSYNC	(1ULL << 1)
-+
-+/* Dry run; do all the parameter verification but do not change anything. */
-+#define XFS_EXCHANGE_RANGE_DRY_RUN	(1ULL << 2)
-+
-+/*
-+ * Exchange only the parts of the two files where the file allocation units
-+ * mapped to file1's range have been written to.  This can accelerate
-+ * scatter-gather atomic writes with a temp file if all writes are aligned to
-+ * the file allocation unit.
-+ */
-+#define XFS_EXCHANGE_RANGE_FILE1_WRITTEN (1ULL << 3)
-+
-+#define XFS_EXCHANGE_RANGE_ALL_FLAGS	(XFS_EXCHANGE_RANGE_TO_EOF | \
-+					 XFS_EXCHANGE_RANGE_DSYNC | \
-+					 XFS_EXCHANGE_RANGE_DRY_RUN | \
-+					 XFS_EXCHANGE_RANGE_FILE1_WRITTEN)
+@@ -239,6 +239,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_BIGTIME	(1 << 21) /* 64-bit nsec timestamps */
+ #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
+ #define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* large extent counters */
++#define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE (1 << 24) /* exchange range */
  
  /*
-  * ioctl commands that are used by Linux filesystems
-@@ -843,6 +883,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
- #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
- #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
-+#define XFS_IOC_EXCHANGE_RANGE	     _IOWR('X', 129, struct xfs_exchange_range)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 895d646bb..2db43b805 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -173,6 +173,8 @@ xfs_sb_version_to_features(
+ 		features |= XFS_FEAT_NEEDSREPAIR;
+ 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NREXT64)
+ 		features |= XFS_FEAT_NREXT64;
++	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_EXCHRANGE)
++		features |= XFS_FEAT_EXCHANGE_RANGE;
  
+ 	return features;
+ }
+@@ -1257,6 +1259,8 @@ xfs_fs_geometry(
+ 	}
+ 	if (xfs_has_large_extent_counts(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
++	if (xfs_has_exchange_range(mp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE;
+ 	geo->rtsectsize = sbp->sb_blocksize;
+ 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
  
 
