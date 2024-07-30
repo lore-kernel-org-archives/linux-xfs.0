@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8494D28EB
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:23:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 756CF79CC
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:23:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302613; cv=none; b=coIS2vTFfhZjrFeNR2w/3x0unJoEFXDv/rvVhSUremRLryknUiLB/J32jNUfVNOuPbcG7BnQxOT/c+T+3aMgJhPCU4InYqVb9AVPb6llQHTQ5cDocBe6lKlmQC5WsnTRzLGhGfnQJx76F1rCeuDSG5CFXHBQIYni5nD1002Wfrs=
+	t=1722302629; cv=none; b=JPNXqeVtHpznv0FE1ZBOlWBQGbgMyAEMvjRBImTWa2vzIKiwXmXv8qdDCPvgyuKlv22hTDLzhAdlvgn5YgWCbPNaRnDSEqi5YiD+80I0wwPrCgiS1+/4qu1A7sZ6QKSOpt2VZohDd5dQWQakKy5uqw1QjBw+eutsqZ2ay5YSX18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302613; c=relaxed/simple;
-	bh=XfXJ56Ijz6vK3lDCY0CYbpA3Ovc6cud6ADZlbKArArI=;
+	s=arc-20240116; t=1722302629; c=relaxed/simple;
+	bh=COa12PVj1pYpxgtsOfmB2rf335Nd0NQDKOh45kI4uQU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ty83RGhmFw+hAPFVJTLgc9NT2Kon46A07WaV6jO1lCXwHaGm1DbsFWSAtOMaQPYMYK5oA64APfUfZxs1xtkRip5fTRcRafjg/D7DsydCRLqRe+Xi6VfXoW2XyEyu39xgPo5EcAFGh7faSN7Hh259vfCHMDBcm7JVGEoD79hqm20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vAt2fnuQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XPmHVdSYFAPWCz0t29DNndv6Zt7TjhybpO1guakBwQBXDrwvELCMYIPMO6RU9mB+couf/fY3QvmIBmaRTCpiP9xQKcSC6ec4/edLrAyzemp4bVtz1CltMaMiqjkRv7WQ+vI1lNJA5BFX/UEX3dy4TM1/6P9xsDg+NeiSk8iNXRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YN1AEjGU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vAt2fnuQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E2E1C32786;
-	Tue, 30 Jul 2024 01:23:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YN1AEjGU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09DBBC32786;
+	Tue, 30 Jul 2024 01:23:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302613;
-	bh=XfXJ56Ijz6vK3lDCY0CYbpA3Ovc6cud6ADZlbKArArI=;
+	s=k20201202; t=1722302629;
+	bh=COa12PVj1pYpxgtsOfmB2rf335Nd0NQDKOh45kI4uQU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=vAt2fnuQwyY6zzpkrjR4K/C2kZlgPL+FBsQd+/mk+0nH1H5wkadZyfMDntbno2kNI
-	 utD6jvEujmI2QCJr6TfBPnk/saQPfW0Qrqy3LIWmiMRSE4/Yz2j+yeW7VuAyVZMpWh
-	 7UE2XF/Wf53vUJl8UJO4ry/pYbOyAb6CFI0TNSJdG99erYjKPJJCCmjSR0Q+Lrv/22
-	 e5Tap8jUKjq8WwjLD5TBntJeIm1CC8GvdGZi1qNPrD8qDwwa8buks+KlOksGRhbSrx
-	 PaDDCV1Aq8R8gGYGmFVVieHuhGheIbcBI/5vuIHp++04j5ewumvyen3VzoLx8BzCMI
-	 qMcUE5TeAyzmQ==
-Date: Mon, 29 Jul 2024 18:23:32 -0700
-Subject: [PATCH 18/24] xfs_db: add a parents command to list the parents of a
- file
+	b=YN1AEjGUo+uUpH+GxwahWY+Orf6WCXxM5slBc6xvWMX6/PmUuoQcqrpk+MLs54yIR
+	 ysGF068VhMg2UJwYcQEuLmD5FHB6rzK+XQ7D1xfbRYY9nlRP+XHJaIo6T6Vlasvs2E
+	 jjWZbx52fPc1qs3rJxEE5DnyBN0YrbqXSdiBhuwdHsYIAhDHuZ+Up80StNpBsgUrrh
+	 NnXHG3m+Pl+3BMdEjpH2XnVhp+Zm/MpzlrYAZ2HFxz1j3aGNmGaQ2HutVLe7cbuPub
+	 MRYaHQPWbTux5GkJ8evIE4dZJ2kttplwl7eJPm5gYmT1Nr0oTS7khEAb7H4+77Se4j
+	 Iu+AYqjWIT7hA==
+Date: Mon, 29 Jul 2024 18:23:48 -0700
+Subject: [PATCH 19/24] xfs_db: make attr_set and attr_remove handle parent
+ pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
  catherine.hoang@oracle.com, allison.henderson@oracle.com
-Message-ID: <172229850752.1350924.8445323138154231292.stgit@frogsfrogsfrogs>
+Message-ID: <172229850764.1350924.1420273232118745087.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
 References: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,373 +48,418 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a command to dump the parents of a file.
+Make it so that xfs_db can load up the filesystem (somewhat uselessly)
+with parent pointers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/namei.c        |  323 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |    9 +
- 2 files changed, 332 insertions(+)
+ db/attrset.c             |  202 +++++++++++++++++++++++++++++++++++++---------
+ libxfs/libxfs_api_defs.h |    1 
+ man/man8/xfs_db.8        |   21 ++++-
+ 3 files changed, 181 insertions(+), 43 deletions(-)
 
 
-diff --git a/db/namei.c b/db/namei.c
-index 41ccaa04b..46b4cacb5 100644
---- a/db/namei.c
-+++ b/db/namei.c
-@@ -596,6 +596,326 @@ static struct cmdinfo ls_cmd = {
- 	.help		= ls_help,
- };
+diff --git a/db/attrset.c b/db/attrset.c
+index 3b5db7c2a..d9ab79fa7 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -24,11 +24,11 @@ static void		attrset_help(void);
  
-+static void
-+pptr_emit(
-+	struct xfs_inode	*ip,
-+	unsigned int		attr_flags,
-+	const uint8_t		*name,
-+	unsigned int		namelen,
-+	const void		*value,
-+	unsigned int		valuelen)
+ static const cmdinfo_t	attr_set_cmd =
+ 	{ "attr_set", "aset", attr_set_f, 1, -1, 0,
+-	  N_("[-r|-s|-u] [-n] [-R|-C] [-v n] name"),
++	  N_("[-r|-s|-u|-p] [-n] [-R|-C] [-v n] name"),
+ 	  N_("set the named attribute on the current inode"), attrset_help };
+ static const cmdinfo_t	attr_remove_cmd =
+ 	{ "attr_remove", "aremove", attr_remove_f, 1, -1, 0,
+-	  N_("[-r|-s|-u] [-n] name"),
++	  N_("[-r|-s|-u|-p] [-n] name"),
+ 	  N_("remove the named attribute from the current inode"), attrset_help };
+ 
+ static void
+@@ -44,6 +44,7 @@ attrset_help(void)
+ "  -r -- 'root'\n"
+ "  -u -- 'user'		(default)\n"
+ "  -s -- 'secure'\n"
++"  -p -- 'parent'\n"
+ "\n"
+ " For attr_set, these options further define the type of set operation:\n"
+ "  -C -- 'create'    - create attribute, fail if it already exists\n"
+@@ -62,6 +63,49 @@ attrset_init(void)
+ 	add_command(&attr_remove_cmd);
+ }
+ 
++static unsigned char *
++get_buf_from_file(
++	const char	*fname,
++	size_t		bufsize,
++	int		*namelen)
 +{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_ino_t		parent_ino;
-+	uint32_t		parent_gen;
-+	int			error;
++	FILE		*fp;
++	unsigned char	*buf;
++	size_t		sz;
 +
-+	if (!(attr_flags & XFS_ATTR_PARENT))
-+		return;
-+
-+	error = -libxfs_parent_from_attr(mp, attr_flags, name, namelen, value,
-+			valuelen, &parent_ino, &parent_gen);
-+	if (error)
-+		return;
-+
-+	dbprintf("%18llu:0x%08x %3d %.*s\n", parent_ino, parent_gen, namelen,
-+			namelen, name);
-+}
-+
-+static int
-+list_sf_pptrs(
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_attr_sf_hdr		*hdr = ip->i_af.if_data;
-+	struct xfs_attr_sf_entry	*sfe;
-+	unsigned int			i;
-+
-+	sfe = libxfs_attr_sf_firstentry(hdr);
-+	for (i = 0; i < hdr->count; i++) {
-+		pptr_emit(ip, sfe->flags, sfe->nameval, sfe->namelen,
-+				sfe->nameval + sfe->valuelen, sfe->valuelen);
-+
-+		sfe = xfs_attr_sf_nextentry(sfe);
++	buf = malloc(bufsize + 1);
++	if (!buf) {
++		perror("malloc");
++		return NULL;
 +	}
 +
-+	return 0;
-+}
-+
-+static void
-+list_leaf_pptr_entries(
-+	struct xfs_inode		*ip,
-+	struct xfs_buf			*bp)
-+{
-+	struct xfs_attr3_icleaf_hdr	ichdr;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_attr_leafblock	*leaf = bp->b_addr;
-+	struct xfs_attr_leaf_entry	*entry;
-+	unsigned int			i;
-+
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
-+	entry = xfs_attr3_leaf_entryp(leaf);
-+
-+	for (i = 0; i < ichdr.count; entry++, i++) {
-+		struct xfs_attr_leaf_name_local	*name_loc;
-+
-+		/*
-+		 * Parent pointers cannot be remote values; don't bother
-+		 * decoding this xattr name.
-+		 */
-+		if (!(entry->flags & XFS_ATTR_LOCAL))
-+			continue;
-+
-+		name_loc = xfs_attr3_leaf_name_local(leaf, i);
-+		pptr_emit(ip, entry->flags, name_loc->nameval,
-+				name_loc->namelen,
-+				name_loc->nameval + name_loc->namelen,
-+				be16_to_cpu(name_loc->valuelen));
++	fp = fopen(fname, "r");
++	if (!fp) {
++		perror(fname);
++		goto out_free;
 +	}
++
++	sz = fread(buf, sizeof(char), bufsize, fp);
++	if (sz == 0) {
++		printf("%s: Could not read anything from file\n", fname);
++		goto out_fp;
++	}
++
++	fclose(fp);
++
++	*namelen = sz;
++	return buf;
++out_fp:
++	fclose(fp);
++out_free:
++	free(buf);
++	return NULL;
 +}
 +
-+static int
-+list_leaf_pptrs(
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_buf			*leaf_bp;
-+	int				error;
++#define LIBXFS_ATTR_NS		(LIBXFS_ATTR_SECURE | \
++				 LIBXFS_ATTR_ROOT | \
++				 LIBXFS_ATTR_PARENT)
 +
-+	error = -libxfs_attr3_leaf_read(NULL, ip, ip->i_ino, 0, &leaf_bp);
-+	if (error)
-+		return error;
-+
-+	list_leaf_pptr_entries(ip, leaf_bp);
-+	libxfs_trans_brelse(NULL, leaf_bp);
-+	return 0;
-+}
-+
-+static int
-+find_leftmost_attr_leaf(
-+	struct xfs_inode		*ip,
-+	struct xfs_buf			**leaf_bpp)
-+{
-+	struct xfs_da3_icnode_hdr	nodehdr;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_da_intnode		*node;
-+	struct xfs_da_node_entry	*btree;
-+	struct xfs_buf			*bp;
-+	xfs_dablk_t			blkno = 0;
-+	unsigned int			expected_level = 0;
-+	int				error;
-+
-+	for (;;) {
-+		uint16_t		magic;
-+
-+		error = -libxfs_da3_node_read(NULL, ip, blkno, &bp,
-+				XFS_ATTR_FORK);
-+		if (error)
-+			return error;
-+
-+		node = bp->b_addr;
-+		magic = be16_to_cpu(node->hdr.info.magic);
-+		if (magic == XFS_ATTR_LEAF_MAGIC ||
-+		    magic == XFS_ATTR3_LEAF_MAGIC)
+ static int
+ attr_set_f(
+ 	int			argc,
+@@ -69,6 +113,8 @@ attr_set_f(
+ {
+ 	struct xfs_da_args	args = { };
+ 	char			*sp;
++	char			*name_from_file = NULL;
++	char			*value_from_file = NULL;
+ 	enum xfs_attr_update	op = XFS_ATTRUPDATE_UPSERT;
+ 	int			c;
+ 
+@@ -81,20 +127,23 @@ attr_set_f(
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "rusCRnv:")) != EOF) {
++	while ((c = getopt(argc, argv, "ruspCRnN:v:V:")) != EOF) {
+ 		switch (c) {
+ 		/* namespaces */
+ 		case 'r':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			args.attr_filter |= LIBXFS_ATTR_ROOT;
+-			args.attr_filter &= ~LIBXFS_ATTR_SECURE;
+ 			break;
+ 		case 'u':
+-			args.attr_filter &= ~(LIBXFS_ATTR_ROOT |
+-					      LIBXFS_ATTR_SECURE);
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			break;
+ 		case 's':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			args.attr_filter |= LIBXFS_ATTR_SECURE;
+-			args.attr_filter &= ~LIBXFS_ATTR_ROOT;
++			break;
++		case 'p':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
++			args.attr_filter |= XFS_ATTR_PARENT;
+ 			break;
+ 
+ 		/* modifiers */
+@@ -105,6 +154,10 @@ attr_set_f(
+ 			op = XFS_ATTRUPDATE_REPLACE;
+ 			break;
+ 
++		case 'N':
++			name_from_file = optarg;
 +			break;
 +
-+		error = EFSCORRUPTED;
-+		if (magic != XFS_DA_NODE_MAGIC &&
-+		    magic != XFS_DA3_NODE_MAGIC)
-+			goto out_buf;
+ 		case 'n':
+ 			/*
+ 			 * We never touch attr2 these days; leave this here to
+@@ -114,6 +167,11 @@ attr_set_f(
+ 
+ 		/* value length */
+ 		case 'v':
++			if (value_from_file) {
++				dbprintf(_("already set value file\n"));
++				return 0;
++			}
 +
-+		libxfs_da3_node_hdr_from_disk(mp, &nodehdr, node);
+ 			args.valuelen = strtol(optarg, &sp, 0);
+ 			if (*sp != '\0' ||
+ 			    args.valuelen < 0 || args.valuelen > 64 * 1024) {
+@@ -122,30 +180,64 @@ attr_set_f(
+ 			}
+ 			break;
+ 
++		case 'V':
++			if (args.valuelen != 0) {
++				dbprintf(_("already set valuelen\n"));
++				return 0;
++			}
 +
-+		if (nodehdr.count == 0 || nodehdr.level >= XFS_DA_NODE_MAXDEPTH)
-+			goto out_buf;
++			value_from_file = optarg;
++			break;
 +
-+		/* Check the level from the root node. */
-+		if (blkno == 0)
-+			expected_level = nodehdr.level - 1;
-+		else if (expected_level != nodehdr.level)
-+			goto out_buf;
-+		else
-+			expected_level--;
-+
-+		/* Find the next level towards the leaves of the dabtree. */
-+		btree = nodehdr.btree;
-+		blkno = be32_to_cpu(btree->before);
-+		libxfs_trans_brelse(NULL, bp);
-+	}
-+
-+	error = EFSCORRUPTED;
-+	if (expected_level != 0)
-+		goto out_buf;
-+
-+	*leaf_bpp = bp;
-+	return 0;
-+
-+out_buf:
-+	libxfs_trans_brelse(NULL, bp);
-+	return error;
-+}
-+
-+static int
-+list_node_pptrs(
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_attr3_icleaf_hdr	leafhdr;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_attr_leafblock	*leaf;
-+	struct xfs_buf			*leaf_bp;
-+	int				error;
-+
-+	error = find_leftmost_attr_leaf(ip, &leaf_bp);
-+	if (error)
-+		return error;
-+
-+	for (;;) {
-+		list_leaf_pptr_entries(ip, leaf_bp);
-+
-+		/* Find the right sibling of this leaf block. */
-+		leaf = leaf_bp->b_addr;
-+		libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+		if (leafhdr.forw == 0)
-+			goto out_leaf;
-+
-+		libxfs_trans_brelse(NULL, leaf_bp);
-+
-+		error = -libxfs_attr3_leaf_read(NULL, ip, ip->i_ino,
-+				leafhdr.forw, &leaf_bp);
-+		if (error)
-+			return error;
-+	}
-+
-+out_leaf:
-+	libxfs_trans_brelse(NULL, leaf_bp);
-+	return error;
-+}
-+
-+static int
-+list_pptrs(
-+	struct xfs_inode	*ip)
-+{
-+	int			error;
-+
-+	if (!libxfs_inode_hasattr(ip))
-+		return 0;
-+
-+	if (ip->i_af.if_format == XFS_DINODE_FMT_LOCAL)
-+		return list_sf_pptrs(ip);
-+
-+	/* attr functions require that the attr fork is loaded */
-+	error = -libxfs_iread_extents(NULL, ip, XFS_ATTR_FORK);
-+	if (error)
-+		return error;
-+
-+	if (libxfs_attr_is_leaf(ip))
-+		return list_leaf_pptrs(ip);
-+
-+	return list_node_pptrs(ip);
-+}
-+
-+/* If the io cursor points to a file, list its parents. */
-+static int
-+parent_cur(
-+	char			*tag)
-+{
-+	struct xfs_inode	*ip;
-+	int			error = 0;
-+
-+	if (!xfs_has_parent(mp))
-+		return 0;
-+
-+	if (iocur_top->typ != &typtab[TYP_INODE])
-+		return ENOTDIR;
-+
-+	error = -libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip);
-+	if (error)
-+		return error;
-+
-+	/* List the parents of a file. */
-+	if (tag)
-+		dbprintf(_("%s:\n"), tag);
-+
-+	error = list_pptrs(ip);
-+	if (error)
-+		goto rele;
-+
-+rele:
-+	libxfs_irele(ip);
-+	return error;
-+}
-+
-+static void
-+parent_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" List the parents of the currently selected file.\n"
-+"\n"
-+" Parent pointers will be listed in the format:\n"
-+" inode_number:inode_gen	ondisk_namehash:namehash	name_length	name\n"
-+	));
-+}
-+
-+static int
-+parent_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	int			c;
-+	int			error = 0;
-+
-+	while ((c = getopt(argc, argv, "")) != -1) {
-+		switch (c) {
-+		default:
-+			ls_help();
+ 		default:
+ 			dbprintf(_("bad option for attr_set command\n"));
+ 			return 0;
+ 		}
+ 	}
+ 
+-	if (optind != argc - 1) {
+-		dbprintf(_("too few options for attr_set (no name given)\n"));
+-		return 0;
+-	}
++	if (name_from_file) {
++		int namelen;
+ 
+-	args.name = (const unsigned char *)argv[optind];
+-	if (!args.name) {
+-		dbprintf(_("invalid name\n"));
+-		return 0;
+-	}
++		if (optind != argc) {
++			dbprintf(_("too many options for attr_set (no name needed)\n"));
 +			return 0;
 +		}
-+	}
 +
-+	if (optind == argc) {
-+		error = parent_cur(NULL);
-+		if (error) {
-+			dbprintf("%s\n", strerror(error));
-+			exitcode = 1;
++		args.name = get_buf_from_file(name_from_file, MAXNAMELEN,
++				&namelen);
++		if (!args.name)
++			return 0;
++
++		args.namelen = namelen;
++	} else {
++		if (optind != argc - 1) {
++			dbprintf(_("too few options for attr_set (no name given)\n"));
++			return 0;
++		}
+ 
+-	args.namelen = strlen(argv[optind]);
+-	if (args.namelen >= MAXNAMELEN) {
+-		dbprintf(_("name too long\n"));
+-		return 0;
++		args.name = (const unsigned char *)argv[optind];
++		if (!args.name) {
++			dbprintf(_("invalid name\n"));
++			return 0;
 +		}
 +
-+		return 0;
-+	}
-+
-+	for (c = optind; c < argc; c++) {
-+		push_cur();
-+
-+		error = path_walk(argv[c]);
-+		if (error)
-+			goto err_cur;
-+
-+		error = parent_cur(argv[c]);
-+		if (error)
-+			goto err_cur;
-+
-+		pop_cur();
-+	}
-+
-+	return 0;
-+err_cur:
-+	pop_cur();
-+	if (error) {
-+		dbprintf("%s: %s\n", argv[c], strerror(error));
-+		exitcode = 1;
-+	}
-+	return 0;
-+}
-+
-+static struct cmdinfo parent_cmd = {
-+	.name		= "parent",
-+	.altname	= "pptr",
-+	.cfunc		= parent_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.canpush	= 0,
-+	.args		= "[paths...]",
-+	.help		= parent_help,
-+};
-+
- void
- namei_init(void)
- {
-@@ -604,4 +924,7 @@ namei_init(void)
++		args.namelen = strlen(argv[optind]);
++		if (args.namelen >= MAXNAMELEN) {
++			dbprintf(_("name too long\n"));
++			goto out;
++		}
+ 	}
  
- 	ls_cmd.oneline = _("list directory contents");
- 	add_command(&ls_cmd);
+-	if (args.valuelen) {
++	if (value_from_file) {
++		int valuelen;
 +
-+	parent_cmd.oneline = _("list parent pointers");
-+	add_command(&parent_cmd);
++		args.value = get_buf_from_file(value_from_file,
++				XFS_XATTR_SIZE_MAX, &valuelen);
++		if (!args.value)
++			goto out;
++
++		args.valuelen = valuelen;
++	} else if (args.valuelen) {
+ 		args.value = memalign(getpagesize(), args.valuelen);
+ 		if (!args.value) {
+ 			dbprintf(_("cannot allocate buffer (%d)\n"),
+@@ -175,6 +267,8 @@ attr_set_f(
+ 		libxfs_irele(args.dp);
+ 	if (args.value)
+ 		free(args.value);
++	if (name_from_file)
++		free((void *)args.name);
+ 	return 0;
  }
+ 
+@@ -184,6 +278,7 @@ attr_remove_f(
+ 	char			**argv)
+ {
+ 	struct xfs_da_args	args = { };
++	char			*name_from_file = NULL;
+ 	int			c;
+ 
+ 	if (cur_typ == NULL) {
+@@ -195,20 +290,27 @@ attr_remove_f(
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "rusn")) != EOF) {
++	while ((c = getopt(argc, argv, "ruspnN:")) != EOF) {
+ 		switch (c) {
+ 		/* namespaces */
+ 		case 'r':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			args.attr_filter |= LIBXFS_ATTR_ROOT;
+-			args.attr_filter &= ~LIBXFS_ATTR_SECURE;
+ 			break;
+ 		case 'u':
+-			args.attr_filter &= ~(LIBXFS_ATTR_ROOT |
+-					      LIBXFS_ATTR_SECURE);
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			break;
+ 		case 's':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			args.attr_filter |= LIBXFS_ATTR_SECURE;
+-			args.attr_filter &= ~LIBXFS_ATTR_ROOT;
++			break;
++		case 'p':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
++			args.attr_filter |= XFS_ATTR_PARENT;
++			break;
++
++		case 'N':
++			name_from_file = optarg;
+ 			break;
+ 
+ 		case 'n':
+@@ -224,21 +326,37 @@ attr_remove_f(
+ 		}
+ 	}
+ 
+-	if (optind != argc - 1) {
+-		dbprintf(_("too few options for attr_remove (no name given)\n"));
+-		return 0;
+-	}
+-
+-	args.name = (const unsigned char *)argv[optind];
+-	if (!args.name) {
+-		dbprintf(_("invalid name\n"));
+-		return 0;
+-	}
+-
+-	args.namelen = strlen(argv[optind]);
+-	if (args.namelen >= MAXNAMELEN) {
+-		dbprintf(_("name too long\n"));
+-		return 0;
++	if (name_from_file) {
++		int namelen;
++
++		if (optind != argc) {
++			dbprintf(_("too many options for attr_set (no name needed)\n"));
++			return 0;
++		}
++
++		args.name = get_buf_from_file(name_from_file, MAXNAMELEN,
++				&namelen);
++		if (!args.name)
++			return 0;
++
++		args.namelen = namelen;
++	} else {
++		if (optind != argc - 1) {
++			dbprintf(_("too few options for attr_remove (no name given)\n"));
++			return 0;
++		}
++
++		args.name = (const unsigned char *)argv[optind];
++		if (!args.name) {
++			dbprintf(_("invalid name\n"));
++			return 0;
++		}
++
++		args.namelen = strlen(argv[optind]);
++		if (args.namelen >= MAXNAMELEN) {
++			dbprintf(_("name too long\n"));
++			return 0;
++		}
+ 	}
+ 
+ 	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &args.dp)) {
+@@ -260,5 +378,7 @@ attr_remove_f(
+ out:
+ 	if (args.dp)
+ 		libxfs_irele(args.dp);
++	if (name_from_file)
++		free((void *)args.name);
+ 	return 0;
+ }
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 5713e5221..bceaab8ba 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -15,6 +15,7 @@
+  */
+ #define LIBXFS_ATTR_ROOT		XFS_ATTR_ROOT
+ #define LIBXFS_ATTR_SECURE		XFS_ATTR_SECURE
++#define LIBXFS_ATTR_PARENT		XFS_ATTR_PARENT
+ 
+ #define xfs_agfl_size			libxfs_agfl_size
+ #define xfs_agfl_walk			libxfs_agfl_walk
 diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index a7f6d55ed..937b17e79 100644
+index 937b17e79..a561bdc49 100644
 --- a/man/man8/xfs_db.8
 +++ b/man/man8/xfs_db.8
-@@ -943,6 +943,15 @@ See the
- .B print
- command.
+@@ -184,10 +184,14 @@ Displays the length, free block count, per-AG reservation size, and per-AG
+ reservation usage for a given AG.
+ If no argument is given, display information for all AGs.
  .TP
-+.BI "parent [" paths "]..."
-+List the parents of a file.
-+If a path resolves to a file, the parents of that file will be listed.
-+If no paths are supplied and the IO cursor points at an inode, the parents of
-+that file will be listed.
-+
-+The output format is:
-+inode number, inode generation, ondisk namehash, namehash, name length, name.
+-.BI "attr_remove [\-r|\-u|\-s] [\-n] " name
++.BI "attr_remove [\-p|\-r|\-u|\-s] [\-n] [\-N " namefile "|" name "] "
+ Remove the specified extended attribute from the current file.
+ .RS 1.0i
+ .TP 0.4i
++.B \-p
++Sets the attribute in the parent namespace.
++Only one namespace option can be specified.
 +.TP
- .BI "path " dir_path
- Walk the directory tree to an inode using the supplied path.
- Absolute and relative paths are supported.
+ .B \-r
+ Sets the attribute in the root namespace.
+ Only one namespace option can be specified.
+@@ -200,14 +204,21 @@ Only one namespace option can be specified.
+ Sets the attribute in the secure namespace.
+ Only one namespace option can be specified.
+ .TP
++.B \-N
++Read the name from this file.
++.TP
+ .B \-n
+ Do not enable 'noattr2' mode on V4 filesystems.
+ .RE
+ .TP
+-.BI "attr_set [\-r|\-u|\-s] [\-n] [\-R|\-C] [\-v " namelen "] " name
++.BI "attr_set [\-p\-r|\-u|\-s] [\-n] [\-R|\-C] [\-v " valuelen "|\-V " valuefile "] [\-N " namefile "|" name "] "
+ Sets an extended attribute on the current file with the given name.
+ .RS 1.0i
+ .TP 0.4i
++.B \-p
++Sets the attribute in the parent namespace.
++Only one namespace option can be specified.
++.TP
+ .B \-r
+ Sets the attribute in the root namespace.
+ Only one namespace option can be specified.
+@@ -220,6 +231,9 @@ Only one namespace option can be specified.
+ Sets the attribute in the secure namespace.
+ Only one namespace option can be specified.
+ .TP
++.B \-N
++Read the name from this file.
++.TP
+ .B \-n
+ Do not enable 'noattr2' mode on V4 filesystems.
+ .TP
+@@ -231,6 +245,9 @@ The command will fail if the attribute does not already exist.
+ Create the attribute.
+ The command will fail if the attribute already exists.
+ .TP
++.B \-V
++Read the value from this file.
++.TP
+ .B \-v
+ Set the attribute value to a string of this length containing the letter 'v'.
+ .RE
 
