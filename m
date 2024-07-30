@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CA134A11
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:23:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 656A84A11
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:23:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299011; cv=none; b=uQagCd5ctMUzJF3FAbhr89poYSKyCBz+gCXfan27CK8zU1ZzIUYCjh9MdPvmTUlFbiWxsnLy3Xh+2AIOkK9WuCxc7mRXqRRHYAmk5sXHk0biDzNoAuYQw8LYmt7j6QXB5tfIN3DE6Ies//dc9cYm69DArfAtzVCVF9OQ+1/xH8s=
+	t=1722299027; cv=none; b=l92zQ5DowFZ1pMZy4Y4ncpiMeMR/NfliP8q1dblVNVAYNFlHnur3uaYnO8SdN+gUn8xX7hypp1/l4UAVKkXw2PIcOmuAuMOFeWX3aFKQmkv0pPbS5qBE81Wpprlz1GuiM4KJYI/C+UN+ciZkJ4t/YB+MJZU+O/oorK4rCue9ukI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299011; c=relaxed/simple;
-	bh=2pah8iC+B2JVjym72IboOwC3wLceJ9ssSge7fNZyWR0=;
+	s=arc-20240116; t=1722299027; c=relaxed/simple;
+	bh=ui+gvFert0CE6X27N3hTlaMQLXHl9lQEtl+p/DCV88c=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rFyCjGhK/IE7NNGjjth2Lno2duz0hw1iBtjX+/1OJOkZQkeuCe0lX03B2gQ0zd1MPkTOWlpfGaJ4vOATX7KIzsiJ8FFof4lGz72thE8ZhlFf0kvJV5UXZ3+j2EW3A3sLa1K2krfjf59ppAg7+iyIzc04N1OUodq2zzubYZOOG20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mUcOg6eD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=iyUL1rTlaCR4oK54jTLDTu4o+lBY0HZQBmqFtYncWcKheFEMF4S32v0qblHlorOrE2RCQ1Zj6SHp1873iC4KmGvObQ02QdpXncQd9om4kG8ebYxt9Pe5WyY35/RUXcHU0LlxHeBneJMs4F3ROz9z7cOwVIYegvyKfsKZ6W7Ce+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OSOmVNQz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mUcOg6eD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39109C32786;
-	Tue, 30 Jul 2024 00:23:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OSOmVNQz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA8B5C32786;
+	Tue, 30 Jul 2024 00:23:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299011;
-	bh=2pah8iC+B2JVjym72IboOwC3wLceJ9ssSge7fNZyWR0=;
+	s=k20201202; t=1722299026;
+	bh=ui+gvFert0CE6X27N3hTlaMQLXHl9lQEtl+p/DCV88c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mUcOg6eDOLdPFcvhxwRmzDTcWdDb2zPGTeT/38xqSl2LwuK8jdXUvE+wuEi3kKqdf
-	 JOrDb2xUUrcLNX6Uc4Jjb++xtLLGDZSRNSV00OjYKj2wg0I0Up0wpiYIeu49MQ6r9V
-	 0zGFz4Qwx538IdMmuQTPWv7w8phlEQRX427M4okAmlRB4NPSn6dWssKeh36BQxxtxo
-	 8GxqfFYXw34tyfDT5H+y/hMWdScyGNKk5/wEbxFX06SA9pAob9qSs27FVKgToijWZS
-	 P2AsqxDoTLfJzuYAHNSwXTIgXJSRwNmTUlMdu8YS/Jw+j5EU+nGp/1wwt9zuABXYJw
-	 Ol+k/cKuX6TGA==
-Date: Mon, 29 Jul 2024 17:23:30 -0700
-Subject: [PATCH 4/5] xfs_repair: don't leak the rootdir inode when orphanage
- already exists
+	b=OSOmVNQzwWtnRJTAYB6XzFQ2pxCdJskRXwDBmjjJV0IFl9mf4rKtb9UJydYUbZGku
+	 5rJkbLpyUVGzzEmDjMkxSe6sqACLjE7eqonYb0hiiKoLXQKFWJOa+t6QJqErC8zDVz
+	 a9WEe8SdeCVWK9hQUPlfhkZfHEBzQDAQZ/hpDDlmm/H15Il7XynD+h/IVqHudFfHhn
+	 lLxrsd/Uhjj43++SWROg7lCRNaYI1Ar5nxGTuSLMIcVeOGCK2OLxNizu4s2L2enXpb
+	 SmT5XGJL6m5thxAH5zid6Q7ZD3J1SwpbfTGihSUJHiRe8qItM1AuFqjVW1onQWRMzk
+	 ix5X/OEiwQfkQ==
+Date: Mon, 29 Jul 2024 17:23:46 -0700
+Subject: [PATCH 5/5] xfs_repair: don't crash on -vv
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229841934.1338302.16119487560444301949.stgit@frogsfrogsfrogs>
+Cc: Santiago Kraus <santiago_kraus@yahoo.com>, Christoph Hellwig <hch@lst.de>,
+ linux-xfs@vger.kernel.org
+Message-ID: <172229841949.1338302.9980286721411923996.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229841874.1338302.4791739002907908995.stgit@frogsfrogsfrogs>
 References: <172229841874.1338302.4791739002907908995.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,40 +47,44 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If repair calls mk_orphanage and the /lost+found directory already
-exists, we need to irele the root directory before exiting the function.
+A user reported a crash in xfs_repair when they run it with -vv
+specified on the command line.  Ultimately this harks back to xfs_m in
+main() containing uninitialized stack contents, and inadequate null
+checks.  Fix both problems in one go.
 
-Fixes: 6c39a3cbda32 ("Don't trash lost+found in phase 4 Merge of master-melb:xfs-cmds:29144a by kenmcd.")
+Reported-by: Santiago Kraus <santiago_kraus@yahoo.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/phase6.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ repair/progress.c   |    2 +-
+ repair/xfs_repair.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index ae8935a26..e6103f768 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -919,8 +919,10 @@ mk_orphanage(xfs_mount_t *mp)
- 	xname.len = strlen(ORPHANAGE);
- 	xname.type = XFS_DIR3_FT_DIR;
+diff --git a/repair/progress.c b/repair/progress.c
+index 07cf4e4f2..74e7a6719 100644
+--- a/repair/progress.c
++++ b/repair/progress.c
+@@ -394,7 +394,7 @@ timestamp(
+ 	time_t			now;
+ 	struct tm		*tmp;
  
--	if (libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL) == 0)
--		return ino;
-+	/* If the lookup of /lost+found succeeds, return the inumber. */
-+	error = -libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL);
-+	if (error == 0)
-+		goto out_pip;
+-	if (verbose > 1 && mp && mp->m_ddev_targp)
++	if (verbose > 1 && mp && mp->m_ddev_targp && mp->m_ddev_targp->bcache)
+ 		cache_report(stderr, "libxfs_bcache", mp->m_ddev_targp->bcache);
  
- 	/*
- 	 * could not be found, create it
-@@ -1012,6 +1014,7 @@ mk_orphanage(xfs_mount_t *mp)
- 			ORPHANAGE, error);
- 	}
- 	libxfs_irele(ip);
-+out_pip:
- 	libxfs_irele(pip);
- 
- 	return(ino);
+ 	now = time(NULL);
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index cf7749643..88aa75542 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -1018,7 +1018,7 @@ main(int argc, char **argv)
+ 	xfs_mount_t	*temp_mp;
+ 	xfs_mount_t	*mp;
+ 	struct xfs_buf	*sbp;
+-	xfs_mount_t	xfs_m;
++	struct xfs_mount xfs_m = { };
+ 	struct xlog	log = {0};
+ 	char		*msgbuf;
+ 	struct xfs_sb	psb;
 
