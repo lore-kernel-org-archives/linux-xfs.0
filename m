@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47C06DF60
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 02:41:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 032116EB5B
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 02:41:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722307297; cv=none; b=W68OL+v57/VZB8V7RHMN1S2+TdZ+efacLwEjxfVH3PQSaT3HPu9+QOuVD0Os0Fpu6p/ax+0gaY7cLsQ9BPAmu5QwVZT+afmI2fD1dMKWkoyyjfoAl/Bnvr4eFN7D3kHwTfOZwnUiONxO5cYajq8CXHrOg1Pb564v3h/MCfodt3Q=
+	t=1722307313; cv=none; b=F/8w5lOywPsG3VK8MH33BUgxdXJY7C0bV7LaEgpa1ERK5XirAMInJWZj00Jmrq4WmiJf9tWHdpNSlKiHmoJ0uT7CWGGu+fhlA97m03T49mmw6xmVfZvnZZiNsuJq7iNPXbJbty/0VWzJmJCrP95xNL3TRVBEHQ9qegLhwzoywjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722307297; c=relaxed/simple;
-	bh=Rkblvs7josCQWWp6gV+kKYbnhVf1jav1CJJIq+cdj0Y=;
+	s=arc-20240116; t=1722307313; c=relaxed/simple;
+	bh=MYpP2p0Eu09EU7VNiIqSAc6Oqh9MCcfrObRu1Lxqcz8=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=lhrn4RuAlwKRKlsZk4WcBfU8znmb46F0XEfSD7xJWtLdJNutRCvbEjG3ZFOBvGvbKwo+ClFRRPwHJfvnO5Ig1RrMhmbOrH2zZkJyJgB8FmxDdUMum6saZtNeuXa1N1aIyUscO8boLiOTTrD7BlrPj/h0Y/CT/Em9LCVdAY8cRso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aV0v4dAB; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=VHs40syAHv8ofEaze0oyUZYotoMFR0KEfTQk0tTVwhC8DOCcPVWKz8CnxJq4OtWtmilq5fDUomU6teLPlKZEGvSEM7MyRW7SheSp4Ghg8K/N/KMKGDVuAQpyamQ2NQxas0T8WpYfYPRXp9gjhIOO2SfTaivcVZabKbru/oDRuOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L9GK6qRJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aV0v4dAB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2C7AC32786;
-	Tue, 30 Jul 2024 02:41:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L9GK6qRJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7828BC32786;
+	Tue, 30 Jul 2024 02:41:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722307296;
-	bh=Rkblvs7josCQWWp6gV+kKYbnhVf1jav1CJJIq+cdj0Y=;
+	s=k20201202; t=1722307312;
+	bh=MYpP2p0Eu09EU7VNiIqSAc6Oqh9MCcfrObRu1Lxqcz8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aV0v4dAB3Akl5dCSXHC+Fy9j+p5qFbpgjOwn8HWcVYvVtWMy0+/OFpRsPspSoq1xe
-	 AcojEOMAypvmXFAdzhue7OKsgIaQOjQl+A+NYUVtgBMgF8vl2osi0r7r8qmwCVy8RE
-	 xl0/svgf5x1oFhCVYOsGorvTkqf2CBGL8kdYprjYpJXFTw0PW30yZIWLPfyV2G1bT3
-	 RDpL8Zv/G3J5+lAplMqn461Zo5AFldRESTtLE6klLkyd1AQHtvX7RYLbyJ5PLKqyTX
-	 Bn/yDuPQkEJclpJ1WZAlDnyhX5l2kE9IohZO0Ev3DobJ4OMDpGLFNLPlbSlMHM1fWT
-	 guxEopLCb6rDg==
-Date: Mon, 29 Jul 2024 19:41:36 -0700
-Subject: [GIT PULL 05/23] xfsprogs: inode-related repair fixes
+	b=L9GK6qRJGWlgB0D2xEG6teDgk1ntBbZ7G74N+xbtdkDgdGiGj6BAOEzhvT0rKqP8P
+	 kfWjDdsv1LpiV4dB6PX51Trr8XLW0RarhtMWRd91bjQf4sQW0cerQ8YwmFxglrErQC
+	 a9BP9T4p9cRMQuKDmuTJjqQH6qmZCCN5VIzG3dj8WEGK+eeCyBpGpOuZx3BwMNUisW
+	 vb2uBn1tJLzsDcqI2uJ7AVBIjq2i7p4J26O4v4mzLoUEbp7aeZ8izugditB3oaouPf
+	 t75xjX6vWuN7TqDxuROlA+/7wSElEmMWfa/ia3OMhsHc7b6Pfz8MQZzHVXHoywZ2Gt
+	 I56A0gj5syPCg==
+Date: Mon, 29 Jul 2024 19:41:51 -0700
+Subject: [GIT PULL 06/23] xfs_scrub: fixes to the repair code
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172230458253.1455085.17011073206641235117.stg-ugh@frogsfrogsfrogs>
+Message-ID: <172230458353.1455085.9566516777477890945.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,43 +51,50 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 7e74984e652fab200bc7319d7c3d90f6ae36be2e:
-
-xfs_{db,repair}: add an explicit owner field to xfs_da_args (2024-07-29 17:01:06 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/inode-repair-improvements-6.10_2024-07-29
-
-for you to fetch changes up to ebf05a446c09336c08865dc29a6332be6ff8223c:
+The following changes since commit ebf05a446c09336c08865dc29a6332be6ff8223c:
 
 mkfs/repair: pin inodes that would otherwise overflow link count (2024-07-29 17:01:06 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-repair-fixes-6.10_2024-07-29
+
+for you to fetch changes up to 4b959abc5f353123775973cd98c94d819cc9de79:
+
+xfs_scrub: actually try to fix summary counters ahead of repairs (2024-07-29 17:01:06 -0700)
+
 ----------------------------------------------------------------
-xfsprogs: inode-related repair fixes [v30.9 05/28]
+xfs_scrub: fixes to the repair code [v30.9 06/28]
 
-While doing QA of the online fsck code, I made a few observations:
-First, nobody was checking that the di_onlink field is actually zero;
-Second, that allocating a temporary file for repairs can fail (and
-thus bring down the entire fs) if the inode cluster is corrupt; and
-Third, that file link counts do not pin at ~0U to prevent integer
-overflows.
-
-This scattered patchset fixes those three problems.
+Now that we've landed the new kernel code, it's time to reorganize the
+xfs_scrub code that handles repairs.  Clean up various naming warts and
+misleading error messages.  Move the repair code to scrub/repair.c as
+the first step.  Then, fix various issues in the repair code before we
+start reorganizing things.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (2):
-libxfs: port the bumplink function from the kernel
-mkfs/repair: pin inodes that would otherwise overflow link count
+Darrick J. Wong (5):
+xfs_scrub: remove ALP_* flags namespace
+xfs_scrub: move repair functions to repair.c
+xfs_scrub: log when a repair was unnecessary
+xfs_scrub: require primary superblock repairs to complete before proceeding
+xfs_scrub: actually try to fix summary counters ahead of repairs
 
-include/xfs_inode.h |  2 ++
-libxfs/util.c       | 18 ++++++++++++++++++
-mkfs/proto.c        |  4 ++--
-repair/incore_ino.c | 14 +++++++++-----
-repair/phase6.c     | 10 +++++-----
-5 files changed, 36 insertions(+), 12 deletions(-)
+scrub/phase1.c        |   2 +-
+scrub/phase2.c        |   3 +-
+scrub/phase3.c        |   2 +-
+scrub/phase4.c        |  22 ++++--
+scrub/phase5.c        |   2 +-
+scrub/phase7.c        |   2 +-
+scrub/repair.c        | 177 ++++++++++++++++++++++++++++++++++++++++++-
+scrub/repair.h        |  16 +++-
+scrub/scrub.c         | 204 +-------------------------------------------------
+scrub/scrub.h         |  16 +---
+scrub/scrub_private.h |  55 ++++++++++++++
+11 files changed, 269 insertions(+), 232 deletions(-)
+create mode 100644 scrub/scrub_private.h
 
