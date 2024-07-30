@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04CC10E9
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:45:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC24963D
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:45:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300342; cv=none; b=Qf9Vw+DbNXUePQjyawLjYHpFppCMfuCmBtFAIE8Jqwb29muJa5XHnsvKwtHy69NejRoP2cyGiaLRQgD/oKuvZIxMiQxT8tNC3UvPsTR5dK+d7QTNuimGfiQFOy8kLOAWCWdGaA6ZPIIXgQ9wFtYk4YYT+PNo/W/DiHnvU8Qjyic=
+	t=1722300357; cv=none; b=d1khnnQ09jTa7x1XG0qXq7k5fy2Ys1GZ82XFs/B34H0rgcilQyXsBrG1qx5H4aouP4NGmNLPoXMY2Dg/e71u9IQzmaSUyehJjb19tQBFJNcDsAJM7vnVLGUadpwGQm8cCzLhcWo11PD4IT77bLs4ElxbtT4t5U4ejnrpzrlCWYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300342; c=relaxed/simple;
-	bh=dXRjIsdbYItqDORc78iq4r2C34Aa2hlCnNcb5V9PRsc=;
+	s=arc-20240116; t=1722300357; c=relaxed/simple;
+	bh=CRUYQx5snKVYWwdu7tbWexDeV8aGc2ic6GE7Sx+ot2I=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LeXYY3W4wr3UK55Bc7/pN3rlG9/4TV/ama/N0+Feh47TW6cC+wJuTg/pVvZPzNl20/XUVMBEqFGB2SY5/dX57qrlyB9u8vBNphEdN03dqb+tZrH471CDTeji3EIJ5E+LiO0HTfTiJ7BE7krVd1umyBgl/ldwGpvPZRCFDwAJGGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fRTy9SO0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=qvMl8+5LdoDlmzSZehJtVeKLSB2is5kkMZ+G8nf6/h39+WGxInC1tlCgYWfyEFOXz9LlqSjVSQUyeW4LxR9FBFPs4bhSO1yEBmLIGJIKDFC4enErC92dKyT6LAfmjkbkINCYgCVGtqvZnmE4LLS5D3VMM/2jYUYoTgdx0RwXO2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S5tnHn6p; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fRTy9SO0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA0DDC32786;
-	Tue, 30 Jul 2024 00:45:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S5tnHn6p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B3B8C32786;
+	Tue, 30 Jul 2024 00:45:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300341;
-	bh=dXRjIsdbYItqDORc78iq4r2C34Aa2hlCnNcb5V9PRsc=;
+	s=k20201202; t=1722300357;
+	bh=CRUYQx5snKVYWwdu7tbWexDeV8aGc2ic6GE7Sx+ot2I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fRTy9SO0PAclornCvB0z1NnlG+7qPgk/ZQ2ZAfHHk6HACIH6xBueeyXTK8VmGUagV
-	 Daqxq3fM8T1HTSNv5/sCBstiwPuKqGiNsqv6SeCsPpZsTNCoM5D9KbnANfhIMVhEtl
-	 KRU1RxiIILStb8XdmKxLrXxkfgCccnguVwWuR5yCJi6C1BOsnc/Zz+i+gdbPn92FGL
-	 Fiinpt9yfe3v+HqhVmE+zNkO2OcNJHW/g8NKnbu7ttCS7M786o6jJxmCUzDHVGjiPS
-	 f/ytmKQDQyLcjMoriMKGTfWxJf/3UcpWIF+Pisxw98NopB4emLVkF3hu3OC9AK/KWy
-	 LpOE71lx0N1oQ==
-Date: Mon, 29 Jul 2024 17:45:41 -0700
-Subject: [PATCH 084/115] xfs: teach online scrub to find directory tree
- structure problems
+	b=S5tnHn6p1CzwfDd4bbqwbSpEebQln4sItqGlvw7QjTN+/WfXn3YLc15Ex4uxfO3tY
+	 IufnL9C/V8Fy55JITpFoSJaOIMIx7XUOkwZuiiBA4sfz3f15VveXFzRoWCb1JONB7l
+	 81wpS6hAvYyD2qwC42CuvQcZd48zpm+bpDLBpsm0nTqnQwHcsgnWNxQdf8pNsKLlf5
+	 LpWmhxOcK89bxqL2p3kH9O24ISXM733an8GQNGLgjCQZvTPfcz5qbwExB8dsz40WNt
+	 cD3Gs7/juI8p2VH+vvRxMEjI+MTl2NhByuHE4+JCfrytp+7SDsH5nBNvzdNfDr4bhS
+	 LF+lwzpaeaNfg==
+Date: Mon, 29 Jul 2024 17:45:56 -0700
+Subject: [PATCH 085/115] xfs: report directory tree corruption in the health
+ information
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229843637.1338752.16678515437880585817.stgit@frogsfrogsfrogs>
+Message-ID: <172229843652.1338752.3168191725388025794.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,34 +47,51 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 928b721a11789a9363d6d7c32a1f3166a79f3b5f
+Source kernel commit: 37056912d5721324ac28787a4f903798f7361099
 
-Create a new scrubber that detects corruptions within the directory tree
-structure itself.  It can detect directories with multiple parents;
-loops within the directory tree; and directory loops not accessible from
-the root.
+Report directories that are the source of corruption in the directory
+tree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ libxfs/xfs_fs.h     |    1 +
+ libxfs/xfs_health.h |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index dd13bfa50..85f2a7e20 100644
+index 85f2a7e20..7ae1912cd 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -719,9 +719,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_QUOTACHECK 25	/* quota counters */
- #define XFS_SCRUB_TYPE_NLINKS	26	/* inode link counts */
- #define XFS_SCRUB_TYPE_HEALTHY	27	/* everything checked out ok */
-+#define XFS_SCRUB_TYPE_DIRTREE	28	/* directory tree structure */
+@@ -411,6 +411,7 @@ struct xfs_bulkstat {
+ #define XFS_BS_SICK_XATTR	(1 << 5)  /* extended attributes */
+ #define XFS_BS_SICK_SYMLINK	(1 << 6)  /* symbolic link remote target */
+ #define XFS_BS_SICK_PARENT	(1 << 7)  /* parent pointers */
++#define XFS_BS_SICK_DIRTREE	(1 << 8)  /* directory tree structure */
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	28
-+#define XFS_SCRUB_TYPE_NR	29
+ /*
+  * Project quota id helpers (previously projid was 16bit only
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index 3c64b5f9b..b0edb4288 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -95,6 +95,7 @@ struct xfs_da_args;
  
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
+ /* Don't propagate sick status to ag health summary during inactivation */
+ #define XFS_SICK_INO_FORGET	(1 << 12)
++#define XFS_SICK_INO_DIRTREE	(1 << 13)  /* directory tree structure */
+ 
+ /* Primary evidence of health problems in a given group. */
+ #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+@@ -125,7 +126,8 @@ struct xfs_da_args;
+ 				 XFS_SICK_INO_DIR | \
+ 				 XFS_SICK_INO_XATTR | \
+ 				 XFS_SICK_INO_SYMLINK | \
+-				 XFS_SICK_INO_PARENT)
++				 XFS_SICK_INO_PARENT | \
++				 XFS_SICK_INO_DIRTREE)
+ 
+ #define XFS_SICK_INO_ZAPPED	(XFS_SICK_INO_BMBTD_ZAPPED | \
+ 				 XFS_SICK_INO_BMBTA_ZAPPED | \
 
