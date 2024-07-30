@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5FEB2F44
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:20:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87CE7522F
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:20:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722298807; cv=none; b=emeyk8iMcmtS8CL/S42ToLHVhm4b5MWF4AN7xZxSbEf4ebrAkxjI30fulEA3gtRizApxkWCL50zB1uO8vtVbd/K1JVWL7x7CRWnedqYjVaHCLYEKO7Xrxpm2n5AWmd9VuKrZH4dtV96McSNUB8TXRn5t5fg6cNsnp/9l2gaISik=
+	t=1722298823; cv=none; b=rH9vOCZfgAOdWcSqOsJ8L4BSmM1Xc3kXqPmpPXJfYmDTnPXwUtLpciejZcCtOgNJST+M1AWA0409SvCD5rSLRqKFcG3JANJJnRWgeheHhk5w/VeNn5KM3Uak5REmWtT5TuU3b2mn8cqkUwrvNK2p0FIolIleSeWrOfKSa0xh8fY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722298807; c=relaxed/simple;
-	bh=EAHYTqXnxjpdmgo3AP4RyC7aEMWIgae0PJorRAW4b2A=;
+	s=arc-20240116; t=1722298823; c=relaxed/simple;
+	bh=njaujcnx87mUpmi2SOaN6Z1ZkOb+xCQP3FK+b+pw5e8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V1JGsycMgItT1/KujU4dHQtVfh64HbrqAkKIouCbKNKP/SOorF0pS1DzmnhvbqiBDoj5LPAgGHEy6yeYGgoVYhqN6LYrDEVaeOdHJEh3O1no3qMjymXp76JHaGXTVNaHFG6AVeB5hZk6CCgC33JvVxxWI0a+C6nvhm/CJlRk8F0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQCTPQRO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UQ1YWWIfY+N4YdDo1tZnmblI3ZUBrO7KJZ4jc5HDtu50J8q9Z/tza//Zx8mFl5U0IuT2j+v103f+RJj58JxMmSaERWnA+A/FvLd3ZxF59SwvaJ8ih8MYgjNruCUu11AOG9JWUH6KJz6di5UUWLVWSSbGoOCzhdQ3dWxvFXyTD30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a4x1WI3Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQCTPQRO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AA3AC32786;
-	Tue, 30 Jul 2024 00:20:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a4x1WI3Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53C41C32786;
+	Tue, 30 Jul 2024 00:20:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722298807;
-	bh=EAHYTqXnxjpdmgo3AP4RyC7aEMWIgae0PJorRAW4b2A=;
+	s=k20201202; t=1722298823;
+	bh=njaujcnx87mUpmi2SOaN6Z1ZkOb+xCQP3FK+b+pw5e8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hQCTPQROIiCqlQ7KG5wiCR6a7jmhM8egPzIc613isHmoT6NfINbDkP/8FACtfthqo
-	 oCJx8QBXKtUURParslklIcA3x/IeMMkqSNJzoqHXnaKa5AhZKdv3WayVA3Y/dtBMt5
-	 /cx2CUSjten2GT2iX5V0ctHHbSrZdvjxp1HGKSneYsBbard2AMezDb0zMqia483clA
-	 XsZFe0twdzUrVGqfQpBx4dJ3s8obK3HR0uakjGlc6/kP+78BEfXd9YDk5KC4T+3ukZ
-	 tb3Xmzo2kPXCAOyt9IUD92EdF0/SOvDbBwVYNw0astdPVuWIxQkEU+RP275Zhe9/Of
-	 mN6nSG2V6VpsA==
-Date: Mon, 29 Jul 2024 17:20:07 -0700
-Subject: [PATCHSET v30.9 14/23] xfs_scrub: tighten security of systemd
- services
+	b=a4x1WI3YE3CMaQsJt72t9d1z+4koLfcrMfEeDRvYBIt790Swyl0beNckVYUMwPhBy
+	 2UxMQ8tQ4XbYBd757HDk+cG8yP2D1Dp+LyhE7QNiiBrCrm3AEEGvKqXb3zJSxtzKNX
+	 KCjVViZsEZC/fDUWLUgwdzA9Yu/c7edEK17MriC2zvP9aXY4hDvDdfuUddqxNzjqor
+	 TfQ3vcENqk93nx/nf1pYaPjDY16CIXlu7rmpqBEYlgGDfJGS3z9y8AKyhvQu0445k2
+	 RhllupcyVLpJOYCVs8zJWZuAewDa6eXjnqsIsbB1HfTeB6LwsO7Nbh0qIp/H89AU+6
+	 UqAkCPKC/yWpw==
+Date: Mon, 29 Jul 2024 17:20:22 -0700
+Subject: [PATCHSET v30.9 15/23] xfs_scrub_all: automatic media scan service
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Helle Vaanzinn <glitsj16@riseup.net>,
- linux-xfs@vger.kernel.org
-Message-ID: <172229848851.1349910.300458734867859926.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <172229849240.1350165.13200329618269649031.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240730001021.GD6352@frogsfrogsfrogs>
 References: <20240730001021.GD6352@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,16 +46,13 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-To reduce the risk of the online fsck service suffering some sort of
-catastrophic breach that results in attackers reconfiguring the running
-system, I embarked on a security audit of the systemd service files.
-The result should be that all elements of the background service
-(individual scrub jobs, the scrub_all initiator, and the failure
-reporting) run with as few privileges and within as strong of a sandbox
-as possible.
-
-Granted, this does nothing about the potential for the /kernel/ screwing
-up, but at least we could prevent obvious container escapes.
+Now that we've completed the online fsck functionality, there are a few
+things that could be improved in the automatic service.  Specifically,
+we would like to perform a more intensive metadata + media scan once per
+month, to give the user confidence that the filesystem isn't losing data
+silently.  To accomplish this, enhance xfs_scrub_all to be able to
+trigger media scans.  Next, add a duplicate set of system services that
+start the media scans automatically.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -66,26 +61,33 @@ This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-service-security-6.10
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-media-scan-service-6.10
 ---
 Commits in this patchset:
- * xfs_scrub: allow auxiliary pathnames for sandboxing
- * xfs_scrub.service: reduce background CPU usage to less than one core if possible
- * xfs_scrub: use dynamic users when running as a systemd service
- * xfs_scrub: tighten up the security on the background systemd service
- * xfs_scrub_fail: tighten up the security on the background systemd service
- * xfs_scrub_all: tighten up the security on the background systemd service
+ * xfs_scrub_all: only use the xfs_scrub@ systemd services in service mode
+ * xfs_scrub_all: remove journalctl background process
+ * xfs_scrub_all: support metadata+media scans of all filesystems
+ * xfs_scrub_all: enable periodic file data scrubs automatically
+ * xfs_scrub_all: trigger automatic media scans once per month
+ * xfs_scrub_all: failure reporting for the xfs_scrub_all job
 ---
- man/man8/xfs_scrub.8             |    9 +++-
- scrub/Makefile                   |    7 ++-
- scrub/phase1.c                   |    4 +-
- scrub/system-xfs_scrub.slice     |   30 ++++++++++++
- scrub/vfs.c                      |    2 -
- scrub/xfs_scrub.c                |   11 +++-
- scrub/xfs_scrub.h                |    5 ++
- scrub/xfs_scrub@.service.in      |   97 ++++++++++++++++++++++++++++++++++----
- scrub/xfs_scrub_all.service.in   |   66 ++++++++++++++++++++++++++
- scrub/xfs_scrub_fail@.service.in |   59 +++++++++++++++++++++++
- 10 files changed, 270 insertions(+), 20 deletions(-)
- create mode 100644 scrub/system-xfs_scrub.slice
+ debian/rules                           |    3 +
+ include/builddefs.in                   |    3 +
+ man/man8/Makefile                      |    7 ++
+ man/man8/xfs_scrub_all.8.in            |   20 +++++
+ scrub/Makefile                         |   21 +++++
+ scrub/xfs_scrub@.service.in            |    2 -
+ scrub/xfs_scrub_all.cron.in            |    2 -
+ scrub/xfs_scrub_all.in                 |  126 ++++++++++++++++++++++++++------
+ scrub/xfs_scrub_all.service.in         |    9 ++
+ scrub/xfs_scrub_all_fail.service.in    |   71 ++++++++++++++++++
+ scrub/xfs_scrub_fail.in                |   46 +++++++++---
+ scrub/xfs_scrub_fail@.service.in       |    2 -
+ scrub/xfs_scrub_media@.service.in      |  100 +++++++++++++++++++++++++
+ scrub/xfs_scrub_media_fail@.service.in |   76 +++++++++++++++++++
+ 14 files changed, 443 insertions(+), 45 deletions(-)
+ rename man/man8/{xfs_scrub_all.8 => xfs_scrub_all.8.in} (59%)
+ create mode 100644 scrub/xfs_scrub_all_fail.service.in
+ create mode 100644 scrub/xfs_scrub_media@.service.in
+ create mode 100644 scrub/xfs_scrub_media_fail@.service.in
 
