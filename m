@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A7579CC
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:17:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F782881E
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:17:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302238; cv=none; b=sSRuOhAEWmNuLeRqRHGvv6bKQ8auj4yAmV8H2lMuF1aaEqR4VbPS/MTZbykbdF2omiyM0m8F14sLD674YEq+i7NnxpSZvI/ZnsuGgjnBXLiLMZBwmsEeA6M9pBqAYiUEH1NkRIL3GP8sG6u+G15zJxXDvKfdVqAeXeQ1GEiGmB4=
+	t=1722302253; cv=none; b=VqPXB7Mj39AE1cPN3N+u9pJm97wt1SBXnJpvJ5L0sXDAdwAQanWskwpU2CYSGrbm8hrcStXkRgQjS9I3jSLU37Yx0uEjq9wf4/Vn8X/01FSXgcmP549jf7y1mhKFhgu5oQutI33W2bAu2w/qSuGiheEFrrY8dN7sqMMw7UnJECw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302238; c=relaxed/simple;
-	bh=nmsqq6k6vUS5Cdk+hijbiB7KqE1P3rTPRNYLaQOeLPY=;
+	s=arc-20240116; t=1722302253; c=relaxed/simple;
+	bh=5B5eF+TkujdaoJdxutQVCkKp4IWuNS0J04iIKVwzhRo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SZOT5zt1qkvOFjV+9yuI+yLwjZJn8y6PhFB6LFKVK6iH619R+mXO3PJRxSOsF+IbG0ueHMMsNBXYXqsxm1oU40xEf/1m+n1L9W8NnbsIdbMrQS+TlbZJ7CROoCaRR1q2boYcfZdFDqH1eZxkzl2I0yH97tohREBDbc1HQL0b1Z0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DQ2CLwvW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=aBA5M/cFSFMUh8InGn5nB5T5CakcG/Gl9W+7TTwhf3vOuUTMBVZ2un5pBEeX7W2vadLCMr3dbuzne+YNF0IOXuwNA10JTiuJCaqrz3zDv5PYhwP1dZN1x5QMxYlZFXw7l+yKdVI7i4c76JpAk7vQq36QCMeRrTSyYpCG/riye40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h0ALb5Ej; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DQ2CLwvW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 591AEC32786;
-	Tue, 30 Jul 2024 01:17:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h0ALb5Ej"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0775CC32786;
+	Tue, 30 Jul 2024 01:17:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302237;
-	bh=nmsqq6k6vUS5Cdk+hijbiB7KqE1P3rTPRNYLaQOeLPY=;
+	s=k20201202; t=1722302253;
+	bh=5B5eF+TkujdaoJdxutQVCkKp4IWuNS0J04iIKVwzhRo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DQ2CLwvWgWApgZtPwh20hWaRIbOQay8s3FxwceR3Zw+DEJGcSMYNt5Y3Gpu1EXGls
-	 4unrypLFD4yXGEst5Pt5GjrJ9QB7GxLLqLid+yoHLdfSSIncyKXXfewIoepQf6lRm6
-	 OcwGIH8KOwQf00b9S7F6BDSFn/B2k5AstVMesTnV++RO2FS0JUdYjf1DnoXF6M2SKw
-	 hd4F1JC/vX+HLZEDIaikwhrwBAlD/eoTDhH2WcbjeVZMhn/1jcd/x2oxlTo4y3nXgJ
-	 nBydFlS6Gm35Et9d06OdJBRt5CwMfUJARVMrkWudqriyzUWgSkS1Vc2Ozab3x+kCLh
-	 Gty2tAhHJGAYw==
-Date: Mon, 29 Jul 2024 18:17:16 -0700
-Subject: [PATCH 5/5] xfs_scrub_all: implement retry and backoff for dbus calls
+	b=h0ALb5Ejs1AASK7TqlalKYf/hEr/ZK+lvun0qAQ9+NNp6n2Iy7AyM5VHFKoJFMUxe
+	 ff1k7TcwWWomdYPB31iwj+1ncAm0G9qLjtcwgIuKssDadDREG49AVPATmBXoX5R0Kq
+	 F9TTCvSCwqLGzYmgZD0zoJPEQhmmXUBwD6DikXR96yQ7dwS7BeRd54ePN4+srq4T3U
+	 ILLl4tDPCCu0E6YKQvJbCHaPlhonp1VAyJylY+c4n4Ahx2iWg5R2ISOAdg1VbSMEST
+	 npMg6Bvjrb4rV3lJzEbOLDFj91tyw6a5QvqvbJcrO5xLmwwlZy5fR9JCyDPArcg7Bm
+	 nRvP5T0WkEiag==
+Date: Mon, 29 Jul 2024 18:17:32 -0700
+Subject: [PATCH 1/6] xfs_scrub_all: fail fast on masked units
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229849719.1350420.4990697396905953343.stgit@frogsfrogsfrogs>
-In-Reply-To: <172229849638.1350420.756131243612881227.stgit@frogsfrogsfrogs>
-References: <172229849638.1350420.756131243612881227.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <172229850069.1350643.14681171051215463285.stgit@frogsfrogsfrogs>
+In-Reply-To: <172229850048.1350643.5520120825070703831.stgit@frogsfrogsfrogs>
+References: <172229850048.1350643.5520120825070703831.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,100 +46,69 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Calls to systemd across dbus are remote procedure calls, which means
-that they're subject to transitory connection failures (e.g. systemd
-re-exec itself).  We don't want to fail at the *first* sign of what
-could be temporary trouble, so implement a limited retry with fibonacci
-backoff before we resort to invoking xfs_scrub as a subprocess.
+If xfs_scrub_all tries to start a masked xfs_scrub@ unit, that's a sign
+that the system administrator really didn't want us to scrub that
+filesystem.  Instead of retrying pointlessly, just make a note of the
+failure and move on.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/xfs_scrub_all.in |   43 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 40 insertions(+), 3 deletions(-)
+ scrub/xfs_scrub_all.in |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
 
 diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index f2e916513..5440e51c0 100644
+index 5440e51c0..5e2e0446a 100644
 --- a/scrub/xfs_scrub_all.in
 +++ b/scrub/xfs_scrub_all.in
-@@ -165,6 +165,22 @@ def path_to_serviceunit(path, scrub_media):
- 	for line in proc.stdout:
- 		return line.decode(sys.stdout.encoding).strip()
+@@ -181,6 +181,10 @@ def fibonacci(max_ret):
+ 		y = z
+ 		z = x + y
  
-+def fibonacci(max_ret):
-+	'''Yield fibonacci sequence up to but not including max_ret.'''
-+	if max_ret < 1:
-+		return
-+
-+	x = 0
-+	y = 1
-+	yield 1
-+
-+	z = x + y
-+	while z <= max_ret:
-+		yield z
-+		x = y
-+		y = z
-+		z = x + y
++def was_unit_masked(ex):
++	'''Decide if this dbus exception occurred because we tried to start a masked unit.'''
++	return ex.get_dbus_name() == "org.freedesktop.systemd1.UnitMasked"
 +
  class scrub_service(scrub_control):
  	'''Control object for xfs_scrub systemd service.'''
  	def __init__(self, mnt, scrub_media):
-@@ -188,6 +204,25 @@ class scrub_service(scrub_control):
- 		self.unit = dbus.Interface(svc_obj,
- 				'org.freedesktop.systemd1.Unit')
- 
-+	def __dbusrun(self, lambda_fn):
-+		'''Call the lambda function to execute something on dbus.  dbus
-+		exceptions result in retries with Fibonacci backoff, and the
-+		bindings will be rebuilt every time.'''
-+		global debug
+@@ -219,6 +223,12 @@ class scrub_service(scrub_control):
+ 				if debug:
+ 					print(e)
+ 				fatal_ex = e
 +
-+		fatal_ex = None
++				# If the unit is masked, there's no point in
++				# retrying any operations on it.
++				if was_unit_masked(e):
++					break
 +
-+		for i in fibonacci(30):
-+			try:
-+				return lambda_fn()
-+			except dbus.exceptions.DBusException as e:
-+				if debug:
-+					print(e)
-+				fatal_ex = e
-+				time.sleep(i)
-+				self.bind()
-+		raise fatal_ex
-+
- 	def state(self):
- 		'''Retrieve the active state for a systemd service.  As of
- 		systemd 249, this is supposed to be one of the following:
-@@ -195,8 +230,10 @@ class scrub_service(scrub_control):
- 		or "deactivating".  These strings are not localized.'''
- 		global debug
- 
-+		l = lambda: self.prop.Get('org.freedesktop.systemd1.Unit',
-+				'ActiveState')
+ 				time.sleep(i)
+ 				self.bind()
+ 		raise fatal_ex
+@@ -270,6 +280,13 @@ class scrub_service(scrub_control):
  		try:
--			return self.prop.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
-+			return self.__dbusrun(l)
- 		except Exception as e:
- 			if debug:
- 				print(e, file = sys.stderr)
-@@ -231,7 +268,7 @@ class scrub_service(scrub_control):
- 			print('starting %s' % self.unitname)
- 
- 		try:
--			self.unit.Start('replace')
-+			self.__dbusrun(lambda: self.unit.Start('replace'))
+ 			self.__dbusrun(lambda: self.unit.Start('replace'))
  			return self.wait()
++		except dbus.exceptions.DBusException as e:
++			# If the unit was masked, the sysadmin doesn't want us
++			# running it.  Pretend that we finished it.
++			if was_unit_masked(e):
++				return 32
++			print(e, file = sys.stderr)
++			return -1
  		except Exception as e:
  			print(e, file = sys.stderr)
-@@ -245,7 +282,7 @@ class scrub_service(scrub_control):
- 			print('stopping %s' % self.unitname)
- 
- 		try:
--			self.unit.Stop('replace')
-+			self.__dbusrun(lambda: self.unit.Stop('replace'))
- 			return self.wait()
- 		except Exception as e:
- 			print(e, file = sys.stderr)
+ 			return -1
+@@ -317,6 +334,10 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+ 		# are running as a systemd service.
+ 		if 'SERVICE_MODE' in os.environ:
+ 			ret = run_service(mnt, scrub_media, killfuncs)
++			if ret == 32:
++				print("Scrubbing %s disabled by administrator, (err=%d)" % (mnt, ret))
++				sys.stdout.flush()
++				return
+ 			if ret == 0 or ret == 1:
+ 				print("Scrubbing %s done, (err=%d)" % (mnt, ret))
+ 				sys.stdout.flush()
 
