@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43D937E1
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:34:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D786110E3
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:34:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299653; cv=none; b=bu/pVRqSvqqJXp/wSllD6Jsp1a6DBnccfnUoO+ZPv0aip/YCVFUEeTlyzgncVbhzz+9dWCXlaTChG1he5als1me68TcJa25+J4SGz5NjqsqhCjLG7cj6r0VVHgzMnRAnVQHpHv62XCoTD/Bn3I7vqxjnSZGE8nHeUZPld7mmPLk=
+	t=1722299668; cv=none; b=VdtAeAuSxBCOlBnybwixZxpUKhVSbTx5NvIDA9bumzrWNZn631TGUR5C9MoOV8oLpVqLt2AjYctArBB15xZ/o3LtkovzQX3DwPXJ5ZRGT7MPuv+2gSJq3dd5Uc6U1RqDuvcE+ClmXOR+TwUwmQ7CwjZ1CrKdD594d2rFw7S7Dlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299653; c=relaxed/simple;
-	bh=e+jyJHB91Ei9XwyBxYXS+DW/sdx5sQYGiqOg2egX7wY=;
+	s=arc-20240116; t=1722299668; c=relaxed/simple;
+	bh=XKX4yNFaIltEpIacbHoR3aTqxIT2InsWyFxu8dXyde4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ve7K7FY4Z9R7TA5QykJ891t1EtoRZQnAOfQUA808O/G1pSesVF60cnOzXICB4uNfKr7+5cll9DMRKT9QPveQTlnbV/YnsicLD/nRf3q+5t9gOIsZtcm2nP2FJWbz2JG4GAEv5Hj2vjzT2oTY5r3nwWnyMoPW52iBuNAVaPWgV1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F70I1neD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YadjL6/wWu+gSWroMa7qWHAmy1hBoIBBpxt4+0tc7J/lWXlrQ+tJvfjotOam3T4FOHZGe6yjOiPa0N1hEfvHUm16ZWFuy4k++19ROhYp/n+6bcfRjXNMDEG9c+MRBv2kQIuYrKZ1rDbhefOyl3Lq5NrNvyDFgD2WWl77Wnnja4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OpOVjzK/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F70I1neD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C90A1C32786;
-	Tue, 30 Jul 2024 00:34:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OpOVjzK/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 741D7C32786;
+	Tue, 30 Jul 2024 00:34:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299652;
-	bh=e+jyJHB91Ei9XwyBxYXS+DW/sdx5sQYGiqOg2egX7wY=;
+	s=k20201202; t=1722299668;
+	bh=XKX4yNFaIltEpIacbHoR3aTqxIT2InsWyFxu8dXyde4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=F70I1neDSOKEsiAKfA6g5nAw7XJ2lP+UabrIXOcLqIXeWrZQxqNsyEdJzoaMdxnC5
-	 QTPlpaeu391XFhWZlMmWu4vEkwDS04mUu19XnU+z/DcjQnhrfEM+MwlsZTN3rvasaE
-	 K2upprCDMoPcyyM3kWvTG46vAraYD7PvepwmexR2dCGR134casOtHXJqy03cPeMSpI
-	 AzAqYHBr8vc0EpIOL2CaOPnwQmj2zNZL4TXkMKeeIPSuwx0pTsgp5F9+vKmsYQxOYP
-	 Xk8ebeBlkL9HI+YerwqIR+Q8iwNGS7EhFSusOE0UHMV7vqd996P2tPf4aO0o/2XRJ5
-	 x0lai5BVdWwcg==
-Date: Mon, 29 Jul 2024 17:34:12 -0700
-Subject: [PATCH 040/115] xfs: stop the steal (of data blocks for RT indirect
- blocks)
+	b=OpOVjzK/xLAZeRmpiNacRdRC1lGJ+08KnC72oqhaf4FBF/brTv8JTWi2EJzQTT1dt
+	 30uWUwDEiQacIX8JIhHsVNx5DwuUjk2WTeDBpc3kPiUdNbAnDqYi2YwbEqyzYj0O0v
+	 82IoAFEIsV4/LFIX3zxKHNjFPc+kScjhT0j9Z2fnOVOFwK1oTwdocByG+1hoUT2f0c
+	 BckOyXzvyzbj1DSYP8Hqjs3d7gP1C78nibZsQ6gP2HvcXn85uOevC6tyPuJyvtAJQy
+	 zlrZ4wgfeGq+pwjShcwoAUvT0PK+/+s71ND3pXkpQibcRRTWXnsfKRoxMD7GGOfbbb
+	 r93ThUM5+Og3w==
+Date: Mon, 29 Jul 2024 17:34:27 -0700
+Subject: [PATCH 041/115] xfs: remove XFS_DA_OP_REMOVE
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
- Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-Message-ID: <172229843005.1338752.10819291299210130711.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <172229843020.1338752.3697044140404729295.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,53 +44,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: bd1753d8c42b6bd5d9a81c81d1ce6e3affe3a59f
+Source kernel commit: f566d5b9fb7136d39d4e9c54d84c82835b539b4e
 
-When xfs_bmap_del_extent_delay has to split an indirect block it tries
-to steal blocks from the the part that gets unmapped to increase the
-indirect block reservation that now needs to cover for two extents
-instead of one.
+Nobody checks this flag, so get rid of it.
 
-This works perfectly fine on the data device, where the data and
-indirect blocks come from the same pool.  It has no chance of working
-when the inode sits on the RT device.  To support re-enabling delalloc
-for inodes on the RT device, make this behavior conditional on not
-being for rt extents.
-
-Note that split of delalloc extents should only happen on writeback
-failure, as for other kinds of hole punching we first write back all
-data and thus convert the delalloc reservations covering the hole to
-a real allocation.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_bmap.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ libxfs/xfs_attr.h     |    1 -
+ libxfs/xfs_da_btree.h |    6 ++----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 7b18477e0..81dccf275 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -4977,9 +4977,14 @@ xfs_bmap_del_extent_delay(
- 		/*
- 		 * Steal as many blocks as we can to try and satisfy the worst
- 		 * case indlen for both new extents.
-+		 *
-+		 * However, we can't just steal reservations from the data
-+		 * blocks if this is an RT inodes as the data and metadata
-+		 * blocks come from different pools.  We'll have to live with
-+		 * under-filled indirect reservation in this case.
- 		 */
- 		da_new = got_indlen + new_indlen;
--		if (da_new > da_old) {
-+		if (da_new > da_old && !isrt) {
- 			stolen = XFS_FILBLKS_MIN(da_new - da_old,
- 						 del->br_blockcount);
- 			da_old += stolen;
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index e4f550085..670ab2a61 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -590,7 +590,6 @@ xfs_attr_init_add_state(struct xfs_da_args *args)
+ static inline enum xfs_delattr_state
+ xfs_attr_init_remove_state(struct xfs_da_args *args)
+ {
+-	args->op_flags |= XFS_DA_OP_REMOVE;
+ 	if (xfs_attr_is_shortform(args->dp))
+ 		return XFS_DAS_SF_REMOVE;
+ 	if (xfs_attr_is_leaf(args->dp))
+diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
+index 7a004786e..76e764080 100644
+--- a/libxfs/xfs_da_btree.h
++++ b/libxfs/xfs_da_btree.h
+@@ -91,9 +91,8 @@ typedef struct xfs_da_args {
+ #define XFS_DA_OP_OKNOENT	(1u << 3) /* lookup op, ENOENT ok, else die */
+ #define XFS_DA_OP_CILOOKUP	(1u << 4) /* lookup returns CI name if found */
+ #define XFS_DA_OP_NOTIME	(1u << 5) /* don't update inode timestamps */
+-#define XFS_DA_OP_REMOVE	(1u << 6) /* this is a remove operation */
+-#define XFS_DA_OP_RECOVERY	(1u << 7) /* Log recovery operation */
+-#define XFS_DA_OP_LOGGED	(1u << 8) /* Use intent items to track op */
++#define XFS_DA_OP_RECOVERY	(1u << 6) /* Log recovery operation */
++#define XFS_DA_OP_LOGGED	(1u << 7) /* Use intent items to track op */
+ 
+ #define XFS_DA_OP_FLAGS \
+ 	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
+@@ -102,7 +101,6 @@ typedef struct xfs_da_args {
+ 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
+ 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
+ 	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
+-	{ XFS_DA_OP_REMOVE,	"REMOVE" }, \
+ 	{ XFS_DA_OP_RECOVERY,	"RECOVERY" }, \
+ 	{ XFS_DA_OP_LOGGED,	"LOGGED" }
+ 
 
