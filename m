@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B56062EB02
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 03:19:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3AC01854;
+	Tue, 30 Jul 2024 03:19:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722309568; cv=none; b=BjYNwIREKS7tEWqO3o5XFA9qogACKkvAspj0chviMYGMK0RzLHsOjVNyP3vysEK4d714NvELxik8AQDKu6WvgvyYf0IRfHxQH6Z0s0ukJySCXa5rROooRsCjwMQpbLZ60hvtyMX65Vu0g0ssfBnCy1RlAlXIiukewaHrcOzqw9A=
+	t=1722309584; cv=none; b=XZj9gkOw2mcnu7MJtOPb4q4uxp/u6iuaS3obC3bKltVlYfRLPOfq9ZzxC0dpyKewOpwAaD+K77ubJZcbA07YeWA3mu7FqZJhc22hkUdDjzwAmi+YQGENNCENouTHRDfsQaM2IgssfBB5sikz+JlyQFjtKLmVpwsXC0Nt4FoTMeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722309568; c=relaxed/simple;
-	bh=EE4PHZGazch6EyGPvwUXmEiX36si6P9j7RABc+HOvhw=;
+	s=arc-20240116; t=1722309584; c=relaxed/simple;
+	bh=bgvZ3WAnMMBGextpPEDs3DO5D7f3ixUZW0tyegdwk7M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MwpttqQZ3DGL8SxQgnfwYSAVEoGpImuM65NhpcKTu3vyHJSfsf1ZWyPAZ9ykfkWY9Jw9nyI13JoGW1fS0yWl5b2Bb7j2yq3RA/92686MfrL1hUf+tJACFKivE2WoiyuUfySigd66mxl7ay+qVGKSFxTjTUYGOKefHpceYUg1TYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IZjb/usN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=taJMuiBHRofXIVsratI7PtXFYxlGTfjrvSWOjMiNaCdghzuEE2rzxU4oIHX+Kaxp71nCiw6z3RAwClufkndvjowc7uajsiY+zVKnsqF6Yt8gIpZiXXbGrPmfChC6NgjHuMiLldajM3i3lbR184QmnCS6cplCdC1bl85nVqgeiCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYb79Dh6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IZjb/usN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36C55C32786;
-	Tue, 30 Jul 2024 03:19:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYb79Dh6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4776C32786;
+	Tue, 30 Jul 2024 03:19:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722309568;
-	bh=EE4PHZGazch6EyGPvwUXmEiX36si6P9j7RABc+HOvhw=;
+	s=k20201202; t=1722309583;
+	bh=bgvZ3WAnMMBGextpPEDs3DO5D7f3ixUZW0tyegdwk7M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IZjb/usNmPXXJS8pzuoYwhFX8oVu9crGOmNRY4FlTtz6/dbA8T+SP6DtOib1WCkzn
-	 wzUwl12/UyBAy3qxR7vBHDs5tv4suOIIXfYDyu0pg+BcOs3BJ3D2IzzZDGOyfd+Xba
-	 9f7MexfWFnwttJScnS81TtAFJ0lrJoWe5qTmEPznHIZBhgJm9hy6HpFg5/W17CGTgp
-	 6jFVW7M8n/xE0yv0++bFE5DAR3xB0mbC/AJvfBoFHaeClOJNqRawXFk07MAa93gI5b
-	 d3ITnfilRKgP02Us0fuvxFZpMpiwj5NslbKsRHPR2Q7HezvMDStZF9t0jjsXU95xia
-	 kfOII/Em9/PTA==
-Date: Mon, 29 Jul 2024 20:19:27 -0700
-Subject: [PATCHSET v30.9 3/3] xfs_scrub: separate package for self healing
+	b=AYb79Dh6UfViwGBZx1PvlmbXmGDt/3/GvvCcg1B7maMnMneEaGuixKDgkhKrBnKpd
+	 pYtbffi95hI/sfAXOEnT1iNs7QE2Qob5H1SCBQhTJaWQdCGTtAnqovFkxHRStgjWOc
+	 1atVoZAfwB4+Bqc/g4DW0BaRjSE4+0sjk1zRsF86t3nG+musfISkF4qJjepWvJpIzy
+	 leU9AEDA0v+C+b+87XID2bvUcUiu9VVIPqpl1NTW6GirGW6XbziJjdOw/0/INuEHtA
+	 NmMSFO/KUqucbq4RnFx5ba06RZNuTAwe/+E/JIB8BRezgup1FBy6fIFWvR5bI0LdlA
+	 r43mQcJeirr7Q==
+Date: Mon, 29 Jul 2024 20:19:43 -0700
+Subject: [PATCHSET v30.9] fstests: xfs filesystem properties
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <172230941338.1544199.12238614551925293396.stgit@frogsfrogsfrogs>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <172230948293.1545890.16907565259543283790.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240730031030.GA6333@frogsfrogsfrogs>
 References: <20240730031030.GA6333@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,10 +46,12 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Debian policy (section 9 iirc) says that services shipped in a package should
-be started by default.  We don't necessarily want that from the base xfsprogs
-package long term, so separate the self healing services into a separate
-package.
+It would be very useful if system administrators could set properties for a
+given xfs filesystem to control its behavior.  This we can do easily and
+extensibly by setting ATTR_ROOT (aka "trusted") extended attributes on the root
+directory.  To prevent this from becoming a weird free for all, let's add some
+library and tooling support so that sysadmins simply run the xfs_property
+program to administer these properties.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -60,47 +62,31 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-self-healing-package
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=filesystem-properties
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=filesystem-properties
 ---
 Commits in this patchset:
- * misc: shift install targets
- * xfs_scrub: use the self_healing fsproperty to select mode
- * debian: create a new package for automatic self-healing
+ * xfs: functional testing for filesystem properties
 ---
- Makefile                          |   14 +++++++++++---
- copy/Makefile                     |    6 +++++-
- db/Makefile                       |    6 +++++-
- debian/Makefile                   |    6 +++++-
- debian/control                    |    8 ++++++++
- debian/rules                      |   15 ++++++++++-----
- doc/Makefile                      |    7 ++++++-
- estimate/Makefile                 |    6 +++++-
- fsck/Makefile                     |    7 ++++++-
- fsr/Makefile                      |    6 +++++-
- growfs/Makefile                   |    6 +++++-
- include/Makefile                  |    7 ++++++-
- io/Makefile                       |    6 +++++-
- libfrog/Makefile                  |    4 +++-
- libhandle/Makefile                |    6 +++++-
- libxcmd/Makefile                  |    4 +++-
- libxfs/Makefile                   |    7 ++++++-
- libxlog/Makefile                  |    4 +++-
- logprint/Makefile                 |    6 +++++-
- m4/Makefile                       |    4 +++-
- man/Makefile                      |   10 +++++++---
- man/man2/Makefile                 |    4 +++-
- man/man3/Makefile                 |    4 +++-
- man/man5/Makefile                 |    5 ++++-
- man/man8/Makefile                 |    4 +++-
- mdrestore/Makefile                |    6 +++++-
- mkfs/Makefile                     |    6 +++++-
- po/Makefile                       |    7 ++++++-
- quota/Makefile                    |    6 +++++-
- repair/Makefile                   |    6 +++++-
- rtcp/Makefile                     |    6 +++++-
- scrub/Makefile                    |   19 ++++++++++++++-----
- scrub/xfs_scrub@.service.in       |    2 +-
- scrub/xfs_scrub_media@.service.in |    2 +-
- spaceman/Makefile                 |    6 +++++-
- 35 files changed, 182 insertions(+), 46 deletions(-)
+ common/config      |    1 
+ common/xfs         |    4 +-
+ tests/xfs/1886     |  135 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1886.out |   53 ++++++++++++++++++++
+ tests/xfs/1887     |  124 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1887.out |   46 ++++++++++++++++++
+ tests/xfs/1888     |   66 +++++++++++++++++++++++++
+ tests/xfs/1888.out |    9 +++
+ tests/xfs/1889     |   67 ++++++++++++++++++++++++++
+ tests/xfs/1889.out |    9 +++
+ 10 files changed, 512 insertions(+), 2 deletions(-)
+ create mode 100755 tests/xfs/1886
+ create mode 100644 tests/xfs/1886.out
+ create mode 100755 tests/xfs/1887
+ create mode 100644 tests/xfs/1887.out
+ create mode 100755 tests/xfs/1888
+ create mode 100644 tests/xfs/1888.out
+ create mode 100755 tests/xfs/1889
+ create mode 100644 tests/xfs/1889.out
 
