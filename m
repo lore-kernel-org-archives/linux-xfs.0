@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5353D79E1
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:26:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAAE68BE8
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:26:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302770; cv=none; b=GuZR4mRXQAjYIQJ/5SGKLonean8kRElPEaIBxbW+rMRH0yHTHQCqb6Mf9HcrlORUEWVfxENzkIysuZfpwKJhLnvY6FWFSgX+r64cMSGaZ0HFkd4HFco54z37bh11Fz4GAWyGqpqNnIA2DLCfEtyyxle+wUSkJuJt3ea8ueO0XdI=
+	t=1722302785; cv=none; b=jpzxhv/mIFUjxK386rVsbzI0/QbOUBEOrpDx+Fd67Q29drow2S4aBtvWu+L7v+xKYLE006CRRc/a52lOY4o7uy3vqZUd5smiEE26+Fl2m4VzeOT38bRBspmE9ImEIRivSYI7X99dvWHv0Q6CnkxHpm0alvhRDAf/5T/R3S8dHhM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302770; c=relaxed/simple;
-	bh=Ubvl4vhVTdBbVONyxhpSPe1x77zhfZznbF9Jx1uusxE=;
+	s=arc-20240116; t=1722302785; c=relaxed/simple;
+	bh=bytfYXM9QwgTSE6ZeGvnFYko9RGfE+VoP1CvxWz3J7Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s3Mj2YvVSUv5mZX4QAs9kYQoDxcX9yd0oxFV0VgpwAURPloUxg3y+yi7lolMHuxTE+HA3VzakfmC8/okro/aepmkRglV2UFsTN+bjmfCZ7voHrVCD3iO1iSQgfgQo9caZ0rFXHHeN1IdCKJwZYj4SFoL6xJLAuytui3hVZnxa9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g0AQg/3F; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=p0kf7uryyIX922T7wUOiCr4Z0ZSywnPD1qiQl/2vzUviqkkBq+qeMM0TL6EkqAcjKpzwrEDCKtIUDZ1QKdU+bMUUYY13HcTtRUG5BND+dxaDffQCv+GCt4oDRj8ZhOTxwLx2t3No4NlmG4OPoeOMys0XI8OlJdiXAo5Vmn805NI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AR5Y9w2O; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g0AQg/3F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBC3EC4AF07;
-	Tue, 30 Jul 2024 01:26:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AR5Y9w2O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 856F5C32786;
+	Tue, 30 Jul 2024 01:26:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302769;
-	bh=Ubvl4vhVTdBbVONyxhpSPe1x77zhfZznbF9Jx1uusxE=;
+	s=k20201202; t=1722302785;
+	bh=bytfYXM9QwgTSE6ZeGvnFYko9RGfE+VoP1CvxWz3J7Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=g0AQg/3F5BgzaY/E3XPnRV58mxZefvYsBEo/9sikHt9ldEtcDc9oBV40VHOzHQF79
-	 lCI/yyFS8ovNvEw3QC8LkW6CH62wCIMDqjc4Ci8CuY1r3pIVo/9TeLEo5dHBHeR5Yp
-	 B398Nq4OcIDOi8r7vZRRQQmZfYo0xLwiGNE3zinei7vrmiCC4a3Fk7bXbKkUettH/f
-	 CibbykCfZMavKGsFJDfKJOEEg7iL0q8Nj3PYQbYi/R/B8CtZvsXf+93Dy428lbtC3V
-	 ck9sKljQYmldhgQzKDLIhBgTNf8MGe8Ft34P509DaJjH7yKL3zTIYaPf09sVS1yDaC
-	 PEco6cLzSLtfw==
-Date: Mon, 29 Jul 2024 18:26:09 -0700
-Subject: [PATCH 02/12] xfs_db: actually report errors from libxfs_attr_set
+	b=AR5Y9w2OjVasvxY0OAkxlQQU7O6TKiIexWCSC5R/sDPxtz3JZ1mQDMDw2oEGDRHPT
+	 LEy8IcsOVrUuJA2nHHuls3r2Eipy/KqRVXrEh/yh4X3+NYTI2y0S9LkaG01ZWMpTA8
+	 5ezTLNlno1QXiznIa6AswFTyLUrjm5ymWDWhISGwwTJuGCg6504kyecJBd5o/L2Wuc
+	 kLPhiqL7f8XPMtDfYpmcs6/GgRt4oSd8SUs25MAvlyimWxrUGoZCnN/3VzAytfEVRj
+	 fbTL/pnx5/GLY8x5w4SLNO4I8sFgscsQYKGD7ROX3Q9liQFgqPeGUuPBayff0RuUfq
+	 NjfEMzGrtHsjQ==
+Date: Mon, 29 Jul 2024 18:26:25 -0700
+Subject: [PATCH 03/12] xfs_repair: junk parent pointer attributes when
+ filesystem doesn't support them
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
  catherine.hoang@oracle.com, allison.henderson@oracle.com
-Message-ID: <172229851515.1352527.17325767071539808212.stgit@frogsfrogsfrogs>
+Message-ID: <172229851527.1352527.17607890696167184163.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229851481.1352527.11812121319440135994.stgit@frogsfrogsfrogs>
 References: <172229851481.1352527.11812121319440135994.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,64 +48,69 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Actually tell the user what went wrong when setting or removing xattrs.
+Drop a parent pointer xattr if the filesystem doesn't support parent
+pointers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/attrset.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ repair/attr_repair.c |   30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
 
-diff --git a/db/attrset.c b/db/attrset.c
-index 008662571..81d530055 100644
---- a/db/attrset.c
-+++ b/db/attrset.c
-@@ -121,6 +121,7 @@ attr_set_f(
- 	char			*value_from_file = NULL;
- 	enum xfs_attr_update	op = XFS_ATTRUPDATE_UPSERT;
- 	int			c;
-+	int			error;
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 2e97fd977..50159b9a5 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -327,6 +327,13 @@ process_shortform_attr(
+ 					NULL, currententry->namelen,
+ 					currententry->valuelen);
  
- 	if (cur_typ == NULL) {
- 		dbprintf(_("no current type\n"));
-@@ -260,9 +261,11 @@ attr_set_f(
- 	args.owner = iocur_top->ino;
- 	libxfs_attr_sethash(&args);
++		if ((currententry->flags & XFS_ATTR_PARENT) &&
++		    !xfs_has_parent(mp)) {
++			do_warn(
++ _("parent pointer found on filesystem that doesn't support parent pointers\n"));
++			junkit |= 1;
++		}
++
+ 		remainingspace = remainingspace -
+ 					xfs_attr_sf_entsize(currententry);
  
--	if (libxfs_attr_set(&args, op, false)) {
--		dbprintf(_("failed to set attr %s on inode %llu\n"),
--			args.name, (unsigned long long)iocur_top->ino);
-+	error = -libxfs_attr_set(&args, op, false);
-+	if (error) {
-+		dbprintf(_("failed to set attr %s on inode %llu: %s\n"),
-+			args.name, (unsigned long long)iocur_top->ino,
-+			strerror(error));
- 		goto out;
+@@ -527,6 +534,15 @@ process_leaf_attr_local(
+ 			return -1;
+ 		}
+ 	}
++
++	if ((entry->flags & XFS_ATTR_PARENT) && !xfs_has_parent(mp)) {
++		do_warn(
++ _("parent pointer found in attribute entry %d in attr block %u, inode %"
++   PRIu64 " on filesystem that doesn't support parent pointers\n"),
++				i, da_bno, ino);
++		return -1;
++	}
++
+ 	return xfs_attr_leaf_entsize_local(local->namelen,
+ 						be16_to_cpu(local->valuelen));
+ }
+@@ -562,6 +578,20 @@ process_leaf_attr_remote(
+ 		return -1;
  	}
  
-@@ -291,6 +294,7 @@ attr_remove_f(
- 	};
- 	char			*name_from_file = NULL;
- 	int			c;
-+	int			error;
- 
- 	if (cur_typ == NULL) {
- 		dbprintf(_("no current type\n"));
-@@ -379,10 +383,12 @@ attr_remove_f(
- 	args.owner = iocur_top->ino;
- 	libxfs_attr_sethash(&args);
- 
--	if (libxfs_attr_set(&args, XFS_ATTRUPDATE_REMOVE, false)) {
--		dbprintf(_("failed to remove attr %s from inode %llu\n"),
-+	error = -libxfs_attr_set(&args, XFS_ATTRUPDATE_REMOVE, false);
-+	if (error) {
-+		dbprintf(_("failed to remove attr %s from inode %llu: %s\n"),
- 			(unsigned char *)args.name,
--			(unsigned long long)iocur_top->ino);
-+			(unsigned long long)iocur_top->ino,
-+			strerror(error));
- 		goto out;
- 	}
- 
++	if (entry->flags & XFS_ATTR_PARENT) {
++		if (!xfs_has_parent(mp))
++			do_warn(
++ _("parent pointer found in attribute entry %d in attr block %u, inode %"
++   PRIu64 " on filesystem that doesn't support parent pointers\n"),
++					i, da_bno, ino);
++		else
++			do_warn(
++ _("parent pointer found in attribute entry %d in attr block %u, inode %"
++   PRIu64 " with bogus remote value\n"),
++					i, da_bno, ino);
++		return -1;
++	}
++
+ 	value = malloc(be32_to_cpu(remotep->valuelen));
+ 	if (value == NULL) {
+ 		do_warn(
 
