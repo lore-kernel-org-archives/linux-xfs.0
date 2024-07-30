@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F021B524C
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:02:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C88A54A2D
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:03:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301375; cv=none; b=KuRM/juo4kgN/PHGsREbhVZGPWiI8dZwrkPRhriPvAv7NA7V9k3lr30JssX6sGNblJp2ndGI7IJWqYN2u7NHZCUvuhiX7LTT7SqbFzjgSSmI17vCJAFjAOh9qbN4/n1IaNiqZYVnvg1d4+vrp5FLzHbxgtmXzHn26754HSZudVU=
+	t=1722301390; cv=none; b=sumsmpom14wNuewaNqE3PTTSra3HSn5JvaU2QqDMsvxkMrDU+AeI/n+BQtopxd5SeuMMPUjwYJl/UqKvAXG980YGuBZGfxpgNvs0xhA3isB76CLHFm2kSIr1svVMwWd2puk/Odz840viYVlkFIvmcpDLKdK00TO3MvtFHHvRzCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301375; c=relaxed/simple;
-	bh=ifGXxlMfs6EQjfJ5uhCjZM6Q5NZmlxKRZQZ8+pyMMBM=;
+	s=arc-20240116; t=1722301390; c=relaxed/simple;
+	bh=p1Vx6zpQ0ANkMlT6xepLOdZFskwtd/P1sd5HM43RxyQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=T0+i0tt2Y40Ch0qmSSN8JP4E5Tiznp4cDxwP6ImU7Q6S0Rn6WpEWIXwCBJ+BQXvMiLJK/0j50U2Vu4UbDi+if2dFcgPU5KNAuMZklM7rX7u4/65TJQ5NfYutjc0qidmxm5f+mP3V1xxI7mjS1xVdon57OOyzqW6eOCLzwVgAEEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBMoWOn1; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=i1KlnpAL6JAGQnzrGt5ATCTg6mTqxbHu+cIHFAl/YDNx/UIwSijU4hokjtRQpxpVe1pD+Q7ZLIjq+71V+bVH2ty0pOvqUJmc9VoXaCrRpoSVvZcvdpGq49l3mhDNvvTDRQ8f3PDSQmpypyi5R0j4DVIWO7WWFpd6chcaZBrY2j0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NCuqT9go; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBMoWOn1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C251CC32786;
-	Tue, 30 Jul 2024 01:02:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NCuqT9go"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90B3AC32786;
+	Tue, 30 Jul 2024 01:03:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301374;
-	bh=ifGXxlMfs6EQjfJ5uhCjZM6Q5NZmlxKRZQZ8+pyMMBM=;
+	s=k20201202; t=1722301390;
+	bh=p1Vx6zpQ0ANkMlT6xepLOdZFskwtd/P1sd5HM43RxyQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OBMoWOn1vE0cdmVRPvYXVoUnEIpK0abyv+cirJ9qJulYeYSbk+l+vHRUmHvOeJDRP
-	 FOQJ+9P7mfkY0A/aaj624je/fYhdWvea6STgf1jg2M7Wa8aI4hP9VQ9IIFgf7DihN3
-	 9LrVLixXFU+LLCbk4Kr3EzemHKKT7PB1N/GB8ZIDv3qWu8ts5jYtr0e9f9y+ZgV3o3
-	 18Q0zupvu/iVHhT+ID1OYCyObtZBxucHF03y+J8Wl2ueYlPzoyUz1STRTWO9yJ0rm/
-	 /k6pozM/4sLnuKCPPyE11OXDNzG3hqKscTjcopA3y9vU4LLcMdLYr5nSjAMJgCnAJl
-	 XdaQT8rQylvUw==
-Date: Mon, 29 Jul 2024 18:02:54 -0700
-Subject: [PATCH 7/9] xfs_scrub: check dependencies of a scrub type before
- repairing
+	b=NCuqT9gotyg+qLf5VleJb3soYMFRLMBn2SzhPvFToTmnIha/oVMPFp8bkpk5/X1DG
+	 FZSJP5M039cteBqg5FjBCLci1YMRFeZZc3ICm3HU0Z9S7eyfpdOtvyLxVlT3wEXmj9
+	 ed7z55Lfayk7mPaG87JotZVBHNuI2bi1dAfL2GWybTEuE7BGXdHXFhxgf2S1cL8S2i
+	 8UuFnBFlw225gHT52gL7T6+6Ps1RoEvCxczrO/DOb3/k0zlaNhQ9K+Mf6HzrSOyRjf
+	 kEc2lcIHiAlenqNm+uHQgfGjoxuHNC/U8FVFxAss6pGBzKPTSLnfPWfG6aSDvwf8ls
+	 ugOlM+ZtqpEMA==
+Date: Mon, 29 Jul 2024 18:03:09 -0700
+Subject: [PATCH 8/9] xfs_scrub: retry incomplete repairs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229846453.1348067.6834490806744998099.stgit@frogsfrogsfrogs>
+Message-ID: <172229846465.1348067.3551407359389464882.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229846343.1348067.12285575950038094861.stgit@frogsfrogsfrogs>
 References: <172229846343.1348067.12285575950038094861.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,82 +46,94 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we have a map of a scrub type to its dependent scrub types, use
-this information to avoid trying to fix higher level metadata before the
-lower levels have passed.
+If a repair says it didn't do anything on account of not being able to
+complete a scan of the metadata, retry the repair a few times; if even
+that doesn't work, we can delay it to phase 4.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/repair.c |   32 ++++++++++++++++++++++++++++++++
- scrub/scrub.h  |    5 +++++
- 2 files changed, 37 insertions(+)
+ scrub/repair.c        |   15 ++++++++++++++-
+ scrub/scrub.c         |    3 +--
+ scrub/scrub_private.h |   10 ++++++++++
+ 3 files changed, 25 insertions(+), 3 deletions(-)
 
 
 diff --git a/scrub/repair.c b/scrub/repair.c
-index d4521f50c..9b4b5d016 100644
+index 9b4b5d016..2b863bb41 100644
 --- a/scrub/repair.c
 +++ b/scrub/repair.c
-@@ -497,6 +497,29 @@ action_list_process(
- 	return ret;
- }
+@@ -58,6 +58,7 @@ xfs_repair_metadata(
+ 	struct xfs_scrub_metadata	oldm;
+ 	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
+ 	bool				repair_only;
++	unsigned int			tries = 0;
+ 	int				error;
  
-+/* Decide if the dependent scrub types of the given scrub type are ok. */
-+static bool
-+repair_item_dependencies_ok(
-+	const struct scrub_item	*sri,
-+	unsigned int		scrub_type)
-+{
-+	unsigned int		dep_mask = repair_deps[scrub_type];
-+	unsigned int		b;
-+
-+	for (b = 0; dep_mask && b < XFS_SCRUB_TYPE_NR; b++, dep_mask >>= 1) {
-+		if (!(dep_mask & 1))
-+			continue;
-+		/*
-+		 * If this lower level object also needs repair, we can't fix
-+		 * the higher level item.
-+		 */
-+		if (sri->sri_state[b] & SCRUB_ITEM_NEEDSREPAIR)
-+			return false;
+ 	/*
+@@ -99,6 +100,7 @@ xfs_repair_metadata(
+ 		str_info(ctx, descr_render(&dsc),
+ 				_("Attempting optimization."));
+ 
++retry:
+ 	error = -xfrog_scrub_metadata(xfdp, &meta);
+ 	switch (error) {
+ 	case 0:
+@@ -179,9 +181,20 @@ _("Read-only filesystem; cannot make changes."));
+ 		return CHECK_DONE;
+ 	}
+ 
++	/*
++	 * If the kernel says the repair was incomplete or that there was a
++	 * cross-referencing discrepancy but no obvious corruption, we'll try
++	 * the repair again, just in case the fs was busy.  Only retry so many
++	 * times.
++	 */
++	if (want_retry(&meta) && tries < 10) {
++		tries++;
++		goto retry;
 +	}
 +
-+	return true;
+ 	if (repair_flags & XRM_FINAL_WARNING)
+ 		scrub_warn_incomplete_scrub(ctx, &dsc, &meta);
+-	if (needs_repair(&meta)) {
++	if (needs_repair(&meta) || is_incomplete(&meta)) {
+ 		/*
+ 		 * Still broken; if we've been told not to complain then we
+ 		 * just requeue this and try again later.  Otherwise we
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 5c14ed209..5fc549f97 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -137,8 +137,7 @@ _("Filesystem is shut down, aborting."));
+ 	 * we'll try the scan again, just in case the fs was busy.
+ 	 * Only retry so many times.
+ 	 */
+-	if (tries < 10 && (is_incomplete(meta) ||
+-			   (xref_disagrees(meta) && !is_corrupt(meta)))) {
++	if (want_retry(meta) && tries < 10) {
+ 		tries++;
+ 		goto retry;
+ 	}
+diff --git a/scrub/scrub_private.h b/scrub/scrub_private.h
+index 08b9130cb..53372e1f3 100644
+--- a/scrub/scrub_private.h
++++ b/scrub/scrub_private.h
+@@ -49,6 +49,16 @@ static inline bool needs_repair(struct xfs_scrub_metadata *sm)
+ 	return is_corrupt(sm) || xref_disagrees(sm);
+ }
+ 
++/*
++ * We want to retry an operation if the kernel says it couldn't complete the
++ * scan/repair; or if there were cross-referencing problems but the object was
++ * not obviously corrupt.
++ */
++static inline bool want_retry(struct xfs_scrub_metadata *sm)
++{
++	return is_incomplete(sm) || (xref_disagrees(sm) && !is_corrupt(sm));
 +}
 +
- /*
-  * For a given filesystem object, perform all repairs of a given class
-  * (corrupt, xcorrupt, xfail, preen) if the repair item says it's needed.
-@@ -536,6 +559,15 @@ repair_item_class(
- 		if (!(sri->sri_state[scrub_type] & repair_mask))
- 			continue;
+ void scrub_warn_incomplete_scrub(struct scrub_ctx *ctx, struct descr *dsc,
+ 		struct xfs_scrub_metadata *meta);
  
-+		/*
-+		 * Don't try to repair higher level items if their lower-level
-+		 * dependencies haven't been verified, unless this is our last
-+		 * chance to fix things without complaint.
-+		 */
-+		if (!(flags & XRM_FINAL_WARNING) &&
-+		    !repair_item_dependencies_ok(sri, scrub_type))
-+			continue;
-+
- 		fix = xfs_repair_metadata(ctx, xfdp, scrub_type, sri, flags);
- 		switch (fix) {
- 		case CHECK_DONE:
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index f22a95262..3ae0bfd29 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -43,6 +43,11 @@ enum check_outcome {
- #define SCRUB_ITEM_REPAIR_XREF	(SCRUB_ITEM_XFAIL | \
- 				 SCRUB_ITEM_XCORRUPT)
- 
-+/* Mask of bits signalling that a piece of metadata requires attention. */
-+#define SCRUB_ITEM_NEEDSREPAIR	(SCRUB_ITEM_CORRUPT | \
-+				 SCRUB_ITEM_XFAIL | \
-+				 SCRUB_ITEM_XCORRUPT)
-+
- struct scrub_item {
- 	/*
- 	 * Information we need to call the scrub and repair ioctls.  Per-AG
 
