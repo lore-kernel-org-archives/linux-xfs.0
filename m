@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80D7910E3
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:18:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617671361
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:18:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722298713; cv=none; b=SnW+p+TrpclsRs4f1BejbaCliaVnbivL4Oabc6flQjPVMa8DzhRv8/gsADnEi50DWqSS0CnFFtYpmIdm4j2uOITaOtDRVtLsq38BBJMqcCQxOkBgmJANXHBA7XcHWaKPqURyPxSjApSMx0CBRaNWC8ItMn48OqQPHF2YSBiMf1Q=
+	t=1722298729; cv=none; b=cQHn2KrVx91ew4ZfQv6QVROz84lELPjSOZGHyhf4WEooRYbDkCn4cBpWbUTDCT6cbHxPPxZ3tOS6YVj4Xe53ntpmBE8oQD6OTCx7WB6tM/tTK6vtCdM+nqAX8758Fz22JBiYFB6CyQ4rleB9/k00vLej4+iSA58XbRD6FIbCNWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722298713; c=relaxed/simple;
-	bh=k1TcXX4YdkBYXNgsaIgploikRzWvQN58v78lOO7U0NE=;
+	s=arc-20240116; t=1722298729; c=relaxed/simple;
+	bh=4hzh8zTH6/QsMRpVNFf6KLoPwk9k+RdtFuNp0bBuagI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d67iRbv2uyapHdbqa5wMyXH30m312sqQdoT3jNC1bpXeIVMDFUKTp9S2TOShP2TNbhxcfOEcU8mu1QTa5KageJH/+Vb1o+uxM47GVNeImBczeTyyMYGDXIj1SNkuW8Toqs82MZpmqpR3zlNcjnyysX9J8ktf5vopKof/QK4ArYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jCi/w7GP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=R+Ti3fyeFH4nOeKPNddk1UsTI3b2PU/wAO93hF4IzL3FKHA/EN9TdorC69DfjZMsJSo/MCyu4V5qw5XcvTLf2EKLMCKVUGuydVJKcbyeXwQncq5NV/3chTEWwHpiwziLYpaJjTs2O4LHHRsbSHfxQCPrwCgcuLYxbK623WznCtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qqAFv8MZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jCi/w7GP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5195AC32786;
-	Tue, 30 Jul 2024 00:18:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qqAFv8MZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE411C32786;
+	Tue, 30 Jul 2024 00:18:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722298713;
-	bh=k1TcXX4YdkBYXNgsaIgploikRzWvQN58v78lOO7U0NE=;
+	s=k20201202; t=1722298729;
+	bh=4hzh8zTH6/QsMRpVNFf6KLoPwk9k+RdtFuNp0bBuagI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jCi/w7GPAOWHvzTXxU0OsEEF5PaSdlKNWh3yGYd4k+gHOg9mZCdhPor5GoRwOmIXA
-	 3oknMRrI393scGor7Yhn18C9HWWqtsl4rRoNOvOR997aHyPheoCwVr/4wIc55GHZLG
-	 fQdYtFdtACAJvHdKtYKtH/lnW2WdEmdwbe6fLP9ddFe1a/SC8+eNh2ecjG7B1W3S9Z
-	 kxRoWd5DzzdAgNzeMKXbXJiZY4OrE5vmvL850OMhCP2BwABbkko6xVL3yOsv2mpkaD
-	 SijT4FP4DihWr/8Ga3XS3AxylSV1fBVZiFpTBOx4B5eLxBuUkk6MArRHsoo0kqrQKo
-	 4YWrk0dN+zgGQ==
-Date: Mon, 29 Jul 2024 17:18:32 -0700
-Subject: [PATCHSET v30.9 08/23] xfs_scrub: track data dependencies for repairs
+	b=qqAFv8MZXekPSgov+NYyJSVcwWKa0eN/nFskT/fTPs884c2JYYR4SR4XpQvFt0giJ
+	 T2sb0h3+FVp9vTXg3Brd7nMu4h/2oXgP5r6M0QofPUucQae/K55mBLLATS12iKp0F8
+	 w58Zo4BugFIMsCujIkDlQvXIqPa2yQMK+IsKxe03Dj954tpGnuG3j1W910x9x7RKWP
+	 5OmYZfcaWqniZ8Dh+RuDRhbVeMRfo4m5tHz8TMcQOjFQ85NFpr/3kzvkwMqeJYoX1x
+	 Y92HmPgJFRD9m5pLN1NFq2CZLltJ+1kkU8pEO2pCctHYQ+UqSuUnhZzmSKNAxz8ANd
+	 bgyokBx1sZD6A==
+Date: Mon, 29 Jul 2024 17:18:48 -0700
+Subject: [PATCHSET v30.9 09/23] xfs_scrub: use scrub_item to track check
+ progress
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229846343.1348067.12285575950038094861.stgit@frogsfrogsfrogs>
+Message-ID: <172229846763.1348436.17732340268176889954.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240730001021.GD6352@frogsfrogsfrogs>
 References: <20240730001021.GD6352@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,28 +47,12 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Certain kinds of XFS metadata depend on the correctness of lower level
-metadata.  For example, directory indexes depends on the directory data
-fork, which in turn depend on the directory inode to be correct.  The
-current scrub code does not strictly preserve these dependencies if it
-has to defer a repair until phase 4, because phase 4 prioritizes repairs
-by type (corruption, then cross referencing, and then preening) and
-loses the ordering of in the previous phases.  This leads to absurd
-things like trying to repair a directory before repairing its corrupted
-fork, which is absurd.
-
-To solve this problem, introduce a repair ticket structure to track all
-the repairs pending for a principal object (inode, AG, etc).  This
-reduces memory requirements if an object requires more than one type of
-repair and makes it very easy to track the data dependencies between
-sub-objects of a principal object.  Repair dependencies between object
-types (e.g.  bnobt before inodes) must still be encoded statically into
-phase 4.
-
-A secondary benefit of this new ticket structure is that we can decide
-to attempt a repair of an object A that was flagged for a cross
-referencing error during the scan if a different object B depends on A
-but only B showed definitive signs of corruption.
+Now that we've introduced tickets to track the status of repairs to a
+specific principal XFS object (fs, ag, file), use them to track the
+scrub state of those same objects.  Ultimately, we want to make it easy
+to introduce vectorized repair, where we send a batch of repair requests
+to the kernel instead of making millions of ioctl calls.  For now,
+however, we'll settle for easier bookkeepping.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -76,30 +61,24 @@ This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-repair-data-deps-6.10
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-object-tracking-6.10
 ---
 Commits in this patchset:
- * xfs_scrub: track repair items by principal, not by individual repairs
- * xfs_scrub: use repair_item to direct repair activities
- * xfs_scrub: remove action lists from phaseX code
- * xfs_scrub: remove scrub_metadata_file
- * xfs_scrub: boost the repair priority of dependencies of damaged items
- * xfs_scrub: clean up repair_item_difficulty a little
- * xfs_scrub: check dependencies of a scrub type before repairing
- * xfs_scrub: retry incomplete repairs
- * xfs_scrub: remove unused action_list fields
+ * xfs_scrub: start tracking scrub state in scrub_item
+ * xfs_scrub: remove enum check_outcome
+ * xfs_scrub: refactor scrub_meta_type out of existence
+ * xfs_scrub: hoist repair retry loop to repair_item_class
+ * xfs_scrub: hoist scrub retry loop to scrub_item_check_file
 ---
- libfrog/scrub.c       |    1 
- scrub/phase1.c        |    9 -
- scrub/phase2.c        |   46 ++--
- scrub/phase3.c        |   77 ++++---
- scrub/phase4.c        |   17 +-
- scrub/phase5.c        |    9 -
- scrub/phase7.c        |    9 -
- scrub/repair.c        |  530 +++++++++++++++++++++++++++++++++----------------
- scrub/repair.h        |   47 +++-
- scrub/scrub.c         |  136 ++++++-------
- scrub/scrub.h         |  108 ++++++++--
- scrub/scrub_private.h |   37 +++
- 12 files changed, 664 insertions(+), 362 deletions(-)
+ scrub/phase1.c        |    3 
+ scrub/phase2.c        |   12 +-
+ scrub/phase3.c        |   41 ++----
+ scrub/phase4.c        |   16 +-
+ scrub/phase5.c        |    5 -
+ scrub/phase7.c        |    5 +
+ scrub/repair.c        |   71 +++++------
+ scrub/scrub.c         |  321 ++++++++++++++++++++++---------------------------
+ scrub/scrub.h         |   40 ++++--
+ scrub/scrub_private.h |   14 ++
+ 10 files changed, 257 insertions(+), 271 deletions(-)
 
