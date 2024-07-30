@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DA55DF60
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 02:41:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47C06DF60
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 02:41:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722307281; cv=none; b=QKxvaaKFbcwKyE68QZmIKkHJbzD76/bih4rBAIcNHAnvmQ1v9eh7/eEVwmTpHeKycfOiD4kz7BXmr25ZICcIjM0W8CaeUD7CvTK4D1xOE55FRH6g8n2PoK6hnDzq8zf6tXQCtJnFDCsl8WE6L8JUNAxhwtrVKgzW8HOuI1id6IA=
+	t=1722307297; cv=none; b=W68OL+v57/VZB8V7RHMN1S2+TdZ+efacLwEjxfVH3PQSaT3HPu9+QOuVD0Os0Fpu6p/ax+0gaY7cLsQ9BPAmu5QwVZT+afmI2fD1dMKWkoyyjfoAl/Bnvr4eFN7D3kHwTfOZwnUiONxO5cYajq8CXHrOg1Pb564v3h/MCfodt3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722307281; c=relaxed/simple;
-	bh=WwVgIj+CpF6oPGfeH8lETlK0yhxodXct2d8wDQXgLvU=;
+	s=arc-20240116; t=1722307297; c=relaxed/simple;
+	bh=Rkblvs7josCQWWp6gV+kKYbnhVf1jav1CJJIq+cdj0Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=tWS1IZnGk5dRVnZ8ZKNOLNYlxmrYPePzg9c8o7SRIZ70rGSH0aWLr/4yUEvZN6Q6eJI1JUnJoRtTiMaLxKAO95XJfN+1tBGiFWtOJKPfvEswHEncGaTODUCsQXvUcJWtyMtaSDI4FtKaY9+kpJ0Z2YWh5S9QUzp2wsiFl3G22/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fi9PabsD; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=lhrn4RuAlwKRKlsZk4WcBfU8znmb46F0XEfSD7xJWtLdJNutRCvbEjG3ZFOBvGvbKwo+ClFRRPwHJfvnO5Ig1RrMhmbOrH2zZkJyJgB8FmxDdUMum6saZtNeuXa1N1aIyUscO8boLiOTTrD7BlrPj/h0Y/CT/Em9LCVdAY8cRso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aV0v4dAB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fi9PabsD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C29C32786;
-	Tue, 30 Jul 2024 02:41:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aV0v4dAB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2C7AC32786;
+	Tue, 30 Jul 2024 02:41:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722307281;
-	bh=WwVgIj+CpF6oPGfeH8lETlK0yhxodXct2d8wDQXgLvU=;
+	s=k20201202; t=1722307296;
+	bh=Rkblvs7josCQWWp6gV+kKYbnhVf1jav1CJJIq+cdj0Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fi9PabsDE02P/tSuDPCCA3kAeEamJoq3rIuku0pd8KvJMPOJJKHaDp4Jq+8yp+BJx
-	 hS4F9YcO8YtB97MYt/0ECE3hWj2f3L5uJGt0WA4EUs8+fpgq3VsAfaZWtrMFKN4DUf
-	 qEh5G8Wez4+Ta4jhq3dup7vMOBKXGV8VVY6GfhEh0xVnFhy3Hysz3gTyxmyd//Cf77
-	 O2dC89gdwwtyPH2PX33wRd+oyM2nAeDxRslN0nTE29IUNCpiUefYVbe/dDRa4kSAQq
-	 oE0eVQw0QXBHyRQKlfTQo+fW0nvA2rEP1J+Kc+1fmMbL59ePWfm3SJAF7D4Vjyoy4w
-	 szFE8N4Rf5XRA==
-Date: Mon, 29 Jul 2024 19:41:20 -0700
-Subject: [GIT PULL 04/23] xfsprogs: set and validate dir/attr block owners
+	b=aV0v4dAB3Akl5dCSXHC+Fy9j+p5qFbpgjOwn8HWcVYvVtWMy0+/OFpRsPspSoq1xe
+	 AcojEOMAypvmXFAdzhue7OKsgIaQOjQl+A+NYUVtgBMgF8vl2osi0r7r8qmwCVy8RE
+	 xl0/svgf5x1oFhCVYOsGorvTkqf2CBGL8kdYprjYpJXFTw0PW30yZIWLPfyV2G1bT3
+	 RDpL8Zv/G3J5+lAplMqn461Zo5AFldRESTtLE6klLkyd1AQHtvX7RYLbyJ5PLKqyTX
+	 Bn/yDuPQkEJclpJ1WZAlDnyhX5l2kE9IohZO0Ev3DobJ4OMDpGLFNLPlbSlMHM1fWT
+	 guxEopLCb6rDg==
+Date: Mon, 29 Jul 2024 19:41:36 -0700
+Subject: [GIT PULL 05/23] xfsprogs: inode-related repair fixes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172230458153.1455085.12133559083527891309.stg-ugh@frogsfrogsfrogs>
+Message-ID: <172230458253.1455085.17011073206641235117.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,46 +51,43 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 39e346ba525c51dd2f405ed5d6368db712fac586:
-
-mkfs: add a formatting option for exchange-range (2024-07-29 17:01:06 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/dirattr-validate-owners-6.10_2024-07-29
-
-for you to fetch changes up to 7e74984e652fab200bc7319d7c3d90f6ae36be2e:
+The following changes since commit 7e74984e652fab200bc7319d7c3d90f6ae36be2e:
 
 xfs_{db,repair}: add an explicit owner field to xfs_da_args (2024-07-29 17:01:06 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/inode-repair-improvements-6.10_2024-07-29
+
+for you to fetch changes up to ebf05a446c09336c08865dc29a6332be6ff8223c:
+
+mkfs/repair: pin inodes that would otherwise overflow link count (2024-07-29 17:01:06 -0700)
+
 ----------------------------------------------------------------
-xfsprogs: set and validate dir/attr block owners [v30.9 04/28]
+xfsprogs: inode-related repair fixes [v30.9 05/28]
 
-There are a couple of significatn changes that need to be made to the
-directory and xattr code before we can support online repairs of those
-data structures.
+While doing QA of the online fsck code, I made a few observations:
+First, nobody was checking that the di_onlink field is actually zero;
+Second, that allocating a temporary file for repairs can fail (and
+thus bring down the entire fs) if the inode cluster is corrupt; and
+Third, that file link counts do not pin at ~0U to prevent integer
+overflows.
 
-The first change is because online repair is designed to use libxfs to
-create a replacement dir/xattr structure in a temporary file, and use
-atomic extent swapping to commit the corrected structure.  To avoid the
-performance hit of walking every block of the new structure to rewrite
-the owner number, we instead change libxfs to allow callers of the dir
-and xattr code the ability to set an explicit owner number to be written
-into the header fields of any new blocks that are created.
-
-The second change is to update the dir/xattr code to actually *check*
-the owner number in each block that is read off the disk, since we don't
-currently do that.
+This scattered patchset fixes those three problems.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (1):
-xfs_{db,repair}: add an explicit owner field to xfs_da_args
+Darrick J. Wong (2):
+libxfs: port the bumplink function from the kernel
+mkfs/repair: pin inodes that would otherwise overflow link count
 
-db/namei.c      | 1 +
-repair/phase6.c | 3 +++
-2 files changed, 4 insertions(+)
+include/xfs_inode.h |  2 ++
+libxfs/util.c       | 18 ++++++++++++++++++
+mkfs/proto.c        |  4 ++--
+repair/incore_ino.c | 14 +++++++++-----
+repair/phase6.c     | 10 +++++-----
+5 files changed, 36 insertions(+), 12 deletions(-)
 
