@@ -1,37 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3547E3FE4
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:35:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8F573FE4
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:35:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299731; cv=none; b=Dl3SsZJR2U+SdgyLuwmYIptlmIcu0KajG8rZ69V74tOV15/KgD0o6TGFEOYk9p59W6/arU9J8LpTJM9oVA6q7mdigPxiMLuQwprj8Ip1kz6gm+70o2vcdl3wZZ8yFPH3cXn1cRaUzgpbTypVEqP6s9msUOh7RuUyHEG8gsrF4iQ=
+	t=1722299746; cv=none; b=rt2ekdBY6R32idcIDwyNoPd+stsZXUmz+sxHrsyuvHQdEaruHvTDQhce2HJAQegzKCWuAOSPgPWFE07wwqXCwtdUkFl4GJGR978uJXxko+dQvqTT0Uzp/DUPYYYR28ImnERkvPAw/cqCcDHq2N+7LPhDopmI3uzlUbKoDlZqb4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299731; c=relaxed/simple;
-	bh=ZpLK4fpzz73Rjb0WhopjlBg+CKpU4hdTuGXklsjF8zw=;
+	s=arc-20240116; t=1722299746; c=relaxed/simple;
+	bh=ibFX8elBA6+vt3Cyn1yJdjyD2OfAnWo4Q5+HLK3Hk7U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bNMSFckTR0L5MbA2tMoMHqdMKiDZNL2cO4pzwal1cbHWpSNnwFtFSDZTEMA4QCKeTcs5naE/A3RniP5OZvxWF5ZxvwgfpDThaKJqklY9Pzkjc+gbMpETTX180LrquRdm6FTUOMDe1taOS3LNjlDWKLOgH4BGSQ8F4l3Ohqj3LpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aQ2ZW3WX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=iPKuwIB6oxviUI5mtT9amdanAWwfDionwXAtQ2ZOIYOxoXCYQ2qV0SOgrTw6YFbE9/fqfWTcndaQ2Mv67b1ABz8+ogoOYHSKRBOCghxowxE8UUoH+tdeb0E1YvzwtnBqpu2D+nEfVW3GScszB/YbrS7vaf0K/QcaoM1MDvCZssc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCBJWQup; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aQ2ZW3WX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 122B9C32786;
-	Tue, 30 Jul 2024 00:35:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCBJWQup"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0CE1C32786;
+	Tue, 30 Jul 2024 00:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299731;
-	bh=ZpLK4fpzz73Rjb0WhopjlBg+CKpU4hdTuGXklsjF8zw=;
+	s=k20201202; t=1722299746;
+	bh=ibFX8elBA6+vt3Cyn1yJdjyD2OfAnWo4Q5+HLK3Hk7U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aQ2ZW3WX3BsupNBcckEYBmSYrrzeLQ4RnELSHY+QzmexFm3Oue4u3ARGrR5a+CwQa
-	 JQjwGJ+2hx64hdrXP++ukGbttSEPcrSq7EabZcnGzmB6pGwo/Lyb5e3btQ+pxITyX3
-	 +SXxDspzWyjNDQX4+N3eF45AQfhBPW4zOBDi5bXeTRN/7HtIGWV6k2HbMxQl3s7HdN
-	 KQcovZnihdGrmw1h5vzWfxiAe6BeSZR8rqXnAnr+HWzrAbb6w0zSsr2E5GIkZWWyGi
-	 LsfUwdqp4DiAe124ol1VHaUs2tAaWqv1O0qUnxo0tivP47tMu1YfrZcIa6oendNbAM
-	 ImHCBKLgEDYqg==
-Date: Mon, 29 Jul 2024 17:35:30 -0700
-Subject: [PATCH 045/115] xfs: rearrange xfs_da_args a bit to use less space
+	b=eCBJWQupeTvBhRKiTS3m/ORxG6TLxnI+mAVvd6KM2u8n94TQ22CjnNiffSQuTDFTl
+	 kcRPHHbjGB7YM2NG7G+jtxeWVTJyVsZT2oQkEtc59fYOG3Wr3G/tcog9CJUvSy9qxk
+	 Id7dRm7zQFV7jhI3jMmM908FIqkDj+O65NUZ44DocIyqGYt1hTrOl22XyKECTNZcG1
+	 aOoLRLQ1ZYRAVpNOu/dnWayZ8sK6eue7wAQS9svDnChvwpXzaVh+U6i/4Xhy4OqHF5
+	 5/+uPtdYqQwDSO5GaSG/WzpaGNcpNZdc0hPeBGPmwU956cfvROk7zgePy89OmwZ8p0
+	 Zhke3qo88T48Q==
+Date: Mon, 29 Jul 2024 17:35:46 -0700
+Subject: [PATCH 046/115] xfs: attr fork iext must be loaded before calling
+ xfs_attr_is_leaf
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229843076.1338752.13895998587215955301.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@lst.de>,
+ linux-xfs@vger.kernel.org
+Message-ID: <172229843089.1338752.16878558381685097871.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,73 +48,69 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: cda60317ac57add7a0a2865aa29afbc6caad3e9a
+Source kernel commit: ef80de940a6344da1d4f12c948a0ad4d6ff6e841
 
-A few notes about struct xfs_da_args:
+Christoph noticed that the xfs_attr_is_leaf in xfs_attr_get_ilocked can
+access the incore extent tree of the attr fork, but nothing in the
+xfs_attr_get path guarantees that the incore tree is actually loaded.
 
-The XFS_ATTR_* flags only go up as far as XFS_ATTR_INCOMPLETE, which
-means that attr_filter could be a u8 field.
+Most of the time it is, but seeing as xfs_attr_is_leaf ignores the
+return value of xfs_iext_get_extent I guess we've been making choices
+based on random stack contents and nobody's complained?
 
-I've reduced the number of XFS_DA_OP_* flags down to the point where
-op_flags would also fit into a u8.
-
-filetype has 7 bytes of slack after it, which is wasteful.
-
-namelen will never be greater than MAXNAMELEN, which is 256.  This field
-could be reduced to a short.
-
-Rearrange the fields in xfs_da_args to waste less space.  This reduces
-the structure size from 136 bytes to 128.  Later when we add extra
-fields to support parent pointer replacement, this will only bloat the
-structure to 144 bytes, instead of 168.
-
+Reported-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_da_btree.h |   20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ libxfs/xfs_attr.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 
-diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
-index 706b529a8..17cef594b 100644
---- a/libxfs/xfs_da_btree.h
-+++ b/libxfs/xfs_da_btree.h
-@@ -54,16 +54,20 @@ enum xfs_dacmp {
-  */
- typedef struct xfs_da_args {
- 	struct xfs_da_geometry *geo;	/* da block geometry */
--	const uint8_t		*name;		/* string (maybe not NULL terminated) */
--	int		namelen;	/* length of string (maybe no NULL) */
--	uint8_t		filetype;	/* filetype of inode for directories */
-+	const uint8_t	*name;		/* string (maybe not NULL terminated) */
- 	void		*value;		/* set of bytes (maybe contain NULLs) */
--	int		valuelen;	/* length of value */
--	unsigned int	attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
--	xfs_dahash_t	hashval;	/* hash value of name */
--	xfs_ino_t	inumber;	/* input/output inode number */
- 	struct xfs_inode *dp;		/* directory inode to manipulate */
- 	struct xfs_trans *trans;	/* current trans (changes over time) */
-+
-+	xfs_ino_t	inumber;	/* input/output inode number */
-+	xfs_ino_t	owner;		/* inode that owns the dir/attr data */
-+
-+	int		valuelen;	/* length of value */
-+	uint8_t		filetype;	/* filetype of inode for directories */
-+	uint8_t		op_flags;	/* operation flags */
-+	uint8_t		attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
-+	short		namelen;	/* length of string (maybe no NULL) */
-+	xfs_dahash_t	hashval;	/* hash value of name */
- 	xfs_extlen_t	total;		/* total blocks needed, for 1st bmap */
- 	int		whichfork;	/* data or attribute fork */
- 	xfs_dablk_t	blkno;		/* blkno of attr leaf of interest */
-@@ -76,9 +80,7 @@ typedef struct xfs_da_args {
- 	xfs_dablk_t	rmtblkno2;	/* remote attr value starting blkno */
- 	int		rmtblkcnt2;	/* remote attr value block count */
- 	int		rmtvaluelen2;	/* remote attr value length in bytes */
--	uint32_t	op_flags;	/* operation flags */
- 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
--	xfs_ino_t	owner;		/* inode that owns the dir/attr data */
- } xfs_da_args_t;
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 5249f9be0..8e9e23836 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -85,6 +85,8 @@ xfs_attr_is_leaf(
+ 	struct xfs_iext_cursor	icur;
+ 	struct xfs_bmbt_irec	imap;
  
- /*
++	ASSERT(!xfs_need_iread_extents(ifp));
++
+ 	if (ifp->if_nextents != 1 || ifp->if_format != XFS_DINODE_FMT_EXTENTS)
+ 		return false;
+ 
+@@ -222,11 +224,21 @@ int
+ xfs_attr_get_ilocked(
+ 	struct xfs_da_args	*args)
+ {
++	int			error;
++
+ 	xfs_assert_ilocked(args->dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
+ 
+ 	if (!xfs_inode_hasattr(args->dp))
+ 		return -ENOATTR;
+ 
++	/*
++	 * The incore attr fork iext tree must be loaded for xfs_attr_is_leaf
++	 * to work correctly.
++	 */
++	error = xfs_iread_extents(args->trans, args->dp, XFS_ATTR_FORK);
++	if (error)
++		return error;
++
+ 	if (args->dp->i_af.if_format == XFS_DINODE_FMT_LOCAL)
+ 		return xfs_attr_shortform_getvalue(args);
+ 	if (xfs_attr_is_leaf(args->dp))
+@@ -868,6 +880,11 @@ xfs_attr_lookup(
+ 		return -ENOATTR;
+ 	}
+ 
++	/* Prerequisite for xfs_attr_is_leaf */
++	error = xfs_iread_extents(args->trans, args->dp, XFS_ATTR_FORK);
++	if (error)
++		return error;
++
+ 	if (xfs_attr_is_leaf(dp)) {
+ 		error = xfs_attr_leaf_hasname(args, &bp);
+ 
 
