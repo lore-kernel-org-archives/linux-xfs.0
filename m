@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C5C77E6
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:30:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47471F9D6
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:30:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299418; cv=none; b=Vt423PoQj8tp0/d8kBHp2X3PAwTrrq5OKzoxn+TK73lqDV1ot2LC0QaN2gNM8WHl6WYE1EBQhmlaj10p35hQujS3jGG/po/j45mrGZViEDqzW6IirrHZrYMzvSfir6ThYTJP8jpd65fAU67MVIaW6O5C+af5mGfOJs1CQExDDW4=
+	t=1722299434; cv=none; b=HL9Hw5Zed5VMGtg7qEPbzXQrFtOHjvv47LiWfJDHIsDm1QfWGMkjThLEhnQZ604bJ/of4RZbjF1mXA7jfc2E4VeWdzUWv9bAKFAyxBmnyV+Bs88ixNBPPSTnO1RYDLVK8fwGz4jWO3zvsfKvkatGQ72JCntXA7PmnsAbks6IHeE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299418; c=relaxed/simple;
-	bh=lERqdodjM0owbvnQKFMZ6ftQ9V/eyK2dv++2P9+I8dw=;
+	s=arc-20240116; t=1722299434; c=relaxed/simple;
+	bh=auztCkabC6+I7P34xpJHvvE+r80Z6f5LkqPGYiXeoW8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y7ErWYQlRz9rrd2dowVdwhGr4T0q9qO1wrrtmVJrkiDAX9QDYPAuCHvF4sVMOvFgbdttkI4B/kZvSftMMQgU96jK6ddBYljc7CU/mDy3yShciRlN8Q2KotfeRdQfkRKHUty9pxVm7t2+Ockhy6P8AappxmWEkOzPxZH9btRJ0RU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qzkagoJ7; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YWi0UawB+XlaTsuAoh7qGphgjRg2GB4D7LjIzz+fMdFa9v6ToKZxvagqkvdaB6vjctIQD1yMWZ+iUdaS7fzLkIwew1otJDfP4cniEp8i2Fw2ojtCCIq8mQzk+zk71PVE4J5arMh5Y6Wqtz1C9TORSkSCeM+S05m5H+0GdIxw89A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g7clOb2b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qzkagoJ7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 250E3C32786;
-	Tue, 30 Jul 2024 00:30:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g7clOb2b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF2B2C32786;
+	Tue, 30 Jul 2024 00:30:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299418;
-	bh=lERqdodjM0owbvnQKFMZ6ftQ9V/eyK2dv++2P9+I8dw=;
+	s=k20201202; t=1722299433;
+	bh=auztCkabC6+I7P34xpJHvvE+r80Z6f5LkqPGYiXeoW8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qzkagoJ7EgSKB8iAZ9+bKFNIEUtBPHm4hvRgJvnDrfhrAbGU3sxWv/a79Qx2y3Wpq
-	 h0VAhfNPq+Ed7Pxvms5OCEQWOq16V2E5Qc6GScgUi9u+wp71K2YX8saEiu3+L+GyI1
-	 M0mBGYGpRaxBKnDCohug11z04Dg77i5f8inVVnxeEghNLUWN44D8WehSX9NbmRk0KY
-	 lxohtpqY2demIvE7LEXzHrp7ZmnZLhG2Ij3rZDEa5JrDyU5Ev1XLqMG5Ub3i5lCjL9
-	 xDLCETrF+MoxEDvMq3TwHXocZNjaoveghxHD3BX/9jKPh2q8sokhsh8Xz8dN+Mvnk8
-	 4Q4SOt6AVaA2w==
-Date: Mon, 29 Jul 2024 17:30:17 -0700
-Subject: [PATCH 025/115] xfs: expose xfs_bmap_local_to_extents for online
- repair
+	b=g7clOb2bdvvgyb0hISgeyN61IvS95dQ0/to6phScrN3ts4d7bOxwfZvmBQBHtMojT
+	 Q4dZlcssRj0Pii6IBYrkHu4X67MlCkZ2Yt3R7oJ+sWYlhbw5KpGiqElRKc3AZdcu64
+	 r6iZNRJp5egE7GtoAxE3OGGwJDJRPLWw1ZcFCFG/VEuZoTHAIaLwbYr2DRMB/kpmpa
+	 GdLEwGZQli6Y7UeHXA11c0XnbTVdUNCAkY11QAs7breE8nqpD0Qfa+DBuORqUyTxiY
+	 mB7pgvkMu6quQ+ZwTUkPf9dOGQk6+HtsxmkfPSWNyGGy6rQnWBLF59DI7hIFIKInUr
+	 hhB3Xbf3TyUSQ==
+Date: Mon, 29 Jul 2024 17:30:33 -0700
+Subject: [PATCH 026/115] xfs: pass the owner to xfs_symlink_write_target
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229842795.1338752.8294926697673625653.stgit@frogsfrogsfrogs>
+Message-ID: <172229842810.1338752.14366833683859202866.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,107 +46,71 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: ef744be416b5c649d287604730400dfa728779fe
+Source kernel commit: ea8214c3195c2ed3a205dea42bbe7746712fc461
 
-Allow online repair to call xfs_bmap_local_to_extents and add a void *
-argument at the end so that online repair can pass its own context.
+Require callers of xfs_symlink_write_target to pass the owner number
+explicitly.  This sets us up for online repair to be able to write a
+remote symlink target to sc->tempip with sc->ip's inumber in the block
+heaader.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_bmap.c           |   11 ++++++-----
- libxfs/xfs_bmap.h           |    6 ++++++
- libxfs/xfs_symlink_remote.c |    3 ++-
- libxfs/xfs_symlink_remote.h |    3 ++-
- 4 files changed, 16 insertions(+), 7 deletions(-)
+ libxfs/xfs_symlink_remote.c |    4 ++--
+ libxfs/xfs_symlink_remote.h |    4 ++--
+ mkfs/proto.c                |    3 ++-
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 868334229..63feb20e2 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -773,7 +773,7 @@ xfs_bmap_local_to_extents_empty(
- }
- 
- 
--STATIC int				/* error */
-+int					/* error */
- xfs_bmap_local_to_extents(
- 	xfs_trans_t	*tp,		/* transaction pointer */
- 	xfs_inode_t	*ip,		/* incore inode pointer */
-@@ -783,7 +783,8 @@ xfs_bmap_local_to_extents(
- 	void		(*init_fn)(struct xfs_trans *tp,
- 				   struct xfs_buf *bp,
- 				   struct xfs_inode *ip,
--				   struct xfs_ifork *ifp))
-+				   struct xfs_ifork *ifp, void *priv),
-+	void		*priv)
- {
- 	int		error = 0;
- 	int		flags;		/* logging flags returned */
-@@ -844,7 +845,7 @@ xfs_bmap_local_to_extents(
- 	 * log here. Note that init_fn must also set the buffer log item type
- 	 * correctly.
- 	 */
--	init_fn(tp, bp, ip, ifp);
-+	init_fn(tp, bp, ip, ifp, priv);
- 
- 	/* account for the change in fork size */
- 	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-@@ -976,8 +977,8 @@ xfs_bmap_add_attrfork_local(
- 
- 	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		return xfs_bmap_local_to_extents(tp, ip, 1, flags,
--						 XFS_DATA_FORK,
--						 xfs_symlink_local_to_remote);
-+				XFS_DATA_FORK, xfs_symlink_local_to_remote,
-+				NULL);
- 
- 	/* should only be called for types that support local format data */
- 	ASSERT(0);
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index b8bdbf156..32fb2a455 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -179,6 +179,12 @@ unsigned int xfs_bmap_compute_attr_offset(struct xfs_mount *mp);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- void	xfs_bmap_local_to_extents_empty(struct xfs_trans *tp,
- 		struct xfs_inode *ip, int whichfork);
-+int xfs_bmap_local_to_extents(struct xfs_trans *tp, struct xfs_inode *ip,
-+		xfs_extlen_t total, int *logflagsp, int whichfork,
-+		void (*init_fn)(struct xfs_trans *tp, struct xfs_buf *bp,
-+				struct xfs_inode *ip, struct xfs_ifork *ifp,
-+				void *priv),
-+		void *priv);
- void	xfs_bmap_compute_maxlevels(struct xfs_mount *mp, int whichfork);
- int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
 diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
-index 72f175990..fbcd1aebb 100644
+index fbcd1aebb..2ad586f39 100644
 --- a/libxfs/xfs_symlink_remote.c
 +++ b/libxfs/xfs_symlink_remote.c
-@@ -166,7 +166,8 @@ xfs_symlink_local_to_remote(
+@@ -308,6 +308,7 @@ int
+ xfs_symlink_write_target(
  	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp,
  	struct xfs_inode	*ip,
--	struct xfs_ifork	*ifp)
-+	struct xfs_ifork	*ifp,
-+	void			*priv)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	char			*buf;
++	xfs_ino_t		owner,
+ 	const char		*target_path,
+ 	int			pathlen,
+ 	xfs_fsblock_t		fs_blocks,
+@@ -362,8 +363,7 @@ xfs_symlink_write_target(
+ 		byte_cnt = min(byte_cnt, pathlen);
+ 
+ 		buf = bp->b_addr;
+-		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset, byte_cnt,
+-				bp);
++		buf += xfs_symlink_hdr_set(mp, owner, offset, byte_cnt, bp);
+ 
+ 		memcpy(buf, cur_chunk, byte_cnt);
+ 
 diff --git a/libxfs/xfs_symlink_remote.h b/libxfs/xfs_symlink_remote.h
-index ac3dac8f6..83b89a1de 100644
+index 83b89a1de..c1672fe1f 100644
 --- a/libxfs/xfs_symlink_remote.h
 +++ b/libxfs/xfs_symlink_remote.h
-@@ -16,7 +16,8 @@ int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
- bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
- 			uint32_t size, struct xfs_buf *bp);
- void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
--				 struct xfs_inode *ip, struct xfs_ifork *ifp);
-+				 struct xfs_inode *ip, struct xfs_ifork *ifp,
-+				 void *priv);
+@@ -21,8 +21,8 @@ void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
  xfs_failaddr_t xfs_symlink_shortform_verify(void *sfp, int64_t size);
  int xfs_symlink_remote_read(struct xfs_inode *ip, char *link);
  int xfs_symlink_write_target(struct xfs_trans *tp, struct xfs_inode *ip,
+-		const char *target_path, int pathlen, xfs_fsblock_t fs_blocks,
+-		uint resblks);
++		xfs_ino_t owner, const char *target_path, int pathlen,
++		xfs_fsblock_t fs_blocks, uint resblks);
+ int xfs_symlink_remote_truncate(struct xfs_trans *tp, struct xfs_inode *ip);
+ 
+ #endif /* __XFS_SYMLINK_REMOTE_H */
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index a923f9c10..5125ee44f 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -252,7 +252,8 @@ writesymlink(
+ 	xfs_extlen_t		nb = XFS_B_TO_FSB(mp, len);
+ 	int			error;
+ 
+-	error = -libxfs_symlink_write_target(tp, ip, buf, len, nb, nb);
++	error = -libxfs_symlink_write_target(tp, ip, ip->i_ino, buf, len, nb,
++			nb);
+ 	if (error) {
+ 		fprintf(stderr,
+ 	_("%s: error %d creating symlink to '%s'.\n"), progname, error, buf);
 
