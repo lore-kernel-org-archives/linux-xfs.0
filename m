@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6E828BF0
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:08:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53AD10E3
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:08:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301705; cv=none; b=g66qtxU1kEGtYc8LsBqaAQqFnTNzdL1IerT8b4qi0xBjZSykdeNFaAAat+PawHJE5eTUvqqHxIe1KXODpZeI3IkdNS6jS06bQwYUbdVc2Cyp6tqQsObtenHQPZaDcuYbmzbFX75QlTZLl9sotLPE7rR8bS9ZtuvzdNmrga5Dxkg=
+	t=1722301721; cv=none; b=DXd9+P+dvAmmO6lM4ecNaB0eGo3l7z9R0gTVhwg3W0Ev1vvtaFMWsDB8tFaSdut35siCtRtLvAMRvIQ/6T53JWCnARDYjhEMBDBZx7J1VDTc1rPSgqjrh4z/1upEQEFyRk/DwHIR/nzRQ937a09RVCdl+oDU2FICMryVj+eO5o4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301705; c=relaxed/simple;
-	bh=ITS7lNaXEw3O6E5pGSkr2qOTyaAOFABUt3QXmb2c5fY=;
+	s=arc-20240116; t=1722301721; c=relaxed/simple;
+	bh=dOyOyTnSQVlRDMxGss5Ydyf63y30U3aB4uSHZb9bq84=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=E3B7pZa9ZKn/KNv5R6QpKfyWd+rZa8TDDVvv/DJs9SpAL98cHlXGmm44p0I03/rI6f94p53FzoMNYOCpWXEpgqBjkNPx4uXVXL/jIwouIg5sozNvz8EWLly33yhDpWexYCdAFdzWd3eiapD5qM1+eFGyCgg7baTPH7/Oojkjs0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tzzT2DxE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EkKf6VCPLwd5GIZrlsHMCKWEOablOuFirnkHgns8m1UfFkM+rc0LbB5efeEeBmVJS/jvaXHtVBKzQwaD84Y9eoeg0XWbuRslQvqjUWlQ/5n5INIrAQqYFcNe20Q9ktPTTJRNS61TM1x4EfX4yI0ld5t8UtgrMx4AoUhV3gjN0+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dOYrtNBL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tzzT2DxE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8E12C32786;
-	Tue, 30 Jul 2024 01:08:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dOYrtNBL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D0A8C32786;
+	Tue, 30 Jul 2024 01:08:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301704;
-	bh=ITS7lNaXEw3O6E5pGSkr2qOTyaAOFABUt3QXmb2c5fY=;
+	s=k20201202; t=1722301720;
+	bh=dOyOyTnSQVlRDMxGss5Ydyf63y30U3aB4uSHZb9bq84=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tzzT2DxEoeZRAiASpSvjaIxSVWxbeuZAth+IBegb6Q+V9r9EIcnEqRKf3NErCacSx
-	 tmG5j8gD8Uio4NBztq6cpLG8Lcgb2VbcEmxOBrw6+rfuDvViRZjaEV/+YbQxe28E2B
-	 2/8kNaKGkiDu2f0FBG6EyAwliigUUr35vcUTNLNxEQEJnnicknU/a+YryjAsVoKsF7
-	 E2YN/yyejkuaVqxrljJ714OOKWEKVoLGsLUFlONJEyRsMkAg8/z6GQuhttb899fO7P
-	 3Rq44D8WIoQhZ7J4Wx3CfirFlbYh13pOvtmbUFrl2joIlDVi+kgX+OZ4rCj5tNbvD2
-	 Ec7WrZcWMvCtQ==
-Date: Mon, 29 Jul 2024 18:08:24 -0700
-Subject: [PATCH 10/13] xfs_scrub: reduce size of struct name_entry
+	b=dOYrtNBLWztuXrh7h1Y7txQ3MdXbnjl1sfmcEVU/ijNBYWW05CRlK0eRfBWwNXCQY
+	 //mMHmpmNCSzXWrMaFaowvCkfqGU3J44dhF/2dGJARpToVr7FYjBH1pMs253hv4Z3f
+	 iIEly2DjruGhsC+gx3rYE/KsRr15jOq6OXZFt2zYSZzEKqsXyRo16fld+jnscH0qwK
+	 4W60DlNtcMX50ERgvg350c/p39WH96BJ2/ifhhLsPmTio+wqjb/p7W3pbpQKv4lopO
+	 oR7iUOEOAD3WphLV/stXs4mzQsPs7c4QdgxdOyURKIxccgf4MvXMS4c4RSfVRU4J9j
+	 NUnZu7d+vcDVA==
+Date: Mon, 29 Jul 2024 18:08:39 -0700
+Subject: [PATCH 11/13] xfs_scrub: rename struct unicrash.normalizer
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229847681.1348850.5157188790717732185.stgit@frogsfrogsfrogs>
+Message-ID: <172229847697.1348850.293417564068933959.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229847517.1348850.11238185324580578408.stgit@frogsfrogsfrogs>
 References: <172229847517.1348850.11238185324580578408.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,66 +46,54 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-libicu doesn't support processing strings longer than 2GB in length, and
-we never feed the unicrash code a name longer than about 300 bytes.
-Rearrange the structure to reduce the head structure size from 56 bytes
-to 44 bytes.
+We're about to introduce a second normalizer, so change the name of the
+existing one to reflect the algorithm that you'll get if you use it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/unicrash.c |   16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ scrub/unicrash.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 
 diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-index 63694c39a..74c0fe1f9 100644
+index 74c0fe1f9..9cde9afff 100644
 --- a/scrub/unicrash.c
 +++ b/scrub/unicrash.c
-@@ -57,18 +57,20 @@
-  * In other words, skel = remove_invisible(nfd(remap_confusables(nfd(name)))).
-  */
+@@ -87,7 +87,7 @@ struct name_entry {
+ struct unicrash {
+ 	struct scrub_ctx	*ctx;
+ 	USpoofChecker		*spoof;
+-	const UNormalizer2	*normalizer;
++	const UNormalizer2	*nfkc;
+ 	bool			compare_ino;
+ 	bool			is_only_root_writeable;
+ 	size_t			nr_buckets;
+@@ -242,7 +242,7 @@ name_entry_compute_checknames(
+ 		goto out_unistr;
  
--typedef unsigned int __bitwise	badname_t;
-+typedef uint16_t __bitwise	badname_t;
- 
- struct name_entry {
- 	struct name_entry	*next;
- 
- 	/* NFKC normalized name */
- 	UChar			*normstr;
--	size_t			normstrlen;
- 
- 	/* Unicode skeletonized name */
- 	UChar			*skelstr;
--	size_t			skelstrlen;
-+
-+	/* Lengths for normstr and skelstr */
-+	int32_t			normstrlen;
-+	int32_t			skelstrlen;
- 
- 	xfs_ino_t		ino;
- 
-@@ -76,7 +78,7 @@ struct name_entry {
- 	badname_t		badflags;
- 
- 	/* Raw dirent name */
--	size_t			namelen;
-+	uint16_t		namelen;
- 	char			name[0];
- };
- #define NAME_ENTRY_SZ(nl)	(sizeof(struct name_entry) + 1 + \
-@@ -345,6 +347,12 @@ name_entry_create(
- 	struct name_entry	*new_entry;
- 	size_t			namelen = strlen(name);
- 
-+	/* should never happen */
-+	if (namelen > UINT16_MAX) {
-+		ASSERT(namelen <= UINT16_MAX);
-+		return false;
-+	}
-+
- 	/* Create new entry */
- 	new_entry = calloc(NAME_ENTRY_SZ(namelen), 1);
- 	if (!new_entry)
+ 	/* Normalize the string. */
+-	normstrlen = unorm2_normalize(uc->normalizer, unistr, unistrlen, NULL,
++	normstrlen = unorm2_normalize(uc->nfkc, unistr, unistrlen, NULL,
+ 			0, &uerr);
+ 	if (uerr != U_BUFFER_OVERFLOW_ERROR || normstrlen < 0)
+ 		goto out_unistr;
+@@ -250,7 +250,7 @@ name_entry_compute_checknames(
+ 	normstr = calloc(normstrlen + 1, sizeof(UChar));
+ 	if (!normstr)
+ 		goto out_unistr;
+-	unorm2_normalize(uc->normalizer, unistr, unistrlen, normstr, normstrlen,
++	unorm2_normalize(uc->nfkc, unistr, unistrlen, normstr, normstrlen,
+ 			&uerr);
+ 	if (U_FAILURE(uerr))
+ 		goto out_normstr;
+@@ -457,7 +457,7 @@ unicrash_init(
+ 	p->ctx = ctx;
+ 	p->nr_buckets = nr_buckets;
+ 	p->compare_ino = compare_ino;
+-	p->normalizer = unorm2_getNFKCInstance(&uerr);
++	p->nfkc = unorm2_getNFKCInstance(&uerr);
+ 	if (U_FAILURE(uerr))
+ 		goto out_free;
+ 	p->spoof = uspoof_open(&uerr);
 
