@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2D5A1854
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 03:19:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B56062EB02
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 03:19:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722309552; cv=none; b=AXEZ4cbbwdBX5+p5HZjp6F+uW/0MgSyCuHLaAfM6SLVuUUqmOEsH2so3ohx49hUd/DCe/pfBfBNWBeQzb+124vD+DRsQaJlnt7f+ZBjBh/Sco9oAxcdBcRnwu39As2O+D34ohzpQ/UBPo1nFZEXBIfMeZhc49jIbiGQP3/BQW8w=
+	t=1722309568; cv=none; b=BjYNwIREKS7tEWqO3o5XFA9qogACKkvAspj0chviMYGMK0RzLHsOjVNyP3vysEK4d714NvELxik8AQDKu6WvgvyYf0IRfHxQH6Z0s0ukJySCXa5rROooRsCjwMQpbLZ60hvtyMX65Vu0g0ssfBnCy1RlAlXIiukewaHrcOzqw9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722309552; c=relaxed/simple;
-	bh=zDN5VkAUL9Q0TR7fXWt/dWNxeCgMceygRuIO54t7Vko=;
+	s=arc-20240116; t=1722309568; c=relaxed/simple;
+	bh=EE4PHZGazch6EyGPvwUXmEiX36si6P9j7RABc+HOvhw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mZDBhRxMc5Z6oxbnSakVb1FWiVL+rIpABVKZsqpa/Oaea+2/22oFwyGSaT2df+LEYbNwc5IE1PlvfJuzAj/x3yQRUP5fUREmYpEkGFgA56ULhewZGMNJ7PSMI2CZ8bTslGgmirX10Cn1HCAs2cS/Bz66jotQWcsGtSJBSgODnRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YgEUJtHP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MwpttqQZ3DGL8SxQgnfwYSAVEoGpImuM65NhpcKTu3vyHJSfsf1ZWyPAZ9ykfkWY9Jw9nyI13JoGW1fS0yWl5b2Bb7j2yq3RA/92686MfrL1hUf+tJACFKivE2WoiyuUfySigd66mxl7ay+qVGKSFxTjTUYGOKefHpceYUg1TYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IZjb/usN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YgEUJtHP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BBB2C32786;
-	Tue, 30 Jul 2024 03:19:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IZjb/usN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36C55C32786;
+	Tue, 30 Jul 2024 03:19:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722309552;
-	bh=zDN5VkAUL9Q0TR7fXWt/dWNxeCgMceygRuIO54t7Vko=;
+	s=k20201202; t=1722309568;
+	bh=EE4PHZGazch6EyGPvwUXmEiX36si6P9j7RABc+HOvhw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YgEUJtHP/bKn8NyPpq4tggjG+PtKTqP7yREJHFh8jNUhWlM/8KSeIKTm6gIUN/QuZ
-	 ADmUWPAbzu4OUr7dy77k+yPJyDWxZsnsXlXRZyuo1aAKWmJ7+xrsNAH08Eziw10aww
-	 uGXC1Kst8tH34S3WGgUO262aj0u7F57d32XQFKamOCPSc1qM2QN4lb59Hpy57W+4pC
-	 7hYuhGH6KlUQY/BnFUwRQNLlPw6CXINsq+gxfKPhU6i8H6Ongq6+1A4jmPmuMxb2t+
-	 c+xPtHZ8alUm69eHHsg3Yr1e59N49rq2q75gl3gk458CZZ2x8/ijdT+b8uIezAa5cV
-	 G/WhONksHK7AA==
-Date: Mon, 29 Jul 2024 20:19:12 -0700
-Subject: [PATCHSET v30.9 2/3] xfs_scrub: control of autonomous self healing
+	b=IZjb/usNmPXXJS8pzuoYwhFX8oVu9crGOmNRY4FlTtz6/dbA8T+SP6DtOib1WCkzn
+	 wzUwl12/UyBAy3qxR7vBHDs5tv4suOIIXfYDyu0pg+BcOs3BJ3D2IzzZDGOyfd+Xba
+	 9f7MexfWFnwttJScnS81TtAFJ0lrJoWe5qTmEPznHIZBhgJm9hy6HpFg5/W17CGTgp
+	 6jFVW7M8n/xE0yv0++bFE5DAR3xB0mbC/AJvfBoFHaeClOJNqRawXFk07MAa93gI5b
+	 d3ITnfilRKgP02Us0fuvxFZpMpiwj5NslbKsRHPR2Q7HezvMDStZF9t0jjsXU95xia
+	 kfOII/Em9/PTA==
+Date: Mon, 29 Jul 2024 20:19:27 -0700
+Subject: [PATCHSET v30.9 3/3] xfs_scrub: separate package for self healing
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172230940983.1544039.13001736803793260744.stgit@frogsfrogsfrogs>
+Message-ID: <172230941338.1544199.12238614551925293396.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240730031030.GA6333@frogsfrogsfrogs>
 References: <20240730031030.GA6333@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,9 +46,10 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Now that we have the ability to set per-filesystem properties, teach the
-background xfs_scrub service to pick up advice from the filesystem that it
-wants to examine, and pick a mode from that.
+Debian policy (section 9 iirc) says that services shipped in a package should
+be started by default.  We don't necessarily want that from the base xfsprogs
+package long term, so separate the self healing services into a separate
+package.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -59,26 +60,47 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=self-healing
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-self-healing-package
 ---
 Commits in this patchset:
- * libfrog: define a self_healing filesystem property
- * xfs_scrub: allow sysadmin to control background scrubs
- * mkfs: set self_healing property
+ * misc: shift install targets
+ * xfs_scrub: use the self_healing fsproperty to select mode
+ * debian: create a new package for automatic self-healing
 ---
- libfrog/fsproperties.c |   38 +++++++++++++++
- libfrog/fsproperties.h |   13 +++++
- man/man8/mkfs.xfs.8.in |    6 ++
- man/man8/xfs_scrub.8   |   44 +++++++++++++++++
- mkfs/lts_4.19.conf     |    1 
- mkfs/lts_5.10.conf     |    1 
- mkfs/lts_5.15.conf     |    1 
- mkfs/lts_5.4.conf      |    1 
- mkfs/lts_6.1.conf      |    1 
- mkfs/lts_6.6.conf      |    1 
- mkfs/xfs_mkfs.c        |  122 ++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/phase1.c         |   81 ++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.c      |   14 ++++++
- scrub/xfs_scrub.h      |    7 +++
- 14 files changed, 330 insertions(+), 1 deletion(-)
+ Makefile                          |   14 +++++++++++---
+ copy/Makefile                     |    6 +++++-
+ db/Makefile                       |    6 +++++-
+ debian/Makefile                   |    6 +++++-
+ debian/control                    |    8 ++++++++
+ debian/rules                      |   15 ++++++++++-----
+ doc/Makefile                      |    7 ++++++-
+ estimate/Makefile                 |    6 +++++-
+ fsck/Makefile                     |    7 ++++++-
+ fsr/Makefile                      |    6 +++++-
+ growfs/Makefile                   |    6 +++++-
+ include/Makefile                  |    7 ++++++-
+ io/Makefile                       |    6 +++++-
+ libfrog/Makefile                  |    4 +++-
+ libhandle/Makefile                |    6 +++++-
+ libxcmd/Makefile                  |    4 +++-
+ libxfs/Makefile                   |    7 ++++++-
+ libxlog/Makefile                  |    4 +++-
+ logprint/Makefile                 |    6 +++++-
+ m4/Makefile                       |    4 +++-
+ man/Makefile                      |   10 +++++++---
+ man/man2/Makefile                 |    4 +++-
+ man/man3/Makefile                 |    4 +++-
+ man/man5/Makefile                 |    5 ++++-
+ man/man8/Makefile                 |    4 +++-
+ mdrestore/Makefile                |    6 +++++-
+ mkfs/Makefile                     |    6 +++++-
+ po/Makefile                       |    7 ++++++-
+ quota/Makefile                    |    6 +++++-
+ repair/Makefile                   |    6 +++++-
+ rtcp/Makefile                     |    6 +++++-
+ scrub/Makefile                    |   19 ++++++++++++++-----
+ scrub/xfs_scrub@.service.in       |    2 +-
+ scrub/xfs_scrub_media@.service.in |    2 +-
+ spaceman/Makefile                 |    6 +++++-
+ 35 files changed, 182 insertions(+), 46 deletions(-)
 
