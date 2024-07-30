@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B802C4A21
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:23:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CA134A11
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:23:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722298995; cv=none; b=PoZcHKyyMttUIsLavToUD5b1VFj4LEn3EK8XqF/3pVbp5B0NqpoR4ZOBK1AsTYMVbzWiMfLv8uFpVUhnh8syEMMtLEPQl2y+ula8UoJQUkRVMYDRBTHNbco1CI073qx96C1PyUOOSTp7wFyHrlTehXTqU+ArncJ9Tnty7Qas4nA=
+	t=1722299011; cv=none; b=uQagCd5ctMUzJF3FAbhr89poYSKyCBz+gCXfan27CK8zU1ZzIUYCjh9MdPvmTUlFbiWxsnLy3Xh+2AIOkK9WuCxc7mRXqRRHYAmk5sXHk0biDzNoAuYQw8LYmt7j6QXB5tfIN3DE6Ies//dc9cYm69DArfAtzVCVF9OQ+1/xH8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722298995; c=relaxed/simple;
-	bh=etdlSgkJtmUGXGaJZiGlyWnMTP/HPJ5Tgk0HZzfia4Y=;
+	s=arc-20240116; t=1722299011; c=relaxed/simple;
+	bh=2pah8iC+B2JVjym72IboOwC3wLceJ9ssSge7fNZyWR0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iUocH4Z6bVY8wqQGW6ClOdVkR28BHl5lvVDLBjYCks072Vr/11SqGm1/DTTsB+QL28L+BHYFX/uvuJVaFc2Go8bJj9a1CevKCmHlZmsadtWWQE6sbRzyC2k5a4lpvIJJvpCcSkTGrwPlx4YEfjbjsgFpAnWwHQRExEAhXikWu80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XB+L7NtF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rFyCjGhK/IE7NNGjjth2Lno2duz0hw1iBtjX+/1OJOkZQkeuCe0lX03B2gQ0zd1MPkTOWlpfGaJ4vOATX7KIzsiJ8FFof4lGz72thE8ZhlFf0kvJV5UXZ3+j2EW3A3sLa1K2krfjf59ppAg7+iyIzc04N1OUodq2zzubYZOOG20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mUcOg6eD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XB+L7NtF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BF2DC32786;
-	Tue, 30 Jul 2024 00:23:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mUcOg6eD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39109C32786;
+	Tue, 30 Jul 2024 00:23:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722298995;
-	bh=etdlSgkJtmUGXGaJZiGlyWnMTP/HPJ5Tgk0HZzfia4Y=;
+	s=k20201202; t=1722299011;
+	bh=2pah8iC+B2JVjym72IboOwC3wLceJ9ssSge7fNZyWR0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XB+L7NtFRKTab8goYcPlyp3p2HRQW3ZrGgdxUrr3S1rJUy6sgVmwfuk02SRH1UlxW
-	 tZUb1Fd+MLklOZaflIjIMo4hY0lgazKqqIR7SLP/iOG5xBkJlipc4a7lwCZ0NkIsHc
-	 gcXNwgGi/ds/ZrJunt5o+aq4tGIUauP7dn2608YQf88iSuTXMh0FLtCmpD6eGHgvT6
-	 i3+ymKc4DBLJytY2CY4c+0nTQ2vxeedgdTxBl/eLhZPyBNuj80fppEJYfbW16sDwz6
-	 dr6Ar9a2Kcm/AKZjSxr8qKcMBwWUAVet1VI925GcvML7A5zQQtoF6EAWUm4I0FRByc
-	 bsaHpxBml9LUw==
-Date: Mon, 29 Jul 2024 17:23:15 -0700
-Subject: [PATCH 3/5] xfile: fix missing error unlock in xfile_fcb_find
+	b=mUcOg6eDOLdPFcvhxwRmzDTcWdDb2zPGTeT/38xqSl2LwuK8jdXUvE+wuEi3kKqdf
+	 JOrDb2xUUrcLNX6Uc4Jjb++xtLLGDZSRNSV00OjYKj2wg0I0Up0wpiYIeu49MQ6r9V
+	 0zGFz4Qwx538IdMmuQTPWv7w8phlEQRX427M4okAmlRB4NPSn6dWssKeh36BQxxtxo
+	 8GxqfFYXw34tyfDT5H+y/hMWdScyGNKk5/wEbxFX06SA9pAob9qSs27FVKgToijWZS
+	 P2AsqxDoTLfJzuYAHNSwXTIgXJSRwNmTUlMdu8YS/Jw+j5EU+nGp/1wwt9zuABXYJw
+	 Ol+k/cKuX6TGA==
+Date: Mon, 29 Jul 2024 17:23:30 -0700
+Subject: [PATCH 4/5] xfs_repair: don't leak the rootdir inode when orphanage
+ already exists
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Christoph Hellwig <hch@lst.de>,
- linux-xfs@vger.kernel.org
-Message-ID: <172229841920.1338302.2007415922737734118.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <172229841934.1338302.16119487560444301949.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229841874.1338302.4791739002907908995.stgit@frogsfrogsfrogs>
 References: <172229841874.1338302.4791739002907908995.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,46 +47,40 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix a missing mutex pthread_mutex_unlock and uninitialized return value
-in xfile_fcb_find.
+If repair calls mk_orphanage and the /lost+found directory already
+exists, we need to irele the root directory before exiting the function.
 
-Coverity-id: 1604113
-Coverity-id: 1604099
+Fixes: 6c39a3cbda32 ("Don't trash lost+found in phase 4 Merge of master-melb:xfs-cmds:29144a by kenmcd.")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfile.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ repair/phase6.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfile.c b/libxfs/xfile.c
-index fdb76f406..6e0fa809a 100644
---- a/libxfs/xfile.c
-+++ b/libxfs/xfile.c
-@@ -179,7 +179,7 @@ xfile_fcb_find(
- {
- 	struct xfile_fcb	*fcb;
- 	int			ret;
--	int			error;
-+	int			error = 0;
+diff --git a/repair/phase6.c b/repair/phase6.c
+index ae8935a26..e6103f768 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -919,8 +919,10 @@ mk_orphanage(xfs_mount_t *mp)
+ 	xname.len = strlen(ORPHANAGE);
+ 	xname.type = XFS_DIR3_FT_DIR;
  
- 	/* No maximum range means that the caller gets a private memfd. */
- 	if (maxbytes == 0) {
-@@ -222,13 +222,13 @@ xfile_fcb_find(
- 	/* Otherwise, open a new memfd and add it to our list. */
- 	error = xfile_fcb_create(description, &fcb);
- 	if (error)
--		return error;
-+		goto out_unlock;
+-	if (libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL) == 0)
+-		return ino;
++	/* If the lookup of /lost+found succeeds, return the inumber. */
++	error = -libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL);
++	if (error == 0)
++		goto out_pip;
  
- 	ret = ftruncate(fcb->fd, maxbytes);
- 	if (ret) {
- 		error = -errno;
- 		xfile_fcb_irele(fcb, 0, maxbytes);
--		return error;
-+		goto out_unlock;
+ 	/*
+ 	 * could not be found, create it
+@@ -1012,6 +1014,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 			ORPHANAGE, error);
  	}
+ 	libxfs_irele(ip);
++out_pip:
+ 	libxfs_irele(pip);
  
- 	list_add_tail(&fcb->fcb_list, &fcb_list);
+ 	return(ino);
 
