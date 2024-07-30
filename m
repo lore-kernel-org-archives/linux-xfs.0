@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D89E7464
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:17:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A7579CC
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:17:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302222; cv=none; b=orr8fkmSnAl28erb1n5zMFBhjHqvl5mKiSMho+aWQ/MankRHR70+SbMPY++kl2W//OT/IBYji8lQsV90ZJV+ZtctmFdIhcqz5diQ3zbptBqDzbQFbXLsSljBor9SMYRc3UxN+rS6p2CJtybRkoo3t2FVDEXo3AuMASs1iC//CRY=
+	t=1722302238; cv=none; b=sSRuOhAEWmNuLeRqRHGvv6bKQ8auj4yAmV8H2lMuF1aaEqR4VbPS/MTZbykbdF2omiyM0m8F14sLD674YEq+i7NnxpSZvI/ZnsuGgjnBXLiLMZBwmsEeA6M9pBqAYiUEH1NkRIL3GP8sG6u+G15zJxXDvKfdVqAeXeQ1GEiGmB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302222; c=relaxed/simple;
-	bh=lfjtvYRmkSEbR/T6lQa31y3p8E0z9tE3pSvcLZKrAdU=;
+	s=arc-20240116; t=1722302238; c=relaxed/simple;
+	bh=nmsqq6k6vUS5Cdk+hijbiB7KqE1P3rTPRNYLaQOeLPY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GYHceNT5Yms82SE/8Qq7bhXxky3Z29jrISI07IUTAl2kNKPXw2zGR4YiamKw9PiqC69/2X4iLoDJEdeMG1TyvHZZBcLg9HfGVhIwgC0NHvos9mfWXSveUFfUhTfm7ZacR12NEWeFrseOQ0qVv4ACsSCXyx/fVEr6ndwMEQw4w4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ke7iz06F; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SZOT5zt1qkvOFjV+9yuI+yLwjZJn8y6PhFB6LFKVK6iH619R+mXO3PJRxSOsF+IbG0ueHMMsNBXYXqsxm1oU40xEf/1m+n1L9W8NnbsIdbMrQS+TlbZJ7CROoCaRR1q2boYcfZdFDqH1eZxkzl2I0yH97tohREBDbc1HQL0b1Z0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DQ2CLwvW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ke7iz06F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6364C32786;
-	Tue, 30 Jul 2024 01:17:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DQ2CLwvW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 591AEC32786;
+	Tue, 30 Jul 2024 01:17:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302221;
-	bh=lfjtvYRmkSEbR/T6lQa31y3p8E0z9tE3pSvcLZKrAdU=;
+	s=k20201202; t=1722302237;
+	bh=nmsqq6k6vUS5Cdk+hijbiB7KqE1P3rTPRNYLaQOeLPY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ke7iz06FuSWjSwUXBvgSa6ffcrhGxBec/A2NIOl0o1c/w5dfN6hn5riDfczw/NDh6
-	 atMho8No0pQb6iJQZrTF84wIODRyJi7bHPbNHVnU+bGzcZM0d8AsZCj8GPij0Uc0bc
-	 6wwzSJbyyzecWdyZq6hEbBdDi267qhnCe4zpn5IKUnPuJMhjzeYEk5dK3jBzDjZs4N
-	 EF6/vXfk6m5nDyR/f4+PSAut5sU0GO8LPKMYgm2KYrnN7JQO8Yw/GJu9KXCk2H+48X
-	 r/WCrBgRMjue+SEMva4YO7DWMqjoqZliYA4Shhb6x+dnU2CKWQSLgrCJ9n0JL5aMT4
-	 Zm/D727AQ2u6g==
-Date: Mon, 29 Jul 2024 18:17:01 -0700
-Subject: [PATCH 4/5] xfs_scrub_all: convert systemctl calls to dbus
+	b=DQ2CLwvWgWApgZtPwh20hWaRIbOQay8s3FxwceR3Zw+DEJGcSMYNt5Y3Gpu1EXGls
+	 4unrypLFD4yXGEst5Pt5GjrJ9QB7GxLLqLid+yoHLdfSSIncyKXXfewIoepQf6lRm6
+	 OcwGIH8KOwQf00b9S7F6BDSFn/B2k5AstVMesTnV++RO2FS0JUdYjf1DnoXF6M2SKw
+	 hd4F1JC/vX+HLZEDIaikwhrwBAlD/eoTDhH2WcbjeVZMhn/1jcd/x2oxlTo4y3nXgJ
+	 nBydFlS6Gm35Et9d06OdJBRt5CwMfUJARVMrkWudqriyzUWgSkS1Vc2Ozab3x+kCLh
+	 Gty2tAhHJGAYw==
+Date: Mon, 29 Jul 2024 18:17:16 -0700
+Subject: [PATCH 5/5] xfs_scrub_all: implement retry and backoff for dbus calls
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229849704.1350420.15182762451486145269.stgit@frogsfrogsfrogs>
+Message-ID: <172229849719.1350420.4990697396905953343.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229849638.1350420.756131243612881227.stgit@frogsfrogsfrogs>
 References: <172229849638.1350420.756131243612881227.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,163 +46,100 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Convert the systemctl invocations to direct dbus calls, which decouples
-us from the CLI in favor of direct API calls.  This spares us from some
-of the insanity of divining service state from program outputs.
+Calls to systemd across dbus are remote procedure calls, which means
+that they're subject to transitory connection failures (e.g. systemd
+re-exec itself).  We don't want to fail at the *first* sign of what
+could be temporary trouble, so implement a limited retry with fibonacci
+backoff before we resort to invoking xfs_scrub as a subprocess.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- debian/control         |    2 +
- scrub/xfs_scrub_all.in |   96 +++++++++++++++++++++++++++++++-----------------
- 2 files changed, 63 insertions(+), 35 deletions(-)
+ scrub/xfs_scrub_all.in |   43 ++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 40 insertions(+), 3 deletions(-)
 
 
-diff --git a/debian/control b/debian/control
-index 344466de0..31773e53a 100644
---- a/debian/control
-+++ b/debian/control
-@@ -8,7 +8,7 @@ Standards-Version: 4.0.0
- Homepage: https://xfs.wiki.kernel.org/
- 
- Package: xfsprogs
--Depends: ${shlibs:Depends}, ${misc:Depends}, python3:any
-+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-dbus, python3:any
- Provides: fsck-backend
- Suggests: xfsdump, acl, attr, quota
- Breaks: xfsdump (<< 3.0.0)
 diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 8954b4740..f2e916513 100644
+index f2e916513..5440e51c0 100644
 --- a/scrub/xfs_scrub_all.in
 +++ b/scrub/xfs_scrub_all.in
-@@ -15,6 +15,7 @@ import sys
- import os
- import argparse
- import signal
-+import dbus
- from io import TextIOWrapper
- from pathlib import Path
- from datetime import timedelta
-@@ -168,25 +169,57 @@ class scrub_service(scrub_control):
+@@ -165,6 +165,22 @@ def path_to_serviceunit(path, scrub_media):
+ 	for line in proc.stdout:
+ 		return line.decode(sys.stdout.encoding).strip()
+ 
++def fibonacci(max_ret):
++	'''Yield fibonacci sequence up to but not including max_ret.'''
++	if max_ret < 1:
++		return
++
++	x = 0
++	y = 1
++	yield 1
++
++	z = x + y
++	while z <= max_ret:
++		yield z
++		x = y
++		y = z
++		z = x + y
++
+ class scrub_service(scrub_control):
  	'''Control object for xfs_scrub systemd service.'''
  	def __init__(self, mnt, scrub_media):
- 		self.unitname = path_to_serviceunit(mnt, scrub_media)
-+		self.prop = None
-+		self.unit = None
-+		self.bind()
-+
-+	def bind(self):
-+		'''Bind to the dbus proxy object for this service.'''
-+		sysbus = dbus.SystemBus()
-+		systemd1 = sysbus.get_object('org.freedesktop.systemd1',
-+					    '/org/freedesktop/systemd1')
-+		manager = dbus.Interface(systemd1,
-+				'org.freedesktop.systemd1.Manager')
-+		path = manager.LoadUnit(self.unitname)
-+
-+		svc_obj = sysbus.get_object('org.freedesktop.systemd1', path)
-+		self.prop = dbus.Interface(svc_obj,
-+				'org.freedesktop.DBus.Properties')
-+		self.unit = dbus.Interface(svc_obj,
-+				'org.freedesktop.systemd1.Unit')
-+
-+	def state(self):
-+		'''Retrieve the active state for a systemd service.  As of
-+		systemd 249, this is supposed to be one of the following:
-+		"active", "reloading", "inactive", "failed", "activating",
-+		or "deactivating".  These strings are not localized.'''
+@@ -188,6 +204,25 @@ class scrub_service(scrub_control):
+ 		self.unit = dbus.Interface(svc_obj,
+ 				'org.freedesktop.systemd1.Unit')
+ 
++	def __dbusrun(self, lambda_fn):
++		'''Call the lambda function to execute something on dbus.  dbus
++		exceptions result in retries with Fibonacci backoff, and the
++		bindings will be rebuilt every time.'''
 +		global debug
 +
-+		try:
-+			return self.prop.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
-+		except Exception as e:
-+			if debug:
-+				print(e, file = sys.stderr)
-+			return 'failed'
- 
- 	def wait(self, interval = 1):
- 		'''Wait until the service finishes.'''
-+		global debug
- 
--		# As of systemd 249, the is-active command returns any of the
--		# following states: active, reloading, inactive, failed,
--		# activating, deactivating, or maintenance.  Apparently these
--		# strings are not localized.
--		while True:
--			try:
--				for l in backtick(['systemctl', 'is-active', self.unitname]):
--					if l == 'failed':
--						return 1
--					if l == 'inactive':
--						return 0
--			except:
--				return -1
--
-+		# Use a poll/sleep loop to wait for the service to finish.
-+		# Avoid adding a dependency on python3 glib, which is required
-+		# to use an event loop to receive a dbus signal.
-+		s = self.state()
-+		while s not in ['failed', 'inactive']:
-+			if debug:
-+				print('waiting %s %s' % (self.unitname, s))
- 			time.sleep(interval)
-+			s = self.state()
-+		if debug:
-+			print('waited %s %s' % (self.unitname, s))
-+		if s == 'failed':
-+			return 1
-+		return 0
- 
- 	def start(self):
- 		'''Start the service and wait for it to complete.  Returns -1
-@@ -194,34 +227,29 @@ class scrub_service(scrub_control):
- 		failed.'''
++		fatal_ex = None
++
++		for i in fibonacci(30):
++			try:
++				return lambda_fn()
++			except dbus.exceptions.DBusException as e:
++				if debug:
++					print(e)
++				fatal_ex = e
++				time.sleep(i)
++				self.bind()
++		raise fatal_ex
++
+ 	def state(self):
+ 		'''Retrieve the active state for a systemd service.  As of
+ 		systemd 249, this is supposed to be one of the following:
+@@ -195,8 +230,10 @@ class scrub_service(scrub_control):
+ 		or "deactivating".  These strings are not localized.'''
  		global debug
  
--		cmd = ['systemctl', 'start', self.unitname]
-+		if debug:
-+			print('starting %s' % self.unitname)
-+
++		l = lambda: self.prop.Get('org.freedesktop.systemd1.Unit',
++				'ActiveState')
  		try:
--			if debug:
--				print(' '.join(cmd))
--			proc = subprocess.Popen(cmd, stdout = DEVNULL())
--			proc.wait()
--			ret = proc.returncode
--		except:
-+			self.unit.Start('replace')
-+			return self.wait()
-+		except Exception as e:
-+			print(e, file = sys.stderr)
- 			return -1
+-			return self.prop.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
++			return self.__dbusrun(l)
+ 		except Exception as e:
+ 			if debug:
+ 				print(e, file = sys.stderr)
+@@ -231,7 +268,7 @@ class scrub_service(scrub_control):
+ 			print('starting %s' % self.unitname)
  
--		if ret != 1:
--			return ret
--
--		# If systemctl-start returns 1, it's possible that the service
--		# failed or that dbus/systemd restarted and the client program
--		# lost its connection -- according to the systemctl man page, 1
--		# means "unit not failed".
--		return self.wait()
--
- 	def stop(self):
- 		'''Stop the service.'''
- 		global debug
+ 		try:
+-			self.unit.Start('replace')
++			self.__dbusrun(lambda: self.unit.Start('replace'))
+ 			return self.wait()
+ 		except Exception as e:
+ 			print(e, file = sys.stderr)
+@@ -245,7 +282,7 @@ class scrub_service(scrub_control):
+ 			print('stopping %s' % self.unitname)
  
--		cmd = ['systemctl', 'stop', self.unitname]
- 		if debug:
--			print(' '.join(cmd))
--		x = subprocess.Popen(cmd)
--		x.wait()
-+			print('stopping %s' % self.unitname)
-+
-+		try:
-+			self.unit.Stop('replace')
-+			return self.wait()
-+		except Exception as e:
-+			print(e, file = sys.stderr)
-+			return -1
- 
- def run_service(mnt, scrub_media, killfuncs):
- 	'''Run scrub as a service.'''
+ 		try:
+-			self.unit.Stop('replace')
++			self.__dbusrun(lambda: self.unit.Stop('replace'))
+ 			return self.wait()
+ 		except Exception as e:
+ 			print(e, file = sys.stderr)
 
