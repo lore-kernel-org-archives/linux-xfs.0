@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61ACCD528
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:58:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C399101C5
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:59:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301124; cv=none; b=Xb3SWqFxJu/MmJtlHmDVkU5p+GEoecf0Lt6uUAE1vpnHOwRIdnuSvamV4SvUoUzM5bXx385xi8qIgozEnMrLDsH4WZH5Dhb8yl/qwJmPwJMNeu1WCBk27FjaAlc/IkdVyv+GjC3QhfXOvuaWzKiVb9XK7/u8HUk5Wp+AFwXblgI=
+	t=1722301140; cv=none; b=qD7I5JTtY1cKKkfMOpiBHKPBBd66sOYdRSeofXfDn7uSk8jCCgzXkssAASBjselTuNdZj1U+uNiy5VFrnekKt4zz5M6wbxO2RANGg+m30AHUD1U8OqX6qew09RdSbaqEiKr0PVPjc1oJM2rZ8ykEDGsSiYzQduKKVxqz1+ZRwX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301124; c=relaxed/simple;
-	bh=5SdjwVqRD08+aXCh9lrFYzDFhWkLBydV4p9swI4HNjc=;
+	s=arc-20240116; t=1722301140; c=relaxed/simple;
+	bh=Qor6Rs907wGl9NQAgIkoRNDZGmfAQBk+UF04ff54/tg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=J2x8vGHEhU+9Sp6D/sJ6T8zbRdcxWz8tSr2bWcHq+oS+GnftBCrAk0ufnFeljI/ahFoqo1o1Zd+noLshEqH8SMPpqvQhYK1MXNwXw8oL1tn6xKWjXEePn0uCRO/TLQIrsDr5+D+Pc7pHrJaDa6AGGog7ryfIyhc4Cee3IS+Kh/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tv7N5kMQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MfiTR9KBYMBO8wJsIhXs5hC5hBJXWvU2hwloHleHsxnA8Aw+WXbgborNZ14mHJXhZB945osY1pNitaP/jcxFSYx2JtK2OVQGmswYL0iiAfaRQVMKh5mS67TL0soVCScos0lzN6aXrbef6PxPL5UTAK1SvJN+CvUQfxZgDxdXKks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=islynhe5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tv7N5kMQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A768C32786;
-	Tue, 30 Jul 2024 00:58:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="islynhe5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAEDFC32786;
+	Tue, 30 Jul 2024 00:58:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301124;
-	bh=5SdjwVqRD08+aXCh9lrFYzDFhWkLBydV4p9swI4HNjc=;
+	s=k20201202; t=1722301139;
+	bh=Qor6Rs907wGl9NQAgIkoRNDZGmfAQBk+UF04ff54/tg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tv7N5kMQq2rk5RnZ6YDu2IOY4uRM3IYHRxn2y8QilOHa1311CU5MbjeXku7do67Zl
-	 D/NH3NkmkAA3zTJG/TTEcdds98Q2B6ftm3C7Ma1psBGRKn4Ub3d/XriGRhwrFVHgCM
-	 yv4vV1DP8OI2wUquXb0KGpg8aJKTs/AhGWLb96qw8hZiwVRCcUHSzNKVRLGSbMLG9p
-	 M+ZkLNgK2VnArTByjezFU8Vd1hamONPrlp6KYlwUi2o1mumVlxJpkUlagw4S04rXef
-	 TQsv+4e7bz2UpYBMaIEhpxwjdo6QpI7coRzDcgNC6xSc2QsCbVGw8ytZhTkTAbTxpw
-	 OxqPyppBho3jw==
-Date: Mon, 29 Jul 2024 17:58:43 -0700
-Subject: [PATCH 4/5] xfs_scrub: require primary superblock repairs to complete
- before proceeding
+	b=islynhe5UGbhvL4uAk0RaBN5rT7R4eh2wTA8yDoHv7Hr8GFyi4ucQbZFMVcGCzlKx
+	 OZIEYCB6JdBeJVtcV75Oz7azcxz+BqUcnsYLw7mUFNv1kvTk3gFxmGz0VMeG1i46E3
+	 Fb+5OzaksC7VX6GYl+PurW/axs96riLuqXSkyEom0DLUlzshf7zLTCXKRT7NtVwyE/
+	 lQBjEhiaxND3hYgUirjHkz8UsHfEl9wSh78mP86UWTptU0WW6bgEMiOYUjNOFXO6MP
+	 Ab2btlwvwGWYAjgoZykeeM+HlR6GGSzwTqMn9lWqe1lbtmuA2t4wTSNebmQez+AFH4
+	 SVZA9w8HOxEWA==
+Date: Mon, 29 Jul 2024 17:58:59 -0700
+Subject: [PATCH 5/5] xfs_scrub: actually try to fix summary counters ahead of
+ repairs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229845602.1345742.11240664872191396236.stgit@frogsfrogsfrogs>
+Message-ID: <172229845614.1345742.16716590378668642512.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229845539.1345742.12185001279081616156.stgit@frogsfrogsfrogs>
 References: <172229845539.1345742.12185001279081616156.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,38 +47,72 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Phase 2 of the xfs_scrub program calls the kernel to check the primary
-superblock before scanning the rest of the filesystem.  Though doing so
-is a no-op now (since the primary super must pass all checks as a
-prerequisite for mounting), the goal of this code is to enable future
-kernel code to intercept an xfs_scrub run before it actually does
-anything.  If this some day involves fixing the primary superblock, it
-seems reasonable to require that /all/ repairs complete successfully
-before moving on to the rest of the filesystem.
+A while ago, I decided to make phase 4 check the summary counters before
+it starts any other repairs, having observed that repairs of primary
+metadata can fail because the summary counters (incorrectly) claim that
+there aren't enough free resources in the filesystem.  However, if
+problems are found in the summary counters, the repair work will be run
+as part of the AG 0 repairs, which means that it runs concurrently with
+other scrubbers.  This doesn't quite get us to the intended goal, so try
+to fix the scrubbers ahead of time.  If that fails, tough, we'll get
+back to it in phase 7 if scrub gets that far.
 
-Unfortunately, that's not what xfs_scrub does now -- primary super
-repairs that fail are theoretically deferred to phase 4!  So make this
-mandatory.
-
+Fixes: cbaf1c9d91a0 ("xfs_scrub: check summary counters")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/phase2.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ scrub/phase4.c |   20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
 
-diff --git a/scrub/phase2.c b/scrub/phase2.c
-index 80c77b287..2d49c604e 100644
---- a/scrub/phase2.c
-+++ b/scrub/phase2.c
-@@ -174,7 +174,8 @@ phase2_func(
- 	ret = scrub_primary_super(ctx, &alist);
- 	if (ret)
- 		goto out_wq;
--	ret = action_list_process_or_defer(ctx, 0, &alist);
-+	ret = action_list_process(ctx, -1, &alist,
-+			XRM_FINAL_WARNING | XRM_NOPROGRESS);
- 	if (ret)
- 		goto out_wq;
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index d42e67637..0c67abf64 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -129,6 +129,7 @@ phase4_func(
+ 	struct scrub_ctx	*ctx)
+ {
+ 	struct xfs_fsop_geom	fsgeom;
++	struct action_list	alist;
+ 	int			ret;
  
+ 	if (!have_action_items(ctx))
+@@ -136,11 +137,13 @@ phase4_func(
+ 
+ 	/*
+ 	 * Check the summary counters early.  Normally we do this during phase
+-	 * seven, but some of the cross-referencing requires fairly-accurate
+-	 * counters, so counter repairs have to be put on the list now so that
+-	 * they get fixed before we stop retrying unfixed metadata repairs.
++	 * seven, but some of the cross-referencing requires fairly accurate
++	 * summary counters.  Check and try to repair them now to minimize the
++	 * chance that repairs of primary metadata fail due to secondary
++	 * metadata.  If repairs fails, we'll come back during phase 7.
+ 	 */
+-	ret = scrub_fs_counters(ctx, &ctx->action_lists[0]);
++	action_list_init(&alist);
++	ret = scrub_fs_counters(ctx, &alist);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -155,11 +158,18 @@ phase4_func(
+ 		return ret;
+ 
+ 	if (fsgeom.sick & XFS_FSOP_GEOM_SICK_QUOTACHECK) {
+-		ret = scrub_quotacheck(ctx, &ctx->action_lists[0]);
++		ret = scrub_quotacheck(ctx, &alist);
+ 		if (ret)
+ 			return ret;
+ 	}
+ 
++	/* Repair counters before starting on the rest. */
++	ret = action_list_process(ctx, -1, &alist,
++			XRM_REPAIR_ONLY | XRM_NOPROGRESS);
++	if (ret)
++		return ret;
++	action_list_discard(&alist);
++
+ 	ret = repair_everything(ctx);
+ 	if (ret)
+ 		return ret;
 
