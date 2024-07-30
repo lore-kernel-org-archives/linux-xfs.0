@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAD6B1373
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:55:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF6A33D5
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:55:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300937; cv=none; b=mo+SrbsP9UTqKvYec/FNnM6D3Jc0HPBGZC9Xyk4kKIA9s5svFVwRgPHgIqG7mq9upVjT5ISpH6IvyMGg5MYMmC6FdiO/cIuTuwZjsjzzrLDyLI96tmA1cImt2bgkfbKZLXwMRJTJybR66+VRctr/tDbHbwtyJoOAsm820K7TAdM=
+	t=1722300952; cv=none; b=AWkezCKYNLz9DeygN0B8jyOG75QDkXH56z3hPJgfBm8qlrbWzYNuwWJHJrr4n43TmJFC0bAPaTIpydN9hjbd6jABg3P3RMYI2MTrDbKzhqdfsB3DNZgIAsSrSBQTzujIgy+guEzCukkfX93+/8c954VJ4RPPB75lBfXE/pnEFE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300937; c=relaxed/simple;
-	bh=HMAsJixGhT1I22rB9xe+semq1rif4ihYuKm1bDPqlOQ=;
+	s=arc-20240116; t=1722300952; c=relaxed/simple;
+	bh=GnAymvVKFVTj+0fzQyxe5pr8dmrMsCvFnOtVoCqCxko=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GODvttV2mWpHDnr7ZG8UJMzxf5xg/dRHzK4w2Wv/TZldgv+Uxpcp3JQ2PCE6X+T6j4Ia6tNvY2XGLP+4dvhFP6q2vvvBZb0/0TiX5bbXk/qKnQYxms+wmmR3oE2QrpmQUNBpRWeozQ4TfkDdNlbyig8VCpdP+ocZCuBsn/ov5d0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cicftMVe; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JpuDGZJ2KI/cJQXpy/fYmbz/hd/8itFPDdnZlfak7FZFtWLTPHeAa5xGX0SbjdHzo0cIdZWhTmtbhvdAA1OfsXLDpOMkLO6EAGZ3OAqs4pb2AvJuWxJ1jY8upE980MCFLv51IFUxJEnX+xEBymVF3DMTB1lwF9jFdovh8oSphBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f/H3eLpu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cicftMVe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EE78C32786;
-	Tue, 30 Jul 2024 00:55:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f/H3eLpu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1741DC32786;
+	Tue, 30 Jul 2024 00:55:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300936;
-	bh=HMAsJixGhT1I22rB9xe+semq1rif4ihYuKm1bDPqlOQ=;
+	s=k20201202; t=1722300952;
+	bh=GnAymvVKFVTj+0fzQyxe5pr8dmrMsCvFnOtVoCqCxko=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cicftMVesnygkux6SxYkMFnvZB5Yqu0QU04GWYyJ0476jWef1RvWK9FEZizB/KrIa
-	 TUaGIrX49ACw+J18HZRG5o/YpAC4kglLPgM0LGOGyX/G52eIqWvGuWT+lDpBp8Eedt
-	 EptU0A12EQLSpXaeFFlwLA8wWTEdElnewfSQfSrkP5zA2aeWUR0dz3eUCCqjJel1VD
-	 EPSrYmWfTMefbbNvgtf2f14Y7isk2sZNhn7r1HJ7rLQEPrE/70tp91lSUwUjBXKWLF
-	 mCEjYQ2u8kymogDR8axEmkI2YOXHwMEBfCPuWFfZFbk93KoouoNpWiR/Q6eXjRYkM9
-	 4Je5kCekda8fw==
-Date: Mon, 29 Jul 2024 17:55:35 -0700
-Subject: [PATCH 07/12] xfs_fsr: convert to bulkstat v5 ioctls
+	b=f/H3eLpukOHFd1ljUleccKIVYzMYoJSLXmFQlxe0RPlCqQ2Zb7Rxb8p65q9JHpwxJ
+	 iE0qp0a2m2wixULIc7LLQxx0RioG3ocfk6Z2+De2FaHqiFixBif79L6UifMafcxNMm
+	 SlSUV2yVCgZL+szIyhoWPs4Yi2HZ8GXGRZzvnUcH2wFfmVOYOsUVmKRA3ab8qg3p7d
+	 i/pcMT/NtHLlKTc7KwnNBha49VJ0+5qF8CikCy5bBqgwsVlhl/TFFRvIW2O8beBI0m
+	 hITFuFxB2/+ejOi/w4+PrjkHRkkD5ZSrZKudhhEJ6qXfAU/J5GBSnDRcaNAc99p47h
+	 2VMeC5uxGbt+g==
+Date: Mon, 29 Jul 2024 17:55:51 -0700
+Subject: [PATCH 08/12] xfs_fsr: skip the xattr/forkoff levering with the newer
+ swapext implementations
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229844495.1344699.6815908404848304622.stgit@frogsfrogsfrogs>
+Message-ID: <172229844508.1344699.3886872839098101255.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229844398.1344699.10032784599013622964.stgit@frogsfrogsfrogs>
 References: <172229844398.1344699.10032784599013622964.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,465 +47,41 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that libhandle can, er, handle bulkstat information coming from the
-v5 bulkstat ioctl, port xfs_fsr to use the new interfaces instead of
-repeatedly converting things back and forth.
+The newer swapext implementations in the kernel run at a high enough
+level (above the bmap layer) that it's no longer required to manipulate
+bs_forkoff by creating garbage xattrs to get the extent tree that we
+want.  If we detect the newer algorithms, skip this error prone step.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fsr/xfs_fsr.c    |  153 +++++++++++++++++++++++++++++++-----------------------
- libfrog/fsgeom.c |   45 ++++++++++++----
- libfrog/fsgeom.h |    1 
- 3 files changed, 121 insertions(+), 78 deletions(-)
+ fsr/xfs_fsr.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 
 diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 06cc0552f..c6dbfb22a 100644
+index c6dbfb22a..22e134adf 100644
 --- a/fsr/xfs_fsr.c
 +++ b/fsr/xfs_fsr.c
-@@ -65,10 +65,10 @@ static int	pagesize;
+@@ -999,6 +999,20 @@ fsr_setup_attr_fork(
+ 	if (!(bstatp->bs_xflags & FS_XFLAG_HASATTR))
+ 		return 0;
  
- void usage(int ret);
- static int  fsrfile(char *fname, xfs_ino_t ino);
--static int  fsrfile_common( char *fname, char *tname, char *mnt,
--                            int fd, struct xfs_bstat *statp);
--static int  packfile(char *fname, char *tname, int fd,
--                     struct xfs_bstat *statp, struct fsxattr *fsxp);
-+static int  fsrfile_common(char *fname, char *tname, char *mnt,
-+			   struct xfs_fd *file_fd, struct xfs_bulkstat *statp);
-+static int  packfile(char *fname, char *tname, struct xfs_fd *file_fd,
-+                     struct xfs_bulkstat *statp, struct fsxattr *fsxp);
- static void fsrdir(char *dirname);
- static int  fsrfs(char *mntdir, xfs_ino_t ino, int targetrange);
- static void initallfs(char *mtab);
-@@ -80,7 +80,7 @@ int xfs_getrt(int fd, struct statvfs *sfbp);
- char * gettmpname(char *fname);
- char * getparent(char *fname);
- int fsrprintf(const char *fmt, ...);
--int read_fd_bmap(int, struct xfs_bstat *, int *);
-+int read_fd_bmap(int, struct xfs_bulkstat *, int *);
- static void tmp_init(char *mnt);
- static char * tmp_next(char *mnt);
- static void tmp_close(char *mnt);
-@@ -102,6 +102,26 @@ static int	nfrags = 0;	/* Debug option: Coerse into specific number
- 				 * of extents */
- static int	openopts = O_CREAT|O_EXCL|O_RDWR|O_DIRECT;
- 
-+/*
-+ * Open a file on an XFS filesystem from file handle components and fs geometry
-+ * data.  Returns zero or a negative error code.
-+ */
-+static int
-+open_handle(
-+	struct xfs_fd		*xfd,
-+	jdm_fshandle_t		*fshandle,
-+	struct xfs_bulkstat	*bulkstat,
-+	struct xfs_fsop_geom	*fsgeom,
-+	int			flags)
-+{
-+	xfd->fd = jdm_open_v5(fshandle, bulkstat, flags);
-+	if (xfd->fd < 0)
-+		return errno;
++	/*
++	 * If the filesystem has the ability to perform atomic file mapping
++	 * exchanges, the file extent swap implementation uses a higher level
++	 * algorithm that calls into the bmap code instead of playing games
++	 * with swapping the extent forks.
++	 *
++	 * This new functionality does not require specific values of
++	 * bs_forkoff, unlike the old fork swap code.  Leave the extended
++	 * attributes alone if we know we're not using the old fork swap
++	 * strategy.  This eliminates a major source of runtime errors in fsr.
++	 */
++	if (fsgeom.flags & XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE)
++		return 0;
 +
-+	xfd_install_geometry(xfd, fsgeom);
-+	return 0;
-+}
-+
- static int
- xfs_swapext(int fd, xfs_swapext_t *sx)
- {
-@@ -627,7 +647,6 @@ static int
- fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
- {
- 	struct xfs_fd	fsxfd = XFS_FD_INIT_EMPTY;
--	int	fd;
- 	int	count = 0;
- 	int	ret;
- 	char	fname[64];
-@@ -665,10 +684,10 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
- 	}
- 
- 	while ((ret = -xfrog_bulkstat(&fsxfd, breq) == 0)) {
--		struct xfs_bstat	bs1;
- 		struct xfs_bulkstat	*buf = breq->bulkstat;
- 		struct xfs_bulkstat	*p;
- 		struct xfs_bulkstat	*endp;
-+		struct xfs_fd		file_fd = XFS_FD_INIT_EMPTY;
- 		uint32_t		buflenout = breq->hdr.ocount;
- 
- 		if (buflenout == 0)
-@@ -685,15 +704,9 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
- 			     (p->bs_extents64 < 2))
- 				continue;
- 
--			ret = -xfrog_bulkstat_v5_to_v1(&fsxfd, &bs1, p);
-+			ret = open_handle(&file_fd, fshandlep, p,
-+					&fsxfd.fsgeom, O_RDWR | O_DIRECT);
- 			if (ret) {
--				fsrprintf(_("bstat conversion error: %s\n"),
--						strerror(ret));
--				continue;
--			}
--
--			fd = jdm_open(fshandlep, &bs1, O_RDWR | O_DIRECT);
--			if (fd < 0) {
- 				/* This probably means the file was
- 				 * removed while in progress of handling
- 				 * it.  Just quietly ignore this file.
-@@ -710,11 +723,12 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
- 			/* Get a tmp file name */
- 			tname = tmp_next(mntdir);
- 
--			ret = fsrfile_common(fname, tname, mntdir, fd, &bs1);
-+			ret = fsrfile_common(fname, tname, mntdir, &file_fd,
-+					p);
- 
- 			leftoffino = p->bs_ino;
- 
--			close(fd);
-+			xfd_close(&file_fd);
- 
- 			if (ret == 0) {
- 				if (--count <= 0)
-@@ -762,9 +776,8 @@ fsrfile(
- {
- 	struct xfs_fd		fsxfd = XFS_FD_INIT_EMPTY;
- 	struct xfs_bulkstat	bulkstat;
--	struct xfs_bstat	statbuf;
-+	struct xfs_fd		file_fd = XFS_FD_INIT_EMPTY;
- 	jdm_fshandle_t		*fshandlep;
--	int			fd = -1;
- 	int			error = -1;
- 	char			*tname;
- 
-@@ -792,17 +805,12 @@ fsrfile(
- 			fname, strerror(error));
- 		goto out;
- 	}
--	error = -xfrog_bulkstat_v5_to_v1(&fsxfd, &statbuf, &bulkstat);
--	if (error) {
--		fsrprintf(_("bstat conversion error on %s: %s\n"),
--			fname, strerror(error));
--		goto out;
--	}
- 
--	fd = jdm_open(fshandlep, &statbuf, O_RDWR|O_DIRECT);
--	if (fd < 0) {
-+	error = open_handle(&file_fd, fshandlep, &bulkstat, &fsxfd.fsgeom,
-+			O_RDWR | O_DIRECT);
-+	if (error) {
- 		fsrprintf(_("unable to open handle %s: %s\n"),
--			fname, strerror(errno));
-+			fname, strerror(error));
- 		goto out;
- 	}
- 
-@@ -810,14 +818,13 @@ fsrfile(
- 	memcpy(&fsgeom, &fsxfd.fsgeom, sizeof(fsgeom));
- 
- 	tname = gettmpname(fname);
--
- 	if (tname)
--		error = fsrfile_common(fname, tname, NULL, fd, &statbuf);
-+		error = fsrfile_common(fname, tname, NULL, &file_fd,
-+				&bulkstat);
- 
- out:
- 	xfd_close(&fsxfd);
--	if (fd >= 0)
--		close(fd);
-+	xfd_close(&file_fd);
- 	free(fshandlep);
- 
- 	return error;
-@@ -843,8 +850,8 @@ fsrfile_common(
- 	char		*fname,
- 	char		*tname,
- 	char		*fsname,
--	int		fd,
--	struct xfs_bstat *statp)
-+	struct xfs_fd	*file_fd,
-+	struct xfs_bulkstat *statp)
- {
- 	int		error;
- 	struct statvfs  vfss;
-@@ -854,7 +861,7 @@ fsrfile_common(
- 	if (vflag)
- 		fsrprintf("%s\n", fname);
- 
--	if (fsync(fd) < 0) {
-+	if (fsync(file_fd->fd) < 0) {
- 		fsrprintf(_("sync failed: %s: %s\n"), fname, strerror(errno));
- 		return -1;
- 	}
-@@ -878,7 +885,7 @@ fsrfile_common(
- 		fl.l_whence = SEEK_SET;
- 		fl.l_start = (off_t)0;
- 		fl.l_len = 0;
--		if ((fcntl(fd, F_GETLK, &fl)) < 0 ) {
-+		if ((fcntl(file_fd->fd, F_GETLK, &fl)) < 0 ) {
- 			if (vflag)
- 				fsrprintf(_("locking check failed: %s\n"),
- 					fname);
-@@ -896,7 +903,7 @@ fsrfile_common(
  	/*
- 	 * Check if there is room to copy the file.
- 	 *
--	 * Note that xfs_bstat.bs_blksize returns the filesystem blocksize,
-+	 * Note that xfs_bulkstat.bs_blksize returns the filesystem blocksize,
- 	 * not the optimal I/O size as struct stat.
- 	 */
- 	if (statvfs(fsname ? fsname : fname, &vfss) < 0) {
-@@ -913,7 +920,7 @@ fsrfile_common(
- 		return 1;
- 	}
- 
--	if ((ioctl(fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-+	if ((ioctl(file_fd->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
- 		fsrprintf(_("failed to get inode attrs: %s\n"), fname);
- 		return(-1);
- 	}
-@@ -929,7 +936,7 @@ fsrfile_common(
- 		return(0);
- 	}
- 	if (fsx.fsx_xflags & FS_XFLAG_REALTIME) {
--		if (xfs_getrt(fd, &vfss) < 0) {
-+		if (xfs_getrt(file_fd->fd, &vfss) < 0) {
- 			fsrprintf(_("cannot get realtime geometry for: %s\n"),
- 				fname);
- 			return(-1);
-@@ -955,7 +962,7 @@ fsrfile_common(
- 	 * file we're defragging, in packfile().
- 	 */
- 
--	if ((error = packfile(fname, tname, fd, statp, &fsx)))
-+	if ((error = packfile(fname, tname, file_fd, statp, &fsx)))
- 		return error;
- 	return -1; /* no error */
- }
-@@ -979,7 +986,7 @@ static int
- fsr_setup_attr_fork(
- 	int		fd,
- 	int		tfd,
--	struct xfs_bstat *bstatp)
-+	struct xfs_bulkstat *bstatp)
- {
- 	struct xfs_fd	txfd = XFS_FD_INIT(tfd);
- 	struct stat	tstatbuf;
-@@ -1161,23 +1168,28 @@ fsr_setup_attr_fork(
-  *  1: No change / No Error
-  */
- static int
--packfile(char *fname, char *tname, int fd,
--	 struct xfs_bstat *statp, struct fsxattr *fsxp)
-+packfile(
-+	char			*fname,
-+	char			*tname,
-+	struct xfs_fd		*file_fd,
-+	struct xfs_bulkstat	*statp,
-+	struct fsxattr		*fsxp)
- {
--	int 		tfd = -1;
--	int		srval;
--	int		retval = -1;	/* Failure is the default */
--	int		nextents, extent, cur_nextents, new_nextents;
--	unsigned	blksz_dio;
--	unsigned	dio_min;
--	struct dioattr	dio;
--	static xfs_swapext_t   sx;
--	struct xfs_flock64  space;
--	off_t 	cnt, pos;
--	void 		*fbuf = NULL;
--	int 		ct, wc, wc_b4;
--	char		ffname[SMBUFSZ];
--	int		ffd = -1;
-+	int			tfd = -1;
-+	int			srval;
-+	int			retval = -1;	/* Failure is the default */
-+	int			nextents, extent, cur_nextents, new_nextents;
-+	unsigned		blksz_dio;
-+	unsigned		dio_min;
-+	struct dioattr		dio;
-+	static xfs_swapext_t	sx;
-+	struct xfs_flock64	space;
-+	off_t			cnt, pos;
-+	void			*fbuf = NULL;
-+	int			ct, wc, wc_b4;
-+	char			ffname[SMBUFSZ];
-+	int			ffd = -1;
-+	int			error;
- 
- 	/*
- 	 * Work out the extent map - nextents will be set to the
-@@ -1185,7 +1197,7 @@ packfile(char *fname, char *tname, int fd,
- 	 * into account holes), cur_nextents is the current number
- 	 * of extents.
- 	 */
--	nextents = read_fd_bmap(fd, statp, &cur_nextents);
-+	nextents = read_fd_bmap(file_fd->fd, statp, &cur_nextents);
- 
- 	if (cur_nextents == 1 || cur_nextents <= nextents) {
- 		if (vflag)
-@@ -1208,7 +1220,7 @@ packfile(char *fname, char *tname, int fd,
- 	unlink(tname);
- 
- 	/* Setup extended attributes */
--	if (fsr_setup_attr_fork(fd, tfd, statp) != 0) {
-+	if (fsr_setup_attr_fork(file_fd->fd, tfd, statp) != 0) {
- 		fsrprintf(_("failed to set ATTR fork on tmp: %s:\n"), tname);
- 		goto out;
- 	}
-@@ -1266,6 +1278,8 @@ packfile(char *fname, char *tname, int fd,
- 	for (extent = 0; extent < nextents; extent++) {
- 		pos = outmap[extent].bmv_offset;
- 		if (outmap[extent].bmv_block == -1) {
-+			off_t	where;
-+
- 			space.l_whence = SEEK_SET;
- 			space.l_start = pos;
- 			space.l_len = outmap[extent].bmv_length;
-@@ -1273,7 +1287,8 @@ packfile(char *fname, char *tname, int fd,
- 				fsrprintf(_("could not trunc tmp %s\n"),
- 					   tname);
- 			}
--			if (lseek(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
-+			where = lseek(tfd, outmap[extent].bmv_length, SEEK_CUR);
-+			if (where < 0) {
- 				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
- 				   tname, strerror(errno));
- 				goto out;
-@@ -1326,7 +1341,7 @@ packfile(char *fname, char *tname, int fd,
- 				   tname, strerror(errno));
- 				goto out;
- 			}
--			if (lseek(fd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
-+			if (lseek(file_fd->fd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
- 				fsrprintf(_("could not lseek in file: %s : %s\n"),
- 				   fname, strerror(errno));
- 				goto out;
-@@ -1346,7 +1361,7 @@ packfile(char *fname, char *tname, int fd,
- 				ct = min(cnt + dio_min - (cnt % dio_min),
- 					blksz_dio);
- 			}
--			ct = read(fd, fbuf, ct);
-+			ct = read(file_fd->fd, fbuf, ct);
- 			if (ct == 0) {
- 				/* EOF, stop trying to read */
- 				extent = nextents;
-@@ -1417,9 +1432,15 @@ packfile(char *fname, char *tname, int fd,
- 		goto out;
- 	}
- 
--	sx.sx_stat     = *statp; /* struct copy */
-+	error = -xfrog_bulkstat_v5_to_v1(file_fd, &sx.sx_stat, statp);
-+	if (error) {
-+		fsrprintf(_("bstat conversion error on %s: %s\n"),
-+				fname, strerror(error));
-+		goto out;
-+	}
-+
- 	sx.sx_version  = XFS_SX_VERSION;
--	sx.sx_fdtarget = fd;
-+	sx.sx_fdtarget = file_fd->fd;
- 	sx.sx_fdtmp    = tfd;
- 	sx.sx_offset   = 0;
- 	sx.sx_length   = statp->bs_size;
-@@ -1433,7 +1454,7 @@ packfile(char *fname, char *tname, int fd,
-         }
- 
- 	/* Swap the extents */
--	srval = xfs_swapext(fd, &sx);
-+	srval = xfs_swapext(file_fd->fd, &sx);
- 	if (srval < 0) {
- 		if (errno == ENOTSUP) {
- 			if (vflag || dflag)
-@@ -1529,7 +1550,7 @@ getparent(char *fname)
- #define MAPSIZE	128
- #define	OUTMAP_SIZE_INCREMENT	MAPSIZE
- 
--int	read_fd_bmap(int fd, struct xfs_bstat *sin, int *cur_nextents)
-+int read_fd_bmap(int fd, struct xfs_bulkstat *sin, int *cur_nextents)
- {
- 	int		i, cnt;
- 	struct getbmap	map[MAPSIZE];
-diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-index 3e7f0797d..6980d3ffa 100644
---- a/libfrog/fsgeom.c
-+++ b/libfrog/fsgeom.c
-@@ -102,29 +102,50 @@ xfrog_geometry(
- 	return -errno;
- }
- 
--/*
-- * Prepare xfs_fd structure for future ioctl operations by computing the xfs
-- * geometry for @xfd->fd.  Returns zero or a negative error code.
-- */
--int
--xfd_prepare_geometry(
-+/* Compute conversion factors of an xfs_fd structure. */
-+static void
-+xfd_compute_conversion_factors(
- 	struct xfs_fd		*xfd)
- {
--	int			ret;
--
--	ret = xfrog_geometry(xfd->fd, &xfd->fsgeom);
--	if (ret)
--		return ret;
--
- 	xfd->agblklog = log2_roundup(xfd->fsgeom.agblocks);
- 	xfd->blocklog = highbit32(xfd->fsgeom.blocksize);
- 	xfd->inodelog = highbit32(xfd->fsgeom.inodesize);
- 	xfd->inopblog = xfd->blocklog - xfd->inodelog;
- 	xfd->aginolog = xfd->agblklog + xfd->inopblog;
- 	xfd->blkbb_log = xfd->blocklog - BBSHIFT;
-+}
-+
-+/*
-+ * Prepare xfs_fd structure for future ioctl operations by computing the xfs
-+ * geometry for @xfd->fd.  Returns zero or a negative error code.
-+ */
-+int
-+xfd_prepare_geometry(
-+	struct xfs_fd		*xfd)
-+{
-+	int			ret;
-+
-+	ret = xfrog_geometry(xfd->fd, &xfd->fsgeom);
-+	if (ret)
-+		return ret;
-+
-+	xfd_compute_conversion_factors(xfd);
- 	return 0;
- }
- 
-+/*
-+ * Prepare xfs_fd structure for future ioctl operations by computing the xfs
-+ * geometry for @xfd->fd.  Returns zero or a negative error code.
-+ */
-+void
-+xfd_install_geometry(
-+	struct xfs_fd		*xfd,
-+	struct xfs_fsop_geom	*fsgeom)
-+{
-+	memcpy(&xfd->fsgeom, fsgeom, sizeof(*fsgeom));
-+	xfd_compute_conversion_factors(xfd);
-+}
-+
- /* Open a file on an XFS filesystem.  Returns zero or a negative error code. */
- int
- xfd_open(
-diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
-index ca38324e8..f327dc7d7 100644
---- a/libfrog/fsgeom.h
-+++ b/libfrog/fsgeom.h
-@@ -55,6 +55,7 @@ struct xfs_fd {
- #define XFS_FD_INIT_EMPTY	XFS_FD_INIT(-1)
- 
- int xfd_prepare_geometry(struct xfs_fd *xfd);
-+void xfd_install_geometry(struct xfs_fd *xfd, struct xfs_fsop_geom *fsgeom);
- int xfd_open(struct xfs_fd *xfd, const char *pathname, int flags);
- int xfd_close(struct xfs_fd *xfd);
- 
+ 	 * use the old method if we have attr1 or the kernel does not yet
+ 	 * support passing the fork offset in the bulkstat data.
 
