@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54DF410E9
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:33:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43D937E1
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:34:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299637; cv=none; b=R4ga+hHIb6MWT8hPiFDVNEQLmSsbS1Hl/qfaukUoy5hcrB3H2W1ZOpQBGS+HmJLVYckaQHAKY+0ztl958d0hzIatcOcQCBc0LpVFkS4S5BqnUWsfWctgxNYjQTDcSDX7RgRM1HmLJdi1mXnXG6Vh4l+uD42GK0Xe7Z0iN2gOLyI=
+	t=1722299653; cv=none; b=bu/pVRqSvqqJXp/wSllD6Jsp1a6DBnccfnUoO+ZPv0aip/YCVFUEeTlyzgncVbhzz+9dWCXlaTChG1he5als1me68TcJa25+J4SGz5NjqsqhCjLG7cj6r0VVHgzMnRAnVQHpHv62XCoTD/Bn3I7vqxjnSZGE8nHeUZPld7mmPLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299637; c=relaxed/simple;
-	bh=WrHvGRxKeLIpn8O8OsOfhqco3mbu06Xa6B6/Xz1+Pjs=;
+	s=arc-20240116; t=1722299653; c=relaxed/simple;
+	bh=e+jyJHB91Ei9XwyBxYXS+DW/sdx5sQYGiqOg2egX7wY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MIs0cR2mlmOO4hVR6BNOfSA/JITDXeYtq/IKxxJz2tB6fly4gQiM34kKdFgYqorMYbswhRrjFCH9f9vuw7tbMfIKXRnOhEm9+7+jDrixq08kKK3ucNgQRrEn4pGGB8mnXgc3q2mVsd3UKWKsZtUmbLHq1Jn+/9Xudc3mAkWLa04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Exz0teri; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Ve7K7FY4Z9R7TA5QykJ891t1EtoRZQnAOfQUA808O/G1pSesVF60cnOzXICB4uNfKr7+5cll9DMRKT9QPveQTlnbV/YnsicLD/nRf3q+5t9gOIsZtcm2nP2FJWbz2JG4GAEv5Hj2vjzT2oTY5r3nwWnyMoPW52iBuNAVaPWgV1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F70I1neD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Exz0teri"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F6AAC32786;
-	Tue, 30 Jul 2024 00:33:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F70I1neD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C90A1C32786;
+	Tue, 30 Jul 2024 00:34:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299637;
-	bh=WrHvGRxKeLIpn8O8OsOfhqco3mbu06Xa6B6/Xz1+Pjs=;
+	s=k20201202; t=1722299652;
+	bh=e+jyJHB91Ei9XwyBxYXS+DW/sdx5sQYGiqOg2egX7wY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Exz0teriCvNReQ8HmkeG416HWILBGENpCDW4hFY9VpA3MhvTpEfdfc9lml1HXx/Sj
-	 7kGZ8kU9tGycopkAMmsTtex3sh+LLvjkUhYbw5ewps7BrNqLB5y0pRrlzc6jpjMvLw
-	 L/j2zVHHpT9beOugTcOEq6SlgOo18ea9CcWh2XF8wq7MjUNH/yg6zilGX3uZm5Uwth
-	 I6l92kWwRu+2rSVNTNzMCcTD1ffZfAssvPcVb3R4ZjLA1Ta18uRpSh5CphodavfIb7
-	 RHpG7WpQyt1HzB0Y3tPur4dwDm7qGUYOLcFhBKrRRQLqVU/iw5Ujtvu9plbYwvYtbK
-	 274bLvx5yITcg==
-Date: Mon, 29 Jul 2024 17:33:56 -0700
-Subject: [PATCH 039/115] xfs: rework splitting of indirect block reservations
+	b=F70I1neDSOKEsiAKfA6g5nAw7XJ2lP+UabrIXOcLqIXeWrZQxqNsyEdJzoaMdxnC5
+	 QTPlpaeu391XFhWZlMmWu4vEkwDS04mUu19XnU+z/DcjQnhrfEM+MwlsZTN3rvasaE
+	 K2upprCDMoPcyyM3kWvTG46vAraYD7PvepwmexR2dCGR134casOtHXJqy03cPeMSpI
+	 AzAqYHBr8vc0EpIOL2CaOPnwQmj2zNZL4TXkMKeeIPSuwx0pTsgp5F9+vKmsYQxOYP
+	 Xk8ebeBlkL9HI+YerwqIR+Q8iwNGS7EhFSusOE0UHMV7vqd996P2tPf4aO0o/2XRJ5
+	 x0lai5BVdWwcg==
+Date: Mon, 29 Jul 2024 17:34:12 -0700
+Subject: [PATCH 040/115] xfs: stop the steal (of data blocks for RT indirect
+ blocks)
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
  Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-Message-ID: <172229842991.1338752.2749856648086015843.stgit@frogsfrogsfrogs>
+Message-ID: <172229843005.1338752.10819291299210130711.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,106 +48,51 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: da2b9c3a8d2cbdeec3f13cebf4c6c86c13e1077e
+Source kernel commit: bd1753d8c42b6bd5d9a81c81d1ce6e3affe3a59f
 
-Move the check if we have enough indirect blocks and the stealing of
-the deleted extent blocks out of xfs_bmap_split_indlen and into the
-caller to prepare for handling delayed allocation of RT extents that
-can't easily be stolen.
+When xfs_bmap_del_extent_delay has to split an indirect block it tries
+to steal blocks from the the part that gets unmapped to increase the
+indirect block reservation that now needs to cover for two extents
+instead of one.
+
+This works perfectly fine on the data device, where the data and
+indirect blocks come from the same pool.  It has no chance of working
+when the inode sits on the RT device.  To support re-enabling delalloc
+for inodes on the RT device, make this behavior conditional on not
+being for rt extents.
+
+Note that split of delalloc extents should only happen on writeback
+failure, as for other kinds of hole punching we first write back all
+data and thus convert the delalloc reservations covering the hole to
+a real allocation.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_bmap.c |   38 ++++++++++++++++----------------------
- 1 file changed, 16 insertions(+), 22 deletions(-)
+ libxfs/xfs_bmap.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 79cde87d0..7b18477e0 100644
+index 7b18477e0..81dccf275 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -4825,31 +4825,17 @@ xfs_bmapi_remap(
-  * ores == 1). The number of stolen blocks is returned. The availability and
-  * subsequent accounting of stolen blocks is the responsibility of the caller.
-  */
--static xfs_filblks_t
-+static void
- xfs_bmap_split_indlen(
- 	xfs_filblks_t			ores,		/* original res. */
- 	xfs_filblks_t			*indlen1,	/* ext1 worst indlen */
--	xfs_filblks_t			*indlen2,	/* ext2 worst indlen */
--	xfs_filblks_t			avail)		/* stealable blocks */
-+	xfs_filblks_t			*indlen2)	/* ext2 worst indlen */
- {
- 	xfs_filblks_t			len1 = *indlen1;
- 	xfs_filblks_t			len2 = *indlen2;
- 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
--	xfs_filblks_t			stolen = 0;
- 	xfs_filblks_t			resfactor;
- 
--	/*
--	 * Steal as many blocks as we can to try and satisfy the worst case
--	 * indlen for both new extents.
--	 */
--	if (ores < nres && avail)
--		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
--	ores += stolen;
--
--	 /* nothing else to do if we've satisfied the new reservation */
--	if (ores >= nres)
--		return stolen;
--
- 	/*
- 	 * We can't meet the total required reservation for the two extents.
- 	 * Calculate the percent of the overall shortage between both extents
-@@ -4894,8 +4880,6 @@ xfs_bmap_split_indlen(
- 
- 	*indlen1 = len1;
- 	*indlen2 = len2;
--
--	return stolen;
- }
- 
- int
-@@ -4911,7 +4895,7 @@ xfs_bmap_del_extent_delay(
- 	struct xfs_bmbt_irec	new;
- 	int64_t			da_old, da_new, da_diff = 0;
- 	xfs_fileoff_t		del_endoff, got_endoff;
--	xfs_filblks_t		got_indlen, new_indlen, stolen;
-+	xfs_filblks_t		got_indlen, new_indlen, stolen = 0;
- 	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
- 	uint64_t		fdblocks;
- 	int			error = 0;
-@@ -4990,8 +4974,19 @@ xfs_bmap_del_extent_delay(
- 		new_indlen = xfs_bmap_worst_indlen(ip, new.br_blockcount);
- 
- 		WARN_ON_ONCE(!got_indlen || !new_indlen);
--		stolen = xfs_bmap_split_indlen(da_old, &got_indlen, &new_indlen,
--						       del->br_blockcount);
-+		/*
-+		 * Steal as many blocks as we can to try and satisfy the worst
-+		 * case indlen for both new extents.
-+		 */
-+		da_new = got_indlen + new_indlen;
-+		if (da_new > da_old) {
-+			stolen = XFS_FILBLKS_MIN(da_new - da_old,
-+						 del->br_blockcount);
-+			da_old += stolen;
-+		}
-+		if (da_new > da_old)
-+			xfs_bmap_split_indlen(da_old, &got_indlen, &new_indlen);
-+		da_new = got_indlen + new_indlen;
- 
- 		got->br_startblock = nullstartblock((int)got_indlen);
- 
-@@ -5003,7 +4998,6 @@ xfs_bmap_del_extent_delay(
- 		xfs_iext_next(ifp, icur);
- 		xfs_iext_insert(ip, icur, &new, state);
- 
--		da_new = got_indlen + new_indlen - stolen;
- 		del->br_blockcount -= stolen;
- 		break;
- 	}
+@@ -4977,9 +4977,14 @@ xfs_bmap_del_extent_delay(
+ 		/*
+ 		 * Steal as many blocks as we can to try and satisfy the worst
+ 		 * case indlen for both new extents.
++		 *
++		 * However, we can't just steal reservations from the data
++		 * blocks if this is an RT inodes as the data and metadata
++		 * blocks come from different pools.  We'll have to live with
++		 * under-filled indirect reservation in this case.
+ 		 */
+ 		da_new = got_indlen + new_indlen;
+-		if (da_new > da_old) {
++		if (da_new > da_old && !isrt) {
+ 			stolen = XFS_FILBLKS_MIN(da_new - da_old,
+ 						 del->br_blockcount);
+ 			da_old += stolen;
 
