@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF4E524C
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:43:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74AA05C96
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:43:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300216; cv=none; b=j/MK1lg83XMdk+gE1ZoFnDhtNUj/Eg3+JQ4R7Aihi5CEBmzjjMNYbDamrJEyUYSnH4asudRAzlv9bstuXg7K3B0f6dLnDVJVwIjhKFT5bHFtfmmb+E6AJXjpgxzxE+usa8eY8LR07IkUFICPgfdF8ZMPpTBhaMqzPqUy+WJiA3Q=
+	t=1722300232; cv=none; b=lPyxIYafVBhdoGKKMnGnWuj7ZX3nzNlmUGztjnx2qVyxem49UU7RwT1u4AMvuY6hUByMWfBp3fVhR/0OANmoZH2hJvbdXKrs1lCWEu2WtFCk0HpNtafEcGKYD2WOAuZdVzC+BpSL5NpE4uhLzmLSbVirKSvB7O/hsOlpdtZ8kAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300216; c=relaxed/simple;
-	bh=rSuRLugBS0uhnnP0iz31CrhGTnafo25QxAP5LRhS7SQ=;
+	s=arc-20240116; t=1722300232; c=relaxed/simple;
+	bh=nXCYp8NGfklbGzFykjoVKDGFqGM7UWWmDnHxe5sgExc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B5UBZlTdOWIRAwZUQU0JSxvUeQRcCINjJuxz2Ac7fr7vhRBsN7IWr05ZokH6WDCODlULovC2Wt1sR4OET/KG2gNzJnovA90MSz86tqJvMienmS2kyn1gl3O+b3xul5UCzwoPFuGWy6SNKTytSDwILtHzqRRplEA8vwGIlUFa4v0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HsvS6JbW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jngEW98qOO9KAWsAmL4MeTvfoKTSWWO1tEUQNDvPJS1255i6xu8adgebZ0N9zmIOm/uhuUhPhxxf2IxuR64Vy70TqO6vS/11faGeQR3BJJTl44rU4x0INJHq1OWNhF3RJxsQqkIfHCGWErQDj1JYZRBo4azs1uFGYvSNoctE/5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUZJvPhl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HsvS6JbW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7D5BC32786;
-	Tue, 30 Jul 2024 00:43:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUZJvPhl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48711C32786;
+	Tue, 30 Jul 2024 00:43:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300216;
-	bh=rSuRLugBS0uhnnP0iz31CrhGTnafo25QxAP5LRhS7SQ=;
+	s=k20201202; t=1722300232;
+	bh=nXCYp8NGfklbGzFykjoVKDGFqGM7UWWmDnHxe5sgExc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HsvS6JbW0XKU4Mi69Eb/LGyJGOXs/LVotSYoNvg5Foyq7TZOYMwhgFediIPv4f8y3
-	 FizZrKR+YJkoU8RRyOwzUYQIBoqNyMCf/kIQSkSIZlyXnsOK56nvgqUQL6dMZoLQHs
-	 yJD284IIW3YTPCtxzg1lRyhzYC4QqJQzNmwrLgY5aZkEFrGGDGvuqaxHhU6fN5Wen+
-	 U53egddga6v4EyiMalTHXjLDDLHgSupBrAmsB1+WfSn+sPygYxzTb0NnlWjtJ277xr
-	 WH4R1wYsg2kloE+oStb42eK0BEbE29H+1pfwhhf2Ydd/nnbTotA7faC0irBxvqY7An
-	 KKdSsgt5GPFOw==
-Date: Mon, 29 Jul 2024 17:43:36 -0700
-Subject: [PATCH 076/115] xfs: enable parent pointers
+	b=SUZJvPhlUKtj0vx6TwQ3HHViSMJIvWmbeAwetAe9ieY/cktq+kxtFCVy0BtGa8mPh
+	 I4iJ5nBXjpFTtu+F+AuQm+DFq/eYE3o80eygliBNGAjYhcdcsoYpf2kr0r4CrukRH5
+	 ZOZs452p3b3exo6BOHGSEKycn18L9d1llIoXlPwFAQg6hwWkguhNSGqgT+Zzd6DgIB
+	 l/FzTcwOKe2PUa0JQZzMIX04P7Jy4cyjf5iajWId/Rx5+BfKnS6qQLBQouwlFhQB3u
+	 FDExjpIuhq+j+8EycdFDUNUDlYcAmLBMnHCLqkHdZ8Nk+8rS9ZLx/ybtUppyKCJMri
+	 AHsubbdJdNLWQ==
+Date: Mon, 29 Jul 2024 17:43:51 -0700
+Subject: [PATCH 077/115] xfs: check dirents have parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229843515.1338752.3328406806785187710.stgit@frogsfrogsfrogs>
+Message-ID: <172229843530.1338752.11619267767899663328.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,29 +46,61 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 67ac7091e35bd34b75c0ec77331b53ca052e0cb3
+Source kernel commit: 61b3f0df5c235806d372aaf696ce9aee7746d18f
 
-Add parent pointers to the list of supported features.
+If the fs has parent pointers, we need to check that each child dirent
+points to a file that has a parent pointer pointing back at us.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_format.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ libxfs/xfs_parent.c |   22 ++++++++++++++++++++++
+ libxfs/xfs_parent.h |    5 +++++
+ 2 files changed, 27 insertions(+)
 
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index b457e457e..61f51becf 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -382,7 +382,8 @@ xfs_sb_has_ro_compat_feature(
- 		 XFS_SB_FEAT_INCOMPAT_BIGTIME | \
- 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
- 		 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
--		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE)
-+		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
-+		 XFS_SB_FEAT_INCOMPAT_PARENT)
+diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+index bb0465197..8c29ba61c 100644
+--- a/libxfs/xfs_parent.c
++++ b/libxfs/xfs_parent.c
+@@ -288,3 +288,25 @@ xfs_parent_from_attr(
+ 		*parent_gen = be32_to_cpu(rec->p_gen);
+ 	return 0;
+ }
++
++/*
++ * Look up a parent pointer record (@parent_name -> @pptr) of @ip.
++ *
++ * Caller must hold at least ILOCK_SHARED.  The scratchpad need not be
++ * initialized.
++ *
++ * Returns 0 if the pointer is found, -ENOATTR if there is no match, or a
++ * negative errno.
++ */
++int
++xfs_parent_lookup(
++	struct xfs_trans		*tp,
++	struct xfs_inode		*ip,
++	const struct xfs_name		*parent_name,
++	struct xfs_parent_rec		*pptr,
++	struct xfs_da_args		*scratch)
++{
++	memset(scratch, 0, sizeof(struct xfs_da_args));
++	xfs_parent_da_args_init(scratch, tp, pptr, ip, ip->i_ino, parent_name);
++	return xfs_attr_get_ilocked(scratch);
++}
+diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
+index d7ab09e73..977885823 100644
+--- a/libxfs/xfs_parent.h
++++ b/libxfs/xfs_parent.h
+@@ -96,4 +96,9 @@ int xfs_parent_from_attr(struct xfs_mount *mp, unsigned int attr_flags,
+ 		const void *value, unsigned int valuelen,
+ 		xfs_ino_t *parent_ino, uint32_t *parent_gen);
  
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
++/* Repair functions */
++int xfs_parent_lookup(struct xfs_trans *tp, struct xfs_inode *ip,
++		const struct xfs_name *name, struct xfs_parent_rec *pptr,
++		struct xfs_da_args *scratch);
++
+ #endif /* __XFS_PARENT_H__ */
 
