@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 349B2881E
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:24:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42D479CC
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:25:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302692; cv=none; b=J2k63F3OHX/15Lmolwwn42qi6IZEBbmCHxKcr4OA810NhnbSQogVnDJrOT1ZKUtDhuNLKhZvYhzhZMHFnu2ND0HTl2vV3Kq0IDguy/JuV9nyu66dVz+KxQ9gLVmICK7BY6N/rUpK4+LNFI6JaqNS6KNf8mc7mr8GPS+2sWYRAg0=
+	t=1722302707; cv=none; b=Gb+QVp8kiZ+XCbTyggfl47B3MGa9N2PwWjG2/hGTRXxLkAVsFBh5LejPX8XBONkz7VFsDliHZQEk5DTImFcJQAK2fd1zsB04OpcQhO409yOD9a7ZkLxqPu+BwDjzZB1yLuM6WFIJpCZVFLoqpC/i3ixqA3roCSRuGQaqn5l76LM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302692; c=relaxed/simple;
-	bh=CtiusBW9yU05l036ziRJ+mfN+oTW8dpiMDB8oQFhXrI=;
+	s=arc-20240116; t=1722302707; c=relaxed/simple;
+	bh=jrPFQNLV+lW8C9ubfE7arwKCLMZ1yqYwbyDx8/E9dYY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WrBEO6BeNpmTwvhxfmI0dQy69E9lPMfKF+aZQnck6fZGhvQBhDQ6/+fZfkdpv8Sb9w90p1AbbMdIaMzB5KI9386bCmc6CxFsHQDCqFR2dRnE7mkfCO6EMTp2BLy8Iglk5N5w+h94TeJBTIo58nIJHIYZsq/eUPb1TJGGr/zqIxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jMMGuiGC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mQ5V4NNGn9qybqyzMPsxWZOFhFsP7fNhkjdFosk676Aq2XzZvV8XJTwSN3PeJtBn96Tra+o2wGOZpbuGRGcIlV32SUNTNvbGbhSKk0s0aVLHWks7k88WiZuFSWs9GTubbJnI/NrZ9IbvehoNg8+IdcoD+RaiDApjp5kjCfDzPAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lfp7Hv0L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jMMGuiGC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9410C32786;
-	Tue, 30 Jul 2024 01:24:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lfp7Hv0L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D714C4AF0A;
+	Tue, 30 Jul 2024 01:25:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302691;
-	bh=CtiusBW9yU05l036ziRJ+mfN+oTW8dpiMDB8oQFhXrI=;
+	s=k20201202; t=1722302707;
+	bh=jrPFQNLV+lW8C9ubfE7arwKCLMZ1yqYwbyDx8/E9dYY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jMMGuiGCK30Ky5y9387QTJltLOeln/G+a3us43uoN6uyeKyPvHeZpHdEhP0oEAjBD
-	 /iF4AL77Vxbt1jf1xUsE4oXLGruFHWNsMI33C9e+4ZbsXzgKyOQBz8Q95U7/PrPAAZ
-	 kUP6dpszMAbz8ZiYWaVcyjbfnAf5IQa7YyvgM1Hmhdnbhlgoc3y4NkHWeRQhqd1QpO
-	 JNw5s/dDb/aMszRBiUUlLgudY8mKTc6OtdZFG+L3nf/LeCd1RsdIa1fmPr+Pt5AEXE
-	 cfrpVp8gI4tHUFX8bGZzrSJpueZis25LWoZ4qCOj0rLNk9Aav6hZtR1bRAuBn8+0PQ
-	 JqVEIYKJU+5fw==
-Date: Mon, 29 Jul 2024 18:24:51 -0700
-Subject: [PATCH 23/24] mkfs: Add parent pointers during protofile creation
+	b=lfp7Hv0LbfJbvaACphGV02mw05N14F01ODne2SWxUmm0EkA14nkyG+vbfytxgpvuy
+	 OY3g3XkpKVHciPiZUGN5nlNWMgDKqW973OiWiON7HHyXGMraDGuzcl8zQRziE3tdUS
+	 mJid2iZm03EVb+sk/dQWiemj7l+3/a58RXHo2so9n0Q/QWJqNq2Sw1N/cMHBdl7VU2
+	 vhZwL/iygRM6uCIje9WayLAW0RkJqAlHHYGZjAFIIns1+OXQVNvbqOiggtR8Vc+umF
+	 6kPUkkQAKcBM7Q3ec5OuOEJoTW+8v0f9z+aZYQ0aPLrhonHDL2Jn/znCjj8P+lH8bk
+	 SatwaKzNDmSVA==
+Date: Mon, 29 Jul 2024 18:25:06 -0700
+Subject: [PATCH 24/24] mkfs: enable formatting with parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Allison Henderson <allison.henderson@oracle.com>,
  Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
  catherine.hoang@oracle.com, allison.henderson@oracle.com
-Message-ID: <172229850818.1350924.4972291714239941056.stgit@frogsfrogsfrogs>
+Message-ID: <172229850832.1350924.11912000530541229395.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
 References: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,216 +48,200 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Inodes created from protofile parsing will also need to add the
-appropriate parent pointers.
+Enable parent pointer support in mkfs via the '-n parent' parameter.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: use xfs_parent_add from libxfs instead of open-coding xfs_attr_set]
+[djwong: move the no-V4 filesystem check to join the rest]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- mkfs/proto.c |   62 +++++++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 48 insertions(+), 14 deletions(-)
+ mkfs/lts_4.19.conf |    3 +++
+ mkfs/lts_5.10.conf |    3 +++
+ mkfs/lts_5.15.conf |    3 +++
+ mkfs/lts_5.4.conf  |    3 +++
+ mkfs/lts_6.1.conf  |    3 +++
+ mkfs/lts_6.6.conf  |    3 +++
+ mkfs/xfs_mkfs.c    |   45 ++++++++++++++++++++++++++++++++++++++++++---
+ 7 files changed, 60 insertions(+), 3 deletions(-)
 
 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index a9a9b704a..8e16eb150 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -348,11 +348,12 @@ newregfile(
- 
- static void
- newdirent(
--	xfs_mount_t	*mp,
--	xfs_trans_t	*tp,
--	xfs_inode_t	*pip,
--	struct xfs_name	*name,
--	xfs_ino_t	inum)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*pip,
-+	struct xfs_name		*name,
-+	struct xfs_inode	*ip,
-+	struct xfs_parent_args	*ppargs)
- {
- 	int	error;
- 	int	rsv;
-@@ -365,9 +366,15 @@ newdirent(
- 
- 	rsv = XFS_DIRENTER_SPACE_RES(mp, name->len);
- 
--	error = -libxfs_dir_createname(tp, pip, name, inum, rsv);
-+	error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, rsv);
- 	if (error)
- 		fail(_("directory createname error"), error);
+diff --git a/mkfs/lts_4.19.conf b/mkfs/lts_4.19.conf
+index 92e8eba6b..9fa1f9378 100644
+--- a/mkfs/lts_4.19.conf
++++ b/mkfs/lts_4.19.conf
+@@ -13,3 +13,6 @@ rmapbt=0
+ sparse=1
+ nrext64=0
+ exchange=0
 +
-+	if (ppargs) {
-+		error = -libxfs_parent_addname(tp, ppargs, pip, name, ip);
-+		if (error)
-+			fail(_("parent addname error"), error);
++[naming]
++parent=0
+diff --git a/mkfs/lts_5.10.conf b/mkfs/lts_5.10.conf
+index 34e7662cd..d64bcdf8c 100644
+--- a/mkfs/lts_5.10.conf
++++ b/mkfs/lts_5.10.conf
+@@ -13,3 +13,6 @@ rmapbt=0
+ sparse=1
+ nrext64=0
+ exchange=0
++
++[naming]
++parent=0
+diff --git a/mkfs/lts_5.15.conf b/mkfs/lts_5.15.conf
+index a36a5c2b7..775fd9ab9 100644
+--- a/mkfs/lts_5.15.conf
++++ b/mkfs/lts_5.15.conf
+@@ -13,3 +13,6 @@ rmapbt=0
+ sparse=1
+ nrext64=0
+ exchange=0
++
++[naming]
++parent=0
+diff --git a/mkfs/lts_5.4.conf b/mkfs/lts_5.4.conf
+index 4204d5b8f..6f43a6c6d 100644
+--- a/mkfs/lts_5.4.conf
++++ b/mkfs/lts_5.4.conf
+@@ -13,3 +13,6 @@ rmapbt=0
+ sparse=1
+ nrext64=0
+ exchange=0
++
++[naming]
++parent=0
+diff --git a/mkfs/lts_6.1.conf b/mkfs/lts_6.1.conf
+index 9a90def8f..a78a4f9e3 100644
+--- a/mkfs/lts_6.1.conf
++++ b/mkfs/lts_6.1.conf
+@@ -13,3 +13,6 @@ rmapbt=0
+ sparse=1
+ nrext64=0
+ exchange=0
++
++[naming]
++parent=0
+diff --git a/mkfs/lts_6.6.conf b/mkfs/lts_6.6.conf
+index 3f7fb6519..91a25bd81 100644
+--- a/mkfs/lts_6.6.conf
++++ b/mkfs/lts_6.6.conf
+@@ -13,3 +13,6 @@ rmapbt=1
+ sparse=1
+ nrext64=1
+ exchange=0
++
++[naming]
++parent=0
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 991ecbdd0..394a35771 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -114,6 +114,7 @@ enum {
+ 	N_SIZE = 0,
+ 	N_VERSION,
+ 	N_FTYPE,
++	N_PARENT,
+ 	N_MAX_OPTS,
+ };
+ 
+@@ -656,6 +657,7 @@ static struct opt_params nopts = {
+ 		[N_SIZE] = "size",
+ 		[N_VERSION] = "version",
+ 		[N_FTYPE] = "ftype",
++		[N_PARENT] = "parent",
+ 		[N_MAX_OPTS] = NULL,
+ 	},
+ 	.subopt_params = {
+@@ -679,6 +681,14 @@ static struct opt_params nopts = {
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
++		{ .index = N_PARENT,
++		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
++		},
++
++
+ 	},
+ };
+ 
+@@ -1040,7 +1050,7 @@ usage( void )
+ 			    sunit=value|su=num,sectsize=num,lazy-count=0|1,\n\
+ 			    concurrency=num]\n\
+ /* label */		[-L label (maximum 12 characters)]\n\
+-/* naming */		[-n size=num,version=2|ci,ftype=0|1]\n\
++/* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
+ /* no-op info only */	[-N]\n\
+ /* prototype file */	[-p fname]\n\
+ /* quiet */		[-q]\n\
+@@ -1878,6 +1888,9 @@ naming_opts_parser(
+ 	case N_FTYPE:
+ 		cli->sb_feat.dirftype = getnum(value, opts, subopt);
+ 		break;
++	case N_PARENT:
++		cli->sb_feat.parent_pointers = getnum(value, &nopts, N_PARENT);
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -2385,6 +2398,14 @@ _("exchange-range not supported without CRC support\n"));
+ 			usage();
+ 		}
+ 		cli->sb_feat.exchrange = false;
++
++		if (cli->sb_feat.parent_pointers &&
++		    cli_opt_set(&nopts, N_PARENT)) {
++			fprintf(stderr,
++_("parent pointers not supported without CRC support\n"));
++			usage();
++		}
++		cli->sb_feat.parent_pointers = false;
+ 	}
+ 
+ 	if (!cli->sb_feat.finobt) {
+@@ -2419,6 +2440,17 @@ _("cowextsize not supported without reflink support\n"));
+ 		usage();
+ 	}
+ 
++	/*
++	 * Turn on exchange-range if parent pointers are enabled and the caller
++	 * did not provide an explicit exchange-range parameter so that users
++	 * can take advantage of online repair.  It's not required for correct
++	 * operation, but it costs us nothing to enable it.
++	 */
++	if (cli->sb_feat.parent_pointers && !cli->sb_feat.exchrange &&
++	    !cli_opt_set(&iopts, I_EXCHANGE)) {
++		cli->sb_feat.exchrange = true;
++	}
++
+ 	/*
+ 	 * Copy features across to config structure now.
+ 	 */
+@@ -3458,8 +3490,6 @@ sb_set_features(
+ 		sbp->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+ 	if (fp->projid32bit)
+ 		sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
+-	if (fp->parent_pointers)
+-		sbp->sb_features2 |= XFS_SB_VERSION2_PARENTBIT;
+ 	if (fp->crcs_enabled)
+ 		sbp->sb_features2 |= XFS_SB_VERSION2_CRCBIT;
+ 	if (fp->attr_version == 2)
+@@ -3520,6 +3550,15 @@ sb_set_features(
+ 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NREXT64;
+ 	if (fp->exchrange)
+ 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_EXCHRANGE;
++	if (fp->parent_pointers) {
++		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_PARENT;
++		/*
++		 * Set ATTRBIT even if mkfs doesn't write out a single parent
++		 * pointer so that the kernel doesn't have to do that for us
++		 * with a synchronous write to the primary super at runtime.
++		 */
++		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
 +	}
  }
  
- static void
-@@ -384,6 +391,20 @@ newdirectory(
- 		fail(_("directory create error"), error);
- }
- 
-+static struct xfs_parent_args *
-+newpptr(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_parent_args	*ret;
-+	int			error;
-+
-+	error = -libxfs_parent_start(mp, &ret);
-+	if (error)
-+		fail(_("initializing parent pointer"), error);
-+
-+	return ret;
-+}
-+
- static void
- parseproto(
- 	xfs_mount_t	*mp,
-@@ -418,6 +439,7 @@ parseproto(
- 	struct cred	creds;
- 	char		*value;
- 	struct xfs_name	xname;
-+	struct xfs_parent_args *ppargs = NULL;
- 
- 	memset(&creds, 0, sizeof(creds));
- 	mstr = getstr(pp);
-@@ -492,6 +514,7 @@ parseproto(
- 	case IF_REGULAR:
- 		buf = newregfile(pp, &len);
- 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
-+		ppargs = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
- 					   &creds, fsxp, &ip);
- 		if (error)
-@@ -501,7 +524,7 @@ parseproto(
- 			free(buf);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_REG_FILE;
--		newdirent(mp, tp, pip, &xname, ip->i_ino);
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
- 		break;
- 
- 	case IF_RESERVED:			/* pre-allocated space only */
-@@ -515,7 +538,7 @@ parseproto(
- 			exit(1);
- 		}
- 		tp = getres(mp, XFS_B_TO_FSB(mp, llen));
--
-+		ppargs = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
- 					  &creds, fsxp, &ip);
- 		if (error)
-@@ -524,17 +547,19 @@ parseproto(
- 		libxfs_trans_ijoin(tp, pip, 0);
- 
- 		xname.type = XFS_DIR3_FT_REG_FILE;
--		newdirent(mp, tp, pip, &xname, ip->i_ino);
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
- 		libxfs_trans_log_inode(tp, ip, flags);
- 		error = -libxfs_trans_commit(tp);
- 		if (error)
- 			fail(_("Space preallocation failed."), error);
-+		libxfs_parent_finish(mp, ppargs);
- 		rsvfile(mp, ip, llen);
- 		libxfs_irele(ip);
- 		return;
- 
- 	case IF_BLOCK:
- 		tp = getres(mp, 0);
-+		ppargs = newpptr(mp);
- 		majdev = getnum(getstr(pp), 0, 0, false);
- 		mindev = getnum(getstr(pp), 0, 0, false);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFBLK, 1,
-@@ -544,12 +569,13 @@ parseproto(
- 		}
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_BLKDEV;
--		newdirent(mp, tp, pip, &xname, ip->i_ino);
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
- 		flags |= XFS_ILOG_DEV;
- 		break;
- 
- 	case IF_CHAR:
- 		tp = getres(mp, 0);
-+		ppargs = newpptr(mp);
- 		majdev = getnum(getstr(pp), 0, 0, false);
- 		mindev = getnum(getstr(pp), 0, 0, false);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFCHR, 1,
-@@ -558,24 +584,26 @@ parseproto(
- 			fail(_("Inode allocation failed"), error);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_CHRDEV;
--		newdirent(mp, tp, pip, &xname, ip->i_ino);
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
- 		flags |= XFS_ILOG_DEV;
- 		break;
- 
- 	case IF_FIFO:
- 		tp = getres(mp, 0);
-+		ppargs = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFIFO, 1, 0,
- 				&creds, fsxp, &ip);
- 		if (error)
- 			fail(_("Inode allocation failed"), error);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_FIFO;
--		newdirent(mp, tp, pip, &xname, ip->i_ino);
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
- 		break;
- 	case IF_SYMLINK:
- 		buf = getstr(pp);
- 		len = (int)strlen(buf);
- 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
-+		ppargs = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFLNK, 1, 0,
- 				&creds, fsxp, &ip);
- 		if (error)
-@@ -583,7 +611,7 @@ parseproto(
- 		writesymlink(tp, ip, buf, len);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_SYMLINK;
--		newdirent(mp, tp, pip, &xname, ip->i_ino);
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
- 		break;
- 	case IF_DIRECTORY:
- 		tp = getres(mp, 0);
-@@ -598,9 +626,10 @@ parseproto(
- 			libxfs_log_sb(tp);
- 			isroot = 1;
- 		} else {
-+			ppargs = newpptr(mp);
- 			libxfs_trans_ijoin(tp, pip, 0);
- 			xname.type = XFS_DIR3_FT_DIR;
--			newdirent(mp, tp, pip, &xname, ip->i_ino);
-+			newdirent(mp, tp, pip, &xname, ip, ppargs);
- 			libxfs_bumplink(tp, pip);
- 			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
- 		}
-@@ -609,6 +638,9 @@ parseproto(
- 		error = -libxfs_trans_commit(tp);
- 		if (error)
- 			fail(_("Directory inode allocation failed."), error);
-+
-+		libxfs_parent_finish(mp, ppargs);
-+
- 		/*
- 		 * RT initialization.  Do this here to ensure that
- 		 * the RT inodes get placed after the root inode.
-@@ -636,6 +668,8 @@ parseproto(
- 		fail(_("Error encountered creating file from prototype file"),
- 			error);
- 	}
-+
-+	libxfs_parent_finish(mp, ppargs);
- 	libxfs_irele(ip);
- }
- 
+ /*
 
