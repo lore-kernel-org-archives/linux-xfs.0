@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42D479CC
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:25:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DFE6FB0
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:25:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722302707; cv=none; b=Gb+QVp8kiZ+XCbTyggfl47B3MGa9N2PwWjG2/hGTRXxLkAVsFBh5LejPX8XBONkz7VFsDliHZQEk5DTImFcJQAK2fd1zsB04OpcQhO409yOD9a7ZkLxqPu+BwDjzZB1yLuM6WFIJpCZVFLoqpC/i3ixqA3roCSRuGQaqn5l76LM=
+	t=1722302723; cv=none; b=DsJOsg+uO7nUu7peEsN/uuGsmqkLibB9WKRy7LGt0NDu3Id18UW18vHxH0aqjDhu+VgadwMv+ZlTnnE78P0LFSHHncEqnN7zWsmGXv8zMthw48+ev7c+0AHUy2uTM25WpXMymKWwUdO02zBfaLb/bs848NG8RjcZJ8MSrduhJkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722302707; c=relaxed/simple;
-	bh=jrPFQNLV+lW8C9ubfE7arwKCLMZ1yqYwbyDx8/E9dYY=;
+	s=arc-20240116; t=1722302723; c=relaxed/simple;
+	bh=P/CZ87AYeBo+x2yskXBOYKUhjRn0oAufg+hQzonC1kc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mQ5V4NNGn9qybqyzMPsxWZOFhFsP7fNhkjdFosk676Aq2XzZvV8XJTwSN3PeJtBn96Tra+o2wGOZpbuGRGcIlV32SUNTNvbGbhSKk0s0aVLHWks7k88WiZuFSWs9GTubbJnI/NrZ9IbvehoNg8+IdcoD+RaiDApjp5kjCfDzPAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lfp7Hv0L; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=J30gQcOVoiKuPj+72aQZX5bWpFvLgofSfFGVaGaYtVX6FyKfNz52fTZdrKY9qji9ehgbrkI3Q1crxSyXHpz+0T0FmUA8/9d5XHHA9kXAQbkDIbnJw/eeoKPgdi3YuMqeRygCmdmucioMxMrfiV/XWcccQnwmyci+dkyfFbl63e0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WkmSK69b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lfp7Hv0L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D714C4AF0A;
-	Tue, 30 Jul 2024 01:25:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WkmSK69b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE083C4AF0A;
+	Tue, 30 Jul 2024 01:25:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722302707;
-	bh=jrPFQNLV+lW8C9ubfE7arwKCLMZ1yqYwbyDx8/E9dYY=;
+	s=k20201202; t=1722302723;
+	bh=P/CZ87AYeBo+x2yskXBOYKUhjRn0oAufg+hQzonC1kc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lfp7Hv0LbfJbvaACphGV02mw05N14F01ODne2SWxUmm0EkA14nkyG+vbfytxgpvuy
-	 OY3g3XkpKVHciPiZUGN5nlNWMgDKqW973OiWiON7HHyXGMraDGuzcl8zQRziE3tdUS
-	 mJid2iZm03EVb+sk/dQWiemj7l+3/a58RXHo2so9n0Q/QWJqNq2Sw1N/cMHBdl7VU2
-	 vhZwL/iygRM6uCIje9WayLAW0RkJqAlHHYGZjAFIIns1+OXQVNvbqOiggtR8Vc+umF
-	 6kPUkkQAKcBM7Q3ec5OuOEJoTW+8v0f9z+aZYQ0aPLrhonHDL2Jn/znCjj8P+lH8bk
-	 SatwaKzNDmSVA==
-Date: Mon, 29 Jul 2024 18:25:06 -0700
-Subject: [PATCH 24/24] mkfs: enable formatting with parent pointers
+	b=WkmSK69bIUSiORH8v2R+fc6ziP4gZnJzW9ON843KVF9c78NhpJf1Q2Nv79yyvv72X
+	 UXCdiB1F6obDuPgrvcWnT2V5Jy20pb+xd91Gehq+0q2bPzocNRZibTJaG+QOMlE5jW
+	 zxv/2I+JluYdQynU9rgoJJrCjPGiJg4xjEX4GzJ2uq8qWzMJkjfk3t0hjHC8fvSL0P
+	 Cnyx7u2ezjtKpe06+uV9tF2avfW6GZD3SAq8ys9LSO6+ONaWnT5VMHvVfrqE+KqC1F
+	 yoTKssNxREd+P96QAxdtQ4QcNSlKrM5QW3T0F/cRsEMvaH2kExP73ka4fR/6ErsevC
+	 C4/64MRdRBl2g==
+Date: Mon, 29 Jul 2024 18:25:22 -0700
+Subject: [PATCH 1/2] xfs: create a blob array data structure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>,
- Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
  catherine.hoang@oracle.com, allison.henderson@oracle.com
-Message-ID: <172229850832.1350924.11912000530541229395.stgit@frogsfrogsfrogs>
-In-Reply-To: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
-References: <172229850491.1350924.499207407445096350.stgit@frogsfrogsfrogs>
+Message-ID: <172229851153.1352400.10523994962893668509.stgit@frogsfrogsfrogs>
+In-Reply-To: <172229851139.1352400.10715918413205904955.stgit@frogsfrogsfrogs>
+References: <172229851139.1352400.10715918413205904955.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,202 +45,259 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Enable parent pointer support in mkfs via the '-n parent' parameter.
+Create a simple 'blob array' data structure for storage of arbitrarily
+sized metadata objects that will be used to reconstruct metadata.  For
+the intended usage (temporarily storing extended attribute names and
+values) we only have to support storing objects and retrieving them.
+Use the xfile abstraction to store the attribute information in memory
+that can be swapped out.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: move the no-V4 filesystem check to join the rest]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- mkfs/lts_4.19.conf |    3 +++
- mkfs/lts_5.10.conf |    3 +++
- mkfs/lts_5.15.conf |    3 +++
- mkfs/lts_5.4.conf  |    3 +++
- mkfs/lts_6.1.conf  |    3 +++
- mkfs/lts_6.6.conf  |    3 +++
- mkfs/xfs_mkfs.c    |   45 ++++++++++++++++++++++++++++++++++++++++++---
- 7 files changed, 60 insertions(+), 3 deletions(-)
+ libxfs/Makefile |    2 +
+ libxfs/xfblob.c |  147 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfblob.h |   24 +++++++++
+ libxfs/xfile.c  |   11 ++++
+ libxfs/xfile.h  |    1 
+ 5 files changed, 185 insertions(+)
+ create mode 100644 libxfs/xfblob.c
+ create mode 100644 libxfs/xfblob.h
 
 
-diff --git a/mkfs/lts_4.19.conf b/mkfs/lts_4.19.conf
-index 92e8eba6b..9fa1f9378 100644
---- a/mkfs/lts_4.19.conf
-+++ b/mkfs/lts_4.19.conf
-@@ -13,3 +13,6 @@ rmapbt=0
- sparse=1
- nrext64=0
- exchange=0
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 9fb53d9cc..4e8f9a135 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -28,6 +28,7 @@ HFILES = \
+ 	linux-err.h \
+ 	topology.h \
+ 	buf_mem.h \
++	xfblob.h \
+ 	xfile.h \
+ 	xfs_ag_resv.h \
+ 	xfs_alloc.h \
+@@ -73,6 +74,7 @@ CFILES = buf_mem.c \
+ 	topology.c \
+ 	trans.c \
+ 	util.c \
++	xfblob.c \
+ 	xfile.c \
+ 	xfs_ag.c \
+ 	xfs_ag_resv.c \
+diff --git a/libxfs/xfblob.c b/libxfs/xfblob.c
+new file mode 100644
+index 000000000..7d8caaa4c
+--- /dev/null
++++ b/libxfs/xfblob.c
+@@ -0,0 +1,147 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "libxfs_priv.h"
++#include "libxfs.h"
++#include "libxfs/xfile.h"
++#include "libxfs/xfblob.h"
 +
-+[naming]
-+parent=0
-diff --git a/mkfs/lts_5.10.conf b/mkfs/lts_5.10.conf
-index 34e7662cd..d64bcdf8c 100644
---- a/mkfs/lts_5.10.conf
-+++ b/mkfs/lts_5.10.conf
-@@ -13,3 +13,6 @@ rmapbt=0
- sparse=1
- nrext64=0
- exchange=0
++/*
++ * XFS Blob Storage
++ * ================
++ * Stores and retrieves blobs using an xfile.  Objects are appended to the file
++ * and the offset is returned as a magic cookie for retrieval.
++ */
 +
-+[naming]
-+parent=0
-diff --git a/mkfs/lts_5.15.conf b/mkfs/lts_5.15.conf
-index a36a5c2b7..775fd9ab9 100644
---- a/mkfs/lts_5.15.conf
-+++ b/mkfs/lts_5.15.conf
-@@ -13,3 +13,6 @@ rmapbt=0
- sparse=1
- nrext64=0
- exchange=0
++#define XB_KEY_MAGIC	0xABAADDAD
++struct xb_key {
++	uint32_t		xb_magic;  /* XB_KEY_MAGIC */
++	uint32_t		xb_size;   /* size of the blob, in bytes */
++	loff_t			xb_offset; /* byte offset of this key */
++	/* blob comes after here */
++} __packed;
 +
-+[naming]
-+parent=0
-diff --git a/mkfs/lts_5.4.conf b/mkfs/lts_5.4.conf
-index 4204d5b8f..6f43a6c6d 100644
---- a/mkfs/lts_5.4.conf
-+++ b/mkfs/lts_5.4.conf
-@@ -13,3 +13,6 @@ rmapbt=0
- sparse=1
- nrext64=0
- exchange=0
++/* Initialize a blob storage object. */
++int
++xfblob_create(
++	const char		*description,
++	struct xfblob		**blobp)
++{
++	struct xfblob		*blob;
++	struct xfile		*xfile;
++	int			error;
 +
-+[naming]
-+parent=0
-diff --git a/mkfs/lts_6.1.conf b/mkfs/lts_6.1.conf
-index 9a90def8f..a78a4f9e3 100644
---- a/mkfs/lts_6.1.conf
-+++ b/mkfs/lts_6.1.conf
-@@ -13,3 +13,6 @@ rmapbt=0
- sparse=1
- nrext64=0
- exchange=0
++	error = xfile_create(description, 0, &xfile);
++	if (error)
++		return error;
 +
-+[naming]
-+parent=0
-diff --git a/mkfs/lts_6.6.conf b/mkfs/lts_6.6.conf
-index 3f7fb6519..91a25bd81 100644
---- a/mkfs/lts_6.6.conf
-+++ b/mkfs/lts_6.6.conf
-@@ -13,3 +13,6 @@ rmapbt=1
- sparse=1
- nrext64=1
- exchange=0
-+
-+[naming]
-+parent=0
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 991ecbdd0..394a35771 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -114,6 +114,7 @@ enum {
- 	N_SIZE = 0,
- 	N_VERSION,
- 	N_FTYPE,
-+	N_PARENT,
- 	N_MAX_OPTS,
- };
- 
-@@ -656,6 +657,7 @@ static struct opt_params nopts = {
- 		[N_SIZE] = "size",
- 		[N_VERSION] = "version",
- 		[N_FTYPE] = "ftype",
-+		[N_PARENT] = "parent",
- 		[N_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -679,6 +681,14 @@ static struct opt_params nopts = {
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
-+		{ .index = N_PARENT,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
-+
-+
- 	},
- };
- 
-@@ -1040,7 +1050,7 @@ usage( void )
- 			    sunit=value|su=num,sectsize=num,lazy-count=0|1,\n\
- 			    concurrency=num]\n\
- /* label */		[-L label (maximum 12 characters)]\n\
--/* naming */		[-n size=num,version=2|ci,ftype=0|1]\n\
-+/* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
- /* no-op info only */	[-N]\n\
- /* prototype file */	[-p fname]\n\
- /* quiet */		[-q]\n\
-@@ -1878,6 +1888,9 @@ naming_opts_parser(
- 	case N_FTYPE:
- 		cli->sb_feat.dirftype = getnum(value, opts, subopt);
- 		break;
-+	case N_PARENT:
-+		cli->sb_feat.parent_pointers = getnum(value, &nopts, N_PARENT);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2385,6 +2398,14 @@ _("exchange-range not supported without CRC support\n"));
- 			usage();
- 		}
- 		cli->sb_feat.exchrange = false;
-+
-+		if (cli->sb_feat.parent_pointers &&
-+		    cli_opt_set(&nopts, N_PARENT)) {
-+			fprintf(stderr,
-+_("parent pointers not supported without CRC support\n"));
-+			usage();
-+		}
-+		cli->sb_feat.parent_pointers = false;
- 	}
- 
- 	if (!cli->sb_feat.finobt) {
-@@ -2419,6 +2440,17 @@ _("cowextsize not supported without reflink support\n"));
- 		usage();
- 	}
- 
-+	/*
-+	 * Turn on exchange-range if parent pointers are enabled and the caller
-+	 * did not provide an explicit exchange-range parameter so that users
-+	 * can take advantage of online repair.  It's not required for correct
-+	 * operation, but it costs us nothing to enable it.
-+	 */
-+	if (cli->sb_feat.parent_pointers && !cli->sb_feat.exchrange &&
-+	    !cli_opt_set(&iopts, I_EXCHANGE)) {
-+		cli->sb_feat.exchrange = true;
++	blob = malloc(sizeof(struct xfblob));
++	if (!blob) {
++		error = -ENOMEM;
++		goto out_xfile;
 +	}
 +
- 	/*
- 	 * Copy features across to config structure now.
- 	 */
-@@ -3458,8 +3490,6 @@ sb_set_features(
- 		sbp->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
- 	if (fp->projid32bit)
- 		sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
--	if (fp->parent_pointers)
--		sbp->sb_features2 |= XFS_SB_VERSION2_PARENTBIT;
- 	if (fp->crcs_enabled)
- 		sbp->sb_features2 |= XFS_SB_VERSION2_CRCBIT;
- 	if (fp->attr_version == 2)
-@@ -3520,6 +3550,15 @@ sb_set_features(
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NREXT64;
- 	if (fp->exchrange)
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_EXCHRANGE;
-+	if (fp->parent_pointers) {
-+		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_PARENT;
-+		/*
-+		 * Set ATTRBIT even if mkfs doesn't write out a single parent
-+		 * pointer so that the kernel doesn't have to do that for us
-+		 * with a synchronous write to the primary super at runtime.
-+		 */
-+		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
++	blob->xfile = xfile;
++	blob->last_offset = PAGE_SIZE;
++
++	*blobp = blob;
++	return 0;
++
++out_xfile:
++	xfile_destroy(xfile);
++	return error;
++}
++
++/* Destroy a blob storage object. */
++void
++xfblob_destroy(
++	struct xfblob	*blob)
++{
++	xfile_destroy(blob->xfile);
++	kfree(blob);
++}
++
++/* Retrieve a blob. */
++int
++xfblob_load(
++	struct xfblob	*blob,
++	xfblob_cookie	cookie,
++	void		*ptr,
++	uint32_t	size)
++{
++	struct xb_key	key;
++	int		error;
++
++	error = xfile_load(blob->xfile, &key, sizeof(key), cookie);
++	if (error)
++		return error;
++
++	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
++		ASSERT(0);
++		return -ENODATA;
 +	}
++	if (size < key.xb_size) {
++		ASSERT(0);
++		return -EFBIG;
++	}
++
++	return xfile_load(blob->xfile, ptr, key.xb_size,
++			cookie + sizeof(key));
++}
++
++/* Store a blob. */
++int
++xfblob_store(
++	struct xfblob	*blob,
++	xfblob_cookie	*cookie,
++	const void	*ptr,
++	uint32_t	size)
++{
++	struct xb_key	key = {
++		.xb_offset = blob->last_offset,
++		.xb_magic = XB_KEY_MAGIC,
++		.xb_size = size,
++	};
++	loff_t		pos = blob->last_offset;
++	int		error;
++
++	error = xfile_store(blob->xfile, &key, sizeof(key), pos);
++	if (error)
++		return error;
++
++	pos += sizeof(key);
++	error = xfile_store(blob->xfile, ptr, size, pos);
++	if (error)
++		goto out_err;
++
++	*cookie = blob->last_offset;
++	blob->last_offset += sizeof(key) + size;
++	return 0;
++out_err:
++	xfile_discard(blob->xfile, blob->last_offset, sizeof(key));
++	return error;
++}
++
++/* Free a blob. */
++int
++xfblob_free(
++	struct xfblob	*blob,
++	xfblob_cookie	cookie)
++{
++	struct xb_key	key;
++	int		error;
++
++	error = xfile_load(blob->xfile, &key, sizeof(key), cookie);
++	if (error)
++		return error;
++
++	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
++		ASSERT(0);
++		return -ENODATA;
++	}
++
++	xfile_discard(blob->xfile, cookie, sizeof(key) + key.xb_size);
++	return 0;
++}
+diff --git a/libxfs/xfblob.h b/libxfs/xfblob.h
+new file mode 100644
+index 000000000..28bf4ab28
+--- /dev/null
++++ b/libxfs/xfblob.h
+@@ -0,0 +1,24 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __XFS_SCRUB_XFBLOB_H__
++#define __XFS_SCRUB_XFBLOB_H__
++
++struct xfblob {
++	struct xfile	*xfile;
++	loff_t		last_offset;
++};
++
++typedef loff_t		xfblob_cookie;
++
++int xfblob_create(const char *descr, struct xfblob **blobp);
++void xfblob_destroy(struct xfblob *blob);
++int xfblob_load(struct xfblob *blob, xfblob_cookie cookie, void *ptr,
++		uint32_t size);
++int xfblob_store(struct xfblob *blob, xfblob_cookie *cookie, const void *ptr,
++		uint32_t size);
++int xfblob_free(struct xfblob *blob, xfblob_cookie cookie);
++
++#endif /* __XFS_SCRUB_XFBLOB_H__ */
+diff --git a/libxfs/xfile.c b/libxfs/xfile.c
+index 6e0fa809a..b4908b49b 100644
+--- a/libxfs/xfile.c
++++ b/libxfs/xfile.c
+@@ -391,3 +391,14 @@ xfile_bytes(
+ 
+ 	return (unsigned long long)statbuf.st_blocks << 9;
  }
++
++/* Discard pages backing a range of the xfile. */
++void
++xfile_discard(
++	struct xfile		*xf,
++	loff_t			pos,
++	unsigned long long	count)
++{
++	fallocate(xf->fcb->fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
++			pos, count);
++}
+diff --git a/libxfs/xfile.h b/libxfs/xfile.h
+index 180a42bbb..7ee8b90cd 100644
+--- a/libxfs/xfile.h
++++ b/libxfs/xfile.h
+@@ -30,5 +30,6 @@ ssize_t xfile_load(struct xfile *xf, void *buf, size_t count, loff_t pos);
+ ssize_t xfile_store(struct xfile *xf, const void *buf, size_t count, loff_t pos);
  
- /*
+ unsigned long long xfile_bytes(struct xfile *xf);
++void xfile_discard(struct xfile *xf, loff_t pos, unsigned long long count);
+ 
+ #endif /* __LIBXFS_XFILE_H__ */
 
