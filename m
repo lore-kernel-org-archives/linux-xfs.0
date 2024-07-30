@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F181B10E3
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:26:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44CB81361
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:26:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299184; cv=none; b=u8Dzsp8rvZAsQRB4xkvlrQK0kWp0Y3ax0o6uCPIws0S7crUpNb9u4uOxHMUDhxgBaS8SwOaKLVsjn+tOVcYdxAnCySWqvKPGmqTsbcob94jhES437+XOz566oSDNCpt4knou5hkED1v5dqJGz4/vTgPh0C0zvMiKXoOli4B/M7E=
+	t=1722299199; cv=none; b=L51ZLHb4er2mIQYpcO6GH4D6yb6MlHRreegFRqc4sV4uE9OAZBp8CGCR1TcA8etfuYQJslKTBZulg2ArQG4Luda1d5l/2zcqLBq0OGoBpmAdJG/qrtpMw6xJMTEmawc/vCLaUTD4E8PS5BJ7H5pbPhNpOkb89x+hBazZifg7DWs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299184; c=relaxed/simple;
-	bh=zqqE0pDSc94SCcVKaDoqqAJBp1TB/3Fo4Cvx89ltN8s=;
+	s=arc-20240116; t=1722299199; c=relaxed/simple;
+	bh=k0ZktlBYfMQULT3Gdav2tNpux228pBkWXHtQlzP7zVo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EgWa71re65vTbmEVgTbCFaTxzbCHUkoTkO1dLv6tjvMITPRTmFs8fRF0CYgSnVjIS1SRmqhhtDrU2DriZzObnRWDenHGLfTU4NZvvbQgbQshyEc1cAniGsqGlArnfWjMoBhnYcewBoY7Y/NpuUM9e0YU9rk+j9MVOFCnvce6lFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j4tflIzC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tughfNW33Z35MDF7Gqk9wLJpKvGolirBgx5e9wyxldCGFux3Phfm8n1ncYrKJnm7THI/Qvj/GFLTruKfqmYq+cNTOIGSNZnL1IRD9vOsKqyRTUcPT496xi+I6GJNPfx7PiLUzISSHjP5JItO5njHVGs6+ORNkvRkRk7zkBCiS+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GW8Ck1tO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j4tflIzC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70813C32786;
-	Tue, 30 Jul 2024 00:26:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GW8Ck1tO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 192F9C32786;
+	Tue, 30 Jul 2024 00:26:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299183;
-	bh=zqqE0pDSc94SCcVKaDoqqAJBp1TB/3Fo4Cvx89ltN8s=;
+	s=k20201202; t=1722299199;
+	bh=k0ZktlBYfMQULT3Gdav2tNpux228pBkWXHtQlzP7zVo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=j4tflIzCoiw1fETaE2dfKcLGgiT7Dzv40Sfu+TjJllwjFpDYqp/qXI9iJKtDziEwf
-	 TiktW7UvGTpM/oLhpxoA3L4DfYIfERkdOgeYw5IFTAZb0GgrWAZHV8O8gtYye/3bY2
-	 VT9mir4wqBNu70uQNY1wNGjH6uFNcguNN4MhFJ+p5M8cyxX+0AhhsjWj5KwFS2sSaC
-	 f6FMSulWWj+benExzp0OLWroFkV0qaXe1EXeR9slBPZ43sFy+Xr82B/C6uSrKcnr6z
-	 zDf8BX4DMwsS/D1KH7oAktm1veYYpgq2xWcyh5QQdcA2S8sUx4FAgBw6rP6Zf0QQlw
-	 beihwhXo6W+SA==
-Date: Mon, 29 Jul 2024 17:26:22 -0700
-Subject: [PATCH 010/115] xfs: condense symbolic links after a mapping exchange
- operation
+	b=GW8Ck1tOn6nm5Gswck6TjP5en3ITCccm9d1DyM5KvwtXSKf+ftgLDsKLmLoacLDTL
+	 UpSOAP3ld54RgqxtewSlwCFV8e6u0NiEwHtx0lhNctGGliuC5JxWnAL/XiHZktecc7
+	 x5N16XrTQqL3AfCMZstGoCT4UV6eJeYWSYILsKgcqBg9Z7A3P7MlZmoZdnQvHjkeZb
+	 W2254TE3lJgAUC6jHT3I5WtfLJP+lTwPidVu9e2NFcCdexM8xVAtCU1JgVIxI70xsi
+	 I3vjQZhQa6BVgHcHcnGFjL+3zXa+rjCEcBDkF7ejLQWTufwIVZFj+0lN2bOQkOeHHb
+	 fYwvY4BLZiUcg==
+Date: Mon, 29 Jul 2024 17:26:38 -0700
+Subject: [PATCH 011/115] xfs: make file range exchange support realtime files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229842582.1338752.12848688005174368044.stgit@frogsfrogsfrogs>
+Message-ID: <172229842596.1338752.16136594403263694499.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,174 +46,136 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 33a9be2b7016e79f47c4c1b523a0aa59d41893c0
+Source kernel commit: e62941103faa2eedba6a155316e059a490c743a6
 
-The previous commit added a new file mapping exchange flag that enables
-us to perform post-exchange processing on file2 once we're done
-exchanging the extent mappings.  Now add this ability for symlinks.
-
-This isn't used anywhere right now, but we need to have the basic ondisk
-flags in place so that a future online symlink repair feature can
-salvage the remote target in a temporary link and exchange the data fork
-mappings when ready.  If one file is in extents format and the other is
-inline, we will have to promote both to extents format to perform the
-exchange.  After the exchange, we can try to condense the fixed symlink
-down to inline format if possible.
+Now that bmap items support the realtime device, we can add the
+necessary pieces to the file range exchange code to support exchanging
+mappings.  All we really need to do here is adjust the blockcount
+upwards to the end of the rt extent and remove the inode checks.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_exchmaps.c       |   49 ++++++++++++++++++++++++++++++++++++++++++-
- libxfs/xfs_symlink_remote.c |   47 +++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_symlink_remote.h |    1 +
- 3 files changed, 96 insertions(+), 1 deletion(-)
+ include/xfs_inode.h   |   10 +++++++
+ libxfs/xfs_exchmaps.c |   70 ++++++++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 70 insertions(+), 10 deletions(-)
 
 
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index a351bb0d9..825708383 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -325,6 +325,16 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+ 	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
+ }
+ 
++
++/*
++ * Decide if this file is a realtime file whose data allocation unit is larger
++ * than a single filesystem block.
++ */
++static inline bool xfs_inode_has_bigrtalloc(struct xfs_inode *ip)
++{
++	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
++}
++
+ /* Always set the child's GID to this value, even if the parent is setgid. */
+ #define CRED_FORCE_GID	(1U << 0)
+ struct cred {
 diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
-index 6e758cac1..34ac9d5f2 100644
+index 34ac9d5f2..37e58d088 100644
 --- a/libxfs/xfs_exchmaps.c
 +++ b/libxfs/xfs_exchmaps.c
-@@ -27,6 +27,7 @@
- #include "xfs_attr.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_dir2.h"
-+#include "xfs_symlink_remote.h"
+@@ -149,12 +149,7 @@ xfs_exchmaps_check_forks(
+ 	    ifp2->if_format == XFS_DINODE_FMT_LOCAL)
+ 		return -EINVAL;
  
- struct kmem_cache	*xfs_exchmaps_intent_cache;
- 
-@@ -430,6 +431,49 @@ xfs_exchmaps_dir_to_sf(
- 	return xfs_dir2_block_to_sf(&args, bp, size, &sfh);
- }
- 
-+/* Convert inode2's remote symlink target back to shortform, if possible. */
-+STATIC int
-+xfs_exchmaps_link_to_sf(
-+	struct xfs_trans		*tp,
-+	struct xfs_exchmaps_intent	*xmi)
-+{
-+	struct xfs_inode		*ip = xmi->xmi_ip2;
-+	struct xfs_ifork		*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
-+	char				*buf;
-+	int				error;
-+
-+	if (ifp->if_format == XFS_DINODE_FMT_LOCAL ||
-+	    ip->i_disk_size > xfs_inode_data_fork_size(ip))
-+		return 0;
-+
-+	/* Read the current symlink target into a buffer. */
-+	buf = kmalloc(ip->i_disk_size + 1,
-+			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
-+	if (!buf) {
-+		ASSERT(0);
-+		return -ENOMEM;
-+	}
-+
-+	error = xfs_symlink_remote_read(ip, buf);
-+	if (error)
-+		goto free;
-+
-+	/* Remove the blocks. */
-+	error = xfs_symlink_remote_truncate(tp, ip);
-+	if (error)
-+		goto free;
-+
-+	/* Convert fork to local format and log our changes. */
-+	xfs_idestroy_fork(ifp);
-+	ifp->if_bytes = 0;
-+	ifp->if_format = XFS_DINODE_FMT_LOCAL;
-+	xfs_init_local_fork(ip, XFS_DATA_FORK, buf, ip->i_disk_size);
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
-+free:
-+	kfree(buf);
-+	return error;
-+}
-+
- /* Clear the reflink flag after an exchange. */
- static inline void
- xfs_exchmaps_clear_reflink(
-@@ -455,6 +499,8 @@ xfs_exchmaps_do_postop_work(
- 			error = xfs_exchmaps_attr_to_sf(tp, xmi);
- 		else if (S_ISDIR(VFS_I(xmi->xmi_ip2)->i_mode))
- 			error = xfs_exchmaps_dir_to_sf(tp, xmi);
-+		else if (S_ISLNK(VFS_I(xmi->xmi_ip2)->i_mode))
-+			error = xfs_exchmaps_link_to_sf(tp, xmi);
- 		xmi->xmi_flags &= ~__XFS_EXCHMAPS_INO2_SHORTFORM;
- 		if (error)
- 			return error;
-@@ -919,7 +965,8 @@ xfs_exchmaps_init_intent(
- 			xmi->xmi_flags |= XFS_EXCHMAPS_CLEAR_INO2_REFLINK;
- 	}
- 
--	if (S_ISDIR(VFS_I(xmi->xmi_ip2)->i_mode))
-+	if (S_ISDIR(VFS_I(xmi->xmi_ip2)->i_mode) ||
-+	    S_ISLNK(VFS_I(xmi->xmi_ip2)->i_mode))
- 		xmi->xmi_flags |= __XFS_EXCHMAPS_INO2_SHORTFORM;
- 
- 	return xmi;
-diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
-index 875e03bcb..72f175990 100644
---- a/libxfs/xfs_symlink_remote.c
-+++ b/libxfs/xfs_symlink_remote.c
-@@ -377,3 +377,50 @@ xfs_symlink_write_target(
- 	ASSERT(pathlen == 0);
- 	return 0;
- }
-+
-+/* Remove all the blocks from a symlink and invalidate buffers. */
-+int
-+xfs_symlink_remote_truncate(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_buf		*bp;
-+	int			nmaps = XFS_SYMLINK_MAPS;
-+	int			done = 0;
-+	int			i;
-+	int			error;
-+
-+	/* Read mappings and invalidate buffers. */
-+	error = xfs_bmapi_read(ip, 0, XFS_MAX_FILEOFF, mval, &nmaps, 0);
-+	if (error)
-+		return error;
-+
-+	for (i = 0; i < nmaps; i++) {
-+		if (!xfs_bmap_is_real_extent(&mval[i]))
-+			break;
-+
-+		error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-+				XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
-+				XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0,
-+				&bp);
-+		if (error)
-+			return error;
-+
-+		xfs_trans_binval(tp, bp);
-+	}
-+
-+	/* Unmap the remote blocks. */
-+	error = xfs_bunmapi(tp, ip, 0, XFS_MAX_FILEOFF, 0, nmaps, &done);
-+	if (error)
-+		return error;
-+	if (!done) {
-+		ASSERT(done);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_SYMLINK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	/* We don't support realtime data forks yet. */
+-	if (!XFS_IS_REALTIME_INODE(req->ip1))
+-		return 0;
+-	if (whichfork == XFS_ATTR_FORK)
+-		return 0;
+-	return -EINVAL;
 +	return 0;
-+}
-diff --git a/libxfs/xfs_symlink_remote.h b/libxfs/xfs_symlink_remote.h
-index a63bd38ae..ac3dac8f6 100644
---- a/libxfs/xfs_symlink_remote.h
-+++ b/libxfs/xfs_symlink_remote.h
-@@ -22,5 +22,6 @@ int xfs_symlink_remote_read(struct xfs_inode *ip, char *link);
- int xfs_symlink_write_target(struct xfs_trans *tp, struct xfs_inode *ip,
- 		const char *target_path, int pathlen, xfs_fsblock_t fs_blocks,
- 		uint resblks);
-+int xfs_symlink_remote_truncate(struct xfs_trans *tp, struct xfs_inode *ip);
+ }
  
- #endif /* __XFS_SYMLINK_REMOTE_H */
+ #ifdef CONFIG_XFS_QUOTA
+@@ -195,6 +190,8 @@ xfs_exchmaps_can_skip_mapping(
+ 	struct xfs_exchmaps_intent	*xmi,
+ 	struct xfs_bmbt_irec		*irec)
+ {
++	struct xfs_mount		*mp = xmi->xmi_ip1->i_mount;
++
+ 	/* Do not skip this mapping if the caller did not tell us to. */
+ 	if (!(xmi->xmi_flags & XFS_EXCHMAPS_INO1_WRITTEN))
+ 		return false;
+@@ -206,11 +203,64 @@ xfs_exchmaps_can_skip_mapping(
+ 	/*
+ 	 * The mapping is unwritten or a hole.  It cannot be a delalloc
+ 	 * reservation because we already excluded those.  It cannot be an
+-	 * unwritten mapping with dirty page cache because we flushed the page
+-	 * cache.  We don't support realtime files yet, so we needn't (yet)
+-	 * deal with them.
++	 * unwritten extent with dirty page cache because we flushed the page
++	 * cache.  For files where the allocation unit is 1FSB (files on the
++	 * data dev, rt files if the extent size is 1FSB), we can safely
++	 * skip this mapping.
+ 	 */
+-	return true;
++	if (!xfs_inode_has_bigrtalloc(xmi->xmi_ip1))
++		return true;
++
++	/*
++	 * For a realtime file with a multi-fsb allocation unit, the decision
++	 * is trickier because we can only swap full allocation units.
++	 * Unwritten mappings can appear in the middle of an rtx if the rtx is
++	 * partially written, but they can also appear for preallocations.
++	 *
++	 * If the mapping is a hole, skip it entirely.  Holes should align with
++	 * rtx boundaries.
++	 */
++	if (!xfs_bmap_is_real_extent(irec))
++		return true;
++
++	/*
++	 * All mappings below this point are unwritten.
++	 *
++	 * - If the beginning is not aligned to an rtx, trim the end of the
++	 *   mapping so that it does not cross an rtx boundary, and swap it.
++	 *
++	 * - If both ends are aligned to an rtx, skip the entire mapping.
++	 */
++	if (!isaligned_64(irec->br_startoff, mp->m_sb.sb_rextsize)) {
++		xfs_fileoff_t	new_end;
++
++		new_end = roundup_64(irec->br_startoff, mp->m_sb.sb_rextsize);
++		irec->br_blockcount = min(irec->br_blockcount,
++					  new_end - irec->br_startoff);
++		return false;
++	}
++	if (isaligned_64(irec->br_blockcount, mp->m_sb.sb_rextsize))
++		return true;
++
++	/*
++	 * All mappings below this point are unwritten, start on an rtx
++	 * boundary, and do not end on an rtx boundary.
++	 *
++	 * - If the mapping is longer than one rtx, trim the end of the mapping
++	 *   down to an rtx boundary and skip it.
++	 *
++	 * - The mapping is shorter than one rtx.  Swap it.
++	 */
++	if (irec->br_blockcount > mp->m_sb.sb_rextsize) {
++		xfs_fileoff_t	new_end;
++
++		new_end = rounddown_64(irec->br_startoff + irec->br_blockcount,
++				mp->m_sb.sb_rextsize);
++		irec->br_blockcount = new_end - irec->br_startoff;
++		return true;
++	}
++
++	return false;
+ }
+ 
+ /*
 
