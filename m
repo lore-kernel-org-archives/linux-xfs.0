@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9390B84D34
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 02:42:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 348CF12E1C2
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 02:42:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722307328; cv=none; b=tu8AEVJ6eQEzizGcJbW3Rrex55RHrFrDQum5lK3FowVkDff5O13JiT626FmQiE3bFnu55VLK16dV/7TCfKQYYZ4drze8OWCVmoPwH6SfbkFvddDbpl+dSzY2PLKvaExe4vmoklyATXelUExEXLdSI87oZE6YEjqYx1174P2V0hk=
+	t=1722307344; cv=none; b=QgTgqiZDcsX1CW1sQ7LLaQBBBTbNy+TA9I9XKgxWpBIBicPOpktCuYh1/6EMQG322cdmdMLoKKnQkPJ5Oj79ZTukiPfpVjWiCOmd+LSEthP1LINRAtU7zEzyOa5Fdo3RexnyESIy4EHFn5/AFSQEAqWW/Ze/pMx5gRxWR7g/Z8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722307328; c=relaxed/simple;
-	bh=0e35jiKGjujQhA3uP9q1N9FwK3Mb5YXH00SbkBvJlns=;
+	s=arc-20240116; t=1722307344; c=relaxed/simple;
+	bh=J8++nZCZAtlXU7XGfEOTqMX+bs2WJK0J3XmlbAMHYAE=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=MQnrX78LVW25F0P+weztaMGfyrQJkclzvCx15BIRJnxxf9oJBnS7Q3/YrMRrbFuo8zUKDfoUifkfPzo6HAnu24MBbfHCie0aH4AtE6yk1un2ckFO7bX0aNtG0LWeke5jBqYTrdnLyGumLUvAF2j2ERNYvKKcLA3yddzb/tejm/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C+L+780h; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=A7oWxBWZ2ZWLnQtfQagsS8CY4TFaIbmFyk/tEoYxlVPbSSIJLnvNR/b2XOH2QtTVIv3HjESgb4+UBTcvNO/F14z6M9XtGOdpz1ji6zeDPrseOKkLhuLbSGFDSy7eLeMR0sUEf9uOiDIsuhRQvLXgeC35u+eOTs6Ti5ec8MEJoLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TPmNlVoL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C+L+780h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2817DC32786;
-	Tue, 30 Jul 2024 02:42:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TPmNlVoL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC80BC32786;
+	Tue, 30 Jul 2024 02:42:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722307328;
-	bh=0e35jiKGjujQhA3uP9q1N9FwK3Mb5YXH00SbkBvJlns=;
+	s=k20201202; t=1722307343;
+	bh=J8++nZCZAtlXU7XGfEOTqMX+bs2WJK0J3XmlbAMHYAE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=C+L+780hAhtz4ezN74hHlRjF1zd4RwHCSXEOb+hQlusnj/E+w1pJmxL0E+r+Fq0EN
-	 yvmYoKyFGD6CtVyfrLogCytBtEaI2xurxgrhqQQomaMcU+QYwF/6T4IldTP++47Nbm
-	 uwSvnlTR6N1OsIFhHOn5HAVePsOpnQwR+EWtmTnt9VZUEmMFPmRjmnRMt8GOfzli4v
-	 mJA5yxiKyzPV+VYvWqjUQZ1chozwrjBKjX2JhZnFweqaTr/9Xb805kzALsS1pwBTJD
-	 8/KwDmyJTiylKlBf9ial2ijHAOCcWoGm+Gd6JUdjrCwWOXzTL5fEw0G/vCncUL8B0k
-	 a2DuNbQfYZ4ow==
-Date: Mon, 29 Jul 2024 19:42:07 -0700
-Subject: [GIT PULL 07/23] xfs_scrub: improve warnings about difficult repairs
+	b=TPmNlVoLu0kNtlIMyKzpa7ZDxpvTwDk9EB+EBnwM15v48GnWR5jjHkU324YhRBoUz
+	 adRfRRYFdOhgYFYvcGB0lVoQYYhJ1vJrtaW7qHc1MhWdyBD399nVhoKQoHxxVXhVJw
+	 fkJwcYI91XpiK6peoZ8fJBVnLKlsQy2khS8azD+f4gJSMofzesUuBbBENJDcqNljBa
+	 PJL85YVLczA0UKAw1pYR3+pIYoRdwj9QULH0S0ZP7LWWJEdAeXiz0hXmwiYBpJHcnM
+	 KYPRQQBqaDhaNYnLaN0rG6/wmp+jI6PCwnlmx24Axa3gQM8q4KQh5d1yZp8d+WuQ/D
+	 sehTAURSD4SLA==
+Date: Mon, 29 Jul 2024 19:42:23 -0700
+Subject: [GIT PULL 08/23] xfs_scrub: track data dependencies for repairs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172230458454.1455085.8671992039573793867.stg-ugh@frogsfrogsfrogs>
+Message-ID: <172230458555.1455085.3083483586761912777.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,56 +51,71 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 4b959abc5f353123775973cd98c94d819cc9de79:
-
-xfs_scrub: actually try to fix summary counters ahead of repairs (2024-07-29 17:01:06 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-better-repair-warnings-6.10_2024-07-29
-
-for you to fetch changes up to bf15d7766e3dd63eda56f6b2f7976e529cd07575:
+The following changes since commit bf15d7766e3dd63eda56f6b2f7976e529cd07575:
 
 xfs_scrub: enable users to bump information messages to warnings (2024-07-29 17:01:07 -0700)
 
-----------------------------------------------------------------
-xfs_scrub: improve warnings about difficult repairs [v30.9 07/28]
+are available in the Git repository at:
 
-While I was poking through the QA results for xfs_scrub, I noticed that
-it doesn't warn the user when the primary and secondary realtime
-metadata are so out of whack that the chances of a successful repair are
-not so high.  I decided that it was worth refactoring the scrub code a
-bit so that we could warn the user about these types of things, and
-ended up refactoring unnecessary helpers out of existence and fixing
-other reporting gaps.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-repair-data-deps-6.10_2024-07-29
+
+for you to fetch changes up to 81bfd0ad04a58892e2c153a22c361e7ff959f3fd:
+
+xfs_scrub: remove unused action_list fields (2024-07-29 17:01:07 -0700)
+
+----------------------------------------------------------------
+xfs_scrub: track data dependencies for repairs [v30.9 08/28]
+
+Certain kinds of XFS metadata depend on the correctness of lower level
+metadata.  For example, directory indexes depends on the directory data
+fork, which in turn depend on the directory inode to be correct.  The
+current scrub code does not strictly preserve these dependencies if it
+has to defer a repair until phase 4, because phase 4 prioritizes repairs
+by type (corruption, then cross referencing, and then preening) and
+loses the ordering of in the previous phases.  This leads to absurd
+things like trying to repair a directory before repairing its corrupted
+fork, which is absurd.
+
+To solve this problem, introduce a repair ticket structure to track all
+the repairs pending for a principal object (inode, AG, etc).  This
+reduces memory requirements if an object requires more than one type of
+repair and makes it very easy to track the data dependencies between
+sub-objects of a principal object.  Repair dependencies between object
+types (e.g.  bnobt before inodes) must still be encoded statically into
+phase 4.
+
+A secondary benefit of this new ticket structure is that we can decide
+to attempt a repair of an object A that was flagged for a cross
+referencing error during the scan if a different object B depends on A
+but only B showed definitive signs of corruption.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (8):
-xfs_scrub: fix missing scrub coverage for broken inodes
-xfs_scrub: collapse trivial superblock scrub helpers
-xfs_scrub: get rid of trivial fs metadata scanner helpers
-xfs_scrub: split up the mustfix repairs and difficulty assessment functions
-xfs_scrub: add missing repair types to the mustfix and difficulty assessment
-xfs_scrub: any inconsistency in metadata should trigger difficulty warnings
-xfs_scrub: warn about difficult repairs to rt and quota metadata
-xfs_scrub: enable users to bump information messages to warnings
+Darrick J. Wong (9):
+xfs_scrub: track repair items by principal, not by individual repairs
+xfs_scrub: use repair_item to direct repair activities
+xfs_scrub: remove action lists from phaseX code
+xfs_scrub: remove scrub_metadata_file
+xfs_scrub: boost the repair priority of dependencies of damaged items
+xfs_scrub: clean up repair_item_difficulty a little
+xfs_scrub: check dependencies of a scrub type before repairing
+xfs_scrub: retry incomplete repairs
+xfs_scrub: remove unused action_list fields
 
-man/man8/xfs_scrub.8 | 19 +++++++++++++++++++
-scrub/common.c       |  2 ++
-scrub/phase1.c       |  2 +-
-scrub/phase2.c       | 53 ++++++++++++++++++++++++++++++++--------------------
-scrub/phase3.c       | 21 +++++++++++++++++----
-scrub/phase4.c       |  9 +++++----
-scrub/phase5.c       | 15 +++++++--------
-scrub/repair.c       | 47 +++++++++++++++++++++++++++++++++++-----------
-scrub/repair.h       | 10 +++++++---
-scrub/scrub.c        | 52 +--------------------------------------------------
-scrub/scrub.h        |  7 ++-----
-scrub/xfs_scrub.c    | 45 +++++++++++++++++++++++++++++++++++++++++++-
-scrub/xfs_scrub.h    |  1 +
-13 files changed, 175 insertions(+), 108 deletions(-)
+libfrog/scrub.c       |   1 +
+scrub/phase1.c        |   9 +-
+scrub/phase2.c        |  46 +++--
+scrub/phase3.c        |  77 ++++----
+scrub/phase4.c        |  17 +-
+scrub/phase5.c        |   9 +-
+scrub/phase7.c        |   9 +-
+scrub/repair.c        | 530 ++++++++++++++++++++++++++++++++++----------------
+scrub/repair.h        |  47 +++--
+scrub/scrub.c         | 136 ++++++-------
+scrub/scrub.h         | 108 ++++++++--
+scrub/scrub_private.h |  37 ++++
+12 files changed, 664 insertions(+), 362 deletions(-)
 
