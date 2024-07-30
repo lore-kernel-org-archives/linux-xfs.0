@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8432963D
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:50:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262731373
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:50:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300623; cv=none; b=XJnHKCYeHxqHfLhGNLS49+6kNwUXOXAuW+df/ftrNoK0zjpT7tLeAzpkHqC8lcg4HUB0N9u5D6dzS4KraaX3ECu0V0mFRBe5lx8FCaIIG/MhJTTOenzOpsc6frSU/TUPPQ9QWjC5mDHQi5JX0FFU2Cz0HV5sXVIUSGmiDLQSovo=
+	t=1722300639; cv=none; b=ogg8DW2fQmdHD4kropd9icN8ZOK8i+338LfQUpYWYkv5SWrIMgKCnu28ii8bsugqLX9DXxB8K+LpH0wk0WZivuwkrFMnnMivci8Wxo8NS2elv2G0wd2iVnwpYK8TVOE0MsLOowenIQKqDx2UfbZggsneQMPUL6veS3WLBqWeQuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300623; c=relaxed/simple;
-	bh=9c7EMmuYZ7ZJQ3i61e30K372PXHFeyvKM6jGei/0Pj8=;
+	s=arc-20240116; t=1722300639; c=relaxed/simple;
+	bh=yTrH3zsi6DnqeDzCE7JlQfJ2Ryqi3kvrNEyUiZH6MJk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s60+mJ2jyWFrB2wkXXeOR1pIG96zBS7Om7QSS6KduSJSKmRAMyeFiXzmedmsuXhjAtwDm/oCesESAlKq7hg0cT7JTwajl/yIKOOiLb6yBVEC2f8xqtuL+ZXuM6eyM20aImdM6KmqhwM8bWYfUH+hMVW4Slh9VpacGLq+AnJuA3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EaDix+04; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Bb5L/TGCpFpti9/L2vpnu8FFWkrCxj9M9DbIAW+LdCaMQ6XLb5ec/LJaq6MsqTcxWnKsTAP/tMMZmiOuvUsf9US209m4ebdoXu+83s8vStaBWgbVo6nHMcNCgX9Axh7j+EN8dRFJ9jrLD/PwWiAPEzP3FCFWMo/8tcsBHbgCVTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YJXbSgaj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EaDix+04"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D707C32786;
-	Tue, 30 Jul 2024 00:50:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YJXbSgaj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F19E6C32786;
+	Tue, 30 Jul 2024 00:50:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300623;
-	bh=9c7EMmuYZ7ZJQ3i61e30K372PXHFeyvKM6jGei/0Pj8=;
+	s=k20201202; t=1722300639;
+	bh=yTrH3zsi6DnqeDzCE7JlQfJ2Ryqi3kvrNEyUiZH6MJk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EaDix+04XFyJZrdES/sfSIgLZDSnIevrIaZo50gudhuGEHBBuYejyuLVcZ8FnS2ug
-	 10bQndBmZ/ERn/v9v8vTbOzBLFpUndO6izl4FqkKcQh6EyhQpnA8d9wBtM5+OPJ7ze
-	 lZrGV/WybVsFwT/rIgCO5/5mrChOUfJkPGiJwQ7eBZ1mX6l3BNDxnsMUFOf4hM2fEf
-	 hcs5okNjmkw3qbGkJNhBJvSNT9jEeTm0KZnqFfCRmw6FJ2PUVHzsMMaPl7qWpUSgmy
-	 nUFcWrSqpUyT7K6o/QU936kPbJ8oIzpbre4dANLP88amUTWULm+CNS09O2N20mlM9e
-	 RdlrBoCBNcTKg==
-Date: Mon, 29 Jul 2024 17:50:22 -0700
-Subject: [PATCH 102/115] xfs: use unsigned ints for non-negative quantities in
- xfs_attr_remote.c
+	b=YJXbSgajuARvsHSko/xhHGWhWL8tdPdT4ckUPQlmIL62yCH2FXGS9Sil3vfQ0Xi3Q
+	 pHPhl/FWyzdVa0qguB6aBfusF5K8RBT6WDSkwnYPPcfbWEoTlup4u6q0cMKyvANUDg
+	 u/5x9tt4kOoY4f3BrP2Xauosa5pICVJuELvb8nhPgF7ZD/By1GQ0w0Ma1UwCWW1NdF
+	 lVUqPsRwikR443HcZmeB3tikOTo+BHb6L9UQQoKLoZLIGoFFIhuaWs5i1F8G3WkLak
+	 JfXozOWOHHMsMB+2Z9ywHCPymIM7P1lO5Efc8HsEpyFWF5T8eukj9TI6WW9xjLTTIK
+	 YevaG+zY8hBCQ==
+Date: Mon, 29 Jul 2024 17:50:38 -0700
+Subject: [PATCH 103/115] xfs: turn XFS_ATTR3_RMT_BUF_SPACE into a function
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>, Christoph Hellwig <hch@lst.de>,
  linux-xfs@vger.kernel.org
-Message-ID: <172229843891.1338752.4693656738170403532.stgit@frogsfrogsfrogs>
+Message-ID: <172229843903.1338752.16739798694181425064.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,214 +47,133 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: a86f8671d03e6eb31abaefdf6928b92df0a2368c
+Source kernel commit: a5714b67cad586f44777ad834e577037ce6b64fd
 
-In the next few patches we're going to refactor the attr remote code so
-that we can support headerless remote xattr values for storing merkle
-tree blocks.  For now, let's change the code to use unsigned int to
-describe quantities of bytes and blocks that cannot be negative.
+Turn this into a properly typechecked function, and actually use the
+correct blocksize for extended attributes.  The function cannot be
+static inline because xfsprogs userspace uses it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_attr_remote.c |   61 +++++++++++++++++++++++-----------------------
- libxfs/xfs_attr_remote.h |    2 +-
- 2 files changed, 31 insertions(+), 32 deletions(-)
+ db/attr.c                |    2 +-
+ db/metadump.c            |    8 ++++----
+ libxfs/xfs_attr_remote.c |   19 ++++++++++++++++---
+ libxfs/xfs_da_format.h   |    4 +---
+ 4 files changed, 22 insertions(+), 11 deletions(-)
 
 
+diff --git a/db/attr.c b/db/attr.c
+index ba722e146..de68d6276 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -214,7 +214,7 @@ attr3_remote_data_count(
+ 
+ 	if (hdr->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
+ 		return 0;
+-	buf_space = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++	buf_space = xfs_attr3_rmt_buf_space(mp);
+ 	if (be32_to_cpu(hdr->rm_bytes) > buf_space)
+ 		return buf_space;
+ 	return be32_to_cpu(hdr->rm_bytes);
+diff --git a/db/metadump.c b/db/metadump.c
+index a656ef574..9457e02e8 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1369,7 +1369,7 @@ add_remote_vals(
+ 		attr_data.remote_vals[attr_data.remote_val_count] = blockidx;
+ 		attr_data.remote_val_count++;
+ 		blockidx++;
+-		length -= XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++		length -= xfs_attr3_rmt_buf_space(mp);
+ 	}
+ 
+ 	if (attr_data.remote_val_count >= MAX_REMOTE_VALS) {
+@@ -1405,8 +1405,8 @@ process_attr_block(
+ 			    attr_data.remote_vals[i] == offset)
+ 				/* Macros to handle both attr and attr3 */
+ 				memset(block +
+-					(bs - XFS_ATTR3_RMT_BUF_SPACE(mp, bs)),
+-				      'v', XFS_ATTR3_RMT_BUF_SPACE(mp, bs));
++					(bs - xfs_attr3_rmt_buf_space(mp)),
++				      'v', xfs_attr3_rmt_buf_space(mp));
+ 		}
+ 		return;
+ 	}
+@@ -1418,7 +1418,7 @@ process_attr_block(
+ 	if (nentries == 0 ||
+ 	    nentries * sizeof(xfs_attr_leaf_entry_t) +
+ 			xfs_attr3_leaf_hdr_size(leaf) >
+-				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
++				xfs_attr3_rmt_buf_space(mp)) {
+ 		if (metadump.show_warnings)
+ 			print_warning("invalid attr count in inode %llu",
+ 					(long long)metadump.cur_ino);
 diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index 282cf2cb9..34e74fd57 100644
+index 34e74fd57..58078465b 100644
 --- a/libxfs/xfs_attr_remote.c
 +++ b/libxfs/xfs_attr_remote.c
-@@ -46,13 +46,13 @@
+@@ -42,6 +42,19 @@
+  * the logging system and therefore never have a log item.
+  */
+ 
++/* How many bytes can be stored in a remote value buffer? */
++inline unsigned int
++xfs_attr3_rmt_buf_space(
++	struct xfs_mount	*mp)
++{
++	unsigned int		blocksize = mp->m_attr_geo->blksize;
++
++	if (xfs_has_crc(mp))
++		return blocksize - sizeof(struct xfs_attr3_rmt_hdr);
++
++	return blocksize;
++}
++
+ /*
   * Each contiguous block has a header, so it is not just a simple attribute
   * length to FSB conversion.
-  */
--int
-+unsigned int
- xfs_attr3_rmt_blocks(
--	struct xfs_mount *mp,
--	int		attrlen)
-+	struct xfs_mount	*mp,
-+	unsigned int		attrlen)
+@@ -52,7 +65,7 @@ xfs_attr3_rmt_blocks(
+ 	unsigned int		attrlen)
  {
  	if (xfs_has_crc(mp)) {
--		int buflen = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-+		unsigned int buflen = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+-		unsigned int buflen = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++		unsigned int buflen = xfs_attr3_rmt_buf_space(mp);
  		return (attrlen + buflen - 1) / buflen;
  	}
  	return XFS_B_TO_FSB(mp, attrlen);
-@@ -91,7 +91,6 @@ xfs_attr3_rmt_verify(
- 	struct xfs_mount	*mp,
- 	struct xfs_buf		*bp,
- 	void			*ptr,
--	int			fsbsize,
- 	xfs_daddr_t		bno)
- {
- 	struct xfs_attr3_rmt_hdr *rmt = ptr;
-@@ -102,7 +101,7 @@ xfs_attr3_rmt_verify(
- 		return __this_address;
- 	if (be64_to_cpu(rmt->rm_blkno) != bno)
- 		return __this_address;
--	if (be32_to_cpu(rmt->rm_bytes) > fsbsize - sizeof(*rmt))
-+	if (be32_to_cpu(rmt->rm_bytes) > mp->m_attr_geo->blksize - sizeof(*rmt))
- 		return __this_address;
- 	if (be32_to_cpu(rmt->rm_offset) +
- 				be32_to_cpu(rmt->rm_bytes) > XFS_XATTR_SIZE_MAX)
-@@ -121,9 +120,9 @@ __xfs_attr3_rmt_read_verify(
- {
- 	struct xfs_mount *mp = bp->b_mount;
- 	char		*ptr;
--	int		len;
-+	unsigned int	len;
- 	xfs_daddr_t	bno;
--	int		blksize = mp->m_attr_geo->blksize;
-+	unsigned int	blksize = mp->m_attr_geo->blksize;
- 
- 	/* no verification of non-crc buffers */
- 	if (!xfs_has_crc(mp))
-@@ -140,7 +139,7 @@ __xfs_attr3_rmt_read_verify(
- 			*failaddr = __this_address;
- 			return -EFSBADCRC;
- 		}
--		*failaddr = xfs_attr3_rmt_verify(mp, bp, ptr, blksize, bno);
-+		*failaddr = xfs_attr3_rmt_verify(mp, bp, ptr, bno);
- 		if (*failaddr)
- 			return -EFSCORRUPTED;
- 		len -= blksize;
-@@ -185,7 +184,7 @@ xfs_attr3_rmt_write_verify(
- {
- 	struct xfs_mount *mp = bp->b_mount;
- 	xfs_failaddr_t	fa;
--	int		blksize = mp->m_attr_geo->blksize;
-+	unsigned int	blksize = mp->m_attr_geo->blksize;
- 	char		*ptr;
- 	int		len;
- 	xfs_daddr_t	bno;
-@@ -202,7 +201,7 @@ xfs_attr3_rmt_write_verify(
- 	while (len > 0) {
- 		struct xfs_attr3_rmt_hdr *rmt = (struct xfs_attr3_rmt_hdr *)ptr;
- 
--		fa = xfs_attr3_rmt_verify(mp, bp, ptr, blksize, bno);
-+		fa = xfs_attr3_rmt_verify(mp, bp, ptr, bno);
- 		if (fa) {
- 			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
- 			return;
-@@ -280,20 +279,20 @@ xfs_attr_rmtval_copyout(
- 	struct xfs_buf		*bp,
- 	struct xfs_inode	*dp,
- 	xfs_ino_t		owner,
--	int			*offset,
--	int			*valuelen,
-+	unsigned int		*offset,
-+	unsigned int		*valuelen,
- 	uint8_t			**dst)
- {
- 	char			*src = bp->b_addr;
- 	xfs_daddr_t		bno = xfs_buf_daddr(bp);
--	int			len = BBTOB(bp->b_length);
--	int			blksize = mp->m_attr_geo->blksize;
-+	unsigned int		len = BBTOB(bp->b_length);
-+	unsigned int		blksize = mp->m_attr_geo->blksize;
- 
- 	ASSERT(len >= blksize);
+@@ -292,7 +305,7 @@ xfs_attr_rmtval_copyout(
  
  	while (len > 0 && *valuelen > 0) {
--		int hdr_size = 0;
--		int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
-+		unsigned int hdr_size = 0;
-+		unsigned int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
+ 		unsigned int hdr_size = 0;
+-		unsigned int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
++		unsigned int byte_cnt = xfs_attr3_rmt_buf_space(mp);
  
  		byte_cnt = min(*valuelen, byte_cnt);
  
-@@ -329,20 +328,20 @@ xfs_attr_rmtval_copyin(
- 	struct xfs_mount *mp,
- 	struct xfs_buf	*bp,
- 	xfs_ino_t	ino,
--	int		*offset,
--	int		*valuelen,
-+	unsigned int	*offset,
-+	unsigned int	*valuelen,
- 	uint8_t		**src)
- {
- 	char		*dst = bp->b_addr;
- 	xfs_daddr_t	bno = xfs_buf_daddr(bp);
--	int		len = BBTOB(bp->b_length);
--	int		blksize = mp->m_attr_geo->blksize;
-+	unsigned int	len = BBTOB(bp->b_length);
-+	unsigned int	blksize = mp->m_attr_geo->blksize;
- 
- 	ASSERT(len >= blksize);
+@@ -341,7 +354,7 @@ xfs_attr_rmtval_copyin(
  
  	while (len > 0 && *valuelen > 0) {
--		int hdr_size;
--		int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
-+		unsigned int hdr_size;
-+		unsigned int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
+ 		unsigned int hdr_size;
+-		unsigned int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
++		unsigned int byte_cnt = xfs_attr3_rmt_buf_space(mp);
  
  		byte_cnt = min(*valuelen, byte_cnt);
  		hdr_size = xfs_attr3_rmt_hdr_set(mp, dst, ino, *offset,
-@@ -388,12 +387,12 @@ xfs_attr_rmtval_get(
- 	struct xfs_buf		*bp;
- 	xfs_dablk_t		lblkno = args->rmtblkno;
- 	uint8_t			*dst = args->value;
--	int			valuelen;
-+	unsigned int		valuelen;
- 	int			nmap;
- 	int			error;
--	int			blkcnt = args->rmtblkcnt;
-+	unsigned int		blkcnt = args->rmtblkcnt;
- 	int			i;
--	int			offset = 0;
-+	unsigned int		offset = 0;
+diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
+index ebde6eb1d..86de99e2f 100644
+--- a/libxfs/xfs_da_format.h
++++ b/libxfs/xfs_da_format.h
+@@ -880,9 +880,7 @@ struct xfs_attr3_rmt_hdr {
  
- 	trace_xfs_attr_rmtval_get(args);
+ #define XFS_ATTR3_RMT_CRC_OFF	offsetof(struct xfs_attr3_rmt_hdr, rm_crc)
  
-@@ -451,7 +450,7 @@ xfs_attr_rmt_find_hole(
- 	struct xfs_inode	*dp = args->dp;
- 	struct xfs_mount	*mp = dp->i_mount;
- 	int			error;
--	int			blkcnt;
-+	unsigned int		blkcnt;
- 	xfs_fileoff_t		lfileoff = 0;
+-#define XFS_ATTR3_RMT_BUF_SPACE(mp, bufsize)	\
+-	((bufsize) - (xfs_has_crc((mp)) ? \
+-			sizeof(struct xfs_attr3_rmt_hdr) : 0))
++unsigned int xfs_attr3_rmt_buf_space(struct xfs_mount *mp);
  
- 	/*
-@@ -480,11 +479,11 @@ xfs_attr_rmtval_set_value(
- 	struct xfs_bmbt_irec	map;
- 	xfs_dablk_t		lblkno;
- 	uint8_t			*src = args->value;
--	int			blkcnt;
--	int			valuelen;
-+	unsigned int		blkcnt;
-+	unsigned int		valuelen;
- 	int			nmap;
- 	int			error;
--	int			offset = 0;
-+	unsigned int		offset = 0;
- 
- 	/*
- 	 * Roll through the "value", copying the attribute value to the
-@@ -643,7 +642,7 @@ xfs_attr_rmtval_invalidate(
- 	struct xfs_da_args	*args)
- {
- 	xfs_dablk_t		lblkno;
--	int			blkcnt;
-+	unsigned int		blkcnt;
- 	int			error;
- 
- 	/*
-diff --git a/libxfs/xfs_attr_remote.h b/libxfs/xfs_attr_remote.h
-index d097ec6c4..c64b04f91 100644
---- a/libxfs/xfs_attr_remote.h
-+++ b/libxfs/xfs_attr_remote.h
-@@ -6,7 +6,7 @@
- #ifndef __XFS_ATTR_REMOTE_H__
- #define	__XFS_ATTR_REMOTE_H__
- 
--int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
-+unsigned int xfs_attr3_rmt_blocks(struct xfs_mount *mp, unsigned int attrlen);
- 
- int xfs_attr_rmtval_get(struct xfs_da_args *args);
- int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+ /* Number of bytes in a directory block. */
+ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
 
