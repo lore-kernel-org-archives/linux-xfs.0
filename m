@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A546646
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:51:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CFFA646
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:52:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300717; cv=none; b=ovHjpZzrZJ5Pc6hvWIoSlDgpHrtCPO6aWvBEl+VnY6YOCn4ZJPsSR+xwQdblrcjqt1m/57Eu9tq2u34Qjcu3DPo+gzJ0FSh85fr992T3lOzpDlBkvJOz1NFs7tYEPD46lvQg9m1RR9Y1WyW9pU8y13nhUZH4YXKte+86gnbiNcw=
+	t=1722300733; cv=none; b=s29ZYncTxkHpeQN9UgyoNjkRTJ1BLZGGilLY5rWkzV5eERWJ+9O21uGS9RF5vGzB35oWt3zOXqlM0wzG8qr/wCGXjkmJ9o+Aw4tB26hKSgh3j2U7lXKoxve6KgnCDrHOm9DFJKNl6i43bq2qQMvLAIpYlIqzWBzP4+z9BPiaekg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300717; c=relaxed/simple;
-	bh=O+7b27+HrjFX1+2EeFesgf6R2DojOfupQIa3yBZC1tI=;
+	s=arc-20240116; t=1722300733; c=relaxed/simple;
+	bh=ohlMZfvdHJey55ioF1WVvAiATIu6j7EM7niIk6eBSWk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jr8YjJHjDWtKHfPRp4y5FJjHJL2BHiF0sVAgIu26DRAtHHP0/SnzDBCfLwnaAaLWZhjkZqd+/E0+srOja592UmKdyzv1Q2qJQs474aHglsIGujHHUNmFxj4+fP76Xi0OMeMzkDYuzlmT3dF1DsrfdrKYLkgbZzXx02/LTs145Fw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KL2gYcil; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jDxaBObb/UixKN+rI2JIW3KB+QAxXkA8wOZP7eC8sF5uTJJAJvz28QDQB2k7dYF3Aj+5lx4ftYvfE1rej77SUaDy13nB3ATlPmTd0jvNd70E65isnpRIf954nHb1DQp/mbRbpC79gB5Q2uxJvkbHzy/zMk5ggUSLsmXsmXsPL0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DIVp5woe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KL2gYcil"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F630C32786;
-	Tue, 30 Jul 2024 00:51:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DIVp5woe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05C58C32786;
+	Tue, 30 Jul 2024 00:52:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300717;
-	bh=O+7b27+HrjFX1+2EeFesgf6R2DojOfupQIa3yBZC1tI=;
+	s=k20201202; t=1722300733;
+	bh=ohlMZfvdHJey55ioF1WVvAiATIu6j7EM7niIk6eBSWk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=KL2gYcilO1XpFdKw0vrLBpkpAKkZX5j6aDFYKFBCOp3braejYMLpI58FhUkvS4J/t
-	 DfoemNPD2c2ze3D9Am91gChLIiEcMRUxONAudRlCXGnEZ+e9Tfjd8yJUZhtdY+gWzQ
-	 NiEQapEXxWwnCxVp1FtUBb2EW9aqTj+gslor8jhMX2obx23KTnZPCRCzA4lpRbpXv4
-	 GG/NgGtgtWuAsH18T8PxJah0hW6QcOxMoeIjLV8WIpHxHDVlYTMWHT7HNsJyiWoqLl
-	 TFa4XPApj3epuFsW1GPdKX+3NTYa4hrY384Jv0uYvlLjaASE6EAfIBzWf3fduzrmKt
-	 7nekj1IffFndg==
-Date: Mon, 29 Jul 2024 17:51:56 -0700
-Subject: [PATCH 108/115] xfs: Stop using __maybe_unused in xfs_alloc.c
+	b=DIVp5woe7/BY8UWAwE2+CHRyFwdFWUwx85iY0EeRdPqH+zTpT42bhTBINEPpc17RS
+	 D+ANU2ELN9J+dTay4gUCXqnaR/N7M9r96jD3kwq2aihvW4r+ya2J+lqxAkT9crugJw
+	 1AOyA15/qYcoX1sahMsFinXm1jRoeG62yU3WU6TgG+ad4MSRNPHu57qXmUb5d/w2pF
+	 792IAasbD2E+VFipiEH77TAjzfU593S3fhq38k3YhJcaQBmT2a1acF6F9cLVP9+tTv
+	 GEU1ih+dNILlx9tJhZocdWbq2ypnBhWsdQndQEBUz6+k1jJcms4SABVADe3TPRfAET
+	 2rg+p8hnm3ltg==
+Date: Mon, 29 Jul 2024 17:52:12 -0700
+Subject: [PATCH 109/115] xfs: fix xfs_init_attr_trans not handling explicit
+ operation codes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, John Garry <john.g.garry@oracle.com>,
- Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
- linux-xfs@vger.kernel.org
-Message-ID: <172229843967.1338752.9487755586572190314.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <172229843979.1338752.1174570151097838124.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,74 +45,113 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: John Garry <john.g.garry@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: b33874fb7f28326380562f208d948bab785fbd6f
+Source kernel commit: 06c37c719d22339ad09b93735923e9b1a9794871
 
-In both xfs_alloc_cur_finish() and xfs_alloc_ag_vextent_exact(), local
-variable @afg is tagged as __maybe_unused. Otherwise an unused variable
-warning would be generated for when building with W=1 and CONFIG_XFS_DEBUG
-unset. In both cases, the variable is unused as it is only referenced in
-an ASSERT() call, which is compiled out (in this config).
+When we were converting the attr code to use an explicit operation code
+instead of keying off of attr->value being null, we forgot to change the
+code that initializes the transaction reservation.  Split the function
+into two helpers that handle the !remove and remove cases, then fix both
+callsites to handle this correctly.
 
-It is generally a poor programming style to use __maybe_unused for
-variables.
-
-The ASSERT() call is to verify that agbno of the end of the extent is
-within bounds for both functions. @afg is used as an intermediate variable
-to find the AG length.
-
-However xfs_verify_agbext() already exists to verify a valid extent range.
-The arguments for calling xfs_verify_agbext() are already available, so use
-that instead.
-
-An advantage of using xfs_verify_agbext() is that it verifies that both the
-start and the end of the extent are within the bounds of the AG and
-catches overflows.
-
-Suggested-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: John Garry <john.g.garry@oracle.com>
+Fixes: c27411d4c640 ("xfs: make attr removal an explicit operation")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_alloc.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ libxfs/xfs_attr.c |   38 ++++++++++++++++++--------------------
+ libxfs/xfs_attr.h |    3 +--
+ 2 files changed, 19 insertions(+), 22 deletions(-)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index b86f788f4..45feff034 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -1004,13 +1004,12 @@ xfs_alloc_cur_finish(
- 	struct xfs_alloc_arg	*args,
- 	struct xfs_alloc_cur	*acur)
- {
--	struct xfs_agf __maybe_unused *agf = args->agbp->b_addr;
- 	int			error;
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 9d32aa406..9e1cce577 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -328,26 +328,20 @@ xfs_attr_calc_size(
+ 	return nblks;
+ }
  
- 	ASSERT(acur->cnt && acur->bnolt);
- 	ASSERT(acur->bno >= acur->rec_bno);
- 	ASSERT(acur->bno + acur->len <= acur->rec_bno + acur->rec_len);
--	ASSERT(acur->rec_bno + acur->rec_len <= be32_to_cpu(agf->agf_length));
-+	ASSERT(xfs_verify_agbext(args->pag, acur->rec_bno, acur->rec_len));
- 
- 	error = xfs_alloc_fixup_trees(acur->cnt, acur->bnolt, acur->rec_bno,
- 				      acur->rec_len, acur->bno, acur->len, 0);
-@@ -1213,7 +1212,6 @@ STATIC int			/* error */
- xfs_alloc_ag_vextent_exact(
- 	xfs_alloc_arg_t	*args)	/* allocation argument structure */
+-/* Initialize transaction reservation for attr operations */
+-void
+-xfs_init_attr_trans(
+-	struct xfs_da_args	*args,
+-	struct xfs_trans_res	*tres,
+-	unsigned int		*total)
++/* Initialize transaction reservation for an xattr set/replace/upsert */
++inline struct xfs_trans_res
++xfs_attr_set_resv(
++	const struct xfs_da_args	*args)
  {
--	struct xfs_agf __maybe_unused *agf = args->agbp->b_addr;
- 	struct xfs_btree_cur *bno_cur;/* by block-number btree cursor */
- 	struct xfs_btree_cur *cnt_cur;/* by count btree cursor */
- 	int		error;
-@@ -1293,7 +1291,7 @@ xfs_alloc_ag_vextent_exact(
+-	struct xfs_mount	*mp = args->dp->i_mount;
++	struct xfs_mount		*mp = args->dp->i_mount;
++	struct xfs_trans_res		ret = {
++		.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
++			    M_RES(mp)->tr_attrsetrt.tr_logres * args->total,
++		.tr_logcount		= XFS_ATTRSET_LOG_COUNT,
++		.tr_logflags		= XFS_TRANS_PERM_LOG_RES,
++	};
+ 
+-	if (args->value) {
+-		tres->tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
+-				 M_RES(mp)->tr_attrsetrt.tr_logres *
+-				 args->total;
+-		tres->tr_logcount = XFS_ATTRSET_LOG_COUNT;
+-		tres->tr_logflags = XFS_TRANS_PERM_LOG_RES;
+-		*total = args->total;
+-	} else {
+-		*tres = M_RES(mp)->tr_attrrm;
+-		*total = XFS_ATTRRM_SPACE_RES(mp);
+-	}
++	return ret;
+ }
+ 
+ /*
+@@ -1005,7 +999,7 @@ xfs_attr_set(
+ 	struct xfs_trans_res	tres;
+ 	int			error, local;
+ 	int			rmt_blks = 0;
+-	unsigned int		total;
++	unsigned int		total = 0;
+ 
+ 	ASSERT(!args->trans);
+ 
+@@ -1032,10 +1026,15 @@ xfs_attr_set(
+ 
+ 		if (!local)
+ 			rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
++
++		tres = xfs_attr_set_resv(args);
++		total = args->total;
+ 		break;
+ 	case XFS_ATTRUPDATE_REMOVE:
+ 		XFS_STATS_INC(mp, xs_attr_remove);
+ 		rmt_blks = xfs_attr3_max_rmt_blocks(mp);
++		tres = M_RES(mp)->tr_attrrm;
++		total = XFS_ATTRRM_SPACE_RES(mp);
+ 		break;
+ 	}
+ 
+@@ -1043,7 +1042,6 @@ xfs_attr_set(
+ 	 * Root fork attributes can use reserved data blocks for this
+ 	 * operation if necessary
  	 */
- 	cnt_cur = xfs_cntbt_init_cursor(args->mp, args->tp, args->agbp,
- 					args->pag);
--	ASSERT(args->agbno + args->len <= be32_to_cpu(agf->agf_length));
-+	ASSERT(xfs_verify_agbext(args->pag, args->agbno, args->len));
- 	error = xfs_alloc_fixup_trees(cnt_cur, bno_cur, fbno, flen, args->agbno,
- 				      args->len, XFSA_FIXUP_BNO_OK);
- 	if (error) {
+-	xfs_init_attr_trans(args, &tres, &total);
+ 	error = xfs_trans_alloc_inode(dp, &tres, total, 0, rsvd, &args->trans);
+ 	if (error)
+ 		return error;
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index 088cb7b30..0e51d0723 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -565,8 +565,7 @@ bool xfs_attr_check_namespace(unsigned int attr_flags);
+ bool xfs_attr_namecheck(unsigned int attr_flags, const void *name,
+ 		size_t length);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+-void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
+-			 unsigned int *total);
++struct xfs_trans_res xfs_attr_set_resv(const struct xfs_da_args *args);
+ 
+ /*
+  * Check to see if the attr should be upgraded from non-existent or shortform to
 
