@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91EE31854
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 03:23:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6AF1854;
+	Tue, 30 Jul 2024 03:23:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722309787; cv=none; b=T/jtdBYVCAOor4+4m1I9FiXxM5qR66WCZka2GK8V7wv7PzpTcEEqoHqCWdIF90++HIqJNNGAK2XwCK4GfNmBmIR2KNtqw33EDN1sZzdzfecEgjVuXK6WakhcuGATz47BViFqS3D66jiVVfiXMJVMUXLsDYkwJu0N/V2VPr81mP0=
+	t=1722309803; cv=none; b=qbyYEznYuuV0L7z8NWOzW0RXMNxMEhQYsqggJzNvKY+aVZxIyiRWHd/8NtL8wEXpHmXY8Mw4OeIjF/Ajml9BKQDGsYk2vRr1WcL7d6UqvwD3I1RGn4/MtpMrT0h8WZefEAxE2iBAgopyyS7b9GhtlV/IFfTNb20b6s/VyrIdjig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722309787; c=relaxed/simple;
-	bh=6qujKIFqWHAQPMRuIpMlXQ5a1mkxMwlNjgpnpJwU3A0=;
+	s=arc-20240116; t=1722309803; c=relaxed/simple;
+	bh=EiUmXcegWCQ/oxouRvCrEAd1h8usyBAYcgkGMDxzcKA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eFk9x1rS1d+BmCDhBUkz4UrLsGA1iDblZDHlSAHobf1rr7300enNuIxqXuEXLGCOgAnm8Pqz0wUI2yg6MZnZtHTA8PotYqG0siVpsAM6Mm/nRy2r56fCpkvdmsLmQn8SUNoFpdRxXdWfVHdyrldlCN3LdckH7kwcv9I8S/fwPdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L2U+5r4t; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=g3zfEl+41MPRvIJSfIVjzY7KeiUxz9pPt872EEzv8mjQ/Zi8YS7vBbPVezg3wyJJOjs7EcBkLyMFSeJAcSC91SlZS95YwsgviAP55nXpUDlL2PZNs0u5fiE7OxnL8q+qVux7E+kQr62si/bJPK1FkL1lfF2TcC7/GuiNFoi2P+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gs8jcojq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L2U+5r4t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64398C32786;
-	Tue, 30 Jul 2024 03:23:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gs8jcojq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F378C32786;
+	Tue, 30 Jul 2024 03:23:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722309787;
-	bh=6qujKIFqWHAQPMRuIpMlXQ5a1mkxMwlNjgpnpJwU3A0=;
+	s=k20201202; t=1722309803;
+	bh=EiUmXcegWCQ/oxouRvCrEAd1h8usyBAYcgkGMDxzcKA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=L2U+5r4tyWnLVsmkvH0/A3IGLK+ZXbcVsO5raU4vHEtsHp+1RobGXJ6CxRyT/Ee9s
-	 qrKMWFtNw2sRg7+giP6BblVEMRLtTEr6FnSQXEAdLbLUE6jNxHMZpGxv6BDsPwST+S
-	 Uvr2DiVqlfQ8du5S+I0J5H3u0Tf7teDECyaIwyoE5sOX99NCruyUoOlp7Bau8WIkAj
-	 mxY7lPdC+3ghxmoE6/T6SqeG7VNcsMj2A3PI6jkiKSH3oB6T/Rp5vsUjWFF4T4Axwq
-	 wtjS311yPiZJ0f2BRHgSuA2/p6pYu6Ayu8RnuUKvOOOXZz0BV46wi8nPYYbv+HZ99M
-	 nUxJUGVJYZQCQ==
-Date: Mon, 29 Jul 2024 20:23:06 -0700
-Subject: [PATCH 3/3] debian: create a new package for automatic self-healing
+	b=Gs8jcojqg45YcdwiPe3uIv5atEzwQaFe+R7EvcGQhvBZX4xfDoojWb/1xcXZtLJRd
+	 XD5Degx30qL0yU7sn6RvztO8s3FP5usnmDOu1zFHNgBAWwsoHbeuLKSa45JmZAwswv
+	 HtKjnW5FTsomKXcOOisFUrVJuViYYgQ6GNOjPrqJIBVhr9FGQrOVaNrGoicYl3JdI4
+	 9T2F+YVt2DeTp+lNz1ET8ZCfC2Ce1hq1pY3XF9V8rtu+UHIea8LcasL3F5IMcMiKbR
+	 DXBiQc5I9LvyTdMZkeF3+vr6yYYeYST4bqLyrDlstBo8jh0/vNr+7soj8HtR3uJF/1
+	 AU20qNJXMz/vQ==
+Date: Mon, 29 Jul 2024 20:23:22 -0700
+Subject: [PATCH 1/1] xfs: functional testing for filesystem properties
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <172230941388.1544199.4672195967361728491.stgit@frogsfrogsfrogs>
-In-Reply-To: <172230941338.1544199.12238614551925293396.stgit@frogsfrogsfrogs>
-References: <172230941338.1544199.12238614551925293396.stgit@frogsfrogsfrogs>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <172230948310.1545890.8726821368029925154.stgit@frogsfrogsfrogs>
+In-Reply-To: <172230948293.1545890.16907565259543283790.stgit@frogsfrogsfrogs>
+References: <172230948293.1545890.16907565259543283790.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,461 +46,613 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new package for people who explicilty want self-healing turned
-on by default for XFS.  This package is named xfsprogs-self-healing.
-
-Note: This introduces a new "install-selfheal" target to install only
-the files needed for enabling online fsck by default.  Other
-distributions should take note of the new target if they choose to
-create a package for enabling autonomous self healing.
+Make sure that fs property storage and retrieval actually work.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- Makefile           |    8 +++++++-
- copy/Makefile      |    2 ++
- db/Makefile        |    2 ++
- debian/Makefile    |    2 ++
- debian/control     |    8 ++++++++
- debian/rules       |   13 +++++++++----
- doc/Makefile       |    3 +++
- estimate/Makefile  |    2 ++
- fsck/Makefile      |    3 +++
- fsr/Makefile       |    2 ++
- growfs/Makefile    |    2 ++
- include/Makefile   |    3 +++
- io/Makefile        |    2 ++
- libfrog/Makefile   |    2 ++
- libhandle/Makefile |    2 ++
- libxcmd/Makefile   |    2 ++
- libxfs/Makefile    |    3 +++
- libxlog/Makefile   |    2 ++
- logprint/Makefile  |    2 ++
- m4/Makefile        |    2 ++
- man/Makefile       |    2 ++
- mdrestore/Makefile |    2 ++
- mkfs/Makefile      |    2 ++
- po/Makefile        |    3 +++
- quota/Makefile     |    2 ++
- repair/Makefile    |    2 ++
- rtcp/Makefile      |    2 ++
- scrub/Makefile     |   12 ++++++++++--
- spaceman/Makefile  |    2 ++
- 29 files changed, 89 insertions(+), 7 deletions(-)
+ common/config      |    1 
+ common/xfs         |    4 +-
+ tests/xfs/1886     |  135 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1886.out |   53 ++++++++++++++++++++
+ tests/xfs/1887     |  124 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1887.out |   46 ++++++++++++++++++
+ tests/xfs/1888     |   66 +++++++++++++++++++++++++
+ tests/xfs/1888.out |    9 +++
+ tests/xfs/1889     |   67 ++++++++++++++++++++++++++
+ tests/xfs/1889.out |    9 +++
+ 10 files changed, 512 insertions(+), 2 deletions(-)
+ create mode 100755 tests/xfs/1886
+ create mode 100644 tests/xfs/1886.out
+ create mode 100755 tests/xfs/1887
+ create mode 100644 tests/xfs/1887.out
+ create mode 100755 tests/xfs/1888
+ create mode 100644 tests/xfs/1888.out
+ create mode 100755 tests/xfs/1889
+ create mode 100644 tests/xfs/1889.out
 
 
-diff --git a/Makefile b/Makefile
-index 44b6c3501539..4bd792d191be 100644
---- a/Makefile
-+++ b/Makefile
-@@ -116,7 +116,7 @@ configure: configure.ac
- include/builddefs: configure
- 	./configure $$LOCAL_CONFIGURE_OPTIONS
+diff --git a/common/config b/common/config
+index 22740c0af8..07bd2cf315 100644
+--- a/common/config
++++ b/common/config
+@@ -234,6 +234,7 @@ export GZIP_PROG="$(type -P gzip)"
+ export BTRFS_IMAGE_PROG="$(type -P btrfs-image)"
+ export BTRFS_MAP_LOGICAL_PROG=$(type -P btrfs-map-logical)
+ export PARTED_PROG="$(type -P parted)"
++export XFS_PROPERTY_PROG="$(type -P xfs_property)"
  
--install: install-pkg
-+install: install-pkg install-selfheal
- 
- install-pkg: $(addsuffix -install-pkg,$(SUBDIRS))
- 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-@@ -124,6 +124,8 @@ install-pkg: $(addsuffix -install-pkg,$(SUBDIRS))
- 
- install-dev: $(addsuffix -install-dev,$(SUBDIRS))
- 
-+install-selfheal: $(addsuffix -install-selfheal,$(SUBDIRS))
+ # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+ # newer systems have udevadm command but older systems like RHEL5 don't.
+diff --git a/common/xfs b/common/xfs
+index bd40a02ed2..a642646345 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1318,8 +1318,8 @@ _require_xfs_spaceman_command()
+ 	testfile=$TEST_DIR/$$.xfs_spaceman
+ 	touch $testfile
+ 	case $command in
+-	"health")
+-		testio=`$XFS_SPACEMAN_PROG -c "health $param" $TEST_DIR 2>&1`
++	"health"|"listfsprops")
++		testio=`$XFS_SPACEMAN_PROG -c "$command $param" $TEST_DIR 2>&1`
+ 		param_checked=1
+ 		;;
+ 	*)
+diff --git a/tests/xfs/1886 b/tests/xfs/1886
+new file mode 100755
+index 0000000000..eca76f51d6
+--- /dev/null
++++ b/tests/xfs/1886
+@@ -0,0 +1,135 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1886
++#
++# Functional testing for low level filesystem property manipulation by
++# xfs_{spaceman,db}.
++#
++. ./common/preamble
++_begin_fstest auto
 +
- %-install-pkg:
- 	@echo "Installing $@"
- 	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-pkg
-@@ -132,6 +134,10 @@ install-dev: $(addsuffix -install-dev,$(SUBDIRS))
- 	@echo "Installing $@"
- 	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-dev
- 
-+%-install-selfheal:
-+	@echo "Installing $@"
-+	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-selfheal
++. ./common/filter
++. ./common/attr
 +
- distclean: clean
- 	$(Q)rm -f $(LDIRT)
- 
-diff --git a/copy/Makefile b/copy/Makefile
-index 446d38bea576..3013dc2dca27 100644
---- a/copy/Makefile
-+++ b/copy/Makefile
-@@ -25,4 +25,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++_require_test
++_require_user fsgqa
++_require_attrs
++_require_xfs_spaceman_command listfsprops
++_require_xfs_db_command attr_list
 +
- -include .dep
-diff --git a/db/Makefile b/db/Makefile
-index 91e259044beb..839c51f03593 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -91,4 +91,6 @@ install-pkg: default
- 	$(INSTALL) -m 755 xfs_metadump.sh $(PKG_SBIN_DIR)/xfs_metadump
- install-dev:
- 
-+install-selfheal:
++_cleanup()
 +
- -include .dep
-diff --git a/debian/Makefile b/debian/Makefile
-index f6a996e91871..104d7c5d76d9 100644
---- a/debian/Makefile
-+++ b/debian/Makefile
-@@ -36,3 +36,5 @@ ifeq ($(PKG_DISTRIBUTION), debian)
- 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
- 	$(INSTALL) -m 755 $(BOOT_MKFS_BIN) $(PKG_SBIN_DIR)/mkfs.xfs
- endif
++{
++	cd /
++	rm -r -f $tmp.*
++	rm -f $TEST_DIR/$seq.somefile
++	rm -r -f $TEST_DIR/$seq.somedir
++}
 +
-+install-selfheal: default
-diff --git a/debian/control b/debian/control
-index 31773e53a19a..aa7a920a7964 100644
---- a/debian/control
-+++ b/debian/control
-@@ -27,6 +27,14 @@ Description: Utilities for managing the XFS filesystem
-  Refer to the documentation at https://xfs.wiki.kernel.org/
-  for complete details.
- 
-+Package: xfsprogs-self-healing
-+Depends: ${shlibs:Depends}, ${misc:Depends}, xfsprogs, systemd, udev
-+Architecture: linux-any
-+Description: Automatic self healing for the XFS filesystem
-+ A set of background services for the XFS filesystem to make it
-+ find and fix corruptions automatically.  These services are activated
-+ automatically upon installation of this package.
++filter_inum()
++{
++	sed -e 's/inode [0-9]*/inode XXX/g'
++}
 +
- Package: xfslibs-dev
- Section: libdevel
- Depends: libc6-dev | libc-dev, uuid-dev, xfsprogs (>= 3.0.0), ${misc:Depends}
-diff --git a/debian/rules b/debian/rules
-index e4eb2499e768..c49aefd10e64 100755
---- a/debian/rules
-+++ b/debian/rules
-@@ -14,6 +14,7 @@ endif
- package = xfsprogs
- develop = xfslibs-dev
- bootpkg = xfsprogs-udeb
-+healpkg = xfsprogs-self-healing
- 
- DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
- DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-@@ -26,9 +27,11 @@ udebpkg = $(bootpkg)_$(version)_$(target).udeb
- dirme  = debian/$(package)
- dirdev = debian/$(develop)
- dirdi  = debian/$(bootpkg)
--pkgme  = DIST_ROOT=`pwd`/$(dirme);  export DIST_ROOT;
--pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
--pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
-+dirheal= debian/$(healpkg)
-+pkgme  = DIST_ROOT=`pwd`/$(dirme);   export DIST_ROOT;
-+pkgdev = DIST_ROOT=`pwd`/$(dirdev);  export DIST_ROOT;
-+pkgdi  = DIST_ROOT=`pwd`/$(dirdi);   export DIST_ROOT;
-+pkgheal= DIST_ROOT=`pwd`/$(dirheal); export DIST_ROOT;
- stdenv = @GZIP=-q; export GZIP;
- 
- configure_options = \
-@@ -103,6 +106,7 @@ binary-arch: checkroot built
- 	$(pkgme)  $(MAKE) -C . install-pkg
- 	$(pkgdev) $(MAKE) -C . install-dev
- 	$(pkgdi)  $(MAKE) -C debian install-d-i
-+	$(pkgheal) $(MAKE) -C . install-selfheal
- 	$(pkgme)  $(MAKE) dist
- 	install -D -m 0755 debian/local/initramfs.hook debian/xfsprogs/usr/share/initramfs-tools/hooks/xfs
- 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
-@@ -114,7 +118,8 @@ binary-arch: checkroot built
- 	dh_compress
- 	dh_fixperms
- 	dh_makeshlibs
--	dh_installsystemd -p xfsprogs --no-enable --no-start --no-restart-after-upgrade --no-stop-on-upgrade
-+	dh_installsystemd -p xfsprogs --no-restart-after-upgrade --no-stop-on-upgrade system-xfs_scrub.slice
-+	dh_installsystemd -p xfsprogs-self-healing --no-restart-after-upgrade --no-stop-on-upgrade xfs_scrub_all.timer
- 	dh_installdeb
- 	dh_shlibdeps
- 	dh_gencontrol
-diff --git a/doc/Makefile b/doc/Makefile
-index ad6749b8d0be..a6ec65f5edc0 100644
---- a/doc/Makefile
-+++ b/doc/Makefile
-@@ -26,3 +26,6 @@ ifeq ($(PKG_DISTRIBUTION), debian)
- endif
- 
- install-dev:
++propname="fakeproperty"	# must not be an actual property
++propval="1721943740"
++longpropname="$(perl -e 'print "x" x 300;')"
++longpropval="$(perl -e 'print "x" x 80000;')"
 +
-+install-selfheal:
++echo "*** SPACEMAN TEST ***"
 +
-diff --git a/estimate/Makefile b/estimate/Makefile
-index d5f8a6d81d65..4fce3463d55c 100644
---- a/estimate/Makefile
-+++ b/estimate/Makefile
-@@ -19,4 +19,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo empty get property
++$XFS_SPACEMAN_PROG -c "getfsprops $propname" $TEST_DIR
 +
- -include .dep
-diff --git a/fsck/Makefile b/fsck/Makefile
-index ccba7f0b6892..33fca9e18fb0 100644
---- a/fsck/Makefile
-+++ b/fsck/Makefile
-@@ -17,3 +17,6 @@ install-pkg: default
- 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
- 	$(INSTALL) -m 755 xfs_fsck.sh $(PKG_SBIN_DIR)/fsck.xfs
- install-dev:
++echo pointless remove property
++$XFS_SPACEMAN_PROG -c "removefsprops $propname" $TEST_DIR
 +
-+install-selfheal:
++echo list property
++$XFS_SPACEMAN_PROG -c "listfsprops" $TEST_DIR | grep $propname
 +
-diff --git a/fsr/Makefile b/fsr/Makefile
-index 3ad9f6d824c6..da32bc531970 100644
---- a/fsr/Makefile
-+++ b/fsr/Makefile
-@@ -22,4 +22,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo set property
++$XFS_SPACEMAN_PROG -c "setfsprops $propname=$propval" $TEST_DIR
 +
- -include .dep
-diff --git a/growfs/Makefile b/growfs/Makefile
-index e0ab870bd6ba..61d184328cf6 100644
---- a/growfs/Makefile
-+++ b/growfs/Makefile
-@@ -30,4 +30,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo list property
++$XFS_SPACEMAN_PROG -c "listfsprops" $TEST_DIR | grep $propname
 +
- -include .dep
-diff --git a/include/Makefile b/include/Makefile
-index 23727fccfdcd..c18ab35a9861 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -64,3 +64,6 @@ install-pkg: default
- 
- install-dev: install
- 	$(INSTALL) -m 644 $(HFILES) $(PKG_INC_DIR)
++echo dump xattrs
++$ATTR_PROG -R -l $TEST_DIR | | grep $propname | _filter_test_dir
 +
-+install-selfheal:
++echo get property
++$XFS_SPACEMAN_PROG -c "getfsprops $propname" $TEST_DIR
 +
-diff --git a/io/Makefile b/io/Makefile
-index d035420b555c..70c95a5c1425 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -95,4 +95,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 xfs_mkfile.sh $(PKG_SBIN_DIR)/xfs_mkfile
- install-dev:
- 
-+install-selfheal:
++echo list property
++$XFS_SPACEMAN_PROG -c "listfsprops" $TEST_DIR | grep $propname
 +
- -include .dep
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 5ebe36fb58c8..262a4a0f8cda 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -81,4 +81,6 @@ include $(BUILDRULES)
- 
- install install-pkg install-dev: default
- 
-+install-selfheal:
++echo child file rejected
++touch $TEST_DIR/$seq.somefile
++$XFS_SPACEMAN_PROG -c "listfsprops $propname" $TEST_DIR/$seq.somefile 2>&1 | \
++	_filter_test_dir
 +
- -include .ltdep
-diff --git a/libhandle/Makefile b/libhandle/Makefile
-index 7cfd0fa4f27e..28c104a77f95 100644
---- a/libhandle/Makefile
-+++ b/libhandle/Makefile
-@@ -27,4 +27,6 @@ install-pkg: default
- install-dev: default
- 	$(INSTALL_LTLIB_DEV)
- 
-+install-selfheal:
++echo child dir accepted
++mkdir -p $TEST_DIR/$seq.somedir
++$XFS_SPACEMAN_PROG -c "listfsprops $propname" $TEST_DIR/$seq.somedir | grep $propname
 +
- -include .ltdep
-diff --git a/libxcmd/Makefile b/libxcmd/Makefile
-index afd5349c8af3..118ecd3cfc88 100644
---- a/libxcmd/Makefile
-+++ b/libxcmd/Makefile
-@@ -25,4 +25,6 @@ include $(BUILDRULES)
- 
- install install-pkg install-dev: default
- 
-+install-selfheal:
++echo remove property
++$XFS_SPACEMAN_PROG -c "removefsprops $propname" $TEST_DIR
 +
- -include .ltdep
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 2c6b45953661..65d4c7619758 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -162,3 +162,6 @@ install-dev: install
- ifndef NODEP
- -include .ltdep
- endif
++echo pointless remove property
++$XFS_SPACEMAN_PROG -c "removefsprops $propname" $TEST_DIR
 +
-+install-selfheal:
++echo set too long name
++$XFS_SPACEMAN_PROG -c "setfsprops $longpropname=$propval" $TEST_DIR
 +
-diff --git a/libxlog/Makefile b/libxlog/Makefile
-index 3710729fe703..37281eb058f2 100644
---- a/libxlog/Makefile
-+++ b/libxlog/Makefile
-@@ -23,4 +23,6 @@ include $(BUILDRULES)
- 
- install install-pkg install-dev: default
- 
-+install-selfheal:
++echo set too long value
++$XFS_SPACEMAN_PROG -c "setfsprops $propname=$longpropval" $TEST_DIR
 +
- -include .ltdep
-diff --git a/logprint/Makefile b/logprint/Makefile
-index 5ec02539a7bb..f1fccbdc8ca7 100644
---- a/logprint/Makefile
-+++ b/logprint/Makefile
-@@ -28,4 +28,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo not enough permissions
++su - "$qa_user" -c "$XFS_SPACEMAN_PROG -c \"setfsprops $propname=$propval\" $TEST_DIR" 2>&1 | _filter_test_dir
 +
- -include .dep
-diff --git a/m4/Makefile b/m4/Makefile
-index eda4c06f6864..b894dd3b0222 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -35,5 +35,7 @@ include $(BUILDRULES)
- 
- install install-pkg install-dev install-lib: default
- 
-+install-selfheal:
++echo "*** DB TEST ***"
 +
- realclean: distclean
- 	rm -f $(CONFIGURE)
-diff --git a/man/Makefile b/man/Makefile
-index f62286e8339d..258e8732a923 100644
---- a/man/Makefile
-+++ b/man/Makefile
-@@ -21,4 +21,6 @@ install-dev : $(addsuffix -install-dev,$(SUBDIRS))
- %-install-dev:
- 	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-dev
- 
-+install-selfheal:
++propval=$((propval + 1))
++_test_unmount
 +
- include $(BUILDRULES)
-diff --git a/mdrestore/Makefile b/mdrestore/Makefile
-index 0d02fb383404..c75d5875929b 100644
---- a/mdrestore/Makefile
-+++ b/mdrestore/Makefile
-@@ -23,4 +23,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo empty get property
++_test_xfs_db -x -c 'path /' -c "attr_get -Z $propname" 2>&1 | filter_inum
 +
- -include .dep
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index cf945aa10c25..515c2db0639d 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -37,4 +37,6 @@ install-pkg: default
- 
- install-dev:
- 
-+install-selfheal:
++echo pointless remove property
++_test_xfs_db -x -c 'path /' -c "attr_remove -Z $propname" 2>&1 | filter_inum
 +
- -include .dep
-diff --git a/po/Makefile b/po/Makefile
-index 3cc0b4177c64..cb6ef954b695 100644
---- a/po/Makefile
-+++ b/po/Makefile
-@@ -25,3 +25,6 @@ install-pkg: default
- 	$(INSTALL_LINGUAS)
- 
- install-dev install-lib:
++echo list property
++_test_xfs_db -x -c 'path /' -c "attr_list -Z" | grep $propname
 +
-+install-selfheal:
++echo set property
++_test_xfs_db -x -c 'path /' -c "attr_set -Z $propname $propval"
 +
-diff --git a/quota/Makefile b/quota/Makefile
-index 01584635b3dd..e1193bd203ad 100644
---- a/quota/Makefile
-+++ b/quota/Makefile
-@@ -30,4 +30,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo list property
++_test_xfs_db -x -c 'path /' -c "attr_list -Z" | grep $propname
 +
- -include .dep
-diff --git a/repair/Makefile b/repair/Makefile
-index 096ae8c6a5b1..e7979a817d4f 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -113,4 +113,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo dump xattrs
++_test_mount
++$ATTR_PROG -R -l $TEST_DIR | grep $propname | _filter_test_dir
++_test_unmount
 +
- -include .dep
-diff --git a/rtcp/Makefile b/rtcp/Makefile
-index 4adb58c4b783..ac638bcd1029 100644
---- a/rtcp/Makefile
-+++ b/rtcp/Makefile
-@@ -23,4 +23,6 @@ install-pkg: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
-+install-selfheal:
++echo get property
++_test_xfs_db -x -c 'path /' -c "attr_get -Z $propname"
 +
- -include .dep
-diff --git a/scrub/Makefile b/scrub/Makefile
-index b0022cb7f005..2c349c682d3a 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -20,6 +20,7 @@ XFS_SCRUB_ARGS = -p
- XFS_SCRUB_SERVICE_ARGS = -b -o fsprops_advise
- ifeq ($(HAVE_SYSTEMD),yes)
- INSTALL_SCRUB += install-systemd
-+INSTALL_SELFHEAL += install-systemd-selfheal
- SYSTEMD_SERVICES=\
- 	$(scrub_svcname) \
- 	xfs_scrub_fail@.service \
-@@ -27,9 +28,10 @@ SYSTEMD_SERVICES=\
- 	xfs_scrub_media_fail@.service \
- 	xfs_scrub_all.service \
- 	xfs_scrub_all_fail.service \
--	xfs_scrub_all.timer \
- 	system-xfs_scrub.slice
--OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
-+SYSTEMD_SERVICES_SELFHEAL=\
-+	xfs_scrub_all.timer
-+OPTIONAL_TARGETS += $(SYSTEMD_SERVICES) $(SYSTEMD_SERVICES_SELFHEAL)
- endif
- ifeq ($(HAVE_CROND),yes)
- INSTALL_SCRUB += install-crond
-@@ -163,6 +165,10 @@ install-systemd: default $(SYSTEMD_SERVICES)
- 	$(INSTALL) -m 755 -d $(PKG_LIBEXEC_DIR)
- 	$(INSTALL) -m 755 $(XFS_SCRUB_FAIL_PROG) $(PKG_LIBEXEC_DIR)
- 
-+install-systemd-selfheal: default $(SYSTEMD_SERVICES_SELFHEAL)
-+	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
-+	$(INSTALL) -m 644 $(SYSTEMD_SERVICES_SELFHEAL) $(SYSTEMD_SYSTEM_UNIT_DIR)
++echo list property
++_test_xfs_db -x -c 'path /' -c "attr_list -Z" | grep $propname
 +
- install-crond: default $(CRONTABS)
- 	$(INSTALL) -m 755 -d $(CROND_DIR)
- 	$(INSTALL) -m 644 $(CRONTABS) $(CROND_DIR)
-@@ -181,4 +187,6 @@ install-udev: $(UDEV_RULES)
- 
- install-dev:
- 
-+install-selfheal: $(INSTALL_SELFHEAL)
++echo remove property
++_test_xfs_db -x -c 'path /' -c "attr_remove -Z $propname"
 +
- -include .dep
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index 49fbc9290c02..ce1650f99b7c 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -47,4 +47,6 @@ install-pkg: default
- 	$(INSTALL) -m 755 xfs_property $(PKG_SBIN_DIR)/xfs_property
- install-dev:
- 
-+install-selfheal:
++echo pointless remove property
++_test_xfs_db -x -c 'path /' -c "attr_remove -Z $propname" 2>&1 | filter_inum
 +
- -include .dep
++echo set too long name
++_test_xfs_db -x -c 'path /' -c "attr_set -Z $longpropname $propval"
++
++echo set too long value
++_test_xfs_db -x -c 'path /' -c "attr_set -Z $propname $longpropval"
++
++status=0
++exit
+diff --git a/tests/xfs/1886.out b/tests/xfs/1886.out
+new file mode 100644
+index 0000000000..2f05c8b7c5
+--- /dev/null
++++ b/tests/xfs/1886.out
+@@ -0,0 +1,53 @@
++QA output created by 1886
++*** SPACEMAN TEST ***
++empty get property
++fakeproperty: No data available
++pointless remove property
++fakeproperty: No data available
++list property
++set property
++fakeproperty=1721943740
++list property
++fakeproperty
++dump xattrs
++Attribute "xfs:fakeproperty" has a 10 byte value for TEST_DIR
++get property
++fakeproperty=1721943740
++list property
++fakeproperty
++child file rejected
++TEST_DIR/1886.somefile: Not a directory
++child dir accepted
++fakeproperty
++remove property
++pointless remove property
++fakeproperty: No data available
++set too long name
++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx: Invalid argument
++set too long value
++fakeproperty: Invalid argument
++not enough permissions
++TEST_DIR: Operation not permitted
++*** DB TEST ***
++empty get property
++failed to get attr xfs:fakeproperty on inode XXX: No data available
++pointless remove property
++failed to remove attr xfs:fakeproperty from inode XXX: No data available
++list property
++set property
++fakeproperty=1721943741
++list property
++fakeproperty
++dump xattrs
++Attribute "xfs:fakeproperty" has a 10 byte value for TEST_DIR
++get property
++fakeproperty=1721943741
++list property
++fakeproperty
++remove property
++pointless remove property
++failed to remove attr xfs:fakeproperty from inode XXX: No data available
++set too long name
++name too long
++set too long value
++xfs:fakeproperty: value too long
+diff --git a/tests/xfs/1887 b/tests/xfs/1887
+new file mode 100755
+index 0000000000..fe75abe2c5
+--- /dev/null
++++ b/tests/xfs/1887
+@@ -0,0 +1,124 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1887
++#
++# Functional testing for xfs_property the wrapper script.
++#
++. ./common/preamble
++_begin_fstest auto
++
++. ./common/filter
++. ./common/attr
++
++_require_test
++_require_attrs
++
++# XXX yeah
++test -z "$XFS_PROPERTY_PROG" && \
++	XFS_PROPERTY_PROG="$(type -P xfs_property.sh)"
++
++_require_command "$XFS_PROPERTY_PROG" xfs_property
++_require_xfs_spaceman_command listfsprops	# actually detect support
++
++_cleanup()
++
++{
++	cd /
++	rm -r -f $tmp.*
++}
++
++filter_inum()
++{
++	sed -e 's/inode [0-9]*/inode XXX/g'
++}
++
++propname="fakeproperty"	# must not be an actual property
++propval="1721943742"
++longpropname="$(perl -e 'print "x" x 300;')"
++longpropval="$(perl -e 'print "x" x 80000;')"
++
++echo "*** OFFLINE XFS_PROPERTY TEST ***"
++
++_test_unmount
++
++echo empty get property
++$XFS_PROPERTY_PROG $TEST_DEV get "$propname" 2>&1 | filter_inum
++
++echo pointless remove property
++$XFS_PROPERTY_PROG $TEST_DEV remove "$propname" 2>&1 | filter_inum
++
++echo list property
++$XFS_PROPERTY_PROG $TEST_DEV list | grep $propname
++
++echo set property
++$XFS_PROPERTY_PROG $TEST_DEV set "$propname=$propval"
++
++echo list property
++$XFS_PROPERTY_PROG $TEST_DEV list | grep $propname
++
++echo dump xattrs
++$ATTR_PROG -R -l $TEST_DEV | grep $propname | _filter_test_dir
++
++echo get property
++$XFS_PROPERTY_PROG $TEST_DEV get "$propname"
++
++echo list property
++$XFS_PROPERTY_PROG $TEST_DEV list | grep $propname
++
++echo remove property
++$XFS_PROPERTY_PROG $TEST_DEV remove "$propname"
++
++echo pointless remove property
++$XFS_PROPERTY_PROG $TEST_DEV remove "$propname" 2>&1 | filter_inum
++
++echo set too long name
++$XFS_PROPERTY_PROG $TEST_DEV set "$longpropname=$propval"
++
++echo set too long value
++$XFS_PROPERTY_PROG $TEST_DEV set "$propname=$longpropval"
++
++echo "*** ONLINE XFS_PROPERTY TEST ***"
++
++propval=$((propval+1))
++_test_mount
++
++echo empty get property
++$XFS_PROPERTY_PROG $TEST_DIR get "$propname"
++
++echo pointless remove property
++$XFS_PROPERTY_PROG $TEST_DIR remove "$propname"
++
++echo list property
++$XFS_PROPERTY_PROG $TEST_DIR list | grep $propname
++
++echo set property
++$XFS_PROPERTY_PROG $TEST_DIR set "$propname=$propval"
++
++echo list property
++$XFS_PROPERTY_PROG $TEST_DIR list | grep $propname
++
++echo dump xattrs
++$ATTR_PROG -R -l $TEST_DIR | grep $propname | _filter_test_dir
++
++echo get property
++$XFS_PROPERTY_PROG $TEST_DIR get "$propname"
++
++echo list property
++$XFS_PROPERTY_PROG $TEST_DIR list | grep $propname
++
++echo remove property
++$XFS_PROPERTY_PROG $TEST_DIR remove "$propname"
++
++echo pointless remove property
++$XFS_PROPERTY_PROG $TEST_DIR remove "$propname"
++
++echo set too long name
++$XFS_PROPERTY_PROG $TEST_DIR set "$longpropname=$propval"
++
++echo set too long value
++$XFS_PROPERTY_PROG $TEST_DIR set "$propname=$longpropval"
++
++status=0
++exit
+diff --git a/tests/xfs/1887.out b/tests/xfs/1887.out
+new file mode 100644
+index 0000000000..2c27206acf
+--- /dev/null
++++ b/tests/xfs/1887.out
+@@ -0,0 +1,46 @@
++QA output created by 1887
++*** OFFLINE XFS_PROPERTY TEST ***
++empty get property
++failed to get attr xfs:fakeproperty on inode XXX: No data available
++pointless remove property
++failed to remove attr xfs:fakeproperty from inode XXX: No data available
++list property
++set property
++fakeproperty=1721943742
++list property
++fakeproperty
++dump xattrs
++get property
++fakeproperty=1721943742
++list property
++fakeproperty
++remove property
++pointless remove property
++failed to remove attr xfs:fakeproperty from inode XXX: No data available
++set too long name
++name too long
++set too long value
++xfs:fakeproperty: value too long
++*** ONLINE XFS_PROPERTY TEST ***
++empty get property
++fakeproperty: No data available
++pointless remove property
++fakeproperty: No data available
++list property
++set property
++fakeproperty=1721943743
++list property
++fakeproperty
++dump xattrs
++Attribute "xfs:fakeproperty" has a 10 byte value for TEST_DIR
++get property
++fakeproperty=1721943743
++list property
++fakeproperty
++remove property
++pointless remove property
++fakeproperty: No data available
++set too long name
++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx: Invalid argument
++set too long value
++fakeproperty: Invalid argument
+diff --git a/tests/xfs/1888 b/tests/xfs/1888
+new file mode 100755
+index 0000000000..8d54343cc2
+--- /dev/null
++++ b/tests/xfs/1888
+@@ -0,0 +1,66 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1888
++#
++# Functional testing for mkfs applying self_healing fs property.
++#
++. ./common/preamble
++_begin_fstest auto
++
++. ./common/filter
++. ./common/attr
++
++_require_test
++_require_xfs_spaceman_command listfsprops	# needed for fs props
++_require_xfs_db_command attr_get
++
++_cleanup()
++
++{
++	cd /
++	rm -r -f $tmp.*
++	rm -f $dummyfile
++	rmdir $dummymnt
++}
++
++dummyfile=$TEST_DIR/$seq.somefile
++dummymnt=$TEST_DIR/$seq.mount
++
++truncate -s 10g $dummyfile
++mkdir -p $dummymnt
++
++filter_inum()
++{
++	sed -e 's/inode [0-9]*/inode XXX/g'
++}
++
++testme() {
++	local mkfs_args=('-f')
++	local value="$1"
++	test -n "$value" && value="=$value"
++
++	if [ $# -gt 0 ]; then
++		mkfs_args+=('-m' "self_healing$value")
++	fi
++
++	echo "testing ${mkfs_args[*]}" >> $seqres.full
++
++	$MKFS_XFS_PROG $MKFS_OPTIONS "${mkfs_args[@]}" $dummyfile >> $seqres.full || \
++		_notrun "mkfs.xfs ${mkfs_args[*]} failed?"
++
++	$XFS_DB_PROG -x -c 'path /' -c "attr_get -Z self_healing" $dummyfile 2>&1 | filter_inum
++}
++
++testme ''
++testme
++testme none
++testme check
++testme optimize
++testme repair
++testme 0
++testme 1
++
++status=0
++exit
+diff --git a/tests/xfs/1888.out b/tests/xfs/1888.out
+new file mode 100644
+index 0000000000..d386d01b8f
+--- /dev/null
++++ b/tests/xfs/1888.out
+@@ -0,0 +1,9 @@
++QA output created by 1888
++self_healing=repair
++failed to get attr xfs:self_healing on inode XXX: No data available
++self_healing=none
++self_healing=check
++self_healing=optimize
++self_healing=repair
++self_healing=none
++self_healing=repair
+diff --git a/tests/xfs/1889 b/tests/xfs/1889
+new file mode 100755
+index 0000000000..623f004631
+--- /dev/null
++++ b/tests/xfs/1889
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1889
++#
++# Functional testing for mkfs applying self_healing fs property and xfs_scrub
++# changing its behavior accordingly.  Or at least claiming to.
++#
++. ./common/preamble
++_begin_fstest auto
++
++. ./common/filter
++. ./common/fuzzy
++
++_require_test
++_require_xfs_spaceman_command listfsprops	# needed for fs props
++_require_xfs_db_command attr_get
++_require_scrub
++
++_cleanup()
++
++{
++	cd /
++	rm -r -f $tmp.*
++	rm -f $dummyfile
++	_umount $dummymnt &>/dev/null
++	rmdir $dummymnt
++}
++
++dummyfile=$TEST_DIR/$seq.somefile
++dummymnt=$TEST_DIR/$seq.mount
++
++truncate -s 10g $dummyfile
++mkdir -p $dummymnt
++
++testme() {
++	local mkfs_args=('-f')
++	local value="$1"
++	test -n "$value" && value="=$value"
++
++	if [ $# -gt 0 ]; then
++		mkfs_args+=('-m' "self_healing$value")
++	fi
++
++	echo "testing ${mkfs_args[*]}" >> $seqres.full
++
++	$MKFS_XFS_PROG $MKFS_OPTIONS "${mkfs_args[@]}" $dummyfile >> $seqres.full || \
++		_notrun "mkfs.xfs ${mkfs_args[*]} failed?"
++
++	_mount -o loop $dummyfile $dummymnt
++	XFS_SCRUB_PHASE=7 $XFS_SCRUB_PROG -d -o fsprops_advise $dummymnt 2>&1 | \
++		grep self_healing | _filter_test_dir | sed -e 's/\(directive.\).*$/\1/g'
++	_umount $dummymnt
++}
++
++testme ''
++testme
++testme none
++testme check
++testme optimize
++testme repair
++testme 0
++testme 1
++
++status=0
++exit
+diff --git a/tests/xfs/1889.out b/tests/xfs/1889.out
+new file mode 100644
+index 0000000000..707c37edd0
+--- /dev/null
++++ b/tests/xfs/1889.out
+@@ -0,0 +1,9 @@
++QA output created by 1889
++Info: TEST_DIR/1889.mount: Checking and repairing per self_healing directive.
++Info: TEST_DIR/1889.mount: Checking per self_healing directive.
++Info: TEST_DIR/1889.mount: Disabling scrub per self_healing directive.
++Info: TEST_DIR/1889.mount: Checking per self_healing directive.
++Info: TEST_DIR/1889.mount: Optimizing per self_healing directive.
++Info: TEST_DIR/1889.mount: Checking and repairing per self_healing directive.
++Info: TEST_DIR/1889.mount: Disabling scrub per self_healing directive.
++Info: TEST_DIR/1889.mount: Checking and repairing per self_healing directive.
 
