@@ -1,41 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765A333D5
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:52:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1CB63D
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:53:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300764; cv=none; b=nWtRrqpZwmRDsNTzKrega9/O0csFgMa3XbKyNRg5tWsjBcrRYOtxDh9/4b/73+yeGr1ESXcLQKqvnqBccWXEFCIf0z3IHvWo6vGk69I1OxhXKmhGfGenT+U+SY1srEttAb2ZCJ3S8EID+413/t1S07mXWxhGC5PF5tZK+hXhvys=
+	t=1722300780; cv=none; b=i+SkD/u8GFXJeGbdRQOEDgIdk7ElhgE17evfQtuRdqIaIZDb96rAQvY4Q04QecQCl8b1TOR6Br04FsHDGgjF3o/h+KLZDJJHxqsrNNSsn4+OAvZOcDScadudpP2o2179Ehv44jee3+eCvOcEL0u4TSxMy7hncIfHd1n+J1jnvlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300764; c=relaxed/simple;
-	bh=breDAnflR6HQIVbLDaUPIDL47Fl2Jo3qty8Gqo6yiuE=;
+	s=arc-20240116; t=1722300780; c=relaxed/simple;
+	bh=YB6LGPg4laErKm6ba8BGrHDa+oP290ymgPN08DXflNw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RYs6Jst4VHldk9r9YG/JEsRX+acMM1tACKMQBHSKqppKmsa3MkMW11yJx9k7fFjsPaYp2wICK9tS0O2ua1ZKA9qkUAvE7fjRIFQ/hBTsnXHyKtwumgsVn2w9L0pxzp6lDIpg79y+irGcOtcC+gYKW/RHYRUzdCjopGeybJ5jzkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aMsSRiYJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=fHFgolD1FVtZQ5W5sxtGDNfG8n8dqtCyhsJEn2sBlaIx8K+lyKDW6jz0/GklLh9+jeclJGTImkVvsmNipbXbjq4Yi8WGurVAk8pIe2EuRM93GDYzOymkIC7rjbviOYyDH1vr9iXDnqQVDixwiQKZKiw1YDIQHbPkYQWNzkwnExM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lOJUeI04; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aMsSRiYJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F70DC32786;
-	Tue, 30 Jul 2024 00:52:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lOJUeI04"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 030C4C32786;
+	Tue, 30 Jul 2024 00:52:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300764;
-	bh=breDAnflR6HQIVbLDaUPIDL47Fl2Jo3qty8Gqo6yiuE=;
+	s=k20201202; t=1722300780;
+	bh=YB6LGPg4laErKm6ba8BGrHDa+oP290ymgPN08DXflNw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aMsSRiYJUmg+O+ggdXikisMTU0aJlNYAJcfCKYKZchKrQtYzQvsQa1zfGsnl5XgCR
-	 NJ89EvkhmdY+wOTFxFV9kGWvXFGeOEAgD8W3VsSEXnuCO6B/8zQ+kei3dses6QYuEn
-	 aWdOr7FUdmo3ubrdJLWA5GmRvcPTo/z5ke/grOicAD+RmD9YwsO9pzImJjPlMzarys
-	 8PUdqLAxJma1xnuvBNQzqgp9dK7bE1xx+RLmr1h5+rPFuXFp+ZouXvLzRspjepfChn
-	 GqjR5h0hcB/uVar0cyZPl9skifE8EiKE9cBRo7sbe1fUr23sbatgIOrLn3bKjlWzAg
-	 VhYAD9ORvEUwg==
-Date: Mon, 29 Jul 2024 17:52:43 -0700
-Subject: [PATCH 111/115] xfs: Add cond_resched to block unmap range and
- reflink remap path
+	b=lOJUeI048hJBtWpoewFecTC+3yBrjABhpeBfa+8P7FUBD1fpyHfPcCLfOdxIyrEQ7
+	 rAADQ/tHWu+oAo6LAkPVTjAEVdtVBaLQVx/0CK7eYXnjenWSu08hA2egjeL/nmZk3b
+	 ApKyQbDwO7r1Ll+MM8HXGJ9IZUekyNoMdTNSAMhNLUI8TUVAew+z9B8tQbc46VJ+ET
+	 YMwZds7Xo4xxrKSqdqPuJhY8guEq9ITe03+GzUV+wpZjcJmcfpEGfusudlRG/A5NRU
+	 Y9GzkYf0YbRz8rF1puGJlQbp3VWXtAw1pig/65hwGrqVrkPv74ps2fE1MD+npqpEDZ
+	 zSvPCTFNYi94g==
+Date: Mon, 29 Jul 2024 17:52:59 -0700
+Subject: [PATCH 112/115] xfs: make sure sb_fdblocks is non-negative
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>,
- "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
- Disha Goel <disgoel@linux.ibm.com>, Chandan Babu R <chandanbabu@kernel.org>,
- linux-xfs@vger.kernel.org
-Message-ID: <172229844004.1338752.17870968518710908441.stgit@frogsfrogsfrogs>
+Cc: Wengang Wang <wen.gang.wang@oracle.com>,
+ Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
+Message-ID: <172229844017.1338752.2042405284909950974.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,108 +45,83 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+From: Wengang Wang <wen.gang.wang@oracle.com>
 
-Source kernel commit: b0c6bcd58d44b1b843d1b7218db5a1efe917d27e
+Source kernel commit: 58f880711f2ba53fd5e959875aff5b3bf6d5c32e
 
-An async dio write to a sparse file can generate a lot of extents
-and when we unlink this file (using rm), the kernel can be busy in umapping
-and freeing those extents as part of transaction processing.
+A user with a completely full filesystem experienced an unexpected
+shutdown when the filesystem tried to write the superblock during
+runtime.
+kernel shows the following dmesg:
 
-Similarly xfs reflink remapping path can also iterate over a million
-extent entries in xfs_reflink_remap_blocks().
+[    8.176281] XFS (dm-4): Metadata corruption detected at xfs_sb_write_verify+0x60/0x120 [xfs], xfs_sb block 0x0
+[    8.177417] XFS (dm-4): Unmount and run xfs_repair
+[    8.178016] XFS (dm-4): First 128 bytes of corrupted metadata buffer:
+[    8.178703] 00000000: 58 46 53 42 00 00 10 00 00 00 00 00 01 90 00 00  XFSB............
+[    8.179487] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[    8.180312] 00000020: cf 12 dc 89 ca 26 45 29 92 e6 e3 8d 3b b8 a2 c3  .....&E)....;...
+[    8.181150] 00000030: 00 00 00 00 01 00 00 06 00 00 00 00 00 00 00 80  ................
+[    8.182003] 00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
+[    8.182004] 00000050: 00 00 00 01 00 64 00 00 00 00 00 04 00 00 00 00  .....d..........
+[    8.182004] 00000060: 00 00 64 00 b4 a5 02 00 02 00 00 08 00 00 00 00  ..d.............
+[    8.182005] 00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 17 00 00 19  ................
+[    8.182008] XFS (dm-4): Corruption of in-memory data detected.  Shutting down filesystem
+[    8.182010] XFS (dm-4): Please unmount the filesystem and rectify the problem(s)
 
-Since we can busy loop in these two functions, so let's add cond_resched()
-to avoid softlockup messages like these.
+When xfs_log_sb writes super block to disk, b_fdblocks is fetched from
+m_fdblocks without any lock. As m_fdblocks can experience a positive ->
+negative -> positive changing when the FS reaches fullness (see
+xfs_mod_fdblocks). So there is a chance that sb_fdblocks is negative, and
+because sb_fdblocks is type of unsigned long long, it reads super big.
+And sb_fdblocks being bigger than sb_dblocks is a problem during log
+recovery, xfs_validate_sb_write() complains.
 
-watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [kworker/1:0:82435]
-CPU: 1 PID: 82435 Comm: kworker/1:0 Tainted: G S  L   6.9.0-rc5-0-default #1
-Workqueue: xfs-inodegc/sda2 xfs_inodegc_worker
-NIP [c000000000beea10] xfs_extent_busy_trim+0x100/0x290
-LR [c000000000bee958] xfs_extent_busy_trim+0x48/0x290
-Call Trace:
-xfs_alloc_get_rec+0x54/0x1b0 (unreliable)
-xfs_alloc_compute_aligned+0x5c/0x144
-xfs_alloc_ag_vextent_size+0x238/0x8d4
-xfs_alloc_fix_freelist+0x540/0x694
-xfs_free_extent_fix_freelist+0x84/0xe0
-__xfs_free_extent+0x74/0x1ec
-xfs_extent_free_finish_item+0xcc/0x214
-xfs_defer_finish_one+0x194/0x388
-xfs_defer_finish_noroll+0x1b4/0x5c8
-xfs_defer_finish+0x2c/0xc4
-xfs_bunmapi_range+0xa4/0x100
-xfs_itruncate_extents_flags+0x1b8/0x2f4
-xfs_inactive_truncate+0xe0/0x124
-xfs_inactive+0x30c/0x3e0
-xfs_inodegc_worker+0x140/0x234
-process_scheduled_works+0x240/0x57c
-worker_thread+0x198/0x468
-kthread+0x138/0x140
-start_kernel_thread+0x14/0x18
+Fix:
+As sb_fdblocks will be re-calculated during mount when lazysbcount is
+enabled, We just need to make xfs_validate_sb_write() happy -- make sure
+sb_fdblocks is not nenative. This patch also takes care of other percpu
+counters in xfs_log_sb.
 
-run fstests generic/175 at 2024-02-02 04:40:21
-[   C17] watchdog: BUG: soft lockup - CPU#17 stuck for 23s! [xfs_io:7679]
-watchdog: BUG: soft lockup - CPU#17 stuck for 23s! [xfs_io:7679]
-CPU: 17 PID: 7679 Comm: xfs_io Kdump: loaded Tainted: G X 6.4.0
-NIP [c008000005e3ec94] xfs_rmapbt_diff_two_keys+0x54/0xe0 [xfs]
-LR [c008000005e08798] xfs_btree_get_leaf_keys+0x110/0x1e0 [xfs]
-Call Trace:
-0xc000000014107c00 (unreliable)
-__xfs_btree_updkeys+0x8c/0x2c0 [xfs]
-xfs_btree_update_keys+0x150/0x170 [xfs]
-xfs_btree_lshift+0x534/0x660 [xfs]
-xfs_btree_make_block_unfull+0x19c/0x240 [xfs]
-xfs_btree_insrec+0x4e4/0x630 [xfs]
-xfs_btree_insert+0x104/0x2d0 [xfs]
-xfs_rmap_insert+0xc4/0x260 [xfs]
-xfs_rmap_map_shared+0x228/0x630 [xfs]
-xfs_rmap_finish_one+0x2d4/0x350 [xfs]
-xfs_rmap_update_finish_item+0x44/0xc0 [xfs]
-xfs_defer_finish_noroll+0x2e4/0x740 [xfs]
-__xfs_trans_commit+0x1f4/0x400 [xfs]
-xfs_reflink_remap_extent+0x2d8/0x650 [xfs]
-xfs_reflink_remap_blocks+0x154/0x320 [xfs]
-xfs_file_remap_range+0x138/0x3a0 [xfs]
-do_clone_file_range+0x11c/0x2f0
-vfs_clone_file_range+0x60/0x1c0
-ioctl_file_clone+0x78/0x140
-sys_ioctl+0x934/0x1270
-system_call_exception+0x158/0x320
-system_call_vectored_common+0x15c/0x2ec
-
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: Disha Goel<disgoel@linux.ibm.com>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/libxfs_priv.h |    2 ++
- libxfs/xfs_bmap.c    |    1 +
- 2 files changed, 3 insertions(+)
+ libxfs/libxfs_priv.h |    2 +-
+ libxfs/xfs_sb.c      |    7 ++++---
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
 
 diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 90b2db091..64bc10e10 100644
+index 64bc10e10..5d1aa23c7 100644
 --- a/libxfs/libxfs_priv.h
 +++ b/libxfs/libxfs_priv.h
-@@ -639,4 +639,6 @@ int xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
-  */
- #define lower_32_bits(n) ((uint32_t)((n) & 0xffffffff))
+@@ -210,7 +210,7 @@ static inline bool WARN_ON(bool expr) {
+ #define WARN_ON_ONCE(e)			WARN_ON(e)
+ #define percpu_counter_read(x)		(*x)
+ #define percpu_counter_read_positive(x)	((*x) > 0 ? (*x) : 0)
+-#define percpu_counter_sum(x)		(*x)
++#define percpu_counter_sum_positive(x)	((*x) > 0 ? (*x) : 0)
  
-+#define cond_resched()	((void)0)
-+
- #endif	/* __LIBXFS_INTERNAL_XFS_H__ */
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 347b44423..a0dda4640 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -6377,6 +6377,7 @@ xfs_bunmapi_range(
- 		error = xfs_defer_finish(tpp);
- 		if (error)
- 			goto out;
-+		cond_resched();
+ /*
+  * get_random_u32 is used for di_gen inode allocation, it must be zero for
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index f45ffd994..bedb36a06 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -1035,11 +1035,12 @@ xfs_log_sb(
+ 	 * and hence we don't need have to update it here.
+ 	 */
+ 	if (xfs_has_lazysbcount(mp)) {
+-		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
++		mp->m_sb.sb_icount = percpu_counter_sum_positive(&mp->m_icount);
+ 		mp->m_sb.sb_ifree = min_t(uint64_t,
+-				percpu_counter_sum(&mp->m_ifree),
++				percpu_counter_sum_positive(&mp->m_ifree),
+ 				mp->m_sb.sb_icount);
+-		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
++		mp->m_sb.sb_fdblocks =
++				percpu_counter_sum_positive(&mp->m_fdblocks);
  	}
- out:
- 	return error;
+ 
+ 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
 
