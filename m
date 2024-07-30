@@ -1,37 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80B141AA3C5
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 19:01:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73C7C18DF8D
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 21:37:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722366116; cv=none; b=M4BAbH2ejnVe6KI3kQ5N2KYAtMRqNS8CEUGpQGVRV1WlDPrSYraVbrPSM8F9y0cgGFE4lkR2UP3rIMPDwz0eclehlGAJzn8y9QEZaXl2gZyglY0JHYbNMU5U0tFWAVyqfy9R7CbKeOhrU41QHernewEvZ8QwyPMNG0/FE1kWa4g=
+	t=1722375445; cv=none; b=utzrSc4ZcTlEicddm5sntEflylWfHVlS8pSK2MTSofIBwHfcxiodnvB1pxbk6TtTReOOjsE/do/A37QUpTTOZlr2/2wGsJNpyXPHsa6tvuSo3Qp47Z0zDLq4PQIhBHsrRfq/XdGJLy/TJgc+3EvC89OVwjHlgbKcFETB6lM59fs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722366116; c=relaxed/simple;
-	bh=Q6dSRDAc1syYHrQ0hjokNVuaIori+jGRXzvM2ZFSh8Q=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KsMAZsP6rM2O9I5M/1BRGgmwPxs5oYeZXAGWvRBiv7glbUHO19PbHVWV9WqNnKp7v2OpXXarXKPwg+ODlNp+xkVZdOrhnAn6o0zgEu9RV06LbfJ0+ypawE3QjlFneyQZNGHhNZ/Y92/Y7OrlgCVTy/nvT4+9ou+KG0ekVnVvhxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jIv2y4Gc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722375445; c=relaxed/simple;
+	bh=fv/80tmw2O3B74SGgiTXbfJvNlVn5+/UZquDCaWwv7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fSxVbnXww6Ui6DwjGbUVOchK+8+T0oXpNEaygEStdFdAqQ/CICkabQKbjH/cMw5IblemA7iZKTVsWTQW0SPQi3/cTAEMTJF18glVPzisCE7RzkJ3n0EWpi7+q5E3wEbZ1P7TGtsyx+PyS2L0hyHJu4qHn8jXUNzDDaQ/QDls77g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VzEYLJSx; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jIv2y4Gc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 058BCC32782
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 19:01:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722366116;
-	bh=Q6dSRDAc1syYHrQ0hjokNVuaIori+jGRXzvM2ZFSh8Q=;
-	h=Date:From:To:Subject:References:In-Reply-To:From;
-	b=jIv2y4GcKjkHIC3k3CHNyWKlUNyITxqYnxyiN/kiOMYH4FsOkJr3OHDRrYVbsOUDp
-	 Qmun3D9F2F+azhVYOVf3Rh8wpDRKOG50XvYe8NOrvtbKAgQOqGt/i+MdgUniWTl3YH
-	 3VWtNP1ftPa8vFz3f1+YhtOfMA+0YBxLjIwtRlM7GQ0ZtpluS083d75RHjsnvvnoPy
-	 hPG3Z6PyIquvJLowgSSyA3SwwFAwVU8/pzmm28BKH3nHpBwdlWH3g7W3iMPB89hBhA
-	 Q9xq6E6AgjzLwOEb0Yxn5ZakHbNgFbmsegHhEDp3Ktb9I6+JchSLCE3S865PpJUDcD
-	 9Nhw8KhPFqyeQ==
-Date: Tue, 30 Jul 2024 12:01:55 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: xfs <linux-xfs@vger.kernel.org>
-Subject: Re: xfsprogs 6.9 .deb build broken on debian 12?
-Message-ID: <20240730190155.GJ6352@frogsfrogsfrogs>
-References: <20240730033627.GG6352@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VzEYLJSx"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=ik3JvGYhM49+NV03+eqB5kzzr29bpeuH74xn1v1Dfeg=; b=VzEYLJSxSYhibfAPjDIqwp+IoK
+	Xb8dO7SCUyZwGuD+dYwV7mtmxhnJZtu7dwxGQSl5D568gOLP6tlLi5nyNRT5xeGDFdgtCLK3cuUSR
+	pzl/Pwr/s2wu7DdmWU6clMZVxEQHOpxhVoX7ISlXSEnZXl8MlZZYut+hDqKhlddbhFsT5uP6D4fuh
+	lxxDVmafiokDxBn0rTc8nB7Z8bxEVpDJZzJh0KCDq8CaXNpbvDYMvcl6rcMGzT/67gOel1GhTrTp4
+	HCshQTI0+xqLIoEle7W/cxHXRWOGKNqVWy7LEIWBkzOc/Pk1fH6jAJYfDeMrjEScXTAMniuGjcuOf
+	PkLZcTKw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sYuX6-0000000GYsN-037h;
+	Tue, 30 Jul 2024 21:37:24 +0000
+Date: Tue, 30 Jul 2024 14:37:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/7] xfs_db: improve getting and setting extended
+ attributes
+Message-ID: <ZqldE1lgKED2d2Tl@infradead.org>
+References: <172230940561.1543753.1129774775335002180.stgit@frogsfrogsfrogs>
+ <172230940616.1543753.12935781628377990063.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,25 +46,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240730033627.GG6352@frogsfrogsfrogs>
+In-Reply-To: <172230940616.1543753.12935781628377990063.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jul 29, 2024 at 08:36:27PM -0700, Darrick J. Wong wrote:
-> Hi everyone,
-> 
-> Has anyone else tried to build xfsprogs 6.9 .deb packages on aarch64 on
-> Debian 12 (gcc 12.2.0)?  About midway through I get:
-> 
-> aarch64-linux-gnu-gcc: internal compiler error: Segmentation fault signal terminated program cc1
-> Please submit a full bug report, with preprocessed source (by using -freport-bug).
-> See <file:///usr/share/doc/gcc-12/README.Bugs> for instructions.
-> 
-> Will try harder in the morning to sort this out if I have time.
-> Strangely, the regular build completes just fine, so it's something
-> about the debuild options that mucks things up.
+> +static int		attr_get_f(int argc, char **argv);
+>  static int		attr_set_f(int argc, char **argv);
+>  static int		attr_remove_f(int argc, char **argv);
+> +static void		attrget_help(void);
+>  static void		attrset_help(void);
 
-Weird.  6.8 also doesn't build now, but it built successfully back in
-May.  Fiddling around with build chroots and vms demonstrates that the
-build works fine in a VM, just not in a schroot.  So I guess something
-changed in qemu that broke gcc.  Sigh.
+I always hate these forward declarations, but I guess it matches the
+existing code..
 
---D
+Otherwise looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
