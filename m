@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9300C10E3
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:11:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 465324C97
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:11:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301861; cv=none; b=s0Q6vXgSP9c+aFsyeGfmMqgYoO/gIzEX3g7AzfrkLPo2Hqd8iv5WY7BXSgrV2NMi/kSDTPfpkiYlQmGbmjaxMbWxSTwc3P5dj98jSLmeaEQ8lT9x9PbOaQfze2zt/WvNx2utKns35xrT6THol878B04gALGVc3qZ0OBYVFtIZms=
+	t=1722301877; cv=none; b=bAIMPh9qS050bZXF6P5e8dxC1Ho5iFLE+P7P6Be0GZG2aejEcetu9OOKfPm6sIvrzlcLOsShsx6Mc/au6yoBXgOb6RMlz9iKtvnNBhGYHVnFyYisZUVoIBZZAmI3dZ9Y6vdZzlzuCW9GIHA/scuNbWcoVBEHIHAOP9UeSLGOtBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301861; c=relaxed/simple;
-	bh=8XChWzotnXNdjHNOruyLXW2cI9kJWIMBSjU/gI11kd0=;
+	s=arc-20240116; t=1722301877; c=relaxed/simple;
+	bh=hw6IT9yfNlgo+IeDOREYJjdgvg4bhoW0U1q2mx+XN20=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=G8ihJIZL4tpyXDstpG4g+PUE6k992X8pw1GgxERG1Y0tgDvMeafTS+RC0lzB3GLwBL2fWzaM2KkYs5XD+P0ODha7Gpeffm1VYhxtrfcWx3UYTy52JXhidZ4BdOKKkVYkhpGwglSWhZmP+twSNpvU9Z8RBXBdBfP0FhbFWprdmUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EmrW7JKN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TfSTJiQX4z5FREqGXSls09WDbM18GnyohoEMvIfXMjYcVnX81KfxHTDVV06P8N9l+sy6vGAu80KsGiyMI5dN27m/1onrR+Lb9vbu41SVm8tWk2Ik1vtrPqmlFaztrHDwulT4INKxE1WMTA0kr5JfUNxKHH6FA3epLKAi9EQMvFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SVkFRLx6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EmrW7JKN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68D67C32786;
-	Tue, 30 Jul 2024 01:11:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SVkFRLx6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AE2AC32786;
+	Tue, 30 Jul 2024 01:11:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301861;
-	bh=8XChWzotnXNdjHNOruyLXW2cI9kJWIMBSjU/gI11kd0=;
+	s=k20201202; t=1722301877;
+	bh=hw6IT9yfNlgo+IeDOREYJjdgvg4bhoW0U1q2mx+XN20=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EmrW7JKNqrlS/kAtg8mWP6nKn9tlVSvdjvAK9SzHFSzNXIpuaDRD/9igMvjyOkoQx
-	 gtNJC0xtJH/G3WIXfaPbtXKdwCWRNUqXCClKJljNpxIqFFR4XVpxTUFMoOlAIfAlq0
-	 r0gtMPBn4pz2eCKyiv028i0UWUJeZkWp1gSYQsYjbvuuVoC7YH9Zmy0FC6KgisBA/o
-	 XP7cOmrwCKaqxDhguEHpC6zNidbJ8KAJXSden1ib7jxcFDWAEgETo2rt7JVAYcVg9P
-	 S2CPGBp6/bDKYnki1NHyTNJ3odMefxoTbVYfhzYm0JA4GAOFxrHzO2c9XraFgXoLiv
-	 hR4DyLWb38OiA==
-Date: Mon, 29 Jul 2024 18:11:00 -0700
-Subject: [PATCH 7/7] xfs_scrub: improve responsiveness while trimming the
- filesystem
+	b=SVkFRLx6yRhdCaNQaLoU7zd7JUcE6Z3lNHYLJ14pYIt913Ta+h0zUqr8gDuoPAYY8
+	 Fo25buz6ho9r7282A0SVmLlfv4oy1yHc5jjOYwjoVRv+lEUMFe3vKdYY5sHH2KjAVM
+	 ja+1lTpwQ9v2wuRy/JSLJCmYlun4bofo15VylBMrmlAMegtKCpn/3KvL1eL/kpP0qN
+	 RHAnG2rahEW4kDx62Gb4GkVZ6Iz/qhbmJhovU93UdO/ukmedCIYt64DVLlsW823LkL
+	 fINSXdKPH8ZV4Kr89ccCR3Dr2jmdrRMu4lDnBAlfczxzM/Xeoo2ZZYhQLEX5XJG2LK
+	 c8uZHlIIcdz5Q==
+Date: Mon, 29 Jul 2024 18:11:16 -0700
+Subject: [PATCH 1/7] libfrog: hoist free space histogram code
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229848138.1349330.4764336698265605990.stgit@frogsfrogsfrogs>
-In-Reply-To: <172229848026.1349330.12889405227098722037.stgit@frogsfrogsfrogs>
-References: <172229848026.1349330.12889405227098722037.stgit@frogsfrogsfrogs>
+Message-ID: <172229848461.1349623.7751510612492335416.stgit@frogsfrogsfrogs>
+In-Reply-To: <172229848439.1349623.8570132525895775451.stgit@frogsfrogsfrogs>
+References: <172229848439.1349623.8570132525895775451.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,218 +46,622 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On a 10TB filesystem where the free space in each AG is heavily
-fragmented, I noticed some very high runtimes on a FITRIM call for the
-entire filesystem.  xfs_scrub likes to report progress information on
-each phase of the scrub, which means that a strace for the entire
-filesystem:
-
-ioctl(3, FITRIM, {start=0x0, len=10995116277760, minlen=0}) = 0 <686.209839>
-
-shows that scrub is uncommunicative for the entire duration.  We can't
-report any progress for the duration of the call, and the program is not
-responsive to signals.  Reducing the size of the FITRIM requests to a
-single AG at a time produces lower times for each individual call, but
-even this isn't quite acceptable, because the time between progress
-reports are still very high:
-
-Strace for the first 4x 1TB AGs looks like (2):
-ioctl(3, FITRIM, {start=0x0, len=1099511627776, minlen=0}) = 0 <68.352033>
-ioctl(3, FITRIM, {start=0x10000000000, len=1099511627776, minlen=0}) = 0 <68.760323>
-ioctl(3, FITRIM, {start=0x20000000000, len=1099511627776, minlen=0}) = 0 <67.235226>
-ioctl(3, FITRIM, {start=0x30000000000, len=1099511627776, minlen=0}) = 0 <69.465744>
-
-I then had the idea to limit the length parameter of each call to a
-smallish amount (~11GB) so that we could report progress relatively
-quickly, but much to my surprise, each FITRIM call still took ~68
-seconds!
-
-Unfortunately, the by-length fstrim implementation handles this poorly
-because it walks the entire free space by length index (cntbt), which is
-a very inefficient way to walk a subset of an AG when the free space is
-fragmented.
-
-To fix that, I created a second implementation in the kernel that will
-walk the bnobt and perform the trims in block number order.  This
-algorithm constrains the amount of btree scanning to something
-resembling the range passed in, which reduces the amount of time it
-takes to respond to a signal.
-
-Therefore, break up the FITRIM calls so they don't scan more than 11GB
-of space at a time.  Break the calls up by AG so that each call only has
-to take one AGF per call, because each AG that we traverse causes a log
-force.
+Combine the two free space histograms in xfs_db and xfs_spaceman into a
+single implementation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/phase8.c |  102 ++++++++++++++++++++++++++++++++++++++++++++++----------
- scrub/vfs.c    |   10 ++++-
- scrub/vfs.h    |    2 +
- 3 files changed, 91 insertions(+), 23 deletions(-)
+ db/freesp.c         |   89 ++++++++------------------------
+ libfrog/Makefile    |    2 +
+ libfrog/histogram.c |  143 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ libfrog/histogram.h |   63 ++++++++++++++++++++++
+ spaceman/freesp.c   |   99 ++++++++++++-----------------------
+ 5 files changed, 264 insertions(+), 132 deletions(-)
+ create mode 100644 libfrog/histogram.c
+ create mode 100644 libfrog/histogram.h
 
 
-diff --git a/scrub/phase8.c b/scrub/phase8.c
-index 75400c968..e35bf11bf 100644
---- a/scrub/phase8.c
-+++ b/scrub/phase8.c
-@@ -45,27 +45,90 @@ fstrim_ok(
- 	return true;
- }
+diff --git a/db/freesp.c b/db/freesp.c
+index 883741e66..43520481d 100644
+--- a/db/freesp.c
++++ b/db/freesp.c
+@@ -12,14 +12,7 @@
+ #include "output.h"
+ #include "init.h"
+ #include "malloc.h"
+-
+-typedef struct histent
+-{
+-	int		low;
+-	int		high;
+-	long long	count;
+-	long long	blocks;
+-} histent_t;
++#include "libfrog/histogram.h"
  
-+/*
-+ * Limit the amount of fstrim scanning that we let the kernel do in a single
-+ * call so that we can implement decent progress reporting and CPU resource
-+ * control.  Pick a prime number of gigabytes for interest.
-+ */
-+#define FSTRIM_MAX_BYTES	(11ULL << 30)
-+
-+/* Trim a certain range of the filesystem. */
-+static int
-+fstrim_fsblocks(
-+	struct scrub_ctx	*ctx,
-+	uint64_t		start_fsb,
-+	uint64_t		fsbcount)
-+{
-+	uint64_t		start = cvt_off_fsb_to_b(&ctx->mnt, start_fsb);
-+	uint64_t		len = cvt_off_fsb_to_b(&ctx->mnt, fsbcount);
-+	int			error;
-+
-+	while (len > 0) {
-+		uint64_t	run;
-+
-+		run = min(len, FSTRIM_MAX_BYTES);
-+
-+		error = fstrim(ctx, start, run);
-+		if (error == EOPNOTSUPP) {
-+			/* Pretend we finished all the work. */
-+			progress_add(len);
-+			return 0;
-+		}
-+		if (error) {
-+			char		descr[DESCR_BUFSZ];
-+
-+			snprintf(descr, sizeof(descr) - 1,
-+					_("fstrim start 0x%llx run 0x%llx"),
-+					(unsigned long long)start,
-+					(unsigned long long)run);
-+			str_liberror(ctx, error, descr);
-+			return error;
-+		}
-+
-+		progress_add(run);
-+		len -= run;
-+		start += run;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Trim each AG on the data device. */
-+static int
-+fstrim_datadev(
-+	struct scrub_ctx	*ctx)
-+{
-+	struct xfs_fsop_geom	*geo = &ctx->mnt.fsgeom;
-+	uint64_t		fsbno;
-+	int			error;
-+
-+	for (fsbno = 0; fsbno < geo->datablocks; fsbno += geo->agblocks) {
-+		uint64_t	fsbcount;
-+
-+		/*
-+		 * Make sure that trim calls do not cross AG boundaries so that
-+		 * the kernel only performs one log force (and takes one AGF
-+		 * lock) per call.
-+		 */
-+		progress_add(geo->blocksize);
-+		fsbcount = min(geo->datablocks - fsbno, geo->agblocks);
-+		error = fstrim_fsblocks(ctx, fsbno, fsbcount);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
- /* Trim the filesystem, if desired. */
- int
- phase8_func(
- 	struct scrub_ctx	*ctx)
- {
--	int			error;
--
- 	if (!fstrim_ok(ctx))
- 		return 0;
+ static void	addhistent(int h);
+ static void	addtohist(xfs_agnumber_t agno, xfs_agblock_t agbno,
+@@ -46,13 +39,10 @@ static int		alignment;
+ static int		countflag;
+ static int		dumpflag;
+ static int		equalsize;
+-static histent_t	*hist;
+-static int		histcount;
++static struct histogram	freesp_hist;
+ static int		multsize;
+ static int		seen1;
+ static int		summaryflag;
+-static long long	totblocks;
+-static long long	totexts;
  
--	error = fstrim(ctx);
--	if (error == EOPNOTSUPP)
--		return 0;
--
--	if (error) {
--		str_liberror(ctx, error, _("fstrim"));
--		return error;
--	}
--
--	progress_add(1);
--	return 0;
-+	return fstrim_datadev(ctx);
- }
- 
- /* Estimate how much work we're going to do. */
-@@ -76,12 +139,13 @@ phase8_estimate(
- 	unsigned int		*nr_threads,
- 	int			*rshift)
- {
--	*items = 0;
--
--	if (fstrim_ok(ctx))
--		*items = 1;
--
-+	if (fstrim_ok(ctx)) {
-+		*items = cvt_off_fsb_to_b(&ctx->mnt,
-+				ctx->mnt.fsgeom.datablocks);
-+	} else {
-+		*items = 0;
-+	}
- 	*nr_threads = 1;
--	*rshift = 0;
-+	*rshift = 30; /* GiB */
+ static const cmdinfo_t	freesp_cmd =
+ 	{ "freesp", NULL, freesp_f, 0, -1, 0,
+@@ -93,18 +83,20 @@ freesp_f(
+ 		if (inaglist(agno))
+ 			scan_ag(agno);
+ 	}
+-	if (histcount)
++	if (hist_buckets(&freesp_hist))
+ 		printhist();
+ 	if (summaryflag) {
+-		dbprintf(_("total free extents %lld\n"), totexts);
+-		dbprintf(_("total free blocks %lld\n"), totblocks);
+-		dbprintf(_("average free extent size %g\n"),
+-			(double)totblocks / (double)totexts);
++		struct histogram_strings hstr = {
++			.sum		= _("total free blocks"),
++			.observations	= _("total free extents"),
++			.averages	= _("average free extent size"),
++		};
++
++		hist_summarize(&freesp_hist, &hstr);
+ 	}
+ 	if (aglist)
+ 		xfree(aglist);
+-	if (hist)
+-		xfree(hist);
++	hist_free(&freesp_hist);
  	return 0;
  }
-diff --git a/scrub/vfs.c b/scrub/vfs.c
-index bcfd4f42c..cc958ba94 100644
---- a/scrub/vfs.c
-+++ b/scrub/vfs.c
-@@ -298,11 +298,15 @@ struct fstrim_range {
- /* Call FITRIM to trim all the unused space in a filesystem. */
- int
- fstrim(
--	struct scrub_ctx	*ctx)
-+	struct scrub_ctx	*ctx,
-+	uint64_t		start,
-+	uint64_t		len)
+ 
+@@ -132,10 +124,9 @@ init(
+ 	int		speced = 0;
+ 
+ 	agcount = countflag = dumpflag = equalsize = multsize = optind = 0;
+-	histcount = seen1 = summaryflag = 0;
+-	totblocks = totexts = 0;
++	seen1 = summaryflag = 0;
+ 	aglist = NULL;
+-	hist = NULL;
++
+ 	while ((c = getopt(argc, argv, "A:a:bcde:h:m:s")) != EOF) {
+ 		switch (c) {
+ 		case 'A':
+@@ -163,7 +154,7 @@ init(
+ 			speced = 1;
+ 			break;
+ 		case 'h':
+-			if (speced && !histcount)
++			if (speced && hist_buckets(&freesp_hist) == 0)
+ 				return usage();
+ 			addhistent(atoi(optarg));
+ 			speced = 1;
+@@ -339,14 +330,7 @@ static void
+ addhistent(
+ 	int	h)
  {
--	struct fstrim_range	range = {0};
-+	struct fstrim_range	range = {
-+		.start		= start,
-+		.len		= len,
+-	hist = xrealloc(hist, (histcount + 1) * sizeof(*hist));
+-	if (h == 0)
+-		h = 1;
+-	hist[histcount].low = h;
+-	hist[histcount].count = hist[histcount].blocks = 0;
+-	histcount++;
+-	if (h == 1)
+-		seen1 = 1;
++	hist_add_bucket(&freesp_hist, h);
+ }
+ 
+ static void
+@@ -355,30 +339,12 @@ addtohist(
+ 	xfs_agblock_t	agbno,
+ 	xfs_extlen_t	len)
+ {
+-	int		i;
+-
+ 	if (alignment && (XFS_AGB_TO_FSB(mp,agno,agbno) % alignment))
+ 		return;
+ 
+ 	if (dumpflag)
+ 		dbprintf("%8d %8d %8d\n", agno, agbno, len);
+-	totexts++;
+-	totblocks += len;
+-	for (i = 0; i < histcount; i++) {
+-		if (hist[i].high >= len) {
+-			hist[i].count++;
+-			hist[i].blocks += len;
+-			break;
+-		}
+-	}
+-}
+-
+-static int
+-hcmp(
+-	const void	*a,
+-	const void	*b)
+-{
+-	return ((histent_t *)a)->low - ((histent_t *)b)->low;
++	hist_add(&freesp_hist, len);
+ }
+ 
+ static void
+@@ -387,6 +353,7 @@ histinit(
+ {
+ 	int	i;
+ 
++	hist_init(&freesp_hist);
+ 	if (equalsize) {
+ 		for (i = 1; i < maxlen; i += equalsize)
+ 			addhistent(i);
+@@ -396,27 +363,17 @@ histinit(
+ 	} else {
+ 		if (!seen1)
+ 			addhistent(1);
+-		qsort(hist, histcount, sizeof(*hist), hcmp);
+-	}
+-	for (i = 0; i < histcount; i++) {
+-		if (i < histcount - 1)
+-			hist[i].high = hist[i + 1].low - 1;
+-		else
+-			hist[i].high = maxlen;
+ 	}
++	hist_prepare(&freesp_hist, maxlen);
+ }
+ 
+ static void
+ printhist(void)
+ {
+-	int	i;
++	struct histogram_strings hstr = {
++		.sum		= _("blocks"),
++		.observations	= _("extents"),
 +	};
  
--	range.len = ULLONG_MAX;
- 	if (ioctl(ctx->mnt.fd, FITRIM, &range) == 0)
- 		return 0;
- 	if (errno == EOPNOTSUPP || errno == ENOTTY)
-diff --git a/scrub/vfs.h b/scrub/vfs.h
-index a8a4d72e2..1af8d80d1 100644
---- a/scrub/vfs.h
-+++ b/scrub/vfs.h
-@@ -24,6 +24,6 @@ typedef int (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
- int scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
- 		scan_fs_tree_dirent_fn dirent_fn, void *arg);
+-	dbprintf("%7s %7s %7s %7s %6s\n",
+-		_("from"), _("to"), _("extents"), _("blocks"), _("pct"));
+-	for (i = 0; i < histcount; i++) {
+-		if (hist[i].count)
+-			dbprintf("%7d %7d %7lld %7lld %6.2f\n", hist[i].low,
+-				hist[i].high, hist[i].count, hist[i].blocks,
+-				hist[i].blocks * 100.0 / totblocks);
+-	}
++	hist_print(&freesp_hist, &hstr);
+ }
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index 53e3c3492..acfa228bc 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -20,6 +20,7 @@ convert.c \
+ crc32.c \
+ file_exchange.c \
+ fsgeom.c \
++histogram.c \
+ list_sort.c \
+ linux.c \
+ logging.c \
+@@ -45,6 +46,7 @@ dahashselftest.h \
+ div64.h \
+ file_exchange.h \
+ fsgeom.h \
++histogram.h \
+ logging.h \
+ paths.h \
+ projects.h \
+diff --git a/libfrog/histogram.c b/libfrog/histogram.c
+new file mode 100644
+index 000000000..c2f344a88
+--- /dev/null
++++ b/libfrog/histogram.c
+@@ -0,0 +1,143 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
++ * Copyright (c) 2012 Red Hat, Inc.
++ * Copyright (c) 2017-2024 Oracle.
++ * All Rights Reserved.
++ */
++#include "xfs.h"
++#include <stdlib.h>
++#include <string.h>
++#include "platform_defs.h"
++#include "libfrog/histogram.h"
++
++/* Create a new bucket with the given low value. */
++int
++hist_add_bucket(
++	struct histogram	*hs,
++	long long		bucket_low)
++{
++	struct histbucket	*buckets;
++
++	if (hs->nr_buckets == INT_MAX)
++		return EFBIG;
++
++	buckets = realloc(hs->buckets,
++			(hs->nr_buckets + 1) * sizeof(struct histbucket));
++	if (!buckets)
++		return errno;
++
++	hs->buckets = buckets;
++	hs->buckets[hs->nr_buckets].low = bucket_low;
++	hs->buckets[hs->nr_buckets].nr_obs = 0;
++	hs->buckets[hs->nr_buckets].sum = 0;
++	hs->nr_buckets++;
++	return 0;
++}
++
++/* Add an observation to the histogram. */
++void
++hist_add(
++	struct histogram	*hs,
++	long long		len)
++{
++	unsigned int		i;
++
++	hs->tot_obs++;
++	hs->tot_sum += len;
++	for (i = 0; i < hs->nr_buckets; i++) {
++		if (hs->buckets[i].high >= len) {
++			hs->buckets[i].nr_obs++;
++			hs->buckets[i].sum += len;
++			break;
++		}
++	}
++}
++
++static int
++histbucket_cmp(
++	const void		*a,
++	const void		*b)
++{
++	const struct histbucket	*ha = a;
++	const struct histbucket	*hb = b;
++
++	if (ha->low < hb->low)
++		return -1;
++	if (ha->low > hb->low)
++		return 1;
++	return 0;
++}
++
++/* Prepare a histogram for bucket configuration. */
++void
++hist_init(
++	struct histogram	*hs)
++{
++	memset(hs, 0, sizeof(struct histogram));
++}
++
++/* Prepare a histogram to receive data observations. */
++void
++hist_prepare(
++	struct histogram	*hs,
++	long long		maxlen)
++{
++	unsigned int		i;
++
++	qsort(hs->buckets, hs->nr_buckets, sizeof(struct histbucket),
++			histbucket_cmp);
++
++	for (i = 0; i < hs->nr_buckets - 1; i++)
++		hs->buckets[i].high = hs->buckets[i + 1].low - 1;
++	hs->buckets[hs->nr_buckets - 1].high = maxlen;
++}
++
++/* Free all data associated with a histogram. */
++void
++hist_free(
++	struct histogram	*hs)
++{
++	free(hs->buckets);
++	memset(hs, 0, sizeof(struct histogram));
++}
++
++/* Dump a histogram to stdout. */
++void
++hist_print(
++	const struct histogram		*hs,
++	const struct histogram_strings	*hstr)
++{
++	unsigned int			obs_w = strlen(hstr->observations);
++	unsigned int			sum_w = strlen(hstr->sum);
++	unsigned int			i;
++
++	printf("%7s %7s %*s %*s %6s\n",
++			_("from"), _("to"),
++			obs_w, hstr->observations,
++			sum_w, hstr->sum,
++			_("pct"));
++
++	for (i = 0; i < hs->nr_buckets; i++) {
++		if (hs->buckets[i].nr_obs == 0)
++			continue;
++
++		printf("%7lld %7lld %*lld %*lld %6.2f\n",
++				hs->buckets[i].low, hs->buckets[i].high,
++				obs_w, hs->buckets[i].nr_obs,
++				sum_w, hs->buckets[i].sum,
++				hs->buckets[i].sum * 100.0 / hs->tot_sum);
++	}
++}
++
++/* Summarize the contents of the histogram. */
++void
++hist_summarize(
++	const struct histogram		*hs,
++	const struct histogram_strings	*hstr)
++{
++	printf("%s %lld\n", hstr->observations, hs->tot_obs);
++	printf("%s %lld\n", hstr->sum, hs->tot_sum);
++	printf("%s %g\n", hstr->averages,
++			(double)hs->tot_sum / (double)hs->tot_obs);
++}
+diff --git a/libfrog/histogram.h b/libfrog/histogram.h
+new file mode 100644
+index 000000000..68afdeb29
+--- /dev/null
++++ b/libfrog/histogram.h
+@@ -0,0 +1,63 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
++ * Copyright (c) 2012 Red Hat, Inc.
++ * Copyright (c) 2017-2024 Oracle.
++ * All Rights Reserved.
++ */
++#ifndef __LIBFROG_HISTOGRAM_H__
++#define __LIBFROG_HISTOGRAM_H__
++
++struct histbucket {
++	/* Low and high size of this bucket */
++	long long		low;
++	long long		high;
++
++	/* Count of observations recorded */
++	long long		nr_obs;
++
++	/* Sum of values recorded */
++	long long		sum;
++};
++
++struct histogram {
++	/* Sum of all values recorded */
++	long long		tot_sum;
++
++	/* Count of all observations recorded */
++	long long		tot_obs;
++
++	struct histbucket	*buckets;
++
++	/* Number of buckets */
++	unsigned int		nr_buckets;
++};
++
++int hist_add_bucket(struct histogram *hs, long long bucket_low);
++void hist_add(struct histogram *hs, long long value);
++void hist_init(struct histogram *hs);
++void hist_prepare(struct histogram *hs, long long maxvalue);
++void hist_free(struct histogram *hs);
++
++struct histogram_strings {
++	/* What does each sum represent? ("free blocks") */
++	const char		*sum;
++
++	/* What does each observation represent? ("free extents") */
++	const char		*observations;
++
++	/* What does sum / observation represent? ("average extent length") */
++	const char		*averages;
++};
++
++void hist_print(const struct histogram *hs,
++		const struct histogram_strings *hstr);
++void hist_summarize(const struct histogram *hs,
++		const struct histogram_strings *hstr);
++
++static inline unsigned int hist_buckets(const struct histogram *hs)
++{
++	return hs->nr_buckets;
++}
++
++#endif /* __LIBFROG_HISTOGRAM_H__ */
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+index f5177cb4e..dfbec52a7 100644
+--- a/spaceman/freesp.c
++++ b/spaceman/freesp.c
+@@ -15,76 +15,52 @@
+ #include "libfrog/paths.h"
+ #include "space.h"
+ #include "input.h"
+-
+-struct histent
+-{
+-	long long	low;
+-	long long	high;
+-	long long	count;
+-	long long	blocks;
+-};
++#include "libfrog/histogram.h"
  
--int fstrim(struct scrub_ctx *ctx);
-+int fstrim(struct scrub_ctx *ctx, uint64_t start, uint64_t len);
+ static int		agcount;
+ static xfs_agnumber_t	*aglist;
+-static struct histent	*hist;
++static struct histogram	freesp_hist;
+ static int		dumpflag;
+ static long long	equalsize;
+ static long long	multsize;
+-static int		histcount;
+ static int		seen1;
+ static int		summaryflag;
+ static int		gflag;
+ static bool		rtflag;
+-static long long	totblocks;
+-static long long	totexts;
  
- #endif /* XFS_SCRUB_VFS_H_ */
+ static cmdinfo_t freesp_cmd;
+ 
+-static void
++static inline void
+ addhistent(
+ 	long long	h)
+ {
+-	if (histcount == INT_MAX) {
++	int		error;
++
++	error = hist_add_bucket(&freesp_hist, h);
++	if (error == EFBIG) {
+ 		printf(_("Too many histogram buckets.\n"));
+ 		return;
+ 	}
+-	hist = realloc(hist, (histcount + 1) * sizeof(*hist));
++	if (error) {
++		printf("%s\n", strerror(error));
++		return;
++	}
++
+ 	if (h == 0)
+ 		h = 1;
+-	hist[histcount].low = h;
+-	hist[histcount].count = hist[histcount].blocks = 0;
+-	histcount++;
+ 	if (h == 1)
+ 		seen1 = 1;
+ }
+ 
+-static void
++static inline void
+ addtohist(
+ 	xfs_agnumber_t	agno,
+ 	xfs_agblock_t	agbno,
+ 	off_t		len)
+ {
+-	long		i;
+-
+ 	if (dumpflag)
+ 		printf("%8d %8d %8"PRId64"\n", agno, agbno, len);
+-	totexts++;
+-	totblocks += len;
+-	for (i = 0; i < histcount; i++) {
+-		if (hist[i].high >= len) {
+-			hist[i].count++;
+-			hist[i].blocks += len;
+-			break;
+-		}
+-	}
+-}
+-
+-static int
+-hcmp(
+-	const void	*a,
+-	const void	*b)
+-{
+-	return ((struct histent *)a)->low - ((struct histent *)b)->low;
++	hist_add(&freesp_hist, len);
+ }
+ 
+ static void
+@@ -93,6 +69,7 @@ histinit(
+ {
+ 	long long	i;
+ 
++	hist_init(&freesp_hist);
+ 	if (equalsize) {
+ 		for (i = 1; i < maxlen; i += equalsize)
+ 			addhistent(i);
+@@ -102,29 +79,19 @@ histinit(
+ 	} else {
+ 		if (!seen1)
+ 			addhistent(1);
+-		qsort(hist, histcount, sizeof(*hist), hcmp);
+-	}
+-	for (i = 0; i < histcount; i++) {
+-		if (i < histcount - 1)
+-			hist[i].high = hist[i + 1].low - 1;
+-		else
+-			hist[i].high = maxlen;
+ 	}
++	hist_prepare(&freesp_hist, maxlen);
+ }
+ 
+-static void
++static inline void
+ printhist(void)
+ {
+-	int	i;
++	struct histogram_strings hstr = {
++		.sum		= _("blocks"),
++		.observations	= _("extents"),
++	};
+ 
+-	printf("%7s %7s %7s %7s %6s\n",
+-		_("from"), _("to"), _("extents"), _("blocks"), _("pct"));
+-	for (i = 0; i < histcount; i++) {
+-		if (hist[i].count)
+-			printf("%7lld %7lld %7lld %7lld %6.2f\n", hist[i].low,
+-				hist[i].high, hist[i].count, hist[i].blocks,
+-				hist[i].blocks * 100.0 / totblocks);
+-	}
++	hist_print(&freesp_hist, &hstr);
+ }
+ 
+ static int
+@@ -255,10 +222,8 @@ init(
+ 	int			speced = 0;	/* only one of -b -e -h or -m */
+ 
+ 	agcount = dumpflag = equalsize = multsize = optind = gflag = 0;
+-	histcount = seen1 = summaryflag = 0;
+-	totblocks = totexts = 0;
++	seen1 = summaryflag = 0;
+ 	aglist = NULL;
+-	hist = NULL;
+ 	rtflag = false;
+ 
+ 	while ((c = getopt(argc, argv, "a:bde:gh:m:rs")) != EOF) {
+@@ -287,7 +252,7 @@ init(
+ 			gflag++;
+ 			break;
+ 		case 'h':
+-			if (speced && !histcount)
++			if (speced && hist_buckets(&freesp_hist) == 0)
+ 				goto many_spec;
+ 			/* addhistent increments histcount */
+ 			x = cvt_s64(optarg, 0);
+@@ -345,18 +310,20 @@ freesp_f(
+ 		if (inaglist(agno))
+ 			scan_ag(agno);
+ 	}
+-	if (histcount && !gflag)
++	if (hist_buckets(&freesp_hist) > 0 && !gflag)
+ 		printhist();
+ 	if (summaryflag) {
+-		printf(_("total free extents %lld\n"), totexts);
+-		printf(_("total free blocks %lld\n"), totblocks);
+-		printf(_("average free extent size %g\n"),
+-			(double)totblocks / (double)totexts);
++		struct histogram_strings hstr = {
++			.sum		= _("total free blocks"),
++			.observations	= _("total free extents"),
++			.averages	= _("average free extent size"),
++		};
++
++		hist_summarize(&freesp_hist, &hstr);
+ 	}
+ 	if (aglist)
+ 		free(aglist);
+-	if (hist)
+-		free(hist);
++	hist_free(&freesp_hist);
+ 	return 0;
+ }
+ 
 
