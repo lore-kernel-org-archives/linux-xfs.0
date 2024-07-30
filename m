@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1CB63D
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:53:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D797F646
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:53:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300780; cv=none; b=i+SkD/u8GFXJeGbdRQOEDgIdk7ElhgE17evfQtuRdqIaIZDb96rAQvY4Q04QecQCl8b1TOR6Br04FsHDGgjF3o/h+KLZDJJHxqsrNNSsn4+OAvZOcDScadudpP2o2179Ehv44jee3+eCvOcEL0u4TSxMy7hncIfHd1n+J1jnvlQ=
+	t=1722300795; cv=none; b=Y+5dpFGlTO67u5zDgg1nP7kMe7u/gryQtPrTt+4OEWmCxdapdgBqcqV7xRbeDmCCrmqLfve0QpMYGb+ktB2sSVee1/xgyFLmNHQ1YhjNylmm9/Vt+VyjOSssWGxeXJaMvqUndOhThrKP97xMerx8QXR2OuhabqWxn9CUnthdlQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300780; c=relaxed/simple;
-	bh=YB6LGPg4laErKm6ba8BGrHDa+oP290ymgPN08DXflNw=;
+	s=arc-20240116; t=1722300795; c=relaxed/simple;
+	bh=P8t9oW+470k2RMY1bYf/1w4HnT17gFkiTGuLONp3M4A=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fHFgolD1FVtZQ5W5sxtGDNfG8n8dqtCyhsJEn2sBlaIx8K+lyKDW6jz0/GklLh9+jeclJGTImkVvsmNipbXbjq4Yi8WGurVAk8pIe2EuRM93GDYzOymkIC7rjbviOYyDH1vr9iXDnqQVDixwiQKZKiw1YDIQHbPkYQWNzkwnExM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lOJUeI04; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uLixYSzTt4nP8/eCFv6KpEC7JPxfd9Mehy079H1suhRjf4Ken7ATBv+6wu4fpl62VeWSIetMaZP4Xwlaw5I97jwuoxfmHsvGjFXIHIfwS/A7hJdfeqDRiQPrGToDw5RTjYITTmBp2Y+nWxvu85o/ybh4LHKRf26qys1P0YW2tcw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MxL6U9lO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lOJUeI04"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 030C4C32786;
-	Tue, 30 Jul 2024 00:52:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MxL6U9lO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE0B6C32786;
+	Tue, 30 Jul 2024 00:53:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300780;
-	bh=YB6LGPg4laErKm6ba8BGrHDa+oP290ymgPN08DXflNw=;
+	s=k20201202; t=1722300795;
+	bh=P8t9oW+470k2RMY1bYf/1w4HnT17gFkiTGuLONp3M4A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lOJUeI048hJBtWpoewFecTC+3yBrjABhpeBfa+8P7FUBD1fpyHfPcCLfOdxIyrEQ7
-	 rAADQ/tHWu+oAo6LAkPVTjAEVdtVBaLQVx/0CK7eYXnjenWSu08hA2egjeL/nmZk3b
-	 ApKyQbDwO7r1Ll+MM8HXGJ9IZUekyNoMdTNSAMhNLUI8TUVAew+z9B8tQbc46VJ+ET
-	 YMwZds7Xo4xxrKSqdqPuJhY8guEq9ITe03+GzUV+wpZjcJmcfpEGfusudlRG/A5NRU
-	 Y9GzkYf0YbRz8rF1puGJlQbp3VWXtAw1pig/65hwGrqVrkPv74ps2fE1MD+npqpEDZ
-	 zSvPCTFNYi94g==
-Date: Mon, 29 Jul 2024 17:52:59 -0700
-Subject: [PATCH 112/115] xfs: make sure sb_fdblocks is non-negative
+	b=MxL6U9lOZGGBbKm41YpuFomQnHTZ9wXWbgOfm2orCqqAcrEl+//4iQQqJ9F5A3u9d
+	 kcFzbrR6xnpvFbYmrB4W+Z+/zvMHE5u75KXQYYfvvSDsrtWlWm/tcpe7jTKGJw0Eii
+	 faQk7avhRx/LP/+FMX7b9HaDioDoG435mID85VERg/57iclYnQuFkrNNCGLXJvoht4
+	 RVJx+osCHzFlpC1wx+7gPZU6rxEPYCgskTZoW4QgZJ8hu09Hs9gcqqXyLnq0+kOXTq
+	 21Hq+fmCnnbFOL7FSdSIlw9mumGThBYjp+kEl3MhCkEUxK/ELyi0vH6IN/LIDl15+V
+	 EjLCeiTRJjkng==
+Date: Mon, 29 Jul 2024 17:53:15 -0700
+Subject: [PATCH 113/115] xfs: restrict when we try to align cow fork delalloc
+ to cowextsz hints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Wengang Wang <wen.gang.wang@oracle.com>,
- Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-Message-ID: <172229844017.1338752.2042405284909950974.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
+ linux-xfs@vger.kernel.org
+Message-ID: <172229844030.1338752.4439274179388747119.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,83 +46,126 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Wengang Wang <wen.gang.wang@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 58f880711f2ba53fd5e959875aff5b3bf6d5c32e
+Source kernel commit: 288e1f693f04e66be99f27e7cbe4a45936a66745
 
-A user with a completely full filesystem experienced an unexpected
-shutdown when the filesystem tried to write the superblock during
-runtime.
-kernel shows the following dmesg:
+xfs/205 produces the following failure when always_cow is enabled:
 
-[    8.176281] XFS (dm-4): Metadata corruption detected at xfs_sb_write_verify+0x60/0x120 [xfs], xfs_sb block 0x0
-[    8.177417] XFS (dm-4): Unmount and run xfs_repair
-[    8.178016] XFS (dm-4): First 128 bytes of corrupted metadata buffer:
-[    8.178703] 00000000: 58 46 53 42 00 00 10 00 00 00 00 00 01 90 00 00  XFSB............
-[    8.179487] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[    8.180312] 00000020: cf 12 dc 89 ca 26 45 29 92 e6 e3 8d 3b b8 a2 c3  .....&E)....;...
-[    8.181150] 00000030: 00 00 00 00 01 00 00 06 00 00 00 00 00 00 00 80  ................
-[    8.182003] 00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
-[    8.182004] 00000050: 00 00 00 01 00 64 00 00 00 00 00 04 00 00 00 00  .....d..........
-[    8.182004] 00000060: 00 00 64 00 b4 a5 02 00 02 00 00 08 00 00 00 00  ..d.............
-[    8.182005] 00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 17 00 00 19  ................
-[    8.182008] XFS (dm-4): Corruption of in-memory data detected.  Shutting down filesystem
-[    8.182010] XFS (dm-4): Please unmount the filesystem and rectify the problem(s)
+This is the result of overly aggressive attempts to align cow fork
+delalloc reservations to the CoW extent size hint.  Looking at the trace
+data, we're trying to append a single fsblock to the "fred" file.
+Trying to create a speculative post-eof reservation fails because
+there's not enough space.
 
-When xfs_log_sb writes super block to disk, b_fdblocks is fetched from
-m_fdblocks without any lock. As m_fdblocks can experience a positive ->
-negative -> positive changing when the FS reaches fullness (see
-xfs_mod_fdblocks). So there is a chance that sb_fdblocks is negative, and
-because sb_fdblocks is type of unsigned long long, it reads super big.
-And sb_fdblocks being bigger than sb_dblocks is a problem during log
-recovery, xfs_validate_sb_write() complains.
+We then set @prealloc_blocks to zero and try again, but the cowextsz
+alignment code triggers, which expands our request for a 1-fsblock
+reservation into a 39-block reservation.  There's not enough space for
+that, so the whole write fails with ENOSPC even though there's
+sufficient space in the filesystem to allocate the single block that we
+need to land the write.
 
-Fix:
-As sb_fdblocks will be re-calculated during mount when lazysbcount is
-enabled, We just need to make xfs_validate_sb_write() happy -- make sure
-sb_fdblocks is not nenative. This patch also takes care of other percpu
-counters in xfs_log_sb.
+There are two things wrong here -- first, we shouldn't be attempting
+speculative preallocations beyond what was requested when we're low on
+space.  Second, if we've already computed a posteof preallocation, we
+shouldn't bother trying to align that to the cowextsize hint.
 
-Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Fix both of these problems by adding a flag that only enables the
+expansion of the delalloc reservation to the cowextsize if we're doing a
+non-extending write, and only if we're not doing an ENOSPC retry.  This
+requires us to move the ENOSPC retry logic to xfs_bmapi_reserve_delalloc.
+
+I probably should have caught this six years ago when 6ca30729c206d was
+being reviewed, but oh well.  Update the comments to reflect what the
+code does now.
+
+Fixes: 6ca30729c206d ("xfs: bmap code cleanup")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/libxfs_priv.h |    2 +-
- libxfs/xfs_sb.c      |    7 ++++---
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ include/xfs_trace.h |    1 +
+ libxfs/xfs_bmap.c   |   31 +++++++++++++++++++++++++++----
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 64bc10e10..5d1aa23c7 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -210,7 +210,7 @@ static inline bool WARN_ON(bool expr) {
- #define WARN_ON_ONCE(e)			WARN_ON(e)
- #define percpu_counter_read(x)		(*x)
- #define percpu_counter_read_positive(x)	((*x) > 0 ? (*x) : 0)
--#define percpu_counter_sum(x)		(*x)
-+#define percpu_counter_sum_positive(x)	((*x) > 0 ? (*x) : 0)
+diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+index 2e5e89d65..fe0854b20 100644
+--- a/include/xfs_trace.h
++++ b/include/xfs_trace.h
+@@ -68,6 +68,7 @@
+ #define trace_xfs_log_recover_item_add(a,b,c,d)	((void) 0)
  
- /*
-  * get_random_u32 is used for di_gen inode allocation, it must be zero for
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index f45ffd994..bedb36a06 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1035,11 +1035,12 @@ xfs_log_sb(
- 	 * and hence we don't need have to update it here.
+ #define trace_xfs_da_btree_corrupt(a,b)		((void) 0)
++#define trace_xfs_delalloc_enospc(...)		((void) 0)
+ #define trace_xfs_btree_corrupt(a,b)		((void) 0)
+ #define trace_xfs_btree_updkeys(a,b,c)		((void) 0)
+ #define trace_xfs_btree_overlapped_query_range(a,b,c)	((void) 0)
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index a0dda4640..e60d11470 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -4052,20 +4052,32 @@ xfs_bmapi_reserve_delalloc(
+ 	xfs_extlen_t		indlen;
+ 	uint64_t		fdblocks;
+ 	int			error;
+-	xfs_fileoff_t		aoff = off;
++	xfs_fileoff_t		aoff;
++	bool			use_cowextszhint =
++					whichfork == XFS_COW_FORK && !prealloc;
+ 
++retry:
+ 	/*
+ 	 * Cap the alloc length. Keep track of prealloc so we know whether to
+ 	 * tag the inode before we return.
  	 */
- 	if (xfs_has_lazysbcount(mp)) {
--		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
-+		mp->m_sb.sb_icount = percpu_counter_sum_positive(&mp->m_icount);
- 		mp->m_sb.sb_ifree = min_t(uint64_t,
--				percpu_counter_sum(&mp->m_ifree),
-+				percpu_counter_sum_positive(&mp->m_ifree),
- 				mp->m_sb.sb_icount);
--		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
-+		mp->m_sb.sb_fdblocks =
-+				percpu_counter_sum_positive(&mp->m_fdblocks);
- 	}
++	aoff = off;
+ 	alen = XFS_FILBLKS_MIN(len + prealloc, XFS_MAX_BMBT_EXTLEN);
+ 	if (!eof)
+ 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
+ 	if (prealloc && alen >= len)
+ 		prealloc = alen - len;
  
- 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+-	/* Figure out the extent size, adjust alen */
+-	if (whichfork == XFS_COW_FORK) {
++	/*
++	 * If we're targetting the COW fork but aren't creating a speculative
++	 * posteof preallocation, try to expand the reservation to align with
++	 * the COW extent size hint if there's sufficient free space.
++	 *
++	 * Unlike the data fork, the CoW cancellation functions will free all
++	 * the reservations at inactivation, so we don't require that every
++	 * delalloc reservation have a dirty pagecache.
++	 */
++	if (use_cowextszhint) {
+ 		struct xfs_bmbt_irec	prev;
+ 		xfs_extlen_t		extsz = xfs_get_cowextsz_hint(ip);
+ 
+@@ -4084,7 +4096,7 @@ xfs_bmapi_reserve_delalloc(
+ 	 */
+ 	error = xfs_quota_reserve_blkres(ip, alen);
+ 	if (error)
+-		return error;
++		goto out;
+ 
+ 	/*
+ 	 * Split changing sb for alen and indlen since they could be coming
+@@ -4134,6 +4146,17 @@ xfs_bmapi_reserve_delalloc(
+ out_unreserve_quota:
+ 	if (XFS_IS_QUOTA_ON(mp))
+ 		xfs_quota_unreserve_blkres(ip, alen);
++out:
++	if (error == -ENOSPC || error == -EDQUOT) {
++		trace_xfs_delalloc_enospc(ip, off, len);
++
++		if (prealloc || use_cowextszhint) {
++			/* retry without any preallocation */
++			use_cowextszhint = false;
++			prealloc = 0;
++			goto retry;
++		}
++	}
+ 	return error;
+ }
+ 
 
