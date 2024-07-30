@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4262BA38
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:32:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1FBC2C6
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:32:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722303145; cv=none; b=qqI8aHOGw6kX2aFloUFYSAGZ3+yu3ZLywD6ycohz60gRW5YQQifPQxl0z7ou6gomrCmUS8mqHQNKFOK5Ej081I9kSy1PNjRU8s8u8o5xFyFBUrTExN6hWCqwPh5u/2LlW4cFMH5kFtKnxjmXa1Zb+TnmGe3dmQW3hfHzW4g+FmA=
+	t=1722303161; cv=none; b=hkn6zEwNYP0t9E5HcMy51AySXsBt7hPKUKmqQ9WUhM9gs0W+gsmy4HdHTsyZbGLHoi3nn8C/jWikBasprHnABEEeA+p0Y9V32KdYFfv2+xRum4SWY9bqdg/Yy7IRG1dy34POXAOXZ+dE0Sus/4GgGuyvJus6HJgJ6TxLxNtPvqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722303145; c=relaxed/simple;
-	bh=jnQdJ1JdQmNLC5Td59N5b28xPTfXmXFrVKYzrPU6uvs=;
+	s=arc-20240116; t=1722303161; c=relaxed/simple;
+	bh=TI+/eJFVt4qexOnV8Cs5zzEd5NxAZRMvr00G3KXpAok=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IDKzJOy/4PwjbP/L8aX3ffkhJ+MLPE9xHkdcXlSs5opm3tKWcFjhczSXBdpEII82EZgVMzEIIjru/UoyH4bvde+lqud8G6c0A1w9gcR7zfjgPEdJ4KWNvqelPjopsbiYNSowAtWlV8HsbhjW490Z5t4lf/gzOe1F5MzW24zNZfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=adaJDJIa; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AH0pIpeSqm4dD9anAv6GLEpSYYpt0T8PpcnHIJ1+6uZ2wYf4Ykk9dHxGx08uzITg/3WBO9UVRoPQaCAnAp+GHjW2bmZMd88lPQ/EqVdr0gXTgdGk2gWyAb5mHeRgizpVN7HCRQkePswBpWE0/b0cOmx+lfVtLQpmF6AZtWUqVYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IXrZ0mLP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="adaJDJIa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49126C32786;
-	Tue, 30 Jul 2024 01:32:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IXrZ0mLP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4E7BC32786;
+	Tue, 30 Jul 2024 01:32:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722303145;
-	bh=jnQdJ1JdQmNLC5Td59N5b28xPTfXmXFrVKYzrPU6uvs=;
+	s=k20201202; t=1722303161;
+	bh=TI+/eJFVt4qexOnV8Cs5zzEd5NxAZRMvr00G3KXpAok=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=adaJDJIafkgqRNnPtvr/nRHkYO4lwOZjGyfo0q7h4Fj/a+TmwbEfWPT3yfbumauiI
-	 +Sdo4dbwjXd119QPDMNlfGHGfchnbPUNROfHg5DbK19Bme9NyifKBpwKtpIpC/fcZ+
-	 2NZuXpa6VqWxB/xmdhw0b5uozBlWOlRBUNGxrpfxYw3EtJzbPb76jwia8+zjlMOMiJ
-	 U535/fozhHQkAA6FpJZrs4v9PnEbCde1qu2r0DOga63VWAeF45PP4It4d5qKYgjH33
-	 5K4U4aNRv4t5kwttbQ4FDjyFt1+pE7wJ7xznvhcdnT6scqoDsMG5Tc6iU0WQxpoNds
-	 UXMKaGpH9rp5w==
-Date: Mon, 29 Jul 2024 18:32:24 -0700
-Subject: [PATCH 09/10] xfs_scrub: use scrub barriers to reduce kernel calls
+	b=IXrZ0mLP5lEBBMdTlH0ct0/k5tY/MGTcsVb3aKDuruuP1hOiOm5/Snb7fJ8/rZp6S
+	 ITza3ahoo5sT8+iAMoblyTORwYCC+r5OcJRMhtatnNHDOjcsmYotgELWGGbD37k5FU
+	 mi5HPLJ6b+fr7UWN3PqgOMfLwziA2oc8v6zfmEIWU2nHJbAoZDDJespWnLfOxvQYGS
+	 H8r5/rbVPSwN0xEzgMukzmCth8F67cQNDCj29yh1lec75q7jVREMJu3Pecm3H6dK+3
+	 0kMcLAJGzcJgoqkuTZ68a2U00kQK13cMIRY9Y//tYwiUUXGeEiyplHIfe6JRqV5VU+
+	 +IH9iW2eG4WJQ==
+Date: Mon, 29 Jul 2024 18:32:40 -0700
+Subject: [PATCH 10/10] xfs_scrub: try spot repairs of metadata items to make
+ scrub progress
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229852474.1353240.7183452625768502480.stgit@frogsfrogsfrogs>
+Message-ID: <172229852487.1353240.15543838281635454310.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229852355.1353240.6151017907178495656.stgit@frogsfrogsfrogs>
 References: <172229852355.1353240.6151017907178495656.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,367 +47,290 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use scrub barriers so that we can submit a single scrub request for a
-bunch of things, and have the kernel stop midway through if it finds
-anything broken.
+Now that we've enabled scrub dependency barriers, it's possible that a
+scrub_item_check call will return with some of the scrub items still in
+NEEDSCHECK state.  If, for example, scrub type B depends on scrub type
+A being clean and A is not clean, B will still be in NEEDSCHECK state.
+
+In order to make as much scanning progress as possible during phase 2
+and phase 3, allow ourselves to try some spot repairs in the hopes that
+it will enable us to make progress towards at least scanning the whole
+metadata item.  If we can't make any forward progress, we'll queue the
+scrub item for repair in phase 4, which means that anything still in in
+NEEDSCHECK state becomes CORRUPT state.  (At worst, the NEEDSCHECK item
+will actually be clean by phase 4, and xfs_scrub will report that it
+didn't need any work after all.)
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/phase2.c        |   15 ++--------
- scrub/phase3.c        |   17 +----------
- scrub/repair.c        |   32 +++++++++++++++++++-
- scrub/scrub.c         |   77 ++++++++++++++++++++++++++++++++++++++++++++++++-
- scrub/scrub.h         |   17 +++++++++++
- scrub/scrub_private.h |    4 ++-
- 6 files changed, 130 insertions(+), 32 deletions(-)
+ scrub/phase2.c |   78 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/phase3.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ scrub/repair.c |   15 +++++++++++
+ 3 files changed, 163 insertions(+), 1 deletion(-)
 
 
 diff --git a/scrub/phase2.c b/scrub/phase2.c
-index 57c6d0ef2..d435da071 100644
+index d435da071..c24d13735 100644
 --- a/scrub/phase2.c
 +++ b/scrub/phase2.c
-@@ -91,21 +91,12 @@ scan_ag_metadata(
- 	snprintf(descr, DESCR_BUFSZ, _("AG %u"), agno);
+@@ -69,6 +69,53 @@ defer_fs_repair(
+ 	return 0;
+ }
  
- 	/*
--	 * First we scrub and fix the AG headers, because we need
--	 * them to work well enough to check the AG btrees.
-+	 * First we scrub and fix the AG headers, because we need them to work
-+	 * well enough to check the AG btrees.  Then scrub the AG btrees.
- 	 */
- 	scrub_item_schedule_group(&sri, XFROG_SCRUB_GROUP_AGHEADER);
--	ret = scrub_item_check(ctx, &sri);
--	if (ret)
--		goto err;
--
--	/* Repair header damage. */
--	ret = repair_item_corruption(ctx, &sri);
--	if (ret)
--		goto err;
--
--	/* Now scrub the AG btrees. */
- 	scrub_item_schedule_group(&sri, XFROG_SCRUB_GROUP_PERAG);
++/*
++ * If we couldn't check all the scheduled metadata items, try performing spot
++ * repairs until we check everything or stop making forward progress.
++ */
++static int
++repair_and_scrub_loop(
++	struct scrub_ctx	*ctx,
++	struct scrub_item	*sri,
++	const char		*descr,
++	bool			*defer)
++{
++	unsigned int		to_check;
++	int			ret;
 +
++	*defer = false;
++	if (ctx->mode != SCRUB_MODE_REPAIR)
++		return 0;
++
++	to_check = scrub_item_count_needscheck(sri);
++	while (to_check > 0) {
++		unsigned int	nr;
++
++		ret = repair_item_corruption(ctx, sri);
++		if (ret)
++			return ret;
++
++		ret = scrub_item_check(ctx, sri);
++		if (ret)
++			return ret;
++
++		nr = scrub_item_count_needscheck(sri);
++		if (nr == to_check) {
++			/*
++			 * We cannot make forward scanning progress with this
++			 * metadata, so defer the rest until phase 4.
++			 */
++			str_info(ctx, descr,
++ _("Unable to make forward checking progress; will try again in phase 4."));
++			*defer = true;
++			return 0;
++		}
++		to_check = nr;
++	}
++
++	return 0;
++}
++
+ /* Scrub each AG's metadata btrees. */
+ static void
+ scan_ag_metadata(
+@@ -82,6 +129,7 @@ scan_ag_metadata(
+ 	struct scan_ctl			*sctl = arg;
+ 	char				descr[DESCR_BUFSZ];
+ 	unsigned int			difficulty;
++	bool				defer_repairs;
+ 	int				ret;
+ 
+ 	if (sctl->aborted)
+@@ -97,10 +145,22 @@ scan_ag_metadata(
+ 	scrub_item_schedule_group(&sri, XFROG_SCRUB_GROUP_AGHEADER);
+ 	scrub_item_schedule_group(&sri, XFROG_SCRUB_GROUP_PERAG);
+ 
++	/*
++	 * Try to check all of the AG metadata items that we just scheduled.
++	 * If we return with some types still needing a check, try repairing
++	 * any damaged metadata that we've found so far, and try again.  Abort
++	 * if we stop making forward progress.
++	 */
  	ret = scrub_item_check(ctx, &sri);
  	if (ret)
  		goto err;
+ 
++	ret = repair_and_scrub_loop(ctx, &sri, descr, &defer_repairs);
++	if (ret)
++		goto err;
++	if (defer_repairs)
++		goto defer;
++
+ 	/*
+ 	 * Figure out if we need to perform early fixing.  The only
+ 	 * reason we need to do this is if the inobt is broken, which
+@@ -117,6 +177,7 @@ scan_ag_metadata(
+ 	if (ret)
+ 		goto err;
+ 
++defer:
+ 	/* Everything else gets fixed during phase 4. */
+ 	ret = defer_fs_repair(ctx, &sri);
+ 	if (ret)
+@@ -137,11 +198,18 @@ scan_fs_metadata(
+ 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	struct scan_ctl		*sctl = arg;
+ 	unsigned int		difficulty;
++	bool			defer_repairs;
+ 	int			ret;
+ 
+ 	if (sctl->aborted)
+ 		goto out;
+ 
++	/*
++	 * Try to check all of the metadata files that we just scheduled.  If
++	 * we return with some types still needing a check, try repairing any
++	 * damaged metadata that we've found so far, and try again.  Abort if
++	 * we stop making forward progress.
++	 */
+ 	scrub_item_init_fs(&sri);
+ 	scrub_item_schedule(&sri, type);
+ 	ret = scrub_item_check(ctx, &sri);
+@@ -150,10 +218,20 @@ scan_fs_metadata(
+ 		goto out;
+ 	}
+ 
++	ret = repair_and_scrub_loop(ctx, &sri, xfrog_scrubbers[type].descr,
++			&defer_repairs);
++	if (ret) {
++		sctl->aborted = true;
++		goto out;
++	}
++	if (defer_repairs)
++		goto defer;
++
+ 	/* Complain about metadata corruptions that might not be fixable. */
+ 	difficulty = repair_item_difficulty(&sri);
+ 	warn_repair_difficulties(ctx, difficulty, xfrog_scrubbers[type].descr);
+ 
++defer:
+ 	ret = defer_fs_repair(ctx, &sri);
+ 	if (ret) {
+ 		sctl->aborted = true;
 diff --git a/scrub/phase3.c b/scrub/phase3.c
-index 98e5c5a1f..09a1ea452 100644
+index 09a1ea452..046a42c1d 100644
 --- a/scrub/phase3.c
 +++ b/scrub/phase3.c
-@@ -145,25 +145,11 @@ scrub_inode(
+@@ -99,6 +99,58 @@ try_inode_repair(
+ 	return repair_file_corruption(ictx->ctx, sri, fd);
+ }
  
- 	/* Scrub the inode. */
- 	scrub_item_schedule(&sri, XFS_SCRUB_TYPE_INODE);
--	error = scrub_item_check_file(ctx, &sri, fd);
--	if (error)
--		goto out;
--
--	error = try_inode_repair(ictx, &sri, fd);
--	if (error)
--		goto out;
- 
- 	/* Scrub all block mappings. */
- 	scrub_item_schedule(&sri, XFS_SCRUB_TYPE_BMBTD);
- 	scrub_item_schedule(&sri, XFS_SCRUB_TYPE_BMBTA);
- 	scrub_item_schedule(&sri, XFS_SCRUB_TYPE_BMBTC);
--	error = scrub_item_check_file(ctx, &sri, fd);
--	if (error)
--		goto out;
--
--	error = try_inode_repair(ictx, &sri, fd);
--	if (error)
--		goto out;
- 
- 	/*
- 	 * Check file data contents, e.g. symlink and directory entries.
-@@ -182,11 +168,12 @@ scrub_inode(
- 
++/*
++ * If we couldn't check all the scheduled file metadata items, try performing
++ * spot repairs until we check everything or stop making forward progress.
++ */
++static int
++repair_and_scrub_inode_loop(
++	struct scrub_ctx	*ctx,
++	struct xfs_bulkstat	*bstat,
++	int			fd,
++	struct scrub_item	*sri,
++	bool			*defer)
++{
++	unsigned int		to_check;
++	int			error;
++
++	*defer = false;
++	if (ctx->mode != SCRUB_MODE_REPAIR)
++		return 0;
++
++	to_check = scrub_item_count_needscheck(sri);
++	while (to_check > 0) {
++		unsigned int	nr;
++
++		error = repair_file_corruption(ctx, sri, fd);
++		if (error)
++			return error;
++
++		error = scrub_item_check_file(ctx, sri, fd);
++		if (error)
++			return error;
++
++		nr = scrub_item_count_needscheck(sri);
++		if (nr == to_check) {
++			char	descr[DESCR_BUFSZ];
++
++			/*
++			 * We cannot make forward scanning progress with this
++			 * inode, so defer the rest until phase 4.
++			 */
++			scrub_render_ino_descr(ctx, descr, DESCR_BUFSZ,
++					bstat->bs_ino, bstat->bs_gen, NULL);
++			str_info(ctx, descr,
++ _("Unable to make forward checking progress; will try again in phase 4."));
++			*defer = true;
++			return 0;
++		}
++		to_check = nr;
++	}
++
++	return 0;
++}
++
+ /* Verify the contents, xattrs, and extent maps of an inode. */
+ static int
+ scrub_inode(
+@@ -169,11 +221,28 @@ scrub_inode(
  	scrub_item_schedule(&sri, XFS_SCRUB_TYPE_XATTR);
  	scrub_item_schedule(&sri, XFS_SCRUB_TYPE_PARENT);
-+
-+	/* Try to check and repair the file while it's open. */
+ 
+-	/* Try to check and repair the file while it's open. */
++	/*
++	 * Try to check all of the metadata items that we just scheduled.  If
++	 * we return with some types still needing a check and the space
++	 * metadata isn't also in need of repairs, try repairing any damaged
++	 * file metadata that we've found so far, and try checking the file
++	 * again.  Worst case, defer the repairs and the checks to phase 4 if
++	 * we can't make any progress on anything.
++	 */
  	error = scrub_item_check_file(ctx, &sri, fd);
  	if (error)
  		goto out;
  
--	/* Try to repair the file while it's open. */
++	if (!ictx->always_defer_repairs) {
++		bool	defer_repairs;
++
++		error = repair_and_scrub_inode_loop(ctx, bstat, fd, &sri,
++				&defer_repairs);
++		if (error || defer_repairs)
++			goto out;
++	}
++
++	/* Try to repair the file while it's open. */
  	error = try_inode_repair(ictx, &sri, fd);
  	if (error)
  		goto out;
 diff --git a/scrub/repair.c b/scrub/repair.c
-index 6a5fd40fd..8a28f6b13 100644
+index 8a28f6b13..e594e704f 100644
 --- a/scrub/repair.c
 +++ b/scrub/repair.c
-@@ -324,6 +324,7 @@ repair_call_kernel(
- 	struct scrubv_descr		vdesc = SCRUBV_DESCR(&scrubv);
- 	struct xfs_scrub_vec		*v;
- 	unsigned int			scrub_type;
-+	bool				need_barrier = false;
- 	int				error;
- 
- 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
-@@ -339,6 +340,11 @@ repair_call_kernel(
- 					repair_flags))
- 			continue;
- 
-+		if (need_barrier) {
-+			xfrog_scrubv_add_barrier(&scrubv);
-+			need_barrier = false;
-+		}
-+
- 		xfrog_scrubv_add_item(&scrubv, sri, scrub_type, true);
- 
- 		if (sri->sri_state[scrub_type] & SCRUB_ITEM_NEEDSREPAIR)
-@@ -351,6 +357,17 @@ repair_call_kernel(
- 		dbg_printf("repair %s flags %xh tries %u\n", descr_render(&dsc),
- 				sri->sri_state[scrub_type],
- 				sri->sri_tries[scrub_type]);
-+
-+		/*
-+		 * One of the other scrub types depends on this one.  Set us up
-+		 * to add a repair barrier if we decide to schedule a repair
-+		 * after this one.  If the UNFIXED flag is set, that means this
-+		 * is our last chance to fix things, so we skip the barriers
-+		 * just let everything run.
-+		 */
-+		if (!(repair_flags & XRM_FINAL_WARNING) &&
-+		    (sri->sri_state[scrub_type] & SCRUB_ITEM_BARRIER))
-+			need_barrier = true;
- 	}
- 
- 	error = -xfrog_scrubv_metadata(xfdp, &scrubv);
-@@ -358,6 +375,16 @@ repair_call_kernel(
- 		return error;
- 
- 	foreach_xfrog_scrubv_vec(&scrubv, vdesc.idx, v) {
-+		/* Deal with barriers separately. */
-+		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER) {
-+			/* -ECANCELED means the kernel stopped here. */
-+			if (v->sv_ret == -ECANCELED)
-+				return 0;
-+			if (v->sv_ret)
-+				return -v->sv_ret;
-+			continue;
-+		}
-+
- 		error = repair_epilogue(ctx, &dsc, sri, repair_flags, v);
- 		if (error)
- 			return error;
-@@ -446,7 +473,8 @@ repair_item_boost_priorities(
-  * bits are left untouched to force a rescan in phase 4.
-  */
- #define MUSTFIX_STATES	(SCRUB_ITEM_CORRUPT | \
--			 SCRUB_ITEM_BOOST_REPAIR)
-+			 SCRUB_ITEM_BOOST_REPAIR | \
-+			 SCRUB_ITEM_BARRIER)
- /*
-  * Figure out which AG metadata must be fixed before we can move on
-  * to the inode scan.
-@@ -728,7 +756,7 @@ repair_item_class(
- 		return 0;
- 	if (ctx->mode == SCRUB_MODE_PREEN && !(repair_mask & SCRUB_ITEM_PREEN))
- 		return 0;
--	if (!scrub_item_schedule_work(sri, repair_mask))
-+	if (!scrub_item_schedule_work(sri, repair_mask, repair_deps))
- 		return 0;
- 
- 	/*
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index d582dafbb..44c404989 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -24,6 +24,35 @@
- 
- /* Online scrub and repair wrappers. */
- 
-+/*
-+ * Bitmap showing the correctness dependencies between scrub types for scrubs.
-+ * Dependencies cannot cross scrub groups.
-+ */
-+#define DEP(x) (1U << (x))
-+static const unsigned int scrub_deps[XFS_SCRUB_TYPE_NR] = {
-+	[XFS_SCRUB_TYPE_AGF]		= DEP(XFS_SCRUB_TYPE_SB),
-+	[XFS_SCRUB_TYPE_AGFL]		= DEP(XFS_SCRUB_TYPE_SB) |
-+					  DEP(XFS_SCRUB_TYPE_AGF),
-+	[XFS_SCRUB_TYPE_AGI]		= DEP(XFS_SCRUB_TYPE_SB),
-+	[XFS_SCRUB_TYPE_BNOBT]		= DEP(XFS_SCRUB_TYPE_AGF),
-+	[XFS_SCRUB_TYPE_CNTBT]		= DEP(XFS_SCRUB_TYPE_AGF),
-+	[XFS_SCRUB_TYPE_INOBT]		= DEP(XFS_SCRUB_TYPE_AGI),
-+	[XFS_SCRUB_TYPE_FINOBT]		= DEP(XFS_SCRUB_TYPE_AGI),
-+	[XFS_SCRUB_TYPE_RMAPBT]		= DEP(XFS_SCRUB_TYPE_AGF),
-+	[XFS_SCRUB_TYPE_REFCNTBT]	= DEP(XFS_SCRUB_TYPE_AGF),
-+	[XFS_SCRUB_TYPE_BMBTD]		= DEP(XFS_SCRUB_TYPE_INODE),
-+	[XFS_SCRUB_TYPE_BMBTA]		= DEP(XFS_SCRUB_TYPE_INODE),
-+	[XFS_SCRUB_TYPE_BMBTC]		= DEP(XFS_SCRUB_TYPE_INODE),
-+	[XFS_SCRUB_TYPE_DIR]		= DEP(XFS_SCRUB_TYPE_BMBTD),
-+	[XFS_SCRUB_TYPE_XATTR]		= DEP(XFS_SCRUB_TYPE_BMBTA),
-+	[XFS_SCRUB_TYPE_SYMLINK]	= DEP(XFS_SCRUB_TYPE_BMBTD),
-+	[XFS_SCRUB_TYPE_PARENT]		= DEP(XFS_SCRUB_TYPE_BMBTD),
-+	[XFS_SCRUB_TYPE_QUOTACHECK]	= DEP(XFS_SCRUB_TYPE_UQUOTA) |
-+					  DEP(XFS_SCRUB_TYPE_GQUOTA) |
-+					  DEP(XFS_SCRUB_TYPE_PQUOTA),
-+};
-+#undef DEP
-+
- /* Describe the current state of a vectored scrub. */
- int
- format_scrubv_descr(
-@@ -255,6 +284,20 @@ xfrog_scrubv_add_item(
- 		v->sv_flags |= XFS_SCRUB_IFLAG_FORCE_REBUILD;
- }
- 
-+/* Add a barrier to the scrub vector. */
-+void
-+xfrog_scrubv_add_barrier(
-+	struct xfrog_scrubv		*scrubv)
-+{
-+	struct xfs_scrub_vec		*v;
-+
-+	v = xfrog_scrubv_next_vector(scrubv);
-+
-+	v->sv_type = XFS_SCRUB_TYPE_BARRIER;
-+	v->sv_flags = XFS_SCRUB_OFLAG_CORRUPT | XFS_SCRUB_OFLAG_XFAIL |
-+		      XFS_SCRUB_OFLAG_XCORRUPT | XFS_SCRUB_OFLAG_INCOMPLETE;
-+}
-+
- /* Do a read-only check of some metadata. */
- static int
- scrub_call_kernel(
-@@ -267,6 +310,7 @@ scrub_call_kernel(
- 	struct scrubv_descr		vdesc = SCRUBV_DESCR(&scrubv);
- 	struct xfs_scrub_vec		*v;
- 	unsigned int			scrub_type;
-+	bool				need_barrier = false;
- 	int				error;
- 
- 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
-@@ -277,8 +321,17 @@ scrub_call_kernel(
- 	foreach_scrub_type(scrub_type) {
- 		if (!(sri->sri_state[scrub_type] & SCRUB_ITEM_NEEDSCHECK))
- 			continue;
-+
-+		if (need_barrier) {
-+			xfrog_scrubv_add_barrier(&scrubv);
-+			need_barrier = false;
-+		}
-+
- 		xfrog_scrubv_add_item(&scrubv, sri, scrub_type, false);
- 
-+		if (sri->sri_state[scrub_type] & SCRUB_ITEM_BARRIER)
-+			need_barrier = true;
-+
- 		dbg_printf("check %s flags %xh tries %u\n", descr_render(&dsc),
- 				sri->sri_state[scrub_type],
- 				sri->sri_tries[scrub_type]);
-@@ -289,6 +342,16 @@ scrub_call_kernel(
- 		return error;
- 
- 	foreach_xfrog_scrubv_vec(&scrubv, vdesc.idx, v) {
-+		/* Deal with barriers separately. */
-+		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER) {
-+			/* -ECANCELED means the kernel stopped here. */
-+			if (v->sv_ret == -ECANCELED)
-+				return 0;
-+			if (v->sv_ret)
-+				return -v->sv_ret;
-+			continue;
-+		}
-+
- 		error = scrub_epilogue(ctx, &dsc, sri, v);
- 		if (error)
- 			return error;
-@@ -383,15 +446,25 @@ scrub_item_call_kernel_again(
- bool
- scrub_item_schedule_work(
- 	struct scrub_item	*sri,
--	uint8_t			state_flags)
-+	uint8_t			state_flags,
-+	const unsigned int	*schedule_deps)
+@@ -860,6 +860,7 @@ repair_item_to_action_item(
+ 	struct action_item	**aitemp)
  {
- 	unsigned int		scrub_type;
- 	unsigned int		nr = 0;
+ 	struct action_item	*aitem;
++	unsigned int		scrub_type;
  
- 	foreach_scrub_type(scrub_type) {
-+		unsigned int	j;
-+
-+		sri->sri_state[scrub_type] &= ~SCRUB_ITEM_BARRIER;
-+
- 		if (!(sri->sri_state[scrub_type] & state_flags))
- 			continue;
- 
-+		foreach_scrub_type(j) {
-+			if (schedule_deps[scrub_type] & (1U << j))
-+				sri->sri_state[j] |= SCRUB_ITEM_BARRIER;
-+		}
-+
- 		sri->sri_tries[scrub_type] = SCRUB_ITEM_MAX_RETRIES;
- 		nr++;
- 	}
-@@ -411,7 +484,7 @@ scrub_item_check_file(
- 	struct xfs_fd			*xfdp = &ctx->mnt;
- 	int				error = 0;
- 
--	if (!scrub_item_schedule_work(sri, SCRUB_ITEM_NEEDSCHECK))
-+	if (!scrub_item_schedule_work(sri, SCRUB_ITEM_NEEDSCHECK, scrub_deps))
+ 	if (repair_item_count_needsrepair(sri) == 0)
  		return 0;
+@@ -875,6 +876,20 @@ repair_item_to_action_item(
+ 	INIT_LIST_HEAD(&aitem->list);
+ 	memcpy(&aitem->sri, sri, sizeof(struct scrub_item));
  
- 	/*
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 183b89379..c3eed1b26 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -30,6 +30,9 @@ enum xfrog_scrub_group;
- /* This scrub type needs to be checked. */
- #define SCRUB_ITEM_NEEDSCHECK	(1 << 5)
- 
-+/* Scrub barrier. */
-+#define SCRUB_ITEM_BARRIER	(1 << 6)
++	/*
++	 * If the scrub item indicates that there is unchecked metadata, assume
++	 * that the scrub type checker depends on something that couldn't be
++	 * fixed.  Mark that type as corrupt so that phase 4 will try it again.
++	 */
++	foreach_scrub_type(scrub_type) {
++		__u8		*state = aitem->sri.sri_state;
 +
- /* All of the state flags that we need to prioritize repair work. */
- #define SCRUB_ITEM_REPAIR_ANY	(SCRUB_ITEM_CORRUPT | \
- 				 SCRUB_ITEM_PREEN | \
-@@ -126,6 +129,20 @@ scrub_item_check(struct scrub_ctx *ctx, struct scrub_item *sri)
- 	return scrub_item_check_file(ctx, sri, -1);
++		if (state[scrub_type] & SCRUB_ITEM_NEEDSCHECK) {
++			state[scrub_type] &= ~SCRUB_ITEM_NEEDSCHECK;
++			state[scrub_type] |= SCRUB_ITEM_CORRUPT;
++		}
++	}
++
+ 	*aitemp = aitem;
+ 	return 0;
  }
- 
-+/* Count the number of metadata objects still needing a scrub. */
-+static inline unsigned int
-+scrub_item_count_needscheck(
-+	const struct scrub_item		*sri)
-+{
-+	unsigned int			ret = 0;
-+	unsigned int			i;
-+
-+	foreach_scrub_type(i)
-+		if (sri->sri_state[i] & SCRUB_ITEM_NEEDSCHECK)
-+			ret++;
-+	return ret;
-+}
-+
- void scrub_report_preen_triggers(struct scrub_ctx *ctx);
- 
- bool can_scrub_fs_metadata(struct scrub_ctx *ctx);
-diff --git a/scrub/scrub_private.h b/scrub/scrub_private.h
-index d9de18ce1..c5e0a7c08 100644
---- a/scrub/scrub_private.h
-+++ b/scrub/scrub_private.h
-@@ -13,6 +13,7 @@ void xfrog_scrubv_from_item(struct xfrog_scrubv *scrubv,
- void xfrog_scrubv_add_item(struct xfrog_scrubv *scrubv,
- 		const struct scrub_item *sri, unsigned int scrub_type,
- 		bool want_repair);
-+void xfrog_scrubv_add_barrier(struct xfrog_scrubv *scrubv);
- 
- struct scrubv_descr {
- 	struct xfrog_scrubv	*scrubv;
-@@ -116,6 +117,7 @@ scrub_item_schedule_retry(struct scrub_item *sri, unsigned int scrub_type)
- 
- bool scrub_item_call_kernel_again(struct scrub_item *sri, uint8_t work_mask,
- 		const struct scrub_item *old);
--bool scrub_item_schedule_work(struct scrub_item *sri, uint8_t state_flags);
-+bool scrub_item_schedule_work(struct scrub_item *sri, uint8_t state_flags,
-+		const unsigned int *schedule_deps);
- 
- #endif /* XFS_SCRUB_SCRUB_PRIVATE_H_ */
 
