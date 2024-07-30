@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 196C23C17
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:23:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B802C4A21
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:23:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722298980; cv=none; b=QNcVzjmQPTFn6Y47KfYOTz72boawIQQ5vJ22hy3fvDbAIG4ZyBIBDeJB00nvWfSjSPhtaAg+1FoMtExmg6I+YsbDzhul0/TIKsKbJAH8+8bPTYCT8Pyaa4zQ8sD5QS16mTfdf4Q0gNDth08AQTQiU1AQPSluajuwltFDekvRbug=
+	t=1722298995; cv=none; b=PoZcHKyyMttUIsLavToUD5b1VFj4LEn3EK8XqF/3pVbp5B0NqpoR4ZOBK1AsTYMVbzWiMfLv8uFpVUhnh8syEMMtLEPQl2y+ula8UoJQUkRVMYDRBTHNbco1CI073qx96C1PyUOOSTp7wFyHrlTehXTqU+ArncJ9Tnty7Qas4nA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722298980; c=relaxed/simple;
-	bh=BFt/Lx5049mr0gIjreHS6l3PbVSWTG5r6GK+9tP/GBw=;
+	s=arc-20240116; t=1722298995; c=relaxed/simple;
+	bh=etdlSgkJtmUGXGaJZiGlyWnMTP/HPJ5Tgk0HZzfia4Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZlYEehyFcacUQhEzICQpzZIWv5Zz0gnl1YAgF0Zff6/xAAOEHTGp7MwjEMcPORHnttpurzuU8hq3M8Hj465wZx/vwIQEOTpXq4QyDnb5HZG59ylPGyUPWjUPOH6ZPSOFaUTgWDJZb+cW6qHhh8KTyXPWUaa8CYdLxivDKAe4J+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tvl0QGNs; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=iUocH4Z6bVY8wqQGW6ClOdVkR28BHl5lvVDLBjYCks072Vr/11SqGm1/DTTsB+QL28L+BHYFX/uvuJVaFc2Go8bJj9a1CevKCmHlZmsadtWWQE6sbRzyC2k5a4lpvIJJvpCcSkTGrwPlx4YEfjbjsgFpAnWwHQRExEAhXikWu80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XB+L7NtF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tvl0QGNs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCA6DC32786;
-	Tue, 30 Jul 2024 00:22:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XB+L7NtF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BF2DC32786;
+	Tue, 30 Jul 2024 00:23:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722298979;
-	bh=BFt/Lx5049mr0gIjreHS6l3PbVSWTG5r6GK+9tP/GBw=;
+	s=k20201202; t=1722298995;
+	bh=etdlSgkJtmUGXGaJZiGlyWnMTP/HPJ5Tgk0HZzfia4Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Tvl0QGNsp0g/Gk1bH4pyvMBOQEloJf8EneAoWq0cAF5Ga1fAOlp3DVlqM6CqIaPz/
-	 fGvQJa+yc9EGRidploxgZjBLIKLIOEZQXee+J6P2U3t8zjBFD++Rm4x8Ur5I93CR0O
-	 BeZAz5rZmGD5nr3i2K+aVWzf5jEZTK8K668acKGtGfP7zZP1kPT6XvOaPurXQNVSXo
-	 hT4aoXdphtvoVKcObKSzPQ6ljcuLHPBNAewTMZO7TAg9kb7+/okrKO3rkIS1YeSm15
-	 Da8iVCH9NmHaOea7a8IOUG9/SPx1rsfbW9svX6+VNmVBiSBqCc4FdJwG0bRd/slL58
-	 j1nbeyVwtFC3g==
-Date: Mon, 29 Jul 2024 17:22:59 -0700
-Subject: [PATCH 2/5] repair: btree blocks are never on the RT subvolume
+	b=XB+L7NtFRKTab8goYcPlyp3p2HRQW3ZrGgdxUrr3S1rJUy6sgVmwfuk02SRH1UlxW
+	 tZUb1Fd+MLklOZaflIjIMo4hY0lgazKqqIR7SLP/iOG5xBkJlipc4a7lwCZ0NkIsHc
+	 gcXNwgGi/ds/ZrJunt5o+aq4tGIUauP7dn2608YQf88iSuTXMh0FLtCmpD6eGHgvT6
+	 i3+ymKc4DBLJytY2CY4c+0nTQ2vxeedgdTxBl/eLhZPyBNuj80fppEJYfbW16sDwz6
+	 dr6Ar9a2Kcm/AKZjSxr8qKcMBwWUAVet1VI925GcvML7A5zQQtoF6EAWUm4I0FRByc
+	 bsaHpxBml9LUw==
+Date: Mon, 29 Jul 2024 17:23:15 -0700
+Subject: [PATCH 3/5] xfile: fix missing error unlock in xfile_fcb_find
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229841907.1338302.6256302271948089489.stgit@frogsfrogsfrogs>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Christoph Hellwig <hch@lst.de>,
+ linux-xfs@vger.kernel.org
+Message-ID: <172229841920.1338302.2007415922737734118.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229841874.1338302.4791739002907908995.stgit@frogsfrogsfrogs>
 References: <172229841874.1338302.4791739002907908995.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,50 +45,48 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-scan_bmapbt tries to track btree blocks in the RT duplicate extent
-AVL tree if the inode has the realtime flag set.  Given that the
-RT subvolume is only ever used for file data this is incorrect.
+Fix a missing mutex pthread_mutex_unlock and uninitialized return value
+in xfile_fcb_find.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Coverity-id: 1604113
+Coverity-id: 1604099
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/scan.c |   21 +++++----------------
- 1 file changed, 5 insertions(+), 16 deletions(-)
+ libxfs/xfile.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 338308ef8..8352b3ccf 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -390,22 +390,11 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
- 			break;
- 		}
- 		pthread_mutex_unlock(&ag_locks[agno].lock);
--	} else  {
--		/*
--		 * attribute fork for realtime files is in the regular
--		 * filesystem
--		 */
--		if (type != XR_INO_RTDATA || whichfork != XFS_DATA_FORK)  {
--			if (search_dup_extent(XFS_FSB_TO_AGNO(mp, bno),
--					XFS_FSB_TO_AGBNO(mp, bno),
--					XFS_FSB_TO_AGBNO(mp, bno) + 1))
--				return(1);
--		} else  {
--			xfs_rtxnum_t	ext = xfs_rtb_to_rtx(mp, bno);
--
--			if (search_rt_dup_extent(mp, ext))
--				return 1;
--		}
-+	} else {
-+		if (search_dup_extent(XFS_FSB_TO_AGNO(mp, bno),
-+				XFS_FSB_TO_AGBNO(mp, bno),
-+				XFS_FSB_TO_AGBNO(mp, bno) + 1))
-+			return 1;
+diff --git a/libxfs/xfile.c b/libxfs/xfile.c
+index fdb76f406..6e0fa809a 100644
+--- a/libxfs/xfile.c
++++ b/libxfs/xfile.c
+@@ -179,7 +179,7 @@ xfile_fcb_find(
+ {
+ 	struct xfile_fcb	*fcb;
+ 	int			ret;
+-	int			error;
++	int			error = 0;
+ 
+ 	/* No maximum range means that the caller gets a private memfd. */
+ 	if (maxbytes == 0) {
+@@ -222,13 +222,13 @@ xfile_fcb_find(
+ 	/* Otherwise, open a new memfd and add it to our list. */
+ 	error = xfile_fcb_create(description, &fcb);
+ 	if (error)
+-		return error;
++		goto out_unlock;
+ 
+ 	ret = ftruncate(fcb->fd, maxbytes);
+ 	if (ret) {
+ 		error = -errno;
+ 		xfile_fcb_irele(fcb, 0, maxbytes);
+-		return error;
++		goto out_unlock;
  	}
- 	(*tot)++;
- 	numrecs = be16_to_cpu(block->bb_numrecs);
+ 
+ 	list_add_tail(&fcb->fcb_list, &fcb_list);
 
