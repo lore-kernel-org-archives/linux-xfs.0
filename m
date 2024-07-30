@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBC2C4A11
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:33:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8F7621
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:33:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722299606; cv=none; b=cuG2xwclN9PnkocR1qFgbrZqjnfHrmVnLvqG1fDmxM13Arb2ocmmjimQIyW3K0rDDEqhW2VaanOp6eD2iA6teCQ71g/ca26rLkbC2nVSDeLfRyqSxGa2lC2jWois5cY+jUs51DGH6vIw45cfo9u+wif+s6KFw7enjQJYBGGgL1s=
+	t=1722299621; cv=none; b=Fap44eUQVXaeD0e8cKUKkNmSSUNvjJE5QI2FG/jSQ6W+pYRg0lJaIR1i6lXNfy0eaMsWhFnD5mFqdZ5bvty9Svelrt12QV1wiiHwu6Y4Q38SpvfGyWQJTKlLRwXSXaDNwbzdUbMxpDFul5Ajy5AbrJUxS+Gw3Fi6lJrg3KLEazQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722299606; c=relaxed/simple;
-	bh=jJewfFYSRD3Gmd9yR0B6v+3LkTqvUldBSiCinzqOUQc=;
+	s=arc-20240116; t=1722299621; c=relaxed/simple;
+	bh=wFnGyPuJFgpJeVQzMJIyfH+uZ2Ozqim+9eqWTloG0No=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=g4vDePQLE3nsnLpAoiTTdcRPX35CGHcDHdB7loWZ0k7kTlds0okxnO7PIPx3wtj+TFBBmctR8f4H0uFV7R8gE2ksc7Am30c5fqoNy53QZnhs2bXGQODPPJd3eBXOU3jaz2atoqADTTy6ibZM6c7KBw2yPXME/vuQRtFOGqdc9kU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qaYisE48; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QBWCxCkdVJq6oClJxKd/Lww4msACCHLHqkHZlbtQSrIYn9XPKY/iXmXGVy8jW7qwzHUCjTUVMyD4bG5+cHdt4k63IxXJqb+rs63LKOEM+HFRg7xs1eWosV6qKdHmUxmm+ihYmoRzx4kSgOsoizMGpUBpCVc1ORGbYR1IBBGnuJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UdlRzXu8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qaYisE48"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C42BFC32786;
-	Tue, 30 Jul 2024 00:33:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UdlRzXu8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78C63C32786;
+	Tue, 30 Jul 2024 00:33:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722299605;
-	bh=jJewfFYSRD3Gmd9yR0B6v+3LkTqvUldBSiCinzqOUQc=;
+	s=k20201202; t=1722299621;
+	bh=wFnGyPuJFgpJeVQzMJIyfH+uZ2Ozqim+9eqWTloG0No=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qaYisE48WIpFFx7mw/ad4Ii8DCWQ/ROJjX0FcYnuClE+dJXMf7Y4vIxTRTF8XqoWO
-	 qdgtFEb9jlfUvZP0Ii8NhufIjE1s+RoZuQV2pdN0Bueg+a42QOZ6Y3TMtcHqDMfd7E
-	 5Mg59WMLQiyn9lDE/vDhfvrLb0wKvHQb2A+7dx5tBxe09Gz7lpzhO7R82m/6jaYdVq
-	 9BLpNSc57IdwkbmtVsoKrTLd/NyPPfy0FdtSwycOusCcT1tip+Toxg7ghTz/LQFN4U
-	 b2G5d0etWo3kctlwCHjTafWMFVtIGIwmTYm2k4ltBO/sYWXpwcmVLK8KLwtTsRWGev
-	 mw/2261i/vumA==
-Date: Mon, 29 Jul 2024 17:33:25 -0700
-Subject: [PATCH 037/115] xfs: cleanup fdblock/frextent accounting in
- xfs_bmap_del_extent_delay
+	b=UdlRzXu8q9X5/cdLR8mJxUvc0Zcja+z/JlgnnFh5NGTyl7DTANgoMjq5ssAakK2mW
+	 lT4Rw3N9hOYyMGGYAniIdTEZfrNm1q+mXKvoCAK397mH4gOfTkBbLOyucunPsD3ff9
+	 PTIpYe0iLFNmP6T9S/r3bei2FzbuZuFdMbsIOTg3u+pAL4p34HM1FHjWtWw1aR8+5w
+	 B60HfkSngAzdwGSWC0SijEAnAw1h+xU4PefHbta/m3XBCeGsztPcn+YFlnmdNpsfpW
+	 SvBTuKl6YM/Z/4+8AWXaNE0OWTCA0HjXyNpbSoKNT5f2xiAUQ3TZJ11WZo8GgW/K1k
+	 HsK4o5/o1Ty9g==
+Date: Mon, 29 Jul 2024 17:33:40 -0700
+Subject: [PATCH 038/115] xfs: support RT inodes in xfs_mod_delalloc
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
  Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-Message-ID: <172229842962.1338752.10553908934303557340.stgit@frogsfrogsfrogs>
+Message-ID: <172229842977.1338752.18120747394730937321.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,77 +47,91 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 7e77d57a1fea5f6bfe166210385ba9f227a606d1
+Source kernel commit: 7099bd0f243fa7511de6e95b0b8807ba7d3e5204
 
-The code to account fdblocks and frextents in xfs_bmap_del_extent_delay
-is a bit weird in that it accounts frextents before the iext tree
-manipulations and fdblocks after it.  Given that the iext tree
-manipulations cannot fail currently that's not really a problem, but
-still odd.  Move the frextent manipulation to the end, and use a
-fdblocks variable to account of the unconditional indirect blocks and
-the data blocks only freed for !RT.  This prepares for following
-updates in the area and already makes the code more readable.
-
-Also remove the !isrt assert given that this code clearly handles
-rt extents correctly, and we'll soon reinstate delalloc support for
-RT inodes.
+To prepare for re-enabling delalloc on RT devices, track the data blocks
+(which use the RT device when the inode sits on it) and the indirect
+blocks (which don't) separately to xfs_mod_delalloc, and add a new
+percpu counter to also track the RT delalloc blocks.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_bmap.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ libxfs/libxfs_priv.h |    2 +-
+ libxfs/xfs_bmap.c    |   12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
 
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 40c418f54..cfe96b05a 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -141,7 +141,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ 
+ 
+ #define xfs_force_shutdown(d,n)		((void) 0)
+-#define xfs_mod_delalloc(a,b) 		((void) 0)
++#define xfs_mod_delalloc(a,b,c)		((void) 0)
+ 
+ /* stop unused var warnings by assigning mp to itself */
+ 
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 1319f1c90..5de8c72a8 100644
+index 5de8c72a8..79cde87d0 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -4913,6 +4913,7 @@ xfs_bmap_del_extent_delay(
- 	xfs_fileoff_t		del_endoff, got_endoff;
- 	xfs_filblks_t		got_indlen, new_indlen, stolen;
- 	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
-+	uint64_t		fdblocks;
- 	int			error = 0;
- 	bool			isrt;
+@@ -1971,7 +1971,7 @@ xfs_bmap_add_extent_delay_real(
+ 	}
  
-@@ -4928,15 +4929,11 @@ xfs_bmap_del_extent_delay(
- 	ASSERT(got->br_startoff <= del->br_startoff);
- 	ASSERT(got_endoff >= del_endoff);
+ 	if (da_new != da_old)
+-		xfs_mod_delalloc(mp, (int64_t)da_new - da_old);
++		xfs_mod_delalloc(bma->ip, 0, (int64_t)da_new - da_old);
  
--	if (isrt)
--		xfs_add_frextents(mp, xfs_rtb_to_rtx(mp, del->br_blockcount));
--
- 	/*
- 	 * Update the inode delalloc counter now and wait to update the
- 	 * sb counters as we might have to borrow some blocks for the
- 	 * indirect block accounting.
- 	 */
--	ASSERT(!isrt);
- 	error = xfs_quota_unreserve_blkres(ip, del->br_blockcount);
- 	if (error)
- 		return error;
-@@ -5013,12 +5010,15 @@ xfs_bmap_del_extent_delay(
+ 	if (bma->cur) {
+ 		da_new += bma->cur->bc_bmap.allocated;
+@@ -2690,7 +2690,7 @@ xfs_bmap_add_extent_hole_delay(
+ 		/*
+ 		 * Nothing to do for disk quota accounting here.
+ 		 */
+-		xfs_mod_delalloc(ip->i_mount, (int64_t)newlen - oldlen);
++		xfs_mod_delalloc(ip, 0, (int64_t)newlen - oldlen);
+ 	}
+ }
  
- 	ASSERT(da_old >= da_new);
- 	da_diff = da_old - da_new;
--	if (!isrt)
--		da_diff += del->br_blockcount;
--	if (da_diff) {
--		xfs_add_fdblocks(mp, da_diff);
--		xfs_mod_delalloc(mp, -da_diff);
--	}
-+	fdblocks = da_diff;
-+
-+	if (isrt)
-+		xfs_add_frextents(mp, xfs_rtb_to_rtx(mp, del->br_blockcount));
-+	else
-+		fdblocks += del->br_blockcount;
-+
-+	xfs_add_fdblocks(mp, fdblocks);
-+	xfs_mod_delalloc(mp, -(int64_t)fdblocks);
+@@ -3367,7 +3367,7 @@ xfs_bmap_alloc_account(
+ 		 * yet.
+ 		 */
+ 		if (ap->wasdel) {
+-			xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)ap->length);
++			xfs_mod_delalloc(ap->ip, -(int64_t)ap->length, 0);
+ 			return;
+ 		}
+ 
+@@ -3391,7 +3391,7 @@ xfs_bmap_alloc_account(
+ 	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+ 	if (ap->wasdel) {
+ 		ap->ip->i_delayed_blks -= ap->length;
+-		xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)ap->length);
++		xfs_mod_delalloc(ap->ip, -(int64_t)ap->length, 0);
+ 		fld = isrt ? XFS_TRANS_DQ_DELRTBCOUNT : XFS_TRANS_DQ_DELBCOUNT;
+ 	} else {
+ 		fld = isrt ? XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
+@@ -4120,7 +4120,7 @@ xfs_bmapi_reserve_delalloc(
+ 		goto out_unreserve_frextents;
+ 
+ 	ip->i_delayed_blks += alen;
+-	xfs_mod_delalloc(ip->i_mount, alen + indlen);
++	xfs_mod_delalloc(ip, alen, indlen);
+ 
+ 	got->br_startoff = aoff;
+ 	got->br_startblock = nullstartblock(indlen);
+@@ -5018,7 +5018,7 @@ xfs_bmap_del_extent_delay(
+ 		fdblocks += del->br_blockcount;
+ 
+ 	xfs_add_fdblocks(mp, fdblocks);
+-	xfs_mod_delalloc(mp, -(int64_t)fdblocks);
++	xfs_mod_delalloc(ip, -(int64_t)del->br_blockcount, -da_diff);
  	return error;
  }
  
