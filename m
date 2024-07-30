@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97AC0D268
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:09:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A95FD528
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 01:09:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722301783; cv=none; b=NkGTyank6zOfhvG0Z70LQQWbrMmfBkwz7mO6iQKUwhnEbdcox5Yypp9fyyCoAFEMzCIFqeIBnYH2auIclnWLb2rJmJY0RaXEVBysgC/cpHPFHVc/GOcc0jElCk2ZpvZ0UiB8jOW3qlZzhiqtDjzS20gBWSssi63sU7mKixrYiW0=
+	t=1722301799; cv=none; b=BfzkSZGfYHm4NDrbIsDhmZ5TTxS/8vtVoSJftoZoZbQToMaeIWcCMmwIxwM12Y8l1C0GOn1buBw9GmYGPtrNfdzQnhpA7Iz8HUwMndhmlk0Xmkid/sU1rWXwV4kTJzsz6q6G1xSRXZCnP9zfaEfbxb+iHh7oIhtFq02hPPBvmhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722301783; c=relaxed/simple;
-	bh=zAC+vqUJufFpa6yVoEPQ4AWn7sLyLMODGoeU2304eBg=;
+	s=arc-20240116; t=1722301799; c=relaxed/simple;
+	bh=RLr8v64eJCBKjvQ0cZ/KwSE/5/mcsOPxY5+dQj9wUJM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PsYOnpiiSTPZbzhXVl5Hst2fhuH0Y6m4LsbaUoZboI14lacWhSJtKaRihHfui5eyRK94zDWCh3UXUfOsNjUWmQqKJB5IkRs34A5b5sQ5BT9hwfR8EaXBQliRwbE24jIUhe5kSMMUbmD9xmaNncQ/duOtxKCCXZfkyaUkVDGxTzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CiRwTxOh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=olzYS4YCdrJiw1/bvfknMaX3zGQpKclLTYGpiJ1AmeF9YNbfHbsoEmeWdy+evXbk6hZmYkxFVAnQ6zhYXG6Prob2Wf/hRiBBjxNbRe11TTns+B4CQVgW1sd0nilE3y1ELeNF4tshug55zKfcRsw97XKX3dhN48WetYtQKGr3gFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CBZ7VORr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CiRwTxOh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16B47C32786;
-	Tue, 30 Jul 2024 01:09:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CBZ7VORr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA8ACC32786;
+	Tue, 30 Jul 2024 01:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722301783;
-	bh=zAC+vqUJufFpa6yVoEPQ4AWn7sLyLMODGoeU2304eBg=;
+	s=k20201202; t=1722301798;
+	bh=RLr8v64eJCBKjvQ0cZ/KwSE/5/mcsOPxY5+dQj9wUJM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CiRwTxOhnQahBFvL8GP7zNPCbJ2OB45TQ3+pB7vLLVM+cSa7KALGALaZhJ6DjkVn9
-	 SZYGJ8BtTSKIVGCjwGf4KMk1LOT/2yQI+u6tgZOoVowETNH5Zn3EYENeSbhHRXi0II
-	 usCgazO2DYoDEHBQ+6zxVzCDwwD1onqUrHdO+2Ib10dzTBi2H4M93wOOFdrYJWVCNC
-	 jVlJaB8ABE8irWAdkYP3ccwnRZJiZb3HMF64L6yAFNRQHGkZjEV461dU90Vot+pP9C
-	 AIlGv8qCy9X2o2GUSD8uOfC2n91hZE6SMu6UwWFVGMDMIUsibAT9tju5Uv6BnwV+SD
-	 JiLl3f0PEivJw==
-Date: Mon, 29 Jul 2024 18:09:42 -0700
-Subject: [PATCH 2/7] xfs_scrub: ignore phase 8 if the user disabled fstrim
+	b=CBZ7VORrBuK0KDDz8nXDCIIjxChpbCWkzd8GaSPE8fjffvCbRrTjSK+axpGSHNLdf
+	 Xs8nckzYg3U5RAOia9EZ6kVmMsH7rEUgQTT2Ymd913upuPqR/fB1sSjuCsY6gTLgMg
+	 QdrDvDkF5YwsRmx4B192qu7UI3knwejOZ0hR18bc/f5Qni5p+COOceS4TC9+arJxDM
+	 UoIPYOOC1+ugnI5SGk+mJbqBvKyqiGkv+k3J7ag2ccgzDtH6st+nzEWoTsK9JuU6KB
+	 d/+YikStXpRMRo265uropY5HI+PPVkkirRc54AVAuvHzjmGav0VVJxJrwfeNQIXlKv
+	 keHThxs3m/p0Q==
+Date: Mon, 29 Jul 2024 18:09:58 -0700
+Subject: [PATCH 3/7] xfs_scrub: collapse trim_filesystem
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229848063.1349330.15343951073553604167.stgit@frogsfrogsfrogs>
+Message-ID: <172229848078.1349330.4131439093892039359.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229848026.1349330.12889405227098722037.stgit@frogsfrogsfrogs>
 References: <172229848026.1349330.12889405227098722037.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,57 +46,43 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the user told us to skip trimming the filesystem, don't run the phase
-at all.
+Collapse this two-line helper into the main function since it's trivial.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/xfs_scrub.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ scrub/phase8.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index e49538ca1..edf58d07b 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -249,6 +249,7 @@ struct phase_rusage {
- /* Operations for each phase. */
- #define DATASCAN_DUMMY_FN	((void *)1)
- #define REPAIR_DUMMY_FN		((void *)2)
-+#define FSTRIM_DUMMY_FN		((void *)3)
- struct phase_ops {
- 	char		*descr;
- 	int		(*fn)(struct scrub_ctx *ctx);
-@@ -429,6 +430,11 @@ run_scrub_phases(
- 			.fn = phase7_func,
- 			.must_run = true,
- 		},
-+		{
-+			.descr = _("Trim filesystem storage."),
-+			.fn = FSTRIM_DUMMY_FN,
-+			.estimate_work = phase8_estimate,
-+		},
- 		{
- 			NULL
- 		},
-@@ -449,6 +455,8 @@ run_scrub_phases(
- 		/* Turn on certain phases if user said to. */
- 		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data) {
- 			sp->fn = phase6_func;
-+		} else if (sp->fn == FSTRIM_DUMMY_FN && want_fstrim) {
-+			sp->fn = phase8_func;
- 		} else if (sp->fn == REPAIR_DUMMY_FN &&
- 			   ctx->mode == SCRUB_MODE_REPAIR) {
- 			sp->descr = _("Repair filesystem.");
-@@ -458,7 +466,8 @@ run_scrub_phases(
+diff --git a/scrub/phase8.c b/scrub/phase8.c
+index 07726b5b8..e577260a9 100644
+--- a/scrub/phase8.c
++++ b/scrub/phase8.c
+@@ -21,15 +21,6 @@
  
- 		/* Skip certain phases unless they're turned on. */
- 		if (sp->fn == REPAIR_DUMMY_FN ||
--		    sp->fn == DATASCAN_DUMMY_FN)
-+		    sp->fn == DATASCAN_DUMMY_FN ||
-+		    sp->fn == FSTRIM_DUMMY_FN)
- 			continue;
+ /* Phase 8: Trim filesystem. */
  
- 		/* Allow debug users to force a particular phase. */
+-/* Trim the unused areas of the filesystem if the caller asked us to. */
+-static void
+-trim_filesystem(
+-	struct scrub_ctx	*ctx)
+-{
+-	fstrim(ctx);
+-	progress_add(1);
+-}
+-
+ /* Trim the filesystem, if desired. */
+ int
+ phase8_func(
+@@ -47,7 +38,8 @@ phase8_func(
+ 		return 0;
+ 
+ maybe_trim:
+-	trim_filesystem(ctx);
++	fstrim(ctx);
++	progress_add(1);
+ 	return 0;
+ }
+ 
 
