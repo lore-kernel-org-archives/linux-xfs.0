@@ -1,100 +1,92 @@
-Received: from esa7.hc1455-7.c3s2.iphmx.com (esa7.hc1455-7.c3s2.iphmx.com [139.138.61.252])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD540191F7A;
-	Tue, 30 Jul 2024 07:54:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=139.138.61.252
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4146555769;
+	Tue, 30 Jul 2024 13:26:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722326095; cv=none; b=V7n2uE1Pk6JV3+KPylvZCZRRz8c7VkgXW8DVjMnGJQCpJx9UEUEFPj1PcI1dbHmgLiuPNzUTy9bQCcigVO+/j/vrMPzRcD1yBVubujopIdkuSS3PenNTkTT9TyECfL1FyLlN7/5+u9oBEMn/7lAC+fz8LQm55AC2UxRG9NsI83A=
+	t=1722345991; cv=none; b=O4co3dQVyCckU6FMpONYGQUf1RIDLIyuxFNrcjTRWjLmaOvkQNdaaNoEWXP7iEtogsZTDwmXCER4qnKxa4rLhcYJsvy5cPiPCd5G1N7S5Zl7LOXuOioAVAAn7Jp7Gwyuku2rPw3KhZRx/akCejzZD3J55p+xnmYmCoYtWK4vhMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722326095; c=relaxed/simple;
-	bh=pWLbYcTX0Uo9Oyj3U5DKEUpvp02NIcc1CTkivDSH9u8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=heUE6Y/NJoK4LVkppR8PhVBXfZ7ljRQIT+OZDiX4/OGbD9hv7PhdSOChoRVV3dK4eQIDx/Ra6YQ+rY7xGbYnZVpU+9YwrdS7sBFJQhnmPppVsYKGEURbylVBlURXG3+UJzIL6gcRM6etNYVsemDq0FFetAxykDMwdi+tfaXGrtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=MfbU20Us; arc=none smtp.client-ip=139.138.61.252
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
+	s=arc-20240116; t=1722345991; c=relaxed/simple;
+	bh=HISM98Ay0WWuaHogvlPHXl5HPQkpYwN2KJ1ekwInS4E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GVhKrKfz+urO7piX7/XmBoqmO9JagCQnXA0EvGqZl+9pgVlJQQFtknbVRQ9BbTBXDOfy0BmHwByCjgNRnbPJQO9682viVzG30beLjK2FQ0XjoTmltGD2e5rE7S1JgO44JwMJDE8/6fWjQPWg/NSutvlXscFiogpJNI6/ueLanLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UilyB9X3; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="MfbU20Us"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
-  t=1722326092; x=1753862092;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=pWLbYcTX0Uo9Oyj3U5DKEUpvp02NIcc1CTkivDSH9u8=;
-  b=MfbU20UsHan41l54RJoS9zL+WK0BK3o+cYBhH/nMWTfJtzrYY+aoE7Oi
-   IC39pp2ZzY336NhtHhoeuK215MLV9CTyPNdYpaEMcQ4RYQIydpKnUZ951
-   ac52yvf9u9hPlHOM8WxiT2DiaCJERClmqn6C9uBYMW4INQTSfODQrxuB5
-   x/0J3SLZV33tfMaHKLJVB17q/+zASsNNt8x9SfcZyGZYYmMFs1fZ0E9HZ
-   9uODECn2FGWhld7qB96tp8PhMt10EPudQTLzW1n9KHrd4pDgac1+2J5Eq
-   HInQ3k1hgLkDyjSbh8fEu/9AA2OnWXyShLmjpVES5Zx0BaKd0ZdDKBJXE
-   w==;
-X-IronPort-AV: E=McAfee;i="6700,10204,11148"; a="147920829"
-X-IronPort-AV: E=Sophos;i="6.09,248,1716217200"; 
-   d="scan'208";a="147920829"
-Received: from unknown (HELO oym-r2.gw.nic.fujitsu.com) ([210.162.30.90])
-  by esa7.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2024 16:54:43 +0900
-Received: from oym-m1.gw.nic.fujitsu.com (oym-nat-oym-m1.gw.nic.fujitsu.com [192.168.87.58])
-	by oym-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id D7A8AD9223;
-	Tue, 30 Jul 2024 16:54:41 +0900 (JST)
-Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
-	by oym-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 25D28D8AD8;
-	Tue, 30 Jul 2024 16:54:41 +0900 (JST)
-Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id A9EE56BED7;
-	Tue, 30 Jul 2024 16:54:40 +0900 (JST)
-Received: from localhost.localdomain (unknown [10.167.226.182])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id 047DD1A000B;
-	Tue, 30 Jul 2024 15:54:39 +0800 (CST)
-From: Ma Xinjian <maxj.fnst@fujitsu.com>
-To: zlang@redhat.com
-Cc: fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Ma Xinjian <maxj.fnst@fujitsu.com>
-Subject: [PATCH] [PATCH] xfs/348: add _fixed_by tag
-Date: Tue, 30 Jul 2024 15:56:53 +0800
-Message-ID: <20240730075653.3473323-1-maxj.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.42.0
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UilyB9X3"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=jDlk0/3hMO7Vd0hLRG4kBbSvr6LqrzTNupwmh7CFwFY=; b=UilyB9X3mn/Ehep0vjEwe0KCo3
+	VmnqZ/RsEq2OBza3MIW0xB1GDIaDT3YY5j51wp2cydwSeNljEVQ9/tVZ9nMWVoiLSk4P5NUJs+Rje
+	C4ju+6rfO8Z5ms6rOLiRSTlvzxVJn0/8Kmee/KSO+hRaWVlxISO45O9MPfYrKZZksqbIQjmH70rgJ
+	3E3aSHaXlEtrbRnf7+JPr8S5SOeiGLt2LnKTvbkahOCknBnA+/diDboTpMrrnwo9FXwIN4Y9FEoOR
+	tYd+9tHVgjbGgqjquJ4DEKTKbFruox78tanhNvj/z09d3nerbuKg2PccvonGoPmdVdMkEq5hkTXKa
+	0gu/SQag==;
+Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
+	by casper.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sYmrz-0000000EjCS-2rvP;
+	Tue, 30 Jul 2024 13:26:28 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id 034513003EA; Tue, 30 Jul 2024 15:26:27 +0200 (CEST)
+Date: Tue, 30 Jul 2024 15:26:26 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	tglx@linutronix.de
+Subject: Re: Are jump labels broken on 6.11-rc1?
+Message-ID: <20240730132626.GV26599@noisy.programming.kicks-ass.net>
+References: <20240730033849.GH6352@frogsfrogsfrogs>
+ <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28564.003
-X-TM-AS-User-Approved-Sender: Yes
-X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28564.003
-X-TMASE-Result: 10--4.430400-10.000000
-X-TMASE-MatchedRID: JUGAxiLh1cM5rof3b4z0VKzGfgakLdja1QQ6Jx/fflaMJxigKCCiS78F
-	Hrw7frluf146W0iUu2u9alSWGuOKxvoLRFtw/0CmjoyKzEmtrEd4SsGg2DQOYkxqTmWcX8+mux6
-	8HkBCq1Di8zVgXoAltvqFFlQp0msE0C1sQRfQzEHEQdG7H66TyHEqm8QYBtMOV57Osr9DRXp17R
-	/9wu8nBgozzo88pXiLA4SZO0rQSwdQwtkgqrDFWNxH7DG6UFSVzd5H8M+VmysSm5w1cAiPERnsR
-	Xz5kGKvW4wbpXTb5DJKKve1kh3RY37qSWrndbmQn0bOriG5BVc=
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
 
-This test requires a kernel patch since 3bf963a6c6 ("xfs/348: partially revert
-dbcc549317"), so note that in the test.
+On Tue, Jul 30, 2024 at 01:00:02PM +0530, Chandan Babu R wrote:
+> On Mon, Jul 29, 2024 at 08:38:49 PM -0700, Darrick J. Wong wrote:
+> > Hi everyone,
+> >
+> > I got the following splat on 6.11-rc1 when I tried to QA xfs online
+> > fsck.  Does this ring a bell for anyone?  I'll try bisecting in the
+> > morning to see if I can find the culprit.
+> 
+> xfs/566 on v6.11-rc1 would consistently cause the oops mentioned below.
+> However, I was able to get xfs/566 to successfully execute for five times on a
+> v6.11-rc1 kernel with the following commits reverted,
+> 
+> 83ab38ef0a0b2407d43af9575bb32333fdd74fb2
+> 695ef796467ed228b60f1915995e390aea3d85c6
+> 9bc2ff871f00437ad2f10c1eceff51aaa72b478f
+> 
+> Reinstating commit 83ab38ef0a0b2407d43af9575bb32333fdd74fb2 causes the kernel
+> to oops once again.
 
-Signed-off-by: Ma Xinjian <maxj.fnst@fujitsu.com>
----
- tests/xfs/348 | 3 +++
- 1 file changed, 3 insertions(+)
+Durr, does this help?
 
-diff --git a/tests/xfs/348 b/tests/xfs/348
-index 3502605c..e4bc1328 100755
---- a/tests/xfs/348
-+++ b/tests/xfs/348
-@@ -12,6 +12,9 @@
- . ./common/preamble
- _begin_fstest auto quick fuzzers repair
+
+diff --git a/kernel/jump_label.c b/kernel/jump_label.c
+index 4ad5ed8adf96..57f70dfa1f3d 100644
+--- a/kernel/jump_label.c
++++ b/kernel/jump_label.c
+@@ -236,7 +236,7 @@ void static_key_disable_cpuslocked(struct static_key *key)
+ 	}
  
-+_fixed_by_git_commit kernel 38de567906d95 \
-+	"xfs: allow symlinks with short remote targets"
-+
- # Import common functions.
- . ./common/filter
- . ./common/repair
--- 
-2.42.0
-
+ 	jump_label_lock();
+-	if (atomic_cmpxchg(&key->enabled, 1, 0))
++	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
+ 		jump_label_update(key);
+ 	jump_label_unlock();
+ }
