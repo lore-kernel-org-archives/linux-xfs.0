@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74AA05C96
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:43:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D3CC6FB0
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:44:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300232; cv=none; b=lPyxIYafVBhdoGKKMnGnWuj7ZX3nzNlmUGztjnx2qVyxem49UU7RwT1u4AMvuY6hUByMWfBp3fVhR/0OANmoZH2hJvbdXKrs1lCWEu2WtFCk0HpNtafEcGKYD2WOAuZdVzC+BpSL5NpE4uhLzmLSbVirKSvB7O/hsOlpdtZ8kAU=
+	t=1722300248; cv=none; b=SmU65tniilKPCQOxvZGUKAN4QBqFosTTDauwZLiCDiMnRleDkscAXPzHDLoOQi5tUP8N3p/0JCp5lvMfxtF/oxhH7V1gZKizdWgC3HNatrPQAJqttoc/D8JPBkqf2n2EYZZ4hJ/oKFUCsDY8BUDcyJ1CgOPX6fn7l9VHecPLTyE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300232; c=relaxed/simple;
-	bh=nXCYp8NGfklbGzFykjoVKDGFqGM7UWWmDnHxe5sgExc=;
+	s=arc-20240116; t=1722300248; c=relaxed/simple;
+	bh=ubCSuFclBFM6vnnnx0GRGnRh66vzbhSDV33CYSFyBkc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jngEW98qOO9KAWsAmL4MeTvfoKTSWWO1tEUQNDvPJS1255i6xu8adgebZ0N9zmIOm/uhuUhPhxxf2IxuR64Vy70TqO6vS/11faGeQR3BJJTl44rU4x0INJHq1OWNhF3RJxsQqkIfHCGWErQDj1JYZRBo4azs1uFGYvSNoctE/5I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUZJvPhl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kMfx9NhshZkNtmWVn1LH3PVpftGHzL1RMn+GouzGpl9SW1yK1tsjz5HJlbTNrtPNVnYOAsfr/evY2HCMLh77e3jz6Oa0X5IGGfZ8JI46mz06J/J172/gsryfEw+c/mlHJv87hlgpoRRGpJRgRIx+d6VeytYRftMxTELNe+cdYnc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GWFYk/tg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUZJvPhl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48711C32786;
-	Tue, 30 Jul 2024 00:43:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GWFYk/tg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E433FC32786;
+	Tue, 30 Jul 2024 00:44:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300232;
-	bh=nXCYp8NGfklbGzFykjoVKDGFqGM7UWWmDnHxe5sgExc=;
+	s=k20201202; t=1722300247;
+	bh=ubCSuFclBFM6vnnnx0GRGnRh66vzbhSDV33CYSFyBkc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SUZJvPhlUKtj0vx6TwQ3HHViSMJIvWmbeAwetAe9ieY/cktq+kxtFCVy0BtGa8mPh
-	 I4iJ5nBXjpFTtu+F+AuQm+DFq/eYE3o80eygliBNGAjYhcdcsoYpf2kr0r4CrukRH5
-	 ZOZs452p3b3exo6BOHGSEKycn18L9d1llIoXlPwFAQg6hwWkguhNSGqgT+Zzd6DgIB
-	 l/FzTcwOKe2PUa0JQZzMIX04P7Jy4cyjf5iajWId/Rx5+BfKnS6qQLBQouwlFhQB3u
-	 FDExjpIuhq+j+8EycdFDUNUDlYcAmLBMnHCLqkHdZ8Nk+8rS9ZLx/ybtUppyKCJMri
-	 AHsubbdJdNLWQ==
-Date: Mon, 29 Jul 2024 17:43:51 -0700
-Subject: [PATCH 077/115] xfs: check dirents have parent pointers
+	b=GWFYk/tgEeHMliXVdn3CvL6ve95o2GCyc01sA8pDoLXCGs732dyI3PkEdLjj5biG3
+	 AvhjGDGoG/KOBIsNBhW/dzxmoLEQR7math4TSODhS49jE4naWHV+kdoUUaHydhLCIA
+	 w0XTtkNCcSbEqYXyW1Qbc5c+XWvwvBTzxlLgbNn8WAxYnqveJDpx61wcweN1BA69nd
+	 +HcQmFheEPhIDuDaW3EWLE4BKvWYja+XUhyX6H4iz2nFbZhA/pBwRNY7KiWkQ+xDHQ
+	 EUXjCjF9JFh5E0W4tQ7ffqR9pF5fCVLrtODtdVubndvYHf0eM9xHRiitQ8K86wL7xb
+	 0sQLcYZ2PtbgQ==
+Date: Mon, 29 Jul 2024 17:44:07 -0700
+Subject: [PATCH 078/115] xfs: remove some boilerplate from xfs_attr_set
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172229843530.1338752.11619267767899663328.stgit@frogsfrogsfrogs>
+Message-ID: <172229843546.1338752.18021774882327744843.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,61 +46,76 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 61b3f0df5c235806d372aaf696ce9aee7746d18f
+Source kernel commit: e7420e75ef04787bc51688fc9bbca7da4d164a1e
 
-If the fs has parent pointers, we need to check that each child dirent
-points to a file that has a parent pointer pointing back at us.
+In preparation for online/offline repair wanting to use xfs_attr_set,
+move some of the boilerplate out of this function into the callers.
+Repair can initialize the da_args completely, and the userspace flag
+handling/twisting goes away once we move it to xfs_attr_change.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_parent.c |   22 ++++++++++++++++++++++
- libxfs/xfs_parent.h |    5 +++++
- 2 files changed, 27 insertions(+)
+ libxfs/xfs_attr.c |   33 ++++++++++++---------------------
+ 1 file changed, 12 insertions(+), 21 deletions(-)
 
 
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-index bb0465197..8c29ba61c 100644
---- a/libxfs/xfs_parent.c
-+++ b/libxfs/xfs_parent.c
-@@ -288,3 +288,25 @@ xfs_parent_from_attr(
- 		*parent_gen = be32_to_cpu(rec->p_gen);
- 	return 0;
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 344b34aa4..1034579a1 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -947,6 +947,16 @@ xfs_attr_lookup(
+ 	return error;
  }
-+
-+/*
-+ * Look up a parent pointer record (@parent_name -> @pptr) of @ip.
-+ *
-+ * Caller must hold at least ILOCK_SHARED.  The scratchpad need not be
-+ * initialized.
-+ *
-+ * Returns 0 if the pointer is found, -ENOATTR if there is no match, or a
-+ * negative errno.
-+ */
-+int
-+xfs_parent_lookup(
-+	struct xfs_trans		*tp,
-+	struct xfs_inode		*ip,
-+	const struct xfs_name		*parent_name,
-+	struct xfs_parent_rec		*pptr,
-+	struct xfs_da_args		*scratch)
-+{
-+	memset(scratch, 0, sizeof(struct xfs_da_args));
-+	xfs_parent_da_args_init(scratch, tp, pptr, ip, ip->i_ino, parent_name);
-+	return xfs_attr_get_ilocked(scratch);
-+}
-diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
-index d7ab09e73..977885823 100644
---- a/libxfs/xfs_parent.h
-+++ b/libxfs/xfs_parent.h
-@@ -96,4 +96,9 @@ int xfs_parent_from_attr(struct xfs_mount *mp, unsigned int attr_flags,
- 		const void *value, unsigned int valuelen,
- 		xfs_ino_t *parent_ino, uint32_t *parent_gen);
  
-+/* Repair functions */
-+int xfs_parent_lookup(struct xfs_trans *tp, struct xfs_inode *ip,
-+		const struct xfs_name *name, struct xfs_parent_rec *pptr,
-+		struct xfs_da_args *scratch);
-+
- #endif /* __XFS_PARENT_H__ */
++/*
++ * Make a change to the xattr structure.
++ *
++ * The caller must have initialized @args, attached dquots, and must not hold
++ * any ILOCKs.
++ *
++ * Returns -EEXIST for XFS_ATTRUPDATE_CREATE if the name already exists.
++ * Returns -ENOATTR for XFS_ATTRUPDATE_REMOVE if the name does not exist.
++ * Returns 0 on success, or a negative errno if something else went wrong.
++ */
+ int
+ xfs_attr_set(
+ 	struct xfs_da_args	*args,
+@@ -960,27 +970,7 @@ xfs_attr_set(
+ 	int			rmt_blks = 0;
+ 	unsigned int		total;
+ 
+-	if (xfs_is_shutdown(dp->i_mount))
+-		return -EIO;
+-
+-	error = xfs_qm_dqattach(dp);
+-	if (error)
+-		return error;
+-
+-	if (!args->owner)
+-		args->owner = args->dp->i_ino;
+-	args->geo = mp->m_attr_geo;
+-	args->whichfork = XFS_ATTR_FORK;
+-	xfs_attr_sethash(args);
+-
+-	/*
+-	 * We have no control over the attribute names that userspace passes us
+-	 * to remove, so we have to allow the name lookup prior to attribute
+-	 * removal to fail as well.  Preserve the logged flag, since we need
+-	 * to pass that through to the logging code.
+-	 */
+-	args->op_flags = XFS_DA_OP_OKNOENT |
+-					(args->op_flags & XFS_DA_OP_LOGGED);
++	ASSERT(!args->trans);
+ 
+ 	switch (op) {
+ 	case XFS_ATTRUPDATE_UPSERT:
+@@ -1075,6 +1065,7 @@ xfs_attr_set(
+ 	error = xfs_trans_commit(args->trans);
+ out_unlock:
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	args->trans = NULL;
+ 	return error;
+ 
+ out_trans_cancel:
 
