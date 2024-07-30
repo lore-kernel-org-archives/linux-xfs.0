@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C5261373
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:51:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D71D94A3F
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:51:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300686; cv=none; b=OlVB9Y5grnzrMaXEyulG7qC7g78IgGFteIB0VXpNIK7UM9vbCyt1MFYMzCiI04z0LPQ9yasn5l68aHOkzJfJmJbbxjzQkv680QghyqM2TsQu2HfRyTNaC+X9s+1nFeY/F4weCACBOlNVHt9Z9Bq5QKzxcafgew3uXSs/B6846y0=
+	t=1722300701; cv=none; b=RRjCYbSXQ6avqBB3v5fwLzsywBlGwLoEis0DOnucwV4DfgppiE8K20o9kigWZ+8QQm10BHFYmMwKovQNgcHcVruYvtatT7giuW0rbSHnwTwTUz4jtAf26pK0ZzQndTTrS0QgqRl0LHH1Qcr0g5KuO0SvJNteMtQBXiWOa8HQJBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300686; c=relaxed/simple;
-	bh=CY9MehgVyxEs1R462SS9fNdXDlf9A+7SFrTrgNmo6c0=;
+	s=arc-20240116; t=1722300701; c=relaxed/simple;
+	bh=eX40Xj6Z9lqAwGs+xmLAsbhzstvYaDDUyP9nzHwmA1M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=beb6+OWCztZWpzUZXJM+SvJpRcqeFw9F61UB3czVbcffkoA7c0xTe7AFsNe9TzyqaZNbjC6UP0l04WjgexlGtNv0vu2yxC5rU7zgWJ6eFuaTrZHPWCub2GYlEVmmgB2gs9HAlhQS6WAwmPUqCib8nrABAXO734A8RDJga643YUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LrTLmIwb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ghShVJjEknGqRXmDW/bNEy6ocMB9LLselZ6N0ZR2zVOuwOqiCssRLkJxdJARJmDE7PH0cVTDcqNtbl/EEkMU+mkrDq1/xh6w06RHgEghoaQq2cBJzg8Gr0aFyBQSpX5IqzVexF4ZmWXKCIPESEDyBlr72GwSqiR0qfIyBztqArU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lTfhxkfN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LrTLmIwb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0205FC32786;
-	Tue, 30 Jul 2024 00:51:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lTfhxkfN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4AD0C32786;
+	Tue, 30 Jul 2024 00:51:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300686;
-	bh=CY9MehgVyxEs1R462SS9fNdXDlf9A+7SFrTrgNmo6c0=;
+	s=k20201202; t=1722300701;
+	bh=eX40Xj6Z9lqAwGs+xmLAsbhzstvYaDDUyP9nzHwmA1M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LrTLmIwb+JAWxHaMghSmgrWkgdnLg9GeIfBwEFLWt1m5ZkYJ9mIc+c9WzjzMJa0BJ
-	 ugpQN6G0OJ926IiRdWx+Ew54GSNTauWo4NJ0y1gvBHsG4JqUWeCTw7dfiXggDZ8WUi
-	 n1WxA4HQBhPLl5m3uw6ERX7A/u6hWfx/e9aDuTFOwo9ZwQWxy1p3BvtO3ok2UuoH4i
-	 clbEK+lNPe/SNka87xa0Uz2YczgXIySBgGZpM1EYlP+Pcjq7/F9Qsen8jVED0WK6G7
-	 29Gkkt58UgfKPnd+LjqGXd3TfEwBW4gArt4/UVZJcf9ht7l6euWieJIkgtVvUFk9Ko
-	 JvTMh/J1G+Adw==
-Date: Mon, 29 Jul 2024 17:51:25 -0700
-Subject: [PATCH 106/115] xfs: xfs_quota_unreserve_blkres can't fail
+	b=lTfhxkfNKy5SJBM8Vam6PR6Me4Z6guuthTBAHEnDvXEXdgo9jjvxs1V2gBGI53pZW
+	 tgT1PuY+SHTMD+L8kAgVmPgzdgDECsikciYqlEbyp+vlCJD7ADQa2FWbsKtHPJrnPP
+	 py4KnUT8kmPnvpg3fc9aGFRJrdfK6mLrZKKM/9kJ6MndwSsT0hhbooErc0qnF5M7++
+	 UIgW0NU9le0n5wzRGBnN+FuESjiwtjXKhOFx2KQdzk154UOXe8s+Sm0HtAJ+JCFD7O
+	 sGhpcIsEEtuKkgAOewyTZJ433r+xoFiheGJvtfyfOxSuMg2VBWKcxQHGTdGPZKSHCB
+	 dRQlW+RQo6jCw==
+Date: Mon, 29 Jul 2024 17:51:41 -0700
+Subject: [PATCH 107/115] xfs: simplify iext overflow checking and upgrade
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
- linux-xfs@vger.kernel.org
-Message-ID: <172229843941.1338752.15359927679279017373.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
+ Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
+Message-ID: <172229843954.1338752.423549545566881943.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,94 +47,160 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: cc3c92e7e79eb5f7f3ec4d5790ade384b7d294f7
+Source kernel commit: 25576c5420e61dea4c2b52942460f2221b8e46e8
 
-Unreserving quotas can't fail due to quota limits, and we'll notice a
-shut down file system a bit later in all the callers anyway.  Return
-void and remove the error checking and propagation in the callers.
+Currently the calls to xfs_iext_count_may_overflow and
+xfs_iext_count_upgrade are always paired.  Merge them into a single
+function to simplify the callers and the actual check and upgrade
+logic itself.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_bmap.c |   16 +++++-----------
- libxfs/xfs_bmap.h |    2 +-
- 2 files changed, 6 insertions(+), 12 deletions(-)
+ libxfs/xfs_attr.c       |    5 +---
+ libxfs/xfs_bmap.c       |    5 +---
+ libxfs/xfs_inode_fork.c |   63 +++++++++++++++++++++--------------------------
+ libxfs/xfs_inode_fork.h |    6 +---
+ 4 files changed, 32 insertions(+), 47 deletions(-)
 
 
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 99648d78c..9d32aa406 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -1049,11 +1049,8 @@ xfs_attr_set(
+ 		return error;
+ 
+ 	if (op != XFS_ATTRUPDATE_REMOVE || xfs_inode_hasattr(dp)) {
+-		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
++		error = xfs_iext_count_extend(args->trans, dp, XFS_ATTR_FORK,
+ 				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+-		if (error == -EFBIG)
+-			error = xfs_iext_count_upgrade(args->trans, dp,
+-					XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+ 		if (error)
+ 			goto out_trans_cancel;
+ 	}
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index e6d700138..4a365f1a1 100644
+index 4a365f1a1..347b44423 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -4922,7 +4922,7 @@ xfs_bmap_split_indlen(
- 	*indlen2 = len2;
+@@ -4645,11 +4645,8 @@ xfs_bmapi_convert_one_delalloc(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+-	error = xfs_iext_count_may_overflow(ip, whichfork,
++	error = xfs_iext_count_extend(tp, ip, whichfork,
+ 			XFS_IEXT_ADD_NOSPLIT_CNT);
+-	if (error == -EFBIG)
+-		error = xfs_iext_count_upgrade(tp, ip,
+-				XFS_IEXT_ADD_NOSPLIT_CNT);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index d9f0a21ac..cd5e2e729 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -763,53 +763,46 @@ xfs_ifork_verify_local_attr(
+ 	return 0;
  }
  
 -int
-+void
- xfs_bmap_del_extent_delay(
+-xfs_iext_count_may_overflow(
+-	struct xfs_inode	*ip,
+-	int			whichfork,
+-	int			nr_to_add)
+-{
+-	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
+-	uint64_t		max_exts;
+-	uint64_t		nr_exts;
+-
+-	if (whichfork == XFS_COW_FORK)
+-		return 0;
+-
+-	max_exts = xfs_iext_max_nextents(xfs_inode_has_large_extent_counts(ip),
+-				whichfork);
+-
+-	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
+-		max_exts = 10;
+-
+-	nr_exts = ifp->if_nextents + nr_to_add;
+-	if (nr_exts < ifp->if_nextents || nr_exts > max_exts)
+-		return -EFBIG;
+-
+-	return 0;
+-}
+-
+ /*
+- * Upgrade this inode's extent counter fields to be able to handle a potential
+- * increase in the extent count by nr_to_add.  Normally this is the same
+- * quantity that caused xfs_iext_count_may_overflow() to return -EFBIG.
++ * Check if the inode fork supports adding nr_to_add more extents.
++ *
++ * If it doesn't but we can upgrade it to large extent counters, do the upgrade.
++ * If we can't upgrade or are already using big counters but still can't fit the
++ * additional extents, return -EFBIG.
+  */
+ int
+-xfs_iext_count_upgrade(
++xfs_iext_count_extend(
+ 	struct xfs_trans	*tp,
  	struct xfs_inode	*ip,
- 	int			whichfork,
-@@ -4938,7 +4938,6 @@ xfs_bmap_del_extent_delay(
- 	xfs_filblks_t		got_indlen, new_indlen, stolen = 0;
- 	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
- 	uint64_t		fdblocks;
--	int			error = 0;
- 	bool			isrt;
++	int			whichfork,
+ 	uint			nr_to_add)
+ {
++	struct xfs_mount	*mp = ip->i_mount;
++	bool			has_large =
++		xfs_inode_has_large_extent_counts(ip);
++	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
++	uint64_t		nr_exts;
++
+ 	ASSERT(nr_to_add <= XFS_MAX_EXTCNT_UPGRADE_NR);
  
- 	XFS_STATS_INC(mp, xs_del_exlist);
-@@ -4958,9 +4957,7 @@ xfs_bmap_del_extent_delay(
- 	 * sb counters as we might have to borrow some blocks for the
- 	 * indirect block accounting.
- 	 */
--	error = xfs_quota_unreserve_blkres(ip, del->br_blockcount);
--	if (error)
--		return error;
-+	xfs_quota_unreserve_blkres(ip, del->br_blockcount);
- 	ip->i_delayed_blks -= del->br_blockcount;
+-	if (!xfs_has_large_extent_counts(ip->i_mount) ||
+-	    xfs_inode_has_large_extent_counts(ip) ||
+-	    XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
++	if (whichfork == XFS_COW_FORK)
++		return 0;
++
++	/* no point in upgrading if if_nextents overflows */
++	nr_exts = ifp->if_nextents + nr_to_add;
++	if (nr_exts < ifp->if_nextents)
+ 		return -EFBIG;
  
- 	if (got->br_startoff == del->br_startoff)
-@@ -5058,7 +5055,6 @@ xfs_bmap_del_extent_delay(
+-	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS) &&
++	    nr_exts > 10)
++		return -EFBIG;
  
- 	xfs_add_fdblocks(mp, fdblocks);
- 	xfs_mod_delalloc(ip, -(int64_t)del->br_blockcount, -da_diff);
--	return error;
++	if (nr_exts > xfs_iext_max_nextents(has_large, whichfork)) {
++		if (has_large || !xfs_has_large_extent_counts(mp))
++			return -EFBIG;
++		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	}
+ 	return 0;
  }
  
- void
-@@ -5616,18 +5612,16 @@ __xfs_bunmapi(
+diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
+index bd53eb951..2373d12fd 100644
+--- a/libxfs/xfs_inode_fork.h
++++ b/libxfs/xfs_inode_fork.h
+@@ -256,10 +256,8 @@ extern void xfs_ifork_init_cow(struct xfs_inode *ip);
  
- delete:
- 		if (wasdel) {
--			error = xfs_bmap_del_extent_delay(ip, whichfork, &icur,
--					&got, &del);
-+			xfs_bmap_del_extent_delay(ip, whichfork, &icur, &got, &del);
- 		} else {
- 			error = xfs_bmap_del_extent_real(ip, tp, &icur, cur,
- 					&del, &tmp_logflags, whichfork,
- 					flags);
- 			logflags |= tmp_logflags;
-+			if (error)
-+				goto error0;
- 		}
+ int xfs_ifork_verify_local_data(struct xfs_inode *ip);
+ int xfs_ifork_verify_local_attr(struct xfs_inode *ip);
+-int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
+-		int nr_to_add);
+-int xfs_iext_count_upgrade(struct xfs_trans *tp, struct xfs_inode *ip,
+-		uint nr_to_add);
++int xfs_iext_count_extend(struct xfs_trans *tp, struct xfs_inode *ip,
++		int whichfork, uint nr_to_add);
+ bool xfs_ifork_is_realtime(struct xfs_inode *ip, int whichfork);
  
--		if (error)
--			goto error0;
--
- 		end = del.br_startoff - 1;
- nodelete:
- 		/*
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index e98849eb9..667b0c2b3 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -202,7 +202,7 @@ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
- int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, uint32_t flags,
- 		xfs_extnum_t nexts, int *done);
--int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
-+void	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
- 		struct xfs_iext_cursor *cur, struct xfs_bmbt_irec *got,
- 		struct xfs_bmbt_irec *del);
- void	xfs_bmap_del_extent_cow(struct xfs_inode *ip,
+ /* returns true if the fork has extents but they are not read in yet. */
 
