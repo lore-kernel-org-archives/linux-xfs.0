@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D797F646
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:53:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 837082563
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 00:53:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722300795; cv=none; b=Y+5dpFGlTO67u5zDgg1nP7kMe7u/gryQtPrTt+4OEWmCxdapdgBqcqV7xRbeDmCCrmqLfve0QpMYGb+ktB2sSVee1/xgyFLmNHQ1YhjNylmm9/Vt+VyjOSssWGxeXJaMvqUndOhThrKP97xMerx8QXR2OuhabqWxn9CUnthdlQ8=
+	t=1722300811; cv=none; b=JWQ05YN9nVepjoqRIeITExe5zjL5uvr9wFjfP0Yaj1FIZ9cvsImryRH+zCOMSKBwFtiL+bVeKIXOPZNZDF9cZvVm3IxZ9qwqFb3MxpJBRhbs6vo3H0KaCDgzvzXxWxxE4rEWNoK74qLHH8J0dsQo6zPS1Hc/QeU4c3NUdGBHbvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722300795; c=relaxed/simple;
-	bh=P8t9oW+470k2RMY1bYf/1w4HnT17gFkiTGuLONp3M4A=;
+	s=arc-20240116; t=1722300811; c=relaxed/simple;
+	bh=yCNbpqZYC4Y5sQix+p9Zpx6CnZT5QE80CxHom56av+k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uLixYSzTt4nP8/eCFv6KpEC7JPxfd9Mehy079H1suhRjf4Ken7ATBv+6wu4fpl62VeWSIetMaZP4Xwlaw5I97jwuoxfmHsvGjFXIHIfwS/A7hJdfeqDRiQPrGToDw5RTjYITTmBp2Y+nWxvu85o/ybh4LHKRf26qys1P0YW2tcw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MxL6U9lO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Cz9cPtJ36oijAWauroAaqwbH81ggzoJBN1XziG5V5vvvd6IvlC56tDAEcCe66JMscSMGSAdd9ktEVB9M92Wax7733NzdfmK4TBSBWDS0lMnsmG5JA8y2BS8wa/ac6onB3EKK50ItksQhN1Ud4e8cPwSh8/vd+e3gvBG2SxmRw5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lOw90Qyz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MxL6U9lO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE0B6C32786;
-	Tue, 30 Jul 2024 00:53:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lOw90Qyz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54D70C32786;
+	Tue, 30 Jul 2024 00:53:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722300795;
-	bh=P8t9oW+470k2RMY1bYf/1w4HnT17gFkiTGuLONp3M4A=;
+	s=k20201202; t=1722300811;
+	bh=yCNbpqZYC4Y5sQix+p9Zpx6CnZT5QE80CxHom56av+k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MxL6U9lOZGGBbKm41YpuFomQnHTZ9wXWbgOfm2orCqqAcrEl+//4iQQqJ9F5A3u9d
-	 kcFzbrR6xnpvFbYmrB4W+Z+/zvMHE5u75KXQYYfvvSDsrtWlWm/tcpe7jTKGJw0Eii
-	 faQk7avhRx/LP/+FMX7b9HaDioDoG435mID85VERg/57iclYnQuFkrNNCGLXJvoht4
-	 RVJx+osCHzFlpC1wx+7gPZU6rxEPYCgskTZoW4QgZJ8hu09Hs9gcqqXyLnq0+kOXTq
-	 21Hq+fmCnnbFOL7FSdSIlw9mumGThBYjp+kEl3MhCkEUxK/ELyi0vH6IN/LIDl15+V
-	 EjLCeiTRJjkng==
-Date: Mon, 29 Jul 2024 17:53:15 -0700
-Subject: [PATCH 113/115] xfs: restrict when we try to align cow fork delalloc
- to cowextsz hints
+	b=lOw90QyzrjkOUgjvVQsEAJDq3WveCS0reXX7bOy+GLWhPKiLdK1NiFYl081eptLPU
+	 tdadkByU/KuGD42cnO9zz75YaSs7+bcvaGdWrq5mp2RF5vg0GWoMkU/f58QZMmTPuI
+	 8s0fIlQQorOl7UxK5bv3YziLZiuS2fmTSL+3WLAhmsqezJPNM3y0EaLKQ9e4A3T0YA
+	 VQr+nbWS4J/kwRMwma8/0oMJG3rMELw951IDf8/6sV++t/Pk4XTc/s0ffViGK6/1Bz
+	 tuKf2b6DbumYv2bOZGzVUbWdXmLO1+PwFNSjOEsfsmaTp7PgWDu4R3aiinBL/en4DK
+	 fNnXglK9+EvYg==
+Date: Mon, 29 Jul 2024 17:53:30 -0700
+Subject: [PATCH 114/115] xfs: allow unlinked symlinks and dirs with zero size
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  linux-xfs@vger.kernel.org
-Message-ID: <172229844030.1338752.4439274179388747119.stgit@frogsfrogsfrogs>
+Message-ID: <172229844043.1338752.16084080686221125367.stgit@frogsfrogsfrogs>
 In-Reply-To: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 References: <172229842329.1338752.683513668861748171.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,124 +47,69 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 288e1f693f04e66be99f27e7cbe4a45936a66745
+Source kernel commit: 1ec9307fc066dd8a140d5430f8a7576aa9d78cd3
 
-xfs/205 produces the following failure when always_cow is enabled:
+For a very very long time, inode inactivation has set the inode size to
+zero before unmapping the extents associated with the data fork.
+Unfortunately, commit 3c6f46eacd876 changed the inode verifier to
+prohibit zero-length symlinks and directories.  If an inode happens to
+get logged in this state and the system crashes before freeing the
+inode, log recovery will also fail on the broken inode.
 
-This is the result of overly aggressive attempts to align cow fork
-delalloc reservations to the CoW extent size hint.  Looking at the trace
-data, we're trying to append a single fsblock to the "fred" file.
-Trying to create a speculative post-eof reservation fails because
-there's not enough space.
+Therefore, allow zero-size symlinks and directories as long as the link
+count is zero; nobody will be able to open these files by handle so
+there isn't any risk of data exposure.
 
-We then set @prealloc_blocks to zero and try again, but the cowextsz
-alignment code triggers, which expands our request for a 1-fsblock
-reservation into a 39-block reservation.  There's not enough space for
-that, so the whole write fails with ENOSPC even though there's
-sufficient space in the filesystem to allocate the single block that we
-need to land the write.
-
-There are two things wrong here -- first, we shouldn't be attempting
-speculative preallocations beyond what was requested when we're low on
-space.  Second, if we've already computed a posteof preallocation, we
-shouldn't bother trying to align that to the cowextsize hint.
-
-Fix both of these problems by adding a flag that only enables the
-expansion of the delalloc reservation to the cowextsize if we're doing a
-non-extending write, and only if we're not doing an ENOSPC retry.  This
-requires us to move the ENOSPC retry logic to xfs_bmapi_reserve_delalloc.
-
-I probably should have caught this six years ago when 6ca30729c206d was
-being reviewed, but oh well.  Update the comments to reflect what the
-code does now.
-
-Fixes: 6ca30729c206d ("xfs: bmap code cleanup")
+Fixes: 3c6f46eacd876 ("xfs: sanity check directory inode di_size")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- include/xfs_trace.h |    1 +
- libxfs/xfs_bmap.c   |   31 +++++++++++++++++++++++++++----
- 2 files changed, 28 insertions(+), 4 deletions(-)
+ libxfs/xfs_inode_buf.c |   23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
 
 
-diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-index 2e5e89d65..fe0854b20 100644
---- a/include/xfs_trace.h
-+++ b/include/xfs_trace.h
-@@ -68,6 +68,7 @@
- #define trace_xfs_log_recover_item_add(a,b,c,d)	((void) 0)
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 5c4e66a25..856659cc3 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -376,10 +376,13 @@ xfs_dinode_verify_fork(
+ 		/*
+ 		 * A directory small enough to fit in the inode must be stored
+ 		 * in local format.  The directory sf <-> extents conversion
+-		 * code updates the directory size accordingly.
++		 * code updates the directory size accordingly.  Directories
++		 * being truncated have zero size and are not subject to this
++		 * check.
+ 		 */
+ 		if (S_ISDIR(mode)) {
+-			if (be64_to_cpu(dip->di_size) <= fork_size &&
++			if (dip->di_size &&
++			    be64_to_cpu(dip->di_size) <= fork_size &&
+ 			    fork_format != XFS_DINODE_FMT_LOCAL)
+ 				return __this_address;
+ 		}
+@@ -525,9 +528,19 @@ xfs_dinode_verify(
+ 	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
+ 		return __this_address;
  
- #define trace_xfs_da_btree_corrupt(a,b)		((void) 0)
-+#define trace_xfs_delalloc_enospc(...)		((void) 0)
- #define trace_xfs_btree_corrupt(a,b)		((void) 0)
- #define trace_xfs_btree_updkeys(a,b,c)		((void) 0)
- #define trace_xfs_btree_overlapped_query_range(a,b,c)	((void) 0)
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index a0dda4640..e60d11470 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -4052,20 +4052,32 @@ xfs_bmapi_reserve_delalloc(
- 	xfs_extlen_t		indlen;
- 	uint64_t		fdblocks;
- 	int			error;
--	xfs_fileoff_t		aoff = off;
-+	xfs_fileoff_t		aoff;
-+	bool			use_cowextszhint =
-+					whichfork == XFS_COW_FORK && !prealloc;
- 
-+retry:
- 	/*
- 	 * Cap the alloc length. Keep track of prealloc so we know whether to
- 	 * tag the inode before we return.
- 	 */
-+	aoff = off;
- 	alen = XFS_FILBLKS_MIN(len + prealloc, XFS_MAX_BMBT_EXTLEN);
- 	if (!eof)
- 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
- 	if (prealloc && alen >= len)
- 		prealloc = alen - len;
- 
--	/* Figure out the extent size, adjust alen */
--	if (whichfork == XFS_COW_FORK) {
+-	/* No zero-length symlinks/dirs. */
+-	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
+-		return __this_address;
 +	/*
-+	 * If we're targetting the COW fork but aren't creating a speculative
-+	 * posteof preallocation, try to expand the reservation to align with
-+	 * the COW extent size hint if there's sufficient free space.
-+	 *
-+	 * Unlike the data fork, the CoW cancellation functions will free all
-+	 * the reservations at inactivation, so we don't require that every
-+	 * delalloc reservation have a dirty pagecache.
++	 * No zero-length symlinks/dirs unless they're unlinked and hence being
++	 * inactivated.
 +	 */
-+	if (use_cowextszhint) {
- 		struct xfs_bmbt_irec	prev;
- 		xfs_extlen_t		extsz = xfs_get_cowextsz_hint(ip);
- 
-@@ -4084,7 +4096,7 @@ xfs_bmapi_reserve_delalloc(
- 	 */
- 	error = xfs_quota_reserve_blkres(ip, alen);
- 	if (error)
--		return error;
-+		goto out;
- 
- 	/*
- 	 * Split changing sb for alen and indlen since they could be coming
-@@ -4134,6 +4146,17 @@ xfs_bmapi_reserve_delalloc(
- out_unreserve_quota:
- 	if (XFS_IS_QUOTA_ON(mp))
- 		xfs_quota_unreserve_blkres(ip, alen);
-+out:
-+	if (error == -ENOSPC || error == -EDQUOT) {
-+		trace_xfs_delalloc_enospc(ip, off, len);
-+
-+		if (prealloc || use_cowextszhint) {
-+			/* retry without any preallocation */
-+			use_cowextszhint = false;
-+			prealloc = 0;
-+			goto retry;
++	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0) {
++		if (dip->di_version > 1) {
++			if (dip->di_nlink)
++				return __this_address;
++		} else {
++			if (dip->di_onlink)
++				return __this_address;
 +		}
 +	}
- 	return error;
- }
  
+ 	fa = xfs_dinode_verify_nrext64(mp, dip);
+ 	if (fa)
 
