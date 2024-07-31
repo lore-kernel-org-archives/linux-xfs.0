@@ -1,137 +1,89 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79CF11AC42F;
-	Wed, 31 Jul 2024 10:56:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD4D1AE856;
+	Wed, 31 Jul 2024 12:40:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722423369; cv=none; b=IGwlQHl1sTNeLNsMohra/BcZcEWqqSNjQQQ0YhCed2ceAeuyUi9oF8Reau7zry4/a6FqGvz/qjt+HhRq9TkMfmL0/pLMb64L2A4TqF2eHDAFot5fDP3sqrMEgRreJQm4l7176mS1Y285uUAN8Se4tN2BEPDhSv4bnd2fzMGIGSQ=
+	t=1722429645; cv=none; b=qqIkDCekkuv29ujay6gAfrXrVnsi0mSW1hzuqcu0V4ZOBH/XdQrmtGp862IMZIWRi33gjeN5JgFA8pwplc+bEYmktmoTGA+9eh3iUcpe9i4ZWC2t0pyZ4mW7jUvHh6evSPQpXrW/OnEr1utaRVH742VvWLKyPw4ri8YGKueMNSA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722423369; c=relaxed/simple;
-	bh=HK4h1PFqWgIByDXpPjcpyxuXOnL9guHIjO5eOafVgLs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DZR9WpnFbQTdpA/SXVNeBUL6YkNRNzOVRvnA+A20a1HEX/sknnFWsfhMw/d2YkOJWAg4x2wB8q2hy6VPeW0Nxjw7XUIaibaERPsXT92JRRRlQsr4ObgBNzSExDdZZcVj1n8F/7lDhr8u9vmTjgQuxVIHjK8IagZgcDsb31asoUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=h+CM5vcR; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1722429645; c=relaxed/simple;
+	bh=ZQYwapvvRoc98cBxhpTni3rNawYyHkaeqj2A0yuc5ro=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KrOW4PcAEcpEcxlXIKYBhxA10wabN4Y1HapHxD/jZkeKvLpFina14kpRV3VIUmFrjeD4J0Mk8TBBqw9mltjz4Vps0RuTD9MFyWxASzLTP3ZhbmWfDCJWLxhuEy6NB66PpEzNfXO6GpWa3Hi3GasknXeZDyOaVbC99fJzY9Z3cew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qEX04/Ya; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="h+CM5vcR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=nxI5JiXjoal3A364js3YMeIq5EhIREJ3YhkGWH1VbfM=; b=h+CM5vcRayI6+QBa/cSQz5xCHm
-	PKDRuI5uMx5uFljH1IemEufmdLO6UdSfXWiFdQVXs6SLgNpGCGL19hmP6JUsSrCBc8EQtNPzyQ8Q7
-	MFljp6bktgPE7ajtZp5PTlOQ6dE/PtUu5V40foFXDAGdvOvNnOlmePIRc8hjMFoh0KSht1LncExKn
-	4zTJU+CkO6ZJ5K9y1mbXXTTZAGm9sIBOzKF8ygGsWnqEhhrKaGxWyFrrhZLFAJJjFDxa4ZboN4dI+
-	qODgfU8wVWP/z4hVNCcqBXNe+7o0U2Rl8VBLK7QgDxApYMuvrFytKTgOeN/xJEIPCZ1spg2mlcZTT
-	P7nJCAZA==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sZ6zu-0000000G1C8-2TvP;
-	Wed, 31 Jul 2024 10:55:58 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id A63EB300820; Wed, 31 Jul 2024 12:55:57 +0200 (CEST)
-Date: Wed, 31 Jul 2024 12:55:57 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	tglx@linutronix.de
-Subject: Re: Are jump labels broken on 6.11-rc1?
-Message-ID: <20240731105557.GY33588@noisy.programming.kicks-ass.net>
-References: <20240730033849.GH6352@frogsfrogsfrogs>
- <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20240730132626.GV26599@noisy.programming.kicks-ass.net>
- <20240731001950.GN6352@frogsfrogsfrogs>
- <20240731031033.GP6352@frogsfrogsfrogs>
- <20240731053341.GQ6352@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qEX04/Ya"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D476C116B1;
+	Wed, 31 Jul 2024 12:40:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1722429645;
+	bh=ZQYwapvvRoc98cBxhpTni3rNawYyHkaeqj2A0yuc5ro=;
+	h=From:To:Cc:Subject:Date:From;
+	b=qEX04/YarwqlcTUNA6W0V8ogVa9vHU+1WusjX1p5G5CAtz0J8ohZajuxd1LN/vZdJ
+	 CFHdoHdeN17YhQVVwelNhxsau/H+GfgvAoUh54BNVstRpSKHdZsHSFiw5n1E5VPHWq
+	 g291geEK/IFE9yY4ftbVYnYs/0K9OOG7JuuojaUj1ziWOWl3VFi/+P7TXvGgGlgTTz
+	 R3VzHhYkwk7uwd4XV4kstW/lNkAB27U0EWk0zEeGdB/ducdhU4N9mRwn0HcLOjEyxp
+	 qtEppqqn8Z35fezc1fbR8g76944VDNUCogdPahN0d3aY7lybpibXZv3Mm7eNmK+B5c
+	 CLtyYH5kRL0SA==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: dchinner@redhat.com,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,lkp@intel.com,nichen@iscas.ac.cn,sandeen@redhat.com,sunjunchao2870@gmail.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 7bf888fa26e8
+Date: Wed, 31 Jul 2024 18:09:55 +0530
+Message-ID: <87o76divjq.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240731053341.GQ6352@frogsfrogsfrogs>
+Content-Type: text/plain
 
-On Tue, Jul 30, 2024 at 10:33:41PM -0700, Darrick J. Wong wrote:
+Hi folks,
 
-> Sooooo... it turns out that somehow your patch got mismerged on the
-> first go-round, and that worked.  The second time, there was no
-> mismerge, which mean that the wrong atomic_cmpxchg() callsite was
-> tested.
-> 
-> Looking back at the mismerge, it actually changed
-> __static_key_slow_dec_cpuslocked, which had in 6.10:
-> 
-> 	if (atomic_dec_and_test(&key->enabled))
-> 		jump_label_update(key);
-> 
-> Decrement, then return true if the value was set to zero.  With the 6.11
-> code, it looks like we want to exchange a 1 with a 0, and act only if
-> the previous value had been 1.
-> 
-> So perhaps we really want this change?  I'll send it out to the fleet
-> and we'll see what it reports tomorrow morning.
+The for-next branch of the xfs-linux repository at:
 
-Bah yes, I missed we had it twice. Definitely both sites want this.
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-I'll tentatively merge the below patch in tip/locking/urgent. I can
-rebase if there is need.
+has just been updated.
 
----
-Subject: jump_label: Fix the fix, brown paper bags galore
-From: Peter Zijlstra <peterz@infradead.org>
-Date: Wed Jul 31 12:43:21 CEST 2024
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-Per the example of:
+The new head of the for-next branch is commit:
 
-  !atomic_cmpxchg(&key->enabled, 0, 1)
+7bf888fa26e8 xfs: convert comma to semicolon
 
-the inverse was written as:
+6 new commits:
 
-  atomic_cmpxchg(&key->enabled, 1, 0)
+Chen Ni (2):
+      [8c2263b92317] xfs: convert comma to semicolon
+      [7bf888fa26e8] xfs: convert comma to semicolon
 
-except of course, that while !old is only true for old == 0, old is
-true for everything except old == 0.
+Darrick J. Wong (2):
+      [80d3d33cdf4b] xfs: fix a memory leak
+      [19ebc8f84ea1] xfs: fix file_path handling in tracepoints
 
-Fix it to read:
+Eric Sandeen (1):
+      [39c1ddb064fd] xfs: allow SECURE namespace xattrs to use reserved block pool
 
-  atomic_cmpxchg(&key->enabled, 1, 0) == 1
+Julian Sun (1):
+      [af5d92f2fad8] xfs: remove unused parameter in macro XFS_DQUOT_LOGRES
 
-such that only the 1->0 transition returns true and goes on to disable
-the keys.
+Code Diffstat:
 
-Fixes: 83ab38ef0a0b ("jump_label: Fix concurrency issues in static_key_slow_dec()")
-Reported-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
----
- kernel/jump_label.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c | 28 ++++++++++++++--------------
+ fs/xfs/scrub/agheader_repair.c |  2 +-
+ fs/xfs/scrub/parent.c          |  2 +-
+ fs/xfs/scrub/trace.h           | 10 ++++------
+ fs/xfs/xfs_attr_list.c         |  2 +-
+ fs/xfs/xfs_trace.h             | 10 ++++------
+ fs/xfs/xfs_xattr.c             | 19 ++++++++++++++++++-
+ 8 files changed, 44 insertions(+), 31 deletions(-)
 
---- a/kernel/jump_label.c
-+++ b/kernel/jump_label.c
-@@ -236,7 +236,7 @@ void static_key_disable_cpuslocked(struc
- 	}
- 
- 	jump_label_lock();
--	if (atomic_cmpxchg(&key->enabled, 1, 0))
-+	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
- 		jump_label_update(key);
- 	jump_label_unlock();
- }
-@@ -289,7 +289,7 @@ static void __static_key_slow_dec_cpuslo
- 		return;
- 
- 	guard(mutex)(&jump_label_mutex);
--	if (atomic_cmpxchg(&key->enabled, 1, 0))
-+	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
- 		jump_label_update(key);
- 	else
- 		WARN_ON_ONCE(!static_key_slow_try_dec(key));
+-- 
+Chandan
