@@ -1,40 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B389194C8F
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jul 2024 23:51:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C76E4C6E;
+	Wed, 31 Jul 2024 00:19:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722383464; cv=none; b=nE9kcPOWi3/Rh80VQ1EJfQzxjXq7FBnZtiPeSeexg7TzKJjsZ2F0fMA5nJp4EIAFLFEHp6PfK4IPW8u/AphqT+8iaKlp/wii9AdpkIiBxMRuL/ZqtqPUerWKt6nLfTCvJZokrH37PsMUHVSFAX+R46wlDYh3+i2XEE9E2bUJTnM=
+	t=1722385192; cv=none; b=ucm57QmRQZQY4vvy1FgZ1BKhLqEWyERSRPNuwfb4Xo0FyLfJLHwC07mRKIbaPL3etWNxbBwTzmaEZi2fNu+5GUhSyzljeoIx9G1YWGvJPSYwbtSvJr/WWb3KbuNTTNt3lEz22jyPoP74D+RhAhWXd1oqt9w8KK6omRKih9DDo6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722383464; c=relaxed/simple;
-	bh=8oCkfyUAQOKz2zlqpcqjy8HS3+za5kiIZreYkP5yO2E=;
+	s=arc-20240116; t=1722385192; c=relaxed/simple;
+	bh=XS8798meb7b62XTDYeSlTAKZTvCRt5eg3kHo45ma4d0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XVTIViEbL4StYjcamksj5Uf0KYuLBUY/Kdx0PH50so3/5sblXwZA//xAO8zNrWoCsRaFXdU1fhRvKOzYKs6kNTYLq8M12OW0ujCjvsLEnj39wgiw9P0d+ZwmwFn0D/7Klxae82G3q09NgAuJCF7oytfK96+fh3R8Ca3+0LYWOJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gOXbC2Tk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=H1hHNuCZj3j6FWH+v02JPZIhM/pF61UpLBsnWR4LA/BjHIabgkW3qkzHd56rjZi8YLbn9LT7FYKPBcYH3qabVR0xWDiOMoNjgtswD+uccDGAtbV5OCLV/gV+jNSMf9rEmSbYCoJibvWeX2ODcyY8fmdWFYdMpU6gTPP0nCU8gIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2JQEOlp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gOXbC2Tk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D47B8C4AF09;
-	Tue, 30 Jul 2024 23:51:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2JQEOlp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DF52C32782;
+	Wed, 31 Jul 2024 00:19:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722383463;
-	bh=8oCkfyUAQOKz2zlqpcqjy8HS3+za5kiIZreYkP5yO2E=;
+	s=k20201202; t=1722385191;
+	bh=XS8798meb7b62XTDYeSlTAKZTvCRt5eg3kHo45ma4d0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gOXbC2TkaM9ycVNCi8jgsCwSeWGm+cHBjmMyhplHpHgSDBo4CBaNKomWQSR/pKFfA
-	 FkDGUnu53GkIiYyceq8xIlMPrNXRVVkFl2M2IMsKaTlEBRKcAUbzrZhtjk3tYSQTQD
-	 wFnR/S5PiUWrKiuQNdFO71aoHNbS8IfS5W2U08kMJhW4Z7sXbcgriHyAL+XRmMHte4
-	 iPBACBr6mkF4wNVA6LKlueDa+YjPhXEV39yJ/vKp//XuICCLbfXCnBXDqFRmDaVKWG
-	 oqqBhfNjJrNNDq5cOHrjxNW1ORukFghhYvVO2byEq6CsIr6s8NDDrvJNyPbvMp0nLz
-	 3DWhwSebVc3yw==
-Date: Tue, 30 Jul 2024 16:51:03 -0700
+	b=F2JQEOlpNAddu48Uo7ro7hXZsnT2J1AHfmBLud9T/zPSNutpjpg1+4/UGoUZxu9yU
+	 Qu4BolfZa19gjIkkSvfRyvLwG+1mnAk7J5jRo+yfgwVHit1UZKCR7yYob58wlv6cwo
+	 BJaEhrZ6xz95j+4PGLOjLMPt4Q0l3/hknkqd7FseitYzRxd2Luo/pB/Y60ZsacHYMC
+	 Q/ZLolMtQlDsaEpxiKo5pTFQCc1h067568+sSb7A0HkheNqBY/KVSFF0iKyhPeJdzf
+	 woefoAi+Q6B/dyjKxCVfrfzeDmfUwyzDrU3iLQUnEntb/78J77miXhv5YXAa3D7cPi
+	 B2gFRm5pkDZIA==
+Date: Tue, 30 Jul 2024 17:19:50 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] libfrog: define a self_healing filesystem property
-Message-ID: <20240730235103.GM6352@frogsfrogsfrogs>
-References: <172230940983.1544039.13001736803793260744.stgit@frogsfrogsfrogs>
- <172230941003.1544039.14396399914334113330.stgit@frogsfrogsfrogs>
- <ZqlhopUMJNAyxuSw@infradead.org>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Chandan Babu R <chandanbabu@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	tglx@linutronix.de
+Subject: Re: Are jump labels broken on 6.11-rc1?
+Message-ID: <20240731001950.GN6352@frogsfrogsfrogs>
+References: <20240730033849.GH6352@frogsfrogsfrogs>
+ <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20240730132626.GV26599@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,23 +48,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZqlhopUMJNAyxuSw@infradead.org>
+In-Reply-To: <20240730132626.GV26599@noisy.programming.kicks-ass.net>
 
-On Tue, Jul 30, 2024 at 02:56:50PM -0700, Christoph Hellwig wrote:
-> self-healing sounds a little imposterous :)
+On Tue, Jul 30, 2024 at 03:26:26PM +0200, Peter Zijlstra wrote:
+> On Tue, Jul 30, 2024 at 01:00:02PM +0530, Chandan Babu R wrote:
+> > On Mon, Jul 29, 2024 at 08:38:49 PM -0700, Darrick J. Wong wrote:
+> > > Hi everyone,
+> > >
+> > > I got the following splat on 6.11-rc1 when I tried to QA xfs online
+> > > fsck.  Does this ring a bell for anyone?  I'll try bisecting in the
+> > > morning to see if I can find the culprit.
+> > 
+> > xfs/566 on v6.11-rc1 would consistently cause the oops mentioned below.
+> > However, I was able to get xfs/566 to successfully execute for five times on a
+> > v6.11-rc1 kernel with the following commits reverted,
+> > 
+> > 83ab38ef0a0b2407d43af9575bb32333fdd74fb2
+> > 695ef796467ed228b60f1915995e390aea3d85c6
+> > 9bc2ff871f00437ad2f10c1eceff51aaa72b478f
+> > 
+> > Reinstating commit 83ab38ef0a0b2407d43af9575bb32333fdd74fb2 causes the kernel
+> > to oops once again.
+> 
+> Durr, does this help?
 
-Do you have a better suggestion?
+Yes, it does!  After ~8, a full fstests run completes without incident.
 
-"auto_fsck"?
+(vs. before where it would blow up within 2 minutes)
 
-"auto_unf***"? ;)
-
-"background_fsck"?
-
-"background_scrub"?
-
-"patrol_scrub"? <ugh>
-
-> The code itself looks fine though.
+Thanks for the fix; you can add
+Tested-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
+
+> 
+> diff --git a/kernel/jump_label.c b/kernel/jump_label.c
+> index 4ad5ed8adf96..57f70dfa1f3d 100644
+> --- a/kernel/jump_label.c
+> +++ b/kernel/jump_label.c
+> @@ -236,7 +236,7 @@ void static_key_disable_cpuslocked(struct static_key *key)
+>  	}
+>  
+>  	jump_label_lock();
+> -	if (atomic_cmpxchg(&key->enabled, 1, 0))
+> +	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
+>  		jump_label_update(key);
+>  	jump_label_unlock();
+>  }
+> 
