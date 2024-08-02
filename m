@@ -1,71 +1,73 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4328517FE
-	for <linux-xfs@vger.kernel.org>; Fri,  2 Aug 2024 00:05:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7418F4C70
+	for <linux-xfs@vger.kernel.org>; Fri,  2 Aug 2024 00:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722557160; cv=none; b=qz9IH8Bd+ZIixbvuZ0a8xVW+T6EUvilsa7GdddK4bInQsIeYScjZOU/vynDfqY6bKCwtyVvX4HZFY/4iG2RDugx+3EwMBAom8VNIhIS38xILtWKPjj38DDDnP534U667Hasw8igrEj1wdOVHGcs9d+8hpgGnu+pNrbC4Ryekw4k=
+	t=1722557793; cv=none; b=n4Ng8FRIs5w3ooetYePelx40iRLu30p9jkNtyh1PHyiWy0obg5bpCzY25d3bWyzjSY61KGv/pGJbitqjtE5mpT6Q0rhIWEcKTr4jJApnqp1rhojsCum+94ucbYgrFO7d2dM0yN/bQwEDt/e8KDhCxaGpoxM5HZmIcLlreepnTMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722557160; c=relaxed/simple;
-	bh=kPg6hNpv0fyQQ4C8xugRnahcyI2M1VfEIoO8Iylc6mw=;
+	s=arc-20240116; t=1722557793; c=relaxed/simple;
+	bh=gv0MSjTTxtetpP1I5Q0ld5WOmfLG/jl/3ZbphmqXk7E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W9X8J5a0OHJUEg1ksyaEMVI7+1b04lUm13FqBzvwjvCi9dADHuj8xdy1fUXsd0XzWHNsgqnvPrRNXeJwYZRSdhstxqWjND4E06jsQhSwGLBfrjunLhSEkKriHYLuS3Fqhl7G/3SrF2U5Wh4YxwWm9QmpFJC44rXP0dkSZxbVT64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KnYaLdmd; arc=none smtp.client-ip=209.85.214.173
+	 Content-Type:Content-Disposition:In-Reply-To; b=CebfCrtIRC3UJnAT2gh90Z0yiKM8+Ed/1z3TbISYjksf1Fz/9Vibge6P1VKzTkO6t7zW5UdY2+ZaieLeQA4Zj6VjOtgyOoOKxbJ+KVpQjZ6AO88uKR7tonnfxPCdtgbHCE7k1D3aJWXOWncEUzapBRv0iZTuWbamjnkjQKXtMr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=eq18qnBA; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KnYaLdmd"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1fc611a0f8cso57193025ad.2
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Aug 2024 17:05:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="eq18qnBA"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1fd9e6189d5so61254575ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Aug 2024 17:16:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1722557158; x=1723161958; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1722557792; x=1723162592; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=BtsQ+3NXr7Z0grTXgI4VJ8mpDigb9614hgPF8/mg2ek=;
-        b=KnYaLdmdx2kIS5cRhTBo9gtYC5Cuu9GWeGnR5/z9WkUTP3MTuLgzH26Y+un7cTRsYv
-         yJjicBTWTBNCawOIBZTDcWdv4BWNIc/mkZRKIddb9YMD+TLu1uBop98FeKxls5Qk1yzE
-         TUReUZcKvWJOhfKmskXQMXSij7vO1d0bHmEYOmecSuIOfcEg4fwKVWZOePvrJpHdJV9b
-         QytxvDv0VDbTl82WF/WQ9T9I3wSGFHPXgDV/7/BFZ2kSWDEJCRa/EOtwi/17BOn8IWM/
-         aqSPG/PcPAThwVhNVGLDusX1cBPb/4SrRJQgnEVPAiCBqnFDleu3VtqIr40a2GMAs7/v
-         HK8Q==
+        bh=P5O2y+QX/4+AvfWat8SXeriUYt2eRpPEagaMMXLYINk=;
+        b=eq18qnBAP1Y41hHojGR56cnJDFMU9z/iJ0HzI3mgxSEMtUtoeRdpcitC3QHVEU7Yis
+         4vfV+1WgxhCS57vJJZ0pxmQmgFRIyu5pJOoV6mTSsd9SOeEAdH6lFY3Dfx8a7+MpwA8/
+         8wbmz1JvZnb8IhfARl5cV2t8+8rZYbCKK1bHUyXMlVAwMGoeVqKVR/jjiombbvduMZTS
+         qY8FJOtKVq79fIyxU0q7y9WtFEsZIEdmw3DhgS5knScvajbtgrasTI7phOXOlZjpEZoP
+         X7qMl6IfvkpystLU4+wViCiP0sUYSU49coRLFG9hjb4Nxxw2O5rLTF1dp6G+c1ZPZqGL
+         2iwA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722557158; x=1723161958;
+        d=1e100.net; s=20230601; t=1722557792; x=1723162592;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=BtsQ+3NXr7Z0grTXgI4VJ8mpDigb9614hgPF8/mg2ek=;
-        b=d6nf8avM9nMPyMboqZulXmQqP2BXS/wzBNj/6HfWcY/nBzvtTqIzpoNt3t9T/6YYGh
-         Zkijr/HP0dOEosGp8/mosANwHu8LirIaSvlqlk2NAHp6XLsnp2XvTWdw7x4TURlJ5x28
-         oaWYkSwkZdp20gYaKijEOeL8BMmLk0/6ewo1szmLyc7/fqFMWCePCTJ64Y0rfcxTJG1I
-         jyUT6gD95X7YBToqO1t2Yne1hoW6xmW39XJ23j51f7bkga65TLrIPUX2Nx29ncBOjfY5
-         8ydixGEespfdOQB/unNTCuU/XnJMjVc9BqjWYFdzr/LSBFkQXkuLUCiCUNAvC3wmamaR
-         oXnQ==
-X-Gm-Message-State: AOJu0YwXku5lotf0r/GjKY2FtLjmKQw+NVt1V/dZtUmKMVX9cNYVmTip
-	KNZRG8sy8QbPHqPvMz8JN5F0BmG6o/A+J9XpxfBkb1HDXwXh924JB8pG3ziOelg=
-X-Google-Smtp-Source: AGHT+IHAi8u2E0Zyx8AqxUHQRqLu9oFcTolJxIePwk6jnTPCdufSt8G3TT6DihMhy1lfh6fr5NcjNA==
-X-Received: by 2002:a17:902:f686:b0:1fb:6294:2e35 with SMTP id d9443c01a7336-1ff5743b563mr26795165ad.50.1722557158429;
-        Thu, 01 Aug 2024 17:05:58 -0700 (PDT)
+        bh=P5O2y+QX/4+AvfWat8SXeriUYt2eRpPEagaMMXLYINk=;
+        b=flqQQH7CuxQpaiW/kPoFbU5Q34h26/JMYvcgQjbKSEu/duU99gaO2yUlDmLKDWystW
+         FYko+imsejrux1cO1dRiulyK9P2L7ee9WF8aYmUo6xUza3BS67PZKh2wV04SwugtNhJA
+         Eigj5FTQGyUgzXK3s+XcUzBGGKamoBNDdjA+GKBrOBeRJgHD/H1VpYH6BrLSkhCC1+dB
+         h5U6MmEvmBfZxQZXQNdhjzUmJdFUz06PcBSWUpao4Wrfteyn8jqNr3UHrWi/IR5TO4fz
+         m34scJyOO/J27Z00G0Gz9YOGJgMCAzoyLTtj6A8yxsyJIPcUOuMM9HllS4H0p3V8oPtW
+         0RKg==
+X-Forwarded-Encrypted: i=1; AJvYcCXnqSWUxyVhQp5KnK9NcQRdLytG500uFyMWnViGXOUMVUoY0dpiuhQe6R9h9G7TiQGV0uLsDCwS17ZTWFpzTQackZNAMdTRfcwW
+X-Gm-Message-State: AOJu0YzRE1znZlni3f5QKw3CkmYanO/Yq9Pp3jox7Wuutz/BR9wSQlOu
+	uz2h6ISYGBp5xNjkZMx4ID/SDPkbuld5X9415MDo8okSDq3X6Xi9esSU4oU/ES60CQhRyqygt3d
+	N
+X-Google-Smtp-Source: AGHT+IED/ILVYPuwHi1/Uz0YtlmpTCrj7vPR+yLRUqKIk8PNLDSf+Y2JTEx/rvVAm1tIbDP9SLdPgg==
+X-Received: by 2002:a17:902:f60a:b0:1fc:4763:445c with SMTP id d9443c01a7336-1ff572ecabdmr27886065ad.32.1722557791675;
+        Thu, 01 Aug 2024 17:16:31 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ff592acd2fsm4645375ad.286.2024.08.01.17.05.57
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ff58f5c5f6sm4919625ad.111.2024.08.01.17.16.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Aug 2024 17:05:57 -0700 (PDT)
+        Thu, 01 Aug 2024 17:16:31 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sZfnv-0023B7-1T;
-	Fri, 02 Aug 2024 10:05:55 +1000
-Date: Fri, 2 Aug 2024 10:05:55 +1000
+	id 1sZfy8-0023d6-2e;
+	Fri, 02 Aug 2024 10:16:28 +1000
+Date: Fri, 2 Aug 2024 10:16:28 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
-	brauner@kernel.org, jack@suse.cz, yi.zhang@huawei.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH 5/6] iomap: drop unnecessary state_lock when setting ifs
- uptodate bits
-Message-ID: <Zqwi48H74g2EX56c@dread.disaster.area>
-References: <20240731091305.2896873-1-yi.zhang@huaweicloud.com>
- <20240731091305.2896873-6-yi.zhang@huaweicloud.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/7] xfs_spaceman: edit filesystem properties
+Message-ID: <ZqwlXKpYtu6c5rZ5@dread.disaster.area>
+References: <172230940561.1543753.1129774775335002180.stgit@frogsfrogsfrogs>
+ <172230940600.1543753.11770032596501355577.stgit@frogsfrogsfrogs>
+ <ZqleFeJhCVee5ttL@infradead.org>
+ <20240730223725.GL6352@frogsfrogsfrogs>
+ <ZqpbRibHaNodChSt@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,98 +76,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240731091305.2896873-6-yi.zhang@huaweicloud.com>
+In-Reply-To: <ZqpbRibHaNodChSt@infradead.org>
 
-On Wed, Jul 31, 2024 at 05:13:04PM +0800, Zhang Yi wrote:
-> From: Zhang Yi <yi.zhang@huawei.com>
+On Wed, Jul 31, 2024 at 08:41:58AM -0700, Christoph Hellwig wrote:
+> On Tue, Jul 30, 2024 at 03:37:25PM -0700, Darrick J. Wong wrote:
+> > On Tue, Jul 30, 2024 at 02:41:41PM -0700, Christoph Hellwig wrote:
+> > > Is this really a xfs_spaceman thingy?  The code itself looks fine,
+> > > but the association with space management is kinda weird.
+> > 
+> > I dunno.  It could just as easily go into xfs_io I suppose; the tiny
+> > advantage of putting it in spaceman is that spaceman grabs the
+> > fsgeometry structure on file open so we don't have to do that again.
 > 
-> Commit '1cea335d1db1 ("iomap: fix sub-page uptodate handling")' fix a
-> race issue when submitting multiple read bios for a page spans more than
-> one file system block by adding a spinlock(which names state_lock now)
-> to make the page uptodate synchronous. However, the race condition only
-> happened between the read I/O submitting and completeing threads,
+> For the online changes xfs_io seems ok, and for the offline ones xfs_db
+> seems like a perfevt fit anyway.
 
-when we do writeback on a folio that has multiple blocks on it we
-can submit multiple bios for that, too. Hence the write completions
-can race with each other and write submission, too.
-
-Yes, write bio submission and completion only need to update ifs
-accounting using an atomic operation, but the same race condition
-exists even though the folio is fully locked at the point of bio
-submission.
-
-
-> it's
-> sufficient to use page lock to protect other paths, e.g. buffered write
-                    ^^^^ folio
-> path.
->
-> After large folio is supported, the spinlock could affect more
-> about the buffered write performance, so drop it could reduce some
-> unnecessary locking overhead.
-
-From the point of view of simple to understand and maintain code, I
-think this is a bad idea. The data structure is currently protected
-by the state lock in all situations, but this change now makes it
-protected by the state lock in one case and the folio lock in a
-different case.
-
-Making this change also misses the elephant in the room: the
-buffered write path still needs the ifs->state_lock to update the
-dirty bitmap. Hence we're effectively changing the serialisation
-mechanism for only one of the two ifs state bitmaps that the
-buffered write path has to update.
-
-Indeed, we can't get rid of the ifs->state_lock from the dirty range
-updates because iomap_dirty_folio() can be called without the folio
-being locked through folio_mark_dirty() calling the ->dirty_folio()
-aop.
-
-IOWs, getting rid of the state lock out of the uptodate range
-changes does not actually get rid of it from the buffered IO patch.
-we still have to take it to update the dirty range, and so there's
-an obvious way to optimise the state lock usage without changing any
-of the bitmap access serialisation behaviour. i.e.  We combine the
-uptodate and dirty range updates in __iomap_write_end() into a
-single lock context such as:
-
-iomap_set_range_dirty_uptodate()
-{
-	struct iomap_folio_state *ifs = folio->private;
-	struct inode *inode:
-        unsigned int blks_per_folio;
-        unsigned int first_blk;
-        unsigned int last_blk;
-        unsigned int nr_blks;
-	unsigned long flags;
-
-	if (!ifs)
-		return;
-
-	inode = folio->mapping->host;
-	blks_per_folio = i_blocks_per_folio(inode, folio);
-	first_blk = (off >> inode->i_blkbits);
-	last_blk = (off + len - 1) >> inode->i_blkbits;
-	nr_blks = last_blk - first_blk + 1;
-
-	spin_lock_irqsave(&ifs->state_lock, flags);
-	bitmap_set(ifs->state, first_blk, nr_blks);
-	bitmap_set(ifs->state, first_blk + blks_per_folio, nr_blks);
-	spin_unlock_irqrestore(&ifs->state_lock, flags);
-}
-
-This means we calculate the bitmap offsets only once, we take the
-state lock only once, and we don't do anything if there is no
-sub-folio state.
-
-If we then fix the __iomap_write_begin() code as Willy pointed out
-to elide the erroneous uptodate range update, then we end up only
-taking the state lock once per buffered write instead of 3 times per
-write.
-
-This patch only reduces it to twice per buffered write, so doing the
-above should provide even better performance without needing to
-change the underlying serialisation mechanism at all.
+If fsprops can be managed both online and offline,
+then xfs_admin is probably the right user facing interface
+to document.  i.e. We already have xfs_admin vectoring between
+xfs_io when the filesystem is online and xfs_db when the filesystem
+is offline to do things like change UUIDs and labels. This would
+make setting fsprops somewhat simpler for admins and scripts as they
+then only have to learn/code one mechanism instead of two...
 
 -Dave.
 -- 
