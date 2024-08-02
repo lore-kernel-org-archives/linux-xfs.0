@@ -1,255 +1,345 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D42601DE852;
-	Fri,  2 Aug 2024 11:13:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04C5814A4C8
+	for <linux-xfs@vger.kernel.org>; Fri,  2 Aug 2024 12:08:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722597206; cv=none; b=LVDAKgJNTPFxFwhDK4poovPNUFCNyfv4iu83Zo4eHMJtcRpqvcAOXZ7dD3sEByzky69g9jnQ81E35rjssnXYZ/MLn19DMhAzvhInXyaiFP3Ue0zHBoxy1toJEJ906TvuMeM3gbAHngOYKriLXF0wdZEcZRYVtPi9tSZW9cHVw+k=
+	t=1722600511; cv=none; b=SoKwhQyAgYazyy+7NVZrv9tcr60OGYUZGNYabhdbwxh8lZXHlvrGiE2CBAe1p0RGUEz3sWkSvi2V98Ur4NoAC0Hox1XnBKmSDfqSfooWX3A18sOPVVF4LB1GfSvG1Um52o8tvAEZfDNnUpqp7MpIM3ZpyILzgCOvtGUc6gnhtPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722597206; c=relaxed/simple;
-	bh=2I6rEo3L9u6qzOlzH3D6sX7P8tfRigs9eJhMXYjF81M=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=EaMi8IYm+QOno5N5G4Ih4m7cR8QMis9dF+hPiER6jtS6JF11CQrGORnAxZJjp47ctTRA9lPaV4vCMDsUtt1XOREA7uBJo6zvbdiqLKvEvqq2s03srXkRvsq6C7+JGr/EFSeyyKQ+GRFWqaRsaVlEMvThGNZHN30kjPTHqhICXT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Wb38r5n7Cz4f3jcr;
-	Fri,  2 Aug 2024 19:13:00 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D2CAB1A018D;
-	Fri,  2 Aug 2024 19:13:13 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgBXzIJHv6xmaKI5Ag--.39544S3;
-	Fri, 02 Aug 2024 19:13:13 +0800 (CST)
-Subject: Re: [PATCH 5/6] iomap: drop unnecessary state_lock when setting ifs
- uptodate bits
+	s=arc-20240116; t=1722600511; c=relaxed/simple;
+	bh=tYkEn77ZMSoIkM1qeIxxoc1gc1/xApbDbJ2Nf+moaoU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UfcAhDaTxfthT+k5kp0ikxCd85zeJolhXrlWHkDfsQyQWRkpFJcn5DZSRUVn7T/E/Z2wQru9/zOPXcTPwWy7L2uaWpaJ5WdlBCaakd/izsVVc61vJFnHjiwLS/ur8lyR7Y25VZCizj8fLbu6GAbbGEIbfERhUdHPbxLBkP+ARjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=T7+DzbFf; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T7+DzbFf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1722600507;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Gkovzc6ohBYgF9Late/GadMW73Fiv81QtRyAQ4mOCzc=;
+	b=T7+DzbFfRA2Av/5v5HkYkw9b/SdnctMFdj1oBe9Du0FZNURt6GaMWAzgssHLe14vncbS2T
+	RMpS/8gJyHlbD9z9j08zWilw2IGYMgttHLY6NZmrHKb5AHyZoBV+5veBzNJtbwPTe0WIuI
+	IUK/RbpGpKjyuhAwkZMovorkx5ukFF8=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-631-mb08m1GmPIStbpdUQMyjjA-1; Fri,
+ 02 Aug 2024 08:08:24 -0400
+X-MC-Unique: mb08m1GmPIStbpdUQMyjjA-1
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 95ADA1955D47;
+	Fri,  2 Aug 2024 12:08:23 +0000 (UTC)
+Received: from bfoster (unknown [10.22.8.152])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C3B52300019E;
+	Fri,  2 Aug 2024 12:08:22 +0000 (UTC)
+Date: Fri, 2 Aug 2024 08:09:15 -0400
+From: Brian Foster <bfoster@redhat.com>
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
- brauner@kernel.org, jack@suse.cz, yi.zhang@huawei.com,
- chengzhihao1@huawei.com, yukuai3@huawei.com
-References: <20240731091305.2896873-1-yi.zhang@huaweicloud.com>
- <20240731091305.2896873-6-yi.zhang@huaweicloud.com>
- <Zqwi48H74g2EX56c@dread.disaster.area>
- <b40a510d-37b3-da50-79db-d56ebd870bf0@huaweicloud.com>
- <Zqx824ty5yvwdvXO@dread.disaster.area>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <1b99e874-e9df-0b06-c856-edb94eca16dc@huaweicloud.com>
-Date: Fri, 2 Aug 2024 19:13:11 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] [RFC] xfs: filesystem expansion design documentation
+Message-ID: <ZqzMay58f0SvdWxV@bfoster>
+References: <20240721230100.4159699-1-david@fromorbit.com>
+ <20240723235801.GU612460@frogsfrogsfrogs>
+ <ZqBO177pPLbovguo@dread.disaster.area>
+ <20240724210833.GZ612460@frogsfrogsfrogs>
+ <ZqGfTvAEzFbfe+Wa@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <Zqx824ty5yvwdvXO@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgBXzIJHv6xmaKI5Ag--.39544S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxtFyDXw1kuFyxCFyfuFW7urg_yoW3WF48pF
-	Z8Ka4DKr4kJFWrZrn2vr1rXF1Fy3yxGry5uFZxG343AF90qF1SgF1Iga45uFW8Jrs3Gr4F
-	vr4Ut3s3uFWUAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Ib4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
-	e2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4I
-	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
-	WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
-	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
-	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
-	IYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZqGfTvAEzFbfe+Wa@dread.disaster.area>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On 2024/8/2 14:29, Dave Chinner wrote:
-> On Fri, Aug 02, 2024 at 10:57:41AM +0800, Zhang Yi wrote:
->> On 2024/8/2 8:05, Dave Chinner wrote:
->>> On Wed, Jul 31, 2024 at 05:13:04PM +0800, Zhang Yi wrote:
->>>> From: Zhang Yi <yi.zhang@huawei.com>
->>>>
->>>> Commit '1cea335d1db1 ("iomap: fix sub-page uptodate handling")' fix a
->>>> race issue when submitting multiple read bios for a page spans more than
->>>> one file system block by adding a spinlock(which names state_lock now)
->>>> to make the page uptodate synchronous. However, the race condition only
->>>> happened between the read I/O submitting and completeing threads,
->>>
->>> when we do writeback on a folio that has multiple blocks on it we
->>> can submit multiple bios for that, too. Hence the write completions
->>> can race with each other and write submission, too.
->>>
->>> Yes, write bio submission and completion only need to update ifs
->>> accounting using an atomic operation, but the same race condition
->>> exists even though the folio is fully locked at the point of bio
->>> submission.
->>>
->>>
->>>> it's
->>>> sufficient to use page lock to protect other paths, e.g. buffered write
->>>                     ^^^^ folio
->>>> path.
->>>>
->>>> After large folio is supported, the spinlock could affect more
->>>> about the buffered write performance, so drop it could reduce some
->>>> unnecessary locking overhead.
->>>
->>> From the point of view of simple to understand and maintain code, I
->>> think this is a bad idea. The data structure is currently protected
->>> by the state lock in all situations, but this change now makes it
->>> protected by the state lock in one case and the folio lock in a
->>> different case.
->>
->> Yeah, I agree that this is a side-effect of this change, after this patch,
->> we have to be careful to distinguish between below two cases B1 and B2 as
->> Willy mentioned.
->>
->> B. If ifs_set_range_uptodate() is called from iomap_set_range_uptodate(),
->>    either we know:
->> B1. The caller of iomap_set_range_uptodate() holds the folio lock, and this
->>     is the only place that can call ifs_set_range_uptodate() for this folio
->> B2. The caller of iomap_set_range_uptodate() holds the state lock
+On Thu, Jul 25, 2024 at 10:41:50AM +1000, Dave Chinner wrote:
+> On Wed, Jul 24, 2024 at 02:08:33PM -0700, Darrick J. Wong wrote:
+> > On Wed, Jul 24, 2024 at 10:46:15AM +1000, Dave Chinner wrote:
+> > > On Tue, Jul 23, 2024 at 04:58:01PM -0700, Darrick J. Wong wrote:
+> > > > On Mon, Jul 22, 2024 at 09:01:00AM +1000, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > 
+> > > > > xfs-expand is an attempt to address the container/vm orchestration
+> > > > > image issue where really small XFS filesystems are grown to massive
+> > > > > sizes via xfs_growfs and end up with really insane, suboptimal
+> > > > > geometries.
+> ....
+> > > > > +Moving the data within an AG could be optimised to be space usage aware, similar
+> > > > > +to what xfs_copy does to build sparse filesystem images. However, the space
+> > > > > +optimised filesystem images aren't going to have a lot of free space in them,
+> > > > > +and what there is may be quite fragmented. Hence doing free space aware copying
+> > > > > +of relatively full small AGs may be IOPS intensive. Given we are talking about
+> > > > > +AGs in the typical size range from 64-512MB, doing a sequential copy of the
+> > > > > +entire AG isn't going to take very long on any storage. If we have to do several
+> > > > > +hundred seeks in that range to skip free space, then copying the free space will
+> > > > > +cost less than the seeks and the partial RAID stripe writes that small IOs will
+> > > > > +cause.
+> > > > > +
+> > > > > +Hence the simplest, sequentially optimised data moving algorithm will be:
+> > > > > +
+> > > > > +.. code-block:: c
+> > > > > +
+> > > > > +	for (agno = sb_agcount - 1; agno > 0; agno--) {
+> > > > > +		src = agno * sb_agblocks;
+> > > > > +		dst = agno * new_agblocks;
+> > > > > +		copy_file_range(src, dst, sb_agblocks);
+> > > > > +	}
+> > > > > +
+> > > > > +This also leads to optimisation via server side or block device copy offload
+> > > > > +infrastructure. Instead of streaming the data through kernel buffers, the copy
+> > > > > +is handed to the server/hardware to moves the data internally as quickly as
+> > > > > +possible.
+> > > > > +
+> > > > > +For filesystem images held in files and, potentially, on sparse storage devices
+> > > > > +like dm-thinp, we don't even need to copy the data.  We can simply insert holes
+> > > > > +into the underlying mapping at the appropriate place.  For filesystem images,
+> > > > > +this is:
+> > > > > +
+> > > > > +.. code-block:: c
+> > > > > +
+> > > > > +	len = new_agblocks - sb_agblocks;
+> > > > > +	for (agno = 1; agno < sb_agcount; agno++) {
+> > > > > +		src = agno * sb_agblocks;
+> > > > > +		fallocate(FALLOC_FL_INSERT_RANGE, src, len)
+> > > > > +	}
+> > > > > +
+> > > > > +Then the filesystem image can be copied to the destination block device in an
+> > > > > +efficient manner (i.e. skipping holes in the image file).
+> > > > 
+> > > > Does dm-thinp support insert range?
+> > > 
+> > > No - that would be a future enhancement. I mention it simly because
+> > > these are things we would really want sparse block devices to
+> > > support natively.
+> > 
+> > <nod> Should the next revision should cc -fsdevel and -block, then?
 > 
-> Yes, I read that before I commented that I think it's a bad idea.
-> And then provided a method where we don't need to care about this at
-> all.
->>
->>>
->>> Making this change also misses the elephant in the room: the
->>> buffered write path still needs the ifs->state_lock to update the
->>> dirty bitmap. Hence we're effectively changing the serialisation
->>> mechanism for only one of the two ifs state bitmaps that the
->>> buffered write path has to update.
->>>
->>> Indeed, we can't get rid of the ifs->state_lock from the dirty range
->>> updates because iomap_dirty_folio() can be called without the folio
->>> being locked through folio_mark_dirty() calling the ->dirty_folio()
->>> aop.
->>>
->>
->> Sorry, I don't understand, why folio_mark_dirty() could be called without
->> folio lock (isn't this supposed to be a bug)?  IIUC, all the file backed
->> folios must be locked before marking dirty. Are there any exceptions or am
->> I missing something?
+> No. This is purely an XFS feature at this point. If future needs
+> change and we require work outside of XFS to be done, then it can be
+> taken up with external teams to design and implement the optional
+> acceleration functions that we desire.
 > 
-> Yes: reading the code I pointed you at.
+> > > > In the worst case (copy_file_range,
+> > > > block device doesn't support xcopy) this results in a pagecache copy of
+> > > > nearly all of the filesystem, doesn't it?
+> > > 
+> > > Yes, it would.
+> > 
+> > Counter-proposal: Instead of remapping the AGs to higher LBAs, what if
+> > we allowed people to create single-AG filesystems with large(ish)
+> > sb_agblocks.  You could then format a 2GB image with (say) a 100G AG
+> > size and copy your 2GB of data into the filesystem.  At deploy time,
+> > growfs will expand AG 0 to 100G and add new AGs after that, same as it
+> > does now.
 > 
-> /**
->  * folio_mark_dirty - Mark a folio as being modified.
->  * @folio: The folio.
->  *
->  * The folio may not be truncated while this function is running.
->  * Holding the folio lock is sufficient to prevent truncation, but some
->  * callers cannot acquire a sleeping lock.  These callers instead hold
->  * the page table lock for a page table which contains at least one page
->  * in this folio.  Truncation will block on the page table lock as it
->  * unmaps pages before removing the folio from its mapping.
->  *
->  * Return: True if the folio was newly dirtied, false if it was already dirty.
->  */
+> We can already do this with existing tools.
 > 
-> So, yes, ->dirty_folio() can indeed be called without the folio
-> being locked and it is not a bug.
-
-Ha, right, I missed the comments of this function, it means that there are
-some special callers that hold table lock instead of folio lock, is it
-pte_alloc_map_lock?
-
-I checked all the filesystem related callers and didn't find any real
-caller that mark folio dirty without holding folio lock and that could
-affect current filesystems which are using iomap framework, it's just
-a potential possibility in the future, am I right?
-
-> 
-> Hence we have to serialise ->dirty_folio against both
-> __iomap_write_begin() dirtying the folio and iomap_writepage_map()
-> clearing the dirty range.
+> All it requires is using xfs_db to rewrite the sb/ag geometry and
+> adding new freespace records. Now you have a 100GB AG instead of 2GB
+> and you can mount it and run growfs to add all the extra AGs you
+> need.
 > 
 
-Both __iomap_write_begin() and iomap_writepage_map() are under the folio
-lock now (locked in iomap_get_folio() and writeback_get_folio()), is there
-any special about this case?
+I'm not sure you have to do anything around adding new freespace records
+as such. If you format a small agcount=1 fs and then bump the sb agblock
+fields via xfs_db, then last I knew you could mount and run xfs_growfs
+according to the outsized AG size with no further changes at all. The
+grow will add the appropriate free space records as normal. I've not
+tried that with actually copying in data first, but otherwise it
+survives repair at least.
 
-> And that means we alway need to take the ifs->state_lock in
-> __iomap_write_begin() when we have an ifs attached to the folio.
-> Hence it is a) not correct and b) makes no sense to try to do
-> uptodate bitmap updates without it held...
+It would be interesting to see if that all still works with data present
+as long as you update the agblock fields before copying anything in. The
+presumption is that this operates mostly the same as extending an
+existing runt AG to a size that's still smaller than the full AG size,
+which obviously works today, just with the special circumstance that
+said runt AG happens to be the only AG in the fs.
+
+FWIW, Darrick's proposal here is pretty much exactly what I've thought
+XFS should have been at least considering doing to mitigate this cloudy
+deployment problem for quite some time. I agree with the caveats and
+limitations that Eric points out, but for a narrowly scoped cloudy
+deployment tool I have a hard time seeing how this wouldn't be anything
+but a significant improvement over the status quo for a relatively small
+amount of work (assuming it can be fully verified to work, of course ;).
+
+ISTM that the major caveats can be managed with some reasonable amount
+of guardrails or policy enforcement. For example, if mkfs.xfs supported
+an "image mode" param that specified a target/min deployment size, that
+could be used as a hint to set the superblock AG size, a log size more
+reflective of the eventual deployment size, and perhaps even facilitate
+some usage limitations until that expected deployment occurs.
+
+I.e., perhaps also set an "image mode" feature flag that requires a
+corresponding mount option in order to mount writeable (to populate the
+base image), and otherwise the fs mounts in a restricted-read mode where
+grow is allowed, and grow only clears the image mode state once the fs
+grows to at least 2 AGs (or whatever), etc. etc. At that point the user
+doesn't have to know or care about any of the underlying geometry
+details, just format and deploy as documented.
+
+That's certainly not perfect and I suspect we could probably come up
+with a variety of different policy permutations or user interfaces to
+consider, but ISTM there's real practical value to something like that.
+
+> Maybe it wasn't obvious from my descriptions of the sparse address
+> space diagrams, but single AG filesystems have no restrictions of AG
+> size growth because there are no high bits set in any of the sparse
+> 64 bit address spaces (i.e. fsbno or inode numbers). Hence we can
+> expand the AG size without worrying about overwriting the address
+> space used by higher AGs.
 > 
->>> IOWs, getting rid of the state lock out of the uptodate range
->>> changes does not actually get rid of it from the buffered IO patch.
->>> we still have to take it to update the dirty range, and so there's
->>> an obvious way to optimise the state lock usage without changing any
->>> of the bitmap access serialisation behaviour. i.e.  We combine the
->>> uptodate and dirty range updates in __iomap_write_end() into a
->>> single lock context such as:
->>>
->>> iomap_set_range_dirty_uptodate()
->>> {
->>> 	struct iomap_folio_state *ifs = folio->private;
->>> 	struct inode *inode:
->>>         unsigned int blks_per_folio;
->>>         unsigned int first_blk;
->>>         unsigned int last_blk;
->>>         unsigned int nr_blks;
->>> 	unsigned long flags;
->>>
->>> 	if (!ifs)
->>> 		return;
->>>
->>> 	inode = folio->mapping->host;
->>> 	blks_per_folio = i_blocks_per_folio(inode, folio);
->>> 	first_blk = (off >> inode->i_blkbits);
->>> 	last_blk = (off + len - 1) >> inode->i_blkbits;
->>> 	nr_blks = last_blk - first_blk + 1;
->>>
->>> 	spin_lock_irqsave(&ifs->state_lock, flags);
->>> 	bitmap_set(ifs->state, first_blk, nr_blks);
->>> 	bitmap_set(ifs->state, first_blk + blks_per_folio, nr_blks);
->>> 	spin_unlock_irqrestore(&ifs->state_lock, flags);
->>> }
->>>
->>> This means we calculate the bitmap offsets only once, we take the
->>> state lock only once, and we don't do anything if there is no
->>> sub-folio state.
->>>
->>> If we then fix the __iomap_write_begin() code as Willy pointed out
->>> to elide the erroneous uptodate range update, then we end up only
->>> taking the state lock once per buffered write instead of 3 times per
->>> write.
->>>
->>> This patch only reduces it to twice per buffered write, so doing the
->>> above should provide even better performance without needing to
->>> change the underlying serialisation mechanism at all.
->>>
->>
->> Thanks for the suggestion. I've thought about this solution too, but I
->> didn't think we need the state_lock when setting ifs dirty bit since the
->> folio lock should work, so I changed my mind and planed to drop all ifs
->> state_lock in the write path (please see the patch 6). Please let me
->> know if I'm wrong.
-> 
-> Whether it works or not is irrelevant: it is badly designed code
-> that you have proposed. We can acheive the same result without
-> changing the locking rules for the bitmap data via a small amount of
-> refactoring, and that is a much better solution than creating
-> complex and subtle locking rules for the object.
-> 
-> "But it works" doesn't mean the code is robust, maintainable code.
-> 
-> So, good optimisation, but NACK in this form. Please rework it to
-> only take the ifs->state_lock once for both bitmap updates in the
-> __iomap_write_end() path.
+> IOWs, the need for reserving sparse address space bits just doesn't
+> exist for single AG filesystems.  The point of this proposal is to
+> document a generic algorithm that avoids the problem of the higher
+> AG address space limiting how large lower AGs can be made. That's
+> the problem that prevents substantial resizing of AGs, and that's
+> what this design document addresses.
 > 
 
-OK, sure, this looks reasonable to me, I will revise it as you suggested
-and check performance gain again in my next iteration.
+So in theory it sounds like you could also defer setting the final AG
+size on a single AG fs at least until the first grow, right? If so, that
+might be particularly useful for the typical one-shot
+expansion/deployment use case. The mkfs could just set image mode and
+single AG, and then the first major grow finalizes the ag size and
+expands to a sane (i.e. multi AG) format.
 
-Thanks,
-Yi.
+I guess that potentially makes log sizing a bit harder, but we've had
+some discussion around online moving and resizing the log in the past as
+well and IIRC it wasn't really that hard to achieve so long as we keep
+the environment somewhat constrained by virtue of switching across a
+quiesce, for example. I don't recall all the details though; I'd have to
+see if I can dig up that conversation...
+
+> > > > Also, perhaps xfs_expand is a good opportunity to stamp a new uuid into
+> > > > the superblock and set the metauuid bit?
+> > > 
+> > > Isn't provisioning software is generally already doing this via
+> > > xfs_admin? We don't do this with growfs, and I'd prefer not to
+> > > overload an expansion tool with random other administrative
+> > > functions that only some use cases/environments might need. 
+> > 
+> > Yeah, though it'd be awfully convenient to do it while we've already got
+> > the filesystem "mounted" in one userspace program.
+> 
+> "it'd be awfully convenient" isn't a technical argument. It's an
+> entirely subjective observation and assumes an awful lot about the
+> implementation design that hasn't been started yet.
+> 
+> Indeed, from an implementation perspective I'm considering that
+> xfs_expand might even implemented as a simple shell script that
+> wraps xfs_db and xfs_io. I strongly suspect that we don't need to
+> write any custom C code for it at all. It's really that simple.
+> 
+> Hence talking about anything to do with optimising the whole expand
+> process to take on other administration tasks before we've even
+> started on a detailed implementation design is highly premature.  I
+> want to make sure the high level design and algorithms are
+> sufficient for all the use cases people can come up with, not define
+> exactly how we are going to implement the functionality.
+> 
+> > > > > +Limitations
+> > > > > +===========
+> > > > > +
+> > > > > +This document describes an offline mechanism for expanding the filesystem
+> > > > > +geometery. It doesn't add new AGs, just expands they existing AGs. If the
+> > > > > +filesystem needs to be made larger than maximally sized AGs can address, then
+> > > > > +a subsequent online xfs_growfs operation is still required.
+> > > > > +
+> > > > > +For container/vm orchestration software, this isn't a huge issue as they
+> > > > > +generally grow the image from within the initramfs context on first boot. That
+> > > > > +is currently a "mount; xfs_growfs" operation pair; adding expansion to this
+> > > > > +would simply require adding expansion before the mount. i.e. first boot becomes
+> > > > > +a "xfs_expand; mount; xfs_growfs" operation. Depending on the eventual size of
+> > > > > +the target filesystem, the xfs-growfs operation may be a no-op.
+> > > > 
+> > > > I don't know about your cloud, but ours seems to optimize vm deploy
+> > > > times very heavily.  Right now their firstboot payload calls xfs_admin
+> > > > to change the fs uuid, mounts the fs, and then growfs's it into the
+> > > > container.
+> > > > 
+> > > > Adding another pre-mount firstboot program (and one that potentially
+> > > > might do a lot of IO) isn't going to be popular with them.
+> > > 
+> > > There's nothing that requires xfs_expand to be done at first boot.
+> > > First boot is just part of the deployment scripts and it may make
+> > > sense to do the expansion as early as possible in the deployment
+> > > process.
+> > 
+> > Yeah, but how often do you need to do a 10000x expansion on anything
+> > other than a freshly cloned image?  Is that common in your cloudworld?
+> > OCI usage patterns seem to be exploding the image on firstboot and
+> > incremental growfs after that.
+> 
+> I've seen it happen many times outside of container/VMs - this was a
+> even a significant problem 20+ years ago when AGs were limited to
+> 4GB. That specific historic case was fixed by moving to 1TB max AG
+> size, but there was no way to convert an existing filesystem. This
+> is the "cloud case" in a nutshell, so it's clearly not a new
+> problem.
+> 
+> Even ignoring the historic situation, we still see people have these
+> problems with growing filesystems. It's especially prevalent with
+> demand driven thin provisioned storage. Project starts small with
+> only the space they need (e.g. for initial documentation), then as
+> it ramps up and starts to generate TBs of data, the storage gets
+> expanded from it's initial "few GBs" size. Same problem, different
+> environment.
+> 
+> > I think the difference between you and I here is that I see this
+> > xfs_expand proposal as entirely a firstboot assistance program, whereas
+> > you're looking at this more as a general operation that can happen at
+> > any time.
+> 
+> Yes. As I've done for the past 15+ years, I'm thinking about the
+> best solution for the wider XFS and storage community first and
+> commercial imperatives second. I've seen people use XFS features and
+> storage APIs for things I've never considered when designing them.
+> I'm constantly surprised by how people use the functionality we
+> provide in innovative, unexpected ways because they are generic
+> enough to provide building blocks that people can use to implement
+> new ideas.
+> 
+
+I think Darrick's agcount=1 proposal here is a nice example of that,
+taking advantage of existing design flexibility to provide a creative
+and elegantly simple solution to a real problem with minimal change and
+risk.
+
+Again the concept obviously needs to be prototyped enough to establish
+confidence that it can work, but I don't really see how this has to be
+mutually exclusive from a generic and more flexible and robust expand
+mechanism in the longer term.
+
+Just my .02. Thanks for the nice writeup, BTW.
+
+Brian
+
+> Filesystem expansion is, IMO, one of those "generically useful"
+> tools and algorithms.
+> 
+> Perhaps it's not an obvious jump, but I'm also thinking about how we
+> might be able to do the opposite of AG expansion to shrink the
+> filesystem online. Not sure it is possible yet, but having the
+> ability to dynamically resize AGs opens up many new possibilities.
+> That's way outside the scope of this discussion, but I mention it
+> simply to point out that the core of this generic expansion idea -
+> decoupling the AG physical size from the internal sparse 64 bit
+> addressing layout - has many potential future uses...
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
