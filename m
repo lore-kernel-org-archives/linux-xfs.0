@@ -1,87 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 662D047A64
-	for <linux-xfs@vger.kernel.org>; Fri,  2 Aug 2024 23:23:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07E942747F;
+	Sat,  3 Aug 2024 14:56:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722640981; cv=none; b=lzDWVy+YEtAHIUpqGVubT9Vc0f/iHapYcvxjpUbunN6//PaPDDAFe+1JA3WdSmqO7RWfwmHbp0l6ju03EeC8yemDKzXc1A1+FvhMVKit/WxIeD10feo6mZfqxcq44RWu4Y1wuyVPdKHwSmKZBO4bwLPcHvrWnxQAJzeWzkMcX2E=
+	t=1722697007; cv=none; b=FmC04+6ZOl9jV7wWsyBv7m5DKgc5PVApez+PZcp4yv6UQm7Y6r/KqD7qPkLt+xYBHQ9q3e25+hqslZRGCZZNAM6ql8RhnmdbEPBjd+zAuIpDh6Uu0wZwiLNVMm575qmZrkENbHZv2lu8plPSrfp8Iy9dyRNM0kMjsKCXEuRGPhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722640981; c=relaxed/simple;
-	bh=i73i73LY+kOOtE7vinhCFo0dbdQzcD/aY0anBwJftnQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rfTLdWKmPLOSz6y0L05IjFWpN0+yyunjvYBhc4fT3pvKN8kWqMIbSPBjf5T6LYc5hXiKd4GzQGt0CRHJBp2zWbIPwnhdArwnTT63tPsP9ByfsinMjcGnnJePNGh9WbykDDob+n9X4FvKNXIpdlwY8yS7hHeks1k2hn2eR0oQPvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vMLB+41G; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722697007; c=relaxed/simple;
+	bh=6M1fLpvH8Cu+8uwdOVhkvLYWG8eOFml1oe3uqDnefao=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=T/AxSQq9boKU3HgrUtbrIWEf56c5mje5VYTVMZNKimMeZwCCVI0oDWqaPcemwkclFC7pxDObdGD/5GjBTTnb+jpWaXbyqIcYEpHKpE5cr7rTzPOsK1cscPUJInO1uCPhoJ+kCnnhL35Je40ESJCiHLpTKKrT0c/BY5w6klzNtoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gxZWomx8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vMLB+41G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E742FC32782;
-	Fri,  2 Aug 2024 23:23:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxZWomx8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BF7EC4AF0A;
+	Sat,  3 Aug 2024 14:56:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722640981;
-	bh=i73i73LY+kOOtE7vinhCFo0dbdQzcD/aY0anBwJftnQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vMLB+41GlJ39uY+wqAQZhuvPoBi6RlRg1t54k94Sl8hTYVaHvnmDV4XuwgBNpYUo8
-	 s+/QTlJ2WlhLd8wzU4SF9NaLXohXPDPO4tRWHnICYVMw4R6f4IO/XdnD9EBtgQwLxg
-	 vAOmfR4/iOVlUBh3vUQJgy4wssGqhIHq1FBYlKdy7lXWN9pUDZ1wbAoy1aNYFZIuUX
-	 efHGHTaNbPxdMBAOXZlFenjnZTmHJTdyBObzV6eHn0V8lj/PS/kmlZtVojwclbW0l5
-	 Q82B1+ODRQtwsHX/psMhqrdkEhZEsUDhXaKDjfQfQY5hgRIt3LW7u9tomDqkxgvLxk
-	 EcumqL3QKlcDg==
-Date: Fri, 2 Aug 2024 16:23:00 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bill O'Donnell <bodonnel@redhat.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH] xfs_db: release ip resource before returning from
- get_next_unlinked()
-Message-ID: <20240802232300.GK6374@frogsfrogsfrogs>
-References: <20240802222552.64389-1-bodonnel@redhat.com>
+	s=k20201202; t=1722697006;
+	bh=6M1fLpvH8Cu+8uwdOVhkvLYWG8eOFml1oe3uqDnefao=;
+	h=From:To:Cc:Subject:Date:From;
+	b=gxZWomx8nlVEZdtPchXt1qU76luF02foxl7AdCLKVsIGznFs1We36UGFofgn7zkT4
+	 W2FMlcZSyLz/ej5zd/heLTDA8zKjf7KlobiQql9he4uymoQuV2DmUV5jivPXygp/6a
+	 545fvfQCjvZU1SUc/W98bueAfKMH9GhiavEdPuLjpFFVoQZtzJnLnGSSF76qbrpblC
+	 Am4mHj1YGfMO+OLtpT6YJ1g0cH0we6B/TPltJN3riFecbbnxCvfuajOBXnmonCu5LL
+	 aMTRlFuW7PWV9v4j6yA58S6D362SzkCxWx5iICXAWSYet6MMkWSyT8peBldTzl33kD
+	 UBaTtl0dkVBAQ==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: chandanbabu@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: bug fixes for 6.11
+Date: Sat, 03 Aug 2024 20:20:49 +0530
+Message-ID: <87ikwh1wpg.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240802222552.64389-1-bodonnel@redhat.com>
+Content-Type: text/plain
 
-On Fri, Aug 02, 2024 at 05:25:52PM -0500, Bill O'Donnell wrote:
-> Fix potential memory leak in function get_next_unlinked(). Call
-> libxfs_irele(ip) before exiting.
-> 
-> Details:
-> Error: RESOURCE_LEAK (CWE-772):
-> xfsprogs-6.5.0/db/iunlink.c:51:2: alloc_arg: "libxfs_iget" allocates memory that is stored into "ip".
-> xfsprogs-6.5.0/db/iunlink.c:68:2: noescape: Resource "&ip->i_imap" is not freed or pointed-to in "libxfs_imap_to_bp".
-> xfsprogs-6.5.0/db/iunlink.c:76:2: leaked_storage: Variable "ip" going out of scope leaks the storage it points to.
-> #   74|   	libxfs_buf_relse(ino_bp);
-> #   75|
-> #   76|-> 	return ret;
-> #   77|   bad:
-> #   78|   	dbprintf(_("AG %u agino %u: %s\n"), agno, agino, strerror(error));
-> 
-> Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
-> ---
->  db/iunlink.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/db/iunlink.c b/db/iunlink.c
-> index d87562e3..3b2417c5 100644
-> --- a/db/iunlink.c
-> +++ b/db/iunlink.c
-> @@ -72,6 +72,7 @@ get_next_unlinked(
->  	dip = xfs_buf_offset(ino_bp, ip->i_imap.im_boffset);
->  	ret = be32_to_cpu(dip->di_next_unlinked);
->  	libxfs_buf_relse(ino_bp);
-> +	libxfs_irele(ip);
+Hi Linus,
 
-I think this needs to cover the error return for libxfs_imap_to_bp too,
-doesn't it?
+Please pull this branch which contains XFS bug fixes for 6.11-rc2. A brief
+description of the fixes is provided below.
 
---D
+I did a test-merge with the main upstream branch as of a few minutes ago and
+didn't see any conflicts.  Please let me know if you encounter any problems.
 
->  
->  	return ret;
->  bad:
-> -- 
-> 2.45.2
-> 
+The following changes since commit 8400291e289ee6b2bf9779ff1c83a291501f017b:
+
+  Linux 6.11-rc1 (2024-07-28 14:19:55 -0700)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.11-fixes-1
+
+for you to fetch changes up to 7bf888fa26e8f22bed4bc3965ab2a2953104ff96:
+
+  xfs: convert comma to semicolon (2024-07-29 09:34:18 +0530)
+
+----------------------------------------------------------------
+Bug fixes for 6.11-rc1:
+
+  * Fix memory leak when corruption is detected during scrubbing parent
+    pointers.
+  * Allow SECURE namespace xattrs to use reserved block pool to in order to
+    prevent ENOSPC.
+  * Save stack space by passing tracepoint's char array to file_path() instead
+    of another stack variable.
+  * Remove unused parameter in macro XFS_DQUOT_LOGRES.
+  * Replace comma with semicolon in a couple of places.
+
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+
+----------------------------------------------------------------
+Chen Ni (2):
+      xfs: convert comma to semicolon
+      xfs: convert comma to semicolon
+
+Darrick J. Wong (2):
+      xfs: fix a memory leak
+      xfs: fix file_path handling in tracepoints
+
+Eric Sandeen (1):
+      xfs: allow SECURE namespace xattrs to use reserved block pool
+
+Julian Sun (1):
+      xfs: remove unused parameter in macro XFS_DQUOT_LOGRES
+
+ fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c | 28 ++++++++++++++--------------
+ fs/xfs/scrub/agheader_repair.c |  2 +-
+ fs/xfs/scrub/parent.c          |  2 +-
+ fs/xfs/scrub/trace.h           | 10 ++++------
+ fs/xfs/xfs_attr_list.c         |  2 +-
+ fs/xfs/xfs_trace.h             | 10 ++++------
+ fs/xfs/xfs_xattr.c             | 19 ++++++++++++++++++-
+ 8 files changed, 44 insertions(+), 31 deletions(-)
