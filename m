@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898B71D540
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Aug 2024 18:46:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 916501D540
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Aug 2024 18:46:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722883583; cv=none; b=PK3zEzFbnMUlBprAArEPMqp2y/lxSLXjoL5ErlZnEPTa3jv8KpwedeW4Zmh9TIl1PWthClx7Sm8XAJ7MXvzQaZ7+d4KpgcIYMwPu63kNlv/hXLX6JBmpfe6CDgJ8HiMhAv5rrfILGx9hfHgNJREGJ/7b/wzxImoRdsF7WK+gCd0=
+	t=1722883606; cv=none; b=OK4h0MQeDCv86J3+Eyv0hSr/8WFsByRIffmG1cjxOJ1dKyzW96KuJKjYrJvVr6GRiec8/A6QttsKnikYI877sbAc07KCDRKvXvlLVEseZTbD/EeRt9FijnSHluQk+ss2DU/sFbXqW2grE2cPNypHmN7ybwBx3jxrv0biUj7R1f4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722883583; c=relaxed/simple;
-	bh=R5tyqaN6s9+8d0KCToAZkpTnXBrBnad6Oa+65Qr3ekU=;
+	s=arc-20240116; t=1722883606; c=relaxed/simple;
+	bh=FVHLKuOOECjxnkB8B0ixqd2Tvc768BUqG49bWyW/wcY=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=ZtftcuU1G3h7ar0eZGNfMwH1pcno6PTlvykH7FnKWZIDenps8NFh/4SaaxL2Yu03+cPdPw7B3gyO7gpcIhPKaQpXdRKf7hi7OrSzIsDrYDAQP+MbfO16Up9STXMM/Svgstli3mqM8nS2Asl0mOojgrFo7qQ7ugSDqwTNy5e1lc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gjBtlkum; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=QcfsZdcS1q/NNpIP+nJr4eE56oFdC+zLts/L5mtCBgjtXk5CtUzLIzG6bAh6ufVRyAnC6royzYrS+NTtK6hZyDLuOE9E8nFqa/fbjJsAiil3ErEncgBWd4t/0m28xl18oeT2NBVnnp/mFFMCitIPnFpHjIlwzm8auPrWkoLNWNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JLw6DEu2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gjBtlkum"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CFEAC32782;
-	Mon,  5 Aug 2024 18:46:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JLw6DEu2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62C14C32782;
+	Mon,  5 Aug 2024 18:46:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722883583;
-	bh=R5tyqaN6s9+8d0KCToAZkpTnXBrBnad6Oa+65Qr3ekU=;
+	s=k20201202; t=1722883606;
+	bh=FVHLKuOOECjxnkB8B0ixqd2Tvc768BUqG49bWyW/wcY=;
 	h=Date:From:To:Cc:Subject:From;
-	b=gjBtlkum0sI+acrF7f00m3Qz35TF3XKjgPwG2EKdGEbempIfdW7e0okJThFgyQwDQ
-	 M5b4uw2wTkTrAOlx3ira6NW7CvoovayqM2tE1PFNJmRvhbwlNkpGoUyYdIyg/FKKU2
-	 b3gvKIgqYzKvqdMKip+Ikk6F4SqrKfZMHfmrTCVYbHV7sktI2ZgWIov9isDaX5JrOe
-	 DQQ0mF3WeH+l+aBo19vMaJMTakpdabtNTzV0MJwTq1i7fV7xHlHKmXcE64sfVPG5Vz
-	 gtrzXO6zFdQnE2zWGcOPbEniSgK9c5LjV5S53iXScljO64qQfPYgdNgou9HJ8FXTi1
-	 vwZJDK1kIAK4A==
-Date: Mon, 5 Aug 2024 11:46:22 -0700
+	b=JLw6DEu21HW1t5rw38qzy6jV1rddRz6Uqc1jZEukRijOypWp17P7ATQbVw2TgnZFq
+	 Ekl7PU3MRb6OhpXx431wSpaEmJkCayymbJH/dfbX4d4aU7Kq0qDZYuitJQ3lR02T/J
+	 K3+bhd86qKTTkkPKu8cyGMGYTLKLFw3NdOkn/pZ/Qw6k4m+GrdAWODP58f2mOvQ7Ea
+	 ZsbQUsHnGRmI73CYae7EFqJbOhnMvEMzujsXxuWJXgohUx8k7fA54t1EqP6OaRxBdf
+	 qEPp9Vk8LFFyfItIpoJEwFzmiZx8RF9a1KUwWntmxVUuEnCg5Q49BiWJ8luFxATzsj
+	 PH61TbK1qnRpQ==
+Date: Mon, 5 Aug 2024 11:46:45 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Chandan Babu R <chandanbabu@kernel.org>
 Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: revert AIL TASK_KILLABLE threshold
-Message-ID: <20240805184622.GB623936@frogsfrogsfrogs>
+Subject: [PATCH] xfs: conditionally allow FS_XFLAG_REALTIME changes if S_DAX
+ is set
+Message-ID: <20240805184645.GC623936@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,40 +44,37 @@ Content-Disposition: inline
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In commit ce46e893b6762, we changed the behavior of the AIL thread to
-set its own task state to KILLABLE whenever the timeout value is
-nonzero.  Unfortunately, this missed the fact that xfsaild_push will
-return 50ms (aka a longish sleep) when we reach the push target or the
-AIL becomes empty, so xfsaild goes to sleep for a long period of time in
-uninterruptible D state.
+If a file has the S_DAX flag (aka fsdax access mode) set, we cannot
+allow users to change the realtime flag unless the datadev and rtdev
+both support fsdax access modes.  Even if there are no extents allocated
+to the file, the setattr thread could be racing with another thread
+that has already started down the write code paths.
 
-This results in artificially high load averages because KILLABLE
-processes are UNINTERRUPTIBLE, which contributes to load average even
-though the AIL is asleep waiting for someone to interrupt it.  It's not
-blocked on IOs or anything, but people scrap ps for processes that look
-like they're stuck in D state, so restore the previous threshold.
-
-Fixes: ce46e893b6762 ("xfs: AIL doesn't need manual pushing")
+Fixes: ba23cba9b3bdc ("fs: allow per-device dax status checking for filesystems")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_trans_ail.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_ioctl.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 0fafcc9f3dbe..8ede9d099d1f 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -644,7 +644,12 @@ xfsaild(
- 	set_freezable();
- 
- 	while (1) {
--		if (tout)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 4e933db75b12..6b13666d4e96 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -483,6 +483,17 @@ xfs_ioctl_setattr_xflags(
+ 		/* Can't change realtime flag if any extents are allocated. */
+ 		if (ip->i_df.if_nextents || ip->i_delayed_blks)
+ 			return -EINVAL;
++
 +		/*
-+		 * Long waits of 50ms or more occur when we've run out of items
-+		 * to push, so we only want uninterruptible state if we're
-+		 * actually blocked on something.
++		 * If S_DAX is enabled on this file, we can only switch the
++		 * device if both support fsdax.  We can't update S_DAX because
++		 * there might be other threads walking down the access paths.
 +		 */
-+		if (tout && tout <= 20)
- 			set_current_state(TASK_KILLABLE|TASK_FREEZABLE);
- 		else
- 			set_current_state(TASK_INTERRUPTIBLE|TASK_FREEZABLE);
++		if (IS_DAX(VFS_I(ip)) &&
++		    (mp->m_ddev_targp->bt_daxdev == NULL ||
++		     (mp->m_rtdev_targp &&
++		      mp->m_rtdev_targp->bt_daxdev == NULL)))
++			return -EINVAL;
+ 	}
+ 
+ 	if (rtflag) {
