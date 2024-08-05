@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 454A5481B9
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Aug 2024 18:45:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898B71D540
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Aug 2024 18:46:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722883535; cv=none; b=HkHIKgh33Lifj36NwqAUvlfH0SwhkXqmXo9dgJxnC9Mwcy9UMFwNXad/aHEehlCLC2d2u70NdBfPWrYbJaE/hwcPUnq7OaKUPjjOpos40yGMPu3NBrMqYh0Z7dGAZfIFNjU1KdYouCdBKhJAtzDPZ/28J3gGnikuEn6qaOXKkus=
+	t=1722883583; cv=none; b=PK3zEzFbnMUlBprAArEPMqp2y/lxSLXjoL5ErlZnEPTa3jv8KpwedeW4Zmh9TIl1PWthClx7Sm8XAJ7MXvzQaZ7+d4KpgcIYMwPu63kNlv/hXLX6JBmpfe6CDgJ8HiMhAv5rrfILGx9hfHgNJREGJ/7b/wzxImoRdsF7WK+gCd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722883535; c=relaxed/simple;
-	bh=Sa83C7JVDPmWI0x3KDRdBFPFhov//yWO7QZO3kk7LXY=;
+	s=arc-20240116; t=1722883583; c=relaxed/simple;
+	bh=R5tyqaN6s9+8d0KCToAZkpTnXBrBnad6Oa+65Qr3ekU=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=pNLqXpflthEKWHLW6JWxZhl7xwq/3GvsKctBkfJ206sVZToQYvqkBO9jPH+NXaLdu6ejOoSOpwLoUSdCr/aJ9AzaFw+rRnOANPDuCv7QWKH9P4BP79CzP5fvq39X7/5x3ISHB+L1RzlXRDbtwpZSXD04W4u/8e1EVXoK6S+Jm00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NIx3Hc8p; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=ZtftcuU1G3h7ar0eZGNfMwH1pcno6PTlvykH7FnKWZIDenps8NFh/4SaaxL2Yu03+cPdPw7B3gyO7gpcIhPKaQpXdRKf7hi7OrSzIsDrYDAQP+MbfO16Up9STXMM/Svgstli3mqM8nS2Asl0mOojgrFo7qQ7ugSDqwTNy5e1lc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gjBtlkum; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NIx3Hc8p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1DF8C32782;
-	Mon,  5 Aug 2024 18:45:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gjBtlkum"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CFEAC32782;
+	Mon,  5 Aug 2024 18:46:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722883534;
-	bh=Sa83C7JVDPmWI0x3KDRdBFPFhov//yWO7QZO3kk7LXY=;
+	s=k20201202; t=1722883583;
+	bh=R5tyqaN6s9+8d0KCToAZkpTnXBrBnad6Oa+65Qr3ekU=;
 	h=Date:From:To:Cc:Subject:From;
-	b=NIx3Hc8pZm/RV8TmqIYyzEOqLky3zkmiAmzH0MjAB9KRrDv2Mho2AdXgS3rMUavR+
-	 1ad+Iv7SYxKOT7zkVu6wF7bAgiW3/RZ2LESlLHh76KiuNg/WspseJlDYj7p5Vq+6kL
-	 V9RF3t9KGw7QpXZd1mIKq5f8VDarWlbdL+OEtn1laMvk64Hk9TVHF7fRFNcrmWSGuV
-	 40ptrnSLfqIexY4XgZ9xCHORo9Rc59u9+2qe5AQBwbgjPbOcytuB6/e7/chwKAq/4Y
-	 llLOeT5k2JvBwrkSAJXvZFZBpPxWOd1I0tQmG5M/YkwXM5xw8RO+bXCQxM/uWRh6PM
-	 7+DPsNSd4lAPA==
-Date: Mon, 5 Aug 2024 11:45:34 -0700
+	b=gjBtlkum0sI+acrF7f00m3Qz35TF3XKjgPwG2EKdGEbempIfdW7e0okJThFgyQwDQ
+	 M5b4uw2wTkTrAOlx3ira6NW7CvoovayqM2tE1PFNJmRvhbwlNkpGoUyYdIyg/FKKU2
+	 b3gvKIgqYzKvqdMKip+Ikk6F4SqrKfZMHfmrTCVYbHV7sktI2ZgWIov9isDaX5JrOe
+	 DQQ0mF3WeH+l+aBo19vMaJMTakpdabtNTzV0MJwTq1i7fV7xHlHKmXcE64sfVPG5Vz
+	 gtrzXO6zFdQnE2zWGcOPbEniSgK9c5LjV5S53iXScljO64qQfPYgdNgou9HJ8FXTi1
+	 vwZJDK1kIAK4A==
+Date: Mon, 5 Aug 2024 11:46:22 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Chandan Babu R <chandanbabu@kernel.org>
 Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: attr forks require attr, not attr2
-Message-ID: <20240805184534.GA623957@frogsfrogsfrogs>
+Subject: [PATCH] xfs: revert AIL TASK_KILLABLE threshold
+Message-ID: <20240805184622.GB623936@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,36 +43,40 @@ Content-Disposition: inline
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It turns out that I misunderstood the difference between the attr and
-attr2 feature bits.  "attr" means that at some point an attr fork was
-created somewhere in the filesystem.  "attr2" means that inodes have
-variable-sized forks, but says nothing about whether or not there
-actually /are/ attr forks in the system.
+In commit ce46e893b6762, we changed the behavior of the AIL thread to
+set its own task state to KILLABLE whenever the timeout value is
+nonzero.  Unfortunately, this missed the fact that xfsaild_push will
+return 50ms (aka a longish sleep) when we reach the push target or the
+AIL becomes empty, so xfsaild goes to sleep for a long period of time in
+uninterruptible D state.
 
-If we have an attr fork, we only need to check that attr is set.
+This results in artificially high load averages because KILLABLE
+processes are UNINTERRUPTIBLE, which contributes to load average even
+though the AIL is asleep waiting for someone to interrupt it.  It's not
+blocked on IOs or anything, but people scrap ps for processes that look
+like they're stuck in D state, so restore the previous threshold.
 
-Fixes: 99d9d8d05da26 ("xfs: scrub inode block mappings")
+Fixes: ce46e893b6762 ("xfs: AIL doesn't need manual pushing")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/bmap.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_trans_ail.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 24a15bf784f1..5ab2ac53c920 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -938,7 +938,13 @@ xchk_bmap(
- 		}
- 		break;
- 	case XFS_ATTR_FORK:
--		if (!xfs_has_attr(mp) && !xfs_has_attr2(mp))
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 0fafcc9f3dbe..8ede9d099d1f 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -644,7 +644,12 @@ xfsaild(
+ 	set_freezable();
+ 
+ 	while (1) {
+-		if (tout)
 +		/*
-+		 * "attr" means that an attr fork was created at some point in
-+		 * the life of this filesystem.  "attr2" means that inodes have
-+		 * variable-sized data/attr fork areas.  Hence we only check
-+		 * attr here.
++		 * Long waits of 50ms or more occur when we've run out of items
++		 * to push, so we only want uninterruptible state if we're
++		 * actually blocked on something.
 +		 */
-+		if (!xfs_has_attr(mp))
- 			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
- 		break;
- 	default:
++		if (tout && tout <= 20)
+ 			set_current_state(TASK_KILLABLE|TASK_FREEZABLE);
+ 		else
+ 			set_current_state(TASK_INTERRUPTIBLE|TASK_FREEZABLE);
