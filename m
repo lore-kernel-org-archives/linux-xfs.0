@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D88728DD1;
-	Tue,  6 Aug 2024 18:19:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6AE928DD1;
+	Tue,  6 Aug 2024 18:20:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722968391; cv=none; b=EdiuhSYCOo5UCXtw8ChI20IspgDnBcIgo5DWbJHdnHUBnWIqWSvIa0B2LuMKcHeRWQvmUOMD7TntobKwJ106oKN5JQZ4OCifTVkndtxCfsXuEctVOUR93zwz2j6uGFOYOFfSUL3uCKOyYjPRYAuNGx+sID34Pgn4DwQy9CDIXeQ=
+	t=1722968406; cv=none; b=qxhVqNw1i0jL+zXwbnaJDO774oGAZ0zHIZAUENxhWS0v07IHWMCgxIwZ5tcKNYRviV9CEarqYB+in1pb0zceXN5TjN/36J4Nkd7y/K3fpfL5zy+mKV26iDc5S1hVpSSZTp2drOPkgb5EciUnxKY8XpnwxKbvyg9OPMUZwh6Aex0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722968391; c=relaxed/simple;
-	bh=S39ucGh+UzX0G9XVmmKU9OvKj98sTAn/2xzgMyVBL5U=;
+	s=arc-20240116; t=1722968406; c=relaxed/simple;
+	bh=1EdpIWZob+RI+oMU4q2FcBu1flC8rhpOeyVRYGTZHQc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eBmDDuvhmBowq9Gp6oxFUwv3sYnJdO3rsYBfsEl6sBf3aYQWfp4JG/q22D3u7LAwzXfv5J08sYEJGLQX0dMU/LOq5jCSd9Q5Hn9cEJalI+G295pDyBmKJDinlrenQf8q1sJaQ9lpSsoazc3FwUDRJzWHda89Xr0SXJZ130IL+jQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L5+GYG7C; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Ig3J/yErEkT++lxsLZsbJifOcATQYZuRFnc/+M4FDfKFRvCt8RC1qoiny+AnASetM4XYx1Y7BmFliWDRAHQY8iZfBkcmnJg+WV8WxczMOonPczapGq9HCZcBpEXQgTXvdoJmgKrENYaVjSaBbn/VZfFj/AoyRUxXtiYdChiu780=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PoC1txa0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L5+GYG7C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03CFAC32786;
-	Tue,  6 Aug 2024 18:19:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PoC1txa0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD75BC32786;
+	Tue,  6 Aug 2024 18:20:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722968391;
-	bh=S39ucGh+UzX0G9XVmmKU9OvKj98sTAn/2xzgMyVBL5U=;
+	s=k20201202; t=1722968406;
+	bh=1EdpIWZob+RI+oMU4q2FcBu1flC8rhpOeyVRYGTZHQc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=L5+GYG7Cyh4cgioFIDvxBeY/+yAqV+K19sToO3sCrZzegQkAOKOesMb60WPfDNuVu
-	 GYUh8NquWrh3I74wp9cU75Tuq8nAEAHPpB5w/0GHHzMHRRa5wtWrhpRDYiK/cHe+Yi
-	 /RbEKX2FbKak6u25a/ejI/Lw/bUkvG2Djhcmu0kLjRoOmy4LmdVHkKt9uyB1xvBZ00
-	 u4KinAjnynssTHH89bR9T3Hj9TKtZOsZyMu7pDC8MtiFF7P81o0EWDpwMv/7imv6tY
-	 VsWB1f5zxqt7z8eOli2QZxw8fA0yDQlDK5zVI/RspkEL17TvyceTRKzk3ovyTLemJd
-	 b9T4exWlikXlA==
-Date: Tue, 06 Aug 2024 11:19:50 -0700
-Subject: [PATCH 2/7] xfs_io: edit filesystem properties
+	b=PoC1txa0EGuqeNVj2YLTA4Lr06yCjxS45r1a1E7tqvx/5BSDud/rOORDAeh0TSO35
+	 6CWRaT+GPROeBnVpgi8BUzJbtc3P4uVdlJhsW8HoeS5QhcRo78aRS3TjcO7oBXwF5q
+	 87HO6NC/lXrPEvVTw0hgSKGqkJ7RglyYAJLPnIiKCDjAdLHygkw2hEbHoZtXus3Q5C
+	 4t3vIig7ItxsMR9hrEs0B660npDtZx59EWsiuh4rDDOZk7MQXPHxwzWn8+PJPjto4I
+	 NBY100L1Cq9AYpGMkhLRoU5CU2vE0vtFLCFlV4EhYW/T5xMIFQ5SKv4wfHKthiKJ9n
+	 0YnTzP+Z93TWA==
+Date: Tue, 06 Aug 2024 11:20:06 -0700
+Subject: [PATCH 3/7] xfs_db: improve getting and setting extended attributes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, hch@lst.de, dchinner@redhat.com,
+Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@lst.de>,
+ Dave Chinner <dchinner@redhat.com>, hch@lst.de, dchinner@redhat.com,
  fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <172296825218.3193059.5122114124530927395.stgit@frogsfrogsfrogs>
+Message-ID: <172296825234.3193059.7895487674250550849.stgit@frogsfrogsfrogs>
 In-Reply-To: <172296825181.3193059.14803487307894313362.stgit@frogsfrogsfrogs>
 References: <172296825181.3193059.14803487307894313362.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,449 +48,482 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some new subcommands to xfs_io so that users can administer
-filesystem properties.
+Add an attr_get command to retrieve the value of an xattr from a file;
+and extend the attr_set command to allow passing of string values.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>Acked-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Dave Chinner <dchinner@redhat.com>
 ---
- io/Makefile       |    1 
- io/fsproperties.c |  365 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- io/init.c         |    1 
- io/io.h           |    1 
- man/man8/xfs_io.8 |   16 ++
- 5 files changed, 383 insertions(+), 1 deletion(-)
- create mode 100644 io/fsproperties.c
+ db/attrset.c      |  262 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ man/man8/xfs_db.8 |   40 ++++++++
+ 2 files changed, 293 insertions(+), 9 deletions(-)
 
 
-diff --git a/io/Makefile b/io/Makefile
-index 3192b813c..0bdd05b57 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -20,6 +20,7 @@ CFILES = \
- 	fiemap.c \
- 	file.c \
- 	freeze.c \
-+	fsproperties.c \
- 	fsuuid.c \
- 	fsync.c \
- 	getrusage.c \
-diff --git a/io/fsproperties.c b/io/fsproperties.c
-new file mode 100644
-index 000000000..79837132e
---- /dev/null
-+++ b/io/fsproperties.c
-@@ -0,0 +1,365 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "platform_defs.h"
-+#include "command.h"
-+#include "init.h"
-+#include "libfrog/paths.h"
-+#include "input.h"
-+#include "libfrog/fsgeom.h"
-+#include "handle.h"
-+#include "io.h"
-+#include "libfrog/fsprops.h"
+diff --git a/db/attrset.c b/db/attrset.c
+index 81d530055..9e53e63c9 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -17,20 +17,43 @@
+ #include "inode.h"
+ #include "malloc.h"
+ #include <sys/xattr.h>
 +#include "libfrog/fsproperties.h"
-+
+ 
++static int		attr_get_f(int argc, char **argv);
+ static int		attr_set_f(int argc, char **argv);
+ static int		attr_remove_f(int argc, char **argv);
++static void		attrget_help(void);
+ static void		attrset_help(void);
+ 
++static const cmdinfo_t	attr_get_cmd =
++	{ "attr_get", "aget", attr_get_f, 1, -1, 0,
++	  N_("[-r|-s|-u|-p|-Z] name"),
++	  N_("get the named attribute on the current inode"), attrget_help };
+ static const cmdinfo_t	attr_set_cmd =
+ 	{ "attr_set", "aset", attr_set_f, 1, -1, 0,
+-	  N_("[-r|-s|-u|-p] [-n] [-R|-C] [-v n] name"),
++	  N_("[-r|-s|-u|-p|-Z] [-n] [-R|-C] [-v n] name"),
+ 	  N_("set the named attribute on the current inode"), attrset_help };
+ static const cmdinfo_t	attr_remove_cmd =
+ 	{ "attr_remove", "aremove", attr_remove_f, 1, -1, 0,
+-	  N_("[-r|-s|-u|-p] [-n] name"),
++	  N_("[-r|-s|-u|-p|-Z] [-n] name"),
+ 	  N_("remove the named attribute from the current inode"), attrset_help };
+ 
 +static void
-+listfsprops_help(void)
++attrget_help(void)
 +{
-+	printf(_(
-+"Print the names of the filesystem properties stored in this filesystem.\n"
++	dbprintf(_(
++"\n"
++" The attr_get command provide interfaces for retrieving the values of extended\n"
++" attributes of a file.  This command requires attribute names to be specified.\n"
++" There are 4 namespace flags:\n"
++"  -r -- 'root'\n"
++"  -u -- 'user'		(default)\n"
++"  -s -- 'secure'\n"
++"  -p -- 'parent'\n"
++"  -Z -- fs property\n"
 +"\n"));
 +}
 +
-+static int
-+fileio_to_fsprops_handle(
-+	struct fileio		*file,
-+	struct fsprops_handle	*fph)
+ static void
+ attrset_help(void)
+ {
+@@ -45,10 +68,15 @@ attrset_help(void)
+ "  -u -- 'user'		(default)\n"
+ "  -s -- 'secure'\n"
+ "  -p -- 'parent'\n"
++"  -Z -- fs property\n"
+ "\n"
+ " For attr_set, these options further define the type of set operation:\n"
+ "  -C -- 'create'    - create attribute, fail if it already exists\n"
+ "  -R -- 'replace'   - replace attribute, fail if it does not exist\n"
++"\n"
++" If the attribute value is a string, it can be specified after the\n"
++" attribute name.\n"
++"\n"
+ " The backward compatibility mode 'noattr2' can be emulated (-n) also.\n"
+ "\n"));
+ }
+@@ -59,6 +87,7 @@ attrset_init(void)
+ 	if (!expert_mode)
+ 		return;
+ 
++	add_command(&attr_get_cmd);
+ 	add_command(&attr_set_cmd);
+ 	add_command(&attr_remove_cmd);
+ }
+@@ -106,6 +135,58 @@ get_buf_from_file(
+ 				 LIBXFS_ATTR_ROOT | \
+ 				 LIBXFS_ATTR_PARENT)
+ 
++static bool
++adjust_fsprop_attr_name(
++	struct xfs_da_args	*args,
++	bool			*free_name)
 +{
-+	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-+	struct fs_path		*fs;
-+	void			*hanp = NULL;
-+	size_t			hlen;
++	const char		*o = (const char *)args->name;
++	char			*p;
 +	int			ret;
 +
-+	/*
-+	 * Look up the mount point info for the open file, which confirms that
-+	 * we were passed a mount point.
-+	 */
-+	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
-+	if (!fs) {
-+		fprintf(stderr, _("%s: Not a XFS mount point.\n"),
-+				file->name);
-+		goto bad;
++	if ((args->attr_filter & LIBXFS_ATTR_NS) != LIBXFS_ATTR_ROOT) {
++		dbprintf(_("fs properties must be ATTR_ROOT\n"));
++		return false;
 +	}
 +
-+	/*
-+	 * Register the mountpoint in the fsfd cache so we can use handle
-+	 * functions later.
-+	 */
-+	ret = path_to_fshandle(fs->fs_dir, &hanp, &hlen);
-+	if (ret) {
-+		perror(fs->fs_dir);
-+		goto bad;
++	ret = fsprop_name_to_attr_name(o, &p);
++	if (ret < 0) {
++		dbprintf(_("could not allocate fs property name string\n"));
++		return false;
++	}
++	args->namelen = ret;
++	args->name = (const uint8_t *)p;
++
++	if (*free_name)
++		free((void *)o);
++	*free_name = true;
++
++	if (args->namelen > MAXNAMELEN) {
++		dbprintf(_("%s: name too long\n"), args->name);
++		return false;
 +	}
 +
-+	ret = -xfd_prepare_geometry(&xfd);
-+	if (ret) {
-+		perror(file->name);
-+		goto free_handle;
++	if (args->valuelen > ATTR_MAX_VALUELEN) {
++		dbprintf(_("%s: value too long\n"), args->name);
++		return false;
 +	}
 +
-+	ret = fsprops_open_handle(&xfd, &file->fs_path, fph);
-+	if (ret) {
-+		if (errno == ESRMNT)
-+			fprintf(stderr, _("%s: Not a XFS mount point.\n"),
-+					file->name);
-+		else
-+			perror(file->name);
-+		goto free_handle;
++	return true;
++}
++
++static void
++print_fsprop(
++	struct xfs_da_args	*args)
++{
++	const char		*p =
++		attr_name_to_fsprop_name((const char *)args->name);
++
++	if (p)
++		printf("%s=%.*s\n", p, args->valuelen, (char *)args->value);
++	else
++		fprintf(stderr, _("%s: not a fs property?\n"), args->name);
++}
++
+ static int
+ attr_set_f(
+ 	int			argc,
+@@ -119,7 +200,9 @@ attr_set_f(
+ 	char			*sp;
+ 	char			*name_from_file = NULL;
+ 	char			*value_from_file = NULL;
++	bool			free_name = false;
+ 	enum xfs_attr_update	op = XFS_ATTRUPDATE_UPSERT;
++	bool			fsprop = false;
+ 	int			c;
+ 	int			error;
+ 
+@@ -132,9 +215,12 @@ attr_set_f(
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "ruspCRnN:v:V:")) != EOF) {
++	while ((c = getopt(argc, argv, "ruspCRnN:v:V:Z")) != EOF) {
+ 		switch (c) {
+ 		/* namespaces */
++		case 'Z':
++			fsprop = true;
++			fallthrough;
+ 		case 'r':
+ 			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			args.attr_filter |= LIBXFS_ATTR_ROOT;
+@@ -213,9 +299,10 @@ attr_set_f(
+ 		if (!args.name)
+ 			return 0;
+ 
++		free_name = true;
+ 		args.namelen = namelen;
+ 	} else {
+-		if (optind != argc - 1) {
++		if (optind != argc - 1 && optind != argc - 2) {
+ 			dbprintf(_("too few options for attr_set (no name given)\n"));
+ 			return 0;
+ 		}
+@@ -250,6 +337,25 @@ attr_set_f(
+ 			goto out;
+ 		}
+ 		memset(args.value, 'v', args.valuelen);
++	} else if (optind == argc - 2) {
++		args.valuelen = strlen(argv[optind + 1]);
++		args.value = strdup(argv[optind + 1]);
++		if (!args.value) {
++			dbprintf(_("cannot allocate buffer (%d)\n"),
++					args.valuelen);
++			goto out;
++		}
 +	}
 +
-+	free_handle(hanp, hlen);
++	if (fsprop) {
++		if (!fsprop_validate((const char *)args.name, args.value)) {
++			dbprintf(_("%s: invalid value \"%s\"\n"),
++					args.name, args.value);
++			goto out;
++		}
++
++		if (!adjust_fsprop_attr_name(&args, &free_name))
++			goto out;
+ 	}
+ 
+ 	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &args.dp)) {
+@@ -269,6 +375,9 @@ attr_set_f(
+ 		goto out;
+ 	}
+ 
++	if (fsprop)
++		print_fsprop(&args);
++
+ 	/* refresh with updated inode contents */
+ 	set_cur_inode(iocur_top->ino);
+ 
+@@ -277,7 +386,7 @@ attr_set_f(
+ 		libxfs_irele(args.dp);
+ 	if (args.value)
+ 		free(args.value);
+-	if (name_from_file)
++	if (free_name)
+ 		free((void *)args.name);
+ 	return 0;
+ }
+@@ -293,6 +402,8 @@ attr_remove_f(
+ 		.op_flags	= XFS_DA_OP_OKNOENT,
+ 	};
+ 	char			*name_from_file = NULL;
++	bool			free_name = false;
++	bool			fsprop = false;
+ 	int			c;
+ 	int			error;
+ 
+@@ -305,9 +416,12 @@ attr_remove_f(
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "ruspnN:")) != EOF) {
++	while ((c = getopt(argc, argv, "ruspnN:Z")) != EOF) {
+ 		switch (c) {
+ 		/* namespaces */
++		case 'Z':
++			fsprop = true;
++			fallthrough;
+ 		case 'r':
+ 			args.attr_filter &= ~LIBXFS_ATTR_NS;
+ 			args.attr_filter |= LIBXFS_ATTR_ROOT;
+@@ -354,6 +468,7 @@ attr_remove_f(
+ 		if (!args.name)
+ 			return 0;
+ 
++		free_name = true;
+ 		args.namelen = namelen;
+ 	} else {
+ 		if (optind != argc - 1) {
+@@ -374,6 +489,9 @@ attr_remove_f(
+ 		}
+ 	}
+ 
++	if (fsprop && !adjust_fsprop_attr_name(&args, &free_name))
++		goto out;
++
+ 	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &args.dp)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+ 			(unsigned long long)iocur_top->ino);
+@@ -398,7 +516,137 @@ attr_remove_f(
+ out:
+ 	if (args.dp)
+ 		libxfs_irele(args.dp);
+-	if (name_from_file)
++	if (free_name)
++		free((void *)args.name);
 +	return 0;
-+free_handle:
-+	free_handle(hanp, hlen);
-+bad:
-+	exitcode = 1;
-+	return 1;
 +}
 +
 +static int
-+print_fsprop(
-+	struct fsprops_handle	*fph,
-+	const char		*name,
-+	size_t			unused,
-+	void			*priv)
++attr_get_f(
++	int			argc,
++	char			**argv)
 +{
-+	bool			*print_values = priv;
-+	char			valuebuf[FSPROP_MAX_VALUELEN];
-+	size_t			valuelen = FSPROP_MAX_VALUELEN;
-+	int			ret;
++	struct xfs_da_args	args = {
++		.geo		= mp->m_attr_geo,
++		.whichfork	= XFS_ATTR_FORK,
++		.op_flags	= XFS_DA_OP_OKNOENT,
++	};
++	char			*name_from_file = NULL;
++	bool			free_name = false;
++	bool			fsprop = false;
++	int			c;
++	int			error;
 +
-+	if (!(*print_values)) {
-+		printf("%s\n", name);
++	if (cur_typ == NULL) {
++		dbprintf(_("no current type\n"));
++		return 0;
++	}
++	if (cur_typ->typnm != TYP_INODE) {
++		dbprintf(_("current type is not inode\n"));
 +		return 0;
 +	}
 +
-+	ret = fsprops_get(fph, name, valuebuf, &valuelen);
-+	if (ret)
-+		return ret;
-+
-+	printf("%s=%.*s\n", name, (int)valuelen, valuebuf);
-+	return 0;
-+}
-+
-+static int
-+listfsprops_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct fsprops_handle	fph = { };
-+	bool			print_values = false;
-+	int			c;
-+	int			ret;
-+
-+	while ((c = getopt(argc, argv, "v")) != EOF) {
++	while ((c = getopt(argc, argv, "ruspN:Z")) != EOF) {
 +		switch (c) {
-+		case 'v':
-+			print_values = true;
++		/* namespaces */
++		case 'Z':
++			fsprop = true;
++			fallthrough;
++		case 'r':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
++			args.attr_filter |= LIBXFS_ATTR_ROOT;
++			break;
++		case 'u':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
++			break;
++		case 's':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
++			args.attr_filter |= LIBXFS_ATTR_SECURE;
++			break;
++		case 'p':
++			args.attr_filter &= ~LIBXFS_ATTR_NS;
++			args.attr_filter |= XFS_ATTR_PARENT;
++			break;
++
++		case 'N':
++			name_from_file = optarg;
 +			break;
 +		default:
-+			exitcode = 1;
-+			listfsprops_help();
++			dbprintf(_("bad option for attr_get command\n"));
 +			return 0;
 +		}
 +	}
 +
-+	ret = fileio_to_fsprops_handle(file, &fph);
-+	if (ret)
-+		return 1;
++	if (name_from_file) {
++		int namelen;
 +
-+	ret = fsprops_walk_names(&fph, print_fsprop, &print_values);
-+	if (ret) {
-+		perror(file->name);
-+		exitcode = 1;
-+	}
-+
-+	fsprops_free_handle(&fph);
-+	return 0;
-+}
-+
-+static struct cmdinfo listfsprops_cmd = {
-+	.name		= "listfsprops",
-+	.cfunc		= listfsprops_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.flags		= CMD_NOMAP_OK,
-+	.args		= "",
-+	.help		= listfsprops_help,
-+};
-+
-+static void
-+getfsprops_help(void)
-+{
-+	printf(_(
-+"Print the values of filesystem properties stored in this filesystem.\n"
-+"\n"
-+"Pass property names as the arguments.\n"
-+"\n"));
-+}
-+
-+static int
-+getfsprops_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct fsprops_handle	fph = { };
-+	int			c;
-+	int			ret;
-+
-+	while ((c = getopt(argc, argv, "")) != EOF) {
-+		switch (c) {
-+		default:
-+			exitcode = 1;
-+			getfsprops_help();
++		if (optind != argc) {
++			dbprintf(_("too many options for attr_get (no name needed)\n"));
 +			return 0;
 +		}
-+	}
 +
-+	ret = fileio_to_fsprops_handle(file, &fph);
-+	if (ret)
-+		return ret;
++		args.name = get_buf_from_file(name_from_file, MAXNAMELEN,
++				&namelen);
++		if (!args.name)
++			return 0;
 +
-+	for (c = optind; c < argc; c++) {
-+		char		valuebuf[FSPROP_MAX_VALUELEN];
-+		size_t		valuelen = FSPROP_MAX_VALUELEN;
-+
-+		ret = fsprops_get(&fph, argv[c], valuebuf, &valuelen);
-+		if (ret) {
-+			perror(argv[c]);
-+			exitcode = 1;
-+			break;
-+		}
-+
-+		printf("%s=%.*s\n", argv[c], (int)valuelen, valuebuf);
-+	}
-+
-+	fsprops_free_handle(&fph);
-+	return 0;
-+}
-+
-+static struct cmdinfo getfsprops_cmd = {
-+	.name		= "getfsprops",
-+	.cfunc		= getfsprops_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.flags		= CMD_NOMAP_OK,
-+	.args		= "",
-+	.help		= getfsprops_help,
-+};
-+
-+static void
-+setfsprops_help(void)
-+{
-+	printf(_(
-+"Set values of filesystem properties stored in this filesystem.\n"
-+"\n"
-+" -f    Do not try to validate property value.\n"
-+"\n"
-+"Provide name=value tuples as the arguments.\n"
-+"\n"));
-+}
-+
-+static int
-+setfsprops_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct fsprops_handle	fph = { };
-+	bool			force = false;
-+	int			c;
-+	int			ret;
-+
-+	while ((c = getopt(argc, argv, "f")) != EOF) {
-+		switch (c) {
-+		case 'f':
-+			force = true;
-+			break;
-+		default:
-+			exitcode = 1;
-+			getfsprops_help();
++		free_name = true;
++		args.namelen = namelen;
++	} else {
++		if (optind != argc - 1) {
++			dbprintf(_("too few options for attr_get (no name given)\n"));
 +			return 0;
 +		}
-+	}
 +
-+	ret = fileio_to_fsprops_handle(file, &fph);
-+	if (ret)
-+		return ret;
-+
-+	for (c = optind; c < argc; c ++) {
-+		char	*equals = strchr(argv[c], '=');
-+
-+		if (!equals) {
-+			fprintf(stderr, _("%s: property value required.\n"),
-+					argv[c]);
-+			exitcode = 1;
-+			break;
-+		}
-+
-+		*equals = 0;
-+
-+		if (!force && !fsprop_validate(argv[c], equals + 1)) {
-+			fprintf(stderr, _("%s: invalid value \"%s\".\n"),
-+					argv[c], equals + 1);
-+			*equals = '=';
-+			exitcode = 1;
-+			break;
-+		}
-+
-+		ret = fsprops_set(&fph, argv[c], equals + 1,
-+				strlen(equals + 1));
-+		if (ret) {
-+			perror(argv[c]);
-+			*equals = '=';
-+			exitcode = 1;
-+			break;
-+		}
-+
-+		printf("%s=%s\n", argv[c], equals + 1);
-+		*equals = '=';
-+	}
-+
-+	fsprops_free_handle(&fph);
-+	return 0;
-+}
-+
-+static struct cmdinfo setfsprops_cmd = {
-+	.name		= "setfsprops",
-+	.cfunc		= setfsprops_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.flags		= CMD_NOMAP_OK,
-+	.args		= "",
-+	.help		= setfsprops_help,
-+};
-+
-+static void
-+removefsprops_help(void)
-+{
-+	printf(_(
-+"Unset a filesystem property.\n"
-+"\n"
-+"Pass property names as the arguments.\n"
-+"\n"));
-+}
-+
-+static int
-+removefsprops_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct fsprops_handle	fph = { };
-+	int			c;
-+	int			ret;
-+
-+	while ((c = getopt(argc, argv, "")) != EOF) {
-+		switch (c) {
-+		default:
-+			exitcode = 1;
-+			getfsprops_help();
++		args.name = (const unsigned char *)argv[optind];
++		if (!args.name) {
++			dbprintf(_("invalid name\n"));
 +			return 0;
 +		}
-+	}
 +
-+	ret = fileio_to_fsprops_handle(file, &fph);
-+	if (ret)
-+		return ret;
-+
-+	for (c = optind; c < argc; c++) {
-+		ret = fsprops_remove(&fph, argv[c]);
-+		if (ret) {
-+			perror(argv[c]);
-+			exitcode = 1;
-+			break;
++		args.namelen = strlen(argv[optind]);
++		if (args.namelen >= MAXNAMELEN) {
++			dbprintf(_("name too long\n"));
++			goto out;
 +		}
 +	}
 +
-+	fsprops_free_handle(&fph);
-+	return 0;
-+}
++	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &args.dp)) {
++		dbprintf(_("failed to iget inode %llu\n"),
++			(unsigned long long)iocur_top->ino);
++		goto out;
++	}
 +
-+static struct cmdinfo removefsprops_cmd = {
-+	.name		= "removefsprops",
-+	.cfunc		= removefsprops_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.flags		= CMD_NOMAP_OK,
-+	.args		= "",
-+	.help		= removefsprops_help,
-+};
++	if (fsprop && !adjust_fsprop_attr_name(&args, &free_name))
++		goto out;
 +
-+void
-+fsprops_init(void)
-+{
-+	listfsprops_cmd.oneline = _("list file system properties");
-+	getfsprops_cmd.oneline = _("print file system properties");
-+	setfsprops_cmd.oneline = _("set file system properties");
-+	removefsprops_cmd.oneline = _("unset file system properties");
++	args.owner = iocur_top->ino;
++	libxfs_attr_sethash(&args);
 +
-+	add_command(&listfsprops_cmd);
-+	add_command(&getfsprops_cmd);
-+	add_command(&setfsprops_cmd);
-+	add_command(&removefsprops_cmd);
-+}
-diff --git a/io/init.c b/io/init.c
-index 37e0f093c..5727f7351 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -89,6 +89,7 @@ init_commands(void)
- 	utimes_init();
- 	crc32cselftest_init();
- 	exchangerange_init();
-+	fsprops_init();
++	/*
++	 * Look up attr value with a maximally long length and a null buffer
++	 * to return the value and the correct length.
++	 */
++	args.valuelen = XATTR_SIZE_MAX;
++	error = -libxfs_attr_get(&args);
++	if (error) {
++		dbprintf(_("failed to get attr %s on inode %llu: %s\n"),
++			args.name, (unsigned long long)iocur_top->ino,
++			strerror(error));
++		goto out;
++	}
++
++	if (fsprop)
++		print_fsprop(&args);
++	else
++		printf("%.*s\n", args.valuelen, (char *)args.value);
++
++out:
++	if (args.dp)
++		libxfs_irele(args.dp);
++	if (args.value)
++		free(args.value);
++	if (free_name)
+ 		free((void *)args.name);
+ 	return 0;
  }
- 
- /*
-diff --git a/io/io.h b/io/io.h
-index fdb715ff0..8c5e59100 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -150,3 +150,4 @@ extern void		repair_init(void);
- extern void		crc32cselftest_init(void);
- extern void		bulkstat_init(void);
- void			exchangerange_init(void);
-+void			fsprops_init(void);
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 657bdaec4..303c64478 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1578,7 +1578,21 @@ Print the sysfs or debugfs path for the mounted filesystem.
- The
- .B -d
- option selects debugfs instead of sysfs.
--
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 9f6fea574..f0865b2df 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -184,7 +184,35 @@ Displays the length, free block count, per-AG reservation size, and per-AG
+ reservation usage for a given AG.
+ If no argument is given, display information for all AGs.
+ .TP
+-.BI "attr_remove [\-p|\-r|\-u|\-s] [\-n] [\-N " namefile "|" name "] "
++.BI "attr_get [\-p|\-r|\-u|\-s|\-Z] [\-N " namefile "|" name "] "
++Print the value of the specified extended attribute from the current file.
++.RS 1.0i
++.TP 0.4i
++.B \-p
++Sets the attribute in the parent namespace.
++Only one namespace option can be specified.
 +.TP
-+.BI "getfsprops " name " [ " names "... ]"
-+Retrieve the values of the given filesystem properties.
++.B \-r
++Sets the attribute in the root namespace.
++Only one namespace option can be specified.
 +.TP
-+.BI "listfsprops [ " \-v " ]"
-+List all filesystem properties that have been stored in the filesystem.
-+If the
-+.B \-v
-+flag is specified, prints the values of the properties.
++.B \-u
++Sets the attribute in the user namespace.
++Only one namespace option can be specified.
 +.TP
-+.BI "setfsprops " name = value " [ " name = value "... ]"
-+Set the given filesystem properties to the specified values.
++.B \-s
++Sets the attribute in the secure namespace.
++Only one namespace option can be specified.
 +.TP
-+.BI "removefsprops " name " [ " names "... ]"
-+Remove the given filesystem properties.
- 
- .SH OTHER COMMANDS
++.B \-Z
++Sets a filesystem property in the root namespace.
++Only one namespace option can be specified.
++.TP
++.B \-N
++Read the name from this file.
++.RE
++.TP
++.BI "attr_remove [\-p|\-r|\-u|\-s|\-Z] [\-n] [\-N " namefile "|" name "] "
+ Remove the specified extended attribute from the current file.
+ .RS 1.0i
+ .TP 0.4i
+@@ -204,6 +232,10 @@ Only one namespace option can be specified.
+ Sets the attribute in the secure namespace.
+ Only one namespace option can be specified.
+ .TP
++.B \-Z
++Sets a filesystem property in the root namespace.
++Only one namespace option can be specified.
++.TP
+ .B \-N
+ Read the name from this file.
+ .TP
+@@ -211,7 +243,7 @@ Read the name from this file.
+ Do not enable 'noattr2' mode on V4 filesystems.
+ .RE
+ .TP
+-.BI "attr_set [\-p\-r|\-u|\-s] [\-n] [\-R|\-C] [\-v " valuelen "|\-V " valuefile "] [\-N " namefile "|" name "] "
++.BI "attr_set [\-p\-r|\-u|\-s|\-Z] [\-n] [\-R|\-C] [\-v " valuelen "|\-V " valuefile "] [\-N " namefile "|" name "] [" value "]"
+ Sets an extended attribute on the current file with the given name.
+ .RS 1.0i
+ .TP 0.4i
+@@ -231,6 +263,10 @@ Only one namespace option can be specified.
+ Sets the attribute in the secure namespace.
+ Only one namespace option can be specified.
+ .TP
++.B \-Z
++Sets a filesystem property in the root namespace.
++Only one namespace option can be specified.
++.TP
+ .B \-N
+ Read the name from this file.
  .TP
 
