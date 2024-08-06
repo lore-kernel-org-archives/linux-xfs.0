@@ -1,43 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FD8A129A7E;
-	Tue,  6 Aug 2024 20:14:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6128C171E61;
+	Tue,  6 Aug 2024 22:01:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722975279; cv=none; b=YwHPsrJzp8TUvX0nYcXEVxYhombaLodnq9Z1TZgHyRTAyecs92pNIrPJtTcxvNnkyCNAHlWPrERSV/XA5tvm5TW68mhRm24hS9BQwqHwCuyaW0SUBBqwg+7+DE+dJLmFJHs1Mr8RkzlvR4OA3I2333gWX0E18XN6KhKSjuVZqbI=
+	t=1722981677; cv=none; b=kJJCAPVcSW53fk9HPKJlzFLewFK9XUd2O4HoO8ske4XsvrGKXHAn5FrDjdWOtD34cX24ufdqnz2F2GZ6XwDz7WmJUZHqRe6/bSyZn2OxuHW6jQgUs3/Y2Kog0aCZfhu6KXcRL7TDPra/Iy3LX0bj9yi4nZPFdsR2ZcvnF/QWTjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722975279; c=relaxed/simple;
-	bh=cYwuBVW7WPFKRnEpy+IFFl54ag6Ze/dkRiRVedUF4IM=;
+	s=arc-20240116; t=1722981677; c=relaxed/simple;
+	bh=3O2F0dhbujAAe3QdNEIIsduxEQUZMXrFfkhNOLE8mJA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H8b0mG4Qsus90kogZK3g8mU1EFKoVm7bOpEYVbIDcI7aLuMLbgsS4DzTbaJ1d6DWqRmJPVkifK/RmuMAbqIUzAWPdku+gFKcoUEv0+yQzC/g4BwhYwlgTEyz97aFlGQW6zwfsNNnKQ/e4vJ1IIjVY5or1vTwhn/rcCChbPMWKEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TtI6vIiz; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nBo5PpXHRrDitvP58cH4a4eFPtaDZ2K6cnbdqpY+hpg3iXdZ76nab+m8IOxYt6wm+m4ywqdy5SAD9k3CUVyyZ2vKumF/xIIlEtDnFlvIeZY4rEKYHsstBfd0/ZmfiapcfXlOjlvdymLl8+aDPXtRzPDfppTohp6lQ1dyy5lQyZM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P2uV6y7p; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TtI6vIiz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFCBAC32786;
-	Tue,  6 Aug 2024 20:14:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P2uV6y7p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3C6AC4AF10;
+	Tue,  6 Aug 2024 22:01:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722975278;
-	bh=cYwuBVW7WPFKRnEpy+IFFl54ag6Ze/dkRiRVedUF4IM=;
+	s=k20201202; t=1722981676;
+	bh=3O2F0dhbujAAe3QdNEIIsduxEQUZMXrFfkhNOLE8mJA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TtI6vIizcTct3JI8798A4w91z293kJbkj58Der6gwHzpG1MZkXP2JAjRrQqmsed85
-	 jcHiCGUcFTiLuSbKDTNgmOaS6vR+bAPlPLa6G76w4NzzIdLQZk+nCxUWIS6fuWHfQp
-	 USlysRcxK/97bW0zDrHmnFEC+Jsa3EsdUrxPGcNoTMW5ED8SeeZqsDhf/rYVl1P02A
-	 6+S4m6EjNuUWrb42pNb1bDLw2kACCQZJOC5PDa4ajPSUcdDJ2B/+u9qCwxWgzDk6hl
-	 RQ0f60FkvtMho1RdrmupFPNpMVVXKMjDdezooq/gHTpu49l2TE58rfmxH0BKndk4XJ
-	 wg3D/qqzABOog==
-Date: Tue, 6 Aug 2024 13:14:38 -0700
+	b=P2uV6y7piAQ2bFmzGGGGvAfoQ8eJjOXelGUVftgvXw+nBV/Aq2L+ZxHMIrRmBRREE
+	 qmC89YOlLMRzo3c9MSWDhsfABmQlJhLAGmJb67fzkCpBk9RZaKsgfmGvb7cjOjtVir
+	 T0ikzr+6GL4bSXa9uPKGrDFq/bq4pLtoi0W3R8yOf13qBUAtx+0fegqQXlvmBZ5Eeq
+	 0ku0gXS0lU/q0U2UG9dIqdtaTWOBLiipp61Ws9VOUcp0vWWiHsl/0DU6+TiOH8SPQz
+	 xOt51yKhogO9FAx7GDxx1ZvUHaLtTOuPMGeoo4VmGtJ+TqDgtjky5/Gz2KwikMNPx4
+	 RBfrKCrBFPXAQ==
+Date: Tue, 6 Aug 2024 15:01:16 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH v3 12/14] xfs: Unmap blocks according to forcealign
-Message-ID: <20240806201438.GP623936@frogsfrogsfrogs>
-References: <20240801163057.3981192-1-john.g.garry@oracle.com>
- <20240801163057.3981192-13-john.g.garry@oracle.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Chandan Babu R <chandanbabu@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	tglx@linutronix.de
+Subject: Re: Are jump labels broken on 6.11-rc1?
+Message-ID: <20240806220116.GH623957@frogsfrogsfrogs>
+References: <20240730033849.GH6352@frogsfrogsfrogs>
+ <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20240730132626.GV26599@noisy.programming.kicks-ass.net>
+ <20240731001950.GN6352@frogsfrogsfrogs>
+ <20240731031033.GP6352@frogsfrogsfrogs>
+ <20240731053341.GQ6352@frogsfrogsfrogs>
+ <20240731105557.GY33588@noisy.programming.kicks-ass.net>
+ <20240805143522.GA623936@frogsfrogsfrogs>
+ <20240806094413.GS37996@noisy.programming.kicks-ass.net>
+ <20240806103808.GT37996@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,206 +55,177 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240801163057.3981192-13-john.g.garry@oracle.com>
+In-Reply-To: <20240806103808.GT37996@noisy.programming.kicks-ass.net>
 
-On Thu, Aug 01, 2024 at 04:30:55PM +0000, John Garry wrote:
-> For when forcealign is enabled, blocks in an inode need to be unmapped
-> according to extent alignment, like what is already done for rtvol.
+On Tue, Aug 06, 2024 at 12:38:08PM +0200, Peter Zijlstra wrote:
+> On Tue, Aug 06, 2024 at 11:44:13AM +0200, Peter Zijlstra wrote:
+> > On Mon, Aug 05, 2024 at 07:35:22AM -0700, Darrick J. Wong wrote:
+> > > On Wed, Jul 31, 2024 at 12:55:57PM +0200, Peter Zijlstra wrote:
+> > > > On Tue, Jul 30, 2024 at 10:33:41PM -0700, Darrick J. Wong wrote:
+> > > > 
+> > > > > Sooooo... it turns out that somehow your patch got mismerged on the
+> > > > > first go-round, and that worked.  The second time, there was no
+> > > > > mismerge, which mean that the wrong atomic_cmpxchg() callsite was
+> > > > > tested.
+> > > > > 
+> > > > > Looking back at the mismerge, it actually changed
+> > > > > __static_key_slow_dec_cpuslocked, which had in 6.10:
+> > > > > 
+> > > > > 	if (atomic_dec_and_test(&key->enabled))
+> > > > > 		jump_label_update(key);
+> > > > > 
+> > > > > Decrement, then return true if the value was set to zero.  With the 6.11
+> > > > > code, it looks like we want to exchange a 1 with a 0, and act only if
+> > > > > the previous value had been 1.
+> > > > > 
+> > > > > So perhaps we really want this change?  I'll send it out to the fleet
+> > > > > and we'll see what it reports tomorrow morning.
+> > > > 
+> > > > Bah yes, I missed we had it twice. Definitely both sites want this.
+> > > > 
+> > > > I'll tentatively merge the below patch in tip/locking/urgent. I can
+> > > > rebase if there is need.
+> > > 
+> > > Hi Peter,
+> > > 
+> > > This morning, I noticed the splat below with -rc2.
+> > > 
+> > > WARNING: CPU: 0 PID: 8578 at kernel/jump_label.c:295 __static_key_slow_dec_cpuslocked.part.0+0x50/0x60
+> > > 
+> > > Line 295 is the else branch of this code:
+> > > 
+> > > 	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
+> > > 		jump_label_update(key);
+> > > 	else
+> > > 		WARN_ON_ONCE(!static_key_slow_try_dec(key));
+> > > 
+> > > Apparently static_key_slow_try_dec returned false?  Looking at that
+> > > function, I suppose the atomic_read of key->enabled returned 0, since it
+> > > didn't trigger the "WARN_ON_ONCE(v < 0)" code.  Does that mean the value
+> > > must have dropped from positive N to 0 without anyone ever taking the
+> > > jump_label_mutex?
+> > 
+> > One possible scenario I see:
+> > 
+> >   slow_dec
+> >     if (try_dec) // dec_not_one-ish, false
+> >     // enabled == 1
+> > 				slow_inc
+> > 				  if (inc_not_disabled) // inc_not_zero-ish
+> > 				  // enabled == 2
+> > 				    return
+> > 
+> >     guard((mutex)(&jump_label_mutex);
+> >     if (atomic_cmpxchg(1,0)==1) // false, we're 2
+> >     
+> > 				slow_dec
+> > 				  if (try-dec) // dec_not_one, true
+> > 				  // enabled == 1
+> > 				    return
+> >     else
+> >       try_dec() // dec_not_one, false
+> >       WARN
+> > 
+> > 
+> > Let me go play to see how best to cure this.
 > 
-> Change variable isrt in __xfs_bunmapi() to a bool, as that is really what
-> it is.
+> I've ended up with this, not exactly pretty :/
 > 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 48 +++++++++++++++++++++++++++++-----------
->  fs/xfs/xfs_inode.c       | 16 ++++++++++++++
->  fs/xfs/xfs_inode.h       |  2 ++
->  3 files changed, 53 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 0c3df8c71c6d..d6ae344a17fc 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5409,6 +5409,25 @@ xfs_bmap_del_extent_real(
->  	return 0;
->  }
->  
-> +static xfs_extlen_t
-> +xfs_bunmapi_align(
-> +	struct xfs_inode	*ip,
-> +	xfs_fsblock_t		fsbno,
-> +	xfs_extlen_t *off)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		return xfs_inode_alloc_fsbsize_align(ip, fsbno, off);
-> +	/*
-> +	 * The agbno for the fsbno is aligned to extsize, but the fsbno itself
-> +	 * is not necessarily aligned (to extsize), so use agbno to determine
-> +	 * mod+offset to the alloc unit boundary.
-> +	 */
-> +	return xfs_inode_alloc_fsbsize_align(ip, XFS_FSB_TO_AGBNO(mp, fsbno),
-> +					off);
-> +}
-> +
->  /*
->   * Unmap (remove) blocks from a file.
->   * If nexts is nonzero then the number of extents to remove is limited to
-> @@ -5430,7 +5449,8 @@ __xfs_bunmapi(
->  	xfs_extnum_t		extno;		/* extent number in list */
->  	struct xfs_bmbt_irec	got;		/* current extent record */
->  	struct xfs_ifork	*ifp;		/* inode fork pointer */
-> -	int			isrt;		/* freeing in rt area */
-> +	bool			isrt;		/* freeing in rt area */
-> +	bool			isforcealign;	/* forcealign inode */
->  	int			logflags;	/* transaction logging flags */
->  	xfs_extlen_t		mod;		/* rt extent offset */
->  	struct xfs_mount	*mp = ip->i_mount;
-> @@ -5468,6 +5488,8 @@ __xfs_bunmapi(
->  	}
->  	XFS_STATS_INC(mp, xs_blk_unmap);
->  	isrt = xfs_ifork_is_realtime(ip, whichfork);
-> +	isforcealign = (whichfork != XFS_ATTR_FORK) &&
-> +			xfs_inode_has_forcealign(ip);
->  	end = start + len;
->  
->  	if (!xfs_iext_lookup_extent_before(ip, ifp, &end, &icur, &got)) {
-> @@ -5486,6 +5508,8 @@ __xfs_bunmapi(
->  	extno = 0;
->  	while (end != (xfs_fileoff_t)-1 && end >= start &&
->  	       (nexts == 0 || extno < nexts)) {
-> +		xfs_extlen_t off;
+> Thomas?
 
-I got really confused because I thought this was a file block offset and
-only after more digging realized that this is a sometimes dummy
-adjustment variable.
-
-> +
->  		/*
->  		 * Is the found extent after a hole in which end lives?
->  		 * Just back up to the previous extent, if so.
-> @@ -5519,18 +5543,18 @@ __xfs_bunmapi(
->  		if (del.br_startoff + del.br_blockcount > end + 1)
->  			del.br_blockcount = end + 1 - del.br_startoff;
->  
-> -		if (!isrt || (flags & XFS_BMAPI_REMAP))
-> +		if ((!isrt && !isforcealign) || (flags & XFS_BMAPI_REMAP))
->  			goto delete;
->  
-> -		mod = xfs_rtb_to_rtxoff(mp,
-> -				del.br_startblock + del.br_blockcount);
-> +		mod = xfs_bunmapi_align(ip,
-> +				del.br_startblock + del.br_blockcount, &off);
->  		if (mod) {
-
-Oof.  I don't like how this loop body has the rtx adjustment code
-inlined into it.  We only use the isrt flag for the one test above.
-I tried hoisting this into something less gross involving separate
-adjustment functions but then you have to pass in so many outer
-variables that it becomes a mess.
-
-The best I can come up with for now is:
-
-	unsigned int		alloc_fsb = xfs_inode_alloc_fsbsize(ip);
-	/* no more isrt/isforcealign bools */
-
-...
-
-		if (alloc_fsb == 1 || (flags & XFS_BMAPI_REMAP))
-			goto delete;
-
-		mod = do_div(del.br_startblock + del.br_blockcount,
-				alloc_fsb);
-		if (mod) {
-
->  			/*
-> -			 * Realtime extent not lined up at the end.
-> +			 * Not aligned to allocation unit on the end.
->  			 * The extent could have been split into written
->  			 * and unwritten pieces, or we could just be
->  			 * unmapping part of it.  But we can't really
-> -			 * get rid of part of a realtime extent.
-> +			 * get rid of part of an extent.
->  			 */
->  			if (del.br_state == XFS_EXT_UNWRITTEN) {
->  				/*
-> @@ -5554,7 +5578,7 @@ __xfs_bunmapi(
->  			ASSERT(del.br_state == XFS_EXT_NORM);
->  			ASSERT(tp->t_blk_res > 0);
->  			/*
-> -			 * If this spans a realtime extent boundary,
-> +			 * If this spans an extent boundary,
->  			 * chop it back to the start of the one we end at.
->  			 */
->  			if (del.br_blockcount > mod) {
-> @@ -5571,14 +5595,12 @@ __xfs_bunmapi(
->  			goto nodelete;
->  		}
->  
-> -		mod = xfs_rtb_to_rtxoff(mp, del.br_startblock);
-> +		mod = xfs_bunmapi_align(ip, del.br_startblock, &off);
->  		if (mod) {
-> -			xfs_extlen_t off = mp->m_sb.sb_rextsize - mod;
-
-		mod = do_div(del.br_startblock, alloc_fsb);
-		if (mod) {
-			xfs_extlen_t off = alloc_fsb - mod;
-
-At least then you don't need this weird xfs_inode_alloc_fsbsize_align
-that passes back two xfs_extlen_t arguments.
+It seems to survive a short test, will send it out for overnight testing
+on the full fleet, thanks.
 
 --D
 
-> -
->  			/*
-> -			 * Realtime extent is lined up at the end but not
-> -			 * at the front.  We'll get rid of full extents if
-> -			 * we can.
-> +			 * Extent is lined up to the allocation unit at the
-> +			 * end but not at the front.  We'll get rid of full
-> +			 * extents if we can.
->  			 */
->  			if (del.br_blockcount > off) {
->  				del.br_blockcount -= off;
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index e7fa155fcbde..bb8abf990186 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3164,3 +3164,19 @@ xfs_is_always_cow_inode(
->  {
->  	return ip->i_mount->m_always_cow && xfs_has_reflink(ip->i_mount);
+> ---
+> diff --git a/kernel/jump_label.c b/kernel/jump_label.c
+> index 6dc76b590703..5fa2c9f094b1 100644
+> --- a/kernel/jump_label.c
+> +++ b/kernel/jump_label.c
+> @@ -168,8 +168,8 @@ bool static_key_slow_inc_cpuslocked(struct static_key *key)
+>  		jump_label_update(key);
+>  		/*
+>  		 * Ensure that when static_key_fast_inc_not_disabled() or
+> -		 * static_key_slow_try_dec() observe the positive value,
+> -		 * they must also observe all the text changes.
+> +		 * static_key_dec() observe the positive value, they must also
+> +		 * observe all the text changes.
+>  		 */
+>  		atomic_set_release(&key->enabled, 1);
+>  	} else {
+> @@ -250,7 +250,7 @@ void static_key_disable(struct static_key *key)
 >  }
-> +
-> +/* Return mod+offset for a blkno to an extent boundary */
-> +xfs_extlen_t
-> +xfs_inode_alloc_fsbsize_align(
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		blkno,
-> +	xfs_extlen_t		*off)
-> +{
-> +	xfs_fileoff_t		blkno_start = blkno;
-> +	xfs_fileoff_t		blkno_end = blkno;
-> +
-> +	xfs_roundout_to_alloc_fsbsize(ip, &blkno_start, &blkno_end);
-> +
-> +	*off = blkno_end - blkno;
-> +	return blkno - blkno_start;
-> +}
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 6dd8055c98b3..7b77797c3943 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -647,6 +647,8 @@ void xfs_roundout_to_alloc_fsbsize(struct xfs_inode *ip,
->  		xfs_fileoff_t *start, xfs_fileoff_t *end);
->  void xfs_roundin_to_alloc_fsbsize(struct xfs_inode *ip,
->  		xfs_fileoff_t *start, xfs_fileoff_t *end);
-> +xfs_extlen_t xfs_inode_alloc_fsbsize_align(struct xfs_inode *ip,
-> +		xfs_fileoff_t blkno, xfs_extlen_t *off);
+>  EXPORT_SYMBOL_GPL(static_key_disable);
 >  
->  int xfs_icreate_dqalloc(const struct xfs_icreate_args *args,
->  		struct xfs_dquot **udqpp, struct xfs_dquot **gdqpp,
-> -- 
-> 2.31.1
-> 
-> 
+> -static bool static_key_slow_try_dec(struct static_key *key)
+> +static bool static_key_dec(struct static_key *key, bool fast)
+>  {
+>  	int v;
+>  
+> @@ -268,31 +268,45 @@ static bool static_key_slow_try_dec(struct static_key *key)
+>  	v = atomic_read(&key->enabled);
+>  	do {
+>  		/*
+> -		 * Warn about the '-1' case though; since that means a
+> -		 * decrement is concurrent with a first (0->1) increment. IOW
+> -		 * people are trying to disable something that wasn't yet fully
+> -		 * enabled. This suggests an ordering problem on the user side.
+> +		 * Warn about the '-1' case; since that means a decrement is
+> +		 * concurrent with a first (0->1) increment. IOW people are
+> +		 * trying to disable something that wasn't yet fully enabled.
+> +		 * This suggests an ordering problem on the user side.
+> +		 *
+> +		 * Warn about the '0' case; simple underflow.
+> +		 *
+> +		 * Neither case should succeed and change things.
+> +		 */
+> +		if (WARN_ON_ONCE(v <= 0))
+> +			return false;
+> +
+> +		/*
+> +		 * Lockless fast-path, dec-not-one like behaviour.
+>  		 */
+> -		WARN_ON_ONCE(v < 0);
+> -		if (v <= 1)
+> +		if (fast && v <= 1)
+>  			return false;
+>  	} while (!likely(atomic_try_cmpxchg(&key->enabled, &v, v - 1)));
+>  
+> -	return true;
+> +	if (fast)
+> +		return true;
+> +
+> +	/*
+> +	 * Locked slow path, dec-and-test like behaviour.
+> +	 */
+> +	lockdep_assert_held(&jump_label_mutex);
+> +	return v == 1;
+>  }
+>  
+>  static void __static_key_slow_dec_cpuslocked(struct static_key *key)
+>  {
+>  	lockdep_assert_cpus_held();
+>  
+> -	if (static_key_slow_try_dec(key))
+> +	if (static_key_dec(key, true)) // dec-not-one
+>  		return;
+>  
+>  	guard(mutex)(&jump_label_mutex);
+> -	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
+> +	if (static_key_dec(key, false)) // dec-and-test
+>  		jump_label_update(key);
+> -	else
+> -		WARN_ON_ONCE(!static_key_slow_try_dec(key));
+>  }
+>  
+>  static void __static_key_slow_dec(struct static_key *key)
+> @@ -329,7 +343,7 @@ void __static_key_slow_dec_deferred(struct static_key *key,
+>  {
+>  	STATIC_KEY_CHECK_USE(key);
+>  
+> -	if (static_key_slow_try_dec(key))
+> +	if (static_key_dec(key, true)) // dec-not-one
+>  		return;
+>  
+>  	schedule_delayed_work(work, timeout);
