@@ -1,52 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6128C171E61;
-	Tue,  6 Aug 2024 22:01:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D7E1175D23;
+	Tue,  6 Aug 2024 22:55:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722981677; cv=none; b=kJJCAPVcSW53fk9HPKJlzFLewFK9XUd2O4HoO8ske4XsvrGKXHAn5FrDjdWOtD34cX24ufdqnz2F2GZ6XwDz7WmJUZHqRe6/bSyZn2OxuHW6jQgUs3/Y2Kog0aCZfhu6KXcRL7TDPra/Iy3LX0bj9yi4nZPFdsR2ZcvnF/QWTjs=
+	t=1722984925; cv=none; b=hIH+VbXIxVowh4eyACxd5TUbxlMAi8bHIC6ccqtOFIzH1DkVBnwo08HW11s9NyIKi8McSJJdY7r/Wlc7L7mQjidmdIxHFjV1Je5ufLv2uxlOgbWJmXtFbHCJpk+hFwJhAeFjigHzSJfgoHM3YP59RlyFWeHJcPOZ8oG2jnmZCU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722981677; c=relaxed/simple;
-	bh=3O2F0dhbujAAe3QdNEIIsduxEQUZMXrFfkhNOLE8mJA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nBo5PpXHRrDitvP58cH4a4eFPtaDZ2K6cnbdqpY+hpg3iXdZ76nab+m8IOxYt6wm+m4ywqdy5SAD9k3CUVyyZ2vKumF/xIIlEtDnFlvIeZY4rEKYHsstBfd0/ZmfiapcfXlOjlvdymLl8+aDPXtRzPDfppTohp6lQ1dyy5lQyZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P2uV6y7p; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722984925; c=relaxed/simple;
+	bh=ZTSy6LyRNewtX5JomdsEjt28F7ruK0Gse9LoVahKVpc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=tl1F/xeOVBqRGYsWG1usBd2cWR64AVba1RXT3RGG57D7OsgT18fV+tz5jD+vZVE2/46QFvOPvPQFY7ExB4BhO5cQJd5uXBoCyeEPT/l4RqHpgBBtX5sHBDgw0inu1vADhrXM29VHEvvYnfUykUtvG9j114KR4XrcpkfaSDeEyeE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AQg6U0za; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P2uV6y7p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3C6AC4AF10;
-	Tue,  6 Aug 2024 22:01:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AQg6U0za"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88A87C32786;
+	Tue,  6 Aug 2024 22:55:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722981676;
-	bh=3O2F0dhbujAAe3QdNEIIsduxEQUZMXrFfkhNOLE8mJA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P2uV6y7piAQ2bFmzGGGGvAfoQ8eJjOXelGUVftgvXw+nBV/Aq2L+ZxHMIrRmBRREE
-	 qmC89YOlLMRzo3c9MSWDhsfABmQlJhLAGmJb67fzkCpBk9RZaKsgfmGvb7cjOjtVir
-	 T0ikzr+6GL4bSXa9uPKGrDFq/bq4pLtoi0W3R8yOf13qBUAtx+0fegqQXlvmBZ5Eeq
-	 0ku0gXS0lU/q0U2UG9dIqdtaTWOBLiipp61Ws9VOUcp0vWWiHsl/0DU6+TiOH8SPQz
-	 xOt51yKhogO9FAx7GDxx1ZvUHaLtTOuPMGeoo4VmGtJ+TqDgtjky5/Gz2KwikMNPx4
-	 RBfrKCrBFPXAQ==
-Date: Tue, 6 Aug 2024 15:01:16 -0700
+	s=k20201202; t=1722984924;
+	bh=ZTSy6LyRNewtX5JomdsEjt28F7ruK0Gse9LoVahKVpc=;
+	h=Date:From:To:Cc:Subject:From;
+	b=AQg6U0zavDNAimryqBV+cbHPnaNC6uBt24Mgn2VUwwE0rWRkpOoIEwQ2YZpXr3Lx5
+	 INSomStOhPpTRXASkMWWHkRZ6gRc7gZ5UMw3SWbIg/+PsLQRZPXAXpPlilAbqeHILj
+	 l7JQ/im5tEqJdQKjPgWJlhpF3jy52akkdIqOfDEmu1u/K5hSsczyrq8wM3e+nYgzH/
+	 Yd/IILKkFG5fBcrME4o2YsubtsVnTF5e/Tv5/u6Eo0H4a7qST99fAqc0KzAxM39ndw
+	 M+y9gfqCmgre+da2+coEbP9B/s9smJKIOBPLnNx/QEufn5o0p1ah2Ozxy204VUlE2v
+	 NCo9/gAFyFq4w==
+Date: Tue, 6 Aug 2024 15:55:23 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	tglx@linutronix.de
-Subject: Re: Are jump labels broken on 6.11-rc1?
-Message-ID: <20240806220116.GH623957@frogsfrogsfrogs>
-References: <20240730033849.GH6352@frogsfrogsfrogs>
- <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20240730132626.GV26599@noisy.programming.kicks-ass.net>
- <20240731001950.GN6352@frogsfrogsfrogs>
- <20240731031033.GP6352@frogsfrogsfrogs>
- <20240731053341.GQ6352@frogsfrogsfrogs>
- <20240731105557.GY33588@noisy.programming.kicks-ass.net>
- <20240805143522.GA623936@frogsfrogsfrogs>
- <20240806094413.GS37996@noisy.programming.kicks-ass.net>
- <20240806103808.GT37996@noisy.programming.kicks-ass.net>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: test online repair when xfiles consists of THPs
+Message-ID: <20240806225523.GB623922@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,177 +40,108 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240806103808.GT37996@noisy.programming.kicks-ass.net>
 
-On Tue, Aug 06, 2024 at 12:38:08PM +0200, Peter Zijlstra wrote:
-> On Tue, Aug 06, 2024 at 11:44:13AM +0200, Peter Zijlstra wrote:
-> > On Mon, Aug 05, 2024 at 07:35:22AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jul 31, 2024 at 12:55:57PM +0200, Peter Zijlstra wrote:
-> > > > On Tue, Jul 30, 2024 at 10:33:41PM -0700, Darrick J. Wong wrote:
-> > > > 
-> > > > > Sooooo... it turns out that somehow your patch got mismerged on the
-> > > > > first go-round, and that worked.  The second time, there was no
-> > > > > mismerge, which mean that the wrong atomic_cmpxchg() callsite was
-> > > > > tested.
-> > > > > 
-> > > > > Looking back at the mismerge, it actually changed
-> > > > > __static_key_slow_dec_cpuslocked, which had in 6.10:
-> > > > > 
-> > > > > 	if (atomic_dec_and_test(&key->enabled))
-> > > > > 		jump_label_update(key);
-> > > > > 
-> > > > > Decrement, then return true if the value was set to zero.  With the 6.11
-> > > > > code, it looks like we want to exchange a 1 with a 0, and act only if
-> > > > > the previous value had been 1.
-> > > > > 
-> > > > > So perhaps we really want this change?  I'll send it out to the fleet
-> > > > > and we'll see what it reports tomorrow morning.
-> > > > 
-> > > > Bah yes, I missed we had it twice. Definitely both sites want this.
-> > > > 
-> > > > I'll tentatively merge the below patch in tip/locking/urgent. I can
-> > > > rebase if there is need.
-> > > 
-> > > Hi Peter,
-> > > 
-> > > This morning, I noticed the splat below with -rc2.
-> > > 
-> > > WARNING: CPU: 0 PID: 8578 at kernel/jump_label.c:295 __static_key_slow_dec_cpuslocked.part.0+0x50/0x60
-> > > 
-> > > Line 295 is the else branch of this code:
-> > > 
-> > > 	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
-> > > 		jump_label_update(key);
-> > > 	else
-> > > 		WARN_ON_ONCE(!static_key_slow_try_dec(key));
-> > > 
-> > > Apparently static_key_slow_try_dec returned false?  Looking at that
-> > > function, I suppose the atomic_read of key->enabled returned 0, since it
-> > > didn't trigger the "WARN_ON_ONCE(v < 0)" code.  Does that mean the value
-> > > must have dropped from positive N to 0 without anyone ever taking the
-> > > jump_label_mutex?
-> > 
-> > One possible scenario I see:
-> > 
-> >   slow_dec
-> >     if (try_dec) // dec_not_one-ish, false
-> >     // enabled == 1
-> > 				slow_inc
-> > 				  if (inc_not_disabled) // inc_not_zero-ish
-> > 				  // enabled == 2
-> > 				    return
-> > 
-> >     guard((mutex)(&jump_label_mutex);
-> >     if (atomic_cmpxchg(1,0)==1) // false, we're 2
-> >     
-> > 				slow_dec
-> > 				  if (try-dec) // dec_not_one, true
-> > 				  // enabled == 1
-> > 				    return
-> >     else
-> >       try_dec() // dec_not_one, false
-> >       WARN
-> > 
-> > 
-> > Let me go play to see how best to cure this.
-> 
-> I've ended up with this, not exactly pretty :/
-> 
-> Thomas?
+From: Darrick J. Wong <djwong@kernel.org>
 
-It seems to survive a short test, will send it out for overnight testing
-on the full fleet, thanks.
+Fork xfs/286 so that we can ensure that the xfile and xmbuf code in
+fsck can handle THPs and large folios.  This actually caused a
+regression in the mm code during 6.10.
 
---D
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ tests/xfs/1877     |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1877.out |    2 +
+ 2 files changed, 78 insertions(+)
+ create mode 100755 tests/xfs/1877
+ create mode 100644 tests/xfs/1877.out
 
-> ---
-> diff --git a/kernel/jump_label.c b/kernel/jump_label.c
-> index 6dc76b590703..5fa2c9f094b1 100644
-> --- a/kernel/jump_label.c
-> +++ b/kernel/jump_label.c
-> @@ -168,8 +168,8 @@ bool static_key_slow_inc_cpuslocked(struct static_key *key)
->  		jump_label_update(key);
->  		/*
->  		 * Ensure that when static_key_fast_inc_not_disabled() or
-> -		 * static_key_slow_try_dec() observe the positive value,
-> -		 * they must also observe all the text changes.
-> +		 * static_key_dec() observe the positive value, they must also
-> +		 * observe all the text changes.
->  		 */
->  		atomic_set_release(&key->enabled, 1);
->  	} else {
-> @@ -250,7 +250,7 @@ void static_key_disable(struct static_key *key)
->  }
->  EXPORT_SYMBOL_GPL(static_key_disable);
->  
-> -static bool static_key_slow_try_dec(struct static_key *key)
-> +static bool static_key_dec(struct static_key *key, bool fast)
->  {
->  	int v;
->  
-> @@ -268,31 +268,45 @@ static bool static_key_slow_try_dec(struct static_key *key)
->  	v = atomic_read(&key->enabled);
->  	do {
->  		/*
-> -		 * Warn about the '-1' case though; since that means a
-> -		 * decrement is concurrent with a first (0->1) increment. IOW
-> -		 * people are trying to disable something that wasn't yet fully
-> -		 * enabled. This suggests an ordering problem on the user side.
-> +		 * Warn about the '-1' case; since that means a decrement is
-> +		 * concurrent with a first (0->1) increment. IOW people are
-> +		 * trying to disable something that wasn't yet fully enabled.
-> +		 * This suggests an ordering problem on the user side.
-> +		 *
-> +		 * Warn about the '0' case; simple underflow.
-> +		 *
-> +		 * Neither case should succeed and change things.
-> +		 */
-> +		if (WARN_ON_ONCE(v <= 0))
-> +			return false;
-> +
-> +		/*
-> +		 * Lockless fast-path, dec-not-one like behaviour.
->  		 */
-> -		WARN_ON_ONCE(v < 0);
-> -		if (v <= 1)
-> +		if (fast && v <= 1)
->  			return false;
->  	} while (!likely(atomic_try_cmpxchg(&key->enabled, &v, v - 1)));
->  
-> -	return true;
-> +	if (fast)
-> +		return true;
-> +
-> +	/*
-> +	 * Locked slow path, dec-and-test like behaviour.
-> +	 */
-> +	lockdep_assert_held(&jump_label_mutex);
-> +	return v == 1;
->  }
->  
->  static void __static_key_slow_dec_cpuslocked(struct static_key *key)
->  {
->  	lockdep_assert_cpus_held();
->  
-> -	if (static_key_slow_try_dec(key))
-> +	if (static_key_dec(key, true)) // dec-not-one
->  		return;
->  
->  	guard(mutex)(&jump_label_mutex);
-> -	if (atomic_cmpxchg(&key->enabled, 1, 0) == 1)
-> +	if (static_key_dec(key, false)) // dec-and-test
->  		jump_label_update(key);
-> -	else
-> -		WARN_ON_ONCE(!static_key_slow_try_dec(key));
->  }
->  
->  static void __static_key_slow_dec(struct static_key *key)
-> @@ -329,7 +343,7 @@ void __static_key_slow_dec_deferred(struct static_key *key,
->  {
->  	STATIC_KEY_CHECK_USE(key);
->  
-> -	if (static_key_slow_try_dec(key))
-> +	if (static_key_dec(key, true)) // dec-not-one
->  		return;
->  
->  	schedule_delayed_work(work, timeout);
+diff --git a/tests/xfs/1877 b/tests/xfs/1877
+new file mode 100755
+index 0000000000..e546ad854f
+--- /dev/null
++++ b/tests/xfs/1877
+@@ -0,0 +1,76 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 1877
++#
++# Force-enable THPs/large folios in tmpfs, then race fsstress and xfs_scrub in
++# force-repair mode for a while to see if we crash, livelock, or corrupt data
++# because the xfile code wasn't folioized.
++#
++. ./common/preamble
++_begin_fstest online_repair dangerous_fsstress_repair
++
++declare -A oldvalues
++
++_cleanup() {
++	cd /
++	for knob in "${!oldvalues[@]}"; do
++		echo "${oldvalues["$knob"]}" > "$knob"
++	done
++
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++_require_scratch
++_require_xfs_stress_online_repair
++
++_fixed_by_git_commit kernel 099d90642a711 \
++	"mm/filemap: make MAX_PAGECACHE_ORDER acceptable to xarray"
++
++# Make sure that the xfile code can handle large folios
++knob="/sys/kernel/mm/transparent_hugepage/shmem_enabled"
++test -w "$knob" || _notrun "tmpfs transparent hugepages disabled"
++
++pagesize=`getconf PAGE_SIZE`
++pagesize_kb=$((pagesize / 1024))
++
++echo "settings now: pagesize=${pagesize_kb}KB" >> $seqres.full
++sysfs-dump /sys/kernel/mm/transparent_hugepage/* >> $seqres.full
++
++# Enable large folios for each of the relevant page sizes.
++for ((i = 0; i <= 31; i++)); do
++	hugepagesize_kb=$(( pagesize_kb * (2**i) ))
++	knob="/sys/kernel/mm/transparent_hugepage/hugepages-${hugepagesize_kb}kB/enabled"
++	test -e "$knob" || continue
++
++	echo "setting $knob to inherit" >> $seqres.full
++	oldvalue="$(sed -e 's/^.*\[//g' -e 's/\].*$//g' < "$knob")"
++	oldvalues["$knob"]="$oldvalue"
++	echo inherit > "$knob"
++done
++
++# Turn on large folios
++knob="/sys/kernel/mm/transparent_hugepage/shmem_enabled"
++echo "setting $knob to force" >> $seqres.full
++oldvalues["$knob"]="$(sed -e 's/^.*\[//g' -e 's/\].*$//g' < "$knob")"
++echo force > "$knob" || _fail "could not force tmpfs transparent hugepages"
++
++echo "settings now" >> $seqres.full
++sysfs-dump /sys/kernel/mm/transparent_hugepage/* >> $seqres.full
++
++_scratch_mkfs >> "$seqres.full" 2>&1
++_scratch_mount
++_scratch_xfs_stress_online_repair -S '-k'
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/1877.out b/tests/xfs/1877.out
+new file mode 100644
+index 0000000000..88d845a112
+--- /dev/null
++++ b/tests/xfs/1877.out
+@@ -0,0 +1,2 @@
++QA output created by 1877
++Silence is golden
