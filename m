@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB2A1762C1;
-	Tue,  6 Aug 2024 19:24:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7255922066;
+	Tue,  6 Aug 2024 19:27:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722972282; cv=none; b=pINbv6B0uJoSNcJmpXssP8dKqHi+4JYyxlNdX5SgBciE8Ff2P/2N5D+jM3PpyfUMQaXn3DI+8MBCMIJZsQgNIC9wmlEG+woDODybtAIUfHwFVahMYcIy7ZicClcnvkfJBm4SL3K9rFN/XsBQL8qEoT0BT8gkmrDo4LoZszbn+eo=
+	t=1722972459; cv=none; b=g6IbmJnUEBQUPhl/0C0cb0aZSa9if4s/8VVuYsmc24Ssq5MCQosdVH/fKshcy7gRqnNvd0y8f5Y9sr/yWC11MJVVFgP/Y0UxJH57InZKlaJHXVTl6OAQc/i4x3bRWN15A8nWv5XAPZYrhidqxAuN71YY+IDaordgJxwdaXLluAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722972282; c=relaxed/simple;
-	bh=KanH2dsOXDBjIaC/3ljdXiWmUXY7N4CM55GZvVkAZqs=;
+	s=arc-20240116; t=1722972459; c=relaxed/simple;
+	bh=3hpNlNjhj2DylZPPrEI4B+JVlg86yLocSEILEUQI0SI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KslfIfCQT/5n0WVJWYt0sAkIDskbTRWEyFlgELkhxFyNfFSpbCNfDhIvyXqwFItY19PI/afgWK2mo2KrwXwGgSceFzTnmDW6A27y0cxXeyDNE1J9w8an2ZLqwMZjLQMbNjQULBLn9/82MiHxPhL0sX15lV3VXUyByE6a2jUKd9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VfsroDnx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FGgtdFYTfEX6UjSnAfFcVhTd60todPvBAEzC3m3Eda3Ob5Nzcrg78hyr3h55bdQDUQo03j/wDqveHq2S6Q4PtQ8jIVE09+eWrBqDImYnMdX744rs8jwtIq4nW+r853txHf3ni2EgLqFGedMn8bM321pp9TAhso38Xh7z3HFC1M4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ebexquxp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VfsroDnx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3334AC4AF0D;
-	Tue,  6 Aug 2024 19:24:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ebexquxp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07398C32786;
+	Tue,  6 Aug 2024 19:27:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722972282;
-	bh=KanH2dsOXDBjIaC/3ljdXiWmUXY7N4CM55GZvVkAZqs=;
+	s=k20201202; t=1722972459;
+	bh=3hpNlNjhj2DylZPPrEI4B+JVlg86yLocSEILEUQI0SI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VfsroDnxJeoQkrr8LTbXXj4qV6h65CT/s1tfiagL0/SjcS5Rl/TJBsB9YMwXqAE8q
-	 Jrltu7ohmMQHALNGGUTy+qiqoHAOZlVRHlO1xdxgxpQjN8HbwcaqFpLPywZq4jqk93
-	 SQfX5JawXfqwc7/I5x61Cl1rHb+2aMzlr36cArjeY/FXb9JhybX/BQGiK/KhnHCbcG
-	 UkHgRf7cer9lsvwe4MqnpyLO0pUx/sF/zwm9PJpeXyj7NgMn6zUGZOo9BpxeoiBqpQ
-	 3OrEx4dmzsO7TiW4VA1KSdoLe1aGqJuqdt1VbJcGEdrabM7cl9NESplbtF1QdLm0cy
-	 fYGJu6IIuxyHA==
-Date: Tue, 6 Aug 2024 12:24:41 -0700
+	b=Ebexquxpj1KIh33hBy4kO9PtzB6rTPmmYU2qxAQBKeYV8iGwx+1ydnpTsgiWLUxzl
+	 OZ1EnCpturFXi6NXMUaka+Mkv2SygTKnsJyPMAbc6O6VGmUEreIudkGla3nxM+j0Vy
+	 6CS9muF1ajyJjV75T+UZUKwsXm1G2pPkYBkgkOK0AkEn2Px1fB05ai1lHWbKU4W/hI
+	 +YKVKoG6Z5DA/bToCf6rEjxKqrViLyQofZTJaJ8QCRdCWzZ781xFE3fb4AdkcXbHJH
+	 NZMHIaGddrF0j7qB0r1m8+1nA3zxc/mxD1ipnhZF8uk2S6sL05oe0vkW1gxP3hy3Om
+	 KY0EdVQUvDSKQ==
+Date: Tue, 6 Aug 2024 12:27:38 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: John Garry <john.g.garry@oracle.com>
 Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
@@ -34,10 +34,10 @@ Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
 	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
 	martin.petersen@oracle.com
-Subject: Re: [PATCH v3 10/14] xfs: Do not free EOF blocks for forcealign
-Message-ID: <20240806192441.GM623936@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 11/14] xfs: Only free full extents for forcealign
+Message-ID: <20240806192738.GN623936@frogsfrogsfrogs>
 References: <20240801163057.3981192-1-john.g.garry@oracle.com>
- <20240801163057.3981192-11-john.g.garry@oracle.com>
+ <20240801163057.3981192-12-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,55 +46,60 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240801163057.3981192-11-john.g.garry@oracle.com>
+In-Reply-To: <20240801163057.3981192-12-john.g.garry@oracle.com>
 
-On Thu, Aug 01, 2024 at 04:30:53PM +0000, John Garry wrote:
-> For when forcealign is enabled, we want the EOF to be aligned as well, so
-> do not free EOF blocks.
+On Thu, Aug 01, 2024 at 04:30:54PM +0000, John Garry wrote:
+> Like we already do for rtvol, only free full extents for forcealign in
+> xfs_free_file_space().
 > 
 > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org> #earlier version
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_bmap_util.c |  7 +++++--
+>  fs/xfs/xfs_bmap_util.c |  7 ++-----
 >  fs/xfs/xfs_inode.c     | 14 ++++++++++++++
 >  fs/xfs/xfs_inode.h     |  2 ++
->  3 files changed, 21 insertions(+), 2 deletions(-)
+>  3 files changed, 18 insertions(+), 5 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index fe2e2c930975..60389ac8bd45 100644
+> index 60389ac8bd45..46eebecd7bba 100644
 > --- a/fs/xfs/xfs_bmap_util.c
 > +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -496,6 +496,7 @@ xfs_can_free_eofblocks(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		end_fsb;
->  	xfs_fileoff_t		last_fsb;
-> +	xfs_fileoff_t		dummy_fsb;
->  	int			nimaps = 1;
->  	int			error;
+> @@ -854,11 +854,8 @@ xfs_free_file_space(
+>  	startoffset_fsb = XFS_B_TO_FSB(mp, offset);
+>  	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
 >  
-> @@ -537,8 +538,10 @@ xfs_can_free_eofblocks(
->  	 * forever.
->  	 */
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-> -	if (xfs_inode_has_bigrtalloc(ip))
-> -		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
-> +
-> +	/* Only try to free beyond the allocation unit that crosses EOF */
-> +	xfs_roundout_to_alloc_fsbsize(ip, &dummy_fsb, &end_fsb);
-> +
->  	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
->  	if (last_fsb <= end_fsb)
->  		return false;
+> -	/* We can only free complete realtime extents. */
+> -	if (xfs_inode_has_bigrtalloc(ip)) {
+> -		startoffset_fsb = xfs_rtb_roundup_rtx(mp, startoffset_fsb);
+> -		endoffset_fsb = xfs_rtb_rounddown_rtx(mp, endoffset_fsb);
+> -	}
+> +	/* Free only complete extents. */
+> +	xfs_roundin_to_alloc_fsbsize(ip, &startoffset_fsb, &endoffset_fsb);
+
+...and then this becomes:
+
+	/* We can only free complete allocation units. */
+	startoffset_fsb = xfs_inode_roundup_alloc_unit(ip, startoffset_fsb);
+	endoffset_fsb = xfs_inode_rounddown_alloc_unit(ip, endoffset_fsb);
+
+I guess "roundout" means "extend start and end to fit allocation unit"
+whereas "roundin" means "shrink start and end to fit allocation unit"?
+
+--D
+
+>  
+>  	/*
+>  	 * Need to zero the stuff we're not freeing, on disk.
 > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 5af12f35062d..d765dedebc15 100644
+> index d765dedebc15..e7fa155fcbde 100644
 > --- a/fs/xfs/xfs_inode.c
 > +++ b/fs/xfs/xfs_inode.c
-> @@ -3129,6 +3129,20 @@ xfs_inode_alloc_unitsize(
->  	return XFS_FSB_TO_B(ip->i_mount, xfs_inode_alloc_fsbsize(ip));
+> @@ -3143,6 +3143,20 @@ xfs_roundout_to_alloc_fsbsize(
+>  	*end = roundup_64(*end, blocks);
 >  }
 >  
 > +void
-> +xfs_roundout_to_alloc_fsbsize(
+> +xfs_roundin_to_alloc_fsbsize(
 > +	struct xfs_inode	*ip,
 > +	xfs_fileoff_t		*start,
 > +	xfs_fileoff_t		*end)
@@ -103,61 +108,22 @@ On Thu, Aug 01, 2024 at 04:30:53PM +0000, John Garry wrote:
 > +
 > +	if (blocks == 1)
 > +		return;
-> +	*start = rounddown_64(*start, blocks);
-> +	*end = roundup_64(*end, blocks);
+> +	*start = roundup_64(*start, blocks);
+> +	*end = rounddown_64(*end, blocks);
 > +}
-
-This is probably going to start another round of shouting, but I think
-it's silly to do two rounding operations when you only care about one
-value.  In patch 12 it results in a bunch more dummy variables that you
-then ignore.
-
-Can't this be:
-
-static inline xfs_fileoff_t
-xfs_inode_rounddown_alloc_unit(
-	struct xfs_inode	*ip,
-	xfs_fileoff		off)
-{
-	unsigned int		rounding = xfs_inode_alloc_fsbsize(ip);
-
-	if (rounding == 1)
-		return off;
-	return rounddown_64(off, rounding);
-}
-
-static inline xfs_fileoff_t
-xfs_inode_roundup_alloc_unit(
-	struct xfs_inode	*ip,
-	xfs_fileoff		off)
-{
-	unsigned int		rounding = xfs_inode_alloc_fsbsize(ip);
-
-	if (rounding == 1)
-		return off;
-	return roundup_64(off, rounding);
-}
-
-Then that callsite can be:
-
-	end_fsb = xfs_inode_roundup_alloc_unit(ip,
-			XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip)));
-
---D
-
 > +
 >  /* Should we always be using copy on write for file writes? */
 >  bool
 >  xfs_is_always_cow_inode(
 > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 158afad8c7a4..7f86c4781bd8 100644
+> index 7f86c4781bd8..6dd8055c98b3 100644
 > --- a/fs/xfs/xfs_inode.h
 > +++ b/fs/xfs/xfs_inode.h
-> @@ -643,6 +643,8 @@ void xfs_inode_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
->  		xfs_filblks_t *dblocks, xfs_filblks_t *rblocks);
->  unsigned int xfs_inode_alloc_fsbsize(struct xfs_inode *ip);
+> @@ -645,6 +645,8 @@ unsigned int xfs_inode_alloc_fsbsize(struct xfs_inode *ip);
 >  unsigned int xfs_inode_alloc_unitsize(struct xfs_inode *ip);
-> +void xfs_roundout_to_alloc_fsbsize(struct xfs_inode *ip,
+>  void xfs_roundout_to_alloc_fsbsize(struct xfs_inode *ip,
+>  		xfs_fileoff_t *start, xfs_fileoff_t *end);
+> +void xfs_roundin_to_alloc_fsbsize(struct xfs_inode *ip,
 > +		xfs_fileoff_t *start, xfs_fileoff_t *end);
 >  
 >  int xfs_icreate_dqalloc(const struct xfs_icreate_args *args,
