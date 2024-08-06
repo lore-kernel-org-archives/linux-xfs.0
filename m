@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1633C485;
-	Tue,  6 Aug 2024 18:20:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893C028DD1;
+	Tue,  6 Aug 2024 18:20:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722968422; cv=none; b=N4N1MwTVYUyqjm3lk0OeKZs5LZpDYiQgZE+sJgu6P3wj3X7vHiKJdsWz1KjMU8xptN/nmTTshSvB9qbNImYsWMmOZ8E/NSW5P/TSWK+MCWkyaOKnn+N/nPuVxnz7NX2Qk9n3zb4FPC97TXobWrIezs3HSXPBGAob+cdy3x7gazI=
+	t=1722968438; cv=none; b=Q4wCU+sa0cFMh+WC+ERoM30RZPndKsswYQe4+1nH4EeFMNBu5+AJ0IZ4wN/1dlUzqjXk/W5tjFLZ56Cuhe0jUqJsJNpsQju2CUWZV0bRo5+dFjttpcLqOFHyVA3zaI0qsxY5p5VQvC+9x8PJ2vFPFnEdD7O7+yCWauUA+eWmoeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722968422; c=relaxed/simple;
-	bh=mE+EIDBUYsfgcYfsD1baFR1mHMySHYjIAjXzSx1LeM0=;
+	s=arc-20240116; t=1722968438; c=relaxed/simple;
+	bh=WUm1KetTOQiyYMGKhBFj9/wHX+lbMFLrEIzwNIZiGkw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=At1CsVr4LnW3GOxMq09TRgsUfLz7NusPKggIgdGvoAxFUQvJeHC41GGkuWn08t11MKKiA8eaSWA88+4zA3ttnUxxPHe9vLd3ukcoaijnEu3XD7i0OMHvZpEXtbGRMKnCJLAdNN80bn/F1hNbSKO5agPEEDEmz8MJH9EYmHsQjas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZOp7vQZi; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gEiUjCbNO31wk1G1QOSYv2XqZYZW4MWrzJFycbQ3qnChFvMEqRmpcEtxGLTMK0CgA/GUJGO2OLvxbNXx4CBT5hVTwRQuhqExmGaiEh5C/B2OQ4pjqHdNWuG8Ck9jWH/3UL2/4JT3PdcQg48tvmDmFDBQtWqCficrThBflyKdauI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XLfXt3cI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZOp7vQZi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57C29C32786;
-	Tue,  6 Aug 2024 18:20:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XLfXt3cI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03C24C32786;
+	Tue,  6 Aug 2024 18:20:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722968422;
-	bh=mE+EIDBUYsfgcYfsD1baFR1mHMySHYjIAjXzSx1LeM0=;
+	s=k20201202; t=1722968438;
+	bh=WUm1KetTOQiyYMGKhBFj9/wHX+lbMFLrEIzwNIZiGkw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZOp7vQZiRl0jN1xZNiijHSgCqVfQdzmhFV2El1O2bXVVKOFmXY3+YpIqg5EB65NyJ
-	 tTPD0D/Sa+HlxlAA+CPaeoCepqVczP7GfbjPKJDjc3BPNrxPWu3umlROdD81WPsHVq
-	 163QecoMb+TsCSAtFLVL9aCPhwS2D1VASjHi+zWqU4SHjaHqwRoZpEHvWPTij85Hbp
-	 UBhtN+VEcvFUf4H6/iH3S55l9ACXzpQbq3bnljfatnJFPDR5WRmR6elbeMYYYmkYSU
-	 If4Dwoo/FDNBNvqTKAFo1f1o6yicopSg7JtFvqdvEE7RQq5vcUQsaeI5URiDk5+Dci
-	 oCb7cjaaMV2lA==
-Date: Tue, 06 Aug 2024 11:20:21 -0700
-Subject: [PATCH 4/7] libxfs: hoist listxattr from xfs_repair
+	b=XLfXt3cIcwdbAvr2lT+4wgE4jUKuC5NFQgcU6ukCzFGdbVTV+S5hFm4aGdNfDgDCK
+	 My3+ervtBaGdUbQ4rUwoRKBzuLHjGKZgD1KitAlRmJF5TPJT7krFldl5WhCt4kkD3Q
+	 WLxoJ2T4MEfV7rB1qRCZbie40yNrqTLSnXtt2VZwzQwZjsKTC8mxirpkfAROpvfobY
+	 5EE5y7LH8DyA+G7h1MXV97uA3vMGUGbN5EB8SJsH6yGwQyzAcQYrkhM0VHhq8AMuZr
+	 CuLPpKe5LgSiaYpiO42LRBngSXGd9A1Rm+yJc/BcfnjqOi0D93JLzyTajdWyUa4drb
+	 P52eDPhNV9VWw==
+Date: Tue, 06 Aug 2024 11:20:37 -0700
+Subject: [PATCH 5/7] libxfs: pass a transaction context through listxattr
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
  hch@lst.de, dchinner@redhat.com, fstests@vger.kernel.org,
  linux-xfs@vger.kernel.org
-Message-ID: <172296825249.3193059.10081892807300202489.stgit@frogsfrogsfrogs>
+Message-ID: <172296825264.3193059.5289497905719296434.stgit@frogsfrogsfrogs>
 In-Reply-To: <172296825181.3193059.14803487307894313362.stgit@frogsfrogsfrogs>
 References: <172296825181.3193059.14803487307894313362.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,114 +48,244 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Hoist the listxattr code from xfs_repair so that we can use it in
-xfs_db.
+Pass a transaction context so that a new caller can walk the attr names
+and query the values all in one go without deadlocking on nested buffer
+access.
+
+While we're at it, make the existing xfs_repair callers try to use
+empty transactions so that we don't deadlock on cycles in the xattr
+structure.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Acked-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/Makefile    |    2 ++
- libxfs/listxattr.c |    2 +-
- libxfs/listxattr.h |    6 +++---
- repair/Makefile    |    2 --
- repair/pptr.c      |    2 +-
- 5 files changed, 7 insertions(+), 7 deletions(-)
- rename repair/listxattr.c => libxfs/listxattr.c (99%)
- rename repair/listxattr.h => libxfs/listxattr.h (81%)
+ libxfs/listxattr.c |   40 +++++++++++++++++++++++-----------------
+ libxfs/listxattr.h |    6 ++++--
+ repair/pptr.c      |    7 ++++++-
+ 3 files changed, 33 insertions(+), 20 deletions(-)
 
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 4e8f9a135..2f2791cae 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -23,6 +23,7 @@ HFILES = \
- 	defer_item.h \
- 	libxfs_io.h \
- 	libxfs_api_defs.h \
-+	listxattr.h \
- 	init.h \
- 	libxfs_priv.h \
- 	linux-err.h \
-@@ -69,6 +70,7 @@ CFILES = buf_mem.c \
- 	defer_item.c \
- 	init.c \
- 	kmem.c \
-+	listxattr.c \
- 	logitem.c \
- 	rdwr.c \
- 	topology.c \
-diff --git a/repair/listxattr.c b/libxfs/listxattr.c
-similarity index 99%
-rename from repair/listxattr.c
-rename to libxfs/listxattr.c
-index 2af77b7b2..bedaca678 100644
---- a/repair/listxattr.c
+diff --git a/libxfs/listxattr.c b/libxfs/listxattr.c
+index bedaca678..34205682f 100644
+--- a/libxfs/listxattr.c
 +++ b/libxfs/listxattr.c
-@@ -6,7 +6,7 @@
- #include "libxfs.h"
- #include "libxlog.h"
- #include "libfrog/bitmap.h"
--#include "repair/listxattr.h"
-+#include "listxattr.h"
- 
+@@ -11,6 +11,7 @@
  /* Call a function for every entry in a shortform xattr structure. */
  STATIC int
-diff --git a/repair/listxattr.h b/libxfs/listxattr.h
-similarity index 81%
-rename from repair/listxattr.h
-rename to libxfs/listxattr.h
-index 2d26fce0f..cddd96af7 100644
---- a/repair/listxattr.h
-+++ b/libxfs/listxattr.h
-@@ -3,8 +3,8 @@
-  * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-  * Author: Darrick J. Wong <djwong@kernel.org>
+ xattr_walk_sf(
++	struct xfs_trans		*tp,
+ 	struct xfs_inode		*ip,
+ 	xattr_walk_fn			attr_fn,
+ 	void				*priv)
+@@ -22,7 +23,7 @@ xattr_walk_sf(
+ 
+ 	sfe = libxfs_attr_sf_firstentry(hdr);
+ 	for (i = 0; i < hdr->count; i++) {
+-		error = attr_fn(ip, sfe->flags, sfe->nameval, sfe->namelen,
++		error = attr_fn(tp, ip, sfe->flags, sfe->nameval, sfe->namelen,
+ 				&sfe->nameval[sfe->namelen], sfe->valuelen,
+ 				priv);
+ 		if (error)
+@@ -37,6 +38,7 @@ xattr_walk_sf(
+ /* Call a function for every entry in this xattr leaf block. */
+ STATIC int
+ xattr_walk_leaf_entries(
++	struct xfs_trans		*tp,
+ 	struct xfs_inode		*ip,
+ 	xattr_walk_fn			attr_fn,
+ 	struct xfs_buf			*bp,
+@@ -75,7 +77,7 @@ xattr_walk_leaf_entries(
+ 			valuelen = be32_to_cpu(name_rmt->valuelen);
+ 		}
+ 
+-		error = attr_fn(ip, entry->flags, name, namelen, value,
++		error = attr_fn(tp, ip, entry->flags, name, namelen, value,
+ 				valuelen, priv);
+ 		if (error)
+ 			return error;
+@@ -91,6 +93,7 @@ xattr_walk_leaf_entries(
   */
--#ifndef __REPAIR_LISTXATTR_H__
--#define __REPAIR_LISTXATTR_H__
-+#ifndef __LIBXFS_LISTXATTR_H__
-+#define __LIBXFS_LISTXATTR_H__
+ STATIC int
+ xattr_walk_leaf(
++	struct xfs_trans		*tp,
+ 	struct xfs_inode		*ip,
+ 	xattr_walk_fn			attr_fn,
+ 	void				*priv)
+@@ -98,18 +101,19 @@ xattr_walk_leaf(
+ 	struct xfs_buf			*leaf_bp;
+ 	int				error;
  
- typedef int (*xattr_walk_fn)(struct xfs_inode *ip, unsigned int attr_flags,
+-	error = -libxfs_attr3_leaf_read(NULL, ip, ip->i_ino, 0, &leaf_bp);
++	error = -libxfs_attr3_leaf_read(tp, ip, ip->i_ino, 0, &leaf_bp);
+ 	if (error)
+ 		return error;
+ 
+-	error = xattr_walk_leaf_entries(ip, attr_fn, leaf_bp, priv);
+-	libxfs_trans_brelse(NULL, leaf_bp);
++	error = xattr_walk_leaf_entries(tp, ip, attr_fn, leaf_bp, priv);
++	libxfs_trans_brelse(tp, leaf_bp);
+ 	return error;
+ }
+ 
+ /* Find the leftmost leaf in the xattr dabtree. */
+ STATIC int
+ xattr_walk_find_leftmost_leaf(
++	struct xfs_trans		*tp,
+ 	struct xfs_inode		*ip,
+ 	struct bitmap			*seen_blocks,
+ 	struct xfs_buf			**leaf_bpp)
+@@ -127,7 +131,7 @@ xattr_walk_find_leftmost_leaf(
+ 	for (;;) {
+ 		uint16_t		magic;
+ 
+-		error = -libxfs_da3_node_read(NULL, ip, blkno, &bp,
++		error = -libxfs_da3_node_read(tp, ip, blkno, &bp,
+ 				XFS_ATTR_FORK);
+ 		if (error)
+ 			return error;
+@@ -164,7 +168,7 @@ xattr_walk_find_leftmost_leaf(
+ 		/* Find the next level towards the leaves of the dabtree. */
+ 		btree = nodehdr.btree;
+ 		blkno = be32_to_cpu(btree->before);
+-		libxfs_trans_brelse(NULL, bp);
++		libxfs_trans_brelse(tp, bp);
+ 
+ 		/* Make sure we haven't seen this new block already. */
+ 		if (bitmap_test(seen_blocks, blkno, 1))
+@@ -184,13 +188,14 @@ xattr_walk_find_leftmost_leaf(
+ 	return 0;
+ 
+ out_buf:
+-	libxfs_trans_brelse(NULL, bp);
++	libxfs_trans_brelse(tp, bp);
+ 	return error;
+ }
+ 
+ /* Call a function for every entry in a node-format xattr structure. */
+ STATIC int
+ xattr_walk_node(
++	struct xfs_trans		*tp,
+ 	struct xfs_inode		*ip,
+ 	xattr_walk_fn			attr_fn,
+ 	void				*priv)
+@@ -204,12 +209,12 @@ xattr_walk_node(
+ 
+ 	bitmap_alloc(&seen_blocks);
+ 
+-	error = xattr_walk_find_leftmost_leaf(ip, seen_blocks, &leaf_bp);
++	error = xattr_walk_find_leftmost_leaf(tp, ip, seen_blocks, &leaf_bp);
+ 	if (error)
+ 		goto out_bitmap;
+ 
+ 	for (;;) {
+-		error = xattr_walk_leaf_entries(ip, attr_fn, leaf_bp,
++		error = xattr_walk_leaf_entries(tp, ip, attr_fn, leaf_bp,
+ 				priv);
+ 		if (error)
+ 			goto out_leaf;
+@@ -220,13 +225,13 @@ xattr_walk_node(
+ 		if (leafhdr.forw == 0)
+ 			goto out_leaf;
+ 
+-		libxfs_trans_brelse(NULL, leaf_bp);
++		libxfs_trans_brelse(tp, leaf_bp);
+ 
+ 		/* Make sure we haven't seen this new leaf already. */
+ 		if (bitmap_test(seen_blocks, leafhdr.forw, 1))
+ 			goto out_bitmap;
+ 
+-		error = -libxfs_attr3_leaf_read(NULL, ip, ip->i_ino,
++		error = -libxfs_attr3_leaf_read(tp, ip, ip->i_ino,
+ 				leafhdr.forw, &leaf_bp);
+ 		if (error)
+ 			goto out_bitmap;
+@@ -238,7 +243,7 @@ xattr_walk_node(
+ 	}
+ 
+ out_leaf:
+-	libxfs_trans_brelse(NULL, leaf_bp);
++	libxfs_trans_brelse(tp, leaf_bp);
+ out_bitmap:
+ 	bitmap_free(&seen_blocks);
+ 	return error;
+@@ -247,6 +252,7 @@ xattr_walk_node(
+ /* Call a function for every extended attribute in a file. */
+ int
+ xattr_walk(
++	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+ 	xattr_walk_fn		attr_fn,
+ 	void			*priv)
+@@ -257,15 +263,15 @@ xattr_walk(
+ 		return 0;
+ 
+ 	if (ip->i_af.if_format == XFS_DINODE_FMT_LOCAL)
+-		return xattr_walk_sf(ip, attr_fn, priv);
++		return xattr_walk_sf(tp, ip, attr_fn, priv);
+ 
+ 	/* attr functions require that the attr fork is loaded */
+-	error = -libxfs_iread_extents(NULL, ip, XFS_ATTR_FORK);
++	error = -libxfs_iread_extents(tp, ip, XFS_ATTR_FORK);
+ 	if (error)
+ 		return error;
+ 
+ 	if (libxfs_attr_is_leaf(ip))
+-		return xattr_walk_leaf(ip, attr_fn, priv);
++		return xattr_walk_leaf(tp, ip, attr_fn, priv);
+ 
+-	return xattr_walk_node(ip, attr_fn, priv);
++	return xattr_walk_node(tp, ip, attr_fn, priv);
+ }
+diff --git a/libxfs/listxattr.h b/libxfs/listxattr.h
+index cddd96af7..933e0f529 100644
+--- a/libxfs/listxattr.h
++++ b/libxfs/listxattr.h
+@@ -6,10 +6,12 @@
+ #ifndef __LIBXFS_LISTXATTR_H__
+ #define __LIBXFS_LISTXATTR_H__
+ 
+-typedef int (*xattr_walk_fn)(struct xfs_inode *ip, unsigned int attr_flags,
++typedef int (*xattr_walk_fn)(struct xfs_trans *tp, struct xfs_inode *ip,
++		unsigned int attr_flags,
  		const unsigned char *name, unsigned int namelen,
-@@ -12,4 +12,4 @@ typedef int (*xattr_walk_fn)(struct xfs_inode *ip, unsigned int attr_flags,
+ 		const void *value, unsigned int valuelen, void *priv);
  
- int xattr_walk(struct xfs_inode *ip, xattr_walk_fn attr_fn, void *priv);
+-int xattr_walk(struct xfs_inode *ip, xattr_walk_fn attr_fn, void *priv);
++int xattr_walk(struct xfs_trans *tp, struct xfs_inode *ip,
++		xattr_walk_fn attr_fn, void *priv);
  
--#endif /* __REPAIR_LISTXATTR_H__ */
-+#endif /* __LIBXFS_LISTXATTR_H__ */
-diff --git a/repair/Makefile b/repair/Makefile
-index e7445d53e..a36a95e35 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -24,7 +24,6 @@ HFILES = \
- 	err_protos.h \
- 	globals.h \
- 	incore.h \
--	listxattr.h \
- 	pptr.h \
- 	prefetch.h \
- 	progress.h \
-@@ -59,7 +58,6 @@ CFILES = \
- 	incore_ext.c \
- 	incore_ino.c \
- 	init.c \
--	listxattr.c \
- 	phase1.c \
- 	phase2.c \
- 	phase3.c \
+ #endif /* __LIBXFS_LISTXATTR_H__ */
 diff --git a/repair/pptr.c b/repair/pptr.c
-index 8ec6a51d2..cc66e6372 100644
+index cc66e6372..ee29e47a8 100644
 --- a/repair/pptr.c
 +++ b/repair/pptr.c
-@@ -11,7 +11,7 @@
- #include "repair/globals.h"
- #include "repair/err_protos.h"
- #include "repair/slab.h"
--#include "repair/listxattr.h"
-+#include "libxfs/listxattr.h"
- #include "repair/threads.h"
- #include "repair/incore.h"
- #include "repair/pptr.h"
+@@ -593,6 +593,7 @@ store_file_pptr_name(
+ /* Decide if this is a directory parent pointer and stash it if so. */
+ static int
+ examine_xattr(
++	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+ 	unsigned int		attr_flags,
+ 	const unsigned char	*name,
+@@ -1205,6 +1206,7 @@ check_file_parent_ptrs(
+ 	struct xfs_inode	*ip,
+ 	struct file_scan	*fscan)
+ {
++	struct xfs_trans	*tp = NULL;
+ 	int			error;
+ 
+ 	error = -init_slab(&fscan->file_pptr_recs, sizeof(struct file_pptr));
+@@ -1215,7 +1217,10 @@ check_file_parent_ptrs(
+ 	fscan->have_garbage = false;
+ 	fscan->nr_file_pptrs = 0;
+ 
+-	error = xattr_walk(ip, examine_xattr, fscan);
++	libxfs_trans_alloc_empty(ip->i_mount, &tp);
++	error = xattr_walk(tp, ip, examine_xattr, fscan);
++	if (tp)
++		libxfs_trans_cancel(tp);
+ 	if (error && !no_modify)
+ 		do_error(_("ino %llu parent pointer scan failed: %s\n"),
+ 				(unsigned long long)ip->i_ino,
 
