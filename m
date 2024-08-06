@@ -1,41 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64B8C2EB10;
-	Tue,  6 Aug 2024 16:14:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD1573477;
+	Tue,  6 Aug 2024 18:14:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722960871; cv=none; b=K863u2vIhX1HN3s/Ied6K9FSSknS8Ud0ORiB/zSY3JBqVoNrvO4nO+LOfRdHg8YHbu+t5YPS8BtJMNoKtvC7sSIwMQgOdDxB3J4MD5PJQIVzprdLpKIBi8fycn/ShJLnOkfUcqZKrdUxUaSFRkbUYFSfSROZtWb/E33Ak8stNlg=
+	t=1722968094; cv=none; b=EXtVnEx8ESvaCqk5S4pRQkwZzOqchAdC9KN4XJEL3zztu9VS6mMxq4Mf+RRiPHV1EuyYbPErnQA542h1Lvahi5vHqEJVs/g0XqRbHUwrbL5uonOkkt9r+w7uajUBju4olFFfe1KHNXFtfWzyjj9y9MvpfXjrwMr1yk6+w8p9d/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722960871; c=relaxed/simple;
-	bh=zrGDtsaecnFiuLR+XY0YSs+F+adfLamn1Pp10kJ/a/Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vE8Sai6vuEz1UTi2Xa1jSg9SDEkiGh1+EunxI1bG2qyBMb+KJsyLtjwPzSrxbQMsQA2yWTdsxNDCaCySmW1GNopA0JknUDZuNcInGhY7FZL/+BCtEi8+olaz6YB6N4rjQ+JYciseXWqifWsMmgAceHDiB2+meD+GBOe7ZWwkwkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fKB0Tmxi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722968094; c=relaxed/simple;
+	bh=EafS5SuqYQY4DXp6Cq17uteGy95lkLRq6kEkyV/M2iM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=McgkfE9ucto4FoIELsu3TUq/ztwqw0Du5XNps2v0NE5wAmGAyjR4S6OwbBL8YyH6o7paHJWdhCLOvaojgyjTgDTXMn+BX1T0X8f9LyElLs1xLQMrbkaVsECAwuK17rTn6nH8nv0qxRm76rreyP5WhKjPmRXNAkoMEhZ8k+MWSaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AyhW+Gr9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fKB0Tmxi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA9F5C32786;
-	Tue,  6 Aug 2024 16:14:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AyhW+Gr9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B8FC32786;
+	Tue,  6 Aug 2024 18:14:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722960871;
-	bh=zrGDtsaecnFiuLR+XY0YSs+F+adfLamn1Pp10kJ/a/Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fKB0TmxiYUajD80Xcd5fWG4XsgBNv0bY/xHfzBMVJyoUEurFSeIHMUTNbUe4FHY1C
-	 YtVVwZCm1k8c4h8ozaXqFhrq6dzReYoz1dVVuDJBanlj2BBClgJbbXfMXO1yO/SJkU
-	 Bb8wagn8efICBP/5KSptuh+IiJ/p4YAK6hGTE9yvO5TClVFtbAiHj6RvMBR8uti6Gz
-	 3n6Df0EChyVbl/GYXzibpxkhuJxO/HysGxjuMnD37/jPVK31m3Ft56yYd6LzuOoMka
-	 6mjQdh/hsoJY0GyH+AE7XR9Jb7v2VJvERNnN875G76U3jb1ipQsn5kxq6ihTKD2EcL
-	 chZe/FLtr/48g==
-Date: Tue, 6 Aug 2024 09:14:30 -0700
+	s=k20201202; t=1722968093;
+	bh=EafS5SuqYQY4DXp6Cq17uteGy95lkLRq6kEkyV/M2iM=;
+	h=Date:From:To:Cc:Subject:From;
+	b=AyhW+Gr9j/J0klk8WMCj0UtZWk8YQvz9xTY7dXv87q8Cpo7SdKPS+QxJl6aaWbARv
+	 Sb0Uk6bP/WZ+G+FavfLDesbklbdjPYp8+eb84L/6SBWqx8C8uFRchbbWgc3tWJkcqA
+	 8RZxtSpq+NReqjzWN3HYiz5gQi9qj3V2XyJFDzZvR98tXWQpVMmWWy/mrpDbVIVaG+
+	 t8ZCgEL3h0bMYaO8bamBzXy4LXc5clJVA81+bnzzprnEUWudo+/4bVjCPw+jkzQur5
+	 fGwQ7VER5OOTF4a9H0LNeJ4Z77b4OR+lq+PrjJJIl21Kq0Ig/5eH+I7CKh105MgP06
+	 Q0l1Meb41U4yQ==
+Date: Tue, 6 Aug 2024 11:14:52 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Ma Xinjian <maxj.fnst@fujitsu.com>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] [PATCH] xfs/348: add _fixed_by tag
-Message-ID: <20240806161430.GA623922@frogsfrogsfrogs>
-References: <20240730075653.3473323-1-maxj.fnst@fujitsu.com>
- <20240730144751.GB6337@frogsfrogsfrogs>
- <20240806131903.h7ym2ktrzqjcqlzj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: Christoph Hellwig <hch@infradead.org>,
+	Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Subject: [PATCHBOMB v30.10] xfsprogs-6.10: filesystem properties
+Message-ID: <20240806181452.GE623936@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,60 +41,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240806131903.h7ym2ktrzqjcqlzj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Tue, Aug 06, 2024 at 09:19:03PM +0800, Zorro Lang wrote:
-> On Tue, Jul 30, 2024 at 07:47:51AM -0700, Darrick J. Wong wrote:
-> > On Tue, Jul 30, 2024 at 03:56:53PM +0800, Ma Xinjian wrote:
-> > > This test requires a kernel patch since 3bf963a6c6 ("xfs/348: partially revert
-> > > dbcc549317"), so note that in the test.
-> > > 
-> > > Signed-off-by: Ma Xinjian <maxj.fnst@fujitsu.com>
-> > > ---
-> > >  tests/xfs/348 | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> > > 
-> > > diff --git a/tests/xfs/348 b/tests/xfs/348
-> > > index 3502605c..e4bc1328 100755
-> > > --- a/tests/xfs/348
-> > > +++ b/tests/xfs/348
-> > > @@ -12,6 +12,9 @@
-> > >  . ./common/preamble
-> > >  _begin_fstest auto quick fuzzers repair
-> > >  
-> > > +_fixed_by_git_commit kernel 38de567906d95 \
-> > > +	"xfs: allow symlinks with short remote targets"
-> > 
-> > Considering that 38de567906d95 is itself a fix for 1eb70f54c445f, do we
-> > want a _broken_by_git_commit to warn people not to apply 1eb70 without
-> > also applying 38de5?
-> 
-> We already have _wants_xxxx_commit and _fixed_by_xxxx_commit, for now, I
-> don't think we need a new one. Maybe:
-> 
->   _fixed_by_kernel_commit 38de567906d95 ..............
->   _wants_kernel_commit 1eb70f54c445f .............
-> 
-> make sense? And use some comments to explain why 1eb70 is wanted?
+Hi all,
 
-Oh!  I didn't realize we had _wants_kernel_commit.  Yeah, that's fine.
+After recent discussions about how to allow sysadmins to opt in or out
+of automatick fsck for XFS[1][2], I now have a patchset for xfsprogs
+6.10 that implements the filesystem properties that we talked about.
+
+As a refresher, the design I settled on is to add ATTR_ROOT (aka
+"trusted") xattrs to the root directory.  ATTR_ROOT xattrs can only be
+accessed by processes with CAP_SYS_ADMIN, so unprivileged userspace
+can't mess with the sysadmin's configured preferences.
+
+I decided that all fs properties should have "xfs:" in the name to make
+them look distinct, and defined "trusted.xfs:autofsck" as the property
+that controls the behavior of automatic fsck.  There's a new wrapper
+program "xfs_property" that one can use to administer the properties.
+xfs_scrub{,bed} uses the property; and mkfs.xfs can set it for you at
+format time.
+
+# mkfs.xfs -m autofsck /dev/sda
+
+# xfs_property /dev/sda get autofsck
+repair
+
+# mount /dev/sda /mnt
+
+# xfs_property /mnt set autofsck=check
+
+# xfs_scrub -o autofsck /mnt
+Info: /mnt: Checking per autofsck directive.
 
 --D
 
-> Thanks,
-> Zorro
-> 
-> > 
-> > --D
-> > 
-> > > +
-> > >  # Import common functions.
-> > >  . ./common/filter
-> > >  . ./common/repair
-> > > -- 
-> > > 2.42.0
-> > > 
-> > > 
-> > 
-> 
-> 
+[1] https://lore.kernel.org/linux-xfs/20240724213852.GA612460@frogsfrogsfrogs/
+[2] https://lore.kernel.org/linux-xfs/20240730031030.GA6333@frogsfrogsfrogs/
