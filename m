@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E8E5B646
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Aug 2024 19:14:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7ADB13CFA3
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Aug 2024 19:14:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723058050; cv=none; b=oN+0wI/76M8pQ1ZlhTDBdTAdMlHweKRoxZQcAaHAGHluPmWRlfCeAqSdtntby5XwHEjtI9c/39rH+8mTE0igwPRlLIpJU3/X2dpHuYGqiDxaXDhIae/aBXRLB22RjghBURCxBqu2iqj0FfWj5ihZG6lCoj5m70L+LZIHlVXqoMw=
+	t=1723058065; cv=none; b=Rh7QKd12UJD1gLOAP2nfKSHq4EiLoFnVP4G2eOW6nnps1FeEP/vXd7QC3E+zuXg5n1WF8JBviivxF6aI0y2NrtuRUmVBoSAQ03FRiHilLSwRwcrd+nwWviCAM9r00YHPiiooBH5/IFCOKG4+42qhhWrwsRhKp5yG/0AUwVtRPV8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723058050; c=relaxed/simple;
-	bh=w+gWr/s1kxwhyQONgmut6VRZibjd4xDWnpSme9HDZKs=;
+	s=arc-20240116; t=1723058065; c=relaxed/simple;
+	bh=QPw9IRCI95tfLgM0IyAnsp+Ioqzye0YX8YqK3eG+D4o=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ol3l2/vhtxklikG+g+DAQTSCPdk9cMsKsw6/dJOQMviyRLpKCxs1oD9lVGAfQAD42pVwLtbm1oGBwed7pT4AZKTk/QT/YVQEQ3QCRQnfkWB3Ly6I7GyXA7lcqwcfpQqpWOI9TLFu+I97ZNwgn2sqxQwIi2UwZBOGSKoBuKU6HL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fmTjnNRA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kf2PbYvHsltK4WPRfRTEaBu10+52l5kDkoz2wlzeuQOfg4/W9ZGcVJTqJQNIVN3adwffSdWG4zwklsf+aGoFywakW1g3FOLZQsanyXQ14qVCkLw84Ew7FSBpAjRZtBohCQWIextOUfMDlKUcrd44ucL0wvRigYaKFeRwbTEU+M4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PlydN1CY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fmTjnNRA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF92BC32781;
-	Wed,  7 Aug 2024 19:14:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PlydN1CY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 888BDC32781;
+	Wed,  7 Aug 2024 19:14:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723058049;
-	bh=w+gWr/s1kxwhyQONgmut6VRZibjd4xDWnpSme9HDZKs=;
+	s=k20201202; t=1723058065;
+	bh=QPw9IRCI95tfLgM0IyAnsp+Ioqzye0YX8YqK3eG+D4o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fmTjnNRAGiZlxH+mw/CW/IJ4JXnawVeDCRMcCssI2czCG0TxW9sR5f5PC0YaIpX4n
-	 ljz2YOy/F7qZFqTwgmmgCTjDmwOrACsTqG6tg4KmtpzmtiZ5ZlefcRtB0LZsKSfv16
-	 B5BBnhOUfuhlJEQsh69aZdv0KPybjlefLBz8bkucDeIJIrCC6s6CM+gAjHgRW8S8dJ
-	 +Ya469f8ltehlq4RleELn6SKb8N6dp6BejcAm9uG2btL1Aa7VlE+kQO0JotmlEXwzd
-	 Xz10U/u3t0u/nFrlqPa6zhe2fkEnZD4y0D1c8GkOwSKOdjYIVAAwsrn0bsRVrU0c1/
-	 p2thNN4awNKXQ==
-Date: Wed, 07 Aug 2024 12:14:09 -0700
-Subject: [PATCH 1/5] design: document atomic file mapping exchange log intent
- structures
+	b=PlydN1CYyQG8KMsCjMHp+AvtVum+ri/ovKBb4mkxR0zIAiN6721Em7jvGj2J2a4K3
+	 Lqu3zQ05mx9xUxf0M+HFlhFzzftiDhvbLWPvdJuxDkvuoNcfzcKYh8v2kCuN2jAhqY
+	 PjjFkQb7lKg6fEBZIxk+NrY0eAsmaBVeoSaC5sqLcSyiNHYxjnZSEN7rK9lm/rLChK
+	 h7L/BVyP9uPpcODsATEVzzI5vMKGkItRpYmec2/TQaXi0OHbmAii0JV2adqS7svnpE
+	 xTXS25LB+ojMLVjonXGrNAxCW/kmW/SShDWJJCVZvEvKUAYMx9xTi7JtuXWVCPmwMe
+	 wAOXRoH860S1g==
+Date: Wed, 07 Aug 2024 12:14:25 -0700
+Subject: [PATCH 2/5] design: document new name-value logged attribute variants
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: chandanbabu@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172305794103.969463.851368852347319574.stgit@frogsfrogsfrogs>
+Message-ID: <172305794118.969463.1580394382652832046.stgit@frogsfrogsfrogs>
 In-Reply-To: <172305794084.969463.781862996787293755.stgit@frogsfrogsfrogs>
 References: <172305794084.969463.781862996787293755.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,196 +46,109 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Document the log intent item formats for the mapping exchange feature.
+In preparation for parent pointers, we added a few new opcodes for
+logged extended attribute updates.  Document them now.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .../allocation_groups.asciidoc                     |   10 ++
- .../journaling_log.asciidoc                        |  123 ++++++++++++++++++++
- design/XFS_Filesystem_Structure/magic.asciidoc     |    2 
- 3 files changed, 135 insertions(+)
+ .../journaling_log.asciidoc                        |   54 ++++++++++++++++++--
+ 1 file changed, 48 insertions(+), 6 deletions(-)
 
 
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index c0ba16a8..e22c7344 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -458,6 +458,16 @@ xfs_repair before it can be mounted.
- Large file fork extent counts.  This greatly expands the maximum number of
- space mappings allowed in data and extended attribute file forks.
- 
-+| +XFS_SB_FEAT_INCOMPAT_EXCHRANGE+ |
-+Atomic file mapping exchanges.  The filesystem is capable of exchanging a range
-+of mappings between two arbitrary ranges of a file's fork by using log intent
-+items to track the progress of the high level exchange operation.  In other
-+words, the exchange operation can be restarted if the system goes down, which
-+is necessary for userspace to commit of new file contents atomically.  This
-+flag has user-visible impacts, which is why it is a permanent incompat flag.
-+See the section about xref:XMI_Log_Item[mapping exchange log intents] for more
-+information.
-+
- |=====
- 
- *sb_features_log_incompat*::
 diff --git a/design/XFS_Filesystem_Structure/journaling_log.asciidoc b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-index 8ff437fe..9d9fa836 100644
+index 9d9fa836..6b9d65c3 100644
 --- a/design/XFS_Filesystem_Structure/journaling_log.asciidoc
 +++ b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-@@ -217,6 +217,8 @@ magic number to distinguish themselves.  Buffer data items only appear after
- | +XFS_LI_BUD+			| 0x1245        | xref:BUD_Log_Item[File Block Mapping Update Done]
- | +XFS_LI_ATTRI+		| 0x1246        | xref:ATTRI_Log_Item[Extended Attribute Update Intent]
- | +XFS_LI_ATTRD+		| 0x1247        | xref:ATTRD_Log_Item[Extended Attribute Update Done]
-+| +XFS_LI_XMI+			| 0x1248        | xref:XMI_Log_Item[File Mapping Exchange Intent]
-+| +XFS_LI_XMD+			| 0x1249        | xref:XMD_Log_Item[File Mapping Exchange Done]
+@@ -730,10 +730,18 @@ of file block mapping operation we want.
+ .Extended attribute update log intent types
+ [options="header"]
+ |=====
+-| Value				| Description
+-| +XFS_ATTRI_OP_FLAGS_SET+	| Set a key/value pair.
+-| +XFS_ATTRI_OP_FLAGS_REMOVE+	| Remove a key/value pair.
+-| +XFS_ATTRI_OP_FLAGS_REPLACE+	| Replace one key/value pair with another.
++| Value					| Description
++| +XFS_ATTRI_OP_FLAGS_SET+		| Associate an attribute name with the
++given value, creating an entry for the name if necessary.
++| +XFS_ATTRI_OP_FLAGS_REMOVE+		| Remove an attribute name and any
++value associated with it.
++| +XFS_ATTRI_OP_FLAGS_REPLACE+		| Remove any value associated with an
++attribute name, then associate the name with the given value.
++| +XFS_ATTRI_OP_FLAGS_PPTR_SET+		| Add a parent pointer associating a directory entry name with a file handle to the parent directory.  The (name, handle) tuple must not exist in the attribute structure.
++| +XFS_ATTRI_OP_FLAGS_PPTR_REMOVE+	| Remove a parent pointer from the attribute structure.  The (name, handle) tuple must already exist.
++| +XFS_ATTRI_OP_FLAGS_PPTR_REPLACE+	| Remove a specific (name, handle) tuple from
++the attribute structure, then add a new (name, handle) tuple to the attribute structure.
++The two names and handles need not be the same.
  |=====
  
- Note that all log items (except for transaction headers) MUST start with
-@@ -649,6 +651,8 @@ file block mapping operation we want.  The upper three bytes are flag bits.
- | Value				| Description
- | +XFS_BMAP_EXTENT_ATTR_FORK+	| Extent is for the attribute fork.
- | +XFS_BMAP_EXTENT_UNWRITTEN+	| Extent is unwritten.
-+| +XFS_BMAP_EXTENT_REALTIME+	| Mapping applies to the data fork of a
-+realtime file.  This flag cannot be combined with +XFS_BMAP_EXTENT_ATTR_FORK+.
- |=====
+ The ``extended attribute update intent'' operation comes first; it tells the
+@@ -747,11 +755,17 @@ through the complex update will be replayed fully during log recovery.
+ struct xfs_attri_log_format {
+      uint16_t                  alfi_type;
+      uint16_t                  alfi_size;
+-     uint32_t                  __pad;
++     uint32_t                  alfi_igen;
+      uint64_t                  alfi_id;
+      uint64_t                  alfi_ino;
+      uint32_t                  alfi_op_flags;
+-     uint32_t                  alfi_name_len;
++     union {
++          uint32_t             alfi_name_len;
++          struct {
++              uint16_t         alfi_old_name_len;
++              uint16_t         alfi_new_name_len;
++          };
++     };
+      uint32_t                  alfi_value_len;
+      uint32_t                  alfi_attr_filter;
+ };
+@@ -764,6 +778,9 @@ order, not big-endian like the rest of XFS.
+ *alfi_size*::
+ Size of this log item.  Should be 1.
  
- The ``file block mapping update intent'' operation comes first; it tells the
-@@ -821,6 +825,125 @@ These regions contain the name and value components of the extended attribute
- being updated, as needed.  There are no magic numbers; each region contains the
- data and nothing else.
++*alfi_igen*::
++Generation number of the file being updated.
++
+ *alfi_id*::
+ A 64-bit number that binds the corresponding ATTRD log item to this ATTRI log
+ item.
+@@ -778,6 +795,13 @@ The operation being performed.  The lower byte must be one of the
+ *alfi_name_len*::
+ Length of the name of the extended attribute.  This must not be zero.
+ The attribute name itself is captured in the next log item.
++This field is not defined for the PPTR_REPLACE opcode.
++
++*alfi_old_name_len*::
++For PPTR_REPLACE, this is the length of the old name.
++
++*alfi_new_name_len*::
++For PPTR_REPLACE, this is the length of the new name.
  
-+[[XMI_Log_Item]]
-+=== File Mapping Exchange Intent
-+
-+These two log items work together to track the exchange of mapped extents
-+between the forks of two files.  Each operation requires a separate XMI/XMD
-+pair.  The log intent item has the following format:
-+
-+[source, c]
-+----
-+struct xfs_xmi_log_format {
-+     uint16_t                  xmi_type;
-+     uint16_t                  xmi_size;
-+     uint32_t                  __pad;
-+     uint64_t                  xmi_id;
-+     uint64_t                  xmi_inode1;
-+     uint64_t                  xmi_inode2;
-+     uint32_t                  xmi_igen1;
-+     uint32_t                  xmi_igen2;
-+     uint64_t                  xmi_startoff1;
-+     uint64_t                  xmi_startoff2;
-+     uint64_t                  xmi_blockcount;
-+     uint64_t                  xmi_flags;
-+     int64_t                   xmi_isize1;
-+     int64_t                   xmi_isize2;
-+};
-+----
-+
-+*xmi_type*::
-+The signature of an XMI operation, 0x1248.  This value is in host-endian order,
-+not big-endian like the rest of XFS.
-+
-+*xmi_size*::
-+Size of this log item.  Should be 1.
-+
-+*__pad*::
-+Must be zero.
-+
-+*xmi_id*::
-+A 64-bit number that binds the corresponding XMD log item to this XMI log item.
-+
-+*xmi_inode1*::
-+Inode number of the first file involved in the operation.
-+
-+*xmi_inode2*::
-+Inode number of the second file involved in the operation.
-+
-+*xmi_igen1*::
-+Generation number of the first file involved in the operation.
-+
-+*xmi_igen2*::
-+Generation number of the second file involved in the operation.
-+
-+*xmi_startoff1*::
-+Starting point within the first file, in units of filesystem blocks.
-+
-+*xmi_startoff2*::
-+Starting point within the second file, in units of filesystem blocks.
-+
-+*xmi_blockcount*::
-+The length to be exchanged, in units of filesystem blocks.
-+
-+*xmi_flags*::
-+Behavioral changes to the operation, as follows:
-+
-+.File Extent Swap Intent Item Flags
-+[options="header"]
-+|=====
-+| Value				    | Description
-+| +XFS_EXCHMAPS_ATTR_FORK+	    | Exchange extents between attribute forks.
-+| +XFS_EXCHMAPS_SET_SIZES+	    | Exchange the file sizes of the two files
-+after the operation completes.
-+| +XFS_EXCHMAPS_INO1_WRITTEN+	    | Exchange the mappings of two files only
-+if the file allocation units mapped to file1's range have been written.
-+| +XFS_EXCHMAPS_CLEAR_INO1_REFLINK+ | Clear the reflink flag from inode1 after
-+the operation.
-+| +XFS_EXCHMAPS_CLEAR_INO2_REFLINK+ | Clear the reflink flag from inode2 after
-+the operation.
-+|=====
-+
-+*xmi_isize1*::
-+The original size of the first file, in bytes.  This is zero if the
-++XFS_EXCHMAPS_SET_SIZES+ flag is not set.
-+
-+*xmi_isize2*::
-+The original size of the second file, in bytes.  This is zero if the
-++XFS_EXCHMAPS_SET_SIZES+ flag is not set.
-+
-+[[XMD_Log_Item]]
-+=== Completion of File Mapping Exchange
-+
-+The ``file mapping exchange done'' operation complements the ``file mapping
-+exchange intent'' operation.  This second operation indicates that the update
-+actually happened, so that log recovery needn't replay the update.  The XMD
-+item and the actual updates are typically found in a new transaction following
-+the transaction in which the XMI was logged.  The completion has this format:
-+
-+[source, c]
-+----
-+struct xfs_xmd_log_format {
-+     uint16_t                  xmd_type;
-+     uint16_t                  xmd_size;
-+     uint32_t                  __pad;
-+     uint64_t                  xmd_xmi_id;
-+};
-+----
-+
-+*xmd_type*::
-+The signature of an XMD operation, 0x1249.  This value is in host-endian order,
-+not big-endian like the rest of XFS.
-+
-+*xmd_size*::
-+Size of this log item.  Should be 1.
-+
-+*__pad*::
-+Must be zero.
-+
-+*xmd_xmi_id*::
-+A 64-bit number that binds the corresponding XMI log item to this XMD log item.
-+
- [[Inode_Log_Item]]
- === Inode Updates
+ *alfi_value_len*::
+ Length of the value of the extended attribute.  This must be zero for remove
+@@ -789,6 +813,24 @@ name.
+ Attribute namespace filter flags.  This must be one of +ATTR_ROOT+,
+ +ATTR_SECURE+, or +ATTR_INCOMPLETE+.
  
-diff --git a/design/XFS_Filesystem_Structure/magic.asciidoc b/design/XFS_Filesystem_Structure/magic.asciidoc
-index a343271a..60952aeb 100644
---- a/design/XFS_Filesystem_Structure/magic.asciidoc
-+++ b/design/XFS_Filesystem_Structure/magic.asciidoc
-@@ -73,6 +73,8 @@ are not aligned to blocks.
- | +XFS_LI_BUD+			| 0x1245        |       | xref:BUD_Log_Item[File Block Mapping Update Done]
- | +XFS_LI_ATTRI+		| 0x1246        |       | xref:ATTRI_Log_Item[Extended Attribute Update Intent]
- | +XFS_LI_ATTRD+		| 0x1247        |       | xref:ATTRD_Log_Item[Extended Attribute Update Done]
-+| +XFS_LI_XMI+			| 0x1248        |       | xref:XMI_Log_Item[File Mapping Exchange Intent]
-+| +XFS_LI_XMD+			| 0x1249        |       | xref:XMD_Log_Item[File Mapping Exchange Done]
- |=====
++For a SET or REPLACE opcode, there should be two regions after the ATTRI intent
++item.  The first region contains the attribute name and the second contains the
++attribute value.
++
++For a REMOVE opcode, there should only be one region after the ATTRI intent
++item, and it will contain the attribute name.
++
++For an PPTR_SET or PPTR_REMOVE opcode, there should be two regions after the
++ATTRI intent item.  The first region contains the dirent name as the attribute
++name.  The second region contains a file handle to the parent directory as the
++attribute value.
++
++For an PPTR_REPLACE opcode, there should be between four regions after the
++ATTRI intent item.  The first region contains the dirent name to remove.
++The second region contains the dirent name to create.  The third region
++contains the parent directory file handle to remove.  The fourth region
++contains the parent directory file handle to add.
++
+ [[ATTRD_Log_Item]]
+ === Completion of Extended Attribute Updates
  
- = Theoretical Limits
 
