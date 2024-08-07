@@ -1,52 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33C1E85260;
-	Wed,  7 Aug 2024 15:05:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7CCD823DE;
+	Wed,  7 Aug 2024 15:12:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723043104; cv=none; b=prywxcmg8VkkCJHVv2pfGFdnks9/w+SHHfQXyeDv2UG4+U1MqIo8igZPf/DELo7vSI1id1Wa/A9tHA+N/x+UnFDj7zKY/X4Toz/7v+Ld51AdTCYehCAlOswiP3Ru2N27AWBh4YiXAHx7D8urv5uZxGtvytU832gBOyPVFlhavks=
+	t=1723043576; cv=none; b=ghTNc0KCxmN8bflyoc3ZMCgOyg4Q4H/S/0Yh+3u069vR9Rf0AlvjY4S5G7ihuDk8OfuPRHMjwO2M2gHZmJcFyqGEmajfm71i6dqhOannS3HzccUqvhuxuoWfr7IgnWUF6GSTys6GGJuJSe0D3aMgajashG7k0o3Qi/fttyq2I1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723043104; c=relaxed/simple;
-	bh=SON7N8k6UkNd7FbM5lJZtVzzXQPqSyE42P7od40nS48=;
+	s=arc-20240116; t=1723043576; c=relaxed/simple;
+	bh=edT9Ll2C0aXQgRu354/92nyX+FLK0NJKdFiGlV9ekCw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JOhEHoiwITYRckljUpMy2V8kDTDJuBG6PhQnfVSd8fvgaTcw8ijzO/7CHW8Z3RsVmprKqAOr6rjUS4hZtoSp13iOkBFExykduQOIlEAAAUUwGUpNOHJ2+KwhPpm5B2GqKyBqho1Mij+UBirLva7acq1bvDyPX/ujhQnUGGrOSPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Amhx43EE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iRhDe8lTKBVmoKIdi+LuWB7UVcagVob6WGOAcFmRaXwDFGZ/fjqmmvN7PJxcl5BvTngjtsI9ylBiI8k9zLSBFDw5yx2MFlGfzMz7cDkpHXKukpVorMNKR8TGG0QrOA3CQ+DFuMSz0DbUfrUEk6L/yO+zYndfXeCrNMlrxPeqSq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ghJVU2TF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Amhx43EE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E00E4C4AF0D;
-	Wed,  7 Aug 2024 15:05:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ghJVU2TF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92CB4C32781;
+	Wed,  7 Aug 2024 15:12:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723043103;
-	bh=SON7N8k6UkNd7FbM5lJZtVzzXQPqSyE42P7od40nS48=;
+	s=k20201202; t=1723043575;
+	bh=edT9Ll2C0aXQgRu354/92nyX+FLK0NJKdFiGlV9ekCw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Amhx43EER3PtJ0PDPyhuXsFnIw9/O3th6dr/8OYvyCURztLgIcUDj/6r1illec8w6
-	 4aiDq4ylFmHw47V9zR4C8ut8WUG206lLrwem58tqdDlY7bzUxoOpBp9jFUFBfzyHap
-	 b77uDCAMeUaDLy8Ad+ww6ADeoVxHrkj/AYzybu43mUXOsXjlyzQixrXD63M7aUJB4O
-	 M7ISfBOhiz6HUN429jK/TrPC/o4SWXkNm6Tyc+IskNgzWMe0DNi1qQTOJiarpYgN/I
-	 ZXvmQN2ISVtWO/DK0oJbmwMC5zYEvVevK5o+FEefaXmlvfVkMs8BwO2ecsVioJu22X
-	 yHGdZTx4XqxwA==
-Date: Wed, 7 Aug 2024 08:05:03 -0700
+	b=ghJVU2TFPplw6CoTGLAsUiCcRTrSz4lq2VV49XXD+NvBiFKU8Pav6e4QpVhoqaCwW
+	 AnL3ND2BnmajPsy0mVQG2scRJpiwv283iVTptmQjoM/hrLrESe99MkGv4vjKoDgR71
+	 h5wqp9Y/sltoP7+dnnzwvJGDvMhSdN/1in/4mT+hJ4lottWbN7tOU6OjGwIoBHig5D
+	 3SPWEzq//pOhpSllm7hwvu6GS71XbNmcaxnbhwY0stDBo3fAK+bB8JzEEe7f9cx53y
+	 Ku6MVKGXpVCm9QZyU22AZSB+5OnlfCjqEpmq08eM1PKp7QXNHpuuVGeObUdikfehBC
+	 FfntjYe66QYuw==
+Date: Wed, 7 Aug 2024 08:12:54 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org
-Subject: Re: Are jump labels broken on 6.11-rc1?
-Message-ID: <20240807150503.GF6051@frogsfrogsfrogs>
-References: <20240731001950.GN6352@frogsfrogsfrogs>
- <20240731031033.GP6352@frogsfrogsfrogs>
- <20240731053341.GQ6352@frogsfrogsfrogs>
- <20240731105557.GY33588@noisy.programming.kicks-ass.net>
- <20240805143522.GA623936@frogsfrogsfrogs>
- <20240806094413.GS37996@noisy.programming.kicks-ass.net>
- <20240806103808.GT37996@noisy.programming.kicks-ass.net>
- <875xsc4ehr.ffs@tglx>
- <20240807143407.GC31338@noisy.programming.kicks-ass.net>
- <87wmks2xhi.ffs@tglx>
+To: John Garry <john.g.garry@oracle.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
+	martin.petersen@oracle.com
+Subject: Re: [PATCH v3 10/14] xfs: Do not free EOF blocks for forcealign
+Message-ID: <20240807151254.GG6051@frogsfrogsfrogs>
+References: <20240801163057.3981192-1-john.g.garry@oracle.com>
+ <20240801163057.3981192-11-john.g.garry@oracle.com>
+ <20240806192441.GM623936@frogsfrogsfrogs>
+ <f39d240b-7abe-45d6-9d87-553ce8c6cf41@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,91 +48,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87wmks2xhi.ffs@tglx>
+In-Reply-To: <f39d240b-7abe-45d6-9d87-553ce8c6cf41@oracle.com>
 
-On Wed, Aug 07, 2024 at 04:55:53PM +0200, Thomas Gleixner wrote:
-> On Wed, Aug 07 2024 at 16:34, Peter Zijlstra wrote:
-> > On Wed, Aug 07, 2024 at 04:03:12PM +0200, Thomas Gleixner wrote:
-> >
-> >> > +	if (static_key_dec(key, true)) // dec-not-one
-> >> 
-> >> Eeew.
-> >
-> > :-) I knew you'd hate on that
+On Wed, Aug 07, 2024 at 01:33:49PM +0100, John Garry wrote:
+> > > +void
+> > > +xfs_roundout_to_alloc_fsbsize(
+> > > +	struct xfs_inode	*ip,
+> > > +	xfs_fileoff_t		*start,
+> > > +	xfs_fileoff_t		*end)
+> > > +{
+> > > +	unsigned int		blocks = xfs_inode_alloc_fsbsize(ip);
+> > > +
+> > > +	if (blocks == 1)
+> > > +		return;
+> > > +	*start = rounddown_64(*start, blocks);
+> > > +	*end = roundup_64(*end, blocks);
+> > > +}
+> > 
+> > This is probably going to start another round of shouting, but I think
+> > it's silly to do two rounding operations when you only care about one
+> > value.
 > 
-> So you added it just to make me grumpy enough to fix it for you, right?
+> Sure, but the "in" version does use the 2x values and I wanted to be
+> consistent. Anyway, I really don't feel strongly about this.
+> 
+> > In patch 12 it results in a bunch more dummy variables that you
+> > then ignore.
+> > 
+> > Can't this be:
+> > 
+> > static inline xfs_fileoff_t
+> > xfs_inode_rounddown_alloc_unit(
+> 
+> Just a question about the naming:
+> xfs_inode_alloc_unitsize() returns bytes, so I would expect
+> xfs_inode_rounddown_alloc_unit() to deal in bytes. Would you be satisfied
+> with xfs_rounddown_alloc_fsbsize()? Or any other suggestion?
 
-FWIW with peter's 'ugly' patch applied, fstests didn't cough up any
-static key complaints overnight.
-
-> >> +/*
-> >> + * Fastpath: Decrement if the reference count is greater than one
-> >> + *
-> >> + * Returns false, if the reference count is 1 or -1 to force the caller
-> >> + * into the slowpath.
-> >> + *
-> >> + * The -1 case is to handle a decrement during a concurrent first enable,
-> >> + * which sets the count to -1 in static_key_slow_inc_cpuslocked(). As the
-> >> + * slow path is serialized the caller will observe 1 once it acquired the
-> >> + * jump_label_mutex, so the slow path can succeed.
-> >> + */
-> >> +static bool static_key_dec_not_one(struct static_key *key)
-> >> +{
-> >> +	int v = static_key_dec(key, true);
-> >> +
-> >> +	return v != 1 && v != -1;
-> >
-> > 	if (v < 0)
-> > 		return false;
-> 
-> Hmm. I think we should do:
-> 
-> #define KEY_ENABLE_IN_PROGRESS		-1
-> 
-> or even a more distinct value like (INT_MIN / 2)
-> 
-> and replace all the magic -1 numbers with it. Then the check becomes
-> explicit:
-> 
->         if (v == KEY_ENABLE_IN_PROGRESS)
->         	return false;
-> 
-> > 	/*
-> > 	 * Notably, 0 (underflow) returns true such that it bails out
-> > 	 * without doing anything.
-> > 	 */
-> > 	return v != 1;
-> >
-> > Perhaps?
-> 
-> Sure.
-> 
-> >> +}
-> >> +
-> >> +/*
-> >> + * Slowpath: Decrement and test whether the refcount hit 0.
-> >> + *
-> >> + * Returns true if the refcount hit zero, i.e. the previous value was one.
-> >> + */
-> >> +static bool static_key_dec_and_test(struct static_key *key)
-> >> +{
-> >> +	int v = static_key_dec(key, false);
-> >> +
-> >> +	lockdep_assert_held(&jump_label_mutex);
-> >> +	return v == 1;
-> >>  }
-> >
-> > But yeah, this is nicer!
-> 
-> :)
-
-It probably goes without saying that if either of you send a cleaned up
-patch with all these changes baked in, I will test it for you all. :)
+xfs_fileoff_t is the unit for file logical blocks, no need to append
+stuff to the name.  It's clear that this function takes a file block
+offset and returns another one.  If we need a second function for file
+byte offsets then we can add another function and maybe wrap the whole
+mess in _Generic.
 
 --D
 
+> > 	struct xfs_inode	*ip,
+> > 	xfs_fileoff		off)
+> > {
+> > 	unsigned int		rounding = xfs_inode_alloc_fsbsize(ip);
+> > 
+> > 	if (rounding == 1)
+> > 		return off;
+> > 	return rounddown_64(off, rounding);
+> > }
+> > 
+> > static inline xfs_fileoff_t
+> > xfs_inode_roundup_alloc_unit(
+> > 	struct xfs_inode	*ip,
+> > 	xfs_fileoff		off)
+> > {
+> > 	unsigned int		rounding = xfs_inode_alloc_fsbsize(ip);
+> > 
+> > 	if (rounding == 1)
+> > 		return off;
+> > 	return roundup_64(off, rounding);
+> > }
+> > 
+> > Then that callsite can be:
+> > 
+> > 	end_fsb = xfs_inode_roundup_alloc_unit(ip,
+> > 			XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip)));
+> 
 > 
 > Thanks,
-> 
->         tglx
+> John
 > 
