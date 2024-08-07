@@ -1,41 +1,58 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4522826AFC;
-	Wed,  7 Aug 2024 14:25:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B351D2B9A1;
+	Wed,  7 Aug 2024 14:34:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723040712; cv=none; b=ZFqozKLZkS2sOVwQNzn/3PCcTV+uvN+UPKKXnOIz3hnoFotRNQEvROZWQYjDK29DaNvk5cdCwMqznAZyotB4cgj8oaY3oItYptYuKUZ1ucbwc7+cwUolXaOt2VgVnFLIDtZrpC6d5Hja4QvlW2KXHN50Od2gV8ht7TbQ/Gd7jW8=
+	t=1723041252; cv=none; b=r/QGkQtu5RWcYy4f3RkOjt+Y6VmPROHnelbBitB73F/ZdSUfOPbVC/OKjuZ/1oXZT1qVRHtZ4ayqgHbHIYEuMEXMEhx4goHBO20LwL8Xmp+I9BZRr/hOGT/v/AaNNCjJuUekTiMGOn3HzaHt0unoAv1qXFEeYddaNXP9tJIDpfE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723040712; c=relaxed/simple;
-	bh=n6XVS07ndS40DP9OxE/y50yjhtV3uJr1TXgJWuJ8r6E=;
+	s=arc-20240116; t=1723041252; c=relaxed/simple;
+	bh=WqkhNT4x7/zQlM4AhmFxq4Q+ZY4U6nP+ET/fhr6SeRo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KSA5s6u04v3kNV3Ca+p+8Sy8tYLdZOSSQe7SCxkH3ESRqumlFeDmKL51ntOh6+fydVC9dsVfFRbzgNEYw5WtWxV/AmPr34BtA9gE07HnzP9HASx5DTQKaER1H5CVHJ8J4ZqnZg2MwECGlAHBuJsw1XV5TTlHqxXQaAPruK4EVxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CP+0A7zi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=L6ZJSGr+DmnqQ91Fxv8Rfv9MXIs4F4kn8b9DK+8pNIZFkn4ew+u1U1OdC6W1GaZnVI3lDksA+XNS7pi4hYtyxSW4FuvGbclxjogXmWFQztPljTmxA5Tj7CCPbCrrJMeQ7Brp/OCAgwSM0NVPkrRz+6naxmB/gGaueqsKF6gKYxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=b6bd+2AY; arc=none smtp.client-ip=90.155.92.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CP+0A7zi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE6BBC32781;
-	Wed,  7 Aug 2024 14:25:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723040711;
-	bh=n6XVS07ndS40DP9OxE/y50yjhtV3uJr1TXgJWuJ8r6E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CP+0A7ziRu8Y9ntOIbZRm0SZ4bCaRgggNRqlK7yg6UCBezLxOpOBcnDQslH/VU3dz
-	 fA24TdTbo1mQWeFKD/k/uD+vgGawB0URbe3C2wsoby3yEL/utEbJfoNDnvuPh6/5XS
-	 J+8qr5EFv0+VGWgGy8KwfUFh9CHrRLQg5Iqy4I4OILlmno6dq5aZYXPn5AERRwxTqn
-	 e0CNBbXt17S3Oh6Tlyi03OsI+hSR1kdNO91gZm01FSbubdQpqVGUFFtV9fOfdNsjLH
-	 kugxlg0F7+Jq3DIz6/DlsS7tB3VObo38Sm8IPzPOl/oP2CwcGAojzoT8/UE3ki003f
-	 ybmXV4aORoFTw==
-Date: Wed, 7 Aug 2024 07:25:11 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Xiaxi Shen <shenxiaxi26@gmail.com>
-Cc: brauner@kernel.org, corbet@lwn.net, skhan@linuxfoundation.org,
-	javier.carrasco.cruz@gmail.com, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Fix spelling and gramatical errors
-Message-ID: <20240807142511.GA6051@frogsfrogsfrogs>
-References: <20240807070536.14536-1-shenxiaxi26@gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b6bd+2AY"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=jkNguGjcftL7vwINObLdbFR92eHWY0kd9agR1JH7w6w=; b=b6bd+2AYpZJxUv+Pl0+aUW9ZdA
+	ilPREVFTAntdp7SYyHawfVlrWu9oa7IHIfMO5V+7Z+b4VrS2ZfNLgfZBwSvRaRCy67DLaTIIZ2YXI
+	8rlaRX7BWS3Z7WE6vWo2Bg+LRH/nqyczCM0fx01lYC8s2xL9bk6vJ/2KDhfBX1bHeVxa4Z/L9Ct93
+	6t5xMXboQVgxMNg0lpVNnChlPtzGGPnnfoPaBmlZ0rZotJ7+3khUYKrOJaI0FIHHs0Y6uEmCurd0p
+	CjgPhlb/jUBV3U+GXdbu/pPkMKdcDV2ZJ/nM2GuCVfobyLNR9UGMbA+3B/nEEt+yP1UPE70n9Knuf
+	PHdMhTWQ==;
+Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
+	by desiato.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sbhjs-00000006dRC-1A60;
+	Wed, 07 Aug 2024 14:34:08 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id 65FB830033D; Wed,  7 Aug 2024 16:34:07 +0200 (CEST)
+Date: Wed, 7 Aug 2024 16:34:07 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Chandan Babu R <chandanbabu@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org
+Subject: Re: Are jump labels broken on 6.11-rc1?
+Message-ID: <20240807143407.GC31338@noisy.programming.kicks-ass.net>
+References: <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20240730132626.GV26599@noisy.programming.kicks-ass.net>
+ <20240731001950.GN6352@frogsfrogsfrogs>
+ <20240731031033.GP6352@frogsfrogsfrogs>
+ <20240731053341.GQ6352@frogsfrogsfrogs>
+ <20240731105557.GY33588@noisy.programming.kicks-ass.net>
+ <20240805143522.GA623936@frogsfrogsfrogs>
+ <20240806094413.GS37996@noisy.programming.kicks-ass.net>
+ <20240806103808.GT37996@noisy.programming.kicks-ass.net>
+ <875xsc4ehr.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,48 +61,92 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240807070536.14536-1-shenxiaxi26@gmail.com>
+In-Reply-To: <875xsc4ehr.ffs@tglx>
 
-On Wed, Aug 07, 2024 at 12:05:36AM -0700, Xiaxi Shen wrote:
-> Fixed 3 typos in design.rst
+On Wed, Aug 07, 2024 at 04:03:12PM +0200, Thomas Gleixner wrote:
+
+> > +	if (static_key_dec(key, true)) // dec-not-one
 > 
-> Signed-off-by: Xiaxi Shen <shenxiaxi26@gmail.com>
+> Eeew.
 
-Thanks for the fixes,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+:-) I knew you'd hate on that
 
---D
-
+> Something like the below?
+> 
+> Thanks,
+> 
+>         tglx
 > ---
->  Documentation/filesystems/iomap/design.rst | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-> index f8ee3427bc1a..37594e1c5914 100644
-> --- a/Documentation/filesystems/iomap/design.rst
-> +++ b/Documentation/filesystems/iomap/design.rst
-> @@ -142,9 +142,9 @@ Definitions
->   * **pure overwrite**: A write operation that does not require any
->     metadata or zeroing operations to perform during either submission
->     or completion.
-> -   This implies that the fileystem must have already allocated space
-> +   This implies that the filesystem must have already allocated space
->     on disk as ``IOMAP_MAPPED`` and the filesystem must not place any
-> -   constaints on IO alignment or size.
-> +   constraints on IO alignment or size.
->     The only constraints on I/O alignment are device level (minimum I/O
->     size and alignment, typically sector size).
+> @@ -250,49 +250,71 @@ void static_key_disable(struct static_ke
+>  }
+>  EXPORT_SYMBOL_GPL(static_key_disable);
 >  
-> @@ -394,7 +394,7 @@ iomap is concerned:
+> -static bool static_key_slow_try_dec(struct static_key *key)
+> +static bool static_key_dec(struct static_key *key, bool dec_not_one)
+>  {
+> +	int v = atomic_read(&key->enabled);
 >  
->   * The **upper** level primitive is provided by the filesystem to
->     coordinate access to different iomap operations.
-> -   The exact primitive is specifc to the filesystem and operation,
-> +   The exact primitive is specific to the filesystem and operation,
->     but is often a VFS inode, pagecache invalidation, or folio lock.
->     For example, a filesystem might take ``i_rwsem`` before calling
->     ``iomap_file_buffered_write`` and ``iomap_file_unshare`` to prevent
-> -- 
-> 2.34.1
-> 
-> 
+>  	do {
+>  		/*
+> +		 * Warn about the '-1' case; since that means a decrement is
+> +		 * concurrent with a first (0->1) increment. IOW people are
+> +		 * trying to disable something that wasn't yet fully enabled.
+> +		 * This suggests an ordering problem on the user side.
+> +		 *
+> +		 * Warn about the '0' case; simple underflow.
+>  		 */
+> +		if (WARN_ON_ONCE(v <= 0))
+> +			return v;
+> +
+> +		if (dec_not_one && v == 1)
+> +			return v;
+> +
+>  	} while (!likely(atomic_try_cmpxchg(&key->enabled, &v, v - 1)));
+>  
+> +	return v;
+> +}
+> +
+> +/*
+> + * Fastpath: Decrement if the reference count is greater than one
+> + *
+> + * Returns false, if the reference count is 1 or -1 to force the caller
+> + * into the slowpath.
+> + *
+> + * The -1 case is to handle a decrement during a concurrent first enable,
+> + * which sets the count to -1 in static_key_slow_inc_cpuslocked(). As the
+> + * slow path is serialized the caller will observe 1 once it acquired the
+> + * jump_label_mutex, so the slow path can succeed.
+> + */
+> +static bool static_key_dec_not_one(struct static_key *key)
+> +{
+> +	int v = static_key_dec(key, true);
+> +
+> +	return v != 1 && v != -1;
+
+	if (v < 0)
+		return false;
+
+	/*
+	 * Notably, 0 (underflow) returns true such that it bails out
+	 * without doing anything.
+	 */
+	return v != 1;
+
+Perhaps?
+
+> +}
+> +
+> +/*
+> + * Slowpath: Decrement and test whether the refcount hit 0.
+> + *
+> + * Returns true if the refcount hit zero, i.e. the previous value was one.
+> + */
+> +static bool static_key_dec_and_test(struct static_key *key)
+> +{
+> +	int v = static_key_dec(key, false);
+> +
+> +	lockdep_assert_held(&jump_label_mutex);
+> +	return v == 1;
+>  }
+
+But yeah, this is nicer!
