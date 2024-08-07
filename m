@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE0C9144D11
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Aug 2024 19:14:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B5FE13CFA3
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Aug 2024 19:14:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723058081; cv=none; b=JKRn1WaNajHjQgFJZvC2TGGvJGexELmb8bsYUJX6sFphYLGdqcG7GoPs/dhyPfBJvVZm/q+hsSIWP/8UjbH91pe4M5WfhJaLK5hmCW46CCXlQRL0N1aseB+QsSbg67bTqCk/tQn4GhHV/lwspSfygDSizl1TVq1SMXkKK3AXDqM=
+	t=1723058097; cv=none; b=pnaR16P+WBnbM1ps3xB/WmAYq3qhGTv8mw4Vp1FyRSTgUm8qpCnmWxbvnI0DgNr7oFCHnFv7FQm4sJ7plbXdgrs2ofWPTFW9BbHeFE9I3AZMUPOzjcyiNcCN0sxS2SBIZjgJ2q5YR4DmjZje6uX54i/wEXmzECxWzWjJu4rGjg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723058081; c=relaxed/simple;
-	bh=OXw/5vWLjPeoPYWIx+/x9r8jow5ET0ubh6Dxl+/5U1E=;
+	s=arc-20240116; t=1723058097; c=relaxed/simple;
+	bh=kgkb46v7suy+I5vqP3isDpQz1hwwm+X+K3j8fc3dy5Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ask5MI9Z32BNcb2iq4zDQpEmzg84oEOtMVo7wSBdv0HPZEmIup+1wMaqVIGiNeIEW70C9cnzOntkj/99Atj48SLEHDCokfb7LC+IMjmzRlVI+rgQFiBJcpmMtVz9iDt4gdyd8eMvp/pzteC7XQagUnXv4SxLJ+tcOS50d1zrsrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EwYGD62J; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SJbV0CZ/mDo5grG2BL3JoKL7C46nC4e++F1FydZ3SJngbcJ3sB0hm1lsVC0E8EQZDXVyBNNyMRSJrTL55fAmEDrUvV9mVWeaA/4vT33dnlBWggD6u5VHbCxxeZAwYQTQ9PW3pu/cajvtVhDWMYimRpyMsmR49sUSu4c3tQMFzCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GSoPdEQJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EwYGD62J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C1D1C32781;
-	Wed,  7 Aug 2024 19:14:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GSoPdEQJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3549C32781;
+	Wed,  7 Aug 2024 19:14:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723058081;
-	bh=OXw/5vWLjPeoPYWIx+/x9r8jow5ET0ubh6Dxl+/5U1E=;
+	s=k20201202; t=1723058097;
+	bh=kgkb46v7suy+I5vqP3isDpQz1hwwm+X+K3j8fc3dy5Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EwYGD62JBAUc3v5vdAZeejpGZ40p6Qizs/aQgb9tfefaT1aD70eL++NJXXTUHzBKV
-	 QZR6r8qx6fX1ITydDfp87eRzK0ZzekbILNMuotnic9UgeQFD9QWMAIRMe/7/1TXr73
-	 iZ+FTToXNsblO4GfazQ4cJrxeqQ3sgqmIIn2wOmWldmISaOPhI/hzG9vG+DVtSgkQI
-	 wAalK1gcMMXyOOGem2Vv+RTILch78hBZnPkiInXbMmYcEwYed2eiF1Qfx80OLG7VKw
-	 aH4UvRZ/+s3ovp2E0BPlohY1LBRLYff6bboW24Orek37Ce/m3vifwCIUrtStDoIjQ1
-	 HX3L49hnc//Og==
-Date: Wed, 07 Aug 2024 12:14:40 -0700
-Subject: [PATCH 3/5] design: document the parent pointer ondisk format
+	b=GSoPdEQJK9kSqkHj0Vk/Hi1maJ0w28GJDUHxEV1Psex8iLnpLKSdsFMqXKcvK9fPN
+	 17b9B8ZDGiclEALrZ3IzaLNs2kaeQZh/AJxcNl5zAEIbDG63U7R6hbL5c/Lzv3wGUA
+	 pMtLPflZOF49R9RpY6WnMgiZA3Rge5AhBOAKhNwLscx4tuFWm85gBdfPZSMIyPYSpM
+	 ZNEkp5WEowjv7kBrRA9LhosgOUWLp5N3DaT1ywimKUOSwjweJi8Z3IdKBS1ZA7QTy2
+	 qmUYwn+ZBO2B8mptMTrbYbTWNKpUUY8MxmLsSxwv2IRF4ixQJgoMofnSeBG9W/EyJ4
+	 Wvo1qX0jMDUqw==
+Date: Wed, 07 Aug 2024 12:14:56 -0700
+Subject: [PATCH 4/5] design: document the metadump v2 format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: chandanbabu@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172305794133.969463.2869086475470560475.stgit@frogsfrogsfrogs>
+Message-ID: <172305794147.969463.227865134024435978.stgit@frogsfrogsfrogs>
 In-Reply-To: <172305794084.969463.781862996787293755.stgit@frogsfrogsfrogs>
 References: <172305794084.969463.781862996787293755.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,141 +46,155 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add parent pointers to the ondisk format documentation.
+Document the ondisk format of v2 metadumps.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .../allocation_groups.asciidoc                     |    4 +
- .../extended_attributes.asciidoc                   |   95 ++++++++++++++++++++
- 2 files changed, 99 insertions(+)
+ design/XFS_Filesystem_Structure/metadump.asciidoc |  112 ++++++++++++++++++++-
+ 1 file changed, 109 insertions(+), 3 deletions(-)
 
 
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index e22c7344..d7fd63ea 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -468,6 +468,10 @@ flag has user-visible impacts, which is why it is a permanent incompat flag.
- See the section about xref:XMI_Log_Item[mapping exchange log intents] for more
- information.
+diff --git a/design/XFS_Filesystem_Structure/metadump.asciidoc b/design/XFS_Filesystem_Structure/metadump.asciidoc
+index 2bddb77f..a32d6423 100644
+--- a/design/XFS_Filesystem_Structure/metadump.asciidoc
++++ b/design/XFS_Filesystem_Structure/metadump.asciidoc
+@@ -6,6 +6,9 @@ snapshot of a live file system and to restore that snapshot onto a block
+ device for debugging purposes.  Only the metadata are captured in the
+ snapshot, and the metadata blocks may be obscured for privacy reasons.
  
-+| +XFS_SB_FEAT_INCOMPAT_PARENT+ |
-+Directory parent pointers.  See the section about xref:Parent_Pointers[parent
-+pointers] for more information.
++[[Metadump_v1]]
++== Metadump v1
 +
- |=====
+ A metadump file starts with a +xfs_metablock+ that records the addresses of
+ the blocks that follow.  Following that are the metadata blocks captured
+ from the filesystem.  The first block following the first superblock
+@@ -21,7 +24,7 @@ struct xfs_metablock {
+ 	__be32		mb_magic;
+ 	__be16		mb_count;
+ 	uint8_t		mb_blocklog;
+-	uint8_t		mb_reserved;
++	uint8_t		mb_info;
+ 	__be64		mb_daddr[];
+ };
+ ----
+@@ -37,14 +40,117 @@ Number of blocks indexed by this record.  This value must not exceed +(1
+ The log size of a metadump block.  This size of a metadump block 512
+ bytes, so this value should be 9.
  
- *sb_features_log_incompat*::
-diff --git a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-index 19bff70f..4000c002 100644
---- a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-+++ b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-@@ -90,6 +90,7 @@ A combination of the following:
- | +XFS_ATTR_SECURE+		| The attribute's namespace is ``secure''.
- | +XFS_ATTR_INCOMPLETE+		| This attribute is being modified.
- | +XFS_ATTR_LOCAL+		| The attribute value is contained within this block.
-+| +XFS_ATTR_PARENT+		| This attribute is a parent pointer.
- |=====
+-*mb_reserved*::
+-Reserved.  Should be zero.
++*mb_info*::
++A combination of the following flags:
++
++.Metadump information flags
++[options="header"]
++|=====
++| Flag				| Description
++| +XFS_METADUMP_INFO_FLAGS+	|
++This field is nonzero.
++
++| +XFS_METADUMP_OBFUSCATED+	|
++User-supplied directory entry and extended attribute names have been obscured,
++and extended attribute values are zeroed to protect privacy.
++
++| +XFS_METADUMP_FULLBLOCKS+	|
++Entire metadata blocks have been dumped, including unused areas.
++If not set, the unused areas are zeroed.
++
++| +XFS_METADUMP_DIRTYLOG+	|
++The log was dirty when the dump was captured.
++
++|=====
  
- .Short form attribute layout
-@@ -911,6 +912,100 @@ Log sequence number of the last write to this block.
- Filesystems formatted prior to v5 do not have this header in the remote block.
- Value data begins immediately at offset zero.
+ *mb_daddr*::
+ An array of disk addresses.  Each of the +mb_count+ blocks (of size +(1
+ << mb_blocklog+) following the +xfs_metablock+ should be written back to
+ the address pointed to by the corresponding +mb_daddr+ entry.
  
-+[[Parent_Pointers]]
-+== Directory Parent Pointers
++[[Metadump_v2]]
++== Metadump v2
 +
-+If this feature is enabled, each directory entry pointing from a parent
-+directory to a child file has a corresponding back link from the child file
-+back to the parent.  In other words, if directory P has an entry "foo" pointing
-+to child C, then child C will have a parent pointer entry "foo" pointing to
-+parent P.  This redundancy enables validation and repairs of the directory tree
-+if the tree structure is damaged.
++A v2 metadump file starts with a +xfs_metadump_header+ structure that records
++information about the dump itself.  Immediately after this header is a sequence
++of a +xfs_meta_extent+ structure describing an extent of data and the data
++itself.  Data areas must be a multiple of 512 bytes in length.
 +
-+Parent pointers are stored in the private ATTR_PARENT namespace within the
-+extended attribute structure.  Attribute names in this namespace use a custom
-+hash function, which is defined as the dirent name hash of the dirent name XORd
-+with the upper and lower 32 bits of the parent inumber.  This hash function
-+reduces collisions if the same file is hard linked into multiple directories
-+under identical names.
-+
-+The attribute name contains the dirent name in
-+the parent, and the attribute value contains a file handle to the parent
-+directory:
++.Metadata v2 Dump Format
 +
 +[source, c]
 +----
-+struct xfs_parent_rec {
-+	__be64	p_ino;
-+	__be32	p_gen;
-+};
++struct xfs_metadump_header {
++	__be32		xmh_magic;
++	__be32		xmh_version;
++	__be32		xmh_compat_flags;
++	__be32		xmh_incompat_flags;
++	__be64		xmh_reserved;
++} __packed;
 +----
 +
-+*p_ino*::
-+Inode number of the parent directory.
++*xmh_magic*::
++The magic number, ``XMD2'' (0x584D4432).
 +
-+*p_gen*::
-+Generation number of the parent directory.
++*xmh_version*::
++The value 2.
 +
-+=== xfs_db Parent Pointer Example
++*xmh_compat_flags*::
++A combination of the following flags:
 +
-+Create a directory tree with the following structure, assuming that the
-+XFS filesystem is mounted on +/mnt+:
++.Metadump v2 compat flags
++[options="header"]
++|=====
++| Flag				| Description
++| +XFS_MD2_COMPAT_OBFUSCATED+	|
++User-supplied directory entry and extended attribute names have been obscured,
++and extended attribute values are zeroed to protect privacy.
 +
++| +XFS_MD2_COMPAT_FULLBLOCKS+	|
++Entire metadata blocks have been dumped, including unused areas.
++If not set, the unused areas are zeroed.
++
++| +XFS_MD2_COMPAT_DIRTYLOG+	|
++The log was dirty when the dump was captured.
++
++| +XFS_MD2_COMPAT_EXTERNALLOG+	|
++Dump contains external log contents.
++
++|=====
++
++*xmh_incompat_flags*::
++Must be zero.
++
++*xmh_reserved*::
++Must be zero.
++
++.Metadata v2 Extent Format
++
++[source, c]
 +----
-+$ mkdir /mnt/a/ /mnt/b
-+$ touch /mnt/a/autoexec.bat
-+$ ln /mnt/a/autoexec.bat /mnt/b/config.sys
-+----
-+
-+Now we open this up in the debugger:
-+
-+----
-+xfs_db> path /a
-+xfs_db> ls
-+8          131                directory      0x0000002e   1 . (good)
-+10         128                directory      0x0000172e   2 .. (good)
-+12         132                regular        0x5a1f6ea0  12 autoexec.bat (good)
-+xfs_db> path /b
-+xfs_db> ls
-+8          16777344           directory      0x0000002e   1 . (good)
-+10         128                directory      0x0000172e   2 .. (good)
-+15         132                regular        0x9a01678c  10 config.sys (good)
-+xfs_db> path /b/config.sys
-+xfs_db> p a
-+a.sfattr.hdr.totsize = 56
-+a.sfattr.hdr.count = 2
-+a.sfattr.list[0].namelen = 12
-+a.sfattr.list[0].valuelen = 12
-+a.sfattr.list[0].root = 0
-+a.sfattr.list[0].secure = 0
-+a.sfattr.list[0].parent = 1
-+a.sfattr.list[0].name = "autoexec.bat"
-+a.sfattr.list[0].parent_dir.inumber = 131
-+a.sfattr.list[0].parent_dir.gen = 3204669414
-+a.sfattr.list[1].namelen = 10
-+a.sfattr.list[1].valuelen = 12
-+a.sfattr.list[1].root = 0
-+a.sfattr.list[1].secure = 0
-+a.sfattr.list[1].parent = 1
-+a.sfattr.list[1].name = "config.sys"
-+a.sfattr.list[1].parent_dir.inumber = 16777344
-+a.sfattr.list[1].parent_dir.gen = 4137450876
-+
++struct xfs_meta_extent {
++	__be64		xme_addr;
++	__be32		xme_len;
++} __packed;
 +----
 +
-+In this example, +/a+ and +/b+ are subdirectories of the root.  A regular file
-+is hardlinked into both subdirectories, under different names.  Directory +/a+
-+is inode 131 and has an entry +autoexec.bat+ pointing to the child file.
-+Directory +/b+ is inode 16777344 and has an entry +config.sys+ pointing to the
-+same child file.
++*xme_addr*::
++Bits 55-56 determine the device from which the metadata dump data was extracted.
 +
-+Within the child file, notice that there are two parent pointers in the
-+extended attribute structure.  The first parent pointer tells us that directory
-+inode 131 should have an entry +autoexec.bat+ pointing down to the child; the
-+second parent pointer tells us that directory inode 16777344 should have an
-+entry +config.sys+ pointing down to the child.
++.Metadump v2 extent flags
++[options="header"]
++|=====
++| Value		| Description
++| 0		| Data device
++| 1		| External log
++|=====
 +
- == Key Differences Between Directories and Extended Attributes
++The lower 54 bits determine the device address from which the dump data was
++extracted, in units of 512 bytes.
++
++*xme_length*::
++Length of the metadata dump data region, in units of 512 bytes.
++
+ == Dump Obfuscation
  
- Directories and extended attributes share the function of mapping names to
+ Unless explicitly disabled, the +xfs_metadump+ tool obfuscates empty block
 
