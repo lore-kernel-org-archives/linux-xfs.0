@@ -1,45 +1,29 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A63327D3E4;
-	Wed,  7 Aug 2024 15:17:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E93C79DC7;
+	Wed,  7 Aug 2024 16:08:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723043853; cv=none; b=lIHNxX7J0ajs9zy140V39SskDxsaMNMQcl/VS9IyM1AgVI/K86dmc4CA8gCQdpYR95YzFXZ3W3XYSR0LOWQ9ON/rDob56fuJ6u30vghgIMN0W2zKmXN2xHhUcmGWXBtBHL5jmaPfE0ZdxJGb7WlTGVzMbuPd05MEA7vLK58P8DE=
+	t=1723046910; cv=none; b=YU9thReP9Y0GBrDZxvK8c8eZji0nESy6r+h07nDkxoiYPFAQq6ZVMS9LjHGjyMrasIc3Y7w6L3cM0OetJJfZhjZbCG9Je5inBmjQbsepFf6+umFHC5Qubo37vgRn6o05XsRjaG1qsLOsdnCPPBZhtmKn2semkB8U0/mB9PMP0+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723043853; c=relaxed/simple;
-	bh=/z8rWo6lRF06Eu8KwlaXy7cG2JX+ag7Ljm0iD7hk2Jw=;
+	s=arc-20240116; t=1723046910; c=relaxed/simple;
+	bh=MBX/Klr99P+DufRkiU2/pWxc0GdbMzXQSkMr7xvs/E0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b8EPqwLYhYQZNq40l4a5Ii23IQLiLW8aamtBLT4ip2iY0UgAZMNLeb2it6t/jeHJGJZaMCQy09wLPdqIksekDoKe9+PVxxuOY/uF+rWWD3V6Kq+2OadpSQ27wGrhIBuJ2tyaRt4SKWCA34nxirD9R93f4XkN1VWJqFwJG4ax31Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S3TUaQoM; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S3TUaQoM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 352F0C32781;
-	Wed,  7 Aug 2024 15:17:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723043853;
-	bh=/z8rWo6lRF06Eu8KwlaXy7cG2JX+ag7Ljm0iD7hk2Jw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=S3TUaQoM+BqXR8OMaKRzxC1os28ge4J4DQaJmqLJU9/0SLQ6QKgOZGNWzB33gd3ri
-	 4NzaCxAHpgIsZBivFU5r/iJP4X8D7RODOBLyoUXkFpyPa0xrLTwFXBRLQoQXK4u4rA
-	 PcquQ7GQiTv76IGmo66GcNNSZhi9lPCwaIQWl3OiiJxSlluVR3PEgworhHQrKcRJhP
-	 HycPMgryMRL5e35gA8UrlMoT9EH53+u48FJ508djBMRM/2dmkRiS9QOoo9cC9nKzLV
-	 7Sn5yMpIy49IwT0NVvdmBNzu+LnoYMz80ABivfgW8UtcbIw64Jy6PufzTZrL3CBnCi
-	 io2jvWhc49kng==
-Date: Wed, 7 Aug 2024 08:17:32 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH v3 14/14] xfs: Enable file data forcealign feature
-Message-ID: <20240807151732.GH6051@frogsfrogsfrogs>
-References: <20240801163057.3981192-1-john.g.garry@oracle.com>
- <20240801163057.3981192-15-john.g.garry@oracle.com>
- <20240806194321.GO623936@frogsfrogsfrogs>
- <19fb82cd-77e6-43af-a0a2-c08700b04066@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=J22n3pi04jywzs5waRq7az2RgKUYlmc/XJDdMHBZpw/FrPvccyfxbRYzk9qbqyioaOrDJdKhpIbNc22FKqREyHBPxbhK3PV9/Yl9W/6RwffRN4Qiivwupo7Jgw5IhF1Bj4XxOVRXPevtgG2Xugp/cc/XiwmxSvitw3tSQnNIh24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 9F68968BFE; Wed,  7 Aug 2024 18:08:24 +0200 (CEST)
+Date: Wed, 7 Aug 2024 18:08:24 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, Dave Chinner <dchinner@redhat.com>, hch@lst.de,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/7] xfs_io: edit filesystem properties
+Message-ID: <20240807160824.GA9745@lst.de>
+References: <172296825181.3193059.14803487307894313362.stgit@frogsfrogsfrogs> <172296825218.3193059.5122114124530927395.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,31 +32,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <19fb82cd-77e6-43af-a0a2-c08700b04066@oracle.com>
+In-Reply-To: <172296825218.3193059.5122114124530927395.stgit@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Aug 07, 2024 at 02:50:18PM +0100, John Garry wrote:
-> On 06/08/2024 20:43, Darrick J. Wong wrote:
-> > On Thu, Aug 01, 2024 at 04:30:57PM +0000, John Garry wrote:
-> > > From: "Darrick J. Wong"<djwong@kernel.org>
-> > > 
-> > > Enable this feature.
-> > > 
-> > > Signed-off-by: "Darrick J. Wong"<djwong@kernel.org>
-> > > Signed-off-by: John Garry<john.g.garry@oracle.com>
-> > You really ought to add your own Reviewed-by tag here...
+On Tue, Aug 06, 2024 at 11:19:50AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> ok, if you prefer. Normally I think it's implied by the context and
-> signed-off tag.
+> Add some new subcommands to xfs_io so that users can administer
+> filesystem properties.
 
-SoB means only that either you've written the patch yourself and have
-the right to submit it, or that you have the right to pass on a patch
-written by someone else who certified the same thing.
+s/some //?
 
-An actual code review should be signalled explicitly, not implied by
-context.
-
---D
-
-> Thanks,
-> John
 > 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>Acked-by: Dave Chinner <dchinner@redhat.com>
+
+Missing newline here.
+
+> +	if (!(*print_values)) {
+
+The inner set of braces here should not be needed.
+
+Otherwise looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
