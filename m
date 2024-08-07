@@ -1,65 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F9ED5BAF0;
-	Wed,  7 Aug 2024 16:43:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9091A13C66F
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Aug 2024 17:15:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723048991; cv=none; b=Lika9YuXhQDj9EPJwTY+LaoU9XheyIjUudTdHs/6OYIxLIYX7gJvQ1BJGR/SCPkzqNsHbcb30RzS+XzmfoYrivTEJsikdUhdP4V6Rn9IjiH1zi5rNplEHC2QXOxA/MmATjKvs2poIpwtK4I6dq8FkAawo3qWnfv1ogHigblUWBA=
+	t=1723050906; cv=none; b=It56Lvbb6m0jgBLud/teOwXH38yLLa0kmKHLgq/j+LzUJExWpqvDBCZ+4SZcMMNl+zq2fMCvh2+5EhpP/Fz2RW1oOY3HR/Au9Ed80llzZgPNZ+ADpukPlFBSgk/wxZHu9uyFdAoP5oV7nKUiz7W2bqmlD3gH7ex37B4nl1ESb/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723048991; c=relaxed/simple;
-	bh=n1Pd3oR8KNQpzL8XsP7ZLOgfQSAyvQjo8vMjZeOO9O0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E3XtNLn6uIrELCZouRH2L6fbn7qhj5+c+pgNQt9bkAX3j8GIg689w9Zuss9xEr7qmOpU0y6Py04ToUUWCZ/oub2Pt4kOqyvkk5xNB7btvrGFrRzksMpY8WCAK0Kiza8G701u3JNBo0zqtO0xzfXTx3Oj9MhgfdADcFQDIyNk9nk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QEz+XPmK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723050906; c=relaxed/simple;
+	bh=6seDGBuy3lllddGh1Odm/wKKIDwwINFGaxNf3YszI+0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EXKCpARRLeFKy0pX+HoXAUo8gK2bXUKlv8wowRVlHUiwBI9/1EzUbrFzKb71K0SWzOOQXmcLCVP+m7+SE90SZFCFmJUc0St0WG6DFjAX+eckqR4N3385j/IAN23tfUjzYF/AdiJAC+R8A4b1mA+udnfzuRYjeoQqV6d0BNmmvCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=GZ5hzzs/; arc=none smtp.client-ip=63.231.237.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QEz+XPmK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE267C32781;
-	Wed,  7 Aug 2024 16:43:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723048991;
-	bh=n1Pd3oR8KNQpzL8XsP7ZLOgfQSAyvQjo8vMjZeOO9O0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QEz+XPmKILUGKHt44O+qzD51YeyLC+RzkHuCpO8bA4kAdClykUWCF/E3sEX3NjC77
-	 1CemyMWtbxmdpWx3gd9Er48wFzMfnmf0PwgCPZ7vpp1nUE1IapIultDEs48cs+QUz8
-	 0hNY2Aj2WQYcS0aGcs/Cih9xyq83yvndwDvhRguYjfpG37OhtLhhGMkgN2yrMMo4GZ
-	 v8UGqTJ4wMbwcMTXNnYmBFaJAFBkLzEATW5+k5Qvm5/+XTl0jgBrSdGlKrXEebJ6Fa
-	 HTfTDsbmU5UNyIwPW6eCpncNtKBP9q3yCQQhmjCG+wKzSyQqUYS29zrKZA2pkRNYsP
-	 fQEm9TMOtapZQ==
-Date: Wed, 7 Aug 2024 09:43:10 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>, \@magnolia.djwong.org
-Cc: cem@kernel.org, Dave Chinner <dchinner@redhat.com>,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/7] xfs_db: improve getting and setting extended
- attributes
-Message-ID: <20240807164310.GK6051@frogsfrogsfrogs>
-References: <172296825181.3193059.14803487307894313362.stgit@frogsfrogsfrogs>
- <172296825234.3193059.7895487674250550849.stgit@frogsfrogsfrogs>
- <20240807161004.GB9745@lst.de>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="GZ5hzzs/"
+Received: from [10.0.0.71] (usg [10.0.0.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 9577A5CE9C4;
+	Wed,  7 Aug 2024 12:07:38 -0500 (CDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 9577A5CE9C4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
+	s=default; t=1723050458;
+	bh=tsDmOa3Mk86Iu7vurKCtpr8tQYTHB9bzHAmOVLMqL0c=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=GZ5hzzs/gbW7b20uAmNuaT8LyMiz6OqkbdxJpnqu8UsbO0oJHd+DqXdA+Ie7fyddJ
+	 AvVzHHUc+QE8Tzly4C2NrcPXPCa9NkCZ9Q39co4vZt6xGWVF4ISoePlV9cCTKswmIQ
+	 NfAgbz8gDHtdKlrozmVfbonxWG8vTvKh/PqqWRl7wD0/p37G2ak/sO+hC2xdh/24Az
+	 5x5bIRcoEmd4BwgItAmH/eYxQqfoinDT5S71B7ZH11TlFyY3Oxri8D0w0PF4kY7ltB
+	 X2i9K1GyJ+jiG8FpxinFZRbyYjyC1neQywOGLG2vxdgA/+ZSYoKicNNuCfVEcdIMlj
+	 oDrAqn9iE9/lA==
+Message-ID: <40fa60fa-b7f0-40c8-87d6-c083b028c6c2@sandeen.net>
+Date: Wed, 7 Aug 2024 12:07:37 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240807161004.GB9745@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs_db: release ip resource before returning from
+ get_next_unlinked()
+To: Bill O'Donnell <bodonnel@redhat.com>, "Darrick J. Wong"
+ <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org
+References: <20240802222552.64389-1-bodonnel@redhat.com>
+ <20240802232300.GK6374@frogsfrogsfrogs> <ZrDkx1gFEGDCvUmS@redhat.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <ZrDkx1gFEGDCvUmS@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Aug 07, 2024 at 06:10:04PM +0200, Christoph Hellwig wrote:
-> On Tue, Aug 06, 2024 at 11:20:06AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Add an attr_get command to retrieve the value of an xattr from a file;
-> > and extend the attr_set command to allow passing of string values.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>Reviewed-by: Christoph Hellwig <hch@lst.de>
+On 8/5/24 9:42 AM, Bill O'Donnell wrote:
+> On Fri, Aug 02, 2024 at 04:23:00PM -0700, Darrick J. Wong wrote:
+>> On Fri, Aug 02, 2024 at 05:25:52PM -0500, Bill O'Donnell wrote:
+>>> Fix potential memory leak in function get_next_unlinked(). Call
+>>> libxfs_irele(ip) before exiting.
+>>>
+>>> Details:
+>>> Error: RESOURCE_LEAK (CWE-772):
+>>> xfsprogs-6.5.0/db/iunlink.c:51:2: alloc_arg: "libxfs_iget" allocates memory that is stored into "ip".
+>>> xfsprogs-6.5.0/db/iunlink.c:68:2: noescape: Resource "&ip->i_imap" is not freed or pointed-to in "libxfs_imap_to_bp".
+>>> xfsprogs-6.5.0/db/iunlink.c:76:2: leaked_storage: Variable "ip" going out of scope leaks the storage it points to.
+>>> #   74|   	libxfs_buf_relse(ino_bp);
+>>> #   75|
+>>> #   76|-> 	return ret;
+>>> #   77|   bad:
+>>> #   78|   	dbprintf(_("AG %u agino %u: %s\n"), agno, agino, strerror(error));
+>>>
+>>> Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
+>>> ---
+>>>  db/iunlink.c | 1 +
+>>>  1 file changed, 1 insertion(+)
+>>>
+>>> diff --git a/db/iunlink.c b/db/iunlink.c
+>>> index d87562e3..3b2417c5 100644
+>>> --- a/db/iunlink.c
+>>> +++ b/db/iunlink.c
+>>> @@ -72,6 +72,7 @@ get_next_unlinked(
+>>>  	dip = xfs_buf_offset(ino_bp, ip->i_imap.im_boffset);
+>>>  	ret = be32_to_cpu(dip->di_next_unlinked);
+>>>  	libxfs_buf_relse(ino_bp);
+>>> +	libxfs_irele(ip);
+>>
+>> I think this needs to cover the error return for libxfs_imap_to_bp too,
+>> doesn't it?
 > 
-> Missing newline here again (not going to say this again if it shows
-> up on more patches..)
+> I considered that, but there are several places in the code where the
+> error return doesn't release the resource. Not that that's correct, but the
+> scans didn't flag them. For example, in bmap_inflate.c, bmapinflate_f()
+> does not release the resource and scans didn't flag it.
 
-Yeah, I don't know why that happened.  Something went wrong in my text
-processing scripts.
+Upstream coverity scan does flag it, CID 1554242 (that CID actually covers
+both instances of the leak).
 
---D
+-Eric
+
+> Thanks-
+> Bill
+> 
+> 
+>>
+>> --D
+>>
+>>>  
+>>>  	return ret;
+>>>  bad:
+>>> -- 
+>>> 2.45.2
+>>>
+>>
+> 
+> 
+
