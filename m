@@ -1,39 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A12B75464E;
-	Wed,  7 Aug 2024 07:31:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9EA1CB320;
+	Wed,  7 Aug 2024 09:37:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723015874; cv=none; b=FxPut1EY6cmC+oio35bS4zr8A91EwAkSJ1VnlNMevxuHOagQ03z9/PSqecRepy/QuC6769QpzllGoIevsCcBrU8rda5UAJ+XYAcT09ELAPABamqgTZAE2KwsBzw5wY2EKQfYUYjmvRpmNvTwuA8IHd4v6N1CtqtqsSg6dijaxyQ=
+	t=1723023438; cv=none; b=Lz3e4DJv3IQy5YBb5+Q8GzdHF85YPsBjjuntl1wGPLs0V7XaGAjpXmJ1f5QM/aPRiuwBWhTpF6keTG7iJ4Cvi/Tjk+C2aygXdxZlAO012tI/0bthF8OgTXMVHC9VGeaP3lawXpOU4H5Ju8bs7xfDMbLoEqDd11UhAtD6rh56eZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723015874; c=relaxed/simple;
-	bh=kjmVOn4W7d36TIXcdoDz7P/vSXeDDFbK30LfaqjgzDI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lGOJ5pYSgWjr8TMV5y8luQE31OHxZ+iieDk+sGOROS0IEF7PAYUEmpuLyDGMHdnFUhBwcSiGoC857OPNIYpUbkSnAiHMZaN6yTs7HxREHv77V9zfa+uAm/tpFi0kyjIau5gpzSpB2e0Eu2nG8kfbVyqKHwzdsQBWNLadLnhPHf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RH8Z5H+8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723023438; c=relaxed/simple;
+	bh=I8LCSMujmAqfFzBAvwIjUQzwzPViItRpq+du9KQ5tCE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=SqK69ZTCGdgdzmGaexTxjQCi5WHHjqoJE2ajPnXJAEsVWl92cWNJJrriWbCD03FMD88h/a3s06SmFCMdV7vHdsvr3Y3jKzlCnwjllA3RNM/g0nDCwLWm8zMDMl3ho68GcSh1SpFwq796IhLKHNMN69s4Sos/Q/hZrIl6UkidA38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1N7pxUV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RH8Z5H+8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA8A1C32782;
-	Wed,  7 Aug 2024 07:31:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1N7pxUV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72E53C32782;
+	Wed,  7 Aug 2024 09:37:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723015874;
-	bh=kjmVOn4W7d36TIXcdoDz7P/vSXeDDFbK30LfaqjgzDI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RH8Z5H+8V7TFOJlsd4oC3v7Hn+HaGpVBNcToCLve1FzIpnWlXplMnmrcYsOktA+o8
-	 ZXqmcpM6c3VHc+kS7GQsBGwI5DA+0jLYvIqP2/1csuMEZHjw3AELs5BVdySIFPMayc
-	 GOA3ihKX1MeSc6Z45wsO+XtHNwCV2G+cpxsUBsqrP5Fh+v7CbLKDOkZ8vH4VS018+V
-	 Q6RMqBEL3NM5LFLT7kQ9a1zpTVh+5AKXwFDQKuFpJzUgVLFHprIrT4t3dos2POYndo
-	 cUVaSYer8iuu9gMWa7n/fzTwBHJqUTwKLggS+SsGUiYeFsBwM2LjedKh/o8i34XWB7
-	 pe8OXO6FUOg5g==
-Date: Wed, 7 Aug 2024 09:31:08 +0200
-From: Carlos Maiolino <cem@kernel.org>
+	s=k20201202; t=1723023438;
+	bh=I8LCSMujmAqfFzBAvwIjUQzwzPViItRpq+du9KQ5tCE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=D1N7pxUVqPXaNGF2EokLIgj7AHU+QZZgOq4m4S603vORtNum3if26eA9iKSENKGk5
+	 +qTOiLW5K81Nb/Mdnd10jT0k8JK1VwJyBYoRnJMliSIqbtdQgRckM6WkpfA2Mv8YzX
+	 DWA4UShvDLsfWsNAh2QvzeCIaXloKN4H/1NFhD+8vn5OKAFsaULAdYTQsxRgB7qLKR
+	 nLt30dz39fM2+YtSH8QeeB7F2mdqKcbVBfcZpKPsn1AeYCjIzw2RLJIelb9nkRmXgL
+	 Ru7ywulDseXSbIxWzIETgIPqMenJ7aP9lZOGgESt9ozThD/1I/FS97ETlvQheBYD6p
+	 M/fXdtsYZFvMg==
+From: Christian Brauner <brauner@kernel.org>
 To: Xiaxi Shen <shenxiaxi26@gmail.com>
-Cc: brauner@kernel.org, djwong@kernel.org, corbet@lwn.net, 
-	skhan@linuxfoundation.org, javier.carrasco.cruz@gmail.com, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Christian Brauner <brauner@kernel.org>,
+	skhan@linuxfoundation.org,
+	javier.carrasco.cruz@gmail.com,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	djwong@kernel.org,
+	corbet@lwn.net
 Subject: Re: [PATCH] Fix spelling and gramatical errors
-Message-ID: <gav3pjazwfsvbvboz42hlf7srbxpfwjt4zaz5uagq4jvoumiru@6r27sngjhias>
+Date: Wed,  7 Aug 2024 11:37:08 +0200
+Message-ID: <20240807-wahlgang-leihwagen-015803fd6257@brauner>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240807070536.14536-1-shenxiaxi26@gmail.com>
 References: <20240807070536.14536-1-shenxiaxi26@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -41,47 +49,30 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240807070536.14536-1-shenxiaxi26@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=840; i=brauner@kernel.org; h=from:subject:message-id; bh=I8LCSMujmAqfFzBAvwIjUQzwzPViItRpq+du9KQ5tCE=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaRtdnAt1RYRnnDAWNbXrOB0uVvchaSYogYLixcGt2bId e7mSDnfUcrCIMbFICumyOLQbhIut5ynYrNRpgbMHFYmkCEMXJwCMJG22Qz/w6plvtbcscyrLMoP fy+Zu/rLjkWcZw03bowP2DS1Y8fFBkaGzcs44pO7f2q83qis1przpmz/j355mffrD5efsEqclbq RCQA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Wed, Aug 07, 2024 at 12:05:36AM GMT, Xiaxi Shen wrote:
+On Wed, 07 Aug 2024 00:05:36 -0700, Xiaxi Shen wrote:
 > Fixed 3 typos in design.rst
 > 
-> Signed-off-by: Xiaxi Shen <shenxiaxi26@gmail.com>
-> ---
->  Documentation/filesystems/iomap/design.rst | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Applied to the vfs.misc branch of the vfs/vfs.git tree.
+Patches in the vfs.misc branch should appear in linux-next soon.
 
-> 
-> diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-> index f8ee3427bc1a..37594e1c5914 100644
-> --- a/Documentation/filesystems/iomap/design.rst
-> +++ b/Documentation/filesystems/iomap/design.rst
-> @@ -142,9 +142,9 @@ Definitions
->   * **pure overwrite**: A write operation that does not require any
->     metadata or zeroing operations to perform during either submission
->     or completion.
-> -   This implies that the fileystem must have already allocated space
-> +   This implies that the filesystem must have already allocated space
->     on disk as ``IOMAP_MAPPED`` and the filesystem must not place any
-> -   constaints on IO alignment or size.
-> +   constraints on IO alignment or size.
->     The only constraints on I/O alignment are device level (minimum I/O
->     size and alignment, typically sector size).
->  
-> @@ -394,7 +394,7 @@ iomap is concerned:
->  
->   * The **upper** level primitive is provided by the filesystem to
->     coordinate access to different iomap operations.
-> -   The exact primitive is specifc to the filesystem and operation,
-> +   The exact primitive is specific to the filesystem and operation,
->     but is often a VFS inode, pagecache invalidation, or folio lock.
->     For example, a filesystem might take ``i_rwsem`` before calling
->     ``iomap_file_buffered_write`` and ``iomap_file_unshare`` to prevent
-> -- 
-> 2.34.1
-> 
-> 
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.misc
+
+[1/1] Fix spelling and gramatical errors
+      https://git.kernel.org/vfs/vfs/c/9ba1824cc875
