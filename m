@@ -1,130 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EFBC82D9A;
-	Wed,  7 Aug 2024 14:40:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD39980611;
+	Wed,  7 Aug 2024 14:55:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723041643; cv=none; b=RbH2c9AatxQK4Eu36tQSP8W79+TCSP1GbNEJ6KcEcd1vp/ct1NXPuXaVOwHllym3gpncGo1EH4feLDe97GpcciM8LBtR7qqIed+yLLJrtjXGNLsZb8NjNIIDRiHRbMp5vK1ioorUX8ryrmx4ZaEo9THAHeYBcL9Qo1mIesFbMHk=
+	t=1723042557; cv=none; b=RYv5fjeyllc24sGv2FnvzxIw5BA+6d87SZ0fDimE2YDB0nvcdPbv0iJOwZjuNjd1mltl7HX0YRCg84PZcNgVHXwrXi21Y7PySsP6YAp+4fJFSBvtsStQ+YpsR9QRbO8wzl0yLzion4sdjujkEGI2LVQ81hzlQHTf+rZeEYLHzmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723041643; c=relaxed/simple;
-	bh=Yp3AmtGCpcU1nG1f/EJmqw8w6DNbUcdzWqWMeZZVk+Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hsOtzqtly5WvVyEaPnY9WvChox04RVf74czqw5OLV3zpj/4LCtZQa12zUbvKB54pHAuVGWGdNkTVd0V0xG+QnNdq/Yx2+UgcttDTQiJKHwnDSu9oc57BD3501zQIL3vSwdTJ6MAd4ugDVLFU2/0wYZrdOhJFqx7CLXPoLgHJIYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lJUEnvUg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723042557; c=relaxed/simple;
+	bh=pCh0QTCzKuTwxpJi7m4EvWhJ590B+sM2LRLozH6+H4Q=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=rbjkpVjRXTDmbKKh8PvD7LpdT8Gt5k+GSmHB7TEzM/jbk7mFVYcBYRuK1z/GvHx62P7Bh6TK38jSlgcBNaxPrB6R2qTGNddzgdyNhmfo5D5zNU/cN75U3ryi3F1nWp2czvsj4TwD0ZO2HqUZrZGzDpgoeZ9XkIdrOFPcxWnUPuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=IZM0z8jH; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=sM6c1+/G; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lJUEnvUg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39CEBC32781;
-	Wed,  7 Aug 2024 14:40:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723041643;
-	bh=Yp3AmtGCpcU1nG1f/EJmqw8w6DNbUcdzWqWMeZZVk+Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lJUEnvUgg6dNw2nG5jR9mYavrcK4ovoc9TqrQOD75uafdEY9Zj4BVGXo1P50jKX52
-	 6ho2Ok6RYRBsmL4eacYmGDirJRggxQn3e/cScdVrSxM/31cAue1UdEFybQlvcfsF/p
-	 pWgoA9cOV+ZLqTtwgy5PSBLMLM3Zypq7QwYLK76226jQqiVHLNOu9TxmXABi8dIeGu
-	 0vXwhiaN1wlGkOql9qDSxl28KbjEXC5B6wI7rcC4s6h2FVl/bTmOBoiZMC1KdjH4kk
-	 LsUjKH0n7ZemJRv/uzHzadMuHwVNFUwOeZZ38xFNby5z0WXtSm6oqZqtk/rOgjSXHO
-	 er1mHaBJYBuuw==
-Date: Wed, 7 Aug 2024 07:40:42 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH v3 07/14] xfs: Introduce FORCEALIGN inode flag
-Message-ID: <20240807144042.GB6051@frogsfrogsfrogs>
-References: <20240801163057.3981192-1-john.g.garry@oracle.com>
- <20240801163057.3981192-8-john.g.garry@oracle.com>
- <20240806190206.GJ623936@frogsfrogsfrogs>
- <5e5d1cfa-e003-4a9a-9bd3-516616e1edbf@oracle.com>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="IZM0z8jH";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="sM6c1+/G"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1723042553;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=g/PqSPq5J2V5SxAq6EKi7bTelvIqzFyX/Zbc6FDTSbY=;
+	b=IZM0z8jHha2AVen6B9WWK4nUorYAiuZF3ju4+y5VjStJiUnvhIiugbBWXPT/mCWe3Dt8d7
+	quPRlXUhl92ELXdnfJLgFh58we4frengzX80JKP3yi7v72SBn0ZVwdKRB1XJErawztTklU
+	X0TpQ/pUU7WADJbsn4yoITcYciTrxoe3BdrIdqdf9NmrY6OGYf+v/DCwxM/TU8pV3gTd4m
+	brVEZuXwywAtJ4yCclwN+cxQrGvBb7TMVBaeSgpkZWL49VS7WUpW1EFv6cPohm5iIJqEwJ
+	Mm+yCln0Hpiwr+2srflPzaQcDwU82GCmFwtWhkS0Sm9JH7hcszoTZm5ruA7NaQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1723042553;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=g/PqSPq5J2V5SxAq6EKi7bTelvIqzFyX/Zbc6FDTSbY=;
+	b=sM6c1+/Gn9dQ1A4igB2LOsyC/0EY8RYDqUBp8EDPVxKSmkesK5rGsM4B9es4qm98WI2DQp
+	4DoCF4bCsowfU8Bg==
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Chandan Babu R
+ <chandanbabu@kernel.org>, Matthew Wilcox <willy@infradead.org>, xfs
+ <linux-xfs@vger.kernel.org>, linux-fsdevel
+ <linux-fsdevel@vger.kernel.org>, linux-kernel
+ <linux-kernel@vger.kernel.org>, x86@kernel.org
+Subject: Re: Are jump labels broken on 6.11-rc1?
+In-Reply-To: <20240807143407.GC31338@noisy.programming.kicks-ass.net>
+References: <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20240730132626.GV26599@noisy.programming.kicks-ass.net>
+ <20240731001950.GN6352@frogsfrogsfrogs>
+ <20240731031033.GP6352@frogsfrogsfrogs>
+ <20240731053341.GQ6352@frogsfrogsfrogs>
+ <20240731105557.GY33588@noisy.programming.kicks-ass.net>
+ <20240805143522.GA623936@frogsfrogsfrogs>
+ <20240806094413.GS37996@noisy.programming.kicks-ass.net>
+ <20240806103808.GT37996@noisy.programming.kicks-ass.net>
+ <875xsc4ehr.ffs@tglx>
+ <20240807143407.GC31338@noisy.programming.kicks-ass.net>
+Date: Wed, 07 Aug 2024 16:55:53 +0200
+Message-ID: <87wmks2xhi.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5e5d1cfa-e003-4a9a-9bd3-516616e1edbf@oracle.com>
+Content-Type: text/plain
 
-On Wed, Aug 07, 2024 at 12:42:32PM +0100, John Garry wrote:
-> On 06/08/2024 20:02, Darrick J. Wong wrote:
-> > On Thu, Aug 01, 2024 at 04:30:50PM +0000, John Garry wrote:
-> > > From: "Darrick J. Wong" <djwong@kernel.org>
-> > > 
-> > > Add a new inode flag to require that all file data extent mappings must
-> > > be aligned (both the file offset range and the allocated space itself)
-> > > to the extent size hint.  Having a separate COW extent size hint is no
-> > > longer allowed.
-> > > 
-> > > The goal here is to enable sysadmins and users to mandate that all space
-> > > mappings in a file must have a startoff/blockcount that are aligned to
-> > > (say) a 2MB alignment and that the startblock/blockcount will follow the
-> > > same alignment.
-> > > 
-> > > Allocated space will be aligned to start of the AG, and not necessarily
-> > > aligned with disk blocks. The upcoming atomic writes feature will rely and
-> > > forcealign and will also require allocated space will also be aligned to
-> > > disk blocks.
-> > > 
-> > > reflink will not be supported for forcealign yet, so disallow a mount under
-> > > this condition. This is because we have the limitation of pageache
-> > > writeback not knowing how to writeback an entire allocation unut, so
-> > > reject a mount with relink.
-> > > 
-> > > RT vol will not be supported for forcealign yet, so disallow a mount under
-> > > this condition. It will be possible to support RT vol and forcealign in
-> > > future. For this, the inode extsize must be a multiple of rtextsize - this
-> > > is enforced already in xfs_ioctl_setattr_check_extsize() and
-> > > xfs_inode_validate_extsize().
-> > > 
-> > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > > Co-developed-by: John Garry <john.g.garry@oracle.com>
-> > > [jpg: many changes from orig, including forcealign inode verification
-> > >   rework, ioctl setattr rework disallow reflink a forcealign inode,
-> > >   disallow mount for forcealign + reflink or rt]
-> > > Signed-off-by: John Garry <john.g.garry@oracle.com>
-> > 
-> > This patch looks ready to me but as I'm the original author I cannot add
-> > a RVB tag.  Someone else needs to add that -- frankly, John is the best
-> > candidate because he grabbed my patch into his tree and actually
-> > modified it to do what he wants, which means he's the most familiar with
-> > it.
-> 
-> I thought my review would be implied since I noted how I appended it, above.
-> 
-> Anyway,
-> 
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> 
-> I am hoping that Dave and Christoph will give some formal ack/review when
-> they get a chance.
-> 
-> BTW, at what stage do we give XFS_SB_FEAT_RO_COMPAT_FORCEALIGN a more proper
-> value? So far it has the experimental dev value of 1 << 30, below.
+On Wed, Aug 07 2024 at 16:34, Peter Zijlstra wrote:
+> On Wed, Aug 07, 2024 at 04:03:12PM +0200, Thomas Gleixner wrote:
+>
+>> > +	if (static_key_dec(key, true)) // dec-not-one
+>> 
+>> Eeew.
+>
+> :-) I knew you'd hate on that
 
-When you're ready for the release manager to merge it, change the value,
-resend the entire series for archival purposes, and send a pull request.
+So you added it just to make me grumpy enough to fix it for you, right?
 
---D
+>> +/*
+>> + * Fastpath: Decrement if the reference count is greater than one
+>> + *
+>> + * Returns false, if the reference count is 1 or -1 to force the caller
+>> + * into the slowpath.
+>> + *
+>> + * The -1 case is to handle a decrement during a concurrent first enable,
+>> + * which sets the count to -1 in static_key_slow_inc_cpuslocked(). As the
+>> + * slow path is serialized the caller will observe 1 once it acquired the
+>> + * jump_label_mutex, so the slow path can succeed.
+>> + */
+>> +static bool static_key_dec_not_one(struct static_key *key)
+>> +{
+>> +	int v = static_key_dec(key, true);
+>> +
+>> +	return v != 1 && v != -1;
+>
+> 	if (v < 0)
+> 		return false;
 
-> Thanks!
-> 
-> 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > > index e1bfee0c3b1a..95f5259c4255 100644
-> > > --- a/fs/xfs/libxfs/xfs_format.h
-> > > +++ b/fs/xfs/libxfs/xfs_format.h
-> > > @@ -352,6 +352,7 @@ xfs_sb_has_compat_feature(
-> > >   #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
-> > >   #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-> > >   #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
-> > > +#define XFS_SB_FEAT_RO_COMPAT_FORCEALIGN (1 << 30)	/* aligned file data extents */
-> > >   #define XFS_SB_FEAT_RO_COMPAT_ALL \
-> > >   		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
-> > >   		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> 
+Hmm. I think we should do:
+
+#define KEY_ENABLE_IN_PROGRESS		-1
+
+or even a more distinct value like (INT_MIN / 2)
+
+and replace all the magic -1 numbers with it. Then the check becomes
+explicit:
+
+        if (v == KEY_ENABLE_IN_PROGRESS)
+        	return false;
+
+> 	/*
+> 	 * Notably, 0 (underflow) returns true such that it bails out
+> 	 * without doing anything.
+> 	 */
+> 	return v != 1;
+>
+> Perhaps?
+
+Sure.
+
+>> +}
+>> +
+>> +/*
+>> + * Slowpath: Decrement and test whether the refcount hit 0.
+>> + *
+>> + * Returns true if the refcount hit zero, i.e. the previous value was one.
+>> + */
+>> +static bool static_key_dec_and_test(struct static_key *key)
+>> +{
+>> +	int v = static_key_dec(key, false);
+>> +
+>> +	lockdep_assert_held(&jump_label_mutex);
+>> +	return v == 1;
+>>  }
+>
+> But yeah, this is nicer!
+
+:)
+
+Thanks,
+
+        tglx
