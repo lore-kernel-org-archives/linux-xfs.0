@@ -1,152 +1,59 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B351D2B9A1;
-	Wed,  7 Aug 2024 14:34:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3AB78B60;
+	Wed,  7 Aug 2024 14:35:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723041252; cv=none; b=r/QGkQtu5RWcYy4f3RkOjt+Y6VmPROHnelbBitB73F/ZdSUfOPbVC/OKjuZ/1oXZT1qVRHtZ4ayqgHbHIYEuMEXMEhx4goHBO20LwL8Xmp+I9BZRr/hOGT/v/AaNNCjJuUekTiMGOn3HzaHt0unoAv1qXFEeYddaNXP9tJIDpfE=
+	t=1723041321; cv=none; b=YgDHOMzs2XZRC4Z6ZN7EOSX346xxlXubPHbMy0KBaCN9tAfzSs1AXLTPoXgXmBL8kzTnOwoKK3ihNzOTmXv8UG6s4nfA0ufkWG1dtl+ob0rFVh4wHFcykTryRlIaSQ1vbaATcGEXWtavIQmkucagrw647xmgWqvfdY6VLWjoIBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723041252; c=relaxed/simple;
-	bh=WqkhNT4x7/zQlM4AhmFxq4Q+ZY4U6nP+ET/fhr6SeRo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L6ZJSGr+DmnqQ91Fxv8Rfv9MXIs4F4kn8b9DK+8pNIZFkn4ew+u1U1OdC6W1GaZnVI3lDksA+XNS7pi4hYtyxSW4FuvGbclxjogXmWFQztPljTmxA5Tj7CCPbCrrJMeQ7Brp/OCAgwSM0NVPkrRz+6naxmB/gGaueqsKF6gKYxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=b6bd+2AY; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1723041321; c=relaxed/simple;
+	bh=fbbGgS9xM7uuQJMlksGNHAtMhMJM+F39QM1REgLM26o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VXHevyNK6dA2U1q4ELA2MWBmrs1a131ew7TJAfhSAQf+VoYUg2Hi06bn9kKhVXJSUC66Ws2XSgshBsjktDEe21steFsSBfv4H59gvYxdFyA4kxgLK4rN4HcyX/uW8SaixqNYAk+SG05eeOpvOxSMN07VdHAWO1Qaa2iZzSKKIgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OrPykyBE; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b6bd+2AY"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OrPykyBE"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=jkNguGjcftL7vwINObLdbFR92eHWY0kd9agR1JH7w6w=; b=b6bd+2AYpZJxUv+Pl0+aUW9ZdA
-	ilPREVFTAntdp7SYyHawfVlrWu9oa7IHIfMO5V+7Z+b4VrS2ZfNLgfZBwSvRaRCy67DLaTIIZ2YXI
-	8rlaRX7BWS3Z7WE6vWo2Bg+LRH/nqyczCM0fx01lYC8s2xL9bk6vJ/2KDhfBX1bHeVxa4Z/L9Ct93
-	6t5xMXboQVgxMNg0lpVNnChlPtzGGPnnfoPaBmlZ0rZotJ7+3khUYKrOJaI0FIHHs0Y6uEmCurd0p
-	CjgPhlb/jUBV3U+GXdbu/pPkMKdcDV2ZJ/nM2GuCVfobyLNR9UGMbA+3B/nEEt+yP1UPE70n9Knuf
-	PHdMhTWQ==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sbhjs-00000006dRC-1A60;
-	Wed, 07 Aug 2024 14:34:08 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 65FB830033D; Wed,  7 Aug 2024 16:34:07 +0200 (CEST)
-Date: Wed, 7 Aug 2024 16:34:07 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Thomas Gleixner <tglx@linutronix.de>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=+Td0JJP15wZF6blaiamgD6Og2znv/T1xmqfEvvNeJds=; b=OrPykyBEMXD7z2EDv1Y3tcYQV3
+	wQNbmR6BJb0JKSoRWcd/sJaa62uyCCrEtuepTARPPjwtaZJdXZ92rGMpDJzPNWg2qfvm+ZDXb4c2A
+	IQ14sUgpViySeh3sn9a7JDfIRmnXaYaaMaUO6R14SjFlO5K/Ze6GwOy9nbmq4d86k01bbwzlcIMAq
+	wvK14VhgbbXJNhXZlQed8fkpMudIep0rGnvv14X7p67XpBYFpurTjJcsSZ25OlOQoYae3uhyiqXF0
+	V0mmAIkmfSuMQM74bwHN98KEAp0LtVilzlM01yZ3SlEUP2elzVJ+SD0nntC+1dF34FTQSIqRLsG39
+	JqDLgqfg==;
+Received: from [4.28.11.157] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sbhl1-00000005M03-1pgP;
+	Wed, 07 Aug 2024 14:35:19 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org
-Subject: Re: Are jump labels broken on 6.11-rc1?
-Message-ID: <20240807143407.GC31338@noisy.programming.kicks-ass.net>
-References: <87o76f9vpj.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20240730132626.GV26599@noisy.programming.kicks-ass.net>
- <20240731001950.GN6352@frogsfrogsfrogs>
- <20240731031033.GP6352@frogsfrogsfrogs>
- <20240731053341.GQ6352@frogsfrogsfrogs>
- <20240731105557.GY33588@noisy.programming.kicks-ass.net>
- <20240805143522.GA623936@frogsfrogsfrogs>
- <20240806094413.GS37996@noisy.programming.kicks-ass.net>
- <20240806103808.GT37996@noisy.programming.kicks-ass.net>
- <875xsc4ehr.ffs@tglx>
+	fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: don't fail tests when mkfs options collide
+Date: Wed,  7 Aug 2024 07:35:06 -0700
+Message-ID: <20240807143519.2900711-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <875xsc4ehr.ffs@tglx>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Aug 07, 2024 at 04:03:12PM +0200, Thomas Gleixner wrote:
+Hi all,
 
-> > +	if (static_key_dec(key, true)) // dec-not-one
-> 
-> Eeew.
+I've been running some tests with forced large log sizes, and forced
+sector sizes, and get a fair amount of failures because these options
+collide with options forced by the tests themselves.  The series here was
+my attempt to fix this by not failing the tests in this case but _notrun
+them and print the options that caused them to fail.
 
-:-) I knew you'd hate on that
-
-> Something like the below?
-> 
-> Thanks,
-> 
->         tglx
-> ---
-> @@ -250,49 +250,71 @@ void static_key_disable(struct static_ke
->  }
->  EXPORT_SYMBOL_GPL(static_key_disable);
->  
-> -static bool static_key_slow_try_dec(struct static_key *key)
-> +static bool static_key_dec(struct static_key *key, bool dec_not_one)
->  {
-> +	int v = atomic_read(&key->enabled);
->  
->  	do {
->  		/*
-> +		 * Warn about the '-1' case; since that means a decrement is
-> +		 * concurrent with a first (0->1) increment. IOW people are
-> +		 * trying to disable something that wasn't yet fully enabled.
-> +		 * This suggests an ordering problem on the user side.
-> +		 *
-> +		 * Warn about the '0' case; simple underflow.
->  		 */
-> +		if (WARN_ON_ONCE(v <= 0))
-> +			return v;
-> +
-> +		if (dec_not_one && v == 1)
-> +			return v;
-> +
->  	} while (!likely(atomic_try_cmpxchg(&key->enabled, &v, v - 1)));
->  
-> +	return v;
-> +}
-> +
-> +/*
-> + * Fastpath: Decrement if the reference count is greater than one
-> + *
-> + * Returns false, if the reference count is 1 or -1 to force the caller
-> + * into the slowpath.
-> + *
-> + * The -1 case is to handle a decrement during a concurrent first enable,
-> + * which sets the count to -1 in static_key_slow_inc_cpuslocked(). As the
-> + * slow path is serialized the caller will observe 1 once it acquired the
-> + * jump_label_mutex, so the slow path can succeed.
-> + */
-> +static bool static_key_dec_not_one(struct static_key *key)
-> +{
-> +	int v = static_key_dec(key, true);
-> +
-> +	return v != 1 && v != -1;
-
-	if (v < 0)
-		return false;
-
-	/*
-	 * Notably, 0 (underflow) returns true such that it bails out
-	 * without doing anything.
-	 */
-	return v != 1;
-
-Perhaps?
-
-> +}
-> +
-> +/*
-> + * Slowpath: Decrement and test whether the refcount hit 0.
-> + *
-> + * Returns true if the refcount hit zero, i.e. the previous value was one.
-> + */
-> +static bool static_key_dec_and_test(struct static_key *key)
-> +{
-> +	int v = static_key_dec(key, false);
-> +
-> +	lockdep_assert_held(&jump_label_mutex);
-> +	return v == 1;
->  }
-
-But yeah, this is nicer!
+Changes since RFC:
+ - rebased to the patches-in-queue branch
