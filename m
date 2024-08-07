@@ -1,78 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9EA1CB320;
-	Wed,  7 Aug 2024 09:37:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F6861E2101;
+	Wed,  7 Aug 2024 11:39:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723023438; cv=none; b=Lz3e4DJv3IQy5YBb5+Q8GzdHF85YPsBjjuntl1wGPLs0V7XaGAjpXmJ1f5QM/aPRiuwBWhTpF6keTG7iJ4Cvi/Tjk+C2aygXdxZlAO012tI/0bthF8OgTXMVHC9VGeaP3lawXpOU4H5Ju8bs7xfDMbLoEqDd11UhAtD6rh56eZw=
+	t=1723030754; cv=none; b=mvhi+g5zEJJrnp9PE0jBY1ZTqXAfr9xpFaFbLALJMjedHw9ev6EA4TLjXM508buFiOlCXqwYLmGGndIoIT8cyT2d78YRMIsoKLMDUDQ4ak0P1prA0EwbtsNgDGtvQbs+13GBeYSnyhanyqBPZvthKPkEEVj7jFr/dSlmQLFl4fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723023438; c=relaxed/simple;
-	bh=I8LCSMujmAqfFzBAvwIjUQzwzPViItRpq+du9KQ5tCE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SqK69ZTCGdgdzmGaexTxjQCi5WHHjqoJE2ajPnXJAEsVWl92cWNJJrriWbCD03FMD88h/a3s06SmFCMdV7vHdsvr3Y3jKzlCnwjllA3RNM/g0nDCwLWm8zMDMl3ho68GcSh1SpFwq796IhLKHNMN69s4Sos/Q/hZrIl6UkidA38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1N7pxUV; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1N7pxUV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72E53C32782;
-	Wed,  7 Aug 2024 09:37:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723023438;
-	bh=I8LCSMujmAqfFzBAvwIjUQzwzPViItRpq+du9KQ5tCE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=D1N7pxUVqPXaNGF2EokLIgj7AHU+QZZgOq4m4S603vORtNum3if26eA9iKSENKGk5
-	 +qTOiLW5K81Nb/Mdnd10jT0k8JK1VwJyBYoRnJMliSIqbtdQgRckM6WkpfA2Mv8YzX
-	 DWA4UShvDLsfWsNAh2QvzeCIaXloKN4H/1NFhD+8vn5OKAFsaULAdYTQsxRgB7qLKR
-	 nLt30dz39fM2+YtSH8QeeB7F2mdqKcbVBfcZpKPsn1AeYCjIzw2RLJIelb9nkRmXgL
-	 Ru7ywulDseXSbIxWzIETgIPqMenJ7aP9lZOGgESt9ozThD/1I/FS97ETlvQheBYD6p
-	 M/fXdtsYZFvMg==
-From: Christian Brauner <brauner@kernel.org>
-To: Xiaxi Shen <shenxiaxi26@gmail.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	skhan@linuxfoundation.org,
-	javier.carrasco.cruz@gmail.com,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	djwong@kernel.org,
-	corbet@lwn.net
-Subject: Re: [PATCH] Fix spelling and gramatical errors
-Date: Wed,  7 Aug 2024 11:37:08 +0200
-Message-ID: <20240807-wahlgang-leihwagen-015803fd6257@brauner>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240807070536.14536-1-shenxiaxi26@gmail.com>
-References: <20240807070536.14536-1-shenxiaxi26@gmail.com>
+	s=arc-20240116; t=1723030754; c=relaxed/simple;
+	bh=iWxaPO9BnrtCywje5tM/thdF9F2kH6y/xZ/ldwKobN0=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=lIblUhDTvTbKbxw5fHKyV+2KEwo/Spp9jAK2A9I3lQpaU9vCdYDEjVdp/1WF4HdxNhO13Y95sC/spgoFDriCVXqKKPh+pk/Q/T6MoJ7JNzuvNSeKBf8rKfldELL14UWZM9HKvF4/FPOmf9VSctDJNy+RfCpNZtxokFvojxr6YR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Wf7VQ0843z4f3jrt;
+	Wed,  7 Aug 2024 19:38:54 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 5BABB1A0568;
+	Wed,  7 Aug 2024 19:39:07 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgAXPoTZXLNmb38WBA--.25043S3;
+	Wed, 07 Aug 2024 19:39:07 +0800 (CST)
+Subject: Re: [PATCH 5/6] iomap: drop unnecessary state_lock when setting ifs
+ uptodate bits
+To: Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ djwong@kernel.org, hch@infradead.org, brauner@kernel.org,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
+References: <20240731091305.2896873-1-yi.zhang@huaweicloud.com>
+ <20240731091305.2896873-6-yi.zhang@huaweicloud.com>
+ <Zqwi48H74g2EX56c@dread.disaster.area>
+ <b40a510d-37b3-da50-79db-d56ebd870bf0@huaweicloud.com>
+ <Zqx824ty5yvwdvXO@dread.disaster.area>
+ <1b99e874-e9df-0b06-c856-edb94eca16dc@huaweicloud.com>
+ <20240805124252.nco2rblmgf6x7z4s@quack3>
+ <20240805140023.inte2rxlhumkfvrh@quack3>
+ <ZrD0TKDHWhwiEoz_@casper.infradead.org>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <ed3c1368-766b-9a54-ec88-b0cde033775f@huaweicloud.com>
+Date: Wed, 7 Aug 2024 19:39:05 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=840; i=brauner@kernel.org; h=from:subject:message-id; bh=I8LCSMujmAqfFzBAvwIjUQzwzPViItRpq+du9KQ5tCE=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaRtdnAt1RYRnnDAWNbXrOB0uVvchaSYogYLixcGt2bId e7mSDnfUcrCIMbFICumyOLQbhIut5ynYrNRpgbMHFYmkCEMXJwCMJG22Qz/w6plvtbcscyrLMoP fy+Zu/rLjkWcZw03bowP2DS1Y8fFBkaGzcs44pO7f2q83qis1przpmz/j355mffrD5efsEqclbq RCQA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZrD0TKDHWhwiEoz_@casper.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgAXPoTZXLNmb38WBA--.25043S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr4xWr1kXw1ftrWxGFWkCrg_yoW8ZF1kpF
+	Wjg3Z2kr4kJF4I9rnFya18J34Fk34xJw15GF1xGr12yF95uF1SgFy3tF1UuF18Gwsaga1I
+	vFyUJas7ZF1UA37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU92b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
+	07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4
+	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
+	MI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
+	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
+	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Wed, 07 Aug 2024 00:05:36 -0700, Xiaxi Shen wrote:
-> Fixed 3 typos in design.rst
+On 2024/8/5 23:48, Matthew Wilcox wrote:
+> On Mon, Aug 05, 2024 at 04:00:23PM +0200, Jan Kara wrote:
+>> Actually add Matthew to CC ;)
 > 
+> It's OK, I was reading.
+> 
+> FWIW, I agree with Dave; the locking complexity in this patch was
+> horrendous.  I was going to get to the same critique he had, but I first
+> wanted to understand what the thought process was.
+
+Yes, I'd like to change to use the solution as Dave suggested.
+
+> 
+>>>> Ha, right, I missed the comments of this function, it means that there are
+>>>> some special callers that hold table lock instead of folio lock, is it
+>>>> pte_alloc_map_lock?
+>>>>
+>>>> I checked all the filesystem related callers and didn't find any real
+>>>> caller that mark folio dirty without holding folio lock and that could
+>>>> affect current filesystems which are using iomap framework, it's just
+>>>> a potential possibility in the future, am I right?
+> 
+> Filesystems are normally quite capable of taking the folio lock to
+> prevent truncation.  It's the MM code that needs the "or holding the
+> page table lock" get-out clause.  I forget exactly which callers it
+> is; I worked through them a few times.  It's not hard to put a
+> WARN_ON_RATELIMIT() into folio_mark_dirty() and get a good sampling.
+> 
+> There's also a "or holding a buffer_head locked" get-out clause that
+> I'm not sure is documented anywhere, but obviously that doesn't apply
+> to the iomap code.
+
+Thanks for your answer, I've found some callers.
+
+Thanks,
+Yi.
+
+> 
+>>> There used to be quite a few places doing that. Now that I've checked all
+>>> places I was aware of got actually converted to call folio_mark_dirty() under
+>>> a folio lock (in particular all the cases happening on IO completion, folio
+>>> unmap etc.). Matthew, are you aware of any place where folio_mark_dirty()
+>>> would be called for regular file page cache (block device page cache is in a
+>>> different situation obviously) without folio lock held?
+> 
+> Yes, the MM code definitely applies to regular files as well as block
+> devices.
 > 
 
-Applied to the vfs.misc branch of the vfs/vfs.git tree.
-Patches in the vfs.misc branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.misc
-
-[1/1] Fix spelling and gramatical errors
-      https://git.kernel.org/vfs/vfs/c/9ba1824cc875
