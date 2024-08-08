@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E12DF190468
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 15:28:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53941190072
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 15:28:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723130910; cv=none; b=Ury+NygcTmnmWoH87HA8dKp67Wa0geMdFhg3UaKn2RqZ4wsv69a2N0bgzP0ACUz0pV+TL7McwQcOy4UFzQ0wbLKbv51wXMIjq1NOPJICMOsAqe49FFNqsd0v4GVbENlSEj9TCymQJySL4kUkeWzZ6pLmnEtvI+//de19A5CGHFw=
+	t=1723130910; cv=none; b=kGJBo8FYsdkFQJMhoAI5K8aO8dzYsj8OWp6DvASwcEb4GF/MTfHZQx9srbHhAOliBMFuLqb7Epiz1Q1gGvFpwfPOfIqkIRRUJyia+O7dlb81O1iGD7/HfV24pd6CvjWHlP9MAE1thF2gz0r/3/Tdo3r1JZ/DY4w+AMrcJHvabNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1723130910; c=relaxed/simple;
-	bh=2TgH0p5TosrlSsMxGUROgGAE8R2IehSYh2uS77SHBtY=;
+	bh=J6Leu8/NjO23GT58hVUMPeJM2l3c+SYzc021Q0VWY/E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hdEoW7Wu/Sww29RJvRxsiNRUE6DyCB2Ge1ziwUc/pn6va5AylMHHsrSjg5JOQSj1U+tAEenD3UkTup5wQW8D4aUlcIYFwDQ1Z79KMzT2d/zqoUAZ+shYDddbBPs3lFHEAW19zW96PuYCXurTaAF7/BwioDw9R2a2+N1h1wJ+MYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mXRo82ga; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=jWkwRg85cFQAfYdIHOUQX2TqKIgb7exZ4glWTIqYpe7eXr1tIBGpZnhw1pFqndETeYc5UXqq+1KP3Z/0A9ANZmUJjhAgTyNDGdSDQqM3lfx97ObfgUTrO3t37W4WQ1sABYUKS57ZtYf0BKsLVlI54b+x3uG4f2xOoxmbcIQpaXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IyAblN0c; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mXRo82ga"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IyAblN0c"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=5apWJdn802bBJYi7AzwrCJlPHotmf/dCE+yMU+gJqj4=; b=mXRo82gaFzbR87otzsdYP/8Gym
-	rKulBq6z31AJ5X5GZLVF2UokgHfaSV6yRGpFAwH4Z+LsffcqgUkTMTj994UYjL2+uR4zDevZ896ry
-	KilVsyIgyp84mq2WyZzam1JyEuW32pBo8+3Yd5dTncHzIxtBERyt16JLb80kcb2tr7zwt2IJRTVt7
-	QsrTfjkDPOZPSkGWTEdQQ9225FZO+FtSV27ruIyMfK0tcGq/aomWVAMF37JM8UmkhyDFRvuHSpKcr
-	+VJOvNRF+xJgvdGrwTznwBrwdjFyoRNDt4e1EQNhk6HGVcBEwNnng/+iF0SP/OhbpMLLzfZK2Ej3h
-	MOjo0Jqw==;
+	bh=QobfccF+bzo+Z4/oCpc3aso3/9FbArdyguCNPPZZfCk=; b=IyAblN0cep1O54c9KOt2IbKoiD
+	C3+xFfba4wD9xH4y162AAK1LS7+RbCddChkjZ9rRWQx6bNbnWluJdeZphjWRTxt0j1oIG04ItAmtc
+	Uj9X3boI0OsBUMKqBloh5CW0rH2leB8jw+C1V6c+7z5DOKhNFWFW2l0XxzzHX+YZEkOLvwTToyFkv
+	4SOO2JS/WmqSf5h50aFeQWfA+l96WcyXfjF9NsfulZ/WBF78ilgiXGiDm5d0C9Kp0gpPWH2Uara06
+	iXE/Utxat2m4NPRSMFSfXMvlLtm00x8+7vXD8MhomlEev4oFJCmhPzOrXB6f9vf46nTEHEViJ/IRB
+	AtyppXTA==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sc540-00000008kWa-1bIW;
+	id 1sc540-00000008kWh-2tbN;
 	Thu, 08 Aug 2024 15:28:28 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/9] xfs: skip all of xfs_file_release when shut down
-Date: Thu,  8 Aug 2024 08:27:30 -0700
-Message-ID: <20240808152826.3028421-5-hch@lst.de>
+Subject: [PATCH 5/9] xfs: don't free post-EOF blocks on read close
+Date: Thu,  8 Aug 2024 08:27:31 -0700
+Message-ID: <20240808152826.3028421-6-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240808152826.3028421-1-hch@lst.de>
 References: <20240808152826.3028421-1-hch@lst.de>
@@ -50,44 +50,77 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-There is no point in trying to free post-EOF blocks when the file system
-is shutdown, as it will just error out ASAP.  Instead return instantly
-when xfs_file_shutdown is called on a shut down file system.
+From: Dave Chinner <dchinner@redhat.com>
 
+When we have a workload that does open/read/close in parallel with other
+allocation, the file becomes rapidly fragmented. This is due to close()
+calling xfs_file_release() and removing the speculative preallocation
+beyond EOF.
+
+Add a check for a writable context to xfs_file_release to skip the
+post-EOF block freeing (an the similarly pointless flushing on truncate
+down).
+
+Before:
+
+Test 1: sync write fragmentation counts
+
+/mnt/scratch/file.0: 919
+/mnt/scratch/file.1: 916
+/mnt/scratch/file.2: 919
+/mnt/scratch/file.3: 920
+/mnt/scratch/file.4: 920
+/mnt/scratch/file.5: 921
+/mnt/scratch/file.6: 916
+/mnt/scratch/file.7: 918
+
+After:
+
+Test 1: sync write fragmentation counts
+
+/mnt/scratch/file.0: 24
+/mnt/scratch/file.1: 24
+/mnt/scratch/file.2: 11
+/mnt/scratch/file.3: 24
+/mnt/scratch/file.4: 3
+/mnt/scratch/file.5: 24
+/mnt/scratch/file.6: 24
+/mnt/scratch/file.7: 23
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick: wordsmithing, fix commit message]
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+[hch: ported to the new ->release code structure]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_file.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_file.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 17dfbaca1c581c..dae8dd1223550d 100644
+index dae8dd1223550d..60424e64230743 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1187,8 +1187,11 @@ xfs_file_release(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 
--	/* If this is a read-only mount, don't generate I/O */
--	if (xfs_is_readonly(mp))
-+	/*
-+	 * If this is a read-only mount or the file system has been shut down,
-+	 * don't generate I/O.
-+	 */
-+	if (xfs_is_readonly(mp) || xfs_is_shutdown(mp))
- 		return 0;
- 
- 	/*
-@@ -1200,8 +1203,7 @@ xfs_file_release(
- 	 * is significantly reducing the time window where we'd otherwise be
- 	 * exposed to that problem.
+@@ -1217,12 +1217,18 @@ xfs_file_release(
+ 	 * There is no point in freeing blocks here for open but unlinked files
+ 	 * as they will be taken care of by the inactivation path soon.
+ 	 *
++	 * When releasing a read-only context, don't flush data or trim post-EOF
++	 * blocks.  This avoids open/read/close workloads from removing EOF
++	 * blocks that other writers depend upon to reduce fragmentation.
++	 *
+ 	 * If we can't get the iolock just skip truncating the blocks past EOF
+ 	 * because we could deadlock with the mmap_lock otherwise. We'll get
+ 	 * another chance to drop them once the last reference to the inode is
+ 	 * dropped, so we'll never leak blocks permanently.
  	 */
--	if (!xfs_is_shutdown(mp) &&
--	    xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED)) {
-+	if (xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED)) {
- 		xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
- 		if (ip->i_delayed_blks > 0)
- 			filemap_flush(inode->i_mapping);
+-	if (inode->i_nlink && xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
++	if (inode->i_nlink &&
++	    (file->f_mode & FMODE_WRITE) &&
++	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+ 		if (xfs_can_free_eofblocks(ip) &&
+ 		    !xfs_iflags_test(ip, XFS_IDIRTY_RELEASE)) {
+ 			/*
 -- 
 2.43.0
 
