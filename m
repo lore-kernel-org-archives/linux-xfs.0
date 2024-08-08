@@ -1,91 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223F34A33
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 15:05:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4224F18F2D6
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 15:28:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723129522; cv=none; b=E4fZOUEs6P2iWtX8tBC9PWdzeGYowkFmgEWlbzlwbpv+oaOBe7oPdoMPlDO3rmaCs5ECT5mgEMYLhz+VXRbwuoHOcc9yMLlGQshEyNzeqGCMDFQKVAQmCSbGQ4Nj3iJmYKmxaePEtNvjCG6Sw+1ymEmQXMhtjIyXiwOO5Cq/of4=
+	t=1723130909; cv=none; b=SWVWFZvrk0nnWdha6fhpbCfL8dTwdKktx0OAfFEDfXb4tBNKl3pOoHUMqC2KU6RJNPG4c7BXRrxHgTVzu91CL7TgY/POoDJu3D/LYbZKl7GrVga6+LGN/kAt82tTKeZtLp7v1qUkOBQ27uS7j7nAVYMk6148sb52bxDcqI35mZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723129522; c=relaxed/simple;
-	bh=Gh0/rHhGgq8m6tGdd49CQE+dpXG7XLoNvG2LNkUMVN8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NbAyO+C85WI4+vKQ+akX+zDLS+YPT/+d2ZeqkxW/B9+p2urBHAOu9eZa8HB3MZYU2ps4YKK1UeKpEoQgVcQvDpdauDV7lexN453+tRdbbYCQRoYSOIApAATDOM+vHeKAAiI4kQrRE4qe4CMz5wJLdcZhnQCzmYqi49wQjVSOaRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hhmZ5HUk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723130909; c=relaxed/simple;
+	bh=1ffybEYeulSPO8MW/8FCE0+ONbLCqzpFEfbiRTvgEDE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=RDGVhoGrv9YAfTVCLn1WH5BESVxG5LKBrkRcgr6AlKES4jruj1HTN39YigFBhI2vJUquGsuH9N1j2d+8nHzIWvhUTBu2FML7BoGVLQ9kFdyzx2N6HboiD7Xs+DQALqOSfWQ8DsDNIermIEmNRM6wURfd0rZKvVlMvowzNFnCHfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KZ/HoF5N; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hhmZ5HUk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90913C32782;
-	Thu,  8 Aug 2024 15:05:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723129521;
-	bh=Gh0/rHhGgq8m6tGdd49CQE+dpXG7XLoNvG2LNkUMVN8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hhmZ5HUkSwLF3Q7f/uJlQkkY5WU/0Sv72QqdgHGZsx/FEyEfnYs5/1lZMwdIHJ1sL
-	 p4kmrKzNxJ+NEU6nQPLO99vVTRSU9NWLw5gKpC63lgyuaKJTlasda993iD2ULLx96B
-	 fGbkUji77p5jiATqteUSVA/DQMPjo+8oSoMpL4Gca4srM/TwUoQk2yf4QIClUF3fF8
-	 wi0f7HZ1eFj7864kXQTSbUGHPkeGQRTVtp69rwYI5RSDpN9j18+MqX2kqVBhUsAoVr
-	 vxljvprW+NtTnftw0VnIf7+zWnIiL1CIYfdC/h2KS5Jx3J1QY1WfJ3e8p1Tbd6FGOS
-	 K6n7YWriTnQNw==
-Date: Thu, 8 Aug 2024 08:05:21 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] man: Update unit for fsx_extsize and fsx_cowextsize
-Message-ID: <20240808150521.GO6051@frogsfrogsfrogs>
-References: <20240808074833.1984856-1-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KZ/HoF5N"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=C2rqm8DhjKyNE7zY2hAiGy5FC8ZJZ94IpLrv2EErJZQ=; b=KZ/HoF5NJ2/lKaY9VP5raDexKd
+	sGG7lw8gF6s9K74sTrhcqy3/kS+5zc+/OmcDu/bTHJ7G4fCDYuNXh/oT9tYBfSgR/KJEHKnQQMRm6
+	FhVhlUrB20CQ8tV7trCxzlFUI4KCt69+pQGVq2pZoS/nNa675yRzSMB5Za0qAvdIuCqPSilFLHlKR
+	YbBPmy1VMZ37mv9Lo+Pyx+aoZpy4GVk81kpYPU9rq/uKX1wcDhXHdOPg9Ugu6R2cYvqV9r4/QZPbP
+	PX77YzmVtXY23TQEHWl4jBNzkVTqfBbSN67qiX+r1rW05xA7Kg4zuFbM8XiFm8aWxmSb8JxfeRZ2h
+	3hmlLDjg==;
+Received: from [4.28.11.157] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sc53z-00000008kWF-3VMN;
+	Thu, 08 Aug 2024 15:28:27 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH 1/9] xfs: remove the i_mode check in xfs_release
+Date: Thu,  8 Aug 2024 08:27:27 -0700
+Message-ID: <20240808152826.3028421-2-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240808152826.3028421-1-hch@lst.de>
+References: <20240808152826.3028421-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240808074833.1984856-1-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Aug 08, 2024 at 07:48:33AM +0000, John Garry wrote:
-> The values in fsx_extsize and fsx_cowextsize are in units of bytes, and not
-> filesystem blocks, so update.
-> 
-> In addition, the default cowextsize is 32 filesystem blocks, not 128, so
-> fix that as well.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+xfs_release is only called from xfs_file_release, which is wired up as
+the f_op->release handler for regular files only.
 
-Yep, that's been wrong for a while. :(
-
-Thanks for fixing the docs,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_inode.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
---D
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7dc6f326936cad..c7249257155881 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1086,9 +1086,6 @@ xfs_release(
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	int		error = 0;
+ 
+-	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
+-		return 0;
+-
+ 	/* If this is a read-only mount, don't do this (would generate I/O) */
+ 	if (xfs_is_readonly(mp))
+ 		return 0;
+-- 
+2.43.0
 
-> 
-> diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxattr.2
-> index 2c626a7e..25a9ba79 100644
-> --- a/man/man2/ioctl_xfs_fsgetxattr.2
-> +++ b/man/man2/ioctl_xfs_fsgetxattr.2
-> @@ -40,7 +40,7 @@ below for more information.
->  .PP
->  .I fsx_extsize
->  is the preferred extent allocation size for data blocks mapped to this file,
-> -in units of filesystem blocks.
-> +in units of bytes.
->  If this value is zero, the filesystem will choose a default option, which
->  is currently zero.
->  If
-> @@ -62,9 +62,9 @@ is the project ID of this file.
->  .PP
->  .I fsx_cowextsize
->  is the preferred extent allocation size for copy on write operations
-> -targeting this file, in units of filesystem blocks.
-> +targeting this file, in units of bytes.
->  If this field is zero, the filesystem will choose a default option,
-> -which is currently 128 filesystem blocks.
-> +which is currently 32 filesystem blocks.
->  If
->  .B XFS_IOC_FSSETXATTR
->  is called with
-> -- 
-> 2.31.1
-> 
-> 
