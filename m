@@ -1,409 +1,206 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 281DD29CE7
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 04:25:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723091114; cv=none; b=kD/ICQ0eVhtLbJTvIxo2ZnI5H3cVE7j97u9Q4zShJft37mChBiEROltIX1qzqjU/6bcPyeIxNP4Ep5v2wXCk+yOROLJ6xV0JWaC9n4c5yOAgD0HZJMEgwC2T6gJ41L+++NiQZallZwgHxbAdJ764eSCMntyXMOHI71TNoNO3goE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723091114; c=relaxed/simple;
-	bh=OeW6UIca7b7KeYJ6B1qSCWfM0uAGt3QA+e5SZ4szTMI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S1XF8B007KUPKc0+T63OfBHPCYU8cKDEDAhEvpz4bVKVooouf7F45X8P0wbwjcirSUEMDTzIcz5RKFkaUSM+jdhDBum8/m03aBnB1vAFiQPqSqxeesQDHjlCUtjraQJ5WmvFwcAGXdnmuWS8UWHDCwlWHCN51T+hMyIA/H268A4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ggb/Bu6G; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F28C8188CCF
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 07:48:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723103339; cv=fail; b=GV9es0xoV7UFFtz7RSoj8RLK1Sp5F5q2n+zHmwOADlPwvM5gBc8O8U8oVgQKsD+Ta+NO4t8lkNUz/2sxb3tzUnNCxwDBbVmltGz2l37x0RG20GoFZBefrBP36V7VUhQuIgsaHaeL9x+9LP4RKDsWdip5+6BEaYrxmU6Tv3iQuGE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723103339; c=relaxed/simple;
+	bh=gyiLwfJ7v/dwWcjz75/q6U/niCcf2rMKZTKmI2kHnTc=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=XKEAXE1kTOzfFCmF/0/tMrhTI0S1IKjoGCP3t6Uax905gVhkFf2TXFJaEti53CCymQepcD+bssSZ0+D874SIBjlHYDOAoGYdHP++UeCbw6msOdyzJ4ob2FhJNNb6FWX5TATB/iEq3ci9J9rfg/ezK2x+QuDJ+bUNXBCb89woXrY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bsHSCaCi; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=oqv7CtX/; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ggb/Bu6G"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1723091111;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=l7FBaH/Enu2fqH7IdyZtcncwK82UJJd9odzq6hZn+qo=;
-	b=ggb/Bu6GmFLHKiocpdV0wq/fUMcTUVycwOfES38HX2zJ1hX6PGTF/y0PZ/F2kHLwdooasM
-	7jcl4bZUrmPZzXamstTt0O2h+LIvl8+bESdP79ebHyhr1SFBvzlEhY20p91LE+OwnWJPFe
-	mG4ihXy6//JGNNW6Uq8EEe+oklFnj98=
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
- [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-248-I7xS4VIcNLe0j9jLIFU_8A-1; Thu, 08 Aug 2024 00:25:09 -0400
-X-MC-Unique: I7xS4VIcNLe0j9jLIFU_8A-1
-Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-3db13ab203aso727079b6e.3
-        for <linux-xfs@vger.kernel.org>; Wed, 07 Aug 2024 21:25:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723091108; x=1723695908;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=l7FBaH/Enu2fqH7IdyZtcncwK82UJJd9odzq6hZn+qo=;
-        b=hmsbcpyMOZ1g4fujxJ07ESNqo3U2jENS7wOtH8rPRO3LPR4veCe1fYNHd8Bg92vwBM
-         KCCOOhRe0W9HyvNe42K/FHt9BtP5CFRdRVb6tIjsVvjz8w4bu4tG6W7330zXbMGPGlqF
-         C7o3qwCBveEpOQwJ/1yRgEjvI+euR77I4hKfWaEY18GX4gMvMaxYW6OHXg4sHHM6gOCB
-         cYyciHyvZjmO9wdvssLQb1WkvW6JZYJ80SU5DJS1l2RuVuESiIO+vxBdWSKzVZ/2xdg1
-         W3nANzwKR3zAzOBYRYwmUKAyewRqwVjmmANg4BP2uEiFOdKeCZ8QD3Mxd5chk3iPYSpi
-         C6vw==
-X-Forwarded-Encrypted: i=1; AJvYcCXSXQ8bm3iaUseHDezP3Os7T+VZo83w5MDaDqdX/gQpO6/nRDZQ+axeVFC6GdVVKSEkFlFmGCpsEKFB6toAznNKC+9GiRAuhT2R
-X-Gm-Message-State: AOJu0YySF0BcD0egtFHACbgNeJrp1OTshDeUXAKOFXJvXPbHPWRFNveI
-	wO1nLpCd8ARanYeChIdoKFby9rGAIB9awPuHhv5hr2fDnZarngqGa8hgUevFTftSPuYicpYXazC
-	pr/dsas9ni/InNzrAySAb6rofh92DYcp/vZN+nZN6gJe2ulYkiZE/ESniNg==
-X-Received: by 2002:a05:6808:1899:b0:3d9:28cd:67a6 with SMTP id 5614622812f47-3dc3b41d09dmr758024b6e.15.1723091108402;
-        Wed, 07 Aug 2024 21:25:08 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFFwSL7Ej3AoBLWJrRYryoAo2sRrRCUl1AIn9W1dF51xiN8qj5gq7U6MYS0L4YLrWfsa9AKOQ==
-X-Received: by 2002:a05:6808:1899:b0:3d9:28cd:67a6 with SMTP id 5614622812f47-3dc3b41d09dmr758009b6e.15.1723091108041;
-        Wed, 07 Aug 2024 21:25:08 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-710cb2d3c8bsm293499b3a.121.2024.08.07.21.25.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Aug 2024 21:25:07 -0700 (PDT)
-Date: Thu, 8 Aug 2024 12:25:04 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: remove all traces of xfs_check
-Message-ID: <20240808042504.fvsvi5tbuxfvi75j@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240806225606.GC623922@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bsHSCaCi";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="oqv7CtX/"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 477L3P6G031112;
+	Thu, 8 Aug 2024 07:48:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	from:to:cc:subject:date:message-id:content-transfer-encoding
+	:content-type:mime-version; s=corp-2023-11-20; bh=O6toAZgxRwaY3z
+	6WjMhNDXDlPnKgPPX0vSy0rr1vpNo=; b=bsHSCaCiBo/MKZ79NJxFOPyVkvNxXM
+	ZwyXspfRkyJm2Ax6eyRQptrchKeObgobjrBtIPi0KDeFCUs5mlPyFGbla5PFGlP1
+	CIIpQ9GzkMxQrFtbVDmE+LGVty3+RWfvbOjvyK82s8l+hKiu6LXiVdX+a+fZgJJI
+	7VVeorepSK4b7UhMmrv+F/ODCwctgrbj3FaOMM1vUOyTU2sCCNsw7nwX3S/MdC1G
+	6+E9dz+4vnUHuTPGDzcUUocg1fpVc51s/Ug2pabuic+fUlCqtMmY6UPeWwrj/MgE
+	LMnhbapYTuecvOeOAsKVFCMqZDTWCV9E6N076743y2ORHP8fcw8gkigw==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40sbfas9u4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 08 Aug 2024 07:48:49 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4785Le21027295;
+	Thu, 8 Aug 2024 07:48:47 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2040.outbound.protection.outlook.com [104.47.73.40])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 40sb0h9eud-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 08 Aug 2024 07:48:47 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=v30mTGjY6B157A8cURr45PNharMkU02JcsIjOkxX0/Iub0J2xDRYkZLVJmeoIx0mCksQbfSwxyk3HqIrRPAvCqpbGsl2s4HZgZu8GJMbX0GO9OMt6fGvm3GSE6Z8xBs1ZXVtKInin5eKuEwcyf3foJbGLGBSMx2eY5bfiUmYIJeM1ACzA7yEN3qwHfaR14XGMFKwlPIIOyytAl9CeN8+9sXRBEOhTmUmsE8/q0B0XGogYGwkFdn5TInNZ2MYtn0k9O0XJr7xDleYCt/9YtfzeQmvlttm025LOhM5uDqmt/aax7pGED2jqzT5gC4YlyiF99UWjOM6dQlMfhFkk5yHOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=O6toAZgxRwaY3z6WjMhNDXDlPnKgPPX0vSy0rr1vpNo=;
+ b=RP9W9ITQX2c/B6YTNXIXDYgurZQWMd+p2ryfLKkB/uQEVEIh6jxqGUvkOiMlvDWZJs3Hg7o8vUiN7GCX53MpsjUjWiMzQraDARpRvFea9zKURwJ+DgL0qPg5bqulfjoo930tbzgKvv+q+PvfWAYqSw7UZfn98PJULOFUf5C7xMkppzeYMi09N4p0QsvjKrckTh2KINl85tD28THB9TgSVtOZprsHVwCCqApGpiTvsZCZZo7i8zlnjc5Z8swmz6UBBDSpiqa/O71YYNUTP5GacZfHPyLRmxmleyxvZon3SlGB9ElkoIq0rOH4T3wHC5d6SoGx14d33eWUorGx38GzIA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=O6toAZgxRwaY3z6WjMhNDXDlPnKgPPX0vSy0rr1vpNo=;
+ b=oqv7CtX//gLkzbY+0zD/hFcqcrura39riFRRQ3oQfg/TiI1OIDscBKYBoN6reMCMYciuSg0sRgPfqNCTt8wCwfYbtihpm52lQk110yShxPm3bIGbYFTlV/6S5YU9d/OU/AaQnb3i2YHVKnYfyajo5KBKBalaNIBc1pF4Iyv5et4=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by LV8PR10MB7917.namprd10.prod.outlook.com (2603:10b6:408:207::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7828.27; Thu, 8 Aug
+ 2024 07:48:45 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%7]) with mapi id 15.20.7828.023; Thu, 8 Aug 2024
+ 07:48:45 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: cem@kernel.org
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH] man: Update unit for fsx_extsize and fsx_cowextsize
+Date: Thu,  8 Aug 2024 07:48:33 +0000
+Message-Id: <20240808074833.1984856-1-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: LNXP265CA0063.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:5d::27) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240806225606.GC623922@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|LV8PR10MB7917:EE_
+X-MS-Office365-Filtering-Correlation-Id: f644203d-660e-4e21-4ef5-08dcb77e87e1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?kr1AXc/HCx6fdJdOocz/eFBFo8++IZGFR4AxKrVrmxvzDJeMKcSusi1Fpx4x?=
+ =?us-ascii?Q?JDXzuisjexd876tUqrc+M7yv20i6C1+layKmRLl1CcGT10tAtyfEQLiYBkfP?=
+ =?us-ascii?Q?0t/gJpTIWd8PgZMd7LZVxIHtSzwwBiwiwz44BDPhGFSLwnFhHrwik3NDX1h3?=
+ =?us-ascii?Q?3ZpIMQ9nk3JyIqgCl65BLlkLKrebecAUJ+408SqgO81IZnKZmCnP9Zk7Lx4M?=
+ =?us-ascii?Q?A5amF0xl7JB0bV9wncayCBQ9pNt26isSoD4Jfa7ry1KrgQ4AlJqpSTJYgDmv?=
+ =?us-ascii?Q?iwWs6BhICByConDcLJln+7Y0izh5dq66VgGWtUz3Fro05idtYAGDQ0y5e46G?=
+ =?us-ascii?Q?o3UeqYN7QwQOPI3M0C5UMevEE+V0s7XQ+xDK7Zt6y5p6jq82GHboxZ34nnHW?=
+ =?us-ascii?Q?cPvjkcl7NLIz219YkejuAjA2YuueD758OrgLikH0fuquT9RKzVifTdiGUizn?=
+ =?us-ascii?Q?C6o5nz+fx9RATgSciQ2BzG0GaPFwyqlhaRutxTZEdQnbCjGYx4UKIO8i1Trc?=
+ =?us-ascii?Q?nkP7tikwHJ1/Au1zWXB3n/KIDdC6w2K/lVMEw+ID1UPdBBkSIr3w8WMGjze9?=
+ =?us-ascii?Q?yxkiGIvFG6YTZJd9zn4w4mMHE6pfwQJrALij5DZ7wTxxLUqB5s6IkfZEPMkj?=
+ =?us-ascii?Q?6wGWg1eaDOufAa+LEUoRegDg1HKiZXp/rpYZTQEF8dPadq69CmvdyY5CBAkO?=
+ =?us-ascii?Q?SSGT4mbBa2+Z2uq2L5gS4cwSTp+WI44n21cp4nNe+anvr9Xhdov+lmXlcNOF?=
+ =?us-ascii?Q?0XmI80pNjSKRmT9d0v4WHAz3hlo42ZX+JGQx1P/4o5c9wJ9KeWN6KSu6d0c+?=
+ =?us-ascii?Q?rNBrq5XAu2/Iwf5v3agMrO66MfNZV4dW7zn4vQpBJZ4U1CyX0zP/FA4fh5No?=
+ =?us-ascii?Q?XVpkPOWhcGyWzA5gCeQ4HpmjG4Bu+7sk1P4S/H3ivH0MnrTfq+uvqZ37Oj3f?=
+ =?us-ascii?Q?XWq5GpvKMrlrW8/wxYOS0AyVwebcnNQLLX+/zw41OhjmcY59UBmHLNFCo9Jz?=
+ =?us-ascii?Q?4se3FEXMWJef94yQEGpDB9r8C9KRQE93dWSbfh/JEsXJ4CaQNwM799miSn1F?=
+ =?us-ascii?Q?cAeYf3bWnakmRkk2t1Cf0FDc9OW6k1oDTbVlIS3dEM2rdUmKONc3hRQ3COPJ?=
+ =?us-ascii?Q?RLa944MHCxDQNR1S5tAYTbPTwc5vXyIyN4w28F3uE+9dJXyzr8Zr5OWRLj+D?=
+ =?us-ascii?Q?5HcuLmPDiAURw8cDAdylJcMYIinL2UWfWhWxw/wtIsNf7qaxm7ATXHICc4ZV?=
+ =?us-ascii?Q?gdZplzO2rlESM6sMllhWPlq791TvI7ECMaN6inLJ4I5lRGssUVusLY6TuHGd?=
+ =?us-ascii?Q?JfzJMvo38w4/U2XOWv2QWhadypY4ZSql1W3JQGow4cO1hg=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Ru5f2zxM5AmbE5MVBX5itXk9+P7SxDUF/6F2cXq4kCR+Dtsrl1ZaqmeXyxPl?=
+ =?us-ascii?Q?b2svYiLp92wT66tH44zv/Q6Y+gl6c8yzEcr6b1dFT172fSh5RRNyVGj458mW?=
+ =?us-ascii?Q?33JHCPT/+aLyk0SzIDlBLe7X1C8OyVrtI9av0Eh5/slUFn29ePMC3Q07nMC+?=
+ =?us-ascii?Q?LzyS30dlL3v0bAvMGU+8k8LDH68zgsw9OY/uLbf82p9l6zH+rLEoa9YTh4Gr?=
+ =?us-ascii?Q?Y0VVioWMq2JbB5CvW9F01q8xw7AXpOsX4idCdViZY9ZkItor/yf9l50sbaG2?=
+ =?us-ascii?Q?VoQnP0924Dhawe0a8SbINqmCH4EcjQmWlHi1h7umSa6IOwbR+ir9u5EvFOV6?=
+ =?us-ascii?Q?ryVLuoNt39L4iLBDPSeWx3Ruxb68cTP8ZABbcD/KiUyxV/yjYvod6vIzZTno?=
+ =?us-ascii?Q?3Srb+90FpU7nvK3fgtjlmc5cB3J8hDQrqoMsawd5wkpKyZUivxPcRt2mPq0z?=
+ =?us-ascii?Q?o8Vt2icsqnOThWUyWXt9qOtodlymmBAomi71A9703MAujb39ruQTv9PWD4i6?=
+ =?us-ascii?Q?zJLMncZEFC2/ILme1U5shsVEk2/yrZo7baZosHCDZHZqWiR/vHm+/XRiabNn?=
+ =?us-ascii?Q?Q2FDpnt/39zkcAcoBZcU4UXdAmx79ZFwU8Z2Pfag2kbRV1hD7jQuym/+EIxG?=
+ =?us-ascii?Q?XyQ6ye3iN9L1DxVyGiogI8cuc9IWH0QU5wg1KanlUMJXwi62M3ErHbdIz/3P?=
+ =?us-ascii?Q?MDsFjw0DJ2QEjOLb15Wdx0f0A1q/BZivguKHN9II8hsQDyaEDzMU79KkrV74?=
+ =?us-ascii?Q?I4Ug3h6JBSiPRiM4DYqlWORv6IiOQAYynDdgUriOW/GQKzXn6Q2iZhLCHhq5?=
+ =?us-ascii?Q?3t8U4wZfoQUPiie9pxnp3Qpl01WLfSmN2+EfFJcWwaKPcjMKwouD5EdUrcsb?=
+ =?us-ascii?Q?uVVEnF+y7Z3WjsAL2yZl4UvXfkJbB/JBN84yNVzmAqMOJlpFuh2/VBRuW/cg?=
+ =?us-ascii?Q?BwLD4qEZT9hd2yhqP1iHQIcDMa9xLiRadjBtbYaus+iFRbCrJbgo2jiALsUd?=
+ =?us-ascii?Q?BcZTjM5lqqVo56lG9MpYnoCBTFyY3e5izzsB/2b+/a+QbgVvV2D4tRsZqOvW?=
+ =?us-ascii?Q?5PAq/w3rZ7LSiCA/yiCmmT2IQcZRHVHHjluPQpT+jxit0buo/e3mGqw3Qxju?=
+ =?us-ascii?Q?LlUGd9YnkOV7PKKf4XxMCxPQqcSfjWwS7yea6J3kuIsKjR6RbCqKfdQwx6zj?=
+ =?us-ascii?Q?ZnVQrJs6l9NJ9/xTfxshHVJ/ty1PIXePvi4jcVN0jrhxvgq/egACtxkl2SQg?=
+ =?us-ascii?Q?DJkApA265E5n1b3JAoIv+2GIaE57/MQ6IY9o18mYJVD6UmaAQXQ10U7/P2FR?=
+ =?us-ascii?Q?m3v4ajUShsaEy7hykEKVHw/9N1L2CAZBe2U5dLp84JBIWfsu3AtbbdDEh7N/?=
+ =?us-ascii?Q?m5mE4HnRjxXTD4tJ0GhzGUGXzRDP+2YL8Uq9/ZRveHtx+yo+HMdMBSqptKnY?=
+ =?us-ascii?Q?uPPyjHVLqBzUbIUX+PgKrrlSMO9nIZMKJ8X31VHoyc4lF18KoHnxtsvvxZFh?=
+ =?us-ascii?Q?pLZfrfawnB6jOVH06BasALmvtletx9Cu6dmbxoX+RADH3wdsIaV2w8K7ctyA?=
+ =?us-ascii?Q?vSVcG9uzTFPZlOEa5ffs8bSRp5BkOi8U1gE2HgGB/2OkjUijMq8fkT9Vuh9q?=
+ =?us-ascii?Q?2Q=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	I1qKRUqH1kTpALUo/Q6ytnZqjNEXaCfrMlufIz7KG/lgvbaY95OOYXV3KTu0EmOJoyQ6hcxnNsYp0rHfKKvZOpvyaUI2n+iVxa0XAL3Q8VRvWzB0YNHfdBpBFybyo/yB4Q8Vrikg82KviyxttROflpBAyGGWCU7fjwNWYIHKUUw5KHLwXEnv/U5T69TKXdWWD2MVnKRtfeWhS7Kw5Jcny3qSA6+ZiUUeKhTwjXqVrEaAjB0lugwY32ieoysg//Ntr9GCap6+0ppzRHE96d6we1Hx3DOrEgELsSQwgB4u2Gs40CtfMNJGi6Fk4tTGy/Vj5+2b7l+WL8cX5bCOJ1U4/JDR5AF6XptnM9mhi+8LpsEsY2I89LUIRnDWewC5Vqh8sBKAzt9+sNqN3BtfEKig92dah9cf85VYHX275t4u9B8+VUHEhE0W8pSYh5oWDx5ujCRx+o7KOMwI/9uh7CyO0NGXpXT00KnyctgUA3fHi017LnG9Hksw7QbDGnhunw5Q2Rv+3sAdwRXCMhrzAvPspHWzsoVlcdKTsnl24QxReuej8SCmv0f899j6URqHkjkDMrMyMV6/k1FYP3rfE+UaDxuR4NGxqhG2pIDp3emHiyU=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f644203d-660e-4e21-4ef5-08dcb77e87e1
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2024 07:48:45.4098
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: s4/BWqw4mfkekT4BKbiBOsa2vn/SY9GaBtIAZXI5aAYUQRMqazXQs5vpEbFpu94Mk9f+ODlI+KynD8upSTCC5g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR10MB7917
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-08_07,2024-08-07_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 adultscore=0
+ phishscore=0 bulkscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
+ definitions=main-2408080055
+X-Proofpoint-GUID: 2UE2a74BBMRt-f2ADmaRnY2uiLLEcerH
+X-Proofpoint-ORIG-GUID: 2UE2a74BBMRt-f2ADmaRnY2uiLLEcerH
 
-On Tue, Aug 06, 2024 at 03:56:06PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> xfsprogs stopped shipping xfs_check (the wrapper script) in May 2014.
-> It's now been over a decade since it went away, and its replacements
-> (xfs_repair and xfs_scrub) now detect a superset of the problems that
-> check can find.
-> 
-> There is no longer any point in invoking xfs_check, so let's remove it
-> from fstests completely.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+The values in fsx_extsize and fsx_cowextsize are in units of bytes, and not
+filesystem blocks, so update.
 
-Finally :)
+In addition, the default cowextsize is 32 filesystem blocks, not 128, so
+fix that as well.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: John Garry <john.g.garry@oracle.com>
 
->  README            |    6 ++---
->  common/fuzzy      |   11 --------
->  common/xfs        |   69 ++---------------------------------------------------
->  crash/xfscrash    |   18 --------------
->  tests/xfs/017     |    6 ++---
->  tests/xfs/114     |    2 +-
->  tests/xfs/291     |    3 +-
->  tests/xfs/307     |    6 -----
->  tests/xfs/307.out |    3 --
->  tests/xfs/308     |    3 --
->  tests/xfs/308.out |    1 -
->  tests/xfs/310     |    2 --
->  12 files changed, 10 insertions(+), 120 deletions(-)
-> 
-> diff --git a/README b/README
-> index 477136deb0..024d395318 100644
-> --- a/README
-> +++ b/README
-> @@ -202,10 +202,8 @@ Extra XFS specification:
->     xfs_repair -n to check the filesystem; xfs_repair to rebuild metadata
->     indexes; and xfs_repair -n (a third time) to check the results of the
->     rebuilding.
-> - - Set FORCE_XFS_CHECK_PROG=yes to have _check_xfs_filesystem run xfs_check
-> -   to check the filesystem. As of August 2021, xfs_repair finds all
-> -   filesystem corruptions found by xfs_check, and more, which means that
-> -   xfs_check is no longer run by default.
-> + - The FORCE_XFS_CHECK_PROG option was removed in July 2024, along with all
-> +   support for xfs_check.
->   - Set TEST_XFS_SCRUB_REBUILD=1 to have _check_xfs_filesystem run xfs_scrub in
->     "force_repair" mode to rebuild the filesystem; and xfs_repair -n to check
->     the results of the rebuilding.
-> diff --git a/common/fuzzy b/common/fuzzy
-> index 3cd7da4ae6..0dd88302cd 100644
-> --- a/common/fuzzy
-> +++ b/common/fuzzy
-> @@ -383,17 +383,6 @@ __scratch_xfs_fuzz_field_offline() {
->  	test $res -eq 0 && \
->  		(>&2 echo "${fuzz_action}: offline scrub didn't fail.")
->  
-> -	# Make sure xfs_repair catches at least as many things as the old
-> -	# xfs_check did.
-> -	if [ -n "${SCRATCH_XFS_FUZZ_CHECK}" ]; then
-> -		__fuzz_notify "+ Detect fuzzed field (xfs_check)"
-> -		_scratch_xfs_check 2>&1
-> -		res1=$?
-> -		if [ $res1 -ne 0 ] && [ $res -eq 0 ]; then
-> -			(>&2 echo "${fuzz_action}: xfs_repair passed but xfs_check failed ($res1).")
-> -		fi
-> -	fi
-> -
->  	# Repair the filesystem offline
->  	__fuzz_notify "+ Try to repair the filesystem (offline)"
->  	_repair_scratch_fs -P 2>&1
-> diff --git a/common/xfs b/common/xfs
-> index 7706b56260..bd40a02ed2 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -270,43 +270,6 @@ _xfs_get_fsxattr()
->  	echo ${value##fsxattr.${field} = }
->  }
->  
-> -# xfs_check script is planned to be deprecated. But, we want to
-> -# be able to invoke "xfs_check" behavior in xfstests in order to
-> -# maintain the current verification levels.
-> -_xfs_check()
-> -{
-> -	OPTS=" "
-> -	DBOPTS=" "
-> -	USAGE="Usage: xfs_check [-fsvV] [-l logdev] [-i ino]... [-b bno]... special"
-> -
-> -	OPTIND=1
-> -	while getopts "b:fi:l:stvV" c; do
-> -		case $c in
-> -			s) OPTS=$OPTS"-s ";;
-> -			t) OPTS=$OPTS"-t ";;
-> -			v) OPTS=$OPTS"-v ";;
-> -			i) OPTS=$OPTS"-i "$OPTARG" ";;
-> -			b) OPTS=$OPTS"-b "$OPTARG" ";;
-> -			f) DBOPTS=$DBOPTS" -f";;
-> -			l) DBOPTS=$DBOPTS" -l "$OPTARG" ";;
-> -			V) $XFS_DB_PROG -p xfs_check -V
-> -			   return $?
-> -			   ;;
-> -		esac
-> -	done
-> -	set -- extra $@
-> -	shift $OPTIND
-> -	case $# in
-> -		1) ${XFS_DB_PROG}${DBOPTS} -F -i -p xfs_check -c "check$OPTS" $1
-> -		   status=$?
-> -		   ;;
-> -		2) echo $USAGE 1>&1
-> -		   status=2
-> -		   ;;
-> -	esac
-> -	return $status
-> -}
-> -
->  _scratch_xfs_options()
->  {
->      local type=$1
-> @@ -392,16 +355,6 @@ _test_xfs_logprint()
->  	$XFS_LOGPRINT_PROG $TEST_OPTIONS $* $TEST_DEV
->  }
->  
-> -_scratch_xfs_check()
-> -{
-> -	SCRATCH_OPTIONS=""
-> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-> -		SCRATCH_OPTIONS="-l $SCRATCH_LOGDEV"
-> -	[ "$LARGE_SCRATCH_DEV" = yes ] && \
-> -		SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -t"
-> -	_xfs_check $SCRATCH_OPTIONS $* $SCRATCH_DEV
-> -}
-> -
->  # Check for secret debugging hooks in xfs_repair
->  _require_libxfs_debug_flag() {
->  	local hook="$1"
-> @@ -765,7 +718,7 @@ _xfs_skip_online_rebuild() {
->  	touch "$RESULT_DIR/.skip_orebuild"
->  }
->  
-> -# run xfs_check and friends on a FS.
-> +# run xfs_repair and xfs_scrub on a FS.
->  _check_xfs_filesystem()
->  {
->  	local can_scrub=
-> @@ -856,24 +809,8 @@ _check_xfs_filesystem()
->  		ok=0
->  	fi
->  
-> -	# xfs_check runs out of memory on large files, so even providing the
-> -	# test option (-t) to avoid indexing the free space trees doesn't make
-> -	# it pass on large filesystems. Avoid it.
-> -	#
-> -	# As of August 2021, xfs_repair completely supersedes xfs_check's
-> -	# ability to find corruptions, so we no longer run xfs_check unless
-> -	# forced to run it.
-> -	if [ "$LARGE_SCRATCH_DEV" != yes ] && [ "$FORCE_XFS_CHECK_PROG" = "yes" ]; then
-> -		_xfs_check $extra_log_options $device 2>&1 > $tmp.fs_check
-> -	fi
-> -	if [ -s $tmp.fs_check ]; then
-> -		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (c)"
-> -		echo "*** xfs_check output ***"		>>$seqres.full
-> -		cat $tmp.fs_check			>>$seqres.full
-> -		echo "*** end xfs_check output"		>>$seqres.full
-> -
-> -		ok=0
-> -	fi
-> +	# xfs_check used to run here, but was removed as of July 2024 because
-> +	# xfs_repair can detect more corruptions than xfs_check ever did.
->  
->  	$XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
->  	if [ $? -ne 0 ]; then
-> diff --git a/crash/xfscrash b/crash/xfscrash
-> index 579b724db3..037b3df1e5 100755
-> --- a/crash/xfscrash
-> +++ b/crash/xfscrash
-> @@ -110,24 +110,6 @@ _check()
->      fail=0
->      
->      if [ $expect -eq 0 ]
-> -    then
-> -        _echo "   *** Checking FS (expecting clean fs)"
-> -    else
-> -        _echo "   *** Checking FS (expecting dirty fs)"
-> -    fi
-> -    
-> -    
-> -    if [ $expect -eq 0 ]
-> -    then
-> -        _echo "      *** xfs_check ($LOG/check_clean.out)"   
-> -        _xfs_check $TEST_DEV &> $LOG/check_clean.out || fail=1
-> -        [ -s /tmp/xfs_check_clean.out ] && fail=1
-> -    else
-> -        _echo "      *** xfs_check ($LOG/check_dirty.out)"   
-> -        _xfs_check $TEST_DEV &> $LOG/check_dirty.out || fail=1
-> -    fi
-> -    
-> -    if [ $fail -eq 0 -a $expect -eq 0 ]
->      then
->          _echo "      *** xfs_repair -n ($LOG/repair_clean.out)"   
->          xfs_repair -n $TEST_DEV &> $LOG/repair_clean.out || fail=1
-> diff --git a/tests/xfs/017 b/tests/xfs/017
-> index efe0ac119b..f961425409 100755
-> --- a/tests/xfs/017
-> +++ b/tests/xfs/017
-> @@ -55,10 +55,10 @@ do
->              | head | grep -q "<CLEAN>" || _fail "DIRTY LOG"
->  
->          echo ""                             >>$seqres.full
-> -        echo "*** XFS_CHECK ***"            >>$seqres.full
-> +        echo "*** XFS_REPAIR ***"           >>$seqres.full
->          echo ""                             >>$seqres.full
-> -        _scratch_xfs_check                  >>$seqres.full 2>&1 \
-> -            || _fail "xfs_check failed"
-> +        _scratch_xfs_repair -n              >>$seqres.full 2>&1 \
-> +            || _fail "xfs_repair -n failed"
->          _try_scratch_mount -o remount,rw \
->              || _fail "remount rw failed"
->  done
-> diff --git a/tests/xfs/114 b/tests/xfs/114
-> index 343730051b..510d31a402 100755
-> --- a/tests/xfs/114
-> +++ b/tests/xfs/114
-> @@ -78,7 +78,7 @@ $XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT >> $seqres.full
->  
->  echo "Remount"
->  _scratch_unmount
-> -_scratch_xfs_check
-> +_check_xfs_scratch_fs
->  _scratch_mount
->  
->  echo "Collapse file"
-> diff --git a/tests/xfs/291 b/tests/xfs/291
-> index 831c50d7b5..0141c075be 100755
-> --- a/tests/xfs/291
-> +++ b/tests/xfs/291
-> @@ -94,9 +94,8 @@ for I in `seq 1 2 5000`; do
->  done
->  
->  _scratch_unmount
-> -# Can xfs_repair and xfs_check cope with this monster?
-> +# Can xfs_repair cope with this monster?
->  _scratch_xfs_repair >> $seqres.full 2>&1 || _fail "xfs_repair failed"
-> -_scratch_xfs_check >> $seqres.full 2>&1 || _fail "xfs_check failed"
->  
->  # Yes they can!  Now...
->  # Can xfs_metadump cope with this monster?
-> diff --git a/tests/xfs/307 b/tests/xfs/307
-> index 25d15a9c0d..7559d90414 100755
-> --- a/tests/xfs/307
-> +++ b/tests/xfs/307
-> @@ -119,9 +119,6 @@ fi
->  
->  _dump_status "broken fs config" >> $seqres.full
->  
-> -echo "Look for leftover warning in xfs_check"
-> -_scratch_xfs_check | _filter_leftover
-> -
->  echo "Look for leftover warning in xfs_repair"
->  _scratch_xfs_repair -n 2>&1 | _filter_leftover
->  
-> @@ -130,9 +127,6 @@ _scratch_xfs_repair >> $seqres.full 2>&1 || echo "xfs_repair failed?"
->  
->  _dump_status "supposedly fixed fs config" >> $seqres.full
->  
-> -echo "Look for no more leftover warning in xfs_check"
-> -_scratch_xfs_check | _filter_leftover
-> -
->  echo "Look for no more leftover warning in xfs_repair"
->  _scratch_xfs_repair -n 2>&1 | _filter_leftover
->  
-> diff --git a/tests/xfs/307.out b/tests/xfs/307.out
-> index b264ed0280..846b2a9813 100644
-> --- a/tests/xfs/307.out
-> +++ b/tests/xfs/307.out
-> @@ -4,10 +4,7 @@ We need AG1 to have a single free extent
->  Find our extent and old counter values
->  Remove the extent from the freesp btrees
->  Add the extent to the refcount btree
-> -Look for leftover warning in xfs_check
-> -leftover CoW extent (NR/NR) len NR
->  Look for leftover warning in xfs_repair
->  leftover CoW extent (NR/NR) len NR
->  Fix filesystem
-> -Look for no more leftover warning in xfs_check
->  Look for no more leftover warning in xfs_repair
-> diff --git a/tests/xfs/308 b/tests/xfs/308
-> index 813c4d8d4e..3c88869e45 100755
-> --- a/tests/xfs/308
-> +++ b/tests/xfs/308
-> @@ -128,9 +128,6 @@ _scratch_unmount
->  
->  _dump_status "supposedly fixed fs config" >> $seqres.full
->  
-> -echo "Look for no more leftover warning in xfs_check"
-> -_scratch_xfs_check | _filter_leftover
-> -
->  echo "Look for no more leftover warning in xfs_repair"
->  _scratch_xfs_repair -n 2>&1 | _filter_leftover
->  
-> diff --git a/tests/xfs/308.out b/tests/xfs/308.out
-> index 383cd07e9d..39a288be68 100644
-> --- a/tests/xfs/308.out
-> +++ b/tests/xfs/308.out
-> @@ -7,5 +7,4 @@ Add the extent to the refcount btree
->  Look for leftover warning in xfs_repair
->  leftover CoW extent (NR/NR) len NR
->  Mount filesystem
-> -Look for no more leftover warning in xfs_check
->  Look for no more leftover warning in xfs_repair
-> diff --git a/tests/xfs/310 b/tests/xfs/310
-> index eb310d8ccd..34d17be97f 100755
-> --- a/tests/xfs/310
-> +++ b/tests/xfs/310
-> @@ -65,7 +65,6 @@ nr_rmaps=$(xfs_db -c 'agf 0' -c 'addr rmaproot' -c 'p' $DMHUGEDISK_DEV | grep ",
->  test $nr_rmaps -eq 1 || xfs_db -c 'agf 0' -c 'addr rmaproot' -c 'p' $DMHUGEDISK_DEV | grep ",$inum,[0-9]*,1,0,0"
->  
->  echo "Check and fake-repair huge filesystem" | tee -a $seqres.full
-> -$XFS_DB_PROG -c 'check' $DMHUGEDISK_DEV
->  $XFS_REPAIR_PROG -n $DMHUGEDISK_DEV >> $seqres.full 2>&1
->  test $? -eq 0 || echo "xfs_repair -n failed, see $seqres.full"
->  
-> @@ -82,7 +81,6 @@ nr_rmaps=$(xfs_db -c 'agf 0' -c 'addr rmaproot' -c 'p' $DMHUGEDISK_DEV | grep ",
->  test $nr_rmaps -eq 1 || xfs_db -c 'agf 0' -c 'addr rmaproot' -c 'p' $DMHUGEDISK_DEV | grep ",$inum,[0-9]*,1,0,0"
->  
->  echo "Check and fake-repair huge filesystem again" | tee -a $seqres.full
-> -$XFS_DB_PROG -c 'check' $DMHUGEDISK_DEV
->  $XFS_REPAIR_PROG -n $DMHUGEDISK_DEV >> $seqres.full 2>&1
->  
->  echo "Done"
-> 
+diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxattr.2
+index 2c626a7e..25a9ba79 100644
+--- a/man/man2/ioctl_xfs_fsgetxattr.2
++++ b/man/man2/ioctl_xfs_fsgetxattr.2
+@@ -40,7 +40,7 @@ below for more information.
+ .PP
+ .I fsx_extsize
+ is the preferred extent allocation size for data blocks mapped to this file,
+-in units of filesystem blocks.
++in units of bytes.
+ If this value is zero, the filesystem will choose a default option, which
+ is currently zero.
+ If
+@@ -62,9 +62,9 @@ is the project ID of this file.
+ .PP
+ .I fsx_cowextsize
+ is the preferred extent allocation size for copy on write operations
+-targeting this file, in units of filesystem blocks.
++targeting this file, in units of bytes.
+ If this field is zero, the filesystem will choose a default option,
+-which is currently 128 filesystem blocks.
++which is currently 32 filesystem blocks.
+ If
+ .B XFS_IOC_FSSETXATTR
+ is called with
+-- 
+2.31.1
 
