@@ -1,29 +1,43 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2614A18C32F
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 14:10:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8C718FDDA
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 14:14:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723126205; cv=none; b=W6sdrARMguNmulVPXYJYDwGQmyQ6hfIw9GpsrAtf0lEFT1dH1mDigwazGy4TyvUTqW1MIJOzKbmCyz75MyAI1b2eOg/U80bap0CNogUdt0BvE+hN0Z3GkUnbuWqQt7jEAvFRY0EjoQQ01P29McrSzufpWEMgeqdX7ENGkOxVhR4=
+	t=1723126472; cv=none; b=ljDX7xdLJ+uU+mrEfvSvDI7t7Zx3iD5ZoHBf0sJyHo7WXe5x1e+HYN1CCTcONmQTCyxtSUi3CodNqGsftgkayVre9b0LripfCXzR9551/PrbnmGt5u4i0aLwAbOBUdE7jN8sG1yIA8fz32Uiaac2k4zJ/7di770ps4NBNvVe6g4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723126205; c=relaxed/simple;
+	s=arc-20240116; t=1723126472; c=relaxed/simple;
 	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KmK91S9W10njZOerfSykJr0ZsFpATWtQT0bildpUBxdCRfkqbPEjF6xuFYLQx9amLFWgrgyP8IU+JTTL5++TCHNg8dJeLTchcYT79+92dmfJ91zUR0DOvw7CVE/+grW9RYhRsv5/it8epz6RlxeMGXbUyOe5y+pRi5e4XGvI4Es=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 02B7668B05; Thu,  8 Aug 2024 16:10:00 +0200 (CEST)
-Date: Thu, 8 Aug 2024 16:10:00 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: chandanbabu@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] design: fix the changelog to reflect the new
- changes
-Message-ID: <20240808141000.GE22326@lst.de>
-References: <172305794084.969463.781862996787293755.stgit@frogsfrogsfrogs> <172305794161.969463.5451370159032939139.stgit@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=GO9ctL6vnN6lqpXiN//1A7QVjn9/mcgqazG4ohFaZzY9dBiCTcG3zZRkwXSiZaylrHxkOOLl8HzayKI/HKR/z9tlnHb7yO7gAn8rJnthL8FZu0I3aGMemvJ+Xg0i5cwq0fuTUma2pkcY28bvwHxYuxLuF3gzLjUJMvvkq4ahbJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gtQwH1gg; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gtQwH1gg"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=gtQwH1gguiT3f5Ey2AEjapOPSe
+	vb+reQ3KeDHvnRsSEXOjwdN6WqwlGnxkOE7Zkali6hWG2v4Uz625PvqZ731+EQZo2Fj2ai3cLQBPi
+	XnTub6+hCtKgPq4LApXRsc+o5/DE9JpgTqYZT18JP0HGRXzZwQaWOkN7eK+7F55TPhEcPI6hCueTt
+	eWXU1I0nhb+BeGxt36cPx3UiQpkklLLjsM/SSD3xyYIqzbxfIO8U5vnDLxL8NG0rsWGvyjUgRuVxb
+	aT8DZ5+ps9CX4suIXrNdyuZdx3+mym2YvYQ4NBlfidAP0rCk4BflctNJbbcdmpLxZvUeMhz/Hib06
+	mDLr1+8A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sc3uM-00000008TvY-2pWJ;
+	Thu, 08 Aug 2024 14:14:26 +0000
+Date: Thu, 8 Aug 2024 07:14:26 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Bill O'Donnell <bodonnel@redhat.com>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, sandeen@sandeen.net,
+	cem@kernel.org
+Subject: Re: [PATCH v3] xfs_db: release ip resource before returning from
+ get_next_unlinked()
+Message-ID: <ZrTSwtcBKuFDwqTQ@infradead.org>
+References: <20240807193801.248101-3-bodonnel@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,10 +46,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <172305794161.969463.5451370159032939139.stgit@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240807193801.248101-3-bodonnel@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
 Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
