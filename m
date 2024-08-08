@@ -1,35 +1,36 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B05F9190079;
-	Thu,  8 Aug 2024 14:44:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F13925570;
+	Thu,  8 Aug 2024 14:51:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723128279; cv=none; b=t/hbPK97ZKLC7eD86tQWnLXDH+fYsoihqhMYpvrQBVOsGoCoyCWl9rV8bZzFUbIhLNs3DMrr3nHBzuwLYM+6aZM1xk6zqiAGHj3GNX7SP/JcUHVocdyWIrJ6hw3M93n+3hgLALWvWpD03V4iVB6KC82z/+mt1LuvYkH4yk3hAgM=
+	t=1723128717; cv=none; b=OicCy4lEsdWFs9wmCQvtEedKeC417MSBSm2nrVZhF/9toDidbQrPNhYs4T3t69GfdNq0cu/C4umwd1+8YG3j4ub5y/zbKGg719D6VkerpIVCmsL7KFITYyudFSSH0H+COJNkgMvRpPgOcRo8lKWEG+Eq8cwn0B+3sF/zhNlfAcA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723128279; c=relaxed/simple;
+	s=arc-20240116; t=1723128717; c=relaxed/simple;
 	bh=+OwJImL4HqYe67YQNsVit4UhYCn3hCx3i+TxtpzuguY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=c1I94Qhv/5DQ2ay0Uy7Q+EM9+Nk5EictI2FwSGRe3pSemdWLSASU3LCtMhFikn79CW5Tfar8hvA7ls/3h5gkPic/LeTuuOsUrCf7G2tiZ8uDd7uACrM/0+8CfQXfr1dWFRpzSfBmTYD53LG6/j7UWGP10Sp86/rHbeu9TTvJu2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DMrg2GWoRYSmcD1ycSZiZVa2jQU+id0t0vCpwCFL5BpSTXllB5sapGPxO0EFJ3pKf04DzHDU0vSRN5raP5IKcRzM1g/Sz8AtqkboO7rKz+W3El4L+BMVn4X60lOvaWZAYNkTX2C8UpGBoC2kfHDjb1KsNwhMr9fG7mKrd3xGulM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.44])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WfqSj4wTHz2Clt8;
-	Thu,  8 Aug 2024 22:39:49 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WfqjC1rwSzpTBq;
+	Thu,  8 Aug 2024 22:50:39 +0800 (CST)
 Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2B7E41400D4;
-	Thu,  8 Aug 2024 22:44:34 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 2387A18005F;
+	Thu,  8 Aug 2024 22:51:51 +0800 (CST)
 Received: from localhost.localdomain (10.175.104.67) by
  kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 8 Aug 2024 22:44:33 +0800
+ 15.2.1544.11; Thu, 8 Aug 2024 22:51:50 +0800
 From: Zizhi Wo <wozizhi@huawei.com>
-To: <chandan.babu@oracle.com>
+To: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
+	<osandov@fb.com>, <john.g.garry@oracle.com>
 CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<wozizhi@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH] xfs: Make the fsmap more precise
-Date: Thu, 8 Aug 2024 22:40:42 +0800
-Message-ID: <20240808144042.1322340-1-wozizhi@huawei.com>
+Subject: [PATCH V2] xfs: Make the fsmap more precise
+Date: Thu, 8 Aug 2024 22:47:59 +0800
+Message-ID: <20240808144759.1330237-1-wozizhi@huawei.com>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -39,7 +40,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  kwepemf100017.china.huawei.com (7.202.181.16)
 
 In commit 63ef7a35912d ("xfs: fix interval filtering in multi-step fsmap
