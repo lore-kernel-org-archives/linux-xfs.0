@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F65218FC79
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 16:51:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9F8D18EFD6
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 16:51:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723135871; cv=none; b=IgXx4gq04Bjyljd4dWmALK0CRq6wUTLpxAR6IXgSV8ElLCB/QAvQLCG8DlB3Yu8VSdkcEwNlmaeKWktUAfHq2duxjZcWkPiEf6SpXt4gcMkGnSnjfr88ZIE2FzZRc5z7rd/+FiEIXGQF4hUJ/lFLT69OyholdCWjhVSA3YQvw3c=
+	t=1723135887; cv=none; b=RdK/WjBHwdOPpJK7WxPSUKQh1rMzBSLrZcyISz44K1VkmvCDpp+vGCzMamr9l9f5J4FEDD1ZbgWl7lR7NpDDrFjE4akQUGoF0INRXIh3U3raQIcnX7f6Z2RLzIyeFmS8WxsASvkrhLC9qdYrMJppAshTMO1V05RTFgBI04zWSvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723135871; c=relaxed/simple;
-	bh=yDBD8R86HhDPhNrpaE9zdBuo0bA0Ww3tsXvkRVrBroo=;
+	s=arc-20240116; t=1723135887; c=relaxed/simple;
+	bh=a2k4qD39LaWHx2Fv5IXYtQMmguxYqhxrQrMu6M8oWnM=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=tSZSlOKCrkT4LV0rZdaa8YEMq+2AdjYwhKRmJ86Zw+5SzdtgWRn6iREsuG8FrkYZDcA3/QynfSnAU46eligU41/YU2QzD9LrwSSkfIl8oecydUBA8XZtT3/LWZclM02lvfTN8tthhsIFB8w1O3XO0x3QPFfpeeKX12wfCZOwzDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nN3VEz4b; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=qHGZ1plbLEs04NLAf96HP8gK+m8UcAlFNFkZznqim3xesH/djnm3aG7efgIKAfAHTUqr1LtDlpCUnPMkvXDHKEblHlB6upo9KWnxCT3+//+NxKhA6G9/+9VJshWCdmfEsQ5wsR/mcDAj6i0LKp/I/riqj2zVOeP35PG3mk+TQ0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nThWERwj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nN3VEz4b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C78F8C32782;
-	Thu,  8 Aug 2024 16:51:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nThWERwj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 763E5C32782;
+	Thu,  8 Aug 2024 16:51:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723135870;
-	bh=yDBD8R86HhDPhNrpaE9zdBuo0bA0Ww3tsXvkRVrBroo=;
+	s=k20201202; t=1723135886;
+	bh=a2k4qD39LaWHx2Fv5IXYtQMmguxYqhxrQrMu6M8oWnM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nN3VEz4bl6sjv7Xe1Awjkr9SIqYA3ZV+nZ7wkXxd8lwkG+/vc7n4YL2mWbaSfc1t5
-	 CqPggNzz+zweXqWIRIvIxJA+2Xsfw+oybWmKDat9SHgW90t8iZOSQwdFvvdYJwWanJ
-	 p3w7lkzDZzLzUmzMS7X401FUEJMx9hjpvXN05QKHW0cBMJIuII5FeHKYzJ/RqwkHeE
-	 8Oz/AaXaZ5Da0lGDl4NuLOonFRfRET2wSXHPMdwUplYU5n4wdaHEWghit+yUMpWL1J
-	 N+y7UJGUIpF/ab4Kp4p0Wl9Gv5xpN9aWvI8ifuRjrCROxN4aCJt5KdD/5JW+obGfNY
-	 0McyGQQX6/Kuw==
-Date: Thu, 08 Aug 2024 09:51:10 -0700
-Subject: [GIT PULL 1/2] xfs_scrub: admin control of automatic fsck
+	b=nThWERwjRQBTPcssBPMZyzJsRdVrYUztfPuuBhTrGIRfaYy5x+Uw8XMQH5QwNUXTc
+	 EX2gWiW8ONOsjwtzjpNiQ7B66pySRpenGVD8F1CeGgBkjj5n8CyY9GvOi87/tUjAiC
+	 sHhRfrtAd22pec6lFLaklGRdqGlpX+bvuA6oVYz7RoLxUQmXMLHqCerOrjwTzzs8mA
+	 bR0vaUqQZb2SQ/M8A1iQOISbt2VzmEXS2yeYc2aI6BFVfuVTxgeW4psDVQfiJeVgp7
+	 FsVgLPfMWeoSKQR3gJk54wKk5G+TRIudnCo5zfaTE1omEiUVuqPwr8r+eZBLnDQ72i
+	 wwZhOO2FYipRg==
+Date: Thu, 08 Aug 2024 09:51:25 -0700
+Subject: [GIT PULL 2/2] debian: enable xfs_scrub_all by default
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: dchinner@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172313566725.2167713.11998419691903109060.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <172313566825.2167713.3959755611631508176.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,88 +51,33 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 5a43a00432ebe9ab8b54155703a9eb9e1a1dd4ec:
-
-xfs_repair: allow symlinks with short remote targets (2024-07-29 17:01:13 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/autofsck-6.10_2024-08-08
-
-for you to fetch changes up to 7fd2c79b3343e4562b4176728e4dd71b187bbbc9:
+The following changes since commit 7fd2c79b3343e4562b4176728e4dd71b187bbbc9:
 
 mkfs: set autofsck filesystem property (2024-08-08 09:38:48 -0700)
 
-----------------------------------------------------------------
-xfs_scrub: admin control of automatic fsck [v30.11 1/2]
+are available in the Git repository at:
 
-Now that we have the ability to set per-filesystem properties, teach the
-background xfs_scrub service to pick up advice from the filesystem that it
-wants to examine, and pick a mode from that.  We're only going to enable this
-by default for newer filesystems.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/debian-autofsck-6.10_2024-08-08
+
+for you to fetch changes up to 45cc055588f4dcc7a2951dd226dd5e64f5e165da:
+
+debian: enable xfs_scrub_all systemd timer services by default (2024-08-08 09:38:48 -0700)
+
+----------------------------------------------------------------
+debian: enable xfs_scrub_all by default [v30.11 2/2]
+
+Update our packaging to enable the background xfs_scrub timer by default.
+This won't do much unless the sysadmin sets the autofsck fs property or
+formats a filesystem with backref metadata.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (11):
-libfrog: support editing filesystem property sets
-xfs_io: edit filesystem properties
-xfs_db: improve getting and setting extended attributes
-libxfs: hoist listxattr from xfs_repair
-libxfs: pass a transaction context through listxattr
-xfs_db: add a command to list xattrs
-xfs_property: add a new tool to administer fs properties
-libfrog: define a autofsck filesystem property
-xfs_scrub: allow sysadmin to control background scrubs
-xfs_scrub: use the autofsck fsproperty to select mode
-mkfs: set autofsck filesystem property
+Darrick J. Wong (1):
+debian: enable xfs_scrub_all systemd timer services by default
 
-db/attrset.c                      | 463 +++++++++++++++++++++++++++++++++++++-
-io/Makefile                       |   4 +-
-io/fsproperties.c                 | 365 ++++++++++++++++++++++++++++++
-io/init.c                         |   1 +
-io/io.h                           |   1 +
-io/xfs_property                   |  77 +++++++
-libfrog/Makefile                  |   7 +
-libfrog/fsproperties.c            |  77 +++++++
-libfrog/fsproperties.h            |  66 ++++++
-libfrog/fsprops.c                 | 202 +++++++++++++++++
-libfrog/fsprops.h                 |  34 +++
-libxfs/Makefile                   |   2 +
-{repair => libxfs}/listxattr.c    |  42 ++--
-libxfs/listxattr.h                |  17 ++
-man/man8/mkfs.xfs.8.in            |   6 +
-man/man8/xfs_db.8                 |  68 +++++-
-man/man8/xfs_io.8                 |  16 +-
-man/man8/xfs_property.8           |  69 ++++++
-man/man8/xfs_scrub.8              |  46 ++++
-mkfs/lts_4.19.conf                |   1 +
-mkfs/lts_5.10.conf                |   1 +
-mkfs/lts_5.15.conf                |   1 +
-mkfs/lts_5.4.conf                 |   1 +
-mkfs/lts_6.1.conf                 |   1 +
-mkfs/lts_6.6.conf                 |   1 +
-mkfs/xfs_mkfs.c                   | 122 +++++++++-
-repair/Makefile                   |   2 -
-repair/listxattr.h                |  15 --
-repair/pptr.c                     |   9 +-
-scrub/Makefile                    |   3 +-
-scrub/phase1.c                    |  91 ++++++++
-scrub/xfs_scrub.c                 |  14 ++
-scrub/xfs_scrub.h                 |   7 +
-scrub/xfs_scrub@.service.in       |   2 +-
-scrub/xfs_scrub_media@.service.in |   2 +-
-35 files changed, 1783 insertions(+), 53 deletions(-)
-create mode 100644 io/fsproperties.c
-create mode 100755 io/xfs_property
-create mode 100644 libfrog/fsproperties.c
-create mode 100644 libfrog/fsproperties.h
-create mode 100644 libfrog/fsprops.c
-create mode 100644 libfrog/fsprops.h
-rename {repair => libxfs}/listxattr.c (84%)
-create mode 100644 libxfs/listxattr.h
-create mode 100644 man/man8/xfs_property.8
-delete mode 100644 repair/listxattr.h
+debian/rules | 2 +-
+1 file changed, 1 insertion(+), 1 deletion(-)
 
