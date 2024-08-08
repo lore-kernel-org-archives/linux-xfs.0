@@ -1,70 +1,71 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+Received: from mail-oa1-f44.google.com (mail-oa1-f44.google.com [209.85.160.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A6D12E1EE
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 22:36:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C1D9156257
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 23:03:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723156598; cv=none; b=rABPFf2s9X2hStzTQgql6Yr5xB4ljZKDTp1JBAXXzBvKODSXVEVC3BWN6Ez3/196EcEU8tmGaNLneNXbfZDljPGgqfuU2eTn7cAt/6sybtqbx4STE9En5eHJgVeFgHy+n5qve2bM3FSJAoqLVq9Hb4MmM4ggK3LquPcNw9CLcE8=
+	t=1723158210; cv=none; b=SyQV9b5T2NHH2UjXF6oe0LxqCG8c6dmGXdCgjLWbEoK+m2622TPsYMg7JkGv6t5M29eC2Y4ncYm9qe1kE0pLc5C9XqgIobiJcGrouMXW8GSRYuiOJAm7rYgP/JRYHmUrMqLWtpQi6QAtHJXKf114l8V3CAi+R2xBAY3LR29k8So=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723156598; c=relaxed/simple;
-	bh=5GPVo4MIVLMt2ufu13wRaxRGQziWADfNbZAsCPjwUFo=;
+	s=arc-20240116; t=1723158210; c=relaxed/simple;
+	bh=53OMQDqcQmaUBrGmOxTmlma4fg3pPX4ccjav8seDQog=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j1V9caPyJgMiDTSTerOuwwArpeTnCg6y5KN/leCa/Jrlb+7iHYykv1MhEl2GZ1ZZqHXRzJHu17wCux0TKgb+wMGkwTdtyN3kO+oUv7KiH8UkIUiSqLckUbBnaGRzYRaQ5QDRT3tmSXCX5ChLMlPpeNy/qmzcATTTZtQUrPKmi60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=jRvfzF9T; arc=none smtp.client-ip=209.85.216.45
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dm7aCbps19Eq7qfoTKZTcOlDtDnXm7gCXrQLjScq9Yv7lS4/aOpKUJ64id66ycjRrlazqW5ha1mf2KwFQ1bD3lGviTKFFObmd/GupSsV2itw2ykX3aE/DIjvnZxlRFr2t7dyH3JruA2T1d0nj07c1+jVPz5D4sAX8xYtGpWGKhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=DiHoZUag; arc=none smtp.client-ip=209.85.160.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="jRvfzF9T"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2d1c1fb5cafso962872a91.2
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Aug 2024 15:36:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="DiHoZUag"
+Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-260f863109cso875859fac.1
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Aug 2024 16:03:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1723156596; x=1723761396; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1723158207; x=1723763007; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OY4d1yvw42w9g7hzdG6ROmo6dvglITY8dmVf01bVFKY=;
-        b=jRvfzF9TOLz4eRHuEWoB4YgRYA4Qd9aV1Com4te1j0W67Zn6WVeUR/75laG6fmTQyD
-         wzcxS4P4fHv5ake9f0iZzsN468zUEQR8BbCyyVAGJOi96ozuZ3rr9u+Tqb0kxQWN5GOW
-         zhzXJTG6mS+gechSiC6iv+p5uIHVVjLVqm8x6XaRiMmqjyAOgaj6YQ/+Tx327eVOGjtH
-         s/bQalHPROkuqUJfuJ/E4d7/Vn5VP3PmlS0LSZD4abzNF5YHet7Hsm6xY/mzLLEMrzOL
-         WXt1vGm+G3MV0LgUYwQctsCSJugeuBGHR55Edffjmnlt/X6sqhV0zegQisnkAAqDsRXu
-         MQtw==
+        bh=dOgcC+bAcPFruYEDE5iZfp7QevUMJEXGwkW+uZQBI7Q=;
+        b=DiHoZUagDxWhrJvMf3ZwcBxRg5EoiUswAF3htt/h3r3ATsoUWl8Myr+tDDwoswf3S2
+         kPVZtmZzMwKODzeJ80REBkGIzJa6G5XZEgjkOkF9NFZa8jTNCRKR69/6c53ruPyH29Ra
+         mqRqkoOjp6zJp3B75KJTuB4xzzFehQzs0+6gGh43AgcSoe9VEVTfpLpTBiJ1rQHZg71o
+         igg0poDjYp0P2UB1QPbkO5mBzkNr93wRF+HmgunEx/4aUDk/HuiFQqlhbpcacx3eY36S
+         lSrz8LNSsUye2XU/VGnEcypGZ8Y7BJlfQDw1l8ocHJrh1s69hW62xFhgG2PC0eM1BD1a
+         KNxg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723156596; x=1723761396;
+        d=1e100.net; s=20230601; t=1723158207; x=1723763007;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=OY4d1yvw42w9g7hzdG6ROmo6dvglITY8dmVf01bVFKY=;
-        b=DieMW6ZRxGgoa6jt/nf26lMsjRTkgP8QoPIe+15FWaIVmiL4rISy9b5BNQmsdsRUZ2
-         7OucuA7jnAD5NhUGFQFHUaI7gT0KynW7tnhVjFlu1a1ySx6uE1+X7AyCLIdz0I7ZYkmZ
-         gGnCO7oRuz3XVigqN1/8W6PkwKaLPwx3Fd8CtVyO+0SU/Dld5bQKkx1D+QJhGwO1Y/ht
-         i4fDaGghVx9J5PKYeNvUEWlgXUqh/XlEwC68fr5UJbFk9x/PpKULmFVaLPBcyslPIeT0
-         DsMPpiMLJ40gedC6vAeqXorKhMicWmVQrIw9av8ZqWjQplv2j6TcciQYcScgThbBR7fa
-         570A==
-X-Forwarded-Encrypted: i=1; AJvYcCVwVBegMXW5KB4U6Dalfi3AsZLFU0IB3L8INXf14kfffLKHPaQv21C0U6THG5sK1PIdlJRqctyLDtK7G5kxM3q2FShRcSiFXGfv
-X-Gm-Message-State: AOJu0YyA/FxO8RhV0ID7pQ20WLhiBpcp1G2BeDp8gbrSnth6Tv1lr/92
-	QaLMhfkO/g8fP+Sy6aAbZHc64BoiVmbf1+hV0fyFhgewetDMXTbBFxzm11i2Wug=
-X-Google-Smtp-Source: AGHT+IEsP+AETEnEWNjipJhzrgP7lIgtC56S6TUYlk+od/gI+G+0iCykP052T6PqpmJ///Wl+KH54Q==
-X-Received: by 2002:a17:90a:f682:b0:2c3:2557:3de8 with SMTP id 98e67ed59e1d1-2d1c34585d8mr3858160a91.33.1723156596112;
-        Thu, 08 Aug 2024 15:36:36 -0700 (PDT)
+        bh=dOgcC+bAcPFruYEDE5iZfp7QevUMJEXGwkW+uZQBI7Q=;
+        b=tiQrmn2+9fSmLiIhWGfjGeK5tUN9FzwutR2l+esMCi6Vg/FnR7F4CD2IphP8aA1V0S
+         66fHgFONUgB4jKMDr4LkK6yGeg9N0WZ1/mwQKrMkxKth8Rvv0iZGVdFXUZvrIGPf8VyM
+         kZoboJj1i0I8nETiAcK+gBT7spwxkz1wabi1/qlF1VTFiuVNgKGAKyMcYXXeRleecwC9
+         3odnA/ptf8xiDY38xNhQFqQH5F/lEq+DqmwAMlMMygESNfRnzgb0pOZQ69FYmXZ4sC7C
+         VtsmkjLK6dGy0f+LBfrbVVrx6V94RtqeaA/C2KdanD64OGC/JO15XIr5xE7itoVN3s1r
+         2zqg==
+X-Forwarded-Encrypted: i=1; AJvYcCWNSCqsmj1nlccUHi9nqowknuHvB6imfdq0PRj0lr5755l2BIiEN/y4PeMCJd8T6mcptT18Nue+fGejn5Zc4XhHN4spenCR8Rdj
+X-Gm-Message-State: AOJu0YxRQ54qqYHyvpET/BJAa20XULDPbpcXhvNrmcb9D+kVEQG6QpzK
+	DBLI/+9b3W1ZZrQCFnARAPRvlOmSX3hn6ptyguxG+3/h5zarAkRSxqGm7YuXuv0=
+X-Google-Smtp-Source: AGHT+IG2QkjumnG5n+CFeoXYaL+HWlKGdIvACMgIu1Rk3RY7CfZzQDB7xJyiRIJZL2S9WnFurWTJhA==
+X-Received: by 2002:a05:6871:14e:b0:260:fc8c:2d28 with SMTP id 586e51a60fabf-2692b69af89mr3993244fac.22.1723158207302;
+        Thu, 08 Aug 2024 16:03:27 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d1b3b5a39bsm3975499a91.50.2024.08.08.15.36.35
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7c1dd6197d2sm2151450a12.75.2024.08.08.16.03.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Aug 2024 15:36:35 -0700 (PDT)
+        Thu, 08 Aug 2024 16:03:26 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1scBkH-00ADrd-15;
-	Fri, 09 Aug 2024 08:36:33 +1000
-Date: Fri, 9 Aug 2024 08:36:33 +1000
+	id 1scCAG-00AFFQ-1S;
+	Fri, 09 Aug 2024 09:03:24 +1000
+Date: Fri, 9 Aug 2024 09:03:24 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/9] xfs: only free posteof blocks on first close
-Message-ID: <ZrVIcay+jnfM7mM5@dread.disaster.area>
+Subject: Re: [PATCH 7/9] xfs: check XFS_EOFBLOCKS_RELEASED earlier in
+ xfs_release_eofblocks
+Message-ID: <ZrVOvDkhX7Mfoxy+@dread.disaster.area>
 References: <20240808152826.3028421-1-hch@lst.de>
- <20240808152826.3028421-7-hch@lst.de>
+ <20240808152826.3028421-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,86 +74,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240808152826.3028421-7-hch@lst.de>
+In-Reply-To: <20240808152826.3028421-8-hch@lst.de>
 
-On Thu, Aug 08, 2024 at 08:27:32AM -0700, Christoph Hellwig wrote:
-> From: "Darrick J. Wong" <djwong@kernel.org>
+On Thu, Aug 08, 2024 at 08:27:33AM -0700, Christoph Hellwig wrote:
+> If the XFS_EOFBLOCKS_RELEASED flag is set, we are not going to free the
+> eofblocks, so don't bother locking the inode or performing the checks in
+> xfs_can_free_eofblocks.
 > 
-> Certain workloads fragment files on XFS very badly, such as a software
-> package that creates a number of threads, each of which repeatedly run
-> the sequence: open a file, perform a synchronous write, and close the
-> file, which defeats the speculative preallocation mechanism.  We work
-> around this problem by only deleting posteof blocks the /first/ time a
-> file is closed to preserve the behavior that unpacking a tarball lays
-> out files one after the other with no gaps.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> [hch: rebased, updated comment, renamed the flag]
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/xfs_file.c  | 32 +++++++++++---------------------
->  fs/xfs/xfs_inode.h |  4 ++--
->  2 files changed, 13 insertions(+), 23 deletions(-)
+>  fs/xfs/xfs_file.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 60424e64230743..30b553ac8f56bb 100644
+> index 30b553ac8f56bb..f1593690ba88d2 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -1204,15 +1204,21 @@ xfs_file_release(
->  	 * exposed to that problem.
+> @@ -1234,9 +1234,9 @@ xfs_file_release(
 >  	 */
->  	if (xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED)) {
-> -		xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
-> +		xfs_iflags_clear(ip, XFS_EOFBLOCKS_RELEASED);
->  		if (ip->i_delayed_blks > 0)
->  			filemap_flush(inode->i_mapping);
->  	}
+>  	if (inode->i_nlink &&
+>  	    (file->f_mode & FMODE_WRITE) &&
+> +	    !xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
+>  	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+> -		if (xfs_can_free_eofblocks(ip) &&
+> -		    !xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED)) {
+> +		if (xfs_can_free_eofblocks(ip)) {
+>  			xfs_free_eofblocks(ip);
+>  			xfs_iflags_set(ip, XFS_EOFBLOCKS_RELEASED);
+>  		}
 
-This should probably be open coded to minimise lock cycles and lock
-contention on the flags lock when concurrent open/sync write/close 
-cycles are run on the file (as recently reported by Mateusz). i.e:
+The test and set here is racy. A long time can pass between the test
+and the setting of the flag, so maybe this should be optimised to
+something like:
 
-	if (ip->i_flags & XFS_ITRUNCATED) {
-		spin_lock(&ip->i_flags_lock);
-		if (ip->i_flags & XFS_ITRUNCATED)
-			ip->i_flags &= ~(XFS_ITRUNCATED | XFS_EOFBLOCKS_RELEASED);
-		spin_unlock(&ip->i_flags_lock);
-		if (ip->i_delayed_blks > 0)
-			filemap_flush(inode->i_mapping);
+	if (inode->i_nlink &&
+	    (file->f_mode & FMODE_WRITE) &&
+	    (!(ip->i_flags & XFS_EOFBLOCKS_RELEASED)) &&
+	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+		if (xfs_can_free_eofblocks(ip) &&
+		    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
+			xfs_free_eofblocks(ip);
+		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
 	}
 
-....
-> @@ -1230,25 +1236,9 @@ xfs_file_release(
->  	    (file->f_mode & FMODE_WRITE) &&
->  	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
->  		if (xfs_can_free_eofblocks(ip) &&
-> -		    !xfs_iflags_test(ip, XFS_IDIRTY_RELEASE)) {
-> -			/*
-> -			 * Check if the inode is being opened, written and
-> -			 * closed frequently and we have delayed allocation
-> -			 * blocks outstanding (e.g. streaming writes from the
-> -			 * NFS server), truncating the blocks past EOF will
-> -			 * cause fragmentation to occur.
-> -			 *
-> -			 * In this case don't do the truncation, but we have to
-> -			 * be careful how we detect this case. Blocks beyond EOF
-> -			 * show up as i_delayed_blks even when the inode is
-> -			 * clean, so we need to truncate them away first before
-> -			 * checking for a dirty release. Hence on the first
-> -			 * dirty close we will still remove the speculative
-> -			 * allocation, but after that we will leave it in place.
-> -			 */
-> +		    !xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED)) {
->  			xfs_free_eofblocks(ip);
-> -			if (ip->i_delayed_blks)
-> -				xfs_iflags_set(ip, XFS_IDIRTY_RELEASE);
-> +			xfs_iflags_set(ip, XFS_EOFBLOCKS_RELEASED);
+I do wonder, though - why do we need to hold the IOLOCK to call
+xfs_can_free_eofblocks()? The only thing that really needs
+serialisation is the xfS_bmapi_read() call, and that's done under
+the ILOCK not the IOLOCK. Sure, xfs_free_eofblocks() needs the
+IOLOCK because it's effectively a truncate w.r.t. extending writes,
+but races with extending writes while checking if we need to do that
+operation aren't really a big deal. Worst case is we take the
+lock and free the EOF blocks beyond the writes we raced with.
 
-		     !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED)
-			xfs_free_eofblocks(ip);
+What am I missing here?
 
-This also avoids an extra lock cycle to set the flag....
+i.e. it seems to me that the logic here could be:
+
+	if (inode->i_nlink &&
+	    (file->f_mode & FMODE_WRITE) &&
+	    (!(ip->i_flags & XFS_EOFBLOCKS_RELEASED)) &&
+	    xfs_can_free_eofblocks(ip) &&
+	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL) &&
+	    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED)) {
+		xfs_free_eofblocks(ip);
+		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+	}
+
+And so avoids attempting to take or taking locks in all the cases
+where locks can be avoided.
 
 -Dave.
 -- 
