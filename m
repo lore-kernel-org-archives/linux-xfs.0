@@ -1,130 +1,121 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 941E6374C3
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 19:00:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723143631; cv=none; b=jXot32r4uBevV9tKZ/yfZ7bZDFh3WcyEaHOGMEF2bgMQBukTpD7ImgBxSOp7q9Vm/Z5nM7JavbDVo9YPXrQFPj77HLQTsFxks1+lFtrUbE+IiCF3C3WkE8yJCUH5HhyIA2p8MVasf8A0dSX82uA18o9+OdGiDwY1QB0FgfOVjwU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723143631; c=relaxed/simple;
-	bh=1UaMA7JT/3n5Sfy9ptopit4fejcQoSxBjuU0DdaLx3g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TKUn2E3oZot/OBELvjCjtC7Rh5K1y8BvOc9W1CzhuyazX/nDZSZ0sQKD3bvibk5DJRkamoo7lk5PKpeDEaQD867UiMxUH26Vu5kqsghbJIMJvLB+40Kqro4DN0FfI4zLzbCJ5FS6pnYjBEw0IstulSMtj7kBTLi+Ql/0Gwr4XrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=XybwWAud; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="XybwWAud"
-Received: from [10.0.0.71] (usg [10.0.0.1])
+Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com [209.85.222.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id B8B675CE9D5;
-	Thu,  8 Aug 2024 14:00:22 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net B8B675CE9D5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1723143622;
-	bh=a8Z/3iT+EHlcgw879vHafLEctGVsVVEHMpYFFjwc1m4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=XybwWAud+4GnK/NlnNrZs/KQp06GcJDltArpe5k11IWrmzjIujxrrCpoplm4xyLSK
-	 VyDmlGZ9aBRk+rUPDoiNdmUv2mIHPbgsIF4me68cpJKIZabOi2b/hB1Gq3BehXjoYm
-	 lBk5xnEe/zKoWEck/jFoMwf49iMR2kAaZqUysx+4M1b5VhL5eg9KTipRD36uP9f5qO
-	 I3QcgF0EBaQoiN3XMzOdcFZSK0d3zp8TtUPW7/0RCeWZsqYqD/hzPcZu1h16nik0+E
-	 zbm+BmwwdVw6mbx51E6C1oL2oY8jvWKK5bl4Rsqoe0uly/0T+sKuccKrhdhkrOCav5
-	 91aPcv50KA0wQ==
-Message-ID: <3a91d785-8c8f-4d2b-998f-a4cd92353120@sandeen.net>
-Date: Thu, 8 Aug 2024 14:00:22 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80C4A158875
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Aug 2024 19:28:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.175
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723145302; cv=none; b=Sh5pGrLWxrXaPkv5qUuTXXoTwk18gng1RcTFaR0zBjPq8r8zgRp/19C84L/6eEvGHiZLjQkv0z4XJXsttgNHGWlRRnnWtjSwOOL94S1awhnA90FNPvFWOT3dV/sKOvRR533U1pr3AVbSVkxYDsX17U0DENXqLhJz81NWDaEGIjc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723145302; c=relaxed/simple;
+	bh=2T/bTyebmmWzgd79hiDdf0J2vl5OhNotJm/x2K/voWI=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VSLXvGCSFRaoZmROs76iWP3HiaOE1Ouazrir0t6GLuJRXALYYK04j1yxtjAK+I6QY1zxk/u/b8GRSW6Xyivl32z+OYhzVrKHXlRhBmIwgrh9fBTsAjWd3lBTP+ZT/P4oc0i36QhyPXsCURhr0gDsYOc5EQsDrbIsoMMODqtkW8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=3LpYCTl+; arc=none smtp.client-ip=209.85.222.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="3LpYCTl+"
+Received: by mail-qk1-f175.google.com with SMTP id af79cd13be357-7a1d7a544e7so83797185a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Aug 2024 12:28:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1723145299; x=1723750099; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rE3z53SxlgArsKnVp16449O9VmLlGGSseshi4KP5xk8=;
+        b=3LpYCTl+TTMHPOVTFUjxbAP5FdreSyhgMqNnVG8AMrrjShiMrZMhLtgidkLT/MJPDI
+         WiATpKWSxlMkGnVpxIWnB4E/kOAzfn8XJY2Sid4QEFbARfIW8/znKlX90QQtEudEr7VC
+         WHUwWDfSyathT4saIRCmEnaugWGKfY9PnN1M+WxnVPvFGrv2YdoakfB2RgvWbqEVC2Mi
+         jJIYqt/17FcXGuQRxAmD/5iNfixztyyZ8b1dKqn+oeaOE2/MCEtp1G5JIbAcrSOYvATO
+         4gadLdC8utv4Jl3KgNDdoT0eRdZWf2iST2QeGK/URMvSXAdRnZIN6nRR+4fLV0dz7B5x
+         G5Uw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1723145299; x=1723750099;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rE3z53SxlgArsKnVp16449O9VmLlGGSseshi4KP5xk8=;
+        b=JPrXYiORDIlUD8lr33y8W/CIG9mgydDBd1NOZ+DknAhWzOLseHtr9cemhdEMx+cQuH
+         51VvvnGbxN4VonhWQBsO9Y8rtrg0D1gXQq1+nXlF/uvnHacQr9WkFDM/IsCaMO77egxi
+         0a+kHcVEN28Ow0YRlET1z32nMD+UtxBbJ8fTRSL1zQ/nJT/X2b26BnnqQkj0i0LvphK6
+         cZN8M3zcfOqYaebA+i59dBZgvC4UgbUdgZ7+dz4QxD+Dqyo5BZvptAXzYN43ZfJO/feP
+         NQ75Hr9MdR7SEjNCYyBZtgBpowMCdyaJpaFUaZk8CsfyAb/hmf4X9f0VNshFl4nbjs9S
+         sweg==
+X-Forwarded-Encrypted: i=1; AJvYcCVoN6PVtGXnrBoxbFR24LqIlOn9XO9udRXqB0tUPzS+cjgtFmLQUx7VTteYe86ZgbUlOs1Uhh6CesDaut/VTglFDbLN7b6qill7
+X-Gm-Message-State: AOJu0YxH4P5tOhF6/DRzmU9GMzcZDfKw8UWNvMdo156iWUgedoMpWsmz
+	YyRMOiaeHi26r4mwIl2mrm2g2T/iJ3VdbtCRebAV8tRUMIcWJheAb4OE2O8Os8A=
+X-Google-Smtp-Source: AGHT+IHIPxOimm17lsK2mRhrmoBs8JQ3/lrD4oPi09uZKL/T2UFWVQatxODNJLMYL/PxGf3Q64nPmg==
+X-Received: by 2002:a05:620a:2596:b0:7a3:49dc:e4c8 with SMTP id af79cd13be357-7a38183e77dmr296678685a.31.1723145299430;
+        Thu, 08 Aug 2024 12:28:19 -0700 (PDT)
+Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-451c86ff90fsm15610521cf.5.2024.08.08.12.28.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Aug 2024 12:28:19 -0700 (PDT)
+From: Josef Bacik <josef@toxicpanda.com>
+To: kernel-team@fb.com,
+	linux-fsdevel@vger.kernel.org,
+	jack@suse.cz,
+	amir73il@gmail.com,
+	brauner@kernel.org,
+	linux-xfs@vger.kernel.org,
+	gfs2@lists.linux.dev,
+	linux-bcachefs@vger.kernel.org
+Subject: [PATCH v2 01/16] fanotify: don't skip extra event info if no info_mode is set
+Date: Thu,  8 Aug 2024 15:27:03 -0400
+Message-ID: <6a659625a0d08fae894cc47352453a6be2579788.1723144881.git.josef@toxicpanda.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1723144881.git.josef@toxicpanda.com>
+References: <cover.1723144881.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] xfs_db: release ip resource before returning from
- get_next_unlinked()
-To: "Darrick J. Wong" <djwong@kernel.org>,
- Bill O'Donnell <bodonnel@redhat.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-References: <20240807193801.248101-3-bodonnel@redhat.com>
- <20240808182833.GR6051@frogsfrogsfrogs>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20240808182833.GR6051@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 8/8/24 1:28 PM, Darrick J. Wong wrote:
-> On Wed, Aug 07, 2024 at 02:38:03PM -0500, Bill O'Donnell wrote:
->> Fix potential memory leak in function get_next_unlinked(). Call
->> libxfs_irele(ip) before exiting.
->>
->> Details:
->> Error: RESOURCE_LEAK (CWE-772):
->> xfsprogs-6.5.0/db/iunlink.c:51:2: alloc_arg: "libxfs_iget" allocates memory that is stored into "ip".
->> xfsprogs-6.5.0/db/iunlink.c:68:2: noescape: Resource "&ip->i_imap" is not freed or pointed-to in "libxfs_imap_to_bp".
->> xfsprogs-6.5.0/db/iunlink.c:76:2: leaked_storage: Variable "ip" going out of scope leaks the storage it points to.
->> #   74|   	libxfs_buf_relse(ino_bp);
->> #   75|
->> #   76|-> 	return ret;
->> #   77|   bad:
->> #   78|   	dbprintf(_("AG %u agino %u: %s\n"), agno, agino, strerror(error));
->>
->> Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
->> ---
->> v2: cover error case.
->> v3: fix coverage to not release unitialized variable.
->> ---
->>  db/iunlink.c | 7 +++++--
->>  1 file changed, 5 insertions(+), 2 deletions(-)
->>
->> diff --git a/db/iunlink.c b/db/iunlink.c
->> index d87562e3..57e51140 100644
->> --- a/db/iunlink.c
->> +++ b/db/iunlink.c
->> @@ -66,15 +66,18 @@ get_next_unlinked(
->>  	}
->>  
->>  	error = -libxfs_imap_to_bp(mp, NULL, &ip->i_imap, &ino_bp);
->> -	if (error)
->> +	if (error) {
->> +		libxfs_buf_relse(ino_bp);
-> 
-> Sorry, I think I've led you astray -- it's not necessary to
-> libxfs_buf_relse in any of the bailouts.
-> 
-> --D
-> 
->>  		goto bad;
->> -
->> +	}
->>  	dip = xfs_buf_offset(ino_bp, ip->i_imap.im_boffset);
->>  	ret = be32_to_cpu(dip->di_next_unlinked);
->>  	libxfs_buf_relse(ino_bp);
->> +	libxfs_irele(ip);
->>  
->>  	return ret;
->>  bad:
->> +	libxfs_irele(ip);
+New pre-content events will be path events but they will also carry
+additional range information. Remove the optimization to skip checking
+whether info structures need to be generated for path events. This
+results in no change in generated info structures for existing events.
 
-And this addition results in a libxfs_irele of an ip() which failed iget()
-via the first goto bad, so you're releasing a thing which was never obtained,
-which doesn't make sense.
+Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+---
+ fs/notify/fanotify/fanotify_user.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
+diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
+index 9ec313e9f6e1..2e2fba8a9d20 100644
+--- a/fs/notify/fanotify/fanotify_user.c
++++ b/fs/notify/fanotify/fanotify_user.c
+@@ -160,9 +160,6 @@ static size_t fanotify_event_len(unsigned int info_mode,
+ 	int fh_len;
+ 	int dot_len = 0;
+ 
+-	if (!info_mode)
+-		return event_len;
+-
+ 	if (fanotify_is_error_event(event->mask))
+ 		event_len += FANOTIFY_ERROR_INFO_LEN;
+ 
+@@ -740,12 +737,10 @@ static ssize_t copy_event_to_user(struct fsnotify_group *group,
+ 	if (fanotify_is_perm_event(event->mask))
+ 		FANOTIFY_PERM(event)->fd = fd;
+ 
+-	if (info_mode) {
+-		ret = copy_info_records_to_user(event, info, info_mode, pidfd,
+-						buf, count);
+-		if (ret < 0)
+-			goto out_close_fd;
+-	}
++	ret = copy_info_records_to_user(event, info, info_mode, pidfd,
++					buf, count);
++	if (ret < 0)
++		goto out_close_fd;
+ 
+ 	if (f)
+ 		fd_install(fd, f);
+-- 
+2.43.0
 
-There are 2 relevant actions here. The libxfs_iget, and the libxfs_imap_to_bp.
-Only after libxfs_iget(ip) /succeeds/ does it need a libxfs_irele(ip), on either
-error paths or normal exit. The fact that it does neither leads to the two leaks
-noted in CID 1554242.
-
-libxfs_imap_to_bp needs a corresponding libxfs_buf_relse() (thanks for clarifying
-djwong) but that libxfs_buf_relse() is already present if libxfs_imap_to_bp
-succeeds. It's not needed if it fails, because there's nothing to release.
-
-When Darrick said
-
-> I think this needs to cover the error return for libxfs_imap_to_bp too,
-> doesn't it?
-
-I think he meant that in the error case where libxfs_imap_to_bp fails, libxfs_irele
-is also needed. (In addition to being needed on a normal return.)
-
--Eric
