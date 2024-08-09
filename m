@@ -1,109 +1,107 @@
-Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008B43B1A2;
-	Fri,  9 Aug 2024 17:08:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2296546542
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Aug 2024 17:18:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723223327; cv=none; b=otmB+S9N+RD6m0ySa12W0bsQqcdFMGcF1pxiKtg4OCGFG4FTgcF8K3uwJpcTOKWzFH3t0Cq43okM5NNE4KuXZnVRBSsoByGV797DISG8bK/Vc0InF2L1zOqrjURm22mnNzAhPUyeYZBZ6hTsUtfx5yrAydFaTZbqwthKHxcOvUw=
+	t=1723223909; cv=none; b=B5zYKo6Anb8rVP1GOSBexx9igV+vKnEauWfGGILnEz3w9CF7QVT3P/qKo5+p3/K1vTIqsTAN8OgGugP5L759gjwNi+47VkPPUTA0slNvd6UJSMJz7rYjNS3PKJXv6fV/0FK9uy2B6knn39++2Gwen3LvBuMzuYxH1d/zWwLxgEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723223327; c=relaxed/simple;
-	bh=Sfw93jLscWCKEbEC5Mx1wdh3zf4xAdcm0Xtf+YUCBzY=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=JWifyFEkNlk4H1ko6XMJe9Pr75yJJVScFmIW8RJKE7ObBBva4y9gfRgQKAOXkHev/PT3s2jx2vYI9z9Y7t4ovXBObEyM+DsnUJq9E9tkhHm+RkGczTKMWI258x/+xb+Kl1mLUuDQKC6CRVsKhfN54wQgNhQtBuoKSRFfEOk//zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OYzQKgIi; arc=none smtp.client-ip=209.85.167.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1723223909; c=relaxed/simple;
+	bh=WBT+r0bsAh+5IoS+c51mNn1R0SD/xOfcHK2e8iqDutQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=S+7KxMuwDsVnXvkj9ktOXPW8P3z1H/AI9qkpn+MWLJ6SW5B4Ft1OLpfFaGgMsWG0gNIBx2vnIgpJ7Cc4pnZoyLyQCVEdAMEmsu1RshdqyYT5HCcPS8ls5FtpRE08nuHf+OkinFzagvQATCK7rFn25eymmpArzmTN9egP+D9iOmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dP/kKlQs; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OYzQKgIi"
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-530ad969360so2595869e87.0;
-        Fri, 09 Aug 2024 10:08:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723223324; x=1723828124; darn=vger.kernel.org;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jUPA00ha0pjXeAraW7mmJ2vOxIYn9Y2B/PCyUa4C5aY=;
-        b=OYzQKgIifNdaB5sNrVkem2kHmC7i1rdrCcc31a/uz2ZuwujmP48wSR4BVhiq3p0OzK
-         KhNjJZS5i6WeNRcHCffwAqQQ86DCgP12Wov65z+u0U9zIVSCzEzWGLvhnjN0N2OlkD2w
-         fxUkIcugYffBh4pBsNXwRt7W6g3MZL8KTJrnzeOnV71TULhp48eJ3NzLNkmr/DFESNko
-         PBxKMaWV8X7hMxD/3YRIAj+5M4ghw0ccn1MTX8cqpLngVOLyTvNynzvHQAfJL6/QLwPn
-         gAqUbxzkCm0slHrE/u/xvLlIKYiYr7p7ncJThxN8QZgmhGhio688FgjzmjSaXNnfJZrw
-         Cx5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723223324; x=1723828124;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=jUPA00ha0pjXeAraW7mmJ2vOxIYn9Y2B/PCyUa4C5aY=;
-        b=nWbYGnANN5eruME7l7Rx+EQJyl7pWSGxmnL6eoQ/vd3AU+UlEd83bIGepdWg9EhhDY
-         6wOtQa860ECydwQYxUuLI2u/nllDdraLz6qzW/lcSVB9yX5HSBRW3eL4jRMrt0vKXYyK
-         0AHHVzq1xBbcdJayhrocW02ECs8R8r64iYNlEW96NYywhl6JyKp8fw+aomS6+VSDf/wa
-         w+5n4IcBEC4mcz3JoP5WgmIYSxbr1T1Vt+3r2pbl8eLTuNPpYVdvhGtwe19iLCvjN56n
-         XrsdPdk6jztw4CtDZpE35QhIbmfnIT6DawhAM6ZlajAkEjxdkvCQcoiWGKK9Ti4RDu7y
-         S8hQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU/z6Ugqkx/Wz17wQanprsQ0mVvm+EniIwitgg+GCloWWvYoAj4dJrdLTzhnf3E059FVT63qdI7A0MFp7Uwm9HxTo1x0/BGQzKG2mnW
-X-Gm-Message-State: AOJu0Yx8WTbmo97o1wwmI9UqdMoNeFGMMnJF6Bzb0wKRqJH2agWs9Ws0
-	OQQrJj8nJX2i1Og6IQHi+FdiKrlk/tKWqVPY8WtEK4q2xgagdGLXlJMhVdSp
-X-Google-Smtp-Source: AGHT+IHobUxoA7hg0QDjsiXD9Li0fuvS8vzc9e8+oXMypsKQzMRpWYoYhgb2mQLLvMzKuy6bv+zERQ==
-X-Received: by 2002:a05:6512:220a:b0:52c:e670:7a12 with SMTP id 2adb3069b0e04-530eea0761bmr1791507e87.60.1723223323483;
-        Fri, 09 Aug 2024 10:08:43 -0700 (PDT)
-Received: from [130.235.83.196] (nieman.control.lth.se. [130.235.83.196])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-530de457d49sm1053614e87.130.2024.08.09.10.08.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 09 Aug 2024 10:08:43 -0700 (PDT)
-Message-ID: <71864473-f0f7-41c3-95f2-c78f6edcfab9@gmail.com>
-Date: Fri, 9 Aug 2024 19:08:41 +0200
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dP/kKlQs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1723223907;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=8akKrMxZB3oGr9d0cwnnQJT7UPJkTonQOFy4fYG0IdE=;
+	b=dP/kKlQsKwWc9wt6vbZeWZtcFKkgqlfy2ZgWgFMyn9Y8FiTCPuD7Xp9LPjixABDZLWXaHQ
+	FAmw9hOqixEAdaWnWrcXN89rAKzCIAOysnGJ/bNVEqJPOIxRMRLJpWu0jjHLTRF5rIP26e
+	3zdrnbQp6hyhgzom4VgDJgV4HTZFttI=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-528-akS5PToEM56ujm9bCT0K8A-1; Fri,
+ 09 Aug 2024 13:18:24 -0400
+X-MC-Unique: akS5PToEM56ujm9bCT0K8A-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AA610196CDF3;
+	Fri,  9 Aug 2024 17:18:22 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.22.32.103])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1801F1956089;
+	Fri,  9 Aug 2024 17:18:20 +0000 (UTC)
+From: Bill O'Donnell <bodonnel@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org,
+	sandeen@sandeen.net,
+	cem@kernel.org,
+	Bill O'Donnell <bodonnel@redhat.com>
+Subject: [PATCH v5] xfs_db: release ip resource before returning from get_next_unlinked()
+Date: Fri,  9 Aug 2024 12:15:42 -0500
+Message-ID: <20240809171541.360496-2-bodonnel@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: linux-xfs@vger.kernel.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
- "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
-From: Anders Blomdell <anders.blomdell@gmail.com>
-Subject: XFS mount timeout in linux-6.9.11
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-With a filesystem that contains a very large amount of hardlinks
-the time to mount the filesystem skyrockets to around 15 minutes
-on 6.9.11-200.fc40.x86_64 as compared to around 1 second on
-6.8.10-300.fc40.x86_64, this of course makes booting drop
-into emergency mode if the filesystem is in /etc/fstab. A git bisect
-nails the offending commit as 14dd46cf31f4aaffcf26b00de9af39d01ec8d547.
+Fix potential memory leak in function get_next_unlinked(). Call
+libxfs_irele(ip) before exiting.
 
-The filesystem is a collection of daily snapshots of a live filesystem
-collected over a number of years, organized as a storage of unique files,
-that are reflinked to inodes that contain the actual {owner,group,permission,
-mtime}, and these inodes are hardlinked into the daily snapshot trees.
+Details:
+Error: RESOURCE_LEAK (CWE-772):
+xfsprogs-6.5.0/db/iunlink.c:51:2: alloc_arg: "libxfs_iget" allocates memory that is stored into "ip".
+xfsprogs-6.5.0/db/iunlink.c:68:2: noescape: Resource "&ip->i_imap" is not freed or pointed-to in "libxfs_imap_to_bp".
+xfsprogs-6.5.0/db/iunlink.c:76:2: leaked_storage: Variable "ip" going out of scope leaks the storage it points to.
+#   74|   	libxfs_buf_relse(ino_bp);
+#   75|
+#   76|-> 	return ret;
+#   77|   bad:
+#   78|   	dbprintf(_("AG %u agino %u: %s\n"), agno, agino, strerror(error));
 
-The numbers for the filesystem are:
+Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
+---
+v2: cover error case.
+v3: fix coverage to not release unitialized variable.
+v4: add logic to cover error case when ip is not attained.
+v5: no need to release a NULL tp in the first error case.
+---
+ db/iunlink.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-   Total file size:           3.6e+12 bytes
-   Unique files:             12.4e+06
-   Reflink inodes:           18.6e+06
-   Hardlinks:                15.7e+09
-   
-Timing between the systems are:
-
-   6.8.10-300.fc40.x86_64:
-
-     # time mount /dev/vg1/test /test
-     real	0m0.835s
-     user	0m0.002s
-     sys	        0m0.014s
-
-   6.9.11-200.fc40.x86_64:
-
-     # time mount /dev/vg1/test /test
-     real	15m36.508s
-     user	0m0.000s
-     sys	        0m27.628s
-
-     (iotop reports 1-4 MB/s)
+diff --git a/db/iunlink.c b/db/iunlink.c
+index d87562e3..35dbc3a0 100644
+--- a/db/iunlink.c
++++ b/db/iunlink.c
+@@ -66,12 +66,15 @@ get_next_unlinked(
+ 	}
+ 
+ 	error = -libxfs_imap_to_bp(mp, NULL, &ip->i_imap, &ino_bp);
+-	if (error)
++	if (error) {
++		libxfs_irele(ip);
+ 		goto bad;
++	}
+ 
+ 	dip = xfs_buf_offset(ino_bp, ip->i_imap.im_boffset);
+ 	ret = be32_to_cpu(dip->di_next_unlinked);
+ 	libxfs_buf_relse(ino_bp);
++	libxfs_irele(ip);
+ 
+ 	return ret;
+ bad:
+-- 
+2.46.0
 
