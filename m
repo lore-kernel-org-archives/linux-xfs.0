@@ -1,140 +1,106 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EE8B1171A7
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Aug 2024 02:04:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723169059; cv=none; b=EtstVaIJRTt8YP++Ur+VhHh2q2L1B9V+NLRYzQnuSvYlY3IP3zC/E5RFv8H5QRYhTX0627NulR/EM9DLEXebZBYCLBR7zvusOEJA1yWhycdt9R2EJegPczz1y2hfOY6eWaoy+ikOP6RsmQIw9gReiVFBz50pxzxltGM/ENIqvhg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723169059; c=relaxed/simple;
-	bh=FxItbLgqsEnbWhW4kyaXdJ+yd/HIXrdrFC/3uiE/eOQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JGJuETPJQQbldrEO01M3fmK4QxmE3lIaILphnL0H4sFGeFurryMecFeUP3udFhwQJ74oT3W6o1PP4R7Q9w+70yUYvQijRSEgKGTpZvkd5s44l03hnyGWQx+l6QSPVY/kjq9awzIBauqFUasqjJ84y5xjtzVfnY097KESpoPoLZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=mFwxXtVw; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="mFwxXtVw"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa3.hc1455-7.c3s2.iphmx.com (esa3.hc1455-7.c3s2.iphmx.com [207.54.90.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id DB3E35CE9D7;
-	Thu,  8 Aug 2024 21:04:15 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net DB3E35CE9D7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1723169055;
-	bh=/PBjzIKS00fyGdiMfado0DO6O5TxhBuGQGQUL2KnEXY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=mFwxXtVwHJz5erONw5PISFJW+BjHm841yrK1yYlKczoy3p1l97y5oblZhX1ZDPo6R
-	 Slv0LJGpdauM2VX3nqn4F52Fydq/wJqVnbifooNSwqbVV6Gbg9v+UNHuuQqLMdQQr3
-	 R4Ios2UUn291Y/R9bs1bG9sXpczNI6CFB6PZ1zc+RtMeYgu+/x2braQq63VF0kdA/v
-	 6XSigds2xgqiJCbCi49yNz/Y22oqU7jzr2Nt0QAEMCY7Nq4rBM1kxEPw+Lz36D5MFG
-	 wMvhLLTrei1pxGDd0dB4R7drU09w8Imy6ASHBvB+VCLLiIn9IkUGTXn3lUILlGXR2V
-	 B/maHzrhdmgNQ==
-Message-ID: <c59bc461-0d27-45c9-8d24-0a6cbe646400@sandeen.net>
-Date: Thu, 8 Aug 2024 21:04:14 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 006FD34CC4;
+	Fri,  9 Aug 2024 08:17:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.54.90.49
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723191468; cv=none; b=dteRVjCBSkMm8MH8hXsmgNOl+flESj5iFMfNF2/tqguP+jzdWow3tdXdx8zOOywloAT/kJIqI/Xv8mkXTqN/aezesJ4enpu1DOlOy9J2Z+4BlUADLxHAkUIsdq/l4xUtiOYyMQmtn9yC+s6L2+qPh662h1R3txvu32RfUtYwG6U=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723191468; c=relaxed/simple;
+	bh=9KGDamRzHnjrZWkM43z+S0wM2ZJsWXRFDwQSs2KOVRk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R0ro276i2cz5/PhDU+hOitMD6rV8ytO//4U62QS+WI21QXKr5VCa9itzKNL5ZvEG5jN9Mbl+qK2qNVRP04PGUuwT0GKf3toQ87J2eP1ex9FsLrlcy9FvJxllDJvOxZ812ZJnM0lsFeIff0eLwZRps+P/d3JG+lvM3XNg20lK4yk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=AlghoGdo; arc=none smtp.client-ip=207.54.90.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="AlghoGdo"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
+  t=1723191465; x=1754727465;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=9KGDamRzHnjrZWkM43z+S0wM2ZJsWXRFDwQSs2KOVRk=;
+  b=AlghoGdoGDgUYyKeAm4+5jSKF47zLYqT5YBLvDFvJsWdu6BG90Sh3dIe
+   BOjMaiX20MMZMHCJ6ziRzJaLO4S1Of5cLPvNmpSMaHll0c1nAkG4XWf5O
+   QuNina0g4bwjp8pB7/k7U9S+uamDKiHivvYn3/b3m5sNszlh2lvlpIHr4
+   l6aiwvC+RyAYEm92exF621jcP9kjfeXIGwXAMz5/Nzs6rlZm7eJ1SVhB4
+   G+MdzLw/cEeoDAoZKXvYO4qgdV2vcfJaD5Bzlxh24Gii6Zp1tjTBLD+tP
+   h5NWtKn/3rZ/h4TYx/O2ndfBV05gCtzCi+L76SkXaQEQOdRAGrMPyRjwB
+   Q==;
+X-CSE-ConnectionGUID: fVz+ttUiStm06Eqh8RVEiQ==
+X-CSE-MsgGUID: NJV7HAPpSPuJigLRKomqDA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11158"; a="170264944"
+X-IronPort-AV: E=Sophos;i="6.09,275,1716217200"; 
+   d="scan'208";a="170264944"
+Received: from unknown (HELO yto-r1.gw.nic.fujitsu.com) ([218.44.52.217])
+  by esa3.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2024 17:16:34 +0900
+Received: from yto-m3.gw.nic.fujitsu.com (yto-nat-yto-m3.gw.nic.fujitsu.com [192.168.83.66])
+	by yto-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id B3B7952842;
+	Fri,  9 Aug 2024 17:16:30 +0900 (JST)
+Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
+	by yto-m3.gw.nic.fujitsu.com (Postfix) with ESMTP id 00A2AE99A;
+	Fri,  9 Aug 2024 17:16:30 +0900 (JST)
+Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
+	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 7E929228938;
+	Fri,  9 Aug 2024 17:16:29 +0900 (JST)
+Received: from localhost.localdomain (unknown [10.167.226.182])
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id 95E821A0002;
+	Fri,  9 Aug 2024 16:16:28 +0800 (CST)
+From: Ma Xinjian <maxj.fnst@fujitsu.com>
+To: zlang@redhat.com,
+	djwong@kernel.org
+Cc: fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Ma Xinjian <maxj.fnst@fujitsu.com>
+Subject: [PATCH v2] xfs/348: add helper tags
+Date: Fri,  9 Aug 2024 16:17:22 +0800
+Message-ID: <20240809081722.795446-1-maxj.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] xfs_db: release ip resource before returning from
- get_next_unlinked()
-To: Bill O'Donnell <bodonnel@redhat.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
- cem@kernel.org
-References: <20240807193801.248101-3-bodonnel@redhat.com>
- <20240808182833.GR6051@frogsfrogsfrogs>
- <3a91d785-8c8f-4d2b-998f-a4cd92353120@sandeen.net>
- <ZrUfc57VJ-RPreCL@redhat.com> <ZrU0_r_PP-YKiKfE@redhat.com>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <ZrU0_r_PP-YKiKfE@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28584.006
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28584.006
+X-TMASE-Result: 10--7.717000-10.000000
+X-TMASE-MatchedRID: /+von0vPuFE5rof3b4z0VKzGfgakLdja1QQ6Jx/fflaMJxigKCCiS78F
+	Hrw7frluf146W0iUu2u9alSWGuOKxvoLRFtw/0CmjoyKzEmtrEd4SsGg2DQOYkxqTmWcX8+mNzn
+	xs0sNGFwPNxz2EvpSILtwqADTAhklr78SC5iivxwURSScn+QSXmMVPzx/r2cb+gtHj7OwNO33FL
+	eZXNZS4DjAdLIal4R6Pl8tQVP2PrkLkPhtQrPM8F2avgFHt3X2ky4PFHziZORI8esYkYuw3w==
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 
-On 8/8/24 4:13 PM, Bill O'Donnell wrote:
-> On Thu, Aug 08, 2024 at 02:41:39PM -0500, Bill O'Donnell wrote:
->> On Thu, Aug 08, 2024 at 02:00:22PM -0500, Eric Sandeen wrote:
->>> On 8/8/24 1:28 PM, Darrick J. Wong wrote:
->>>> On Wed, Aug 07, 2024 at 02:38:03PM -0500, Bill O'Donnell wrote:
->>>>> Fix potential memory leak in function get_next_unlinked(). Call
->>>>> libxfs_irele(ip) before exiting.
->>>>>
->>>>> Details:
->>>>> Error: RESOURCE_LEAK (CWE-772):
->>>>> xfsprogs-6.5.0/db/iunlink.c:51:2: alloc_arg: "libxfs_iget" allocates memory that is stored into "ip".
->>>>> xfsprogs-6.5.0/db/iunlink.c:68:2: noescape: Resource "&ip->i_imap" is not freed or pointed-to in "libxfs_imap_to_bp".
->>>>> xfsprogs-6.5.0/db/iunlink.c:76:2: leaked_storage: Variable "ip" going out of scope leaks the storage it points to.
->>>>> #   74|   	libxfs_buf_relse(ino_bp);
->>>>> #   75|
->>>>> #   76|-> 	return ret;
->>>>> #   77|   bad:
->>>>> #   78|   	dbprintf(_("AG %u agino %u: %s\n"), agno, agino, strerror(error));
->>>>>
->>>>> Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
->>>>> ---
->>>>> v2: cover error case.
->>>>> v3: fix coverage to not release unitialized variable.
->>>>> ---
->>>>>  db/iunlink.c | 7 +++++--
->>>>>  1 file changed, 5 insertions(+), 2 deletions(-)
->>>>>
->>>>> diff --git a/db/iunlink.c b/db/iunlink.c
->>>>> index d87562e3..57e51140 100644
->>>>> --- a/db/iunlink.c
->>>>> +++ b/db/iunlink.c
->>>>> @@ -66,15 +66,18 @@ get_next_unlinked(
->>>>>  	}
->>>>>  
->>>>>  	error = -libxfs_imap_to_bp(mp, NULL, &ip->i_imap, &ino_bp);
->>>>> -	if (error)
->>>>> +	if (error) {
->>>>> +		libxfs_buf_relse(ino_bp);
->>>>
->>>> Sorry, I think I've led you astray -- it's not necessary to
->>>> libxfs_buf_relse in any of the bailouts.
->>>>
->>>> --D
->>>>
->>>>>  		goto bad;
->>>>> -
->>>>> +	}
->>>>>  	dip = xfs_buf_offset(ino_bp, ip->i_imap.im_boffset);
->>>>>  	ret = be32_to_cpu(dip->di_next_unlinked);
->>>>>  	libxfs_buf_relse(ino_bp);
->>>>> +	libxfs_irele(ip);
->>>>>  
->>>>>  	return ret;
->>>>>  bad:
->>>>> +	libxfs_irele(ip);
->>>
->>> And this addition results in a libxfs_irele of an ip() which failed iget()
->>> via the first goto bad, so you're releasing a thing which was never obtained,
->>> which doesn't make sense.
->>>
->>>
->>> There are 2 relevant actions here. The libxfs_iget, and the libxfs_imap_to_bp.
->>> Only after libxfs_iget(ip) /succeeds/ does it need a libxfs_irele(ip), on either
->>> error paths or normal exit. The fact that it does neither leads to the two leaks
->>> noted in CID 1554242.
->>
->> In libxfs_iget, -ENOMEM is returned when kmem_cache_zalloc() fails. For all other
->> error cases in that function, kmem_cache_free() releases the memory that was presumably
->> successfully allocated. I had wondered if we need to use libxfs_irele() at all in
->> get_next_unlinked() (except for the success case)?
-> 
-> So, if that's the case, I'm back to v1 of this patch.
-> -Bill
+This test requires a kernel patch since 3bf963a6c6 ("xfs/348: partially revert
+dbcc549317"), so note that in the test.
 
-when libxfs_iget succeeds, it has obtained an inode.
+Signed-off-by: Ma Xinjian <maxj.fnst@fujitsu.com>
+---
+ tests/xfs/348 | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-After that has happened, libxfs_irele needs to be called either in the normal
-return path, or any subsequent error path, to free that inode in this function.
-
-As Darrick pointed out in his first reply, V1 missed irele on the error path,
-so it was not sufficient.
-
--Eric
+diff --git a/tests/xfs/348 b/tests/xfs/348
+index 3502605c..00b81dbd 100755
+--- a/tests/xfs/348
++++ b/tests/xfs/348
+@@ -12,6 +12,13 @@
+ . ./common/preamble
+ _begin_fstest auto quick fuzzers repair
+ 
++_fixed_by_git_commit kernel 38de567906d95 \
++	"xfs: allow symlinks with short remote targets"
++
++# 1eb70f54c445f fixed null pointer failures due to insufficient validation
++_wants_kernel_commit kernel 1eb70f54c445f \
++	"xfs: validate inode fork size against fork format"
++
+ # Import common functions.
+ . ./common/filter
+ . ./common/repair
+-- 
+2.42.0
 
