@@ -1,31 +1,31 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 374B5171CD;
-	Sat, 10 Aug 2024 00:26:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B51A182D8;
+	Sat, 10 Aug 2024 00:31:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723249603; cv=none; b=MGk0KbgkTLntp9n07QKlwPZz6lSFtx30LeI1A/f02YFw7lt8u8dmggzQ6TD7P3080/68+ss0lEWXu9RTdjl2NGo2uKjIXluamgeWNPcEpXB+K7a5hL9BFa2IoIcKgbwQIyRQ2mSxH+x6WhqQxdK6prlJ2l11/HGq+KTNWEgw5DQ=
+	t=1723249902; cv=none; b=CeKiMvS/zdURZZ4dfC6rj+zfgw5rcpwFjCrqXqM/9SxUDeI7Gz0F8XK0lAIGxj+ZZCDIInn1tA8TXNtigMHRb2pso9GTXf6y4i9EN/Ex39XNFi39r5TGvUvsm5lCyQtR0EOSefxkeYssgX5mr1SV6Lg0WVqkZuH8auiDAdgqM6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723249603; c=relaxed/simple;
-	bh=isGV8iowZzgdKsFvP7qT+20blQTVUSCQh9csow6FWdY=;
+	s=arc-20240116; t=1723249902; c=relaxed/simple;
+	bh=JGAyMGAG4j2hlYG3BpMddGtpc8MWUx6wf7wBPm2PqjA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Hfo9AJ4ovw1sCg9kx2JKQsVzjmdIDjM1hWRWxiqoGkXlqAwV3OPjC5xvmHgvEM6veFFgj4ET8Zgos9IGA+rwWjJTvyTBsZzwzwD+98skhEh4HqH++m6u5ILSb6hd0+kPyhSYRdEiKji7VDg/yC1QUEgr7tBDfE8X+ilVNaxmuoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+	 In-Reply-To:Content-Type; b=tvyyHjG5wPvFriBcqVsecTvm70HVojhBLIurcaofalRy6Bd5LsaG+a9aeTNUQTU3aS3enFjmL13FgIQLnlxRH4I3708o+BDMeh0Ny76At13P+KHuIYZe3nS3LnWm3Z0G1+UcdyQuW3DjwJRvQY9por5A6nSY9nkNU9qLuA/WKrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.44])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4WghKq1vvlz1j6NS;
-	Sat, 10 Aug 2024 08:21:51 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WghXt1Tcyzcd49;
+	Sat, 10 Aug 2024 08:31:26 +0800 (CST)
 Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5D0B3140137;
-	Sat, 10 Aug 2024 08:26:37 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 454FB1800FF;
+	Sat, 10 Aug 2024 08:31:36 +0800 (CST)
 Received: from [10.174.176.88] (10.174.176.88) by
  kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Sat, 10 Aug 2024 08:26:36 +0800
-Message-ID: <ddaab6d5-08f3-4a54-a8bc-9ebda7773ec0@huawei.com>
-Date: Sat, 10 Aug 2024 08:26:35 +0800
+ 15.2.1544.11; Sat, 10 Aug 2024 08:31:35 +0800
+Message-ID: <c593ed3d-dc27-48c0-9e3e-519e9cf2e54d@huawei.com>
+Date: Sat, 10 Aug 2024 08:31:34 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,23 +34,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH V2] xfs: Make the fsmap more precise
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <chandan.babu@oracle.com>, <dchinner@redhat.com>, <osandov@fb.com>,
-	<john.g.garry@oracle.com>, <linux-xfs@vger.kernel.org>,
+To: Carlos Maiolino <cem@kernel.org>
+CC: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
+	<osandov@fb.com>, <john.g.garry@oracle.com>, <linux-xfs@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>
 References: <20240808144759.1330237-1-wozizhi@huawei.com>
- <20240809162226.GW6051@frogsfrogsfrogs>
+ <3oq52rri7iwsxhpiquztikmb7k3t324tt3b64yd5ac43lb42jy@m2twc7tvphca>
 From: Zizhi Wo <wozizhi@huawei.com>
-In-Reply-To: <20240809162226.GW6051@frogsfrogsfrogs>
+In-Reply-To: <3oq52rri7iwsxhpiquztikmb7k3t324tt3b64yd5ac43lb42jy@m2twc7tvphca>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
  kwepemf100017.china.huawei.com (7.202.181.16)
 
 
 
-在 2024/8/10 0:22, Darrick J. Wong 写道:
-> On Thu, Aug 08, 2024 at 10:47:59PM +0800, Zizhi Wo wrote:
+在 2024/8/9 17:09, Carlos Maiolino 写道:
+> On Thu, Aug 08, 2024 at 10:47:59PM GMT, Zizhi Wo wrote:
 >> In commit 63ef7a35912d ("xfs: fix interval filtering in multi-step fsmap
 >> queries"), Darrick has solved a fsmap bug about incorrect filter condition.
 >> But I still notice two problems in fsmap:
@@ -66,26 +66,14 @@ X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
 >> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 3 7' /mnt
 >> [root@fedora ~]#
 >> Normally, we should be able to get [3, 7), but we got nothing.
-> 
-> Hmm, yes, that's a bug.
-> 
+>>
 >> Bug 2:
 >> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 15 20' /mnt
 >>   EXT: DEV    BLOCK-RANGE      OWNER            FILE-OFFSET      AG AG-OFFSET        TOTAL
 >>     0: 253:32 [8..23]:         per-AG metadata                   0  (8..23)             16
 >> Normally, we should be able to get [15, 20), but we obtained a whole
 >> segment of extent.
-> 
-> Both filesystems implementing GETFSMAP (ext4 and xfs) can return larger
-> mapping than what was requested.  Userspace can decide to trim the
-> mappings before using them, which is why the kernel doesn't do that on
-> its own.
-> 
-
-Oh, I see. I noticed that querying the missing_owner range could be
-precise, but querying the non-missing_owner range only displayed the
-whole thing. I found this inconsistent, so I fixed the issue myself...
-
+>>
 >> The first problem is caused by shifting. When the query interval is before
 >> the first extent which can be find in btree, no records can meet the
 >> requirement. And the gap will be obtained in the last query. However,
@@ -104,32 +92,41 @@ whole thing. I found this inconsistent, so I fixed the issue myself...
 >> Resolve this issue by introducing the "tail_daddr" field in
 >> xfs_getfsmap_info. This records |key[1].fmr_physical + key[1].length| at
 >> the granularity of sector. If the current query is the last, the rec_daddr
->> is tail_daddr to prevent missing interval problems caused by shifting. We
+>> is tail_daddr to prevent missing interval problems caused by shifting.
+> 
+> You mention the introduction of the 'tail_daddr' field, but your patch
+> does not introduce such field. Your patch description should properly match
+> your patch.
+> 
+
+I'm very sorry, I mistakenly referred to "end_daddr" as "tail_daddr"!
+Next time, I will carefully review the commit message of the patch.
+To fix the first bug, introducing "end_daddr" is sufficient, but fixing
+the second bug requires both "start_daddr" and "end_daddr".
+
+> 
+>> We
 >> only need to focus on the last query, because xfs disks are internally
 >> aligned with disk blocksize that are powers of two and minimum 512, so
 >> there is no problem with shifting in previous queries.
+>>
+>> The second problem is that the resulting range is not truncated precisely
+>> according to the boundary.
 > 
-> Not sure what "tail_daddr" is; the patch adds {start,end}_daddr.  I
-> agree that fsmap -vvvv -d 3 7 ought to return "static fs metadata"
-> instead of nothing, however.
+> Even though they are related, I'd prefer these two fixes split this into 2
+> separated patches, not a single one. This makes reviewers lives easier to
+> follow what you are fixing.
 > 
-> Can you send a separate fix for "Bug 1", please?
-> 
-> --D
 
-I'm very sorry, I mistakenly referred to "end_daddr" as "tail_daddr"!
-"end_daddr" is mainly used to fix the first bug, where the last range
-wasn't calculated with sector granularity, causing query issues. The
-second bug fix relies on both "start_daddr" and "end_daddr". But as
-discussed above, the second one isn't really an issue? So I'll only fix
-the first bug in the next patch version.
+Sure, I'll split them. Thanks for the suggestion. However, as Darrick
+mentioned, the second issue of displaying the entire range might not be
+a problem. So I'll address the first bug in the next version.
 
 Thanks,
 Zizhi Wo
 
 > 
->> The second problem is that the resulting range is not truncated precisely
->> according to the boundary. Currently, the query display mechanism for owner
+>> Currently, the query display mechanism for owner
 >> and missing_owner is different. The query of missing_owner (e.g. freespace
 >> in rmapbt/ unknown space in bnobt) is obtained by subtraction (gap), which
 >> can accurately lock the range. In the query of owner which almostly finded
@@ -147,7 +144,13 @@ Zizhi Wo
 >> Currently query is directly displayed as [c, d), the correct display should
 >> be [a, b). This problem is solved by calculating max(a, c) and min(b, d) to
 >> identify the head and tail of the range. To be able to determine the bounds
->> of the low key, "start_daddr" is introduced in xfs_getfsmap_info. Although
+>> of the low key, "start_daddr" is introduced in xfs_getfsmap_info.
+> 
+> Here you properly describe what your patch is doing.
+> 
+> Carlos
+> 
+>> Although
 >> in some scenarios, similar results can be achieved without introducing
 >> "start_daddr" and relying solely on info->next_daddr (e.g. in bnobt), it is
 >> ineffective for overlapping scenarios in rmapbt.
@@ -286,3 +289,4 @@ Zizhi Wo
 >> 2.39.2
 >>
 >>
+> 
