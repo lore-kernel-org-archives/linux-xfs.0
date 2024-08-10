@@ -1,31 +1,59 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B51A182D8;
-	Sat, 10 Aug 2024 00:31:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DA5414B090;
+	Sat, 10 Aug 2024 08:29:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723249902; cv=none; b=CeKiMvS/zdURZZ4dfC6rj+zfgw5rcpwFjCrqXqM/9SxUDeI7Gz0F8XK0lAIGxj+ZZCDIInn1tA8TXNtigMHRb2pso9GTXf6y4i9EN/Ex39XNFi39r5TGvUvsm5lCyQtR0EOSefxkeYssgX5mr1SV6Lg0WVqkZuH8auiDAdgqM6c=
+	t=1723278586; cv=none; b=kblH26VwVkVS35wD2nrlYQVCCDj6bnjvtoKnPFa+29FKqZkEBukVRbToBi7qvHxvlTXaPxRSxwZEBOr4F6Mv2/BS/IBgU/VVL8sUzujo2w0gJAbiGDTX3TGFcux49MywFtGR1h/hWNCHFaJAKFkv/d7WZx0ZKRxx6bE6KRq+1AU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723249902; c=relaxed/simple;
-	bh=JGAyMGAG4j2hlYG3BpMddGtpc8MWUx6wf7wBPm2PqjA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=tvyyHjG5wPvFriBcqVsecTvm70HVojhBLIurcaofalRy6Bd5LsaG+a9aeTNUQTU3aS3enFjmL13FgIQLnlxRH4I3708o+BDMeh0Ny76At13P+KHuIYZe3nS3LnWm3Z0G1+UcdyQuW3DjwJRvQY9por5A6nSY9nkNU9qLuA/WKrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WghXt1Tcyzcd49;
-	Sat, 10 Aug 2024 08:31:26 +0800 (CST)
-Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id 454FB1800FF;
-	Sat, 10 Aug 2024 08:31:36 +0800 (CST)
-Received: from [10.174.176.88] (10.174.176.88) by
- kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Sat, 10 Aug 2024 08:31:35 +0800
-Message-ID: <c593ed3d-dc27-48c0-9e3e-519e9cf2e54d@huawei.com>
-Date: Sat, 10 Aug 2024 08:31:34 +0800
+	s=arc-20240116; t=1723278586; c=relaxed/simple;
+	bh=+U/WSWoZiq1NNzQuvc0HgFuRNc2G7WpQvVR3KrAg8Hs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bdrN2c+KUvFu6AV9o/ErYvzWyiXNNE9t8L8aQVeujykfXTmONhnMw3FQ2o+kp9O62+wiOlRGrtsfPMoC4OvIRC/WCfHgo+/QyGSUZCbCCgBvtSJr5pNa0oGbqmQlOKAWZ1zG7AmybQSkHY5Y2gZBNvQafxHrTQRA2mOJFUnvCHI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fdo3H4Zi; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fdo3H4Zi"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-52f01b8738dso2506202e87.1;
+        Sat, 10 Aug 2024 01:29:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1723278583; x=1723883383; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=YeCuEGx9luAQ2+Oji6MqCQGLfxWCFImTTTV2T41ZgRY=;
+        b=fdo3H4Zi889hAzJxVkUISYDaVOqVT2qTm7CntDkpJBiJ2MunaETy/9fWFgcpNx8ZLr
+         bzouM6DittwEOtH58oEyzqbfPs+tvHMioHmCAtDQZ9cOA2GWPRzt/boOs/hffU1xZ5p3
+         ohcqRGTlwIPYV0txK6zvhfxeOAq8PxG42QPm3/LA6QrKpkLCG7SKqyFIbg3AHFXbK45X
+         juVNRwX/A0EJ0tZjQiABT43qWH5YEqkWI+0lfvzKYI5YaLRIHWNNMxMvlLXOdwOMYyYM
+         OwH5vtm2S0t/zjtR8MpMUk04nI0+g4b2WptSDBnVdO2fEtbAIFp8nFfYUCb/BkfIaeA/
+         CrwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1723278583; x=1723883383;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=YeCuEGx9luAQ2+Oji6MqCQGLfxWCFImTTTV2T41ZgRY=;
+        b=Ht7ffBFbmUJ50InYWxK1uGhLepEinnLIBSlEN5qCQxQwE6CJuLK9n03+LHup1AFmAs
+         gq/p+nMb+Wa7RHIcOKQJAuudlugj52CwzDJxVjubQ4XO3ukWyeQPB9Mdl+kNa0OkuzOi
+         q8WkIieLnkZlfLDzkQeaY06CAuvrQUHBUv6SgmSxZeu/xlYjbfGntOagytpoqQeEoQ9W
+         yY7/R/lauQVN2Dce69TsWMN3nwG+zH6BximIKQDxsCCrTsGzvcyavySRh2oyyrV+uohT
+         eMVgEkXU3QhhgDdjF4fUx71Y6ADGYiLztQW73qHPdcrbWiYvTiOwI4ZALGZIUAdcpYlQ
+         XfhA==
+X-Forwarded-Encrypted: i=1; AJvYcCW9w9txDsFYokN7jqKiXpZl66LXk/XawkYtan2X3TbiUAQ9/xSMuKawIz+LnIZyPO1IzMZbLLkUNjoL9hv/rHY3Od90y/5XD4MU5CSy
+X-Gm-Message-State: AOJu0YzAhmUjMlPfQVgcuHUbg4Je9vGrW8yIUIZIjUq9RJGus36clEdn
+	BJQANs1UlOotxKb6mPs45zmHmtECvnbQ8QVqyyzc8weHjIapB1FvBWcEkYi7
+X-Google-Smtp-Source: AGHT+IEggfPN1vpAkp1UUJNnkvfUddZErKWbv9eoFdy7YFz5CcS1LQPJJ3y9I9mzmTWhnHYifmZYBA==
+X-Received: by 2002:a05:6512:108d:b0:52c:e00c:d3a9 with SMTP id 2adb3069b0e04-530ee96c74cmr2789858e87.1.1723278582755;
+        Sat, 10 Aug 2024 01:29:42 -0700 (PDT)
+Received: from ?IPV6:2a00:801:56b:e722:f008:fe67:227a:e9f4? ([2a00:801:56b:e722:f008:fe67:227a:e9f4])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53200f42271sm152991e87.255.2024.08.10.01.29.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 10 Aug 2024 01:29:42 -0700 (PDT)
+Message-ID: <252d91e2-282e-4af4-b99b-3b8147d98bc3@gmail.com>
+Date: Sat, 10 Aug 2024 10:29:38 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,260 +61,127 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2] xfs: Make the fsmap more precise
-To: Carlos Maiolino <cem@kernel.org>
-CC: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
-	<osandov@fb.com>, <john.g.garry@oracle.com>, <linux-xfs@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>
-References: <20240808144759.1330237-1-wozizhi@huawei.com>
- <3oq52rri7iwsxhpiquztikmb7k3t324tt3b64yd5ac43lb42jy@m2twc7tvphca>
-From: Zizhi Wo <wozizhi@huawei.com>
-In-Reply-To: <3oq52rri7iwsxhpiquztikmb7k3t324tt3b64yd5ac43lb42jy@m2twc7tvphca>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemf100017.china.huawei.com (7.202.181.16)
+Subject: Re: XFS mount timeout in linux-6.9.11
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong"
+ <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
+References: <71864473-f0f7-41c3-95f2-c78f6edcfab9@gmail.com>
+ <ZraeRdPmGXpbRM7V@dread.disaster.area>
+Content-Language: en-US
+From: Anders Blomdell <anders.blomdell@gmail.com>
+In-Reply-To: <ZraeRdPmGXpbRM7V@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
 
-在 2024/8/9 17:09, Carlos Maiolino 写道:
-> On Thu, Aug 08, 2024 at 10:47:59PM GMT, Zizhi Wo wrote:
->> In commit 63ef7a35912d ("xfs: fix interval filtering in multi-step fsmap
->> queries"), Darrick has solved a fsmap bug about incorrect filter condition.
->> But I still notice two problems in fsmap:
->>
->> [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
->>   EXT: DEV    BLOCK-RANGE           OWNER              FILE-OFFSET      AG AG-OFFSET             TOTAL
->>     0: 253:32 [0..7]:               static fs metadata                  0  (0..7)                    8
->>     1: 253:32 [8..23]:              per-AG metadata                     0  (8..23)                  16
->>     2: 253:32 [24..39]:             inode btree                         0  (24..39)                 16
->>     ......
->>
->> Bug 1:
->> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 3 7' /mnt
->> [root@fedora ~]#
->> Normally, we should be able to get [3, 7), but we got nothing.
->>
->> Bug 2:
->> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 15 20' /mnt
->>   EXT: DEV    BLOCK-RANGE      OWNER            FILE-OFFSET      AG AG-OFFSET        TOTAL
->>     0: 253:32 [8..23]:         per-AG metadata                   0  (8..23)             16
->> Normally, we should be able to get [15, 20), but we obtained a whole
->> segment of extent.
->>
->> The first problem is caused by shifting. When the query interval is before
->> the first extent which can be find in btree, no records can meet the
->> requirement. And the gap will be obtained in the last query. However,
->> rec_daddr is calculated based on the start_block recorded in key[1], which
->> is converted by calling XFS_BB_TO_FSBT. Then if rec_daddr does not exceed
->> info->next_daddr, which means keys[1].fmr_physical >> (mp)->m_blkbb_log
->> <= info->next_daddr, no records will be displayed. In the above example,
->> 3 >> (mp)->m_blkbb_log = 0 and 7 >> (mp)->m_blkbb_log = 0, so the two are
->> reduced to 0 and the gap is ignored:
->>
->> before calculate ----------------> after shifting
->>   3(st)    7(ed)                       0(st/ed)
->>    |---------|                            |
->>    sector size                        block size
->>
->> Resolve this issue by introducing the "tail_daddr" field in
->> xfs_getfsmap_info. This records |key[1].fmr_physical + key[1].length| at
->> the granularity of sector. If the current query is the last, the rec_daddr
->> is tail_daddr to prevent missing interval problems caused by shifting.
+On 2024-08-10 00:55, Dave Chinner wrote:
+> On Fri, Aug 09, 2024 at 07:08:41PM +0200, Anders Blomdell wrote:
+>> With a filesystem that contains a very large amount of hardlinks
+>> the time to mount the filesystem skyrockets to around 15 minutes
+>> on 6.9.11-200.fc40.x86_64 as compared to around 1 second on
+>> 6.8.10-300.fc40.x86_64,
 > 
-> You mention the introduction of the 'tail_daddr' field, but your patch
-> does not introduce such field. Your patch description should properly match
-> your patch.
+> That sounds like the filesystem is not being cleanly unmounted on
+> 6.9.11-200.fc40.x86_64 and so is having to run log recovery on the
+> next mount and so is recovering lots of hardlink operations that
+> weren't written back at unmount.
 > 
+> Hence this smells like an unmount or OS shutdown process issue, not
+> a mount issue. e.g. if something in the shutdown scripts hangs,
+> systemd may time out the shutdown and power off/reboot the machine
+> wihtout completing the full shutdown process. The result of this is
+> the filesystem has to perform recovery on the next mount and so you
+> see a long mount time because of some other unrelated issue.
+> 
+> What is the dmesg output for the mount operations? That will tell us
+> if journal recovery is the difference for certain.  Have you also
+> checked to see what is happening in the shutdown/unmount process
+> before the long mount times occur?
+echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
+mount /dev/vg1/test /test
+echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
+umount /test
+echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
+mount /dev/vg1/test /test
+echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
 
-I'm very sorry, I mistakenly referred to "end_daddr" as "tail_daddr"!
-Next time, I will carefully review the commit message of the patch.
-To fix the first bug, introducing "end_daddr" is sufficient, but fixing
-the second bug requires both "start_daddr" and "end_daddr".
+[55581.470484] 6.8.0-rc4-00129-g14dd46cf31f4 09:17:20
+[55581.492733] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+[56048.292804] XFS (dm-7): Ending clean mount
+[56516.433008] 6.8.0-rc4-00129-g14dd46cf31f4 09:32:55
+[56516.434695] XFS (dm-7): Unmounting Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+[56516.925145] 6.8.0-rc4-00129-g14dd46cf31f4 09:32:56
+[56517.039873] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+[56986.017144] XFS (dm-7): Ending clean mount
+[57454.876371] 6.8.0-rc4-00129-g14dd46cf31f4 09:48:34
 
-> 
->> We
->> only need to focus on the last query, because xfs disks are internally
->> aligned with disk blocksize that are powers of two and minimum 512, so
->> there is no problem with shifting in previous queries.
->>
->> The second problem is that the resulting range is not truncated precisely
->> according to the boundary.
-> 
-> Even though they are related, I'd prefer these two fixes split this into 2
-> separated patches, not a single one. This makes reviewers lives easier to
-> follow what you are fixing.
-> 
+And rebooting to the kernel before the offending commit:
 
-Sure, I'll split them. Thanks for the suggestion. However, as Darrick
-mentioned, the second issue of displaying the entire range might not be
-a problem. So I'll address the first bug in the next version.
+[   60.177951] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:00
+[   61.009283] SGI XFS with ACLs, security attributes, realtime, scrub, quota, no debug enabled
+[   61.017422] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+[   61.351100] XFS (dm-7): Ending clean mount
+[   61.366359] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:01
+[   61.367673] XFS (dm-7): Unmounting Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+[   61.444552] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:01
+[   61.459358] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+[   61.513938] XFS (dm-7): Ending clean mount
+[   61.524056] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:01
 
-Thanks,
-Zizhi Wo
 
 > 
->> Currently, the query display mechanism for owner
->> and missing_owner is different. The query of missing_owner (e.g. freespace
->> in rmapbt/ unknown space in bnobt) is obtained by subtraction (gap), which
->> can accurately lock the range. In the query of owner which almostly finded
->> by btree, as long as certain conditions met, the entire interval is
->> recorded, regardless of the starting address of the key[0] and key[1]
->> incoming from the user state. Focus on the following scenario:
->>
->>                      a       b
->>                      |-------|
->> 	              query
->>                   c             d
->> |----------------|-------------|----------------|
->>    missing owner1      owner      missing owner2
->>
->> Currently query is directly displayed as [c, d), the correct display should
->> be [a, b). This problem is solved by calculating max(a, c) and min(b, d) to
->> identify the head and tail of the range. To be able to determine the bounds
->> of the low key, "start_daddr" is introduced in xfs_getfsmap_info.
+>> this of course makes booting drop
+>> into emergency mode if the filesystem is in /etc/fstab. A git bisect
+>> nails the offending commit as 14dd46cf31f4aaffcf26b00de9af39d01ec8d547.
 > 
-> Here you properly describe what your patch is doing.
+> Commit 14dd46cf31f4 ("xfs: split xfs_inobt_init_cursor") doesn't
+> seem like a candidate for any sort of change of behaviour. It's just
+> a refactoring patch that doesn't change any behaviour at all. 
+> Are you sure the reproducer you used for the bisect is reliable?
+Yes.
+
+>> The filesystem is a collection of daily snapshots of a live filesystem
+>> collected over a number of years, organized as a storage of unique files,
+>> that are reflinked to inodes that contain the actual {owner,group,permission,
+>> mtime}, and these inodes are hardlinked into the daily snapshot trees.
 > 
-> Carlos
+> So it's reflinks and hardlinks. Recovering a reflink takes a lot
+> more CPU time and journal traffic than recovering a hardlink, so
+> that will also be a contributing factor.
 > 
->> Although
->> in some scenarios, similar results can be achieved without introducing
->> "start_daddr" and relying solely on info->next_daddr (e.g. in bnobt), it is
->> ineffective for overlapping scenarios in rmapbt.
+>> The numbers for the filesystem are:
 >>
->> After applying this patch, both of the above issues have been fixed (the
->> same applies to boundary queries for the log device and realtime device):
->> 1)
->> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 3 7' /mnt
->>   EXT: DEV    BLOCK-RANGE      OWNER              FILE-OFFSET      AG AG-OFFSET        TOTAL
->>     0: 253:32 [3..6]:          static fs metadata                  0  (3..6)               4
->> 2)
->> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 15 20' /mnt
->>   EXT: DEV    BLOCK-RANGE      OWNER            FILE-OFFSET      AG AG-OFFSET        TOTAL
->>     0: 253:32 [15..19]:        per-AG metadata                   0  (15..19)             5
->>
->> Note that due to the current query range being more precise, high.rm_owner
->> needs to be handled carefully. When it is 0, set it to the maximum value to
->> prevent missing intervals in rmapbt.
->>
->> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
->> ---
->>   fs/xfs/xfs_fsmap.c | 42 ++++++++++++++++++++++++++++++++++++++++--
->>   1 file changed, 40 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
->> index 85dbb46452ca..e7bb21497e5c 100644
->> --- a/fs/xfs/xfs_fsmap.c
->> +++ b/fs/xfs/xfs_fsmap.c
->> @@ -162,6 +162,8 @@ struct xfs_getfsmap_info {
->>   	xfs_daddr_t		next_daddr;	/* next daddr we expect */
->>   	/* daddr of low fsmap key when we're using the rtbitmap */
->>   	xfs_daddr_t		low_daddr;
->> +	xfs_daddr_t		start_daddr;	/* daddr of low fsmap key */
->> +	xfs_daddr_t		end_daddr;	/* daddr of high fsmap key */
->>   	u64			missing_owner;	/* owner of holes */
->>   	u32			dev;		/* device id */
->>   	/*
->> @@ -276,6 +278,7 @@ xfs_getfsmap_helper(
->>   	struct xfs_mount		*mp = tp->t_mountp;
->>   	bool				shared;
->>   	int				error;
->> +	int				trunc_len;
->>   
->>   	if (fatal_signal_pending(current))
->>   		return -EINTR;
->> @@ -283,6 +286,13 @@ xfs_getfsmap_helper(
->>   	if (len_daddr == 0)
->>   		len_daddr = XFS_FSB_TO_BB(mp, rec->rm_blockcount);
->>   
->> +	/*
->> +	 * Determine the maximum boundary of the query to prepare for
->> +	 * subsequent truncation.
->> +	 */
->> +	if (info->last && info->end_daddr)
->> +		rec_daddr = info->end_daddr;
->> +
->>   	/*
->>   	 * Filter out records that start before our startpoint, if the
->>   	 * caller requested that.
->> @@ -348,6 +358,21 @@ xfs_getfsmap_helper(
->>   		return error;
->>   	fmr.fmr_offset = XFS_FSB_TO_BB(mp, rec->rm_offset);
->>   	fmr.fmr_length = len_daddr;
->> +	/*  If the start address of the record is before the low key, truncate left. */
->> +	if (info->start_daddr > rec_daddr) {
->> +		trunc_len = info->start_daddr - rec_daddr;
->> +		fmr.fmr_physical += trunc_len;
->> +		fmr.fmr_length -= trunc_len;
->> +		/* need to update the offset in rmapbt. */
->> +		if (info->missing_owner == XFS_FMR_OWN_FREE)
->> +			fmr.fmr_offset += trunc_len;
->> +	}
->> +	/* If the end address of the record exceeds the high key, truncate right. */
->> +	if (info->end_daddr) {
->> +		fmr.fmr_length = umin(fmr.fmr_length, info->end_daddr - fmr.fmr_physical);
->> +		if (fmr.fmr_length == 0)
->> +			goto out;
->> +	}
->>   	if (rec->rm_flags & XFS_RMAP_UNWRITTEN)
->>   		fmr.fmr_flags |= FMR_OF_PREALLOC;
->>   	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
->> @@ -364,7 +389,7 @@ xfs_getfsmap_helper(
->>   
->>   	xfs_getfsmap_format(mp, &fmr, info);
->>   out:
->> -	rec_daddr += len_daddr;
->> +	rec_daddr = fmr.fmr_physical + fmr.fmr_length;
->>   	if (info->next_daddr < rec_daddr)
->>   		info->next_daddr = rec_daddr;
->>   	return 0;
->> @@ -655,6 +680,13 @@ __xfs_getfsmap_datadev(
->>   			error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
->>   			if (error)
->>   				break;
->> +			/*
->> +			 * Set the owner of high_key to the maximum again to
->> +			 * prevent missing intervals during the query.
->> +			 */
->> +			if (info->high.rm_owner == 0 &&
->> +			    info->missing_owner == XFS_FMR_OWN_FREE)
->> +			    info->high.rm_owner = ULLONG_MAX;
->>   			xfs_getfsmap_set_irec_flags(&info->high, &keys[1]);
->>   		}
->>   
->> @@ -946,6 +978,9 @@ xfs_getfsmap(
->>   
->>   	info.next_daddr = head->fmh_keys[0].fmr_physical +
->>   			  head->fmh_keys[0].fmr_length;
->> +	/* Assignment is performed only for the first time. */
->> +	if (head->fmh_keys[0].fmr_length == 0)
->> +		info.start_daddr = info.next_daddr;
->>   	info.fsmap_recs = fsmap_recs;
->>   	info.head = head;
->>   
->> @@ -966,8 +1001,10 @@ xfs_getfsmap(
->>   		 * low key, zero out the low key so that we get
->>   		 * everything from the beginning.
->>   		 */
->> -		if (handlers[i].dev == head->fmh_keys[1].fmr_device)
->> +		if (handlers[i].dev == head->fmh_keys[1].fmr_device) {
->>   			dkeys[1] = head->fmh_keys[1];
->> +			info.end_daddr = dkeys[1].fmr_physical + dkeys[1].fmr_length;
->> +		}
->>   		if (handlers[i].dev > head->fmh_keys[0].fmr_device)
->>   			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
->>   
->> @@ -991,6 +1028,7 @@ xfs_getfsmap(
->>   		xfs_trans_cancel(tp);
->>   		tp = NULL;
->>   		info.next_daddr = 0;
->> +		info.start_daddr = 0;
->>   	}
->>   
->>   	if (tp)
->> -- 
->> 2.39.2
->>
->>
+>>    Total file size:           3.6e+12 bytes
 > 
+> 3.6TB, not a large data set by any measurement.
+> 
+>>    Unique files:             12.4e+06
+> 
+> 12M files, not a lot.
+> 
+>>    Reflink inodes:           18.6e+06
+> 
+> 18M inodes with shared extents, not a huge number, either.
+> 
+>>    Hardlinks:                15.7e+09
+> 
+> Ok, 15.7 billion hardlinks is a *lot*.
+:-)
+> 
+> And by a lot, I mean that's the largest number of hardlinks in an
+> XFS filesystem I've personally ever heard about in 20 years.
+Glad to be of service.
+
+> 
+> As a warning: hope like hell you never have a disaster with that
+> storage and need to run xfs_repair on that filesystem. It you don't
+> have many, many TBs of RAM, just checking the hardlinks resolve
+> correctly could take billions of IOs...
+I hope so as well :-), but it is not a critical system (used for testing
+and statistics, will take about a month to rebuild though :-/).
+
+> 
+> -Dave.
