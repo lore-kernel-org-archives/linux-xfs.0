@@ -1,74 +1,74 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from mail-oa1-f43.google.com (mail-oa1-f43.google.com [209.85.160.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8251A28FC
-	for <linux-xfs@vger.kernel.org>; Sun, 11 Aug 2024 23:48:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC2554A1C
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 00:04:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723420100; cv=none; b=Cc3Hm2/1GNCVepsGsj8/oK7BQW3e5MlXs3zfpH3z0puMPVCCZD8MGXqL0QuZO6pRJusubE2mgOmO3HGDgQ+vmaauJPUuDCtJKh4lHKvaM2ARMJ7inn/Nja4zy94YHstydHQMILRbH0RlFaFENE4RsHaR+TruG+Vz+ro2xtQd2mA=
+	t=1723421064; cv=none; b=FM4AGGYFUFF/a7xNFlNEdrMptt7mGlS5YKRUugeW1we3f27KaHBUA1DPryW8Xu+WX2FWNK/UaXLXD/i9XnBwAd8DNJy+xqdqJSNsBlSc1vhGr9Ti+kNuEebpiT3Ri1kaTUHpuqKHe7lYMPyvycU4zw29jeXhpz8g+f/q6hedP/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723420100; c=relaxed/simple;
-	bh=H1UW/xKzcvMJ+r/Jpwah8D+T8dcCF//bd6lL85sfbtg=;
+	s=arc-20240116; t=1723421064; c=relaxed/simple;
+	bh=xkh6wJHVf6uVke9ptkJtT2GAdv+0ZBuNUx7jFO6MAGE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bbwPFKRfPZWOq+0634WvrRTwxMf1shc3a8T0TEc1BdIatxynsu73fPV0fz4YrrOoj4w9xkI0dHWJFmvfw1vJN1mUiRRvK8jRY/4Sdd8obBWrdEwHrY6TIay6i4vyj5x8NIhIII6LmulMnkhKZ1u+RAAtMRRPv3+EXEiJAnFkgFQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=oIAsuYc3; arc=none smtp.client-ip=209.85.216.49
+	 Content-Type:Content-Disposition:In-Reply-To; b=CL3xU9dHb4BxMQL9u4P93unAvOVYsXXBBpIR02kOaHAr+Fjp4K5XAgmTNhzqLwe7ezY2fIyZFjNUi+4zWhdkBP2lK2Q/lTVdKRo+e8uv+VQGf1ULrxxEYtTBbj3RWLZ3R6A0WeU3BSOSeiNPU5B9sVRVSJfNtBH2a5kcffCECQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=mA6HQzR3; arc=none smtp.client-ip=209.85.160.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="oIAsuYc3"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-2cb6662ba3aso2481357a91.1
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Aug 2024 16:48:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="mA6HQzR3"
+Received: by mail-oa1-f43.google.com with SMTP id 586e51a60fabf-261e543ef35so2660712fac.3
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Aug 2024 17:04:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1723420098; x=1724024898; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1723421061; x=1724025861; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Lv42EnrcBPnXVT76SapYmuJuHXzchC2VmcEA3YFI6Ms=;
-        b=oIAsuYc3lQ1Ah8oQayk+XUoc4srByP+0vxVWGkNePW1YAYnI0PF0YNvSN4D/cFiTYU
-         /uTlIH//XZuR/Gd1teQg14EDr4qk9gfAGbY+rFaQh4Q4q8d28Rh3Vb7Mnvv/Xe70JdcU
-         7Mvd9lzl4k+oRYQplXV3UqCSuWTzJSBQhoETgJGV19PzioMuRnlHjj5l87mDBdpluZ5Y
-         Nt+IHE14vI0rvIlcCbrxu3etYpZkbsWOr7FTaAem8nojJROjwOi1+g9ysaSfmcJen4Te
-         mn2HxCgN9nb30CTnIzELYEf8RYNxprYzX2/XzjLSBHdQ4eiRKD81R+bFcPh4qSXUv2Jv
-         naLA==
+        bh=FwHHMTfR0m72/F0FKClBhUnG7fJbSLh/yvNQxx41+us=;
+        b=mA6HQzR3S1Gx+jVpF/LL9s6yVD49b0wSkM2jyqIwbqQg8s5KgPDPcm1sN7HNu5EF86
+         jaQdya+iaPt0AgKUeN1wVBU+XwL6Uw9IK75KU1A5XF+8ejUu2AJd1Jfs1qbIulQNBzAL
+         82qVQ90H6jDALcmcVWgMZdrMBXG3eUs1y/tLaGbnJZYHopv08C0dWX24hI6IwQSavV0e
+         fK3llqerNO44OpLS3XdNgJ7stAqeLjorqkqR2vx3ll/5SLLCLCpK3JasY/UIAGC4BOP8
+         IA/KKv/W1O8FOTZTbdqdCoSUL38s1YuyMhQJ23nX0WDz0pHcMt8WlY7pKmxgywLwolJd
+         mlbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723420098; x=1724024898;
+        d=1e100.net; s=20230601; t=1723421061; x=1724025861;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Lv42EnrcBPnXVT76SapYmuJuHXzchC2VmcEA3YFI6Ms=;
-        b=dTHAieqvyigByQdQSKFVIeBsJlW+LPj31ECf2iRkN4xagf2rWwRZq3fc0PP0SknBNA
-         FTtoBNetlBPLHz6WeuKpI5FXOSQRFi1QXM9PyTS12Y5WhDHLw53jutm/wImzS1ziHm8o
-         WWY0PLVxI6H8AoUOmztK0zNPuXeSmyKpkyAe+immVCyeNcbpAUtao/zTyzzzeOKf+pvM
-         /m5ZPPJZJX7ootVmtA2OAunfgJs80cDLJ/8O9PuddulEeDgQ5M+w+mpiZpm2jUQwIDL0
-         fbJA1iVoF4R+Rp0YtvagZ0jBy7qHmIChhEvCLsDcLeC0qG07TmJtCsBwQg/fWYvy7xC2
-         WzTw==
-X-Forwarded-Encrypted: i=1; AJvYcCVOYIrHU2fX8yygq4aSRyx2vuaF5gATvYNdPoW37pxxMIrE4inke5QOjKVjw0B54bEKumYzkFvVBNJBKpNCQNATM+qz6ZI0bU3b
-X-Gm-Message-State: AOJu0YxC2AJep3lsnGEJQOD6FdXWWYz7zsfbJTw4TF7JQ8IK4wgU9mbD
-	Twn9n02XG/0AURmZ/8pY33qmpAoWA70af9uhk+04lrvqKp5+QQvFF8Hcwy3AB5/XLFyOiZhzzwV
-	B
-X-Google-Smtp-Source: AGHT+IGsjgJbMq+rrDBSTleSGK9YC0Who1RM0mxob13kS7WzpGuKh6166p7SaPhdmSZZKRWcSAScXQ==
-X-Received: by 2002:a17:90b:8d4:b0:2c9:75a7:5c25 with SMTP id 98e67ed59e1d1-2d1c4c2dae7mr18635261a91.15.1723420097623;
-        Sun, 11 Aug 2024 16:48:17 -0700 (PDT)
+        bh=FwHHMTfR0m72/F0FKClBhUnG7fJbSLh/yvNQxx41+us=;
+        b=bx0ZKycY+zmEFxO8m9umcBNvN7wW76b37rMn9818sCbjKvcYD54uZp+66KYhLuIa/B
+         QlvIMGC7f0eyxbyZiFkfAHUUS+1iRfK+cQy3nwG+gNXTtjuzbhXEjUVByXX0C4HuhgPc
+         RGQJXcYurdWRw6sqzeFd+XW1yyz8ELXWLDlqC6i+uOcxGHVqrAeutCSnJ3FHzvW4xgs+
+         hxw4MS/KVJouq233K/CCJtiXBjcCrJjuI+r5Rv+zqJhhuc2CwME2/uweXID0bVIPDeu5
+         CjFL6KWd2NMPXTCNxPmMcmW04jRMk8CSL809ch6h5MaFmqdaPGHFNvmeHpupzqCm8ST0
+         EnHA==
+X-Gm-Message-State: AOJu0YxNLwFrShOKVJ+VW7XPPTNAJRmOCXVytrVRiEKmBxXhBN/ZFlAb
+	iwhuPf8UfiR6HkbO384xi18ZrepkbZ0xqPC0Nyvz2IeK5Rgz/xj4BwRAt05U8Cc=
+X-Google-Smtp-Source: AGHT+IGb7eCyKYvq+Vqr8OsUoaQJY2rmfDVWWR4wHJ7zWsOfWyPSQU6zpm+MuO6FZOFN+8ecM6Purw==
+X-Received: by 2002:a05:6870:7246:b0:260:e36f:ef50 with SMTP id 586e51a60fabf-26c62c0df24mr10492409fac.2.1723421061598;
+        Sun, 11 Aug 2024 17:04:21 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d1c9db44dasm6846990a91.45.2024.08.11.16.48.17
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-710e5a89ab3sm2857371b3a.153.2024.08.11.17.04.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Aug 2024 16:48:17 -0700 (PDT)
+        Sun, 11 Aug 2024 17:04:21 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sdIIG-00DoFU-2u;
-	Mon, 12 Aug 2024 09:48:12 +1000
-Date: Mon, 12 Aug 2024 09:48:12 +1000
+	id 1sdIXq-00DpB6-2p;
+	Mon, 12 Aug 2024 10:04:18 +1000
+Date: Mon, 12 Aug 2024 10:04:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
+To: Anders Blomdell <anders.blomdell@gmail.com>
+Cc: linux-xfs@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/9] xfs: check XFS_EOFBLOCKS_RELEASED earlier in
- xfs_release_eofblocks
-Message-ID: <ZrlNvJairwgvACh2@dread.disaster.area>
-References: <20240808152826.3028421-1-hch@lst.de>
- <20240808152826.3028421-8-hch@lst.de>
- <ZrVOvDkhX7Mfoxy+@dread.disaster.area>
- <20240811085952.GB12713@lst.de>
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: XFS mount timeout in linux-6.9.11
+Message-ID: <ZrlRggozUT6dJRh+@dread.disaster.area>
+References: <71864473-f0f7-41c3-95f2-c78f6edcfab9@gmail.com>
+ <ZraeRdPmGXpbRM7V@dread.disaster.area>
+ <252d91e2-282e-4af4-b99b-3b8147d98bc3@gmail.com>
+ <ZrfzsIcTX1Qi+IUi@dread.disaster.area>
+ <4697de37-a630-402f-a547-cc4b70de9dc3@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,88 +77,93 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240811085952.GB12713@lst.de>
+In-Reply-To: <4697de37-a630-402f-a547-cc4b70de9dc3@gmail.com>
 
-On Sun, Aug 11, 2024 at 10:59:52AM +0200, Christoph Hellwig wrote:
-> On Fri, Aug 09, 2024 at 09:03:24AM +1000, Dave Chinner wrote:
-> > The test and set here is racy. A long time can pass between the test
-> > and the setting of the flag,
-> 
-> The race window is much tighter due to the iolock, but if we really
-> care about the race here, the right fix for that is to keep a second
-> check for the XFS_EOFBLOCKS_RELEASED flag inside the iolock.
-
-Right, that's exactly what the code I proposed below does.
-
-> > so maybe this should be optimised to
-> > something like:
+On Sun, Aug 11, 2024 at 10:17:50AM +0200, Anders Blomdell wrote:
+> On 2024-08-11 01:11, Dave Chinner wrote:
+> > On Sat, Aug 10, 2024 at 10:29:38AM +0200, Anders Blomdell wrote:
+> > > On 2024-08-10 00:55, Dave Chinner wrote:
+> > > > On Fri, Aug 09, 2024 at 07:08:41PM +0200, Anders Blomdell wrote:
+> > > echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
+> > > mount /dev/vg1/test /test
+> > > echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
+> > > umount /test
+> > > echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
+> > > mount /dev/vg1/test /test
+> > > echo $(uname -r) $(date +%H:%M:%S) > /dev/kmsg
+> > > 
+> > > [55581.470484] 6.8.0-rc4-00129-g14dd46cf31f4 09:17:20
+> > > [55581.492733] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+> > > [56048.292804] XFS (dm-7): Ending clean mount
+> > > [56516.433008] 6.8.0-rc4-00129-g14dd46cf31f4 09:32:55
 > > 
-> > 	if (inode->i_nlink &&
-> > 	    (file->f_mode & FMODE_WRITE) &&
-> > 	    (!(ip->i_flags & XFS_EOFBLOCKS_RELEASED)) &&
-> > 	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-> > 		if (xfs_can_free_eofblocks(ip) &&
-> > 		    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
-> > 			xfs_free_eofblocks(ip);
-> > 		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> > 	}
-> 
-> All these direct i_flags access actually are racy too (at least in
-> theory).
-
-Yes, but we really don't care about racing against the bit being
-set. The flag never gets cleared unless a truncate down occurs, so
-we don't really have to care about racing with that case - there
-will be no eofblocks to free.
-
-If the test races with another release call setting the flag (i.e.
-we see it clear) then we are going to go the slow way and then do
-exactly the right thing according to the current bit state once we
-hold the IO lock and the i_flags_lock.
-
-> We'd probably be better off moving those over to the atomic
-> bitops and only using i_lock for any coordination beyond the actual
-> flags.  I'd rather not get into that here for now, even if it is a
-> worthwhile project for later.
-
-That doesn't solve the exclusive cacheline access problem Mateusz
-reported. It allows us to isolate the bitop updates, but in this
-case here the atomic test-and-set op still requires exclusive
-cacheline access.
-
-Hence we'd still need test-test-and-set optimisations here to avoid
-the exclusive cacheline contention when the bit is already set...
-
-> > I do wonder, though - why do we need to hold the IOLOCK to call
-> > xfs_can_free_eofblocks()? The only thing that really needs
-> > serialisation is the xfS_bmapi_read() call, and that's done under
-> > the ILOCK not the IOLOCK. Sure, xfs_free_eofblocks() needs the
-> > IOLOCK because it's effectively a truncate w.r.t. extending writes,
-> > but races with extending writes while checking if we need to do that
-> > operation aren't really a big deal. Worst case is we take the
-> > lock and free the EOF blocks beyond the writes we raced with.
+> > So it took ~450s to determine that the mount was clean, then another
+> > 450s to return to userspace?
+> Yeah, that aligns with my userspace view that the mount takes 15 minutes.
 > > 
-> > What am I missing here?
-> 
-> I think the prime part of the story is that xfs_can_free_eofblocks was
-> split out of xfs_free_eofblocks, which requires the iolock.  But I'm
-> not sure if some of the checks are a little racy without the iolock,
+> > > [56516.434695] XFS (dm-7): Unmounting Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+> > > [56516.925145] 6.8.0-rc4-00129-g14dd46cf31f4 09:32:56
+> > > [56517.039873] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+> > > [56986.017144] XFS (dm-7): Ending clean mount
+> > > [57454.876371] 6.8.0-rc4-00129-g14dd46cf31f4 09:48:34
+> > 
+> > Same again.
+> > 
+> > Can you post the 'xfs_info /mnt/pt' for that filesystem?
+> # uname -r ; xfs_info /test
+> 6.8.0-rc4-00128-g8541a7d9da2d
+> meta-data=/dev/mapper/vg1-test isize=512    agcount=8, agsize=268435455 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=0, rmapbt=0
+>          =                       reflink=1    bigtime=0 inobtcount=0 nrext64=0
+> data     =                       bsize=4096   blocks=2147483640, imaxpct=20
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=521728, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Ok. I think the checks are racy even with the iolock - most of the
-checks are for inode metadata that is modified under the ilock (e.g.
-i_diflags, i_delayed_blks) or the ip->i_flags_lock (e.g.
-VFS_I(ip)->i_size for serialisation with updates via
-xfs_dio_write_end_io()). Hence I don't think that holding the IO
-lock here makes any difference here at all...
+Ok, nothing I'd consider strange there.
 
-> although I doubt it matter in practice as they are all optimizations.
-> I'd need to take a deeper look at this, so maybe it's worth a follow
-> on together with the changes in i_flags handling.
+> > > And rebooting to the kernel before the offending commit:
+> > > 
+> > > [   60.177951] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:00
+> > > [   61.009283] SGI XFS with ACLs, security attributes, realtime, scrub, quota, no debug enabled
+> > > [   61.017422] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+> > > [   61.351100] XFS (dm-7): Ending clean mount
+> > > [   61.366359] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:01
+> > > [   61.367673] XFS (dm-7): Unmounting Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+> > > [   61.444552] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:01
+> > > [   61.459358] XFS (dm-7): Mounting V5 Filesystem e2159bbc-18fb-4d4b-a6c5-14c97b8e5380
+> > > [   61.513938] XFS (dm-7): Ending clean mount
+> > > [   61.524056] 6.8.0-rc4-00128-g8541a7d9da2d 10:23:01
+> > 
+> > Yeah, that's what I'd expect to see.
 
-*nod*
+Ok, can you run the same series of commands but this time in another
+shell run this command and leave it running for the entire
+mount/unmount/mount/unmount sequence:
+
+# trace-cmd record -e xfs\* -e printk
+
+Then ctrl-c out of it, and run:
+
+# trace-cmd report > xfs-mount-report.<kernel>.txt
+
+on both kernels and send me the output (or a link that I can
+download because it will probably be quite large even when
+compressed) that is generated?
+
+That will tell me what XFS is doing different at mount time on the
+different kernels.
+
+[snip stuff about git bisect]
+
+I'll come back to the bisect if it's relevant once I know what XFS
+is doing differently across the unmount/mount cycles on the two
+different kernels.
 
 -Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
