@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3096816BE3B;
-	Mon, 12 Aug 2024 12:16:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06FF517B4FD;
+	Mon, 12 Aug 2024 12:16:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723464984; cv=none; b=p4GbKcxKloDNGq9XsqYMgHEDg9qyxPbqYqWyJKsUwtgxgUhldbovSWlWVsYP+eZgfHgpMjE/9qXsc2FDd+/3ZBW1H/13EMP5e3pEij5z1yLB1kfRF+e6KfvV9DE3sv6Ol6yLx/HydfsPxYFDIU5NrX3cVehadraxGVuCcljrhfs=
+	t=1723464986; cv=none; b=KGpISuUdI38FuXlzxpTiLUSvLZ4zabVakk3HMRbOBjOK86dEMf0aZkxEPA68xHNZBvIGN9w9m+AOVHSVH9d0OBXSNLNrWkCFgPq36PCJHfps3crdS3ZmQVxrteOKHPF5NXl9XW/x01qgN5rXU5bcG9zHlJGEwIE0q1AnTjzbtDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723464984; c=relaxed/simple;
-	bh=b13qTTePhXsovr+tkZ99PLzauYfJFJPIBeRsrYSKIgQ=;
+	s=arc-20240116; t=1723464986; c=relaxed/simple;
+	bh=51TeY73ZfcfHsbXKyd+uQriWs57Uk1pq+S2vwwDi1Lg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=b45DLnX2DHiyItgSRMOf1DkMym+q7kW7NfWhAHsuHMk9xMVBXBiGfE2MW5FrBKNfvBCAi+0EuMzDwefVZ56jxZAGqFraRfZIB44K9yvNkQde/n2B4qtVVhsX8AR2vr7LApJgrya7mHfwAqz+/VfOwKuCdeoBuYXwdVdkRbJJ7xw=
+	 MIME-Version; b=NZEZmiZ8BC8+WOSStZiI/CqwjzA+Seju/m4KvfVRbIETGf20fxBY9VPQUfekm9pFd6RJSBSmNPtB4dfUZ634PuNswnjV8dpkF+jev/NVYFv4vTf2bYrALrRSk0rpZMLW9KHJjJF/U8l4zODY5qFAa7/qFPyAwJlZJg0kZ0Y+rSM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WjD4t0khnz4f3mHt;
-	Mon, 12 Aug 2024 20:15:58 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WjD4y58L1z4f3mJ5;
+	Mon, 12 Aug 2024 20:16:02 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id AF1911A144C;
-	Mon, 12 Aug 2024 20:16:12 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 534B51A1535;
+	Mon, 12 Aug 2024 20:16:17 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP3 (Coremail) with SMTP id _Ch0CgDHeLcD_blmHhy7BQ--.21435S7;
-	Mon, 12 Aug 2024 20:16:12 +0800 (CST)
+	by APP3 (Coremail) with SMTP id _Ch0CgDHeLcD_blmHhy7BQ--.21435S10;
+	Mon, 12 Aug 2024 20:16:17 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
@@ -37,9 +37,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yi.zhang@huaweicloud.com,
 	chengzhihao1@huawei.com,
 	yukuai3@huawei.com
-Subject: [PATCH v2 3/6] iomap: advance the ifs allocation if we have more than one blocks per folio
-Date: Mon, 12 Aug 2024 20:11:56 +0800
-Message-Id: <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
+Subject: [PATCH v2 6/6] iomap: reduce unnecessary state_lock when setting ifs uptodate and dirty bits
+Date: Mon, 12 Aug 2024 20:11:59 +0800
+Message-Id: <20240812121159.3775074-7-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
 References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
@@ -50,82 +50,103 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgDHeLcD_blmHhy7BQ--.21435S7
-X-Coremail-Antispam: 1UD129KBjvJXoW7urWrWF1DCFyDCrW3AF1UWrg_yoW8Zw4DpF
-	WDKFWqkFWxJr17urnrXas8ZrWj93yYqrWfCay3W3ZxZF1Dtr17Kw4kKa4YyFyxXr97Ar4S
-	vFs0vFy8WF15Ar7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
-	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIev
-	Ja73UjIFyTuYvjfUF3kuDUUUU
+X-CM-TRANSID:_Ch0CgDHeLcD_blmHhy7BQ--.21435S10
+X-Coremail-Antispam: 1UD129KBjvJXoWxAF4kGFykJF4DKF15Ww17ZFb_yoW5Ar4DpF
+	W5Ka98KrZ8Xw17uw1fXF18Zr1Yk34xXr48CayfGwn3CF45Ary2gF18ua4jyFW8Xrn7Ar1v
+	qF1DtFy8WF4jyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
+	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnI
+	WIevJa73UjIFyTuYvjfUriihUUUUU
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-Now we allocate ifs if i_blocks_per_folio is larger than one when
-writing back dirty folios in iomap_writepage_map(), so we don't attach
-an ifs after buffer write to an entire folio until it starts writing
-back, if we partial truncate that folio, iomap_invalidate_folio() can't
-clear counterpart block's dirty bit as expected. Fix this by advance the
-ifs allocation to __iomap_write_begin().
+When doing buffered write, we set uptodate and drity bits of the written
+range separately, it holds the ifs->state_lock twice when blocksize <
+folio size, which is redundant. After large folio is supported, the
+spinlock could affect more about the performance, merge them could
+reduce some unnecessary locking overhead and gets some performance gain.
 
+Suggested-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 ---
- fs/iomap/buffered-io.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ fs/iomap/buffered-io.c | 38 +++++++++++++++++++++++++++++++++++---
+ 1 file changed, 35 insertions(+), 3 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 763deabe8331..79031b7517e5 100644
+index 96600405dbb5..67d7c1c22c98 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -699,6 +699,12 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
- 	size_t from = offset_in_folio(folio, pos), to = from + len;
- 	size_t poff, plen;
+@@ -182,6 +182,37 @@ static void iomap_set_range_dirty(struct folio *folio, size_t off, size_t len)
+ 		ifs_set_range_dirty(folio, ifs, off, len);
+ }
  
-+	if (nr_blocks > 1) {
-+		ifs = ifs_alloc(iter->inode, folio, iter->flags);
-+		if ((iter->flags & IOMAP_NOWAIT) && !ifs)
-+			return -EAGAIN;
-+	}
++static void ifs_set_range_dirty_uptodate(struct folio *folio,
++		struct iomap_folio_state *ifs, size_t off, size_t len)
++{
++	struct inode *inode = folio->mapping->host;
++	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
++	unsigned int first_blk = (off >> inode->i_blkbits);
++	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
++	unsigned int nr_blks = last_blk - first_blk + 1;
++	unsigned long flags;
 +
++	spin_lock_irqsave(&ifs->state_lock, flags);
++	bitmap_set(ifs->state, first_blk, nr_blks);
++	if (ifs_is_fully_uptodate(folio, ifs))
++		folio_mark_uptodate(folio);
++	bitmap_set(ifs->state, first_blk + blks_per_folio, nr_blks);
++	spin_unlock_irqrestore(&ifs->state_lock, flags);
++}
++
++static void iomap_set_range_dirty_uptodate(struct folio *folio,
++		size_t off, size_t len)
++{
++	struct iomap_folio_state *ifs = folio->private;
++
++	if (ifs)
++		ifs_set_range_dirty_uptodate(folio, ifs, off, len);
++	else
++		folio_mark_uptodate(folio);
++
++	filemap_dirty_folio(folio->mapping, folio);
++}
++
+ static struct iomap_folio_state *ifs_alloc(struct inode *inode,
+ 		struct folio *folio, unsigned int flags)
+ {
+@@ -851,6 +882,8 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
+ static bool __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
+ 		size_t copied, struct folio *folio)
+ {
++	size_t from = offset_in_folio(folio, pos);
++
+ 	flush_dcache_folio(folio);
+ 
  	/*
- 	 * If the write or zeroing completely overlaps the current folio, then
- 	 * entire folio will be dirtied so there is no need for
-@@ -710,10 +716,6 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
- 	    pos + len >= folio_pos(folio) + folio_size(folio))
- 		return 0;
+@@ -866,9 +899,8 @@ static bool __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
+ 	 */
+ 	if (unlikely(copied < len && !folio_test_uptodate(folio)))
+ 		return false;
+-	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), len);
+-	iomap_set_range_dirty(folio, offset_in_folio(folio, pos), copied);
+-	filemap_dirty_folio(inode->i_mapping, folio);
++
++	iomap_set_range_dirty_uptodate(folio, from, copied);
+ 	return true;
+ }
  
--	ifs = ifs_alloc(iter->inode, folio, iter->flags);
--	if ((iter->flags & IOMAP_NOWAIT) && !ifs && nr_blocks > 1)
--		return -EAGAIN;
--
- 	if (folio_test_uptodate(folio))
- 		return 0;
- 
-@@ -1928,7 +1930,12 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	WARN_ON_ONCE(end_pos <= pos);
- 
- 	if (i_blocks_per_folio(inode, folio) > 1) {
--		if (!ifs) {
-+		/*
-+		 * This should not happen since we always allocate ifs in
-+		 * iomap_folio_mkwrite_iter() and there is more than one
-+		 * blocks per folio in __iomap_write_begin().
-+		 */
-+		if (WARN_ON_ONCE(!ifs)) {
- 			ifs = ifs_alloc(inode, folio, 0);
- 			iomap_set_range_dirty(folio, 0, end_pos - pos);
- 		}
 -- 
 2.39.2
 
