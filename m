@@ -1,42 +1,51 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6221186E33;
-	Mon, 12 Aug 2024 16:33:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44FE61494B8;
+	Mon, 12 Aug 2024 16:40:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723480421; cv=none; b=R+4B3aDCZF3qG2j7BOv5dPQXbxKdhaJ38DzI670iTWcmoODyqUhQAiwLFS1Q+mtK76zPyEYEv2o22441O+4oimwX9/1deHHf/FXFTw1KWfmpIYB7E858gaUpqL6c/NkbP+oeZ1r7rUNWk57P1NepwS1jUSU+ZsUi8N3/b2msnUA=
+	t=1723480815; cv=none; b=P5o+V8LdriEorWc9y09vMpGuB8qrZOpunJTqhpsBY+pjCm9LwsF36t0+yicrpMBQDz8gtIVVp86BTHveAWFUO9OJMUdz2KtFhVXQcaGKvfghmEnWQua597rFHMNRHezQojh7uUkbsWRZW1izfenVzxaVBHJ98ZlrJpIys8XKmro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723480421; c=relaxed/simple;
-	bh=WmL869a4ewwYi7s/OKKxovTDNlv44X8vvMJuu+PGBJc=;
+	s=arc-20240116; t=1723480815; c=relaxed/simple;
+	bh=BhuxBHwSqvK3NfpdV6y7jZbOqPnGXVRVotuTD2awFSI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZJqUSugXqdMa3HURuSQXPMTI77ei3LVhom3kuzwMNiE0bWWZpaFAK1Golu+Q0AEX+1GZ0ukRnxlwN5nj4EWC2xHD2uYjajMV0J2JSRouxh+bBn9kVPgTwaXh1g3E+2jAM8yFxaVcWxXIAp47Q9MN1eKWFxtI5cr6nK9bvCX1v+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k8FLyvqw; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=LRuEAIalEehhpJgq61npSTVzFcdF2M5AtCv1pbFunnNVUMNJufQALk6gksPJCuK7ExvvVH5z1d/o5DbWAO2aVd7XxEnnaiYR/W1dj/XWff3q5U2l5jAkPzsJBYKChHMlrQ4ttseLwWMeUuR/9HbGzf7sYWOonY2KNOdus/NUvTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=hoQRIyKZ; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k8FLyvqw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7277BC4AF0D;
-	Mon, 12 Aug 2024 16:33:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723480420;
-	bh=WmL869a4ewwYi7s/OKKxovTDNlv44X8vvMJuu+PGBJc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=k8FLyvqwISb5t1RJ8XaY2JruX6rtvrjBaAkRMM2ACtEgJpq/xFWJw1vZHqrxLq+Zo
-	 5hBl7ZkOWMqmkgeGFnILGWM5/AoojduIYKc/B2BFKKpFN1qf+8R9vnrJpuP+gxK8ir
-	 8mmT5SsdfzI/utJ3Jf+yN0ojBKxEOsZDYsqdgeWtNAye/9qgiIiJu8PvfTqhaFBAVv
-	 O1tZr2tVRkMGkTWbVjuvZbTCqW8F1t4ezCUJMMRkhZq5yFsSEn+tu5OItYcO3e3GO+
-	 weHyinGtCDDpqST5Oteu5MkJN6g1/9xzmtyucF+EF9Kzane8WVphXGjGm6/tqBtFah
-	 9argB4ZYitjiQ==
-Date: Mon, 12 Aug 2024 09:33:39 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
-	david@fromorbit.com, jack@suse.cz, willy@infradead.org,
-	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH v2 1/6] iomap: correct the range of a partial dirty clear
-Message-ID: <20240812163339.GD6043@frogsfrogsfrogs>
-References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
- <20240812121159.3775074-2-yi.zhang@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="hoQRIyKZ"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4WjKxb0d8yz9t6q;
+	Mon, 12 Aug 2024 18:40:03 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1723480803;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rJk4Vnl04Aw7j+NDa+iBHRI+DmCBEW0NB+2kLgBa26E=;
+	b=hoQRIyKZjG/fYVUmT/agpW2XV974v/vv4+sVRs19uH3+KkIBDIBu7ezLh6wWIF6h76NT16
+	TUWz6o/OdRRR5qtGX26SfbxPxDPHIXezFf2yt4cXepvXQkhflwtBgDZBaQX2Zin3x1cric
+	uOX6q0jkxexjQOiZ+TdWOL9I6qgRrA0MTbuV8fVELOcPM6qaZv7VsxWodc3v8FObdzWzV1
+	D5mVTXKVKlzOLxmMSalVIO9NC50PIi120AWLUn9U/kg5GuwNhctn/C4iA59rJIghlssIvH
+	IWdQI2xxs1MYCSkavZDk+RC6mK1ZYUPGklribuB0zSluA0nnpXi8btmrhR3ZlQ==
+Date: Mon, 12 Aug 2024 16:39:56 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, p.raghav@samsung.com
+Subject: Re: [PATCH 2/3] xfs: convert perag lookup to xarray
+Message-ID: <20240812163956.xduakibqyzuapfkt@quentin>
+References: <20240812063143.3806677-1-hch@lst.de>
+ <20240812063143.3806677-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,52 +54,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240812121159.3775074-2-yi.zhang@huaweicloud.com>
+In-Reply-To: <20240812063143.3806677-3-hch@lst.de>
 
-On Mon, Aug 12, 2024 at 08:11:54PM +0800, Zhang Yi wrote:
-> From: Zhang Yi <yi.zhang@huawei.com>
-> 
-> The block range calculation in ifs_clear_range_dirty() is incorrect when
-> partial clear a range in a folio. We can't clear the dirty bit of the
-> first block or the last block if the start or end offset is blocksize
-> unaligned, this has not yet caused any issue since we always clear a
-> whole folio in iomap_writepage_map()->iomap_clear_range_dirty(). Fix
-> this by round up the first block and round down the last block and
-> correct the calculation of nr_blks.
-> 
-> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> ---
->  fs/iomap/buffered-io.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index f420c53d86ac..4da453394aaf 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -138,11 +138,14 @@ static void ifs_clear_range_dirty(struct folio *folio,
->  {
->  	struct inode *inode = folio->mapping->host;
->  	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-> -	unsigned int first_blk = (off >> inode->i_blkbits);
-> -	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
-> -	unsigned int nr_blks = last_blk - first_blk + 1;
-> +	unsigned int first_blk = DIV_ROUND_UP(off, i_blocksize(inode));
-
-Is there a round up macro that doesn't involve integer division?
-
---D
-
-> +	unsigned int last_blk = (off + len) >> inode->i_blkbits;
-> +	unsigned int nr_blks = last_blk - first_blk;
->  	unsigned long flags;
+On Mon, Aug 12, 2024 at 08:31:01AM +0200, Christoph Hellwig wrote:
+> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> index 7e80732cb54708..5efb1e8b4107a9 100644
+> --- a/fs/xfs/libxfs/xfs_ag.c
+> +++ b/fs/xfs/libxfs/xfs_ag.c
+> @@ -46,7 +46,7 @@ xfs_perag_get(
+>  	struct xfs_perag	*pag;
 >  
-> +	if (!nr_blks)
-> +		return;
-> +
->  	spin_lock_irqsave(&ifs->state_lock, flags);
->  	bitmap_clear(ifs->state, first_blk + blks_per_folio, nr_blks);
->  	spin_unlock_irqrestore(&ifs->state_lock, flags);
-> -- 
-> 2.39.2
-> 
-> 
+>  	rcu_read_lock();
+xa_load() already calls rcu_read_lock(). So we can get rid of this I
+guess?
+> -	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+> -xfs_perag_get_tag(
+> -	struct xfs_mount	*mp,
+> -	xfs_agnumber_t		first,
+> -	unsigned int		tag)
+> -{
+> -	struct xfs_perag	*pag;
+> -	int			found;
+> -
+> -	rcu_read_lock();
+> -	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
+> -					(void **)&pag, first, 1, tag);
+> -	if (found <= 0) {
+> -		rcu_read_unlock();
+> -		return NULL;
+> -	}
+> -	trace_xfs_perag_get_tag(pag, _RET_IP_);
+> -	atomic_inc(&pag->pag_ref);
+> -	rcu_read_unlock();
+> -	return pag;
+> -}
+> -
+>  /* Get a passive reference to the given perag. */
+>  struct xfs_perag *
+>  xfs_perag_hold(
+> @@ -117,38 +92,13 @@ xfs_perag_grab(
+>  	struct xfs_perag	*pag;
+>  
+>  	rcu_read_lock();
+Same here.
