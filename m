@@ -1,41 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E981191
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 17:42:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D2E8187356;
+	Mon, 12 Aug 2024 19:02:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723484536; cv=none; b=a1Pa4h+frR/0W3dPaLSwjHfT1PKTaxlbiC2pWVdBburbuk4+dQDy9ilY0ze7ducWUiOJkTjdS/ZxxRN5P0+88b3iHiVLz+Ry2Ey6yrlwvnkgjsVk37rJU/S7B1HuoucEM+SMWbRAahVMcvzABdIbZlUYG3TdyMFLM7qhUKgVRa0=
+	t=1723489367; cv=none; b=ty09e4bqDSLYh+eOvhUb2HQgKzU5Z6ZRoFSymFqSgpFEM7IaXA4246toNZ4iDhMuYj1CwsTNlkjjt/LapolKFqAbwRxJzOVz/ZsW8aXTqb1SxFaklGOgBHV1Bg4+K6RSeDVTLKEj/i/ty4FQiU6AEIEO/cPDirg3AHGIaZGlafE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723484536; c=relaxed/simple;
-	bh=g2gC+HoyPK6Kr8loo5TtdceWLK7OMYi2uwZga4QIQTY=;
+	s=arc-20240116; t=1723489367; c=relaxed/simple;
+	bh=ezMmUg7mHTwVHN5XujxTb1haTuUKj91GEz6kSdHQPy0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RssQlk7d98QYiFEXqyuOTZlD0D9zbSQmI3f79G1S4nghbFnGLehR9HUg9B+Z1C8w8AjXySdhQNj9rc4YIktx5oLq4VOs5mYY8DiLUbLwr458ZmhDE5DDBBaabMGuokPHF/g9vuoNLMpjhbsxkzKrgYxrJM7ZBISSWZMP/AZpexE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eW/v9PiN; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ClL6wmZydoefitqePRCx2YurXieFRAgg8uEMTfHgbH2LQarhnlfkZROtf74FQfjjIk/zfvilikkhfnjfwv/1/FfedcHcpLcMWeSD5i2qlDeDsGDmWDJiLT9YQNFWn1tf8tjcNVkQN/vFaNuSY4ktHmOhyKOfK33VInuD8Vl5kTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Zlk31/Pe; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eW/v9PiN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F346C32782;
-	Mon, 12 Aug 2024 17:42:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723484535;
-	bh=g2gC+HoyPK6Kr8loo5TtdceWLK7OMYi2uwZga4QIQTY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eW/v9PiNx+A3oHBDaS9xiw6+gAnB3nevmUucubb2TR7TRXxBgZxzo1rQoTa58ZWaE
-	 CbpIXy++QnE4nh3qE0PnKvrT/zhsFBoQsEHhIvEr2U+ws9hgCa2jGSKwEtLgz8MSEb
-	 rG0nouiXpKr/Kp36YupzMiwt8ztaW6DZZEfjgm+HksmlyfzU/g4AuXHS1gy6OGPZpw
-	 GkBGG3bLsxRg/c9f6YTXWzNO+cNp8QLR44d0E6D7SZLWQoe7Cir6Z1OXvweplUouUm
-	 thCB76byqokz58xxdT4RhsGbDLc7bMHkbIbXN1N87ApHOtqQ2Ib1pkydDTW/DVDY5B
-	 Z32DL9hzE/sRQ==
-Date: Mon, 12 Aug 2024 10:42:15 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: fix handling of RCU freed inodes from other AGs
- in xrep_iunlink_mark_incore
-Message-ID: <20240812174215.GA6051@frogsfrogsfrogs>
-References: <20240812052352.3786445-1-hch@lst.de>
- <20240812052352.3786445-3-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Zlk31/Pe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=GpykWVB4jVqd4iXL28CO+MJFswhu6BiB100HaYD/b6k=; b=Zlk31/Pe8Ro8nKwrfBAa6P6ZGz
+	BItQl+tCoekxITYt6NKsWG7r6hZOMSw09ROtD5nH7FuRBegXhcxOuTFOe4qAjI3FtrSvXGwSw7aWU
+	SBw27vNuOfCPJJpQXfbr0AKv+VARznrJaDyn6hXi14YXmUbn4KN0EdsdcHzfv+4j36Sdb39JivTJ+
+	kGjNLkCOt/QPbHpSjnitU78Yt2rpiHsSEYNRtzGzSjvkV048RnPr0NTRoTXoxqp0VK3kLlpSDjFXe
+	gNLlaf3HZB1DNWZlM9Jti8hbPm2czNP75GrfI3aF2GHbevhRd+M+tU3/4SJCL5IpDMCOQpGf1u4bZ
+	M5m8/cvw==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sdaJQ-0000000FPkA-2I3C;
+	Mon, 12 Aug 2024 19:02:36 +0000
+Date: Mon, 12 Aug 2024 20:02:36 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, p.raghav@samsung.com
+Subject: Re: [PATCH 2/3] xfs: convert perag lookup to xarray
+Message-ID: <ZrpcTAuJFSzE4-nA@casper.infradead.org>
+References: <20240812063143.3806677-1-hch@lst.de>
+ <20240812063143.3806677-3-hch@lst.de>
+ <20240812163956.xduakibqyzuapfkt@quentin>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,81 +51,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240812052352.3786445-3-hch@lst.de>
+In-Reply-To: <20240812163956.xduakibqyzuapfkt@quentin>
 
-On Mon, Aug 12, 2024 at 07:23:01AM +0200, Christoph Hellwig wrote:
-> When xrep_iunlink_mark_incore skips an inode because it was RCU freed
-> from another AG, the slot for the inode in the batch array needs to be
-> zeroed.  Also un-duplicate the check and remove the need for the
-> xrep_iunlink_igrab helper.
-> 
-> Fixes: ab97f4b1c030 ("xfs: repair AGI unlinked inode bucket lists")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Aug 12, 2024 at 04:39:56PM +0000, Pankaj Raghav (Samsung) wrote:
+> On Mon, Aug 12, 2024 at 08:31:01AM +0200, Christoph Hellwig wrote:
+> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> > index 7e80732cb54708..5efb1e8b4107a9 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.c
+> > +++ b/fs/xfs/libxfs/xfs_ag.c
+> > @@ -46,7 +46,7 @@ xfs_perag_get(
+> >  	struct xfs_perag	*pag;
+> >  
+> >  	rcu_read_lock();
+> xa_load() already calls rcu_read_lock(). So we can get rid of this I
+> guess?
 
-Looks good to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Almost certainly not; I assume pag is RCU-freed, so you'd be introducing
+a UAF if the RCU lock is dropped before getting a refcount on the pag.
 
---D
 
-> ---
->  fs/xfs/scrub/agheader_repair.c | 28 +++++++---------------------
->  1 file changed, 7 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> index 2f98d90d7fd66d..558bc86b1b83c3 100644
-> --- a/fs/xfs/scrub/agheader_repair.c
-> +++ b/fs/xfs/scrub/agheader_repair.c
-> @@ -1108,23 +1108,6 @@ xrep_iunlink_walk_ondisk_bucket(
->  	return 0;
->  }
->  
-> -/* Decide if this is an unlinked inode in this AG. */
-> -STATIC bool
-> -xrep_iunlink_igrab(
-> -	struct xfs_perag	*pag,
-> -	struct xfs_inode	*ip)
-> -{
-> -	struct xfs_mount	*mp = pag->pag_mount;
-> -
-> -	if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
-> -		return false;
-> -
-> -	if (!xfs_inode_on_unlinked_list(ip))
-> -		return false;
-> -
-> -	return true;
-> -}
-> -
->  /*
->   * Mark the given inode in the lookup batch in our unlinked inode bitmap, and
->   * remember if this inode is the start of the unlinked chain.
-> @@ -1196,9 +1179,6 @@ xrep_iunlink_mark_incore(
->  		for (i = 0; i < nr_found; i++) {
->  			struct xfs_inode *ip = ragi->lookup_batch[i];
->  
-> -			if (done || !xrep_iunlink_igrab(pag, ip))
-> -				ragi->lookup_batch[i] = NULL;
-> -
->  			/*
->  			 * Update the index for the next lookup. Catch
->  			 * overflows into the next AG range which can occur if
-> @@ -1211,8 +1191,14 @@ xrep_iunlink_mark_incore(
->  			 * us to see this inode, so another lookup from the
->  			 * same index will not find it again.
->  			 */
-> -			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
-> +			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno) {
-> +				ragi->lookup_batch[i] = NULL;
->  				continue;
-> +			}
-> +
-> +			if (done || !xfs_inode_on_unlinked_list(ip))
-> +				ragi->lookup_batch[i] = NULL;
-> +
->  			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
->  			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
->  				done = true;
-> -- 
-> 2.43.0
-> 
-> 
