@@ -1,116 +1,177 @@
-Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D35A017B501;
-	Mon, 12 Aug 2024 12:47:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48C0216F271
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 13:56:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723466873; cv=none; b=gB0SL5M8EHw28Y2s0tysmuCu7yNhosoAtg2Vkf/F7SMdZJQ/YiG/xPdIOuCNwYd62UFYj2deXgWEeCSXLWB+ZJrrOcnOUwzDdOh+CT+bw+hxf+oDU+NoJdfu8J05XAQ5LAkeN459XLrOfzphgY6sXvSZXRIbuy4au+t+22+eYMQ=
+	t=1723470968; cv=none; b=kOYQSuGuNgqiAPO0IVbnkJozhRm1JXe6Cq9ktbVQ56czVGDO8nXZkZ2ayuBDE5yJzszDcwcxZp8FZ4ZXghtU5fmO0c917wxZB78r5I77cdc0dQ+jxjkEutP8jn0H4Yu3JUkd8nMxKdIvh+urRZ+NqM4RaXCf8o/uvMZttNJJvkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723466873; c=relaxed/simple;
-	bh=O4m+UYGqu6T4Onmz+MHv97vuuf+KeykpMVt+uLQVovI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Jj0esBShMitRPPWyjH8e3DoEXNsnlomO0ybvUm18lCK3cUXjQTD9ebFihef08paB+Zzmx7N88nVm8UHl133yy8WzRCBBt/M1Khl10fyLl0XnFBwx/n5GuFFxMqgyYJkSrBBiaCb0B+0HVSblPNCKoWHxW4Nk5esNbrpV6q5LnKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4WjDlR1rGZz3RrlX;
-	Mon, 12 Aug 2024 20:45:55 +0800 (CST)
-Received: from kwepemf100006.china.huawei.com (unknown [7.202.181.220])
-	by mail.maildlp.com (Postfix) with ESMTPS id C7854140202;
-	Mon, 12 Aug 2024 20:47:45 +0800 (CST)
-Received: from [10.174.177.210] (10.174.177.210) by
- kwepemf100006.china.huawei.com (7.202.181.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 12 Aug 2024 20:47:44 +0800
-Message-ID: <137c8c6e-ead3-51ed-be5a-c8eba0be3a2d@huawei.com>
-Date: Mon, 12 Aug 2024 20:47:44 +0800
+	s=arc-20240116; t=1723470968; c=relaxed/simple;
+	bh=YYGgKXuV0O7VXB4yJSDvw3VzjDS1omdPXt9eIgP5Up4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=k77JkdVF1CPn8U0FsHOQl3tv6xX9MJtq+u21R29a/Z95Nf+ajXYAwt7vPAdQA7ElMBG8R5wjQBVwchoeRZYXHh72ZiL6FPNIXEac5IOCdyhGptIU4oXWJ/lqVUicehQylqhIjiDNgt2sAV/MgIGJEuiGSQpShel8876t5liVay0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UwixoPmu; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UwixoPmu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1723470965;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=I4sJrEj36tSHzS55DoX6KfEvNbPwzrJz93iSI+d/ydI=;
+	b=UwixoPmuPxsqIxOZ4HiMoFSX3Y6XfhiPE04X1iZt58Vnyeby7HGHMvm25mVHIM3Zq01m8g
+	x1XgKIwORfnybYQMWD2tcd9AQLPQ/Tz1nG5O9uGZIfyikmG2iZf5RFn7E4Z8FedMp6tM7Y
+	uJDSJpPFAp80TX/zGPcONN9trJNzcKQ=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-456-SwcX5442Np6yu6HAsU5qfQ-1; Mon,
+ 12 Aug 2024 09:56:01 -0400
+X-MC-Unique: SwcX5442Np6yu6HAsU5qfQ-1
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B0EC219373D8;
+	Mon, 12 Aug 2024 13:56:00 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.64.74])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A2AF130001A1;
+	Mon, 12 Aug 2024 13:55:59 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org,
+	sandeen@sandeen.net
+Subject: [RFD] xfsprogs/mkfs: prototype XFS image mode format for scalable AG growth
+Date: Mon, 12 Aug 2024 09:56:52 -0400
+Message-ID: <20240812135652.250798-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH v2 3/6] iomap: advance the ifs allocation if we have more
- than one blocks per folio
-To: Zhang Yi <yi.zhang@huaweicloud.com>, <linux-xfs@vger.kernel.org>,
-	<linux-fsdevel@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <djwong@kernel.org>, <hch@infradead.org>,
-	<brauner@kernel.org>, <david@fromorbit.com>, <jack@suse.cz>,
-	<willy@infradead.org>, <yi.zhang@huawei.com>, <chengzhihao1@huawei.com>,
-	<yukuai3@huawei.com>
-References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
- <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
-From: yangerkun <yangerkun@huawei.com>
-In-Reply-To: <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemf100006.china.huawei.com (7.202.181.220)
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
+Tweak a few checks to facilitate experimentation with an agcount=1
+filesystem format with a larger agsize than the filesystem data
+size. The purpose of this is to POC a filesystem image mode format
+for XFS that better supports the typical cloud filesystem image
+deployment use case where a very small fs image is created and then
+immediately grown orders of magnitude in size once deployed to
+container environments. The large grow size delta produces
+filesystems with excessive AG counts, which leads to various other
+functional problems that eventually derive from this sort of
+pathological geometry.
 
+To experiment with this patch, format a small fs with something like
+the following:
 
-在 2024/8/12 20:11, Zhang Yi 写道:
-> From: Zhang Yi <yi.zhang@huawei.com>
-> 
-> Now we allocate ifs if i_blocks_per_folio is larger than one when
-> writing back dirty folios in iomap_writepage_map(), so we don't attach
-> an ifs after buffer write to an entire folio until it starts writing
-> back, if we partial truncate that folio, iomap_invalidate_folio() can't
-> clear counterpart block's dirty bit as expected. Fix this by advance the
-> ifs allocation to __iomap_write_begin().
-> 
-> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> ---
->   fs/iomap/buffered-io.c | 17 ++++++++++++-----
->   1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 763deabe8331..79031b7517e5 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -699,6 +699,12 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->   	size_t from = offset_in_folio(folio, pos), to = from + len;
->   	size_t poff, plen;
->   
-> +	if (nr_blocks > 1) {
-> +		ifs = ifs_alloc(iter->inode, folio, iter->flags);
-> +		if ((iter->flags & IOMAP_NOWAIT) && !ifs)
-> +			return -EAGAIN;
-> +	}
-> +
->   	/*
->   	 * If the write or zeroing completely overlaps the current folio, then
->   	 * entire folio will be dirtied so there is no need for
+  mkfs.xfs -f -lsize=64m -dsize=512m,agcount=1,agsize=8g <imgfile>
 
-The comments upper need change too.
+Increase the underlying image file size, mount and grow. The
+filesystem will grow according to the format time AG size as if the
+AG was a typical runt AG on a traditional multi-AG fs.
 
+This means that the filesystem remains with an AG count of 1 until
+fs size grows beyond AG size. Since the typical deployment workflow
+is an immediate very small -> very large, one-time grow, the image
+fs can set a reasonable enough default or configurable AG size
+(based on user input) that ensures deployed filesystems end up in a
+generally supportable geometry (i.e. with multiple AGs for
+superblock redundancy) before seeing production workloads.
 
-> @@ -710,10 +716,6 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->   	    pos + len >= folio_pos(folio) + folio_size(folio))
->   		return 0;
->   
-> -	ifs = ifs_alloc(iter->inode, folio, iter->flags);
-> -	if ((iter->flags & IOMAP_NOWAIT) && !ifs && nr_blocks > 1)
-> -		return -EAGAIN;
-> -
->   	if (folio_test_uptodate(folio))
->   		return 0;
->   
-> @@ -1928,7 +1930,12 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->   	WARN_ON_ONCE(end_pos <= pos);
->   
->   	if (i_blocks_per_folio(inode, folio) > 1) {
-> -		if (!ifs) {
-> +		/*
-> +		 * This should not happen since we always allocate ifs in
-> +		 * iomap_folio_mkwrite_iter() and there is more than one
-> +		 * blocks per folio in __iomap_write_begin().
-> +		 */
-> +		if (WARN_ON_ONCE(!ifs)) {
->   			ifs = ifs_alloc(inode, folio, 0);
->   			iomap_set_range_dirty(folio, 0, end_pos - pos);
->   		}
+Further optional changes are possible on the kernel side to help
+provide some simple guardrails against misuse of this mechanism. For
+example, the kernel could do anything from warn/fail or restrict
+runtime functionality for an insufficient grow. The image mode
+itself could set a backwards incompat feature bit that requires a
+mount option to enable full functionality (with the exception of
+growfs). More discussion is required to determine whether this
+provides a usable solution for the common cloud workflows that
+exhibit this problem and what the right interface and/or limitations
+are to ensure it is used correctly.
+
+Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Hi all,
+
+This is a followup to the idea Darrick brought up in the expansion
+discussion here [1]. I poked through the code a bit and found it
+somewhat amusing how little was in the way of experimenting with this,
+so threw this against an fstests run over the weekend. I see maybe
+around ~10 or so test failures, most of which look like simple failures
+related to either not expecting agcount == 1 fs' or my generally
+hacky/experimental changes. There are a couple or so that require a bit
+more investigation to properly characterize before I would consider this
+fully sane.
+
+I'm posting this separately from the expansion discussion to hopefully
+avoid further conflating the two. My current sense is that if this turns
+out to be a fundamentally workable approach, mkfs would more look
+something like 'mkfs --image-size 40g ...' and the kernel side may grow
+some optional guardrail logic mentioned above and in the previous
+discussion here [2], but others might have different ideas.
+
+Darrick, you originally raised this idea and then Eric brought up some
+legitimate technical concerns in the expansion design thread. I'm
+curious if either of you have any further thoughts/ideas on this.
+
+Brian
+
+[1] https://lore.kernel.org/linux-xfs/20240721230100.4159699-1-david@fromorbit.com/
+[2] https://lore.kernel.org/linux-xfs/ZqzMay58f0SvdWxV@bfoster/
+
+ mkfs/xfs_mkfs.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 6d2469c3c..50a874a03 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -325,8 +325,7 @@ static struct opt_params dopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = D_AGCOUNT,
+-		  .conflicts = { { &dopts, D_AGSIZE },
+-				 { &dopts, D_CONCURRENCY },
++		  .conflicts = { { &dopts, D_CONCURRENCY },
+ 				 { NULL, LAST_CONFLICT } },
+ 		  .minval = 1,
+ 		  .maxval = XFS_MAX_AGNUMBER,
+@@ -368,8 +367,7 @@ static struct opt_params dopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_AGSIZE,
+-		  .conflicts = { { &dopts, D_AGCOUNT },
+-				 { &dopts, D_CONCURRENCY },
++		  .conflicts = { { &dopts, D_CONCURRENCY },
+ 				 { NULL, LAST_CONFLICT } },
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+@@ -1233,7 +1231,7 @@ validate_ag_geometry(
+ 		usage();
+ 	}
+ 
+-	if (agsize > dblocks) {
++	if (agsize > dblocks && agcount != 1) {
+ 		fprintf(stderr,
+ 	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
+ 			(long long)agsize, (long long)dblocks);
+@@ -2703,7 +2701,8 @@ validate_supported(
+ 	 * Filesystems should not have fewer than two AGs, because we need to
+ 	 * have redundant superblocks.
+ 	 */
+-	if (mp->m_sb.sb_agcount < 2) {
++	if (mp->m_sb.sb_agcount < 2 &&
++	    mp->m_sb.sb_agblocks <= mp->m_sb.sb_dblocks) {
+ 		fprintf(stderr,
+  _("Filesystem must have at least 2 superblocks for redundancy!\n"));
+ 		usage();
+-- 
+2.45.0
+
