@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 338F414A616
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 05:24:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51C0914A616
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 05:24:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723440244; cv=none; b=NHhmDFdT9/J66XG4UrYOQHgzXzHnOZInPoIgAOkSOugmeF8VdK3XP4Mwa2bqiJOz4IFHsV3SQxfK5BFOB6ypkLp+i0dFPCHlO34CJNyMoZ4Ruc0We29UJxPaVWkC1E8bx52ZAtjXG8+cQaUxSfuAR3PHc0DaCPfooX68P/cTJkU=
+	t=1723440247; cv=none; b=AaLF8dV9F9tcebHcoRsQvAJBho4Xi7BbpHuQyzJKddAelqUMbOGBBuN6E+apH1xAIiZSIuYCkOdjCHRjra6gBQgG/P+C8OH2Kv918kEWGZywz6pfpBZwQ3y1+EbS62J7H0Qvxsiq5dSePh/LXC8HlZiIvlXq7WsHE29W3OdNOZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723440244; c=relaxed/simple;
-	bh=+Dp4rBDB8QO1YFmlPCsQDUaFwJU+JmYrBfgwG2Ip2Gk=;
+	s=arc-20240116; t=1723440247; c=relaxed/simple;
+	bh=W6mAiQCEpqOwiDl1jpNgbjnqlh3ZJq5pbbyFZX2xofg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u5SkJ/oDBc1i7l7uvN1ghYA6PsHdXZp9TMnSAiz1d8qpZ9o8BjRU/PpytrWYWgZYdJyD2mBVt+Wib3rntPLcm1yyQ5xE+kqzPPvq2LztjxTHdXU68L0BXqoBlX01kNjGUUUABww0IDajipqJYIjW2tWMqfVS26gDLFQNAHlPzis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TMEZD1i4; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=VXLn7XKdOHBTBUyLnTyASdI4XjSVxU7aNwNfkILP9ZUdGz3TQ+lE0qbYCW4Pc9XPh/FDvMABd/LyuUPmdL97pAJjQ/b9kDdiX3ufSGGZzwsXr36oSX/Rb0TRll7pLXpL1qcdOP4rDnBJObYBV6V4Rr50oGO4hyBW960RgmlDVe0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LmnKs/u/; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TMEZD1i4"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LmnKs/u/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=lRnXl04+DmVNGX8msI2lmDpVzDH9f7neGlfMR17aoQE=; b=TMEZD1i4TCWqDoBT43+Npn9m9c
-	tYwDYkkE1V4Mr4mD2Lp1MfB5v6gm4aq9rjdyQbgZiYhJstK6jQs6KGGI8Ze1WyxFWD8Y63a6NRxpr
-	EnP/0sxnTHrBvNoc7fTPYV6L99ejci7hXqXjRVq7OUBHystdRfsygy9NcQQ/tfRXLxlcVb5Mgjd9i
-	6BDq+YTxlzSPLbdBoP1ba6e17eKEFYHFaiuGV1NFYPz6Vr19eNy41hkl6ROANvna3W/XIC1wm6Shj
-	6U892/Lb9ZMMp7+fKBHaY+dLm9x44E8kaJjLDlBsE0VPPuyknvsJNew8gtSr9vWvGRBJinxm6iLnA
-	WJbOXZrQ==;
+	bh=pWc24pgVG8BWv7ylAz76mNdH/ub09rz4B+Iuz4S7Wjg=; b=LmnKs/u/M8+amDbs3HP0gQqy/N
+	ko/M7Wi9epnlzqq9A9MBJGVKK8iNvhGs6V4x46cN+p1ZcFP+HRGabXEHcn3l0z+n15zEHTNHb9Fz5
+	c4BAXtgXR+iZF0sG4AS7/AXumq5+MZ91nQ9Srbj64ciAT8jQMtjE1vAU1WLi4GNZsxtJMwisHu/7j
+	yF0S/CPtEEFB2xdmrE4lW1N+qfMHO+KZM9mnydTF+BxoeKJD0WTuhgPyQ8Lz9aRS0uKO80pouBkEn
+	WG5abpLdxBNXWu1g6N/FxFIo50sjtUy8dnQrARnWprPYVOoY+6mMGRiuM/Fd54qP+jCFWQnZoRgIg
+	djE2PFNA==;
 Received: from 2a02-8389-2341-5b80-ee60-2eea-6f8f-8d7f.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:ee60:2eea:6f8f:8d7f] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sdNXG-0000000Gv5N-0722;
-	Mon, 12 Aug 2024 05:24:02 +0000
+	id 1sdNXI-0000000Gv5X-29no;
+	Mon, 12 Aug 2024 05:24:04 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <david@fromorbit.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/2] xfs: fix handling of RCU freed inodes from other AGs in xfs_icwalk_ag
-Date: Mon, 12 Aug 2024 07:23:00 +0200
-Message-ID: <20240812052352.3786445-2-hch@lst.de>
+Subject: [PATCH 2/2] xfs: fix handling of RCU freed inodes from other AGs in xrep_iunlink_mark_incore
+Date: Mon, 12 Aug 2024 07:23:01 +0200
+Message-ID: <20240812052352.3786445-3-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240812052352.3786445-1-hch@lst.de>
 References: <20240812052352.3786445-1-hch@lst.de>
@@ -50,44 +50,67 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-When xfs_icwalk_ag skips an inode because it was RCU freed from another
-AG, the slot for the inode in the batch array needs to be zeroed.  We
-also really shouldn't try to grab the inode in that case (or at very
-least undo the grab), so move the call to xfs_icwalk_ag after this sanity
-check.
+When xrep_iunlink_mark_incore skips an inode because it was RCU freed
+from another AG, the slot for the inode in the batch array needs to be
+zeroed.  Also un-duplicate the check and remove the need for the
+xrep_iunlink_igrab helper.
 
-Fixes: 1a3e8f3da09c ("xfs: convert inode cache lookups to use RCU locking")
+Fixes: ab97f4b1c030 ("xfs: repair AGI unlinked inode bucket lists")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_icache.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/agheader_repair.c | 28 +++++++---------------------
+ 1 file changed, 7 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index ae3c049fd3a216..3ee92d3d1770db 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1701,9 +1701,6 @@ xfs_icwalk_ag(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = batch[i];
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 2f98d90d7fd66d..558bc86b1b83c3 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -1108,23 +1108,6 @@ xrep_iunlink_walk_ondisk_bucket(
+ 	return 0;
+ }
  
--			if (done || !xfs_icwalk_igrab(goal, ip, icw))
--				batch[i] = NULL;
+-/* Decide if this is an unlinked inode in this AG. */
+-STATIC bool
+-xrep_iunlink_igrab(
+-	struct xfs_perag	*pag,
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_mount	*mp = pag->pag_mount;
+-
+-	if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
+-		return false;
+-
+-	if (!xfs_inode_on_unlinked_list(ip))
+-		return false;
+-
+-	return true;
+-}
+-
+ /*
+  * Mark the given inode in the lookup batch in our unlinked inode bitmap, and
+  * remember if this inode is the start of the unlinked chain.
+@@ -1196,9 +1179,6 @@ xrep_iunlink_mark_incore(
+ 		for (i = 0; i < nr_found; i++) {
+ 			struct xfs_inode *ip = ragi->lookup_batch[i];
+ 
+-			if (done || !xrep_iunlink_igrab(pag, ip))
+-				ragi->lookup_batch[i] = NULL;
 -
  			/*
  			 * Update the index for the next lookup. Catch
  			 * overflows into the next AG range which can occur if
-@@ -1716,8 +1713,14 @@ xfs_icwalk_ag(
+@@ -1211,8 +1191,14 @@ xrep_iunlink_mark_incore(
  			 * us to see this inode, so another lookup from the
  			 * same index will not find it again.
  			 */
 -			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
 +			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno) {
-+				batch[i] = NULL;
++				ragi->lookup_batch[i] = NULL;
  				continue;
 +			}
 +
-+			if (done || !xfs_icwalk_igrab(goal, ip, icw))
-+				batch[i] = NULL;
++			if (done || !xfs_inode_on_unlinked_list(ip))
++				ragi->lookup_batch[i] = NULL;
 +
  			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
  			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
