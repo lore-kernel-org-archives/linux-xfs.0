@@ -1,46 +1,41 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6415013AA47;
-	Mon, 12 Aug 2024 17:01:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23ED0191
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 17:39:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723482064; cv=none; b=TGatDm6aQG2WxNSgSmjhIMAqbMPAZlSxSM1JEWFsYtjhfo5ETRfE4KkZN/++cIIBt0mG0AdMdjbjgxHgEtRuAufbt74HzAWjzj8Ju6KCtj/w9SrW7sGYOOc9NSVIVR9ZGv8s1WsEHiufKQrWU5yRCu0qJgeXfJcaJGwtKz5OJic=
+	t=1723484398; cv=none; b=iZ9Lj+8ZB9Kfb/xDrEViba2kDWBYeaxGQhHj5ulg4/J6tcpqjwugUjGqyXj3tPts+eaSfnd+wrS5o5WKdVh/HcbrGsGppStdGlrVgCzcYdtjp7Ird6/0lRvOtMQvNtqzXeOMFaiCNp19PkZuYEu8lfgBOocuOHM50iRyBo7WBKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723482064; c=relaxed/simple;
-	bh=8b5pr16seuZpo9saeW2XCuySEgaFGIzdr02fA2Ln/d0=;
+	s=arc-20240116; t=1723484398; c=relaxed/simple;
+	bh=Hm3a88Grx2ytVguesxqHOm/zG8ZYMsXpEff88DKi6Ak=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ITHvqIFfcJUrJ4c453E7ywSgn+4reVLmIZnIS9nYoBM/LUxUFOfKppwWQhmWxczOFt5tksQxTOzQMshDCcSNCoI7/RI8CjhCKnMssRqrhwn9OmN49JxqCybUz0o0JbHwFTD+YQetBp56vWqHqg/6tZytcNdTcRxlnBMqUE1/siQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YxNJEnqc; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=aclJkvuxfOjxprmMOAwquloDTNBrMts1ngCNST/ibRDiV09sAcrSNojEpP990IGGqaEQg+NaBwXwN5BWT2J2a85aXx6trfoVJKNHR6mGMrdlnwFdw/EkJXUBTRtDMV4ALxBMPmYmr50Uk2ngMO/af/rlDPy42OGREUEN5a/T2T4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=emvdOLkd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YxNJEnqc"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=2UYFiu6HqmmpfFendkGxflUA9GYeKhm9rf3y5gZQMVg=; b=YxNJEnqcK6vjycw/IA5UbUiaGc
-	TI1YjlzgLbKr84DRcTr+osV8NOs0PhUU+9eZgxB+L5sGrnJswrxcnbctAUfy3qt75SINVpgloY5jC
-	Kz1C/r+C8gztqx6Nita+R7wyON/44PDhb76j2OuPjvlke5s9LF7xGdHBLGY0b/iMgMyzyOWIAjcus
-	mqUzqxgkZe6k5iyPvq5jNFAnso6eweuenj0ZY+yTzOyfpvzOZutVrh1X3v2YsUlGm1on6BKYPw/HW
-	6EeqmG1rZ51gDYtdo3RyZ7rCezDk6FLOC6yC8igUuQXdPM9ga9btwDHG709cbha19WO6CCdl9Zhib
-	VAsSWkTw==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sdYPi-0000000FHcI-2r8I;
-	Mon, 12 Aug 2024 17:00:58 +0000
-Date: Mon, 12 Aug 2024 18:00:58 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
-	brauner@kernel.org, david@fromorbit.com, jack@suse.cz,
-	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH v2 6/6] iomap: reduce unnecessary state_lock when setting
- ifs uptodate and dirty bits
-Message-ID: <Zro_yj3agfdhM16Q@casper.infradead.org>
-References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
- <20240812121159.3775074-7-yi.zhang@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="emvdOLkd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AF6CC32782;
+	Mon, 12 Aug 2024 17:39:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723484397;
+	bh=Hm3a88Grx2ytVguesxqHOm/zG8ZYMsXpEff88DKi6Ak=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=emvdOLkdMSW5XcBlqaaLrP9jRfRcCcEB/Lsz4dGmP3CD0ZVBXti4K3+rw9smkMok1
+	 ABE4L3Os5041t6ukf4vKIV79PgY3leD76rfAOVqCWODBJ21fOOm81Seg0HXaMf8g/V
+	 59EIMrIHIWu4Z8j0n8nPY3NZcZFm48miauz9vYuLEdSk+YaVp1C79zlGf9Dg8Tr3CL
+	 py5RYi1I/RqqzYdDOouY8fy2VmfbJaAhHFIDWF9+VXRLitvyxbTC8HTANAkIRo25Jn
+	 fJ/HkmA0RomNGd3PedujzX4O+Z8q3+Sbmqcjg6v2fwKb7l1mSIM2Y5cIpA8wPbtbyA
+	 EqiP91Mv2EV1g==
+Date: Mon, 12 Aug 2024 10:39:56 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: fix handling of RCU freed inodes from other AGs
+ in xfs_icwalk_ag
+Message-ID: <20240812173956.GZ6051@frogsfrogsfrogs>
+References: <20240812052352.3786445-1-hch@lst.de>
+ <20240812052352.3786445-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,25 +44,60 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240812121159.3775074-7-yi.zhang@huaweicloud.com>
+In-Reply-To: <20240812052352.3786445-2-hch@lst.de>
 
-On Mon, Aug 12, 2024 at 08:11:59PM +0800, Zhang Yi wrote:
-> @@ -866,9 +899,8 @@ static bool __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
->  	 */
->  	if (unlikely(copied < len && !folio_test_uptodate(folio)))
->  		return false;
-> -	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), len);
-> -	iomap_set_range_dirty(folio, offset_in_folio(folio, pos), copied);
-> -	filemap_dirty_folio(inode->i_mapping, folio);
+On Mon, Aug 12, 2024 at 07:23:00AM +0200, Christoph Hellwig wrote:
+> When xfs_icwalk_ag skips an inode because it was RCU freed from another
+> AG, the slot for the inode in the batch array needs to be zeroed.  We
+> also really shouldn't try to grab the inode in that case (or at very
+> least undo the grab), so move the call to xfs_icwalk_ag after this sanity
+> check.
+> 
+> Fixes: 1a3e8f3da09c ("xfs: convert inode cache lookups to use RCU locking")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_icache.c | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index ae3c049fd3a216..3ee92d3d1770db 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1701,9 +1701,6 @@ xfs_icwalk_ag(
+>  		for (i = 0; i < nr_found; i++) {
+>  			struct xfs_inode *ip = batch[i];
+>  
+> -			if (done || !xfs_icwalk_igrab(goal, ip, icw))
+> -				batch[i] = NULL;
+> -
+>  			/*
+>  			 * Update the index for the next lookup. Catch
+>  			 * overflows into the next AG range which can occur if
+> @@ -1716,8 +1713,14 @@ xfs_icwalk_ag(
+>  			 * us to see this inode, so another lookup from the
+>  			 * same index will not find it again.
+>  			 */
+> -			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
+> +			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno) {
+> +				batch[i] = NULL;
+>  				continue;
+> +			}
 > +
-> +	iomap_set_range_dirty_uptodate(folio, from, copied);
->  	return true;
+> +			if (done || !xfs_icwalk_igrab(goal, ip, icw))
+> +				batch[i] = NULL;
 
-I wonder how often we overwrite a completely uptodate folio rather than
-writing new data to a fresh folio?  iow, would this be a measurable
-optimisation?
+IOWs, if @ip has been freed and reallocated to a different AG, then we
+don't want to touch it at all, not even to check IRECLAIMABLE in igrab.
+I think that sounds correct so
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-	if (folio_test_uptodate(folio))
-		iomap_set_range_dirty(folio, from, copied);
-	else
-		iomap_set_range_dirty_uptodate(folio, from, copied);
+--D
+
+> +
+>  			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+>  			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
+>  				done = true;
+> -- 
+> 2.43.0
+> 
+> 
