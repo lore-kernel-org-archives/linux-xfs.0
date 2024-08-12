@@ -1,99 +1,103 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BA7E142624;
-	Mon, 12 Aug 2024 19:51:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0978215C12D
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 22:38:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723492296; cv=none; b=IUMnMYTY7E43UDvzXaOcJWMCKHGPeLhgILAvK+Vv6kWQL6G/IYqCuu3zzxsV8iBtmZ6u4IbU+vwlpufofvLJuB0brpVg+0yBToLOQ641btzfcm193/dhK8lb375bpgqFUCI28tq0Fo2rwakcjg2LXrlCByNqbOoiBjIk87yH1N0=
+	t=1723502317; cv=none; b=SjjZ8E3lILVFEnnQ9InXvz8tVvCH2na1b8ACboL/0CDPLaItaq2EbYguMiSacfoQDTvl5BUa3N/Y6wJ9qCCrK3aD1NX0EjG4jGC5uPVKywKzzJLw6gABpsSiX4DzQnew7wuNWVLaNqQVJ584XBb/Qbb+9PngLt1lc9nQ9HPCpMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723492296; c=relaxed/simple;
-	bh=gP/bpLciLkpKGzlsU8ReLBZJrv7PGYAYC56gE4RpCC4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=REbG6mGhFQxQ1lXquiVEVhqACItmuAGIlm2SSl0KxsFhJw0++AI4BoO9xh55IVvhR/i+ygZmZJ49WJEXBIWfUcTBhwrn/MHu0lUIIs/00xbeS2R8VYMCAvSOr8N3Hq20iRZAkmcPTEzH8G9nJu6qsNhis0n0e8sDNKkogtFGLqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XS172KtA; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1723502317; c=relaxed/simple;
+	bh=H7glYCVDwQhMN3DUVURfdfuqISpMGls7A+H8kUeJ8nw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=Ogz1Wsv1iijd4+2G4znAwK7Me0Rr8kCy2rinxsO2tBLPyzyJBb/8agTvJneGS+ttrbToebhrXlEtnvdlcGZjA7GB0C/8EopKf6FZuidVLTnNncpH/ePh50QNq69/nj2FGnwOEERFTYlXeIXVblwvaurA7tyYILg53aZao8d14oA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J+Kl4Erh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XS172KtA"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-710d0995e21so3002543b3a.1;
-        Mon, 12 Aug 2024 12:51:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723492295; x=1724097095; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mgYfPRF3ACLx0CsT/FH9HD8nnUJcsRM2/FyE/YVJdNI=;
-        b=XS172KtAGU6vUEFDhr9KXFu6prf3XjL4AFPsis1j8p6XPswYQWKq02YZJvb+TICabB
-         3NOpXs8/m+cFMbsxkLpRI0wHzxciQESYcH517TVzCNh+JsThyI64/b7SEggVRErfzzPZ
-         HOARkz8H6CWuh8bIpJKqhSNsjeTqOI4WkfEA7onYrJR3uKbbmb8kwGOwmtHmGmxwT82E
-         FE8DmOjtw7lvOvg6AKfCkgOOP6OSRDKXoltsQqTi0TvKET+BFvZpAMu9WZvLB9UYmNrv
-         GrQbpGd1tpOWUnJE9u472GF03AfS3hlMZ8dSCpbkD1RSgmUvHsRVuWYJE9xO0JcvYJWU
-         lMaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723492295; x=1724097095;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mgYfPRF3ACLx0CsT/FH9HD8nnUJcsRM2/FyE/YVJdNI=;
-        b=D3ZgeGEwGrLAYXsj2YNbsOAKUqoOO185pj8Jj1o4Vmno2Jz8YPSuOANvV54aKNvh13
-         RiRyZI4iexFtiAGEKOdLpLYqO3nFPuDTLX34TQW+ByoKWETvG+Of0iDPJn/mkxoZRzHB
-         ZIy2KripQlW9wo8WvNkiC5IIBPbhQxNxbzvtFP9e917RkquWWXlB0qkuWc82m1z0u/di
-         E8ljZNIMc0LbGokGK6avXFxPnH3Si8BGHRXzjjPUxoGU6llLN3xSs22+ZPnzBAafM5SU
-         NTprNx9J6v8aOurVV79uKD8jVwCf76b6iwBbTMs05bJT0aJ2Wy29smnYr0PK5R0RO/GJ
-         GZ1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXgiiSU+ECJVfJsVdnOdJhZMtIP18nBa3N5urGQg25+eWCvFKK3CeYbRh5JeWy0tSUjoSHdpUt42LgoUhC7PsDTF3SVlR96tOZrbqmfko504LZidTAFZHOJiztiOauZcmSpf3B4wujZpeSm4XymJHRv7yWjViN8lV4apTqAtXcZ
-X-Gm-Message-State: AOJu0YyfgAYzJOcEfmcx3VceOFkDX093hTPvF7TRe0qpE01Coc3WKBgq
-	XVhj+RTaAFWrdSjRCzglYYdfT3GzG5aOF4F8Bo+L7uMOLUKirc/c
-X-Google-Smtp-Source: AGHT+IHr2FUt5tB5Z8XWeM8c2KYnSWU7w9shzsRAxJkX4+Ub8pDm7QbwkM9TXEr1DXgbHPKFzk2v/g==
-X-Received: by 2002:a17:902:ec8f:b0:1fd:67a8:845f with SMTP id d9443c01a7336-201ca136e0fmr16415265ad.14.1723492294790;
-        Mon, 12 Aug 2024 12:51:34 -0700 (PDT)
-Received: from dev0.. ([2405:201:6803:30b3:3671:7e47:70c8:c710])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-201cd1a947fsm595505ad.140.2024.08.12.12.51.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Aug 2024 12:51:34 -0700 (PDT)
-From: Abhinav Jain <jain.abhinav177@gmail.com>
-To: gregkh@linuxfoundation.org,
-	chandan.babu@oracle.com,
-	djwong@kernel.org
-Cc: jain.abhinav177@gmail.com,
-	leah.rumancik@gmail.com,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	stable@vger.kernel.org,
-	syzbot+55fb1b7d909494fd520d@syzkaller.appspotmail.com
-Subject: Re: [PATCH 6.1.y] xfs: remove WARN when dquot cache insertion fails
-Date: Tue, 13 Aug 2024 01:21:28 +0530
-Message-Id: <20240812195128.1095045-1-jain.abhinav177@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <2024081244-emit-starlit-dd23@gregkh>
-References: <2024081244-emit-starlit-dd23@gregkh>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J+Kl4Erh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0E23C4AF0E;
+	Mon, 12 Aug 2024 22:38:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723502316;
+	bh=H7glYCVDwQhMN3DUVURfdfuqISpMGls7A+H8kUeJ8nw=;
+	h=Date:From:To:Cc:Subject:From;
+	b=J+Kl4Erh5cniuK6diFPdTtD5u7Ng05JROSZyFyGCIxlDGWjoKL20FB6cSXkkAHjM1
+	 wSrhHa9RHfrYEcejXiTAmAlGFgGqiX5iPX/nylXlffryA2IgEtM+gU7wux8XRR7a+o
+	 9pbrsWhLknX60Hv0mC3QifkSpbYme8oRbr7tBhVKa9FJcH/bCYvfOwhaPA4moS37hX
+	 yqBV7eg+mCMLo2cs3ZuqeFmc7D+jwFBht2JhexHCTJmxk8jNSNdMmjpLuW9EMnKmkI
+	 fSy6CH95fVd7rq52bKOtSVr2XdAlKQrU6jo62FSOxPvQ5qofOGEAUtek5KlJoFP/l+
+	 ww3xOHhGSTTqg==
+Date: Mon, 12 Aug 2024 15:38:36 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] libxfs: dirty buffers should be marked uptodate too
+Message-ID: <20240812223836.GB6051@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Mon, 12 Aug 2024 16:40:13 +0200, Greg K-H wrote:
-> You lost all of the ownership and original signed-off-by attributes for
-> the commit :(
->
+From: Darrick J. Wong <djwong@kernel.org>
 
-I will work on this to understand how to avoid such mistake moving forward.
+I started fuzz-testing the realtime rmap feature with a very large
+number of realtime allocation groups.  There were so many rt groups that
+repair had to rebuild /realtime in the metadata directory tree, and that
+directory was big enough to spur the creation of a block format
+directory.
 
-> Please work with the xfs developers if they wish to see this backported
-> or not, that's up to them.
->
-> thanks,
-> 
-> greg k-h
+Unfortunately, repair then walks both directory trees to look for
+unconnceted files.  This part of phase 6 emits CRC errors on the newly
+created buffers for the /realtime directory, declares the directory to
+be garbage, and moves all the rt rmap inodes to /lost+found, resulting
+in a corrupt fs.
 
-I am tagging XFS maintainers so that they can confirm the same. If there
-is a go ahead, only then I will submit a v2 retaining the original
-signed-off-by attributes.
+Poking around in gdb, I noticed that the buffer contents were indeed
+zero, and that UPTODATE was not set.  This was very strange, until I
+added a watch on bp->b_flags to watch for accesses.  It turns out that
+xfs_repair's prefetch code will _get a buffer and zero the contents if
+UPTODATE is not set.
 
-Thanks,
-Abhinav
+The directory tree code in libxfs will also _get a buffer, initialize
+it, and log it to the coordinating transaction, which in this case is
+the transactions used to reconnect the rmap btree inodes to /realtime.
+At no point does any of that code ever set UPTODATE on the buffer, which
+is why prefetch zaps the contents.
+
+Hence change both buffer dirtying functions to set UPTODATE, since a
+dirty buffer is by definition at least as recent as whatever's on disk.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
+ libxfs/rdwr.c  |    2 +-
+ libxfs/trans.c |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index bd773a7375bc..35be785c435a 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -919,7 +919,7 @@ libxfs_buf_mark_dirty(
+ 	 */
+ 	bp->b_error = 0;
+ 	bp->b_flags &= ~LIBXFS_B_STALE;
+-	bp->b_flags |= LIBXFS_B_DIRTY;
++	bp->b_flags |= LIBXFS_B_DIRTY | LIBXFS_B_UPTODATE;
+ }
+ 
+ /* Prepare a buffer to be sent to the MRU list. */
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index b5f6081a16cb..5c896ba1661b 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -716,6 +716,7 @@ libxfs_trans_dirty_buf(
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+ 
++	bp->b_flags |= LIBXFS_B_UPTODATE;
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+ }
