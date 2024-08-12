@@ -1,46 +1,46 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51C0914A616
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 05:24:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC5402599;
+	Mon, 12 Aug 2024 06:31:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723440247; cv=none; b=AaLF8dV9F9tcebHcoRsQvAJBho4Xi7BbpHuQyzJKddAelqUMbOGBBuN6E+apH1xAIiZSIuYCkOdjCHRjra6gBQgG/P+C8OH2Kv918kEWGZywz6pfpBZwQ3y1+EbS62J7H0Qvxsiq5dSePh/LXC8HlZiIvlXq7WsHE29W3OdNOZs=
+	t=1723444310; cv=none; b=V1D1JJP/DFLXvBj4W2JpzrnZn3k/5zFo7tEtdTLYkQRAxZAayQqt9SXMvpeQI56CMWF53ZRCxMoZqyjScWeSwUzio/TFUeLLW3PaDBis2A6hwDOqvh7ee9IZGXonk7/xSADI2crmkzVPiY+CQmbbpamTtz5C7TDqbp7nkTe1kTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723440247; c=relaxed/simple;
-	bh=W6mAiQCEpqOwiDl1jpNgbjnqlh3ZJq5pbbyFZX2xofg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VXLn7XKdOHBTBUyLnTyASdI4XjSVxU7aNwNfkILP9ZUdGz3TQ+lE0qbYCW4Pc9XPh/FDvMABd/LyuUPmdL97pAJjQ/b9kDdiX3ufSGGZzwsXr36oSX/Rb0TRll7pLXpL1qcdOP4rDnBJObYBV6V4Rr50oGO4hyBW960RgmlDVe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LmnKs/u/; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1723444310; c=relaxed/simple;
+	bh=yGngzFisU3hHM/W+/P9PCmF6ot5hT/WB3q7V+4e6Sqk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P3pE76T/zGXezKUFxE+7JX/de/DJenx4RNcojVk7gd4z9WayLKFqjQLZumVXlXYdRa9ABKUJNRoQErrWluzuht5E/UGwjucIOANtj6Dapl4COX4+72iPuSua4LGsUUIiDnGbs9WUUQVMn/iLkQq4PihTysEnua3EpqapGrIElbY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JKDWWdaB; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LmnKs/u/"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JKDWWdaB"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=pWc24pgVG8BWv7ylAz76mNdH/ub09rz4B+Iuz4S7Wjg=; b=LmnKs/u/M8+amDbs3HP0gQqy/N
-	ko/M7Wi9epnlzqq9A9MBJGVKK8iNvhGs6V4x46cN+p1ZcFP+HRGabXEHcn3l0z+n15zEHTNHb9Fz5
-	c4BAXtgXR+iZF0sG4AS7/AXumq5+MZ91nQ9Srbj64ciAT8jQMtjE1vAU1WLi4GNZsxtJMwisHu/7j
-	yF0S/CPtEEFB2xdmrE4lW1N+qfMHO+KZM9mnydTF+BxoeKJD0WTuhgPyQ8Lz9aRS0uKO80pouBkEn
-	WG5abpLdxBNXWu1g6N/FxFIo50sjtUy8dnQrARnWprPYVOoY+6mMGRiuM/Fd54qP+jCFWQnZoRgIg
-	djE2PFNA==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=FuyQkuQbkI6CMzqgMD1lf+z72iAYbcxitO6ISRVGreY=; b=JKDWWdaBFDZ62CMNAal85eU9iv
+	MsbwcVQaHQA6SUi3Zn0vLwWn1eOgE+FkiiLTCh5zjG2RzlAx8KelK6ahb5r3WdknDokvmhWnIXmwq
+	eoTJCZCETv5t5Ll+pwGaO9z596zDLpq2HYFPR3uUyxGcEek5aG7OH+E4Kwah3MUvtg4zcZM8zPas5
+	PSMSTr8sgVxD95JhgQob+feDXghhTq65+sOUMAuu88AtpTLQLK/ke3b4duSrQBevFDteUnGWZTDLs
+	y2ySCF3h073H9aPSzwX1+DnP4b0wjXpP4BKy5tcXnOGkkb1TdK25efwogfcTXB/Qfswg7yqN22aZX
+	9t0SF+iA==;
 Received: from 2a02-8389-2341-5b80-ee60-2eea-6f8f-8d7f.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:ee60:2eea:6f8f:8d7f] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sdNXI-0000000Gv5X-29no;
-	Mon, 12 Aug 2024 05:24:04 +0000
+	id 1sdOao-0000000H1JW-3sGv;
+	Mon, 12 Aug 2024 06:31:47 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>
+To: Chandan Babu R <chandan.babu@oracle.com>,
+	Matthew Wilcox <willy@infradead.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: fix handling of RCU freed inodes from other AGs in xrep_iunlink_mark_incore
-Date: Mon, 12 Aug 2024 07:23:01 +0200
-Message-ID: <20240812052352.3786445-3-hch@lst.de>
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: conver XFS perag lookup to xarrays
+Date: Mon, 12 Aug 2024 08:30:59 +0200
+Message-ID: <20240812063143.3806677-1-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240812052352.3786445-1-hch@lst.de>
-References: <20240812052352.3786445-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,71 +50,31 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-When xrep_iunlink_mark_incore skips an inode because it was RCU freed
-from another AG, the slot for the inode in the batch array needs to be
-zeroed.  Also un-duplicate the check and remove the need for the
-xrep_iunlink_igrab helper.
+Hi all,
 
-Fixes: ab97f4b1c030 ("xfs: repair AGI unlinked inode bucket lists")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/scrub/agheader_repair.c | 28 +++++++---------------------
- 1 file changed, 7 insertions(+), 21 deletions(-)
+for a project with the pending RT group code in XFS that reuses the basic
+perag concepts I'd much prefer to use xarrays over the old radix tree for
+nicer iteration semantics.
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 2f98d90d7fd66d..558bc86b1b83c3 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -1108,23 +1108,6 @@ xrep_iunlink_walk_ondisk_bucket(
- 	return 0;
- }
- 
--/* Decide if this is an unlinked inode in this AG. */
--STATIC bool
--xrep_iunlink_igrab(
--	struct xfs_perag	*pag,
--	struct xfs_inode	*ip)
--{
--	struct xfs_mount	*mp = pag->pag_mount;
--
--	if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
--		return false;
--
--	if (!xfs_inode_on_unlinked_list(ip))
--		return false;
--
--	return true;
--}
--
- /*
-  * Mark the given inode in the lookup batch in our unlinked inode bitmap, and
-  * remember if this inode is the start of the unlinked chain.
-@@ -1196,9 +1179,6 @@ xrep_iunlink_mark_incore(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = ragi->lookup_batch[i];
- 
--			if (done || !xrep_iunlink_igrab(pag, ip))
--				ragi->lookup_batch[i] = NULL;
--
- 			/*
- 			 * Update the index for the next lookup. Catch
- 			 * overflows into the next AG range which can occur if
-@@ -1211,8 +1191,14 @@ xrep_iunlink_mark_incore(
- 			 * us to see this inode, so another lookup from the
- 			 * same index will not find it again.
- 			 */
--			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
-+			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno) {
-+				ragi->lookup_batch[i] = NULL;
- 				continue;
-+			}
-+
-+			if (done || !xfs_inode_on_unlinked_list(ip))
-+				ragi->lookup_batch[i] = NULL;
-+
- 			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
- 			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
- 				done = true;
--- 
-2.43.0
+This series converts the perag code to xarrays to keep them in sync and
+throws in the use of kfree_rcu_mightsleep in the same area.
 
+To easily allow porting libxfs code to userspace this can't use xa_set
+which requires stealing bits from the pointer, and as part of
+investigating that I realized that the xa_set API is generally not so
+nice for callers for which a pre-existing entry in the xarray is
+always an error.  Thus the first patch adds a new xa_set wrapper that
+treats an existing entry as an error and avoids the need to use of
+xa_err.  It could also be used to clean up a significant number of
+existing callers.
+
+Diffstat:
+ fs/xfs/libxfs/xfs_ag.c |   93 ++++---------------------------------------------
+ fs/xfs/libxfs/xfs_ag.h |   14 -------
+ fs/xfs/xfs_icache.c    |   77 ++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_mount.h     |    3 -
+ fs/xfs/xfs_super.c     |    3 -
+ fs/xfs/xfs_trace.h     |    3 -
+ include/linux/xarray.h |    1 
+ lib/xarray.c           |   33 +++++++++++++++++
+ 8 files changed, 96 insertions(+), 131 deletions(-)
