@@ -1,45 +1,48 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8B114F9C5
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 06:32:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02466158860;
+	Mon, 12 Aug 2024 12:16:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723444377; cv=none; b=uH5db48bfqSt41XKoqJN0paspzWCUzt8rE4fdqx9qV1s8x6dmYrlQj0IAGDLQHP9LxOnKaV/pKEZP3PxgHU6R/Vjq5VIIeGn0c1ayFGkyPexPWNZSj/4iJOcrnuiVi6tOSHkJeMi3+yFBdZTdztbiVh9uQMeoR3luEctj/dDemc=
+	t=1723464982; cv=none; b=LwFLMNMXEnbVUtTQ2SFjtLr/lhHZvGNke1QP96ZDO7fEc14nwuvL3nnHfKPVOM9AR8f3xZAqAMp9WPTHTT1nU23xyTRAqv4v6AVxpNQw53vY0W6gQ/EGCYLB78aol5xjrDUVvxmW+N0y1SN245gOBzJBiTn8bMJAybx+kNLKVzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723444377; c=relaxed/simple;
-	bh=4QuDUTrqyW4BE4dlfoVHnEm/ecmq2iEGILNatH70YMI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ESLwuHdQ91ooi9OJaJ+tVhg3g0NzGI/+vSQCTt0hcUmxVxLwiaP5uhfGmdbxTkMr5stg5jyGCZJUMtscIMVt8MmT/029FDO37AQ6vNYaS/ZcCYjlF896euKxJVlcQyhvv7PceMA4Vc2kOOHYQpiCSIrjCbM4vc05nIQ5HgpT/f0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=iOe5EYo1; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iOe5EYo1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=s3wsEKpu/FzK4PyKc3qOv9eRN4n12F02jPE3eJ6t5P0=; b=iOe5EYo1/5P0M3Qo2oznvmxxZB
-	rthD1ciUR7VOHZYJiRA/LD9poWdLgECkzjAbaXjqmTFCZC6mPIj2uaevM+2kp1s/M8lMVIcLa+1nj
-	w7qXyyOevMzFam1G7dvX0QpM8itQBXCvekEh3EL1kJCck3aXnIUs9Q7HI/TdrmB+/EZsXHkoh7qi8
-	n89oQ8z8cZbnjMHwEPu3qG3q1rtdGfT4WYUgHtaWZm0X1+RMQ8dnS7+FN63Xv6lz23sIKlUB2suSw
-	yooLEPMdRFAyT8ySrO8RM7ZJo/qkK6aLRoNEjibNNdPNKL8qBEzPmKUZVP2Fm0WXleQ/CXIaXgbZX
-	6llIZ5bQ==;
-Received: from 2a02-8389-2341-5b80-ee60-2eea-6f8f-8d7f.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:ee60:2eea:6f8f:8d7f] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sdObv-0000000H1gO-0dtm;
-	Mon, 12 Aug 2024 06:32:55 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] xfs: use kfree_rcu_mightsleep to free the perag structures
-Date: Mon, 12 Aug 2024 08:32:31 +0200
-Message-ID: <20240812063243.3806779-5-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240812063243.3806779-1-hch@lst.de>
-References: <20240812063243.3806779-1-hch@lst.de>
+	s=arc-20240116; t=1723464982; c=relaxed/simple;
+	bh=wQyajU4ub9vwuhQUmYUbY4TRRoLVYByoH8L7XYPIi2Y=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=lrcFVHmH70TKgPLecc/SdmXk//TwK2WQKL4Ddm7ydhvYKyagmgwQ6PNuFb2fB1gvQkNdWUwcwVHMcjoI60kuzkCUGYu/yodbB/SFXHq8Zd2NZIwV8HRH3YRji0ziLgFaumzkYzXa8OBA/kHsuFSGUCc1GEfvatag5tlBdKa+2a0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WjD4s4JlMz4f3mJ3;
+	Mon, 12 Aug 2024 20:15:57 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id 34D1C1A0568;
+	Mon, 12 Aug 2024 20:16:12 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP3 (Coremail) with SMTP id _Ch0CgDHeLcD_blmHhy7BQ--.21435S6;
+	Mon, 12 Aug 2024 20:16:12 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org,
+	brauner@kernel.org,
+	david@fromorbit.com,
+	jack@suse.cz,
+	willy@infradead.org,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com
+Subject: [PATCH v2 2/6] iomap: support invalidating partial folios
+Date: Mon, 12 Aug 2024 20:11:55 +0800
+Message-Id: <20240812121159.3775074-3-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
+References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,63 +50,53 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-CM-TRANSID:_Ch0CgDHeLcD_blmHhy7BQ--.21435S6
+X-Coremail-Antispam: 1UD129KBjvdXoWrtFWxGFW7Jr43Zry5tw13Arb_yoWkJwc_Z3
+	4kWw1kXr1rG3WftF1xAFWayr1v934rCr18uFy8tF9Yk34DJas5Jr1vkFnagF1UJa17GFZx
+	Jan5ur45Zry29jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbkxFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
+	0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+	wVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+	v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j
+	6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7
+	AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE
+	2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcV
+	C2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kfnx
+	nUUI43ZEXa7VU1c18PUUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Source kernel commit: 7344fea851552b1586ee161147a749995504b368
+From: Zhang Yi <yi.zhang@huawei.com>
 
-Using the kfree_rcu_mightsleep is simpler and removes the need for a
-rcu_head in the perag structure.
+Current iomap_invalidate_folio() could only invalidate an entire folio,
+if we truncate a partial folio on a filesystem with blocksize < folio
+size, it will left over the dirty bits of truncated/punched blocks, and
+the write back process will try to map the invalid hole range, but
+fortunately it hasn't trigger any real problems now since ->map_blocks()
+will fix the length. Fix this by supporting invalidating partial folios.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 ---
- libxfs/xfs_ag.c | 12 +-----------
- libxfs/xfs_ag.h |  3 ---
- 2 files changed, 1 insertion(+), 14 deletions(-)
+ fs/iomap/buffered-io.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index 58ca12f6e..40d1d8a4b 100644
---- a/libxfs/xfs_ag.c
-+++ b/libxfs/xfs_ag.c
-@@ -183,16 +183,6 @@ out:
- 	return error;
- }
- 
--STATIC void
--__xfs_free_perag(
--	struct rcu_head	*head)
--{
--	struct xfs_perag *pag = container_of(head, struct xfs_perag, rcu_head);
--
--	ASSERT(!delayed_work_pending(&pag->pag_blockgc_work));
--	kfree(pag);
--}
--
- /*
-  * Free up the per-ag resources associated with the mount structure.
-  */
-@@ -216,7 +206,7 @@ xfs_free_perag(
- 		xfs_perag_rele(pag);
- 		XFS_IS_CORRUPT(pag->pag_mount,
- 				atomic_read(&pag->pag_active_ref) != 0);
--		call_rcu(&pag->rcu_head, __xfs_free_perag);
-+		kfree_rcu_mightsleep(pag);
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 4da453394aaf..763deabe8331 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -644,6 +644,8 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
+ 		WARN_ON_ONCE(folio_test_writeback(folio));
+ 		folio_cancel_dirty(folio);
+ 		ifs_free(folio);
++	} else {
++		iomap_clear_range_dirty(folio, offset, len);
  	}
  }
- 
-diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index b5eee2c78..d9cccd093 100644
---- a/libxfs/xfs_ag.h
-+++ b/libxfs/xfs_ag.h
-@@ -63,9 +63,6 @@ struct xfs_perag {
- 	/* Blocks reserved for the reverse mapping btree. */
- 	struct xfs_ag_resv	pag_rmapbt_resv;
- 
--	/* for rcu-safe freeing */
--	struct rcu_head	rcu_head;
--
- 	/* Precalculated geometry info */
- 	xfs_agblock_t		block_count;
- 	xfs_agblock_t		min_block;
+ EXPORT_SYMBOL_GPL(iomap_invalidate_folio);
 -- 
-2.43.0
+2.39.2
 
