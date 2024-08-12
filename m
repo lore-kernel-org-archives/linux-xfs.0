@@ -1,24 +1,24 @@
-Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C75634D8D1;
-	Mon, 12 Aug 2024 01:19:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8780D51C5A;
+	Mon, 12 Aug 2024 01:19:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723425561; cv=none; b=Yrv6ds0OZPn1fl1UjPX4oP2kQK3BhrZNiF5alv7milCrmrNpTp4JP1DR+2ruzB4c81YynAAIIQSVozgvrLx0wv1nMz13abK/oh6/ShT9QW3CDCP8D0K/1eH7WRi2AT2b/sMTqGZNsr1zFxKooL4XoJQX+TvApHcn2ZGkqLXPFgg=
+	t=1723425561; cv=none; b=RAqkKjAZ2EjlI/rNjYqJM7HiUNgHDrzy3d9I582QGkGclarKoIxhjMqIS7H6hH7BSdjOgTzknhZOq6IpvRgHL9phg3DI3bcHmbiIFCKWGczYaI/yKMhJM9QbxpAFX9rKf5s/CR32+vA5H0nknpmzAKPbEsN/3zqUGW0zPKkr9tE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1723425561; c=relaxed/simple;
-	bh=6glbL5BVgHnPNbMtt7CIze/uMVh88dG87PZrKQX/zGk=;
+	bh=7WKuSrhhuMjx6s68LT+l8FZy8h58s+1PKUkmG3wmLTA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e+tt/2blpBkaU46jlRkoNtgp2QxtJMHx8jPIadGhdOTvEPMiVgupVJGtPUFIjRRv2l7w1r1N8RQg7I5OsMOYTC6L/h9FUaujkltjuQ4d2HEVujnKnGfSO4P3J0uehu+XRZx0Pibiu8AwRxRWHntfsIGKylEzTihFg1/1wvlU+fw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.32
+	 MIME-Version:Content-Type; b=kom0yUmN8jTIq5QFqTkFGkxywUgu2765LAy4VDaBgDkZ8VXY0/JSppY1c+5L6MAdmtJgKOAYozIvY+Vf1kUxONwzl4MbdIhoWIlaBB/aTFX66xntPBwaGGS3UAGBe5CYNKEHKSfIrYc/0oR2QbQw+BMBfnlCco8/KxWpm5H44iY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.17])
-	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4WhxSw4lmKz3Rrjd;
-	Mon, 12 Aug 2024 09:17:20 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WhxVX6MRjzyPBr;
+	Mon, 12 Aug 2024 09:18:44 +0800 (CST)
 Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id 03C751A0188;
+	by mail.maildlp.com (Postfix) with ESMTPS id BC32B1402D0;
 	Mon, 12 Aug 2024 09:19:11 +0800 (CST)
 Received: from localhost.localdomain (10.175.104.67) by
  kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
@@ -29,9 +29,9 @@ To: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
 	<osandov@fb.com>, <john.g.garry@oracle.com>
 CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<wozizhi@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH V3 1/2] xfs: Fix the owner setting issue for rmap query in xfs fsmap
-Date: Mon, 12 Aug 2024 09:15:04 +0800
-Message-ID: <20240812011505.1414130-2-wozizhi@huawei.com>
+Subject: [PATCH V3 2/2] xfs: Fix missing interval for missing_owner in xfs fsmap
+Date: Mon, 12 Aug 2024 09:15:05 +0800
+Message-ID: <20240812011505.1414130-3-wozizhi@huawei.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240812011505.1414130-1-wozizhi@huawei.com>
 References: <20240812011505.1414130-1-wozizhi@huawei.com>
@@ -46,7 +46,7 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  kwepemf100017.china.huawei.com (7.202.181.16)
 
-I notice a rmap query bug in xfs_io fsmap:
+In the fsmap query of xfs, there is an interval missing problem:
 [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
  EXT: DEV    BLOCK-RANGE           OWNER              FILE-OFFSET      AG AG-OFFSET             TOTAL
    0: 253:16 [0..7]:               static fs metadata                  0  (0..7)                    8
@@ -58,66 +58,83 @@ I notice a rmap query bug in xfs_io fsmap:
    6: 253:16 [104..127]:           free space                          0  (104..127)               24
    ......
 
-Bug:
-[root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 0 3' /mnt
+BUG:
+[root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 104 107' /mnt
 [root@fedora ~]#
-Normally, we should be able to get one record, but we got nothing.
+Normally, we should be able to get [104, 107), but we got nothing.
 
-The root cause of this problem lies in the incorrect setting of rm_owner in
-the rmap query. In the case of the initial query where the owner is not
-set, __xfs_getfsmap_datadev() first sets info->high.rm_owner to ULLONG_MAX.
-This is done to prevent any omissions when comparing rmap items. However,
-if the current ag is detected to be the last one, the function sets info's
-high_irec based on the provided key. If high->rm_owner is not specified, it
-should continue to be set to ULLONG_MAX; otherwise, there will be issues
-with interval omissions. For example, consider "start" and "end" within the
-same block. If high->rm_owner == 0, it will be smaller than the founded
-record in rmapbt, resulting in a query with no records. The main call stack
-is as follows:
+The problem is caused by shifting. The query for the problem-triggered
+scenario is for the missing_owner interval (e.g. freespace in rmapbt/
+unknown space in bnobt), which is obtained by subtraction (gap). For this
+scenario, the interval is obtained by info->last. However, rec_daddr is
+calculated based on the start_block recorded in key[1], which is converted
+by calling XFS_BB_TO_FSBT. Then if rec_daddr does not exceed
+info->next_daddr, which means keys[1].fmr_physical >> (mp)->m_blkbb_log
+<= info->next_daddr, no records will be displayed. In the above example,
+104 >> (mp)->m_blkbb_log = 12 and 107 >> (mp)->m_blkbb_log = 12, so the two
+are reduced to 0 and the gap is ignored:
 
-xfs_ioc_getfsmap
-  xfs_getfsmap
-    xfs_getfsmap_datadev_rmapbt
-      __xfs_getfsmap_datadev
-        info->high.rm_owner = ULLONG_MAX
-        if (pag->pag_agno == end_ag)
-	  xfs_fsmap_owner_to_rmap
-	    // set info->high.rm_owner = 0 because fmr_owner == 0
-	    dest->rm_owner = 0
-	// get nothing
-	xfs_getfsmap_datadev_rmapbt_query
+ before calculate ----------------> after shifting
+ 104(st)  107(ed)		      12(st/ed)
+  |---------|				  |
+  sector size			      block size
 
-The problem can be resolved by setting the rm_owner of high to ULLONG_MAX
-again under certain conditions.
+Resolve this issue by introducing the "end_daddr" field in
+xfs_getfsmap_info. This records |key[1].fmr_physical + key[1].length| at
+the granularity of sector. If the current query is the last, the rec_daddr
+is end_daddr to prevent missing interval problems caused by shifting. We
+only need to focus on the last query, because xfs disks are internally
+aligned with disk blocksize that are powers of two and minimum 512, so
+there is no problem with shifting in previous queries.
 
 After applying this patch, the above problem have been solved:
-[root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 0 3' /mnt
- EXT: DEV    BLOCK-RANGE      OWNER              FILE-OFFSET      AG AG-OFFSET        TOTAL
-   0: 253:16 [0..7]:          static fs metadata                  0  (0..7)               8
+[root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 104 107' /mnt
+ EXT: DEV    BLOCK-RANGE      OWNER            FILE-OFFSET      AG AG-OFFSET        TOTAL
+   0: 253:16 [104..106]:      free space                        0  (104..106)           3
 
 Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
 Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
 ---
- fs/xfs/xfs_fsmap.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/xfs/xfs_fsmap.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 85dbb46452ca..d346acff7725 100644
+index d346acff7725..4ae273b54129 100644
 --- a/fs/xfs/xfs_fsmap.c
 +++ b/fs/xfs/xfs_fsmap.c
-@@ -655,6 +655,13 @@ __xfs_getfsmap_datadev(
- 			error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
- 			if (error)
- 				break;
-+			/*
-+			 * Set the owner of high_key to the maximum again to
-+			 * prevent missing intervals during the query.
-+			 */
-+			if (info->high.rm_owner == 0 &&
-+			    info->missing_owner == XFS_FMR_OWN_FREE)
-+			    info->high.rm_owner = ULLONG_MAX;
- 			xfs_getfsmap_set_irec_flags(&info->high, &keys[1]);
- 		}
+@@ -162,6 +162,7 @@ struct xfs_getfsmap_info {
+ 	xfs_daddr_t		next_daddr;	/* next daddr we expect */
+ 	/* daddr of low fsmap key when we're using the rtbitmap */
+ 	xfs_daddr_t		low_daddr;
++	xfs_daddr_t		end_daddr;	/* daddr of high fsmap key */
+ 	u64			missing_owner;	/* owner of holes */
+ 	u32			dev;		/* device id */
+ 	/*
+@@ -294,6 +295,13 @@ xfs_getfsmap_helper(
+ 		return 0;
+ 	}
+ 
++	/*
++	 * To prevent missing intervals in the last query, consider using
++	 * sectors as the granularity.
++	 */
++	if (info->last && info->end_daddr)
++		rec_daddr = info->end_daddr;
++
+ 	/* Are we just counting mappings? */
+ 	if (info->head->fmh_count == 0) {
+ 		if (info->head->fmh_entries == UINT_MAX)
+@@ -973,8 +981,10 @@ xfs_getfsmap(
+ 		 * low key, zero out the low key so that we get
+ 		 * everything from the beginning.
+ 		 */
+-		if (handlers[i].dev == head->fmh_keys[1].fmr_device)
++		if (handlers[i].dev == head->fmh_keys[1].fmr_device) {
+ 			dkeys[1] = head->fmh_keys[1];
++			info.end_daddr = dkeys[1].fmr_physical + dkeys[1].fmr_length;
++		}
+ 		if (handlers[i].dev > head->fmh_keys[0].fmr_device)
+ 			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
  
 -- 
 2.39.2
