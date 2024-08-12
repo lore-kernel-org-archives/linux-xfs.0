@@ -1,108 +1,60 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7784217B512;
-	Mon, 12 Aug 2024 12:16:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA6E1E488;
+	Mon, 12 Aug 2024 12:25:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723464987; cv=none; b=CAiZQcPbxCrXFXTGbc7MI/Vo3QD8tMOCdA84cpG+oktldgDeO6L3t5Zo80+v72IobDum3Yv3sGxx4lbbhUgZMjWHqp1amEp2XxraPaYt8u19tRf0snm3Vq00+WsXL+B35m1VY/BxsWJKc7Z5GOl5KIkGzhBitcE13MWdkxjPBus=
+	t=1723465518; cv=none; b=fUR48wFD946gWtIPopdN6L0jBCEor1QF5HcCnsNzflBazuzFyhfl8tS7DauwYYGsJSYDQnNIUTwb2fMFQlXd5ku5aG+c5LYYTYq0hSE4kOnAB1ag8Tf+g/D3ONaTwANj1eJpmiTBODjAS7kiywEfnWm28K7Z+iu1n7CAyV8JxHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723464987; c=relaxed/simple;
-	bh=qwwFYGMWC22LSZVs7J52wbNCW10XLQrjH2GIDCGBkBQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=orhGq+XB8l2exQMtO3J+mnb+txOmgJH6fE+40qwPBWlmUmCB/iSgLhIHF8xWHJZIJSWJXuz7w1NNlvuFBlNfJS0Qo2u5WXqOPrO5bO0nxKCatsjMZPSxpChtsxKkU/A+GWhQVTHFXJlPQ+F+9DmogSdH/cffqK7XMRxSizFvtpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WjD534627z4f3kKT;
-	Mon, 12 Aug 2024 20:16:07 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id CAFA01A1537;
-	Mon, 12 Aug 2024 20:16:16 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP3 (Coremail) with SMTP id _Ch0CgDHeLcD_blmHhy7BQ--.21435S9;
-	Mon, 12 Aug 2024 20:16:13 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-xfs@vger.kernel.org,
+	s=arc-20240116; t=1723465518; c=relaxed/simple;
+	bh=CAGGh6/9hidM3yNSjoFQBeXqOaxJ5PUdZyDIj+1T9wQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZYwR1KVYrIGS35Db6aD/vbeJ1R6fm1HnE4QwJPrKbFjSn7MQ7ne7e9duNv4iwXVziau2y8V3z8c5XHg6uLTZhoV+4f9aOB7mD6AX/9nyKPQYw6brpWOGS8uz3XbXNd1+Kd1q0oPmBSlbIIs38jhPBrLM/awBSr4fdKFCG4L0/hI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VYdYZB43; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VYdYZB43"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=tHSSy+8A4ywnuPcu2eKxxY4jQdJdSdqLOG6mbdcZPrY=; b=VYdYZB431a8XnFuJKHYvANwI+F
+	vv+07umPLmljAHoeNLd5TobW1ngToTvjjeHiRJJiR3joWwCcOwljkniv+4JahUf+GHBB8xbv+J+Qh
+	IEDgUQ3WKzlVGwoQrb4aI0oFyEBsKkvi6CYhQrVW2va1GYUZuMtXrgFcg2iGJE1kPhKodx+QEHcmC
+	pfmDH2EaaIPcmXbI/RpI1EtQf3dVebldX+woqU3n4tw3blHdeOW7v+wM12PnHsIumWOddoDwCMDHV
+	QBE06pwrQpbyKhOrw+CWmM3+5cz4md2QnESTXmeCxa9mlJDDJjU+ITxN0iZ5cF/j0AxkSZ+df9Uh5
+	oqbEDcGQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sdU6q-0000000Eypq-02PZ;
+	Mon, 12 Aug 2024 12:25:12 +0000
+Date: Mon, 12 Aug 2024 13:25:11 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	brauner@kernel.org,
-	david@fromorbit.com,
-	jack@suse.cz,
-	willy@infradead.org,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com
-Subject: [PATCH v2 5/6] iomap: don't mark blocks uptodate after partial zeroing
-Date: Mon, 12 Aug 2024 20:11:58 +0800
-Message-Id: <20240812121159.3775074-6-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
-References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
+Subject: Re: [PATCH 1/3] xarray: add xa_set
+Message-ID: <Zrn_J_Yo4-BY-SHc@casper.infradead.org>
+References: <20240812063143.3806677-1-hch@lst.de>
+ <20240812063143.3806677-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgDHeLcD_blmHhy7BQ--.21435S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr4UKryxCF1fXryfXF4ruFg_yoW8GFWDpF
-	Z8KFWkKryqgF43u3WkAF93Zw10ya90gr4fCr4UWwn8uF45tF4jgr92ga13ZFy0vry7Cr4Y
-	vr4vgFy8uF15ZrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
-	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnI
-	WIevJa73UjIFyTuYvjfUriihUUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240812063143.3806677-2-hch@lst.de>
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On Mon, Aug 12, 2024 at 08:31:00AM +0200, Christoph Hellwig wrote:
+> Add a convenience wrapper or xa_store that returns an error value when
+> there is an existing entry instead of the old entry.  This simplifies
+> code that wants to check that it is never overwriting an existing
+> entry.
 
-In __iomap_write_begin(), if we unaligned buffered write data to a hole
-of a regular file, we only zero out the place where aligned to block
-size that we don't want to write, but mark the whole range uptodate if
-block size < folio size. This is wrong since the not zeroed part will
-contains stale data and can be accessed by a concurrent buffered read
-easily (on the filesystem may not hold inode->i_rwsem) once we mark the
-range uptodate. Fix this by drop iomap_set_range_uptodate() in the
-zeroing out branch.
-
-Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
-Reported-by: Matthew Wilcox <willy@infradead.org>
-Closes: https://lore.kernel.org/all/ZqsN5ouQTEc1KAzV@casper.infradead.org/
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
----
- fs/iomap/buffered-io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index ac762de9a27f..96600405dbb5 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -744,8 +744,8 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
- 					poff, plen, srcmap);
- 			if (status)
- 				return status;
-+			iomap_set_range_uptodate(folio, poff, plen);
- 		}
--		iomap_set_range_uptodate(folio, poff, plen);
- 	} while ((block_start += plen) < block_end);
- 
- 	return 0;
--- 
-2.39.2
-
+How is that different from xa_insert()?
