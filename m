@@ -1,112 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A96A199225
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2024 22:40:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4580ED531;
+	Tue, 13 Aug 2024 02:14:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723502410; cv=none; b=PKCeqhNKbkncdi/Xd1Zz/Bd6J4Foyc/IyzttbvTSHX+mEvr0gy0NKYzMfLHQ1VOsu50fDkiwLrrn1drxBu6MN1cPkhDCaECpYJPLbaqXsLsOeBpKIZgnJ8I4NKQghlO2T6B+anL2VudggYAM1iZ7NVRjYdYE8/iEISi+oNGkIxI=
+	t=1723515289; cv=none; b=UTqFHQ7D8yK4GM14CoU1x84RMUq2zvZDMh4DQ1/tSqqAEfs4m68SX3vC6ScpycFXblPsinlzaKDaj2ON8FvSBSNTlCCcP28DWrtzEC+C2DEytSWBkarfsW/Cm1nZAXe19wEhKDy4pdy+UZu4mv01mR6hDFjil5qkMDsl3DnT3UE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723502410; c=relaxed/simple;
-	bh=SlsEJdoS4lg4xYJMBKVGBBDab4wmxYydb3rLCsrfFIM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=h5Orf2fzBiLzp8pzCeBjBVaxFq/ckij1IcPJIupJ4vCCoYApglKee6yqMitCYV0NQu/ipYFS244uFsTpW7Dza4GQMyR8IOnUj18eOrZp/rdyAfLh17F/EUkpvJ1vDTYkVmsHcuD+dSDJYMVhOmbYJcv679jGgTKwyO6MBte6mNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OdJV863R; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OdJV863R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76DBC4AF0D;
-	Mon, 12 Aug 2024 22:40:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723502409;
-	bh=SlsEJdoS4lg4xYJMBKVGBBDab4wmxYydb3rLCsrfFIM=;
-	h=Date:From:To:Cc:Subject:From;
-	b=OdJV863RdYeyzskK3Z+qVcy0cqDJYMcwEeqaFyRJuwDpgjcu9/UOKZwBD7aI0qouK
-	 FkKEZ/XhMhV+L5c8NddwvxgFWGQNLE/Wes23yyLzvaSk/PElDnEztDkbtRecHJR5Kq
-	 ipnVNEJXVxY9l5D0SCXPl4pKM0tlL6bB/1QJ6ziZteBwZz9g0jDZ5YwhP+2BR+vj/w
-	 pXHzh9ieS06CjRbKCzvy/5wRld5L1sBcA4La0JBiQGG6ge+7cO7qjf7ntr4h/J5xxg
-	 Eojp97OgE3jsCPzvv63lNr7G3wLLyy4M0elVWBDmJKQSV5cLghyeybO2h08rmNXafA
-	 TdVSqiN+KVrXA==
-Date: Mon, 12 Aug 2024 15:40:09 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: kjell.m.randa@gmail.com, xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: fix di_onlink checking for V1/V2 inodes
-Message-ID: <20240812224009.GD6051@frogsfrogsfrogs>
+	s=arc-20240116; t=1723515289; c=relaxed/simple;
+	bh=vvhvWKIh2t4mtzuVwGeHfsr+W2bjpTI1kncVkcWG15g=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=OwfhQ4boemyuW//CA1MQ1JYC2/zo2zSu9N+khH7Ya8WQJKdmJRSVv7qEVyHt9373XwWbYR/5BLrYXgAxfP86GuyMmeLDUUKaHWLIb0b9eiRuKv1JQ5zR699/qv1zJ4irkH9F5nb4cSRDzcbF6kAANm/91UZmyClPX4OuiLrdMf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WjZhM6kHwz4f3kvY;
+	Tue, 13 Aug 2024 10:14:27 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 91AA81A058E;
+	Tue, 13 Aug 2024 10:14:42 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgAHL4WQwbpmVecoBg--.63080S3;
+	Tue, 13 Aug 2024 10:14:42 +0800 (CST)
+Subject: Re: [PATCH v2 1/6] iomap: correct the range of a partial dirty clear
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
+ david@fromorbit.com, jack@suse.cz, willy@infradead.org, yi.zhang@huawei.com,
+ chengzhihao1@huawei.com, yukuai3@huawei.com
+References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
+ <20240812121159.3775074-2-yi.zhang@huaweicloud.com>
+ <20240812163339.GD6043@frogsfrogsfrogs>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <d56e3183-a27e-fbbb-4203-28e8e10127cb@huaweicloud.com>
+Date: Tue, 13 Aug 2024 10:14:40 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20240812163339.GD6043@frogsfrogsfrogs>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgAHL4WQwbpmVecoBg--.63080S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7ury8Jr13Kw1UWrW5Xw1UWrg_yoW8ur1rpr
+	s3KF4UKrWDXry29r1xXFyrXFn5tanrWF48JrW7WryrWan0qr1fKr109ay3uF92gr4xAF10
+	vF1agrWxCrWqyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Ib4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4I
+	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
+	WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
+	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
+	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
+	IYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 2024/8/13 0:33, Darrick J. Wong wrote:
+> On Mon, Aug 12, 2024 at 08:11:54PM +0800, Zhang Yi wrote:
+>> From: Zhang Yi <yi.zhang@huawei.com>
+>>
+>> The block range calculation in ifs_clear_range_dirty() is incorrect when
+>> partial clear a range in a folio. We can't clear the dirty bit of the
+>> first block or the last block if the start or end offset is blocksize
+>> unaligned, this has not yet caused any issue since we always clear a
+>> whole folio in iomap_writepage_map()->iomap_clear_range_dirty(). Fix
+>> this by round up the first block and round down the last block and
+>> correct the calculation of nr_blks.
+>>
+>> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+>> ---
+>>  fs/iomap/buffered-io.c | 9 ++++++---
+>>  1 file changed, 6 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+>> index f420c53d86ac..4da453394aaf 100644
+>> --- a/fs/iomap/buffered-io.c
+>> +++ b/fs/iomap/buffered-io.c
+>> @@ -138,11 +138,14 @@ static void ifs_clear_range_dirty(struct folio *folio,
+>>  {
+>>  	struct inode *inode = folio->mapping->host;
+>>  	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+>> -	unsigned int first_blk = (off >> inode->i_blkbits);
+>> -	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
+>> -	unsigned int nr_blks = last_blk - first_blk + 1;
+>> +	unsigned int first_blk = DIV_ROUND_UP(off, i_blocksize(inode));
+> 
+> Is there a round up macro that doesn't involve integer division?
+> 
 
-"KjellR" complained on IRC that an old V4 filesystem suddenly stopped
-mounting after upgrading from 6.9.11 to 6.10.3, with the following splat
-when trying to read the rt bitmap inode:
+Sorry, I don't find a common macro now, if we want to avoid integer division,
+how about open code here?
 
-00000000: 49 4e 80 00 01 02 00 01 00 00 00 00 00 00 00 00  IN..............
-00000010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000020: 00 00 00 00 00 00 00 00 43 d2 a9 da 21 0f d6 30  ........C...!..0
-00000030: 43 d2 a9 da 21 0f d6 30 00 00 00 00 00 00 00 00  C...!..0........
-00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000050: 00 00 00 02 00 00 00 00 00 00 00 04 00 00 00 00  ................
-00000060: ff ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+	first_blk = round_up(off, i_blocksize(inode)) >> inode->i_blkbits;
 
-As Dave Chinner points out, this is a V1 inode with both di_onlink and
-di_nlink set to 1 and di_flushiter == 0.  In other words, this inode was
-formatted this way by mkfs and hasn't been touched since then.
+Thanks,
+Yi.
 
-Back in the old days of xfsprogs 3.2.3, I observed that libxfs_ialloc
-would set di_nlink, but if the filesystem didn't have NLINK, it would
-then set di_version = 1.  libxfs_iflush_int later sees the V1 inode and
-copies the value of di_nlink to di_onlink without zeroing di_onlink.
+> 
+>> +	unsigned int last_blk = (off + len) >> inode->i_blkbits;
+>> +	unsigned int nr_blks = last_blk - first_blk;
+>>  	unsigned long flags;
+>>  
+>> +	if (!nr_blks)
+>> +		return;
+>> +
+>>  	spin_lock_irqsave(&ifs->state_lock, flags);
+>>  	bitmap_clear(ifs->state, first_blk + blks_per_folio, nr_blks);
+>>  	spin_unlock_irqrestore(&ifs->state_lock, flags);
+>> -- 
+>> 2.39.2
+>>
+>>
 
-Eventually this filesystem must have been upgraded to support NLINK
-because 6.10 doesn't support !NLINK filesystems, which is how we tripped
-over this old behavior.  The filesystem doesn't have a realtime section,
-so that's why the rtbitmap inode has never been touched.
-
-Fix this by removing the di_onlink/di_nlink checking for all V1/V2
-inodes because this is a muddy mess.  The V3 inode handling code has
-always supported NLINK and written di_onlink==0 so keep that check.
-The removal of the V1 inode handling code when we dropped support for
-!NLINK obscured this old behavior.
-
-Reported-by: kjell.m.randa@gmail.com
-Fixes: 40cb8613d612 ("xfs: check unused nlink fields in the ondisk inode")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_inode_buf.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 513b50da6215..79babeac9d75 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -514,12 +514,18 @@ xfs_dinode_verify(
- 			return __this_address;
- 	}
- 
--	if (dip->di_version > 1) {
-+	/*
-+	 * Historical note: xfsprogs in the 3.2 era set up its incore inodes to
-+	 * have di_nlink track the link count, even if the actual filesystem
-+	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
-+	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
-+	 * the the incore di_nlink value, which is why we cannot check for
-+	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
-+	 * di_onlink==0, so we can check that.
-+	 */
-+	if (dip->di_version >= 2) {
- 		if (dip->di_onlink)
- 			return __this_address;
--	} else {
--		if (dip->di_nlink)
--			return __this_address;
- 	}
- 
- 	/* don't allow invalid i_size */
