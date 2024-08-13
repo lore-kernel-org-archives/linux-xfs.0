@@ -1,147 +1,167 @@
-Received: from mail-qv1-f51.google.com (mail-qv1-f51.google.com [209.85.219.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 633B62262B;
-	Tue, 13 Aug 2024 12:02:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FEC19D886;
+	Tue, 13 Aug 2024 14:37:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723550523; cv=none; b=JIK+hn+hNSuUCDSasOLZ1QBg7Pd1Qycn2sQiQNvnhXRnJlMObOzkzn4MaAc//pBC8BVrT7s1H/5Oo3qLAYPECfVO0LEtQs9ymmtnb930B7VUbm+tnxmiAUnqWfdsxJ0CZZm5EuRVV8eznZRBzYvl6QpN+l4os9a8TXwd5Bf9ohA=
+	t=1723559836; cv=none; b=ab1HpupXspZHqp0/RclIpXNKeraJVGLX3jVXJz9nTdQvKijOu8/Tt3dAJ4dKm+PNXwwAFHuTBxPIGIFeNIR0SorlxdDOegQYmK9eRf1wYl+UezAJNMFmgZtxK+76jEvedZecweFfdQlQUj/HZxlxpL4CbyLcQxGAd9sTAlhgbnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723550523; c=relaxed/simple;
-	bh=WoxzxQV1ooQd4sb4UGzBvOFbkbnqQDKsPPMquAA7wMk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=O6jHdAf3kaCajlOc3ZS7c8rY9M6IAn9s0C3hUpYSf+uotNoXUrUubDjrFnfROjj4/9SvUwQfTiuN+aUMUqJTMy8x5+mwHL9oJZ8Hxjvz3+2XmR/G8QZWms/OLpKChgbsX4JiZ6BQrrtAd9Zf0ygMHGmtrkLLsnFHKzv1CNZszcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gYeUvquH; arc=none smtp.client-ip=209.85.219.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1723559836; c=relaxed/simple;
+	bh=xrbXi/Tvzg3SLG5dVVMqrQ+DWhv4hRKjrG2J+apEvRo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DuoQpDidSRxF4UkroZsn/6uPGa6gTlaWULZVc1gwAlYGdVaKe82f20Jc3386TNZu2M/8PqlVQ9JHhJrpQYX9vBQ1E2nudRRTVuQpnI6PVBv3Ko/B7RO6qSVDSoVusY2z3JcnmNF0TqzcEZPqKCY99UdzaZ3twGsDXqP2gbl2AuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uN0dnmZu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gYeUvquH"
-Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-6bd777e6623so22924236d6.3;
-        Tue, 13 Aug 2024 05:02:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723550521; x=1724155321; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=8lKe2IZzXANr7tMnM64bs7C7lJQXJvi3Yh98xyr+R3c=;
-        b=gYeUvquHYNQBpUOsoOkqJcRzAtuBymqC0blwoMv3DIMbE5tUOZSCTSg9wczSFyUJ/o
-         jAkySvXOHverIhdPgpChQmiUsH0mFtCguDqUdzEPQEo5WtKpaAJgujChIv+LhqvDfivT
-         cOAcVKycuS/COd281hAlwsbAn+SUw9ZLlM+Eg9nvcdrCBf9m0up5gOvfymxd3wJ15iNO
-         F5dOUrnmGFne18xXf8dDDbQ7WFje330INo3I6Lq08i0G6MO8k6DZhrOZxoW/MDQVsCMp
-         TyhMUC8aZM+j7P0Ob20cRV5LHrJBje9fZjo+iAgLuku189xsNkA92ZMBQCanZI1uMRfr
-         sk5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723550521; x=1724155321;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8lKe2IZzXANr7tMnM64bs7C7lJQXJvi3Yh98xyr+R3c=;
-        b=mGiNqOtoscoW+OZT8bRJcI1YXppXCvSTOyq/SFfzYv/bCRNfP1Dv3B+aa4Pgru3kZl
-         uZEakReEtlCT2aPHfRY+Z7cBoSZK9fQ2bAFtToFzOtFLbr7JFjaAcT+13XG2kfOoZN97
-         u51i+5EKKRFWbV1ttrxfDe7YycRnRwIhTC/u14uGckyIgXB+MDngJuj9WZG+kW8UTdI8
-         FlSe46oaTK+6INLm4X2NTHx7ACiyvFimvyWPTwta5nm95JfHBdPR+6MbzHAoJH2YnYKr
-         mLhXQMLK/BxeaOatfyEUTFnwWoonVobUSAfMV15TXFWK9kGkPryA+O2sOt6HEIufXFWm
-         bM5g==
-X-Forwarded-Encrypted: i=1; AJvYcCUtrvHkcAY/uk0CeP3Sl27gNIpceWO/MQrNbUsB5GG/nwPGTXZEWvyYBXhvNVXIFGNKp8jqyioWvjcfXDjUoiLJ1du4ifkprouJap8J
-X-Gm-Message-State: AOJu0YxOctsBiGHG0a2i+HwCeZ3R8kgh+zuveYe7enuhltEOgMcBFzvd
-	PehGVhgt7IIl+NT957+KE2qPpMz/8M01Z8t3QV33nlNLEipqQMCc
-X-Google-Smtp-Source: AGHT+IHHvzj09SebJbcuJ/1mNymCt6orZzcJ2wp/qIiGAqZtLn1D+Y2//gKE+pHCoWmXVK8igCX4Fw==
-X-Received: by 2002:a05:6214:5507:b0:6bb:a0f6:8b32 with SMTP id 6a1803df08f44-6bf4f7de658mr32844146d6.33.1723550521072;
-        Tue, 13 Aug 2024 05:02:01 -0700 (PDT)
-Received: from [130.235.83.196] (nieman.control.lth.se. [130.235.83.196])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6bd82e6db59sm33111936d6.143.2024.08.13.05.01.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Aug 2024 05:02:00 -0700 (PDT)
-Message-ID: <6766edb4-2f56-4b52-9e6d-343ae00d6957@gmail.com>
-Date: Tue, 13 Aug 2024 14:01:57 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uN0dnmZu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 980CCC4AF09;
+	Tue, 13 Aug 2024 14:37:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723559835;
+	bh=xrbXi/Tvzg3SLG5dVVMqrQ+DWhv4hRKjrG2J+apEvRo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uN0dnmZueytWeiZ68uwNEvINpX/1oFHPj3K5vDyski8yZdVrN+YyfNwsUA3ncscEB
+	 9Cv9O+wwcdUvfVJhdP20cm1Fx91NW1nFui/SiONOHx4D7L+PdcGqGVmJ85qbcFrLU/
+	 2gsVBrpB2mAcAkze1ULK5v+HVLbT4XSAZzVfMyO1ATfKzkcz3hWNflbNVAj8mZ/V+y
+	 3ALOhk/cb5H41pFHjr6cznGOhM0RALAjGA7b3eMYSrWKiDErT+qVptetP+YCjcEj36
+	 VpvFmeRXIKJkQQLFls7JRYyPtyMOydS2lw5D728Qu5SHa8RnSjx5OrgTR4L6D7Inp0
+	 UFTkxLacM54mg==
+Date: Tue, 13 Aug 2024 07:37:15 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] statx.h: update to latest kernel UAPI
+Message-ID: <20240813143715.GC6047@frogsfrogsfrogs>
+References: <20240813073527.81072-1-hch@lst.de>
+ <20240813073527.81072-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: XFS mount timeout in linux-6.9.11
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong"
- <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
-References: <71864473-f0f7-41c3-95f2-c78f6edcfab9@gmail.com>
- <ZraeRdPmGXpbRM7V@dread.disaster.area>
- <252d91e2-282e-4af4-b99b-3b8147d98bc3@gmail.com>
- <ZrfzsIcTX1Qi+IUi@dread.disaster.area>
- <4697de37-a630-402f-a547-cc4b70de9dc3@gmail.com>
- <ZrlRggozUT6dJRh+@dread.disaster.area>
- <6a19bfdf-9503-4c3b-bc5b-192685ec1bdd@gmail.com>
- <ZrslIPV6/qk6cLVy@dread.disaster.area>
-Content-Language: en-US
-From: Anders Blomdell <anders.blomdell@gmail.com>
-In-Reply-To: <ZrslIPV6/qk6cLVy@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240813073527.81072-2-hch@lst.de>
 
+On Tue, Aug 13, 2024 at 09:35:00AM +0200, Christoph Hellwig wrote:
+> Update the localy provided statx definition to the latest kernel UAPI,
+> and use it unconditionally instead only if no kernel version is provided.
+> 
+> This allows using more recent additions than provided in the system
+> headers.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  src/statx.h | 32 ++++++++++++++++++++++++++------
+>  1 file changed, 26 insertions(+), 6 deletions(-)
+> 
+> diff --git a/src/statx.h b/src/statx.h
+> index 3f239d791..ab29fe22d 100644
+> --- a/src/statx.h
+> +++ b/src/statx.h
+> @@ -28,8 +28,6 @@
+>  # endif
+>  #endif
+>  
+> -#ifndef STATX_TYPE
+> -
+>  /*
+>   * Timestamp structure for the timestamps in struct statx.
+>   *
+> @@ -44,6 +42,7 @@
+>   *
+>   * __reserved is held in case we need a yet finer resolution.
+>   */
+> +#define statx_timestamp statx_timestamp_fstests
 
+Might want to put these #defines at the top with a comment so that
+future people copy-pastaing too fast (i.e. me) don't obliterate them
+accidentally.
 
-On 2024-08-13 11:19, Dave Chinner wrote:
-> On Mon, Aug 12, 2024 at 03:03:49PM +0200, Anders Blomdell wrote:
->> On 2024-08-12 02:04, Dave Chinner wrote:
->>>
->>> Ok, can you run the same series of commands but this time in another
->>> shell run this command and leave it running for the entire
->>> mount/unmount/mount/unmount sequence:
->>>
->>> # trace-cmd record -e xfs\* -e printk
-> 
-> [snip location of trace]
-> 
->>> That will tell me what XFS is doing different at mount time on the
->>> different kernels.
->> Looks like a timing issue, a trylock fails and brings about a READ_AHEAD burst.
-> 
-> Not timing - it is definitely a bug in the commit the bisect pointed
-> at.
-> 
-> However, it's almost impossible to actually see until someone or
-> something (the trace) points it out directly.
-> 
-> The trace confirmed what I suspected - the READ_AHEAD stuff you see
-> is an inode btree being walked. I knew that we walk the free inode
-> btrees during mount unless you have a specific feature bit set, but
-> I didn't think your filesystem is new enough to have that feature
-> set according to the xfs_info output.
-> 
-> However, I couldn't work out why the free inode btrees would take
-> that long to walk as the finobt generally tends towards empty on any
-> filesystem that is frequently allocating inodes. The mount time on
-> the old kernel indicates they are pretty much empty, because the
-> mount time is under a second and it's walked all 8 finobts *twice*
-> during mount.
-> 
-> What the trace pointed out was that the finobt walk to calculate
-> AG reserve space wasn't actually walking the finobt - it was walking
-> the inobt. That indexes all allocated inodes, so mount was walking
-> the btrees that index the ~30 million allocated inodes in the
-> filesystem. That takes a lot of IO, and that's the 450s pause
-> to calculate reserves before we run log recovery, and then the
-> second 450s pause occurs after log recovery because we have to
-> recalculate the reserves once all the intents and unlinked inodes
-> have been replayed.
-> 
->  From that observation, it was just a matter of tracking down the
-> code that is triggering the walk and working out why it was running
-> down the wrong inobt....
-> 
-> In hindsight, this was a wholly avoidable bug - a single patch made
-> two different API modifications that only differed by a single
-> letter, and one of the 23 conversions missed a single letter. If
-> that was two patches - one for the finobt conversion, the second for
-> the inobt conversion, the bug would have been plainly obvious during
-> review....
-> 
-> Anders, can you try the patch below? It should fix your issue.
-Works like a charm! Thanks for the help!
+/*
+ * Use a fstests-specific name for these structures so we can always
+ * find the latest version of the abi.
+ */
+#define statx_timestamp statx_timestamp_fstests
+#define statx statx_fstests
 
-I take it that this patch goes into linux-stable (and linux-next) quite soon!
+[all the statx.h stuff here]
 
-/Anders
+Otherwise looks fine to me.
+
+--D
+
+>  struct statx_timestamp {
+>  	__s64	tv_sec;
+>  	__s32	tv_nsec;
+> @@ -87,6 +86,7 @@ struct statx_timestamp {
+>   * will have values installed for compatibility purposes so that stat() and
+>   * co. can be emulated in userspace.
+>   */
+> +#define statx statx_fstests
+>  struct statx {
+>  	/* 0x00 */
+>  	__u32	stx_mask;	/* What results were written [uncond] */
+> @@ -102,7 +102,8 @@ struct statx {
+>  	__u64	stx_ino;	/* Inode number */
+>  	__u64	stx_size;	/* File size */
+>  	__u64	stx_blocks;	/* Number of 512-byte blocks allocated */
+> -	__u64	__spare1[1];
+> +	__u64	stx_attributes_mask; /* Mask to show what's supported in stx_attributes */
+> +
+>  	/* 0x40 */
+>  	struct statx_timestamp	stx_atime;	/* Last access time */
+>  	struct statx_timestamp	stx_btime;	/* File creation time */
+> @@ -114,7 +115,18 @@ struct statx {
+>  	__u32	stx_dev_major;	/* ID of device containing file [uncond] */
+>  	__u32	stx_dev_minor;
+>  	/* 0x90 */
+> -	__u64	__spare2[14];	/* Spare space for future expansion */
+> +	__u64	stx_mnt_id;
+> +	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
+> +	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
+> +	/* 0xa0 */
+> +	__u64	stx_subvol;	/* Subvolume identifier */
+> +	__u32	stx_atomic_write_unit_min;	/* Min atomic write unit in bytes */
+> +	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
+> +	/* 0xb0 */
+> +	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment count */
+> +	__u32   __spare1[1];
+> +	/* 0xb8 */
+> +	__u64	__spare3[9];	/* Spare space for future expansion */
+>  	/* 0x100 */
+>  };
+>  
+> @@ -139,6 +151,12 @@ struct statx {
+>  #define STATX_BLOCKS		0x00000400U	/* Want/got stx_blocks */
+>  #define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
+>  #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
+> +#define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
+> +#define STATX_DIOALIGN		0x00002000U	/* Want/got direct I/O alignment info */
+> +#define STATX_MNT_ID_UNIQUE	0x00004000U	/* Want/got extended stx_mount_id */
+> +#define STATX_SUBVOL		0x00008000U	/* Want/got stx_subvol */
+> +#define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields */
+> +
+>  #define STATX_ALL		0x00000fffU	/* All currently supported flags */
+>  
+>  /*
+> @@ -157,9 +175,11 @@ struct statx {
+>  #define STATX_ATTR_APPEND		0x00000020 /* [I] File is append-only */
+>  #define STATX_ATTR_NODUMP		0x00000040 /* [I] File is not to be dumped */
+>  #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
+> -
+>  #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
+> -#endif /* STATX_TYPE */
+> +#define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
+> +#define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
+> +#define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
+> +#define STATX_ATTR_WRITE_ATOMIC		0x00400000 /* File supports atomic write operations */
+>  
+>  static inline
+>  int xfstests_statx(int dfd, const char *filename, unsigned flags,
+> -- 
+> 2.43.0
+> 
+> 
