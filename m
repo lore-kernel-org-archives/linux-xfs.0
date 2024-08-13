@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98CD6125AC;
-	Tue, 13 Aug 2024 14:40:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13F4A19EEB1;
+	Tue, 13 Aug 2024 14:40:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723560005; cv=none; b=mnYWOPE9lRdCQGJq2Kpp4C+WYnaU+AX0Y6j015VOP8bc1YzHpT8fYaio2FEYmCleRcmgD06gzt+b/+wt0LZMl2+IMYDQASD5qglkE0S/WpU1E0fE9LOCOtlBlJJWbVJYtXx4405/FZrjn6h/gSmLl5ptT/AecWRJPt+wJMnya88=
+	t=1723560046; cv=none; b=E5fNQ6YNK1dkZByHmAf4nFGYsby+1a38szvcBVTLeSdZDYx+aQgKH/jPEgy2506JNUQy/Pywy9+wP8I5m5X/CaBsGfymrzp9HJpJdq/H3KNSyHQHWrMnbDdQfmE91iCtz93NBQ2aekfhNtIoT+nB6EP8G8uPzxneoCfVHnawbg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723560005; c=relaxed/simple;
-	bh=SdIe+xJItG6ZuNwa0Em9ah2j1AjQv8knZayRK+shvD4=;
+	s=arc-20240116; t=1723560046; c=relaxed/simple;
+	bh=o3BjWMi6v5uyouSb5RLlPRWAcrsbicY0RYuKU6cQ7js=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iIU+8IWYJV8yWDOFDMCYsJFb0rSYfUiGpGVsA6Lc3HsK9GBl2VPxEYbP+dvYs1kJ/yA+PMqgiLoVdrXdKPYDjEuJG8KooPjCP7St0mrmSIchAeJVMdFrytJY83hbal62eSHhSkECQCqGT9rHQKs+lHWtOPcNJBH0E2STw9a8biU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FDoVrv6h; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZVgsCeXHMEi6BtExDIPDXGWzLuxVzno3kloY5ROHUT5yEoM9N1CAuDqZBa1K8YoqK/KdXTxRqaFBRb4yzoxgjjY9OCGT73QXs0RZcztiK1bVpedrogLKvAbx766ugoHysvlS5qlO06/h0u7Nq6cUlSXWCr0T9F/LcGJKiqSgShs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dDsMyz+S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FDoVrv6h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D2E4C4AF09;
-	Tue, 13 Aug 2024 14:40:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dDsMyz+S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B313C4AF0F;
+	Tue, 13 Aug 2024 14:40:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723560005;
-	bh=SdIe+xJItG6ZuNwa0Em9ah2j1AjQv8knZayRK+shvD4=;
+	s=k20201202; t=1723560045;
+	bh=o3BjWMi6v5uyouSb5RLlPRWAcrsbicY0RYuKU6cQ7js=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FDoVrv6h5N0jaeIel/7klS/8Lt1d0lw1PAkc2dL6MuVOWulGr1b9ZAI+GMNr/2U6p
-	 p64rw17XcPV6P7/kd8rjb0kLWnXmFsINseuz3doEMAi0kD87CPMX5vsbgrBWF0LnU8
-	 002K1xyemZdjbYwSy+R/Y/GeLtzl38buAe9+Tyx/hTgoFLRPr8UIHttHlg1tQiSsOc
-	 psYhHhoHDqsrntZNYPE8gSZMk4wFupf5d49o2huTztPO45tkcumCckl2bobEFTDRcN
-	 l8GIjY44nxxXvBRch1cxMxjzDRj7KFbNoCIIpIwCgmzdXVdx5rKnhdwxUNCEWjQnfR
-	 c4f5Xui7Hzerw==
-Date: Tue, 13 Aug 2024 07:40:04 -0700
+	b=dDsMyz+SSxbSlJ9EGMKm5O3JFKob7wMkIb34jx+HOcecsGrdUY6GpP3GdZLrmkmJp
+	 hRRZoSWrRUchUhVDFHoBEMlWZeQCPXFmCkcV+0QsWTtd48BPcxW92WITMF41a5arNU
+	 GJgqzE8NRf0BNGYtDYGP2jnRZvykR4gHTe+G/0zja0WsTCFaHjNrF3hlDIT6QcSVrU
+	 X6GJF4WNqQ/fuU2JzDZbEWHTHFnt48o8XQbxSOLU8u0ueYLprgvxvamz/9qJsi2ziZ
+	 EpxQUu7KCc7rXOMkj4X3jRIi9B7lfGML561bTcfXLHCPSw2krk/ITQpWSeORu6bWcn
+	 64dREIqlgLURQ==
+Date: Tue, 13 Aug 2024 07:40:45 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] add a new min_dio_alignment helper
-Message-ID: <20240813144004.GD6047@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/5] xfs/424: don't use _min_dio_alignment
+Message-ID: <20240813144045.GE6047@frogsfrogsfrogs>
 References: <20240813073527.81072-1-hch@lst.de>
- <20240813073527.81072-3-hch@lst.de>
+ <20240813073527.81072-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,115 +43,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240813073527.81072-3-hch@lst.de>
+In-Reply-To: <20240813073527.81072-4-hch@lst.de>
 
-On Tue, Aug 13, 2024 at 09:35:01AM +0200, Christoph Hellwig wrote:
-> Add a new C program to find the minimum direct I/O alignment.  This
-> uses the statx stx_dio_offset_align field if provided, then falls
-> back to the BLKSSZGET ioctl for block backed file systems and finally
-> the page size.  It is intended as a more capable replacement for the
-> _min_dio_alignment bash helper.
+On Tue, Aug 13, 2024 at 09:35:02AM +0200, Christoph Hellwig wrote:
+> xfs/424 tests xfs_db and not the kernel xfs code, and really wants
+> the device sector size and not the minimum direct I/O alignment.
+> 
+> Switch to a direct call of the blockdev utility.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  src/Makefile            |  2 +-
->  src/min_dio_alignment.c | 66 +++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 67 insertions(+), 1 deletion(-)
->  create mode 100644 src/min_dio_alignment.c
-> 
-> diff --git a/src/Makefile b/src/Makefile
-> index 559209be9..b3da59a0e 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -34,7 +34,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
->  	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
->  	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
-> -	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault
-> +	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment
->  
->  EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
->  	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
-> diff --git a/src/min_dio_alignment.c b/src/min_dio_alignment.c
-> new file mode 100644
-> index 000000000..c3345bfb2
-> --- /dev/null
-> +++ b/src/min_dio_alignment.c
-> @@ -0,0 +1,66 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2024 Christoph Hellwig
-> + */
-> +#include <fcntl.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <unistd.h>
-> +#include <sys/mount.h>
-> +#include <sys/ioctl.h>
-> +#include <sys/stat.h>
-> +#include "statx.h"
-> +
-> +static int min_dio_alignmenent(const char *mntpnt, const char *devname)
 
-              min_dio_alignment
-
-> +{
-> +	struct statx stx = { };
-> +	struct stat st;
-> +	int fd;
-> +
-> +	/*
-> +	 * If the file system supports STATX_DIOALIGN, use the dio_offset_align
-> +	 * member, as that reports exactly the information that we are asking
-> +	 * for.
-> +	 *
-> +	 * STATX_DIOALIGN is only reported on regular files, so use O_TMPFILE
-> +	 * to create one without leaving a trace.
-> +	 */
-> +	fd = open(mntpnt, O_TMPFILE | O_RDWR | O_EXCL, 0600);
-> +	if (fd >= 0 &&
-> +	    xfstests_statx(fd, "", AT_EMPTY_PATH, STATX_DIOALIGN, &stx) == 0 &&
-> +	    (stx.stx_mask & STATX_DIOALIGN))
-> +		return stx.stx_dio_offset_align;
-> +
-> +	/*
-> +	 * If we are on a block device and no explicit aligned is reported, use
-> +	 * the logical block size as a guestimate.
-> +	 */
-> +	if (stat(devname, &st) == 0 && S_ISBLK(st.st_mode)) {
-> +		int dev_fd = open(devname, O_RDONLY);
-> +		int logical_block_size;
-> +
-> +		if (dev_fd > 0 &&
-> +		    fstat(dev_fd, &st) == 0 &&
-> +		    S_ISBLK(st.st_mode) &&
-> +		    ioctl(dev_fd, BLKSSZGET, &logical_block_size)) {
-> +			return logical_block_size;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * No support for STATX_DIOALIGN and not a block device:
-> +	 * default to PAGE_SIZE.
-
-Should we try DIOINFO here as a second to last gasp?
+Looks good,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +	 */
-> +	return getpagesize();
-> +}
-> +
-> +int main(int argc, char **argv)
-> +{
-> +	if (argc != 3) {
-> +		fprintf(stderr, "usage: %s mountpoint devicename\n", argv[0]);
-> +		exit(1);
-> +	}
-> +
-> +	printf("%d\n", min_dio_alignmenent(argv[1], argv[2]));
-> +	exit(0);
-> +}
+> ---
+>  tests/xfs/424 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/tests/xfs/424 b/tests/xfs/424
+> index 71d48bec1..6078d3489 100755
+> --- a/tests/xfs/424
+> +++ b/tests/xfs/424
+> @@ -50,7 +50,7 @@ echo "Silence is golden."
+>  # NOTE: skip attr3, bmapbta, bmapbtd, dir3, dqblk, inodata, symlink
+>  # rtbitmap, rtsummary, log
+>  #
+> -sec_sz=`_min_dio_alignment $SCRATCH_DEV`
+> +sec_sz=`blockdev --getss $SCRATCH_DEV`
+>  while [ $sec_sz -le 4096 ]; do
+>  	sector_sizes="$sector_sizes $sec_sz"
+>  	sec_sz=$((sec_sz * 2))
 > -- 
 > 2.43.0
 > 
