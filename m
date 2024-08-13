@@ -1,41 +1,40 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 942231862A;
-	Tue, 13 Aug 2024 02:21:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A435E1E86A;
+	Tue, 13 Aug 2024 02:49:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723515704; cv=none; b=n3LOhjV+o4Z6xvu2V0e3SNed5vye+vkhYMKZ6C3Vg4w9Pj3B6++w5xBhKVAxb/9NT9deyboCfsfwe/xxk5mfw+TH8OURh8EYG9L2/oQcG7wrn56yVwfHwNCt1FMotoDNGwKLyzc869RBu1WmtPzIVTjypJLfqeb6sc8QZRtAQFk=
+	t=1723517371; cv=none; b=XEzZdZDy6rc1bRSaFfwrFQTVTZEgZDQUpWO3Otu/sAmsjeuwLY/ru7gYYnY1X3FHtHDuJJ3VtPWVqQNcBiic4Z9DSEnVPCVeecCzXMpSHLP+5PSmWr3pOufVBBl95Jk/cU42q7PTpakDzcg3r+RClYod3mSGRmPANlIHEXjypkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723515704; c=relaxed/simple;
-	bh=CWDikRhvACJ6VTavQgtCFQU2sXIpkGz0NQquxrwT4Hw=;
+	s=arc-20240116; t=1723517371; c=relaxed/simple;
+	bh=hQKnZrBwQM09zuJSipp9urEd+Q+xJzQsaB5ZluAZ2UU=;
 	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=f6TDa//LwhYT1vDmOs10xG6UHPnq5QQQVx7o81wpTT5EprIWqj3g/3cA0o4GL9xAe2w5OM0e2Qtmkmq6HFEQbBI9qAVZ27HDiIbNkzmGtOlAwQEeX89ZOgKatT4pNtLy0UltYhv127zn4c25yldaiJaiTay069YqHkuC+DIDmJc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 In-Reply-To:Content-Type; b=dPziTh8A7xroTv/h8onfOWYITX1WVAjCbj0et1tjZyqk3v20oAV1YyMR5LV4cIlhMEaEsYbsHponYRowNc05iivtLbU8RxKHpV00ljyN3XsKBCnBce0ZS2UTyjP0bbTxX1ksSv76/rgnLqXskbT0ymUscCyC9/TN3WXbhLUcO/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4WjZrL2CmBz4f3jM9;
-	Tue, 13 Aug 2024 10:21:22 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WjbSV36mNz4f3jZQ;
+	Tue, 13 Aug 2024 10:49:14 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id F323E1A1645;
-	Tue, 13 Aug 2024 10:21:35 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id B2E1A1A07BA;
+	Tue, 13 Aug 2024 10:49:23 +0800 (CST)
 Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgBXfoQvw7pmIV0pBg--.64234S3;
-	Tue, 13 Aug 2024 10:21:35 +0800 (CST)
-Subject: Re: [PATCH v2 3/6] iomap: advance the ifs allocation if we have more
- than one blocks per folio
-To: yangerkun <yangerkun@huawei.com>, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
- brauner@kernel.org, david@fromorbit.com, jack@suse.cz, willy@infradead.org,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
+	by APP4 (Coremail) with SMTP id gCh0CgBnj4WxybpmnD0rBg--.782S3;
+	Tue, 13 Aug 2024 10:49:23 +0800 (CST)
+Subject: Re: [PATCH v2 4/6] iomap: correct the dirty length in page mkwrite
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
+ david@fromorbit.com, jack@suse.cz, willy@infradead.org, yi.zhang@huawei.com,
+ chengzhihao1@huawei.com, yukuai3@huawei.com
 References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
- <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
- <137c8c6e-ead3-51ed-be5a-c8eba0be3a2d@huawei.com>
+ <20240812121159.3775074-5-yi.zhang@huaweicloud.com>
+ <20240812164536.GE6043@frogsfrogsfrogs>
 From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <02adb965-ad95-2b75-f48a-51a4b75ad88b@huaweicloud.com>
-Date: Tue, 13 Aug 2024 10:21:34 +0800
+Message-ID: <0ee2814f-2878-bcff-7baf-703327091805@huaweicloud.com>
+Date: Tue, 13 Aug 2024 10:49:21 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 Precedence: bulk
@@ -44,93 +43,94 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <137c8c6e-ead3-51ed-be5a-c8eba0be3a2d@huawei.com>
+In-Reply-To: <20240812164536.GE6043@frogsfrogsfrogs>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXfoQvw7pmIV0pBg--.64234S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXFyUKr4ftr4DZw18Zw4fXwb_yoW5WFy8pr
-	4kKFWUGrWxJrn3urnrtFyUZryUt3yUJ3WUGr48W3W7XF4UJr1jgr4UWFyq9F1UXr4xJr48
-	Xr1jqryxuF15Ar7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgBnj4WxybpmnD0rBg--.782S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7ury5AFW7WFy7tr4xXw1DWrg_yoW8Kw1DpF
+	WDKFWqkr48J3Zruwn3Ar1Yvr10kr9xXw40yF17W343AFn8ur12gr1UK3Wj9F1xKr13Aw4S
+	vF4jqa4xXFyjyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUU9Ib4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
 	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
 	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
 	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
 	e2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4I
 	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
 	WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
 	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
 	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
-	IYCTnIWIevJa73UjIFyTuYvjxUOBMKDUUUU
+	IYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 2024/8/12 20:47, yangerkun wrote:
-> 
-> 
-> 在 2024/8/12 20:11, Zhang Yi 写道:
+On 2024/8/13 0:45, Darrick J. Wong wrote:
+> On Mon, Aug 12, 2024 at 08:11:57PM +0800, Zhang Yi wrote:
 >> From: Zhang Yi <yi.zhang@huawei.com>
 >>
->> Now we allocate ifs if i_blocks_per_folio is larger than one when
->> writing back dirty folios in iomap_writepage_map(), so we don't attach
->> an ifs after buffer write to an entire folio until it starts writing
->> back, if we partial truncate that folio, iomap_invalidate_folio() can't
->> clear counterpart block's dirty bit as expected. Fix this by advance the
->> ifs allocation to __iomap_write_begin().
+>> When doing page mkwrite, iomap_folio_mkwrite_iter() dirty the entire
+>> folio by folio_mark_dirty() even the map length is shorter than one
+>> folio. However, on the filesystem with more than one blocks per folio,
+>> we'd better to only set counterpart block's dirty bit according to
+>> iomap_length(), so open code folio_mark_dirty() and pass the correct
+>> length.
 >>
 >> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 >> ---
->>   fs/iomap/buffered-io.c | 17 ++++++++++++-----
->>   1 file changed, 12 insertions(+), 5 deletions(-)
+>>  fs/iomap/buffered-io.c | 5 ++++-
+>>  1 file changed, 4 insertions(+), 1 deletion(-)
 >>
 >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
->> index 763deabe8331..79031b7517e5 100644
+>> index 79031b7517e5..ac762de9a27f 100644
 >> --- a/fs/iomap/buffered-io.c
 >> +++ b/fs/iomap/buffered-io.c
->> @@ -699,6 +699,12 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->>       size_t from = offset_in_folio(folio, pos), to = from + len;
->>       size_t poff, plen;
->>   +    if (nr_blocks > 1) {
->> +        ifs = ifs_alloc(iter->inode, folio, iter->flags);
->> +        if ((iter->flags & IOMAP_NOWAIT) && !ifs)
->> +            return -EAGAIN;
->> +    }
+>> @@ -1492,7 +1492,10 @@ static loff_t iomap_folio_mkwrite_iter(struct iomap_iter *iter,
+>>  		block_commit_write(&folio->page, 0, length);
+>>  	} else {
+>>  		WARN_ON_ONCE(!folio_test_uptodate(folio));
+>> -		folio_mark_dirty(folio);
 >> +
->>       /*
->>        * If the write or zeroing completely overlaps the current folio, then
->>        * entire folio will be dirtied so there is no need for
+>> +		ifs_alloc(iter->inode, folio, 0);
+>> +		iomap_set_range_dirty(folio, 0, length);
+>> +		filemap_dirty_folio(iter->inode->i_mapping, folio);
 > 
-> The comments upper need change too.
+> Is it correct to be doing a lot more work by changing folio_mark_dirty
+> to filemap_dirty_folio?  Now pagefaults call __mark_inode_dirty which
+> they did not before.  Also, the folio itself must be marked dirty if any
+> of the ifs bitmap is marked dirty, so I don't understand the change
+> here.
+> 
 
-Will update as well, thanks for pointing this out.
+This change is just open code iomap_dirty_folio() and correct the length
+that passing to iomap_set_range_dirty().
+
+bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
+{
+	struct inode *inode = mapping->host;
+	size_t len = folio_size(folio);
+...
+	ifs_alloc(inode, folio, 0);
+	iomap_set_range_dirty(folio, 0, len);
+	return filemap_dirty_folio(mapping, folio);
+}
+
+Before this change, the code also call filemap_dirty_folio() (though
+folio_mark_dirty()->iomap_dirty_folio()->filemap_dirty_folio()), so it call
+__mark_inode_dirty() too. After this change, filemap_dirty_folio()->
+folio_test_set_dirty() will mark the folio dirty. Hence there is no
+difference between the two points you mentioned. Am I missing something?
 
 Thanks,
 Yi.
 
 > 
-> 
->> @@ -710,10 +716,6 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->>           pos + len >= folio_pos(folio) + folio_size(folio))
->>           return 0;
->>   -    ifs = ifs_alloc(iter->inode, folio, iter->flags);
->> -    if ((iter->flags & IOMAP_NOWAIT) && !ifs && nr_blocks > 1)
->> -        return -EAGAIN;
->> -
->>       if (folio_test_uptodate(folio))
->>           return 0;
->>   @@ -1928,7 +1930,12 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->>       WARN_ON_ONCE(end_pos <= pos);
->>         if (i_blocks_per_folio(inode, folio) > 1) {
->> -        if (!ifs) {
->> +        /*
->> +         * This should not happen since we always allocate ifs in
->> +         * iomap_folio_mkwrite_iter() and there is more than one
->> +         * blocks per folio in __iomap_write_begin().
->> +         */
->> +        if (WARN_ON_ONCE(!ifs)) {
->>               ifs = ifs_alloc(inode, folio, 0);
->>               iomap_set_range_dirty(folio, 0, end_pos - pos);
->>           }
+>>  	}
+>>  
+>>  	return length;
+>> -- 
+>> 2.39.2
+>>
+>>
 
