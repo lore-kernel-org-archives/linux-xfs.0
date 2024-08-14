@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992E839879;
-	Wed, 14 Aug 2024 05:12:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6D0E39879
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 05:12:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723612349; cv=none; b=qbqDacP97gyHj5IYBULBXqNyXhLQFIOfLXQ9YDsL9ZANTXpZ4s6s1RcG5HtTmdQ+L0A/89LzOfqa0/7XyLyRmfMU0yLr2VH8mhCyiZLol5wpnwID4nDUgIop/Y7oLesyuEa/3JOnVu6JkAtm/ivcSqcWcmY1NcuKooBepAEAO+Y=
+	t=1723612368; cv=none; b=ZOiLvMEX44Y1gynerNDGtVMYpczbnW/U66eEKPSqfkXJEHkXgzaSZIq+XyxBmaxDfJTec7jQOl+cSsLC77gcAznjBUYdyn9vL6D6rrTkC5y1kD+AJuHwWhDFV6qARbmQsBrKv3gvW3wp4/K9LjWrO/7X/yQZfOlstO4RWf5P+MI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723612349; c=relaxed/simple;
-	bh=Inla43+pi/44Nhb5T/nwC5IJ9GX/L5QYMTS/FVfyoPI=;
+	s=arc-20240116; t=1723612368; c=relaxed/simple;
+	bh=FO36I3pFNTcxClIWMWi+FcgUpR/FD/NjaYkECGr2Roc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tN9s93HyCR6HGjiJ2+SYCIaXiCQZ/Nyt1I8Mk7Hq9CoNwBVWaVOym9/aPP1gxLGToEXp9dCWaxQNmYWGw1x21a5aasV9JnBTQGDwQ4uhXHtqtEVPeSWGkooT2aT6AqTzKdvgtGTtdsE3W/024/87jxKpD6b3JwrficmbE0ffMNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SA/QQerg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rXHwmJOcOU4V8Lq74qiFe2m3Nh0+LFmh9/yPJ7d8B9eZpU0OetUBhM9MaJuzWqpcqPlI3uNKLZHN1OcSAAAqvcFTs8Zis06ViyfKw/G4aQOWV5ByaqHF/wex2C+byEGU2wB1ys2+ur4vxOsPQdUdvBjILtUYpHcMMs9AJFipHOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iCcMDFWu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SA/QQerg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E22E1C32786;
-	Wed, 14 Aug 2024 05:12:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iCcMDFWu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B9FC32786;
+	Wed, 14 Aug 2024 05:12:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723612348;
-	bh=Inla43+pi/44Nhb5T/nwC5IJ9GX/L5QYMTS/FVfyoPI=;
+	s=k20201202; t=1723612368;
+	bh=FO36I3pFNTcxClIWMWi+FcgUpR/FD/NjaYkECGr2Roc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SA/QQerg71Ju3qDAkz68EBDJuwl2Kh4Z3rHAfPURo1md94eJK/8fgg9XuJLI12o75
-	 5xq49Lr7CfZwlDwbyklvBc/XOPPR54fz3mFjiTT/DGSBGk4ErLpyL2MHYtNqMx9vh/
-	 /uKCRHSHY+oB65aD6pQgfSsgnrpwrH3Ft0vwAg7dWBgA79VPB7VmOQjGD25NMH3+Oc
-	 76dwKPIuZK/mLPWZZmdXNEWXMqd7IexZSOc39iT3LtyIALnVt3VbZw+iHAtukjTUxG
-	 XX4+p1ibBVt2maQpg9r6SP5vN9FkTi7ftNkSsjmIQUjCV/Q0Wtay3aReNConnlVq+b
-	 p3DQ6HqYZRCCQ==
-Date: Tue, 13 Aug 2024 22:12:27 -0700
+	b=iCcMDFWumWTt9lLvI1dHQBN2h18hrm2IfUlvcuiNHssmdJkflA1nf/EmxqeAdGvOJ
+	 cGD5J174Oej7DlfipfWUM53TmoveNfEquqHJum+cJmRnT7B2pOUOb344HGAwrd9wAO
+	 PZwSPH2/B/V6RlIuDTQA6LW74lgInbrekxRARnmUMyhFeRAdAm8FOyv/eamMZmWoOG
+	 9D37fGwekj3XiSvlAEUe9j0l4cg+LyN7FgkDQfk4y+N8cvJ9wGfhl9EPR53K2v4Ghl
+	 ThZSm8hoaGwTQr2S3JObS4/dIchc5dkQ64DpPQYJ7KMPPBzUaDyuEaeZNBGvsM96gi
+	 9AnQ4cmiG1Iaw==
+Date: Tue, 13 Aug 2024 22:12:47 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] add a new min_dio_alignment helper
-Message-ID: <20240814051227.GC865349@frogsfrogsfrogs>
-References: <20240814045232.21189-1-hch@lst.de>
- <20240814045232.21189-3-hch@lst.de>
+Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: remove a stale comment in xfs_ioc_trim
+Message-ID: <20240814051247.GD865349@frogsfrogsfrogs>
+References: <20240814042358.19297-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,126 +41,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240814045232.21189-3-hch@lst.de>
+In-Reply-To: <20240814042358.19297-1-hch@lst.de>
 
-On Wed, Aug 14, 2024 at 06:52:11AM +0200, Christoph Hellwig wrote:
-> Add a new C program to find the minimum direct I/O alignment.  This
-> uses the statx stx_dio_offset_align field if provided, then falls
-> back to the BLKSSZGET ioctl for block backed file systems and finally
-> the page size.  It is intended as a more capable replacement for the
-> _min_dio_alignment bash helper.
+On Wed, Aug 14, 2024 at 06:23:57AM +0200, Christoph Hellwig wrote:
+> There is no truncating down going on here, the code has changed multiple
+> times since the comment was added with the initial FITRIM implementation
+> and it doesn't make sense in the current context.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good now,
+Heh, whoops.
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  .gitignore              |  1 +
->  src/Makefile            |  2 +-
->  src/min_dio_alignment.c | 66 +++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 68 insertions(+), 1 deletion(-)
->  create mode 100644 src/min_dio_alignment.c
+>  fs/xfs/xfs_discard.c | 7 -------
+>  1 file changed, 7 deletions(-)
 > 
-> diff --git a/.gitignore b/.gitignore
-> index 97c7e0014..36083e9d3 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -207,6 +207,7 @@ tags
->  /src/log-writes/replay-log
->  /src/perf/*.pyc
->  /src/fiemap-fault
-> +/src/min_dio_alignment
+> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> index 6f0fc7fe1f2ba9..6516afecce0979 100644
+> --- a/fs/xfs/xfs_discard.c
+> +++ b/fs/xfs/xfs_discard.c
+> @@ -689,13 +689,6 @@ xfs_ioc_trim(
+>  	range.minlen = max_t(u64, granularity, range.minlen);
+>  	minlen = XFS_B_TO_FSB(mp, range.minlen);
 >  
->  # Symlinked files
->  /tests/generic/035.out
-> diff --git a/src/Makefile b/src/Makefile
-> index 559209be9..b3da59a0e 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -34,7 +34,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
->  	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
->  	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
-> -	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault
-> +	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment
->  
->  EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
->  	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
-> diff --git a/src/min_dio_alignment.c b/src/min_dio_alignment.c
-> new file mode 100644
-> index 000000000..131f60236
-> --- /dev/null
-> +++ b/src/min_dio_alignment.c
-> @@ -0,0 +1,66 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2024 Christoph Hellwig
-> + */
-> +#include <fcntl.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <unistd.h>
-> +#include <sys/mount.h>
-> +#include <sys/ioctl.h>
-> +#include <sys/stat.h>
-> +#include "statx.h"
-> +
-> +static int min_dio_alignment(const char *mntpnt, const char *devname)
-> +{
-> +	struct statx stx = { };
-> +	struct stat st;
-> +	int fd;
-> +
-> +	/*
-> +	 * If the file system supports STATX_DIOALIGN, use the dio_offset_align
-> +	 * member, as that reports exactly the information that we are asking
-> +	 * for.
-> +	 *
-> +	 * STATX_DIOALIGN is only reported on regular files, so use O_TMPFILE
-> +	 * to create one without leaving a trace.
-> +	 */
-> +	fd = open(mntpnt, O_TMPFILE | O_RDWR | O_EXCL, 0600);
-> +	if (fd >= 0 &&
-> +	    xfstests_statx(fd, "", AT_EMPTY_PATH, STATX_DIOALIGN, &stx) == 0 &&
-> +	    (stx.stx_mask & STATX_DIOALIGN))
-> +		return stx.stx_dio_offset_align;
-> +
-> +	/*
-> +	 * If we are on a block device and no explicit aligned is reported, use
-> +	 * the logical block size as a guestimate.
-> +	 */
-> +	if (stat(devname, &st) == 0 && S_ISBLK(st.st_mode)) {
-> +		int dev_fd = open(devname, O_RDONLY);
-> +		int logical_block_size;
-> +
-> +		if (dev_fd > 0 &&
-> +		    fstat(dev_fd, &st) == 0 &&
-> +		    S_ISBLK(st.st_mode) &&
-> +		    ioctl(dev_fd, BLKSSZGET, &logical_block_size)) {
-> +			return logical_block_size;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * No support for STATX_DIOALIGN and not a block device:
-> +	 * default to PAGE_SIZE.
-> +	 */
-> +	return getpagesize();
-> +}
-> +
-> +int main(int argc, char **argv)
-> +{
-> +	if (argc != 3) {
-> +		fprintf(stderr, "usage: %s mountpoint devicename\n", argv[0]);
-> +		exit(1);
-> +	}
-> +
-> +	printf("%d\n", min_dio_alignment(argv[1], argv[2]));
-> +	exit(0);
-> +}
+> -	/*
+> -	 * Truncating down the len isn't actually quite correct, but using
+> -	 * BBTOB would mean we trivially get overflows for values
+> -	 * of ULLONG_MAX or slightly lower.  And ULLONG_MAX is the default
+> -	 * used by the fstrim application.  In the end it really doesn't
+> -	 * matter as trimming blocks is an advisory interface.
+> -	 */
+>  	max_blocks = mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks;
+>  	if (range.start >= XFS_FSB_TO_B(mp, max_blocks) ||
+>  	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
 > -- 
 > 2.43.0
 > 
