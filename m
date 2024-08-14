@@ -1,121 +1,78 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AD353BB48;
-	Wed, 14 Aug 2024 03:57:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75F0048CCD
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 04:24:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723607833; cv=none; b=o6cQ+/VnC8nRM5kDS4h/Jwvil5m3rIUSJ2z4LE8FzmkjMPNBlXH227tZ+Vn4j72AS+x+Wtf8kKk/fgjsxn8C7lYe1VD4NeulRZZCbnWTSlu619O0EBiTCIGVVcTQaKp60s3l+bkxfww3bZB+baKDrohNZih06mww6rThvH+RHD4=
+	t=1723609445; cv=none; b=mvEhHvICLqrhoi4i9jBg4xj6riFKNO4DucOP+P93LQJmxH17oUKNEHcyoDmubnD1YERnlNdRnpL6rfMon5RcIYAFtHVGr+AleR1i4qf7phYBscGx29CeO1ozH3ZSOj8PxoCxWamU51a2La/n3MCr6xSL5i6plpqeefs7RHlD6TY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723607833; c=relaxed/simple;
-	bh=JYZNJKXJCiVPWZkkBUJ1XzTfQ4lfrWXGF9nXpiX3Bvg=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=QtXMR5OfgYzlmKQst6MTxDknMvuqhKtnYuGt/qS0S5isthP2VffUZJ0fv+Ut0akpc0LG8e7OVmmX8mQpHOji1V87B6GEuV5bsKQ3jprqH1aJ0ZqfRLD6mPPT64cQLpu2BqlOiNyIVJe/4lYNGYvYS/Y7qFG3owyxlcArPB5xwHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WkDw82KpYz4f3jjx;
-	Wed, 14 Aug 2024 11:56:56 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A04661A0568;
-	Wed, 14 Aug 2024 11:57:05 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgBXzIIPK7xmIyWOBg--.9713S3;
-	Wed, 14 Aug 2024 11:57:05 +0800 (CST)
-Subject: Re: [PATCH v2 0/6] iomap: some minor non-critical fixes and
- improvements when block size < folio size
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
- brauner@kernel.org, jack@suse.cz, willy@infradead.org, yi.zhang@huawei.com,
- chengzhihao1@huawei.com, yukuai3@huawei.com
-References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
- <ZrwNG9ftNaV4AJDd@dread.disaster.area>
- <feead66e-5b83-7e54-1164-c7c61e78e7be@huaweicloud.com>
- <Zrwap10baOW8XeIv@dread.disaster.area>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <a08a9491-61d7-b300-55ba-b016dd5aad5a@huaweicloud.com>
-Date: Wed, 14 Aug 2024 11:57:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1723609445; c=relaxed/simple;
+	bh=KoajIGlO0p2fL/+S/+N8KjBwVXITZBRootPWi8npg9Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e608B5iKCgbzJHyHwjAW2HZxHpL+vr004RgyCpVzilWG1tJbwajMbf1CNT9tWEhoVwTwnt3yUAjHKvjaEf6ov8VOme1qMYTShNjfPuxtW6qj598CdHmLkLDzexbR5Web6PP2b7EBFKbleh8yyXy7EQ8LCvEkUxuEKRuZWx27bQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PIQSJi9R; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PIQSJi9R"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=HOSPjef32AO02nHMrhO4fpwsgn14dOnglB3T4zYDbJ8=; b=PIQSJi9RLnC+I/oRlmsFcrW5kZ
+	oPlEsdKrYtgXooyFZhh1bdHI0q2Tqsk2f8dXajFyHzvsn1im3zHxA9Vrjpj3wGy8gJCM+Cf8tk4sT
+	PUz1gC0SvHK1s+Rue0XQVCIyFyVgr1as1ukbOBLHNL7bm3aOOLd22sVvuBtVL1022aFApfShI06pz
+	3e/U8Cw8Q4WbYQyZgzR6PSkzj6gQEULnmr2MV+OUftAS2d0A6THiJrlN7MoG7BoU+nd2bcQt0/Su8
+	ky2cd3wlCqafjnhBAJsXX8zK8bfdyyC0aK4xeggoOovySJ5iwUizQ1hzhV7zSXLSl0eU9iZgz8zwg
+	nykXiwuA==;
+Received: from 2a02-8389-2341-5b80-fd16-64b9-63e2-2d30.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:fd16:64b9:63e2:2d30] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1se5YI-00000005gi3-1I46;
+	Wed, 14 Aug 2024 04:24:02 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: chandan.babu@oracle.com
+Cc: djwong@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH 1/2] xfs: remove a stale comment in xfs_ioc_trim
+Date: Wed, 14 Aug 2024 06:23:57 +0200
+Message-ID: <20240814042358.19297-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <Zrwap10baOW8XeIv@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgBXzIIPK7xmIyWOBg--.9713S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7urW7Gw17WF13Jry8XF1xAFb_yoW8CF15pF
-	yagF90krn5Kr4fXwn2qr40qr1vyw15GayrGFyrt34j9rs8Zr17JF4xKFyrCrZ2qwn7Xr4j
-	vrWrG34xCF15Za7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Ib4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
-	e2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4I
-	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
-	WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
-	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
-	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
-	IYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On 2024/8/14 10:47, Dave Chinner wrote:
-> On Wed, Aug 14, 2024 at 10:14:01AM +0800, Zhang Yi wrote:
->> On 2024/8/14 9:49, Dave Chinner wrote:
->>> important to know if the changes made actually provided the benefit
->>> we expected them to make....
->>>
->>> i.e. this is the sort of table of results I'd like to see provided:
->>>
->>> platform	base		v1		v2
->>> x86		524708.0	569218.0	????
->>> arm64		801965.0	871605.0	????
->>>
->>
->>  platform	base		v1		v2
->>  x86		524708.0	571315.0 	569218.0
->>  arm64	801965.0	876077.0	871605.0
-> 
-> So avoiding the lock cycle in iomap_write_begin() (in patch 5) in
-> this partial block write workload made no difference to performance
-> at all, and removing a lock cycle in iomap_write_end provided all
-> that gain?
+There is no truncating down going on here, the code has changed multiple
+times since the comment was added with the initial FITRIM implementation
+and it doesn't make sense in the current context.
 
-Yes.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_discard.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-> 
-> Is this an overwrite workload or a file extending workload? The
-> result implies that iomap_block_needs_zeroing() is returning false,
-> hence it's an overwrite workload and it's reading partial blocks
-> from disk. i.e. it is doing synchronous RMW cycles from the ramdisk
-> and so still calling the uptodate bitmap update function rather than
-> hitting the zeroing case and skipping it.
-> 
-> Hence I'm just trying to understand what the test is doing because
-> that tells me what the result should be...
-> 
-
-I forgot to mentioned that I test this on xfs with 1K block size, this
-is a simple case of block size < folio size that I can direct use
-UnixBench.
-
-This test first do buffered append write with bs=1K,count=2000 in the
-first round, and then do overwrite from the start position with the same
-parameters repetitively in 30 seconds. All the write operations are
-block size aligned, so iomap_write_begin() just continue after
-iomap_adjust_read_range(), don't call iomap_set_range_uptodate() to set
-range uptodate originally, hence there is no difference whether with or
-without patch 5 in this test case.
-
-Thanks,
-Yi.
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 6f0fc7fe1f2ba9..6516afecce0979 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -689,13 +689,6 @@ xfs_ioc_trim(
+ 	range.minlen = max_t(u64, granularity, range.minlen);
+ 	minlen = XFS_B_TO_FSB(mp, range.minlen);
+ 
+-	/*
+-	 * Truncating down the len isn't actually quite correct, but using
+-	 * BBTOB would mean we trivially get overflows for values
+-	 * of ULLONG_MAX or slightly lower.  And ULLONG_MAX is the default
+-	 * used by the fstrim application.  In the end it really doesn't
+-	 * matter as trimming blocks is an advisory interface.
+-	 */
+ 	max_blocks = mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks;
+ 	if (range.start >= XFS_FSB_TO_B(mp, max_blocks) ||
+ 	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
+-- 
+2.43.0
 
