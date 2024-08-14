@@ -1,200 +1,58 @@
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 693051B3F2F
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 14:12:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31AB61EF1D;
+	Wed, 14 Aug 2024 14:46:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723644748; cv=none; b=tt6cPKpR0DEWOqIu4AdtsTR44f1PWvr4qUTAeCU8U1muiPoZ8H7EJowPV9OtvZELRLruZWqWOYtJA6BCacaWI2m5QmJf+I13CRDjnTJZi6LXPsf/t75IVgD5P+effSu0DGIdPgjy4Y28MqtUuTZWfe1XDqH3UNy91RrOvkI2ppw=
+	t=1723646786; cv=none; b=khMOyApTADHc9xM+snmVGVU9wVZ+GxdOh7QKvzbykhmaKUmGqHuOP+30hM8QpBftAI7nGqP/JjjBD22Wcf+mVag+nFpuwI9fxKEwz8QoSIcNSg4v5SyhNB7pM5pM1K0SIqfg+ES/FXC4zmWqhdG2tI6t6DmuwtoqZLZSw34DZ40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723644748; c=relaxed/simple;
-	bh=uW+YoEhZFUiapwpn9UGKynC673wpNaED/j666kFODuM=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=T6SU4Efsyf4dCvXAF9qbJbBL3D1yZl/UJ+EUXGopjCojCM4MrcKVu9Qa9keRCblPfQqCYPp8KbJLqtkorUKc1Pge51rZbncO2mIof6XIDZ13XVliIPfqU2gn8/jFYlwfYwu7RRmZPBef6TTZoXFbdhjtVcB412Rq1f9g/QOLTcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3994393abd5so79005655ab.0
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 07:12:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723644745; x=1724249545;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=boSZ5Eh0ApCoMT7BRJdc4bM7Sxny0/h7zzQAm+3Vt6c=;
-        b=Omw22aeaDuPgiXvDURdnWjLfLMxiN/cngi4+ZE+iWe158LibLEhgzNK1z+XhjUMjJn
-         6MrmR2Cx3PxpDEeWTgBWg1imoEADiFxYLNNMvtm7GhIwBBuEIIL8IH5shntW15Pa921/
-         w6V+jx2i7WFjqEYIEG3KmO3fZjAkvX/DuYpyGfL+Xm9IwyE+uGcv+y15PIhUG6KV7qAl
-         hdqJzIDMpbO/S3tUPofiMQzZ5bHGfD6+8rrtM4Pw6hDlTtEdwGIuMKtlnZb28xJvRE/k
-         aMNgEWkyWZUZ6qeISn/a1s0CNkLx9SWTcNp2Qn/LWmGLNLy1fLmKNMMVPFAV2XwOWTpB
-         CTxg==
-X-Forwarded-Encrypted: i=1; AJvYcCX901XutCjgFAYHhRy3wC/1rddzXdqWZfayV5fLUhuELbYYjf0yMdL6mdDoP9B+aU3mUqDveo+bMnEqyoeRHp8+t8zNECV+54PW
-X-Gm-Message-State: AOJu0YyocRzkH/vAtVkZK6sHHNtMuB+fe8xeAy6VWG1UwMYY9EWRBq+p
-	3aH2tRqNFPy533y8irQ1YSqtkzRdgkOkMqgEYGBCkN6hQMQnToKAcTVxFVz5yrGn2HJBo6r1WPU
-	Ul06r40jK9V6LxmMnRfV2nJQIaShcaovYkSXtgwNsrXnjZ0D+8/R+fzw=
-X-Google-Smtp-Source: AGHT+IELeklnhNoHXCFg6Uiceu3dfzjxrrOfGVjgdTVPB/RdUqPx41CymyxEOG63cw+z+/4atDuBo20/2E7NuwFfk9t9t6XI/b3k
+	s=arc-20240116; t=1723646786; c=relaxed/simple;
+	bh=aekBnxAOUFjKnS5qZoBh7M6hqiZXVA2N3rrRXQzWOKI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HboVeJKLyMxCXRyUFFxc1qE0QH2E7aT08HafDGjwW3p0MBbJrw/Kqe3mcC5V0hmE04NxjOOPLZQPv6PXZLWxl+uoWu6U8at1aCs6uPTzcEPsyvU7D/bNAapDJxLHMwhoogRdWGSolK3wyJTpLeuyAXh8C2jAfaqvys3wRLDTdO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LDX0TjBB; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LDX0TjBB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 818CDC116B1;
+	Wed, 14 Aug 2024 14:46:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723646786;
+	bh=aekBnxAOUFjKnS5qZoBh7M6hqiZXVA2N3rrRXQzWOKI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LDX0TjBBxYeATLANwPSRZCtru+eWvLik4svydIREbMswGSP0M3LU2aU7NZA+VhBWA
+	 UmG5GZ2rfTCXnA3bztn6wAryKIYvL1IJpfX0TP3PDh5DZhKnVoWOjV68oAJ298+Thi
+	 3QexoQhYcHAsyUWGwq2S/G7+Q9TTRg1C97WkrG3yjn1z168o2i+3lkl6MIfasZ/hL2
+	 42AY1rkFi0jdEazCPMOqQo23piFmyZQsT7kMdgXTlgBFu4Kdet997alinMP+xNjoQt
+	 ZhJmdjMw3RoZ9ebBypGow8G8nsDnwXaaNPgwfXVADjihy3GqUm5cA72Zk0owpqY81/
+	 tUIby0ySibKBA==
+Date: Wed, 14 Aug 2024 08:46:23 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de,
+	axboe@kernel.dk, martin.petersen@oracle.com
+Subject: Re: [bug report] raid0 array mkfs.xfs hang
+Message-ID: <ZrzDP5c7bRyh7UnE@kbusch-mbp>
+References: <8292cfd7-eb9c-4ca7-8eec-321b3738857b@oracle.com>
+ <4d31268f-310b-4220-88a2-e191c3932a82@oracle.com>
+ <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6638:34ab:b0:4c2:8a0c:380d with SMTP id
- 8926c6da1cb9f-4cab09ccfe3mr154285173.3.1723644745484; Wed, 14 Aug 2024
- 07:12:25 -0700 (PDT)
-Date: Wed, 14 Aug 2024 07:12:25 -0700
-In-Reply-To: <000000000000e33add0616358204@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000c61f9a061fa550db@google.com>
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_icwalk_ag (2)
-From: syzbot <syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com>
 
-syzbot has found a reproducer for the following issue on:
+On Wed, Aug 14, 2024 at 03:00:06PM +0100, John Garry wrote:
+> 
+> The value max write zeroes value is changing in raid0_map_submit_bio() ->
+> mddev_check_write_zeroes()
 
-HEAD commit:    6b0f8db921ab Merge tag 'execve-v6.11-rc4' of git://git.ker..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=149dea91980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=801d05d1ea4be1b8
-dashboard link: https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10aa45cb980000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17b59205980000
-
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-6b0f8db9.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/b407dbb66544/vmlinux-6b0f8db9.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/5c1cf0f1b692/bzImage-6b0f8db9.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/ddaad63422d8/mount_0.gz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com
-
-======================================================
-WARNING: possible circular locking dependency detected
-6.11.0-rc3-syzkaller-00013-g6b0f8db921ab #0 Not tainted
-------------------------------------------------------
-kswapd0/80 is trying to acquire lock:
-ffff88803ba5a7d8 (&xfs_nondir_ilock_class#3){++++}-{3:3}, at: xfs_reclaim_inode fs/xfs/xfs_icache.c:944 [inline]
-ffff88803ba5a7d8 (&xfs_nondir_ilock_class#3){++++}-{3:3}, at: xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1630 [inline]
-ffff88803ba5a7d8 (&xfs_nondir_ilock_class#3){++++}-{3:3}, at: xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1712
-
-but task is already holding lock:
-ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6841 [inline]
-ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbb4/0x35a0 mm/vmscan.c:7223
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (fs_reclaim){+.+.}-{0:0}:
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
-       __fs_reclaim_acquire mm/page_alloc.c:3823 [inline]
-       fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3837
-       might_alloc include/linux/sched/mm.h:334 [inline]
-       slab_pre_alloc_hook mm/slub.c:3939 [inline]
-       slab_alloc_node mm/slub.c:4017 [inline]
-       __do_kmalloc_node mm/slub.c:4157 [inline]
-       __kmalloc_noprof+0xa9/0x400 mm/slub.c:4170
-       kmalloc_noprof include/linux/slab.h:685 [inline]
-       xfs_attr_shortform_list+0x753/0x1900 fs/xfs/xfs_attr_list.c:117
-       xfs_attr_list+0x1d0/0x270 fs/xfs/xfs_attr_list.c:595
-       xfs_vn_listxattr+0x1d2/0x2c0 fs/xfs/xfs_xattr.c:341
-       vfs_listxattr fs/xattr.c:493 [inline]
-       listxattr+0x107/0x290 fs/xattr.c:841
-       path_listxattr fs/xattr.c:865 [inline]
-       __do_sys_listxattr fs/xattr.c:877 [inline]
-       __se_sys_listxattr fs/xattr.c:874 [inline]
-       __x64_sys_listxattr+0x173/0x230 fs/xattr.c:874
-       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
-       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #0 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
-       check_prev_add kernel/locking/lockdep.c:3133 [inline]
-       check_prevs_add kernel/locking/lockdep.c:3252 [inline]
-       validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
-       __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
-       down_write_nested+0xa2/0x220 kernel/locking/rwsem.c:1695
-       xfs_reclaim_inode fs/xfs/xfs_icache.c:944 [inline]
-       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1630 [inline]
-       xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1712
-       xfs_icwalk fs/xfs/xfs_icache.c:1761 [inline]
-       xfs_reclaim_inodes_nr+0x2d4/0x3e0 fs/xfs/xfs_icache.c:1010
-       super_cache_scan+0x40f/0x4b0 fs/super.c:227
-       do_shrink_slab+0x701/0x1160 mm/shrinker.c:435
-       shrink_slab+0x1090/0x14c0 mm/shrinker.c:662
-       shrink_one+0x43b/0x850 mm/vmscan.c:4815
-       shrink_many mm/vmscan.c:4876 [inline]
-       lru_gen_shrink_node mm/vmscan.c:4954 [inline]
-       shrink_node+0x3799/0x3de0 mm/vmscan.c:5934
-       kswapd_shrink_node mm/vmscan.c:6762 [inline]
-       balance_pgdat mm/vmscan.c:6954 [inline]
-       kswapd+0x1bcd/0x35a0 mm/vmscan.c:7223
-       kthread+0x2f0/0x390 kernel/kthread.c:389
-       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
-       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(fs_reclaim);
-                               lock(&xfs_nondir_ilock_class#3);
-                               lock(fs_reclaim);
-  lock(&xfs_nondir_ilock_class#3);
-
- *** DEADLOCK ***
-
-2 locks held by kswapd0/80:
- #0: ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6841 [inline]
- #0: ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbb4/0x35a0 mm/vmscan.c:7223
- #1: ffff88803a4000e0 (&type->s_umount_key#44){.+.+}-{3:3}, at: super_trylock_shared fs/super.c:562 [inline]
- #1: ffff88803a4000e0 (&type->s_umount_key#44){.+.+}-{3:3}, at: super_cache_scan+0x94/0x4b0 fs/super.c:196
-
-stack backtrace:
-CPU: 0 UID: 0 PID: 80 Comm: kswapd0 Not tainted 6.11.0-rc3-syzkaller-00013-g6b0f8db921ab #0
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:93 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:119
- check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2186
- check_prev_add kernel/locking/lockdep.c:3133 [inline]
- check_prevs_add kernel/locking/lockdep.c:3252 [inline]
- validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
- __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
- lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
- down_write_nested+0xa2/0x220 kernel/locking/rwsem.c:1695
- xfs_reclaim_inode fs/xfs/xfs_icache.c:944 [inline]
- xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1630 [inline]
- xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1712
- xfs_icwalk fs/xfs/xfs_icache.c:1761 [inline]
- xfs_reclaim_inodes_nr+0x2d4/0x3e0 fs/xfs/xfs_icache.c:1010
- super_cache_scan+0x40f/0x4b0 fs/super.c:227
- do_shrink_slab+0x701/0x1160 mm/shrinker.c:435
- shrink_slab+0x1090/0x14c0 mm/shrinker.c:662
- shrink_one+0x43b/0x850 mm/vmscan.c:4815
- shrink_many mm/vmscan.c:4876 [inline]
- lru_gen_shrink_node mm/vmscan.c:4954 [inline]
- shrink_node+0x3799/0x3de0 mm/vmscan.c:5934
- kswapd_shrink_node mm/vmscan.c:6762 [inline]
- balance_pgdat mm/vmscan.c:6954 [inline]
- kswapd+0x1bcd/0x35a0 mm/vmscan.c:7223
- kthread+0x2f0/0x390 kernel/kthread.c:389
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
-
-
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+Your change looks fine, though it sounds odd that md raid is changing
+queue_limit values outside the limits_lock. The stacking limits should
+have set the md device to 0 if one of the member drives doesn't support
+write_zeroes, right?
