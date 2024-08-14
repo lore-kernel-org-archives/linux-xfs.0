@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8F6C365;
-	Wed, 14 Aug 2024 04:52:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7207B365;
+	Wed, 14 Aug 2024 04:52:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723611159; cv=none; b=FchudBjXI5iVGTkh+AlzVpEiZcW7vpysfoX1RhyIz1zSkrjTB5KfYjTq2xPvVvIhtEJiI9se3NaYGuClHhvmiM9bn/OZYUYhjHKzVN5cHtXfXFdnlk2moMn3rBTHqFJSL5JyF4AcdtKmjvE6o7fp4sFruwkAI7aMsmDHjwdPigU=
+	t=1723611162; cv=none; b=W+R1RhD9CYZ9XSVzOfCqWxnvsd2v2KwKA1BZqHFlLd4Yaub85FiIHyYLs3QZjuuudwUlp7R+Q7/U3IOiZHk15yuWD1dzF61bl0Apq5cP6rQ1Re7bUGI28ajOS+TLDI9BbdR1U8dVkXFl0Ts0XDBFlXQfJ1PFkI1UKO37sbux6TU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723611159; c=relaxed/simple;
-	bh=TyshqFx55BN2h/ekFelHp5JkOa2ChjyXWhHLZJSrQG0=;
+	s=arc-20240116; t=1723611162; c=relaxed/simple;
+	bh=FwkxUtA85ZvpMvh2lhqmJu3bVm/8V7EiKneeXMlzM4w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=amW2grvV/bgkAmzhZgVdfH5ALDFz4tsu4V4oDHT4IPRWogm2STIbb4UyZGbjf0WNFJyMCSkUyLv2jruFlsKKMMn0VTQXRSoZ3bXfIu1tfW0xoSlK28wnavi6dkOeQvuz0MERHD4TjXucfRKjFidjU+z/34UOsTxKzIYH+bnmszU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Ka9TfRWQ; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=DVz+D2+Eay0HQ+efNnm/jj6tPIrjhn662Hwb+sZ1Fq4CdvRaFDMUTXkZbNJkL/D+S1m5pzJtDZJKVeR42CdeDm4mwObQn11h1AWZ3r4dMX8NpyFX2zb6i/5QBuN+k3yVvKOXzY4mPpXHnXs2Ke2FTaMdmS9YTcMxlnD8dzfxvfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=P9i074bz; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ka9TfRWQ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="P9i074bz"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=nz/icJZIWEQmfZWtHl4b92sQ8biRSWlO73Zg7iEhTr4=; b=Ka9TfRWQsHJ8KxdlOdcwp1DpE1
-	kFEDccLUKaHkkKeZVrf+W0nTWwFw4D+ktws9eXhW8D0syn+FjA4VeM0Mu+2Jiqxm62q7ZbMBwCApB
-	CzvshORPmPEp1NwIMgX+N5aOhCdq9gMerAgtQWeoEdhlkJ/K3ZnERDx8XYBTtbv/AVq1Dk/GXpGTu
-	0Qr1A1mRhJ7dltxLJHldMVTPcPs36SOvQPb49AkodwkhiDW9fgKsqw3RmA3YtaBVHKwG7VJsb7XF8
-	jDkEG5uIppBZboMK5tNVLp881rbdSrwc4P936hql4h4hlXOAoyv9EfL+uY09yXPpR+ALXQSXaRvl6
-	IGrd0rFQ==;
+	bh=DujxcGjdRTBQfRrN5G4VMYkrTO1OM4IYiQKSOFoAUVU=; b=P9i074bzvGHgazegXUeTNWbMrp
+	g52ghoYubviqTChk1j6X/OVf9gk7S0GFCsOpvrtWoPV38RzDr4mBwBwRw2vf7oDX0zqFcDQP6W7PZ
+	wETNQO+WvVJmXqxKyeJV/gmMbYco+5ZDL5djE/qK+fYvJjJt4zgU1I3scHHdyoVVGIS6cZ3e3ona6
+	lJ/bDjdP5ZRdJzWzr1ZPl+9HHCmRDhstxAwpKBwVU6RKyI+7tdAjuuiTQ2/5mX9u3cWea+zVEhqGH
+	jlGBL8uk/3S2E+S6tyZ9EjLTSL6zKYWL8+svKxWFMk27FZwS5z1sMCq0NerSXycOmx3idHdKMCdIQ
+	FckwGe3A==;
 Received: from 2a02-8389-2341-5b80-fd16-64b9-63e2-2d30.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:fd16:64b9:63e2:2d30] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1se5zw-00000005jKq-3e8O;
-	Wed, 14 Aug 2024 04:52:37 +0000
+	id 1se5zz-00000005jLF-2GsN;
+	Wed, 14 Aug 2024 04:52:39 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/5] statx.h: update to latest kernel UAPI
-Date: Wed, 14 Aug 2024 06:52:10 +0200
-Message-ID: <20240814045232.21189-2-hch@lst.de>
+Subject: [PATCH 2/5] add a new min_dio_alignment helper
+Date: Wed, 14 Aug 2024 06:52:11 +0200
+Message-ID: <20240814045232.21189-3-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240814045232.21189-1-hch@lst.de>
 References: <20240814045232.21189-1-hch@lst.de>
@@ -50,102 +50,117 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Update the localy provided statx definition to the latest kernel UAPI,
-and use it unconditionally instead only if no kernel version is provided.
-
-This allows using more recent additions than provided in the system
-headers.
+Add a new C program to find the minimum direct I/O alignment.  This
+uses the statx stx_dio_offset_align field if provided, then falls
+back to the BLKSSZGET ioctl for block backed file systems and finally
+the page size.  It is intended as a more capable replacement for the
+_min_dio_alignment bash helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- src/statx.h | 38 ++++++++++++++++++++++++++++++++------
- 1 file changed, 32 insertions(+), 6 deletions(-)
+ .gitignore              |  1 +
+ src/Makefile            |  2 +-
+ src/min_dio_alignment.c | 66 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 68 insertions(+), 1 deletion(-)
+ create mode 100644 src/min_dio_alignment.c
 
-diff --git a/src/statx.h b/src/statx.h
-index 3f239d791..bae1c86f6 100644
---- a/src/statx.h
-+++ b/src/statx.h
-@@ -5,6 +5,14 @@
- #include <sys/syscall.h>
- #include <linux/types.h>
+diff --git a/.gitignore b/.gitignore
+index 97c7e0014..36083e9d3 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -207,6 +207,7 @@ tags
+ /src/log-writes/replay-log
+ /src/perf/*.pyc
+ /src/fiemap-fault
++/src/min_dio_alignment
  
+ # Symlinked files
+ /tests/generic/035.out
+diff --git a/src/Makefile b/src/Makefile
+index 559209be9..b3da59a0e 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -34,7 +34,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
+ 	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
+ 	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
+-	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault
++	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment
+ 
+ EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
+ 	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
+diff --git a/src/min_dio_alignment.c b/src/min_dio_alignment.c
+new file mode 100644
+index 000000000..131f60236
+--- /dev/null
++++ b/src/min_dio_alignment.c
+@@ -0,0 +1,66 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Swizzle the symbol namespace so that we can provide our own version
-+ * overriding the system one that might now have all the latest fields
-+ * under the standard names even when <sys/stat.h> is included.
++ * Copyright (c) 2024 Christoph Hellwig
 + */
-+#define statx_timestamp statx_timestamp_fstests
-+#define statx statx_fstests
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <sys/mount.h>
++#include <sys/ioctl.h>
++#include <sys/stat.h>
++#include "statx.h"
 +
- #ifndef AT_STATX_SYNC_TYPE
- #define AT_STATX_SYNC_TYPE      0x6000  /* Type of synchronisation required from statx() */
- #define AT_STATX_SYNC_AS_STAT   0x0000  /* - Do whatever stat() does */
-@@ -28,8 +36,6 @@
- # endif
- #endif
- 
--#ifndef STATX_TYPE
--
- /*
-  * Timestamp structure for the timestamps in struct statx.
-  *
-@@ -102,7 +108,8 @@ struct statx {
- 	__u64	stx_ino;	/* Inode number */
- 	__u64	stx_size;	/* File size */
- 	__u64	stx_blocks;	/* Number of 512-byte blocks allocated */
--	__u64	__spare1[1];
-+	__u64	stx_attributes_mask; /* Mask to show what's supported in stx_attributes */
++static int min_dio_alignment(const char *mntpnt, const char *devname)
++{
++	struct statx stx = { };
++	struct stat st;
++	int fd;
 +
- 	/* 0x40 */
- 	struct statx_timestamp	stx_atime;	/* Last access time */
- 	struct statx_timestamp	stx_btime;	/* File creation time */
-@@ -114,7 +121,18 @@ struct statx {
- 	__u32	stx_dev_major;	/* ID of device containing file [uncond] */
- 	__u32	stx_dev_minor;
- 	/* 0x90 */
--	__u64	__spare2[14];	/* Spare space for future expansion */
-+	__u64	stx_mnt_id;
-+	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
-+	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
-+	/* 0xa0 */
-+	__u64	stx_subvol;	/* Subvolume identifier */
-+	__u32	stx_atomic_write_unit_min;	/* Min atomic write unit in bytes */
-+	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
-+	/* 0xb0 */
-+	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment count */
-+	__u32   __spare1[1];
-+	/* 0xb8 */
-+	__u64	__spare3[9];	/* Spare space for future expansion */
- 	/* 0x100 */
- };
- 
-@@ -139,6 +157,12 @@ struct statx {
- #define STATX_BLOCKS		0x00000400U	/* Want/got stx_blocks */
- #define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
- #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
-+#define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
-+#define STATX_DIOALIGN		0x00002000U	/* Want/got direct I/O alignment info */
-+#define STATX_MNT_ID_UNIQUE	0x00004000U	/* Want/got extended stx_mount_id */
-+#define STATX_SUBVOL		0x00008000U	/* Want/got stx_subvol */
-+#define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields */
++	/*
++	 * If the file system supports STATX_DIOALIGN, use the dio_offset_align
++	 * member, as that reports exactly the information that we are asking
++	 * for.
++	 *
++	 * STATX_DIOALIGN is only reported on regular files, so use O_TMPFILE
++	 * to create one without leaving a trace.
++	 */
++	fd = open(mntpnt, O_TMPFILE | O_RDWR | O_EXCL, 0600);
++	if (fd >= 0 &&
++	    xfstests_statx(fd, "", AT_EMPTY_PATH, STATX_DIOALIGN, &stx) == 0 &&
++	    (stx.stx_mask & STATX_DIOALIGN))
++		return stx.stx_dio_offset_align;
 +
- #define STATX_ALL		0x00000fffU	/* All currently supported flags */
- 
- /*
-@@ -157,9 +181,11 @@ struct statx {
- #define STATX_ATTR_APPEND		0x00000020 /* [I] File is append-only */
- #define STATX_ATTR_NODUMP		0x00000040 /* [I] File is not to be dumped */
- #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
--
- #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
--#endif /* STATX_TYPE */
-+#define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
-+#define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
-+#define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
-+#define STATX_ATTR_WRITE_ATOMIC		0x00400000 /* File supports atomic write operations */
- 
- static inline
- int xfstests_statx(int dfd, const char *filename, unsigned flags,
++	/*
++	 * If we are on a block device and no explicit aligned is reported, use
++	 * the logical block size as a guestimate.
++	 */
++	if (stat(devname, &st) == 0 && S_ISBLK(st.st_mode)) {
++		int dev_fd = open(devname, O_RDONLY);
++		int logical_block_size;
++
++		if (dev_fd > 0 &&
++		    fstat(dev_fd, &st) == 0 &&
++		    S_ISBLK(st.st_mode) &&
++		    ioctl(dev_fd, BLKSSZGET, &logical_block_size)) {
++			return logical_block_size;
++		}
++	}
++
++	/*
++	 * No support for STATX_DIOALIGN and not a block device:
++	 * default to PAGE_SIZE.
++	 */
++	return getpagesize();
++}
++
++int main(int argc, char **argv)
++{
++	if (argc != 3) {
++		fprintf(stderr, "usage: %s mountpoint devicename\n", argv[0]);
++		exit(1);
++	}
++
++	printf("%d\n", min_dio_alignment(argv[1], argv[2]));
++	exit(0);
++}
 -- 
 2.43.0
 
