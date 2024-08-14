@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58FA941A80;
-	Wed, 14 Aug 2024 05:32:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A3538385;
+	Wed, 14 Aug 2024 05:36:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723613566; cv=none; b=QxdJ7qD143i23cY+d2NTxwD4P+Xu9QqKIAX9yMwsU4Ebhp9Tm1hFEkFF+hK5VbU7R6XcSCjXQPSYHHewXXbk67bgZBIApvPWyPZyZnWTrpO8oNWwQelPN/2yAhJNovFmJyX7OMv/annSFnqGgqU7nc1tmiRE8FfmSC4IvvCEg4w=
+	t=1723613795; cv=none; b=aElkra05axZp3Vqc0QPXNdUUVDd1An2T/k4ZanV/i70f3takGBn/mwov3MD7LXVbHWVkRXDWYdAoG/g6/pIj02tueyRPHPZQafqJZdVRkxYyCysjsQpVcILu6FwKTIcIyf09zMRI1eGDnZWkd0QaqJTb9AQIdbxDn6lrQ0wjHyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723613566; c=relaxed/simple;
-	bh=1SraA/eAFP9lFYWgtA2oWrXzPNSDOFARgqj668r8GLY=;
+	s=arc-20240116; t=1723613795; c=relaxed/simple;
+	bh=/rAEJs1r0VD4fmwlanwnKSDqoQUALUIzkvQEReJ6Jvs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Fsi9nkg+8SjIscqVaYi+0o/uIS+Nr9cAIsB40Uui2EPkoogGttuM9R7P50zlMcvNDWneZ5CgP9NRJDygNgco1aaHsSa3XwXd2iB5FfbC4W2fysM4cehb0dqjhv7CDijs3WQQvGrJZ42iFQ7QnGn6Sat7gHAb70coAhC/d2GyYAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3EKiqd3A; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=JTbxTd+AQf3wnJMXINR4lltab1DeotJmCQCD6Mdl/qyledkys7Bqrk2CebpPheTfzec2rLVSeLg/dbni5iCwMR8PmD38pU8X/EKeZnUKwU0PJVippWoo1z3Usyn0ldxvYfD+dsk7+v5Jxk1APyRoy0euOy1RJMY3GgjWWU6RLWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VaShOaTf; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3EKiqd3A"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VaShOaTf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=bFdNPcly9q002YCik5SIuwJxh7NBwj43r8V17plHTYw=; b=3EKiqd3A39sOOtYWMV9ub9ZV4A
-	xsDGmn/zFTw5BJ4pUa6FT8agpRc7fjIy7lGQM6OXFwCa0TGZ7AE4YWsjUp7USqe0dJI2/g03A3z9Q
-	l2GVY7+r8HlQFjrUOLT3ErHePSG9c6QCyEq4GBxb0N/zWUzQVcxwuUvk9wU2dgKhaNh12lauNyv8P
-	AnavGNnD+LdX6x+nuFy6o9AxoeGAe70FHfhrs5XUnEYH75d6M5ZHgPvJ0znv8B5epgbO8r1Hwh0uj
-	5WshEjQGSwg/ibx8xSpod4RYVyTiUaY9EfAOJO3YLvMFHfVTqGwPP4qEMi4du0QOOamB3FYSrG0mT
-	tDiocyxA==;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=xEfWbo8r2cyR9oaWqebE1Q4YcRl+hmd5XVA7kyPWT3I=; b=VaShOaTf5lfz3eoGIoM2Zqoyk+
+	GpoKDkROSOU/YhGjjqEvAb3i4qE2dzzDu2ceLytVmzakSVv2i9pkVLMPuK2XIalOqCBdQDy7VFEXs
+	7fDLSuaillPBuDTAHHRWdB97GEq2Ft6uDWfE1GCqbCQ6nROU40R1NjA81jTgA6HPKlwRvGg2Loe7j
+	g5+xPWtIN1k1zJmiIeQLtnWgCz1cSYaMOsi2KB1N7Uq8LBFfnNAHRUIPMnArRpdRpRGmtgX/pR45N
+	kM9YhMvpuM5L5PHUW4KiVjHpFN5fbD6Mntda234wLgWeNv0I4FzjOOQ4sOVvjVhtU4k4ePmAfEgsy
+	TNYtAiEw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1se6cm-00000005ofY-3b96;
-	Wed, 14 Aug 2024 05:32:44 +0000
-Date: Tue, 13 Aug 2024 22:32:44 -0700
+	id 1se6gT-00000005p9e-2EX9;
+	Wed, 14 Aug 2024 05:36:33 +0000
+Date: Tue, 13 Aug 2024 22:36:33 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: Zhang Yi <yi.zhang@huaweicloud.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -37,35 +37,33 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	brauner@kernel.org, david@fromorbit.com, jack@suse.cz,
 	willy@infradead.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
 	yukuai3@huawei.com
-Subject: Re: [PATCH v2 3/6] iomap: advance the ifs allocation if we have more
- than one blocks per folio
-Message-ID: <ZrxBfKi_DpThYo94@infradead.org>
+Subject: Re: [PATCH v2 4/6] iomap: correct the dirty length in page mkwrite
+Message-ID: <ZrxCYbqSHbpKpZjH@infradead.org>
 References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
- <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
+ <20240812121159.3775074-5-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
+In-Reply-To: <20240812121159.3775074-5-yi.zhang@huaweicloud.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Aug 12, 2024 at 08:11:56PM +0800, Zhang Yi wrote:
+On Mon, Aug 12, 2024 at 08:11:57PM +0800, Zhang Yi wrote:
 > From: Zhang Yi <yi.zhang@huawei.com>
 > 
-> Now we allocate ifs if i_blocks_per_folio is larger than one when
-> writing back dirty folios in iomap_writepage_map(), so we don't attach
-> an ifs after buffer write to an entire folio until it starts writing
-> back, if we partial truncate that folio, iomap_invalidate_folio() can't
-> clear counterpart block's dirty bit as expected. Fix this by advance the
-> ifs allocation to __iomap_write_begin().
+> When doing page mkwrite, iomap_folio_mkwrite_iter() dirty the entire
+> folio by folio_mark_dirty() even the map length is shorter than one
+> folio. However, on the filesystem with more than one blocks per folio,
+> we'd better to only set counterpart block's dirty bit according to
+> iomap_length(), so open code folio_mark_dirty() and pass the correct
+> length.
 
-Wouldn't it make more sense to only allocate the ifѕ in
-iomap_invalidate_folio when it actually is needed?
-
-Also do you have a reproducer for this?
+What about moving the folio_mark_dirty out of the loop and directly
+into iomap_page_mkwrite so that it is exactly called once?  The
+iterator then does nothing for the !buffer_head case (but we still
+need to call it to allocate the blocks).
 
