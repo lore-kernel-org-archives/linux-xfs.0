@@ -1,80 +1,71 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8173F3D552;
-	Wed, 14 Aug 2024 05:21:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58FA941A80;
+	Wed, 14 Aug 2024 05:32:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723612877; cv=none; b=osTboWyNsjjZMZ9XqbCCAQcU/EYwaTRyC0bM3t79lNulCKjM8evBlWoQ9dWsANjcqn+tG+Vn6l0H0KBvlP8HlZ/lkXuLrQKBRzEDccawmyocWrohcyeKHiEh0lcac2ParPnRVbluMuLFnUCWiYeXEHRXzjTZLf75p1vNRI/NOM4=
+	t=1723613566; cv=none; b=QxdJ7qD143i23cY+d2NTxwD4P+Xu9QqKIAX9yMwsU4Ebhp9Tm1hFEkFF+hK5VbU7R6XcSCjXQPSYHHewXXbk67bgZBIApvPWyPZyZnWTrpO8oNWwQelPN/2yAhJNovFmJyX7OMv/annSFnqGgqU7nc1tmiRE8FfmSC4IvvCEg4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723612877; c=relaxed/simple;
-	bh=hiFgZ4lgI34I18iPdNIEumOyHlNswzdbFci1RGY0yik=;
+	s=arc-20240116; t=1723613566; c=relaxed/simple;
+	bh=1SraA/eAFP9lFYWgtA2oWrXzPNSDOFARgqj668r8GLY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t5obmzL0B5h+534x8Fz+w4Nwg6In4UCfVvk3Lj4uPRSSLLyH23fE06B+XDtJn5MOZ0kMrCCHmL3tW9EFz5zZoGRiH/KKvaKnGXluU/MGmUwcwkchP/L3FvjCeZKgwRlkCuy3GD+JOe4uAv2OmERkllQ6DpAi7dlC5XNGgRi3kCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 60A6B227A88; Wed, 14 Aug 2024 07:21:11 +0200 (CEST)
-Date: Wed, 14 Aug 2024 07:21:11 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: convert perag lookup to xarray
-Message-ID: <20240814052111.GA30979@lst.de>
-References: <20240812063143.3806677-1-hch@lst.de> <20240812063143.3806677-3-hch@lst.de> <Zrw5q0qTi9m8AT6+@dread.disaster.area>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fsi9nkg+8SjIscqVaYi+0o/uIS+Nr9cAIsB40Uui2EPkoogGttuM9R7P50zlMcvNDWneZ5CgP9NRJDygNgco1aaHsSa3XwXd2iB5FfbC4W2fysM4cehb0dqjhv7CDijs3WQQvGrJZ42iFQ7QnGn6Sat7gHAb70coAhC/d2GyYAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3EKiqd3A; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3EKiqd3A"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=bFdNPcly9q002YCik5SIuwJxh7NBwj43r8V17plHTYw=; b=3EKiqd3A39sOOtYWMV9ub9ZV4A
+	xsDGmn/zFTw5BJ4pUa6FT8agpRc7fjIy7lGQM6OXFwCa0TGZ7AE4YWsjUp7USqe0dJI2/g03A3z9Q
+	l2GVY7+r8HlQFjrUOLT3ErHePSG9c6QCyEq4GBxb0N/zWUzQVcxwuUvk9wU2dgKhaNh12lauNyv8P
+	AnavGNnD+LdX6x+nuFy6o9AxoeGAe70FHfhrs5XUnEYH75d6M5ZHgPvJ0znv8B5epgbO8r1Hwh0uj
+	5WshEjQGSwg/ibx8xSpod4RYVyTiUaY9EfAOJO3YLvMFHfVTqGwPP4qEMi4du0QOOamB3FYSrG0mT
+	tDiocyxA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1se6cm-00000005ofY-3b96;
+	Wed, 14 Aug 2024 05:32:44 +0000
+Date: Tue, 13 Aug 2024 22:32:44 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
+	brauner@kernel.org, david@fromorbit.com, jack@suse.cz,
+	willy@infradead.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+	yukuai3@huawei.com
+Subject: Re: [PATCH v2 3/6] iomap: advance the ifs allocation if we have more
+ than one blocks per folio
+Message-ID: <ZrxBfKi_DpThYo94@infradead.org>
+References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
+ <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <Zrw5q0qTi9m8AT6+@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Aug 14, 2024 at 02:59:23PM +1000, Dave Chinner wrote:
-> Can we split the implementation change and the API change into two
-> separate patches, please?
+On Mon, Aug 12, 2024 at 08:11:56PM +0800, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
+> 
+> Now we allocate ifs if i_blocks_per_folio is larger than one when
+> writing back dirty folios in iomap_writepage_map(), so we don't attach
+> an ifs after buffer write to an entire folio until it starts writing
+> back, if we partial truncate that folio, iomap_invalidate_folio() can't
+> clear counterpart block's dirty bit as expected. Fix this by advance the
+> ifs allocation to __iomap_write_begin().
 
-I don't think that is entirely possible, but things can be split
-a bit more.  I've actually done some of that including more API
-changes in the meantime, so this might only need small adjustments
-anyway.
+Wouldn't it make more sense to only allocate the ifѕ in
+iomap_invalidate_folio when it actually is needed?
 
-> So what's the overall plan for avoiding this sort of mess
-> everywhere? Can we re-implement the existing iterators more
-> efficiently with xarray iterators, or does xarray-based iteration
-> require going back to the old way of open coding all iterations?
-
-We can reimplement them, but they won't be more efficient.  That
-being said using the xas iterator for places that don't need to
-unlock works really nicely, and I've added a little syntactic sugar
-to make this even nicer as in:
-
-	rcu_read_lock();
-	for_each_perag_marked(mp, pag, XFS_PERAG_RECLAIM_MARK) {
-		/* do stuff */
-	}
-	rcu_read_unlock();
-
-which is about as good as it gets in terms of efficiency and readability.
-
-For the ones that need to sleep I'm now doing:
-
-	struct xfs_perag        *pag = NULL;
-
-	while ((pag = xfs_iwalk_next_ag(mp, pag, XFS_PERAG_BLOCKGC_MARK))) {
-		/* do stuff */
-	}
-
-which is also nice, and except for the _MARK stuff due to the sparse
-__bitwise annotations can be one in a prep patch.
+Also do you have a reproducer for this?
 
