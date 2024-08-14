@@ -1,42 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75F0048CCD
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 04:24:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 100D048CCD
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 04:24:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723609445; cv=none; b=mvEhHvICLqrhoi4i9jBg4xj6riFKNO4DucOP+P93LQJmxH17oUKNEHcyoDmubnD1YERnlNdRnpL6rfMon5RcIYAFtHVGr+AleR1i4qf7phYBscGx29CeO1ozH3ZSOj8PxoCxWamU51a2La/n3MCr6xSL5i6plpqeefs7RHlD6TY=
+	t=1723609447; cv=none; b=VybRVVTqNUKfaHlgFT6n1YFwiFDn78KyOLGQZohMb6YeeX51KvGYiE35pqCwYAIudze1Xren+pgbJ5K5FFcJn6pK7WD831ChF5oh5aLG5WAB+GT3yFoymPtExCqkkw2v602MdiyxYrznWkL8J2JzGkN0/cQMkkM3iyVs02b5wjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723609445; c=relaxed/simple;
-	bh=KoajIGlO0p2fL/+S/+N8KjBwVXITZBRootPWi8npg9Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e608B5iKCgbzJHyHwjAW2HZxHpL+vr004RgyCpVzilWG1tJbwajMbf1CNT9tWEhoVwTwnt3yUAjHKvjaEf6ov8VOme1qMYTShNjfPuxtW6qj598CdHmLkLDzexbR5Web6PP2b7EBFKbleh8yyXy7EQ8LCvEkUxuEKRuZWx27bQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PIQSJi9R; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1723609447; c=relaxed/simple;
+	bh=XmPwM97/+Qfx1SB5ZGieBBZaOb/KYb2UuU6kHTqrKjY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=E29/htj4oYU+RIWFVobXZg2S0h30y7pvFPmWW7aSjLlHX+VY62YrEayFcRRNrZhOG2pzK3n5JclWef93EBIOx8PjggGaoqvn44GnTKTZTlW8yjQ0R6UOqXPGbeBPSYhii8xqEumjWVbpDFq0c+Mq0tLpnTV0e6EndWyPtVOk0Vg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ES3QXski; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PIQSJi9R"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ES3QXski"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=HOSPjef32AO02nHMrhO4fpwsgn14dOnglB3T4zYDbJ8=; b=PIQSJi9RLnC+I/oRlmsFcrW5kZ
-	oPlEsdKrYtgXooyFZhh1bdHI0q2Tqsk2f8dXajFyHzvsn1im3zHxA9Vrjpj3wGy8gJCM+Cf8tk4sT
-	PUz1gC0SvHK1s+Rue0XQVCIyFyVgr1as1ukbOBLHNL7bm3aOOLd22sVvuBtVL1022aFApfShI06pz
-	3e/U8Cw8Q4WbYQyZgzR6PSkzj6gQEULnmr2MV+OUftAS2d0A6THiJrlN7MoG7BoU+nd2bcQt0/Su8
-	ky2cd3wlCqafjnhBAJsXX8zK8bfdyyC0aK4xeggoOovySJ5iwUizQ1hzhV7zSXLSl0eU9iZgz8zwg
-	nykXiwuA==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=6O0gAu4hk2Epn1I6F9qYf/RPUp+ibB/of9uboSp47PE=; b=ES3QXskiCi0oxsKZqCTy+ggL52
+	p0v0UvCB7+iyqyRdo4iWl4Fg5r6ISplvEjZbO+rsb60KubYWzZmSlk59hqZrzUP+qao2Ft+AodAUk
+	uo5TS3JR9uC73Z1x9Ssa5atW5XRusLEA8LcG5dhvgNVmBSmdXZuoq7lpczE1PV7UzSNTd672W5Y5s
+	coJ5/SlPVSipUxBL26WlJ9twPbm4wYWEIasM5sODlPZ515t7X7+WMxco4Ra0L4GdJzxWoAy7STVme
+	bssMVC0QqPr1yAf07ZRy+06zEk2PqWy5M3fRc8L70cRAsq4E/1waEv2BXU9pdc4wcUi8LYrpaKf6w
+	MwrskWfQ==;
 Received: from 2a02-8389-2341-5b80-fd16-64b9-63e2-2d30.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:fd16:64b9:63e2:2d30] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1se5YI-00000005gi3-1I46;
-	Wed, 14 Aug 2024 04:24:02 +0000
+	id 1se5YK-00000005giM-45tG;
+	Wed, 14 Aug 2024 04:24:05 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: chandan.babu@oracle.com
 Cc: djwong@kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/2] xfs: remove a stale comment in xfs_ioc_trim
-Date: Wed, 14 Aug 2024 06:23:57 +0200
-Message-ID: <20240814042358.19297-1-hch@lst.de>
+Subject: [PATCH 2/2] xfs: don't extend the FITRIM range if the rt device does not support discard
+Date: Wed, 14 Aug 2024 06:23:58 +0200
+Message-ID: <20240814042358.19297-2-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240814042358.19297-1-hch@lst.de>
+References: <20240814042358.19297-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,33 +49,99 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-There is no truncating down going on here, the code has changed multiple
-times since the comment was added with the initial FITRIM implementation
-and it doesn't make sense in the current context.
+Fix the newly added discard support to only offer a FITRIM range that
+spans the RT device in addition to the main device if the RT device
+actually supports discard.  Without this we'll incorrectly accept
+a larger range than actually supported and confuse user space if the
+RT device does not support discard.  This can easily happen when the
+main device is a SSD but the RT device is a hard driver.
 
+Move the code around a bit to keep the max_blocks and granularity
+assignments together and to handle the case where only the RT device
+supports discard as well.
+
+Fixes: 3ba3ab1f6719 ("xfs: enable FITRIM on the realtime device")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_discard.c | 7 -------
- 1 file changed, 7 deletions(-)
+ fs/xfs/xfs_discard.c | 37 ++++++++++++++++++++++++-------------
+ 1 file changed, 24 insertions(+), 13 deletions(-)
 
 diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 6f0fc7fe1f2ba9..6516afecce0979 100644
+index 6516afecce0979..46e28499a7d3ce 100644
 --- a/fs/xfs/xfs_discard.c
 +++ b/fs/xfs/xfs_discard.c
-@@ -689,13 +689,6 @@ xfs_ioc_trim(
+@@ -654,9 +654,9 @@ xfs_ioc_trim(
+ 	struct xfs_mount		*mp,
+ 	struct fstrim_range __user	*urange)
+ {
+-	unsigned int		granularity =
+-		bdev_discard_granularity(mp->m_ddev_targp->bt_bdev);
++	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
+ 	struct block_device	*rt_bdev = NULL;
++	unsigned int		granularity = 0;
+ 	struct fstrim_range	range;
+ 	xfs_daddr_t		start, end;
+ 	xfs_extlen_t		minlen;
+@@ -666,15 +666,6 @@ xfs_ioc_trim(
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+-	if (mp->m_rtdev_targp &&
+-	    bdev_max_discard_sectors(mp->m_rtdev_targp->bt_bdev))
+-		rt_bdev = mp->m_rtdev_targp->bt_bdev;
+-	if (!bdev_max_discard_sectors(mp->m_ddev_targp->bt_bdev) && !rt_bdev)
+-		return -EOPNOTSUPP;
+-
+-	if (rt_bdev)
+-		granularity = max(granularity,
+-				  bdev_discard_granularity(rt_bdev));
+ 
+ 	/*
+ 	 * We haven't recovered the log, so we cannot use our bnobt-guided
+@@ -683,13 +674,33 @@ xfs_ioc_trim(
+ 	if (xfs_has_norecovery(mp))
+ 		return -EROFS;
+ 
++	if (bdev_max_discard_sectors(bdev)) {
++		max_blocks = mp->m_sb.sb_dblocks;
++		granularity = bdev_discard_granularity(bdev);
++	} else {
++		bdev = NULL;
++	}
++
++	if (mp->m_rtdev_targp) {
++		rt_bdev = mp->m_rtdev_targp->bt_bdev;
++		if (!bdev_max_discard_sectors(rt_bdev)) {
++			if (!bdev)
++				return -EOPNOTSUPP;
++			rt_bdev = NULL;
++		}
++	}
++	if (rt_bdev) {
++		max_blocks += mp->m_sb.sb_rblocks;
++		granularity =
++			max(granularity, bdev_discard_granularity(rt_bdev));
++	}
++
+ 	if (copy_from_user(&range, urange, sizeof(range)))
+ 		return -EFAULT;
+ 
  	range.minlen = max_t(u64, granularity, range.minlen);
  	minlen = XFS_B_TO_FSB(mp, range.minlen);
  
--	/*
--	 * Truncating down the len isn't actually quite correct, but using
--	 * BBTOB would mean we trivially get overflows for values
--	 * of ULLONG_MAX or slightly lower.  And ULLONG_MAX is the default
--	 * used by the fstrim application.  In the end it really doesn't
--	 * matter as trimming blocks is an advisory interface.
--	 */
- 	max_blocks = mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks;
+-	max_blocks = mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks;
  	if (range.start >= XFS_FSB_TO_B(mp, max_blocks) ||
  	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
+ 	    range.len < mp->m_sb.sb_blocksize)
+@@ -698,7 +709,7 @@ xfs_ioc_trim(
+ 	start = BTOBB(range.start);
+ 	end = start + BTOBBT(range.len) - 1;
+ 
+-	if (bdev_max_discard_sectors(mp->m_ddev_targp->bt_bdev)) {
++	if (bdev) {
+ 		error = xfs_trim_datadev_extents(mp, start, end, minlen,
+ 				&blocks_trimmed);
+ 		if (error)
 -- 
 2.43.0
 
