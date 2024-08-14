@@ -1,70 +1,70 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 654F77346D
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 21:50:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47637139CE3
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 22:04:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723672224; cv=none; b=XuUJ6iqRf0RvgHNvj9vK1DEE29Pwlb2zjja1PP0mfgUSHgmcnUzKatwdL2A9CxcqYzkzz3Ioyn1Qn0dtlqZ01nztzPEgbOIXlIJUKbC0AeiO1x6GXhSRqeYBuazS+QDJWsT0YC2v6ppyjBthnCfj12QxIJMrR8UYJB6aWzMKbeU=
+	t=1723673050; cv=none; b=bYzI1DS538eDW8QYO4w465wVhP7somOgOQ25v9s71D/40y8op9r5VavMyu2Dq6vRv/ROILa77yCm9ScPNrh/Y2YdL3jv/sbzNtdaFHhEARKzldGx6rs0WJAt+n4rfC8fNF6Ly+C34qvPXYPnGbm6ssLdGQGqaw5tEGI7y4wzfao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723672224; c=relaxed/simple;
-	bh=8OALDjpMpl1dJiePTzB/P/6ENqMCdVZZw33qtSHE+F8=;
+	s=arc-20240116; t=1723673050; c=relaxed/simple;
+	bh=ej2IMUAmsnpGU8O2i7FXOpfkaPk6imttCsWaIDR8mNk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hzz4ju5SRp/56jU+zeZ6AI2HRdKJTvAwHZFMEq+SUqpjQ3mjLjKLQF49hDNn9PCdb/EHNxyKSyF7SBCR3Jff5RrXi3lT0G9kH6pebyF9RAcmVlgE77423zH1v4rfma0EqhyRiettffmzCzv7tMr1rgPYgBl0iR/VJXvq3rQPvvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HEpMj4F1; arc=none smtp.client-ip=209.85.214.174
+	 Content-Type:Content-Disposition:In-Reply-To; b=uCsKTKTxVhvPpvZ3pFSTEXlZ/cbajQwslYMD2Y2/H+48QqhsU2S+PcsP/jUeGUY4e/vNQw5j+2cwtHFsdrHg5lE/PzfJ575z1jDIu2qCDTbJoHfNvvD7q8f1Y9fv50d6wc9bz/4ZodYLLh2j7r6pgFTPVszFdVpcGjc09ug3bI0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=n5O0H/Su; arc=none smtp.client-ip=209.85.210.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HEpMj4F1"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1fc65329979so3373805ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 14:50:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="n5O0H/Su"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-710ffaf921fso214217b3a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2024 15:04:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1723672220; x=1724277020; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1723673046; x=1724277846; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=95RKT+2SQppOQr1VgjziPVzGf4MIch8NH88huMWpwBU=;
-        b=HEpMj4F1takq8Dj0KR1Ozr/k766txag292AxJqR6cwWX9V2kIogn2gSZS6U50cK1E0
-         rK1oKjnZbLk3t2rGkYaQjxQNzcaPsqqene6WYz12lBwX4lnF5/UzhPIldvSdqS2c4vCv
-         9BOEgkCRgcDO/F9Z0yc29ok5eiveJleRQY6/w8LIUfHsNQTF4sqSTRDup3zX8gkS+6jW
-         JOm/F2bkFvOg9QV+dSdJE+iqmhUTd1PA+dep3jJKT5RitSMV5WdTfbVHJ3Pg2JSo30ae
-         n5tJTRi9GARtb7yDDWNzWd2QwL8Q0fajUxyHbodjwH/XfwRCzZDPEajITCCfhmu7ZD61
-         3Uwg==
+        bh=463ygjMlKQz67QoG0495w4hyl86iGYYoRtfwEYS7g0U=;
+        b=n5O0H/Su7JGC0VLgmUciRjVZ2zWYF/8fmj8ln7+55lIRjju870GcbvJNmnfs2iVI56
+         8pBNlF17+gkk5hpiA4aU2C294dQ7kjdo4OTnv3GPoCTUs/X9jJdoEcrH1Ucv2pMeskUP
+         RmNiNIvM8SoGl7PUzkPciDGOXTQcjaazDHF6JxrlLERrd4HTs/f0yIHv0TMAD+8nQXcG
+         gnmUGBc0PYPBnADWtozvArpRQlCU/3xmf0FZXGjn5cp4QYImEEjF1tTBcBkjQBheqWkl
+         PWK4y4HEUMum483fwY8c7X0k00NvU6qt/s/ddRP+nbNu1kIIJbKTaM2pufBJ6nl0034G
+         iHTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723672220; x=1724277020;
+        d=1e100.net; s=20230601; t=1723673046; x=1724277846;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=95RKT+2SQppOQr1VgjziPVzGf4MIch8NH88huMWpwBU=;
-        b=bsMrtQoQcKv45pK/VxhFrfK18Ro/w/Qz5hdbgRhK+wfJK85sBKmkQ6KBr9DtdRX7qW
-         +FtF5NJwVEWgaDoik+027fBCAV1qMeoyNuRkPFIHwiyzVISO+LZOODogpDaK27gcNTQF
-         apa0DdGyNxYkrV0RrL0aG24YyaoWOdy1ydYNC4q/3GzQCkpsUq7ZJuvJSIWrlkwFb3bs
-         5gD8oBx4T+/1vtQMnstDuDnIPAPYcZss+ka8iLewb9+OUryPcfcwL1GQhz0ZUlFmKxRj
-         ycTmVDJ6XTn/X8f13+xeGrByguqOeehqMdvQDJ8qhX4UVomxqBsBKP3p8gA89wUjPOe4
-         SC3Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVCyAZfkUmRpyc/i582iLNKdnWd0l27AMnga+aAWThlEAymga9oGEO+kfEcMJzqHRe9VQdQdta9vWm09sAZ0SDInS3jcFh8MS6B
-X-Gm-Message-State: AOJu0YybNyjWQIUUg8KmBgmFE1IJiZP4vlROGAED7TpNB07mvmHYJB4N
-	5+F/EZFuGZK1MXhCqrTSTklOfkJxRhS+aU1WyLAulUatcBEJpLX4gZkizEv+79I=
-X-Google-Smtp-Source: AGHT+IHrOw7qud/Ve7kmOhAaRR1eCibYydMEkfvT+CbZpYhPoQmQ+0vI/ZEbD0x7OrghckBIyxFS7w==
-X-Received: by 2002:a17:903:18b:b0:1ff:3c4f:e93d with SMTP id d9443c01a7336-201d65c09f4mr53110405ad.55.1723672220527;
-        Wed, 14 Aug 2024 14:50:20 -0700 (PDT)
+        bh=463ygjMlKQz67QoG0495w4hyl86iGYYoRtfwEYS7g0U=;
+        b=iim1NhLFyfLekRgZ5h2Wuq/lLsYWYye3pHQ6BfvBN/16pc/EjYohnBQykyV9O847aq
+         BgDQstlQL/SkST5GOyCPSIvi/WGkNVSkyP059LTUAdQ/y5cTdpQ7icVxx/2f2L7Wbo5c
+         lFNM9v9YeORHZel1T3W11dVROAeDHjJlWSjVyuKtmfDcp8juGElAbSwoi2xJANWrhEgZ
+         uso2w+Bn9qmHvqtxfiSwZ+M2yVQIl1eE87e97kQPRXmAu/e1w/B/QSnJgr76uJJm1f9s
+         EA6tcxUExjRMWLHsuUW5dpVWHskyzG1+p/uRzMZp2uH71tkwosd7BIS0xepEaqXmbVuE
+         g3qw==
+X-Forwarded-Encrypted: i=1; AJvYcCW5IVRk+MvsPE/tZhoUhTmgIdysFMZCyuZ+ek8IOk72ur7lRbc7+BFZD83cEc5WK4iG7pCFZOQYyT9y1Mewq0Q0/6mrxMPD9sUL
+X-Gm-Message-State: AOJu0YwyW4VftaK0nUYflsfLhdppix/T2zP5kZBf5CeklHnPz3Aqicd3
+	+RjUTRb49Ug5gTrT5yiy0SYJ1g0t5kmH8WchMXMBOnBDmpWb7eGtBJMaoOx5Bf0=
+X-Google-Smtp-Source: AGHT+IE7t4J+4cqZQXUHBFbYhSBIT7SpgdS2BVYdXOCyAYVvWGtO3sonWrGZp6MpD8SgwB87RGvfeQ==
+X-Received: by 2002:a05:6a00:190e:b0:70d:2709:3b53 with SMTP id d2e1a72fcca58-71276eed914mr1535788b3a.4.1723673046384;
+        Wed, 14 Aug 2024 15:04:06 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-201f02faa2dsm955045ad.36.2024.08.14.14.50.19
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7127ae669b7sm50190b3a.88.2024.08.14.15.04.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Aug 2024 14:50:20 -0700 (PDT)
+        Wed, 14 Aug 2024 15:04:05 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1seLsn-00HFlM-33;
-	Thu, 15 Aug 2024 07:50:17 +1000
-Date: Thu, 15 Aug 2024 07:50:17 +1000
+	id 1seM67-00HGb5-0F;
+	Thu, 15 Aug 2024 08:04:03 +1000
+Date: Thu, 15 Aug 2024 08:04:03 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: fix handling of RCU freed inodes from other AGs
- in xfs_icwalk_ag
-Message-ID: <Zr0mmZmoHNLReTi/@dread.disaster.area>
+Subject: Re: [PATCH 2/2] xfs: fix handling of RCU freed inodes from other AGs
+ in xrep_iunlink_mark_incore
+Message-ID: <Zr0p09mKjoxMdZD5@dread.disaster.area>
 References: <20240812052352.3786445-1-hch@lst.de>
- <20240812052352.3786445-2-hch@lst.de>
+ <20240812052352.3786445-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,130 +73,95 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240812052352.3786445-2-hch@lst.de>
+In-Reply-To: <20240812052352.3786445-3-hch@lst.de>
 
-On Mon, Aug 12, 2024 at 07:23:00AM +0200, Christoph Hellwig wrote:
-> When xfs_icwalk_ag skips an inode because it was RCU freed from another
-> AG, the slot for the inode in the batch array needs to be zeroed.  We
-> also really shouldn't try to grab the inode in that case (or at very
-> least undo the grab), so move the call to xfs_icwalk_ag after this sanity
-> check.
-
-I think this change is invalid and needs to be reworked. It moves
-the actual "has the inode been RCU freed in this grace period"
-checks to after some other check on the inode is performed. From
-that perspective, this is a bad change to make.
-
-From another perspective, this is a poor change to make because....
-
-> Fixes: 1a3e8f3da09c ("xfs: convert inode cache lookups to use RCU locking")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-... that commit and the current code isn't actually broken.
-
-In commit 1a3e8f3da09c, xfs_inode_ag_walk_grab() added explicit
-checks against using RCU freed inodes, and that nulls out the inode
-in the batch array:
-
-       /*
-        * check for stale RCU freed inode
-        *
-        * If the inode has been reallocated, it doesn't matter if it's not in
-        * the AG we are walking - we are walking for writeback, so if it
-        * passes all the "valid inode" checks and is dirty, then we'll write
-        * it back anyway.  If it has been reallocated and still being
-        * initialised, the XFS_INEW check below will catch it.
-        */
-       spin_lock(&ip->i_flags_lock);
-       if (!ip->i_ino)
-               goto out_unlock_noent;
-
-
-Indeed, xfs_icwalk_igrab() -> xfs_blockgc_igrab() still has this
-check:
-
-	/* Check for stale RCU freed inode */
-        spin_lock(&ip->i_flags_lock);
-        if (!ip->i_ino)
-                goto out_unlock_noent;
-
-However, that commit used a different check for reclaimable inodes;
-it uses XFS_IRECLAIM to indicate that the inode is either being
-reclaimed or has been RCU freed and so reclaim should not touch it.
-xfs_reclaim_igrab() still retains that check:
-
-	spin_lock(&ip->i_flags_lock);
-        if (!__xfs_iflags_test(ip, XFS_IRECLAIMABLE) ||
-            __xfs_iflags_test(ip, XFS_IRECLAIM)) {
-                /* not a reclaim candidate. */
-                spin_unlock(&ip->i_flags_lock);
-                return false;
-        }
-
-XFS_IRECLAIM is always set on RCU freed inodes (it's set at the same
-time ip->i_ino is set to zero in xfs_reclaim_inode()) before the
-inode is rcu freed, and so neither of these grab functions will
-allow RCU freed inodes to be grabbed.
-
-Hence:
-
-> ---
->  fs/xfs/xfs_icache.c | 11 +++++++----
->  1 file changed, 7 insertions(+), 4 deletions(-)
+On Mon, Aug 12, 2024 at 07:23:01AM +0200, Christoph Hellwig wrote:
+> When xrep_iunlink_mark_incore skips an inode because it was RCU freed
+> from another AG, the slot for the inode in the batch array needs to be
+> zeroed.  Also un-duplicate the check and remove the need for the
+> xrep_iunlink_igrab helper.
 > 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index ae3c049fd3a216..3ee92d3d1770db 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1701,9 +1701,6 @@ xfs_icwalk_ag(
->  		for (i = 0; i < nr_found; i++) {
->  			struct xfs_inode *ip = batch[i];
+> Fixes: ab97f4b1c030 ("xfs: repair AGI unlinked inode bucket lists")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/scrub/agheader_repair.c | 28 +++++++---------------------
+>  1 file changed, 7 insertions(+), 21 deletions(-)
+> 
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index 2f98d90d7fd66d..558bc86b1b83c3 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -1108,23 +1108,6 @@ xrep_iunlink_walk_ondisk_bucket(
+>  	return 0;
+>  }
 >  
-> -			if (done || !xfs_icwalk_igrab(goal, ip, icw))
-> -				batch[i] = NULL;
+> -/* Decide if this is an unlinked inode in this AG. */
+> -STATIC bool
+> -xrep_iunlink_igrab(
+> -	struct xfs_perag	*pag,
+> -	struct xfs_inode	*ip)
+> -{
+> -	struct xfs_mount	*mp = pag->pag_mount;
 > -
+> -	if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
+> -		return false;
+> -
+> -	if (!xfs_inode_on_unlinked_list(ip))
+> -		return false;
+> -
+> -	return true;
+> -}
 
-The existing code here -always- catches RCU freed inodes that have
-not yet been freed due to the grace period still running. This
-code replaces RCU freed inodes with NULL in the batch
-array, and so after this point the inode is guaranteed to be valid.
+This code is wrong. It does not explicitly check for RCU freed
+inodes (i.e.  ip->i_ino = 0 or XFS_IRECLAIM being set) and so will
+never detect stale RCU freed inodes in AG 0.
 
+It is probably working by chance to avoid stale freed inodes
+because ip->i_prev_unlinked will be 0 for such inodes.
+
+*However*, this code does not have the necessary memory barriers to
+guarantee it catches the ip->i_ino or ip->i_prev_unlinked writes
+prior to freeing. The ip->i_ino check needs to be done under the
+ip->i_flags_lock as it is the unlock->lock memory barrier that
+the inode cache RCU lookup algorithms rely on for correct detection
+for RCU freed inodes.
+
+> -
+>  /*
+>   * Mark the given inode in the lookup batch in our unlinked inode bitmap, and
+>   * remember if this inode is the start of the unlinked chain.
+> @@ -1196,9 +1179,6 @@ xrep_iunlink_mark_incore(
+>  		for (i = 0; i < nr_found; i++) {
+>  			struct xfs_inode *ip = ragi->lookup_batch[i];
+>  
+> -			if (done || !xrep_iunlink_igrab(pag, ip))
+> -				ragi->lookup_batch[i] = NULL;
+> -
 >  			/*
 >  			 * Update the index for the next lookup. Catch
 >  			 * overflows into the next AG range which can occur if
-> @@ -1716,8 +1713,14 @@ xfs_icwalk_ag(
+> @@ -1211,8 +1191,14 @@ xrep_iunlink_mark_incore(
 >  			 * us to see this inode, so another lookup from the
 >  			 * same index will not find it again.
 >  			 */
 > -			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
 > +			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno) {
-> +				batch[i] = NULL;
+> +				ragi->lookup_batch[i] = NULL;
 >  				continue;
+> +			}
+> +
+> +			if (done || !xfs_inode_on_unlinked_list(ip))
+> +				ragi->lookup_batch[i] = NULL;
 
-This check is not checking for RCU freed inodes - it was checking
-for indoes that are both freed and reallocated within a single RCU
-grace period.  I added this check in 1a3e8f3da09c (backin 2010)
-because I wasn't 100% certain of the RCU existence guarantees and
-those interacted with read side critical sections.  It was
-defensive, "just in case" code.
+Same with this new code - it's not explicitly checking for RCU freed
+inodes and doesn't have the correct memory barriers.
 
-Looking at this code now - with another 14 years of RCU algorithms
-experience under my belt - it is obvious that this code is
-unnecessary and always has been.
+Hence I think the fixes for this code are:
 
-From RCU first principles, we cannot see a new inode
-with a different inode number magically appear at this memory
-address during a rcu_read_lock() side critical period.
-
-Such behaviour would require the inode to be removed from the radix
-tree, freed and then reallocated and reinitialised to a different
-identity within a single RCU grace period. That is impossible
-because the object we found during the lookup won't get freed until
-the RCU grace period ends sometime after we drop the
-rcu_read_lock()....
-
-Hence the right thing to do here is to remove this check completely
-and leave the rest of the code alone....
+1. change xrep_iunlink_igrab() to use the same RCU freed inode
+checks as xfs_blockgc_igrab(); and
+2. remove the (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
+check altogether.
 
 -Dave.
 -- 
