@@ -1,83 +1,156 @@
-Received: from mail-io1-f72.google.com (mail-io1-f72.google.com [209.85.166.72])
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74D031AC886
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 10:40:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA7F17C9A7
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 12:26:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723718427; cv=none; b=sHZB4FW0VV52sPbimj0QENDtBwXFueSUC961N1g+EdBCiSoY5F54iKPUYMOsjuTRX/BK9VrsccD0W2d0WcGlKMOeWaF+2+489i6Y39MOL6gQctYTUbQRtpqqDWheIXXvIHVJ+mfFbnlgaPWQ1Fw3NGE2pY2iFDO7dXlCqupbuRI=
+	t=1723724764; cv=none; b=UUTUlOxYl6daqMRkQnK1ymBZYySQ75wXs+RZpmIjuAXZwek+pPu1q9HkxESxqqz0SmDN++h6cojO9Dbi/MeJA6mUCTnlOWgkKeXgDdbCpnNhF+U6HqEEtnHl3igsG/tBceFAuDZLyXjtXaX5q1LqclZblJplejbzjQUnx9wR58c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723718427; c=relaxed/simple;
-	bh=z1ba+5EJVDOkslQ+E/z3CgpEv67HZzOhoQigUq+k5cQ=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=OYAQRZ+KYD6PUUBRiXHTHEUBHhIbY0w/ZNRO7FAgog2DEuXWOKy7CyVW9zZ3g26GZMbSPJ0vk/HDPd/bev0EqIqGaxH/5LYAt8SsNvqjQmGMgWRA/25EUo4CgnMnlsneftl1XtNaVkKVH+zXaB0eyKivsB87kdZSw8VilYjKAmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-81f93601444so82740839f.2
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 03:40:26 -0700 (PDT)
+	s=arc-20240116; t=1723724764; c=relaxed/simple;
+	bh=0im/Qykv7c1iy0qA7z6aX1F3OLwdCBwKdNNBPWl0vBc=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=Z3kqIo66G2aTzNEgiwppWKVUjIo0yPC3KCitSc8mbC7jZc1eXzkw1jfSJi5lsLMP9y7YK7RJsq9/1cWuk5sg9rIAxKX4aGO24O9anvZWzLDnOzMvNFS/aLEF+CtWdNO9ACq6iAxxfknILYCCp6uKp99/stxCyqEuQFV5XQwSu+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DuHtTuj5; arc=none smtp.client-ip=209.85.167.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DuHtTuj5"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-52efdf02d13so1333223e87.2
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 05:26:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1723724760; x=1724329560; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=koc1IsnC0GAKbAZNMmwiEPVpZsMn8AiFFHVBL5y7yDw=;
+        b=DuHtTuj5gJ9hbqOymXTBqRhH+JPkXKqH7Iv91RbYkAC6Gsswv5bTMI99T90hLGhZpu
+         bH4Qxxvflc4aHwonHvtYt3Mkg/HSVZrz2vMMYDhtl1LkbMmhaI2uV0nrAvQpGC9saUTc
+         1G/EUsGYLvI1tr2rbU1Mt7wdrD32zxPha5Mh+oLRjKbOPq80Wdj+WNx4wVoAtX7yZQC6
+         8Gci10ehXIZqHDgskJLrLv3M+deuFCllY9FpqnRGKZpVB+LQsLnYrcPwJ6YvaPYP2roS
+         Dx+A2CnJPx/zIyX7abWr6T0myfGpvz62LGA3LlW/Vnbxd8acPTkd1gIS529PXWHIePQV
+         9qSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723718425; x=1724323225;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+        d=1e100.net; s=20230601; t=1723724760; x=1724329560;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=opiCOyLB/xPeMdw+vyiT2OWRVsp382tiiE0i299tivY=;
-        b=n7+11EKwH2VYWuiJ8nPfEXKlAhwKMS7OjjnTZQOpFQR26rtvgAmtyJ18SfQqhudcR9
-         BUZB1xMr/kmLgAFGyd9sYiYIwHtEBVh9+LvKqbdfB12QSoK+FUIj5ZbDmjhvlwouhPqP
-         z0UQdUlT/Xm3yNjSd828oXR7QEc5eMq1R4xVBHepDpaoTm7cDXtmybwOYKE74XeCtt74
-         Q7dGIACCssdDu+BKdrf3Aif0rMGxKKI1ht79+w9oxQrbUswsoy9TuJRbmDkckaUB1pOM
-         v1Wueb3qtR9T6yefsdshe/FqnsBqLRQKb/o3Uz9dIQNBCTxbA+pDpPQ8RprlgLTSH5P1
-         974g==
-X-Forwarded-Encrypted: i=1; AJvYcCU8K/MzXcKl2H/Ca2ZVqna5oVgwpRIOfM6DP1FU0iYR+h2qD5WAUQrO9ul7VdlrvkGnqWuu6vj+vewVZ+YP1J+4qSZ0fYo74NFT
-X-Gm-Message-State: AOJu0Yx2voLLKeCrQ6ilhkkYAm0KxQNqP/ruX2Y+ybBC0aPp+THUyAgt
-	JqxbS3HPKfoP9Tma1iZQvZue7Qy8vwbf/kAS1JQFkuRpoBu1A/8sPc426wN6125w0LDV07ebrdE
-	S5n/5gE4lR8iOD6OCPpQOfkjMKQBbpo5K9aauUpeI4l7WfLtM4syEC8k=
-X-Google-Smtp-Source: AGHT+IHwFK/7Fi1D4ndezxiB63QY2Su/S65+td2Lvy/Y8aP12/SaksBUdM8x7drT5SN13mffR4o50rRGTKkU4SCvPTX7wNuZem2M
+        bh=koc1IsnC0GAKbAZNMmwiEPVpZsMn8AiFFHVBL5y7yDw=;
+        b=FwLsd3OX7J1nCV9VnBUp64FlmQXhIpLVMhMy84N5LBdK7NjbjTFtUprNYHSbgZy1Uh
+         ldI6l/dc/eKWgOyLjok/FBc2I+uOqR07201QDvt39tO+gxMK8MT8gDxJkZSEDVzrXl7p
+         BO94geCXWf1/BLIRasDtJZuH0npSRtybYMs2oTA1+qE39LW4aI07CYOe2kDzUoZHa0o0
+         rjraPW5PvvrJdGqI5KAHYUkyGNBDCiEKZHUrog/3n4NqSEbMAjMyxaXWi+cpb4NC3iPo
+         SAdH9jKlrOp+Y5s1lgumZlGT507o9QVgPo8XfXiMdoJ67rxoPyOd335l9zJneCj5OZK7
+         Dn5A==
+X-Gm-Message-State: AOJu0Yw4MDvvLsjPnvz9TARveCHdKGT9VHu+/lglJFKnbWJneGwLLXhx
+	UBvdoOubBTMlECFrb0IaBo9WbKQIF4JqIzvW1Dz77CxKA5mOCUzLSOCTKVEUV6NnVHMU+DWUSOk
+	07GNTi02ClTPOagilLVFmL47etN+S1jbM
+X-Google-Smtp-Source: AGHT+IH120qMS4736ZFJPJtgEQ2TEdv1n3BUnoknUH7iEMYY9dPd0Uy8PAXwbjiDt1s6Oul8AhoPApLNyxvsscoILu8=
+X-Received: by 2002:a05:6512:3a8f:b0:530:da96:a990 with SMTP id
+ 2adb3069b0e04-532eda8aa12mr4928248e87.32.1723724759884; Thu, 15 Aug 2024
+ 05:25:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:12c1:b0:396:ec3b:df63 with SMTP id
- e9e14a558f8ab-39d124f3e2cmr3864035ab.4.1723718425574; Thu, 15 Aug 2024
- 03:40:25 -0700 (PDT)
-Date: Thu, 15 Aug 2024 03:40:25 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000731785061fb678d5@google.com>
-Subject: [syzbot] Monthly xfs report (Aug 2024)
-From: syzbot <syzbot+list4f8957ccf166d2563804@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+From: Mateusz Guzik <mjguzik@gmail.com>
+Date: Thu, 15 Aug 2024 14:25:48 +0200
+Message-ID: <CAGudoHFJV=S61Fjb=QVf4mSTRfkYf5QR1y0TDMhnawZKtgyouA@mail.gmail.com>
+Subject: perf loss on parallel compile due to conention on the buf semaphore
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 
-Hello xfs maintainers/developers,
+I have an ext4-based system where xfs got mounted on tmpfs for testing
+purposes. The directory is being used a lot by gcc when compiling.
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+I'm testing with 24 compilers running in parallel, each operating on
+their own hello world source file, listed at the end for reference.
 
-During the period, 1 new issues were detected and 0 were fixed.
-In total, 12 issues are still open and 23 have been fixed so far.
+Both ext4 and btrfs backing the directory result in 100% cpu
+utilization and about 1500 compiles/second. With xfs I see about 20%
+idle(!) and about 1100 compiles/second.
 
-Some of the still happening issues:
+According to offcputime-bpfcc -K the time is spent waiting on the buf
+thing, sample traces:
 
-Ref Crashes Repro Title
-<1> 74      Yes   possible deadlock in xfs_icwalk_ag (2)
-                  https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
-<2> 69      No    KASAN: slab-use-after-free Read in xfs_inode_item_push
-                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
-<3> 22      No    possible deadlock in xfs_ilock_attr_map_shared
-                  https://syzkaller.appspot.com/bug?extid=069cc167ecbee6e3e91a
+   finish_task_switch.isra.0
+    __schedule
+    schedule
+    schedule_timeout
+    __down_common
+    down
+    xfs_buf_lock
+    xfs_buf_find_lock
+    xfs_buf_get_map
+    xfs_buf_read_map
+    xfs_trans_read_buf_map
+    xfs_read_agi
+    xfs_ialloc_read_agi
+    xfs_dialloc
+    xfs_create
+    xfs_generic_create
+    path_openat
+    do_filp_open
+    do_sys_openat2
+    __x64_sys_openat
+    do_syscall_64
+    entry_SYSCALL_64_after_hwframe
+    -                cc (602142)
+        10639
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+    finish_task_switch.isra.0
+    __schedule
+    schedule
+    schedule_timeout
+    __down_common
+    down
+    xfs_buf_lock
+    xfs_buf_find_lock
+    xfs_buf_get_map
+    xfs_buf_read_map
+    xfs_trans_read_buf_map
+    xfs_read_agi
+    xfs_iunlink
+    xfs_dir_remove_child
+    xfs_remove
+    xfs_vn_unlink
+    vfs_unlink
+    do_unlinkat
+    __x64_sys_unlink
+    do_syscall_64
+    entry_SYSCALL_64_after_hwframe
+    -                as (598688)
+        12050
 
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
+The fact that this is contended aside, I'll note the stock semaphore
+code does not do adaptive spinning, which avoidably significantly
+worsens the impact. You can probably convert this to a rw semaphore
+and only ever writelock, which should sort out this aspect. I did not
+check what can be done to contend less to begin with.
 
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
+reproducing:
+create a hello world .c file (say /tmp/src.c) and plop into /src:
+for i in $(seq 0 23); do cp /tmp/src.c /src/src${i}.c; done
 
-You may send multiple commands in a single email message.
+plop the following into will-it-scale/tests/cc.c && ./cc_processes -t 24
+
+#include <sys/types.h>
+#include <unistd.h>
+
+char *testcase_description = "compile";
+
+void testcase(unsigned long long *iterations, unsigned long nr)
+{
+        char cmd[1024];
+
+        sprintf(&cmd, "cc -c -o /tmp/out.%d /src/src%d.c", nr, nr);
+
+        while (1) {
+                system(cmd);
+
+                (*iterations)++;
+        }
+}
+
+-- 
+Mateusz Guzik <mjguzik gmail.com>
