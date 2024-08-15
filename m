@@ -1,105 +1,80 @@
-Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49DB2146A7D;
-	Wed, 14 Aug 2024 22:55:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB4339FCE;
+	Thu, 15 Aug 2024 03:14:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723676160; cv=none; b=YBZ6BZ1JkkhrqZauMpsoAPiKzeKskYvjI/4avrf7Kzud1jNJMnmLknjCjwASUVY3nWFVpTBxm526iV5h60VlD/OvvYbWvLrsPhq/rhHz3eiEEgvMWKoeQ2aXR/gUsrDUNHhNlbcMg7mOrnp2CFFt8R3e5sCfnE76lluIYasty4U=
+	t=1723691646; cv=none; b=D2g5jYYUk3xQdoqu5ihvmA2p0LoRrvwfpzX7GTqkOLS3Q9rB/NC8zn2O5KFgOflPwkVowQj8VSitmQdYOE31qi/g2oQ+XPQR+fOom4KrKuxdrelAYFTxpnr4ApvdrLG7onzw+a1TyMmbnXS4WU8g6Ox9X5yPfC/OnBAQNU6gNaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723676160; c=relaxed/simple;
-	bh=0Siz89VcGW8U4QXrejsGirWfD/VSEaA89z+rYwMoA+w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FPmvDDZMQOZ3at7jweWTpMHm1Xl/FYV1RBq/m3TRJhKzZEcl1nUBRDFHjY0dyBtlzXATcMly8CxnJ1zWVhocjbr2RCZtxchAUsVGOKlV9aX0lOSCVq11BkLMqPn5J814vuW37hMzWu2qK6fmuztlK5ZtcWmoQxao6ceFhXy9zgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZepPHp1n; arc=none smtp.client-ip=209.85.219.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1723691646; c=relaxed/simple;
+	bh=thhEBcc+3s9aaOhrpQtbTz50JQitSQ9kwBCCU59JHGQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XQ4au/2jKkOaDVuMwNiZaeRH6valGfRvO5eRgI+wc9SVJ6uif2IjAV28Tb9Eb/sw6jN2TEzsdxK1r2EsI2kOah2VCWoe0JtOVjZPx49MQUf9zjbcEubaT2Dz6w23gh0BT+obgGkdqNgGlQZg8xs1J7SOjcN3fsaIQQ2Ud8gFHT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mo93k7H2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZepPHp1n"
-Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-e116e2727dcso309481276.0;
-        Wed, 14 Aug 2024 15:55:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723676158; x=1724280958; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0Siz89VcGW8U4QXrejsGirWfD/VSEaA89z+rYwMoA+w=;
-        b=ZepPHp1n+GJ5DLj3zI4/HojuzpMIm4fTQ01oRn9fE6t/H+avkMJWoLCxkHOUPux5qo
-         cJf4lIIZwVagFH6DFc8PhDjqBbfw/guXeYm3G+/qNJC9dnEuLlsmSmnYBYmeKwW0wkym
-         2Wnfe2H8Z/CL5UK9NxeOewTwVvOOYVTFpyZumXA9Ams1EIvwTnVCSx8OO9g/qLykc5nw
-         2su7qhtZWhbWR3H+q4tfpe/VDdcezGBUSZHfT2XkbZUdjyjx/F/ad4/QGg5rkrcGWFyM
-         vZig+5Q1AcJm+re64qRH0fArTFkPzAQgFgO7obqRV5gs32PPaLpQ18eUe5p4yL8ucejX
-         J8AA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723676158; x=1724280958;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0Siz89VcGW8U4QXrejsGirWfD/VSEaA89z+rYwMoA+w=;
-        b=gj0UgbHJImf3F9tuG6nLQxkh00hIL21QFwlT49algIRdlZiSGIdZH7A+2eztoUF/wB
-         KU1HFn7F0l3oBBoBgSOF2oVNmhgpjYUg3/vkvjv/cyOv7xBqx3bE/+neRboq6f0Ra170
-         xGHhnj/FSZhOrtjNTKtCWYAD8gdXm5cMDZVUo5tMVtZMvBaizx3d3YgYW/RZsakS4ge9
-         k7hpf7NLipFSHV9Q+pHhYWUss2x0mcpYTkwrS65HeL61/T4P6SSkeJ+80jxldzDtrEqz
-         bFxEP/DH5bJzpVq3BpxKbAYVtSUB0SYBfydxcyfjHs41KcixjAACdwK28oJyncRxqWD0
-         3kmQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXResFqdTtX+WX3tNe8d2IHceTPhhYxkwpCqvY9DwcZaQN8gQP0UVwzfVdVUi66yzyxwtuqAEvF4WIIjXbRytfEHa7EUl4CTH5yAFX3OcO4NvJZ75VDM5MQHpuA+2cflqYMlka6SrW20lI4aXt54wKbYA99jbpPYkHdgODxJMsb
-X-Gm-Message-State: AOJu0YyQtj+p0xg6Rpq9ISfz4geuh+0qvOfHCplHOLEbKwnsMJ+00ZDX
-	bgsth0zqmzW/KZ9/1NZNZYZOfsDuSvTPztERirU1UqtJiVHEUSSrEESDjzkdZmdNj9R8lFf5PoW
-	YuE4yv9Hib4wt3zyWj7kB6pBIlTc=
-X-Google-Smtp-Source: AGHT+IHQ2TqZnJV1mxSjnzpxWCx+nfJNemzi8w1aw5mIOa61nNOnvPe+92b9GLy1tbgEUTyfwE+zYlG3cylwl8Lzk7s=
-X-Received: by 2002:a05:6902:2510:b0:e0b:d3a5:9604 with SMTP id
- 3f1490d57ef6-e1155ae1dc4mr5245810276.26.1723676158206; Wed, 14 Aug 2024
- 15:55:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mo93k7H2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DD6BC4AF0A;
+	Thu, 15 Aug 2024 03:14:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723691645;
+	bh=thhEBcc+3s9aaOhrpQtbTz50JQitSQ9kwBCCU59JHGQ=;
+	h=From:To:Cc:Subject:Date:From;
+	b=mo93k7H2+aCk19skjUTNXnj468E5y2LZ4iPU9qDz5E7OA7D46F/WakuedQ+zH2iWC
+	 etmuoCMseoOB491BUq6QpBr/6ul+PjaGP9FlTMhidepqRWY+OeGlWZKKDIQWEjpISu
+	 E+I6aFyMgnEexbpsJobO+LMSWpV8/3xGg6wBUVAURyF/BaXVTFoik+F6rbdi0gJ6YY
+	 aYiIe+xxeeqev7Z8i6zUkKjvgumXfII0JfvFmRVLsMAXWUEb6ZT2VSk8X+c8cBXyQ3
+	 g8SaavzqwMWv9URrbaM/NZ1fi9m31iX84UKlf1UDq2fmYQ7RwTVo11/WHCngYwCD/+
+	 TEM6llSaYGBTw==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 8d16762047c6
+Date: Thu, 15 Aug 2024 08:41:25 +0530
+Message-ID: <875xs2scjp.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <2024081244-emit-starlit-dd23@gregkh> <20240812195128.1095045-1-jain.abhinav177@gmail.com>
-In-Reply-To: <20240812195128.1095045-1-jain.abhinav177@gmail.com>
-From: Leah Rumancik <leah.rumancik@gmail.com>
-Date: Wed, 14 Aug 2024 15:55:47 -0700
-Message-ID: <CACzhbgQ7Smz21qi+XnQwy-gDecnhYw432oUAgQBJng0go-=kvg@mail.gmail.com>
-Subject: Re: [PATCH 6.1.y] xfs: remove WARN when dquot cache insertion fails
-To: Abhinav Jain <jain.abhinav177@gmail.com>
-Cc: gregkh@linuxfoundation.org, chandan.babu@oracle.com, djwong@kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	stable@vger.kernel.org, syzbot+55fb1b7d909494fd520d@syzkaller.appspotmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 
-Hi Abhinav,
+Hi folks,
 
-Thanks for your message! Fixing bot noise from WARNs isn't a high
-priority for me for patches to backport to stable, but I'm currently
-working on a set anyways so I'll throw this patch in. No need to
-resend anything.
+The for-next branch of the xfs-linux repository at:
 
-- Leah
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-On Mon, Aug 12, 2024 at 12:51=E2=80=AFPM Abhinav Jain <jain.abhinav177@gmai=
-l.com> wrote:
->
-> On Mon, 12 Aug 2024 16:40:13 +0200, Greg K-H wrote:
-> > You lost all of the ownership and original signed-off-by attributes for
-> > the commit :(
-> >
->
-> I will work on this to understand how to avoid such mistake moving forwar=
-d.
->
-> > Please work with the xfs developers if they wish to see this backported
-> > or not, that's up to them.
-> >
-> > thanks,
-> >
-> > greg k-h
->
-> I am tagging XFS maintainers so that they can confirm the same. If there
-> is a go ahead, only then I will submit a v2 retaining the original
-> signed-off-by attributes.
->
-> Thanks,
-> Abhinav
-> ---
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+8d16762047c6 xfs: conditionally allow FS_XFLAG_REALTIME changes if S_DAX is set
+
+3 new commits:
+
+Darrick J. Wong (3):
+      [73c34b0b85d4] xfs: attr forks require attr, not attr2
+      [04d6dbb55301] xfs: revert AIL TASK_KILLABLE threshold
+      [8d16762047c6] xfs: conditionally allow FS_XFLAG_REALTIME changes if S_DAX is set
+
+Please note that I have now dropped the following two commits from for-next,
+
+xfs: fix handling of RCU freed inodes from other AGs in  xrep_iunlink_mark_incore (4813305c621d)
+xfs: fix handling of RCU freed inodes from other AGs in xfs_icwalk_ag (681a1601ec07)
+
+Code Diffstat:
+
+ fs/xfs/scrub/bmap.c    |  8 +++++++-
+ fs/xfs/xfs_ioctl.c     | 11 +++++++++++
+ fs/xfs/xfs_trans_ail.c |  7 ++++++-
+ 3 files changed, 24 insertions(+), 2 deletions(-)
+
+-- 
+Chandan
