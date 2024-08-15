@@ -1,175 +1,219 @@
-Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 672D01714DC
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 12:26:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08ADE19DF8B
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 12:35:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723724800; cv=none; b=ZSQD4FO0eaABV5YSXUVXz8wQxzFhU9IuyZHmNXyVM+nl1hXRo5TaUQGGNmdRJVx+8MkSSVtFf1kSXXH2arFqHHAtHNqokY1mHJlSoSQmzTolMT+BpSc1muI73pXwi6C8cHSCzT916jaE6id3bmz+dGd7VMv2hWytxzaz6xYmhhM=
+	t=1723725335; cv=none; b=egqj587DRd4Cnn4cBLWcScSyXOw89ixvzZS9JW/KINmK8MNRMxiZHgXmujD3hqGJ/xFI4oUQZ3Kudkoq8t+/NVYROqnHpTDnKsrMoXmuwh+dEnELItd+/eQHNKXEA+AxCTDQ2Hswst6SXUJbZAfiUPX6IbSrS2NHzYhiRYo7yfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723724800; c=relaxed/simple;
-	bh=ORYOrGZR9rhqnRUa1FmNAWNtpWp9O6XiJgTzuuCqTi4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fOgnw68z+NA8Td7idsBz5/dOyVdUMLkPddE947GIE7C4wWI/T7Ar3XQ1xYngcjNJ4mq+MwV+xIVN/al4dFmgrcz074f8mTVFBBXpik0sGqo/uKQU1R6CLuAbwVRxf87kbuGTe58lRa0uotOKt2wPn4TqYFw0Bl73IbKzvS3nXB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DGWJQTKc; arc=none smtp.client-ip=209.85.218.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DGWJQTKc"
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-a7aac70e30dso104981566b.1
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 05:26:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723724797; x=1724329597; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0Ga671Dz+v8d15XLAuiab3cK1X5R+G/DagXaBPp4FC4=;
-        b=DGWJQTKcbt2pjE8fjR4RfV026xz/SSG/43qgz3ChzrhdHcnJQQ7tkUs4ui8Nj4/AGY
-         RNsU5k69orlPssIf3JSwZciZCYROus1PN5/4v8+3gR0vXabArjQw/JKC1NmSbyJvUV6o
-         zk31POp6LHdbEr2TiX0eSnrssgrY0g05ZUM2RmD0/1fCjY2SCoNEuEhdNrnbHXz/O8rY
-         H028jqtR3zZ50kQiFQEPZV3iTKuPP2WEps/exHNUAoH2GihWEu6CS+1Lm5kIWySYhet1
-         nxQLeojfeJnkqZSADiwK7NvPypFP3C0f4Ia+VxtySf4Wq7jT8HIct6V5EbVAHyZqzIt0
-         AHeQ==
+	s=arc-20240116; t=1723725335; c=relaxed/simple;
+	bh=oCc8kiVUHH0a9spPU3xnBLKFF7P2+smtvv+27o1ThP8=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=HQeoLnnl0aSqP2kc3HAvmnCi/DR2k/ukLjeaVWi/cMoDWiy+8vLozvFEqhGocLUBN7UwECBDHg2z4lHMdboEMe01790VP1pnPgFZXJaCZ0507cxiooJfmKAR5xFQB4K4L7N2VJJKGOZH6/XjVV3lNq1OjtIz7yIPtk0o/s5Y2qo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-39d17abca55so9845515ab.1
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 05:35:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723724797; x=1724329597;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0Ga671Dz+v8d15XLAuiab3cK1X5R+G/DagXaBPp4FC4=;
-        b=xRQsqVDWUUpuvxmbU1uFAsrB17CpVxXufCC3lKAgRGsgNx3J+VLYnMCa1kKLN+xWkY
-         ZVomFfZVtmO0OAIPE+nACXpVV+sSPn9DGmEienrPmxTZGzjfuFsfEKsJ7kG1L8B+peaC
-         V321FvAtKuO25y9QedI4yRKZoEM4JIL19p76CSsI19Gs5a+MTa/LbGNrG1A/5O+v2Gnd
-         C9ztP2C2t4HPjDjbgvtyEMG2M/TVTNMD7Hg/lI8MBL1iY1VkUVycmH/IcpWz2QYp7Q5J
-         QAApnIQTvKaOJOPf1FrrYMbMXNSsvMgfK62qdWT+404P7qLI6a/4zcucdUPPdVXAdMZA
-         EE6A==
-X-Gm-Message-State: AOJu0YyvKmcymop8niqOppYrMQBeL7HT4u5qj6Oi3e5A2YBbJnQEv27Z
-	N9Q2/72KJBS/opJNT/0puMbwONP3McU4B6BnwvxZotvw72J9JZKfcaCzrAGhnzdU34x4d0rkS0O
-	+2NR43FiROQCpWMOdKUf5vld3zZV3fw==
-X-Google-Smtp-Source: AGHT+IH/G1zcN1Fli4pBQaGSPXiJOu1eTb7hHVwtMn3WHXqL9PTjk/ovg3hkoZ75ERd1zhy6Xq9QhvpE7g3J02pSgnY=
-X-Received: by 2002:a17:907:c0d:b0:a7a:ab1a:2d71 with SMTP id
- a640c23a62f3a-a83670956a2mr396131866b.59.1723724796293; Thu, 15 Aug 2024
- 05:26:36 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1723725333; x=1724330133;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FO04zWfmoPl6JXkiMG9YubIKQuGqI1ZQgX1qGisSs5g=;
+        b=qJGjVqJNgkJdPx6juPB5+3NtApL96xJ0iDLFNTDIW2y035YVescFc0AwtmdxSTC6Mb
+         UcEn0LcYmhL/P1IC2BW9hhImTtfE9ZwgAhCAUnulCxzSWVXgxfPl8Mc6c0Q4s+JhGoeE
+         TSW4pHLP4KOXpAIBhhSdxbbKzLW1IV0u7NTgYKB2W3gV8e/WW6iQtOHW8U2zQNXRvaE2
+         ezPtiSdCu7iKahiTH1Oy7VDVN6ClfaA8GWTpBl1UUeBLlKECPXOMOfUC42HuVJc/dsN3
+         U2kobTRlI/a8X+uVa+ZvAAFAd1A/aiQyuwn9PwTf6crV8es9B4ma6sByMh6AJLzNQ68p
+         rbPA==
+X-Forwarded-Encrypted: i=1; AJvYcCWza4gOeLS7VhqtGa4Y87YykTIYCARvXV3wXMLHyKXznmwOIlwLU5EUdBs3Zu4d0OjCYDb23ESY8HKftGPLh4PqZWPULTNDkgkD
+X-Gm-Message-State: AOJu0Ywsrbwg+m/KarOIVE1976SADVldDpm9W1REhk3oBBs135dUCUEB
+	rUHjtjc8GPP5fR73VqvbhR4qAA7SVz8igmpgONWd43Q8ibqNUSZ7gZRmm9SKUteX6prm6Bd8PT8
+	Fmao9RSsRKo3cO7aiLfUalnjYt1b7/4+TjYaUb0aFPhbDKWaJpR3QI7w=
+X-Google-Smtp-Source: AGHT+IE3qfcv0Gz50A9TsKAswvDjNQ74Mo+p6fxg9LQ8hiROgEVQ81tDh9Ibc4rQvRAwFMDV8lTLnQ94SWAJYBQW59D7ja3Y6QeQ
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGudoHFJV=S61Fjb=QVf4mSTRfkYf5QR1y0TDMhnawZKtgyouA@mail.gmail.com>
-In-Reply-To: <CAGudoHFJV=S61Fjb=QVf4mSTRfkYf5QR1y0TDMhnawZKtgyouA@mail.gmail.com>
-From: Mateusz Guzik <mjguzik@gmail.com>
-Date: Thu, 15 Aug 2024 14:26:24 +0200
-Message-ID: <CAGudoHHO=P5VRY32fY4KgoOomJrfQMW5hhR5pKE--2wS3u+WVw@mail.gmail.com>
-Subject: Re: perf loss on parallel compile due to conention on the buf semaphore
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+X-Received: by 2002:a05:6e02:214e:b0:398:36c0:796e with SMTP id
+ e9e14a558f8ab-39d124564a7mr4824845ab.1.1723725333099; Thu, 15 Aug 2024
+ 05:35:33 -0700 (PDT)
+Date: Thu, 15 Aug 2024 05:35:33 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000002b8b05061fb8147f@google.com>
+Subject: [syzbot] [xfs?] possible deadlock in xfs_can_free_eofblocks (2)
+From: syzbot <syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 15, 2024 at 2:25=E2=80=AFPM Mateusz Guzik <mjguzik@gmail.com> w=
-rote:
->
-> I have an ext4-based system where xfs got mounted on tmpfs for testing
+Hello,
 
-erm, i mean on /tmp :)
+syzbot found the following issue on:
 
-I also used noatime.
+HEAD commit:    6b0f8db921ab Merge tag 'execve-v6.11-rc4' of git://git.ker..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=104cabd3980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=801d05d1ea4be1b8
+dashboard link: https://syzkaller.appspot.com/bug?extid=53d541c7b07d55a392ca
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=148fe6ed980000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17840ad5980000
 
-> purposes. The directory is being used a lot by gcc when compiling.
->
-> I'm testing with 24 compilers running in parallel, each operating on
-> their own hello world source file, listed at the end for reference.
->
-> Both ext4 and btrfs backing the directory result in 100% cpu
-> utilization and about 1500 compiles/second. With xfs I see about 20%
-> idle(!) and about 1100 compiles/second.
->
-> According to offcputime-bpfcc -K the time is spent waiting on the buf
-> thing, sample traces:
->
->    finish_task_switch.isra.0
->     __schedule
->     schedule
->     schedule_timeout
->     __down_common
->     down
->     xfs_buf_lock
->     xfs_buf_find_lock
->     xfs_buf_get_map
->     xfs_buf_read_map
->     xfs_trans_read_buf_map
->     xfs_read_agi
->     xfs_ialloc_read_agi
->     xfs_dialloc
->     xfs_create
->     xfs_generic_create
->     path_openat
->     do_filp_open
->     do_sys_openat2
->     __x64_sys_openat
->     do_syscall_64
->     entry_SYSCALL_64_after_hwframe
->     -                cc (602142)
->         10639
->
->     finish_task_switch.isra.0
->     __schedule
->     schedule
->     schedule_timeout
->     __down_common
->     down
->     xfs_buf_lock
->     xfs_buf_find_lock
->     xfs_buf_get_map
->     xfs_buf_read_map
->     xfs_trans_read_buf_map
->     xfs_read_agi
->     xfs_iunlink
->     xfs_dir_remove_child
->     xfs_remove
->     xfs_vn_unlink
->     vfs_unlink
->     do_unlinkat
->     __x64_sys_unlink
->     do_syscall_64
->     entry_SYSCALL_64_after_hwframe
->     -                as (598688)
->         12050
->
-> The fact that this is contended aside, I'll note the stock semaphore
-> code does not do adaptive spinning, which avoidably significantly
-> worsens the impact. You can probably convert this to a rw semaphore
-> and only ever writelock, which should sort out this aspect. I did not
-> check what can be done to contend less to begin with.
->
-> reproducing:
-> create a hello world .c file (say /tmp/src.c) and plop into /src:
-> for i in $(seq 0 23); do cp /tmp/src.c /src/src${i}.c; done
->
-> plop the following into will-it-scale/tests/cc.c && ./cc_processes -t 24
->
-> #include <sys/types.h>
-> #include <unistd.h>
->
-> char *testcase_description =3D "compile";
->
-> void testcase(unsigned long long *iterations, unsigned long nr)
-> {
->         char cmd[1024];
->
->         sprintf(&cmd, "cc -c -o /tmp/out.%d /src/src%d.c", nr, nr);
->
->         while (1) {
->                 system(cmd);
->
->                 (*iterations)++;
->         }
-> }
->
-> --
-> Mateusz Guzik <mjguzik gmail.com>
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-6b0f8db9.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/b407dbb66544/vmlinux-6b0f8db9.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/5c1cf0f1b692/bzImage-6b0f8db9.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/ce1130cd3c8d/mount_0.gz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com
+
+======================================================
+WARNING: possible circular locking dependency detected
+6.11.0-rc3-syzkaller-00013-g6b0f8db921ab #0 Not tainted
+------------------------------------------------------
+kswapd0/79 is trying to acquire lock:
+ffff88801da74118 (&xfs_nondir_ilock_class#3){++++}-{3:3}, at: xfs_can_free_eofblocks+0x5f1/0x8d0 fs/xfs/xfs_bmap_util.c:550
+
+but task is already holding lock:
+ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6841 [inline]
+ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbb4/0x35a0 mm/vmscan.c:7223
+
+which lock already depends on the new lock.
 
 
+the existing dependency chain (in reverse order) is:
 
---=20
-Mateusz Guzik <mjguzik gmail.com>
+-> #1 (fs_reclaim){+.+.}-{0:0}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+       __fs_reclaim_acquire mm/page_alloc.c:3823 [inline]
+       fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3837
+       might_alloc include/linux/sched/mm.h:334 [inline]
+       slab_pre_alloc_hook mm/slub.c:3939 [inline]
+       slab_alloc_node mm/slub.c:4017 [inline]
+       __do_kmalloc_node mm/slub.c:4157 [inline]
+       __kmalloc_noprof+0xa9/0x400 mm/slub.c:4170
+       kmalloc_noprof include/linux/slab.h:685 [inline]
+       xfs_attr_shortform_list+0x753/0x1900 fs/xfs/xfs_attr_list.c:117
+       xfs_attr_list+0x1d0/0x270 fs/xfs/xfs_attr_list.c:595
+       xfs_vn_listxattr+0x1d2/0x2c0 fs/xfs/xfs_xattr.c:341
+       vfs_listxattr fs/xattr.c:493 [inline]
+       listxattr+0x107/0x290 fs/xattr.c:841
+       path_listxattr fs/xattr.c:865 [inline]
+       __do_sys_llistxattr fs/xattr.c:883 [inline]
+       __se_sys_llistxattr fs/xattr.c:880 [inline]
+       __x64_sys_llistxattr+0x170/0x230 fs/xattr.c:880
+       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #0 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
+       check_prev_add kernel/locking/lockdep.c:3133 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3252 [inline]
+       validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
+       __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+       down_read_nested+0xb5/0xa50 kernel/locking/rwsem.c:1651
+       xfs_can_free_eofblocks+0x5f1/0x8d0 fs/xfs/xfs_bmap_util.c:550
+       xfs_inode_mark_reclaimable+0x1bb/0xf60 fs/xfs/xfs_icache.c:2148
+       destroy_inode fs/inode.c:313 [inline]
+       evict+0x549/0x630 fs/inode.c:694
+       dispose_list fs/inode.c:712 [inline]
+       prune_icache_sb+0x239/0x2f0 fs/inode.c:897
+       super_cache_scan+0x38c/0x4b0 fs/super.c:223
+       do_shrink_slab+0x701/0x1160 mm/shrinker.c:435
+       shrink_slab+0x1090/0x14c0 mm/shrinker.c:662
+       shrink_one+0x43b/0x850 mm/vmscan.c:4815
+       shrink_many mm/vmscan.c:4876 [inline]
+       lru_gen_shrink_node mm/vmscan.c:4954 [inline]
+       shrink_node+0x3799/0x3de0 mm/vmscan.c:5934
+       kswapd_shrink_node mm/vmscan.c:6762 [inline]
+       balance_pgdat mm/vmscan.c:6954 [inline]
+       kswapd+0x1bcd/0x35a0 mm/vmscan.c:7223
+       kthread+0x2f0/0x390 kernel/kthread.c:389
+       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(fs_reclaim);
+                               lock(&xfs_nondir_ilock_class#3);
+                               lock(fs_reclaim);
+  rlock(&xfs_nondir_ilock_class#3);
+
+ *** DEADLOCK ***
+
+2 locks held by kswapd0/79:
+ #0: ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6841 [inline]
+ #0: ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbb4/0x35a0 mm/vmscan.c:7223
+ #1: ffff88803a2860e0 (&type->s_umount_key#44){.+.+}-{3:3}, at: super_trylock_shared fs/super.c:562 [inline]
+ #1: ffff88803a2860e0 (&type->s_umount_key#44){.+.+}-{3:3}, at: super_cache_scan+0x94/0x4b0 fs/super.c:196
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 79 Comm: kswapd0 Not tainted 6.11.0-rc3-syzkaller-00013-g6b0f8db921ab #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:93 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:119
+ check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2186
+ check_prev_add kernel/locking/lockdep.c:3133 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3252 [inline]
+ validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
+ __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
+ lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+ down_read_nested+0xb5/0xa50 kernel/locking/rwsem.c:1651
+ xfs_can_free_eofblocks+0x5f1/0x8d0 fs/xfs/xfs_bmap_util.c:550
+ xfs_inode_mark_reclaimable+0x1bb/0xf60 fs/xfs/xfs_icache.c:2148
+ destroy_inode fs/inode.c:313 [inline]
+ evict+0x549/0x630 fs/inode.c:694
+ dispose_list fs/inode.c:712 [inline]
+ prune_icache_sb+0x239/0x2f0 fs/inode.c:897
+ super_cache_scan+0x38c/0x4b0 fs/super.c:223
+ do_shrink_slab+0x701/0x1160 mm/shrinker.c:435
+ shrink_slab+0x1090/0x14c0 mm/shrinker.c:662
+ shrink_one+0x43b/0x850 mm/vmscan.c:4815
+ shrink_many mm/vmscan.c:4876 [inline]
+ lru_gen_shrink_node mm/vmscan.c:4954 [inline]
+ shrink_node+0x3799/0x3de0 mm/vmscan.c:5934
+ kswapd_shrink_node mm/vmscan.c:6762 [inline]
+ balance_pgdat mm/vmscan.c:6954 [inline]
+ kswapd+0x1bcd/0x35a0 mm/vmscan.c:7223
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
