@@ -1,85 +1,83 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f72.google.com (mail-io1-f72.google.com [209.85.166.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A9A146A6D;
-	Thu, 15 Aug 2024 10:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74D031AC886
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 10:40:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723717210; cv=none; b=ssEXZKF7cwseruuAFqbTp64d0OfTGrjMfI5WhAJ3lwSOSpVuQC0NzGFp+Yhas+dZizXnXS16I95WSGlN5gq3Gf7VSULYT9DppvVVBTT6bFWCdkSKn7XltJ98ZncBOZyajMb//JX+uOiZk2DCqEsfYBja+FHbsnqHrsSXqcTj2Oo=
+	t=1723718427; cv=none; b=sHZB4FW0VV52sPbimj0QENDtBwXFueSUC961N1g+EdBCiSoY5F54iKPUYMOsjuTRX/BK9VrsccD0W2d0WcGlKMOeWaF+2+489i6Y39MOL6gQctYTUbQRtpqqDWheIXXvIHVJ+mfFbnlgaPWQ1Fw3NGE2pY2iFDO7dXlCqupbuRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723717210; c=relaxed/simple;
-	bh=raOaABlj1OsS4zpQCmdxj81O5KH9fSUAIFRNuwOHlBE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=eJWEm0iFBuT2cCpIeVpSnHY6GRAZS8N93yEHq1H74IvbUVaaTxwTQYlf6zRLGtS1GlIPVuqUhmBprf7gf6/no8jl7XyckFkfGvmWUk7Qn0ER8ZsU6G1oqPdg3qTsbYj4lZzEAIIAOs7iwvP8VVofGfIRUS/0TfO7/X9TnlPmp/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Wl1JC0S47z1HGZm;
-	Thu, 15 Aug 2024 18:16:59 +0800 (CST)
-Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7BC3F180019;
-	Thu, 15 Aug 2024 18:20:04 +0800 (CST)
-Received: from [10.174.176.88] (10.174.176.88) by
- kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 15 Aug 2024 18:20:03 +0800
-Message-ID: <a4a70b97-aaff-49ce-afbf-e58787647bdc@huawei.com>
-Date: Thu, 15 Aug 2024 18:20:02 +0800
+	s=arc-20240116; t=1723718427; c=relaxed/simple;
+	bh=z1ba+5EJVDOkslQ+E/z3CgpEv67HZzOhoQigUq+k5cQ=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=OYAQRZ+KYD6PUUBRiXHTHEUBHhIbY0w/ZNRO7FAgog2DEuXWOKy7CyVW9zZ3g26GZMbSPJ0vk/HDPd/bev0EqIqGaxH/5LYAt8SsNvqjQmGMgWRA/25EUo4CgnMnlsneftl1XtNaVkKVH+zXaB0eyKivsB87kdZSw8VilYjKAmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-81f93601444so82740839f.2
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 03:40:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1723718425; x=1724323225;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=opiCOyLB/xPeMdw+vyiT2OWRVsp382tiiE0i299tivY=;
+        b=n7+11EKwH2VYWuiJ8nPfEXKlAhwKMS7OjjnTZQOpFQR26rtvgAmtyJ18SfQqhudcR9
+         BUZB1xMr/kmLgAFGyd9sYiYIwHtEBVh9+LvKqbdfB12QSoK+FUIj5ZbDmjhvlwouhPqP
+         z0UQdUlT/Xm3yNjSd828oXR7QEc5eMq1R4xVBHepDpaoTm7cDXtmybwOYKE74XeCtt74
+         Q7dGIACCssdDu+BKdrf3Aif0rMGxKKI1ht79+w9oxQrbUswsoy9TuJRbmDkckaUB1pOM
+         v1Wueb3qtR9T6yefsdshe/FqnsBqLRQKb/o3Uz9dIQNBCTxbA+pDpPQ8RprlgLTSH5P1
+         974g==
+X-Forwarded-Encrypted: i=1; AJvYcCU8K/MzXcKl2H/Ca2ZVqna5oVgwpRIOfM6DP1FU0iYR+h2qD5WAUQrO9ul7VdlrvkGnqWuu6vj+vewVZ+YP1J+4qSZ0fYo74NFT
+X-Gm-Message-State: AOJu0Yx2voLLKeCrQ6ilhkkYAm0KxQNqP/ruX2Y+ybBC0aPp+THUyAgt
+	JqxbS3HPKfoP9Tma1iZQvZue7Qy8vwbf/kAS1JQFkuRpoBu1A/8sPc426wN6125w0LDV07ebrdE
+	S5n/5gE4lR8iOD6OCPpQOfkjMKQBbpo5K9aauUpeI4l7WfLtM4syEC8k=
+X-Google-Smtp-Source: AGHT+IHwFK/7Fi1D4ndezxiB63QY2Su/S65+td2Lvy/Y8aP12/SaksBUdM8x7drT5SN13mffR4o50rRGTKkU4SCvPTX7wNuZem2M
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 0/2] Some bugfix for xfs fsmap
-To: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
-	<osandov@fb.com>, <john.g.garry@oracle.com>
-CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<yangerkun@huawei.com>
-References: <20240812011505.1414130-1-wozizhi@huawei.com>
-From: Zizhi Wo <wozizhi@huawei.com>
-In-Reply-To: <20240812011505.1414130-1-wozizhi@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemf100017.china.huawei.com (7.202.181.16)
+X-Received: by 2002:a05:6e02:12c1:b0:396:ec3b:df63 with SMTP id
+ e9e14a558f8ab-39d124f3e2cmr3864035ab.4.1723718425574; Thu, 15 Aug 2024
+ 03:40:25 -0700 (PDT)
+Date: Thu, 15 Aug 2024 03:40:25 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000731785061fb678d5@google.com>
+Subject: [syzbot] Monthly xfs report (Aug 2024)
+From: syzbot <syzbot+list4f8957ccf166d2563804@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-friendly ping
+Hello xfs maintainers/developers,
 
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-在 2024/8/12 9:15, Zizhi Wo 写道:
-> Changes since V2[1]:
->   - Split the original patch into two, each for a different problem.
->   - The fix focuses solely on addressing the omission problem and does not
->     involve the precision of intervals.
-> 
-> This patch set contains two patches to repair fsmap. Although they are both
-> problems of missing query intervals, the root causes of the two are
-> inconsistent, so two patches are proposed.
-> 
-> Patch 1: The fix addresses the interval omission issue caused by the
-> incorrect setting of "rm_owner" in the high_key during rmap queries. In
-> this scenario, fsmap finds the record on the rmapbt, but due to the
-> incorrect setting of the "rm_owner", the key of the record is larger than
-> the high_key, causing the query result to be incorrect. This issue is
-> resolved by fixing the "rm_owner" setup logic.
-> 
-> Patch 2: The fix addresses the interval omission issue caused by bit
-> shifting during gap queries in fsmap. In this scenario, fsmap does not
-> find the record on the rmapbt, so it needs to locate it by the gap of the
-> info->next_daddr and high_key address. However, due to the shift, the
-> two are reduced to 0, so the query error is caused. The issue is resolved
-> by introducing the "end_daddr" field in the xfs_getfsmap_info structure to
-> store the high_key at the sector granularity.
-> 
-> [1] https://lore.kernel.org/all/20240808144759.1330237-1-wozizhi@huawei.com/
-> 
-> Zizhi Wo (2):
->    xfs: Fix the owner setting issue for rmap query in xfs fsmap
->    xfs: Fix missing interval for missing_owner in xfs fsmap
-> 
->   fs/xfs/xfs_fsmap.c | 19 ++++++++++++++++++-
->   1 file changed, 18 insertions(+), 1 deletion(-)
-> 
+During the period, 1 new issues were detected and 0 were fixed.
+In total, 12 issues are still open and 23 have been fixed so far.
+
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 74      Yes   possible deadlock in xfs_icwalk_ag (2)
+                  https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
+<2> 69      No    KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<3> 22      No    possible deadlock in xfs_ilock_attr_map_shared
+                  https://syzkaller.appspot.com/bug?extid=069cc167ecbee6e3e91a
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
