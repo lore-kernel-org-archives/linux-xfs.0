@@ -1,42 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from slategray.cherry.relay.mailchannels.net (slategray.cherry.relay.mailchannels.net [23.83.223.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86C8E84E0A;
-	Thu, 15 Aug 2024 17:42:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723743750; cv=none; b=AUNbN51ZSE/2Kjx5ei20GocyEptz6JdCvx+SvW+hhbuEFy8TbGhKD7K+C8xkkfkxEOInRm4NK/zQU+nBbTRZ0iBxrpRF4jPThaSv7ml4vuwINDAmZv0ANLXcJdt5uKw7RK2FNEHmn1/n8oLdfGDH4R8g6zHQ6Pkk+MOmQDs0BFc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723743750; c=relaxed/simple;
-	bh=MNhO4E4MKhkv70C1X6YvebALLvnw3gkttx8/+8U/M/s=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E0AE5644E
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 19:40:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=23.83.223.169
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723750812; cv=pass; b=Ua1VH9fqxTYYoYgjS5QBqIUDZXY8+TMnhiw5oRYRoc02eFUUMTx+qK3M0IUkr+4Wp7xWi3/Dfj300YkazG1DFKisE2CadFwMskI48mfdwuF8vCY8ilDdAS4dHT3zxQ+X19AHJsz5I0yTi0Y/90uozOLUVLi6wvDQnF/M9nQoaBY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723750812; c=relaxed/simple;
+	bh=DYv0XX5TH/96rVPN7kpkY+c8IJDR1Wxw81yxlCaYMZE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O84kHBJuUrEXL7IiPYR5nyDxjzvfCCCpzresVIBHjYa9QyENnhgYK1lEW69YPXcKe1d0rsc5z4nBTDBdBCrHznvlUJXEohbRrpDa43hWV2koRIm/5lNKyXs1DsKkcK1kjU6zw+/iGPojZx2e1LXNS5hJBCnUoBjTZPkXyCKtFto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D/3nlWgV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YZ+YkeWrc3B4OU0Tf7qdORu7ZrNUNqvR7CSrVPqWB3G3NaOSTEihxqhTZNtl9PGm45cV2lFl1w68zT5xLcljdcD6dsEyEcT8Y64Db0H7MnTcLP0naXdjbIlfsgW6m/YZBwqAnnZ7SvmwdMSMJ+8IYfsXuB5di4bwxfjv0rBVyJ8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=templeofstupid.com; spf=pass smtp.mailfrom=templeofstupid.com; dkim=pass (2048-bit key) header.d=templeofstupid.com header.i=@templeofstupid.com header.b=qLH8BhP1; arc=pass smtp.client-ip=23.83.223.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=templeofstupid.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=templeofstupid.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D/3nlWgV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EE47C32786;
-	Thu, 15 Aug 2024 17:42:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723743750;
-	bh=MNhO4E4MKhkv70C1X6YvebALLvnw3gkttx8/+8U/M/s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=D/3nlWgVC40U3fUda7qoVbsgb6w/g5otOSrAN5lvRvwfj1Eporj5XuSkGNOHBK+KN
-	 FrFzAr6oR5p0EtY3diyMx8F56GBRWf1ylgFrtNpA9Tq0HfMlUPip3WcFPMSCSXKOHt
-	 tEoqeULkqvkV/+LOXEhvI3FZOCOkbad5tuAbjw0mY7iYtwkIblbbbCeolt+dYx2anO
-	 qpxhzSPbuuiD38Cin3hDVTEy+Qg5kbwEmUW5akLPgZbPQxSkBHsDWP9WrktZ/uF6A5
-	 CgoeKLQBiw5gnIgGXx4jhRbdvd5sdRpZBVEBrQ1Y8xX3tdJl046natj2lfOQSz+gOa
-	 oB4nGnsVKjUhg==
-Date: Thu, 15 Aug 2024 10:42:29 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zizhi Wo <wozizhi@huawei.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, osandov@fb.com,
-	john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, yangerkun@huawei.com
-Subject: Re: [PATCH V3 2/2] xfs: Fix missing interval for missing_owner in
- xfs fsmap
-Message-ID: <20240815174229.GI865349@frogsfrogsfrogs>
-References: <20240812011505.1414130-1-wozizhi@huawei.com>
- <20240812011505.1414130-3-wozizhi@huawei.com>
+	dkim=pass (2048-bit key) header.d=templeofstupid.com header.i=@templeofstupid.com header.b="qLH8BhP1"
+X-Sender-Id: dreamhost|x-authsender|kjlx@templeofstupid.com
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+	by relay.mailchannels.net (Postfix) with ESMTP id A11586C4D78
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 19:40:09 +0000 (UTC)
+Received: from pdx1-sub0-mail-a210.dreamhost.com (unknown [127.0.0.6])
+	(Authenticated sender: dreamhost)
+	by relay.mailchannels.net (Postfix) with ESMTPA id 525E66C4CBA
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 19:40:09 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1723750809; a=rsa-sha256;
+	cv=none;
+	b=jzYUNg/UxhfMn/RyOgnXhCoI2VSP+yDf2rNNVN9hwSlgO3Ek+Fl2wE5PwAdgrwm/CoNdcu
+	Ig3PzvbOSNPSx8Z7Anc3p/9E74/LCIcc/FHdy7udduux5eoAqKuT/lswiizxpj7FX+OE+K
+	MpWVTnOJ/jlGh6jw4UclBQwJizT8i4l99X55aePVg3eY9Uy7WH0DtAhm+qOo46qbBTCEVS
+	Sln5V1r/raqdEyVw5g9xoH4/xPlN0spkeraQmsyOBnnl+OqDSgOZ/AxE/Ua5s8PjzqDTw8
+	HISfoEtZoKXS4WRW1iIstfFWrUpDH1Gj7jafxNFvRhtHFBpRcRksO5eAFIT5BQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+	s=arc-2022; t=1723750809;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references:dkim-signature;
+	bh=pcTxIWGPeu1R01B3vemkbii6+5znxxejEkyXOzhEKmU=;
+	b=Ejl/gwvr34ZjhsibdSpe6gnxSKkoEQtCiIJ320UfHEIET8Pc1rQAeonM7MyLeXn/g3NaRo
+	x5CWa7f+AvYoUhJA3gIJuhtrj5uN2A3LtC7EhfZhSXDRXOkx7adgRsrsL8sCUm7BsHuX1Q
+	AI/1y8TvVzZP3ZcEVgCRNfQ1+oe2B01/VDQqkkt+RP/y8d76Ygdqm0F/cr3yj7boq9Qjhh
+	uHGwYSjrt8tNrLg+W3pCLx8bQooLJUuH5CcsOGS6kNbgCFswUIW/ZPI2BZNRmphzlCv7rf
+	Zb7RchNbsjg+twIp/FjqhNmmry0TY9eOOmSpkep2SlyqynmQHsmA6e+/9VDm1A==
+ARC-Authentication-Results: i=1;
+	rspamd-c4b59d8dc-cwtkn;
+	auth=pass smtp.auth=dreamhost smtp.mailfrom=kjlx@templeofstupid.com
+X-Sender-Id: dreamhost|x-authsender|kjlx@templeofstupid.com
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|kjlx@templeofstupid.com
+X-MailChannels-Auth-Id: dreamhost
+X-Cellar-Dime: 4d72dcdf2c45c112_1723750809553_675905780
+X-MC-Loop-Signature: 1723750809553:551450302
+X-MC-Ingress-Time: 1723750809552
+Received: from pdx1-sub0-mail-a210.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+	by 100.124.208.81 (trex/7.0.2);
+	Thu, 15 Aug 2024 19:40:09 +0000
+Received: from kmjvbox.templeofstupid.com (c-73-70-109-47.hsd1.ca.comcast.net [73.70.109.47])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kjlx@templeofstupid.com)
+	by pdx1-sub0-mail-a210.dreamhost.com (Postfix) with ESMTPSA id 4WlFp0479NzNs
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 12:40:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=templeofstupid.com;
+	s=dreamhost; t=1723750808;
+	bh=pcTxIWGPeu1R01B3vemkbii6+5znxxejEkyXOzhEKmU=;
+	h=Date:From:To:Cc:Subject:Content-Type;
+	b=qLH8BhP1IV9VF75GQ8se/mGUGeUpGZtXpA1kWGt3O+YPraUSVS6wbO1KRHM9Hg7Lf
+	 G0qYpbkc7h6Hf3uJhdk1aOPzERZ7VOA9LwpJWGAb1uUXMmv2ooy64I8WxBdvsdGKzi
+	 URN+gaHOXw/efANGUg6EDVIGad1mm4dF2KnlUg1gGshG6NqFEtOiqiFyXRYrDIOL4d
+	 OqSSighHaLuJzHT7JIaAqT6q3evzyIkXnkxdghc9YGCM+36AG/irQBFKJPzYaMKHKS
+	 dgYKsWWkQaBjl161dxko0Bvuvv56QTVQEktsNYTDIqVXIwxa423Db4CKUV4ns0K287
+	 mmQLKwNB3BsCw==
+Received: from johansen (uid 1000)
+	(envelope-from kjlx@templeofstupid.com)
+	id e0064
+	by kmjvbox.templeofstupid.com (DragonFly Mail Agent v0.12);
+	Thu, 15 Aug 2024 12:40:07 -0700
+Date: Thu, 15 Aug 2024 12:40:07 -0700
+From: Krister Johansen <kjlx@templeofstupid.com>
+To: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <david@fromorbit.com>
+Cc: Dave Chinner <dchinner@redhat.com>, Zorro Lang <zlang@kernel.org>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: [RFC PATCH 2/2] xfs/306: update resblks to account for increased
+ per-ag reservation size
+Message-ID: <7a1a37011ed851a2dfdb8ff62e9e60236253580a.1723690703.git.kjlx@templeofstupid.com>
+References: <cover.1723687224.git.kjlx@templeofstupid.com>
+ <cover.1723690703.git.kjlx@templeofstupid.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,130 +100,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240812011505.1414130-3-wozizhi@huawei.com>
+In-Reply-To: <cover.1723690703.git.kjlx@templeofstupid.com>
 
-On Mon, Aug 12, 2024 at 09:15:05AM +0800, Zizhi Wo wrote:
-> In the fsmap query of xfs, there is an interval missing problem:
-> [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
->  EXT: DEV    BLOCK-RANGE           OWNER              FILE-OFFSET      AG AG-OFFSET             TOTAL
->    0: 253:16 [0..7]:               static fs metadata                  0  (0..7)                    8
->    1: 253:16 [8..23]:              per-AG metadata                     0  (8..23)                  16
->    2: 253:16 [24..39]:             inode btree                         0  (24..39)                 16
->    3: 253:16 [40..47]:             per-AG metadata                     0  (40..47)                  8
->    4: 253:16 [48..55]:             refcount btree                      0  (48..55)                  8
->    5: 253:16 [56..103]:            per-AG metadata                     0  (56..103)                48
->    6: 253:16 [104..127]:           free space                          0  (104..127)               24
->    ......
-> 
-> BUG:
-> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 104 107' /mnt
-> [root@fedora ~]#
-> Normally, we should be able to get [104, 107), but we got nothing.
-> 
-> The problem is caused by shifting. The query for the problem-triggered
-> scenario is for the missing_owner interval (e.g. freespace in rmapbt/
-> unknown space in bnobt), which is obtained by subtraction (gap). For this
-> scenario, the interval is obtained by info->last. However, rec_daddr is
-> calculated based on the start_block recorded in key[1], which is converted
-> by calling XFS_BB_TO_FSBT. Then if rec_daddr does not exceed
-> info->next_daddr, which means keys[1].fmr_physical >> (mp)->m_blkbb_log
-> <= info->next_daddr, no records will be displayed. In the above example,
-> 104 >> (mp)->m_blkbb_log = 12 and 107 >> (mp)->m_blkbb_log = 12, so the two
-> are reduced to 0 and the gap is ignored:
-> 
->  before calculate ----------------> after shifting
->  104(st)  107(ed)		      12(st/ed)
->   |---------|				  |
->   sector size			      block size
-> 
-> Resolve this issue by introducing the "end_daddr" field in
-> xfs_getfsmap_info. This records |key[1].fmr_physical + key[1].length| at
-> the granularity of sector. If the current query is the last, the rec_daddr
-> is end_daddr to prevent missing interval problems caused by shifting. We
-> only need to focus on the last query, because xfs disks are internally
-> aligned with disk blocksize that are powers of two and minimum 512, so
-> there is no problem with shifting in previous queries.
-> 
-> After applying this patch, the above problem have been solved:
-> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 104 107' /mnt
->  EXT: DEV    BLOCK-RANGE      OWNER            FILE-OFFSET      AG AG-OFFSET        TOTAL
->    0: 253:16 [104..106]:      free space                        0  (104..106)           3
-> 
-> Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
-> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
-> ---
->  fs/xfs/xfs_fsmap.c | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index d346acff7725..4ae273b54129 100644
-> --- a/fs/xfs/xfs_fsmap.c
-> +++ b/fs/xfs/xfs_fsmap.c
-> @@ -162,6 +162,7 @@ struct xfs_getfsmap_info {
->  	xfs_daddr_t		next_daddr;	/* next daddr we expect */
->  	/* daddr of low fsmap key when we're using the rtbitmap */
->  	xfs_daddr_t		low_daddr;
-> +	xfs_daddr_t		end_daddr;	/* daddr of high fsmap key */
+The AGFL reservation patches increase the amount of reserved space that
+this test needs in order to succeed.  Modify the resblks xfs_io call to
+account for the increased per-AG reservation.
 
-This ought to be initialized to an obviously impossible value (e.g.
--1ULL) in xfs_getfsmap before we start walking btrees.
+Without this change, the dd in the test gets an ENOSPC in the path where
+a delalloc is converted to a real allocation.  This results in the test
+spinning in the dd command and generating endless xfs_discard_folio
+warnings.
 
->  	u64			missing_owner;	/* owner of holes */
->  	u32			dev;		/* device id */
->  	/*
-> @@ -294,6 +295,13 @@ xfs_getfsmap_helper(
->  		return 0;
->  	}
->  
-> +	/*
-> +	 * To prevent missing intervals in the last query, consider using
-> +	 * sectors as the granularity.
-> +	 */
-> +	if (info->last && info->end_daddr)
-> +		rec_daddr = info->end_daddr;
+Since resblks is supposed to prevent the filesystem from getting empty
+enough to hit a case like this, increase it slightly to account for the
+modified per-ag reservation size.
 
-I think this needs a better comment.  How about:
+Signed-off-by: Krister Johansen <kjlx@templeofstupid.com>
+---
+ tests/xfs/306 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	/*
-	 * For an info->last query, we're looking for a gap between the
-	 * last mapping emitted and the high key specified by userspace.
-	 * If the user's query spans less than 1 fsblock, then
-	 * info->high and info->low will have the same rm_startblock,
-	 * which causes rec_daddr and next_daddr to be the same.
-	 * Therefore, use the end_daddr that we calculated from
-	 * userspace's high key to synthesize the record.  Note that if
-	 * the btree query found a mapping, there won't be a gap.
-	 */
+diff --git a/tests/xfs/306 b/tests/xfs/306
+index e21a5622..9acace85 100755
+--- a/tests/xfs/306
++++ b/tests/xfs/306
+@@ -47,7 +47,7 @@ for i in $(seq 0 3); do
+ done
+ 
+ # consume and fragment free space
+-$XFS_IO_PROG -xc "resblks 16" $SCRATCH_MNT >> $seqres.full 2>&1
++$XFS_IO_PROG -xc "resblks 17" $SCRATCH_MNT >> $seqres.full 2>&1
+ dd if=/dev/zero of=$SCRATCH_MNT/file bs=4k >> $seqres.full 2>&1
+ $XFS_IO_PROG -c "fsync" $SCRATCH_MNT/file >> $seqres.full 2>&1
+ $here/src/punch-alternating $SCRATCH_MNT/file
+-- 
+2.25.1
 
-> +
->  	/* Are we just counting mappings? */
->  	if (info->head->fmh_count == 0) {
->  		if (info->head->fmh_entries == UINT_MAX)
-> @@ -973,8 +981,10 @@ xfs_getfsmap(
->  		 * low key, zero out the low key so that we get
->  		 * everything from the beginning.
->  		 */
-> -		if (handlers[i].dev == head->fmh_keys[1].fmr_device)
-> +		if (handlers[i].dev == head->fmh_keys[1].fmr_device) {
->  			dkeys[1] = head->fmh_keys[1];
-> +			info.end_daddr = dkeys[1].fmr_physical + dkeys[1].fmr_length;
-
-dkeys[1].fmr_length is never used by anything in the fsmap code --
-__xfs_getfsmap_datadev sets end_fsb using only dkeys[1].fmr_physical.
-You shouldn't add it to end_daddr here because then they won't be
-describing the same thing.
-
-Anyway I'll figure out a reproducer for fstests and send the whole pile
-back to the mailing list once it passes QA.  Thanks for finding the bug
-and attempting a fix. :)
-
---D
-
-> +		}
->  		if (handlers[i].dev > head->fmh_keys[0].fmr_device)
->  			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
->  
-> -- 
-> 2.39.2
-> 
-> 
