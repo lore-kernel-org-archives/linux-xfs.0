@@ -1,80 +1,59 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB4339FCE;
-	Thu, 15 Aug 2024 03:14:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D238716BE20;
+	Thu, 15 Aug 2024 05:42:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723691646; cv=none; b=D2g5jYYUk3xQdoqu5ihvmA2p0LoRrvwfpzX7GTqkOLS3Q9rB/NC8zn2O5KFgOflPwkVowQj8VSitmQdYOE31qi/g2oQ+XPQR+fOom4KrKuxdrelAYFTxpnr4ApvdrLG7onzw+a1TyMmbnXS4WU8g6Ox9X5yPfC/OnBAQNU6gNaw=
+	t=1723700539; cv=none; b=NoT2JkP2gRA9+h/XRa/Qcc3wxS9uP9F+BhUHHBzotyZICFUPh9BjGllL4fcRQgHl6NZlHS8k4ke81AbRSHM5H58DQ26qHEd0ggLIWrv6yg+uq7W3quxF1opHh0sjheG0JdfJat+48bzBapnBP3ayqEVK0WTCqgJ6WCC4S8MN73E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723691646; c=relaxed/simple;
-	bh=thhEBcc+3s9aaOhrpQtbTz50JQitSQ9kwBCCU59JHGQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XQ4au/2jKkOaDVuMwNiZaeRH6valGfRvO5eRgI+wc9SVJ6uif2IjAV28Tb9Eb/sw6jN2TEzsdxK1r2EsI2kOah2VCWoe0JtOVjZPx49MQUf9zjbcEubaT2Dz6w23gh0BT+obgGkdqNgGlQZg8xs1J7SOjcN3fsaIQQ2Ud8gFHT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mo93k7H2; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mo93k7H2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DD6BC4AF0A;
-	Thu, 15 Aug 2024 03:14:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723691645;
-	bh=thhEBcc+3s9aaOhrpQtbTz50JQitSQ9kwBCCU59JHGQ=;
-	h=From:To:Cc:Subject:Date:From;
-	b=mo93k7H2+aCk19skjUTNXnj468E5y2LZ4iPU9qDz5E7OA7D46F/WakuedQ+zH2iWC
-	 etmuoCMseoOB491BUq6QpBr/6ul+PjaGP9FlTMhidepqRWY+OeGlWZKKDIQWEjpISu
-	 E+I6aFyMgnEexbpsJobO+LMSWpV8/3xGg6wBUVAURyF/BaXVTFoik+F6rbdi0gJ6YY
-	 aYiIe+xxeeqev7Z8i6zUkKjvgumXfII0JfvFmRVLsMAXWUEb6ZT2VSk8X+c8cBXyQ3
-	 g8SaavzqwMWv9URrbaM/NZ1fi9m31iX84UKlf1UDq2fmYQ7RwTVo11/WHCngYwCD/+
-	 TEM6llSaYGBTw==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 8d16762047c6
-Date: Thu, 15 Aug 2024 08:41:25 +0530
-Message-ID: <875xs2scjp.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=arc-20240116; t=1723700539; c=relaxed/simple;
+	bh=+RsYryd49I5xvPZ9WQUndwiv1DTUsY+RawTW5CqgD7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Rcn2ljkXRsCipgTBSVIGCEQ5MjY6KxNHPg4dijMqYj/wEhKHn+Vlw7afz7MpSS6bsDhzrznU6u3NpTWfqnssF5Thv1Qm84U0XGR6+bPD9dtuiOl4XTgmZ1HRiDxwbTuPkQERwoV926lZmcVPUbBnrhgEVOdRK3Eah241Nw0kGmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 4B209227A87; Thu, 15 Aug 2024 07:42:11 +0200 (CEST)
+Date: Thu, 15 Aug 2024 07:42:11 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Keith Busch <kbusch@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org, hch@lst.de, axboe@kernel.dk
+Subject: Re: [bug report] raid0 array mkfs.xfs hang
+Message-ID: <20240815054211.GA12998@lst.de>
+References: <8292cfd7-eb9c-4ca7-8eec-321b3738857b@oracle.com> <4d31268f-310b-4220-88a2-e191c3932a82@oracle.com> <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com> <ZrzDP5c7bRyh7UnE@kbusch-mbp> <yq1wmkjtb1t.fsf@ca-mkp.ca.oracle.com> <441fb8d7-422d-440c-9e12-ab58a0401cad@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <441fb8d7-422d-440c-9e12-ab58a0401cad@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hi folks,
+On Wed, Aug 14, 2024 at 06:25:39PM +0100, John Garry wrote:
+> On 14/08/2024 15:52, Martin K. Petersen wrote:
+>>
+>> Keith,
+>>
+>>> Your change looks fine, though it sounds odd that md raid is changing
+>>> queue_limit values outside the limits_lock. The stacking limits should
+>>> have set the md device to 0 if one of the member drives doesn't
+>>> support write_zeroes, right?
+>>
+>
+> And even if we had used the limits lock to synchronize the update, that 
+> only synchronizes writers but not readers (of the limits).
 
-The for-next branch of the xfs-linux repository at:
+Readers are blocked by freezing the queues (for most drivers) or
+doing the internal mddev suspend for md.
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-8d16762047c6 xfs: conditionally allow FS_XFLAG_REALTIME changes if S_DAX is set
-
-3 new commits:
-
-Darrick J. Wong (3):
-      [73c34b0b85d4] xfs: attr forks require attr, not attr2
-      [04d6dbb55301] xfs: revert AIL TASK_KILLABLE threshold
-      [8d16762047c6] xfs: conditionally allow FS_XFLAG_REALTIME changes if S_DAX is set
-
-Please note that I have now dropped the following two commits from for-next,
-
-xfs: fix handling of RCU freed inodes from other AGs in  xrep_iunlink_mark_incore (4813305c621d)
-xfs: fix handling of RCU freed inodes from other AGs in xfs_icwalk_ag (681a1601ec07)
-
-Code Diffstat:
-
- fs/xfs/scrub/bmap.c    |  8 +++++++-
- fs/xfs/xfs_ioctl.c     | 11 +++++++++++
- fs/xfs/xfs_trans_ail.c |  7 ++++++-
- 3 files changed, 24 insertions(+), 2 deletions(-)
-
--- 
-Chandan
+So I suspect kicking off a workqueue to do the limits update will
+be the right thing going ahead.  For now we'll just need to hack
+around by doing single reads of the field.
