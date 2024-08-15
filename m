@@ -1,219 +1,142 @@
-Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08ADE19DF8B
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 12:35:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4630F26AE4;
+	Thu, 15 Aug 2024 16:36:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723725335; cv=none; b=egqj587DRd4Cnn4cBLWcScSyXOw89ixvzZS9JW/KINmK8MNRMxiZHgXmujD3hqGJ/xFI4oUQZ3Kudkoq8t+/NVYROqnHpTDnKsrMoXmuwh+dEnELItd+/eQHNKXEA+AxCTDQ2Hswst6SXUJbZAfiUPX6IbSrS2NHzYhiRYo7yfY=
+	t=1723739795; cv=none; b=saM3vGQNXr7KZ7ML2SsnofI0UKZ4G5ir3EdAPEhVNLAshfLLW2vVrYcVaHxvKlPvLaJoAWloxcT7PEbgDiLQUchfoEt5sMeoorwF18yyf2EyNZ7J3x3JQzD1I9/x81SGeYkzJX8jNXJqfxvXbacKADvArO0T/kRqVR/fiCap24A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723725335; c=relaxed/simple;
-	bh=oCc8kiVUHH0a9spPU3xnBLKFF7P2+smtvv+27o1ThP8=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=HQeoLnnl0aSqP2kc3HAvmnCi/DR2k/ukLjeaVWi/cMoDWiy+8vLozvFEqhGocLUBN7UwECBDHg2z4lHMdboEMe01790VP1pnPgFZXJaCZ0507cxiooJfmKAR5xFQB4K4L7N2VJJKGOZH6/XjVV3lNq1OjtIz7yIPtk0o/s5Y2qo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-39d17abca55so9845515ab.1
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2024 05:35:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723725333; x=1724330133;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=FO04zWfmoPl6JXkiMG9YubIKQuGqI1ZQgX1qGisSs5g=;
-        b=qJGjVqJNgkJdPx6juPB5+3NtApL96xJ0iDLFNTDIW2y035YVescFc0AwtmdxSTC6Mb
-         UcEn0LcYmhL/P1IC2BW9hhImTtfE9ZwgAhCAUnulCxzSWVXgxfPl8Mc6c0Q4s+JhGoeE
-         TSW4pHLP4KOXpAIBhhSdxbbKzLW1IV0u7NTgYKB2W3gV8e/WW6iQtOHW8U2zQNXRvaE2
-         ezPtiSdCu7iKahiTH1Oy7VDVN6ClfaA8GWTpBl1UUeBLlKECPXOMOfUC42HuVJc/dsN3
-         U2kobTRlI/a8X+uVa+ZvAAFAd1A/aiQyuwn9PwTf6crV8es9B4ma6sByMh6AJLzNQ68p
-         rbPA==
-X-Forwarded-Encrypted: i=1; AJvYcCWza4gOeLS7VhqtGa4Y87YykTIYCARvXV3wXMLHyKXznmwOIlwLU5EUdBs3Zu4d0OjCYDb23ESY8HKftGPLh4PqZWPULTNDkgkD
-X-Gm-Message-State: AOJu0Ywsrbwg+m/KarOIVE1976SADVldDpm9W1REhk3oBBs135dUCUEB
-	rUHjtjc8GPP5fR73VqvbhR4qAA7SVz8igmpgONWd43Q8ibqNUSZ7gZRmm9SKUteX6prm6Bd8PT8
-	Fmao9RSsRKo3cO7aiLfUalnjYt1b7/4+TjYaUb0aFPhbDKWaJpR3QI7w=
-X-Google-Smtp-Source: AGHT+IE3qfcv0Gz50A9TsKAswvDjNQ74Mo+p6fxg9LQ8hiROgEVQ81tDh9Ibc4rQvRAwFMDV8lTLnQ94SWAJYBQW59D7ja3Y6QeQ
+	s=arc-20240116; t=1723739795; c=relaxed/simple;
+	bh=xKVVPX3rDcMygqr4duaL+U23CUdrlkMrIkiE6lBMEFQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LBcvELixth7sbejw7KM+YOUqZOczWgCxZKFCW6u6PrakxzmsgAYbeTFC0JVoeNMXBgIFWsyFYCGI8560WMaRsgdNDfss9oa5Mt/mwHeR/uXjofvMOxIVAcRUAI1C8r5nBOlUVlSOngSjrddngGXvqVEmWfSrJ59N8xPIWOrbk3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sMfQ1Wi2; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sMfQ1Wi2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1E2AC32786;
+	Thu, 15 Aug 2024 16:36:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723739794;
+	bh=xKVVPX3rDcMygqr4duaL+U23CUdrlkMrIkiE6lBMEFQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=sMfQ1Wi2wCpmRS2RPMPrdGCCYj4oc34JzrUZiTu4+06mlW3ao9Ox1PoT4/3eAFoQt
+	 RDSxwxpDOz3K1fuzGAkmgJO7NtfMIusYQeE4CHHVmGO2C42r4oz6PmAOdBKqmbOBKh
+	 dvhtGKbnm+A337zbKE/8L38Z5pzNDsvEuUeRRhQ71jOxk8KLUl+hOPCaXqCA98W5xg
+	 4gLSoGVsQdka6WXPgIAwhCSImSLqGHIrLukLqnAGSe7lZ+nOAOFvmQNjJaOtjyU/fI
+	 mx3JxVUlK34yA7LuV/vzivGnH39GKBz0CzRiUjBwCNipgl1G50CFXH/6K1yBrZHXaz
+	 rolsYiaQFRalQ==
+Date: Thu, 15 Aug 2024 09:36:34 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zizhi Wo <wozizhi@huawei.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, osandov@fb.com,
+	john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, yangerkun@huawei.com
+Subject: Re: [PATCH V3 1/2] xfs: Fix the owner setting issue for rmap query
+ in xfs fsmap
+Message-ID: <20240815163634.GH865349@frogsfrogsfrogs>
+References: <20240812011505.1414130-1-wozizhi@huawei.com>
+ <20240812011505.1414130-2-wozizhi@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:214e:b0:398:36c0:796e with SMTP id
- e9e14a558f8ab-39d124564a7mr4824845ab.1.1723725333099; Thu, 15 Aug 2024
- 05:35:33 -0700 (PDT)
-Date: Thu, 15 Aug 2024 05:35:33 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000002b8b05061fb8147f@google.com>
-Subject: [syzbot] [xfs?] possible deadlock in xfs_can_free_eofblocks (2)
-From: syzbot <syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240812011505.1414130-2-wozizhi@huawei.com>
 
-Hello,
+On Mon, Aug 12, 2024 at 09:15:04AM +0800, Zizhi Wo wrote:
+> I notice a rmap query bug in xfs_io fsmap:
+> [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
+>  EXT: DEV    BLOCK-RANGE           OWNER              FILE-OFFSET      AG AG-OFFSET             TOTAL
+>    0: 253:16 [0..7]:               static fs metadata                  0  (0..7)                    8
+>    1: 253:16 [8..23]:              per-AG metadata                     0  (8..23)                  16
+>    2: 253:16 [24..39]:             inode btree                         0  (24..39)                 16
+>    3: 253:16 [40..47]:             per-AG metadata                     0  (40..47)                  8
+>    4: 253:16 [48..55]:             refcount btree                      0  (48..55)                  8
+>    5: 253:16 [56..103]:            per-AG metadata                     0  (56..103)                48
+>    6: 253:16 [104..127]:           free space                          0  (104..127)               24
+>    ......
+> 
+> Bug:
+> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 0 3' /mnt
+> [root@fedora ~]#
+> Normally, we should be able to get one record, but we got nothing.
+> 
+> The root cause of this problem lies in the incorrect setting of rm_owner in
+> the rmap query. In the case of the initial query where the owner is not
+> set, __xfs_getfsmap_datadev() first sets info->high.rm_owner to ULLONG_MAX.
+> This is done to prevent any omissions when comparing rmap items. However,
+> if the current ag is detected to be the last one, the function sets info's
+> high_irec based on the provided key. If high->rm_owner is not specified, it
+> should continue to be set to ULLONG_MAX; otherwise, there will be issues
+> with interval omissions. For example, consider "start" and "end" within the
+> same block. If high->rm_owner == 0, it will be smaller than the founded
+> record in rmapbt, resulting in a query with no records. The main call stack
+> is as follows:
+> 
+> xfs_ioc_getfsmap
+>   xfs_getfsmap
+>     xfs_getfsmap_datadev_rmapbt
+>       __xfs_getfsmap_datadev
+>         info->high.rm_owner = ULLONG_MAX
+>         if (pag->pag_agno == end_ag)
+> 	  xfs_fsmap_owner_to_rmap
+> 	    // set info->high.rm_owner = 0 because fmr_owner == 0
+> 	    dest->rm_owner = 0
+> 	// get nothing
+> 	xfs_getfsmap_datadev_rmapbt_query
+> 
+> The problem can be resolved by setting the rm_owner of high to ULLONG_MAX
+> again under certain conditions.
+> 
+> After applying this patch, the above problem have been solved:
+> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 0 3' /mnt
+>  EXT: DEV    BLOCK-RANGE      OWNER              FILE-OFFSET      AG AG-OFFSET        TOTAL
+>    0: 253:16 [0..7]:          static fs metadata                  0  (0..7)               8
+> 
+> Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
+> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+> ---
+>  fs/xfs/xfs_fsmap.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 85dbb46452ca..d346acff7725 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -655,6 +655,13 @@ __xfs_getfsmap_datadev(
+>  			error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
+>  			if (error)
+>  				break;
+> +			/*
+> +			 * Set the owner of high_key to the maximum again to
+> +			 * prevent missing intervals during the query.
+> +			 */
+> +			if (info->high.rm_owner == 0 &&
+> +			    info->missing_owner == XFS_FMR_OWN_FREE)
+> +			    info->high.rm_owner = ULLONG_MAX;
 
-syzbot found the following issue on:
+Shouldn't this be in xfs_fsmap_owner_to_rmap?
 
-HEAD commit:    6b0f8db921ab Merge tag 'execve-v6.11-rc4' of git://git.ker..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=104cabd3980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=801d05d1ea4be1b8
-dashboard link: https://syzkaller.appspot.com/bug?extid=53d541c7b07d55a392ca
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=148fe6ed980000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17840ad5980000
+And, looking at that function, isn't this the solution:
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-6b0f8db9.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/b407dbb66544/vmlinux-6b0f8db9.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/5c1cf0f1b692/bzImage-6b0f8db9.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/ce1130cd3c8d/mount_0.gz
+	switch (src->fmr_owner) {
+	case 0:			/* "lowest owner id possible" */
+	case -1ULL:		/* "highest owner id possible" */
+		dest->rm_owner = src->fmr_owner;
+		break;
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com
+instead of this special-casing outside the setter function?
 
-======================================================
-WARNING: possible circular locking dependency detected
-6.11.0-rc3-syzkaller-00013-g6b0f8db921ab #0 Not tainted
-------------------------------------------------------
-kswapd0/79 is trying to acquire lock:
-ffff88801da74118 (&xfs_nondir_ilock_class#3){++++}-{3:3}, at: xfs_can_free_eofblocks+0x5f1/0x8d0 fs/xfs/xfs_bmap_util.c:550
+--D
 
-but task is already holding lock:
-ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6841 [inline]
-ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbb4/0x35a0 mm/vmscan.c:7223
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (fs_reclaim){+.+.}-{0:0}:
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
-       __fs_reclaim_acquire mm/page_alloc.c:3823 [inline]
-       fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3837
-       might_alloc include/linux/sched/mm.h:334 [inline]
-       slab_pre_alloc_hook mm/slub.c:3939 [inline]
-       slab_alloc_node mm/slub.c:4017 [inline]
-       __do_kmalloc_node mm/slub.c:4157 [inline]
-       __kmalloc_noprof+0xa9/0x400 mm/slub.c:4170
-       kmalloc_noprof include/linux/slab.h:685 [inline]
-       xfs_attr_shortform_list+0x753/0x1900 fs/xfs/xfs_attr_list.c:117
-       xfs_attr_list+0x1d0/0x270 fs/xfs/xfs_attr_list.c:595
-       xfs_vn_listxattr+0x1d2/0x2c0 fs/xfs/xfs_xattr.c:341
-       vfs_listxattr fs/xattr.c:493 [inline]
-       listxattr+0x107/0x290 fs/xattr.c:841
-       path_listxattr fs/xattr.c:865 [inline]
-       __do_sys_llistxattr fs/xattr.c:883 [inline]
-       __se_sys_llistxattr fs/xattr.c:880 [inline]
-       __x64_sys_llistxattr+0x170/0x230 fs/xattr.c:880
-       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
-       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #0 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
-       check_prev_add kernel/locking/lockdep.c:3133 [inline]
-       check_prevs_add kernel/locking/lockdep.c:3252 [inline]
-       validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
-       __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
-       down_read_nested+0xb5/0xa50 kernel/locking/rwsem.c:1651
-       xfs_can_free_eofblocks+0x5f1/0x8d0 fs/xfs/xfs_bmap_util.c:550
-       xfs_inode_mark_reclaimable+0x1bb/0xf60 fs/xfs/xfs_icache.c:2148
-       destroy_inode fs/inode.c:313 [inline]
-       evict+0x549/0x630 fs/inode.c:694
-       dispose_list fs/inode.c:712 [inline]
-       prune_icache_sb+0x239/0x2f0 fs/inode.c:897
-       super_cache_scan+0x38c/0x4b0 fs/super.c:223
-       do_shrink_slab+0x701/0x1160 mm/shrinker.c:435
-       shrink_slab+0x1090/0x14c0 mm/shrinker.c:662
-       shrink_one+0x43b/0x850 mm/vmscan.c:4815
-       shrink_many mm/vmscan.c:4876 [inline]
-       lru_gen_shrink_node mm/vmscan.c:4954 [inline]
-       shrink_node+0x3799/0x3de0 mm/vmscan.c:5934
-       kswapd_shrink_node mm/vmscan.c:6762 [inline]
-       balance_pgdat mm/vmscan.c:6954 [inline]
-       kswapd+0x1bcd/0x35a0 mm/vmscan.c:7223
-       kthread+0x2f0/0x390 kernel/kthread.c:389
-       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
-       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(fs_reclaim);
-                               lock(&xfs_nondir_ilock_class#3);
-                               lock(fs_reclaim);
-  rlock(&xfs_nondir_ilock_class#3);
-
- *** DEADLOCK ***
-
-2 locks held by kswapd0/79:
- #0: ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6841 [inline]
- #0: ffffffff8ea2fce0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbb4/0x35a0 mm/vmscan.c:7223
- #1: ffff88803a2860e0 (&type->s_umount_key#44){.+.+}-{3:3}, at: super_trylock_shared fs/super.c:562 [inline]
- #1: ffff88803a2860e0 (&type->s_umount_key#44){.+.+}-{3:3}, at: super_cache_scan+0x94/0x4b0 fs/super.c:196
-
-stack backtrace:
-CPU: 0 UID: 0 PID: 79 Comm: kswapd0 Not tainted 6.11.0-rc3-syzkaller-00013-g6b0f8db921ab #0
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:93 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:119
- check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2186
- check_prev_add kernel/locking/lockdep.c:3133 [inline]
- check_prevs_add kernel/locking/lockdep.c:3252 [inline]
- validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
- __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
- lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
- down_read_nested+0xb5/0xa50 kernel/locking/rwsem.c:1651
- xfs_can_free_eofblocks+0x5f1/0x8d0 fs/xfs/xfs_bmap_util.c:550
- xfs_inode_mark_reclaimable+0x1bb/0xf60 fs/xfs/xfs_icache.c:2148
- destroy_inode fs/inode.c:313 [inline]
- evict+0x549/0x630 fs/inode.c:694
- dispose_list fs/inode.c:712 [inline]
- prune_icache_sb+0x239/0x2f0 fs/inode.c:897
- super_cache_scan+0x38c/0x4b0 fs/super.c:223
- do_shrink_slab+0x701/0x1160 mm/shrinker.c:435
- shrink_slab+0x1090/0x14c0 mm/shrinker.c:662
- shrink_one+0x43b/0x850 mm/vmscan.c:4815
- shrink_many mm/vmscan.c:4876 [inline]
- lru_gen_shrink_node mm/vmscan.c:4954 [inline]
- shrink_node+0x3799/0x3de0 mm/vmscan.c:5934
- kswapd_shrink_node mm/vmscan.c:6762 [inline]
- balance_pgdat mm/vmscan.c:6954 [inline]
- kswapd+0x1bcd/0x35a0 mm/vmscan.c:7223
- kthread+0x2f0/0x390 kernel/kthread.c:389
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+>  			xfs_getfsmap_set_irec_flags(&info->high, &keys[1]);
+>  		}
+>  
+> -- 
+> 2.39.2
+> 
+> 
