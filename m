@@ -1,30 +1,48 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0B7317625E;
-	Thu, 15 Aug 2024 05:52:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B046614373B;
+	Thu, 15 Aug 2024 05:59:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723701149; cv=none; b=SjasrXdqMe7xpKESg/187AL+INPYhGL2k2dTkuzocqZ+HswP1sq82AAiaf+kDcGF/XPYcXQDJKrWjM5ieDbS865LKT7gYknpiLIkWHDEgL/7Guhd2IqQb0KjW1+568QXYe37x84FJAocmOqKGrThgzQ935KrwF6Y9mHvA+ZgXus=
+	t=1723701557; cv=none; b=Ka/eUcYRgSgPGCGbvI+NO8blXPzjAAZsKaJElklTatLi6fAAMrq4e3sX3Tx9gSSSahlXBcIKVV3Y7dySYZqk06i1c2hcHfZP8+dD/rZiVy/PMfjBMLefO1qfvKtCA0/f65HWzClNyVgRn0sjTU7lTqmnLqcrBKKFJL57HOPEfBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723701149; c=relaxed/simple;
-	bh=/vherpvzLbNQPYH3OUZgJuhhFrctNdizp6VJWmncDL4=;
+	s=arc-20240116; t=1723701557; c=relaxed/simple;
+	bh=nZrX44umNACnJSNfTTA+9S1PzwQ+9fqqaKCap03RRQM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UTKfpZhqq3iH6FUv/74bsPkfDsOyFpmF+2lEhyfd7XADcSr+VegBqCUQw8TrMH8H3AvFrwKFeVJdoDZD9suyqJnoqmrETBHqwoi53McLb6dpVXKOijUiJhf99BacNv/TBmwsrYtzSSu+svXKFQHlcTJXyyAMAvdkU5fvf3xJiqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id CB9BC227A87; Thu, 15 Aug 2024 07:52:21 +0200 (CEST)
-Date: Thu, 15 Aug 2024 07:52:21 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de,
-	axboe@kernel.dk, martin.petersen@oracle.com
-Subject: Re: [bug report] raid0 array mkfs.xfs hang
-Message-ID: <20240815055221.GA13120@lst.de>
-References: <8292cfd7-eb9c-4ca7-8eec-321b3738857b@oracle.com> <4d31268f-310b-4220-88a2-e191c3932a82@oracle.com> <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=HVsdjLhOCuqXK7cFuCYpfAl3DCpygb7jrwaGb4ARWERkJlpGTztusXUTo2F/r1YlmP5r21Phb/KxGNOeBn2qT0cp31lUXAtek821cuT7T3UkKUu8dsnhyJU4S3/EcTjdRYAMt7cltmj+ob+ohYbPz4NC6jHWnhDp0dO2g3M7P0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WMul+536; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WMul+536"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=5ru1ApbhwE2IDueiU2tVHH2qGg8YWNB/TaqMyPn2o8Q=; b=WMul+536M5z+dO5jSFNGjfvnwL
+	XbkzTDaNfrZNvzv8Zhh9Jmyp9eT+E0DuOpVGdaTvqSyvJsIsJcsP6sbNNAe7CP+bsmbb9RrfWinuZ
+	swv+yxWuuBNh3g9aUcqCIGgjqINoklczgEp7Kj7HklVLWhcEvuvr8yRAnmsVOxF8cjE8pP0GrBuHB
+	67Y8uxq8jC71O6AuzTe5A1lKQhm0WJfojOqJ2yvc96GdC2sFB552LkRvqNaX8jp/qSCB2vglCzZ/K
+	J4GbOH7oSnW00hezuQWMv82l3cGndplMudLaqjdCqTwa6jKRzC2Vo3GZtUAVVGFIn70NDHY/at/Oh
+	UE5rEDiw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1seTVw-0000000982T-12yI;
+	Thu, 15 Aug 2024 05:59:12 +0000
+Date: Wed, 14 Aug 2024 22:59:12 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	djwong@kernel.org, brauner@kernel.org, david@fromorbit.com,
+	jack@suse.cz, willy@infradead.org, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com
+Subject: Re: [PATCH v2 4/6] iomap: correct the dirty length in page mkwrite
+Message-ID: <Zr2ZMBS_0SC7Sysn@infradead.org>
+References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
+ <20240812121159.3775074-5-yi.zhang@huaweicloud.com>
+ <ZrxCYbqSHbpKpZjH@infradead.org>
+ <7824fcb7-1de9-7435-e9f7-03dd7da6ec0a@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,24 +51,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <7824fcb7-1de9-7435-e9f7-03dd7da6ec0a@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Aug 14, 2024 at 03:00:06PM +0100, John Garry wrote:
-> -       __blkdev_issue_write_zeroes(bdev, sector, nr_sects, gfp, &bio, 
-> flags);
-> +       __blkdev_issue_write_zeroes(bdev, sector, nr_sects, gfp, &bio, 
-> flags, limit);
+On Wed, Aug 14, 2024 at 03:49:41PM +0800, Zhang Yi wrote:
+> Sorry, this makes me confused. How does this could prevent setting
+> redundant dirty bits?
+> 
+> Suppose we have a 3K regular file on a filesystem with 1K block size.
+> In iomap_page_mkwrite(), the iter.len is 3K, if the folio size is 4K,
+> folio_mark_dirty() will also mark all 4 bits of ifs dirty. And then,
+> if we expand this file size to 4K, and this will still lead to a hole
+> with dirty bit set but without any block allocated/reserved. Am I
+> missing something?
 
-Please fix the overly long line while touching this.
-
->  {
-> +
-> +       sector_t limit = bio_write_zeroes_limit(bdev);
->         if (bdev_read_only(bdev))
->                 return -EPERM;
-
-Can you add a comment explaining why the limit is read once for future
-readers?  Also please keep an empty line after the variable declaration
-instead of before it.
+No, we still need the ifs manipulation in the loop indeed.  But
+the filemap_dirty_folio (and the not uptodate warning) can still
+move outside the iterator.
 
