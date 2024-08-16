@@ -1,120 +1,173 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E35881C232C
-	for <linux-xfs@vger.kernel.org>; Fri, 16 Aug 2024 19:31:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F38280045
+	for <linux-xfs@vger.kernel.org>; Fri, 16 Aug 2024 19:40:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723836684; cv=none; b=fR7J7C0xhVWpSbqhIEWGLVxm2esHPNSJDFyI1CSt09dn9gQmxJbYq1IqpFNyUhmeCq2+Kh8zrOFsbIJxnWy/PnrM29Rgln7YJlOg1afMAYw4fHXa0ZRJrD4pvY6SZigN8Yre4zZLv1dFaqY+3EIBkx+lLTI1Shf3VdSjoCwbQ5g=
+	t=1723837208; cv=none; b=Xo3OGlQREP4I43FKFOacUOOn61U3QXSRQnPUg+0b/Jp07tmyLN2VzpOoobg+8fP9W7mS9oIXiDewI7AKe+TW4Enqfk9tgvvx6ySBZ4VcFufC/O1NuL447XNC89UjjUpzK7XscITtlkFySqI4H37O+yCnhihg/XHI6RSxG0qx4S4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723836684; c=relaxed/simple;
-	bh=a3UBjcnOVg9NQFsbusket7qF4bskI8OeVBv1Iky1Ikk=;
-	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
-	 Content-Type:Date:Message-ID; b=Ho+B7yZVB7sHRH0nLPOEh067+E5noURE5/e4KYqZhzGvy7SZxHEuW2E3nvYI+xW/CAtpreTuR+ommrWMt33WUQHjMkjKCgrHXrmDnxxWHxwnnJpU58cYkp0P+1d0s3jVyxznOwqb/bdBdoQlxlUR76+9bfDa3gfsULe+qIa2Hbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CYkBmuSm; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1723837208; c=relaxed/simple;
+	bh=mPropUM+eFiGbbX32pCOLNyyfBDgTnVctH/GTPG5Rkk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Y2Lrruy4+EuOI3g0dvBXx4aApn0bFmIGbdoE650UgtWl/OlP/V13xzKvOM2bUP5xelbyizMSUWNkYr5Liq5fJbLnZ/YZSYJ1/jPQvO7ZxQq2eCiINFVHQDoPzzUjECdTj+rLpZGq7mmmsz1st5rEwmj3fPidNm0qSJ6DQV6537E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qVgV/mo1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CYkBmuSm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1723836682;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=dAUVeRgH13oxbvE6MJ/L04r2yM6YzE3o8WtEBRvyajM=;
-	b=CYkBmuSmV2/nUgKhd1Y5R5YEkYp4xqrso1YiuYAn8qFXy9/qslYX3cJcusqKF4gJlrNXF7
-	IAp/UvUqxDcDN7PR+jdPAQTrKduFIGOA98fM/4MRAmylqDY5E1QB6T9kwNXZTCCkaSEtRB
-	rlq6jc825AO42pPU6kJ0zE0C1eA+q90=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-610-KiX_NkxMM_erpn1TlFqLZQ-1; Fri,
- 16 Aug 2024 15:31:15 -0400
-X-MC-Unique: KiX_NkxMM_erpn1TlFqLZQ-1
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CBF101955F45;
-	Fri, 16 Aug 2024 19:31:10 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.42.28.30])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6593719560A3;
-	Fri, 16 Aug 2024 19:31:04 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-	Kingdom.
-	Registered in England and Wales under Company Registration No. 3798903
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20240815090849.972355-1-kernel@pankajraghav.com>
-References: <20240815090849.972355-1-kernel@pankajraghav.com>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: dhowells@redhat.com, brauner@kernel.org, akpm@linux-foundation.org,
-    chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
-    djwong@kernel.org, hare@suse.de, gost.dev@samsung.com,
-    linux-xfs@vger.kernel.org, hch@lst.de, david@fromorbit.com,
-    Zi Yan <ziy@nvidia.com>, yang@os.amperecomputing.com,
-    linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-    willy@infradead.org, john.g.garry@oracle.com,
-    cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
-    ryan.roberts@arm.com
-Subject: Re: [PATCH v12 00/10] enable bs > ps in XFS
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qVgV/mo1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83D52C32782;
+	Fri, 16 Aug 2024 19:40:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723837207;
+	bh=mPropUM+eFiGbbX32pCOLNyyfBDgTnVctH/GTPG5Rkk=;
+	h=From:To:Cc:Subject:Date:From;
+	b=qVgV/mo1rufqIXeqlIPCDjBIHWVMDFuuLG7npEpPLOTSD9mQrVsJcKD2r7TVEbzx/
+	 OjGtoqL/bJs65+wxUnlmz4I6CjzcyvfTctf3hyi/FGAW9EvA6aNkjCxot0r6KG2h7Y
+	 n/bP1n6qtdnwj05xHYvqMRm5+BZaOv80H2a4U+5RBaoUO/QJcF6eJieOxMYZCFi2A1
+	 AkRyHJzy63TBNM4/iXTjn4/q+Gph60dkY+9KmV5dlxYI5+xsqUt4Iu6q8LmODJHSmd
+	 9YWeBCdnPMc8Jn6S40cXP3jayJAkECQ2ph1AsfRWJbruuKjHh+5v2RK9l/EidUYeCd
+	 Q/CayYgAJBN5A==
+From: cem@kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: ebiggers@google.com,
+	wbx@openadk.org
+Subject: [PATCH] xfs_io: Fix fscrypt macros ordering
+Date: Fri, 16 Aug 2024 21:39:38 +0200
+Message-ID: <20240816193957.42626-1-cem@kernel.org>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <2924796.1723836663.1@warthog.procyon.org.uk>
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 16 Aug 2024 20:31:03 +0100
-Message-ID: <2924797.1723836663@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Transfer-Encoding: 8bit
 
-Hi Pankaj,
+From: Carlos Maiolino <cem@kernel.org>
 
-I applied the first five patches and set minimum folio size for afs files =
-to
-8K (see attached patch) and ran some tests.
+We've been reported a failure to build xfsprogs within buildroot's
+environment when they tried to upgrade xfsprogs from 6.4 to 6.9:
 
-With simple tests, I can see in the trace log that it is definitely creati=
-ng
-8K folios where it would previously create 4K folios.
+encrypt.c:53:36: error: 'FSCRYPT_KEY_IDENTIFIER_SIZE' undeclared
+here (not in a function)
+        53 |         __u8
+master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
+           |
+^~~~~~~~~~~~~~~~~~~~~~~~~~~
+     encrypt.c:61:42: error: field 'v1' has incomplete type
+        61 |                 struct fscrypt_policy_v1 v1;
+           |                                          ^~
 
-However, with 'xfstests -g quick', generic/075 generic/112 generic/393 fai=
-l
-where they didn't previously.  I won't be able to look into this more till
-Monday.
+They were using a kernel version without FS_IOC_GET_ENCRYPTION_POLICY_EX
+set and OVERRIDE_SYSTEM_FSCRYPT_POLICY_V2 was unset.
+This combination caused xfsprogs to attempt to define fscrypt_policy_v2
+locally, which uses:
+	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
 
-If you want to try using afs for yourself, install the kafs-client package
-(available on Fedora and Debian), do 'systemctl start afs.mount' and then =
-you
-can, say, do:
+The problem is FSCRYPT_KEY_IDENTIFIER_SIZE is only after this block of
+code, so we need to define it earlier.
 
-	ls /afs/openafs.org/www/docs.openafs.org/
+This also attempts to use fscrypt_policy_v1, which is defined only
+later.
 
-and browse the publicly accessible files under there.
+To fix this, just reorder both ifdef blocks, but we need to move the
+definition of FS_IOC_GET_ENCRYPTION_POLICY_EX to the later, otherwise,
+the later definitions won't be enabled causing havoc.
 
-David
+Fixes: e97caf714697a ("xfs_io/encrypt: support specifying crypto data unit size")
+Reported-by: Waldemar Brodkorb <wbx@openadk.org>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
-commit d676df787baee3b710b9f0d284b21518473feb3c
-Author: David Howells <dhowells@redhat.com>
-Date:   Fri Aug 16 19:54:25 2024 +0100
+ io/encrypt.c | 64 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
-    afs: [DEBUGGING] Set min folio order
-
-diff --git a/fs/afs/inode.c b/fs/afs/inode.c
-index 3acf5e050072..c3842cba92e7 100644
---- a/fs/afs/inode.c
-+++ b/fs/afs/inode.c
-@@ -104,6 +104,7 @@ static int afs_inode_init_from_status(struct afs_opera=
-tion *op,
- 		inode->i_fop	=3D &afs_file_operations;
- 		inode->i_mapping->a_ops	=3D &afs_file_aops;
- 		mapping_set_large_folios(inode->i_mapping);
-+		mapping_set_folio_min_order(inode->i_mapping, 1);
- 		break;
- 	case AFS_FTYPE_DIR:
- 		inode->i_mode	=3D S_IFDIR |  (status->mode & S_IALLUGO);
+diff --git a/io/encrypt.c b/io/encrypt.c
+index 79061b07c..97abb964e 100644
+--- a/io/encrypt.c
++++ b/io/encrypt.c
+@@ -35,35 +35,6 @@
+ #define FS_IOC_GET_ENCRYPTION_POLICY		_IOW('f', 21, struct fscrypt_policy)
+ #endif
+ 
+-/*
+- * Since the log2_data_unit_size field was added later than fscrypt_policy_v2
+- * itself, we may need to override the system definition to get that field.
+- * And also fscrypt_get_policy_ex_arg since it contains fscrypt_policy_v2.
+- */
+-#if !defined(FS_IOC_GET_ENCRYPTION_POLICY_EX) || \
+-	defined(OVERRIDE_SYSTEM_FSCRYPT_POLICY_V2)
+-#undef fscrypt_policy_v2
+-struct fscrypt_policy_v2 {
+-	__u8 version;
+-	__u8 contents_encryption_mode;
+-	__u8 filenames_encryption_mode;
+-	__u8 flags;
+-	__u8 log2_data_unit_size;
+-	__u8 __reserved[3];
+-	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
+-};
+-
+-#undef fscrypt_get_policy_ex_arg
+-struct fscrypt_get_policy_ex_arg {
+-	__u64 policy_size; /* input/output */
+-	union {
+-		__u8 version;
+-		struct fscrypt_policy_v1 v1;
+-		struct fscrypt_policy_v2 v2;
+-	} policy; /* output */
+-};
+-#endif
+-
+ /*
+  * Second batch of ioctls (Linux headers v5.4+), plus some renamings from FS_ to
+  * FSCRYPT_.  We don't bother defining the old names here.
+@@ -106,9 +77,6 @@ struct fscrypt_policy_v1 {
+ 
+ #define FSCRYPT_MAX_KEY_SIZE		64
+ 
+-#define FS_IOC_GET_ENCRYPTION_POLICY_EX		_IOWR('f', 22, __u8[9]) /* size + version */
+-/* struct fscrypt_get_policy_ex_arg was defined earlier */
+-
+ #define FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR	1
+ #define FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER	2
+ struct fscrypt_key_specifier {
+@@ -152,6 +120,38 @@ struct fscrypt_get_key_status_arg {
+ 
+ #endif /* !FS_IOC_GET_ENCRYPTION_POLICY_EX */
+ 
++/*
++ * Since the log2_data_unit_size field was added later than fscrypt_policy_v2
++ * itself, we may need to override the system definition to get that field.
++ * And also fscrypt_get_policy_ex_arg since it contains fscrypt_policy_v2.
++ */
++#if !defined(FS_IOC_GET_ENCRYPTION_POLICY_EX) || \
++	defined(OVERRIDE_SYSTEM_FSCRYPT_POLICY_V2)
++#undef fscrypt_policy_v2
++struct fscrypt_policy_v2 {
++	__u8 version;
++	__u8 contents_encryption_mode;
++	__u8 filenames_encryption_mode;
++	__u8 flags;
++	__u8 log2_data_unit_size;
++	__u8 __reserved[3];
++	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
++};
++
++#undef fscrypt_get_policy_ex_arg
++struct fscrypt_get_policy_ex_arg {
++	__u64 policy_size; /* input/output */
++	union {
++		__u8 version;
++		struct fscrypt_policy_v1 v1;
++		struct fscrypt_policy_v2 v2;
++	} policy; /* output */
++};
++
++#define FS_IOC_GET_ENCRYPTION_POLICY_EX		_IOWR('f', 22, __u8[9]) /* size + version */
++
++#endif
++
+ /*
+  * Since the key_id field was added later than struct fscrypt_add_key_arg
+  * itself, we may need to override the system definition to get that field.
+-- 
+2.46.0
 
