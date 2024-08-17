@@ -1,204 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796371C579A
-	for <linux-xfs@vger.kernel.org>; Fri, 16 Aug 2024 21:50:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 026091E52C;
+	Sat, 17 Aug 2024 04:27:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723845018; cv=none; b=YGA2Vk5OqpGt4aDYpbUgnAGQcFEMFlfI5AmEqjvAuvbGvgsbzdCE5Fb5VTsdkzIvehf2KGw7y9KilOLlHMr52KqBREiyDCGfQ44aLY+UBFEWKTVfKGWmspN2NupuLe20DEcvXHI5JPnuoPwofsg446dOK0B+j4A+2hD4SxVTBcM=
+	t=1723868879; cv=none; b=NOXg+567X4sON4KHVvgYWebMTlKrkdq52KnPoVjcqirmm0zQv+Z1xKTNRirGFLnHuoI9Yo7JdyGHmvofXRaHySnX2D8OHoaKRdnAd0DA6TARXn+wbUW5LXujF3JtVezM2q2vSqi5K3VyEVVNX9LDfalR0Xyfq3GHwfWEAo+CSL8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723845018; c=relaxed/simple;
-	bh=RrhtA8chO+720d9E0B35k2giRus4rgiVXOK8dqkrAg0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lWlPCd0GllFtXg9jCOjHdJIx2TW2irL0oDFYvy4Rc2UiJzGTu0uEKq9mqLV5LXU1Bnm6EX6YRt+1SF5U4/bjwlnW6wP+CbZ2SyY3SJQ8xRgAkM/dluvfBbfWGV+lgP/a59Q/8rMiHvPpxdMCnH4FqvxMcJ4118VnMcbYqPhKISk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cBsx+Sf8; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cBsx+Sf8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E13BDC32782;
-	Fri, 16 Aug 2024 21:50:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723845017;
-	bh=RrhtA8chO+720d9E0B35k2giRus4rgiVXOK8dqkrAg0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cBsx+Sf8GoQoxbD88RZSIjQZl0ppXimFt9x/iIlfHCBp5oJRw/DTF4Y0r+UwtqRV9
-	 6Zn4q2aiJ3sDeKbTHWNM7c6QCngOzmFDkwT43fqU3JCITsa4bL1bLh6AOtU8cl3Utj
-	 ZkDJWAkfF1JJ7o1Fdmqh+bKk+43eWxs/7M0tc/+lNSRqtVdlOk3+Rg6gs+bjOPOlZR
-	 e14pSakhJy5pTuj8WPB3aJ9HXSoSoN1KkeY/m/hVC3fG/vaGx8IB5W0RcmV9zg+hzH
-	 hpCf2826tfozymRP0QwOZIjgAcjG89qj0oDizgULpUkgqra5pyiN4ETiJQy1Idynjp
-	 O13dchdkhrrow==
-Date: Fri, 16 Aug 2024 14:50:17 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: don't extend the FITRIM range if the rt device
- does not support discard
-Message-ID: <20240816215017.GK865349@frogsfrogsfrogs>
-References: <20240816081908.467810-1-hch@lst.de>
- <20240816081908.467810-3-hch@lst.de>
+	s=arc-20240116; t=1723868879; c=relaxed/simple;
+	bh=ZrCa4r6Sg6v/CR/ysHT8GIMNebnmNaigKsm4TEayycE=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=YA5zD0svJteTR3WTsZ95RWY+3eIJECusO4hFtPeNOSGthm8e415dRA5jxDkF59Srnk+kem9/4E+KCDh5PGyTHGdeGOof+i+CSSjMvglnoUlbI4EBi20Z/ef61UKYDhcA082H+SQQvopXBU/DSpTMo/nXWY+cmtRNgjcutiG+v14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Wm5S91Lxmz4f3jHc;
+	Sat, 17 Aug 2024 12:27:37 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 1D4FE1A018D;
+	Sat, 17 Aug 2024 12:27:51 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgAXPoTFJsBmJiWpBw--.34678S3;
+	Sat, 17 Aug 2024 12:27:50 +0800 (CST)
+Subject: Re: [PATCH v2 3/6] iomap: advance the ifs allocation if we have more
+ than one blocks per folio
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, djwong@kernel.org, brauner@kernel.org,
+ david@fromorbit.com, jack@suse.cz, willy@infradead.org, yi.zhang@huawei.com,
+ chengzhihao1@huawei.com, yukuai3@huawei.com
+References: <20240812121159.3775074-1-yi.zhang@huaweicloud.com>
+ <20240812121159.3775074-4-yi.zhang@huaweicloud.com>
+ <ZrxBfKi_DpThYo94@infradead.org>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <58d9c752-1b40-0af8-370c-cf03144c54c0@huaweicloud.com>
+Date: Sat, 17 Aug 2024 12:27:49 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240816081908.467810-3-hch@lst.de>
+In-Reply-To: <ZrxBfKi_DpThYo94@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAXPoTFJsBmJiWpBw--.34678S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw47uF4UJF4kKFWDury8Xwb_yoW8JFWfpF
+	9rKr1DGFW8Cay7uF9rZay7Zw1Y9343GFyUGFsaq3WakFn7t347K3W2ga4jkay7Gw1kAr4F
+	q3y7XrZ7WFy5A3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU92b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
+	07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4
+	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
+	MI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
+	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
+	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Fri, Aug 16, 2024 at 10:18:43AM +0200, Christoph Hellwig wrote:
-> Fix the newly added discard support to only offer a FITRIM range that
-> spans the RT device in addition to the main device if the RT device
-> actually supports discard.  Without this we'll incorrectly accept
-> a larger range than actually supported and confuse user space if the
-> RT device does not support discard.  This can easily happen when the
-> main device is a SSD but the RT device is a hard driver.
+On 2024/8/14 13:32, Christoph Hellwig wrote:
+> On Mon, Aug 12, 2024 at 08:11:56PM +0800, Zhang Yi wrote:
+>> From: Zhang Yi <yi.zhang@huawei.com>
+>>
+>> Now we allocate ifs if i_blocks_per_folio is larger than one when
+>> writing back dirty folios in iomap_writepage_map(), so we don't attach
+>> an ifs after buffer write to an entire folio until it starts writing
+>> back, if we partial truncate that folio, iomap_invalidate_folio() can't
+>> clear counterpart block's dirty bit as expected. Fix this by advance the
+>> ifs allocation to __iomap_write_begin().
 > 
-> Move the code around a bit to keep the max_blocks and granularity
-> assignments together and explicitly reject that case where only the
-> RT device supports discard, as that does not fit the way the FITRIM ABI
-> works very well and is a very fringe use case.
+> Wouldn't it make more sense to only allocate the ifѕ in
+> iomap_invalidate_folio when it actually is needed?
+> 
 
-Is there more to this than generic/260 failing?  And if not, does the
-following patch things up for you?
+I forget to mention that truncate_inode_partial_folio() call
+folio_invalidate()->iomap_invalidate_folio() only when the folio has
+private, if the folio doesn't has ifs, the iomap_invalidate_folio()
+would nerver be called, hence allocate the ifs in
+iomap_invalidate_folio() is useless.
 
---D
+In my opinion, one solution is change to always call folio_invalidate()
+in truncate_inode_partial_folio(), all callbacks should handle the no
+private case. Another solution is add a magic (a fake ifs) to
+folio->private and then convert it to a real one in
+iomap_invalidate_folio(), any thoughts?
 
-From: Darrick J. Wong <djwong@kernel.org>
-Subject: [PATCH] generic/260: fix for multi-device xfs with mixed discard support
+Thanks,
+Yi.
 
-Fix this test so that it can handle XFS filesystems with a realtime
-volume when the data and rt devices do not both support discard.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/rc  |   12 ++++++++++-
- common/xfs |   65 +++++++++++++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 64 insertions(+), 13 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index b718030a59..426f2de43b 100644
---- a/common/rc
-+++ b/common/rc
-@@ -4207,6 +4207,16 @@ _require_batched_discard()
- 	fi
- }
- 
-+_bdev_queue_property()
-+{
-+	local dev="$1"
-+	local property="$2"
-+	local default="$3"
-+
-+	local fname="/sys/block/$(_short_dev "$dev")/queue/$property"
-+	cat "$fname" 2>/dev/null || echo "$default"
-+}
-+
- # Given a mountpoint and the device associated with that mountpoint, return the
- # maximum start offset that the FITRIM command will accept, in units of 1024
- # byte blocks.
-@@ -4214,7 +4224,7 @@ _discard_max_offset_kb()
- {
- 	case "$FSTYP" in
- 	xfs)
--		_xfs_discard_max_offset_kb "$1"
-+		_xfs_discard_max_offset_kb "$@"
- 		;;
- 	*)
- 		$DF_PROG -k | awk -v dev="$2" -v mnt="$1" '$1 == dev && $7 == mnt { print $3 }'
-diff --git a/common/xfs b/common/xfs
-index 9501adac4c..5ad60a3ddc 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1882,7 +1882,13 @@ _require_xfs_scratch_atomicswap()
- # of 1024 byte blocks.
- _xfs_discard_max_offset_kb()
- {
-+	local mount="$1"
-+	local dev="$2"
- 	local statfs
-+	local datadev_discard=
-+	local rtdev_discard=
-+	local dev_discard_max=
-+	local rtdev_discard_max=
- 
- 	# Use awk to read the statfs output for the XFS filesystem, compute
- 	# the two possible FITRIM offset maximums, and then use some horrid
-@@ -1895,31 +1901,66 @@ _xfs_discard_max_offset_kb()
- 	# 2: Realtime volume size in fsblocks.
- 	# 3: Max FITRIM offset if we can only trim the data volume
- 	# 4: Max FITRIM offset if we can trim the data and rt volumes
--	readarray -t statfs < <($XFS_IO_PROG -c 'statfs' "$1" | \
--		awk '{g[$1] = $3} END {printf("%d\n%d\n%d\n%d\n%d\n",
-+	# 5: Max FITRIM offset if we can only trim the rt volume
-+	readarray -t statfs < <($XFS_IO_PROG -c 'statfs' "$mount" | \
-+		awk '{g[$1] = $3} END {printf("%d\n%d\n%d\n%d\n%d\n%d\n",
- 			g["geom.bsize"],
- 			g["geom.datablocks"],
- 			g["geom.rtblocks"],
- 			g["geom.bsize"] * g["geom.datablocks"] / 1024,
--			g["geom.bsize"] * (g["geom.datablocks"] + g["geom.rtblocks"]) / 1024);}')
-+			g["geom.bsize"] * (g["geom.datablocks"] + g["geom.rtblocks"]) / 1024,
-+			g["geom.bsize"] * g["geom.rtblocks"] / 1024);}')
- 
- 	# If the kernel supports discarding the realtime volume, then it will
- 	# not reject a FITRIM for fsblock dblks+1, even if the len/minlen
- 	# arguments are absurd.
- 	if [ "${statfs[2]}" -gt 0 ]; then
--		if $FSTRIM_PROG -o "$((statfs[0] * statfs[1]))" \
-+		case "$dev" in
-+		"$SCRATCH_DEV")
-+			rtdev_discard_max="$(_bdev_queue_property "$SCRATCH_RTDEV" discard_max_bytes 0)"
-+			;;
-+		"$TEST_DEV")
-+			rtdev_discard_max="$(_bdev_queue_property "$TEST_RTDEV" discard_max_bytes 0)"
-+			;;
-+		*)
-+			echo "Unrecognized device $dev" >&2
-+			rtdev_discard_max=0
-+			;;
-+		esac
-+
-+		if [ "$rtdev_discard_max" -gt 0 ] &&
-+		   $FSTRIM_PROG -o "$((statfs[0] * statfs[1]))" \
- 				-l "${statfs[0]}" \
--				-m "$((statfs[0] * 2))" "$1" &>/dev/null; then
--			# The kernel supports discarding the rt volume, so
--			# print out the second answer from above.
--			echo "${statfs[4]}"
--			return
-+				-m "$((statfs[0] * 2))" "$mount" &>/dev/null; then
-+			# The kernel supports discarding the rt volume
-+			rtdev_discard=2
- 		fi
- 	fi
- 
--	# The kernel does not support discarding the rt volume or there is no
--	# rt volume.  Print out the first answer from above.
--	echo "${statfs[3]}"
-+	# The kernel supports discarding the rt volume
-+	dev_discard_max="$(_bdev_queue_property "$dev" discard_max_bytes 0)"
-+	if [ "$dev_discard_max" -gt 0 ]; then
-+		datadev_discard=1
-+	fi
-+
-+	case "$datadev_discard$rtdev_discard" in
-+	"12")
-+		# Both devices support it
-+		echo "${statfs[4]}"
-+		;;
-+	"1")
-+		# Only the data device supports it
-+		echo "${statfs[3]}"
-+		;;
-+	"2")
-+		# Only the rt device supports it
-+		echo "${statfs[5]}"
-+		;;
-+	*)
-+		# No support at all
-+		echo 0
-+		;;
-+	esac
- }
- 
- # check if mkfs and the kernel support nocrc (v4) file systems
