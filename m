@@ -1,55 +1,56 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D52816B74C
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 11:47:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E723816728E
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 11:59:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724068033; cv=none; b=PXeGmZhno+1DmId6JDvNznFJykzcgs05+4g8hzpAPiDi+Uu34A7vUN4VXB++FbSrQ1BEX+KwAQEhQZwGOeX/J1a5YOP/+hQf+19Vrezi6tvs7kmSIFzJsLs9eA2OucQEOB8lQ6HyIic02eeme6IXooSc8Fh2BR3WRwxuXxBOt5Y=
+	t=1724068792; cv=none; b=ulrmMeGOg0HQiMVBdVO4QLvHyWZcbGdY+C1uRosq6j0WC71iM452yvHTvPEo1Kqu66OoWhTQPeusvm0K4L27eQKXGbOmro79DGuDnWf30Y5WHckTGWZAaLDuxbdG+m+gjqAO+oa6ss1L/mqBfw7B1IJlEyzg6slLgKemhbaNYy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724068033; c=relaxed/simple;
-	bh=6THoPfDJ4DaIHDJGHkyac3o4Tj9/qF0aMMiW5s1/rNE=;
-	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
-	 Content-Type:Date:Message-ID; b=b7U/G6CT2v5s0vZku+w08TiIKGw4bynUXr7olNqj3vkNYBjiM9P5LfItYKDHYJs6bn+gIb0V2Hj695e+LLjcBqa0AQMj1qOrxDaUQBPcnKWFFCU24bC8cQHZNCEe1VZPFguOp9LPSRPRx3kCEDiofJEvpvH1lAixJUmUEVB2Pgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Vu1/1VWA; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1724068792; c=relaxed/simple;
+	bh=QoDrXZXFlLjJRrcfSVsie6OGUkt4QrKIKGi1LCthZaA=;
+	h=From:In-Reply-To:References:Cc:Subject:MIME-Version:Content-Type:
+	 Date:Message-ID; b=G6fHAFyJXU/heHU43lRSZViBserTMwO6dpBqaMBZlfBifdOy4m9f08Tn51AW51B9QmSp67z57kxt+y91lhiJ8K3kYbY43CTt87NPQgnDqhseIesOp/J4aQ6H75opycG/ykYF60hhNQAytdunkcMI0vyLFp+kKQN4kFnsn2VBiF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OCLbJB1V; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vu1/1VWA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OCLbJB1V"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1724068030;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	s=mimecast20190719; t=1724068789;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/BXnkxNev4eqM9SF7QxyJDhAGvzkKQgET2zOAAZoUuI=;
-	b=Vu1/1VWA3cItEJZiqMEMvjOAy6kEhwhmg1/yMYg8WRPsx/SdCK+AOIkQa9EAg0GULGg+Fa
-	rjsFzQrrKuiJhpIBLoq+yYJnJKhEQccQSSQLn5uWP8vGBZzyAQ9HrIuJcoDpV1YIFqvTk/
-	xB++q8vJsOwHVNcS1mAOdtbaZ5g+c/Q=
+	bh=nSDk9RrUaqqTiS3gE8YAv0OqBuyGmh41yRuUpfpoLP4=;
+	b=OCLbJB1VOPolIQnSlcWMPQwvDV1xdaYgOHrCs95MVWaVc1EL/mD0Iehey8CbsFnyyIwtgq
+	GMCvIgjF8LbpsBelnZjHSQYD9glWp01IJfNjRLmwAaW9ySphiV1C1cTQDoFIiR/nfnubpw
+	rp/YOIGLLFeMi4V58rh1dc73vjlGIQw=
 Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-85--2BxB3vTOoaoqk81-59JpA-1; Mon,
- 19 Aug 2024 07:47:06 -0400
-X-MC-Unique: -2BxB3vTOoaoqk81-59JpA-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-665-y-oQF2GQOyaLK-9XZ_4nzw-1; Mon,
+ 19 Aug 2024 07:59:43 -0400
+X-MC-Unique: y-oQF2GQOyaLK-9XZ_4nzw-1
 Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DAA5F1955BEE;
-	Mon, 19 Aug 2024 11:47:02 +0000 (UTC)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8403F1954B1D;
+	Mon, 19 Aug 2024 11:59:40 +0000 (UTC)
 Received: from warthog.procyon.org.uk (unknown [10.42.28.30])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 75E1F19773E0;
-	Mon, 19 Aug 2024 11:46:56 +0000 (UTC)
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AEB1619773E0;
+	Mon, 19 Aug 2024 11:59:33 +0000 (UTC)
 Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
 	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
 	Kingdom.
 	Registered in England and Wales under Company Registration No. 3798903
 From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20240818165124.7jrop5sgtv5pjd3g@quentin>
-References: <20240818165124.7jrop5sgtv5pjd3g@quentin> <20240815090849.972355-1-kernel@pankajraghav.com> <2924797.1723836663@warthog.procyon.org.uk>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: dhowells@redhat.com, brauner@kernel.org, akpm@linux-foundation.org,
+In-Reply-To: <3402933.1724068015@warthog.procyon.org.uk>
+References: <3402933.1724068015@warthog.procyon.org.uk> <20240818165124.7jrop5sgtv5pjd3g@quentin> <20240815090849.972355-1-kernel@pankajraghav.com> <2924797.1723836663@warthog.procyon.org.uk>
+Cc: dhowells@redhat.com,
+    "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+    brauner@kernel.org, akpm@linux-foundation.org,
     chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
     djwong@kernel.org, hare@suse.de, gost.dev@samsung.com,
     linux-xfs@vger.kernel.org, hch@lst.de, david@fromorbit.com,
@@ -66,109 +67,45 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <3402932.1724068015.1@warthog.procyon.org.uk>
+Content-ID: <3405742.1724068772.1@warthog.procyon.org.uk>
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Aug 2024 12:46:55 +0100
-Message-ID: <3402933.1724068015@warthog.procyon.org.uk>
+Date: Mon, 19 Aug 2024 12:59:32 +0100
+Message-ID: <3405743.1724068772@warthog.procyon.org.uk>
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-Hi Pankaj,
+David Howells <dhowells@redhat.com> wrote:
 
-I can reproduce the problem with:
+> You can see the invalidate_folio call, with the offset at 0x4 an the len=
+gth as
+> 0x1ffc.  The data at the beginning of the page is 0x78787878.  This look=
+s
+> correct.
+> =
 
-xfs_io -t -f -c "pwrite -S 0x58 0 40" -c "fsync" -c "truncate 4" -c "trunc=
-ate 4096" /xfstest.test/wubble; od -x /xfstest.test/wubble
+> Then second ftruncate() is called to increase the file size to 4096
+> (ie. 0x1000):
+> =
 
-borrowed from generic/393.  I've distilled it down to the attached C progr=
-am.
+>  pankaj-5833: netfs_truncate: ni=3D9e isz=3D4 rsz=3D4 zp=3D4 to=3D1000
+>  pankaj-5833: netfs_inval_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001=
+ o=3D1000 l=3D1000 d=3D78787878
+>  pankaj-5833: netfs_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 inval=
+-part
+>  pankaj-5833: netfs_set_size: ni=3D9e resize-file isz=3D1000 rsz=3D1000 =
+zp=3D4
+> =
 
-Turning on tracing and adding a bit more, I can see the problem happening.
-Here's an excerpt of the tracing (I've added some non-upstream tracepoints=
-).
-Firstly, you can see the second pwrite at fpos 0, 40 bytes (ie. 0x28):
+> And here's the problem: in the invalidate_folio() call, the offset is 0x=
+1000
+> and the length is 0x1000 (o=3D and l=3D).  But that's the wrong half of =
+the folio!
+> I'm guessing that the caller thereafter clears the other half of the fol=
+io -
+> the bit that should be kept.
 
- pankaj-5833: netfs_write_iter: WRITE-ITER i=3D9e s=3D0 l=3D28 f=3D0
- pankaj-5833: netfs_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 mod-str=
-eamw
-
-Then first ftruncate() is called to reduce the file size to 4:
-
- pankaj-5833: netfs_truncate: ni=3D9e isz=3D2028 rsz=3D2028 zp=3D4000 to=3D=
-4
- pankaj-5833: netfs_inval_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 o=
-=3D4 l=3D1ffc d=3D78787878
- pankaj-5833: netfs_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 inval-p=
-art
- pankaj-5833: netfs_set_size: ni=3D9e resize-file isz=3D4 rsz=3D4 zp=3D4
-
-You can see the invalidate_folio call, with the offset at 0x4 an the lengt=
-h as
-0x1ffc.  The data at the beginning of the page is 0x78787878.  This looks
-correct.
-
-Then second ftruncate() is called to increase the file size to 4096
-(ie. 0x1000):
-
- pankaj-5833: netfs_truncate: ni=3D9e isz=3D4 rsz=3D4 zp=3D4 to=3D1000
- pankaj-5833: netfs_inval_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 o=
-=3D1000 l=3D1000 d=3D78787878
- pankaj-5833: netfs_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 inval-p=
-art
- pankaj-5833: netfs_set_size: ni=3D9e resize-file isz=3D1000 rsz=3D1000 zp=
-=3D4
-
-And here's the problem: in the invalidate_folio() call, the offset is 0x10=
-00
-and the length is 0x1000 (o=3D and l=3D).  But that's the wrong half of th=
-e folio!
-I'm guessing that the caller thereafter clears the other half of the folio=
- -
-the bit that should be kept.
+Actually, I think I'm wrong in my evaluation - I think that's the region t=
+o be
+invalidated, not the region to be kept.
 
 David
----
-/* Distillation of the generic/393 xfstest */
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-#define ERR(x, y) do { if ((long)(x) =3D=3D -1) { perror(y); exit(1); } } =
-while(0)
-
-static const char xxx[40] =3D "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-static const char yyy[40] =3D "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
-static const char dropfile[] =3D "/proc/sys/vm/drop_caches";
-static const char droptype[] =3D "3";
-static const char file[] =3D "/xfstest.test/wubble";
-
-int main(int argc, char *argv[])
-{
-        int fd, drop;
-
-	/* Fill in the second 8K block of the file... */
-        fd =3D open(file, O_CREAT|O_TRUNC|O_WRONLY, 0666);
-        ERR(fd, "open");
-        ERR(ftruncate(fd, 0), "pre-trunc $file");
-        ERR(pwrite(fd, yyy, sizeof(yyy), 0x2000), "write-2000");
-        ERR(close(fd), "close");
-
-	/* ... and drop the pagecache so that we get a streaming
-	 * write, attaching some private data to the folio.
-	 */
-        drop =3D open(dropfile, O_WRONLY);
-        ERR(drop, dropfile);
-        ERR(write(drop, droptype, sizeof(droptype) - 1), "write-drop");
-        ERR(close(drop), "close-drop");
-
-        fd =3D open(file, O_WRONLY, 0666);
-        ERR(fd, "reopen");
-	/* Make a streaming write on the first 8K block (needs O_WRONLY). */
-        ERR(pwrite(fd, xxx, sizeof(xxx), 0), "write-0");
-	/* Now use truncate to shrink and reexpand. */
-        ERR(ftruncate(fd, 4), "trunc-4");
-        ERR(ftruncate(fd, 4096), "trunc-4096");
-        ERR(close(fd), "close-2");
-        exit(0);
-}
 
