@@ -1,42 +1,42 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44C3A15E5D6
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 14:17:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D91F16BE1A
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 15:00:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724077070; cv=none; b=ZNEmgzqUC3YQiOuDYAaEmZePUptwPgS4ts7jn8LeNV8+E7cDbrgPLM4GclKy/YPzbc+fG/AKCBDfkFoXLdO8xjHaYKuT8zAP/A+fZK6NR1sGpxEaUmni0YUckR52h6djzTXcYlx6kDCv7EkVc/MR/kBgDbL6CnkfACk0M2IZnqY=
+	t=1724079632; cv=none; b=Phk7Ek2a3TP0E621SJt3FGm1vKxFP1/G48oULVLIpptfxTPD8nZ0yYypcBI1IMwS0F+1aKa7KuF7MwMWMK9qCqM5+e2oftYu1J2eBkXY+2CMhT8vjs7WrUnyRJIHlF19TYjzv3j+OJOQ0b8lzxlSINL113YS2DWPrl9eA0EqUhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724077070; c=relaxed/simple;
-	bh=RqZWoKpKTGWk09law4kuCdcjLVtRZIj3J+L83EJWmDg=;
+	s=arc-20240116; t=1724079632; c=relaxed/simple;
+	bh=JPGlJYlD8GR54UP1s6GxN4xwSDeXjGj/aFiXZiEGlQk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qpup03lUSAVXvda+aq9hc1/VFNAWMj02OS+V4N7Oes9bfvffcg05ArWceoOpMXPawIfjcOulE87B40a8cpiYax++j8uIQoSw94ZE8If7yC7pH4SonUzuVbyPCofnlKb2QCuxEI+0kpDOICXoac4lsFa75/Dq26XN+YLl014UzqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RU7VryTW; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=Yq48ksIKM8fLp8pBD/3X4MErcROKmkXQ0+V3I9Ph/XJANFUpax8n7JvU+lGr7PrppPJGYCgymmbY9GkmII3sNBxULxUGS186AgBXbCvBKmG6qeswK9JqjigFlYZKItbMZaBtfn+IMXY3L6DQc3h4uNBw6qjVepatYwirqQJCqQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qQ7pDJM2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RU7VryTW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=C1KvwdvNX/YNJHfr7DhZxcYe0h7mS0Z1W0tRtvSG+H4=; b=RU7VryTW+OOzlMGstcYMhWzJvg
-	bsd/hkcX98quZ/IIGb2BW+FpXlvtg/4meDXi05HDhfnwUhve/T5qAWmf4/7cZzAZjfOUD3AXmgXNM
-	i+FKnmzMg3yByLr9M09lDuHk7ohE96Ghw6x1WWSTZDBi3URjPq8/lv3y2GPmJ228T46ta0f5pZihv
-	1JuQ+uZILC/GII49NFIeofCxoFW/pfzp625M7aEQmy0NfcQFul65yzSGNTJsNCr/w9kVfIfcuw9ot
-	/p7oipAyxOyhhIC6psyxBsVKp9ZM2Z2SJj15ibH9Kru4/y9ue6S6PLk66JUOZSNxGDEH0a4/3MlXr
-	tY1I/CRg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sg3Cb-00000001ie1-2EDX;
-	Mon, 19 Aug 2024 14:17:45 +0000
-Date: Mon, 19 Aug 2024 07:17:45 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Julien Olivain <ju.o@free.fr>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] libxfs: provide a memfd_create() wrapper if not
- present in libc
-Message-ID: <ZsNUCdDpYO3BNDCt@infradead.org>
-References: <20240817160052.2810571-1-ju.o@free.fr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qQ7pDJM2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01042C32782;
+	Mon, 19 Aug 2024 15:00:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724079631;
+	bh=JPGlJYlD8GR54UP1s6GxN4xwSDeXjGj/aFiXZiEGlQk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qQ7pDJM2MZ1jCRZJYmDA0KrWvex9+LJR9Kw1B1yUrjdN8hV7WGxKAdwsZ2h8f+h45
+	 A/nxcCKGsX1uhlgApwiArAkQtspVXFNJbQbdszce94kjaU6kDKPz6mRCa661BdcsjW
+	 lF5eBFuFiLCyBg/4XJlXSEuxAgPrQFZecyA9lRcfBERKeOIvlFdWgdGWOXmrDiz++3
+	 6ch0yuSghookC3aFxtp4tWvKovhD4Hcv/ZXTlhEj7b0mvzDjpFFd6IdzmTqwOcxX6E
+	 d0fcn6tu7R2uGbFqmzBnU+a0Zda7H75OK8vvxhnbuh8FhTSl+2C7c+O5fFogDL4Pmb
+	 eqoTg4iQ7TG1w==
+Date: Mon, 19 Aug 2024 08:00:30 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: don't extend the FITRIM range if the rt device
+ does not support discard
+Message-ID: <20240819150030.GO865349@frogsfrogsfrogs>
+References: <20240816081908.467810-1-hch@lst.de>
+ <20240816081908.467810-3-hch@lst.de>
+ <20240816215017.GK865349@frogsfrogsfrogs>
+ <20240819124407.GA6610@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,22 +45,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240817160052.2810571-1-ju.o@free.fr>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240819124407.GA6610@lst.de>
 
-On Sat, Aug 17, 2024 at 06:00:52PM +0200, Julien Olivain wrote:
-> Commit 1cb2e387 "libxfs: add xfile support" introduced
-> a use of the memfd_create() system call, included in version
-> xfsprogs v6.9.0.
+On Mon, Aug 19, 2024 at 02:44:07PM +0200, Christoph Hellwig wrote:
+> On Fri, Aug 16, 2024 at 02:50:17PM -0700, Darrick J. Wong wrote:
+> > Is there more to this than generic/260 failing?
 > 
-> This system call was introduced in kernel commit [1], first included
-> in kernel v3.17 (released on 2014-10-05).
+> The only other users of the detection is generic/251, which doesn't
+> seem to care about the exact value.
 > 
-> The memfd_create() glibc wrapper function was added much later in
-> commit [2], first included in glibc version 2.27 (released on
-> 2018-02-01).
+> > And if not, does the
+> > following patch things up for you?
+> 
+> This works.  OTOH it will break again with the zoned RT subvolume
+> which can't support FITRIM even on devices that claim it.  And for
+> actual users that care (and not just xfstests) these kinds of hacks
+> don't seem very palatable..
 
-I guess 6 years old is still worth supporting.  The code itself looks
-good:
+What does discard do on a zoned device?  Is that how you reset the write
+pointer?  And does that mean that either you tell the device to discard
+everything it's written in a zone, or it will do nothing?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I see that this test really just puts a lower bound on how much FITRIM
+can report that it discarded from an empty fs.  That number is already
+rather meaningless on XFS because the amount "discarded" is roughly
+(free space - (amount of pending gc work + discard work already in
+progress)) and the user has no visibility into the amount of pending gc
+work.  And you can repeatedly FITRIM and it reports the same number
+since we have no idea if the device actually *did* anything.
+
+Hmm.  No manpage for FITRIM.  Why don't we return the number of bytes
+in the space map that we iterated as range.len?  Or perhaps leave it
+unchanged?
+
+--D
