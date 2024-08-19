@@ -1,42 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D6A2188CD9;
-	Mon, 19 Aug 2024 18:44:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBC9B1DD382
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 22:16:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724093079; cv=none; b=Mdh+UTeoQTKIcYUHmlw2pdHqoytA21gFKSBSKu1CrzGqu5yrI4CO8RLPvggE2/TRH0YPE6BEd6EPuH8tWk82qDDsTiLcqdgAcWFvi4D7qTOo81qV/JMaoE0HTWAqB5t+Xi475P6CsJPW3LTc95ut021OwDV5Lmakqa6lj4U++zc=
+	t=1724105809; cv=none; b=sLrszlvnHoc1Dgbt+9H1AMGofcbzuGEzk+cjA5Ej+4IoGNIaogoGIA1RY3yZMP+XZwcrQv0hOUmFtRPhqGeQHiwCxWW40bs7b9mnuThIolejXikEFgzuRkrlu/69Q8+z/bIJZNlNerIni7J0XHRpTRJP7MbaKQQYBg/JizOyRig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724093079; c=relaxed/simple;
-	bh=IKWmLhqc4HOpXiXkRyYaCMwW6DA4gOKTOvY5fmT89wg=;
+	s=arc-20240116; t=1724105809; c=relaxed/simple;
+	bh=D77h7pBmJaIao3eORJWKIV3ZMv+UbgvImXknw1Nz2eY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PVrqAFnxHycjADkT5R5CYqiOpEwv9kA2nu3vFTgg4iCiWMPsxHkKVMShl+WBtgRe9RbzoiE3OqorqEfZwWpBE2f8mq3HB7F/nuXuSRV1aMhg0lPuBeQPkkJFB3CaiH5Oy1sS3ZkdBsfMGQ0VO4U+7zp09TLa1XoHIMKot7u4dL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K7ei5VKY; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=VAQZKyWjN5gXcStYd8mWekw1DqnQSuLjDlUXBCEs3Rk29SyFrxNkYiUNso1YS9osx14C9G3myE402/Jit/oMCUhjxo/QYanCIkhkEltp6/gz18aB9Hz/wt/Mn3ssjQcVhUwHmf4/BNZOpQ8Tm3bayJ8XCxk2Cqqzo5k/vyk2hpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=CCvhVVrA; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K7ei5VKY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E26B8C32782;
-	Mon, 19 Aug 2024 18:44:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724093079;
-	bh=IKWmLhqc4HOpXiXkRyYaCMwW6DA4gOKTOvY5fmT89wg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=K7ei5VKYMDzSGgV9i3asrWoMeBu383Lrjd2edttkn232HkXGW7Ez+FtOEaedNUT5N
-	 BCynaXPpDAhxoTnukSFFV3MoFeHa3biDvdlpiwUeLVpPM8oDWPEzCDUXK98tjkU+C2
-	 bWSVSmxFC2fz25AfEIPSN2WodpoqFOy6JX2KqcYftJGTdWs/FrcrDicjb19rE2Va1L
-	 +dUcto/YO85GX9hFc9S7U+8F6cLoUgs2DZc6zQoqdSUr7/trlQuL437Jkf2vWVw4T3
-	 xB6UmSavQDGeilqhbMklajFJVuYb/Yu/Hn59O2K6oOEIXhO9QGncrx94Yw+PEanw4X
-	 luNDH0OSETuLQ==
-Date: Mon, 19 Aug 2024 11:44:38 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zizhi Wo <wozizhi@huawei.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, osandov@fb.com,
-	john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, yangerkun@huawei.com
-Subject: Re: [PATCH V4 2/2] xfs: Fix missing interval for missing_owner in
- xfs fsmap
-Message-ID: <20240819184438.GR865349@frogsfrogsfrogs>
-References: <20240819005320.304211-1-wozizhi@huawei.com>
- <20240819005320.304211-3-wozizhi@huawei.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="CCvhVVrA"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-20231aa8908so13805845ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 15:16:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724105807; x=1724710607; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=N/au4vGQhoGn9UetKPA7LukrmQexlvK/Tsm5BPGezUI=;
+        b=CCvhVVrAmrZJ+6GXR3ATeg/5JY3TBSL61eOU1VIOipJ3uZCxLAtiFlnIeeCCJkqClq
+         2unyqxbzmklhcNMwfArWxyajNigsZi6LTwxhdfjo+A34cf/TEqy0On7U40FHimJkCkNs
+         eLJKh9uDQxJPh96wuaDAHulHhDodGCXnPmAhcTgFnoZ/1AIPwm53OWzpPIKtCcHXPXEi
+         i15cLXnG7ZAN6Uiee8wTkWW6nLqZFZLvgb+cXV73s4ckOno6s5nXXdK1rVvkkjokwuVM
+         Vl+GEDY25TfhDFKotq4ccnPI9rYzAhuoVW9eFXzY2hiJSwyGna8AGaZrSr44fhdLbRDv
+         +aig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724105807; x=1724710607;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=N/au4vGQhoGn9UetKPA7LukrmQexlvK/Tsm5BPGezUI=;
+        b=isAsFZ2dlJW8oRxIgot0ol4cNlVFvrEMt5B5oZKi6XH5FvXQ//GWDrPwXMQnMUpXXs
+         7e+g8YDh43Dhd7KfsZAW0J++w4ivnkuAD3FrQX3sg+jXWDuj+Qp2p7Pz/aauT4GKaOFd
+         FzdTA17XVDfaaqlcxROHHR9r1vP9RIIweIlfmWHcw/tcTEGSm1HW26g7g5b3U5cU+NA7
+         VHpt7XeqckykGvNuVvj+mjq3umn9y2VvRFKLQxw/YFsFhbO+KKJt++GjB2ug9LWWegJ/
+         xPMjX/Mc2QcLXGxYcWpEbhkSeZ3VJB6W6Hd7DnUPaHiAQRLAGyMKM1WsroS92rncktET
+         PuKg==
+X-Forwarded-Encrypted: i=1; AJvYcCWEwFmRjsCaANd4hm45NeY0fAIcQM39cKAlk7xnmArKqaLUY/Me8uVSKnEdJB5BSc1vaO1hncq428s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyauKn/mfR/aqZyR8hT4fEu7kVjS/4u6IuALuvkd6hFYdYjiJ2m
+	0/+CHmomHtcgB32mcmzPqZBBzA8ZBv00DJhqJWJvxiCKGNpZVTqr8bW7briQM2QIBZjMhJz810A
+	g
+X-Google-Smtp-Source: AGHT+IGfgnuZSDWnafemCvrXj6hQgzz1eqoQQciqUMGOGeM5FpILbGMtlACJqOVtqLBB8lz65PfHjA==
+X-Received: by 2002:a17:902:f791:b0:202:13d7:92aa with SMTP id d9443c01a7336-20213d795cdmr98949815ad.24.1724105806730;
+        Mon, 19 Aug 2024 15:16:46 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-201f03795edsm66749105ad.153.2024.08.19.15.16.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Aug 2024 15:16:46 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sgAg7-005ZLT-1e;
+	Tue, 20 Aug 2024 08:16:43 +1000
+Date: Tue, 20 Aug 2024 08:16:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: syzbot <syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] INFO: task hung in xfs_buf_item_unpin (2)
+Message-ID: <ZsPES2351eLXRYPz@dread.disaster.area>
+References: <0000000000008905bf061fc61371@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,134 +73,146 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240819005320.304211-3-wozizhi@huawei.com>
+In-Reply-To: <0000000000008905bf061fc61371@google.com>
 
-On Mon, Aug 19, 2024 at 08:53:20AM +0800, Zizhi Wo wrote:
-> In the fsmap query of xfs, there is an interval missing problem:
-> [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
->  EXT: DEV    BLOCK-RANGE           OWNER              FILE-OFFSET      AG AG-OFFSET             TOTAL
->    0: 253:16 [0..7]:               static fs metadata                  0  (0..7)                    8
->    1: 253:16 [8..23]:              per-AG metadata                     0  (8..23)                  16
->    2: 253:16 [24..39]:             inode btree                         0  (24..39)                 16
->    3: 253:16 [40..47]:             per-AG metadata                     0  (40..47)                  8
->    4: 253:16 [48..55]:             refcount btree                      0  (48..55)                  8
->    5: 253:16 [56..103]:            per-AG metadata                     0  (56..103)                48
->    6: 253:16 [104..127]:           free space                          0  (104..127)               24
->    ......
+On Thu, Aug 15, 2024 at 10:17:31PM -0700, syzbot wrote:
+> Hello,
 > 
-> BUG:
-> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 104 107' /mnt
-> [root@fedora ~]#
-> Normally, we should be able to get [104, 107), but we got nothing.
+> syzbot found the following issue on:
 > 
-> The problem is caused by shifting. The query for the problem-triggered
-> scenario is for the missing_owner interval (e.g. freespace in rmapbt/
-> unknown space in bnobt), which is obtained by subtraction (gap). For this
-> scenario, the interval is obtained by info->last. However, rec_daddr is
-> calculated based on the start_block recorded in key[1], which is converted
-> by calling XFS_BB_TO_FSBT. Then if rec_daddr does not exceed
-> info->next_daddr, which means keys[1].fmr_physical >> (mp)->m_blkbb_log
-> <= info->next_daddr, no records will be displayed. In the above example,
-> 104 >> (mp)->m_blkbb_log = 12 and 107 >> (mp)->m_blkbb_log = 12, so the two
-> are reduced to 0 and the gap is ignored:
+> HEAD commit:    1fb918967b56 Merge tag 'for-6.11-rc3-tag' of git://git.ker..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=115e1429980000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=92c0312151c4e32e
+> dashboard link: https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 > 
->  before calculate ----------------> after shifting
->  104(st)  107(ed)		      12(st/ed)
->   |---------|				  |
->   sector size			      block size
+> Unfortunately, I don't have any reproducer for this issue yet.
 > 
-> Resolve this issue by introducing the "end_daddr" field in
-> xfs_getfsmap_info. This records key[1].fmr_physical at the granularity of
-> sector. If the current query is the last, the rec_daddr is end_daddr to
-> prevent missing interval problems caused by shifting. We only need to focus
-> on the last query, because xfs disks are internally aligned with disk
-> blocksize that are powers of two and minimum 512, so there is no problem
-> with shifting in previous queries.
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/7b0e9f1a37aa/disk-1fb91896.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/d554edb47a8e/vmlinux-1fb91896.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/d1ec77d87b65/bzImage-1fb91896.xz
 > 
-> After applying this patch, the above problem have been solved:
-> [root@fedora ~]# xfs_io -c 'fsmap -vvvv -d 104 107' /mnt
->  EXT: DEV    BLOCK-RANGE      OWNER            FILE-OFFSET      AG AG-OFFSET        TOTAL
->    0: 253:16 [104..106]:      free space                        0  (104..106)           3
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com
 > 
-> Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
-> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
-> ---
->  fs/xfs/xfs_fsmap.c | 19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index 3a30b36779db..4734f8d6303c 100644
-> --- a/fs/xfs/xfs_fsmap.c
-> +++ b/fs/xfs/xfs_fsmap.c
-> @@ -162,6 +162,7 @@ struct xfs_getfsmap_info {
->  	xfs_daddr_t		next_daddr;	/* next daddr we expect */
->  	/* daddr of low fsmap key when we're using the rtbitmap */
->  	xfs_daddr_t		low_daddr;
-> +	xfs_daddr_t		end_daddr;	/* daddr of high fsmap key */
->  	u64			missing_owner;	/* owner of holes */
->  	u32			dev;		/* device id */
->  	/*
-> @@ -294,6 +295,19 @@ xfs_getfsmap_helper(
->  		return 0;
->  	}
->  
-> +	/*
-> +	 * For an info->last query, we're looking for a gap between the
-> +	 * last mapping emitted and the high key specified by userspace.
-> +	 * If the user's query spans less than 1 fsblock, then
-> +	 * info->high and info->low will have the same rm_startblock,
-> +	 * which causes rec_daddr and next_daddr to be the same.
-> +	 * Therefore, use the end_daddr that we calculated from
-> +	 * userspace's high key to synthesize the record.  Note that if
-> +	 * the btree query found a mapping, there won't be a gap.
-> +	 */
-> +	if (info->last && info->end_daddr != LLONG_MAX)
-> +		rec_daddr = info->end_daddr;
-> +
->  	/* Are we just counting mappings? */
->  	if (info->head->fmh_count == 0) {
->  		if (info->head->fmh_entries == UINT_MAX)
-> @@ -946,6 +960,7 @@ xfs_getfsmap(
->  
->  	info.next_daddr = head->fmh_keys[0].fmr_physical +
->  			  head->fmh_keys[0].fmr_length;
-> +	info.end_daddr = LLONG_MAX;
->  	info.fsmap_recs = fsmap_recs;
->  	info.head = head;
->  
-> @@ -966,8 +981,10 @@ xfs_getfsmap(
->  		 * low key, zero out the low key so that we get
->  		 * everything from the beginning.
->  		 */
-> -		if (handlers[i].dev == head->fmh_keys[1].fmr_device)
-> +		if (handlers[i].dev == head->fmh_keys[1].fmr_device) {
->  			dkeys[1] = head->fmh_keys[1];
-> +			info.end_daddr = dkeys[1].fmr_physical;
+> INFO: task kworker/1:1H:43 blocked for more than 143 seconds.
+>       Not tainted 6.11.0-rc3-syzkaller-00066-g1fb918967b56 #0
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> task:kworker/1:1H    state:D stack:25320 pid:43    tgid:43    ppid:2      flags:0x00004000
+> Workqueue: xfs-log/loop4 xlog_ioend_work
+> Call Trace:
+>  <TASK>
+>  context_switch kernel/sched/core.c:5188 [inline]
+>  __schedule+0x17ae/0x4a10 kernel/sched/core.c:6529
+>  __schedule_loop kernel/sched/core.c:6606 [inline]
+>  schedule+0x14b/0x320 kernel/sched/core.c:6621
+>  schedule_timeout+0xb0/0x310 kernel/time/timer.c:2557
+>  ___down_common kernel/locking/semaphore.c:225 [inline]
+>  __down_common+0x343/0x7f0 kernel/locking/semaphore.c:246
+>  down+0x84/0xc0 kernel/locking/semaphore.c:63
+>  xfs_buf_lock+0x164/0x510 fs/xfs/xfs_buf.c:1196
+>  xfs_buf_item_unpin+0x1dd/0x710 fs/xfs/xfs_buf_item.c:582
+>  xlog_cil_committed+0x82f/0xf00 fs/xfs/xfs_log_cil.c:910
+>  xlog_cil_process_committed+0x15c/0x1b0 fs/xfs/xfs_log_cil.c:941
+>  xlog_state_shutdown_callbacks+0x2ba/0x3b0 fs/xfs/xfs_log.c:487
+>  xlog_force_shutdown+0x32c/0x390 fs/xfs/xfs_log.c:3530
+>  xlog_ioend_work+0xad/0x100 fs/xfs/xfs_log.c:1244
+>  process_one_work kernel/workqueue.c:3231 [inline]
+>  process_scheduled_works+0xa2c/0x1830 kernel/workqueue.c:3312
+>  worker_thread+0x86d/0xd40 kernel/workqueue.c:3390
+>  kthread+0x2f0/0x390 kernel/kthread.c:389
+>  ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+>  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+>  </TASK>
+> INFO: task syz.4.26:5406 blocked for more than 144 seconds.
+>       Not tainted 6.11.0-rc3-syzkaller-00066-g1fb918967b56 #0
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> task:syz.4.26        state:D stack:21208 pid:5406  tgid:5405  ppid:5216   flags:0x00004004
+> Call Trace:
+>  <TASK>
+>  context_switch kernel/sched/core.c:5188 [inline]
+>  __schedule+0x17ae/0x4a10 kernel/sched/core.c:6529
+>  __schedule_loop kernel/sched/core.c:6606 [inline]
+>  schedule+0x14b/0x320 kernel/sched/core.c:6621
+>  xlog_wait fs/xfs/xfs_log_priv.h:587 [inline]
+>  xlog_wait_on_iclog+0x501/0x770 fs/xfs/xfs_log.c:840
+>  xlog_force_lsn+0x523/0x9e0 fs/xfs/xfs_log.c:3066
+>  xfs_log_force_seq+0x1da/0x450 fs/xfs/xfs_log.c:3103
+>  __xfs_trans_commit+0xb98/0x1290 fs/xfs/xfs_trans.c:900
+>  xfs_sync_sb_buf+0x2dc/0x370 fs/xfs/libxfs/xfs_sb.c:1178
+>  xfs_ioc_setlabel fs/xfs/xfs_ioctl.c:1143 [inline]
+>  xfs_file_ioctl+0x165b/0x19e0 fs/xfs/xfs_ioctl.c:1298
+>  vfs_ioctl fs/ioctl.c:51 [inline]
+>  __do_sys_ioctl fs/ioctl.c:907 [inline]
+>  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:893
+>  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+>  do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Another problem that I found while testing this out is that if
-dkeys[1].fmr_physical extends a little bit beyond the end of what the
-filesystem thinks is the device size, this change results in fsmap
-reporting an "unknown" extent between that end point and whatever the
-user specified as fmr_physical.
+That XFS deadlock looks to have been there for a while.
 
-IOWs, let's say that the filesystem has 67G of space and 16G AGs.  This
-results in 4x 16G AGs, and a runt AG 4 that is 3G long.  If you initiate
-an fsmap query for [64G, 80G), it'll report "unknown" space between 67G
-and 80G, whereas previously it did not report that.  I noticed this due
-to a regression in xfs/566 with the rtgroups patchset applied, though it
-also seems to happen with that same test if the underlying device has a
-raid stripe configuration that causes runt AGs.
+The test case is setting the loop dev to zero size immediately after
+mount and then clearing the filesystem label. xfs_sync_sb_buf()
+calls xfs_trans_bhold() so the transaction commit does not unlock
+the buffer. The transaction is synchronous, so it issues the journal
+IO then goes to sleep waiting for journal IO completion with the
+superblock buffer locked.
 
-I think this can be fixed by constraining end_daddr to the minimum of
-fmr_physical and XFS_FSB_TO_BB(dblocks/rblocks/logblocks).
+The Journal IO errors out and runs a shutdown, which runs error
+handling on the items to error them out. That requires taking the
+buffer lock on buffer items, and that's already held by the log
+force waiting for IO completion...
 
---D
+I think it can be fixed by doing something like this:
 
-> +		}
->  		if (handlers[i].dev > head->fmh_keys[0].fmr_device)
->  			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
->  
-> -- 
-> 2.39.2
-> 
-> 
+ static void
+ xlog_state_shutdown_callbacks(
+         struct xlog             *log)
+ {
+         struct xlog_in_core     *iclog;
+         LIST_HEAD(cb_list);
+
+         iclog = log->l_iclog;
+         do {
+                 if (atomic_read(&iclog->ic_refcnt)) {
+                         /* Reference holder will re-run iclog callbacks. */
+                         continue;
+                 }
+                 list_splice_init(&iclog->ic_callbacks, &cb_list);
++
++		/*
++		 * Wake waiters before processing callbacks as synchronous
++		 * transactions might waiting on completion whilst holding
++		 * locks we need to error out log items here.
++		 */
++                wake_up_all(&iclog->ic_write_wait);
++                wake_up_all(&iclog->ic_force_wait);
+                 spin_unlock(&log->l_icloglock);
+
+                 xlog_cil_process_committed(&cb_list);
+
+                 spin_lock(&log->l_icloglock);
+-                wake_up_all(&iclog->ic_write_wait);
+-                wake_up_all(&iclog->ic_force_wait);
+         } while ((iclog = iclog->ic_next) != log->l_iclog);
+
+         wake_up_all(&log->l_flush_wait);
+ }
+
+The log is makred as shutdown before xlog_state_shutdown_callbacks()
+is run and xlog_wait_on_iclog() checks if the log is shut down
+after it is woken. Hence if we wake the waiters first, they'll see
+the shutdown, get -EIO returned from xfs_trans_commit() and unlock
+and release all the objects they have locked.
+
+Once they do this, the xfs_buf_item_unpin() call that is stuck
+waiting for the buffer lock to be released will gain the lock and
+make progress. This will allow the journal shutdown to complete, and
+the hang will go away.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
