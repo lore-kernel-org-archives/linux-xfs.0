@@ -1,140 +1,174 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A93199B9;
-	Mon, 19 Aug 2024 07:37:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D52816B74C
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 11:47:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724053082; cv=none; b=L7hyuEP5N9JGKRplCNKfEJYNQ7JK9URVuhP89i/EUSimvKBJ88AKTDJpfbNEjDyCV/bitLWp1fZPYdyaq//IoTJrxHpISvETTh9NSeWNJz0yXwVD3xzKXe7uE++Sd0ip0dKtPQsMq/mbo722cMk/UaD/BgjU33RSp7Z7/87nZ08=
+	t=1724068033; cv=none; b=PXeGmZhno+1DmId6JDvNznFJykzcgs05+4g8hzpAPiDi+Uu34A7vUN4VXB++FbSrQ1BEX+KwAQEhQZwGOeX/J1a5YOP/+hQf+19Vrezi6tvs7kmSIFzJsLs9eA2OucQEOB8lQ6HyIic02eeme6IXooSc8Fh2BR3WRwxuXxBOt5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724053082; c=relaxed/simple;
-	bh=a/FGlat47ime/nwybgnEJP+svbaKuPXpSelvJuR8a5E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pkwFsTcdapuhqELn5uvIol4zza7JWFY05jrWTuKSx3wKKoQZAy28KIS4Mvgu7ufCZ5Rk7oQuIVQr9TZj+uHd+fuI8hxp2Fy2YFVQe4dkmimpcr15k8UJ5KvkQ3XTzCecPpPQf1rBD3nUxyo6dMebzNzD1TT+tYNUFAHhjurIysQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=Kiv6Zvc3; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1724068033; c=relaxed/simple;
+	bh=6THoPfDJ4DaIHDJGHkyac3o4Tj9/qF0aMMiW5s1/rNE=;
+	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
+	 Content-Type:Date:Message-ID; b=b7U/G6CT2v5s0vZku+w08TiIKGw4bynUXr7olNqj3vkNYBjiM9P5LfItYKDHYJs6bn+gIb0V2Hj695e+LLjcBqa0AQMj1qOrxDaUQBPcnKWFFCU24bC8cQHZNCEe1VZPFguOp9LPSRPRx3kCEDiofJEvpvH1lAixJUmUEVB2Pgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Vu1/1VWA; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="Kiv6Zvc3"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4WnPZh6dx0z9sS4;
-	Mon, 19 Aug 2024 09:37:48 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1724053069;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vu1/1VWA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1724068030;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jJkwHXhW1pyUg2A3OtTuCVYWWX/pQvICQgZce5b09dI=;
-	b=Kiv6Zvc3GH4pHILeeyyIsuen6YNQt8fsJ6DlA2KW8qCldQSZ/Oml6KOpFQbYYIbxWxFksm
-	duoxHAULNvQYGSb2SCwhpjvnXUdjuNdrfjqkWX9KGnAv3xPe0soOlgGTzTtywObrk5YMBV
-	en1XXx1fAiod/oTLbBUGbBxBYQf+ZAxWszA25fY7YWlIkStgdhI/TjlY1hjPLGfT5NYde8
-	JcYjjA/127+QoklIaTOnlZc5YkwtYDmH+hcx+dDmJzjtdB1kTcNpBu3d5Ek/LwOSSCipgp
-	+N6jPZ1cc5030AVDWsZW9jrElTzk3FzsYTHYC19Rv8+8of/tpNoVQj7p8/JqjQ==
-Date: Mon, 19 Aug 2024 07:37:42 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: Hannes Reinecke <hare@suse.de>
-Cc: David Howells <dhowells@redhat.com>, brauner@kernel.org,
-	akpm@linux-foundation.org, chandan.babu@oracle.com,
-	linux-fsdevel@vger.kernel.org, djwong@kernel.org,
-	gost.dev@samsung.com, linux-xfs@vger.kernel.org, hch@lst.de,
-	david@fromorbit.com, Zi Yan <ziy@nvidia.com>,
-	yang@os.amperecomputing.com, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, willy@infradead.org, john.g.garry@oracle.com,
-	cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
-	ryan.roberts@arm.com
+	bh=/BXnkxNev4eqM9SF7QxyJDhAGvzkKQgET2zOAAZoUuI=;
+	b=Vu1/1VWA3cItEJZiqMEMvjOAy6kEhwhmg1/yMYg8WRPsx/SdCK+AOIkQa9EAg0GULGg+Fa
+	rjsFzQrrKuiJhpIBLoq+yYJnJKhEQccQSSQLn5uWP8vGBZzyAQ9HrIuJcoDpV1YIFqvTk/
+	xB++q8vJsOwHVNcS1mAOdtbaZ5g+c/Q=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-85--2BxB3vTOoaoqk81-59JpA-1; Mon,
+ 19 Aug 2024 07:47:06 -0400
+X-MC-Unique: -2BxB3vTOoaoqk81-59JpA-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DAA5F1955BEE;
+	Mon, 19 Aug 2024 11:47:02 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.30])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 75E1F19773E0;
+	Mon, 19 Aug 2024 11:46:56 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20240818165124.7jrop5sgtv5pjd3g@quentin>
+References: <20240818165124.7jrop5sgtv5pjd3g@quentin> <20240815090849.972355-1-kernel@pankajraghav.com> <2924797.1723836663@warthog.procyon.org.uk>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: dhowells@redhat.com, brauner@kernel.org, akpm@linux-foundation.org,
+    chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
+    djwong@kernel.org, hare@suse.de, gost.dev@samsung.com,
+    linux-xfs@vger.kernel.org, hch@lst.de, david@fromorbit.com,
+    Zi Yan <ziy@nvidia.com>, yang@os.amperecomputing.com,
+    linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+    willy@infradead.org, john.g.garry@oracle.com,
+    cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
+    ryan.roberts@arm.com
 Subject: Re: [PATCH v12 00/10] enable bs > ps in XFS
-Message-ID: <20240819073742.uwrx6ldk6j3wde5j@quentin>
-References: <20240818165124.7jrop5sgtv5pjd3g@quentin>
- <20240815090849.972355-1-kernel@pankajraghav.com>
- <2924797.1723836663@warthog.procyon.org.uk>
- <3141777.1724012176@warthog.procyon.org.uk>
- <df26beed-97c7-44e4-b380-2260b8331ea9@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <df26beed-97c7-44e4-b380-2260b8331ea9@suse.de>
-X-Rspamd-Queue-Id: 4WnPZh6dx0z9sS4
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3402932.1724068015.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 19 Aug 2024 12:46:55 +0100
+Message-ID: <3402933.1724068015@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On Mon, Aug 19, 2024 at 09:24:11AM +0200, Hannes Reinecke wrote:
-> On 8/18/24 22:16, David Howells wrote:
-> > Pankaj Raghav (Samsung) <kernel@pankajraghav.com> wrote:
-> > 
-> > > I am no expert in network filesystems but are you sure there are no
-> > > PAGE_SIZE assumption when manipulating folios from the page cache in
-> > > AFS?
-> > 
-> > Note that I've removed the knowledge of the pagecache from 9p, afs and cifs to
-> > netfslib and intend to do the same to ceph.  The client filesystems just
-> > provide read and write ops to netfslib and netfslib uses those to do ordinary
-> > buffered I/O, unbuffered I/O (selectable by mount option on some filesystems)
-> > and DIO.
-> > 
-> > That said, I'm not sure that I haven't made some PAGE_SIZE assumptions.  I
-> > don't *think* I have since netfslib is fully multipage folio capable, but I
-> > can't guarantee it.
-> > 
-> I guess you did:
-> 
-> static int afs_fill_super(struct super_block *sb, struct afs_fs_context
-> *ctx)
-> {
->         struct afs_super_info *as = AFS_FS_S(sb);
->         struct inode *inode = NULL;
->         int ret;
-> 
->         _enter("");
-> 
->         /* fill in the superblock */
->         sb->s_blocksize         = PAGE_SIZE;
->         sb->s_blocksize_bits    = PAGE_SHIFT;
->         sb->s_maxbytes          = MAX_LFS_FILESIZE;
->         sb->s_magic             = AFS_FS_MAGIC;
->         sb->s_op                = &afs_super_ops;
-> 
-> IE you essentially nail AFS to use PAGE_SIZE.
-> Not sure how you would tell AFS to use a different block size;
-> maybe a mount option?
+Hi Pankaj,
 
-I saw this as well, but I didn't see this variable being used anywhere.
-Probably this has no meaning in a network-based FSs?
+I can reproduce the problem with:
 
-> And there are several other places which will need to be modified;
-> eg afs_mntpt_set_params() is trying to read from a page which
-> won't fly with large blocks (converted to read_full_folio()?),
-> and, of course, the infamous AFS_DIR_BLOCKS_PER_PAGE which will
-> overflow for large blocks.
+xfs_io -t -f -c "pwrite -S 0x58 0 40" -c "fsync" -c "truncate 4" -c "trunc=
+ate 4096" /xfstest.test/wubble; od -x /xfstest.test/wubble
 
-But the min folio order is set only for AFS_FTYPE_FILE and not
-for AFS_FTYPE_DIR.
+borrowed from generic/393.  I've distilled it down to the attached C progr=
+am.
 
-> 
-> So some work is required, but everything looks doable.
-> Maybe I can find some time until LPC.
-> 
-> > Mostly this was just a note to you that there might be an issue with your code
-> > - but I haven't investigated it yet and it could well be in my code.
-> > 
-> Hmm. I'd rather fix the obvious places in afs first; just do a quick
-> grep for 'PAGE_', that'll give you a good impression of places to look at.
-> 
-Agree.
+Turning on tracing and adding a bit more, I can see the problem happening.
+Here's an excerpt of the tracing (I've added some non-upstream tracepoints=
+).
+Firstly, you can see the second pwrite at fpos 0, 40 bytes (ie. 0x28):
 
-> Cheers,
-> 
-> Hannes
-> -- 
-> Dr. Hannes Reinecke                  Kernel Storage Architect
-> hare@suse.de                                +49 911 74053 688
-> SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-> HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
-> 
+ pankaj-5833: netfs_write_iter: WRITE-ITER i=3D9e s=3D0 l=3D28 f=3D0
+ pankaj-5833: netfs_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 mod-str=
+eamw
+
+Then first ftruncate() is called to reduce the file size to 4:
+
+ pankaj-5833: netfs_truncate: ni=3D9e isz=3D2028 rsz=3D2028 zp=3D4000 to=3D=
+4
+ pankaj-5833: netfs_inval_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 o=
+=3D4 l=3D1ffc d=3D78787878
+ pankaj-5833: netfs_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 inval-p=
+art
+ pankaj-5833: netfs_set_size: ni=3D9e resize-file isz=3D4 rsz=3D4 zp=3D4
+
+You can see the invalidate_folio call, with the offset at 0x4 an the lengt=
+h as
+0x1ffc.  The data at the beginning of the page is 0x78787878.  This looks
+correct.
+
+Then second ftruncate() is called to increase the file size to 4096
+(ie. 0x1000):
+
+ pankaj-5833: netfs_truncate: ni=3D9e isz=3D4 rsz=3D4 zp=3D4 to=3D1000
+ pankaj-5833: netfs_inval_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 o=
+=3D1000 l=3D1000 d=3D78787878
+ pankaj-5833: netfs_folio: pfn=3D116fec i=3D0009e ix=3D00000-00001 inval-p=
+art
+ pankaj-5833: netfs_set_size: ni=3D9e resize-file isz=3D1000 rsz=3D1000 zp=
+=3D4
+
+And here's the problem: in the invalidate_folio() call, the offset is 0x10=
+00
+and the length is 0x1000 (o=3D and l=3D).  But that's the wrong half of th=
+e folio!
+I'm guessing that the caller thereafter clears the other half of the folio=
+ -
+the bit that should be kept.
+
+David
+---
+/* Distillation of the generic/393 xfstest */
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+#define ERR(x, y) do { if ((long)(x) =3D=3D -1) { perror(y); exit(1); } } =
+while(0)
+
+static const char xxx[40] =3D "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+static const char yyy[40] =3D "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
+static const char dropfile[] =3D "/proc/sys/vm/drop_caches";
+static const char droptype[] =3D "3";
+static const char file[] =3D "/xfstest.test/wubble";
+
+int main(int argc, char *argv[])
+{
+        int fd, drop;
+
+	/* Fill in the second 8K block of the file... */
+        fd =3D open(file, O_CREAT|O_TRUNC|O_WRONLY, 0666);
+        ERR(fd, "open");
+        ERR(ftruncate(fd, 0), "pre-trunc $file");
+        ERR(pwrite(fd, yyy, sizeof(yyy), 0x2000), "write-2000");
+        ERR(close(fd), "close");
+
+	/* ... and drop the pagecache so that we get a streaming
+	 * write, attaching some private data to the folio.
+	 */
+        drop =3D open(dropfile, O_WRONLY);
+        ERR(drop, dropfile);
+        ERR(write(drop, droptype, sizeof(droptype) - 1), "write-drop");
+        ERR(close(drop), "close-drop");
+
+        fd =3D open(file, O_WRONLY, 0666);
+        ERR(fd, "reopen");
+	/* Make a streaming write on the first 8K block (needs O_WRONLY). */
+        ERR(pwrite(fd, xxx, sizeof(xxx), 0), "write-0");
+	/* Now use truncate to shrink and reexpand. */
+        ERR(ftruncate(fd, 4), "trunc-4");
+        ERR(ftruncate(fd, 4096), "trunc-4096");
+        ERR(close(fd), "close-2");
+        exit(0);
+}
+
