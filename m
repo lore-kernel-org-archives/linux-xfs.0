@@ -1,68 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3840C16C6A0
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 15:12:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3B045BEC
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2024 15:17:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724080337; cv=none; b=q85MNcPpSKnuB2Q/8lFAtrP2dBx2AJzKWn5LaztjnNjhzq/ju4p2BKsGMPmXeNU2vFy36i47NPdwhoAyGirkuBYBhoR9deGFRjjNnNc2xI/gZe3AhItOMap2GGePcJzd9El2oSJsI8CPHs0Ht2VwL7d4bjxYeQ59kzVX2Aor+b0=
+	t=1724080645; cv=none; b=gxCJVRu3ifUX8v5ITJd7JPQgNhLUnXy3RT+xX5e2gDj7lTL6SXWIZSOpRPm5SsMxxgNmy1sjSGDT9vQksGo1MJadUHeMDPYSDKs9TPIHc1iTsBJgvoTkau/lYRUzlcf7oba8JLa90pAYmG1xcAjXizQTtLmjiYoPiQYVrb86E1k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724080337; c=relaxed/simple;
-	bh=z+Df0ww26TIDNgFS9YUVx+2VhHQKkKkFrLPKAIaNk1U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Fv6EyLoE07psd0KrKPL46V1ba4lZnQAlAY1f2c/4K9tcJ3hqtI/KQYckZa6aPKsn+ejXnzrlskx+Q5XBgndzza+ZMB5+tImrTbCmWKMQk6jCC8I5BtScZlXUA8/9AM4AxdoqDEd8xtmg91sCIeb1zjNZ82xtdTDcAKgT6tpnjII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sxw8PZ/k; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724080645; c=relaxed/simple;
+	bh=79dx5kJlbp/APxcDTBvNrtwqZA9zos8u2hlpu6v2cxE=;
+	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
+	 Content-Type:Date:Message-ID; b=FxTuDiN1qhEy3opfZCHfHZJlwBqpjkF5DneZP6PgcjraI8Rogc21VHBj4ymFrpMFHAgSsg3pFz4Kio4x2N5mpvSDqvKXv349t0ZPKh0IsUKz6vsEA7thj0ysG0yPnxP6NDd08gIBcNL1EhaOrgawWVpKDt7T2RuUtNv9yeIHOD4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ilEtQEjs; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sxw8PZ/k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6A0CC32782;
-	Mon, 19 Aug 2024 15:12:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724080336;
-	bh=z+Df0ww26TIDNgFS9YUVx+2VhHQKkKkFrLPKAIaNk1U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sxw8PZ/kMnrViJdXUlIYZ9LdgzF/nG7H5pisIel51vGEixsWwQIBOEHsSdpkLd5T+
-	 a5ZrcQgxaJwoGueicKRDUJvz4vQEwn3S1Q1WlAsAVQlCf4Xm2mSIetWd9wRx8LMHy0
-	 NKSsJh/8tcXtXO/Z5+Rwh8dUW5YC29F7b1vHkS0835IlbxM+Ig2A29zEJQGnO9r7wy
-	 Eedz230UOQsCPZOy7Bw4VHCy7QhKXNm2ym+lZwrSf31APbV1IkZVAusEP6t3O70DAn
-	 2uqJgomR62HQoj7EDeprP5urWjS726c1GfFFHXpz9qOQ9tr5DvHqT4A5VCxuDYN6v5
-	 1cHxW/tddRgBw==
-Date: Mon, 19 Aug 2024 08:12:16 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libfrog: Unconditionally build fsprops.c
-Message-ID: <20240819151216.GP865349@frogsfrogsfrogs>
-References: <20240819132222.219434-1-cem@kernel.org>
- <ZsNSHLekoGCThzaj@infradead.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ilEtQEjs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1724080642;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+oMbslWyUxniTyVqSh/iKY0BQR2pIPVrXRKHLsZfPgg=;
+	b=ilEtQEjsGo3az8D3tbDeRHjtQaasdeF0kyluqFUWtWoyQ8mGrACbdq4Y42T341nh++TGtO
+	a0TknstzwH1psfH1H8SeKq/3jL6xz4PQrYGBvdR2V8mHz2A5phAdaAE9UjbOpWtVOl7MJk
+	PmaUhOaP25xyxal0MEg+5M1VAiu0/Gs=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-190-mFqV8Sn2ONiReiz4ntrKfw-1; Mon,
+ 19 Aug 2024 11:17:21 -0400
+X-MC-Unique: mFqV8Sn2ONiReiz4ntrKfw-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8A6B41956080;
+	Mon, 19 Aug 2024 15:17:17 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.30])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1139719792D8;
+	Mon, 19 Aug 2024 15:17:10 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <2924797.1723836663@warthog.procyon.org.uk>
+References: <2924797.1723836663@warthog.procyon.org.uk> <20240815090849.972355-1-kernel@pankajraghav.com>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: dhowells@redhat.com, brauner@kernel.org, akpm@linux-foundation.org,
+    chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
+    djwong@kernel.org, hare@suse.de, gost.dev@samsung.com,
+    linux-xfs@vger.kernel.org, hch@lst.de, david@fromorbit.com,
+    Zi Yan <ziy@nvidia.com>, yang@os.amperecomputing.com,
+    linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+    willy@infradead.org, john.g.garry@oracle.com,
+    cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
+    ryan.roberts@arm.com
+Subject: Re: [PATCH v12 00/10] enable bs > ps in XFS
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZsNSHLekoGCThzaj@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3452630.1724080629.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 19 Aug 2024 16:17:09 +0100
+Message-ID: <3452631.1724080629@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On Mon, Aug 19, 2024 at 07:09:32AM -0700, Christoph Hellwig wrote:
-> On Mon, Aug 19, 2024 at 03:22:05PM +0200, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> > 
-> > The new xfs_io fs properties subcommand, requires fsprops to be build,
-> > while libfrog conditionally build it according to the existence of
-> > libattr.
-> > 
-> > This causes builds to fail if the libattr headers are not available,
-> > without a clear output.
-> > 
-> > Now that xfs_io unconditionally requires libfrog/fsprops.c to be built,
-> > remove the condition from libfrog's Makefile.
-> 
-> That means we'll also need to make libattr mandatory in configure,
-> right?
+Okay, the code in netfs_invalidate_folio() isn't correct in the way it red=
+uces
+streaming writes.  Attached is a patch that shows some of the changes I ne=
+ed
+to make - but this is not yet working.
 
-How about we just opencode ATTR_ENTRY in libfrog and then we can get rid
-of the libattr dependency for it and xfs_scrub?  IIRC that's the only
-piece of libattr that those pieces actually need.
+David
+---
+diff --git a/fs/netfs/misc.c b/fs/netfs/misc.c
+index eaa0a992d178..e237c771eeb5 100644
+--- a/fs/netfs/misc.c
++++ b/fs/netfs/misc.c
+@@ -214,18 +215,34 @@ void netfs_invalidate_folio(struct folio *folio, siz=
+e_t offset, size_t length)
+ 		/* We have a partially uptodate page from a streaming write. */
+ 		unsigned int fstart =3D finfo->dirty_offset;
+ 		unsigned int fend =3D fstart + finfo->dirty_len;
+-		unsigned int end =3D offset + length;
++		unsigned int iend =3D offset + length;
+ =
 
---D
+ 		if (offset >=3D fend)
+ 			return;
+-		if (end <=3D fstart)
++		if (iend <=3D fstart)
++			return;
++
++		/* The invalidation region overlaps the data.  If the region
++		 * covers the start of the data, we either move along the start
++		 * or just erase the data entirely.
++		 */
++		if (offset <=3D fstart) {
++			if (iend >=3D fend)
++				goto erase_completely;
++			/* Move the start of the data. */
++			finfo->dirty_len =3D fend - iend;
++			finfo->dirty_offset =3D offset;
+ 			return;
+-		if (offset <=3D fstart && end >=3D fend)
+-			goto erase_completely;
+-		if (offset <=3D fstart && end > fstart)
+-			goto reduce_len;
+-		if (offset > fstart && end >=3D fend)
+-			goto move_start;
++		}
++
++		/* Reduce the length of the data if the invalidation region
++		 * covers the tail part.
++		 */
++		if (iend >=3D fend) {
++			finfo->dirty_len =3D offset - fstart;
++			return;
++		}
++
+ 		/* A partial write was split.  The caller has already zeroed
+ 		 * it, so just absorb the hole.
+ 		 */
+@@ -238,12 +261,6 @@ void netfs_invalidate_folio(struct folio *folio, size=
+_t offset, size_t length)
+ 	folio_clear_uptodate(folio);
+ 	kfree(finfo);
+ 	return;
+-reduce_len:
+-	finfo->dirty_len =3D offset + length - finfo->dirty_offset;
+-	return;
+-move_start:
+-	finfo->dirty_len -=3D offset - finfo->dirty_offset;
+-	finfo->dirty_offset =3D offset;
+ }
+ EXPORT_SYMBOL(netfs_invalidate_folio);
+ =
+
