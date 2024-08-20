@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3460C208D7;
-	Tue, 20 Aug 2024 16:15:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7142C46B91
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 16:19:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724170539; cv=none; b=fv/MgplxziuqrUCmzL4PIvCUTrf3U66EA7av8Mk2TwPzIdQYeS8o6l2CexIoW/2spwCPAeF8wCEQXnBpRxdkWcmg1Npa1uasC+jggTQlqmiRfR7tRhaW6PEAj7zvRRjZMjoE7ymfpYTABPyru2cVQt8HEOGZM8fdLZtotKKcOiY=
+	t=1724170796; cv=none; b=XYOZ3zWMMDLRnElYNdGiIuwDPSsRilG/HCnTjofDvO1PlIfBoBRBovItCEawlMFJY5yuaovsXvOAD26H5uryU0oMi8ChxkC8QnSFJ6qrGUHDbamGVGUmmfYhpkZRVVKsBikeTfA7LGLVDNyXPurh+kCvBSIIxoqqIvfhISDvhxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724170539; c=relaxed/simple;
-	bh=9X9zE81M2UtM+HT2hiECWQgG2TJ/K92mEOc886Ex72Y=;
+	s=arc-20240116; t=1724170796; c=relaxed/simple;
+	bh=S58AEbs3kCF0Gab+PgZf39SiWMBOUZP1+WaqadXGK54=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RbnxYS2LpTRE9cMWPzUedDbwE49de7L7Y5T/BOTX0WWEY2zIDGrVXNqKTtJdptIy3kX6mA9e6Cqd5o33wXw3pXjGChCq0fqfXC06S+njLt1xpkSTAQ6ckGeBSO0ysrbhmbtr9KJSN8KSYlOExDDHfrrSWe1RaC5ytLNzjjqjNZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qtBRqQo/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CwMu9hEkQtuoAfuQiGxozNludjiPo0QZqOaIBcH2NZkwg1sbUybIEglIYqT6WhAuAWnUJwoBj3bUMZtdbHepQ8my2KmnS/HwUXO5vUVd3NfZuwU/WBZABIKJ49lsmcpIsHw5T36WgpOR61OTI3l3U8ryYxTE/L+i+tax5SjmQf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EnbDpFeH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qtBRqQo/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97C1BC4AF16;
-	Tue, 20 Aug 2024 16:15:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EnbDpFeH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB5EEC4AF0C;
+	Tue, 20 Aug 2024 16:19:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724170538;
-	bh=9X9zE81M2UtM+HT2hiECWQgG2TJ/K92mEOc886Ex72Y=;
+	s=k20201202; t=1724170795;
+	bh=S58AEbs3kCF0Gab+PgZf39SiWMBOUZP1+WaqadXGK54=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qtBRqQo/ZC8HF/Y6sJF35K11EqskwB1AzpvttVKPgjXjqTXy0pQjVKLwWLbYyV3l/
-	 GfwPMcvMPkJL6UcLp9p6OQREpXwmV7kVk/GCw4U3nGzdkWcfPj/LokYTcA/V+vAmGy
-	 TM57kGQmSePD3Xn0BpgKnq+b77EkCAdNNF/2A2P3poqsSB//223YsAvHJfOzAchI/4
-	 Wr2Y6Dq+XldKSWTNkoXca81p9G0k4yvzRtbJUXDoJ6zHOuUUQxgVMSgO2J/WV9xfVu
-	 WkhH97LRrOsMLSNyRv4DO/FpfP3+r5+p5IJctiK0QYP6Df8pYsO+xUk6BfsuKM76Ln
-	 Rw5sE7q8HRFWA==
-Date: Tue, 20 Aug 2024 09:15:37 -0700
+	b=EnbDpFeH34Y6qvGzCGEZztp0Mk60oV9/AdUeoGvpvT+1c6goISwgfz6ed4UAZcrN9
+	 /sIU+9V8TDMOdIEqLNeFqChNjIdW10F4d6ITVVJcG9sfgr+/6f+SQWyy5weZVyCb3i
+	 9T6/SZCQKyMgbe36EqNm3IPW1tYtIbrvpIJn9hgHnqGWZQwkudN1eoIc7VsB/P5oYO
+	 lx3WJK4UZXpV0r4YyQ+5obiLm2xSI7CFOVC1ZsPPpugKF0bzhZ0GVxMrK9UJSmSTGy
+	 m6Uah8opePsoJqw46hRWLmJG+V6xwshXZNvPzcQUu558/zOXTyRQ/agAemO9wB8RV/
+	 EyBXGUMRGIDtg==
+Date: Tue, 20 Aug 2024 09:19:55 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Jonathan Corbet <corbet@lwn.net>,
-	Christian Brauner <brauner@kernel.org>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH] Documentation: iomap: fix a typo
-Message-ID: <20240820161537.GS865349@frogsfrogsfrogs>
-References: <20240820161329.1293718-1-kernel@pankajraghav.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: don't extend the FITRIM range if the rt device
+ does not support discard
+Message-ID: <20240820161955.GF6082@frogsfrogsfrogs>
+References: <20240816081908.467810-1-hch@lst.de>
+ <20240816081908.467810-3-hch@lst.de>
+ <20240816215017.GK865349@frogsfrogsfrogs>
+ <20240819124407.GA6610@lst.de>
+ <20240819150030.GO865349@frogsfrogsfrogs>
+ <20240819150804.GA17283@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,39 +47,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240820161329.1293718-1-kernel@pankajraghav.com>
+In-Reply-To: <20240819150804.GA17283@lst.de>
 
-On Tue, Aug 20, 2024 at 06:13:29PM +0200, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
+On Mon, Aug 19, 2024 at 05:08:04PM +0200, Christoph Hellwig wrote:
+> On Mon, Aug 19, 2024 at 08:00:30AM -0700, Darrick J. Wong wrote:
+> > > This works.  OTOH it will break again with the zoned RT subvolume
+> > > which can't support FITRIM even on devices that claim it.  And for
+> > > actual users that care (and not just xfstests) these kinds of hacks
+> > > don't seem very palatable..
+> > 
+> > What does discard do on a zoned device?  Is that how you reset the write
+> > pointer?  And does that mean that either you tell the device to discard
+> > everything it's written in a zone, or it will do nothing?
 > 
-> Change voidw -> void.
+> On an actual zone device it will probably do nothing.  But at least for
+> NVMe the command used to implement discard is mandatory, so all
+> devices will show support.  We also support the zoned mode on
+> conventional devices, but instead of through FITRIM we want to issue
+> it instad of a zone reset when the whole rtg has been garbage collected.
 > 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> > Hmm.  No manpage for FITRIM.  Why don't we return the number of bytes
+> > in the space map that we iterated as range.len?  Or perhaps leave it
+> > unchanged?
+> 
+> The above would seem sensible.  Not sure if we can still pull it
+> off, though.
 
-Heh, whoopsw.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+It seems to have survived testing on TOT overnight, so I'll bake it into
+djwong-dev when I go through and remove the rtgroups/rtsb feature bits
+today.  And I guess the rtgroups xarray conversion too.
 
 --D
-
-> ---
->  Documentation/filesystems/iomap/design.rst | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-> index 37594e1c5914..7261b1b2c379 100644
-> --- a/Documentation/filesystems/iomap/design.rst
-> +++ b/Documentation/filesystems/iomap/design.rst
-> @@ -165,7 +165,7 @@ structure below:
->       u16                 flags;
->       struct block_device *bdev;
->       struct dax_device   *dax_dev;
-> -     voidw               *inline_data;
-> +     void                *inline_data;
->       void                *private;
->       const struct iomap_folio_ops *folio_ops;
->       u64                 validity_cookie;
-> -- 
-> 2.44.1
-> 
-> 
