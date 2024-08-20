@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97D141922D3
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 17:05:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2823D1922D3
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 17:05:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724173536; cv=none; b=uIQ0RQp3auFtPwNODgWLlqilVUQdAEP6M9KhqZN5/RXlAi1Gm+Dc2y9E4W8mOX48rppZ6xzaZwLwHw0TkLZ2qH4P2tGjsnVwhVSCoj5EaDU1SNMpOqp8C5HAs2fFdJUnQqus54z+PRoMUNOSmbR7FOYKZD2YzWx/+nXxp868Fkw=
+	t=1724173539; cv=none; b=Vwk2lmlnmm3rixMviNkqs++TeYXZy4yGOpWtbu6KBpfCvkoG3TWOL+y9f6LleHCrVv6pOGl12n6gFowpu4U3ntfK9qvszUkTl8BHxYBAmqesdyBH2BlKLa/lUVqab3d2WbHNFPnjqBDGblmvglkrGqMb07DscPPYHo3lntp4ED4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724173536; c=relaxed/simple;
-	bh=fHIQDvBeRbNuduw1ydrirbOK5ZLfuiFCFPbXhiVLIC0=;
+	s=arc-20240116; t=1724173539; c=relaxed/simple;
+	bh=m9tTEfylWBuO14G9tpxvTKkcICbwxmU6zr2kJRLTc9s=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FORd/a96l3/2DYaUVcSmXjGbDoGZ12pk4MZ3lMDUn7iPRxkp+3r9NyAppFR9QjINYjGSvsaHbzWYKXVBVbOatoL6sl9TqLN0NwqIr71pfY8JiAiR4b15QU2WEs8xJCvu+4+6nBp2m2s3v0iSAMpUCCRc86cM/1l86/f4Eb3fFVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4CTorS5r; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=EuXuoVt9Ntrtcrl/+qT+rnml0l3CUlS96xhPLFLbXXt5JBY6+qgHGkWOtUgrv6tMUawA+8Sl3cUwpnqgCIH2SMH6Jr+j6W38iJ/2zpiT9NiewsBXxCnMjqCWno6Qtomr9ty0b8r9++f1M9OeSy9wK5S18LUNlDE8gKNOa+WZ3AQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=F3kDBV9l; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4CTorS5r"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F3kDBV9l"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=kjKsugTo0DbWkTTYAsnUWJvqBDWH2hR7R3cGSmqZb2M=; b=4CTorS5rgyK/jYB8SNLhp2Ch9T
-	kCeJwHpLDObL9QWexxI+JaoxURRnn+U3GUIKZMlY9O/+kbiSEtR3vht02ORN3e7ijifLBHKzSH3U5
-	mYNkoHYmzs9nw5iZP5rpHMsFHmmB0dS31F2fEsCHi1mwfKrycAlqYOMDLmnOgebmK+IgjMEprHj/u
-	WLv9EjtfgzSSTtD3lrKz9RJNfB8lA6jqqqPHQkCTXlQD4iG3/w7PkiHZIDRp2MDzJX08cryWD+K0X
-	lFWX7QT3r2iguZUxcCFNuZJuxW3UMWhwGtnabbpLELa7ad6sZ8gceWqWvoH2sTbnGYKnm1Unr8pCy
-	aftAsdVg==;
+	bh=4sezW40oJuQHGpDawOTlaiilF1ouERkRpavusvIJ7p8=; b=F3kDBV9lGhM3knwF2jenAjoMyz
+	cdVh3O8xZCIGoAlmQnTsLacUu9ocm0gLWB+qLSE9Ik1b7Suza2iFayUT6MyVu7Y8J/3Ck/J/Dqndp
+	LRuAJ/b8DG8zLHhtPVKg3EPC9Z/IWpJgiqLuIamZjnnEBTyCcKkyEsLl9tzzCf0QJeVM/jhwY3KZ/
+	O4LiKUZu7e37dvskwhn8IjBlUaGtfSgWb2KiAfGBNY8h+06y68JG/XJKYT1WBLHBzJQkEGbSzs9jA
+	iVr5dgyCmrt2rNM2TxhaQ1SHHoW3RIwdawhqaOkDHHd5hpcfhBziKDj2k3wLucKwNkkAWZANN4pb7
+	7KHk2LCQ==;
 Received: from 2a02-8389-2341-5b80-6a7b-305c-cbe0-c9b8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:6a7b:305c:cbe0:c9b8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sgSIX-000000066bs-3DWA;
-	Tue, 20 Aug 2024 17:05:34 +0000
+	id 1sgSIb-000000066d5-12JJ;
+	Tue, 20 Aug 2024 17:05:37 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/6] xfs: fold xfs_bmap_alloc_userdata into xfs_bmapi_allocate
-Date: Tue, 20 Aug 2024 19:04:55 +0200
-Message-ID: <20240820170517.528181-5-hch@lst.de>
+Subject: [PATCH 5/6] xfs: call xfs_bmap_exact_minlen_extent_alloc from xfs_bmap_btalloc
+Date: Tue, 20 Aug 2024 19:04:56 +0200
+Message-ID: <20240820170517.528181-6-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240820170517.528181-1-hch@lst.de>
 References: <20240820170517.528181-1-hch@lst.de>
@@ -49,107 +49,114 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Userdata and metadata allocations end up in the same allocation helpers.
-Remove the separate xfs_bmap_alloc_userdata function to make this more
-clear.
+xfs_bmap_exact_minlen_extent_alloc duplicates the args setup in
+xfs_bmap_btalloc.  Switch to call it from xfs_bmap_btalloc after
+doing the basic setup.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 73 +++++++++++++++-------------------------
- 1 file changed, 28 insertions(+), 45 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 61 +++++++++-------------------------------
+ 1 file changed, 13 insertions(+), 48 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a63be14a9873e8..1db9d084a44c47 100644
+index 1db9d084a44c47..b5eeaea164ee46 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4167,43 +4167,6 @@ xfs_bmapi_reserve_delalloc(
- 	return error;
- }
- 
--static int
--xfs_bmap_alloc_userdata(
--	struct xfs_bmalloca	*bma)
--{
--	struct xfs_mount	*mp = bma->ip->i_mount;
--	int			whichfork = xfs_bmapi_whichfork(bma->flags);
+@@ -3471,28 +3471,17 @@ xfs_bmap_process_allocated_extent(
+ #ifdef DEBUG
+ static int
+ xfs_bmap_exact_minlen_extent_alloc(
+-	struct xfs_bmalloca	*ap)
++	struct xfs_bmalloca	*ap,
++	struct xfs_alloc_arg	*args)
+ {
+-	struct xfs_mount	*mp = ap->ip->i_mount;
+-	struct xfs_alloc_arg	args = { .tp = ap->tp, .mp = mp };
+-	xfs_fileoff_t		orig_offset;
+-	xfs_extlen_t		orig_length;
 -	int			error;
 -
--	/*
--	 * Set the data type being allocated. For the data fork, the first data
--	 * in the file is treated differently to all other allocations. For the
--	 * attribute fork, we only need to ensure the allocated range is not on
--	 * the busy list.
--	 */
--	bma->datatype = XFS_ALLOC_NOBUSY;
--	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK) {
--		bma->datatype |= XFS_ALLOC_USERDATA;
--		if (bma->offset == 0)
--			bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
+-	ASSERT(ap->length);
 -
--		if (mp->m_dalign && bma->length >= mp->m_dalign) {
--			error = xfs_bmap_isaeof(bma, whichfork);
--			if (error)
--				return error;
--		}
+ 	if (ap->minlen != 1) {
+-		ap->blkno = NULLFSBLOCK;
+-		ap->length = 0;
++		args->fsbno = NULLFSBLOCK;
+ 		return 0;
+ 	}
+ 
+-	orig_offset = ap->offset;
+-	orig_length = ap->length;
 -
--		if (XFS_IS_REALTIME_INODE(bma->ip))
--			return xfs_bmap_rtalloc(bma);
+-	args.alloc_minlen_only = 1;
+-
+-	xfs_bmap_compute_alignments(ap, &args);
++	args->alloc_minlen_only = 1;
++	args->minlen = args->maxlen = ap->minlen;
++	args->total = ap->total;
+ 
+ 	/*
+ 	 * Unlike the longest extent available in an AG, we don't track
+@@ -3502,33 +3491,9 @@ xfs_bmap_exact_minlen_extent_alloc(
+ 	 * we need not be concerned about a drop in performance in
+ 	 * "debug only" code paths.
+ 	 */
+-	ap->blkno = XFS_AGB_TO_FSB(mp, 0, 0);
++	ap->blkno = XFS_AGB_TO_FSB(ap->ip->i_mount, 0, 0);
+ 
+-	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+-	args.minlen = args.maxlen = ap->minlen;
+-	args.total = ap->total;
+-
+-	args.alignment = 1;
+-	args.minalignslop = 0;
+-
+-	args.minleft = ap->minleft;
+-	args.wasdel = ap->wasdel;
+-	args.resv = XFS_AG_RESV_NONE;
+-	args.datatype = ap->datatype;
+-
+-	error = xfs_alloc_vextent_first_ag(&args, ap->blkno);
+-	if (error)
+-		return error;
+-
+-	if (args.fsbno != NULLFSBLOCK) {
+-		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
+-			orig_length);
+-	} else {
+-		ap->blkno = NULLFSBLOCK;
+-		ap->length = 0;
 -	}
 -
--	if (unlikely(XFS_TEST_ERROR(false, mp,
--			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
--		return xfs_bmap_exact_minlen_extent_alloc(bma);
--
--	return xfs_bmap_btalloc(bma);
--}
--
- static int
- xfs_bmapi_allocate(
- 	struct xfs_bmalloca	*bma)
-@@ -4221,15 +4184,35 @@ xfs_bmapi_allocate(
- 	else
- 		bma->minlen = 1;
+-	return 0;
++	return xfs_alloc_vextent_first_ag(args, ap->blkno);
+ }
+ #else
  
--	if (bma->flags & XFS_BMAPI_METADATA) {
--		if (unlikely(XFS_TEST_ERROR(false, mp,
--				XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
--			error = xfs_bmap_exact_minlen_extent_alloc(bma);
--		else
--			error = xfs_bmap_btalloc(bma);
--	} else {
--		error = xfs_bmap_alloc_userdata(bma);
-+	if (!(bma->flags & XFS_BMAPI_METADATA)) {
-+		/*
-+		 * For the data and COW fork, the first data in the file is
-+		 * treated differently to all other allocations. For the
-+		 * attribute fork, we only need to ensure the allocated range
-+		 * is not on the busy list.
-+		 */
-+		bma->datatype = XFS_ALLOC_NOBUSY;
-+		if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK) {
-+			bma->datatype |= XFS_ALLOC_USERDATA;
-+			if (bma->offset == 0)
-+				bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
-+
-+			if (mp->m_dalign && bma->length >= mp->m_dalign) {
-+				error = xfs_bmap_isaeof(bma, whichfork);
-+				if (error)
-+					return error;
-+			}
-+		}
- 	}
-+
-+	if ((bma->datatype & XFS_ALLOC_USERDATA) &&
-+	    XFS_IS_REALTIME_INODE(bma->ip))
-+		error = xfs_bmap_rtalloc(bma);
-+	else if (unlikely(XFS_TEST_ERROR(false, mp,
+@@ -3792,8 +3757,11 @@ xfs_bmap_btalloc(
+ 	/* Trim the allocation back to the maximum an AG can fit. */
+ 	args.maxlen = min(ap->length, mp->m_ag_max_usable);
+ 
+-	if ((ap->datatype & XFS_ALLOC_USERDATA) &&
+-	    xfs_inode_is_filestream(ap->ip))
++	if (unlikely(XFS_TEST_ERROR(false, mp,
 +			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
-+		error = xfs_bmap_exact_minlen_extent_alloc(bma);
-+	else
-+		error = xfs_bmap_btalloc(bma);
++		error = xfs_bmap_exact_minlen_extent_alloc(ap, &args);
++	else if ((ap->datatype & XFS_ALLOC_USERDATA) &&
++			xfs_inode_is_filestream(ap->ip))
+ 		error = xfs_bmap_btalloc_filestreams(ap, &args, stripe_align);
+ 	else
+ 		error = xfs_bmap_btalloc_best_length(ap, &args, stripe_align);
+@@ -4208,9 +4176,6 @@ xfs_bmapi_allocate(
+ 	if ((bma->datatype & XFS_ALLOC_USERDATA) &&
+ 	    XFS_IS_REALTIME_INODE(bma->ip))
+ 		error = xfs_bmap_rtalloc(bma);
+-	else if (unlikely(XFS_TEST_ERROR(false, mp,
+-			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
+-		error = xfs_bmap_exact_minlen_extent_alloc(bma);
+ 	else
+ 		error = xfs_bmap_btalloc(bma);
  	if (error)
- 		return error;
- 	if (bma->blkno == NULLFSBLOCK)
 -- 
 2.43.0
 
