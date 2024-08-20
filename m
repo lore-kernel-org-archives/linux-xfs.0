@@ -1,31 +1,31 @@
-Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7B6218B468;
-	Tue, 20 Aug 2024 09:23:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FEB418A95A;
+	Tue, 20 Aug 2024 09:46:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724145813; cv=none; b=oSzM0Jdwj4xsO9bvjQYOXu5mQRJ1Si6DUUUi3gwCo07ZKDvuZwqS1S/ShaKhsq24SXRYD96o6xug/c9WRoIDMLcsNC59lrvuVMqiWPIJmPyAEDuGboIc2G2VH70OQWGgJc6u0Vmm1pq6nC2hyYZsJkmfmv+QjzcRGSoHvYHRvUk=
+	t=1724147165; cv=none; b=N21GxM3/QfbKCi7AdK7c+nfpC7h7Fn9bFh1Vac+eTeYT+wUQVW2fTaQHUllZwdCZ9FyHx3RteoX4+f7YK9jmnqlV9H2nX/hTWR9N1jhC4dWGiVfZK3i12U5D42Lm2DOfpLiUDr3lgAvzIjkDhS+lElL3+WPQI2nmVHYm0r9THmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724145813; c=relaxed/simple;
-	bh=G7ZgOWdruX5aHmZd5xkeb8whK51X54ptM22wTDCFRbE=;
+	s=arc-20240116; t=1724147165; c=relaxed/simple;
+	bh=OQdPl2NH/p6w4XWIGS6owk9Eh+ZEuVXskQUiJ0FXQRc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=D9Y2KsOKK9JvTTh6zzycSFste7EltH0yAdey2FzW5gZktaX+y9QPaL10NKXxsQWbau5nKZtDAwLP8floSGwSzRHeXMG4+NEyBGzQrYGtwDGte48bvEfItCQtnqwwC59to0qWS6L/mOrhJMyVxEFGvKQDVUY6dWgkeXyO3dX1RGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.32
+	 In-Reply-To:Content-Type; b=qMDk7/xK6jy/6wiyIBbYMTGDzM/d30Fsjn/lK9TAid4OhcKuW4Zoi5cmyvQlSTw+MkNOFNuFjQkbgN7k5F0WBV4CP4Gl325C19nU1LWGti8u624qDIm8O2ie60xpAGj4bJ7PmR7pzkQ2fm5BWpXxseEB9F0AkSQ0LEbVfZdZJpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4Wp3qx0snPz1xvcm;
-	Tue, 20 Aug 2024 17:21:33 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Wp4JR3CwZz1HGpD;
+	Tue, 20 Aug 2024 17:42:47 +0800 (CST)
 Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id 292EF18001B;
-	Tue, 20 Aug 2024 17:23:27 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 597C51401F4;
+	Tue, 20 Aug 2024 17:45:58 +0800 (CST)
 Received: from [10.174.176.88] (10.174.176.88) by
  kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 20 Aug 2024 17:23:26 +0800
-Message-ID: <06289b8b-7623-4691-afad-34724742176c@huawei.com>
-Date: Tue, 20 Aug 2024 17:23:25 +0800
+ 15.2.1544.11; Tue, 20 Aug 2024 17:45:57 +0800
+Message-ID: <20b3f53e-b850-4c59-8cb1-04d63d9444ea@huawei.com>
+Date: Tue, 20 Aug 2024 17:45:56 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,7 +46,7 @@ From: Zizhi Wo <wozizhi@huawei.com>
 In-Reply-To: <871q2jegs1.fsf@debian-BULLSEYE-live-builder-AMD64>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
  kwepemf100017.china.huawei.com (7.202.181.16)
 
 
@@ -132,33 +132,8 @@ X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
 > https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/log/?qt=range&q=v6.9.0
 > 
 
-Hello! I upgraded xfsprogs to 6.9.0, and tested the latest code
-(reverted jump_label.c related code), but still no problems with the
-test, maybe there is a problem with my other environment configuration?
-Here is my configuration:
-
-export FSTYP=xfs
-export TEST_DEV=/dev/vdb
-export TEST_DIR=/tmp/test
-mkdir /tmp/test -p
-export SCRATCH_DEV=/dev/vde
-export SCRATCH_MNT=/tmp/scratch
-mkdir /tmp/scratch -p
-export TEST_LOGDEV=/dev/vdc
-export TEST_RTDEV=/dev/vdd
-export TEST_FS_MOUNT_OPTS="-o rtdev=/dev/vdd -o logdev=/dev/vdc"
-export MKFS_OPTIONS="-f -m reflink=0,rmapbt=0 -d rtinherit=1 -l size=1g"
-export USE_EXTERNAL=yes
-echo xfs/556
-./check xfs/556
-
-
-However, this patch is not the final version, and I found another
-statistical issue with fsmap locally. In addition, Darrick also found a
-boundary-case bug in the patch, which may be responsible for the scrub 
-indefinitely? I'm not sure. Anyway, I'll fix it again and test it, and
-hopefully pass the test next time.
+Oh, I made a silly configuration mistake. I have already reproduced the
+failure of this use case locally. Sorry for bothering you.
 
 Thanks,
 Zizhi Wo
-
