@@ -1,45 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46CA01BE242;
-	Tue, 20 Aug 2024 17:28:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B06F114B94B
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 19:39:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724174933; cv=none; b=nM4AyuD7CQNaSk3AF0eTPfMNb1OQMC7nUz0MscRrhbjZSu8zPzQ66Wg07Fmo6dJzpaWVrZDNKWzvyjATZJ/AwXodDhK1vy2DNcRS4hzoO9PZKMNhkjg2y7375FckOY86rD1oWbQhkCCg84tyC/PAMk0ZGfOumuLiSKyOlfeIXw0=
+	t=1724182760; cv=none; b=Od7tschsGhnLdyFraa+IohsY0aqHfyljKw6Udxetm7R6Uz6chzauuEBGnzsmyOsDiL2nno3L+otLNQ+M6HNcsjH1qSAjiDRVa3554pc5/BCvCE14I+snT99O8W5K2eiWpx9RMas1vu+DSdE1jr3BN/+ShO4gW/UwUQLqit3B33M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724174933; c=relaxed/simple;
-	bh=QDiQZYx6M6RaBNbILBpKMDVTjxGNMVHSJSW+1HFcYDs=;
+	s=arc-20240116; t=1724182760; c=relaxed/simple;
+	bh=wYSeE26qJIB7joo4Tv+/ux8wK4l0U/6vMdbtFRyE7Cg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EyXVX/hJJW/RQsYfTLfY3zmGweblZyKzpMFso5m0hlctCIxvU4IP07NcnD32z1Ilw8ybmm71qMV++9ezHpKVizAGCSNz1v4S8hRe2YkfVZaf83flBZzlWf1G+HlVZb/mx1pdpjuFR00ggZ/YMygIPAkEKAXkP8sDSAbBK+aj19c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U7NvEF/g; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JQJQZSYoehERO8537N9Tv3b1CVGkT8U9vZtL7fntWLFDN7jrqm9xOAa7Xnln3Gmmx4dw7/Gk4rH0mLtuPfno8lBru08NB514kFnO28JUMIQXk9llYcpYXZ6pTmUkhatqmJ9xbaUJK6SkrfSqj/Uttd6JvJRQzmeSCGQPVtJkqGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gJi1/G95; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U7NvEF/g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFD48C4AF13;
-	Tue, 20 Aug 2024 17:28:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gJi1/G95"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C5BCC4AF18;
+	Tue, 20 Aug 2024 19:39:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724174932;
-	bh=QDiQZYx6M6RaBNbILBpKMDVTjxGNMVHSJSW+1HFcYDs=;
+	s=k20201202; t=1724182760;
+	bh=wYSeE26qJIB7joo4Tv+/ux8wK4l0U/6vMdbtFRyE7Cg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=U7NvEF/gF7TsWhkR5KjL7b8J21f9YKr00uC2trvh8kAlqPRQHqFyPB8l+3K+yKQzN
-	 Ya+/RNzhKyhtknhJ4NTtUEPB5q5NA/cqernX41jMYUgFDCVG+D9kYZFaj7O6m9fNW2
-	 6MfBaPcyRQFwpB92lvlQ+Hqbtdx3JemGZvtDqKEI8EDO6S0KIGsP4I+N1yEvvFeNrR
-	 yeVGeb7O2i6TA+upylc8XNoCeMG+ecdtwAE7OX81kwbAW8TkrWv+NMOEVsSuWYM/gK
-	 11ZSsgOqyRX+3LpbzMMet8EsdE6a0U7hdgtIOlw5vscwdJfmkeI+UGRB6q4yGUAhqN
-	 Y7wi2GAgoavoA==
-Date: Tue, 20 Aug 2024 10:28:52 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
-	jack@suse.cz, chandan.babu@oracle.com, dchinner@redhat.com,
-	hch@lst.de, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, hare@suse.de,
-	martin.petersen@oracle.com, catherine.hoang@oracle.com,
-	kbusch@kernel.org
-Subject: Re: [PATCH v5 2/7] fs: Export generic_atomic_write_valid()
-Message-ID: <20240820172852.GH6082@frogsfrogsfrogs>
-References: <20240817094800.776408-1-john.g.garry@oracle.com>
- <20240817094800.776408-3-john.g.garry@oracle.com>
+	b=gJi1/G95U77QWM5lcVnIMARyM50JcUABi/L8rnOmu4OaQonyi1CRxvrESQO3B1ZEg
+	 nXAR0qfjx5A31PssPZWj+zbdcuiQjK19S2p1ND9BCJaEQXD9+bdDv8fhXi/M31qj2b
+	 WM9ifCQAkZMll+4Ijeqg67OKaeyHR04OVnLdI47L+lUlAYP+vZnDh8WE3Qd7M/2og6
+	 JKF40eRFOxVoECkFPw7mWLYaBjX2qVP/AruFp5A66+BR5KK2W9CQo1XpMcIuucXUsB
+	 SZkvBnfa/GiBLXSU0QrrbAmUTMpc8XpTp1J81fGSRVuALO6lSdybYyBNjZl/8j1w2g
+	 GcfvkZJ4kansg==
+Date: Tue, 20 Aug 2024 12:39:18 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, wbx@openadk.org
+Subject: Re: [PATCH V2] xfs_io: Fix fscrypt macros ordering
+Message-ID: <20240820193918.GB1178@sol.localdomain>
+References: <20240817093256.222226-1-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,31 +41,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240817094800.776408-3-john.g.garry@oracle.com>
+In-Reply-To: <20240817093256.222226-1-cem@kernel.org>
 
-On Sat, Aug 17, 2024 at 09:47:55AM +0000, John Garry wrote:
-> The XFS code will need this.
+On Sat, Aug 17, 2024 at 11:32:48AM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> We've been reported a failure to build xfsprogs within buildroot's
+> environment when they tried to upgrade xfsprogs from 6.4 to 6.9:
+> 
+> encrypt.c:53:36: error: 'FSCRYPT_KEY_IDENTIFIER_SIZE' undeclared
+> here (not in a function)
+>         53 |         __u8
+> master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
+>            |
+> ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+>      encrypt.c:61:42: error: field 'v1' has incomplete type
+>         61 |                 struct fscrypt_policy_v1 v1;
+>            |                                          ^~
+> 
+> They were using a kernel version without FS_IOC_GET_ENCRYPTION_POLICY_EX
+> set and OVERRIDE_SYSTEM_FSCRYPT_POLICY_V2 was unset.
+> This combination caused xfsprogs to attempt to define fscrypt_policy_v2
+> locally, which uses:
+> 	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
+> 
+> The problem is FSCRYPT_KEY_IDENTIFIER_SIZE is only after this block of
+> code, so we need to define it earlier.
+> 
+> This also attempts to use fscrypt_policy_v1, which is defined only
+> later.
+> 
+> To fix this, just reorder both ifdef blocks, but we need to move the
+> definition of FS_IOC_GET_ENCRYPTION_POLICY_EX to the later, otherwise,
+> the later definitions won't be enabled causing havoc.
+> 
+> Fixes: e97caf714697a ("xfs_io/encrypt: support specifying crypto data unit size")
+> Reported-by: Waldemar Brodkorb <wbx@openadk.org>
+> Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
->  fs/read_write.c | 1 +
->  1 file changed, 1 insertion(+)
+> V2:
+> 	- Remove dangling leftover comment
+> 	- define FS_IOC_GET_ENCRYPTION_POLICY_EX on it's own block.
 > 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index d8af6f2f1c9a..babc3673c22c 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1752,3 +1752,4 @@ bool generic_atomic_write_valid(struct kiocb *iocb, struct iov_iter *iter)
->  
->  	return true;
->  }
-> +EXPORT_SYMBOL_GPL(generic_atomic_write_valid);
-
-Looks great,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> -- 
-> 2.31.1
+> Bill, as the updates for the V2 are trivial, I'm keeping your RwB,
+> hopefuly you agree :)
 > 
+>  io/encrypt.c | 67 ++++++++++++++++++++++++++--------------------------
+>  1 file changed, 34 insertions(+), 33 deletions(-)
+
+Reviewed-by: Eric Biggers <ebiggers@google.com>
+
+- Eric
