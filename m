@@ -1,85 +1,145 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992E11922D3
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 17:05:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 500981B8EAE;
+	Tue, 20 Aug 2024 17:28:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724173542; cv=none; b=QojjLTLgPDcaVtSuWI9gcICYOyORzgRTzylf7aCW4cC+tzB8UMYLKP/kTmMxlzCLjMDGy0vlln2WGEMgQ1JN/R5Z9uoPj2LzQ0N3erNRvgBukib3ttu7URqvPZFzOWXigbjx1f8ZPF+SJDKY3+EM+OodJqBUceVUhuAAPkWH4fA=
+	t=1724174920; cv=none; b=tPEXPSvXTFjwZTSJhUNcpqvVo4Xf4GhCprxGHPz7ibC5GCyyWFp2HBv+hteuOLtLIVTW+JyEzNsKFU9xLrnI8dEKUk/1Z0JfCTMm/gOYbv6cc9DXujDSEP2kVCINLWmT5PmteS4hzpReKslHIN2dUS2n+oIZMYnPgWp1kpay360=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724173542; c=relaxed/simple;
-	bh=jQzuOXax4MV0X0/ru/sDbUIAN5ufYeXYbtHiwS6OZ7o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=r5U3Ot4+/h5ktUNCby6H1p7H57hhODi7S1ApxN5LQiXOIQ4vjs5XRF4LiUS9k1KukPALKA1aIxgm3S1tSlXF9+8NtcDWFKgxcI0nAaovJIL6o0r5cig5TGpHlk7DDo34tQJQ4KWEXxC7CFhMwDiyxPwrFVRPDjiO8PeITAhrI6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=q5nPqTeZ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1724174920; c=relaxed/simple;
+	bh=F+sx4QoPN53hJ2Psfkq3WkNMf0Xu9WTKhtrgYL8KAxY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rgxiFVZ+cPqHAU+w5SaBvtz9n1pnXX/UcGZdQqJeYOmp7B/8Eg+TDEBbavbky32jjKsn+O/HAJnvi2/OyBFuTHjNuW/DmHpuNhc3+/VFjxhBQwX6seNk8xXoW9n20MnbRUC7UaD0lwwsBaNAfedykldwSwc3gD99bStgrXC5/dk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rJlTUlzW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="q5nPqTeZ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=6zY6LdHYGroXTMNX5/DB0oiV6Dd4xVJ25rjGPQrAQrI=; b=q5nPqTeZP3WVGDuDiC9EP3P/sc
-	C0+JzSdGQodUTtkVh3/QMEQeG1doNLxVFiwgWz//XGWsBcBBbKGNmdBQeYT7NC2mD6J8tJUdaq9vP
-	Z7OmxHbXJL2jcaE/Ynkoby68/16CyAaVC802Dsz6VMGwZGT9hMrRSsexd8JN2SfRfShbu6YI0CsxV
-	inPhVHT74WxUQi8Xjaz//TOj5Qd0BPoDWvtNL2DH8QIuxKrTgxqhq0ZoJCz9a2xD+EwBVAMReNDa9
-	Ohja0wbh65hjhFj8p+hXOK7s7EXR1W9QP5yL6Vs9jF9OmLJcCDAZi6C3S0HLAPfhxq3h/oV1T/2qO
-	aP+4NgHA==;
-Received: from 2a02-8389-2341-5b80-6a7b-305c-cbe0-c9b8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:6a7b:305c:cbe0:c9b8] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sgSIe-000000066eL-33sY;
-	Tue, 20 Aug 2024 17:05:41 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 6/6] xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
-Date: Tue, 20 Aug 2024 19:04:57 +0200
-Message-ID: <20240820170517.528181-7-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240820170517.528181-1-hch@lst.de>
-References: <20240820170517.528181-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rJlTUlzW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF3F2C4AF10;
+	Tue, 20 Aug 2024 17:28:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724174919;
+	bh=F+sx4QoPN53hJ2Psfkq3WkNMf0Xu9WTKhtrgYL8KAxY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rJlTUlzW0vEnOQ6khAOr7j4Ezi8r4BlVc0vqH/Mc3ZQ5TJFMfG177Ikmh0aXMgxmW
+	 NyVhy7mBzmtY6vqvtfGbEouwz+1cZlD7LqT978rnML0HoNIES3m+9diaeEKSXsXAuF
+	 66uDl2pvtO73RWhYbqJJOrJr9rfRTxfVue0GCULak2H7/vIaemKuFHwD0oiacSFXKU
+	 CA3WHSYd6o/fId9pTdzlb3lRxwGHyIIfiVGXSmfXg1N+LghZk53n5hp8vPOuZeOmTa
+	 mTX7zxPRZVLkU3eX2xOGUuVgIuEl2PcBxpzpoFqAhk5ERKHU/R6pwrWB0cGwA7he1s
+	 Rv+sSqN1Zvxuw==
+Date: Tue, 20 Aug 2024 10:28:39 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
+	jack@suse.cz, chandan.babu@oracle.com, dchinner@redhat.com,
+	hch@lst.de, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, hare@suse.de,
+	martin.petersen@oracle.com, catherine.hoang@oracle.com,
+	kbusch@kernel.org
+Subject: Re: [PATCH v5 1/7] block/fs: Pass an iocb to
+ generic_atomic_write_valid()
+Message-ID: <20240820172839.GG6082@frogsfrogsfrogs>
+References: <20240817094800.776408-1-john.g.garry@oracle.com>
+ <20240817094800.776408-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240817094800.776408-2-john.g.garry@oracle.com>
 
-Currently the debug-only xfs_bmap_exact_minlen_extent_alloc allocation
-variant fails to drop into the lowmode last restor allocator, and
-thus can sometimes fail allocations for which the caller has a
-transaction block reservation.
+On Sat, Aug 17, 2024 at 09:47:54AM +0000, John Garry wrote:
+> Darrick and Hannes thought it better that generic_atomic_write_valid()
+> should be passed a struct iocb, and not just the member of that struct
+> which is referenced; see [0] and [1].
+> 
+> I think that makes a more generic and clean API, so make that change.
+> 
+> [0] https://lore.kernel.org/linux-block/680ce641-729b-4150-b875-531a98657682@suse.de/
+> [1] https://lore.kernel.org/linux-xfs/20240620212401.GA3058325@frogsfrogsfrogs/
+> 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Suggested-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-Fix this by using xfs_bmap_btalloc_low_space to do the actual allocation.
+Thanks for doing this,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+--D
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b5eeaea164ee46..784dd5dda2a1a2 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3493,7 +3493,13 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	 */
- 	ap->blkno = XFS_AGB_TO_FSB(ap->ip->i_mount, 0, 0);
- 
--	return xfs_alloc_vextent_first_ag(args, ap->blkno);
-+	/*
-+	 * Use the low space allocator as it first does a "normal" AG iteration
-+	 * and then drops the reservation to minlen, which might be required to
-+	 * find an allocation for the transaction reservation when the file
-+	 * system is very full.
-+	 */
-+	return xfs_bmap_btalloc_low_space(ap, args);
- }
- #else
- 
--- 
-2.43.0
-
+> ---
+>  block/fops.c       | 8 ++++----
+>  fs/read_write.c    | 4 ++--
+>  include/linux/fs.h | 2 +-
+>  3 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/block/fops.c b/block/fops.c
+> index 9825c1713a49..1c0f9d313845 100644
+> --- a/block/fops.c
+> +++ b/block/fops.c
+> @@ -34,13 +34,13 @@ static blk_opf_t dio_bio_write_op(struct kiocb *iocb)
+>  	return opf;
+>  }
+>  
+> -static bool blkdev_dio_invalid(struct block_device *bdev, loff_t pos,
+> +static bool blkdev_dio_invalid(struct block_device *bdev, struct kiocb *iocb,
+>  				struct iov_iter *iter, bool is_atomic)
+>  {
+> -	if (is_atomic && !generic_atomic_write_valid(iter, pos))
+> +	if (is_atomic && !generic_atomic_write_valid(iocb, iter))
+>  		return true;
+>  
+> -	return pos & (bdev_logical_block_size(bdev) - 1) ||
+> +	return iocb->ki_pos & (bdev_logical_block_size(bdev) - 1) ||
+>  		!bdev_iter_is_aligned(bdev, iter);
+>  }
+>  
+> @@ -373,7 +373,7 @@ static ssize_t blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+>  	if (!iov_iter_count(iter))
+>  		return 0;
+>  
+> -	if (blkdev_dio_invalid(bdev, iocb->ki_pos, iter, is_atomic))
+> +	if (blkdev_dio_invalid(bdev, iocb, iter, is_atomic))
+>  		return -EINVAL;
+>  
+>  	nr_pages = bio_iov_vecs_to_alloc(iter, BIO_MAX_VECS + 1);
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 90e283b31ca1..d8af6f2f1c9a 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1737,7 +1737,7 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
+>  	return 0;
+>  }
+>  
+> -bool generic_atomic_write_valid(struct iov_iter *iter, loff_t pos)
+> +bool generic_atomic_write_valid(struct kiocb *iocb, struct iov_iter *iter)
+>  {
+>  	size_t len = iov_iter_count(iter);
+>  
+> @@ -1747,7 +1747,7 @@ bool generic_atomic_write_valid(struct iov_iter *iter, loff_t pos)
+>  	if (!is_power_of_2(len))
+>  		return false;
+>  
+> -	if (!IS_ALIGNED(pos, len))
+> +	if (!IS_ALIGNED(iocb->ki_pos, len))
+>  		return false;
+>  
+>  	return true;
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index fd34b5755c0b..55d8b6beac7a 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -3657,6 +3657,6 @@ static inline bool vfs_empty_path(int dfd, const char __user *path)
+>  	return !c;
+>  }
+>  
+> -bool generic_atomic_write_valid(struct iov_iter *iter, loff_t pos);
+> +bool generic_atomic_write_valid(struct kiocb *iocb, struct iov_iter *iter);
+>  
+>  #endif /* _LINUX_FS_H */
+> -- 
+> 2.31.1
+> 
