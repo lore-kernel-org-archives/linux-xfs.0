@@ -1,95 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B06F114B94B
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 19:39:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D217B18B474
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 23:24:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724182760; cv=none; b=Od7tschsGhnLdyFraa+IohsY0aqHfyljKw6Udxetm7R6Uz6chzauuEBGnzsmyOsDiL2nno3L+otLNQ+M6HNcsjH1qSAjiDRVa3554pc5/BCvCE14I+snT99O8W5K2eiWpx9RMas1vu+DSdE1jr3BN/+ShO4gW/UwUQLqit3B33M=
+	t=1724196282; cv=none; b=paTfzkJz59z+i25vOAPQvTXin061XUqev4lCGr3Y2XhuMAe2MDKoc23AIYOTW9/iMzp0B2dXSH2aqa0akZKDzJ/nyxzGK+BTZq4LcljfnEbdFDlRx+2X9hevKpeJ+RfFEJLR1kgmwZoyBuw0YOswNHBxOpA2csD9kFTIalq+pjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724182760; c=relaxed/simple;
-	bh=wYSeE26qJIB7joo4Tv+/ux8wK4l0U/6vMdbtFRyE7Cg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JQJQZSYoehERO8537N9Tv3b1CVGkT8U9vZtL7fntWLFDN7jrqm9xOAa7Xnln3Gmmx4dw7/Gk4rH0mLtuPfno8lBru08NB514kFnO28JUMIQXk9llYcpYXZ6pTmUkhatqmJ9xbaUJK6SkrfSqj/Uttd6JvJRQzmeSCGQPVtJkqGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gJi1/G95; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724196282; c=relaxed/simple;
+	bh=ktj3J694UJT11cdVq07iovQ6VNYIzh45Q7Ed964y7SU=;
+	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
+	 Content-Type:Date:Message-ID; b=BevgmETTmeh8d5ritm+UKnCPMmpXwRpbYjFos31NKE/iTkBo2ZvG8D9QPSJzRQpw8N5bg2yLXB2Oi8Wir/hXGjd7h36eQX9utUTZQ5X6mwziZS3YsZ6u6FT2z9MH0t0WvSBm8tjfGII+dwUuS7Sia+jC3yrWrvxvLV4JZODzP18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gyJ36ngD; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gJi1/G95"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C5BCC4AF18;
-	Tue, 20 Aug 2024 19:39:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724182760;
-	bh=wYSeE26qJIB7joo4Tv+/ux8wK4l0U/6vMdbtFRyE7Cg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gJi1/G95U77QWM5lcVnIMARyM50JcUABi/L8rnOmu4OaQonyi1CRxvrESQO3B1ZEg
-	 nXAR0qfjx5A31PssPZWj+zbdcuiQjK19S2p1ND9BCJaEQXD9+bdDv8fhXi/M31qj2b
-	 WM9ifCQAkZMll+4Ijeqg67OKaeyHR04OVnLdI47L+lUlAYP+vZnDh8WE3Qd7M/2og6
-	 JKF40eRFOxVoECkFPw7mWLYaBjX2qVP/AruFp5A66+BR5KK2W9CQo1XpMcIuucXUsB
-	 SZkvBnfa/GiBLXSU0QrrbAmUTMpc8XpTp1J81fGSRVuALO6lSdybYyBNjZl/8j1w2g
-	 GcfvkZJ4kansg==
-Date: Tue, 20 Aug 2024 12:39:18 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, wbx@openadk.org
-Subject: Re: [PATCH V2] xfs_io: Fix fscrypt macros ordering
-Message-ID: <20240820193918.GB1178@sol.localdomain>
-References: <20240817093256.222226-1-cem@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gyJ36ngD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1724196279;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4wTO3rn8cai9pfp8/7PSJNm83ubFTKdJd8PEervFV6A=;
+	b=gyJ36ngD9QiLbvdyDKvQWjYH3AUBeFiS2/bd2PMHLvJEG8I/kUNl8Pj3RJTnvhuFfYBXmO
+	JFFhUBHtcrkL9s6YKJTKPPtBf/lGMFUcyPrtLPzKOhLSpa+JxqQ0IBCK3bOYddqfJeGtIM
+	euMNaOLpbGH67uR8b/isC00mUG6bGsM=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-612-V0HWiyhqP0C_oN7kg_4XJA-1; Tue,
+ 20 Aug 2024 19:24:34 -0400
+X-MC-Unique: V0HWiyhqP0C_oN7kg_4XJA-1
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 76A721955D47;
+	Tue, 20 Aug 2024 23:24:31 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.30])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AA4AC19560AA;
+	Tue, 20 Aug 2024 23:24:25 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20240818165124.7jrop5sgtv5pjd3g@quentin>
+References: <20240818165124.7jrop5sgtv5pjd3g@quentin> <20240815090849.972355-1-kernel@pankajraghav.com> <2924797.1723836663@warthog.procyon.org.uk>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: dhowells@redhat.com, brauner@kernel.org, akpm@linux-foundation.org,
+    chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
+    djwong@kernel.org, hare@suse.de, gost.dev@samsung.com,
+    linux-xfs@vger.kernel.org, hch@lst.de, david@fromorbit.com,
+    Zi Yan <ziy@nvidia.com>, yang@os.amperecomputing.com,
+    linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+    willy@infradead.org, john.g.garry@oracle.com,
+    cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
+    ryan.roberts@arm.com
+Subject: Re: [PATCH v12 00/10] enable bs > ps in XFS
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240817093256.222226-1-cem@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3792764.1724196264.1@warthog.procyon.org.uk>
+Date: Wed, 21 Aug 2024 00:24:24 +0100
+Message-ID: <3792765.1724196264@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Sat, Aug 17, 2024 at 11:32:48AM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
-> 
-> We've been reported a failure to build xfsprogs within buildroot's
-> environment when they tried to upgrade xfsprogs from 6.4 to 6.9:
-> 
-> encrypt.c:53:36: error: 'FSCRYPT_KEY_IDENTIFIER_SIZE' undeclared
-> here (not in a function)
->         53 |         __u8
-> master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
->            |
-> ^~~~~~~~~~~~~~~~~~~~~~~~~~~
->      encrypt.c:61:42: error: field 'v1' has incomplete type
->         61 |                 struct fscrypt_policy_v1 v1;
->            |                                          ^~
-> 
-> They were using a kernel version without FS_IOC_GET_ENCRYPTION_POLICY_EX
-> set and OVERRIDE_SYSTEM_FSCRYPT_POLICY_V2 was unset.
-> This combination caused xfsprogs to attempt to define fscrypt_policy_v2
-> locally, which uses:
-> 	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
-> 
-> The problem is FSCRYPT_KEY_IDENTIFIER_SIZE is only after this block of
-> code, so we need to define it earlier.
-> 
-> This also attempts to use fscrypt_policy_v1, which is defined only
-> later.
-> 
-> To fix this, just reorder both ifdef blocks, but we need to move the
-> definition of FS_IOC_GET_ENCRYPTION_POLICY_EX to the later, otherwise,
-> the later definitions won't be enabled causing havoc.
-> 
-> Fixes: e97caf714697a ("xfs_io/encrypt: support specifying crypto data unit size")
-> Reported-by: Waldemar Brodkorb <wbx@openadk.org>
-> Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
-> V2:
-> 	- Remove dangling leftover comment
-> 	- define FS_IOC_GET_ENCRYPTION_POLICY_EX on it's own block.
-> 
-> Bill, as the updates for the V2 are trivial, I'm keeping your RwB,
-> hopefuly you agree :)
-> 
->  io/encrypt.c | 67 ++++++++++++++++++++++++++--------------------------
->  1 file changed, 34 insertions(+), 33 deletions(-)
+Okay, I think I've found the bugs in my code and in truncate.  It appears
+they're affected by your code, but exist upstream.  You can add:
 
-Reviewed-by: Eric Biggers <ebiggers@google.com>
+	Tested-by: David Howells <dhowells@redhat.com>
 
-- Eric
+to patches 1-5 if you wish.
+
+David
+
