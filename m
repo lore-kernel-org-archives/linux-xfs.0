@@ -1,147 +1,96 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27ABF17FE
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2024 02:18:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9575C14A4EA;
+	Tue, 20 Aug 2024 05:56:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724120313; cv=none; b=IgiXgK/GTcKyG1Gn9GLSW1G40RM+4myKJirxNfWo3ZVyHh6TEl4rQ4JUzzbiICxFIY6D8R4fp/G2G+qn50cQWIEy92nccAczzMIn3bY+iBtbbSOiqn2ZdU9r5aJEaFMlgJU62Z1pEJXn77LwK30m6Fkp+sZJQ5nM5wWQq/Wuk6I=
+	t=1724133401; cv=none; b=HerE78h8194BZCF7OXsbK0qODhyaWtEm3YcK2fVTrLEubDLUfYuYF8K2vagD5frE+9dPZ6BBa1yLNQ5jtQoZDY0hKgS1IPYikiS42VqjzP7PcVk89xmFM3mPAPJyjeW1tTs/psOreM4Hlbq5x1BK/deEHgiA1BtBJtxnKSmHqLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724120313; c=relaxed/simple;
-	bh=eUMwp3S5xbJCsKqKjaUNUaa3EJkE5dBm6njaBEkBLTU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mHIRh5MjIwTP5UxkacYeZmJv0ZNvjLmKmtECrqsfQ0dbgMdeRDj6GUoVYHCUPiVs4mE1Z1ulMgY1tzq9oZaWPjDr7BK0LLxcpAFwS36zhkb6g9IVX2fh+T8BdE01y2hGa/l/meD0pbVpX3Jj9NXJUJ19Gc0pkJP5z+U+hmkaj6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 7ca653205e9711efa216b1d71e6e1362-20240820
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
-	IP_UNTRUSTED, SRC_UNTRUSTED, IP_UNFAMILIAR, SRC_UNFAMILIAR, DN_TRUSTED
-	SRC_TRUSTED, SA_UNTRUSTED, SA_LOWREP, SA_EXISTED, SPF_NOPASS
-	DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD_SPF, CIE_UNKNOWN
-	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_T1, AMN_GOOD
-	AMN_C_TI, AMN_C_BU, ABX_GENE_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.38,REQID:082a3338-cd7b-4ad8-abfb-2526b68c497b,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:30
-X-CID-INFO: VERSION:1.1.38,REQID:082a3338-cd7b-4ad8-abfb-2526b68c497b,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:30
-X-CID-META: VersionHash:82c5f88,CLOUDID:487b9cadfd5ca818dd537906069868c1,BulkI
-	D:240820094828Z09OTTML,BulkQuantity:1,Recheck:0,SF:43|74|66|23|17|19|102,T
-	C:nil,Content:0,EDM:5,IP:-2,URL:11|1,File:nil,RT:nil,Bulk:40,QS:nil,BEC:ni
-	l,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_ULN,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-UUID: 7ca653205e9711efa216b1d71e6e1362-20240820
-X-User: liuhuan01@kylinos.cn
-Received: from localhost.localdomain [(1.198.31.154)] by mailgw.kylinos.cn
-	(envelope-from <liuhuan01@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 402167868; Tue, 20 Aug 2024 09:56:59 +0800
-From: liuhuan01@kylinos.cn
-To: linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org,
-	cmaiolino@redhat.com,
-	liuh <liuhuan01@kylinos.cn>
-Subject: [PATCH] xfs_db: do some checks in init to prevent corruption
-Date: Tue, 20 Aug 2024 09:56:54 +0800
-Message-Id: <20240820015654.17418-1-liuhuan01@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1724133401; c=relaxed/simple;
+	bh=lP3hzyVguaIzqFqbTUvQOeicQQ9iJEqMwGxCD6XIZ/g=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=Wtmo9REThzcTuvv0w2yI3OZLOl7HpGzNGUHkQq4pGPPTRoVOreqgVJttNY+ZRgwZ/A5gouIhMmwWtCJk/VInu3BRiqsxLf7zRfVm9YNSSSwYjaJJlJVbu42GBCU1d4PEqV+v6wG8N66RmwoSLEjQnB3a4O/oR/efyRuc2D6oiDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jm4di160; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jm4di160"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3405AC4AF11;
+	Tue, 20 Aug 2024 05:56:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724133401;
+	bh=lP3hzyVguaIzqFqbTUvQOeicQQ9iJEqMwGxCD6XIZ/g=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=jm4di1606d32XU/ZoORpfK0hif1AsUnJhziBeLnbQP7WHEtMo+BR53SxMxyTQSDXq
+	 EyAez7TpXwi0MlDeudhQ3idpFPZia7ZghH55sbbKpyxAGpi3Pvg2FmDPZ6Igacs0vA
+	 tQHQAyDyCdTU4FwGgnhfhSqvixfU3HeSpGp8br+fVCB6E31SEyV9XUfh3vP8C8Nup5
+	 YTwW7i2U7+2e2vt6yPLj43EozHqW4Dgu2Xx39mUu+tuza2W4as/noj/bQY/zXjJb3M
+	 fMYhjoOtP+1irstN/jyDryUVpt7CRYOrL80N07/uLsHjBTypZEdMjQwowWqLvnQXO/
+	 YNjxvfNMoFhHw==
+References: <20240819005320.304211-1-wozizhi@huawei.com>
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: Zizhi Wo <wozizhi@huawei.com>
+Cc: djwong@kernel.org, dchinner@redhat.com, osandov@fb.com,
+ john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yangerkun@huawei.com
+Subject: Re: [PATCH V4 0/2] Some bugfix for xfs fsmap
+Date: Tue, 20 Aug 2024 11:23:20 +0530
+In-reply-to: <20240819005320.304211-1-wozizhi@huawei.com>
+Message-ID: <875xrvenzf.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-From: liuh <liuhuan01@kylinos.cn>
+On Mon, Aug 19, 2024 at 08:53:18 AM +0800, Zizhi Wo wrote:
+> Changes since V3[1]:
+>  - For the first patch, simply place the modification logic in the
+>    xfs_fsmap_owner_to_rmap() function.
+>  - For the second patch, more detailed comments were added and related
+>    changes were made to the initialization of the end_daddr field.
+>
+> This patch set contains two patches to repair fsmap. Although they are both
+> problems of missing query intervals, the root causes of the two are
+> inconsistent, so two patches are proposed.
+>
+> Patch 1: The fix addresses the interval omission issue caused by the
+> incorrect setting of "rm_owner" in the high_key during rmap queries. In
+> this scenario, fsmap finds the record on the rmapbt, but due to the
+> incorrect setting of the "rm_owner", the key of the record is larger than
+> the high_key, causing the query result to be incorrect. This issue is
+> resolved by fixing the "rm_owner" setup logic.
+>
+> Patch 2: The fix addresses the interval omission issue caused by bit
+> shifting during gap queries in fsmap. In this scenario, fsmap does not
+> find the record on the rmapbt, so it needs to locate it by the gap of the
+> info->next_daddr and high_key address. However, due to the shift, the two
+> are reduced to 0, so the query error is caused. The issue is resolved by
+> introducing the "end_daddr" field in the xfs_getfsmap_info structure to
+> store the high_key at the sector granularity.
+>
+> [1] https://lore.kernel.org/all/20240812011505.1414130-1-wozizhi@huawei.com/
+>
 
-Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredumps during the process.
-Total two types of coredump:
-	(a) xfs_db -c "sb 0" -c "print sectlog" /dev/loop1
-	(b) xfs_db -c "sb 0" -c "print agblock" /dev/loop1
+The two patches in this series cause xfs_scrub to execute indefinitely
+immediately after xfs/556 is executed.
 
-For coredump (a) system will generate signal SIGSEGV corrupt the process. And the stack as follow:
-corrupt at: q = *++b; in function crc32_body
-	#0  crc32_body
-	#1  crc32_le_generic
-	#2  crc32c_le
-	#3  xfs_start_cksum_safe
-	#4  libxfs_verify_cksum
-	#5  xfs_buf_verify_cksum
-	#6  xfs_agf_read_verify
-	#7  libxfs_readbuf_verify
-	#8  libxfs_buf_read_map
-	#9  libxfs_trans_read_buf_map
-	#10 libxfs_trans_read_buf
-	#11 libxfs_read_agf
-	#12 libxfs_alloc_read_agf
-	#13 libxfs_initialize_perag_data
-	#14 init
-	#15 main
+The fstest configuration used is provided below,
 
-For coredump (b) system will generate signal SIGFPE corrupt the process. And the stack as follow:
-corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
-	#0  libxfs_getbuf_flags
-	#1  libxfs_getbuf_flags
-	#2  libxfs_buf_read_map
-	#3  libxfs_buf_read
-	#4  libxfs_mount
-	#5  init
-	#6  main
+FSTYP=xfs
+TEST_DIR=/media/test
+SCRATCH_MNT=/media/scratch
+TEST_DEV=/dev/loop16
+TEST_LOGDEV=/dev/loop13
+TEST_RTDEV=/dev/loop12
+TEST_FS_MOUNT_OPTS="-o rtdev=/dev/loop12 -o logdev=/dev/loop13"
+SCRATCH_DEV_POOL="/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop9 /dev/loop10 /dev/loop11"
+MKFS_OPTIONS="-f -m reflink=0,rmapbt=0, -d rtinherit=1 -lsize=1g"
+SCRATCH_LOGDEV=/dev/loop15
+SCRATCH_RTDEV=/dev/loop14
+USE_EXTERNAL=yes
 
-Analyze the above two issues separately:
-	coredump (a) was caused by the corrupt superblock metadata: (mp)->m_sb.sb_sectlog, it was 128;
-	coredump (b) was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0;
-
-Current, xfs_db doesn't validate the superblock, it goes to corruption if superblock is damaged, theoretically.
-
-So do some check in xfs_db init function to prevent corruption and leave some hints.
-
-Signed-off-by: liuh <liuhuan01@kylinos.cn>
----
- db/init.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/db/init.c b/db/init.c
-index cea25ae5..4402f85f 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -129,6 +129,13 @@ init(
- 		}
- 	}
- 
-+	if (unlikely(sbp->sb_agblocks == 0)) {
-+		fprintf(stderr,
-+			_("%s: device %s agblocks unexpected\n"),
-+			progname, x.data.name);
-+		exit(1);
-+	}
-+
- 	agcount = sbp->sb_agcount;
- 	mp = libxfs_mount(&xmount, sbp, &x, LIBXFS_MOUNT_DEBUGGER);
- 	if (!mp) {
-@@ -140,6 +147,13 @@ init(
- 	mp->m_log = &xlog;
- 	blkbb = 1 << mp->m_blkbb_log;
- 
-+	if (unlikely(sbp->sb_sectlog < XFS_MIN_SECTORSIZE_LOG || sbp->sb_sectlog > XFS_MAX_SECTORSIZE_LOG)) {
-+		fprintf(stderr,
-+			_("%s: device %s sectlog(%u) unexpected\n"),
-+			progname, x.data.name, sbp->sb_sectlog);
-+		exit(1);
-+	}
-+
- 	/* Did we limit a broken agcount in libxfs_mount? */
- 	if (sbp->sb_agcount != agcount)
- 		exitcode = 1;
 -- 
-2.43.0
-
+Chandan
