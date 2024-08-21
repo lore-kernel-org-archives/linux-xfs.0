@@ -1,146 +1,73 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2B5170A2C;
-	Wed, 21 Aug 2024 06:39:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912CE1A2868;
+	Wed, 21 Aug 2024 07:16:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724222360; cv=none; b=FhJojMJbq6z2m414HyBNztycZLyxmmaF42UZD7t/bKdIQ8FIR4XAwue3nitIKdCXikZYHPL4aewbdDTLzqeinHaxnO+W07L0t9HBAMoE6cTOHdcu5JYGWNlVkqiX3YPng0x63EtrFOBIjalJNWdvks2u4JuXOQ6KhOf2R91mBlA=
+	t=1724224566; cv=none; b=o4mk6rsnGVUVzZXYR1xN8ZoPy52EGvxZfHrfswEvMMAENmRWBR75cB6tLsDBV7L5Zv6yEBHcOROmt99mSKu0tY9Zc+8UkBs8lrvBSnL3RQLnDlXScKDxCdk+98LId10mYqFNLL6gM21fV2s//LhSp15CbxkEafJWglnmmtdsY8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724222360; c=relaxed/simple;
-	bh=a1l5H0ZeSXPVmUrT5jKzje4uC6mxacoXnv/Sytvf8LY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dDTM00qc7IzsFC6WM0a88j6kLkXug7OaiFK7WcoY/IUu5UEVZ9b9sY7TpIkEwU3YYoGob8fxWyBNsM3K+B3jvvUkql0gh1KfEVaHPL3pujsT990ftH7MFQ9q7QBVcZ/9qZNZx6hGIXeXIjCRi9ImmdIcJUCCLVei50CSBuh9/Tg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=K+t2+Gnq; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1724224566; c=relaxed/simple;
+	bh=gGa8aDchR6P35xmEhYkIohAWzHWpKhSYViKdBUb5fSk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PHYqrKI4rPA6o0HU+dR+Hj1aZmisI0Ja61oWWlt6oKnkewY4iU5cF6POUbr6IbyicEdCrARpsZsmktGCCyDrXCb72JhxSOqzrOjV1T9IfzZePqTG7pTJhyiwvpyVBdDQfs8DklURI6xNB2EtSMIixz+94dBnENUKioCfp43Ooj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=kBxW1OsG; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K+t2+Gnq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Ql+VaQTZ7hLkH7bRT5C66iw8O48DAz+gyyCW66CXGQM=; b=K+t2+Gnq+Cz14uZTdmhzBTYsoA
-	LJTBOvGnscxKOroGRK20aJA3trjEqhXVVhIGi1TC2hPtQIEkLZMSUTUqXWGoDfXJSeCazkFsnu+tw
-	0GSCPZPpvJK1hNFnKFB9VR0JMiBnL3Zy3b3/p/bcCgEkVTO+k/fSG5RjjvrB+tU0wlRuwtEf32Yv7
-	2cZ/oFQ6Hhp4qhGp5gq8+aE/krgKF6nQkuNUv4cXwGISZddZHzvnYFvENQARwvHB1Epqw234UZFsS
-	MkP+HrnjCKLoMJAvWl1li2TNR+Y2d5/iuZVZpJxeOFuKgcSVj6iUTos34l2gDwSvt4KDV4pa7uy+8
-	txASn7rg==;
-Received: from 2a02-8389-2341-5b80-94d5-b2c4-989b-ff6e.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:94d5:b2c4:989b:ff6e] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sgf00-00000007kGp-46bz;
-	Wed, 21 Aug 2024 06:39:17 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	Matthew Wilcox <willy@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 5/5] xfs: use xas_for_each_marked in xfs_reclaim_inodes_count
-Date: Wed, 21 Aug 2024 08:38:32 +0200
-Message-ID: <20240821063901.650776-6-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240821063901.650776-1-hch@lst.de>
-References: <20240821063901.650776-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="kBxW1OsG"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4Wpd0S5Lg5z9t63;
+	Wed, 21 Aug 2024 09:15:52 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1724224552;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rYduLHKa0UHntXi/4itA9oNRT2pbqE6hHxbM6/MwnOA=;
+	b=kBxW1OsGM38Idead3+WnZ9Z5SBYYwxcEKeB6IXQ+T2Po00kcJxg2GozC7yxon/8hEC3Hqf
+	HwwfF3xGe7m8KuAne9mcpU/rUiOtNnZXh5ZEVRVVggUipkOPl3O6X4BGOlg/VwqB8P7tKS
+	ZW5yvXOMqrfzIvZBwZ76sbYKig8uYddGLTpWTBSEiHKChB7zk9M/0M0pog3AXBaXenU0SN
+	vUHgB0lZCu0SYeiklp49XQ+eGj6dVaqPxNMAhS5wrCZCDa0X5oYAkS9BoqteNARNVWCYG2
+	+oRPW2jnmZfb8LYdg7FaLjv5CgHR1OSEm+tiOzxKErnqhqIaYWiRJulpcknyFA==
+Date: Wed, 21 Aug 2024 07:15:46 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: David Sterba <dsterba@suse.cz>
+Cc: Jonathan Corbet <corbet@lwn.net>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christian Brauner <brauner@kernel.org>,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH] Documentation: iomap: fix a typo
+Message-ID: <20240821071546.isbpc2smmjhooetj@quentin>
+References: <20240820161329.1293718-1-kernel@pankajraghav.com>
+ <20240821000525.GM25962@twin.jikos.cz>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240821000525.GM25962@twin.jikos.cz>
+X-Rspamd-Queue-Id: 4Wpd0S5Lg5z9t63
 
-xfs_reclaim_inodes_count iterates over all AGs to sum up the reclaimable
-inodes counts.  There is no point in grabbing a reference to the them or
-unlock the RCU critical section for each iteration, so switch to the
-more efficient xas_for_each_marked iterator.
+On Wed, Aug 21, 2024 at 02:05:25AM +0200, David Sterba wrote:
+> On Tue, Aug 20, 2024 at 06:13:29PM +0200, Pankaj Raghav (Samsung) wrote:
+> > From: Pankaj Raghav <p.raghav@samsung.com>
+> > 
+> > Change voidw -> void.
+> 
+> Tips for more typo fixes in the same file: fileystem, constaints,
+> specifc
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_icache.c | 36 ++++++++----------------------------
- fs/xfs/xfs_trace.h  |  2 +-
- 2 files changed, 9 insertions(+), 29 deletions(-)
+These are already fixed in fs-next:
+9ba1824cc875 ("Fix spelling and gramatical errors")
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 5bca845e702f1d..d36dbaba660013 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -300,32 +300,6 @@ xfs_perag_clear_inode_tag(
- 	trace_xfs_perag_clear_inode_tag(pag, _RET_IP_);
- }
- 
--/*
-- * Search from @first to find the next perag with the given tag set.
-- */
--static struct xfs_perag *
--xfs_perag_get_next_tag(
--	struct xfs_mount	*mp,
--	struct xfs_perag	*pag,
--	unsigned int		tag)
--{
--	unsigned long		index = 0;
--
--	if (pag) {
--		index = pag->pag_agno + 1;
--		xfs_perag_rele(pag);
--	}
--
--	rcu_read_lock();
--	pag = xa_find(&mp->m_perags, &index, ULONG_MAX, ici_tag_to_mark(tag));
--	if (pag) {
--		trace_xfs_perag_get_next_tag(pag, _RET_IP_);
--		atomic_inc(&pag->pag_ref);
--	}
--	rcu_read_unlock();
--	return pag;
--}
--
- /*
-  * Find the next AG after @pag, or the first AG if @pag is NULL.
-  */
-@@ -1080,11 +1054,17 @@ long
- xfs_reclaim_inodes_count(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_perag	*pag = NULL;
-+	XA_STATE		(xas, &mp->m_perags, 0);
- 	long			reclaimable = 0;
-+	struct xfs_perag	*pag;
- 
--	while ((pag = xfs_perag_get_next_tag(mp, pag, XFS_ICI_RECLAIM_TAG)))
-+	rcu_read_lock();
-+	xas_for_each_marked(&xas, pag, ULONG_MAX, XFS_PERAG_RECLAIM_MARK) {
-+		trace_xfs_reclaim_inodes_count(pag, _THIS_IP_);
- 		reclaimable += pag->pag_ici_reclaimable;
-+	}
-+	rcu_read_unlock();
-+
- 	return reclaimable;
- }
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 002d012ebd83cb..d73c0a49d9dc29 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -210,7 +210,6 @@ DEFINE_EVENT(xfs_perag_class, name,	\
- 	TP_PROTO(struct xfs_perag *pag, unsigned long caller_ip), \
- 	TP_ARGS(pag, caller_ip))
- DEFINE_PERAG_REF_EVENT(xfs_perag_get);
--DEFINE_PERAG_REF_EVENT(xfs_perag_get_next_tag);
- DEFINE_PERAG_REF_EVENT(xfs_perag_hold);
- DEFINE_PERAG_REF_EVENT(xfs_perag_put);
- DEFINE_PERAG_REF_EVENT(xfs_perag_grab);
-@@ -218,6 +217,7 @@ DEFINE_PERAG_REF_EVENT(xfs_perag_grab_next_tag);
- DEFINE_PERAG_REF_EVENT(xfs_perag_rele);
- DEFINE_PERAG_REF_EVENT(xfs_perag_set_inode_tag);
- DEFINE_PERAG_REF_EVENT(xfs_perag_clear_inode_tag);
-+DEFINE_PERAG_REF_EVENT(xfs_reclaim_inodes_count);
- 
- TRACE_EVENT(xfs_inodegc_worker,
- 	TP_PROTO(struct xfs_mount *mp, unsigned int shrinker_hits),
 -- 
-2.43.0
-
+Pankaj Raghav
