@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D041152170
-	for <linux-xfs@vger.kernel.org>; Wed, 21 Aug 2024 16:07:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26AFF13AA2F;
+	Wed, 21 Aug 2024 16:11:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724256444; cv=none; b=j9YYZqBYwWQfs4jEPXEesvu0O7rS9G6kaZ9Zit0vmWGbvynG+978fnhGmGjC8tgsTLUJBu9ibLfEhqWv0l/IjqVwAHCVloid1HWGMMw+mRQP/PNhiwveDXYcJJV/BXS5NPMfQ6fFoEXx/X+wKhhGr+mmorgUkXC5cvVI1UpU3mE=
+	t=1724256717; cv=none; b=L2NWoPjTPZp4lryqNJOGpSiIuPi2x9aGyTcyJlyog3G6iJpkVKU8eFInlT6WLO9HGYLtFakKkav3qxNLpM6kFwsQp8Nu8CSQLO6UFAUV+Q+7Cp9ehKSdprFvpwvOvOjdjS8k7RMGKst2WgZH313IQKLfnCNWYRxA78P/XApSPjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724256444; c=relaxed/simple;
-	bh=fxQqJMm0KU5Y3kBZKrhjQ13ElqmFCoU6uq+1pY0mrrw=;
+	s=arc-20240116; t=1724256717; c=relaxed/simple;
+	bh=MEJJd+MKHs1hMwsiYvw3/hmUabJ0aXvZ/amvjwnl0Cc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Q29pAlgqOUFgKmavYbrM8Dqu++OoSfx43gwZzLVIzL5Lw2UjZZTQXVN8IhMUC6p7PRI074dISxU+HnqmZ4A+E5RtIx7BB7ORfryf+jHIXlDUJzSCb4mSSpBWpndJICOYERUZN2ovsxgUrJ6aoH7uly3ppE/9wAHKc2kwOOS5qQo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YE9xQSor; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=S/ZBehU5cvbMVwiU9jO24q8Lwt1PfQmjxuz4jrzAEEOe53OHKFmWGrlSOjPmPuhol2H96GD1pWGJ4lx0j1K/2Y8omcn2bUs4YZFUoqj7GQXollbLhx0lkQz2YZJVS9rqnl3iMibE80M5GZAHRwuP3stRyXbaerh6cWvHN5NHNAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VKSMg4wi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YE9xQSor"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2678C4AF13;
-	Wed, 21 Aug 2024 16:07:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VKSMg4wi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FC53C32786;
+	Wed, 21 Aug 2024 16:11:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724256444;
-	bh=fxQqJMm0KU5Y3kBZKrhjQ13ElqmFCoU6uq+1pY0mrrw=;
+	s=k20201202; t=1724256716;
+	bh=MEJJd+MKHs1hMwsiYvw3/hmUabJ0aXvZ/amvjwnl0Cc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YE9xQSor6jVcowLY8YkjJXm+qiW8cqwCJGpfXG30MooeUx1uGGi8y29N2F+MWGju5
-	 acnghYZyCTopiqZwxXyXrs6M8EqAp/Hg/Vri2DYVSfY2lrVoKTEbBdyPz6Hdxfvfeh
-	 m+HBS3QTHgytbmHyZQyU+kj17vrK6974mqIWGXXR1Q32CZ1sFS8ugrso3whpCtD2KO
-	 6mtcF1w+XcRzFLShOXl+YOlICy7TyBpqnLCpPmrGGeaTV+fmQOeX56Ou48t/zmrUa9
-	 80wVKHBgQCApRcNKOAHj6BkY31mDH8uIxcaWGgZ2ukWKI96I7h5eqaZyCvNFR/+5j3
-	 jmnt5hxi7Cvtg==
-Date: Wed, 21 Aug 2024 09:07:23 -0700
+	b=VKSMg4wifuJYoPjK6qaRKZugM+xEv2szUoNZoUXGKK+OxqWJeZWUT3YVBtU6trS2u
+	 lcAqeb9/5CmVrTfYcQvPdFWAuOGpEQHN/0ouVXXlxfTrX+Ac9tnvINk1Q0SBAktXmy
+	 EA/CwkPBqF/3bfCm/sVaboL18jPlh8jwGk0RPeTMsN9295RqXUIp6vnCjLw7KHJ68X
+	 kiVIhAHnrmps4osYirOFwkAMvvF49/IPqxAZp9m2nHSyXdcDRtXSQBJXDqSrwYfy1l
+	 iSLhndiuZxHDq9Um2ov8kuLFta17kNye8jNc4Z1hAiFqKsI/Cesi/j+GCeqkGnIyrP
+	 kE11iork6D+Gw==
+Date: Wed, 21 Aug 2024 09:11:56 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: support lowmode allocations in
- xfs_bmap_exact_minlen_extent_alloc
-Message-ID: <20240821160723.GA865349@frogsfrogsfrogs>
-References: <20240820170517.528181-1-hch@lst.de>
- <20240820170517.528181-7-hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
+	Theodore Ts'o <tytso@mit.edu>, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org
+Subject: Re: sort out the fallocate mode mess
+Message-ID: <20240821161156.GB865349@frogsfrogsfrogs>
+References: <20240821063108.650126-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,53 +47,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240820170517.528181-7-hch@lst.de>
+In-Reply-To: <20240821063108.650126-1-hch@lst.de>
 
-On Tue, Aug 20, 2024 at 07:04:57PM +0200, Christoph Hellwig wrote:
-> Currently the debug-only xfs_bmap_exact_minlen_extent_alloc allocation
-> variant fails to drop into the lowmode last restor allocator, and
-
-                                         last resort?
-
-> thus can sometimes fail allocations for which the caller has a
-> transaction block reservation.
+On Wed, Aug 21, 2024 at 08:30:26AM +0200, Christoph Hellwig wrote:
+> Hi all,
 > 
-> Fix this by using xfs_bmap_btalloc_low_space to do the actual allocation.
+> I've recently been looking at the XFS fallocate implementation and got
+> upset about the messing parsing of the mode argument, which mixes modes
+> and an optional flag in a really confusing way.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index b5eeaea164ee46..784dd5dda2a1a2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3493,7 +3493,13 @@ xfs_bmap_exact_minlen_extent_alloc(
->  	 */
->  	ap->blkno = XFS_AGB_TO_FSB(ap->ip->i_mount, 0, 0);
->  
-> -	return xfs_alloc_vextent_first_ag(args, ap->blkno);
-> +	/*
-> +	 * Use the low space allocator as it first does a "normal" AG iteration
-> +	 * and then drops the reservation to minlen, which might be required to
-> +	 * find an allocation for the transaction reservation when the file
-> +	 * system is very full.
+> This series tries to clean this up by better defining what is the
+> operation mode and what is an optional flag, so that both the core
+> code and file systems can use switch statements to switch on the mode.
 
-Isn't it already doing a minlen allocation?  Oh, that probably refers to
-shrinking args->total, doesn't it.
+For patches 4-6,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-If the answer to that is 'yes' then
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+(I'm not going to touch the NO_HIDE_STALE pony, I'll let you and tytso
+mix it up over^W^W^W^Wdiscuss that...)
 
 --D
-
-> +	 */
-> +	return xfs_bmap_btalloc_low_space(ap, args);
->  }
->  #else
->  
-> -- 
-> 2.43.0
-> 
-> 
