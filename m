@@ -1,55 +1,29 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498F2188909;
-	Wed, 21 Aug 2024 07:16:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B787C1CDFB1
+	for <linux-xfs@vger.kernel.org>; Wed, 21 Aug 2024 08:24:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724224620; cv=none; b=JdUjMl0uhfrkdO3vcbhA09HdtVwZK3Yf9TB+PUW4PnfB1GYidZ91/A5t4bPEjc6n0Cy2uipJPALxXRpN3Dcoe9LWv+gIL+Xn3GHhXlzshxVmCXIyvJLQiVUaEgz47To4sXjo5ToV5VRb7lbErzhDXeLNEWeu07Dvp8g0QsaSyT0=
+	t=1724228687; cv=none; b=gxiCugJHU9AHREKKiAArBPMBPIisnqYs9GtHUIrXUhRrp084L89VjinjGwUqXI9icbMO8tuVrWK9+MXeLgIj5gQ7JW10UVgWi2hWqRh2+/XOQpnIr1LYgO3m26j8J3IonmWu6jbp3h3sDIfx83hSMhfovGA5JiPM0ID6v7TyHMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724224620; c=relaxed/simple;
-	bh=jqt1gQihFHjYpmPfb0zxSVtjAZIis7swiMpvgCdhod8=;
+	s=arc-20240116; t=1724228687; c=relaxed/simple;
+	bh=c/cIGm+l3IhzxLnCTKKpqBKBHV37OIBef9llsANa/kU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LT1GIknSIs4l8b/V5VuEfZqc2jD00T0YUN57hvobuYmuuGqoImb1j77+nDjxp69DJeOUYzkGLoDjgOy+c55pzaa1J6y7lRz8S8OvzzKXvYnCUwBcVv/qMyy65CuEuu/WfqvmBxcbLp7b1i5dVDTxQJvIP4XTXBHq05CzC1EfDdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=BG2uisKp; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="BG2uisKp"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4Wpd1f3kprz9sbL;
-	Wed, 21 Aug 2024 09:16:54 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1724224614;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=COicL3dzsH199VTY45pcXnDs0kBDd9mbwCxNoGj2E1Y=;
-	b=BG2uisKpPsVLH52AW2aRd4OqV1POoYNMy0zI0uu79RqnDIJZQznELLzV1EHvTPhfe1a09D
-	NldmivH8oPOyYF5EcBoLZ70ApwfFkQXI8B2V4RF1s3Gjz+Fg0zv9LgxFrP16CsYJInVeCT
-	o8xct3A9N87M0452iwimATTnuGeELu4ShtrRrVz/SHlUB172FcDex7ZImkji13KW6L8XyW
-	LM01BmjIcq1gataPir39gXixFhZptxbarPufzHmo5ySuJEACW0VLOteQgIjCx1vD8RGG7L
-	U/Phj97V1AX0vY6QOiROvoMzKbFb/M0yZbFdkBJdrSncC03xOTpM1LxVFtkW4A==
-Date: Wed, 21 Aug 2024 07:16:48 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: David Howells <dhowells@redhat.com>
-Cc: brauner@kernel.org, akpm@linux-foundation.org, chandan.babu@oracle.com,
-	linux-fsdevel@vger.kernel.org, djwong@kernel.org, hare@suse.de,
-	gost.dev@samsung.com, linux-xfs@vger.kernel.org, hch@lst.de,
-	david@fromorbit.com, Zi Yan <ziy@nvidia.com>,
-	yang@os.amperecomputing.com, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, willy@infradead.org, john.g.garry@oracle.com,
-	cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
-	ryan.roberts@arm.com
-Subject: Re: [PATCH v12 00/10] enable bs > ps in XFS
-Message-ID: <20240821071648.frec5z52frrydkz6@quentin>
-References: <20240818165124.7jrop5sgtv5pjd3g@quentin>
- <20240815090849.972355-1-kernel@pankajraghav.com>
- <2924797.1723836663@warthog.procyon.org.uk>
- <3792765.1724196264@warthog.procyon.org.uk>
+	 Content-Type:Content-Disposition:In-Reply-To; b=XUPIHRZj6R9Eb0iMB1b2PnDHMcEXjDH55q9ogbCGTF1lT76u8OJ7C4vWStIOCYcIfjOI60z8aHTK1Jn0LsKVFtzHvpa6U5QxjAenMI+EJ1z2//xbNa8TW0H4xPcWyrPMqRlCOu7gBGe0jyOluJh/pHMA3JoWGjxqM5Eu6a9sX30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id CBE9F227A87; Wed, 21 Aug 2024 10:24:40 +0200 (CEST)
+Date: Wed, 21 Aug 2024 10:24:40 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/6] xfs: call xfs_bmap_exact_minlen_extent_alloc from
+ xfs_bmap_btalloc
+Message-ID: <20240821082440.GA2431@lst.de>
+References: <20240820170517.528181-1-hch@lst.de> <20240820170517.528181-6-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -58,18 +32,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3792765.1724196264@warthog.procyon.org.uk>
+In-Reply-To: <20240820170517.528181-6-hch@lst.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Aug 21, 2024 at 12:24:24AM +0100, David Howells wrote:
-> Okay, I think I've found the bugs in my code and in truncate.  It appears
-> they're affected by your code, but exist upstream.  You can add:
-> 
-> 	Tested-by: David Howells <dhowells@redhat.com>
-> 
-> to patches 1-5 if you wish.
+On Tue, Aug 20, 2024 at 07:04:56PM +0200, Christoph Hellwig wrote:
+> xfs_bmap_exact_minlen_extent_alloc duplicates the args setup in
+> xfs_bmap_btalloc.  Switch to call it from xfs_bmap_btalloc after
+> doing the basic setup.
 
-Thanks David. I will send a new version with your Tested-by and the one
-fix in the first patch.
+And the buildbot correctly points out that we want the following fixup
+for non-DEBUG builds:
 
--- 
-Pankaj
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 03b23875330734..0f793673d73dcb 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3543,9 +3543,13 @@ xfs_bmap_exact_minlen_extent_alloc(
+ 	return xfs_bmap_btalloc_low_space(ap, args);
+ }
+ #else
+-
+-#define xfs_bmap_exact_minlen_extent_alloc(bma) (-EFSCORRUPTED)
+-
++static int
++xfs_bmap_exact_minlen_extent_alloc(
++	struct xfs_bmalloca	*ap,
++	struct xfs_alloc_arg	*args)
++{
++	BUILD_BUG_ON(1);
++}
+ #endif
+ 
+ /*
