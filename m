@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45BC919995D;
-	Wed, 21 Aug 2024 16:58:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B72313E022;
+	Wed, 21 Aug 2024 17:07:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724259485; cv=none; b=ehqPIcA10sdYvxJwvt20OqYahoV/DuBZAXJohxq4lvrUoRcKNWxDviMGtalVRi7OdbDeq8IVjzXjZIbFtaW9CO0wVyVTa5eDLquLpsICxiUq/S9Z9SA0qGtZoYgPeGO2TJMt72R3eCXwz+e7FPfsTGBJ3l03pu2zdEtFTQaCxIY=
+	t=1724260055; cv=none; b=b5lS+/lHrjqsgHx1v3hqcvQiVnW4iOiokGDh5xYvAGXQ23BFFhMPIoc9hxTk07qVNPpyMEd4zlj11FEywL85bMol4Usr9KbQH79QV8CHnG4n0YE5xFsGsW+SumGKERRa2qlYf0DG4CuIjwULMejQELukP2ejaYBtb0xOHfGce3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724259485; c=relaxed/simple;
-	bh=n+AxqqbskxJ534zPXzBpn7AEArHbo5EMD8JRMZ7PwWQ=;
+	s=arc-20240116; t=1724260055; c=relaxed/simple;
+	bh=X/FMGS6nNVkr3M3pYfKLWM17aTsCYXsmDksgz5f3XuM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ubzV3ytwTNyDbnaG08v6GLSN4lKTXAT1LyBiA/lE/mOlOC8nmvOiHizvQiGLcrs/L2ApfIGPyjoeNPurayf385zx5j01mvlTJEh8SDh0InkHFPMcREzuzPdM7F7vt4D2dkeRyUg2kxTXAzw0i2+H9sVol+zYil8qFXKYx7i1JR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VtHVJU0H; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=SQeGBQGah5tyxAVnv3AH4OzbeaVSsi8Ie/sAJr8wIK6nBgLqUQKp/hKNbma518X88xY9nAZw9y5U+Rvezm4X5ShNaosclT56GjH75Zo+EQKEQkbkX8Hs98s2YBgFRHOOluXM5Znz7xYdNT4mDIPoRZv1ZvPeTdDmzA2qFLfjjVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NLSK+wUk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VtHVJU0H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1168C32781;
-	Wed, 21 Aug 2024 16:58:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NLSK+wUk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD1BDC32781;
+	Wed, 21 Aug 2024 17:07:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724259484;
-	bh=n+AxqqbskxJ534zPXzBpn7AEArHbo5EMD8JRMZ7PwWQ=;
+	s=k20201202; t=1724260055;
+	bh=X/FMGS6nNVkr3M3pYfKLWM17aTsCYXsmDksgz5f3XuM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VtHVJU0HB8FbQJF5vXuxlvJcU15vi1xoi0eCzDwJk4Pv4rq4jBAtmRnUOL7RTBb8A
-	 8mclzmfYSR/ZofYGHaQQmbRN37suKKxj5CFNuldjmPB8byFkHRLEOy5hllTDAI45GE
-	 qb4LucFK7xIoCXRsqJF4vmB/SToSsj/THuFRpvTvsdJTvfLf51K8kCq9maQUyTzmnZ
-	 1inmn1KVtmEhrkXEDpWdAzNLnVY57CruInPa+uDrTElD9KuuTKWcgEE4QbabUHTqhB
-	 N4MWk2KELJaVzB5luysOUKL/4/wrs+GFF6jekAmxWV/qbK977mTbfLHuMUNAlqf4qB
-	 T8nZN2HIerk8Q==
-Date: Wed, 21 Aug 2024 09:58:03 -0700
+	b=NLSK+wUkm5n616pqcCxUSGMp6A66Ggsm8ifOOu+lqqg/MeclUTge25abqieRl1vHu
+	 4AdGLQX5YBjCKBC3jGD2viFU0AugnN1JPxMYw4P1I1HimjYRejYLL1aosAQkDUhfVf
+	 C6c/JQVnoWsjpZISFnnWwpS8P6P7Elrk6KI7w9kYS/1Xn9tnOHekAsq2zNYl7PH8Sr
+	 jA4BNe84b0vNFOvjpSWG1BmgEwyTXW2n8A4kylHKG2nf4NaV3rGusUu0qB6itKNCQV
+	 QxpGIU+uf62zz/TiNuenEnChl3P3aRt9x4Q56P5I04KEmZJ1bGVX65vwbmbLk9NqRo
+	 2UKl4ejchMqHw==
+Date: Wed, 21 Aug 2024 10:07:34 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: John Garry <john.g.garry@oracle.com>
 Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
@@ -36,10 +36,10 @@ Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
 	linux-fsdevel@vger.kernel.org, hare@suse.de,
 	martin.petersen@oracle.com, catherine.hoang@oracle.com,
 	kbusch@kernel.org
-Subject: Re: [PATCH v5 3/7] fs: iomap: Atomic write support
-Message-ID: <20240821165803.GI865349@frogsfrogsfrogs>
+Subject: Re: [PATCH v5 4/7] xfs: Support FS_XFLAG_ATOMICWRITES for forcealign
+Message-ID: <20240821170734.GJ865349@frogsfrogsfrogs>
 References: <20240817094800.776408-1-john.g.garry@oracle.com>
- <20240817094800.776408-4-john.g.garry@oracle.com>
+ <20240817094800.776408-5-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,324 +48,476 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240817094800.776408-4-john.g.garry@oracle.com>
+In-Reply-To: <20240817094800.776408-5-john.g.garry@oracle.com>
 
-On Sat, Aug 17, 2024 at 09:47:56AM +0000, John Garry wrote:
-> Support direct I/O atomic writes by producing a single bio with REQ_ATOMIC
-> flag set.
+On Sat, Aug 17, 2024 at 09:47:57AM +0000, John Garry wrote:
+> Add initial support for new flag FS_XFLAG_ATOMICWRITES for forcealign
+> enabled.
 > 
-> We rely on the FS to guarantee extent alignment, such that an atomic write
-> should never straddle two or more extents. The FS should also check for
-> validity of an atomic write length/alignment.
+> This flag is a file attribute that mirrors an ondisk inode flag.  Actual
+> support for untorn file writes (for now) depends on both the iflag and the
+> underlying storage devices, which we can only really check at statx and
+> pwritev2() time.  This is the same story as FS_XFLAG_DAX, which signals to
+> the fs that we should try to enable the fsdax IO path on the file (instead
+> of the regular page cache), but applications have to query STAT_ATTR_DAX to
+> find out if they really got that IO path.
 > 
-> For each iter, data is appended to the single bio. That bio is allocated
-> on the first iter.
+> Current kernel support for atomic writes is based on HW support (for atomic
+> writes). As such, it is required to ensure extent alignment with
+> atomic_write_unit_max so that an atomic write can result in a single
+> HW-compliant IO operation.
 > 
-> If that total bio data does not match the expected total, then error and
-> do not submit the bio as we cannot tolerate a partial write.
+> rtvol also guarantees extent alignment, but we are basing support initially
+> on forcealign, which is not supported for rtvol yet.
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/iomap/direct-io.c  | 122 +++++++++++++++++++++++++++++++++++-------
->  fs/iomap/trace.h      |   3 +-
->  include/linux/iomap.h |   1 +
->  3 files changed, 106 insertions(+), 20 deletions(-)
+>  fs/xfs/libxfs/xfs_format.h     | 11 +++++--
+>  fs/xfs/libxfs/xfs_inode_buf.c  | 52 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_inode_util.c |  4 +++
+>  fs/xfs/libxfs/xfs_sb.c         |  2 ++
+>  fs/xfs/xfs_buf.c               | 15 +++++++++-
+>  fs/xfs/xfs_buf.h               |  4 ++-
+>  fs/xfs/xfs_buf_mem.c           |  2 +-
+>  fs/xfs/xfs_inode.h             |  5 ++++
+>  fs/xfs/xfs_ioctl.c             | 52 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_mount.h             |  2 ++
+>  fs/xfs/xfs_super.c             | 12 ++++++++
+>  include/uapi/linux/fs.h        |  1 +
+>  12 files changed, 157 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index f3b43d223a46..72f28d53ab03 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -37,6 +37,7 @@ struct iomap_dio {
->  	int			error;
->  	size_t			done_before;
->  	bool			wait_for_completion;
-> +	struct bio		*atomic_bio;
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 04c6cbc943c2..a9f3389438a6 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -353,12 +353,16 @@ xfs_sb_has_compat_feature(
+>  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+>  #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
+>  #define XFS_SB_FEAT_RO_COMPAT_FORCEALIGN (1 << 30)	/* aligned file data extents */
+> +#define XFS_SB_FEAT_RO_COMPAT_ATOMICWRITES (1 << 31)	/* atomicwrites enabled */
+
+Do you ever see test failures in xfs/270?
+
+> +
+>  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+>  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+>  		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
+>  		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT | \
+> -		 XFS_SB_FEAT_RO_COMPAT_FORCEALIGN)
+> +		 XFS_SB_FEAT_RO_COMPAT_FORCEALIGN | \
+> +		 XFS_SB_FEAT_RO_COMPAT_ATOMICWRITES)
+> +
+>  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+>  static inline bool
+>  xfs_sb_has_ro_compat_feature(
+> @@ -1097,6 +1101,7 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+>  #define XFS_DIFLAG2_NREXT64_BIT 4	/* large extent counters */
+>  /* data extent mappings for regular files must be aligned to extent size hint */
+>  #define XFS_DIFLAG2_FORCEALIGN_BIT 5
+> +#define XFS_DIFLAG2_ATOMICWRITES_BIT 6
 >  
->  	union {
->  		/* used during submission and for synchronous completion: */
-> @@ -61,6 +62,24 @@ static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
->  	return bio_alloc(iter->iomap.bdev, nr_vecs, opf, GFP_KERNEL);
+>  #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
+>  #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
+> @@ -1104,10 +1109,12 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+>  #define XFS_DIFLAG2_BIGTIME	(1 << XFS_DIFLAG2_BIGTIME_BIT)
+>  #define XFS_DIFLAG2_NREXT64	(1 << XFS_DIFLAG2_NREXT64_BIT)
+>  #define XFS_DIFLAG2_FORCEALIGN	(1 << XFS_DIFLAG2_FORCEALIGN_BIT)
+> +#define XFS_DIFLAG2_ATOMICWRITES	(1 << XFS_DIFLAG2_ATOMICWRITES_BIT)
+>  
+>  #define XFS_DIFLAG2_ANY \
+>  	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
+> -	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64 | XFS_DIFLAG2_FORCEALIGN)
+> +	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64 | XFS_DIFLAG2_FORCEALIGN | \
+> +	 XFS_DIFLAG2_ATOMICWRITES)
+>  
+>  static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
+>  {
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 1c59891fa9e2..59933c7df56d 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -178,7 +178,10 @@ xfs_inode_from_disk(
+>  	struct xfs_inode	*ip,
+>  	struct xfs_dinode	*from)
+>  {
+> +	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+>  	struct inode		*inode = VFS_I(ip);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+>  	int			error;
+>  	xfs_failaddr_t		fa;
+>  
+> @@ -261,6 +264,13 @@ xfs_inode_from_disk(
+>  	}
+>  	if (xfs_is_reflink_inode(ip))
+>  		xfs_ifork_init_cow(ip);
+> +
+> +	if (xfs_inode_has_atomicwrites(ip)) {
+> +		if (sbp->sb_blocksize < target->bt_bdev_awu_min ||
+> +		    sbp->sb_blocksize * ip->i_extsize > target->bt_bdev_awu_max)
+
+Can this multiplication trigger integer overflows?
+
+> +			ip->i_diflags2 &= ~XFS_DIFLAG2_ATOMICWRITES;
+
+Ondisk iflag updates must use transactions.
+
+Or you can fail IOCB_ATOMIC writes if XFS_DIFLAG2_ATOMICWRITES is set
+but the forcealign blocksize doesn't fit with awu_min/max.
+
+> +	}
+> +
+>  	return 0;
+>  
+>  out_destroy_data_fork:
+> @@ -483,6 +493,40 @@ xfs_dinode_verify_nrext64(
+>  	return NULL;
 >  }
 >  
-> +static struct bio *iomap_dio_alloc_bio_data(const struct iomap_iter *iter,
-> +		struct iomap_dio *dio, unsigned short nr_vecs, blk_opf_t opf,
-> +		loff_t pos)
+> +static xfs_failaddr_t
+> +xfs_inode_validate_atomicwrites(
+> +	struct xfs_mount	*mp,
+> +	uint32_t		extsize,
+> +	uint64_t		flags2)
 > +{
-> +	struct bio *bio = iomap_dio_alloc_bio(iter, dio, nr_vecs, opf);
-> +	struct inode *inode = iter->inode;
+> +	/* superblock rocompat feature flag */
+> +	if (!xfs_has_atomicwrites(mp))
+> +		return __this_address;
 > +
-> +	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
-> +				  GFP_KERNEL);
-> +	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
-> +	bio->bi_write_hint = inode->i_write_hint;
-> +	bio->bi_ioprio = dio->iocb->ki_ioprio;
-> +	bio->bi_private = dio;
-> +	bio->bi_end_io = iomap_dio_bio_end_io;
+> +	/*
+> +	 * forcealign is required, so rely on sanity checks in
+> +	 * xfs_inode_validate_forcealign()
+> +	 */
+> +	if (!(flags2 & XFS_DIFLAG2_FORCEALIGN))
+> +		return __this_address;
 > +
-> +	return bio;
+> +	if (!is_power_of_2(extsize))
+> +		return __this_address;
+> +
+> +	/* Required to guarantee data block alignment */
+> +	if (mp->m_sb.sb_agblocks % extsize)
+> +		return __this_address;
+> +
+> +	/* Requires stripe unit+width be a multiple of extsize */
+> +	if (mp->m_dalign && (mp->m_dalign % extsize))
+> +		return __this_address;
+> +
+> +	if (mp->m_swidth && (mp->m_swidth % extsize))
+
+IIRC m_dalign and m_swidth can be set at mount time, which can result in
+inode verifiers logging corruption errors if those parameters change.  I
+think we should validate these two congruencies when setting
+FMODE_CAN_ATOMIC_WRITE.
+
+> +		return __this_address;
+> +
+> +	return NULL;
 > +}
 > +
->  static void iomap_dio_submit_bio(const struct iomap_iter *iter,
->  		struct iomap_dio *dio, struct bio *bio, loff_t pos)
->  {
-> @@ -256,7 +275,7 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
->   * clearing the WRITE_THROUGH flag in the dio request.
->   */
->  static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
-> -		const struct iomap *iomap, bool use_fua)
-> +		const struct iomap *iomap, bool use_fua, bool atomic)
->  {
->  	blk_opf_t opflags = REQ_SYNC | REQ_IDLE;
+>  xfs_failaddr_t
+>  xfs_dinode_verify(
+>  	struct xfs_mount	*mp,
+> @@ -666,6 +710,14 @@ xfs_dinode_verify(
+>  			return fa;
+>  	}
 >  
-> @@ -268,6 +287,8 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
->  		opflags |= REQ_FUA;
->  	else
->  		dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
-> +	if (atomic)
-> +		opflags |= REQ_ATOMIC;
->  
->  	return opflags;
+> +	if (flags2 & XFS_DIFLAG2_ATOMICWRITES) {
+> +		fa = xfs_inode_validate_atomicwrites(mp,
+> +				be32_to_cpu(dip->di_extsize),
+> +				flags2);
+> +		if (fa)
+> +			return fa;
+> +	}
+> +
+>  	return NULL;
 >  }
-> @@ -275,21 +296,23 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
->  static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  		struct iomap_dio *dio)
+>  
+> diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
+> index b264939d8855..dbd5b16e1844 100644
+> --- a/fs/xfs/libxfs/xfs_inode_util.c
+> +++ b/fs/xfs/libxfs/xfs_inode_util.c
+> @@ -82,6 +82,8 @@ xfs_flags2diflags2(
+>  		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+>  	if (xflags & FS_XFLAG_FORCEALIGN)
+>  		di_flags2 |= XFS_DIFLAG2_FORCEALIGN;
+> +	if (xflags & FS_XFLAG_ATOMICWRITES)
+> +		di_flags2 |= XFS_DIFLAG2_ATOMICWRITES;
+>  
+>  	return di_flags2;
+>  }
+> @@ -130,6 +132,8 @@ xfs_ip2xflags(
+>  			flags |= FS_XFLAG_COWEXTSIZE;
+>  		if (ip->i_diflags2 & XFS_DIFLAG2_FORCEALIGN)
+>  			flags |= FS_XFLAG_FORCEALIGN;
+> +		if (ip->i_diflags2 & XFS_DIFLAG2_ATOMICWRITES)
+> +			flags |= FS_XFLAG_ATOMICWRITES;
+>  	}
+>  
+>  	if (xfs_inode_has_attr_fork(ip))
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index e56911553edd..5de8725bf93a 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -166,6 +166,8 @@ xfs_sb_version_to_features(
+>  		features |= XFS_FEAT_INOBTCNT;
+>  	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FORCEALIGN)
+>  		features |= XFS_FEAT_FORCEALIGN;
+> +	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_ATOMICWRITES)
+> +		features |= XFS_FEAT_ATOMICWRITES;
+>  	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_FTYPE)
+>  		features |= XFS_FEAT_FTYPE;
+>  	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_SPINODES)
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index aa4dbda7b536..44bee3e2b2bb 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -2060,6 +2060,8 @@ int
+>  xfs_init_buftarg(
+>  	struct xfs_buftarg		*btp,
+>  	size_t				logical_sectorsize,
+> +	unsigned int			awu_min,
+> +	unsigned int			awu_max,
+>  	const char			*descr)
 >  {
-> +	bool atomic = dio->iocb->ki_flags & IOCB_ATOMIC;
->  	const struct iomap *iomap = &iter->iomap;
->  	struct inode *inode = iter->inode;
->  	unsigned int fs_block_size = i_blocksize(inode), pad;
-> +	struct iov_iter *i = dio->submit.iter;
-
-If you're going to pull this out into a convenience variable, please do
-that as a separate patch so that the actual untorn write additions don't
-get mixed in.
-
->  	loff_t length = iomap_length(iter);
->  	loff_t pos = iter->pos;
->  	blk_opf_t bio_opf;
->  	struct bio *bio;
->  	bool need_zeroout = false;
->  	bool use_fua = false;
-> -	int nr_pages, ret = 0;
-> +	int nr_pages, orig_nr_pages, ret = 0;
->  	size_t copied = 0;
->  	size_t orig_count;
->  
->  	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
-> -	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
-> +	    !bdev_iter_is_aligned(iomap->bdev, i))
->  		return -EINVAL;
->  
->  	if (iomap->type == IOMAP_UNWRITTEN) {
-> @@ -322,15 +345,35 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  			dio->flags &= ~IOMAP_DIO_CALLER_COMP;
->  	}
->  
-> +	if (dio->atomic_bio) {
-> +		/*
-> +		 * These should not fail, but check just in case.
-> +		 * Caller takes care of freeing the bio.
-> +		 */
-> +		if (iter->iomap.bdev != dio->atomic_bio->bi_bdev) {
-> +			ret = -EINVAL;
-> +			goto out;
-> +		}
+>  	/* Set up device logical sector size mask */
+> @@ -2086,6 +2088,9 @@ xfs_init_buftarg(
+>  	btp->bt_shrinker->scan_objects = xfs_buftarg_shrink_scan;
+>  	btp->bt_shrinker->private_data = btp;
+>  	shrinker_register(btp->bt_shrinker);
 > +
-> +		if (dio->atomic_bio->bi_iter.bi_sector +
-> +		    (dio->atomic_bio->bi_iter.bi_size >> SECTOR_SHIFT) !=
-
-Hmm, so I guess you stash an untorn write bio in the iomap_dio so that
-multiple iomap_dio_bio_iter can try to combine a mixed mapping into a
-single contiguous untorn write that can be completed all at once?
-I suppose that works as long as the iomap->type is the same across all
-the _iter calls, but I think that needs explicit checking here.
-
-> +			iomap_sector(iomap, pos)) {
-> +			ret = -EINVAL;
-> +			goto out;
-> +		}
-> +	} else if (atomic) {
-> +		orig_nr_pages = bio_iov_vecs_to_alloc(i, BIO_MAX_VECS);
+> +	btp->bt_bdev_awu_min = awu_min;
+> +	btp->bt_bdev_awu_max = awu_max;
+>  	return 0;
+>  
+>  out_destroy_io_count:
+> @@ -2102,6 +2107,7 @@ xfs_alloc_buftarg(
+>  {
+>  	struct xfs_buftarg	*btp;
+>  	const struct dax_holder_operations *ops = NULL;
+> +	unsigned int awu_min = 0, awu_max = 0;
+>  
+>  #if defined(CONFIG_FS_DAX) && defined(CONFIG_MEMORY_FAILURE)
+>  	ops = &xfs_dax_holder_operations;
+> @@ -2115,6 +2121,13 @@ xfs_alloc_buftarg(
+>  	btp->bt_daxdev = fs_dax_get_by_bdev(btp->bt_bdev, &btp->bt_dax_part_off,
+>  					    mp, ops);
+>  
+> +	if (bdev_can_atomic_write(btp->bt_bdev)) {
+> +		struct request_queue *q = bdev_get_queue(btp->bt_bdev);
+> +
+> +		awu_min = queue_atomic_write_unit_min_bytes(q);
+> +		awu_max = queue_atomic_write_unit_max_bytes(q);
 > +	}
 > +
 >  	/*
->  	 * Save the original count and trim the iter to just the extent we
->  	 * are operating on right now.  The iter will be re-expanded once
->  	 * we are done.
->  	 */
-> -	orig_count = iov_iter_count(dio->submit.iter);
-> -	iov_iter_truncate(dio->submit.iter, length);
-> +	orig_count = iov_iter_count(i);
-> +	iov_iter_truncate(i, length);
+>  	 * When allocating the buftargs we have not yet read the super block and
+>  	 * thus don't know the file system sector size yet.
+> @@ -2122,7 +2135,7 @@ xfs_alloc_buftarg(
+>  	if (xfs_setsize_buftarg(btp, bdev_logical_block_size(btp->bt_bdev)))
+>  		goto error_free;
+>  	if (xfs_init_buftarg(btp, bdev_logical_block_size(btp->bt_bdev),
+> -			mp->m_super->s_id))
+> +			awu_min, awu_max, mp->m_super->s_id))
+>  		goto error_free;
 >  
-> -	if (!iov_iter_count(dio->submit.iter))
-> +	if (!iov_iter_count(i))
->  		goto out;
+>  	return btp;
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index b1580644501f..3bcd8137d739 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -124,6 +124,8 @@ struct xfs_buftarg {
+>  	struct percpu_counter	bt_io_count;
+>  	struct ratelimit_state	bt_ioerror_rl;
 >  
->  	/*
-> @@ -365,27 +408,46 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  	 * can set up the page vector appropriately for a ZONE_APPEND
->  	 * operation.
->  	 */
-> -	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua);
-> +	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
-> +
-> +	if (atomic) {
-> +		size_t orig_atomic_size;
-> +
-> +		if (!dio->atomic_bio) {
-> +			dio->atomic_bio = iomap_dio_alloc_bio_data(iter,
-> +					dio, orig_nr_pages, bio_opf, pos);
-> +		}
-> +		orig_atomic_size = dio->atomic_bio->bi_iter.bi_size;
-> +
-> +		/*
-> +		 * In case of error, caller takes care of freeing the bio. The
-> +		 * smallest size of atomic write is i_node size, so no need for
+> +	unsigned int		bt_bdev_awu_min, bt_bdev_awu_max;
 
-What is "i_node size"?  Are you referring to i_blocksize?
+Please add a comment here about what these mean.  Not everyone is going
+to know what "awu" abbreviates.
 
-> +		 * tail zeroing out.
-> +		 */
-> +		ret = bio_iov_iter_get_pages(dio->atomic_bio, i);
-> +		if (!ret) {
-> +			copied = dio->atomic_bio->bi_iter.bi_size -
-> +				orig_atomic_size;
-> +		}
+> +
+>  	/* built-in cache, if we're not using the perag one */
+>  	struct xfs_buf_cache	bt_cache[];
+>  };
+> @@ -393,7 +395,7 @@ bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
 >  
-> -	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
-> +		dio->size += copied;
-> +		goto out;
+>  /* for xfs_buf_mem.c only: */
+>  int xfs_init_buftarg(struct xfs_buftarg *btp, size_t logical_sectorsize,
+> -		const char *descr);
+> +		unsigned int awu_min, unsigned int awu_max, const char *descr);
+>  void xfs_destroy_buftarg(struct xfs_buftarg *btp);
+>  
+>  #endif	/* __XFS_BUF_H__ */
+> diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
+> index 9bb2d24de709..af48a8da2f0f 100644
+> --- a/fs/xfs/xfs_buf_mem.c
+> +++ b/fs/xfs/xfs_buf_mem.c
+> @@ -93,7 +93,7 @@ xmbuf_alloc(
+>  	btp->bt_meta_sectorsize = XMBUF_BLOCKSIZE;
+>  	btp->bt_meta_sectormask = XMBUF_BLOCKSIZE - 1;
+>  
+> -	error = xfs_init_buftarg(btp, XMBUF_BLOCKSIZE, descr);
+> +	error = xfs_init_buftarg(btp, XMBUF_BLOCKSIZE, 0, 0, descr);
+>  	if (error)
+>  		goto out_bcache;
+>  
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 336124105c47..cfcb67da12cb 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -321,6 +321,11 @@ static inline bool xfs_inode_has_forcealign(struct xfs_inode *ip)
+>  	return ip->i_diflags2 & XFS_DIFLAG2_FORCEALIGN;
+>  }
+>  
+> +static inline bool xfs_inode_has_atomicwrites(struct xfs_inode *ip)
+> +{
+> +	return ip->i_diflags2 & XFS_DIFLAG2_ATOMICWRITES;
+> +}
+> +
+>  /*
+>   * Decide if this file is a realtime file whose data allocation unit is larger
+>   * than a single filesystem block.
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index a68ec68e5b92..7af2837779e8 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -502,6 +502,49 @@ xfs_ioctl_setattr_forcealign(
+>  	return 0;
+>  }
+>  
+> +
+> +/*
+> + * Forcealign requires a power-of-2 extent size hint.
+> + */
+> +static int
+> +xfs_ioctl_setattr_atomicwrites(
+> +	struct xfs_inode	*ip,
+> +	struct fileattr		*fa)
+> +{
+> +	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	uint32_t		extsize = XFS_B_TO_FSB(mp, fa->fsx_extsize);
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +
+> +	if (!xfs_has_atomicwrites(mp))
+> +		return -EINVAL;
+> +
+> +	if (!(fa->fsx_xflags & FS_XFLAG_FORCEALIGN))
+> +		return -EINVAL;
+> +
+> +	if (!is_power_of_2(extsize))
+> +		return -EINVAL;
+> +
+> +	/* Required to guarantee data block alignment */
+> +	if (mp->m_sb.sb_agblocks % extsize)
+> +		return -EINVAL;
+> +
+> +	/* Requires stripe unit+width be a multiple of extsize */
+> +	if (mp->m_dalign && (mp->m_dalign % extsize))
+> +		return -EINVAL;
+> +
+> +	if (mp->m_swidth && (mp->m_swidth % extsize))
+> +		return -EINVAL;
+> +
+> +	if (target->bt_bdev_awu_min > sbp->sb_blocksize)
+> +		return -EINVAL;
+> +
+> +	if (target->bt_bdev_awu_max < fa->fsx_extsize)
+> +		return -EINVAL;
+> +
+> +	return 0;
+> +}
+> +
+>  static int
+>  xfs_ioctl_setattr_xflags(
+>  	struct xfs_trans	*tp,
+> @@ -511,9 +554,12 @@ xfs_ioctl_setattr_xflags(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	bool			rtflag = (fa->fsx_xflags & FS_XFLAG_REALTIME);
+>  	bool			forcealign = fa->fsx_xflags & FS_XFLAG_FORCEALIGN;
+> +	bool			atomic_writes;
+>  	uint64_t		i_flags2;
+>  	int			error;
+>  
+> +	atomic_writes = fa->fsx_xflags & FS_XFLAG_ATOMICWRITES;
+> +
+>  	/* Can't change RT or forcealign flags if any extents are allocated. */
+>  	if (rtflag != XFS_IS_REALTIME_INODE(ip) ||
+>  	    forcealign != xfs_inode_has_forcealign(ip)) {
+> @@ -554,6 +600,12 @@ xfs_ioctl_setattr_xflags(
+>  			return error;
+>  	}
+>  
+> +	if (atomic_writes) {
+> +		error = xfs_ioctl_setattr_atomicwrites(ip, fa);
+> +		if (error)
+> +			return error;
 > +	}
 > +
-> +	nr_pages = bio_iov_vecs_to_alloc(i, BIO_MAX_VECS);
->  	do {
->  		size_t n;
->  		if (dio->error) {
-> -			iov_iter_revert(dio->submit.iter, copied);
-> +			iov_iter_revert(i, copied);
->  			copied = ret = 0;
->  			goto out;
->  		}
+>  	ip->i_diflags = xfs_flags2diflags(ip, fa->fsx_xflags);
+>  	ip->i_diflags2 = i_flags2;
 >  
-> -		bio = iomap_dio_alloc_bio(iter, dio, nr_pages, bio_opf);
-> +		bio = iomap_dio_alloc_bio_data(iter, dio, nr_pages, bio_opf, pos);
->  		fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
->  					  GFP_KERNEL);
-> -		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
-> -		bio->bi_write_hint = inode->i_write_hint;
-> -		bio->bi_ioprio = dio->iocb->ki_ioprio;
-> -		bio->bi_private = dio;
-> -		bio->bi_end_io = iomap_dio_bio_end_io;
-
-I see two places (here and iomap_dio_zero) that allocate a bio and
-perform some initialization of it.  Can you move the common pieces to
-iomap_dio_alloc_bio instead of adding a iomap_dio_alloc_bio_data
-variant, and move all that to a separate cleanup patch?
-
-> -		ret = bio_iov_iter_get_pages(bio, dio->submit.iter);
-> +		ret = bio_iov_iter_get_pages(bio, i);
->  		if (unlikely(ret)) {
->  			/*
->  			 * We have to stop part way through an IO. We must fall
-> @@ -408,8 +470,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  		dio->size += n;
->  		copied += n;
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 30228fea908d..0c5a3ae3cdaf 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -300,6 +300,7 @@ typedef struct xfs_mount {
+>  #define XFS_FEAT_NREXT64	(1ULL << 26)	/* large extent counters */
+>  #define XFS_FEAT_EXCHANGE_RANGE	(1ULL << 27)	/* exchange range */
+>  #define XFS_FEAT_FORCEALIGN	(1ULL << 28)	/* aligned file data extents */
+> +#define XFS_FEAT_ATOMICWRITES	(1ULL << 29)	/* atomic writes support */
 >  
-> -		nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter,
-> -						 BIO_MAX_VECS);
-> +		nr_pages = bio_iov_vecs_to_alloc(i, BIO_MAX_VECS);
->  		/*
->  		 * We can only poll for single bio I/Os.
->  		 */
-> @@ -435,7 +496,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  	}
->  out:
->  	/* Undo iter limitation to current extent */
-> -	iov_iter_reexpand(dio->submit.iter, orig_count - copied);
-> +	iov_iter_reexpand(i, orig_count - copied);
->  	if (copied)
->  		return copied;
->  	return ret;
-> @@ -555,6 +616,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	struct blk_plug plug;
->  	struct iomap_dio *dio;
->  	loff_t ret = 0;
-> +	size_t orig_count = iov_iter_count(iter);
+>  /* Mount features */
+>  #define XFS_FEAT_NOATTR2	(1ULL << 48)	/* disable attr2 creation */
+> @@ -387,6 +388,7 @@ __XFS_HAS_V4_FEAT(v3inodes, V3INODES)
+>  __XFS_HAS_V4_FEAT(crc, CRC)
+>  __XFS_HAS_V4_FEAT(pquotino, PQUOTINO)
+>  __XFS_HAS_FEAT(forcealign, FORCEALIGN)
+> +__XFS_HAS_FEAT(atomicwrites, ATOMICWRITES)
 >  
->  	trace_iomap_dio_rw_begin(iocb, iter, dio_flags, done_before);
->  
-> @@ -580,6 +642,13 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	if (iocb->ki_flags & IOCB_NOWAIT)
->  		iomi.flags |= IOMAP_NOWAIT;
->  
-> +	if (iocb->ki_flags & IOCB_ATOMIC) {
-> +		if (bio_iov_vecs_to_alloc(iter, INT_MAX) > BIO_MAX_VECS)
-> +			return ERR_PTR(-EINVAL);
-> +		iomi.flags |= IOMAP_ATOMIC;
-> +	}
-> +	dio->atomic_bio = NULL;
-> +
->  	if (iov_iter_rw(iter) == READ) {
->  		/* reads can always complete inline */
->  		dio->flags |= IOMAP_DIO_INLINE_COMP;
-> @@ -665,6 +734,21 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		iocb->ki_flags &= ~IOCB_HIPRI;
+>  /*
+>   * Mount features
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index b52a01b50387..5352b90b2bb6 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1721,6 +1721,18 @@ xfs_fs_fill_super(
+>  		mp->m_features &= ~XFS_FEAT_DISCARD;
 >  	}
 >  
-> +	if (iocb->ki_flags & IOCB_ATOMIC) {
-> +		if (ret >= 0) {
-> +			if (dio->size == orig_count) {
-> +				iomap_dio_submit_bio(&iomi, dio,
-> +					dio->atomic_bio, iocb->ki_pos);
+> +	if (xfs_has_atomicwrites(mp)) {
+> +		if (!xfs_has_forcealign(mp)) {
+> +			xfs_alert(mp,
+> +	"forcealign required for atomicwrites!");
 
-Does this need to do task_io_account_write like regular direct writes
-do?
-
-> +			} else {
-> +				if (dio->atomic_bio)
-> +					bio_put(dio->atomic_bio);
-> +				ret = -EINVAL;
-> +			}
-> +		} else if (dio->atomic_bio) {
-> +			bio_put(dio->atomic_bio);
-
-This ought to null out dio->atomic_bio to prevent accidental UAF.
+This (atomicwrites && !forcealign) ought to be checked in the superblock
+verifier.
 
 --D
 
+> +			error = -EINVAL;
+> +			goto out_filestream_unmount;
 > +		}
+> +
+> +		xfs_warn(mp,
+> +"EXPERIMENTAL atomicwrites feature in use. Use at your own risk!");
 > +	}
 > +
->  	blk_finish_plug(&plug);
+>  	if (xfs_has_reflink(mp)) {
+>  		if (mp->m_sb.sb_rblocks) {
+>  			xfs_alert(mp,
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index f55d650f904a..c416f549e94d 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -160,6 +160,7 @@ struct fsxattr {
+>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+>  /* data extent mappings for regular files must be aligned to extent size hint */
+>  #define FS_XFLAG_FORCEALIGN	0x00020000
+> +#define FS_XFLAG_ATOMICWRITES	0x00040000	/* atomic writes enabled */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
 >  
->  	/*
-> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
-> index 0a991c4ce87d..4118a42cdab0 100644
-> --- a/fs/iomap/trace.h
-> +++ b/fs/iomap/trace.h
-> @@ -98,7 +98,8 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
->  	{ IOMAP_REPORT,		"REPORT" }, \
->  	{ IOMAP_FAULT,		"FAULT" }, \
->  	{ IOMAP_DIRECT,		"DIRECT" }, \
-> -	{ IOMAP_NOWAIT,		"NOWAIT" }
-> +	{ IOMAP_NOWAIT,		"NOWAIT" }, \
-> +	{ IOMAP_ATOMIC,		"ATOMIC" }
->  
->  #define IOMAP_F_FLAGS_STRINGS \
->  	{ IOMAP_F_NEW,		"NEW" }, \
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 6fc1c858013d..8fd949442262 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -178,6 +178,7 @@ struct iomap_folio_ops {
->  #else
->  #define IOMAP_DAX		0
->  #endif /* CONFIG_FS_DAX */
-> +#define IOMAP_ATOMIC		(1 << 9)
->  
->  struct iomap_ops {
->  	/*
+>  /* the read-only stuff doesn't really belong here, but any other place is
 > -- 
 > 2.31.1
 > 
