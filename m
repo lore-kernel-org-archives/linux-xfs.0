@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFB3C187345
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 23:59:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F97B17E006
+	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 23:59:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724371142; cv=none; b=dvRldN5M5QWg0F1FQgoMmNl5q64SiQJHld917JgY2abwwhO0R/YKElC+W1DoNNBirxVZibGCuBqgd+N7n8ABO2Z1mj/tB+VJpTHu+eWbfu523sacg/j4lV04Z+7PUBumwHrK/MzHSMsGZYT6h1mXUp/MRoSpaJZTDOXhEVMLwJo=
+	t=1724371158; cv=none; b=DdwavGGKylnFsI44sqm3MQVkA7u6+bI3tmQPjCpt3qkIfkME9Ln2akWPrx8cl4yk6HN1Jvv3iRq4tzWuVtjai24chi54wJ/kkgMcOlY/gUlm47btrsRDwwimyfZEmxQr8WM9ae15guqW54aG7bhX5MBAPir3y3GNVv/tiMW7ztg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724371142; c=relaxed/simple;
-	bh=+BQri2zCpb77r8VeZq+Qu9Ub0vgDI8VIZ4sZd0FKb0A=;
+	s=arc-20240116; t=1724371158; c=relaxed/simple;
+	bh=5WwgPFYIRHb84m1oEVgwekJWBC0347vAB2EpZAcX8wM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=G0AemMPjbC+bpO8d6wX4HZ5omtCvNNdwe355MdMIBn5KCO8tIYAYTbggWnpUD7VF6hGqdSb02E90ybr1pNHooWYZ9cinSTrmcZ+lH4vEhttb7//14ycMFOJ5CreQuRkAvwS4zXnQcfkY9OAgn8MlKqTy6LWlt4d3pr9iWAZ9AOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JSBiJ9MB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=J3L10vycNwNgg1hOHGEwhXyW9groLFGA6vzn06xo5kuV2OpacagMEg9htGvhCQvfZiuCK9dke9hshbDQIuKEyvCogFOdUryo9aAJ7GquBb/YGYqycI0D8PoDLJCLq9GHV4f2GMHiZWJcRNhc2hm0GzruhWsrS2gHEuVJIOaS6TY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h6PLvlDp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JSBiJ9MB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FC65C4AF0B;
-	Thu, 22 Aug 2024 23:59:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h6PLvlDp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E70F3C32782;
+	Thu, 22 Aug 2024 23:59:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724371142;
-	bh=+BQri2zCpb77r8VeZq+Qu9Ub0vgDI8VIZ4sZd0FKb0A=;
+	s=k20201202; t=1724371158;
+	bh=5WwgPFYIRHb84m1oEVgwekJWBC0347vAB2EpZAcX8wM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=JSBiJ9MB+753SOdXPc4sHZwYAe4BdIPOISyvD9sT+utmSIyFZGT2kCYaLWWyobAPi
-	 9MzXEm68LQT/WCpJraHmR2gR2bG9uChCj5Vo08inoCKXaOXEO6G+MOkmzv4G4+x9i4
-	 WMw/rifMvvz2EWHjHI/u54vQZ7SpWDi1Zp8swzCXzTRQNaSGuHkQTOrT1QDvBOU+3P
-	 IjyO/9BcKkaGFVfOfrqbE3KEJi/YONAliu6a5sekYJ9CvXNp37qxjOdNVdjomBxJX8
-	 T9MW/2VpjMsVWx9sKmdYJT9ofQztvHNjhEc1ssCMkCSYdNR42tqK9hX4joItMmjlHb
-	 bO0lghlfpFp1A==
-Date: Thu, 22 Aug 2024 16:59:01 -0700
-Subject: [PATCH 1/9] xfs: fix di_onlink checking for V1/V2 inodes
+	b=h6PLvlDpqmd8O+hKPEKXBZxeplloIXgxYeQPai/h7Lc3GOtQs3N7AoVYEalDjO5Z8
+	 QVsiesRbBMFmq6Y6zakzVN1gSo/WRvHauVbqGcoavG/pRXEmtivdY4CS6XBADaJeE3
+	 FVdsJ3mN1+vorkpKwfA2A4lF4RYObUdVenKawiUwCAvEV+r3kpPw96f3uW5SxSUacx
+	 tkZgKah+ZheBKDwytgArAiOVaAlXszpHJhxpJJ0RULTD1VuvVodOU7k/I+3+udPSZh
+	 3PdA/t+rN4DM5Ux0n+LHRBI0FShmTRmx27IQcXSuINuNx32wGmWltAQVh9ByJsF6eC
+	 Gz3UVYNMhOxEQ==
+Date: Thu, 22 Aug 2024 16:59:17 -0700
+Subject: [PATCH 2/9] xfs: fix folio dirtying for XFILE_ALLOC callers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: kjell.m.randa@gmail.com, Christoph Hellwig <hch@lst.de>, hch@lst.de,
+Cc: willy@infradead.org, Christoph Hellwig <hch@lst.de>, hch@lst.de,
  linux-xfs@vger.kernel.org
-Message-ID: <172437083768.56860.15670987236466728044.stgit@frogsfrogsfrogs>
+Message-ID: <172437083785.56860.5451255060419862713.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs>
 References: <172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,73 +47,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-"KjellR" complained on IRC that an old V4 filesystem suddenly stopped
-mounting after upgrading from 6.9.11 to 6.10.3, with the following splat
-when trying to read the rt bitmap inode:
+willy pointed out that folio_mark_dirty is the correct function to use
+to mark an xfile folio dirty because it calls out to the mapping's aops
+to mark it dirty.  For tmpfs this likely doesn't matter much since it
+currently uses nop_dirty_folio, but let's use the abstractions properly.
 
-00000000: 49 4e 80 00 01 02 00 01 00 00 00 00 00 00 00 00  IN..............
-00000010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000020: 00 00 00 00 00 00 00 00 43 d2 a9 da 21 0f d6 30  ........C...!..0
-00000030: 43 d2 a9 da 21 0f d6 30 00 00 00 00 00 00 00 00  C...!..0........
-00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000050: 00 00 00 02 00 00 00 00 00 00 00 04 00 00 00 00  ................
-00000060: ff ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-
-As Dave Chinner points out, this is a V1 inode with both di_onlink and
-di_nlink set to 1 and di_flushiter == 0.  In other words, this inode was
-formatted this way by mkfs and hasn't been touched since then.
-
-Back in the old days of xfsprogs 3.2.3, I observed that libxfs_ialloc
-would set di_nlink, but if the filesystem didn't have NLINK, it would
-then set di_version = 1.  libxfs_iflush_int later sees the V1 inode and
-copies the value of di_nlink to di_onlink without zeroing di_onlink.
-
-Eventually this filesystem must have been upgraded to support NLINK
-because 6.10 doesn't support !NLINK filesystems, which is how we tripped
-over this old behavior.  The filesystem doesn't have a realtime section,
-so that's why the rtbitmap inode has never been touched.
-
-Fix this by removing the di_onlink/di_nlink checking for all V1/V2
-inodes because this is a muddy mess.  The V3 inode handling code has
-always supported NLINK and written di_onlink==0 so keep that check.
-The removal of the V1 inode handling code when we dropped support for
-!NLINK obscured this old behavior.
-
-Reported-by: kjell.m.randa@gmail.com
-Fixes: 40cb8613d612 ("xfs: check unused nlink fields in the ondisk inode")
+Reported-by: willy@infradead.org
+Fixes: 6907e3c00a40 ("xfs: add file_{get,put}_folio")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/xfile.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 513b50da6215f..79babeac9d754 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -514,12 +514,18 @@ xfs_dinode_verify(
- 			return __this_address;
- 	}
+diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
+index d848222f802ba..9b5d98fe1f8ab 100644
+--- a/fs/xfs/scrub/xfile.c
++++ b/fs/xfs/scrub/xfile.c
+@@ -293,7 +293,7 @@ xfile_get_folio(
+ 	 * (potentially last) reference in xfile_put_folio.
+ 	 */
+ 	if (flags & XFILE_ALLOC)
+-		folio_set_dirty(folio);
++		folio_mark_dirty(folio);
+ 	return folio;
+ }
  
--	if (dip->di_version > 1) {
-+	/*
-+	 * Historical note: xfsprogs in the 3.2 era set up its incore inodes to
-+	 * have di_nlink track the link count, even if the actual filesystem
-+	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
-+	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
-+	 * the the incore di_nlink value, which is why we cannot check for
-+	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
-+	 * di_onlink==0, so we can check that.
-+	 */
-+	if (dip->di_version >= 2) {
- 		if (dip->di_onlink)
- 			return __this_address;
--	} else {
--		if (dip->di_nlink)
--			return __this_address;
- 	}
- 
- 	/* don't allow invalid i_size */
 
