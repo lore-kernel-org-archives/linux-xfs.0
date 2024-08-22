@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A28117E006
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 23:58:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFB3C187345
+	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 23:59:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724371127; cv=none; b=TGcjX4Mgj4n0JkgBEWfBjcFs8eZA9UNLK6B85nC6dRFWZcqEOgS82zWGf6mUE7Mf+xm1X8vs1POoGwvbpOfp1bB/IcfYbMqjh5UU9Pt0EDPEixmeAeXAPJ1N3seL1m95MOcbHfqyKp/PrglDbYiiuI/IY6quyqBfB+0InGvswBs=
+	t=1724371142; cv=none; b=dvRldN5M5QWg0F1FQgoMmNl5q64SiQJHld917JgY2abwwhO0R/YKElC+W1DoNNBirxVZibGCuBqgd+N7n8ABO2Z1mj/tB+VJpTHu+eWbfu523sacg/j4lV04Z+7PUBumwHrK/MzHSMsGZYT6h1mXUp/MRoSpaJZTDOXhEVMLwJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724371127; c=relaxed/simple;
-	bh=4MjxV7sLZjrShxl2uTE5mXEZhjILujqsK6BDH3lqUN4=;
+	s=arc-20240116; t=1724371142; c=relaxed/simple;
+	bh=+BQri2zCpb77r8VeZq+Qu9Ub0vgDI8VIZ4sZd0FKb0A=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=seQe3wMl+SPXfRDUjoFa8xhNE/uuYt5QlmLziOjjExVQCPQDXBGFF8tJYKv6ng+7VHTjSPkT7wiUJy7Vs+po/o7hmy8J6ka2HXcuYwV6S3t4bDc8jpg5RwPNd5D+PAAWcNCZGTB8LCOVmG3dobK7Nb3Y4i8EbPgACnWZiEm/IhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BtJ7XpuP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=G0AemMPjbC+bpO8d6wX4HZ5omtCvNNdwe355MdMIBn5KCO8tIYAYTbggWnpUD7VF6hGqdSb02E90ybr1pNHooWYZ9cinSTrmcZ+lH4vEhttb7//14ycMFOJ5CreQuRkAvwS4zXnQcfkY9OAgn8MlKqTy6LWlt4d3pr9iWAZ9AOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JSBiJ9MB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BtJ7XpuP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD02AC32782;
-	Thu, 22 Aug 2024 23:58:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JSBiJ9MB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FC65C4AF0B;
+	Thu, 22 Aug 2024 23:59:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724371126;
-	bh=4MjxV7sLZjrShxl2uTE5mXEZhjILujqsK6BDH3lqUN4=;
+	s=k20201202; t=1724371142;
+	bh=+BQri2zCpb77r8VeZq+Qu9Ub0vgDI8VIZ4sZd0FKb0A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BtJ7XpuPmyRD6yM+J9g8+TAmwePaNQ8ImEKKe9LDbkDo9Nny/Pm4wJXVB8477k9CE
-	 KBh5xxz0yUY3Rx55MUATgX0gLDNmvzn/QSJt3sizD1Intb+n8y6ZY7/qGobXSYaD6B
-	 NkbmquYI2npMqip4iVpoOhGBu90QeHO3OdrEkvC0TIlz00wjIOH73DARAyI4fIBJB6
-	 LsgzcF4kKa5Wj4EUxJBs58gPn1VfUOMpC/W/0aq2fd/PR2d1iQyXKxMcsXUESfijyR
-	 zeUbP5U9XsAOKu1zW3F0WOXLELvxFeaElqbzpdXtLDlsti8AMsntSCQJDjGdMeuTrU
-	 SyJV05js9w/UQ==
-Date: Thu, 22 Aug 2024 16:58:46 -0700
-Subject: [PATCHSET v4.0 10/10] xfs: store quota files in the metadir
+	b=JSBiJ9MB+753SOdXPc4sHZwYAe4BdIPOISyvD9sT+utmSIyFZGT2kCYaLWWyobAPi
+	 9MzXEm68LQT/WCpJraHmR2gR2bG9uChCj5Vo08inoCKXaOXEO6G+MOkmzv4G4+x9i4
+	 WMw/rifMvvz2EWHjHI/u54vQZ7SpWDi1Zp8swzCXzTRQNaSGuHkQTOrT1QDvBOU+3P
+	 IjyO/9BcKkaGFVfOfrqbE3KEJi/YONAliu6a5sekYJ9CvXNp37qxjOdNVdjomBxJX8
+	 T9MW/2VpjMsVWx9sKmdYJT9ofQztvHNjhEc1ssCMkCSYdNR42tqK9hX4joItMmjlHb
+	 bO0lghlfpFp1A==
+Date: Thu, 22 Aug 2024 16:59:01 -0700
+Subject: [PATCH 1/9] xfs: fix di_onlink checking for V1/V2 inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437089342.61495.12289421749855228771.stgit@frogsfrogsfrogs>
-In-Reply-To: <20240822235230.GJ6043@frogsfrogsfrogs>
-References: <20240822235230.GJ6043@frogsfrogsfrogs>
+Cc: kjell.m.randa@gmail.com, Christoph Hellwig <hch@lst.de>, hch@lst.de,
+ linux-xfs@vger.kernel.org
+Message-ID: <172437083768.56860.15670987236466728044.stgit@frogsfrogsfrogs>
+In-Reply-To: <172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs>
+References: <172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -44,50 +45,75 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Store the quota files in the metadata directory tree instead of the superblock.
-Since we're introducing a new incompat feature flag, let's also make the mount
-process bring up quotas in whatever state they were when the filesystem was
-last unmounted, instead of requiring sysadmins to remember that themselves.
+"KjellR" complained on IRC that an old V4 filesystem suddenly stopped
+mounting after upgrading from 6.9.11 to 6.10.3, with the following splat
+when trying to read the rt bitmap inode:
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+00000000: 49 4e 80 00 01 02 00 01 00 00 00 00 00 00 00 00  IN..............
+00000010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 43 d2 a9 da 21 0f d6 30  ........C...!..0
+00000030: 43 d2 a9 da 21 0f d6 30 00 00 00 00 00 00 00 00  C...!..0........
+00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000050: 00 00 00 02 00 00 00 00 00 00 00 04 00 00 00 00  ................
+00000060: ff ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
 
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
+As Dave Chinner points out, this is a V1 inode with both di_onlink and
+di_nlink set to 1 and di_flushiter == 0.  In other words, this inode was
+formatted this way by mkfs and hasn't been touched since then.
 
---D
+Back in the old days of xfsprogs 3.2.3, I observed that libxfs_ialloc
+would set di_nlink, but if the filesystem didn't have NLINK, it would
+then set di_version = 1.  libxfs_iflush_int later sees the V1 inode and
+copies the value of di_nlink to di_onlink without zeroing di_onlink.
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=metadir-quotas
+Eventually this filesystem must have been upgraded to support NLINK
+because 6.10 doesn't support !NLINK filesystems, which is how we tripped
+over this old behavior.  The filesystem doesn't have a realtime section,
+so that's why the rtbitmap inode has never been touched.
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadir-quotas
+Fix this by removing the di_onlink/di_nlink checking for all V1/V2
+inodes because this is a muddy mess.  The V3 inode handling code has
+always supported NLINK and written di_onlink==0 so keep that check.
+The removal of the V1 inode handling code when we dropped support for
+!NLINK obscured this old behavior.
 
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=metadir-quotas
+Reported-by: kjell.m.randa@gmail.com
+Fixes: 40cb8613d612 ("xfs: check unused nlink fields in the ondisk inode")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * xfs: refactor xfs_qm_destroy_quotainos
- * xfs: use metadir for quota inodes
- * xfs: scrub quota file metapaths
- * xfs: persist quota flags with metadir
- * xfs: update sb field checks when metadir is turned on
- * xfs: enable metadata directory feature
----
- fs/xfs/libxfs/xfs_dquot_buf.c  |  190 ++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_format.h     |    3 
- fs/xfs/libxfs/xfs_fs.h         |    6 +
- fs/xfs/libxfs/xfs_quota_defs.h |   43 +++++++
- fs/xfs/libxfs/xfs_sb.c         |    1 
- fs/xfs/scrub/agheader.c        |   36 ++++--
- fs/xfs/scrub/metapath.c        |   76 ++++++++++++
- fs/xfs/xfs_mount.c             |   15 ++
- fs/xfs/xfs_mount.h             |    6 +
- fs/xfs/xfs_qm.c                |  250 +++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_qm_bhv.c            |   18 +++
- fs/xfs/xfs_quota.h             |    2 
- fs/xfs/xfs_super.c             |   22 ++++
- 13 files changed, 597 insertions(+), 71 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 513b50da6215f..79babeac9d754 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -514,12 +514,18 @@ xfs_dinode_verify(
+ 			return __this_address;
+ 	}
+ 
+-	if (dip->di_version > 1) {
++	/*
++	 * Historical note: xfsprogs in the 3.2 era set up its incore inodes to
++	 * have di_nlink track the link count, even if the actual filesystem
++	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
++	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
++	 * the the incore di_nlink value, which is why we cannot check for
++	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
++	 * di_onlink==0, so we can check that.
++	 */
++	if (dip->di_version >= 2) {
+ 		if (dip->di_onlink)
+ 			return __this_address;
+-	} else {
+-		if (dip->di_nlink)
+-			return __this_address;
+ 	}
+ 
+ 	/* don't allow invalid i_size */
 
