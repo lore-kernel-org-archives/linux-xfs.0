@@ -1,171 +1,109 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 325DC1CC892;
-	Thu, 22 Aug 2024 13:56:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D7F1CC151
+	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 14:43:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724334982; cv=none; b=CLwWIy6PWA2TuhgFgOaEVZsov0FBthQBeUB7FURjpLKj3OJP64rIBYPSIvCLV8ZlVu2OtwPcBlEMHFh7WVlrkACsPLn6nx8Mir6u57FV502apixQps3hTs/pOmfAl+8UnvffCJbcKq4qAgq9olVLy/kqqR2Bz8cyzFHaL+myBV8=
+	t=1724337813; cv=none; b=b3dNBKF/gByKd6Z7+dKchXJdB2amWdI+RH+kcbX3Zwa0fOtd1tS4uFcdTy3cACp+XkwCGFZvIvHRBJV1VSHrygrvBczYPmrx7hoE9l7Yt7o2Nugr70/priZGqOUjNqX1x6NxVWPSbpC+jgp592HGLahkkUMCTWb9LkdCEltOutk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724334982; c=relaxed/simple;
-	bh=eiTLr+kGOaPfZuXR78HsGTHQ0hqu8uBD3fLLCW65UBA=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=KaPPXvSjqFWzP2uvcVnasB5OFQ3bMa7jrhepi5i7sLqbK0DysjQuQplb92SV8tv74eLUxAD6iiTzTBu4bGEBDuaeRKR95lgRe8vG+YNIhoiQpkHwctgxYoz9+tl1ZNWppoYZoRKZjE/C/yqjdywGUh+HSaS/s57/hAaFrXehcsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=Csyw9loc; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1724337813; c=relaxed/simple;
+	bh=CnskYCyzEZqOP6saLcifTRlLp+k961zQ/ECKT1nG6fA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qMzLv4Johs7Wwtc9XDsjpVKHEN1+BFSUFoCDty1NczOiMlKkJh7cDhcdKR3KlrFHbstSZLvgrfAMck+6/O08GnS8NFO2Sd4TGem4vaXHo6OtCe+wGI16SzEyn9AI6xxpOreShYBVUpqWl98Phiy2lCl+NtIp80c/ofvqln9tAyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EQmfffJz; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="Csyw9loc"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4WqPjM3plkz9sZS;
-	Thu, 22 Aug 2024 15:50:31 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1724334631;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EQmfffJz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1724337810;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding;
-	bh=7pRMKX2rOPE9Dpzaf39cm+nvGAfhyyeS/+UDEWMvToI=;
-	b=Csyw9locQT7xz4yaIBnXECXhUPSNMWknIij06oRMHOESEGG5Dh5nFug0EI3DHMUcij2SWK
-	pmM91iH0Z38wJR/gYdmTPX6KC8FxHPNmh4AkzwRbe9jqCtzygsaA0iFOKoeueQ1r1hxt/2
-	TTBLM6d0NjSjAyRyynp1xniDeVMMrLgz/k5SCFqsocaEBIcfkD7iqVA7v6j2bljwF0TWNf
-	BfTaxBZEQo0k76TJAv8qJ4oyYCqBMt6jfzabcSOOKl1Al5h5LSDAMPjHBLUliRiKcU04TM
-	ZQLRTaNl0ryfhhVZprYrfmZS3Hsxd1MLBuWEWhTsgBxwmlGrwqEdtWfSXGpdag==
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: brauner@kernel.org,
-	akpm@linux-foundation.org
-Cc: chandan.babu@oracle.com,
-	linux-fsdevel@vger.kernel.org,
+	bh=OU4n9rOOEq1xDdw7y5sS73yDKdKzZct4WLyBIkmSXng=;
+	b=EQmfffJzffCDEoQTQp+9BiaPfFbUMvG/+HBbpFxonmYt5k5iLJFyO6qvzZGMjuV5fCuJma
+	7CwSCl09mitQsuwW66fjsruAKXoGSKQs9UxKlkTh3yXKSpMfOSKzLjibQhkG/fUDG6B+8B
+	wwBsZ0rWMReVNnSFJDvDBTOewx++TwY=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-610-utNSIiw1NNaHLzwfZgZpVQ-1; Thu,
+ 22 Aug 2024 10:43:27 -0400
+X-MC-Unique: utNSIiw1NNaHLzwfZgZpVQ-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C28311955F42;
+	Thu, 22 Aug 2024 14:43:25 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.33.147])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 76A0A19560A3;
+	Thu, 22 Aug 2024 14:43:24 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
 	djwong@kernel.org,
-	hare@suse.de,
-	gost.dev@samsung.com,
-	linux-xfs@vger.kernel.org,
-	kernel@pankajraghav.com,
-	hch@lst.de,
-	david@fromorbit.com,
-	Zi Yan <ziy@nvidia.com>,
-	yang@os.amperecomputing.com,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	willy@infradead.org,
-	john.g.garry@oracle.com,
-	cl@os.amperecomputing.com,
-	p.raghav@samsung.com,
-	mcgrof@kernel.org,
-	ryan.roberts@arm.com
-Subject: [PATCH v13 00/10] enable bs > ps in XFS
-Date: Thu, 22 Aug 2024 15:50:08 +0200
-Message-ID: <20240822135018.1931258-1-kernel@pankajraghav.com>
-Content-Type: text/plain; charset="utf-8"
+	josef@toxicpanda.com,
+	david@fromorbit.com
+Subject: [PATCH 0/3] fstests/fsx: test coverage for eof zeroing
+Date: Thu, 22 Aug 2024 10:44:19 -0400
+Message-ID: <20240822144422.188462-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4WqPjM3plkz9sZS
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+Hi all,
 
-This is the 13th version of the series that enables block size > page size
-(Large Block Size) experimental support in XFS. Please consider this for
-the inclusion in 6.12.
+One of the questions that came up on the last round of review on dealing
+with the iomap zeroing problem [1] was having some proper test coverage.
+When looking back at some of my custom tests, I realized some relied on
+delay injection hacks, and otherwise felt like a random collection of
+command sequences and whatnot that were probably somewhat duplicative.
 
-The context and motivation can be seen in cover letter of the RFC v1 [0].
-We also recorded a talk about this effort at LPC [1], if someone would
-like more context on this effort.
+Rather than adding fstests that continuously add random sequences of
+xfs_io commands to try and test for zeroing problems, I started playing
+around with fsx and came up with this series. In a nutshell, this does
+intentional post-eof writes (to the eof page, via mapped writes) for
+operations that are otherwise expected to perform partial page zeroing.
+This allows the existing post-eof and unexpected data checks in fsx to
+detect problems as normal. In my initial tests, this reproduces both the
+truncate (already fixed) and write extension problems related to iomap
+zero range fairly quickly on XFS.
 
-Thanks to David Howells, the page cache changes have also been tested on
-top of AFS[2] with mapping_min_order set.
+It also produces zeroing issues on other non-iomap filesystems (ext4,
+btrfs, bcachefs), which I suspect is something that probably needs to be
+fixed on a per-fs basis. To test fsx itself, this so far seems to run
+reliably longer term on XFS with the corresponding iomap zero range fix
+in place.
 
-A lot of emphasis has been put on testing using kdevops, starting with an XFS
-baseline [3]. The testing has been split into regression and progression.
+Patch 1 is refactoring prep, patch 2 enables the eof data write
+mechanism, and patch 3 adds a new fstests test to use it. The test
+currently only supports XFS due to the aforementioned issues, but the
+idea is to remove the restriction as other fs' are fixed. Thoughts,
+reviews, flames appreciated.
 
-Regression testing:
-In regression testing, we ran the whole test suite to check for regressions on
-existing profiles due to the page cache changes.
+Brian
 
-I also ran split_huge_page_test selftest on XFS filesystem to check for
-huge page splits in min order chunks is done correctly.
+[1] https://lore.kernel.org/linux-fsdevel/20240718130212.23905-1-bfoster@redhat.com/
 
-No regressions were found with these patches added on top.
+Brian Foster (3):
+  fsx: factor out a file size update helper
+  fsx: support eof page pollution for eof zeroing test coverage
+  generic: test to run fsx eof pollution
 
-Progression testing:
-For progression testing, we tested for 8k, 16k, 32k and 64k block sizes.  To
-compare it with existing support, an ARM VM with 64k base page system (without
-our patches) was used as a reference to check for actual failures due to LBS
-support in a 4k base page size system.
+ ltp/fsx.c             | 129 +++++++++++++++++++++++++++++++-----------
+ tests/generic/362     |  27 +++++++++
+ tests/generic/362.out |   2 +
+ 3 files changed, 126 insertions(+), 32 deletions(-)
+ create mode 100755 tests/generic/362
+ create mode 100644 tests/generic/362.out
 
-No new failures were found with the LBS support.
-
-We've done some preliminary performance tests with fio on XFS on 4k block size
-against pmem and NVMe with buffered IO and Direct IO on vanilla Vs + these
-patches applied, and detected no regressions.
-
-We ran sysbench on postgres and mysql for several hours on LBS XFS
-without any issues.
-
-We also wrote an eBPF tool called blkalgn [5] to see if IO sent to the device
-is aligned and at least filesystem block size in length.
-
-For those who want this in a git tree we have this up on a kdevops
-large-block-minorder-for-next-v13 tag [6].
-
-[0] https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
-[1] https://www.youtube.com/watch?v=ar72r5Xf7x4
-[2] https://lore.kernel.org/linux-mm/3792765.1724196264@warthog.procyon.org.uk/
-[3] https://github.com/linux-kdevops/kdevops/blob/master/docs/xfs-bugs.md
-489 non-critical issues and 55 critical issues. We've determined and reported
-that the 55 critical issues have all fall into 5 common  XFS asserts or hung
-tasks  and 2 memory management asserts.
-[4] https://github.com/linux-kdevops/fstests/tree/lbs-fixes
-[5] https://github.com/iovisor/bcc/pull/4813
-[6] https://github.com/linux-kdevops/linux/
-[7] https://lore.kernel.org/linux-kernel/Zl20pc-YlIWCSy6Z@casper.infradead.org/#t
-
-Changes since v12:
-- Fixed the issue of masking the wrong bits in PATCH 1.
-- Collected Tested-by from David Howells.
-
-Dave Chinner (1):
-  xfs: use kvmalloc for xattr buffers
-
-Luis Chamberlain (1):
-  mm: split a folio in minimum folio order chunks
-
-Matthew Wilcox (Oracle) (1):
-  fs: Allow fine-grained control of folio sizes
-
-Pankaj Raghav (7):
-  filemap: allocate mapping_min_order folios in the page cache
-  readahead: allocate folios with mapping_min_order in readahead
-  filemap: cap PTE range to be created to allowed zero fill in
-    folio_map_range()
-  iomap: fix iomap_dio_zero() for fs bs > system page size
-  xfs: expose block size in stat
-  xfs: make the calculation generic in xfs_sb_validate_fsb_count()
-  xfs: enable block size larger than page size support
-
- fs/iomap/buffered-io.c        |   4 +-
- fs/iomap/direct-io.c          |  45 +++++++++++--
- fs/xfs/libxfs/xfs_attr_leaf.c |  15 ++---
- fs/xfs/libxfs/xfs_ialloc.c    |   5 ++
- fs/xfs/libxfs/xfs_shared.h    |   3 +
- fs/xfs/xfs_icache.c           |   6 +-
- fs/xfs/xfs_iops.c             |   2 +-
- fs/xfs/xfs_mount.c            |   8 ++-
- fs/xfs/xfs_super.c            |  28 +++++---
- include/linux/huge_mm.h       |  14 ++--
- include/linux/pagemap.h       | 123 ++++++++++++++++++++++++++++++----
- mm/filemap.c                  |  36 ++++++----
- mm/huge_memory.c              |  60 +++++++++++++++--
- mm/readahead.c                |  83 +++++++++++++++++------
- 14 files changed, 347 insertions(+), 85 deletions(-)
-
-
-base-commit: eb8c5ca373cbb018a84eb4db25c863302c9b6314
 -- 
-2.44.1
+2.45.0
 
