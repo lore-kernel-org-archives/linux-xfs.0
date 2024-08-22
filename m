@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A890017E006
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 23:57:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9480A17E006
+	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 23:57:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724371048; cv=none; b=Sb9s2rXVr86PIMi65uhDQ4DSChPFUXMIkpPgxj+CM3j8e6F2FHWDWv6DtdrtWpXlYyWE6aowRQuiT053fzUU7B3KYiPYuP5ycsrOevOAQqzrAnoc8w1jZxMXglkosqTu2RJQjOt15Yx5hPzAFAMkowLvaAE3XiCRs88aPO3Wo8o=
+	t=1724371064; cv=none; b=pYChnuhUReEJmXvuNTLsv0p/zBcguw6Q1t54lU4UN6gFV8nj56IgmdH4noeM9UvI6vzEZ51ac+nCYxIqMRmhCmbLICVRaYnxpIqUluy5KluaO9M1s89ICBXNg5WMF+EtyboIfcgKxbDnfGXhc0zeVGyBf14rVP4UJIr8UC3lpwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724371048; c=relaxed/simple;
-	bh=nROqhroadig1JPxzJpWBPvjxD8hhHKckim22KcaYtC4=;
+	s=arc-20240116; t=1724371064; c=relaxed/simple;
+	bh=iJX8pD1K+wawZm0D+nFyDQMN8mNLDmxcOAJEoWHQVY0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pS1BLH27Y0tvco9n/LmuT0qqPhPsfq8kTmk/QNHViTIjTrgUqfpPzre8T/wF6EZYJP/aZSlte2mvYt1Cf9m4xnJ6z1gLXvMLvyNuV4TuKv0pCZWHKyJdqPSLLjhUwI+s5GtbS4UkWWldsA1qonyC63ag8E9rLtFXIp0IePyAbkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K/M/Dpt4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=LGVhehK0sTkpnaRZNKF4sfFIUIWuf2eOyTc6EjXCrHoe6Cnx3h8ZT1qsTK57KzIINFAxFN1N3Rkmqfgv6PcmX/DjayaOjXiDrbL7CppuSfi4MJXr1hSMrzKLkAc1aXZvdF8HZzeUNvHIlwopliITvxa0wOHjOVUKycQ9scXELN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VkdwHzVz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K/M/Dpt4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BC0CC32782;
-	Thu, 22 Aug 2024 23:57:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VkdwHzVz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C2A6C32782;
+	Thu, 22 Aug 2024 23:57:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724371048;
-	bh=nROqhroadig1JPxzJpWBPvjxD8hhHKckim22KcaYtC4=;
+	s=k20201202; t=1724371064;
+	bh=iJX8pD1K+wawZm0D+nFyDQMN8mNLDmxcOAJEoWHQVY0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=K/M/Dpt4fJZ7dnQCKhM/5sQ2FL5UTykFh20Gg60Ixojp/yHoaSf+emikq/t4qvaTM
-	 F7xDtTmIYT1Uui32ODtGI5AkyjMQYvVi/ogvQ3e4My87deqRDEFresa5vV/Y5Qajgu
-	 9l/IL4VMiBRceZleOWJ+DSwCmlB1o2GKgLCjPf+xxdOPwxDZX/9JYVeX8ExHkrEAry
-	 lT0g7hamrIRgClh2aOGFDiUmHA1ist2Ea9F3H7GyHFTRDIBR9g0pirAvTUhPRqwCxy
-	 FM6EN1EQ4XoqVn3jbnRKTwDG8L081ImEiw6QCOlapzKEAnBur1dZQtq/THaycYhFJ/
-	 NTqKOufWHMz9g==
-Date: Thu, 22 Aug 2024 16:57:28 -0700
-Subject: [PATCHSET v4.0 05/10] xfs: clean up the rtbitmap code
+	b=VkdwHzVzpDUVJh5apdyx1etD0o56UpVF2mgP1cEnWw2IISvSsMFEMxfFnEqdU7bfp
+	 Od/LtiDLhPYN45cN+AKC7EKM971YrA0UWTGKYioYQiH7MfkcwQFxECsMr6wLAMnaBW
+	 TsZvlYyIVUCK9lvuMICB1ZMWnSdWE4Ijto4xusUIPWc2Dp7K3kmuOHfCf1b8bJu9y/
+	 a2vnGAkCZqSnMIN7oi7jiatr2QkZoDeWebr6pLD/RDhhzKJolbeayV0iKKv/vp908N
+	 tNBlvWcDZtI1CMWF7utIAqEHh8b+Id0cKQpugpPz7jYvCeHkF4cbFGgYyhjkzxvVqZ
+	 xqbsQQnOrtzfA==
+Date: Thu, 22 Aug 2024 16:57:43 -0700
+Subject: [PATCHSET v4.0 06/10] xfs: fixes and cleanups for the realtime
+ allocator
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437085987.58604.7735951538617329546.stgit@frogsfrogsfrogs>
+Message-ID: <172437086590.59070.9398644715198875909.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240822235230.GJ6043@frogsfrogsfrogs>
 References: <20240822235230.GJ6043@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,8 +47,13 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Here are some cleanups and reorganization of the realtime bitmap code to share
-more of that code between userspace and the kernel.
+While I was reviewing how to integrate realtime allocation groups with
+the rt allocator, I noticed several bugs in the existing allocation code
+with regards to calculating the maximum range of rtx to scan for free
+space.  This series fixes those range bugs and cleans up a few things
+too.
+
+I also added a few cleanups from Christoph.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,31 +64,29 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=rtbitmap-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=rtalloc-fixes
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=rtbitmap-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=rtalloc-fixes
 ---
 Commits in this patchset:
- * xfs: remove xfs_validate_rtextents
- * xfs: factor out a xfs_validate_rt_geometry helper
- * xfs: make the RT rsum_cache mandatory
- * xfs: remove the limit argument to xfs_rtfind_back
- * xfs: assert a valid limit in xfs_rtfind_forw
- * xfs: add bounds checking to xfs_rt{bitmap,summary}_read_buf
- * xfs: cleanup the calling convention for xfs_rtpick_extent
- * xfs: push the calls to xfs_rtallocate_range out to xfs_bmap_rtalloc
- * xfs: factor out a xfs_growfs_rt_bmblock helper
- * xfs: factor out a xfs_last_rt_bmblock helper
- * xfs: factor out rtbitmap/summary initialization helpers
- * xfs: push transaction join out of xfs_rtbitmap_lock and xfs_rtgroup_lock
+ * xfs: use the recalculated transaction reservation in xfs_growfs_rt_bmblock
+ * xfs: ensure rtx mask/shift are correct after growfs
+ * xfs: don't return too-short extents from xfs_rtallocate_extent_block
+ * xfs: don't scan off the end of the rt volume in xfs_rtallocate_extent_block
+ * xfs: refactor aligning bestlen to prod
+ * xfs: clean up xfs_rtallocate_extent_exact a bit
+ * xfs: reduce excessive clamping of maxlen in xfs_rtallocate_extent_near
+ * xfs: fix broken variable-sized allocation detection in xfs_rtallocate_extent_block
+ * xfs: remove xfs_rtb_to_rtxrem
+ * xfs: simplify xfs_rtalloc_query_range
 ---
- fs/xfs/libxfs/xfs_bmap.c     |    3 
- fs/xfs/libxfs/xfs_rtbitmap.c |  192 ++++++++++++++-
- fs/xfs/libxfs/xfs_rtbitmap.h |   33 +--
- fs/xfs/libxfs/xfs_sb.c       |   64 +++--
- fs/xfs/libxfs/xfs_sb.h       |    1 
- fs/xfs/libxfs/xfs_types.h    |   12 -
- fs/xfs/xfs_rtalloc.c         |  535 +++++++++++++++++-------------------------
- 7 files changed, 438 insertions(+), 402 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |   51 ++++++---------
+ fs/xfs/libxfs/xfs_rtbitmap.h |   21 ------
+ fs/xfs/libxfs/xfs_sb.c       |   12 +++
+ fs/xfs/libxfs/xfs_sb.h       |    2 +
+ fs/xfs/xfs_discard.c         |   15 ++--
+ fs/xfs/xfs_fsmap.c           |   11 +--
+ fs/xfs/xfs_rtalloc.c         |  145 +++++++++++++++++++++++-------------------
+ 7 files changed, 124 insertions(+), 133 deletions(-)
 
