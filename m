@@ -1,51 +1,38 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 455C2171A7;
-	Thu, 22 Aug 2024 21:23:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407F618756E
+	for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2024 23:52:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724361832; cv=none; b=G5VBo4PUFP6e9XPguWDTkvStNCnVUWVytFESe3cpR7TxL9z30ac5vNqJYbByFNiW2f8W4WEJ3rtrfDh82LTk2vUBEZEQ09eA8B+RCqc+NwHkW/emH9GqFkovU6CUaAHOE3xTkGFEwIqH1hLvgJASsdO8VaZ+shUpiNDkPSFjCpg=
+	t=1724370751; cv=none; b=aQyyoi2p29CbIPaqyDxN7Rbh08yCVGPE2sBOe3uEEu8bnltgHSY7cFNOqBxQwss0IpkOZjBwTzXOCKrxTGOh0hK9a8XX4FoWuhRxL7YARv1u+fiUGhj/+6WSHUQWPlxIc2xxnaXJ5cmMh7eSe7apEkaklOGh54vL91+vnsy78ss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724361832; c=relaxed/simple;
-	bh=HN1xBVZLE3f1sAjk8xE5JEoHDgbt0F1gZsiaf4ullkQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=usIdeL+TlesZGmmBW5e9+bHlR2uPPYs5XXfDQjZDCawMSzcTLDZ3NLFI0DaZE734UO1cS38WYtWnQBr1Rv8UyNR2dyjarJ97fV0pWQFgPNRY9hr0y9AR8Zb0nHp2vgtxiN6riMb5yw/nbO9qUb2CW7pTjdCW+ZIUybQIsnkesdI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3ekiuWiF; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1724370751; c=relaxed/simple;
+	bh=LQ5JiTKAhxACDCarf0aoLyduRl0wP8KYIF14ttGsuE4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=leEF7yTV7HvrxeuqHSiFY6WRUJks6SQBmRbxFbFs8p6hv9oNmE7dnzxE2yETxya/InQW4AMqCi8UtejeGGOhIQa1kSUjJyCLh02mOr9UTuWnDB/dWC6FhfKZ5h4bg+l8D3qMVGvqBVrhASg7Bcts1kJ7xBQO5GwUZySKockfFvQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RQbLk5wc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3ekiuWiF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=OvL0cDQRRZcsjqitDDNhwyuFsI+775ltV1T5OI53uko=; b=3ekiuWiFd1cyQXu09+aZB8desx
-	MdgicvngIggXnCHUlmvJWT44SmXVmzDwNgo3KErf8cBlbVctfEy4ZR0623bvubOgNTKh3wrHrjS+A
-	Dm5P8OEbvCp7nd8tbvqjungtvDzhVMbQ9Ubmun5qws+oeLX5eAG68mHwxf6eKvb2ed7Q4dQbyTG2Y
-	lLxkXQNwbhiabt++fmczf+PZ6b/++ZGdVRdYz3RJZo57iAwpR913ThIENwQ8gK11ajbeHLafcsUk8
-	+iKNgkQh4D+p1baO2PW8AXkNsgy2FVWHxBOrxWjc7MSdZXojzKCdWbM03duSoRcEbj6FHKLap8wYS
-	i4ulvt6A==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1shFHW-0000000ELWk-1g5D;
-	Thu, 22 Aug 2024 21:23:46 +0000
-Date: Thu, 22 Aug 2024 14:23:46 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Christian Brauner <brauner@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
-	linux-fsdevel@vger.kernel.org, hare@suse.de, gost.dev@samsung.com,
-	linux-xfs@vger.kernel.org, hch@lst.de, david@fromorbit.com,
-	Zi Yan <ziy@nvidia.com>, yang@os.amperecomputing.com,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	willy@infradead.org, john.g.garry@oracle.com,
-	cl@os.amperecomputing.com, p.raghav@samsung.com,
-	ryan.roberts@arm.com, mcgrof@kernel.org
-Subject: Re: [PATCH v13 00/10] enable bs > ps in XFS
-Message-ID: <ZsesYqVivEAToPUI@bombadil.infradead.org>
-References: <20240822135018.1931258-1-kernel@pankajraghav.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RQbLk5wc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16C4BC32782;
+	Thu, 22 Aug 2024 23:52:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724370751;
+	bh=LQ5JiTKAhxACDCarf0aoLyduRl0wP8KYIF14ttGsuE4=;
+	h=Date:From:To:Cc:Subject:From;
+	b=RQbLk5wc7AWRVSRM0x2SHABLFxuscb256/VY0YXCNlIi23c8sB1FoShWnDDKOeQnq
+	 Qztj1ZxnlPvWLTN5CjoFDLWAQTsO+ynC7cfsDVnH8v2gVuEj/nQpmt0gILS+/ZSBTc
+	 4s56D8ZY8xuMJHAbogbKFQx2myg9ypP/Ffm8sp5NIm8qhmvX7M1tKCAgz6Ks8wXYPX
+	 M5KGwYtxqBvFB1l6et1+ssa5UO9WL5uwO6lKfhHVdq2sTCDvStb1xFX6jKKdExmJtv
+	 ZVuOw57xLNtN3/EhvXwItCp79KdQt3xtB2AYt7Mog6UlF3vhAF/v9lHnURnV+cMLt0
+	 FLeY9n7xmMQxw==
+Date: Thu, 22 Aug 2024 16:52:30 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>,
+	Chandan Babu R <chandanbabu@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCHBOMB 6.12] xfs: metadata directories and realtime groups
+Message-ID: <20240822235230.GJ6043@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,27 +41,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240822135018.1931258-1-kernel@pankajraghav.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-On Thu, Aug 22, 2024 at 03:50:08PM +0200, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
-> 
-> This is the 13th version of the series that enables block size > page size
-> (Large Block Size) experimental support in XFS. Please consider this for
-> the inclusion in 6.12.
+Hi everyone,
 
-Christian, Andrew,
+Christoph and I have been working on getting the long-delayed metadata
+directory tree patchset into mergeable shape, and I think we're now
+satisfied that we've gotten the code to where we want it for 6.12.
 
-we believe this is ready for integration, and at the last XFS BoF we
-were wondering what tree this should go through. I see fs-next is
-actually just a branch on linux-next with the merge of a few select
-trees [0], but this touches mm, so its not clear what tree would be be
-most appropriate to consider.
+First comes all the accumulated bug fixes for 6.11.  After that is all
+the new code:
 
-Please let us know what you think, it would be great to get this into
-fs-next somehow to get more exposure / testing.
+The metadata directory tree sets us up for much more flexible metadata
+within an XFS filesystem.  Instead of rooting inodes in the superblock
+which has very limited space, we instead create a directory tree that
+can contain arbitrary numbers of metadata files.
 
-[0] https://lore.kernel.org/all/20240528091629.3b8de7e0@canb.auug.org.au/
+Having done that, we can now shard the realtime volume into multiple
+allocation groups, much as we do with AGs for the data device.  However,
+the realtime volume has a fun twist -- each rtgroup gets its own space
+metadata files, and for that we need a metadata directory tree.
 
-  Luis
+Metadata directory trees and realtime groups also enable us to complete
+the realtime modernization project, which will add reverse mapping
+btrees, reflink, quota support, and zoned storage support for rt
+volumes.  The commit-range ioctl is now part of the rt groups patchset,
+because that's the only practical way to defragment rt files when the
+rt extent size is larger than 1 fsblock and rmap is enabled.  Also,
+with Jeff Layton's multigrained ctime work headed for 6.12, we can now
+measure file changes in a saner fashion.
+
+Finally, quota inodes now live in the metadata directory tree, which is
+a pretty simple conversion.  However, we added yet another new feature,
+which is that xfs will now remember the quota accounting and enforcement
+state across unmounts.  You can still tweak them via mount options, but
+not specifying any is no longer interpreted the same as 'noquota'.
+
+I'm only sending the kernel patches to the list for now, but please have
+a look at the git tree links for xfsprogs and fstests changes.
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=metadir-quotas_2024-08-22
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadir-quotas_2024-08-22
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=metadir-quotas_2024-08-22
+
+--D
