@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3567171A5
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:19:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69507179AD
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:20:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724372393; cv=none; b=aikq3vfZaqzFbXnf9lr7J6kbKsTy54Yekn2RnCtLx0s+Ujm36tddNMJ2Hz2v8HGmYAYAR63fIXehX+5/mklzuf18+tiw6nJZx53/AUfl0sSrYVkY46bq45C+TyNbKzoSH8TuOJd1SyTTiywz0VfhtnZyyZn2eUURSsUlqudWhjg=
+	t=1724372408; cv=none; b=noTVebYh1ocjSCntNEJAXldACNS7pVm68fa97PKEPG/VLA30WVVXsoE69NtWWpoySjQMu+hBgiUKTTOrh4DBzRtV8AGEjcVDQpDLBIyDq7fm+dlphjGEE7BeFeJDdCFAT+0QSXorRWoRQkaY4cDYYBZVZyMJvtODfA0T63UmHPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724372393; c=relaxed/simple;
-	bh=Oz1JfcgfD0qamXeNbpkwNpkRxlMbXxil0MX88dWWpCQ=;
+	s=arc-20240116; t=1724372408; c=relaxed/simple;
+	bh=LoFEKU8W417l/YHuSt27t7hwYTBXsHuVhdTGH7eiRJI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SPU6ZaqsPXEI62jbsfZVNzgRdziFizTa9/WRDhsYOJsVVLbXum3fw+8fGNBxBcTuCvUvGFhQJGh0fMShirZQxrlNu+b9iEXkNwNexWaplbQiIHuTFTu1aD0B3qQwTS0PB9O4imUxDUpyzwMFH+wdZQlkB5CZDH5m+7EAaqPnpcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RLow2123; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EdZfM+8GGFlfyFj63eRbCfsRLCsb77yOoQd562j7isebg2eC9CiR+zVPmegO0D8jRM7bu6uAzXY+gj2GCnJ5PCLEp2z5Zfh+QVma5iR/vgwO07PLnWOKEmYfOJIhJb7fPH0PqATRk98znen6x1f1y6eWGfu2Lh5mc5iDcuoVh0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FT9NhfdZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RLow2123"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED7DC32782;
-	Fri, 23 Aug 2024 00:19:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FT9NhfdZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3789BC32782;
+	Fri, 23 Aug 2024 00:20:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724372392;
-	bh=Oz1JfcgfD0qamXeNbpkwNpkRxlMbXxil0MX88dWWpCQ=;
+	s=k20201202; t=1724372408;
+	bh=LoFEKU8W417l/YHuSt27t7hwYTBXsHuVhdTGH7eiRJI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RLow2123Wv+FQSyqJBA+3pK3JVp+SYPUWcUJ2RqqAZFtGplvGuc3HYIN5oqDDQi8k
-	 yhNukAzB3FnJs1sIvZ8XhZCRF3u3bDAhVHwFF4VtMOTkcDlxvB7NbBAW+HmT8J5iEK
-	 /uX29bHdV+DORpvQyFimckOBpnrRv26+/74k1Hh23xuXpypUE89FXgPv7e5XVBV2Ae
-	 paY4ZHll44BYfRP7C0aEzIFyNoEOIXZW+m2puaGFrEdX4I0mmYee8yXx2/GvIiHB0y
-	 ndUeRLSMFURYI0LzUMmJ7690tqyWVR4GMRPYxaaahla4oHvDHI/evx9cUlOmZAlvU0
-	 mVRzeRFKOfXwA==
-Date: Thu, 22 Aug 2024 17:19:52 -0700
-Subject: [PATCH 20/24] xfs: use xfs_growfs_rt_alloc_fake_mount in
- xfs_growfs_rt_alloc_blocks
+	b=FT9NhfdZ1CK12ZaWaMq2DZKbxfNxrdl2Io4lNSgJPCcGdGvpzKViLHh/hLjchoyq2
+	 iAwlp3PhyJ40kG8FScA3AFa1S6sV8vCLk/1IjwjKOCuv/ehLs1C/ieRsETP+NkU+7N
+	 wJq3RyDnwGyFQNFEGsCoJUGE/iV2K3atcmzPc5235LNlUZhCIY4Ch/3dF+dMqmoppe
+	 ydLPDksO+xtz0GqaEA9TUj8gdFsatydIXrBfIjgvMlSDOi2XchW08BlPAlJHEeyNEr
+	 9RrpeGpfiVWSCADhVYNuRNnmg64COTRXOv1Mu9c4lAiwYSBXcS5Yl09DRc3xpdrCxu
+	 8yVB0kScC88QA==
+Date: Thu, 22 Aug 2024 17:20:07 -0700
+Subject: [PATCH 21/24] xfs: factor out a xfs_growfs_check_rtgeom helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437087593.59588.3393693654050943333.stgit@frogsfrogsfrogs>
+Message-ID: <172437087611.59588.7898768503459548119.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
 References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,48 +46,88 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Use xfs_growfs_rt_alloc_fake_mount instead of manually recalculating
-the RT bitmap geometry.
+Split the check that the rtsummary fits into the log into a separate
+helper, and use xfs_growfs_rt_alloc_fake_mount to calculate the new RT
+geometry.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: avoid division for the 0-rtx growfs check]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_rtalloc.c |   43 +++++++++++++++++++++++++++++--------------
+ 1 file changed, 29 insertions(+), 14 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 71e650b6c4253..61231b1dc4b79 100644
+index 61231b1dc4b79..78a3879ad6193 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -935,10 +935,10 @@ xfs_growfs_rt_alloc_blocks(
- 	struct xfs_mount	*mp = rtg->rtg_mount;
- 	struct xfs_inode	*rbmip = rtg->rtg_inodes[XFS_RTGI_BITMAP];
- 	struct xfs_inode	*rsumip = rtg->rtg_inodes[XFS_RTGI_SUMMARY];
--	xfs_rtxnum_t		nrextents = div_u64(nrblocks, rextsize);
- 	xfs_extlen_t		orbmblocks;
- 	xfs_extlen_t		orsumblocks;
- 	xfs_extlen_t		nrsumblocks;
+@@ -1023,6 +1023,31 @@ xfs_growfs_rtg(
+ 	return error;
+ }
+ 
++static int
++xfs_growfs_check_rtgeom(
++	const struct xfs_mount	*mp,
++	xfs_rfsblock_t		rblocks,
++	xfs_extlen_t		rextsize)
++{
 +	struct xfs_mount	*nmp;
- 	int			error;
- 
- 	/*
-@@ -948,9 +948,13 @@ xfs_growfs_rt_alloc_blocks(
- 	orbmblocks = XFS_B_TO_FSB(mp, rbmip->i_disk_size);
- 	orsumblocks = XFS_B_TO_FSB(mp, rsumip->i_disk_size);
- 
--	*nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
--	nrsumblocks = xfs_rtsummary_blockcount(mp,
--		xfs_compute_rextslog(nrextents) + 1, *nrbmblocks);
-+	nmp = xfs_growfs_rt_alloc_fake_mount(mp, nrblocks, rextsize);
++	int			error = 0;
++
++	nmp = xfs_growfs_rt_alloc_fake_mount(mp, rblocks, rextsize);
 +	if (!nmp)
 +		return -ENOMEM;
 +
-+	*nrbmblocks = nmp->m_sb.sb_rbmblocks;
-+	nrsumblocks = nmp->m_rsumblocks;
++	/*
++	 * New summary size can't be more than half the size of the log.  This
++	 * prevents us from getting a log overflow, since we'll log basically
++	 * the whole summary file at once.
++	 */
++	if (nmp->m_rsumblocks > (mp->m_sb.sb_logblocks >> 1))
++		error = -EINVAL;
++
 +	kfree(nmp);
++	return error;
++}
++
+ /*
+  * Grow the realtime area of the filesystem.
+  */
+@@ -1031,9 +1056,6 @@ xfs_growfs_rt(
+ 	xfs_mount_t	*mp,		/* mount point for filesystem */
+ 	xfs_growfs_rt_t	*in)		/* growfs rt input struct */
+ {
+-	xfs_rtxnum_t		nrextents;
+-	xfs_extlen_t		nrbmblocks;
+-	xfs_extlen_t		nrsumblocks;
+ 	struct xfs_buf		*bp;
+ 	xfs_agblock_t		old_rextsize = mp->m_sb.sb_rextsize;
+ 	int			error;
+@@ -1082,20 +1104,13 @@ xfs_growfs_rt(
+ 	/*
+ 	 * Calculate new parameters.  These are the final values to be reached.
+ 	 */
+-	nrextents = div_u64(in->newblocks, in->extsize);
+ 	error = -EINVAL;
+-	if (nrextents == 0)
++	if (in->newblocks < in->extsize)
+ 		goto out_unlock;
+-	nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
+-	nrsumblocks = xfs_rtsummary_blockcount(mp,
+-			xfs_compute_rextslog(nrextents) + 1, nrbmblocks);
  
- 	error = xfs_rtfile_initialize_blocks(rtg, XFS_RTGI_BITMAP, orbmblocks,
- 			*nrbmblocks, NULL);
+-	/*
+-	 * New summary size can't be more than half the size of
+-	 * the log.  This prevents us from getting a log overflow,
+-	 * since we'll log basically the whole summary file at once.
+-	 */
+-	if (nrsumblocks > (mp->m_sb.sb_logblocks >> 1))
++	/* Make sure the new fs size won't cause problems with the log. */
++	error = xfs_growfs_check_rtgeom(mp, in->newblocks, in->extsize);
++	if (error)
+ 		goto out_unlock;
+ 
+ 	error = xfs_growfs_rtg(mp, in->newblocks, in->extsize);
 
