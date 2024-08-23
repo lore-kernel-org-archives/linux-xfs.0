@@ -1,71 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C08B653
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:29:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34475111A1
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:32:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724372972; cv=none; b=Xk4vvMzxskSXmBVujK+yhYwadMoK3k+MuxrYDfA+8wEw/tG7QOcjXWlumpXPhCUD0fZ0jXmvMGiT2O9leQD9hsdCnht00M64orkyu+RGg7iEgnZdhExiedC6iB/m+v0nMlb6sjLpnVeY1eTa1Pq63rPR84CrhZ3+p6Euyfp/kuE=
+	t=1724373132; cv=none; b=NyEGG7oVBx0QjN9yn6MKTNQfSCZ1FMN/Winr7dfbry3r3+WFbHYHIcwrmlJ5bdH28ZodftUPYRnytNCCN1AGQC6NeTS9QfmXkVJgGjOP9azo7f7ZKFoCGnx0siLr2AQCiNQ7QTCf19nPQ52QNFBB2bmEhCzYKTGMEXZjNzu50XM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724372972; c=relaxed/simple;
-	bh=2gytWVOiq+JtZGdu5+Qfx0RkYIMu8RJm/mX4h3NjZXE=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sSp8E6BWTtEh2krEVITC77vaOoj/jtNOXUWqictynnJ4w1ylKtJKovjMt075Tmx8eX5Oxo081/dgs3zg1kaTScm44seWowGy9iJ3VqzAfPNEnia27U/OtIyleh4oPLLSOBLalls+4GCmrDODe2OvS8xeweJ2RnCjHinyJhBhyKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HRduX30u; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724373132; c=relaxed/simple;
+	bh=AShGbdcQ4mhV1q6Fp9rG62EYQLLWWkN+nY5e3wVMwrI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=cValxy2y8t2VNZ3oRiWbtfgkTrss/q+KnvxzOOXgXwm50gF2laAvpnvJoBjfxAT4MGgPRzxl0jb0d3X5xC5gDFk8BXco19NBtpBDHF74ezFrnm/AdFKmUfRIjbcCuFL/Y6V1e25qdom3WaeqfnXCpbotZdn9FB7gkUSLVMD49oM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sZ0xHSdM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HRduX30u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6493FC32782;
-	Fri, 23 Aug 2024 00:29:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sZ0xHSdM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC487C32782;
+	Fri, 23 Aug 2024 00:32:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724372971;
-	bh=2gytWVOiq+JtZGdu5+Qfx0RkYIMu8RJm/mX4h3NjZXE=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HRduX30u0yWm8U2Vv7qYVuRope3xZvjcaPRbyuH5wRC3LLTh2QkHS2EO1ZE1Qbcfb
-	 cFA/WqKxbYLjNDfy+bEYrrxAh8eeY5APKs8ca8nf4AsUxR8QuYv4v/GEpSyea0QsYX
-	 Wu0DoeVcNkMdeZza3dSx5cYVaiSQDyMFD9sXMWKIRiDWZiYGwvMCZZ18p0sn/NO0PH
-	 sqmV3RtgA6Co5UwePOETngxoi35IOXzbDzYqxjXBR4nWF841DX3Hfdk7v6I5F4W89z
-	 1Mu+rMPJ0cUwS8gAhszcNOgVkVX1ydXodL0B7+hLxAd4+POFpurNgp/+50Sfbc6k1i
-	 T2aIKDDxnQJaA==
-Date: Thu, 22 Aug 2024 17:29:30 -0700
-Subject: [PATCH 6/6] xfs: enable metadata directory feature
+	s=k20201202; t=1724373131;
+	bh=AShGbdcQ4mhV1q6Fp9rG62EYQLLWWkN+nY5e3wVMwrI=;
+	h=Date:From:To:Cc:Subject:From;
+	b=sZ0xHSdMvKHE0GIEEJCMPRy/rtqFKv9iKgwBOGV/DwF8JXOGSkRkWx8TpAO9NmER4
+	 kdtWk6VYvPHOXrcJqgRJbbK/6rYRTBOMnSY06mkSYgjB53BMBncRLeAJ5cyoAJ9wIZ
+	 KFLKn+/lVx5y4FQJsAE/iIC9PCdSXyEg/Dm7Pn08bQNsWAG3Ileqj7M31LjwHA9/Kz
+	 So67rx63/RK5sdt1JPL4I1NNZKvqGhKKzolDL8D375+AO0StftTU8lj3mxqG9+3p0X
+	 EChvLe1xMctO9qrScnsTBRkdPivQK8vas8rs9tZPqSF9S83ockr8FTP47WE5m9602r
+	 nDtNcYdLEd/tQ==
+Date: Thu, 22 Aug 2024 17:32:11 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437089467.61495.6398228533025859603.stgit@frogsfrogsfrogs>
-In-Reply-To: <172437089342.61495.12289421749855228771.stgit@frogsfrogsfrogs>
-References: <172437089342.61495.12289421749855228771.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To: chandanbabu@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-documentation: master updated to 661d339d
+Message-ID: <20240823003211.GY865349@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-Enable the metadata directory feature.
+The master branch of the xfs-documentation repository at:
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
 
+has just been updated.
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index cafac42cd51ad..6aa141c99e808 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -397,7 +397,8 @@ xfs_sb_has_ro_compat_feature(
- 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
- 		 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
- 		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
--		 XFS_SB_FEAT_INCOMPAT_PARENT)
-+		 XFS_SB_FEAT_INCOMPAT_PARENT | \
-+		 XFS_SB_FEAT_INCOMPAT_METADIR)
- 
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
+I have updated the pdf:
+https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf
+
+The new head of the master branch is commit:
+
+661d339d Merge tag 'xfsdocs-6.10-updates_2024-08-22' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation into mainn
+
+6 new commits:
+
+Darrick J. Wong (6):
+      [a1fea3a8] design: document atomic file mapping exchange log intent structures
+      [ff9995e7] design: document new logged parent pointer attribute variants
+      [2e8458c5] design: document the parent pointer ondisk format
+      [4d6cdd07] design: document the metadump v2 format
+      [3ecf3b36] design: fix the changelog to reflect the new changes
+      [661d339d] Merge tag 'xfsdocs-6.10-updates_2024-08-22' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation into mainn
+
+Code Diffstat:
+
+ .../allocation_groups.asciidoc                     |  14 ++
+ design/XFS_Filesystem_Structure/docinfo.xml        |  32 ++++
+ .../extended_attributes.asciidoc                   |  95 +++++++++++
+ .../journaling_log.asciidoc                        | 177 ++++++++++++++++++++-
+ design/XFS_Filesystem_Structure/magic.asciidoc     |   2 +
+ design/XFS_Filesystem_Structure/metadump.asciidoc  | 112 ++++++++++++-
+ 6 files changed, 423 insertions(+), 9 deletions(-)
