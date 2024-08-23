@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 825C4188939;
-	Fri, 23 Aug 2024 17:41:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B9018BBB9
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 17:51:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724434901; cv=none; b=j0F5LlEF2BWjulNshjD2EZ9y21L7mW7+kUu0Tjp9fkYwHBuue8qmZVAGMabiQ70kfi4OiTWZX0KlrN2R+o27x+5Cr6S0tpipgGbmvxH5EnjSRC32uPycYAWKcnUdsdzfY9QFModEkyp/GloBcWiUi0fhNalzi4Q00Yhf/NygaFU=
+	t=1724435516; cv=none; b=mVDsRciqDZTdVsBdb1H8Kb9w+ucZA1FMj1JTrUEBrWPdetQeTsaTV/LotKyz7eTen//qKLigsSheZqJdEkOELshd8kS6W5BMYvVRgFpmYS9OJ1QI52Kp+i61G4PK/JykkeG584SxUdYKo+K4bXU7UZhZuW+1g/oDQPgERX4ORHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724434901; c=relaxed/simple;
-	bh=2p3QEMWRfgv2vPL3sfcPViAEuSutcnGMSODw4D6OGso=;
+	s=arc-20240116; t=1724435516; c=relaxed/simple;
+	bh=joZDJdmEiiwHWm+RTppkBY9q/B6483QdjhR9OXYXTp0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DJRz1RANXuNfdWXaFqfYckmRnj0uxLtZ1wsytlYv4jIAfw5COZBnm9vJjYyyUXJzFneCQaxVCMOGmi17M6rdzKhhqma+yTgyxhEqFtwNIBREzUU6swK5Od6J0QyFqoohRj+RwqFfekITnbyiTyOsDVHfvWOoOwT0Je5GN9X9Dks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J1zf/04A; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tSf8hmHvIX0zabLvbWIE/SrTLjl2zAyWcLiJvUW7jyfSevXcTYOYeHI9PI5TeEvQ1wXchGQMa1l4hs+PkjXAB2u6fvPTE5IaPY/V+7jpldU+SiIUnakhzU9IRh0SPbxFfRAZLJlEXP0GnW5jsl3ZLtPIEAqpy1GOB7L+q89zYbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uc9U2vU2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J1zf/04A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0D5BC32786;
-	Fri, 23 Aug 2024 17:41:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uc9U2vU2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80884C32786;
+	Fri, 23 Aug 2024 17:51:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724434901;
-	bh=2p3QEMWRfgv2vPL3sfcPViAEuSutcnGMSODw4D6OGso=;
+	s=k20201202; t=1724435515;
+	bh=joZDJdmEiiwHWm+RTppkBY9q/B6483QdjhR9OXYXTp0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=J1zf/04ABhuZP2uUpMSTPaL7c6KTEA/o22z9pb5OD0dlijGdTAwMvu2yw24SotERm
-	 3Tyo3hwj//N1okj4sTV72xtAGhGofc7JsOwNRpN7c+TYlhyiozMrInFwHunsvIRY6T
-	 P+DGOOwIUUJ+cXVFGgHduY8qmEsQct888Xwd/8chf37buP3/1oT6BNI8nX6/WCZH7a
-	 rlb/aAGc6XPvqbXXikt91lSq/RJAfl96i+XsAPEOZ8RdBRT0vKmzYcfaln0ldvh1yH
-	 MWASKT2rjKw/5/+ubXtHk6SKO2a5A2YOn8OtJXjsupWxO/DRMqowGv9kW4QU1R91p+
-	 o98FUe9ne521A==
-Date: Fri, 23 Aug 2024 10:41:40 -0700
+	b=Uc9U2vU2z2FMSDPWvVB/IFkZQqE8y0qcM3N08yF8daCTc3gZSw9TADlYccN1UPRoW
+	 qHicDvO/ih5y45MEXmIIDRs6tZVxch/wvJDUsQlZCWcmtrkh5943mlfyE3tacYqU6S
+	 g/DyJz4Os71ZwejhWtizKDiPfCevgjq5HSO8UHA/yx3JW0rJcYtsXrcRJUCV8MfhqN
+	 KMXdOhnX8GJBMzasltaDyyYCB7MLYPFefSitdshKJOFh7b/5gWdfjnOpDosaeaZ5b7
+	 c1RgE+jcqhGHKBPI7oVYUdjSBEAu3JValXxynJ1rmyHGZJOo45BepFApR1wQu/F+ml
+	 xHjzcUUGTRFag==
+Date: Fri, 23 Aug 2024 10:51:55 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, hch@lst.de,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: introduce new file range commit ioctls
-Message-ID: <20240823174140.GJ865349@frogsfrogsfrogs>
-References: <172437084258.57211.13522832162579952916.stgit@frogsfrogsfrogs>
- <172437084278.57211.4355071581143024290.stgit@frogsfrogsfrogs>
- <ZsgMRrOBlBwsHBdZ@infradead.org>
- <e167fb368b8a54b0716ae35730ddc61a658f6f6a.camel@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/26] xfs: refactor loading quota inodes in the regular
+ case
+Message-ID: <20240823175155.GK865349@frogsfrogsfrogs>
+References: <172437085093.57482.7844640009051679935.stgit@frogsfrogsfrogs>
+ <172437085206.57482.3726157833898843274.stgit@frogsfrogsfrogs>
+ <ZsgQvof8gWadH7Hf@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,47 +44,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e167fb368b8a54b0716ae35730ddc61a658f6f6a.camel@kernel.org>
+In-Reply-To: <ZsgQvof8gWadH7Hf@infradead.org>
 
-On Fri, Aug 23, 2024 at 09:20:15AM -0400, Jeff Layton wrote:
-> On Thu, 2024-08-22 at 21:12 -0700, Christoph Hellwig wrote:
-> > On Thu, Aug 22, 2024 at 05:01:22PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > This patch introduces two more new ioctls to manage atomic updates to
-> > > file contents -- XFS_IOC_START_COMMIT and XFS_IOC_COMMIT_RANGE.  The
-> > > commit mechanism here is exactly the same as what XFS_IOC_EXCHANGE_RANGE
-> > > does, but with the additional requirement that file2 cannot have changed
-> > > since some sampling point.  The start-commit ioctl performs the sampling
-> > > of file attributes.
-> > 
-> > The code itself looks simply enough now, but how do we guarantee
-> > that ctime actually works as a full change count and not just by
-> > chance here?
-> > 
+On Thu, Aug 22, 2024 at 09:31:58PM -0700, Christoph Hellwig wrote:
+> > +	xfs_ino_t		ino = NULLFSINO;
+> > +
+> > +	switch (type) {
+> > +	case XFS_DQTYPE_USER:
+> > +		ino = mp->m_sb.sb_uquotino;
+> > +		break;
+> > +	case XFS_DQTYPE_GROUP:
+> > +		ino = mp->m_sb.sb_gquotino;
+> > +		break;
+> > +	case XFS_DQTYPE_PROJ:
+> > +		ino = mp->m_sb.sb_pquotino;
+> > +		break;
+> > +	default:
+> > +		ASSERT(0);
+> > +		return -EFSCORRUPTED;
+> > +	}
 > 
-> With current mainline kernels it won't, but the updated multigrain
-> timestamp series is in linux-next and is slated to go into v6.12. At
-> that point it should be fine for this purpose.
+> I'd probably split this type to ino lookup into a separate helper,
+> but that doesn't really matter.
 
-<nod> If these both get merged for 6.12, I think the appropriate port
-for this patch is to change xfs_ioc_start_commit to do:
+I tried that, but left it embedded here because I didn't want to write a
+helper function that then had to return a magic value for "some
+programmer f*cked up, let's just bail out" that also couldn't have been
+read in from disk.  In theory 0 should work because
+xfs_sb_quota_from_disk should have converted that to NULLFSINO for us,
+but that felt like a good way to introduce a subtle bug that will blow
+up later.
 
-	struct kstat	kstat;
+I suppose 0 wouldn't be the worst magic value, since xfs_iget would just
+blow up noisily for us.  OTOH all this gets deleted at the other end of
+the metadir series anyway so I'd preferentially fix xfs_dqinode_load.
 
-	fill_mg_cmtime(&kstat, STATX_CTIME | STATX_MTIME, XFS_I(ip2));
-	kern_f->file2_ctime		= kstat.ctime.tv_sec;
-	kern_f->file2_ctime_nsec	= kstat.ctime.tv_nsec;
-	kern_f->file2_mtime		= kstat.mtime.tv_sec;
-	kern_f->file2_mtime_nsec	= kstat.mtime.tv_nsec;
-
-instead of open-coding the inode_get_[cm]time calls.  The entire
-exchangerange feature is still marked experimental, so I didn't think it
-was worth rebasing my entire dev branch on the multigrain timestamp
-redux series; we can just fix it later.
+Thanks for the review!
 
 --D
 
-> -- 
-> Jeff Layton <jlayton@kernel.org>
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
 > 
