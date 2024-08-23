@@ -1,103 +1,121 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16BB149C46
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 11:09:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 621339457;
+	Fri, 23 Aug 2024 12:37:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724411379; cv=none; b=Y7pnVsZb3IzYttALIbu2k/ioLLwlFGxa3pF51cX3IxiC22MoacVbP+JNDCwNiZIT28alD6uJbbuHoO6ANVOcDJjKDmewQD/XJofPpyMarvKzJcWkM5iTVnT3fCfwxy5eeu7OLbO6BhimfCyGLzOPEPN6I+uxnBmAw2kpjphOXHs=
+	t=1724416620; cv=none; b=hzi+oJz4rB74a+3lPhg2Qp36/nXK9kUKVuuo8btmiFiFhIX3lCvdeXXgLU9ZVo95dFFd4g5OIu+Z+eaDAlFXizg4g8aH2cqx4RzvnDj/cNAhTnCaV9igyGu3+l/jOTZoocq/ZWBokqT81fqMu88S3VuT6vw7KohLMAjd10B200Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724411379; c=relaxed/simple;
-	bh=/5n8hzWgz/HuQgiUpMiAmUNXf8su2E3o1Qj6bFxF41U=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ezwosEoZpqQgyl1CKuBdC7wFNLpHDOx8l1o68W2xfBRA9uJdvNW0gzJ6zOpCEaVTvqUJ4e+nlPYbTSIolSaFIYnkoFJ7Za0sPgd8axJO+tbj5JnI/ZbZWSrd/Lyri+UIFKsKYyWdmMlj0ue73AhvW4OsrnqDI0GzO2dqYE1pDrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Wqy536v4Jz1S8Nh;
-	Fri, 23 Aug 2024 19:09:27 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 72CE1180042;
-	Fri, 23 Aug 2024 19:09:33 +0800 (CST)
-Received: from localhost.localdomain (10.175.104.67) by
- dggpemf500017.china.huawei.com (7.185.36.126) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 23 Aug 2024 19:09:32 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <chandanbabu@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH 3/5] xfs: add XFS_ITEM_UNSAFE for log item push return result
-Date: Fri, 23 Aug 2024 19:04:37 +0800
-Message-ID: <20240823110439.1585041-4-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240823110439.1585041-1-leo.lilong@huawei.com>
-References: <20240823110439.1585041-1-leo.lilong@huawei.com>
+	s=arc-20240116; t=1724416620; c=relaxed/simple;
+	bh=wJm/cK61ICsrxHTxRJLxc2PoHQxXnV6Nne6+HqDiJW4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CgEm23S2YuUNdb87zk9MnUO+nNvHLHm6huIoosEUuRPZ9Hv4RN8XUxvX4907a8c4njIzv010JG19pT9ehGG1zCHBwKL0PHra2xH2ED+oFMVuZ99FKPB/AjjeLrtb9IZE3jvhlfZo6F1jdHuYpq9phMGWvcKSMnPlkJLeA7dnPn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QgD5VoXW; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QgD5VoXW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72DE4C32786;
+	Fri, 23 Aug 2024 12:36:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724416620;
+	bh=wJm/cK61ICsrxHTxRJLxc2PoHQxXnV6Nne6+HqDiJW4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=QgD5VoXWbeZLTru9Tt25aCYhK02rbbQac4qidyVHfGzE+bV8LU4NPLi4BMcFJEsSV
+	 Mja9oOTr8okQXOVansqh1krU3Cdl0UkXQ++CuZqDD7wNa7LEQMqfo1uq9OTEiVMqLG
+	 6XCFsnL4xDGQi3XY77gs5evZpPZn1oWkCHRKqKjeLUJ550XFskgHz+Nngj497f8GsC
+	 YNwH43SjXX7y4e/I/AHcpp8/0sf/Ze2I/tdzCQjx2h6eKRwg/I0bNiYx3MdTPoxX8L
+	 s6RwuOf9mnw/xOXzbBtTUBcWJj28i/GZYwqXsXfHwVZF5Ur2JSlw5ytJE1Gqb1tD8U
+	 yS1VVo76yrUHA==
+From: Christian Brauner <brauner@kernel.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+	Luis Chamberlain <mcgrof@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>,
+	chandan.babu@oracle.com,
+	linux-fsdevel@vger.kernel.org,
+	djwong@kernel.org,
+	hare@suse.de,
+	gost.dev@samsung.com,
+	linux-xfs@vger.kernel.org,
+	hch@lst.de,
+	david@fromorbit.com,
+	Zi Yan <ziy@nvidia.com>,
+	yang@os.amperecomputing.com,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	willy@infradead.org,
+	john.g.garry@oracle.com,
+	cl@os.amperecomputing.com,
+	p.raghav@samsung.com,
+	ryan.roberts@arm.com,
+	akpm@linux-foundation.org
+Subject: Re: [PATCH v13 00/10] enable bs > ps in XFS
+Date: Fri, 23 Aug 2024 14:36:42 +0200
+Message-ID: <20240823-anstieg-nachwachsen-be47155a7797@brauner>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240822135018.1931258-1-kernel@pankajraghav.com>
+References: <20240822135018.1931258-1-kernel@pankajraghav.com> <ZsesYqVivEAToPUI@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2513; i=brauner@kernel.org; h=from:subject:message-id; bh=wJm/cK61ICsrxHTxRJLxc2PoHQxXnV6Nne6+HqDiJW4=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaSdaIrLviV+VlbhcaZ103ODmJXf29vOvTnKV1taYex2c v1Ng/8KHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABORfsPwP2zF82efLh7WelQn lbx56vdLCzYlJnn5PpzyUPTTMY+0HU8ZGf7mBDRzz3s+SaMhbUlH7MLY1pjVd4XCnkzdJpH4wGP +Ik4A
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemf500017.china.huawei.com (7.185.36.126)
 
-After pushing log items, the log item may have been freed, making it
-unsafe to access in tracepoints. This commit introduces XFS_ITEM_UNSAFE
-to indicate when an item might be freed during the item push operation.
+On Thu, 22 Aug 2024 15:50:08 +0200, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
+> 
+> This is the 13th version of the series that enables block size > page size
+> (Large Block Size) experimental support in XFS. Please consider this for
+> the inclusion in 6.12.
+> 
+> The context and motivation can be seen in cover letter of the RFC v1 [0].
+> We also recorded a talk about this effort at LPC [1], if someone would
+> like more context on this effort.
+> 
+> [...]
 
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+I've rebased this onto v6.11-rc1 and did a test compile for each commit
+and ran xfstests for xfs. Looks good so far. Should show up in fs-next
+tomorrow.
+
 ---
- fs/xfs/xfs_stats.h     | 1 +
- fs/xfs/xfs_trans.h     | 1 +
- fs/xfs/xfs_trans_ail.c | 7 +++++++
- 3 files changed, 9 insertions(+)
 
-diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-index a61fb56ed2e6..9a7a020587cf 100644
---- a/fs/xfs/xfs_stats.h
-+++ b/fs/xfs/xfs_stats.h
-@@ -86,6 +86,7 @@ struct __xfsstats {
- 	uint32_t		xs_push_ail_pushbuf;
- 	uint32_t		xs_push_ail_pinned;
- 	uint32_t		xs_push_ail_locked;
-+	uint32_t		xs_push_ail_unsafe;
- 	uint32_t		xs_push_ail_flushing;
- 	uint32_t		xs_push_ail_restarts;
- 	uint32_t		xs_push_ail_flush;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index f06cc0f41665..fd4f04853fe2 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -117,6 +117,7 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
- #define XFS_ITEM_PINNED		1
- #define XFS_ITEM_LOCKED		2
- #define XFS_ITEM_FLUSHING	3
-+#define XFS_ITEM_UNSAFE		4
- 
- /*
-  * This is the structure maintained for every active transaction.
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 8ede9d099d1f..a5ab1ffb8937 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -561,6 +561,13 @@ xfsaild_push(
- 
- 			stuck++;
- 			break;
-+		case XFS_ITEM_UNSAFE:
-+			/*
-+			 * The item may have been freed, so we can't access the
-+			 * log item here.
-+			 */
-+			XFS_STATS_INC(mp, xs_push_ail_unsafe);
-+			break;
- 		default:
- 			ASSERT(0);
- 			break;
--- 
-2.39.2
+Applied to the vfs.blocksize branch of the vfs/vfs.git tree.
+Patches in the vfs.blocksize branch should appear in linux-next soon.
 
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.blocksize
+
+[01/10] fs: Allow fine-grained control of folio sizes
+        https://git.kernel.org/vfs/vfs/c/e8201b314c01
+[02/10] filemap: allocate mapping_min_order folios in the page cache
+        https://git.kernel.org/vfs/vfs/c/c104d25f8c49
+[03/10] readahead: allocate folios with mapping_min_order in readahead
+        https://git.kernel.org/vfs/vfs/c/7949d4e70aef
+[04/10] mm: split a folio in minimum folio order chunks
+        https://git.kernel.org/vfs/vfs/c/fd031210c9ce
+[05/10] filemap: cap PTE range to be created to allowed zero fill in folio_map_range()
+        https://git.kernel.org/vfs/vfs/c/e9f3b433acd0
+[06/10] iomap: fix iomap_dio_zero() for fs bs > system page size
+        https://git.kernel.org/vfs/vfs/c/d940b3b7b76b
+[07/10] xfs: use kvmalloc for xattr buffers
+        https://git.kernel.org/vfs/vfs/c/13c9f3c68405
+[08/10] xfs: expose block size in stat
+        https://git.kernel.org/vfs/vfs/c/4e70eedd93ae
+[09/10] xfs: make the calculation generic in xfs_sb_validate_fsb_count()
+        https://git.kernel.org/vfs/vfs/c/f8b794f50725
+[10/10] xfs: enable block size larger than page size support
+        https://git.kernel.org/vfs/vfs/c/0ab3ca31b012
