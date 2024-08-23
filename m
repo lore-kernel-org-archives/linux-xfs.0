@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B1B14688
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:14:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E98F3C36
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:15:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724372095; cv=none; b=gunGmVBBAvLSxHjX37urBK5mPXxvUntVYRxE3iBAUNS+RuMt++ZhPQtsRoNxqcPgdEaSi49jl5/3WrF6hZWN+9rwo9MR6VlpNnYC7JaPa235MiSJBWV8JLMHIy2mjDimbK+TtI59obsy9yTJMTU0LPQVdWMv5lIr3mUnQ0KBEWg=
+	t=1724372111; cv=none; b=C+wMk8TIVJaMcuJc8Gx4Oj9KMBhrxtYH9HyBgLp9ja2HmeHNH0O3DoEvy3yCNeFVwfVFrqbRjKqu+eNr+L99ROyfNcQ/S+fn9DxdKVBsA19qarsulWi8zdTdIGWLCpO6InHPxuT4K9NtlDFRwoxPjdp/BS1WgYkSQ4CtnoHNLbI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724372095; c=relaxed/simple;
-	bh=JbF7w8/OyCN4RPnonSFZraZk9qjmU9jy6fCnYPU9aMQ=;
+	s=arc-20240116; t=1724372111; c=relaxed/simple;
+	bh=0r5KbjMoN50bbZqPU7uuimt3YP9bqe9hH7T890jwL1U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eIOAbLG+AeuCZDERGWmyHKdzyT3Ii3IZicyEj+D2sBlXOEKxI2GzkegrY77QMPyjMuJaoWxuwwJOSp7PPdlIOsfzO5oySPkcgC0uvYy3Lsxk6cR5rSOMtS4bLyNS4UzAPW/9iz+JRST/2oazE9fIkzYNU3ycFBtiyieBGsoOMvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tPUiZVsl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=J1dsVt4S32ERNn/LglECnHAKD49Sbvy23m8zglbsVGE6eobMWrQeAlddVw/ZN7r7BRkgeBwt1AWynb+US72QJaVb72BG7kQ2GX7YrCnynHWPY12NtJmdophBCECj545A9QIUavt3ssNn5c9Ru9+SsIkBh33RBK041d1DwgHk/aM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i9J60lGy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tPUiZVsl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 764B9C32782;
-	Fri, 23 Aug 2024 00:14:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i9J60lGy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20DD1C32782;
+	Fri, 23 Aug 2024 00:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724372095;
-	bh=JbF7w8/OyCN4RPnonSFZraZk9qjmU9jy6fCnYPU9aMQ=;
+	s=k20201202; t=1724372111;
+	bh=0r5KbjMoN50bbZqPU7uuimt3YP9bqe9hH7T890jwL1U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tPUiZVsl3aPNkDMdUgTYlzjsI3JC/paq1D3RaksUutjCDWn2e2rBqZK3h6VztTtb+
-	 yiiFulmePLliBqzsW1MCRLCB0m6ruvqkpVLpPQ2UqHPqhbpjVbhzJnJKESofLAI7e3
-	 AIGjvvG1PMGAbq/Lm3V009hR0trhuOWlvDl3zy5vmOfsfKoaOkRKqAJhasGDjfpJ0t
-	 W4bUVtEnsUYXqKyoLVD788jLNEVRgV8kKBGtdRX5Gxt1AD0f5Aa6RqS1+89r4lRZM6
-	 7Se5M6nC6lMy8PGCtdi97vddSCqpunhQIObyGtnkvJqyKiESIJqL+CzGlYzPbgVUY7
-	 d/Ga+2AKj6Ttg==
-Date: Thu, 22 Aug 2024 17:14:55 -0700
-Subject: [PATCH 01/24] xfs: clean up the ISVALID macro in xfs_bmap_adjacent
+	b=i9J60lGyzBbDi59p5Rm9xdS/ZtqkzZD7An8cY9UNdqG3dEtmnbKM5Tsde+4VvTSbn
+	 jjYTsh9uP6ehgqIZvgXJymxFKW1gPuFi0e/QBQ9gKPDkUpExC/xVu1/nRK6tl1pIkS
+	 F0h4tMzGiW5qJXSMhryAQNuiaadHLqk1k0T73RSl1Spcq78EQnq7WVZ+iazTOzWM5t
+	 9ZFR3pDsufx7b3w2KQzZHWtHFttoR5l1mVb+RpW6F1jf50pJMR5GBfL6+Y8lrjFKy5
+	 WhXGd1L1UALnSzn2Qrlq1BU/7Rf804U3qRY7un9d0aR2qup9zCQaA+VEg4czWQyHog
+	 ZpWuyQQlrZNlg==
+Date: Thu, 22 Aug 2024 17:15:10 -0700
+Subject: [PATCH 02/24] xfs: factor out a xfs_rtallocate helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437087261.59588.1337508214006211237.stgit@frogsfrogsfrogs>
+Message-ID: <172437087277.59588.1424560489617257464.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
 References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,130 +46,137 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Turn the  ISVALID macro defined and used inside in xfs_bmap_adjacent
-that relies on implict context into a proper inline function.
+Split out a helper from xfs_rtallocate that performs the actual
+allocation.  This keeps the scope of the xfs_rtalloc_args structure
+contained, and prepares for rtgroups support.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   55 +++++++++++++++++++++++++++-------------------
- 1 file changed, 32 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_rtalloc.c |   81 +++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 50 insertions(+), 31 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 314fc7d55659a..3a8796f165d6d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3115,6 +3115,23 @@ xfs_bmap_extsize_align(
- 	return 0;
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 4e7db8d4c0827..861a82471b5d0 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1269,6 +1269,51 @@ xfs_rtalloc_align_minmax(
+ 	*raminlen = newminlen;
  }
  
-+static inline bool
-+xfs_bmap_adjacent_valid(
-+	struct xfs_bmalloca	*ap,
-+	xfs_fsblock_t		x,
-+	xfs_fsblock_t		y)
++static int
++xfs_rtallocate(
++	struct xfs_trans	*tp,
++	xfs_rtxnum_t		start,
++	xfs_rtxlen_t		minlen,
++	xfs_rtxlen_t		maxlen,
++	xfs_rtxlen_t		prod,
++	bool			wasdel,
++	xfs_rtblock_t		*bno,
++	xfs_extlen_t		*blen)
 +{
-+	struct xfs_mount	*mp = ap->ip->i_mount;
++	struct xfs_rtalloc_args	args = {
++		.mp		= tp->t_mountp,
++		.tp		= tp,
++	};
++	xfs_rtxnum_t		rtx;
++	xfs_rtxlen_t		len = 0;
++	int			error;
 +
-+	if (XFS_IS_REALTIME_INODE(ap->ip) &&
-+	    (ap->datatype & XFS_ALLOC_USERDATA))
-+		return x < mp->m_sb.sb_rblocks;
++	if (start) {
++		error = xfs_rtallocate_extent_near(&args, start, minlen, maxlen,
++				&len, prod, &rtx);
++	} else {
++		error = xfs_rtallocate_extent_size(&args, minlen, maxlen, &len,
++				prod, &rtx);
++	}
 +
-+	return XFS_FSB_TO_AGNO(mp, x) == XFS_FSB_TO_AGNO(mp, y) &&
-+		XFS_FSB_TO_AGNO(mp, x) < mp->m_sb.sb_agcount &&
-+		XFS_FSB_TO_AGBNO(mp, x) < mp->m_sb.sb_agblocks;
++	if (error)
++		goto out_release;
++
++	error = xfs_rtallocate_range(&args, rtx, len);
++	if (error)
++		goto out_release;
++
++	xfs_trans_mod_sb(tp, wasdel ?
++			XFS_TRANS_SB_RES_FREXTENTS : XFS_TRANS_SB_FREXTENTS,
++			-(long)len);
++	*bno = xfs_rtx_to_rtb(args.mp, rtx);
++	*blen = xfs_rtxlen_to_extlen(args.mp, len);
++
++out_release:
++	xfs_rtbuf_cache_relse(&args);
++	return error;
 +}
 +
- #define XFS_ALLOC_GAP_UNITS	4
+ int
+ xfs_bmap_rtalloc(
+ 	struct xfs_bmalloca	*ap)
+@@ -1276,7 +1321,6 @@ xfs_bmap_rtalloc(
+ 	struct xfs_mount	*mp = ap->ip->i_mount;
+ 	xfs_fileoff_t		orig_offset = ap->offset;
+ 	xfs_rtxnum_t		start;	   /* allocation hint rtextent no */
+-	xfs_rtxnum_t		rtx;	   /* actually allocated rtextent no */
+ 	xfs_rtxlen_t		prod = 0;  /* product factor for allocators */
+ 	xfs_extlen_t		mod = 0;   /* product factor for allocators */
+ 	xfs_rtxlen_t		ralen = 0; /* realtime allocation length */
+@@ -1286,10 +1330,6 @@ xfs_bmap_rtalloc(
+ 	xfs_rtxlen_t		raminlen;
+ 	bool			rtlocked = false;
+ 	bool			ignore_locality = false;
+-	struct xfs_rtalloc_args	args = {
+-		.mp		= mp,
+-		.tp		= ap->tp,
+-	};
+ 	int			error;
  
- /* returns true if ap->blkno was modified */
-@@ -3122,36 +3139,25 @@ bool
- xfs_bmap_adjacent(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
--	xfs_fsblock_t	adjust;		/* adjustment to block numbers */
--	xfs_mount_t	*mp;		/* mount point structure */
--	int		rt;		/* true if inode is realtime */
-+	xfs_fsblock_t		adjust;		/* adjustment to block numbers */
+ 	align = xfs_get_extsz_hint(ap->ip);
+@@ -1363,19 +1403,9 @@ xfs_bmap_rtalloc(
+ 			xfs_rtalloc_align_minmax(&raminlen, &ralen, &prod);
+ 	}
  
--#define	ISVALID(x,y)	\
--	(rt ? \
--		(x) < mp->m_sb.sb_rblocks : \
--		XFS_FSB_TO_AGNO(mp, x) == XFS_FSB_TO_AGNO(mp, y) && \
--		XFS_FSB_TO_AGNO(mp, x) < mp->m_sb.sb_agcount && \
--		XFS_FSB_TO_AGBNO(mp, x) < mp->m_sb.sb_agblocks)
+-	if (start) {
+-		error = xfs_rtallocate_extent_near(&args, start, raminlen,
+-				ralen, &ralen, prod, &rtx);
+-	} else {
+-		error = xfs_rtallocate_extent_size(&args, raminlen,
+-				ralen, &ralen, prod, &rtx);
+-	}
 -
--	mp = ap->ip->i_mount;
--	rt = XFS_IS_REALTIME_INODE(ap->ip) &&
--		(ap->datatype & XFS_ALLOC_USERDATA);
- 	/*
- 	 * If allocating at eof, and there's a previous real block,
- 	 * try to use its last block as our starting point.
- 	 */
- 	if (ap->eof && ap->prev.br_startoff != NULLFILEOFF &&
- 	    !isnullstartblock(ap->prev.br_startblock) &&
--	    ISVALID(ap->prev.br_startblock + ap->prev.br_blockcount,
--		    ap->prev.br_startblock)) {
-+	    xfs_bmap_adjacent_valid(ap,
-+			ap->prev.br_startblock + ap->prev.br_blockcount,
-+			ap->prev.br_startblock)) {
- 		ap->blkno = ap->prev.br_startblock + ap->prev.br_blockcount;
- 		/*
- 		 * Adjust for the gap between prevp and us.
- 		 */
- 		adjust = ap->offset -
- 			(ap->prev.br_startoff + ap->prev.br_blockcount);
--		if (adjust &&
--		    ISVALID(ap->blkno + adjust, ap->prev.br_startblock))
-+		if (adjust && xfs_bmap_adjacent_valid(ap, ap->blkno + adjust,
-+				ap->prev.br_startblock))
- 			ap->blkno += adjust;
- 		return true;
- 	}
-@@ -3174,7 +3180,8 @@ xfs_bmap_adjacent(
- 		    !isnullstartblock(ap->prev.br_startblock) &&
- 		    (prevbno = ap->prev.br_startblock +
- 			       ap->prev.br_blockcount) &&
--		    ISVALID(prevbno, ap->prev.br_startblock)) {
-+		    xfs_bmap_adjacent_valid(ap, prevbno,
-+				ap->prev.br_startblock)) {
+-	if (error) {
+-		xfs_rtbuf_cache_relse(&args);
+-		if (error != -ENOSPC)
+-			return error;
+-
++	error = xfs_rtallocate(ap->tp, start, raminlen, ralen, prod, ap->wasdel,
++			       &ap->blkno, &ap->length);
++	if (error == -ENOSPC) {
+ 		if (align > mp->m_sb.sb_rextsize) {
  			/*
- 			 * Calculate gap to end of previous block.
- 			 */
-@@ -3190,8 +3197,8 @@ xfs_bmap_adjacent(
- 			 * number, then just use the end of the previous block.
- 			 */
- 			if (prevdiff <= XFS_ALLOC_GAP_UNITS * ap->length &&
--			    ISVALID(prevbno + prevdiff,
--				    ap->prev.br_startblock))
-+			    xfs_bmap_adjacent_valid(ap, prevbno + prevdiff,
-+					ap->prev.br_startblock))
- 				prevbno += adjust;
- 			else
- 				prevdiff += adjust;
-@@ -3223,9 +3230,11 @@ xfs_bmap_adjacent(
- 			 * offset by our length.
- 			 */
- 			if (gotdiff <= XFS_ALLOC_GAP_UNITS * ap->length &&
--			    ISVALID(gotbno - gotdiff, gotbno))
-+			    xfs_bmap_adjacent_valid(ap, gotbno - gotdiff,
-+					gotbno))
- 				gotbno -= adjust;
--			else if (ISVALID(gotbno - ap->length, gotbno)) {
-+			else if (xfs_bmap_adjacent_valid(ap, gotbno - ap->length,
-+					gotbno)) {
- 				gotbno -= ap->length;
- 				gotdiff += adjust - ap->length;
- 			} else
-@@ -3253,7 +3262,7 @@ xfs_bmap_adjacent(
- 			return true;
- 		}
+ 			 * We previously enlarged the request length to try to
+@@ -1403,20 +1433,9 @@ xfs_bmap_rtalloc(
+ 		ap->length = 0;
+ 		return 0;
  	}
--#undef ISVALID
-+
- 	return false;
- }
+-
+-	error = xfs_rtallocate_range(&args, rtx, ralen);
+ 	if (error)
+-		goto out_release;
++		return error;
  
+-	xfs_trans_mod_sb(ap->tp, ap->wasdel ?
+-			XFS_TRANS_SB_RES_FREXTENTS : XFS_TRANS_SB_FREXTENTS,
+-			-(long)ralen);
+-
+-	ap->blkno = xfs_rtx_to_rtb(mp, rtx);
+-	ap->length = xfs_rtxlen_to_extlen(mp, ralen);
+ 	xfs_bmap_alloc_account(ap);
+-
+-out_release:
+-	xfs_rtbuf_cache_relse(&args);
+-	return error;
++	return 0;
+ }
 
