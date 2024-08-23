@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34475111A1
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:32:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D84DDB8
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:49:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724373132; cv=none; b=NyEGG7oVBx0QjN9yn6MKTNQfSCZ1FMN/Winr7dfbry3r3+WFbHYHIcwrmlJ5bdH28ZodftUPYRnytNCCN1AGQC6NeTS9QfmXkVJgGjOP9azo7f7ZKFoCGnx0siLr2AQCiNQ7QTCf19nPQ52QNFBB2bmEhCzYKTGMEXZjNzu50XM=
+	t=1724374153; cv=none; b=YlmbLzpjiUXgpRr3xlYbhNb9z+rZmLfz/encycUWMyzkgiG6FD64KFZ7kawEh34Lw0Nxc34d0ab2ACDdr0NhKd9bHAdG58mfv/qcqbR4W2FCv6hKd5sA49x/Rg0lyGmblEjc5eMXTCfbc2fSnfEXm3z4/2NkpAv/QsLt16GjeVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724373132; c=relaxed/simple;
-	bh=AShGbdcQ4mhV1q6Fp9rG62EYQLLWWkN+nY5e3wVMwrI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=cValxy2y8t2VNZ3oRiWbtfgkTrss/q+KnvxzOOXgXwm50gF2laAvpnvJoBjfxAT4MGgPRzxl0jb0d3X5xC5gDFk8BXco19NBtpBDHF74ezFrnm/AdFKmUfRIjbcCuFL/Y6V1e25qdom3WaeqfnXCpbotZdn9FB7gkUSLVMD49oM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sZ0xHSdM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724374153; c=relaxed/simple;
+	bh=RFSKZfQLrytQdpuSgR9zKax5SqplbWVMVdnIJcTHg/M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jfMGixzUS73c2XVTnoZEPOiu0i6UaZ/atdIDWoJ4iEHNds4l6c97SmcFhtsPPco5D7r1ExS5LQJBHEBmIXCEAsBzflkMC5crrRih0H7TykiUlc7VqLEjc8SNx0KQajmBtD63ezjswooIP3KcS422j2G671moEtN5CEoET3yGAPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=njw+oL0m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sZ0xHSdM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC487C32782;
-	Fri, 23 Aug 2024 00:32:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="njw+oL0m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60A2DC32782;
+	Fri, 23 Aug 2024 00:49:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724373131;
-	bh=AShGbdcQ4mhV1q6Fp9rG62EYQLLWWkN+nY5e3wVMwrI=;
-	h=Date:From:To:Cc:Subject:From;
-	b=sZ0xHSdMvKHE0GIEEJCMPRy/rtqFKv9iKgwBOGV/DwF8JXOGSkRkWx8TpAO9NmER4
-	 kdtWk6VYvPHOXrcJqgRJbbK/6rYRTBOMnSY06mkSYgjB53BMBncRLeAJ5cyoAJ9wIZ
-	 KFLKn+/lVx5y4FQJsAE/iIC9PCdSXyEg/Dm7Pn08bQNsWAG3Ileqj7M31LjwHA9/Kz
-	 So67rx63/RK5sdt1JPL4I1NNZKvqGhKKzolDL8D375+AO0StftTU8lj3mxqG9+3p0X
-	 EChvLe1xMctO9qrScnsTBRkdPivQK8vas8rs9tZPqSF9S83ockr8FTP47WE5m9602r
-	 nDtNcYdLEd/tQ==
-Date: Thu, 22 Aug 2024 17:32:11 -0700
+	s=k20201202; t=1724374153;
+	bh=RFSKZfQLrytQdpuSgR9zKax5SqplbWVMVdnIJcTHg/M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=njw+oL0mrNXrHF1ZyK0agIxBIWL18k1jGzf8FM7p3CJ6EnwR1hSWN0laz+YHeYquh
+	 IaOXO8d9/+aBlSyMtEgIy/C4cIrc3JkJWHkNVgGGsX8czd34Cgb9/4Q7gO9FPdxhTM
+	 1Zk5W2/Q4lko9lvX1Uw5L0BYMxbAKCbyicb8xatL7wixZHkhxPMkhRojN7O+UYHHIl
+	 9GsAP8zuMBLQsOmpix6h8wPtzNOpD2XCxWU1FUPXZHAYds5viImecn2iJw8mECjLs9
+	 4h7V97JlRBPxuFDr1EKLCk/MsRjAST0o27yVyCT2yVVGEkUV5UH5muyHEx2/k71DTc
+	 KxELMfQfEJi+Q==
+Date: Thu, 22 Aug 2024 17:49:12 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: chandanbabu@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-documentation: master updated to 661d339d
-Message-ID: <20240823003211.GY865349@frogsfrogsfrogs>
+To: liuhuan01@kylinos.cn
+Cc: linux-xfs@vger.kernel.org, cmaiolino@redhat.com
+Subject: Re: [PATCH] xfs_db: make sure agblocks is valid to prevent corruption
+Message-ID: <20240823004912.GU6082@frogsfrogsfrogs>
+References: <20240821104412.8539-1-liuhuan01@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,43 +41,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20240821104412.8539-1-liuhuan01@kylinos.cn>
 
-Hi folks,
+On Wed, Aug 21, 2024 at 06:44:12PM +0800, liuhuan01@kylinos.cn wrote:
+> From: liuh <liuhuan01@kylinos.cn>
+> 
+> Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredump during the process.
+> 	xfs_db -c "sb 0" -c "p agblocks" /dev/loop1
+> 
+> System will generate signal SIGFPE corrupt the process. And the stack as follow:
+> corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
+> 	#0  libxfs_getbuf_flags
+> 	#1  libxfs_getbuf_flags
+> 	#2  libxfs_buf_read_map
+> 	#3  libxfs_buf_read
+> 	#4  libxfs_mount
+> 	#5  init
+> 	#6  main
+> 
+> The coredump was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0.
+> In this case, user cannot run in expert mode also.
+> 
+> Never check (mp)->m_sb.sb_agblocks before use it cause this issue.
+> Make sure (mp)->m_sb.sb_agblocks > 0 before libxfs_mount to prevent corruption and leave a message.
+> 
+> Signed-off-by: liuh <liuhuan01@kylinos.cn>
+> ---
+>  db/init.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/db/init.c b/db/init.c
+> index cea25ae5..2d3295ba 100644
+> --- a/db/init.c
+> +++ b/db/init.c
+> @@ -129,6 +129,13 @@ init(
+>  		}
+>  	}
+>  
+> +	if (unlikely(sbp->sb_agblocks == 0)) {
+> +		fprintf(stderr,
+> +			_("%s: device %s agblocks unexpected\n"),
+> +			progname, x.data.name);
+> +		exit(1);
 
-The master branch of the xfs-documentation repository at:
+What if we set sb_agblocks to 1 and let the debugger continue?
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+--D
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-I have updated the pdf:
-https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf
-
-The new head of the master branch is commit:
-
-661d339d Merge tag 'xfsdocs-6.10-updates_2024-08-22' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation into mainn
-
-6 new commits:
-
-Darrick J. Wong (6):
-      [a1fea3a8] design: document atomic file mapping exchange log intent structures
-      [ff9995e7] design: document new logged parent pointer attribute variants
-      [2e8458c5] design: document the parent pointer ondisk format
-      [4d6cdd07] design: document the metadump v2 format
-      [3ecf3b36] design: fix the changelog to reflect the new changes
-      [661d339d] Merge tag 'xfsdocs-6.10-updates_2024-08-22' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation into mainn
-
-Code Diffstat:
-
- .../allocation_groups.asciidoc                     |  14 ++
- design/XFS_Filesystem_Structure/docinfo.xml        |  32 ++++
- .../extended_attributes.asciidoc                   |  95 +++++++++++
- .../journaling_log.asciidoc                        | 177 ++++++++++++++++++++-
- design/XFS_Filesystem_Structure/magic.asciidoc     |   2 +
- design/XFS_Filesystem_Structure/metadump.asciidoc  | 112 ++++++++++++-
- 6 files changed, 423 insertions(+), 9 deletions(-)
+> +	}
+> +
+>  	agcount = sbp->sb_agcount;
+>  	mp = libxfs_mount(&xmount, sbp, &x, LIBXFS_MOUNT_DEBUGGER);
+>  	if (!mp) {
+> -- 
+> 2.43.0
+> 
