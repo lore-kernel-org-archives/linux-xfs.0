@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D5374A02
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:14:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B1B14688
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:14:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724372080; cv=none; b=a9xu94sy/PTtR6NY64kVzTfqv9MU1N+laxYA//oqH9nZIZvi5yCYZowllOMzYnS18Wb3XfJBnifkPmPqhRHXJr1NLD7Y28ZE1kXtdG0leZKcv+87IfH5ztxNgWene5GO/VrugwrJnuMyKOB94jC1/9bh+0X+32FhPwYX/MRBy60=
+	t=1724372095; cv=none; b=gunGmVBBAvLSxHjX37urBK5mPXxvUntVYRxE3iBAUNS+RuMt++ZhPQtsRoNxqcPgdEaSi49jl5/3WrF6hZWN+9rwo9MR6VlpNnYC7JaPa235MiSJBWV8JLMHIy2mjDimbK+TtI59obsy9yTJMTU0LPQVdWMv5lIr3mUnQ0KBEWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724372080; c=relaxed/simple;
-	bh=OnwU5reumCw9sk2dnYJQK3hTGXFqXFWBTHFwttFX4Tw=;
+	s=arc-20240116; t=1724372095; c=relaxed/simple;
+	bh=JbF7w8/OyCN4RPnonSFZraZk9qjmU9jy6fCnYPU9aMQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lab2szPNXNNluuTmvaoihxD3LV2drZu+E+eKS2KE0XxwFDWAY5gbO53xc4RhMlvYNdZUkFrNPM24SF8oTx4ljLik+GEyhcR6R2qQKEjZ7uM/yFDbT5OK3yMTYiE8g02nCbtrPg1sGxvc2OKyeUZjKY1mhDbE461RzS3m6758Gws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DweApmSK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=eIOAbLG+AeuCZDERGWmyHKdzyT3Ii3IZicyEj+D2sBlXOEKxI2GzkegrY77QMPyjMuJaoWxuwwJOSp7PPdlIOsfzO5oySPkcgC0uvYy3Lsxk6cR5rSOMtS4bLyNS4UzAPW/9iz+JRST/2oazE9fIkzYNU3ycFBtiyieBGsoOMvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tPUiZVsl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DweApmSK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE443C4AF0B;
-	Fri, 23 Aug 2024 00:14:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tPUiZVsl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 764B9C32782;
+	Fri, 23 Aug 2024 00:14:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724372079;
-	bh=OnwU5reumCw9sk2dnYJQK3hTGXFqXFWBTHFwttFX4Tw=;
+	s=k20201202; t=1724372095;
+	bh=JbF7w8/OyCN4RPnonSFZraZk9qjmU9jy6fCnYPU9aMQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DweApmSKz4zfevsoD8qZDPd8kMhYcr5y6/uJxZsU6bgN4PIBL+pd2TTtwnlZMlN+P
-	 7kU5umIX/w3i8TZKrhBF870A0CuZMh5qFCDzgBtizeYZjirpa3TOpqnHeWUMSEbnVP
-	 SDfa1FJE1ikETw2IlhmWao5vjnaCOdoYqKP1rBZKj7dQ839/fDsmvVn+J/WAXl+3HH
-	 CMZKP/mPNZH1XK5XiGM56q+xSW3fB0ep9idGOoP/vYcUt5v+dusF7FXX7xhcRCi1SB
-	 YbMHtZaQ8P0OFZLh+hoamSBpH+Vq/FnP2ZXLu43uH8CwcAKYkGtGa6bsi36CN8+nD0
-	 vINMKdiG5WA2g==
-Date: Thu, 22 Aug 2024 17:14:39 -0700
-Subject: [PATCH 10/10] xfs: simplify xfs_rtalloc_query_range
+	b=tPUiZVsl3aPNkDMdUgTYlzjsI3JC/paq1D3RaksUutjCDWn2e2rBqZK3h6VztTtb+
+	 yiiFulmePLliBqzsW1MCRLCB0m6ruvqkpVLpPQ2UqHPqhbpjVbhzJnJKESofLAI7e3
+	 AIGjvvG1PMGAbq/Lm3V009hR0trhuOWlvDl3zy5vmOfsfKoaOkRKqAJhasGDjfpJ0t
+	 W4bUVtEnsUYXqKyoLVD788jLNEVRgV8kKBGtdRX5Gxt1AD0f5Aa6RqS1+89r4lRZM6
+	 7Se5M6nC6lMy8PGCtdi97vddSCqpunhQIObyGtnkvJqyKiESIJqL+CzGlYzPbgVUY7
+	 d/Ga+2AKj6Ttg==
+Date: Thu, 22 Aug 2024 17:14:55 -0700
+Subject: [PATCH 01/24] xfs: clean up the ISVALID macro in xfs_bmap_adjacent
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437086789.59070.5109124547219329958.stgit@frogsfrogsfrogs>
-In-Reply-To: <172437086590.59070.9398644715198875909.stgit@frogsfrogsfrogs>
-References: <172437086590.59070.9398644715198875909.stgit@frogsfrogsfrogs>
+Message-ID: <172437087261.59588.1337508214006211237.stgit@frogsfrogsfrogs>
+In-Reply-To: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
+References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,214 +46,130 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-There isn't much of a good reason to pass the xfs_rtalloc_rec structures
-that describe extents to xfs_rtalloc_query_range as we really just want
-a lower and upper bound xfs_rtxnum_t.  Pass the rtxnum directly and
-simply the interface.
+Turn the  ISVALID macro defined and used inside in xfs_bmap_adjacent
+that relies on implict context into a proper inline function.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   42 +++++++++++++++++-------------------------
- fs/xfs/libxfs/xfs_rtbitmap.h |    3 +--
- fs/xfs/xfs_discard.c         |   15 +++++++--------
- fs/xfs/xfs_fsmap.c           |   11 +++++------
- 4 files changed, 30 insertions(+), 41 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |   55 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 32 insertions(+), 23 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 431ef62939caa..c58eb75ef0fa0 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1047,8 +1047,8 @@ int
- xfs_rtalloc_query_range(
- 	struct xfs_mount		*mp,
- 	struct xfs_trans		*tp,
--	const struct xfs_rtalloc_rec	*low_rec,
--	const struct xfs_rtalloc_rec	*high_rec,
-+	xfs_rtxnum_t			start,
-+	xfs_rtxnum_t			end,
- 	xfs_rtalloc_query_range_fn	fn,
- 	void				*priv)
- {
-@@ -1056,45 +1056,42 @@ xfs_rtalloc_query_range(
- 		.mp			= mp,
- 		.tp			= tp,
- 	};
--	struct xfs_rtalloc_rec		rec;
--	xfs_rtxnum_t			rtstart;
--	xfs_rtxnum_t			rtend;
--	xfs_rtxnum_t			high_key;
--	int				is_free;
- 	int				error = 0;
- 
--	if (low_rec->ar_startext > high_rec->ar_startext)
-+	if (start > end)
- 		return -EINVAL;
--	if (low_rec->ar_startext >= mp->m_sb.sb_rextents ||
--	    low_rec->ar_startext == high_rec->ar_startext)
-+	if (start == end || start >= mp->m_sb.sb_rextents)
- 		return 0;
- 
--	high_key = min(high_rec->ar_startext, mp->m_sb.sb_rextents - 1);
-+	end = min(end, mp->m_sb.sb_rextents - 1);
- 
- 	/* Iterate the bitmap, looking for discrepancies. */
--	rtstart = low_rec->ar_startext;
--	while (rtstart <= high_key) {
-+	while (start <= end) {
-+		struct xfs_rtalloc_rec	rec;
-+		int			is_free;
-+		xfs_rtxnum_t		rtend;
-+
- 		/* Is the first block free? */
--		error = xfs_rtcheck_range(&args, rtstart, 1, 1, &rtend,
-+		error = xfs_rtcheck_range(&args, start, 1, 1, &rtend,
- 				&is_free);
- 		if (error)
- 			break;
- 
- 		/* How long does the extent go for? */
--		error = xfs_rtfind_forw(&args, rtstart, high_key, &rtend);
-+		error = xfs_rtfind_forw(&args, start, end, &rtend);
- 		if (error)
- 			break;
- 
- 		if (is_free) {
--			rec.ar_startext = rtstart;
--			rec.ar_extcount = rtend - rtstart + 1;
-+			rec.ar_startext = start;
-+			rec.ar_extcount = rtend - start + 1;
- 
- 			error = fn(mp, tp, &rec, priv);
- 			if (error)
- 				break;
- 		}
- 
--		rtstart = rtend + 1;
-+		start = rtend + 1;
- 	}
- 
- 	xfs_rtbuf_cache_relse(&args);
-@@ -1109,13 +1106,8 @@ xfs_rtalloc_query_all(
- 	xfs_rtalloc_query_range_fn	fn,
- 	void				*priv)
- {
--	struct xfs_rtalloc_rec		keys[2];
--
--	keys[0].ar_startext = 0;
--	keys[1].ar_startext = mp->m_sb.sb_rextents - 1;
--	keys[0].ar_extcount = keys[1].ar_extcount = 0;
--
--	return xfs_rtalloc_query_range(mp, tp, &keys[0], &keys[1], fn, priv);
-+	return xfs_rtalloc_query_range(mp, tp, 0, mp->m_sb.sb_rextents - 1, fn,
-+			priv);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 314fc7d55659a..3a8796f165d6d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3115,6 +3115,23 @@ xfs_bmap_extsize_align(
+ 	return 0;
  }
  
- /* Is the given extent all free? */
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index 69ddacd4b01e6..0dbc9bb40668a 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.h
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -292,8 +292,7 @@ int xfs_rtmodify_summary(struct xfs_rtalloc_args *args, int log,
- int xfs_rtfree_range(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
- 		xfs_rtxlen_t len);
- int xfs_rtalloc_query_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		const struct xfs_rtalloc_rec *low_rec,
--		const struct xfs_rtalloc_rec *high_rec,
-+		xfs_rtxnum_t start, xfs_rtxnum_t end,
- 		xfs_rtalloc_query_range_fn fn, void *priv);
- int xfs_rtalloc_query_all(struct xfs_mount *mp, struct xfs_trans *tp,
- 			  xfs_rtalloc_query_range_fn fn,
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 25f5dffeab2ae..bf1e3f330018d 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -554,11 +554,10 @@ xfs_trim_rtdev_extents(
- 	xfs_daddr_t		end,
- 	xfs_daddr_t		minlen)
++static inline bool
++xfs_bmap_adjacent_valid(
++	struct xfs_bmalloca	*ap,
++	xfs_fsblock_t		x,
++	xfs_fsblock_t		y)
++{
++	struct xfs_mount	*mp = ap->ip->i_mount;
++
++	if (XFS_IS_REALTIME_INODE(ap->ip) &&
++	    (ap->datatype & XFS_ALLOC_USERDATA))
++		return x < mp->m_sb.sb_rblocks;
++
++	return XFS_FSB_TO_AGNO(mp, x) == XFS_FSB_TO_AGNO(mp, y) &&
++		XFS_FSB_TO_AGNO(mp, x) < mp->m_sb.sb_agcount &&
++		XFS_FSB_TO_AGBNO(mp, x) < mp->m_sb.sb_agblocks;
++}
++
+ #define XFS_ALLOC_GAP_UNITS	4
+ 
+ /* returns true if ap->blkno was modified */
+@@ -3122,36 +3139,25 @@ bool
+ xfs_bmap_adjacent(
+ 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
  {
--	struct xfs_rtalloc_rec	low = { };
--	struct xfs_rtalloc_rec	high = { };
- 	struct xfs_trim_rtdev	tr = {
- 		.minlen_fsb	= XFS_BB_TO_FSB(mp, minlen),
- 	};
-+	xfs_rtxnum_t		low, high;
- 	struct xfs_trans	*tp;
- 	xfs_daddr_t		rtdev_daddr;
- 	int			error;
-@@ -584,17 +583,17 @@ xfs_trim_rtdev_extents(
- 			XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks) - 1);
+-	xfs_fsblock_t	adjust;		/* adjustment to block numbers */
+-	xfs_mount_t	*mp;		/* mount point structure */
+-	int		rt;		/* true if inode is realtime */
++	xfs_fsblock_t		adjust;		/* adjustment to block numbers */
  
- 	/* Convert the rt blocks to rt extents */
--	low.ar_startext = xfs_rtb_to_rtxup(mp, XFS_BB_TO_FSB(mp, start));
--	high.ar_startext = xfs_rtb_to_rtx(mp, XFS_BB_TO_FSBT(mp, end));
-+	low = xfs_rtb_to_rtxup(mp, XFS_BB_TO_FSB(mp, start));
-+	high = xfs_rtb_to_rtx(mp, XFS_BB_TO_FSBT(mp, end));
- 
+-#define	ISVALID(x,y)	\
+-	(rt ? \
+-		(x) < mp->m_sb.sb_rblocks : \
+-		XFS_FSB_TO_AGNO(mp, x) == XFS_FSB_TO_AGNO(mp, y) && \
+-		XFS_FSB_TO_AGNO(mp, x) < mp->m_sb.sb_agcount && \
+-		XFS_FSB_TO_AGBNO(mp, x) < mp->m_sb.sb_agblocks)
+-
+-	mp = ap->ip->i_mount;
+-	rt = XFS_IS_REALTIME_INODE(ap->ip) &&
+-		(ap->datatype & XFS_ALLOC_USERDATA);
  	/*
- 	 * Walk the free ranges between low and high.  The query_range function
- 	 * trims the extents returned.
+ 	 * If allocating at eof, and there's a previous real block,
+ 	 * try to use its last block as our starting point.
  	 */
- 	do {
--		tr.stop_rtx = low.ar_startext + (mp->m_sb.sb_blocksize * NBBY);
-+		tr.stop_rtx = low + (mp->m_sb.sb_blocksize * NBBY);
- 		xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
--		error = xfs_rtalloc_query_range(mp, tp, &low, &high,
-+		error = xfs_rtalloc_query_range(mp, tp, low, high,
- 				xfs_trim_gather_rtextent, &tr);
+ 	if (ap->eof && ap->prev.br_startoff != NULLFILEOFF &&
+ 	    !isnullstartblock(ap->prev.br_startblock) &&
+-	    ISVALID(ap->prev.br_startblock + ap->prev.br_blockcount,
+-		    ap->prev.br_startblock)) {
++	    xfs_bmap_adjacent_valid(ap,
++			ap->prev.br_startblock + ap->prev.br_blockcount,
++			ap->prev.br_startblock)) {
+ 		ap->blkno = ap->prev.br_startblock + ap->prev.br_blockcount;
+ 		/*
+ 		 * Adjust for the gap between prevp and us.
+ 		 */
+ 		adjust = ap->offset -
+ 			(ap->prev.br_startoff + ap->prev.br_blockcount);
+-		if (adjust &&
+-		    ISVALID(ap->blkno + adjust, ap->prev.br_startblock))
++		if (adjust && xfs_bmap_adjacent_valid(ap, ap->blkno + adjust,
++				ap->prev.br_startblock))
+ 			ap->blkno += adjust;
+ 		return true;
+ 	}
+@@ -3174,7 +3180,8 @@ xfs_bmap_adjacent(
+ 		    !isnullstartblock(ap->prev.br_startblock) &&
+ 		    (prevbno = ap->prev.br_startblock +
+ 			       ap->prev.br_blockcount) &&
+-		    ISVALID(prevbno, ap->prev.br_startblock)) {
++		    xfs_bmap_adjacent_valid(ap, prevbno,
++				ap->prev.br_startblock)) {
+ 			/*
+ 			 * Calculate gap to end of previous block.
+ 			 */
+@@ -3190,8 +3197,8 @@ xfs_bmap_adjacent(
+ 			 * number, then just use the end of the previous block.
+ 			 */
+ 			if (prevdiff <= XFS_ALLOC_GAP_UNITS * ap->length &&
+-			    ISVALID(prevbno + prevdiff,
+-				    ap->prev.br_startblock))
++			    xfs_bmap_adjacent_valid(ap, prevbno + prevdiff,
++					ap->prev.br_startblock))
+ 				prevbno += adjust;
+ 			else
+ 				prevdiff += adjust;
+@@ -3223,9 +3230,11 @@ xfs_bmap_adjacent(
+ 			 * offset by our length.
+ 			 */
+ 			if (gotdiff <= XFS_ALLOC_GAP_UNITS * ap->length &&
+-			    ISVALID(gotbno - gotdiff, gotbno))
++			    xfs_bmap_adjacent_valid(ap, gotbno - gotdiff,
++					gotbno))
+ 				gotbno -= adjust;
+-			else if (ISVALID(gotbno - ap->length, gotbno)) {
++			else if (xfs_bmap_adjacent_valid(ap, gotbno - ap->length,
++					gotbno)) {
+ 				gotbno -= ap->length;
+ 				gotdiff += adjust - ap->length;
+ 			} else
+@@ -3253,7 +3262,7 @@ xfs_bmap_adjacent(
+ 			return true;
+ 		}
+ 	}
+-#undef ISVALID
++
+ 	return false;
+ }
  
- 		if (error == -ECANCELED)
-@@ -615,8 +614,8 @@ xfs_trim_rtdev_extents(
- 		if (error)
- 			break;
- 
--		low.ar_startext = tr.restart_rtx;
--	} while (!xfs_trim_should_stop() && low.ar_startext <= high.ar_startext);
-+		low = tr.restart_rtx;
-+	} while (!xfs_trim_should_stop() && low <= high);
- 
- 	xfs_trans_cancel(tp);
- 	return error;
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 71f32354944e4..e154466268757 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -520,11 +520,11 @@ xfs_getfsmap_rtdev_rtbitmap(
- 	struct xfs_getfsmap_info	*info)
- {
- 
--	struct xfs_rtalloc_rec		alow = { 0 };
- 	struct xfs_rtalloc_rec		ahigh = { 0 };
- 	struct xfs_mount		*mp = tp->t_mountp;
- 	xfs_rtblock_t			start_rtb;
- 	xfs_rtblock_t			end_rtb;
-+	xfs_rtxnum_t			high;
- 	uint64_t			eofs;
- 	int				error;
- 
-@@ -553,10 +553,9 @@ xfs_getfsmap_rtdev_rtbitmap(
- 	 * Set up query parameters to return free rtextents covering the range
- 	 * we want.
- 	 */
--	alow.ar_startext = xfs_rtb_to_rtx(mp, start_rtb);
--	ahigh.ar_startext = xfs_rtb_to_rtxup(mp, end_rtb);
--	error = xfs_rtalloc_query_range(mp, tp, &alow, &ahigh,
--			xfs_getfsmap_rtdev_rtbitmap_helper, info);
-+	high = xfs_rtb_to_rtxup(mp, end_rtb);
-+	error = xfs_rtalloc_query_range(mp, tp, xfs_rtb_to_rtx(mp, start_rtb),
-+			high, xfs_getfsmap_rtdev_rtbitmap_helper, info);
- 	if (error)
- 		goto err;
- 
-@@ -565,7 +564,7 @@ xfs_getfsmap_rtdev_rtbitmap(
- 	 * rmap starting at the block after the end of the query range.
- 	 */
- 	info->last = true;
--	ahigh.ar_startext = min(mp->m_sb.sb_rextents, ahigh.ar_startext);
-+	ahigh.ar_startext = min(mp->m_sb.sb_rextents, high);
- 
- 	error = xfs_getfsmap_rtdev_rtbitmap_helper(mp, tp, &ahigh, info);
- 	if (error)
 
