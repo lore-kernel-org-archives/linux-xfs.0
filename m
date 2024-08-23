@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91CE018B14
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:28:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F20BB653
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:29:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724372924; cv=none; b=AgU6CKCD0LWoMYR2Vbi0mXL9QjTsgOTcTytK/Y30tE5Hyg3NH0Q/CoM9I+uOdYnbM3kyJgGDyFTs6EFPeCGDScDYluOT4PMXl2QGLPTs7Zspdq6Ot+T1sISGnC3htLLUUcBzuSTd1VeKW/3Tni0viDvW0w6pGDgJJxAFpV2qXE4=
+	t=1724372940; cv=none; b=p+Zf3IoUzg3gTRUthapEOK0F26J+AtV8nBwUtvgLD3Mkaq7mELeqfm7vGIUV/mFuA4BZ3ztQH2CkmVUyqonKU3fHMFNCjWkfSNyKhcbk3oP+EM/6LsK2NEYlUEM8/QlifdWXKNmAZWiR3dp1Y1NtiTL9NcYOI5x5LemLtoSbruI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724372924; c=relaxed/simple;
-	bh=MGnuWMDxrgZ8AwSNoFf+NAnsIndXpzU6mJYcDrYV67g=;
+	s=arc-20240116; t=1724372940; c=relaxed/simple;
+	bh=G0RHyyVoWqK0I9L730r1frFQT7tlsaPmsaiAm7md5qc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CKoJEMveWJRUxwHW6FvELksKW+zKcdg8tb4bHfM11NAbdnpfxRA+LDmudRqKU1nxoKBYXBxrKUoPp/M6Zy7kyhtB3iCh/O/0V38I4y/wMPQQ2OkcjHhOPSE9Gjix6uc432fqMDyBRP9+Nvn+XxC/inBJ94/3jxQcLenedQ4TB90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UX9z+f/O; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=h9RqmqEqgDWRuQJqEO96eaFMxJkhQBKyNjr9CTOSlcKU/DtKsNLSkkrASv+1MY2KaY2Do9sjlzZlw8Ro/0uecMs40oGP4j2twN9e0G5d/JwoEyMcBnV8O0oGZciDODo9xa9TgB6gFl1jfHoMrzG6UJOmf+YUjyMnANZkdxwS3n8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aBWxH3Ts; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UX9z+f/O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69A7DC32782;
-	Fri, 23 Aug 2024 00:28:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aBWxH3Ts"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 192CBC32782;
+	Fri, 23 Aug 2024 00:29:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724372924;
-	bh=MGnuWMDxrgZ8AwSNoFf+NAnsIndXpzU6mJYcDrYV67g=;
+	s=k20201202; t=1724372940;
+	bh=G0RHyyVoWqK0I9L730r1frFQT7tlsaPmsaiAm7md5qc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UX9z+f/O4kctNfmkRZ/iG40fTYuWpJ4QbUEB6JwsGeLKfcx8S+N35aSTMRBD4ltF3
-	 DtHNbM9WRVxU0s3eq8tXfsw/twWYgkJk/wf2mpepd/4C8EEpPqmHed6lQve0Zq6rNf
-	 HhRKhpS8bx7hMM/Nwyay+9aAMdfCxjGyszBTKNPT/uDAAK8zD7u2ALbyWOKpY31huR
-	 N5uZyvBsxlAumh02acaqx1VmWYJG+1pBSLhI1mLblPCY9HL8NE7ZAjf7z9zBJdacW/
-	 iMgtke4OzkH3YLJ/JEXk2YuJK8LF3KOrK8/1m8ceg9zmKeYMry5jf/AS1W7M98Neym
-	 oN56WuJFa4Ctg==
-Date: Thu, 22 Aug 2024 17:28:43 -0700
-Subject: [PATCH 3/6] xfs: scrub quota file metapaths
+	b=aBWxH3Tsv80o02JUNZTopkAlXsDn8v41x1ONuW5uDXERq75+SDkQFONg1IDQCKOA4
+	 +L2Nf62aNsVxQwxRSJGtsBaUlfvX86L5r58+20tior7AfbMl7Bh5N7+qu6EZ9f/D/y
+	 ACzeQRx5ONfk0G1fjt23cIzNLFfFonbBnjMWxBP70QTQC4j0r9fPNH5QTrEgy4krx5
+	 TZVjQmXEX3RtakgfV7z2bo2Gi6FvwL3HVf53BI4ItmFTlCrDF/aUlPzCkc8bQdWmWx
+	 vuQYnLezz+PhG6js9/1d6yBWdOeaQkj/OFGxDFWm+wdbpaAQdI7b91ZtEsgMkL1cHx
+	 NuQ+0iJI2QQEg==
+Date: Thu, 22 Aug 2024 17:28:59 -0700
+Subject: [PATCH 4/6] xfs: persist quota flags with metadir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437089414.61495.2473580313151427630.stgit@frogsfrogsfrogs>
+Message-ID: <172437089432.61495.8117184114353548540.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437089342.61495.12289421749855228771.stgit@frogsfrogsfrogs>
 References: <172437089342.61495.12289421749855228771.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,126 +46,219 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable online fsck for quota file metadata directory paths.
+It's annoying that one has to keep reminding XFS about what quota
+options it should mount with, since the quota flags recording the
+previous state are sitting right there in the primary superblock.  Even
+more strangely, there exists a noquota option to disable quotas
+completely, so it's odder still that providing no options is the same as
+noquota.
+
+Starting with metadir, let's change the behavior so that if the user
+does not specify any quota-related mount options at all, the ondisk
+quota flags will be used to bring up quota.  In other words, the
+filesystem will mount in the same state and with the same functionality
+as it had during the last mount.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_fs.h  |    6 +++-
- fs/xfs/scrub/metapath.c |   76 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 81 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_mount.c  |   15 +++++++++++++++
+ fs/xfs/xfs_mount.h  |    6 ++++++
+ fs/xfs/xfs_qm_bhv.c |   18 ++++++++++++++++++
+ fs/xfs/xfs_quota.h  |    2 ++
+ fs/xfs/xfs_super.c  |   22 ++++++++++++++++++++++
+ 5 files changed, 63 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 11fa3d0c38086..d460946cae8f1 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -825,9 +825,13 @@ struct xfs_scrub_vec_head {
- #define XFS_SCRUB_METAPATH_RTDIR	(1)  /* rtrgroups metadir */
- #define XFS_SCRUB_METAPATH_RTBITMAP	(2)  /* per-rtg bitmap */
- #define XFS_SCRUB_METAPATH_RTSUMMARY	(3)  /* per-rtg summary */
-+#define XFS_SCRUB_METAPATH_QUOTADIR	(4)  /* quota metadir */
-+#define XFS_SCRUB_METAPATH_USRQUOTA	(5)  /* user quota */
-+#define XFS_SCRUB_METAPATH_GRPQUOTA	(6)  /* group quota */
-+#define XFS_SCRUB_METAPATH_PRJQUOTA	(7)  /* project quota */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 5726ea597f5a2..cbf47354561c1 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -850,6 +850,13 @@ xfs_mountfs(
+ 	if (error)
+ 		goto out_fail_wait;
  
- /* Number of metapath sm_ino values */
--#define XFS_SCRUB_METAPATH_NR		(4)
-+#define XFS_SCRUB_METAPATH_NR		(8)
- 
- /*
-  * ioctl limits
-diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index e5714655152db..49ea19edc1492 100644
---- a/fs/xfs/scrub/metapath.c
-+++ b/fs/xfs/scrub/metapath.c
-@@ -165,6 +165,74 @@ xchk_setup_metapath_rtginode(
- # define xchk_setup_metapath_rtginode(...)	(-ENOENT)
- #endif /* CONFIG_XFS_RT */
- 
-+#ifdef CONFIG_XFS_QUOTA
-+/* Scan the /quota directory itself. */
-+static int
-+xchk_setup_metapath_quotadir(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*dp = NULL;
-+	int			error;
++	/*
++	 * If we're resuming quota status, pick up the preliminary qflags from
++	 * the ondisk superblock so that we know if we should recover dquots.
++	 */
++	if (xfs_is_resuming_quotaon(mp))
++		xfs_qm_resume_quotaon(mp);
 +
-+	error = xfs_trans_alloc_empty(sc->mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_dqinode_load_parent(tp, &dp);
-+	xfs_trans_cancel(tp);
-+	if (error)
-+		return error;
-+
-+	error = xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
-+			kasprintf(GFP_KERNEL, "quota"), dp);
-+	xfs_irele(dp);
-+	return error;
-+}
-+
-+/* Scan a quota inode under the /quota directory. */
-+static int
-+xchk_setup_metapath_dqinode(
-+	struct xfs_scrub	*sc,
-+	xfs_dqtype_t		type)
-+{
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_inode	*dp = NULL;
-+	struct xfs_inode	*ip = NULL;
-+	const char		*path;
-+	int			error;
-+
-+	error = xfs_trans_alloc_empty(sc->mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_dqinode_load_parent(tp, &dp);
-+	if (error)
-+		goto out_cancel;
-+
-+	error = xfs_dqinode_load(tp, dp, type, &ip);
-+	if (error)
-+		goto out_dp;
-+
-+	xfs_trans_cancel(tp);
-+	tp = NULL;
-+
-+	path = kasprintf(GFP_KERNEL, "%s", xfs_dqinode_path(type));
-+	error = xchk_setup_metapath_scan(sc, dp, path, ip);
-+
-+	xfs_irele(ip);
-+out_dp:
-+	xfs_irele(dp);
-+out_cancel:
-+	if (tp)
-+		xfs_trans_cancel(tp);
-+	return error;
-+}
-+#else
-+# define xchk_setup_metapath_quotadir(...)	(-ENOENT)
-+# define xchk_setup_metapath_dqinode(...)	(-ENOENT)
-+#endif /* CONFIG_XFS_QUOTA */
-+
- int
- xchk_setup_metapath(
- 	struct xfs_scrub	*sc)
-@@ -186,6 +254,14 @@ xchk_setup_metapath(
- 		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_BITMAP);
- 	case XFS_SCRUB_METAPATH_RTSUMMARY:
- 		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_SUMMARY);
-+	case XFS_SCRUB_METAPATH_QUOTADIR:
-+		return xchk_setup_metapath_quotadir(sc);
-+	case XFS_SCRUB_METAPATH_USRQUOTA:
-+		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_USER);
-+	case XFS_SCRUB_METAPATH_GRPQUOTA:
-+		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_GROUP);
-+	case XFS_SCRUB_METAPATH_PRJQUOTA:
-+		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_PROJ);
- 	default:
- 		return -ENOENT;
+ 	/*
+ 	 * Log's mount-time initialization. The first part of recovery can place
+ 	 * some items on the AIL, to be handled when recovery is finished or
+@@ -863,6 +870,14 @@ xfs_mountfs(
+ 		goto out_inodegc_shrinker;
  	}
+ 
++	/*
++	 * If we're resuming quota status and recovered the log, re-sample the
++	 * qflags from the ondisk superblock now that we've recovered it, just
++	 * in case someone shut down enforcement just before a crash.
++	 */
++	if (xfs_clear_resuming_quotaon(mp) && xlog_recovery_needed(mp->m_log))
++		xfs_qm_resume_quotaon(mp);
++
+ 	/*
+ 	 * If logged xattrs are still enabled after log recovery finishes, then
+ 	 * they'll be available until unmount.  Otherwise, turn them off.
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 7e68812db1be7..ba9af63aec143 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -459,6 +459,8 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
+ #define XFS_OPSTATE_UNSET_LOG_INCOMPAT	11
+ /* Filesystem can use logged extended attributes */
+ #define XFS_OPSTATE_USE_LARP		12
++/* Filesystem should use qflags to determine quotaon status */
++#define XFS_OPSTATE_RESUMING_QUOTAON	13
+ 
+ #define __XFS_IS_OPSTATE(name, NAME) \
+ static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
+@@ -483,8 +485,12 @@ __XFS_IS_OPSTATE(inodegc_enabled, INODEGC_ENABLED)
+ __XFS_IS_OPSTATE(blockgc_enabled, BLOCKGC_ENABLED)
+ #ifdef CONFIG_XFS_QUOTA
+ __XFS_IS_OPSTATE(quotacheck_running, QUOTACHECK_RUNNING)
++__XFS_IS_OPSTATE(resuming_quotaon, RESUMING_QUOTAON)
+ #else
+ # define xfs_is_quotacheck_running(mp)	(false)
++# define xfs_is_resuming_quotaon(mp)	(false)
++# define xfs_set_resuming_quotaon(mp)	(false)
++# define xfs_clear_resuming_quotaon(mp)	(false)
+ #endif
+ __XFS_IS_OPSTATE(done_with_log_incompat, UNSET_LOG_INCOMPAT)
+ __XFS_IS_OPSTATE(using_logged_xattrs, USE_LARP)
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index a11436579877d..79a96558f739e 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -135,3 +135,21 @@ xfs_qm_newmount(
+ 
+ 	return 0;
+ }
++
++/*
++ * If the sysadmin didn't provide any quota mount options, restore the quota
++ * accounting and enforcement state from the ondisk superblock.  Only do this
++ * for metadir filesystems because this is a behavior change.
++ */
++void
++xfs_qm_resume_quotaon(
++	struct xfs_mount	*mp)
++{
++	if (!xfs_has_metadir(mp))
++		return;
++	if (xfs_has_norecovery(mp))
++		return;
++
++	mp->m_qflags = mp->m_sb.sb_qflags & (XFS_ALL_QUOTA_ACCT |
++					     XFS_ALL_QUOTA_ENFD);
++}
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index 645761997bf2d..2d36d967380e7 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -125,6 +125,7 @@ extern void xfs_qm_dqdetach(struct xfs_inode *);
+ extern void xfs_qm_dqrele(struct xfs_dquot *);
+ extern void xfs_qm_statvfs(struct xfs_inode *, struct kstatfs *);
+ extern int xfs_qm_newmount(struct xfs_mount *, uint *, uint *);
++void xfs_qm_resume_quotaon(struct xfs_mount *mp);
+ extern void xfs_qm_mount_quotas(struct xfs_mount *);
+ extern void xfs_qm_unmount(struct xfs_mount *);
+ extern void xfs_qm_unmount_quotas(struct xfs_mount *);
+@@ -202,6 +203,7 @@ xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_dquot *udqp,
+ #define xfs_qm_dqrele(d)			do { (d) = (d); } while(0)
+ #define xfs_qm_statvfs(ip, s)			do { } while(0)
+ #define xfs_qm_newmount(mp, a, b)					(0)
++#define xfs_qm_resume_quotaon(mp)		((void)0)
+ #define xfs_qm_mount_quotas(mp)
+ #define xfs_qm_unmount(mp)
+ #define xfs_qm_unmount_quotas(mp)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 835886c322a83..d02bfe9ddfe58 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -67,6 +67,9 @@ enum xfs_dax_mode {
+ 	XFS_DAX_NEVER = 2,
+ };
+ 
++/* Were quota mount options provided?  Must use the upper 16 bits of qflags. */
++#define XFS_QFLAGS_MNTOPTS	(1U << 31)
++
+ static void
+ xfs_mount_set_dax_mode(
+ 	struct xfs_mount	*mp,
+@@ -1264,6 +1267,8 @@ xfs_fs_parse_param(
+ 	int			size = 0;
+ 	int			opt;
+ 
++	BUILD_BUG_ON(XFS_QFLAGS_MNTOPTS & XFS_MOUNT_QUOTA_ALL);
++
+ 	opt = fs_parse(fc, xfs_fs_parameters, param, &result);
+ 	if (opt < 0)
+ 		return opt;
+@@ -1341,32 +1346,39 @@ xfs_fs_parse_param(
+ 	case Opt_noquota:
+ 		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
+ 		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
++		parsing_mp->m_qflags |= XFS_QFLAGS_MNTOPTS;
+ 		return 0;
+ 	case Opt_quota:
+ 	case Opt_uquota:
+ 	case Opt_usrquota:
+ 		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ENFD);
++		parsing_mp->m_qflags |= XFS_QFLAGS_MNTOPTS;
+ 		return 0;
+ 	case Opt_qnoenforce:
+ 	case Opt_uqnoenforce:
+ 		parsing_mp->m_qflags |= XFS_UQUOTA_ACCT;
+ 		parsing_mp->m_qflags &= ~XFS_UQUOTA_ENFD;
++		parsing_mp->m_qflags |= XFS_QFLAGS_MNTOPTS;
+ 		return 0;
+ 	case Opt_pquota:
+ 	case Opt_prjquota:
+ 		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ENFD);
++		parsing_mp->m_qflags |= XFS_QFLAGS_MNTOPTS;
+ 		return 0;
+ 	case Opt_pqnoenforce:
+ 		parsing_mp->m_qflags |= XFS_PQUOTA_ACCT;
+ 		parsing_mp->m_qflags &= ~XFS_PQUOTA_ENFD;
++		parsing_mp->m_qflags |= XFS_QFLAGS_MNTOPTS;
+ 		return 0;
+ 	case Opt_gquota:
+ 	case Opt_grpquota:
+ 		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ENFD);
++		parsing_mp->m_qflags |= XFS_QFLAGS_MNTOPTS;
+ 		return 0;
+ 	case Opt_gqnoenforce:
+ 		parsing_mp->m_qflags |= XFS_GQUOTA_ACCT;
+ 		parsing_mp->m_qflags &= ~XFS_GQUOTA_ENFD;
++		parsing_mp->m_qflags |= XFS_QFLAGS_MNTOPTS;
+ 		return 0;
+ 	case Opt_discard:
+ 		parsing_mp->m_features |= XFS_FEAT_DISCARD;
+@@ -1761,6 +1773,14 @@ xfs_fs_fill_super(
+ 		xfs_warn(mp,
+ 	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
+ 
++	/*
++	 * If no quota mount options were provided, maybe we'll try to pick
++	 * up the quota accounting and enforcement flags from the ondisk sb.
++	 */
++	if (!(mp->m_qflags & XFS_QFLAGS_MNTOPTS))
++		xfs_set_resuming_quotaon(mp);
++	mp->m_qflags &= ~XFS_QFLAGS_MNTOPTS;
++
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
+@@ -1947,6 +1967,8 @@ xfs_fs_reconfigure(
+ 	int			flags = fc->sb_flags;
+ 	int			error;
+ 
++	new_mp->m_qflags &= ~XFS_QFLAGS_MNTOPTS;
++
+ 	/* version 5 superblocks always support version counters. */
+ 	if (xfs_has_crc(mp))
+ 		fc->sb_flags |= SB_I_VERSION;
 
