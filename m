@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62900195
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:11:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60FCDA2A
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:12:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724371908; cv=none; b=JaARk7C+NUG8HadpbcvJnddOJYkEQ+YAUCSF1nycVDXlPnO4jzVRCY/8OMJORJ7j0ds9S6wvgqDmvTYpqBSt1tHqjaweiXooPregYfLR5FUxbxEzRTYOa/U9z81aelmA7Tnjguf36CgLr0saB4c0CdmELsyOp9tC4xrrBykE+0Q=
+	t=1724371924; cv=none; b=l/3yQ1yTFzcDrgFDVOjO6oYg7nzLZP5wfROd8vusEBg7fhdYgO+KX+bFKdmpJNA/SoTzbEn1vJV4djkl/uustq5NdTSbsXvV/GxHSxIFWJfAZGGph862WmQqvzIZ5w0rIJ6PnuefQ8qjjF9hZGChSo/dcoxCLMXqFDo8pjJNI94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724371908; c=relaxed/simple;
-	bh=FzWFaLSWQVLYtMu05hHXWbQ/jdTrGuq2XzGaa6r5+UY=;
+	s=arc-20240116; t=1724371924; c=relaxed/simple;
+	bh=KGcXK24m9dZJNB+A3EDjCJnZgzf9FGB3JLjy5XYcrLI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ikRazxuE6XJrXsofZhAGZ3D0gZNuuuDo1RYxTZ/tFKKk0+FOOyKHQj+j1sxSdziFtHkt1O4oYNwskAyBesoPtjZWpbQksi3xp0PSfM+FfqfHNti4LK45PskCQPv/Bb6a71FhJM5fzpJ5xm2yHucOAICVcTdMThDJlMY96TTaec8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Drh6zXFp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=U3iKJ/JFCa/wJ3BOnjkxyKINRXzzS1aiO1pjosoC5o8zIdCI2fOr3CySh886J+YvvHMNDeYih5ahYuRpJpeETsaOrixHQyU/ujvMQ37cRWFK5JrG/8wHZzgbzOudsb7dolHiAn60mvv2O1dGImyoYRI62HM9W5P9gAbcyWbxSX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gSdAjA2S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Drh6zXFp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 390E7C32782;
-	Fri, 23 Aug 2024 00:11:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gSdAjA2S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D173DC32782;
+	Fri, 23 Aug 2024 00:12:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724371908;
-	bh=FzWFaLSWQVLYtMu05hHXWbQ/jdTrGuq2XzGaa6r5+UY=;
+	s=k20201202; t=1724371923;
+	bh=KGcXK24m9dZJNB+A3EDjCJnZgzf9FGB3JLjy5XYcrLI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Drh6zXFprMfuUFUJmJrd1z7JojefRsVjcWTuKvApJj4+mfIfX0gzvZYhiayRpKOgg
-	 TD+Gzm/2od+mSkkZpSsq73xUNKL6Qx6FpB196nZmjEE0M7hsRL5APGTt9bMeWkKOP7
-	 bxR2hFpK2+OIEgoL7y3xw9j2WU8Mq8SD0VakN3cIpIlX49d9Evc6QYNWI6sK/kUa1L
-	 dn/qb23PNvv5P4D6fNyGGvELn5A/c1WMZ2eXlsJmlmZbQn1YYRcelx7LNXilDDixhJ
-	 krVhkPEKDwEZqguuoHbzHyxUz0Gs0e+rXb4hljAvJAB4qMbd/gcuFW+Ks6bGdxtw9U
-	 WKn5aGef++MUQ==
-Date: Thu, 22 Aug 2024 17:11:47 -0700
-Subject: [PATCH 11/12] xfs: factor out rtbitmap/summary initialization helpers
+	b=gSdAjA2SFn0dK5OGrTxAGkFsjLHWL/310ITK8poAOCpuTXdgZA1Lm0Ai1mHS56OMx
+	 rbY+cHwo7LTgagnjAF4k3WPCJkOO1a5WywKEd56qgxZYRC6wdqThO49n00tHI4FqWG
+	 q45E+3sQlEhdUFKBSTfNLrtgaIDVqDhWoJmiGR+2vYzyhQfeUzvmBDNWeTieb/rT2P
+	 3F52s7V/XUL42oMPtfAvmrUYfnaKCIN9nJWCP9oJ9WThkd86dMJEOpTd+fUtEK61kY
+	 tUV/ZCz44Rz5NEr6MZzxs/SJb8gH+xpz+NV0DiwJgPXooVAEuaaKwum4GKWywAC+dI
+	 CYtk0czzSrNvg==
+Date: Thu, 22 Aug 2024 17:12:03 -0700
+Subject: [PATCH 12/12] xfs: push transaction join out of xfs_rtbitmap_lock and
+ xfs_rtgroup_lock
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437086208.58604.13633887639855830783.stgit@frogsfrogsfrogs>
+Message-ID: <172437086225.58604.13666040100912659325.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437085987.58604.7735951538617329546.stgit@frogsfrogsfrogs>
 References: <172437085987.58604.7735951538617329546.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,317 +47,123 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Add helpers to libxfs that can be shared by growfs and mkfs for
-initializing the rtbitmap and summary, and by passing the optional data
-pointer also by repair for rebuilding them.  This will become even more
-useful when the rtgroups feature adds a metadata header to each block,
-which means even more shared code.
+To prepare for being able to join an already locked rtbitmap inode to a
+transaction split out separate helpers for joining the transaction from
+the locking helpers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: minor documentation and data advance tweaks]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |  126 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtbitmap.h |    3 +
- fs/xfs/xfs_rtalloc.c         |  121 +---------------------------------------
- 3 files changed, 133 insertions(+), 117 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c     |    3 ++-
+ fs/xfs/libxfs/xfs_rtbitmap.c |   24 +++++++++++++-----------
+ fs/xfs/libxfs/xfs_rtbitmap.h |    6 ++++--
+ fs/xfs/xfs_rtalloc.c         |    6 ++++--
+ 4 files changed, 23 insertions(+), 16 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index b79803784b766..314fc7d55659a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5379,7 +5379,8 @@ xfs_bmap_del_extent_real(
+ 			 */
+ 			if (!(tp->t_flags & XFS_TRANS_RTBITMAP_LOCKED)) {
+ 				tp->t_flags |= XFS_TRANS_RTBITMAP_LOCKED;
+-				xfs_rtbitmap_lock(tp, mp);
++				xfs_rtbitmap_lock(mp);
++				xfs_rtbitmap_trans_join(tp);
+ 			}
+ 			error = xfs_rtfree_blocks(tp, del->br_startblock,
+ 					del->br_blockcount);
 diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 02d6668d860fd..715d2c54ce029 100644
+index 715d2c54ce029..d7c731aeee12d 100644
 --- a/fs/xfs/libxfs/xfs_rtbitmap.c
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -13,6 +13,8 @@
- #include "xfs_mount.h"
- #include "xfs_inode.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_trans_space.h"
- #include "xfs_trans.h"
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
-@@ -1255,3 +1257,127 @@ xfs_rtbitmap_unlock_shared(
- 	if (rbmlock_flags & XFS_RBMLOCK_BITMAP)
- 		xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
- }
-+
-+static int
-+xfs_rtfile_alloc_blocks(
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_filblks_t		count_fsb,
-+	struct xfs_bmbt_irec	*map)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	int			nmap = 1;
-+	int			error;
-+
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtalloc,
-+			XFS_GROWFSRT_SPACE_RES(mp, count_fsb), 0, 0, &tp);
-+	if (error)
-+		return error;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+
-+	error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
-+				XFS_IEXT_ADD_NOSPLIT_CNT);
-+	if (error)
-+		goto out_trans_cancel;
-+
-+	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
-+			XFS_BMAPI_METADATA, 0, map, &nmap);
-+	if (error)
-+		goto out_trans_cancel;
-+
-+	return xfs_trans_commit(tp);
-+
-+out_trans_cancel:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+/* Get a buffer for the block. */
-+static int
-+xfs_rtfile_initialize_block(
-+	struct xfs_inode	*ip,
-+	xfs_fsblock_t		fsbno,
-+	void			*data)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	struct xfs_buf		*bp;
-+	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
-+	enum xfs_blft		buf_type;
-+	int			error;
-+
-+	if (ip == mp->m_rsumip)
-+		buf_type = XFS_BLFT_RTSUMMARY_BUF;
-+	else
-+		buf_type = XFS_BLFT_RTBITMAP_BUF;
-+
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtzero, 0, 0, 0, &tp);
-+	if (error)
-+		return error;
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+
-+	error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-+			XFS_FSB_TO_DADDR(mp, fsbno), mp->m_bsize, 0, &bp);
-+	if (error) {
-+		xfs_trans_cancel(tp);
-+		return error;
-+	}
-+
-+	xfs_trans_buf_set_type(tp, bp, buf_type);
-+	bp->b_ops = &xfs_rtbuf_ops;
-+	if (data)
-+		memcpy(bp->b_addr, data, copylen);
-+	else
-+		memset(bp->b_addr, 0, copylen);
-+	xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
-+	return xfs_trans_commit(tp);
-+}
-+
-+/*
-+ * Allocate space to the bitmap or summary file, and zero it, for growfs.
-+ * @data must be a contiguous buffer large enough to fill all blocks in the
-+ * file; or NULL to initialize the contents to zeroes.
-+ */
-+int
-+xfs_rtfile_initialize_blocks(
-+	struct xfs_inode	*ip,		/* inode (bitmap/summary) */
-+	xfs_fileoff_t		offset_fsb,	/* offset to start from */
-+	xfs_fileoff_t		end_fsb,	/* offset to allocate to */
-+	void			*data)		/* data to fill the blocks */
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
-+
-+	while (offset_fsb < end_fsb) {
-+		struct xfs_bmbt_irec	map;
-+		xfs_filblks_t		i;
-+		int			error;
-+
-+		error = xfs_rtfile_alloc_blocks(ip, offset_fsb,
-+				end_fsb - offset_fsb, &map);
-+		if (error)
-+			return error;
-+
-+		/*
-+		 * Now we need to clear the allocated blocks.
-+		 *
-+		 * Do this one block per transaction, to keep it simple.
-+		 */
-+		for (i = 0; i < map.br_blockcount; i++) {
-+			error = xfs_rtfile_initialize_block(ip,
-+					map.br_startblock + i, data);
-+			if (error)
-+				return error;
-+			if (data)
-+				data += copylen;
-+		}
-+
-+		offset_fsb = map.br_startoff + map.br_blockcount;
-+	}
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index e87e2099cff5e..0d5ab5e2cb6a3 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.h
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -343,6 +343,9 @@ xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
- unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
- 		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
- 
-+int xfs_rtfile_initialize_blocks(struct xfs_inode *ip,
-+		xfs_fileoff_t offset_fsb, xfs_fileoff_t end_fsb, void *data);
-+
- void xfs_rtbitmap_lock(struct xfs_trans *tp, struct xfs_mount *mp);
- void xfs_rtbitmap_unlock(struct xfs_mount *mp);
- 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 5bead4db164e9..52ed8448d9925 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -643,121 +643,6 @@ xfs_rtallocate_extent_size(
- 	return -ENOSPC;
+@@ -1201,23 +1201,25 @@ xfs_rtsummary_wordcount(
+ 	return XFS_FSB_TO_B(mp, blocks) >> XFS_WORDLOG;
  }
  
 -/*
-- * Allocate space to the bitmap or summary file, and zero it, for growfs.
+- * Lock both realtime free space metadata inodes for a freespace update.  If a
+- * transaction is given, the inodes will be joined to the transaction and the
+- * ILOCKs will be released on transaction commit.
 - */
--STATIC int
--xfs_growfs_rt_alloc(
--	struct xfs_mount	*mp,		/* file system mount point */
--	xfs_extlen_t		oblocks,	/* old count of blocks */
--	xfs_extlen_t		nblocks,	/* new count of blocks */
--	struct xfs_inode	*ip)		/* inode (bitmap/summary) */
--{
--	xfs_fileoff_t		bno;		/* block number in file */
--	struct xfs_buf		*bp;	/* temporary buffer for zeroing */
--	xfs_daddr_t		d;		/* disk block address */
--	int			error;		/* error return value */
--	xfs_fsblock_t		fsbno;		/* filesystem block for bno */
--	struct xfs_bmbt_irec	map;		/* block map output */
--	int			nmap;		/* number of block maps */
--	int			resblks;	/* space reservation */
--	enum xfs_blft		buf_type;
--	struct xfs_trans	*tp;
++/* Lock both realtime free space metadata inodes for a freespace update. */
+ void
+ xfs_rtbitmap_lock(
+-	struct xfs_trans	*tp,
+ 	struct xfs_mount	*mp)
+ {
+ 	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP);
+-	if (tp)
+-		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
 -
--	if (ip == mp->m_rsumip)
--		buf_type = XFS_BLFT_RTSUMMARY_BUF;
--	else
--		buf_type = XFS_BLFT_RTBITMAP_BUF;
--
--	/*
--	 * Allocate space to the file, as necessary.
--	 */
--	while (oblocks < nblocks) {
--		resblks = XFS_GROWFSRT_SPACE_RES(mp, nblocks - oblocks);
--		/*
--		 * Reserve space & log for one extent added to the file.
--		 */
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtalloc, resblks,
--				0, 0, &tp);
--		if (error)
--			return error;
--		/*
--		 * Lock the inode.
--		 */
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--
--		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
--				XFS_IEXT_ADD_NOSPLIT_CNT);
--		if (error)
--			goto out_trans_cancel;
--
--		/*
--		 * Allocate blocks to the bitmap file.
--		 */
--		nmap = 1;
--		error = xfs_bmapi_write(tp, ip, oblocks, nblocks - oblocks,
--					XFS_BMAPI_METADATA, 0, &map, &nmap);
--		if (error)
--			goto out_trans_cancel;
--		/*
--		 * Free any blocks freed up in the transaction, then commit.
--		 */
--		error = xfs_trans_commit(tp);
--		if (error)
--			return error;
--		/*
--		 * Now we need to clear the allocated blocks.
--		 * Do this one block per transaction, to keep it simple.
--		 */
--		for (bno = map.br_startoff, fsbno = map.br_startblock;
--		     bno < map.br_startoff + map.br_blockcount;
--		     bno++, fsbno++) {
--			/*
--			 * Reserve log for one block zeroing.
--			 */
--			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtzero,
--					0, 0, 0, &tp);
--			if (error)
--				return error;
--			/*
--			 * Lock the bitmap inode.
--			 */
--			xfs_ilock(ip, XFS_ILOCK_EXCL);
--			xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--			/*
--			 * Get a buffer for the block.
--			 */
--			d = XFS_FSB_TO_DADDR(mp, fsbno);
--			error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
--					mp->m_bsize, 0, &bp);
--			if (error)
--				goto out_trans_cancel;
--
--			xfs_trans_buf_set_type(tp, bp, buf_type);
--			bp->b_ops = &xfs_rtbuf_ops;
--			memset(bp->b_addr, 0, mp->m_sb.sb_blocksize);
--			xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
--			/*
--			 * Commit the transaction.
--			 */
--			error = xfs_trans_commit(tp);
--			if (error)
--				return error;
--		}
--		/*
--		 * Go on to the next extent, if any.
--		 */
--		oblocks = map.br_startoff + map.br_blockcount;
--	}
--
--	return 0;
--
--out_trans_cancel:
--	xfs_trans_cancel(tp);
--	return error;
--}
--
- static int
- xfs_alloc_rsum_cache(
- 	struct xfs_mount	*mp,
-@@ -1064,10 +949,12 @@ xfs_growfs_rt(
+ 	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM);
+-	if (tp)
+-		xfs_trans_ijoin(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
++}
++
++/*
++ * Join both realtime free space metadata inodes to the transaction.  The
++ * ILOCKs will be released on transaction commit.
++ */
++void
++xfs_rtbitmap_trans_join(
++	struct xfs_trans	*tp)
++{
++	xfs_trans_ijoin(tp, tp->t_mountp->m_rbmip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, tp->t_mountp->m_rsumip, XFS_ILOCK_EXCL);
+ }
+ 
+ /* Unlock both realtime free space metadata inodes after a freespace update. */
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index 0d5ab5e2cb6a3..523d3d3c12c60 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -346,8 +346,9 @@ unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
+ int xfs_rtfile_initialize_blocks(struct xfs_inode *ip,
+ 		xfs_fileoff_t offset_fsb, xfs_fileoff_t end_fsb, void *data);
+ 
+-void xfs_rtbitmap_lock(struct xfs_trans *tp, struct xfs_mount *mp);
++void xfs_rtbitmap_lock(struct xfs_mount *mp);
+ void xfs_rtbitmap_unlock(struct xfs_mount *mp);
++void xfs_rtbitmap_trans_join(struct xfs_trans *tp);
+ 
+ /* Lock the rt bitmap inode in shared mode */
+ #define XFS_RBMLOCK_BITMAP	(1U << 0)
+@@ -376,7 +377,8 @@ xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
+ # define xfs_rtbitmap_wordcount(mp, r)			(0)
+ # define xfs_rtsummary_blockcount(mp, l, b)		(0)
+ # define xfs_rtsummary_wordcount(mp, l, b)		(0)
+-# define xfs_rtbitmap_lock(tp, mp)		do { } while (0)
++# define xfs_rtbitmap_lock(mp)			do { } while (0)
++# define xfs_rtbitmap_trans_join(tp)		do { } while (0)
+ # define xfs_rtbitmap_unlock(mp)		do { } while (0)
+ # define xfs_rtbitmap_lock_shared(mp, lf)	do { } while (0)
+ # define xfs_rtbitmap_unlock_shared(mp, lf)	do { } while (0)
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 52ed8448d9925..e809a8649c60c 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -741,7 +741,8 @@ xfs_growfs_rt_bmblock(
+ 		goto out_free;
+ 	nargs.tp = args.tp;
+ 
+-	xfs_rtbitmap_lock(args.tp, mp);
++	xfs_rtbitmap_lock(mp);
++	xfs_rtbitmap_trans_join(args.tp);
+ 
  	/*
- 	 * Allocate space to the bitmap and summary files, as necessary.
+ 	 * Update the bitmap inode's size ondisk and incore.  We need to update
+@@ -1319,7 +1320,8 @@ xfs_bmap_rtalloc(
+ 	 * Lock out modifications to both the RT bitmap and summary inodes
  	 */
--	error = xfs_growfs_rt_alloc(mp, rbmblocks, nrbmblocks, mp->m_rbmip);
-+	error = xfs_rtfile_initialize_blocks(mp->m_rbmip, rbmblocks,
-+			nrbmblocks, NULL);
- 	if (error)
- 		goto out_unlock;
--	error = xfs_growfs_rt_alloc(mp, rsumblocks, nrsumblocks, mp->m_rsumip);
-+	error = xfs_rtfile_initialize_blocks(mp->m_rsumip, rsumblocks,
-+			nrsumblocks, NULL);
- 	if (error)
- 		goto out_unlock;
+ 	if (!rtlocked) {
+-		xfs_rtbitmap_lock(ap->tp, mp);
++		xfs_rtbitmap_lock(mp);
++		xfs_rtbitmap_trans_join(ap->tp);
+ 		rtlocked = true;
+ 	}
  
 
