@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8274310953
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:25:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B61F538A
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:25:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724372705; cv=none; b=tTm+UdlFsk1mdhV0gzwNu80mzv89UncXeMJ7I9qObep5pUexBetiRNZ6JoP9/O/J5ZGIcYxbLRZJc9Pv2qddXQJgw3m4N+tgQw6+ARr+shDiTPpSUckvSP32h4d92Tj4zwNl3aMFK+iEVtWNaaxgriwGCl4jwWSWIsSmi5hPtEs=
+	t=1724372721; cv=none; b=gqn9++mK5lWBgmyCW0BEkaiWbrmtOVE/SQZyTogjl+mrGISP65szC8RkwE6hcKx6PLUgl9NEczvHo3iz8vJfTt10nhjPMqmuipSDFR51SFIr3+apDklIRRwtUbeo9Q6plREI54GEPS8vVQSLOCSMhEJII8KVkSWOT2Bv9kUUMSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724372705; c=relaxed/simple;
-	bh=V3uKaL//fBP0VYGoUwnehrtSQRaL0Am54ZMnCteBqNo=;
+	s=arc-20240116; t=1724372721; c=relaxed/simple;
+	bh=fglrqyw/TYGT5a2ze2sXMoGvaXxhbFaLfmNM4vVdKcQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=h9B2JxggZT46QJJjfPls5mpED9e71VLcA2VkuhpgQjghh3ua33bsYR+NELr7BDI3NRUr5UQlaFK7KLHS8kt8kqITrE4L8vHKnYRIP3ts0Z+5jzaTChjT7o6zvj5h4kHt5L+QxsWmw5qUykS+zAgaY1wx5QJqOIraVDPuVyuyPzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gslDYAxt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=P/0U50Cj++kz0wVUu6CkJPpqcL6eVtytyFPGgLdvZ0+FxxmW6pbw05RfPlwe7cQMPUemwhxIDs5mTkEW2u5FPMS2onDF1j9ZejOgdfFV6bM3fu3tTpKGK+svt0PNBlLDzUaMI4tg2fg+lD0ylBHT5gSwApwgiCFINs17U8zb2sI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C/MfNHZh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gslDYAxt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BC5DC32782;
-	Fri, 23 Aug 2024 00:25:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C/MfNHZh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 012DFC32782;
+	Fri, 23 Aug 2024 00:25:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724372705;
-	bh=V3uKaL//fBP0VYGoUwnehrtSQRaL0Am54ZMnCteBqNo=;
+	s=k20201202; t=1724372721;
+	bh=fglrqyw/TYGT5a2ze2sXMoGvaXxhbFaLfmNM4vVdKcQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gslDYAxtKS1a8iciZfFFy/eIV/3h01Dp6Fg1ZGGSiB/TekZqs9cmbd7I5pGKSeclc
-	 YW+JcLUN2NrURqT2fr5v25CMcELLMTMbA0duBUif6kzifCRbTz7QHfKgcilHVy+cLv
-	 NBVczNEdJBWFvAqQ2gNwOpyeXB20eMInieRcOVrYmkSEIOUHHD4QP2S+065YZI2pIr
-	 nK5Ndx/3Z5BBrKDE7w2DV3tPINtYSZgGiZcAMVk0n8BrutrLHAM6ORohiBaa6Mp+L0
-	 GCEGnHGVQw7KUjj2mE+cQPqGII/eBdn2Yo09tXsmoQZ5FDiKbB2O20Q93TmrmkHBys
-	 ZihOMeHzDrrZg==
-Date: Thu, 22 Aug 2024 17:25:04 -0700
-Subject: [PATCH 15/26] xfs: store rtgroup information with a bmap intent
+	b=C/MfNHZhHFttsKI4PcFjmkaHXNpsA0Zpf2QHBfz18AwrE+W6S4LmhYR3ZiTmrD3AN
+	 yr+muUKJz8oCTO8ED/ekYa1o3GIcuZ+T4FPlgVuzGh2GOvgNc+lTeTfhiTOGmX1NQS
+	 nNYlrHmnZ6TjHhSsTD2P05wYwtY+vc8PqLPSb72Gsku2RWsrAVpxxgwzm21XmprOiR
+	 ypzFRg22Xj8QsxQZqWvEY9X8qhjpSyJMrUbKw3uzgoAdrjKQ2hI2ZioOHY2f2CL49D
+	 /a8T7o6phTdmLeHE5yW/J8DU9wKvf5ZSJhK9GfQLDLDVGf2YcGoQYbmwm0fHChhMF5
+	 vlwa3Q5WSBYEg==
+Date: Thu, 22 Aug 2024 17:25:20 -0700
+Subject: [PATCH 16/26] xfs: force swapext to a realtime file to use the file
+ content exchange ioctl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437088782.60592.3733953729473737601.stgit@frogsfrogsfrogs>
+Message-ID: <172437088799.60592.14096570051407234430.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
 References: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,77 +47,42 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the bmap intent items take an active reference to the rtgroup
-containing the space that is being mapped or unmapped.  We will need
-this functionality once we start enabling rmap and reflink on the rt
-volume.
+xfs_swap_extent_rmap does not use log items to track the overall
+progress of an attempt to swap the extent mappings between two files.
+If the system crashes in the middle of swapping a partially written
+realtime extent, the mapping will be left in an inconsistent state
+wherein a file can point to multiple extents on the rt volume.
+
+The new file range exchange functionality handles this correctly, so all
+callers must upgrade to that.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.h |    5 ++++-
- fs/xfs/xfs_bmap_item.c   |   18 ++++++++++++++++--
- 2 files changed, 20 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_bmap_util.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 7592d46e97c66..eb3670ecd1373 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -248,7 +248,10 @@ struct xfs_bmap_intent {
- 	enum xfs_bmap_intent_type		bi_type;
- 	int					bi_whichfork;
- 	struct xfs_inode			*bi_owner;
--	struct xfs_perag			*bi_pag;
-+	union {
-+		struct xfs_perag		*bi_pag;
-+		struct xfs_rtgroup		*bi_rtg;
-+	};
- 	struct xfs_bmbt_irec			bi_bmap;
- };
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index fe2e2c9309755..025e58daf6f50 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1522,6 +1522,18 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	}
  
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index e224b49b7cff6..9a7e97a922b6d 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -26,6 +26,7 @@
- #include "xfs_log_recover.h"
- #include "xfs_ag.h"
- #include "xfs_trace.h"
-+#include "xfs_rtgroup.h"
- 
- struct kmem_cache	*xfs_bui_cache;
- struct kmem_cache	*xfs_bud_cache;
-@@ -324,8 +325,18 @@ xfs_bmap_update_get_group(
- 	struct xfs_mount	*mp,
- 	struct xfs_bmap_intent	*bi)
- {
--	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
-+	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
-+		if (xfs_has_rtgroups(mp)) {
-+			xfs_rgnumber_t	rgno;
-+
-+			rgno = xfs_rtb_to_rgno(mp, bi->bi_bmap.br_startblock);
-+			bi->bi_rtg = xfs_rtgroup_get(mp, rgno);
-+		} else {
-+			bi->bi_rtg = NULL;
-+		}
-+
- 		return;
++	/*
++	 * The rmapbt implementation is unable to resume a swapext operation
++	 * after a crash if the allocation unit size is larger than a block.
++	 * This (deprecated) interface will not be upgraded to handle this
++	 * situation.  Defragmentation must be performed with the commit range
++	 * ioctl.
++	 */
++	if (XFS_IS_REALTIME_INODE(ip) && xfs_has_rtgroups(ip->i_mount)) {
++		error = -EOPNOTSUPP;
++		goto out_unlock;
 +	}
- 
- 	/*
- 	 * Bump the intent count on behalf of the deferred rmap and refcount
-@@ -354,8 +365,11 @@ static inline void
- xfs_bmap_update_put_group(
- 	struct xfs_bmap_intent	*bi)
- {
--	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
-+	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
-+		if (xfs_has_rtgroups(bi->bi_owner->i_mount))
-+			xfs_rtgroup_put(bi->bi_rtg);
- 		return;
-+	}
- 
- 	xfs_perag_intent_put(bi->bi_pag);
- }
++
+ 	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		goto out_unlock;
 
