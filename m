@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 140ACB653
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C521CBE47
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:26:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724372768; cv=none; b=H3j+efPnZccauO/7qeYPrjkh3JEPyiZnfylz4hJIyKNPxEocwmD6evzDrtK/6BYwPlqbZmHq8/bo39LAP3NRnEGW24RyyyNrih0BOQL8ctv8OX5q4o7ncq6vQfgSLep3sfr8yVbsohImIBCloq5QNvKGYJeUmA8AsBPzTw9b2pg=
+	t=1724372783; cv=none; b=cp7m2pxTw9ZnvqYKV5u/Bo9yHZFIftO4L+pQ5HFgdy2IM2iIXhy3jEq8zBDf+qTFKo8Jz99JaH9H2MbtXveCAJwAwsEPzaM9qWyQeWFMOBzKwLHeG4EA9BH6+xjABWqjsY+Y8/0gVVQq/9DXzkGSfEsrvQxlbIa/U1VXWOxuOKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724372768; c=relaxed/simple;
-	bh=DwWI+Ysm54Af+2PPpKtC9NkJyZXPnVHlza69Qm+aDWk=;
+	s=arc-20240116; t=1724372783; c=relaxed/simple;
+	bh=/d1y6f4n3bdknVSJSlblm6U8yHUgQcoY4nAeTo8MENU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IhkQMOeDM3O7oMuFjC4vf4BgVc3WvmVQRSwgs73pSmZFSUFHm4R8jpi9eTJoU65Wau+BNpJT+Y6XBhtdViOJYaUXcLwV5wjnciQ6CxKLOp54gqKYVK/wnTnT7KWS/NPQnOLum9dbbDnQ+c18r9/1eji9IhSTclncsTJ88HXyRwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wewde9yh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XHTfOS58ikRyxmr/pmlMr7+DkVZH0u0P8xP8xvkZAYm5PyMZAzf7jHDcTlBaj87dKP5tKPHbpp9P8awPHIC0VGkc3vAnlMJ58i3rOZfGRH/FQGl9ckeFx3WmOEEc3FS1tD4Um2GHsm2xITo0Ucl/iEVZEQEcERN0WASOM904T8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e3drdkas; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wewde9yh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E190AC32782;
-	Fri, 23 Aug 2024 00:26:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e3drdkas"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93318C32782;
+	Fri, 23 Aug 2024 00:26:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724372767;
-	bh=DwWI+Ysm54Af+2PPpKtC9NkJyZXPnVHlza69Qm+aDWk=;
+	s=k20201202; t=1724372783;
+	bh=/d1y6f4n3bdknVSJSlblm6U8yHUgQcoY4nAeTo8MENU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Wewde9yhlFW6xzL+XBHni4XHMoeNyu3T8EegwzMBaJgH5s56SgZDsTNKZH3nHozzt
-	 kbBelykmwPSTFEp61FDz3RKXcLO9hiRSI27dJE8MtEhmLaS0oLBmRJ16DjiwtgriLh
-	 MCwkqAkWXz+tXJltS3wWIBBWEemM+ZX1BzxgDue6GbvCvQGvyYLfrP+mhPlNiyKX2V
-	 pOCSLJLrC49eky1TF7w9NnFBrVtOWWU8DOyXYyowYwq/R7q4AyfXwmiOVUodsNFyvY
-	 nXH3eqvesECA8GkpLajWBaz4MRrmKQoN6K3VxwVoEDRjGZq43jbq5wgnMARWDwkltl
-	 GdCXytnmb+4yA==
-Date: Thu, 22 Aug 2024 17:26:07 -0700
-Subject: [PATCH 19/26] xfs: use realtime EFI to free extents when rtgroups are
- enabled
+	b=e3drdkasMxDKoxa0SbyYPKjKE4Nlyz9tFuGIsrdW2UNLnZJAQn+WI5/ayPbDFY1/3
+	 yS+wJ+fITxvS1uePXr4nugvZRV4rBBXohon7pZOxmsTyrBKB68JiH7BFLIZ3p/TT1m
+	 jHY+S6QiE1riNJ+/oOxWdJz1TrGKFDIcWpr0NcJC4ULv59XB9eagO0uKD3P8EntRMA
+	 IrcsbPgwF+jXrms07TLgRS7D4zIWvNLn13S3B4PzP6z5ZXSWlx9fHtFd4noIVt3rrH
+	 Ap8fi2ae+NsnqBTbHt/mdsFJETcc6ODt7vQCpnAiWX6l7oy4Ty03KqEB9K65eqS3YD
+	 /uDHVYoqtEBZw==
+Date: Thu, 22 Aug 2024 17:26:23 -0700
+Subject: [PATCH 20/26] xfs: don't merge ioends across RTGs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437088851.60592.2012898665553673543.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <172437088869.60592.1406516687324740088.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
 References: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,60 +44,59 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-When rmap is enabled, XFS expects a certain order of operations, which
-is: 1) remove the file mapping, 2) remove the reverse mapping, and then
-3) free the blocks.  When reflink is enabled, XFS replaces (3) with a
-deferred refcount decrement operation that can schedule freeing the
-blocks if that was the last refcount.
+Unlike AGs, RTGs don't always have metadata in their first blocks, and
+thus we don't get automatic protection from merging I/O completions
+across RTG boundaries.  Add code to set the IOMAP_F_BOUNDARY flag for
+ioends that start at the first block of a RTG so that they never get
+merged into the previous ioend.
 
-For realtime files, xfs_bmap_del_extent_real tries to do 1 and 3 in the
-same transaction, which will break both rmap and reflink unless we
-switch it to use realtime EFIs.  Both rmap and reflink depend on the
-rtgroups feature, so let's turn on EFIs for all rtgroups filesystems.
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_iomap.c |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index f1bf8635a8cf3..126a0d253654a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5434,9 +5434,11 @@ xfs_bmap_del_extent_real(
- 	 * If we need to, add to list of extents to delete.
- 	 */
- 	if (!(bflags & XFS_BMAPI_REMAP)) {
-+		bool	isrt = xfs_ifork_is_realtime(ip, whichfork);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 13cabd345e227..607d360c4a911 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -24,6 +24,7 @@
+ #include "xfs_iomap.h"
+ #include "xfs_trace.h"
+ #include "xfs_quota.h"
++#include "xfs_rtgroup.h"
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
+@@ -115,7 +116,9 @@ xfs_bmbt_to_iomap(
+ 		iomap->addr = IOMAP_NULL_ADDR;
+ 		iomap->type = IOMAP_DELALLOC;
+ 	} else {
+-		iomap->addr = BBTOB(xfs_fsb_to_db(ip, imap->br_startblock));
++		xfs_daddr_t	bno = xfs_fsb_to_db(ip, imap->br_startblock);
 +
- 		if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK) {
- 			xfs_refcount_decrease_extent(tp, del);
--		} else if (xfs_ifork_is_realtime(ip, whichfork)) {
-+		} else if (isrt && !xfs_has_rtgroups(mp)) {
- 			error = xfs_bmap_free_rtblocks(tp, del);
- 		} else {
- 			unsigned int	efi_flags = 0;
-@@ -5445,6 +5447,19 @@ xfs_bmap_del_extent_real(
- 			    del->br_state == XFS_EXT_UNWRITTEN)
- 				efi_flags |= XFS_FREE_EXTENT_SKIP_DISCARD;
++		iomap->addr = BBTOB(bno);
+ 		if (mapping_flags & IOMAP_DAX)
+ 			iomap->addr += target->bt_dax_part_off;
  
-+			/*
-+			 * Historically, we did not use EFIs to free realtime
-+			 * extents.  However, when reverse mapping is enabled,
-+			 * we must maintain the same order of operations as the
-+			 * data device, which is: Remove the file mapping,
-+			 * remove the reverse mapping, and then free the
-+			 * blocks.  Reflink for realtime volumes requires the
-+			 * same sort of ordering.  Both features rely on
-+			 * rtgroups, so let's gate rt EFI usage on rtgroups.
-+			 */
-+			if (isrt)
-+				efi_flags |= XFS_FREE_EXTENT_REALTIME;
-+
- 			error = xfs_free_extent_later(tp, del->br_startblock,
- 					del->br_blockcount, NULL,
- 					XFS_AG_RESV_NONE, efi_flags);
+@@ -124,6 +127,15 @@ xfs_bmbt_to_iomap(
+ 		else
+ 			iomap->type = IOMAP_MAPPED;
+ 
++		/*
++		 * Mark iomaps starting at the first sector of a RTG as merge
++		 * boundary so that each I/O completions is contained to a
++		 * single RTG.
++		 */
++		if (XFS_IS_REALTIME_INODE(ip) && xfs_has_rtgroups(mp) &&
++		    xfs_rtb_to_rtx(mp, bno) == 0 &&
++		    xfs_rtb_to_rtxoff(mp, bno) == 0)
++			iomap->flags |= IOMAP_F_BOUNDARY;
+ 	}
+ 	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
+ 	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
 
