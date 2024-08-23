@@ -1,23 +1,24 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D690C1428E3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8A3149C46
 	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 11:09:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724411376; cv=none; b=QpazXjLu4pT2sowhBF5qaLTZX6BW+yTEJrIYZPzbvXvd0Jll6+BtjEybskycGwH9Grlx22DxwMntL7B/oj78p2TUnmDFWHUCR/13lnOQmdvkC2BpGcOPdvA63D0ER8AfG4YtkY1O1n7YntRSmekjI+5CPIKehs1IurPGwowoUkc=
+	t=1724411377; cv=none; b=q4u2lS1zrB2+fzu6kZvR5s+A+z2+W3zxDhen5I4zrD25EePeFzAIALIrUbe1gYW68jTh5tPKtb+fQEZbWtN85vaMx90jTDcXeBE6clqFhcebr5C88Wjw3oVoHm1dphJj6uGhqd8NeQziBNIahpSy+RIeq5WYyy36JYF+gZP+Pc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724411376; c=relaxed/simple;
-	bh=q8Y7RO1nKYnI2Jq5fKi7ENkb6cSqh/Fx37E52xrJyeo=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JVVPtF5AbJyEmDGvAYQ+fzzo+haRTgFSPh8YhG78JSgpNos2tRv1UtNFAtMcLnWlcsXSVTqm64f7OwYSGsHbkagP57IXFLBq2lIX4VbmF0JKimVjdwxlvBpCh+ihPs5f6Lf9MOY4/oo3gdl2CX7ZiWKTbg1NIrqNdKMTDj6prwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+	s=arc-20240116; t=1724411377; c=relaxed/simple;
+	bh=SumY8s8vVWlvWgWsSZyYCJFPDfkXACMGJosfzreKhzo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=L/fH4evrJXZppgYVPTwfaWlGUleKP4wpigqMp3wqB43kqmVtju5zFge5bDVr6wTdUBvG8NgnjncIR/3QK4XeY2W0/Y04yovO/XeSQDIbW4qOqkrL7v7MFj1otzynjclFjAaiSfbq9zaYd7U27z/4GwMDeRLpmndXW9aaWbOc9XY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Wqy1P5Nm5z1HH3s;
-	Fri, 23 Aug 2024 19:06:17 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Wqy4g4ZKbzyR80;
+	Fri, 23 Aug 2024 19:09:07 +0800 (CST)
 Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0D8D31A016C;
+	by mail.maildlp.com (Postfix) with ESMTPS id 7B7141800CD;
 	Fri, 23 Aug 2024 19:09:32 +0800 (CST)
 Received: from localhost.localdomain (10.175.104.67) by
  dggpemf500017.china.huawei.com (7.185.36.126) with Microsoft SMTP Server
@@ -27,10 +28,12 @@ From: Long Li <leo.lilong@huawei.com>
 To: <djwong@kernel.org>, <chandanbabu@kernel.org>
 CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
 	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH 0/5] xfs: fix and cleanups for log item push
-Date: Fri, 23 Aug 2024 19:04:34 +0800
-Message-ID: <20240823110439.1585041-1-leo.lilong@huawei.com>
+Subject: [PATCH 1/5] xfs: remove redundant set null for ip->i_itemp
+Date: Fri, 23 Aug 2024 19:04:35 +0800
+Message-ID: <20240823110439.1585041-2-leo.lilong@huawei.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240823110439.1585041-1-leo.lilong@huawei.com>
+References: <20240823110439.1585041-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,33 +45,26 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  dggpemf500017.china.huawei.com (7.185.36.126)
 
-Hi all,
+ip->i_itemp has been set null in xfs_inode_item_destroy(), so there is
+no need set it null again in xfs_inode_free_callback().
 
-This patch series fix some issues during item push, The following is a
-brief overview of the patches, see the patches for more details.
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+ fs/xfs/xfs_icache.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Patch 1 : Simple clean code.
-Patch 2 : Fixed an issue where the tail lsn was moved forward abnormally
-          due to deleting log item from AIL before log shutdown.
-Patch 3-5 : Fix log item access UAF after inode/dquot item pushed.
-
-
-Long Li (5):
-  xfs: remove redundant set null for ip->i_itemp
-  xfs: ensuere deleting item from AIL after shutdown in dquot flush
-  xfs: add XFS_ITEM_UNSAFE for log item push return result
-  xfs: fix a UAF when dquot item push
-  xfs: fix a UAF when inode item push
-
- fs/xfs/xfs_dquot.c      |  8 +++++++-
- fs/xfs/xfs_dquot_item.c | 10 +++++++++-
- fs/xfs/xfs_icache.c     |  1 -
- fs/xfs/xfs_inode_item.c | 21 ++++++++++++++-------
- fs/xfs/xfs_stats.h      |  1 +
- fs/xfs/xfs_trans.h      |  1 +
- fs/xfs/xfs_trans_ail.c  |  7 +++++++
- 7 files changed, 39 insertions(+), 10 deletions(-)
-
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index cf629302d48e..a5e5e5520a3b 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -143,7 +143,6 @@ xfs_inode_free_callback(
+ 		ASSERT(!test_bit(XFS_LI_IN_AIL,
+ 				 &ip->i_itemp->ili_item.li_flags));
+ 		xfs_inode_item_destroy(ip);
+-		ip->i_itemp = NULL;
+ 	}
+ 
+ 	kmem_cache_free(xfs_inode_cache, ip);
 -- 
 2.39.2
 
