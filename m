@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8318115BB
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:13:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E8D0620
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2024 00:13:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724371986; cv=none; b=IJJ5KqVEyI/aFR0ma1I1aOkU6zMDsHq9ei5kmBU1P0v2ZGSiE5sAdo+45ZMoAUOt3VVUT+NU0WyzOgBTAdZ7XRx6hqzHIlW1l2YUK6ErqF10V6J+DUgq//BewnWJDsi42LIb/S/USe0vxTlNLQR5xAxS+7E+yc1oWPpfidDwT2E=
+	t=1724372002; cv=none; b=dSRmsTEEtRa8dK1aFkNOYxxXpGvLGmAJIgHqLtDkfUe0tmE58DLRrIggShf/uUJ9EJ0ImbWopX2oazmufly3NzCGRy/hgECd6l4A/UopYmI6fF9L98/vS1KbJNwoHMwNYW5vx6gCUmFpx/cXcNgftX+aAYPRVL5bk722RwzIkCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724371986; c=relaxed/simple;
-	bh=aAdcm9+Wu73/u5NcBqmeqIwK3dPCgLoXA1mteEvUzJw=;
+	s=arc-20240116; t=1724372002; c=relaxed/simple;
+	bh=R/CbXvZiPxXm7EUKkHTnQ4645IJ2vIpsy39qfAEwmmk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eBaS82YBppXqeg1niKLy00hpwRhLW03aJ6WxUs57mtcAgg3syYDFQ1CiY25BrUhf+Y6axO0wHlGezFS0XiocZqEH/gsyE7Pck4G71LBbe7oVTkycyh3HNR/JvPZ6Gmw2ZjzFAaVRAaxdDB76mG8hWBrv2pQ6BM+RL5G+ypQ7N6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L5SwUw0L; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=oLcrXiUsC3kchbAy6I4gZqepFphVLa1CzGnxSLZdcmbEHtW2miQANAV1AGmWXmlq9SoeIXEPraKg+15kAK8npRTNNIuvzYpez0IVpv57DNU7cAeQJHzY/7ohXkf7qBFrehygL6ijP10cgM5QPNJWpvSmnZxcNpdq8fjI43yp/zY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SP2wrvwf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L5SwUw0L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CD77C32782;
-	Fri, 23 Aug 2024 00:13:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SP2wrvwf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6EC9C4AF0B;
+	Fri, 23 Aug 2024 00:13:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724371986;
-	bh=aAdcm9+Wu73/u5NcBqmeqIwK3dPCgLoXA1mteEvUzJw=;
+	s=k20201202; t=1724372002;
+	bh=R/CbXvZiPxXm7EUKkHTnQ4645IJ2vIpsy39qfAEwmmk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=L5SwUw0L9uqQKEQ7C0veuI/DjiMHIKRqFFgvVh70tyMnLuA5Xgg17FmcsVxzrPziR
-	 eIynUsfr+Mrw1awLzfY7HY9jw6efy9QJWBegoIuYx60Do2UMCdI6CVVnpomJIFakgx
-	 CdZW5zLLNTeMchvGiD3nCPuRRH/9XSyPzIpheH1rZz5VBN8mCEQrdbQilb88iXlxW0
-	 3dUv6EGbnhbeQ4dHfQqlsu1HuZPJGK2gFme7I22pO3Ku6jVhiSrtlswqCUszRffzPV
-	 0e6WP8Vceqr4zbPIkIg+KfPBsqR/gAwOBR4Z5JZb8v9GlJ6pJeRBr6FKF8OUmr52sC
-	 +Robk4jW8Hq5A==
-Date: Thu, 22 Aug 2024 17:13:05 -0700
-Subject: [PATCH 04/10] xfs: don't scan off the end of the rt volume in
- xfs_rtallocate_extent_block
+	b=SP2wrvwf+4yfhA1PCx/hydLn0CfwNY8BT5ywmm5y8glMO/AavL/4iwMDm3PzMjMUO
+	 pwX5jDGlpG1SA5AkBPdfNItLxQ++dLWTAyJgXkqv0uD9SCVG5LJk+OxHm9DVgPpSIW
+	 WA3Efx3OWq7M1KKbKPeAFQueXmBqgqq8TcN12fOkfsC/UlUpcTRbUKMnTxEQsgHwq5
+	 3TwJmr9/QEXPATfl+b/ojV3JGZZtYH8yLrd1imsnE/as3/JD7Hu/SJo6wxoTWI+mK1
+	 rFeNyRcoK9EZXigeCwQPXAM+5hvilVt5masIJ9nYaHQKdCE+4awJk/vEAkrP63xwRm
+	 oz1j2GlA6XPqg==
+Date: Thu, 22 Aug 2024 17:13:21 -0700
+Subject: [PATCH 05/10] xfs: refactor aligning bestlen to prod
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172437086686.59070.3726598549775443534.stgit@frogsfrogsfrogs>
+Message-ID: <172437086703.59070.1862088410279807687.stgit@frogsfrogsfrogs>
 In-Reply-To: <172437086590.59070.9398644715198875909.stgit@frogsfrogsfrogs>
 References: <172437086590.59070.9398644715198875909.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,51 +46,73 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The loop conditional here is not quite correct because an rtbitmap block
-can represent rtextents beyond the end of the rt volume.  There's no way
-that it makes sense to scan for free space beyond EOFS, so don't do it.
-This overrun has been present since v2.6.0.
+There are two places in xfs_rtalloc.c where we want to make sure that a
+count of rt extents is aligned with a particular prod(uct) factor.  In
+one spot, we actually use rounddown(), albeit unnecessarily if prod < 2.
+In the other case, we open-code this rounding inefficiently by promoting
+the 32-bit length value to a 64-bit value and then performing a 64-bit
+division to figure out the subtraction.
 
-Also fix the type of bestlen, which was incorrectly converted.
+Refactor this into a single helper that uses the correct types and
+division method for the type, and skips the division entirely unless
+prod is large enough to make a difference.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_rtalloc.c |   26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 3d78dc0940190..7e45e1c74c027 100644
+index 7e45e1c74c027..54f34d7d4c199 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -231,22 +231,20 @@ xfs_rtallocate_extent_block(
- 	xfs_rtxnum_t		*rtx)	/* out: start rtext allocated */
- {
- 	struct xfs_mount	*mp = args->mp;
--	xfs_rtxnum_t		besti;	/* best rtext found so far */
--	xfs_rtxnum_t		bestlen;/* best length found so far */
-+	xfs_rtxnum_t		besti = -1; /* best rtext found so far */
- 	xfs_rtxnum_t		end;	/* last rtext in chunk */
--	int			error;
- 	xfs_rtxnum_t		i;	/* current rtext trying */
- 	xfs_rtxnum_t		next;	/* next rtext to try */
-+	xfs_rtxlen_t		bestlen = 0; /* best length found so far */
- 	int			stat;	/* status from internal calls */
-+	int			error;
+@@ -196,6 +196,17 @@ xfs_rtallocate_range(
+ 	return xfs_rtmodify_range(args, start, len, 0);
+ }
+ 
++/* Reduce @rtxlen until it is a multiple of @prod. */
++static inline xfs_rtxlen_t
++xfs_rtalloc_align_len(
++	xfs_rtxlen_t	rtxlen,
++	xfs_rtxlen_t	prod)
++{
++	if (unlikely(prod > 1))
++		return rounddown(rtxlen, prod);
++	return rtxlen;
++}
++
+ /*
+  * Make sure we don't run off the end of the rt volume.  Be careful that
+  * adjusting maxlen downwards doesn't cause us to fail the alignment checks.
+@@ -210,7 +221,7 @@ xfs_rtallocate_clamp_len(
+ 	xfs_rtxlen_t		ret;
+ 
+ 	ret = min(mp->m_sb.sb_rextents, startrtx + rtxlen) - startrtx;
+-	return rounddown(ret, prod);
++	return xfs_rtalloc_align_len(ret, prod);
+ }
+ 
+ /*
+@@ -294,17 +305,10 @@ xfs_rtallocate_extent_block(
+ 		goto nospace;
  
  	/*
--	 * Loop over all the extents starting in this bitmap block,
--	 * looking for one that's long enough.
-+	 * Loop over all the extents starting in this bitmap block up to the
-+	 * end of the rt volume, looking for one that's long enough.
+-	 * If size should be a multiple of prod, make that so.
++	 * Ensure bestlen is a multiple of prod, but don't return a too-short
++	 * extent.
  	 */
--	for (i = xfs_rbmblock_to_rtx(mp, bbno), besti = -1, bestlen = 0,
--		end = xfs_rbmblock_to_rtx(mp, bbno + 1) - 1;
--	     i <= end;
--	     i++) {
-+	end = min(mp->m_sb.sb_rextents, xfs_rbmblock_to_rtx(mp, bbno + 1)) - 1;
-+	for (i = xfs_rbmblock_to_rtx(mp, bbno); i <= end; i++) {
- 		/* Make sure we don't scan off the end of the rt volume. */
- 		maxlen = xfs_rtallocate_clamp_len(mp, i, maxlen, prod);
+-	if (prod > 1) {
+-		xfs_rtxlen_t	p;	/* amount to trim length by */
+-
+-		div_u64_rem(bestlen, prod, &p);
+-		if (p)
+-			bestlen -= p;
+-	}
+-
+-	/* Don't return a too-short extent. */
++	bestlen = xfs_rtalloc_align_len(bestlen, prod);
+ 	if (bestlen < minlen)
+ 		goto nospace;
  
 
