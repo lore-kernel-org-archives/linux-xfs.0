@@ -1,86 +1,96 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D8611BDDB
-	for <linux-xfs@vger.kernel.org>; Sat, 24 Aug 2024 03:41:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C705D182B4;
+	Sat, 24 Aug 2024 04:46:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724470878; cv=none; b=JvMU3brCryr9gSrc63B72z5fVZfQL71vVnb3P1QEIwRu6o+gdJXPXuKpWEWnWuKnsrHmK0ggq7hxvIrATrqKR8OsWlGOiv07qZHEkuBWsY1TgcPgjIGeOXSniEig7dSTfqiI5TufW9w6z0RkZuoxGPZQAlBAW1WiyCSnUFWo/Sg=
+	t=1724474804; cv=none; b=lCOFc0LfrmuZ6dUX+z9RgvTUhLOeS6e/w5LWLA/drBnWCSfsuCkFoLz5BnIeAh6m0vo6JgVEoeX56x4qujx0d5lss3lscqWhHqRKprU3IVhBgSntUJJNI5phTQpO5DrGvvq6aZJrO3t4MYCKsc4UCeq02RhQaZHgzrX4CNCdPu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724470878; c=relaxed/simple;
-	bh=hiPirQU743fqMaamvNwkvWll+ePXTl4rcbXYGUuRk84=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o96q5cizRlI7rRS2IYmt3KTAACdzg5d/R3JT0kBNFLpSC7X9yKNxgRmf/qzGiu3vwjuFekKeH9nqhlLh1zqytNBGTHK2Al1J+KKW8aIDn6kYivVvbbx/BEb6XKkbU/+s07S8EIsvceok3nq32wQW+T117MpLjn0USkycmof0OVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ms5RO1fI; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1724474804; c=relaxed/simple;
+	bh=s7xdtysKKGZbwDUnaPeYWK3s+KmjLTpVXaCfvp3YpeY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OgKr5pLNCPJbmsc++ip9H/tSEnc+vEmiqIhM2LTIH1SP6Kxa45p6BtGQJ8tgcKzYId5vMhqpkvRz3bAwgumlvLHuR3ZqyOXwBSYbgo1FKLj1fVb5UnFJjGDU767mmvtW/EmhdY9I408JgXB1p/mhHRg2soxoRl2Vu4mLSAcib88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iuFQZx+D; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ms5RO1fI"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=WV91XfuPalAR6sncgRRkCFH/g4wVSAS8w3cADrhfJm4=; b=ms5RO1fIKh1ShlsfRG7TLLgCo9
-	K3IEwxwmyDVpxICEuvV0n5fM52klSaxclAzzYU/iYJxM5RAZeM//gXkJQE7OYr9YfyJQ5PgrYhLTv
-	/LDUyw6dQAiqIgfHRKZ0eSMnfsvSuCsJO11ZJ/qRjhWkvl7E0ERhasiur30JkjcpQs7JtMt1h6UCW
-	am3Uo7YlWWP+IAKziXv9dOHh/DD+aNaDfq4yypALdW/3vkd/j9ehtuh/Eb2zJpv8bXwPUTOuJuRiV
-	uu1R0Jo/Na90hrPZm20IyYye/5ijklWEYw9PnXrIPuCYjh+ZxnVsIcBfn44+RHHyfUxB8ICSGd2jG
-	kaTvrukQ==;
-Received: from 2a02-8389-2341-5b80-7457-864c-9b77-b751.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:7457:864c:9b77:b751] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1shheO-00000001MSG-2W0u;
-	Sat, 24 Aug 2024 03:41:16 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 6/6] xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
-Date: Sat, 24 Aug 2024 05:40:12 +0200
-Message-ID: <20240824034100.1163020-7-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240824034100.1163020-1-hch@lst.de>
-References: <20240824034100.1163020-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iuFQZx+D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31EF5C32781;
+	Sat, 24 Aug 2024 04:46:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724474804;
+	bh=s7xdtysKKGZbwDUnaPeYWK3s+KmjLTpVXaCfvp3YpeY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iuFQZx+D9EgidxuPZ/uU0kAI6aq9Ze95SAzRK8D/peebcha4jjmBb05kQOP8/5jzS
+	 zyE3v/5uPlo/lV2sfNOm1vPEKt/lbdspQVSILJlprqmy9Kc+B2bp3XDFCR8eyWPc9m
+	 WFQq7NlSzFWvA4fAMyfs2jaOLbnVRklBgz6EhTgr1Fc6Unxt02FrtV+JHEvqy9L74z
+	 kgcK0ucbA88d8BLMTHMKeMXNwXWC68c7GUMxlN35VOll+Ths19HQeMPvSDXlKEp/lx
+	 kYH/MjCOsyXDFTGELy/F123Qiy6Awsxmi9QCPl83g1TgGAMRgFjcuB8h3tbi1blYyp
+	 MUWEelq7iSmZw==
+Date: Fri, 23 Aug 2024 21:46:43 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Layton <jlayton@kernel.org>, hch@lst.de, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: introduce new file range commit ioctls
+Message-ID: <20240824044643.GS865349@frogsfrogsfrogs>
+References: <172437084258.57211.13522832162579952916.stgit@frogsfrogsfrogs>
+ <172437084278.57211.4355071581143024290.stgit@frogsfrogsfrogs>
+ <ZsgMRrOBlBwsHBdZ@infradead.org>
+ <e167fb368b8a54b0716ae35730ddc61a658f6f6a.camel@kernel.org>
+ <20240823174140.GJ865349@frogsfrogsfrogs>
+ <ZslTjr9P-2JUKVg7@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZslTjr9P-2JUKVg7@infradead.org>
 
-Currently the debug-only xfs_bmap_exact_minlen_extent_alloc allocation
-variant fails to drop into the lowmode last resort allocator, and
-thus can sometimes fail allocations for which the caller has a
-transaction block reservation.
+On Fri, Aug 23, 2024 at 08:29:18PM -0700, Christoph Hellwig wrote:
+> On Fri, Aug 23, 2024 at 10:41:40AM -0700, Darrick J. Wong wrote:
+> > <nod> If these both get merged for 6.12, I think the appropriate port
+> > for this patch is to change xfs_ioc_start_commit to do:
+> > 
+> > 	struct kstat	kstat;
+> > 
+> > 	fill_mg_cmtime(&kstat, STATX_CTIME | STATX_MTIME, XFS_I(ip2));
+> > 	kern_f->file2_ctime		= kstat.ctime.tv_sec;
+> > 	kern_f->file2_ctime_nsec	= kstat.ctime.tv_nsec;
+> > 	kern_f->file2_mtime		= kstat.mtime.tv_sec;
+> > 	kern_f->file2_mtime_nsec	= kstat.mtime.tv_nsec;
+> > 
+> > instead of open-coding the inode_get_[cm]time calls.  The entire
+> > exchangerange feature is still marked experimental, so I didn't think it
+> > was worth rebasing my entire dev branch on the multigrain timestamp
+> > redux series; we can just fix it later.
+> 
+> But the commit log could really note this dependency.  This will be
+> especially useful for backports, but also for anyone reading through
+> code history.
 
-Fix this by using xfs_bmap_btalloc_low_space to do the actual allocation.
+Ok, how about this for a commit message:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_bmap.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+"This patch introduces two more new ioctls to manage atomic updates to
+file contents -- XFS_IOC_START_COMMIT and XFS_IOC_COMMIT_RANGE.  The
+commit mechanism here is exactly the same as what XFS_IOC_EXCHANGE_RANGE
+does, but with the additional requirement that file2 cannot have changed
+since some sampling point.  The start-commit ioctl performs the sampling
+of file attributes.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 73c5af9f0affed..f890d8dc25e47d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3493,7 +3493,13 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	 */
- 	ap->blkno = XFS_AGB_TO_FSB(ap->ip->i_mount, 0, 0);
- 
--	return xfs_alloc_vextent_first_ag(args, ap->blkno);
-+	/*
-+	 * Call xfs_bmap_btalloc_low_space here as it first does a "normal" AG
-+	 * iteration and then drops args->total to args->minlen, which might be
-+	 * required to find an allocation for the transaction reservation when
-+	 * the file system is very full.
-+	 */
-+	return xfs_bmap_btalloc_low_space(ap, args);
- }
- #else
- 
--- 
-2.43.0
+"Note: This patch currently samples i_ctime during START_COMMIT and
+checks that it hasn't changed during COMMIT_RANGE.  This isn't entirely
+safe in kernels prior to 6.12 because ctime only had coarse grained
+granularity and very fast updates could collide with a COMMIT_RANGE.
+With the multi-granularity ctime introduced in that release by Jeff
+Layton, it's now possible to update ctime such that this does not
+happen.
 
+"It is critical, then, that this patch must not be backported to any
+kernel that does not support fine-grained file change timestamps."
+
+Will that pass muster?
+
+--D
