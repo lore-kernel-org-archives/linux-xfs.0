@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16DEA80034
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 19:40:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6972719AA57
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 21:17:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724701229; cv=none; b=jww9egZv2hU+RsHiSd7Ugd30JIesYZ7i3iHJJE7FOROhFwi0srvIvjUu1bpbKM++GU16gedb1ETR7i6qmYCL6MshxaAkqTI5sm9Ln/dNBPPWj9kZz91NcrN9wRg00ff99hi2lHBiHbSj4bKAx7Qtn9SuStrB2ZAaGfXmagIIrGk=
+	t=1724707041; cv=none; b=qBwc0FrlBESXo5vtn44GYvcnXn4egXOuh7UsjmKittZDBP3XOn6RzlPi353z9/qUs2WFKYgI85omsZ5SQ2i+uHoiW5UrMnyE2tiLUpS22WN0kV4VpiWtuRIajv3R07I/3lSHqLUUHQT8tU+kSS0ygtqsVWD1NCbdRUsSBeRLkxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724701229; c=relaxed/simple;
-	bh=zrbNUB7xBQ6H1dGpOJMH2jLL/HeLsIyfbnjBfPxRGSI=;
+	s=arc-20240116; t=1724707041; c=relaxed/simple;
+	bh=6LzrvIqJRXAtXJjUtRs6X4iqXk7c1BFUDMEUuGWYvsU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qpu9NoWCo1b5vc00WgGg/o/c7itlLiMAsjcfQciHcR3gg80ZfnhH1oHB5jJh4kxbRzj8cL5uRf6IgJS+WK+uFVx7pLGdcUOmHYSFThyx1DUDSWhGyDo7bcPgnI/DwqgjgYeGnawf9DFAAlbtAiwO60M5ZDWMhAym0HEEJouk2sw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l+T8RQjD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QC3vJhRkoCGT7xY12UZwD6Yd3drCuXqignwRcxOuSzw8kxlJFMcETGwsYswwBs5FXK79CQrI7DCGdKGXmkdmykTNhQomHMlGeU/5erqXwskX8TCuFDb+LHz9KSE0bPsCxGO5wbTyr5aRFqm6FP2FKrOvzw6IjPtpH6UB+dHg/zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kzQByx7b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l+T8RQjD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A3FEC8B7A3;
-	Mon, 26 Aug 2024 19:40:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kzQByx7b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D29EBC568DF;
+	Mon, 26 Aug 2024 21:17:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724701228;
-	bh=zrbNUB7xBQ6H1dGpOJMH2jLL/HeLsIyfbnjBfPxRGSI=;
+	s=k20201202; t=1724707040;
+	bh=6LzrvIqJRXAtXJjUtRs6X4iqXk7c1BFUDMEUuGWYvsU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=l+T8RQjDiy2UiY9L9E1v0kzMJhYAfQ5hYx/X/eb2eVpdKyU4OO9wEG+kWIQ68o5he
-	 vJP6Acd48Khm7OSMyhBX4SEUA7+uQaJTlvJtilGosBAbovOz3xoS+1lyucDsscQr81
-	 GHEMxE3k/xoN48M7RW9KQJHdZe51E9n0kG7DQ7hx9J5+aLZsjvZH3CFRGGawfroEOY
-	 Os/G/V+ZsSoV2YWzsq2IFNC5W5t1mv7+MuSHHr/Fuva+kt7Os6OYkWSsY3XP3sq+Sq
-	 COGApCgezpqanKhzCwILKwT92JLjoBujCfcXhofni1ZR2tnIkit9eOhXE8RfK8ymgl
-	 sGk7PRULzylYQ==
-Date: Mon, 26 Aug 2024 12:40:28 -0700
+	b=kzQByx7b4vgRIpU/0b8k1WK0KR6AciMXM5fUaV8y6s3eLWpiTM8kYLdxddQdwOHwJ
+	 Wnfw6ZBafLKjUvyfHFp8K6dRFHGCMgVudJvTemSa/hb93yGw6Uo37S4Kr1IChBilPT
+	 AoFQYKY8ixzpg9c+5rn1NVWjpiv1meePxaGbrPzJ+/hg85ROBba9JlIKxY6/tUVJMM
+	 0nt4H/KXL4PFKYhTLNjgSzeP6r43+duMeQCxMVRdXIa8JZIKF+EaUrG3ThK0a7jgL+
+	 9EYXeuj8I9gANU3CgB+Bo28nknTXqscQ1/i+0UkDFBaIzFQKbvy54xprQ9O0RCWDPq
+	 /aWFdxPHDx9Hg==
+Date: Mon, 26 Aug 2024 14:17:20 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 21/26] xfs: make the RT allocator rtgroup aware
-Message-ID: <20240826194028.GE865349@frogsfrogsfrogs>
-References: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
- <172437088886.60592.11418423460788700576.stgit@frogsfrogsfrogs>
- <ZswLBVOUvwhJZInN@dread.disaster.area>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+Subject: Re: [RFD] xfsprogs/mkfs: prototype XFS image mode format for
+ scalable AG growth
+Message-ID: <20240826211720.GF865349@frogsfrogsfrogs>
+References: <20240812135652.250798-1-bfoster@redhat.com>
+ <20240823011502.GV6082@frogsfrogsfrogs>
+ <Zsyobbqa_yMptsvy@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,206 +44,257 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZswLBVOUvwhJZInN@dread.disaster.area>
+In-Reply-To: <Zsyobbqa_yMptsvy@bfoster>
 
-On Mon, Aug 26, 2024 at 02:56:37PM +1000, Dave Chinner wrote:
-> On Thu, Aug 22, 2024 at 05:26:38PM -0700, Darrick J. Wong wrote:
-> > From: Christoph Hellwig <hch@lst.de>
+On Mon, Aug 26, 2024 at 12:08:13PM -0400, Brian Foster wrote:
+> On Thu, Aug 22, 2024 at 06:15:02PM -0700, Darrick J. Wong wrote:
+> > On Mon, Aug 12, 2024 at 09:56:52AM -0400, Brian Foster wrote:
+> > > Tweak a few checks to facilitate experimentation with an agcount=1
+> > > filesystem format with a larger agsize than the filesystem data
+> > > size. The purpose of this is to POC a filesystem image mode format
+> > > for XFS that better supports the typical cloud filesystem image
+> > > deployment use case where a very small fs image is created and then
+> > > immediately grown orders of magnitude in size once deployed to
+> > > container environments. The large grow size delta produces
+> > > filesystems with excessive AG counts, which leads to various other
+> > > functional problems that eventually derive from this sort of
+> > > pathological geometry.
+> > > 
+> > > To experiment with this patch, format a small fs with something like
+> > > the following:
+> > > 
+> > >   mkfs.xfs -f -lsize=64m -dsize=512m,agcount=1,agsize=8g <imgfile>
+> > > 
+> > > Increase the underlying image file size, mount and grow. The
+> > > filesystem will grow according to the format time AG size as if the
+> > > AG was a typical runt AG on a traditional multi-AG fs.
+> > > 
+> > > This means that the filesystem remains with an AG count of 1 until
+> > > fs size grows beyond AG size. Since the typical deployment workflow
+> > > is an immediate very small -> very large, one-time grow, the image
+> > > fs can set a reasonable enough default or configurable AG size
+> > > (based on user input) that ensures deployed filesystems end up in a
+> > > generally supportable geometry (i.e. with multiple AGs for
+> > > superblock redundancy) before seeing production workloads.
+> > > 
+> > > Further optional changes are possible on the kernel side to help
+> > > provide some simple guardrails against misuse of this mechanism. For
+> > > example, the kernel could do anything from warn/fail or restrict
+> > > runtime functionality for an insufficient grow. The image mode
+> > > itself could set a backwards incompat feature bit that requires a
+> > > mount option to enable full functionality (with the exception of
+> > > growfs). More discussion is required to determine whether this
+> > > provides a usable solution for the common cloud workflows that
+> > > exhibit this problem and what the right interface and/or limitations
+> > > are to ensure it is used correctly.
+> > > 
+> > > Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > Hi all,
+> > > 
+> > > This is a followup to the idea Darrick brought up in the expansion
+> > > discussion here [1]. I poked through the code a bit and found it
+> > > somewhat amusing how little was in the way of experimenting with this,
+> > > so threw this against an fstests run over the weekend. I see maybe
+> > > around ~10 or so test failures, most of which look like simple failures
+> > > related to either not expecting agcount == 1 fs' or my generally
+> > > hacky/experimental changes. There are a couple or so that require a bit
+> > > more investigation to properly characterize before I would consider this
+> > > fully sane.
+> > > 
+> > > I'm posting this separately from the expansion discussion to hopefully
+> > > avoid further conflating the two. My current sense is that if this turns
+> > > out to be a fundamentally workable approach, mkfs would more look
+> > > something like 'mkfs --image-size 40g ...' and the kernel side may grow
+> > > some optional guardrail logic mentioned above and in the previous
+> > > discussion here [2], but others might have different ideas.
+> > > 
+> > > Darrick, you originally raised this idea and then Eric brought up some
+> > > legitimate technical concerns in the expansion design thread. I'm
+> > > curious if either of you have any further thoughts/ideas on this.
 > > 
-> > Make the allocator rtgroup aware by either picking a specific group if
-> > there is a hint, or loop over all groups otherwise.  A simple rotor is
-> > provided to pick the placement for initial allocations.
+> > Well, it /does/ seem to work as intended -- you can create a filesystem
+> > with a 100G agsize even on a 8G filesystem.  We've been over the
+> > drawbacks of this approach vs. Dave's (i.e. explodefs is really only a
+> > one-time event) so I won't rehash that here.
 > > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c     |   13 +++++-
-> >  fs/xfs/libxfs/xfs_rtbitmap.c |    6 ++-
-> >  fs/xfs/xfs_mount.h           |    1 
-> >  fs/xfs/xfs_rtalloc.c         |   98 ++++++++++++++++++++++++++++++++++++++----
-> >  4 files changed, 105 insertions(+), 13 deletions(-)
+> 
+> Yeah.. I view this as kind of an incremental step in the broader
+> expandfs topic to opportunistically solve a real (and lingering) problem
+> with a minimal amount of complexity.
+> 
+> > But it does solve the much more constrained problem of disk images
+> > deployed from a gold master image undergoing a massive onetime expansion
+> > during firstboot.  The lack of secondary superblocks and xfs_repair
+> > warnings are concerning, but to that, I have these things to say:
 > > 
+> > a. If it's a gold master image from a trusted distributor, they should
+> > be installing verity information on all the read-mostly files so that
+> > one can validate the vendor's signatures.  The fs metadata being corrupt
+> > is moot if fsverity fails.
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 126a0d253654a..88c62e1158ac7 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3151,8 +3151,17 @@ xfs_bmap_adjacent_valid(
-> >  	struct xfs_mount	*mp = ap->ip->i_mount;
-> >  
-> >  	if (XFS_IS_REALTIME_INODE(ap->ip) &&
-> > -	    (ap->datatype & XFS_ALLOC_USERDATA))
-> > -		return x < mp->m_sb.sb_rblocks;
-> > +	    (ap->datatype & XFS_ALLOC_USERDATA)) {
-> > +		if (x >= mp->m_sb.sb_rblocks)
-> > +			return false;
-> > +		if (!xfs_has_rtgroups(mp))
-> > +			return true;
-> > +
-> > +		return xfs_rtb_to_rgno(mp, x) == xfs_rtb_to_rgno(mp, y) &&
-> > +			xfs_rtb_to_rgno(mp, x) < mp->m_sb.sb_rgcount &&
-> > +			xfs_rtb_to_rtx(mp, x) < mp->m_sb.sb_rgextents;
 > 
-> WHy do we need the xfs_has_rtgroups() check here? The new rtg logic will
-> return true for an old school rt device here, right?
-
-The incore sb_rgextents is zero on !rtg filesystems, so we need the
-xfs_has_rtgroups.
-
-> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index 3fedc552b51b0..2b57ff2687bf6 100644
-> > --- a/fs/xfs/xfs_rtalloc.c
-> > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -1661,8 +1661,9 @@ xfs_rtalloc_align_minmax(
-> >  }
-> >  
-> >  static int
-> > -xfs_rtallocate(
-> > +xfs_rtallocate_rtg(
-> >  	struct xfs_trans	*tp,
-> > +	xfs_rgnumber_t		rgno,
-> >  	xfs_rtblock_t		bno_hint,
-> >  	xfs_rtxlen_t		minlen,
-> >  	xfs_rtxlen_t		maxlen,
-> > @@ -1682,16 +1683,33 @@ xfs_rtallocate(
-> >  	xfs_rtxlen_t		len = 0;
-> >  	int			error = 0;
-> >  
-> > -	args.rtg = xfs_rtgroup_grab(args.mp, 0);
-> > +	args.rtg = xfs_rtgroup_grab(args.mp, rgno);
-> >  	if (!args.rtg)
-> >  		return -ENOSPC;
-> >  
-> >  	/*
-> > -	 * Lock out modifications to both the RT bitmap and summary inodes.
-> > +	 * We need to lock out modifications to both the RT bitmap and summary
-> > +	 * inodes for finding free space in xfs_rtallocate_extent_{near,size}
-> > +	 * and join the bitmap and summary inodes for the actual allocation
-> > +	 * down in xfs_rtallocate_range.
-> > +	 *
-> > +	 * For RTG-enabled file system we don't want to join the inodes to the
-> > +	 * transaction until we are committed to allocate to allocate from this
-> > +	 * RTG so that only one inode of each type is locked at a time.
-> > +	 *
-> > +	 * But for pre-RTG file systems we need to already to join the bitmap
-> > +	 * inode to the transaction for xfs_rtpick_extent, which bumps the
-> > +	 * sequence number in it, so we'll have to join the inode to the
-> > +	 * transaction early here.
-> > +	 *
-> > +	 * This is all a bit messy, but at least the mess is contained in
-> > +	 * this function.
-> >  	 */
-> >  	if (!*rtlocked) {
-> >  		xfs_rtgroup_lock(args.rtg, XFS_RTGLOCK_BITMAP);
-> > -		xfs_rtgroup_trans_join(tp, args.rtg, XFS_RTGLOCK_BITMAP);
-> > +		if (!xfs_has_rtgroups(args.mp))
-> > +			xfs_rtgroup_trans_join(tp, args.rtg,
-> > +					XFS_RTGLOCK_BITMAP);
-> >  		*rtlocked = true;
-> >  	}
-> >  
-> > @@ -1701,7 +1719,7 @@ xfs_rtallocate(
-> >  	 */
-> >  	if (bno_hint)
-> >  		start = xfs_rtb_to_rtx(args.mp, bno_hint);
-> > -	else if (initial_user_data)
-> > +	else if (!xfs_has_rtgroups(args.mp) && initial_user_data)
-> >  		start = xfs_rtpick_extent(args.rtg, tp, maxlen);
+> This crossed my mind at one point as well. I thought these sort of image
+> repo setups at least had per-image checksum files or whatever that would
+> hopefully somewhat mitigate this sort of problem.
 > 
-> Check initial_user_data first - we don't care if there are rtgroups
-> enabled if initial_user_data is not true, and we only ever allocate
-> initial data on an inode once...
-
-<nod>
-
-> > @@ -1741,6 +1767,53 @@ xfs_rtallocate(
-> >  	return error;
-> >  }
-> >  
-> > +static int
-> > +xfs_rtallocate_rtgs(
-> > +	struct xfs_trans	*tp,
-> > +	xfs_fsblock_t		bno_hint,
-> > +	xfs_rtxlen_t		minlen,
-> > +	xfs_rtxlen_t		maxlen,
-> > +	xfs_rtxlen_t		prod,
-> > +	bool			wasdel,
-> > +	bool			initial_user_data,
-> > +	xfs_rtblock_t		*bno,
-> > +	xfs_extlen_t		*blen)
-> > +{
-> > +	struct xfs_mount	*mp = tp->t_mountp;
-> > +	xfs_rgnumber_t		start_rgno, rgno;
-> > +	int			error;
-> > +
-> > +	/*
-> > +	 * For now this just blindly iterates over the RTGs for an initial
-> > +	 * allocation.  We could try to keep an in-memory rtg_longest member
-> > +	 * to avoid the locking when just looking for big enough free space,
-> > +	 * but for now this keep things simple.
-> > +	 */
-> > +	if (bno_hint != NULLFSBLOCK)
-> > +		start_rgno = xfs_rtb_to_rgno(mp, bno_hint);
-> > +	else
-> > +		start_rgno = (atomic_inc_return(&mp->m_rtgrotor) - 1) %
-> > +				mp->m_sb.sb_rgcount;
-> > +
-> > +	rgno = start_rgno;
-> > +	do {
-> > +		bool		rtlocked = false;
-> > +
-> > +		error = xfs_rtallocate_rtg(tp, rgno, bno_hint, minlen, maxlen,
-> > +				prod, wasdel, initial_user_data, &rtlocked,
-> > +				bno, blen);
-> > +		if (error != -ENOSPC)
-> > +			return error;
-> > +		ASSERT(!rtlocked);
-> > +
-> > +		if (++rgno == mp->m_sb.sb_rgcount)
-> > +			rgno = 0;
-> > +		bno_hint = NULLFSBLOCK;
-> > +	} while (rgno != start_rgno);
-> > +
-> > +	return -ENOSPC;
-> > +}
-> > +
-> >  static int
-> >  xfs_rtallocate_align(
-> >  	struct xfs_bmalloca	*ap,
-> > @@ -1835,9 +1908,16 @@ xfs_bmap_rtalloc(
-> >  	if (xfs_bmap_adjacent(ap))
-> >  		bno_hint = ap->blkno;
-> >  
-> > -	error = xfs_rtallocate(ap->tp, bno_hint, raminlen, ralen, prod,
-> > -			ap->wasdel, initial_user_data, &rtlocked,
-> > -			&ap->blkno, &ap->length);
-> > +	if (xfs_has_rtgroups(ap->ip->i_mount)) {
-> > +		error = xfs_rtallocate_rtgs(ap->tp, bno_hint, raminlen, ralen,
-> > +				prod, ap->wasdel, initial_user_data,
-> > +				&ap->blkno, &ap->length);
-> > +	} else {
-> > +		error = xfs_rtallocate_rtg(ap->tp, 0, bno_hint, raminlen, ralen,
-> > +				prod, ap->wasdel, initial_user_data,
-> > +				&rtlocked, &ap->blkno, &ap->length);
-> > +	}
+> > b. We can turn off the xfs_repair hostility to single-AG filesystems
+> > so that people who /do/ want to fsck their goldmaster images don't get
+> > annoying warnings.  We /could/ add a new compat flag to say it's ok to
+> > single-AG, or we could hang that on the fsverity sb flag.
+> > 
+> > c. Over on our end, we know the minimum cloud boot volume size -- it's
+> > 47GB.  My canned OL9 image seems to come with a 36GB root filesystem.
+> > My guess is that most of our users will say yes to the instance creator
+> > asking them if they want more space (a princely 67GB minimum if you're
+> > stingy like I am!) so I think one could tweak the image creator to spit
+> > out a 36GB AG XFS, knowing that only the Ferengi users *won't* end up
+> > with a double-AG rootfs.
+> > 
 > 
-> The xfs_has_rtgroups() check is unnecessary.  The iterator in
-> xfs_rtallocate_rtgs() will do the right thing for the
-> !xfs_has_rtgroups() case - it'll set start_rgno = 0 and break out
-> after a single call to xfs_rtallocate_rtg() with rgno = 0.
-> 
-> Another thing that probably should be done here is push all the
-> constant value calculations a couple of functions down the stack to
-> where they are used. Then we only need to pass two parameters down
-> through the rg iterator here, not 11...
+> Do you mean that the image size is 37GB, or it's grown to that size at
+> some point during the deployment? If the latter, any idea on the
+> ballpark size of a typical install image before it's deployed and grown?
 
-..and pass the ap itself too, to remove three of the parameters?
+I think the actual gold master images have ~37G root filesystems.  I
+didn't choose to expand my stingy OL8 image at firstboot, and it has 4
+AGs like you'd expect.  Most of the time the deployment control panel
+tries to convince you to upgrade to 67G, if not ~200G.
+
+> > IOWs, this more or less works for the usecase that generates the most
+> > internal complaints about xfs sucking.  As I said earlier, I've not
+> > heard about people wanting to 10000x growfs after firstboot; usually
+> > they only grow incrementally as they decide that extra $$$$$ is worth
+> > another 10GB.
+> > 
+> 
+> This is my understanding as well.
+> 
+> > I think this is worth prototyping a bit more.  Do you?
+> > 
+> 
+> I do as well..
+> 
+> Eric and I had a random discussion about this the other week and one of
+> the concerns he brought up is the risk that some deployment might grow
+> and still end up on a single AG fs because maybe the deployment just
+> didn't provide sufficient storage as expected for the image. This was
+> part of the reason I brought up the whole image mode feature bit in the
+> expandfs discussion, because we could always do something to enforce
+> that fs functionality is hobbled until sufficiently grown to at least
+> 2xAGs and thus clear the image mode feature bit.
+> 
+> That said, another thing I played around a bit with after posting this
+> was the ability to just grow the AG size at runtime. I.e., for a single
+> AG fs, it's fairly easy to just change the AG size at growfs time. I
+> currently have that prototyped by using a separate transaction to avoid
+> some verifier failure madness I didn't want to sift through to prove the
+> concept, but this could also be prototyped to exist as a separate,
+> optional GROWFS_AGSIZE ioctl without much additional fuss.
+
+What if we rev the growfsdata ioctl to allow the user to specify an
+agsize?  Userspace (i.e. xfs_growfs) can then try to set the AG size, or
+if that fails, fall back to the current growfsdata.
+
+> So for example, suppose that we just created an image file fs with
+> something like "mkfs.xfs -d agcount=1 -lsize=64m <file>," where the
+> superblock AG size is not actually larger than the single AG. Then we
+> update xfs_growfs to look at the current block device size, make a
+> decision on an ideal AG size from that, and run an ioctl(GROWFS_AGSIZE,
+> agsize) followed by the typical ioctl(GROWFS_DATA, bdev_size). The
+> GROWFS_AGSIZE can either update the sb ag size as appropriate before the
+> grow, or just fail and we fall back to default growfs behavior.
+> 
+> That would allow a bit more dynamic runtime behavior and maybe ensure we
+> end up with a more typical 4xAG fs in most cases. Dave had pointed out
+> that there might be concerns around AG sizing logic, but this would
+> exist in userspace and could be lifted straight from mkfs if need be.
+> TBH, on my first look it looked like it was mostly alignment (i.e.
+> stripe unit, etc.) related stuff, so I'd probably just punt and let
+> GROWFS_AGSIZE fail if any such unsupported fields are set. Worst case we
+> just fall back to existing behavior.
+
+I wouldn't have a problem with hoisting that to libxfs and sharing with
+the kernel.
+
+> Thoughts on that? If that sounds interesting enough I can follow up with
+> a v2 prototype along those lines. Appreciate the discussion.
+> 
+> Brian
+> 
+> P.S. Semi-random thought after writing up the above.. it occurred to me
+> that we already have a provisional shrink mechanism, so in theory
+> perhaps we could also do something like "mkfs.xfs --image-mode <file>"
+> where we just hardcoded agcount=1,agsize=1TB, and then let userspace
+> grow shrink to the appropriate agsize in the delta < 0 && agsize >
+> fssize case and then grow out normally from there. Maybe that's just
+> another way of doing the same thing, but something else to think about
+> at least..
+
+<shrug> I'd rather do the ag resizing explicitly than implied if someone
+says to shrink (or grow) and the agcount is zero and magic compat flag
+is set.
 
 --D
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > [1] https://lore.kernel.org/linux-xfs/20240721230100.4159699-1-david@fromorbit.com/
+> > > [2] https://lore.kernel.org/linux-xfs/ZqzMay58f0SvdWxV@bfoster/
+> > > 
+> > >  mkfs/xfs_mkfs.c | 11 +++++------
+> > >  1 file changed, 5 insertions(+), 6 deletions(-)
+> > > 
+> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > > index 6d2469c3c..50a874a03 100644
+> > > --- a/mkfs/xfs_mkfs.c
+> > > +++ b/mkfs/xfs_mkfs.c
+> > > @@ -325,8 +325,7 @@ static struct opt_params dopts = {
+> > >  	},
+> > >  	.subopt_params = {
+> > >  		{ .index = D_AGCOUNT,
+> > > -		  .conflicts = { { &dopts, D_AGSIZE },
+> > > -				 { &dopts, D_CONCURRENCY },
+> > > +		  .conflicts = { { &dopts, D_CONCURRENCY },
+> > >  				 { NULL, LAST_CONFLICT } },
+> > >  		  .minval = 1,
+> > >  		  .maxval = XFS_MAX_AGNUMBER,
+> > > @@ -368,8 +367,7 @@ static struct opt_params dopts = {
+> > >  		  .defaultval = SUBOPT_NEEDS_VAL,
+> > >  		},
+> > >  		{ .index = D_AGSIZE,
+> > > -		  .conflicts = { { &dopts, D_AGCOUNT },
+> > > -				 { &dopts, D_CONCURRENCY },
+> > > +		  .conflicts = { { &dopts, D_CONCURRENCY },
+> > >  				 { NULL, LAST_CONFLICT } },
+> > >  		  .convert = true,
+> > >  		  .minval = XFS_AG_MIN_BYTES,
+> > > @@ -1233,7 +1231,7 @@ validate_ag_geometry(
+> > >  		usage();
+> > >  	}
+> > >  
+> > > -	if (agsize > dblocks) {
+> > > +	if (agsize > dblocks && agcount != 1) {
+> > >  		fprintf(stderr,
+> > >  	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
+> > >  			(long long)agsize, (long long)dblocks);
+> > > @@ -2703,7 +2701,8 @@ validate_supported(
+> > >  	 * Filesystems should not have fewer than two AGs, because we need to
+> > >  	 * have redundant superblocks.
+> > >  	 */
+> > > -	if (mp->m_sb.sb_agcount < 2) {
+> > > +	if (mp->m_sb.sb_agcount < 2 &&
+> > > +	    mp->m_sb.sb_agblocks <= mp->m_sb.sb_dblocks) {
+> > >  		fprintf(stderr,
+> > >   _("Filesystem must have at least 2 superblocks for redundancy!\n"));
+> > >  		usage();
+> > > -- 
+> > > 2.45.0
+> > > 
+> > 
+> 
 > 
