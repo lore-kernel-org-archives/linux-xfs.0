@@ -1,56 +1,55 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C75FC08
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 14:03:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6109188A12
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 14:06:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724681006; cv=none; b=FSoiaKgE9nYN+sRAAgGmEtRuvE/knfHKkUW4PQvj3MOvCt2Hy+P/s1w2g4lmD/cX0FnXoJ3ApxJUQy8pso2O/SOf05cYqQvOb6qVlaYkE7WSACcAl64aIZqeZAaA/OEzLfwxzkHYowfTmIS1BlL2Kkhk3BI11dNnKGrLK1I3Cx4=
+	t=1724681205; cv=none; b=I1ELd3F0tknDKwZg4ql231hxnK043hQk+w4Ek7QkUPDZKmmzsfb8/0atEP3AWw56GhqF4bDuy/JJpYp0V06zF5VPO2RuyibsJHBGhtq9jcKg3WLo98bN546IaeZoMP/KfHysI9mhuaxb27Dm1vCnIWw5Pq6+fMIyc85b2+z9Eu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724681006; c=relaxed/simple;
-	bh=KTIVeKyKAamq/lAcmy7ePOVZvRRWj2S5vgpsRr/QWBg=;
+	s=arc-20240116; t=1724681205; c=relaxed/simple;
+	bh=S7KCAcZlTHlL6IZZSjByJR01Jx+dNJZkM+l8CLKATAE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CSgM53m9Ip8SscFJ50ZoxpFDtqus/idgx7CxNAnZpx6W4GwS0O5WWqB0BgmCsjbscq5BpLm2vQXfCjBew/CbGLnVXku63DQ3DRhaWc7gTex6Fdhz+6sms/CwkBcsttBStQFJeGtXIuWdQn6Z/ApTCSeCYwwgHb7xDQ1o+jJqvBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LD36Nxmu; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=Eq+jDmkTRr3KasrlVQ+XU5vgunh83zrg2n/AmOCtcL1GQuyaCbaBjExrhY3pZ6c6yEwZTzl0qN3WVMsz0ND/nbynB6d1yxZFaf9r98yE+GeAvHW0OrHlo8ufHEQ0J4JgeGcigUo6J/kej/kHLkzX48XMPsoCulC4UgMNqU6iBMM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=h0rLkxi3; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LD36Nxmu"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="h0rLkxi3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1724681003;
+	s=mimecast20190719; t=1724681201;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=PD6l1Uvu/PU6kCiHgybS5Q9PQ0ncoZopI7J/3AWpVLA=;
-	b=LD36NxmucasnlxnW0GeDqqP7AZHA7ZEhsZ8yb02NX8iP/ATuXhAOwL+sA61lAtj8Jss6SU
-	+cRGUC8+RqqRAs6bN0w6JRfQaw80eHdmDhyoqk9Xowxna5HUl+68Wb138d1pJKsRmLA1M/
-	v/HFW5EA877XDjKMJAx/LGE+ybUuwaY=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+	bh=5aRd4rFr7LIWlAGKgwuEmrevSyr0KYJo9n8hiZeDPiE=;
+	b=h0rLkxi3+APCQnxFGDW5vCI0vXrdLBRSg6CZKw9HpAm7RG9/uTnz6a7EzIscQXqxixhyEU
+	legOoT+DRE045A1fnXhoMizoQ/8ov8TqmIlVOri4+r6PTNccDd5sx2phC7DQ4BVKONvpCj
+	S2gqPMS90CorsfzYwpJYIpqXKul0OVM=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-591-bRvqfHuCPjGVZjiAW6DwzQ-1; Mon,
- 26 Aug 2024 10:03:17 -0400
-X-MC-Unique: bRvqfHuCPjGVZjiAW6DwzQ-1
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-629-zzB28F-uMz-UGhx8cDGzjw-1; Mon,
+ 26 Aug 2024 10:06:38 -0400
+X-MC-Unique: zzB28F-uMz-UGhx8cDGzjw-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1E96A1955BF4;
-	Mon, 26 Aug 2024 14:03:15 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C983E18BEFE1;
+	Mon, 26 Aug 2024 14:06:35 +0000 (UTC)
 Received: from bfoster (unknown [10.22.32.22])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BCD25300019C;
-	Mon, 26 Aug 2024 14:03:13 +0000 (UTC)
-Date: Mon, 26 Aug 2024 10:04:10 -0400
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B96851955F40;
+	Mon, 26 Aug 2024 14:06:34 +0000 (UTC)
+Date: Mon, 26 Aug 2024 10:07:31 -0400
 From: Brian Foster <bfoster@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
 	josef@toxicpanda.com, david@fromorbit.com
-Subject: Re: [PATCH 2/3] fsx: support eof page pollution for eof zeroing test
- coverage
-Message-ID: <ZsyLWle3uXLS0bOj@bfoster>
+Subject: Re: [PATCH 3/3] generic: test to run fsx eof pollution
+Message-ID: <ZsyMI-yNdZkoQt9g@bfoster>
 References: <20240822144422.188462-1-bfoster@redhat.com>
- <20240822144422.188462-3-bfoster@redhat.com>
- <20240822205257.GW865349@frogsfrogsfrogs>
+ <20240822144422.188462-4-bfoster@redhat.com>
+ <20240822205430.GX865349@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,206 +58,117 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240822205257.GW865349@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <20240822205430.GX865349@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Thu, Aug 22, 2024 at 01:52:57PM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 22, 2024 at 10:44:21AM -0400, Brian Foster wrote:
-> > File ranges that are newly exposed via size changing operations are
-> > expected to return zeroes until written to. This behavior tends to
-> > be difficult to regression test as failures can be racy and
-> > transient. fsx is probably the best tool for this type of test
-> > coverage, but uncovering issues can require running for a
-> > significantly longer period of time than is typically invoked
-> > through fstests tests. As a result, these types of regressions tend
-> > to go unnoticed for an unfortunate amount of time.
+On Thu, Aug 22, 2024 at 01:54:30PM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 22, 2024 at 10:44:22AM -0400, Brian Foster wrote:
+> > Filesystem regressions related to partial page zeroing can go
+> > unnoticed for a decent amount of time. A recent example is the issue
+> > of iomap zero range not handling dirty pagecache over unwritten
+> > extents, which leads to wrong behavior on certain file extending
+> > operations (i.e. truncate, write extension, etc.).
 > > 
-> > To facilitate uncovering these problems more quickly, implement an
-> > eof pollution mode in fsx that opportunistically injects post-eof
-> > data prior to operations that change file size. Since data injection
-> > occurs immediately before the size changing operation, it can be
-> > used to detect problems in partial eof page/block zeroing associated
-> > with each relevant operation.
+> > fsx does occasionally uncover these sorts of problems, but failures
+> > can be rare and/or require longer running tests outside what is
+> > typically run via full fstests regression runs. fsx now supports a
+> > mode that injects post-eof data in order to explicitly test partial
+> > eof zeroing behavior. This uncovers certain problems more quickly
+> > and applies coverage more broadly across size changing operations.
 > > 
-> > The implementation takes advantage of the fact that mapped writes
-> > can place data beyond eof so long as the page starts within eof. The
-> > main reason for the isolated per-operation approach (vs. something
-> > like allowing mapped writes to write beyond eof, for example) is to
-> > accommodate the fact that writeback zeroes post-eof data on the eof
-> > page. The current approach is therefore not necessarily guaranteed
-> > to detect all problems, but provides more generic and broad test
-> > coverage than the alternative of testing explicit command sequences
-> > and doesn't require significant changes to how fsx works. If this
-> > proves useful long term, further enhancements can be considered that
-> > might facilitate the presence of post-eof data across operations.
-> > 
-> > Enable the feature with the -e command line option. It is disabled
-> > by default because zeroing behavior is inconsistent across
-> > filesystems. This can also be revisited in the future if zeroing
-> > behavior is refined for the major filesystems that rely on fstests
-> > for regression testing.
+> > Add a new test that runs an fsx instance (modeled after generic/127)
+> > with eof pollution mode enabled. While the test is generic, it is
+> > currently limited to XFS as that is currently the only known major
+> > fs that does enough zeroing to satisfy the strict semantics expected
+> > by fsx. The long term goal is to uncover and fix issues so more
+> > filesystems can enable this test.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > ---
-> >  ltp/fsx.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> >  1 file changed, 72 insertions(+), 2 deletions(-)
+> >  tests/generic/362     | 27 +++++++++++++++++++++++++++
+> >  tests/generic/362.out |  2 ++
+> >  2 files changed, 29 insertions(+)
+> >  create mode 100755 tests/generic/362
+> >  create mode 100644 tests/generic/362.out
 > > 
-> > diff --git a/ltp/fsx.c b/ltp/fsx.c
-> > index 1389c51d..20b8cd9f 100644
-> > --- a/ltp/fsx.c
-> > +++ b/ltp/fsx.c
-> > @@ -178,6 +178,7 @@ int	dedupe_range_calls = 1;		/* -B flag disables */
-> >  int	copy_range_calls = 1;		/* -E flag disables */
-> >  int	exchange_range_calls = 1;	/* -0 flag disables */
-> >  int	integrity = 0;			/* -i flag */
-> > +int	pollute_eof = 0;		/* -e flag */
-> >  int	fsxgoodfd = 0;
-> >  int	o_direct;			/* -Z */
-> >  int	aio = 0;
-> > @@ -983,6 +984,58 @@ gendata(char *original_buf, char *good_buf, unsigned offset, unsigned size)
-> >  	}
-> >  }
-> >  
-> > +/*
-> > + * Pollute the EOF page with data beyond EOF prior to size change operations.
-> > + * This provides additional test coverage for partial EOF block/page zeroing.
-> > + * If the upcoming operation does not correctly zero, incorrect file data will
-> > + * be detected.
-> > + */
-> > +void
-> > +pollute_eofpage(unsigned int maxoff)
-> > +{
-> > +	unsigned offset = file_size;
-> > +	unsigned pg_offset;
-> > +	unsigned write_size;
-> > +	char    *p;
+> > diff --git a/tests/generic/362 b/tests/generic/362
+> > new file mode 100755
+> > index 00000000..30870cd0
+> > --- /dev/null
+> > +++ b/tests/generic/362
+> > @@ -0,0 +1,27 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2024 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FSQA Test No. 362
+> > +#
+> > +# Run fsx with EOF pollution enabled. This provides test coverage for partial
+> > +# EOF page/block zeroing for operations that change file size.
+> > +#
 > > +
-> > +	if (!pollute_eof)
-> > +		return;
+> > +. ./common/preamble
+> > +_begin_fstest rw auto
 > > +
-> > +	/* write up to specified max or the end of the eof page */
-> > +	pg_offset = offset & mmap_mask;
-> > +	write_size = MIN(PAGE_SIZE - pg_offset, maxoff - offset);
+> > +FSX_FILE_SIZE=262144
+> > +# on failure, replace -q with -d to see post-eof writes in the dump output
+> > +FSX_ARGS="-q -l $FSX_FILE_SIZE -e 1 -N 100000"
 > > +
-> > +	if (!pg_offset)
-> > +		return;
+> > +_require_test
 > > +
-> > +	if (!quiet &&
-> > +	    ((progressinterval && testcalls % progressinterval == 0) ||
-> > +	    (debug &&
-> > +	     (monitorstart == -1 ||
-> > +	     (offset + write_size > monitorstart &&
-> > +	      (monitorend == -1 || offset <= monitorend)))))) {
-> > +		prt("%lld pollute_eof\t0x%x thru\t0x%x\t(0x%x bytes)\n",
-> > +			testcalls, offset, offset + write_size - 1, write_size);
-> > +	}
-> > +
-> > +	if ((p = (char *)mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE,
-> > +			      MAP_FILE | MAP_SHARED, fd,
-> > +			      (off_t)(offset - pg_offset))) == (char *)-1) {
+> > +# currently only xfs performs enough zeroing to satisfy fsx
+> > +_supported_fs xfs
 > 
-> Nit:
-> 
-> if (mmap(...) == MAP_FAILED)?
-> 
-> Otherwise I like the concept here. :)
+> Should get rid of this. ;)
 > 
 
-Yep, copy paste fail. Will fix.
+Agreed. But just to be clear, I was planning to leave this in for now so
+we don't have to go and fix the various other filesystem issues
+(assuming various maintainers agree) as a gate to fixing iomap zeroing
+and having decent test coverage. I'm planning to look into the other
+failures once I get through the iomap revalidation thing to avoid the
+flush on XFS.
+
+> > +ltp/fsx $FSX_ARGS $FSX_AVOID $TEST_DIR/fsx.$seq > $tmp.output 2>&1
+> 
+> I wonder, is there a reason not to use run_fsx from common/rc?
+> 
+
+At first glance the only thing that stands out to me is run_fsx
+hardcodes the file to $TEST_DIR/junk instead of using and leaving around
+a test-specific file. I find that ever so slightly annoying, but not
+enough to hardcode the fsx command in the test, so I'll make that
+change.
+
+My initial hope was to be able to just turn on the eof pollution thing
+by default and rely on existing fstests to (which I've confirmed do)
+detect the iomap zeroing problems, but the other non-iomap fs failures
+mean we can't do that without being disruptive and hence the need for
+the custom fstest. If we can get to the point of completely removing the
+_supported_fs check above, then perhaps we could also revisit changing
+the fsx default and removing this test.
+
+> Otherwise this looks ok to me.
+> 
+
+Thanks for the comments.
 
 Brian
 
 > --D
 > 
-> > +		prterr("pollute_eofpage: mmap");
-> > +		return;
-> > +	}
+> > +cat $tmp.output
 > > +
-> > +	/*
-> > +	 * Write to a range just past EOF of the test file. Do not update the
-> > +	 * good buffer because the upcoming operation is expected to zero this
-> > +	 * range of the file.
-> > +	 */
-> > +	gendata(original_buf, p, pg_offset, write_size);
-> > +
-> > +	if (munmap(p, PAGE_SIZE) != 0)
-> > +		prterr("pollute_eofpage: munmap");
-> > +}
-> > +
-> >  /*
-> >   * Helper to update the tracked file size. If the offset begins beyond current
-> >   * EOF, zero the range from EOF to offset in the good buffer.
-> > @@ -990,8 +1043,10 @@ gendata(char *original_buf, char *good_buf, unsigned offset, unsigned size)
-> >  void
-> >  update_file_size(unsigned offset, unsigned size)
-> >  {
-> > -	if (offset > file_size)
-> > +	if (offset > file_size) {
-> > +		pollute_eofpage(offset + size);
-> >  		memset(good_buf + file_size, '\0', offset - file_size);
-> > +	}
-> >  	file_size = offset + size;
-> >  }
-> >  
-> > @@ -1143,6 +1198,9 @@ dotruncate(unsigned size)
-> >  
-> >  	log4(OP_TRUNCATE, 0, size, FL_NONE);
-> >  
-> > +	/* pollute the current EOF before a truncate down */
-> > +	if (size < file_size)
-> > +		pollute_eofpage(maxfilelen);
-> >  	update_file_size(size, 0);
-> >  
-> >  	if (testcalls <= simulatedopcount)
-> > @@ -1305,6 +1363,9 @@ do_collapse_range(unsigned offset, unsigned length)
-> >  
-> >  	log4(OP_COLLAPSE_RANGE, offset, length, FL_NONE);
-> >  
-> > +	/* pollute current eof before collapse truncates down */
-> > +	pollute_eofpage(maxfilelen);
-> > +
-> >  	if (testcalls <= simulatedopcount)
-> >  		return;
-> >  
-> > @@ -1356,6 +1417,9 @@ do_insert_range(unsigned offset, unsigned length)
-> >  
-> >  	log4(OP_INSERT_RANGE, offset, length, FL_NONE);
-> >  
-> > +	/* pollute current eof before insert truncates up */
-> > +	pollute_eofpage(maxfilelen);
-> > +
-> >  	if (testcalls <= simulatedopcount)
-> >  		return;
-> >  
-> > @@ -2385,6 +2449,7 @@ usage(void)
-> >  	-b opnum: beginning operation number (default 1)\n\
-> >  	-c P: 1 in P chance of file close+open at each op (default infinity)\n\
-> >  	-d: debug output for all operations\n\
-> > +	-e: pollute post-eof on size changes (default 0)\n\
-> >  	-f: flush and invalidate cache after I/O\n\
-> >  	-g X: write character X instead of random generated data\n\
-> >  	-i logdev: do integrity testing, logdev is the dm log writes device\n\
-> > @@ -2783,7 +2848,7 @@ main(int argc, char **argv)
-> >  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
-> >  
-> >  	while ((ch = getopt_long(argc, argv,
-> > -				 "0b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyABD:EFJKHzCILN:OP:RS:UWXZ",
-> > +				 "0b:c:de:fg:i:j:kl:m:no:p:qr:s:t:w:xyABD:EFJKHzCILN:OP:RS:UWXZ",
-> >  				 longopts, NULL)) != EOF)
-> >  		switch (ch) {
-> >  		case 'b':
-> > @@ -2805,6 +2870,11 @@ main(int argc, char **argv)
-> >  		case 'd':
-> >  			debug = 1;
-> >  			break;
-> > +		case 'e':
-> > +			pollute_eof = getnum(optarg, &endp);
-> > +			if (pollute_eof < 0 || pollute_eof > 1)
-> > +				usage();
-> > +			break;
-> >  		case 'f':
-> >  			flush = 1;
-> >  			break;
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/362.out b/tests/generic/362.out
+> > new file mode 100644
+> > index 00000000..7af6b96a
+> > --- /dev/null
+> > +++ b/tests/generic/362.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 362
+> > +All 100000 operations completed A-OK!
 > > -- 
 > > 2.45.0
 > > 
