@@ -1,58 +1,56 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C18E194A6B
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 16:20:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 506961946D0
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 17:09:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724689255; cv=none; b=bDoGoATGJFGwgRbY+O3V55yUqrNPL0+d/JBainvUw80GfqE7+s/LESWfsYSv2aLdN4z8SNPFzmzB7T/w9YF34+BqXWVV6EUKdUpVMMzGKO5V6V/N4FFogUqwtL4+TW9JICZu6RNxQDf3QezJV2rCuErAo8FMQ7kn0FM+LKO4nWQ=
+	t=1724692195; cv=none; b=UGPWP92cyf1rTUVBACeVSWzLD/qvwbDLHDZWn0Btb8WmXiKTN7lrTPyBaSxYtw9HjqZpoQJPPz71oSl85WnsHi9QA6GJnFCcugdffG45+uK/Y+xsazYxzRWEE8Ms8urqPnB4OA19ojQNqid4Ah1xq0jOmKMrFGYosLVo5BV0syc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724689255; c=relaxed/simple;
-	bh=ch2Etf6YmHaS9y3FPYswQhO9MKhYMLm0Mp/4LpQnah0=;
+	s=arc-20240116; t=1724692195; c=relaxed/simple;
+	bh=4NJomvd1FkhRbF4teAxibD4t/8nSE3hcw3k3aFsC67U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aEtHQSZmCrqQir8Uhw5zpge/8IaAYlkNAclOdkKZyXna2redU9dSyKaCntderhgMg+nnty02BlI3FUgC3FQ4kQxNhWdAJhEiEdz8NpSLJ3DspAtA0EG+sb+u8eKaVpz26+vP2qMpsl/DaW1IGO4EcrNWM7hFk7lXnDZ/+NyLDOI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Evvw1Mjd; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=WdiuuZsd43+zKTVsJFa7ipFbl/JqQm1BiQFqLmKrlAKsTi5nkS6AFKOpC1hL4kUYbaP/8T8rKNDzWZPYmrPGEBIbxzplb2RL7l4VF02hI0GPF8GwwD5yAYqP58VcZdsCebGjK/Qdmz+5Kw6aK4bng5zptBR50ihQ4J+vRLqT23A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YN8aoRHk; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Evvw1Mjd"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YN8aoRHk"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1724689252;
+	s=mimecast20190719; t=1724692191;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=p1LjrpKcP7UYBoQzong09jX9UWGXwu2iSaP3XjmBMtY=;
-	b=Evvw1MjdLuqcKJXbwNw0YrNueutNtTCBp4MSyFz+1czhpF5zPSPdgqV5YZg6VwcpmcmXam
-	H58GdXW0qAm6X4f3hXRkggT2p/kYO+mQIUxn/KJjkKrPy0gnNAhJE55MNdOiDzWpo+/O5K
-	+FeiZQ0/ayI4GGJ2yVCQV+TpB/j3BWs=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+	bh=0qn6hxlwrF0+8H5tQBVuv5gyNycLc//aQmQBBA/uTuw=;
+	b=YN8aoRHkUcYTI12woCbDTsVw6ZwADICF5rbIckBcaIu2cuf+E5S7lKjdagZoHgigBRRRxb
+	XTK5rTL17isNwN4VX7PyfM4FE3KqlkJpAPDpeSHQASWRWHdiJ/piHrDMa/asNxY2zH3VU+
+	1xkVUXUw371y9MhT/MO0i6QVLjeSCWw=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-76-0aVmVSrPMS6fz83M7u40TA-1; Mon,
- 26 Aug 2024 12:20:50 -0400
-X-MC-Unique: 0aVmVSrPMS6fz83M7u40TA-1
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-524-UYkY999fOs22UI4dRFIZFg-1; Mon,
+ 26 Aug 2024 13:09:47 -0400
+X-MC-Unique: UYkY999fOs22UI4dRFIZFg-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2E7061955BEF;
-	Mon, 26 Aug 2024 16:20:49 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 78BED1955F43;
+	Mon, 26 Aug 2024 17:09:45 +0000 (UTC)
 Received: from bfoster (unknown [10.22.32.22])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4F7E9300019C;
-	Mon, 26 Aug 2024 16:20:48 +0000 (UTC)
-Date: Mon, 26 Aug 2024 12:21:44 -0400
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C2131956053;
+	Mon, 26 Aug 2024 17:09:44 +0000 (UTC)
+Date: Mon, 26 Aug 2024 13:10:40 -0400
 From: Brian Foster <bfoster@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: skip background cowblock trims on inodes open for
- write
-Message-ID: <ZsyrmMqEgmgauZcW@bfoster>
-References: <20240214165231.84925-1-bfoster@redhat.com>
- <20240224020554.GP6226@frogsfrogsfrogs>
- <Zdyw8i6/DTEgojqm@bfoster>
- <20240226193921.GM616564@frogsfrogsfrogs>
- <ZdzxBr3daNUHwlxg@bfoster>
- <20240823012447.GX6082@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+	josef@toxicpanda.com, david@fromorbit.com
+Subject: Re: [PATCH 1/3] fsx: factor out a file size update helper
+Message-ID: <Zsy3EEr8_gjGofaI@bfoster>
+References: <20240822144422.188462-1-bfoster@redhat.com>
+ <20240822144422.188462-2-bfoster@redhat.com>
+ <20240822205019.GV865349@frogsfrogsfrogs>
+ <ZsyLShYLojBLPNiC@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,256 +59,255 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240823012447.GX6082@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <ZsyLShYLojBLPNiC@bfoster>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Thu, Aug 22, 2024 at 06:24:47PM -0700, Darrick J. Wong wrote:
-> On Mon, Feb 26, 2024 at 03:13:58PM -0500, Brian Foster wrote:
-> > On Mon, Feb 26, 2024 at 11:39:21AM -0800, Darrick J. Wong wrote:
-> > > On Mon, Feb 26, 2024 at 10:40:34AM -0500, Brian Foster wrote:
-> > > > On Fri, Feb 23, 2024 at 06:05:54PM -0800, Darrick J. Wong wrote:
-> > > > > On Wed, Feb 14, 2024 at 11:52:31AM -0500, Brian Foster wrote:
-> > > > > > The background blockgc scanner runs on a 5m interval by default and
-> > > > > > trims preallocation (post-eof and cow fork) from inodes that are
-> > > > > > otherwise idle. Idle effectively means that iolock can be acquired
-> > > > > > without blocking and that the inode has no dirty pagecache or I/O in
-> > > > > > flight.
-> > > > > > 
-> > > > > > This simple mechanism and heuristic has worked fairly well for
-> > > > > > post-eof speculative preallocations. Support for reflink and COW
-> > > > > > fork preallocations came sometime later and plugged into the same
-> > > > > > mechanism, with similar heuristics. Some recent testing has shown
-> > > > > > that COW fork preallocation may be notably more sensitive to blockgc
-> > > > > > processing than post-eof preallocation, however.
-> > > > > > 
-> > > > > > For example, consider an 8GB reflinked file with a COW extent size
-> > > > > > hint of 1MB. A worst case fully randomized overwrite of this file
-> > > > > > results in ~8k extents of an average size of ~1MB. If the same
-> > > > > > workload is interrupted a couple times for blockgc processing
-> > > > > > (assuming the file goes idle), the resulting extent count explodes
-> > > > > > to over 100k extents with an average size <100kB. This is
-> > > > > > significantly worse than ideal and essentially defeats the COW
-> > > > > > extent size hint mechanism.
-> > > > > > 
-> > > > > > While this particular test is instrumented, it reflects a fairly
-> > > > > > reasonable pattern in practice where random I/Os might spread out
-> > > > > > over a large period of time with varying periods of (in)activity.
-> > > > > > For example, consider a cloned disk image file for a VM or container
-> > > > > > with long uptime and variable and bursty usage. A background blockgc
-> > > > > > scan that races and processes the image file when it happens to be
-> > > > > > clean and idle can have a significant effect on the future
-> > > > > > fragmentation level of the file, even when still in use.
-> > > > > > 
-> > > > > > To help combat this, update the heuristic to skip cowblocks inodes
-> > > > > > that are currently opened for write access during non-sync blockgc
-> > > > > > scans. This allows COW fork preallocations to persist for as long as
-> > > > > > possible unless otherwise needed for functional purposes (i.e. a
-> > > > > > sync scan), the file is idle and closed, or the inode is being
-> > > > > > evicted from cache.
-> > > > > 
-> > > > > Hmmm.  Thinking this over a bit more, I wonder if we really want this
-> > > > > heuristic?
-> > > > > 
-> > > > > If we're doing our periodic background scan then sure, I think it's ok
-> > > > > to ignore files that are open for write but aren't actively being
-> > > > > written to.
-> > > > > 
-> > > > > This might introduce nastier side effects if OTOH we're doing blockgc
-> > > > > because we've hit ENOSPC and we're trying to free up any blocks that we
-> > > > > can.  I /think/ the way you've written the inode_is_open_for_write check
-> > > > > means that we scan maximally for ENOSPC.
-> > > > > 
-> > > > 
-> > > > The intent of the patch was to limit the scope of the heuristic to
-> > > > the background (non-sync) scan where there are no real guarantees or
-> > > > predictability. Otherwise I would expect a sync scan to bypass the
-> > > > heuristic and prioritize the need to free space.
-> > > > 
-> > > > This is similar to the existing dirty pagecache check for eofblocks
-> > > > inodes, but I notice that the same check for cowblocks inodes doesn't
-> > > > seem to care about the type of scan. I suppose one thing to consider for
-> > > > why that might not matter that much is that IIRC usually this sort of
-> > > > -ENOSPC handling is preceded by a full fs flush, which probably reduces
-> > > > the significance of a sync check filter (or lack thereof).
-> > > > 
-> > > > > However, xfs_blockgc_free_dquots doesn't seem to do synchronous scans
-> > > > > for EDQUOT.  So if we hit quota limits, we won't free maximally, right?
-> > > > > OTOH I guess we don't really do that now either, so maybe it doesn't
-> > > > > matter?
-> > > > > 
-> > > > > <shrug> Thoughts?
-> > > > > 
-> > > > 
-> > > > Yeah, it seems like it depends on the calling context. I.e.,
-> > > > xfs_file_buffered_write() -> xfs_blockgc_free_quota() passes the sync
-> > > > flag for the -EDQUOT case. That case doesn't invoke a flush for -EDQUOT
-> > > > since it's a a specific quota failure, so ISTM this isn't that much of a
-> > > > departure from the existing heuristic (which skips cowblocks inodes that
-> > > > are dirty). Is there a case I'm missing?
+On Mon, Aug 26, 2024 at 10:03:54AM -0400, Brian Foster wrote:
+> On Thu, Aug 22, 2024 at 01:50:19PM -0700, Darrick J. Wong wrote:
+> > On Thu, Aug 22, 2024 at 10:44:20AM -0400, Brian Foster wrote:
+> > > In preparation for support for eof page pollution, factor out a file
+> > > size update helper. This updates the internally tracked file size
+> > > based on the upcoming operation and zeroes the appropriate range in
+> > > the good buffer for extending operations.
 > > > 
-> > > Not that I can think of.  The SYNC/!SYNC decision is entirely based on
-> > > the caller's state, which (ime) makes me think harder any time I have to
-> > > reason about the {block,inode}gc function calls.
+> > > Note that a handful of callers currently make these updates after
+> > > performing the associated operation. Order is not important to
+> > > current behavior, but it will be for a follow on patch, so make
+> > > those calls a bit earlier as well.
 > > > 
-> > 
-> > Not sure what you mean by caller state, but I kind of just view it as a
-> > poorly named force scan (not that that's a better name). All that really
-> > matters in this context is the non-force/sync/wait mode that is run by
-> > the background scanner. Nothing prevents userspace from running a sync
-> > scan via ioctl() whenever, so it's hard to assume behavior.
-> > 
-> > Also just a random thought.. you could consider something like a FLUSH
-> > flag (and/or scan) if you wanted to be more selectively aggressive for
-> > any of the -EDQUOT handling cases.
-> > 
-> > > > The question that comes to mind to me is whether those dirty checks in
-> > > > xfs_prep_free_cowblocks() are more of a correctness thing than a
-> > > > heuristic..? For example, is that to prevent races between things like
-> > > > writes allocating some cowblocks and blockgc coming along and removing
-> > > > them before I/O completes, which actually expects them to exist for
-> > > > remapping? If so, I suppose that would make me want to tweak the change
-> > > > a bit to perhaps make the open check first and combine the comments to
-> > > > better explain what is heuristic and what is rule, but that's only if we
-> > > > want to keep the patch..
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  ltp/fsx.c | 57 +++++++++++++++++++++++++------------------------------
+> > >  1 file changed, 26 insertions(+), 31 deletions(-)
 > > > 
-> > > The dirty/writeback flag testing in xfs_prep_free_cowblocks exists for
-> > > correctness -- any time there's live cow staging blocks (as opposed to
-> > > speculative preallocations) it skips that inode.
-> > > 
+> > > diff --git a/ltp/fsx.c b/ltp/fsx.c
+> > > index 2dc59b06..1389c51d 100644
+> > > --- a/ltp/fsx.c
+> > > +++ b/ltp/fsx.c
+> > > @@ -983,6 +983,17 @@ gendata(char *original_buf, char *good_buf, unsigned offset, unsigned size)
+> > >  	}
+> > >  }
+> > >  
+> > > +/*
+> > > + * Helper to update the tracked file size. If the offset begins beyond current
+> > > + * EOF, zero the range from EOF to offset in the good buffer.
+> > > + */
+> > > +void
+> > > +update_file_size(unsigned offset, unsigned size)
+> > > +{
+> > > +	if (offset > file_size)
+> > > +		memset(good_buf + file_size, '\0', offset - file_size);
+> > > +	file_size = offset + size;
+> > > +}
+> > >  
+> > >  void
+> > >  dowrite(unsigned offset, unsigned size)
+> > > @@ -1003,10 +1014,8 @@ dowrite(unsigned offset, unsigned size)
+> > >  	log4(OP_WRITE, offset, size, FL_NONE);
+> > >  
+> > >  	gendata(original_buf, good_buf, offset, size);
+> > > -	if (file_size < offset + size) {
+> > > -		if (file_size < offset)
+> > > -			memset(good_buf + file_size, '\0', offset - file_size);
+> > > -		file_size = offset + size;
+> > > +	if (offset + size > file_size) {
+> > > +		update_file_size(offset, size);
+> > >  		if (lite) {
+> > >  			warn("Lite file size bug in fsx!");
+> > >  			report_failure(149);
+> > > @@ -1070,10 +1079,8 @@ domapwrite(unsigned offset, unsigned size)
+> > >  	log4(OP_MAPWRITE, offset, size, FL_NONE);
+> > >  
+> > >  	gendata(original_buf, good_buf, offset, size);
+> > > -	if (file_size < offset + size) {
+> > > -		if (file_size < offset)
+> > > -			memset(good_buf + file_size, '\0', offset - file_size);
+> > > -		file_size = offset + size;
+> > > +	if (offset + size > file_size) {
+> > > +		update_file_size(offset, size);
+> > >  		if (lite) {
+> > >  			warn("Lite file size bug in fsx!");
+> > >  			report_failure(200);
+> > > @@ -1136,9 +1143,7 @@ dotruncate(unsigned size)
+> > >  
+> > >  	log4(OP_TRUNCATE, 0, size, FL_NONE);
+> > >  
+> > > -	if (size > file_size)
+> > > -		memset(good_buf + file_size, '\0', size - file_size);
+> > > -	file_size = size;
+> > > +	update_file_size(size, 0);
+> > >  
+> > >  	if (testcalls <= simulatedopcount)
+> > >  		return;
+> > > @@ -1247,6 +1252,9 @@ do_zero_range(unsigned offset, unsigned length, int keep_size)
+> > >  	log4(OP_ZERO_RANGE, offset, length,
+> > >  	     keep_size ? FL_KEEP_SIZE : FL_NONE);
+> > >  
+> > > +	if (end_offset > file_size)
+> > > +		update_file_size(offset, length);
+> > > +
+> > >  	if (testcalls <= simulatedopcount)
+> > >  		return;
 > > 
-> > Thanks, makes sense. With that, I'd make _prep_free_cowblocks() look
-> > more something like:
-> 
-> I think we were talking about xfs_prep_free_cowblocks, right?
-> 
-
-Yeah, IIRC.
-
-> >         /*
-> >          * A cowblocks trim of an inode can have a significant effect on
-> >          * fragmentation even when a reasonable COW extent size hint is set.
-> >          * Therefore, we prefer to not process cowblocks unless they are clean
-> >          * and idle. We can never process a cowblocks inode that is dirty or has
-> >          * in-flight I/O under any circumstances, because outstanding writeback
-> >          * or dio expects targeted COW fork blocks exist through write
-> >          * completion where they can be remapped into the data fork.
-> >          *
-> >          * Therefore, the heuristic used here is to never process inodes
-> >          * currently opened for write from background (i.e. non-sync) scans. For
-> >          * sync scans, use the pagecache/dio state of the inode to ensure we
-> >          * never free COW fork blocks out from under pending I/O.
-> >          */
-> >         if (!sync && inode_is_open_for_write(VFS_I(ip)))
-> >                 return false;
-> >         if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-> >             mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> >             mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-> >             atomic_read(&VFS_I(ip)->i_dio_count))
-> >                 return false;
+> > Don't we only want to do the goodbuf zeroing if we don't bail out due to
+> > the (testcalls <= simulatedopcount) logic?  Same question for
+> > do_clone_range and do_copy_range.
 > > 
-> > ... but again, not clear to me if upstream wants the patch or not. v2 or
-> > shall I drop it?
 > 
-> I think it's a useful heuristic for background blockgc not to clear
-> speculative cow preallocations on files that are open for write, even if
-> there's no contention on the IOLOCK for that file.  Maybe it's time to
-> get that moving again, along with the post-eof block handling revamp?
+> Hm, good question. It's quite possible I busted something there. For
+> some reason I was thinking this would all be a no-op for that mode but I
+> hadn't quite thought it through (or tested it).
 > 
-> (Sorry it took me 6 months to reply to this...)
+> It looks like this is for the -b "beginning operation number" support,
+> so you can start a test from somewhere beyond operation 0 of a given
+> seed/sequence. As such it appears to make changes to incore state and
+> then write the goodbuf out to the file and truncate it as a final step
+> before proper operation begins.
+> 
+> Looking at how some of the current operations are handled, I think the
+> size-related goodbuf zeroing is Ok because we'd expect that part of the
+> file to remain zeroed, after a truncate up, etc., for example. In fact,
+> I'm wondering if the current zero range behavior is technically wrong
+> because if a zero range were to extend the file during simulation, we
+> don't actually update the in-core state as expected. This might actually
+> be worth factoring out into a bug fix patch with proper explanation.
+> 
+> WRT the eof pollution behavior during simulation, I'm kind of on the
+> fence. It's arguably wrong because we're not running the kernel
+> operations and so there's nothing to verify, but OTOH perhaps we should
+> be doing the zeroing associated with size changes in-core that should
+> wipe out the eof pollution. Then again, nothing really verifies this and
+> if something fails, we end up writing that data out to the test file.
+> None of that is really the purpose of this mechanism, so I'm leaning
+> towards calling it wrong and making the following tweaks:
 > 
 
-No problem. I'll follow up with a v2 once I get a chance to page back in
-where I was at with this and review any pending tweaks we were
-discussing...
+Err.. I think you can disregard most of this reasoning. I got my wires
+crossed between zeroing behavior and pollute_eofpage().
+pollute_eofpage() updates the file only, so just blows up in simulation
+mode and is clearly wrong. :) That makes things more simple, though I
+think the plan below to disable it is the same...
 
 Brian
 
-> --D
+> 1. Split out another bug fix patch to do size related updates (including
+> zeroing) consistently during simulation.
 > 
-> > Brian
+> 2. Update pollute_eofpage() in the next patch to skip out when testcalls
+> <= simulatedopcount (with some commenting).
+> 
+> Let me know if you think any of that doesn't make sense.
+> 
+> > /me reads the second patch but doesn't quite get it. :/
 > > 
-> > > --D
+> 
+> The zeroing tests I was using were basically manual test sequences to do
+> things like this:
+> 
+> 	xfs_io -fc "truncate 2k" -c "falloc -k 0 4k" ... -c "mwrite 0 4k" \
+> 		-c "truncate 8k" <file>
+> 
+> ... which itentionally writes beyond EOF before a truncate up operation
+> to test whether the zero range in the truncate path DTRT with a dirty
+> folio over an unwritten block. In a nutshell, I'm just trying to
+> genericize that sort of test a bit more by doing similar post-eof
+> mwrites opportunistically in fsx in operations that should be expected
+> to do similar zeroing in-kernel.
+> 
+> I.e., replace the "truncate 8k" above with any size extending operation
+> that starts beyond EOF such that we should expect the range from
+> 2k-<endofpage> to be zeroed. Does that explain things better?
+> 
+> > Are you doing this to mirror what the kernel does?  A comment here to
+> > explain why we're doing this differently would help me.
+> > 
+> 
+> Yeah, sort of... it's more like writing a canary value to a small range
+> of the file but rather than expecting it to remain unmodified, we expect
+> it to be zeroed by the upcoming operation. Therefore we don't write the
+> garbage data to goodbuf, because goodbuf should contain zeroes and we
+> want to detect a data mismatch on subsequent reads if the kernel didn't
+> do the expected zeroing.
+> 
+> Brian
+> 
+> > --D
+> > 
+> > >  
+> > > @@ -1263,17 +1271,6 @@ do_zero_range(unsigned offset, unsigned length, int keep_size)
+> > >  	}
+> > >  
+> > >  	memset(good_buf + offset, '\0', length);
+> > > -
+> > > -	if (!keep_size && end_offset > file_size) {
+> > > -		/*
+> > > -		 * If there's a gap between the old file size and the offset of
+> > > -		 * the zero range operation, fill the gap with zeroes.
+> > > -		 */
+> > > -		if (offset > file_size)
+> > > -			memset(good_buf + file_size, '\0', offset - file_size);
+> > > -
+> > > -		file_size = end_offset;
+> > > -	}
+> > >  }
+> > >  
+> > >  #else
+> > > @@ -1538,6 +1535,9 @@ do_clone_range(unsigned offset, unsigned length, unsigned dest)
+> > >  
+> > >  	log5(OP_CLONE_RANGE, offset, length, dest, FL_NONE);
+> > >  
+> > > +	if (dest + length > file_size)
+> > > +		update_file_size(dest, length);
+> > > +
+> > >  	if (testcalls <= simulatedopcount)
+> > >  		return;
+> > >  
+> > > @@ -1556,10 +1556,6 @@ do_clone_range(unsigned offset, unsigned length, unsigned dest)
+> > >  	}
+> > >  
+> > >  	memcpy(good_buf + dest, good_buf + offset, length);
+> > > -	if (dest > file_size)
+> > > -		memset(good_buf + file_size, '\0', dest - file_size);
+> > > -	if (dest + length > file_size)
+> > > -		file_size = dest + length;
+> > >  }
+> > >  
+> > >  #else
+> > > @@ -1756,6 +1752,9 @@ do_copy_range(unsigned offset, unsigned length, unsigned dest)
+> > >  
+> > >  	log5(OP_COPY_RANGE, offset, length, dest, FL_NONE);
+> > >  
+> > > +	if (dest + length > file_size)
+> > > +		update_file_size(dest, length);
+> > > +
+> > >  	if (testcalls <= simulatedopcount)
+> > >  		return;
+> > >  
+> > > @@ -1792,10 +1791,6 @@ do_copy_range(unsigned offset, unsigned length, unsigned dest)
+> > >  	}
+> > >  
+> > >  	memcpy(good_buf + dest, good_buf + offset, length);
+> > > -	if (dest > file_size)
+> > > -		memset(good_buf + file_size, '\0', dest - file_size);
+> > > -	if (dest + length > file_size)
+> > > -		file_size = dest + length;
+> > >  }
+> > >  
+> > >  #else
+> > > @@ -1846,7 +1841,7 @@ do_preallocate(unsigned offset, unsigned length, int keep_size)
+> > >  
+> > >  	if (end_offset > file_size) {
+> > >  		memset(good_buf + file_size, '\0', end_offset - file_size);
+> > > -		file_size = end_offset;
+> > > +		update_file_size(offset, length);
+> > >  	}
+> > >  
+> > >  	if (testcalls <= simulatedopcount)
+> > > -- 
+> > > 2.45.0
 > > > 
-> > > > Brian
-> > > > 
-> > > > > --D
-> > > > > 
-> > > > > > Suggested-by: Darrick Wong <djwong@kernel.org>
-> > > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > > ---
-> > > > > > 
-> > > > > > This fell out of some of the discussion on a prospective freeze time
-> > > > > > blockgc scan. I ran this through the same random write test described in
-> > > > > > that thread and it prevented all cowblocks trimming until the file is
-> > > > > > released.
-> > > > > > 
-> > > > > > Brian
-> > > > > > 
-> > > > > > [1] https://lore.kernel.org/linux-xfs/ZcutUN5B2ZCuJfXr@bfoster/
-> > > > > > 
-> > > > > >  fs/xfs/xfs_icache.c | 20 +++++++++++++++++---
-> > > > > >  1 file changed, 17 insertions(+), 3 deletions(-)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > > > index dba514a2c84d..d7c54e45043a 100644
-> > > > > > --- a/fs/xfs/xfs_icache.c
-> > > > > > +++ b/fs/xfs/xfs_icache.c
-> > > > > > @@ -1240,8 +1240,13 @@ xfs_inode_clear_eofblocks_tag(
-> > > > > >   */
-> > > > > >  static bool
-> > > > > >  xfs_prep_free_cowblocks(
-> > > > > > -	struct xfs_inode	*ip)
-> > > > > > +	struct xfs_inode	*ip,
-> > > > > > +	struct xfs_icwalk	*icw)
-> > > > > >  {
-> > > > > > +	bool			sync;
-> > > > > > +
-> > > > > > +	sync = icw && (icw->icw_flags & XFS_ICWALK_FLAG_SYNC);
-> > > > > > +
-> > > > > >  	/*
-> > > > > >  	 * Just clear the tag if we have an empty cow fork or none at all. It's
-> > > > > >  	 * possible the inode was fully unshared since it was originally tagged.
-> > > > > > @@ -1262,6 +1267,15 @@ xfs_prep_free_cowblocks(
-> > > > > >  	    atomic_read(&VFS_I(ip)->i_dio_count))
-> > > > > >  		return false;
-> > > > > >  
-> > > > > > +	/*
-> > > > > > +	 * A full cowblocks trim of an inode can have a significant effect on
-> > > > > > +	 * fragmentation even when a reasonable COW extent size hint is set.
-> > > > > > +	 * Skip cowblocks inodes currently open for write on opportunistic
-> > > > > > +	 * blockgc scans.
-> > > > > > +	 */
-> > > > > > +	if (!sync && inode_is_open_for_write(VFS_I(ip)))
-> > > > > > +		return false;
-> > > > > > +
-> > > > > >  	return true;
-> > > > > >  }
-> > > > > >  
-> > > > > > @@ -1291,7 +1305,7 @@ xfs_inode_free_cowblocks(
-> > > > > >  	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
-> > > > > >  		return 0;
-> > > > > >  
-> > > > > > -	if (!xfs_prep_free_cowblocks(ip))
-> > > > > > +	if (!xfs_prep_free_cowblocks(ip, icw))
-> > > > > >  		return 0;
-> > > > > >  
-> > > > > >  	if (!xfs_icwalk_match(ip, icw))
-> > > > > > @@ -1320,7 +1334,7 @@ xfs_inode_free_cowblocks(
-> > > > > >  	 * Check again, nobody else should be able to dirty blocks or change
-> > > > > >  	 * the reflink iflag now that we have the first two locks held.
-> > > > > >  	 */
-> > > > > > -	if (xfs_prep_free_cowblocks(ip))
-> > > > > > +	if (xfs_prep_free_cowblocks(ip, icw))
-> > > > > >  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-> > > > > >  	return ret;
-> > > > > >  }
-> > > > > > -- 
-> > > > > > 2.42.0
-> > > > > > 
-> > > > > 
-> > > > 
-> > > > 
 > > > 
 > > 
+> 
 > 
 
