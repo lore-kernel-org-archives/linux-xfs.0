@@ -1,34 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A9519DF66;
-	Tue, 27 Aug 2024 23:15:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 239281D417F
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 23:33:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724800510; cv=none; b=sBTb0FtiXvYDJ6C+KmK2NIim19V9u6hqhx8YpFN7qkk8Poz6rhZbebrvOmQjXnrA+N36UcD7772GW0h/IwPleXOWT9eRFCKp9I+BgFHdDTtBN2w/5tANSeTAGF0byZTKfhq3gKUfX/VEuf5j0crix8nOs6h7Tdk0MxeoazY30Dg=
+	t=1724801634; cv=none; b=qJlsL/ADQcMctvjp5ZlrjSTC8q5RcbXCljRzi78uiqfk4Y+EUcclfO3vHjITb0CkwZOZh+oC//wmw24A+Di5uzTeHkwefM/LYhuCX2BIoIUwd0DmMV+Pnheu2/NM+Z1n0cluq3zxm5zAYUZumB9/cC4YSx6PWrhm73ukzZ80CEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724800510; c=relaxed/simple;
-	bh=OLsfW6fvwwy8Dz9CLI7k9MJrb2Yd+U5ZRIOjzC6OmmU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=ATQw0wirYlZjuD6v1LUkKTGMIUt7JJ6C/i1nyHPpFQFoUijDb1xS59id4YxExcuDQXWNtYTg+vExc/6qsDatz5hIwIv4dFwMDFEgaP1ekkQ7cya/p1k+OP66q0+Ecl+lfMgQfBcGrJb2sD1gu9VYucLL/h+KiLcZEKxwmjPviPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TFY6UqET; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724801634; c=relaxed/simple;
+	bh=eEgW/SV+sck23Y+yNVc3y0162C1r1f8gJRF2FWYmBx0=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=T1WFNhJUWi9XUSh8oMvuXjxxI5gmcHJ2CisewHJZiIjWrILRy/O//UMABb1AoulJk3x0sVOqzVHQxJE9UYlrPdMupnP9yjNOI/nnPGhqSKnX3lEBmZ+WXoPvT36NPyFrF0IX3vYnlZsGynmYYoktXKMj/X7m8HgFiVkRzMos6Z0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FVG+mSo1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TFY6UqET"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04113C4AF10;
-	Tue, 27 Aug 2024 23:15:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FVG+mSo1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94D3AC53FC4;
+	Tue, 27 Aug 2024 23:33:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724800509;
-	bh=OLsfW6fvwwy8Dz9CLI7k9MJrb2Yd+U5ZRIOjzC6OmmU=;
-	h=From:Date:Subject:To:Cc:From;
-	b=TFY6UqET2jHW3ySVqDhEZpJzR66XB3sJupscP3rEtROgdVefIKZF1xc/SfVlHKVNA
-	 kvI6Jv8XUNBT2fk2Uu1/8cPadOxpSTbVL7PyhPBq8bg9C9/zRSszjHtxYs43eKv6/A
-	 p/ZPDsQ1xtYNGdaHMNN+VRfmNtLdmfqp8mlTW39gez5uutvUeb1wkbsrnwThzQh3f/
-	 Zf1+WlgAGpez9f1E2NbO95nx7uddQfXDRZnLMmo3G7Ea/3g0sbfcuZIiiHfhcg2EUd
-	 RQk03FwrVLPWqO9mqWGZhuIFhxlyaN5NyV8R4KGR4rP3ydLIB9T1lJisYCsPVwyP0A
-	 d3M7GKKUkEhNg==
-From: Nathan Chancellor <nathan@kernel.org>
-Date: Tue, 27 Aug 2024 16:15:05 -0700
-Subject: [PATCH] xfs: Fix format specifier for max_folio_size in
- xfs_fs_fill_super()
+	s=k20201202; t=1724801633;
+	bh=eEgW/SV+sck23Y+yNVc3y0162C1r1f8gJRF2FWYmBx0=;
+	h=Date:Subject:From:To:Cc:From;
+	b=FVG+mSo1JtlYQDEYARyFK+lgb3ucbTVsJAikceYVM0nVOg2Xx4Uff4N9rho+bUY/j
+	 UOD8YFR42zrSFegsK+i+13KR0hi1YwrBOKcC1fYXz+ARw4mZIJ2syWyQc0SkviW0It
+	 LdHa86+DfTuVTVDSSzpIIvgAGd+2MVaNtIRAG8X9fymv312C8cHZTjTIHmsrGHUhnU
+	 ShNi8eFsRo2WZj3dEp7SI9sXSjyLrBV6M1SF/vz38EGULAFcdk6vCcXf2OgHmL1j2m
+	 Gh3OUOqDRLckl4moAEETutKhKlytaOiKcA+oSWNGBaFT97aF8yBIiQh4Aljpeiowjn
+	 kF+YBaMsk72ew==
+Date: Tue, 27 Aug 2024 16:33:52 -0700
+Subject: [PATCHSET v4.1] xfs: cleanups for inode rooted btree code
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: djwong@kernel.org
+Cc: sam@gentoo.org, kernel@mattwhitlock.name, linux-xfs@vger.kernel.org,
+ hch@lst.de
+Message-ID: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,76 +41,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240827-xfs-fix-wformat-bs-gt-ps-v1-1-aec6717609e0@kernel.org>
-X-B4-Tracking: v=1; b=H4sIAPhdzmYC/x2MSQqAMAwAvyI5G7BV3L4iHmpNNQetNEUF8e8Wj
- wMz84BQYBLoswcCnSzs9wQqz8CuZl8IeU4MutBV0eoGbyfo+MbL+bCZiJPgEvEQ7OrGlcYoqyo
- NKT8CJe9fD+P7ftdr63NqAAAA
-To: Christian Brauner <brauner@kernel.org>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, 
- "Darrick J. Wong" <djwong@kernel.org>, Pankaj Raghav <p.raghav@samsung.com>, 
- Luis Chamberlain <mcgrof@kernel.org>, Dave Chinner <dchinner@redhat.com>, 
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
- patches@lists.linux.dev, Nathan Chancellor <nathan@kernel.org>
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2458; i=nathan@kernel.org;
- h=from:subject:message-id; bh=OLsfW6fvwwy8Dz9CLI7k9MJrb2Yd+U5ZRIOjzC6OmmU=;
- b=owGbwMvMwCUmm602sfCA1DTG02pJDGnnYv9s2PmAqbtcZ97m+919PNYzbW88KWd5eLrNVq3+x
- CRNJruCjlIWBjEuBlkxRZbqx6rHDQ3nnGW8cWoSzBxWJpAhDFycAjCRxjaGX0xiz8s/VAgtig3O
- r+d6cfOKtGn88uAd4TZeh3hWfJef+4Phr2i6Q+LqhyG/VZMF7Pemf9ri6CjrZHtN4bqti5lOT/J
- kZgA=
-X-Developer-Key: i=nathan@kernel.org; a=openpgp;
- fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
 
-When building for a 32-bit architecture, where 'size_t' is 'unsigned
-int', there is a warning due to use of '%ld', the specifier for a 'long
-int':
+Hi all,
 
-  In file included from fs/xfs/xfs_linux.h:82,
-                   from fs/xfs/xfs.h:26,
-                   from fs/xfs/xfs_super.c:7:
-  fs/xfs/xfs_super.c: In function 'xfs_fs_fill_super':
-  fs/xfs/xfs_super.c:1654:1: error: format '%ld' expects argument of type 'long int', but argument 5 has type 'size_t' {aka 'unsigned int'} [-Werror=format=]
-   1654 | "block size (%u bytes) not supported; Only block size (%ld) or less is supported",
-        | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   1655 |                                 mp->m_sb.sb_blocksize, max_folio_size);
-        |                                                        ~~~~~~~~~~~~~~
-        |                                                        |
-        |                                                        size_t {aka unsigned int}
-  ...
-  fs/xfs/xfs_super.c:1654:58: note: format string is defined here
-   1654 | "block size (%u bytes) not supported; Only block size (%ld) or less is supported",
-        |                                                        ~~^
-        |                                                          |
-        |                                                          long int
-        |                                                        %d
+This series prepares the btree code to support realtime reverse mapping btrees
+by refactoring xfs_ifork_realloc to be fed a per-btree ops structure so that it
+can handle multiple types of inode-rooted btrees.  It moves on to refactoring
+the btree code to use the new realloc routines.
 
-Use the proper 'size_t' specifier, '%zu', to resolve the warning.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-Fixes: 0ab3ca31b012 ("xfs: enable block size larger than page size support")
-Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-cleanups
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-cleanups
 ---
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 242271298a33..e8cc7900911e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1651,7 +1651,7 @@ xfs_fs_fill_super(
- 
- 		if (mp->m_sb.sb_blocksize > max_folio_size) {
- 			xfs_warn(mp,
--"block size (%u bytes) not supported; Only block size (%ld) or less is supported",
-+"block size (%u bytes) not supported; Only block size (%zu) or less is supported",
- 				mp->m_sb.sb_blocksize, max_folio_size);
- 			error = -ENOSYS;
- 			goto out_free_sb;
-
+Commits in this patchset:
+ * xfs: fix C++ compilation errors in xfs_fs.h
+ * xfs: fix FITRIM reporting again
+ * xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
+ * xfs: replace shouty XFS_BM{BT,DR} macros
+ * xfs: move the zero records logic into xfs_bmap_broot_space_calc
+ * xfs: refactor the allocation and freeing of incore inode fork btree roots
+ * xfs: refactor creation of bmap btree roots
+ * xfs: hoist the code that moves the incore inode fork broot memory
+ * xfs: rearrange xfs_iroot_realloc a bit
+ * xfs: standardize the btree maxrecs function parameters
 ---
-base-commit: f143d1a48d6ecce12f5bced0d18a10a0294726b5
-change-id: 20240827-xfs-fix-wformat-bs-gt-ps-967f3aa1c142
-
-Best regards,
--- 
-Nathan Chancellor <nathan@kernel.org>
+ fs/xfs/libxfs/xfs_alloc_btree.c    |    6 +
+ fs/xfs/libxfs/xfs_alloc_btree.h    |    3 -
+ fs/xfs/libxfs/xfs_attr_leaf.c      |    8 +
+ fs/xfs/libxfs/xfs_bmap.c           |   62 +++++-----
+ fs/xfs/libxfs/xfs_bmap_btree.c     |   37 ++++--
+ fs/xfs/libxfs/xfs_bmap_btree.h     |  216 +++++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_fs.h             |    4 -
+ fs/xfs/libxfs/xfs_ialloc.c         |    4 -
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    6 +
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |    3 -
+ fs/xfs/libxfs/xfs_inode_fork.c     |  192 ++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_inode_fork.h     |    3 +
+ fs/xfs/libxfs/xfs_refcount_btree.c |    5 +
+ fs/xfs/libxfs/xfs_refcount_btree.h |    3 -
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    7 +
+ fs/xfs/libxfs/xfs_rmap_btree.h     |    3 -
+ fs/xfs/libxfs/xfs_sb.c             |   16 +--
+ fs/xfs/libxfs/xfs_trans_resv.c     |    2 
+ fs/xfs/scrub/bmap_repair.c         |    2 
+ fs/xfs/scrub/inode_repair.c        |   12 +-
+ fs/xfs/xfs_bmap_util.c             |    4 -
+ fs/xfs/xfs_discard.c               |    2 
+ 22 files changed, 363 insertions(+), 237 deletions(-)
 
