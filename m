@@ -1,41 +1,44 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F1EB2260C;
-	Tue, 27 Aug 2024 05:55:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E27A20E6;
+	Tue, 27 Aug 2024 06:11:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724738140; cv=none; b=Ymm3BbhZoIiF11T6a443r5scuDG4gFlMuw992YUTg5T2dW0MZdXiFhRiVe6TpMtIIkCSuOkFVmakj3eu6+UzwxAZNegIL83gl+b/V5EV/KDMfxmujXKqFjlbw10HFCz63Igf5Pbhzsli9i2NOnf9JvdMR+cMdUjLcShnNWPsTIo=
+	t=1724739105; cv=none; b=pouTlUr7K8d5mwSjeT8WAx+HL6BH0/2hZUVDtsFgDUbiKUj4v14UV2OozRSqr/LpQmyVFRdH7/ZA6yLOpCEdVHVj8umrvCoFklPH9i19G5mYdfZJSrgxNHk6NkNEhkoRSKqWtl9DeJ8qkY6r1WQMdbkdkxuNeJtWjfMkj9br8rw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724738140; c=relaxed/simple;
-	bh=UNUUCvQTms/9iZEo4GfsCDlp2KN6INNumi/aUtPAUsw=;
+	s=arc-20240116; t=1724739105; c=relaxed/simple;
+	bh=8ja/d4hVgkWL5VIf717tg90wBtgBjVNrgxgEIUJ2miU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sscPRcJhw6TrwcQuU0Hd0PuDc3E8dGfYB9wD7TiN8MoKrOEjO0KcedGVKu/u3fqo5DBPCADnrehtu/820gzVnwaLwkmkoj0OeOielI3V+ct+YdiYbIOTgRCkAKWtxzbeJzsstCUXWJCHDIP6Kp6xl9N54w9bCIMPoMKMBKkd4do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZMbZytn/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tfl9bx02nQC4GSgVbdydvIRbiwTJgd2s1jaKiYOneQqFtWU/CZggSQ5KDsQrpNU0/V5fPtG4RkrpadnWvArHzM2p6Kw5HrSly+F3KODAEJ6CbbjZ3ygjBHGbI8+sqydh8jEgTqjb2wxu+SwpMVv095ooaKvo8j5CRr5tRIT9c/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Noo+1MQI; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZMbZytn/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C286AC8B7A4;
-	Tue, 27 Aug 2024 05:55:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724738139;
-	bh=UNUUCvQTms/9iZEo4GfsCDlp2KN6INNumi/aUtPAUsw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZMbZytn/IziybM+kw+0P3sab/WKf0I5NwzlFI7IVFzXzCbFZHXD1QcqQiRFvOl9L2
-	 kuTPNW/NkTSPpccRYnnVrYqFpHTN86B+PypYoQ2I/0VLpR8gm/zT+UoUZ0AioG4/2e
-	 vpSEZshcHFujaCfyIL7aLPA1hylOrjz/Rh2ruVI3APVvv2dy5pisd8Skr3CT3Dr6UI
-	 1T+WAkrlnzexX+YxPOrLdgrs/DQRSArPt+q45/KR3xfOIDFazUJ1zaAfYWVHkxYYCh
-	 TAbkj4JA+GJPDKOa7R58vwTA2rT1FHCfRBpS/9Vni3rdxBv4vegLJJI6CuV5gUOiSv
-	 2UfD2/XHf7E6Q==
-Date: Mon, 26 Aug 2024 22:55:39 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: brauner@kernel.org, sfr@canb.auug.org.au, p.raghav@samsung.com,
-	dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-next@vger.kernel.org
-Subject: Re: [PATCH] iomap: remove set_memor_ro() on zero page
-Message-ID: <20240827055539.GL865349@frogsfrogsfrogs>
-References: <20240826212632.2098685-1-mcgrof@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Noo+1MQI"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=ydOHnHCRlRXBdmHUv3quLpc+tSab9bHxakBbfIjOVZs=; b=Noo+1MQIrB8RICNQvn0XiIlrfz
+	CpRkPqCj4oOEhy0BuBs0WOqUQp4e/epHSpWfrfvcWuGXGnpdMbSL0L6RPOnIzZtaKQiAXa43wI+hk
+	Ny57YCri3ncF6eO1LaHWIWjabZeZeoM/278MO6Hb+xlbU3J07KaJC3cueEeGMbbMLEDlLRRgOnRSc
+	y/zX2CQJS1gjmGUULRFDXWuSr/vb7PtLx92mG4E2DyzRApItx8nVbFpU3qF+A6WmuN2Ur1Ss4177q
+	JXGE6PXzIfHpkTj8a6/uBXrQk0dmSiMgblyg6Bf8Tulo21GzJnAJajNJ1r6uAZZPT0JyY3sycVTzK
+	T1ykHoxw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sipQc-00000009xyl-3w5y;
+	Tue, 27 Aug 2024 06:11:42 +0000
+Date: Mon, 26 Aug 2024 23:11:42 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	djwong@kernel.org, josef@toxicpanda.com, david@fromorbit.com
+Subject: Re: [PATCH 2/2] iomap: make zero range flush conditional on
+ unwritten mappings
+Message-ID: <Zs1uHoemE7jHQ2bw@infradead.org>
+References: <20240822145910.188974-1-bfoster@redhat.com>
+ <20240822145910.188974-3-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,56 +47,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240826212632.2098685-1-mcgrof@kernel.org>
+In-Reply-To: <20240822145910.188974-3-bfoster@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Aug 26, 2024 at 02:26:32PM -0700, Luis Chamberlain wrote:
-> Stephen reported a boot failure on ppc power8 system where
-> set_memor_ro() on the new zero page failed [0]. Christophe Leroy
-> further clarifies we can't use this on on linear memory on ppc, and
-> so instead of special casing this just for PowerPC [2] remove the
-> call as suggested by Darrick.
-> 
-> [0] https://lore.kernel.org/all/20240826175931.1989f99e@canb.auug.org.au/T/#u
-> [1] https://lore.kernel.org/all/b0fe75b4-c1bb-47f7-a7c3-2534b31c1780@csgroup.eu/
-> [2] https://lore.kernel.org/all/ZszrJkFOpiy5rCma@bombadil.infradead.org/
-> 
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+On Thu, Aug 22, 2024 at 10:59:10AM -0400, Brian Foster wrote:
+> Note that we also flush for hole mappings because iomap_zero_range()
+> is used for partial folio zeroing in some cases. For example, if a
+> folio straddles EOF on a sub-page FSB size fs, the post-eof portion
+> is hole-backed and dirtied/written via mapped write, and then i_size
+> increases before writeback can occur (which otherwise zeroes the
+> post-eof portion of the EOF folio), then the folio becomes
+> inconsistent with disk until reclaimed.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Eww.  I'm not sure iomap_zero_range is the right way to handle this
+even if that's what we have now and it kinda work.
 
---D
+> +	/*
+> +	 * We can skip pre-zeroed mappings so long as either the mapping was
+> +	 * clean before we started or we've flushed at least once since.
+> +	 * Otherwise we don't know whether the current mapping had dirty
+> +	 * pagecache, so flush it now, stale the current mapping, and proceed
+> +	 * from there.
+> +	 */
+> +	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN) {
 
-> ---
-> 
-> This applies to the vfs.blocksize branch on the vfs tree.
-> 
->  fs/iomap/direct-io.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index c02b266bba52..f637aa0706a3 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -11,7 +11,6 @@
->  #include <linux/iomap.h>
->  #include <linux/backing-dev.h>
->  #include <linux/uio.h>
-> -#include <linux/set_memory.h>
->  #include <linux/task_io_accounting_ops.h>
->  #include "trace.h"
->  
-> @@ -781,8 +780,6 @@ static int __init iomap_dio_init(void)
->  	if (!zero_page)
->  		return -ENOMEM;
->  
-> -	set_memory_ro((unsigned long)page_address(zero_page),
-> -		      1U << IOMAP_ZERO_PAGE_ORDER);
->  	return 0;
->  }
->  fs_initcall(iomap_dio_init);
-> -- 
-> 2.43.0
-> 
-> 
+.. at very least the above needs to be documented here as a big fat
+reminder, though.
+
+Otherwise the series looks sensible to me.
+
