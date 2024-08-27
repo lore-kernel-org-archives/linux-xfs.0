@@ -1,70 +1,43 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B245B322E
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:37:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89A3FC8C7
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724722622; cv=none; b=adajghEzec2KSRIQeN8CUt0whSBYTtwMzk2EEm3wYHEIErRm3AE3i8MO50jPNa0ZDr/d4z9Bsvevd65tHV1bJmpASWT/mkZprgqFCVDO560lVuWLOtRg1VcgshVErHaP+4T5mQjz6iZ5XkJz2bX4Jsr/IQSPzt12ZywnWsqnmao=
+	t=1724723760; cv=none; b=CH8y6vSYvwgLLQPS4AZbEPHDQDl7j3wcaxaUYI2t8YJ7EQxYGVTbqjDYoo5j6YIjmDenmyUnrjIHGDcQTtUJ44qLrtVnf89MxyV/nnSr6Bl1Z/8BNIlyeUAAure0Fww5SRYDudIaXLe6WEEA0IzksSitEFEkonibyW7RN4aWkIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724722622; c=relaxed/simple;
-	bh=MAZ+/CVWtijc4ARSxksWA9nLZM9i8Op6OQHLtW1vsE8=;
+	s=arc-20240116; t=1724723760; c=relaxed/simple;
+	bh=D0fZtkz++/4ZlOiXOP0CBp2/2XdvUbb3G00SH5QJHSc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RLDNhTFclweOLBQoKSmAVRLcX1p5pb2R86Q+BmlYxMRIkbL0dYZoDmcLhBGLa2ImKKhSLEDjngKCOu+GiyVYWYtZLhaFuE9Mf3ChiFDbbvOMvpG+zN9gbFHXnZqG94FO2FXvIgwV9V46g6vZZ3GbCSryQexR+m7XrfM2rr6kiLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=JIkFLrQZ; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=jqkcjqNAbBFaf0QawLcoSPHCQ74CTFiQHapX9pUcR3RUNG+sOoM/LqXLG9ntEnJ5Ea/X1QSuXXqzrhSRG8syQe3cQ4P2TD6YSetKJ5mCR9EKCjgCivZVf80+iexySapPq5eGDOCkwxwq5RsfNsbh+7mEa1svb7TaRbw9vTEO3Qw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EJQkz/tG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="JIkFLrQZ"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-714263cb074so3422438b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 18:37:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724722620; x=1725327420; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+9LVkoGtTavbErnrLPIBauVORRDfAKYcmcIS8uWHns0=;
-        b=JIkFLrQZnAL5ugG9RCOEXrw+m6jV/KT8j8D5e4nZdSDWxfQe4o4XtMwJzrGeip4tSh
-         fDVMoCebuM87rd2mqXSJU73MPLGWSVUYaQagsiYhzvg+innmeklBBxmpxjmVDtRFNSjX
-         jpHd0oxeJPJK8rFw78+i1OPYCB0cof7kHSZU9UBopR35dlX75RfkF8qH1jQJrFXw8kG5
-         GRumLHMqFyXk0mFFMlzL+8MSOkOlBQTGA3tnnfSGucE/Ph+NYWQRLFZ4XCrUiS/GpHjI
-         S4pSTpQNXelr4m2+gNWyWvbHMXuJ5uNRjERyHNPIUZJx/4n67zgkU/zSeUi2j1cwAgnX
-         WLvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724722620; x=1725327420;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+9LVkoGtTavbErnrLPIBauVORRDfAKYcmcIS8uWHns0=;
-        b=COYmOC/fwmnB79pg2XBf9wMkQ1wP8/nXpgLfQwMGC2SD5T4Fdu3ju9CXvbUhonu7Cs
-         4dNeH00ICPmuJb6n4ow4uTWuk8WMb6xywSfLMYhNJugQhJaN+BwPodneS+rs1wM6YevJ
-         m/qCj1Tt3dtwjiU02qwR9T0TaVdDNNAbTfqMCiXyHkWkiMRtM3fZgUTkrHSMrNzOmIDV
-         hWKjRm0c19h9WJ8jUjI2EjRcx63MS3tKX+19RTcriBiQ+04BSDD4oqwGY2doJvcIZgA/
-         fxMdh4Aht+U/nC0AmPZUaFuUYNCTeK+gllVqm6mBsb8hDLzpkXmJ30mNn1Jv5FLM3/nq
-         9Rhw==
-X-Forwarded-Encrypted: i=1; AJvYcCXYD1qAK1ppbr8mM6jkfzARl14QbZ3Xrs2b5uVBoeOE3c7kYPUGZzzKfaTrZFIy9a5cg0hqJGane8c=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwcVHS4Z0+YXa1GaW0JsozZKIOxIokcMIBReXRtzArHfpF3vOEV
-	UszmjNEv86ULZi+0EsznB68aD0jNUCkhlAnY/KZNNoRZ4bweWsNHO+qoOgBUD5c=
-X-Google-Smtp-Source: AGHT+IEHTGid6JaZN7UQXq5P9m1RAFdZHwhq59O2a1js58H6eem9g18K+Gex1k5kBJSyKZSVSpGyxw==
-X-Received: by 2002:a05:6a00:b46:b0:714:271e:7c3e with SMTP id d2e1a72fcca58-71445d0ecccmr12545530b3a.9.1724722619897;
-        Mon, 26 Aug 2024 18:36:59 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71434309676sm7860737b3a.174.2024.08.26.18.36.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Aug 2024 18:36:59 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sil8j-00E0VZ-0v;
-	Tue, 27 Aug 2024 11:36:57 +1000
-Date: Tue, 27 Aug 2024 11:36:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/26] xfs: support logging EFIs for realtime extents
-Message-ID: <Zs0tuQlJbleBPND/@dread.disaster.area>
-References: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
- <172437088816.60592.12361252562494894102.stgit@frogsfrogsfrogs>
- <ZswFhKNrMh4I8QGm@dread.disaster.area>
- <20240826193835.GD865349@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EJQkz/tG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E71E1C8B7AF;
+	Tue, 27 Aug 2024 01:55:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724723759;
+	bh=D0fZtkz++/4ZlOiXOP0CBp2/2XdvUbb3G00SH5QJHSc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EJQkz/tGJf1ZWaS54udW3+/0VWZEkR+KmAyqxhl5wilxGmp4ou70kZWGWBr22ItXZ
+	 cfUcXj/KC9Cc5zpPrtqf8a9wzXZ96g4J0/HNipUjkRR5fgui8JhD3uY/aPRo/5koop
+	 gXvaZJtoA84PtB+aSrqWRIWouPxUB2ojvcJv71oRFe3iUV7jQXD8aYIL7FfbhvsvCu
+	 nGvGsBl81g+Tx8a409+eIpqZGqYPZYE7fRkKXofuieHo7N1E97aAFgZ8b9uO7rIcCM
+	 /7auwdQZSL9MH4DtQuq7/xxPOC4e8oRWh7dH7DWF2rV/krk8DjYhX5JawGv1MD3d35
+	 XBLqMVe4RGjXQ==
+Date: Mon, 26 Aug 2024 18:55:58 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>,
+	Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 11/24] xfs: create incore realtime group structures
+Message-ID: <20240827015558.GD6082@frogsfrogsfrogs>
+References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
+ <172437087433.59588.10419191726395528458.stgit@frogsfrogsfrogs>
+ <ZsvEmInHRA6GVuz3@dread.disaster.area>
+ <20240826191404.GC865349@frogsfrogsfrogs>
+ <Zs0kfidzTGC7KACX@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,137 +46,483 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240826193835.GD865349@frogsfrogsfrogs>
+In-Reply-To: <Zs0kfidzTGC7KACX@dread.disaster.area>
 
-On Mon, Aug 26, 2024 at 12:38:35PM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 26, 2024 at 02:33:08PM +1000, Dave Chinner wrote:
-> > On Thu, Aug 22, 2024 at 05:25:36PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Aug 27, 2024 at 10:57:34AM +1000, Dave Chinner wrote:
+> On Mon, Aug 26, 2024 at 12:14:04PM -0700, Darrick J. Wong wrote:
+> > On Mon, Aug 26, 2024 at 09:56:08AM +1000, Dave Chinner wrote:
+> > > On Thu, Aug 22, 2024 at 05:17:31PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Create an incore object that will contain information about a realtime
+> > > > allocation group.  This will eventually enable us to shard the realtime
+> > > > section in a similar manner to how we shard the data section, but for
+> > > > now just a single object for the entire RT subvolume is created.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  fs/xfs/Makefile             |    1 
+> > > >  fs/xfs/libxfs/xfs_format.h  |    3 +
+> > > >  fs/xfs/libxfs/xfs_rtgroup.c |  196 ++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/libxfs/xfs_rtgroup.h |  212 +++++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/libxfs/xfs_sb.c      |    7 +
+> > > >  fs/xfs/libxfs/xfs_types.h   |    4 +
+> > > >  fs/xfs/xfs_log_recover.c    |   20 ++++
+> > > >  fs/xfs/xfs_mount.c          |   16 +++
+> > > >  fs/xfs/xfs_mount.h          |   14 +++
+> > > >  fs/xfs/xfs_rtalloc.c        |    6 +
+> > > >  fs/xfs/xfs_super.c          |    1 
+> > > >  fs/xfs/xfs_trace.c          |    1 
+> > > >  fs/xfs/xfs_trace.h          |   38 ++++++++
+> > > >  13 files changed, 517 insertions(+), 2 deletions(-)
+> > > >  create mode 100644 fs/xfs/libxfs/xfs_rtgroup.c
+> > > >  create mode 100644 fs/xfs/libxfs/xfs_rtgroup.h
 > > > 
-> > > Teach the EFI mechanism how to free realtime extents.  We're going to
-> > > need this to enforce proper ordering of operations when we enable
-> > > realtime rmap.
+> > > Ok, how is the global address space for real time extents laid out
+> > > across rt groups? i.e. is it sparse similar to how fsbnos and inode
+> > > numbers are created for the data device like so?
 > > > 
-> > > Declare a new log intent item type (XFS_LI_EFI_RT) and a separate defer
-> > > ops for rt extents.  This keeps the ondisk artifacts and processing code
-> > > completely separate between the rt and non-rt cases.  Hopefully this
-> > > will make it easier to debug filesystem problems.
+> > > 	fsbno = (agno << agblklog) | agbno
+> > > 
+> > > Or is it something different? I can't find that defined anywhere in
+> > > this patch, so I can't determine if the unit conversion code and
+> > > validation is correct or not...
 > > 
-> > Doesn't this now require busy extent tracking for rt extents that
-> > are being freed?  i.e. they get marked as free with the EFD, but
-> > cannot be reallocated (or discarded) until the EFD is committed to
-> > disk.
-> > 
-> > we don't allow user data allocation on the data device to reuse busy
-> > ranges because the freeing of the extent has not yet been committed
-> > to the journal. Because we use async transaction commits, that means
-> > we can return to userspace without even the EFI in the journal - it
-> > can still be in memory in the CIL. Hence we cannot allow userspace
-> > to reallocate that range and write to it, even though it is marked free in the
-> > in-memory metadata.
+> > They're not sparse like fsbnos on the data device, they're laid end to
+> > end.  IOWs, it's a straight linear translation.  If you have an rtgroup
+> > that is 50 blocks long, then rtgroup 1 starts at (50 * blocksize).
 > 
-> Ah, that's a good point -- in memory the bunmapi -> RTEFI -> RTEFD ->
-> rtalloc -> bmapi transactions succeed, userspace writes to the file
-> blocks, then the log goes down without completing /any/ of those
-> transactions, and now a read of the old file gets new contents.
-
-*nod*
-
-> > If userspace then does a write and then we crash without the
-> > original EFI on disk, then we've just violated metadata vs data
-> > update ordering because recovery will not replay the extent free nor
-> > the new allocation, yet the data in that extent will have been
-> > changed.
-> > 
-> > Hence I think that if we are moving to intent based freeing of real
-> > time extents, we absolutely need to add support for busy extent
-> > tracking to realtime groups before we enable EFIs on realtime
-> > groups.....
+> Yes, I figured that out later. I think that's less than optimal,
+> because it essentially repeats the problems we have with AGs being
+> fixed size without the potential for fixing it easily. i.e. the
+> global sharded fsbno address space is sparse, so we can actually
+> space out the sparse address regions to allow future flexibility in
+> group size and location work.
 > 
-> Yep.  As a fringe benefit, we'd be able to support issuing discards from
-> FITRIM without holding the rtbitmap lock, and -o discard on rt extents
-> too.
-
-Yes. And I suspect that if we unify the perag and rtg into a single
-group abstraction, the busy extent tracking will work for both
-allocators without much functional change being needed at all...
-
-> > Also ....
-> > 
-> > > @@ -447,6 +467,17 @@ xfs_extent_free_defer_add(
-> > >  
-> > >  	trace_xfs_extent_free_defer(mp, xefi);
-> > >  
-> > > +	if (xfs_efi_is_realtime(xefi)) {
-> > > +		xfs_rgnumber_t		rgno;
-> > > +
-> > > +		rgno = xfs_rtb_to_rgno(mp, xefi->xefi_startblock);
-> > > +		xefi->xefi_rtg = xfs_rtgroup_get(mp, rgno);
-> > > +
-> > > +		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
-> > > +				&xfs_rtextent_free_defer_type);
-> > > +		return;
-> > > +	}
-> > > +
-> > >  	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
-> > >  	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
-> > >  		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
-> > 
-> > Hmmmm. Isn't this also missing the xfs_drain intent interlocks that
-> > allow online repair to wait until all the intents outstanding on a
-> > group complete?
+> By having the rtgroup addressing being purely physical, we're
+> completely stuck with fixed sized rtgroups and there is no way
+> around that. IOWs, the physical address space sharding repeats the
+> existing grow and shrink problems we have with the existing fixed
+> size AGs.
 > 
-> Yep.  I forgot about that.
+> We're discussing how to use the sparse fsbno addressing to allow
+> resizing of AGs, but we will not be able to do that at all with
+> rtgroups as they stand. The limitation is a 64 bit global rt extent
+> address is essential the physical address of the extent in the block
+> device LBA space.
 
-Same comment about unified group infrastructure ;)
+<nod> I /think/ it's pretty simple to convert the rtgroups rtblock
+numbers to sparse ala xfs_fsblock_t -- all we have to do is make sure
+that mp->m_rgblklog is set to highbit64(rtgroup block count) and then
+delete all the multiply/divide code, just like we do on the data device.
 
-> > > +
-> > > +/* Cancel a realtime extent freeing. */
-> > > +STATIC void
-> > > +xfs_rtextent_free_cancel_item(
-> > > +	struct list_head		*item)
-> > > +{
-> > > +	struct xfs_extent_free_item	*xefi = xefi_entry(item);
-> > > +
-> > > +	xfs_rtgroup_put(xefi->xefi_rtg);
-> > > +	kmem_cache_free(xfs_extfree_item_cache, xefi);
-> > > +}
-> > > +
-> > > +/* Process a free realtime extent. */
-> > > +STATIC int
-> > > +xfs_rtextent_free_finish_item(
-> > > +	struct xfs_trans		*tp,
-> > > +	struct xfs_log_item		*done,
-> > > +	struct list_head		*item,
-> > > +	struct xfs_btree_cur		**state)
-> > 
-> > btree cursor ....
-> > 
-> > > +{
-> > > +	struct xfs_mount		*mp = tp->t_mountp;
-> > > +	struct xfs_extent_free_item	*xefi = xefi_entry(item);
-> > > +	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
-> > > +	struct xfs_rtgroup		**rtgp = (struct xfs_rtgroup **)state;
-> > 
-> > ... but is apparently holding a xfs_rtgroup. that's kinda nasty, and
-> > the rtg the xefi is supposed to be associated with is already held
-> > by the xefi, so....
+The thing I *don't* know is how will this affect hch's zoned device
+support -- he's mentioned that rtgroups will eventually have both a size
+and a "capacity" to keep the zones aligned to groups, or groups aligned
+to zones, I don't remember which.  I don't know if segmenting
+br_startblock for rt mappings makes things better or worse for that.
+
+> > This patch, FWIW, refactors the existing rt code so that a !rtgroups
+> > filesystem is represented by one large "group", with xfs_rtxnum_t now
+> > indexing rt extents within a group. 
 > 
-> It's very nasty, and I preferred when it was just a void**.  Maybe we
-> should just change that to a:
+> Right, we can do that regardless of whether we use logical or
+> physical addressing for the global rtbno for sharded rtgroup layout.
+> the rtgno of 0 for that rtg always results in logical = physical
+> addressing.
 > 
-> struct xfs_intent_item_state {
-> 	struct xfs_btree_cur	*cur;
-> 	struct xfs_rtgroup	*rtg;
+> > Probably it should be renamed to xfs_rgxnum_t.
+> 
+> That might be a good idea.
+> 
+> > Note that we haven't defined the rtgroup ondisk format yet, so I'll go
+> > amend that patch to spell out the ondisk format of the brave new world.
+> 
+> Yes, please! That would have made working out all the differences
+> between all the combinations of rt, rtx, rg, num, len, blk, etc a
+> whole lot easier to work out.
+
+<Nod> I'll go work all that out.
+
+> > > > +struct xfs_rtgroup *
+> > > > +xfs_rtgroup_grab(
+> > > > +	struct xfs_mount	*mp,
+> > > > +	xfs_agnumber_t		agno)
+> > > > +{
+> > > > +	struct xfs_rtgroup	*rtg;
+> > > > +
+> > > > +	rcu_read_lock();
+> > > > +	rtg = xa_load(&mp->m_rtgroups, agno);
+> > > > +	if (rtg) {
+> > > > +		trace_xfs_rtgroup_grab(rtg, _RET_IP_);
+> > > > +		if (!atomic_inc_not_zero(&rtg->rtg_active_ref))
+> > > > +			rtg = NULL;
+> > > > +	}
+> > > > +	rcu_read_unlock();
+> > > > +	return rtg;
+> > > > +}
+> > > > +
+> > > > +void
+> > > > +xfs_rtgroup_rele(
+> > > > +	struct xfs_rtgroup	*rtg)
+> > > > +{
+> > > > +	trace_xfs_rtgroup_rele(rtg, _RET_IP_);
+> > > > +	if (atomic_dec_and_test(&rtg->rtg_active_ref))
+> > > > +		wake_up(&rtg->rtg_active_wq);
+> > > > +}
+> > > 
+> > > This is all duplicates of the xfs_perag code. Can you put together a
+> > > patchset to abstract this into a "xfs_group" and embed them in both
+> > > the perag and and rtgroup structures?
+> > > 
+> > > That way we only need one set of lookup and iterator infrastructure,
+> > > and it will work for both data and rt groups...
+> > 
+> > How will that work with perags still using the radix tree and rtgroups
+> > using the xarray?  Yes, we should move the perags to use the xarray too
+> > (and indeed hch already has a series on list to do that) but here's
+> > really not the time to do that because I don't want to frontload a bunch
+> > more core changes onto this already huge patchset.
+> 
+> Let's first assume they both use xarray (that's just a matter of
+> time, yes?) so it's easier to reason about. Then we have something
+> like this:
+> 
+> /*
+>  * xfs_group - a contiguous 32 bit block address space group
+>  */
+> struct xfs_group {
+> 	struct xarray		xarr;
+> 	u32			num_groups;
+> };
+
+Ah, that's the group head.  I might call this struct xfs_groups?
+
+So ... would it theoretically make more sense to use an rhashtable here?
+Insofar as the only place that totally falls down is if you want to
+iterate tagged groups; and that's only done for AGs.
+
+I'm ok with using an xarray here, fwiw.
+
+> struct xfs_group_item {
+> 	struct xfs_group	*group; /* so put/rele don't need any other context */
+> 	u32			gno;
+> 	atomic_t		passive_refs;
+> 	atomic_t		active_refs;
+> 	wait_queue_head_t	active_wq;
+> 	unsigned long		opstate;
+> 
+> 	u32			blocks;		/* length in fsb */
+> 	u32			extents;	/* length in extents */
+> 	u32			blk_log;	/* extent size in fsb */
+> 
+> 	/* limits for min/max valid addresses */
+> 	u32			max_addr;
+> 	u32			min_addr;
+> };
+
+Yeah, that's pretty much what I had in the prototype that I shredded an
+hour ago.
+
+> And then we define:
+> 
+> struct xfs_perag {
+> 	struct xfs_group_item	g;
+> 
+> 	/* perag specific stuff follows */
+> 	....
 > };
 > 
-> and pass that around?  At least then the compiler can typecheck that for
-> us.
+> struct xfs_rtgroup {
+> 	struct xfs_group_item	g;
+> 
+> 	/* rtg specific stuff follows */
+> 	.....
+> 
+> }
+> 
+> And then a couple of generic macros:
+> 
+> #define to_grpi(grpi, gi)	container_of((gi), typeof(grpi), g)
+> #define to_gi(grpi)		(&(grpi)->g)
+> 
+> though this might be better as just typed macros:
+> 
+> #define gi_to_pag(gi)	container_of((gi), struct xfs_perag, g)
+> #define gi_to_rtg(gi)	container_of((gi), struct xfs_rtgroup, g)
+> 
+> And then all the grab/rele/get/put stuff becomes:
+> 
+> 	rtg = to_grpi(rtg, xfs_group_grab(mp->m_rtgroups, rgno));
+> 	pag = to_grpi(pag, xfs_group_grab(mp->m_perags, agno));
+> 	....
+> 	xfs_group_put(&rtg->g);
+> 	xfs_group_put(&pag->g);
+> 
+> 
+> or
+> 
+> 	rtg = gi_to_rtg(xfs_group_grab(mp->m_rtgroups, rgno));
+> 	pag = gi_to_pag(xfs_group_grab(mp->m_perags, agno));
+> 	....
+> 	xfs_group_put(&rtg->g);
+> 	xfs_group_put(&pag->g);
+> 
+> 
+> then we pass the group to each of the "for_each_group..." iterators
+> like so:
+> 
+> 	for_each_group(&mp->m_perags, agno, pag) {
+> 		/* do stuff with pag */
+> 	}
+> 
+> or
+> 	for_each_group(&mp->m_rtgroups, rtgno, rtg) {
+> 		/* do stuff with rtg */
+> 	}
+> 
+> And we use typeof() and container_of() to access the group structure
+> within the pag/rtg. Something like:
+> 
+> #define to_grpi(grpi, gi)	container_of((gi), typeof(grpi), g)
+> #define to_gi(grpi)		(&(grpi)->g)
+> 
+> #define for_each_group(grp, gno, grpi)					\
+> 	(gno) = 0;							\
+> 	for ((grpi) = to_grpi((grpi), xfs_group_grab((grp), (gno)));	\
+> 	     (grpi) != NULL;						\
+> 	     (grpi) = to_grpi(grpi, xfs_group_next((grp), to_gi(grpi),	\
+> 					&(gno), (grp)->num_groups))
+> 
+> And now we essentially have common group infrstructure for
+> access, iteration, geometry and address verification purposes...
 
-Sounds good to me. :)
+<nod> That's pretty much what I had drafted, albeit with different
+helper macros since I kept the for_each_{perag,rtgroup} things around
+for type safety.  Though I think for_each_perag just becomes:
 
--Dave.
+#define for_each_perag(mp, agno, pag) \
+	for_each_group((mp)->m_perags, (agno), (pag))
 
--- 
-Dave Chinner
-david@fromorbit.com
+Right?
+
+> > 
+> > > > +
+> > > > +/* Compute the number of rt extents in this realtime group. */
+> > > > +xfs_rtxnum_t
+> > > > +xfs_rtgroup_extents(
+> > > +	struct xfs_mount	*mp,
+> > > > +	xfs_rgnumber_t		rgno)
+> > > > +{
+> > > > +	xfs_rgnumber_t		rgcount = mp->m_sb.sb_rgcount;
+> > > > +
+> > > > +	ASSERT(rgno < rgcount);
+> > > > +	if (rgno == rgcount - 1)
+> > > > +		return mp->m_sb.sb_rextents -
+> > > > +			((xfs_rtxnum_t)rgno * mp->m_sb.sb_rgextents);
+> > > 
+> > > Urk. So this relies on a non-rtgroup filesystem doing a
+> > > multiplication by zero of a field that the on-disk format does not
+> > > understand to get the right result.  I think this is a copying a bad
+> > > pattern we've been slowly trying to remove from the normal
+> > > allocation group code.
+> > > 
+> > > > +
+> > > > +	ASSERT(xfs_has_rtgroups(mp));
+> > > > +	return mp->m_sb.sb_rgextents;
+> > > > +}
+> > > 
+> > > We already embed the length of the rtgroup in the rtgroup structure.
+> > > THis should be looking up the rtgroup (or being passed the rtgroup
+> > > the caller already has) and doing the right thing. i.e.
+> > > 
+> > > 	if (!rtg || !xfs_has_rtgroups(rtg->rtg_mount))
+> > > 		return mp->m_sb.sb_rextents;
+> > > 	return rtg->rtg_extents;
+> > 
+> > xfs_rtgroup_extents is the function that we use to set rtg->rtg_extents.
+> 
+> That wasn't clear from the context of the patch. Perhaps a better
+> name xfs_rtgroup_calc_extents() to indicate that it is a setup
+> function, not something that should be regularly called at runtime?
+
+<nod>
+
+> > 
+> > > > +static inline xfs_rtblock_t
+> > > > +xfs_rgno_start_rtb(
+> > > > +	struct xfs_mount	*mp,
+> > > > +	xfs_rgnumber_t		rgno)
+> > > > +{
+> > > > +	if (mp->m_rgblklog >= 0)
+> > > > +		return ((xfs_rtblock_t)rgno << mp->m_rgblklog);
+> > > > +	return ((xfs_rtblock_t)rgno * mp->m_rgblocks);
+> > > > +}
+> > > 
+> > > Where does mp->m_rgblklog come from? That wasn't added to the
+> > > on-disk superblock structure and it is always initialised to zero
+> > > in this patch.
+> > > 
+> > > When will m_rgblklog be zero and when will it be non-zero? If it's
+> > 
+> > As I mentioned before, this patch merely ports non-rtg filesystems to
+> > use the rtgroup structure.  m_rgblklog will be set to nonzero values
+> > when we get to defining the ondisk rtgroup structure.
+> 
+> Yeah, which makes some of the context in the patch hard to
+> understand... :/
+> 
+> > But, to cut ahead here, m_rgblklog will be set to a non-negative value
+> > if the rtgroup size (in blocks) is a power of two.  Then these unit
+> > conversion functions can use shifts instead of expensive multiplication
+> > and divisions.  The same goes for rt extent to {fs,rt}block conversions.
+> 
+> yeah, so mp->m_rgblklog is not equivalent of mp->m_agblklog at all.
+> It took me some time to understand that - the names are the same,
+> they are used in similar address conversions, but they have
+> completely different functions.
+> 
+> I suspect we need some better naming here, regardless of the
+> rtgroups global address space layout discussion...
+
+Or just make xfs_rtblock_t sparse, in which case I think m_rgblklog
+usage patterns become exactly the same as m_agblklog.
+
+> > > > +
+> > > > +static inline uint64_t
+> > > > +__xfs_rtb_to_rgbno(
+> > > > +	struct xfs_mount	*mp,
+> > > > +	xfs_rtblock_t		rtbno)
+> > > > +{
+> > > > +	uint32_t		rem;
+> > > > +
+> > > > +	if (!xfs_has_rtgroups(mp))
+> > > > +		return rtbno;
+> > > > +
+> > > > +	if (mp->m_rgblklog >= 0)
+> > > > +		return rtbno & mp->m_rgblkmask;
+> > > > +
+> > > > +	div_u64_rem(rtbno, mp->m_rgblocks, &rem);
+> > > > +	return rem;
+> > > > +}
+> > > 
+> > > Why is this function returning a uint64_t - a xfs_rgblock_t is only
+> > > a 32 bit type...
+> > 
+> > group 0 on a !rtg filesystem can be 64-bits in block/rt count.  This is
+> > a /very/ annoying pain point -- if you actually created such a
+> > filesystem it actually would never work because the rtsummary file would
+> > be created undersized due to an integer overflow, but the verifiers
+> > never checked any of that, and due to the same underflow the rtallocator
+> > would search the wrong places and (eventually) fall back to a dumb
+> > linear scan.
+> > 
+> > Soooooo this is an obnoxious usecase (broken large !rtg filesystems)
+> > that we can't just drop, though I'm pretty sure there aren't any systems
+> > in the wild.
+> 
+> Ugh. That definitely needs to be a comment somewhere in the code to
+> explain this. :/
+
+Well it's all in the commit that fixed the rtsummary for those things.
+
+> > > > diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> > > > index a8cd44d03ef64..1ce4b9eb16f47 100644
+> > > > --- a/fs/xfs/libxfs/xfs_types.h
+> > > > +++ b/fs/xfs/libxfs/xfs_types.h
+> > > > @@ -9,10 +9,12 @@
+> > > >  typedef uint32_t	prid_t;		/* project ID */
+> > > >  
+> > > >  typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+> > > > +typedef uint32_t	xfs_rgblock_t;	/* blockno in realtime group */
+> > > 
+> > > Is that right? The rtg length is 2^32 * rtextsize, and rtextsize can
+> > > be 2^20 bytes:
+> > > 
+> > > #define XFS_MAX_RTEXTSIZE (1024 * 1024 * 1024)
+> > 
+> > No, the maximum rtgroup length is 2^32-1 blocks.
+> 
+> I couldn't tell if the max length was being defined as the maximum
+> number of rt extents that the rtgroup could index, of whether it was
+> the maximum number of filesystem blocks (i.e. data device fsblock
+> size) tha an rtgroup could index...
+
+The max rtgroup length is defined in blocks; the min is defined in rt
+extents.  I might want to bump up the minimum a bit, but I think
+Christoph should weigh in on that first -- I think his zns patchset
+currently assigns one rtgroup to each zone?  Because he was muttering
+about how 130,000x 256MB rtgroups really sucks.  Would it be very messy
+to have a minimum size of (say) 1GB?
+
+> > > Hence for a 4kB fsbno filesystem, the actual maximum size of an rtg
+> > > in filesystem blocks far exceeds what we can address with a 32 bit
+> > > variable.
+> > > 
+> > > If xfs_rgblock_t is actually indexing multi-fsbno rtextents, then it
+> > > is an extent number index, not a "block" index. An extent number
+> > > index won't overflow 32 bits (because the rtg has a max of 2^32 - 1
+> > > rtextents)
+> > > 
+> > > IOWs, shouldn't this be named soemthing like:
+> > > 
+> > > typedef uint32_t	xfs_rgext_t;	/* extent number in realtime group */
+> > 
+> > and again, we can't do that because we emulate !rtg filesystems with a
+> > single "rtgroup" that can be more than 2^32 rtx long.
+> 
+> *nod*
+> 
+> > > >  typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+> > > >  typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
+> > > >  typedef uint32_t	xfs_rtxlen_t;	/* file extent length in rtextents */
+> > > >  typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
+> > > > +typedef uint32_t	xfs_rgnumber_t;	/* realtime group number */
+> > > >  typedef uint64_t	xfs_extnum_t;	/* # of extents in a file */
+> > > >  typedef uint32_t	xfs_aextnum_t;	/* # extents in an attribute fork */
+> > > >  typedef int64_t		xfs_fsize_t;	/* bytes in a file */
+> > > > @@ -53,7 +55,9 @@ typedef void *		xfs_failaddr_t;
+> > > >  #define	NULLFILEOFF	((xfs_fileoff_t)-1)
+> > > >  
+> > > >  #define	NULLAGBLOCK	((xfs_agblock_t)-1)
+> > > > +#define NULLRGBLOCK	((xfs_rgblock_t)-1)
+> > > >  #define	NULLAGNUMBER	((xfs_agnumber_t)-1)
+> > > > +#define	NULLRGNUMBER	((xfs_rgnumber_t)-1)
+> > > 
+> > > What's the maximum valid rtg number? We're not ever going to be
+> > > supporting 2^32 - 2 rtgs, so what is a realistic maximum we can cap
+> > > this at and validate it at?
+> > 
+> > /me shrugs -- the smallest AG size on the data device is 16M, which
+> > technically speaking means that one /could/ format 2^(63-24) groups,
+> > or order 39.
+> > 
+> > Realistically with the maximum rtgroup size of 2^31 blocks, we probably
+> > only need 2^(63 - (31 + 10)) = 2^22 rtgroups max on a 1k fsblock fs.
+> 
+> Right, those are the theoretical maximums. Practically speaking,
+> though, mkfs and mount iteration of all AGs means millions to
+> billions of IOs need to be done before the filesystem can even be
+> fully mounted. Hence the practical limit to AG count is closer to a
+> few tens of thousands, not hundreds of billions.
+> 
+> Hence I'm wondering if we should actually cap the maximum number of
+> rtgroups. WE're just about at BS > PS, so with a 64k block size a
+> single rtgroup can index 2^32 * 2^16 bytes which puts individual
+> rtgs at 256TB in size. Unless there are use cases for rtgroup sizes
+> smaller than a few GBs, I just don't see the need for support
+> theoretical maximum counts on tiny block size filesystems. Thirty
+> thousand rtgs at 256TB per rtg puts us at 64 bit device size limits,
+> and we hit those limits on 4kB block sizes at around 500,000 rtgs.
+> 
+> So do we need to support millions of rtgs? I'd say no....
+
+...but we might.  Christoph, how gnarly does zns support get if you have
+to be able to pack multiple SMR zones into a single rtgroup?
+
+--D
+
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
