@@ -1,42 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6378D2114
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 04:27:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4EFBF507
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 04:38:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724732845; cv=none; b=nsdz9ZzT2SKJ2GslC69sp8+oFHEU5a5PZI9OHxmLCd95dOlyrrU20hpWjVtbyIfMSgZPyN/Jut6+4JjN3yFtJ/bCo6ysXRJi2WgMaOJfet1Cz2WvkkpM3ZVRZNorz0YS4D4h42p4odjjjae7IgCtzlO2LxtR/EJ3Si7B8lpoFyA=
+	t=1724733498; cv=none; b=hFvJlM+ASzViBAfI+swciOoEtFjIypRArKupc2ja+ea/nOkHUJO5GshNB14ROo8WIfCfhqG10KfSCxKrNujo6y4dhbY/MGIu4Yfvt5dCT6itBvExjs7ngD+YXaUBhnhJDqEWdY3Nj8CTg3KCL1UcbqpdIxubroAVNXCqjvjrZP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724732845; c=relaxed/simple;
-	bh=UKeynDDcGU7wRAeHWy5ZZAoqPwaUgx01eaojQFcT+zI=;
+	s=arc-20240116; t=1724733498; c=relaxed/simple;
+	bh=XZqhGdAJwoHxiaDDZnYcXwmgEwbAQmGLn3u/oN2mPNA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HfLne6oKoobxVipj/7/hBkWD5bkGlEnjEwldOeng9Ilj/R0ZawCF6G9WDzU5Tvyk54yXMYGdB0VFk4fyCp20K9q8C867IWeJFHA5OkZ4Mv6sWdrE5hjbI3VbMwT5JB2wPR/GmWm3OOGmGTn7PxjH1dKl9RunMOhgFJ648qGKMAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FUexMK2r; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YNTNBg0yfdYsddtTIx68l2MUx0k5BCAkzAfdhPpPAOf2WPqjxl0RFPga441cxLSXa6mz0E+le68t+cUPrWjZDSaVlhAeDynkYlyJyysxbgU67SQe1MIq5W8l+PnvdQDvTUT44qLwfYzamzqGQt4lR4XCpydO8WanP2UxugJkElw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Mparv4E1; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FUexMK2r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD1C4C8B7DF;
-	Tue, 27 Aug 2024 04:27:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724732844;
-	bh=UKeynDDcGU7wRAeHWy5ZZAoqPwaUgx01eaojQFcT+zI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FUexMK2rW7Rin8QReOpFLGt/HPhEWX5F0HVyKhdGdyQnIgLrOfraeeiAe9kvoALmJ
-	 r8a+SOuvswCGtmMBspzsgGy4re2LXDi31YtCTDMGC+6NjMsh+VIascX3ZLllitxbh8
-	 mSAB/MnpyP5ldbS6nT83A407gFcIIKSPCW9oN41zxnUvpNF1pnVq6NCJZ3ovfUCv/u
-	 ppxM8v9NYfuRmkmNbJPzWn+wtKHVB+b1mhdVNF4Wkzz6R0s+k6enwxSKh8hhMImlFn
-	 JJENjkon2eB/hEJrP5pIChUuJidfkLyBakEuehbmlDKGI7mZZBwBgdRp9Nysor31TB
-	 xBpsh8zbJsyjg==
-Date: Mon, 26 Aug 2024 21:27:24 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Mparv4E1"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=uKamNo9yoDuusn8fYAmJjQEz9iA3jZsbIcV03GuAiH4=; b=Mparv4E1GbsojXTrfRcJufzegh
+	N16VKf04b/O7A7OcM6womR3ZmnPypdDJhSA9NLro1JlQvFO8D4vOBBXf7UkzauPuKHUjIWvQZCVKe
+	M5OiqNQbV78v303VJ1njBCbw84e0OFJh6z2WWPRVlTkAXaUnoKR2x+fjW4qdICFPQpw7pTCLu36dp
+	SPB/rfFP8RocToJV1sC29BgFnh+hoWOlL4ff4DD1eOZeITLnYavN3gUEbwB8cd8h1PPXKESO6Fh+b
+	9qOaHgS4K9Zc6hflBh9Wot1RsgYS6306bJ409yPZMhqL5zrXa70CvFvZwbwdNn0ufP6NoD1dRpcg8
+	LgulPUsg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sinyC-00000009iqj-0wEh;
+	Tue, 27 Aug 2024 04:38:16 +0000
+Date: Mon, 26 Aug 2024 21:38:16 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 21/24] xfs: factor out a xfs_growfs_check_rtgeom helper
-Message-ID: <20240827042724.GI865349@frogsfrogsfrogs>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, hch@lst.de,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 11/24] xfs: create incore realtime group structures
+Message-ID: <Zs1YOAdBx9pRaynK@infradead.org>
 References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
- <172437087611.59588.7898768503459548119.stgit@frogsfrogsfrogs>
- <ZsvjQiGQS6WD/rwB@dread.disaster.area>
- <20240826182734.GA865349@frogsfrogsfrogs>
- <Zs0sBGeYgiiKxk4o@dread.disaster.area>
+ <172437087433.59588.10419191726395528458.stgit@frogsfrogsfrogs>
+ <ZsvEmInHRA6GVuz3@dread.disaster.area>
+ <20240826191404.GC865349@frogsfrogsfrogs>
+ <Zs0kfidzTGC7KACX@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,97 +49,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zs0sBGeYgiiKxk4o@dread.disaster.area>
+In-Reply-To: <Zs0kfidzTGC7KACX@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Aug 27, 2024 at 11:29:40AM +1000, Dave Chinner wrote:
-> On Mon, Aug 26, 2024 at 11:27:34AM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 26, 2024 at 12:06:58PM +1000, Dave Chinner wrote:
-> > > On Thu, Aug 22, 2024 at 05:20:07PM -0700, Darrick J. Wong wrote:
-> > > > From: Christoph Hellwig <hch@lst.de>
-> > > > 
-> > > > Split the check that the rtsummary fits into the log into a separate
-> > > > helper, and use xfs_growfs_rt_alloc_fake_mount to calculate the new RT
-> > > > geometry.
-> > > > 
-> > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > [djwong: avoid division for the 0-rtx growfs check]
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  fs/xfs/xfs_rtalloc.c |   43 +++++++++++++++++++++++++++++--------------
-> > > >  1 file changed, 29 insertions(+), 14 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > > > index 61231b1dc4b79..78a3879ad6193 100644
-> > > > --- a/fs/xfs/xfs_rtalloc.c
-> > > > +++ b/fs/xfs/xfs_rtalloc.c
-> > > > @@ -1023,6 +1023,31 @@ xfs_growfs_rtg(
-> > > >  	return error;
-> > > >  }
-> > > >  
-> > > > +static int
-> > > > +xfs_growfs_check_rtgeom(
-> > > > +	const struct xfs_mount	*mp,
-> > > > +	xfs_rfsblock_t		rblocks,
-> > > > +	xfs_extlen_t		rextsize)
-> > > > +{
-> > > > +	struct xfs_mount	*nmp;
-> > > > +	int			error = 0;
-> > > > +
-> > > > +	nmp = xfs_growfs_rt_alloc_fake_mount(mp, rblocks, rextsize);
-> > > > +	if (!nmp)
-> > > > +		return -ENOMEM;
-> > > > +
-> > > > +	/*
-> > > > +	 * New summary size can't be more than half the size of the log.  This
-> > > > +	 * prevents us from getting a log overflow, since we'll log basically
-> > > > +	 * the whole summary file at once.
-> > > > +	 */
-> > > > +	if (nmp->m_rsumblocks > (mp->m_sb.sb_logblocks >> 1))
-> > > > +		error = -EINVAL;
-> > > 
-> > > FWIW, the new size needs to be smaller than that, because the "half
-> > > the log size" must to include all the log metadata needed to
-> > > encapsulate that object. The grwofs transaction also logs inodes and
-> > > the superblock, so that also takes away from the maximum size of
-> > > the summary file....
-> > 
-> > <shrug> It's the same logic as what's there now, and there haven't been
-> > any bug reports, have there? 
-> 
-> No, none that I know of - it was just an observation that the code
-> doesn't actually guarantee what the comment says it should do.
-> 
-> > Though I suppose that's just a reduction
-> > of what?  One block for the rtbitmap, and (conservatively) two inodes
-> > and a superblock?
-> 
-> The rtbitmap update might touch a lot more than one block. The newly
-> allocated space in the rtbitmap inode is initialised to zeros, and
-> so the xfs_rtfree_range() call from the growfs code to mark the new
-> space free has to write all 1s to that range of the rtbitmap. This
-> is all done in a single transaction, so we might actually be logging
-> a *lot* of rtbitmap buffers here.
-> 
-> IIRC, there is a bit per rtextent, so in a 4kB buffer we can mark
-> 32768 rtextents free. If they are 4kB each, then that's 128MB of
-> space tracked per rtbitmap block. This adds up to roughly 3.5MB of
-> log space for the rtbitmap updates per TB of grown rtdev space....
-> 
-> So, yeah, I think that calculation and comment is inaccurate, but we
-> don't have to fix this right now.
+On Tue, Aug 27, 2024 at 10:57:34AM +1000, Dave Chinner wrote:
+> We're discussing how to use the sparse fsbno addressing to allow
+> resizing of AGs, but we will not be able to do that at all with
+> rtgroups as they stand. The limitation is a 64 bit global rt extent
+> address is essential the physical address of the extent in the block
+> device LBA space.
 
-The kernel only "frees" the new space one rbmblock at a time, so I think
-that's why this calculation has never misfired.  I /think/ that means
-that each transaction only ends up logging two rtsummary blocks at a
-time?  One to decrement a counter, and again to increment one another
-level up?
+With this series there are not global RT extent addresses, the extents
+are always relative to the group and an entity only used in the
+allocator.
 
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> /*
+>  * xfs_group - a contiguous 32 bit block address space group
+>  */
+> struct xfs_group {
+> 	struct xarray		xarr;
+> 	u32			num_groups;
+> };
 > 
+> struct xfs_group_item {
+> 	struct xfs_group	*group; /* so put/rele don't need any other context */
+> 	u32			gno;
+> 	atomic_t		passive_refs;
+> 	atomic_t		active_refs;
+
+What is the point of splitting the group and group_item?  This isn't
+done in the current perag struture either.
+
+> Hence I'm wondering if we should actually cap the maximum number of
+> rtgroups. WE're just about at BS > PS, so with a 64k block size a
+> single rtgroup can index 2^32 * 2^16 bytes which puts individual
+> rtgs at 256TB in size. Unless there are use cases for rtgroup sizes
+> smaller than a few GBs, I just don't see the need for support
+> theoretical maximum counts on tiny block size filesystems. Thirty
+> thousand rtgs at 256TB per rtg puts us at 64 bit device size limits,
+> and we hit those limits on 4kB block sizes at around 500,000 rtgs.
+> 
+> So do we need to support millions of rtgs? I'd say no....
+
+As said before hardware is having a word with with the 256GB hardware
+zone size in SMR HDDs.  I hope that size will eventually increase, but
+I would not bet my house on it.
+
