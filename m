@@ -1,70 +1,70 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D86D10E9
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:05:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 644524C83
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:29:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724720758; cv=none; b=Bz1AkpO/4/Pf6ZPuZ7LhcxKG649O4DWHBTlvbbeeiIp2Sn+8CnZOZXOiCnt9H98YWjEjOZ8+BNbXl2SRof0OHjdHOxmdIVDlnlOGnQSDoQiO/PYo6ca5XlhPazi42RRHKJPvs+gEf3ytSI5OXWh+9ZJyL/YcNzjUAYNGFe5WBgA=
+	t=1724722186; cv=none; b=h7WVMB9+67cCke6/IyrcfMHh799yA3RHfUf9JW60CQHt7Jk2AnjnQTdYlMkwK8HdyWC2oS6ur7yjbq4Aqu1SGakK7hYePuUshrbn1iifMRPqM8ugBm+KuduNyEl8zOWXrIt+lfn7FXvz0vLX6XWfAtFz8jGWzzfyjzi7CMAbnfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724720758; c=relaxed/simple;
-	bh=cSA6c+t3vEyJansKpgvDf6mOtPHUeic0l+SqG4N3/Ag=;
+	s=arc-20240116; t=1724722186; c=relaxed/simple;
+	bh=DcinMszPgcPb1z6ijB3ytomN8iLG0XRfNzHlF9tNJAA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NoSUXPbRAn1egtCRUGETetTQze6mgyGH8pRW8P0INN8xaL4sMNhjNAer1LRI0gfhLreBYGw+rAn494A+hgQ/igKiFklipzqITLEzlYmtvosmxDi7BJMur9CDLV51hwBFZFXksqtnTAvzRRWEUCSJxOVQPZcrUQQnt3su2IjAgcc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=FHP+YC2Z; arc=none smtp.client-ip=209.85.214.169
+	 Content-Type:Content-Disposition:In-Reply-To; b=FkZTq+eb+JqqyFzmsYo3fIPj+N3bRcHHiMUbYLCFa4hJDinarQ9xVt3h2DPd6F8VDjA5bn/b+AKgLdXmzDiAxBVJGkc2Wigtca0OI6NR2aakYH1HZkpGRK2bVPBXG8C6UGmcrTs8tOrJeg7bu9A9bmzOw1ODO7qVg5mMsRxKYAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=zJQrzT8g; arc=none smtp.client-ip=209.85.214.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="FHP+YC2Z"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-20219a0fe4dso48163925ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 18:05:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="zJQrzT8g"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1fec34f94abso48895635ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 18:29:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724720756; x=1725325556; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724722184; x=1725326984; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IVv8uPXc7iWgcAQg+pryTYezVU8twIApiWvn5w3q5kk=;
-        b=FHP+YC2ZN+ghzBtIYWPPnvE54l5L3WpCR+/5Kq/Ns/Ur2XfwFyS+GgwNF+XflA6nW1
-         upICfyhW4SnSZxX3jieKMX9KCIU7FmHEwBiaIT6UmDbe616AkjYru3nj3eHtyI6QFjYi
-         acdsNAo2kEU7YFh0ac+OtNYPOEFk2Nfy/4WUy37CbvBUaRJKccpA7fnwDqAi7TwCse/8
-         mhVjXCiX7dFYbJWaIuBuoowSncDI1PcVmm49iW0k/zOQgfOi4Sd0kWyQRKjJp73CtUIO
-         NopU333973wKKlRBygtLgWrlzqZlgeCo89AYxT5lpmuJR1kgswJUpQR0TCyDfizm/hop
-         62+A==
+        bh=052qOUC3MWV4p9zp/MFFbExy4ZnQnJ2gv9XkJob2jlc=;
+        b=zJQrzT8gHMx4m9qutXqqwU72ERZT4WK41CBVobBs7rUx8bgpL7qBStmY06CavNsl41
+         sVNb0xN6R3oRS5SYaplOembfPwDByhsYZ0vNGumMQV+RrJoGSFS26ImO5cTgO2zQgOUQ
+         gAzebgcLDH3hmXf4H38jxzBYGbzStZH561eRna7JTOKiIGqyo9VRJpBkR15PiQwuUBuU
+         sUTovL9qz7It0j9VhsI2hC1oaOL6/ij7/bL8LsHU5AhmfsqpJ10jUoNnhcA4Tt7yFc9a
+         y5N4NpD7v3PmnvFvTt8h4pmXOJ5UkT4fbM3PLR6VI0VdiqVYyVmq8LvSZU9ONAO+bZo/
+         qZMA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724720756; x=1725325556;
+        d=1e100.net; s=20230601; t=1724722184; x=1725326984;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=IVv8uPXc7iWgcAQg+pryTYezVU8twIApiWvn5w3q5kk=;
-        b=EczajboNaZSNsfIlxv7F4l9EcuH8zdESo1CosUwU33afuc6fACh8FDKj+6N2fl4Lh5
-         qXPlTiJOVOPcB83Xd5wgIve8xrjwXY73kbhI5OZY9Yij8akx8aUBtJskBPuHVqR9pI96
-         8KPpcNWAP2/CRx2szWk87P6uuAjKTmIXCGDKbQwkrI3EPSZsgxYY/zDjxKezwhdVtbEu
-         uo9QDUxnu1qeJ5aCKqTohiXgP3I/i3sY+qCFTdriY2JaqSzZH1WwZ6S6/YJcq/Dy87yS
-         9Ni0mFzoAEMl/rt21hEp+oT0YLoJX5PrlLOTUX7gNG1NInskpVFrgs9mCxWZh5BnKHwJ
-         stLA==
-X-Forwarded-Encrypted: i=1; AJvYcCXIPqLD+2JLFMSGrYrm56gSZ3IDlQbTReg6QgOSzqJdQOcmVDD6inmTftIrj5JFIE3xX3Qev1PTw14=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPK7ZgR3C2/PnDX04RHOm5nOOqG27RYmoj1FCvlX3VPqgFHl7I
-	tluiqjLrgk9EY3Rg9xXpIpNH94Px2KIUp6WIGCWX4/tEZkEyev3k5rKbBKwsknk=
-X-Google-Smtp-Source: AGHT+IEv/TLnjdnFSKvoQZ8iZH2SRkYlg41ocmhIsWdKlng9bw7pDh8xzAATbLSE5N90RgTw72R9vQ==
-X-Received: by 2002:a17:903:2449:b0:1fa:128c:4315 with SMTP id d9443c01a7336-2039e4ef297mr141361475ad.44.1724720755790;
-        Mon, 26 Aug 2024 18:05:55 -0700 (PDT)
+        bh=052qOUC3MWV4p9zp/MFFbExy4ZnQnJ2gv9XkJob2jlc=;
+        b=hecLzhW8KYZOtabAUUN4oL8AtHPEWYbGJiFQYcpzEKwz0PQGSf218uMcs8wZ2ss/z7
+         2wCHcZ/t2Cj4muo1sURYRXI5PWrJkrnStpH87pcTK/0kJMOxD2LhECwU/maJ9VwlDAqF
+         rLK8h+63Nck6vc8E+bb7FWO2Wsg28mnO8Xp2G0eqWEkxCoZTAfZ8fiG7XLVN3qInFufr
+         haLkSWZb7w8sB7Lqf6ttFDPTm0wWsXq2zgMlDBJG0abjJISyWs5TprZeEDb31fCt5PFf
+         ijPux6fi20fquVr42WMFZJyovBiTT89+UCa83cHitLPEwp5H3SOaO9uT0HVL6lgRFqFM
+         6Qdw==
+X-Forwarded-Encrypted: i=1; AJvYcCXzpT8oCxzHWvQKny/9KIsOVDU5fceq2/fcM2WAAX7AmbXGVvfWi706Uaplv10t6tOVZcdcONIncWg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YykOMuSefINtFGQpxLx4CIsO57R00Hz3DeXgrtICSqrgHW8myzb
+	0UN8RkwoEh+eeUuXwDRXQxRflPDPt3GsiDH1IW+lLV6ss/ao4lw1jjUtrz3Ddc8=
+X-Google-Smtp-Source: AGHT+IHm2qveADu2QdS943NR8XkK6bGhXm3v0/Wg9n98geaOI0178Esdv7Ku5uHiej8nxuOT9LlpQg==
+X-Received: by 2002:a17:902:ecca:b0:1fa:7e0:d69a with SMTP id d9443c01a7336-2039e4ef0d7mr109814175ad.46.1724722183568;
+        Mon, 26 Aug 2024 18:29:43 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385608eb5sm72969845ad.188.2024.08.26.18.05.55
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385564dd9sm72795795ad.51.2024.08.26.18.29.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Aug 2024 18:05:55 -0700 (PDT)
+        Mon, 26 Aug 2024 18:29:43 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sikef-00DywU-0C;
-	Tue, 27 Aug 2024 11:05:53 +1000
-Date: Tue, 27 Aug 2024 11:05:53 +1000
+	id 1sil1g-00E0Cb-1O;
+	Tue, 27 Aug 2024 11:29:40 +1000
+Date: Tue, 27 Aug 2024 11:29:40 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 14/24] xfs: support caching rtgroup metadata inodes
-Message-ID: <Zs0mcWjsEzTeAysF@dread.disaster.area>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 21/24] xfs: factor out a xfs_growfs_check_rtgeom helper
+Message-ID: <Zs0sBGeYgiiKxk4o@dread.disaster.area>
 References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
- <172437087487.59588.6672080001636292983.stgit@frogsfrogsfrogs>
- <ZsvdP4IaRNpJcavt@dread.disaster.area>
- <20240826183734.GB865349@frogsfrogsfrogs>
+ <172437087611.59588.7898768503459548119.stgit@frogsfrogsfrogs>
+ <ZsvjQiGQS6WD/rwB@dread.disaster.area>
+ <20240826182734.GA865349@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,110 +73,85 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240826183734.GB865349@frogsfrogsfrogs>
+In-Reply-To: <20240826182734.GA865349@frogsfrogsfrogs>
 
-On Mon, Aug 26, 2024 at 11:37:34AM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 26, 2024 at 11:41:19AM +1000, Dave Chinner wrote:
-> > On Thu, Aug 22, 2024 at 05:18:18PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Aug 26, 2024 at 11:27:34AM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 26, 2024 at 12:06:58PM +1000, Dave Chinner wrote:
+> > On Thu, Aug 22, 2024 at 05:20:07PM -0700, Darrick J. Wong wrote:
+> > > From: Christoph Hellwig <hch@lst.de>
 > > > 
-> > > Create the necessary per-rtgroup infrastructure that we need to load
-> > > metadata inodes into memory.
+> > > Split the check that the rtsummary fits into the log into a separate
+> > > helper, and use xfs_growfs_rt_alloc_fake_mount to calculate the new RT
+> > > geometry.
 > > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > [djwong: avoid division for the 0-rtx growfs check]
 > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > > ---
-> > >  fs/xfs/libxfs/xfs_rtgroup.c |  182 +++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/libxfs/xfs_rtgroup.h |   28 +++++++
-> > >  fs/xfs/xfs_mount.h          |    1 
-> > >  fs/xfs/xfs_rtalloc.c        |   48 +++++++++++
-> > >  4 files changed, 258 insertions(+), 1 deletion(-)
+> > >  fs/xfs/xfs_rtalloc.c |   43 +++++++++++++++++++++++++++++--------------
+> > >  1 file changed, 29 insertions(+), 14 deletions(-)
 > > > 
 > > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
-> > > index ae6d67c673b1a..50e4a56d749f0 100644
-> > > --- a/fs/xfs/libxfs/xfs_rtgroup.c
-> > > +++ b/fs/xfs/libxfs/xfs_rtgroup.c
-> > > @@ -30,6 +30,8 @@
-> > >  #include "xfs_icache.h"
-> > >  #include "xfs_rtgroup.h"
-> > >  #include "xfs_rtbitmap.h"
-> > > +#include "xfs_metafile.h"
-> > > +#include "xfs_metadir.h"
+> > > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> > > index 61231b1dc4b79..78a3879ad6193 100644
+> > > --- a/fs/xfs/xfs_rtalloc.c
+> > > +++ b/fs/xfs/xfs_rtalloc.c
+> > > @@ -1023,6 +1023,31 @@ xfs_growfs_rtg(
+> > >  	return error;
+> > >  }
 > > >  
-> > >  /*
-> > >   * Passive reference counting access wrappers to the rtgroup structures.  If
-> > > @@ -295,3 +297,183 @@ xfs_rtginode_lockdep_setup(
-> > >  #else
-> > >  #define xfs_rtginode_lockdep_setup(ip, rgno, type)	do { } while (0)
-> > >  #endif /* CONFIG_PROVE_LOCKING */
+> > > +static int
+> > > +xfs_growfs_check_rtgeom(
+> > > +	const struct xfs_mount	*mp,
+> > > +	xfs_rfsblock_t		rblocks,
+> > > +	xfs_extlen_t		rextsize)
+> > > +{
+> > > +	struct xfs_mount	*nmp;
+> > > +	int			error = 0;
 > > > +
-> > > +struct xfs_rtginode_ops {
-> > > +	const char		*name;	/* short name */
-> > > +
-> > > +	enum xfs_metafile_type	metafile_type;
-> > > +
-> > > +	/* Does the fs have this feature? */
-> > > +	bool			(*enabled)(struct xfs_mount *mp);
-> > > +
-> > > +	/* Create this rtgroup metadata inode and initialize it. */
-> > > +	int			(*create)(struct xfs_rtgroup *rtg,
-> > > +					  struct xfs_inode *ip,
-> > > +					  struct xfs_trans *tp,
-> > > +					  bool init);
-> > > +};
-> > 
-> > What's all this for?
-> > 
-> > AFAICT, loading the inodes into the rtgs requires a call to
-> > xfs_metadir_load() when initialising the rtg (either at mount or
-> > lazily on the first access to the rtg). Hence I'm not really sure
-> > what this complexity is needed for, and the commit message is not
-> > very informative....
-> 
-> Yes, the creation and mkdir code in here is really to support growfs,
-> mkfs, and repair.  How about I change the commit message to:
-> 
-> "Create the necessary per-rtgroup infrastructure that we need to load
-> metadata inodes into memory and to create directory trees on the fly.
-> Loading is needed by the mounting process.  Creation is needed by
-> growfs, mkfs, and repair."
-
-IMO it would have been nicer to add this with the patch that
-adds growfs support for rtgs. That way the initial inode loading
-would be much easier to understand and review, and the rest of it
-would have enough context to be able to review it sanely. There
-isn't enough context in this patch to determine if the creation code
-is sane or works correctly....
-
-
-> > > +	path = xfs_rtginode_path(rtg->rtg_rgno, type);
-> > > +	if (!path)
+> > > +	nmp = xfs_growfs_rt_alloc_fake_mount(mp, rblocks, rextsize);
+> > > +	if (!nmp)
 > > > +		return -ENOMEM;
-> > > +	error = xfs_metadir_load(tp, mp->m_rtdirip, path, ops->metafile_type,
-> > > +			&ip);
-> > > +	kfree(path);
 > > > +
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	if (XFS_IS_CORRUPT(mp, ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
-> > > +			       ip->i_df.if_format != XFS_DINODE_FMT_BTREE)) {
-> > > +		xfs_irele(ip);
-> > > +		return -EFSCORRUPTED;
-> > > +	}
+> > > +	/*
+> > > +	 * New summary size can't be more than half the size of the log.  This
+> > > +	 * prevents us from getting a log overflow, since we'll log basically
+> > > +	 * the whole summary file at once.
+> > > +	 */
+> > > +	if (nmp->m_rsumblocks > (mp->m_sb.sb_logblocks >> 1))
+> > > +		error = -EINVAL;
 > > 
-> > We don't support LOCAL format for any type of regular file inodes,
-> > so I'm a little confiused as to why this wouldn't be caught by the
-> > verifier on inode read? i.e.  What problem is this trying to catch,
-> > and why doesn't the inode verifier catch it for us?
+> > FWIW, the new size needs to be smaller than that, because the "half
+> > the log size" must to include all the log metadata needed to
+> > encapsulate that object. The grwofs transaction also logs inodes and
+> > the superblock, so that also takes away from the maximum size of
+> > the summary file....
 > 
-> This is really more of a placeholder for more refactorings coming down
-> the line for the rtrmap patchset, which will create a new
-> XFS_DINODE_FMT_RMAP.  At that time we'll need to check that an inode
-> that we are loading to be the rmap btree actually has that set.
+> <shrug> It's the same logic as what's there now, and there haven't been
+> any bug reports, have there? 
 
-Ok, can you leave a comment to indicate this so I don't have to
-remember why this code exists?
+No, none that I know of - it was just an observation that the code
+doesn't actually guarantee what the comment says it should do.
+
+> Though I suppose that's just a reduction
+> of what?  One block for the rtbitmap, and (conservatively) two inodes
+> and a superblock?
+
+The rtbitmap update might touch a lot more than one block. The newly
+allocated space in the rtbitmap inode is initialised to zeros, and
+so the xfs_rtfree_range() call from the growfs code to mark the new
+space free has to write all 1s to that range of the rtbitmap. This
+is all done in a single transaction, so we might actually be logging
+a *lot* of rtbitmap buffers here.
+
+IIRC, there is a bit per rtextent, so in a 4kB buffer we can mark
+32768 rtextents free. If they are 4kB each, then that's 128MB of
+space tracked per rtbitmap block. This adds up to roughly 3.5MB of
+log space for the rtbitmap updates per TB of grown rtdev space....
+
+So, yeah, I think that calculation and comment is inaccurate, but we
+don't have to fix this right now.
 
 -Dave.
 -- 
