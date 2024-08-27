@@ -1,70 +1,42 @@
-Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C19E7747F
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:56:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDFF6747F
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:56:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724723797; cv=none; b=WLqQ3DIuFrY/SwZPjqfLRGPqiNWVduA7B/LNe9nz5EywfnBi9ztZ9H4RSp1AIsNxxC7Mqppmg/nztuQEJYTTbe/X5IfdjisNe44oTCGS8HlIYkvmIN4posMsZLZe2k1sBAx4aatrQpiLn8SLWYSLRfJZ9RWzCxFUlx1eSnkR3c0=
+	t=1724723819; cv=none; b=uakguLsKLGR7MTTj5ZllB/+tNFZvtUf7u0lYQdOXQytERlpgmiTGQGrBpp1NFCycilwH1MlsJFen8Nymh2EpZDqVPZSX2vHmpDQ2VZ9z/PzKDoQ7HlDWccNw9quod+REZp7CK9tPJKWY4F1qv9ZgrMnoRo3qjKA952/+HByybEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724723797; c=relaxed/simple;
-	bh=KBGS+USkH7YTQMsPHEJvqawu07hD14aQxslz20TjMxY=;
+	s=arc-20240116; t=1724723819; c=relaxed/simple;
+	bh=tcrqklnwEn5yAJPId8GgURhijpd8OghOnsZKpyxlVks=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fXyBm+2RStlJFhd1MyLgcoe9YlaqRiINHI4nNR8grT9eaRIPzgQ4YjHy6azic5R/v0HJBSsSGadTGVfx2DhlGi/+bCRGQ0tDZSzwF44n/WsaauMnyBNRPyM6P4emxzrD+tHvCzE+bsvK+7C4lJTmu9uLvRzlsscEB4FCZzi8rCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=r4XVlzoP; arc=none smtp.client-ip=209.85.160.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=RSi3e6K4Fxd4i2bsOXw6IXrrUzxSPMevo+xgrets/r5RhQThl5lp+H7iwSpEmjD7w8lAhkuRle+vGZ44YRRnhVekTtfLaTWYPtc511Q2MGal0B9aJikrIVJWG4wf84HnXRz+NCX4EAzVxwD/hu3wy4loG/od3cF/Yk27tYUMsFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bWOCbhtP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="r4XVlzoP"
-Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-27045e54272so3276182fac.0
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 18:56:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724723795; x=1725328595; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=E5Y0aNumcPSsetrspRN/dHj/JjpZpq3pQZFX/8kFq+s=;
-        b=r4XVlzoPvqVU3K9AOb0qkn2u2Nw56WVB7oyKoEhTwgwKvfJfFAxl/w7nf1wMOr/waI
-         vSrVegVU205bhhSbNMZerwHPL5ezyh0FB/I4PeM3bKVyrO4VSBe7l0QhIXjfPgAXZxBQ
-         RW31YvUMtmIW/SBii3DidUziQWOZArRJwDu6qFZTgmO9+4XjoolFUEJ27PHGG+l6BFGT
-         wYY6YmOTYvkuTIz25KZ6oqPz/30UPhCzMLZg7R63hTq/6mIUBpnGd2Bm1ZdYTZ45/Vwi
-         PkP8JkK9d75SKfHOg3CvtgssT2ra/7d/DlkLRrqRFxc2UxbuL6+RiMr/TNDW9l11YOUP
-         e+GA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724723795; x=1725328595;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=E5Y0aNumcPSsetrspRN/dHj/JjpZpq3pQZFX/8kFq+s=;
-        b=B/QyzPorvdzXGmMKr8K7Iz6XuH1Vg8FGAfGWfbezSt4yh/lPJI7/NLU0lhrSflkvNZ
-         7VSxDyM1mmP0scKMBnjzYK9vsgFYLWtmoqVAoETJkOAOFqenbHsSATi8LYmES4DO5KDR
-         B0mNmkhYcUDaJxT6oNhorPvmeix42ZsAChmbWEFv+JhlEYHQIVT0APkv92RcPjbgA/YK
-         i1nolUYDCz/BAZUas2XL2HmxOvaE9Qrvf2Q9FlACD1Z4pWRQf/mgv15f1EGUb75Zi47a
-         6b4//1jn2gWREuaNHcZypcpa8d7AxhO/ctUKmZp+41/cSt4iNT0nAXVziLPeHZ5ARYkU
-         hvCA==
-X-Forwarded-Encrypted: i=1; AJvYcCXH69y1xuU4X27A3UD3A8FbvJ1iUYRfFLnS3Uhi4RsdTyAkGmaB8TJZycm5qqbFlWZjo+KkpyXbmBE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy41WbhGsHRCkOHDxMwkfN+KakJMOTZO1yp/1dIF7C7dlXANRMt
-	Y4hvLaD67DTCwa2lIIxv7HD63/yXixHWx3dASiX/4xgavWvvaVsWp1J0Fo7Xxrw=
-X-Google-Smtp-Source: AGHT+IF9EDMO9daCR1ajssgUTxmc5WgZrVPRPOKXD1OIcIlr+3neUEuvipGaYWzfXxETbMjeionHVA==
-X-Received: by 2002:a05:6870:170f:b0:26f:f1ea:6a71 with SMTP id 586e51a60fabf-273e64673bemr11942225fac.7.1724723794685;
-        Mon, 26 Aug 2024 18:56:34 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-714342e2c83sm7616384b3a.133.2024.08.26.18.56.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Aug 2024 18:56:34 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1silRf-00E1Xq-1l;
-	Tue, 27 Aug 2024 11:56:31 +1000
-Date: Tue, 27 Aug 2024 11:56:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 21/26] xfs: make the RT allocator rtgroup aware
-Message-ID: <Zs0yT0T8fnzQgDI3@dread.disaster.area>
-References: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
- <172437088886.60592.11418423460788700576.stgit@frogsfrogsfrogs>
- <ZswLBVOUvwhJZInN@dread.disaster.area>
- <20240826194028.GE865349@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bWOCbhtP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5FA5C8B7AF;
+	Tue, 27 Aug 2024 01:56:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724723818;
+	bh=tcrqklnwEn5yAJPId8GgURhijpd8OghOnsZKpyxlVks=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bWOCbhtPolk9xhc0GG2WOOhES3id8RCSY1HBln/TdJavW0A9IekwhAK44Uj2rCTUZ
+	 9t1Xgk3HUW4uDML+zQn5of4ni6Zhv5pparIf2GREgyP4XnsR0u7hXW6MYV66F5tIF5
+	 omF2SaMcTmHx769nxWmQ2xe2OTrMMqbVeKVjJDZ6lsqSMvnPR/28eFvePlfQIwuJH6
+	 gLeyixYRquil0Cb9QQMGMu2bLD6VV+8a8ceKRgYdLjSVCiYjkVT0HBosKB0H+UKLGG
+	 vJhlWxFpAso5JqVaI28OvN+OVZgCGuOh2yeK40ZDK+YIK0G1piJaDSm9K5uEqtHTVf
+	 2TpSqIqYqgyoQ==
+Date: Mon, 26 Aug 2024 18:56:58 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 13/24] xfs: add a lockdep class key for rtgroup inodes
+Message-ID: <20240827015658.GE6082@frogsfrogsfrogs>
+References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
+ <172437087470.59588.4171434021531099837.stgit@frogsfrogsfrogs>
+ <ZsvFDesdVVdUhI8T@dread.disaster.area>
+ <20240826213827.GG865349@frogsfrogsfrogs>
+ <Zs0k0y1euPWgWMie@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,109 +45,82 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240826194028.GE865349@frogsfrogsfrogs>
+In-Reply-To: <Zs0k0y1euPWgWMie@dread.disaster.area>
 
-On Mon, Aug 26, 2024 at 12:40:28PM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 26, 2024 at 02:56:37PM +1000, Dave Chinner wrote:
-> > On Thu, Aug 22, 2024 at 05:26:38PM -0700, Darrick J. Wong wrote:
-> > > From: Christoph Hellwig <hch@lst.de>
+On Tue, Aug 27, 2024 at 10:58:59AM +1000, Dave Chinner wrote:
+> On Mon, Aug 26, 2024 at 02:38:27PM -0700, Darrick J. Wong wrote:
+> > On Mon, Aug 26, 2024 at 09:58:05AM +1000, Dave Chinner wrote:
+> > > On Thu, Aug 22, 2024 at 05:18:02PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Add a dynamic lockdep class key for rtgroup inodes.  This will enable
+> > > > lockdep to deduce inconsistencies in the rtgroup metadata ILOCK locking
+> > > > order.  Each class can have 8 subclasses, and for now we will only have
+> > > > 2 inodes per group.  This enables rtgroup order and inode order checks
+> > > > when nesting ILOCKs.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_rtgroup.c |   52 +++++++++++++++++++++++++++++++++++++++++++
+> > > >  1 file changed, 52 insertions(+)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+> > > > index 51f04cad5227c..ae6d67c673b1a 100644
+> > > > --- a/fs/xfs/libxfs/xfs_rtgroup.c
+> > > > +++ b/fs/xfs/libxfs/xfs_rtgroup.c
+> > > > @@ -243,3 +243,55 @@ xfs_rtgroup_trans_join(
+> > > >  	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
+> > > >  		xfs_rtbitmap_trans_join(tp);
+> > > >  }
+> > > > +
+> > > > +#ifdef CONFIG_PROVE_LOCKING
+> > > > +static struct lock_class_key xfs_rtginode_lock_class;
+> > > > +
+> > > > +static int
+> > > > +xfs_rtginode_ilock_cmp_fn(
+> > > > +	const struct lockdep_map	*m1,
+> > > > +	const struct lockdep_map	*m2)
+> > > > +{
+> > > > +	const struct xfs_inode *ip1 =
+> > > > +		container_of(m1, struct xfs_inode, i_lock.dep_map);
+> > > > +	const struct xfs_inode *ip2 =
+> > > > +		container_of(m2, struct xfs_inode, i_lock.dep_map);
+> > > > +
+> > > > +	if (ip1->i_projid < ip2->i_projid)
+> > > > +		return -1;
+> > > > +	if (ip1->i_projid > ip2->i_projid)
+> > > > +		return 1;
+> > > > +	return 0;
+> > > > +}
 > > > 
-> > > Make the allocator rtgroup aware by either picking a specific group if
-> > > there is a hint, or loop over all groups otherwise.  A simple rotor is
-> > > provided to pick the placement for initial allocations.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_bmap.c     |   13 +++++-
-> > >  fs/xfs/libxfs/xfs_rtbitmap.c |    6 ++-
-> > >  fs/xfs/xfs_mount.h           |    1 
-> > >  fs/xfs/xfs_rtalloc.c         |   98 ++++++++++++++++++++++++++++++++++++++----
-> > >  4 files changed, 105 insertions(+), 13 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > index 126a0d253654a..88c62e1158ac7 100644
-> > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > @@ -3151,8 +3151,17 @@ xfs_bmap_adjacent_valid(
-> > >  	struct xfs_mount	*mp = ap->ip->i_mount;
-> > >  
-> > >  	if (XFS_IS_REALTIME_INODE(ap->ip) &&
-> > > -	    (ap->datatype & XFS_ALLOC_USERDATA))
-> > > -		return x < mp->m_sb.sb_rblocks;
-> > > +	    (ap->datatype & XFS_ALLOC_USERDATA)) {
-> > > +		if (x >= mp->m_sb.sb_rblocks)
-> > > +			return false;
-> > > +		if (!xfs_has_rtgroups(mp))
-> > > +			return true;
-> > > +
-> > > +		return xfs_rtb_to_rgno(mp, x) == xfs_rtb_to_rgno(mp, y) &&
-> > > +			xfs_rtb_to_rgno(mp, x) < mp->m_sb.sb_rgcount &&
-> > > +			xfs_rtb_to_rtx(mp, x) < mp->m_sb.sb_rgextents;
+> > > What's the project ID of the inode got to do with realtime groups?
 > > 
-> > WHy do we need the xfs_has_rtgroups() check here? The new rtg logic will
-> > return true for an old school rt device here, right?
+> > Each rtgroup metadata file stores its group number in i_projid so that
+> > mount can detect if there's a corruption in /rtgroup and we just opened
+> > the bitmap from the wrong group.
+> > 
+> > We can also use lockdep to detect code that locks rtgroup metadata in
+> > the wrong order.  Potentially we could use this _cmp_fn to enforce that
+> > we always ILOCK in the order bitmap -> summary -> rmap -> refcount based
+> > on i_metatype.
 > 
-> The incore sb_rgextents is zero on !rtg filesystems, so we need the
-> xfs_has_rtgroups.
+> Ok, can we union the i_projid field (both in memory and in the
+> on-disk structure) so that dual use of the field is well documented
+> by the code?
 
-Hmmm. Could we initialise it in memory only for !rtg filesystems,
-and make sure we never write it back via a check in the
-xfs_sb_to_disk() formatter function?
+Sounds good to me.  Does
 
-That would remove one of the problematic in-memory differences
-between old skool rtdev setups and the new rtg-based setups...
+union {
+	xfs_prid_t	i_projid;
+	uint32_t	i_metagroup;
+};
 
-> > > @@ -1835,9 +1908,16 @@ xfs_bmap_rtalloc(
-> > >  	if (xfs_bmap_adjacent(ap))
-> > >  		bno_hint = ap->blkno;
-> > >  
-> > > -	error = xfs_rtallocate(ap->tp, bno_hint, raminlen, ralen, prod,
-> > > -			ap->wasdel, initial_user_data, &rtlocked,
-> > > -			&ap->blkno, &ap->length);
-> > > +	if (xfs_has_rtgroups(ap->ip->i_mount)) {
-> > > +		error = xfs_rtallocate_rtgs(ap->tp, bno_hint, raminlen, ralen,
-> > > +				prod, ap->wasdel, initial_user_data,
-> > > +				&ap->blkno, &ap->length);
-> > > +	} else {
-> > > +		error = xfs_rtallocate_rtg(ap->tp, 0, bno_hint, raminlen, ralen,
-> > > +				prod, ap->wasdel, initial_user_data,
-> > > +				&rtlocked, &ap->blkno, &ap->length);
-> > > +	}
-> > 
-> > The xfs_has_rtgroups() check is unnecessary.  The iterator in
-> > xfs_rtallocate_rtgs() will do the right thing for the
-> > !xfs_has_rtgroups() case - it'll set start_rgno = 0 and break out
-> > after a single call to xfs_rtallocate_rtg() with rgno = 0.
-> > 
-> > Another thing that probably should be done here is push all the
-> > constant value calculations a couple of functions down the stack to
-> > where they are used. Then we only need to pass two parameters down
-> > through the rg iterator here, not 11...
-> 
-> ..and pass the ap itself too, to remove three of the parameters?
+sound ok?
 
-Yeah, I was thinking that the iterator only needs the bno_hint
-to determine which group to start iterating. Everything else is
-derived from information in the ap structure and so doesn't need to
-be calculated above the iterator.
+--D
 
-Though we could just lift the xfs_rtalloc_args() up to this level
-and stuff all the parameters into that structure and pass it down
-instead (like we do with xfs_alloc_args for the btree allocator).
-Then we only need to pass args through xfs_rtallocate(),
-xfs_rtallocate_extent_near/size() and all the other helper
-functions, too.
-
-That's a much bigger sort of cleanup, though, but I think it would
-be worth doing a some point because it would bring the rtalloc code
-closer to how the btalloc code is structured. And, perhaps, allow us
-to potentially share group selection and iteration code between
-the bt and rt allocators in future...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
