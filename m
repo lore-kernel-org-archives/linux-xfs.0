@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC0B11494AC
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 14:41:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4EBF1C6897
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 14:44:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724769673; cv=none; b=tePKQDukfahJNIbHEd2FElfZ+PDj5vNSTXHETHe6/yZAGwFdp3ZLEDZV9cFzCPCmFY7LAsNKenzQxXQWuJ4ad9MVYbczSrvWcogVTxuCophpiOqFtD0+Z5NAD1WvRD/Y+BTbACRDWJ1ev2wTzg1RQkh/Sy6YUlR8CNbreQ+m/ms=
+	t=1724769864; cv=none; b=CMF9AaCRi0Kdm3cZQX6rhRSTu4uJubZnk7ao6+/2+5IpshtqzQQvB4tR4QEafX8v89UZn45bHuKkhmiE+bRcojP1RXy535dR4hNlIuccXvqb37bUU0mmKLzu+kI3WWppytAVqdpI5rBWDc/XRm1BRBo5lfQju3MDgiYmHqNcfT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724769673; c=relaxed/simple;
-	bh=a657NQ2JS3eEuzSeXrKFOBFHwH5MCmtSvFUmfc5QvYE=;
+	s=arc-20240116; t=1724769864; c=relaxed/simple;
+	bh=EuMio4ZpF2zLvTLuVLUrsOWwyPLuxWrCWLVVfI/rmTE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=grM7W25tLK6H+06MFWwxc9B97H2Op0ICPbmuvwuhoi40RtcJB4co92Nww1wqqCyo/VJyYBf9uSiyKrF1iuCS/Ne+8nA59nmUuR6iuM06SEIkZtyhooXYDbSZhfoWTEOyWtzpJ0rKrF3C35bA8gKkAbAtRdzQiMXAFuZ0euNklNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tSIT6ut8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CZRHubrAhjoHHfg9HadwK4aFesVaYEllMGS5WGAwtEhfKhZMNx6ysfr6capNYlZJ21JtMUpJitPfyjxPaaHzq+YCQnMdkZuBXNf/aQ91hmFslD4bxFplwSj6+6b8SOuQqCrwPHA2FKzKsi3+VUDj5LlZiUpVOBIvmuYBCeDfkfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HJEe9NFF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tSIT6ut8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DE5CC6107B;
-	Tue, 27 Aug 2024 14:41:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HJEe9NFF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACA1AC6105E;
+	Tue, 27 Aug 2024 14:44:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724769673;
-	bh=a657NQ2JS3eEuzSeXrKFOBFHwH5MCmtSvFUmfc5QvYE=;
+	s=k20201202; t=1724769863;
+	bh=EuMio4ZpF2zLvTLuVLUrsOWwyPLuxWrCWLVVfI/rmTE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tSIT6ut8p/6avRhtqfTK/VXL39eNHbeP+w1xl2f88RhAzVUH7/IcUwUjNK5XBJGXB
-	 PCuJdTJNiWL9bhsd+HulSHuxuVrb0zGTQT9pIvakr+8B+7zFxZiny3gjvDvjbojELF
-	 VN4B2UvHh0Ty/7UlkNtsCIbzAW/+3k4q3dFtF+uqQIn7ZWc5HgS1mULCWbJUCg+FDn
-	 AnUU6vdJc+WXVEW7IzLxaEMryo//4IvErxYw62IB5Nl6o6m9aeosgbLmB5mYakTUj0
-	 0jAb7lgBkbC8/NEdJ4/3lh4ckEcZg25pGTpe29NA8lGizqxwIsZKsusYWYCxmCSjOG
-	 qiP6tPlKatVPg==
-Date: Tue, 27 Aug 2024 07:41:12 -0700
+	b=HJEe9NFFvQf3zGvmFkcIbcL2DVl9M+a4nVTyljcks5MTZqdM8vvTh84Jbcgij+zta
+	 5DWbW824dn6D4LCy6UW+8cdYMplWlsa+lUzC6yVJvCV3kbid+JaxT1GgQzS0DF5Gxf
+	 8Cooz2tvk8Wslad5Gw0syq5EVQ4Eb0gWNVKkUZaf6FO1+m0AdKSQgrTLl8SkAiuG+C
+	 7AIIU287oioOWUOnCJ7/q/oWiuZwGSFleGhirZOcblIh4XOQFSmbbAcZmytg4SLJQR
+	 ecDD406YhqBxQkaiYeIxreK89xRkGAx/jz3vKuCSAlT13cgzaWRHw0knYjSk+CToWG
+	 xkHBN1ap+qdnw==
+Date: Tue, 27 Aug 2024 07:44:23 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, hch@infradead.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
 Subject: Re: [PATCH 1/3] libhandle: Remove libattr dependency
-Message-ID: <20240827144112.GN865349@frogsfrogsfrogs>
+Message-ID: <20240827144423.GO865349@frogsfrogsfrogs>
 References: <20240827115032.406321-1-cem@kernel.org>
  <20240827115032.406321-2-cem@kernel.org>
+ <Zs3CuTVfX1f2oZTD@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,166 +43,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240827115032.406321-2-cem@kernel.org>
+In-Reply-To: <Zs3CuTVfX1f2oZTD@infradead.org>
 
-On Tue, Aug 27, 2024 at 01:50:22PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On Tue, Aug 27, 2024 at 05:12:41AM -0700, Christoph Hellwig wrote:
+> On Tue, Aug 27, 2024 at 01:50:22PM +0200, cem@kernel.org wrote:
+> > +	struct xfs_attrlist_cursor	cur = { };
+> > +	char				attrbuf[XFS_XATTR_LIST_MAX];
+> > +	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
 > 
-> Aiming torwards removing xfsprogs libattr dependency, getting rid of
-> libattr_cursor is the first step.
+> Not really changed by this patch, but XFS_XATTR_LIST_MAX feels pretty
+> large for an on-stack allocation.  Maybe this should use a dynamic
+> allocation, which would also remove the need for the cast?
 > 
-> libxfs already has our own definition of xfs_libattr_cursor, so we can
-> simply use it.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  include/handle.h   |  3 +--
->  include/jdm.h      |  5 ++---
->  libfrog/fsprops.c  |  8 ++++----
->  libhandle/handle.c |  2 +-
->  libhandle/jdm.c    | 14 +++++++-------
->  scrub/phase5.c     |  2 +-
->  6 files changed, 16 insertions(+), 18 deletions(-)
-> 
-> diff --git a/include/handle.h b/include/handle.h
-> index ba0650051..991bd5d01 100644
-> --- a/include/handle.h
-> +++ b/include/handle.h
-> @@ -11,7 +11,6 @@ extern "C" {
->  #endif
->  
->  struct fsdmidata;
-> -struct attrlist_cursor;
->  struct parent;
->  
->  extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
-> @@ -29,7 +28,7 @@ extern int  attr_multi_by_handle (void *__hanp, size_t __hlen, void *__buf,
->  				  int __rtrvcnt, int __flags);
->  extern int  attr_list_by_handle (void *__hanp, size_t __hlen, void *__buf,
->  				 size_t __bufsize, int __flags,
-> -				 struct attrlist_cursor *__cursor);
-> +				 struct xfs_attrlist_cursor *__cursor);
->  extern int  parents_by_handle(void *__hanp, size_t __hlen,
->  			      struct parent *__buf, size_t __bufsize,
->  			      unsigned int *__count);
-> diff --git a/include/jdm.h b/include/jdm.h
-> index 50c2296b4..669ee75ce 100644
-> --- a/include/jdm.h
-> +++ b/include/jdm.h
-> @@ -12,7 +12,6 @@ typedef void	jdm_filehandle_t;	/* filehandle */
->  
->  struct xfs_bstat;
->  struct xfs_bulkstat;
-> -struct attrlist_cursor;
->  struct parent;
->  
->  extern jdm_fshandle_t *
-> @@ -60,11 +59,11 @@ extern intgen_t
->  jdm_attr_list(	jdm_fshandle_t *fshp,
->  		struct xfs_bstat *statp,
->  		char *bufp, size_t bufsz, int flags,
-> -		struct attrlist_cursor *cursor);
-> +		struct xfs_attrlist_cursor *cursor);
->  
->  intgen_t jdm_attr_list_v5(jdm_fshandle_t *fshp, struct xfs_bulkstat *statp,
->  		char *bufp, size_t bufsz, int flags,
-> -		struct attrlist_cursor *cursor);
-> +		struct xfs_attrlist_cursor *cursor);
+> Same in few other spots.
 
-Hmm.  Here you're changing function signatures for a public library.
-attrlist_cursor and xfs_attrlist_cursor are the same object, but I
-wonder if this is going to cause downstream compilation errors for
-programs that include libattr but not xfs_fs.h?
-
-I simply made a shim libfrog/fakelibattr.h that wraps the libhandle
-stuff (albeit in a fragile manner, but I don't expect any further
-libattr updates) so that we don't have to change libhandle itself.
-
->  extern int
->  jdm_parents( jdm_fshandle_t *fshp,
-> diff --git a/libfrog/fsprops.c b/libfrog/fsprops.c
-> index 88046b7a0..05a584a56 100644
-> --- a/libfrog/fsprops.c
-> +++ b/libfrog/fsprops.c
-> @@ -68,10 +68,10 @@ fsprops_walk_names(
->  	fsprops_name_walk_fn	walk_fn,
->  	void			*priv)
->  {
-> -	struct attrlist_cursor	cur = { };
-> -	char			attrbuf[XFS_XATTR_LIST_MAX];
-> -	struct attrlist		*attrlist = (struct attrlist *)attrbuf;
-> -	int			ret;
-> +	struct xfs_attrlist_cursor	cur = { };
-> +	char				attrbuf[XFS_XATTR_LIST_MAX];
-> +	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
-> +	int				ret;
->  
->  	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
->  
-> diff --git a/libhandle/handle.c b/libhandle/handle.c
-> index 1e8fe9ac5..a9a9f9534 100644
-> --- a/libhandle/handle.c
-> +++ b/libhandle/handle.c
-> @@ -381,7 +381,7 @@ attr_list_by_handle(
->  	void		*buf,
->  	size_t		bufsize,
->  	int		flags,
-> -	struct attrlist_cursor *cursor)
-> +	struct		xfs_attrlist_cursor *cursor)
-
-Odd indenting here.
+Yeah, the name list buffer here and in scrub could also be reduced
+in size to 4k or something like that.  Long ago the attrlist ioctl had a
+bug in it where it would loop forever, which is why scrub allocated such
+a huge buffer to try to avoid falling into that trap.  But that was
+~2017, those kernels should have been retired or patched by now.
 
 --D
 
->  {
->  	int		error, fd;
->  	char		*path;
-> diff --git a/libhandle/jdm.c b/libhandle/jdm.c
-> index e21aff2b2..9ce605ad3 100644
-> --- a/libhandle/jdm.c
-> +++ b/libhandle/jdm.c
-> @@ -221,7 +221,7 @@ int
->  jdm_attr_list(	jdm_fshandle_t *fshp,
->  		struct xfs_bstat *statp,
->  		char *bufp, size_t bufsz, int flags,
-> -		struct attrlist_cursor *cursor)
-> +		struct xfs_attrlist_cursor *cursor)
->  {
->  	fshandle_t *fshandlep = ( fshandle_t * )fshp;
->  	filehandle_t filehandle;
-> @@ -240,12 +240,12 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
->  
->  int
->  jdm_attr_list_v5(
-> -	jdm_fshandle_t		*fshp,
-> -	struct xfs_bulkstat	*statp,
-> -	char			*bufp,
-> -	size_t			bufsz,
-> -	int			flags,
-> -	struct attrlist_cursor	*cursor)
-> +	jdm_fshandle_t			*fshp,
-> +	struct xfs_bulkstat		*statp,
-> +	char				*bufp,
-> +	size_t				bufsz,
-> +	int				flags,
-> +	struct xfs_attrlist_cursor	*cursor)
->  {
->  	struct fshandle		*fshandlep = (struct fshandle *)fshp;
->  	struct filehandle	filehandle;
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index f6c295c64..27fa29be6 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -190,7 +190,7 @@ check_xattr_ns_names(
->  	struct xfs_bulkstat		*bstat,
->  	const struct attrns_decode	*attr_ns)
->  {
-> -	struct attrlist_cursor		cur;
-> +	struct xfs_attrlist_cursor	cur;
->  	char				attrbuf[XFS_XATTR_LIST_MAX];
->  	char				keybuf[XATTR_NAME_MAX + 1];
->  	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
-> -- 
-> 2.46.0
+> Not really something to worry about for this patch, so:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
 > 
