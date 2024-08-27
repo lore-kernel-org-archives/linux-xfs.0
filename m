@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58ED7158D9C
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 11:50:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6111A158D9C
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 11:50:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724759440; cv=none; b=Sz4CxVY0YRMMcvimQSKCuO3spXeTWOQXYVftEZzL2DA2gzw2ybjTxURQOxWQ1W9yOV1Iv7qRMavGIzsXYj29Cnhn1Y7YbcAH5969DZ38A1AqhDb1u7KOS6zotXWczwTDkhS+3vDxPgii+KQZH/JFXFh+p1//qXGpobio4XQhN6E=
+	t=1724759442; cv=none; b=iLDkzMVnRJPS8LyMNcqzO0iN55CM0HZn2JtN2jqitMThpRH6fLZWlgtcUBl/xZp1DqLqmRiKOEmogLTYmKqLjioX7y88BHBCzWJg34H+cAIRN1U1u5MJcVTjeviXg7TsLLI7qIsmZ1B5fbzn9Cx2DcqEhL1o/o7qjrHsxo+f3LE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724759440; c=relaxed/simple;
-	bh=+2TUQlc7Wd0raPiGzks2wtehH6wF3L2xrO3UGSkaRPE=;
+	s=arc-20240116; t=1724759442; c=relaxed/simple;
+	bh=K+f1HKNawDQtC5HkoPto55QyUXeh5WOK8n3vJkXI1YQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BfP+nFfCOha8UsnHgsRGVXZk2d23eLIPPKA59VhtusmmQhBQXmHcCe80khqSD6DvNLt/4EfmwIj7nUmEBpdNQJDdZi4++3tKCF2Zmb7Pk+YtgW+ENXrPsX3ZGL7Wj4JB965qzxaqI/JGVfZrwCfdFZn3ZJn7irQ9lm29zHF2hfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HVA4DqIR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Kte1pV4dr80eUbVnPx0F9m8aUje9KqT3gvgfVdo0kstC+SgACaX56byh0N+Ou9akmGIHA4+GMeaxIfsWYEwbeXLJqS9hYwG62tufn+COyM3+SRDqkqJYqWlG9yc3fihjUdmHTdCKZioLOTlt3X5OVoGJKamIKlyLzXD9ills4QQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sfcGL09q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HVA4DqIR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1DB9C515FB;
-	Tue, 27 Aug 2024 11:50:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sfcGL09q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2B6CC515FF;
+	Tue, 27 Aug 2024 11:50:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724759440;
-	bh=+2TUQlc7Wd0raPiGzks2wtehH6wF3L2xrO3UGSkaRPE=;
+	s=k20201202; t=1724759441;
+	bh=K+f1HKNawDQtC5HkoPto55QyUXeh5WOK8n3vJkXI1YQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=HVA4DqIRpYX6NT3wIFprnB1A88XwvHIgWEHcXLFy7o+9ZZ9Wl78PJ9oyoDWhNHEEc
-	 9Tf6I2KQcXk+bM/vDHg3xtomJ44DwaFs7KTo0Jx+QZzTillA6/DZXLNXLqX5JaSxsV
-	 CjR6ISL2MsXZGwIWMqJK8JLr8q7TOGj3763IxhbYxxsGvThs0bkoPApTqL+kzV1rh1
-	 QEzC4BdCOKv/+uzL+tdjOBDZUMVlzElHTftRr5lR+wuRcGMA7BwLi735urf+Pyd9sH
-	 mwDxbrqAI2IignRhnS9GlZI+DvccdXunEF7SG7yYiYhWi/EFSewt0Cjz+UNcBeCdWD
-	 RZLlsnynCiohA==
+	b=sfcGL09qj/8VrSdQ4SZ3fhqCJcuOOOSzX5yy0Y2h12y0+rg8ns74XKuVW4ihPPMTF
+	 JTfcaHoFz/ltQ9hV7ZYT/IAXiRNaVZ55zrReplpLUDQS4CfPDcohRPETdlUDQnI1am
+	 LQ4qQbSkS6x7GxEDjB6Lt8A0EeQvG0l1OP9/iYxoepa5jPTygCFQMTVsxba5nCUzsM
+	 EP8sbBca7tHUqyHjPum8pWw41kgHAQBFIIsxmDF7idqC9We0fs+wKNW2QaTNRcFPlA
+	 E8JTU8Zab3nuqmwEvdvxTS7RHzVb1dqC9W9U6XWuaoCbCIZm+t967MdVYBxQF9RP6I
+	 pJvB2xJoZVLNg==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de,
 	hch@infradead.org
-Subject: [PATCH 1/3] libhandle: Remove libattr dependency
-Date: Tue, 27 Aug 2024 13:50:22 +0200
-Message-ID: <20240827115032.406321-2-cem@kernel.org>
+Subject: [PATCH 2/3] libfrog: remove libattr dependency
+Date: Tue, 27 Aug 2024 13:50:23 +0200
+Message-ID: <20240827115032.406321-3-cem@kernel.org>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <20240827115032.406321-1-cem@kernel.org>
 References: <20240827115032.406321-1-cem@kernel.org>
@@ -47,146 +47,108 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-Aiming torwards removing xfsprogs libattr dependency, getting rid of
-libattr_cursor is the first step.
+Get rid of libfrog's libattr dependency, and move the needed local
+definitions to a new header - libfrog/attr.h
 
-libxfs already has our own definition of xfs_libattr_cursor, so we can
-simply use it.
+We could keep the ATTR_ENTRY definition local to fsprops.h, but we'll
+add more content to it in the next patch.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- include/handle.h   |  3 +--
- include/jdm.h      |  5 ++---
- libfrog/fsprops.c  |  8 ++++----
- libhandle/handle.c |  2 +-
- libhandle/jdm.c    | 14 +++++++-------
- scrub/phase5.c     |  2 +-
- 6 files changed, 16 insertions(+), 18 deletions(-)
+ libfrog/Makefile  |  7 ++-----
+ libfrog/attr.h    | 18 ++++++++++++++++++
+ libfrog/fsprops.c |  7 +++----
+ 3 files changed, 23 insertions(+), 9 deletions(-)
+ create mode 100644 libfrog/attr.h
 
-diff --git a/include/handle.h b/include/handle.h
-index ba0650051..991bd5d01 100644
---- a/include/handle.h
-+++ b/include/handle.h
-@@ -11,7 +11,6 @@ extern "C" {
- #endif
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index acddc894e..8581c146b 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -21,6 +21,7 @@ crc32.c \
+ file_exchange.c \
+ fsgeom.c \
+ fsproperties.c \
++fsprops.c \
+ getparents.c \
+ histogram.c \
+ list_sort.c \
+@@ -49,6 +50,7 @@ div64.h \
+ file_exchange.h \
+ fsgeom.h \
+ fsproperties.h \
++fsprops.h \
+ getparents.h \
+ histogram.h \
+ logging.h \
+@@ -62,11 +64,6 @@ workqueue.h
  
- struct fsdmidata;
--struct attrlist_cursor;
- struct parent;
+ LSRCFILES += gen_crc32table.c
  
- extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
-@@ -29,7 +28,7 @@ extern int  attr_multi_by_handle (void *__hanp, size_t __hlen, void *__buf,
- 				  int __rtrvcnt, int __flags);
- extern int  attr_list_by_handle (void *__hanp, size_t __hlen, void *__buf,
- 				 size_t __bufsize, int __flags,
--				 struct attrlist_cursor *__cursor);
-+				 struct xfs_attrlist_cursor *__cursor);
- extern int  parents_by_handle(void *__hanp, size_t __hlen,
- 			      struct parent *__buf, size_t __bufsize,
- 			      unsigned int *__count);
-diff --git a/include/jdm.h b/include/jdm.h
-index 50c2296b4..669ee75ce 100644
---- a/include/jdm.h
-+++ b/include/jdm.h
-@@ -12,7 +12,6 @@ typedef void	jdm_filehandle_t;	/* filehandle */
+-ifeq ($(HAVE_LIBATTR),yes)
+-CFILES+=fsprops.c
+-HFILES+=fsprops.h
+-endif
+-
+ LDIRT = gen_crc32table crc32table.h
  
- struct xfs_bstat;
- struct xfs_bulkstat;
--struct attrlist_cursor;
- struct parent;
- 
- extern jdm_fshandle_t *
-@@ -60,11 +59,11 @@ extern intgen_t
- jdm_attr_list(	jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
- 		char *bufp, size_t bufsz, int flags,
--		struct attrlist_cursor *cursor);
-+		struct xfs_attrlist_cursor *cursor);
- 
- intgen_t jdm_attr_list_v5(jdm_fshandle_t *fshp, struct xfs_bulkstat *statp,
- 		char *bufp, size_t bufsz, int flags,
--		struct attrlist_cursor *cursor);
-+		struct xfs_attrlist_cursor *cursor);
- 
- extern int
- jdm_parents( jdm_fshandle_t *fshp,
+ default: ltdepend $(LTLIBRARY)
+diff --git a/libfrog/attr.h b/libfrog/attr.h
+new file mode 100644
+index 000000000..9110499f2
+--- /dev/null
++++ b/libfrog/attr.h
+@@ -0,0 +1,18 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (c) 2024 Red Hat, Inc.  All Rights Reserved.
++ * Author: Carlos Maiolino <cmaiolino@redhat.com>
++ */
++#ifndef __LIBFROG_ATTR_H__
++#define __LIBFROG_ATTR_H__
++
++/*
++ * Those definitions come from libattr
++ *
++ * We are redifining here so we don't need to keep libattr as a dependency anymore
++ */
++#define ATTR_ENTRY(buffer, index)		\
++	((struct xfs_attrlist_ent *)		\
++	 &((char *)buffer)[ ((struct xfs_attrlist *)(buffer))->al_offset[index] ])
++
++#endif /* __LIBFROG_ATTR_H__ */
 diff --git a/libfrog/fsprops.c b/libfrog/fsprops.c
-index 88046b7a0..05a584a56 100644
+index 05a584a56..ea47c66ed 100644
 --- a/libfrog/fsprops.c
 +++ b/libfrog/fsprops.c
-@@ -68,10 +68,10 @@ fsprops_walk_names(
- 	fsprops_name_walk_fn	walk_fn,
- 	void			*priv)
+@@ -10,8 +10,7 @@
+ #include "libfrog/bulkstat.h"
+ #include "libfrog/fsprops.h"
+ #include "libfrog/fsproperties.h"
+-
+-#include <attr/attributes.h>
++#include "libfrog/attr.h"
+ 
+ /*
+  * Given an xfd and a mount table path, get us the handle for the root dir so
+@@ -70,7 +69,7 @@ fsprops_walk_names(
  {
--	struct attrlist_cursor	cur = { };
--	char			attrbuf[XFS_XATTR_LIST_MAX];
--	struct attrlist		*attrlist = (struct attrlist *)attrbuf;
--	int			ret;
-+	struct xfs_attrlist_cursor	cur = { };
-+	char				attrbuf[XFS_XATTR_LIST_MAX];
-+	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
-+	int				ret;
+ 	struct xfs_attrlist_cursor	cur = { };
+ 	char				attrbuf[XFS_XATTR_LIST_MAX];
+-	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
++	struct xfs_attrlist		*attrlist = (struct xfs_attrlist *)attrbuf;
+ 	int				ret;
  
  	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
+@@ -81,7 +80,7 @@ fsprops_walk_names(
+ 		unsigned int	i;
  
-diff --git a/libhandle/handle.c b/libhandle/handle.c
-index 1e8fe9ac5..a9a9f9534 100644
---- a/libhandle/handle.c
-+++ b/libhandle/handle.c
-@@ -381,7 +381,7 @@ attr_list_by_handle(
- 	void		*buf,
- 	size_t		bufsize,
- 	int		flags,
--	struct attrlist_cursor *cursor)
-+	struct		xfs_attrlist_cursor *cursor)
- {
- 	int		error, fd;
- 	char		*path;
-diff --git a/libhandle/jdm.c b/libhandle/jdm.c
-index e21aff2b2..9ce605ad3 100644
---- a/libhandle/jdm.c
-+++ b/libhandle/jdm.c
-@@ -221,7 +221,7 @@ int
- jdm_attr_list(	jdm_fshandle_t *fshp,
- 		struct xfs_bstat *statp,
- 		char *bufp, size_t bufsz, int flags,
--		struct attrlist_cursor *cursor)
-+		struct xfs_attrlist_cursor *cursor)
- {
- 	fshandle_t *fshandlep = ( fshandle_t * )fshp;
- 	filehandle_t filehandle;
-@@ -240,12 +240,12 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
+ 		for (i = 0; i < attrlist->al_count; i++) {
+-			struct attrlist_ent	*ent = ATTR_ENTRY(attrlist, i);
++			struct xfs_attrlist_ent	*ent = ATTR_ENTRY(attrlist, i);
+ 			const char		*p =
+ 				attr_name_to_fsprop_name(ent->a_name);
  
- int
- jdm_attr_list_v5(
--	jdm_fshandle_t		*fshp,
--	struct xfs_bulkstat	*statp,
--	char			*bufp,
--	size_t			bufsz,
--	int			flags,
--	struct attrlist_cursor	*cursor)
-+	jdm_fshandle_t			*fshp,
-+	struct xfs_bulkstat		*statp,
-+	char				*bufp,
-+	size_t				bufsz,
-+	int				flags,
-+	struct xfs_attrlist_cursor	*cursor)
- {
- 	struct fshandle		*fshandlep = (struct fshandle *)fshp;
- 	struct filehandle	filehandle;
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index f6c295c64..27fa29be6 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -190,7 +190,7 @@ check_xattr_ns_names(
- 	struct xfs_bulkstat		*bstat,
- 	const struct attrns_decode	*attr_ns)
- {
--	struct attrlist_cursor		cur;
-+	struct xfs_attrlist_cursor	cur;
- 	char				attrbuf[XFS_XATTR_LIST_MAX];
- 	char				keybuf[XATTR_NAME_MAX + 1];
- 	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
 -- 
 2.46.0
 
