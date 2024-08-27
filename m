@@ -1,70 +1,70 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1674046B5
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 00:59:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D86D10E9
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:05:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724720344; cv=none; b=RdgtVIhDRL0IVdoYMevQ21EMnrOb0NNfpkf3HnNfDlMoDM0+T5K7WC6X0OSi5T7YiRv8jo2q58Gn7RtJEkuu6gGXbC9Gj1m6IHaOmmpU/ce2pbi4htHec3ZQialnXJKmdd7RYN6/O8OTFPlnChdxgbbkD411RHyA5eyO6zmZOj4=
+	t=1724720758; cv=none; b=Bz1AkpO/4/Pf6ZPuZ7LhcxKG649O4DWHBTlvbbeeiIp2Sn+8CnZOZXOiCnt9H98YWjEjOZ8+BNbXl2SRof0OHjdHOxmdIVDlnlOGnQSDoQiO/PYo6ca5XlhPazi42RRHKJPvs+gEf3ytSI5OXWh+9ZJyL/YcNzjUAYNGFe5WBgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724720344; c=relaxed/simple;
-	bh=WFHofCR3c2rFd1nYI0X2oy+Mrl9h3CEaknkRHYpSkp4=;
+	s=arc-20240116; t=1724720758; c=relaxed/simple;
+	bh=cSA6c+t3vEyJansKpgvDf6mOtPHUeic0l+SqG4N3/Ag=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GMrvPFVv4z83TNTX6qq65dyEIv5Iem/P/ObnIuxalBDziybSzctYZclW4HoH1IGK5IdBGjASCUVe8drf91ce8M/GITT0BEu+g4WRgCugwHRXSBqnKyc/ibQ+afIfM/TpzW4vsTMVxtSqwMZKnf2exsjIGsAI2T645j9SBX3X9Gg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=eCqHMtqp; arc=none smtp.client-ip=209.85.216.52
+	 Content-Type:Content-Disposition:In-Reply-To; b=NoSUXPbRAn1egtCRUGETetTQze6mgyGH8pRW8P0INN8xaL4sMNhjNAer1LRI0gfhLreBYGw+rAn494A+hgQ/igKiFklipzqITLEzlYmtvosmxDi7BJMur9CDLV51hwBFZFXksqtnTAvzRRWEUCSJxOVQPZcrUQQnt3su2IjAgcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=FHP+YC2Z; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="eCqHMtqp"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-2d3d662631aso3818451a91.1
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 17:59:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="FHP+YC2Z"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-20219a0fe4dso48163925ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 18:05:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724720342; x=1725325142; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724720756; x=1725325556; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=aYtUiv7YLgzcs/x00HAAym+Jp1p1bF1Lz9JpmR0QCw0=;
-        b=eCqHMtqp6UcBHuO1rdAtPxK7ELwLcEcH26YWNi/0hXcWODDM/ZLk38OG5tQHiPEUWz
-         5ED4tOU5Q/3fLu1zr6b8v+yVlm3iMyR7PAQWJPLqyjnY/hK4t9lWSG1pBwfTUwdhqQur
-         YFbxNy3s3irBOtMF6SRdz1t42c3osWV7Xdmr2FIqwUo+btiQSOKywM9RRPlZZH4Q0PXR
-         09NFxzegkauL2YENH+pHpuf4J8X2rseFoQ1cDgCO5Ql8UOsI55stwmR0OkdynSTxCOPR
-         7bcmfCItNdB65ZjxcPmw9OKOPzYfJJMudxMxDB8WYYWfTa0lJjddNnXmbeN1jGxAUj0r
-         b1AA==
+        bh=IVv8uPXc7iWgcAQg+pryTYezVU8twIApiWvn5w3q5kk=;
+        b=FHP+YC2ZN+ghzBtIYWPPnvE54l5L3WpCR+/5Kq/Ns/Ur2XfwFyS+GgwNF+XflA6nW1
+         upICfyhW4SnSZxX3jieKMX9KCIU7FmHEwBiaIT6UmDbe616AkjYru3nj3eHtyI6QFjYi
+         acdsNAo2kEU7YFh0ac+OtNYPOEFk2Nfy/4WUy37CbvBUaRJKccpA7fnwDqAi7TwCse/8
+         mhVjXCiX7dFYbJWaIuBuoowSncDI1PcVmm49iW0k/zOQgfOi4Sd0kWyQRKjJp73CtUIO
+         NopU333973wKKlRBygtLgWrlzqZlgeCo89AYxT5lpmuJR1kgswJUpQR0TCyDfizm/hop
+         62+A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724720342; x=1725325142;
+        d=1e100.net; s=20230601; t=1724720756; x=1725325556;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=aYtUiv7YLgzcs/x00HAAym+Jp1p1bF1Lz9JpmR0QCw0=;
-        b=uLDkqVIJXLQdkubwnRiFagC4Y06KibqW8DtrVdWXzA2zlxC59TaMTGnxDzkRbY7ypB
-         OBfMReOT/97lT9+I1ihmp6qZYZ/tc1Ds4JgGkY8smW2ausKABH4LQ0XTqMS6YG+t7A0a
-         Ss6wuKZuWJP4NwO5eH38JPIFy/c1cm3uHwopmn6cTl/zb96iWgrA2TatEGzwHdZs4cZw
-         NSSsf8+FB6vmfT/nq662ct6ie5QO29c8RP9OOinq9wYM2/8C8ksLCzTb35ljp9WY5jcl
-         LvpYhC91p28F3KYbzP2UOrbLRoMZF6YJ/yUqAkXZUXa/Ky68eGaBdGrEIzHEQ1FxW6GU
-         Io6A==
-X-Forwarded-Encrypted: i=1; AJvYcCXVUw/Rcw9dQArsUbg5rKRq0jL6qal1C+WpCgnlyw2D52YXyfWsRCbbtbipMzMDryTAN3H99eszXb4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4jpW1ZjF3qXlmuGshlfEU4rizj6hWGEQGn/XLwTj63DqZzqFx
-	K1aZguVV3JH4DHj228Fi7cr92jvCwNRycATz5TsBLNXt7Xw6NToVbyrqFd69smA=
-X-Google-Smtp-Source: AGHT+IHPnpHk2EpjjWw1otv7xTPc95uvPO0x6jIsp7QMrozb+wB9C2aGXaJVe61SncElhCVO15mC4A==
-X-Received: by 2002:a17:90a:5d0c:b0:2d3:d95a:36d1 with SMTP id 98e67ed59e1d1-2d646bf604fmr12574815a91.12.1724720342218;
-        Mon, 26 Aug 2024 17:59:02 -0700 (PDT)
+        bh=IVv8uPXc7iWgcAQg+pryTYezVU8twIApiWvn5w3q5kk=;
+        b=EczajboNaZSNsfIlxv7F4l9EcuH8zdESo1CosUwU33afuc6fACh8FDKj+6N2fl4Lh5
+         qXPlTiJOVOPcB83Xd5wgIve8xrjwXY73kbhI5OZY9Yij8akx8aUBtJskBPuHVqR9pI96
+         8KPpcNWAP2/CRx2szWk87P6uuAjKTmIXCGDKbQwkrI3EPSZsgxYY/zDjxKezwhdVtbEu
+         uo9QDUxnu1qeJ5aCKqTohiXgP3I/i3sY+qCFTdriY2JaqSzZH1WwZ6S6/YJcq/Dy87yS
+         9Ni0mFzoAEMl/rt21hEp+oT0YLoJX5PrlLOTUX7gNG1NInskpVFrgs9mCxWZh5BnKHwJ
+         stLA==
+X-Forwarded-Encrypted: i=1; AJvYcCXIPqLD+2JLFMSGrYrm56gSZ3IDlQbTReg6QgOSzqJdQOcmVDD6inmTftIrj5JFIE3xX3Qev1PTw14=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPK7ZgR3C2/PnDX04RHOm5nOOqG27RYmoj1FCvlX3VPqgFHl7I
+	tluiqjLrgk9EY3Rg9xXpIpNH94Px2KIUp6WIGCWX4/tEZkEyev3k5rKbBKwsknk=
+X-Google-Smtp-Source: AGHT+IEv/TLnjdnFSKvoQZ8iZH2SRkYlg41ocmhIsWdKlng9bw7pDh8xzAATbLSE5N90RgTw72R9vQ==
+X-Received: by 2002:a17:903:2449:b0:1fa:128c:4315 with SMTP id d9443c01a7336-2039e4ef297mr141361475ad.44.1724720755790;
+        Mon, 26 Aug 2024 18:05:55 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d6139201ecsm10703542a91.18.2024.08.26.17.59.01
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385608eb5sm72969845ad.188.2024.08.26.18.05.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Aug 2024 17:59:01 -0700 (PDT)
+        Mon, 26 Aug 2024 18:05:55 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sikXz-00DyeH-1O;
-	Tue, 27 Aug 2024 10:58:59 +1000
-Date: Tue, 27 Aug 2024 10:58:59 +1000
+	id 1sikef-00DywU-0C;
+	Tue, 27 Aug 2024 11:05:53 +1000
+Date: Tue, 27 Aug 2024 11:05:53 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/24] xfs: add a lockdep class key for rtgroup inodes
-Message-ID: <Zs0k0y1euPWgWMie@dread.disaster.area>
+Subject: Re: [PATCH 14/24] xfs: support caching rtgroup metadata inodes
+Message-ID: <Zs0mcWjsEzTeAysF@dread.disaster.area>
 References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
- <172437087470.59588.4171434021531099837.stgit@frogsfrogsfrogs>
- <ZsvFDesdVVdUhI8T@dread.disaster.area>
- <20240826213827.GG865349@frogsfrogsfrogs>
+ <172437087487.59588.6672080001636292983.stgit@frogsfrogsfrogs>
+ <ZsvdP4IaRNpJcavt@dread.disaster.area>
+ <20240826183734.GB865349@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,68 +73,110 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240826213827.GG865349@frogsfrogsfrogs>
+In-Reply-To: <20240826183734.GB865349@frogsfrogsfrogs>
 
-On Mon, Aug 26, 2024 at 02:38:27PM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 26, 2024 at 09:58:05AM +1000, Dave Chinner wrote:
-> > On Thu, Aug 22, 2024 at 05:18:02PM -0700, Darrick J. Wong wrote:
+On Mon, Aug 26, 2024 at 11:37:34AM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 26, 2024 at 11:41:19AM +1000, Dave Chinner wrote:
+> > On Thu, Aug 22, 2024 at 05:18:18PM -0700, Darrick J. Wong wrote:
 > > > From: Darrick J. Wong <djwong@kernel.org>
 > > > 
-> > > Add a dynamic lockdep class key for rtgroup inodes.  This will enable
-> > > lockdep to deduce inconsistencies in the rtgroup metadata ILOCK locking
-> > > order.  Each class can have 8 subclasses, and for now we will only have
-> > > 2 inodes per group.  This enables rtgroup order and inode order checks
-> > > when nesting ILOCKs.
+> > > Create the necessary per-rtgroup infrastructure that we need to load
+> > > metadata inodes into memory.
 > > > 
 > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > > ---
-> > >  fs/xfs/libxfs/xfs_rtgroup.c |   52 +++++++++++++++++++++++++++++++++++++++++++
-> > >  1 file changed, 52 insertions(+)
+> > >  fs/xfs/libxfs/xfs_rtgroup.c |  182 +++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/libxfs/xfs_rtgroup.h |   28 +++++++
+> > >  fs/xfs/xfs_mount.h          |    1 
+> > >  fs/xfs/xfs_rtalloc.c        |   48 +++++++++++
+> > >  4 files changed, 258 insertions(+), 1 deletion(-)
 > > > 
 > > > 
 > > > diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
-> > > index 51f04cad5227c..ae6d67c673b1a 100644
+> > > index ae6d67c673b1a..50e4a56d749f0 100644
 > > > --- a/fs/xfs/libxfs/xfs_rtgroup.c
 > > > +++ b/fs/xfs/libxfs/xfs_rtgroup.c
-> > > @@ -243,3 +243,55 @@ xfs_rtgroup_trans_join(
-> > >  	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
-> > >  		xfs_rtbitmap_trans_join(tp);
-> > >  }
+> > > @@ -30,6 +30,8 @@
+> > >  #include "xfs_icache.h"
+> > >  #include "xfs_rtgroup.h"
+> > >  #include "xfs_rtbitmap.h"
+> > > +#include "xfs_metafile.h"
+> > > +#include "xfs_metadir.h"
+> > >  
+> > >  /*
+> > >   * Passive reference counting access wrappers to the rtgroup structures.  If
+> > > @@ -295,3 +297,183 @@ xfs_rtginode_lockdep_setup(
+> > >  #else
+> > >  #define xfs_rtginode_lockdep_setup(ip, rgno, type)	do { } while (0)
+> > >  #endif /* CONFIG_PROVE_LOCKING */
 > > > +
-> > > +#ifdef CONFIG_PROVE_LOCKING
-> > > +static struct lock_class_key xfs_rtginode_lock_class;
+> > > +struct xfs_rtginode_ops {
+> > > +	const char		*name;	/* short name */
 > > > +
-> > > +static int
-> > > +xfs_rtginode_ilock_cmp_fn(
-> > > +	const struct lockdep_map	*m1,
-> > > +	const struct lockdep_map	*m2)
-> > > +{
-> > > +	const struct xfs_inode *ip1 =
-> > > +		container_of(m1, struct xfs_inode, i_lock.dep_map);
-> > > +	const struct xfs_inode *ip2 =
-> > > +		container_of(m2, struct xfs_inode, i_lock.dep_map);
+> > > +	enum xfs_metafile_type	metafile_type;
 > > > +
-> > > +	if (ip1->i_projid < ip2->i_projid)
-> > > +		return -1;
-> > > +	if (ip1->i_projid > ip2->i_projid)
-> > > +		return 1;
-> > > +	return 0;
-> > > +}
+> > > +	/* Does the fs have this feature? */
+> > > +	bool			(*enabled)(struct xfs_mount *mp);
+> > > +
+> > > +	/* Create this rtgroup metadata inode and initialize it. */
+> > > +	int			(*create)(struct xfs_rtgroup *rtg,
+> > > +					  struct xfs_inode *ip,
+> > > +					  struct xfs_trans *tp,
+> > > +					  bool init);
+> > > +};
 > > 
-> > What's the project ID of the inode got to do with realtime groups?
+> > What's all this for?
+> > 
+> > AFAICT, loading the inodes into the rtgs requires a call to
+> > xfs_metadir_load() when initialising the rtg (either at mount or
+> > lazily on the first access to the rtg). Hence I'm not really sure
+> > what this complexity is needed for, and the commit message is not
+> > very informative....
 > 
-> Each rtgroup metadata file stores its group number in i_projid so that
-> mount can detect if there's a corruption in /rtgroup and we just opened
-> the bitmap from the wrong group.
+> Yes, the creation and mkdir code in here is really to support growfs,
+> mkfs, and repair.  How about I change the commit message to:
 > 
-> We can also use lockdep to detect code that locks rtgroup metadata in
-> the wrong order.  Potentially we could use this _cmp_fn to enforce that
-> we always ILOCK in the order bitmap -> summary -> rmap -> refcount based
-> on i_metatype.
+> "Create the necessary per-rtgroup infrastructure that we need to load
+> metadata inodes into memory and to create directory trees on the fly.
+> Loading is needed by the mounting process.  Creation is needed by
+> growfs, mkfs, and repair."
 
-Ok, can we union the i_projid field (both in memory and in the
-on-disk structure) so that dual use of the field is well documented
-by the code?
+IMO it would have been nicer to add this with the patch that
+adds growfs support for rtgs. That way the initial inode loading
+would be much easier to understand and review, and the rest of it
+would have enough context to be able to review it sanely. There
+isn't enough context in this patch to determine if the creation code
+is sane or works correctly....
+
+
+> > > +	path = xfs_rtginode_path(rtg->rtg_rgno, type);
+> > > +	if (!path)
+> > > +		return -ENOMEM;
+> > > +	error = xfs_metadir_load(tp, mp->m_rtdirip, path, ops->metafile_type,
+> > > +			&ip);
+> > > +	kfree(path);
+> > > +
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	if (XFS_IS_CORRUPT(mp, ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
+> > > +			       ip->i_df.if_format != XFS_DINODE_FMT_BTREE)) {
+> > > +		xfs_irele(ip);
+> > > +		return -EFSCORRUPTED;
+> > > +	}
+> > 
+> > We don't support LOCAL format for any type of regular file inodes,
+> > so I'm a little confiused as to why this wouldn't be caught by the
+> > verifier on inode read? i.e.  What problem is this trying to catch,
+> > and why doesn't the inode verifier catch it for us?
+> 
+> This is really more of a placeholder for more refactorings coming down
+> the line for the rtrmap patchset, which will create a new
+> XFS_DINODE_FMT_RMAP.  At that time we'll need to check that an inode
+> that we are loading to be the rmap btree actually has that set.
+
+Ok, can you leave a comment to indicate this so I don't have to
+remember why this code exists?
 
 -Dave.
 -- 
