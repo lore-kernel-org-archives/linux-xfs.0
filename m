@@ -1,84 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2482B481CD
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 23:12:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A9519DF66;
+	Tue, 27 Aug 2024 23:15:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724800371; cv=none; b=agWpUgYg+lkvrP34pQoccfpIuZ44OustXlDKE7Stq/iRSknemRmzi6COBEwZ4oOlXtnA2HLZEwudGsW6uRIW/q4DGmE8l+/xzdhIYtmYV9B/rXhyOeYTM/o/KZrMyI/e2re3Dx5Bi7VSZk7O6hOaIaL/r2dBxkIBrYQtMoL+PKI=
+	t=1724800510; cv=none; b=sBTb0FtiXvYDJ6C+KmK2NIim19V9u6hqhx8YpFN7qkk8Poz6rhZbebrvOmQjXnrA+N36UcD7772GW0h/IwPleXOWT9eRFCKp9I+BgFHdDTtBN2w/5tANSeTAGF0byZTKfhq3gKUfX/VEuf5j0crix8nOs6h7Tdk0MxeoazY30Dg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724800371; c=relaxed/simple;
-	bh=crhUPPECf8EJvlrNWQXOXXEeens1Gl2CRfqzPEE8RH4=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=MJqf6wKBc7/HzAtum3VSOmbVKY0d1sX5V/qxkByVmqsGu7Gdh8jJHYrC2gRUl4afp+lL5lXH0DdA/kG9voa4wu9+WBHktFWS+CsElENNYLNUBjYRa9rANvbIcJ+9OAJFVDFNihfY5r/QMXeFVBu5yRW3e4xJYkxAxPgHf+poEkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PL91/zRg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724800510; c=relaxed/simple;
+	bh=OLsfW6fvwwy8Dz9CLI7k9MJrb2Yd+U5ZRIOjzC6OmmU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=ATQw0wirYlZjuD6v1LUkKTGMIUt7JJ6C/i1nyHPpFQFoUijDb1xS59id4YxExcuDQXWNtYTg+vExc/6qsDatz5hIwIv4dFwMDFEgaP1ekkQ7cya/p1k+OP66q0+Ecl+lfMgQfBcGrJb2sD1gu9VYucLL/h+KiLcZEKxwmjPviPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TFY6UqET; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PL91/zRg"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id A7808C4AF13
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 23:12:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TFY6UqET"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04113C4AF10;
+	Tue, 27 Aug 2024 23:15:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724800370;
-	bh=crhUPPECf8EJvlrNWQXOXXEeens1Gl2CRfqzPEE8RH4=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=PL91/zRgt8AX8WUstOMsCj/Oy7Z2dOtHWIkp2nGng54XyC1r+pGw+RACFFKonwWKx
-	 Q9zmluxKF2W540q27iUCvhgG7xlNOiu/Ned07nl8gYPlxm4EY9Yn8ooLzrJGXdUZkk
-	 zUzn10E/dqO+VrBjEO/HSe/fgWuW45EQtyVtxMjwPsz0cpUrvwLsPwTYosPkYWmsey
-	 valtEkujvW8QmHD5r3xxWrS/EjYfswpo1WYu65j6S8To170IikpQx8aAD7vTVGO1zh
-	 dSvx5aSMx0p1UgBDe1X1pR9djWLCi7DpoMo18V9OQ0fWwGfvdzUp9g+XG7Q/xw/Si8
-	 kAbYMxE8pj8hQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id A005DC53BC0; Tue, 27 Aug 2024 23:12:50 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 219203] xfsprogs-6.10.0: missing cast in
- /usr/include/xfs/xfs_fs.h(xfs_getparents_next_rec) causes error in C++
- compilations
-Date: Tue, 27 Aug 2024 23:12:50 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: kernel@mattwhitlock.name
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-219203-201763-AZs1owRnQK@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219203-201763@https.bugzilla.kernel.org/>
-References: <bug-219203-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=k20201202; t=1724800509;
+	bh=OLsfW6fvwwy8Dz9CLI7k9MJrb2Yd+U5ZRIOjzC6OmmU=;
+	h=From:Date:Subject:To:Cc:From;
+	b=TFY6UqET2jHW3ySVqDhEZpJzR66XB3sJupscP3rEtROgdVefIKZF1xc/SfVlHKVNA
+	 kvI6Jv8XUNBT2fk2Uu1/8cPadOxpSTbVL7PyhPBq8bg9C9/zRSszjHtxYs43eKv6/A
+	 p/ZPDsQ1xtYNGdaHMNN+VRfmNtLdmfqp8mlTW39gez5uutvUeb1wkbsrnwThzQh3f/
+	 Zf1+WlgAGpez9f1E2NbO95nx7uddQfXDRZnLMmo3G7Ea/3g0sbfcuZIiiHfhcg2EUd
+	 RQk03FwrVLPWqO9mqWGZhuIFhxlyaN5NyV8R4KGR4rP3ydLIB9T1lJisYCsPVwyP0A
+	 d3M7GKKUkEhNg==
+From: Nathan Chancellor <nathan@kernel.org>
+Date: Tue, 27 Aug 2024 16:15:05 -0700
+Subject: [PATCH] xfs: Fix format specifier for max_folio_size in
+ xfs_fs_fill_super()
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240827-xfs-fix-wformat-bs-gt-ps-v1-1-aec6717609e0@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAPhdzmYC/x2MSQqAMAwAvyI5G7BV3L4iHmpNNQetNEUF8e8Wj
+ wMz84BQYBLoswcCnSzs9wQqz8CuZl8IeU4MutBV0eoGbyfo+MbL+bCZiJPgEvEQ7OrGlcYoqyo
+ NKT8CJe9fD+P7ftdr63NqAAAA
+To: Christian Brauner <brauner@kernel.org>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Pankaj Raghav <p.raghav@samsung.com>, 
+ Luis Chamberlain <mcgrof@kernel.org>, Dave Chinner <dchinner@redhat.com>, 
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ patches@lists.linux.dev, Nathan Chancellor <nathan@kernel.org>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2458; i=nathan@kernel.org;
+ h=from:subject:message-id; bh=OLsfW6fvwwy8Dz9CLI7k9MJrb2Yd+U5ZRIOjzC6OmmU=;
+ b=owGbwMvMwCUmm602sfCA1DTG02pJDGnnYv9s2PmAqbtcZ97m+919PNYzbW88KWd5eLrNVq3+x
+ CRNJruCjlIWBjEuBlkxRZbqx6rHDQ3nnGW8cWoSzBxWJpAhDFycAjCRxjaGX0xiz8s/VAgtig3O
+ r+d6cfOKtGn88uAd4TZeh3hWfJef+4Phr2i6Q+LqhyG/VZMF7Pemf9ri6CjrZHtN4bqti5lOT/J
+ kZgA=
+X-Developer-Key: i=nathan@kernel.org; a=openpgp;
+ fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219203
+When building for a 32-bit architecture, where 'size_t' is 'unsigned
+int', there is a warning due to use of '%ld', the specifier for a 'long
+int':
 
---- Comment #3 from Matt Whitlock (kernel@mattwhitlock.name) ---
-(In reply to Darrick J. Wong from comment #2)
-> -       void *next =3D ((void *)gpr + gpr->gpr_reclen);
-> +       void *next =3D ((char *)gpr + gpr->gpr_reclen);
+  In file included from fs/xfs/xfs_linux.h:82,
+                   from fs/xfs/xfs.h:26,
+                   from fs/xfs/xfs_super.c:7:
+  fs/xfs/xfs_super.c: In function 'xfs_fs_fill_super':
+  fs/xfs/xfs_super.c:1654:1: error: format '%ld' expects argument of type 'long int', but argument 5 has type 'size_t' {aka 'unsigned int'} [-Werror=format=]
+   1654 | "block size (%u bytes) not supported; Only block size (%ld) or less is supported",
+        | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1655 |                                 mp->m_sb.sb_blocksize, max_folio_size);
+        |                                                        ~~~~~~~~~~~~~~
+        |                                                        |
+        |                                                        size_t {aka unsigned int}
+  ...
+  fs/xfs/xfs_super.c:1654:58: note: format string is defined here
+   1654 | "block size (%u bytes) not supported; Only block size (%ld) or less is supported",
+        |                                                        ~~^
+        |                                                          |
+        |                                                          long int
+        |                                                        %d
 
-G++ 14 apparently didn't care about the arithmetic on a void*. Only the cas=
-t in
-the return statement was necessary for libktorrent to include <xfs/xfs_fs.h>
-without error. (I did not check whether the compiler emitted a warning.)
-Certainly it is preferable to do arithmetic on a pointer to a type of known
-size, so thanks for suggesting this other fix as well.
+Use the proper 'size_t' specifier, '%zu', to resolve the warning.
 
---=20
-You may reply to this email to add a comment.
+Fixes: 0ab3ca31b012 ("xfs: enable block size larger than page size support")
+Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+---
+ fs/xfs/xfs_super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 242271298a33..e8cc7900911e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1651,7 +1651,7 @@ xfs_fs_fill_super(
+ 
+ 		if (mp->m_sb.sb_blocksize > max_folio_size) {
+ 			xfs_warn(mp,
+-"block size (%u bytes) not supported; Only block size (%ld) or less is supported",
++"block size (%u bytes) not supported; Only block size (%zu) or less is supported",
+ 				mp->m_sb.sb_blocksize, max_folio_size);
+ 			error = -ENOSYS;
+ 			goto out_free_sb;
+
+---
+base-commit: f143d1a48d6ecce12f5bced0d18a10a0294726b5
+change-id: 20240827-xfs-fix-wformat-bs-gt-ps-967f3aa1c142
+
+Best regards,
+-- 
+Nathan Chancellor <nathan@kernel.org>
+
