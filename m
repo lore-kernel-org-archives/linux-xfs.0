@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61D566EB64;
-	Tue, 27 Aug 2024 18:45:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C36BB6EB64;
+	Tue, 27 Aug 2024 18:45:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724784337; cv=none; b=D+fciCXxvux1/xlWtq58XtPRj9J78THthCv7pM60UILDCd9QW19bygl6PalF4AjuW9iU6V3Skg5jllDilcopqcSpjZMSLeHSquZnovtUTTPoiMjRIFn7xPUTVCXmNY5/e5w5Q5If2POp9H7mcLEeLFA9yVlxj85CQ81PYpmX8sY=
+	t=1724784352; cv=none; b=dBYc297Lms87YcshYmjdcrAa7ECGjd7in/Ms+smtlJij58PDSVY/PM+QFEaYyffXZ1EVxEYUk7reIPlqHaA0ijjgwXXcleKwd+FxF5B3drofyRENd4ISPv79mZhkud1rm8Cdnk9l8rj1KRGmVD4/CT/D7CmV2CoucPvF7UI4Gi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724784337; c=relaxed/simple;
-	bh=0751bTLRIRfZ/PH3DyJn025BcAs9+07JJKkR40alXpU=;
+	s=arc-20240116; t=1724784352; c=relaxed/simple;
+	bh=dTPxFzOAwaGVqwgw/skuO7ZxdWLhwV5d3TuExIrQ6+0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aDtvSNzqZVtFDCViflKCJWjWVA1m/U4y+yKnbzhlU4yyiJH5V7CSxV86IrK/aEDR68YSe1ZnxW/plmtEukYUPE9bOkt5fXNdfvD56zv5gfdDeDh7e3y0UVC44WGMS33M3YQIeJMOcM1PHKJBlE86cRgfitsa4jlpUKMyNG521LA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gxVp1oC/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=u5VTDrNKh2yf+70qqU5pN8VWVKztV2MSgZv4DTAOsNtLX4fimAJlh/41qETg6dyYcNLz7SJvsDHQ2sSCxmt05NXniqVjpUq/wvffq07jL6vRFOn6V8Fi2FJScH0r1jEk2Rnuws0R00JRVmERUV5N1FULwmIkJBsmkvNonVDSZqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R8/2U1iA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxVp1oC/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB48CC4FE98;
-	Tue, 27 Aug 2024 18:45:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R8/2U1iA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 999ECC4FE98;
+	Tue, 27 Aug 2024 18:45:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724784337;
-	bh=0751bTLRIRfZ/PH3DyJn025BcAs9+07JJKkR40alXpU=;
+	s=k20201202; t=1724784352;
+	bh=dTPxFzOAwaGVqwgw/skuO7ZxdWLhwV5d3TuExIrQ6+0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gxVp1oC/vzMXElfSSIkwn0lBgJpYR4Dc55PRH4XqaCL99v6PA8W2Ojc1+VPrrlP84
-	 TPTavgqXb1DHgKzA7Zc9bKmx5d5DzvdgCUvhi0oyzTNdPkNY2GCnFO5RX6L4UR2fRQ
-	 L3fMncU+zbx9nEqaQZh6fOLu6cOUY8iFB0CD52VplpCmGmLKAiMzD4clF3mCBByqlP
-	 g43KnpRs7CNLYftC0GpWvCjK0kQr3X+C26JcrvTXMdG2IMOg4RvGv0HnKopkOGT5SW
-	 ZBlxMKj8D1+AOIvpSOod4Q6P5C5xP8ZAmLwAaOKOeuANpiJAQgZ6nev76beqEqDGBP
-	 aSrtl8xZKovFQ==
-Date: Tue, 27 Aug 2024 11:45:36 -0700
-Subject: [PATCHSET v31.0 5/5] fstests: xfs filesystem properties
+	b=R8/2U1iA+pzVgVzDpdCKHFQXlw3DQt2V8PE91FaznYinPBcEJ4M5V3E6bhIrcaOjj
+	 g8sAMeF1KQnl8yHsoTKfXjCB9FxakUPwZYtZjFXMqtAXeTd6UGDWMv7EzfmLiIJ3pE
+	 A71ZfSo2RwrCFJ6IqyiIazP/mmmFxOCSZAEjJuXvbo8WjnA06+L/CgLMpjXJBeBzhB
+	 LbJAu3hPVuHrgVqn0LN+wGfPrOJipNumhb1LohKKxaHqQvpwrltRqQ9mepJv8FsBfm
+	 kPjRgQClNmUuuuhAYeKcPbwWdDKawVN+nBpreI767RTQh76spze49RZgu1ReDXS8tm
+	 8lzwlOHYQenEA==
+Date: Tue, 27 Aug 2024 11:45:52 -0700
+Subject: [PATCH 1/2] generic/453: test confusable name detection with 32-bit
+ unicode codepoints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <172478423759.2039792.1261370258750521007.stgit@frogsfrogsfrogs>
-In-Reply-To: <20240827184204.GM6047@frogsfrogsfrogs>
-References: <20240827184204.GM6047@frogsfrogsfrogs>
+Message-ID: <172478422302.2039346.11815162501675799772.stgit@frogsfrogsfrogs>
+In-Reply-To: <172478422285.2039346.9658505409794335819.stgit@frogsfrogsfrogs>
+References: <172478422285.2039346.9658505409794335819.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -44,51 +45,74 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-It would be very useful if system administrators could set properties for a
-given xfs filesystem to control its behavior.  This we can do easily and
-extensibly by setting ATTR_ROOT (aka "trusted") extended attributes on the root
-directory.  To prevent this from becoming a weird free for all, let's add some
-library and tooling support so that sysadmins simply run the xfs_property
-program to administer these properties.
+Test the confusable name detection when there are 32-bit unicode
+sequences in use.  In other words, emoji.  Change the xfs_scrub test to
+dump the output to a file instead of passing huge echo commands around.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=filesystem-properties
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=filesystem-properties
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Commits in this patchset:
- * xfs: functional testing for filesystem properties
----
- common/config       |    1 
- common/xfs          |   14 ++++-
- doc/group-names.txt |    1 
- tests/generic/062   |    4 +
- tests/xfs/1886      |  137 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1886.out  |   53 ++++++++++++++++++++
- tests/xfs/1887      |  122 +++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1887.out  |   46 +++++++++++++++++
- tests/xfs/1888      |   66 +++++++++++++++++++++++++
- tests/xfs/1888.out  |    9 +++
- tests/xfs/1889      |   63 +++++++++++++++++++++++
- tests/xfs/1889.out  |    8 +++
- 12 files changed, 522 insertions(+), 2 deletions(-)
- create mode 100755 tests/xfs/1886
- create mode 100644 tests/xfs/1886.out
- create mode 100755 tests/xfs/1887
- create mode 100644 tests/xfs/1887.out
- create mode 100755 tests/xfs/1888
- create mode 100644 tests/xfs/1888.out
- create mode 100755 tests/xfs/1889
- create mode 100644 tests/xfs/1889.out
+ tests/generic/453 |   32 +++++++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 11 deletions(-)
+
+
+diff --git a/tests/generic/453 b/tests/generic/453
+index a0fb802e9b..930e6408ff 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -148,6 +148,10 @@ setf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
+ setd ".\xe2\x80\x8d" "zero width joiners in dot entry"
+ setd "..\xe2\x80\x8d" "zero width joiners in dotdot entry"
+ 
++# utf8 sequence mapping to a u32 unicode codepoint that can be confused
++setf "toilet_bowl.\xf0\x9f\x9a\xbd" "toilet emoji"
++setf "toilet_bow\xe2\x80\x8dl.\xf0\x9f\x9a\xbd" "toilet emoji with zero width joiner"
++
+ ls -la $testdir >> $seqres.full
+ 
+ echo "Test files"
+@@ -198,6 +202,9 @@ testf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
+ testd ".\xe2\x80\x8d" "zero width joiners in dot entry"
+ testd "..\xe2\x80\x8d" "zero width joiners in dotdot entry"
+ 
++testf "toilet_bowl.\xf0\x9f\x9a\xbd" "toilet emoji"
++testf "toilet_bow\xe2\x80\x8dl.\xf0\x9f\x9a\xbd" "toilet emoji with zero width joiner"
++
+ echo "Uniqueness of inodes?"
+ stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
+ 	if [ "${nr}" -gt 1 ]; then
+@@ -208,18 +215,21 @@ done
+ echo "Test XFS online scrub, if applicable"
+ 
+ if _check_xfs_scrub_does_unicode "$SCRATCH_MNT" "$SCRATCH_DEV"; then
+-	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1 | filter_scrub)"
+-	echo "${output}" | grep -q "french_" || echo "No complaints about french e accent?"
+-	echo "${output}" | grep -q "greek_" || echo "No complaints about greek letter mess?"
+-	echo "${output}" | grep -q "arabic_" || echo "No complaints about arabic expanded string?"
+-	echo "${output}" | grep -q "mixed_" || echo "No complaints about mixed script confusables?"
+-	echo "${output}" | grep -q "hyphens_" || echo "No complaints about hyphenation confusables?"
+-	echo "${output}" | grep -q "dz_digraph_" || echo "No complaints about single script confusables?"
+-	echo "${output}" | grep -q "inadequate_" || echo "No complaints about inadequate rendering confusables?"
+-	echo "${output}" | grep -q "prohibition_" || echo "No complaints about prohibited sequence confusables?"
+-	echo "${output}" | grep -q "zerojoin_" || echo "No complaints about zero-width join confusables?"
++	LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1 | filter_scrub > $tmp.scrub
++
++	grep -q "french_" $tmp.scrub || echo "No complaints about french e accent?"
++	grep -q "greek_" $tmp.scrub || echo "No complaints about greek letter mess?"
++	grep -q "arabic_" $tmp.scrub || echo "No complaints about arabic expanded string?"
++	grep -q "mixed_" $tmp.scrub || echo "No complaints about mixed script confusables?"
++	grep -q "hyphens_" $tmp.scrub || echo "No complaints about hyphenation confusables?"
++	grep -q "dz_digraph_" $tmp.scrub || echo "No complaints about single script confusables?"
++	grep -q "inadequate_" $tmp.scrub || echo "No complaints about inadequate rendering confusables?"
++	grep -q "prohibition_" $tmp.scrub || echo "No complaints about prohibited sequence confusables?"
++	grep -q "zerojoin_" $tmp.scrub || echo "No complaints about zero-width join confusables?"
++	grep -q "toilet_" $tmp.scrub || echo "No complaints about zero-width join confusables with emoji?"
++
+ 	echo "Actual xfs_scrub output:" >> $seqres.full
+-	echo "${output}" >> $seqres.full
++	cat $tmp.scrub >> $seqres.full
+ fi
+ 
+ # success, all done
 
