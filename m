@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAAF2146590;
-	Tue, 27 Aug 2024 18:46:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8379145024;
+	Tue, 27 Aug 2024 18:46:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724784368; cv=none; b=cJnyXGPg/nIetCzj1HRi041GloOZ5WHTyU6Pa5IbSfDaAacqkPw3Yl8QY7aCvUNAmpxeg+BPH92bLP0uzgaBTJGHXXJ6JrjZe+4YjPs1rKxjwhoHQ80InswTUTWBPgQR4OD8OoHqDrhUd6ylWkowM1gNcZemA1//q9gqwtRrJWg=
+	t=1724784384; cv=none; b=TbodpmodYBdWaOomt4zXGK6H7xj1YR5+5eHBjkRO1ZKvUdGrKD572Pz2fx/dUh+3vuTYduGHijjHVTfIwx87mdqMVwNOSp/E11mayEn0ihebsxkFUn88cWlio/4M6bCkpA5P7bV33NtMG59HQhde7oW7d95eMTT0ofxv+XyCGCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724784368; c=relaxed/simple;
-	bh=RB8Xkek+RyEu8VSTsz0/nh6DtSFR9GD7KhisCBOFUy4=;
+	s=arc-20240116; t=1724784384; c=relaxed/simple;
+	bh=F7SdUFhBVUxz0OsPExbnI1+BHOZs2fx+NPFHFUCGgZg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iNM/LZJUM7fVr7dk7a4RMwp9tCs50wL5WhGlWvh6SAG3NJcZvBhDC4T2CWE/U0s6QWoXxc++G92gg9Egpgj7YCUlVuAMNsUFUH9ZcvNsftKjRduF3vqmraTkidmUzpT/ci9MJ9oqwTfA4HiHSE3/HVlwXBENUGIwNi80Ps7V0q8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dn8KCG+0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=K86rLpLOdwYXMnj8K72vkxwlsyl8sd8W+sNtruBeeqAnygm1cvhtvokZhA2Xpn+7M77o/gk60lM7ulUAlFoIofBBhQP1VQHH3f/pNLRLPFaYrIXXGGxOPaRzcWAl3k7/87ejS5p5NPSNV7g5IsQuT3V9Plbpp+9tIUws6fc4ynA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kfaMJe+k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dn8KCG+0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56C75C4FEA1;
-	Tue, 27 Aug 2024 18:46:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kfaMJe+k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AA36C4FEA1;
+	Tue, 27 Aug 2024 18:46:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724784368;
-	bh=RB8Xkek+RyEu8VSTsz0/nh6DtSFR9GD7KhisCBOFUy4=;
+	s=k20201202; t=1724784384;
+	bh=F7SdUFhBVUxz0OsPExbnI1+BHOZs2fx+NPFHFUCGgZg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dn8KCG+010ymv46VFBwLaBihrYH+/guhi4kKN688oLbrgy2Tjgq2/B4W4fg4lejgq
-	 6c/VRVfX92Vgq3+Fmt/JegRJWKDkltO0cLzu0KM6XbZMM7PE258xu4NjCDpX3KCcYa
-	 kqfw3I6BjPrbHq8GVDBfk0QrDeUItfRz5tRAVk6C0LMheBhbcpYZowR7IzWTZ2t5mG
-	 hkvQKYBr6zLMa59ahuqJU1W8olUwnl7GCp5pYnJkyjcOYH1NPTZ0ivsBFKkeCJd36n
-	 m+tpgllOQRg9XRMIBGhhLXy3TBSrEVpAmcaNmF50eJf0aztMJSVvj+VqXtOU6KizAJ
-	 4XGRaDJxqjS/w==
-Date: Tue, 27 Aug 2024 11:46:07 -0700
-Subject: [PATCH 2/2] generic/453: check xfs_scrub detection of confusing job
- offers
+	b=kfaMJe+kP4yhIUc6QbjU8B4bC+SWWatwhXB1e60iWx3GA+Onp0R3zcqnSz705Wcca
+	 pYpg1qz0txFTyAhSN2O2Kn4mvhoQyocbwuYqcCVm+rVmR5ABI4wD+A20ENMVJNC1KM
+	 NLttr1jZWx84kxqgeSbDGfYShDDrnc7UekcEqLcU0YEX3BGbr1HgjC2ydbgoRIb/Ef
+	 1bUsGbzAxjVJzShhrlcdO6htkyVBCCtpFunWvi0WaOnxaECDMVVXFFhSXLlyjojP2x
+	 1aGNArvQVwHIhQ57cq41spOkR2bu+FDoUh8wXsoeLYyCOyrGDz5HJA+QzR8F2AXRX/
+	 nbAYS/csVGQAQ==
+Date: Tue, 27 Aug 2024 11:46:23 -0700
+Subject: [PATCH 1/1] xfs: test xfs_scrub services
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <172478422317.2039346.8642752505849905499.stgit@frogsfrogsfrogs>
-In-Reply-To: <172478422285.2039346.9658505409794335819.stgit@frogsfrogsfrogs>
-References: <172478422285.2039346.9658505409794335819.stgit@frogsfrogsfrogs>
+Message-ID: <172478422655.2039472.662383375138981747.stgit@frogsfrogsfrogs>
+In-Reply-To: <172478422640.2039472.46168148654222028.stgit@frogsfrogsfrogs>
+References: <172478422640.2039472.46168148654222028.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -43,144 +42,284 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Earlier this year, ESET revealed that Linux users had been tricked into
-opening executables containing malware payloads.  The trickery came in
-the form of a malicious zip file containing a filename with the string
-"job offer․pdf".  Note that the filename does *not* denote a real pdf
-file, since the last four codepoints in the file name are "ONE DOT
-LEADER", p, d, and f.  Not period (ok, FULL STOP), p, d, f like you'd
-normally expect.
+Create a pair of new tests that check that xfs_scrub and xfs_scrub_all
+will find and test mounted filesystems.
 
-Now that xfs_scrub can look for codepoints that could be confused with a
-period followed by alphanumerics, let's make sure it actually works.
-
-Link: https://www.welivesecurity.com/2023/04/20/linux-malware-strengthens-links-lazarus-3cx-supply-chain-attack/
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/453 |   79 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 78 insertions(+), 1 deletion(-)
+ common/rc          |   14 +++++
+ common/systemd     |   73 +++++++++++++++++++++++++++
+ tests/xfs/1863     |  140 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1863.out |    5 ++
+ 4 files changed, 232 insertions(+)
+ create mode 100644 common/systemd
+ create mode 100755 tests/xfs/1863
+ create mode 100644 tests/xfs/1863.out
 
 
-diff --git a/tests/generic/453 b/tests/generic/453
-index 930e6408ff..855243a860 100755
---- a/tests/generic/453
-+++ b/tests/generic/453
-@@ -36,6 +36,15 @@ setf() {
- 	echo "Storing ${key} ($(hexbytes "${key}")) -> ${value}" >> $seqres.full
+diff --git a/common/rc b/common/rc
+index 9da9fe1882..5a26669925 100644
+--- a/common/rc
++++ b/common/rc
+@@ -5480,6 +5480,20 @@ _require_duplicate_fsid()
+ 	esac
  }
  
-+setchild() {
-+	subdir="$1"
-+	key="$(echo -e "$2")"
-+
-+	mkdir -p "${testdir}/${subdir}"
-+	echo "$subdir" > "${testdir}/${subdir}/${key}"
-+	echo "Storing ${subdir}/${key} ($(hexbytes "${key}")) -> ${subdir}" >> $seqres.full
++# Can we find a program in the $PATH?
++_have_program() {
++	command -v "$1" &>/dev/null
 +}
 +
- setd() {
- 	key="$(echo -e "$1")"
- 	value="$2"
-@@ -63,6 +72,24 @@ testf() {
- 	fi
- }
- 
-+testchild() {
-+	subdir="$1"
-+	key="$(echo -e "$2")"
-+	fname="${testdir}/${subdir}/${key}"
++# Require that a program can be found via the $PATH, or complain otherwise
++_require_program() {
++	local cmd="$1"
++	local tag="$2"
 +
-+	echo "Testing ${subdir}/${key} ($(hexbytes "${key}")) -> ${subdir}" >> $seqres.full
-+
-+	if [ ! -e "${fname}" ]; then
-+		echo "Key ${key} does not exist for ${subdir} test??"
-+		return
-+	fi
-+
-+	actual_value="$(cat "${fname}")"
-+	if [ "${actual_value}" != "${subdir}" ]; then
-+		echo "Key ${key} has value ${subdir}, expected ${actual_value}."
-+	fi
++	test -z "$tag" && tag="$(basename "$cmd")"
++	_have_program "$1" || _notrun "$tag required"
 +}
 +
- testd() {
- 	key="$(echo -e "$1")"
- 	value="$2"
-@@ -152,7 +179,27 @@ setd "..\xe2\x80\x8d" "zero width joiners in dotdot entry"
- setf "toilet_bowl.\xf0\x9f\x9a\xbd" "toilet emoji"
- setf "toilet_bow\xe2\x80\x8dl.\xf0\x9f\x9a\xbd" "toilet emoji with zero width joiner"
+ init_rc
  
--ls -la $testdir >> $seqres.full
-+# decoy file extensions used in 3cx malware attack, and similar ones
-+setchild "one_dot_leader" "job offer\xe2\x80\xa4pdf"
-+setchild "small_full_stop" "job offer\xef\xb9\x92pdf"
-+setchild "fullwidth_full_stop" "job offer\xef\xbc\x8epdf"
-+setchild "syriac_supralinear" "job offer\xdc\x81pdf"
-+setchild "syriac_sublinear" "job offer\xdc\x82pdf"
-+setchild "lisu_letter_tone" "job offer\xea\x93\xb8pdf"
-+setchild "actual_period" "job offer.pdf"
-+setchild "one_dot_leader_zero_width_space" "job offer\xe2\x80\xa4\xe2\x80\x8dpdf"
+ ################################################################################
+diff --git a/common/systemd b/common/systemd
+new file mode 100644
+index 0000000000..b2e24f267b
+--- /dev/null
++++ b/common/systemd
+@@ -0,0 +1,73 @@
++##/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# Routines for managing systemd units
 +
-+# again, but this time all in the same directory to trip the confusable
-+# detector
-+setf "job offer\xe2\x80\xa4pdf" "one dot leader"
-+setf "job offer\xef\xb9\x92pdf" "small full stop"
-+setf "job offer\xef\xbc\x8epdf" "fullwidth full stop"
-+setf "job offer\xdc\x81pdf" "syriac supralinear full stop"
-+setf "job offer\xdc\x82pdf" "syriac sublinear full stop"
-+setf "job offer\xea\x93\xb8pdf" "lisu letter tone mya ti"
-+setf "job offer.pdf" "actual period"
++# Is systemd installed?
++_systemd_installed() {
++	_have_program systemctl
++}
 +
-+ls -laR $testdir >> $seqres.full
- 
- echo "Test files"
- testf "french_caf\xc3\xa9.txt" "NFC"
-@@ -205,6 +252,23 @@ testd "..\xe2\x80\x8d" "zero width joiners in dotdot entry"
- testf "toilet_bowl.\xf0\x9f\x9a\xbd" "toilet emoji"
- testf "toilet_bow\xe2\x80\x8dl.\xf0\x9f\x9a\xbd" "toilet emoji with zero width joiner"
- 
-+testchild "one_dot_leader" "job offer\xe2\x80\xa4pdf"
-+testchild "small_full_stop" "job offer\xef\xb9\x92pdf"
-+testchild "fullwidth_full_stop" "job offer\xef\xbc\x8epdf"
-+testchild "syriac_supralinear" "job offer\xdc\x81pdf"
-+testchild "syriac_sublinear" "job offer\xdc\x82pdf"
-+testchild "lisu_letter_tone" "job offer\xea\x93\xb8pdf"
-+testchild "actual_period" "job offer.pdf"
-+testchild "one_dot_leader_zero_width_space" "job offer\xe2\x80\xa4\xe2\x80\x8dpdf"
++_require_systemd_installed() {
++	_require_program systemctl systemd
++}
 +
-+testf "job offer\xe2\x80\xa4pdf" "one dot leader"
-+testf "job offer\xef\xb9\x92pdf" "small full stop"
-+testf "job offer\xef\xbc\x8epdf" "fullwidth full stop"
-+testf "job offer\xdc\x81pdf" "syriac supralinear full stop"
-+testf "job offer\xdc\x82pdf" "syriac sublinear full stop"
-+testf "job offer\xea\x93\xb8pdf" "lisu letter tone mya ti"
-+testf "job offer.pdf" "actual period"
++# Is systemd running on this system?
++_systemd_is_running() {
++	_systemd_installed || return 1
++	systemctl show-environment &>/dev/null
++}
 +
- echo "Uniqueness of inodes?"
- stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
- 	if [ "${nr}" -gt 1 ]; then
-@@ -228,6 +292,19 @@ if _check_xfs_scrub_does_unicode "$SCRATCH_MNT" "$SCRATCH_DEV"; then
- 	grep -q "zerojoin_" $tmp.scrub || echo "No complaints about zero-width join confusables?"
- 	grep -q "toilet_" $tmp.scrub || echo "No complaints about zero-width join confusables with emoji?"
- 
-+	# Does xfs_scrub complain at all about the job offer files?  Pre-2023
-+	# versions did not know to screen for that.
-+	if grep -q "job offer" $tmp.scrub; then
-+		grep -q 'job offer.xe2.x80.xa4pdf' $tmp.scrub || echo "No complaints about one dot leader?"
-+		grep -q "job offer.xef.xb9.x92pdf" $tmp.scrub || echo "No complaints about small full stop?"
-+		grep -q "job offer.xef.xbc.x8epdf" $tmp.scrub || echo "No complaints about fullwidth full stop?"
-+		grep -q "job offer.xdc.x81pdf" $tmp.scrub || echo "No complaints about syriac supralinear full stop?"
-+		grep -q "job offer.xdc.x82pdf" $tmp.scrub || echo "No complaints about syriac sublinear full stop?"
-+		grep -q "job offer.xea.x93.xb8pdf" $tmp.scrub || echo "No complaints about lisu letter tone mya ti?"
-+		grep -q "job offer.*could be confused with" $tmp.scrub || echo "No complaints about confusing job offers?"
-+		grep -q "job offer.xe2.x80.xa4.xe2.x80.x8dpdf" $tmp.scrub || echo "No complaints about one dot leader with invisible space?"
++_require_systemd_is_running() {
++	_systemd_is_running || \
++		_notrun "systemd is not active"
++}
++
++# Is this unit defined, as according to systemd?
++_systemd_unit_defined() {
++	_systemd_installed || return 1
++	systemctl cat "$1" >/dev/null
++}
++
++_require_systemd_unit_defined() {
++	_require_systemd_installed
++	_systemd_unit_defined "$1" || \
++		_notrun "systemd unit \"$1\" not found"
++}
++
++# Is this unit active, as according to systemd?
++_systemd_unit_active() {
++	_systemd_installed || return 1
++	_systemd_unit_defined "$1" || return 1
++
++	test "$(systemctl is-active "$1")" = "active"
++}
++
++_require_systemd_unit_active() {
++	_require_systemd_unit_defined "$1"
++	_systemd_unit_active "$1" || \
++		_notrun "systemd unit \"$1\" not active"
++}
++
++# Find the path to a systemd unit
++_systemd_unit_path() {
++	systemctl show "$1" | grep FragmentPath= | cut -d '=' -f 2
++}
++
++# Make systemd reload itself after changing unit files or generator sources
++# such as /etc/fstab
++_systemd_reload() {
++	systemctl daemon-reload
++}
++
++# Where is the systemd runtime directory?
++_systemd_runtime_dir() {
++	echo "/run/systemd/system/"
++}
++
++# What is the status of this systemd unit?
++_systemd_unit_status() {
++	_systemd_installed || return 1
++	systemctl status "$1"
++}
+diff --git a/tests/xfs/1863 b/tests/xfs/1863
+new file mode 100755
+index 0000000000..7d41092e2e
+--- /dev/null
++++ b/tests/xfs/1863
+@@ -0,0 +1,140 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2023-2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1863
++#
++# Check that the online fsck systemd services find and check the scratch
++# filesystem, and that we can read the health reports after the fact.  IOWs,
++# this is basic testing for the systemd background services.
++#
++. ./common/preamble
++_begin_fstest auto scrub
++
++_cleanup()
++{
++	cd /
++	if [ -n "$new_svcfile" ]; then
++		rm -f "$new_svcfile"
++		systemctl daemon-reload
 +	fi
++	rm -r -f $tmp.*
++}
 +
- 	echo "Actual xfs_scrub output:" >> $seqres.full
- 	cat $tmp.scrub >> $seqres.full
- fi
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++. ./common/systemd
++
++_require_systemd_is_running
++_require_systemd_unit_defined xfs_scrub@.service
++_require_systemd_unit_defined xfs_scrub_all.service
++_require_scratch
++_require_scrub
++_require_xfs_io_command "scrub"
++_require_xfs_spaceman_command "health"
++_require_populate_commands
++
++# xfs_scrub_all requires the python3-dbus library, which is a separate package
++_require_command $PYTHON3_PROG python3
++$PYTHON3_PROG -c 'import dbus' &>/dev/null || \
++	_notrun "test requires python3-dbus"
++
++_require_command $ATTR_PROG "attr"
++
++_xfs_skip_online_rebuild
++_xfs_skip_offline_rebuild
++
++# Back when xfs_scrub was really experimental, the systemd service definitions
++# contained various bugs that resulted in weird problems such as logging
++# messages sometimes dropping slashes from paths, and the xfs_scrub@ service
++# being logged as completing long after the process actually stopped.  These
++# problems were all fixed by the time the --auto-media-scan-stamp option was
++# added to xfs_scrub_all, so turn off this test for such old codebases.
++scruball_exe="$(systemctl cat xfs_scrub_all | grep '^ExecStart=' | \
++	sed -e 's/ExecStart=//g' -e 's/ .*$//g')"
++grep -q -- '--auto-media-scan-stamp' "$scruball_exe" || \
++	_notrun "xfs_scrub service too old, skipping test"
++
++orig_svcfile="$(_systemd_unit_path "xfs_scrub_all.service")"
++test -f "$orig_svcfile" || \
++	_notrun "cannot find xfs_scrub_all service file"
++
++new_svcdir="$(_systemd_runtime_dir)"
++test -d "$new_svcdir" || \
++	_notrun "cannot find runtime systemd service dir"
++
++# We need to make some local mods to the xfs_scrub_all service definition
++# so we fork it and create a new service just for this test.
++new_scruball_svc="xfs_scrub_all_fstest.service"
++_systemd_unit_status "$new_scruball_svc" 2>&1 | \
++	grep -E -q '(could not be found|Loaded: not-found)' || \
++	_notrun "systemd service \"$new_scruball_svc\" found, will not mess with this"
++
++find_scrub_trace() {
++	local path="$1"
++
++	$XFS_SPACEMAN_PROG -c "health" "$path" | grep -q ": ok$" || \
++		echo "cannot find evidence that $path was scrubbed"
++}
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++_scratch_mount
++
++# Configure the filesystem for background checks of the filesystem.
++$ATTR_PROG -R -s xfs:autofsck -V check $SCRATCH_MNT >> $seqres.full
++
++run_scrub_service() {
++	systemctl start --wait "$1"
++
++	# Sometimes systemctl start --wait returns early due to some external
++	# event, such as somebody else reloading the daemon, which closes the
++	# socket.  The CLI has no way to resume waiting for the service once
++	# the connection breaks, so we'll pgrep for up to 30 seconds until
++	# there are no xfs_scrub processes running on the system.
++	for ((i = 0; i < 30; i++)); do
++		pgrep -f 'xfs_scrub*' > /dev/null 2>&1 || break
++		sleep 1
++	done
++}
++
++echo "Scrub Scratch FS"
++scratch_path=$(systemd-escape --path "$SCRATCH_MNT")
++run_scrub_service xfs_scrub@$scratch_path
++find_scrub_trace "$SCRATCH_MNT"
++
++# Remove the xfs_scrub_all media scan stamp directory (if specified) because we
++# want to leave the regular system's stamp file alone.
++mkdir -p $tmp/stamp
++
++new_svcfile="$new_svcdir/$new_scruball_svc"
++cp "$orig_svcfile" "$new_svcfile"
++
++execstart="$(grep '^ExecStart=' $new_svcfile | \
++	sed -e 's/--auto-media-scan-interval[[:space:]]*[0-9]*[a-z]*//g')"
++sed -e '/ExecStart=/d' -e '/BindPaths=/d' -i $new_svcfile
++cat >> "$new_svcfile" << ENDL
++[Service]
++$execstart
++ENDL
++_systemd_reload
++
++# Emit the results of our editing to the full log.
++systemctl cat "$new_scruball_svc" >> $seqres.full
++
++# Cycle mounts to clear all the incore CHECKED bits.
++_scratch_cycle_mount
++
++echo "Scrub Everything"
++run_scrub_service "$new_scruball_svc"
++
++sleep 2 # give systemd a chance to tear down the service container mount tree
++
++find_scrub_trace "$SCRATCH_MNT"
++
++echo "Scrub Done" | tee -a $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1863.out b/tests/xfs/1863.out
+new file mode 100644
+index 0000000000..27c2d79a63
+--- /dev/null
++++ b/tests/xfs/1863.out
+@@ -0,0 +1,5 @@
++QA output created by 1863
++Format and populate
++Scrub Scratch FS
++Scrub Everything
++Scrub Done
 
