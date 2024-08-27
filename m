@@ -1,73 +1,72 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 692FD19E7FB
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 09:40:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414F619DF70
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 09:45:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724751620; cv=none; b=F2ZRU8ibxHSg36M3fBAKQ3eIFXA9DWr3Ruj2SKwg01EwQNHIKR6gpITh6jXuiAwvxKA8GNO5Nbh25kBmvX7ATMxPJiu2J5oQOH3n11YkEnSD1pYLByElPHSP4BNQEWNF1tQf+/4ttrtgsRgn3+vS2B3HDV0hk0oK2jNw6ADrbgQ=
+	t=1724751902; cv=none; b=kI3mV8ZeSze30TcKAibomNxTMQigi15YIwnQbIqBeYpbsjsFqs+1v6c0LXopk7D9vn+fk1hyBE98/klxIHmTgbnM/UoNuKizK8EtyCXEAjjhN7pigxtUQDA9Xo9SIhe+dgZ6FOJ6ddscCIypR8bB4FeXy3hKVZwl2HlXx+Irc7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724751620; c=relaxed/simple;
-	bh=5RpDWrC/pkF2adYaWnrjtlyhUK4+HuGfyUikbOi6kOM=;
+	s=arc-20240116; t=1724751902; c=relaxed/simple;
+	bh=HR9kEdFGs5k5ryFzh1lLm0d2p/NzdCuiRI8wXS9GJN8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ruTI7yIbmBWZOgFkwSw8TqyE7eBbIVjwtORqboGCU8tfdMM1cInsRBWqE1fHnhofLaa3Ex++pKpMlZEc/bE/3k3FHdX9aZMZiH9CeiuNKf+qvJBqp3vycJrcn+BpNEZQ/ax4ga2ulnVCSgk5vXNvszrmE87g2nelSJm9J+6ETLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=2/g9yqqB; arc=none smtp.client-ip=209.85.216.51
+	 Content-Type:Content-Disposition:In-Reply-To; b=bzqWjPmgE+O0L/pbE08BYkywU8t3+1yf70iTA+kzNHV1kiaGQZlXBezlJoXn2FePVvDC5ZoCPna2c3vJ564gOSLtARHULf895whrw4C9PbMtosxIkfIPr0YT7qPjqRUVUmQnlErAJ9Zj3Zi+4emivqCAHm3vpABGOWXI2oH3UVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Qpj+zzUX; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="2/g9yqqB"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2d3d7a1e45fso3653302a91.3
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 02:40:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Qpj+zzUX"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2020e83eca1so49385205ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 02:45:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724751617; x=1725356417; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724751900; x=1725356700; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=l8eDOuDSob55RuerLRy/OdodY3/iGKe0TTHn0YjTdt4=;
-        b=2/g9yqqBII2ks96/FbQhq4mly+EOmORDVZ5p7uzcXV0snfr/Qofeoj4u3Bh4gzNXRt
-         SavUmaF66R45ctzlyQePiWEo37I+EKZe6dyEE4S8rbmdIJahkmwcmt3yKPDIsdoEVoQE
-         9dc/25WPjKUedMEL2ZVUHPoLx4AwGMcsuQ0jDBRERt2OA7Sc0BnpM/kXj+fcDXdJtc8z
-         NsRBqa/lwFI1aeB+c969jhQPMz/sdFJ1CvsJCxiXW3KIFvTrYiGY5A64X/R0MJEvEsBu
-         Hm3hRAUYd5KhlxNh0BbYMIO9PLV9LmPDyng90+flShtujMzqMF34PSELgakT4wZX2YA1
-         cI1Q==
+        bh=lxadA1uVmtYpE3iUCEP+EiUHlr4cvtop20T8uo5yqIA=;
+        b=Qpj+zzUXJwSWQvJZ9T794g/qc0seSIm+ve8QISc8MAqG72VvFhTmMEtegsraItuXqp
+         5K3bA9N5kX7H8QCHHGyo2FpD5lkib1yTCC5f84DLCMGR+NraUHnc1QcvTdNiLuoC18+U
+         cb6+jG90b5Nbav2H3fWoljD3qr1k2dYb0GgD9Jd5eJth8OMG2BnNzFF/Y+PdkDjsTuZh
+         BcgI1lmpZxOEyV0ytNozEiXs8cJD20U+cZxkkD8Eq8MjqyBlr5uv9fuVWYiNP8YWIK3u
+         VUk9MJaDQ2Kn+l5FJQYP54OdsqtwcBLB+TDOFeQQB9r/71PBxrqnlAO9mj90UnJJBJpj
+         XyHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724751617; x=1725356417;
+        d=1e100.net; s=20230601; t=1724751900; x=1725356700;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=l8eDOuDSob55RuerLRy/OdodY3/iGKe0TTHn0YjTdt4=;
-        b=Z+73YXvL6+uPQoyhAof868gja/TpN6U4CTDPUH0Al/Q6JfU5+yKNEKxr/B3Clc53zP
-         M4Z264ECtXR25jYe1Pdw35FQUkOXtS7EIk9hKHFzz3l1Y2sWwOWx4PmmI6YqCDn4g4U3
-         J8esSDxqmO9A3USHL/jvFwlTH2FyZt+JUKhe/C2qAiJM5lbIIyFSxdTijxSkuVt5eYrz
-         TusS6XwJVlgEzQ0wJbvKvL5btR5zf151NbWVzm0xVrQgNzJBmiZHfVhyuuDUJcAZITf/
-         2ffIu7j8XVbssKhhte0tlmAyOVKLpNLLCEOBo2ZAOUKMOfQyyL87S9ylKp3U4s9H8DkR
-         gjyA==
-X-Forwarded-Encrypted: i=1; AJvYcCXB9H8a6yCi20xxRjT3LKm/1pjuoQrO7gIElvCzhaUplVMbT0AtK77BiLI17xpsGwV5rnUa4eM99m8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxylSKmazHaneDgK4Mkw8GomG5h9BFy41P2O/hkgNFSuGLL+wHn
-	5oK/5NGTgS2tSYr27595OuLNGlMsOxYqFm39UJuo7l+JWURmxxjA1xvoBu8KK0psePsuY2OMk5C
-	W
-X-Google-Smtp-Source: AGHT+IEE8KxryI9OXz+urhauailbdjtkynlFsnRlPb9QlGayjTGRt4XR9F3LTePKK69xengGWPa/oA==
-X-Received: by 2002:a17:90a:1c08:b0:2d3:cc7e:c418 with SMTP id 98e67ed59e1d1-2d646bc9dfdmr10877197a91.15.1724751617430;
-        Tue, 27 Aug 2024 02:40:17 -0700 (PDT)
+        bh=lxadA1uVmtYpE3iUCEP+EiUHlr4cvtop20T8uo5yqIA=;
+        b=lPfZvNA96Vqun7WQ5XWvRe6JZX4XjQD/jVuHeDhqXb8WUKMdfPfDSpTOt4Whvwj+zu
+         xWleAZ6eKISz9uMQPGFW8LW3ZUpEMR3qc+U8YOd+Sx1QSnk7Oceykiii27CtyeAExW8o
+         VZm5E//yZcr9JlAs6BDkTC1MGXzot+trzaVVSAP82ywA8a0V0BrNbjLQUuKdWTF778vq
+         h248+OKN1ISwihxgqdcun4qZZB/GCSdPWMjoR867Y7bGKk+WuZn7xYL37Y7oj48Iqkyn
+         wqpZs5ezpbnfnGBIT4nZBvpf5Oqw4UM2J+I+yn9icbMObBAOA4Scis0PvuWa3ZOIBRE0
+         sJog==
+X-Forwarded-Encrypted: i=1; AJvYcCWIu+OrRF2wyXNUI1Uc7QANhuO2//7K5mCSGrL/qzYuDZF2jX8JAWn7aiyv4Gehc7qatJmdzNuRRkw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywd/8/KcsAFF4GKTWmilVHUVNF3/VP1XkmwUzIq1/n0ua4dEUJG
+	hl8/37//jROoxpZw2tEyf6a8FawTyxtJ/lViZzLyYwWbTY0VFxtLEKDh3mp0Y14=
+X-Google-Smtp-Source: AGHT+IHLeujOmJdiUuAFdpZPgjURWUIXS9vV9l7gfLpb/d733TiKoGmlA+b6i/uGb9St46C4rNbwtQ==
+X-Received: by 2002:a17:902:db0d:b0:201:df0b:2b5d with SMTP id d9443c01a7336-2039e52da6cmr111741335ad.64.1724751900470;
+        Tue, 27 Aug 2024 02:45:00 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-65.pa.nsw.optusnet.com.au. [49.179.0.65])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d613b1f0d5sm11546306a91.55.2024.08.27.02.40.16
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385ae4f62sm79531475ad.256.2024.08.27.02.45.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Aug 2024 02:40:16 -0700 (PDT)
+        Tue, 27 Aug 2024 02:45:00 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sisgQ-00EP8Y-1z;
-	Tue, 27 Aug 2024 19:40:14 +1000
-Date: Tue, 27 Aug 2024 19:40:14 +1000
+	id 1sisky-00EPKc-1o;
+	Tue, 27 Aug 2024 19:44:56 +1000
+Date: Tue, 27 Aug 2024 19:44:56 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Long Li <leo.lilong@huawei.com>, chandanbabu@kernel.org,
 	linux-xfs@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
 	yangerkun@huawei.com
-Subject: Re: [PATCH 2/5] xfs: ensuere deleting item from AIL after shutdown
- in dquot flush
-Message-ID: <Zs2e/kFGwEAXqfIq@dread.disaster.area>
+Subject: Re: [PATCH 3/5] xfs: add XFS_ITEM_UNSAFE for log item push return
+ result
+Message-ID: <Zs2gGMRZSlmndZpH@dread.disaster.area>
 References: <20240823110439.1585041-1-leo.lilong@huawei.com>
- <20240823110439.1585041-3-leo.lilong@huawei.com>
- <20240823170006.GF865349@frogsfrogsfrogs>
+ <20240823110439.1585041-4-leo.lilong@huawei.com>
+ <20240823171709.GG865349@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,94 +75,78 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240823170006.GF865349@frogsfrogsfrogs>
+In-Reply-To: <20240823171709.GG865349@frogsfrogsfrogs>
 
-On Fri, Aug 23, 2024 at 10:00:06AM -0700, Darrick J. Wong wrote:
-> On Fri, Aug 23, 2024 at 07:04:36PM +0800, Long Li wrote:
-> > Deleting items from the AIL before the log is shut down can result in the
-> > log tail moving forward in the journal on disk because log writes can still
-> > be taking place. As a result, items that have been deleted from the AIL
-> > might not be recovered during the next mount, even though they should be,
-> > as they were never written back to disk.
+On Fri, Aug 23, 2024 at 10:17:09AM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 23, 2024 at 07:04:37PM +0800, Long Li wrote:
+> > After pushing log items, the log item may have been freed, making it
+> > unsafe to access in tracepoints. This commit introduces XFS_ITEM_UNSAFE
+> > to indicate when an item might be freed during the item push operation.
 > > 
 > > Signed-off-by: Long Li <leo.lilong@huawei.com>
 > > ---
-> >  fs/xfs/xfs_dquot.c | 8 +++++++-
-> >  1 file changed, 7 insertions(+), 1 deletion(-)
+> >  fs/xfs/xfs_stats.h     | 1 +
+> >  fs/xfs/xfs_trans.h     | 1 +
+> >  fs/xfs/xfs_trans_ail.c | 7 +++++++
+> >  3 files changed, 9 insertions(+)
 > > 
-> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> > index c1b211c260a9..4cbe3db6fc32 100644
-> > --- a/fs/xfs/xfs_dquot.c
-> > +++ b/fs/xfs/xfs_dquot.c
-> > @@ -1332,9 +1332,15 @@ xfs_qm_dqflush(
-> >  	return 0;
+> > diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+> > index a61fb56ed2e6..9a7a020587cf 100644
+> > --- a/fs/xfs/xfs_stats.h
+> > +++ b/fs/xfs/xfs_stats.h
+> > @@ -86,6 +86,7 @@ struct __xfsstats {
+> >  	uint32_t		xs_push_ail_pushbuf;
+> >  	uint32_t		xs_push_ail_pinned;
+> >  	uint32_t		xs_push_ail_locked;
+> > +	uint32_t		xs_push_ail_unsafe;
+> >  	uint32_t		xs_push_ail_flushing;
+> >  	uint32_t		xs_push_ail_restarts;
+> >  	uint32_t		xs_push_ail_flush;
+> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > index f06cc0f41665..fd4f04853fe2 100644
+> > --- a/fs/xfs/xfs_trans.h
+> > +++ b/fs/xfs/xfs_trans.h
+> > @@ -117,6 +117,7 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+> >  #define XFS_ITEM_PINNED		1
+> >  #define XFS_ITEM_LOCKED		2
+> >  #define XFS_ITEM_FLUSHING	3
+> > +#define XFS_ITEM_UNSAFE		4
 > >  
-> >  out_abort:
-> > +	/*
-> > +	 * Shutdown first to stop the log before deleting items from the AIL.
-> > +	 * Deleting items from the AIL before the log is shut down can result
-> > +	 * in the log tail moving forward in the journal on disk because log
-> > +	 * writes can still be taking place.
-> > +	 */
-> > +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> >  	dqp->q_flags &= ~XFS_DQFLAG_DIRTY;
-> >  	xfs_trans_ail_delete(lip, 0);
-> > -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> >  /*
+> >   * This is the structure maintained for every active transaction.
+> > diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> > index 8ede9d099d1f..a5ab1ffb8937 100644
+> > --- a/fs/xfs/xfs_trans_ail.c
+> > +++ b/fs/xfs/xfs_trans_ail.c
+> > @@ -561,6 +561,13 @@ xfsaild_push(
+> >  
+> >  			stuck++;
+> >  			break;
+> > +		case XFS_ITEM_UNSAFE:
+> > +			/*
+> > +			 * The item may have been freed, so we can't access the
+> > +			 * log item here.
+> > +			 */
+> > +			XFS_STATS_INC(mp, xs_push_ail_unsafe);
 > 
-> I see the logic in shutting down the log before letting go of the dquot
-> log item that triggered the shutdown, but I wonder, why do we delete the
-> item from the AIL?  AFAICT the inode items don't do that on iflush
-> failure, but OTOH I couldn't figure out how the log items in the AIL get
-> deleted from the AIL after a shutdown. 
+> Aha, so this is in reaction to Dave's comment "So, yeah, these failure
+> cases need to return something different to xfsaild_push() so it knows
+> that it is unsafe to reference the log item, even for tracing purposes."
 
-Intents are removed from the AIL when the transaction containing
-the deferred intent chain is cancelled instead of committed due the
-log being shut down.
+I wish I knew when I said that and what I said it about. There's no
+pointer to previous versions of this fix in the series description -
+it's not even marked as a "v2" patchset.
 
-For everything else in the AIL, the ->iop_push method is supposed to
-do any cleanup that is necessary by failing the item push and
-running the item failure method itself.
+> What we're trying to communicate through xfsaild_push_item is that we've
+> cycled the AIL lock and possibly done something (e.g. deleting the log
+> item from the AIL) such that the lip reference might be stale.
+> 
+> Can we call this XFS_ITEM_STALEREF?  "Unsafe" is vague.
 
-For buffers, this is running IO completion as if an IO error
-occurred. Error handling sees the shutdown and removes the item from
-the AIL.
-
-For inodes, xfs_iflush_cluster() fails the inode buffer as if an IO
-error occurred, that then runs the individual inode abort code that
-removes the inode items from the AIL.
-
-For dquots, it has the ancient cleanup method that inodes used to
-have. i.e. if the dquot has been flushed to the buffer, it is attached to
-the buffer and then the buffer submission will fail and run IO
-completion with an error. If the dquot hasn't been flushed to the
-buffer because either it or the underlying dquot buffer is corrupt
-it will remove the dquot from the AIL and then shut down the
-filesystem.
-
-It's the latter case that could be an issue. It's not the same as
-the inode item case, because the tail pinning that the INODE_ALLOC
-inode item type flag causes does not happen with dquots. There is
-still a potential window where the dquot could be at the tail of the
-log, and remocing it moves the tail forward at exactly the same time
-the log tail is being sampled during a log write, and the shutdown
-doesn't happen fast enough to prevent the log write going out to
-disk.
-
-To make timing of such a race even more unlikely, it would have to
-race with a log write that contains a commit record, otherwise the
-log tail lsn in the iclog will be ignored because it wasn't
-contained within a complete checkpoint in the journal.  It's very
-unlikely that a filesystem will read a corrupt dquot from disk at
-exactly the same point in time these other journal pre-conditions
-are met, but it could happen...
-
-> Or maybe during a shutdown we just stop xfsaild and let the higher
-> level objects free the log items during reclaim?
-
-The AIL contains objects that have no references elsewhere in the
-filesystem. It must be pushed until empty during unmount after a
-shutdown to ensure that all the items in it have been pushed,
-failed, removed from the AIL and freed...
+In this case, the returned value tells the aild what the result of
+the push was. i.e. the return value is XFS_ITEM_FREED, telling the
+aild that the push has freed the item (and so the aild should not
+access it again).
 
 -Dave.
 -- 
