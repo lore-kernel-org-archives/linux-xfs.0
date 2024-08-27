@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B6E745024;
-	Tue, 27 Aug 2024 18:46:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4223C6EB64;
+	Tue, 27 Aug 2024 18:47:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724784415; cv=none; b=Xt0ZWq4/F7SELXMjmRTeHeHHE2MHqL2RR5li/ZyWspJ+SRzfK23zHmNub7ZMwD2+s5rFq8dH7NnubDjNjf74OXRrYEt64vjjNN6B0LbkObCGT92iIoBljYgvU15kv7KJgtlp3cKb4T4+l2V+0Ic5lDflx/vHw55V1ljTgU9k35g=
+	t=1724784431; cv=none; b=IwlN9WM5dsuk8/45pn7DYQxSBrWr6uAN/y2Bnz0h1MyZssxmlrpOjBso9Tql0V/Ot3VIBE98IyEoibrB8uyRW7mMcQW5Igh+XtAI0cQMjQWuDbkzxwXVPwh5R6NpBGH+nvsQpxL4r8q3+M7btoxwJXuuhQQhQDntGR7yRuTtOV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724784415; c=relaxed/simple;
-	bh=GV02vmXBWEfvxZWz9UG6iKbf9KtxLjRxvba4U6cdGJY=;
+	s=arc-20240116; t=1724784431; c=relaxed/simple;
+	bh=5MBCroX2+T62yuTYZGeEPsseTBXsnseDLUmjN9H1Dek=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CIsnHLzpoOyWAIJbsZMzCPwqSVx4SDAVKzBvblSz/N7WDzjylGw5I7U6N3E8sR9c2DdqvrcxNqHzwpnSOH+5jC97DE6zTQJwPURYD8L1xV8hddHz1nMPmx27JKo2paPYOl5syTFptxMi7+BkeN/fEA9/NybWW5zhZdw8FxSq0iI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ig9s9RzJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hc3R5Zy/mqc4oIF05ijKi0hEcJphl1VyzO1ZYQVxMxcub/6dh0ctCALmux7xGfw6/ElK0X+0tVqIe+6xCi8NONhXZUoh1Ih/VJEXfcJor/B1UpcfmkP3zrIEv2eHF8yvWHqtOkjuEGt98zLgt58U8sMMaNBF3Mi8bt2LyWzUBSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WwIgkMQr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ig9s9RzJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55DF6C4FEA1;
-	Tue, 27 Aug 2024 18:46:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WwIgkMQr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11F42C4FEAB;
+	Tue, 27 Aug 2024 18:47:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724784415;
-	bh=GV02vmXBWEfvxZWz9UG6iKbf9KtxLjRxvba4U6cdGJY=;
+	s=k20201202; t=1724784431;
+	bh=5MBCroX2+T62yuTYZGeEPsseTBXsnseDLUmjN9H1Dek=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ig9s9RzJetMNpXe/hvTHdo3ulwsSr73mzGhIRlRLN/9SFvG3sGPGHpdxf2DdxnvRB
-	 ppWsK2BZjy+lHBHzFrE1de6p2xstR1zQcR119s/orNm3hNHesUiqR6AfCsGERp+7iU
-	 YrjLQd46uKp07A0mEHVNcl6OGaZwcawn9SMP0h17MhnR/3LrA9w8d0VOL+4RKOa9qS
-	 QSkoQyh4mhbQfQoaN7LG1fd3+2glYXipuBZ44lVoq/N+Xt0EToMTvWXYpO7NrHz6uz
-	 Xi2PB8jt7+qXpgUaDr/jS5Ua/Tv5QmCByiaowkhfNlMFcG2Hhy4Pv1I4Isqn0UistP
-	 YCcCx7zWPihsA==
-Date: Tue, 27 Aug 2024 11:46:54 -0700
-Subject: [PATCH 1/2] xfs: refactor statfs field extraction
+	b=WwIgkMQrKMJ0pm1+ynWa3ttsBx6lZL0ol58vj0xoaGVQvXRCzPl7P0AFvqkhhhxOW
+	 4auVHcnoGZHdMqeFKfzOif94iKl0Lhi3SrJuZ3PNNwrydMkP9kO1X4fq4FjbPzk2dy
+	 24ACkYKeDI+du17FyEA0/45RM0OGkaxx+ETNIIoYj/7KhMCy5bt/pbLxgstM+TmEaV
+	 kVY1fMEUqZa2wUGAmxcbKg+DdEnUHMZ2VHgANto4lD/SVVz9IN5KIAtW6bJj6O04Nz
+	 wFuVUtldTcd6EMdqArTO7Bz2hqr6NTeeUzwpAI192pyguYcuwV9wld7u5bEGiLD/Hs
+	 fIWRiSi5b74CQ==
+Date: Tue, 27 Aug 2024 11:47:10 -0700
+Subject: [PATCH 2/2] common/xfs: FITRIM now supports realtime volumes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <172478423399.2039664.15689426615151903933.stgit@frogsfrogsfrogs>
+Message-ID: <172478423415.2039664.6807634599087596331.stgit@frogsfrogsfrogs>
 In-Reply-To: <172478423382.2039664.3766932721854273834.stgit@frogsfrogsfrogs>
 References: <172478423382.2039664.3766932721854273834.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,96 +46,64 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Prepare for the next patch by refactoring the open-coded bits that call
-statfs on a mounted xfs filesystem to extract a status field.
+XFS now supports FITRIM to the realtime volume.  Detect this support and
+enable it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/xfs    |    6 ++++++
- tests/xfs/176 |    4 ++--
- tests/xfs/187 |    6 +++---
- tests/xfs/541 |    6 ++----
- 4 files changed, 13 insertions(+), 9 deletions(-)
+ common/xfs |   40 ++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 38 insertions(+), 2 deletions(-)
 
 
 diff --git a/common/xfs b/common/xfs
-index 6370f17523..7ee6fbec84 100644
+index 7ee6fbec84..de557ebd90 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -1818,3 +1818,9 @@ _require_xfs_parent()
- 		|| _notrun "kernel does not support parent pointers"
- 	_scratch_unmount
- }
+@@ -1777,8 +1777,44 @@ _require_xfs_scratch_atomicswap()
+ # of 1024 byte blocks.
+ _xfs_discard_max_offset_kb()
+ {
+-	$XFS_IO_PROG -c 'statfs' "$1" | \
+-		awk '{g[$1] = $3} END {print (g["geom.bsize"] * g["geom.datablocks"] / 1024)}'
++	local statfs
 +
-+# Extract a statfs attribute of the given mounted XFS filesystem.
-+_xfs_statfs_field()
-+{
-+	$XFS_IO_PROG -c 'statfs' "$1" | grep -E "$2" | cut -d ' ' -f 3
-+}
-diff --git a/tests/xfs/176 b/tests/xfs/176
-index db7001a5b9..8d58590fd9 100755
---- a/tests/xfs/176
-+++ b/tests/xfs/176
-@@ -47,7 +47,7 @@ fi
++	# Use awk to read the statfs output for the XFS filesystem, compute
++	# the two possible FITRIM offset maximums, and then use some horrid
++	# bash magic to import the five numbers as an indexed array.  There's
++	# no better way to do this in bash since you can't readarray to build
++	# an associative array.  Elements are as follows:
++	#
++	# 0: fsblock size in bytes
++	# 1: Data volume size in fsblocks.
++	# 2: Realtime volume size in fsblocks.
++	# 3: Max FITRIM offset if we can only trim the data volume
++	# 4: Max FITRIM offset if we can trim the data and rt volumes
++	readarray -t statfs < <($XFS_IO_PROG -c 'statfs' "$1" | \
++		awk '{g[$1] = $3} END {printf("%d\n%d\n%d\n%d\n%d\n",
++			g["geom.bsize"],
++			g["geom.datablocks"],
++			g["geom.rtblocks"],
++			g["geom.bsize"] * g["geom.datablocks"] / 1024,
++			g["geom.bsize"] * (g["geom.datablocks"] + g["geom.rtblocks"]) / 1024);}')
++
++	# If the kernel supports discarding the realtime volume, then it will
++	# not reject a FITRIM for fsblock dblks+1, even if the len/minlen
++	# arguments are absurd.
++	if [ "${statfs[2]}" -gt 0 ]; then
++		if $FSTRIM_PROG -o "$((statfs[0] * statfs[1]))" \
++				-l "${statfs[0]}" \
++				-m "$((statfs[0] * 2))" "$1" &>/dev/null; then
++			# The kernel supports discarding the rt volume, so
++			# print out the second answer from above.
++			echo "${statfs[4]}"
++			return
++		fi
++	fi
++
++	# The kernel does not support discarding the rt volume or there is no
++	# rt volume.  Print out the first answer from above.
++	echo "${statfs[3]}"
+ }
  
- _scratch_mount
- _xfs_force_bdev data $SCRATCH_MNT
--old_dblocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.datablocks)
-+old_dblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.datablocks)
- 
- mkdir $SCRATCH_MNT/save/ $SCRATCH_MNT/urk/
- sino=$(stat -c '%i' $SCRATCH_MNT/save)
-@@ -170,7 +170,7 @@ for ((ino = target_ino; ino >= icluster_ino; ino--)); do
- 	res=$?
- 
- 	# Make sure shrink did not work
--	new_dblocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.datablocks)
-+	new_dblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.datablocks)
- 	if [ "$new_dblocks" != "$old_dblocks" ]; then
- 		echo "should not have shrank $old_dblocks -> $new_dblocks"
- 		break
-diff --git a/tests/xfs/187 b/tests/xfs/187
-index 04ff9a81b6..56a9adc164 100755
---- a/tests/xfs/187
-+++ b/tests/xfs/187
-@@ -77,8 +77,8 @@ _xfs_force_bdev realtime $SCRATCH_MNT
- 
- # Set the extent size hint larger than the realtime extent size.  This is
- # necessary to exercise the minlen constraints on the realtime allocator.
--fsbsize=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.bsize | awk '{print $3}')
--rtextsize_blks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.rtextsize | awk '{print $3}')
-+fsbsize=$(_xfs_statfs_field "$SCRATCH_MNT" geom.bsize)
-+rtextsize_blks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtextsize)
- extsize=$((2 * rtextsize_blks * fsbsize))
- 
- echo "rtextsize_blks=$rtextsize_blks extsize=$extsize" >> $seqres.full
-@@ -133,7 +133,7 @@ punch_off=$((bigfile_sz - frag_sz))
- $here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / fsbsize)) -i $((rtextsize_blks * 2)) -s $rtextsize_blks
- 
- # Make sure we have some free rtextents.
--free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep statfs.f_bavail | awk '{print $3}')
-+free_rtx=$(_xfs_statfs_field "$SCRATCH_MNT" statfs.f_bavail)
- if [ $free_rtx -eq 0 ]; then
- 	echo "Expected fragmented free rt space, found none."
- fi
-diff --git a/tests/xfs/541 b/tests/xfs/541
-index f18b801cfe..518373fa89 100755
---- a/tests/xfs/541
-+++ b/tests/xfs/541
-@@ -81,13 +81,11 @@ test $grow_extszhint -eq 0 || \
- 	echo "expected post-grow extszhint 0, got $grow_extszhint"
- 
- # Check that we now have rt extents.
--rtextents=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | \
--	grep 'geom.rtextents' | cut -d ' ' -f 3)
-+rtextents=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtextents)
- test $rtextents -gt 0 || echo "expected rtextents > 0"
- 
- # Check the new rt extent size.
--after_rtextsz_blocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | \
--	grep 'geom.rtextsize' | cut -d ' ' -f 3)
-+after_rtextsz_blocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtextsize)
- test $after_rtextsz_blocks -eq $new_rtextsz_blocks || \
- 	echo "expected rtextsize $new_rtextsz_blocks, got $after_rtextsz_blocks"
- 
+ # check if mkfs and the kernel support nocrc (v4) file systems
 
