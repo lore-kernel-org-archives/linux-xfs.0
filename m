@@ -1,49 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA22F171AF
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 05:18:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDB634AEEA
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 05:19:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724735927; cv=none; b=OvcMbvYHI0CEB5wziCU+RJj794tKgb+ni7Ho1wELIJGsOYoZVzHwNemv86LWtD0AJ4bFP9BTPn99aajsxzF2H+7P5pNk23XMu3yD0HdtHxjDw3HnCyPCDD6LuJAyqV86KiZT9+hZKbC+bcn6BieneWaHQMdNJHPSDqpu5noShtM=
+	t=1724735960; cv=none; b=ThC9p+lCtysHojtMZg0WeVzl+TK9CXPR2aKzUzXuiksRP4+tuY2Vkkv6fpetIMXiMjIK6Vgnq1hnhHEjoVOkK7Jr2TVF0Sf19iG7/VUpMtPdpKCiN70KCdE5LGY0aXlk7YoW427yVxWtyNWCcF0a6Gpd/3wGpbHHdy5D7LdBy1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724735927; c=relaxed/simple;
-	bh=iuhENakpoJqoxLBZdI4r4RD8iLSrSq00yYmrUIf7DH8=;
+	s=arc-20240116; t=1724735960; c=relaxed/simple;
+	bh=yxzZXHio2Z1dvbBURvGL794QAzmHpK3hgRuNReVooN4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C6MhiMVrUuawAI0cX0+ca0rROW+tBUNUvSxfNd8+EkwQPlR35t08YIS/HsHVXpaJc82ZXiB3dAUuIWxXsAvEpKkMbwS0b7lLX+Z0aM40nmEfGf50NRRg068DxIPbSJg2dw+UZs2yDENLYGdYf88ifNs1G2f0EYbfWjsgVJ4Zbe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zCPWtasb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=cali4dMJijXuErAznmx+43uCz1vK3UUPQT8nzgOzqfpRF/sSTv2ZaZp1pLrDQs3l8hR00S/w9UDOqgh9nzpPMGMYJJIsDnUbX381xUf1defS+WdlnP2G53JtJujDPZxUZQSuh3dC+VKUXLR0ftFm0YGp71oOZCmqCNvBqlBMqEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hYVdTDsc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zCPWtasb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=+P+UbMogebRzRtZA9m+fPseeXIGaZ8IhyvOo+TfWX18=; b=zCPWtasbmiu2IG+qWqpjSjWKwa
-	RLevpNfWC1zoHqQVlTyK8/EiypBOH9hdaI2LtXv86nJZ8s0Bllt1My/UIUpAQe3T+Nmky+xNBPwsV
-	SesQp1uVKdmhCoUIUtdphQDenc87+qMyLp3KHEAU5KY1onGWuff+Vy0TklpBshq+dD0Qn7x6U4YO4
-	sfenO0OREcVPYSwcQhYbHb9yuMvVIivDF2s4zG9oI5BnnARReM4LQbupDWwjN+rdM2NpEV9D9JJMi
-	LnG4VfB0C4bvFxkX8LFcnEVbJE6Pi0HG6bQ4ysOqId5xVV2GEEJZedETkGilfK404UvvymGcZHGa1
-	qKBVoUpQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1siobN-00000009qV3-0Yhh;
-	Tue, 27 Aug 2024 05:18:45 +0000
-Date: Mon, 26 Aug 2024 22:18:45 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Dave Chinner <david@fromorbit.com>, hch@lst.de,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hYVdTDsc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57952C8B7A3;
+	Tue, 27 Aug 2024 05:19:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724735960;
+	bh=yxzZXHio2Z1dvbBURvGL794QAzmHpK3hgRuNReVooN4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hYVdTDsc9lCgGqw0QPR7aDIahui6xq4ZAmz0Yo/j4tnVWOwjsjJj66o/ZpIbraCmU
+	 XqakwGqKGWjaV8S45SjmWcM1upS+omSY+6Ii007h6BAzFJPtaoZdAUlfWkTCJF/hNG
+	 JWO6ypXz2HiSJm3Yxd45HIfsigb/3tYjnnYorHn+yHcf8dhpZZLGMJxOkgQI8GJO3R
+	 98gcwDNckeDmj/q0K9RMTBu7xmnZfVBKcsTg4Akb9uzcWEZekgcQmXv8Cv6wlZNxEy
+	 tE4RV89q0Ut0KgSHXnZ4EhjsUad8SXekyF7dBd+0g1mT/ScbQUa42R7yvfZH7+pXli
+	 PgR2/NYsZmEzw==
+Date: Mon, 26 Aug 2024 22:19:19 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, hch@lst.de,
 	linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 11/24] xfs: create incore realtime group structures
-Message-ID: <Zs1htb6lliBEWZW9@infradead.org>
+Message-ID: <20240827051919.GK865349@frogsfrogsfrogs>
 References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
  <172437087433.59588.10419191726395528458.stgit@frogsfrogsfrogs>
  <ZsvEmInHRA6GVuz3@dread.disaster.area>
  <20240826191404.GC865349@frogsfrogsfrogs>
- <Zs0kfidzTGC7KACX@dread.disaster.area>
- <Zs1YOAdBx9pRaynK@infradead.org>
- <20240827051719.GJ865349@frogsfrogsfrogs>
+ <Zs1Vl38sptZSkvXk@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,52 +46,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240827051719.GJ865349@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Zs1Vl38sptZSkvXk@infradead.org>
 
-On Mon, Aug 26, 2024 at 10:17:19PM -0700, Darrick J. Wong wrote:
-> > allocator.
-> > 
-> > > /*
-> > >  * xfs_group - a contiguous 32 bit block address space group
-> > >  */
-> > > struct xfs_group {
-> > > 	struct xarray		xarr;
-> > > 	u32			num_groups;
-> > > };
-> > > 
-> > > struct xfs_group_item {
-> > > 	struct xfs_group	*group; /* so put/rele don't need any other context */
-> > > 	u32			gno;
-> > > 	atomic_t		passive_refs;
-> > > 	atomic_t		active_refs;
-> > 
-> > What is the point of splitting the group and group_item?  This isn't
-> > done in the current perag struture either.
+On Mon, Aug 26, 2024 at 09:27:03PM -0700, Christoph Hellwig wrote:
+> On Mon, Aug 26, 2024 at 12:14:04PM -0700, Darrick J. Wong wrote:
+> > They're not sparse like fsbnos on the data device, they're laid end to
+> > end.  IOWs, it's a straight linear translation.  If you have an rtgroup
+> > that is 50 blocks long, then rtgroup 1 starts at (50 * blocksize).
 > 
-> I think xfs_group encapsulates/replaces the radix tree root in struct
-> xfs_mount, and the xarray inside it points to xfs_group_item objects.
+> Except with the zone capacity features on ZNS devices, where they
+> already are sparse.  But that's like 200 patches away from the state
+> here..
 
-Ahh.  So it's now a xfs_group structure, but a xfs_groups one,
-with the group item really being xfs_group.
+Heh.
 
-> 
-> > > Hence I'm wondering if we should actually cap the maximum number of
-> > > rtgroups. WE're just about at BS > PS, so with a 64k block size a
-> > > single rtgroup can index 2^32 * 2^16 bytes which puts individual
-> > > rtgs at 256TB in size. Unless there are use cases for rtgroup sizes
-> > > smaller than a few GBs, I just don't see the need for support
-> > > theoretical maximum counts on tiny block size filesystems. Thirty
-> > > thousand rtgs at 256TB per rtg puts us at 64 bit device size limits,
-> > > and we hit those limits on 4kB block sizes at around 500,000 rtgs.
-> > > 
-> > > So do we need to support millions of rtgs? I'd say no....
+> > group 0 on a !rtg filesystem can be 64-bits in block/rt count.  This is
+> > a /very/ annoying pain point -- if you actually created such a
+> > filesystem it actually would never work because the rtsummary file would
+> > be created undersized due to an integer overflow, but the verifiers
+> > never checked any of that, and due to the same underflow the rtallocator
+> > would search the wrong places and (eventually) fall back to a dumb
+> > linear scan.
 > > 
-> > As said before hardware is having a word with with the 256GB hardware
-> > zone size in SMR HDDs.  I hope that size will eventually increase, but
-> > I would not bet my house on it.
+> > Soooooo this is an obnoxious usecase (broken large !rtg filesystems)
+> > that we can't just drop, though I'm pretty sure there aren't any systems
+> > in the wild.
 > 
-> Wait, 256 *gigabytes*?  That wouldn't be such a bad minimum.
+> So, do we really need to support that?  I think we've always supported
+> a 64-bit block count, so we'll have to support that, but if a > 32bit
+> extent count was always broken maybe we should simply stop to pretend
+> to support it?
 
-Sorry, MB.  My units really suck this morning :)
+I'm in favor of that.  The rextslog computation only got fixed in 6.8,
+which means none of the LTS kernels really have it yet.  And the ones
+that do are migrating verrrrry slowly due to the global rtbmp lock.
 
+> > > What's the maximum valid rtg number? We're not ever going to be
+> > > supporting 2^32 - 2 rtgs, so what is a realistic maximum we can cap
+> > > this at and validate it at?
+> > 
+> > /me shrugs -- the smallest AG size on the data device is 16M, which
+> > technically speaking means that one /could/ format 2^(63-24) groups,
+> > or order 39.
+> > 
+> > Realistically with the maximum rtgroup size of 2^31 blocks, we probably
+> > only need 2^(63 - (31 + 10)) = 2^22 rtgroups max on a 1k fsblock fs.
+> 
+> Note that with zoned file system later on we are bound by hardware
+> size.  SMR HDDs by convention some with 256MB zones.  This is a bit
+> on the small side, but grouping multiple of those into a RT group
+> would be a major pain.  I hope the hardware size will eventually
+> increase, maybe when they move to 3-digit TB capcity points.
+
+<nod>
+
+--D
