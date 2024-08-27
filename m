@@ -1,74 +1,69 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1CFB1D31A2
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 21:52:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FEB01F943
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 21:53:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724795574; cv=none; b=vDDl2wJd7re4R1W1CqHxvCa0KWsNpx3uqtUEGf8x5Od34gRfJDLqTGqR3+xup78gq30aO8NanTsdjJmZUklj8YJwKgCYsCpjI+pKsEB49itHLYkMcqGbRtAMfkwnCzp+3So7Cv3wWgXpt34uLNVfxW0TzFWEz95+FRccNGBheKw=
+	t=1724795619; cv=none; b=DrKXLfdnt9zQBzubEJdYL2JZEiXzvxzAV9Y923nhqdqRpN9nk0UvomqttSnPN2D4LtkvoYiCbXSa3+nh3Uc0OJLhQQySaczUzAbi09dRlMlG5PGq+matOP0/NBvYYHQ8kP/juqp8Iu2xSo0Q6e1bM1+UMSjRi63YVpAL22y1jPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724795574; c=relaxed/simple;
-	bh=F9eJaJPfslQsABbYMPlicWG8jBGdvuszUyCNXzYbdWE=;
+	s=arc-20240116; t=1724795619; c=relaxed/simple;
+	bh=Ey4VKVEkUlKyt642AGBYtmTsjIW0ykZherpMZikXl3g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vbe8PZKaUWer+MPuxwC/tFdcCSmpTvNvBxy1jgNdVKGyVDbEaTGjoG6SSmfznmtS2QEo1zzdGlFkY1322xO8yQFgLW7IwDTkvBKKVMKTB36wfQCBH1RKgEawonZx6usMYrXUERC044jFH9usjvkhVp/d4NHt0YGE1GLzJE/kLTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=BwULrtU7; arc=none smtp.client-ip=209.85.214.173
+	 Content-Type:Content-Disposition:In-Reply-To; b=sDA5ORBw0dUtuvgMd+AQxaxhz9NsDug8Hm+Kjdedg8Hy/qPM4CTwyWr8GiLMFF+1pe6MsuTkzIyfjqDujDFY5U6Xl0UU5BEFHAhD/EfZPzi1oSkKD96kGL+ALZuOvQ0J5WvwatvdLAxC6LQNkDzF08N1B2GeSxtCr/tHvZh6gfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=jo6uigLO; arc=none smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="BwULrtU7"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2020b730049so47328365ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 14:52:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="jo6uigLO"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1fec34f94abso62085025ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 14:53:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724795572; x=1725400372; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724795616; x=1725400416; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/M1fHpURSwwBqo8r/1p5kI4hufw1gAagcu4MW2tN+LE=;
-        b=BwULrtU7VbjpwONFxW0lzoG+C60UAnjBOreHr7BHilW5qW05aRraqAHcoLncAa0Eyo
-         Z2pYDRrtfJVusbU+XY2mAOjJXIeevLdy1vpZ/0crXmapaY0jmtRpm9Gyh87tqncsz1H5
-         aldn1JtguK8fQEpvJ2M9fZ3300EcZHAefl2OmUh3ubQ0PMsa88wiRQc+oJ9rHo5lLwTp
-         dC/YwYTScZTJ64PKQ63CAK7j3Z2eqcBDKt7rNGa4c10dSfwQprsmWNkOpZaBOpCO+FhY
-         WaNiKMS5btEZhUWDLIrV8GYYUOFHcYfeILO1AfE2QEcSKhvmyQUDdekQmLOQAYJgq3rf
-         WGfQ==
+        bh=+Wo/NrKtlpvDPaRhlKS48B4Dwtb35qtRRg3qbJru4H4=;
+        b=jo6uigLOAqAcVDZE2NKJEjfh7MyzBf6uRxg2x5lqY9ldUs9PeCdRRd4jB5Q7msz6kg
+         hukQ05hZoqrke80WqGPI7PAHjtjIMOrL04vI7pRCN8wxPfpKlNF+4N3sPa2SBEaGv+sB
+         eq9Ljzfq+97mkYzSa5eyEy5CXGD/gRby60Wjv6vw249Vgvx/agC31w4LqChzONnAH27K
+         MU5INSKukEXk7yHv0wTOdcWJedIdHyPsQv1xLR0WIJtnvkvfxrugO1vYezBsCLZyLW7G
+         OUwtO9M/9g29M8o5atuflQrJMypO96X2AZDAsVGaHB2KgOrUt90xVPQiPUrwoIjDP/ho
+         s2ow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724795572; x=1725400372;
+        d=1e100.net; s=20230601; t=1724795616; x=1725400416;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/M1fHpURSwwBqo8r/1p5kI4hufw1gAagcu4MW2tN+LE=;
-        b=vy+azy3gESeOpRQ+d02+rLSCChIFtOQni5iMWMO4D5KU/zbro8MRnsJB5cmF/7x81h
-         wA7/DpFwnoxJRWthFkUu6GtiFR4klq03KXncrfjnjm0exRVivJMq/CkXGxIXzeNk4JEv
-         TDdw8ddwtFYFhiIeIN3kFGEKTcUi9zXGJN+ipMJ1ZEe6GyzymKm0QBCFGkCyBNQOI+0Q
-         m3SXGbWpnJ1aUKEQgsgs4AzKElmQnoHNK4DGlI9gOdWyzlZyGQAgCuYxVPGd+Xxsg3lh
-         2YisBj3oc1EtFbVd+0yzWhiznfsnd3ewnYaOxpWAzhR3syksnVAP45oETO4+IZRTmIb8
-         sHng==
-X-Forwarded-Encrypted: i=1; AJvYcCUIQ5odTRfd5JxSMwVUMimocnA0l2c0TmOVjIqKv5XhuGUVx5IgTxcQjmhDZC3UHy6OLb1TrJa5cJk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzyT/vzlXp5S/bxCO4q3N1SdmO2MLbZfUwrc6IPlFIhk00/KRS4
-	ZL1ZJ0Zi36l/F05LJPaW8AKoFGdnMUkReF4nx+CnPkVclWuQ3m6Wpvea2j1kX1g=
-X-Google-Smtp-Source: AGHT+IF+l/Yr24UpWSDycaYUKuwZYtYB3TRi9xwhgAV0qI8D/eV7IxV5dcGydnob4/mD5VzxYhwKCg==
-X-Received: by 2002:a17:902:d2c6:b0:202:2cd5:2085 with SMTP id d9443c01a7336-2039e4b4b90mr124965715ad.32.1724795571871;
-        Tue, 27 Aug 2024 14:52:51 -0700 (PDT)
+        bh=+Wo/NrKtlpvDPaRhlKS48B4Dwtb35qtRRg3qbJru4H4=;
+        b=wcZloa//Dops5FfVIhXIZgtwa+ZiZoc/Y4znt+JDC4A3Sa9CmOCHu4FIkbXah+zA8z
+         iiphUg2P/tRkkKT80fXO/f+4Tc6SBHwgwCLtivMxXKmaSis19qVFPYtCJbdC9WxLsoES
+         CZjGZ6N2FgNNiFa4L+ZJU8okfPmH/FB+NJCAsgym1VCVw2SkC2tCVAlZV/C8hxYcMPuT
+         bAYpD163HmieMrTkS47R1rMS8GS6dv8Yk/W43G6Ifc4oVTtx3RAlnexHgDja+vaAOMuw
+         IkWTlTK3C2N6FHVoxAFpMQHfnJxTvKIOZ51J483QeCTElk4XXFtU2Ryo7yj0RushlBl9
+         4qaA==
+X-Forwarded-Encrypted: i=1; AJvYcCVp3QrZkd9SvNmYb8DjkwRuKRQrpjeCVQPy4unQZMzKxzoRxYJXy0jVtt/f9FM94Bbd0mjgDIWkGy0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyI+0Htin5oze4MAWG+PUjuiWAYSCNqsjC83d6yExqkVVjw8Zhn
+	1wP9ACUMmBrwN5WH2Pgvl5cnKEAasLKquwF7eMWCu8RwWlsQ9gwOVe9EPvLPj5qeFZ0GV3F4FQM
+	N
+X-Google-Smtp-Source: AGHT+IESMrWEm32vG7mHO39WRxTSD9syfWb84dp1KHANfP9t1sWdcKewLFs7VGaBrBah+hgx/n71qg==
+X-Received: by 2002:a17:903:1c8:b0:202:32f7:2326 with SMTP id d9443c01a7336-2039e479482mr197733335ad.17.1724795616419;
+        Tue, 27 Aug 2024 14:53:36 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-65.pa.nsw.optusnet.com.au. [49.179.0.65])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2038560a05dsm86950205ad.214.2024.08.27.14.52.51
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-203855664c1sm88303675ad.3.2024.08.27.14.53.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Aug 2024 14:52:51 -0700 (PDT)
+        Tue, 27 Aug 2024 14:53:36 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sj47M-00F0au-2l;
-	Wed, 28 Aug 2024 07:52:48 +1000
-Date: Wed, 28 Aug 2024 07:52:48 +1000
+	id 1sj485-00F0dA-25;
+	Wed, 28 Aug 2024 07:53:33 +1000
+Date: Wed, 28 Aug 2024 07:53:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH 3/5] xfs: add XFS_ITEM_UNSAFE for log item push return
- result
-Message-ID: <Zs5KsPEBZFkzG2Pb@dread.disaster.area>
-References: <20240823110439.1585041-1-leo.lilong@huawei.com>
- <20240823110439.1585041-4-leo.lilong@huawei.com>
- <ZslU0yvCX9pbJq8C@infradead.org>
- <Zs2jpYJHBtYqSMmD@dread.disaster.area>
- <Zs3G-ZrwPsOjuInE@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3] xfs: ensure st_blocks never goes to zero during COW
+ writes
+Message-ID: <Zs5K3fZ1kbIK6yTd@dread.disaster.area>
+References: <20240827050345.1750476-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,49 +72,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zs3G-ZrwPsOjuInE@infradead.org>
+In-Reply-To: <20240827050345.1750476-1-hch@lst.de>
 
-On Tue, Aug 27, 2024 at 05:30:49AM -0700, Christoph Hellwig wrote:
-> On Tue, Aug 27, 2024 at 08:00:05PM +1000, Dave Chinner wrote:
-> > Hence the only cases where the item might have been already removed
-> > from the AIL by the ->iop_push() are those where the push itself
-> > removes the item from the AIL. This only occurs in shutdown
-> > situations, so it's not the common case.
-> > 
-> > In which case, returning XFS_ITEM_FREED to tell the push code that
-> > it was freed and should not reference it at all is fine. We don't
-> > really even need tracing for this case because if the items can't be
-> > removed from the AIL, they will leave some other AIL trace when
-> > pushe (i.e.  they will be stuck locked, pinned or flushing and those
-> > will leave traces...)
+On Tue, Aug 27, 2024 at 07:03:21AM +0200, Christoph Hellwig wrote:
+> COW writes remove the amount overwritten either directly for delalloc
+> reservations, or in earlier deferred transactions than adding the new
+> amount back in the bmap map transaction.  This means st_blocks on an
+> inode where all data is overwritten using the COW path can temporarily
+> show a 0 st_blocks.  This can easily be reproduced with the pending
+> zoned device support where all writes use this path and trips the
+> check in generic/615, but could also happen on a reflink file without
+> that.
 > 
-> So XFS_ITEM_FREED is definitively a better name, but it still feels
-> a bit fragile that any of these shutdown paths need special handling
-> inside ->iop_push.
+> Fix this by temporarily add the pending blocks to be mapped to
+> i_delayed_blks while the item is queued.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Agreed, but I don't see an easy way to fix that right now because
-the shutdown behaviour is both item type and item state specific.
+Looks good to me.
 
-I suspect that we'd do better to have explicit shutdown processing
-of log items in the AIL (i.e. a ->iop_shutdown method) that is
-called instead of ->iop_push when the AIL detects that the
-filesystem has shut down. We can then define the exact behaviour we
-want in this case and processing does not have to be non-blocking
-for performance and latency reasons.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-If we go down that route, I think we'd want to add a
-XFS_ITEM_SHUTDOWN return value after the push code calls
-xfs_force_shutdown(). The push code does not error out the item or
-remove it from the AIL, just shuts down the fs and returns
-XFS_ITEM_SHUTDOWN.
-
-The AIL then breaks out of the push loop and submits the delwri
-buffers which will error them all out and remove them from the AIL
-because the fs is shut down. It then starts a new walk from the tail
-calling ->iop_shutdown on everything remaining in the AIL until the
-AIL is empty....
-
--Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
