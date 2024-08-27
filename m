@@ -1,109 +1,70 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FEA5146596;
-	Tue, 27 Aug 2024 06:26:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EC333A1C4;
+	Tue, 27 Aug 2024 06:51:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724739971; cv=none; b=bXbjXdz9RRbPJEu2al8rPSna9bf0OfY2Sy1NNWDeZ7wn/911wFN5KG2XgVYg9Gp5N1SGwduqNoFyhSH++W/hVbCdIuIM3B78UyzuzgfHUdhnbvT2a+7FiCo8kLM0pfY2vh66MmidPhiT7JhjFxzLJ9wRKriYKpoDATs0mPCqwoc=
+	t=1724741492; cv=none; b=rtM93CTwBAT2cftlMOVs0MBNfA1TP9v/ACmTYVzhJWjDZ169l7h8dWC3NhKFwJiGhtkQdHNS7UQ2c+xMtOn6YII6dOIckvQLkoc9gCrDq1oLtJMrJbOoJBjNYSLvRFIAFTj2tq96OeKNiSMVEVq/GvjvtWE/orpQaaUBD4POYV8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724739971; c=relaxed/simple;
-	bh=dEhTUlXeWzHxDgVzj0ci8VW5ybz/ubs17Yn9nv7EjYM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=emHdnXlghI+wz6XfLPaOcSh6WL4maDLRubsG+R/TLXSeK+kGkhR+dBFak7VS50K+HpOvy6GgG2iy+hXKVqI2rlx2xbWwh2KTeq96OS+e3wXIq+oVc5fEhOCjx7LOB9UjTCEAgiXvqoQQa9Ktk5jAjxBsrehh1gfCSI49QLIcQUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=hxOQOsCF; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
+	s=arc-20240116; t=1724741492; c=relaxed/simple;
+	bh=D2TV5kBY7UZXY+Lwn+hOQcL9j6rqj76riA0ZNX5yNU0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nelBf5mQW3f9SmLc/4q6dhDf1tm5H8fEe+Pqm1u1gHtIRJqDpXPXlbxN6eK5FsaPjwXNSdW+F/LvRYOW/R2rmxgmAGI0IKP8nJ9LiHx6yS0lKV26JW5u4rVbSOGDstO0HQj9Qv+2yrbMNnV4XiCy/QnVAjDHcrB3iOW/GSJgfxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wy7vG6Xq; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="hxOQOsCF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-	s=201702; t=1724739964;
-	bh=dEhTUlXeWzHxDgVzj0ci8VW5ybz/ubs17Yn9nv7EjYM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=hxOQOsCFKBD0D/EMlqQ2y4x3oKZAVhGs1l9NbRS2Ipjg2J/qKk9Yz4utwKQb59RS7
-	 j3LZF50BJBnI1P5Hdt/TrW/LuRB3VnKVKT14vJG4DBsL14Uq7Y3xiKpSK5UBwm3mdn
-	 CI06KAzzE+ge/aGhW3BZp3B0JsNY7cGVI1FvSD8bKgcuxmwHwt9s5x9QxhK+mB+wXS
-	 2sFb1z662ze1E/MmoRPEaztGuhGloCL+LhnGzTENyhSchPHvWQI9xaTS8jxjDkHnFW
-	 0sUk2iyNrR9dTPTYCZgaHAiCQ31VOuZvpcbKQftPdxxwh+3iOIiyfbh+52WeGaGXCg
-	 sQWUk2Q1/57AA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4WtHcD3GgXz4w2R;
-	Tue, 27 Aug 2024 16:26:04 +1000 (AEST)
-Date: Tue, 27 Aug 2024 16:26:03 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org,
- p.raghav@samsung.com, dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-next@vger.kernel.org
-Subject: Re: [PATCH] iomap: remove set_memor_ro() on zero page
-Message-ID: <20240827162603.1a86804a@canb.auug.org.au>
-In-Reply-To: <20240827055539.GL865349@frogsfrogsfrogs>
-References: <20240826212632.2098685-1-mcgrof@kernel.org>
-	<20240827055539.GL865349@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wy7vG6Xq"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=D2TV5kBY7UZXY+Lwn+hOQcL9j6rqj76riA0ZNX5yNU0=; b=wy7vG6XqoqCg7oRND/piAuTP6Q
+	CRgxtyhNB2Su+PN+jmXlwsjyEo6qKzy2KN4XJBHXi4wvJyxR6gE0gtV7f1s1oiv9z18rTXwY2Jtfd
+	vsDNUAmCLwhOOuX/seEfcxVzZaV1bNWDh803ahb4QU5RbSmFFFzeZDhyabrRHc3YH7tk/oRTISNxu
+	UOL4/6ujIO2ppcR5Oc10B6FnFyoHKAeEvp1F3wfM+A8VM9E+KB4KVP+v5A1jGEimv8F+n4wkwda2z
+	/oEyAap1cmVLNfPP0q5E3BXuRxpZDHwrHeB7ZHooP+7D16TstLf2X5kB9nWxikiMp82IwH/6PTahD
+	aUdcczjw==;
+Received: from 2a02-8389-2341-5b80-0483-5781-2c2b-8fb4.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:483:5781:2c2b:8fb4] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1siq35-0000000A68r-0GPh;
+	Tue, 27 Aug 2024 06:51:27 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Chandan Babu R <chandan.babu@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Jan Kara <jack@suse.cz>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org
+Subject: sort out the fallocate mode mess v2
+Date: Tue, 27 Aug 2024 08:50:44 +0200
+Message-ID: <20240827065123.1762168-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/WnlHn7eTQnOBUQK_4ciR3n7";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-
---Sig_/WnlHn7eTQnOBUQK_4ciR3n7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
 Hi all,
 
-On Mon, 26 Aug 2024 22:55:39 -0700 "Darrick J. Wong" <djwong@kernel.org> wr=
-ote:
->
-> On Mon, Aug 26, 2024 at 02:26:32PM -0700, Luis Chamberlain wrote:
-> > Stephen reported a boot failure on ppc power8 system where
-> > set_memor_ro() on the new zero page failed [0]. Christophe Leroy
-> > further clarifies we can't use this on on linear memory on ppc, and
-> > so instead of special casing this just for PowerPC [2] remove the
-> > call as suggested by Darrick.
-> >=20
-> > [0] https://lore.kernel.org/all/20240826175931.1989f99e@canb.auug.org.a=
-u/T/#u
-> > [1] https://lore.kernel.org/all/b0fe75b4-c1bb-47f7-a7c3-2534b31c1780@cs=
-group.eu/
-> > [2] https://lore.kernel.org/all/ZszrJkFOpiy5rCma@bombadil.infradead.org/
-> >=20
-> > Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> > Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org> =20
->=20
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+I've recently been looking at the XFS fallocate implementation and got
+upset about the messing parsing of the mode argument, which mixes modes
+and an optional flag in a really confusing way.
 
-I added this to linux-next today, and it seems to have fixed the run
-time warning, so
+This series tries to clean this up by better defining what is the
+operation mode and what is an optional flag, so that both the core
+code and file systems can use switch statements to switch on the mode.
 
-Tested-by: Stephen Rothwell <sfr@canb.auug.org.au>
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/WnlHn7eTQnOBUQK_4ciR3n7
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmbNcXsACgkQAVBC80lX
-0GwSvQf/SZMg3tJDWWeP8zI9bZsMGEGzu5BLoZ5oj8mmXcuOqPucOfCNi/tvrAh1
-OnGlCyfZzYNT8IeItMqx7z2IgUW+PFDfXJhNCRUo/HNtI35ujrDjheFJahmA+Fxx
-pupM1EiDiKOY366X0XzQ3vc1Q224QMIcWw7NgpPC2xN3xhsiV4w3d5WSyP/hDigq
-2wlrdH8H8ssAD9EM6JXfqPxvFYEoTJzCPj4Nl7/o+/c15SRfGjwXFkd3hbUE2eif
-fXlSIFoPaRIwQDvff0jipIQG3ArRIRa0UsyiBvnmdGalXLgG9WoHKrlUzR+a/IU3
-+xa+rMHLb9LGTX8ggF8/6S7lWyzF6A==
-=5GmB
------END PGP SIGNATURE-----
-
---Sig_/WnlHn7eTQnOBUQK_4ciR3n7--
+Changes since v1:
+ - fix the IS_APPEND check
+ - ensure space is allocated after unshare
