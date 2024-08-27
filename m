@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260C31CBE8F;
-	Tue, 27 Aug 2024 16:14:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 537921C7B6F;
+	Tue, 27 Aug 2024 16:21:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724775257; cv=none; b=u04+OKIp8Y8Vn7TJSGV+WmsFXl6WNfMgeJ0PD/E0fdNmSJjllQ3RBv6b+nceBf6S75qjUm7Uz3t+fSIMy3rAS1vdE5nTWEsKztA+QV+C6pz+QaTyrE/1sGcNdrX7+Ttxk/zUS2dtetbMDl4FnzgIsJcZWbPRzGrIWgRT9w82SCM=
+	t=1724775710; cv=none; b=an7kruJcWcBQO7MaQ7NaEU4XamKgC5Lr2LL+nKSBCeZ1eGL5nY1p+GXB+TUCo6GoI2SmPOlpkyqgjQsIPu7KcUEuAA39xIeGs9cIIMTim/xTPzy5sDmsHDUaOiKA0zF1/xL43O4MULgCv69A4u+ZjqQUG2Y2IncaD6+C1ehl23k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724775257; c=relaxed/simple;
-	bh=qGZe//87Ad+MQ9pCLChDZiENV5roGQM7RxHylRBQ/Qg=;
+	s=arc-20240116; t=1724775710; c=relaxed/simple;
+	bh=JQr73mjboc/Gct44z8kRql9dmLTPg3NLsDKBXdOnwm8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L1ecSNRlG9+OfauqRDgSqoJWvyrc+TzT/fU0PqUd4GHcXk38Ez8hUNb4RRCnCqAfCM94ltNZRv0f1Yoa9zquk/g6Ger9daUcaIYPYUCUIKDrjZ3UNdjGy/oM/9TSjST4zBXqx8tSXAGThFQiSsoKxDqFk27S5UOxBd+mU+dgdOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PEpoxL2j; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=dLfnjkJUT+iPjnR4qoheoI1bD4+vrkmy1rdFiFehGfTxPitgsKFWND1cOTGbW8vWTx0pdGzvdKUHWRWYT1fdgt98RB003JJZ/9gXEpKbCgO22UAik0qBgqBpJommosh1GUx6OpvKtvQMPpXNd4PMZeWnL8qHgTbJVhS/zp05apk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LbK0XZfZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PEpoxL2j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99D6DC5383C;
-	Tue, 27 Aug 2024 16:14:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LbK0XZfZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C379C582B2;
+	Tue, 27 Aug 2024 16:21:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724775256;
-	bh=qGZe//87Ad+MQ9pCLChDZiENV5roGQM7RxHylRBQ/Qg=;
+	s=k20201202; t=1724775710;
+	bh=JQr73mjboc/Gct44z8kRql9dmLTPg3NLsDKBXdOnwm8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PEpoxL2jbnnPi2ZZv1w0NMg5LKaWNaOfhSWlKJDlpyefl7IZYZcXA0zuC+PMHfAzO
-	 1hHzFWBIUqTJko98HBXJEP+9BR7+JKQf2i55ubErJ/Yxnjr1155coZ21yY9/+L6ZBb
-	 kiVGofNr8DmPWNlrImaqvIyvhJTHkvWNmu+9CnoJs0xcy9cThCjznUTbt26PgR/Kvz
-	 Ro/VLKWqYiOG/ua5LTVMBZ2xHGnD0urdJ00DvazpUdS+p1kyQW4Lx9kF2VILWr57WK
-	 0vDtHf39A+Moa5Sm6/BSLYbDjOjcalyePVhc+assAgkfjV5RZ/7DnC+aUxIlP3V8cr
-	 0BftsriqH4AYA==
-Date: Tue, 27 Aug 2024 09:14:16 -0700
+	b=LbK0XZfZ9eMtMU8it2cTplP+mQ7sw0UfXUmcxwMu34Fb8pYlNgF++otgsJcoUAdQg
+	 85Ais4em+TiRz8BjNN9FN+Zu7gUNYsz3VFZAI6WHUcl0isDPI8A0cn0PUIHKZTxwEE
+	 vn7Y/4nWh1QJ4IXbwWlGhKDllrSAfQrBkQ5W73x9MifG1xYbz9aTUJ9P7HflHbUItG
+	 7F8RRaJxMePdOQwve1okTJaQx7dt5JYm3fV0J937G2kg03KVaz3TKlS05Wwy9nldpB
+	 OR7YtssyYw0nt9J7egA6TzqtUReeQbHu8xhGiObRLolkpKVRXnfzEjlbyw+4e6qLUD
+	 LvKm2FmiZPZFQ==
+Date: Tue, 27 Aug 2024 09:21:49 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 01/10] iomap: handle a post-direct I/O invalidate race in
- iomap_write_delalloc_release
-Message-ID: <20240827161416.GV865349@frogsfrogsfrogs>
+Subject: Re: [PATCH 02/10] iomap: improve shared block detection in
+ iomap_unshare_iter
+Message-ID: <20240827162149.GW865349@frogsfrogsfrogs>
 References: <20240827051028.1751933-1-hch@lst.de>
- <20240827051028.1751933-2-hch@lst.de>
+ <20240827051028.1751933-3-hch@lst.de>
+ <20240827054424.GM6043@frogsfrogsfrogs>
+ <20240827054757.GA11067@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,57 +47,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240827051028.1751933-2-hch@lst.de>
+In-Reply-To: <20240827054757.GA11067@lst.de>
 
-On Tue, Aug 27, 2024 at 07:09:48AM +0200, Christoph Hellwig wrote:
-> When direct I/O completions invalidates the page cache it holds neither the
-> i_rwsem nor the invalidate_lock so it can be racing with
-> iomap_write_delalloc_release.  If the search for the end of the region that
-> contains data returns the start offset we hit such a race and just need to
-> look for the end of the newly created hole instead.
+On Tue, Aug 27, 2024 at 07:47:57AM +0200, Christoph Hellwig wrote:
+> On Mon, Aug 26, 2024 at 10:44:24PM -0700, Darrick J. Wong wrote:
+> > Maybe we should rename it then?
+> > 
+> > IOMAP_F_OUT_OF_PLACE_WRITE.
+> > 
+> > Yuck.
+> > 
+> > IOMAP_F_ELSEWHERE
+> > 
+> > Not much better.  Maybe just add a comment that "IOMAP_F_SHARED" really
+> > just means an out of place write (aka srcmap is not just a hole).
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/buffered-io.c | 10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
+> Heh.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index f420c53d86acc5..69a931de1979b9 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1241,7 +1241,15 @@ static int iomap_write_delalloc_release(struct inode *inode,
->  			error = data_end;
->  			goto out_unlock;
->  		}
-> -		WARN_ON_ONCE(data_end <= start_byte);
-> +
-> +		/*
-> +		 * If we race with post-direct I/O invalidation of the page cache,
-> +		 * there might be no data left at start_byte.
-> +		 */
-> +		if (data_end == start_byte)
-> +			continue;
+> For writes it usually means out of place write, but for reporting
+> it gets translated to the FIEMAP_EXTENT_SHARED flag or is used to
+> reject swapon.  And the there is black magic in DAX.
 
-Is there any chance that we could get stuck in a loop here?  I
-think it's the case that if SEEK_HOLE returns data_end == start_byte,
-then the next time through the loop, the SEEK_DATA will return something
-that is > start_byte.  Unless someone is very rapidly writing and
-punching the page cache?
+Hee hee.  Yeah, let's leave IOMAP_F_SHARED alone; an out of place write
+can be detected by iter->srcmap.type != HOLE.
 
-Hmm but then if *xfs* is punching delalloc then we're we holding the
-iolock so who else could be doing that?
-
-If the answers are 'no' and 'nobody' then
+The patch looks fine so
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
-
-> +
-> +		WARN_ON_ONCE(data_end < start_byte);
->  		WARN_ON_ONCE(data_end > scan_end_byte);
->  
->  		error = iomap_write_delalloc_scan(inode, &punch_start_byte,
-> -- 
-> 2.43.0
-> 
-> 
