@@ -1,70 +1,70 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 644524C83
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:29:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B245B322E
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 01:37:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724722186; cv=none; b=h7WVMB9+67cCke6/IyrcfMHh799yA3RHfUf9JW60CQHt7Jk2AnjnQTdYlMkwK8HdyWC2oS6ur7yjbq4Aqu1SGakK7hYePuUshrbn1iifMRPqM8ugBm+KuduNyEl8zOWXrIt+lfn7FXvz0vLX6XWfAtFz8jGWzzfyjzi7CMAbnfo=
+	t=1724722622; cv=none; b=adajghEzec2KSRIQeN8CUt0whSBYTtwMzk2EEm3wYHEIErRm3AE3i8MO50jPNa0ZDr/d4z9Bsvevd65tHV1bJmpASWT/mkZprgqFCVDO560lVuWLOtRg1VcgshVErHaP+4T5mQjz6iZ5XkJz2bX4Jsr/IQSPzt12ZywnWsqnmao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724722186; c=relaxed/simple;
-	bh=DcinMszPgcPb1z6ijB3ytomN8iLG0XRfNzHlF9tNJAA=;
+	s=arc-20240116; t=1724722622; c=relaxed/simple;
+	bh=MAZ+/CVWtijc4ARSxksWA9nLZM9i8Op6OQHLtW1vsE8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FkZTq+eb+JqqyFzmsYo3fIPj+N3bRcHHiMUbYLCFa4hJDinarQ9xVt3h2DPd6F8VDjA5bn/b+AKgLdXmzDiAxBVJGkc2Wigtca0OI6NR2aakYH1HZkpGRK2bVPBXG8C6UGmcrTs8tOrJeg7bu9A9bmzOw1ODO7qVg5mMsRxKYAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=zJQrzT8g; arc=none smtp.client-ip=209.85.214.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=RLDNhTFclweOLBQoKSmAVRLcX1p5pb2R86Q+BmlYxMRIkbL0dYZoDmcLhBGLa2ImKKhSLEDjngKCOu+GiyVYWYtZLhaFuE9Mf3ChiFDbbvOMvpG+zN9gbFHXnZqG94FO2FXvIgwV9V46g6vZZ3GbCSryQexR+m7XrfM2rr6kiLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=JIkFLrQZ; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="zJQrzT8g"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1fec34f94abso48895635ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 18:29:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="JIkFLrQZ"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-714263cb074so3422438b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 18:37:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724722184; x=1725326984; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724722620; x=1725327420; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=052qOUC3MWV4p9zp/MFFbExy4ZnQnJ2gv9XkJob2jlc=;
-        b=zJQrzT8gHMx4m9qutXqqwU72ERZT4WK41CBVobBs7rUx8bgpL7qBStmY06CavNsl41
-         sVNb0xN6R3oRS5SYaplOembfPwDByhsYZ0vNGumMQV+RrJoGSFS26ImO5cTgO2zQgOUQ
-         gAzebgcLDH3hmXf4H38jxzBYGbzStZH561eRna7JTOKiIGqyo9VRJpBkR15PiQwuUBuU
-         sUTovL9qz7It0j9VhsI2hC1oaOL6/ij7/bL8LsHU5AhmfsqpJ10jUoNnhcA4Tt7yFc9a
-         y5N4NpD7v3PmnvFvTt8h4pmXOJ5UkT4fbM3PLR6VI0VdiqVYyVmq8LvSZU9ONAO+bZo/
-         qZMA==
+        bh=+9LVkoGtTavbErnrLPIBauVORRDfAKYcmcIS8uWHns0=;
+        b=JIkFLrQZnAL5ugG9RCOEXrw+m6jV/KT8j8D5e4nZdSDWxfQe4o4XtMwJzrGeip4tSh
+         fDVMoCebuM87rd2mqXSJU73MPLGWSVUYaQagsiYhzvg+innmeklBBxmpxjmVDtRFNSjX
+         jpHd0oxeJPJK8rFw78+i1OPYCB0cof7kHSZU9UBopR35dlX75RfkF8qH1jQJrFXw8kG5
+         GRumLHMqFyXk0mFFMlzL+8MSOkOlBQTGA3tnnfSGucE/Ph+NYWQRLFZ4XCrUiS/GpHjI
+         S4pSTpQNXelr4m2+gNWyWvbHMXuJ5uNRjERyHNPIUZJx/4n67zgkU/zSeUi2j1cwAgnX
+         WLvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724722184; x=1725326984;
+        d=1e100.net; s=20230601; t=1724722620; x=1725327420;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=052qOUC3MWV4p9zp/MFFbExy4ZnQnJ2gv9XkJob2jlc=;
-        b=hecLzhW8KYZOtabAUUN4oL8AtHPEWYbGJiFQYcpzEKwz0PQGSf218uMcs8wZ2ss/z7
-         2wCHcZ/t2Cj4muo1sURYRXI5PWrJkrnStpH87pcTK/0kJMOxD2LhECwU/maJ9VwlDAqF
-         rLK8h+63Nck6vc8E+bb7FWO2Wsg28mnO8Xp2G0eqWEkxCoZTAfZ8fiG7XLVN3qInFufr
-         haLkSWZb7w8sB7Lqf6ttFDPTm0wWsXq2zgMlDBJG0abjJISyWs5TprZeEDb31fCt5PFf
-         ijPux6fi20fquVr42WMFZJyovBiTT89+UCa83cHitLPEwp5H3SOaO9uT0HVL6lgRFqFM
-         6Qdw==
-X-Forwarded-Encrypted: i=1; AJvYcCXzpT8oCxzHWvQKny/9KIsOVDU5fceq2/fcM2WAAX7AmbXGVvfWi706Uaplv10t6tOVZcdcONIncWg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YykOMuSefINtFGQpxLx4CIsO57R00Hz3DeXgrtICSqrgHW8myzb
-	0UN8RkwoEh+eeUuXwDRXQxRflPDPt3GsiDH1IW+lLV6ss/ao4lw1jjUtrz3Ddc8=
-X-Google-Smtp-Source: AGHT+IHm2qveADu2QdS943NR8XkK6bGhXm3v0/Wg9n98geaOI0178Esdv7Ku5uHiej8nxuOT9LlpQg==
-X-Received: by 2002:a17:902:ecca:b0:1fa:7e0:d69a with SMTP id d9443c01a7336-2039e4ef0d7mr109814175ad.46.1724722183568;
-        Mon, 26 Aug 2024 18:29:43 -0700 (PDT)
+        bh=+9LVkoGtTavbErnrLPIBauVORRDfAKYcmcIS8uWHns0=;
+        b=COYmOC/fwmnB79pg2XBf9wMkQ1wP8/nXpgLfQwMGC2SD5T4Fdu3ju9CXvbUhonu7Cs
+         4dNeH00ICPmuJb6n4ow4uTWuk8WMb6xywSfLMYhNJugQhJaN+BwPodneS+rs1wM6YevJ
+         m/qCj1Tt3dtwjiU02qwR9T0TaVdDNNAbTfqMCiXyHkWkiMRtM3fZgUTkrHSMrNzOmIDV
+         hWKjRm0c19h9WJ8jUjI2EjRcx63MS3tKX+19RTcriBiQ+04BSDD4oqwGY2doJvcIZgA/
+         fxMdh4Aht+U/nC0AmPZUaFuUYNCTeK+gllVqm6mBsb8hDLzpkXmJ30mNn1Jv5FLM3/nq
+         9Rhw==
+X-Forwarded-Encrypted: i=1; AJvYcCXYD1qAK1ppbr8mM6jkfzARl14QbZ3Xrs2b5uVBoeOE3c7kYPUGZzzKfaTrZFIy9a5cg0hqJGane8c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwcVHS4Z0+YXa1GaW0JsozZKIOxIokcMIBReXRtzArHfpF3vOEV
+	UszmjNEv86ULZi+0EsznB68aD0jNUCkhlAnY/KZNNoRZ4bweWsNHO+qoOgBUD5c=
+X-Google-Smtp-Source: AGHT+IEHTGid6JaZN7UQXq5P9m1RAFdZHwhq59O2a1js58H6eem9g18K+Gex1k5kBJSyKZSVSpGyxw==
+X-Received: by 2002:a05:6a00:b46:b0:714:271e:7c3e with SMTP id d2e1a72fcca58-71445d0ecccmr12545530b3a.9.1724722619897;
+        Mon, 26 Aug 2024 18:36:59 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385564dd9sm72795795ad.51.2024.08.26.18.29.42
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71434309676sm7860737b3a.174.2024.08.26.18.36.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Aug 2024 18:29:43 -0700 (PDT)
+        Mon, 26 Aug 2024 18:36:59 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sil1g-00E0Cb-1O;
-	Tue, 27 Aug 2024 11:29:40 +1000
-Date: Tue, 27 Aug 2024 11:29:40 +1000
+	id 1sil8j-00E0VZ-0v;
+	Tue, 27 Aug 2024 11:36:57 +1000
+Date: Tue, 27 Aug 2024 11:36:57 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 21/24] xfs: factor out a xfs_growfs_check_rtgeom helper
-Message-ID: <Zs0sBGeYgiiKxk4o@dread.disaster.area>
-References: <172437087178.59588.10818863865198159576.stgit@frogsfrogsfrogs>
- <172437087611.59588.7898768503459548119.stgit@frogsfrogsfrogs>
- <ZsvjQiGQS6WD/rwB@dread.disaster.area>
- <20240826182734.GA865349@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 17/26] xfs: support logging EFIs for realtime extents
+Message-ID: <Zs0tuQlJbleBPND/@dread.disaster.area>
+References: <172437088439.60592.14498225725916348568.stgit@frogsfrogsfrogs>
+ <172437088816.60592.12361252562494894102.stgit@frogsfrogsfrogs>
+ <ZswFhKNrMh4I8QGm@dread.disaster.area>
+ <20240826193835.GD865349@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,87 +73,137 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240826182734.GA865349@frogsfrogsfrogs>
+In-Reply-To: <20240826193835.GD865349@frogsfrogsfrogs>
 
-On Mon, Aug 26, 2024 at 11:27:34AM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 26, 2024 at 12:06:58PM +1000, Dave Chinner wrote:
-> > On Thu, Aug 22, 2024 at 05:20:07PM -0700, Darrick J. Wong wrote:
-> > > From: Christoph Hellwig <hch@lst.de>
+On Mon, Aug 26, 2024 at 12:38:35PM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 26, 2024 at 02:33:08PM +1000, Dave Chinner wrote:
+> > On Thu, Aug 22, 2024 at 05:25:36PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
 > > > 
-> > > Split the check that the rtsummary fits into the log into a separate
-> > > helper, and use xfs_growfs_rt_alloc_fake_mount to calculate the new RT
-> > > geometry.
+> > > Teach the EFI mechanism how to free realtime extents.  We're going to
+> > > need this to enforce proper ordering of operations when we enable
+> > > realtime rmap.
 > > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > [djwong: avoid division for the 0-rtx growfs check]
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/xfs/xfs_rtalloc.c |   43 +++++++++++++++++++++++++++++--------------
-> > >  1 file changed, 29 insertions(+), 14 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > > index 61231b1dc4b79..78a3879ad6193 100644
-> > > --- a/fs/xfs/xfs_rtalloc.c
-> > > +++ b/fs/xfs/xfs_rtalloc.c
-> > > @@ -1023,6 +1023,31 @@ xfs_growfs_rtg(
-> > >  	return error;
-> > >  }
-> > >  
-> > > +static int
-> > > +xfs_growfs_check_rtgeom(
-> > > +	const struct xfs_mount	*mp,
-> > > +	xfs_rfsblock_t		rblocks,
-> > > +	xfs_extlen_t		rextsize)
-> > > +{
-> > > +	struct xfs_mount	*nmp;
-> > > +	int			error = 0;
-> > > +
-> > > +	nmp = xfs_growfs_rt_alloc_fake_mount(mp, rblocks, rextsize);
-> > > +	if (!nmp)
-> > > +		return -ENOMEM;
-> > > +
-> > > +	/*
-> > > +	 * New summary size can't be more than half the size of the log.  This
-> > > +	 * prevents us from getting a log overflow, since we'll log basically
-> > > +	 * the whole summary file at once.
-> > > +	 */
-> > > +	if (nmp->m_rsumblocks > (mp->m_sb.sb_logblocks >> 1))
-> > > +		error = -EINVAL;
+> > > Declare a new log intent item type (XFS_LI_EFI_RT) and a separate defer
+> > > ops for rt extents.  This keeps the ondisk artifacts and processing code
+> > > completely separate between the rt and non-rt cases.  Hopefully this
+> > > will make it easier to debug filesystem problems.
 > > 
-> > FWIW, the new size needs to be smaller than that, because the "half
-> > the log size" must to include all the log metadata needed to
-> > encapsulate that object. The grwofs transaction also logs inodes and
-> > the superblock, so that also takes away from the maximum size of
-> > the summary file....
+> > Doesn't this now require busy extent tracking for rt extents that
+> > are being freed?  i.e. they get marked as free with the EFD, but
+> > cannot be reallocated (or discarded) until the EFD is committed to
+> > disk.
+> > 
+> > we don't allow user data allocation on the data device to reuse busy
+> > ranges because the freeing of the extent has not yet been committed
+> > to the journal. Because we use async transaction commits, that means
+> > we can return to userspace without even the EFI in the journal - it
+> > can still be in memory in the CIL. Hence we cannot allow userspace
+> > to reallocate that range and write to it, even though it is marked free in the
+> > in-memory metadata.
 > 
-> <shrug> It's the same logic as what's there now, and there haven't been
-> any bug reports, have there? 
+> Ah, that's a good point -- in memory the bunmapi -> RTEFI -> RTEFD ->
+> rtalloc -> bmapi transactions succeed, userspace writes to the file
+> blocks, then the log goes down without completing /any/ of those
+> transactions, and now a read of the old file gets new contents.
 
-No, none that I know of - it was just an observation that the code
-doesn't actually guarantee what the comment says it should do.
+*nod*
 
-> Though I suppose that's just a reduction
-> of what?  One block for the rtbitmap, and (conservatively) two inodes
-> and a superblock?
+> > If userspace then does a write and then we crash without the
+> > original EFI on disk, then we've just violated metadata vs data
+> > update ordering because recovery will not replay the extent free nor
+> > the new allocation, yet the data in that extent will have been
+> > changed.
+> > 
+> > Hence I think that if we are moving to intent based freeing of real
+> > time extents, we absolutely need to add support for busy extent
+> > tracking to realtime groups before we enable EFIs on realtime
+> > groups.....
+> 
+> Yep.  As a fringe benefit, we'd be able to support issuing discards from
+> FITRIM without holding the rtbitmap lock, and -o discard on rt extents
+> too.
 
-The rtbitmap update might touch a lot more than one block. The newly
-allocated space in the rtbitmap inode is initialised to zeros, and
-so the xfs_rtfree_range() call from the growfs code to mark the new
-space free has to write all 1s to that range of the rtbitmap. This
-is all done in a single transaction, so we might actually be logging
-a *lot* of rtbitmap buffers here.
+Yes. And I suspect that if we unify the perag and rtg into a single
+group abstraction, the busy extent tracking will work for both
+allocators without much functional change being needed at all...
 
-IIRC, there is a bit per rtextent, so in a 4kB buffer we can mark
-32768 rtextents free. If they are 4kB each, then that's 128MB of
-space tracked per rtbitmap block. This adds up to roughly 3.5MB of
-log space for the rtbitmap updates per TB of grown rtdev space....
+> > Also ....
+> > 
+> > > @@ -447,6 +467,17 @@ xfs_extent_free_defer_add(
+> > >  
+> > >  	trace_xfs_extent_free_defer(mp, xefi);
+> > >  
+> > > +	if (xfs_efi_is_realtime(xefi)) {
+> > > +		xfs_rgnumber_t		rgno;
+> > > +
+> > > +		rgno = xfs_rtb_to_rgno(mp, xefi->xefi_startblock);
+> > > +		xefi->xefi_rtg = xfs_rtgroup_get(mp, rgno);
+> > > +
+> > > +		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
+> > > +				&xfs_rtextent_free_defer_type);
+> > > +		return;
+> > > +	}
+> > > +
+> > >  	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
+> > >  	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
+> > >  		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
+> > 
+> > Hmmmm. Isn't this also missing the xfs_drain intent interlocks that
+> > allow online repair to wait until all the intents outstanding on a
+> > group complete?
+> 
+> Yep.  I forgot about that.
 
-So, yeah, I think that calculation and comment is inaccurate, but we
-don't have to fix this right now.
+Same comment about unified group infrastructure ;)
+
+> > > +
+> > > +/* Cancel a realtime extent freeing. */
+> > > +STATIC void
+> > > +xfs_rtextent_free_cancel_item(
+> > > +	struct list_head		*item)
+> > > +{
+> > > +	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+> > > +
+> > > +	xfs_rtgroup_put(xefi->xefi_rtg);
+> > > +	kmem_cache_free(xfs_extfree_item_cache, xefi);
+> > > +}
+> > > +
+> > > +/* Process a free realtime extent. */
+> > > +STATIC int
+> > > +xfs_rtextent_free_finish_item(
+> > > +	struct xfs_trans		*tp,
+> > > +	struct xfs_log_item		*done,
+> > > +	struct list_head		*item,
+> > > +	struct xfs_btree_cur		**state)
+> > 
+> > btree cursor ....
+> > 
+> > > +{
+> > > +	struct xfs_mount		*mp = tp->t_mountp;
+> > > +	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+> > > +	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
+> > > +	struct xfs_rtgroup		**rtgp = (struct xfs_rtgroup **)state;
+> > 
+> > ... but is apparently holding a xfs_rtgroup. that's kinda nasty, and
+> > the rtg the xefi is supposed to be associated with is already held
+> > by the xefi, so....
+> 
+> It's very nasty, and I preferred when it was just a void**.  Maybe we
+> should just change that to a:
+> 
+> struct xfs_intent_item_state {
+> 	struct xfs_btree_cur	*cur;
+> 	struct xfs_rtgroup	*rtg;
+> };
+> 
+> and pass that around?  At least then the compiler can typecheck that for
+> us.
+
+Sounds good to me. :)
 
 -Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
