@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51DAE1442E8
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 23:34:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF82D1442E8
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 23:34:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724801655; cv=none; b=Ju26Xcugt3T0s1L32xgJqhi+P8+9D5OuJWHgMb1SkeSYDRan9wZ+/i9bn86getzNH/r8KrXD7tgA5qXiAisNYBePjvrBiud/cECffGmuFqLgKj4brixmQAJSJhOhWccrZF2wkAuD5KnGUE5AoaR6yrkCN8kW/q/ifoWaM4pzjCA=
+	t=1724801671; cv=none; b=GJ3XasjveDyUnScsOYzyapYPHMfnwQQvUTROit8XyZtC3WshaU1T4GlbOn/kD9VSlW1QMiZNzn9YibGCq+acxYGVBs2oQcUCp6GU38XBz+z0fToXj5jeNfdRvlAwtNyORlCMNuRANLIXdFl59YhDAEjWo4U+aMpWphKFdTO9ccI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724801655; c=relaxed/simple;
-	bh=FMaw/2MmQlxt3tnLSByoAN4WOw6EkjA2UbQyhyeVHSE=;
+	s=arc-20240116; t=1724801671; c=relaxed/simple;
+	bh=iazVZBhREmLNsr48OUa4DZt3CBXsribPprHDkhcZ4/0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YHJ/a257MFw7f5V9COcKYACKE038hhpCkinFlBGvG9LYiR3vu28h1V26YxF7qQ4BD6YRc8E6zb8HXU+JECKioTtHIOYXP4gnt4/jTo1QHN0eYEOT9WUdqgo0Pew+foRQYdZ+78URBTjqQbnhwY2qpDULxXQUTxfEs8jqVQaRdrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jA57BaTn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=F68c7W/l5ym9aujx7xPG4mocShOpbT8ILCwNAjAseNXW+w7FUpypDkpJiuw5tnUDN99YiTyUFycuNkJNoqmWNPShxybSkpwTaBlOjPN0F7s1cCMdF2s/W2JpBRlOAvxgJqKPpLmUY/tDqeYx+6cXxoT0fkuOh0971WseDHQpjes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PN+ToycV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jA57BaTn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C6A9C55DE5;
-	Tue, 27 Aug 2024 23:34:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PN+ToycV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B25F8C55DED;
+	Tue, 27 Aug 2024 23:34:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724801655;
-	bh=FMaw/2MmQlxt3tnLSByoAN4WOw6EkjA2UbQyhyeVHSE=;
+	s=k20201202; t=1724801670;
+	bh=iazVZBhREmLNsr48OUa4DZt3CBXsribPprHDkhcZ4/0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jA57BaTnZdnoq27aDuOzyrmk8gK6NSgT4gjWCH4RendbauLFKCidI1DWCN9Dmh7jC
-	 EH6e195+m5Ic9GoSpqgfYy2e0VScQZGIcu6ZI4OLk/pTYZe+wII5RU3ZR32QMKhK87
-	 WYZVkf4Fdy/Y82NEKwbe0rUGxLyAbeJkx3r/TcppFCLwUTDV53t2T8EfA1uKpU15OZ
-	 iu8/sGsxmvrfRbE9/7mBPJMd7KQ7zzUeWbLhN89mK689Dwge9Dhb2Z5Cm/ublyYJA6
-	 spknHpJC3saDAnek8UOCPWWezn92eWnjvEiZOUXLr+YIxGwiHijm/GRG4pDDOduQ3U
-	 n7d8yjMRzHkLw==
-Date: Tue, 27 Aug 2024 16:34:14 -0700
-Subject: [PATCH 02/10] xfs: fix FITRIM reporting again
+	b=PN+ToycVkQBYN+3ExKhDN0TkTufsgbxyvc7FXrAXkjPKwfvZMpRRhJO8FMIJsorHR
+	 olLt9qB7aLE5/qs0OCM7jUkQzAcHCCrSnmW28w56IGPuoAzTPpfNNMdLICZh0Ms0V6
+	 r6v6AbOnz+dIwVBU/j8prXfnTRITIjU6H/s52j60/7jNoj14fLe7GmoXt98UPX0HVa
+	 kq/O1l6eC54C1+8qZmXgV1GOeVs1X/3i9Pz0119ydUkig84EbUUdAmmWc0dPbLlD+6
+	 9xxTVNC5IqvclgT+Xq9q3Ln+ElR9QqwI0j6mlLSvHUWdnLoz26RW5EWj40N6XYwqCu
+	 WYxUrwBLP4UMA==
+Date: Tue, 27 Aug 2024 16:34:30 -0700
+Subject: [PATCH 03/10] xfs: fix a sloppy memory handling bug in
+ xfs_iroot_realloc
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172480131538.2291268.13135074466048273297.stgit@frogsfrogsfrogs>
+Message-ID: <172480131555.2291268.18437550031190966427.stgit@frogsfrogsfrogs>
 In-Reply-To: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
 References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,27 +47,46 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't report FITRIMming more bytes than possibly exist in the
-filesystem.
+While refactoring code, I noticed that when xfs_iroot_realloc tries to
+shrink a bmbt root block, it allocates a smaller new block and then
+copies "records" and pointers to the new block.  However, bmbt root
+blocks cannot ever be leaves, which means that it's not technically
+correct to copy records.  We /should/ be copying keys.
 
-Fixes: 410e8a18f8e93 ("xfs: don't bother reporting blocks trimmed via FITRIM")
+Note that this has never resulted in actual memory corruption because
+sizeof(bmbt_rec) == (sizeof(bmbt_key) + sizeof(bmbt_ptr)).  However,
+this will no longer be true when we start adding realtime rmap stuff,
+so fix this now.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_discard.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_inode_fork.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index bf1e3f330018d..d8c4a5dcca7ae 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -707,7 +707,7 @@ xfs_ioc_trim(
- 		return last_error;
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 9d11ae0159091..6223823009049 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -463,15 +463,15 @@ xfs_iroot_realloc(
+ 	}
  
- 	range.len = min_t(unsigned long long, range.len,
--			  XFS_FSB_TO_B(mp, max_blocks));
-+			  XFS_FSB_TO_B(mp, max_blocks) - range.start);
- 	if (copy_to_user(urange, &range, sizeof(range)))
- 		return -EFAULT;
- 	return 0;
+ 	/*
+-	 * Only copy the records and pointers if there are any.
++	 * Only copy the keys and pointers if there are any.
+ 	 */
+ 	if (new_max > 0) {
+ 		/*
+-		 * First copy the records.
++		 * First copy the keys.
+ 		 */
+-		op = (char *)XFS_BMBT_REC_ADDR(mp, ifp->if_broot, 1);
+-		np = (char *)XFS_BMBT_REC_ADDR(mp, new_broot, 1);
+-		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_rec_t));
++		op = (char *)XFS_BMBT_KEY_ADDR(mp, ifp->if_broot, 1);
++		np = (char *)XFS_BMBT_KEY_ADDR(mp, new_broot, 1);
++		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_key_t));
+ 
+ 		/*
+ 		 * Then copy the pointers.
 
