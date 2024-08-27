@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6111A158D9C
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 11:50:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5E9E158D9C
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 11:50:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724759442; cv=none; b=iLDkzMVnRJPS8LyMNcqzO0iN55CM0HZn2JtN2jqitMThpRH6fLZWlgtcUBl/xZp1DqLqmRiKOEmogLTYmKqLjioX7y88BHBCzWJg34H+cAIRN1U1u5MJcVTjeviXg7TsLLI7qIsmZ1B5fbzn9Cx2DcqEhL1o/o7qjrHsxo+f3LE=
+	t=1724759444; cv=none; b=YzBZZAlQwDV7DCuxi8gL1IS7pNKd6+AFueMBbCY9ZEG+15pzTiFJYhan1o0IZ2z8Bcitiab0u/qRBrdT5BhDcdM1Dca22fqKHxCGK6kcRpNjNlgT5jthXOgIiK4BE2a4Fk5IOoNOslDOKXQM3HG11lCr+sROnhkedpkxP8JwZvQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724759442; c=relaxed/simple;
-	bh=K+f1HKNawDQtC5HkoPto55QyUXeh5WOK8n3vJkXI1YQ=;
+	s=arc-20240116; t=1724759444; c=relaxed/simple;
+	bh=zHJBaEx7H3mAeZsPVB3RA7XWhxv31v+xTa1MCt6Q8kU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Kte1pV4dr80eUbVnPx0F9m8aUje9KqT3gvgfVdo0kstC+SgACaX56byh0N+Ou9akmGIHA4+GMeaxIfsWYEwbeXLJqS9hYwG62tufn+COyM3+SRDqkqJYqWlG9yc3fihjUdmHTdCKZioLOTlt3X5OVoGJKamIKlyLzXD9ills4QQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sfcGL09q; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=dP9vigBM5aiWpKYEBYorMJhRp+nN8xzeKWThmLDZFgnwFVD5QMQrEWwF7QTSRjIxDLsRZO465mDxOlbizyd1o7r3jnMeISP+q0qe4FXhf1qvChmFyu52/rEUdDmH0dL/clxo890HSIArx+qjW+90Kq4zkHYb1dHkZpGHoqxlMBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qx3LS48N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sfcGL09q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2B6CC515FF;
-	Tue, 27 Aug 2024 11:50:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qx3LS48N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BACEC519AA;
+	Tue, 27 Aug 2024 11:50:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724759441;
-	bh=K+f1HKNawDQtC5HkoPto55QyUXeh5WOK8n3vJkXI1YQ=;
+	s=k20201202; t=1724759443;
+	bh=zHJBaEx7H3mAeZsPVB3RA7XWhxv31v+xTa1MCt6Q8kU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=sfcGL09qj/8VrSdQ4SZ3fhqCJcuOOOSzX5yy0Y2h12y0+rg8ns74XKuVW4ihPPMTF
-	 JTfcaHoFz/ltQ9hV7ZYT/IAXiRNaVZ55zrReplpLUDQS4CfPDcohRPETdlUDQnI1am
-	 LQ4qQbSkS6x7GxEDjB6Lt8A0EeQvG0l1OP9/iYxoepa5jPTygCFQMTVsxba5nCUzsM
-	 EP8sbBca7tHUqyHjPum8pWw41kgHAQBFIIsxmDF7idqC9We0fs+wKNW2QaTNRcFPlA
-	 E8JTU8Zab3nuqmwEvdvxTS7RHzVb1dqC9W9U6XWuaoCbCIZm+t967MdVYBxQF9RP6I
-	 pJvB2xJoZVLNg==
+	b=qx3LS48N22Lmg0PndMXgzpaKKRsO3MqjrSTfPq4UHGluaSHnPAieVoTo4fQRkO9pD
+	 BzIW+XTt2q28PEyunhaAe5i7dOGSi41ZNrEErrGJC8AOhrX1r4qc0jX60l37K2cyD3
+	 RQr9nvi/6C/xdgSWo1CaiyLk3NO2GG6uPeXxd1FKmPUAtbf8+9W5jIhhA67GuvTRzz
+	 ZjmamHSY4hEXVhuIYjEko8jTzCAml2iJnMIRcmKaCINHnqgXUwNd/mMqD18cRZcCuA
+	 LKj9kwmNggJkncmFv3YLz/ttVwynC+Lkj5RX37VfFcIa9Tza5sLLizKRV6l/sn+PBT
+	 X+MK16DECb/Tw==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de,
 	hch@infradead.org
-Subject: [PATCH 2/3] libfrog: remove libattr dependency
-Date: Tue, 27 Aug 2024 13:50:23 +0200
-Message-ID: <20240827115032.406321-3-cem@kernel.org>
+Subject: [PATCH 3/3] scrub: Remove libattr dependency
+Date: Tue, 27 Aug 2024 13:50:24 +0200
+Message-ID: <20240827115032.406321-4-cem@kernel.org>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <20240827115032.406321-1-cem@kernel.org>
 References: <20240827115032.406321-1-cem@kernel.org>
@@ -47,108 +47,90 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-Get rid of libfrog's libattr dependency, and move the needed local
-definitions to a new header - libfrog/attr.h
-
-We could keep the ATTR_ENTRY definition local to fsprops.h, but we'll
-add more content to it in the next patch.
+Rename all attrlist usage to xfs_attrlist, and add a couple more
+definitions to libfrog/attr.h
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libfrog/Makefile  |  7 ++-----
- libfrog/attr.h    | 18 ++++++++++++++++++
- libfrog/fsprops.c |  7 +++----
- 3 files changed, 23 insertions(+), 9 deletions(-)
- create mode 100644 libfrog/attr.h
+ libfrog/attr.h | 5 +++++
+ scrub/Makefile | 4 ----
+ scrub/phase5.c | 9 +++------
+ 3 files changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index acddc894e..8581c146b 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -21,6 +21,7 @@ crc32.c \
- file_exchange.c \
- fsgeom.c \
- fsproperties.c \
-+fsprops.c \
- getparents.c \
- histogram.c \
- list_sort.c \
-@@ -49,6 +50,7 @@ div64.h \
- file_exchange.h \
- fsgeom.h \
- fsproperties.h \
-+fsprops.h \
- getparents.h \
- histogram.h \
- logging.h \
-@@ -62,11 +64,6 @@ workqueue.h
+diff --git a/libfrog/attr.h b/libfrog/attr.h
+index 9110499f2..f1a10b5ae 100644
+--- a/libfrog/attr.h
++++ b/libfrog/attr.h
+@@ -11,8 +11,13 @@
+  *
+  * We are redifining here so we don't need to keep libattr as a dependency anymore
+  */
++
+ #define ATTR_ENTRY(buffer, index)		\
+ 	((struct xfs_attrlist_ent *)		\
+ 	 &((char *)buffer)[ ((struct xfs_attrlist *)(buffer))->al_offset[index] ])
  
- LSRCFILES += gen_crc32table.c
++/* Attr flags used within xfsprogs, must match the definitions from libattr */
++#define ATTR_ROOT	0x0002	/* use root namespace attributes in op */
++#define ATTR_SECURE	0x0008	/* use security namespaces attributes in op */
++
+ #endif /* __LIBFROG_ATTR_H__ */
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 53e8cb02a..1e1109048 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -100,10 +100,6 @@ ifeq ($(HAVE_MALLINFO2),yes)
+ LCFLAGS += -DHAVE_MALLINFO2
+ endif
  
 -ifeq ($(HAVE_LIBATTR),yes)
--CFILES+=fsprops.c
--HFILES+=fsprops.h
+-LCFLAGS += -DHAVE_LIBATTR
 -endif
 -
- LDIRT = gen_crc32table crc32table.h
- 
- default: ltdepend $(LTLIBRARY)
-diff --git a/libfrog/attr.h b/libfrog/attr.h
-new file mode 100644
-index 000000000..9110499f2
---- /dev/null
-+++ b/libfrog/attr.h
-@@ -0,0 +1,18 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (c) 2024 Red Hat, Inc.  All Rights Reserved.
-+ * Author: Carlos Maiolino <cmaiolino@redhat.com>
-+ */
-+#ifndef __LIBFROG_ATTR_H__
-+#define __LIBFROG_ATTR_H__
-+
-+/*
-+ * Those definitions come from libattr
-+ *
-+ * We are redifining here so we don't need to keep libattr as a dependency anymore
-+ */
-+#define ATTR_ENTRY(buffer, index)		\
-+	((struct xfs_attrlist_ent *)		\
-+	 &((char *)buffer)[ ((struct xfs_attrlist *)(buffer))->al_offset[index] ])
-+
-+#endif /* __LIBFROG_ATTR_H__ */
-diff --git a/libfrog/fsprops.c b/libfrog/fsprops.c
-index 05a584a56..ea47c66ed 100644
---- a/libfrog/fsprops.c
-+++ b/libfrog/fsprops.c
-@@ -10,8 +10,7 @@
+ ifeq ($(HAVE_LIBICU),yes)
+ CFILES += unicrash.c
+ LCFLAGS += -DHAVE_LIBICU $(LIBICU_CFLAGS)
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 27fa29be6..2e495643f 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -20,6 +20,7 @@
+ #include "libfrog/scrub.h"
+ #include "libfrog/bitmap.h"
  #include "libfrog/bulkstat.h"
- #include "libfrog/fsprops.h"
- #include "libfrog/fsproperties.h"
--
--#include <attr/attributes.h>
 +#include "libfrog/attr.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "inodes.h"
+@@ -164,7 +165,6 @@ out_unicrash:
+ 	return ret;
+ }
  
- /*
-  * Given an xfd and a mount table path, get us the handle for the root dir so
-@@ -70,7 +69,7 @@ fsprops_walk_names(
- {
- 	struct xfs_attrlist_cursor	cur = { };
+-#ifdef HAVE_LIBATTR
+ /* Routines to scan all of an inode's xattrs for name problems. */
+ struct attrns_decode {
+ 	int			flags;
+@@ -193,8 +193,8 @@ check_xattr_ns_names(
+ 	struct xfs_attrlist_cursor	cur;
  	char				attrbuf[XFS_XATTR_LIST_MAX];
+ 	char				keybuf[XATTR_NAME_MAX + 1];
 -	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
+-	struct attrlist_ent		*ent;
 +	struct xfs_attrlist		*attrlist = (struct xfs_attrlist *)attrbuf;
- 	int				ret;
++	struct xfs_attrlist_ent		*ent;
+ 	struct unicrash			*uc = NULL;
+ 	int				i;
+ 	int				error;
+@@ -267,9 +267,6 @@ check_xattr_names(
+ 	}
+ 	return ret;
+ }
+-#else
+-# define check_xattr_names(c, d, h, b)	(0)
+-#endif /* HAVE_LIBATTR */
  
- 	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
-@@ -81,7 +80,7 @@ fsprops_walk_names(
- 		unsigned int	i;
- 
- 		for (i = 0; i < attrlist->al_count; i++) {
--			struct attrlist_ent	*ent = ATTR_ENTRY(attrlist, i);
-+			struct xfs_attrlist_ent	*ent = ATTR_ENTRY(attrlist, i);
- 			const char		*p =
- 				attr_name_to_fsprop_name(ent->a_name);
- 
+ static int
+ render_ino_from_handle(
 -- 
 2.46.0
 
