@@ -1,321 +1,192 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA74D1442E8
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 23:36:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B6215CD4A
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 23:37:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724801780; cv=none; b=j2nX5lW85myerga/bzJj+3SUPn+WDl4cFzCWv+R5nFo90NxpqLh0KlfBcetldAAsuV84NgfmbcctHCuw9h43khTn8fo16c3q+Ta1PsoyZIUZZhIl6f5jcsQ4i7V4pIAQZUDJW994QpWF1KUxMNUkt3rSimI3xCw7PEH4dPGNzK4=
+	t=1724801848; cv=none; b=U8UBlZI7VEOUHXRduZw2KH1B3IXsFMGxYyKUO+tiXO8tyDEBTv/qlx4xp34k06MRTelKt9heZP5LLLtyX3Ob2kIsvUEEOOFaQMIJty29sFx85IRedUmY6tzZzOpWzugrfJEHUdhiILSMnSSPWf4+Ry6KU+rSnGzdTKh7vmfD4Tg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724801780; c=relaxed/simple;
-	bh=7vjVwIftBxdrigt0s5BBUPk1KH/1L3edbODt/VKy3KA=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dg5J+pnApKHLOvumuBrSurZRzS+YYVxPAue3lLHN4iCFjSUDHyxEpAAXW3aKeVuz1pdv5QW9LrbqBU4jHK77FRNsnXayBU7l/BqkF0JvpeAdEPQRk6ddW15CNU6AnJztX6zFemNhIgut/G9qFRy+ealN4ZkJKBEmgyUmK7OWlgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=in2RubrE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724801848; c=relaxed/simple;
+	bh=jG5xkoq0lVzTHUswIg2VGSuJ37xm5da7CFUxf8MDhXo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=l6ki6mHch6BWp0bB8SEqHZ3xQZ7X6oYe9ifIh2qSF5oKKBjNYNPPeOhRx9Q7ch8IgjNc9vzR1VcKrc/7/n/PvA0oO295O7ML5652tklq5as7RBILEvfKYanIGCsvmdsdFAf2/6OQsvuYdSCgO/4Eyg2KqBebrS+TTX0fzRyAmis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xshZFRed; arc=none smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="in2RubrE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B34C3C5677C;
-	Tue, 27 Aug 2024 23:36:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724801780;
-	bh=7vjVwIftBxdrigt0s5BBUPk1KH/1L3edbODt/VKy3KA=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=in2RubrEoYzSEVb1d0L9ZWEr5D+IgRZKyAGR/4Kv65WsuxnaftLfGNbLGtbZI2/Jc
-	 Mu5Qe81qosPQcpPg+gKB8ELBE3m7o8yzV2tUmEO0rf158H5bl1falk8grsLzUMsK0U
-	 Nbt1H3hlxp6AlikUp0pTryhbGKKXKrqxvP8Ei7AmDCeyCWPdeLmzVyeYxSYO9G5V2s
-	 OdAMKUPR3Pskboiml5BzditPSxEywhXrvGIEgUDGURJn/QMtzTn73Ova/ZaeO34loq
-	 mWfQU+1DAhBzfe66OLIdGVd/xi983xiMWX0/tAUR7LdNeCR50IbNZVqSo+dfa+v4Lv
-	 uHOBzajqaxO8w==
-Date: Tue, 27 Aug 2024 16:36:20 -0700
-Subject: [PATCH 10/10] xfs: standardize the btree maxrecs function parameters
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172480131678.2291268.7444633174884927311.stgit@frogsfrogsfrogs>
-In-Reply-To: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
-References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xshZFRed"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-7cd8d2731d1so4031317a12.3
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 16:37:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724801846; x=1725406646; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=2+DLvUCYUqW/4mUMfgPkkePGl5rYEz/UNsr5Vh8It0g=;
+        b=xshZFRedtR9jPz39UxarDO3PVHSNrx+BNZfGQjgZOL6itSRL2qTSH+Zok23I3U176i
+         VWZaWBbXjqxjWqxMsi67Pm7ubSsriHcBBfmn4rr7zRayBp54+jpY8ICvJEDkkw47fMvq
+         brYgAhT0F09WfRWVmEX8i63vvSns7oY1sVyIEWOg3Gp2wCrfnNrvfshB1Lm+8AvCvRoW
+         an9OnZ+qkmji/5UqmyrQztWtBpzlM5VhajT7jkhw1agDe56C2HKlKJ5QlRPfOfSZU4Lh
+         HINpQg8WEMe1d6pwJCa9NqKj3qII8Xo5REMf1/ws0QlYE9lXKI5kWnP2pAw5igQ2SdsZ
+         4+tg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724801846; x=1725406646;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2+DLvUCYUqW/4mUMfgPkkePGl5rYEz/UNsr5Vh8It0g=;
+        b=SZap405mFh4nRFbLyQn6qob6i3EH6WXEB/fpQHUvqmeoGG12j/VbLAvZVa1/Ic+k+j
+         Je2Wo2VUL8aGhCMOzNx06JJyfMKXEKzw/lCyie2Ymy/oYRyHtqx6I112JX4Euyil7mU+
+         QzTOjn2Q9APs3SqYGcyUV839MN52LKWT8Rn5lMl8HOA12NHKaZcxM3ySpymx71hezZJl
+         TLMDLBB7W2XbgPFrNdxpqgrJ5TRgcjJhwTOgPYcMiF2yGHVN7niFfdh7wEB1P3L8rFJS
+         BDgEqTwVIntqjIdBDEHrxCIYqQJXNsUBdyZIspdwVtVR1n3hNNExVHCSG7+hPn6L1oPk
+         32Mw==
+X-Forwarded-Encrypted: i=1; AJvYcCW+vejcja1OUguaaHGP5kcIgMyifUNI5o/U7ZEaQT1WkVSBXSnTULwht4cGPP/DND0i4wqle1UjKfU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxn8l9PfURujAH+xSRygTtsVV4Nfhndb4ZNY/QvaHDdFwnb+3DX
+	31OVvn2vcTUgQwQ6EKG/WSwYTOpoIrGT1LYGx8dVZgKsXF57Xns/IYW2AiDas8QfvN+a02RkHJ9
+	9
+X-Google-Smtp-Source: AGHT+IHRvaJNkzwFGujkF9vxnnczLJmpL4cKkTj2RVJ275vr8Kzq+PvtHbNSbHR2YQe3girKTXoXQA==
+X-Received: by 2002:a17:90a:a094:b0:2d3:c6a7:5c99 with SMTP id 98e67ed59e1d1-2d646b9d9b4mr15651404a91.8.1724801845547;
+        Tue, 27 Aug 2024 16:37:25 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-0-65.pa.nsw.optusnet.com.au. [49.179.0.65])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d84464222asm86351a91.45.2024.08.27.16.37.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Aug 2024 16:37:25 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sj5kY-00F64r-1X;
+	Wed, 28 Aug 2024 09:37:22 +1000
+Date: Wed, 28 Aug 2024 09:37:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: liuh <liuhuan01@kylinos.cn>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	cmaiolino@redhat.com
+Subject: Re: [PATCH] xfs_db: make sure agblocks is valid to prevent corruption
+Message-ID: <Zs5jMo1Vzg9gxA/J@dread.disaster.area>
+References: <20240821104412.8539-1-liuhuan01@kylinos.cn>
+ <20240823004912.GU6082@frogsfrogsfrogs>
+ <Zs1GxsICOpY/SKzn@dread.disaster.area>
+ <7e23cd96-e022-2458-0b7c-b0138db02718@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7e23cd96-e022-2458-0b7c-b0138db02718@kylinos.cn>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Aug 27, 2024 at 06:24:25PM +0800, liuh wrote:
+> 在 2024/8/27 11:23, Dave Chinner 写道:
+> > On Thu, Aug 22, 2024 at 05:49:12PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Aug 21, 2024 at 06:44:12PM +0800, liuhuan01@kylinos.cn wrote:
+> > > > From: liuh <liuhuan01@kylinos.cn>
+> > > > 
+> > > > Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredump during the process.
+> > > > 	xfs_db -c "sb 0" -c "p agblocks" /dev/loop1
+> > > > 
+> > > > System will generate signal SIGFPE corrupt the process. And the stack as follow:
+> > > > corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
+> > > > 	#0  libxfs_getbuf_flags
+> > > > 	#1  libxfs_getbuf_flags
+> > > > 	#2  libxfs_buf_read_map
+> > > > 	#3  libxfs_buf_read
+> > > > 	#4  libxfs_mount
+> > > > 	#5  init
+> > > > 	#6  main
+> > > > 
+> > > > The coredump was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0.
+> > > > In this case, user cannot run in expert mode also.
+> > > > 
+> > > > Never check (mp)->m_sb.sb_agblocks before use it cause this issue.
+> > > > Make sure (mp)->m_sb.sb_agblocks > 0 before libxfs_mount to prevent corruption and leave a message.
+> > > > 
+> > > > Signed-off-by: liuh <liuhuan01@kylinos.cn>
+> > > > ---
+> > > >   db/init.c | 7 +++++++
+> > > >   1 file changed, 7 insertions(+)
+> > > > 
+> > > > diff --git a/db/init.c b/db/init.c
+> > > > index cea25ae5..2d3295ba 100644
+> > > > --- a/db/init.c
+> > > > +++ b/db/init.c
+> > > > @@ -129,6 +129,13 @@ init(
+> > > >   		}
+> > > >   	}
+> > > > +	if (unlikely(sbp->sb_agblocks == 0)) {
+> > > > +		fprintf(stderr,
+> > > > +			_("%s: device %s agblocks unexpected\n"),
+> > > > +			progname, x.data.name);
+> > > > +		exit(1);
+> > > What if we set sb_agblocks to 1 and let the debugger continue?
+> > Yeah, I'd prefer that xfs_db will operate on a corrupt filesystem and
+> > maybe crash unexpectedly than to refuse to allow any diagnosis of
+> > the corrupt filesystem.
+> > 
+> > xfs_db is a debug and forensic analysis tool. Having it crash
+> > because it didn't handle some corruption entirely corectly isn't
+> > something that we should be particularly worried about...
+> > 
+> > -Dave.
+> 
+> I agree with both of you, xfs_db is just a debugger tool.
+> But for the above case, xfs_db can do nothing, even do a simple view on
+> primary superblock.
+> The user all knowns is that xfs_db goto corrupt, but don't know what's cause
+> the problem.
+> 
+> If set sb_agblocks to 1, xfs_db can going to work to view on primary
+> superblock,
+> but can't relay on it to view more information.
 
-Standardize the parameters in xfs_{alloc,bm,ino,rmap,refcount}bt_maxrecs
-so that we have consistent calling conventions.  This doesn't affect the
-kernel that much, but enables us to clean up userspace a bit.
+Yes, a value of "1" will avoid the crash.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_alloc_btree.c    |    6 +++---
- fs/xfs/libxfs/xfs_alloc_btree.h    |    3 ++-
- fs/xfs/libxfs/xfs_bmap.c           |    2 +-
- fs/xfs/libxfs/xfs_bmap_btree.c     |    6 +++---
- fs/xfs/libxfs/xfs_bmap_btree.h     |    5 +++--
- fs/xfs/libxfs/xfs_ialloc.c         |    4 ++--
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    6 +++---
- fs/xfs/libxfs/xfs_ialloc_btree.h   |    3 ++-
- fs/xfs/libxfs/xfs_inode_fork.c     |    2 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |    5 +++--
- fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++-
- fs/xfs/libxfs/xfs_rmap_btree.c     |    7 ++++---
- fs/xfs/libxfs/xfs_rmap_btree.h     |    3 ++-
- fs/xfs/libxfs/xfs_sb.c             |   16 ++++++++--------
- 14 files changed, 39 insertions(+), 32 deletions(-)
+However, it is obviously not an ideal choice because a value of 1 is
+not a valid value for sb_agblocks.
 
+IOWs, Darricks suggestion really was not to literally use a value of
+1, but to substitute a non-zero value that allows xfs_db to largely
+function correctly on a filesystem corrupted in this way.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 585e98e87ef9e..aada676eee519 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -569,11 +569,11 @@ xfs_allocbt_block_maxrecs(
- /*
-  * Calculate number of records in an alloc btree block.
-  */
--int
-+unsigned int
- xfs_allocbt_maxrecs(
- 	struct xfs_mount	*mp,
--	int			blocklen,
--	int			leaf)
-+	unsigned int		blocklen,
-+	bool			leaf)
- {
- 	blocklen -= XFS_ALLOC_BLOCK_LEN(mp);
- 	return xfs_allocbt_block_maxrecs(blocklen, leaf);
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
-index 155b47f231ab2..12647f9aaa6d7 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.h
-@@ -53,7 +53,8 @@ struct xfs_btree_cur *xfs_bnobt_init_cursor(struct xfs_mount *mp,
- struct xfs_btree_cur *xfs_cntbt_init_cursor(struct xfs_mount *mp,
- 		struct xfs_trans *tp, struct xfs_buf *bp,
- 		struct xfs_perag *pag);
--extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
-+unsigned int xfs_allocbt_maxrecs(struct xfs_mount *mp, unsigned int blocklen,
-+		bool leaf);
- extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
- 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index e3922cf75381c..37a1a1339027c 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -584,7 +584,7 @@ xfs_bmap_btree_to_extents(
- 	ASSERT(ifp->if_format == XFS_DINODE_FMT_BTREE);
- 	ASSERT(be16_to_cpu(rblock->bb_level) == 1);
- 	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
--	ASSERT(xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0) == 1);
-+	ASSERT(xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, false) == 1);
- 
- 	pp = xfs_bmap_broot_ptr_addr(mp, rblock, 1, ifp->if_broot_bytes);
- 	cbno = be64_to_cpu(*pp);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 0769644d30412..b811fb38a839a 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -645,11 +645,11 @@ xfs_bmbt_commit_staged_btree(
- /*
-  * Calculate number of records in a bmap btree block.
-  */
--int
-+unsigned int
- xfs_bmbt_maxrecs(
- 	struct xfs_mount	*mp,
--	int			blocklen,
--	int			leaf)
-+	unsigned int		blocklen,
-+	bool			leaf)
- {
- 	blocklen -= xfs_bmbt_block_len(mp);
- 	return xfs_bmbt_block_maxrecs(blocklen, leaf);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index a187f4b120ea1..df6a60452260e 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -35,7 +35,8 @@ extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
- 
- extern int xfs_bmbt_get_maxrecs(struct xfs_btree_cur *, int level);
- extern int xfs_bmdr_maxrecs(int blocklen, int leaf);
--extern int xfs_bmbt_maxrecs(struct xfs_mount *, int blocklen, int leaf);
-+unsigned int xfs_bmbt_maxrecs(struct xfs_mount *mp, unsigned int blocklen,
-+		bool leaf);
- 
- extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
- 				 int whichfork, xfs_ino_t new_owner,
-@@ -151,7 +152,7 @@ xfs_bmap_broot_ptr_addr(
- 	unsigned int		i,
- 	unsigned int		sz)
- {
--	return xfs_bmbt_ptr_addr(mp, bb, i, xfs_bmbt_maxrecs(mp, sz, 0));
-+	return xfs_bmbt_ptr_addr(mp, bb, i, xfs_bmbt_maxrecs(mp, sz, false));
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index fc70601e8d8ee..20bb5ce381345 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2948,8 +2948,8 @@ xfs_ialloc_setup_geometry(
- 
- 	/* Compute inode btree geometry. */
- 	igeo->agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
--	igeo->inobt_mxr[0] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 1);
--	igeo->inobt_mxr[1] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	igeo->inobt_mxr[0] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, true);
-+	igeo->inobt_mxr[1] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, false);
- 	igeo->inobt_mnr[0] = igeo->inobt_mxr[0] / 2;
- 	igeo->inobt_mnr[1] = igeo->inobt_mxr[1] / 2;
- 
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 797d5b5f7b725..401b42d52af68 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -572,11 +572,11 @@ xfs_inobt_block_maxrecs(
- /*
-  * Calculate number of records in an inobt btree block.
-  */
--int
-+unsigned int
- xfs_inobt_maxrecs(
- 	struct xfs_mount	*mp,
--	int			blocklen,
--	int			leaf)
-+	unsigned int		blocklen,
-+	bool			leaf)
- {
- 	blocklen -= XFS_INOBT_BLOCK_LEN(mp);
- 	return xfs_inobt_block_maxrecs(blocklen, leaf);
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
-index 6472ec1ecbb45..300edf5bc0094 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
-@@ -50,7 +50,8 @@ struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_perag *pag,
- 		struct xfs_trans *tp, struct xfs_buf *agbp);
- struct xfs_btree_cur *xfs_finobt_init_cursor(struct xfs_perag *pag,
- 		struct xfs_trans *tp, struct xfs_buf *agbp);
--extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
-+unsigned int xfs_inobt_maxrecs(struct xfs_mount *mp, unsigned int blocklen,
-+		bool leaf);
- 
- /* ir_holemask to inode allocation bitmap conversion */
- uint64_t xfs_inobt_irec_to_allocmask(const struct xfs_inobt_rec_incore *irec);
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 306106b78d088..847fbfdd87f8c 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -480,7 +480,7 @@ xfs_iroot_realloc(
- 	}
- 
- 	/* Compute the new and old record count and space requirements. */
--	cur_max = xfs_bmbt_maxrecs(mp, old_size, 0);
-+	cur_max = xfs_bmbt_maxrecs(mp, old_size, false);
- 	new_max = cur_max + rec_diff;
- 	ASSERT(new_max >= 0);
- 	new_size = xfs_bmap_broot_space_calc(mp, new_max);
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index cb3b1d42ae9a8..795928d1a66d8 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -417,9 +417,10 @@ xfs_refcountbt_block_maxrecs(
- /*
-  * Calculate the number of records in a refcount btree block.
-  */
--int
-+unsigned int
- xfs_refcountbt_maxrecs(
--	int			blocklen,
-+	struct xfs_mount	*mp,
-+	unsigned int		blocklen,
- 	bool			leaf)
- {
- 	blocklen -= XFS_REFCOUNT_BLOCK_LEN;
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-index 1e0ab25f6c680..beb93bef6a814 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -48,7 +48,8 @@ struct xbtree_afakeroot;
- extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
- 		struct xfs_trans *tp, struct xfs_buf *agbp,
- 		struct xfs_perag *pag);
--extern int xfs_refcountbt_maxrecs(int blocklen, bool leaf);
-+unsigned int xfs_refcountbt_maxrecs(struct xfs_mount *mp, unsigned int blocklen,
-+		bool leaf);
- extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
- 
- extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 56fd6c4bd8b41..ac2f1f499b76f 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -731,10 +731,11 @@ xfs_rmapbt_block_maxrecs(
- /*
-  * Calculate number of records in an rmap btree block.
-  */
--int
-+unsigned int
- xfs_rmapbt_maxrecs(
--	int			blocklen,
--	int			leaf)
-+	struct xfs_mount	*mp,
-+	unsigned int		blocklen,
-+	bool			leaf)
- {
- 	blocklen -= XFS_RMAP_BLOCK_LEN;
- 	return xfs_rmapbt_block_maxrecs(blocklen, leaf);
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index eb90d89e80866..119b1567cd0ee 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -47,7 +47,8 @@ struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
- 				struct xfs_perag *pag);
- void xfs_rmapbt_commit_staged_btree(struct xfs_btree_cur *cur,
- 		struct xfs_trans *tp, struct xfs_buf *agbp);
--int xfs_rmapbt_maxrecs(int blocklen, int leaf);
-+unsigned int xfs_rmapbt_maxrecs(struct xfs_mount *mp, unsigned int blocklen,
-+		bool leaf);
- extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
- 
- extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index a6fa9aedb28b0..d95409f3cba66 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1000,23 +1000,23 @@ xfs_sb_mount_common(
- 	mp->m_blockwmask = mp->m_blockwsize - 1;
- 	xfs_mount_sb_set_rextsize(mp, sbp);
- 
--	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
--	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, true);
-+	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, false);
- 	mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
- 	mp->m_alloc_mnr[1] = mp->m_alloc_mxr[1] / 2;
- 
--	mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 1);
--	mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, true);
-+	mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, false);
- 	mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
- 	mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
- 
--	mp->m_rmap_mxr[0] = xfs_rmapbt_maxrecs(sbp->sb_blocksize, 1);
--	mp->m_rmap_mxr[1] = xfs_rmapbt_maxrecs(sbp->sb_blocksize, 0);
-+	mp->m_rmap_mxr[0] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, true);
-+	mp->m_rmap_mxr[1] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, false);
- 	mp->m_rmap_mnr[0] = mp->m_rmap_mxr[0] / 2;
- 	mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
- 
--	mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(sbp->sb_blocksize, true);
--	mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(sbp->sb_blocksize, false);
-+	mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize, true);
-+	mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize, false);
- 	mp->m_refc_mnr[0] = mp->m_refc_mxr[0] / 2;
- 	mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
- 
+> Maybe left a warning message and set sb_agblocks to 1 and let debugger
+> continue is better.
 
+When two senior developers both say "do it this way", it is worth
+trying to understand why they made that suggestion, not take the
+suggestion as the exact solution to the problem. We've provided
+the -framework- for the desired solution, but you still need to do
+some work to make it work.
+
+So what is a valid value for sb_agblocks? Is that value more
+functional that a value of 1?  If it is more functional, can we
+calculate a better approximation of the correct value?
+
+Go an look at all the geometry information we have in
+the superblock that we can calculate an approximate AG size from.
+
+	sb_agcount tells us how many AGs there are.
+	sb_dblocks tells us the size of the filesystem.
+	sb_agblklog tells us the maximum size the AG could possibly be.
+
+Go look for redundant metadata that we can get the exact value of
+agblocks from without relying on a specific sb_agblocks value.
+
+	agf->agf_length should always equal sb_agblocks
+	agi->agi_length should always equal sb_agblocks
+
+Look at the sb_agblocks verification/bounds checking code to
+determine absolute min/max valid values.
+
+	XFS_MIN_AG_BYTES tells us the smallest valid AG size.
+	XFS_MIN_AG_BLOCKS tells us the smallest valid AG block count.
+
+So, how would you go about calculating an approximate, if not
+exactly correct value for the missing sb_agblocks value?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
