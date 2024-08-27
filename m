@@ -1,192 +1,183 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855211552ED
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 22:30:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08B6E158DC8
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 22:51:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724797855; cv=none; b=RuTasNahMGuc1E90uC/8MBhAst12OvR/4Ja18RLm36D2Q1CNlh3lh4ltPfQpsLFzxE7P+lMZVL+ozzo41Q0WJwmG/VRQ9CfTqhkkJqjyOa45P7dv06B9pjO02LhGdVSKRCajBYkCb0KrNIKP75tBXpAwYpzcF1519o9kS+REpvI=
+	t=1724799087; cv=none; b=JZXjN2mTnG3sDBUND+kU7WVy2qaeqUrFVBLOQWBN++z/ZgRy5fa81QL95IKzrsMYjM+0vr6DjMoI9WSddr5d9ecag9A+UQS370172RoHNcWcp99ch4UnpOZu+nLRRvPvxUBsR9Kl4XmvgJaSPVjFPK3FFGBj+wHLhAT6jSMpIEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724797855; c=relaxed/simple;
-	bh=PQby5F4jJ8TD1hlkKAx1MENWOL+JUsSbW2gJZcoAfeU=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OTbMrtj3Qxc0vn9pGLEfk0JccO5UENLb9DqhMEvCbZYMM8kQMwssI47fyjyLVX1XGVI0nTpZHdVx26xmlcCZTfXP10hEIgVPU0LLGjiVzFG6gX7TVG0qImEUK1qh+uACdN4sVlaRzL6+Yb7nLGE5h+Bcumhsw1T2tnQlITkT5rg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fBdQnbpT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724799087; c=relaxed/simple;
+	bh=uZEV6Er55Y1nv1xBlG+kUchSJelI/Jfm4FIRafbGjV0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JEVxf+w1OncqLWB06TrlZwKWQzuaUeMiYMgM1rU0nJHwevYVnUEda8qvhU8Pigv2GBCaeaGh9jjuDPu4EU5DBL9/rClWijO7OabtUL04LTkS+viYKpMBQVEGIwRbgI/OB1oX3WcVJ/7tYi1Sh7LQIRcU7cEPfkMJkwqaswGyYRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=sJrWBI2F; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fBdQnbpT"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 0FA76C4DE07
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 22:30:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724797855;
-	bh=PQby5F4jJ8TD1hlkKAx1MENWOL+JUsSbW2gJZcoAfeU=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=fBdQnbpT192BDWHDkGyZ3/uLM7lHEYwbwcdotxy7vy1LqInfSDeVFHo/WkBMZW1P3
-	 sqAMdKkmWSfy79B8v6AkwYhsqU/7tTWP2Xwp+L8yS8tIB4bDSaILjJa2OMZq+oNX/a
-	 plFVk3EXWPr75Ct1k3cR59JyLbPgEmSr8uDDEwYbuJFT5i/fCi4ZgB9Qnhutd5JY00
-	 lxhiEfGUTUZCSz/U6jcwLkeAG8JJFPBLX4drXTccM3anmNb3Y0hSn+GgQ5U1qqyDPU
-	 Qx0I5uGLjMGGbG3+fFP9BtqeprQzpgKH5K/upEt/U2bnhX6V1Hxh/7J6gzrmQ1W/BN
-	 BI7iw9AeeJ4fA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 0826AC53BC2; Tue, 27 Aug 2024 22:30:55 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 219203] xfsprogs-6.10.0: missing cast in
- /usr/include/xfs/xfs_fs.h(xfs_getparents_next_rec) causes error in C++
- compilations
-Date: Tue, 27 Aug 2024 22:30:54 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: djwong@kernel.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-219203-201763-9PynOwJ3m5@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219203-201763@https.bugzilla.kernel.org/>
-References: <bug-219203-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="sJrWBI2F"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2021a99af5eso55051795ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 15:51:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724799085; x=1725403885; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=GJGHZxh5R6ZTtzzS/6NHcFwTfwgCDmdEBZWgyIzoMVk=;
+        b=sJrWBI2FJL5ddMRADH+qo3A+SmTzsmuUmxnq6ndGO4pxZQFlS5VB+0sWQJDf1j1YF9
+         cnSFDgsnTkdVrQ3UEMKvf2+mZBQ6qwuu2aP6vpS7Ac2qIIRXLDsUIaeWYZdGonuH/lxQ
+         OHTeWtS4/Lzp2DFNMWw3dljnviTQ88zIZ5ZcHqzWz90bORq8ewtUD5W5rcOycr2Ar4gv
+         4uhBqYAbuIGEi8LAg2DCpsQe9QKyH05+lb/DWQYXLvdwNfo5QSQMhWzPw0jbtG/HbqtL
+         9dwFZT89JGwPkXy0/gzhxDmKFoKXnWYScQBclRcBm2nP2j7NCvXjDvptjjEgeoMqYG1F
+         NHfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724799085; x=1725403885;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GJGHZxh5R6ZTtzzS/6NHcFwTfwgCDmdEBZWgyIzoMVk=;
+        b=LDNGND48CrOHmJELzphlDxOyJBmO93fKsUh8Wfbmo01SjTZRXuDmMGBumdlKZmPpTG
+         K3IEi3Ntdts54obBfYJbdqxcvshEsSrE4dMHNhmu95oK/v2GrC21UwXuraVelWULAg/j
+         H+afQVwlN3YQTKfZyUH+PVGQu8YDHLBYh82LZeqZ0qTu6YJhXJK5bjMFJFw/OeeDxOTy
+         FjqXXmFErW3chMmqDucDi23u2Zc1ppbTWAauiTPAaeUgzujDHAXYxXH+dRZpXRy58OYk
+         /tyNvNrR9DigjHcm9u6hja2cbMrtdH731CXMxps92P9TSobZmzNknMVtlVt1RKPhserp
+         7FOg==
+X-Forwarded-Encrypted: i=1; AJvYcCW5VsyvQ1AdTyW40oV4FZw1A0421GXiLcJLPFO1i4UnS3NN3iTnyt4VBALpzCfWhZkSIIjtymb3sQ8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwLOpnEbbHKnQ9LwtS+w/GZso4X4ikfoDsB6bQAs5QKMacZwHuI
+	ySbcNUwbvPPiBS1+OHHPNiZw6nDJrZYHK7gq7MuzajwZUhlJ3cJg55ls7FwC+xk=
+X-Google-Smtp-Source: AGHT+IFtWGzsf+t9jppqitVe4iRyVZpKNl+Rv44cEroZBBCOkbsjRtNxvNObXq1JQJhWQRM7TkpVTg==
+X-Received: by 2002:a17:903:244c:b0:203:a156:54af with SMTP id d9443c01a7336-203a15655dcmr223343795ad.17.1724799085373;
+        Tue, 27 Aug 2024 15:51:25 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-0-65.pa.nsw.optusnet.com.au. [49.179.0.65])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-203855dbf79sm87443545ad.125.2024.08.27.15.51.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Aug 2024 15:51:24 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sj522-00F3c9-04;
+	Wed, 28 Aug 2024 08:51:22 +1000
+Date: Wed, 28 Aug 2024 08:51:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 4/5] xfs: convert perag lookup to xarray
+Message-ID: <Zs5Yac5V0pbz1PMF@dread.disaster.area>
+References: <20240821063901.650776-1-hch@lst.de>
+ <20240821063901.650776-5-hch@lst.de>
+ <20240821162810.GF865349@frogsfrogsfrogs>
+ <20240822034548.GD32681@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240822034548.GD32681@lst.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219203
+On Thu, Aug 22, 2024 at 05:45:48AM +0200, Christoph Hellwig wrote:
+> On Wed, Aug 21, 2024 at 09:28:10AM -0700, Darrick J. Wong wrote:
+> > On Wed, Aug 21, 2024 at 08:38:31AM +0200, Christoph Hellwig wrote:
+> > > Convert the perag lookup from the legacy radix tree to the xarray,
+> > > which allows for much nicer iteration and bulk lookup semantics.
+> > 
+> > Looks like a pretty straightforward covnersion.  Is there a good
+> > justification for converting the ici radix tree too?  Or is it too
+> > sparse to be worth doing?
+> 
+> radix trees and xarrays have pretty similar behavior related to
+> sparseness or waste of interior nodes due to it. 
 
---- Comment #2 from Darrick J. Wong (djwong@kernel.org) ---
-On Wed, Aug 28, 2024 at 07:40:15AM +1000, Dave Chinner wrote:
-> On Tue, Aug 27, 2024 at 09:07:03PM +0000, bugzilla-daemon@kernel.org wrot=
-e:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D219203
-> >=20
-> >             Bug ID: 219203
-> >            Summary: xfsprogs-6.10.0: missing cast in
-> >                     /usr/include/xfs/xfs_fs.h(xfs_getparents_next_rec)
-> >                     causes error in C++ compilations
-> >            Product: File System
-> >            Version: 2.5
-> >           Hardware: All
-> >                 OS: Linux
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P3
-> >          Component: XFS
-> >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
-> >           Reporter: kernel@mattwhitlock.name
-> >         Regression: No
-> >=20
-> > C allows implicit casts from void* to any pointer type, but C++ does no=
-t.
-> Thus,
-> > when including <xfs/xfs_fs.h> in a C++ compilation unit, the compiler
-> raises
-> > this error:
-> >=20
-> > /usr/include/xfs/xfs_fs.h: In function 'xfs_getparents_rec*
-> > xfs_getparents_next_rec(xfs_getparents*, xfs_getparents_rec*)':
-> > /usr/include/xfs/xfs_fs.h:915:16: error: invalid conversion from 'void*=
-' to
-> > 'xfs_getparents_rec*' [-fpermissive]
-> >   915 |         return next;
-> >       |                ^~~~
-> >       |                |
-> >       |                void*
-> >=20
-> >=20
-> > The return statement in xfs_getparents_next_rec() should have used an
-> explicit
-> > cast, as the return statement in xfs_getparents_first_rec() does.
-> >=20
-> > --- /usr/include/xfs/xfs_fs.h
-> > +++ /usr/include/xfs/xfs_fs.h
-> > @@ -912,7 +912,7 @@
-> >         if (next >=3D end)
-> >                 return NULL;
-> >=20
-> > -       return next;
-> > +       return (struct xfs_getparents_rec *)next;
-> >  }
->=20
-> We shouldn't be putting static inline code in xfs_fs.h. That header
-> file is purely for kernel API definitions. Iterator helper functions
-> aren't part of the kernel API definition - they should be in some
-> other exported header file if they are needed at all. The helpers
-> could be defined in the getparents man page in the example code that
-> uses them rather than exposing the C code to the world...
->=20
-> I note that we've recently added a static inline function type
-> checking function to xfs_types.h rather than it being an external
-> function declaration, so there's more than one header file that
-> needs cleanup....
+And the node size is still 64 entries, which matches up with inode
+chunk size. Hence a fully populated and cached inode chunk fills
+xarray nodes completely, just like the radix tree. Hence if our
+inode allocation locality decisions work, we end up with good
+population characteristics in the in-memory cache index, too.
 
-XFS has been exporting tons of static inline functions via xfslibs-dev
-for ages:
+> So unless we find a
+> better data structure for it, it would be worthwhile.
 
-$ grep static.*inline /usr/include/xfs/ | wc -l
-103
+I have prototype patches to convert the ici radix tree to an xarray.
+When I wrote it a few months ago I never got the time to actually
+test it because other stuff happened....
 
-And the kernel itself has been doing that for years:
+> But the ici radix tree does pretty funny things in terms of also
+> protecting other fields with the lock synchronizing it, so the conversion
+> is fairly complicated
 
-$ grep static.*inline /usr/include/linux/ | wc -l
-348
+The locking isn't a big deal - I just used xa_lock() and xa_unlock()
+to use the internal xarray lock to replace the perag->pag_ici_lock.
+This gives the same semantics of making external state and tree
+state updates atomic.
 
-...most of which don't trip g++ errors.  This was the first thing that
-broke a build somewhere, because neither the kernel nor xfsprogs use
-the C++ compiler.
+e.g. this code in xfs_reclaim_inode():
 
-Shouldn't code review have caught these kinds of problems?  Why wasn't
-there any automated testing to identify these issues before they got
-merged?  How many more guardrails do I get to build??
+	spin_lock(&pag->pag_ici_lock);
+	if (!radix_tree_delete(&pag->pag_ici_root,
+			       XFS_INO_TO_AGINO(ip->i_mount, ino)))
+		ASSERT(0);
+	xfs_perag_clear_inode_tag(pag, NULLAGINO, XFS_ICI_RECLAIM_TAG);
+	spin_unlock(&pag->pag_ici_lock);
 
-Or: should we add a dummy cpp source file to xfsprogs that includes
-xfs.h so that developers have some chance of finding potential C++
-errors sooner than 6 weeks after the kernel release?
+becomes:
 
-So far as I can tell, this fixes the c++ compilation errors, at least
-with gcc 12:
+	xa_lock(&pag->pag_icache);
+	if (__xa_erase(&pag->pag_icache,
+			XFS_INO_TO_AGINO(ip->i_mount, ino)) != ip)
+		ASSERT(0);
+	xfs_perag_clear_inode_tag(pag, NULLAGINO, XFS_ICI_RECLAIM_TAG);
+	xa_unlock(&pag->pag_icache);
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 0613239cad13..8fc305cce06b 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -971,13 +971,13 @@ static inline struct xfs_getparents_rec *
- xfs_getparents_next_rec(struct xfs_getparents *gp,
-                        struct xfs_getparents_rec *gpr)
- {
--       void *next =3D ((void *)gpr + gpr->gpr_reclen);
-+       void *next =3D ((char *)gpr + gpr->gpr_reclen);
-        void *end =3D (void *)(uintptr_t)(gp->gp_buffer + gp->gp_bufsize);
+so the clearing of the XFS_ICI_RECLAIM_TAG in the mp->m_perag tree
+is still atomic w.r.t. the removal of the inode from the icache
+xarray.
 
-        if (next >=3D end)
-                return NULL;
+> and I don't feel like doing it right now, at least
+> no without evaluating if for example a rthashtable might actually be
+> the better data structure here.  The downside of the rthashtable is
+> that it doens't support tags/masks and isn't great for iteration, so it
+> might very much not be very suitable.
 
--       return next;
-+       return (struct xfs_getparents_rec *)next;
- }
+The rhashtable is not suited to the inode cache at all. A very
+common access pattern is iterating all the inodes in an inode
+cluster (e.g. in xfs_iflush_cluster() or during an icwalk) and with
+a radix tree or xarray, these lookups all hit the same node and
+cachelines. We've optimised this into gang lookups, which means
+all the inodes in a cluster are fetched at the same time via
+sequential memory access.
 
+Move to a rhashtable makes this iteration mechanism impossible
+because the rhashtable is unordered. Every inode we look up now
+takes at least one cacheline miss because it's in some other
+completely random index in the rhashtable and not adjacent to
+the last inode we lookuped up. Worse, we have to dereference each
+object we find on the chain to do key matching, so it's at least two
+cacheline accesses per inode lookup.
 
---D
+So instead of a cluster lookup of 32 inodes only requiring a few
+cacheline accesses to walk down the tree and then 4 sequential
+cacheline accesses to retreive all the inode pointers, we have at
+least 64 individual random cacheline accesses to get the pointers to
+the same number of inodes.
 
-> -Dave.
-> --=20
-> Dave Chinner
-> david@fromorbit.com
->
+IOWs, a hashtable of any kind is way more inefficient than using the
+radix tree or xarray when it comes to the sorts of lockless
+sequential access patterns we use internally with the XFS inode
+cache.
 
---=20
-You may reply to this email to add a comment.
+Keep in mind that I went through all this "scalable structure
+analysis" back in 2007 before I replaced the hash table based inode
+cache implementation with radix trees. Radix trees were a far better
+choice than a hash table way back then, and nothing in our inode
+cache access patterns and algorithms has really changed since
+then....
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
