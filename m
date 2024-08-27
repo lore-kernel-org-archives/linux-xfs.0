@@ -1,42 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC8E4A33
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 03:16:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4AF78F66
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 03:23:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724728596; cv=none; b=RGdAU7RDRkUmasft3gxi9BUhEesaC40qyLJ6fX+FSLmfNih+pDJdpdBCDWs+tpmLXhVzUzckZdjbKBxH2W+CwE5m+EFouQBRgW/8RRp73zF80D5QetB16yz1UsRwcxXy6NEDRRFubthl9ksre7hU4ImI+d7Svow1CkjUq4zGQVc=
+	t=1724729035; cv=none; b=AiW1NJDIxDL/ghEPyBIcFAI7y9Dr3RqzYiNUsx78blq8kcNvNcUyo4ahJ9j/rblkXI/o3Zm1lEuVD/bJ358DD46fe9DUfR86aEpy4bRU9spfKDmSxyOl4ZnC1I5pZcBhRXODq6X057DdFQle79FhAHjxi9wHCms/HKL6A8Y1g2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724728596; c=relaxed/simple;
-	bh=Pwpq2sTTLXAOGUvmQYOdP2UJ+AB+PG+/6MKv4CBqfZI=;
+	s=arc-20240116; t=1724729035; c=relaxed/simple;
+	bh=3VQC+oYr1QkMfOP+oQVFlDWngFNujyutxTt5PaAYGUw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jj74SuUZQ4VIm8BzgxK9LODhswf9PgAhA1ORLMNKvGMx8ridqRf7IJOqJlasvjldX2Az+AwCewphBzsrX6yuZpIvcbo3eu+V2V16ZQku2KB59ygDogcFeTJx8XPl+cTJxKJhqMFpFd2tbnFJGn5oqD6sYTvkgMixcBAx3FIybeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X7VLA+Vl; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HkuiYq4JprLbevb6QOHs4bRGZsiAMY3xVb93ECedOiuB15R35oI1Kbe9Ph1/zUq0ZiUxgUmgE1G6EltiY6lpTf9b0i6fD9oMuV8oN7W5X1YSCdtjXNtpmifDBpU6ZfM65nlVb/KpAa3ex0r39UctPUQn8EGRcuGIwyFmw1eJvuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=mJeDYw+F; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X7VLA+Vl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AC72C8B7A1;
-	Tue, 27 Aug 2024 03:16:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724728596;
-	bh=Pwpq2sTTLXAOGUvmQYOdP2UJ+AB+PG+/6MKv4CBqfZI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=X7VLA+VlwsmdsWERS1TiSyoNB4Xj6hR0cS9CusPAm5dPexfNzDB0BN7CyH5deSQSJ
-	 Y/Sr2cVa1sNkvWKc/1U0ZcPfVjV82l5Z828cWcHlp0aDPCFtNIA1buRbd1R4nDEqA0
-	 NjQxnIlNHfk7OhvXMMyEffabiEU0LY3GXmn9fFJlRKhB07S237q/dVhnQN23l0NRey
-	 T+RkXIuJpVIX27YPq0uPD0So95nN4FKrpNZc2eTu07IWXGGZSmXlDSlTuDUn5VSysU
-	 MhsD5QhKvJh47fucda+y0PhpoVLGao8Y/pPwBeDG9eAiZpiJEGoOlbOuXKOexyHDtd
-	 T+F+mImgwwAFw==
-Date: Mon, 26 Aug 2024 20:16:35 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] xfs: update sb field checks when metadir is turned on
-Message-ID: <20240827031635.GH6082@frogsfrogsfrogs>
-References: <172437089342.61495.12289421749855228771.stgit@frogsfrogsfrogs>
- <172437089450.61495.17228908896759675474.stgit@frogsfrogsfrogs>
- <ZsxQa3xvdkrwvN48@dread.disaster.area>
- <20240826180747.GY865349@frogsfrogsfrogs>
- <Zs03C0CurF8bmDZr@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="mJeDYw+F"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-7cd9e634ea9so2964399a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2024 20:23:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724729033; x=1725333833; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=mwAQ1bg9N3yOeqS2uUN/ZfX4LxWfRfY5QTvMH1jInNc=;
+        b=mJeDYw+FusLkES6RyaacEtAgEIQzpBXWJbzcWBpo6+j+jZuyeHmR/LDwfnffcCOuuK
+         ZUTaYRORXzE3641CL7jLvEs4/yci8PRUlkdJom2EnjyoZae56Ji+glfVPCcEBytOuApE
+         VWJMkvIwGH++n19+MX3WJsOqAE6aeDe9SZ6js6iHQJzR20L0cGRRVPgCig5iWim15fOu
+         enZVkTntq9mWVKullZA1ERdElByFwVhURiXh0avNhc/gfcb5L46m+atmplGLu5HqN0z4
+         Al2DcZj+IFdclRzd9MRl+w537ull9lxcp9bryc5ugxhfpIB4UHFWAWX2+aIuYB/q9rXH
+         jJjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724729033; x=1725333833;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mwAQ1bg9N3yOeqS2uUN/ZfX4LxWfRfY5QTvMH1jInNc=;
+        b=WNi7+I8gzccVZYd4NivWA9ohQc+LrrzlTuq/OyhYWnEkJ+5whVUmho7AmjkWcEKzvT
+         CmQPjASxnUWKWeTFCJVrw9kq2UstNc4M6v3zgzKfvR5wQ6RabvrM4PwKwDT8H8LAwkvs
+         7AQlztvMXF15nb6n8QnxW7Qjzj77n2MpUkTrNum78GQFfkgJWIjXkrfJlbfoHei91hnU
+         fjvyymHez7GgzTrSokLP5k0ZGoR9e2uINGarjc53Sn2kw6jPRylJleqiAakuYfESU8Sq
+         nOWhSPfDWtC7bD8SDH6w4fWxEzwi/zr2/SVXe9cGjq45+Gajl9A2FekEjF1yshjS/2z5
+         ECSg==
+X-Forwarded-Encrypted: i=1; AJvYcCVhEAonMHy3rJwyskL8auhkT4WdH220hFH9bnJsG7ipYBO02xpf4aKDaWp8KCVKjA8WG4Pki4JH0rg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzO/mvWWN4GkXvobwyYQ+XegtLwVKltm47YQcyaoqhkOXtwOQ91
+	k+3TCKVHAWl4F1ZvdormQwJnoffxqURHBbOxPdRfkO5iKvwHF0AVEHJOV6JaP2nk/2AA/F2ylJ+
+	/
+X-Google-Smtp-Source: AGHT+IEJTpu2u3I2oE7oxtYifHxqk0mFnKUax9mmczMyloN3WNbX4LSDtrVcwPe1PohFVy6XNL5fdQ==
+X-Received: by 2002:a05:6a20:ce4c:b0:1c4:c93e:a57b with SMTP id adf61e73a8af0-1ccc08aa56emr1704471637.23.1724729033108;
+        Mon, 26 Aug 2024 20:23:53 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-47-239.pa.nsw.optusnet.com.au. [49.181.47.239])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-203855664e2sm74160705ad.30.2024.08.26.20.23.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Aug 2024 20:23:52 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1simoA-00E5oT-0M;
+	Tue, 27 Aug 2024 13:23:50 +1000
+Date: Tue, 27 Aug 2024 13:23:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: liuhuan01@kylinos.cn, linux-xfs@vger.kernel.org, cmaiolino@redhat.com
+Subject: Re: [PATCH] xfs_db: make sure agblocks is valid to prevent corruption
+Message-ID: <Zs1GxsICOpY/SKzn@dread.disaster.area>
+References: <20240821104412.8539-1-liuhuan01@kylinos.cn>
+ <20240823004912.GU6082@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,122 +72,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zs03C0CurF8bmDZr@dread.disaster.area>
+In-Reply-To: <20240823004912.GU6082@frogsfrogsfrogs>
 
-On Tue, Aug 27, 2024 at 12:16:43PM +1000, Dave Chinner wrote:
-> On Mon, Aug 26, 2024 at 11:07:47AM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 26, 2024 at 07:52:43PM +1000, Dave Chinner wrote:
-> > > On Thu, Aug 22, 2024 at 05:29:15PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > When metadir is enabled, we want to check the two new rtgroups fields,
-> > > > and we don't want to check the old inumbers that are now in the metadir.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  fs/xfs/scrub/agheader.c |   36 ++++++++++++++++++++++++------------
-> > > >  1 file changed, 24 insertions(+), 12 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> > > > index cad997f38a424..0d22d70950a5c 100644
-> > > > --- a/fs/xfs/scrub/agheader.c
-> > > > +++ b/fs/xfs/scrub/agheader.c
-> > > > @@ -147,14 +147,14 @@ xchk_superblock(
-> > > >  	if (xfs_has_metadir(sc->mp)) {
-> > > >  		if (sb->sb_metadirino != cpu_to_be64(mp->m_sb.sb_metadirino))
-> > > >  			xchk_block_set_preen(sc, bp);
-> > > > +	} else {
-> > > > +		if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
-> > > > +			xchk_block_set_preen(sc, bp);
-> > > > +
-> > > > +		if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
-> > > > +			xchk_block_set_preen(sc, bp);
-> > > >  	}
-> > > >  
-> > > > -	if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
-> > > > -		xchk_block_set_preen(sc, bp);
-> > > > -
-> > > > -	if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
-> > > > -		xchk_block_set_preen(sc, bp);
-> > > > -
-> > > 
-> > > If metadir is enabled, then shouldn't sb->sb_rbmino/sb_rsumino both
-> > > be NULLFSINO to indicate they aren't valid?
+On Thu, Aug 22, 2024 at 05:49:12PM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 21, 2024 at 06:44:12PM +0800, liuhuan01@kylinos.cn wrote:
+> > From: liuh <liuhuan01@kylinos.cn>
 > > 
-> > The ondisk sb values aren't defined anymore and we set the incore values
-> > to NULLFSINO (and never write that back out) so there's not much to
-> > check anymore.  I guess we could check that they're all zero or
-> > something, which is what mkfs writes out, though my intent here was to
-> > leave them as undefined bits, figuring that if we ever want to reuse
-> > those fields we're going to define a new incompat bit anyway.
+> > Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredump during the process.
+> > 	xfs_db -c "sb 0" -c "p agblocks" /dev/loop1
 > > 
-> > OTOH now would be the time to define what the field contents are
-> > supposed to be -- zero or NULLFSINO?
-> 
-> Yeah, I think it's best to give them a solid definition, that way we
-> don't bump up against "we can't tell if it has never been used
-> before" problems.
-> 
+> > System will generate signal SIGFPE corrupt the process. And the stack as follow:
+> > corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
+> > 	#0  libxfs_getbuf_flags
+> > 	#1  libxfs_getbuf_flags
+> > 	#2  libxfs_buf_read_map
+> > 	#3  libxfs_buf_read
+> > 	#4  libxfs_mount
+> > 	#5  init
+> > 	#6  main
 > > 
-> > > Given the rt inodes should have a well defined value even when
-> > > metadir is enabled, I would say the current code that is validating
-> > > the values are consistent with the primary across all secondary
-> > > superblocks is correct and this change is unnecessary....
-> > > 
-> > > 
-> > > > @@ -229,11 +229,13 @@ xchk_superblock(
-> > > >  	 * sb_icount, sb_ifree, sb_fdblocks, sb_frexents
-> > > >  	 */
-> > > >  
-> > > > -	if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
-> > > > -		xchk_block_set_preen(sc, bp);
-> > > > +	if (!xfs_has_metadir(mp)) {
-> > > > +		if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
-> > > > +			xchk_block_set_preen(sc, bp);
-> > > >  
-> > > > -	if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
-> > > > -		xchk_block_set_preen(sc, bp);
-> > > > +		if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
-> > > > +			xchk_block_set_preen(sc, bp);
-> > > > +	}
-> > > 
-> > > Same - if metadir is in use and quota inodes are in the metadir,
-> > > then the superblock quota inodes should be NULLFSINO....
+> > The coredump was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0.
+> > In this case, user cannot run in expert mode also.
 > > 
-> > Ok, I'll go with NULLFSINO ondisk and in memory.
+> > Never check (mp)->m_sb.sb_agblocks before use it cause this issue.
+> > Make sure (mp)->m_sb.sb_agblocks > 0 before libxfs_mount to prevent corruption and leave a message.
+> > 
+> > Signed-off-by: liuh <liuhuan01@kylinos.cn>
+> > ---
+> >  db/init.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/db/init.c b/db/init.c
+> > index cea25ae5..2d3295ba 100644
+> > --- a/db/init.c
+> > +++ b/db/init.c
+> > @@ -129,6 +129,13 @@ init(
+> >  		}
+> >  	}
+> >  
+> > +	if (unlikely(sbp->sb_agblocks == 0)) {
+> > +		fprintf(stderr,
+> > +			_("%s: device %s agblocks unexpected\n"),
+> > +			progname, x.data.name);
+> > +		exit(1);
 > 
-> OK.
-> 
-> Just to add to that (because I looked), mkfs.xfs does this to
-> initialise rtino numbers before they are allocated:
-> 
-> $ git grep NULLFSINO mkfs
-> mkfs/xfs_mkfs.c:        sbp->sb_rootino = sbp->sb_rbmino = sbp->sb_rsumino = NULLFSINO;
-> $
-> 
-> and repair does this for quota inodes when clearing the superblock
-> inode fields:
-> 
-> $ git grep NULLFSINO repair/dinode.c
-> repair/dinode.c:                        mp->m_sb.sb_uquotino = NULLFSINO;
-> repair/dinode.c:                        mp->m_sb.sb_gquotino = NULLFSINO;
-> repair/dinode.c:                        mp->m_sb.sb_pquotino = NULLFSINO;
-> $
-> 
-> So the current code is typically using NULLFSINO instead of zero on
-> disk for "inode does not exist".
+> What if we set sb_agblocks to 1 and let the debugger continue?
 
-<nod> Though I noticed that it writes out sb_[ugp]quotino = 0.
-Christoph once remarked that those parts of the sb were at some point
-unused, so they were zero, and they only become NULLFSINO once someone
-turns on QUOTABIT in sb_versionnum.
+Yeah, I'd prefer that xfs_db will operate on a corrupt filesystem and
+maybe crash unexpectedly than to refuse to allow any diagnosis of
+the corrupt filesystem.
 
-Regardless, all 1s is ok by me.
+xfs_db is a debug and forensic analysis tool. Having it crash
+because it didn't handle some corruption entirely corectly isn't
+something that we should be particularly worried about...
 
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
