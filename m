@@ -1,56 +1,42 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA13E19CD04
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 14:22:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF2419EEA2
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 14:36:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724768542; cv=none; b=Y6yNosnRwKM0mGn4Fj6DSGDx9CF8Rf5CCc+ixUqqF6/ZjiB4VhZjV+L4yg+C83YRWYrmi6JUHL1TAn3auDOKKTbLlOxxDSkm5c1ohlOe+5NVUNH+vdFS6szkUZ3o3df9YnPz6O5Q6BSFxcZYzKz6tQXEJEYMyVcmZvlO2dFV2ZY=
+	t=1724769377; cv=none; b=mMVDZJw9ZyC+Mv2vEdf6X1wez5l7aQCjBZMhoFmqCT1cyzrB2p2CH9oMne23bwh5W5Mh5fzo/O8ZurMyb7W/ZLoTPMJmVgi+WmB8tXV2/+xHHazPu0KPz+nCCwc/AmDoZU1BesCOR9i9QWo626+MW/qKh1bT+11kssrha3vOkAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724768542; c=relaxed/simple;
-	bh=rMY+Wpa6P9tpuCs/0GZB0yDMZmRLrFpolvUlscalVBY=;
+	s=arc-20240116; t=1724769377; c=relaxed/simple;
+	bh=gBadKD2GFCjdl+yjfUWpSBaXPOXUAEGqjtOkuVZlB3c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VNDgx8Ai9W46Zxj8ZfwA0P0HwhIfHe+TZyop+OS9SY/TTHtZRSIIH5Op2fAvum5hhn4mB9V0bBF5eRzya57KOlZuixvlw3Eh+vJYugsFnjjkus5K9tMhpMIX7lwTjXDkhSkgQycCDHxHKv/JWR3Ax0cmhHtMmAZgZuRYQA9i34c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XEBBuhlD; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=LVhiCRAagoupagaMyqZo9S6YUEQ3V9N1rNEJ/CHNfLji1H1Rg7hWnpx4kXyWchjdDmMyHINQmpf1633SGnuz8vzEeB0z3ogTNSBIby6bOnDKDF6BfeiB88ZjVypOqYQLkLZR/bSBK1UhXPI/jjTUx/Ao3Da9GhBk9VeIx0s6jlA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y3cvlGg0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XEBBuhlD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1724768539;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=twWn1uZMxlAJCczdUdorkg/5g2Kk3ZQ1joR3dGvJZA4=;
-	b=XEBBuhlDMhE/UGcKNpEFx7k0vRZH8/eW4RZ0xZyiQq7aC7ay+F/znAI6Zi+JY+Jb2ZS/U6
-	08lkOX//ilDMUihup3mSzWd3iXxAjrq2bgEpMTflvDU//tRb8SBnRxlc6LP4nMEGapFMjS
-	ovFVxP1fsZScY/0WmnOmySg2CKnoWMI=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-533-vV8QkMvUMEiTLuzl7CrM7A-1; Tue,
- 27 Aug 2024 10:22:14 -0400
-X-MC-Unique: vV8QkMvUMEiTLuzl7CrM7A-1
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E6B1D1955BED;
-	Tue, 27 Aug 2024 14:22:11 +0000 (UTC)
-Received: from bfoster (unknown [10.22.16.95])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8C1FF1955DD6;
-	Tue, 27 Aug 2024 14:22:10 +0000 (UTC)
-Date: Tue, 27 Aug 2024 10:23:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	djwong@kernel.org, josef@toxicpanda.com, david@fromorbit.com
-Subject: Re: [PATCH 2/2] iomap: make zero range flush conditional on
- unwritten mappings
-Message-ID: <Zs3hTiXLtuwXkYgU@bfoster>
-References: <20240822145910.188974-1-bfoster@redhat.com>
- <20240822145910.188974-3-bfoster@redhat.com>
- <Zs1uHoemE7jHQ2bw@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y3cvlGg0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE7FAC4DE02;
+	Tue, 27 Aug 2024 14:36:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724769376;
+	bh=gBadKD2GFCjdl+yjfUWpSBaXPOXUAEGqjtOkuVZlB3c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Y3cvlGg0yxNesIeaSJx0PLHZs/0vvPutQhHHneBQPexCmwHv42DNfTDdtNAK0nXbJ
+	 mn26vT5hW2EyATC+217E+iSM3/Ubi/0D8OpZE/y2dYl+5ruqMITZBTY1kn5MmESuBt
+	 hjUFgfUEWvQCwey7Qb/+xCCo9XvdaVk2YeEyEUfEfnaUdjyHuuZ91+uwwHFnN+zJ9j
+	 cZ0iymhm4or5pzIFaytPiLIrcRD1KXDw0uOc7XZRwPdh4r4qqHVjtVpJz/iaqdMRUv
+	 r3XkrfbTNUUYQqMtnc+Q0H//pOFrnOyaDlwh3b7xM4h7YCa+wd4fwpEWCt9fQMtgNX
+	 MTWJN0IpVFipQ==
+Date: Tue, 27 Aug 2024 07:36:15 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH 3/3] scrub: Remove libattr dependency
+Message-ID: <20240827143615.GM865349@frogsfrogsfrogs>
+References: <20240827115032.406321-1-cem@kernel.org>
+ <20240827115032.406321-4-cem@kernel.org>
+ <Zs3Dr2wwcaAFhMMO@infradead.org>
+ <7vjkhxi2jv6mg4k6xle62lhve27myjgxml2batfwmshwkvfekk@jstiohihwa2d>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,55 +45,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zs1uHoemE7jHQ2bw@infradead.org>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+In-Reply-To: <7vjkhxi2jv6mg4k6xle62lhve27myjgxml2batfwmshwkvfekk@jstiohihwa2d>
 
-On Mon, Aug 26, 2024 at 11:11:42PM -0700, Christoph Hellwig wrote:
-> On Thu, Aug 22, 2024 at 10:59:10AM -0400, Brian Foster wrote:
-> > Note that we also flush for hole mappings because iomap_zero_range()
-> > is used for partial folio zeroing in some cases. For example, if a
-> > folio straddles EOF on a sub-page FSB size fs, the post-eof portion
-> > is hole-backed and dirtied/written via mapped write, and then i_size
-> > increases before writeback can occur (which otherwise zeroes the
-> > post-eof portion of the EOF folio), then the folio becomes
-> > inconsistent with disk until reclaimed.
+On Tue, Aug 27, 2024 at 02:27:07PM +0200, Carlos Maiolino wrote:
+> On Tue, Aug 27, 2024 at 05:16:47AM GMT, Christoph Hellwig wrote:
+> > >   */
+> > > +
+> > >  #define ATTR_ENTRY(buffer, index)		\
+> > 
+> > Spurious whitespace change.
+> > 
+> > >  	((struct xfs_attrlist_ent *)		\
+> > >  	 &((char *)buffer)[ ((struct xfs_attrlist *)(buffer))->al_offset[index] ])
+> > >  
+> > > +/* Attr flags used within xfsprogs, must match the definitions from libattr */
+> > > +#define ATTR_ROOT	0x0002	/* use root namespace attributes in op */
+> > > +#define ATTR_SECURE	0x0008	/* use security namespaces attributes in op */
+> > 
+> > Why do we need these vs just using XFS_ATTR_ROOT/XFS_ATTR_SECURE from
+> > xfs_da_format.h?
 > 
-> Eww.  I'm not sure iomap_zero_range is the right way to handle this
-> even if that's what we have now and it kinda work.
+> Because I didn't see XFS_ATTR_ROOT and XFS_ATTR_SECURE exists :)
+
+Well if we're reusing symbols from xfs_fs.h then change these to
+XFS_IOC_ATTR_ROOT and XFS_IOC_ATTR_SECURE.
+
+> I'll take a look on it, and if we don't really need to define ATTR_ROOT/SECURE,
+> I'll just keep ATTR_ENTRY locally to fsprops.h, we don't need a header file for
+> just a single definition IMO.
+
+<shrug> I'd have turned them into namespaced libfrog functions in
+libfrog/attr.h, and demacro'd ATTR_ENTRY too:
+
+static inline struct xfs_attrlist_ent *
+libfrog_attr_entry(
+	struct xfs_attrlist	*list,
+	unsigned int		index)
+{
+	char			*buffer = (char *)list;
+
+	return (struct xfs_attrlist_ent *)&buffer[list->al_offset[index]];
+}
+
+static inline int
+libfrog_attr_list_by_handle(
+	void				*hanp,
+	size_t				hlen,
+	void				*buf,
+	size_t				bufsize,
+	int				flags,
+	struct xfs_attrlist_cursor	*cursor)
+{
+	return attr_list_by_handle(hanp, hlen, buf, bufsize, flags,
+			(struct attrlist_cursor *)cursor);
+}
+
+--D
+
 > 
-
-Yeah, I agree with that. That was one of the minor appeals (to me) of the
-prototype I posted a while back that customizes iomap_truncate_page() to
-do unconditional zeroing instead of being an almost pointless wrapper
-for iomap_zero_range(). I don't quite recall if that explicitly handled
-the hole case since it was quickly hacked together, but the general idea
-is that it could be more purpose built for these partial zeroing cases
-than zero range might be.
-
-There are some other caveats with that approach that would still require
-some variant of zero range, however, so I'm not immediately clear on
-what the ideal high level solution looks like quite yet. I'd like to get
-the existing mechanism working correctly, improve the test situation and
-go from there.
-
-> > +	/*
-> > +	 * We can skip pre-zeroed mappings so long as either the mapping was
-> > +	 * clean before we started or we've flushed at least once since.
-> > +	 * Otherwise we don't know whether the current mapping had dirty
-> > +	 * pagecache, so flush it now, stale the current mapping, and proceed
-> > +	 * from there.
-> > +	 */
-> > +	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN) {
+> > 
+> > > +	struct xfs_attrlist		*attrlist = (struct xfs_attrlist *)attrbuf;
+> > 
+> > Overly long line.
 > 
-> .. at very least the above needs to be documented here as a big fat
-> reminder, though.
+> Ok, Thanks!
 > 
-
-Sure, I'll include that explanation in the code comments in v2. Thanks.
-
-Brian
-
-> Otherwise the series looks sensible to me.
+> Carlos
 > 
-> 
-
