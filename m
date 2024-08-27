@@ -1,55 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA7DF1552ED
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 22:30:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855211552ED
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 22:30:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724797853; cv=none; b=aaJahkUwIMNkHJuUtPcMuDlCf43i8tL4mZzvtLo04lpbuLxG3U+FctkZVGtm0ed44qqkeJ0CAd3lQoY6gdcmP4XKIs3hxAMcUYshEQiZJ6Ky9TZBeaGpbbS99ywTDcIuO1vSGsuUS6Zg8uJtfTxI3q3VPj3R8khjSSs20/1yVOI=
+	t=1724797855; cv=none; b=RuTasNahMGuc1E90uC/8MBhAst12OvR/4Ja18RLm36D2Q1CNlh3lh4ltPfQpsLFzxE7P+lMZVL+ozzo41Q0WJwmG/VRQ9CfTqhkkJqjyOa45P7dv06B9pjO02LhGdVSKRCajBYkCb0KrNIKP75tBXpAwYpzcF1519o9kS+REpvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724797853; c=relaxed/simple;
-	bh=XoGOlXKl3isWVW74oyKsTV53WPs3PxekAJ7ykI40VVU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lh4oZsqUvoNKDIGDzSWm64IHuiATXHvdJM7YmCar9crKXA2qvXjRIDW1yfuz8yKoM6Bx+cASyFipxeRUQ0biWEmZe+vvnAH6V9fvW5J4agE/muHUdWh8S6df8K2JSBlWJgxcuE5X7ZrWdtTkWpj5Txh5s7VPWMEKHVFj+nzd6Uo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W9cis3jx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724797855; c=relaxed/simple;
+	bh=PQby5F4jJ8TD1hlkKAx1MENWOL+JUsSbW2gJZcoAfeU=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=OTbMrtj3Qxc0vn9pGLEfk0JccO5UENLb9DqhMEvCbZYMM8kQMwssI47fyjyLVX1XGVI0nTpZHdVx26xmlcCZTfXP10hEIgVPU0LLGjiVzFG6gX7TVG0qImEUK1qh+uACdN4sVlaRzL6+Yb7nLGE5h+Bcumhsw1T2tnQlITkT5rg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fBdQnbpT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W9cis3jx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 669C2C4DDF8;
-	Tue, 27 Aug 2024 22:30:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fBdQnbpT"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0FA76C4DE07
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 22:30:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724797853;
-	bh=XoGOlXKl3isWVW74oyKsTV53WPs3PxekAJ7ykI40VVU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=W9cis3jxYsIdL4xbK2LEOIAdPYW+E8Am61spDOXwr7A7gTBhWEO0yUwVideodo+R3
-	 6J/fM2SanmYGz5K1GSw5RwD7WUMvmt+a+qbhYoh3w6Y2V2NGbGs291y43BaWjahbrL
-	 Pu4tFjqjtmGxddSGTBAgFoY55ehYcO1CVv0N0JfRhzXRQtog17dmZpatKZUrEE2tMY
-	 HC43U0nfyHBjO7xena2Qrjbh0wB5nzu0B4zrKbP5NUw5PlR8UQepqAHwE8zRv+shcg
-	 +siq5skCh+AI9N4DI/hRanomeyCdZJPTK7C6Ck+YWpDAQj3CTYIBq8Ht+5llJh9t4L
-	 EQMkJmm7ZKvdg==
-Date: Tue, 27 Aug 2024 15:30:52 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: bugzilla-daemon@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [Bug 219203] New: xfsprogs-6.10.0: missing cast in
+	s=k20201202; t=1724797855;
+	bh=PQby5F4jJ8TD1hlkKAx1MENWOL+JUsSbW2gJZcoAfeU=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=fBdQnbpT192BDWHDkGyZ3/uLM7lHEYwbwcdotxy7vy1LqInfSDeVFHo/WkBMZW1P3
+	 sqAMdKkmWSfy79B8v6AkwYhsqU/7tTWP2Xwp+L8yS8tIB4bDSaILjJa2OMZq+oNX/a
+	 plFVk3EXWPr75Ct1k3cR59JyLbPgEmSr8uDDEwYbuJFT5i/fCi4ZgB9Qnhutd5JY00
+	 lxhiEfGUTUZCSz/U6jcwLkeAG8JJFPBLX4drXTccM3anmNb3Y0hSn+GgQ5U1qqyDPU
+	 Qx0I5uGLjMGGbG3+fFP9BtqeprQzpgKH5K/upEt/U2bnhX6V1Hxh/7J6gzrmQ1W/BN
+	 BI7iw9AeeJ4fA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 0826AC53BC2; Tue, 27 Aug 2024 22:30:55 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-xfs@vger.kernel.org
+Subject: [Bug 219203] xfsprogs-6.10.0: missing cast in
  /usr/include/xfs/xfs_fs.h(xfs_getparents_next_rec) causes error in C++
  compilations
-Message-ID: <20240827223052.GD1977952@frogsfrogsfrogs>
+Date: Tue, 27 Aug 2024 22:30:54 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: djwong@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-219203-201763-9PynOwJ3m5@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-219203-201763@https.bugzilla.kernel.org/>
 References: <bug-219203-201763@https.bugzilla.kernel.org/>
- <Zs5Hvxzxiq3wQGU7@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zs5Hvxzxiq3wQGU7@dread.disaster.area>
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D219203
+
+--- Comment #2 from Darrick J. Wong (djwong@kernel.org) ---
 On Wed, Aug 28, 2024 at 07:40:15AM +1000, Dave Chinner wrote:
-> On Tue, Aug 27, 2024 at 09:07:03PM +0000, bugzilla-daemon@kernel.org wrote:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=219203
-> > 
+> On Tue, Aug 27, 2024 at 09:07:03PM +0000, bugzilla-daemon@kernel.org wrot=
+e:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D219203
+> >=20
 > >             Bug ID: 219203
 > >            Summary: xfsprogs-6.10.0: missing cast in
 > >                     /usr/include/xfs/xfs_fs.h(xfs_getparents_next_rec)
@@ -65,41 +86,46 @@ On Wed, Aug 28, 2024 at 07:40:15AM +1000, Dave Chinner wrote:
 > >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
 > >           Reporter: kernel@mattwhitlock.name
 > >         Regression: No
-> > 
-> > C allows implicit casts from void* to any pointer type, but C++ does not. Thus,
-> > when including <xfs/xfs_fs.h> in a C++ compilation unit, the compiler raises
+> >=20
+> > C allows implicit casts from void* to any pointer type, but C++ does no=
+t.
+> Thus,
+> > when including <xfs/xfs_fs.h> in a C++ compilation unit, the compiler
+> raises
 > > this error:
-> > 
+> >=20
 > > /usr/include/xfs/xfs_fs.h: In function 'xfs_getparents_rec*
 > > xfs_getparents_next_rec(xfs_getparents*, xfs_getparents_rec*)':
-> > /usr/include/xfs/xfs_fs.h:915:16: error: invalid conversion from 'void*' to
+> > /usr/include/xfs/xfs_fs.h:915:16: error: invalid conversion from 'void*=
+' to
 > > 'xfs_getparents_rec*' [-fpermissive]
 > >   915 |         return next;
 > >       |                ^~~~
 > >       |                |
 > >       |                void*
-> > 
-> > 
-> > The return statement in xfs_getparents_next_rec() should have used an explicit
+> >=20
+> >=20
+> > The return statement in xfs_getparents_next_rec() should have used an
+> explicit
 > > cast, as the return statement in xfs_getparents_first_rec() does.
-> > 
+> >=20
 > > --- /usr/include/xfs/xfs_fs.h
 > > +++ /usr/include/xfs/xfs_fs.h
 > > @@ -912,7 +912,7 @@
-> >         if (next >= end)
+> >         if (next >=3D end)
 > >                 return NULL;
-> > 
+> >=20
 > > -       return next;
 > > +       return (struct xfs_getparents_rec *)next;
 > >  }
-> 
+>=20
 > We shouldn't be putting static inline code in xfs_fs.h. That header
 > file is purely for kernel API definitions. Iterator helper functions
 > aren't part of the kernel API definition - they should be in some
 > other exported header file if they are needed at all. The helpers
 > could be defined in the getparents man page in the example code that
 > uses them rather than exposing the C code to the world...
-> 
+>=20
 > I note that we've recently added a static inline function type
 > checking function to xfs_types.h rather than it being an external
 > function declaration, so there's more than one header file that
@@ -139,13 +165,13 @@ index 0613239cad13..8fc305cce06b 100644
  xfs_getparents_next_rec(struct xfs_getparents *gp,
                         struct xfs_getparents_rec *gpr)
  {
--       void *next = ((void *)gpr + gpr->gpr_reclen);
-+       void *next = ((char *)gpr + gpr->gpr_reclen);
-        void *end = (void *)(uintptr_t)(gp->gp_buffer + gp->gp_bufsize);
- 
-        if (next >= end)
+-       void *next =3D ((void *)gpr + gpr->gpr_reclen);
++       void *next =3D ((char *)gpr + gpr->gpr_reclen);
+        void *end =3D (void *)(uintptr_t)(gp->gp_buffer + gp->gp_bufsize);
+
+        if (next >=3D end)
                 return NULL;
- 
+
 -       return next;
 +       return (struct xfs_getparents_rec *)next;
  }
@@ -154,7 +180,13 @@ index 0613239cad13..8fc305cce06b 100644
 --D
 
 > -Dave.
-> -- 
+> --=20
 > Dave Chinner
 > david@fromorbit.com
-> 
+>
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
