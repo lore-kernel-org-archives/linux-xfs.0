@@ -1,72 +1,45 @@
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 957CD1991AB
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 10:00:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CAC21A073C;
+	Tue, 27 Aug 2024 10:13:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724752811; cv=none; b=Vgzk8kXUW2srja1bS/t7ufD3LLbVLJgx+P9Za8CdGxRQdO+RxVNwf2p8h9rpioD1XUjauzKETm/jjSqDjQxBM4RVUZ7hYIeTHDFwmf9XDtvWKQxoyATFHLSf33UErwjldJl/2mDX8x4xgHgoXMYc8AoPBnXzj6vOnGvKMoMGyvg=
+	t=1724753627; cv=none; b=jTJH+08XUa2ubxlUdzVa3gQryRzV1p3nlw5DnJe3QxC1kYwGdy6TEu5KsGmKj/PfLr29tzOPnRWRxqu2+xiCplkAYR6BMnZ0UqiuaZU4XQY02+mlQYj/mEiJ++T9/a2XSN73Ui/ZT3rHCnelLomoZlkp34jSMUeX45mowskWirg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724752811; c=relaxed/simple;
-	bh=N0PzZDt0PzJPjSER3FZj4PELLF7A1Vcr8t5O2XBdm2U=;
+	s=arc-20240116; t=1724753627; c=relaxed/simple;
+	bh=OtKLKLovPXlPeSXxDYFfqWc1OdexnokcwRWezfoZEfU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BCBKXP3sFCBIqEkWYgJlkWAG7wZiwlXRiyw4mksGfkuPKTf2LnEXWuIDcUpBPQpboXrqPYGjbr3XTXw40PNpx4P9KMd939zAKUSiVhIhawnbDEg3Ze4sGiNerDfCHh5VSPsI2bG5suWzHBmHUe1vfnLj9fuCsqZp7c5WEiXLWuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=gXJ/Trce; arc=none smtp.client-ip=209.85.215.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=irgvcPYrhBkkw/kAcd+3aKT4ERvOI5CGEXaSkWKKaUxCYxcsNVtg7QrLk3NYSWMiqJKk9JG+07xR6PRhS0jB7dkwTCeDADUpLtgGFa65dunm5NrINHY0Ks6kKDppt9Sr4vIXKRLzBwmzneSytDWOy5ouwtz5g3ezVtiVtE1ITno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IFq11HQo; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="gXJ/Trce"
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-7c6aee8e8daso3759516a12.0
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 03:00:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724752809; x=1725357609; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=LItg0RW/oD/L3YKzfGrhnwe+I1ecw+wcxdiz2DlOt1A=;
-        b=gXJ/Trces7755n6U41E9bLjoxB2B2KEQHfjE/CGLDvcjdgBwlkG+GpcKyQpsXvw6Ca
-         8cwsa6diBEe7o0JWd/jad2IjL7oufNi9z1e/ahT7bqeiCWUDTA3j+98jarrr8OsLI3tV
-         QRr2rHcxwLruaUPQlUhG9psp4yb2H0nR4VIWqVDkZri/hZcV0SC0zajnCBkc7sZ3Mde7
-         gB8DqBFAsnXlIIh4jn9mcyVBT4/vF9sRbCPtPuCyVz37/Ftq5kRVIFRrHwSSj5K0cRUt
-         4WqmkZxEaMdskUr2Y2GU08rnUpVWzOkgohKf88JXxqyO2rc0BtAMojCFPq1HlpIfIw5k
-         7J3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724752809; x=1725357609;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LItg0RW/oD/L3YKzfGrhnwe+I1ecw+wcxdiz2DlOt1A=;
-        b=B/qqvTF9RfCzdAVOx/PtWOQUYRpbmPBh1ldiLOB9DwuJD7v114IvMFCGtt1m3gl89/
-         AcEM9b6/jc1NtH6q4n6GxHtUmb3nqFI+LhdHepsO3c7cJj0+pULBWXFCle9kQgEOrfY8
-         mZuLD0cCRF85wmZELBIv48Bb71GPTsonKaCPYNjO4l4gj4yzl4bI5sCwl/SLsqaK20DF
-         fxYc95OR3aSxMEIlj35Xz/II9TrIvYoBcolWASyQ3LxEPpibluTQH2om8kziUaYlmgKo
-         sLwHB4EErZoCb0TGI8BpdSH0Jnac1IS5E38mb8O9iV4XQqSf/gtz79Eed8HXXhZEt4K6
-         oFFA==
-X-Forwarded-Encrypted: i=1; AJvYcCVDnEZxoWh5F9x5T+gEKd5gTeeNWyPBvvzbYAIV9XyW4IYcpYlpZL4d2E3qsX5YQet/kfLW2WFzJ8Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxyfJ/sZVdk9SdUHOObZaUnRkisJJGj2orrN2qBGLbH+fMiAS5e
-	tf8P4MgC38cFqqqnCB2nLKcKovRUJk6N3i4sWV7w7ZALp5KfAx6U6mNaFegmjHA=
-X-Google-Smtp-Source: AGHT+IHptT87g/WsLrq0RQjHqrafESub5eBdp7QEFbfncW7gkNW8FxjckCVK8lwNpC5/Bgj8612QGw==
-X-Received: by 2002:a05:6a20:b598:b0:1c4:b931:e2c4 with SMTP id adf61e73a8af0-1cc8b4bd8bamr14912132637.26.1724752808767;
-        Tue, 27 Aug 2024 03:00:08 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-0-65.pa.nsw.optusnet.com.au. [49.179.0.65])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-203855dd2e8sm80165895ad.121.2024.08.27.03.00.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Aug 2024 03:00:08 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1siszd-00EQEa-20;
-	Tue, 27 Aug 2024 20:00:05 +1000
-Date: Tue, 27 Aug 2024 20:00:05 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH 3/5] xfs: add XFS_ITEM_UNSAFE for log item push return
- result
-Message-ID: <Zs2jpYJHBtYqSMmD@dread.disaster.area>
-References: <20240823110439.1585041-1-leo.lilong@huawei.com>
- <20240823110439.1585041-4-leo.lilong@huawei.com>
- <ZslU0yvCX9pbJq8C@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IFq11HQo"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=oTpgnzArF2ljhVVf8MMWOhH6rtMPFPfD+TCF0oj6yfk=; b=IFq11HQohnkjBHntHpFG0iYr0j
+	asZC3RUnexBi3yUL4MBE7il6zzcqabH2zAcUmZjVMq0tF32n57UMi1YypLKQqqF4K1DGr+LYfn6QI
+	BCWOOM8TesyNTvSDyLFFyLYk+7VmCjvG5VSsi8uVs/8XGEtNKygFJec0304UVDoZ8wDwN6te3GiLd
+	nDeGMNtLUVK0Njfs/9HV3iLDYYPkp4ilzUq+K5uhWWF5AQWvYF7Muhoq87ohCkwL9A/Jb5jKWdr93
+	d/RBMxozwXCt5mj1owY8nzZGmQ/mALd8kTv8R5ZRSSsHOBwzMEMyLpF1OT3MwnOH4PHNwk8/kY6Am
+	BSl3uONw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sitCo-0000000AlHG-00a5;
+	Tue, 27 Aug 2024 10:13:42 +0000
+Date: Tue, 27 Aug 2024 03:13:41 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Julian Sun <sunjunchao2870@gmail.com>
+Cc: syzbot <syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com>,
+	brauner@kernel.org, chandan.babu@oracle.com, djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [iomap?] [xfs?] WARNING in iomap_write_begin
+Message-ID: <Zs2m1cXz2o8o1IC-@infradead.org>
+References: <0000000000008964f1061f8c32b6@google.com>
+ <de72f61cd96c9e55160328dd8b0c706767849e45.camel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,38 +48,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZslU0yvCX9pbJq8C@infradead.org>
+In-Reply-To: <de72f61cd96c9e55160328dd8b0c706767849e45.camel@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Aug 23, 2024 at 08:34:43PM -0700, Christoph Hellwig wrote:
-> On Fri, Aug 23, 2024 at 07:04:37PM +0800, Long Li wrote:
-> > After pushing log items, the log item may have been freed, making it
-> > unsafe to access in tracepoints. This commit introduces XFS_ITEM_UNSAFE
-> > to indicate when an item might be freed during the item push operation.
+On Tue, Aug 27, 2024 at 04:54:41PM +0800, Julian Sun wrote:
+> On Tue, 2024-08-13 at 01:14 -0700, syzbot wrote:
+> Hi,
 > 
-> So instead of this magic unsafe operation I think declaring a rule that
-> the lip must never be accessed after the return is the much saner
-> choice.
+> Is this still a valid problem, or is it a known issue? If it is still
+> valid, I'd like to dig it into, but do you have any ideas or
+> suggestions before I proceed? Thanks.
 
-That may well be the case, but in the normal case the only way to
-remove the item from the AIL is to run IO completion. We don't
-actually submit IO for anything we've pushed until after we've
-dropped out of the item push loop, so IO completion and potential
-item AIL removal and freeing can't occur for anything we need to do
-IO on.
+I tried to reproduce it locally but haven't hit it.  Once reproduced
+the next debug check would be which of the need zeroing conditions
+triggers.
 
-Hence the only cases where the item might have been already removed
-from the AIL by the ->iop_push() are those where the push itself
-removes the item from the AIL. This only occurs in shutdown
-situations, so it's not the common case.
-
-In which case, returning XFS_ITEM_FREED to tell the push code that
-it was freed and should not reference it at all is fine. We don't
-really even need tracing for this case because if the items can't be
-removed from the AIL, they will leave some other AIL trace when
-pushe (i.e.  they will be stuck locked, pinned or flushing and those
-will leave traces...)
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
