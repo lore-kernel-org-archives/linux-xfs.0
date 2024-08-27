@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A65091CDA3C;
-	Tue, 27 Aug 2024 18:44:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6411F84D34;
+	Tue, 27 Aug 2024 18:44:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724784274; cv=none; b=VJwlg5v5suOA26ODTqjtJwzlRgrjhljSFHNOgeNT2hG+JaMbPPdw46Tp7y5zciiKLPWaDqaVQHkCbJzcL82xTgQMgcAMvmCWPMVBU7h5DEkHQ/ngLYOaR2Lm8issLvmbR2qR4AcbBkpT880xWiRYosEkoxgGbuVTxzw0veM37k4=
+	t=1724784290; cv=none; b=J3X0d+nWxC7jbW/y/0dKwgyN5NZWGxe7AbBMdJ6Q0rICQLsz5pFQv+w15y55Oy3XTPZZIoyIch29mJFFaea9JXEEPCPmXsannR6QQztK/ts9+lP8sxXfie7zM/gLe6MQcL7LQfU1ZCp9S5KKUhCYchSD6/5qAkvW+jZpMmP9vaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724784274; c=relaxed/simple;
-	bh=S+tKeRnjIVAVCcZ5QA7azWjbf7rUUFysF5bCcV9/Jms=;
+	s=arc-20240116; t=1724784290; c=relaxed/simple;
+	bh=lpXKGw4wrV4trbpYDgy0jam5RV5/tPlvR0Wb+lxJU+w=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SCW5nvpDyguxe+mOj8Jlolm9cM+uid2jF0O1G1aHihD0N7QcXJRw6Xd5XU7Z2Pcmo659d5EM7tDM3nvFiXsSLDic6Ir6KZLmwY9kGierxVrr0BFzk2xxQkdAOoSOgYXlxdllHvyqzt/LA08ZDmtrC2WyAOYFzD6+P97keoJ5eqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QmM7XxW2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=njFA+hHXVdN6YzSZoO/l+A5RBUT4ahuXbZgc+CaVWoTPkf6musqaMcy1O6U43+0k5i7k6F8UM2Drns6Lb73ag6k/zbfdvCqtXRjpI5Taz03ReTOWhkLfFutjvaf1L0oMGlHEdNyf/pZaiJi+VlTkfYZvXSWZ5eEPq5NJWNRUGVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O7NY2WE0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QmM7XxW2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29CAAC4FE98;
-	Tue, 27 Aug 2024 18:44:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O7NY2WE0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBB8FC4FE9D;
+	Tue, 27 Aug 2024 18:44:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724784274;
-	bh=S+tKeRnjIVAVCcZ5QA7azWjbf7rUUFysF5bCcV9/Jms=;
+	s=k20201202; t=1724784289;
+	bh=lpXKGw4wrV4trbpYDgy0jam5RV5/tPlvR0Wb+lxJU+w=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QmM7XxW2aYQ1xgt1lCrivSbvrhpgI+5W8IK/x0K8YXpyfI7qXwqPkIj/7L8Zd6eWU
-	 ch7e6wKEjtnZhbE+JkViB7BfavqADk9jGOmmqhR9F+wfEZ7S4McDsBhT2XZ4NZpIyU
-	 9RQMMhDgKjFQMVYkk93Pk1UGtEO6M+bJ4MTBXlvakWYlWkooyciYPpPOlREB7zQil/
-	 hhDVg8+Sn7lOsvJOR+HKFzci+n/4RnmuYoau6NHnVNgTh7Gakc5LtEzRBVl6lDESU+
-	 iP3Jr/SuL4qpD83XtCpEhlW8+8mxrW5igezAnC6kbu1e8ufFcGx+LeCkUQ7mWzRNaO
-	 d+i4g2I2f6gWw==
-Date: Tue, 27 Aug 2024 11:44:33 -0700
-Subject: [PATCHSET v31.0 1/5] fstests: detect deceptive filename extensions
+	b=O7NY2WE0zCRVt8AoZvfO++lDc/rTGvT0dYnsIALNHZpqJjFCgsv0dIQQPvTaf6x6e
+	 IDlEooT0y/21hgzQ71cRffc0LeneKe3Mv9zqTj7bvH3X77CyiUv9CNTUfKrlaBZeRy
+	 rUtIgU4xuSgHJn0ijoVZhzhE8iqJ22+94Qln/fnaCQfLa9DSfuuNHxhCbkU/znJj4v
+	 AjIqCXFgsrKkEoMvUMnI0yvyHKIroOZnmoKMeH87ZoxB6favslO/dO6LEJWrGcMdHy
+	 Bpjmrv93NqShx+VzJoe+vZyCjgNx5wKD2lfBK5uhXfvSOyc6irYEmVg7/lscPzfcZY
+	 rKKBeF96mRUlA==
+Date: Tue, 27 Aug 2024 11:44:49 -0700
+Subject: [PATCHSET v31.0 2/5] fstests: test systemd background services
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <172478422285.2039346.9658505409794335819.stgit@frogsfrogsfrogs>
+Message-ID: <172478422640.2039472.46168148654222028.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240827184204.GM6047@frogsfrogsfrogs>
 References: <20240827184204.GM6047@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,13 +46,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-In early 2023, malware researchers disclosed a phishing attack that was
-targeted at people running Linux workstations.  The attack vector
-involved the use of filenames containing what looked like a file
-extension but instead contained a lookalike for the full stop (".")
-and a common extension ("pdf").  Enhance xfs_scrub phase 5 to detect
-these types of attacks and warn the system administrator.  Add
-functional testing for this code.
+Add a couple of new tests to check that the systemd services for
+xfs_scrub are at least minimally functional.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -62,16 +57,18 @@ Comments and questions are, as always, welcome.
 
 --D
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-detect-deceptive-extensions
-
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-detect-deceptive-extensions
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-improvements
 ---
 Commits in this patchset:
- * generic/453: test confusable name detection with 32-bit unicode codepoints
- * generic/453: check xfs_scrub detection of confusing job offers
+ * xfs: test xfs_scrub services
 ---
- tests/generic/453 |  111 +++++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 99 insertions(+), 12 deletions(-)
+ common/rc          |   14 +++++
+ common/systemd     |   73 +++++++++++++++++++++++++++
+ tests/xfs/1863     |  140 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1863.out |    5 ++
+ 4 files changed, 232 insertions(+)
+ create mode 100644 common/systemd
+ create mode 100755 tests/xfs/1863
+ create mode 100644 tests/xfs/1863.out
 
