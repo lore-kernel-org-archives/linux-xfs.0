@@ -1,70 +1,51 @@
-Received: from mail-io1-f42.google.com (mail-io1-f42.google.com [209.85.166.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E262189B91
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 14:51:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 088E117C9AF;
+	Wed, 28 Aug 2024 14:59:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724856684; cv=none; b=TJ4z9bLKg2f7rA8ZZkdHs1bkYb0QXg2iddkcgWTT1xW0M+HU0QiKdZEOAoidKBIkBCIQkfBAKj3Ume/1SorJX7isZeBgMVjEn19CSJcjw8EKOi85G0GaUL/14EJF6ixTFmCM8oTghsKI3NGNH+9jwpQCIJdPDvpAf1I1zaHXLBI=
+	t=1724857150; cv=none; b=HyMqtJqtdrYkf0iXKlphl2yELuv8rN7s8rU3zc5fnPld/DcqW4rPFHx6/7atG/V1Hbn/4FwBM28F7rbTM6dFM8ycMZQU77mcWbQp/NKXYYksYuccPQIs/KWd5hkTkDIXwvG4YZyJd5o/VFPSEQQgvrPuNdsgsWhWUdjhLKHuUDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724856684; c=relaxed/simple;
-	bh=rbYF9EQE6+2l/S8qLuOSkRSe2U+4urx63JdRyvn3Tq8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Q34njC8vCsPKjUzjVtVoMShZFsSjh8FlTLFg5C4xW73QGzdEPFJMbsvH/whgBHGA1UQ/nVdkrYkAwyEM7/WRVhbdwN7UeX2VOH1UHD81+TASrS0PC1qPj3HQZrSVg5578RM/TTUX9i1zWkfoPt/ixeiaBCnvo2ToQ6RX/3J/sSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=sOcWWwTu; arc=none smtp.client-ip=209.85.166.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1724857150; c=relaxed/simple;
+	bh=UpzTDQbTDM/duQdOjIrQF0JtfhbJsdmFGxYvGryuTxk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CIpmsGNBiQo6emj5a688ScF+iQTIsoE0M2lbsogk690/DD5RKWP7IJZKNNb3+jtWHu/DThgfNhcm8ub6DJY9YVW189S806q6TyRy67O16OpX7qSiwBjoipBh7e8kJJCf07Pe5rH1aAdP6XFWtYstsChW4FFKLX4guxupIBxIP5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fVT0pES8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="sOcWWwTu"
-Received: by mail-io1-f42.google.com with SMTP id ca18e2360f4ac-81f96ea9ff7so338489139f.3
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 07:51:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1724856682; x=1725461482; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PkBMJ6J7tx70rz6zmOA31ER4Q+skEgbVfFZ8HyWSogA=;
-        b=sOcWWwTu66gx9nBISRms8YlVMHBwqLYqwrIRtkz0p/fFg5TIgNSLV/E6qlazZZvkFJ
-         3g9UrAaQKqqghTbx/pTGcy+TGSCgBTXDgnxSXTvr69SgDljLZk2nvDdDhsar5BAl62xO
-         OsPvhhMxmf5NFnK2nhMXKaPAy8QIvOXalqGaL74PmW/fctcQIZ8b2AgHzVWlZz1CrSG8
-         I+msLL8ImwLNcgbNn2QcQQFZe/CNjPp3qL83xPpIIyOrP4xJvM2sq99Bk16+ppxbg1Us
-         /S3hW7LKOylLzrwEOdGO0YpT+RIL1UmJqDiyTHTqIQAtkvypv1a5mNJsrePCtwH2Tujr
-         9GTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724856682; x=1725461482;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PkBMJ6J7tx70rz6zmOA31ER4Q+skEgbVfFZ8HyWSogA=;
-        b=PyAMXpFKQjRl7TqyOrBk01YAJ2uPjPmrP5NAsU51u9Qcm9Zd+H9txDTluFF7fqkVaR
-         X2tYTB5Wz9g66IrXHbs4G9LCmpBjei87R0ug9/gZFu04xhiebFa/eoV5FmxNhRFuWweb
-         oDPTMDV8kbldSQlamFMJ1L1Of8nrQQv4A6q6yS0UXCxLm65xbA8FlSUJNVRkD8GKMz4G
-         4KQEEpR3WSx8yOd29EOTrx7mMhQEeMwKr179ztYjjBJnxfUS2x6GV1HuxZAV3fb+POH5
-         8ETrJ6A6nM0cQZQ4WHjWfIIT5FUciHhWsSTlN0W9WTtSItm6Z68P2PRAr9nr5NigCQl1
-         Ov+g==
-X-Forwarded-Encrypted: i=1; AJvYcCUvxY2dgClQBtfU6Gp1N6cOlxHlcBclTH2TDLH+UdgiRDmTxtoIU55BlD+8QLYRwEYGgFdfncfIcK0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yywd4631pKRTaly3cK4XYaLPZCI/OidkD6LyY2h17bXYY/VQCEW
-	9/Iw7bYfb+n3ED/TBGvk/zcA2aMRAPoWHdhvF6eI1gKA0Njix0BvCR7lzq5dxqY=
-X-Google-Smtp-Source: AGHT+IGH/sM51D0GQjar03mWbJeEot9AqwANMQY365pltcRA1L8eRTcfI+pPccqJjQxvsPbCCa2OWg==
-X-Received: by 2002:a05:6602:341a:b0:7eb:7f2e:5b3a with SMTP id ca18e2360f4ac-827873116d3mr2276078039f.2.1724856682153;
-        Wed, 28 Aug 2024 07:51:22 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4ce70f84e20sm3092887173.84.2024.08.28.07.51.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2024 07:51:21 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, 
- linux-block <linux-block@vger.kernel.org>, linux-scsi@vger.kernel.org, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, 
- John Garry <john.g.garry@oracle.com>
-In-Reply-To: <20240827175340.GB1977952@frogsfrogsfrogs>
-References: <20240827175340.GB1977952@frogsfrogsfrogs>
-Subject: Re: [PATCH] block: fix detection of unsupported WRITE SAME in
- blkdev_issue_write_zeroes
-Message-Id: <172485668128.410120.18023172929961192707.b4-ty@kernel.dk>
-Date: Wed, 28 Aug 2024 08:51:21 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fVT0pES8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96EABC4CEDF;
+	Wed, 28 Aug 2024 14:59:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724857149;
+	bh=UpzTDQbTDM/duQdOjIrQF0JtfhbJsdmFGxYvGryuTxk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=fVT0pES8N4PTFkiCAwxNpO3Cg29t7OPWu7yjC+pA3SXVg8PJqiXGwGVa+bnL7dJs4
+	 DZIQV+K9/5/NPv3UxO1xcCZ4XoDV0gZQYFRwcxdB36iPowOcmtu24JEevYL9yLw8nv
+	 mcuhQy/UCzoXHn4eZJWxbDn3ZQSjIiC8BcMHzNbyuBr0pu3BIW4QvGSyWv4BpBvSY/
+	 SgtK6QW0dX5i0VGoej1CCMc9Ux4/UrqYgxnlEdP3x/2Rr32LgYzX/r+1koyJA+37up
+	 odG8/YtATU6VO7ij/D/6QUuJGrjnXR4jXXR4kP8MwzetNZ97WOzYocUpTctL35PdHz
+	 lCMEd+lAg13Mg==
+From: Christian Brauner <brauner@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Brian Foster <bfoster@redhat.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Jan Kara <jack@suse.cz>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Chandan Babu R <chandan.babu@oracle.com>
+Subject: Re: [PATCH 1/6] block: remove checks for FALLOC_FL_NO_HIDE_STALE
+Date: Wed, 28 Aug 2024 16:58:47 +0200
+Message-ID: <20240828-bauen-leben-c8bb953a9fae@brauner>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240827065123.1762168-2-hch@lst.de>
+References: <20240827065123.1762168-1-hch@lst.de> <20240827065123.1762168-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,30 +53,41 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1593; i=brauner@kernel.org; h=from:subject:message-id; bh=UpzTDQbTDM/duQdOjIrQF0JtfhbJsdmFGxYvGryuTxk=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaSdtzZZ+fPJvXuvTxXsXqpguebWGw9R9oAtW/l4V36Ks Ll1cOGcvo5SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJxPIwMky/cuDUxf32EV5h 81f+XvrK+cvRPBM1C+HchQonb5r2qZ5h+J/4+1/Li76oKBEHjlsCV5Z4HZ1aE7f+M4PH3J9/bS8 arOEBAA==
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-
-On Tue, 27 Aug 2024 10:53:40 -0700, Darrick J. Wong wrote:
-> On error, blkdev_issue_write_zeroes used to recheck the block device's
-> WRITE SAME queue limits after submitting WRITE SAME bios.  As stated in
-> the comment, the purpose of this was to collapse all IO errors to
-> EOPNOTSUPP if the effect of issuing bios was that WRITE SAME got turned
-> off in the queue limits.  Therefore, it does not make sense to reuse the
-> zeroes limit that was read earlier in the function because we only care
-> about the queue limit *now*, not what it was at the start of the
-> function.
+On Tue, 27 Aug 2024 08:50:45 +0200, Christoph Hellwig wrote:
+> While the FALLOC_FL_NO_HIDE_STALE value has been registered, it has
+> always been rejected by vfs_fallocate before making it into
+> blkdev_fallocate because it isn't in the supported mask.
 > 
-> [...]
+> 
 
-Applied, thanks!
+Applied to the vfs.fallocate branch of the vfs/vfs.git tree.
+Patches in the vfs.fallocate branch should appear in linux-next soon.
 
-[1/1] block: fix detection of unsupported WRITE SAME in blkdev_issue_write_zeroes
-      (no commit info)
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Best regards,
--- 
-Jens Axboe
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fallocate
 
+[1/6] block: remove checks for FALLOC_FL_NO_HIDE_STALE
+      https://git.kernel.org/vfs/vfs/c/a24dfa515642
+[2/6] ext4: remove tracing for FALLOC_FL_NO_HIDE_STALE
+      https://git.kernel.org/vfs/vfs/c/c5a8e5423301
+[3/6] fs: sort out the fallocate mode vs flag mess
+      https://git.kernel.org/vfs/vfs/c/2f6369068139
+[4/6] xfs: call xfs_flush_unmap_range from xfs_free_file_space
+      https://git.kernel.org/vfs/vfs/c/2764727be269
+[5/6] xfs: move the xfs_is_always_cow_inode check into xfs_alloc_file_space
+      https://git.kernel.org/vfs/vfs/c/12206b1c423b
+[6/6] xfs: refactor xfs_file_fallocate
+      https://git.kernel.org/vfs/vfs/c/a0c3802f87a2
