@@ -1,46 +1,32 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4D0AA48
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 04:35:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63BAD3D96A;
+	Wed, 28 Aug 2024 04:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724819746; cv=none; b=sqEVTWQIwF7tzQOjvLwZkgqXCNhMU4j0tA4w2Vl8oSjaTdMHWJ+7I6/iFfK7Af9z1EnJLjDQIdMbP4b8RmK64yGhz4T1J4WBxg8wmwRIGwy6hbeITKPV/bp6dVZsmffIaBrpQTX46aLPUtIWhf0hd6RYTZV97gaD6Qket4mXFGM=
+	t=1724820535; cv=none; b=OPXzscQRBdRbVc2YEW4FFpSHBoWPOBAoIb0C444sgjOnCq0t7vyftH/DHNv/8c++QkQxgViSlIJo5WM4TZEdqFYqcpl6K9GDmuCzU7h1aQBluiM2ZgLiJFBNyr/8tuepKALq4B1sE9Vq/WH6OjjXarp9AZbqYmNcHqQysyL+KOU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724819746; c=relaxed/simple;
-	bh=28r67jT/DJEdVEHAIvIaX4QVpOWszLhRE9Or/XY3DJA=;
+	s=arc-20240116; t=1724820535; c=relaxed/simple;
+	bh=kiHT81fhyIPby1exHgmOJxmZcW/7Jl+utzDPXB/VNhY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=izqYP/Ovaype89T/r9arjfPvQvHj5EjqniernwoQMJ4U9AvsOhjFmd+1gkptJktCfjMylBZLEaBH4VRwqdF26rQZRkQFqxZdPR++ySFBHdgRsCREVepXTNkBFPM61WOaMDRYDWoaQyXfbVX95FDP7HNfUb1u18WlmQ7ULOMZBZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ehSxXsJo; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ehSxXsJo"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=nwFU2ZIVze9BkaZARGQUWoEb6qjVZbYsZMFVgfnYL58=; b=ehSxXsJor7IZIlLJ5qTSe2XHeD
-	odpcx7oK1qQyy7wt3TssNHBiro4FV6+jzq9lr9GOkhyxfVab2vBZyj7grTEvH5MgiUOlKdB6o9A9e
-	Ep4wttNZyOUV9HobS3v/YwFesCBPuLs0JyFu+84j0HqX93jPUi3af7vs0KfP+6MxISAZdKF9oP7IJ
-	9duY1aFqHhsJxqpEajMx8Ifl2SlqlWcfE6kSN9pIYNGCB54PRtD2Mgz28kjLc6+5A4NOalRJgt3S7
-	8SJplTYG5jmuo13LHvvxBRpvPPQdSDcfGSW1+FEr+cF5WBWP4o26w4xEOzQdb0c9k9vofKAIc1Z8q
-	zftSzVTg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sjAPI-0000000DoOy-0wh3;
-	Wed, 28 Aug 2024 04:35:44 +0000
-Date: Tue, 27 Aug 2024 21:35:44 -0700
-From: Christoph Hellwig <hch@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=M0LTqD5WpdaKtU/1j/3GbpsgsoM/8tKWPZ7ka8SB426oOt+gxV1JIfjdECiMFHv5lxozq1WGiMrDHD+Z6j0kJ6ovbCRR2Rml7dRUZx53yTy+0IuMyQb4hpWP3VsU8wkOqhlsoQAP67JOB+//5Jsv3C0cU6VO4qJUEdGZn4Z54cc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id D101C227A88; Wed, 28 Aug 2024 06:48:48 +0200 (CEST)
+Date: Wed, 28 Aug 2024 06:48:48 +0200
+From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>,
-	linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 3/3] scrub: Remove libattr dependency
-Message-ID: <Zs6pIFfRmMylXiIS@infradead.org>
-References: <20240827115032.406321-1-cem@kernel.org>
- <20240827115032.406321-4-cem@kernel.org>
- <Zs3Dr2wwcaAFhMMO@infradead.org>
- <7vjkhxi2jv6mg4k6xle62lhve27myjgxml2batfwmshwkvfekk@jstiohihwa2d>
- <20240827143615.GM865349@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 01/10] iomap: handle a post-direct I/O invalidate race
+ in iomap_write_delalloc_release
+Message-ID: <20240828044848.GA31463@lst.de>
+References: <20240827051028.1751933-1-hch@lst.de> <20240827051028.1751933-2-hch@lst.de> <20240827161416.GV865349@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,14 +35,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240827143615.GM865349@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240827161416.GV865349@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Aug 27, 2024 at 07:36:15AM -0700, Darrick J. Wong wrote:
-> > Because I didn't see XFS_ATTR_ROOT and XFS_ATTR_SECURE exists :)
+On Tue, Aug 27, 2024 at 09:14:16AM -0700, Darrick J. Wong wrote:
+> Is there any chance that we could get stuck in a loop here?  I
+> think it's the case that if SEEK_HOLE returns data_end == start_byte,
+> then the next time through the loop, the SEEK_DATA will return something
+> that is > start_byte.
+
+Yes.
+
+> Unless someone is very rapidly writing and
+> punching the page cache?
 > 
-> Well if we're reusing symbols from xfs_fs.h then change these to
-> XFS_IOC_ATTR_ROOT and XFS_IOC_ATTR_SECURE.
+> Hmm but then if *xfs* is punching delalloc then we're we holding the
+> iolock so who else could be doing that?
 
-Ah, yes.  We've got yet another name for those..
+Yes.  It's only the async direct I/O completions that punch without
+the lock.
 
