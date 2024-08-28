@@ -1,117 +1,74 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D02BF12E1D9
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 05:05:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC8314A630;
+	Wed, 28 Aug 2024 05:11:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724821557; cv=none; b=qvWKIofpQntfdnqmTQkhtCoCAU+AtI51yVKo63lGw8JhkKzygK2U5hdIGptWbfk9/r2XcuCbGrbBlt9vsd6Bf1y/Vn56mffUr8Zq/66CkWUDZY6BAD83wJc9gXSi6mG7E2aYj4PCLg3i+pZz055KNRXbTEPO03/OrA0fsm2oA/E=
+	t=1724821920; cv=none; b=lDG7iCGQrhKZwAixlgg9r4ocT3ViVB7JUbn1Trq9FRr6g/Gtdf6RiIz0ZfTKjJQGJwQLdslEx4X77b+zyErJbx9K3WK4aqR7d2h3tAD0T3p/7ZdkHadEMLNHPF8GwjTF/QJ6fqeBTwe8Nncii4P9E2rhT/JKOYlEZAq4fwkOnfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724821557; c=relaxed/simple;
-	bh=DFkjIqFzxP25YteHlap/6CaMoSqIWs/AWFsT7GU5gpU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m54WX/s3kHmGcKTlQhwO2qpIOqbKGGP8KlrpG7tpbIMoayOgOt0o4Be/0Pec0fh3Y+8Cs9MdG3tjhrHvwXWgWCULmad2mdD5qfj8SxLTnJdhRUU4uCCSuViDpl81e7tScCS+icDCA4oNad9kCC/nmvBRXaaU7jSDOo5mMe9dSIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=V3vsoidX; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1724821920; c=relaxed/simple;
+	bh=bdm0aOLyAz81WxxOGs3gd2CNrQr7fVLHYghOaVv/kJs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=itRyZkmJ6kUaYrPuCtF44ykiup2D2fL0ucfUWyMtSMLavoldq0f4mJigRi0E5r0AJSGSc223ELZk8ZJk3ThBK82dSA9eC5WGmwQAqq/OxFtPojvQYOzrUmCPnEkI3mp+pZrrVK3kmu6Nt6ZA23+zQTN8vy2LxyQua3Uv00Sylac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=X3HxUN3G; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V3vsoidX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1724821553;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qBQL0BddfH+kZ0cKiipxY4QCt26n2OX/jWUkKukRaTQ=;
-	b=V3vsoidX8cRg83fis7ab3K7cwdR4eXVYQ//ssEKduSsgGDz2Z71ezZqxW6wiSa3wflWSCI
-	+MuEVDfCDgbbj6xGBmSFKhT/unN7W0f0ectadpAE+fL1v0IuFv+TIhJ1D3RAPMxjLryNB2
-	TNpJ5xBRz3iKglPdMk/MaqUU1yKi1r0=
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
- [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-50-JHtU6U7ZNL2bqZdoNhF-HA-1; Wed, 28 Aug 2024 01:05:51 -0400
-X-MC-Unique: JHtU6U7ZNL2bqZdoNhF-HA-1
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-7ad78c1a019so6101421a12.2
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2024 22:05:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724821551; x=1725426351;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qBQL0BddfH+kZ0cKiipxY4QCt26n2OX/jWUkKukRaTQ=;
-        b=K/jb4CZdAzI+Gvl3KCDrULL1RWDAnk2lC4N0NdHxbWnZFxePqrRKRPdEuDpOCTYiNK
-         1lozDTV/8KQPbM+TnrP2JFj6gnWttbYiyXxfpBpOlK23cW9vKweAPUIEro03Gn1bkDxw
-         9IbTa3TgOyut67ftivxgfOQbpiEwnxle39UGh86sP/NV4qJGRNgiOjz2rCDjJhSy0KQY
-         Yduhw3ZuFFCzOYQEzxChczyCl5E9pvTm+aMdHnkpVVIjE8/cxOjIWuwISU9AKb7aGobW
-         Ax3H5A3hvxBHqM12ZtjckCG8hMQHhh9697eN6VkOOjWsMdIe+rkokC6lTt8ZLoQy5SGt
-         ERCA==
-X-Forwarded-Encrypted: i=1; AJvYcCX1qJF2ud24OipTIard07eE+lkjtSU8OU5aJGcddiuYHNc4ZaNnLTYgDa6zspr6JL03B01x1wg019k=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw3WQPiRbSUpyI2p/K7tE/2nlOrrz+E61JRoC4cxS6kNjp5mniQ
-	us5dFfkJraZYc5sNomanpScsfZU9IJtm4F5Lf+GPr9e9i1PyZ9zQbfm47tiT66QsgVKgwQtiGXU
-	HNidHSh+94Ph6am5pN1hLuMrGAf5Y8xxuzVHAXa7p/rH8jJGOSm3tPsLWWA==
-X-Received: by 2002:a05:6a20:1721:b0:1cc:d5bd:786b with SMTP id adf61e73a8af0-1ccd5bd7a25mr321731637.29.1724821550754;
-        Tue, 27 Aug 2024 22:05:50 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEEFIR/JYUspmbqn+uXgyne5OJuKUo5hCa8srA4oTGGM3OHrxovBgoVaZYvyktiaMavpWw0rA==
-X-Received: by 2002:a05:6a20:1721:b0:1cc:d5bd:786b with SMTP id adf61e73a8af0-1ccd5bd7a25mr321712637.29.1724821550130;
-        Tue, 27 Aug 2024 22:05:50 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d844624dc7sm542977a91.30.2024.08.27.22.05.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Aug 2024 22:05:49 -0700 (PDT)
-Date: Wed, 28 Aug 2024 13:05:45 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-block <linux-block@vger.kernel.org>, linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: regression on generic/351 in 6.11-rc5?
-Message-ID: <20240828050545.jfpaeu7mqsanozi2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240827020714.GK6047@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="X3HxUN3G"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=qSrOGe9vJINzdxtkitGbypmH6rCj1S+W6yy7xPpVUoU=; b=X3HxUN3G5AQjNd4nruMAMvMJoV
+	QVcBtF1VxfYhH2aCiOyzjGwmKI3MB6O9yfeATurSVzgs6siJEU9RKbXJG8eYVPLKdTIaT8TG8W8UU
+	0EPjbk52n7fZIjattgXlSkWQ834pUD5JaC7W6552Vq4WdhCrlTWvJrK4WJljGvd3b3gl2fxWYZ5Mz
+	f7hRxeNwu5XK7Yi02li2+uMqKoQtx0ioB17f2aZj23D8NbZjQoGY9AYmANwym8LmX27bfJMm8JakZ
+	vMLoJbvTEH0h8wvQpdLJRdFyu24i67SAj9qrESC+MnnH8wyCeTpCDTKgU7EHKTgfrlMFGOwIgI1Uq
+	6/yocsEw==;
+Received: from ppp-2-84-49-240.home.otenet.gr ([2.84.49.240] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sjAyK-0000000DsCP-08Ei;
+	Wed, 28 Aug 2024 05:11:56 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Hongbo Li <lihongbo22@huawei.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	linux-nilfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: RFC: add STATX_DIO_READ_ALIGN
+Date: Wed, 28 Aug 2024 08:11:00 +0300
+Message-ID: <20240828051149.1897291-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240827020714.GK6047@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Aug 26, 2024 at 07:07:14PM -0700, Darrick J. Wong wrote:
-> Hi everyone,
-> 
-> Has anyone else noticed the following regression in generic/351 between
-> 6.11-rc4 and -rc5?
+Hi all,
 
-Hi Darrick,
+file systems that write out of place usually require different alignment
+for direct I/O writes than what they can do for reads.  This series tries
+to address this by yet another statx field.
 
-The g/351 isn't in auto (default) group. So I think most of fstests users
-don't run it regularly. So I think most of them didn't hit that.
-How about add this case and more "fast and stable" cases to auto group?
-Include some xfs_scrub and online repair test cases.
+Note that the code is completely untested - I wrote it and got preempted
+and only sent this out because Hongbo Li brought the issue up in the
+nilfs2 context.  I've just started a vacation so I'm unlikely to get
+back to it any time soon, but if someone wants to take the work over
+go for it.  I'll probably answer to email at least every other day or
+so.
 
-Thanks,
-Zorro
-
-> 
-> --- /tmp/fstests/tests/generic/351.out	2024-02-28 16:20:24.224889046 -0800
-> +++ /var/tmp/fstests/generic/351.out.bad	2024-08-26 00:03:35.701439178 -0700
-> @@ -25,7 +25,7 @@ b83f9394092e15bdcda585cd8e776dc6  SCSI_D
->  Destroy device
->  Create w/o unmap or writesame and format
->  Zero punch, no fallback available
-> -fallocate: Operation not supported
-> +fallocate: Remote I/O error
->  Zero range, write fallback
->  Check contents
->  0fc6bc93cd0cd97e3cde5ea39ea1185d  SCSI_DEBUG_DEV
-> 
-> Just speculating here, but seeing as that test messes with lbpme in
-> scsi-debug, that this might be a result of this patch:
-> 
-> https://lore.kernel.org/all/20240817005325.3319384-1-martin.petersen@oracle.com/
-> 
-> Will bisect in the morning...
-> 
-> --D
-> 
-
+Diffstat:
+ fs/stat.c                 |    1 
+ fs/xfs/xfs_iops.c         |   37 +++++++++++++----
+ include/linux/stat.h      |    1 
+ include/uapi/linux/stat.h |   99 ++++++++++++++++++++++++++++++++++------------
+ 4 files changed, 106 insertions(+), 32 deletions(-)
