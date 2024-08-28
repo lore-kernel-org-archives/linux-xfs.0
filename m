@@ -1,47 +1,47 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AB5618030;
-	Wed, 28 Aug 2024 04:25:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BA23A48;
+	Wed, 28 Aug 2024 04:32:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724819159; cv=none; b=GI4qDQF+ImnbJjt9XfbJDeQQlY4gZF6Lh4pclRor5yEJZkz7gINUWCe0VvnCzNP0nitwy6bM74Mdp3mgqVeMSfpuxUBeef3Wmc9ZeYMaaWxiYYA91yDvJCTnk5J9JvKrbWAhhFV1e+IwdgL9+e+sEP7icj62zk7yAyM1Xz7os78=
+	t=1724819557; cv=none; b=BbCEjy4+k6oSXvvCLEWuPVRyEnxZrOKF4IduDhh77QvunJw8sSVMjjZF2zOuWnwXzS93mFNMf6G+5U7NYYs6Lmha+IrD3caL0x2JPvUTvHuDNw/EHnK8+p4HNkugTKuQJ+xFixjkfBh9PW2g633vD91fWCbQrrcqiDZagSn0Jxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724819159; c=relaxed/simple;
-	bh=nVJZ20UZwi9G1iQIPtKo2MLVT8yBwaubD7dhphFN/Ak=;
+	s=arc-20240116; t=1724819557; c=relaxed/simple;
+	bh=zt8HFHN+KLKybUEPSC1qVuw+SAE/WwOB9cLLcno3f1U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tVGdJcmgunmcztmG8H28ZZfQHD8N4KhHXsX1Dgtpsupx3wYO05Y1mhZSGeD9RasvfotPChAkCbTbATuZETMeLQM87Xro4vvQlBLFJ/bKi5S0ODJqi/E2t0R+rWEOrS5cNLEmJMiy5gmNOPn5OmgIZsE9XkptU0i+vWGVP4EkBgI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wQDhIPcz; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=HqW7vRmEhKPRn3LKiZ8pibdMHhzoQPXxsjMZKfXFUAa5NnxBCMVqlZfW1OCsAE4gY6qVPuxlvJQAB9Hi87PKJ4NbVvEKkm6WBN7ggBLAYlbDiYpgv0GPVCoQf5PMiMRMxGB2sqDxVLb/nYYo6Ka0hvr27PCsHXC4+2d/3SqcI90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zkD7r4P1; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wQDhIPcz"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zkD7r4P1"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=H66DSH30a1wLetJeIcaRJ0SJaICUB/a3w3PZbe6CiVA=; b=wQDhIPczVdMtCkZQ+MAFv0tSnv
-	Bz+8liWciw8F+tJKE6yTanO8hmkkt5EE8Zfh03CbAZeKaMYeD4/JE+LSjghQ2Ki+3wtIW0I+hDjfL
-	SVlPNRYYXa5w0L3jukmukR5jJo4jy+snNiCBXa9Ytk2xe8ju2jtRjk5s6YboBZBlrOIwIdcPKw5yd
-	8HHYp5LJAeDxG2NHevX6VxXE5tVLN5rOg72DBqwomoNg+Lz+uXpd0VP3ygVX2Xl0RWTtropJM99b3
-	khKgTw7JxAHfmg3sKm04MPhsaP0ppLjk+5tpqI1gBqWKB7MLTWyQ0ws+us3wM1YNsKHxwhGwCvfre
-	dNIv2eDQ==;
+	bh=zt8HFHN+KLKybUEPSC1qVuw+SAE/WwOB9cLLcno3f1U=; b=zkD7r4P1VXX9qv0vxWdRdWftCW
+	841z7yRGrT0/RWpY42dhICoteoB45H+YDMeWFZdMyT/rTzy1iwnuyz4wKeFJdgqPe3afLTNdWkrEY
+	AWhpfLZu4hHUWh0qig9PQSW6miSb6CqTHWBYI10nGSF5FxeN7fUxjLZgIgweR5J3I+Oqu4IFl0ias
+	W3PZJEddtSfu0wI3w8kw6rm9ylBU7DkVBPHyRPKFraFa1jcQ8TBJLVxJHnPFEe7XU58WoQiVYVDBa
+	rJRua4tKc9pvBoHaJcmLCaNabJVqCak7IMjyQgby6tNeKUAlVGskV2exI2az7utBSffKG+ak2LXIN
+	3FVueBIw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sjAFo-0000000DmcV-2Qe8;
-	Wed, 28 Aug 2024 04:25:56 +0000
-Date: Tue, 27 Aug 2024 21:25:56 -0700
+	id 1sjAMF-0000000Dns2-3s6w;
+	Wed, 28 Aug 2024 04:32:35 +0000
+Date: Tue, 27 Aug 2024 21:32:35 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>,
-	linux-block <linux-block@vger.kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH] block: fix detection of unsupported WRITE SAME in
- blkdev_issue_write_zeroes
-Message-ID: <Zs6m1H04ZJ97MaHb@infradead.org>
-References: <20240827175340.GB1977952@frogsfrogsfrogs>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, djwong@kernel.org, josef@toxicpanda.com,
+	david@fromorbit.com
+Subject: Re: [PATCH 2/2] iomap: make zero range flush conditional on
+ unwritten mappings
+Message-ID: <Zs6oY91eFfaFVrMw@infradead.org>
+References: <20240822145910.188974-1-bfoster@redhat.com>
+ <20240822145910.188974-3-bfoster@redhat.com>
+ <Zs1uHoemE7jHQ2bw@infradead.org>
+ <Zs3hTiXLtuwXkYgU@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,23 +50,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240827175340.GB1977952@frogsfrogsfrogs>
+In-Reply-To: <Zs3hTiXLtuwXkYgU@bfoster>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Aug 27, 2024 at 10:53:40AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> On error, blkdev_issue_write_zeroes used to recheck the block device's
-> WRITE SAME queue limits after submitting WRITE SAME bios.  As stated in
-> the comment, the purpose of this was to collapse all IO errors to
-> EOPNOTSUPP if the effect of issuing bios was that WRITE SAME got turned
-> off in the queue limits.  Therefore, it does not make sense to reuse the
-> zeroes limit that was read earlier in the function because we only care
-> about the queue limit *now*, not what it was at the start of the
-> function.
+On Tue, Aug 27, 2024 at 10:23:10AM -0400, Brian Foster wrote:
+> Yeah, I agree with that. That was one of the minor appeals (to me) of the
+> prototype I posted a while back that customizes iomap_truncate_page() to
+> do unconditional zeroing instead of being an almost pointless wrapper
+> for iomap_zero_range().
 
-Yes, that was a bit overeager..
+I only very vaguely remember that, you don't happen to have a pointer
+to that?
 
-Looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
