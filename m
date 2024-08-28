@@ -1,44 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7172334CC4;
-	Wed, 28 Aug 2024 16:13:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27CA44C68;
+	Wed, 28 Aug 2024 16:17:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724861619; cv=none; b=hyxcOull2/z6oS67Nqi3O1PilUGAaF1AVxJaJB4Bb5MVSC4AybGYlU9FQZaWfiPAlkp0GTrK+BzpiWgeFnzb0dlPh8s4Q00c/HalZ8fK+YGg3FZswtGo7yqdIdynYCRXIfGfKvdhbxR/wgm985cU5WGJz/ePLlb4CxAYrSwKGh0=
+	t=1724861827; cv=none; b=LjXSNVgj/SMNoGaPidfWydAMiWvaEhi3ZW7ny1fl4QmEWCOPM6eDeh1PtVtyOLAt42bY5xAY8fAfBWY8zKllLY4xu1dPXwG4CHba6d3pwJLQdKBqHxeBBsqU1avW6DF8l+2NZiQKkEyRhZwvp8e5aUWG2R5fo+ChSw8Ve16Zk9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724861619; c=relaxed/simple;
-	bh=zdCdsY+jeYjKDjT+Cc27R2H1cgv6tyZ8edPuagZsmF8=;
+	s=arc-20240116; t=1724861827; c=relaxed/simple;
+	bh=zzEz6a+a7catR9lF918EwtrhUutTlF4Pbk+J6wAcCw0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NIBUGYAw/0XGLeKkJ2fhcovApIrR+XfNt8Kg3DmtPL9LnvKyE23951Tcb8Q2fl8lSCbSMBHmcpNWdoQoHa9LX0sDyIPlpzIfxsQm0y9ENsthXVrVyMMBD5ElkHdlKqwFRv07cbU5z9SkNCOru5dDLb1JUZoJmrXLzIQRCQscWGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=muD8Htpo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=EXUvnWEo7bCy5cAQlZ3cRKQNGF04MCUouspoX1zLQone3vRPnBJboDDbOlqq4R+fM+zWbbwl33+UYaRnX4tvYcIJRU5fTQWQPnQm+rmh5Y/sC9/0XZwwf0dgutasOvDFu/wZ6lKbGRu+GibwKDeokDpPhybAwQ9dAAW7FkhHXrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NxxgJuIJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="muD8Htpo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDD2CC4E697;
-	Wed, 28 Aug 2024 16:13:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NxxgJuIJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B537EC51EFE;
+	Wed, 28 Aug 2024 16:17:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724861618;
-	bh=zdCdsY+jeYjKDjT+Cc27R2H1cgv6tyZ8edPuagZsmF8=;
+	s=k20201202; t=1724861826;
+	bh=zzEz6a+a7catR9lF918EwtrhUutTlF4Pbk+J6wAcCw0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=muD8HtpoC2P4gW2JExN+1d/z4b1TFD8Wnxb7u+W9/L82rxIq54X0L868QNCho7cNP
-	 Skd3kkcLiL8olxgUzKMMjGbhfS/RoeJ1s7hWSrbCw4QIMHwxUVn3VqAFr0Hhqd/6EZ
-	 4YID9FDfcO/95hnVwsvxWkXRu7nXzaf3Ssqu/pmu+oNaHYbi5Qzof2o0M+JDPlQY8P
-	 o/jCzet1yGt6+TxMuEG0G3b00isV6APRJG4H6LLCRfhsTMZ+B0qMDx0Jn10bMlldto
-	 5ApdvwNjiIS40T+fsDZRXa48GDYNb78lCf/w9wihsEOPnzHEhpaR6LNSpl9+Gus3ho
-	 bfJJbX9sCZ+XQ==
-Date: Wed, 28 Aug 2024 09:13:38 -0700
+	b=NxxgJuIJRyZJqzE/0h9xbbxQOOsR3VFLEUM0Fd+duKDEywUX12Fpnn5nzbXzDlvyb
+	 zJ9loCnxLbVhr2FRoCsOpiC91g/7ezzgrZHpkuPQ3BjW61sk+XLik6TdFkd0Mj2dKE
+	 ySHIgUuXPn6Yx9DDLT3nnMdCsIlN362YraDknMyDUds/Rq/2XOCFITky6zf1STOJf2
+	 sW+HjM5qt2SRXbjqQQWZ5r09gFugBOKB6j5lMsmz+nTdLQMS0pcmnYKW8bbJQpk+Oj
+	 6ZenheRsMCDHz9rZrL+rb8UaUhIHcnzF8dZ3S2rWvr0tgSDHh5InaROPD1IVq6u1aP
+	 FIgYWMrIX4DdA==
+Date: Wed, 28 Aug 2024 09:17:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 01/10] iomap: handle a post-direct I/O invalidate race in
- iomap_write_delalloc_release
-Message-ID: <20240828161338.GH1977952@frogsfrogsfrogs>
+Subject: Re: [PATCH 02/10] iomap: improve shared block detection in
+ iomap_unshare_iter
+Message-ID: <20240828161706.GI1977952@frogsfrogsfrogs>
 References: <20240827051028.1751933-1-hch@lst.de>
- <20240827051028.1751933-2-hch@lst.de>
- <20240827161416.GV865349@frogsfrogsfrogs>
- <20240828044848.GA31463@lst.de>
+ <20240827051028.1751933-3-hch@lst.de>
+ <20240827054424.GM6043@frogsfrogsfrogs>
+ <20240827054757.GA11067@lst.de>
+ <20240827162149.GW865349@frogsfrogsfrogs>
+ <20240828044929.GB31463@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,35 +49,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240828044848.GA31463@lst.de>
+In-Reply-To: <20240828044929.GB31463@lst.de>
 
-On Wed, Aug 28, 2024 at 06:48:48AM +0200, Christoph Hellwig wrote:
-> On Tue, Aug 27, 2024 at 09:14:16AM -0700, Darrick J. Wong wrote:
-> > Is there any chance that we could get stuck in a loop here?  I
-> > think it's the case that if SEEK_HOLE returns data_end == start_byte,
-> > then the next time through the loop, the SEEK_DATA will return something
-> > that is > start_byte.
-> 
-> Yes.
-> 
-> > Unless someone is very rapidly writing and
-> > punching the page cache?
+On Wed, Aug 28, 2024 at 06:49:29AM +0200, Christoph Hellwig wrote:
+> On Tue, Aug 27, 2024 at 09:21:49AM -0700, Darrick J. Wong wrote:
+> > > For writes it usually means out of place write, but for reporting
+> > > it gets translated to the FIEMAP_EXTENT_SHARED flag or is used to
+> > > reject swapon.  And the there is black magic in DAX.
 > > 
-> > Hmm but then if *xfs* is punching delalloc then we're we holding the
-> > iolock so who else could be doing that?
-> 
-> Yes.  It's only the async direct I/O completions that punch without
-> the lock.
+> > Hee hee.  Yeah, let's leave IOMAP_F_SHARED alone; an out of place write
+> > can be detected by iter->srcmap.type != HOLE.
 
-Heh, I forgot that I'd asked three questions.  Anyway I'm satisfied with
-the answers I got, so
+out of place write => "OOP"
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+but that acronym is already taken
 
-Though we might have to revisit this for filesystems that don't take
-i_rwsem exclusively when writing -- is that a problem?  I guess if you
-had two threads both writing and punching the pagecache they could get
-into trouble, but that might be a case of "if it hurts don't do that".
+static inline bool iomap_write_oops(const struct iomap_iter *i)
+{
+	/* ... i wrote it again */
+	return i->srcmap.type != HOLE;
+}
+
+<with apologies to the artist I just insulted>
+
+jk
+
+> I can probably come up with a comment that includes the COWextsize hints
+> in the definition of out of place writes and we should be all fine..
+
+Sounds good to me.
 
 --D
-
