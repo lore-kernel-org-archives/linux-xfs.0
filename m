@@ -1,80 +1,105 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB510158DB1;
-	Thu, 29 Aug 2024 11:24:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DDB07E59A;
+	Thu, 29 Aug 2024 11:26:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724930701; cv=none; b=M8C9ksC7dMRbhrlNLr/QUSpzuA4PNQwP2biU+WQt0HwAjD423V6iciWMzrgy09b600+qqe30kXcWHcJe4ajVC+eCCscaQ+ypXcIgAUsq3GYUJ/+0RbbUVMTobNSI2dlvKV38AU/P83qYRZ7SIUqAXTLNlplIm7Elj40z5KFKI0o=
+	t=1724930790; cv=none; b=Q0pr6PVbQaJr+DqPXwsohBnUfRVeZ++Kqg0U2yLpImBlTbp61QjAffIUj4cvGSIsALj/wwL7Nx3HLL5uIe8W3sgyo4j1w+Fei/Pwwx9U4K244jIr5sHIikLyqzYnTdF8FEwLlZXHMym3P3T5cmPEX77Q+r+tpNyzZkmLiRgpc/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724930701; c=relaxed/simple;
-	bh=FYDAbKjMprT+30E0SkamTgATHIiEKQyogZj2ApAJJAo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=fBpACDO7kOB19fPKoLA5wjY1TJbp5vIIXDCnkb2XawHn43BPCx3SoTJoLPsOCDLg/sD+HEDqrehbFXUO/9wYRanjT4SdgKdZB3ogKQ7i5wZaYQ+y6rusH3QAdHGikNNzI2uhB1nxV4JKVhTMyITNyNAtQLAbT0I5TOlcxz16EKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Wvf5m3nfnzLqsJ;
-	Thu, 29 Aug 2024 19:22:52 +0800 (CST)
-Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id E0BD8180105;
-	Thu, 29 Aug 2024 19:24:56 +0800 (CST)
-Received: from [10.174.176.88] (10.174.176.88) by
- kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 29 Aug 2024 19:24:56 +0800
-Message-ID: <9337ebda-8e27-4754-bc57-748e44f3b5e0@huawei.com>
-Date: Thu, 29 Aug 2024 19:24:55 +0800
+	s=arc-20240116; t=1724930790; c=relaxed/simple;
+	bh=gOx6qmYz1ck2X6HyQGme0UfMW99Cp51bAJbqgEhNEeo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=EnKmFXA1AMEOqIZtTBp82J9BrMYlqg4hQ9uqA6MovbhOZdWa1tMKuqSQMb7ZaM3vsx0a5IbrANd3vQv5lTI2WvXOcJ0CnhfTw7ypRAScjo70j1sa/LY3sjpaL1kOutBmsZDkOWJNaFC6OY4wGWFk+PutsfDA/1muuGuG6C/ouEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FMvQdcKW; arc=none smtp.client-ip=209.85.219.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FMvQdcKW"
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-6bf825d779eso2690936d6.0;
+        Thu, 29 Aug 2024 04:26:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1724930788; x=1725535588; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gOx6qmYz1ck2X6HyQGme0UfMW99Cp51bAJbqgEhNEeo=;
+        b=FMvQdcKW03eY2PheFvwldA5mr9KHxeNJUrqHjIWgDzV8khcn9jxNCOYbsr6jU2ZySb
+         Pzg3i0cKzXbpNqyyxjkaAe+MJRR5tFEwb5Hgm9LBx8qmiImTZ3Tl7XXNurdLLLmAzR9a
+         CHxRIPKO3TxoJjlmsJDfi1JkMMtbIF9diIsDjdOGZUiBFmA3KKGS2MboP6t1/aAGMgRh
+         aoCJvz1RTTXQmEYnn8sAVOW69/jsQ+/lmnLoSeIG2TiomoI5L3bZHHfVpCLmNy97zwB5
+         KZqv674iMXlUWyyDfsZI8NRU+MXpGZ+chnOCrX2NDpRlU8ZCSLuY0YN5LPwu9FJKFzE2
+         A6aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724930788; x=1725535588;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=gOx6qmYz1ck2X6HyQGme0UfMW99Cp51bAJbqgEhNEeo=;
+        b=WCveoz3mHyLDygXfRxZ4kLhF9ucwMMklM7kSFabrZXWdVX/6lSEcA4vSWNDqM3b+0q
+         MnOJc/G/NWS6/2zhTvwOcq344EC5G6X5eEQVYAsATYvR2Fo4R3uVHwJ9CFusYdOenM/M
+         j3OKbaZEcXrSaSHIfzmuzkSsbOAglRZahiFYwsbJ+eIGA+T72mmjpCH1wxDLEUox2IvI
+         dTywOceKrUnLTfJ/R7t2gGUlFSxiWiSkB9nZKgOM7Pzr9jrJ1JUw8g2uuigToBzYJqyq
+         wq77vKtNzxVXTVlkYznX+U54m2DcQUxO1BGXNCU9UBWc/i7nXX+LKnjg7X7Y9TdAHm2q
+         HhZg==
+X-Forwarded-Encrypted: i=1; AJvYcCV27atyMFFTSa5yILJfdfF8ZE/o3L1ScyDqpKRU4rXws0+xDYqSP+OCAmSaF8Bys04qSiu+CUA7XXRWS9Qf0Q==@vger.kernel.org, AJvYcCVimMGLY1umN1SSZmeTjYdUPjgSuaEEWfitVBMHz4yk4nIV1w9BDt9+6rWr0gnr6bs35/kMEKo5pyUA@vger.kernel.org, AJvYcCXnzA9aMdKZwPgTYf+pemXFDRtXAQpV2taxqqEE+pzJK8bOuOUbqLLGa7jpKWzSZrCFCdYDrUra2OJfBYWRIA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5N72cUoCD00E6CCxURy2nygfgKI9aGBQ+8S/cDorJUaJ1alV9
+	zvLn4dlhi2k9+nQ+dy+gcUWeXm9VVNxGG6dse15tj5YR+QBLHfFaLOssjkVSvuGcQz6+aE6DAlo
+	rbaEAV56HWbFHEc4CNwnMk/HIj5w=
+X-Google-Smtp-Source: AGHT+IF9Q1Ms8z/doAt1y4SkEv8z6ZQR3pz6NK2GvaKkD36Rbpxx93lLppwh2O+ZQ4ORSU1yEkhjdAHk+vkdNGr/aKc=
+X-Received: by 2002:a05:6214:3388:b0:6c1:6ad1:72af with SMTP id
+ 6a1803df08f44-6c33e62452fmr25327836d6.29.1724930788119; Thu, 29 Aug 2024
+ 04:26:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] Some boundary error bugfix related to XFS fsmap.
-To: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
-	<osandov@fb.com>, <john.g.garry@oracle.com>
-CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<yangerkun@huawei.com>
-References: <20240826031005.2493150-1-wozizhi@huawei.com>
-From: Zizhi Wo <wozizhi@huawei.com>
-In-Reply-To: <20240826031005.2493150-1-wozizhi@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemf100017.china.huawei.com (7.202.181.16)
+References: <cover.1723670362.git.josef@toxicpanda.com> <2bd333be8352f31163eac7528fdcb8b47a1f97b4.1723670362.git.josef@toxicpanda.com>
+ <20240829111510.dfyqczbyzefqzdtx@quack3>
+In-Reply-To: <20240829111510.dfyqczbyzefqzdtx@quack3>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 29 Aug 2024 13:26:17 +0200
+Message-ID: <CAOQ4uxjuySfiOXy_R28nhQnF+=ty=hL2Zj3h=aVrGXjm_v7gug@mail.gmail.com>
+Subject: Re: [PATCH v4 15/16] gfs2: add pre-content fsnotify hook to fault
+To: Jan Kara <jack@suse.cz>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
+	brauner@kernel.org, linux-xfs@vger.kernel.org, gfs2@lists.linux.dev, 
+	linux-bcachefs@vger.kernel.org, Andreas Gruenbacher <agruenba@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-friendly ping
+On Thu, Aug 29, 2024 at 1:15=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
+>
+> On Wed 14-08-24 17:25:33, Josef Bacik wrote:
+> > gfs2 takes the glock before calling into filemap fault, so add the
+> > fsnotify hook for ->fault before we take the glock in order to avoid an=
+y
+> > possible deadlock with the HSM.
+> >
+> > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+>
+> The idea of interactions between GFS2 cluster locking and HSM gives me
+> creeps. But yes, this patch looks good to me. Would be nice to get ack fr=
+om
+> GFS2 guys. Andreas?
 
-在 2024/8/26 11:10, Zizhi Wo 写道:
-> Prior to this, I had already sent out a patchset related to xfs fsmap
-> bugfix, which mainly introduced "info->end_daddr" to fix omitted extents[1]
-> and Darrick had already sent out a patchbomb for merging into stable[2],
-> which included my previous patches.
-> 
-> However, I recently discovered two new fsmap problems...What follows is a
-> brief description of them:
-> 
-> Patch 1: In this scenario, fsmap lost one block count. The root cause is
-> that during the calculation of highkey, the calculation of start_block is
-> missing an increment by one, which leads to the last query missing one
-> This problem is resolved by adding a sentinel node.
-> 
-> Patch 2: In this scenario, the fsmap query for realtime deivce may display
-> extra intervals. This is due to an extra increase in "end_rtb". The issue
-> is resolved by adjusting the relevant calculations. And this patch depends
-> on the previous patch that introduced "info->end_daddr".
-> 
-> [1] https://lore.kernel.org/all/20240819005320.304211-1-wozizhi@huawei.com/
-> [2] https://lore.kernel.org/all/172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs/
-> 
-> Zizhi Wo (2):
->    xfs: Fix missing block calculations in xfs datadev fsmap
->    xfs: Fix incorrect parameter calculation in rt fsmap
-> 
->   fs/xfs/libxfs/xfs_rtbitmap.c |  4 +---
->   fs/xfs/xfs_fsmap.c           | 39 +++++++++++++++++++++++++++++++-----
->   2 files changed, 35 insertions(+), 8 deletions(-)
-> 
+If we are being honest, I think that the fact that HSM events require caref=
+ul
+handling in ->fault() and not to mention no documentation of this fact,
+perhaps we should let HSM events be an opt-in file_system_type feature?
+
+Additionally, we had to introduce FS_DISALLOW_NOTIFY_PERM
+and restrict sb marks on SB_NOUSER, all because these fanotify
+features did not require fs opt-in to begin with.
+
+I think we would be repeating this mistake if we do not add
+FS_ALLOW_HSM from the start.
+
+After all, I cannot imagine HSM being used on anything but
+the major disk filesystems.
+
+Hmm?
+
+Amir.
