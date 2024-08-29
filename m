@@ -1,40 +1,49 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A657926296
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 22:10:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C79D26296;
+	Thu, 29 Aug 2024 22:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724969430; cv=none; b=Mqopk/fxuUpmSsbrkXLLSejMUk3G8clYHoG9loKFe9G707tXEIOFHKI8MmZgrv3qh4dUT2CYKBcfFJfTtSeMS3UgA23aVrr2x84yRUrnpbAgcGmVjW8gqkzynL+YSPQIHn16IcRe9gmL/LGmMhedz6iPP4oe2KgkuhTd7QLZx2g=
+	t=1724969522; cv=none; b=XFKFCEY1q98RxHIKauQ/66ykQcagv5NPGDguKGWR71mn8g3HJYl11dImgaC4I1g+J3pc1Jurq6IrWE2qWwrLwv0Az+sj05YnkCTyQr78e0kyuY4kOezyFuOJPDJ2B9zESvXjxVlH7bGAl2t/QH2XLvwX6B6KVdYALix7VNhL80A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724969430; c=relaxed/simple;
-	bh=Jp5OOPqGXTF5XL580yUT1PXbqJwYGo01yisG+oBk2Nc=;
+	s=arc-20240116; t=1724969522; c=relaxed/simple;
+	bh=DevfjA9nYbUkDAc+ZWbkTJGqwYUf+3w9J196uxoOS/c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oijXJHETnn7Jg0wAFdT5+0T++us+d36SNyO2CfHAd/v2n7cw5vn4oCAecWjrChCuTyrmTTHaPNDPwsEL3rvtl7ZhCPunsU5S1qILfPnY8r2a7c7bzm4PDe2aELtjwNW1FoN3ESQiq7x9D03Ar/1ua1bokLX+88prZfqVJg8HBNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=anjpFaIo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Jt/BOdVcTVO1cCW89SNIM4jaEmMQxz9uiSfQO9dqtHn7j1mrp4e/CMvCpdi6HTgVX/IvEDwNm+ffs5+KLgfnQJsXF8IYnW2iJns+ihxsNKFeuL1tYZEZ/iPP+rqcUaf1+uvuXJxuDOUSQ7uEIXAqj6ApYaFcVDwSxPJA/AjUZlk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mzVS94Ox; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="anjpFaIo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21F0AC4CEC1;
-	Thu, 29 Aug 2024 22:10:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724969430;
-	bh=Jp5OOPqGXTF5XL580yUT1PXbqJwYGo01yisG+oBk2Nc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=anjpFaIoaXae2xdMSwQQj5ZUnLtn5R6a60/G+Tz8APodOd5uJ9ZNN3J6KFpnBMT+7
-	 WRYfCzMsiO4NhIDaHnTTn/Hy25RfMUBq/af4QHRICA8gD8A9DUotppGULZ03TWpo50
-	 F4dn5AxLqFdBzL9Lpcjmay5bNbbEBS2h5ZUS+z+nVXohABMK/GZaNYlNx3CtV9RTqz
-	 FR5yHONMBpzSeCBgTaOf6gQhwHdf11DqZYAAY+LnpgfAFkn0frsseaYiGn32B6jEVr
-	 bW5fLFzLwRi9JbK7Xc81Ii4E5qYqANyMHIjKXKFLxjJSl/cryk195rJqZ/wlrIxjKc
-	 Ymn7RQtxlmwiQ==
-Date: Thu, 29 Aug 2024 15:10:29 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 04/10] xfs: replace shouty XFS_BM{BT,DR} macros
-Message-ID: <20240829221029.GR6224@frogsfrogsfrogs>
-References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
- <172480131573.2291268.11692699884722779994.stgit@frogsfrogsfrogs>
- <Zs/WSw6fm4SyyyW4@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mzVS94Ox"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=cluY4o3sKBSLScF/Teq2ofGGdYtENiSAyED2EAKIs78=; b=mzVS94Oxz0ViRqldoe5ZZiqQPQ
+	vWJdXxMTCNPxNG3KtUP86F10zUufqOiR66z03/EZgspXZhYFAllr4x+fHcue1QcI604ITY0XlV9H4
+	d9Mxr6S0Angqab1MH0Lvg3XximaLie9b10KWD8HGdHCiv5XSlOJxOeGHWQ956qFCbt9yYFNS6b8TT
+	YeYXnuyYZaBlexuII1PKqthXKQKqKjkY4i25Hvb7BkC/tcyHYyY89M1MU1wAV2YrEqIy0mDRcmBox
+	UTemC3lLeiXLuRMF59cMEfdSobjBB4hNndOFcYL5MG8A2Ze9xGvmzPBJWrS5zHYzrYwpZ0VECNqrC
+	fSwVEqmQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1sjnMf-00000002ZPG-0LKr;
+	Thu, 29 Aug 2024 22:11:37 +0000
+Date: Thu, 29 Aug 2024 23:11:36 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: brauner@kernel.org, akpm@linux-foundation.org, chandan.babu@oracle.com,
+	linux-fsdevel@vger.kernel.org, djwong@kernel.org, hare@suse.de,
+	gost.dev@samsung.com, linux-xfs@vger.kernel.org, hch@lst.de,
+	david@fromorbit.com, Zi Yan <ziy@nvidia.com>,
+	yang@os.amperecomputing.com, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, john.g.garry@oracle.com,
+	cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
+	ryan.roberts@arm.com, David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH v13 04/10] mm: split a folio in minimum folio order chunks
+Message-ID: <ZtDyGHTSy3Bi3FkS@casper.infradead.org>
+References: <20240822135018.1931258-1-kernel@pankajraghav.com>
+ <20240822135018.1931258-5-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,129 +52,195 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zs/WSw6fm4SyyyW4@dread.disaster.area>
+In-Reply-To: <20240822135018.1931258-5-kernel@pankajraghav.com>
 
-On Thu, Aug 29, 2024 at 12:00:43PM +1000, Dave Chinner wrote:
-> On Tue, Aug 27, 2024 at 04:34:45PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Replace all the shouty bmap btree and bmap disk root macros with actual
-> > functions, and fix a type handling error in the xattr code that the
-> > macros previously didn't care about.
-> 
-> I don't see a type handling fix in the xattr code in the patch.
-> 
-> If there is one, can you please split it out to make it obvious?
+On Thu, Aug 22, 2024 at 03:50:12PM +0200, Pankaj Raghav (Samsung) wrote:
+> @@ -317,9 +319,10 @@ unsigned long thp_get_unmapped_area_vmflags(struct file *filp, unsigned long add
+>  bool can_split_folio(struct folio *folio, int caller_pins, int *pextra_pins);
+>  int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+>  		unsigned int new_order);
+> +int split_folio_to_list(struct folio *folio, struct list_head *list);
+>  static inline int split_huge_page(struct page *page)
+>  {
+> -	return split_huge_page_to_list_to_order(page, NULL, 0);
+> +	return split_folio(page_folio(page));
 
-No, I think that's just debris from an old iteration of this years-old
-patch.  The xattr fixes got merged in the xattr state machine series
-that Allison merged a long time ago.
+Oh!  You can't do this!
 
-> ....
-> 
-> > -#define XFS_BMDR_REC_ADDR(block, index) \
-> > -	((xfs_bmdr_rec_t *) \
-> > -		((char *)(block) + \
-> > -		 sizeof(struct xfs_bmdr_block) + \
-> > -	         ((index) - 1) * sizeof(xfs_bmdr_rec_t)))
-> 
-> > +
-> > +static inline struct xfs_bmbt_rec *
-> > +xfs_bmdr_rec_addr(
-> > +	struct xfs_bmdr_block	*block,
-> > +	unsigned int		index)
-> > +{
-> > +	return (struct xfs_bmbt_rec *)
-> > +		((char *)(block + 1) +
-> > +		 (index - 1) * sizeof(struct xfs_bmbt_rec));
-> > +}
-> 
-> There's a logic change in these BMDR conversions - why does the new
-> version use (block + 1) and the old one use a (block + sizeof())
-> calculation?
+split_huge_page() takes a precise page, NOT a folio.  That page is
+locked.  When we return from split_huge_page(), the new folio which
+contains the precise page is locked.
 
-Pointer arithmetic works great inside C functions where you know the
-type of the operand.  That's why I used it.
+You've made it so that the caller's page's folio won't necessarily
+be locked.  More testing was needed ;-P
 
-That doesn't work at all in a macro where someone could pass in any
-random pointer and then the math is wrong.  That's why the macro casts
-to a byte-sized pointer type and then adds exactly the sizeof() bytes,
-or at least I assume that's the motivation of the authors.
-
-> I *think* they are equivalent, but now as I read the code I have to
-> think about casts and pointer arithmetic and work out what structure
-> we are taking the size of in my head rather than it being straight
-> forward and obvious from the code.
-
-The function argument declaration is four lines up.
-
-> It doesn't change the code that is generated, so I think that the
-> existing "+ sizeof()" variants is better than this mechanism because
-> everyone is familiar with the existing definitions....
-
-I disagree.  With your change, to validate this function, everyone must
-to check that the argument type matches the sizeof argument to confirm
-that the pointer arithmetic is correct.
-
-static inline struct xfs_bmbt_rec *
-xfs_bmdr_rec_addr(
-	struct xfs_bmdr_block	*block,
-	unsigned int		index)
-{
-	return (struct xfs_bmbt_rec *)
-		((char *)(block) +
-		 sizeof(struct xfs_btree_block) +
-		 (index - 1) * sizeof(struct xfs_bmbt_rec));
-}
-
-Oops, this function is broken, when we could have trusted the compiler
-to get the types and the math correct for us.
-
-> > +static inline struct xfs_bmbt_key *
-> > +xfs_bmdr_key_addr(
-> > +	struct xfs_bmdr_block	*block,
-> > +	unsigned int		index)
-> > +{
-> > +	return (struct xfs_bmbt_key *)
-> > +		((char *)(block + 1) +
-> > +		 (index - 1) * sizeof(struct xfs_bmbt_key));
-> > +}
-> > +
-> > +static inline xfs_bmbt_ptr_t *
-> > +xfs_bmdr_ptr_addr(
-> > +	struct xfs_bmdr_block	*block,
-> > +	unsigned int		index,
-> > +	unsigned int		maxrecs)
-> > +{
-> > +	return (xfs_bmbt_ptr_t *)
-> > +		((char *)(block + 1) +
-> > +		 maxrecs * sizeof(struct xfs_bmbt_key) +
-> > +		 (index - 1) * sizeof(xfs_bmbt_ptr_t));
-> > +}
-> 
-> Same for these.
-> 
-> > +/*
-> > + * Compute the space required for the incore btree root containing the given
-> > + * number of records.
-> > + */
-> > +static inline size_t
-> > +xfs_bmap_broot_space_calc(
-> > +	struct xfs_mount	*mp,
-> > +	unsigned int		nrecs)
-> > +{
-> > +	return xfs_bmbt_block_len(mp) + \
-> > +	       (nrecs * (sizeof(struct xfs_bmbt_key) + sizeof(xfs_bmbt_ptr_t)));
-> > +}
-> 
-> stray '\' remains in that conversion.
-
-Will fix, thanks.
-
---D
-
-> -Dave.
+>  }
+>  void deferred_split_folio(struct folio *folio);
+>  
+> @@ -495,6 +498,12 @@ static inline int split_huge_page(struct page *page)
+>  {
+>  	return 0;
+>  }
+> +
+> +static inline int split_folio_to_list(struct folio *folio, struct list_head *list)
+> +{
+> +	return 0;
+> +}
+> +
+>  static inline void deferred_split_folio(struct folio *folio) {}
+>  #define split_huge_pmd(__vma, __pmd, __address)	\
+>  	do { } while (0)
+> @@ -622,7 +631,4 @@ static inline int split_folio_to_order(struct folio *folio, int new_order)
+>  	return split_folio_to_list_to_order(folio, NULL, new_order);
+>  }
+>  
+> -#define split_folio_to_list(f, l) split_folio_to_list_to_order(f, l, 0)
+> -#define split_folio(f) split_folio_to_order(f, 0)
+> -
+>  #endif /* _LINUX_HUGE_MM_H */
+> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> index cf8e34f62976f..06384b85a3a20 100644
+> --- a/mm/huge_memory.c
+> +++ b/mm/huge_memory.c
+> @@ -3303,6 +3303,9 @@ bool can_split_folio(struct folio *folio, int caller_pins, int *pextra_pins)
+>   * released, or if some unexpected race happened (e.g., anon VMA disappeared,
+>   * truncation).
+>   *
+> + * Callers should ensure that the order respects the address space mapping
+> + * min-order if one is set for non-anonymous folios.
+> + *
+>   * Returns -EINVAL when trying to split to an order that is incompatible
+>   * with the folio. Splitting to order 0 is compatible with all folios.
+>   */
+> @@ -3384,6 +3387,7 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+>  		mapping = NULL;
+>  		anon_vma_lock_write(anon_vma);
+>  	} else {
+> +		unsigned int min_order;
+>  		gfp_t gfp;
+>  
+>  		mapping = folio->mapping;
+> @@ -3394,6 +3398,14 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+>  			goto out;
+>  		}
+>  
+> +		min_order = mapping_min_folio_order(folio->mapping);
+> +		if (new_order < min_order) {
+> +			VM_WARN_ONCE(1, "Cannot split mapped folio below min-order: %u",
+> +				     min_order);
+> +			ret = -EINVAL;
+> +			goto out;
+> +		}
+> +
+>  		gfp = current_gfp_context(mapping_gfp_mask(mapping) &
+>  							GFP_RECLAIM_MASK);
+>  
+> @@ -3506,6 +3518,25 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+>  	return ret;
+>  }
+>  
+> +int split_folio_to_list(struct folio *folio, struct list_head *list)
+> +{
+> +	unsigned int min_order = 0;
+> +
+> +	if (folio_test_anon(folio))
+> +		goto out;
+> +
+> +	if (!folio->mapping) {
+> +		if (folio_test_pmd_mappable(folio))
+> +			count_vm_event(THP_SPLIT_PAGE_FAILED);
+> +		return -EBUSY;
+> +	}
+> +
+> +	min_order = mapping_min_folio_order(folio->mapping);
+> +out:
+> +	return split_huge_page_to_list_to_order(&folio->page, list,
+> +							min_order);
+> +}
+> +
+>  void __folio_undo_large_rmappable(struct folio *folio)
+>  {
+>  	struct deferred_split *ds_queue;
+> @@ -3736,6 +3767,8 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+>  		struct vm_area_struct *vma = vma_lookup(mm, addr);
+>  		struct folio_walk fw;
+>  		struct folio *folio;
+> +		struct address_space *mapping;
+> +		unsigned int target_order = new_order;
+>  
+>  		if (!vma)
+>  			break;
+> @@ -3753,7 +3786,13 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+>  		if (!is_transparent_hugepage(folio))
+>  			goto next;
+>  
+> -		if (new_order >= folio_order(folio))
+> +		if (!folio_test_anon(folio)) {
+> +			mapping = folio->mapping;
+> +			target_order = max(new_order,
+> +					   mapping_min_folio_order(mapping));
+> +		}
+> +
+> +		if (target_order >= folio_order(folio))
+>  			goto next;
+>  
+>  		total++;
+> @@ -3771,9 +3810,14 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+>  		folio_get(folio);
+>  		folio_walk_end(&fw, vma);
+>  
+> -		if (!split_folio_to_order(folio, new_order))
+> +		if (!folio_test_anon(folio) && folio->mapping != mapping)
+> +			goto unlock;
+> +
+> +		if (!split_folio_to_order(folio, target_order))
+>  			split++;
+>  
+> +unlock:
+> +
+>  		folio_unlock(folio);
+>  		folio_put(folio);
+>  
+> @@ -3802,6 +3846,8 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+>  	pgoff_t index;
+>  	int nr_pages = 1;
+>  	unsigned long total = 0, split = 0;
+> +	unsigned int min_order;
+> +	unsigned int target_order;
+>  
+>  	file = getname_kernel(file_path);
+>  	if (IS_ERR(file))
+> @@ -3815,6 +3861,8 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+>  		 file_path, off_start, off_end);
+>  
+>  	mapping = candidate->f_mapping;
+> +	min_order = mapping_min_folio_order(mapping);
+> +	target_order = max(new_order, min_order);
+>  
+>  	for (index = off_start; index < off_end; index += nr_pages) {
+>  		struct folio *folio = filemap_get_folio(mapping, index);
+> @@ -3829,15 +3877,19 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+>  		total++;
+>  		nr_pages = folio_nr_pages(folio);
+>  
+> -		if (new_order >= folio_order(folio))
+> +		if (target_order >= folio_order(folio))
+>  			goto next;
+>  
+>  		if (!folio_trylock(folio))
+>  			goto next;
+>  
+> -		if (!split_folio_to_order(folio, new_order))
+> +		if (folio->mapping != mapping)
+> +			goto unlock;
+> +
+> +		if (!split_folio_to_order(folio, target_order))
+>  			split++;
+>  
+> +unlock:
+>  		folio_unlock(folio);
+>  next:
+>  		folio_put(folio);
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.44.1
 > 
