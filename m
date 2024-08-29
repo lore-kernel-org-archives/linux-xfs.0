@@ -1,147 +1,171 @@
-Received: from fout8-smtp.messagingengine.com (fout8-smtp.messagingengine.com [103.168.172.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B62DD15C138
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 21:56:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A657926296
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 22:10:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724968567; cv=none; b=r9XRhzyluzr7U+nV6S9aTphI+GorJ16YFJ2OrYh7VD21V8//gXkScUdlPp3djI1cjcqcujljNRGwbJkDh6VlOA9VR1HpRXc5g4DZRgu3dvrbCopgviTmSa5UVSUC/7ffwdV7eZuiBJ1WOKVW/eTPfswbUzows2JMGcVI09wXQkA=
+	t=1724969430; cv=none; b=Mqopk/fxuUpmSsbrkXLLSejMUk3G8clYHoG9loKFe9G707tXEIOFHKI8MmZgrv3qh4dUT2CYKBcfFJfTtSeMS3UgA23aVrr2x84yRUrnpbAgcGmVjW8gqkzynL+YSPQIHn16IcRe9gmL/LGmMhedz6iPP4oe2KgkuhTd7QLZx2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724968567; c=relaxed/simple;
-	bh=+VBZx+wcnf0RQ+bXmOs55zhTxVwdUmFEv4ffl4hqmTc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bGCn678gGlDEfYaf86A7dwCOveajBjLRpnsPhdjomx+Hu3ksKapkGzbtDFx389bjSPJTrNheBs4rCj7DCX5/hYyr94TU8vuNoGQF9FAO6TLNJnln753x5zM3mK3lDF+09cVeW6qdhcFyxRblwEajf9o7t2hw7Kf8tK9sDe/TonY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=PMribWcV; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=FMKTmyRA; arc=none smtp.client-ip=103.168.172.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1724969430; c=relaxed/simple;
+	bh=Jp5OOPqGXTF5XL580yUT1PXbqJwYGo01yisG+oBk2Nc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oijXJHETnn7Jg0wAFdT5+0T++us+d36SNyO2CfHAd/v2n7cw5vn4oCAecWjrChCuTyrmTTHaPNDPwsEL3rvtl7ZhCPunsU5S1qILfPnY8r2a7c7bzm4PDe2aELtjwNW1FoN3ESQiq7x9D03Ar/1ua1bokLX+88prZfqVJg8HBNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=anjpFaIo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="PMribWcV";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="FMKTmyRA"
-Received: from phl-compute-04.internal (phl-compute-04.nyi.internal [10.202.2.44])
-	by mailfout.nyi.internal (Postfix) with ESMTP id B712C138FF43;
-	Thu, 29 Aug 2024 17:56:02 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-04.internal (MEProxy); Thu, 29 Aug 2024 17:56:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1724968562;
-	 x=1725054962; bh=biVC1PkEPuhL7ghzvsDAwWreppyJ4/IAoXj4uCykOtE=; b=
-	PMribWcVL+bz6OGfgsmBQG5Vo8DaXhuuoZxie926GPtmB05x6HBHFspkYZVGeJZr
-	Tscs3CsG3+G0wmZ6phAHLC0u8QefqNw5FK+Ynx9xwNX2Et9KFoB4LiFg6malkMwo
-	2DrDdsmlIwIiKdItXMhoMpg4OCeAfx+1a35Ayh2PC9PBMZbL0B3x723ficEbtdAM
-	8okdVOChKTy8QylBpbWZpRzKqYYGT/T9mMES6a+4fhI92VSU6fcA8JXf+0D2VF6a
-	QrbtOWV3OBTNOCbStStjCt4raj9rxwi9+i1qNpGlpHTEkFFUKPrTvxaFJ1eAMWPo
-	nnKT8d5cj2MBq/HUZWrKRw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1724968562; x=
-	1725054962; bh=biVC1PkEPuhL7ghzvsDAwWreppyJ4/IAoXj4uCykOtE=; b=F
-	MKTmyRAVWuSf5nTS03ZiPsYR+cPhGbfP7/4cJh1Bwbyf1jjj5cRzihYjsj/Xcdwm
-	fR7quexRF1cWrieHdKX8ZEOtpmhS58q+9V/eDN31n2NsbnYhL1q8sLskSqAfY1T4
-	1NUi2kW3Z2mY0P+8nMEPnXr3s2pmcUS/L2uEP3p801nw6AFFymKdO1ivJcli93q3
-	/Ab/QQCv6d32h6jfifgcmfTcMZB2hHNNv7186frgRiFe9y57Z6bjnKxyx5u2lPUy
-	MwU4YJW/SkA+UH6tWzqjSOJi9yyoR9iQMTMwCbYXrUSEDV63Fdf34na/vWN9Fm6l
-	kCyzkjSNdUAmzuIc4NRHg==
-X-ME-Sender: <xms:cu7QZn6FLyQe3MJxHx2v6HqlBnuJWCNaROeUm47wnq6rfcPEF_m1cA>
-    <xme:cu7QZs4mSbbLke7ROtddBAjPXYzeCIfxlElxuNjRgnQOsGyaYsBx3nfJqAJ1MSmkN
-    tvnoAbcBc2JlOKf6Rc>
-X-ME-Received: <xmr:cu7QZufxSretPYaB356zJlRXqguA32MBbRppTgwL9kauE20v_Cx5HT2cCVpd3D977lE>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrudefhedgtdefucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggvpdfu
-    rfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnh
-    htshculddquddttddmnecujfgurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtvdej
-    necuhfhrohhmpefgrhhitgcuufgrnhguvggvnhcuoehsrghnuggvvghnsehsrghnuggvvg
-    hnrdhnvghtqeenucggtffrrghtthgvrhhnpeevieekueetfeeujedtheeffedvgeffiedv
-    jeejleffhfeggeejuedtjeeulefhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
-    grmhepmhgrihhlfhhrohhmpehsrghnuggvvghnsehsrghnuggvvghnrdhnvghtpdhnsggp
-    rhgtphhtthhopeegpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegsohguohhnnh
-    gvlhesrhgvughhrghtrdgtohhmpdhrtghpthhtoheplhhinhhugidqgihfshesvhhgvghr
-    rdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegtvghmsehkvghrnhgvlhdrohhrghdprh
-    gtphhtthhopegujhifohhngheskhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:cu7QZoL1Ffh0hrBk8KTVQcd3GnMztCx9oZ3KoWm6CVBudVSE3eC4wA>
-    <xmx:cu7QZrIYCKhK5Csp-C9GU5NcE4hR9CgTYITrtwuYrOZQkEnLA_ytkg>
-    <xmx:cu7QZhwMoXJVogUdhqjfCVXIJKtlErT9lZpYUyiRDXJ6jtdi46WbNw>
-    <xmx:cu7QZnLh4GNtajACg4t2z06xlACYoIOoie9jf3NXe6IkFqgKWUiXoQ>
-    <xmx:cu7QZhgPtXFDU5Uj-hoP7rEERy1eSEY2MZxmIsR1owSVKRbb2udahw47>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 29 Aug 2024 17:56:02 -0400 (EDT)
-Message-ID: <5e5e4f37-2cac-416c-844e-1b2bbb426f91@sandeen.net>
-Date: Thu, 29 Aug 2024 16:56:01 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="anjpFaIo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21F0AC4CEC1;
+	Thu, 29 Aug 2024 22:10:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724969430;
+	bh=Jp5OOPqGXTF5XL580yUT1PXbqJwYGo01yisG+oBk2Nc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=anjpFaIoaXae2xdMSwQQj5ZUnLtn5R6a60/G+Tz8APodOd5uJ9ZNN3J6KFpnBMT+7
+	 WRYfCzMsiO4NhIDaHnTTn/Hy25RfMUBq/af4QHRICA8gD8A9DUotppGULZ03TWpo50
+	 F4dn5AxLqFdBzL9Lpcjmay5bNbbEBS2h5ZUS+z+nVXohABMK/GZaNYlNx3CtV9RTqz
+	 FR5yHONMBpzSeCBgTaOf6gQhwHdf11DqZYAAY+LnpgfAFkn0frsseaYiGn32B6jEVr
+	 bW5fLFzLwRi9JbK7Xc81Ii4E5qYqANyMHIjKXKFLxjJSl/cryk195rJqZ/wlrIxjKc
+	 Ymn7RQtxlmwiQ==
+Date: Thu, 29 Aug 2024 15:10:29 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 04/10] xfs: replace shouty XFS_BM{BT,DR} macros
+Message-ID: <20240829221029.GR6224@frogsfrogsfrogs>
+References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
+ <172480131573.2291268.11692699884722779994.stgit@frogsfrogsfrogs>
+ <Zs/WSw6fm4SyyyW4@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfsdump: prevent use-after-free in fstab_commit()
-To: Bill O'Donnell <bodonnel@redhat.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, djwong@kernel.org
-References: <20240829175925.59281-1-bodonnel@redhat.com>
- <c2ca3889-1a25-434b-a990-c75dd79aed39@sandeen.net>
- <ZtDQTKc336_Y_FcD@redhat.com> <ZtDbOSVV8k__YxMx@redhat.com>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <ZtDbOSVV8k__YxMx@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zs/WSw6fm4SyyyW4@dread.disaster.area>
 
-On 8/29/24 3:34 PM, Bill O'Donnell wrote:
-> On Thu, Aug 29, 2024 at 02:47:24PM -0500, Bill O'Donnell wrote:
-
-...
-
->>>> +	free(list_cpy);
->>>
->>> and then this would double-free that same memory address.
->>
->> I see that now. This code is indeed difficult to grok.
->>
->> Perhaps (if this a legitimate finding of use after free), instead of having the memory
->> freed in invidx_commit(), it should instead be freed once in fstab_commit() after the iterations
->> of the for-loops in that function. I'll have a look at that possibility.
+On Thu, Aug 29, 2024 at 12:00:43PM +1000, Dave Chinner wrote:
+> On Tue, Aug 27, 2024 at 04:34:45PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Replace all the shouty bmap btree and bmap disk root macros with actual
+> > functions, and fix a type handling error in the xattr code that the
+> > macros previously didn't care about.
 > 
-> i.e., Removing what Coverity tags as the culprit (node_free(list_del(dst_n)) from
-> invidx_commit(), and adding free(list) following the for-loop iteration in fstab_commit() may be
-> a better solution.
+> I don't see a type handling fix in the xattr code in the patch.
+> 
+> If there is one, can you please split it out to make it obvious?
 
-I don't think that's the right approach.
+No, I think that's just debris from an old iteration of this years-old
+patch.  The xattr fixes got merged in the xattr state machine series
+that Allison merged a long time ago.
 
-invidx_commit() has this while loop, which is where coverity thinks the passed-in "list"
-might get freed, before the caller uses it again:
+> ....
+> 
+> > -#define XFS_BMDR_REC_ADDR(block, index) \
+> > -	((xfs_bmdr_rec_t *) \
+> > -		((char *)(block) + \
+> > -		 sizeof(struct xfs_bmdr_block) + \
+> > -	         ((index) - 1) * sizeof(xfs_bmdr_rec_t)))
+> 
+> > +
+> > +static inline struct xfs_bmbt_rec *
+> > +xfs_bmdr_rec_addr(
+> > +	struct xfs_bmdr_block	*block,
+> > +	unsigned int		index)
+> > +{
+> > +	return (struct xfs_bmbt_rec *)
+> > +		((char *)(block + 1) +
+> > +		 (index - 1) * sizeof(struct xfs_bmbt_rec));
+> > +}
+> 
+> There's a logic change in these BMDR conversions - why does the new
+> version use (block + 1) and the old one use a (block + sizeof())
+> calculation?
 
-                /* Clean up the mess we just created */
-                /* find node for dst_fileidx */
-                dst_n = find_invidx_node(list, dst_fileidx);
-                tmp_parent = ((data_t *)(dst_n->data))->parent;
-                while(dst_n != NULL) {
-                    node_t *tmp_n1;
+Pointer arithmetic works great inside C functions where you know the
+type of the operand.  That's why I used it.
 
-                    dst_d = dst_n->data;
+That doesn't work at all in a macro where someone could pass in any
+random pointer and then the math is wrong.  That's why the macro casts
+to a byte-sized pointer type and then adds exactly the sizeof() bytes,
+or at least I assume that's the motivation of the authors.
 
-                    /* close affected invidx file and stobj files */
-                    for(i = 0; i < dst_d->nbr_children; i++) {
-                        close_stobj_file(((data_t *)(dst_d->children[i]->data))->file_idx, BOOL_FALSE);
-                    }
+> I *think* they are equivalent, but now as I read the code I have to
+> think about casts and pointer arithmetic and work out what structure
+> we are taking the size of in my head rather than it being straight
+> forward and obvious from the code.
 
-                    /* free_all_children on that node */
-                    free_all_children(dst_n);
-                    tmp_n1 = find_invidx_node(dst_n->next, dst_fileidx);
-                    node_free(list_del(dst_n));
-                    dst_n = tmp_n1;
-                }
+The function argument declaration is four lines up.
 
-"list" is presumably the head of a list of items, and this is cleaning up / freeing items
-within that list. Coverity seems to think that the while loop can end up getting back to
-the head and freeing it, which the caller then uses again in a loop.
+> It doesn't change the code that is generated, so I think that the
+> existing "+ sizeof()" variants is better than this mechanism because
+> everyone is familiar with the existing definitions....
 
-My guess is that coverity is wrong, but I don't think you're going to be able to prove that
-(or fix this) without at least getting a sense of what this code is actually doing, and
-how this list is shaped and managed...
+I disagree.  With your change, to validate this function, everyone must
+to check that the argument type matches the sizeof argument to confirm
+that the pointer arithmetic is correct.
 
--Eric
+static inline struct xfs_bmbt_rec *
+xfs_bmdr_rec_addr(
+	struct xfs_bmdr_block	*block,
+	unsigned int		index)
+{
+	return (struct xfs_bmbt_rec *)
+		((char *)(block) +
+		 sizeof(struct xfs_btree_block) +
+		 (index - 1) * sizeof(struct xfs_bmbt_rec));
+}
+
+Oops, this function is broken, when we could have trusted the compiler
+to get the types and the math correct for us.
+
+> > +static inline struct xfs_bmbt_key *
+> > +xfs_bmdr_key_addr(
+> > +	struct xfs_bmdr_block	*block,
+> > +	unsigned int		index)
+> > +{
+> > +	return (struct xfs_bmbt_key *)
+> > +		((char *)(block + 1) +
+> > +		 (index - 1) * sizeof(struct xfs_bmbt_key));
+> > +}
+> > +
+> > +static inline xfs_bmbt_ptr_t *
+> > +xfs_bmdr_ptr_addr(
+> > +	struct xfs_bmdr_block	*block,
+> > +	unsigned int		index,
+> > +	unsigned int		maxrecs)
+> > +{
+> > +	return (xfs_bmbt_ptr_t *)
+> > +		((char *)(block + 1) +
+> > +		 maxrecs * sizeof(struct xfs_bmbt_key) +
+> > +		 (index - 1) * sizeof(xfs_bmbt_ptr_t));
+> > +}
+> 
+> Same for these.
+> 
+> > +/*
+> > + * Compute the space required for the incore btree root containing the given
+> > + * number of records.
+> > + */
+> > +static inline size_t
+> > +xfs_bmap_broot_space_calc(
+> > +	struct xfs_mount	*mp,
+> > +	unsigned int		nrecs)
+> > +{
+> > +	return xfs_bmbt_block_len(mp) + \
+> > +	       (nrecs * (sizeof(struct xfs_bmbt_key) + sizeof(xfs_bmbt_ptr_t)));
+> > +}
+> 
+> stray '\' remains in that conversion.
+
+Will fix, thanks.
+
+--D
+
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
