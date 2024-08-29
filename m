@@ -1,88 +1,88 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C91314B950;
-	Thu, 29 Aug 2024 10:48:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D6F218DF77;
+	Thu, 29 Aug 2024 10:51:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724928492; cv=none; b=dZVPqMwoCRxbYRu4Mc61Fk2q85LCQ0c8rUoXu9jG0FMQ+/t0KNDqfAnBrrmKifBC+M/QTxUFIqp6RPH4TYGm1vQuSazV2uzuXOqN3baPUaKwCGHzKa+G+9xnd/GxY06MRuN407m3RmLwht6AKVH2L4+MlXL5JsqhvCCnlAkET+M=
+	t=1724928692; cv=none; b=T1p4z6+Jk4Crl2j7lOyVf0oiRw3EbNyHbSjXEC3syF5I43dtIFNq4CQ1jKQL8l3Gasri2tFALaD6l60F4Lh7/ur5b3sSdhfjXPR5DBCXof4iT+Aq+kFwzbbrbXg7bx6f+Z71U8IdRFyjObWyBn1zqGupNcXuTdmeGZzN2VrjrWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724928492; c=relaxed/simple;
-	bh=vuJHAnJgqAzc6OocswqQsMXxp93fDT5iaJNUt46Rkv4=;
+	s=arc-20240116; t=1724928692; c=relaxed/simple;
+	bh=ywL4NsSBHNoy9rpspEUEj4YUvvhpY4qUJMoYHy66nZw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hKerYXMt0y3SpeU701MqhyWjSzLFRJ8HOKVDiPwswJCzLasFaL9bi4TJAuF2zlFuYB20cPMR8m5BdknddHCUw2xWWv52T5FfztpfhJix/FQOTHK2HSAjlY8XhZkaXc8eBJd0cPQlDknm2MQWca/Onu1DHD7BeF1s2hjOA2zXpx4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=qim55DdY; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=9xXFTZs4; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=rLjqS3Ov; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=gieVXgay; arc=none smtp.client-ip=195.135.223.131
+	 Content-Type:Content-Disposition:In-Reply-To; b=mKEEpKLzE3qekKlFE+2r6QYyVGHOMHjE9xltQsRhbeuwv/kQi9eJuXxek2Xqq7PkPOAcAe7bWWZNHYyZEa0YXsrLyIyp3tDxfCXAh69fsYCrex/5C+wcZnGioAVzlc+T5c1Iq7kT9pSq8NoDN8YiR459VDNxxMMw0zbTXqjJuWY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=2VVaeWGG; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=TtlYOp1I; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=2VVaeWGG; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=TtlYOp1I; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="qim55DdY";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="9xXFTZs4";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="rLjqS3Ov";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="gieVXgay"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="2VVaeWGG";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="TtlYOp1I";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="2VVaeWGG";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="TtlYOp1I"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 029DF1F45E;
-	Thu, 29 Aug 2024 10:48:06 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id ACA3C2199E;
+	Thu, 29 Aug 2024 10:51:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1724928487; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1724928688; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=IYshNOA125TAq+wwYlbfMDtD7jQaRDujc9AboFKKLPM=;
-	b=qim55DdYitf3H3MHYaWbW05FnClviBJ6ATBpRqLFUWk48nGk0PBzyAc2WQn10BIgLSGrH2
-	g64PqahIQfo3JSxF1RNfof4PdY5+IfmPRaDNFSiN6m4/N/B5eqT/s9lEMb6PNd3P2YLGaN
-	w2GVUV3If+ubg19dLioqI+O9B14Zvns=
+	bh=dBaair/wHrQp3Y/P6HPYN/L5d+w2KmoifNX/toWOhss=;
+	b=2VVaeWGG5IEPKcNTi63cTUadBQfPsnAjfSueCdNZc9KWgwv7+yFf9z7eiPMkVq1FEPy5ia
+	y8dGEa7Y42OXfWj0aNhVCf+hwYHZX6gSXWlZUWweAjpQR8cq09WrMIOABhqUZ2fCinK5N2
+	L/hP0WATN4SBuL44notwfM5fa6/Dbro=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1724928487;
+	s=susede2_ed25519; t=1724928688;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=IYshNOA125TAq+wwYlbfMDtD7jQaRDujc9AboFKKLPM=;
-	b=9xXFTZs4mG6AFPRwv5pR2rgfrxgmHub4ikn1hK0J6MculsEXOAVG/gC24Jmlbpwp5EXhee
-	SG7xJS9j4fct3bCg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=rLjqS3Ov;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=gieVXgay
+	bh=dBaair/wHrQp3Y/P6HPYN/L5d+w2KmoifNX/toWOhss=;
+	b=TtlYOp1IPjbdYKJG6suOMFuXGnHG0+rbW5n+ojie67qk7vhkMLOE4y9bYP8Hn3MPUDX92l
+	KnmNwUGcnVepE5CQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1724928486; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1724928688; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=IYshNOA125TAq+wwYlbfMDtD7jQaRDujc9AboFKKLPM=;
-	b=rLjqS3OvCY9IxdTS3AyQPiM43CrzOT8uK2HgrdvRumyqou4aPw8refUghxFTEVXK6P7XCx
-	PJxJ9QJED5Ze9r2AacSgS/fENqOtLGCZ7rJ2lUsWGUoucezQPe6GO2CYKBF4sLcQDo/Kfo
-	gDeon9Jjy4Ai9hw3FtI+m5t89bmbq6Y=
+	bh=dBaair/wHrQp3Y/P6HPYN/L5d+w2KmoifNX/toWOhss=;
+	b=2VVaeWGG5IEPKcNTi63cTUadBQfPsnAjfSueCdNZc9KWgwv7+yFf9z7eiPMkVq1FEPy5ia
+	y8dGEa7Y42OXfWj0aNhVCf+hwYHZX6gSXWlZUWweAjpQR8cq09WrMIOABhqUZ2fCinK5N2
+	L/hP0WATN4SBuL44notwfM5fa6/Dbro=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1724928486;
+	s=susede2_ed25519; t=1724928688;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=IYshNOA125TAq+wwYlbfMDtD7jQaRDujc9AboFKKLPM=;
-	b=gieVXgaybs7KsI52JK2WhMwXjnb2bKDzWUlQSfKwuO+7dIWZIyPLqdqlWy7Es4XT9HMitN
-	nFaqiSbd5K0Y9IAw==
+	bh=dBaair/wHrQp3Y/P6HPYN/L5d+w2KmoifNX/toWOhss=;
+	b=TtlYOp1IPjbdYKJG6suOMFuXGnHG0+rbW5n+ojie67qk7vhkMLOE4y9bYP8Hn3MPUDX92l
+	KnmNwUGcnVepE5CQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E701A13B01;
-	Thu, 29 Aug 2024 10:48:05 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9CA5F139B0;
+	Thu, 29 Aug 2024 10:51:28 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id i8BlOOVR0GZUDAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 29 Aug 2024 10:48:05 +0000
+	id kpD3JbBS0GZ7DQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 29 Aug 2024 10:51:28 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 65FA2A0965; Thu, 29 Aug 2024 12:48:05 +0200 (CEST)
-Date: Thu, 29 Aug 2024 12:48:05 +0200
+	id 5639FA0965; Thu, 29 Aug 2024 12:51:28 +0200 (CEST)
+Date: Thu, 29 Aug 2024 12:51:28 +0200
 From: Jan Kara <jack@suse.cz>
 To: Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
 	amir73il@gmail.com, brauner@kernel.org, linux-xfs@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-bcachefs@vger.kernel.org
-Subject: Re: [PATCH v4 11/16] fanotify: disable readahead if we have
- pre-content watches
-Message-ID: <20240829104805.gu5xt2nruupzt2jm@quack3>
+	gfs2@lists.linux.dev, linux-bcachefs@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [PATCH v4 12/16] mm: don't allow huge faults for files with pre
+ content watches
+Message-ID: <20240829105128.zvczpadmdoaarau2@quack3>
 References: <cover.1723670362.git.josef@toxicpanda.com>
- <9a458c9c553c6a8d5416c91650a9b152458459d0.1723670362.git.josef@toxicpanda.com>
+ <d6d0c9d4ccaeb559f4f51fdb1fb96880f890a665.1723670362.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -91,79 +91,133 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9a458c9c553c6a8d5416c91650a9b152458459d0.1723670362.git.josef@toxicpanda.com>
-X-Rspamd-Queue-Id: 029DF1F45E
+In-Reply-To: <d6d0c9d4ccaeb559f4f51fdb1fb96880f890a665.1723670362.git.josef@toxicpanda.com>
 X-Spam-Level: 
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCPT_COUNT_SEVEN(0.00)[9];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FREEMAIL_CC(0.00)[fb.com,vger.kernel.org,suse.cz,gmail.com,kernel.org,lists.linux.dev];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,toxicpanda.com:email,suse.com:email,suse.cz:dkim]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.01
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[10];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_COUNT_THREE(0.00)[3];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[fb.com,vger.kernel.org,suse.cz,gmail.com,kernel.org,lists.linux.dev,kvack.org];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,toxicpanda.com:email,suse.com:email]
+X-Spam-Score: -3.80
 X-Spam-Flag: NO
 
-On Wed 14-08-24 17:25:29, Josef Bacik wrote:
-> With page faults we can trigger readahead on the file, and then
-> subsequent faults can find these pages and insert them into the file
-> without emitting an fanotify event.  To avoid this case, disable
-> readahead if we have pre-content watches on the file.  This way we are
-> guaranteed to get an event for every range we attempt to access on a
-> pre-content watched file.
+On Wed 14-08-24 17:25:30, Josef Bacik wrote:
+> There's nothing stopping us from supporting this, we could simply pass
+> the order into the helper and emit the proper length.  However currently
+> there's no tests to validate this works properly, so disable it until
+> there's a desire to support this along with the appropriate tests.
 > 
 > Reviewed-by: Christian Brauner <brauner@kernel.org>
 > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 
-...
-
-> @@ -674,6 +675,14 @@ void page_cache_sync_ra(struct readahead_control *ractl,
->  {
->  	bool do_forced_ra = ractl->file && (ractl->file->f_mode & FMODE_RANDOM);
->  
-> +	/*
-> +	 * If we have pre-content watches we need to disable readahead to make
-> +	 * sure that we don't find 0 filled pages in cache that we never emitted
-> +	 * events for.
-> +	 */
-> +	if (ractl->file && fsnotify_file_has_pre_content_watches(ractl->file))
-> +		return;
-> +
-
-There are callers which don't pass struct file to readahead (either to
-page_cache_sync_ra() or page_cache_async_ra()). Luckily these are very few
-- cramfs for a block device (we don't care) and btrfs from code paths like
-send-receive or defrag. Now if you tell me you're fine breaking these
-corner cases for btrfs, I'll take your word for it but it looks like a
-nasty trap to me. Now doing things like defrag or send-receive on offline
-files on HSM managed filesystem doesn't look like a terribly good idea
-anyway so perhaps we just want btrfs to check and refuse such things?
+Looks good to me. I don't expect this to be controversial but let's CC MM
+guys for awareness...
 
 								Honza
 
+> ---
+>  mm/memory.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/mm/memory.c b/mm/memory.c
+> index d10e616d7389..3010bcc5e4f9 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -78,6 +78,7 @@
+>  #include <linux/ptrace.h>
+>  #include <linux/vmalloc.h>
+>  #include <linux/sched/sysctl.h>
+> +#include <linux/fsnotify.h>
+>  
+>  #include <trace/events/kmem.h>
+>  
+> @@ -5252,8 +5253,17 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
+>  static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
+>  {
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	if (vma_is_anonymous(vma))
+>  		return do_huge_pmd_anonymous_page(vmf);
+> +	/*
+> +	 * Currently we just emit PAGE_SIZE for our fault events, so don't allow
+> +	 * a huge fault if we have a pre content watch on this file.  This would
+> +	 * be trivial to support, but there would need to be tests to ensure
+> +	 * this works properly and those don't exist currently.
+> +	 */
+> +	if (file && fsnotify_file_has_pre_content_watches(file))
+> +		return VM_FAULT_FALLBACK;
+>  	if (vma->vm_ops->huge_fault)
+>  		return vma->vm_ops->huge_fault(vmf, PMD_ORDER);
+>  	return VM_FAULT_FALLBACK;
+> @@ -5263,6 +5273,7 @@ static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
+>  static inline vm_fault_t wp_huge_pmd(struct vm_fault *vmf)
+>  {
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	const bool unshare = vmf->flags & FAULT_FLAG_UNSHARE;
+>  	vm_fault_t ret;
+>  
+> @@ -5277,6 +5288,9 @@ static inline vm_fault_t wp_huge_pmd(struct vm_fault *vmf)
+>  	}
+>  
+>  	if (vma->vm_flags & (VM_SHARED | VM_MAYSHARE)) {
+> +		/* See comment in create_huge_pmd. */
+> +		if (file && fsnotify_file_has_pre_content_watches(file))
+> +			goto split;
+>  		if (vma->vm_ops->huge_fault) {
+>  			ret = vma->vm_ops->huge_fault(vmf, PMD_ORDER);
+>  			if (!(ret & VM_FAULT_FALLBACK))
+> @@ -5296,9 +5310,13 @@ static vm_fault_t create_huge_pud(struct vm_fault *vmf)
+>  #if defined(CONFIG_TRANSPARENT_HUGEPAGE) &&			\
+>  	defined(CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD)
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	/* No support for anonymous transparent PUD pages yet */
+>  	if (vma_is_anonymous(vma))
+>  		return VM_FAULT_FALLBACK;
+> +	/* See comment in create_huge_pmd. */
+> +	if (file && fsnotify_file_has_pre_content_watches(file))
+> +		return VM_FAULT_FALLBACK;
+>  	if (vma->vm_ops->huge_fault)
+>  		return vma->vm_ops->huge_fault(vmf, PUD_ORDER);
+>  #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+> @@ -5310,12 +5328,16 @@ static vm_fault_t wp_huge_pud(struct vm_fault *vmf, pud_t orig_pud)
+>  #if defined(CONFIG_TRANSPARENT_HUGEPAGE) &&			\
+>  	defined(CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD)
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	vm_fault_t ret;
+>  
+>  	/* No support for anonymous transparent PUD pages yet */
+>  	if (vma_is_anonymous(vma))
+>  		goto split;
+>  	if (vma->vm_flags & (VM_SHARED | VM_MAYSHARE)) {
+> +		/* See comment in create_huge_pmd. */
+> +		if (file && fsnotify_file_has_pre_content_watches(file))
+> +			goto split;
+>  		if (vma->vm_ops->huge_fault) {
+>  			ret = vma->vm_ops->huge_fault(vmf, PUD_ORDER);
+>  			if (!(ret & VM_FAULT_FALLBACK))
+> -- 
+> 2.43.0
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
