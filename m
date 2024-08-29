@@ -1,46 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E2C640BE5;
-	Thu, 29 Aug 2024 05:20:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 608DDEAD5;
+	Thu, 29 Aug 2024 05:41:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724908845; cv=none; b=B2IUoUyamCBFevhgqlunq++27Z8B+UgiceHpb6jpb6zkWl9+gR1xiwWiSHsvrQ0nKTYyC6l3aJg8P0qgpRtPN3xLGYc9y9q7Y0mOI+J84Fy0DE7795KyjtCCKcrV2LPNErwNktvRaOlvyWgr81JbCHle0jvqX3KA/51M0u+ZKqg=
+	t=1724910119; cv=none; b=V2IQ86CMNV+l7vNnJ/8U+A4oDqxW6Gi5Inf9OsehssfDww+TsVT1YKEwy4EL/9+2S/BDOY/nPT9dwpt/anuZoxsRq9fqrJ7vQ0572n6BScPYq+C96C5zw5B06WmK/DgkvNqVue8uDWUDkO5RWeHmXCH4Anliyi5LoMjHZH/IVyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724908845; c=relaxed/simple;
-	bh=LOw1y/5lK6WWdzN+9rCaAqH1+DRP0gltZPjRzyrtxNg=;
+	s=arc-20240116; t=1724910119; c=relaxed/simple;
+	bh=jyGaQPMnPj2tCjOQqCi+8gEJCAbKmNuFE7iNOsFeeRU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r9apOb+MD/SQfUjh9xWE8Gya40VLnqBlONjKhlZOccfaYp4ampM54sI+uiMyMhGtC5rE4sWmM91lW8QTlnwwp1ZPA3kZQXwJ4y27u6OaHt8BEq0Kx4BdfHA+cUSAjm9VdqkEo7Gz1vs5Z6qpWkmo7sKBBBO+vvX9z/wsnp+0dlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NFGsvsTj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=vAuwuQpL6uX+HjGAAMh14hCHj5uWyVAQsh0jpmxD5tjP+t+JJGRyUCN3ySZdjPeta/6OsVLseIyeJrsEiD4c+fYAemPeSuEyYuw0VaNoDC6XSVH6N4KYqgFp3iC9qK4ZKVh5sm8CfoVCjdvGy2J2YGJg9d9Ucy/cXhKYjuOctqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dYXwYRNo; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NFGsvsTj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E69CC4CEC1;
-	Thu, 29 Aug 2024 05:20:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724908845;
-	bh=LOw1y/5lK6WWdzN+9rCaAqH1+DRP0gltZPjRzyrtxNg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NFGsvsTjcEkCkiHjXxDEdHpF9OTFf0cBX92HviFVT+RMHC8+4HSyQjFQU/0Qc1MrM
-	 y8rCcJduJmranRNIKVaX6ePUFo6dVYQMO5p2X+4WpyOe0Knxi6wP24Qq1UBDjuph8U
-	 PpL2tbKGLS/JzxnM7uUdDkujfTxdIuixDxpzD2PKx1vyNJMFQCZp+71md/bCsqaAcc
-	 wPbWTE4FHsLgxMRZokSh21ylcEQc8krfBzniJ+biWk5CrsBiJ5/+Mvrdf4JNSg9bJr
-	 BnKwuAQ6whg10++kogu/1ATSElV8Bie2LgCJU0GseH4jNAonTIaMO3wxsWWMTtFwUP
-	 Qylck3jJx6OdA==
-Date: Wed, 28 Aug 2024 22:20:44 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Nathan Chancellor <nathan@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH] xfs: Fix format specifier for max_folio_size in
- xfs_fs_fill_super()
-Message-ID: <20240829052044.GJ6224@frogsfrogsfrogs>
-References: <20240827-xfs-fix-wformat-bs-gt-ps-v1-1-aec6717609e0@kernel.org>
- <Zs_vIaw8ESLN2TwY@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dYXwYRNo"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=rGBPdhvxamoPQC5N4zLYkm5U4PqPbkWwmIYWe0iQNH8=; b=dYXwYRNoALCdq32TetQv6F26DM
+	HtW8apiPBK/Cu0mSKr4/ByORfMAftsFUbgvt7Qr0HjdU+xP+R96NTruCUano4rMAjM3zdWmSfx7fn
+	58kcbJapKfnC1KdxSeWjsAe6mQQVRYoRnrUNn9T2zQLWHNTh9tYQTLmnFEEqD6NMsBLzD50yTl21K
+	bQCNQ+DQQtprAOk/a/yBlsq49L2H/Mts9cUJ0Yqfoy2/kJG7AhxP9M1CdONT03SY9L3jBuFFQosC/
+	sE7zz8in3t2H288/q2vCrGxh4QaPYKXvfJbOuKU7Hnhtkv2O8PLgycaasWQMbMYfPXS+fcchxZa/Z
+	c3xzDvbw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sjXuu-00000000d0n-1k7l;
+	Thu, 29 Aug 2024 05:41:56 +0000
+Date: Wed, 28 Aug 2024 22:41:56 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	djwong@kernel.org, josef@toxicpanda.com, david@fromorbit.com
+Subject: Re: [PATCH 2/2] iomap: make zero range flush conditional on
+ unwritten mappings
+Message-ID: <ZtAKJH_NGhjxFQHa@infradead.org>
+References: <20240822145910.188974-1-bfoster@redhat.com>
+ <20240822145910.188974-3-bfoster@redhat.com>
+ <Zs1uHoemE7jHQ2bw@infradead.org>
+ <Zs3hTiXLtuwXkYgU@bfoster>
+ <Zs6oY91eFfaFVrMw@infradead.org>
+ <Zs8Zo3V1G3NAQEnK@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,71 +51,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zs_vIaw8ESLN2TwY@casper.infradead.org>
+In-Reply-To: <Zs8Zo3V1G3NAQEnK@bfoster>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Aug 29, 2024 at 04:46:41AM +0100, Matthew Wilcox wrote:
-> On Tue, Aug 27, 2024 at 04:15:05PM -0700, Nathan Chancellor wrote:
-> > When building for a 32-bit architecture, where 'size_t' is 'unsigned
-> > int', there is a warning due to use of '%ld', the specifier for a 'long
-> > int':
-> > 
-> >   In file included from fs/xfs/xfs_linux.h:82,
-> >                    from fs/xfs/xfs.h:26,
-> >                    from fs/xfs/xfs_super.c:7:
-> >   fs/xfs/xfs_super.c: In function 'xfs_fs_fill_super':
-> >   fs/xfs/xfs_super.c:1654:1: error: format '%ld' expects argument of type 'long int', but argument 5 has type 'size_t' {aka 'unsigned int'} [-Werror=format=]
-> >    1654 | "block size (%u bytes) not supported; Only block size (%ld) or less is supported",
-> >         | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >    1655 |                                 mp->m_sb.sb_blocksize, max_folio_size);
-> >         |                                                        ~~~~~~~~~~~~~~
-> >         |                                                        |
-> >         |                                                        size_t {aka unsigned int}
-> >   ...
-> >   fs/xfs/xfs_super.c:1654:58: note: format string is defined here
-> >    1654 | "block size (%u bytes) not supported; Only block size (%ld) or less is supported",
-> >         |                                                        ~~^
-> >         |                                                          |
-> >         |                                                          long int
-> >         |                                                        %d
+On Wed, Aug 28, 2024 at 08:35:47AM -0400, Brian Foster wrote:
+> Yeah, it was buried in a separate review around potentially killing off
+> iomap_truncate_page():
 > 
-> Do we really need the incredibly verbose compiler warning messages?
-> Can't we just say "this is the wrong format specifier on 32 bit"
-> and be done with it?
-
-Clearly you haven't f*cked up^W^Wforgotten a comma in an xfs tracepoint
-in a while, those will generate 60 pages of helpful diagnostics.
-
---D
-
-> > Use the proper 'size_t' specifier, '%zu', to resolve the warning.
-> > 
-> > Fixes: 0ab3ca31b012 ("xfs: enable block size larger than page size support")
-> > Signed-off-by: Nathan Chancellor <nathan@kernel.org>
-> > ---
-> >  fs/xfs/xfs_super.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 242271298a33..e8cc7900911e 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1651,7 +1651,7 @@ xfs_fs_fill_super(
-> >  
-> >  		if (mp->m_sb.sb_blocksize > max_folio_size) {
-> >  			xfs_warn(mp,
-> > -"block size (%u bytes) not supported; Only block size (%ld) or less is supported",
-> > +"block size (%u bytes) not supported; Only block size (%zu) or less is supported",
-> >  				mp->m_sb.sb_blocksize, max_folio_size);
-> >  			error = -ENOSYS;
-> >  			goto out_free_sb;
-> > 
-> > ---
-> > base-commit: f143d1a48d6ecce12f5bced0d18a10a0294726b5
-> > change-id: 20240827-xfs-fix-wformat-bs-gt-ps-967f3aa1c142
-> > 
-> > Best regards,
-> > -- 
-> > Nathan Chancellor <nathan@kernel.org>
-> > 
-> > 
+> https://lore.kernel.org/linux-fsdevel/ZlxUpYvb9dlOHFR3@bfoster/
 > 
+> The idea is pretty simple.. use the same kind of check this patch does
+> for doing a flush, but instead open code and isolate it to
+> iomap_truncate_page() so we can just default to doing the buffered write
+> instead.
+> 
+> Note that I don't think this replaces the need for patch 1, but it might
+> arguably make further optimization of the flush kind of pointless
+> because I'm not sure zero range would ever be called from somewhere that
+> doesn't flush already.
+> 
+> The tradeoffs I can think of are this might introduce some false
+> positives where an EOF folio might be dirty but a sub-folio size block
+> backing EOF might be clean, and again that callers like truncate and
+> write extension would need to both truncate the eof page and zero the
+> broader post-eof range. Neither of those seem all that significant to
+> me, but just my .02.
+
+Looking at that patch and your current series I kinda like not having
+to deal with the dirty caches in the loop, and in fact I'd also prefer
+to not do any writeback from the low-level zero helpers if we can.
+That is not doing your patch 1 but instead auditing the callers if
+any of them needs them and documenting the expectation.
+
+But please let Dave and Darrick chime in first before investing any
+work into this.
+
