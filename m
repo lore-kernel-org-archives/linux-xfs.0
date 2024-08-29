@@ -1,34 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F123E2837F;
-	Thu, 29 Aug 2024 03:48:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE5F1311B5
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 03:51:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724903308; cv=none; b=T+NeaTliOBJEgFtbFWo7x9lZAYeFHt5uV/yJ0+3R905eCJH8tMna9bWMQE+tFtASQdF24V/kAJTmbDr/YNadEcHn8XFCgdd+jQG7zdQ5aAfam/YeRc2HuGwpdPFO+f6CwgwT+YJp78t3QskK0NSnlnzdmB3VG1At5QdbCcc4JFU=
+	t=1724903518; cv=none; b=t5L8TdHv7mBhyjPtwBkb7PPhjojpXaxljWzKruKbf33LfQ7e69jpy5szNqrJ21CYhbjZPKFEbfhntS/6J7MhK3G1vDWDNlBU6mKy7UqGZMXFQTh0yKdJikJ5pQphphtYwUKDuAjI0nNzrQnoC8k0sBX2iTGLYOIs+OLgC15YOPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724903308; c=relaxed/simple;
-	bh=d1v+IFWEguBYxwg1tMtkP8YpTI6g6V2Vr6vGF081P1I=;
+	s=arc-20240116; t=1724903518; c=relaxed/simple;
+	bh=kKA44cGGQPTf6+yThMRXXJCZQc+8J0pDBvCCZLhBp/8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j7mgWuUxtMTnI2FtBEvPXqIQc/cmaR9yAWjjSkVboG0F7aveafLijHVHtpCm7IXFEDrGxg4KP81e8PKKv3eNMRB/tQzp0Eikv5HtC48YzTLj9kzOEtzOpAyoTSFg44ZcI1pVKnqRFEeERk4HeNvs1bwZq8szQGHmS/YDwF2wHNk=
+	 Content-Type:Content-Disposition:In-Reply-To; b=MUIaPwbZScicV2bsXLjRp0J6sCg8q/lWwP1kLbiX4g0s6yJiA7lHkHbaeZiZLLXoUmuqzKbP0Fy/xiVWJV/UlwXAUQT8ZUNDtjv8Q5PyK5+GOaVldQYefdUjPoFmX3PzDST29GWGUE+hv7DOWqHamdm6lLB/zl12chU6thvYfss=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 338FD68AFE; Thu, 29 Aug 2024 05:48:22 +0200 (CEST)
-Date: Thu, 29 Aug 2024 05:48:22 +0200
+	id F16E468AFE; Thu, 29 Aug 2024 05:51:52 +0200 (CEST)
+Date: Thu, 29 Aug 2024 05:51:52 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: move the tagged perag lookup helpers to
- xfs_icache.c
-Message-ID: <20240829034822.GA3974@lst.de>
-References: <20240821063901.650776-1-hch@lst.de> <20240821063901.650776-3-hch@lst.de> <20240821163407.GH865349@frogsfrogsfrogs> <Zs7DoMzcyh7QbfUb@infradead.org> <20240828161004.GG1977952@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 05/10] xfs: move the zero records logic into
+ xfs_bmap_broot_space_calc
+Message-ID: <20240829035152.GA4023@lst.de>
+References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs> <172480131591.2291268.4549323808410277633.stgit@frogsfrogsfrogs> <20240828041424.GE30526@lst.de> <20240829011555.GE6224@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,19 +32,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240828161004.GG1977952@frogsfrogsfrogs>
+In-Reply-To: <20240829011555.GE6224@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Aug 28, 2024 at 09:10:04AM -0700, Darrick J. Wong wrote:
-> > tags for garbage collection of zoned rtgs, but I'd rather build the
-> > right abstraction when we get to that.  That will probably also
-> > include sorting out the current mess with the ICI vs IWALK flags.
+On Wed, Aug 28, 2024 at 06:15:55PM -0700, Darrick J. Wong wrote:
+> save 72 bytes per inode when the btree is completely empty by returning
+> 0 from xfs_{rtrmap,rtrefcount}_broot_space_calc?  The answer to
+> that was a bunch of null pointer dereferences because there's a fair
+> amount of code in the rtrmap/rtrefcount/btree code that assumes that
+> if_broot isn't null if you've created a btree cursor.
 > 
-> Or converting pag_ici_root to an xarray, and then we can make all of
-> them use the same mark symbols. <shrug>
+> OTOH if you're really going to have 130000 zns rtgroups then maybe we
+> actually want this savings?  That's 9MB of memory that we don't have to
+> waste on an empty device -- for rtrmaps the savings are minimal because
+> eventually you'll write *something*; for rtrefcounts, this might be
+> meaningful because you format with reflink but don't necessarily use it
+> right away.
 
-Maybe we could, but someone intentionally separated them out (and than
-someone, not sure if the same persons were involved, was very sloppy
-about the separation) so I'll need to look a bit more at the history.
-And maybe think about a better way of doing this.
+Sounds kinda nice, but also painful.  If the abstraction works out nice
+enough it might be worth it.
 
