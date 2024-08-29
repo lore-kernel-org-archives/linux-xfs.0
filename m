@@ -1,169 +1,80 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E30729474;
-	Thu, 29 Aug 2024 11:18:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB510158DB1;
+	Thu, 29 Aug 2024 11:24:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724930283; cv=none; b=msXNx5lGFtbPOtiFVoa29wlPo6dTMUSqbA9md3o4pdGzmT5l5quAqjpWc/kiyxzvPLr20Xnb11DLr/3pCLryKbxvFfLpUdQFXlh+K7a9XGbujUYT5xjIpXRFlB3/jvKyjTudTlGomuYcHeZXaLj/cgxqXTFD1yqk1BmB98Pa0UQ=
+	t=1724930701; cv=none; b=M8C9ksC7dMRbhrlNLr/QUSpzuA4PNQwP2biU+WQt0HwAjD423V6iciWMzrgy09b600+qqe30kXcWHcJe4ajVC+eCCscaQ+ypXcIgAUsq3GYUJ/+0RbbUVMTobNSI2dlvKV38AU/P83qYRZ7SIUqAXTLNlplIm7Elj40z5KFKI0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724930283; c=relaxed/simple;
-	bh=/PwGxbIVR+NNi8MVB+lEH0f0kwNGHAH5RR5iiYcu7UQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wu4f5Iq2ia9u+g495vicAuc8KuZ1fIPv8RLzRLFSgnvK/G0mTP22H+v44lNz2ovUeRxISMP6y5ij6ziKdGulCLmQ3fjWPqTvU4HR0Oe9qtfJLXRos2yN2Lq4rJLCVSYsXMjfxfC1pK1nmuwS4ytBF1saUCzAJdBZQWug6aW4+zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=BpL8AwJj; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=IJjfXb59; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=qEyZu7Tr; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=wOXoTiVg; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="BpL8AwJj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="IJjfXb59";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="qEyZu7Tr";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="wOXoTiVg"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id E113B1F381;
-	Thu, 29 Aug 2024 11:17:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1724930279; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0VbUZDZQwysdju52Mc/Prv655x840ugcPnmGGooE7sA=;
-	b=BpL8AwJj59PVb3dhbuAZcXAjX8r2rxJ9g24wzvJyYcCP8rcssgGm+TQ1F/jPcroXo8/1Pe
-	YFaWVlj+m3K8aJzagPO/sgbHGzwOgf77v29MtpIbF81CyRhDulQI8AqfQMI1X1eq2MRMEQ
-	qxYA+mrzUrcwHcpOu0i3EBzjVQZYm8Q=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1724930279;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0VbUZDZQwysdju52Mc/Prv655x840ugcPnmGGooE7sA=;
-	b=IJjfXb59ZkfzJRClFLr8yRG/1v10ufGm7twMC3KAPEhATFAMD3EU3uf3jkn53dLAd5NWrE
-	yG7ZNyvNZbjKBMAQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=qEyZu7Tr;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=wOXoTiVg
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1724930277; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0VbUZDZQwysdju52Mc/Prv655x840ugcPnmGGooE7sA=;
-	b=qEyZu7TrP7Uxt5l0A9md+zJ+QViU0Edmm8HTIxAFOAzjzz+vO869cxaF1zblg/0eqyiS2A
-	0Rphkh3+budjfwfAVVTYsY9OSXdIk/4LGLQc9cYMeNJidhJApLgqSgWKFLZxRiz7lDHbPq
-	x7gvXFQD7DWz24DgDrltYMV7+LBPjhc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1724930277;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0VbUZDZQwysdju52Mc/Prv655x840ugcPnmGGooE7sA=;
-	b=wOXoTiVgrQNH+YEaJYYhfy98Z6l5wjLMOT/1w232L0/67UTfdCGUFxPiSrijSvddshI62Y
-	wBL+JVxhD/lc/oDg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D5B9A139B0;
-	Thu, 29 Aug 2024 11:17:57 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id g30sNOVY0GZ9FgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 29 Aug 2024 11:17:57 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 87F0AA0965; Thu, 29 Aug 2024 13:17:53 +0200 (CEST)
-Date: Thu, 29 Aug 2024 13:17:53 +0200
-From: Jan Kara <jack@suse.cz>
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
-	amir73il@gmail.com, brauner@kernel.org, linux-xfs@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-bcachefs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 16/16] xfs: add pre-content fsnotify hook for write
- faults
-Message-ID: <20240829111753.3znmdajndwwfwh6n@quack3>
-References: <cover.1723670362.git.josef@toxicpanda.com>
- <631039816bbac737db351e3067520e85a8774ba1.1723670362.git.josef@toxicpanda.com>
+	s=arc-20240116; t=1724930701; c=relaxed/simple;
+	bh=FYDAbKjMprT+30E0SkamTgATHIiEKQyogZj2ApAJJAo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=fBpACDO7kOB19fPKoLA5wjY1TJbp5vIIXDCnkb2XawHn43BPCx3SoTJoLPsOCDLg/sD+HEDqrehbFXUO/9wYRanjT4SdgKdZB3ogKQ7i5wZaYQ+y6rusH3QAdHGikNNzI2uhB1nxV4JKVhTMyITNyNAtQLAbT0I5TOlcxz16EKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Wvf5m3nfnzLqsJ;
+	Thu, 29 Aug 2024 19:22:52 +0800 (CST)
+Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
+	by mail.maildlp.com (Postfix) with ESMTPS id E0BD8180105;
+	Thu, 29 Aug 2024 19:24:56 +0800 (CST)
+Received: from [10.174.176.88] (10.174.176.88) by
+ kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 29 Aug 2024 19:24:56 +0800
+Message-ID: <9337ebda-8e27-4754-bc57-748e44f3b5e0@huawei.com>
+Date: Thu, 29 Aug 2024 19:24:55 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <631039816bbac737db351e3067520e85a8774ba1.1723670362.git.josef@toxicpanda.com>
-X-Rspamd-Queue-Id: E113B1F381
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCPT_COUNT_TWELVE(0.00)[12];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,toxicpanda.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:dkim];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FREEMAIL_CC(0.00)[fb.com,vger.kernel.org,suse.cz,gmail.com,kernel.org,lists.linux.dev,fromorbit.com,infradead.org];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.01
-X-Spam-Flag: NO
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/2] Some boundary error bugfix related to XFS fsmap.
+To: <chandan.babu@oracle.com>, <djwong@kernel.org>, <dchinner@redhat.com>,
+	<osandov@fb.com>, <john.g.garry@oracle.com>
+CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<yangerkun@huawei.com>
+References: <20240826031005.2493150-1-wozizhi@huawei.com>
+From: Zizhi Wo <wozizhi@huawei.com>
+In-Reply-To: <20240826031005.2493150-1-wozizhi@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemf100017.china.huawei.com (7.202.181.16)
 
-On Wed 14-08-24 17:25:34, Josef Bacik wrote:
-> xfs has it's own handling for write faults, so we need to add the
-> pre-content fsnotify hook for this case.  Reads go through filemap_fault
-> so they're handled properly there.
+friendly ping
+
+在 2024/8/26 11:10, Zizhi Wo 写道:
+> Prior to this, I had already sent out a patchset related to xfs fsmap
+> bugfix, which mainly introduced "info->end_daddr" to fix omitted extents[1]
+> and Darrick had already sent out a patchbomb for merging into stable[2],
+> which included my previous patches.
 > 
-> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
-
-Looks good to me but it would be great to get explicit ack from some XFS
-guy...  Some selection CCed :)
-
-								Honza
-
-> ---
->  fs/xfs/xfs_file.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> However, I recently discovered two new fsmap problems...What follows is a
+> brief description of them:
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 4cdc54dc9686..e61c4c389d7d 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1283,6 +1283,10 @@ xfs_write_fault(
->  	unsigned int		lock_mode = XFS_MMAPLOCK_SHARED;
->  	vm_fault_t		ret;
->  
-> +	ret = filemap_maybe_emit_fsnotify_event(vmf);
-> +	if (unlikely(ret))
-> +		return ret;
-> +
->  	sb_start_pagefault(inode->i_sb);
->  	file_update_time(vmf->vma->vm_file);
->  
-> -- 
-> 2.43.0
+> Patch 1: In this scenario, fsmap lost one block count. The root cause is
+> that during the calculation of highkey, the calculation of start_block is
+> missing an increment by one, which leads to the last query missing one
+> This problem is resolved by adding a sentinel node.
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> Patch 2: In this scenario, the fsmap query for realtime deivce may display
+> extra intervals. This is due to an extra increase in "end_rtb". The issue
+> is resolved by adjusting the relevant calculations. And this patch depends
+> on the previous patch that introduced "info->end_daddr".
+> 
+> [1] https://lore.kernel.org/all/20240819005320.304211-1-wozizhi@huawei.com/
+> [2] https://lore.kernel.org/all/172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs/
+> 
+> Zizhi Wo (2):
+>    xfs: Fix missing block calculations in xfs datadev fsmap
+>    xfs: Fix incorrect parameter calculation in rt fsmap
+> 
+>   fs/xfs/libxfs/xfs_rtbitmap.c |  4 +---
+>   fs/xfs/xfs_fsmap.c           | 39 +++++++++++++++++++++++++++++++-----
+>   2 files changed, 35 insertions(+), 8 deletions(-)
+> 
