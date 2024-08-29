@@ -1,67 +1,69 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-oi1-f179.google.com (mail-oi1-f179.google.com [209.85.167.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FC804084E
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 02:13:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD0334A18
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 02:54:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724897595; cv=none; b=JnE9SWCr/My2iX+n3nVuz6VJpVMVeGQjeJNDNmamm+2ECkJeo7egCYq3VZLhsO+0v2YeFQgR8SnGmvXyl2MBejwRMipjX1YEITV3c8/NEdTRTJ3LGB+klyRBpXvtx1oSSkysRzDEOmlrvKJGMIXsZf6ORNWjhlZXt57tvQggd0E=
+	t=1724900078; cv=none; b=pvoIgdbf3tgoXR2jIEQAjFvq9NEwK6qULf7LR1HTQlA35KoNUHGRnkpTxldZRURvm3qEHQ9yb3ZgUIFO75NmSfuYXwWCPTxYAeMcoqlYL8O5KFy0vOeNxNwtID59XCJ4kCfHDynaasAIgKhePk9elKsco8ytkuFibSopVIUsnuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724897595; c=relaxed/simple;
-	bh=Xbe0tx+3OMdJXJ5Es2Ujzn9J+L1DIndwSf8fnwVAmws=;
+	s=arc-20240116; t=1724900078; c=relaxed/simple;
+	bh=6N8J920qxbq5bXeZ0wVB+p6h1qwisCrHZzFpLPyS9sI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d9s/2pH1xD8Rzrl5uN/BVx6GU5bKDNKJ+zCTVIS5QHMgm43FR2QLFawEq4G4cxiY3C4t/Zh67RddgBUFy336bX1MAl4u15aig1sqbaCXFCaRAwWRwvJLMklZfwIDTXKlBaNWLOD+lsJo6bUgxP3gNledTLB3dRTj/9DZa01L6rc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=esMMb9Fu; arc=none smtp.client-ip=209.85.210.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=QSJv4hgDWTAGU/61navxtaMdInYeDL/8hN5SXFVchg3ge6A5V2Pw+e4KhToWkqCh76QcHSNkAfxX0fcP8KqTHf4d/Mf4Vqljsjzdx5R/uGVCcifuuNkNreut+cQenlZSHLXW7mussIedK4abcbyMb+Uqs01J5HosSvXYmtIgFGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=fFiSLxQ/; arc=none smtp.client-ip=209.85.167.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="esMMb9Fu"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-71423704ef3so131154b3a.3
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 19:13:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="fFiSLxQ/"
+Received: by mail-oi1-f179.google.com with SMTP id 5614622812f47-3df04cf5135so85917b6e.1
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 19:54:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724897593; x=1725502393; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724900075; x=1725504875; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=67bQvZoVNsdiTCpVWzO1I4vyAmPSqzAo+fncMEZqvlY=;
-        b=esMMb9FuRRrs1UaoZ/2PU1utM8wBAOsHvLIXTmmaGgT0fxAn6ezkjyAsEJYdfFOjhj
-         xEc+ODVosV4gy/FC+Tg+K0h4ZW2M+LVKdsyoWG1evZ+s5M9N6yliszOVRYcxvo2VTi5J
-         tT3QADxBJn8tDuuOyJUvmxDmWzv4eG6XSkxXgo8HPi3APoMteS3AwxtgPzMRtWf7i7sY
-         Jyxrjyel0bAb67Op2XyayBCghumk3obwvM2+qVdoyPLzlE6ItcCtCRKIS56641E6t6qg
-         6z+Kdz+75LR8AkFqyrppBaAi5Cj/b2okCbNHzysiBZ7zNa6Sfq71vQEmHRji/C2lLRfn
-         PKhg==
+        bh=nV5JBlQMSG2Tm7zUUduSIbDQOss7Z01JyzsdZOoAFl0=;
+        b=fFiSLxQ/WP/Cu3XKyIHNvIvu9cC74YrE74wyEyESgvHEBJUZ6paAICS7xASynEFNtU
+         NOjFMqrZaLx+o+c2tBLCUhWbr6tGZhrydGho590cSV3Lh0YRDUNvow3CRoI/zudx7Q2H
+         sZiINLJwTTanex1kFcCE164OCu5+uMIqKMrcpc6HbJG5t7mDAM+z4YMR9yj7fvxHd6rM
+         +U+dscbE+bBirMdjlYHHptg1WVMenhmFXOUjoRqX6VweDDePgVuDCm/afYrWUiqi17yS
+         GkSlqaqSTLJvawE2uXuAtWuqW4MvQa6Yay2/kO/USjRV2ERKAhIyN9RPTedmgzmoUE9W
+         zZWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724897593; x=1725502393;
+        d=1e100.net; s=20230601; t=1724900075; x=1725504875;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=67bQvZoVNsdiTCpVWzO1I4vyAmPSqzAo+fncMEZqvlY=;
-        b=p0vbb9oLZfdVz5ghr/Do8goaPi9oVPCR8I1L4TqZ+uZEyncZzzJ48zayIMn7QBPI62
-         fRtA4cI6glk7CWYrV0GeXfsHB/LexX7s5kiKBlwqCVtcog1JyX4xZ3Yn+vSvhMFiSkd3
-         OffMCvc2Jg3kwJ5TpZ4kXkSiUZ7G9qlCtRNyYr45OIna4UPiIW5E58RVZlWAtZMCr4ID
-         tT2+CAmAxiKTPLonuB+Nx0Wc+iMoZp8S8RtIDA2YecFVf5sNnbCrSx6H05mxt0DXkGpk
-         dqZpI8k4EJiDmS0QjMnJbiMdKPWR4aUMZqhqhTW1g2MbPgtLGR/bPJOV0vcptYX5VbiT
-         ngxg==
-X-Gm-Message-State: AOJu0YyDKATIf5GbYfrfeJcq+IjshFQmGrwLDgf1BfyQmB5YcUlepsd4
-	LzDPVKOChxfQcm/XYgrnyk8jno1SydTprKJd3/WT/BTRYW9FRTPGXZLPVBcxbrY=
-X-Google-Smtp-Source: AGHT+IFQFtkzkAEQ+crF6b8M4KBdBpQITpjdpTNL9SZqJTSCxxDv5X7wDlnFF7o3sFmSphVbR41YBw==
-X-Received: by 2002:a05:6a21:a4c2:b0:1c1:92f8:d3c6 with SMTP id adf61e73a8af0-1cce1046489mr1181119637.27.1724897592669;
-        Wed, 28 Aug 2024 19:13:12 -0700 (PDT)
+        bh=nV5JBlQMSG2Tm7zUUduSIbDQOss7Z01JyzsdZOoAFl0=;
+        b=fxJGJqQ3m7rCrrVXQT3RskdyyEi18DR7K/pEoeadc6m3UtfaW5cSleCSOanK28/Ga2
+         VBDNLmVBngvUc8N1fif1Q5uXZL6LtX3XI4Bit+2YnrfbWe4BuP7vi+B9J+YUZzudkTtO
+         vr60lcMZyc76vBtYODQAmMKoQbgxHXo6ZTr63tH4Hm0mztRvPly8YvAOYT8NPrCum8+V
+         q8QO8nVj/7i5aePwi2bxB6BpByeM8K8u5lXeFChDx+PYJgMPw4NRneIEJAag8TE6+FhZ
+         alatk9Jrn3TrVszsS0rHJFvynRlO15EREFPCiwPmTWNiYhLbwXgsfaaU4DWrLPWID1ZR
+         c43w==
+X-Gm-Message-State: AOJu0YwpycAObx5SKOI6mgbV5IJFiatiTwlIGahPDdiE6/o/LuxfWqYY
+	42Smhah2NRr25zJFW0zcI2NX7ripJ2IJxXJlUv9R5OA+6estxnuT7pHsItitoOKvJJZFVb7uAnG
+	c
+X-Google-Smtp-Source: AGHT+IGTFRR2K6iIvmNEoSFxFGUEQFr4Bd7zbHH/FE+F+982PL26lPlyrOGP5mkRzvmJ2iXiPJThbA==
+X-Received: by 2002:a05:6808:1b06:b0:3d9:dfef:d7b3 with SMTP id 5614622812f47-3df05e3cdcdmr1510926b6e.34.1724900075505;
+        Wed, 28 Aug 2024 19:54:35 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-65.pa.nsw.optusnet.com.au. [49.179.0.65])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-205155342dcsm1318835ad.151.2024.08.28.19.13.12
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7d22e774263sm216262a12.26.2024.08.28.19.54.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2024 19:13:12 -0700 (PDT)
+        Wed, 28 Aug 2024 19:54:35 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sjUer-00GPUk-1f;
-	Thu, 29 Aug 2024 12:13:09 +1000
-Date: Thu, 29 Aug 2024 12:13:09 +1000
+	id 1sjVIu-00GRUa-1X;
+	Thu, 29 Aug 2024 12:54:32 +1000
+Date: Thu, 29 Aug 2024 12:54:32 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 07/10] xfs: refactor creation of bmap btree roots
-Message-ID: <Zs/ZNSQ74BOefzUm@dread.disaster.area>
+Subject: Re: [PATCH 08/10] xfs: hoist the code that moves the incore inode
+ fork broot memory
+Message-ID: <Zs/i6JZerKLqTLnt@dread.disaster.area>
 References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
- <172480131627.2291268.8798821424165754100.stgit@frogsfrogsfrogs>
+ <172480131644.2291268.12671154009132010264.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,73 +72,132 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <172480131627.2291268.8798821424165754100.stgit@frogsfrogsfrogs>
+In-Reply-To: <172480131644.2291268.12671154009132010264.stgit@frogsfrogsfrogs>
 
-On Tue, Aug 27, 2024 at 04:35:33PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 27, 2024 at 04:35:48PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Now that we've created inode fork helpers to allocate and free btree
-> roots, create a new bmap btree helper to create a new bmbt root, and
-> refactor the extents <-> btree conversion functions to use our new
-> helpers.
+> Whenever we change the size of the memory buffer holding an inode fork
+> btree root block, we have to copy the contents over.  Refactor all this
+> into a single function that handles both, in preparation for making
+> xfs_iroot_realloc more generic.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c       |   20 ++++++--------------
->  fs/xfs/libxfs/xfs_bmap_btree.c |   13 +++++++++++++
->  fs/xfs/libxfs/xfs_bmap_btree.h |    2 ++
->  3 files changed, 21 insertions(+), 14 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_fork.c |   87 ++++++++++++++++++++++++++--------------
+>  1 file changed, 56 insertions(+), 31 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 00cac756c9566..e3922cf75381c 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -614,7 +614,7 @@ xfs_bmap_btree_to_extents(
->  	xfs_trans_binval(tp, cbp);
->  	if (cur->bc_levels[0].bp == cbp)
->  		cur->bc_levels[0].bp = NULL;
-> -	xfs_iroot_realloc(ip, -1, whichfork);
-> +	xfs_iroot_free(ip, whichfork);
-
-I feel like the "whichfork" interface is unnecessary here. We
-already have the ifp in all cases here, and so
-
-	xfs_iroot_free(ifp);
-
-avoids the need to look up the ifp again in xfs_iroot_free().
-
-The same happens with xfs_iroot_alloc() - the callers already have
-the ifp in a local variable, so...
-
->  	ASSERT(ifp->if_broot == NULL);
->  	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
->  	*logflagsp |= XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
-> @@ -655,19 +655,10 @@ xfs_bmap_extents_to_btree(
->  	ASSERT(ifp->if_format == XFS_DINODE_FMT_EXTENTS);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 60646a6c32ec7..307207473abdb 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -387,6 +387,50 @@ xfs_iroot_free(
+>  	ifp->if_broot = NULL;
+>  }
 >  
->  	/*
-> -	 * Make space in the inode incore. This needs to be undone if we fail
-> -	 * to expand the root.
-> -	 */
-> -	xfs_iroot_realloc(ip, 1, whichfork);
-> -
-> -	/*
-> -	 * Fill in the root.
-> -	 */
-> -	block = ifp->if_broot;
-> -	xfs_bmbt_init_block(ip, block, NULL, 1, 1);
-> -	/*
-> -	 * Need a cursor.  Can't allocate until bb_level is filled in.
-> +	 * Fill in the root, create a cursor.  Can't allocate until bb_level is
-> +	 * filled in.
->  	 */
-> +	xfs_bmbt_iroot_alloc(ip, whichfork);
+> +/* Move the bmap btree root from one incore buffer to another. */
+> +static void
+> +xfs_ifork_move_broot(
+> +	struct xfs_inode	*ip,
+> +	int			whichfork,
+> +	struct xfs_btree_block	*dst_broot,
+> +	size_t			dst_bytes,
+> +	struct xfs_btree_block	*src_broot,
+> +	size_t			src_bytes,
+> +	unsigned int		numrecs)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	void			*dptr;
+> +	void			*sptr;
+> +
+> +	ASSERT(xfs_bmap_bmdr_space(src_broot) <= xfs_inode_fork_size(ip, whichfork));
 
-.... this becomes xfs_bmbt_iroot_alloc(ip, ifp);
+We pass whichfork just for this debug check. Can you pull this up
+to the callers?
 
-i.e. once we already have an ifp resolved for the fork, it makes no
-sense to pass whichfork down the stack instead of the ifp...
+> +
+> +	/*
+> +	 * We always have to move the pointers because they are not butted
+> +	 * against the btree block header.
+> +	 */
+> +	if (numrecs) {
+> +		sptr = xfs_bmap_broot_ptr_addr(mp, src_broot, 1, src_bytes);
+> +		dptr = xfs_bmap_broot_ptr_addr(mp, dst_broot, 1, dst_bytes);
+> +		memmove(dptr, sptr, numrecs * sizeof(xfs_fsblock_t));
+> +	}
+> +
+> +	if (src_broot == dst_broot)
+> +		return;
+
+Urk. So this is encoding caller logic directly into this function.
+ie. the grow cases uses krealloc() which copies the keys and
+pointers but still needs the pointers moved. The buffer is large
+enough for that, so it passes src and dst as the same buffer and
+this code then jumps out after copying the ptrs (a second time) to
+their final resting place.
+
+> +	/*
+> +	 * If the root is being totally relocated, we have to migrate the block
+> +	 * header and the keys that come after it.
+> +	 */
+> +	memcpy(dst_broot, src_broot, xfs_bmbt_block_len(mp));
+> +
+> +	/* Now copy the keys, which come right after the header. */
+> +	if (numrecs) {
+> +		sptr = xfs_bmbt_key_addr(mp, src_broot, 1);
+> +		dptr = xfs_bmbt_key_addr(mp, dst_broot, 1);
+> +		memcpy(dptr, sptr, numrecs * sizeof(struct xfs_bmbt_key));
+> +	}
+
+And here we do the key copy for the shrink case where we technically
+don't need separate buffers but we really want to minimise memory
+usage if we can so we reallocate a smaller buffer and free the
+original larger one.
+
+Given this, I think this code is more natural by doing all the
+allocate/free/copy ourselves instead of using krealloc() and it's
+implicit copy for one of the cases.
+
+i.e. rename this function xfs_ifork_realloc_broot() and make it do
+this:
+
+{
+	struct xfs_btree_block *src = ifp->if_broot;
+	struct xfs_btree_block *dst = NULL;
+
+	if (!numrecs)
+		goto out_free_src;
+
+	dst = kmalloc(new_size);
+
+	/* copy block header */
+	memcpy(dst, src, xfs_bmbt_block_len(mp));
+
+	/* copy records */
+	sptr = xfs_bmbt_key_addr(mp, src, 1);
+	dptr = xfs_bmbt_key_addr(mp, dst, 1);
+	memcpy(dptr, sptr, numrecs * sizeof(struct xfs_bmbt_key));
+
+	/* copy pointers */
+	sptr = xfs_bmap_broot_ptr_addr(mp, src_broot, 1, src_bytes);
+	dptr = xfs_bmap_broot_ptr_addr(mp, dst_broot, 1, dst_bytes);
+	memmove(dptr, sptr, numrecs * sizeof(xfs_fsblock_t));
+
+out_free_src:
+	kfree(src);
+	ifp->if_broot = dst;
+	ifp->if_broot_bytes = new_size;
+}
+
+And the callers are now both:
+
+	xfs_ifork_realloc_broot(mp, ifp, new_size, old_size, numrecs);
+
+This also naturally handles the "reduce to zero size" without
+needing any special case code, it avoids the double pointer copy on
+grow, and the operation logic is simple, obvious and easy to
+understand...
 
 -Dave.
 -- 
