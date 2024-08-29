@@ -1,61 +1,61 @@
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8188F38DE4
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 03:03:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F192F481D1
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 03:11:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724900618; cv=none; b=cUO3YbYAro5kpa77odNE5+Z0Y64e9giTyd9z+ytpwaUZxgRBASrfgpe9Ye93SoMWR21+BAi9RRIMfFIapu0UU10Vyw92ycgsE2oNouvQ77hN4kX9gHTepU3mSipjzv6CRtoTWahgyH9T4UHwJ8UrC61YLSleHpTX8aOIeQYHjws=
+	t=1724901078; cv=none; b=QndxiasgSXKFdBslvEZDCZzAvcvWbH43tQR48a2abb/QSqFG1Iu7YDZ6nImbM6TX1+q7aXLwA3Gt0MPM4+6hHaxlmqrexTbLMSQ9NqMUJE/QZYhsoklKifYE7P76mkXlm2JjyEiOVRJU29muuWN366GunwsiPvxtFADg4oJ6wQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724900618; c=relaxed/simple;
-	bh=Y5TFWF6UZ5bQXyp+AvYM1eMv+pzyDjlsxCBBIQxDZRI=;
+	s=arc-20240116; t=1724901078; c=relaxed/simple;
+	bh=8vNd7eJk+7BqiWgLOIf5f94ZTL26wZSzW4bJHu9N4ng=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hV7EepvJ4JgYvux/AJG6bhQC0GVanxYJiDtOEJEsQA47yjkSF4gWO6AQfBnI3fiVail6zsb5E4ji0/42+8bC6JrbLuVyGY8pm8PN4vwzew1whiBSfb04v6y9HcZSVLUn2G9ZIxQAkmuph7+nvJRSHxK9srB91PNm15xoUS2SKs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=zV8Q8Kv0; arc=none smtp.client-ip=209.85.215.181
+	 Content-Type:Content-Disposition:In-Reply-To; b=TYyXMrRMwysd/HcB9KC4S4CbEcLqRV+0dEdju1ZwgjRAUgbRBYBO08jCS/hW7u/oWAsWTkABNDojmWtwAGyGzVS4ZpxavvRvkSCqNyt5inx+23oU/L/24/vnydO9YX4bBf6eRxon4FP5Geqr+72L7UKXOFL4ZLusHfhfn04ZTqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=NnVcdPwC; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="zV8Q8Kv0"
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-7ae3d7222d4so96619a12.3
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 20:03:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NnVcdPwC"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2020b730049so1459645ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2024 20:11:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724900615; x=1725505415; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1724901076; x=1725505876; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9/z6toI6voQ0IKlbU4L2/8KMYJeJaGPdDqgqk9fjkIQ=;
-        b=zV8Q8Kv0tREVC0ieTlWeVUwMPIx0Jj6eJlilhSO2ALZjaw7oDA2tJfsWPGudI1y4DB
-         WVWF6mEal/8hog63XImi5GyT9c6nXbOd//00lRGA+jJVyZZbuZjNy4y9GnQrf0L4Dnc/
-         hce6YvhGkVm/D9tCqB1R9AUvH6irJMDi6gvJAM500CjcONe4t03oo0OlY00nwqkGN3OB
-         BpBb+VB1/dB3Rmf7O+kITD9xPRO5vnGddjYtPkNc1QxM1tvzHAZM8L/ZKDdNTJ1ZREPD
-         Ajq2oxokP+SuyTC2nTBq70/1RalT3h9RV051mPOswWX6iSUUbkB+nQcuXBpnCSY3mB3E
-         MvoA==
+        bh=7LFPcUrRfm2Rty5fGa9femgiXFTLjsc0Q2+FGvRfHxc=;
+        b=NnVcdPwCPJ+F/K6ZdXqa3P4AIPR7qWdLDjmO+gZRziGpzrbOfsX48/n0df36mcgmgC
+         FFy+A72zMXwTJ5ycDm2izsdrVJvZtlnwDGujkBoDHbWkWeEEOgNgu+IarPTucRz24vL3
+         ItlYWCvPwDfmp5YTZTC3hK8OEsb9NGGqqRcGDX9Br0GS5+nxnFDLT5BDTIpodLx2Hlzc
+         S8q1ZnwZDN/PfrhC8gb0/AsFu1RQYRBuPo+fJwZoDA5RnUkzhoaCyxq/b5LAtIeVnING
+         ywpdP+P5CkNeozbh9ybEWKbwOYqPYNAodsbPrz56uOQO7C9cb9csOvqTgxgF+GTCUI52
+         WyKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724900615; x=1725505415;
+        d=1e100.net; s=20230601; t=1724901076; x=1725505876;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=9/z6toI6voQ0IKlbU4L2/8KMYJeJaGPdDqgqk9fjkIQ=;
-        b=ru5H43HFqAKCeO0IXAWL4joQMvz9GvfjHbrclGPdsFYjyUTHV3tsFHYp9NPTuJ8xX2
-         m4a2AU3IV1AMlBeJ/wnJkiuUPuCFqFVVV5Kfdexr6QmBXI+oaK1gmRL94N3zdym2EpFR
-         cpzHxAtf5tc14EZ+/FX5trpq3iPHWyXZGCAu1UlJG8EfuvcG/o8nc1krfTZoNp9A8Ade
-         IN0wqkxqfcr6yYpHYh6HdBgbjrhcx6bhX3n+33rOrL1u7IXI3tS9TWciYhLStEDj/xtK
-         ArIPiJbQAuojSZtJ84GLKuWGeYyw6XMTvOhIMlguvsIs2jM1yLvo7qhri3F5N+0Vo7g4
-         2Slw==
-X-Forwarded-Encrypted: i=1; AJvYcCW+96o5C5duagmsnQiiQOZ90vbuKAdSrZpkwk7DLUNb6EB5MjuRrF8M2kDf/mceSdZnAdD1iCzRtrk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxkVXFCFVeDLUXOmjbFsr83IZgvAg7GYzWfR6WUVYHpBq6hs1Ss
-	OUDYKj6c3y3gdmlcaSLDWHj3tFI6Rr6p9x1w5pIv2RQCo2jdSWSpkJM2DXY9Fvo=
-X-Google-Smtp-Source: AGHT+IGsjijU+KkW6jFzBT/TWTjdXr9y3F1MJJ71ZQJHmm+Lxp/ogvEjvW4gS5LrA1D6exxUROszQg==
-X-Received: by 2002:a05:6a21:10a:b0:1c3:b143:303b with SMTP id adf61e73a8af0-1cce111d93emr1276501637.54.1724900614723;
-        Wed, 28 Aug 2024 20:03:34 -0700 (PDT)
+        bh=7LFPcUrRfm2Rty5fGa9femgiXFTLjsc0Q2+FGvRfHxc=;
+        b=h6KW8l2Zzyrn31b5Yfhg41CoL7EUEam2LuMPqhfX2/E5rJb9qZRCgilSiJJzPnf0GJ
+         QlBVDPgWMSuDM/4Du5vtwfGPiGKlsSwILI80Wl9qJnvV7zfLSm2kZoANVOA8yDJLYK47
+         TcZuIZKQRSVbrcjNAlZS/AIeJGAdmEfej9SsSaBPDQFWjvg7AstLoB7mPiBLyOra8Mzp
+         nSQCr7xUzcLR4PVDxVSJE8wOWkkWe5LRbHqOeVFkrERgQzJSA6kA2/d8fje22LpRdZaW
+         +wDyOFDFsejDjdLg60/n3EpfFgomsjRyL7ZV+tUuYR+BEZ1ReCZ/Bnf3KnjLwL4pTPAh
+         oX+g==
+X-Forwarded-Encrypted: i=1; AJvYcCW0b/ksyQBgvhivN2tWWjMtNOzHs9rH4FJTzXzeHrjjauVrsU3K9t70Bl21zE18u29ZLyBTuYQntzo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxrkZ8r9sMcouXq6/tTMDEnAMb8ej0bH1Tcf09aJ8c2tsGYNFWi
+	KJu06yb6Bugmbq80nIDGrc6a645e19Snthy3YwLsBWfdvFdPwduqckIIHBYxgK8=
+X-Google-Smtp-Source: AGHT+IF0HizZIxQmIfTO5RgF8t2VuMPRsNbwH/RaEtTlxkHAdS4UOzOzAb8NSNSIxINZnhLS8ywk4g==
+X-Received: by 2002:a17:902:d48b:b0:203:a046:d687 with SMTP id d9443c01a7336-2050c2159a0mr19130725ad.7.1724901076201;
+        Wed, 28 Aug 2024 20:11:16 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-65.pa.nsw.optusnet.com.au. [49.179.0.65])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-205152cd8d6sm1780325ad.71.2024.08.28.20.03.34
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20515537a2csm1806355ad.176.2024.08.28.20.11.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2024 20:03:34 -0700 (PDT)
+        Wed, 28 Aug 2024 20:11:15 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sjVRb-00GS83-3A;
-	Thu, 29 Aug 2024 13:03:32 +1000
-Date: Thu, 29 Aug 2024 13:03:31 +1000
+	id 1sjVZ1-00GSSL-15;
+	Thu, 29 Aug 2024 13:11:11 +1000
+Date: Thu, 29 Aug 2024 13:11:11 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>,
@@ -66,11 +66,10 @@ Cc: Christian Brauner <brauner@kernel.org>,
 	Theodore Ts'o <tytso@mit.edu>, linux-block@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 4/6] xfs: call xfs_flush_unmap_range from
- xfs_free_file_space
-Message-ID: <Zs/lA5FJoF0Zd9Ip@dread.disaster.area>
+Subject: Re: [PATCH 6/6] xfs: refactor xfs_file_fallocate
+Message-ID: <Zs/mz4Gve+znep2M@dread.disaster.area>
 References: <20240827065123.1762168-1-hch@lst.de>
- <20240827065123.1762168-5-hch@lst.de>
+ <20240827065123.1762168-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,44 +78,86 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240827065123.1762168-5-hch@lst.de>
+In-Reply-To: <20240827065123.1762168-7-hch@lst.de>
 
-On Tue, Aug 27, 2024 at 08:50:48AM +0200, Christoph Hellwig wrote:
-> Call xfs_flush_unmap_range from xfs_free_file_space so that
-> xfs_file_fallocate doesn't have to predict which mode will call it.
+On Tue, Aug 27, 2024 at 08:50:50AM +0200, Christoph Hellwig wrote:
+> Refactor xfs_file_fallocate into separate helpers for each mode,
+> two factors for i_size handling and a single switch statement over the
+> supported modes.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_bmap_util.c |  8 ++++++++
->  fs/xfs/xfs_file.c      | 21 ---------------------
->  2 files changed, 8 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index fe2e2c93097550..187a0dbda24fc4 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -848,6 +848,14 @@ xfs_free_file_space(
->  	if (len <= 0)	/* if nothing being freed */
->  		return 0;
->  
-> +	/*
-> +	 * Now AIO and DIO has drained we flush and (if necessary) invalidate
-> +	 * the cached range over the first operation we are about to run.
-> +	 */
-> +	error = xfs_flush_unmap_range(ip, offset, len);
+>  fs/xfs/xfs_file.c | 330 +++++++++++++++++++++++++++++-----------------
+>  1 file changed, 208 insertions(+), 122 deletions(-)
+
+Much nicer. :)
+
+And it made an existing issue in the code quite obvious, too:
+
+> +/*
+> + * Punch a hole and prealloc the range.  We use a hole punch rather than
+> + * unwritten extent conversion for two reasons:
+> + *
+> + *   1.) Hole punch handles partial block zeroing for us.
+> + *   2.) If prealloc returns ENOSPC, the file range is still zero-valued by
+> + *	 virtue of the hole punch.
+> + */
+> +static int
+> +xfs_falloc_zero_range(
+> +	struct file		*file,
+> +	int			mode,
+> +	loff_t			offset,
+> +	loff_t			len)
+> +{
+> +	struct inode		*inode = file_inode(file);
+> +	unsigned int		blksize = i_blocksize(inode);
+> +	loff_t			new_size = 0;
+> +	int			error;
+> +
+> +	trace_xfs_zero_file_space(XFS_I(inode));
+> +
+> +	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
 > +	if (error)
 > +		return error;
 > +
->  	startoffset_fsb = XFS_B_TO_FSB(mp, offset);
->  	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+> +	error = xfs_free_file_space(XFS_I(inode), offset, len);
+> +	if (error)
+> +		return error;
+> +
+> +	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+> +	offset = round_down(offset, blksize);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	if (error)
+> +		return error;
+> +	return xfs_falloc_setsize(file, new_size);
+> +}
 
-Ok, so if we ever change the zeroing implementation to not punch a
-hole first, we're going to have to make sure we add this to whatever
-new zeroing implementation we have.
+Our zeroing operation always does preallocation, but....
 
-Can you leave a comment in the FALLOC_FL_ZERO_RANGE implementation
-code that notes it currently relies on the xfs_flush_unmap_range()
-in xfs_free_file_space() for correct operation?
+
+> +static int
+> +xfs_falloc_allocate_range(
+> +	struct file		*file,
+> +	int			mode,
+> +	loff_t			offset,
+> +	loff_t			len)
+> +{
+> +	struct inode		*inode = file_inode(file);
+> +	loff_t			new_size = 0;
+> +	int			error;
+> +
+> +	/*
+> +	 * If always_cow mode we can't use preallocations and thus should not
+> +	 * create them.
+> +	 */
+> +	if (xfs_is_always_cow_inode(XFS_I(inode)))
+> +		return -EOPNOTSUPP;
+
+... our preallocation operation always returns -EOPNOTSUPP for
+COW mode.
+
+Should the zeroing code also have this COW mode check in it after
+the hole punch has run so we don't do unnecessary prealloc there?
 
 -Dave.
 -- 
