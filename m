@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5EF8156875
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 22:34:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F31D018A6DF
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 22:46:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724970875; cv=none; b=JjrMSr6ZsKVmt3tqGl6kSt7lGx9hbrcW/Xprq3g4YjhyqbvxslSVGQabpBGy8ZqawKXXobfpnncnQ+v7Lihjmnl0uV7x5aMIo8iS0chNH9d3rxnParstIFwyTxo/Rf1m8D2HVq8JOdWQpAZEGIsOh7Gwgd4CEFGOWHLLDuVXNLI=
+	t=1724971601; cv=none; b=Qk4CZBgwa5AIJA9zuNm3lXoBzqmc11uxQvnFqKlkHPIoo4reD8PMELVH+gYkmkhHwNZ6TVald3PxE/wLwSsWLBW5G9dy4oQ4TAPeuAteGcTTLwO1iV6J4frXJcsh8CRkEmUp+6F+RGtHwtb9QlZKDcIOCIPyrVCEzO5r43b9t4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724970875; c=relaxed/simple;
-	bh=vh0GAlA/4nTVCB8rmeP6plCfxlSCBBfY0CmRwCjKCsg=;
+	s=arc-20240116; t=1724971601; c=relaxed/simple;
+	bh=Ha8Iv9ET87U2hCpVx1EFxLJcwEWt2j4HGPhy2kbbwT8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AIqhoiZUzjQdfE/SMyjhBDscV0vszZNvoqVmQX7/I79uogLD6C92p1Auhz89GrwUyXNRoXcOhoP70zIW+Yt3iv4Kk2pPWl5cFL1t8qZIV2zCpbB0A8E3Igli+0rNHWXaZEIS/Y9Q273wdwnCFkReUc751XTkD3GMrqK4ZsvoW8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kZFapnXF; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mx30E/U2A8ygMDqxaBml+xPHfyNdqQU2p63jSXaE+pCR7avbwrrXYVBYz7K7/MwdTKkAJQGd0NGsfTpoTz9yaAsSUOJnYQUmjyP9l81FhLN6q0aj4/7qkuq231eOWYz3JBHU/PIqo2RHfxLh7ICqJ6ckLHy2bvAJGHAtnKRoLeQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvnDCAFs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kZFapnXF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63B09C4CEC1;
-	Thu, 29 Aug 2024 22:34:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvnDCAFs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A1ECC4CEC1;
+	Thu, 29 Aug 2024 22:46:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724970875;
-	bh=vh0GAlA/4nTVCB8rmeP6plCfxlSCBBfY0CmRwCjKCsg=;
+	s=k20201202; t=1724971600;
+	bh=Ha8Iv9ET87U2hCpVx1EFxLJcwEWt2j4HGPhy2kbbwT8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kZFapnXFY3+9d4xxyJttKNoymOH2KzRm3R8UOHbKjddIrrMKDsIdjGOxsd9G01P0C
-	 b0rzh+mQQjaRUhbnOu2KkMONKhObInCgYuItkkvl2lx7p5mv2L9+CLNPpIEE0UdyfI
-	 r8tKema14CiHOFfwS+14fzbbe8/NQilj+kocpLIpI1zGbT+rPftK++rlq6GM3LZ6JR
-	 XbuvXa6B+fqWNTk1ZZhXc2Ua0K6i3K+LaMPdgogpVcFQTkaz9bQ37jGcUJtNA5z623
-	 0+oZ7KMQ43VfHRGl+kdPLoINeSVFmF6Rz8eeaMtJZ9+X39M2ZTOy9BSsetM9/iejlS
-	 MOBlxA5rspgqg==
-Date: Thu, 29 Aug 2024 15:34:34 -0700
+	b=LvnDCAFscXQOiKhCrwbsR4Ukeqa2s3QEYUOZCR7VVMoWl2JS5oemgI+8po0i0UJw1
+	 xdqNk8zAo7JMhzflV6japc471xbgErn8jwaw8XKguRBOom+XQyQ+oBD4v3dYmtG5y4
+	 csU0KjUx/RZGPfksQi+dw4XVBbn6LtJcyMNpcmChkI7XfP3qjSA8D+xVw6ssiSzj94
+	 G+xB9OclC/7EzqwAdEuAfj4NcOcaklbeqQ614KfYTTygjPnBzf4RU9pUe41JoKMZsA
+	 iGDP6sVB0HrZZB+UlGYSmG2Z7Qq26otSLTFgA1k8r39HZX/PtGap3nf0l3cTPKvp+n
+	 Iw9udG30frwtQ==
+Date: Thu, 29 Aug 2024 15:46:39 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/10] xfs: move the zero records logic into
- xfs_bmap_broot_space_calc
-Message-ID: <20240829223434.GS6224@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 07/10] xfs: refactor creation of bmap btree roots
+Message-ID: <20240829224639.GT6224@frogsfrogsfrogs>
 References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs>
- <172480131591.2291268.4549323808410277633.stgit@frogsfrogsfrogs>
- <20240828041424.GE30526@lst.de>
- <Zs/XUl2ImQHFxhKP@dread.disaster.area>
+ <172480131627.2291268.8798821424165754100.stgit@frogsfrogsfrogs>
+ <Zs/ZNSQ74BOefzUm@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,61 +43,82 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zs/XUl2ImQHFxhKP@dread.disaster.area>
+In-Reply-To: <Zs/ZNSQ74BOefzUm@dread.disaster.area>
 
-On Thu, Aug 29, 2024 at 12:05:06PM +1000, Dave Chinner wrote:
-> On Wed, Aug 28, 2024 at 06:14:24AM +0200, Christoph Hellwig wrote:
-> > On Tue, Aug 27, 2024 at 04:35:01PM -0700, Darrick J. Wong wrote:
-> > > This helps us remove a level of indentation in xfs_iroot_realloc because
-> > > we can handle the zero-size case in a single place instead of repeatedly
-> > > checking it.  We'll refactor further in the next patch.
+On Thu, Aug 29, 2024 at 12:13:09PM +1000, Dave Chinner wrote:
+> On Tue, Aug 27, 2024 at 04:35:33PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > I think we can do the same cleanup in xfs_iroot_realloc without this
-> > special case:
+> > Now that we've created inode fork helpers to allocate and free btree
+> > roots, create a new bmap btree helper to create a new bmbt root, and
+> > refactor the extents <-> btree conversion functions to use our new
+> > helpers.
 > > 
-> > This:
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c       |   20 ++++++--------------
+> >  fs/xfs/libxfs/xfs_bmap_btree.c |   13 +++++++++++++
+> >  fs/xfs/libxfs/xfs_bmap_btree.h |    2 ++
+> >  3 files changed, 21 insertions(+), 14 deletions(-)
 > > 
-> > > +	new_size = xfs_bmap_broot_space_calc(mp, new_max);
-> > > +	if (new_size == 0) {
-> > > +		kfree(ifp->if_broot);
-> > > +		ifp->if_broot = NULL;
-> > > +		ifp->if_broot_bytes = 0;
-> > > +		return;
 > > 
-> > becomes:
-> > 
-> > 	if (new_max == 0) {
-> > 		kfree(ifp->if_broot);
-> > 		ifp->if_broot = NULL;
-> > 		ifp->if_broot_bytes = 0;
-> > 		return;
-> > 	}
-> > 	new_size = xfs_bmap_broot_space_calc(mp, new_max);
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 00cac756c9566..e3922cf75381c 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -614,7 +614,7 @@ xfs_bmap_btree_to_extents(
+> >  	xfs_trans_binval(tp, cbp);
+> >  	if (cur->bc_levels[0].bp == cbp)
+> >  		cur->bc_levels[0].bp = NULL;
+> > -	xfs_iroot_realloc(ip, -1, whichfork);
+> > +	xfs_iroot_free(ip, whichfork);
 > 
-> I kinda prefer this version; I noticed the code could be cleaned
-> up the way looking at some other patch earlier this morning...
+> I feel like the "whichfork" interface is unnecessary here. We
+> already have the ifp in all cases here, and so
+> 
+> 	xfs_iroot_free(ifp);
+> 
+> avoids the need to look up the ifp again in xfs_iroot_free().
 
-As I pointed out to Christoph in this thread already, this change won't
-age well because the rt rmap and refcount btrees will want to create
-incore btree root blocks with zero records and then create btree cursors
-around that.  This refactoring series, incidentally, comes from the
-rtrmap series.  Cursor initialization will try to access ifp->if_broot,
-which results in null pointer deref whackamole all over xfs_btree.c if
-we do that.
+Yeah, that makes sense.
 
-I'm working on a better solution than that, which might be pointing
-if_broot to a zeroed out rodata xfs_btree_block object and amending
-xfs_iroot_free not to delete anything that's not a heap pointer.
+> The same happens with xfs_iroot_alloc() - the callers already have
+> the ifp in a local variable, so...
+> 
+> >  	ASSERT(ifp->if_broot == NULL);
+> >  	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
+> >  	*logflagsp |= XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
+> > @@ -655,19 +655,10 @@ xfs_bmap_extents_to_btree(
+> >  	ASSERT(ifp->if_format == XFS_DINODE_FMT_EXTENTS);
+> >  
+> >  	/*
+> > -	 * Make space in the inode incore. This needs to be undone if we fail
+> > -	 * to expand the root.
+> > -	 */
+> > -	xfs_iroot_realloc(ip, 1, whichfork);
+> > -
+> > -	/*
+> > -	 * Fill in the root.
+> > -	 */
+> > -	block = ifp->if_broot;
+> > -	xfs_bmbt_init_block(ip, block, NULL, 1, 1);
+> > -	/*
+> > -	 * Need a cursor.  Can't allocate until bb_level is filled in.
+> > +	 * Fill in the root, create a cursor.  Can't allocate until bb_level is
+> > +	 * filled in.
+> >  	 */
+> > +	xfs_bmbt_iroot_alloc(ip, whichfork);
+> 
+> .... this becomes xfs_bmbt_iroot_alloc(ip, ifp);
+> 
+> i.e. once we already have an ifp resolved for the fork, it makes no
+> sense to pass whichfork down the stack instead of the ifp...
 
-We don't need that here yet because the bmap btree code only sets
-new_max==0 when it's tearing down the ondisk btree prior to converting
-to FMT_EXTENTS, but I'd rather not change this patch now just to revert
-it a month from now back to what I originally posted.
+Makes sense here too, will change both.
 
 --D
 
 > -Dave.
-> 
 > -- 
 > Dave Chinner
 > david@fromorbit.com
