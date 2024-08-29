@@ -1,44 +1,42 @@
-Received: from out-176.mta1.migadu.com (out-176.mta1.migadu.com [95.215.58.176])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7496B18E021
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 12:56:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61D5119414E
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2024 13:18:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724936164; cv=none; b=gfqQgproJNkAMvnikbpuryhd0rBPNiWfwY+9wSSDRCalzhjh19qwzhSAKrwmiYHoo13FGeakY4pF9RBTtCG9c7SY7Aq/v6QkORQMA8bktL7qtn/zXVSYVSDcjHJnDv0qZ+jrgry9TzBiN60LhOVZndg+nzynivEPnxSB0YKf3DA=
+	t=1724937503; cv=none; b=nVm4zfiD1cwpbwjuDZFVuBDHLxBxKvfHP3f/qc6OwjRW4FbK6R2TrhWLfH42Dxg9zEyTiBj189c9zGBxtpmzMoODCKywi7Lpe/guTlcMmkCuh5ZTbZT2DCY04IiCBe6T3i146HP0AStF279VGbP6wKqJ9m4Aff9qMZYILZCewGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724936164; c=relaxed/simple;
-	bh=zNkDvfaNhgjAc7yL7GBBZMbe/RFNPbnApKQFg9/TgLA=;
+	s=arc-20240116; t=1724937503; c=relaxed/simple;
+	bh=uPLVSCKb/0/As5ZE7FS3xCdSh1HfdfdxZUmjWBFaUEY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sQUcqXVWJFc7r7OFQugwa6ky+guvJ0+kQ5qbCW6nmDGJmdedOmUJKXOn5uZaDchPpKOqHY9K+60udXV4GA13YLzCrCtQ5o1O5Pf4aiCvYWNbWMelNiT4F4DWboHFhK6yPoJSnZorK+8VotPBaJZnPxNhRUIUGGvQkOC1hu1gN+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=p8P9u5g3; arc=none smtp.client-ip=95.215.58.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=HBu75LEV2KrEhsP4JwJyfzF56uiZRGdQMBz0m8912gQRYYmtC8GS4nqEWwBBqebfElBVPXN3wfRclj8JuFyJn2zTVZfqo7G/+0pUZ5NQVyl7yA2Nl/9goKP5iem/hH/zP96GISOlO5HbtOrVvUNpUEjbOw7MA+Qdd/1kGsG2dr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QoFGtoZd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="p8P9u5g3"
-Date: Thu, 29 Aug 2024 08:55:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1724936160;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BnMGv88WDoKcQvjIJzYL0rYHExqMCe4hXsbVaVeGr5Y=;
-	b=p8P9u5g3LDHWjWblqz0GqWJCIJSXDmaQrHa2pgL1rH/QQ6sAojd/2n07vgwWs+YIV5JWYP
-	Gbq50Ic52qNBIIqvOSawcDlj6vmZktBtuqyBKURHzELB2nE5nzmBblz4b6G/FQV1vmYRB7
-	MPXnfuypCK3TeRUkhBcHsMMp5vweTq4=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: Jan Kara <jack@suse.cz>, kernel-team@fb.com, 
-	linux-fsdevel@vger.kernel.org, amir73il@gmail.com, brauner@kernel.org, 
-	linux-xfs@vger.kernel.org, gfs2@lists.linux.dev, linux-bcachefs@vger.kernel.org
-Subject: Re: [PATCH v4 14/16] bcachefs: add pre-content fsnotify hook to fault
-Message-ID: <3cuyv5dz376boeahogdpgzdkzgkjiwmksgfrattzblrh2agkqn@igtywyxsifnv>
-References: <cover.1723670362.git.josef@toxicpanda.com>
- <9627e80117638745c2f4341eb8ac94f63ea9acee.1723670362.git.josef@toxicpanda.com>
- <20240829111055.hyc4eke7a5e26z7r@quack3>
- <zzlv7xb76hkojmilxsvrsrhsh7yzglvrwofxcavjo4nluhjbdu@cl2c4iscmfg2>
- <20240829124607.GC2995802@perftesting>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QoFGtoZd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3771C4CEC1;
+	Thu, 29 Aug 2024 13:18:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724937503;
+	bh=uPLVSCKb/0/As5ZE7FS3xCdSh1HfdfdxZUmjWBFaUEY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=QoFGtoZdFocGciJ+k+xkWeyEnzKHDQYaLQe4qm+0Q9CdHDtqiUJpRzdoqHmuohvRO
+	 hAdK7J9Db9jLDIvaBkzLLgHwkHbDtZua0Rix+6poOROeCjljnGg3m5D0Rxq5mYbUQ6
+	 cU9GTbniFlw4w8B1GZbIFbEkz+T/h18sITi5Df/PQA+VXXCzAD8eoF98x+Hyg0/66n
+	 +56Bk/I77TNpOAH21ZnHPScsmr0wi8KTzSkahA3FXd4BLLFeOpaZuPuOwXI2vPZ66B
+	 SAN4b1f9uIjQfST5bfp5Xzf3XQWQ4b4gB0f83ltro/v/OP9KeeFVmmsV80/g8XaYhr
+	 iRSZlv4AttTeQ==
+Date: Thu, 29 Aug 2024 15:18:18 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
+	hch@lst.de
+Subject: Re: [PATCH 1/3] libhandle: Remove libattr dependency
+Message-ID: <zvy5npuity7acnphyagseag4ywmtazdzfzzqyxkeqr2hwurmtx@fblb265pyec4>
+References: <20240827115032.406321-1-cem@kernel.org>
+ <20240827115032.406321-2-cem@kernel.org>
+ <20240827144112.GN865349@frogsfrogsfrogs>
+ <Zs6o5q_zv1T3wPSw@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,26 +45,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240829124607.GC2995802@perftesting>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <Zs6o5q_zv1T3wPSw@infradead.org>
 
-On Thu, Aug 29, 2024 at 08:46:07AM GMT, Josef Bacik wrote:
-> On Thu, Aug 29, 2024 at 07:26:42AM -0400, Kent Overstreet wrote:
-> > On Thu, Aug 29, 2024 at 01:10:55PM GMT, Jan Kara wrote:
-> > > On Wed 14-08-24 17:25:32, Josef Bacik wrote:
-> > > > bcachefs has its own locking around filemap_fault, so we have to make
-> > > > sure we do the fsnotify hook before the locking.  Add the check to emit
-> > > > the event before the locking and return VM_FAULT_RETRY to retrigger the
-> > > > fault once the event has been emitted.
-> > > > 
-> > > > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
-> > > 
-> > > Looks good to me. Would be nice to get ack from bcachefs guys. Kent?
-> > 
-> > I said I wanted the bcachefs side tested, and offered Josef CI access
-> > for that - still waiting to hear from him.
+Sorry, came back late for the party...
+
+On Tue, Aug 27, 2024 at 09:34:46PM GMT, Christoph Hellwig wrote:
+> On Tue, Aug 27, 2024 at 07:41:12AM -0700, Darrick J. Wong wrote:
+> > Hmm.  Here you're changing function signatures for a public library.
+> > attrlist_cursor and xfs_attrlist_cursor are the same object, but I
+> > wonder if this is going to cause downstream compilation errors for
+> > programs that include libattr but not xfs_fs.h?
 > 
-> My bad I thought I had responded.  I tested bcachefs, xfs, ext4, and btrfs with
-> my tests.  I'll get those turned into fstests today/tomorrow.  Thanks,
+> Oh, I forgot that jdm.h is public.  Yes, this will cause the compiler
+> to complain, so we can't do that.
 
-Acked-by: Kent Overstreet <kent.overstreet@linux.dev>
+I spoke with darrick on Tuesday, and it seemed IMO that libhandle is supposed to
+be a xfsprogs thing, not something that should be packaged separated, but I
+might be totally wrong here.
+
+If we ought to maintain jdm.h intact, then I'd come back to pack definitions
+into libfrog/attr.h, but what I don't like about this, is we'll end up with two
+definitions for virtually the same thing, xfs_attrlist in libfrog and attrlist
+in xfs_fs.h, unless we do use Darrick's idea and mimic libxfs behavior in
+libfrog/attr.h, something like:
+
+#define xfs_attrlist_cursor attrlist_cursor
+
+So we could use it within libfrog, without messing up with public libhandle
+interface?!
+
+Carlos
