@@ -1,281 +1,229 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FDBA16EB4C;
-	Fri, 30 Aug 2024 08:55:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C35BEEB7;
+	Fri, 30 Aug 2024 09:48:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725008126; cv=none; b=jVyRW5ILg8PvvKSUwzSrKfBLkhxF2naBndTEWdXC6la2l2meAZaxvwJZrtm3evjIEU8h4vRrXGMi6Ti3SVySmrWGydmcuUMqr5oDWAYrXIVValmnVbEuRV7YIECqaafX8RqhQRdVpYB/RvCehF629xq4OxKTOdEQj6yUe6ELgzg=
+	t=1725011309; cv=none; b=PNkqhQUeLJNx5v6atte2q+XZDGsKJ+5A4TkqxIcOLl4+7sYTLlnVvP730fbwX5pZy3IyrmeOzlHCVZOwQQ2ATo4L0pK8DXeKSlTnLXjHZqVt3t+fTiKQsJ0wX8B3HK5e05QyL5yZOt6Q/EjapgdRn8qzmK/OuT6aYyKAE6h6tsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725008126; c=relaxed/simple;
-	bh=1ayrW2KRYSv4VG5vc1pV7HviSsEOCiqIqwNBh+QL/fQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Up+XatSw/FJZG8p2qdsARMzPEa0omT9wbL+q2x7s/KlnicspXe094TPkHOt0oheN61L/TLXd9OOZioQmXMlqW1nybZg8pqSAY1cBrJnpPAau1nmFmnyIKuJ1c5derwxXiCj1JaZv5bHSWZsGLrbsMmFBy0QWQFTPHCFyf4EmQls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=F+bI1gXG; arc=none smtp.client-ip=209.85.222.173
+	s=arc-20240116; t=1725011309; c=relaxed/simple;
+	bh=Q/rhZGGCFpZtbC5xbU/2iGU3qUy1MhfwvwGN3HHGEkY=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=mbDtvVTW+/48INt5Py6b4z7krdxJoB+PPccV+btMHoKTaiSD282aYv06uQ3PgxmeV8rq+oHYcDQi41KCPyGd5Xnio7uEFBy6vv90+vlv98ToP+CkgHyzVSuoOJErv8hKiASxb1YDTL5u9TcxD1JTDg8GPoXqs0p2U7IjGjBTADo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gSdnmEZ5; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F+bI1gXG"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-7a8125458e4so26459985a.3;
-        Fri, 30 Aug 2024 01:55:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gSdnmEZ5"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-20202df1c2fso18519375ad.1;
+        Fri, 30 Aug 2024 02:48:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725008122; x=1725612922; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1725011307; x=1725616107; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=JrbmTGNNi0W3S9mCcoxI/7kNMrUNDnmdpl0nVBsbYG8=;
-        b=F+bI1gXGfvGAIkJMj7JYiOZIFPIaLJf8NUYz2W/AmlM8TF6d/tpyRh5uiSra1xelFh
-         rEKdUq5jA4JWh2syiKNKoqOXEPL+Mt/2Yl/qpSF1ebtr9KEOUzKFS7fUrsXJbo3vyKnw
-         IvZRTywntMy1C9Vcr6nKqFtw2q50y9+fuhiyUiCCejIX/bJsZwKXyjLo6E47o6RGVZ2r
-         H+Sjogt0gzYmc24aASJcC+NkYCyqYxneWYYOqibxizHYf+b+kF0rP+0b1soQ5AtH1QKU
-         i2nVYrey4rKJZTtVVdwDEDsat3eWIKXNhh6SC1CtifJX+UMh6KEq6iw/Sb7J1dEJm9h2
-         dCjg==
+        bh=rP4trEeuRs8rU3WJDDxHXc+6maOAdRJoijfPpM0VRLo=;
+        b=gSdnmEZ5JYSusX6dT6hwGdse0+a+lwC/3nw/r1MVgF7vnBCg1DUU67Uzz2gHdMZGYC
+         /NayrQeJWX1J9yXnVfdt7lxU+LjfdIB/JKl897Cmjnz7qBWcw2L/X/8S4dxz3hZL0qpd
+         idhvXVGUWoxWKK2sOQT3YE6/W0PnZV1i4lxMtQSCLCPlctXoGUDyTFCyU/YJ57Vpxima
+         bTycFn+tmrSky4lH0KVyKscNrEDTfRhztdmqcHFyV0ifLiVBieEtihMJIzTzLb7EYV2C
+         AkfgVf24SRCgNyzGRHHiEGbRd/ycs60+8xbPz7jL0dhS5VDbJ/r2T3P1SCDLqctnAIaC
+         kBwA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725008122; x=1725612922;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JrbmTGNNi0W3S9mCcoxI/7kNMrUNDnmdpl0nVBsbYG8=;
-        b=SOkl5DbF+9cEW5hg9kU1NeCFh4mBLKPBnqAumVmsSr6+gdN7g94buPrIFWXx0fapDQ
-         C+QEFqNH5G9bSQuTn3pv3jbHGafoWJMfVajqxbEjte6S3S2mHUBTMwsZKw4mqEWT7AaO
-         RdrtJ2kZmawJM8pjibWMYq55R9Q7Jp0p0BcMnSEXN7kMmy0xpeNTY1UBWLLsxplYiyvN
-         tzk99OHGaV4k97rulYiLmbKicvVW2YzKcDzKuqvrb+Rs1x94sSWO4UklPwzxmShTtOGV
-         yrhHi1Yp1AdQCuRX/svGaH1uzSEgOINnQx+Ee710t5CVdHw/k6xjma6XpcPOvK/sUyfY
-         3BEQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUBVyS0c/iLYWUvU51ULBa5aL/LYDqB2PkYXSFZY/GPmKPrQFYo+iUEv+H0COQl4dkBjJflhT6VeJz1he3zYQ==@vger.kernel.org, AJvYcCVm62TBF9IVV9F6moAprG27rjyS3cnIOxvbwkRAosCgI4lV1eAsoslY0i66jGhqFxPgGdMgyYSqoT0e@vger.kernel.org, AJvYcCXqUqVHg4MP4nmxMAhF55r6fSuqYj6JPSQWrSIplN+xrUhkP2vXd7ZPffV9xY3lquoEEpLnRojUflePOlMLBw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzks1ye+JYIqB/8kFs9s/prfPkkf//9lJpC5LeomQvl4v5Sfupl
-	/EwCwICQulsvUccb4CChqKKGfRrHTlN5f5qn8mUhJV7f9KSIEnXuo/A/4MAAIHc6Z/EIr3HT5R/
-	b7sxtbqKGoQ6n7O+YUsSpYiyH2Alx9NaXKIM=
-X-Google-Smtp-Source: AGHT+IEgASSglc7fCqyUAqgIbS/CgJN8Y1QKd5RBsgX3/p1PKUl0P29QjM+n2Xn3M3qcUlDagsErduSVe2FrEbulU1s=
-X-Received: by 2002:a05:620a:240e:b0:7a7:fad0:d916 with SMTP id
- af79cd13be357-7a8041bcbf4mr633010085a.26.1725008121996; Fri, 30 Aug 2024
- 01:55:21 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1725011307; x=1725616107;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=rP4trEeuRs8rU3WJDDxHXc+6maOAdRJoijfPpM0VRLo=;
+        b=jHMKXLfFpQKP/FBfIRApcul660U/87R870ncNS32gzzvuRxixVMSTouJhX+hBQhMJc
+         az5ooBa3ini/mvutiKgNRIqhk2xXLJeN2pNlrG0iT61cjRJ/VCMyScP4ztiQJM6sHrNX
+         bBEUTiXiyd18HzMZrencW+Dof4zZFpMPPSV9P9mi9zSA9qVwN+c1xYFy0lehwK9ZU2C5
+         Pvwk/Xp/BJaBz4Y8OZJIubI/whm4XV93488RKQIAAw1uplSis/yQ5/IlVTxY1sq40nPr
+         vJWFvqzRZZyOU1/toPUSp9bt5xoSyUtvChl8j5mWJh3ul713DeVmFxgDHI/UMnSeXbz2
+         5qoQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUJk35tHaEbDPlAPJJmf3krt7mQuKbrNdGu6EBjZyL5tj4JpVs7wGyBPOAKd5du41C0PePg7U4AGRxwH9b0@vger.kernel.org, AJvYcCWOOVcuVjaQVrm7BopUnf1EaavDdjPxTBtKBneq0wAbdvT05FbEBHyEValRzcvXpTlKeT81MmhdMz/H3hhI@vger.kernel.org, AJvYcCXo7P7stByeJTDQSXHji8jN3a0ebqxY78X+Ud3+tm2qWH8ddcoKirg1qDOeZ7nflmmosFA5qRQoVvyl@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy272REuK3OxWCVSWrDoMOPdHmQS4LvWpe5BMgxVVtS7NIJx+9X
+	/5BVTcPOnoc0ZguP4GrjonTkx80ZQq3ZZzqfJtU9UM4UT0z5vpOz
+X-Google-Smtp-Source: AGHT+IFUHv4NlP67moIb7PvFaWCUYc0jv/H9kTpts63Iexcd2yb65SkNnIiRrd3AIyJNx0QsqYZEsg==
+X-Received: by 2002:a17:902:ce85:b0:201:f2a4:cf74 with SMTP id d9443c01a7336-2050ea1658amr82777765ad.22.1725011307214;
+        Fri, 30 Aug 2024 02:48:27 -0700 (PDT)
+Received: from [127.0.0.1] ([103.85.75.88])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20515545d75sm23650115ad.237.2024.08.30.02.48.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Aug 2024 02:48:26 -0700 (PDT)
+Message-ID: <df7fc9c1863f353091cfcb84f04e365aa4609bab.camel@gmail.com>
+Subject: Re: [syzbot] [iomap?] [xfs?] WARNING in iomap_write_begin
+From: Julian Sun <sunjunchao2870@gmail.com>
+To: syzbot <syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com>, 
+	brauner@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Date: Fri, 30 Aug 2024 17:48:22 +0800
+In-Reply-To: <0000000000008964f1061f8c32b6@google.com>
+References: <0000000000008964f1061f8c32b6@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4-2 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1723670362.git.josef@toxicpanda.com> <20240829214153.GP6224@frogsfrogsfrogs>
-In-Reply-To: <20240829214153.GP6224@frogsfrogsfrogs>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 30 Aug 2024 10:55:10 +0200
-Message-ID: <CAOQ4uxh+zD1A18VPyoRHeaBt+XCpt2LB18K6ZHQJR-VqdGrCVw@mail.gmail.com>
-Subject: Re: [PATCH v4 00/16] fanotify: add pre-content hooks
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	jack@suse.cz, brauner@kernel.org, linux-xfs@vger.kernel.org, 
-	gfs2@lists.linux.dev, linux-bcachefs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 29, 2024 at 11:41=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
-> wrote:
->
-> On Wed, Aug 14, 2024 at 05:25:18PM -0400, Josef Bacik wrote:
-> > v3: https://lore.kernel.org/linux-fsdevel/cover.1723228772.git.josef@to=
-xicpanda.com/
-> > v2: https://lore.kernel.org/linux-fsdevel/cover.1723144881.git.josef@to=
-xicpanda.com/
-> > v1: https://lore.kernel.org/linux-fsdevel/cover.1721931241.git.josef@to=
-xicpanda.com/
-> >
-> > v3->v4:
-> > - Trying to send a final verson Friday at 5pm before you go on vacation=
- is a
-> >   recipe for silly mistakes, fixed the xfs handling yet again, per Chri=
-stoph's
-> >   review.
-> > - Reworked the file system helper so it's handling of fpin was a little=
- less
-> >   silly, per Chinner's suggestion.
-> > - Updated the return values to not or in VM_FAULT_RETRY, as we have a c=
-omment
-> >   in filemap_fault that says if VM_FAULT_ERROR is set we won't have
-> >   VM_FAULT_RETRY set.
-> >
-> > v2->v3:
-> > - Fix the pagefault path to do MAY_ACCESS instead, updated the perm han=
-dler to
-> >   emit PRE_ACCESS in this case, so we can avoid the extraneous perm eve=
-nt as per
-> >   Amir's suggestion.
-> > - Reworked the exported helper so the per-filesystem changes are much s=
-maller,
-> >   per Amir's suggestion.
-> > - Fixed the screwup for DAX writes per Chinner's suggestion.
-> > - Added Christian's reviewed-by's where appropriate.
-> >
-> > v1->v2:
-> > - reworked the page fault logic based on Jan's suggestion and turned it=
- into a
-> >   helper.
-> > - Added 3 patches per-fs where we need to call the fsnotify helper from=
- their
-> >   ->fault handlers.
-> > - Disabled readahead in the case that there's a pre-content watch in pl=
-ace.
-> > - Disabled huge faults when there's a pre-content watch in place (entir=
-ely
-> >   because it's untested, theoretically it should be straightforward to =
-do).
-> > - Updated the command numbers.
-> > - Addressed the random spelling/grammer mistakes that Jan pointed out.
-> > - Addressed the other random nits from Jan.
-> >
-> > --- Original email ---
-> >
+On Tue, 2024-08-13 at 01:14 -0700, syzbot wrote:
+Test the following patch.
+
+#syz test: upstream ee9a43b7cfe2
+
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 72c981e3dc92..6216c31aa3cc 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1162,6 +1162,9 @@ xfs_buffered_write_iomap_begin(
+        if (error)
+                goto out_unlock;
+=20
++       /* Get extent info that may updated by
+xfs_bmapi_reserve_delalloc() */
++       xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur,
+&imap);
++
+        /*
+         * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we
+punch
+         * them out if the write happens to fail.
+
+
 > > Hello,
-> >
-> > These are the patches for the bare bones pre-content fanotify support. =
- The
-> > majority of this work is Amir's, my contribution to this has solely bee=
-n around
-> > adding the page fault hooks, testing and validating everything.  I'm se=
-nding it
-> > because Amir is traveling a bunch, and I touched it last so I'm going t=
-o take
-> > all the hate and he can take all the credit.
-> >
-> > There is a PoC that I've been using to validate this work, you can find=
- the git
-> > repo here
-> >
-> > https://github.com/josefbacik/remote-fetch
-> >
-> > This consists of 3 different tools.
-> >
-> > 1. populate.  This just creates all the stub files in the directory fro=
-m the
-> >    source directory.  Just run ./populate ~/linux ~/hsm-linux and it'll
-> >    recursively create all of the stub files and directories.
-> > 2. remote-fetch.  This is the actual PoC, you just point it at the sour=
-ce and
-> >    destination directory and then you can do whatever.  ./remote-fetch =
-~/linux
-> >    ~/hsm-linux.
-> > 3. mmap-validate.  This was to validate the pagefault thing, this is li=
-kely what
-> >    will be turned into the selftest with remote-fetch.  It creates a fi=
-le and
-> >    then you can validate the file matches the right pattern with both n=
-ormal
-> >    reads and mmap.  Normally I do something like
-> >
-> >    ./mmap-validate create ~/src/foo
-> >    ./populate ~/src ~/dst
-> >    ./rmeote-fetch ~/src ~/dst
-> >    ./mmap-validate validate ~/dst/foo
-> >
-> > I did a bunch of testing, I also got some performance numbers.  I copie=
-d a
-> > kernel tree, and then did remote-fetch, and then make -j4
-> >
-> > Normal
-> > real    9m49.709s
-> > user    28m11.372s
-> > sys     4m57.304s
-> >
-> > HSM
-> > real    10m6.454s
-> > user    29m10.517s
-> > sys     5m2.617s
-> >
-> > So ~17 seconds more to build with HSM.  I then did a make mrproper on b=
-oth trees
-> > to see the size
-> >
-> > [root@fedora ~]# du -hs /src/linux
-> > 1.6G    /src/linux
-> > [root@fedora ~]# du -hs dst
-> > 125M    dst
-> >
-> > This mirrors the sort of savings we've seen in production.
-> >
-> > Meta has had these patches (minus the page fault patch) deployed in pro=
-duction
-> > for almost a year with our own utility for doing on-demand package fetc=
-hing.
-> > The savings from this has been pretty significant.
-> >
-> > The page-fault hooks are necessary for the last thing we need, which is
-> > on-demand range fetching of executables.  Some of our binaries are seve=
-ral gigs
-> > large, having the ability to remote fetch them on demand is a huge win =
-for us
-> > not only with space savings, but with startup time of containers.
->
-> So... does this pre-content fetcher already work for regular reads and
-> writes, and now you're looking to wire up page faults?  Or does it only
-> handle page faults?  Judging from Amir's patches I'm guessing the
-> FAN_PRE_{ACCESS,MODIFY} events are new, so this only sends notifications
-> prior to read and write page faults?  The XFS change looks reasonable to
-> me, but I'm left wondering "what does this shiny /do/?"
->
+> >=20
+> > syzbot found the following issue on:
+> >=20
+> > HEAD commit:=C2=A0=C2=A0=C2=A0 ee9a43b7cfe2 Merge tag 'net-6.11-rc3' of
+> > git://git.kernel...
+> > git tree:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 upstream
+> > console+strace:
+> > https://syzkaller.appspot.com/x/log.txt?x=3D10b70c5d980000
+> > kernel config:=C2=A0
+> > https://syzkaller.appspot.com/x/.config?x=3D9358cc4a2e37fd30
+> > dashboard link:
+> > https://syzkaller.appspot.com/bug?extid=3D296b1c84b9cbf306e5a0
+> > compiler:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Debian clang version 15.0=
+.6, GNU ld (GNU Binutils
+> > for
+> > Debian) 2.40
+> > syz repro:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0
+> > https://syzkaller.appspot.com/x/repro.syz?x=3D139519d9980000
+> > C reproducer:=C2=A0=C2=A0
+> > https://syzkaller.appspot.com/x/repro.c?x=3D13deb97d980000
+> >=20
+> > Downloadable assets:
+> > disk image:
+> > https://storage.googleapis.com/syzbot-assets/e6062f24de48/disk-ee9a43b7=
+.raw.xz
+> > vmlinux:
+> > https://storage.googleapis.com/syzbot-assets/5d3ec6153dbd/vmlinux-ee9a4=
+3b7.xz
+> > kernel image:
+> > https://storage.googleapis.com/syzbot-assets/98dbabb91d02/bzImage-ee9a4=
+3b7.xz
+> > mounted in repro:
+> > https://storage.googleapis.com/syzbot-assets/4d05d229907e/mount_0.gz
+> >=20
+> > IMPORTANT: if you fix the issue, please add the following tag to
+> > the
+> > commit:
+> > Reported-by: syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com
+> >=20
+> > ------------[ cut here ]------------
+> > WARNING: CPU: 1 PID: 5222 at fs/iomap/buffered-io.c:727
+> > __iomap_write_begin fs/iomap/buffered-io.c:727 [inline]
+> > WARNING: CPU: 1 PID: 5222 at fs/iomap/buffered-io.c:727
+> > iomap_write_begin+0x13f0/0x16f0 fs/iomap/buffered-io.c:830
+> > Modules linked in:
+> > CPU: 1 UID: 0 PID: 5222 Comm: syz-executor247 Not tainted
+> > 6.11.0-rc2-syzkaller-00111-gee9a43b7cfe2 #0
+> > Hardware name: Google Google Compute Engine/Google Compute Engine,
+> > BIOS Google 06/27/2024
+> > RIP: 0010:__iomap_write_begin fs/iomap/buffered-io.c:727 [inline]
+> > RIP: 0010:iomap_write_begin+0x13f0/0x16f0 fs/iomap/buffered-
+> > io.c:830
+> > Code: b5 0d 01 90 48 c7 c7 a0 54 fa 8b e8 da 19 2b ff 90 0f 0b 90
+> > 90
+> > e9 74 ef ff ff e8 5b f1 68 ff e9 4b f6 ff ff e8 51 f1 68 ff 90 <0f>
+> > 0b 90 bb fb ff ff ff e9 e9 fe ff ff e8 3e f1 68 ff 90 0f 0b 90
+> > RSP: 0018:ffffc90003a577c0 EFLAGS: 00010293
+> > RAX: ffffffff822a858f RBX: 0000000000000080 RCX: ffff888023080000
+> > RDX: 0000000000000000 RSI: 0000000000000080 RDI: 0000000000000000
+> > RBP: ffffc90003a57a50 R08: ffffffff822a8294 R09: 1ffff11029263f69
+> > R10: dffffc0000000000 R11: ffffed1029263f6a R12: ffffc90003a579b0
+> > R13: ffffc90003a57bf0 R14: ffffc90003a57990 R15: 0000000000000800
+> > FS:=C2=A0 000055555f8fc480(0000) GS:ffff8880b9300000(0000)
+> > knlGS:0000000000000000
+> > CS:=C2=A0 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > CR2: 0000000020001000 CR3: 0000000079b06000 CR4: 00000000003506f0
+> > DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> > DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> > Call Trace:
+> > =C2=A0<TASK>
+> > =C2=A0iomap_unshare_iter fs/iomap/buffered-io.c:1351 [inline]
+> > =C2=A0iomap_file_unshare+0x460/0x780 fs/iomap/buffered-io.c:1391
+> > =C2=A0xfs_reflink_unshare+0x173/0x5f0 fs/xfs/xfs_reflink.c:1681
+> > =C2=A0xfs_file_fallocate+0x6be/0xa50 fs/xfs/xfs_file.c:997
+> > =C2=A0vfs_fallocate+0x553/0x6c0 fs/open.c:334
+> > =C2=A0ksys_fallocate fs/open.c:357 [inline]
+> > =C2=A0__do_sys_fallocate fs/open.c:365 [inline]
+> > =C2=A0__se_sys_fallocate fs/open.c:363 [inline]
+> > =C2=A0__x64_sys_fallocate+0xbd/0x110 fs/open.c:363
+> > =C2=A0do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+> > =C2=A0do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+> > =C2=A0entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> > RIP: 0033:0x7f2d716a6899
+> > Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 f1 17 00 00 90 48 89 f8
+> > 48
+> > 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48>
+> > 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+> > RSP: 002b:00007ffd620c3d18 EFLAGS: 00000246 ORIG_RAX:
+> > 000000000000011d
+> > RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f2d716a6899
+> > RDX: 0000000000000000 RSI: 0000000000000040 RDI: 0000000000000006
+> > RBP: 0000000000000000 R08: 0700000000000000 R09: 0700000000000000
+> > R10: 0000000000002000 R11: 0000000000000246 R12: 00007ffd620c3d60
+> > R13: 00007ffd620c3fe8 R14: 431bde82d7b634db R15: 00007f2d716ef03b
+> > =C2=A0</TASK>
+> >=20
+> >=20
+> > ---
+> > This report is generated by a bot. It may contain errors.
+> > See https://goo.gl/tpsmEJ=C2=A0for more information about syzbot.
+> > syzbot engineers can be reached at syzkaller@googlegroups.com.
+> >=20
+> > syzbot will keep track of this issue. See:
+> > https://goo.gl/tpsmEJ#status=C2=A0for how to communicate with syzbot.
+> >=20
+> > If the report is already addressed, let syzbot know by replying
+> > with:
+> > #syz fix: exact-commit-title
+> >=20
+> > If you want syzbot to run the reproducer, reply with:
+> > #syz test: git://repo/address.git branch-or-commit-hash
+> > If you attach or paste a git patch, syzbot will apply it before
+> > testing.
+> >=20
+> > If you want to overwrite report's subsystems, reply with:
+> > #syz set subsystems: new-subsystem
+> > (See the list of subsystem names on the web dashboard)
+> >=20
+> > If the report is a duplicate of another one, reply with:
+> > #syz dup: exact-subject-of-another-report
+> >=20
+> > If you want to undo deduplication, reply with:
+> > #syz undup
 
-I *think* I understand the confusion.
+--=20
+Julian Sun <sunjunchao2870@gmail.com>
 
-Let me try to sort it out.
-
-This patch set collaboration aims to add the functionality of HSM
-service by adding events FS_PRE_{ACCESS,MODIFY} prior to
-read/write and page faults.
-
-Maybe you are puzzled by not seeing any new read/write hooks?
-This is because the HSM events utilize the existing fsnotify_file_*perm()
-hooks that are in place for the legacy FS_ACCESS_PERM event.
-
-So why is a new FS_PRE_ACCESS needed?
-Let me first quote commit message of patch 2/16 [1]:
----
-The new FS_PRE_ACCESS permission event is similar to FS_ACCESS_PERM,
-but it meant for a different use case of filling file content before
-access to a file range, so it has slightly different semantics.
-
-Generate FS_PRE_ACCESS/FS_ACCESS_PERM as two seperate events, same as
-we did for FS_OPEN_PERM/FS_OPEN_EXEC_PERM.
-
-FS_PRE_MODIFY is a new permission event, with similar semantics as
-FS_PRE_ACCESS, which is called before a file is modified.
-
-FS_ACCESS_PERM is reported also on blockdev and pipes, but the new
-pre-content events are only reported for regular files and dirs.
-
-The pre-content events are meant to be used by hierarchical storage
-managers that want to fill the content of files on first access.
----
-
-And from my man page draft [2]:
----
-       FAN_PRE_ACCESS (since Linux 6.x)
-              Create  an  event before a read from a directory or a file ra=
-nge,
-              that provides an opportunity for the event listener to
-modify the content of the object
-              before the reader is going to access the content in the
-specified range.
-              An additional information record of type
-FAN_EVENT_INFO_TYPE_RANGE is returned
-             for each event in the read buffer.
-...
----
-
-So the semantics of the two events is slightly different, but also the
-meaning of "an opportunity for the event listener to modify the content".
-
-FS_ACCESS_PERM already provided this opportunity on old kernels,
-but prior to "Tidy up file permission hooks" series [3] in v6.8, writing
-file content in FS_ACCESS_PERM event context was prone to deadlocks.
-
-Therefore, an application using FS_ACCESS_PERM may be prone
-for deadlocks, while an application using FAN_PRE_ACCESS should
-be safe in that regard.
-
-Thanks,
-Amir.
-
-[1] https://lore.kernel.org/all/a96217d84dfebb15582a04524dc9821ba3ea1406.17=
-23670362.git.josef@toxicpanda.com/
-[2] https://github.com/amir73il/man-pages/commits/fan_pre_path
-[3] https://lore.kernel.org/all/20231122122715.2561213-1-amir73il@gmail.com=
-/
+--=20
+Julian Sun <sunjunchao2870@gmail.com>
