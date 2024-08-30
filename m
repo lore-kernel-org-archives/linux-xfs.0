@@ -1,97 +1,182 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9350E17ADEB;
-	Fri, 30 Aug 2024 11:31:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 662AE14EC41
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Aug 2024 11:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725017496; cv=none; b=S8avFLR3GXzP1ile3u2jajN+7DwW+4Vj2bjYAwDGA1g5WPc66iB6Qp1ASUTSzNSZTuKLvv0e470QXmaUa1P7LO1QBEE9h5/NCMr5vF8IyMVU59MpU2dhFGnhoPRGDUV7p+15WG9239JJn/aEZuURrWdg8e3N+OasWUVKCnx2G38=
+	t=1725019010; cv=none; b=Y6Sv55c+Rm0IoD40sFtFmhuXzuXBWR3lj0bu3dc0KpqOnlMgITYp1vfrCmsiJrG02uug6A/tKOe3GyyclKMy61hGFD16rUh+kVvGDALAdgYXWmX886cuxnXnrd++BDChdzqUh75Aa9GabWjrEc1HyauMQ+C9LYj+HIgdAcWTmss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725017496; c=relaxed/simple;
-	bh=BEseMaH/R26oENGgZC1y8ZUAeWSWb0ov7ljLsQGQL5g=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=jfPDjFSuxx4hBqayxEXF6vLQe3zFAuCwjLP0ygmwWGxr9m4LwKJAX05M5ILAwVBkz1Yu2L9Y+sVotxIZ5quLfQoTlwnyjmFKYsYE+ZkslaLiBYa3UKHQuFWNPiLvEztRXYGfIuxRwgoz1M7TNIJrdFsC6AphTSdoeiynMS9gW7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fuij65pU; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1725019010; c=relaxed/simple;
+	bh=YkDBVGzrOx/VsfwqAbBAe90LgpryVugHR5F8hPKbKQo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=S6M+b/aKd98wjLlahZas7hykr5IpdmtbkiQzws50SI+bz2PQWUWSi9iHJ56DkdUv+2z14aJILRTorahalVSCPbZ6NiJLWZRPkSlUvKQr/3QHcWr+L+/x38BRft9VdAKpnV0K/yAF9dJngCAe5iM8jEG4vDyLagx9ksRukKNNbww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FASZirPl; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fuij65pU"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-70cec4aa1e4so1182099b3a.1;
-        Fri, 30 Aug 2024 04:31:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725017494; x=1725622294; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SFHF8CkCSJECTVcPI7L3d3vdcCaiUuTgwTRGi6N0+KM=;
-        b=fuij65pUOklz4SFHmCElfwuyE665HS3yR7kEopSIyZQeUMk9Tjz0NXjLyWM4Yod/Yi
-         vufGwTV0nPTGcL0rSxlJ8XTe0gNrSs5LJMmpWZ2DwwJqL13wonzhe52iBgibHES4gy2v
-         rTjqaZYuFTlUkQWa4AetPwWSleQ316SvwmO78bcYLJqQiEiums16xmX53lqRTSzkb8FU
-         ZgdF3jG7x0dJKgfn7wY8QGEmj2GCv0gmbATjflH+RFEBUmOHJLOjujk2NLOzbcbmlea6
-         Ql2QOf+rLo9ti8OajnPsk4WRvH/P68+8+8FkQiyi03GDT/qKFxOuEDWNJeQxdKlV3Zil
-         js4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725017494; x=1725622294;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SFHF8CkCSJECTVcPI7L3d3vdcCaiUuTgwTRGi6N0+KM=;
-        b=UXL/Vw0X8ouHvtQu+6PDQbCuc8XD4YadlEEo8HA47m+6o+RgW2DLkBae14LDwwbd6k
-         z9x1rpSaUAHTarb5SFrIeSzBI0Z6alc0Wx/59tOCNPdQj7NaKmBmHobRx3LYWBsx8+fs
-         UFWVBdJnYjSeTp7BJxbqeAW2DMg/9TSetDONlNpSa2D2mhnszNAbZxuakvSRgTl2Y4Fw
-         T+ZhKyc2iJnPk3z28manp1ABbMcXNja9T3jv3WLFyuK7BOjZhe9JYaj3fOozjFgUbpFU
-         FHE3LjC8AJDwft6N/RsH6jswxn1uDOPnBrOZ+5sB19+njqqVsfD5uyQPFTeZk/rTl0lg
-         KE0A==
-X-Forwarded-Encrypted: i=1; AJvYcCUdsr2IyHkb3mIbZNwO0N5SxoTG5eiCNWONA0AE1CALYmpqGMgCrn1WffDZE6qg5+odFsVI68+hfAtb@vger.kernel.org, AJvYcCUx59fLPtpsi432J8Gk18I3NJWgbxSrRXLKGsWvJFsaNRSGhQTzydxQaY2thJOTbQloxclnAuX1G2cqSrRu@vger.kernel.org, AJvYcCVCB9UJt36jJExtZQNGtyo5E/d26vbozvas+utZURlkJJoVUhOQe3wUJ/tKBkD10xZ6JxWUE/GXbfPckN1T@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3MHPknya1zg64a+LKE0RANSsQo8fAK6h1waSBtYPVtazWyZhd
-	ZuAVdvcv27/JcJLYSWxhw+Mjxp3x/nSplCjp45Aa9F4Vfl1DwZXz
-X-Google-Smtp-Source: AGHT+IH5Hvvt5LsiN3gjHVMOELcNkoiyya11sfbL9JT4CUB7pFtIBW7+HZ9dcHBmVWJOiOqr6somEw==
-X-Received: by 2002:a05:6a00:1409:b0:714:1311:cd24 with SMTP id d2e1a72fcca58-715dfba79bcmr6392117b3a.5.1725017493588;
-        Fri, 30 Aug 2024 04:31:33 -0700 (PDT)
-Received: from localhost ([114.242.33.243])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-715e55a6ad9sm2551051b3a.84.2024.08.30.04.31.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Aug 2024 04:31:33 -0700 (PDT)
-From: Julian Sun <sunjunchao2870@gmail.com>
-To: sunjunchao2870@gmail.com
-Cc: brauner@kernel.org,
-	chandan.babu@oracle.com,
-	djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [iomap?] [xfs?] WARNING in iomap_write_begin
-Date: Fri, 30 Aug 2024 19:31:30 +0800
-Message-Id: <20240830113130.165574-1-sunjunchao2870@gmail.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <df7fc9c1863f353091cfcb84f04e365aa4609bab.camel@gmail.com>
-References: <df7fc9c1863f353091cfcb84f04e365aa4609bab.camel@gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FASZirPl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1725019007;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zSLc11qhTygt7HmpmpslXVkQOWaRfUSRVX0mYTZEZlg=;
+	b=FASZirPl/qTEYRr2jahiQEZFEGKnu49cWpYuyuwDt5IsuAzOFQNaKQ9wqHuYdsoDYlc4HA
+	Gpj2/aI6UQKnRWt6J0ao2tJ6HACw6kGnskOyvVZluOrerstUbgstzKYwR8wySJo7eayiVK
+	hAi74KZepW1lJbIpsd13XYv8UtKgK1g=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-312-eB7dIMgTOwST6sWq8n7a_g-1; Fri,
+ 30 Aug 2024 07:56:45 -0400
+X-MC-Unique: eB7dIMgTOwST6sWq8n7a_g-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B5A4E1955D57;
+	Fri, 30 Aug 2024 11:56:43 +0000 (UTC)
+Received: from bfoster (unknown [10.22.16.95])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 143501955BE3;
+	Fri, 30 Aug 2024 11:56:41 +0000 (UTC)
+Date: Fri, 30 Aug 2024 07:57:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, josef@toxicpanda.com,
+	david@fromorbit.com
+Subject: Re: [PATCH 2/2] iomap: make zero range flush conditional on
+ unwritten mappings
+Message-ID: <ZtGztWILZPlU6Gxo@bfoster>
+References: <20240822145910.188974-1-bfoster@redhat.com>
+ <20240822145910.188974-3-bfoster@redhat.com>
+ <Zs1uHoemE7jHQ2bw@infradead.org>
+ <Zs3hTiXLtuwXkYgU@bfoster>
+ <Zs6oY91eFfaFVrMw@infradead.org>
+ <Zs8Zo3V1G3NAQEnK@bfoster>
+ <ZtAKJH_NGhjxFQHa@infradead.org>
+ <ZtCOVzK4KlPbcnk_@bfoster>
+ <20240829214800.GQ6224@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240829214800.GQ6224@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-The patch passed test locally, and the patch in the link 
-appears to be messed up. Please retest.
+On Thu, Aug 29, 2024 at 02:48:00PM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 29, 2024 at 11:05:59AM -0400, Brian Foster wrote:
+> > On Wed, Aug 28, 2024 at 10:41:56PM -0700, Christoph Hellwig wrote:
+> > > On Wed, Aug 28, 2024 at 08:35:47AM -0400, Brian Foster wrote:
+> > > > Yeah, it was buried in a separate review around potentially killing off
+> > > > iomap_truncate_page():
+> > > > 
+> > > > https://lore.kernel.org/linux-fsdevel/ZlxUpYvb9dlOHFR3@bfoster/
+> > > > 
+> > > > The idea is pretty simple.. use the same kind of check this patch does
+> > > > for doing a flush, but instead open code and isolate it to
+> > > > iomap_truncate_page() so we can just default to doing the buffered write
+> > > > instead.
+> > > > 
+> > > > Note that I don't think this replaces the need for patch 1, but it might
+> > > > arguably make further optimization of the flush kind of pointless
+> > > > because I'm not sure zero range would ever be called from somewhere that
+> > > > doesn't flush already.
+> > > > 
+> > > > The tradeoffs I can think of are this might introduce some false
+> > > > positives where an EOF folio might be dirty but a sub-folio size block
+> > > > backing EOF might be clean, and again that callers like truncate and
+> > > > write extension would need to both truncate the eof page and zero the
+> > > > broader post-eof range. Neither of those seem all that significant to
+> > > > me, but just my .02.
+> > > 
+> > > Looking at that patch and your current series I kinda like not having
+> > > to deal with the dirty caches in the loop, and in fact I'd also prefer
+> > > to not do any writeback from the low-level zero helpers if we can.
+> > > That is not doing your patch 1 but instead auditing the callers if
+> > > any of them needs them and documenting the expectation.
+> 
+> I looked, and was pretty sure that XFS is the only one that has that
+> expectation.
+> 
+> > I agree this seems better in some ways, but I don't like complicating or
+> > putting more responsibility on the callers. I think if we had a high
+> > level iomap function that wrapped a combination of this proposed variant
+> > of truncate_page() and zero_range() for general inode size changes, that
+> > might alleviate that concern.
+> > 
+> > Otherwise IME even if we audited and fixed all callers today, over time
+> > we'll just reintroduce the same sorts of errors if the low level
+> > mechanisms aren't made to function correctly.
+> 
+> Yeah.  What /are/ the criteria for needing the flush and wait?  AFAICT,
+> a filesystem only needs the flush if it's possible to have dirty
+> pagecache backed either by a hole or an unwritten extent, right?
+> 
 
-#syz test: upstream ee9a43b7cfe2
+Yeah, but this flush behavior shouldn't be a caller consideration at
+all. It's just an implementation detail. All the caller should care
+about is that zero range works As Expected (tm).
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 72c981e3dc92..6216c31aa3cc 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1162,6 +1162,9 @@ xfs_buffered_write_iomap_begin(
- 	if (error)
- 		goto out_unlock;
- 
-+	/* Get extent info that may updated by xfs_bmapi_reserve_delalloc() */
-+	xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap);
-+
- 	/*
- 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
- 	 * them out if the write happens to fail.
+The pre-iomap way of doing this in XFS was xfs_zero_eof() ->
+xfs_iozero(), which was an internally coded buffered write loop that
+wrote zeroes into pagecache. That was ultimately replaced with
+iomap_zero_range() with the same sort of usage expectations, but
+iomap_zero_range() just didn't work quite correctly in all cases.
+
+> I suppose we could amend the iomap ops so that filesystems could signal
+> that they allow either of those things, and then we wouldn't have to
+> query the mapping for filesystems that don't, right?  IOWs, one can opt
+> out of safety features if there's no risk of a garbage, right?
+> 
+
+Not sure I parse.. In general I think we could let ops signal whether
+they want certain checks. This is how I used the IOMAP_F_DIRTY_CACHE
+flag mentioned in the other thread. If the operation handler is
+interested in pagecache state, set an IOMAP_DIRTY_CACHE flag in ops to
+trigger a pre iomap_begin() check and then set the corresponding
+_F_DIRTY_CACHE flag on the mapping if dirty, but I'm not sure if that's
+the same concept you're alluding to here.
+
+> (Also: does xfs allow dirty page cache backed by a hole?  I didn't think
+> that was possible.)
+> 
+
+It's a corner case. A mapped write can write to any portion of a folio
+so long as it starts within eof. So if you have a mapped write that
+writes past EOF, there's no guarantee that range of the folio is mapped
+by blocks.
+
+That post-eof part of the folio would be zeroed at writeback time, but
+that assumes i_size doesn't change before writeback. If it does and the
+size change operation doesn't do the zeroing itself (enter zero range
+via write extension), then we end up with a dirty folio at least
+partially backed by a hole with non-zero data within EOF. There's
+nothing written back to disk in this hole backed example, but the
+pagecache is still inconsistent with what's on disk and therefore I
+suspect data corruption is possible if the folio is redirtied before
+reclaimed.
+
+Brian
+
+> > > But please let Dave and Darrick chime in first before investing any
+> > > work into this.
+> > > 
+> > > 
+> > 
+> > Based on the feedback to v2, it sounds like there's general consensus on
+> > the approach modulo some code factoring discussion. Unless there is
+> > objection, I think I'll stick with that for now for the sake of progress
+> > and keep this option in mind on the back burner. None of this is really
+> > that hard to change if we come up with something better.
+> > 
+> > Brian
+> > 
+> > 
+> 
+
