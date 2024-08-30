@@ -1,32 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D192667A0D;
-	Fri, 30 Aug 2024 03:42:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ED87567F
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Aug 2024 03:44:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724989373; cv=none; b=Rm8B5I91LjJYpIzHQsm81qrK7pRud95u7cReMF0LcCNFCmuZLvkWtH0HUvDPmtihNVQlb/iZuFClb82KdQjbPK8cWMFp8zQwic008BKGt8TwPvCyFNSBNqO881mDk36PMKj2u6j/ri/wKO5WklgQzz6CP58j9KWW922mTVPNEG0=
+	t=1724989445; cv=none; b=UiKtWACV/2LxDlINsq8c4uaqrFvPmPuaLaZ57YZFNBTmyQNsYz2x6bunnaIEIzq+4VzNq4S6M6JSR/k+9d1q9eqGvC5U/DNoq5kUTeTrS6yfGIjSDSF/93fdcj0CzrFdS0XpxAkTEJO3IGJHRwQRH8Sm0k0Km1rVmWu7Dcq+sTA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724989373; c=relaxed/simple;
-	bh=ehxqUB7kvoK91VInz+QmJlkor1XBmBtzAfDdGaV47pM=;
+	s=arc-20240116; t=1724989445; c=relaxed/simple;
+	bh=Ps+qyXw9sw32MTLR7B9UFXbdNAosT4uUratb6Hdivkc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Sv1xodBe8Oh9R6+1nz81RgeVXGXrnZIJijxVmOJQ5+i5ZlprtJ+IMYHlxROJ1XRDM3xYrwvx8EGU1tzHGWfYBRXO2S4kW2dQXWXhToGNAYaPcv3dftcOBjUYJ5f0LtD3hQM3eU1vPpT7NeMMK9zB7OgoAu47y2fle4YNoLI/yDQ=
+	 Content-Type:Content-Disposition:In-Reply-To; b=QXyTYLypbbNFwV3LW50Jp3YtRYcXmE+82w++xxPMJ0ILc4ieEmFZmRyz+PKr+1Vk7eoSM4ds2nYkC2bgpN3MzUyafb8WWb3kKei6wZay5reY7Y7CC3IeQcv+iH6tVX7wNUwmG9f/0/xBlu1Jwe35AG4efRS5p5Vt+3EWcZgdJLU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9F63B227A88; Fri, 30 Aug 2024 05:42:41 +0200 (CEST)
-Date: Fri, 30 Aug 2024 05:42:41 +0200
+	id 60B8C227A88; Fri, 30 Aug 2024 05:43:59 +0200 (CEST)
+Date: Fri, 30 Aug 2024 05:43:59 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 01/10] iomap: handle a post-direct I/O invalidate race
- in iomap_write_delalloc_release
-Message-ID: <20240830034241.GA25633@lst.de>
-References: <20240827051028.1751933-1-hch@lst.de> <20240827051028.1751933-2-hch@lst.de> <20240827161416.GV865349@frogsfrogsfrogs> <20240828044848.GA31463@lst.de> <20240828161338.GH1977952@frogsfrogsfrogs> <20240829034626.GB3854@lst.de> <20240829142219.GC6216@frogsfrogsfrogs>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH 04/10] xfs: replace shouty XFS_BM{BT,DR} macros
+Message-ID: <20240830034359.GB25633@lst.de>
+References: <172480131476.2291268.1290356315337515850.stgit@frogsfrogsfrogs> <172480131573.2291268.11692699884722779994.stgit@frogsfrogsfrogs> <Zs/WSw6fm4SyyyW4@dread.disaster.area> <20240829221029.GR6224@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,24 +32,12 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240829142219.GC6216@frogsfrogsfrogs>
+In-Reply-To: <20240829221029.GR6224@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Aug 29, 2024 at 07:22:19AM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 29, 2024 at 05:46:26AM +0200, Christoph Hellwig wrote:
-> > On Wed, Aug 28, 2024 at 09:13:38AM -0700, Darrick J. Wong wrote:
-> > > Though we might have to revisit this for filesystems that don't take
-> > > i_rwsem exclusively when writing -- is that a problem?  I guess if you
-> > > had two threads both writing and punching the pagecache they could get
-> > > into trouble, but that might be a case of "if it hurts don't do that".
-> > 
-> > No i_rwsem for buffered writes?  You can't really do that without hell
-> > breaking lose.  At least not without another exclusive lock.
-> 
-> Well, i_rwsem in shared mode.  ISTR ext4 does inode_lock_shared and
-> serializes on the folio lock, at least for non extending writes.
+On Thu, Aug 29, 2024 at 03:10:29PM -0700, Darrick J. Wong wrote:
+> I disagree.  With your change, to validate this function, everyone must
+> to check that the argument type matches the sizeof argument to confirm
+> that the pointer arithmetic is correct.
 
-ext4 uses plain inode lock/unlock which is an exclusive i_rwsem.
-Given that Posix requires the entire write to synchronized vs other
-writes applications would break otherwise.
-
+Agreed.
