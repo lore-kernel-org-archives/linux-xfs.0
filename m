@@ -1,263 +1,74 @@
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68E11197512
-	for <linux-xfs@vger.kernel.org>; Fri, 30 Aug 2024 11:59:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD6CA192D79
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Aug 2024 12:04:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725019151; cv=none; b=osshGocG32sYWRfj6IpOA6gIwm/vv/pReODNiqBbPnM+ijO14NSd5ppiCsRRLq0WEkA3FIcd9ApV7DrXpn9RpKTUMpyTojVt1tW0Bxw29CrmY+wX5PCMRdYsemyRkzNO9GPMQIvUJwRdt8e6tjZmxFrqwmzyKRJ5TN23mSX9rxQ=
+	t=1725019447; cv=none; b=sn733tS1ygcwaOO7yqz6pg/HGpNhU8Nosxustf4WfH+ZJhaKmQeI9GRugOpp0l2FKuIGRRVW9Lnj9rTWieVYr/LrJMlv+hAymH2bEGj3p8h7uA1xdxOsBJOW+ouJvy7D2expMkQ83NgNRyox0/8sHgVq2/jezMDtMM2WYxdWQrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725019151; c=relaxed/simple;
-	bh=Do/dKTgzKyjKV3wG/nTXEGEsup4OPV6FVk1d8aqBgs0=;
-	h=Date:From:To:CC:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:References; b=EGCyiwzt0CFCqHj1+RFGiM2vp7qhCdD3xnnEWCaHE+mxFJ2pjQOcZzBipEVqHvzyoQwTz5ZppbK8mPNQoosA/gV93oPggtOepBP/IxaBoGG+n+qpPMZdPLRxsT6C+K7oxzNa3Fe1EtKSV9xtNgD6zcTiXFITDSGWNq3GaNu7J+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=bco1LBrB; arc=none smtp.client-ip=210.118.77.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="bco1LBrB"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20240830115901euoutp012f6571f88ae1abe4252c5c5f788c703c~wf8Tve_LJ2617726177euoutp015
-	for <linux-xfs@vger.kernel.org>; Fri, 30 Aug 2024 11:59:01 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20240830115901euoutp012f6571f88ae1abe4252c5c5f788c703c~wf8Tve_LJ2617726177euoutp015
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1725019141;
-	bh=8HWjlCk36MrIJSrgWwx1NmtEBTy4vjMaSH0kx3VdLd0=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=bco1LBrBZupyWRz52Pcm5M6dAIAykk31d/RkDfQNKXJ7uayVO6zP95i/US3ZvPNGI
-	 UGcD3Hb7EtaAZ61gBAczrPe3HG1lme8djLaUgcpFQbjGc1kc3m6p8fCgY8VdxPAd5F
-	 uWasUKsIotVxKNri48tHnu8pTSjE7jEwXA92xc4A=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-	eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-	20240830115900eucas1p1904693aec6c26d37328f2ce5ba0b66ee~wf8TPibCT2191621916eucas1p1Q;
-	Fri, 30 Aug 2024 11:59:00 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-	eusmges1new.samsung.com (EUCPMTA) with SMTP id 5C.35.09624.404B1D66; Fri, 30
-	Aug 2024 12:59:00 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20240830115859eucas1p2e384f48594d104a5fc9fb24e87c6fd24~wf8SlIV_t0820908209eucas1p2L;
-	Fri, 30 Aug 2024 11:58:59 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-	eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240830115859eusmtrp18799b0ad847be3279ca20891fbd4c7ad~wf8SkCqRi2130721307eusmtrp1n;
-	Fri, 30 Aug 2024 11:58:59 +0000 (GMT)
-X-AuditID: cbfec7f2-bfbff70000002598-d3-66d1b404249a
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-	eusmgms2.samsung.com (EUCPMTA) with SMTP id D2.B8.19096.304B1D66; Fri, 30
-	Aug 2024 12:58:59 +0100 (BST)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240830115859eusmtip155b93040a53676de393ba4eb081c20f4~wf8SPiRhu1205512055eusmtip1b;
-	Fri, 30 Aug 2024 11:58:59 +0000 (GMT)
-Received: from localhost (106.110.32.87) by CAMSVWEXC02.scsc.local
-	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-	Fri, 30 Aug 2024 12:58:58 +0100
-Date: Fri, 30 Aug 2024 13:58:58 +0200
-From: Daniel Gomez <da.gomez@samsung.com>
-To: Luis Chamberlain <mcgrof@kernel.org>
-CC: Zi Yan <ziy@nvidia.com>, Matthew Wilcox <willy@infradead.org>, "Sven
- Schnelle" <svens@linux.ibm.com>, "Pankaj Raghav (Samsung)"
-	<kernel@pankajraghav.com>, <brauner@kernel.org>,
-	<akpm@linux-foundation.org>, <chandan.babu@oracle.com>,
-	<linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>, <hare@suse.de>,
-	<gost.dev@samsung.com>, <linux-xfs@vger.kernel.org>, <hch@lst.de>,
-	<david@fromorbit.com>, <yang@os.amperecomputing.com>,
-	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
-	<john.g.garry@oracle.com>, <cl@os.amperecomputing.com>,
-	<p.raghav@samsung.com>, <ryan.roberts@arm.com>, David Howells
-	<dhowells@redhat.com>, <linux-s390@vger.kernel.org>
-Subject: Re: [PATCH v13 04/10] mm: split a folio in minimum folio order
- chunks
-Message-ID: <20240830115858.fzsmindasycwphkv@AALNPWDAGOMEZ1.aal.scsc.local>
+	s=arc-20240116; t=1725019447; c=relaxed/simple;
+	bh=LzYJkrUnXtqxg2sI+D1UMYC84BooZXybirjBd4noWGE=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=b1W/46N0BwG6aACDqN+jNcpscPqTK9WaS0+cU2iQ9C+0H/AqarhmM1ILVDAOM5FPT1Alq2aeMQRQyFbEt5uq7nNE9vtMt88BDhwrV1eTXC10WEs8zYFUC/WVaGrpn56nYz6e5llBzM86LzhdSkQXgbBrcU5aTJ/o115U9efvwXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-82a1c81b736so176017739f.1
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Aug 2024 05:04:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725019444; x=1725624244;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rHDsUT4NRjm0E62nv5pzyF9OkIWVCQzkDjrSQv8pAQQ=;
+        b=fQm28gF8KI6U+uWw5CHARat8tqKByLg3MYLRuSEYVtq3D1VqIZKnN+4kd+2DcoTSOB
+         g2VAksCyJ3/BcOIkTpQQBRITUeHPJuB0DvrZ0qjW+Wwf8JUR0BEhKMlVmJDl2t3tJmMF
+         Kd8q8pJn2LOVm2vac1WUv/gtHTmYsxLZyyfegAP7LMPwb0UeUqLzNbkkDOGM2wmMBlWJ
+         IdXTYX0sJo+FfCbzpUiKe9E+rI6lVfx+USg23OzsSuQ9yUIMN81mkJEcWDcFK8VpwC+/
+         Ri5umnXkq2+sjfVfH3lfJ5R8eqORqUmyJqldh9fPFEcYqvsdTCbgH4V5I9q5CZo59DrV
+         OR0w==
+X-Forwarded-Encrypted: i=1; AJvYcCUeIwFux72VIEAZyrqyyaSBjoQzJxheDb7zgFGMIRRxpOXfFFw+yXLN2Y/hrwOEt1tW9qQ5oFAAzng=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw2u6E5sdVwwvDCLUBDc4JdXfqtv8NutjzgbQiuXswhxKVGQbeH
+	t1zyl8zOzgMg/O/iPrVZqJ9WBsYC095pXcoLd4uQQszDT6Wuu6qk7gXTWx9HM5sVAy46uamfNpf
+	GJyusXDvt+rDzaq+2OEFW110rajM1VAezcGPHd9m/bNRf9115HcyJDEw=
+X-Google-Smtp-Source: AGHT+IHkeMWqDAvDeGYJgg5YMOaQK7jdsKqdGcqreZ4lgwJEgGVi024TdtI8UpS+TYuDnfDMd5R10l/KDFcFhGhDgP0x6rTs28HB
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZtEHPAsIHKxUHBZX@bombadil.infradead.org>
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMJsWRmVeSWpSXmKPExsWy7djP87osWy6mGbx9ImExZ/0aNovXhz8x
-	Wlw6Kmexbu1DJostx+4xWrxr+s1icfkJn8WeRZOYLFauPspkceHXDkaLMy8/s1js2XsSKLlr
-	DpvFvTX/WS0mLGxmttj1Zwe7xY0JTxktenZPZbRYtn4tu8XvH0AlvUtOslvMPnqP3UHMY828
-	NYwepxZJeGxeoeWxaVUnm8emT5PYPU7M+M3iMWHRAUaP3Tcb2Dx6m9+xeXx8eovFo/vyDXaP
-	sysdPd7vu8rmsfl0tcfnTXIB/FFcNimpOZllqUX6dglcGRuutzIVdGpVbLj2iLWB8YxiFyMn
-	h4SAicS/iz9Yuxi5OIQEVjBK3G5+yQ7hfGGU+HPvDCOE85lR4nrTUjaYlqdf30MlljNK9B17
-	jlB1qG0h1LDNjBI3Nj4Ga2ERUJWYuGAXM4jNJqApse/kJnYQW0RAQ2LfhF4mkAZmgfmsElPX
-	nQdLCAsESOx6+5ERxOYV8Ja4PfcYC4QtKHFy5hMgmwOoQVNi/S59CFNaYvk/DpAKZgF5ieat
-	s8FWcQqYSXzceZ8R4mpFiRkTV7JA2LUSp7bcAlsrIbCSS+LEvw4miISLxN/V16EahCVeHd/C
-	DmHLSJye3APVnC6xZN0sKLtAYs/tWawgN0gIWEv0ncmBCDtK7HqzlRkizCdx460gxGl8EpO2
-	TYcK80p0tAlNYFSZheStWQhvzUJ4axaStxYwsqxiFE8tLc5NTy02zEst1ytOzC0uzUvXS87P
-	3cQITLen/x3/tINx7quPeocYmTgYDzFKcDArifCeOH42TYg3JbGyKrUoP76oNCe1+BCjNAeL
-	kjivaop8qpBAemJJanZqakFqEUyWiYNTqoFpaqeqgMClu6Eugf+M4xhXf5myljlTZ6ehL7v9
-	Ut8ptisPvuCyncrcsTB/8eSmml3p27tePVx55NNyu0MNB+Tq2R1vexgHuxYuVvHfL8V1LF96
-	nfEDXpmfguWTsnKdT0Uk6WcmV7v1xUe1lTI07JAt2X3lyPqqwtWN+Syx332MVvJJxN1x2GdX
-	VlC5oMg+2O+U1Pf2Pl97Tm13FVad7S35MbUnK90zdjz60v6r9nVM9Lxc61M7FP+6WXgcPXd1
-	s/YVEdljLz/OUdXjvLg291lyDpfA+eKvy3b4e+lMTpAWmHuZ3+DuZx/VCW95+s+KzOybV2Cq
-	X+h81m0+t2iHP3eG0fvVx33CRO5dOxRyWomlOCPRUIu5qDgRAJcpHyAmBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrHKsWRmVeSWpSXmKPExsVy+t/xu7rMWy6mGbzboGoxZ/0aNovXhz8x
-	Wlw6Kmexbu1DJostx+4xWrxr+s1icfkJn8WeRZOYLFauPspkceHXDkaLMy8/s1js2XsSKLlr
-	DpvFvTX/WS0mLGxmttj1Zwe7xY0JTxktenZPZbRYtn4tu8XvH0AlvUtOslvMPnqP3UHMY828
-	NYwepxZJeGxeoeWxaVUnm8emT5PYPU7M+M3iMWHRAUaP3Tcb2Dx6m9+xeXx8eovFo/vyDXaP
-	sysdPd7vu8rmsfl0tcfnTXIB/FF6NkX5pSWpChn5xSW2StGGFkZ6hpYWekYmlnqGxuaxVkam
-	Svp2NimpOZllqUX6dgl6GRuutzIVdGpVbLj2iLWB8YxiFyMnh4SAicTTr+8Zuxi5OIQEljJK
-	XLi/kgkiISOx8ctVVghbWOLPtS42iKKPjBK9s/8yQzibGSX2bf/DDlLFIqAqMXHBLmYQm01A
-	U2LfyU1gcREBDYl9E3qZQBqYBeayShz8OQFshbCAn8TC1dvZQGxeAW+J23OPsUBMXcAs8fX0
-	HUaIhKDEyZlPgBIcQN2aEut36UOY0hLL/3GAVDALyEs0b50NtpdTwEzi4877jBBXK0rMmLiS
-	BcKulfj89xnjBEaRWUiGzkIYOgth6CwkQxcwsqxiFEktLc5Nzy020itOzC0uzUvXS87P3cQI
-	TEjbjv3csoNx5auPeocYmTgYDzFKcDArifCeOH42TYg3JbGyKrUoP76oNCe1+BCjKTCEJjJL
-	iSbnA1NiXkm8oZmBqaGJmaWBqaWZsZI4L9uV82lCAumJJanZqakFqUUwfUwcnFINTEWW07fe
-	CSyVS+H43la/5eLmTg9/k0keUiuVs60YCl3Fr/rMc9uzqP51+vq+gp/NXx+YTeP5/ds9za3d
-	q3Img+La86F3lle8uLliwcXNcX7ab9ktmeIOLF70+l26bVrzeSfNYpWqNS86+/dafp1su7Ph
-	qvdV61TTVTs1GG5a1yU8Eny47Y6rUt+NBdsiZ1vv41rx9GLYx9+Rew3XiOckCF4oWnfnHNuf
-	tvMqj36aLNr+/fG2iD0XlHXV/zJNlCqzvbhQSkfuGoMy/7JMh7kWK10Tlb7f187ZFbzyoouk
-	peb91uMqsnwLsu7td2k5Lreia+WPZbtPcm00vOR/hWH201kHf27sXZX3bPqCisMnH3srsRRn
-	JBpqMRcVJwIAFUFGDdEDAAA=
-X-CMS-MailID: 20240830115859eucas1p2e384f48594d104a5fc9fb24e87c6fd24
-X-Msg-Generator: CA
-X-RootMTR: 20240829234204eucas1p26c2785f434a9355a4b20ac3499e9c0f2
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20240829234204eucas1p26c2785f434a9355a4b20ac3499e9c0f2
-References: <20240822135018.1931258-1-kernel@pankajraghav.com>
-	<20240822135018.1931258-5-kernel@pankajraghav.com>
-	<yt9dttf3r49e.fsf@linux.ibm.com> <ZtDCErRjh8bC5Y1r@bombadil.infradead.org>
-	<ZtDSJuI2hYniMAzv@casper.infradead.org>
-	<221FAE59-097C-4D31-A500-B09EDB07C285@nvidia.com>
-	<CGME20240829234204eucas1p26c2785f434a9355a4b20ac3499e9c0f2@eucas1p2.samsung.com>
-	<ZtEHPAsIHKxUHBZX@bombadil.infradead.org>
+X-Received: by 2002:a05:6638:8907:b0:4c0:838e:9fd1 with SMTP id
+ 8926c6da1cb9f-4d017ed76a4mr83432173.5.1725019443909; Fri, 30 Aug 2024
+ 05:04:03 -0700 (PDT)
+Date: Fri, 30 Aug 2024 05:04:03 -0700
+In-Reply-To: <20240830113130.165574-1-sunjunchao2870@gmail.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000002f63ae0620e563e2@google.com>
+Subject: Re: [syzbot] [iomap?] [xfs?] WARNING in iomap_write_begin
+From: syzbot <syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com>
+To: brauner@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, sunjunchao2870@gmail.com, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Aug 29, 2024 at 04:41:48PM -0700, Luis Chamberlain wrote:
-> On Thu, Aug 29, 2024 at 06:12:26PM -0400, Zi Yan wrote:
-> > The issue is that the change to split_huge_page() makes split_huge_page_to_list_to_order()
-> > unlocks the wrong subpage. split_huge_page() used to pass the “page” pointer
-> > to split_huge_page_to_list_to_order(), which keeps that “page” still locked.
-> > But this patch changes the “page” passed into split_huge_page_to_list_to_order()
-> > always to the head page.
-> > 
-> > This fixes the crash on my x86 VM, but it can be improved:
-> > 
-> > diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-> > index 7c50aeed0522..eff5d2fb5d4e 100644
-> > --- a/include/linux/huge_mm.h
-> > +++ b/include/linux/huge_mm.h
-> > @@ -320,10 +320,7 @@ bool can_split_folio(struct folio *folio, int *pextra_pins);
-> >  int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
-> >                 unsigned int new_order);
-> >  int split_folio_to_list(struct folio *folio, struct list_head *list);
-> > -static inline int split_huge_page(struct page *page)
-> > -{
-> > -       return split_folio(page_folio(page));
-> > -}
-> > +int split_huge_page(struct page *page);
-> >  void deferred_split_folio(struct folio *folio);
-> > 
-> >  void __split_huge_pmd(struct vm_area_struct *vma, pmd_t *pmd,
-> > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> > index c29af9451d92..4d723dab4336 100644
-> > --- a/mm/huge_memory.c
-> > +++ b/mm/huge_memory.c
-> > @@ -3297,6 +3297,25 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
-> >         return ret;
-> >  }
-> > 
-> > +int split_huge_page(struct page *page)
-> > +{
-> > +       unsigned int min_order = 0;
-> > +       struct folio *folio = page_folio(page);
-> > +
-> > +       if (folio_test_anon(folio))
-> > +               goto out;
-> > +
-> > +       if (!folio->mapping) {
-> > +               if (folio_test_pmd_mappable(folio))
-> > +                       count_vm_event(THP_SPLIT_PAGE_FAILED);
-> > +               return -EBUSY;
-> > +       }
-> > +
-> > +       min_order = mapping_min_folio_order(folio->mapping);
-> > +out:
-> > +       return split_huge_page_to_list_to_order(page, NULL, min_order);
-> > +}
-> > +
-> >  int split_folio_to_list(struct folio *folio, struct list_head *list)
-> >  {
-> >         unsigned int min_order = 0;
-> 
-> 
-> Confirmed, and also although you suggest it can be improved, I thought
-> that we could do that by sharing more code and putting things in the
-> headers, the below also fixes this but tries to share more code, but
-> I think it is perhaps less easier to understand than your patch.
-> 
-> So I think your patch is cleaner and easier as a fix.
+Hello,
 
-I reproduced it in arm64 as well. And both fixes provided solved the issue.
+syzbot has tested the proposed patch and the reproducer did not trigger any issue:
 
-> 
-> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-> index c275aa9cc105..99cd9c7bf55b 100644
-> --- a/include/linux/huge_mm.h
-> +++ b/include/linux/huge_mm.h
-> @@ -97,6 +97,7 @@ extern struct kobj_attribute thpsize_shmem_enabled_attr;
->  	(!!thp_vma_allowable_orders(vma, vm_flags, tva_flags, BIT(order)))
->  
->  #define split_folio(f) split_folio_to_list(f, NULL)
-> +#define split_folio_to_list(f, list) split_page_folio_to_list(&f->page, f, list)
->  
->  #ifdef CONFIG_PGTABLE_HAS_HUGE_LEAVES
->  #define HPAGE_PMD_SHIFT PMD_SHIFT
-> @@ -331,10 +332,11 @@ unsigned long thp_get_unmapped_area_vmflags(struct file *filp, unsigned long add
->  bool can_split_folio(struct folio *folio, int caller_pins, int *pextra_pins);
->  int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
->  		unsigned int new_order);
-> -int split_folio_to_list(struct folio *folio, struct list_head *list);
-> +int split_page_folio_to_list(struct page *page, struct folio *folio,
-> +			     struct list_head *list);
->  static inline int split_huge_page(struct page *page)
->  {
-> -	return split_folio(page_folio(page));
-> +	return split_page_folio_to_list(page, page_folio(page), NULL);
->  }
->  void deferred_split_folio(struct folio *folio);
->  
-> @@ -511,7 +513,9 @@ static inline int split_huge_page(struct page *page)
->  	return 0;
->  }
->  
-> -static inline int split_folio_to_list(struct folio *folio, struct list_head *list)
-> +static inline int split_page_folio_to_list(struct page *page,
-> +					   struct folio *folio,
-> +					   struct list_head *list)
->  {
->  	return 0;
->  }
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index 169f1a71c95d..b115bfe63b52 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -3529,7 +3529,8 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
->  	return ret;
->  }
->  
-> -int split_folio_to_list(struct folio *folio, struct list_head *list)
-> +int split_page_folio_to_list(struct page *page, struct folio *folio,
-> +			     struct list_head *list)
->  {
->  	unsigned int min_order = 0;
->  
-> @@ -3544,8 +3545,7 @@ int split_folio_to_list(struct folio *folio, struct list_head *list)
->  
->  	min_order = mapping_min_folio_order(folio->mapping);
->  out:
-> -	return split_huge_page_to_list_to_order(&folio->page, list,
-> -							min_order);
-> +	return split_huge_page_to_list_to_order(page, list, min_order);
->  }
->  
->  void __folio_undo_large_rmappable(struct folio *folio)
+Reported-by: syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com
+Tested-by: syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com
+
+Tested on:
+
+commit:         ee9a43b7 Merge tag 'net-6.11-rc3' of git://git.kernel...
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=14a8e347980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=9358cc4a2e37fd30
+dashboard link: https://syzkaller.appspot.com/bug?extid=296b1c84b9cbf306e5a0
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+patch:          https://syzkaller.appspot.com/x/patch.diff?x=13101f8d980000
+
+Note: testing is done by a robot and is best-effort only.
