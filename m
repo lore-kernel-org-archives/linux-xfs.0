@@ -1,102 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724EA14F6C;
-	Sat, 31 Aug 2024 15:32:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2122746444;
+	Sat, 31 Aug 2024 19:13:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725118349; cv=none; b=dBsOuGF1NAwVqtb8DmWuOTZw4tA2kxUekfnPwXwhnQWkPYqsq5xWgGoF4urN1bNUrtwyUT/yTVEJ+5MgSHpG2fuEymjdeNO3/6SaDZF7nEeCSmVv9kdIr9bvSOxbPOxcVtA/BqL8kwtpTgiblvnNNlrTmIWRwIqxgQpN7nf3D5I=
+	t=1725131630; cv=none; b=o0hf7SOCZRfQ7FfL+4nhz8R5VKfmXUx0Uei4wwGEadvYot7/zi2a06hsRd4BByAY95mLY8liWeDElRAE0lVJabrC1XCXYcVdUVDVL+UgtHw4Bir+MDL8aJtXjTqz1PFwbawJBc4UV1kWB2FK4k381uTNhNqBMAnBTzFcFTn7zpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725118349; c=relaxed/simple;
-	bh=us0ZFcwRjwDGxeJgFEpVoCAGiForOHqx1JKOLsYbIcw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UnYu4QaJA3Y1czkl7h+5XdQ0ToVVW9082Juka+nu1aGGhtHalLqY8hDFjy3jjVhKKk3lnoFcsAGKzEoFej2aNpCaGvY2IbzLGBCGyN12tkS5jGrG2/sn6k/BMaWNW6WQGekIMnCQilL++FHvnPgT9dG2MhUodp4Dhmesd2XNyiA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Esm0CaJn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725131630; c=relaxed/simple;
+	bh=bA+TgE6GyBiP6XdJSvLrt2aQ+sD+003B3wqwjCMMnZ0=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=EhUlcrsXsY85/PqMizg+rxsTDozPqvix1GIXXGoFHfBItHHdXE5aLVuwhFVSS+5PbBemXvscwm5AHk5HOeq9ovH66Yh9KNJvwfhsZkRWiislZG0t4lKiJFMw1f/z/nrOMAOgQOAldrlYx0wfCkvU6e0KBQB2pchoiiqLJ6S+m1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HX8ntLxy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Esm0CaJn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C101C4CEC0;
-	Sat, 31 Aug 2024 15:32:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HX8ntLxy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A699CC4CEC0;
+	Sat, 31 Aug 2024 19:13:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725118349;
-	bh=us0ZFcwRjwDGxeJgFEpVoCAGiForOHqx1JKOLsYbIcw=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Esm0CaJnU1mwoby3N9rCxImvHdxAH7agiz11eq5zFWZoFaVa/TEG0q2Q820HRJr1/
-	 NKl25rvHdvaDPtxbNFdltMw+SnUZAJTDCNjOpdlGSuhtyv4M5I9Q+SEutM5K8omHfZ
-	 n/7tJPril4z3ctv1NjI1ZL1+3iQIyxxA878PoN/ylMJBXbEoRLxod+rQwflsXIM6Wv
-	 S58e3gDJkgs/Nq/MxFuyiA9s3++APeYv3FFjGGfjPXGmuaiRzHir8quR7fb9Tia4oZ
-	 VIQJu1yliFiPwLPSc2zcejK3uHJFew/a+R/5E2K5SZzxsymFGlExjXMdQKFzebb5Sm
-	 qDpVjNVv/pMcA==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: chandanbabu@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: bug fixes for 6.11
-Date: Sat, 31 Aug 2024 20:59:46 +0530
-Message-ID: <87o758so6y.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=k20201202; t=1725131629;
+	bh=bA+TgE6GyBiP6XdJSvLrt2aQ+sD+003B3wqwjCMMnZ0=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=HX8ntLxyZduYSEEk/jBcQ4aFOtTWO8WnPLqYoMjyrsT9d1iBAuwrA0CsPE/P1E14a
+	 FJ1izrTKHnUZmSalDRClVkQ7UmiCujBcP5f8FL5cW6gbNAfsUtDLhTpBIT7kag+qQS
+	 1hBWBUdazfl5I88v3Ab3qLzW0/KwShbJLm5TEePd2gT0V60HgWExtGOa8rDGpcTq7B
+	 2PcjjQAXNsLVtgifCqa65E5DWe19XAqpN6l9S54E56RriNjbr3Bd5xLGJtlnOfsfqW
+	 0bhk57j2npkjOzSEMG+xitfnI0l/P5BIuURirKd8VfCoX7TbTKQUo8CRUVazxvVuek
+	 M/MfwdaEqMqzA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 7130E3809A80;
+	Sat, 31 Aug 2024 19:13:51 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 6.11
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <87o758so6y.fsf@debian-BULLSEYE-live-builder-AMD64>
+References: <87o758so6y.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <87o758so6y.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.11-fixes-4
+X-PR-Tracked-Commit-Id: a24cae8fc1f13f6f6929351309f248fd2e9351ce
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 0efdc097965bcf60d1db62f100ef544714714e88
+Message-Id: <172513162993.2915779.10899559352924721295.pr-tracker-bot@kernel.org>
+Date: Sat, 31 Aug 2024 19:13:49 +0000
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: torvalds@linux-foundation.org, chandanbabu@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Hi Linus,
+The pull request you sent on Sat, 31 Aug 2024 20:59:46 +0530:
 
-Please pull this branch which contains XFS bug fixes for 6.11-rc6. A brief
-description of the fixes is provided below.
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.11-fixes-4
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any problems.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/0efdc097965bcf60d1db62f100ef544714714e88
 
-The following changes since commit 5be63fc19fcaa4c236b307420483578a56986a37:
+Thank you!
 
-  Linux 6.11-rc5 (2024-08-25 19:07:11 +1200)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.11-fixes-4
-
-for you to fetch changes up to a24cae8fc1f13f6f6929351309f248fd2e9351ce:
-
-  xfs: reset rootdir extent size hint after growfsrt (2024-08-27 18:32:14 +0530)
-
-----------------------------------------------------------------
-Bug fixes for 6.11-rc6:
-
-  * Do not call out v1 inodes with non-zero di_nlink field as being corrupt.
-  * Change xfs_finobt_count_blocks() to count "free inode btree" blocks rather
-    than "inode btree" blocks.
-  * Don't report the number of trimmed bytes via FITRIM because the underlying
-    storage isn't required to do anything and failed discard IOs aren't
-    reported to the caller anyway.
-  * Fix incorrect setting of rm_owner field in an rmap query.
-  * Report missing disk offset range in an fsmap query.
-  * Obtain m_growlock when extending realtime section of the filesystem.
-  * Reset rootdir extent size hint after extending realtime section of the
-    filesystem.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (6):
-      xfs: fix di_onlink checking for V1/V2 inodes
-      xfs: fix folio dirtying for XFILE_ALLOC callers
-      xfs: don't bother reporting blocks trimmed via FITRIM
-      xfs: use XFS_BUF_DADDR_NULL for daddrs in getfsmap code
-      xfs: take m_growlock when running growfsrt
-      xfs: reset rootdir extent size hint after growfsrt
-
-Dave Chinner (1):
-      xfs: xfs_finobt_count_blocks() walks the wrong btree
-
-Zizhi Wo (2):
-      xfs: Fix the owner setting issue for rmap query in xfs fsmap
-      xfs: Fix missing interval for missing_owner in xfs fsmap
-
- fs/xfs/libxfs/xfs_ialloc_btree.c |  2 +-
- fs/xfs/libxfs/xfs_inode_buf.c    | 14 +++++---
- fs/xfs/scrub/xfile.c             |  2 +-
- fs/xfs/xfs_discard.c             | 36 ++++++-------------
- fs/xfs/xfs_fsmap.c               | 30 +++++++++++++---
- fs/xfs/xfs_rtalloc.c             | 78 +++++++++++++++++++++++++++++++++-------
- 6 files changed, 114 insertions(+), 48 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
