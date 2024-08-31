@@ -1,175 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB92114AD38;
-	Fri, 30 Aug 2024 23:56:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 016FC320F
+	for <linux-xfs@vger.kernel.org>; Sat, 31 Aug 2024 13:35:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725062183; cv=none; b=mMJFeTT7H9djF2nqUDWeLRYQFf8a25Re7X2trenC2ENYs+QYv6uhXIpXjrB/V5i50NeZnMFJjVgpbTGMZ3qfrmKrSvTXGstHznJcMk4rcxdsXsVTannW5Yl6moJ9Si6vyhjytPrAxOPJe0Qa7ZKaMJnC3tJ8HVQ02+9FFcagL6U=
+	t=1725111320; cv=none; b=rvjg4EkeeuZ30mYVA3TQQwbS+cGOH+1o7CCr9n91NCwg+5M1rylhGwoY3fuyHUcDvHy5SyfRgZigxcWxzeC1uyi3s2as5bOFZjbp0XxQCNixwhDqie6xKufsXvaQ96b/QoK5+3LyU+kivhdc3NIJfCB9MNpXSwH9kZyJM++gnro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725062183; c=relaxed/simple;
-	bh=pbFRQTG3rbv8AkxuMR0tvTGJyrk4wg2skLcT7z9reuU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dxaGzNCZKC2j8U/q4gd4goTuxrNCVF+TwOx0JsxZIVsVkhSVzfjmJSqoux1PWCKU6PqP9KP83QUtSByQgK5bOzyoU72/G90eZ4nyp9tWmdvcPcRWMJFVf/TB0H0Dh8mUZLlGo1Fp/UtvKxpGurOXRbuWXgB010kXL4srhmfMJC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CNxqSu4R; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CNxqSu4R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 649E4C4CEC2;
-	Fri, 30 Aug 2024 23:56:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725062182;
-	bh=pbFRQTG3rbv8AkxuMR0tvTGJyrk4wg2skLcT7z9reuU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CNxqSu4R2RXwfm3i1v+v0kcHeNf2XDM39kZJuuYNTOFXW5TNbH1tlB56L288jy9e/
-	 4J323pD8XvKLSsepz7ImyShHz08EM6SOzXu3avEMeV/vaFDgJ5akE2UZErUrG+TzZN
-	 DTgt7XFgixSvvf9coIcf/sZujl6WZI7nUy/P+hw0tOP3fRob/aDXqyA/d4cE4MPb4i
-	 F2MI5hVzFNAYCeG4G1r/3y9+LHWTVTfLJT0gP0qqUGM7ecc8lo+W9rrvpB42vLMHRB
-	 g2sLQ80L0/+aUD7iF4RrhMhJax8r4faYX2e5oTPTpu1CA6u+VJjOLCyPVMZAQTMPwE
-	 WZCGWWRZpChiw==
-Date: Fri, 30 Aug 2024 16:56:21 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
-	jack@suse.cz, chandan.babu@oracle.com, dchinner@redhat.com,
-	hch@lst.de, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, hare@suse.de,
-	martin.petersen@oracle.com, catherine.hoang@oracle.com,
-	kbusch@kernel.org
-Subject: Re: [PATCH v5 3/7] fs: iomap: Atomic write support
-Message-ID: <20240830235621.GS6216@frogsfrogsfrogs>
-References: <20240817094800.776408-1-john.g.garry@oracle.com>
- <20240817094800.776408-4-john.g.garry@oracle.com>
- <20240821165803.GI865349@frogsfrogsfrogs>
- <a91557d2-95d4-4e73-9936-72fc1fbe100f@oracle.com>
- <20240822203058.GR865349@frogsfrogsfrogs>
- <112ec3a6-48b3-4596-9c20-e23288581ffd@oracle.com>
+	s=arc-20240116; t=1725111320; c=relaxed/simple;
+	bh=BMsA3G3DocJPjg/xv1iObCUBqCPo8RTb9aYk03EdD7g=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i+c4vd8azR9YjNtqqVVxlPyBsV/BCa00Ul6YIPJIqxkhBBy2uQPMe7MF+rVd7FfeDzTy7SZArYBVVVmYv0EqOTzMyWrprmAmpI/iQnmH32G0GTbxgBoQJSMwTCYvfZAngt1IbnKYMvIKTAlpx9O5u+7A/XfJYXhazhz9CXkiRkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Wwwv71B6jzgYs1;
+	Sat, 31 Aug 2024 21:33:07 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8A6211800D1;
+	Sat, 31 Aug 2024 21:35:12 +0800 (CST)
+Received: from localhost (10.175.127.227) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 31 Aug
+ 2024 21:35:12 +0800
+Date: Sat, 31 Aug 2024 21:45:05 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>
+CC: <chandanbabu@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
+Subject: Re: [PATCH 2/5] xfs: ensuere deleting item from AIL after shutdown
+ in dquot flush
+Message-ID: <20240831134505.GA1994623@ceph-admin>
+References: <20240823110439.1585041-1-leo.lilong@huawei.com>
+ <20240823110439.1585041-3-leo.lilong@huawei.com>
+ <20240823170006.GF865349@frogsfrogsfrogs>
+ <Zs2e/kFGwEAXqfIq@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <112ec3a6-48b3-4596-9c20-e23288581ffd@oracle.com>
+In-Reply-To: <Zs2e/kFGwEAXqfIq@dread.disaster.area>
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Fri, Aug 30, 2024 at 04:48:36PM +0100, John Garry wrote:
-> On 22/08/2024 21:30, Darrick J. Wong wrote:
-> > > Then, the iomap->type/flag is either IOMAP_UNWRITTEN/IOMAP_F_DIRTY or
-> > > IOMAP_MAPPED/IOMAP_F_DIRTY per iter. So the type is not consistent. However
-> > > we will set IOMAP_DIO_UNWRITTEN in dio->flags, so call xfs_dio_write_endio()
-> > > -> xfs_iomap_write_unwritten() for the complete FSB range.
+On Tue, Aug 27, 2024 at 07:40:14PM +1000, Dave Chinner wrote:
+> On Fri, Aug 23, 2024 at 10:00:06AM -0700, Darrick J. Wong wrote:
+> > On Fri, Aug 23, 2024 at 07:04:36PM +0800, Long Li wrote:
+> > > Deleting items from the AIL before the log is shut down can result in the
+> > > log tail moving forward in the journal on disk because log writes can still
+> > > be taking place. As a result, items that have been deleted from the AIL
+> > > might not be recovered during the next mount, even though they should be,
+> > > as they were never written back to disk.
 > > > 
-> > > Do you see a problem with this?
-> 
-> Sorry again for the slow response.
-> 
+> > > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > > ---
+> > >  fs/xfs/xfs_dquot.c | 8 +++++++-
+> > >  1 file changed, 7 insertions(+), 1 deletion(-)
 > > > 
-> > > Please see this also for some more background:
-> > > https://urldefense.com/v3/__https://lore.kernel.org/linux-
-> > > xfs/20240726171358.GA27612@lst.de/__;!!ACWV5N9M2RV99hQ! P5jeP96F8wAtRAblbm8NvRo8nlpil03vA26UMMX8qrYa4IzKecAAk7x1l1M45bBshC3Czxn1CkDXypNSAg$
-> > Yes -- if you have a mix of written and unwritten blocks for the same
-> > chunk of physical space:
+> > > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > > index c1b211c260a9..4cbe3db6fc32 100644
+> > > --- a/fs/xfs/xfs_dquot.c
+> > > +++ b/fs/xfs/xfs_dquot.c
+> > > @@ -1332,9 +1332,15 @@ xfs_qm_dqflush(
+> > >  	return 0;
+> > >  
+> > >  out_abort:
+> > > +	/*
+> > > +	 * Shutdown first to stop the log before deleting items from the AIL.
+> > > +	 * Deleting items from the AIL before the log is shut down can result
+> > > +	 * in the log tail moving forward in the journal on disk because log
+> > > +	 * writes can still be taking place.
+> > > +	 */
+> > > +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > >  	dqp->q_flags &= ~XFS_DQFLAG_DIRTY;
+> > >  	xfs_trans_ail_delete(lip, 0);
+> > > -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
 > > 
-> > 0      7
-> > WUWUWUWU
-> > 
-> > the directio ioend function will start four separate transactions to
-> > convert blocks 1, 3, 5, and 7 to written status.  If the system crashes
-> > midway through, they will see this afterwards:
-> > 
-> > WWWWW0W0
-> > 
-> > IOWs, although the*disk write* was completed successfully, the mapping
-> > updates were torn, and the user program sees a torn write.
-> > > The most performant/painful way to fix this would be to make the whole
-> > ioend completion a logged operation so that we could commit to updating
-> > all the unwritten mappings and restart it after a crash.
+> > I see the logic in shutting down the log before letting go of the dquot
+> > log item that triggered the shutdown, but I wonder, why do we delete the
+> > item from the AIL?  AFAICT the inode items don't do that on iflush
+> > failure, but OTOH I couldn't figure out how the log items in the AIL get
+> > deleted from the AIL after a shutdown. 
 > 
-> could we make it logged for those special cases which we are interested in
-> only?
+> Intents are removed from the AIL when the transaction containing
+> the deferred intent chain is cancelled instead of committed due the
+> log being shut down.
+> 
+> For everything else in the AIL, the ->iop_push method is supposed to
+> do any cleanup that is necessary by failing the item push and
+> running the item failure method itself.
+> 
+> For buffers, this is running IO completion as if an IO error
+> occurred. Error handling sees the shutdown and removes the item from
+> the AIL.
+> 
+> For inodes, xfs_iflush_cluster() fails the inode buffer as if an IO
+> error occurred, that then runs the individual inode abort code that
+> removes the inode items from the AIL.
+> 
+> For dquots, it has the ancient cleanup method that inodes used to
+> have. i.e. if the dquot has been flushed to the buffer, it is attached to
+> the buffer and then the buffer submission will fail and run IO
+> completion with an error. If the dquot hasn't been flushed to the
+> buffer because either it or the underlying dquot buffer is corrupt
+> it will remove the dquot from the AIL and then shut down the
+> filesystem.
+> 
+> It's the latter case that could be an issue. It's not the same as
+> the inode item case, because the tail pinning that the INODE_ALLOC
+> inode item type flag causes does not happen with dquots. There is
 
-Yes, though this is the long route -- you get to define a new ondisk log
-item, build all the incore structures to process them, and then define a
-new high level operation that uses the state encoded in that new log
-item to run all the ioend completion transactions within that framework.
-Also you get to add a new log incompat feature bit for this.
+I'd like to know if the "INODE_ALLOC inode item" refers to a buf
+item with the XFS_BLI_INODE_ALLOC_BUF flag? I understand that when
+this type of buf item undergoes relog, the tail lsn might be pinned,
+but I'm not sure why it's mentioned here, Why does it cause inode
+and dquot to be very different?
 
-Perhaps we should analyze the cost of writing and QA'ing all that vs.
-the amount of time saved in the handling of this corner case using one
-of the less exciting options.
+> still a potential window where the dquot could be at the tail of the
+> log, and remocing it moves the tail forward at exactly the same time
+> the log tail is being sampled during a log write, and the shutdown
+> doesn't happen fast enough to prevent the log write going out to
+> disk.
+> 
+> To make timing of such a race even more unlikely, it would have to
+> race with a log write that contains a commit record, otherwise the
+> log tail lsn in the iclog will be ignored because it wasn't
+> contained within a complete checkpoint in the journal.  It's very
+> unlikely that a filesystem will read a corrupt dquot from disk at
+> exactly the same point in time these other journal pre-conditions
+> are met, but it could happen...
+> 
 
-> > The least performant of course is to write zeroes at allocation time,
-> > like we do for fsdax.
-> 
-> That idea was already proposed:
-> https://lore.kernel.org/linux-xfs/ZcGIPlNCkL6EDx3Z@dread.disaster.area/
+This is a very detailed explanation. I will add this to my commit
+message in the next version. Yes, although the conditions for it
+to occur are strict, it's still possible to happen.
 
-Yes, I'm aware.
+Thanks,
+Long Li
 
-> > A possible middle ground would be to detect IOMAP_ATOMIC in the
-> > ->iomap_begin method, notice that there are mixed mappings under the
-> > proposed untorn IO, and pre-convert the unwritten blocks by writing
-> > zeroes to disk and updating the mappings
+> > Or maybe during a shutdown we just stop xfsaild and let the higher
+> > level objects free the log items during reclaim?
 > 
-> Won't that have the same issue as using XFS_BMAPI_ZERO, above i.e. zeroing
-> during allocation?
-
-Only if you set the forcealign size to > 1fsb and fail to write new
-file data in forcealign units, even for non-untorn writes.  If all
-writes to the file are aligned to the forcealign size then there's only
-one extent conversion to be done, and that cannot be torn.
-
-> > before handing the one single
-> > mapping back to iomap_dio_rw to stage the untorn writes bio.  At least
-> > you'd only be suffering that penalty for the (probable) corner case of
-> > someone creating mixed mappings.
+> The AIL contains objects that have no references elsewhere in the
+> filesystem. It must be pushed until empty during unmount after a
+> shutdown to ensure that all the items in it have been pushed,
+> failed, removed from the AIL and freed...
 > 
-> BTW, one issue I have with the sub-extent(or -alloc unit) zeroing from v4
-> series is how the unwritten conversion has changed, like:
-> 
-> xfs_iomap_write_unwritten()
-> {
-> 	unsigned int rounding;
-> 
-> 	/* when converting anything unwritten, we must be spanning an alloc unit,
-> so round up/down */
-> 	if (rounding > 1) {
-> 		offset_fsb = rounddown(rounding);
-> 		count_fsb = roundup(rounding);
-> 	}
-> 
-> 	...
-> 	do {
-> 		xfs_bmapi_write();
-> 		...
-> 		xfs_trans_commit();
-> 	} while ();
-> }
-> 
-> I'm not too happy with it and it seems a bit of a bodge, as I would rather
-> we report the complete size written (user data and zeroes); then
-> xfs_iomap_write_unwritten() would do proper individual block conversion.
-> However, we do something similar for zeroing for sub-FSB writes. I am not
-> sure if that is the same thing really, as we only round up to FSB size.
-> Opinion?
-
-xfs_iomap_write_unwritten is in the ioend path; that's not what I was
-talking about.
-
-I'm talking about a separate change to the xfs_direct_write_iomap_begin
-function that would detect the case where the bmapi_read returns an
-@imap that doesn't span the whole forcealign region, then repeatedly
-calls bmapi_write(BMAPI_ZERO | BMAPI_CONVERT) on any unwritten mappings
-within that file range until the original bmapi_read would return a
-single written mapping.
-
---D
-
-> 
-> Thanks,
-> John
-> 
-> 
-> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
