@@ -1,157 +1,102 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 016FC320F
-	for <linux-xfs@vger.kernel.org>; Sat, 31 Aug 2024 13:35:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724EA14F6C;
+	Sat, 31 Aug 2024 15:32:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725111320; cv=none; b=rvjg4EkeeuZ30mYVA3TQQwbS+cGOH+1o7CCr9n91NCwg+5M1rylhGwoY3fuyHUcDvHy5SyfRgZigxcWxzeC1uyi3s2as5bOFZjbp0XxQCNixwhDqie6xKufsXvaQ96b/QoK5+3LyU+kivhdc3NIJfCB9MNpXSwH9kZyJM++gnro=
+	t=1725118349; cv=none; b=dBsOuGF1NAwVqtb8DmWuOTZw4tA2kxUekfnPwXwhnQWkPYqsq5xWgGoF4urN1bNUrtwyUT/yTVEJ+5MgSHpG2fuEymjdeNO3/6SaDZF7nEeCSmVv9kdIr9bvSOxbPOxcVtA/BqL8kwtpTgiblvnNNlrTmIWRwIqxgQpN7nf3D5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725111320; c=relaxed/simple;
-	bh=BMsA3G3DocJPjg/xv1iObCUBqCPo8RTb9aYk03EdD7g=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i+c4vd8azR9YjNtqqVVxlPyBsV/BCa00Ul6YIPJIqxkhBBy2uQPMe7MF+rVd7FfeDzTy7SZArYBVVVmYv0EqOTzMyWrprmAmpI/iQnmH32G0GTbxgBoQJSMwTCYvfZAngt1IbnKYMvIKTAlpx9O5u+7A/XfJYXhazhz9CXkiRkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.252])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Wwwv71B6jzgYs1;
-	Sat, 31 Aug 2024 21:33:07 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8A6211800D1;
-	Sat, 31 Aug 2024 21:35:12 +0800 (CST)
-Received: from localhost (10.175.127.227) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 31 Aug
- 2024 21:35:12 +0800
-Date: Sat, 31 Aug 2024 21:45:05 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>
-CC: <chandanbabu@kernel.org>, <linux-xfs@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
-Subject: Re: [PATCH 2/5] xfs: ensuere deleting item from AIL after shutdown
- in dquot flush
-Message-ID: <20240831134505.GA1994623@ceph-admin>
-References: <20240823110439.1585041-1-leo.lilong@huawei.com>
- <20240823110439.1585041-3-leo.lilong@huawei.com>
- <20240823170006.GF865349@frogsfrogsfrogs>
- <Zs2e/kFGwEAXqfIq@dread.disaster.area>
+	s=arc-20240116; t=1725118349; c=relaxed/simple;
+	bh=us0ZFcwRjwDGxeJgFEpVoCAGiForOHqx1JKOLsYbIcw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UnYu4QaJA3Y1czkl7h+5XdQ0ToVVW9082Juka+nu1aGGhtHalLqY8hDFjy3jjVhKKk3lnoFcsAGKzEoFej2aNpCaGvY2IbzLGBCGyN12tkS5jGrG2/sn6k/BMaWNW6WQGekIMnCQilL++FHvnPgT9dG2MhUodp4Dhmesd2XNyiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Esm0CaJn; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Esm0CaJn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C101C4CEC0;
+	Sat, 31 Aug 2024 15:32:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725118349;
+	bh=us0ZFcwRjwDGxeJgFEpVoCAGiForOHqx1JKOLsYbIcw=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Esm0CaJnU1mwoby3N9rCxImvHdxAH7agiz11eq5zFWZoFaVa/TEG0q2Q820HRJr1/
+	 NKl25rvHdvaDPtxbNFdltMw+SnUZAJTDCNjOpdlGSuhtyv4M5I9Q+SEutM5K8omHfZ
+	 n/7tJPril4z3ctv1NjI1ZL1+3iQIyxxA878PoN/ylMJBXbEoRLxod+rQwflsXIM6Wv
+	 S58e3gDJkgs/Nq/MxFuyiA9s3++APeYv3FFjGGfjPXGmuaiRzHir8quR7fb9Tia4oZ
+	 VIQJu1yliFiPwLPSc2zcejK3uHJFew/a+R/5E2K5SZzxsymFGlExjXMdQKFzebb5Sm
+	 qDpVjNVv/pMcA==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: chandanbabu@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: bug fixes for 6.11
+Date: Sat, 31 Aug 2024 20:59:46 +0530
+Message-ID: <87o758so6y.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <Zs2e/kFGwEAXqfIq@dread.disaster.area>
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+Content-Type: text/plain
 
-On Tue, Aug 27, 2024 at 07:40:14PM +1000, Dave Chinner wrote:
-> On Fri, Aug 23, 2024 at 10:00:06AM -0700, Darrick J. Wong wrote:
-> > On Fri, Aug 23, 2024 at 07:04:36PM +0800, Long Li wrote:
-> > > Deleting items from the AIL before the log is shut down can result in the
-> > > log tail moving forward in the journal on disk because log writes can still
-> > > be taking place. As a result, items that have been deleted from the AIL
-> > > might not be recovered during the next mount, even though they should be,
-> > > as they were never written back to disk.
-> > > 
-> > > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > > ---
-> > >  fs/xfs/xfs_dquot.c | 8 +++++++-
-> > >  1 file changed, 7 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> > > index c1b211c260a9..4cbe3db6fc32 100644
-> > > --- a/fs/xfs/xfs_dquot.c
-> > > +++ b/fs/xfs/xfs_dquot.c
-> > > @@ -1332,9 +1332,15 @@ xfs_qm_dqflush(
-> > >  	return 0;
-> > >  
-> > >  out_abort:
-> > > +	/*
-> > > +	 * Shutdown first to stop the log before deleting items from the AIL.
-> > > +	 * Deleting items from the AIL before the log is shut down can result
-> > > +	 * in the log tail moving forward in the journal on disk because log
-> > > +	 * writes can still be taking place.
-> > > +	 */
-> > > +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > >  	dqp->q_flags &= ~XFS_DQFLAG_DIRTY;
-> > >  	xfs_trans_ail_delete(lip, 0);
-> > > -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > 
-> > I see the logic in shutting down the log before letting go of the dquot
-> > log item that triggered the shutdown, but I wonder, why do we delete the
-> > item from the AIL?  AFAICT the inode items don't do that on iflush
-> > failure, but OTOH I couldn't figure out how the log items in the AIL get
-> > deleted from the AIL after a shutdown. 
-> 
-> Intents are removed from the AIL when the transaction containing
-> the deferred intent chain is cancelled instead of committed due the
-> log being shut down.
-> 
-> For everything else in the AIL, the ->iop_push method is supposed to
-> do any cleanup that is necessary by failing the item push and
-> running the item failure method itself.
-> 
-> For buffers, this is running IO completion as if an IO error
-> occurred. Error handling sees the shutdown and removes the item from
-> the AIL.
-> 
-> For inodes, xfs_iflush_cluster() fails the inode buffer as if an IO
-> error occurred, that then runs the individual inode abort code that
-> removes the inode items from the AIL.
-> 
-> For dquots, it has the ancient cleanup method that inodes used to
-> have. i.e. if the dquot has been flushed to the buffer, it is attached to
-> the buffer and then the buffer submission will fail and run IO
-> completion with an error. If the dquot hasn't been flushed to the
-> buffer because either it or the underlying dquot buffer is corrupt
-> it will remove the dquot from the AIL and then shut down the
-> filesystem.
-> 
-> It's the latter case that could be an issue. It's not the same as
-> the inode item case, because the tail pinning that the INODE_ALLOC
-> inode item type flag causes does not happen with dquots. There is
+Hi Linus,
 
-I'd like to know if the "INODE_ALLOC inode item" refers to a buf
-item with the XFS_BLI_INODE_ALLOC_BUF flag? I understand that when
-this type of buf item undergoes relog, the tail lsn might be pinned,
-but I'm not sure why it's mentioned here, Why does it cause inode
-and dquot to be very different?
+Please pull this branch which contains XFS bug fixes for 6.11-rc6. A brief
+description of the fixes is provided below.
 
-> still a potential window where the dquot could be at the tail of the
-> log, and remocing it moves the tail forward at exactly the same time
-> the log tail is being sampled during a log write, and the shutdown
-> doesn't happen fast enough to prevent the log write going out to
-> disk.
-> 
-> To make timing of such a race even more unlikely, it would have to
-> race with a log write that contains a commit record, otherwise the
-> log tail lsn in the iclog will be ignored because it wasn't
-> contained within a complete checkpoint in the journal.  It's very
-> unlikely that a filesystem will read a corrupt dquot from disk at
-> exactly the same point in time these other journal pre-conditions
-> are met, but it could happen...
-> 
+I did a test-merge with the main upstream branch as of a few minutes ago and
+didn't see any conflicts.  Please let me know if you encounter any problems.
 
-This is a very detailed explanation. I will add this to my commit
-message in the next version. Yes, although the conditions for it
-to occur are strict, it's still possible to happen.
+The following changes since commit 5be63fc19fcaa4c236b307420483578a56986a37:
 
-Thanks,
-Long Li
+  Linux 6.11-rc5 (2024-08-25 19:07:11 +1200)
 
-> > Or maybe during a shutdown we just stop xfsaild and let the higher
-> > level objects free the log items during reclaim?
-> 
-> The AIL contains objects that have no references elsewhere in the
-> filesystem. It must be pushed until empty during unmount after a
-> shutdown to ensure that all the items in it have been pushed,
-> failed, removed from the AIL and freed...
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.11-fixes-4
+
+for you to fetch changes up to a24cae8fc1f13f6f6929351309f248fd2e9351ce:
+
+  xfs: reset rootdir extent size hint after growfsrt (2024-08-27 18:32:14 +0530)
+
+----------------------------------------------------------------
+Bug fixes for 6.11-rc6:
+
+  * Do not call out v1 inodes with non-zero di_nlink field as being corrupt.
+  * Change xfs_finobt_count_blocks() to count "free inode btree" blocks rather
+    than "inode btree" blocks.
+  * Don't report the number of trimmed bytes via FITRIM because the underlying
+    storage isn't required to do anything and failed discard IOs aren't
+    reported to the caller anyway.
+  * Fix incorrect setting of rm_owner field in an rmap query.
+  * Report missing disk offset range in an fsmap query.
+  * Obtain m_growlock when extending realtime section of the filesystem.
+  * Reset rootdir extent size hint after extending realtime section of the
+    filesystem.
+
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (6):
+      xfs: fix di_onlink checking for V1/V2 inodes
+      xfs: fix folio dirtying for XFILE_ALLOC callers
+      xfs: don't bother reporting blocks trimmed via FITRIM
+      xfs: use XFS_BUF_DADDR_NULL for daddrs in getfsmap code
+      xfs: take m_growlock when running growfsrt
+      xfs: reset rootdir extent size hint after growfsrt
+
+Dave Chinner (1):
+      xfs: xfs_finobt_count_blocks() walks the wrong btree
+
+Zizhi Wo (2):
+      xfs: Fix the owner setting issue for rmap query in xfs fsmap
+      xfs: Fix missing interval for missing_owner in xfs fsmap
+
+ fs/xfs/libxfs/xfs_ialloc_btree.c |  2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c    | 14 +++++---
+ fs/xfs/scrub/xfile.c             |  2 +-
+ fs/xfs/xfs_discard.c             | 36 ++++++-------------
+ fs/xfs/xfs_fsmap.c               | 30 +++++++++++++---
+ fs/xfs/xfs_rtalloc.c             | 78 +++++++++++++++++++++++++++++++++-------
+ 6 files changed, 114 insertions(+), 48 deletions(-)
