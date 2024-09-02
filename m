@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 221021A3AAA
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:43:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9D4B1CB50F
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:43:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725302603; cv=none; b=KFetQQFA4KJnonLuQJcHEvukb8DUJqf7Gx54mwgu79gIvSrOr8oglwk8I6gB9RIPjGggsHPxw5QWrBl2s5+2ntUhTMlA0Hr77iX4zHbc2luUhPUlcQPQsV21eovKbrwy2Lrj3ZfoIS32xBBwzAVFjS9FN0pTOr1HTbLQjWuiOtE=
+	t=1725302618; cv=none; b=Ouavds7VdcOjlT+Y2MIrBtWVhs7UU5h07gnMl/ouoyjXB0lFBJ4dLzBSNHw64pyp4LOxkm/aRXzG6+eKYXtosfhJgBLJf1KtuwnyDTw+4KmGf1lsFNP/ExPtQZ4wofYlHi33Lm+vEYhTYci5iM/hhMFE8n2VkMPTZH9Zugyyvx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725302603; c=relaxed/simple;
-	bh=Ckq1jinAOObk4le8a06/7yfpjQ2YO4D4Rl8RwlL5H1Q=;
+	s=arc-20240116; t=1725302618; c=relaxed/simple;
+	bh=5NudYtpqF7XHNh7K6AUtYmIaJoO+k+smGo4wsWteGt8=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=bFOfysbPYQy1H/8ZrYishZdvtCYd++m/7vjNhwaf1/0CiClSakS9zO3iqJ1p+J6Z81XfibWQj2ShAiV8KIi9AYQnA2q+Qpc1Ft+jxa9KTPuVx0HSsrol6LL7IOv8fQ51bRq8vin7v1MyO3ZUCMc0/ofe0tuLALdOWtpqeHfeefo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VTkgnV60; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=DDZR+6jT7vM7vqx65avo0LARppBicliYAApE5E3PcIOV/40XgnUazV3GpE+kd2sOr6WZu1kKjLXL14fkkYCiW+Id4UtnwVZAQapL8nn8XGgup8mxwrSYPGwoCtPHV08uBpU2VTOLvfBi7dzDtI1VKrV1vH+NC88cQAWmo7SDb8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CbKhGUYP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VTkgnV60"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C4C5C4CEC2;
-	Mon,  2 Sep 2024 18:43:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CbKhGUYP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4204BC4CEC2;
+	Mon,  2 Sep 2024 18:43:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725302602;
-	bh=Ckq1jinAOObk4le8a06/7yfpjQ2YO4D4Rl8RwlL5H1Q=;
+	s=k20201202; t=1725302618;
+	bh=5NudYtpqF7XHNh7K6AUtYmIaJoO+k+smGo4wsWteGt8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VTkgnV60YDrRxb6qNPRf1Oq2QF27aCKo3KOhMuF27WYURdalcjiyu+FMuKpAVXlLQ
-	 4sFStJNkiTdo7+S1wYTSh4d7LFt++evTVQav3T1yqQV3lcPzNadEqwWovaYLTayeh/
-	 Q3d4MrsNbmXL8lHY4ULV/x/4b4YZ+h9ufhjliQAoUvRVzW17uJY9nJJoXpzBXMTUQb
-	 eoM2my41JCCP6UtejydF1UGZ4aOY9SrepInRmR3f+hITT0BWlTooY3io+DZEU0usI1
-	 6hKuHJ8Mz54OWwV+P4mBF85inftCyPnRwoWT2446zfF6LZ53Ox12Ursu1b5vzCv5l7
-	 VOlrMpa75+SCg==
-Date: Mon, 02 Sep 2024 11:43:22 -0700
-Subject: [GIT PULL 7/8] xfs: various bug fixes for 6.12
+	b=CbKhGUYPy1ZjGHrp/m0AAAwzlm+mCw+Frip76+AQ6D3OlcqF+xxaFVqh+dJhNj+84
+	 wGY5PJTkfvJojqtXLsly2OYOXEbFB5MnRr/kTukHy6P2ZX671C2nYdluPX9fS2YE7L
+	 38Jma8bpSJ2Ekppx+4nXgWOVgVN+9VBqSn4utz4kJ763VR6WzR6MEJXD2EzQish1wH
+	 ZsVnC2an3S5qg2xI2gDvJqap3TtLDGIDkJvhx0vMHZLbNTyUgpfEsG3OHFBExtQB60
+	 YuJ6JktiwqpV/pt3/n0xrErY2TDeBDTOaxuyiI7KsZHeg8Ckq8FmyxxRvFQZjHik7F
+	 OsY65/rY/28jA==
+Date: Mon, 02 Sep 2024 11:43:37 -0700
+Subject: [GIT PULL 8/8] xfs: cleanups for inode rooted btree code
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, kernel@mattwhitlock.name, linux-xfs@vger.kernel.org, sam@gentoo.org
-Message-ID: <172530248562.3348968.7217782771063673945.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <172530248669.3348968.12555145296914101501.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,35 +53,53 @@ encounter any problems.
 
 --D
 
-The following changes since commit 2c4162be6c10d3bc4884c211ae4787fc84c4fe3c:
-
-xfs: refactor loading quota inodes in the regular case (2024-09-01 08:58:20 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/xfs-fixes-6.12_2024-09-02
-
-for you to fetch changes up to de55149b6639e903c4d06eb0474ab2c05060e61d:
+The following changes since commit de55149b6639e903c4d06eb0474ab2c05060e61d:
 
 xfs: fix a sloppy memory handling bug in xfs_iroot_realloc (2024-09-01 08:58:20 -0700)
 
-----------------------------------------------------------------
-xfs: various bug fixes for 6.12 [7/8]
+are available in the Git repository at:
 
-Various bug fixes for 6.12.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/btree-cleanups-6.12_2024-09-02
+
+for you to fetch changes up to 411a71256de6f5a0015a28929cfbe6bc36c503dc:
+
+xfs: standardize the btree maxrecs function parameters (2024-09-01 08:58:20 -0700)
+
+----------------------------------------------------------------
+xfs: cleanups for inode rooted btree code [v4.2 8/8]
+
+This series prepares the btree code to support realtime reverse mapping btrees
+by refactoring xfs_ifork_realloc to be fed a per-btree ops structure so that it
+can handle multiple types of inode-rooted btrees.  It moves on to refactoring
+the btree code to use the new realloc routines.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs: fix C++ compilation errors in xfs_fs.h
-xfs: fix FITRIM reporting again
-xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
+Darrick J. Wong (2):
+xfs: replace shouty XFS_BM{BT,DR} macros
+xfs: standardize the btree maxrecs function parameters
 
-fs/xfs/libxfs/xfs_fs.h         |  5 +++--
-fs/xfs/libxfs/xfs_inode_fork.c | 10 +++++-----
-fs/xfs/xfs_discard.c           |  2 +-
-3 files changed, 9 insertions(+), 8 deletions(-)
+fs/xfs/libxfs/xfs_alloc_btree.c    |   6 +-
+fs/xfs/libxfs/xfs_alloc_btree.h    |   3 +-
+fs/xfs/libxfs/xfs_attr_leaf.c      |   8 +-
+fs/xfs/libxfs/xfs_bmap.c           |  42 ++++----
+fs/xfs/libxfs/xfs_bmap_btree.c     |  24 ++---
+fs/xfs/libxfs/xfs_bmap_btree.h     | 207 +++++++++++++++++++++++++------------
+fs/xfs/libxfs/xfs_ialloc.c         |   4 +-
+fs/xfs/libxfs/xfs_ialloc_btree.c   |   6 +-
+fs/xfs/libxfs/xfs_ialloc_btree.h   |   3 +-
+fs/xfs/libxfs/xfs_inode_fork.c     |  34 +++---
+fs/xfs/libxfs/xfs_refcount_btree.c |   5 +-
+fs/xfs/libxfs/xfs_refcount_btree.h |   3 +-
+fs/xfs/libxfs/xfs_rmap_btree.c     |   7 +-
+fs/xfs/libxfs/xfs_rmap_btree.h     |   3 +-
+fs/xfs/libxfs/xfs_sb.c             |  16 +--
+fs/xfs/libxfs/xfs_trans_resv.c     |   2 +-
+fs/xfs/scrub/bmap_repair.c         |   2 +-
+fs/xfs/scrub/inode_repair.c        |  12 +--
+fs/xfs/xfs_bmap_util.c             |   4 +-
+19 files changed, 237 insertions(+), 154 deletions(-)
 
