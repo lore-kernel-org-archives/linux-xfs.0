@@ -1,245 +1,87 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80D61A3A93
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:56:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17F681A3A97;
+	Mon,  2 Sep 2024 19:08:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725303394; cv=none; b=ljPQ/6AUzWYfyg4rBTHk+mTAkSEsKAhViXx5XF7dH7eLaAwj5D3+sdZYXjo/trCrB2toXoeJ+GAphpzqSdcn+mXsSVMBl2rbIwqt6vJRBBwIdJ6q9CG6n/liwx0kQvAsG1sTSIVR5GJOXWwB3W+EJ0XJNYQ77KwyMD395m0wNYA=
+	t=1725304109; cv=none; b=d9z6a8ilt9PmtJq7/nPFjnUUdDsloOByPYNgFtvFSxOqdkNjo079Ku8I7BV3+Ch9JbXhixzUoSa19iUpNhLhG1/3xW6m0uh/ldKVPGxPFg03hw75sCWif5lTA81ERzTUEZEwxai3ju8/Ad6fufzGwiP7DQnVtJtjJWQr/5PjtSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725303394; c=relaxed/simple;
-	bh=iUcs+xPallOPpfj4NWMd7dvIqH5aBXEgKV0j4sRXhKA=;
+	s=arc-20240116; t=1725304109; c=relaxed/simple;
+	bh=L/v8ja7U3poGx/rL4/awxrsM/dIZpV15uF3Vk7OelJQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jjKoNw7zb00IbbGDo5+lR8YYK1peRU9uZqLO29u52WKpKUt2dN0NMldlKM6aYXZE1Iikmg6uFcETAUO4+RhZNjdcPDxkh5lpVvuOjWrZwKPcPCMzzY254GIjF0mukABqw+VgFXfCx1oUHxAHpW85UY7pVxd8tJi1R3UK1gcXt9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c/7I3XCu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XFnJ2U44bs8EUnAloDN6/p9cNt6l2OevHlJa9SJtWCfKGg8STu627yTVNz6iL3PiOLACSxMYF+JYKGsNWw9VjhJfKYgblLC3i9hOmSjir1IUSYOwKVJflHAp46yzDuwMY23hKQcXrccqucyhiQ2mm0hlIX9/EdJlTk5t5SvLKD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JtxoRv1q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c/7I3XCu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A6E2C4CEC2;
-	Mon,  2 Sep 2024 18:56:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JtxoRv1q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ACEBC4CEC2;
+	Mon,  2 Sep 2024 19:08:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725303394;
-	bh=iUcs+xPallOPpfj4NWMd7dvIqH5aBXEgKV0j4sRXhKA=;
+	s=k20201202; t=1725304108;
+	bh=L/v8ja7U3poGx/rL4/awxrsM/dIZpV15uF3Vk7OelJQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=c/7I3XCullBE2dAzrUdCbOH4f1JzV24Ftnen/woVc1UxJwIV6y7nuIzKDIfSDk1s5
-	 xNtvXoe3LtIqPockzL6W2kcU6v89cJAryZeTx1880T9f27+isauy+RY21UjaWZN55D
-	 ufgwlzRz4OE4VlXWxDDVfFxzYyvCyzhM28FrlLgoh9XuHcoIGWzx/L+hHyQ02GYwtg
-	 QArpjzmL8B9hl2YUh2AQHmaeSqR/zC+yNSdmBVqdR5NmAwRt7VwoYvDFUgn1wn6JEO
-	 J838p9EebKwMfOGlFXVkJGMmZmVb7LLEyJcRe0RJSS5QkGb3E9Dp2s3THIiYXE6tSl
-	 xiL2Az3QJlBiQ==
-Date: Mon, 2 Sep 2024 11:56:33 -0700
+	b=JtxoRv1q/aJlCtREh37W45BQfuQy6nS1jVgUCVYiWIGfw1ei5kQ+nKFUGljjj82mR
+	 GxFDm2k5OF2yz+1z3EQoia7ATf8BoKJUIHgDDb/WN2ATF4Yg6BT1pGtOFq9YBLLuh0
+	 0Os92Zxq/aFKrlngOEFeWnIwk7CnISLsCiigC/olD7yKrp8zH8n4cTjGLjBlm+orSd
+	 O67sTYp6V2mFj4v3vhMKxFpwKanxb/nGEZwUwdy/Am6pciLaCArm74HTRDitQcP2tE
+	 fGcQOqO8aoFAxPiHeURNV3vRPlUvTFxHbkY/ga7xTlCsLkxQRFH+dUzGWbLit00oAc
+	 cPdWrH0jYqY1w==
+Date: Mon, 2 Sep 2024 12:08:28 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: liuhuan01@kylinos.cn
-Cc: david@fromorbit.com, cmaiolino@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs_db: make sure agblocks is valid to prevent
- corruption
-Message-ID: <20240902185633.GZ6224@frogsfrogsfrogs>
-References: <Zs5jMo1Vzg9gxA/J@dread.disaster.area>
- <20240902101238.12895-1-liuhuan01@kylinos.cn>
+To: Zizhi Wo <wozizhi@huawei.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, osandov@fb.com,
+	john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, yangerkun@huawei.com
+Subject: Re: [PATCH 0/2] Some boundary error bugfix related to XFS fsmap.
+Message-ID: <20240902190828.GA6224@frogsfrogsfrogs>
+References: <20240826031005.2493150-1-wozizhi@huawei.com>
+ <9337ebda-8e27-4754-bc57-748e44f3b5e0@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240902101238.12895-1-liuhuan01@kylinos.cn>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9337ebda-8e27-4754-bc57-748e44f3b5e0@huawei.com>
 
-On Mon, Sep 02, 2024 at 06:12:39PM +0800, liuhuan01@kylinos.cn wrote:
-> From: liuh <liuhuan01@kylinos.cn>
-> 
-> Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredump during the process.
-> 	xfs_db -c "sb 0" -c "p agblocks" /dev/loop1
-> 
-> System will generate signal SIGFPE corrupt the process. And the stack as follow:
-> corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
-> 	#0  libxfs_getbuf_flags
-> 	#1  libxfs_getbuf_flags
-> 	#2  libxfs_buf_read_map
-> 	#3  libxfs_buf_read
-> 	#4  libxfs_mount
-> 	#5  init
-> 	#6  main
-> 
-> The coredump was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0.
-> In this case, user cannot run in expert mode also.
-> 
-> So, try to get agblocks from agf/agi 0, if failed use the default geometry to calc agblocks.
-> The worst thing is cannot get agblocks accroding above method, then set it to 1.
-> 
-> Signed-off-by: liuh <liuhuan01@kylinos.cn>
-> ---
->  db/Makefile |   2 +-
->  db/init.c   | 128 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 129 insertions(+), 1 deletion(-)
-> 
-> diff --git a/db/Makefile b/db/Makefile
-> index 83389376..322d5617 100644
-> --- a/db/Makefile
-> +++ b/db/Makefile
-> @@ -68,7 +68,7 @@ CFILES = $(HFILES:.h=.c) \
->  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
->  
->  LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
-> -	  $(LIBPTHREAD)
-> +	  $(LIBPTHREAD) $(LIBBLKID)
->  LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
->  LLDFLAGS += -static-libtool-libs
->  
-> diff --git a/db/init.c b/db/init.c
-> index cea25ae5..15124ee2 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -38,6 +38,121 @@ usage(void)
->  	exit(1);
->  }
->  
-> +static void
-> +xfs_guess_default_ag_geometry(uint64_t *agsize, uint64_t *agcount, struct libxfs_init *x)
-> +{
-> +	struct fs_topology	ft;
-> +	int			blocklog;
-> +	uint64_t		dblocks;
-> +	int			multidisk;
-> +
-> +	memset(&ft, 0, sizeof(ft));
-> +	get_topology(x, &ft, 1);
-> +
-> +	/*
-> +	 * get geometry from get_topology result.
-> +	 * Use default block size (2^12)
-> +	 */
-> +	blocklog = 12;
-> +	multidisk = ft.data.swidth | ft.data.sunit;
-> +	dblocks = x->data.size >> (blocklog - BBSHIFT);
-> +	calc_default_ag_geometry(blocklog, dblocks, multidisk,
-> +				 agsize, agcount);
-> +}
-> +
-> +static xfs_agblock_t
-> +xfs_get_agblock_from_agf(struct xfs_mount *mp)
-> +{
-> +	xfs_agblock_t agblocks = 0;
-> +	int error;
-> +	struct xfs_buf *bp;
-> +	struct xfs_agf *agf;
-> +
-> +	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
-> +			XFS_AG_DADDR(mp, 0, XFS_AGF_DADDR(mp)),
-> +			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+On Thu, Aug 29, 2024 at 07:24:55PM +0800, Zizhi Wo wrote:
+> friendly ping
 
-Why not call the full verifier on the buffer read?
-
-> +	if (error) {
-> +		fprintf(stderr, "xfs_get_agblock from agf-0 error %d\n", error);
-> +		return agblocks;
-> +	}
-> +
-> +	if (xfs_has_crc(mp) && !xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF)) {
-> +		fprintf(stderr, "xfs_get_agblock from agf-0 badcrc\n");
-> +		return agblocks;
-> +	}
-
-Then you don't have to do this ^^^ stuff.
+Sorry, I'm not going to get to this until late September.
 
 --D
 
-> +	agf = bp->b_addr;
-> +	agblocks = be32_to_cpu(agf->agf_length);
-> +
-> +	libxfs_buf_relse(bp);
-> +
-> +	return agblocks;
-> +}
-> +
-> +static xfs_agblock_t
-> +xfs_get_agblock_from_agi(struct xfs_mount *mp)
-> +{
-> +	xfs_agblock_t agblocks = 0;
-> +	int error;
-> +	struct xfs_buf *bp;
-> +	struct xfs_agi *agi;
-> +
-> +	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
-> +			XFS_AG_DADDR(mp, 0, XFS_AGI_DADDR(mp)),
-> +			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-> +	if (error) {
-> +		fprintf(stderr, "xfs_get_agblock from agi-0 error %d\n", error);
-> +		return agblocks;
-> +	}
-> +
-> +	if (xfs_has_crc(mp) && !xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF)) {
-> +		fprintf(stderr, "xfs_get_agblock from agi-0 badcrc\n");
-> +		return agblocks;
-> +	}
-> +
-> +	agi = bp->b_addr;
-> +	agblocks = be32_to_cpu(agi->agi_length);
-> +
-> +	libxfs_buf_relse(bp);
-> +
-> +	return agblocks;
-> +}
-> +
-> +/*
-> + * If sb_agblocks was damaged, try to read it from agf/agi 0.
-> + * With read agf/agi fails use default geometry to calc agblocks/agcount.
-> + * The worst thing is cannot get agblocks according above method, then set to 1.
-> + */
-> +static xfs_agblock_t
-> +xfs_try_get_agblocks(struct xfs_mount *mp, struct libxfs_init *x)
-> +{
-> +	xfs_agblock_t agblocks;
-> +	uint64_t agsize, agcount;
-> +
-> +	/* firset try to get agblocks from agf-0 */
-> +	agblocks = xfs_get_agblock_from_agf(mp);
-> +	if (XFS_FSB_TO_B(mp, agblocks) >= XFS_MIN_AG_BYTES &&
-> +		XFS_FSB_TO_B(mp, agblocks) <= XFS_MAX_AG_BYTES)
-> +		return agblocks;
-> +
-> +	/* second try to get agblocks from agi-0 */
-> +	agblocks = xfs_get_agblock_from_agi(mp);
-> +	if (XFS_FSB_TO_B(mp, agblocks) >= XFS_MIN_AG_BYTES &&
-> +		XFS_FSB_TO_B(mp, agblocks) <= XFS_MAX_AG_BYTES)
-> +		return agblocks;
-> +
-> +	/* third use default geometry to calc agblocks/agcount */
-> +	xfs_guess_default_ag_geometry(&agsize, &agcount, x);
-> +
-> +	if (XFS_FSB_TO_B(mp, agsize) < XFS_MIN_AG_BYTES ||
-> +		XFS_FSB_TO_B(mp, agsize) > XFS_MAX_AG_BYTES)
-> +		agblocks = 1; /* the worst is set to 1 */
-> +	else
-> +		agblocks = agsize;
-> +
-> +	return agblocks;
-> +}
-> +
->  static void
->  init(
->  	int		argc,
-> @@ -129,6 +244,19 @@ init(
->  		}
->  	}
->  
-> +	/* If sb_agblocks was damaged, try to get agblocks */
-> +	if (XFS_FSB_TO_B(&xmount, sbp->sb_agblocks) < XFS_MIN_AG_BYTES ||
-> +		XFS_FSB_TO_B(&xmount, sbp->sb_agblocks) > XFS_MAX_AG_BYTES) {
-> +		xfs_agblock_t agblocks;
-> +		xfs_agblock_t bad_agblocks = sbp->sb_agblocks;
-> +
-> +		agblocks = xfs_try_get_agblocks(&xmount, &x);
-> +		sbp->sb_agblocks = agblocks;
-> +
-> +		fprintf(stderr, "wrong agblocks, try to get from agblocks %u -> %u\n",
-> +			bad_agblocks, sbp->sb_agblocks);
-> +	}
-> +
->  	agcount = sbp->sb_agcount;
->  	mp = libxfs_mount(&xmount, sbp, &x, LIBXFS_MOUNT_DEBUGGER);
->  	if (!mp) {
-> -- 
-> 2.43.0
-> 
+> 在 2024/8/26 11:10, Zizhi Wo 写道:
+> > Prior to this, I had already sent out a patchset related to xfs fsmap
+> > bugfix, which mainly introduced "info->end_daddr" to fix omitted extents[1]
+> > and Darrick had already sent out a patchbomb for merging into stable[2],
+> > which included my previous patches.
+> > 
+> > However, I recently discovered two new fsmap problems...What follows is a
+> > brief description of them:
+> > 
+> > Patch 1: In this scenario, fsmap lost one block count. The root cause is
+> > that during the calculation of highkey, the calculation of start_block is
+> > missing an increment by one, which leads to the last query missing one
+> > This problem is resolved by adding a sentinel node.
+> > 
+> > Patch 2: In this scenario, the fsmap query for realtime deivce may display
+> > extra intervals. This is due to an extra increase in "end_rtb". The issue
+> > is resolved by adjusting the relevant calculations. And this patch depends
+> > on the previous patch that introduced "info->end_daddr".
+> > 
+> > [1] https://lore.kernel.org/all/20240819005320.304211-1-wozizhi@huawei.com/
+> > [2] https://lore.kernel.org/all/172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs/
+> > 
+> > Zizhi Wo (2):
+> >    xfs: Fix missing block calculations in xfs datadev fsmap
+> >    xfs: Fix incorrect parameter calculation in rt fsmap
+> > 
+> >   fs/xfs/libxfs/xfs_rtbitmap.c |  4 +---
+> >   fs/xfs/xfs_fsmap.c           | 39 +++++++++++++++++++++++++++++++-----
+> >   2 files changed, 35 insertions(+), 8 deletions(-)
+> > 
 > 
