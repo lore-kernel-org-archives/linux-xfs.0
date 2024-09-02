@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4BA219CC17
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:24:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E877D19CC0A
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:24:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725301466; cv=none; b=qhLA2Km5qwYT60vbpFMuqoRzEYw7l/uHuXZFVRpx/PuUjdEsilt/wzHm3HfiMTeQpSONVgVQPrSQqKNh0tDRU+5cAP593FTrvsp5FNIs4nYpdshKzNgOkf4+5udXodkPX3QWX8LOtSQG/C+CHxlIfk0+XqOR7RE2OtT/EsPiPWo=
+	t=1725301482; cv=none; b=MiT/uY7431IhTfqRzOo0ipLuYsPNa4Y5KYCpyhZzUOnOMGrkmddJm2GtYFrOruiEL0N40nDAV/ec0gTE/u1anF/P86+drcuNEvxuSdWpcTr01J6n0OdYgtNgIOPPBSnb2c7cAW2qy1Pp/CdR7xC1oLkvIqD3FGK/eW/hZA+hl30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725301466; c=relaxed/simple;
-	bh=mZEXf4VioodfNCWINwkiz/omqXIaTarqpiIT3Bwu0Vk=;
+	s=arc-20240116; t=1725301482; c=relaxed/simple;
+	bh=MKOfmd3IPxxxV40cPS7kGn0Id5rJrkaGf9nI2zhSRKU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Li2eJZrO6nfTbFxdiO3sFcR14HWYHmauOAB2wrZggq9qioUxbVuoHxzCu/8d7GYMxWt4uQ5aq0nKeZz9PJA7u51BPggkcvX+b+ExeqAlBaRFyLEO4cNw22xmCQoNyXsXSvxRb6EO7ITk6wYNZ/njG/usWGHY+tpOk/0vR9n+o5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XiQyWU1Q; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rcPxLqXtFs0hQrd4Z4fsxncihcmDgu7zXiTdedhhjIB5MjuPDo8XwxTKAvNofX7E61X3fr63EqOZrfYxIvtWn7fDfhhZrSkcOufdpuU7LraJKVI+JUzoT1Lo8+whUmipEe9Vg+qQygSReNdHtZRd15T72aNuz+9dmcKsCfG+vAk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JULRdaGw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XiQyWU1Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 217CBC4CEC7;
-	Mon,  2 Sep 2024 18:24:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JULRdaGw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFE6FC4CEC2;
+	Mon,  2 Sep 2024 18:24:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725301466;
-	bh=mZEXf4VioodfNCWINwkiz/omqXIaTarqpiIT3Bwu0Vk=;
+	s=k20201202; t=1725301481;
+	bh=MKOfmd3IPxxxV40cPS7kGn0Id5rJrkaGf9nI2zhSRKU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XiQyWU1Q+x09ff/D2VFQI7mnzwwzdOFZ/okxNNoig54aLzoFzMSOT6LLhv0PiymWm
-	 Hy3sxDCtrSfmTH8E25QEoP1le9WyAMfo7hjLW3kcEY0V+O4uwz9gqMAxlSHEkZZ//5
-	 51LmpDX+mwkxrOtNZHeDUW6FpL4uSLwcCW24ufiH58SOvwQv9+xDJyL8viGe2Qgpj5
-	 3YtQMuHCLBrraRtF1rVhRSWZX7HfvjpS6vUorJpcMfkdAwl2LcxhNNXs3tuz1EQAZR
-	 QDWtSpdfVlkdS+nElNLFpaKC2BwAgF3X831Rbm0VKsWYutl4LmkMRp3VxerJvBotbW
-	 oyXjz/CM8ChZA==
-Date: Mon, 02 Sep 2024 11:24:25 -0700
-Subject: [PATCH 02/12] xfs: factor out a xfs_validate_rt_geometry helper
+	b=JULRdaGwnG9NyeNn4t+XYB6jYKMUwiLTkbicD8c6VGLODqOC7OF80pu6zcGnroCwY
+	 fKdGuIAHY/i2JbN1PdGSP8J2CjcWztDCaOibT6V9tNzkIvJMBHf6izx2a43dwdOPKY
+	 hI4TACMHV2Q0y2XFjFcUoOYNx4w1RH5lRhaY9luVL5GuyXNGhJW5r0Un+xWy1sdCBR
+	 l+CG2EK3JxE9+u+4Cs9ZwLEw9toH/ug88ro10Sxoi2p0CRJVJuIvaO56/Xtpl3wNgh
+	 TV68UCBGa4v0VmePl1g0+k8nHz8aKrKbZlRSdfyNSxQbIxFs5Yu4UdG40KjZH1CekW
+	 OKG/4Olr/aA6w==
+Date: Mon, 02 Sep 2024 11:24:41 -0700
+Subject: [PATCH 03/12] xfs: make the RT rsum_cache mandatory
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172530105749.3325146.15482918038952714808.stgit@frogsfrogsfrogs>
+Message-ID: <172530105765.3325146.266426096031623491.stgit@frogsfrogsfrogs>
 In-Reply-To: <172530105692.3325146.16430332012430234510.stgit@frogsfrogsfrogs>
 References: <172530105692.3325146.16430332012430234510.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,116 +46,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Split the RT geometry validation in the early mount code into a
-helper than can be reused by repair (from which this code was
-apparently originally stolen anyway).
+Currently the RT mount code simply ignores an allocation failure for the
+rsum_cache.  The code mostly works fine with it, but not having it leads
+to nasty corner cases in the growfs code that we don't really handle
+well.  Switch to failing the mount if we can't allocate the memory, the
+file system would not exactly be useful in such a constrained environment
+to start with.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: u64 return value for calc_rbmblocks]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_sb.c |   64 ++++++++++++++++++++++++++----------------------
- fs/xfs/libxfs/xfs_sb.h |    1 +
- 2 files changed, 36 insertions(+), 29 deletions(-)
+ fs/xfs/xfs_rtalloc.c |   26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index f2fb6035fd21..f9c3045f71e0 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -232,6 +232,38 @@ xfs_validate_sb_read(
- 	return 0;
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index d28395abdd02..26eab1b408c8 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -767,21 +767,20 @@ xfs_growfs_rt_alloc(
+ 	return error;
  }
  
-+static uint64_t
-+xfs_sb_calc_rbmblocks(
-+	struct xfs_sb		*sbp)
-+{
-+	return howmany_64(sbp->sb_rextents, NBBY * sbp->sb_blocksize);
-+}
-+
-+/* Validate the realtime geometry */
-+bool
-+xfs_validate_rt_geometry(
-+	struct xfs_sb		*sbp)
-+{
-+	if (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE ||
-+	    sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)
-+		return false;
-+
-+	if (sbp->sb_rblocks == 0) {
-+		if (sbp->sb_rextents != 0 || sbp->sb_rbmblocks != 0 ||
-+		    sbp->sb_rextslog != 0 || sbp->sb_frextents != 0)
-+			return false;
-+		return true;
-+	}
-+
-+	if (sbp->sb_rextents == 0 ||
-+	    sbp->sb_rextents != div_u64(sbp->sb_rblocks, sbp->sb_rextsize) ||
-+	    sbp->sb_rextslog != xfs_compute_rextslog(sbp->sb_rextents) ||
-+	    sbp->sb_rbmblocks != xfs_sb_calc_rbmblocks(sbp))
-+		return false;
-+
-+	return true;
-+}
-+
- /* Check all the superblock fields we care about when writing one out. */
- STATIC int
- xfs_validate_sb_write(
-@@ -491,39 +523,13 @@ xfs_validate_sb_common(
- 		}
- 	}
- 
--	/* Validate the realtime geometry; stolen from xfs_repair */
--	if (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE ||
--	    sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE) {
-+	if (!xfs_validate_rt_geometry(sbp)) {
- 		xfs_notice(mp,
--			"realtime extent sanity check failed");
-+			"realtime %sgeometry check failed",
-+			sbp->sb_rblocks ? "" : "zeroed ");
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (sbp->sb_rblocks == 0) {
--		if (sbp->sb_rextents != 0 || sbp->sb_rbmblocks != 0 ||
--		    sbp->sb_rextslog != 0 || sbp->sb_frextents != 0) {
--			xfs_notice(mp,
--				"realtime zeroed geometry check failed");
--			return -EFSCORRUPTED;
--		}
--	} else {
--		uint64_t	rexts;
--		uint64_t	rbmblocks;
--
--		rexts = div_u64(sbp->sb_rblocks, sbp->sb_rextsize);
--		rbmblocks = howmany_64(sbp->sb_rextents,
--				       NBBY * sbp->sb_blocksize);
--
--		if (sbp->sb_rextents == 0 ||
--		    sbp->sb_rextents != rexts ||
--		    sbp->sb_rextslog != xfs_compute_rextslog(rexts) ||
--		    sbp->sb_rbmblocks != rbmblocks) {
--			xfs_notice(mp,
--				"realtime geometry sanity check failed");
--			return -EFSCORRUPTED;
--		}
--	}
--
+-static void
++static int
+ xfs_alloc_rsum_cache(
+-	xfs_mount_t	*mp,		/* file system mount structure */
+-	xfs_extlen_t	rbmblocks)	/* number of rt bitmap blocks */
++	struct xfs_mount	*mp,
++	xfs_extlen_t		rbmblocks)
+ {
  	/*
- 	 * Either (sb_unit and !hasdalign) or (!sb_unit and hasdalign)
- 	 * would imply the image is corrupted.
-diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-index 37b1ed1bc209..796f02191dfd 100644
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -38,6 +38,7 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
- bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
- 		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
- 		bool silent);
-+bool	xfs_validate_rt_geometry(struct xfs_sb *sbp);
+ 	 * The rsum cache is initialized to the maximum value, which is
+ 	 * trivially an upper bound on the maximum level with any free extents.
+-	 * We can continue without the cache if it couldn't be allocated.
+ 	 */
+ 	mp->m_rsum_cache = kvmalloc(rbmblocks, GFP_KERNEL);
+-	if (mp->m_rsum_cache)
+-		memset(mp->m_rsum_cache, -1, rbmblocks);
+-	else
+-		xfs_warn(mp, "could not allocate realtime summary cache");
++	if (!mp->m_rsum_cache)
++		return -ENOMEM;
++	memset(mp->m_rsum_cache, -1, rbmblocks);
++	return 0;
+ }
  
- uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+ /*
+@@ -939,8 +938,11 @@ xfs_growfs_rt(
+ 		goto out_unlock;
  
+ 	rsum_cache = mp->m_rsum_cache;
+-	if (nrbmblocks != sbp->sb_rbmblocks)
+-		xfs_alloc_rsum_cache(mp, nrbmblocks);
++	if (nrbmblocks != sbp->sb_rbmblocks) {
++		error = xfs_alloc_rsum_cache(mp, nrbmblocks);
++		if (error)
++			goto out_unlock;
++	}
+ 
+ 	/*
+ 	 * Allocate a new (fake) mount/sb.
+@@ -1268,7 +1270,9 @@ xfs_rtmount_inodes(
+ 	if (error)
+ 		goto out_rele_summary;
+ 
+-	xfs_alloc_rsum_cache(mp, sbp->sb_rbmblocks);
++	error = xfs_alloc_rsum_cache(mp, sbp->sb_rbmblocks);
++	if (error)
++		goto out_rele_summary;
+ 	return 0;
+ 
+ out_rele_summary:
 
