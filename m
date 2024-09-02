@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33AE519CC04
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:30:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDAC819CC31
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:30:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725301842; cv=none; b=e6KAJo2/s9ecst1UyqCjJR4cvd36jHeZ31Lz66xkl8dTMuBzTALVz1JPSsiRWm6WWtFSxpbgSQJpr6Y9b8EgUpaEBDLj+CVdzWOtLj8bXPnbrg2zwxEfaZInGSDrKDi0z+2vO7HMs2L9EWTP1/xWCRYIKXMqkFXqdcvX4XqWg7Y=
+	t=1725301857; cv=none; b=USi+oLyt2ktWegtsNhia3HeXoZySUKymjswcBh40o67eTO5wk+e9hDXv36JY9wohK3Pgl55PQ+ShVyIecy3iqRJBh0hy84dHffWDFjHlQkSoHaetBvL3IfbhKxVMWCIehRIht7+UqSwOyfauAuHdmiDjErAtYDFMpCmR4Y020uE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725301842; c=relaxed/simple;
-	bh=GVq7uQQUr5RGKteM7Tq4sfkmxeNlMEzTKRSd9dNB5DI=;
+	s=arc-20240116; t=1725301857; c=relaxed/simple;
+	bh=oCmmToF60RFu8+JN137VcifPP51o1/FMqzC76K6uJbI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V0tk2y8IzyfG8Co16bkARl3oSumR7jhDKQkmWo2Pnk3RKWEsnWM82aLf2/Y0e6mq7qjR6cob1gt+9C9HNbjCyrt96MRcE/zdjA3Qxiz/jHariGyMiLY82Wx1YdYc3cUJtmUD0Z9uURpoU11Muu4oiGT9JFrF4wbYOfalNPZVV7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LVBRI8bo; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=n6jN1XI/btGKEcT+BdJwuY9WaZ1bHlOP5hQILlg4jqqsSzFNgnunG9d8xYN/05CyKQoVpY14BkbuibVK7FZP+2GwjnFAWxR5bR9bmqNEWX3y7+TlFa6AnYIH3/kaCXVJQxwqUMp2lU9icfHXcLxoZRDU+8Z/HVwtV0CqjIDDOVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lONVzLlX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LVBRI8bo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA2A6C4CEC2;
-	Mon,  2 Sep 2024 18:30:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lONVzLlX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F8DCC4CEC2;
+	Mon,  2 Sep 2024 18:30:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725301841;
-	bh=GVq7uQQUr5RGKteM7Tq4sfkmxeNlMEzTKRSd9dNB5DI=;
+	s=k20201202; t=1725301857;
+	bh=oCmmToF60RFu8+JN137VcifPP51o1/FMqzC76K6uJbI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LVBRI8boU4qrjZBobTfSSmORVjyiZbURhWNOTYQg/wgxbn+yk89aVxI/A9MRuVFmt
-	 3Pk3Zi2gNbbKyytOSNEFx3UyKW+oRstTlqlkrcGHLUekjFSkXq5Sojs3K6m9+3hZko
-	 QgKXgtEe2MyRz5BoKS2At+T7h+MHb3FCUNjc70X4K41Q0IRLBW9PtzZ5W4ZcRDhSa4
-	 6B5MZefHw9HI7acgJBKoIbeygftSi2Mybcg55krMUO0Z1nbyVKBVQeiFiTEv+9Nii/
-	 7hb9Upjvak/JZz+lw3DFlcDMDIPj7BD/SZBcghidqU5/35m/kk+5APGrAV9xiGx8KF
-	 f/T5NPWY7XhRA==
-Date: Mon, 02 Sep 2024 11:30:41 -0700
-Subject: [PATCH 04/10] xfs: factor out a xfs_rtallocate_align helper
+	b=lONVzLlX0j+NMlbF/GkYhJSlR8apcV1ZpkbW1ZVD0KBuo5MTtwQ2yrtI3Bq3Tk9Mc
+	 IIWE3hUVycDaEVMM5plaY3gnSe1BuHt9Q30e6S2AzVcYf5QltclFBJ8Rt8eTw3D9Qj
+	 o5Y1k80A7ILext8MHpagA7P+362ewB67lAoQpuE+X8XjPGEkX4dE0FVL1J8fwxesQa
+	 wKfD1JqHTF/V7SVYh2AcYMiIAYSczfoQ3Zi4PpWe/euxajlpvvmmp5FZUJ1Q4ByXgw
+	 4qiCSwZ3zP1Ax1+V81WshhnLnZRaLLQbeEL9BYjoOknhybN5XaKGpd7wncB5AsgVTl
+	 E63uUxSEPBJ2g==
+Date: Mon, 02 Sep 2024 11:30:56 -0700
+Subject: [PATCH 05/10] xfs: make the rtalloc start hint a xfs_rtblock_t
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172530106833.3326080.2641612257297215834.stgit@frogsfrogsfrogs>
+Message-ID: <172530106848.3326080.1417046683456610512.stgit@frogsfrogsfrogs>
 In-Reply-To: <172530106749.3326080.9105141649726807892.stgit@frogsfrogsfrogs>
 References: <172530106749.3326080.9105141649726807892.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,150 +46,81 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Split the code to calculate the aligned allocation request from
-xfs_bmap_rtalloc into a separate self-contained helper.
+0 is a valid start RT extent, and with pending changes it will become
+both more common and non-unique.  Switch to pass a xfs_rtblock_t instead
+so that we can use NULLRTBLOCK to determine if a hint was set or not.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   93 ++++++++++++++++++++++++++++++++------------------
- 1 file changed, 59 insertions(+), 34 deletions(-)
+ fs/xfs/xfs_rtalloc.c |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index a6b9ba572cdc..61e0c5b7a327 100644
+index 61e0c5b7a327..29edb8044b00 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -1336,30 +1336,33 @@ xfs_rtallocate(
- 	return error;
- }
+@@ -1266,7 +1266,7 @@ xfs_rtalloc_align_minmax(
+ static int
+ xfs_rtallocate(
+ 	struct xfs_trans	*tp,
+-	xfs_rtxnum_t		start,
++	xfs_rtblock_t		bno_hint,
+ 	xfs_rtxlen_t		minlen,
+ 	xfs_rtxlen_t		maxlen,
+ 	xfs_rtxlen_t		prod,
+@@ -1280,6 +1280,7 @@ xfs_rtallocate(
+ 		.mp		= tp->t_mountp,
+ 		.tp		= tp,
+ 	};
++	xfs_rtxnum_t		start = 0;
+ 	xfs_rtxnum_t		rtx;
+ 	xfs_rtxlen_t		len = 0;
+ 	int			error = 0;
+@@ -1297,7 +1298,9 @@ xfs_rtallocate(
+ 	 * For an allocation to an empty file at offset 0, pick an extent that
+ 	 * will space things out in the rt area.
+ 	 */
+-	if (!start && initial_user_data)
++	if (bno_hint)
++		start = xfs_rtb_to_rtx(args.mp, bno_hint);
++	else if (initial_user_data)
+ 		start = xfs_rtpick_extent(args.mp, tp, maxlen);
  
--int
--xfs_bmap_rtalloc(
--	struct xfs_bmalloca	*ap)
-+static int
-+xfs_rtallocate_align(
-+	struct xfs_bmalloca	*ap,
-+	xfs_rtxlen_t		*ralen,
-+	xfs_rtxlen_t		*raminlen,
-+	xfs_rtxlen_t		*prod,
-+	bool			*noalign)
+ 	if (start) {
+@@ -1410,15 +1413,16 @@ int
+ xfs_bmap_rtalloc(
+ 	struct xfs_bmalloca	*ap)
  {
- 	struct xfs_mount	*mp = ap->ip->i_mount;
+-	struct xfs_mount	*mp = ap->ip->i_mount;
  	xfs_fileoff_t		orig_offset = ap->offset;
--	xfs_rtxnum_t		start = 0;   /* allocation hint rtextent no */
--	xfs_rtxlen_t		prod = 0;  /* product factor for allocators */
--	xfs_extlen_t		mod = 0;   /* product factor for allocators */
--	xfs_rtxlen_t		ralen = 0; /* realtime allocation length */
--	xfs_extlen_t		align;     /* minimum allocation alignment */
--	xfs_extlen_t		orig_length = ap->length;
- 	xfs_extlen_t		minlen = mp->m_sb.sb_rextsize;
--	xfs_rtxlen_t		raminlen;
--	bool			rtlocked = false;
-+	xfs_extlen_t            align;	/* minimum allocation alignment */
-+	xfs_extlen_t		mod;	/* product factor for allocators */
+-	xfs_rtxnum_t		start = 0; /* allocation hint rtextent no */
+ 	xfs_rtxlen_t		prod = 0;  /* product factor for allocators */
+ 	xfs_rtxlen_t		ralen = 0; /* realtime allocation length */
++	xfs_rtblock_t		bno_hint = NULLRTBLOCK;
+ 	xfs_extlen_t		orig_length = ap->length;
+ 	xfs_rtxlen_t		raminlen;
+ 	bool			rtlocked = false;
+ 	bool			noalign = false;
++	bool			initial_user_data =
++		ap->datatype & XFS_ALLOC_INITIAL_USER_DATA;
  	int			error;
  
--	align = xfs_get_extsz_hint(ap->ip);
--	if (!align)
--		align = 1;
--retry:
--	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
--					align, 1, ap->eof, 0,
--					ap->conv, &ap->offset, &ap->length);
-+	if (*noalign) {
-+		align = mp->m_sb.sb_rextsize;
-+	} else {
-+		align = xfs_get_extsz_hint(ap->ip);
-+		if (!align)
-+			align = 1;
-+		if (align == mp->m_sb.sb_rextsize)
-+			*noalign = true;
-+	}
-+
-+	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev, align, 1,
-+			ap->eof, 0, ap->conv, &ap->offset, &ap->length);
- 	if (error)
+ retry:
+@@ -1427,10 +1431,10 @@ xfs_bmap_rtalloc(
  		return error;
- 	ASSERT(ap->length);
-@@ -1383,32 +1386,54 @@ xfs_bmap_rtalloc(
- 	 * XFS_BMBT_MAX_EXTLEN), we don't hear about that number, and can't
- 	 * adjust the starting point to match it.
- 	 */
--	ralen = xfs_extlen_to_rtxlen(mp, min(ap->length, XFS_MAX_BMBT_EXTLEN));
--	raminlen = max_t(xfs_rtxlen_t, 1, xfs_extlen_to_rtxlen(mp, minlen));
--	ASSERT(raminlen > 0);
--	ASSERT(raminlen <= ralen);
--
--	if (xfs_bmap_adjacent(ap))
+ 
+ 	if (xfs_bmap_adjacent(ap))
 -		start = xfs_rtb_to_rtx(mp, ap->blkno);
-+	*ralen = xfs_extlen_to_rtxlen(mp, min(ap->length, XFS_MAX_BMBT_EXTLEN));
-+	*raminlen = max_t(xfs_rtxlen_t, 1, xfs_extlen_to_rtxlen(mp, minlen));
-+	ASSERT(*raminlen > 0);
-+	ASSERT(*raminlen <= *ralen);
++		bno_hint = ap->blkno;
  
- 	/*
- 	 * Only bother calculating a real prod factor if offset & length are
- 	 * perfectly aligned, otherwise it will just get us in trouble.
- 	 */
- 	div_u64_rem(ap->offset, align, &mod);
--	if (mod || ap->length % align) {
--		prod = 1;
--	} else {
--		prod = xfs_extlen_to_rtxlen(mp, align);
--		if (prod > 1)
--			xfs_rtalloc_align_minmax(&raminlen, &ralen, &prod);
--	}
-+	if (mod || ap->length % align)
-+		*prod = 1;
-+	else
-+		*prod = xfs_extlen_to_rtxlen(mp, align);
-+
-+	if (*prod > 1)
-+		xfs_rtalloc_align_minmax(raminlen, ralen, prod);
-+	return 0;
-+}
-+
-+int
-+xfs_bmap_rtalloc(
-+	struct xfs_bmalloca	*ap)
-+{
-+	struct xfs_mount	*mp = ap->ip->i_mount;
-+	xfs_fileoff_t		orig_offset = ap->offset;
-+	xfs_rtxnum_t		start = 0; /* allocation hint rtextent no */
-+	xfs_rtxlen_t		prod = 0;  /* product factor for allocators */
-+	xfs_rtxlen_t		ralen = 0; /* realtime allocation length */
-+	xfs_extlen_t		orig_length = ap->length;
-+	xfs_rtxlen_t		raminlen;
-+	bool			rtlocked = false;
-+	bool			noalign = false;
-+	int			error;
-+
-+retry:
-+	error = xfs_rtallocate_align(ap, &ralen, &raminlen, &prod, &noalign);
-+	if (error)
-+		return error;
-+
-+	if (xfs_bmap_adjacent(ap))
-+		start = xfs_rtb_to_rtx(mp, ap->blkno);
- 
- 	error = xfs_rtallocate(ap->tp, start, raminlen, ralen, prod, ap->wasdel,
- 			ap->datatype & XFS_ALLOC_INITIAL_USER_DATA, &rtlocked,
+-	error = xfs_rtallocate(ap->tp, start, raminlen, ralen, prod, ap->wasdel,
+-			ap->datatype & XFS_ALLOC_INITIAL_USER_DATA, &rtlocked,
++	error = xfs_rtallocate(ap->tp, bno_hint, raminlen, ralen, prod,
++			ap->wasdel, initial_user_data, &rtlocked,
  			&ap->blkno, &ap->length);
  	if (error == -ENOSPC) {
--		if (align > mp->m_sb.sb_rextsize) {
-+		if (!noalign) {
- 			/*
- 			 * We previously enlarged the request length to try to
- 			 * satisfy an extent size hint.  The allocator didn't
-@@ -1418,7 +1443,7 @@ xfs_bmap_rtalloc(
- 			 */
- 			ap->offset = orig_offset;
- 			ap->length = orig_length;
--			minlen = align = mp->m_sb.sb_rextsize;
-+			noalign = true;
- 			goto retry;
- 		}
- 
+ 		if (!noalign) {
 
