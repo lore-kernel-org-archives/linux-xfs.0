@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E877D19CC0A
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:24:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D6E19CC10
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:24:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725301482; cv=none; b=MiT/uY7431IhTfqRzOo0ipLuYsPNa4Y5KYCpyhZzUOnOMGrkmddJm2GtYFrOruiEL0N40nDAV/ec0gTE/u1anF/P86+drcuNEvxuSdWpcTr01J6n0OdYgtNgIOPPBSnb2c7cAW2qy1Pp/CdR7xC1oLkvIqD3FGK/eW/hZA+hl30=
+	t=1725301497; cv=none; b=ZgtjHvqvGB/au1cWV3K8yD4T7AqSh6AuPlevsxNZWc96TprWxBrtrEXBz7C+6zbbv4VGKD8q+j8M76cPQFkQlehB8jUdQ4HeaBs2CgCuXJcra9POoE67Htq3ghtT8vmV0h2iZxlpvGe4MZuj6IjsZRccAFHMJcy1VXMzg1fPl/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725301482; c=relaxed/simple;
-	bh=MKOfmd3IPxxxV40cPS7kGn0Id5rJrkaGf9nI2zhSRKU=;
+	s=arc-20240116; t=1725301497; c=relaxed/simple;
+	bh=s3CbncoiCGEnLIyni8gzhm4R/gaBqkvHEDBz8emzatA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rcPxLqXtFs0hQrd4Z4fsxncihcmDgu7zXiTdedhhjIB5MjuPDo8XwxTKAvNofX7E61X3fr63EqOZrfYxIvtWn7fDfhhZrSkcOufdpuU7LraJKVI+JUzoT1Lo8+whUmipEe9Vg+qQygSReNdHtZRd15T72aNuz+9dmcKsCfG+vAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JULRdaGw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=r1hKuM6pVL/QH528KDfSnFo8jXxnjPGyP3uXJr2QA3EbOjq1xd90KVDKmJBTSZBv4bKnFmYvs3VFWDNuB+D7t0YBZMGted2p3N65eqecvBIMgWJu+tXD8EvlnvwpIzjAmoiDa6tz+JmelWrsQZ9iPOAlNrSkbD2cE0arDwkZ8cc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LykO7/vA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JULRdaGw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFE6FC4CEC2;
-	Mon,  2 Sep 2024 18:24:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LykO7/vA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61133C4CEC2;
+	Mon,  2 Sep 2024 18:24:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725301481;
-	bh=MKOfmd3IPxxxV40cPS7kGn0Id5rJrkaGf9nI2zhSRKU=;
+	s=k20201202; t=1725301497;
+	bh=s3CbncoiCGEnLIyni8gzhm4R/gaBqkvHEDBz8emzatA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=JULRdaGwnG9NyeNn4t+XYB6jYKMUwiLTkbicD8c6VGLODqOC7OF80pu6zcGnroCwY
-	 fKdGuIAHY/i2JbN1PdGSP8J2CjcWztDCaOibT6V9tNzkIvJMBHf6izx2a43dwdOPKY
-	 hI4TACMHV2Q0y2XFjFcUoOYNx4w1RH5lRhaY9luVL5GuyXNGhJW5r0Un+xWy1sdCBR
-	 l+CG2EK3JxE9+u+4Cs9ZwLEw9toH/ug88ro10Sxoi2p0CRJVJuIvaO56/Xtpl3wNgh
-	 TV68UCBGa4v0VmePl1g0+k8nHz8aKrKbZlRSdfyNSxQbIxFs5Yu4UdG40KjZH1CekW
-	 OKG/4Olr/aA6w==
-Date: Mon, 02 Sep 2024 11:24:41 -0700
-Subject: [PATCH 03/12] xfs: make the RT rsum_cache mandatory
+	b=LykO7/vAS7W/LzfptfXYTU+1IiPZP9rFEAGXY/RbMmST/U0vAFoDvLv3bibjHvbcr
+	 HjuMHkAz7uYqpHq+KukNZtjqY2d0n2dAmZLTbpQYPKzQJiMhCcCAo4js41PJTxwWc+
+	 4MrFOy0yN+dNb5NL3oe+PZTn0kxKmn4sTFghS4PsZrh6RHoX9MEFVpnq8qRJ8W9YN/
+	 PGdeILLcJniUaiLVlGo+kCNpMPG39Sw9voVFLi3Q/cbczbHRZIH2UoudtAGCCItsr+
+	 CMbwt7IkC7+ckVzMMgHZUP0pxjBMrzV9NjxDOjHEwBGIh9NifA2KgPgZ7H1dMxELPI
+	 ebEXv/gEYW1dw==
+Date: Mon, 02 Sep 2024 11:24:56 -0700
+Subject: [PATCH 04/12] xfs: remove the limit argument to xfs_rtfind_back
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172530105765.3325146.266426096031623491.stgit@frogsfrogsfrogs>
+Message-ID: <172530105781.3325146.12002294989045841517.stgit@frogsfrogsfrogs>
 In-Reply-To: <172530105692.3325146.16430332012430234510.stgit@frogsfrogsfrogs>
 References: <172530105692.3325146.16430332012430234510.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,77 +46,82 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Currently the RT mount code simply ignores an allocation failure for the
-rsum_cache.  The code mostly works fine with it, but not having it leads
-to nasty corner cases in the growfs code that we don't really handle
-well.  Switch to failing the mount if we can't allocate the memory, the
-file system would not exactly be useful in such a constrained environment
-to start with.
+All callers pass a 0 limit to xfs_rtfind_back, so remove the argument
+and hard code it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |    9 ++++-----
+ fs/xfs/libxfs/xfs_rtbitmap.h |    2 +-
+ fs/xfs/xfs_rtalloc.c         |    2 +-
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index d28395abdd02..26eab1b408c8 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -767,21 +767,20 @@ xfs_growfs_rt_alloc(
- 	return error;
- }
- 
--static void
-+static int
- xfs_alloc_rsum_cache(
--	xfs_mount_t	*mp,		/* file system mount structure */
--	xfs_extlen_t	rbmblocks)	/* number of rt bitmap blocks */
-+	struct xfs_mount	*mp,
-+	xfs_extlen_t		rbmblocks)
- {
- 	/*
- 	 * The rsum cache is initialized to the maximum value, which is
- 	 * trivially an upper bound on the maximum level with any free extents.
--	 * We can continue without the cache if it couldn't be allocated.
- 	 */
- 	mp->m_rsum_cache = kvmalloc(rbmblocks, GFP_KERNEL);
--	if (mp->m_rsum_cache)
--		memset(mp->m_rsum_cache, -1, rbmblocks);
--	else
--		xfs_warn(mp, "could not allocate realtime summary cache");
-+	if (!mp->m_rsum_cache)
-+		return -ENOMEM;
-+	memset(mp->m_rsum_cache, -1, rbmblocks);
-+	return 0;
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 386b672c5058..9feeefe53948 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -139,14 +139,13 @@ xfs_rtbuf_get(
  }
  
  /*
-@@ -939,8 +938,11 @@ xfs_growfs_rt(
- 		goto out_unlock;
- 
- 	rsum_cache = mp->m_rsum_cache;
--	if (nrbmblocks != sbp->sb_rbmblocks)
--		xfs_alloc_rsum_cache(mp, nrbmblocks);
-+	if (nrbmblocks != sbp->sb_rbmblocks) {
-+		error = xfs_alloc_rsum_cache(mp, nrbmblocks);
-+		if (error)
-+			goto out_unlock;
-+	}
- 
+- * Searching backward from start to limit, find the first block whose
+- * allocated/free state is different from start's.
++ * Searching backward from start find the first block whose allocated/free state
++ * is different from start's.
+  */
+ int
+ xfs_rtfind_back(
+ 	struct xfs_rtalloc_args	*args,
+ 	xfs_rtxnum_t		start,	/* starting rtext to look at */
+-	xfs_rtxnum_t		limit,	/* last rtext to look at */
+ 	xfs_rtxnum_t		*rtx)	/* out: start rtext found */
+ {
+ 	struct xfs_mount	*mp = args->mp;
+@@ -175,7 +174,7 @@ xfs_rtfind_back(
+ 	 */
+ 	word = xfs_rtx_to_rbmword(mp, start);
+ 	bit = (int)(start & (XFS_NBWORD - 1));
+-	len = start - limit + 1;
++	len = start + 1;
  	/*
- 	 * Allocate a new (fake) mount/sb.
-@@ -1268,7 +1270,9 @@ xfs_rtmount_inodes(
+ 	 * Compute match value, based on the bit at start: if 1 (free)
+ 	 * then all-ones, else all-zeroes.
+@@ -698,7 +697,7 @@ xfs_rtfree_range(
+ 	 * We need to find the beginning and end of the extent so we can
+ 	 * properly update the summary.
+ 	 */
+-	error = xfs_rtfind_back(args, start, 0, &preblock);
++	error = xfs_rtfind_back(args, start, &preblock);
+ 	if (error) {
+ 		return error;
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index 6186585f2c37..1e04f0954a0f 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -316,7 +316,7 @@ xfs_rtsummary_read_buf(
+ int xfs_rtcheck_range(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
+ 		xfs_rtxlen_t len, int val, xfs_rtxnum_t *new, int *stat);
+ int xfs_rtfind_back(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
+-		xfs_rtxnum_t limit, xfs_rtxnum_t *rtblock);
++		xfs_rtxnum_t *rtblock);
+ int xfs_rtfind_forw(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
+ 		xfs_rtxnum_t limit, xfs_rtxnum_t *rtblock);
+ int xfs_rtmodify_range(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 26eab1b408c8..3728445b0b1c 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -142,7 +142,7 @@ xfs_rtallocate_range(
+ 	 * We need to find the beginning and end of the extent so we can
+ 	 * properly update the summary.
+ 	 */
+-	error = xfs_rtfind_back(args, start, 0, &preblock);
++	error = xfs_rtfind_back(args, start, &preblock);
  	if (error)
- 		goto out_rele_summary;
+ 		return error;
  
--	xfs_alloc_rsum_cache(mp, sbp->sb_rbmblocks);
-+	error = xfs_alloc_rsum_cache(mp, sbp->sb_rbmblocks);
-+	if (error)
-+		goto out_rele_summary;
- 	return 0;
- 
- out_rele_summary:
 
