@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98EDC19CC13
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:23:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73B8B5680
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:23:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725301403; cv=none; b=BfnNJLROPBQ/zfQcENjhMLdN+Hi4ZAQ9KLgHGv1P1D3FaQuZ4lM1BTQoH2jt5PimkiOKUud02w+pda/bDxxuy8SYjtH7FymRFOfF3Fy2t28GyS6aAEi/+f9ZXHfpMgyAE9zVm6PST19NJYkOkIC8ovNBPWfmbMfzoUUxLL5vuMs=
+	t=1725301419; cv=none; b=qoU/GQ+D3Idgg0nhAN5pRUsHGcr5NiqMw1vtLsYDrB18Nunp6v2e4jutSCuRzuipvPoKKlFo1KkdcBYTAnDq1Yu6BV9F3IJGMGf4YT75kYDZwvmhzmunSlHDsFR1IjrzAy6b08f1W2Bb7QLAwe8NWilvFXzGDUQ3+TrYL8talYs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725301403; c=relaxed/simple;
-	bh=3aXwgQgjWvfhf6ybbBvm/dEtiVoedmXMSGUbLjzNM2s=;
+	s=arc-20240116; t=1725301419; c=relaxed/simple;
+	bh=zvvHylj8DN9zNqk6frhvIz34CSS4wSiIWoAauOBQ7ws=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ifO3LsMqS0x8H+VysfOTIZJdkgAzg6XsdGuOvO7hfQ8AjmwvwiJwobMRlGUJC09xxKxD9AQu5vPUP0VTKOMD2alz2jP7ybrf2h2BOopWzK9HW3bJNtF6CUk1JFLM7jpvsjm4arPJ3yCTfkYmM76Lo2dR/H83ytAJPcKt0AMR3D4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QvjJeWno; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=C9pBaGUWjxlJVCmypYhCkfoj4s6UlQ49CvxkrcTV8as5q0oAAXvx8xaybWs50LL4yZM5q+ii6NHVcGAP1X8tw1Oo3ToQz8Yl1Dv7GDE6vVcImjZxV05sRGvNcQUtVwGKqPKw1c/5Gz05YIObkjAMGjEb7cjnhKR43gkI9wRVCJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q5pZ8f7h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QvjJeWno"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AEAFC4CEC2;
-	Mon,  2 Sep 2024 18:23:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q5pZ8f7h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FF17C4CEC2;
+	Mon,  2 Sep 2024 18:23:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725301403;
-	bh=3aXwgQgjWvfhf6ybbBvm/dEtiVoedmXMSGUbLjzNM2s=;
+	s=k20201202; t=1725301419;
+	bh=zvvHylj8DN9zNqk6frhvIz34CSS4wSiIWoAauOBQ7ws=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QvjJeWnoi04v9dUHGpg1kIsWEotrYvhesc9HngGvOMRd/429AKiOXyQ0bHs20iLOe
-	 54AVRKF+VAbJ8I9tF5YplUQb2F1rtEMzYJMVEQaZo4knRa/wgTBcoJF1zAmoBiiHBP
-	 kt5T1VutxBDDT+J8U+j58fPkLGyQExFdxzV5+O7Gp8o+x0nQjyMptabFAIF2ZcZCtk
-	 our4h74I4rvJCNkQWdBcu0KjhGJL/jO6d0OIds4Mav7/elsJwWPiWhkaCKRIHR1LSe
-	 HcffdlKcmXj8PWmo6Omy8U4+B987HHjDEcZ4pbzcli19Yo27/zrUSFncQxqJoqkmgb
-	 3L5siGCNFU5sQ==
-Date: Mon, 02 Sep 2024 11:23:22 -0700
-Subject: [PATCH 1/3] xfs: validate inumber in xfs_iget
+	b=q5pZ8f7hDl2XqZxpH/dNFGekE0zMZz8WQJhGh3Fwc914iD/2nAAw7a/41dlfgUkon
+	 5ep0YpAu8SZZGZCYwTks9uf4oWS46vYbwmI+5R1B89lslngcZR5KhPKhUH7FSJbbYW
+	 HGxYdNzE1sXxZ5+g/Y4QlBLCHuxQLJ33pXWeFhECxnk/Ec4btnCUBbsOhkGy68ERZR
+	 wAfzAzaKcab6Kv3phhqLYle/yxS4SCO+/9J7kxOIcbvTM6Ha26z0fkUSxcvOz7xU5U
+	 1jBcLERaJG9E3Ym6NbntjhZrLoUfZPgfdv91uvLp7TAWLkDHjVixzUcEBGcyO+DURN
+	 gTJ3FzpCd6VYQ==
+Date: Mon, 02 Sep 2024 11:23:38 -0700
+Subject: [PATCH 2/3] xfs: match on the global RT inode numbers in
+ xfs_is_metadata_inode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
- linux-xfs@vger.kernel.org
-Message-ID: <172530105323.3324987.17852010194613598900.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <172530105339.3324987.3663743222940678218.stgit@frogsfrogsfrogs>
 In-Reply-To: <172530105300.3324987.5977059243804546726.stgit@frogsfrogsfrogs>
 References: <172530105300.3324987.5977059243804546726.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,29 +45,39 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Actually use the inumber validator to check the argument passed in here.
+Match the inode number instead of the inode pointers, as the inode
+pointers in the superblock will go away soon.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: port to my tree, make the parameter a const pointer]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_inode.h |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index cf629302d48e..887d2a01161e 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -755,7 +755,7 @@ xfs_iget(
- 	ASSERT((lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) == 0);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 51defdebef30..1908409968db 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -276,12 +276,13 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+ 	return ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
+ }
  
- 	/* reject inode numbers outside existing AGs */
--	if (!ino || XFS_INO_TO_AGNO(mp, ino) >= mp->m_sb.sb_agcount)
-+	if (!xfs_verify_ino(mp, ino))
- 		return -EINVAL;
+-static inline bool xfs_is_metadata_inode(struct xfs_inode *ip)
++static inline bool xfs_is_metadata_inode(const struct xfs_inode *ip)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
  
- 	XFS_STATS_INC(mp, xs_ig_attempts);
+-	return ip == mp->m_rbmip || ip == mp->m_rsumip ||
+-		xfs_is_quota_inode(&mp->m_sb, ip->i_ino);
++	return ip->i_ino == mp->m_sb.sb_rbmino ||
++	       ip->i_ino == mp->m_sb.sb_rsumino ||
++	       xfs_is_quota_inode(&mp->m_sb, ip->i_ino);
+ }
+ 
+ bool xfs_is_always_cow_inode(struct xfs_inode *ip);
 
