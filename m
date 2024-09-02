@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0D6A19CC03
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:22:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F284919CC0A
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:22:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725301341; cv=none; b=A9Z0Lm+oTWqhbJsxn8yDnAS1MNb0PFiqtoR0H1skjc9/wbHKabgyfRa3rFwv+OMIFVnrjqfRC1aLduocpPmcZSFzkYrqiMMtqEQPVUID800yriqPBrHoY9xs86m1u3oHZn7vb2lVYhk/qkJFUVKE6had3P1wKBICqgNLTMkpAmc=
+	t=1725301357; cv=none; b=I98PMRCdM+r0d+tg4iFUd3nxJFSTyt3XB5+3LNYoYYlWSQOVv2LiHTlLBrDlLFuLnCKuQEjM2ARBiSkAQNbPKbTNNj7PK+xV9KSaI0SlwQPogZNo5JOaKaR9ivaiQ/HYZ9QjGSROtNtbmgP2ikpiUdmiDbpAwAZ6Ys6nzd79f/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725301341; c=relaxed/simple;
-	bh=o/NpqHshynFLyK85gwmTKxdbiqR/x+0ZnEu0qCkdGtU=;
+	s=arc-20240116; t=1725301357; c=relaxed/simple;
+	bh=YFzepLvS/pn5kU+Gjt4itwlpCioh9A2h8zqcdOoS8o0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QSdKpwFrqulfPnsOx7GefuXLOaWX1/fNqjuIak0CkkDc7mHJdnLUEneComPTgaXW+aN/QUnV3MO5T8I2pdlmmtrsUOVfMukELs8B9hGmKLqXtl2onKtkuLrdjWkeUSysFoqa9DLha+4QbT2BaR5Anq6h1d8nPB7sVCWIj6IMU4U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TUYDi45q; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kQPz9q9xm8lrY6uigNrEZ5ocz9DW0NU65P7z2hJPFllUlgJtc/u3a09rdkfJW7dnXAtyYOfdpiYPfYm59sS3PlD18B1Tn/U2M7s/r/ux/PJkTSaIG+wu80Zzoc2FCEU9FujBoOX2YfQLDw/Wzow7b9IRs0C6fp20RjnUIwNyA1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKHEjR8S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TUYDi45q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D04FEC4CEC2;
-	Mon,  2 Sep 2024 18:22:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKHEjR8S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C576C4CEC2;
+	Mon,  2 Sep 2024 18:22:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725301340;
-	bh=o/NpqHshynFLyK85gwmTKxdbiqR/x+0ZnEu0qCkdGtU=;
+	s=k20201202; t=1725301356;
+	bh=YFzepLvS/pn5kU+Gjt4itwlpCioh9A2h8zqcdOoS8o0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TUYDi45qb8FPJteO/sMcMDV0LoIDDjH/fjoGDh1TNyxRkMMSrVG0km95lAk/NZl8a
-	 xpr7Zusdb6FcDc8C/mhx+4h50GM5CW9y9zI7RxksLvryPKL78KcPfuu+veHjuznvno
-	 RFWzVswu7bgcoWzXxr9oNotgPQH6h9ePDTws57pyX2FDO0iEN7jHEi5FEusIa3700d
-	 anpYxI7Rx4/sBBazCmzM9Mdx8pBnz0LxgqshDFELDyp3Ty+DO94wJ7n3utLrJGJWEk
-	 vmLwp2IF16AV6sxz8IMVzTWNudPb1ZtgaBMNKSywbxH45x7wEO4moOtcJav4tqlTil
-	 ld/py7h2KTKaw==
-Date: Mon, 02 Sep 2024 11:22:20 -0700
-Subject: [PATCHSET v4.2 6/8] xfs: cleanups for quota mount
+	b=BKHEjR8SB10htB6UcIRZll9e+hzsnJvOiEamz2NBfavZorpdHX6veriXhb+e4WGNP
+	 MlvC4fj7Zhbs6grkhb+9CPtnXJX7LChIE9Pbd0y/3JffWu27r5iNP9icjU0YRvLq4P
+	 SDsqOHP4pmiGeCVDeC6jCD4V4ksV5vdK0wUeZBcb84vFXE+u9Ih/cqjwj06yWhQdxc
+	 oEYo1nvy+LHXtBqqN02kbG3xvzg+v0RR/gDcNmAEA6nuR9lBtZPT0G6eA2RJTsMBYQ
+	 wFLgQzLHJAZX7IBa82O/O+McDs/aHuvRxgf25vOUDEBOUZI8Ep2+vuFdUFlKt/z5Sl
+	 qKxVJj1TFzInQ==
+Date: Mon, 02 Sep 2024 11:22:36 -0700
+Subject: [PATCHSET 7/8] xfs: various bug fixes for 6.12
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172530107246.3326467.9171618222594281309.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, kernel@mattwhitlock.name, sam@gentoo.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <172530107589.3326571.1610526525006344754.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240902181606.GX6224@frogsfrogsfrogs>
 References: <20240902181606.GX6224@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,8 +47,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Refactor the quota file loading code in preparation for adding metadata
-directory trees.  Did you know that quotarm works even when quota isn't active?
+Various bug fixes for 6.12.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,14 +58,15 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=quota-cleanups-6.12
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-fixes-6.12
 ---
 Commits in this patchset:
- * xfs: refactor loading quota inodes in the regular case
+ * xfs: fix C++ compilation errors in xfs_fs.h
+ * xfs: fix FITRIM reporting again
+ * xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
 ---
- fs/xfs/xfs_qm.c          |   46 +++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_qm.h          |    3 +++
- fs/xfs/xfs_qm_syscalls.c |   13 +++++------
- fs/xfs/xfs_quotaops.c    |   53 +++++++++++++++++++++++++++-------------------
- 4 files changed, 80 insertions(+), 35 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h         |    5 +++--
+ fs/xfs/libxfs/xfs_inode_fork.c |   10 +++++-----
+ fs/xfs/xfs_discard.c           |    2 +-
+ 3 files changed, 9 insertions(+), 8 deletions(-)
 
