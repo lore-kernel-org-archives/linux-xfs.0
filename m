@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1287519CC04
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:32:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0E4B19CC04
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:32:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725301936; cv=none; b=oJx+g5BSDGfNdcfIJxbpVXeST7JlTNGEpo+2S75cbFzWr37Mqfd4EJIQW81ylYxZi8srD2i7vy2jLrZEo7FxAQY1U17lqVG0uoASYzp9aa71AIkuRmw/8dI108FGfI+72w8zpgZXo6UisMQM7qQMS+3twStWjrYA6TphMeGZE/Q=
+	t=1725301952; cv=none; b=iffV6xXXYooqJMEn5I4whiXSVv/K61t7517hKvhg7plpYc57unysgsIPxhQaT0rEFtY5NjICF5485cRS7/Sbg/pVQtEFqQYhvQXxFxXIh5euktegneo7psfkTT0RDh8eUWczUhdXrL/rb3lW8x/wtelpHj8TaUKnOqPkytcoz6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725301936; c=relaxed/simple;
-	bh=haRgdh+s5nTLR6J5ufLuRVIb/UuwCX2+mg1WZoh6/aE=;
+	s=arc-20240116; t=1725301952; c=relaxed/simple;
+	bh=Pz2HaBvQRGvHBnVy4zBb+AsWK9uJJoFVzoB6NLvZAdg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TPKIZVi4oQzWJLxg7TLZDzW6mJfYaOUORbgKCU/j1u7UaqjXD/lbjfZoWCG15fsik636du+mUVD3gW8dzfbYMY5gD9R/nh3lUW5wdKWls7Yit9dzUA+D3Mv1v5Hpu3CALxGigKjsjl2V0Bxdp1YKIXUbtiW7oAbnQRUhbJO01J0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FZmFNina; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mwYUJ/Na2WQ1LjxMbFPiTugK3nq3/uOmlCJMUdaNZ6itXJcAyxnJMn1oJ+UvJWoYvroELGT8cccfMdBVqLAf31xwlFzO2BRFM2GkscuW2trCuSU5xxknXqWKS0vulDA+E363ckhRselLKWNsjsR7OuZREmNZA2hPerNWfrIqqSo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=scSsPwbY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FZmFNina"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8968EC4CEC2;
-	Mon,  2 Sep 2024 18:32:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="scSsPwbY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27EAEC4CEC2;
+	Mon,  2 Sep 2024 18:32:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725301935;
-	bh=haRgdh+s5nTLR6J5ufLuRVIb/UuwCX2+mg1WZoh6/aE=;
+	s=k20201202; t=1725301951;
+	bh=Pz2HaBvQRGvHBnVy4zBb+AsWK9uJJoFVzoB6NLvZAdg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FZmFNinabrW8F5cgIXXEW12kbuePULO0awYfkoi0irMA5XfuBOFciA5xq2tEQ8yJs
-	 lbeXtckiXPFuvpbBzw8M1I1Ybq4dIm8wMAXZKPApV0JOIfKlu9/IdHvuJBSoNnmhi4
-	 480oj2yyRM7aWSvEoc0u+R8+lDi6c+FjozxwX9DeuyQErqwo8/849itqY2sQ+6FOPU
-	 zDbafWQr/ZEmCJuSLmqFrah5panJ/PzXtniAIR7mm+n56pbiA57Ju1cQnar9CE8tWb
-	 /+BMNaxPVXqRhPbnKaH9i57e6JJr9ZeosJ23UGeKZJOESSe2qjXiiI8EGnGgWZ1ivA
-	 suIgQtzt88Tww==
-Date: Mon, 02 Sep 2024 11:32:15 -0700
-Subject: [PATCH 10/10] xfs: move xfs_ioc_getfsmap out of xfs_ioctl.c
+	b=scSsPwbY/E+N96HRN1vHJzAI5Vr2QvFUVnLZVbRcilW9lo93wR6Z4nVqd0uLbWKS2
+	 OSyOm32rk/NvtX5y3qP1nVSOrPwnTpVSCXhmjDL4+ylGB5h4li7bjQpFtDMwMp5zGY
+	 Ivw/v58Y05OaYhTFtUPiVfnWr5wW8qivGv7MxrdRdmXrCvTtv7pqAxHNHAGdfW5qtI
+	 GwL7DNPEJqUKLoZtqBxeuzxQbwLDb+8yhQd3qYynGKSLdiQpowEYreTwHXYk15ZEG9
+	 Jhsex/OWFFNiEyxb9FIuSkXJa9jIcSqT7vtC3QEchi1kDa10336qHStgajoW8fIQYC
+	 4LCK9++wAcTGg==
+Date: Mon, 02 Sep 2024 11:32:30 -0700
+Subject: [PATCH 1/1] xfs: refactor loading quota inodes in the regular case
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172530106930.3326080.442944321188284872.stgit@frogsfrogsfrogs>
-In-Reply-To: <172530106749.3326080.9105141649726807892.stgit@frogsfrogsfrogs>
-References: <172530106749.3326080.9105141649726807892.stgit@frogsfrogsfrogs>
+Message-ID: <172530107264.3326467.17589062814660038104.stgit@frogsfrogsfrogs>
+In-Reply-To: <172530107246.3326467.9171618222594281309.stgit@frogsfrogsfrogs>
+References: <172530107246.3326467.9171618222594281309.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,337 +46,244 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move this function out of xfs_ioctl.c to reduce the clutter in there,
-and make the entire getfsmap implementation self-contained in a single
-file.
+Create a helper function to load quota inodes in the case where the
+dqtype and the sb quota inode fields correspond.  This is true for
+nearly all the iget callsites in the quota code, except for when we're
+switching the group and project quota inodes.  We'll need this in
+subsequent patches to make the metadir handling less convoluted.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_fsmap.c |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_fsmap.h |    6 +-
- fs/xfs/xfs_ioctl.c |  130 --------------------------------------------------
- 3 files changed, 134 insertions(+), 136 deletions(-)
+ fs/xfs/xfs_qm.c          |   46 +++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_qm.h          |    3 +++
+ fs/xfs/xfs_qm_syscalls.c |   13 +++++------
+ fs/xfs/xfs_quotaops.c    |   53 +++++++++++++++++++++++++++-------------------
+ 4 files changed, 80 insertions(+), 35 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 615253406fde..ae18ab86e608 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -44,7 +44,7 @@ xfs_fsmap_from_internal(
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 63f6ca2db251..7e2307921deb 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1538,6 +1538,43 @@ xfs_qm_mount_quotas(
+ 	}
  }
  
- /* Convert an fsmap to an xfs_fsmap. */
--void
-+static void
- xfs_fsmap_to_internal(
- 	struct xfs_fsmap	*dest,
- 	struct fsmap		*src)
-@@ -889,7 +889,7 @@ xfs_getfsmap_check_keys(
-  * xfs_getfsmap_info.low/high	-- per-AG low/high keys computed from
-  *				   dkeys; used to query the metadata.
-  */
--int
-+STATIC int
- xfs_getfsmap(
- 	struct xfs_mount		*mp,
- 	struct xfs_fsmap_head		*head,
-@@ -1019,3 +1019,133 @@ xfs_getfsmap(
- 	head->fmh_oflags = FMH_OF_DEV_T;
- 	return error;
- }
-+
++/*
++ * Load the inode for a given type of quota, assuming that the sb fields have
++ * been sorted out.  This is not true when switching quota types on a V4
++ * filesystem, so do not use this function for that.
++ *
++ * Returns -ENOENT if the quota inode field is NULLFSINO; 0 and an inode on
++ * success; or a negative errno.
++ */
 +int
-+xfs_ioc_getfsmap(
-+	struct xfs_inode	*ip,
-+	struct fsmap_head	__user *arg)
++xfs_qm_qino_load(
++	struct xfs_mount	*mp,
++	xfs_dqtype_t		type,
++	struct xfs_inode	**ipp)
 +{
-+	struct xfs_fsmap_head	xhead = {0};
-+	struct fsmap_head	head;
-+	struct fsmap		*recs;
-+	unsigned int		count;
-+	__u32			last_flags = 0;
-+	bool			done = false;
-+	int			error;
++	xfs_ino_t		ino = NULLFSINO;
 +
-+	if (copy_from_user(&head, arg, sizeof(struct fsmap_head)))
-+		return -EFAULT;
-+	if (memchr_inv(head.fmh_reserved, 0, sizeof(head.fmh_reserved)) ||
-+	    memchr_inv(head.fmh_keys[0].fmr_reserved, 0,
-+		       sizeof(head.fmh_keys[0].fmr_reserved)) ||
-+	    memchr_inv(head.fmh_keys[1].fmr_reserved, 0,
-+		       sizeof(head.fmh_keys[1].fmr_reserved)))
-+		return -EINVAL;
-+
-+	/*
-+	 * Use an internal memory buffer so that we don't have to copy fsmap
-+	 * data to userspace while holding locks.  Start by trying to allocate
-+	 * up to 128k for the buffer, but fall back to a single page if needed.
-+	 */
-+	count = min_t(unsigned int, head.fmh_count,
-+			131072 / sizeof(struct fsmap));
-+	recs = kvcalloc(count, sizeof(struct fsmap), GFP_KERNEL);
-+	if (!recs) {
-+		count = min_t(unsigned int, head.fmh_count,
-+				PAGE_SIZE / sizeof(struct fsmap));
-+		recs = kvcalloc(count, sizeof(struct fsmap), GFP_KERNEL);
-+		if (!recs)
-+			return -ENOMEM;
++	switch (type) {
++	case XFS_DQTYPE_USER:
++		ino = mp->m_sb.sb_uquotino;
++		break;
++	case XFS_DQTYPE_GROUP:
++		ino = mp->m_sb.sb_gquotino;
++		break;
++	case XFS_DQTYPE_PROJ:
++		ino = mp->m_sb.sb_pquotino;
++		break;
++	default:
++		ASSERT(0);
++		return -EFSCORRUPTED;
 +	}
 +
-+	xhead.fmh_iflags = head.fmh_iflags;
-+	xfs_fsmap_to_internal(&xhead.fmh_keys[0], &head.fmh_keys[0]);
-+	xfs_fsmap_to_internal(&xhead.fmh_keys[1], &head.fmh_keys[1]);
++	if (ino == NULLFSINO)
++		return -ENOENT;
 +
-+	trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
-+	trace_xfs_getfsmap_high_key(ip->i_mount, &xhead.fmh_keys[1]);
-+
-+	head.fmh_entries = 0;
-+	do {
-+		struct fsmap __user	*user_recs;
-+		struct fsmap		*last_rec;
-+
-+		user_recs = &arg->fmh_recs[head.fmh_entries];
-+		xhead.fmh_entries = 0;
-+		xhead.fmh_count = min_t(unsigned int, count,
-+					head.fmh_count - head.fmh_entries);
-+
-+		/* Run query, record how many entries we got. */
-+		error = xfs_getfsmap(ip->i_mount, &xhead, recs);
-+		switch (error) {
-+		case 0:
-+			/*
-+			 * There are no more records in the result set.  Copy
-+			 * whatever we got to userspace and break out.
-+			 */
-+			done = true;
-+			break;
-+		case -ECANCELED:
-+			/*
-+			 * The internal memory buffer is full.  Copy whatever
-+			 * records we got to userspace and go again if we have
-+			 * not yet filled the userspace buffer.
-+			 */
-+			error = 0;
-+			break;
-+		default:
-+			goto out_free;
-+		}
-+		head.fmh_entries += xhead.fmh_entries;
-+		head.fmh_oflags = xhead.fmh_oflags;
-+
-+		/*
-+		 * If the caller wanted a record count or there aren't any
-+		 * new records to return, we're done.
-+		 */
-+		if (head.fmh_count == 0 || xhead.fmh_entries == 0)
-+			break;
-+
-+		/* Copy all the records we got out to userspace. */
-+		if (copy_to_user(user_recs, recs,
-+				 xhead.fmh_entries * sizeof(struct fsmap))) {
-+			error = -EFAULT;
-+			goto out_free;
-+		}
-+
-+		/* Remember the last record flags we copied to userspace. */
-+		last_rec = &recs[xhead.fmh_entries - 1];
-+		last_flags = last_rec->fmr_flags;
-+
-+		/* Set up the low key for the next iteration. */
-+		xfs_fsmap_to_internal(&xhead.fmh_keys[0], last_rec);
-+		trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
-+	} while (!done && head.fmh_entries < head.fmh_count);
-+
-+	/*
-+	 * If there are no more records in the query result set and we're not
-+	 * in counting mode, mark the last record returned with the LAST flag.
-+	 */
-+	if (done && head.fmh_count > 0 && head.fmh_entries > 0) {
-+		struct fsmap __user	*user_rec;
-+
-+		last_flags |= FMR_OF_LAST;
-+		user_rec = &arg->fmh_recs[head.fmh_entries - 1];
-+
-+		if (copy_to_user(&user_rec->fmr_flags, &last_flags,
-+					sizeof(last_flags))) {
-+			error = -EFAULT;
-+			goto out_free;
-+		}
-+	}
-+
-+	/* copy back header */
-+	if (copy_to_user(arg, &head, sizeof(struct fsmap_head))) {
-+		error = -EFAULT;
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kvfree(recs);
-+	return error;
++	return xfs_iget(mp, NULL, ino, 0, 0, ipp);
 +}
-diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
-index a0775788e7b1..a0bcc38486a5 100644
---- a/fs/xfs/xfs_fsmap.h
-+++ b/fs/xfs/xfs_fsmap.h
-@@ -7,6 +7,7 @@
- #define __XFS_FSMAP_H__
- 
- struct fsmap;
-+struct fsmap_head;
- 
- /* internal fsmap representation */
- struct xfs_fsmap {
-@@ -27,9 +28,6 @@ struct xfs_fsmap_head {
- 	struct xfs_fsmap fmh_keys[2];	/* low and high keys */
- };
- 
--void xfs_fsmap_to_internal(struct xfs_fsmap *dest, struct fsmap *src);
--
--int xfs_getfsmap(struct xfs_mount *mp, struct xfs_fsmap_head *head,
--		struct fsmap *out_recs);
-+int xfs_ioc_getfsmap(struct xfs_inode *ip, struct fsmap_head __user *arg);
- 
- #endif /* __XFS_FSMAP_H__ */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 90b3ee21e7fe..7226d27e8afc 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -876,136 +876,6 @@ xfs_ioc_getbmap(
- 	return error;
++
+ /*
+  * This is called after the superblock has been read in and we're ready to
+  * iget the quota inodes.
+@@ -1561,24 +1598,21 @@ xfs_qm_init_quotainos(
+ 		if (XFS_IS_UQUOTA_ON(mp) &&
+ 		    mp->m_sb.sb_uquotino != NULLFSINO) {
+ 			ASSERT(mp->m_sb.sb_uquotino > 0);
+-			error = xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
+-					     0, 0, &uip);
++			error = xfs_qm_qino_load(mp, XFS_DQTYPE_USER, &uip);
+ 			if (error)
+ 				return error;
+ 		}
+ 		if (XFS_IS_GQUOTA_ON(mp) &&
+ 		    mp->m_sb.sb_gquotino != NULLFSINO) {
+ 			ASSERT(mp->m_sb.sb_gquotino > 0);
+-			error = xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
+-					     0, 0, &gip);
++			error = xfs_qm_qino_load(mp, XFS_DQTYPE_GROUP, &gip);
+ 			if (error)
+ 				goto error_rele;
+ 		}
+ 		if (XFS_IS_PQUOTA_ON(mp) &&
+ 		    mp->m_sb.sb_pquotino != NULLFSINO) {
+ 			ASSERT(mp->m_sb.sb_pquotino > 0);
+-			error = xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+-					     0, 0, &pip);
++			error = xfs_qm_qino_load(mp, XFS_DQTYPE_PROJ, &pip);
+ 			if (error)
+ 				goto error_rele;
+ 		}
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 6e09dfcd13e2..e919c7f62f57 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -184,4 +184,7 @@ xfs_get_defquota(struct xfs_quotainfo *qi, xfs_dqtype_t type)
+ 	}
  }
  
--STATIC int
--xfs_ioc_getfsmap(
++int xfs_qm_qino_load(struct xfs_mount *mp, xfs_dqtype_t type,
++		struct xfs_inode **ipp);
++
+ #endif /* __XFS_QM_H__ */
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 392cb39cc10c..4eda50ae2d1c 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -53,16 +53,15 @@ xfs_qm_scall_quotaoff(
+ STATIC int
+ xfs_qm_scall_trunc_qfile(
+ 	struct xfs_mount	*mp,
+-	xfs_ino_t		ino)
++	xfs_dqtype_t		type)
+ {
+ 	struct xfs_inode	*ip;
+ 	struct xfs_trans	*tp;
+ 	int			error;
+ 
+-	if (ino == NULLFSINO)
++	error = xfs_qm_qino_load(mp, type, &ip);
++	if (error == -ENOENT)
+ 		return 0;
+-
+-	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
+ 	if (error)
+ 		return error;
+ 
+@@ -113,17 +112,17 @@ xfs_qm_scall_trunc_qfiles(
+ 	}
+ 
+ 	if (flags & XFS_QMOPT_UQUOTA) {
+-		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_uquotino);
++		error = xfs_qm_scall_trunc_qfile(mp, XFS_DQTYPE_USER);
+ 		if (error)
+ 			return error;
+ 	}
+ 	if (flags & XFS_QMOPT_GQUOTA) {
+-		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_gquotino);
++		error = xfs_qm_scall_trunc_qfile(mp, XFS_DQTYPE_GROUP);
+ 		if (error)
+ 			return error;
+ 	}
+ 	if (flags & XFS_QMOPT_PQUOTA)
+-		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_pquotino);
++		error = xfs_qm_scall_trunc_qfile(mp, XFS_DQTYPE_PROJ);
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 9c162e69976b..4c7f7ce4fd2f 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -16,24 +16,25 @@
+ #include "xfs_qm.h"
+ 
+ 
+-static void
++static int
+ xfs_qm_fill_state(
+ 	struct qc_type_state	*tstate,
+ 	struct xfs_mount	*mp,
 -	struct xfs_inode	*ip,
--	struct fsmap_head	__user *arg)
--{
--	struct xfs_fsmap_head	xhead = {0};
--	struct fsmap_head	head;
--	struct fsmap		*recs;
--	unsigned int		count;
--	__u32			last_flags = 0;
--	bool			done = false;
--	int			error;
--
--	if (copy_from_user(&head, arg, sizeof(struct fsmap_head)))
--		return -EFAULT;
--	if (memchr_inv(head.fmh_reserved, 0, sizeof(head.fmh_reserved)) ||
--	    memchr_inv(head.fmh_keys[0].fmr_reserved, 0,
--		       sizeof(head.fmh_keys[0].fmr_reserved)) ||
--	    memchr_inv(head.fmh_keys[1].fmr_reserved, 0,
--		       sizeof(head.fmh_keys[1].fmr_reserved)))
--		return -EINVAL;
--
--	/*
--	 * Use an internal memory buffer so that we don't have to copy fsmap
--	 * data to userspace while holding locks.  Start by trying to allocate
--	 * up to 128k for the buffer, but fall back to a single page if needed.
--	 */
--	count = min_t(unsigned int, head.fmh_count,
--			131072 / sizeof(struct fsmap));
--	recs = kvcalloc(count, sizeof(struct fsmap), GFP_KERNEL);
--	if (!recs) {
--		count = min_t(unsigned int, head.fmh_count,
--				PAGE_SIZE / sizeof(struct fsmap));
--		recs = kvcalloc(count, sizeof(struct fsmap), GFP_KERNEL);
--		if (!recs)
--			return -ENOMEM;
--	}
--
--	xhead.fmh_iflags = head.fmh_iflags;
--	xfs_fsmap_to_internal(&xhead.fmh_keys[0], &head.fmh_keys[0]);
--	xfs_fsmap_to_internal(&xhead.fmh_keys[1], &head.fmh_keys[1]);
--
--	trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
--	trace_xfs_getfsmap_high_key(ip->i_mount, &xhead.fmh_keys[1]);
--
--	head.fmh_entries = 0;
--	do {
--		struct fsmap __user	*user_recs;
--		struct fsmap		*last_rec;
--
--		user_recs = &arg->fmh_recs[head.fmh_entries];
--		xhead.fmh_entries = 0;
--		xhead.fmh_count = min_t(unsigned int, count,
--					head.fmh_count - head.fmh_entries);
--
--		/* Run query, record how many entries we got. */
--		error = xfs_getfsmap(ip->i_mount, &xhead, recs);
--		switch (error) {
--		case 0:
--			/*
--			 * There are no more records in the result set.  Copy
--			 * whatever we got to userspace and break out.
--			 */
--			done = true;
--			break;
--		case -ECANCELED:
--			/*
--			 * The internal memory buffer is full.  Copy whatever
--			 * records we got to userspace and go again if we have
--			 * not yet filled the userspace buffer.
--			 */
--			error = 0;
--			break;
--		default:
--			goto out_free;
--		}
--		head.fmh_entries += xhead.fmh_entries;
--		head.fmh_oflags = xhead.fmh_oflags;
--
--		/*
--		 * If the caller wanted a record count or there aren't any
--		 * new records to return, we're done.
--		 */
--		if (head.fmh_count == 0 || xhead.fmh_entries == 0)
--			break;
--
--		/* Copy all the records we got out to userspace. */
--		if (copy_to_user(user_recs, recs,
--				 xhead.fmh_entries * sizeof(struct fsmap))) {
--			error = -EFAULT;
--			goto out_free;
--		}
--
--		/* Remember the last record flags we copied to userspace. */
--		last_rec = &recs[xhead.fmh_entries - 1];
--		last_flags = last_rec->fmr_flags;
--
--		/* Set up the low key for the next iteration. */
--		xfs_fsmap_to_internal(&xhead.fmh_keys[0], last_rec);
--		trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
--	} while (!done && head.fmh_entries < head.fmh_count);
--
--	/*
--	 * If there are no more records in the query result set and we're not
--	 * in counting mode, mark the last record returned with the LAST flag.
--	 */
--	if (done && head.fmh_count > 0 && head.fmh_entries > 0) {
--		struct fsmap __user	*user_rec;
--
--		last_flags |= FMR_OF_LAST;
--		user_rec = &arg->fmh_recs[head.fmh_entries - 1];
--
--		if (copy_to_user(&user_rec->fmr_flags, &last_flags,
--					sizeof(last_flags))) {
--			error = -EFAULT;
--			goto out_free;
--		}
--	}
--
--	/* copy back header */
--	if (copy_to_user(arg, &head, sizeof(struct fsmap_head))) {
--		error = -EFAULT;
--		goto out_free;
--	}
--
--out_free:
--	kvfree(recs);
--	return error;
--}
--
- int
- xfs_ioc_swapext(
- 	xfs_swapext_t	*sxp)
+-	xfs_ino_t		ino,
+-	struct xfs_def_quota	*defq)
++	xfs_dqtype_t		type)
+ {
+-	bool			tempqip = false;
++	struct xfs_inode	*ip;
++	struct xfs_def_quota	*defq;
++	int			error;
+ 
+-	tstate->ino = ino;
+-	if (!ip && ino == NULLFSINO)
+-		return;
+-	if (!ip) {
+-		if (xfs_iget(mp, NULL, ino, 0, 0, &ip))
+-			return;
+-		tempqip = true;
++	error = xfs_qm_qino_load(mp, type, &ip);
++	if (error) {
++		tstate->ino = NULLFSINO;
++		return error != -ENOENT ? error : 0;
+ 	}
++
++	defq = xfs_get_defquota(mp->m_quotainfo, type);
++
++	tstate->ino = ip->i_ino;
+ 	tstate->flags |= QCI_SYSFILE;
+ 	tstate->blocks = ip->i_nblocks;
+ 	tstate->nextents = ip->i_df.if_nextents;
+@@ -43,8 +44,9 @@ xfs_qm_fill_state(
+ 	tstate->spc_warnlimit = 0;
+ 	tstate->ino_warnlimit = 0;
+ 	tstate->rt_spc_warnlimit = 0;
+-	if (tempqip)
+-		xfs_irele(ip);
++	xfs_irele(ip);
++
++	return 0;
+ }
+ 
+ /*
+@@ -56,8 +58,9 @@ xfs_fs_get_quota_state(
+ 	struct super_block	*sb,
+ 	struct qc_state		*state)
+ {
+-	struct xfs_mount *mp = XFS_M(sb);
+-	struct xfs_quotainfo *q = mp->m_quotainfo;
++	struct xfs_mount	*mp = XFS_M(sb);
++	struct xfs_quotainfo	*q = mp->m_quotainfo;
++	int			error;
+ 
+ 	memset(state, 0, sizeof(*state));
+ 	if (!XFS_IS_QUOTA_ON(mp))
+@@ -76,12 +79,18 @@ xfs_fs_get_quota_state(
+ 	if (XFS_IS_PQUOTA_ENFORCED(mp))
+ 		state->s_state[PRJQUOTA].flags |= QCI_LIMITS_ENFORCED;
+ 
+-	xfs_qm_fill_state(&state->s_state[USRQUOTA], mp, q->qi_uquotaip,
+-			  mp->m_sb.sb_uquotino, &q->qi_usr_default);
+-	xfs_qm_fill_state(&state->s_state[GRPQUOTA], mp, q->qi_gquotaip,
+-			  mp->m_sb.sb_gquotino, &q->qi_grp_default);
+-	xfs_qm_fill_state(&state->s_state[PRJQUOTA], mp, q->qi_pquotaip,
+-			  mp->m_sb.sb_pquotino, &q->qi_prj_default);
++	error = xfs_qm_fill_state(&state->s_state[USRQUOTA], mp,
++			XFS_DQTYPE_USER);
++	if (error)
++		return error;
++	error = xfs_qm_fill_state(&state->s_state[GRPQUOTA], mp,
++			XFS_DQTYPE_GROUP);
++	if (error)
++		return error;
++	error = xfs_qm_fill_state(&state->s_state[PRJQUOTA], mp,
++			XFS_DQTYPE_PROJ);
++	if (error)
++		return error;
+ 	return 0;
+ }
+ 
 
