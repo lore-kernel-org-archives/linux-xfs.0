@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDAC819CC31
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:30:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A5065680
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:31:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725301857; cv=none; b=USi+oLyt2ktWegtsNhia3HeXoZySUKymjswcBh40o67eTO5wk+e9hDXv36JY9wohK3Pgl55PQ+ShVyIecy3iqRJBh0hy84dHffWDFjHlQkSoHaetBvL3IfbhKxVMWCIehRIht7+UqSwOyfauAuHdmiDjErAtYDFMpCmR4Y020uE=
+	t=1725301873; cv=none; b=KdvYQu3GX4FwaiKZB0R8FupOIEmweFXvNy21b3o/DtGdFfCjmRDr9O6QNphGbkecrUjYzA++KUi+2jCy0RSMzRNkGru6Kqk7VdevMqkoqsmlAcEs2W9I3Be8JMiHb23seuYgJwNxIxtDD6SRJ/r6jhLeq251LhwPl0hFOCOuf3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725301857; c=relaxed/simple;
-	bh=oCmmToF60RFu8+JN137VcifPP51o1/FMqzC76K6uJbI=;
+	s=arc-20240116; t=1725301873; c=relaxed/simple;
+	bh=8K+T8hUDe3kLobGyJGMCX+DhSoGBD/ofG7q0VuLb1Uw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n6jN1XI/btGKEcT+BdJwuY9WaZ1bHlOP5hQILlg4jqqsSzFNgnunG9d8xYN/05CyKQoVpY14BkbuibVK7FZP+2GwjnFAWxR5bR9bmqNEWX3y7+TlFa6AnYIH3/kaCXVJQxwqUMp2lU9icfHXcLxoZRDU+8Z/HVwtV0CqjIDDOVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lONVzLlX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rqBnb7oxmWcBkHS4B1VFs5CavP51T584VmJsOfDfO7xO/5kb9H5QVBzuuXp9KGv9SS7vnJzqVzZlCMfdd9Hl+s1kap+SpRBl+BsQpRq2DS4BS+4hzh8EkNxeIHtVfgzhNZfauuCScTmYiju062yRs0u0RKpSCiEklW8aasAiQyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P1U77ajd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lONVzLlX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F8DCC4CEC2;
-	Mon,  2 Sep 2024 18:30:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P1U77ajd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04A3BC4CEC2;
+	Mon,  2 Sep 2024 18:31:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725301857;
-	bh=oCmmToF60RFu8+JN137VcifPP51o1/FMqzC76K6uJbI=;
+	s=k20201202; t=1725301873;
+	bh=8K+T8hUDe3kLobGyJGMCX+DhSoGBD/ofG7q0VuLb1Uw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lONVzLlX0j+NMlbF/GkYhJSlR8apcV1ZpkbW1ZVD0KBuo5MTtwQ2yrtI3Bq3Tk9Mc
-	 IIWE3hUVycDaEVMM5plaY3gnSe1BuHt9Q30e6S2AzVcYf5QltclFBJ8Rt8eTw3D9Qj
-	 o5Y1k80A7ILext8MHpagA7P+362ewB67lAoQpuE+X8XjPGEkX4dE0FVL1J8fwxesQa
-	 wKfD1JqHTF/V7SVYh2AcYMiIAYSczfoQ3Zi4PpWe/euxajlpvvmmp5FZUJ1Q4ByXgw
-	 4qiCSwZ3zP1Ax1+V81WshhnLnZRaLLQbeEL9BYjoOknhybN5XaKGpd7wncB5AsgVTl
-	 E63uUxSEPBJ2g==
-Date: Mon, 02 Sep 2024 11:30:56 -0700
-Subject: [PATCH 05/10] xfs: make the rtalloc start hint a xfs_rtblock_t
+	b=P1U77ajdegpFjnwsKo44SJMd1bxq/sG8nYzfrAjmbMJBgxMNmnlb3WKzZGGhlypi7
+	 AZNYVLzHsojGJO53vGHeFLfOjf26y/H1PlMZRgXPZuby2pPstPyt9BrI+RRTvcQnVH
+	 6dnI/BeaIf9DOgbp/HRdsHmOQ7yy6tWPS2sgHf7MVrvjncJPqpUHvbDZ1kD1FaF7tc
+	 NDVkfBQCfXn1gGOLlCx3CQZsb8QzVK1Mu6WmYNWmaDtp9vu4jd6/666YiY8sCu+5Ou
+	 92BBDdSH/+ro8Y3a4a717hXmug2ajXs1eAqeMjO9K/fxhT1VrZl4GcwkBzp8RKwj3S
+	 M8XImD7DHXwUA==
+Date: Mon, 02 Sep 2024 11:31:12 -0700
+Subject: [PATCH 06/10] xfs: add xchk_setup_nothing and xchk_nothing helpers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172530106848.3326080.1417046683456610512.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@lst.de>,
+ linux-xfs@vger.kernel.org
+Message-ID: <172530106865.3326080.8457881111716349121.stgit@frogsfrogsfrogs>
 In-Reply-To: <172530106749.3326080.9105141649726807892.stgit@frogsfrogsfrogs>
 References: <172530106749.3326080.9105141649726807892.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,83 +45,124 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-0 is a valid start RT extent, and with pending changes it will become
-both more common and non-unique.  Switch to pass a xfs_rtblock_t instead
-so that we can use NULLRTBLOCK to determine if a hint was set or not.
+Add common helpers for no-op scrubbing methods.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+[hch: split from a larger patch]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_rtalloc.c |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ fs/xfs/scrub/common.h |   29 +++++++++--------------------
+ fs/xfs/scrub/scrub.h  |   29 +++++++++--------------------
+ 2 files changed, 18 insertions(+), 40 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 61e0c5b7a327..29edb8044b00 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1266,7 +1266,7 @@ xfs_rtalloc_align_minmax(
- static int
- xfs_rtallocate(
- 	struct xfs_trans	*tp,
--	xfs_rtxnum_t		start,
-+	xfs_rtblock_t		bno_hint,
- 	xfs_rtxlen_t		minlen,
- 	xfs_rtxlen_t		maxlen,
- 	xfs_rtxlen_t		prod,
-@@ -1280,6 +1280,7 @@ xfs_rtallocate(
- 		.mp		= tp->t_mountp,
- 		.tp		= tp,
- 	};
-+	xfs_rtxnum_t		start = 0;
- 	xfs_rtxnum_t		rtx;
- 	xfs_rtxlen_t		len = 0;
- 	int			error = 0;
-@@ -1297,7 +1298,9 @@ xfs_rtallocate(
- 	 * For an allocation to an empty file at offset 0, pick an extent that
- 	 * will space things out in the rt area.
- 	 */
--	if (!start && initial_user_data)
-+	if (bno_hint)
-+		start = xfs_rtb_to_rtx(args.mp, bno_hint);
-+	else if (initial_user_data)
- 		start = xfs_rtpick_extent(args.mp, tp, maxlen);
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 3d5f1f6b4b7b..47148cc4a833 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -53,6 +53,11 @@ int xchk_checkpoint_log(struct xfs_mount *mp);
+ bool xchk_should_check_xref(struct xfs_scrub *sc, int *error,
+ 			   struct xfs_btree_cur **curpp);
  
- 	if (start) {
-@@ -1410,15 +1413,16 @@ int
- xfs_bmap_rtalloc(
- 	struct xfs_bmalloca	*ap)
++static inline int xchk_setup_nothing(struct xfs_scrub *sc)
++{
++	return -ENOENT;
++}
++
+ /* Setup functions */
+ int xchk_setup_agheader(struct xfs_scrub *sc);
+ int xchk_setup_fs(struct xfs_scrub *sc);
+@@ -72,16 +77,8 @@ int xchk_setup_dirtree(struct xfs_scrub *sc);
+ int xchk_setup_rtbitmap(struct xfs_scrub *sc);
+ int xchk_setup_rtsummary(struct xfs_scrub *sc);
+ #else
+-static inline int
+-xchk_setup_rtbitmap(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
+-static inline int
+-xchk_setup_rtsummary(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
++# define xchk_setup_rtbitmap		xchk_setup_nothing
++# define xchk_setup_rtsummary		xchk_setup_nothing
+ #endif
+ #ifdef CONFIG_XFS_QUOTA
+ int xchk_ino_dqattach(struct xfs_scrub *sc);
+@@ -93,16 +90,8 @@ xchk_ino_dqattach(struct xfs_scrub *sc)
  {
--	struct xfs_mount	*mp = ap->ip->i_mount;
- 	xfs_fileoff_t		orig_offset = ap->offset;
--	xfs_rtxnum_t		start = 0; /* allocation hint rtextent no */
- 	xfs_rtxlen_t		prod = 0;  /* product factor for allocators */
- 	xfs_rtxlen_t		ralen = 0; /* realtime allocation length */
-+	xfs_rtblock_t		bno_hint = NULLRTBLOCK;
- 	xfs_extlen_t		orig_length = ap->length;
- 	xfs_rtxlen_t		raminlen;
- 	bool			rtlocked = false;
- 	bool			noalign = false;
-+	bool			initial_user_data =
-+		ap->datatype & XFS_ALLOC_INITIAL_USER_DATA;
- 	int			error;
+ 	return 0;
+ }
+-static inline int
+-xchk_setup_quota(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
+-static inline int
+-xchk_setup_quotacheck(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
++# define xchk_setup_quota		xchk_setup_nothing
++# define xchk_setup_quotacheck		xchk_setup_nothing
+ #endif
+ int xchk_setup_fscounters(struct xfs_scrub *sc);
+ int xchk_setup_nlinks(struct xfs_scrub *sc);
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 1bc33f010d0e..5993fcaffb2c 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -231,6 +231,11 @@ xchk_should_terminate(
+ 	return false;
+ }
  
- retry:
-@@ -1427,10 +1431,10 @@ xfs_bmap_rtalloc(
- 		return error;
- 
- 	if (xfs_bmap_adjacent(ap))
--		start = xfs_rtb_to_rtx(mp, ap->blkno);
-+		bno_hint = ap->blkno;
- 
--	error = xfs_rtallocate(ap->tp, start, raminlen, ralen, prod, ap->wasdel,
--			ap->datatype & XFS_ALLOC_INITIAL_USER_DATA, &rtlocked,
-+	error = xfs_rtallocate(ap->tp, bno_hint, raminlen, ralen, prod,
-+			ap->wasdel, initial_user_data, &rtlocked,
- 			&ap->blkno, &ap->length);
- 	if (error == -ENOSPC) {
- 		if (!noalign) {
++static inline int xchk_nothing(struct xfs_scrub *sc)
++{
++	return -ENOENT;
++}
++
+ /* Metadata scrubbers */
+ int xchk_tester(struct xfs_scrub *sc);
+ int xchk_superblock(struct xfs_scrub *sc);
+@@ -254,31 +259,15 @@ int xchk_dirtree(struct xfs_scrub *sc);
+ int xchk_rtbitmap(struct xfs_scrub *sc);
+ int xchk_rtsummary(struct xfs_scrub *sc);
+ #else
+-static inline int
+-xchk_rtbitmap(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
+-static inline int
+-xchk_rtsummary(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
++# define xchk_rtbitmap		xchk_nothing
++# define xchk_rtsummary		xchk_nothing
+ #endif
+ #ifdef CONFIG_XFS_QUOTA
+ int xchk_quota(struct xfs_scrub *sc);
+ int xchk_quotacheck(struct xfs_scrub *sc);
+ #else
+-static inline int
+-xchk_quota(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
+-static inline int
+-xchk_quotacheck(struct xfs_scrub *sc)
+-{
+-	return -ENOENT;
+-}
++# define xchk_quota		xchk_nothing
++# define xchk_quotacheck	xchk_nothing
+ #endif
+ int xchk_fscounters(struct xfs_scrub *sc);
+ int xchk_nlinks(struct xfs_scrub *sc);
 
