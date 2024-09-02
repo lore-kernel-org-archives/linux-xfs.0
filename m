@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70C1C1A3AAA
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:43:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 221021A3AAA
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Sep 2024 18:43:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725302587; cv=none; b=Ob2ZSv35NW3hxeCDr0rqsyA/rbriBdVQHAHPKdQCHWGVYd04nAf+U8MdGA2opNb1NXTtZXq57aEAKIx0tP7bK6uDB6P6wHWn4tpbvZ/v9Fn/y69B2CFOF5a0urejDmZtyVS58prQLkI2y4QvQjEJrsIFGzWZwpMf5EOmS1wNyKs=
+	t=1725302603; cv=none; b=KFetQQFA4KJnonLuQJcHEvukb8DUJqf7Gx54mwgu79gIvSrOr8oglwk8I6gB9RIPjGggsHPxw5QWrBl2s5+2ntUhTMlA0Hr77iX4zHbc2luUhPUlcQPQsV21eovKbrwy2Lrj3ZfoIS32xBBwzAVFjS9FN0pTOr1HTbLQjWuiOtE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725302587; c=relaxed/simple;
-	bh=U+0+R0IWijuWeDp/EvCRiQ/0/+fBhy7cbCZvbYsrumE=;
+	s=arc-20240116; t=1725302603; c=relaxed/simple;
+	bh=Ckq1jinAOObk4le8a06/7yfpjQ2YO4D4Rl8RwlL5H1Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=gVdNfv05k1XneZvNJB1/OYLbjnFCndXu5omL5Fhxmodur0HF6XvQh2VRa8HjaeJJf8PKG4NrYWx1ocH+HKOcQChU4ksyQqciBD5JmtFl8ZYMOQDUnwZmCWSEShbccPwZC6LiA6z6IIaf0MXbrp2Z4kHmO/MqdfoN3+YkeXAAde4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p+X7xE5k; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=bFOfysbPYQy1H/8ZrYishZdvtCYd++m/7vjNhwaf1/0CiClSakS9zO3iqJ1p+J6Z81XfibWQj2ShAiV8KIi9AYQnA2q+Qpc1Ft+jxa9KTPuVx0HSsrol6LL7IOv8fQ51bRq8vin7v1MyO3ZUCMc0/ofe0tuLALdOWtpqeHfeefo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VTkgnV60; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p+X7xE5k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F223AC4CEC2;
-	Mon,  2 Sep 2024 18:43:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VTkgnV60"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C4C5C4CEC2;
+	Mon,  2 Sep 2024 18:43:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725302587;
-	bh=U+0+R0IWijuWeDp/EvCRiQ/0/+fBhy7cbCZvbYsrumE=;
+	s=k20201202; t=1725302602;
+	bh=Ckq1jinAOObk4le8a06/7yfpjQ2YO4D4Rl8RwlL5H1Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=p+X7xE5ktZK+LDk9vsC0aFCtBwZ1kfZHHSwWtihe/g5wexsm2QCTIqGmx+akemCdX
-	 qR9Qj6314+lygL61ok36oOktV4+eKrv0QmqiF0K5+AlE6X3yQBM0RtAd/QYA68Aa6u
-	 k0JnezdgQTVw9tTAciybtSmtyn9+hxghirKd18AIrZOV1CsOWWAfs6YCadF4u+uTFK
-	 G9Fn4TNdqYR9/PFI4pP3qLg+6JUEEPT5Naqo76+fr8AIqDmu+nMjsoqG8+Ixv0A1py
-	 In5fO7ggsq38ohceKhMAShRYgqe6Ii1qlzx2GVsc48nVraqidVhFsIf/Ln1tbTx/AK
-	 QY+1INYsKSR7Q==
-Date: Mon, 02 Sep 2024 11:43:06 -0700
-Subject: [GIT PULL 6/8] xfs: cleanups for quota mount
+	b=VTkgnV60YDrRxb6qNPRf1Oq2QF27aCKo3KOhMuF27WYURdalcjiyu+FMuKpAVXlLQ
+	 4sFStJNkiTdo7+S1wYTSh4d7LFt++evTVQav3T1yqQV3lcPzNadEqwWovaYLTayeh/
+	 Q3d4MrsNbmXL8lHY4ULV/x/4b4YZ+h9ufhjliQAoUvRVzW17uJY9nJJoXpzBXMTUQb
+	 eoM2my41JCCP6UtejydF1UGZ4aOY9SrepInRmR3f+hITT0BWlTooY3io+DZEU0usI1
+	 6hKuHJ8Mz54OWwV+P4mBF85inftCyPnRwoWT2446zfF6LZ53Ox12Ursu1b5vzCv5l7
+	 VOlrMpa75+SCg==
+Date: Mon, 02 Sep 2024 11:43:22 -0700
+Subject: [GIT PULL 7/8] xfs: various bug fixes for 6.12
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172530248455.3348968.4210083940459711589.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, kernel@mattwhitlock.name, linux-xfs@vger.kernel.org, sam@gentoo.org
+Message-ID: <172530248562.3348968.7217782771063673945.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,35 +53,35 @@ encounter any problems.
 
 --D
 
-The following changes since commit 2ca7b9d7b80810b2b45b78b8a4b4fa78a1ddc2dd:
-
-xfs: move xfs_ioc_getfsmap out of xfs_ioctl.c (2024-09-01 08:58:19 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/quota-cleanups-6.12_2024-09-02
-
-for you to fetch changes up to 2c4162be6c10d3bc4884c211ae4787fc84c4fe3c:
+The following changes since commit 2c4162be6c10d3bc4884c211ae4787fc84c4fe3c:
 
 xfs: refactor loading quota inodes in the regular case (2024-09-01 08:58:20 -0700)
 
-----------------------------------------------------------------
-xfs: cleanups for quota mount [v4.2 6/8]
+are available in the Git repository at:
 
-Refactor the quota file loading code in preparation for adding metadata
-directory trees.  Did you know that quotarm works even when quota isn't active?
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/xfs-fixes-6.12_2024-09-02
+
+for you to fetch changes up to de55149b6639e903c4d06eb0474ab2c05060e61d:
+
+xfs: fix a sloppy memory handling bug in xfs_iroot_realloc (2024-09-01 08:58:20 -0700)
+
+----------------------------------------------------------------
+xfs: various bug fixes for 6.12 [7/8]
+
+Various bug fixes for 6.12.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (1):
-xfs: refactor loading quota inodes in the regular case
+Darrick J. Wong (3):
+xfs: fix C++ compilation errors in xfs_fs.h
+xfs: fix FITRIM reporting again
+xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
 
-fs/xfs/xfs_qm.c          | 46 +++++++++++++++++++++++++++++++++++------
-fs/xfs/xfs_qm.h          |  3 +++
-fs/xfs/xfs_qm_syscalls.c | 13 ++++++------
-fs/xfs/xfs_quotaops.c    | 53 ++++++++++++++++++++++++++++--------------------
-4 files changed, 80 insertions(+), 35 deletions(-)
+fs/xfs/libxfs/xfs_fs.h         |  5 +++--
+fs/xfs/libxfs/xfs_inode_fork.c | 10 +++++-----
+fs/xfs/xfs_discard.c           |  2 +-
+3 files changed, 9 insertions(+), 8 deletions(-)
 
