@@ -1,154 +1,271 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 121091A0BC6;
-	Tue,  3 Sep 2024 09:59:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611C345003
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Sep 2024 10:25:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725357556; cv=none; b=Fxp+a08voG1NuftbvqmqWUzbUmGJGp7jGePU5Q1wRlOMfVNWtkGLAxWmdxCeSrU2kmAQ1nX0K3cRYSBoDUcvpSMEkmTwmX17XlpQfq63M7JvxJ3G0kYk+RDIUdRMH1EuR2CRsKYm5nB9qBHOWZux4jFY8zf9DgvfPOz555EmKD0=
+	t=1725359115; cv=none; b=V8HU3UmTJKyKyWpoyN3vw0xuugjoTA+c29oY6NoC7sfuMS2lOGhyu7QDgtdCDLBglBHK/hiS12uFbRQEfhRrFHnt+R79roEWW0TH3QC0cwMe01KMb0tRuiDyL1PabU8Lu8Lz/gQJb7rkmsTd69M3U0W5QI0EH1ELBcUkmBOSl3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725357556; c=relaxed/simple;
-	bh=92HOKrc+FF3iMGsMq6TdS8V0rw2rCv+/h4iwd8p1KBY=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=pPMiDAs557ofOu4NFWCSwWsJAyWEwbV5oVJrIO9yFA+7BVneJFH/SGQ4tsx1Or9HHcOArbHLZ44pRaM0/121KMWHVuVt0Z01ilAaT5qE5UQQMr5vikuJoJj+RcqyiCCdbuV3cyxwEPiX+AuJFFLCV4GitWzYKhPmBfmDeUm6I3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OepdFj+c; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OepdFj+c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7D5DC4CEC4;
-	Tue,  3 Sep 2024 09:59:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725357555;
-	bh=92HOKrc+FF3iMGsMq6TdS8V0rw2rCv+/h4iwd8p1KBY=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=OepdFj+cGeEAv7ArruHtbA5Yh0E0bzUXw1hzh0ryRjgql/WjT9jLmSksMFHarWu9Q
-	 XgEL5vDOZR3NuzcS5wvZZY9+sxNVf8Ac8gYuBXcwSqE+PM+VjI7u05xd/mDWv1v2qF
-	 uT4nJHlBQiKDgPjEpIeLxCKZHJNawfAsc5/9arAVPHU2t9UQOKHHvI5tXXf56R250g
-	 90h0yv46vjQ7dWP25ciXvdiHYBRdTJJQbLnVOfN1SfH210cLAnl44pMc1CahTHfH+5
-	 kGDIag4u06zOilNpFebg8u9qHNER4bpXQAimFX36COrD1iT9fv/Ivk/iOp4Bjz8kex
-	 ljm2R4hIXscFw==
-References: <202409031358.2c34ad37-oliver.sang@intel.com>
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: kernel test robot <oliver.sang@intel.com>
-Cc: Zizhi Wo <wozizhi@huawei.com>, oe-lkp@lists.linux.dev, lkp@intel.com,
- linux-kernel@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
- linux-xfs@vger.kernel.org
-Subject: Re: [linus:master] [xfs] ca6448aed4: xfstests.xfs.556.fail
-Date: Tue, 03 Sep 2024 15:17:04 +0530
-In-reply-to: <202409031358.2c34ad37-oliver.sang@intel.com>
-Message-ID: <87cyllys5s.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=arc-20240116; t=1725359115; c=relaxed/simple;
+	bh=8Yz07rpXso3xAZzingi7zmKQASNI4hY8Sys/I6P8RqQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=ezV9dyUDTiPnMyzeQPd7Agx/hgmgPKgnDIeXNU8vwtC0co/7uQID254QTpXCziJP3x7tGZBAMB35/220vA+Q6Z284T3t2l5QFDuRvONMHVhS2KzzO47uKJ+KATZ9I5Z7yz3HpVDZ/Q5Sq2lWLAquhTx80C8ewwaIn0ELhq4+V18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: c351bcea69de11efa216b1d71e6e1362-20240903
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
+	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
+	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
+	HR_TO_NO_NAME, IP_UNTRUSTED, SRC_UNTRUSTED, IP_UNFAMILIAR, SRC_UNFAMILIAR
+	DN_TRUSTED, SRC_TRUSTED, SA_EXISTED, SPF_NOPASS, DKIM_NOPASS
+	DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS
+	GTI_RG_INFO, GTI_C_BU, AMN_T1, AMN_GOOD, AMN_C_TI
+	AMN_C_BU, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.38,REQID:a2cd2a2f-ebcb-4539-bab0-dc8a76335a3f,IP:10,
+	URL:0,TC:0,Content:-5,EDM:-25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,AC
+	TION:release,TS:-25
+X-CID-INFO: VERSION:1.1.38,REQID:a2cd2a2f-ebcb-4539-bab0-dc8a76335a3f,IP:10,UR
+	L:0,TC:0,Content:-5,EDM:-25,RT:0,SF:-5,FILE:0,BULK:0,RULE:EDM_GE969F26,ACT
+	ION:release,TS:-25
+X-CID-META: VersionHash:82c5f88,CLOUDID:a0a12df3f4596bf489de12d15150d899,BulkI
+	D:240903182036LKO2L66X,BulkQuantity:1,Recheck:0,SF:66|25|17|19|43|74|102,T
+	C:nil,Content:0,EDM:1,IP:-2,URL:11|1,File:nil,RT:nil,Bulk:40,QS:nil,BEC:ni
+	l,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_FSI,TF_CID_SPAM_ULN,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,
+	TF_CID_SPAM_FSD
+X-UUID: c351bcea69de11efa216b1d71e6e1362-20240903
+X-User: liuhuan01@kylinos.cn
+Received: from localhost.localdomain [(123.53.36.118)] by mailgw.kylinos.cn
+	(envelope-from <liuhuan01@kylinos.cn>)
+	(Generic MTA)
+	with ESMTP id 309782053; Tue, 03 Sep 2024 18:24:55 +0800
+From: liuhuan01@kylinos.cn
+To: david@fromorbit.com
+Cc: cmaiolino@redhat.com,
+	djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	liuh <liuhuan01@kylinos.cn>
+Subject: [PATCH v3] xfs_db: make sure agblocks is valid to prevent corruption
+Date: Tue,  3 Sep 2024 18:24:02 +0800
+Message-Id: <20240903102401.14085-1-liuhuan01@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <ZtZ0Z58+XHoFt84Q@dread.disaster.area>
+References: <ZtZ0Z58+XHoFt84Q@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 03, 2024 at 01:18:35 PM +0800, kernel test robot wrote:
-> Hello,
->
-> kernel test robot noticed "xfstests.xfs.556.fail" on:
->
-> commit: ca6448aed4f10ad88eba79055f181eb9a589a7b3 ("xfs: Fix missing interval for missing_owner in xfs fsmap")
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
->
-> [test failed on linus/master      431c1646e1f86b949fa3685efc50b660a364c2b6]
-> [test failed on linux-next/master 985bf40edf4343dcb04c33f58b40b4a85c1776d4]
->
-> in testcase: xfstests
-> version: xfstests-x86_64-d9423fec-1_20240826
-> with following parameters:
->
-> 	disk: 4HDD
-> 	fs: xfs
-> 	test: xfs-556
->
->
->
-> compiler: gcc-12
-> test machine: 4 threads Intel(R) Xeon(R) CPU E3-1225 v5 @ 3.30GHz (Skylake) with 16G memory
->
-> (please refer to attached dmesg/kmsg for entire log/backtrace)
->
->
->
->
-> If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <oliver.sang@intel.com>
-> | Closes: https://lore.kernel.org/oe-lkp/202409031358.2c34ad37-oliver.sang@intel.com
->
-> 2024-09-01 09:27:55 export TEST_DIR=/fs/sda1
-> 2024-09-01 09:27:55 export TEST_DEV=/dev/sda1
-> 2024-09-01 09:27:55 export FSTYP=xfs
-> 2024-09-01 09:27:55 export SCRATCH_MNT=/fs/scratch
-> 2024-09-01 09:27:55 mkdir /fs/scratch -p
-> 2024-09-01 09:27:55 export SCRATCH_DEV=/dev/sda4
-> 2024-09-01 09:27:55 export SCRATCH_LOGDEV=/dev/sda2
-> 2024-09-01 09:27:55 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
-> 2024-09-01 09:27:55 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
-> 2024-09-01 09:27:55 echo xfs/556
-> 2024-09-01 09:27:55 ./check xfs/556
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 lkp-skl-d06 6.11.0-rc5-00007-gca6448aed4f1 #1 SMP PREEMPT_DYNAMIC Sun Sep  1 16:52:26 CST 2024
-> MKFS_OPTIONS  -- -f /dev/sda4
-> MOUNT_OPTIONS -- /dev/sda4 /fs/scratch
->
-> xfs/556       - output mismatch (see /lkp/benchmarks/xfstests/results//xfs/556.out.bad)
->     --- tests/xfs/556.out	2024-08-26 19:09:50.000000000 +0000
->     +++ /lkp/benchmarks/xfstests/results//xfs/556.out.bad	2024-09-01 09:28:17.532120817 +0000
->     @@ -1,12 +1,21 @@
->      QA output created by 556
->      Scrub for injected media error (single threaded)
->     +Corruption: disk offset 106496: media error in unknown owner. (phase6.c line 400)
->      Unfixable Error: SCRATCH_MNT/a: media error at data offset 2FSB length 1FSB.
->      SCRATCH_MNT: unfixable errors found: 1
->     +SCRATCH_MNT: corruptions found: 1
->     +SCRATCH_MNT: Unmount and run xfs_repair.
->     ...
->     (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/556.out /lkp/benchmarks/xfstests/results//xfs/556.out.bad'  to see the entire diff)
-> Ran: xfs/556
-> Failures: xfs/556
-> Failed 1 of 1 tests
+From: liuh <liuhuan01@kylinos.cn>
 
-Hi,
+Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredump during the process.
+	xfs_db -c "sb 0" -c "p agblocks" /dev/loop1
 
-I am unable to recreate the failure reported above. I am using xfsprogs v6.9.0
-and Linux kernel v6.11-rc6 on my test system.
+System will generate signal SIGFPE corrupt the process. And the stack as follow:
+corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
+	#0  libxfs_getbuf_flags
+	#1  libxfs_getbuf_flags
+	#2  libxfs_buf_read_map
+	#3  libxfs_buf_read
+	#4  libxfs_mount
+	#5  init
+	#6  main
 
-I am using a test environment created by Kdevops. However, I have made sure
-that SCRATCH_XFS_LIST_METADATA_FIELDS and SCRATCH_XFS_LIST_FUZZ_VERBS are set
-to values mentioned in the above bug report.
+The coredump was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0.
+In this case, user cannot run in expert mode also.
 
-# uname -r
-6.11.0-rc6
+So, try to get agblocks from agf/agi 0, if agf/agi 0 length match, use it as agblocks.
+If failed use the default geometry to calc agblocks.
 
-# xfs_repair -V
-xfs_repair version 6.9.0
+Signed-off-by: liuh <liuhuan01@kylinos.cn>
+---
+ db/Makefile |   2 +-
+ db/init.c   | 142 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 143 insertions(+), 1 deletion(-)
 
-# ./naggy-check.sh --section xfs_reflink_modified -c 1 xfs/556
-SCRATCH_XFS_LIST_METADATA_FIELDS = u3.sfdir3.hdr.parent.i4
-SCRATCH_XFS_LIST_FUZZ_VERBS = random
-SECTION       -- xfs_reflink_modified
-RECREATING    -- xfs on /dev/loop16
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 xfs-reflink 6.11.0-rc6 #2 SMP PREEMPT_DYNAMIC Tue Sep  3 09:34:50 GMT 2024
-MKFS_OPTIONS  -- -f /dev/loop5
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop5 /media/scratch
-
-xfs/556 6s ...  5s
-Ran: xfs/556
-Passed all 1 tests
-
-SECTION       -- xfs_reflink_modified
-=========================
-Ran: xfs/556
-Passed all 1 tests
-
-naggy-check.sh is a wrapper around xfstests' "check" script. I have modified
-it to print the values of the environment variables
-SCRATCH_XFS_LIST_METADATA_FIELDS and SCRATCH_XFS_LIST_FUZZ_VERBS.
-
+diff --git a/db/Makefile b/db/Makefile
+index 83389376..322d5617 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -68,7 +68,7 @@ CFILES = $(HFILES:.h=.c) \
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
+-	  $(LIBPTHREAD)
++	  $(LIBPTHREAD) $(LIBBLKID)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS += -static-libtool-libs
+ 
+diff --git a/db/init.c b/db/init.c
+index cea25ae5..167bc777 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -38,6 +38,138 @@ usage(void)
+ 	exit(1);
+ }
+ 
++static void
++xfs_guess_default_ag_geometry(uint64_t *agsize, uint64_t *agcount, struct libxfs_init *x)
++{
++	struct fs_topology	ft;
++	int			blocklog;
++	uint64_t		dblocks;
++	int			multidisk;
++
++	fprintf(stderr, "Attempting to guess AG length from device geometry. This may not work.\n");
++
++	memset(&ft, 0, sizeof(ft));
++	get_topology(x, &ft, 1);
++
++	/*
++	 * get geometry from get_topology result.
++	 * Use default block size (2^12)
++	 */
++	blocklog = 12;
++	multidisk = ft.data.swidth | ft.data.sunit;
++	dblocks = x->data.size >> (blocklog - BBSHIFT);
++	calc_default_ag_geometry(blocklog, dblocks, multidisk,
++				 agsize, agcount);
++
++	if (*agsize >= XFS_MIN_AG_BLOCKS && *agsize <= XFS_MAX_AG_BLOCKS)
++		fprintf(stderr, "Guessed AG length is %lu blocks.\n", *agsize);
++}
++
++static xfs_agblock_t
++xfs_get_agblock_from_agf(struct xfs_mount *mp)
++{
++	xfs_agblock_t agblocks = NULLAGBLOCK;
++	int error;
++	struct xfs_buf *bp;
++	struct xfs_agf *agf;
++
++	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
++			XFS_AGF_DADDR(mp), 1, 0, &bp, NULL);
++	if (error) {
++		fprintf(stderr, "AGF 0 length recovery failed\n");
++		return NULLAGBLOCK;
++	}
++
++	agf = bp->b_addr;
++	if (be32_to_cpu(agf->agf_magicnum) == XFS_AGF_MAGIC)
++		agblocks = be32_to_cpu(agf->agf_length);
++
++	libxfs_buf_relse(bp);
++
++	if (agblocks != NULLAGBLOCK)
++		fprintf(stderr, "AGF 0 length %u blocks found.\n", agblocks);
++	else
++		fprintf(stderr, "AGF 0 length recovery failed.\n");
++
++	return agblocks;
++}
++
++static xfs_agblock_t
++xfs_get_agblock_from_agi(struct xfs_mount *mp)
++{
++	xfs_agblock_t agblocks = NULLAGBLOCK;
++	int error;
++	struct xfs_buf *bp;
++	struct xfs_agi *agi;
++
++	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
++			XFS_AGI_DADDR(mp), 1, 0, &bp, NULL);
++	if (error) {
++		fprintf(stderr, "AGI 0 length recovery failed\n");
++		return NULLAGBLOCK;
++	}
++
++
++	agi = bp->b_addr;
++	if (be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC)
++		agblocks = be32_to_cpu(agi->agi_length);
++
++	libxfs_buf_relse(bp);
++
++	if (agblocks != NULLAGBLOCK)
++		fprintf(stderr, "AGI 0 length %u blocks found.\n", agblocks);
++	else
++		fprintf(stderr, "AGI 0 length recovery failed.\n");
++
++	return agblocks;
++}
++
++/*
++ * Try to get it from agf/agi length when primary superblock agblocks damaged.
++ * If agf matchs agi length, use it as agblocks, otherwise use the default geometry
++ * to calc agblocks
++ */
++static xfs_agblock_t
++xfs_try_get_agblocks(struct xfs_mount *mp, struct libxfs_init *x)
++{
++	xfs_agblock_t agblocks = NULLAGBLOCK;
++	xfs_agblock_t agblocks_agf, agblocks_agi;
++	uint64_t agsize, agcount;
++
++	fprintf(stderr, "Attempting recovery from AGF/AGI 0 metadata...\n");
++
++	agblocks_agf = xfs_get_agblock_from_agf(mp);
++	agblocks_agi = xfs_get_agblock_from_agi(mp);
++
++	if (agblocks_agf == agblocks_agi && agblocks_agf >= XFS_MIN_AG_BLOCKS && agblocks_agf <= XFS_MAX_AG_BLOCKS) {
++		fprintf(stderr, "AGF/AGI 0 length matches.\n");
++		fprintf(stderr, "Using %u blocks for superblock agblocks\n", agblocks_agf);
++		return agblocks_agf;
++	}
++
++	/* use default geometry to calc agblocks/agcount */
++	xfs_guess_default_ag_geometry(&agsize, &agcount, x);
++
++	/* choose the agblocks among agf/agi length and agsize */
++	if (agblocks_agf == agsize && agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
++		fprintf(stderr, "Guessed AG matchs AGF length\n");
++		agblocks = agsize;
++	} else if (agblocks_agi == agsize && agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
++		fprintf(stderr, "Guessed AG matchs AGI length\n");
++		agblocks = agsize;
++	} else if (agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
++		fprintf(stderr, "Guessed AG does not match AGF/AGI 0 length.\n");
++		agblocks =  agsize;
++	} else {
++		fprintf(stderr, "_(%s: device too small to hold a valid XFS filesystem)", progname);
++		exit(1);
++	}
++
++	fprintf(stderr, "Using %u blocks for superblock agblocks.\n", agblocks);
++
++	return agblocks;
++}
++
+ static void
+ init(
+ 	int		argc,
+@@ -129,6 +261,16 @@ init(
+ 		}
+ 	}
+ 
++	/* If sb_agblocks was damaged, try to get agblocks */
++	if (sbp->sb_agblocks < XFS_MIN_AG_BLOCKS || sbp->sb_agblocks > XFS_MAX_AG_BLOCKS) {
++		xfs_agblock_t agblocks;
++
++		fprintf(stderr, "Out of bounds superblock agblocks (%u) found.\n", sbp->sb_agblocks);
++
++		agblocks = xfs_try_get_agblocks(&xmount, &x);
++		sbp->sb_agblocks = agblocks;
++	}
++
+ 	agcount = sbp->sb_agcount;
+ 	mp = libxfs_mount(&xmount, sbp, &x, LIBXFS_MOUNT_DEBUGGER);
+ 	if (!mp) {
 -- 
-Chandan
+2.43.0
+
