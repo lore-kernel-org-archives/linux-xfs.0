@@ -1,98 +1,81 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62D121A4E97;
-	Tue,  3 Sep 2024 09:18:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACE591C766C
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Sep 2024 09:23:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725355126; cv=none; b=uPNTikgCCW8YRvHq74cDzu7YR+eJho9+S1nfRu8nJuQUDaC+tPI7YsGW7FkoUh8b/xGSOpgchCVBxLpXf2tV0R6QWhtZG66yrxoXzdYXKPuRej4sPBvaiP9FX1qRY5ddVuHBAGMzdlrVSmPUsZeDcUKzTps37YcgFrkC4ttydFc=
+	t=1725355415; cv=none; b=BnfQgt799WCgRZFHRaE3OPReue05uSEhsFVo5E3WghUsZGk4fKJgSrk3sUTG4cQRmWK7ejricGzgx6YDz/q4Qouk+IWdhcnUntBjG175aWUmlZH+13HMMYF2jGrWMqQq/b8rRuORywwpilW0iix1hfCD+BxwQsoO2HC2mPRqBXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725355126; c=relaxed/simple;
-	bh=NtX+6yB97NtVGALvaPIfDfrFsr7PAI8spCIrDJGjcOs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=KlSS/gNH6xz37EZldxbICUy0nXZITeLmNrikVIqNmA1/BNEQNREA7PUakUfEz8AMYSg2Efvo9nwmIOKLrNbQPximt2cWsHIb9J2t3nLBuP5MmxXotaDxC80SOe7oa/0IXR0tlXbuFdnBsf768t3eQqtI59WBgLAoroqubeYs6Tw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Wyg3k6gCzzgYpm;
-	Tue,  3 Sep 2024 17:16:34 +0800 (CST)
-Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id A29351800FE;
-	Tue,  3 Sep 2024 17:18:41 +0800 (CST)
-Received: from [10.174.176.88] (10.174.176.88) by
- kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 3 Sep 2024 17:18:40 +0800
-Message-ID: <2437d861-af70-42b1-b517-aad0a66351cd@huawei.com>
-Date: Tue, 3 Sep 2024 17:18:39 +0800
+	s=arc-20240116; t=1725355415; c=relaxed/simple;
+	bh=sDJPZ7dWRLgn3DK8a8UmemnQ3gzEzJvs7Ix5kRL41o0=;
+	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=bh/A6ZS3rZ2BCKWuIBnHJGRBPq7T9zwytGqaj8rPdK73asxecTavsItansMy+7gq7qRQIQsF0MyTze5/MDIuM5y038jm+YicNIJmr9rU8ljf9jC85/PqL0HFLUGbn6cJAhjP2DnsXfIEjdn5XKUDx3Yrm4Ex1ELsn/GFXnG/Ac4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=cFDnMpho; arc=none smtp.client-ip=212.122.41.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="cFDnMpho"
+From: Christian Theune <ct@flyingcircus.io>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
+	s=mail; t=1725355402;
+	bh=sDJPZ7dWRLgn3DK8a8UmemnQ3gzEzJvs7Ix5kRL41o0=;
+	h=From:Subject:Date:Cc:To;
+	b=cFDnMphogOn0FdO/SBGNd5rzYo3GMbdO6TmTdnq4wecf7yO1Ja5tdfK7n59bsz9TT
+	 H91tsBkpvA/ZXl+6GDrvbH7kDq9YOKOR9eB5X3Y35rcM9YxeLbyXLgOutJFU/x2Xok
+	 NvZSGsL2O5z+TBiW6d52BAXWah9Bb7rlJKSXeo2E=
+Content-Type: text/plain;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] Some boundary error bugfix related to XFS fsmap.
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <chandan.babu@oracle.com>, <dchinner@redhat.com>, <osandov@fb.com>,
-	<john.g.garry@oracle.com>, <linux-xfs@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>
-References: <20240826031005.2493150-1-wozizhi@huawei.com>
- <9337ebda-8e27-4754-bc57-748e44f3b5e0@huawei.com>
- <20240902190828.GA6224@frogsfrogsfrogs>
-From: Zizhi Wo <wozizhi@huawei.com>
-In-Reply-To: <20240902190828.GA6224@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemf100017.china.huawei.com (7.202.181.16)
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
+Subject: Any new insights on large folio issues causing data loss?
+Message-Id: <666A596B-9C9D-4D59-83EA-7DB2B2C3867E@flyingcircus.io>
+Date: Tue, 3 Sep 2024 11:23:02 +0200
+Cc: Daniel Dao <dqminh@cloudflare.com>
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
+Hi,
 
+I=E2=80=99ve been trying to hunt down an XFS issue last year that Daniel =
+was (and is) also experiencing:
+=
+https://lore.kernel.org/lkml/CA+wXwBS7YTHUmxGP3JrhcKMnYQJcd6=3D7HE+E1v-guk=
+01L2K3Zw@mail.gmail.com/T/
 
-在 2024/9/3 3:08, Darrick J. Wong 写道:
-> On Thu, Aug 29, 2024 at 07:24:55PM +0800, Zizhi Wo wrote:
->> friendly ping
-> 
-> Sorry, I'm not going to get to this until late September.
-> 
-> --D
+I did also register a kernel bug back then:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217572#c7
 
-OK, I've got it. Have a nice holiday😀
+The overall impression was that this is related to large folios and =
+Daniel told me he=E2=80=99s currently running 6.1/6.6 with large folios =
+disabled, by applying a revert for this patch: =
+https://github.com/torvalds/linux/commit/6795801366da0cd3d99e27c37f020a8f1=
+6714886
 
-Thanks,
-Zizhi Wo
+We=E2=80=99re currently still running on 5.15 but this is getting long =
+in the tooth and we=E2=80=99re now experiencing issues where backports =
+are starting to slow down so that we get bitten by other issues.
 
-> 
->> 在 2024/8/26 11:10, Zizhi Wo 写道:
->>> Prior to this, I had already sent out a patchset related to xfs fsmap
->>> bugfix, which mainly introduced "info->end_daddr" to fix omitted extents[1]
->>> and Darrick had already sent out a patchbomb for merging into stable[2],
->>> which included my previous patches.
->>>
->>> However, I recently discovered two new fsmap problems...What follows is a
->>> brief description of them:
->>>
->>> Patch 1: In this scenario, fsmap lost one block count. The root cause is
->>> that during the calculation of highkey, the calculation of start_block is
->>> missing an increment by one, which leads to the last query missing one
->>> This problem is resolved by adding a sentinel node.
->>>
->>> Patch 2: In this scenario, the fsmap query for realtime deivce may display
->>> extra intervals. This is due to an extra increase in "end_rtb". The issue
->>> is resolved by adjusting the relevant calculations. And this patch depends
->>> on the previous patch that introduced "info->end_daddr".
->>>
->>> [1] https://lore.kernel.org/all/20240819005320.304211-1-wozizhi@huawei.com/
->>> [2] https://lore.kernel.org/all/172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs/
->>>
->>> Zizhi Wo (2):
->>>     xfs: Fix missing block calculations in xfs datadev fsmap
->>>     xfs: Fix incorrect parameter calculation in rt fsmap
->>>
->>>    fs/xfs/libxfs/xfs_rtbitmap.c |  4 +---
->>>    fs/xfs/xfs_fsmap.c           | 39 +++++++++++++++++++++++++++++++-----
->>>    2 files changed, 35 insertions(+), 8 deletions(-)
->>>
->>
-> 
+I=E2=80=99m generally rather happy to upgrade, but we=E2=80=99ve had =
+multiple instances of data loss with 6.1 last year and we=E2=80=99d like =
+to avoid running into that again =E2=80=A6 but I also don=E2=80=99t feel =
+so good about reverting the folio support indiscriminately =E2=80=A6=20
+
+As the issue was quite fuzzy I wonder whether someone has a gut feeling =
+whether this should have improved over time or maybe this issue triggers =
+someones memory where it might be related to a fix that isn=E2=80=99t =
+obvious?
+
+Thanks!
+Christian
+
+--=20
+Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian Zagrodnick
+
