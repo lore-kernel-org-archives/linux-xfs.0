@@ -1,271 +1,285 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611C345003
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Sep 2024 10:25:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60AF01D0959
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Sep 2024 12:30:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725359115; cv=none; b=V8HU3UmTJKyKyWpoyN3vw0xuugjoTA+c29oY6NoC7sfuMS2lOGhyu7QDgtdCDLBglBHK/hiS12uFbRQEfhRrFHnt+R79roEWW0TH3QC0cwMe01KMb0tRuiDyL1PabU8Lu8Lz/gQJb7rkmsTd69M3U0W5QI0EH1ELBcUkmBOSl3o=
+	t=1725366604; cv=none; b=IG7Vk/6/hCTzwsstg8uVEDNd9Ir4fs0uOzufuT3jrSTWgXfrXPE37o1XjshwN56BH0vEQzRi/Id+cwyulUlRY81a1zLSbdPdwAoTQa3oQhdrIT5KzQ2fRc+Z20eSIUR5eGtSSDGFvsBPBLdYFscWfWhLgrSmqHcUANNA9HvxsvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725359115; c=relaxed/simple;
-	bh=8Yz07rpXso3xAZzingi7zmKQASNI4hY8Sys/I6P8RqQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ezV9dyUDTiPnMyzeQPd7Agx/hgmgPKgnDIeXNU8vwtC0co/7uQID254QTpXCziJP3x7tGZBAMB35/220vA+Q6Z284T3t2l5QFDuRvONMHVhS2KzzO47uKJ+KATZ9I5Z7yz3HpVDZ/Q5Sq2lWLAquhTx80C8ewwaIn0ELhq4+V18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: c351bcea69de11efa216b1d71e6e1362-20240903
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_UNTRUSTED, SRC_UNTRUSTED, IP_UNFAMILIAR, SRC_UNFAMILIAR
-	DN_TRUSTED, SRC_TRUSTED, SA_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS
-	GTI_RG_INFO, GTI_C_BU, AMN_T1, AMN_GOOD, AMN_C_TI
-	AMN_C_BU, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.38,REQID:a2cd2a2f-ebcb-4539-bab0-dc8a76335a3f,IP:10,
-	URL:0,TC:0,Content:-5,EDM:-25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,AC
-	TION:release,TS:-25
-X-CID-INFO: VERSION:1.1.38,REQID:a2cd2a2f-ebcb-4539-bab0-dc8a76335a3f,IP:10,UR
-	L:0,TC:0,Content:-5,EDM:-25,RT:0,SF:-5,FILE:0,BULK:0,RULE:EDM_GE969F26,ACT
-	ION:release,TS:-25
-X-CID-META: VersionHash:82c5f88,CLOUDID:a0a12df3f4596bf489de12d15150d899,BulkI
-	D:240903182036LKO2L66X,BulkQuantity:1,Recheck:0,SF:66|25|17|19|43|74|102,T
-	C:nil,Content:0,EDM:1,IP:-2,URL:11|1,File:nil,RT:nil,Bulk:40,QS:nil,BEC:ni
-	l,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSI,TF_CID_SPAM_ULN,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,
-	TF_CID_SPAM_FSD
-X-UUID: c351bcea69de11efa216b1d71e6e1362-20240903
-X-User: liuhuan01@kylinos.cn
-Received: from localhost.localdomain [(123.53.36.118)] by mailgw.kylinos.cn
-	(envelope-from <liuhuan01@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 309782053; Tue, 03 Sep 2024 18:24:55 +0800
-From: liuhuan01@kylinos.cn
-To: david@fromorbit.com
-Cc: cmaiolino@redhat.com,
-	djwong@kernel.org,
-	linux-xfs@vger.kernel.org,
-	liuh <liuhuan01@kylinos.cn>
-Subject: [PATCH v3] xfs_db: make sure agblocks is valid to prevent corruption
-Date: Tue,  3 Sep 2024 18:24:02 +0800
-Message-Id: <20240903102401.14085-1-liuhuan01@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <ZtZ0Z58+XHoFt84Q@dread.disaster.area>
-References: <ZtZ0Z58+XHoFt84Q@dread.disaster.area>
+	s=arc-20240116; t=1725366604; c=relaxed/simple;
+	bh=MadOy1n9lMn2gJiTmCo/b3sxyuT0+3q42VXhnUpkc+k=;
+	h=Date:From:To:CC:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:References; b=g0IQbucu1fehUPEpE0QCWbW93FIgeTNMq95GexX15bL0sd7Ij8aQg705BLiR9lkN341m7FxBk1hZ/e29LAh4H/F8fS+CIhBBxMHBIRslPJxTbR9w+USJYp3HVcGEXp3ONXOYkvEAPl5OHSoxXn6FhELnuh6cgdZlSMoCeC2JmO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=qn0o1gnF; arc=none smtp.client-ip=210.118.77.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qn0o1gnF"
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20240903122954euoutp0158748218fad9e212cb84d92dabaab1a0~xu8bFzo4E2322723227euoutp01Z
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Sep 2024 12:29:54 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20240903122954euoutp0158748218fad9e212cb84d92dabaab1a0~xu8bFzo4E2322723227euoutp01Z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1725366594;
+	bh=cgNOgNReNzAJFf9P5wa3Kro2zVp3TLloPkWMjpgBKgI=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=qn0o1gnFDe30/e5l1CNLn8s6VRfRR4IZnoshRZ5H/dfQFW/dnweGOz1wEGpuK8ejY
+	 3fMvN4SZzwnOJvlA8hNFLYq18YYKFMZbxMVUX8ekj24TP4NEo8PG/10+sW5G7k8YWf
+	 N7eeu1FWQY93iu2gdIO3BPMiZwKOUaJ2PLjh/kp0=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+	20240903122952eucas1p2ac10c1a77d1c5248183d9ccffd55c25a~xu8ZW4yn20966109661eucas1p2g;
+	Tue,  3 Sep 2024 12:29:52 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+	eusmges1new.samsung.com (EUCPMTA) with SMTP id 0B.49.09624.04107D66; Tue,  3
+	Sep 2024 13:29:52 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240903122952eucas1p208675907d19ad2a8f7f46756163f0b59~xu8YuAl6V2062120621eucas1p2D;
+	Tue,  3 Sep 2024 12:29:52 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+	eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240903122952eusmtrp1603deb26a30cdd3061f0cbdab62f6f61~xu8YtMypv2418124181eusmtrp1F;
+	Tue,  3 Sep 2024 12:29:52 +0000 (GMT)
+X-AuditID: cbfec7f2-bfbff70000002598-f3-66d70140ec54
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+	eusmgms1.samsung.com (EUCPMTA) with SMTP id FD.CD.14621.F3107D66; Tue,  3
+	Sep 2024 13:29:51 +0100 (BST)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+	eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20240903122951eusmtip21569f5ad77ab643529872aec9866690e~xu8YabmBK0762607626eusmtip2R;
+	Tue,  3 Sep 2024 12:29:51 +0000 (GMT)
+Received: from localhost (106.110.32.87) by CAMSVWEXC02.scsc.local
+	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
+	Tue, 3 Sep 2024 13:29:50 +0100
+Date: Tue, 3 Sep 2024 14:29:50 +0200
+From: Daniel Gomez <da.gomez@samsung.com>
+To: <brauner@kernel.org>
+CC: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+	<akpm@linux-foundation.org>, <chandan.babu@oracle.com>,
+	<linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>, <hare@suse.de>,
+	<gost.dev@samsung.com>, <linux-xfs@vger.kernel.org>, <hch@lst.de>,
+	<david@fromorbit.com>, Zi Yan <ziy@nvidia.com>,
+	<yang@os.amperecomputing.com>, <linux-kernel@vger.kernel.org>,
+	<linux-mm@kvack.org>, <willy@infradead.org>, <john.g.garry@oracle.com>,
+	<cl@os.amperecomputing.com>, <p.raghav@samsung.com>, <mcgrof@kernel.org>,
+	<ryan.roberts@arm.com>, Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v13 10/10] xfs: enable block size larger than page size
+ support
+Message-ID: <20240903122950.eugl53tler4n52ao@AALNPWDAGOMEZ1.aal.scsc.local>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20240822135018.1931258-11-kernel@pankajraghav.com>
+X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
+	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Sf1CTdRy+7/u+vO+75bjXsfJ7aFZI6ixQLquvB2eA5r2X52VX7jrJZMrr
+	oMbgNhHCuNDudjk2VHIKA2mHpMwt0MHhfgCdowEbktakSHSpgZ0w4ASj1KJ8fdfpf8/n+TzP
+	fZ/nc18al87GxNN5mt2cVqNUJ5Bior3n3vdJ6eDnXavqf1qK6locJBrvngboR/9i1PzNDQy1
+	9YQBGhg7TqHQSCzqaKjCkM3ux9Cl+y6ALtyeIVBHZ4BAIU8dicKOf2OQ528XhYYOjQJk9JoB
+	evDXw4WpMUChWn+YSpexjnoHYIMNkG1tWsE6Tx8gWed0FcX2VT8gWO8v5SRr+nySZO+MXiHY
+	itAQxQ7YMtiprkGSbe3fy844F2+O3SpOy+HUeXs47cq12eJco/cSWTj4UknjyctUObAuMQCa
+	hsxq2O1dYwBiWso0ATjuK6eE4S6AR2udmDDMAHiuw0MYgOiRw3rdD4TFKQAt+puPVefvTuHC
+	4ASw3n8N8BaCSYS3Bo+QPCYZOewKOCn+cRkDoadBwetxxk9AfdMoxmviGAW0/voDzmskzEb4
+	j/sznpYw82GgZuRRCpx5GVq90yQvwZmF8NQczdMiJh1WmH6nhKAvwOrDtmjoMhhsu4IJeL8Y
+	HhzNE/B62Dm8L8rHwbHetqh3Eez/0hj1qmBjsyWKC2HHsCVGOF0qrLygFugM2HvNFqVj4dDE
+	fCFkLKxqP4YLtAR+oZcK6qXQHo4Qh8ASyxO1LE/UsjyuZQX4abCAK9LlqzhdioYrTtYp83VF
+	GlXyzoJ8J3j4Nfvneqdd4PjYnWQfwGjgA5DGE2SSbWcHd0klOcpPSjltwXZtkZrT+cBCmkhY
+	IHkx5zlOyqiUu7mPOa6Q0/6/xWhRfDmWGLR9CLcPlLylMLgnli8KuGZPXnd9ZMoozDo8efWr
+	M/NMx4p/M5vvg3V9y69ORpQ3DxR7kkuXhfdUdvscxvbVedkXxz1/4M71ubi8TN26+ah+VZnG
+	Pu87Q1ZBMO489XQN8LW8kbWtRfPqt+rO15D1g2cHZIqV3MFNFyPASpfWDifNlr33/LtT3drW
+	kcw/x1vMX8e539b02n1yRfyMuejGphTZZVb/lCjz1rqU5uCa2/u67u0Fcuv7mUfeeWXLjpq1
+	Sen2rdmpkVRjWkgxXHAi0lDxzIk397sdn6ZJ+5gNdS6jZi6x1ORunCoWJU2Emis3vt5WvWMD
+	IxLDnapzJfIeVQKhy1WmrMC1OuV/WFlUoAkEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprGKsWRmVeSWpSXmKPExsVy+t/xe7r2jNfTDG4ut7CYs34Nm8Xrw58Y
+	LS4dlbNYt/Yhk8WWY/cYLc6+mstucfkJn8WeRZOYLFauPspkceHXDkaLMy8/s1js2XuSxeLy
+	rjlsFvfW/Ge12PVnB7vFjQlPGS16dk9ltPj9AyjRu+Qku8Xso/fYHUQ81sxbw+hxapGEx+YV
+	Wh6bVnWyeWz6NInd48SM3yweu282sHn0Nr9j8/j49BaLR/flG+weZ1c6erzfd5XNY/Ppao/P
+	m+QC+KL0bIryS0tSFTLyi0tslaINLYz0DC0t9IxMLPUMjc1jrYxMlfTtbFJSczLLUov07RL0
+	Mnp2X2AruKpdsWTZFfYGxgXKXYycHBICJhILHhxl7GLk4hASWMoosWDyARaIhIzExi9XWSFs
+	YYk/17rYIIo+Mkqc3XwfytnEKLF7wQ4mkCoWARWJZ1ensIHYbAKaEvtObmLvYuTgEBGQkNi1
+	KAyknlngKItE24qnYPXCAmESC+5fZAap4RXwlvi7sx4kLCRwglGiZ6UiiM0rIChxcuYTsIOY
+	BXQkFuz+xAZSziwgLbH8HwdImFPAQaK79zk7xJ2KEjMmroS6v1bi899njBMYhWchmTQLyaRZ
+	CJMWMDKvYhRJLS3OTc8tNtQrTswtLs1L10vOz93ECEwg24793LyDcd6rj3qHGJk4GA8xSnAw
+	K4nwxm68mibEm5JYWZValB9fVJqTWnyI0RQYEBOZpUST84EpLK8k3tDMwNTQxMzSwNTSzFhJ
+	nNft8vk0IYH0xJLU7NTUgtQimD4mDk6pBiZdt+45Z3mV3M1lJ62bPv9R4HmL32yxT9tef++N
+	bGLSDMr45373gE7v2+2NFxW/zdicphp5tjG18Nq7wI53bkXvQ0U2Ci065fn1tZzF1NsqNS01
+	HZ4Fp89E3u82DF1r9U6b9f7KBJ5ztiuunc5k/eN7NPrt3Q8zr99mNHG4ZqhifFgrzf3000NH
+	d/tMlxQNyZN6dN1F3f93urL0utSzMfrPWlezxd6+dTvqpPEXeYF50re9yx9e3TDBlFnOyDnb
+	hzuJ6+CrvnMi7jfyjCu7lueEbvNsWdzw/feJ+TznmzhPvGT2dFd6pfaNhb3NpqziwfzAh+pV
+	u6RyPkfYXZh9RemYKUNPaSRPC/vHBW6lRUosxRmJhlrMRcWJAG+r+XKpAwAA
+X-CMS-MailID: 20240903122952eucas1p208675907d19ad2a8f7f46756163f0b59
+X-Msg-Generator: CA
+X-RootMTR: 20240822135125eucas1p1c9928c1596c724973055d94103adba96
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20240822135125eucas1p1c9928c1596c724973055d94103adba96
+References: <20240822135018.1931258-1-kernel@pankajraghav.com>
+	<CGME20240822135125eucas1p1c9928c1596c724973055d94103adba96@eucas1p1.samsung.com>
+	<20240822135018.1931258-11-kernel@pankajraghav.com>
 
-From: liuh <liuhuan01@kylinos.cn>
+On Thu, Aug 22, 2024 at 03:50:18PM +0200, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
+> 
+> Page cache now has the ability to have a minimum order when allocating
+> a folio which is a prerequisite to add support for block size > page
+> size.
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c |  5 +++++
+>  fs/xfs/libxfs/xfs_shared.h |  3 +++
+>  fs/xfs/xfs_icache.c        |  6 ++++--
+>  fs/xfs/xfs_mount.c         |  1 -
+>  fs/xfs/xfs_super.c         | 28 ++++++++++++++++++++--------
+>  include/linux/pagemap.h    | 13 +++++++++++++
+>  6 files changed, 45 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 0af5b7a33d055..1921b689888b8 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -3033,6 +3033,11 @@ xfs_ialloc_setup_geometry(
+>  		igeo->ialloc_align = mp->m_dalign;
+>  	else
+>  		igeo->ialloc_align = 0;
+> +
+> +	if (mp->m_sb.sb_blocksize > PAGE_SIZE)
+> +		igeo->min_folio_order = mp->m_sb.sb_blocklog - PAGE_SHIFT;
+> +	else
+> +		igeo->min_folio_order = 0;
+>  }
+>  
+>  /* Compute the location of the root directory inode that is laid out by mkfs. */
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index 2f7413afbf46c..33b84a3a83ff6 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -224,6 +224,9 @@ struct xfs_ino_geometry {
+>  	/* precomputed value for di_flags2 */
+>  	uint64_t	new_diflags2;
+>  
+> +	/* minimum folio order of a page cache allocation */
+> +	unsigned int	min_folio_order;
+> +
+>  };
+>  
+>  #endif /* __XFS_SHARED_H__ */
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index cf629302d48e7..0fcf235e50235 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -88,7 +88,8 @@ xfs_inode_alloc(
+>  
+>  	/* VFS doesn't initialise i_mode! */
+>  	VFS_I(ip)->i_mode = 0;
+> -	mapping_set_large_folios(VFS_I(ip)->i_mapping);
+> +	mapping_set_folio_min_order(VFS_I(ip)->i_mapping,
+> +				    M_IGEO(mp)->min_folio_order);
+>  
+>  	XFS_STATS_INC(mp, vn_active);
+>  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> @@ -325,7 +326,8 @@ xfs_reinit_inode(
+>  	inode->i_uid = uid;
+>  	inode->i_gid = gid;
+>  	inode->i_state = state;
+> -	mapping_set_large_folios(inode->i_mapping);
+> +	mapping_set_folio_min_order(inode->i_mapping,
+> +				    M_IGEO(mp)->min_folio_order);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 3949f720b5354..c6933440f8066 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -134,7 +134,6 @@ xfs_sb_validate_fsb_count(
+>  {
+>  	uint64_t		max_bytes;
+>  
+> -	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+>  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
+>  
+>  	if (check_shl_overflow(nblocks, sbp->sb_blocklog, &max_bytes))
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 210481b03fdb4..8cd76a01b543f 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1638,16 +1638,28 @@ xfs_fs_fill_super(
+>  		goto out_free_sb;
+>  	}
+>  
+> -	/*
+> -	 * Until this is fixed only page-sized or smaller data blocks work.
+> -	 */
+>  	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
+> -		xfs_warn(mp,
+> -		"File system with blocksize %d bytes. "
+> -		"Only pagesize (%ld) or less will currently work.",
+> +		size_t max_folio_size = mapping_max_folio_size_supported();
+> +
+> +		if (!xfs_has_crc(mp)) {
+> +			xfs_warn(mp,
+> +"V4 Filesystem with blocksize %d bytes. Only pagesize (%ld) or less is supported.",
+>  				mp->m_sb.sb_blocksize, PAGE_SIZE);
+> -		error = -ENOSYS;
+> -		goto out_free_sb;
+> +			error = -ENOSYS;
+> +			goto out_free_sb;
+> +		}
+> +
+> +		if (mp->m_sb.sb_blocksize > max_folio_size) {
+> +			xfs_warn(mp,
+> +"block size (%u bytes) not supported; Only block size (%ld) or less is supported",
 
-Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredump during the process.
-	xfs_db -c "sb 0" -c "p agblocks" /dev/loop1
+This small fix [1] is missing in linux-next and vfs trees. Can it be picked?
 
-System will generate signal SIGFPE corrupt the process. And the stack as follow:
-corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
-	#0  libxfs_getbuf_flags
-	#1  libxfs_getbuf_flags
-	#2  libxfs_buf_read_map
-	#3  libxfs_buf_read
-	#4  libxfs_mount
-	#5  init
-	#6  main
+[1] https://lore.kernel.org/all/Zs_vIaw8ESLN2TwY@casper.infradead.org/
 
-The coredump was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0.
-In this case, user cannot run in expert mode also.
-
-So, try to get agblocks from agf/agi 0, if agf/agi 0 length match, use it as agblocks.
-If failed use the default geometry to calc agblocks.
-
-Signed-off-by: liuh <liuhuan01@kylinos.cn>
----
- db/Makefile |   2 +-
- db/init.c   | 142 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 143 insertions(+), 1 deletion(-)
-
-diff --git a/db/Makefile b/db/Makefile
-index 83389376..322d5617 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -68,7 +68,7 @@ CFILES = $(HFILES:.h=.c) \
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
- 
- LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
--	  $(LIBPTHREAD)
-+	  $(LIBPTHREAD) $(LIBBLKID)
- LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
- LLDFLAGS += -static-libtool-libs
- 
-diff --git a/db/init.c b/db/init.c
-index cea25ae5..167bc777 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -38,6 +38,138 @@ usage(void)
- 	exit(1);
- }
- 
-+static void
-+xfs_guess_default_ag_geometry(uint64_t *agsize, uint64_t *agcount, struct libxfs_init *x)
-+{
-+	struct fs_topology	ft;
-+	int			blocklog;
-+	uint64_t		dblocks;
-+	int			multidisk;
-+
-+	fprintf(stderr, "Attempting to guess AG length from device geometry. This may not work.\n");
-+
-+	memset(&ft, 0, sizeof(ft));
-+	get_topology(x, &ft, 1);
-+
-+	/*
-+	 * get geometry from get_topology result.
-+	 * Use default block size (2^12)
-+	 */
-+	blocklog = 12;
-+	multidisk = ft.data.swidth | ft.data.sunit;
-+	dblocks = x->data.size >> (blocklog - BBSHIFT);
-+	calc_default_ag_geometry(blocklog, dblocks, multidisk,
-+				 agsize, agcount);
-+
-+	if (*agsize >= XFS_MIN_AG_BLOCKS && *agsize <= XFS_MAX_AG_BLOCKS)
-+		fprintf(stderr, "Guessed AG length is %lu blocks.\n", *agsize);
-+}
-+
-+static xfs_agblock_t
-+xfs_get_agblock_from_agf(struct xfs_mount *mp)
-+{
-+	xfs_agblock_t agblocks = NULLAGBLOCK;
-+	int error;
-+	struct xfs_buf *bp;
-+	struct xfs_agf *agf;
-+
-+	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
-+			XFS_AGF_DADDR(mp), 1, 0, &bp, NULL);
-+	if (error) {
-+		fprintf(stderr, "AGF 0 length recovery failed\n");
-+		return NULLAGBLOCK;
-+	}
-+
-+	agf = bp->b_addr;
-+	if (be32_to_cpu(agf->agf_magicnum) == XFS_AGF_MAGIC)
-+		agblocks = be32_to_cpu(agf->agf_length);
-+
-+	libxfs_buf_relse(bp);
-+
-+	if (agblocks != NULLAGBLOCK)
-+		fprintf(stderr, "AGF 0 length %u blocks found.\n", agblocks);
-+	else
-+		fprintf(stderr, "AGF 0 length recovery failed.\n");
-+
-+	return agblocks;
-+}
-+
-+static xfs_agblock_t
-+xfs_get_agblock_from_agi(struct xfs_mount *mp)
-+{
-+	xfs_agblock_t agblocks = NULLAGBLOCK;
-+	int error;
-+	struct xfs_buf *bp;
-+	struct xfs_agi *agi;
-+
-+	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
-+			XFS_AGI_DADDR(mp), 1, 0, &bp, NULL);
-+	if (error) {
-+		fprintf(stderr, "AGI 0 length recovery failed\n");
-+		return NULLAGBLOCK;
-+	}
-+
-+
-+	agi = bp->b_addr;
-+	if (be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC)
-+		agblocks = be32_to_cpu(agi->agi_length);
-+
-+	libxfs_buf_relse(bp);
-+
-+	if (agblocks != NULLAGBLOCK)
-+		fprintf(stderr, "AGI 0 length %u blocks found.\n", agblocks);
-+	else
-+		fprintf(stderr, "AGI 0 length recovery failed.\n");
-+
-+	return agblocks;
-+}
-+
-+/*
-+ * Try to get it from agf/agi length when primary superblock agblocks damaged.
-+ * If agf matchs agi length, use it as agblocks, otherwise use the default geometry
-+ * to calc agblocks
-+ */
-+static xfs_agblock_t
-+xfs_try_get_agblocks(struct xfs_mount *mp, struct libxfs_init *x)
-+{
-+	xfs_agblock_t agblocks = NULLAGBLOCK;
-+	xfs_agblock_t agblocks_agf, agblocks_agi;
-+	uint64_t agsize, agcount;
-+
-+	fprintf(stderr, "Attempting recovery from AGF/AGI 0 metadata...\n");
-+
-+	agblocks_agf = xfs_get_agblock_from_agf(mp);
-+	agblocks_agi = xfs_get_agblock_from_agi(mp);
-+
-+	if (agblocks_agf == agblocks_agi && agblocks_agf >= XFS_MIN_AG_BLOCKS && agblocks_agf <= XFS_MAX_AG_BLOCKS) {
-+		fprintf(stderr, "AGF/AGI 0 length matches.\n");
-+		fprintf(stderr, "Using %u blocks for superblock agblocks\n", agblocks_agf);
-+		return agblocks_agf;
-+	}
-+
-+	/* use default geometry to calc agblocks/agcount */
-+	xfs_guess_default_ag_geometry(&agsize, &agcount, x);
-+
-+	/* choose the agblocks among agf/agi length and agsize */
-+	if (agblocks_agf == agsize && agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
-+		fprintf(stderr, "Guessed AG matchs AGF length\n");
-+		agblocks = agsize;
-+	} else if (agblocks_agi == agsize && agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
-+		fprintf(stderr, "Guessed AG matchs AGI length\n");
-+		agblocks = agsize;
-+	} else if (agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
-+		fprintf(stderr, "Guessed AG does not match AGF/AGI 0 length.\n");
-+		agblocks =  agsize;
-+	} else {
-+		fprintf(stderr, "_(%s: device too small to hold a valid XFS filesystem)", progname);
-+		exit(1);
-+	}
-+
-+	fprintf(stderr, "Using %u blocks for superblock agblocks.\n", agblocks);
-+
-+	return agblocks;
-+}
-+
- static void
- init(
- 	int		argc,
-@@ -129,6 +261,16 @@ init(
- 		}
- 	}
- 
-+	/* If sb_agblocks was damaged, try to get agblocks */
-+	if (sbp->sb_agblocks < XFS_MIN_AG_BLOCKS || sbp->sb_agblocks > XFS_MAX_AG_BLOCKS) {
-+		xfs_agblock_t agblocks;
-+
-+		fprintf(stderr, "Out of bounds superblock agblocks (%u) found.\n", sbp->sb_agblocks);
-+
-+		agblocks = xfs_try_get_agblocks(&xmount, &x);
-+		sbp->sb_agblocks = agblocks;
-+	}
-+
- 	agcount = sbp->sb_agcount;
- 	mp = libxfs_mount(&xmount, sbp, &x, LIBXFS_MOUNT_DEBUGGER);
- 	if (!mp) {
--- 
-2.43.0
-
+> +				mp->m_sb.sb_blocksize, max_folio_size);
+> +			error = -ENOSYS;
+> +			goto out_free_sb;
+> +		}
+> +
+> +		xfs_warn(mp,
+> +"EXPERIMENTAL: V5 Filesystem with Large Block Size (%d bytes) enabled.",
+> +			mp->m_sb.sb_blocksize);
+>  	}
+>  
+>  	/* Ensure this filesystem fits in the page cache limits */
+> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+> index 4cc170949e9c0..55b254d951da7 100644
+> --- a/include/linux/pagemap.h
+> +++ b/include/linux/pagemap.h
+> @@ -374,6 +374,19 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+>  #define MAX_XAS_ORDER		(XA_CHUNK_SHIFT * 2 - 1)
+>  #define MAX_PAGECACHE_ORDER	min(MAX_XAS_ORDER, PREFERRED_MAX_PAGECACHE_ORDER)
+>  
+> +/*
+> + * mapping_max_folio_size_supported() - Check the max folio size supported
+> + *
+> + * The filesystem should call this function at mount time if there is a
+> + * requirement on the folio mapping size in the page cache.
+> + */
+> +static inline size_t mapping_max_folio_size_supported(void)
+> +{
+> +	if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
+> +		return 1U << (PAGE_SHIFT + MAX_PAGECACHE_ORDER);
+> +	return PAGE_SIZE;
+> +}
+> +
+>  /*
+>   * mapping_set_folio_order_range() - Set the orders supported by a file.
+>   * @mapping: The address space of the file.
+> -- 
+> 2.44.1
+> 
