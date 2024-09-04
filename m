@@ -1,74 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02D481D174D
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Sep 2024 11:16:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9788A12BEBB;
+	Wed,  4 Sep 2024 18:24:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725448603; cv=none; b=lIxbVnYEWSksIwiTmI1+6yug0s+HhgRVqi3m5bp7bSqxh5CAZhgYqK8ZGdLV09vq3h4H4NfOSIO6lZ2mVRvJrDLaB8x/UB41VGUFbRSbBmYMFv2Qp74YLoHBEdEHGuehIKEsSBnN7WiEaCBneRvsBEjaw9CmE2TO0yzzOTlcq58=
+	t=1725474296; cv=none; b=OrVe1Rk9jhTihMfUjBmNilnqTXEboX3S6uYbGt16kP5U/ECijuyrXvZKZ0x7GXPWuPk9LCIPFqpshK4XenFRzmDpgpxFJSWSx+DQnFVogallibc3hgHbIk19R7POC2kkUpJrjze63qPq4DKZjIRxuCKI+OdhOLvrKlYL6cZBoLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725448603; c=relaxed/simple;
-	bh=aYpmmr/pqQosD2oZN6mnrahDl814HMUNKON5md2JpcE=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=IqMrHN3lVrI48oconmLYLXoU/qzjKN5PYeeZjmpBVILSvS8JHKu3eN+t3LTTfiN9cpaQc//gWmipZfb8JNW8X7leU9YNNcisYQBC/TMG0Px08AwekFU1yleCu9HJPLHCApzcRvUehRLbLVgEkli/ZdsdjAomPTdUn15Z4Z6kP+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=akUK171Q; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725474296; c=relaxed/simple;
+	bh=oTygpKrcBoVJtqSNVkgv22Lqd069o3jfJeouisBqqWo=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=Pb3gJcgS700ibU2CJp6LCYdpurIhnx2VTpZwG/PZTm25ydzfeAbwoAWoKOyoyJG7KfsG2fXVFeXj7oYcMKSve2xD345aMscffpp6CqgBJypXkMjmJvYsNn9NcbjSQu0Qf2rhvpCm/EjkY1gnB/aQUApyhvrMycKSvqmUmxZ1gDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BujEe65x; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="akUK171Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 221FFC4CED7
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Sep 2024 11:16:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725448602;
-	bh=aYpmmr/pqQosD2oZN6mnrahDl814HMUNKON5md2JpcE=;
-	h=Date:From:To:Subject:From;
-	b=akUK171Qod/vNvoh7fE9422V3kCJIOCxKViFEWA2/avukYN9fibxsX1g5532Y+KEF
-	 d+F+bTuktlNEcqW5So+B6gfUuAGA/tPGQzv2/eD+RlhqqsHUCvqkySEJCOwI36M5PS
-	 ZyHeko0fqbCp1zAC72FANzuVgNh1hUxVxIPZyo7wAJECfPuwdjgrZ8fyqtbvxumSw+
-	 nCOKUmQLS9wLB6rAEyNWLbYEG8Goi9+MaBp2GlGdgZ+IYh7U2f1BxgolGF655eSEFY
-	 XO1mAYGh1Hul6IUfeXYyN1af0nnztLCRUWamojaBkdv9PgqjbwnIgB2FrvxeSx914M
-	 m5KKUgKBkgViA==
-Date: Wed, 4 Sep 2024 13:16:39 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs v6.10.1 released
-Message-ID: <6nyeagcx7p6dtlyofzx2awrllemhvvtyyeefm5p2bupg7kggxe@55mwuah6sfrd>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BujEe65x"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2055136b612so43189925ad.0;
+        Wed, 04 Sep 2024 11:24:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1725474294; x=1726079094; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=2IO0UamiFjwdYmyIGjlqy1tP39MG7vWaltTAyQyjoUA=;
+        b=BujEe65xcFuQbBCzdrhXt0KnMG5k6zfL822JQdKWSrPTp7/88c7mJkTv1hQsElv2P9
+         4nyRjuv+SC+hVGssKCC6NcJmMNOcWRUHhB2ea6P6CFT8QIpVpwtIX6lMlXrDnbaCfE5p
+         i9P009+o5dCXfSgmPG5wSbdjGtoPH7QmzOs2Kep1s4m/R0F30enqHvBpfcXYzQLEWGVz
+         hIuCe8OnCU5SGLLtpSTnxRxYxPBAi/tTQqZVcpLNQjC8QQz+uzgBiJaUaIerV3U9W7qV
+         O3fDVBNTP3/amHK09M8ewfwaYaamQVkSW37Ox80nZoW/0Q5HhihgO+GGDoY3D4A7J3n4
+         Amnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725474294; x=1726079094;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2IO0UamiFjwdYmyIGjlqy1tP39MG7vWaltTAyQyjoUA=;
+        b=N8o/A012jBR526xytl5dgtwYD6uK07wEiX5DZmAEuMzuLwsoiOiZ2wkK9kiD1teIEx
+         CTjcScE+TwY9NpjnZbGv8A32EZkEe7tzDj3/E2jCDWp7lBzKO+/6ylgsG/1TbNwS9GIG
+         w1z04LqArk/zsPJSKV4KP+w2X6dC8Bmar5eMsuk54CCVw61BCV76W3y0d+IS2ID2j+tC
+         QGmYo9buJ4ebxfHFfdjvuHAeFpes/dAE/cOge7jsUaXM/r4Dz+WdCed2chFe/zc3kyIR
+         WHBIKmWlitdxtS6DkPDiYH7RtFlt8pwliKEWiZXqt13tvD8BXx6ftLX+8kmCNInY/zOz
+         TCPA==
+X-Forwarded-Encrypted: i=1; AJvYcCVywp59JcDU18Mu4ZoYN7P9t4ar5DkSuly8fTdSDGICB7U7/83pVxvPJz6sm+Vd7neaU0rSVsbi8vFK4Lu+@vger.kernel.org, AJvYcCWPZiGYkVxWY+YK5ORi+sRjUHqw8iKP1zQnaBsu6+ZTJIT4aAHfYoQlYz1ji/eP6nKo3MVpRHkAk50L@vger.kernel.org, AJvYcCWxFjBde3K9ZAZCpUFmPrtz2CCEIk1vEoD9iVSUhXLzncTD7UXpvH4MExtcx5Zg52Hwkj9dgKxu75aicQtT@vger.kernel.org
+X-Gm-Message-State: AOJu0YzGIN0Gcv49VzuxhBDDM7ETV9ivlQEQFSoe6n6rIWasUxRwaTf0
+	VCaECINhzdbkS8jXs9zl92hSdbQAvKp6rHdpGkp4ouK+qxH4KLa8
+X-Google-Smtp-Source: AGHT+IGbuwAK6u2tFoQixAjgshxr3k87zv2jDIi8q2w8lMUvaZTuDRG8JRaXxeFK0eqKSSAblDoBgw==
+X-Received: by 2002:a17:902:db0d:b0:205:7835:38dc with SMTP id d9443c01a7336-20578353a3emr139131155ad.60.1725474293499;
+        Wed, 04 Sep 2024 11:24:53 -0700 (PDT)
+Received: from dw-tp ([171.76.86.74])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206ae78c41csm16720445ad.0.2024.09.04.11.24.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Sep 2024 11:24:52 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com, djwong@kernel.org, dchinner@redhat.com, hch@lst.de
+Cc: viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com, martin.petersen@oracle.com, John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v4 00/14] forcealign for xfs
+In-Reply-To: <20240813163638.3751939-1-john.g.garry@oracle.com>
+Date: Wed, 04 Sep 2024 23:44:29 +0530
+Message-ID: <87frqf2smy.fsf@gmail.com>
+References: <20240813163638.3751939-1-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-Hi folks,
+John Garry <john.g.garry@oracle.com> writes:
 
-The xfsprogs repository at:
+> This series is being spun off the block atomic writes for xfs series at
+> [0].
+>
+> That series got too big.
+>
+> The actual forcealign patches are roughly the same in this series.
+>
+> Why forcealign?
+> In some scenarios to may be required to guarantee extent alignment and
+> granularity.
+>
+> For example, for atomic writes, the maximum atomic write unit size would
+> be limited at the extent alignment and granularity, guaranteeing that an
+> atomic write would not span data present in multiple extents.
+>
+> forcealign may be useful as a performance tuning optimization in other
+> scenarios.
+>
+> I decided not to support forcealign for RT devices here. Initially I
+> thought that it would be quite simple of implement. However, I discovered
+> through much testing and subsequent debug that this was not true, so I
+> decided to defer support to later.
+>
+> Early development xfsprogs support is at:
+> https://github.com/johnpgarry/xfsprogs-dev/commits/atomic-writes/
+>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Hi John,
 
-has just been updated.
+Thanks for your continued work on atomic write.
+I went over the XFS patch series and this is my understanding + some queries. Could you please help with these.
 
-This is an exceptional release to fix the reported C++ compile errors on v6.10.0
+1. As I understand XFS untorn atomic write support is built on top of FORCEALIGN feature (which this series is adding) which in turn uses extsize hint feature underneath.
+   Now extsize hint mainly controls the alignment of both "physical start" & "logical start" offset and extent length, correct?
+   This is done using args->alignment for start aand args->prod/mode variables for extent length. Correct?
 
-The for-next branch has also been updated to match the state of master.
+   - If say we are not able to allocate an aligned physical start? Then since extsize is just a hint we go ahead with whatever best available extent is right?
+   - also extsize looks to be only providing allocation side of hints. (not de-allocation). Correct?
 
-The new head of the master branch is commit:
+2. If say there is an append write i.e. the allocation is needed to be done at EOF. Then we try for an exact bno (from eof block) and aligned extent length, right?
+   i.e. xfs_bmap_btalloc_filestreams() -> xfs_bmap_btalloc_at_eof(ap, args);
+   If it is not available then we try for nearby bno xfs_alloc_vextent_near_bno(args, target) and similar...
 
-fde42a497dba52bcf1faaf0f6ae50707a3d06b29
+3. It is the FORCEALIGN feature which _mandates_ both allocation (by using extsize hint) and de-allocation to happen _only_ in extsize chunks.
+   i.e. forcealign mandates -
+   - the logical and physical start offset should be aligned as per args->alignment
+   - extent length be aligned as per args->prod/mod.
+     If above two cannot be satisfied then return -ENOSPC.
 
-New commits:
+   - Does the unmapping of extents also only happens in extsize chunks (with forcealign)?
+     If the start or end of the extent which needs unmapping is unaligned then we convert that extent to unwritten and skip, is it? (__xfs_bunmapi())
+     This is a bit unclear to me. Maybe I need to look more deeper into the __xfs_bunmapi() while loop.
 
-Carlos Maiolino (1):
-      [fde42a497] xfsprogs: Release v6.10.1
+My knowledge about this is still limited so please ignore any silly questions.
 
-Darrick J. Wong (1):
-      [1f19ad060] xfs: fix C++ compilation errors in xfs_fs.h
-
-Code Diffstat:
-
- VERSION          | 2 +-
- configure.ac     | 2 +-
- debian/changelog | 6 ++++++
- doc/CHANGES      | 3 +++
- libxfs/xfs_fs.h  | 5 +++--
- 5 files changed, 14 insertions(+), 4 deletions(-)
+-ritesh
