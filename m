@@ -1,207 +1,249 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 090E841C65
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Sep 2024 20:29:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725395361; cv=fail; b=NjI0HAYI2Zi9GPxokr0REEsW7b7tpYYBimjMhuviDTFh6dadyEzuOuDzN/sUF3qz2dtFDQDaW7joZyiUy1yZX++fpiXsSwD8CeQrEFmo5jVADUMn3oOctlUwK0OcrzAZep2mTkVTUGCbJ48N6Sxd4Cr+9G9tx242VRtipCjTuVI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725395361; c=relaxed/simple;
-	bh=yObZ5yvI+O3LakJuSKTyYPbbdM66OYvsq94qWtLV0lY=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=TisDjixCID6O8WOBK0nlgtZ3X2nDKbySZnvgsMLUca8teU6eHc5xQ4YWaEKOqpNy80/NPsEon112TNkhYqnZ1SgYBiwOZsEEVlBtHyCvL2MMl7ToBFmNcrhMcgC51G7UZ0AThbNxgr51B5qmHvBwQEFVkHcbZvpNp6Dg3x4IejQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SOpot93V; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=I5OCYmjc; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF77391
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Sep 2024 00:35:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1725410148; cv=none; b=Yqvc/o2dQyHvYDy10C+bW2ZmPJR1RRYp2T7FEU+LsstoCeoDe8dcCt8W1M2QdTfr/08McZErCQLK6PUj/W6ZsRESnjydhK1QaQocaPwXJUQ6u4bD+/JpP2Xj86BDGTu7oullReavfzLLEOoole6arOPB2uCKptfuAYVmshMUEck=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1725410148; c=relaxed/simple;
+	bh=EcEry7sj4uZHIlU9bQDtUoL7z30Ue66a1E6WzjoTlBI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=m8RPvUKaqcDQCtdlxpg3qRSKQ9ZPPajzePIeGCg6Rbpui+0JZxHrWKdQlhAE2z3o7fQMk0LTmP4nCrmS0NiOZAv+5S5Epw6UBzr4rgwEv9j9pIk7OftN+1R1wQDoVQt6du0vSwc9b1uXTH7xW6g4CvpaN4sgQtOTgLRLCh5SUT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=bcLOmTWQ; arc=none smtp.client-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SOpot93V";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="I5OCYmjc"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 483K4LBU011803;
-	Tue, 3 Sep 2024 20:29:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=
-	corp-2023-11-20; bh=94Ncv72p5D21s2g/tjJtT/Qm0K4NU59qZYtmkduRIOU=; b=
-	SOpot93VacoRv45+bWYG1y+7nd1PyiC2jLncq2nxPL4LVVJ4vwmKv7a6at1Oaedl
-	CJVebTF1fiuWU8nslS+wjTk/zRLkU9X3i+5LDRSoBRQft4WeNdrluY+oj2hJRRGF
-	9FeCy4Yyfg+iPgJijdoN0NRe/+iQ33ksjy5soQLilbVx0RK0H/4LlyBTOh/hFRd+
-	fHzwD3U9fCiOmKKItjgi4s9MxBjF/xDlQSI0ARjSKYeAdMHgWz5vEmROayKNVC8q
-	CZ85bEc8lzapBZAVsqZBM7Ia2/LR44i31un2vrtZ/jOop2tUvKH/DMBqs8H038Bz
-	CNf3JhhIVdsPOdfSdj9ssQ==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41dw51sv13-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 03 Sep 2024 20:29:13 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 483JYAm4023553;
-	Tue, 3 Sep 2024 20:29:12 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2100.outbound.protection.outlook.com [104.47.58.100])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 41bsm8puqn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 03 Sep 2024 20:29:12 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mIiCjC+F//OfccJ2bJUFLpufp1W2sC2rKczfXdPdtjjIEaqPwwu7+iMNAVEQzEFpzcly8z63YqA5Ns6OfkY6aLTkGlzzTKhd5vr9BUauN7qsDPQVVMdSr0tHWvinj5paiJN0b5Mn3pWmuKsLOAKBMN/yO41qmj3h87pscDNeQBbPhL7u7c5iv/iXckKHYPcqLHaV0xda9SR4MZFeasBpVE93VSQbxBr+gcV+nnRgrDwKd85T7xb9HmEkGMGABBPDlfVNC6ZHDm7PAA/A+/qsvxNe+5qFYR5buXOxPzMbJzRjrqFl7xy4cqbAoIH6Z/PEvrK4KT/9hQ6Zx6vyJqC1JA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=94Ncv72p5D21s2g/tjJtT/Qm0K4NU59qZYtmkduRIOU=;
- b=zRD9abMGr/KdEVtoOTjUWjOv+4A/lpmnU7fjr28QcPTgaET4nbD7khS8nHnVbMqfYqFbh4/RvOQvg1ckmHnE1o0ivh6bPvu3bjZxhT6Wptd8312GxVvvieeU9uik0q9YQS/nGzQceDslTkzCqgNI5mp78R8hrkX5PN9QWoibB3sQOES/s0XU2Muf8ZCFvyZqqaSG9/DsqNc/b7UYO242VI4mXzvUw8fydJNSM+3uoCfFfv96L5yeCcnaTAN3dxXYL89ibyY7sX0t/9usDX8ph9+3gZd1xxvwXlcqdbaVre58qNHJeIryHFEseq/XRTrunwv4+UgVAN/faI5abAXexA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="bcLOmTWQ"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-2d86f71353dso170990a91.2
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Sep 2024 17:35:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=94Ncv72p5D21s2g/tjJtT/Qm0K4NU59qZYtmkduRIOU=;
- b=I5OCYmjciDaam7O9kg/gvmjNUTwygBTZQTdvzfomltDEo3y1MJ/rXl38lXSo9JG388B07q2Ckzc+1nPIy95+txasYdLqlJvMZ67o6JUq5hMRqlvRyYnh8AGssi1z0hBDvuq28/Jik891sW3R0Bky8juCrhXmzjkiOG3SKunVA2E=
-Received: from SA1PR10MB7586.namprd10.prod.outlook.com (2603:10b6:806:379::6)
- by LV8PR10MB7965.namprd10.prod.outlook.com (2603:10b6:408:204::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7939.12; Tue, 3 Sep
- 2024 20:29:09 +0000
-Received: from SA1PR10MB7586.namprd10.prod.outlook.com
- ([fe80::808a:1720:2702:e26d]) by SA1PR10MB7586.namprd10.prod.outlook.com
- ([fe80::808a:1720:2702:e26d%4]) with mapi id 15.20.7918.020; Tue, 3 Sep 2024
- 20:29:09 +0000
-Message-ID: <ba7a3e5d-643f-4e8a-ba9d-5d25fb4f2d47@oracle.com>
-Date: Tue, 3 Sep 2024 15:29:07 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [External] : [PATCH] xfsdump: Remove dead code from
- restore_extent().
-To: Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Cc: cem@kernel.org, djwong@kernel.org, sandeen@sandeen.net
-References: <20240903174140.268614-2-bodonnel@redhat.com>
-Content-Language: en-US
-From: mark.tinguely@oracle.com
-In-Reply-To: <20240903174140.268614-2-bodonnel@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BN9PR03CA0463.namprd03.prod.outlook.com
- (2603:10b6:408:139::18) To SA1PR10MB7586.namprd10.prod.outlook.com
- (2603:10b6:806:379::6)
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1725410146; x=1726014946; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=X09FZcsXHq5FRxLqb6QpBy2WSWRNXIIXcEnLXxsbJbE=;
+        b=bcLOmTWQWzs2tkZjfFPS1dANwr2pwA3kcOtrB4xUzaWuJZgGX4djEurhO3/1zKINU+
+         FymqsSD5NKmjyhqMH8+fzMQInWc9EJY/ewRuoVmUG+kCk4D+AYgtyEfl4lu6cjDJ9AEc
+         j46OcWbrdqaboYL4jqSK2aV2X9ZoDpB6/3DcD+YuD9r0YklWfmaFJscAfrffqS4FPVha
+         015LJ2hDB0ayp/Isbw9kAYxfCdVxHcApxgJbmm952PsBpo+Rv0KJulAsM4HkvN4OACAG
+         jliqsrVlH8Eu793YRhGKJJ7hM4onNBGb0JQ5SqpjBOmw/NU3DwKX6bkbX+DJIp2TPa9f
+         oAiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725410146; x=1726014946;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=X09FZcsXHq5FRxLqb6QpBy2WSWRNXIIXcEnLXxsbJbE=;
+        b=w02suGkmnWGcxOyq1bK8Uxkj9B8gWM04g3mhjJ1XzDxVWtnHWvXHKwnZpyqBden0gz
+         4nAhrd9luKxJlTCUaUFqeEtCpPZkzZ9t1H1LKWpSsaihD5yvDwrbgfbJQElMUy9ptdou
+         vdyos47XrA11No3l19twGqCL2YNujQ+q3ajbfnAvGZMVUgxB1kfcAQDGGdgFmsueTU7c
+         9G0iPDnI6izaNSx/9j+DxL1AQpnOYXw+OiNLW72NQK9+y6maU3MnfW0BQtbX5nPp8RW4
+         om3726goR1QSE5cZje39wiI35ZRMaeYKDZBZruTSxAFv10LsRUscMUIeVcKxZ1CMU2l8
+         +GyQ==
+X-Gm-Message-State: AOJu0YxZaic0D02WH49RayeHTzsH+4cJTVPsLoGLFGf9HysXboqRY7rK
+	dFW0pVErGPH/8wwd+FOMyxiLJVNwuEmka5rB5MsFud6bj8qaBYi/ozb4y9K741o=
+X-Google-Smtp-Source: AGHT+IGVEY+9Dzsox6IDnQN6NMlVkr8M2M+by+5f76aPgUPj7uhILidXLiNGspq3pJuPnevQJPy1NQ==
+X-Received: by 2002:a17:90a:3486:b0:2da:89ac:75b9 with SMTP id 98e67ed59e1d1-2da89ac7679mr897727a91.11.1725410146249;
+        Tue, 03 Sep 2024 17:35:46 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d8ebdf56c0sm4508476a91.23.2024.09.03.17.35.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Sep 2024 17:35:45 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sldzq-000Ueb-0E;
+	Wed, 04 Sep 2024 10:35:42 +1000
+Date: Wed, 4 Sep 2024 10:35:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Julian Sun <sunjunchao2870@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca,
+	jack@suse.cz, brauner@kernel.org, djwong@kernel.org, hch@lst.de,
+	syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com
+Subject: Re: [PATCH] iomap: clean preallocated blocks in iomap_end() when 0
+ bytes was written.
+Message-ID: <ZterXrqAFi9knEbD@dread.disaster.area>
+References: <20240903054808.126799-1-sunjunchao2870@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB7586:EE_|LV8PR10MB7965:EE_
-X-MS-Office365-Filtering-Correlation-Id: b6b13e72-4c92-416b-19f3-08dccc5710c1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?K2JBb2dlMHVLNEh2SkErWjIzSUJNbFNwUkZ2SFJDdTIwMWtmaXVOM2gwdlFR?=
- =?utf-8?B?bVNxQlRkVXRmNVhFUVl4MW00NUFqUFRTRk5Zdms0TmFtYWUyUFNIY016cmZ4?=
- =?utf-8?B?MWp0M0FhdVk2VlR3blJkcDZMR2xJakZPUS8venRIMitIOXUxWkMvVkZBQTZn?=
- =?utf-8?B?dnFxdnFabEhaaTlpWFF3U2FvN3FlT0FjVHZBbkxHVjJySlNCNjJPMTFZR21M?=
- =?utf-8?B?andZMzBkaFVpUVVuVEM0alhQd1p6cFR4YWRGM1lpRFY4SlpWcmRhY1NWU0Ez?=
- =?utf-8?B?UlFCNVI5MXkwUGdIU05neFFKS2NqSXNDQmlyYllUaEZBYWtuNExGRG9ycUNZ?=
- =?utf-8?B?YmlRbzlqRWg4V25laXQ0T3lrWFZGZURaVXRHSzdKWFFaRXBRanZzYzdQanl2?=
- =?utf-8?B?ME94dVV2QXU4cE50RG93a2xSQjVVakZpVFF3KzB5SFRVY1RrNWpTRnF0Vitx?=
- =?utf-8?B?NW85NFdwM1pidzA5NVV3ZlJBcVFwUlNydmtoQmVxemtkckdBY2lpMWUzR1d5?=
- =?utf-8?B?V0IrNWl1ZERqWjdKSmhCZnF0KzJwKzJvNTdMVzgvSFdiTGdxbFpaU0M5dXV2?=
- =?utf-8?B?eVhyQW8wNi9STFBMWk9XNDZPUFpQZG5CeWU4dVpLZ1NTR0NZQkZvN1lJY1lU?=
- =?utf-8?B?ckFsdVVSMFFwdnZNd2lJcjVGejVZTHl0bkNITFBXZEpOQTRRby92aGpxRWc2?=
- =?utf-8?B?aHRGS1hhbmF2aTMzWDFOcUZnaE1sc2w5eXMwTFkzZ2kxSlA1bzcrd1ZxTUhE?=
- =?utf-8?B?OFB5RWo2RE54YmJCZlN0TjVTWG5zc0Q4a3ZMV1B0cmdnZXk5UE0vTEtNR0o1?=
- =?utf-8?B?RXN0RUJ6bk1ZN3dJd1U3L29wU0ExQU9kcG1mQ1hQT2JVZ3JYK0J1MDl3VUVy?=
- =?utf-8?B?TnZRTUptVHVhSkV1S0tTNlIxNnQzUzVKRm5zcmhXQjJ5WWtoMmtlVEl1TS9W?=
- =?utf-8?B?aW1uT0Vwbi9zMCtndy8yTzY1enMvNmZQTzhtaFZKWEp5THkvSEIxNUp6cWI1?=
- =?utf-8?B?U2QydWR1YzhQNG5uMDdjZ2lFTzc1ZGpUK0VDUEhRRW1FUTNkaUQ1RGNGdU9q?=
- =?utf-8?B?cHRsVWRvZTdYQXNOckVLRmxTdDBsTGZmYXVOUVpNM0N1V01tQU1jNDRHTm1C?=
- =?utf-8?B?clhxZ2JWS0l4L0xqbXA0bkxSeU43N2xNdE9wNzNmOXhpYkszQ0FvY3J4SXZC?=
- =?utf-8?B?RTg0andJZkdPOXNhSXVSc1hIcDQxM3B0Tkk0My9pL1BLRW96YktDZXQ4ckly?=
- =?utf-8?B?TjBYdUFkVW1ia2JLOWJiQVp4eFBqMzlCVHp6d0YxTUtDcXNHeGUvQXA3TXBn?=
- =?utf-8?B?bWloN01HU1U5TkxjOU5tenROaEJJc3QvVzNsT2EwbXgwcWZGaHBIRFBjWWky?=
- =?utf-8?B?blR3eVkyQnA2dDVyelpjKzVzOC9qR0dUalM4VXpuK1BENnptaTQrYTYybzBk?=
- =?utf-8?B?bFVtS3lsRXFudyswd2hWejAyMWFmK0lCL2QyelNxejAzdDhmNURWQk44bW1D?=
- =?utf-8?B?cm9RRGE0V2dOOHVSOHVUcnJEOExjaDBHMklXdVZRUXVyOFFLZE0zMFdFdnpE?=
- =?utf-8?B?QkxRV2ZQOG53TXl1OFNWQTNDNVBQT1owK09XWWxtNkxVUTdoQSs3bkFFUmU3?=
- =?utf-8?B?MHEzUG1WMDROVGtaZFJQV1VITm9seWlmamRNdmdvQjlrU3ZEc0tkRDlzU3Z3?=
- =?utf-8?B?NEh0QWsvc3Eyc1krMTBRU2YwMVE0cXZJNjczd1ZZKzBNN1k5MHJMbytlcUtt?=
- =?utf-8?B?eEJWSThtUFA1Qk9yUHJDRWMwM3k2a012NlV5dzJCc05rZ1liZEdIRlNPMThR?=
- =?utf-8?B?M0Z3MlZ2S2oxZzdYWVhoQT09?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB7586.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UUU3cFdGdTlaWkNOL2Q1cUpxRTZGWTJYbWhGWlV6dVViWlZKSnB6SDJzWjdI?=
- =?utf-8?B?Q1FXcVdiR1phNUZxbDAyTkpieUNLcGM2OG9GaHVZbjdUSjB4ZUJjV2NTeDR5?=
- =?utf-8?B?d0RpNzM3SGRwVzdtVkNKelVMZjI1dE1WMnlsdjMxN1ZCVzhDSitGNlhrdVdq?=
- =?utf-8?B?ZUFzclFvWVNicGJaajR5eXd1dmlDOC83UlNCSDlwdWFNaW80a09XYzMrdVAx?=
- =?utf-8?B?TGtkSnlSUFRJc2xZUGFnVWdGcEYraWQzMFRzNlFJRC90azllMGx3RTRGTWRO?=
- =?utf-8?B?R0NjV2VTRVNXcGdQRTcxR09UcGhYMGNtODZHQW02Wm5yZXhKcnJ1WEZXR1VG?=
- =?utf-8?B?VEwvSWlGOGE5RGc3VkhudmJYMU4zMFpDZU10cVdLQkwzMHJPUXZTTXdHZGNJ?=
- =?utf-8?B?K2ZCeXh3QlM5RzdLWDByTlJoeUNQSHpYQ2dIMWFqcVBKYnZ1TTM4MisyelFL?=
- =?utf-8?B?cWdUOUFhRkpqQnlnUmRDRVkwaFo3NnpraEhzbnFVNnJCQlJlQVQyeC9Xa0NS?=
- =?utf-8?B?VExEOTJmNE05T3FUYnpSN0lDeEx2cDZhb0pNLzVTWHk1NUIxSk5yeFVMR1Rl?=
- =?utf-8?B?M1RxUXduclFOZXFHb21VblpSeFJlYUhocEZ0cmlmekVoRmNOWjdHREFXMndZ?=
- =?utf-8?B?SW9vd3NvQTdqem94TUcwU1RjTHZYS2hFQWpaMTZndXcyKzdKVlA4UVp2RkZj?=
- =?utf-8?B?Y3FPRW0rU1lZTENLbkhWM1l6bkRYZmRJRUNpdVo1bFJaTTBXLzZ5bEprUUln?=
- =?utf-8?B?WFRkVDFPazVqVmlqOWJDeHRUZmNXUlgxdnd0QVl1akxBYXltK3hEQXdVMGc4?=
- =?utf-8?B?MytjdUtMWG9zYkNEWnRZN0h1SmxQTjZKYm9CYldUdkpHbkI2VEI1ZVorUm55?=
- =?utf-8?B?dUMrREkreTFJMXVpeitDOFdDRlJYb0F6Tm1zeXJEZTVWWjBoLzM5YlRFTGdX?=
- =?utf-8?B?NVpWVHd4c3VHYmtZT21BWmVXaFE5Tjh5UUxaeThlYzROOXV0enRhdnNHbHNx?=
- =?utf-8?B?LzdGWTV5Umh2aEE1eHAvUjVUbC9qZElaM0Jqdkx0VnNVYTlnMkkyM1N5eGNl?=
- =?utf-8?B?RXlTOUpBVzVWZ3ZWa3Z2WVdRZHN4RGlrVmd3QkNtZUFVcVZuT0tDRnhhVmVK?=
- =?utf-8?B?WVhvRWNnYXBrU2h3TkpMM2ZTQzZWa3pOTFo4bHYxVDZCeXVSMkZyckF0Szh6?=
- =?utf-8?B?V0o2VlBUei9wVG4rdmFVa2RvMUN0Q3dYeXh2RmJ0ZVBLU2VwUmVlVk8zaVBi?=
- =?utf-8?B?U3RaYzROZ2l2TjRycncybmgzMzB2R0NqaDFBWUNDR0ZRNWNEdEc5SkdDZW04?=
- =?utf-8?B?SVNhdzhtV2s0Um5qYk44a1htbFoveHd0bmN2dzVIdkdaVnBBaEtDWVpUaEpV?=
- =?utf-8?B?U08ycEFURGNSWWZiWDg3K2RDWFJEeTBVREl1dE1OeHRxdnVhZTZxc2xBeVBv?=
- =?utf-8?B?UmVGcWJINFgxMmJTYXVvT092VU4rRTc2Vm9uS1QzWFFQT1k5MjZHRzl4WEpn?=
- =?utf-8?B?VFM0OW1WYTkxYkxkSXBFa2dIT1FpRE0vNXpZcVJpSlBLaXFWbTJMc0VaWEJG?=
- =?utf-8?B?Q2VyUDJpcFNHc0R4Zk1kbjEyelF0SXNISHNadGFVUEVLb0tQaUNKbk9uMHJC?=
- =?utf-8?B?MmFSMXVQcXgrS2hBSnp2eVhwSjdZUVRHVlRocEYvNEUyNzhSOFlCVE9MYTZr?=
- =?utf-8?B?dkZaY1pSU3lDQTdkMmRNUUZJL0FaT0tVQnREd3hjUUlNaldSRlBOVkFUekUr?=
- =?utf-8?B?T3hMSmtqNWN1SWZ1akNZK0lZYm1Ha1RaSmJwSEFGSVhJRHVzd3FHcXhTY0Jh?=
- =?utf-8?B?cFBZTXFGdHlSTEZqTmdGWUJBT3JKeFAvMkpYTjN5RjcrTXg0QlA1ZkVpaDRQ?=
- =?utf-8?B?bmxvZWNBZXpvdUFSVjZQTnNtSHNuZ051L1hBbVhNUzFRNnBrR2k1QjlFOVc0?=
- =?utf-8?B?RVJkN0RyZHVjand1WXVOTUdod2JNKy9sWUlHbHhrc0NydGxJRFYvWlczdVR2?=
- =?utf-8?B?OG1kZTd0Wkk1SlRGMEZoazR6bXlkMVpQM3pEL1BTR0kwVGhkRm1EQldPendH?=
- =?utf-8?B?UjlkZ1c5S3NmdldtRSs1MW1xMVFSTEJHSDNVTWsyMk1uZnBYOXBlbWRKcitF?=
- =?utf-8?B?RVJTS3dsRjBhTytQUDFvSTBwSVZtQS82TU1vT285dTBHMzFCVWZBc2NUQ0lj?=
- =?utf-8?B?Tnc9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	50m/e+WvhISzwsC0EhBQhmAyz0f9Vj6A8kRpi+TntJ/3LdGmY199DHKI717XUjIQUVwDKk+cXg8Vrgcgd8wj46HLVWIu4CQFJqe+3Xsplp+5wBUcxY1VCAdduJzofQAVqCTdBL7s704d/gPMwwngkuUENmBRLPQEhSjBxOD4+p5nBkfN+hEuA9QTxZN3B9Nh2h1EIFFo6INqV50oqZSCGGjoQEVv3AMEJE2BiMbILip8VNbxV3ZUDBUM/B+X2m/aM6ieZt1yQd3t6rO35TkBfIcBqB9MTli3JNgeOHmHguW0FcBhShGoms4He7rIexie56Y0zu3F0ocgWk8Y6ks8+HrjcqVXqNBJmTHuYxPcP+hwaK/T5d819Zf4wIl/HThuO//Fj0LgfJsZBD7Rma47Mw+e1uITb1SwC8LmnWrmibicR+2st1FVF+TMfRBd5bokjg8Shn+HWnEdoapXWdaV4ZH0iglx5xzOjH2e9h6uSTLxRHKncOBQq3DayBH/5scwaXME9T57rb7BEeaRTr078bXHL4ItU5Iq23HrtWFAU1XUut1Rh8CtprWSUs+RJn/nyypKSlmPVJ/jV/QBgzpH6LKl3vH+ZDkVDANgdS7ZwPM=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b6b13e72-4c92-416b-19f3-08dccc5710c1
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB7586.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Sep 2024 20:29:09.7245
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: WHd82CJw486L+XnlMxr6srR8INGopTPGezX9UShIfxkYSa1+5FKzS1rqgNKAqMKtiGE02xV3nzf0Vk+2W9Glv5/UqN03EcFRKb43XXe5Szs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR10MB7965
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-03_08,2024-09-03_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
- mlxscore=0 spamscore=0 adultscore=0 phishscore=0 bulkscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2407110000 definitions=main-2409030164
-X-Proofpoint-ORIG-GUID: cnhuE9xDqxrQMkRG9SXa3zri19Oh7Z_Y
-X-Proofpoint-GUID: cnhuE9xDqxrQMkRG9SXa3zri19Oh7Z_Y
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240903054808.126799-1-sunjunchao2870@gmail.com>
 
-On 9/3/24 12:41 PM, Bill O'Donnell wrote:
-> Remove dead code and from restore_extent() in content.c.
-> Variable rttrunc is constantly 0.
->
-> Coverity CID 1618877
->
-> Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
-> ---
->   restore/content.c | 7 -------
->   1 file changed, 7 deletions(-)
->
-Looks like dead code.
+On Tue, Sep 03, 2024 at 01:48:08PM +0800, Julian Sun wrote:
+> Hi, all.
+> 
+> Recently, syzbot reported a issue as following:
+> 
+> WARNING: CPU: 1 PID: 5222 at fs/iomap/buffered-io.c:727 __iomap_write_begin fs/iomap/buffered-io.c:727 [inline]
+> WARNING: CPU: 1 PID: 5222 at fs/iomap/buffered-io.c:727 iomap_write_begin+0x13f0/0x16f0 fs/iomap/buffered-io.c:830
+> CPU: 1 UID: 0 PID: 5222 Comm: syz-executor247 Not tainted 6.11.0-rc2-syzkaller-00111-gee9a43b7cfe2 #0
+> RIP: 0010:__iomap_write_begin fs/iomap/buffered-io.c:727 [inline]
+> RIP: 0010:iomap_write_begin+0x13f0/0x16f0 fs/iomap/buffered-io.c:830
+> Call Trace:
+>  <TASK>
+>  iomap_unshare_iter fs/iomap/buffered-io.c:1351 [inline]
+>  iomap_file_unshare+0x460/0x780 fs/iomap/buffered-io.c:1391
+>  xfs_reflink_unshare+0x173/0x5f0 fs/xfs/xfs_reflink.c:1681
+>  xfs_file_fallocate+0x6be/0xa50 fs/xfs/xfs_file.c:997
+>  vfs_fallocate+0x553/0x6c0 fs/open.c:334
+>  ksys_fallocate fs/open.c:357 [inline]
+>  __do_sys_fallocate fs/open.c:365 [inline]
+>  __se_sys_fallocate fs/open.c:363 [inline]
+>  __x64_sys_fallocate+0xbd/0x110 fs/open.c:363
+>  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+>  do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> RIP: 0033:0x7f2d716a6899
+> 
+> syzbot constructed the following scenario: syzbot called the write()
+> system call, passed an illegal pointer, and attempted to write 0x1017
+> bytes, resulting in 0 bytes written and returning EFAULT to user
+> space. Then, it called the write() system call again, passed another
+> illegal pointer, and attempted to write 0xfea7 bytes, resulting in
+> 0xe00 bytes written. Finally called copy_file_range() sys call and
+> fallocate() sys call with FALLOC_FL_UNSHARE_RANGE flag.
+> 
+> What happened here is: during the first write, xfs_buffered_write_iomap_begin()
+> used preallocated 512 blocks, inserted an extent with a length of 512 and
+> reserved 512 blocks in the quota, with the iomap length being 1M.
 
-Reviewed-by: Mark Tinguely <mark.tinguely@oracle.com>
+Why did XFS preallocate 512 blocks? The file was opened O_TRUNC, so
+it should be zero length and a write of just over 4100 bytes will
+not trigger speculative prealloc on a zero length file (threshold is
+64kB). Indeed, the first speculative prealloc will only be 64kB in
+size...
 
+Hence it's not immediately obvious what precondition is causing this
+behaviour to occur.
+
+> However, when the write failed(0 byte was written), only 0x1017 bytes were
+> passed to iomap_end() instead of the preallocated 1M bytes/512 blocks.
+> This caused only 3 blocks to be unreserved for the quota in iomap_end(),
+> instead of 512, and the corresponding extent information also only removed
+> 3 blocks instead of 512.
+
+Why 3 blocks? what was the filesystem block size? 2kB?
+
+This also smells of delayed allocation, because if it were
+-preallocation- it would be unwritten extents and we don't punch
+them out on write failures. See my first question....
+
+Regardless, the behaviour is perfectly fine. The remainder of the
+blocks are beyond EOF, and so have no impact on anything at this
+point in time.
+
+> As a result, during the second write, the iomap length was 3 blocks
+> instead of the expected 512 blocks,
+
+What was the mapping? A new delalloc extent from 0 to 6kB? If so,
+that is exactly as expected, because there's a hole in the file
+there.
+
+> which ultimately triggered the
+> issue reported by syzbot in the fallocate() system call.
+
+How? We wrote 3584 bytes, which means the first 2 blocks were
+written and marked dirty, and the third block should have been
+punched out by the same process that punched the delalloc blocks in
+the first write. We end up with a file size of 3584 bytes, and
+a delalloc mapping for those first two blocks followed by a hole,
+followed by another delalloc extent beyond EOF.
+
+There is absolutely nothing incorrect about this state - this is
+exactly how we want delalloc beyond EOF to be handled. i.e. it
+remains in place until it is explicitly removed. An normal
+application would fix the write buffer and rewrite the data, thereby
+using the space beyond EOF that we've already preallocated.
+
+IOWs, this change in this patch is papering over the issue by
+preventing short writes from leaving extents beyond EOF, rather than
+working out why either CFR or UNSHARE is going wrong when there are
+extents beyond EOF.
+
+So, onto the copy_file_range() bit.
+
+Then CFR was called with a length of 0xffffffffa003e45bul, which is
+almost 16EB in size. This should result in -EOVERFLOW, because that
+is out of the range that an loff_t can represent.
+
+i.e. generic_copy_file_checks() does this:
+
+	if (pos_in + count < pos_in || pos_out + count < pos_out)
+                return -EOVERFLOW;
+
+and pos_in is a loff_t which is signed. Hence (0 + 15EB) should
+overflow to a large negative offset and be less than 0. Implicit
+type casting rules always break my brain - this looks like it is
+casting everything to unsigned, thereby not actually checking if
+we're overflowing the max offset the kernel can operate on.
+
+This oversize length is not caught by a check against max file size
+supported by the superblock, either,, because the count gets
+truncated to EOF before the generic checks against supported maximum
+file sizes are done.
+
+That seems ... wrong. Look at fallocate() - after checking for
+overflow, it checks offset + len against inode->i_sb->s_maxbytes and
+returns -EFBIG at that point.
+
+IOWs, I think CFR should be doing nothing but returning either
+-EOVERFLOW of -EFBIG here because the length is way longer than
+maximum supported file offset for any file operation in Linux.  Then
+unshare should do nothing because the file is not shared and should
+not have the reflink flag set on it.....
+
+However, the strace indicates that:
+
+copy_file_range(6, [0], 5, NULL, 18446744072099193947, 0) = 3584
+
+That it is copying 3584 bytes. i.e. the overflow check is broken.
+It indicates, however, that the file size is as expected from the
+the short writes that occurred.
+
+Hence the unshare operation should only be operating on the range of
+0-3584 bytes because that is the only possible range of the file
+that is shared.
+
+However, the fallocate() call is for offset 0, length 0x2000 bytes
+(8kB), and these ranges are passed directly from XFS to
+iomap_file_unshare().  iomap_file_unshare() never checks the range
+against EOF, either, and so we've passed a range beyond EOF to
+iomap_file_unshare() for it to process. That seems ... wrong.
+
+Hence the unshare does:
+
+first map:	 0 - 4k - unshare successfully.
+second map:	4k - 6k - hole, skip. Beyond EOF.
+third map:	6k - 8k - delalloc, beyond EOF so needs zeroing.
+			  Fires warnings because UNSHARE.
+
+IOWs, iomap_file_unshare() will walk beyond EOF blissfully unaware
+it is trying to unshare blocks that cannot ever be shared first
+place because reflink will not share blocks beyond EOF. And because
+those blocks are beyond EOF, they will always trigger the "need
+zeroing" case in __iomap_write_begin() and fire warnings.
+
+So, yeah, either xfs_file_fallocate() or iomap_file_unshare() need
+to clamp the range being unshared to EOF.
+
+Hence this looks like a couple of contributing issues that need to
+be fixed:
+
+- The CFR overflow checks look broken.
+- The unshare range is never trimmed to EOF.
+
+but it's definitely not a bug caused by short writes leaving
+delalloc extents beyond EOF. There are many, many ways that
+we can create delalloc extents beyond EOF before running an UNSHARE
+operation that can trip over them like this.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
