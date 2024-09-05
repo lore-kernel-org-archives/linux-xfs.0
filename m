@@ -1,39 +1,58 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED80BE4A
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 09:01:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9892319306F;
+	Thu,  5 Sep 2024 09:16:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725526883; cv=none; b=VQwUt6Oi7GeUBJJJFmqeKPIpYtta3q6Rp0wRD4OtKXsXY/QhD+g66tPgQlymMRF7xLjw7xM7lkFIFOQg84awl09Pc45Yu07nfqz1psSvsWc7H7ry/n+sJLZ47+shMT75PUhKylb4CUrB+eVO5cL0YMpscONk2WEDQrfPmx/y7iY=
+	t=1725527771; cv=none; b=HmObl4B0c3HvtkGWef/mWWcmxejqR4GMeO8k1JVp502ixi0FdzZKv3rrx+RIESmQ/2QKUH41RR0oqZnyOxMofdwHNOTanqUua+46M55w20F53LMS3TG1naQOK4qr7hy46cT0YqqbB6oT98cnQExQRUWJC4ZIpYQe+/wm9nqJtRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725526883; c=relaxed/simple;
-	bh=vpYMqOD/PAAtJNZ1ycwRCiXAOL9rC/rTYldrwkD83kQ=;
+	s=arc-20240116; t=1725527771; c=relaxed/simple;
+	bh=7Dw5VKZkulLlheyA1Qjs3IF3Ob0JkeSjdUhPsmJtaCU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sHR0EkzJeIHKID3T3U1OBoIsUGxuKqPcwPNYMpHQw/WFOhVU13Cg8ER5OA0VlxN45zpYIBMDx9CTzDUgDjRQsJLySgvXEnWKr7C0a4/d32XCHkDVtabklbxObNcTqwcu/6/k2k4fafoBIKVLmF7fPcBqHadi63CslTr9QQufOUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=llpmPW+u; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Nu1L7q3/SR0vyRD+ctbivVPq/oTnVXQ+sTUiEeQrkGNXp8L8iUuU+WQw/6YzzNrRfh/vea3TaA1LMbvayj/X4IlLrdRuuqZbb4uueaupOK/pWJ5lvKqqDQpvu5aLRTTNg5TmJq8pJFz7XGnhFfzol3NcCG3UKriLNHIO8dFSG5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dFiPiyuJ; arc=none smtp.client-ip=90.155.92.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="llpmPW+u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0E49C4CEC3;
-	Thu,  5 Sep 2024 09:01:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725526883;
-	bh=vpYMqOD/PAAtJNZ1ycwRCiXAOL9rC/rTYldrwkD83kQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=llpmPW+ut/QmZxPmRLHyhrSHHMYoH5XncsJCg0Vcl3NwfFq93MNG2/nL8+BpAS8MU
-	 +N/ZtSZsuz8Ne+nCXnWmtsnI5osx+n79BLAHO30braEBETbr2BNihJpJNgmdxmLnTi
-	 7P3adbd04QN5nCxtidtQ+n4x1rQ9L8GMniXujIZQ6tyGMFgmq+bENJP61+n9qawheX
-	 DXGTLozGj9d0ZkEumuhboj8gTWE8iFmlOdrNQiTwXGMU37ZJA/kqr5YZwaPr5abgUD
-	 d6EngrMRF9ac48dIngUWTsIXmWklY9h/ga0grOzrvv5nGqoGF9TO2RVPYl48xO+Gc7
-	 DiIUdPfDhcLeA==
-Date: Thu, 5 Sep 2024 11:01:18 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] man: Update unit for fsx_extsize and fsx_cowextsize
-Message-ID: <lcsus6hy4vqtngbgp7q2gvll42ujgkq2mioo64j2shlhrz2mlr@ykrwvep3bpla>
-References: <20240808074833.1984856-1-john.g.garry@oracle.com>
- <20472c92-188a-466c-ba10-2a634782782f@oracle.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dFiPiyuJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=XsdqhbJ3zmhNs2KrvIEKmoJ1rY5ARJ37kpe6b70U7Bg=; b=dFiPiyuJETW8FuNmBJbojo4NDN
+	do4sznt5lbniPfb64SPy5h0o8fthSkCTgiYh9ZYMm98KKABQKG+SvrJIi0yAywxxm625bfMBWdZnN
+	0qBdd9qkaX72KKVTuvTq2gciXTAL4w4KvDvjoyOgNR9yrYVV3kr2Z16yxd4tXUEd7W/2MX/zEI4fa
+	6RUAkV2lW03ksZRr091NA63GzohWIhJAjuCZ8sFWUE5YPV+oOcxOV/xBqutA3Bjsc/y32KXjOXU9y
+	sJynLllYCesV+6+NfUuUhwOD54BoI1l80Sd/654R/dZHHhm42C1b9cgBadAIda4/VKEhoG+xcrvut
+	btt3PsIw==;
+Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
+	by desiato.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1sm8b0-00000000Rt1-0fGT;
+	Thu, 05 Sep 2024 09:16:06 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id 4C443300599; Thu,  5 Sep 2024 11:16:05 +0200 (CEST)
+Date: Thu, 5 Sep 2024 11:16:05 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Chandan Babu R <chandanbabu@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org
+Subject: Re: Are jump labels broken on 6.11-rc1?
+Message-ID: <20240905091605.GE4928@noisy.programming.kicks-ass.net>
+References: <20240731105557.GY33588@noisy.programming.kicks-ass.net>
+ <20240805143522.GA623936@frogsfrogsfrogs>
+ <20240806094413.GS37996@noisy.programming.kicks-ass.net>
+ <20240806103808.GT37996@noisy.programming.kicks-ass.net>
+ <875xsc4ehr.ffs@tglx>
+ <20240807143407.GC31338@noisy.programming.kicks-ass.net>
+ <87wmks2xhi.ffs@tglx>
+ <20240807150503.GF6051@frogsfrogsfrogs>
+ <20240827033506.GH865349@frogsfrogsfrogs>
+ <20240905081241.GM4723@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,54 +61,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20472c92-188a-466c-ba10-2a634782782f@oracle.com>
+In-Reply-To: <20240905081241.GM4723@noisy.programming.kicks-ass.net>
 
-On Thu, Sep 05, 2024 at 09:15:50AM GMT, John Garry wrote:
-> On 08/08/2024 08:48, John Garry wrote:
-> > The values in fsx_extsize and fsx_cowextsize are in units of bytes, and not
-> > filesystem blocks, so update.
+On Thu, Sep 05, 2024 at 10:12:41AM +0200, Peter Zijlstra wrote:
+> On Mon, Aug 26, 2024 at 08:35:06PM -0700, Darrick J. Wong wrote:
+
+> > [33965.988873] ------------[ cut here ]------------
+> > [33966.013870] WARNING: CPU: 1 PID: 8992 at kernel/jump_label.c:295 __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
+
+> > [33966.040184] pc : __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
+> > [33966.042845] lr : __static_key_slow_dec_cpuslocked.part.0+0x48/0xc0
+
+> > [33966.072840] Call trace:
+> > [33966.073838]  __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
+> > [33966.076105]  static_key_slow_dec+0x48/0x88
+
+> > This corresponds to the:
 > > 
-> > In addition, the default cowextsize is 32 filesystem blocks, not 128, so
-> > fix that as well.
-> > 
-> > Signed-off-by: John Garry <john.g.garry@oracle.com>
+> > 	WARN_ON_ONCE(!static_key_slow_try_dec(key));
 > 
-> Has this change been missed?
+> But but but,... my patch killed that function. So are you sure it is
+> applied ?!
+> 
+> Because this sounds like exactly that issue again.
+> 
+> Anyway, it appears I had totally forgotten about this issue again due to
+> holidays, sorry. Let me stare hard at Thomas' patch and make a 'pretty'
+> one that does boot.
 
-Yup, I'll add it to the next release.
+I've taken tglx's version with a small change (added comment) and boot
+tested it and queued it here:
 
-Carlos.
+  git://git.kernel.org/pub/scm/linux/kernel/git/peterz/queue.git locking/urgent
 
+Could you please double check on both x86_64 and arm64?
 
-> 
-> Cheers,
-> John
-> 
-> > 
-> > diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxattr.2
-> > index 2c626a7e..25a9ba79 100644
-> > --- a/man/man2/ioctl_xfs_fsgetxattr.2
-> > +++ b/man/man2/ioctl_xfs_fsgetxattr.2
-> > @@ -40,7 +40,7 @@ below for more information.
-> >   .PP
-> >   .I fsx_extsize
-> >   is the preferred extent allocation size for data blocks mapped to this file,
-> > -in units of filesystem blocks.
-> > +in units of bytes.
-> >   If this value is zero, the filesystem will choose a default option, which
-> >   is currently zero.
-> >   If
-> > @@ -62,9 +62,9 @@ is the project ID of this file.
-> >   .PP
-> >   .I fsx_cowextsize
-> >   is the preferred extent allocation size for copy on write operations
-> > -targeting this file, in units of filesystem blocks.
-> > +targeting this file, in units of bytes.
-> >   If this field is zero, the filesystem will choose a default option,
-> > -which is currently 128 filesystem blocks.
-> > +which is currently 32 filesystem blocks.
-> >   If
-> >   .B XFS_IOC_FSSETXATTR
-> >   is called with
-> 
-> 
+If green by with the build robots and your own testing I'll push this
+into tip/locking/urgent to be sent to Linus on Sunday. Hopefully finally
+resolving this issue.
