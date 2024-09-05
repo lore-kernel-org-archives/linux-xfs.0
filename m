@@ -1,65 +1,65 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2CF718892D
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14E581862B8
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725560536; cv=none; b=hPrE8Iv5ZVpm7H0+K0k2B41b6ylDEiPen+NZgDqCU74nBtFsJJHv4n3Tal0IXZ8UzHRHNZBe9v1sjfWvGsxa5TdxeNLnJpnGGQOvjtBLELI8/0LeBj1KjqqQw8lsBWyXcMtpk9rX3K8R5RkuTS654lScGCk8rqm6vE7WMIcBeKY=
+	t=1725560537; cv=none; b=U8tUGI9cm8k7efDx+w8Dbq0Nhhn3JcaZiyXA6QutmA5ybdK3PH+Y/cRbrkzsTUxbR8b3DP6oPTD4CNh8cssgdHbgRP7lpAMSa8bJDhBjm9jcOIERUOC5jX93SwwnKo/pOVOQpDA429Uk1CNWA9nRMCYDstwHtoPlI3jJquCV60A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725560536; c=relaxed/simple;
-	bh=q6qq7169Hq/Hf2cGfojdRbHgLExeOMKheLI3HiW/Yo8=;
+	s=arc-20240116; t=1725560537; c=relaxed/simple;
+	bh=Uwg+nboRYd5HhEqNSkSx+n/tsd7X8Tm3rR6D0OB37vc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NJAuOdN9pT4g/cJSKCC/VjpNDddKkG+OqL8WX0wvXgLkNAnnPlV0LO49ShwEfk6B95FG5Z5vnHEEOiNedUsnD9hI4rLac5DqKLAk9qYtvJjox4KQsIii7XP3yTKVAmUv6jWCWrRSsHykSBfkTWdvFnXa1YVRA6h54aAHluDnN7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Qf82lU5R; arc=none smtp.client-ip=209.85.214.177
+	 MIME-Version; b=XvpUU/7EefFlYMeJ6fMhpfEADAhWjJ23/OghT3CmBOdcLDX3EuXWM0Oz7fTefE8gQnGemsqI07Puf6zdYGqQqCIYL0eZiEE2Z8P9KOzNWppxTD/B10vufGK+ALmWQufN4dMbHV3+IzByEH4txysmB4J+nVfbObNmJMck/ap9E/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XSpR0tLj; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qf82lU5R"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-20696938f86so11309395ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XSpR0tLj"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-205909afad3so12158945ad.2
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725560534; x=1726165334; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1725560535; x=1726165335; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=v5/3DIxSIUXkMvmWDVCYDFtNq6m7PQRik1oF/pZe10U=;
-        b=Qf82lU5RNzhrrJljOqG0FRf4EqTiEZIA+hvzlQ8X+gfOWiySWtXTCcw3vM+86HTLaE
-         t72WCzO62ZjbtSBjgiMCvod6a3O3eo1JCB7tkKKayG0/uV01hfhIwM/SeKuZpyHkeh0S
-         V5ZhdJinQ72zBO87Sj6jnvU8/SW3ucv3tvAvcsodT42IaWJlMBvBPG3ZeDsNX1PdwH8+
-         qHerBX4cRE5BMstmZ05rmQnwDeIoDeLnqY2Ubh0rSxNYe1cf5NxUIwFTEuoLWhqQttA7
-         ryEH9x/o+zMkjD1O+r56ea5aDUSRInA91aAeZhaNF+JjvGwykeSI/oNkVRmtLk5Izaps
-         ybEg==
+        bh=crAqPX1XFEmY5qcCaw3wc4s67VJ1NonixVSmxVtWDKc=;
+        b=XSpR0tLjf/XkWS35ba0lVBeQ1JgcHYeASJcJO4Pn/V9N3GXXGzzYT78bCsCi1w60qP
+         7VbN4QkJi/8flUR7LI2ASLBDdUKEljt2/xLVGkYmacDiKDYXCkic6JoA4Tib0IdIgWxV
+         ba4+l1w+Aq3AvJC6FXKeltJcnjfBM/EAb7TlixlWwBlzhHAToWs3NqoeODsHvxDJt5yD
+         JkL4GRUOIqmxF/dkMwVbVFzBgqrTOHQoxyByfC6qAi16NBfqa0HRVRqA9rCcYIGF8er7
+         5RHx6z0Wmtfo2Z7JugDmjxLo6ICAOyQsyNHevipXmsiAMnl7wtCkRziaaHJuzz6s/JG3
+         NRhg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725560534; x=1726165334;
+        d=1e100.net; s=20230601; t=1725560535; x=1726165335;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=v5/3DIxSIUXkMvmWDVCYDFtNq6m7PQRik1oF/pZe10U=;
-        b=oAzbWTsQi2BQOh7g1Bt1G2XXd4eFm/LepKzXvwQIjLerZaH4U9sMwBMGEvI6H4oFbN
-         QaMmR2tkzsM4iuoAvwNwBI/Fk2g5tg3cty4iPmnsWW1WpLyp9fLOmMLsIyqMaSy+3mCy
-         /nj+r1wedJYCwrOAuLJl2cIE0jN7BQL+M7dwjNzl/XuMAdImb0nrH4rRJe3W47giuQwj
-         CUrgQZb60uL5Y2tnJiuG9Z+lvB3838fXh3/nDKCFqeav4wU8iIum1fT0ehT8mOWSTKMj
-         h881Kuma0F6ogG+molnk6YNF9SeZo3SPENaJ5xmuKcFFZpXEFmdzv9XxYSa6CrpJBT62
-         2reA==
-X-Gm-Message-State: AOJu0Yx78djlBJnH9PRRHb3/6w6tzbJ9CQZmf9ON+DAGIRxJdlCR0pO4
-	3ZXa+jM3R3zLS53edIZY2kPh7bIRYDh7PpbnohxOXiWffM3FH7WOY5sMhwoM
-X-Google-Smtp-Source: AGHT+IHXU+DWAX2XZfMGSDQOFShwSzczl6sa382Wgp2ZwMGWu/OlFErxaGuefhnawU2I4KeNm6fHEA==
-X-Received: by 2002:a17:902:ce05:b0:206:5104:a21c with SMTP id d9443c01a7336-2065104a474mr144360285ad.20.1725560534140;
-        Thu, 05 Sep 2024 11:22:14 -0700 (PDT)
+        bh=crAqPX1XFEmY5qcCaw3wc4s67VJ1NonixVSmxVtWDKc=;
+        b=AKR3c3xNMdqgKJ12Z3j8l770/11PMk4KOHguk1iR9YgdcYDFTXkGQYWPrdQ00C0Lf4
+         v0qhZuDDbDkclJGs8cj7uBTZL8sFm5NeiczNz8flCfG2lnJVo7YrxTl5N540q44xQKqB
+         /E2jMdQH+0b8OW+5WWX3l1Lh2L4lrbxaJUSADInfk6Z8U2b01KuJinFBF8Oqd6Jahziw
+         yi8gOTZsnhoETDj3mqLFNdS8o9k0RsH2eZKLVQkRaAG9ik4dsZDe/BwFtdo0B7r2hucF
+         52WBjtI20hHZfPjQIB43YIrDPtm7TZzwAf/eEM4AkdJp5DJyODhQQxoT7qTpd/12xESA
+         Olzg==
+X-Gm-Message-State: AOJu0YwX8cvJVH0nNyWlkNIvUKEXn/47ngMWDv49hdpuXakVFEdksqhI
+	wLXNfnPg7luHF4cNbQ0omiI7xM6SgsAiFY9QhexkP/tdWNhIsduSiWsAFI7V
+X-Google-Smtp-Source: AGHT+IELJDgjrsiadlMcFnuhGE91Hekqu+Q0dFXUklMiZt25j6Yt6ZzEoxN5RMIlkdDJZLLPkmYVqg==
+X-Received: by 2002:a17:903:41ca:b0:206:dc2a:232c with SMTP id d9443c01a7336-206dc2a24c7mr19535185ad.15.1725560535119;
+        Thu, 05 Sep 2024 11:22:15 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2da2:d734:ef56:7ccf])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.22.13
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.22.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 11:22:13 -0700 (PDT)
+        Thu, 05 Sep 2024 11:22:14 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
 	chandan.babu@oracle.com,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 22/26] xfs: use i_prev_unlinked to distinguish inodes that are not on the unlinked list
-Date: Thu,  5 Sep 2024 11:21:39 -0700
-Message-ID: <20240905182144.2691920-23-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 23/26] xfs: reload entire unlinked bucket lists
+Date: Thu,  5 Sep 2024 11:21:40 -0700
+Message-ID: <20240905182144.2691920-24-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
 In-Reply-To: <20240905182144.2691920-1-leah.rumancik@gmail.com>
 References: <20240905182144.2691920-1-leah.rumancik@gmail.com>
@@ -73,109 +73,225 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit f12b96683d6976a3a07fdf3323277c79dbe8f6ab ]
+[ Upstream commit 83771c50e42b92de6740a63e152c96c052d37736 ]
 
-Alter the definition of i_prev_unlinked slightly to make it more obvious
-when an inode with 0 link count is not part of the iunlink bucket lists
-rooted in the AGI.  This distinction is necessary because it is not
-sufficient to check inode.i_nlink to decide if an inode is on the
-unlinked list.  Updates to i_nlink can happen while holding only
-ILOCK_EXCL, but updates to an inode's position in the AGI unlinked list
-(which happen after the nlink update) requires both ILOCK_EXCL and the
-AGI buffer lock.
+The previous patch to reload unrecovered unlinked inodes when adding a
+newly created inode to the unlinked list is missing a key piece of
+functionality.  It doesn't handle the case that someone calls xfs_iget
+on an inode that is not the last item in the incore list.  For example,
+if at mount time the ondisk iunlink bucket looks like this:
 
-The next few patches will make it possible to reload an entire unlinked
-bucket list when we're walking the inode table or performing handle
-operations and need more than the ability to iget the last inode in the
-chain.
+AGI -> 7 -> 22 -> 3 -> NULL
 
-The upcoming directory repair code also needs to be able to make this
-distinction to decide if a zero link count directory should be moved to
-the orphanage or allowed to inactivate.  An upcoming enhancement to the
-online AGI fsck code will need this distinction to check and rebuild the
-AGI unlinked buckets.
+None of these three inodes are cached in memory.  Now let's say that
+someone tries to open inode 3 by handle.  We need to walk the list to
+make sure that inodes 7 and 22 get loaded cold, and that the
+i_prev_unlinked of inode 3 gets set to 22.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_icache.c |  2 +-
- fs/xfs/xfs_inode.c  |  3 ++-
- fs/xfs/xfs_inode.h  | 20 +++++++++++++++++++-
- 3 files changed, 22 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_export.c |   6 +++
+ fs/xfs/xfs_inode.c  | 100 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.h  |   9 ++++
+ fs/xfs/xfs_itable.c |   9 ++++
+ fs/xfs/xfs_trace.h  |  20 +++++++++
+ 5 files changed, 144 insertions(+)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 4b040740678c..6df826fc787c 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -113,7 +113,7 @@ xfs_inode_alloc(
- 	INIT_LIST_HEAD(&ip->i_ioend_list);
- 	spin_lock_init(&ip->i_ioend_lock);
- 	ip->i_next_unlinked = NULLAGINO;
--	ip->i_prev_unlinked = NULLAGINO;
-+	ip->i_prev_unlinked = 0;
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index 1064c2342876..f71ea786a6d2 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -146,6 +146,12 @@ xfs_nfs_get_inode(
+ 		return ERR_PTR(error);
+ 	}
  
- 	return ip;
- }
++	error = xfs_inode_reload_unlinked(ip);
++	if (error) {
++		xfs_irele(ip);
++		return ERR_PTR(error);
++	}
++
+ 	if (VFS_I(ip)->i_generation != generation) {
+ 		xfs_irele(ip);
+ 		return ERR_PTR(-ESTALE);
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8c7cbe7f47ef..8c1782a72487 100644
+index 8c1782a72487..06cdf5dd88af 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2015,6 +2015,7 @@ xfs_iunlink_insert_inode(
- 	}
- 
- 	/* Point the head of the list to point to this inode. */
-+	ip->i_prev_unlinked = NULLAGINO;
- 	return xfs_iunlink_update_bucket(tp, pag, agibp, bucket_index, agino);
+@@ -3622,3 +3622,103 @@ xfs_iunlock2_io_mmap(
+ 	if (ip1 != ip2)
+ 		inode_unlock(VFS_I(ip1));
  }
- 
-@@ -2117,7 +2118,7 @@ xfs_iunlink_remove_inode(
- 	}
- 
- 	ip->i_next_unlinked = NULLAGINO;
--	ip->i_prev_unlinked = NULLAGINO;
-+	ip->i_prev_unlinked = 0;
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 225f6f93c2fa..c0211ff2874e 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -68,8 +68,21 @@ typedef struct xfs_inode {
- 	uint64_t		i_diflags2;	/* XFS_DIFLAG2_... */
- 	struct timespec64	i_crtime;	/* time created */
- 
--	/* unlinked list pointers */
-+	/*
-+	 * Unlinked list pointers.  These point to the next and previous inodes
-+	 * in the AGI unlinked bucket list, respectively.  These fields can
-+	 * only be updated with the AGI locked.
-+	 *
-+	 * i_next_unlinked caches di_next_unlinked.
-+	 */
- 	xfs_agino_t		i_next_unlinked;
 +
-+	/*
-+	 * If the inode is not on an unlinked list, this field is zero.  If the
-+	 * inode is the first element in an unlinked list, this field is
-+	 * NULLAGINO.  Otherwise, i_prev_unlinked points to the previous inode
-+	 * in the unlinked list.
-+	 */
- 	xfs_agino_t		i_prev_unlinked;
- 
- 	/* VFS inode */
-@@ -81,6 +94,11 @@ typedef struct xfs_inode {
- 	struct list_head	i_ioend_list;
- } xfs_inode_t;
- 
-+static inline bool xfs_inode_on_unlinked_list(const struct xfs_inode *ip)
++/*
++ * Reload the incore inode list for this inode.  Caller should ensure that
++ * the link count cannot change, either by taking ILOCK_SHARED or otherwise
++ * preventing other threads from executing.
++ */
++int
++xfs_inode_reload_unlinked_bucket(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip)
 +{
-+	return ip->i_prev_unlinked != 0;
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_buf		*agibp;
++	struct xfs_agi		*agi;
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
++	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	xfs_agino_t		prev_agino, next_agino;
++	unsigned int		bucket;
++	bool			foundit = false;
++	int			error;
++
++	/* Grab the first inode in the list */
++	pag = xfs_perag_get(mp, agno);
++	error = xfs_ialloc_read_agi(pag, tp, &agibp);
++	xfs_perag_put(pag);
++	if (error)
++		return error;
++
++	bucket = agino % XFS_AGI_UNLINKED_BUCKETS;
++	agi = agibp->b_addr;
++
++	trace_xfs_inode_reload_unlinked_bucket(ip);
++
++	xfs_info_ratelimited(mp,
++ "Found unrecovered unlinked inode 0x%x in AG 0x%x.  Initiating list recovery.",
++			agino, agno);
++
++	prev_agino = NULLAGINO;
++	next_agino = be32_to_cpu(agi->agi_unlinked[bucket]);
++	while (next_agino != NULLAGINO) {
++		struct xfs_inode	*next_ip = NULL;
++
++		if (next_agino == agino) {
++			/* Found this inode, set its backlink. */
++			next_ip = ip;
++			next_ip->i_prev_unlinked = prev_agino;
++			foundit = true;
++		}
++		if (!next_ip) {
++			/* Inode already in memory. */
++			next_ip = xfs_iunlink_lookup(pag, next_agino);
++		}
++		if (!next_ip) {
++			/* Inode not in memory, reload. */
++			error = xfs_iunlink_reload_next(tp, agibp, prev_agino,
++					next_agino);
++			if (error)
++				break;
++
++			next_ip = xfs_iunlink_lookup(pag, next_agino);
++		}
++		if (!next_ip) {
++			/* No incore inode at all?  We reloaded it... */
++			ASSERT(next_ip != NULL);
++			error = -EFSCORRUPTED;
++			break;
++		}
++
++		prev_agino = next_agino;
++		next_agino = next_ip->i_next_unlinked;
++	}
++
++	xfs_trans_brelse(tp, agibp);
++	/* Should have found this inode somewhere in the iunlinked bucket. */
++	if (!error && !foundit)
++		error = -EFSCORRUPTED;
++	return error;
 +}
 +
- static inline bool xfs_inode_has_attr_fork(struct xfs_inode *ip)
- {
- 	return ip->i_forkoff > 0;
++/* Decide if this inode is missing its unlinked list and reload it. */
++int
++xfs_inode_reload_unlinked(
++	struct xfs_inode	*ip)
++{
++	struct xfs_trans	*tp;
++	int			error;
++
++	error = xfs_trans_alloc_empty(ip->i_mount, &tp);
++	if (error)
++		return error;
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	if (xfs_inode_unlinked_incomplete(ip))
++		error = xfs_inode_reload_unlinked_bucket(tp, ip);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	xfs_trans_cancel(tp);
++
++	return error;
++}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index c0211ff2874e..0467d297531e 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -593,4 +593,13 @@ void xfs_end_io(struct work_struct *work);
+ int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+ void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+ 
++static inline bool
++xfs_inode_unlinked_incomplete(
++	struct xfs_inode	*ip)
++{
++	return VFS_I(ip)->i_nlink == 0 && !xfs_inode_on_unlinked_list(ip);
++}
++int xfs_inode_reload_unlinked_bucket(struct xfs_trans *tp, struct xfs_inode *ip);
++int xfs_inode_reload_unlinked(struct xfs_inode *ip);
++
+ #endif	/* __XFS_INODE_H__ */
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index a1c2bcf65d37..ee3eb3181e3e 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -80,6 +80,15 @@ xfs_bulkstat_one_int(
+ 	if (error)
+ 		goto out;
+ 
++	if (xfs_inode_unlinked_incomplete(ip)) {
++		error = xfs_inode_reload_unlinked_bucket(tp, ip);
++		if (error) {
++			xfs_iunlock(ip, XFS_ILOCK_SHARED);
++			xfs_irele(ip);
++			return error;
++		}
++	}
++
+ 	ASSERT(ip != NULL);
+ 	ASSERT(ip->i_imap.im_blkno != 0);
+ 	inode = VFS_I(ip);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index d713e10dff8a..0cd62031e53f 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3704,6 +3704,26 @@ TRACE_EVENT(xfs_iunlink_reload_next,
+ 		  __entry->next_agino)
+ );
+ 
++TRACE_EVENT(xfs_inode_reload_unlinked_bucket,
++	TP_PROTO(struct xfs_inode *ip),
++	TP_ARGS(ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, agino)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->agno = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
++		__entry->agino = XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino);
++	),
++	TP_printk("dev %d:%d agno 0x%x agino 0x%x bucket %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agino,
++		  __entry->agino % XFS_AGI_UNLINKED_BUCKETS)
++);
++
+ DECLARE_EVENT_CLASS(xfs_ag_inode_class,
+ 	TP_PROTO(struct xfs_inode *ip),
+ 	TP_ARGS(ip),
 -- 
 2.46.0.598.g6f2099f65c-goog
 
