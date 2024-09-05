@@ -1,67 +1,68 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4CC018754D
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 858B1187357
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725560523; cv=none; b=m8unn4gD8bBYkxNY2aljmMD86GeJMnRj1aulY73tLn/3ojKsLjkfvXan7t/a61fYKb1uBcwkM+orGOe6gCDoyseASijYFDhajrHQCAjcqlirFE4PZTGGAN/tpIk+OYdVH8Q2p01Ul3B9GQRBnr4PUWYMKZJmw9O2xpZa4OrG+Hw=
+	t=1725560524; cv=none; b=A8CHk0GAhCQIQJRZ4FEurZSMdapWeB7Q7B/Mn3S+mJL2jVS+Z0eibU0fKiAH88ojEixXaP+pzTtq42VfunCQFegV2l6WMgowl3m8SZc0DVGpRR5h0+n5ixpCgvGfrXnVAcZLonbKthe773Sl98sf57Dl7D51/1K0nAQDFFfR7NE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725560523; c=relaxed/simple;
-	bh=ex+Z0N7afk0rOd6e7S5yztxz371+3w1tO7GgrvQk9Kw=;
+	s=arc-20240116; t=1725560524; c=relaxed/simple;
+	bh=fNxF1A85GQ3tX99uYdvNeatQYgz/N0TrtfWfvLV0184=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dxVRh3DfbjE/BtflkT66bKGr46ulBgbAWFhgi8C725lQTUW/t+2hTshF7OjKASTq85sE/QpcM4cdlDHMbhg18271xGnfYkhD6YpdUXv9912FnLo9YKkEzb7cXsRdPKZloGxmBiIUYZWUEUCjHoiLDDarMlboOaRhl1sS7Co+Cwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SEj51Wcb; arc=none smtp.client-ip=209.85.215.169
+	 MIME-Version; b=Ux/GeDiLYbotSG15yTGrXTSyVFzVEFxPQHMWHy7PiVX7UguAmqTiYkkt3YQRTMMNZHADId8tYIKEzy6hhUQYHpz00W4GAt51rcz2b/bHOEIEMX9MQpn6DNvXA3ZnUVJrxPIIe7QpHKQerTKeGDIRjzeiZFc7ZaUFxV8uHJghgP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WRxHNjKG; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SEj51Wcb"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-7d50e865b7aso549019a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WRxHNjKG"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2055136b612so12351855ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725560521; x=1726165321; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1725560522; x=1726165322; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hZU7Bfd5lbjk+/RmdOLvGCY4sbjakLLt4Vz3JSDRaUc=;
-        b=SEj51WcbdgPyz8Q8Q0Bfx9TdGxMgmyG07KTAy08dWgPMl/MB7FxII/XD2fSe3i90qK
-         dc0b7U8yavRxJhZRFzAG45v0JHQPgQStSt5NN0ott5YIUw9vqJZk0xN7BEE4fqyuOsWe
-         pRfOXTThi008rw1edSJTHRSCcXD9AiwHANWS2n4QJdCZF2stnoRKcSctn/1do8upC6OA
-         NH/km6fxUEOZ2pVsWTXmygm9MlOxdIJNd5kfObZf3GQE6RJv75ZPtx/574HC2cOosTbR
-         QDvWwykxqP5Pb+JftGzcHHs61xpOSJAh4+KnGdGYQCGqrnAnvk4wPJN4HzpFvwgku7wX
-         RLJA==
+        bh=41dGirSTLjJ1lRlnioWURooeGcIA7fc6MXk3B/N6dEA=;
+        b=WRxHNjKGH2w/pEmlhwxpNmLpQpd5ReNDuj6iecXeQdCb1bk3UnksldRJyf/TejJhaA
+         KQxh5mljVkt5bAlYFtzsujbzjlKP2Ua1gXvF/dxb7Go9llYWSjz31pbLHUZmNFKRpeAC
+         0lgtuShHLPYQRM1lYgTl3ugIlH3NDzzv+Pi+H7u7w03EYM7InRwSVQjtrbpKTSDKXqh2
+         G4wMFQAg9Se9nMTJilLfUTPTMz7e4VjSKYbae0TXG76Ke53GAJ7S6kMQ2uRF9EfDeQCu
+         l+CSQynec1R8+hPATwOsCVBGtaoBiWvAxTh9GeZBBZQYKkW3zkiJa2bKlm4GbIuH6clI
+         wjXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725560521; x=1726165321;
+        d=1e100.net; s=20230601; t=1725560522; x=1726165322;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=hZU7Bfd5lbjk+/RmdOLvGCY4sbjakLLt4Vz3JSDRaUc=;
-        b=SqtQPJPC/kP5oXiZ0W8+OKG64i9kkDUPpA3VOI++eGwVrCgJ5nLEzITt53GzvTXLC0
-         679JXgV/B/6jYEDBFZYylZJ8DSJxvNvf2kMFIk9qBT6Hkv/6nbf76HjixvWVo0w+xrK6
-         2kYvj9+yxbCA1uxpIxblBG4M2nJuR1KtlIFVbUgWyEk6U4jXqwWMIJAH4Tvz0e9QCbkQ
-         HUsOdB/DcEzrq82F9FNfFtp8xcrSmgSVsOdVZVLF8LnC9mlth+z7XSYOkY/+2DUkYxgt
-         316LJ2wX1t6C6m0elMguQaKB5MWaIkeV1MoRLgxXk6o4tqEY3b9RtKGvXS+qRwczCdbi
-         HLqQ==
-X-Gm-Message-State: AOJu0Yx3nk8LIxOLlq4EVUVfwWVvmgPETvX6VCL/hp25CcdxK18H9Wr5
-	+s46o1wrkB7Mf6nggDu+d6uAM2xSbnbxtaSFETIqo+eL0jPMvpGfV9Enwm23
-X-Google-Smtp-Source: AGHT+IHRpFiZVEo7/K7PgHPQrfJ5NsN0ylYQoOjTFWcy608rBctTB3D9jbsBOaY5j+ZCMyITx+wXZQ==
-X-Received: by 2002:a17:902:e804:b0:202:4b65:65af with SMTP id d9443c01a7336-20546b35a4cmr232258135ad.52.1725560520735;
-        Thu, 05 Sep 2024 11:22:00 -0700 (PDT)
+        bh=41dGirSTLjJ1lRlnioWURooeGcIA7fc6MXk3B/N6dEA=;
+        b=mmsHgViOOZpjRptMaPWINvep+6fRDkWjeV5ZN99DbVA/twIkLewLDIdKYGAkk4L1sM
+         ZWbCgUnK+73b1suBkbkL+8/5SREWhB1Kg2Qg+YYjlACm3lX5ZsisHGLa9LCZ5rx0NXgw
+         9AIuiUIzShf2jRdBAUdtPYaTRK/bz8ZyqEAMi4br9RCCfjnC+JMyux0ytDzxTSDyoo5T
+         bG8cIpFBal9wiGsXdM59aAOM1OIfuVfIn2uRURRa4FMqOFb8F2CEKBaLouLxTzoZ8Fus
+         gYmf3+D2+LLXY5TvyxJ2hMfU+FWEDIMCgShZwVyGX8mtuP1vupHpkeXqUWSWcTQ7EOSR
+         jIvw==
+X-Gm-Message-State: AOJu0YxJPGHhOxHVADmz0TzFBqtYqKzmTnUEn73mFwcYpPe0M7RdCyDK
+	bd8ulqUA+KqCtv4JVOLGwj60kkneONTSRemvxz3IwCKiEUmJysjBnsLT81ap
+X-Google-Smtp-Source: AGHT+IE+l+2mPRSkVQVc3j74Eny1N8vw5GLGknU28tvyZwWV9Gh6cvdass/Rn5m+Q5PT0nGT8E8S3g==
+X-Received: by 2002:a17:902:da82:b0:206:9ab3:2ebc with SMTP id d9443c01a7336-2069ab33684mr131494255ad.47.1725560521704;
+        Thu, 05 Sep 2024 11:22:01 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2da2:d734:ef56:7ccf])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.21.59
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.22.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 11:22:00 -0700 (PDT)
+        Thu, 05 Sep 2024 11:22:01 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
 	chandan.babu@oracle.com,
-	Dave Chinner <dchinner@redhat.com>,
-	Pengfei Xu <pengfei.xu@intel.com>,
+	Ye Bin <yebin10@huawei.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	Dave Chinner <david@fromorbit.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 09/26] xfs: quotacheck failure can race with background inode inactivation
-Date: Thu,  5 Sep 2024 11:21:26 -0700
-Message-ID: <20240905182144.2691920-10-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 10/26] xfs: fix BUG_ON in xfs_getbmap()
+Date: Thu,  5 Sep 2024 11:21:27 -0700
+Message-ID: <20240905182144.2691920-11-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
 In-Reply-To: <20240905182144.2691920-1-leah.rumancik@gmail.com>
 References: <20240905182144.2691920-1-leah.rumancik@gmail.com>
@@ -73,126 +74,100 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Ye Bin <yebin10@huawei.com>
 
-[ Upstream commit 0c7273e494dd5121e20e160cb2f047a593ee14a8 ]
+[ Upstream commit 8ee81ed581ff35882b006a5205100db0b57bf070 ]
 
-The background inode inactivation can attached dquots to inodes, but
-this can race with a foreground quotacheck failure that leads to
-disabling quotas and freeing the mp->m_quotainfo structure. The
-background inode inactivation then tries to allocate a quota, tries
-to dereference mp->m_quotainfo, and crashes like so:
-
-XFS (loop1): Quotacheck: Unsuccessful (Error -5): Disabling quotas.
-xfs filesystem being mounted at /root/syzkaller.qCVHXV/0/file0 supports timestamps until 2038 (0x7fffffff)
-BUG: kernel NULL pointer dereference, address: 00000000000002a8
-....
-CPU: 0 PID: 161 Comm: kworker/0:4 Not tainted 6.2.0-c9c3395d5e3d #1
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
-Workqueue: xfs-inodegc/loop1 xfs_inodegc_worker
-RIP: 0010:xfs_dquot_alloc+0x95/0x1e0
-....
+There's issue as follows:
+XFS: Assertion failed: (bmv->bmv_iflags & BMV_IF_DELALLOC) != 0, file: fs/xfs/xfs_bmap_util.c, line: 329
+------------[ cut here ]------------
+kernel BUG at fs/xfs/xfs_message.c:102!
+invalid opcode: 0000 [#1] PREEMPT SMP KASAN
+CPU: 1 PID: 14612 Comm: xfs_io Not tainted 6.3.0-rc2-next-20230315-00006-g2729d23ddb3b-dirty #422
+RIP: 0010:assfail+0x96/0xa0
+RSP: 0018:ffffc9000fa178c0 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000000001 RCX: ffff888179a18000
+RDX: 0000000000000000 RSI: ffff888179a18000 RDI: 0000000000000002
+RBP: 0000000000000000 R08: ffffffff8321aab6 R09: 0000000000000000
+R10: 0000000000000001 R11: ffffed1105f85139 R12: ffffffff8aacc4c0
+R13: 0000000000000149 R14: ffff888269f58000 R15: 000000000000000c
+FS:  00007f42f27a4740(0000) GS:ffff88882fc00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000b92388 CR3: 000000024f006000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 Call Trace:
  <TASK>
- xfs_qm_dqread+0x46/0x440
- xfs_qm_dqget_inode+0x154/0x500
- xfs_qm_dqattach_one+0x142/0x3c0
- xfs_qm_dqattach_locked+0x14a/0x170
- xfs_qm_dqattach+0x52/0x80
- xfs_inactive+0x186/0x340
- xfs_inodegc_worker+0xd3/0x430
- process_one_work+0x3b1/0x960
- worker_thread+0x52/0x660
- kthread+0x161/0x1a0
- ret_from_fork+0x29/0x50
- </TASK>
-....
+ xfs_getbmap+0x1a5b/0x1e40
+ xfs_ioc_getbmap+0x1fd/0x5b0
+ xfs_file_ioctl+0x2cb/0x1d50
+ __x64_sys_ioctl+0x197/0x210
+ do_syscall_64+0x39/0xb0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-Prevent this race by flushing all the queued background inode
-inactivations pending before purging all the cached dquots when
-quotacheck fails.
+Above issue may happen as follows:
+         ThreadA                       ThreadB
+do_shared_fault
+ __do_fault
+  xfs_filemap_fault
+   __xfs_filemap_fault
+    filemap_fault
+                             xfs_ioc_getbmap -> Without BMV_IF_DELALLOC flag
+			      xfs_getbmap
+			       xfs_ilock(ip, XFS_IOLOCK_SHARED);
+			       filemap_write_and_wait
+ do_page_mkwrite
+  xfs_filemap_page_mkwrite
+   __xfs_filemap_fault
+    xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+    iomap_page_mkwrite
+     ...
+     xfs_buffered_write_iomap_begin
+      xfs_bmapi_reserve_delalloc -> Allocate delay extent
+                              xfs_ilock_data_map_shared(ip)
+	                      xfs_getbmap_report_one
+			       ASSERT((bmv->bmv_iflags & BMV_IF_DELALLOC) != 0)
+	                        -> trigger BUG_ON
 
-Reported-by: Pengfei Xu <pengfei.xu@intel.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+As xfs_filemap_page_mkwrite() only hold XFS_MMAPLOCK_SHARED lock, there's
+small window mkwrite can produce delay extent after file write in xfs_getbmap().
+To solve above issue, just skip delalloc extents.
+
+Signed-off-by: Ye Bin <yebin10@huawei.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_qm.c | 40 ++++++++++++++++++++++++++--------------
- 1 file changed, 26 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ff53d40a2dae..f51960d7dcbd 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1321,15 +1321,14 @@ xfs_qm_quotacheck(
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 867645b74d88..351087cde27e 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -314,15 +314,13 @@ xfs_getbmap_report_one(
+ 	if (isnullstartblock(got->br_startblock) ||
+ 	    got->br_startblock == DELAYSTARTBLOCK) {
+ 		/*
+-		 * Delalloc extents that start beyond EOF can occur due to
+-		 * speculative EOF allocation when the delalloc extent is larger
+-		 * than the largest freespace extent at conversion time.  These
+-		 * extents cannot be converted by data writeback, so can exist
+-		 * here even if we are not supposed to be finding delalloc
+-		 * extents.
++		 * Take the flush completion as being a point-in-time snapshot
++		 * where there are no delalloc extents, and if any new ones
++		 * have been created racily, just skip them as being 'after'
++		 * the flush and so don't get reported.
+ 		 */
+-		if (got->br_startoff < XFS_B_TO_FSB(ip->i_mount, XFS_ISIZE(ip)))
+-			ASSERT((bmv->bmv_iflags & BMV_IF_DELALLOC) != 0);
++		if (!(bmv->bmv_iflags & BMV_IF_DELALLOC))
++			return 0;
  
- 	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
- 			NULL);
--	if (error) {
--		/*
--		 * The inode walk may have partially populated the dquot
--		 * caches.  We must purge them before disabling quota and
--		 * tearing down the quotainfo, or else the dquots will leak.
--		 */
--		xfs_qm_dqpurge_all(mp);
--		goto error_return;
--	}
-+
-+	/*
-+	 * On error, the inode walk may have partially populated the dquot
-+	 * caches.  We must purge them before disabling quota and tearing down
-+	 * the quotainfo, or else the dquots will leak.
-+	 */
-+	if (error)
-+		goto error_purge;
- 
- 	/*
- 	 * We've made all the changes that we need to make incore.  Flush them
-@@ -1363,10 +1362,8 @@ xfs_qm_quotacheck(
- 	 * and turn quotaoff. The dquots won't be attached to any of the inodes
- 	 * at this point (because we intentionally didn't in dqget_noattach).
- 	 */
--	if (error) {
--		xfs_qm_dqpurge_all(mp);
--		goto error_return;
--	}
-+	if (error)
-+		goto error_purge;
- 
- 	/*
- 	 * If one type of quotas is off, then it will lose its
-@@ -1376,7 +1373,7 @@ xfs_qm_quotacheck(
- 	mp->m_qflags &= ~XFS_ALL_QUOTA_CHKD;
- 	mp->m_qflags |= flags;
- 
-- error_return:
-+error_return:
- 	xfs_buf_delwri_cancel(&buffer_list);
- 
- 	if (error) {
-@@ -1395,6 +1392,21 @@ xfs_qm_quotacheck(
- 	} else
- 		xfs_notice(mp, "Quotacheck: Done.");
- 	return error;
-+
-+error_purge:
-+	/*
-+	 * On error, we may have inodes queued for inactivation. This may try
-+	 * to attach dquots to the inode before running cleanup operations on
-+	 * the inode and this can race with the xfs_qm_destroy_quotainfo() call
-+	 * below that frees mp->m_quotainfo. To avoid this race, flush all the
-+	 * pending inodegc operations before we purge the dquots from memory,
-+	 * ensuring that background inactivation is idle whilst we turn off
-+	 * quotas.
-+	 */
-+	xfs_inodegc_flush(mp);
-+	xfs_qm_dqpurge_all(mp);
-+	goto error_return;
-+
- }
- 
- /*
+ 		p->bmv_oflags |= BMV_OF_DELALLOC;
+ 		p->bmv_block = -2;
 -- 
 2.46.0.598.g6f2099f65c-goog
 
