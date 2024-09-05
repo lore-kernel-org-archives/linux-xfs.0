@@ -1,201 +1,110 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA1EC14F125
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63B3C18E02E
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 19:30:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725560540; cv=none; b=lvUzNNF2qjrDe2sHbR0l2qK1Ai9VpKUqiTpFCz4Z+QFrr6IQFHTyD2TIiGr6841kOZtZC29ckHaTCiCJ1qKm3cz7UzQjlBtF8MNtdTkVvokzkY4sNcwgKQ9qIC/4oFC/DQ6U0sqoXQfRb9Mf/XsNmFdTj9MLeg6BfzQwtBmsuP0=
+	t=1725564605; cv=none; b=V/qIGB5/XdSGh4cu8XiD/iszxwg4mFWrBipPcnIYkdk8S8bHrIA/FGcEUOE05oeSHJlmUIgdSAEqCgfcIbvlOnkUdgTrqgd86XOMkEWoJp4cRMYFBSGc/w3iIEaxG07lh3UWm3jI2DastAcfIlkwKh7GIBp1iQngGuMW2hhAL6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725560540; c=relaxed/simple;
-	bh=PPNdc3z3NqwEjYCLYKW/QfYOgzNgiCuta5kiBo65KeI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aJ2icomH4ZdmtoAd4lohHpRibd3iFADbRPVuulCqFwf44/LVaMQK0QjvvWIjdQYjv4aCC8IpCgFslUQEs4lTnw2Cthx60WP6EFMeRlrtJ/d8On3dxYwHBTu4uGy98p/CUDYTBmKSfJLY6cUQ9/5seeMVqwcScsXsaRFWFmqT5Oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LXaMdfzC; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1725564605; c=relaxed/simple;
+	bh=h+GztmK06ua0ItOo5xyNb+uFSPQwlQl1O+khIF189xA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oil4304a5H0yMUk8qZtRQ2PZmvfRZQASfuTOxJEZnkZnlLDTgSEbMQZ1XK6D/sbVeEJ+DGZp4oWCpA87brz67LlQf+zXjM/PS/krolbwyssffjBFxOa+RWt94jcRv5m3h7CD1FH61txHu4m4HL1SgxLk02hi7PyHKEULSocAhoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=Z3/T92iC; arc=none smtp.client-ip=209.85.222.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LXaMdfzC"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-71434174201so866237b3a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="Z3/T92iC"
+Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-7a802deeb9aso79140085a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 12:30:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725560538; x=1726165338; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=X0L1twsXbiKjyUC98PoGnv6lrlvreY6QLXRsV9mKZ4U=;
-        b=LXaMdfzCWPEjt6Sk9VYlxlZLhKEAXdGVYG6fVuJe0f1jZda9KFSohhZBw+Ej46yqsh
-         DCURihDq3lTjkQ9oMyY3jg3lkjYvEvhxx/jHT69/wBBNlO3y3yVCdCN7m5upvkWEyrxU
-         zedTGOr1Y71w/FRkY2zMJgOuyrI7K/BsgbUEhJ8TIpFc+3AnlgVlp7HxlrUugg0kmvFD
-         4YYFdEbNESTBAFa/UwOBX2upo8728hVG8PslN1m9NcpEgTSbnk3YHQwMZ/YYo+CKN4Eu
-         Uf2OCoQuonJhfEizdaOKpYBtVEa6ry5gWwp6qRFX8xWRKZkUfyCRreatVMncsH0KG5Vb
-         n+jg==
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1725564601; x=1726169401; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=uLq88qKC5eEOv6jE9dMcoyRYpwT+k6ZKS0lrxy9sSsE=;
+        b=Z3/T92iC/Fj+/Cia06bnr5Xwx1xqgKpVwu0CnncHmhc/EuaCDuXE1YbsTZT0gknmM2
+         Ku1Y8gBvzZTsGRFAmeATiWCoh5PVX1h2cORqMX2Ii57fV4Juetf9BuPjEThIET2wV2Yb
+         G7I+Wq+sLEpo2sd6hGboa45C3vYQP89JbLNlkKt+1p9bd0o9Pwq2g8eMSEtlMqwPa53Q
+         e9FeFzxH3dJQoGNYjUxg7AH2jY4+W6nCrKVWACOQyH/QxpRZ0VEnh7sJnE0+9oeXQBNc
+         hcwD83qYlCjnUz6PMtyk/iBJ2u0XNtRQeeBOWPNnI/pM3Dy0AbGtIR8eJGk4bBCy5jX/
+         k3bA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725560538; x=1726165338;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=X0L1twsXbiKjyUC98PoGnv6lrlvreY6QLXRsV9mKZ4U=;
-        b=xI4Mout2ihGjLd0k7ROHPtPrOA2fcs2teL0bqjwb2N26cm3Md8aOiZDd4du9V7PX/c
-         emsIsD+32ZWjRZVygr1kk6DH5m1sLcrqCsx6MLX4ToWC1uknyU6tFZwvUz3ZomS3Ewaf
-         PQmeLHQ6TPziAdQee9FqPqnQyg8tNsupkQGgFL1V1aEjl3ShFJQGQdKM2YI9pWmS9Lyh
-         hyGjMDoTwA54kB8kPAScnlWLj8S1ofbtbZfsl8AZ5Rxo0M6TYPii8guCu8tOaWhUZTuL
-         nGnDkwbQTMd4in39opoN4FiPO8EmwdAobDsDlYp3ChwVDNwh1zp8JeuTyvvlYeFq5vlt
-         XuQw==
-X-Gm-Message-State: AOJu0YzJpI3otvAxf1rBVSHi/95OF0yUCv2NWjqP6WwltKe+GiOdVXK8
-	gPfuPyZFk/KxyXBUxwFtOT8Tn2lEeQcj6V+Z+UXe0WcZbKyawLytSCeXVv3t
-X-Google-Smtp-Source: AGHT+IHNsr7Io7SKqY0PAnRH284SxCVtjzf8mH5VCvkupsFQz5VEKWU8Qhe/2X96sTGcWmKxNemKCQ==
-X-Received: by 2002:a17:903:1cf:b0:1fd:8eaf:ea73 with SMTP id d9443c01a7336-20546705a4fmr212233295ad.35.1725560538098;
-        Thu, 05 Sep 2024 11:22:18 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2da2:d734:ef56:7ccf])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.22.17
+        d=1e100.net; s=20230601; t=1725564601; x=1726169401;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uLq88qKC5eEOv6jE9dMcoyRYpwT+k6ZKS0lrxy9sSsE=;
+        b=VGM/m0k8LRv2B00BE9yATKwCdheCXF+5nzOGJBkRG5UZ0lIIMX/Kxo9MqvbZeRiByB
+         DrpBDoKJWGwB5RsLalRW9zMh4k6l2uVev+IfuyrAQ5TE235msolwvYEsKkpLUKr0KbcF
+         vzWSSPufqIcxVp7VpiyhogcyaG1OATB/kKBAx0MGU7U4z0fGwdTpIU/h6LHAzC5eIqV/
+         YEavl9M0zqzdHm7xOg0wiG0ykcjpaIzh5MO98i2Hh9cQShlwgv819/ijdGHn7o5leN/q
+         1JF1kaVoY2+g+357lAnE50HkuK4h13RCIloMEJhAPFSURZZjLINirtgMoBubTeYJF9Ab
+         y4zA==
+X-Forwarded-Encrypted: i=1; AJvYcCUzC0+SK6g+rQImXj93hyOQy5BZ9nZdBDHwA93W1TsvYa1Zra7XAXuOWM8j6Zw9+34ebdwEkcYXK9Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzzG6//9yjH3T7aB5ZWdiIGcWvcjR6bG5337/SVxHfebJJdhhg7
+	tp+AipzgS0DI2N9MdSO3sOohfO5XODEXiHVue3fq99iGqhQNRHtMm0/vaVkb06c=
+X-Google-Smtp-Source: AGHT+IH/jKRTwmHj2A0Fw8hBIQQEYZheGvncMyz59vEBTim/gY8yU8p+bmOgT7GJ5npitcpK4cA+uw==
+X-Received: by 2002:a05:620a:29d0:b0:7a2:275:4841 with SMTP id af79cd13be357-7a99733aef1mr14265285a.34.1725564601247;
+        Thu, 05 Sep 2024 12:30:01 -0700 (PDT)
+Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7a98ef1f9a4sm101960785a.2.2024.09.05.12.30.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 11:22:17 -0700 (PDT)
-From: Leah Rumancik <leah.rumancik@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: amir73il@gmail.com,
-	chandan.babu@oracle.com,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Dave Chinner <david@fromorbit.com>,
-	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 26/26] xfs: set bnobt/cntbt numrecs correctly when formatting new AGs
-Date: Thu,  5 Sep 2024 11:21:43 -0700
-Message-ID: <20240905182144.2691920-27-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
-In-Reply-To: <20240905182144.2691920-1-leah.rumancik@gmail.com>
-References: <20240905182144.2691920-1-leah.rumancik@gmail.com>
+        Thu, 05 Sep 2024 12:30:00 -0700 (PDT)
+Date: Thu, 5 Sep 2024 15:29:59 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+To: Jan Kara <jack@suse.cz>
+Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, amir73il@gmail.com,
+	brauner@kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [PATCH v5 00/18] fanotify: add pre-content hooks
+Message-ID: <20240905192959.GA3710628@perftesting>
+References: <cover.1725481503.git.josef@toxicpanda.com>
+ <20240905120808.7fcsnv7nslqsq4t6@quack3>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240905120808.7fcsnv7nslqsq4t6@quack3>
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Thu, Sep 05, 2024 at 02:08:08PM +0200, Jan Kara wrote:
+> Hello!
+> 
+> On Wed 04-09-24 16:27:50, Josef Bacik wrote:
+> > These are the patches for the bare bones pre-content fanotify support.  The
+> > majority of this work is Amir's, my contribution to this has solely been around
+> > adding the page fault hooks, testing and validating everything.  I'm sending it
+> > because Amir is traveling a bunch, and I touched it last so I'm going to take
+> > all the hate and he can take all the credit.
+> > 
+> > There is a PoC that I've been using to validate this work, you can find the git
+> > repo here
+> > 
+> > https://github.com/josefbacik/remote-fetch
+> 
+> The test tool seems to be a bit outdated wrt the current series. It took me
+> quite a while to debug why HSM isn't working with it (eventually I've
+> tracked it down to the changes in struct fanotify_event_info_range...).
+> Anyway all seems to be working (after fixing up some missing export), I've
+> pushed out the result I have to:
 
-[ Upstream commit 8e698ee72c4ecbbf18264568eb310875839fd601 ]
+Eesh sorry, I updated it for the fstests and used that as the source of truth
+for this stuff, which is how I validated all of the fs'es that got the
+FS_ALLOW_HSM flag.
 
-Through generic/300, I discovered that mkfs.xfs creates corrupt
-filesystems when given these parameters:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git fsnotify
+> 
+> and will push it to linux-next as well so that it gets some soaking before
+> the merge window. That being said I'd still like to get explicit ack from
+> XFS folks (hint) so don't patches may still rebase due to that.
+> 
 
-# mkfs.xfs -d size=512M /dev/sda -f -d su=128k,sw=4 --unsupported
-Filesystems formatted with --unsupported are not supported!!
-meta-data=/dev/sda               isize=512    agcount=8, agsize=16352 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-data     =                       bsize=4096   blocks=130816, imaxpct=25
-         =                       sunit=32     swidth=128 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=8192, version=2
-         =                       sectsz=512   sunit=32 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=0 blks
-Discarding blocks...Done.
-# xfs_repair -n /dev/sda
-Phase 1 - find and verify superblock...
-        - reporting progress in intervals of 15 minutes
-Phase 2 - using internal log
-        - zero log...
-        - 16:30:50: zeroing log - 16320 of 16320 blocks done
-        - scan filesystem freespace and inode maps...
-agf_freeblks 25, counted 0 in ag 4
-sb_fdblocks 8823, counted 8798
+Awesome, thanks!
 
-The root cause of this problem is the numrecs handling in
-xfs_freesp_init_recs, which is used to initialize a new AG.  Prior to
-calling the function, we set up the new bnobt block with numrecs == 1
-and rely on _freesp_init_recs to format that new record.  If the last
-record created has a blockcount of zero, then it sets numrecs = 0.
-
-That last bit isn't correct if the AG contains the log, the start of the
-log is not immediately after the initial blocks due to stripe alignment,
-and the end of the log is perfectly aligned with the end of the AG.  For
-this case, we actually formatted a single bnobt record to handle the
-free space before the start of the (stripe aligned) log, and incremented
-arec to try to format a second record.  That second record turned out to
-be unnecessary, so what we really want is to leave numrecs at 1.
-
-The numrecs handling itself is overly complicated because a different
-function sets numrecs == 1.  Change the bnobt creation code to start
-with numrecs set to zero and only increment it after successfully
-formatting a free space extent into the btree block.
-
-Fixes: f327a00745ff ("xfs: account for log space when formatting new AGs")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
----
- fs/xfs/libxfs/xfs_ag.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index bb0c700afe3c..bf47efe08a58 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -415,10 +415,12 @@ xfs_freesp_init_recs(
- 		ASSERT(start >= mp->m_ag_prealloc_blocks);
- 		if (start != mp->m_ag_prealloc_blocks) {
- 			/*
--			 * Modify first record to pad stripe align of log
-+			 * Modify first record to pad stripe align of log and
-+			 * bump the record count.
- 			 */
- 			arec->ar_blockcount = cpu_to_be32(start -
- 						mp->m_ag_prealloc_blocks);
-+			be16_add_cpu(&block->bb_numrecs, 1);
- 			nrec = arec + 1;
- 
- 			/*
-@@ -429,7 +431,6 @@ xfs_freesp_init_recs(
- 					be32_to_cpu(arec->ar_startblock) +
- 					be32_to_cpu(arec->ar_blockcount));
- 			arec = nrec;
--			be16_add_cpu(&block->bb_numrecs, 1);
- 		}
- 		/*
- 		 * Change record start to after the internal log
-@@ -438,15 +439,13 @@ xfs_freesp_init_recs(
- 	}
- 
- 	/*
--	 * Calculate the record block count and check for the case where
--	 * the log might have consumed all available space in the AG. If
--	 * so, reset the record count to 0 to avoid exposure of an invalid
--	 * record start block.
-+	 * Calculate the block count of this record; if it is nonzero,
-+	 * increment the record count.
- 	 */
- 	arec->ar_blockcount = cpu_to_be32(id->agsize -
- 					  be32_to_cpu(arec->ar_startblock));
--	if (!arec->ar_blockcount)
--		block->bb_numrecs = 0;
-+	if (arec->ar_blockcount)
-+		be16_add_cpu(&block->bb_numrecs, 1);
- }
- 
- /*
-@@ -458,7 +457,7 @@ xfs_bnoroot_init(
- 	struct xfs_buf		*bp,
- 	struct aghdr_init_data	*id)
- {
--	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, id->agno);
-+	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 0, id->agno);
- 	xfs_freesp_init_recs(mp, bp, id);
- }
- 
-@@ -468,7 +467,7 @@ xfs_cntroot_init(
- 	struct xfs_buf		*bp,
- 	struct aghdr_init_data	*id)
- {
--	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, id->agno);
-+	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 0, id->agno);
- 	xfs_freesp_init_recs(mp, bp, id);
- }
- 
--- 
-2.46.0.598.g6f2099f65c-goog
-
+Josef
