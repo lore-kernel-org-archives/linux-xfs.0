@@ -1,236 +1,126 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A14C614F9FB
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 06:33:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8F1F18A94F;
+	Thu,  5 Sep 2024 07:50:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725518013; cv=none; b=RaGCAGawyN9ct24z7AZZ8+mhdNqxrGcap7Uwk3DJDgVdlzCp4X1ZDkyRRVJRow4PlMfO+oNeWXHl7CL+E+4zTf6Hlap5fguQeSzpVZ/1Eaarqj3n9b8/lrpZytCEWAuoXtIZN8NJBBemCvn0WKJqhGCgdyU1mP+liqhSfuBOlKU=
+	t=1725522606; cv=none; b=AxK+RbP7R/MkMKe5ZYVbBNQwj8/rWuSf2g1o4tDjPvY1gV2dosNIO2WZxkqUOWNCFJyCgKjNZbwQOGZhM/nyqAFxD4WTlsu6B9dcbDsW/KqLLuQXoOSlgpXYzEfs0+T/qOF5Gkyy3K3QyCQvMzIre5rBT67ZZBe0kxEi2yTTp2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725518013; c=relaxed/simple;
-	bh=bn2hT7LCXxc6ZAJ3sAa1GdVh4sbht0Y2LYPcjvQAWhU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PQy1YgT9S4wtcpirXYqICXN0ec2OH4GCdp1Oyt5MeDBSyc2sALvFneIl/KN4NwXv08DW0U6TD+5AIl06Oczxm6BxDR29VErX8ZPihp5LkbUbeFUWQEr8WSPS05weWYQHoWgiM+1hCvo2eWXKQ+TzCt6fvJRKfJqUWa1/2juYyY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HP/JwMfM; arc=none smtp.client-ip=209.85.216.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1725522606; c=relaxed/simple;
+	bh=V0dpBrY34w1of9Wfd593x+2vtoJgckPvvU/iE312/ZI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=M6O+QXZ9cIBi0m4eQ/LnMZflK3oyznwGuUS8JpEZOj9XLM3kwRc8deUfQIrieAYrrTYoj6QYWllSbMlSaj9RfFlqeHyVfn/cBLaiDjRafWI/K0EXQ/+OLIfwrlXB5E+4fXr/+P4/ACAdM57/VrZBLTUOcIhynSm+saIjztjKFho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V4Py8miF; arc=none smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HP/JwMfM"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-2d889207d1aso288097a91.3
-        for <linux-xfs@vger.kernel.org>; Wed, 04 Sep 2024 23:33:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V4Py8miF"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-a86e9db75b9so69946266b.1;
+        Thu, 05 Sep 2024 00:50:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1725518011; x=1726122811; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=vHrQB9ZzTtd9vlUCSy7LGRdh1BOF/2sydG6GAeYnfi4=;
-        b=HP/JwMfMuhWWYvwqSMUORQa07RcXHpwT3SfmvG/DNNzd/nqtwsDdKjCcDk0lpKC5xz
-         n6fyfOdccCbqQii7FU8PUCxnwewX3/N3udviniXry7MTMELl9S9j9HCAvWG7G9UkGpL3
-         hgfQiZ6r7vwY3dKPEG8cCch/u0B16ySZX3IO0mBpGCNpRert0arrxx0/RDsS599OfOk9
-         VKaaFElhXtRuZzES153su18s5nrVZtRT6ywHc/OCJpiOUf9ilr8dM4TmPZjpHUN4s+bx
-         awn4wBEQuxmTbrF6pBRYhnZuUe0q1S/0kSzqNOINZ6+DvGplUbwEOptdOATxxVBqDh4+
-         ab5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725518011; x=1726122811;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1725522603; x=1726127403; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=vHrQB9ZzTtd9vlUCSy7LGRdh1BOF/2sydG6GAeYnfi4=;
-        b=UYQ8OAySovIkHFOynMBZdZMoO1PY9wMaaXi2sZgkjeh/5DQML7ppqJoUSUwvLrwONC
-         /wWYBCrgl+2isPkzUAY3UCundfGYbfYdAU9nVmwGL/mzRXdlqY17Cy9FI3hsYZm/vo+I
-         KZhkRk0DaMCkyK9UoSs5N3Ppq8tJV1MdNtlnOppfhqnuaK36LR3lRniTGhjxLLXp7+XG
-         6bL7qsdXqiqfuUPnapl25vnftMUKf5l61ak6fguhnvWiaKM4v8WrbYW5OjojFZZACbCp
-         AOUPP1FCOOP2w3yO9eDfjKvtcFkpyD5CUMSIqmwn8tTpaL2GgtxtBk46OQFE1OPIdMTz
-         WJug==
-X-Forwarded-Encrypted: i=1; AJvYcCVtLgJntBlwCMaBF8odmw4+L9eq0RVHNP+G7eM4S//dBRfycRPyqsQXkhiVlgBGtC8/3e2SCCKIbFE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxMZ32bImzlfLWxzVly/QtSUDRYyT1ivUNfRqHGIGEHcCW7OK+2
-	A05eAO7BchN2IngZ/ddpAhFCaY2npvl6hG/s25JVp2a7lBZHrzEhPKHHKJL5C6E=
-X-Google-Smtp-Source: AGHT+IFudb2jXVi3fyn9fbyDKZGK5M7nd5GbCLtDM63iBtHB1vQH2iGvjD3x2eQ0jr1WruHcNCRMhw==
-X-Received: by 2002:a17:90a:ea93:b0:2d3:c87e:b888 with SMTP id 98e67ed59e1d1-2d894453b36mr15951219a91.27.1725518010858;
-        Wed, 04 Sep 2024 23:33:30 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2da8f2f1ba0sm2775743a91.25.2024.09.04.23.33.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Sep 2024 23:33:30 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1sm63b-0012NC-1z;
-	Thu, 05 Sep 2024 16:33:27 +1000
-Date: Thu, 5 Sep 2024 16:33:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com,
-	djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-Message-ID: <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
-References: <20240813163638.3751939-1-john.g.garry@oracle.com>
- <87frqf2smy.fsf@gmail.com>
- <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <877cbq3g9i.fsf@gmail.com>
+        bh=obKZt04JKsvNVi6u0/skPlG2/rQwZ50vJNCGCR1ZGE8=;
+        b=V4Py8miFX0bajZNnezn1IOa2t/oBdXqNFEKI5xjcRS9g74wF/pEawqHD7S2xN3CUFZ
+         ZZ1ZkUKIxEby5JfFSOtiQiTEXzM73yTFqg3mfXwWAhuw0MkeUCcVNpkOScl5F4BrVBgw
+         dTChKme9ArR/2G+3tda7Ib4MGI1uMYGXRzPwS5UUBN6Q+jJ6ISi29X8AqIgJoRCJR316
+         GObepzvAANnveOL3DCiWb0nziNZmuenaESQ+cMXHj2jZpn5AdSdgc0go+1+Me5KZCzZJ
+         p3HzSuTTEcnQxKJZhxLuFGRIRYhr8KVO/WfuBHYlBRSDXTyPpItt+Hp02pX+NLyJ8Ola
+         zX+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725522603; x=1726127403;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=obKZt04JKsvNVi6u0/skPlG2/rQwZ50vJNCGCR1ZGE8=;
+        b=Ohb9fyz3MJW7E1fhpVvOoAzUJPk58aYgzQkv5VIHzKuNMLXOXXqoPWnLhdqhI7u+md
+         ETTy7NryjZtauDbCADS3lCN8OFbkhQIi/E/XvN6XSUT0AoB51wVT2w1dUHMTfnGNtcRj
+         ZOdaXo8BPIBO4YslYhdyi9HL/dkryqt1GKSgaGeu2URnJUyaVlZFx1+mHN1PkBDr0nfK
+         idxeJj+856n8rXqeGXl+adpyVTEEXdTmRqMQ82unl69p9iFILsI8dOJGDhTQbs27EofT
+         QRaOPCEW50z5eYqA+7dcYhCaCqSeTd8pvPZMisCLw9AdVcWhnGh1FvnnSok01idGZujP
+         +b+A==
+X-Forwarded-Encrypted: i=1; AJvYcCV6kRSjXWwUUEZi3EHTyHz99kLhhTpgojQX9EJu23HyERVoAvXLENHdjUYC6IdgleAYYkaeUtTjLHty@vger.kernel.org, AJvYcCWfzuTm+yLq3k5VuLJFQx+UlatxTQwE1dxy5ELh2GngJmvIyC/hSaBS07vn6ltK4Vbe/h68BvvW1dbHq+4=@vger.kernel.org, AJvYcCWxIAVyyYIUCkPGDh6TkXVw9sjUMGe4Xt6TuwmaMc9kMnl260pGxa3+jZ4OwS6MCGdemgMLcJjQAYKYP0ca/A==@vger.kernel.org, AJvYcCXTdIRaRUFXTndFEzdcbRmMNdAP/K7uKAqYkaNyDmQxm+nrxhAdiNLdpQVHg0B/uRhbc38ZQffzTGsR/3MF8A==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxnscabWce0Z3FfSr3BaYYq1rBUwXl0/HNdvYeCXhC8X4a2FAKi
+	UXSGzK7VATPKvmuDAuLHJtUH9tfHYaaMUT5z6Wm508zzGIpJVMZ4LJfpyNz3JShqLXXltjgW6zI
+	GU/eSQ/48w9EkuFSZCtdktadoC5U=
+X-Google-Smtp-Source: AGHT+IEHSNTpPFHkq0s7FK0k8QmUuli6ehAfPoksbiKPJcO4py5ijgctkPnEzs8y3xVPK4dpbF+h/76wGWLYfWSrqls=
+X-Received: by 2002:a17:907:7ea3:b0:a86:82da:2c3c with SMTP id
+ a640c23a62f3a-a8a1d32e2femr750791266b.40.1725522602045; Thu, 05 Sep 2024
+ 00:50:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <877cbq3g9i.fsf@gmail.com>
+References: <cover.1725481503.git.josef@toxicpanda.com> <6a659625a0d08fae894cc47352453a6be2579788.1725481503.git.josef@toxicpanda.com>
+In-Reply-To: <6a659625a0d08fae894cc47352453a6be2579788.1725481503.git.josef@toxicpanda.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 5 Sep 2024 09:49:38 +0200
+Message-ID: <CAOQ4uxjZy3paDxQ9=ME=9ukHYwpq6CRJtZ3BN=2wwa6YFtBTGg@mail.gmail.com>
+Subject: Re: [PATCH v5 01/18] fanotify: don't skip extra event info if no
+ info_mode is set
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
+	brauner@kernel.org, linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 05, 2024 at 09:26:25AM +0530, Ritesh Harjani wrote:
-> Dave Chinner <david@fromorbit.com> writes:
-> > On Wed, Sep 04, 2024 at 11:44:29PM +0530, Ritesh Harjani wrote:
-> >> 3. It is the FORCEALIGN feature which _mandates_ both allocation
-> >> (by using extsize hint) and de-allocation to happen _only_ in
-> >> extsize chunks.
-> >>
-> >>    i.e. forcealign mandates -
-> >>    - the logical and physical start offset should be aligned as
-> >>    per args->alignment
-> >>    - extent length be aligned as per args->prod/mod.
-> >>      If above two cannot be satisfied then return -ENOSPC.
-> >
-> > Yes.
-> >
-> >> 
-> >>    - Does the unmapping of extents also only happens in extsize
-> >>    chunks (with forcealign)?
-> >
-> > Yes, via use of xfs_inode_alloc_unitsize() in the high level code
-> > aligning the fsbno ranges to be unmapped.
-> >
-> > Remember, force align requires both logical file offset and
-> > physical block number to be correctly aligned,
-> 
-> This is where I would like to double confirm it again. Even the
-> extsize hint feature (w/o FORCEALIGN) will try to allocate aligned
-> physical start and logical start file offset and length right?
+On Wed, Sep 4, 2024 at 10:29=E2=80=AFPM Josef Bacik <josef@toxicpanda.com> =
+wrote:
+>
+> New pre-content events will be path events but they will also carry
+> additional range information. Remove the optimization to skip checking
+> whether info structures need to be generated for path events. This
+> results in no change in generated info structures for existing events.
+>
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 
-No.
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-> (Or does extsize hint only restricts alignment to logical start file
-> offset + length and not the physical start?)
-
-Neither.
-
-extsize hint by itself (i.e. existing behaviour) has no alignment
-effect at all. All it affects is -size- of the extent. i.e. once
-the extent start is chosen, extent size hints will trim the length
-of the extent to a multiple of the extent size hint. Alignment is
-not considered at all.
-
-> Also it looks like there is no difference with ATOMIC_WRITE AND
-> FORCEALIGN feature with XFS, correct? (except that ATOMIC_WRITE is
-> adding additional natural alignment restrictions on pos and len). 
-
-Atomic write requires additional hardware support, and it restricts
-the valid sizes of extent size hints that can be set. Only atomic
-writes can be done on files marked as configured for atomic writes;
-force alignment can be done on any file...
-
-> So why maintain 2 separate on disk inode flags for FORCEALIGN AND
-> ATOMIC_WRITE?
-
-the atomic write flag indicates that a file has been set up
-correctly for atomic writes to be able to issues reliably. force
-alignment doesn't guarantee that - it's just a mechanism that tells
-the allocator to behave a specific way.
-
-> - Do you foresee FORCEALIGN to be also used at other places w/o
-> ATOMIC_WRITE where feature differentiation between the two on an
-> inode is required?
-
-The already exist. For example, reliably allocating huge page
-mappings on DAX filesystems requires 2MB forced alignment. 
-
-> - Does the same reasoning will hold for XFS_SB_FEAT_RO_COMPAT_FORCEALIGN
-> & XFS_SB_FEAT_RO_COMPAT_ATOMICWRITES too?
-
-Same as above.
-
-> - But why ro_compact for ATOMICWRITES? There aren't any on disk metadata
-> changes within XFS filesystem to support atomic writes, right? 
-
-Because if you downgrade the kernel to something that doesn't
-support atomic writes, then non-atomic sized/aligned data can be
-written to the file and/or torn writes can occur.
-
-Worse, extent size hints that don't match the underlying hardware
-support could be set up for inodes, and when the kernel is upgraded
-again then atomic writes will fail on inodes that have atomic write
-flags set on them....
-
-> Is it something to just prevent users from destroying their own data
-> by not allowing a rw mount from an older kernel where users could do
-> unaligned writes to files marked for atomic writes?
-> Or is there any other reasoning to prevent XFS filesystem from becoming
-> inconsistent if an older kernel does a rw mount here.
-
-The older kernel does not know what the unknown inode flag means
-(i.e. atomic writes) and so, by definition, we cannot allow it to
-modify metadata or file data because it may not modify it in the
-correct way for that flag being set on the inode.
-
-Kernels that don't understand feature flags need to treat the
-filesystem as read-only, no matter how trivial the feature addition
-might seem.
-
-> > so unmap alignment
-> > has to be set up correctly at file offset level before we even know
-> > what extents underly the file range we need to unmap....
-> >
-> >>      If the start or end of the extent which needs unmapping is
-> >>      unaligned then we convert that extent to unwritten and skip,
-> >>      is it? (__xfs_bunmapi())
-> >
-> > The high level code should be aligning the start and end of the
-> > file range to be removed via xfs_inode_alloc_unitsize(). Hence 
-> > the low level __xfs_bunmapi() code shouldn't ever be encountering
-> > unaligned unmaps on force-aligned inodes.
-> >
-> 
-> Yes, but isn't this code snippet trying to handle a case when it finds an
-> unaligned extent during unmap?
-
-It does exactly that.
-
-> And what we are essentially trying to 
-> do here is leave the unwritten extent as is and if the found extent is
-> written then convert to unwritten and skip it (goto nodelete). This
-> means with forcealign if we encounter an unaligned extent then the file
-> will have this space reserved as is with extent marked unwritten. 
-> 
-> Is this understanding correct?
-
-Yes, except for the fact that this code is not triggered by force
-alignment.
-
-This code is preexisting realtime file functionality. It is used
-when the rtextent size is larger than a single filesytem block.
-
-In these configurations, we do allocation in rtextsize units, but we
-track written/unwritten extents in the BMBT on filesystem block
-granularity. Hence we can have unaligned written/unwritten extent
-boundaries, and if we aren't unmapping a whole rtextent then we
-simply mark the unused portion of it as unwritten in the BMBT to
-indicate it contains zeroes.
-
-IOWs, existing RT files have different IO alignment and
-written/unwritten extent conversion behaviour to the new forced
-alignment feature. The implementation code is shared in many places,
-but the higher level forced alignment functionality ensures there
-are never unaligned unwritten extents created or unaligned
-unmappings asked for. Hence this code does not trigger for the
-forced alignment cases.
-
-i.e. we have multiple seperate allocation alignment behaviours that
-share an implementation, but they do not all behave exactly the same
-way or provide the same alignment guarantees....
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  fs/notify/fanotify/fanotify_user.c | 13 ++++---------
+>  1 file changed, 4 insertions(+), 9 deletions(-)
+>
+> diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fano=
+tify_user.c
+> index 9ec313e9f6e1..2e2fba8a9d20 100644
+> --- a/fs/notify/fanotify/fanotify_user.c
+> +++ b/fs/notify/fanotify/fanotify_user.c
+> @@ -160,9 +160,6 @@ static size_t fanotify_event_len(unsigned int info_mo=
+de,
+>         int fh_len;
+>         int dot_len =3D 0;
+>
+> -       if (!info_mode)
+> -               return event_len;
+> -
+>         if (fanotify_is_error_event(event->mask))
+>                 event_len +=3D FANOTIFY_ERROR_INFO_LEN;
+>
+> @@ -740,12 +737,10 @@ static ssize_t copy_event_to_user(struct fsnotify_g=
+roup *group,
+>         if (fanotify_is_perm_event(event->mask))
+>                 FANOTIFY_PERM(event)->fd =3D fd;
+>
+> -       if (info_mode) {
+> -               ret =3D copy_info_records_to_user(event, info, info_mode,=
+ pidfd,
+> -                                               buf, count);
+> -               if (ret < 0)
+> -                       goto out_close_fd;
+> -       }
+> +       ret =3D copy_info_records_to_user(event, info, info_mode, pidfd,
+> +                                       buf, count);
+> +       if (ret < 0)
+> +               goto out_close_fd;
+>
+>         if (f)
+>                 fd_install(fd, f);
+> --
+> 2.43.0
+>
