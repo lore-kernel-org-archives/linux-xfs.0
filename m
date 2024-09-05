@@ -1,209 +1,286 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E85319925B;
-	Thu,  5 Sep 2024 13:40:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C769D1CFBC
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:21:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725543643; cv=none; b=dXgV2xKcFwK2CuRUs/sRi+1kKF146fKY2nLMHZZqosvs4t56P+wNCKRpHJzZOUAkWT4q1SmX809/3uBlJ6+92Ay4drUajRA+bUCGx1A/ps3fRG1Qf1oRm8IKjoLoKMCbuyyGFenwSskxbJvZU90p2OycDxuLD1Ok3JJ/ZhaUrqE=
+	t=1725560514; cv=none; b=uTr5ePHpujla5hOESTJMYe77YW8v1p51rwjLaLzwlM9GVqTcsMar4gqBk9tK6bC6iRDmUu8HK5YBPP+nJXkXyEJW/bPkCzsBdifxSZ+8GxNszr0UHm87d9BJ1U0H1nH+2AyX5nY45MvdMVLKiSlXd2X3gLh9JBolYwZvQEOIvew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725543643; c=relaxed/simple;
-	bh=jqT9gfQKg62Ke/yo1S3pOE/9To2elnqZSpgTqhq0gDc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=S0lk9SS4A4nLp8c2wLLXEWQuAloji59xstMx2MH7dZBBbrpRL3SjEvHLOi5E39H8NkFrUd5/jn71QCCKbevPkfEFORUIgogkIzaog0TEqQYrmUVOPVB9rw+n6GLgsfzQk9qpZ1fKGRMMa2HrObNUx73JxEo0LzZfbQq3HppNsUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lCq1mk1j; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725560514; c=relaxed/simple;
+	bh=J55Rx5eZcjTP3QMIjrdMzC49R0JZviNJeAfoRyPwlRU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=De5wx/TproMwTM3bJGeWp0wHmeF460kFFEUH+PrmORmS7wYW3fl4jvjy3r8R5394wyPuu6r4HWFxiwgWil7xvleKqNkqaJShJtOht9EQHm4CazUYrr2222Bkdynqz/PosdPbscY3FCAkNHWfnQxTh7N5lg48tgn6X7I+OQht7p4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FGlwLz3G; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lCq1mk1j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF221C4CEC7;
-	Thu,  5 Sep 2024 13:40:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725543643;
-	bh=jqT9gfQKg62Ke/yo1S3pOE/9To2elnqZSpgTqhq0gDc=;
-	h=From:To:Cc:Subject:Date:From;
-	b=lCq1mk1jgUWjyB2/dmCJ+DgaYez1p1guO1G24bS8FetPmJxLACUrEiyBwvDvuEjYK
-	 FwaBw2aW3//WsaQHYqexRTiTaZ4/T8O2hlZH/swbZHbyRcH2UV3vyEWCTu9FRFb+ic
-	 tBm8V2jAsXUDgpAkDleuIdX6yzxS8YEhOt1Qhc2s6HEsq3nQKDlLCeHwPDljnUIjdi
-	 jketICGecH+kzLdYuPLLeyu8nWAdEDUiTZQzBw5a4nXD65GVGOGSoMFJt4D5sIpQWu
-	 G7EoaYHrVlzQ/HmNsN/fLjqxgvVXux4apEZs2wkg3BAPDNJVvG74dD2caGXK8V3gG3
-	 GJ1VbLtcLwjkQ==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: abaci@linux.alibaba.com,dan.carpenter@linaro.org,dchinner@redhat.com,djwong@kernel.org,hch@lst.de,jiapeng.chong@linux.alibaba.com,jlayton@kernel.org,john.g.garry@oracle.com,kch@nvidia.com,kernel@mattwhitlock.name,lihongbo22@huawei.com,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,sam@gentoo.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 90fa22da6d6b
-Date: Thu, 05 Sep 2024 19:08:46 +0530
-Message-ID: <87ikva6wx3.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FGlwLz3G"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-205659dc63aso11985925ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:21:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1725560512; x=1726165312; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=SAEgxCEs2Cxm3YOJZ8VvrHVenV0GteqrvVz8xZIOIwk=;
+        b=FGlwLz3GhgbLnGh+ULv3R3tu5XBZrD15GbcmlkwTt2cWTH3gf40kBthMZpCoOLVZQK
+         KBFcJw7p73V1n1x4TNzxRfVDfAI2RuMDRPS5YKl/R7WWFyyHqwZqXVHV7vGcqkqy4Wfc
+         P+1d7r6cw+SW5pUeEcJZ4N1CFnqsM0Ax97gmxF0yioBtx0KjVJiQbuMma9wvPN3jac5j
+         RUdZKhBpz74eZq1VHdpPHfRM1OwDS5GK6wzwBVRB6nMkuE5wQQrZW3b+O2qUbzUpDr2+
+         1e58ezN8jx7rSbSiF/E5poQpWFFwdmZAUspA0wHrJhPyFDULlVw5ZocKo9s//OKiSPKR
+         ZWBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725560512; x=1726165312;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=SAEgxCEs2Cxm3YOJZ8VvrHVenV0GteqrvVz8xZIOIwk=;
+        b=xF41iYAT1p99W28Z5O94oeQlcZnoljtAB6tjWMGUyTjqCy6Wy9e/3PlGQ+hQpV3/MR
+         pVWUyQSmuU+Tv2ebHMa3+wxv5B5Hiye0AsnHjqNB6Vqph0bYj4ByOwyrFV894uX/EPC0
+         apMQ19FugbEXHHjy2eyjX29iKGR40QAIiPPv+N4wz2ujkvJSA5eRXZE2loKlcNt4v93m
+         LsLvvrozb+ldKO1JYzlOW3hZWLTq8wE8edLNyIl8DiP82pGlGgWFO7S2CK4W6SoYYqLv
+         s+JPxb9mWXPXb4zueCykhaxmwZCK3WO1Sea6KjPrMbqIDNrGmU4gDYxmvx2DTp6TnrqO
+         AgAg==
+X-Gm-Message-State: AOJu0Yzx5Nh46rJJ0O5GZ6F8+OBMckflnmFzsXzoAuAeDJzza0+JyiyU
+	LFs7W7nRKIpXZIuAAsDsbknA3P809ooVX/EReJpI5YETD8j43Ew+K1mguw==
+X-Google-Smtp-Source: AGHT+IF8r45YAakZH7gvNa3yzhOecNmFzfFsXFDMbk3joXmxwd6Wybt1vHgAq9MEjE2CCyKakDXBfA==
+X-Received: by 2002:a17:903:11cf:b0:202:3103:c250 with SMTP id d9443c01a7336-20547338beemr191124245ad.38.1725560511852;
+        Thu, 05 Sep 2024 11:21:51 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2da2:d734:ef56:7ccf])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.21.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Sep 2024 11:21:51 -0700 (PDT)
+From: Leah Rumancik <leah.rumancik@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: amir73il@gmail.com,
+	chandan.babu@oracle.com,
+	Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 00/26] xfs backports to catch 6.1.y up to 6.6
+Date: Thu,  5 Sep 2024 11:21:17 -0700
+Message-ID: <20240905182144.2691920-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-Hi folks,
+Hello again,
 
-The for-next branch of the xfs-linux repository at:
+Here is the next set of XFS backports, this set is for 6.1.y and I will
+be following up with a set for 5.15.y later. There were some good
+suggestions made at LSF to survey test coverage to cut back on
+testing but I've been a bit swamped and a backport set was overdue.
+So for this set, I have run the auto group 3 x 8 configs with no
+regressions seen. Let me know if you spot any issues.
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Thanks,
+Leah
 
-has just been updated.
+https://lkml.iu.edu/hypermail/linux/kernel/2212.0/04860.html
+52f31ed22821
+[1/1] xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+https://lore.kernel.org/linux-xfs/ef8a958d-741f-5bfd-7b2f-db65bf6dc3ac@huawei.com/
+4da112513c01
+[1/1] xfs: Fix deadlock on xfs_inodegc_worker
 
-The new head of the for-next branch is commit:
+https://www.spinics.net/lists/linux-xfs/msg68547.html
+601a27ea09a3
+[1/1] xfs: fix extent busy updating
 
-90fa22da6d6b xfs: ensure st_blocks never goes to zero during COW writes
+https://www.spinics.net/lists/linux-xfs/msg67254.html
+c85007e2e394
+[1/1] xfs: don't use BMBT btree split workers for IO completion
 
-69 new commits:
+fixes from start of the series
+https://lore.kernel.org/linux-xfs/20230209221825.3722244-1-david@fromorbit.com/
+[00/42] xfs: per-ag centric allocation alogrithms
 
-Chandan Babu R (8):
-      [41c38bf024ab] Merge tag 'atomic-file-commits-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
-      [37126ddd48ae] Merge tag 'metadir-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
-      [0879dee5cefb] Merge tag 'rtbitmap-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
-      [b2138a591c14] Merge tag 'rtalloc-fixes-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
-      [07b2bbcf77b2] Merge tag 'rtalloc-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
-      [8f78a440444f] Merge tag 'quota-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
-      [5384639bf7b8] Merge tag 'xfs-fixes-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
-      [169d89f33bb5] Merge tag 'btree-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+1dd0510f6d4b
+[01/42] xfs: fix low space alloc deadlock
 
-Christoph Hellwig (37):
-      [021d9c107e29] xfs: remove xfs_validate_rtextents
-      [6529eef810e2] xfs: factor out a xfs_validate_rt_geometry helper
-      [3cb30d516229] xfs: make the RT rsum_cache mandatory
-      [a18a69bbec08] xfs: use the recalculated transaction reservation in xfs_growfs_rt_bmblock
-      [1e21d1897f93] xfs: clean up the ISVALID macro in xfs_bmap_adjacent
-      [119c65e56bc1] xfs: remove the limit argument to xfs_rtfind_back
-      [86a0264ef26e] xfs: ensure rtx mask/shift are correct after growfs
-      [a9f646af4307] xfs: factor out a xfs_rtallocate helper
-      [6d2db12d56a3] xfs: assert a valid limit in xfs_rtfind_forw
-      [fd048a1bb391] xfs: rework the rtalloc fallback handling
-      [b4781eea6872] xfs: add bounds checking to xfs_rt{bitmap,summary}_read_buf
-      [b2dd85f41476] xfs: factor out a xfs_rtallocate_align helper
-      [237130564ef3] xfs: cleanup the calling convention for xfs_rtpick_extent
-      [ec12f97f1b8a] xfs: make the rtalloc start hint a xfs_rtblock_t
-      [c8e5a0bfe008] xfs: push the calls to xfs_rtallocate_range out to xfs_bmap_rtalloc
-      [7996f10ce6cc] xfs: factor out a xfs_growfs_rt_bmblock helper
-      [1fc51cf11dd8] xfs: remove xfs_{rtbitmap,rtsummary}_wordcount
-      [266e78aec4b9] xfs: factor out a xfs_last_rt_bmblock helper
-      [33912286cb19] xfs: replace m_rsumsize with m_rsumblocks
-      [feb09b727b03] xfs: match on the global RT inode numbers in xfs_is_metadata_inode
-      [2a95ffc44b61] xfs: factor out rtbitmap/summary initialization helpers
-      [fa0fc38b255c] xfs: remove xfs_rtb_to_rtxrem
-      [0a59e4f3e167] xfs: push transaction join out of xfs_rtbitmap_lock and xfs_rtgroup_lock
-      [df8b181f1551] xfs: simplify xfs_rtalloc_query_range
-      [6e13dbebd518] xfs: remove the i_mode check in xfs_release
-      [5d3ca6261121] xfs: refactor f_op->release handling
-      [98e44e2bc0fb] xfs: don't bother returning errors from xfs_file_release
-      [c741d79c1a97] xfs: skip all of xfs_file_release when shut down
-      [b717089efe47] xfs: check XFS_EOFBLOCKS_RELEASED earlier in xfs_release_eofblocks
-      [11f4c3a53add] xfs: simplify extent lookup in xfs_can_free_eofblocks
-      [9372dce08b34] xfs: reclaim speculative preallocations for append only files
-      [4ef7c6d39dc7] xfs: use kfree_rcu_mightsleep to free the perag structures
-      [f48f0a8e00b6] xfs: move the tagged perag lookup helpers to xfs_icache.c
-      [f9ffd095c89a] xfs: simplify tagged perag iteration
-      [32fa4059fe67] xfs: convert perag lookup to xarray
-      [866cf1dd3d5c] xfs: use xas_for_each_marked in xfs_reclaim_inodes_count
-      [90fa22da6d6b] xfs: ensure st_blocks never goes to zero during COW writes
+f08f984c63e9
+[02/42] xfs: prefer free inodes at ENOSPC over chunk allocation
 
-Dan Carpenter (1):
-      [fb8b941c75bd] xfs: remove unnecessary check
+d5753847b216
+[03/42] xfs: block reservation too large for minleft allocation
 
-Darrick J. Wong (19):
-      [cb59233e8237] xfs: don't return too-short extents from xfs_rtallocate_extent_block
-      [e99aa0401eb4] xfs: don't scan off the end of the rt volume in xfs_rtallocate_extent_block
-      [e6a74dcf9bc3] xfs: refactor aligning bestlen to prod
-      [62c3d2496808] xfs: clean up xfs_rtallocate_extent_exact a bit
-      [0902819fe649] xfs: add xchk_setup_nothing and xchk_nothing helpers
-      [74c234bbe51a] xfs: reduce excessive clamping of maxlen in xfs_rtallocate_extent_near
-      [05aba1953f4a] xfs: validate inumber in xfs_iget
-      [9e9be9840fad] xfs: fix broken variable-sized allocation detection in xfs_rtallocate_extent_block
-      [516f91035c27] xfs: rearrange xfs_fsmap.c a little bit
-      [398597c3ef7f] xfs: introduce new file range commit ioctls
-      [390b4775d678] xfs: pass the icreate args object to xfs_dialloc
-      [2ca7b9d7b808] xfs: move xfs_ioc_getfsmap out of xfs_ioctl.c
-      [64dfa18d6e32] xfs: fix C++ compilation errors in xfs_fs.h
-      [c460f0f1a2bc] xfs: fix FITRIM reporting again
-      [79124b374006] xfs: replace shouty XFS_BM{BT,DR} macros
-      [2c4162be6c10] xfs: refactor loading quota inodes in the regular case
-      [de55149b6639] xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
-      [411a71256de6] xfs: standardize the btree maxrecs function parameters
-      [f1204d96450f] xfs: only free posteof blocks on first close
+https://lore.kernel.org/linux-xfs/Y+Z7TZ9o+KgXLcV8@magnolia/
+60b730a40c43
+[1/1] xfs: fix uninitialized variable access
 
-Dave Chinner (1):
-      [816e3599ca9b] xfs: don't free post-EOF blocks on read close
+https://lore.kernel.org/linux-xfs/20230228051250.1238353-1-david@fromorbit.com/
+0c7273e494dd
+[1/1] xfs: quotacheck failure can race with background inode inactivation
 
-Hongbo Li (1):
-      [70045dafdf8d] xfs: use LIST_HEAD() to simplify code
+https://lore.kernel.org/linux-xfs/20230412024907.GP360889@frogsfrogsfrogs/
+8ee81ed581ff
+[1/1] xfs: fix BUG_ON in xfs_getbmap()
 
-Jiapeng Chong (1):
-      [9db384feea85] xfs: Remove duplicate xfs_trans_priv.h header
+https://www.spinics.net/lists/linux-xfs/msg71062.html
+[0/4] xfs: bug fixes for 6.4-rc1
 
-John Garry (1):
-      [ca57120dfe27] xfs: Use xfs set and clear mp state helpers
+[1/4] xfs: don't unconditionally null args->pag in xfs_bmap_btalloc_at_eof
+    skip, fix for a commit from 6.3
 
-Code Diffstat:
+8e698ee72c4e
+[2/4] xfs: set bnobt/cntbt numrecs correctly when formatting new AGs
 
- fs/xfs/libxfs/xfs_ag.c             |  94 +---------
- fs/xfs/libxfs/xfs_ag.h             |  14 --
- fs/xfs/libxfs/xfs_alloc_btree.c    |   6 +-
- fs/xfs/libxfs/xfs_alloc_btree.h    |   3 +-
- fs/xfs/libxfs/xfs_attr_leaf.c      |   8 +-
- fs/xfs/libxfs/xfs_bmap.c           | 101 ++++++-----
- fs/xfs/libxfs/xfs_bmap_btree.c     |  24 +--
- fs/xfs/libxfs/xfs_bmap_btree.h     | 207 +++++++++++++++-------
- fs/xfs/libxfs/xfs_defer.c          |   1 -
- fs/xfs/libxfs/xfs_fs.h             |  31 +++-
- fs/xfs/libxfs/xfs_ialloc.c         |   9 +-
- fs/xfs/libxfs/xfs_ialloc.h         |   4 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |   6 +-
- fs/xfs/libxfs/xfs_ialloc_btree.h   |   3 +-
- fs/xfs/libxfs/xfs_inode_fork.c     |  40 ++---
- fs/xfs/libxfs/xfs_inode_util.c     |   2 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |   5 +-
- fs/xfs/libxfs/xfs_refcount_btree.h |   3 +-
- fs/xfs/libxfs/xfs_rmap_btree.c     |   7 +-
- fs/xfs/libxfs/xfs_rmap_btree.h     |   3 +-
- fs/xfs/libxfs/xfs_rtbitmap.c       | 274 +++++++++++++++++++++--------
- fs/xfs/libxfs/xfs_rtbitmap.h       |  61 ++-----
- fs/xfs/libxfs/xfs_sb.c             |  92 ++++++----
- fs/xfs/libxfs/xfs_sb.h             |   3 +
- fs/xfs/libxfs/xfs_trans_resv.c     |   4 +-
- fs/xfs/libxfs/xfs_types.h          |  12 --
- fs/xfs/scrub/bmap_repair.c         |   2 +-
- fs/xfs/scrub/common.h              |  29 +--
- fs/xfs/scrub/inode_repair.c        |  12 +-
- fs/xfs/scrub/rtsummary.c           |  11 +-
- fs/xfs/scrub/rtsummary.h           |   2 +-
- fs/xfs/scrub/rtsummary_repair.c    |  12 +-
- fs/xfs/scrub/scrub.h               |  29 +--
- fs/xfs/scrub/tempfile.c            |   2 +-
- fs/xfs/xfs_bmap_item.c             |  17 ++
- fs/xfs/xfs_bmap_util.c             |  38 ++--
- fs/xfs/xfs_discard.c               |  17 +-
- fs/xfs/xfs_exchrange.c             | 143 ++++++++++++++-
- fs/xfs/xfs_exchrange.h             |  16 +-
- fs/xfs/xfs_file.c                  |  72 +++++++-
- fs/xfs/xfs_fsmap.c                 | 403 +++++++++++++++++++++++++++---------------
- fs/xfs/xfs_fsmap.h                 |   6 +-
- fs/xfs/xfs_fsops.c                 |   2 +-
- fs/xfs/xfs_icache.c                |  89 +++++++---
- fs/xfs/xfs_inode.c                 |  86 +--------
- fs/xfs/xfs_inode.h                 |  12 +-
- fs/xfs/xfs_ioctl.c                 | 134 +-------------
- fs/xfs/xfs_log.c                   |   2 +-
- fs/xfs/xfs_log_recover.c           |   2 +-
- fs/xfs/xfs_mount.c                 |   2 +-
- fs/xfs/xfs_mount.h                 |   5 +-
- fs/xfs/xfs_mru_cache.c             |   3 +-
- fs/xfs/xfs_qm.c                    |  48 ++++-
- fs/xfs/xfs_qm.h                    |   3 +
- fs/xfs/xfs_qm_syscalls.c           |  13 +-
- fs/xfs/xfs_quotaops.c              |  53 +++---
- fs/xfs/xfs_rtalloc.c               | 868 ++++++++++++++++++++++++++++++++++++++++++------------------------------------------------
- fs/xfs/xfs_super.c                 |  13 +-
- fs/xfs/xfs_symlink.c               |   2 +-
- fs/xfs/xfs_trace.h                 |  61 ++++++-
- 60 files changed, 1772 insertions(+), 1454 deletions(-)
+[3/4] xfs: flush dirty data and drain directios before scrubbing cow fork
+    skip, scrub
+
+[4/4] xfs: don't allocate into the data fork for an unshare request
+    skip, more of an optimization than a fix
+
+1bba82fe1afa
+[5/4] xfs: fix negative array access in xfs_getbmap
+  (fix of 8ee81ed)
+
+https://lore.kernel.org/linux-xfs/20230517000449.3997582-1-david@fromorbit.com/
+[0/4] xfs: bug fixes for 6.4-rcX
+
+89a4bf0dc385
+[1/4] xfs: buffer pins need to hold a buffer reference
+
+[2/4] xfs: restore allocation trylock iteration
+  skip, for issue introduced in 6.3
+
+cb042117488d
+[3/4] xfs: defered work could create precommits
+  (dependency for patch 4)
+
+82842fee6e59
+[4/4] xfs: fix AGF vs inode cluster buffer deadlock
+
+https://lore.kernel.org/linux-xfs/20240612225148.3989713-1-david@fromorbit.com/
+348a1983cf4c
+(fix for 82842fee6e5)
+[1/1] xfs: fix unlink vs cluster buffer instantiation race
+
+https://lore.kernel.org/linux-xfs/20230530001928.2967218-1-david@fromorbit.com/
+d4d12c02b
+[1/1] xfs: collect errors from inodegc for unlinked inode recovery
+
+https://lore.kernel.org/linux-xfs/20230524121041.GA4128075@ceph-admin/
+c3b880acadc9
+[1/1] xfs: fix ag count overflow during growfs
+
+4b827b3f305d
+[1/1] xfs: remove WARN when dquot cache insertion fails
+  requested on list to reduce bot noise
+
+https://www.spinics.net/lists/linux-xfs/msg73214.html
+5cf32f63b0f4
+[1/2] xfs: fix the calculation for "end" and "length"
+
+[2/2] introduces new feature, skipping
+
+https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com/
+3c90c01e4934
+[1/1] xfs: correct calculation for agend and blockcount
+  (fixes 5cf32)
+
+https://lore.kernel.org/all/20230901160020.GT28186@frogsfrogsfrogs/
+68b957f64fca
+[1/1] xfs: load uncached unlinked inodes into memory on demand
+
+https://www.spinics.net/lists/linux-xfs/msg74960.html
+[0/3] xfs: reload entire iunlink lists
+
+f12b96683d69
+[1/3] xfs: use i_prev_unlinked to distinguish inodes that are not on the unlinked list
+
+83771c50e42b
+[2/3] xfs: reload entire unlinked bucket lists
+  (dependency of 49813a21ed)
+
+49813a21ed57
+[3/3] xfs: make inode unlinked bucket recovery work with quotacheck
+  (dependency for 537c013)
+
+https://lore.kernel.org/all/169565629026.1982077.12646061547002741492.stgit@frogsfrogsfrogs/
+537c013b140d
+[1/1] xfs: fix reloading entire unlinked bucket lists
+  (fix of 68b957f64fca)
+
+
+Darrick J. Wong (8):
+  xfs: fix uninitialized variable access
+  xfs: load uncached unlinked inodes into memory on demand
+  xfs: fix negative array access in xfs_getbmap
+  xfs: use i_prev_unlinked to distinguish inodes that are not on the
+    unlinked list
+  xfs: reload entire unlinked bucket lists
+  xfs: make inode unlinked bucket recovery work with quotacheck
+  xfs: fix reloading entire unlinked bucket lists
+  xfs: set bnobt/cntbt numrecs correctly when formatting new AGs
+
+Dave Chinner (12):
+  xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
+  xfs: don't use BMBT btree split workers for IO completion
+  xfs: fix low space alloc deadlock
+  xfs: prefer free inodes at ENOSPC over chunk allocation
+  xfs: block reservation too large for minleft allocation
+  xfs: quotacheck failure can race with background inode inactivation
+  xfs: buffer pins need to hold a buffer reference
+  xfs: defered work could create precommits
+  xfs: fix AGF vs inode cluster buffer deadlock
+  xfs: collect errors from inodegc for unlinked inode recovery
+  xfs: remove WARN when dquot cache insertion fails
+  xfs: fix unlink vs cluster buffer instantiation race
+
+Long Li (1):
+  xfs: fix ag count overflow during growfs
+
+Shiyang Ruan (2):
+  xfs: fix the calculation for "end" and "length"
+  xfs: correct calculation for agend and blockcount
+
+Wengang Wang (1):
+  xfs: fix extent busy updating
+
+Wu Guanghao (1):
+  xfs: Fix deadlock on xfs_inodegc_worker
+
+Ye Bin (1):
+  xfs: fix BUG_ON in xfs_getbmap()
+
+ fs/xfs/libxfs/xfs_ag.c          |  19 ++-
+ fs/xfs/libxfs/xfs_alloc.c       |  69 +++++++--
+ fs/xfs/libxfs/xfs_bmap.c        |  16 +-
+ fs/xfs/libxfs/xfs_bmap.h        |   2 +
+ fs/xfs/libxfs/xfs_bmap_btree.c  |  19 ++-
+ fs/xfs/libxfs/xfs_btree.c       |  18 ++-
+ fs/xfs/libxfs/xfs_fs.h          |   2 +
+ fs/xfs/libxfs/xfs_ialloc.c      |  17 +++
+ fs/xfs/libxfs/xfs_log_format.h  |   9 +-
+ fs/xfs/libxfs/xfs_trans_inode.c | 113 +-------------
+ fs/xfs/xfs_attr_inactive.c      |   1 -
+ fs/xfs/xfs_bmap_util.c          |  18 +--
+ fs/xfs/xfs_buf_item.c           |  88 ++++++++---
+ fs/xfs/xfs_dquot.c              |   1 -
+ fs/xfs/xfs_export.c             |  14 ++
+ fs/xfs/xfs_extent_busy.c        |   1 +
+ fs/xfs/xfs_fsmap.c              |   1 +
+ fs/xfs/xfs_fsops.c              |  13 +-
+ fs/xfs/xfs_icache.c             |  58 +++++--
+ fs/xfs/xfs_icache.h             |   4 +-
+ fs/xfs/xfs_inode.c              | 260 ++++++++++++++++++++++++++++----
+ fs/xfs/xfs_inode.h              |  36 ++++-
+ fs/xfs/xfs_inode_item.c         | 149 ++++++++++++++++++
+ fs/xfs/xfs_inode_item.h         |   1 +
+ fs/xfs/xfs_itable.c             |  11 ++
+ fs/xfs/xfs_log_recover.c        |  19 ++-
+ fs/xfs/xfs_mount.h              |  11 +-
+ fs/xfs/xfs_notify_failure.c     |  15 +-
+ fs/xfs/xfs_qm.c                 |  72 ++++++---
+ fs/xfs/xfs_super.c              |   1 +
+ fs/xfs/xfs_trace.h              |  46 ++++++
+ fs/xfs/xfs_trans.c              |   9 +-
+ 32 files changed, 841 insertions(+), 272 deletions(-)
+
+-- 
+2.46.0.598.g6f2099f65c-goog
+
