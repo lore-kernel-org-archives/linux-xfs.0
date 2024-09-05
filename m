@@ -1,109 +1,95 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3138193424;
-	Thu,  5 Sep 2024 08:33:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED80BE4A
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 09:01:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725525208; cv=none; b=dncTLDieGKKJ6QbYwMHggy7B5rfXlbyUK8Ycp+0r5/I0UfL6lFED+51MXTBvQn91HC8TJCSiCX+SPa0/9OsRV677rwd+OIwh3EVwIdBpIc1hKhR83NaH8HXXvgCt7ht6nvyIA0N2ug0zfRQKbrQd/Bww62QwyZsHNQlaeTQFqW8=
+	t=1725526883; cv=none; b=VQwUt6Oi7GeUBJJJFmqeKPIpYtta3q6Rp0wRD4OtKXsXY/QhD+g66tPgQlymMRF7xLjw7xM7lkFIFOQg84awl09Pc45Yu07nfqz1psSvsWc7H7ry/n+sJLZ47+shMT75PUhKylb4CUrB+eVO5cL0YMpscONk2WEDQrfPmx/y7iY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725525208; c=relaxed/simple;
-	bh=XZnPEdwYX5299M5M5CvLohjv7UGr7OVeODRERuSitr0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KJhUn8xkx8Lz8GZ7U4nrtR2COulqpM2jN9v5iLQbEXHSqkcBW51sqlcs17j+qcMViU3CuOJbSHOi/LrXtkfGZZ6jqXvEyS+MhkyVuq+v0PJQu+FPA+/XAyNux9Wj59mA5kT6FGShAd5q6f5TrQtojCWsVknMbQUnPWsLhEffyaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RKMOspPr; arc=none smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1725526883; c=relaxed/simple;
+	bh=vpYMqOD/PAAtJNZ1ycwRCiXAOL9rC/rTYldrwkD83kQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sHR0EkzJeIHKID3T3U1OBoIsUGxuKqPcwPNYMpHQw/WFOhVU13Cg8ER5OA0VlxN45zpYIBMDx9CTzDUgDjRQsJLySgvXEnWKr7C0a4/d32XCHkDVtabklbxObNcTqwcu/6/k2k4fafoBIKVLmF7fPcBqHadi63CslTr9QQufOUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=llpmPW+u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RKMOspPr"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a86984e035aso84727766b.2;
-        Thu, 05 Sep 2024 01:33:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725525205; x=1726130005; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Z6VoVXvMgjJFAnKoFBYcoiUaf50g7AR944M8kCA7EnY=;
-        b=RKMOspPrH3TywRmNaIgB2Ns1wFOHLQsjxGRxmMfIDeId/VM+wJdhMk33MmzmbrlMiW
-         FkN3owU8yKuxyvoBsQw/2sh1i730LLI3btRr1QjwkivnIEJ44oM9Mr8pTKR6qdSmiKQg
-         iath7yK9xkUTAt4OY1k4Adks5vxK4e5L8dQ6pIJ7ong4Qv4EvL5+YjNgmJNmy+xKXqZw
-         MDuHKkAOjUqaPFXTmNdvLTilcICa/LIh70xOE61SfurgFpt+1b9NmP6zWT2+7JQvQ6G8
-         ODSanpUEtQcYppvNj/1bDVCVHQ2jxkac/8A6wU7IzbDOZ1GYjqixXlvVqB9Vew0cqoVx
-         x9KQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725525205; x=1726130005;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Z6VoVXvMgjJFAnKoFBYcoiUaf50g7AR944M8kCA7EnY=;
-        b=QhHZhMrXf9RUSbiVvIIqUCVDAnaweZ4HPK1cPZWDX3iZNbsLjVFX4QI2EH488vl8xm
-         CqDLVUncDMuXjq4taixOyQ34Peau1lWO/1kY8/JSlxhb5FX6//Ni2qiAVhi47b+0Dymz
-         vCcRh+uNgcaGLZYwn6mSKtKOz8gcuo0pGPYwQowSH7QVvRPnLcJlt5Lmb7ZJlFZcYMQw
-         SCt0On5fVRlLi4x61PZgj2oR8GRX9Ili7KAJOzLqUvViQ+FFwBy9r+fRAVAfIXvAGt0K
-         W8yn+/hG/oynqslc8qD4wotRAhNU17wFdu00GFAWWkSHVGo+pkt28cOxn0zg+8SWiVSe
-         lFoA==
-X-Forwarded-Encrypted: i=1; AJvYcCUZV8l/fDd1wNFtRtXimecNS31XYZ/fqWoOxA5/KoVo87ign+twiUCHyaMVP8jrVp+iVu5x3mvvN38CMUSJog==@vger.kernel.org, AJvYcCVbhSFtnQ+XxcUvatsbyha0xeSeEIm5A6BqNkIS+XkzcHiXeQEfSgAtMKbm3WoAXAjIRs4bNTjPOq2JM3uRaw==@vger.kernel.org, AJvYcCW4Inss/fb/BlvoBcAk2YSAsJh1pREaBjReay689Bns6CtHTqnS8ifmDRdTlWkq+QFoLgzfmA7MJsLM@vger.kernel.org, AJvYcCWHLpkTSoR5cx1J5EI18vw/rpkZjjZbqhmm91eAYiTJhdnT/NrH3zYmUZYI/HGNJlf4otu9JEjBFACRY6k=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy3WD+Kz28GFNImAQWEDqFg/JnF9jOiVpKM2E9aIAGv/5vOfwe3
-	RWbtyVkElYKDhr5ciPplJh5jAHoV1Nx44F+yxob8crr8aoM8C5ldPqadb4DQwLccjTlCQBLX/BL
-	Q6Lj1AFZABlKKzI8/hkSJEaeFYQs=
-X-Google-Smtp-Source: AGHT+IGcHHmcIfL3pt3Z+CSw87wwzuOptm9dc3Y5/ExCPVuX7rDOZZpaYVk+knjoWAY+OGISPhiN58eLFv90/DszDTY=
-X-Received: by 2002:a17:907:12cd:b0:a8a:3f78:7b7b with SMTP id
- a640c23a62f3a-a8a3f79d5a5mr252075066b.14.1725525204534; Thu, 05 Sep 2024
- 01:33:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="llpmPW+u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0E49C4CEC3;
+	Thu,  5 Sep 2024 09:01:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725526883;
+	bh=vpYMqOD/PAAtJNZ1ycwRCiXAOL9rC/rTYldrwkD83kQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=llpmPW+ut/QmZxPmRLHyhrSHHMYoH5XncsJCg0Vcl3NwfFq93MNG2/nL8+BpAS8MU
+	 +N/ZtSZsuz8Ne+nCXnWmtsnI5osx+n79BLAHO30braEBETbr2BNihJpJNgmdxmLnTi
+	 7P3adbd04QN5nCxtidtQ+n4x1rQ9L8GMniXujIZQ6tyGMFgmq+bENJP61+n9qawheX
+	 DXGTLozGj9d0ZkEumuhboj8gTWE8iFmlOdrNQiTwXGMU37ZJA/kqr5YZwaPr5abgUD
+	 d6EngrMRF9ac48dIngUWTsIXmWklY9h/ga0grOzrvv5nGqoGF9TO2RVPYl48xO+Gc7
+	 DiIUdPfDhcLeA==
+Date: Thu, 5 Sep 2024 11:01:18 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] man: Update unit for fsx_extsize and fsx_cowextsize
+Message-ID: <lcsus6hy4vqtngbgp7q2gvll42ujgkq2mioo64j2shlhrz2mlr@ykrwvep3bpla>
+References: <20240808074833.1984856-1-john.g.garry@oracle.com>
+ <20472c92-188a-466c-ba10-2a634782782f@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1725481503.git.josef@toxicpanda.com>
-In-Reply-To: <cover.1725481503.git.josef@toxicpanda.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 5 Sep 2024 10:33:07 +0200
-Message-ID: <CAOQ4uxikusW_q=zdqDKCHz8kGoTyUg1htWhPR1OFAFGHdj-vcQ@mail.gmail.com>
-Subject: Re: [PATCH v5 00/18] fanotify: add pre-content hooks
-To: Josef Bacik <josef@toxicpanda.com>, jack@suse.cz
-Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, brauner@kernel.org, 
-	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20472c92-188a-466c-ba10-2a634782782f@oracle.com>
 
-On Wed, Sep 4, 2024 at 10:29=E2=80=AFPM Josef Bacik <josef@toxicpanda.com> =
-wrote:
->
-> v4: https://lore.kernel.org/linux-fsdevel/cover.1723670362.git.josef@toxi=
-cpanda.com/
-> v3: https://lore.kernel.org/linux-fsdevel/cover.1723228772.git.josef@toxi=
-cpanda.com/
-> v2: https://lore.kernel.org/linux-fsdevel/cover.1723144881.git.josef@toxi=
-cpanda.com/
-> v1: https://lore.kernel.org/linux-fsdevel/cover.1721931241.git.josef@toxi=
-cpanda.com/
->
-> v4->v5:
-> - Cleaned up the various "I'll fix it on commit" notes that Jan made sinc=
-e I had
->   to respin the series anyway.
-> - Renamed the filemap pagefault helper for fsnotify per Christians sugges=
-tion.
-> - Added a FS_ALLOW_HSM flag per Jan's comments, based on Amir's rough ske=
-tch.
-> - Added a patch to disable btrfs defrag on pre-content watched files.
-> - Added a patch to turn on FS_ALLOW_HSM for all the file systems that I t=
-ested.
+On Thu, Sep 05, 2024 at 09:15:50AM GMT, John Garry wrote:
+> On 08/08/2024 08:48, John Garry wrote:
+> > The values in fsx_extsize and fsx_cowextsize are in units of bytes, and not
+> > filesystem blocks, so update.
+> > 
+> > In addition, the default cowextsize is 32 filesystem blocks, not 128, so
+> > fix that as well.
+> > 
+> > Signed-off-by: John Garry <john.g.garry@oracle.com>
+> 
+> Has this change been missed?
 
-My only nits are about different ordering of the FS_ALLOW_HSM patches
-I guess as the merge window is closing in, Jan could do these trivial
-reorders on commit, based on his preference (?).
+Yup, I'll add it to the next release.
 
-> - Added two fstests (which will be posted separately) to validate everyth=
-ing,
->   re-validated the series with btrfs, xfs, ext4, and bcachefs to make sur=
-e I
->   didn't break anything.
+Carlos.
 
-Very cool!
 
-Thanks again for the "productization" of my patches :)
-Amir.
+> 
+> Cheers,
+> John
+> 
+> > 
+> > diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxattr.2
+> > index 2c626a7e..25a9ba79 100644
+> > --- a/man/man2/ioctl_xfs_fsgetxattr.2
+> > +++ b/man/man2/ioctl_xfs_fsgetxattr.2
+> > @@ -40,7 +40,7 @@ below for more information.
+> >   .PP
+> >   .I fsx_extsize
+> >   is the preferred extent allocation size for data blocks mapped to this file,
+> > -in units of filesystem blocks.
+> > +in units of bytes.
+> >   If this value is zero, the filesystem will choose a default option, which
+> >   is currently zero.
+> >   If
+> > @@ -62,9 +62,9 @@ is the project ID of this file.
+> >   .PP
+> >   .I fsx_cowextsize
+> >   is the preferred extent allocation size for copy on write operations
+> > -targeting this file, in units of filesystem blocks.
+> > +targeting this file, in units of bytes.
+> >   If this field is zero, the filesystem will choose a default option,
+> > -which is currently 128 filesystem blocks.
+> > +which is currently 32 filesystem blocks.
+> >   If
+> >   .B XFS_IOC_FSSETXATTR
+> >   is called with
+> 
+> 
