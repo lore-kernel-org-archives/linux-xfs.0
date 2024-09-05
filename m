@@ -1,257 +1,209 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06659199FB4;
-	Thu,  5 Sep 2024 12:08:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E85319925B;
+	Thu,  5 Sep 2024 13:40:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725538100; cv=none; b=DynmsdZyqE8JoqKVIQYpGjasCRzi4jJI9o3c0w57NwYcL8bSlt1DUsfrS2NP+/3RvLJtZxAuWNZVjWu3qw6y58ja+xwoo7u9+YT4edeZICqXwKDAfHNKuGawaVTaD7rJRe9i0RQiM2B5ElAtJ+Peubkt84m2OboiIGc/2oDd59I=
+	t=1725543643; cv=none; b=dXgV2xKcFwK2CuRUs/sRi+1kKF146fKY2nLMHZZqosvs4t56P+wNCKRpHJzZOUAkWT4q1SmX809/3uBlJ6+92Ay4drUajRA+bUCGx1A/ps3fRG1Qf1oRm8IKjoLoKMCbuyyGFenwSskxbJvZU90p2OycDxuLD1Ok3JJ/ZhaUrqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725538100; c=relaxed/simple;
-	bh=pnup+PjNdWYL01f6Vj8DyxDxFFGWiNQX79oCLmQV2cU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WALUXvsADid7f3LOT1CkN6+0yRm8uSi3OZXy4lYcrcBDYY9AQ/BrkZikgHnIMMWodj3bFCZJI9xdDbaKOFwn1AgF3i3zWYiziUTx82kt/wTih02H9LGytWno5HW45kXLc7VifCKc+7C6f9Ff8KMXoGVzwIZM2MyJiI/LfV968sI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ZUBIhauk; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DjnIceNR; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ZUBIhauk; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DjnIceNR; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1725543643; c=relaxed/simple;
+	bh=jqT9gfQKg62Ke/yo1S3pOE/9To2elnqZSpgTqhq0gDc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=S0lk9SS4A4nLp8c2wLLXEWQuAloji59xstMx2MH7dZBBbrpRL3SjEvHLOi5E39H8NkFrUd5/jn71QCCKbevPkfEFORUIgogkIzaog0TEqQYrmUVOPVB9rw+n6GLgsfzQk9qpZ1fKGRMMa2HrObNUx73JxEo0LzZfbQq3HppNsUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lCq1mk1j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ZUBIhauk";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DjnIceNR";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ZUBIhauk";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DjnIceNR"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 2205421A81;
-	Thu,  5 Sep 2024 12:08:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1725538097; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4WJ4nFRla3E237+ALZbePBMCha1Jx0LA7680EWIZ9qA=;
-	b=ZUBIhauk9pLBn+4LtJzsocMf/RdTLy24lmCpQqShpi8SbBM/cNVVG2D4BUnJnHTyV6NuNo
-	Xc2FU8Q2CA8TL4E1kWdxYz6g86k7fiDmM9MnDHAA8X4fbZEMqEKBvEbKCqLvnxXIgWWB5l
-	0KzppmFnuC1nIEfCnB5bP/djulDphLc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1725538097;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4WJ4nFRla3E237+ALZbePBMCha1Jx0LA7680EWIZ9qA=;
-	b=DjnIceNRdWP15oYi6DsfMSICUce41R5WBJZXVfFmhDi3YmzSQR+qRyG0QJhu7wLGzfRbqi
-	Lwpq7LY9iCpx6KDQ==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1725538097; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4WJ4nFRla3E237+ALZbePBMCha1Jx0LA7680EWIZ9qA=;
-	b=ZUBIhauk9pLBn+4LtJzsocMf/RdTLy24lmCpQqShpi8SbBM/cNVVG2D4BUnJnHTyV6NuNo
-	Xc2FU8Q2CA8TL4E1kWdxYz6g86k7fiDmM9MnDHAA8X4fbZEMqEKBvEbKCqLvnxXIgWWB5l
-	0KzppmFnuC1nIEfCnB5bP/djulDphLc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1725538097;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4WJ4nFRla3E237+ALZbePBMCha1Jx0LA7680EWIZ9qA=;
-	b=DjnIceNRdWP15oYi6DsfMSICUce41R5WBJZXVfFmhDi3YmzSQR+qRyG0QJhu7wLGzfRbqi
-	Lwpq7LY9iCpx6KDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1653613419;
-	Thu,  5 Sep 2024 12:08:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id dP5sBTGf2WbLawAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 05 Sep 2024 12:08:17 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id B2A12A0968; Thu,  5 Sep 2024 14:08:08 +0200 (CEST)
-Date: Thu, 5 Sep 2024 14:08:08 +0200
-From: Jan Kara <jack@suse.cz>
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
-	amir73il@gmail.com, brauner@kernel.org, linux-xfs@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [PATCH v5 00/18] fanotify: add pre-content hooks
-Message-ID: <20240905120808.7fcsnv7nslqsq4t6@quack3>
-References: <cover.1725481503.git.josef@toxicpanda.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lCq1mk1j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF221C4CEC7;
+	Thu,  5 Sep 2024 13:40:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725543643;
+	bh=jqT9gfQKg62Ke/yo1S3pOE/9To2elnqZSpgTqhq0gDc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=lCq1mk1jgUWjyB2/dmCJ+DgaYez1p1guO1G24bS8FetPmJxLACUrEiyBwvDvuEjYK
+	 FwaBw2aW3//WsaQHYqexRTiTaZ4/T8O2hlZH/swbZHbyRcH2UV3vyEWCTu9FRFb+ic
+	 tBm8V2jAsXUDgpAkDleuIdX6yzxS8YEhOt1Qhc2s6HEsq3nQKDlLCeHwPDljnUIjdi
+	 jketICGecH+kzLdYuPLLeyu8nWAdEDUiTZQzBw5a4nXD65GVGOGSoMFJt4D5sIpQWu
+	 G7EoaYHrVlzQ/HmNsN/fLjqxgvVXux4apEZs2wkg3BAPDNJVvG74dD2caGXK8V3gG3
+	 GJ1VbLtcLwjkQ==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: abaci@linux.alibaba.com,dan.carpenter@linaro.org,dchinner@redhat.com,djwong@kernel.org,hch@lst.de,jiapeng.chong@linux.alibaba.com,jlayton@kernel.org,john.g.garry@oracle.com,kch@nvidia.com,kernel@mattwhitlock.name,lihongbo22@huawei.com,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,sam@gentoo.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 90fa22da6d6b
+Date: Thu, 05 Sep 2024 19:08:46 +0530
+Message-ID: <87ikva6wx3.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1725481503.git.josef@toxicpanda.com>
-X-Spam-Score: -3.80
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_COUNT_THREE(0.00)[3];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[fb.com,vger.kernel.org,suse.cz,gmail.com,kernel.org,kvack.org];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Level: 
+Content-Type: text/plain
 
-Hello!
+Hi folks,
 
-On Wed 04-09-24 16:27:50, Josef Bacik wrote:
-> These are the patches for the bare bones pre-content fanotify support.  The
-> majority of this work is Amir's, my contribution to this has solely been around
-> adding the page fault hooks, testing and validating everything.  I'm sending it
-> because Amir is traveling a bunch, and I touched it last so I'm going to take
-> all the hate and he can take all the credit.
-> 
-> There is a PoC that I've been using to validate this work, you can find the git
-> repo here
-> 
-> https://github.com/josefbacik/remote-fetch
+The for-next branch of the xfs-linux repository at:
 
-The test tool seems to be a bit outdated wrt the current series. It took me
-quite a while to debug why HSM isn't working with it (eventually I've
-tracked it down to the changes in struct fanotify_event_info_range...).
-Anyway all seems to be working (after fixing up some missing export), I've
-pushed out the result I have to:
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-https://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git fsnotify
+has just been updated.
 
-and will push it to linux-next as well so that it gets some soaking before
-the merge window. That being said I'd still like to get explicit ack from
-XFS folks (hint) so don't patches may still rebase due to that.
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-								Honza
+The new head of the for-next branch is commit:
 
- 
-> This consists of 3 different tools.
-> 
-> 1. populate.  This just creates all the stub files in the directory from the
->    source directory.  Just run ./populate ~/linux ~/hsm-linux and it'll
->    recursively create all of the stub files and directories.
-> 2. remote-fetch.  This is the actual PoC, you just point it at the source and
->    destination directory and then you can do whatever.  ./remote-fetch ~/linux
->    ~/hsm-linux.
-> 3. mmap-validate.  This was to validate the pagefault thing, this is likely what
->    will be turned into the selftest with remote-fetch.  It creates a file and
->    then you can validate the file matches the right pattern with both normal
->    reads and mmap.  Normally I do something like
-> 
->    ./mmap-validate create ~/src/foo
->    ./populate ~/src ~/dst
->    ./rmeote-fetch ~/src ~/dst
->    ./mmap-validate validate ~/dst/foo
+90fa22da6d6b xfs: ensure st_blocks never goes to zero during COW writes
 
+69 new commits:
 
+Chandan Babu R (8):
+      [41c38bf024ab] Merge tag 'atomic-file-commits-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+      [37126ddd48ae] Merge tag 'metadir-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+      [0879dee5cefb] Merge tag 'rtbitmap-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+      [b2138a591c14] Merge tag 'rtalloc-fixes-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+      [07b2bbcf77b2] Merge tag 'rtalloc-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+      [8f78a440444f] Merge tag 'quota-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+      [5384639bf7b8] Merge tag 'xfs-fixes-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
+      [169d89f33bb5] Merge tag 'btree-cleanups-6.12_2024-09-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.12-mergeA
 
-> 
-> I did a bunch of testing, I also got some performance numbers.  I copied a
-> kernel tree, and then did remote-fetch, and then make -j4
-> 
-> Normal
-> real    9m49.709s
-> user    28m11.372s
-> sys     4m57.304s
-> 
-> HSM
-> real    10m6.454s
-> user    29m10.517s
-> sys     5m2.617s
-> 
-> So ~17 seconds more to build with HSM.  I then did a make mrproper on both trees
-> to see the size
-> 
-> [root@fedora ~]# du -hs /src/linux
-> 1.6G    /src/linux
-> [root@fedora ~]# du -hs dst
-> 125M    dst
-> 
-> This mirrors the sort of savings we've seen in production.
-> 
-> Meta has had these patches (minus the page fault patch) deployed in production
-> for almost a year with our own utility for doing on-demand package fetching.
-> The savings from this has been pretty significant.
-> 
-> The page-fault hooks are necessary for the last thing we need, which is
-> on-demand range fetching of executables.  Some of our binaries are several gigs
-> large, having the ability to remote fetch them on demand is a huge win for us
-> not only with space savings, but with startup time of containers.
-> 
-> There will be tests for this going into LTP once we're satisfied with the
-> patches and they're on their way upstream.  Thanks,
-> 
-> Josef
-> 
-> Amir Goldstein (8):
->   fsnotify: introduce pre-content permission event
->   fsnotify: generate pre-content permission event on open
->   fanotify: introduce FAN_PRE_ACCESS permission event
->   fanotify: introduce FAN_PRE_MODIFY permission event
->   fanotify: pass optional file access range in pre-content event
->   fanotify: rename a misnamed constant
->   fanotify: report file range info with pre-content events
->   fanotify: allow to set errno in FAN_DENY permission response
-> 
-> Josef Bacik (10):
->   fanotify: don't skip extra event info if no info_mode is set
->   fs: add a flag to indicate the fs supports pre-content events
->   fanotify: add a helper to check for pre content events
->   fanotify: disable readahead if we have pre-content watches
->   mm: don't allow huge faults for files with pre content watches
->   fsnotify: generate pre-content permission event on page fault
->   bcachefs: add pre-content fsnotify hook to fault
->   xfs: add pre-content fsnotify hook for write faults
->   btrfs: disable defrag on pre-content watched files
->   fs: enable pre-content events on supported file systems
-> 
->  fs/bcachefs/fs-io-pagecache.c      |   4 +
->  fs/bcachefs/fs.c                   |   2 +-
->  fs/btrfs/ioctl.c                   |   9 ++
->  fs/btrfs/super.c                   |   3 +-
->  fs/ext4/super.c                    |   6 +-
->  fs/namei.c                         |   9 ++
->  fs/notify/fanotify/fanotify.c      |  33 ++++++--
->  fs/notify/fanotify/fanotify.h      |  15 ++++
->  fs/notify/fanotify/fanotify_user.c | 119 ++++++++++++++++++++++-----
->  fs/notify/fsnotify.c               |  17 +++-
->  fs/xfs/xfs_file.c                  |   4 +
->  fs/xfs/xfs_super.c                 |   2 +-
->  include/linux/fanotify.h           |  20 +++--
->  include/linux/fs.h                 |   1 +
->  include/linux/fsnotify.h           |  58 +++++++++++--
->  include/linux/fsnotify_backend.h   |  59 ++++++++++++-
->  include/linux/mm.h                 |   1 +
->  include/uapi/linux/fanotify.h      |  18 ++++
->  mm/filemap.c                       | 128 +++++++++++++++++++++++++++--
->  mm/memory.c                        |  22 +++++
->  mm/readahead.c                     |  13 +++
->  security/selinux/hooks.c           |   3 +-
->  22 files changed, 489 insertions(+), 57 deletions(-)
-> 
-> -- 
-> 2.43.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Christoph Hellwig (37):
+      [021d9c107e29] xfs: remove xfs_validate_rtextents
+      [6529eef810e2] xfs: factor out a xfs_validate_rt_geometry helper
+      [3cb30d516229] xfs: make the RT rsum_cache mandatory
+      [a18a69bbec08] xfs: use the recalculated transaction reservation in xfs_growfs_rt_bmblock
+      [1e21d1897f93] xfs: clean up the ISVALID macro in xfs_bmap_adjacent
+      [119c65e56bc1] xfs: remove the limit argument to xfs_rtfind_back
+      [86a0264ef26e] xfs: ensure rtx mask/shift are correct after growfs
+      [a9f646af4307] xfs: factor out a xfs_rtallocate helper
+      [6d2db12d56a3] xfs: assert a valid limit in xfs_rtfind_forw
+      [fd048a1bb391] xfs: rework the rtalloc fallback handling
+      [b4781eea6872] xfs: add bounds checking to xfs_rt{bitmap,summary}_read_buf
+      [b2dd85f41476] xfs: factor out a xfs_rtallocate_align helper
+      [237130564ef3] xfs: cleanup the calling convention for xfs_rtpick_extent
+      [ec12f97f1b8a] xfs: make the rtalloc start hint a xfs_rtblock_t
+      [c8e5a0bfe008] xfs: push the calls to xfs_rtallocate_range out to xfs_bmap_rtalloc
+      [7996f10ce6cc] xfs: factor out a xfs_growfs_rt_bmblock helper
+      [1fc51cf11dd8] xfs: remove xfs_{rtbitmap,rtsummary}_wordcount
+      [266e78aec4b9] xfs: factor out a xfs_last_rt_bmblock helper
+      [33912286cb19] xfs: replace m_rsumsize with m_rsumblocks
+      [feb09b727b03] xfs: match on the global RT inode numbers in xfs_is_metadata_inode
+      [2a95ffc44b61] xfs: factor out rtbitmap/summary initialization helpers
+      [fa0fc38b255c] xfs: remove xfs_rtb_to_rtxrem
+      [0a59e4f3e167] xfs: push transaction join out of xfs_rtbitmap_lock and xfs_rtgroup_lock
+      [df8b181f1551] xfs: simplify xfs_rtalloc_query_range
+      [6e13dbebd518] xfs: remove the i_mode check in xfs_release
+      [5d3ca6261121] xfs: refactor f_op->release handling
+      [98e44e2bc0fb] xfs: don't bother returning errors from xfs_file_release
+      [c741d79c1a97] xfs: skip all of xfs_file_release when shut down
+      [b717089efe47] xfs: check XFS_EOFBLOCKS_RELEASED earlier in xfs_release_eofblocks
+      [11f4c3a53add] xfs: simplify extent lookup in xfs_can_free_eofblocks
+      [9372dce08b34] xfs: reclaim speculative preallocations for append only files
+      [4ef7c6d39dc7] xfs: use kfree_rcu_mightsleep to free the perag structures
+      [f48f0a8e00b6] xfs: move the tagged perag lookup helpers to xfs_icache.c
+      [f9ffd095c89a] xfs: simplify tagged perag iteration
+      [32fa4059fe67] xfs: convert perag lookup to xarray
+      [866cf1dd3d5c] xfs: use xas_for_each_marked in xfs_reclaim_inodes_count
+      [90fa22da6d6b] xfs: ensure st_blocks never goes to zero during COW writes
+
+Dan Carpenter (1):
+      [fb8b941c75bd] xfs: remove unnecessary check
+
+Darrick J. Wong (19):
+      [cb59233e8237] xfs: don't return too-short extents from xfs_rtallocate_extent_block
+      [e99aa0401eb4] xfs: don't scan off the end of the rt volume in xfs_rtallocate_extent_block
+      [e6a74dcf9bc3] xfs: refactor aligning bestlen to prod
+      [62c3d2496808] xfs: clean up xfs_rtallocate_extent_exact a bit
+      [0902819fe649] xfs: add xchk_setup_nothing and xchk_nothing helpers
+      [74c234bbe51a] xfs: reduce excessive clamping of maxlen in xfs_rtallocate_extent_near
+      [05aba1953f4a] xfs: validate inumber in xfs_iget
+      [9e9be9840fad] xfs: fix broken variable-sized allocation detection in xfs_rtallocate_extent_block
+      [516f91035c27] xfs: rearrange xfs_fsmap.c a little bit
+      [398597c3ef7f] xfs: introduce new file range commit ioctls
+      [390b4775d678] xfs: pass the icreate args object to xfs_dialloc
+      [2ca7b9d7b808] xfs: move xfs_ioc_getfsmap out of xfs_ioctl.c
+      [64dfa18d6e32] xfs: fix C++ compilation errors in xfs_fs.h
+      [c460f0f1a2bc] xfs: fix FITRIM reporting again
+      [79124b374006] xfs: replace shouty XFS_BM{BT,DR} macros
+      [2c4162be6c10] xfs: refactor loading quota inodes in the regular case
+      [de55149b6639] xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
+      [411a71256de6] xfs: standardize the btree maxrecs function parameters
+      [f1204d96450f] xfs: only free posteof blocks on first close
+
+Dave Chinner (1):
+      [816e3599ca9b] xfs: don't free post-EOF blocks on read close
+
+Hongbo Li (1):
+      [70045dafdf8d] xfs: use LIST_HEAD() to simplify code
+
+Jiapeng Chong (1):
+      [9db384feea85] xfs: Remove duplicate xfs_trans_priv.h header
+
+John Garry (1):
+      [ca57120dfe27] xfs: Use xfs set and clear mp state helpers
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_ag.c             |  94 +---------
+ fs/xfs/libxfs/xfs_ag.h             |  14 --
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   6 +-
+ fs/xfs/libxfs/xfs_alloc_btree.h    |   3 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c      |   8 +-
+ fs/xfs/libxfs/xfs_bmap.c           | 101 ++++++-----
+ fs/xfs/libxfs/xfs_bmap_btree.c     |  24 +--
+ fs/xfs/libxfs/xfs_bmap_btree.h     | 207 +++++++++++++++-------
+ fs/xfs/libxfs/xfs_defer.c          |   1 -
+ fs/xfs/libxfs/xfs_fs.h             |  31 +++-
+ fs/xfs/libxfs/xfs_ialloc.c         |   9 +-
+ fs/xfs/libxfs/xfs_ialloc.h         |   4 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   6 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |   3 +-
+ fs/xfs/libxfs/xfs_inode_fork.c     |  40 ++---
+ fs/xfs/libxfs/xfs_inode_util.c     |   2 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |   5 +-
+ fs/xfs/libxfs/xfs_refcount_btree.h |   3 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   7 +-
+ fs/xfs/libxfs/xfs_rmap_btree.h     |   3 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c       | 274 +++++++++++++++++++++--------
+ fs/xfs/libxfs/xfs_rtbitmap.h       |  61 ++-----
+ fs/xfs/libxfs/xfs_sb.c             |  92 ++++++----
+ fs/xfs/libxfs/xfs_sb.h             |   3 +
+ fs/xfs/libxfs/xfs_trans_resv.c     |   4 +-
+ fs/xfs/libxfs/xfs_types.h          |  12 --
+ fs/xfs/scrub/bmap_repair.c         |   2 +-
+ fs/xfs/scrub/common.h              |  29 +--
+ fs/xfs/scrub/inode_repair.c        |  12 +-
+ fs/xfs/scrub/rtsummary.c           |  11 +-
+ fs/xfs/scrub/rtsummary.h           |   2 +-
+ fs/xfs/scrub/rtsummary_repair.c    |  12 +-
+ fs/xfs/scrub/scrub.h               |  29 +--
+ fs/xfs/scrub/tempfile.c            |   2 +-
+ fs/xfs/xfs_bmap_item.c             |  17 ++
+ fs/xfs/xfs_bmap_util.c             |  38 ++--
+ fs/xfs/xfs_discard.c               |  17 +-
+ fs/xfs/xfs_exchrange.c             | 143 ++++++++++++++-
+ fs/xfs/xfs_exchrange.h             |  16 +-
+ fs/xfs/xfs_file.c                  |  72 +++++++-
+ fs/xfs/xfs_fsmap.c                 | 403 +++++++++++++++++++++++++++---------------
+ fs/xfs/xfs_fsmap.h                 |   6 +-
+ fs/xfs/xfs_fsops.c                 |   2 +-
+ fs/xfs/xfs_icache.c                |  89 +++++++---
+ fs/xfs/xfs_inode.c                 |  86 +--------
+ fs/xfs/xfs_inode.h                 |  12 +-
+ fs/xfs/xfs_ioctl.c                 | 134 +-------------
+ fs/xfs/xfs_log.c                   |   2 +-
+ fs/xfs/xfs_log_recover.c           |   2 +-
+ fs/xfs/xfs_mount.c                 |   2 +-
+ fs/xfs/xfs_mount.h                 |   5 +-
+ fs/xfs/xfs_mru_cache.c             |   3 +-
+ fs/xfs/xfs_qm.c                    |  48 ++++-
+ fs/xfs/xfs_qm.h                    |   3 +
+ fs/xfs/xfs_qm_syscalls.c           |  13 +-
+ fs/xfs/xfs_quotaops.c              |  53 +++---
+ fs/xfs/xfs_rtalloc.c               | 868 ++++++++++++++++++++++++++++++++++++++++++------------------------------------------------
+ fs/xfs/xfs_super.c                 |  13 +-
+ fs/xfs/xfs_symlink.c               |   2 +-
+ fs/xfs/xfs_trace.h                 |  61 ++++++-
+ 60 files changed, 1772 insertions(+), 1454 deletions(-)
