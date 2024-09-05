@@ -1,68 +1,67 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35064183CB8
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C766814F125
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725560528; cv=none; b=Z0KINtmhIeUXcga2FEMBy2/GrnMoxFNp574tB7CI6a6AV3Ur7ztuIQTTN3C2SrBFIdcQk33SmLaoqxNnxMZuqy1nvzCl9YQlCjGCbtXAeFCgxhVlzixtAU0vHmJmLoZaaqbCCFMqRL60VztexaZGYBwlUAfVpBvySqLUFYOMmnU=
+	t=1725560528; cv=none; b=E3yM/YY2p5UvmCYALBWbZPlTPJ7wtAAfkvHrjxnU7LmNnWZTKKPCzktg7Pc22Y83z5bZs2V+SMEFyRSrSUOPiaEdizAGPkS5T13XwNatujOWoDzMr1Zrgxyk0SA5aJE6FKp2IjbptSW9ss3butoj7mM7hyRLjNwcuQ30wMyau2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1725560528; c=relaxed/simple;
-	bh=cXbR2BrL28+Nv5fe5fo1wP7SCaWROq27w01fNqV/b28=;
+	bh=BbFnDJSkUm3Sdb4VroXXYAhanjg3vkqsQhVamSt+P7g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bvZTwX2+yncyCkNLBenFlek3n8mXuRqPHoC+Jqu7LQWISwUDVA/zaUSMFdSdoPWZojx5cEKHQaWQRFKsZPkEQZAjq52jrrT4RvPP+RJEehDE9WXECf8wx8m+wywlgePDlJhgJywdpKINrQv9otC8iNNFRKjLPha3hFXnRw+NJmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nHB4Cki4; arc=none smtp.client-ip=209.85.215.172
+	 MIME-Version; b=oaVUX4nMSDivC+9i5xJukKz9AWLk1fmSNnU/qf3MoAiA51a64E66Qd2DtOqQW2HmktkJGsoU88UJ4inAVVWnmvKPN1JuFrKnKOlbnD4SC7JcfxVSVvhyca27QMzs1QRmhQBZLBDMr2DqWnCaiIrWUWz8IR+yu2NMdEUGgWh5OBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hsQ/EMVp; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nHB4Cki4"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-7cb3db0932cso953768a12.1
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hsQ/EMVp"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2068a7c9286so10968655ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725560525; x=1726165325; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1725560526; x=1726165326; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=QVqUYPIWdP5eCegjpjBL0SsLMXeNqCOKWFLK7lHVYpk=;
-        b=nHB4Cki4GKviNt1BBWS755WFsxqm8aUFv4c9lYaSoenhDJPN5zl1fn0LD4MQq38dqZ
-         POxevwxO9gNvETmysNzs+c4kR7UkUBpH1TQrLxTQbgfg/zy7YeIaLJ8C/4JfxpJoNZnm
-         VEOqjBfw7xoPXEVAltT8Y5vEA0ZDei/oC6N1Oin9aAQ8OL6mUNVjM1ouuO/cnjP3LqaU
-         Igauj90iGQEUeZWIgj80BPwc1hYU9TUMndgFib7o3F0n9OkXdtLWk8Nq3xqA46EJlEgr
-         H7iHX3S4Ok2zJwrhuFTHj9fPIbPdkdldYm0zGBeV2jpXYvOvYKduSW07ApZ5Wngy0qrT
-         l7Hw==
+        bh=Pl22X2afz+QBVCMFxTlTVdU7L2XLQCrOsSnRWzmnJn8=;
+        b=hsQ/EMVpA590g0LH90PCC1zAysZUioLrUBHCGcEHXVQFGM6pACEZogHPO6wOtqi5UP
+         C2RD2JqnRuwFzga4MJ/fyicd7UCA7qVp6FhLN0LwuGOoYHGhZIunyVl1kGO8gUpS6pca
+         K9p5IdjFV4riTo7ksthdhsingRWpzamH1b1iZj6F7l0iexmScmg/d++jQggbG9N0U/BU
+         6Z5q0nzpFOcdP34lWoUmMlng0EnBZKztiIFpOI1/tdsq0i945jknGtzckMML/33H61YF
+         YEA3zhX45LlPnJM49j4dBYGXft6+rDTIrmOpE2DEnHK9Ss1InbBtc0sdWLw6uSBH23aP
+         SEIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725560525; x=1726165325;
+        d=1e100.net; s=20230601; t=1725560526; x=1726165326;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=QVqUYPIWdP5eCegjpjBL0SsLMXeNqCOKWFLK7lHVYpk=;
-        b=NRkM0gz80fhEjWuCczA/bD6rnoAVXbwHV8B4E/VQu68vIpQqIoHJPclqIrDIEXp7lk
-         +IVlalFy6Pd9L0fBebSRdoceL6g3Rqg1eCuUTh/3XTR9ALjy4nsX+/DCpMQTPB73mh4P
-         lSh1MaJrxB3EDfjGN+sGbPd7eVxHORLbddPHAwxGun+kJUVFcZOq0f8bN/gPPiBvtL1s
-         FIrltZz7wh2JwaB+au63B4PAIclRQnNA9dV1D53EqJmoCabcDKvWc7/rskATzxtt4+a4
-         Tv/nGFOz6AIwJlEWuQT+71mZKAoAH8k9Yynge6AOQYUsJB681VKgxaZd9BGWmq0+4GKb
-         SLcw==
-X-Gm-Message-State: AOJu0Yyqg3lLoTxoSDQW1cqa0twYvdJE+bbqPFRzge6/+iRQ/WljFv6i
-	Lb7zSDNAJQ2BcJjSekHRE5YoEqxjauH+NufuJT51mhf48btTQP7Dobhh/7yQ
-X-Google-Smtp-Source: AGHT+IEUw1u4CC8nyi7kPw7lftEm1b2BjZqxP5CesqF5AqG84einUTjo34ycRlipAgSpAJ4j4WdS4g==
-X-Received: by 2002:a17:903:244e:b0:205:5548:9a28 with SMTP id d9443c01a7336-20555489bacmr200370405ad.49.1725560525030;
+        bh=Pl22X2afz+QBVCMFxTlTVdU7L2XLQCrOsSnRWzmnJn8=;
+        b=CBJAakQZf91n/nMSUwTjQ3m5FJz1TJvLTFBt+t1mwQyk7mwM6tRY9Rt2/ZHZaSGkpv
+         GCUIXTdW2zxGFCrpvZElEa1BmpVKtdVDmZtOU4KFxE2QC4baq7JLPAkrsY+FmgzCrkKd
+         rx7MaHsyxBUdZamH0k0whwcSfs1w3ThRib1It/P/c6xsERYS8PK8Rt8JK7tZcGYlLRVp
+         t82pA2EnezXWZWRj5xRV396F1Gsy19AzPn24zh8RisYGWBtCzNdUL4lmFyHzOQlxHtT8
+         YSfW5Xd3V4Va2UNcIoCnAO7QDWuKwSONTaKUBqnydSTrqNNGhYSd9MsvRSui5qIyRR35
+         hSug==
+X-Gm-Message-State: AOJu0Yx6tLPcgfr6o86cMdIQmvs+8V2TgYeKxmC4tAXi3pMwc1AXDQj+
+	N489UQBym+iXimivm9vN2M9ao2YElAoC+IWrZXe1PqJS1O9DxugQoVDud6Gv
+X-Google-Smtp-Source: AGHT+IFyZsgZA52vmjhRYX23VY5eQdGjFmYgDoxDrWg9v/CcbArTzDLRsudXe5cuECkkq614xfv6Tg==
+X-Received: by 2002:a17:902:d48a:b0:205:73ac:98d9 with SMTP id d9443c01a7336-205841b9fa7mr135970595ad.31.1725560525960;
         Thu, 05 Sep 2024 11:22:05 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2da2:d734:ef56:7ccf])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.22.04
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.22.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 11:22:04 -0700 (PDT)
+        Thu, 05 Sep 2024 11:22:05 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
 	chandan.babu@oracle.com,
 	Dave Chinner <dchinner@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <david@fromorbit.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 13/26] xfs: fix AGF vs inode cluster buffer deadlock
-Date: Thu,  5 Sep 2024 11:21:30 -0700
-Message-ID: <20240905182144.2691920-14-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 14/26] xfs: collect errors from inodegc for unlinked inode recovery
+Date: Thu,  5 Sep 2024 11:21:31 -0700
+Message-ID: <20240905182144.2691920-15-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
 In-Reply-To: <20240905182144.2691920-1-leah.rumancik@gmail.com>
 References: <20240905182144.2691920-1-leah.rumancik@gmail.com>
@@ -76,425 +75,350 @@ Content-Transfer-Encoding: 8bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-[ Upstream commit 82842fee6e5979ca7e2bf4d839ef890c22ffb7aa ]
+[ Upstream commit d4d12c02bf5f768f1b423c7ae2909c5afdfe0d5f ]
 
-Lock order in XFS is AGI -> AGF, hence for operations involving
-inode unlinked list operations we always lock the AGI first. Inode
-unlinked list operations operate on the inode cluster buffer,
-so the lock order there is AGI -> inode cluster buffer.
+Unlinked list recovery requires errors removing the inode the from
+the unlinked list get fed back to the main recovery loop. Now that
+we offload the unlinking to the inodegc work, we don't get errors
+being fed back when we trip over a corruption that prevents the
+inode from being removed from the unlinked list.
 
-For O_TMPFILE operations, this now means the lock order set down in
-xfs_rename and xfs_link is AGI -> inode cluster buffer -> AGF as the
-unlinked ops are done before the directory modifications that may
-allocate space and lock the AGF.
+This means we never clear the corrupt unlinked list bucket,
+resulting in runtime operations eventually tripping over it and
+shutting down.
 
-Unfortunately, we also now lock the inode cluster buffer when
-logging an inode so that we can attach the inode to the cluster
-buffer and pin it in memory. This creates a lock order of AGF ->
-inode cluster buffer in directory operations as we have to log the
-inode after we've allocated new space for it.
+Fix this by collecting inodegc worker errors and feed them
+back to the flush caller. This is largely best effort - the only
+context that really cares is log recovery, and it only flushes a
+single inode at a time so we don't need complex synchronised
+handling. Essentially the inodegc workers will capture the first
+error that occurs and the next flush will gather them and clear
+them. The flush itself will only report the first gathered error.
 
-This creates a lock inversion between the AGF and the inode cluster
-buffer. Because the inode cluster buffer is shared across multiple
-inodes, the inversion is not specific to individual inodes but can
-occur when inodes in the same cluster buffer are accessed in
-different orders.
+In the cases where callers can return errors, propagate the
+collected inodegc flush error up the error handling chain.
 
-To fix this we need move all the inode log item cluster buffer
-interactions to the end of the current transaction. Unfortunately,
-xfs_trans_log_inode() calls are littered throughout the transactions
-with no thought to ordering against other items or locking. This
-makes it difficult to do anything that involves changing the call
-sites of xfs_trans_log_inode() to change locking orders.
+In the case of inode unlinked list recovery, there are several
+superfluous calls to flush queued unlinked inodes -
+xlog_recover_iunlink_bucket() guarantees that it has flushed the
+inodegc and collected errors before it returns. Hence nothing in the
+calling path needs to run a flush, even when an error is returned.
 
-However, we do now have a mechanism that allows is to postpone dirty
-item processing to just before we commit the transaction: the
-->iop_precommit method. This will be called after all the
-modifications are done and high level objects like AGI and AGF
-buffers have been locked and modified, thereby providing a mechanism
-that guarantees we don't lock the inode cluster buffer before those
-high level objects are locked.
-
-This change is largely moving the guts of xfs_trans_log_inode() to
-xfs_inode_item_precommit() and providing an extra flag context in
-the inode log item to track the dirty state of the inode in the
-current transaction. This also means we do a lot less repeated work
-in xfs_trans_log_inode() by only doing it once per transaction when
-all the work is done.
-
-Fixes: 298f7bec503f ("xfs: pin inode backing buffer to the inode log item")
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/libxfs/xfs_log_format.h  |   9 +-
- fs/xfs/libxfs/xfs_trans_inode.c | 113 ++----------------------
- fs/xfs/xfs_inode_item.c         | 149 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode_item.h         |   1 +
- 4 files changed, 166 insertions(+), 106 deletions(-)
+ fs/xfs/xfs_icache.c      | 46 ++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_icache.h      |  4 ++--
+ fs/xfs/xfs_inode.c       | 20 ++++++-----------
+ fs/xfs/xfs_inode.h       |  2 +-
+ fs/xfs/xfs_log_recover.c | 19 ++++++++---------
+ fs/xfs/xfs_mount.h       |  1 +
+ fs/xfs/xfs_super.c       |  1 +
+ fs/xfs/xfs_trans.c       |  4 +++-
+ 8 files changed, 60 insertions(+), 37 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index f13e0809dc63..269573c82808 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -324,7 +324,6 @@ struct xfs_inode_log_format_32 {
- #define XFS_ILOG_DOWNER	0x200	/* change the data fork owner on replay */
- #define XFS_ILOG_AOWNER	0x400	/* change the attr fork owner on replay */
- 
--
- /*
-  * The timestamps are dirty, but not necessarily anything else in the inode
-  * core.  Unlike the other fields above this one must never make it to disk
-@@ -333,6 +332,14 @@ struct xfs_inode_log_format_32 {
-  */
- #define XFS_ILOG_TIMESTAMP	0x4000
- 
-+/*
-+ * The version field has been changed, but not necessarily anything else of
-+ * interest. This must never make it to disk - it is used purely to ensure that
-+ * the inode item ->precommit operation can update the fsync flag triggers
-+ * in the inode item correctly.
-+ */
-+#define XFS_ILOG_IVERSION	0x8000
-+
- #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
- 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
- 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index 8b5547073379..cb4796b6e693 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -40,9 +40,8 @@ xfs_trans_ijoin(
- 	iip->ili_lock_flags = lock_flags;
- 	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
- 
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
-+	/* Reset the per-tx dirty context and add the item to the tx. */
-+	iip->ili_dirty_flags = 0;
- 	xfs_trans_add_item(tp, &iip->ili_item);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index f5568fa54039..4b040740678c 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -454,6 +454,27 @@ xfs_inodegc_queue_all(
+ 	return ret;
  }
  
-@@ -76,17 +75,10 @@ xfs_trans_ichgtime(
++/* Wait for all queued work and collect errors */
++static int
++xfs_inodegc_wait_all(
++	struct xfs_mount	*mp)
++{
++	int			cpu;
++	int			error = 0;
++
++	flush_workqueue(mp->m_inodegc_wq);
++	for_each_online_cpu(cpu) {
++		struct xfs_inodegc	*gc;
++
++		gc = per_cpu_ptr(mp->m_inodegc, cpu);
++		if (gc->error && !error)
++			error = gc->error;
++		gc->error = 0;
++	}
++
++	return error;
++}
++
  /*
-  * This is called to mark the fields indicated in fieldmask as needing to be
-  * logged when the transaction is committed.  The inode must already be
-- * associated with the given transaction.
-- *
-- * The values for fieldmask are defined in xfs_inode_item.h.  We always log all
-- * of the core inode if any of it has changed, and we always log all of the
-- * inline data/extents/b-tree root if any of them has changed.
-- *
-- * Grab and pin the cluster buffer associated with this inode to avoid RMW
-- * cycles at inode writeback time. Avoid the need to add error handling to every
-- * xfs_trans_log_inode() call by shutting down on read error.  This will cause
-- * transactions to fail and everything to error out, just like if we return a
-- * read error in a dirty transaction and cancel it.
-+ * associated with the given transaction. All we do here is record where the
-+ * inode was dirtied and mark the transaction and inode log item dirty;
-+ * everything else is done in the ->precommit log item operation after the
-+ * changes in the transaction have been completed.
+  * Check the validity of the inode we just found it the cache
   */
- void
- xfs_trans_log_inode(
-@@ -96,7 +88,6 @@ xfs_trans_log_inode(
+@@ -1490,15 +1511,14 @@ xfs_blockgc_free_space(
+ 	if (error)
+ 		return error;
+ 
+-	xfs_inodegc_flush(mp);
+-	return 0;
++	return xfs_inodegc_flush(mp);
+ }
+ 
+ /*
+  * Reclaim all the free space that we can by scheduling the background blockgc
+  * and inodegc workers immediately and waiting for them all to clear.
+  */
+-void
++int
+ xfs_blockgc_flush_all(
+ 	struct xfs_mount	*mp)
  {
- 	struct xfs_inode_log_item *iip = ip->i_itemp;
- 	struct inode		*inode = VFS_I(ip);
--	uint			iversion_flags = 0;
+@@ -1519,7 +1539,7 @@ xfs_blockgc_flush_all(
+ 	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
+ 		flush_delayed_work(&pag->pag_blockgc_work);
  
- 	ASSERT(iip);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-@@ -104,18 +95,6 @@ xfs_trans_log_inode(
+-	xfs_inodegc_flush(mp);
++	return xfs_inodegc_flush(mp);
+ }
  
- 	tp->t_flags |= XFS_TRANS_DIRTY;
+ /*
+@@ -1841,13 +1861,17 @@ xfs_inodegc_set_reclaimable(
+  * This is the last chance to make changes to an otherwise unreferenced file
+  * before incore reclamation happens.
+  */
+-static void
++static int
+ xfs_inodegc_inactivate(
+ 	struct xfs_inode	*ip)
+ {
++	int			error;
++
+ 	trace_xfs_inode_inactivating(ip);
+-	xfs_inactive(ip);
++	error = xfs_inactive(ip);
+ 	xfs_inodegc_set_reclaimable(ip);
++	return error;
++
+ }
  
--	/*
--	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
--	 * don't matter - we either will need an extra transaction in 24 hours
--	 * to log the timestamps, or will clear already cleared fields in the
--	 * worst case.
--	 */
--	if (inode->i_state & I_DIRTY_TIME) {
--		spin_lock(&inode->i_lock);
--		inode->i_state &= ~I_DIRTY_TIME;
--		spin_unlock(&inode->i_lock);
--	}
--
- 	/*
- 	 * First time we log the inode in a transaction, bump the inode change
- 	 * counter if it is configured for this to occur. While we have the
-@@ -128,86 +107,10 @@ xfs_trans_log_inode(
- 	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
- 		if (IS_I_VERSION(inode) &&
- 		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
--			iversion_flags = XFS_ILOG_CORE;
--	}
--
--	/*
--	 * If we're updating the inode core or the timestamps and it's possible
--	 * to upgrade this inode to bigtime format, do so now.
--	 */
--	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
--	    xfs_has_bigtime(ip->i_mount) &&
--	    !xfs_inode_has_bigtime(ip)) {
--		ip->i_diflags2 |= XFS_DIFLAG2_BIGTIME;
--		flags |= XFS_ILOG_CORE;
--	}
--
--	/*
--	 * Inode verifiers do not check that the extent size hint is an integer
--	 * multiple of the rt extent size on a directory with both rtinherit
--	 * and extszinherit flags set.  If we're logging a directory that is
--	 * misconfigured in this way, clear the hint.
--	 */
--	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
--	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
--	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
--		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
--				   XFS_DIFLAG_EXTSZINHERIT);
--		ip->i_extsize = 0;
--		flags |= XFS_ILOG_CORE;
-+			flags |= XFS_ILOG_IVERSION;
+ void
+@@ -1879,8 +1903,12 @@ xfs_inodegc_worker(
+ 
+ 	WRITE_ONCE(gc->shrinker_hits, 0);
+ 	llist_for_each_entry_safe(ip, n, node, i_gclist) {
++		int	error;
++
+ 		xfs_iflags_set(ip, XFS_INACTIVATING);
+-		xfs_inodegc_inactivate(ip);
++		error = xfs_inodegc_inactivate(ip);
++		if (error && !gc->error)
++			gc->error = error;
  	}
  
--	/*
--	 * Record the specific change for fdatasync optimisation. This allows
--	 * fdatasync to skip log forces for inodes that are only timestamp
--	 * dirty.
--	 */
--	spin_lock(&iip->ili_lock);
--	iip->ili_fsync_fields |= flags;
--
--	if (!iip->ili_item.li_buf) {
--		struct xfs_buf	*bp;
--		int		error;
--
--		/*
--		 * We hold the ILOCK here, so this inode is not going to be
--		 * flushed while we are here. Further, because there is no
--		 * buffer attached to the item, we know that there is no IO in
--		 * progress, so nothing will clear the ili_fields while we read
--		 * in the buffer. Hence we can safely drop the spin lock and
--		 * read the buffer knowing that the state will not change from
--		 * here.
--		 */
--		spin_unlock(&iip->ili_lock);
--		error = xfs_imap_to_bp(ip->i_mount, tp, &ip->i_imap, &bp);
--		if (error) {
--			xfs_force_shutdown(ip->i_mount, SHUTDOWN_META_IO_ERROR);
--			return;
--		}
--
--		/*
--		 * We need an explicit buffer reference for the log item but
--		 * don't want the buffer to remain attached to the transaction.
--		 * Hold the buffer but release the transaction reference once
--		 * we've attached the inode log item to the buffer log item
--		 * list.
--		 */
--		xfs_buf_hold(bp);
--		spin_lock(&iip->ili_lock);
--		iip->ili_item.li_buf = bp;
--		bp->b_flags |= _XBF_INODES;
--		list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
--		xfs_trans_brelse(tp, bp);
--	}
--
--	/*
--	 * Always OR in the bits from the ili_last_fields field.  This is to
--	 * coordinate with the xfs_iflush() and xfs_buf_inode_iodone() routines
--	 * in the eventual clearing of the ili_fields bits.  See the big comment
--	 * in xfs_iflush() for an explanation of this coordination mechanism.
--	 */
--	iip->ili_fields |= (flags | iip->ili_last_fields | iversion_flags);
--	spin_unlock(&iip->ili_lock);
-+	iip->ili_dirty_flags |= flags;
+ 	memalloc_nofs_restore(nofs_flag);
+@@ -1904,13 +1932,13 @@ xfs_inodegc_push(
+  * Force all currently queued inode inactivation work to run immediately and
+  * wait for the work to finish.
+  */
+-void
++int
+ xfs_inodegc_flush(
+ 	struct xfs_mount	*mp)
+ {
+ 	xfs_inodegc_push(mp);
+ 	trace_xfs_inodegc_flush(mp, __return_address);
+-	flush_workqueue(mp->m_inodegc_wq);
++	return xfs_inodegc_wait_all(mp);
  }
  
- int
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index ca2941ab6cbc..91c847a84e10 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -29,6 +29,153 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
- 	return container_of(lip, struct xfs_inode_log_item, ili_item);
+ /*
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 6cd180721659..da58984b80d2 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -59,7 +59,7 @@ int xfs_blockgc_free_dquots(struct xfs_mount *mp, struct xfs_dquot *udqp,
+ 		unsigned int iwalk_flags);
+ int xfs_blockgc_free_quota(struct xfs_inode *ip, unsigned int iwalk_flags);
+ int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_icwalk *icm);
+-void xfs_blockgc_flush_all(struct xfs_mount *mp);
++int xfs_blockgc_flush_all(struct xfs_mount *mp);
+ 
+ void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+@@ -77,7 +77,7 @@ void xfs_blockgc_start(struct xfs_mount *mp);
+ 
+ void xfs_inodegc_worker(struct work_struct *work);
+ void xfs_inodegc_push(struct xfs_mount *mp);
+-void xfs_inodegc_flush(struct xfs_mount *mp);
++int xfs_inodegc_flush(struct xfs_mount *mp);
+ void xfs_inodegc_stop(struct xfs_mount *mp);
+ void xfs_inodegc_start(struct xfs_mount *mp);
+ void xfs_inodegc_cpu_dead(struct xfs_mount *mp, unsigned int cpu);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 54b707787f90..b0b4f6ac2397 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1620,16 +1620,7 @@ xfs_inactive_ifree(
+ 	 */
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
+ 
+-	/*
+-	 * Just ignore errors at this point.  There is nothing we can do except
+-	 * to try to keep going. Make sure it's not a silent error.
+-	 */
+-	error = xfs_trans_commit(tp);
+-	if (error)
+-		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+-			__func__, error);
+-
+-	return 0;
++	return xfs_trans_commit(tp);
  }
  
-+static uint64_t
-+xfs_inode_item_sort(
-+	struct xfs_log_item	*lip)
-+{
-+	return INODE_ITEM(lip)->ili_inode->i_ino;
-+}
+ /*
+@@ -1696,12 +1687,12 @@ xfs_inode_needs_inactive(
+  * now be truncated.  Also, we clear all of the read-ahead state
+  * kept for the inode here since the file is now closed.
+  */
+-void
++int
+ xfs_inactive(
+ 	xfs_inode_t	*ip)
+ {
+ 	struct xfs_mount	*mp;
+-	int			error;
++	int			error = 0;
+ 	int			truncate = 0;
+ 
+ 	/*
+@@ -1742,7 +1733,7 @@ xfs_inactive(
+ 		 * reference to the inode at this point anyways.
+ 		 */
+ 		if (xfs_can_free_eofblocks(ip, true))
+-			xfs_free_eofblocks(ip);
++			error = xfs_free_eofblocks(ip);
+ 
+ 		goto out;
+ 	}
+@@ -1779,7 +1770,7 @@ xfs_inactive(
+ 	/*
+ 	 * Free the inode.
+ 	 */
+-	xfs_inactive_ifree(ip);
++	error = xfs_inactive_ifree(ip);
+ 
+ out:
+ 	/*
+@@ -1787,6 +1778,7 @@ xfs_inactive(
+ 	 * the attached dquots.
+ 	 */
+ 	xfs_qm_dqdetach(ip);
++	return error;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index fa780f08dc89..225f6f93c2fa 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -470,7 +470,7 @@ enum layout_break_reason {
+ 	(xfs_has_grpid((pip)->i_mount) || (VFS_I(pip)->i_mode & S_ISGID))
+ 
+ int		xfs_release(struct xfs_inode *ip);
+-void		xfs_inactive(struct xfs_inode *ip);
++int		xfs_inactive(struct xfs_inode *ip);
+ int		xfs_lookup(struct xfs_inode *dp, const struct xfs_name *name,
+ 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
+ int		xfs_create(struct user_namespace *mnt_userns,
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 05e48523ea40..affe94356ed1 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2711,7 +2711,9 @@ xlog_recover_iunlink_bucket(
+ 			 * just to flush the inodegc queue and wait for it to
+ 			 * complete.
+ 			 */
+-			xfs_inodegc_flush(mp);
++			error = xfs_inodegc_flush(mp);
++			if (error)
++				break;
+ 		}
+ 
+ 		prev_agino = agino;
+@@ -2719,10 +2721,15 @@ xlog_recover_iunlink_bucket(
+ 	}
+ 
+ 	if (prev_ip) {
++		int	error2;
 +
-+/*
-+ * Prior to finally logging the inode, we have to ensure that all the
-+ * per-modification inode state changes are applied. This includes VFS inode
-+ * state updates, format conversions, verifier state synchronisation and
-+ * ensuring the inode buffer remains in memory whilst the inode is dirty.
-+ *
-+ * We have to be careful when we grab the inode cluster buffer due to lock
-+ * ordering constraints. The unlinked inode modifications (xfs_iunlink_item)
-+ * require AGI -> inode cluster buffer lock order. The inode cluster buffer is
-+ * not locked until ->precommit, so it happens after everything else has been
-+ * modified.
-+ *
-+ * Further, we have AGI -> AGF lock ordering, and with O_TMPFILE handling we
-+ * have AGI -> AGF -> iunlink item -> inode cluster buffer lock order. Hence we
-+ * cannot safely lock the inode cluster buffer in xfs_trans_log_inode() because
-+ * it can be called on a inode (e.g. via bumplink/droplink) before we take the
-+ * AGF lock modifying directory blocks.
-+ *
-+ * Rather than force a complete rework of all the transactions to call
-+ * xfs_trans_log_inode() once and once only at the end of every transaction, we
-+ * move the pinning of the inode cluster buffer to a ->precommit operation. This
-+ * matches how the xfs_iunlink_item locks the inode cluster buffer, and it
-+ * ensures that the inode cluster buffer locking is always done last in a
-+ * transaction. i.e. we ensure the lock order is always AGI -> AGF -> inode
-+ * cluster buffer.
-+ *
-+ * If we return the inode number as the precommit sort key then we'll also
-+ * guarantee that the order all inode cluster buffer locking is the same all the
-+ * inodes and unlink items in the transaction.
-+ */
-+static int
-+xfs_inode_item_precommit(
-+	struct xfs_trans	*tp,
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-+	struct xfs_inode	*ip = iip->ili_inode;
-+	struct inode		*inode = VFS_I(ip);
-+	unsigned int		flags = iip->ili_dirty_flags;
+ 		ip->i_prev_unlinked = prev_agino;
+ 		xfs_irele(prev_ip);
 +
-+	/*
-+	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
-+	 * don't matter - we either will need an extra transaction in 24 hours
-+	 * to log the timestamps, or will clear already cleared fields in the
-+	 * worst case.
-+	 */
-+	if (inode->i_state & I_DIRTY_TIME) {
-+		spin_lock(&inode->i_lock);
-+		inode->i_state &= ~I_DIRTY_TIME;
-+		spin_unlock(&inode->i_lock);
-+	}
-+
-+	/*
-+	 * If we're updating the inode core or the timestamps and it's possible
-+	 * to upgrade this inode to bigtime format, do so now.
-+	 */
-+	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-+	    xfs_has_bigtime(ip->i_mount) &&
-+	    !xfs_inode_has_bigtime(ip)) {
-+		ip->i_diflags2 |= XFS_DIFLAG2_BIGTIME;
-+		flags |= XFS_ILOG_CORE;
-+	}
-+
-+	/*
-+	 * Inode verifiers do not check that the extent size hint is an integer
-+	 * multiple of the rt extent size on a directory with both rtinherit
-+	 * and extszinherit flags set.  If we're logging a directory that is
-+	 * misconfigured in this way, clear the hint.
-+	 */
-+	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
-+	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
-+	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
-+		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
-+				   XFS_DIFLAG_EXTSZINHERIT);
-+		ip->i_extsize = 0;
-+		flags |= XFS_ILOG_CORE;
-+	}
-+
-+	/*
-+	 * Record the specific change for fdatasync optimisation. This allows
-+	 * fdatasync to skip log forces for inodes that are only timestamp
-+	 * dirty. Once we've processed the XFS_ILOG_IVERSION flag, convert it
-+	 * to XFS_ILOG_CORE so that the actual on-disk dirty tracking
-+	 * (ili_fields) correctly tracks that the version has changed.
-+	 */
-+	spin_lock(&iip->ili_lock);
-+	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
-+	if (flags & XFS_ILOG_IVERSION)
-+		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
-+
-+	if (!iip->ili_item.li_buf) {
-+		struct xfs_buf	*bp;
-+		int		error;
-+
-+		/*
-+		 * We hold the ILOCK here, so this inode is not going to be
-+		 * flushed while we are here. Further, because there is no
-+		 * buffer attached to the item, we know that there is no IO in
-+		 * progress, so nothing will clear the ili_fields while we read
-+		 * in the buffer. Hence we can safely drop the spin lock and
-+		 * read the buffer knowing that the state will not change from
-+		 * here.
-+		 */
-+		spin_unlock(&iip->ili_lock);
-+		error = xfs_imap_to_bp(ip->i_mount, tp, &ip->i_imap, &bp);
++		error2 = xfs_inodegc_flush(mp);
++		if (error2 && !error)
++			return error2;
+ 	}
+-	xfs_inodegc_flush(mp);
+ 	return error;
+ }
+ 
+@@ -2789,7 +2796,6 @@ xlog_recover_iunlink_ag(
+ 			 * bucket and remaining inodes on it unreferenced and
+ 			 * unfreeable.
+ 			 */
+-			xfs_inodegc_flush(pag->pag_mount);
+ 			xlog_recover_clear_agi_bucket(pag, bucket);
+ 		}
+ 	}
+@@ -2806,13 +2812,6 @@ xlog_recover_process_iunlinks(
+ 
+ 	for_each_perag(log->l_mp, agno, pag)
+ 		xlog_recover_iunlink_ag(pag);
+-
+-	/*
+-	 * Flush the pending unlinked inodes to ensure that the inactivations
+-	 * are fully completed on disk and the incore inodes can be reclaimed
+-	 * before we signal that recovery is complete.
+-	 */
+-	xfs_inodegc_flush(log->l_mp);
+ }
+ 
+ STATIC void
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 69ddd5319634..c8e72f0d3965 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -62,6 +62,7 @@ struct xfs_error_cfg {
+ struct xfs_inodegc {
+ 	struct llist_head	list;
+ 	struct delayed_work	work;
++	int			error;
+ 
+ 	/* approximate count of inodes in the list */
+ 	unsigned int		items;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 12662b169b71..1c143c69da6e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1089,6 +1089,7 @@ xfs_inodegc_init_percpu(
+ #endif
+ 		init_llist_head(&gc->list);
+ 		gc->items = 0;
++		gc->error = 0;
+ 		INIT_DELAYED_WORK(&gc->work, xfs_inodegc_worker);
+ 	}
+ 	return 0;
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index a772f60de4a2..b45879868f90 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -290,7 +290,9 @@ xfs_trans_alloc(
+ 		 * Do not perform a synchronous scan because callers can hold
+ 		 * other locks.
+ 		 */
+-		xfs_blockgc_flush_all(mp);
++		error = xfs_blockgc_flush_all(mp);
 +		if (error)
 +			return error;
-+
-+		/*
-+		 * We need an explicit buffer reference for the log item but
-+		 * don't want the buffer to remain attached to the transaction.
-+		 * Hold the buffer but release the transaction reference once
-+		 * we've attached the inode log item to the buffer log item
-+		 * list.
-+		 */
-+		xfs_buf_hold(bp);
-+		spin_lock(&iip->ili_lock);
-+		iip->ili_item.li_buf = bp;
-+		bp->b_flags |= _XBF_INODES;
-+		list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
-+		xfs_trans_brelse(tp, bp);
-+	}
-+
-+	/*
-+	 * Always OR in the bits from the ili_last_fields field.  This is to
-+	 * coordinate with the xfs_iflush() and xfs_buf_inode_iodone() routines
-+	 * in the eventual clearing of the ili_fields bits.  See the big comment
-+	 * in xfs_iflush() for an explanation of this coordination mechanism.
-+	 */
-+	iip->ili_fields |= (flags | iip->ili_last_fields);
-+	spin_unlock(&iip->ili_lock);
-+
-+	/*
-+	 * We are done with the log item transaction dirty state, so clear it so
-+	 * that it doesn't pollute future transactions.
-+	 */
-+	iip->ili_dirty_flags = 0;
-+	return 0;
-+}
-+
- /*
-  * The logged size of an inode fork is always the current size of the inode
-  * fork. This means that when an inode fork is relogged, the size of the logged
-@@ -662,6 +809,8 @@ xfs_inode_item_committing(
- }
- 
- static const struct xfs_item_ops xfs_inode_item_ops = {
-+	.iop_sort	= xfs_inode_item_sort,
-+	.iop_precommit	= xfs_inode_item_precommit,
- 	.iop_size	= xfs_inode_item_size,
- 	.iop_format	= xfs_inode_item_format,
- 	.iop_pin	= xfs_inode_item_pin,
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index bbd836a44ff0..377e06007804 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -17,6 +17,7 @@ struct xfs_inode_log_item {
- 	struct xfs_log_item	ili_item;	   /* common portion */
- 	struct xfs_inode	*ili_inode;	   /* inode ptr */
- 	unsigned short		ili_lock_flags;	   /* inode lock flags */
-+	unsigned int		ili_dirty_flags;   /* dirty in current tx */
- 	/*
- 	 * The ili_lock protects the interactions between the dirty state and
- 	 * the flush state of the inode log item. This allows us to do atomic
+ 		want_retry = false;
+ 		goto retry;
+ 	}
 -- 
 2.46.0.598.g6f2099f65c-goog
 
