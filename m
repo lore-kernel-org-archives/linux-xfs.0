@@ -1,67 +1,66 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7177C186608
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:21:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724C2187357
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 18:22:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725560521; cv=none; b=kM7j7/4C+WhcSDF3GkGHBUUTXdJ5+/O8m4t/7MoXdzbOOARMe3hqGRESVEws3q13qQFDZlzSW8kWFHn3/ZCusO4PyVl098++9MMOpzysSsP+KjT7GAK8jMQ3NrLH91rUcXhncWbXQywKg9NU193mohS8o+cHJDL4C1BTCDzE7IE=
+	t=1725560521; cv=none; b=VyTKOJYvJ4de0kwNheA73PK2SBssA7M0dyzMjF6NZVzXcVnC8ey0vOD9DU2/WU6XwWz0DsT7yXfHaxWF5wZ0JUOCo/4BkvRr+xGobJJfKa90MEyZ2IKQnuRh9r/X06xTcxprgA0keOcQThYnV4ElKfc3eHZkuZvzp5QPi/blSxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1725560521; c=relaxed/simple;
-	bh=FF6JMZWwQRcRleKVkDA6D0aj94NXEADuuw+p/iYLhGo=;
+	bh=mS0Nk9qedVsrVvzemMpUVzwX/mfMQF94WPpvXDLExhE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rRwbMw0goQY0rr4E0zmkQ8xgC3IOHclfUXQbVtQ/dQQDa6bnoXR7MvaPICjjqhrQ3/piVoSbC4bs9RUFOS1aMXwRLqIpKBRxAjJrLx2jy1jhzS8vEkhjN/x6OLvAZ8M6403DTbrTNjwa9B5B6d34/meKA74MJAKOymRfGd9t9Dg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DHgSiQ+2; arc=none smtp.client-ip=209.85.210.172
+	 MIME-Version; b=qnUXNS4kMqswGy7RlSKEqsXmx3lAnZeNap+V5oJUdAm2PqlZzeRzkEMERVUOKkJwRedEyBSNFGNXdmLKEAzf43MCx4nTZPl/itzPpOFs41jFl0oyojTskQc3uhjzs8BaayG8vXeWnuiOfTsittDvezaPDV8yDRYtpxiJzKULrqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FuD69d/Y; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DHgSiQ+2"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-715cc93694fso1003042b3a.2
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:21:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FuD69d/Y"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-201d5af11a4so10861285ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 11:22:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20230601; t=1725560519; x=1726165319; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fRCmlKmYyIo2vUDZg14mFO8/fkqfqDMlbQVHLwmhVOA=;
-        b=DHgSiQ+2Q4VqmoMdZ7YsUUvXxEcql3zJ1zaZczzN/mBgBhOmJf71v7PGhrpFrV0ozP
-         4AzEQ7Cx+irDyCQpxrsbbCx0uPy3NH0QBFUVpGsukn9WyO+UvLh9nOlKHZ87jXlWqe3+
-         l/6yVa9B85Ud64FylCNnTuh7cATwlSijxxyamiyX9RjndoWBwhNwC4r2VCKb25Qoaibk
-         /W/Xwejy8KPIZ6UVADwKshVxAyMyADxLmQR8bHhRSscCSkTmRGcfAf/kYL+KQXWRsLlS
-         47i33Yua+NiHt9kQ9Xxt2h8mlsDV0oGuaqziNCEGSCtT0+mOSPz6TT1/9qAptXckreIO
-         YbDA==
+        bh=olcB0F8DHK4CDFU/f2CEsuVv4NsXmBIozmjDSFuNxmg=;
+        b=FuD69d/YVtXqE+zpBMKCrgUr6+ujig2unJDjO5btpCmt0kEEBhDctVVXKb7paF4UNI
+         PS+Eh34r/L1IF3wY404DdHC/s+ZDWrsX0rUl47lBQ69IBDXt4YAblCHZxgpfM2d96ipp
+         kocSqw5ZRwkPoM54uYKdPLS2IDx9mMt5A/8zrg0akTobYes7jCwO1K9Iea6i8s1JPHrk
+         y/E9ewmQ30Yfyuvn3A7hXDdnVmjuRiQs7SDoW5geEQF+SwLe7G3aloVEHwAR2aIUfiCs
+         t3BJzDhjYKwG/CEVWHubTDE4gN08DmLhX+5FMclSmKHSVMnleNw7YQz54Zz8tvPDGe7/
+         Xt1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1725560519; x=1726165319;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fRCmlKmYyIo2vUDZg14mFO8/fkqfqDMlbQVHLwmhVOA=;
-        b=hADAR+IhGp8DBFeAIkFckJlzsy9K1YoBgbxbjVPWLa72iykXIpZv3UMoP/z4qPO2bh
-         1vjvHDuNINF7EKeuMUpLlyPKiNnzvNz9IIXPCkByg/GT8H+u75XmQ4bhUCgCDLvOVbHI
-         uwCzFcjjJBDtDHBX1tBfxONnkmIKv5EDMh0AfeuNDu7MrLVgjNff/LNVt1TlH0+KFU+A
-         SmGevmjpnIxMOumIY9p/k2jZp7NhsLvsuwz3KJfhHKteGi0f/vbFu8gOPpCtDPK+qbkn
-         VDF5aogGL5nrsGBj38PKL5mQTX053qNy/eDZnaZ62faNhQQOv2j2+r7jD9py1m6qhUS/
-         iCUw==
-X-Gm-Message-State: AOJu0YwsIBfmwMea0W991G36TWNkjCa3eTy6WrgtWWdhZaL5l334gFzp
-	jkfAeAYP9eFlAIrUZPuUHC4Z4cwcFLoZHwsv6dKd36NTlN/DerE8//mcMRWd
-X-Google-Smtp-Source: AGHT+IERZk1yo9NjR+kJQ3nTcxhFXAsOZPY5JMw2+Q4xDoial0SADCBw5sjzUL4UmgtG41PHscuF5g==
-X-Received: by 2002:a17:902:e804:b0:1fc:568d:5f05 with SMTP id d9443c01a7336-205472c61acmr214965895ad.8.1725560518674;
-        Thu, 05 Sep 2024 11:21:58 -0700 (PDT)
+        bh=olcB0F8DHK4CDFU/f2CEsuVv4NsXmBIozmjDSFuNxmg=;
+        b=mfF2ac5XzSnqSPAw2UY1FnJyQddBd3saA9s5TrQeMDfHKTmdDLpg6U6dyJ1GZoKlab
+         zA/YX0TdsCh37TP++QP7nHCmxUtPOPTqTChg1DlUeNixsGOEjG0YoxZor+fZEaMdsu+R
+         gYAjGmDZf7DCYPUOkIS+Y37lP7w3GsAFsBqBgEXcJlsP2g6o0aVFv70GAWpDdwNyI3vF
+         51XaacVOJI6wosNz7EJ1/tQ0dxfdWQfc+Z6fjuNpJEqwPzC89I/AGVFfUjowH2lAXYgs
+         LfTBuCCogCCkCQmJWmAbfGi8dP4dPAKr38L6p2fHvsOEhuR4ZWUkKuLi9FTecPjhbd8A
+         zTlg==
+X-Gm-Message-State: AOJu0YxnMeVbc7lbJo4hLeryajs0THwr6wu0qJponRitfWhL/smU/qHP
+	9GIihKEvwjpV5rsFLL9opVQxVytnX06zDwqN1s1JYX9rSdAapXY383WtH2q3
+X-Google-Smtp-Source: AGHT+IE6q94kM5GcVu/dON7eY0k90Yy3KKVlZ6Zgu4uvfzKm9M+5M25RYwN8aWIX9Z7niJx5BD6bEQ==
+X-Received: by 2002:a17:902:eccd:b0:202:51ca:9823 with SMTP id d9443c01a7336-20546b35b37mr202720455ad.46.1725560519622;
+        Thu, 05 Sep 2024 11:21:59 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2da2:d734:ef56:7ccf])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.21.57
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea684f0sm31374395ad.271.2024.09.05.11.21.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 11:21:58 -0700 (PDT)
+        Thu, 05 Sep 2024 11:21:59 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
 	chandan.babu@oracle.com,
-	Dave Chinner <dchinner@redhat.com>,
-	Allison Henderson <allison.henderson@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
+	syzbot+090ae72d552e6bd93cfe@syzkaller.appspotmail.com,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 07/26] xfs: block reservation too large for minleft allocation
-Date: Thu,  5 Sep 2024 11:21:24 -0700
-Message-ID: <20240905182144.2691920-8-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 08/26] xfs: fix uninitialized variable access
+Date: Thu,  5 Sep 2024 11:21:25 -0700
+Message-ID: <20240905182144.2691920-9-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
 In-Reply-To: <20240905182144.2691920-1-leah.rumancik@gmail.com>
 References: <20240905182144.2691920-1-leah.rumancik@gmail.com>
@@ -73,102 +72,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Dave Chinner <dchinner@redhat.com>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit d5753847b216db0e553e8065aa825cfe497ad143 ]
+[ Upstream commit 60b730a40c43fbcc034970d3e77eb0f25b8cc1cf ]
 
-When we enter xfs_bmbt_alloc_block() without having first allocated
-a data extent (i.e. tp->t_firstblock == NULLFSBLOCK) because we
-are doing something like unwritten extent conversion, the transaction
-block reservation is used as the minleft value.
+If the end position of a GETFSMAP query overlaps an allocated space and
+we're using the free space info to generate fsmap info, the akeys
+information gets fed into the fsmap formatter with bad results.
+Zero-init the space.
 
-This works for operations like unwritten extent conversion, but it
-assumes that the block reservation is only for a BMBT split. THis is
-not always true, and sometimes results in larger than necessary
-minleft values being set. We only actually need enough space for a
-btree split, something we already handle correctly in
-xfs_bmapi_write() via the xfs_bmapi_minleft() calculation.
-
-We should use xfs_bmapi_minleft() in xfs_bmbt_alloc_block() to
-calculate the number of blocks a BMBT split on this inode is going to
-require, not use the transaction block reservation that contains the
-maximum number of blocks this transaction may consume in it...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reported-by: syzbot+090ae72d552e6bd93cfe@syzkaller.appspotmail.com
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       |  2 +-
- fs/xfs/libxfs/xfs_bmap.h       |  2 ++
- fs/xfs/libxfs/xfs_bmap_btree.c | 19 +++++++++----------
- 3 files changed, 12 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_fsmap.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 018837bd72c8..9dc33cdc2ab9 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4242,7 +4242,7 @@ xfs_bmapi_convert_unwritten(
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index d8337274c74d..062e5dc5db9f 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -761,6 +761,7 @@ xfs_getfsmap_datadev_bnobt(
+ {
+ 	struct xfs_alloc_rec_incore	akeys[2];
  
--static inline xfs_extlen_t
-+xfs_extlen_t
- xfs_bmapi_minleft(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 16db95b11589..08c16e4edc0f 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -220,6 +220,8 @@ int	xfs_bmap_add_extent_unwritten_real(struct xfs_trans *tp,
- 		struct xfs_inode *ip, int whichfork,
- 		struct xfs_iext_cursor *icur, struct xfs_btree_cur **curp,
- 		struct xfs_bmbt_irec *new, int *logflagsp);
-+xfs_extlen_t xfs_bmapi_minleft(struct xfs_trans *tp, struct xfs_inode *ip,
-+		int fork);
- 
- enum xfs_bmap_intent_type {
- 	XFS_BMAP_MAP = 1,
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index cfa052d40105..18de4fbfef4e 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -213,18 +213,16 @@ xfs_bmbt_alloc_block(
- 	if (args.fsbno == NULLFSBLOCK) {
- 		args.fsbno = be64_to_cpu(start->l);
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+
- 		/*
--		 * Make sure there is sufficient room left in the AG to
--		 * complete a full tree split for an extent insert.  If
--		 * we are converting the middle part of an extent then
--		 * we may need space for two tree splits.
--		 *
--		 * We are relying on the caller to make the correct block
--		 * reservation for this operation to succeed.  If the
--		 * reservation amount is insufficient then we may fail a
--		 * block allocation here and corrupt the filesystem.
-+		 * If we are coming here from something like unwritten extent
-+		 * conversion, there has been no data extent allocation already
-+		 * done, so we have to ensure that we attempt to locate the
-+		 * entire set of bmbt allocations in the same AG, as
-+		 * xfs_bmapi_write() would have reserved.
- 		 */
--		args.minleft = args.tp->t_blk_res;
-+		args.minleft = xfs_bmapi_minleft(cur->bc_tp, cur->bc_ino.ip,
-+						cur->bc_ino.whichfork);
- 	} else if (cur->bc_tp->t_flags & XFS_TRANS_LOWMODE) {
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 	} else {
-@@ -248,6 +246,7 @@ xfs_bmbt_alloc_block(
- 		 * successful activate the lowspace algorithm.
- 		 */
- 		args.fsbno = 0;
-+		args.minleft = 0;
- 		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		error = xfs_alloc_vextent(&args);
- 		if (error)
++	memset(akeys, 0, sizeof(akeys));
+ 	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
+ 	return __xfs_getfsmap_datadev(tp, keys, info,
+ 			xfs_getfsmap_datadev_bnobt_query, &akeys[0]);
 -- 
 2.46.0.598.g6f2099f65c-goog
 
