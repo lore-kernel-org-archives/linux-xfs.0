@@ -1,157 +1,231 @@
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2060.outbound.protection.outlook.com [40.107.243.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E9448CFC
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2024 03:44:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.188.122
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725594294; cv=none; b=KuMliZuZ8hrOzKGX0diKgTqdmDY22QP12khL2iCVrLFud7iZuC6svjUcT6s3MQ3IDDNvC9lsIxjINkASn/8NcNW9P7uXjYWqigsrp0FXfch46HPAv6Z0cXh6lVW2gYZMPneP/6Xd8GXY8V31Tzbfmerj+IgxyTbkjgYP6YJRYSY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725594294; c=relaxed/simple;
-	bh=3/+vytpspWWORVql5n6t/mT6Bh/MUWPO99Ry4OYJnYs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PlHsO/9CuseWpQVhIzHZD410C06iwi/JNQq+mcm19dBJ7ADXpjwJUB/qA1m+V8iBuJuLEX15krstkaZEYFhg/7cVXiseTW5FiMvAWl1MouTXtQdrE+seLQZtpvJstU145OINqQUX/D27Ej2t8yN72fQEwmZyEhrPNT+UzjQmFSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b=d+AuAbAI; arc=none smtp.client-ip=185.125.188.122
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948A13B1A2;
+	Fri,  6 Sep 2024 06:08:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.243.60
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1725602932; cv=fail; b=GEoFd+bDs7M9jPyG300gRwCZBBslbxDo6JZ8udj3X7tbaAAv5UmN0xZaYykpREtes9aQEGuk08SFh/lt2A+lRC/X8r1w4nFi94TJWVGgAaGdtl5z6xBVg84ZOFVmeFpHCgACzgerG0H9tyw5GyVqDBzAPxJ3tlEbvxkkUof1Ye4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1725602932; c=relaxed/simple;
+	bh=EE5gyL6n2EA1Rls5D/wwEvbVdbWsm3vZSHcjoPfSoJI=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 Content-Type:MIME-Version; b=c2bbka+ESs0+iRFGh7OXBlqgssSaYIQk15CsW20qY5H01M6QlqoaSQJpL2rQL73ZoDGfzvqzl95wXJxj8BvReEE4TBQzQQtZyAqLxyXoQ6FYgg3/mBArzf4zSRPQQxhM0yIaFboetZrsbUcQLvA8cIE9Uxx+uQ4uqIXMiz10m0M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=n1nW40tT; arc=fail smtp.client-ip=40.107.243.60
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b="d+AuAbAI"
-Received: from mail-yb1-f200.google.com (mail-yb1-f200.google.com [209.85.219.200])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 3AA043F5AB
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2024 03:44:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-	s=20210705; t=1725594289;
-	bh=FOWKZaZsgk7gRF82n+LEXeVs/JB7uXjutf5ZzKMkFGc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type;
-	b=d+AuAbAIOeYUkoMEY0PSXKmmhDqnHfJIrexStrWDQWPs36uqVAWsHNdr9vsHJ0Gl6
-	 g682CZvfNEjvsUrMxdFweGwWV+BKuojJwv2cYk7ku+tqucFAar//YdZyhn7T759HbR
-	 LlAfGOT59pSXPDsX/foJJS0912EiHFD71FyKzZnhn+U9vU0NRoI2myQ0ArkFzvdaDu
-	 Mmjblf/jSSWcnmOg+Zc6jAxhiu2oV+QQ3J93QN5FwrCBlRQjNd5U7zczrUL52xbSb8
-	 0Z5v7GJL1l45rmDI7uvAkY6eW0H9RzaD9aiUY5qdo8VZbcK1zuA1G+hei0XdEF5fAZ
-	 voDt514f+0jGA==
-Received: by mail-yb1-f200.google.com with SMTP id 3f1490d57ef6-e1a7ef9eb78so3609543276.3
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 20:44:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725594288; x=1726199088;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FOWKZaZsgk7gRF82n+LEXeVs/JB7uXjutf5ZzKMkFGc=;
-        b=bvgUpWTv/7kzmbE+Say3/lparLNZHjiymMzkSHgNSY+e/3gx22I0iMA4MZJdd9LgzQ
-         vecGwBUlqatu1m30YBos1LWKYKfYHRJgjbvUIZwAmUc59sSnYWi1tE6YcR5is4quJQxi
-         WyplSYucRcE39JLROVPcPM5qQ+eHdGLT0FsxDHH+SL1XQ3eDvp8GtEaikXDnHWyRu141
-         VugznL/m7+SmLjWPrIoy22cXNqqVa+Sof6PO5H77kCNvfoEsIrvzwPpTQmvW6Z9D/AIZ
-         G9g+2Zv3tHAwWgOlLs1ojoN4js2y+TEtV+l0p0GoyrU4keaMF49xxeiJJQyOfrkC0X4P
-         Khnw==
-X-Forwarded-Encrypted: i=1; AJvYcCXzyyBAQGn/pCYFTKZooIOvZldESFFupSn2h8F8udc56O1BQodWTlaXqfGeeeoRz83Un06Bonxn6PA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywp4S9CnHUeCIVlLVpX4N6kaHOARANnAjOn+CbPMCfLJnL0uuKU
-	VWf7fTpLQxs2e/skd8N4P9dRBmq97CuQCAC3OaaNZ6T9C+f4gY0WYuv92+hs97/YbHT0BmhmnB2
-	vp8ji5Qb/OQOZhLoTHL4afCw8cwdEjdKE2V6Ymz7+5GIu13hWMC5lvI2T9phgkt8PxvGp09ayRm
-	uyKWifDqlWHndgQ0kYay1RyU7+vzjJvxDYYOEpoaHuR+sMUyqiniQLUc/lILFVrA==
-X-Received: by 2002:a05:6902:1201:b0:e0b:db13:76bc with SMTP id 3f1490d57ef6-e1d348661aamr1656355276.12.1725594287985;
-        Thu, 05 Sep 2024 20:44:47 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHYt32VQyfa3UEOLTpB8XTsDVlBVPCy97S3G9sJaRr5HOMT4SokFv3WwCvu9kTTyhbb8JVlOoYSPwKX2Bnkatw=
-X-Received: by 2002:a05:6902:1201:b0:e0b:db13:76bc with SMTP id
- 3f1490d57ef6-e1d348661aamr1656342276.12.1725594287656; Thu, 05 Sep 2024
- 20:44:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="n1nW40tT"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=LCrR6VhnMnsg1v2Rbtl51RhnerGQJZRpyySPERektbkoaCDCeThbkFo65cRrieXJHyBDS84vS+yChuAGl2/FNHcyAAWmfsn1sHn+7O8oqFOKZxKeGqa+w8ZXB4xogOmWTNbJM7WZVre3XgN48/swD+XFUcZUJL97v9ik7tqVZl1WY5gzVyjUWjTxdaff7auucIxcJRVkLsiNbTdQQ7x7GW/8qXStR8QqqoDKJcnfe+SoiEV3dQBUo76VjFSu5LUHv9rkXnBV408yEfKaLPr8qtDiBhDHXnGFfCpv6+3wPAlimN2ccdcebH4R6yZjavXhghHneT4dbjrd0Z0qBiHR1Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=UbsRXH9JJIBnRvfSPNoa0YV7m2c595aea1nDAMY00oI=;
+ b=bRXnbi6fG0MqNV0Hp/SCLmUNdJZhvvZ+ZzB6oVFWaFRxAnZ5Rr7JwodkoPR1MDJHnLt2NbCdbbZCBeQ9iVVpT9aLAzyofBJ7tbEzkXUdgob174v828SHmJNQPw32PgK4IMSPoKO2sd+6u1d2IS8+zxOOUKhI4M5zxaMzm5S7LMcHAe/+jB+pjndA1qLZvIHk/LuWuoyx3APrulCW7cMIM7Eg64TU1dg8AYGvmmf4E3onvrvPNs9c+0O3qNexoGHqNRA6SbQJqjDQiUCYcBIkU1eGPpYc8G/ILCkDT+ji8t6Cff3s52McGgIzy+2868pDR/Y0zDI5B3mG+b2kYAjV4Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=UbsRXH9JJIBnRvfSPNoa0YV7m2c595aea1nDAMY00oI=;
+ b=n1nW40tTYajkvZIah/cOB3kuMPNPkzynMSnvc0Rx1aQwK7PnFIMaPVV7RFtNnfbGAaaEn7rlu9IH2lgVuRx5bbcAIQAKHHlc8YvnNoFozYOmT0Dz0sQ9DYImFiiEbtBOSFeH+0O0kLLOEmsNeQfbG7Lo9vblrzP78s+Hz4zTvKP4pkydF+HZF3/YVkotEPM7AjMkLUR89IksW8HMZXB2+Hw49nrWafcYL4Xfycz/BLYbO/OvR/Pt5fQFGuZTwup8BqXLbugBYmx3NIBKPESOPuoA9Z1QKolxjahVEF5EX/zPkDSn/J1yoo86nuTkUfwoFgPXJWjCvf15ClX+T52Viw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
+ SA0PR12MB4495.namprd12.prod.outlook.com (2603:10b6:806:70::13) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.7918.28; Fri, 6 Sep 2024 06:08:47 +0000
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe]) by DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe%3]) with mapi id 15.20.7918.024; Fri, 6 Sep 2024
+ 06:08:47 +0000
+References: <cover.66009f59a7fe77320d413011386c3ae5c2ee82eb.1719386613.git-series.apopple@nvidia.com>
+ <afcfa4f164e5642c4f629c75acf794838c2ac9aa.1719386613.git-series.apopple@nvidia.com>
+ <20240627054455.GF14837@lst.de>
+User-agent: mu4e 1.10.8; emacs 29.1
+From: Alistair Popple <apopple@nvidia.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: dan.j.williams@intel.com, vishal.l.verma@intel.com,
+ dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com,
+ jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com, will@kernel.org,
+ mpe@ellerman.id.au, npiggin@gmail.com, dave.hansen@linux.intel.com,
+ ira.weiny@intel.com, willy@infradead.org, djwong@kernel.org,
+ tytso@mit.edu, linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+ nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ jhubbard@nvidia.com, david@fromorbit.com
+Subject: Re: [PATCH 10/13] fs/dax: Properly refcount fs dax pages
+Date: Fri, 06 Sep 2024 16:00:38 +1000
+In-reply-to: <20240627054455.GF14837@lst.de>
+Message-ID: <87wmjpb9g6.fsf@nvdebian.thelocal>
+Content-Type: text/plain
+X-ClientProxiedBy: SY5PR01CA0085.ausprd01.prod.outlook.com
+ (2603:10c6:10:1f5::12) To DS0PR12MB7726.namprd12.prod.outlook.com
+ (2603:10b6:8:130::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240813072815.1655916-1-gerald.yang@canonical.com> <20240813145327.GE6051@frogsfrogsfrogs>
-In-Reply-To: <20240813145327.GE6051@frogsfrogsfrogs>
-From: Gerald Yang <gerald.yang@canonical.com>
-Date: Fri, 6 Sep 2024 11:44:37 +0800
-Message-ID: <CAMsNC+vKDt21mLG_VZDyMXZkVOeMsQ45hU7D7gCvHj9HmT0DxQ@mail.gmail.com>
-Subject: Re: [PATCH] fsck.xfs: fix fsck.xfs run by different shells when
- fsck.mode=force is set
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|SA0PR12MB4495:EE_
+X-MS-Office365-Filtering-Correlation-Id: d081438c-657d-4fc3-63dd-08dcce3a5e92
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|7416014|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?Qkn2Zz9/4qH7iAaVFFLM7o2NoD5/A0WNiRaXj72XV5wtoX+z6oAy7fR3BN6f?=
+ =?us-ascii?Q?VvqdYpdiBD90SOMrOSFt+j73r7FsvQItHV9GMySaaJ0Pq9NPAE7BDQ3FG2W8?=
+ =?us-ascii?Q?q0Dr1+kO1PaY7rieB+0SgNMB3OHb1ucb8kDYGsb6dVWBBwbN4U1p1/+sR7k7?=
+ =?us-ascii?Q?FrZ6hadUvmLRY8Ow+NmbcWaQ2IQ7flRG+/bn6F7FPfx8yCwCtI9ROS8ebaLz?=
+ =?us-ascii?Q?CWKc0r4ZjBGGGRu/PiNi5z+1cdXu7xlqUU38J3XytJoEGZOdGxDQVDFMlT4Q?=
+ =?us-ascii?Q?yWyoJEorzVCRSVuphmT3t4o/AkRmTJPTuC+VRHNmezh73KoiBdLDouf/3Q9n?=
+ =?us-ascii?Q?x4IAlea0Ck+EMimkStn10h38OefCvf06PRMMXstWTBnshhOm8jl6GDaXhgpp?=
+ =?us-ascii?Q?1a0ODHht6/TXTurPmZROe/LqLuElcjuOc76lKBoPtZN84hUjYhRWWkeFxeYN?=
+ =?us-ascii?Q?GdO/J3G9wHPgpELNtpwD2cKUm9zywigH9KIx9ykwuGvAijRF91ZGzILh0p8k?=
+ =?us-ascii?Q?O1ihH4CgFvkGvCJNvxQaxPCjEsWAvGIh5JYHY7OhvlxmOMzOZFK9wiSUfIDx?=
+ =?us-ascii?Q?rTBQtBLLact7WcoileoSOKBk1+UA070w9uZ0/Wcj+w3CLUNOniS8Qn94ceuv?=
+ =?us-ascii?Q?GDumQSEXjfl44Bbrt3eYbbpxNLmelpJu/Y3C73YU0vqZwzLzeU5tyWzwDAEx?=
+ =?us-ascii?Q?CYuayZxQuQwE/0V30xS0FRzj1cQ9ibVFuhenJbLQnKDu+DSFrRFnetc+Tmbg?=
+ =?us-ascii?Q?4/Pr9zj87kKIcpmWH+IniHi8TdeYhoUCkwvql0YG1age+zd/VmNSRsBtugXr?=
+ =?us-ascii?Q?pClbmGNub2BCOIxQDiumHPAGhtZmrSNuSBvKFZf/1rsWy31TgHSEz8afzwn4?=
+ =?us-ascii?Q?BcU8U3Kl0Chv0c8gsOp2iWdr2SA4tRDybjHUAcGonSBcCJL0JBBIBKpwLuLR?=
+ =?us-ascii?Q?YuR31LxeSMcLpZWculnzC97b/HoVm2D/ArDYOLO3J+yQa1Q7Zd4qEXDBJFeE?=
+ =?us-ascii?Q?6E1kMjk7iX153CsWfYekq2C5/AewKBksItEl0vGTe6YKWjl5awwx9wl+BYMX?=
+ =?us-ascii?Q?OwZNmqivzNOJpNAzRM22Xa5jKMiZwh1FWpr7keeq0oaMOry2HmL/XVMufu4j?=
+ =?us-ascii?Q?n6azWgkd3TMziOHgPfzzwZH00mLBWlRA+9Y4+sRodcuglLY3o7Exjj1N75Pr?=
+ =?us-ascii?Q?35ogvnd1vP8pt6jGHKPhj/B/hvH8ysrE+cg3N1SEjuCpfRflnf0253rEXM8V?=
+ =?us-ascii?Q?SQTPAZlCA5QgnrW39XI+hg6XjA75DBKVheU0a8mJw/rNE+RwSud2dA0svylk?=
+ =?us-ascii?Q?sfIXOR8rNPJ4NkC7Q1Ov88+CtMqEEOZkliAqUv2UwZGdsw=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?YLsEU0S8sWvuBBHQ1rIXmX8xljB5qdnPq48s4HILSUaki49MCk3UlmVOkpgI?=
+ =?us-ascii?Q?p7zzGU8VdL79gR/gBeILlWMZncGwAoGhBBXJzeLtjS4SMOuR3yU4fQqE8ik4?=
+ =?us-ascii?Q?0uR7cOAQg3wVDqpCLY9y1J/ftpvr6o3OO9lwKtK+nR/KMMMlcGvoeYCJdI5M?=
+ =?us-ascii?Q?LMRz5/gLkFjw8Kqb2Et57VjRXqc++0qBq44rB0ihhTc9OEgAuM3+YD1pFTiL?=
+ =?us-ascii?Q?2hDG8M/d3bjc9rVnCGKr7FzNMJfUeD7Sy/HHKpbsmEzbmYuxNo4STzvnKp3i?=
+ =?us-ascii?Q?ZdgXgAZy1eopAeJ/44LqZcN8sGlCQLbOXZOHcCtU1LO4chZilqa0aGINBfsV?=
+ =?us-ascii?Q?Xx8AmQCX+/6vYOIW53Co7GlgGEzp3LR3awCvHS+KY+eX7aXybojY6KU3HZv1?=
+ =?us-ascii?Q?NYfG8+zyxbiNq15LnKtrj3hHoKN2OQDtfxqeEwU0a2CKSl9mgZKqQmyf4r/P?=
+ =?us-ascii?Q?s5CHV69ojOsmIP63/pmQb20WvRXf/L2k1DNgvLBZLpMFi1Vu0WuGxcqAHodA?=
+ =?us-ascii?Q?5Zm/TEwzjCY+ofqbkk0pfmUT7WE9o4WPOKZjKrenKZM3QcOltzVrNNZKT15e?=
+ =?us-ascii?Q?uerCl7+5pz+P6m7zaDQOcyqk2M2I0WavHjkr35YTf5M/S0mKvZx3Ti/0O1L7?=
+ =?us-ascii?Q?19htGNqivcYb1TZBjb7q1c0WZcIzZznMAJOeQrmNC+CezW5sU/lt/dp7n7Ht?=
+ =?us-ascii?Q?hNBCVk08sJGlNOssgSrKJqAazDAXk1SYzBRXgMKnnP4ZLwb+/ER+8Q8oXfGM?=
+ =?us-ascii?Q?9LJDHhAzbT6Ealod1RSoSyVrP0dDGyrRJsgl3NWA/Qj8AAKGHZub2XlgoyxO?=
+ =?us-ascii?Q?hZN3jtpYh2dPPraTVS9tTJ985/wM9ZL377YTXr83ze1y/ZtTR/g4jihLyvFR?=
+ =?us-ascii?Q?1lfIac5WLm4P2eCtXE7LBZzRaZRGYDEukXLtMtoUGE39qDfnuAnzYBVj2iNI?=
+ =?us-ascii?Q?B2tJNuE0A8r450hYGvwYfhIXxYqvUFzGn5freb5sFcpxEkrV5F099s361Jls?=
+ =?us-ascii?Q?LQlzIT3a8yB0rq0imsKazLZ0b5T+PvKUNoIsii3I7hQkc9/Hwl1YyZ/0i3m6?=
+ =?us-ascii?Q?voNseznKbRgjSiDMZ0fvRZBGyhcr/p3hr47xplidVRLBp12pmKKmq54Jifnw?=
+ =?us-ascii?Q?OqfE6Ly4cH8K5go7bAVVtJNbXUy+I+MjUpiEvDJoxG8wPkG1K5XIKH1VTCQq?=
+ =?us-ascii?Q?Y/0AbHrTsT1fVxMpiWZepxkpaUSG+scdZzCj5EMW8LESThVwZBZ7GXhTbln7?=
+ =?us-ascii?Q?sBsZV8ljyVNhp+cfD0G5wQ9wBNsSnxtmDtIJwvrbCG6/IJemztNHH/Eyka3D?=
+ =?us-ascii?Q?AyqlrMwV5GKp6pfcSx1G+a0uk23d5Uwb05oGj43QbrbTy3UKXkJHFH38+a/Z?=
+ =?us-ascii?Q?P6axFRrluydkBdymQJuUxw45Vh5ruu4ViNMhBdXmYWiUNznIKR1csq70SLoR?=
+ =?us-ascii?Q?eFc78r98oAUKOZ/nzXIWdC6a5aZN92eREaC13S08EmZHItbtV3+RT3zPo4xO?=
+ =?us-ascii?Q?4oF3FS44PzTaYYIFOGl/KoTNfbzyCJEGzyA3GuXKitI/xFulWUz9CGOAFlLF?=
+ =?us-ascii?Q?2JsXpH4xze5zJ2jX+0RhsglWmBb+7Y88tDlr/81o?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d081438c-657d-4fc3-63dd-08dcce3a5e92
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Sep 2024 06:08:47.3083
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: gbK2MoRguK+zVxCQMw/hnsNuQuoEZO8vjpOaoX14PgMEC75rqG8HQpHJ5+z51xWMmF5EkR/vBNjnBKkiJVkBKQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4495
 
-Thank you Darrick for the review
-I just would like to ask if this will be merged into for-next soon?
 
+Christoph Hellwig <hch@lst.de> writes:
 
-On Tue, Aug 13, 2024 at 10:53=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
-> wrote:
+>> diff --git a/drivers/dax/device.c b/drivers/dax/device.c
+>> index eb61598..b7a31ae 100644
+>> --- a/drivers/dax/device.c
+>> +++ b/drivers/dax/device.c
+>> @@ -126,11 +126,11 @@ static vm_fault_t __dev_dax_pte_fault(struct dev_dax *dev_dax,
+>>  		return VM_FAULT_SIGBUS;
+>>  	}
+>>  
+>> -	pfn = phys_to_pfn_t(phys, PFN_DEV|PFN_MAP);
+>> +	pfn = phys_to_pfn_t(phys, 0);
+>>  
+>>  	dax_set_mapping(vmf, pfn, fault_size);
+>>  
+>> -	return vmf_insert_mixed(vmf->vma, vmf->address, pfn);
+>> +	return dax_insert_pfn(vmf->vma, vmf->address, pfn, vmf->flags & FAULT_FLAG_WRITE);
 >
-> On Tue, Aug 13, 2024 at 03:25:51PM +0800, Gerald Yang wrote:
-> > When fsck.mode=3Dforce is specified in the kernel command line, fsck.xf=
-s
-> > is executed during the boot process. However, when the default shell is
-> > not bash, $PS1 should be a different value, consider the following scri=
-pt:
-> > cat ps1.sh
-> > echo "$PS1"
-> >
-> > run ps1.sh with different shells:
-> > ash ./ps1.sh
-> > $
-> > bash ./ps1.sh
-> >
-> > dash ./ps1.sh
-> > $
-> > ksh ./ps1.sh
-> >
-> > zsh ./ps1.sh
-> >
-> > On systems like Ubuntu, where dash is the default shell during the boot
-> > process to improve startup speed. This results in FORCE being incorrect=
-ly
-> > set to false and then xfs_repair is not invoked:
-> > if [ -n "$PS1" -o -t 0 ]; then
-> >         FORCE=3Dfalse
-> > fi
-> >
-> > Other distros may encounter this issue too if the default shell is set
-> > to anoother shell.
-> >
-> > Check "-t 0" is enough to determine if we are in interactive mode, and
-> > xfs_repair is invoked as expected regardless of the shell used.
-> >
-> > Fixes: 04a2d5dc ("fsck.xfs: allow forced repairs using xfs_repair")
-> > Signed-off-by: Gerald Yang <gerald.yang@canonical.com>
-> > ---
-> >  fsck/xfs_fsck.sh | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-> > index 62a1e0b3..19ada9a7 100755
-> > --- a/fsck/xfs_fsck.sh
-> > +++ b/fsck/xfs_fsck.sh
-> > @@ -55,12 +55,12 @@ fi
-> >  # directly.
-> >  #
-> >  # Use multiple methods to capture most of the cases:
-> > -# The case for *i* and -n "$PS1" are commonly suggested in bash manual
-> > +# The case for *i* is commonly suggested in bash manual
-> >  # and the -t 0 test checks stdin
-> >  case $- in
-> >       *i*) FORCE=3Dfalse ;;
+> Plenty overly long lines here and later.
 >
-> I can't remember why we allow any argument with the letter 'i' in it to
-> derail an xfs_repair -f invocation??
+> Q: hould dax_insert_pfn take a vm_fault structure instead of the vma?
+> Or are the potential use cases that aren't from the fault path?
+
+Nope, good idea. I will update it to take a vm_fault struct for the next
+version.
+
+> similar instead of the bool write passing the fault flags might actually
+> make things more readable than the bool.
 >
-> Regardless, the bits you changed look correct so
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Also at least currently it seems like there are no modular users despite
+> the export, or am I missing something?
+
+It gets used in drivers/dax/device.c which I think is built into
+device_dax.ko:
+
+obj-$(CONFIG_DEV_DAX) += device_dax.o
+
+...
+
+device_dax-y := device.o
+
+>>  {
+>> +	/*
+>> +	 * Make sure we flush any cached data to the page now that it's free.
+>> +	 */
+>> +	if (PageDirty(page))
+>> +		dax_flush(NULL, page_address(page), page_size(page));
+>> +
 >
-> --D
+> Adding the magic dax_dev == NULL case to dax_flush and going through it
+> vs just calling arch_wb_cache_pmem directly here seems odd.
 >
-> >  esac
-> > -if [ -n "$PS1" -o -t 0 ]; then
-> > +if [ -t 0 ]; then
-> >       FORCE=3Dfalse
-> >  fi
-> >
-> > --
-> > 2.43.0
-> >
-> >
+> But I also don't quite understand how it is related to the rest
+> of the patch anyway.
+
+Yeah, that should be unnecessary as it gets called elsewhere as needed
+so will remove it.
+
+>>  		if (!pmd_present(*pmd))
+>>  			goto out;
+>> diff --git a/mm/mm_init.c b/mm/mm_init.c
+>> index b7e1599..f11ee0d 100644
+>> --- a/mm/mm_init.c
+>> +++ b/mm/mm_init.c
+>> @@ -1016,7 +1016,8 @@ static void __ref __init_zone_device_page(struct page *page, unsigned long pfn,
+>>  	 */
+>>  	if (pgmap->type == MEMORY_DEVICE_PRIVATE ||
+>>  	    pgmap->type == MEMORY_DEVICE_COHERENT ||
+>> -	    pgmap->type == MEMORY_DEVICE_PCI_P2PDMA)
+>> +	    pgmap->type == MEMORY_DEVICE_PCI_P2PDMA ||
+>> +	    pgmap->type == MEMORY_DEVICE_FS_DAX)
+>>  		set_page_count(page, 0);
+>>  }
+>
+> So we'll skip this for MEMORY_DEVICE_GENERIC only.  Does anyone remember
+> if that's actively harmful or just not needed?  If the latter it might
+> be simpler to just set the page count unconditionally here.
+
+Yeah I'm not sure but the switch statement you suggested at least makes
+this much clearer. Once I get this series finished I can chase down the
+MEMORY_DEVICE_GENERIC differences. I suspect we can just do it
+unconditionally.
