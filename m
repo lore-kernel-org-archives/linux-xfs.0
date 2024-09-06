@@ -1,144 +1,191 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E87011A28C;
-	Fri,  6 Sep 2024 08:01:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C58371CBE8D
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2024 11:39:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725609703; cv=none; b=mBv12nwAigauxcEyogv7ktfsts5ClaS6zSbgXfttG7lGgNDs6IOB8agwTqG2f80C/+1+9P9I9QJaN2movrCovqQpaAKW1XEhQ7WM877uRlQC9A9XGe2Q0pkVQwIOH/uEVFGsvULpXyJuTmTLdmqQVCeqNJx3eCV2X0OEs1vt9qQ=
+	t=1725622793; cv=none; b=HUXv93j7P3Rd2a9XoI9nlZm5ydf8qobDaJ11RIsUaet1Aal2VydOp3JGSoPi4JHi0S2iHG68kbo4XDZOBkhrI4TkI5zLzy9Cfsthgud4+BVCejLhZzXhkMCPXw9ppJXS/FWFZ761P7eQBAiQl8qm+dPj1Fs9fFnsw2gaZkaM5IU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725609703; c=relaxed/simple;
-	bh=GGW2mP0FOw5e7YTZk5o31AtnAUs24hgfzJgcmoV/maU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IwXF7fWh9sqhr44KTa2exQR88VW988G0J5t01ghqt1DwA0yqJshcJU7pClX6KZONlRwqmASyrHvw7qkiQRPrm40bKomivhCnrU/qPkfgxYKU0HtZjU7zOhb4UurwzGCsMdfa1A0HhAfiQ6tWynI1NntgeUFWaN140QpkDoH0So0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=qS8uuxYi; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1725622793; c=relaxed/simple;
+	bh=y3mNa3KrpTR6LzsLZnZ8+Hv6BakhgRMsHG9+YwBD7tw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Yi09n8yNeMYlV1zXESvY63fKZbuLJm9DW474YM3396eSB0l0Ob4s0a4cJCR9NdQ5aIyHNjQ/GG/bMkXjBlD08JFoUy+6rtuMFHuLXFiitB7RuwjTFjdifUCRXvjNBCplzWiDC+LV2FgR/c3o0zU3uiZUlVjCsQbSWSAEyG2Y9r0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JnFbGY95; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="qS8uuxYi"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4X0TFk0k78z9sn8;
-	Fri,  6 Sep 2024 10:01:30 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1725609690;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JnFbGY95"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1725622790;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=txiTk9IGx6J3KSO7NujdzBabpDFq03RzqiY0DDy6h34=;
-	b=qS8uuxYixNti8tE7TN9MLXvUBgPDjjlh9aTJdMkk3SurmVQjB6IIh/4l2iXjxLgrv0h9vr
-	5TMmBe6fZTNwOIMXy88Czf0WzZAEb+pV9BXgh7OBbJ+Gb17IrhY2JjvM44y1MRfvr73RnV
-	5mAk456khuBRrN/tNg5y458EixvqWWZ4Lh0DR3z0wJ5k2ScCtQhL9gakI4vOB9SMSXh3ah
-	JEGczHKtCLcQBlq+yoVbWxcp/PQqGoNs1jxRURY5jwO/zYt/WmJpXyMQB6ERcCziUmXLuh
-	19OBukBK+v0mnjJUROFZ2M6jz7ErfMNKPIPPlwH21umlNcYrxdjTLtFMlNN5XA==
-Date: Fri, 6 Sep 2024 08:01:20 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: "Lai, Yi" <yi1.lai@linux.intel.com>
-Cc: brauner@kernel.org, akpm@linux-foundation.org, chandan.babu@oracle.com,
-	linux-fsdevel@vger.kernel.org, djwong@kernel.org, hare@suse.de,
-	gost.dev@samsung.com, linux-xfs@vger.kernel.org, hch@lst.de,
-	david@fromorbit.com, Zi Yan <ziy@nvidia.com>,
-	yang@os.amperecomputing.com, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, willy@infradead.org, john.g.garry@oracle.com,
-	cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
-	ryan.roberts@arm.com, David Howells <dhowells@redhat.com>,
-	pengfei.xu@intel.com
-Subject: Re: [PATCH v13 04/10] mm: split a folio in minimum folio order chunks
-Message-ID: <20240906080120.q6xff2odea3ay4k7@quentin>
-References: <20240822135018.1931258-1-kernel@pankajraghav.com>
- <20240822135018.1931258-5-kernel@pankajraghav.com>
- <ZtqmtjZ+mVTDx208@ly-workstation>
+	bh=IZqAksm7lAakcihKVsgu3MrhQnkwRLProVURVGQh9ZQ=;
+	b=JnFbGY95C0nbLw6wXaHjqouYRww3b2tbZy6u3QXEdFz3cpjWgiDLoStLjeHWz4esKx3vsQ
+	D3/FpoWWwF1rwOaKTeS+lVevBJLQerluX3enx0SWqq99N4M37ALgNoYTcA7uehCdHbMFdB
+	4qJS0cIqzJ7OSRZETGf5ButcO4FKaag=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-96-OYkmajudPdm0aX1_BmySkg-1; Fri,
+ 06 Sep 2024 07:39:49 -0400
+X-MC-Unique: OYkmajudPdm0aX1_BmySkg-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E42B41955D59;
+	Fri,  6 Sep 2024 11:39:47 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.16.69])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0BCA91956086;
+	Fri,  6 Sep 2024 11:39:46 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Darrick Wong <djwong@kernel.org>
+Subject: [PATCH 2/1] xfs: don't free cowblocks from under dirty pagecache on unshare
+Date: Fri,  6 Sep 2024 07:40:51 -0400
+Message-ID: <20240906114051.120743-1-bfoster@redhat.com>
+In-Reply-To: <20240903124713.23289-1-bfoster@redhat.com>
+References: <20240903124713.23289-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZtqmtjZ+mVTDx208@ly-workstation>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On Fri, Sep 06, 2024 at 02:52:38PM +0800, Lai, Yi wrote:
-Hi Yi,
+fallocate unshare mode explicitly breaks extent sharing. When a
+command completes, it checks the data fork for any remaining shared
+extents to determine whether the reflink inode flag and COW fork
+preallocation can be removed. This logic doesn't consider in-core
+pagecache and I/O state, however, which means we can unsafely remove
+COW fork blocks that are still needed under certain conditions.
 
-> 
-> I used Syzkaller and found that there is task hang in soft_offline_page in Linux-next tree - next-20240902.
+For example, consider the following command sequence:
 
-I don't know if it is related, but we had a fix for this commit for a
-ltp failure due to locking issues that is there in next-20240905 but not
-in next-20240902.
+xfs_io -fc "pwrite 0 1k" -c "reflink <file> 0 256k 1k" \
+	-c "pwrite 0 32k" -c "funshare 0 1k" <file>
 
-Fix: https://lore.kernel.org/linux-next/20240902124931.506061-2-kernel@pankajraghav.com/
+This allocates a data block at offset 0, shares it, and then
+overwrites it with a larger buffered write. The overwrite triggers
+COW fork preallocation, 32 blocks by default, which maps the entire
+32k write to delalloc in the COW fork. All but the shared block at
+offset 0 remains hole mapped in the data fork. The unshare command
+redirties and flushes the folio at offset 0, removing the only
+shared extent from the inode. Since the inode no longer maps shared
+extents, unshare purges the COW fork before the remaining 28k may
+have written back.
 
-Is this reproducible also on next-20240905?
+This leaves dirty pagecache backed by holes, which writeback quietly
+skips, thus leaving clean, non-zeroed pagecache over holes in the
+file. To verify, fiemap shows holes in the first 32k of the file and
+reads return different data across a remount:
 
-> 
-> After bisection and the first bad commit is:
-> "
-> fd031210c9ce mm: split a folio in minimum folio order chunks
-> "
-> 
-> All detailed into can be found at:
-> https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page
-> Syzkaller repro code:
-> https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/repro.c
-> Syzkaller repro syscall steps:
-> https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/repro.prog
-> Syzkaller report:
-> https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/repro.report
-> Kconfig(make olddefconfig):
-> https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/kconfig_origin
-> Bisect info:
-> https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/bisect_info.log
-> bzImage:
-> https://github.com/laifryiee/syzkaller_logs/raw/f633dcbc3a8e4ca5f52f0110bc75ff17d9885db4/240904_155526_soft_offline_page/bzImage_ecc768a84f0b8e631986f9ade3118fa37852fef0
-> Issue dmesg:
-> https://github.com/laifryiee/syzkaller_logs/blob/main/240904_155526_soft_offline_page/ecc768a84f0b8e631986f9ade3118fa37852fef0_dmesg.log
-> 
-> "
-> [  447.976688]  ? __pfx_soft_offline_page.part.0+0x10/0x10
-> [  447.977255]  ? __sanitizer_cov_trace_const_cmp4+0x1a/0x20
-> [  447.977858]  soft_offline_page+0x97/0xc0
-> [  447.978281]  do_madvise.part.0+0x1a45/0x2a30
-> [  447.978742]  ? __pfx___lock_acquire+0x10/0x10
-> [  447.979227]  ? __pfx_do_madvise.part.0+0x10/0x10
-> [  447.979716]  ? __this_cpu_preempt_check+0x21/0x30
-> [  447.980225]  ? __this_cpu_preempt_check+0x21/0x30
-> [  447.980729]  ? lock_release+0x441/0x870
-> [  447.981160]  ? __this_cpu_preempt_check+0x21/0x30
-> [  447.981656]  ? seqcount_lockdep_reader_access.constprop.0+0xb4/0xd0
-> [  447.982321]  ? lockdep_hardirqs_on+0x89/0x110
-> [  447.982771]  ? trace_hardirqs_on+0x51/0x60
-> [  447.983191]  ? seqcount_lockdep_reader_access.constprop.0+0xc0/0xd0
-> [  447.983819]  ? __sanitizer_cov_trace_cmp4+0x1a/0x20
-> [  447.984282]  ? ktime_get_coarse_real_ts64+0xbf/0xf0
-> [  447.984673]  __x64_sys_madvise+0x139/0x180
-> [  447.984997]  x64_sys_call+0x19a5/0x2140
-> [  447.985307]  do_syscall_64+0x6d/0x140
-> [  447.985600]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> [  447.986011] RIP: 0033:0x7f782623ee5d
-> [  447.986248] RSP: 002b:00007fff9ddaffb8 EFLAGS: 00000217 ORIG_RAX: 000000000000001c
-> [  447.986709] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f782623ee5d
-> [  447.987147] RDX: 0000000000000065 RSI: 0000000000003000 RDI: 0000000020d51000
-> [  447.987584] RBP: 00007fff9ddaffc0 R08: 00007fff9ddafff0 R09: 00007fff9ddafff0
-> [  447.988022] R10: 00007fff9ddafff0 R11: 0000000000000217 R12: 00007fff9ddb0118
-> [  447.988428] R13: 0000000000401716 R14: 0000000000403e08 R15: 00007f782645d000
-> [  447.988799]  </TASK>
-> [  447.988921]
-> [  447.988921] Showing all locks held in the system:
-> [  447.989237] 1 lock held by khungtaskd/33:
-> [  447.989447]  #0: ffffffff8705c500 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x73/0x3c0
-> [  447.989947] 1 lock held by repro/628:
-> [  447.990144]  #0: ffffffff87258a28 (mf_mutex){+.+.}-{3:3}, at: soft_offline_page.part.0+0xda/0xf40
-> [  447.990611]
-> [  447.990701] =============================================
-> 
-> "
-> 
-> I hope you find it useful.
-> 
-> Regards,
-> Yi Lai
-> 
+$ xfs_io -c "fiemap -v" <file>
+<file>:
+ EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
+   ...
+   1: [8..511]:        hole               504
+   ...
+$ xfs_io -c "pread -v 4k 8" <file>
+00001000:  cd cd cd cd cd cd cd cd  ........
+$ umount <mnt>; mount <dev> <mnt>
+$ xfs_io -c "pread -v 4k 8" <file>
+00001000:  00 00 00 00 00 00 00 00  ........
+
+To avoid this problem, make unshare follow the same rules used for
+background cowblock scanning and never purge the COW fork for inodes
+with dirty pagecache or in-flight I/O.
+
+Fixes: 46afb0628b ("xfs: only flush the unshared range in xfs_reflink_unshare")
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Here's another COW issue I came across via some unshare testing. A quick
+hack to enable unshare in fsx uncovered it. I'll follow up with a proper
+patch for that.
+
+I'm sending this as a 2/1 here just to reflect patch order in my local
+tree. Also note that I haven't explicitly tested the fixes commit, but a
+quick test to switch back to the old full flush behavior on latest
+master also makes the problem go away, so I suspect that's where the
+regression was introduced.
+
+Brian
+
+ fs/xfs/xfs_icache.c  |  8 +-------
+ fs/xfs/xfs_reflink.c |  3 +++
+ fs/xfs/xfs_reflink.h | 19 +++++++++++++++++++
+ 3 files changed, 23 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 900a6277d931..a1b34e6ccfe2 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1278,13 +1278,7 @@ xfs_prep_free_cowblocks(
+ 	 */
+ 	if (!sync && inode_is_open_for_write(VFS_I(ip)))
+ 		return false;
+-	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
+-	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+-	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+-	    atomic_read(&VFS_I(ip)->i_dio_count))
+-		return false;
+-
+-	return true;
++	return xfs_can_free_cowblocks(ip);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 6fde6ec8092f..5bf6682e701b 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1595,6 +1595,9 @@ xfs_reflink_clear_inode_flag(
+ 
+ 	ASSERT(xfs_is_reflink_inode(ip));
+ 
++	if (!xfs_can_free_cowblocks(ip))
++		return 0;
++
+ 	error = xfs_reflink_inode_has_shared_extents(*tpp, ip, &needs_flag);
+ 	if (error || needs_flag)
+ 		return error;
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index fb55e4ce49fa..4a58e4533671 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -6,6 +6,25 @@
+ #ifndef __XFS_REFLINK_H
+ #define __XFS_REFLINK_H 1
+ 
++/*
++ * Check whether it is safe to free COW fork blocks from an inode. It is unsafe
++ * to do so when an inode has dirty cache or I/O in-flight, even if no shared
++ * extents exist in the data fork, because outstanding I/O may target blocks
++ * that were speculatively allocated to the COW fork.
++ */
++static inline bool
++xfs_can_free_cowblocks(struct xfs_inode *ip)
++{
++	struct inode *inode = VFS_I(ip);
++
++	if ((inode->i_state & I_DIRTY_PAGES) ||
++	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
++	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
++	    atomic_read(&inode->i_dio_count))
++		return false;
++	return true;
++}
++
+ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *irec, bool *shared);
+ int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+-- 
+2.45.0
+
