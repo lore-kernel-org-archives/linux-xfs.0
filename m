@@ -1,158 +1,157 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE3E01A4E6B
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2024 21:47:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E9448CFC
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2024 03:44:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.188.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725572851; cv=none; b=Exm22ymZSU9cbPfJmef/708fUm8cvYnRNwivabYl/GrJ4yKvocn5DMI9fwOiGUt/Ghz6eqWbhvHJu7CyrXjXYcomYZAbreYQXDrOYqD2d9xOKTA04Iv3BJUMqr02B209bLftuYK2jZy2XgtNiGVy8pboy+8e8GSUU1NoMyuyEHY=
+	t=1725594294; cv=none; b=KuMliZuZ8hrOzKGX0diKgTqdmDY22QP12khL2iCVrLFud7iZuC6svjUcT6s3MQ3IDDNvC9lsIxjINkASn/8NcNW9P7uXjYWqigsrp0FXfch46HPAv6Z0cXh6lVW2gYZMPneP/6Xd8GXY8V31Tzbfmerj+IgxyTbkjgYP6YJRYSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725572851; c=relaxed/simple;
-	bh=i0UOLszZ08xbkKnNss4rxGidGxMtshSELEYiMtpJsAo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m10axYCS+jrS2PRcN4XtuDmuOaMhua0l7Y88m/O7N5NKqZdbcMqT31G1JHMPLXkoeyAJVRlBrpTFm5J8fB/kF5PfeFqqg4XoRLR6zqUajShoSxVLPuXzS/Se0HnXa+QjXxxvLu8dzMNIxCQ8z50v0VTwNOGbAraJk8kXEhOldFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=AM/3Te74; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1725594294; c=relaxed/simple;
+	bh=3/+vytpspWWORVql5n6t/mT6Bh/MUWPO99Ry4OYJnYs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=PlHsO/9CuseWpQVhIzHZD410C06iwi/JNQq+mcm19dBJ7ADXpjwJUB/qA1m+V8iBuJuLEX15krstkaZEYFhg/7cVXiseTW5FiMvAWl1MouTXtQdrE+seLQZtpvJstU145OINqQUX/D27Ej2t8yN72fQEwmZyEhrPNT+UzjQmFSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b=d+AuAbAI; arc=none smtp.client-ip=185.125.188.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="AM/3Te74"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-70b2421471aso964825a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 14:47:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1725572849; x=1726177649; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hB1tfzvGqDohT1t5kqG0/BoXV4hNHXK08f2dliq9E5c=;
-        b=AM/3Te74MfuKJtGMpXeBv585oyw355qnw1uuAo+L2GK6X+Ed5uO1Fcl3cwGC0rwmGa
-         9IYl3D8QJJr1hsWO3WvGks3a/TnGnH5u4hfqHuH25wG6M7DEYXFr6Zj4Ztf/gSLPVKFy
-         abfL4qLMQHWk1AlU/BLFRpu17n1dIppwHyesa//myALWY51V7kLiqpFDL02c5nvTewy9
-         cdsNbllhlepOTHn1Xenp6QUGuvUY9WKsVtZ8QbFIR4QHFzGeYRYdZ8EjzfEsMX5FzdVJ
-         TqOXXERoEF4Ta34OPs/Ha9x0xo6q7AtajV5jEt68rSs6E8qlKufHz5X4feRfxUzhLNx/
-         VFMw==
+	dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b="d+AuAbAI"
+Received: from mail-yb1-f200.google.com (mail-yb1-f200.google.com [209.85.219.200])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 3AA043F5AB
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2024 03:44:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20210705; t=1725594289;
+	bh=FOWKZaZsgk7gRF82n+LEXeVs/JB7uXjutf5ZzKMkFGc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type;
+	b=d+AuAbAIOeYUkoMEY0PSXKmmhDqnHfJIrexStrWDQWPs36uqVAWsHNdr9vsHJ0Gl6
+	 g682CZvfNEjvsUrMxdFweGwWV+BKuojJwv2cYk7ku+tqucFAar//YdZyhn7T759HbR
+	 LlAfGOT59pSXPDsX/foJJS0912EiHFD71FyKzZnhn+U9vU0NRoI2myQ0ArkFzvdaDu
+	 Mmjblf/jSSWcnmOg+Zc6jAxhiu2oV+QQ3J93QN5FwrCBlRQjNd5U7zczrUL52xbSb8
+	 0Z5v7GJL1l45rmDI7uvAkY6eW0H9RzaD9aiUY5qdo8VZbcK1zuA1G+hei0XdEF5fAZ
+	 voDt514f+0jGA==
+Received: by mail-yb1-f200.google.com with SMTP id 3f1490d57ef6-e1a7ef9eb78so3609543276.3
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2024 20:44:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725572849; x=1726177649;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hB1tfzvGqDohT1t5kqG0/BoXV4hNHXK08f2dliq9E5c=;
-        b=J9SfNRpT31MFST1iIzuqPk35GsYjd/EZmAwbmQUnKqMM5GCrKllGzUPW0VuRTU3HGC
-         UBmMZBTglUtptfgyY17hruJJ8135YQoCxJKt6FRq5SZhkOjs9lybXUYlWy0FMcFz9qt1
-         UPRu9t0Xirlxe/sk6fEdLvPZ5mFJKuWXWjVcAwZlAgU5oCGEcwSL2llldCEBeyMad6tY
-         VBR0KTRvLNQaecjMmH7Eav132gcmurEM/IHXB2d6KpIXEnBxJj1t7tX94xFb894F+oxF
-         ag/QcC1hqVbDnh7TJveVY1xudeohimeDL89vI35jfEpLwCcUfWumov+DXlu4jtcQHIJK
-         f6FA==
-X-Forwarded-Encrypted: i=1; AJvYcCXKJ/79C951cvnHU5cbAHCytoLGZhH/6lwSp4UE+oHtsL5nwmUfq6PpecuXlxhQRIO68brV1bdjgQA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyrAv5mUrS1cn9OfYOcXN6YFiW/NFjnUJcSQDY+H1Vk32bKSCik
-	H0LN/RIDTjq/HIvDBx9HcvRCH70hINGhIsKkABJqDQaFk1v+oNy/ZsgT7/ZUsMQ=
-X-Google-Smtp-Source: AGHT+IHW1qkkMGd7aAakdsHaXQLUN2sqd1dppj81Yx0AkFn4FNYXzftRyCfRbZSCa5Eh4tky41vb6w==
-X-Received: by 2002:a17:902:c40e:b0:202:4640:cc68 with SMTP id d9443c01a7336-2050c48fb65mr250217535ad.59.1725572848921;
-        Thu, 05 Sep 2024 14:47:28 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea94b99sm32720895ad.279.2024.09.05.14.47.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 14:47:27 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1smKK2-001Ja3-2r;
-	Fri, 06 Sep 2024 07:47:22 +1000
-Date: Fri, 6 Sep 2024 07:47:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
-	djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-Message-ID: <Ztom6uI0L4uEmDjT@dread.disaster.area>
-References: <20240813163638.3751939-1-john.g.garry@oracle.com>
- <87frqf2smy.fsf@gmail.com>
- <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
+        d=1e100.net; s=20230601; t=1725594288; x=1726199088;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=FOWKZaZsgk7gRF82n+LEXeVs/JB7uXjutf5ZzKMkFGc=;
+        b=bvgUpWTv/7kzmbE+Say3/lparLNZHjiymMzkSHgNSY+e/3gx22I0iMA4MZJdd9LgzQ
+         vecGwBUlqatu1m30YBos1LWKYKfYHRJgjbvUIZwAmUc59sSnYWi1tE6YcR5is4quJQxi
+         WyplSYucRcE39JLROVPcPM5qQ+eHdGLT0FsxDHH+SL1XQ3eDvp8GtEaikXDnHWyRu141
+         VugznL/m7+SmLjWPrIoy22cXNqqVa+Sof6PO5H77kCNvfoEsIrvzwPpTQmvW6Z9D/AIZ
+         G9g+2Zv3tHAwWgOlLs1ojoN4js2y+TEtV+l0p0GoyrU4keaMF49xxeiJJQyOfrkC0X4P
+         Khnw==
+X-Forwarded-Encrypted: i=1; AJvYcCXzyyBAQGn/pCYFTKZooIOvZldESFFupSn2h8F8udc56O1BQodWTlaXqfGeeeoRz83Un06Bonxn6PA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywp4S9CnHUeCIVlLVpX4N6kaHOARANnAjOn+CbPMCfLJnL0uuKU
+	VWf7fTpLQxs2e/skd8N4P9dRBmq97CuQCAC3OaaNZ6T9C+f4gY0WYuv92+hs97/YbHT0BmhmnB2
+	vp8ji5Qb/OQOZhLoTHL4afCw8cwdEjdKE2V6Ymz7+5GIu13hWMC5lvI2T9phgkt8PxvGp09ayRm
+	uyKWifDqlWHndgQ0kYay1RyU7+vzjJvxDYYOEpoaHuR+sMUyqiniQLUc/lILFVrA==
+X-Received: by 2002:a05:6902:1201:b0:e0b:db13:76bc with SMTP id 3f1490d57ef6-e1d348661aamr1656355276.12.1725594287985;
+        Thu, 05 Sep 2024 20:44:47 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHYt32VQyfa3UEOLTpB8XTsDVlBVPCy97S3G9sJaRr5HOMT4SokFv3WwCvu9kTTyhbb8JVlOoYSPwKX2Bnkatw=
+X-Received: by 2002:a05:6902:1201:b0:e0b:db13:76bc with SMTP id
+ 3f1490d57ef6-e1d348661aamr1656342276.12.1725594287656; Thu, 05 Sep 2024
+ 20:44:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
+References: <20240813072815.1655916-1-gerald.yang@canonical.com> <20240813145327.GE6051@frogsfrogsfrogs>
+In-Reply-To: <20240813145327.GE6051@frogsfrogsfrogs>
+From: Gerald Yang <gerald.yang@canonical.com>
+Date: Fri, 6 Sep 2024 11:44:37 +0800
+Message-ID: <CAMsNC+vKDt21mLG_VZDyMXZkVOeMsQ45hU7D7gCvHj9HmT0DxQ@mail.gmail.com>
+Subject: Re: [PATCH] fsck.xfs: fix fsck.xfs run by different shells when
+ fsck.mode=force is set
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 05, 2024 at 11:15:41AM +0100, John Garry wrote:
-> > >     - Does the unmapping of extents also only happens in extsize
-> > >     chunks (with forcealign)?
-> > 
-> > Yes, via use of xfs_inode_alloc_unitsize() in the high level code
-> > aligning the fsbno ranges to be unmapped.
-> > 
-> > Remember, force align requires both logical file offset and
-> > physical block number to be correctly aligned, so unmap alignment
-> > has to be set up correctly at file offset level before we even know
-> > what extents underly the file range we need to unmap....
-> > 
-> > >       If the start or end of the extent which needs unmapping is
-> > >       unaligned then we convert that extent to unwritten and skip,
-> > >       is it? (__xfs_bunmapi())
-> > 
-> > The high level code should be aligning the start and end of the
-> > file range to be removed via xfs_inode_alloc_unitsize().
-> 
-> Is that the case for something like truncate? There we just say what is the
-> end block which we want to truncate to in
-> xfs_itruncate_extents_flags(new_size)  ->
-> xfs_bunmapi_range(XFS_B_TO_FSB(new_size)), and that may not be alloc unit
-> aligned.
+Thank you Darrick for the review
+I just would like to ask if this will be merged into for-next soon?
 
-Ah, I thought we had that alignment in xfs_itruncate_extents_flags()
-already, but if we don't then that's a bug that needs to be fixed.
 
-We change the space reservation in xfs-setattr_size() for this case
-(patch 9) but then don't do any alignment there - it relies on
-xfs_itruncate_extents_flags() to do the right thing w.r.t. extent
-removal alignment w.r.t. the new EOF.
-
-i.e. The xfs_setattr_size() code takes care of EOF block zeroing and
-page cache removal so the user doesn't see old data beyond EOF,
-whilst xfs_itruncate_extents_flags() is supposed to take care of the
-extent removal and the details of that operation (e.g. alignment).
-
-Patch 10 also modifies xfs_can_free_eofblocks() to take alignment
-into account for the post-eof block removal, but doesn't change
-xfs_free_eofblocks() at all. i.e  it also relies on
-xfs_itruncate_extents_flags() to do the right thing for force
-aligned inodes.
-
-In this case, we are removing post-eof speculative preallocation
-that that has been allocated by delalloc conversion during
-writeback.  These post-eof extents will already be unwritten extents
-because delalloc conversion uses unwritten extents to avoid
-stale data exposure if we crash between allocation and the data
-being written to the extents. Hence there should be no extents to
-convert to unwritten in the majority of cases here.
-
-The only case where we might get written extents beyond EOF is if
-the file has been truncated down, but in that case we don't really
-care because truncate should have already taken care of post-eof
-extent alignment for us. xfs_can_free_eofblocks() will see this
-extent alignment and so we'll skip xfs_free_eofblocks() in this case
-altogether....
-
-Hence xfs_free_eofblocks() should never need to convert a partial
-unaligned extent range to unwritten when force-align is enabled
-because the post-eof extents should already be unwritten. We also
-want to leave the inode in the most optimal state for future
-extension, which means we want the post-eof extent to be correctly
-aligned.
-
-Hence there are multiple reasons that xfs_itruncate_extents_flags()
-should be aligning the post-EOF block it is starting the unmapping
-at for force aligned allocation contexts. And in doing so, we remove
-the weird corner case where we can have an unaligned extent state
-boundary at EOF for atomic writes....
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On Tue, Aug 13, 2024 at 10:53=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
+> wrote:
+>
+> On Tue, Aug 13, 2024 at 03:25:51PM +0800, Gerald Yang wrote:
+> > When fsck.mode=3Dforce is specified in the kernel command line, fsck.xf=
+s
+> > is executed during the boot process. However, when the default shell is
+> > not bash, $PS1 should be a different value, consider the following scri=
+pt:
+> > cat ps1.sh
+> > echo "$PS1"
+> >
+> > run ps1.sh with different shells:
+> > ash ./ps1.sh
+> > $
+> > bash ./ps1.sh
+> >
+> > dash ./ps1.sh
+> > $
+> > ksh ./ps1.sh
+> >
+> > zsh ./ps1.sh
+> >
+> > On systems like Ubuntu, where dash is the default shell during the boot
+> > process to improve startup speed. This results in FORCE being incorrect=
+ly
+> > set to false and then xfs_repair is not invoked:
+> > if [ -n "$PS1" -o -t 0 ]; then
+> >         FORCE=3Dfalse
+> > fi
+> >
+> > Other distros may encounter this issue too if the default shell is set
+> > to anoother shell.
+> >
+> > Check "-t 0" is enough to determine if we are in interactive mode, and
+> > xfs_repair is invoked as expected regardless of the shell used.
+> >
+> > Fixes: 04a2d5dc ("fsck.xfs: allow forced repairs using xfs_repair")
+> > Signed-off-by: Gerald Yang <gerald.yang@canonical.com>
+> > ---
+> >  fsck/xfs_fsck.sh | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+> > index 62a1e0b3..19ada9a7 100755
+> > --- a/fsck/xfs_fsck.sh
+> > +++ b/fsck/xfs_fsck.sh
+> > @@ -55,12 +55,12 @@ fi
+> >  # directly.
+> >  #
+> >  # Use multiple methods to capture most of the cases:
+> > -# The case for *i* and -n "$PS1" are commonly suggested in bash manual
+> > +# The case for *i* is commonly suggested in bash manual
+> >  # and the -t 0 test checks stdin
+> >  case $- in
+> >       *i*) FORCE=3Dfalse ;;
+>
+> I can't remember why we allow any argument with the letter 'i' in it to
+> derail an xfs_repair -f invocation??
+>
+> Regardless, the bits you changed look correct so
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>
+> --D
+>
+> >  esac
+> > -if [ -n "$PS1" -o -t 0 ]; then
+> > +if [ -t 0 ]; then
+> >       FORCE=3Dfalse
+> >  fi
+> >
+> > --
+> > 2.43.0
+> >
+> >
