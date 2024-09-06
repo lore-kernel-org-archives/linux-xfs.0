@@ -1,82 +1,82 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45914158D7B
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2024 21:12:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85FB5158D7B
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2024 21:12:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725657146; cv=fail; b=VJiWbg7u0Fen1umD4hZKa23oljdhL3dt99RzwVrUlfeBP81/OOsnsP7/jaGEHC3VWUbhqTs6IgzB4H1uv4A8c+8Bs5HlfL3/8nMO1HltQPrkSCF5zQneg0B/ZnDjoIh1la6w6TFNJbPwd4yNdCJqmf6SnML6eDpnFNOsxDtJ7+0=
+	t=1725657149; cv=fail; b=i0oV5/uN0xdncSwKGdgtOxcWpxj+g8jlxkHxwcj4m/bVhxk3y8pgIGU684N/9qsWFTlvUNEv3e7tU6Lm3j67fwZyOxoumfK6HVipNx/70JaOI3AFipcQFoy1UYZuX5Nx5xhCEU6IcwynvHa1njNvpJxAfuo5Vae0KmHzfUINOnE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725657146; c=relaxed/simple;
-	bh=9R5gDYGRkD3zuEAj6D/OwgIiAtThfu1pQPpc/dE4v6w=;
+	s=arc-20240116; t=1725657149; c=relaxed/simple;
+	bh=AE6wEh+v9e73Y8djekuwFsrp3sa49969EM0ozv8FRXU=;
 	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=CwLLrDaIHmzaSvcaGuWCEu/UU6mAMADr8hYk6wi56ortwUXtfO+ellL+s6Rnx6mZ03/99E0Sj0jXWW0zTfGkwPry3YsLmWZ9tQy4m/nbD+jrRskoJizi9J1G0AGnRtI1Mjgpp03ktSPQOJgHaDpBHyp0jKlLZXnupiPy1YXy9M8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=CnGJTo6R; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=q0I4mBg7; arc=fail smtp.client-ip=205.220.177.32
+	 Content-Type:MIME-Version; b=qGFUMeuDFdt+u4G9aLsiHkNj0fxRHiWB11ItxQHaDic0uPRohZZ7b4VihKcJQWnY6VBNB3W16kZwS5quJ2TefcdxkRRKh9tNuolP+SR88o2XPnaMYeEnxB/ZMy7vdnlplnpOP2BgNKfyBPV4RHoIt7UZ6onyiYQdb5DKdBaVqA8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=AObzJj9T; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=oKYR2Vf3; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CnGJTo6R";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="q0I4mBg7"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 486KXVVw032154
-	for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2024 21:12:24 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AObzJj9T";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="oKYR2Vf3"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 486KXU2g024511
+	for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2024 21:12:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
 	from:to:subject:date:message-id:in-reply-to:references
 	:content-transfer-encoding:content-type:mime-version; s=
-	corp-2023-11-20; bh=ryNP2/BUEI5XGaNMf5mCh93xxASKGerHyr9sWS/BFKk=; b=
-	CnGJTo6RrOt28m+8f4keCjppie77pmh7elm/y/Og4L2NnvWg7svOXVoIxCRUp665
-	GkTFTuPz04cXazEMD7iJclOq6T0IhiVaOnG083QHc9d5y0ch1o/DMcSqotgyzCNL
-	VnOlZNIQxL7pbq4lwUFK7QTAKXTDiCxs8rTxT2m8DignhU44K3o7A+nbCz6Lv9md
-	AARyNG0dnjuNxvnx8Wj71KsGFclRh3b4fWEDHsz+O0RUZzBT7ZHQ2i8l7ulm0sKQ
-	cVUnoIOujaUoYy6GXkPo7jvKWQojWz9ARCY7yjJkMMhZNVVaDOtmj/ApcJdTPS1Z
-	GHmV29p3AsVmPaIz94qvRQ==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41fhwntkr7-1
+	corp-2023-11-20; bh=YEUG3n119LVEMUwUVMBQ5v3OPk4cqTIGB3GuhKOQq5c=; b=
+	AObzJj9THYcJyJUwgKW4/kyB+lV/xF3/D79f/byEAuTQwrXIJ6azy589b8/Alkvx
+	1Hao3MtkqPoHJ3LrPDWitxEhxNH49XZhXS596L4lXj6Apw7ddw3wP2koQcgj0muJ
+	xHyK9Y/TzLmy86ZL+YbIAmrOjzahmN8pli+v1r969Wtrxgy9giK+AhLUt5yKcv8+
+	6/RcChRC/JQgUcaUOMuVAvYwocpRUtqFrevHBfjwLZK4zv+10w6LDC9sMd1dFszf
+	ivV3o0nChZQ7y5X/ZZAcdukAvTBQoNWeL91ldFlG2L7f3vy0Zlw9pLkmUJLmIw6/
+	8gAW8bPpfC5FigYTGIrcng==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41fhwkak3s-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2024 21:12:24 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 486JLXGm006826
-	for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2024 21:12:23 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 41fhydejdy-1
+	for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2024 21:12:26 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 486K2FuB036933
+	for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2024 21:12:25 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2176.outbound.protection.outlook.com [104.47.59.176])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 41fhygea64-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2024 21:12:23 +0000
+	for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2024 21:12:25 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=gzPSJtoz55umnEY2funkeYwCTmZgkTF5gpBWHC38tPHzBr9U8fuTIvmmtPkG1c4v5jY69gXvGyGrVvWniP/H8zZX/63PYVAgUtNJhLupPZq+87XhASN0IdK/0Ytf85WG1XFYWboREueIlU+Zad+2n9xnXHBNrKUgWhU34uFaGNfqdOs+5jdU2Hco2qFW8iew+osaYibYkbpm/1OoZ/cBIxsFEz1S4oJ2Gevdp++doHht9+dPfcK+2UVx8VUmUN0WEBRVhdHf0II06xo7GfdyOW456ijpqS5Sorr8JFuOvpT0E5X56c869QgWlFCO13VU6OUEP4Vl1pWlrRgGCd1/rw==
+ b=v3fEUC2xHmXoAzolpWzYeD2kh3qoUy1r1sOqVmxjXHPGs/sy6IlpgcOmqtnGk9Z3m7ailQ9K2vSpXSOr05P0AIOxExsT7aBEBrYK/8FubF5LIIBbkDSSUkFMXIeI6gfBeYn1fhhfizFrhxcfcoSezk2ccJBENLB5HqI2RkJlV8umTkQ2uINkZ0ykwmEeZOde8ZQi5CDE0xaaH2Wz7vSB4Pj2AD/jsx1xIsfwtTQvQbsR5CUTrHSHsI4PGAWmrx5pfmsHT3aZ6h1a4WfInSJU0RWmLO2Q+OCXaUbKOHlcKnMDWqL4DQ1Q1jX3ZrX4S1XuZZ/1UBK6/qmP9KK6LeCPzg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ryNP2/BUEI5XGaNMf5mCh93xxASKGerHyr9sWS/BFKk=;
- b=X1+VWztrOzd/+6JLDjz4za/MLbqpeK1o7cxObM7EsMcJa1NVvDZ0bw4WZjVL7s4K1AoLSn2uHdKnQameEpoqxZLdjPtHksOCUI+3a8YF1tqNVTHZ22uhKOhDqz2IAQeSkhWWrhIhnLU4nQN8AwGtPnAqxirUPCC/nexul1QnOeNMLV77+KYp0ECa+owx80HaDrj+gd7UYG4ZiFaqNXZaXg7AONZWB2eMTDl8e4JLrGZJbI5MkhyDXomQ+H6knzsRqjGVH39EpZ17bVjuPZLthbAfRdJrIrM+Iu8EBKcKOFsVdUzEmkzzkVNfGlB22dPiLGvkgeuU2HDz6N3XNiZ5vA==
+ bh=YEUG3n119LVEMUwUVMBQ5v3OPk4cqTIGB3GuhKOQq5c=;
+ b=k2Xz9MEfZKz3VBL1fitrbYb/wkicMoz+YQeBu2c2HQNWpDBMgRURVL6I8jnZMR73EuTdNvr9DvpIb/hA6SFCKuwILSRKNoCBqNjS0ngvEMTAb49doexuPqS6RTzS4m38ABYAbVs572tmJceI+vx4hTCoM+I273HwLYEw4bva8VixAcB4V6qFt07VxAiCQgz6YggEWA7bVRM8XciDeP24aeFKx7z1U/c2ywpHi9yNKz5J+GHULJsIpiJVgAgAyxIxrpY0r8cdWVPrLv4nNRK+7ggshdSe/IBw5RP/Z+WUX3yr6OkAWDVjVb7Np6/fFmQER5SeiRThg1KPMbnzQAkVKA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ryNP2/BUEI5XGaNMf5mCh93xxASKGerHyr9sWS/BFKk=;
- b=q0I4mBg7p56cYgHeCfNhPPaxo8RpeAVgXJXKZBbfjJxzjdDPSvg/dd4NrJp+oeEW/wjY5bez5u0PIzQ1rIFxSCe5apgaU0XUGOws/EjFHf9nIqXTd/t64/iKdJ8WGhn+WDirbXCgclmyIDi9gmkHVBQzXgwAKM1uC6zKYti3KNU=
+ bh=YEUG3n119LVEMUwUVMBQ5v3OPk4cqTIGB3GuhKOQq5c=;
+ b=oKYR2Vf3eRrAw+aeFnQ2CHk1smGhLUn2oefykU9oC/NfMK5Zq58I0cPW0SClAesuzSqg3fNfM/wKGPPYSerwmFV7uxeOJaREh9qfth1y/G0XUeIab47Q8Lli7OSUPZqyy+1PXOOtO7fM67MI7EgvpPZPk7fFvz3th50gFNXyae4=
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
  by CO6PR10MB5587.namprd10.prod.outlook.com (2603:10b6:303:146::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7962.9; Fri, 6 Sep
- 2024 21:12:20 +0000
+ 2024 21:12:23 +0000
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::a63b:c94b:7ed8:4142]) by BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::a63b:c94b:7ed8:4142%4]) with mapi id 15.20.7939.010; Fri, 6 Sep 2024
- 21:12:20 +0000
+ 21:12:23 +0000
 From: Catherine Hoang <catherine.hoang@oracle.com>
 To: linux-xfs@vger.kernel.org
-Subject: [PATCH 6.6 CANDIDATE 20/22] xfs: fix freeing speculative preallocations for preallocated files
-Date: Fri,  6 Sep 2024 14:11:34 -0700
-Message-Id: <20240906211136.70391-21-catherine.hoang@oracle.com>
+Subject: [PATCH 6.6 CANDIDATE 21/22] xfs: restrict when we try to align cow fork delalloc to cowextsz hints
+Date: Fri,  6 Sep 2024 14:11:35 -0700
+Message-Id: <20240906211136.70391-22-catherine.hoang@oracle.com>
 X-Mailer: git-send-email 2.39.3 (Apple Git-146)
 In-Reply-To: <20240906211136.70391-1-catherine.hoang@oracle.com>
 References: <20240906211136.70391-1-catherine.hoang@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BY3PR03CA0023.namprd03.prod.outlook.com
- (2603:10b6:a03:39a::28) To BLAPR10MB5316.namprd10.prod.outlook.com
+X-ClientProxiedBy: BY3PR03CA0007.namprd03.prod.outlook.com
+ (2603:10b6:a03:39a::12) To BLAPR10MB5316.namprd10.prod.outlook.com
  (2603:10b6:208:326::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -86,257 +86,259 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|CO6PR10MB5587:EE_
-X-MS-Office365-Filtering-Correlation-Id: d67d837d-0feb-40f8-c9b5-08dcceb89874
+X-MS-Office365-Filtering-Correlation-Id: e93bd36c-e173-4b12-ff3f-08dcceb8997e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?zWEUPVw1LS1mHTbtrcRT1bvusmTgWz4GmQB6UefYueoNZH2JE1/FXz2Ru/ss?=
- =?us-ascii?Q?qx8SI8BIph59j9kbVgSL4dCWTs4OTjxnjVxc4q8xJEiQDOuSijlzhHl3rN9D?=
- =?us-ascii?Q?PBnlLAPByVke0/ZQPPC6prEB8HmasR5SXjYJ6Yw7WN1D4K2VDm05id1FoMln?=
- =?us-ascii?Q?oAy3hBpQE/OhVad8BCzJokiTMnJBtuLz0dHzIelM7rcmN7g9xH9Y4O0SE88u?=
- =?us-ascii?Q?WYPLtzNJ1RROnv3eSG/kZGb1Xcj3gNPKWat7gpDrvT3H0lt9CovHOuvGEgsi?=
- =?us-ascii?Q?+zZZrFZhgRQ6G4UIHiQej/FLXc+vIGOQOwpjXBR3btChVfMMw7O1NZ2ZjnBn?=
- =?us-ascii?Q?vRl6vUe7P4i7NhcrAv4Ad941nE4KNB3pi8Eax5+dulC9FR7bn04fy+3t6u7i?=
- =?us-ascii?Q?P0AHdXJq0WxXlEanES8NkrQUd/L4bPnlH5uZLZ4oAi/6IyXoySkQ4OqdV2i/?=
- =?us-ascii?Q?v2xW4qdD4FW5cppt4hWevtnPGlCMtnbx9VBUgZiTxf6hTakyEW169ACisQaP?=
- =?us-ascii?Q?m7ZRtkDAzcbcXa+TkAXGcFr3gAPWbAEmtkUCvz0jJFZZYdCkewHbU8rdGt52?=
- =?us-ascii?Q?IOlUM8XjngDhLuI26E7DSrwjV12P1yl5So/OxDbsHWPr33GzD1Lt8feo+/D3?=
- =?us-ascii?Q?DpMN86CqeI+Y8cCSkSjE3gggAdP4tEsUuWaVv1+clzWrDnq3Zu+V3TmfpKM3?=
- =?us-ascii?Q?simcYZDy88iQ+lUPjGEVhhtxtPG+QRx6XtxlzcFMd7JUxlEHcS3uBanvW5t+?=
- =?us-ascii?Q?LUlcortVvcx/vZpcQlYLQ71wNU+XBoSRynsa5BB3yzaiextj70v3CnAsySKv?=
- =?us-ascii?Q?ob6WAxZuufaFvC2DpV+tkfEBAZU3cwBGQHpTeoyAt/k7zJUcS83w1G3Jis/L?=
- =?us-ascii?Q?EQWytdJsW4SLD3NX13Y3CZ2aerixNtrEy2FuSxgN59yDEvXfpnFgNFfS+hlO?=
- =?us-ascii?Q?h5+tmRSgOkvCPfGknVK9j5g7KappV6lfRp/ZLuoYWWN+HVfibYf4IFOY+rAk?=
- =?us-ascii?Q?GvU18r9PrPni+l/QoFcvq4x9lw/tNFYJ151zZ2M3TbMlc/XMOTLNZ3yNA0nC?=
- =?us-ascii?Q?2zZww5vWMHxxkT03XYPIpX3sL/uvtT8B6N7DEF6Ix8WFtgQvcCY57aWlOTz1?=
- =?us-ascii?Q?NcPNNKLkJq6e3iSQQ6tBaSGHCcA4kHSFbfwkSsAdWkjB+dJf0y8xSyyw044c?=
- =?us-ascii?Q?re8EsLl+1BU8OPW9apwymPJgo1f1XLE7VtMFeuR0LTgGfoioTo4k6f70Mjk2?=
- =?us-ascii?Q?Ps7jcxCEzU3hnEF6UGNRAp5MuFYxT0LhUcLpO8vgvBJwX+pA1hOXL2J/ScXH?=
- =?us-ascii?Q?1pXy4GSK8lK1lQHTZJdruMhXdmo1FGCdgs18yWjX76B3CA=3D=3D?=
+	=?us-ascii?Q?Ao+a95RjfEgda4uNeghYNDOSebe/JkXQRru5QVgF+jpBGG0ZZNR9PNKLbP4z?=
+ =?us-ascii?Q?awAu0ONLJW6fr6gVLwggTa6GImlonClk+1ZLLHUWPDb5vtSLJUwZBNCKh8P3?=
+ =?us-ascii?Q?y5Au2GWlK6U8O77tkb5dPgj9BMgloX4Nh9Yz+IiH2s15uLoCefS4aRXDUHDX?=
+ =?us-ascii?Q?xC5rUpGLBnF2XsirZXaPLIWCSGqaLihZ6hvf50VgQJ/iH616T3xjBt7MNiqY?=
+ =?us-ascii?Q?UWeTnmdAnBxKLuVGpDPwA/mI5CEeAuZMv4qlGc9F24IG/FKpbFiBt/wOzPSy?=
+ =?us-ascii?Q?piLZf6oXt4MhakeuuxoJ/dRv66Hj0uGsv8m7W0yy4mqDc+3AKFK2tNG1eOEl?=
+ =?us-ascii?Q?2EyRt+WmSFHPpYPVKg9+GlE8u60DN5bGOBrPCNxawvFo0TcJxKAat1ZITkFZ?=
+ =?us-ascii?Q?s2qCjwfa5q5tfXZoOr6Ibfqsi6EwIduBlnyYse9xfiE3SjveNy3k7quxfwoC?=
+ =?us-ascii?Q?D4S3yKA/q5zkf/U+o8yjyHz8g8pFD9M3xqpJh6LQorQBXfRDDXKVwVAYlkB+?=
+ =?us-ascii?Q?oQYCRgKizAyWWW6v3jgwOHwaQiye8RgmIlWscr/spQn9KX9Tl8inssbyXvcW?=
+ =?us-ascii?Q?/z1I5S2G+1fr2DpQY+7ddeba1QUAPxqqetiHpL8GKqpkCqM2vZz0669ARgv4?=
+ =?us-ascii?Q?9dHbIKBLj5kQepUj1xqyY1oqW7aH0jzYit770tnhDe7mOnmPR7jvrEolkpWp?=
+ =?us-ascii?Q?qDGVYspMzKX6dDEhWZVKgsf5xjbS/wd1rzFOJdItDV4z6l9kg43p5QjK3zBO?=
+ =?us-ascii?Q?H1zWPGGzW3j4nGO/dIqdqbU5JHLQAhHXVlGBH8cdx2oiWyjLRY2zFfxjQ3mm?=
+ =?us-ascii?Q?JzqvdGMOAlhM4hIfDF+KwWGVahJLAf5RvzkDNxJjyG2cB5P7l5cOw4dwrsx0?=
+ =?us-ascii?Q?+W/0u/Zp4bNi2wOlRQBLBMgLH7ehMl73NfVi1WAQn0qUVwbb1rGv3v5xbGO5?=
+ =?us-ascii?Q?CI7F8kr2h0RGS5ETmLYehzRiz/IGVMM9XUr8MrbtVFkc8Iru+cHLWuLG68J7?=
+ =?us-ascii?Q?NEXBkrZWJRdsxByEzWmO0QqGWKElto1BSKIGMYDJpILjgT2hDV+OFeWksjn5?=
+ =?us-ascii?Q?rcKWfjJlgZ2ZEHvzNltWOMg5uyvAA4VfEGs8Srm3XWn0X0q41jNHrHIweQL8?=
+ =?us-ascii?Q?te67rezqzMm1Uq+WNXq8D8Rp7i9H94cCJwOR2WSx5318Fl8to7QQA2YR4z/W?=
+ =?us-ascii?Q?BA0++AGKkDtUoSR2Pbm4ld6mSg2Pt8ZPA17xi60nVKBuhTQncrcd7QIdHoen?=
+ =?us-ascii?Q?20SKBNipgH1pBc2xvGmUibvCLKFp/fq9rKIUz7Z+blKe8N33oWBLZbS8n41+?=
+ =?us-ascii?Q?59irbgxK8f1FnFc9RA9a3/LPPgG7b49ZxMJsH3F1puW2Mg=3D=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?hMo6CvuVaB2MHt3LqNZ7Rb1ngQmPthM5WhONlu9ew3ODRYJ/peHUagmx/83i?=
- =?us-ascii?Q?CuALzKB74ICOq7RbLMqXPT50P2H26g5PyQeiRPgWh2cp3vDMHw9Rot+vm/xN?=
- =?us-ascii?Q?hZ+BgzuGASSiWzBa0KDPkDLmNRzTwCmLeVYSIfMq8dVED6jM/80szSVC0Wf2?=
- =?us-ascii?Q?RrC2Zve4UMiJ2qYndKseY+E700ssphzoTO23Ut+wdDnN55/ATXLhOKl/0di8?=
- =?us-ascii?Q?ud/t7mujJTmopcooCpSB+72RssrIaH9wmEA2I0+wsYvGtr7X46PSNdBmqEQu?=
- =?us-ascii?Q?ehkKgVdjaV7bjpMZXOLFTLDUg1OYsej3Ny9nXwdMiKSBv4PcOnHKlfOoRxF4?=
- =?us-ascii?Q?vR20r3NU3pvvq+98q7SyJjMNFAKOABz48G05vxz1+x+dcoZTpLxROrQmWIu+?=
- =?us-ascii?Q?Kov30zclxbd1LIn4Fpc047aWoR3nYY6zY33cEesfQyuRzHXW26qfzRYanzXw?=
- =?us-ascii?Q?ME9XK1q2PuZcsgJc7o10lFphdJz6ecEbxzyZFaZbKNlkYeUnZgzr/4shg0hB?=
- =?us-ascii?Q?FCF+cbaV5pCk/mKGdoJhUf1CbK2D3zmDPB8DdyctylNCv0MtwgjWUzmvDhxE?=
- =?us-ascii?Q?v8OgFJ0fcS1M0VtoIGuPPbWlTKII8Jk6b92t+O2HQHGGwiGot6LuugMTejii?=
- =?us-ascii?Q?iDSBlIQY4gPoJBvSgmhvEr76ZaaCjeI56zhrXxc6usehKH4gqWi1Fy61OpBZ?=
- =?us-ascii?Q?9vnawQwGpVOY/yk4rTEKyGnTb0tuZ+uppyuUQU5NacM0TK6+z/yKxdnqVKaO?=
- =?us-ascii?Q?9bjmAHt5Y1Nhj+sMdC5ogJIwBNUfVDneU6MFF7zPsZYz91DUGC+AgnghSSfZ?=
- =?us-ascii?Q?rtGuQYQxWy9QYih13JFu2UImJ2y/Hyf2Jj3Ql3tYhqhOTfQS6o54r1laAxGN?=
- =?us-ascii?Q?92hE1f+7zvClDGosiCQR694s9LpI1QWr4PBMRPw2kRiFB3LCTabqeHNVF6NJ?=
- =?us-ascii?Q?VVD6AFex9csi4JwTVcPjOljEIaFOPpfp81CjWCbYFgPShaqECblhs/V1Rk8d?=
- =?us-ascii?Q?ETEgMtVCjoKiDv8kLP2XxXKrt1bYWRWQFn3ER9mEdq+jA5sdtewSs9k5Lqja?=
- =?us-ascii?Q?LBeadIqcA64FybIGsRGLsr/HFylVq2w3UF77UEYt3XXEnlcicSk7svk6hxjv?=
- =?us-ascii?Q?eCFzjk40pYp4fXZlYwJMaNH/tXJOABLLmBFpH5SnI5whRtOlymm5vLd4Sqil?=
- =?us-ascii?Q?GdypKByjZPe1Cq1eQiHh7KlMJnGI97DMS2cQiPvdUlLz0ja1nhdziih6c2sC?=
- =?us-ascii?Q?xkgtzgkHNbr+hp4zL5jLwEAkZ+t1e2lX6TCAuitNyeRnG0khvJFb0EbFWijh?=
- =?us-ascii?Q?RKsoLoFGLVHPRvabfrbtDIhkk7gApT91+cwT0GSsdaF8KLoXORXps/FY/qin?=
- =?us-ascii?Q?O7CkQu/ynEb2axf55uejkIHul/jZzZDDcvlVslNLcCvWdIkuc+w5U4hyA1q+?=
- =?us-ascii?Q?ybBGfWch7qD7tczBPoslNZQ26jYaPLqciOlgq+q4vkA0J2pppnJL7lUwovpz?=
- =?us-ascii?Q?rPAlhPUD2/XsmBrhkMbrlPeoSw5dox/K+yL/+xINDMCv2n6ezkbNLin8U2c9?=
- =?us-ascii?Q?HBtsWlqe3FKQm2be4PKtbbWbh6BvoJ3n9n21rx8AM46qO2BZVKwcw4DasFDP?=
- =?us-ascii?Q?IQ=3D=3D?=
+	=?us-ascii?Q?Uc6A8X+fMhyvwMSi0RQE3zqg89gklKIpsJjP7SkL4GzOGTdxiGoSH1PuIfQa?=
+ =?us-ascii?Q?0uaif81A+VrIwBVY4eE2m8MU75XuRiJYhOY236RyF+L7A8I5mnBeJsNmh8fW?=
+ =?us-ascii?Q?j2awH4hWHKU279OBeQd1P4XIsOQ0QtGJWlV8gE6QhwAaFPR266hmg47gPo4V?=
+ =?us-ascii?Q?AnJnqx40Igwrt84953XbO6JVlX046TTSACIyMA9AXkhWkucFdho5UFUotBWP?=
+ =?us-ascii?Q?N+CX3UaF22qJsxK/yzUo6QmPVj7AP4HoCellqikgmD+isWwxvdmwkiZ7W6/j?=
+ =?us-ascii?Q?pxJP4+yt3zgiWDe1j5amZKLwsmRc8q8hxoQLkpCcEyuXrWsd1+doVzma1crc?=
+ =?us-ascii?Q?fWzcQDUHW2857gv9BCoPU1uPxzx46L0dZyGmT562Q+cS5bU3TXCLHsYMjxH0?=
+ =?us-ascii?Q?Xu1pzopQSRyiralXvSQqyrZoD87KaoUvl22m2wDYWTtuEJ1bJgmFvGEsDe8b?=
+ =?us-ascii?Q?0HHFJqANq16P510lFyZ7OudiE2TKnOCkwZi6v89Tbm0MCgFvEwXw0tzsWKB9?=
+ =?us-ascii?Q?7AmYzBd3CvgwewoQ6a0V3h0ewaIboTsgkUCQ2yAakhHl5RZmwSAh9Z2nZnDk?=
+ =?us-ascii?Q?nwblga4qI4813dzYS2QTh5cEX4oaiBHZOCKNMeRJMVoDU4+DxcSag0I2YZ2u?=
+ =?us-ascii?Q?EgigYkRNwdZi+/qSv/meXXqv0AQCrEwP5vIBPj4fIAMcWisULOoMELe7L4y0?=
+ =?us-ascii?Q?rphy8PMtfY1m6yiqCL/CCRcf8nZ1wQ6Mr5MlqHXHKw+8/WfVwrD4Pvv+V73n?=
+ =?us-ascii?Q?UR40cX2Z6//Jd5pj403CwNcIy8LqcMEnz0eJs3EI0FXyS7wsVWAvMEyxEBLM?=
+ =?us-ascii?Q?9QAl+YjuXezcZ2PFc6jV/T9FccokCEh99qwOgXayi6/JQcYpYPvEyhpFhbN8?=
+ =?us-ascii?Q?zI4ay+pL/Mg0KfRQE8NliyX2HvBm6umYeDIRDgGcbLL93C6MOQmDzqOidgkA?=
+ =?us-ascii?Q?HNkuiiGDcZtAKuBOxKNQOTb/e6pMXzQ1lOxfakzNwXeoKyVLTeTzsforVCFD?=
+ =?us-ascii?Q?+J4R8BMdaQOH+Gw0gF93pLrxmCYR3P+zBcg6217FQNqSdPdzDOs7uufMoyAq?=
+ =?us-ascii?Q?r+xY0CmLqufJldA/M5gk9ixBRbjzefTl3Sl325jeIGCsZUcPUbdgcvBhUNto?=
+ =?us-ascii?Q?Z5GhavRO3fMCr7Gb2xqKe2eZ6WHxZsrXE38Tdfw2kxZrgnYZYfUHsPznOmLU?=
+ =?us-ascii?Q?m/5ajaN/vhqza8BEeZyq2ZcRQ5EF4I14rrO5IXZgKH1WuB+lY8KnPpXBR/mx?=
+ =?us-ascii?Q?N0U0y2kQXYcUjm9IxL/3bzh9mIF8svUMJnoEpaJyVOcT2xnuHWbra1N+/XkR?=
+ =?us-ascii?Q?h0cIFN8bchdYidwDb9eNgu+L6cEKJkGIZBCvSuwS3yMDIN0dw+5CaYzc1zfy?=
+ =?us-ascii?Q?Ej89W9IZqz52WAvRCvdvy5ORj99V0xSOxsrwDF8oXmDf93mVfLlelfCzTNoP?=
+ =?us-ascii?Q?4xNY/3TDi3WtoZD19JxnXzSH9188ngDhsROnG2ToqM/Y91q0z1xsSxf1Ewq5?=
+ =?us-ascii?Q?hroGYi5XQVVsIkM+uw6Kyp7G522Lx/9JYDVJliv9lgISJqXMBuwQCOmHiEXW?=
+ =?us-ascii?Q?1J4Di0axGXzuquF7JDr9EuWG8eImCLDti9TfjQdnRULnhVhx3eukzyPVJHLh?=
+ =?us-ascii?Q?rw=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	bgCzrOzYSL0ozTuGi9L0baDKJtxb7aC/RR/jPfWC/8cXz4nmIe4YMdTWS9s1FzzF3QGh6X0yiJYAZDNm/Kxyzv4doS+x45C+SaqMcFOxhFjvJy8fWD7bsnLyXo8VVQJCYpOFpoGQU8tkEvRUt53U+18nPl1Qs9NoB/ZP7+zHKrdhOI0LWQHi3SOz5lrxnZ/im7wIOoHJKprYkcOHIWxCVMr8AleYt6JFt0zRYoTwcqlWkxp4m8ZwkI7/LftnHlghOD2kQzxka0Bwhkm5hy9H5BWJ7YRwCSnVmvFq2bwTBRxaIscd377wDMIeA7GWn8L9nL8Dg6nxsVxCzH441wEGZ6sI1WARHdB//3iNE0xG7sCq9gh7fLrWIc06kNDGyI05mGdKCyj5/JeWdsKOR21rvCTQ05r8TSMBwOucwRUpmjxhZ5gySWI1FUfNp20oAxetV+IppWRyc3WYH0SsfIIyW/73vBUEhRCgEZ55hWvQ8LUxWS5CQmTD30jrJfeg5w+S4N5gxVsq3SDxz3YYiXKzS6j3J+TE4VB9HFXADgn8xIpJ21vQWUPb8qlS0xNNW4vCrs47ekCPbwVq/Vn+lshdd7cBf4Xg+J96GqB+n7+ihyc=
+	brQwrgOyQ5chjg3b2/qzmz/AO7WKc8Ak6o0EiHJMBA95o6mXtRxgJsmbYoFmJoD9xnLdeR68t4evRhdKJ856stPcEbRS1ybyS8rJ7hhY/dHHoQgEhpU/R5I6ZrsOZhQBu/yHTLmlXdLUidVNTmAoe49XPl0t2hnxvuMUoRsnsiEPnDSGM5J6yZSVE/XR08bGZ+tsJOn69XFqhoSgUGO7A3cDy8a7m/Ocm/N019sJF35+JrYkqp9X1PyydNN58xAU4/oUaIzJ4KJzDoDTBAsCCLjnekCZhd1cS8pZe8fCvXAz0I7k4ojr1aNkYll12zRhYe/+guS0O2PCPawVYM4k4qqq7SmGq37fqIh1KpzIivs3W0qi/pq+1Bv2sSdc9PYrThyrN+cW29mmaRShYLINt3v7KhnNa0AfPO9tcX6LhE/twpsC/niSQtFJAFPN2CgWP5whvbGezKE/oj7PWhAcJaWOovcO3leGDYWbi5QgoEDDJN5xuHRD+T0gWNFHs67EKvSMZIIH3ckfCD+cH2JAyL8AbZBrkpqQrlmNP2jzOaRoV6ogfzjdqdQMZvzjmRROlaijL6khKWR7dG8ASAZO8N8kN2gCG2vanw9uvEsdoe8=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d67d837d-0feb-40f8-c9b5-08dcceb89874
+X-MS-Exchange-CrossTenant-Network-Message-Id: e93bd36c-e173-4b12-ff3f-08dcceb8997e
 X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Sep 2024 21:12:20.8150
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Sep 2024 21:12:23.0837
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: j5dgPS4CaFymMwMQsYLZ4hRLUc6koHwK/PQFG3GoBYSAOMq5imJ2tqf5pDD1nfGFbFUif0jUFEi/BGkmqgJwG5zhTodWR30LumW1JSdhFSc=
+X-MS-Exchange-CrossTenant-UserPrincipalName: AeFaTPVeEE5y6akwbAiAf+G2llslfRDn3SI41Ncp6DvgnkA1zlVCp8bzo2cGxMh0WnsO84CWROTyahObyEH6jqL4CBLOvl/+0kvzw5kH25M=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR10MB5587
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_06,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
- spamscore=0 suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
+ suspectscore=0 mlxlogscore=999 adultscore=0 spamscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2408220000
  definitions=main-2409060157
-X-Proofpoint-GUID: B62xc2MrBBPrLXOZqIMaGNj-lT_3wumC
-X-Proofpoint-ORIG-GUID: B62xc2MrBBPrLXOZqIMaGNj-lT_3wumC
+X-Proofpoint-GUID: TNNz1sbBi9qr3Rlx6F4afmfAHZkme51j
+X-Proofpoint-ORIG-GUID: TNNz1sbBi9qr3Rlx6F4afmfAHZkme51j
 
-From: Christoph Hellwig <hch@lst.de>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 610b29161b0aa9feb59b78dc867553274f17fb01 upstream.
+commit 288e1f693f04e66be99f27e7cbe4a45936a66745 upstream.
 
-xfs_can_free_eofblocks returns false for files that have persistent
-preallocations unless the force flag is passed and there are delayed
-blocks.  This means it won't free delalloc reservations for files
-with persistent preallocations unless the force flag is set, and it
-will also free the persistent preallocations if the force flag is
-set and the file happens to have delayed allocations.
+xfs/205 produces the following failure when always_cow is enabled:
 
-Both of these are bad, so do away with the force flag and always free
-only post-EOF delayed allocations for files with the XFS_DIFLAG_PREALLOC
-or APPEND flags set.
+  --- a/tests/xfs/205.out	2024-02-28 16:20:24.437887970 -0800
+  +++ b/tests/xfs/205.out.bad	2024-06-03 21:13:40.584000000 -0700
+  @@ -1,4 +1,5 @@
+   QA output created by 205
+   *** one file
+  +   !!! disk full (expected)
+   *** one file, a few bytes at a time
+   *** done
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+This is the result of overly aggressive attempts to align cow fork
+delalloc reservations to the CoW extent size hint.  Looking at the trace
+data, we're trying to append a single fsblock to the "fred" file.
+Trying to create a speculative post-eof reservation fails because
+there's not enough space.
+
+We then set @prealloc_blocks to zero and try again, but the cowextsz
+alignment code triggers, which expands our request for a 1-fsblock
+reservation into a 39-block reservation.  There's not enough space for
+that, so the whole write fails with ENOSPC even though there's
+sufficient space in the filesystem to allocate the single block that we
+need to land the write.
+
+There are two things wrong here -- first, we shouldn't be attempting
+speculative preallocations beyond what was requested when we're low on
+space.  Second, if we've already computed a posteof preallocation, we
+shouldn't bother trying to align that to the cowextsize hint.
+
+Fix both of these problems by adding a flag that only enables the
+expansion of the delalloc reservation to the cowextsize if we're doing a
+non-extending write, and only if we're not doing an ENOSPC retry.  This
+requires us to move the ENOSPC retry logic to xfs_bmapi_reserve_delalloc.
+
+I probably should have caught this six years ago when 6ca30729c206d was
+being reviewed, but oh well.  Update the comments to reflect what the
+code does now.
+
+Fixes: 6ca30729c206d ("xfs: bmap code cleanup")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 30 ++++++++++++++++++++++--------
- fs/xfs/xfs_bmap_util.h |  2 +-
- fs/xfs/xfs_icache.c    |  2 +-
- fs/xfs/xfs_inode.c     | 14 ++++----------
- 4 files changed, 28 insertions(+), 20 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 31 +++++++++++++++++++++++++++----
+ fs/xfs/xfs_iomap.c       | 34 ++++++++++++----------------------
+ 2 files changed, 39 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 4a7d1a1b67a3..f9d72d8e3c35 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -636,13 +636,11 @@ xfs_bmap_punch_delalloc_range(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f63e7365b320..164160529159 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3974,20 +3974,32 @@ xfs_bmapi_reserve_delalloc(
+ 	xfs_extlen_t		alen;
+ 	xfs_extlen_t		indlen;
+ 	int			error;
+-	xfs_fileoff_t		aoff = off;
++	xfs_fileoff_t		aoff;
++	bool			use_cowextszhint =
++					whichfork == XFS_COW_FORK && !prealloc;
  
- /*
-  * Test whether it is appropriate to check an inode for and free post EOF
-- * blocks. The 'force' parameter determines whether we should also consider
-- * regular files that are marked preallocated or append-only.
-+ * blocks.
-  */
- bool
- xfs_can_free_eofblocks(
--	struct xfs_inode	*ip,
--	bool			force)
-+	struct xfs_inode	*ip)
- {
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -676,11 +674,11 @@ xfs_can_free_eofblocks(
- 		return false;
- 
++retry:
  	/*
--	 * Do not free real preallocated or append-only files unless the file
--	 * has delalloc blocks and we are forced to remove them.
-+	 * Only free real extents for inodes with persistent preallocations or
-+	 * the append-only flag.
+ 	 * Cap the alloc length. Keep track of prealloc so we know whether to
+ 	 * tag the inode before we return.
  	 */
- 	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
--		if (!force || ip->i_delayed_blks == 0)
-+		if (ip->i_delayed_blks == 0)
- 			return false;
++	aoff = off;
+ 	alen = XFS_FILBLKS_MIN(len + prealloc, XFS_MAX_BMBT_EXTLEN);
+ 	if (!eof)
+ 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
+ 	if (prealloc && alen >= len)
+ 		prealloc = alen - len;
  
- 	/*
-@@ -734,6 +732,22 @@ xfs_free_eofblocks(
- 	/* Wait on dio to ensure i_size has settled. */
- 	inode_dio_wait(VFS_I(ip));
- 
+-	/* Figure out the extent size, adjust alen */
+-	if (whichfork == XFS_COW_FORK) {
 +	/*
-+	 * For preallocated files only free delayed allocations.
++	 * If we're targetting the COW fork but aren't creating a speculative
++	 * posteof preallocation, try to expand the reservation to align with
++	 * the COW extent size hint if there's sufficient free space.
 +	 *
-+	 * Note that this means we also leave speculative preallocations in
-+	 * place for preallocated files.
++	 * Unlike the data fork, the CoW cancellation functions will free all
++	 * the reservations at inactivation, so we don't require that every
++	 * delalloc reservation have a dirty pagecache.
 +	 */
-+	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
-+		if (ip->i_delayed_blks) {
-+			xfs_bmap_punch_delalloc_range(ip,
-+				round_up(XFS_ISIZE(ip), mp->m_sb.sb_blocksize),
-+				LLONG_MAX);
-+		}
-+		xfs_inode_clear_eofblocks_tag(ip);
-+		return 0;
-+	}
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
- 	if (error) {
- 		ASSERT(xfs_is_shutdown(mp));
-@@ -1048,7 +1062,7 @@ xfs_prepare_shift(
- 	 * Trim eofblocks to avoid shifting uninitialized post-eof preallocation
- 	 * into the accessible region of the file.
++	if (use_cowextszhint) {
+ 		struct xfs_bmbt_irec	prev;
+ 		xfs_extlen_t		extsz = xfs_get_cowextsz_hint(ip);
+ 
+@@ -4006,7 +4018,7 @@ xfs_bmapi_reserve_delalloc(
  	 */
--	if (xfs_can_free_eofblocks(ip, true)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		error = xfs_free_eofblocks(ip);
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 6888078f5c31..1383019ccdb7 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -63,7 +63,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- 
- /* EOF block manipulation functions */
--bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-+bool	xfs_can_free_eofblocks(struct xfs_inode *ip);
- int	xfs_free_eofblocks(struct xfs_inode *ip);
- 
- int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index db88f41c94c6..57a9f2317525 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1149,7 +1149,7 @@ xfs_inode_free_eofblocks(
- 	}
- 	*lockflags |= XFS_IOLOCK_EXCL;
- 
--	if (xfs_can_free_eofblocks(ip, false))
-+	if (xfs_can_free_eofblocks(ip))
- 		return xfs_free_eofblocks(ip);
- 
- 	/* inode could be preallocated or append-only */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8bfde8fce6e2..7aa73855fab6 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1469,7 +1469,7 @@ xfs_release(
- 	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
- 		return 0;
- 
--	if (xfs_can_free_eofblocks(ip, false)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		/*
- 		 * Check if the inode is being opened, written and closed
- 		 * frequently and we have delayed allocation blocks outstanding
-@@ -1685,15 +1685,13 @@ xfs_inode_needs_inactive(
+ 	error = xfs_quota_reserve_blkres(ip, alen);
+ 	if (error)
+-		return error;
++		goto out;
  
  	/*
- 	 * This file isn't being freed, so check if there are post-eof blocks
--	 * to free.  @force is true because we are evicting an inode from the
--	 * cache.  Post-eof blocks must be freed, lest we end up with broken
--	 * free space accounting.
-+	 * to free.
- 	 *
- 	 * Note: don't bother with iolock here since lockdep complains about
- 	 * acquiring it in reclaim context. We have the only reference to the
- 	 * inode at this point anyways.
- 	 */
--	return xfs_can_free_eofblocks(ip, true);
-+	return xfs_can_free_eofblocks(ip);
+ 	 * Split changing sb for alen and indlen since they could be coming
+@@ -4051,6 +4063,17 @@ xfs_bmapi_reserve_delalloc(
+ out_unreserve_quota:
+ 	if (XFS_IS_QUOTA_ON(mp))
+ 		xfs_quota_unreserve_blkres(ip, alen);
++out:
++	if (error == -ENOSPC || error == -EDQUOT) {
++		trace_xfs_delalloc_enospc(ip, off, len);
++
++		if (prealloc || use_cowextszhint) {
++			/* retry without any preallocation */
++			use_cowextszhint = false;
++			prealloc = 0;
++			goto retry;
++		}
++	}
+ 	return error;
  }
  
- /*
-@@ -1741,15 +1739,11 @@ xfs_inactive(
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1a150ecbd2b7..9ce2f48b4ebc 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1127,33 +1127,23 @@ xfs_buffered_write_iomap_begin(
+ 		}
+ 	}
  
- 	if (VFS_I(ip)->i_nlink != 0) {
- 		/*
--		 * force is true because we are evicting an inode from the
--		 * cache. Post-eof blocks must be freed, lest we end up with
--		 * broken free space accounting.
--		 *
- 		 * Note: don't bother with iolock here since lockdep complains
- 		 * about acquiring it in reclaim context. We have the only
- 		 * reference to the inode at this point anyways.
- 		 */
--		if (xfs_can_free_eofblocks(ip, true))
-+		if (xfs_can_free_eofblocks(ip))
- 			error = xfs_free_eofblocks(ip);
+-retry:
+-	error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
+-			end_fsb - offset_fsb, prealloc_blocks,
+-			allocfork == XFS_DATA_FORK ? &imap : &cmap,
+-			allocfork == XFS_DATA_FORK ? &icur : &ccur,
+-			allocfork == XFS_DATA_FORK ? eof : cow_eof);
+-	switch (error) {
+-	case 0:
+-		break;
+-	case -ENOSPC:
+-	case -EDQUOT:
+-		/* retry without any preallocation */
+-		trace_xfs_delalloc_enospc(ip, offset, count);
+-		if (prealloc_blocks) {
+-			prealloc_blocks = 0;
+-			goto retry;
+-		}
+-		fallthrough;
+-	default:
+-		goto out_unlock;
+-	}
+-
+ 	if (allocfork == XFS_COW_FORK) {
++		error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
++				end_fsb - offset_fsb, prealloc_blocks, &cmap,
++				&ccur, cow_eof);
++		if (error)
++			goto out_unlock;
++
+ 		trace_xfs_iomap_alloc(ip, offset, count, allocfork, &cmap);
+ 		goto found_cow;
+ 	}
  
- 		goto out;
++	error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
++			end_fsb - offset_fsb, prealloc_blocks, &imap, &icur,
++			eof);
++	if (error)
++		goto out_unlock;
++
+ 	/*
+ 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
+ 	 * them out if the write happens to fail.
 -- 
 2.39.3
 
