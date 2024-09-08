@@ -1,81 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ABE516631D;
-	Sun,  8 Sep 2024 14:18:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B631E26281;
+	Sun,  8 Sep 2024 17:28:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725805102; cv=none; b=LVh7qH74fCFbtHIB9b2qUoE2+dm2334yrG2T96pbJmlndFMRjhq/SsBvmfIljAK9/wiU3qvZXOaPgpxdpHwHyjIGW96rxzuXVvEiRgUlFbb/iY18LCXHKZBcigFCw1wkvtWJ4nTi2bvdUYaCSVm0JuX2m5vBp+KGXIpt2DW+lxI=
+	t=1725816541; cv=none; b=XLKq2rZWEkC4MURy59rEHYxHuQRsU8fJsHr5kGTs+50srQKV9vj5BtoYvcnojOi5Sk0YYySW5Vwcpjl3Bs1iKRN5Y+EMsLys99FnyDr3Rgv7JGkBeyOJIhpf25ahalRWOeJCjf9PLjQeuVduBoFXDgAgR24h3eBY2zby3itT2n4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725805102; c=relaxed/simple;
-	bh=2B3bGDYggMBeJGJc+cLhQOLEm7NrJWnQsiyWcfPyrKY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sxkzuM8w+JzZJiUMgOXwn75GL+yWUPQ22gMLtb2vv+R+PqX1jcN8OGTusljpgIbi9iWeNLIm3CV/y2kk54s9qbmCGMWQ7e+F34pjYDMDTN+c7waz3NJwLuUzpZNntW/UrKHC6mzqjCSMPnS1Z+3VPD8thxHlzIyuoIYCSZ2XI/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=DHvkQaJZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725816541; c=relaxed/simple;
+	bh=ODeLpK4Af15QLuBE5+94jWGI6ekq3Rl0Ngi9ZJdlkvw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Mo/erU8V9FTf0tpYu1jjPEIwn+eT5TZermcE2J6zqBlWOqW86d+nMEOFxObyxyvJmBROm94xvYtfBzoeAYEqxSisITMhSju3AhB4XvNnOxqweFkHB8xIDdAjFuR78WHaOzT+4bd2Fkub0EevSw/BAyrTzknab32VdkQJpr6XZO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S9xKHqRP; arc=none smtp.client-ip=209.85.222.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="DHvkQaJZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D35EC4CEC3;
-	Sun,  8 Sep 2024 14:18:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1725805101;
-	bh=2B3bGDYggMBeJGJc+cLhQOLEm7NrJWnQsiyWcfPyrKY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DHvkQaJZ5KWhqCgVwErwWAz8q3OAc7WBJGrtBJ7ucSzqrW7uixJ7a189Yd8LdIGUn
-	 jfMsZ0G/NNwLAtM4BxtGSSm8AJFDHvbmQFagcJLft+4FldWbLiyW3BNxq7DGduNsDK
-	 uHtS5ea6ylmqcOrxDHTmlk07Dw+eGTKgXhbxFJ8o=
-Date: Sun, 8 Sep 2024 16:18:18 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	stable <stable@vger.kernel.org>, Dave Chinner <david@fromorbit.com>,
-	Anders Blomdell <anders.blomdell@gmail.com>,
-	linux-xfs@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chandan Babu R <chandan.babu@oracle.com>
-Subject: Re: XFS mount timeout in linux-6.9.11
-Message-ID: <2024090803-twerp-moaning-2bf6@gregkh>
-References: <ZraeRdPmGXpbRM7V@dread.disaster.area>
- <252d91e2-282e-4af4-b99b-3b8147d98bc3@gmail.com>
- <ZrfzsIcTX1Qi+IUi@dread.disaster.area>
- <4697de37-a630-402f-a547-cc4b70de9dc3@gmail.com>
- <ZrlRggozUT6dJRh+@dread.disaster.area>
- <6a19bfdf-9503-4c3b-bc5b-192685ec1bdd@gmail.com>
- <ZrslIPV6/qk6cLVy@dread.disaster.area>
- <20240813145925.GD16082@lst.de>
- <20240813152530.GF6051@frogsfrogsfrogs>
- <2ca27751aba7c9f74c13facc7ffbbb1934dac59c.camel@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S9xKHqRP"
+Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-7a99c99acf7so219052485a.1;
+        Sun, 08 Sep 2024 10:28:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1725816539; x=1726421339; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Zsm4RBB/t1W/avz/RLFv9t+SfuXFUhmHDDisoJZDHX4=;
+        b=S9xKHqRPQQM7xPhEStgC00isOr/r4gEGd8azrYHW2eHIwEIhTU6j+lO8in92a9dDjG
+         Tqh0c7Io9+HgaupshO/OJMb1+L+7GO80OhOdv3rdMXHMceeYMKMPD/kdrO/m6cw42fIE
+         RP2WHlJPVsBkrJFMCikbcZPkbXHqHi04Egt8TqgZLA5GL+BajET1V2GTfqRtayCFIi/M
+         UfFCFgJCOT0X4UcgiK7/1c4uKjQ70zZY1owGr1KG2VvnsvcRAGjcpX1VJ0M9JlboCS0J
+         GQmZVuXJ2czNrl9uCF8JKiIkD3cZHDEZM5gPkEPdA1AY/UIPmbKkxza0rdd8jRRj/QW4
+         UijA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725816539; x=1726421339;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Zsm4RBB/t1W/avz/RLFv9t+SfuXFUhmHDDisoJZDHX4=;
+        b=B3wqw35L928dDQ6wnVY1jOwV/mP2NLWObM+BsV8WyHj4qayHl3b9K43MkO6PgJcd1k
+         nnj9/irXdO+6JCTMPUDXphNtfPtlztmlvaJhqVDjSVh+IL1Uhzi8Wb4KnyK8MOuJN+a6
+         gIBi8cxtzuJagMDsFHaFNllvpUNrUDYibbRXTK7SIeXZ3UwmnxDv2Td4GgjwU+jYe8zk
+         nMVUW/6ToxbX/LK8JDaLxHXMaUu/mBjRmkI1Cv+F3URxVi4cwx6LtFJdDkYXTDFxXvLH
+         JCbkTY4ESC4/d+f7g7qo5rigPdjG5GJLgEs6NuKTVk/lc3ROrzUMFRbXINykU4htx1rh
+         JZeg==
+X-Forwarded-Encrypted: i=1; AJvYcCW+0ORQRj3az9mP0rFMd400eUkby26l2G40tSctfaECfeZ8JaEzGsOvVmX2W53SrFK5ukCDrWreW4Drg7Ls@vger.kernel.org, AJvYcCWHG5lLIr7kGznmT8m8c9RtjadyCDRQN1BQzdXEqEEpLJrSV/e5HS1n5buReeBJ+gvU0/wjyF8/7Q4wVFE6og==@vger.kernel.org, AJvYcCWxOJCKfKVIaHrYM2btYj4v1A8PUwQhSsm1e78FYmYdVRzP/XDoP7O+FQ9VcmtBj6SzqxLBd6iekvc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6KAuroSOVRz8RnL7OugNBCkLje6MQky7+yyGRDNmQfjY2gvR7
+	j3WUUCEMIc/FMBSwX9/miSEcUxqQODKTQu3avo2NOfUqZSjLP48f
+X-Google-Smtp-Source: AGHT+IFsyFIKWpHy038Lxs6Jr/2PCnsALaerIi1bPVPX58yVKn+KBHywpybD0Fvqok+idKj5a7aUew==
+X-Received: by 2002:a05:620a:40c7:b0:7a9:b9c6:ab3e with SMTP id af79cd13be357-7a9b9c6ba9dmr10025185a.4.1725816538546;
+        Sun, 08 Sep 2024 10:28:58 -0700 (PDT)
+Received: from localhost.localdomain (d24-150-189-55.home.cgocable.net. [24.150.189.55])
+        by smtp.googlemail.com with ESMTPSA id af79cd13be357-7a9a7a040dbsm144713585a.86.2024.09.08.10.28.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 08 Sep 2024 10:28:58 -0700 (PDT)
+From: Dennis Lam <dennis.lamerice@gmail.com>
+To: brauner@kernel.org,
+	djwong@kernel.org,
+	corbet@lwn.net
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Dennis Lam <dennis.lamerice@gmail.com>
+Subject: [PATCH] docs:filesystems: fix spelling and grammar mistakes in iomap design page
+Date: Sun,  8 Sep 2024 13:28:42 -0400
+Message-ID: <20240908172841.9616-2-dennis.lamerice@gmail.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2ca27751aba7c9f74c13facc7ffbbb1934dac59c.camel@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Sep 04, 2024 at 08:45:14AM +0100, David Woodhouse wrote:
-> On Tue, 2024-08-13 at 08:25 -0700, Darrick J. Wong wrote:
-> > On Tue, Aug 13, 2024 at 04:59:25PM +0200, Christoph Hellwig wrote:
-> > > On Tue, Aug 13, 2024 at 07:19:28PM +1000, Dave Chinner wrote:
-> > > > In hindsight, this was a wholly avoidable bug - a single patch made
-> > > > two different API modifications that only differed by a single
-> > > > letter, and one of the 23 conversions missed a single letter. If
-> > > > that was two patches - one for the finobt conversion, the second for
-> > > > the inobt conversion, the bug would have been plainly obvious during
-> > > > review....
-> > > 
-> > > Maybe we should avoid identifiers that close anyway :)
-> > > 
-> > > The change looks good:
-> > > 
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Looks good to me too
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> Is it (now commit 95179935bea) going to -stable too?
+Signed-off-by: Dennis Lam <dennis.lamerice@gmail.com>
+---
+ Documentation/filesystems/iomap/design.rst | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-It's in the 6.10.y queue now, thanks!
+diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
+index f8ee3427bc1a..e2d34085dd0e 100644
+--- a/Documentation/filesystems/iomap/design.rst
++++ b/Documentation/filesystems/iomap/design.rst
+@@ -142,9 +142,9 @@ Definitions
+  * **pure overwrite**: A write operation that does not require any
+    metadata or zeroing operations to perform during either submission
+    or completion.
+-   This implies that the fileystem must have already allocated space
++   This implies that the filesystem must have already allocated space
+    on disk as ``IOMAP_MAPPED`` and the filesystem must not place any
+-   constaints on IO alignment or size.
++   constraints on IO alignment or size.
+    The only constraints on I/O alignment are device level (minimum I/O
+    size and alignment, typically sector size).
+ 
+@@ -426,7 +426,7 @@ iomap is concerned:
+ 
+ The exact locking requirements are specific to the filesystem; for
+ certain operations, some of these locks can be elided.
+-All further mention of locking are *recommendations*, not mandates.
++All further mentions of locking are *recommendations*, not mandates.
+ Each filesystem author must figure out the locking for themself.
+ 
+ Bugs and Limitations
+-- 
+2.46.0
 
-greg k-h
