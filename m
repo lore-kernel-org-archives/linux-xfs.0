@@ -1,75 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18CB8171E5A;
-	Mon,  9 Sep 2024 07:53:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 622D41B29AA;
+	Mon,  9 Sep 2024 09:07:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725868422; cv=none; b=mjEe1o2r8Iw2Vo3CWTam9JPD066PiVk18gO+ChS7U0GsTa00xyM839inV9iIusGZ8Pk5MPSuiJQdhG/8CloieI4OlwBmRfwNJ5/be4joS3fOZShzOTDXUck+zHwNi78DgnjVV7QEEW/igyvibz1q65qABcWDtlpMxu3UeiZ84VE=
+	t=1725872876; cv=none; b=QrzaLQAfuaHw7qEEMkgTqiHl0Ip24GLAV6lXDG8h0GoTcnpXy8Y4oyNnY9xjJ9jCK2DjfQlmUS0PMNeg8NeJz6aiP9PXLWuAEViCZiI6O5/jdEOCYlzDvTUkOn+TBjT3aronkOEttcDFMHD4IdbMO1D75DuAlyBT+q/7S2ADGak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725868422; c=relaxed/simple;
-	bh=w36v0FrIQmVf2i9WlExfRmtNLSy5f3G9wFgNnUH6NWI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kCg4WQYAW9GSbRnjNRj01yhvcsQnNrhjI8veDpVRwkhLhwtRD/FM86GI851ptg6pOmkcdbaPxHPhZ2nyo3sDSLvjSCz6qeMLEffvPk5y+rCDiNQBt8iEvroHXEY77rqqlhBEbefIuA8tmhcfWH0Pjk/fWc1ZXxuzLhA2NHPfsvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LwgZgx30; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725872876; c=relaxed/simple;
+	bh=V/slzjxF+QekQUJxEFMYqDh9AUHCyg0pmt1KtMEnvis=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=j5wwPAnpb1P3bfVja5jW3Pvr4+alqxXlVlbHlxJELQqNsW0u30ruMRNU/NdbN3NU0BkmwnJx0DDvCaae5S4R4BYbRjJwC/Vj41mbLl3b4WM0+UhVreAoqPfv6276bH+Jhhy00pASphEuycxkmvMzsw/kihLPL4efL7TQwKjOYU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QVUgasGu; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LwgZgx30"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BED94C4CEC5;
-	Mon,  9 Sep 2024 07:53:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725868421;
-	bh=w36v0FrIQmVf2i9WlExfRmtNLSy5f3G9wFgNnUH6NWI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=LwgZgx300K69LHYfcC+E5jXdMx8t4CWC2u0UNFoOkiCYFdA4j1qCIJF25WKVRHzog
-	 NlP8T9eJXF80rZFtdnUt3iDrdpeSlzmnpD1hJX6d2VUBl30fYW5V3NbYq8Is6AKZU0
-	 Hs1If9cLy2dtNXOaasPFwnL031z2umJDuOVLwJoWjBsATaMYgqik8tKu70X/sVgCMQ
-	 x+M0ls0sqUpaMB6iikmS5foj22pVc1F/Kl0cmKIckjddM8LilODPp9/6+TugVAex3c
-	 +jxypfAZb8yxNlCybB6ICzzj5TwWzWko4iDSblV8/Swv/aSobuNekhTjXNxGQSExm+
-	 2ClUJP9cee+YQ==
-From: Christian Brauner <brauner@kernel.org>
-To: Dennis Lam <dennis.lamerice@gmail.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	djwong@kernel.org,
-	corbet@lwn.net
-Subject: Re: [PATCH] docs:filesystems: fix spelling and grammar mistakes in iomap design page
-Date: Mon,  9 Sep 2024 09:53:28 +0200
-Message-ID: <20240909-frosch-klumpen-dbaee12c22d6@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240908172841.9616-2-dennis.lamerice@gmail.com>
-References: <20240908172841.9616-2-dennis.lamerice@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QVUgasGu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1725872874; x=1757408874;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=V/slzjxF+QekQUJxEFMYqDh9AUHCyg0pmt1KtMEnvis=;
+  b=QVUgasGulJ8cJ5bIu82Zo7iOqy6LaKju2NjGqim+bfm2soh3GObihLAw
+   s8/D5n2W68PRcs+0Wt4zy6FhatjpBN/Z+MiQ3Cy+L7M2Lxx9rXQibFo8Z
+   xHbSmePniUx7ARKy1U0xvK8NbjO4AZax109QJK77ikT7c+G9xd7i9NeJH
+   o47Ocner/PfVkNfop0VpxLZo+f84AMyLsD3pgPHxpO2856LDOBQNPg4eD
+   NVp27jp3frzpYNaHmJGx3TxU4cN017+NcOSQA1pGNcqoqgfUGmOsJmwBz
+   EbZrhEXHjSWHP628UjOBVtkx/jLKHRZajC8BnU6uL0ZeHKiS6X/M+cJgL
+   Q==;
+X-CSE-ConnectionGUID: cJCDaRU8Tz6k2PqqhepSxw==
+X-CSE-MsgGUID: hWCLrRAqRyu+x6GXQzVr4w==
+X-IronPort-AV: E=McAfee;i="6700,10204,11189"; a="35906721"
+X-IronPort-AV: E=Sophos;i="6.10,213,1719903600"; 
+   d="scan'208";a="35906721"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2024 02:07:54 -0700
+X-CSE-ConnectionGUID: FdqRaOSaQlOJjszMXka2Lg==
+X-CSE-MsgGUID: YPmk04xxQmWs0pRaAdrmgA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,213,1719903600"; 
+   d="scan'208";a="71008760"
+Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.161.23])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2024 02:07:49 -0700
+Date: Mon, 9 Sep 2024 17:06:37 +0800
+From: "Lai, Yi" <yi1.lai@linux.intel.com>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: brauner@kernel.org, akpm@linux-foundation.org, chandan.babu@oracle.com,
+	linux-fsdevel@vger.kernel.org, djwong@kernel.org, hare@suse.de,
+	gost.dev@samsung.com, linux-xfs@vger.kernel.org, hch@lst.de,
+	david@fromorbit.com, Zi Yan <ziy@nvidia.com>,
+	yang@os.amperecomputing.com, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, willy@infradead.org, john.g.garry@oracle.com,
+	cl@os.amperecomputing.com, p.raghav@samsung.com, mcgrof@kernel.org,
+	ryan.roberts@arm.com, David Howells <dhowells@redhat.com>,
+	pengfei.xu@intel.com
+Subject: Re: [PATCH v13 04/10] mm: split a folio in minimum folio order chunks
+Message-ID: <Zt66nWAon7ue5xnw@ly-workstation>
+References: <20240822135018.1931258-1-kernel@pankajraghav.com>
+ <20240822135018.1931258-5-kernel@pankajraghav.com>
+ <ZtqmtjZ+mVTDx208@ly-workstation>
+ <20240906080120.q6xff2odea3ay4k7@quentin>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=860; i=brauner@kernel.org; h=from:subject:message-id; bh=w36v0FrIQmVf2i9WlExfRmtNLSy5f3G9wFgNnUH6NWI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTdW1mnez35c7vpBH/j9mOZ92eZzK0IaNTP97wj/z293 mwD51mBjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIkE/mL4H74mybyymFfR8y9r feh79X0F7lO5Pkxb7Rq6R1+K1XXJbkaGx+kb7+1e0L2jtJDp+38+/vX7zOP0G++XsNhM7vu+adc 1FgA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240906080120.q6xff2odea3ay4k7@quentin>
 
-On Sun, 08 Sep 2024 13:28:42 -0400, Dennis Lam wrote:
+Hi,
+
+I have tried running the repro.c for 1 hour using next-20240905 kernel. Issue
+cannot be reproduced.
+
+Thank you.
+
+Regards,
+Yi Lai
+
+On Fri, Sep 06, 2024 at 08:01:20AM +0000, Pankaj Raghav (Samsung) wrote:
+> On Fri, Sep 06, 2024 at 02:52:38PM +0800, Lai, Yi wrote:
+> Hi Yi,
 > 
-
-
-Applied to the vfs.blocksize branch of the vfs/vfs.git tree.
-Patches in the vfs.blocksize branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.blocksize
-
-[1/1] docs:filesystems: fix spelling and grammar mistakes in iomap design page
-      https://git.kernel.org/vfs/vfs/c/b1daf3f8475f
+> > 
+> > I used Syzkaller and found that there is task hang in soft_offline_page in Linux-next tree - next-20240902.
+> 
+> I don't know if it is related, but we had a fix for this commit for a
+> ltp failure due to locking issues that is there in next-20240905 but not
+> in next-20240902.
+> 
+> Fix: https://lore.kernel.org/linux-next/20240902124931.506061-2-kernel@pankajraghav.com/
+> 
+> Is this reproducible also on next-20240905?
+> 
+> > 
+> > After bisection and the first bad commit is:
+> > "
+> > fd031210c9ce mm: split a folio in minimum folio order chunks
+> > "
+> > 
+> > All detailed into can be found at:
+> > https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page
+> > Syzkaller repro code:
+> > https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/repro.c
+> > Syzkaller repro syscall steps:
+> > https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/repro.prog
+> > Syzkaller report:
+> > https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/repro.report
+> > Kconfig(make olddefconfig):
+> > https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/kconfig_origin
+> > Bisect info:
+> > https://github.com/laifryiee/syzkaller_logs/tree/main/240904_155526_soft_offline_page/bisect_info.log
+> > bzImage:
+> > https://github.com/laifryiee/syzkaller_logs/raw/f633dcbc3a8e4ca5f52f0110bc75ff17d9885db4/240904_155526_soft_offline_page/bzImage_ecc768a84f0b8e631986f9ade3118fa37852fef0
+> > Issue dmesg:
+> > https://github.com/laifryiee/syzkaller_logs/blob/main/240904_155526_soft_offline_page/ecc768a84f0b8e631986f9ade3118fa37852fef0_dmesg.log
+> > 
+> > "
+> > [  447.976688]  ? __pfx_soft_offline_page.part.0+0x10/0x10
+> > [  447.977255]  ? __sanitizer_cov_trace_const_cmp4+0x1a/0x20
+> > [  447.977858]  soft_offline_page+0x97/0xc0
+> > [  447.978281]  do_madvise.part.0+0x1a45/0x2a30
+> > [  447.978742]  ? __pfx___lock_acquire+0x10/0x10
+> > [  447.979227]  ? __pfx_do_madvise.part.0+0x10/0x10
+> > [  447.979716]  ? __this_cpu_preempt_check+0x21/0x30
+> > [  447.980225]  ? __this_cpu_preempt_check+0x21/0x30
+> > [  447.980729]  ? lock_release+0x441/0x870
+> > [  447.981160]  ? __this_cpu_preempt_check+0x21/0x30
+> > [  447.981656]  ? seqcount_lockdep_reader_access.constprop.0+0xb4/0xd0
+> > [  447.982321]  ? lockdep_hardirqs_on+0x89/0x110
+> > [  447.982771]  ? trace_hardirqs_on+0x51/0x60
+> > [  447.983191]  ? seqcount_lockdep_reader_access.constprop.0+0xc0/0xd0
+> > [  447.983819]  ? __sanitizer_cov_trace_cmp4+0x1a/0x20
+> > [  447.984282]  ? ktime_get_coarse_real_ts64+0xbf/0xf0
+> > [  447.984673]  __x64_sys_madvise+0x139/0x180
+> > [  447.984997]  x64_sys_call+0x19a5/0x2140
+> > [  447.985307]  do_syscall_64+0x6d/0x140
+> > [  447.985600]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> > [  447.986011] RIP: 0033:0x7f782623ee5d
+> > [  447.986248] RSP: 002b:00007fff9ddaffb8 EFLAGS: 00000217 ORIG_RAX: 000000000000001c
+> > [  447.986709] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f782623ee5d
+> > [  447.987147] RDX: 0000000000000065 RSI: 0000000000003000 RDI: 0000000020d51000
+> > [  447.987584] RBP: 00007fff9ddaffc0 R08: 00007fff9ddafff0 R09: 00007fff9ddafff0
+> > [  447.988022] R10: 00007fff9ddafff0 R11: 0000000000000217 R12: 00007fff9ddb0118
+> > [  447.988428] R13: 0000000000401716 R14: 0000000000403e08 R15: 00007f782645d000
+> > [  447.988799]  </TASK>
+> > [  447.988921]
+> > [  447.988921] Showing all locks held in the system:
+> > [  447.989237] 1 lock held by khungtaskd/33:
+> > [  447.989447]  #0: ffffffff8705c500 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x73/0x3c0
+> > [  447.989947] 1 lock held by repro/628:
+> > [  447.990144]  #0: ffffffff87258a28 (mf_mutex){+.+.}-{3:3}, at: soft_offline_page.part.0+0xda/0xf40
+> > [  447.990611]
+> > [  447.990701] =============================================
+> > 
+> > "
+> > 
+> > I hope you find it useful.
+> > 
+> > Regards,
+> > Yi Lai
+> > 
