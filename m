@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18BC214A4C3
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 04:29:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19444F218
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 04:29:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725942553; cv=none; b=ICDn0CkuPYzf9fIwrSInjbrTDEY0YAg5NKetmyEh8NMNAg/4hRi8w/a5/C8i3Vnd+t0aE444UpFomI9da7K3aZ7rFJUVcntX1i0YXVFCokAsfipqI6CEODVtxJQ+2iNmPOX/A07U98r/2kJtMXjfHljpkzopUteC9qJJtHOMPM0=
+	t=1725942557; cv=none; b=vCQQMOMYwvZhCmf4Ol6DkLXgVCDMheiRH2/5xO2BtkbPSjk4zSBsLYfJj8ebtPV3aZAeFff7YLijLzhvd9WTaCjufA5RjFXFzyaSZAxWQJlgk3Sq2CKx/9GPzw6WvO/af/Ibu+E4h7l7QOgyNeYHSX3B54eXqt4evunlaqI7+1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725942553; c=relaxed/simple;
-	bh=5nnXUtyYfZ7DLo7NaIxf2PdvDY+fx0h1jl/thkheHFY=;
+	s=arc-20240116; t=1725942557; c=relaxed/simple;
+	bh=jIpi9wkMryaj2lQ/TmpFrUVbCL8BrCG11AuWi++BUVY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=awFOUDFcYxzNM7gSMFt9qKpFY/UK8ARFINQl9E3kcRxYeMRi7+7CXzwGEHMAMab4zfa2BtPDTgTXxxDa/JSItJKZc0OAjWa4YvsZlu7FCZjLFb3uhNo0CeLtO/nrfzpGp83rrFruXYg2e5M8J/gOM0ZUVlpI8uZJ2sEiOe7KsjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=llkx/v6T; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=UpKb8Op0N2WyH9BIn0HG+9b4DFj0mIqYffgVmF9DlyHrVNEoHHn69femswO6jmCnV2PERjf2Osm6Q3gpTvGZXWpPN/AUVzpuLJpAHIMd3BBeMqhLkh2eWoQS6Zdf4Wz9DwAJAGSkB92imlCgMwJWlX2m67AR7mqgDyjAgd3hKdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bkLGCd4o; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="llkx/v6T"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bkLGCd4o"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=+cwr44IoqVLLnQZA90U3ZGU+9W7x7ZS5rDhtOUdbAbU=; b=llkx/v6T810smL63+RmZbJdDLL
-	bhapBML8aTE04jNUCQ2/UIQVvuvIk1sbpTkqHPJYi3Fv5cDvb1iV61jGrKJkKZAqdATaOuj6dZxNQ
-	r7DTQ3oFXdr5ZdSIG70WzvYjAJnO4NJMXmmCxEchMbhwtrW8xY4czwR2+RYf7xZs+mYP5y5GvrOSl
-	R70CpGoo7zo/xfgrEkxdIZfS5Ced7Q61HLIYMl3KVgMdPQK9DRk+xD+9k7Z+rBJTXbKHJttdWasC+
-	56JKFqcwO73vx22xDodH5BfmBKIHLFgyyCp5//AdqhVoXGjKlGH+ZFBrfy5/8SQNzwAnqKt0A8oli
-	8k/uNKEA==;
+	bh=fHzWSW9D6RgjCkLxa927Ic+d+EEnNxvXQtpxOPO75vI=; b=bkLGCd4oJ5EKytV1lxOHTtXRRm
+	Dx/nyDw7vvIyrd4to2Ucwrm1b+NOcsxd90Tf9gQmocW5TVCmY8txtC0WMcfCRLju1koOlYh0kh1pT
+	RLSJlWY6wkuT2bkWV0+54nWOGKUPqvcRGyTIstXlvReKfF1ifkVmQxNxONYI4325ue5XDDt6fH0WC
+	62CFNkz82Ez67LSa5M3xn0DuKVUOtIFhnDCaDgWMPRzah8MjlMQRlsZV8nlRKAst4O+P+aoyTtS9p
+	kgQvq92VPk/V5N8Tt8BoJcz0uv1IRklYdBj9UVvFCj0fOQtOKZRMZraniKe1hmrDxWWMjsd1RRn/8
+	j2vJ8F6Q==;
 Received: from ppp-2-84-49-240.home.otenet.gr ([2.84.49.240] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1snsV2-00000004D5C-27Ci;
-	Tue, 10 Sep 2024 04:29:09 +0000
+	id 1snsV7-00000004D6A-2rxi;
+	Tue, 10 Sep 2024 04:29:14 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/4] xfs: merge the perag freeing helpers
-Date: Tue, 10 Sep 2024 07:28:45 +0300
-Message-ID: <20240910042855.3480387-3-hch@lst.de>
+Subject: [PATCH 3/4] xfs: create perag structures as soon as possible during log recovery
+Date: Tue, 10 Sep 2024 07:28:46 +0300
+Message-ID: <20240910042855.3480387-4-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240910042855.3480387-1-hch@lst.de>
 References: <20240910042855.3480387-1-hch@lst.de>
@@ -49,149 +49,146 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-There is no good reason to have two different routines for freeing perag
-structures for the unmount and error cases.  Add two arguments to specify
-the range of AGs to free to xfs_free_perag, and use that to replace
-xfs_free_unused_perag_range.
+An unclean log can contain both the transaction that created a new
+allocation group and the first transaction that is freeing space from
+it, in which case the extent free item recovery requires the perag
+structure to be present.
 
-The addition RCU grace period for the error case is harmless, and the
-extra check for the AG to actually exist is not required now that the
-callers pass the exact known allocated range.
+Currently the perag structures are only created after log recovery
+has completed, leading a warning and file system shutdown for the
+above case.  Fix this by creating new perag structures and updating
+the in-memory superblock fields as soon a buffer log item that covers
+the primary super block is recovered.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_ag.c | 40 ++++++++++------------------------------
- fs/xfs/libxfs/xfs_ag.h |  5 ++---
- fs/xfs/xfs_fsops.c     |  2 +-
- fs/xfs/xfs_mount.c     |  5 ++---
- 4 files changed, 15 insertions(+), 37 deletions(-)
+ fs/xfs/libxfs/xfs_log_recover.h |  2 ++
+ fs/xfs/xfs_buf_item_recover.c   | 16 +++++++++
+ fs/xfs/xfs_log_recover.c        | 59 ++++++++++++++-------------------
+ 3 files changed, 43 insertions(+), 34 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 5186735da5d45a..3f695100d7ab58 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -185,17 +185,20 @@ xfs_initialize_perag_data(
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 521d327e4c89ed..d0e13c84422d0a 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -165,4 +165,6 @@ void xlog_recover_intent_item(struct xlog *log, struct xfs_log_item *lip,
+ int xlog_recover_finish_intent(struct xfs_trans *tp,
+ 		struct xfs_defer_pending *dfp);
+ 
++int xlog_recover_update_agcount(struct xfs_mount *mp, struct xfs_dsb *dsb);
++
+ #endif	/* __XFS_LOG_RECOVER_H__ */
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 09e893cf563cb9..033821a56b6ac6 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -969,6 +969,22 @@ xlog_recover_buf_commit_pass2(
+ 			goto out_release;
+ 	} else {
+ 		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
++
++		/*
++		 * Update the in-memory superblock and perag structures from the
++		 * primary SB buffer.
++		 *
++		 * This is required because transactions running after growf
++		 * s may require in-memory structures like the perag right after
++		 * committing the growfs transaction that created the underlying
++		 * objects.
++		 */
++		if ((xfs_blft_from_flags(buf_f) & XFS_BLFT_SB_BUF) &&
++		    xfs_buf_daddr(bp) == 0) {
++			error = xlog_recover_update_agcount(mp, bp->b_addr);
++			if (error)
++				goto out_release;
++		}
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 2af02b32f419c2..7d7ab146cae758 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3334,6 +3334,30 @@ xlog_do_log_recovery(
+ 	return error;
  }
  
++int
++xlog_recover_update_agcount(
++	struct xfs_mount		*mp,
++	struct xfs_dsb			*dsb)
++{
++	xfs_agnumber_t			old_agcount = mp->m_sb.sb_agcount;
++	int				error;
++
++	xfs_sb_from_disk(&mp->m_sb, dsb);
++	if (mp->m_sb.sb_agcount < old_agcount) {
++		xfs_alert(mp, "Shrinking AG count in log recovery");
++		return -EFSCORRUPTED;
++	}
++	mp->m_features |= xfs_sb_version_to_features(&mp->m_sb);
++	error = xfs_initialize_perag(mp, old_agcount, mp->m_sb.sb_agcount,
++			mp->m_sb.sb_dblocks, &mp->m_maxagi);
++	if (error) {
++		xfs_warn(mp, "Failed recovery per-ag init: %d", error);
++		return error;
++	}
++	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
++	return 0;
++}
++
  /*
-- * Free up the per-ag resources associated with the mount structure.
-+ * Free up the per-ag resources  within the specified AG range.
+  * Do the actual recovery
   */
- void
--xfs_free_perag(
--	struct xfs_mount	*mp)
-+xfs_free_perag_range(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		first_agno,
-+	xfs_agnumber_t		end_agno)
-+
+@@ -3343,10 +3367,6 @@ xlog_do_recover(
+ 	xfs_daddr_t		head_blk,
+ 	xfs_daddr_t		tail_blk)
  {
--	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
+-	struct xfs_mount	*mp = log->l_mp;
+-	struct xfs_buf		*bp = mp->m_sb_bp;
+-	struct xfs_sb		*sbp = &mp->m_sb;
+-	xfs_agnumber_t		old_agcount = sbp->sb_agcount;
+ 	int			error;
  
--	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
--		pag = xa_erase(&mp->m_perags, agno);
-+	for (agno = first_agno; agno < end_agno; agno++) {
-+		struct xfs_perag	*pag = xa_erase(&mp->m_perags, agno);
-+
- 		ASSERT(pag);
- 		XFS_IS_CORRUPT(pag->pag_mount, atomic_read(&pag->pag_ref) != 0);
- 		xfs_defer_drain_free(&pag->pag_intents_drain);
-@@ -270,29 +273,6 @@ xfs_agino_range(
- 	return __xfs_agino_range(mp, xfs_ag_block_count(mp, agno), first, last);
- }
+ 	trace_xfs_log_recover(log, head_blk, tail_blk);
+@@ -3371,36 +3391,7 @@ xlog_do_recover(
+ 	 */
+ 	xfs_ail_assign_tail_lsn(log->l_ailp);
  
--/*
-- * Free perag within the specified AG range, it is only used to free unused
-- * perags under the error handling path.
-- */
--void
--xfs_free_unused_perag_range(
--	struct xfs_mount	*mp,
--	xfs_agnumber_t		agstart,
--	xfs_agnumber_t		agend)
--{
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		index;
--
--	for (index = agstart; index < agend; index++) {
--		pag = xa_erase(&mp->m_perags, index);
--		if (!pag)
--			break;
--		xfs_buf_cache_destroy(&pag->pag_bcache);
--		xfs_defer_drain_free(&pag->pag_intents_drain);
--		kfree(pag);
+-	/*
+-	 * Now that we've finished replaying all buffer and inode updates,
+-	 * re-read the superblock and reverify it.
+-	 */
+-	xfs_buf_lock(bp);
+-	xfs_buf_hold(bp);
+-	error = _xfs_buf_read(bp, XBF_READ);
+-	if (error) {
+-		if (!xlog_is_shutdown(log)) {
+-			xfs_buf_ioerror_alert(bp, __this_address);
+-			ASSERT(0);
+-		}
+-		xfs_buf_relse(bp);
+-		return error;
 -	}
--}
 -
- int
- xfs_initialize_perag(
- 	struct xfs_mount	*mp,
-@@ -369,7 +349,7 @@ xfs_initialize_perag(
- out_free_pag:
- 	kfree(pag);
- out_unwind_new_pags:
--	xfs_free_unused_perag_range(mp, old_agcount, index);
-+	xfs_free_perag_range(mp, old_agcount, index);
- 	return error;
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 69fc31e7b84728..6e68d6a3161a0f 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -144,13 +144,12 @@ __XFS_AG_OPSTATE(prefers_metadata, PREFERS_METADATA)
- __XFS_AG_OPSTATE(allows_inodes, ALLOWS_INODES)
- __XFS_AG_OPSTATE(agfl_needs_reset, AGFL_NEEDS_RESET)
- 
--void xfs_free_unused_perag_range(struct xfs_mount *mp, xfs_agnumber_t agstart,
--			xfs_agnumber_t agend);
- int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t old_agcount,
- 		xfs_agnumber_t agcount, xfs_rfsblock_t dcount,
- 		xfs_agnumber_t *maxagi);
-+void xfs_free_perag_range(struct xfs_mount *mp, xfs_agnumber_t first_agno,
-+		xfs_agnumber_t end_agno);
- int xfs_initialize_perag_data(struct xfs_mount *mp, xfs_agnumber_t agno);
--void xfs_free_perag(struct xfs_mount *mp);
- 
- /* Passive AG references */
- struct xfs_perag *xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index de2bf0594cb474..b247d895c276d2 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -229,7 +229,7 @@ xfs_growfs_data_private(
- 	xfs_trans_cancel(tp);
- out_free_unused_perag:
- 	if (nagcount > oagcount)
--		xfs_free_unused_perag_range(mp, oagcount, nagcount);
-+		xfs_free_perag_range(mp, oagcount, nagcount);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 0f4f56a7f02d9a..6671ee3849c239 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1044,7 +1044,7 @@ xfs_mountfs(
- 		xfs_buftarg_drain(mp->m_logdev_targp);
- 	xfs_buftarg_drain(mp->m_ddev_targp);
-  out_free_perag:
--	xfs_free_perag(mp);
-+	xfs_free_perag_range(mp, 0, mp->m_sb.sb_agcount);
-  out_free_dir:
- 	xfs_da_unmount(mp);
-  out_remove_uuid:
-@@ -1125,8 +1125,7 @@ xfs_unmountfs(
- 	xfs_errortag_clearall(mp);
- #endif
- 	shrinker_free(mp->m_inodegc_shrinker);
--	xfs_free_perag(mp);
+-	/* Convert superblock from on-disk format */
+-	xfs_sb_from_disk(sbp, bp->b_addr);
+-	xfs_buf_relse(bp);
 -
-+	xfs_free_perag_range(mp, 0, mp->m_sb.sb_agcount);
- 	xfs_errortag_del(mp);
- 	xfs_error_sysfs_del(mp);
- 	xchk_stats_unregister(mp->m_scrub_stats);
+-	/* re-initialise in-core superblock and geometry structures */
+-	mp->m_features |= xfs_sb_version_to_features(sbp);
+-	xfs_reinit_percpu_counters(mp);
+-	error = xfs_initialize_perag(mp, old_agcount, sbp->sb_agcount,
+-			sbp->sb_dblocks, &mp->m_maxagi);
+-	if (error) {
+-		xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
+-		return error;
+-	}
+-	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
++	xfs_reinit_percpu_counters(log->l_mp);
+ 
+ 	/* Normal transactions can now occur */
+ 	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
 -- 
 2.45.2
 
