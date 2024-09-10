@@ -1,49 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CB76757EB;
-	Tue, 10 Sep 2024 13:47:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7922E18FDDF
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 14:18:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725976067; cv=none; b=GkBecppOz3MbcqDZ1usUSwxLKUjsngBcdlfJ9UN+NKmAUdyOPuTZ7bgepnmnVyEH/KBDPzihyM/suwwHLM5CBz3SRnJt/SVW3ZxYUPG7y0RIRKiQpmZ0VSsbsSa7mUN+/AixzwBlqDiK6lOFjIqVRtE80yWayPS39kYgByySnT0=
+	t=1725977936; cv=none; b=LCRJFG7NZc/6K5WTP2OMdtOtAfa+jLLQJ3lKQTsUe2rHZWnqzLhZw0Ooot4J8Dkqa1jRfDRzFobsrNWUik8wUjFlxpyzjDYgVCTNLecNWg150PpjfhTA1tEhAOi7qdIhArsfvFCo5tukdEwRb5Mprmgr2aGWaYiqx1efEa4S+zY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725976067; c=relaxed/simple;
-	bh=5BIOwvLP7xQQalA/sz2+3hW69BzQPTxbRY8bNFFdbAI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=LsA2VlMYGQmD56r9l+4ytCwowrQtiX6g9RHpQeVBAR12xGqRm+CtLGvxHIW5xpSZDW+ZZ1MwcGs8fzwlJAYjjauNDT3CQehEP8r8LrZ2nzzEpiHkmGVpaRIks/+ldyx2VrxZ2KsgXKTgyQvzzwPHQRad7NUDSLHfpueiZGEIUJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IEY2rbqH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725977936; c=relaxed/simple;
+	bh=jiHUyJ6x73YXYkIrcOzQgXfAtScry0+JeJor9h0eoTQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UyLK5hEJqlaAUJhvIfLUZDV085Ts+5QYoNZA1hjcLiX/JgKD2Xf95AoXrIVdKCKYK2AIgYRTOWJKafexMTpvx0N2tZpm1QJuoS7lX5m1doAW9DOZsp1NVGOiQhtTgSqSHHykKf0RKYo6BcUsFDvO5Qv1XQK9Jv+4cJM4Fg4Wr6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HuyQgDMF; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IEY2rbqH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D511CC4CEC3;
-	Tue, 10 Sep 2024 13:47:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725976067;
-	bh=5BIOwvLP7xQQalA/sz2+3hW69BzQPTxbRY8bNFFdbAI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=IEY2rbqH3w3QWrZlffkEMhj/SAK8BlbPxQf4rRb1zSHKyK4xF+Srv+UDY+zHbUHzs
-	 JA0DvU5f0DbgBMr3Sb5NitOnO2l6OHERxru8WQxOi/fJE6CW+QLpPt6O5/ESc2+/r+
-	 nEyp+8CDZog+NSU2TE5LTInkxU2EuSK5CR0ndMZpCY+3IMEwxr53HALAeZLU8Bi7l/
-	 cUTwVYBmS/QHkMC1jDttI9VWJbTdhB+eeTr/YItiNqDBT0HATyT6n3eyy5pPwSbLn2
-	 iHAiH4D62eBGk+h2r6ea7QlTKFYhvpIXWUtNZ+ZEIM4X00o83BFiF+6ZPyxS5I2Qe6
-	 0pct/bThNgVEA==
-Date: Tue, 10 Sep 2024 08:47:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alistair Popple <apopple@nvidia.com>
-Cc: dan.j.williams@intel.com, linux-mm@kvack.org, vishal.l.verma@intel.com,
-	dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com,
-	jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
-	will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
-	dave.hansen@linux.intel.com, ira.weiny@intel.com,
-	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
-	linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
-	david@fromorbit.com
-Subject: Re: [PATCH 02/12] pci/p2pdma: Don't initialise page refcount to one
-Message-ID: <20240910134745.GA577955@bhelgaas>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HuyQgDMF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1725977933;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TC6kiy0r0pYGURKWrV6KFL2eaR4/p8VaGxZ9KXZi1so=;
+	b=HuyQgDMFEsSqUUx/qEFQgUJK7nac+yM/MkPM2L5G+s/XQcdj0X8Z8TXxuZaE/+Tjx22oog
+	QWMRRuRe6U5fOKLGKWuLienA05viyV/Tv5JAYARKMBPRw/Y7aUZrBWFp9+rAj8Gr6C6IMI
+	JuD7PFyD8fp67QchLN24utiBn1C+n78=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-448-AG-AruinPm25KX2tqnYbww-1; Tue,
+ 10 Sep 2024 10:18:50 -0400
+X-MC-Unique: AG-AruinPm25KX2tqnYbww-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D99B41955D55;
+	Tue, 10 Sep 2024 14:18:48 +0000 (UTC)
+Received: from bfoster (unknown [10.22.16.69])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AC13119560A3;
+	Tue, 10 Sep 2024 14:18:47 +0000 (UTC)
+Date: Tue, 10 Sep 2024 10:19:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, djwong@kernel.org, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test log recovery for extent frees right after
+ growfs
+Message-ID: <ZuBVhszqs-fKmc9X@bfoster>
+References: <20240910043127.3480554-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,42 +57,130 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4f8326d9d9e81f1cb893c2bd6f17878b138cf93d.1725941415.git-series.apopple@nvidia.com>
+In-Reply-To: <20240910043127.3480554-1-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-In subject:
-
-  PCI/P2PDMA: ...
-
-would match previous history.
-
-On Tue, Sep 10, 2024 at 02:14:27PM +1000, Alistair Popple wrote:
-> The reference counts for ZONE_DEVICE private pages should be
-> initialised by the driver when the page is actually allocated by the
-> driver allocator, not when they are first created. This is currently
-> the case for MEMORY_DEVICE_PRIVATE and MEMORY_DEVICE_COHERENT pages
-> but not MEMORY_DEVICE_PCI_P2PDMA pages so fix that up.
+On Tue, Sep 10, 2024 at 07:31:17AM +0300, Christoph Hellwig wrote:
+> Reproduce a bug where log recovery fails when an unfinised extent free
+> intent is in the same log as the growfs transaction that added the AG.
 > 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+
+No real issue with the test, but I wonder if we could do something more
+generic. Various XFS shutdown and log recovery issues went undetected
+for a while until we started adding more of the generic stress tests
+currently categorized in the recoveryloop group.
+
+So for example, I'm wondering if you took something like generic/388 or
+475 and modified it to start with a smallish fs, grew it in 1GB or
+whatever increments on each loop iteration, and then ran the same
+generic stress/timeout/shutdown/recovery sequence, would that eventually
+reproduce the issue you've fixed? I don't think reproducibility would
+need to be 100% for the test to be useful, fwiw.
+
+Note that I'm assuming we don't have something like that already. I see
+growfs and shutdown tests in tests/xfs/group.list, but nothing in both
+groups and I haven't looked through the individual tests. Just a
+thought.
+
+Brian
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/pci/p2pdma.c |  6 ++++++
->  mm/memremap.c        | 17 +++++++++++++----
->  mm/mm_init.c         | 22 ++++++++++++++++++----
->  3 files changed, 37 insertions(+), 8 deletions(-)
+>  tests/xfs/1323     | 61 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1323.out | 14 +++++++++++
+>  2 files changed, 75 insertions(+)
+>  create mode 100755 tests/xfs/1323
+>  create mode 100644 tests/xfs/1323.out
 > 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 4f47a13..210b9f4 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -129,6 +129,12 @@ static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
->  	}
->  
->  	/*
-> +	 * Initialise the refcount for the freshly allocated page. As we have
-> +	 * just allocated the page no one else should be using it.
-> +	 */
-> +	set_page_count(virt_to_page(kaddr), 1);
+> diff --git a/tests/xfs/1323 b/tests/xfs/1323
+> new file mode 100755
+> index 000000000..a436510b0
+> --- /dev/null
+> +++ b/tests/xfs/1323
+> @@ -0,0 +1,61 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2024, Christoph Hellwig
+> +#
+> +# FS QA Test No. 1323
+> +#
+> +# Test that recovering an extfree item residing on a freshly grown AG works.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick growfs
+> +
+> +. ./common/filter
+> +. ./common/inject
+> +
+> +_require_xfs_io_error_injection "free_extent"
+> +
+> +_xfs_force_bdev data $SCRATCH_MNT
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	_scratch_unmount > /dev/null 2>&1
+> +	rm -rf $tmp.*
+> +}
+> +
+> +echo "Format filesystem"
+> +_scratch_mkfs_sized $((128 * 1024 * 1024)) >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +echo "Fill file system"
+> +dd if=/dev/zero of=$SCRATCH_MNT/filler1 bs=64k oflag=direct &>/dev/null
+> +sync
+> +dd if=/dev/zero of=$SCRATCH_MNT/filler2 bs=64k oflag=direct &>/dev/null
+> +sync
+> +
+> +echo "Grow file system"
+> +$XFS_GROWFS_PROG $SCRATCH_MNT >>$seqres.full
+> +
+> +echo "Create test files"
+> +dd if=/dev/zero of=$SCRATCH_MNT/test1 bs=8M count=4 oflag=direct | \
+> +	 _filter_dd
+> +dd if=/dev/zero of=$SCRATCH_MNT/test2 bs=8M count=4 oflag=direct | \
+> +	 _filter_dd
+> +
+> +echo "Inject error"
+> +_scratch_inject_error "free_extent"
+> +
+> +echo "Remove test file"
+> +rm $SCRATCH_MNT/test2
+> +
+> +echo "FS should be shut down, touch will fail"
+> +touch $SCRATCH_MNT/test1 2>&1 | _filter_scratch
+> +
+> +echo "Remount to replay log"
+> +_scratch_remount_dump_log >> $seqres.full
+> +
+> +echo "Done"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1323.out b/tests/xfs/1323.out
+> new file mode 100644
+> index 000000000..1740f9a1f
+> --- /dev/null
+> +++ b/tests/xfs/1323.out
+> @@ -0,0 +1,14 @@
+> +QA output created by 1323
+> +Format filesystem
+> +Fill file system
+> +Grow file system
+> +Create test files
+> +4+0 records in
+> +4+0 records out
+> +4+0 records in
+> +4+0 records out
+> +Inject error
+> +Remove test file
+> +FS should be shut down, touch will fail
+> +Remount to replay log
+> +Done
+> -- 
+> 2.45.2
+> 
+> 
 
-No doubt the subject line is true in some overall context, but it does
-seem to say the opposite of what happens here.
-
-Bjorn
