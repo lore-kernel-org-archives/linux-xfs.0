@@ -1,93 +1,49 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF9313AD09;
-	Tue, 10 Sep 2024 09:22:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B80F11684AE;
+	Tue, 10 Sep 2024 11:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725960147; cv=none; b=O/smHgUPwcY7uWhsKCcZ4RvsuDzrTLLm79Dp5sPzb+cMv4RdGtuorQRbdXx08dhUuNckziXcdR6Rfr+mEqdIUX4sLHOM77F/wqwhFs6D9rqEwapNcyoR7AoNrfOGApWbTXadZoYZ0gx0TSU7I7ccCNtIYQ/7+NSla5VjTDzWSh4=
+	t=1725968067; cv=none; b=Vn5lZkda7W0e2O0pnK5f2Du8/gfwDhCVZoU6eh4IWyO55gFXD3vilNg5XE67xYwi21sVErYrioBK7XZIDqljKY8s7QF26FFr0KWQu8rRMTCQaaATGmSuJ0lgXcXCfAdtNTpbrp+rw0TONqbxpcEc33gqjyyQralVn9uhobKjwXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725960147; c=relaxed/simple;
-	bh=WjeYyW6noFtC/bFpHRDIx1hKKO/gppZdKQhU2y+wnoU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nxB4U0vZeRo4tg3C+et3KN/P3GXwXnLjrCfBv8EeyG3WRmA7mPD8gdJTVcgp9kgib+MR1LjyqucMBkAVf5slWiDKf6IAvZ9phNQds0QB+KuBwGTLatVv9RmlWzDX+XcqU9Ye5a28ocFx+XOhOk4R6eGt4GvrQlG4HPUmxuSbBj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HQfZ+7fC; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HQfZ+7fC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E1CCC4CEC3;
-	Tue, 10 Sep 2024 09:22:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725960146;
-	bh=WjeYyW6noFtC/bFpHRDIx1hKKO/gppZdKQhU2y+wnoU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=HQfZ+7fCxMtxZQKEkTADlIJYWNfpdEtdQTwzr58Y6npglr7O0Hi7/e4J+T12X6o2t
-	 n7HLzG6bFS2PsEF4TQDecMvoXgZ4JLIFsy7e/l+9qEDcn3hHN/MjcW7M2tjtqQaLd2
-	 jeBcGXIv7IQ+1VoQsCBIt9DtWz41PWyN1Ydmcl6BNCGuS55V24RL04gJgRC7/23HpU
-	 v1+qGDAslYV3kDmx+c+hGpTBAxHgPXQzn93D9IkiOvDl/OalQDqUg+tj7KjOnYWd7h
-	 FlXogca5B3Ut+bkiDGXYpBRLYs8jT7/U0CTaei1Wr+0hedPOMMmNZCgFZLeC8I4L/8
-	 YiWJEI99PvfWw==
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: (subset) fix stale delalloc punching for COW I/O v2
-Date: Tue, 10 Sep 2024 11:22:20 +0200
-Message-ID: <20240910-parallel-abtropfen-b166de2c9058@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240910043949.3481298-1-hch@lst.de>
-References: <20240910043949.3481298-1-hch@lst.de>
+	s=arc-20240116; t=1725968067; c=relaxed/simple;
+	bh=4L9ZICwUQ4X5BA1zmSIU+Ry8cIkasTyXNEzgZAOfRS0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cXLUjRiokTsw1g2AWRvDZjXVUjOZAU/GG8ZoxGAdKq7T14neaBG0B5IRivoWWLkQ7Rx4b8lTJ9rvq6MPqCgwzKLiG0xPFVgXdqxOKal4qM66cfF8cMC08Yc2BzOAka7GfiQuafP+5OF1KffleXJbRRkWmhFPe0EsSWGakLJnDGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 83022227AA8; Tue, 10 Sep 2024 13:34:20 +0200 (CEST)
+Date: Tue, 10 Sep 2024 13:34:20 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, zlang@kernel.org, djwong@kernel.org,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test log recovery for extent frees right after
+ growfs
+Message-ID: <20240910113420.GA7326@lst.de>
+References: <20240910043127.3480554-1-hch@lst.de> <20240910085748.jcea37l665dxluge@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1902; i=brauner@kernel.org; h=from:subject:message-id; bh=WjeYyW6noFtC/bFpHRDIx1hKKO/gppZdKQhU2y+wnoU=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQ94D+r+q1f583ZLJ3la1VdWJLin+WvKGaazZYm3zdDQ W2tmZhLRykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwEQuLGP4ny/LzCfLcf1aHK9D e+bewruGy162MW+c/vO+afSq4tzmHIb/9X16n2q5OHv/Seg9u6Nz7Xler/oLnbxtPYqJotcVGv3 4AA==
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240910085748.jcea37l665dxluge@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, 10 Sep 2024 07:39:02 +0300, Christoph Hellwig wrote:
-> this is another fallout from the zoned XFS work, which stresses the XFS
-> COW I/O path very heavily.  It affects normal I/O to reflinked files as
-> well, but is very hard to hit there.
+On Tue, Sep 10, 2024 at 04:57:48PM +0800, Zorro Lang wrote:
+> On Tue, Sep 10, 2024 at 07:31:17AM +0300, Christoph Hellwig wrote:
+> > Reproduce a bug where log recovery fails when an unfinised extent free
+> > intent is in the same log as the growfs transaction that added the AG.
 > 
-> The main problem here is that we only punch out delalloc reservations
-> from the data fork, but COW I/O places delalloc extents into the COW
-> fork, which means that it won't get punched out forshort writes.
-> 
-> [...]
+> Which bug? If it's a regression test, can we have a _fixed_by_kernel_commit
+> to mark the known issue?
 
-Christoph, could you double-check that things look good to you? I had to
-resolve a minor merge conflict.
+I just sent the kernel patches for it.  It's been there basically
+forever as far as I can tell.
 
----
-
-Applied to the vfs.blocksize branch of the vfs/vfs.git tree.
-Patches in the vfs.blocksize branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.blocksize
-
-[01/12] iomap: handle a post-direct I/O invalidate race in iomap_write_delalloc_release
-        https://git.kernel.org/vfs/vfs/c/7a9d43eace88
-[02/12] iomap: improve shared block detection in iomap_unshare_iter
-        https://git.kernel.org/vfs/vfs/c/b53fdb215d13
-[03/12] iomap: pass flags to iomap_file_buffered_write_punch_delalloc
-        https://git.kernel.org/vfs/vfs/c/11596dc3dfae
-[04/12] iomap: pass the iomap to the punch callback
-        https://git.kernel.org/vfs/vfs/c/492f53758fad
-[05/12] iomap: remove the iomap_file_buffered_write_punch_delalloc return value
-        https://git.kernel.org/vfs/vfs/c/4bceb9ba05ac
