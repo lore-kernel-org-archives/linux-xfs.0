@@ -1,186 +1,154 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7922E18FDDF
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 14:18:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5940D15FA7E;
+	Tue, 10 Sep 2024 14:49:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725977936; cv=none; b=LCRJFG7NZc/6K5WTP2OMdtOtAfa+jLLQJ3lKQTsUe2rHZWnqzLhZw0Ooot4J8Dkqa1jRfDRzFobsrNWUik8wUjFlxpyzjDYgVCTNLecNWg150PpjfhTA1tEhAOi7qdIhArsfvFCo5tukdEwRb5Mprmgr2aGWaYiqx1efEa4S+zY=
+	t=1725979763; cv=none; b=HhCt5Ngafp2Yhw0ak107wMoJlRYsoHtRG9BXckYhWRRmQHx39sapHad5JWXWz9Ev1gv7eafpmSGdelOyqNgCwKHTlLY6LOw7Une4UolLHkAaXHSOBMCL6JZlGW/DFuCl9fKaPatl8w53UGydoBLg+rwhGy6ThnV2s58CAmGDDZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725977936; c=relaxed/simple;
-	bh=jiHUyJ6x73YXYkIrcOzQgXfAtScry0+JeJor9h0eoTQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UyLK5hEJqlaAUJhvIfLUZDV085Ts+5QYoNZA1hjcLiX/JgKD2Xf95AoXrIVdKCKYK2AIgYRTOWJKafexMTpvx0N2tZpm1QJuoS7lX5m1doAW9DOZsp1NVGOiQhtTgSqSHHykKf0RKYo6BcUsFDvO5Qv1XQK9Jv+4cJM4Fg4Wr6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HuyQgDMF; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1725979763; c=relaxed/simple;
+	bh=XWaMFbokrzRtCfofNCMQm6vxq7D5SaoYO1/HXlHXoUM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Jz8ceQsfZ+z88AZBxNXHa863r3KaSaxTLTeFX8ebhhiY27UnVqdOR9b55Ox/QHdt3++kSpdhCRiphukjC4OxrIFG5GPpQCr5OVlgJwZJeCOxljwGXFN+boSROkFPFV2mx0pR9ey9K9yQSBCsqVKDqXy7I2tpBGARxnWD5ilhPoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QRfobcFL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HuyQgDMF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1725977933;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TC6kiy0r0pYGURKWrV6KFL2eaR4/p8VaGxZ9KXZi1so=;
-	b=HuyQgDMFEsSqUUx/qEFQgUJK7nac+yM/MkPM2L5G+s/XQcdj0X8Z8TXxuZaE/+Tjx22oog
-	QWMRRuRe6U5fOKLGKWuLienA05viyV/Tv5JAYARKMBPRw/Y7aUZrBWFp9+rAj8Gr6C6IMI
-	JuD7PFyD8fp67QchLN24utiBn1C+n78=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-448-AG-AruinPm25KX2tqnYbww-1; Tue,
- 10 Sep 2024 10:18:50 -0400
-X-MC-Unique: AG-AruinPm25KX2tqnYbww-1
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D99B41955D55;
-	Tue, 10 Sep 2024 14:18:48 +0000 (UTC)
-Received: from bfoster (unknown [10.22.16.69])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AC13119560A3;
-	Tue, 10 Sep 2024 14:18:47 +0000 (UTC)
-Date: Tue, 10 Sep 2024 10:19:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, djwong@kernel.org, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: test log recovery for extent frees right after
- growfs
-Message-ID: <ZuBVhszqs-fKmc9X@bfoster>
-References: <20240910043127.3480554-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QRfobcFL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DD40C4CEC3;
+	Tue, 10 Sep 2024 14:49:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725979762;
+	bh=XWaMFbokrzRtCfofNCMQm6vxq7D5SaoYO1/HXlHXoUM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=QRfobcFLI9GtjTDx7WiDr9f548doOS/YbQvR5TiY3pchFbRnIlg/d8YKaZdnnrCvj
+	 j3v4tLK+rgkX9UauqoOD7JZsmoIg6TB7FmxJt4c858Y0Vo7zC/o4OYwSlgT7geuJhW
+	 WbS695wKRRyPhcgvR0C6wHTje4nbOEvzBeVMWWO7mj1lSqIACq1Kwn+6uywbXU2G5j
+	 H2Ic6oeXSBSxbuk6tTm0VJgzIZvHd6nCtLei5SwShTbZn/b4975VTM4GHQLJgda00a
+	 mPwx57gkmqy8kWnvGeH9mBaN/Qpt4pYnnPx8nuH+FTJ0B/5JSzkdtlxGCWlVKlJhxC
+	 6jzjuoET8e/yA==
+Message-ID: <ee565fda-b230-4fb3-8122-e0a9248ef1d1@kernel.org>
+Date: Tue, 10 Sep 2024 16:49:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240910043127.3480554-1-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+User-Agent: Mozilla Thunderbird
+Subject: Re: Regression v6.11 booting cannot mount harddisks (xfs)
+To: Damien Le Moal <dlemoal@kernel.org>,
+ Linus Torvalds <torvalds@linuxfoundation.org>,
+ LKML <linux-kernel@vger.kernel.org>
+Cc: Netdev <netdev@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-ide@vger.kernel.org, cassel@kernel.org, handan.babu@oracle.com,
+ djwong@kernel.org, Linux-XFS <linux-xfs@vger.kernel.org>,
+ hdegoede@redhat.com, "David S. Miller" <davem@davemloft.net>,
+ Jakub Kicinski <kuba@kernel.org>, kernel-team <kernel-team@cloudflare.com>
+References: <0a43155c-b56d-4f85-bb46-dce2a4e5af59@kernel.org>
+ <d2c82922-675e-470f-a4d3-d24c4aecf2e8@kernel.org>
+Content-Language: en-US
+From: Jesper Dangaard Brouer <hawk@kernel.org>
+In-Reply-To: <d2c82922-675e-470f-a4d3-d24c4aecf2e8@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 10, 2024 at 07:31:17AM +0300, Christoph Hellwig wrote:
-> Reproduce a bug where log recovery fails when an unfinised extent free
-> intent is in the same log as the growfs transaction that added the AG.
+
+
+On 10/09/2024 15.06, Damien Le Moal wrote:
+> On 2024/09/10 21:19, Jesper Dangaard Brouer wrote:
+>> Hi Linus,
+>>
+>> My testlab kernel devel server isn't booting correctly on v6.11 branches
+>> (e.g. net-next at 6.11.0-rc5)
+>> I just confirmed this also happens on your tree tag: v6.11-rc7.
+>>
+>> The symptom/issue is that harddisk dev names (e.g /dev/sda, /dev/sdb,
+>> /dev/sdc) gets reordered.  I switched /etc/fstab to use UUID's instead
+>> (which boots on v6.10) but on 6.11 it still cannot mount harddisks and
+>> doesn't fully boot.
+> 
+> Parallel SCSI device scanning has been around for a long time... This is
+> controlled with CONFIG_SCSI_SCAN_ASYNC. And yes, that can cause disk names to
+> change, which is why it is never a good idea to rely on them but instead use
+> /dev/disk/by-* names. Disabling CONFIG_SCSI_SCAN_ASYNC will likely not guarantee
+> that disk names will be constant, given that you seem to have 2 AHCI adapters on
+> your host and PCI device scanning is done in parallel.
+> 
+>> E.g. errors:
+>>     systemd[1]: Expecting device
+>> dev-disk-by\x2duuid-0c2b348d\x2de013\x2d482b\x2da91c\x2d029640ec427a.device
+>> - /dev/disk/by-uuid/0c2b348d-e013-482b-a91c-029640ec42
+>> 7a...
+>>     [DEPEND] Dependency failed for var-lib.mount - /var/lib.
+>>     [...]
+>>     [ TIME ] Timed out waiting for device
+>> dev-d…499e46-b40d-4067-afd4-5f6ad09fcff2.
+>>     [DEPEND] Dependency failed for boot.mount - /boot.
+>>
+>> That corresponds to fstab's:
+>>    - UUID=8b499e46-b40d-4067-afd4-5f6ad09fcff2 /boot     xfs defaults 0 0
+>>    - UUID=0c2b348d-e013-482b-a91c-029640ec427a /var/lib/ xfs defaults 0 0
+>>
+>> It looks like disk controller initialization happens in *parallel* on
+>> these newer kernels as dmesg shows init printk's overlapping:
+>>
+>>    [    5.683393] scsi 5:0:0:0: Direct-Access     ATA      SAMSUNG
+>> MZ7KM120 003Q PQ: 0 ANSI: 5
+>>    [    5.683641] scsi 7:0:0:0: Direct-Access     ATA      SAMSUNG
+>> MZ7KM120 003Q PQ: 0 ANSI: 5
+>>    [    5.683797] scsi 8:0:0:0: Direct-Access     ATA      Samsung SSD
+>> 840  BB0Q PQ: 0 ANSI: 5
+>>    [...]
+>>    [    7.057376] sd 5:0:0:0: [sda] 234441648 512-byte logical blocks:
+>> (120 GB/112 GiB)
+>>    [    7.062279] sd 7:0:0:0: [sdb] 234441648 512-byte logical blocks:
+>> (120 GB/112 GiB)
+>>    [    7.070628] sd 5:0:0:0: [sda] Write Protect is off
+>>    [    7.070701] sd 8:0:0:0: [sdc] 488397168 512-byte logical blocks:
+>> (250 GB/233 GiB)
+>>
+>> Perhaps this could be a hint to what changed?
+> 
+> See above. The disk /dev/sdX names not being reliable is rather normal.
+> Are you sure you have the correct UUIDs of your FSes on the disks ? You can
+> check them with "blkid /dev/sdX[n]"
 > 
 
-No real issue with the test, but I wonder if we could do something more
-generic. Various XFS shutdown and log recovery issues went undetected
-for a while until we started adding more of the generic stress tests
-currently categorized in the recoveryloop group.
+I have checked that I use the correct UUIDs.
 
-So for example, I'm wondering if you took something like generic/388 or
-475 and modified it to start with a smallish fs, grew it in 1GB or
-whatever increments on each loop iteration, and then ran the same
-generic stress/timeout/shutdown/recovery sequence, would that eventually
-reproduce the issue you've fixed? I don't think reproducibility would
-need to be 100% for the test to be useful, fwiw.
+I checked my /etc/fstab have the UUID entries under /dev/disk/by-uuid/
+via this oneliner, which needs to have a /etc/fstab entry under each
+UUID. We can see I have one partition that I'm not using
+(0fd3bc38-6496-401f-87f2-87e09532de53), which is expected.
 
-Note that I'm assuming we don't have something like that already. I see
-growfs and shutdown tests in tests/xfs/group.list, but nothing in both
-groups and I haven't looked through the individual tests. Just a
-thought.
+$ for UUID in $(ls /dev/disk/by-uuid/); do echo $UUID; grep -H $UUID 
+/etc/fstab; done
+09e8c15f-80d2-47e3-8e73-d3fdfcf33eef
+/etc/fstab:UUID=09e8c15f-80d2-47e3-8e73-d3fdfcf33eef / 
+     xfs     defaults        0 0
+0c2b348d-e013-482b-a91c-029640ec427a
+/etc/fstab:UUID=0c2b348d-e013-482b-a91c-029640ec427a	/var/lib/		xfs 
+defaults 0 0
+0fd3bc38-6496-401f-87f2-87e09532de53
+581920da-1ccb-4b25-856c-036310032a74
+/etc/fstab:UUID=581920da-1ccb-4b25-856c-036310032a74	/nix			xfs	defaults 0 0
+8b499e46-b40d-4067-afd4-5f6ad09fcff2
+/etc/fstab:UUID=8b499e46-b40d-4067-afd4-5f6ad09fcff2 /boot 
+     xfs     defaults        0 0
+cd409a50-0371-47ca-9213-49a2bc7b9317
+/etc/fstab:UUID=cd409a50-0371-47ca-9213-49a2bc7b9317 swap 
+     swap    defaults        0 0
 
-Brian
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  tests/xfs/1323     | 61 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1323.out | 14 +++++++++++
->  2 files changed, 75 insertions(+)
->  create mode 100755 tests/xfs/1323
->  create mode 100644 tests/xfs/1323.out
+>> Any hints what commit I should try to test revert?
+>> Or good starting point for bisecting?
 > 
-> diff --git a/tests/xfs/1323 b/tests/xfs/1323
-> new file mode 100755
-> index 000000000..a436510b0
-> --- /dev/null
-> +++ b/tests/xfs/1323
-> @@ -0,0 +1,61 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2024, Christoph Hellwig
-> +#
-> +# FS QA Test No. 1323
-> +#
-> +# Test that recovering an extfree item residing on a freshly grown AG works.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick growfs
-> +
-> +. ./common/filter
-> +. ./common/inject
-> +
-> +_require_xfs_io_error_injection "free_extent"
-> +
-> +_xfs_force_bdev data $SCRATCH_MNT
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	_scratch_unmount > /dev/null 2>&1
-> +	rm -rf $tmp.*
-> +}
-> +
-> +echo "Format filesystem"
-> +_scratch_mkfs_sized $((128 * 1024 * 1024)) >> $seqres.full
-> +_scratch_mount >> $seqres.full
-> +
-> +echo "Fill file system"
-> +dd if=/dev/zero of=$SCRATCH_MNT/filler1 bs=64k oflag=direct &>/dev/null
-> +sync
-> +dd if=/dev/zero of=$SCRATCH_MNT/filler2 bs=64k oflag=direct &>/dev/null
-> +sync
-> +
-> +echo "Grow file system"
-> +$XFS_GROWFS_PROG $SCRATCH_MNT >>$seqres.full
-> +
-> +echo "Create test files"
-> +dd if=/dev/zero of=$SCRATCH_MNT/test1 bs=8M count=4 oflag=direct | \
-> +	 _filter_dd
-> +dd if=/dev/zero of=$SCRATCH_MNT/test2 bs=8M count=4 oflag=direct | \
-> +	 _filter_dd
-> +
-> +echo "Inject error"
-> +_scratch_inject_error "free_extent"
-> +
-> +echo "Remove test file"
-> +rm $SCRATCH_MNT/test2
-> +
-> +echo "FS should be shut down, touch will fail"
-> +touch $SCRATCH_MNT/test1 2>&1 | _filter_scratch
-> +
-> +echo "Remount to replay log"
-> +_scratch_remount_dump_log >> $seqres.full
-> +
-> +echo "Done"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/1323.out b/tests/xfs/1323.out
-> new file mode 100644
-> index 000000000..1740f9a1f
-> --- /dev/null
-> +++ b/tests/xfs/1323.out
-> @@ -0,0 +1,14 @@
-> +QA output created by 1323
-> +Format filesystem
-> +Fill file system
-> +Grow file system
-> +Create test files
-> +4+0 records in
-> +4+0 records out
-> +4+0 records in
-> +4+0 records out
-> +Inject error
-> +Remove test file
-> +FS should be shut down, touch will fail
-> +Remount to replay log
-> +Done
-> -- 
-> 2.45.2
-> 
-> 
+> You said that 6.10 works, so maybe start from there ?
 
+I tested I could boot tag v6.10, and have started bisection.
+
+I've not tried to deselect CONFIG_SCSI_SCAN_ASYNC as the kernel that
+worked on tag v6.10 also had this CONFIG_SCSI_SCAN_ASYNC enabled. So, it
+is likely not related to the async controller init.
+
+--Jesper
