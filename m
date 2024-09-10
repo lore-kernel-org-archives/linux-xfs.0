@@ -1,285 +1,325 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2067.outbound.protection.outlook.com [40.107.244.67])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 135E215FA74;
-	Tue, 10 Sep 2024 03:16:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725938199; cv=none; b=RjZi1yp/jdYkU0cxFrmEErr38AYe9NkmPC2eyn++nQjQYPfpVle3oajgP+mzfvt+vqV/Ifq9ZgLpDjHu51Huripw+N7Ev6oA+pgioe4aG6q0am5v1QRv/Dn290q7FQLbl7scnGFOMgrCFaryoIInrz1kiquu5V9PsP9YG45fJnU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725938199; c=relaxed/simple;
-	bh=RI7vaofvvvg8pKNCcQiGiuheIucLz0wnhFCtQ0t4ff4=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=dcnrMfvSqKqHHXiIgXYbksv3GWBkrcThWmBcMpLles+JrIFmBSerXR3AvKfBQdKjgiErzrVDK133utHkR0nrLKU2hiIdP6S7RLwbL/qErtBUv/xTN229ETq8iD7XDaKFk11tDg0L8/nN30GQ3UiufcOJhCjDFN7WMOvS/fgw+Bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z/+hfiNi; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40F971CF8B;
+	Tue, 10 Sep 2024 04:14:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.244.67
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1725941699; cv=fail; b=rrcKhKyPibJBd8BADu6gayn0v7Ie25koI3xOgf1EXLmxkYgojTmUJYmgs1qE+kMtGHZysWnS0A3IqG+j3Ag2gSCl95Byy5WDoFKM0AIogLuCz4irirniqs1sbuVGGr//xPMPwS9R+7EZN1vwzBBUnNCeyZDY71i2iGcxMC5ah+w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1725941699; c=relaxed/simple;
+	bh=HEyuLXqL17QbcXoLD/RRZc9HaUB99clhh2u1Wlsomwg=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Q+YoCcwSHiVRhcRJU5wUROFRkV59ipLgP6J0HNl+DXFkUNMtDjTECg56WiZW9sERRCTQe4/PHXquRloqpxZIlAds7i5hTAjrKDJYBu+uLm/ML8FsZHS7WESRwQ+F+/h2hSWVEMQmb2WAF8bL8eNPwgwHhooAYBWJUkXf9BqcnSw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=HTUO8EfS; arc=fail smtp.client-ip=40.107.244.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z/+hfiNi"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2068bee21d8so49566495ad.2;
-        Mon, 09 Sep 2024 20:16:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725938197; x=1726542997; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=+Xriae1tNLH7ACZvKSa9eB14DPc11SseH7yztypTP8I=;
-        b=Z/+hfiNiNbjIfj6BuYhhSgX92E6OL/6xXumy2BFJ2EK8so0dh5/5dQfALQ3yHUUQLt
-         w8RoMmkeEG6g7dB3aHVtN20ytsCglGLl/BUICHZzUUrQWGv1frYJ8vIn1FdQgJ1uHVja
-         KhxnY4AfHMnuSfapiIr1dSQruDI88V5ojbQB20bGijGzhhTZxXyATj76a/WxxQL2pKSi
-         Tp+VpDFnBXVjXi0An6L5o8PcRa/1izODLQJGD7QpyXJVAuGBBYtWHmkQBBLDSArVLPGP
-         tewLtNTAlwcdhS67uQjH8s1H1pQ87JgFC3m16JAgQV19+3CvTgOdR/tY7UjYTNUQZwH9
-         7T4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725938197; x=1726542997;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+Xriae1tNLH7ACZvKSa9eB14DPc11SseH7yztypTP8I=;
-        b=BQZRX4pWAcfMFGgbivtahz33Xm4RGBWg+dFYpIKWnY/MD2HxxEBMrOlztgGSIGu9PD
-         uNladeclaMDhep3nFfXdU3LIkEkkWZpwQSTkwuLwRRM3eZ4DbEQwxyvokNCwfZXZx/Kk
-         Ye9I3Sj8NKqYHZWfBFos8gx+I9n+v2hcg9bPV4htU2jFVO4ADVLBijg7QdunULGzY+Ae
-         Wqb6I9J8BxBRvbzOK2jFtBsNadYZy03sR2n/KSdb+FKHqals/ecZzatMK3+RexwP7QN3
-         f0b9sBaacfAtUEp23FSfabVBuNE7EMj1AQ2X70xNqwX6jwukn1pWwnsYwDPaceCizf+h
-         5SDQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUDqQEovVehW0CjKtOr+LBXgzKH55QFpJGsS9jEnMfRL28PHPjDlJeQvvBBheOSW/yqQg2bfc+0rtQaK327@vger.kernel.org, AJvYcCW21REGCdSfZ1kl1drF/S7dSwAaMJlXbwTkN8L5RmTIs3ilSTGHmdoMxTeXhpNzrg+vW5RClteQhV2w@vger.kernel.org, AJvYcCWw3NaIwoZxSiRv+d1NJhJFbAr9YrtahsVRJUSGWz3jI5QghvrBG64HCN2UGHBatoEFqicr365E00IgM32e@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdbISlmpvx/9tS7x8VZ8KuOpiFi4TR7tir647oZvGBWxxtkTnd
-	O4y9VKuDc1BPDl/Tqtm12MLzupo+xz0KLSPShPllLSZHaBrJZKri
-X-Google-Smtp-Source: AGHT+IGvb6xXL3VBFMKGimtbpm8nNpUqoPcGgEmsTaD6ZrtVPkudnvh0GC9uLlmFgrICJntK2YSkQA==
-X-Received: by 2002:a17:902:e552:b0:207:17f6:9efc with SMTP id d9443c01a7336-20717f69f77mr147502105ad.25.1725938196944;
-        Mon, 09 Sep 2024 20:16:36 -0700 (PDT)
-Received: from dw-tp ([171.76.84.199])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20710e123d1sm40139775ad.53.2024.09.09.20.16.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Sep 2024 20:16:36 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com, djwong@kernel.org, dchinner@redhat.com, hch@lst.de, viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com, martin.petersen@oracle.com
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-In-Reply-To: <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
-Date: Tue, 10 Sep 2024 08:21:55 +0530
-Message-ID: <877cbkgr04.fsf@gmail.com>
-References: <20240813163638.3751939-1-john.g.garry@oracle.com> <87frqf2smy.fsf@gmail.com> <ZtjrUI+oqqABJL2j@dread.disaster.area> <877cbq3g9i.fsf@gmail.com> <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="HTUO8EfS"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rM5WWDVJ9LsaCuXzykg1cuBj5MIvlPvuyZQ1SluLsreZIfYl1PFAo+T03vPNOicuzUFPjqxUx1XYz2/7QphBn6iiNfcqyOrxC1Tcf8l9yPLjdBNOnujWS65TyaDaMj0FRk+27ikYbz1gmfZQ6tawZ2Ye0ieg3JYGQ9PySr1XfCrVh9tNhJSQ3DFh5MeLnf5ThiD69bbVRBURKQDdO864g0o1eDg1cSUc59ln0iEpOPnxyWtieS0k9Gv8fuZUan1pH0d8m0BYWT0OZAz/987VtwdWNvcLEwaSNokzim5ZkhSQ01UrChvjJhkHqojHaOlFZLsV6Zs7K3MXL08MvBg1rg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Dj62ZU2eq7PwQ0A+RevWVIS5zpn4ChQYwj1ZgfGOnqE=;
+ b=UMmoceg+HqG/tFPoeQW+niJDAo9PIp7Qp+4LWkWwaLjmLrRl2yril7ZgED9lCevv4lfB3v0p3dYyiEWFZct2Bebv9UmoqVQwv5JCfSqwuugT50+A/xu0WnI1a3AIrTHjPIrS4DWTPZD5+Fy+Owi6lNn2DZL69m+gKsj0j6LvV81ym7qDMpmfNPMJJD/73Zjickkw75NwFsiN1ejaUlJ7lp0qHO3Zg6zcNhB/ML0Us6xLtNH8FaQasNobHA1Y0sK1uK0fKW6zP8FUfs2tNofV537pXh9ef/NQTXT4ZrD6pYHaLyrRrB8ZPqzIVpxwtJgrt0UAN8v1Z25tFd4VauOBYA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Dj62ZU2eq7PwQ0A+RevWVIS5zpn4ChQYwj1ZgfGOnqE=;
+ b=HTUO8EfSTts2vYfVJ8zMhDu1HglM1yhL5XyAqKGHg6qsjJSo87qNtVtNE6aVZchoof1CdXZCnskPdi5qpSEfcn+AvxqoM0VcVA/kgpEKWJ0BUxzQFXrZNXXqz0q5p+yOcVndgLh/NLbtWKq98Z1KnpxT+TDJzsFw4Xjee4444AvBT9okw8UBd/+sMeKl7MhVfBM4UxhRefQkJpBYZiTKLaV7/WvVnlo2wHgBLdrWF5qHbMxoIcnyypeetjEa3s8OFdaxmv5dtE6zCLIDEUJOnPmEQVrE3zDn2PA12e2UabX3m8ELfhVhnh6UlLOCXZaifGzv3Mu2zRHt/51sUd0qzQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
+ BY5PR12MB4148.namprd12.prod.outlook.com (2603:10b6:a03:208::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7918.20; Tue, 10 Sep
+ 2024 04:14:53 +0000
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe]) by DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe%3]) with mapi id 15.20.7918.024; Tue, 10 Sep 2024
+ 04:14:52 +0000
+From: Alistair Popple <apopple@nvidia.com>
+To: dan.j.williams@intel.com,
+	linux-mm@kvack.org
+Cc: Alistair Popple <apopple@nvidia.com>,
+	vishal.l.verma@intel.com,
+	dave.jiang@intel.com,
+	logang@deltatee.com,
+	bhelgaas@google.com,
+	jack@suse.cz,
+	jgg@ziepe.ca,
+	catalin.marinas@arm.com,
+	will@kernel.org,
+	mpe@ellerman.id.au,
+	npiggin@gmail.com,
+	dave.hansen@linux.intel.com,
+	ira.weiny@intel.com,
+	willy@infradead.org,
+	djwong@kernel.org,
+	tytso@mit.edu,
+	linmiaohe@huawei.com,
+	david@redhat.com,
+	peterx@redhat.com,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org,
+	nvdimm@lists.linux.dev,
+	linux-cxl@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	jhubbard@nvidia.com,
+	hch@lst.de,
+	david@fromorbit.com
+Subject: [PATCH 00/12] fs/dax: Fix FS DAX page reference counts
+Date: Tue, 10 Sep 2024 14:14:25 +1000
+Message-ID: <cover.9f0e45d52f5cff58807831b6b867084d0b14b61c.1725941415.git-series.apopple@nvidia.com>
+X-Mailer: git-send-email 2.43.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SY6PR01CA0044.ausprd01.prod.outlook.com
+ (2603:10c6:10:e9::13) To DS0PR12MB7726.namprd12.prod.outlook.com
+ (2603:10b6:8:130::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|BY5PR12MB4148:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6f8c6d14-5803-4892-acb7-08dcd14f1e8c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|7416014|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?ZnnUxhzQR7dfxgqIEtbukVwcYcdO5dLJ3Jh/eWMYLdqcFwqPWR2Fr51dF3nm?=
+ =?us-ascii?Q?Hv/flbdNsRGbIeoSAeiTCKPH9Q35A//cyyhK8t8up5Lx70r9vAdrD2Z6+UDv?=
+ =?us-ascii?Q?73u7svLtJ4lW6w31Zh6VUW9hIl/QQTxbn2BbAmqCW9jglFew9WbjLn2rwxl2?=
+ =?us-ascii?Q?C3NhdgRHPKBdo4SeBPYhVsPARR3D7fF+qY3/R17lYsqn1u3Qssj5B4J3t7nc?=
+ =?us-ascii?Q?iu5V2tEdvGKa6NMAZBWnC+7PcLZdYU8wSv5nGRHwvuITPYy+rEGOrSYmVvYG?=
+ =?us-ascii?Q?xlrFx5o+UmdAAt2fxEcZMyng1u7ZNAwgUQ6t8N/SFFIMgfAGetJyDqy99BGv?=
+ =?us-ascii?Q?ornTlW2TyG4dpRsP4EYGTAuNXiDkMIgfK51gBFKrLFKyDu7aGxgGcffAHF82?=
+ =?us-ascii?Q?hkQHiCj6wKbq3NfgujeqV5BL/uP8lX3zE0q84V0KO3v6b2gCbf1qlVUMjK6+?=
+ =?us-ascii?Q?bjmHZmvMysQOOceWk4TIQhsUqpk1GMLcWQuKxWidJSB+PiIGyF0DO5T0vgnt?=
+ =?us-ascii?Q?G12EPXRcTf39IVmR+Wr2A9rGRGamlP6RF/Ch8f9pAz8dL8rKdznrqyPX/G6D?=
+ =?us-ascii?Q?yr2WcsxgQXr7IGoXVYTV1OzuMOVf2vj1a5lytYz2EEXnBQALJ3LXWmJdt8ye?=
+ =?us-ascii?Q?YOoZ16uw6vlbGlOvSP+gHddbRZqHTgyXaDSwqErI+DH8W9bqYh+7xpQnb3yM?=
+ =?us-ascii?Q?LOM8bEI2k/oRg5V7L7DHaYd9YMvb8ezMpQt4U3BNh7wLraKBDeVv6CnGVgHO?=
+ =?us-ascii?Q?7mVTP2HCtQXUkhx6Tnd5jVaiKiFAreLqeOaH2ccQByiQ49FU6XMHpuwghD+B?=
+ =?us-ascii?Q?H1VAChH6U2FD90oaec4PjhYHUcsuSF54dNnTicyueb+u7vABSRAvlqeMG+9A?=
+ =?us-ascii?Q?zL78r/+iaodfvGhVbEA6wdBCIAGWJzc1ma6OY2xdF62JA/7CS5WrYkL5o7CO?=
+ =?us-ascii?Q?sWMsnguj25Gyt/FcTjRt5lUgXxnvgB7zzUqHw0Wbmv8lPLKt23SsvLm2vnJP?=
+ =?us-ascii?Q?/Pm/FeSguKFqhFVAlwU57XMh4pbBYuVUHn5ui6mOFK9fgR+uqUb22kE8XEvg?=
+ =?us-ascii?Q?KbsykVaAhVsIe3QA5bew9PWwvBiQNQmhEBfZvwq2ESKYKvEzwr55HuZB9uIq?=
+ =?us-ascii?Q?7xsE7T+5mpfPAX3zha/KpH75MkRTQo37frJeAALsjS8n8+Zg0bkNhxBSsqxz?=
+ =?us-ascii?Q?c4+/XWf3J7+mya8czXcAgS5y2aR2sZ1cOKhcFx1QN9SCAGWZBeOzFpVynQTE?=
+ =?us-ascii?Q?iqGdrytEL/yMO/ymIVBV3hPfneIyO9uiXDXDviNwVwncZ8HkuMbfqDPbU7i5?=
+ =?us-ascii?Q?FIRPzCTt138DBNvVnLY4QLCXighNd2bFBXh7vFKOL7zcNA=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?iPvvvgL0LwQD9VoXbVEZs5zSoU42BUPo89iMH8kSCOutf8qTEMsRcdUQOIuJ?=
+ =?us-ascii?Q?P/++b8ARUl5pZ0H/k/b4d2NjXILJPxnrk5EYM+2ZXKzrnME9B+7It1thtGbn?=
+ =?us-ascii?Q?CJz5pukbXZGDKuUn88nv02Nx8+VaC3YMoltWyUQ+E/3H9CRLsx2ZmGWuDg/Z?=
+ =?us-ascii?Q?oa3xOW6zmYXQxueXB1M/Fy1tHoKVvH5MRhsPFarkMaSM/Qnxy1hnTyrdPRzG?=
+ =?us-ascii?Q?D/oxr0p/V7K/ulg2r771Lxtn/N4xS54NCSN0JkaraeNfXdxadfv6gcH5mYzR?=
+ =?us-ascii?Q?Y5JAGva02XK+HbMzjW9cVZmlXjoSNw/J7BwwPinnabY9CTJ0Qnp97gPIqzke?=
+ =?us-ascii?Q?SfrN6Wm/5YV7fwd/PThFbk/K+3CWTyVUzD788OQYjCOa7jTHrKC9WrFnybkW?=
+ =?us-ascii?Q?FJolriEs0BpF5NcbA4fGBZdivC/17FvMCH6GTt6QJJKpmIFuQTW+dN2+sTSH?=
+ =?us-ascii?Q?O03N6jBot1N6cEqd3cdb+seunWsQd1A1CVOfXPeb/1bnMrVPXOgxaUF3EfKQ?=
+ =?us-ascii?Q?zAy/AHVsYXkDYo24dYezHksJPb2qh6+1ix1/whjF7RFAZyy2CRftljy/HAgr?=
+ =?us-ascii?Q?K+yjpBYtjEBfwDDjXRIJ9XnwGPuqJ5lnK6Y2REUokPWTKZaL031470n5vBNA?=
+ =?us-ascii?Q?5efxWMhoPMhoGOTe5YMz4s7gsDTs6OJawiuBy8xOiUBsfME0RaR4ouAr+QsE?=
+ =?us-ascii?Q?kywh+9qbJmt8snAEGC0YnY/7JeNDqqQ4rmifXOusnBo4i8qG8D3nDbDaUUVD?=
+ =?us-ascii?Q?pPdJ+Y5j4BHIPI+iMdjExrWs4kBivGAotuFu/YdLjxEfrDkOFbek/OyyhBav?=
+ =?us-ascii?Q?WVtrISa3ChgoVng9lGh+tdaLmLnf+vLwbWdRuf740ewIx5oInnM+nIflf7Lr?=
+ =?us-ascii?Q?kbxqBs3KlQIbUOz+BU7oW1CP1SEAfK9Ae0rGIdpU2o5Hp9XnEVE9ONyLFEAt?=
+ =?us-ascii?Q?LL05IbIANmx7GXoMIWf240xM6hWKvVTDm6zYWE+lbdNk9SounQ4YR0ZveacM?=
+ =?us-ascii?Q?AX+cUdqPgzb666qFdxWW7Fs+c0C9XgpdOsCW75zCPevZ4TiccgGXL0vgQB05?=
+ =?us-ascii?Q?2kwNmNJhS1+9uxOlljUnKIzYNx4zCXyPMaqJP2JJ/NKtPxUrliJjL4u8Arq1?=
+ =?us-ascii?Q?k/l8HtpP8p/yr4mjDY+Jhdd80H1wUSxeCHyCVCVR97eY09iebRvueHQnEIYD?=
+ =?us-ascii?Q?Nm/c6zYWuwZ/OxpRjCYAnic6tAtudOrv5TMeG9Hd61wFY1AIMZpI4J2plqWw?=
+ =?us-ascii?Q?o+KzLnVin07Lgyi5sYDVuXTBVrsegVUV216yrVGBeDbVMzKDTaSm3gnKhIeC?=
+ =?us-ascii?Q?MaFzXvgL6mUAjs4sqO88ithBaptOnxQHRDhyeqnrZT9aleczbmLweR1l+gWF?=
+ =?us-ascii?Q?NnI7LRPHfxjXE/C1raxSpOb8BSb03cUNJR9R5v7JXg1P7YyJsV+ps+sDCe+m?=
+ =?us-ascii?Q?GLFd+lAS+nBr7nu8imyWAIiCtlaWd98rchOx7X6bX3qAj7p3rh6AzRZtXYeQ?=
+ =?us-ascii?Q?yApoD36xIYxfof5q5MGFHLZa+4AbY8pJyQwEblfLfNRRlnrNHWP27VyvJFyM?=
+ =?us-ascii?Q?VYHaJKukJc1DexdZCcyxRLOdBV6gdEhx1OUMxZ9r?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6f8c6d14-5803-4892-acb7-08dcd14f1e8c
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Sep 2024 04:14:52.7881
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: +5lg8OEyikUpYwdD+10eHGMDZwYMnwBqLwF6nDT5+1jKdfSfKS/v70Y79y4aPL2TQVh8iVjjvAgV9SkYzEY9dA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4148
 
-Dave Chinner <david@fromorbit.com> writes:
+Main updates since v1:
 
-> On Thu, Sep 05, 2024 at 09:26:25AM +0530, Ritesh Harjani wrote:
->> Dave Chinner <david@fromorbit.com> writes:
->> > On Wed, Sep 04, 2024 at 11:44:29PM +0530, Ritesh Harjani wrote:
->> >> 3. It is the FORCEALIGN feature which _mandates_ both allocation
->> >> (by using extsize hint) and de-allocation to happen _only_ in
->> >> extsize chunks.
->> >>
->> >>    i.e. forcealign mandates -
->> >>    - the logical and physical start offset should be aligned as
->> >>    per args->alignment
->> >>    - extent length be aligned as per args->prod/mod.
->> >>      If above two cannot be satisfied then return -ENOSPC.
->> >
->> > Yes.
->> >
->> >> 
->> >>    - Does the unmapping of extents also only happens in extsize
->> >>    chunks (with forcealign)?
->> >
->> > Yes, via use of xfs_inode_alloc_unitsize() in the high level code
->> > aligning the fsbno ranges to be unmapped.
->> >
->> > Remember, force align requires both logical file offset and
->> > physical block number to be correctly aligned,
->> 
->> This is where I would like to double confirm it again. Even the
->> extsize hint feature (w/o FORCEALIGN) will try to allocate aligned
->> physical start and logical start file offset and length right?
->
-> No.
->
->> (Or does extsize hint only restricts alignment to logical start file
->> offset + length and not the physical start?)
->
-> Neither.
->
+ - Now passes the same number of xfs_test with dax=always as without
+   this series (some seem to fail on my setup normally). Thanks Dave
+   for the suggestion as there were some deadlocks/crashes in v1 due
+   to misshandling of write-protect faults and truncation which should
+   now be fixed.
 
-Yes, thanks for the correction. Indeed extsize hint does not take care
-of the physical start alignment at all.
+ - The pgmap field has been moved to the folio (thanks Matthew for the
+   suggestion).
 
-> extsize hint by itself (i.e. existing behaviour) has no alignment
-> effect at all. All it affects is -size- of the extent. i.e. once
-> the extent start is chosen, extent size hints will trim the length
-> of the extent to a multiple of the extent size hint. Alignment is
-> not considered at all.
->
+ - No longer remove the vmf_insert_pfn_pXd() functions and instead
+   refactor them for use by DAX as Peter Xu suggested they will be
+   needed in future and I see there are patches in linux-next that
+   call them.
 
-Please correct me I wrong here... but XFS considers aligning the logical
-start and the length of the allocated extent (for extsize) as per below
-code right? 
+FS DAX pages have always maintained their own page reference counts
+without following the normal rules for page reference counting. In
+particular pages are considered free when the refcount hits one rather
+than zero and refcounts are not added when mapping the page.
 
-i.e.
-1) xfs_direct_write_iomap_begin()
-{
-    <...>
-    if (offset + length > XFS_ISIZE(ip))
-		end_fsb = xfs_iomap_eof_align_last_fsb(ip, end_fsb);
-                  => xfs_fileoff_t aligned_end_fsb = roundup_64(end_fsb, align);
-                     return aligned_end_fsb
-}
+Tracking this requires special PTE bits (PTE_DEVMAP) and a secondary
+mechanism for allowing GUP to hold references on the page (see
+get_dev_pagemap). However there doesn't seem to be any reason why FS
+DAX pages need their own reference counting scheme.
 
-2) xfs_bmap_compute_alignments()
-{
-    <...>
-    	else if (ap->datatype & XFS_ALLOC_USERDATA)
-		     align = xfs_get_extsz_hint(ap->ip);
+By treating the refcounts on these pages the same way as normal pages
+we can remove a lot of special checks. In particular pXd_trans_huge()
+becomes the same as pXd_leaf(), although I haven't made that change
+here. It also frees up a valuable SW define PTE bit on architectures
+that have devmap PTE bits defined.
 
-        if (align) {
-            if (xfs_bmap_extsize_align(mp, &ap->got, &ap->prev, align, 0,
-                        ap->eof, 0, ap->conv, &ap->offset,
-                        &ap->length))
-                ASSERT(0);
-            ASSERT(ap->length);
+It also almost certainly allows further clean-up of the devmap managed
+functions, but I have left that as a future improvment.
 
-            args->prod = align;
-            div_u64_rem(ap->offset, args->prod, &args->mod);
-            if (args->mod)
-                args->mod = args->prod - args->mod;
-        }
-        <...>
-}
+I am not intimately familiar with the FS DAX code so would appreciate
+some careful review there. In particular I have not given any thought
+at all to CONFIG_FS_DAX_LIMITED.
 
-So args->prod and args->mod... aren't they use to align the logical
-start and the length of the extent?
+Signed-off-by: Alistair Popple <apopple@nvidia.com>
 
+---
 
-However, I do notice that when the file is closed XFS trims the length
-allocated beyond EOF boundary (for extsize but not for forcealign from
-the new forcealign series) i.e.
+Cc: dan.j.williams@intel.com
+Cc: vishal.l.verma@intel.com
+Cc: dave.jiang@intel.com
+Cc: logang@deltatee.com
+Cc: bhelgaas@google.com
+Cc: jack@suse.cz
+Cc: jgg@ziepe.ca
+Cc: catalin.marinas@arm.com
+Cc: will@kernel.org
+Cc: mpe@ellerman.id.au
+Cc: npiggin@gmail.com
+Cc: dave.hansen@linux.intel.com
+Cc: ira.weiny@intel.com
+Cc: willy@infradead.org
+Cc: djwong@kernel.org
+Cc: tytso@mit.edu
+Cc: linmiaohe@huawei.com
+Cc: david@redhat.com
+Cc: peterx@redhat.com
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: nvdimm@lists.linux.dev
+Cc: linux-cxl@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-ext4@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Cc: jhubbard@nvidia.com
+Cc: hch@lst.de
+Cc: david@fromorbit.com
 
-xfs_file_release() -> xfs_release() -> xfs_free_eofblocks()
+Alistair Popple (12):
+  mm/gup.c: Remove redundant check for PCI P2PDMA page
+  pci/p2pdma: Don't initialise page refcount to one
+  fs/dax: Refactor wait for dax idle page
+  mm: Allow compound zone device pages
+  mm/memory: Add dax_insert_pfn
+  huge_memory: Allow mappings of PUD sized pages
+  huge_memory: Allow mappings of PMD sized pages
+  gup: Don't allow FOLL_LONGTERM pinning of FS DAX pages
+  mm: Update vm_normal_page() callers to accept FS DAX pages
+  fs/dax: Properly refcount fs dax pages
+  mm: Remove pXX_devmap callers
+  mm: Remove devmap related functions and page table bits
 
-I guess that is because xfs_can_free_eofblocks() does not consider
-alignment for extsize in this function 
+ Documentation/mm/arch_pgtable_helpers.rst     |   6 +-
+ arch/arm64/Kconfig                            |   1 +-
+ arch/arm64/include/asm/pgtable-prot.h         |   1 +-
+ arch/arm64/include/asm/pgtable.h              |  24 +--
+ arch/powerpc/Kconfig                          |   1 +-
+ arch/powerpc/include/asm/book3s/64/hash-4k.h  |   6 +-
+ arch/powerpc/include/asm/book3s/64/hash-64k.h |   7 +-
+ arch/powerpc/include/asm/book3s/64/pgtable.h  |  52 +----
+ arch/powerpc/include/asm/book3s/64/radix.h    |  14 +-
+ arch/powerpc/mm/book3s64/hash_pgtable.c       |   3 +-
+ arch/powerpc/mm/book3s64/pgtable.c            |   8 +-
+ arch/powerpc/mm/book3s64/radix_pgtable.c      |   5 +-
+ arch/powerpc/mm/pgtable.c                     |   2 +-
+ arch/x86/Kconfig                              |   1 +-
+ arch/x86/include/asm/pgtable.h                |  50 +----
+ arch/x86/include/asm/pgtable_types.h          |   5 +-
+ arch/x86/mm/pat/memtype.c                     |   4 +-
+ drivers/dax/device.c                          |  12 +-
+ drivers/dax/super.c                           |   2 +-
+ drivers/gpu/drm/nouveau/nouveau_dmem.c        |   3 +-
+ drivers/nvdimm/pmem.c                         |   4 +-
+ drivers/pci/p2pdma.c                          |  12 +-
+ fs/dax.c                                      | 197 ++++++++---------
+ fs/ext4/inode.c                               |   5 +-
+ fs/fuse/dax.c                                 |   4 +-
+ fs/fuse/virtio_fs.c                           |   3 +-
+ fs/proc/task_mmu.c                            |  16 +-
+ fs/userfaultfd.c                              |   2 +-
+ fs/xfs/xfs_inode.c                            |   4 +-
+ include/linux/dax.h                           |  12 +-
+ include/linux/huge_mm.h                       |  15 +-
+ include/linux/memremap.h                      |  17 +-
+ include/linux/migrate.h                       |   4 +-
+ include/linux/mm.h                            |  39 +---
+ include/linux/mm_types.h                      |   9 +-
+ include/linux/mmzone.h                        |   8 +-
+ include/linux/page-flags.h                    |   6 +-
+ include/linux/pfn_t.h                         |  20 +--
+ include/linux/pgtable.h                       |  21 +--
+ include/linux/rmap.h                          |  15 +-
+ lib/test_hmm.c                                |   3 +-
+ mm/Kconfig                                    |   4 +-
+ mm/debug_vm_pgtable.c                         |  59 +-----
+ mm/gup.c                                      | 177 +---------------
+ mm/hmm.c                                      |  12 +-
+ mm/huge_memory.c                              | 221 +++++++++++--------
+ mm/internal.h                                 |   2 +-
+ mm/khugepaged.c                               |   2 +-
+ mm/mapping_dirty_helpers.c                    |   4 +-
+ mm/memcontrol-v1.c                            |   2 +-
+ mm/memory-failure.c                           |   6 +-
+ mm/memory.c                                   | 126 +++++++----
+ mm/memremap.c                                 |  53 ++---
+ mm/migrate_device.c                           |   9 +-
+ mm/mlock.c                                    |   2 +-
+ mm/mm_init.c                                  |  23 +-
+ mm/mprotect.c                                 |   2 +-
+ mm/mremap.c                                   |   5 +-
+ mm/page_vma_mapped.c                          |   5 +-
+ mm/pagewalk.c                                 |   8 +-
+ mm/pgtable-generic.c                          |   7 +-
+ mm/rmap.c                                     |  49 ++++-
+ mm/swap.c                                     |   2 +-
+ mm/userfaultfd.c                              |   2 +-
+ mm/vmscan.c                                   |   5 +-
+ 65 files changed, 591 insertions(+), 819 deletions(-)
 
-xfs_can_free_eofblocks()
-{
-<...>
-	end_fsb = xfs_inode_roundup_alloc_unit(ip,
-			XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip)));
-<...>
-}
-
-
-
-
->> Also it looks like there is no difference with ATOMIC_WRITE AND
->> FORCEALIGN feature with XFS, correct? (except that ATOMIC_WRITE is
->> adding additional natural alignment restrictions on pos and len). 
->
-> Atomic write requires additional hardware support, and it restricts
-> the valid sizes of extent size hints that can be set. Only atomic
-> writes can be done on files marked as configured for atomic writes;
-> force alignment can be done on any file...
->
->> So why maintain 2 separate on disk inode flags for FORCEALIGN AND
->> ATOMIC_WRITE?
->
-> the atomic write flag indicates that a file has been set up
-> correctly for atomic writes to be able to issues reliably. force
-> alignment doesn't guarantee that - it's just a mechanism that tells
-> the allocator to behave a specific way.
->
->> - Do you foresee FORCEALIGN to be also used at other places w/o
->> ATOMIC_WRITE where feature differentiation between the two on an
->> inode is required?
->
-> The already exist. For example, reliably allocating huge page
-> mappings on DAX filesystems requires 2MB forced alignment. 
->
->> - Does the same reasoning will hold for XFS_SB_FEAT_RO_COMPAT_FORCEALIGN
->> & XFS_SB_FEAT_RO_COMPAT_ATOMICWRITES too?
->
-> Same as above.
->
->> - But why ro_compact for ATOMICWRITES? There aren't any on disk metadata
->> changes within XFS filesystem to support atomic writes, right? 
->
-> Because if you downgrade the kernel to something that doesn't
-> support atomic writes, then non-atomic sized/aligned data can be
-> written to the file and/or torn writes can occur.
->
-> Worse, extent size hints that don't match the underlying hardware
-> support could be set up for inodes, and when the kernel is upgraded
-> again then atomic writes will fail on inodes that have atomic write
-> flags set on them....
->
->> Is it something to just prevent users from destroying their own data
->> by not allowing a rw mount from an older kernel where users could do
->> unaligned writes to files marked for atomic writes?
->> Or is there any other reasoning to prevent XFS filesystem from becoming
->> inconsistent if an older kernel does a rw mount here.
->
-> The older kernel does not know what the unknown inode flag means
-> (i.e. atomic writes) and so, by definition, we cannot allow it to
-> modify metadata or file data because it may not modify it in the
-> correct way for that flag being set on the inode.
->
-> Kernels that don't understand feature flags need to treat the
-> filesystem as read-only, no matter how trivial the feature addition
-> might seem.
->
->> > so unmap alignment
->> > has to be set up correctly at file offset level before we even know
->> > what extents underly the file range we need to unmap....
->> >
->> >>      If the start or end of the extent which needs unmapping is
->> >>      unaligned then we convert that extent to unwritten and skip,
->> >>      is it? (__xfs_bunmapi())
->> >
->> > The high level code should be aligning the start and end of the
->> > file range to be removed via xfs_inode_alloc_unitsize(). Hence 
->> > the low level __xfs_bunmapi() code shouldn't ever be encountering
->> > unaligned unmaps on force-aligned inodes.
->> >
->> 
->> Yes, but isn't this code snippet trying to handle a case when it finds an
->> unaligned extent during unmap?
->
-> It does exactly that.
->
->> And what we are essentially trying to 
->> do here is leave the unwritten extent as is and if the found extent is
->> written then convert to unwritten and skip it (goto nodelete). This
->> means with forcealign if we encounter an unaligned extent then the file
->> will have this space reserved as is with extent marked unwritten. 
->> 
->> Is this understanding correct?
->
-> Yes, except for the fact that this code is not triggered by force
-> alignment.
->
-> This code is preexisting realtime file functionality. It is used
-> when the rtextent size is larger than a single filesytem block.
->
-> In these configurations, we do allocation in rtextsize units, but we
-> track written/unwritten extents in the BMBT on filesystem block
-> granularity. Hence we can have unaligned written/unwritten extent
-> boundaries, and if we aren't unmapping a whole rtextent then we
-> simply mark the unused portion of it as unwritten in the BMBT to
-> indicate it contains zeroes.
->
-> IOWs, existing RT files have different IO alignment and
-> written/unwritten extent conversion behaviour to the new forced
-> alignment feature. The implementation code is shared in many places,
-> but the higher level forced alignment functionality ensures there
-> are never unaligned unwritten extents created or unaligned
-> unmappings asked for. Hence this code does not trigger for the
-> forced alignment cases.
->
-> i.e. we have multiple seperate allocation alignment behaviours that
-> share an implementation, but they do not all behave exactly the same
-> way or provide the same alignment guarantees....
->
-
-Thanks for taking time and explaining this. 
-
--ritesh
+base-commit: 6f1833b8208c3b9e59eff10792667b6639365146
+-- 
+git-series 0.9.1
