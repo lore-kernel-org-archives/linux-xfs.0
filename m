@@ -1,55 +1,71 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B2F318A950;
-	Tue, 10 Sep 2024 08:08:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5A318785A
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 08:57:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725955688; cv=none; b=boFrY+c9D32PQ3sfFoghExm9iC+/O20tSfMBkj8buQkFBPD6wjU03mI5jMTD6e2JOWiMpjf8sSQ/UXltzgIGsCccmV3daXteb3agJWC09lsdWntYNURp5If2PaMe8ct1Ll8k4jhM1rFosztuKgRUkgAsZyA5Y9cfmD1+WWaSpLQ=
+	t=1725958678; cv=none; b=phpHtftMA90VJFyvHWz8BSMTkXBFK+sp6PMNJjDZDdqWCs8wzuk7Us6muQ8HTtnWATIpie9ZCZcKOJR7QwUFnDLv7bneWZAUN2o7gg9OBZZQTGkyVvzQMzHt1qco8Nj94eLhGvbs/pes13YzG02CW/fVa2rT7ZEwYuzZoFkj1A0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725955688; c=relaxed/simple;
-	bh=n6lTvb8ctWCZJg7gGSkM6ri3wmxA4Fyo9i0OlOu3t7w=;
+	s=arc-20240116; t=1725958678; c=relaxed/simple;
+	bh=IsEmsvFeVX8DIJBC90yytIThBQHwz1fY8VpsXf7i13s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dRBKNxZfDDtuIQk/HfDhxXPROKn3GsZKPR3pJXkiWOajqnyvRqcW+irMvbipzqQG9xtLKur7p836mHNerJ1joqFlARqMd7Xrknd4n7We+RmDJTN+5DWLydS2Iv/yD0o2GNafGg4jvz8UoxnB0LJf/FHMho1vZC02RWnMeUgudj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2Q3cko72; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=GKkkR9wXNxH6rUuRRzye6aJmyqV+I/4Ymn1JrzeGZolWK73VEV4kRxycwLN+jLCwYuMfoQ9fFe1ZlSS93Fhpnp7KUxdQePdYEHOpCKhMiQh1yd4Ze+nm99PjDuv613HGw7BQsJu06DAPEuP5jdAV93fcN77j85rJerwzDPF7eO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F+Nd+LYZ; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2Q3cko72"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=n6lTvb8ctWCZJg7gGSkM6ri3wmxA4Fyo9i0OlOu3t7w=; b=2Q3cko72j3efTKvD2h+8Ne3oJl
-	BBrDCu7AxT6FkWdOFwvtTtLR06kZD+YI0nshld5bVvvaWn0mfImvlE2WUm05eARxPV0arY6N035Qr
-	7cLedc1xieNpn6y30NPETJOaxyv5gaUaMZjiNjUw80saw8aNomExLmi0jVUqX3hAQi2zGydjkVH82
-	eu9Cm6r7qnjxBRztrDlCrivIZOgNpOkrzXJfdylDqKY4wOrmhtnMf7JuxzeosSglQgwXXeyTu06Lc
-	EvVpPv/q6mBsXi+IdDOGNcHstoXil4ZfdAeWM4PmM3DIpWzqK1/bVgZ9luBZhyKOAY3VL8ozTg0Tt
-	0T8te3ng==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1snvuu-00000004jrO-3JCU;
-	Tue, 10 Sep 2024 08:08:04 +0000
-Date: Tue, 10 Sep 2024 01:08:04 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Arnd Bergmann <arnd@kernel.org>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Anthony Iliopoulos <ailiop@suse.com>,
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-	Kees Cook <kees@kernel.org>,
-	Kent Overstreet <kent.overstreet@gmail.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: add CONFIG_MMU dependency
-Message-ID: <Zt_-ZOG6SWvGgHtb@infradead.org>
-References: <20240909111922.249159-1-arnd@kernel.org>
- <20240909134219.xkz37p5biid22u6k@quack3>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F+Nd+LYZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1725958675;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gN705/aJssiQyERZ3MXMUcDHR8iN1Usw3Gyoe7gp/Ig=;
+	b=F+Nd+LYZ/VyanIsRPuEXB8iXPGD0C2V68a4XTGKYMOOyWGFfGfKnT7nQeWlY5ZU+3CTtgw
+	LtBmi5x03BT9GVrij81trOiifazW4ouO+1OhYXEGQkgyewoAuis0AUPw9bedNu2MHXgj9J
+	aXKVs9B4mibFyDcIINXYhUkcr1gkFwg=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-653-5uGhHbzjONuHqa4L2iQwaA-1; Tue, 10 Sep 2024 04:57:54 -0400
+X-MC-Unique: 5uGhHbzjONuHqa4L2iQwaA-1
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-2d8e7e427d5so5964690a91.0
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 01:57:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725958673; x=1726563473;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gN705/aJssiQyERZ3MXMUcDHR8iN1Usw3Gyoe7gp/Ig=;
+        b=GaKNXS/6Ha0byQZ/XYNRTEu/JeH4uwEH8f++9a0FEb8V9Hqr53w2twRFT/FbyXJlEL
+         htHFqjes3cFfceb7pTfrOfdIv8mXE22H3k1X7W8jHJw7lbLsN50oyGYSuuFOI/V4yy7f
+         3VRbQ8tYR1VJjk8ubd0Y4Q7riiK0V7/A448yJEchPpCo/e+XHu+Fejb+/Due8rl+D9b6
+         CCHk0Qq1dBck1N7sut6Ly7IpVebQqePfysAvuvR6bKhUKR4qd5WhPtwySD+tbAI5sGFA
+         zbDwfXrTf29MY/pdcxZxoLjGJVmhE0Zfy26RyvMm+WkJjvZbTlkHw5QCjdw60BrDm3dc
+         BjQA==
+X-Forwarded-Encrypted: i=1; AJvYcCVxbu9ZF3EavptpJmuFhPcHkN2P0cy6WEVHLwPEJrKP/L3Bu+W9rloWmxsJIoSFk7qdjoKWcpl+Tqw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhEOyz52Mzz18C0okYczUoZREISovR9tvuRdTgh5CH1OBzGt8J
+	vMupx7prvYXCT6BGdkJDQOPf1b6mMTWILDmCFeWfkl0mKTiaq0eTmqvfAnbwQ+cTElkgYbwmClX
+	mJvZkGqWDkCDVt7yI2owi/QqIarkXTJ8CFoKotzc9lqpoNkN5SjQPu4ugCg==
+X-Received: by 2002:a17:90a:ba96:b0:2c9:36bf:ba6f with SMTP id 98e67ed59e1d1-2db67181b2cmr3460539a91.3.1725958672888;
+        Tue, 10 Sep 2024 01:57:52 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH/ojzIDkzUEQHAthzP7MHQ2hXwA+IO45SQRXadI7eTdqsKzCXoXOT+b7IQt0qDOkc2xTWsOQ==
+X-Received: by 2002:a17:90a:ba96:b0:2c9:36bf:ba6f with SMTP id 98e67ed59e1d1-2db67181b2cmr3460508a91.3.1725958672298;
+        Tue, 10 Sep 2024 01:57:52 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2db043c437dsm5842446a91.26.2024.09.10.01.57.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Sep 2024 01:57:51 -0700 (PDT)
+Date: Tue, 10 Sep 2024 16:57:48 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, djwong@kernel.org, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test log recovery for extent frees right after
+ growfs
+Message-ID: <20240910085748.jcea37l665dxluge@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240910043127.3480554-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -58,16 +74,137 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240909134219.xkz37p5biid22u6k@quack3>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240910043127.3480554-1-hch@lst.de>
 
-On Mon, Sep 09, 2024 at 03:42:19PM +0200, Jan Kara wrote:
-> Thanks! I've noticed the error from 0-day over the weekend as well. At this
-> point I'd rather handle this in a similar way as e.g. filemap_fault() is
-> handled in NOMMU case. I agree users of XFS (or bcachefs for that matter)
-> with !CONFIG_MMU are unlikely but fsnotify_filemap_fault() can grow more
-> users over time and providing the stub is easy enough. I'll push out fixed
-> version of the patch.
+On Tue, Sep 10, 2024 at 07:31:17AM +0300, Christoph Hellwig wrote:
+> Reproduce a bug where log recovery fails when an unfinised extent free
+> intent is in the same log as the growfs transaction that added the AG.
 
-Yes, the stub is the right fix for this.
+Which bug? If it's a regression test, can we have a _fixed_by_kernel_commit
+to mark the known issue?
+
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  tests/xfs/1323     | 61 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1323.out | 14 +++++++++++
+>  2 files changed, 75 insertions(+)
+>  create mode 100755 tests/xfs/1323
+>  create mode 100644 tests/xfs/1323.out
+> 
+> diff --git a/tests/xfs/1323 b/tests/xfs/1323
+> new file mode 100755
+> index 000000000..a436510b0
+> --- /dev/null
+> +++ b/tests/xfs/1323
+> @@ -0,0 +1,61 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2024, Christoph Hellwig
+> +#
+> +# FS QA Test No. 1323
+> +#
+> +# Test that recovering an extfree item residing on a freshly grown AG works.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick growfs
+> +
+> +. ./common/filter
+> +. ./common/inject
+> +
+
+_require_scratch
+
+> +_require_xfs_io_error_injection "free_extent"
+> +
+> +_xfs_force_bdev data $SCRATCH_MNT
+
+Don't you need to do this after below _scratch_mount ?
+
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	_scratch_unmount > /dev/null 2>&1
+
+SCRATCH_DEV will be unmounted at the end of each test, so this might not be needed.
+If so, this whole _cleanup is not necessary.
+
+> +	rm -rf $tmp.*
+> +}
+> +
+> +echo "Format filesystem"
+> +_scratch_mkfs_sized $((128 * 1024 * 1024)) >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +echo "Fill file system"
+> +dd if=/dev/zero of=$SCRATCH_MNT/filler1 bs=64k oflag=direct &>/dev/null
+> +sync
+> +dd if=/dev/zero of=$SCRATCH_MNT/filler2 bs=64k oflag=direct &>/dev/null
+> +sync
+
+There's a helper named _fill_fs() in common/populate, I'm not sure if
+your above steps are necessary or can be replaced, just to confirm with
+you.
+
+> +
+> +echo "Grow file system"
+> +$XFS_GROWFS_PROG $SCRATCH_MNT >>$seqres.full
+
+_require_command "$XFS_GROWFS_PROG" xfs_growfs
+
+> +
+> +echo "Create test files"
+> +dd if=/dev/zero of=$SCRATCH_MNT/test1 bs=8M count=4 oflag=direct | \
+> +	 _filter_dd
+> +dd if=/dev/zero of=$SCRATCH_MNT/test2 bs=8M count=4 oflag=direct | \
+> +	 _filter_dd
+> +
+> +echo "Inject error"
+> +_scratch_inject_error "free_extent"
+> +
+> +echo "Remove test file"
+> +rm $SCRATCH_MNT/test2
+
+Is -f needed ?
+
+Thanks,
+Zorro
+
+> +
+> +echo "FS should be shut down, touch will fail"
+> +touch $SCRATCH_MNT/test1 2>&1 | _filter_scratch
+> +
+> +echo "Remount to replay log"
+> +_scratch_remount_dump_log >> $seqres.full
+> +
+> +echo "Done"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1323.out b/tests/xfs/1323.out
+> new file mode 100644
+> index 000000000..1740f9a1f
+> --- /dev/null
+> +++ b/tests/xfs/1323.out
+> @@ -0,0 +1,14 @@
+> +QA output created by 1323
+> +Format filesystem
+> +Fill file system
+> +Grow file system
+> +Create test files
+> +4+0 records in
+> +4+0 records out
+> +4+0 records in
+> +4+0 records out
+> +Inject error
+> +Remove test file
+> +FS should be shut down, touch will fail
+> +Remount to replay log
+> +Done
+> -- 
+> 2.45.2
+> 
+> 
 
