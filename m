@@ -1,145 +1,114 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 114D5183CA0
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 20:55:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE63BBA20;
+	Wed, 11 Sep 2024 00:49:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726001759; cv=none; b=fhib53JocpKRoMUsGYe73Ol3xSY73LGUIW2/cA5OyGiGEaFEBe1POUBJ9PMKhBv8FtkIMM0n1EtUNYxvg8uAtxnYrqccJ59jZtXeIi5ckxFSZW76Sr2WHxAXTYrod3EbPT0rbFHnlPWNDfyMk6r+EUkIHJlpVEkmrpi1+PSqpKg=
+	t=1726015793; cv=none; b=fGvvG5NDrKrcdBm0kf/6PaYPl9sz3mCHAdMmrLorqBvd8WR4BoGjyce03HQZL78kDunPUGWse8/mzTCmx9Iiw76Q0929HHsk/mw7dWlzknToikwFaFu8VgMSkv5P7CsYwoCI1PifmUAtNXGDQm1iU20xrA8rDtCefutogk8Omk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726001759; c=relaxed/simple;
-	bh=21E8ZSdDZyOJiD061b5jDUcHbdCC2nnjjDTxVeEYnuA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OyyLiUVy7Ne4zMuMJAceYxAl32CZaE7UxXRQLTPpHpwgsz+EOJ816NofDBawhhzDjxexCMXXFcZfOk/F0C+UhpMtKOt84hG+Sw1uGCOx1EK4FxDIxeBaIHdNJefetJd7aDckFE+S8mcNLR3MlwGea9aK5SzYQB3n7TnhU7hHjE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=A7AAfigT; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1726015793; c=relaxed/simple;
+	bh=dH7fv14lgnC0D0A5OnxBGGxWTkAjfmvEzxeklRot7jA=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=J4urWD9EEVnvFtLwxlG/iRZNMXXEkyRg/u22lGDm0rk43AcI8HcgF7qsOapRqprm5+m3F+YKIG+9VpS/oO7k+GJvxhbm3JePIxFykA11JFRjM/araytNFymkEhfWdH9nIsuaeEcdJnUJUIg90iHi3oL5ORVtm+je8pyOTS4fPC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=PfU+CRym; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="A7AAfigT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1726001755;
-	h=from:from:reply-to:reply-to:subject:subject:date:date:
-	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-	 content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Z64cjPQ7ARZ7rg9e0WRemNHWozu1NXwz+vOz+nBIefM=;
-	b=A7AAfigT7+yQtDA3zh0yvGrXRrJOmzjvDCYLwVSuQqnZ8rdGo7waZW02hI4sS8P6XWYdQ/
-	L1Ss1l2m7LQDkOeQZ0T/+9M0Co0M8uxDTLeYTt8VF5l32QiXM0QV+WPDPm3KhopTE52YnU
-	kRMPWt9ZFOOrP8CG+fMwSsUt2jZzyxI=
-Received: from mail-yb1-f200.google.com (mail-yb1-f200.google.com
- [209.85.219.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-387-xE5r4wz_N36bmodmqVCPBA-1; Tue, 10 Sep 2024 16:55:54 -0400
-X-MC-Unique: xE5r4wz_N36bmodmqVCPBA-1
-Received: by mail-yb1-f200.google.com with SMTP id 3f1490d57ef6-e1cfb9d655eso12289816276.0
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Sep 2024 13:55:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726001754; x=1726606554;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :reply-to:in-reply-to:references:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Z64cjPQ7ARZ7rg9e0WRemNHWozu1NXwz+vOz+nBIefM=;
-        b=VPoXVkwe41XqEWAGQoKit1s2GmTTAvMF/A2i00pcv5XzXMu1O/nJ+pOWdUIr1ZhMKN
-         77nWAT06EZNvHvDgVEy3Hboj6V/jMhF+c87sTI0uzsnlIvzAIY4+AqLBr3zKxqrtQcPh
-         cSL765dkO23wLk6OielObpeP+YDfpliDsoffMygiMYu8vH34IvhZ2qFD4A6AX941DihK
-         PigRMXqK/QKxnnk0id2Icu7sgZ7vGOKSyu9pSKiTOvVQOaUxTzmLtGITdjuBYkFrRyVg
-         TYO+FoRjJEYkWXjIE3VW896PhVXtJa+5ubvj9GKwHYC/dnSZbf8Tv5qu+M2E2Fztycku
-         F1BQ==
-X-Gm-Message-State: AOJu0YwzD2lZOiIeU5GRlhLuWiAKmVqixKecU9YrVM8aibT1EwT1QNNW
-	SSpGV+jhLRReEuS7C0UGBPW9DvaCtrhcZBJANY3Edc+4Zf43BqGn4sEfqpwt7cgST2deY/2Q8YR
-	QC/oDpc7NLT8A0B5XcL79aK+M2V5V0RxNx6EdJXj41jvKcUVlI1k8I1iLfADpXsZ90TY/VPo5qm
-	41qhLrRE5yTuho5Hq56gR66EB1xs3DhFFiAZmnzb3FTsZkOA==
-X-Received: by 2002:a05:6902:983:b0:e1d:1b8a:ac4 with SMTP id 3f1490d57ef6-e1d348663c3mr13379277276.11.1726001753955;
-        Tue, 10 Sep 2024 13:55:53 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHbDk7k7N1gOLLhkOR987e9ETl1mx2sGMWF7VlPgYdOJ+kJnE7m7WvEEqfFsCW+O8EueUP3wg/sM/n6XRO+5nw=
-X-Received: by 2002:a05:6902:983:b0:e1d:1b8a:ac4 with SMTP id
- 3f1490d57ef6-e1d348663c3mr13379266276.11.1726001753670; Tue, 10 Sep 2024
- 13:55:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="PfU+CRym"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=nTtMb9H3dXUpUSnSef+Be8oMvAgnwIOToyszkwVy8e4=; b=PfU+CRymWcXZGU8mYwkDuJY5Nt
+	KxhnN6hTdnUpKK6c3FLfnreXMcwDl5uXgI0f+QVr9IAL/a7U4alJzvox0Hu/jx8FdVvfCvk6K23RF
+	lK8vn7f2TcsKwePi8XAAm+Do+v3+uwGtpS1ailTPFQB4bfs203NzQnnCCUXb/sMVlet5HU1E6m9vy
+	zcwHt8C4DgCDQe3olE14BG0oSvKMkpTZrdceJIxDReKKpwni+aYI+Z20uWIsMZDYZ8HVFkh+hCtJv
+	YV4oSurTolqbMlZJN15P2PVDkvC2Zg5xnEPszFLT8tR9OOrTm8xYZG/nJd2oKo02MXEmzvmD9xZuB
+	l6TfHBVA==;
+Received: from d104-157-31-28.abhsia.telus.net ([104.157.31.28] helo=[192.168.1.250])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <logang@deltatee.com>)
+	id 1soBXi-000ozM-2O;
+	Tue, 10 Sep 2024 18:49:11 -0600
+Message-ID: <6f3402ae-01ad-4764-8941-f88bc77f5227@deltatee.com>
+Date: Tue, 10 Sep 2024 18:48:48 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <MW4PR84MB1660E875ADC85F675B7DE5BA889A2@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
- <MW4PR84MB1660429406E16C5B4CE9711B889A2@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
- <CAFMei7N0zgsxLnOcgvQ96d7Z1r=eWrtDtEuRuwQ_RmwbVk0p7w@mail.gmail.com> <MW4PR84MB1660E4CBA90C778F55E4DDF8889A2@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
-In-Reply-To: <MW4PR84MB1660E4CBA90C778F55E4DDF8889A2@MW4PR84MB1660.NAMPRD84.PROD.OUTLOOK.COM>
-Reply-To: nathans@redhat.com
-From: Nathan Scott <nathans@redhat.com>
-Date: Wed, 11 Sep 2024 06:55:42 +1000
-Message-ID: <CAFMei7MFFjHL7-RdWje4Z+41Z=AV_pU852LqnVERecOhNYKC2w@mail.gmail.com>
-Subject: Re: XFS Performance Metrics
-To: "P M, Priya" <pm.priya@hpe.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+To: Alistair Popple <apopple@nvidia.com>, dan.j.williams@intel.com,
+ linux-mm@kvack.org
+Cc: vishal.l.verma@intel.com, dave.jiang@intel.com, bhelgaas@google.com,
+ jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com, will@kernel.org,
+ mpe@ellerman.id.au, npiggin@gmail.com, dave.hansen@linux.intel.com,
+ ira.weiny@intel.com, willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
+ linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+ nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
+ david@fromorbit.com
+References: <cover.9f0e45d52f5cff58807831b6b867084d0b14b61c.1725941415.git-series.apopple@nvidia.com>
+ <4f8326d9d9e81f1cb893c2bd6f17878b138cf93d.1725941415.git-series.apopple@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <4f8326d9d9e81f1cb893c2bd6f17878b138cf93d.1725941415.git-series.apopple@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 104.157.31.28
+X-SA-Exim-Rcpt-To: apopple@nvidia.com, dan.j.williams@intel.com, linux-mm@kvack.org, vishal.l.verma@intel.com, dave.jiang@intel.com, bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com, dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org, djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de, david@fromorbit.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH 02/12] pci/p2pdma: Don't initialise page refcount to one
+X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Hi Priya,
 
-On Tue, Sep 10, 2024 at 7:02=E2=80=AFPM P M, Priya <pm.priya@hpe.com> wrote=
-:
->
-> Thanks Nathans. But I don=E2=80=99t find this package for my configuratio=
-n
->
-> apt-get install pcp-zeroconf
-> Reading package lists... Done
-> Building dependency tree... Done
-> Reading state information... Done
-> E: Unable to locate package pcp-zeroconf
-> root@CZ241009TJ-1 Tue Sep 10 14:28:18:~#
->
-> could  you suggest any other way.
->
 
-You may have an older Debian system?  You could either upgrade to get
-this zeroconf package, e.g. in bookworm
-https://packages.debian.org/bookworm/pcp-zeroconf
+On 2024-09-09 22:14, Alistair Popple wrote:
+> The reference counts for ZONE_DEVICE private pages should be
+> initialised by the driver when the page is actually allocated by the
+> driver allocator, not when they are first created. This is currently
+> the case for MEMORY_DEVICE_PRIVATE and MEMORY_DEVICE_COHERENT pages
+> but not MEMORY_DEVICE_PCI_P2PDMA pages so fix that up.
+> 
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> ---
+>  drivers/pci/p2pdma.c |  6 ++++++
+>  mm/memremap.c        | 17 +++++++++++++----
+>  mm/mm_init.c         | 22 ++++++++++++++++++----
+>  3 files changed, 37 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 4f47a13..210b9f4 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -129,6 +129,12 @@ static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
+>  	}
+>  
+>  	/*
+> +	 * Initialise the refcount for the freshly allocated page. As we have
+> +	 * just allocated the page no one else should be using it.
+> +	 */
+> +	set_page_count(virt_to_page(kaddr), 1);
+> +
+> +	/*
+>  	 * vm_insert_page() can sleep, so a reference is taken to mapping
+>  	 * such that rcu_read_unlock() can be done before inserting the
+>  	 * pages
+This seems to only set reference count to the first page, when there can
+be more than one page referenced by kaddr.
 
-Or you can install the base pcp package instead and configure it manually.
-Feel free to move this discussion over to a PCP mailing list though or
-slack channel, probably not of interest to many folk here I guess.
+I suspect the page count adjustment should be done in the for loop
+that's a few lines lower than this.
 
-cheers.
+I think a similar mistake was made by other recent changes.
 
---
-Nathan
+Thanks,
 
-> -----Original Message-----
-> From: Nathan Scott <nathans@redhat.com>
-> Sent: Tuesday, September 10, 2024 1:34 PM
-> To: P M, Priya <pm.priya@hpe.com>
-> Cc: linux-xfs@vger.kernel.org
-> Subject: Re: XFS Performance Metrics
->
-> Hi Priya,
->
-> On Tue, Sep 10, 2024 at 4:01=E2=80=AFPM P M, Priya <pm.priya@hpe.com> wro=
-te:
-> >
-> > Hi,
-> >
-> > I am looking for performance metrics such as throughput, latency, and I=
-OPS on an XFS filesystem. Do we have any built-in tools that can provide th=
-ese details, or are there any syscalls that the application can use to obta=
-in these performance metrics?
-> >
->
-> I recommend you start with Performance Co-Pilot (pcp.io) which makes the =
-XFS kernel metrics available in an easily consumable form.  The simplest wa=
-y is via:
->
-> > [dnf or apt-get] install pcp-zeroconf
-> > pminfo xfs vfs mem disk
->
-> This makes available some 350+ XFS metrics which can be recorded, reporte=
-d, visualised with grafana-pcp, and so on.
->
-> cheers.
->
-> --
-> Nathan
->
-
+Logan
