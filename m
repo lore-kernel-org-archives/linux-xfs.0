@@ -1,114 +1,111 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE33F148FF7
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Sep 2024 22:12:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42DCB1C175F
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Sep 2024 22:26:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726179162; cv=none; b=ETK0F3NZ/7eptK7OjqccULQvfDZoB3SGYPS5M4A5dPEnE/qljE8TL1Q4d9wZfheiTkQS/FYWZfE7imjOOShEwIV+tS3XEr29fUXd+I280s8HMH71os8JZaGkvLVAw2IcU7FL3zDsiRK4p9ApD3N/xN8P+QzMCdVq5vOdYCzIpLY=
+	t=1726179973; cv=none; b=hB9/ASpRI3aXhTBz0jIn+R/cslZxvpf7GqLQMQhM0UIwAN9IeH2hIE3KFXfh2NanLqSQ1LTbYQBDKcez44V6F4mPvRM5nSNO7i6JKgEZiEXZza/3NYjX86eDTRpoi9TxwbgkRjSEf1bEdRzT2ew1T7+R9ERy3Yd/Pzve6jfhszg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726179162; c=relaxed/simple;
-	bh=UlYy7Hlbdt+rczKfYZZW2LIR+Y5Cgkp3NmyR7eArPLU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=H0A4YQOrwXCA4hzdGuq+pnSDptVmf5+PnZl81keYpP7tPKsgM7WrIrODOiNkL/wvWX6o+2eLQdPnLJ+lu3/HUDT5zAYq4M63BpNbXDmDQoTIXlnnfPGIHtudjnJTWI9Ikf2SNpA0Rm/vITcIu8PtKriZIZ1vb9lKqqCt8Kv7o+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=ZNch9qJu; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1726179973; c=relaxed/simple;
+	bh=KbS83rDiWhetHVtFkjA/wbafpTGhtpNgKVkrYNxEn7I=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=csIkxyapQB1DdwWfrMzLFSF9GbenSOXfjb/mK+FQOMD8bgfW+n4k3XPpG7torNAGlwWQc8zXVqIRlwntd8W8II0st1XhNUQd0rjylbLXn6H7255GJPh49FDBLn5JYuzrsA12KmBu0VqhyKn7L2qvCM17sNcDvrPKXL/wRQUFb0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=HvJ6SrZ4; arc=none smtp.client-ip=209.85.218.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="ZNch9qJu"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2d873dc644dso1224307a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Sep 2024 15:12:39 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="HvJ6SrZ4"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a8a7903cb7dso14107366b.3
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Sep 2024 15:26:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1726179159; x=1726783959; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=6XHoL0ZBi9GE7Zl5WoiwZ5w6Gz6wVLeamEWBzoE27iE=;
-        b=ZNch9qJumqv92QI8ZUAkl/0w69TYW8NdOpM66ZLbwHUqtU5657xSWUIsgIoBdc2sgj
-         j/t3yvECkQDqscjnevuytcT/kSUrKPU+IZL5Rjwu3vbO7GXtWEXgkfFH6CVn4ZA/igOT
-         Hradv1CtkfX1tIjayTBIZ1bjBx3zMXbXLKffYXnH/aZ/HsHLPp9tRvhbuT5z7oxdWKaI
-         SXe8h3UmRqhcROd45KVKaVthcqc286AQPSTl7lnSsC0tvRxsnyebL09iys6tgNKMZzbr
-         L/8np1YmHF8elGMcL+JryHQJyYGbOPF9+luUljsSFdXvb9mpeJuOEWrolAKYVADmv5ht
-         RFng==
+        d=linux-foundation.org; s=google; t=1726179969; x=1726784769; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=QeNLQ4zvks3207JaJjctekem2eb/h7As09d+6h+vRY8=;
+        b=HvJ6SrZ4XOg7QdrDfupDUvarrACv/pwoh5022WXxvBgxX9RWRRTeAXUDEiwPxrlk5a
+         EJDRaVQOkv+OMxCSG32BiaPWbG3GJHC7WsrIHxRayJTWk1bAl/yfH7017P4WCGQEbaqV
+         AyO7GoVlMG6DERPSBFCG0NDHyc/fVXfc/2JOo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726179159; x=1726783959;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6XHoL0ZBi9GE7Zl5WoiwZ5w6Gz6wVLeamEWBzoE27iE=;
-        b=vkyq4+Bj5jmaa5pzVdr5CnKTwt4iYWm66qmww06k7Emq/K/gfWo60ubUNeDIEUZSTF
-         TnHJxkbt0p3V2FBwc8FYuBZbXv4JYYWSGuTDy8LZKLgsgtO+FvMksjxmO1SuAIU+e0pc
-         5BMC8lgX6/h0AZ0QgHjcsDzMccfZtEPEtvrLsCO9pDcNiwypJYgL4fNFxedz4vePJDhF
-         d8ME/Wj7ee8NzTg2Wqsqigx0HJUuI4sgnlex3YjWRt2JCM5XCNFe/o6fnV+3vkRPxCSu
-         ggr6ChGBQ3j/LlsczK6RU5q2lCKkTHrBUwIrdMD9bKrczbBpoIcc5unijw7DD0ecWFL9
-         nuUQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV7dU7QMHFYTEkEghWVIljkQpY8rY0c6dFbh4nVnS1wzP05nVKDCWJ4Owhxi3xIPP2pcGi3XByMI5k=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyf1JCqQly7dOuRV1d1YKdec53wzv9ZWZKKZA7zoZIyjP8RU3QP
-	/IIuTA7t3BPFI8eQE9d7bhN2Hy7wyrhKj2zW8errsrl2YblOLW5Dy9CY5G5J0y8=
-X-Google-Smtp-Source: AGHT+IFpTCq6+ukL7H58M1PsiI9W1iyXsSunsAA643ZhHhX6ctp4jDxCLQSXqpQypnPnbrvP1So3dQ==
-X-Received: by 2002:a17:90b:4a4a:b0:2da:7536:2b8c with SMTP id 98e67ed59e1d1-2dba0082fecmr5160596a91.36.1726179158919;
-        Thu, 12 Sep 2024 15:12:38 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dbb9ced741sm211330a91.39.2024.09.12.15.12.37
+        d=1e100.net; s=20230601; t=1726179969; x=1726784769;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=QeNLQ4zvks3207JaJjctekem2eb/h7As09d+6h+vRY8=;
+        b=VGtgY2I3vHVWToTVm+C0wz/pX4Y5IYf4VfYqTF4SPZgs9hWItDVckNiCPtzdJ8KoCQ
+         kWdnDgyV7/X47az6rN00ydUkusrP/4Ks2SEzY9uP7d+UFxEU3PlvpH6xiT/57iAn5sex
+         VeOoKcIHoluGKjbiD3UPOrvx9VpLtfKtflsUE3TsRTnVY1J2O2QyAvq+wvUVgsImgNsp
+         o5NzQ2ckFoNTqaH662Xp8lHkzzomeTBknVSAC6UpgNRJIv7HTmroUeZwRcJ3y0DSU7LO
+         kgQ0NT1FCmQbHrjKzx4vO10KxX5HBMSW1RqU/BtPZ4kTgBWZ1wDDqtYtJJSyVPjzhHwN
+         UGvA==
+X-Forwarded-Encrypted: i=1; AJvYcCWEYM8AoJ4xUvJ4wvZhiuc1Jg39jp+RSbwVT9sYAYxt0nZI6mQFsi8vM/41KXNb500gR7vZTanH4Z4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyewprCJOwypiYJ+4G9XeYcHHZa3DZO4b7gLr0C+wGstke377GU
+	kF1IpDJFZ06Ce/VqoS/uH/HEkEG/f9a9czUbidvEjdbLe/FzzXsWvnrzL205O9kcSicIbMesHCp
+	JyizJ/g==
+X-Google-Smtp-Source: AGHT+IG6sUauBggcOMen6Xy9AX/Pkoe8aLyCo5yWB0WBg+Ct+h8yIo13Q98jafL9HEk8zV8J6QBKtw==
+X-Received: by 2002:a05:6402:3484:b0:5c2:58fe:9304 with SMTP id 4fb4d7f45d1cf-5c41dea6b5emr721685a12.1.1726179969250;
+        Thu, 12 Sep 2024 15:26:09 -0700 (PDT)
+Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com. [209.85.208.41])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5c3ebd42620sm6872201a12.20.2024.09.12.15.26.07
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Sep 2024 15:12:38 -0700 (PDT)
-Message-ID: <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
-Date: Thu, 12 Sep 2024 16:12:36 -0600
+        Thu, 12 Sep 2024 15:26:07 -0700 (PDT)
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-5c26a52cf82so126487a12.2
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Sep 2024 15:26:07 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUvoRK57rLNPMRMZljy2MF5GE11298HcipvN2pZXxO61xwNGiL4xo5mK//LMm37p/hDwT5GP41btBw=@vger.kernel.org
+X-Received: by 2002:a05:6402:43cd:b0:5c4:ae3:83bd with SMTP id
+ 4fb4d7f45d1cf-5c41e193d3dmr666054a12.21.1726179967306; Thu, 12 Sep 2024
+ 15:26:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
+ <ZuNjNNmrDPVsVK03@casper.infradead.org> <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
+In-Reply-To: <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 12 Sep 2024 15:25:50 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
+Message-ID: <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
 Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
  folios since Dec 2021 (any kernel from 6.1 upwards)
-To: Matthew Wilcox <willy@infradead.org>,
- Christian Theune <ct@flyingcircus.io>
-Cc: linux-mm@kvack.org, "linux-xfs@vger.kernel.org"
- <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
- Daniel Dao <dqminh@cloudflare.com>, Dave Chinner <david@fromorbit.com>,
- clm@meta.com, regressions@lists.linux.dev, regressions@leemhuis.info
-References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
- <ZuNjNNmrDPVsVK03@casper.infradead.org>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <ZuNjNNmrDPVsVK03@casper.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Matthew Wilcox <willy@infradead.org>, Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Daniel Dao <dqminh@cloudflare.com>, 
+	Dave Chinner <david@fromorbit.com>, clm@meta.com, regressions@lists.linux.dev, 
+	regressions@leemhuis.info
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/12/24 3:55 PM, Matthew Wilcox wrote:
-> On Thu, Sep 12, 2024 at 11:18:34PM +0200, Christian Theune wrote:
->> This bug is very hard to reproduce but has been known to exist as a
->> ?fluke? for a while already. I have invested a number of days trying
->> to come up with workloads to trigger it quicker than that stochastic
->> ?once every few weeks in a fleet of 1.5k machines", but it eludes
->> me so far. I know that this also affects Facebook/Meta as well as
->> Cloudflare who are both running newer kernels (at least 6.1, 6.6,
->> and 6.9) with the above mentioned patch reverted. I?m from a much
->> smaller company and seeing that those guys are running with this patch
->> reverted (that now makes their kernel basically an untested/unsupported
->> deviation from the mainline) smells like desparation. I?m with a
->> much smaller team and company and I?m wondering why this isn?t
->> tackled more urgently from more hands to make it shallow (hopefully).
-> 
-> This passive-aggressive nonsense is deeply aggravating.  I've known
-> about this bug for much longer, but like you I am utterly unable to
-> reproduce it.  I've spent months looking for the bug, and I cannot.
+On Thu, 12 Sept 2024 at 15:12, Jens Axboe <axboe@kernel.dk> wrote:
+>
+> When I saw Christian's report, I seemed to recall that we ran into this
+> at Meta too. And we did, and hence have been reverting it since our 5.19
+> release (and hence 6.4, 6.9, and 6.11 next). We should not be shipping
+> things that are known broken.
 
-What passive aggressiveness?! There's a data corruption bug where we
-know what causes it, yet we continue to ship it. That's aggravating.
+I do think that if we have big sites just reverting it as known broken
+and can't figure out why, we should do so upstream too.
 
-People are aware of the bug, and since there's no good reproducer, it's
-hard to fix. That part is fine and understandable. What seems amiss here
-is the fact that large folio support for xfs hasn't just been reverted
-until the issue is understood and resolved.
+Yes,  it's going to make it even harder to figure out what's wrong.
+Not great. But if this causes filesystem corruption, that sure isn't
+great either. And people end up going "I'll use ext4 which doesn't
+have the problem", that's not exactly helpful either.
 
-When I saw Christian's report, I seemed to recall that we ran into this
-at Meta too. And we did, and hence have been reverting it since our 5.19
-release (and hence 6.4, 6.9, and 6.11 next). We should not be shipping
-things that are known broken.
+And yeah, the reason ext4 doesn't have the problem is simply because
+ext4 doesn't enable large folios. So that doesn't pin anything down
+either (ie it does *not* say "this is an xfs bug" - it obviously might
+be, but it's probably more likely some large-folio issue).
 
--- 
-Jens Axboe
+Other filesystems do enable large folios (afs, bcachefs, erofs, nfs,
+smb), but maybe just not be used under the kind of load to show it.
+
+Honestly, the fact that it hasn't been reverted after apparently
+people knowing about it for months is a bit shocking to me. Filesystem
+people tend to take unknown corruption issues as a big deal. What
+makes this so special? Is it because the XFS people don't consider it
+an XFS issue, so...
+
+                Linus
