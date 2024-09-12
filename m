@@ -1,48 +1,46 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A427919F430;
-	Thu, 12 Sep 2024 11:52:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A3A7288BD;
+	Thu, 12 Sep 2024 12:07:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726141952; cv=none; b=ZtySKq2eNtM3RwAJr+FCC0DG9WeW4m0pki6Yx6IlS3cnJxZbH2pqQMxiLzjXYzwogc/N+tH5X6b1yasdi4BuQV3U0y6OTbsI+V7t9gw2OQqefzzauF4wFV9Dp17ATwhA7zJ+xX3va8oT/nqoNjoklGpzb4QjeHi9QChaePd7Srk=
+	t=1726142875; cv=none; b=QYYYXIJYLpWKwZN2HCnCbXDb0OmTsCnbZtRZRX8meJDIZEnZwlpfvi/w6sK6HOoOBl1tf35BBkkacdLqpAW8cxQo8FRxIhHj5HH+53Z49Q9LPBnfkUC7I36h99uEO5HIuc1YdfL4+GWEmodbqesvNe4c87gEytTcgRicfEEOeCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726141952; c=relaxed/simple;
-	bh=UxGGqGI6lmlwBTsPjmRmmN0QPm0qGEImDfB/sQVQ8bE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=In8lOIXlcBbQY1Ir5/0qahGE56L6nyQysCx2ESgFJZ47IuJnaiTIakQdBXIMgKkCD80o32rJNX6NAe0T3LjQklxB2zZQYw9X2LZz1VlYN7C/TyHajlTxQupJUzFcifLIyTfz2tyekbDHU4Q1GP3RV6wlrofM9f27dBfKo93vnUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=k2PeLr5o; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1726142875; c=relaxed/simple;
+	bh=FE9qaI2RQDZHJGK18TN5kDROuWwy4+7YXkorV4s++0A=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=f0gYcfc9EHwzIPguk287m5SQF5LDzeAu6WQa/1mxAq2yriBF7LDQWgZY/202iy6/xMPdtGcYIXE8aB4lzLEzBCD19Nz1vLMUdeVsl6HRQIab3lmKLMet2iIkbKkZhr+Bzs79+MlPj6NHAJstDvJgidk/PdhYUNKY2VR/LVz65mo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VlKqICTF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="k2PeLr5o"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4X4G5J6BGvz9sqq;
-	Thu, 12 Sep 2024 13:52:20 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1726141940;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2efnxzDfw9QXH50hbL3FzD+55QgECys/ru4yn8zfnU8=;
-	b=k2PeLr5oWvWf7IS9oipKD9+QOfKjHdHpgSJYEFz+iqb6wTTVmreXdXUbugtgqUkZUIuvov
-	nKBOD0sHqVg5c+hzNQ3LRrOqIJ8YUScQJvzfxoOKvs1hPFba6ATJE/MbVxUUgmNqLfaSMp
-	sIBYj+JbENONVdT3dbHzgflJT4O0Dx51bsI5veNB0ditUZYoHYZx2Lyd/+Q3roZ7TPoTIh
-	AbSWizv7VoM9EEpaiEEcxY9wNnYKTR/A2gmcJ9mr2lglVpSuqZfRU4XecEvLgcQGe1j/9Y
-	wtLtmDgWFHPGOM8V6dxRTn1Az2Vb0dvlcNjzd5QrHu2Z0qe30NEZBDnak7IUTg==
-Date: Thu, 12 Sep 2024 11:52:14 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: Jonathan Corbet <corbet@lwn.net>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Christian Brauner <brauner@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Pankaj Raghav <p.raghav@samsung.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VlKqICTF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 832A5C4CEC3;
+	Thu, 12 Sep 2024 12:07:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726142874;
+	bh=FE9qaI2RQDZHJGK18TN5kDROuWwy4+7YXkorV4s++0A=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=VlKqICTFJVdzjOmQWZGWUJ85jBV1/9iUlYtK9/cJLStrRFfGgGPZAmps35yCNKSPS
+	 EiM+Jw+glEIv3foCRYmrG2LETJUkAuQ10MTb/PSeALYd4eZ+TZyt02zRf48Vgb68Q7
+	 PZmq2GRFMRfYcImxwlLo3b3vw82hJjDEG5xbmk6cXtZYhLowPs90Rygua+Cn9Z0evO
+	 evPLUliJopHD5fZklDrEctvBnPAd6TvqDcNeTFUsGwfW4dDiZ7VW+VL2tRe633IROV
+	 GybOp+zqurd5/eO7bdRRQ1OV2ME+SxBlBXj7xro8KWEk/+ndA/buxKuLY+RgDRGsPY
+	 OOB3m3WN/Ii5w==
+From: Christian Brauner <brauner@kernel.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"Darrick J . Wong" <djwong@kernel.org>
 Subject: Re: [PATCH] Documentation: iomap: fix a typo
-Message-ID: <20240912115214.omoenw2bdz5zi4rt@quentin>
+Date: Thu, 12 Sep 2024 14:07:39 +0200
+Message-ID: <20240912-frist-backfisch-a5badbdd5752@brauner>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240820161329.1293718-1-kernel@pankajraghav.com>
 References: <20240820161329.1293718-1-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -50,38 +48,30 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240820161329.1293718-1-kernel@pankajraghav.com>
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=860; i=brauner@kernel.org; h=from:subject:message-id; bh=FE9qaI2RQDZHJGK18TN5kDROuWwy4+7YXkorV4s++0A=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQ9ujnZrMmo68WXFYams8ViTy0+uMhgys+6UMVtCyR0n lydF36zqaOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAixucYGY6sq5ns5qtkdHCh nfRbqYQTDS8MmlMeXEu/+yTqXt4S/lcM/xOEuJjidDVZGx+o7GX93Su277bHgZz/70uk/V3b537 7zgwA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-ping @Christian.
-
-On Tue, Aug 20, 2024 at 06:13:29PM +0200, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
-> 
+On Tue, 20 Aug 2024 18:13:29 +0200, Pankaj Raghav (Samsung) wrote:
 > Change voidw -> void.
 > 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
->  Documentation/filesystems/iomap/design.rst | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-> index 37594e1c5914..7261b1b2c379 100644
-> --- a/Documentation/filesystems/iomap/design.rst
-> +++ b/Documentation/filesystems/iomap/design.rst
-> @@ -165,7 +165,7 @@ structure below:
->       u16                 flags;
->       struct block_device *bdev;
->       struct dax_device   *dax_dev;
-> -     voidw               *inline_data;
-> +     void                *inline_data;
->       void                *private;
->       const struct iomap_folio_ops *folio_ops;
->       u64                 validity_cookie;
-> -- 
-> 2.44.1
 > 
 
--- 
-Pankaj Raghav
+Applied to the vfs.blocksize branch of the vfs/vfs.git tree.
+Patches in the vfs.blocksize branch should appear in linux-next soon.
+
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.blocksize
+
+[1/1] Documentation: iomap: fix a typo
+      https://git.kernel.org/vfs/vfs/c/71fdfcdd0dc8
