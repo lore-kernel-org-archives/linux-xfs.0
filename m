@@ -1,51 +1,38 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96F36EB4C;
-	Fri, 13 Sep 2024 04:43:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBDA21D52B
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Sep 2024 05:42:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726202590; cv=none; b=nG3GUzznxrGzBsFqycZUil3uZiz/a0p6xixlxIV27dkVtLYKz5RxN3MHEErz1LgisutNE37gptNvdNIetkvz5XV9R+R4MkpwUwXs6PshNl7OacOF4BKQZsDIZHGUKfjg8SxK3zLKzItWVFaYP43xKEgqnJSP1xdq/aIMCs7AAd0=
+	t=1726206146; cv=none; b=jz1capaILGgqOzlVJ1fTRIOcm0shny5GIwqMf9ovPwN6vVvyI+D7Yrox0IGMJRf2OwqX/s7nsyGsOtjRk+FKy5dv9Y2x6HeEIMEagOosm2EfQ3wu2GIUTX1kXrY3VNW7gzUJewfgQYOH25Ct2VIZ8uAJSFVtfOi4D7947cMod5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726202590; c=relaxed/simple;
-	bh=AKLPPYm+6jdHIvY02rA2E5qqXhodiMUtGAGgWGCccdo=;
+	s=arc-20240116; t=1726206146; c=relaxed/simple;
+	bh=+dhDShFAjFIYABi7dc5CRIEuod1vpFBt4Z5M5e6Da3U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nKiTsBr68cGaXF5I5bfFdU6jEHNNdfORdRkH8ApPWTey/5Do4eQFCrh0/W43Xzzj3iU4XKylcPtYKAi0gH1E9ND+uWraI+B7cfiaUfVRH6ZexjUv2kUUfd1qe6+B4/flUFehvwr8WSZ8hKJHhQZhkPB05meuWZI1GPBvH4KUHW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=p3NOxoaU; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	 Content-Type:Content-Disposition:In-Reply-To; b=EIF9D+vh2uVbK9JCUAc/naBlWQUbgO2hkAejwinZhrFoMyPtyMrnC8/PwKykWH74645LYaXphyLBle9plDCC65GTSZJilqTOY+reyAUseC5b089SMygk6FiwXX+JwFaTK07kL3wYYd0hZyyPxHpbWrLNvONBSCC1rmtn4X9elTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GjU9PHCU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="p3NOxoaU"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=GB+MKzmDyvafMVZlwBfvwAyG60Rf5lxn8o4RMGC5ew8=; b=p3NOxoaUVL0Tm61H/SLdyESx8v
-	ZHs48asoNOFanm5vv0ZSZ49qzWMQfbyuRLZxjHiuycwWkURaceybOQLhzhhG2lW9Mxk5iEYS+iO6z
-	96REL79fUYOQ3guW4qaR+M0XAm+Y+udO6taziwWEqvdfh2VshDeBrh0opDPFbgGCJpsAQS+WRnTi6
-	KJglhQXupoqkIqG/TFbSzX9Ztw9LBO+2NK1apqe7LqvY+f6P0LZKmVhqiuynm9cceMK3XRcuxffqR
-	vOaqSb8BKNnkMTVO+b6KDkns1pSz9jCakhrx/tPSCe6YWOKBfUMbPr0K9pIvZiw0qVNTiURl+9gbj
-	FmTqO63g==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1soy9A-0000000Bt99-2A9A;
-	Fri, 13 Sep 2024 04:43:04 +0000
-Date: Fri, 13 Sep 2024 05:43:04 +0100
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: Andrii Nakryiko <andrii.nakryiko@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	David Chinner <david@fromorbit.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	bpf <bpf@vger.kernel.org>, Networking <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the bpf-next tree
-Message-ID: <20240913044304.GB2825852@ZenIV>
-References: <20240913135551.4156251c@canb.auug.org.au>
- <20240913040038.GA2825852@ZenIV>
- <CAEf4BzashWCozzD7KetgC0Wya-KqUzj0omguAOt+oUVDzHys=Q@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GjU9PHCU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74BF4C4CEC0;
+	Fri, 13 Sep 2024 05:42:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726206146;
+	bh=+dhDShFAjFIYABi7dc5CRIEuod1vpFBt4Z5M5e6Da3U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GjU9PHCUYT9N2E03KPDx+GBcT5MRu4j22FSh6KBTL+H5lfuRvSZZpp7SvlOvpthHm
+	 cIb0PMJoH+x55wqZ0+qWeDiiA66JI2aE+nGYQpl0ZxJX6GKAvUJeo7JD/xMDuKLJzV
+	 rhehNzor19H1K7RePG+2RHQ5dCEJuxDIlOLGCuduNzYd61EmtuVpj0j8WNmrGZOYQf
+	 wvEIUt1WdweVZYlW2+6Gl5PA/Hmf8jrknajcCpIjjNtl4sPCUzbuWohAsQQKajwzt/
+	 KdTemnvzYC1TsLP3nmmV4o4en+B0Mqlm3rUfmIOrmiNIf/pgJerqHmYAb0FSB2DpcK
+	 4kJhNa2ffd2RQ==
+Date: Fri, 13 Sep 2024 07:42:22 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Bastian Germann <bage@debian.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/6] debian: Debian and Ubuntu archive changes
+Message-ID: <slyvt2rz27lnawl6k22ozv2mevul6zrv3j5pzmobrxao5ilsmh@qz4l27bmlqd7>
+References: <20240912072059.913-1-bage@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,24 +41,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAEf4BzashWCozzD7KetgC0Wya-KqUzj0omguAOt+oUVDzHys=Q@mail.gmail.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <20240912072059.913-1-bage@debian.org>
 
-On Thu, Sep 12, 2024 at 09:26:31PM -0700, Andrii Nakryiko wrote:
-
-> Should I take out the following from bpf-next/for-next for now?
+On Thu, Sep 12, 2024 at 09:20:47AM GMT, Bastian Germann wrote:
+> Hi,
 > 
-> a8e40fd0f127 ("Merge branch 'bpf-next/struct_fd' into for-next")
+> I am forwarding all the changes that are in the Debian and Ubuntu
+> archives with a major structural change in the debian/rules file,
+> which gets the package to a more modern dh-based build flavor.
 > 
-> Al, currently I'm basing my patches on top of your stable-struct_fd
-> branch. If you need to update it, I think that's fine, I can rebase on
-> top of the updated branch, given my patches weren't yet merged
-> anywhere. Let me know.
+> Bastian Germann (6):
+>   debian: Update debhelper-compat level
+>   debian: Update public release key
+>   debian: Prevent recreating the orig tarball
+>   debian: Add Build-Depends: systemd-dev
+>   debian: Modernize build script
+>   debian: Correct the day-of-week on 2024-09-04
+> 
+>  debian/changelog                |   2 +-
+>  debian/compat                   |   2 +-
+>  debian/control                  |   2 +-
+>  debian/rules                    |  81 ++++++++----------------
+>  debian/upstream/signing-key.asc | 106 ++++++++++++++------------------
+>  5 files changed, 75 insertions(+), 118 deletions(-)
 
-al@duke:~/linux/trees/temp$ git describe for-next 
-v6.11-rc1-3-gde12c3391bce
-al@duke:~/linux/trees/temp$ git describe stable-struct_fd 
-v6.11-rc1-3-gde12c3391bce
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-IOW, #for-next is currently identical to that branch (will grow a merge
-shortly); no need to rebase anything.
+Those changes look fine for me, but I'll wait Darrick's review too as he's more
+familiar with Debian than I am.
+
+Carlos
+
+> 
+> -- 
+> 2.45.2
+> 
+> 
