@@ -1,91 +1,134 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CD5C8827;
-	Fri, 13 Sep 2024 03:44:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 014C83716D;
+	Fri, 13 Sep 2024 03:55:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726199066; cv=none; b=AV205LqqXDD1zdFW+crscVN4OSC0189SI14lBLnoRMFxAzH7eb3rv95DwZaWcQ9uKxJ9MGtWe39aRDiIsc64NJ/2PZvWfpSKshZ8tiRG3xZHU6FrcpRBiclGVBC3vBXhyuhTyVf7N+bm4BWCSvuuSxxC4hKp8IT7DqQWaCbrN6s=
+	t=1726199759; cv=none; b=Ybkw3R+xB+oPCVKq6G0IQ0Zbdul3WKNBiIij7ehLLwaYxPls6qU1WSdydTIx2zFrKDoPOaA7HPMkch+4R1PVsL4I3Eg0CuLbgu4vbpbRUXMOhhXcSXsu0LNXqRKYVepBVpSELdniB5lBQ2UI62tzfrRLbo4hhZ4vp1fZMIX8jxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726199066; c=relaxed/simple;
-	bh=/m4GfWd3oU9aBz87wq0gfZPIiwHASnEq9/Vz2lV/oe4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nfRFNPkNs4FlVyQ0Wbi1VSC/d5JV0OgIalJwI5jyh/9/sT/dSmL7dcLl+88jimQH+GE8lI2t/dxl/hSxCnTPBe14q0zAjoO+2ciqDAMewiFFETh68jpX8LbmilUXi0IFkuvgFmEEg0lapCaXfXWfDWlv8n79fyOon5X9kxOpnxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JOdq7coC; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1726199759; c=relaxed/simple;
+	bh=XEf+xBWqSZosQFjsRQCHe7OPs4kOLwcwmr/7EEWmscU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=d+L4CtOeyW65BdqEQDE/V+0ZA0KLsBOGbmJ/SLCcVkef+HBCh7yJ+zYbavycs0u+0KI4kj/CxhSXH7fHEqmC27NiI8sH8+WZ3eFQYtcZ5uYkT8IqW/4IalStELqJImb422Btf9Tkhry3ZWZBuPf4myQJvAigXQWQ3vBo6dYKGNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=Nir4rlgq; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JOdq7coC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=RvfXQ9uvEs2BWWmkp13Rn+2w03z6x8sxWgVmbE+dLsk=; b=JOdq7coCdU6dtWavSvoUMfgrkb
-	HkADbUmaigqOAD9xt0G4oLZPvfAPkdxAFR/9izSAnmePGYc1AvjFz080+NLrvCIcADY9LkHjCTjCh
-	1zmlQw1FsW0jgAUWCa6Gk7b8eAelPrR1BjOU1mK+mIEhAMXWWMFRsyFs/578cNsU7Zpd2IB6iz7Vx
-	IXiLEB7YFP9nr9k/lVXJ6uAJ1oHMCv5UiinGibHQFfuMLsvsn6AD5/JiotmGckfolhF0U7L0Z7zEo
-	8ytsOnorp5ox7o3K1IJaEBqylesxq0Um4ewmL6vrPDszY7tbyJ0Ou+C1oBbY2SP3nFCDB1+7X3BFe
-	8fpoFTGg==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1soxEA-0000000G4tf-1dYV;
-	Fri, 13 Sep 2024 03:44:10 +0000
-Date: Fri, 13 Sep 2024 04:44:10 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christian Theune <ct@flyingcircus.io>,
-	linux-mm@kvack.org,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Dao <dqminh@cloudflare.com>,
-	Dave Chinner <david@fromorbit.com>, clm@meta.com,
-	regressions@lists.linux.dev, regressions@leemhuis.info
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-Message-ID: <ZuO1CtpGgwyf8Hui@casper.infradead.org>
-References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
- <ZuNjNNmrDPVsVK03@casper.infradead.org>
- <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
- <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
- <415b0e1a-c92f-4bf9-bccd-613f903f3c75@kernel.dk>
- <CAHk-=wg51pT_b+tgHuAaO6O0PT19WY9p3CXEqTn=LO8Zjaf=7A@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="Nir4rlgq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1726199753;
+	bh=SVVUXGwkJdQgfUdfteDebc7NB12XpEgE4fZlbLLMeoI=;
+	h=Date:From:To:Cc:Subject:From;
+	b=Nir4rlgqnHFqA8NozeRB0Iumduyt4/OkXNFuVSLnUksJcV5SWfZZW/a/wYvbYV3cZ
+	 RXX3l/ehTFfmwKBPi0mpxFPl+kpUtDjlX0SdAALD1jIL/UOndfUskYXak4s0akFdtn
+	 T7wqpocXR5lwYSIhHV7SmXO+384RsSqOXbJu6oCkWagBDWdIiR42b3HAb0GCaTj4iY
+	 JVZJWJgLK3yu9PcYayaA+V5QfXO0/2oYieyuPuHklTczZZZQ2N6ImkIQM8cNNR/EUD
+	 nF1pwAOShdFMMb6k8jcCRSOEPGQB7i+YUKdViIxkErdVjUWMeX1wJqG1CanHJcWlvc
+	 v5xGtUTDuXz9w==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4X4gT41v80z4wy9;
+	Fri, 13 Sep 2024 13:55:52 +1000 (AEST)
+Date: Fri, 13 Sep 2024 13:55:51 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Daniel Borkmann <daniel@iogearbox.net>, Alexei Starovoitov
+ <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, David Chinner
+ <david@fromorbit.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Al Viro
+ <viro@zeniv.linux.org.uk>, <linux-xfs@vger.kernel.org>, bpf
+ <bpf@vger.kernel.org>, Networking <netdev@vger.kernel.org>, Linux Kernel
+ Mailing List <linux-kernel@vger.kernel.org>, Linux Next Mailing List
+ <linux-next@vger.kernel.org>
+Subject: linux-next: build failure after merge of the bpf-next tree
+Message-ID: <20240913135551.4156251c@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wg51pT_b+tgHuAaO6O0PT19WY9p3CXEqTn=LO8Zjaf=7A@mail.gmail.com>
+Content-Type: multipart/signed; boundary="Sig_/rXB2FGQB1LHlS=gzzOd7Q/.";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-On Thu, Sep 12, 2024 at 03:56:17PM -0700, Linus Torvalds wrote:
-> On Thu, 12 Sept 2024 at 15:30, Jens Axboe <axboe@kernel.dk> wrote:
-> >
-> > It might be an iomap thing... Other file systems do use it, but to
-> > various degrees, and XFS is definitely the primary user.
-> 
-> I have to say, I looked at the iomap code, and it's disgusting.
+--Sig_/rXB2FGQB1LHlS=gzzOd7Q/.
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I'm not going to comment on this because I think it's unrelated to
-the problem.
+Hi all,
 
-We have reports of bad entries being returned from page cache lookups.
-Sometimes they're pages which have been freed, sometimes they're pages
-which are very definitely in use by a different filesystem.
+After merging the bpf-next tree, today's linux-next build (powerpc
+ppc64_defconfig) failed like this:
 
-I think that's what the underlying problem is here (or else we have
-two problems).  I'm not convinced that it's necessarily related to large
-folios, but it's certainly easier to reproduce with large folios.
+fs/xfs/xfs_exchrange.c: In function 'xfs_ioc_commit_range':
+fs/xfs/xfs_exchrange.c:938:19: error: 'struct fd' has no member named 'file'
+  938 |         if (!file1.file)
+      |                   ^
+fs/xfs/xfs_exchrange.c:940:26: error: 'struct fd' has no member named 'file'
+  940 |         fxr.file1 =3D file1.file;
+      |                          ^
 
-I've looked at a number of explanations for this.  Could it be a page
-that's being freed without being removed from the xarray?  We seem to
-have debug that would trigger in that case, so I don't think so.
+Caused by commit
 
-Could it be a page with a messed-up refcount?  Again, I think we'd
-notice the VM_BUG_ON_PAGE() in put_page_testzero(), so I don't think
-it's that either.
+  1da91ea87aef ("introduce fd_file(), convert all accessors to it.")
 
-My current best guess is that we have an xarray node with a stray pointer
-in it; that the node is freed from one xarray, allocated to a different
-xarray, but not properly cleared.  But I can't reproduce the problem,
-so that's pure speculation on my part.
+interacting with commit
+
+  398597c3ef7f ("xfs: introduce new file range commit ioctls")
+
+I have applied the following patch for today.
+
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Fri, 13 Sep 2024 13:53:35 +1000
+Subject: [PATCH] fix up 3 for "introduce fd_file(), convert all accessors to
+ it."
+
+interacting with commit "xfs: introduce new file range commit ioctls"
+from the xfs tree.
+
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+ fs/xfs/xfs_exchrange.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
+index 39fe02a8deac..75cb53f090d1 100644
+--- a/fs/xfs/xfs_exchrange.c
++++ b/fs/xfs/xfs_exchrange.c
+@@ -935,9 +935,9 @@ xfs_ioc_commit_range(
+ 	fxr.file2_ctime.tv_nsec	=3D kern_f->file2_ctime_nsec;
+=20
+ 	file1 =3D fdget(args.file1_fd);
+-	if (!file1.file)
++	if (fd_empty(file1))
+ 		return -EBADF;
+-	fxr.file1 =3D file1.file;
++	fxr.file1 =3D fd_file(file1);
+=20
+ 	error =3D xfs_exchange_range(&fxr);
+ 	fdput(file1);
+--=20
+2.45.2
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/rXB2FGQB1LHlS=gzzOd7Q/.
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmbjt8cACgkQAVBC80lX
+0GyDNAf+LQQb+QL9TMZKMLzFxlsmKmHfGwNU9a4yhYswnkWHszjKPEzU8wZlkjcK
+MUk0qywdEGYTO8Qvk9d9/ZJLtvUVp5eLS6mH4637OGAB5JrgPF3rHFujLaMNQXmg
+6lRXcz2YL1GGwPr/RZjey7AcBWz93hUEbKccCnJ8Sm1wGNwDOmw4Rab/A/ybHrZh
+a4omj+z+MnjtckezzzwTwbmVmmD7mKOf6RZC242PF1hPjvMV//wYJ9B/Odw/nU+Q
+OVtCAtFidN1hR1avssCcsPqnmsRzrm1o1E8WydakC++DPqld3S/AU0rhAI/ehORG
+wxJgS9CDBGYAytFOombExKjZYAfp3w==
+=wx01
+-----END PGP SIGNATURE-----
+
+--Sig_/rXB2FGQB1LHlS=gzzOd7Q/.--
