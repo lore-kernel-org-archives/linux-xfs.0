@@ -1,354 +1,255 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E3F01DB95A;
-	Fri, 13 Sep 2024 14:02:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726236157; cv=none; b=Y6JfOYpwScAfAH/8YOjMwxcS8MTH3v5PXt17px21ZNYUTE2WuZOnjHpRr4rgxi5wPPIs0KhlZHU2WV5l/YlJtkQbowhOXpbBOr5LPFRAaWkzqhZjliIiqaZymspj0jh52mewWWWdPQokXDq6prKKwdD0+TuRKEXGMofQfNrago4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726236157; c=relaxed/simple;
-	bh=t2Ui/SX4AxPA+ilhCL7nQu41U9EfcHzmNFaUUk1q8Is=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=qdApsv+OKDuOuHYlu46rao/5Wkq2pCp2LVAp9KDYbnCNrPkhX0dNpuSpyicSkUYzSZNvHVCviqKDWkA2RfxgYP/HbxUTX1wGKpq5DVf/QfC2lhdFpyhY4KqddYzF6yZ+y9yRjwE5T/5BMBx3svlVl2sQ0Ap+KIfnWHZAIRexLFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OYkIZXRT; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12822D502;
+	Fri, 13 Sep 2024 15:31:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1726241482; cv=fail; b=GVrsqTpYvZ7SShOQ2ZqOyc9E5yQJRHOtvEc+tMDlk1T6xUm0LjpGAtE6i8+QgPtxCP/kSnGZcgMmxIlgxSaUAcACst1YWhvryINqh5iK+vpgTwikwMxZYYFTaoT4XvqwKsm+Gb136NLKEoQe+yeTk3fSU8nNcYUefSaNQAkku4k=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1726241482; c=relaxed/simple;
+	bh=wT1+phQPJz0lkzghseP4fVkEBWUiYRf8TNN2sVQuzas=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=seAju00FiXjqEvLHdvhXbU14mJhGcMtDBC6oH7cBgV9Jqdrt2zZ8IXHX4lLYOW8pSmYR2dY6wdeAF35ifr3chbm4SzoC760nZuYjsnFab3XQZYtHK4U0DeCjyEXAB21Pr7NxKmsfkJJm0wuwwWPzALJBlgPHquhCE5jjruhUa/8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=eVE+lz1H; arc=fail smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OYkIZXRT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 167E9C4CEC0;
-	Fri, 13 Sep 2024 14:02:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726236156;
-	bh=t2Ui/SX4AxPA+ilhCL7nQu41U9EfcHzmNFaUUk1q8Is=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=OYkIZXRTi49O5Zq64sitpXZgQwX0h94kLimMQ8lorTxH+cTU0HEeN5ghRmpBLz8hM
-	 ukRc7I+HdO+g0dPxSxCnkqO1kHJoPgQ66Brl4Djx8cZuj0bC1PmFW+pl//7g6iDAB+
-	 KxnIlS+wEfr745xM44VQRFH2YsExJezUgMiMwuqYALSNjuOoqfjKuX1+7V/kcT6JU0
-	 AjGJ91nkgLsnmzOcNJVYpQg59SkOHukaylhRRhDdDpTJY/0U4bIkPvSs8uF5jQDSEy
-	 4LPMCJ8oI0wal4EUN2fpwMlwL4TdJJIGPE7DlHKqtejXGy1WSeqrD21LX1WxJLLZUA
-	 D/irB37RwbSQg==
-Message-ID: <de5a3a21ceb5fa59de64443807e3bafa1a003a13.camel@kernel.org>
-Subject: Re: [PATCH v7 05/11] fs: tracepoints around multigrain timestamp
- events
-From: Jeff Layton <jlayton@kernel.org>
-To: John Stultz <jstultz@google.com>, Thomas Gleixner <tglx@linutronix.de>, 
- Stephen Boyd <sboyd@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Steven
- Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Jonathan Corbet
- <corbet@lwn.net>, Chandan Babu R <chandan.babu@oracle.com>, "Darrick J.
- Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger
- <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, Josef Bacik
- <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,  Hugh Dickins
- <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Chuck Lever
- <chuck.lever@oracle.com>, Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org
-Date: Fri, 13 Sep 2024 10:02:32 -0400
-In-Reply-To: <20240913-mgtime-v7-5-92d4020e3b00@kernel.org>
-References: <20240913-mgtime-v7-0-92d4020e3b00@kernel.org>
-	 <20240913-mgtime-v7-5-92d4020e3b00@kernel.org>
-Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
- keydata=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
- QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="eVE+lz1H"
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48DCTOZq002869;
+	Fri, 13 Sep 2024 08:30:52 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	s2048-2021-q4; bh=Cr49Om7Nm/q77lFKcYMu6DvcskxYMtja5TFNuy+5jYs=; b=
+	eVE+lz1HSoRUuC2hmpHCggtee6cegs/cox/vR6IZTdyPVeU2Ef3bOl3TPG6rqQCB
+	nisFhB7b36n9LxLcADLrES0OrgB/HF3QqW3E75+9nntx2jq4D8ng+d5dM2s6E/eC
+	eJTTK7AlOHxeXzFRSHHvfxrToYervDNDjpBv0Yz64QikQFhUyvWVU6AEDalk5suD
+	OFTZlA+l0jEepogSC9eFFH4IkmmSDGluU7v+o88TUrLDrTP1HqSXCfF/9pOd2nYB
+	pg8pYyveufJ0dtOkBuHi4yJmZf180hnLvidqLC/pRIBC3b3OWubO3kZ1om9jShZT
+	sS5yCmgCAlEECVpm0w5/aA==
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2045.outbound.protection.outlook.com [104.47.66.45])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 41mneds1mn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 13 Sep 2024 08:30:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=oM9LhFYBjXHs3HSwQ4MTM+6wEzXijq1JMhrstsAF31xY1xqAPNmiW25XeNkNkW/giRivGH9+oCNneRpMDa0D/WI18RRJnSiSuF659ShNaEThleQ5GXoHPbqVfENqLWKycbYVGTGXXb5NSLr4vfpRTWobj3IVZfxLXOOucmQFUY61vEbarME2GYHout21j6hAkXP3Sc1HCDZfFnoeMhtMhOi0usU3JFr1hIemD7FMzlpwfIqKkPBMd7wcL/0+OxbHus5xhiORPwDRBhB5Xi0EXl4nIhgLBVJnmy0VRReXjNzc9VLrU+hkLKLfeBG31KKF8IoaeeA+XQ6QZEZJn5Z/ug==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Cr49Om7Nm/q77lFKcYMu6DvcskxYMtja5TFNuy+5jYs=;
+ b=hbTitZhjQpsIFYaGv9hW4bd5lB13lLu6tPXST+Xe9z9/9dvyjw0p39BdqSSTS8uy1hU8OHajmPzNZfAIuWPb5hgsIoZ0iqtdoe/mmy2NFMTraCFC3BLMMPRn+88lKad6qK/vpOOytCqzSEE1mkrG7nySbAThGZYj5bceISElLw2PIggaSWvtlonb4RqjaePbhkZqANr8rmzOS9xCJ2cZBe1//iQCwb8EvDDjDctKzqaAYATq9fOG2gxBr8U4fh8Eo+fpzHCjiCPU4Vbfcv+Q+qt3fDPgE3lFxpYumllvagiWm5PqDc+NVrvT9N+2NccbA7FLdIwXqLbc39r1lvXbaA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
+ dkim=pass header.d=meta.com; arc=none
+Received: from LV3PR15MB6455.namprd15.prod.outlook.com (2603:10b6:408:1ad::10)
+ by LV3PR15MB6660.namprd15.prod.outlook.com (2603:10b6:408:26f::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7962.20; Fri, 13 Sep
+ 2024 15:30:50 +0000
+Received: from LV3PR15MB6455.namprd15.prod.outlook.com
+ ([fe80::740a:ec4a:6e81:cf28]) by LV3PR15MB6455.namprd15.prod.outlook.com
+ ([fe80::740a:ec4a:6e81:cf28%7]) with mapi id 15.20.7939.017; Fri, 13 Sep 2024
+ 15:30:50 +0000
+Message-ID: <d4a1cca4-96b8-4692-81f0-81c512f55ccf@meta.com>
+Date: Fri, 13 Sep 2024 11:30:41 -0400
+User-Agent: Mozilla Thunderbird
+Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
+ folios since Dec 2021 (any kernel from 6.1 upwards)
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>
+Cc: Matthew Wilcox <willy@infradead.org>,
+        Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Daniel Dao <dqminh@cloudflare.com>, Dave Chinner <david@fromorbit.com>,
+        regressions@lists.linux.dev, regressions@leemhuis.info
+References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
+ <ZuNjNNmrDPVsVK03@casper.infradead.org>
+ <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
+ <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
+From: Chris Mason <clm@meta.com>
+Content-Language: en-US
+In-Reply-To: <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: BN9PR03CA0918.namprd03.prod.outlook.com
+ (2603:10b6:408:107::23) To LV3PR15MB6455.namprd15.prod.outlook.com
+ (2603:10b6:408:1ad::10)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV3PR15MB6455:EE_|LV3PR15MB6660:EE_
+X-MS-Office365-Filtering-Correlation-Id: 97aa111a-74c3-4ebb-8e1f-08dcd4090c01
+X-FB-Source: Internal
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|7416014|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?VzFFVkEwMkcvejNpSTNrMHU2b2lscDdVck4xbnB3blZlN0NZNGZpblcwSGc3?=
+ =?utf-8?B?UGQzQkhCSTVmNnl3WXdjY2pTWXpwdEFNeW1qYWRMdTFET09kMk1vV0xMeG5I?=
+ =?utf-8?B?ZFQ0cC9iNkUzMWhlOHJic3FxUlFwWklWUEhTZVNNdU4wSUZGSlEwakRFd2M5?=
+ =?utf-8?B?NkUzRERCN2RId2RCZm9UUGZKN0UydEZ1U01kZ0ZRMUVsSTJlak1aM29NZWgx?=
+ =?utf-8?B?MVVuaTNaREIzaVZ4UjA1eDJoeDFYekRGam1vcjdaUlNhaWZDWUlNeXA3S1NO?=
+ =?utf-8?B?TVVyWHRFRUVreEtTYzNlWit0c1EycWVQckZYb2dxYTd5WjZScEFFSktkeWZ5?=
+ =?utf-8?B?dG1rTFBiRWIrSUZHVjVyS2lhVTFnZXZVWDJaOXdzMUZQWjRrUVFPZlc1Nzcz?=
+ =?utf-8?B?UHl4YmRVVlJRN0RtUkhabG0yZmIxUXlZU096ZGoxb2loWU5PYWlhMWp0VzRV?=
+ =?utf-8?B?d1NPSHZ3Q3F4Nm5xWENIaXhndG5xSTdUcnhheWxYOG1wOWZSTnhwdWdRKzl4?=
+ =?utf-8?B?ZW43OVlJVW8rMXZ4TldndERLRW1RM0JaM2l0Q3ZVUDFQSEpaK0NLdDRLVVlm?=
+ =?utf-8?B?b3NvSjYrOVF4WERlbUU0R1FFK3J6bUFqMzR2SWRhMFpLeE1TRVZLSVRGQVlp?=
+ =?utf-8?B?ZElrK3dzMEhneGpFaUlsSVdGRU9kazgxQ3RKQUxnRXRwUGY2U2hvWTlWMS8x?=
+ =?utf-8?B?aUlFMVUwdEdXOW16UVNSVklHemlYWWtSK0N2enA0emgxUWpTUm1UZUt0eFRE?=
+ =?utf-8?B?bVdFVloxbHlpOUhEM1Z5V0Zmek52RUY0cE0vdXRJSzEwRkloUEU3RHBmY0U2?=
+ =?utf-8?B?U1ZyaldKVXorcFNYbldvanBROFN0VnEvWmZiOGJJVVJ3L2tvMXlyV2pMdUVL?=
+ =?utf-8?B?THVia2xESG5MYlpUS3RsZ08rS0pjZkFSS0ZwU3Zsd2srdnlXRk1LVjMvVWV3?=
+ =?utf-8?B?NEtZZ29oaWRCZktFb2E2S05HUzRIcGx3QzBvKzU5SHJNdzEzMG5kZWlubDl1?=
+ =?utf-8?B?WFBHd0tsRk5MM3RENlN1U2o1ajVvQ2ZUNUMySVVEMm9TZkJZNjVXSktSd21q?=
+ =?utf-8?B?M0ZIcHBUZENsUTJmVkRwZW1hWnNtWXQrNzhPUGRmZ2ZFV0hZK2RIWEtvV3Nw?=
+ =?utf-8?B?b0JEb0l1SUhrWVRHdnArWDN6cGZaK0RqeXFEWkFERTZPNi9RRHZJMnhjWmhB?=
+ =?utf-8?B?dmdTRUVJZ3RkSWFuL3hVK1MrR1FUSTJXRTkyMG5KTXBTNnJ1OHR4M1RndE5M?=
+ =?utf-8?B?dE9aeW9HSlZnOEJiWDdIK09KZStPb0ozcVJQSDhqUjVKOXNCZEJ6YWM0SGVV?=
+ =?utf-8?B?MFF6NEdrRDhvWXh0Uk5SZi92ZTBodVJaNGdMM1RGWjhxclJ1cW5VeERZNHZL?=
+ =?utf-8?B?cjJtRFBhZUJXU3NUWFBaVU1sNTNXcUo3Wm05TjVMTXdYOGt5cm02bXpmcVQy?=
+ =?utf-8?B?T1FLZUQ4dGdlZ2hHT3I2RkE5MFFOUjVLQUQ5eHkvUDdUOUNGbzhubmZFaFQ1?=
+ =?utf-8?B?UkJzRkVReCtMaE5nTjljREMvN0t2dWV5ZDFvRzEwVDhObTNnMTVGcmNQRmw2?=
+ =?utf-8?B?ekNrVm84VmNJNTBuYmMweDhTaXBlZXl5SEdDTEIybHNHcklSOHorOUc5Q292?=
+ =?utf-8?B?bG1Ja2IwQWRUNmZzNDNPMUNzSlAvcjlKWHZEZW0vcnhPQnNrcnR2OHozK3U0?=
+ =?utf-8?B?TkFxQ2ZsbktmZGdPbVJaQUJXQkhOMENJaFBRWC9YUkJUdi8wL2lLZUNIK1Rs?=
+ =?utf-8?B?a0lKdmRFVjdzTGUvcHdXbWhlNjg0THVQcGFEL2pHcGNJeCtRWGttZEl6RVZT?=
+ =?utf-8?B?K0RnTGl6dHRkaW91cThiZz09?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR15MB6455.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NElWTnNEY0xmdEg3TUNjWEpsWFJDeVNPdllEbDV4azRrMVVtWXJXWDNnWkFY?=
+ =?utf-8?B?T3pOT2NkN2UwVXRnRG5wd0pQQVdQM3pDSlBYTzZReFFuUEhpemxMdVBiSTNZ?=
+ =?utf-8?B?MEdHTi8yRFhiS3FmUHpoT21RM2NaNlpyQXNGZUhMZEgvLzRKakFWNWtUY1g4?=
+ =?utf-8?B?UUpZb283YVU0N2NKYURPWXBhUUszQk50eDhhS2ZQNk5TQzFESmpjSWxzbzN1?=
+ =?utf-8?B?S2JQajR5NTZlMkVabkdkSittRGp4TlBzaVRZVFVTL01kOTREY2VLVkNhMEcw?=
+ =?utf-8?B?dFpXNTV1Qk94L1RrVmtOUlVWZ2RhQ3JncGdQTmR4eGFVbWR3azVnMGl0cEpa?=
+ =?utf-8?B?bDNhekpLb3pud2tIREd0ZHdZVlFqV0t6UW1rU1J3RUlNQWN0L0FYMlhlWkVT?=
+ =?utf-8?B?cWw3eFd4QThzZTRBK3dZTXZJY29pUitTU3E1T0dsenN3YnBsUzUra1lrYkw5?=
+ =?utf-8?B?RFVnUXdNRFpJNisyWFk1aWRIbmd6TFBqM1d0Q09sK214UFhNOEIyS01GbXNY?=
+ =?utf-8?B?cDMzYU01Y0luS2JURHR1dWpwQ2VRdkdRa1V2dVpvM1daWmxJZDlZSEUzdFBO?=
+ =?utf-8?B?Z3FJc043V0FPYTBHRFpXNjIxRSsrTlB3MWZ6cXMxZ2tZRDhCMVEwYm1iNUJm?=
+ =?utf-8?B?RzFtN2JtUUVTMWYwMS9XdFdpemRGemJvRnYxUmhiWnVaNWtRMXZ1Nk9WeDhM?=
+ =?utf-8?B?eU42R3JxUUpicTdtTWthcjFFWUpiczB1Z2I1aHlxUlVHVU5wb2FUWFhPZG44?=
+ =?utf-8?B?ZHExMlIyV2N5TG1VRnFNLzFzUE8yV3dTMzJTSmhkamZ0TjFpN2pYeHlXd3ps?=
+ =?utf-8?B?Mkx5Yy9kL2Q5Y0N3VmY4aWJnZTdwV3B4NWdzQWVlUUZiUmlSUldRRmZKcThy?=
+ =?utf-8?B?QnFqcHJEYUxMYWt2TldDMnZnUjVmRUZ0dmdzYU1sZFB0dzduSG45QzdsWmIy?=
+ =?utf-8?B?MTJSZW02VHhILzZnRWQwSnNEYkNQNnBWMzlxbkFJdXVSaC9kajJqYnFIRTdZ?=
+ =?utf-8?B?ZzVsNlp2ZDVBQThzQUZ3b0xEK2x5TGpkY3dNOE4rRGhvcVdMMlZ0b0kvM2Qy?=
+ =?utf-8?B?NUJHNmgxeEFEa2NQWmhMdlkvQVArdUZQTEcxajIreWMwbjlld3dwZTBUYzUw?=
+ =?utf-8?B?dG4yTjZRYUFTNSttZDFGSGJQeTI4Sk52UU1GejY4SVE5VEpmaS9GR3QrUXdm?=
+ =?utf-8?B?cDkzNHNENzBFYmgwUkQvVmk4dGYxUm1ISGx1L2ViQ25ZNW5XcUI5OVJRYnI5?=
+ =?utf-8?B?TDJZejdkNzh4NHBXYnRQSVBma0ozM1dQbXQxOEhyYWNlSHZrY0NXajc1Tndh?=
+ =?utf-8?B?Z0dNOWYzVDE2a1R5N2MzV2tOVDdoR05sbkZHTGtVVENtWnduZlpvNGFWT3ox?=
+ =?utf-8?B?VEJCMHBwUnU0bUJUcnhucWQ4ZjBTOFl1czlGTVhjR05CUU5iL2lyUDMvODJ6?=
+ =?utf-8?B?RG5jZVdLZHRpckpGM3NFaWY3NHE3dGJBMHJjWDlGYVN2Wnk0U0FVS2x0VGg2?=
+ =?utf-8?B?QkhXTSthMU5VNExkRXViRHB6aWduV1p4akRFMlZwVnc5QzdtS1hMSys2alBV?=
+ =?utf-8?B?dlAwNGV1VlQ2SS8rNFFVbWxWelc1ZEo3TTJNTFVMY1REWlpEVTMvZUxlNmNw?=
+ =?utf-8?B?OStESUlJOW1pK0liUEtIcUNRVU9ibmlObjVaVW5XTHVXamFUaGJ0emVTVVJH?=
+ =?utf-8?B?eU1DRjJvNGdSVDJXV0hCeU5SNVZxNEZ3cEVjZWVOR20wUGhRVEkxQm5mejdN?=
+ =?utf-8?B?SVpPaytJdkFkdjhxVkZXdU9mdko1d1NpMCttdTRwRXVxNllweEhjN3FsNTgv?=
+ =?utf-8?B?Nkl3RDRYNTNWTHlDL2s5bFNmVHIxbjNuQ2gvYUxLUkpZNmh2U21wa0pvSGxK?=
+ =?utf-8?B?ZVRQa3htLzVoYWpoay95NUdoVVRyd2dEOGd3TnR5WHdOOC93eVk3dTRSOXR6?=
+ =?utf-8?B?NmlxTnJEMHFpK3htdHVNTUt2Nlh3M0lyYUFhRXdGa2xQZU5ieklHQ2NJaVV1?=
+ =?utf-8?B?T014MjJ6Vmk1YnQ5bEcvdHI5MXlsQ2N2VFJwdWEzZ2o2MGg0NHBKR3l0UWdE?=
+ =?utf-8?B?M2o5RWhqbUdrNS85ZGpGN2ZERll2clNIenZBc00xcFgzR0pSRi9aUm0xdWxo?=
+ =?utf-8?Q?gK4k=3D?=
+X-OriginatorOrg: meta.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 97aa111a-74c3-4ebb-8e1f-08dcd4090c01
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR15MB6455.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Sep 2024 15:30:50.2020
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BQs+sWuv1/Rsi/6S2iRyLFIjfYASKPblhCnaSvWT/vRM1PC4jUPkDrkeT06Ty28v
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR15MB6660
+X-Proofpoint-ORIG-GUID: SuwVA-1tEtNygELp76Sm1Wsu3rpHo5Ar
+X-Proofpoint-GUID: SuwVA-1tEtNygELp76Sm1Wsu3rpHo5Ar
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-13_11,2024-09-13_02,2024-09-02_01
 
-On Fri, 2024-09-13 at 09:54 -0400, Jeff Layton wrote:
-> Add some tracepoints around various multigrain timestamp events.
->=20
-> Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/inode.c                       |   6 ++
->  fs/stat.c                        |   3 +
->  include/trace/events/timestamp.h | 124 +++++++++++++++++++++++++++++++++=
-++++++
->  3 files changed, 133 insertions(+)
->=20
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 260a8a1c1096..d19f70422a5d 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -22,6 +22,9 @@
->  #include <linux/iversion.h>
->  #include <linux/rw_hint.h>
->  #include <trace/events/writeback.h>
-> +#define CREATE_TRACE_POINTS
-> +#include <trace/events/timestamp.h>
-> +
->  #include "internal.h"
-> =20
->  /*
-> @@ -2598,6 +2601,7 @@ EXPORT_SYMBOL(inode_nohighmem);
-> =20
->  struct timespec64 inode_set_ctime_to_ts(struct inode *inode, struct time=
-spec64 ts)
->  {
-> +	trace_inode_set_ctime_to_ts(inode, &ts);
->  	set_normalized_timespec64(&ts, ts.tv_sec, ts.tv_nsec);
->  	inode->i_ctime_sec =3D ts.tv_sec;
->  	inode->i_ctime_nsec =3D ts.tv_nsec;
-> @@ -2683,6 +2687,7 @@ struct timespec64 inode_set_ctime_current(struct in=
-ode *inode)
-> =20
->  	/* No need to cmpxchg if it's exactly the same */
->  	if (cns =3D=3D now.tv_nsec && inode->i_ctime_sec =3D=3D now.tv_sec)
-> +		trace_ctime_xchg_skip(inode, &now);
->  		goto out;
 
-I just realized I sent out an earlier version that has the above bug in
-it (missing curly braces). The version I tested, and the version in my
-public tree have this bug fixed.
 
->  	cur =3D cns;
->  retry:
-> @@ -2690,6 +2695,7 @@ struct timespec64 inode_set_ctime_current(struct in=
-ode *inode)
->  	if (try_cmpxchg(&inode->i_ctime_nsec, &cur, now.tv_nsec)) {
->  		/* If swap occurred, then we're (mostly) done */
->  		inode->i_ctime_sec =3D now.tv_sec;
-> +		trace_ctime_ns_xchg(inode, cns, now.tv_nsec, cur);
->  	} else {
->  		/*
->  		 * Was the change due to someone marking the old ctime QUERIED?
-> diff --git a/fs/stat.c b/fs/stat.c
-> index a449626fd460..9eb6d9b2d010 100644
-> --- a/fs/stat.c
-> +++ b/fs/stat.c
-> @@ -23,6 +23,8 @@
->  #include <linux/uaccess.h>
->  #include <asm/unistd.h>
-> =20
-> +#include <trace/events/timestamp.h>
-> +
->  #include "internal.h"
->  #include "mount.h"
-> =20
-> @@ -52,6 +54,7 @@ void fill_mg_cmtime(struct kstat *stat, u32 request_mas=
-k, struct inode *inode)
->  	if (!(stat->ctime.tv_nsec & I_CTIME_QUERIED))
->  		stat->ctime.tv_nsec =3D ((u32)atomic_fetch_or(I_CTIME_QUERIED, pcn));
->  	stat->ctime.tv_nsec &=3D ~I_CTIME_QUERIED;
-> +	trace_fill_mg_cmtime(inode, &stat->ctime, &stat->mtime);
->  }
->  EXPORT_SYMBOL(fill_mg_cmtime);
-> =20
-> diff --git a/include/trace/events/timestamp.h b/include/trace/events/time=
-stamp.h
-> new file mode 100644
-> index 000000000000..c9e5ec930054
-> --- /dev/null
-> +++ b/include/trace/events/timestamp.h
-> @@ -0,0 +1,124 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM timestamp
-> +
-> +#if !defined(_TRACE_TIMESTAMP_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define _TRACE_TIMESTAMP_H
-> +
-> +#include <linux/tracepoint.h>
-> +#include <linux/fs.h>
-> +
-> +#define CTIME_QUERIED_FLAGS \
-> +	{ I_CTIME_QUERIED, "Q" }
-> +
-> +DECLARE_EVENT_CLASS(ctime,
-> +	TP_PROTO(struct inode *inode,
-> +		 struct timespec64 *ctime),
-> +
-> +	TP_ARGS(inode, ctime),
-> +
-> +	TP_STRUCT__entry(
-> +		__field(dev_t,		dev)
-> +		__field(ino_t,		ino)
-> +		__field(time64_t,	ctime_s)
-> +		__field(u32,		ctime_ns)
-> +		__field(u32,		gen)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		__entry->dev		=3D inode->i_sb->s_dev;
-> +		__entry->ino		=3D inode->i_ino;
-> +		__entry->gen		=3D inode->i_generation;
-> +		__entry->ctime_s	=3D ctime->tv_sec;
-> +		__entry->ctime_ns	=3D ctime->tv_nsec;
-> +	),
-> +
-> +	TP_printk("ino=3D%d:%d:%ld:%u ctime=3D%lld.%u",
-> +		MAJOR(__entry->dev), MINOR(__entry->dev), __entry->ino, __entry->gen,
-> +		__entry->ctime_s, __entry->ctime_ns
-> +	)
-> +);
-> +
-> +DEFINE_EVENT(ctime, inode_set_ctime_to_ts,
-> +		TP_PROTO(struct inode *inode,
-> +			 struct timespec64 *ctime),
-> +		TP_ARGS(inode, ctime));
-> +
-> +DEFINE_EVENT(ctime, ctime_xchg_skip,
-> +		TP_PROTO(struct inode *inode,
-> +			 struct timespec64 *ctime),
-> +		TP_ARGS(inode, ctime));
-> +
-> +TRACE_EVENT(ctime_ns_xchg,
-> +	TP_PROTO(struct inode *inode,
-> +		 u32 old,
-> +		 u32 new,
-> +		 u32 cur),
-> +
-> +	TP_ARGS(inode, old, new, cur),
-> +
-> +	TP_STRUCT__entry(
-> +		__field(dev_t,		dev)
-> +		__field(ino_t,		ino)
-> +		__field(u32,		gen)
-> +		__field(u32,		old)
-> +		__field(u32,		new)
-> +		__field(u32,		cur)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		__entry->dev		=3D inode->i_sb->s_dev;
-> +		__entry->ino		=3D inode->i_ino;
-> +		__entry->gen		=3D inode->i_generation;
-> +		__entry->old		=3D old;
-> +		__entry->new		=3D new;
-> +		__entry->cur		=3D cur;
-> +	),
-> +
-> +	TP_printk("ino=3D%d:%d:%ld:%u old=3D%u:%s new=3D%u cur=3D%u:%s",
-> +		MAJOR(__entry->dev), MINOR(__entry->dev), __entry->ino, __entry->gen,
-> +		__entry->old & ~I_CTIME_QUERIED,
-> +		__print_flags(__entry->old & I_CTIME_QUERIED, "|", CTIME_QUERIED_FLAGS=
-),
-> +		__entry->new,
-> +		__entry->cur & ~I_CTIME_QUERIED,
-> +		__print_flags(__entry->cur & I_CTIME_QUERIED, "|", CTIME_QUERIED_FLAGS=
-)
-> +	)
-> +);
-> +
-> +TRACE_EVENT(fill_mg_cmtime,
-> +	TP_PROTO(struct inode *inode,
-> +		 struct timespec64 *ctime,
-> +		 struct timespec64 *mtime),
-> +
-> +	TP_ARGS(inode, ctime, mtime),
-> +
-> +	TP_STRUCT__entry(
-> +		__field(dev_t,		dev)
-> +		__field(ino_t,		ino)
-> +		__field(time64_t,	ctime_s)
-> +		__field(time64_t,	mtime_s)
-> +		__field(u32,		ctime_ns)
-> +		__field(u32,		mtime_ns)
-> +		__field(u32,		gen)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		__entry->dev		=3D inode->i_sb->s_dev;
-> +		__entry->ino		=3D inode->i_ino;
-> +		__entry->gen		=3D inode->i_generation;
-> +		__entry->ctime_s	=3D ctime->tv_sec;
-> +		__entry->mtime_s	=3D mtime->tv_sec;
-> +		__entry->ctime_ns	=3D ctime->tv_nsec;
-> +		__entry->mtime_ns	=3D mtime->tv_nsec;
-> +	),
-> +
-> +	TP_printk("ino=3D%d:%d:%ld:%u ctime=3D%lld.%u mtime=3D%lld.%u",
-> +		MAJOR(__entry->dev), MINOR(__entry->dev), __entry->ino, __entry->gen,
-> +		__entry->ctime_s, __entry->ctime_ns,
-> +		__entry->mtime_s, __entry->mtime_ns
-> +	)
-> +);
-> +#endif /* _TRACE_TIMESTAMP_H */
-> +
-> +/* This part must be outside protection */
-> +#include <trace/define_trace.h>
->=20
+On 9/12/24 6:25 PM, Linus Torvalds wrote:
+> On Thu, 12 Sept 2024 at 15:12, Jens Axboe <axboe@kernel.dk> wrote:
+>>
+>> When I saw Christian's report, I seemed to recall that we ran into this
+>> at Meta too. And we did, and hence have been reverting it since our 5.19
+>> release (and hence 6.4, 6.9, and 6.11 next). We should not be shipping
+>> things that are known broken.
+> 
+> I do think that if we have big sites just reverting it as known broken
+> and can't figure out why, we should do so upstream too.
 
---=20
-Jeff Layton <jlayton@kernel.org>
+I've mentioned this in the past to both Willy and Dave Chinner, but so
+far all of my attempts to reproduce it on purpose have failed.  It's
+awkward because I don't like to send bug reports that I haven't
+reproduced on a non-facebook kernel, but I'm pretty confident this bug
+isn't specific to us.
+
+I'll double down on repros again during plumbers and hopefully come up
+with a recipe for explosions.  On other important datapoint is that we
+also enable huge folios via tmpfs mount -o huge=within_size.
+
+That hasn't hit problems, and we've been doing it for years, but of
+course the tmpfs usage is pretty different from iomap/xfs.
+
+We have two workloads that have reliably seen large folios bugs in prod.
+ This is all on bare metal systems, some are two socket, some single,
+nothing really exotic.
+
+1) On 5.19 kernels, knfsd reading and writing to XFS.  We needed
+O(hundreds) of knfsd servers running for about 8 hours to see one hit.
+
+The issue looked similar to Christian Theune's rcu stalls, but since it
+was just one CPU spinning away, I was able to perf probe and drgn my way
+to some details.  The xarray for the file had a series of large folios:
+
+[ index 0 large folio from the correct file ]
+[ index 1: large folio from the correct file ]
+...
+[ index N: large folio from a completely different file ]
+[ index N+1: large folio from the correct file ]
+
+I'm being sloppy with index numbers, but the important part is that
+we've got a large folio from the wrong file in the middle of the bunch.
+
+filemap_read() iterates over batches of folios from the xarray, but if
+one of the folios in the batch has folio->offset out of order with the
+rest, the whole thing turns into a infinite loop.  It's not really a
+filemap_read() bug, the batch coming back from the xarray is just incorrect.
+
+2) On 6.9 kernels, we saw a BUG_ON() during inode eviction because
+mapping->nrpages was non-zero.  I'm assuming it's really just a
+different window into the same bug.  Crash dump analysis was less
+conclusive because the xarray itself was always empty, but turning off
+large folios made the problem go away.
+
+This happened ~5-10 times a day, and the service had a few thousand
+machines running 6.9.  If I can't make an artificial repro, I'll try and
+talk the service owners into setting up a production shadow to hammer on
+it with additional debugging.
+
+We also disabled large folios for our 6.4 kernel, but Stefan actually
+tracked that bug down:
+
+commit a48d5bdc877b85201e42cef9c2fdf5378164c23a
+Author: Stefan Roesch <shr@devkernel.io>
+Date:   Mon Nov 6 10:19:18 2023 -0800
+
+    mm: fix for negative counter: nr_file_hugepages
+
+We didn't have time to revalidate with large folios back on afterwards.
+
+-chris
