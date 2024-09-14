@@ -1,73 +1,61 @@
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3874D1CE71F
-	for <linux-xfs@vger.kernel.org>; Sat, 14 Sep 2024 09:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C5E343ABD;
+	Sat, 14 Sep 2024 13:29:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726305665; cv=none; b=bm4lUSCaR9o7O+Kri8dcQ53kCkLegQmD/PrHCVoeRk67XiYVmNqd0M/2my5u95Otmq1TTOsFaEyeTcPXQF9asBn90Ju5D/aTXEW65RnMugF3Im/nt2r+Fh6vESpXYaXc+NH98Zjva8RthsitzjYqVm2n0ktitT7l/I5362EJ+OM=
+	t=1726320589; cv=none; b=paIdI5+/mLWSc/t5DA+xxP1qOs7uUJeWKm+RQMotOh+EHHhQHHunHnki6Uh+my7hz0flTsVLdyWeNQp9ijfaQk3JlPTi6kLl1UX2gDnr1++3P//ntzFYdH9V3Y5ArQG0XU58M+WqAsHRfdMX6au55vCEPyt2w4KNXvqgaYkehLo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726305665; c=relaxed/simple;
-	bh=z5d/ggt3yfI97olGsHHbSMLccyXsRNVuW1KdhKDpsKA=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=prwaV8uRgYrGF46vz5FLhzNOE/mpQHI217Rt14elK1aEgqlzI7oZFb7edNG0A1SfcF3BWqdmu06cxLNsgFvZTAoBQgJR1eMHtRrWXBg8PQXLYUvkveZedUoerEklrt/TOy3R9xBSILPheGNevRu39XD5blGbiWv0l0cGwrx7mtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3a0629ed658so58362995ab.1
-        for <linux-xfs@vger.kernel.org>; Sat, 14 Sep 2024 02:21:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726305663; x=1726910463;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6nh+vMYDR40T13jEK9ffJJB+1B7wdqMgWUrcaG7M5Ko=;
-        b=SVFoWUatB2GJybWf+4QYSm2TYKJfXV8r0uJG8x+br4EmRCrCllRFRnFiqPbz5/lADs
-         Yzo8n1qADU5bkk83jcCDxvKIlV3gp9cFLzRVStPmVuqUs0BC/PsDTiNwnFYkBJDyrtuX
-         bHIU9rPcpCUlgQi+5tlw1Q6mQocg7EUTN8Ggvs8q/csogbhPmeVvTw4w4D/uqX/QUlLY
-         DcfuinZBV4l7grQxj9aFfg5fVlet9lUm9FecRRvgmHHp2RUSuBAuLwrdT6vC84cm2Gjl
-         IJNXTpHhBylrpx3zV/gtZNqvHQcfCzTCcfyqHszs82soZ/pLXyhlsN/tys2RSyw3hztk
-         F7cQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX1VxR98VzqSQx1xEBupLZv7pq1+W+KqllOouMfZWOaybNKR8lKfkf71sMZrNr48cVqnYQuRF9fmHA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwplSDF8D4RZjJdIqN+o8azO9mjQfABPPZSUbjzDAcGAyJwxELd
-	Ag2zZv5jFhek/i3/2qryIuJPkhE3mmLXqYNg5L4+V1lmLYhwAWYHN7OQYAF9+BYYNgm78P02LCY
-	d1m5o9nbtYOqreatMVbH/E3fmlueQqMFqjB5+eOQa7iplGIOUTw0cC8U=
-X-Google-Smtp-Source: AGHT+IG9ui8jSh2Q9ot9S7bbxQ8NxRjmtemD8CF5RAJWqw5koDRdZ3z3kZV5tG9mDmbYI8QDCQ/AY/S/OOsj0S+29u7s9ohJ0WcZ
+	s=arc-20240116; t=1726320589; c=relaxed/simple;
+	bh=ENS4d4cBqvHMS4kIgC6CuenSU8fTI9WWXBs8vM2d6ks=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HfefLIQ5mrzNABtlrgyKiiMmQuvtyvljcKOotcQSlujIHLEalVjyoC7rJ6BxMmK2TzlsHvXhVSy0ohwk5gkFa6HwKxyIjWH9uab3+RcA2UC/MHI9tkmvrxgg5dcRRWOBw508iNeHzgn/AeNbvnfTNJ+mcFWFB+ESgDXNlnbOwG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hzjWpVK1; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hzjWpVK1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5F4AC4CEC0;
+	Sat, 14 Sep 2024 13:29:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726320588;
+	bh=ENS4d4cBqvHMS4kIgC6CuenSU8fTI9WWXBs8vM2d6ks=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hzjWpVK1yXxkliKL/M5G51lind0Oepjslbqrkk0BjXrSelRw7+TSziaqII9maQF9l
+	 hHvFMrPYOlXSd2bn4Ky9urZO5ayqTCwUJ9wQc7A+jf6N5jZd7EjviT59+sD+JOHsIx
+	 cisM+srUui55e8ei+XYZhG48/aITB4P0IFJynHw8z9JYJVDnUgufZFYDS0bphb8SZg
+	 yxgO9MfOGBpbV+Zjdq//HgjWHGURnTfGTM+/VFzaR6JLUqiGej+N48guCq2itdejCV
+	 tZAGkgRoxIc3cCfa1mzBrXOlZZ2sgJGHcmmyjTCmHp+88ZkOgF3ehb/NUFxxc6iITN
+	 8MK88dvLNUnHQ==
+Date: Sat, 14 Sep 2024 15:29:38 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: John Stultz <jstultz@google.com>, Thomas Gleixner <tglx@linutronix.de>, 
+	Stephen Boyd <sboyd@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Jan Kara <jack@suse.cz>, Steven Rostedt <rostedt@goodmis.org>, 
+	Masami Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Chandan Babu R <chandan.babu@oracle.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, 
+	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+	David Sterba <dsterba@suse.com>, Hugh Dickins <hughd@google.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Chuck Lever <chuck.lever@oracle.com>, 
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	linux-mm@kvack.org, Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v7 00/11] fs: multigrain timestamp redux
+Message-ID: <20240914-umfang-kojen-e9bf965393bd@brauner>
+References: <20240913-mgtime-v7-0-92d4020e3b00@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1c8d:b0:39f:797a:65f8 with SMTP id
- e9e14a558f8ab-3a084929ebdmr80280635ab.19.1726305663320; Sat, 14 Sep 2024
- 02:21:03 -0700 (PDT)
-Date: Sat, 14 Sep 2024 02:21:03 -0700
-In-Reply-To: <20240914090051.636332-1-lizhi.xu@windriver.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <66e5557f.050a0220.175489.0004.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_can_free_eofblocks (2)
-From: syzbot <syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, lizhi.xu@windriver.com, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20240913-mgtime-v7-0-92d4020e3b00@kernel.org>
 
-Hello,
+On Fri, Sep 13, 2024 at 09:54:09AM GMT, Jeff Layton wrote:
+> Once more into the breach, dear friends!
 
-syzbot has tested the proposed patch and the reproducer did not trigger any issue:
-
-Reported-by: syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com
-Tested-by: syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com
-
-Tested on:
-
-commit:         b7718454 Merge tag 'pci-v6.11-fixes-4' of git://git.ke..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=16e18407980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=709406cf7915cc0e
-dashboard link: https://syzkaller.appspot.com/bug?extid=53d541c7b07d55a392ca
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-patch:          https://syzkaller.appspot.com/x/patch.diff?x=134350a9980000
-
-Note: testing is done by a robot and is best-effort only.
+I think this will have to be the v6.13 breach. :/
