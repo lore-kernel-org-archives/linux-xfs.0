@@ -1,95 +1,78 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612FA1E884;
-	Fri, 13 Sep 2024 21:30:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96AD91487C1;
+	Sat, 14 Sep 2024 09:01:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.166.238
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726263024; cv=none; b=AAWdUFMEusM3pAbz0/s2oUD60s6BvXY3/83IbF6ZOwZsd3X1tDr0YGLYGE0epf/AZtzGx3BDxEZmrI+RY5hMu0Jm88LzFj8ekUIqcDb9ru+z7vP/AFA81nggUp62NJMbjmMJYGGlcX87wNr32wZirEeECngchzPJbsqalvRpNzM=
+	t=1726304477; cv=none; b=dWapTfN8Uqt3M59M/egXSxbsI86X4c99l4HamISkwB8OcqSgQle5ZjPUtv3YIbkOBa4+quGHl76vpYAA1rtUaD9eVmy0KcVAc/wBd33+YgaP/07SEbOfYF++Fat0X3oNRM0tlvmxSlYEErkA6CMVBMan2J8gqKifb/JGzz8MBqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726263024; c=relaxed/simple;
-	bh=+k6ZxvwrVNCbKN2u3wk5AlFx1/04DtTREo4MFxRD448=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P0t5BiLvVVwzTdYSPxpQzpxCuxd2h0IWS5g+/2m8OHagdxqtoD+44xLsPXNSXiUFtFefq/4PenKisX/ZbBKbFwIX/3feQQ6KuztPtceVVRK0wmyXykwCCXRHcXzZuwWfYwynBaJy1f/tPyVGeyLqhPvfUznxDafoCubjaIBR9g0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=D2MX1hXV; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="D2MX1hXV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=yZFmPPNNPyPVHwqQRbgbAhRYsxST8nX90G2qtvqpxNQ=; b=D2MX1hXVqxM+b2Tq+Hvw4tocOz
-	DLg4I0ge4lCMRtXGKFXcDCDoqiHz5uV1jey6HcaRGdhqNsDq9kaCOD5GMwYGdJKL8u8nr7RPusfWP
-	eCqHGxooSUSBS+L++H6Yi3XWDxfxioPGIdJLfAENLQC0MQVFfRTUrqaSYUvpEVihXoTDulMulQq2t
-	AljQWD4jAGxQX52sidyhG1KiJU49IgAxxXi3tze/1mhSFUpP5OOOkq+1AkFxkE9jRQuMTf3hPJoY+
-	LEAIYHHmZC4S0va6eJosOkNqz1Tx9qQNupkHhQ8tllOPDy7Knx+PzDsSMEV80kR0i79uQHlx40Gpx
-	+cWxG3ig==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1spDrr-0000000H0er-3mFV;
-	Fri, 13 Sep 2024 21:30:16 +0000
-Date: Fri, 13 Sep 2024 22:30:15 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Chris Mason <clm@meta.com>, Jens Axboe <axboe@kernel.dk>,
-	Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Dao <dqminh@cloudflare.com>,
-	Dave Chinner <david@fromorbit.com>, regressions@lists.linux.dev,
-	regressions@leemhuis.info
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-Message-ID: <ZuSu51iMWr3PZ7ZW@casper.infradead.org>
-References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
- <ZuNjNNmrDPVsVK03@casper.infradead.org>
- <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
- <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
- <d4a1cca4-96b8-4692-81f0-81c512f55ccf@meta.com>
- <ZuRfjGhAtXizA7Hu@casper.infradead.org>
- <b40b2b1c-3ed5-4943-b8d0-316e04cb1dab@meta.com>
- <ZuSBPrN2CbWMlr3f@casper.infradead.org>
- <CAHk-=wh=_n1jfSRw2tyS0w85JpHZvG9wNynOB_141C19=RuJvQ@mail.gmail.com>
+	s=arc-20240116; t=1726304477; c=relaxed/simple;
+	bh=icNKcmpquoKE/03kYN3EdCdWEne6Kb6LGJ0UkA8qL/M=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Di9iznjrfIOwdS61uBKeHmIrcXdvY6rdrxFV/EwBE8YLQtksqef0ZKc5JuFDoUz2vxaC4q4dTVcQ0WvNyRHZ4Kr4/woZyubBuVfc8Yg4B7qELTGe6AeFUFSiKZNt5lDvO62zraTMqMsHpC8ZIb9T4dSqtpGQ3tJMG5aR6BpfV9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; arc=none smtp.client-ip=205.220.166.238
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
+Received: from pps.filterd (m0250809.ppops.net [127.0.0.1])
+	by mx0a-0064b401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48E8sN0Y012592;
+	Sat, 14 Sep 2024 02:00:55 -0700
+Received: from ala-exchng02.corp.ad.wrs.com (ala-exchng02.wrs.com [147.11.82.254])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 41gpbk7sr6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Sat, 14 Sep 2024 02:00:54 -0700 (PDT)
+Received: from ala-exchng01.corp.ad.wrs.com (147.11.82.252) by
+ ALA-EXCHNG02.corp.ad.wrs.com (147.11.82.254) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Sat, 14 Sep 2024 02:00:54 -0700
+Received: from pek-lpd-ccm6.wrs.com (147.11.136.210) by
+ ala-exchng01.corp.ad.wrs.com (147.11.82.252) with Microsoft SMTP Server id
+ 15.1.2507.39 via Frontend Transport; Sat, 14 Sep 2024 02:00:52 -0700
+From: Lizhi Xu <lizhi.xu@windriver.com>
+To: <syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com>
+CC: <chandan.babu@oracle.com>, <djwong@kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <syzkaller-bugs@googlegroups.com>
+Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_can_free_eofblocks (2)
+Date: Sat, 14 Sep 2024 17:00:51 +0800
+Message-ID: <20240914090051.636332-1-lizhi.xu@windriver.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <0000000000002b8b05061fb8147f@google.com>
+References: <0000000000002b8b05061fb8147f@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wh=_n1jfSRw2tyS0w85JpHZvG9wNynOB_141C19=RuJvQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: RgLr_YTnMDgahEVsPlEO5MeKi9noxxU7
+X-Authority-Analysis: v=2.4 cv=Ye3v5BRf c=1 sm=1 tr=0 ts=66e550c6 cx=c_pps a=K4BcnWQioVPsTJd46EJO2w==:117 a=K4BcnWQioVPsTJd46EJO2w==:17 a=EaEq8P2WXUwA:10 a=N7_jEAYsZG4nfPjY8GMA:9
+X-Proofpoint-ORIG-GUID: RgLr_YTnMDgahEVsPlEO5MeKi9noxxU7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-14_07,2024-09-13_02,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ spamscore=0 mlxlogscore=669 clxscore=1011 bulkscore=0 malwarescore=0
+ mlxscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0
+ priorityscore=1501 classifier=spam authscore=0 adjust=0 reason=mlx
+ scancount=1 engine=8.21.0-2408220000 definitions=main-2409140062
 
-On Fri, Sep 13, 2024 at 02:24:02PM -0700, Linus Torvalds wrote:
-> On Fri, 13 Sept 2024 at 11:15, Matthew Wilcox <willy@infradead.org> wrote:
-> >
-> > Oh!  I think split is the key.  Let's say we have an order-6 (or
-> > larger) folio.  And we call split_huge_page() (whatever it's called
-> > in your kernel version).  That calls xas_split_alloc() followed
-> > by xas_split().  xas_split_alloc() puts entry in node->slots[0] and
-> > initialises node->slots[1..XA_CHUNK_SIZE] to a sibling entry.
-> 
-> Hmm. The splitting does seem to be not just indicated by the debug
-> logs, but it ends up being a fairly complicated case. *The* most
-> complicated case of adding a new folio by far, I'd say.
-> 
-> And I wonder if it's even necessary?
+we use GFP_NOFS for sbp
 
-Unfortunately, we need to handle things like "we are truncating a file
-which has a folio which now extends many pages beyond the end of the
-file" and so we have to split the folio which now crosses EOF.  Or we
-could write it back and drop it, but that has its own problems.
+#syz test
 
-Part of the "large block size" patches sitting in Christian's tree is
-solving these problems for folios which can't be split down to order-0,
-so there may be ways we can handle this better now, but if we don't
-split we might end up wasting a lot of memory in file tails.
-
-> It's possible that I'm entirely missing something, but at least the
-> filemap_add_folio() case looks like it really would actually be
-> happier with a "oh, that size conflicts with an existing entry, let's
-> just allocate a smaller size then"
-
-Pretty sure we already do that; it's mostly handled through the
-readahead path which checks for conflicting folios already in the cache.
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 7db386304875..0dc4600010b8 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -114,7 +114,7 @@ xfs_attr_shortform_list(
+ 	 * It didn't all fit, so we have to sort everything on hashval.
+ 	 */
+ 	sbsize = sf->count * sizeof(*sbuf);
+-	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
++	sbp = sbuf = kmalloc(sbsize, GFP_NOFS | __GFP_NOFAIL);
+ 
+ 	/*
+ 	 * Scan the attribute list for the rest of the entries, storing
