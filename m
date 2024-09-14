@@ -1,78 +1,73 @@
-Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96AD91487C1;
-	Sat, 14 Sep 2024 09:01:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.166.238
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3874D1CE71F
+	for <linux-xfs@vger.kernel.org>; Sat, 14 Sep 2024 09:21:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726304477; cv=none; b=dWapTfN8Uqt3M59M/egXSxbsI86X4c99l4HamISkwB8OcqSgQle5ZjPUtv3YIbkOBa4+quGHl76vpYAA1rtUaD9eVmy0KcVAc/wBd33+YgaP/07SEbOfYF++Fat0X3oNRM0tlvmxSlYEErkA6CMVBMan2J8gqKifb/JGzz8MBqE=
+	t=1726305665; cv=none; b=bm4lUSCaR9o7O+Kri8dcQ53kCkLegQmD/PrHCVoeRk67XiYVmNqd0M/2my5u95Otmq1TTOsFaEyeTcPXQF9asBn90Ju5D/aTXEW65RnMugF3Im/nt2r+Fh6vESpXYaXc+NH98Zjva8RthsitzjYqVm2n0ktitT7l/I5362EJ+OM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726304477; c=relaxed/simple;
-	bh=icNKcmpquoKE/03kYN3EdCdWEne6Kb6LGJ0UkA8qL/M=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Di9iznjrfIOwdS61uBKeHmIrcXdvY6rdrxFV/EwBE8YLQtksqef0ZKc5JuFDoUz2vxaC4q4dTVcQ0WvNyRHZ4Kr4/woZyubBuVfc8Yg4B7qELTGe6AeFUFSiKZNt5lDvO62zraTMqMsHpC8ZIb9T4dSqtpGQ3tJMG5aR6BpfV9o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; arc=none smtp.client-ip=205.220.166.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
-Received: from pps.filterd (m0250809.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48E8sN0Y012592;
-	Sat, 14 Sep 2024 02:00:55 -0700
-Received: from ala-exchng02.corp.ad.wrs.com (ala-exchng02.wrs.com [147.11.82.254])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 41gpbk7sr6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Sat, 14 Sep 2024 02:00:54 -0700 (PDT)
-Received: from ala-exchng01.corp.ad.wrs.com (147.11.82.252) by
- ALA-EXCHNG02.corp.ad.wrs.com (147.11.82.254) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Sat, 14 Sep 2024 02:00:54 -0700
-Received: from pek-lpd-ccm6.wrs.com (147.11.136.210) by
- ala-exchng01.corp.ad.wrs.com (147.11.82.252) with Microsoft SMTP Server id
- 15.1.2507.39 via Frontend Transport; Sat, 14 Sep 2024 02:00:52 -0700
-From: Lizhi Xu <lizhi.xu@windriver.com>
-To: <syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com>
-CC: <chandan.babu@oracle.com>, <djwong@kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <syzkaller-bugs@googlegroups.com>
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_can_free_eofblocks (2)
-Date: Sat, 14 Sep 2024 17:00:51 +0800
-Message-ID: <20240914090051.636332-1-lizhi.xu@windriver.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <0000000000002b8b05061fb8147f@google.com>
-References: <0000000000002b8b05061fb8147f@google.com>
+	s=arc-20240116; t=1726305665; c=relaxed/simple;
+	bh=z5d/ggt3yfI97olGsHHbSMLccyXsRNVuW1KdhKDpsKA=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=prwaV8uRgYrGF46vz5FLhzNOE/mpQHI217Rt14elK1aEgqlzI7oZFb7edNG0A1SfcF3BWqdmu06cxLNsgFvZTAoBQgJR1eMHtRrWXBg8PQXLYUvkveZedUoerEklrt/TOy3R9xBSILPheGNevRu39XD5blGbiWv0l0cGwrx7mtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3a0629ed658so58362995ab.1
+        for <linux-xfs@vger.kernel.org>; Sat, 14 Sep 2024 02:21:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726305663; x=1726910463;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=6nh+vMYDR40T13jEK9ffJJB+1B7wdqMgWUrcaG7M5Ko=;
+        b=SVFoWUatB2GJybWf+4QYSm2TYKJfXV8r0uJG8x+br4EmRCrCllRFRnFiqPbz5/lADs
+         Yzo8n1qADU5bkk83jcCDxvKIlV3gp9cFLzRVStPmVuqUs0BC/PsDTiNwnFYkBJDyrtuX
+         bHIU9rPcpCUlgQi+5tlw1Q6mQocg7EUTN8Ggvs8q/csogbhPmeVvTw4w4D/uqX/QUlLY
+         DcfuinZBV4l7grQxj9aFfg5fVlet9lUm9FecRRvgmHHp2RUSuBAuLwrdT6vC84cm2Gjl
+         IJNXTpHhBylrpx3zV/gtZNqvHQcfCzTCcfyqHszs82soZ/pLXyhlsN/tys2RSyw3hztk
+         F7cQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX1VxR98VzqSQx1xEBupLZv7pq1+W+KqllOouMfZWOaybNKR8lKfkf71sMZrNr48cVqnYQuRF9fmHA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwplSDF8D4RZjJdIqN+o8azO9mjQfABPPZSUbjzDAcGAyJwxELd
+	Ag2zZv5jFhek/i3/2qryIuJPkhE3mmLXqYNg5L4+V1lmLYhwAWYHN7OQYAF9+BYYNgm78P02LCY
+	d1m5o9nbtYOqreatMVbH/E3fmlueQqMFqjB5+eOQa7iplGIOUTw0cC8U=
+X-Google-Smtp-Source: AGHT+IG9ui8jSh2Q9ot9S7bbxQ8NxRjmtemD8CF5RAJWqw5koDRdZ3z3kZV5tG9mDmbYI8QDCQ/AY/S/OOsj0S+29u7s9ohJ0WcZ
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-GUID: RgLr_YTnMDgahEVsPlEO5MeKi9noxxU7
-X-Authority-Analysis: v=2.4 cv=Ye3v5BRf c=1 sm=1 tr=0 ts=66e550c6 cx=c_pps a=K4BcnWQioVPsTJd46EJO2w==:117 a=K4BcnWQioVPsTJd46EJO2w==:17 a=EaEq8P2WXUwA:10 a=N7_jEAYsZG4nfPjY8GMA:9
-X-Proofpoint-ORIG-GUID: RgLr_YTnMDgahEVsPlEO5MeKi9noxxU7
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-14_07,2024-09-13_02,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- spamscore=0 mlxlogscore=669 clxscore=1011 bulkscore=0 malwarescore=0
- mlxscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0
- priorityscore=1501 classifier=spam authscore=0 adjust=0 reason=mlx
- scancount=1 engine=8.21.0-2408220000 definitions=main-2409140062
+X-Received: by 2002:a05:6e02:1c8d:b0:39f:797a:65f8 with SMTP id
+ e9e14a558f8ab-3a084929ebdmr80280635ab.19.1726305663320; Sat, 14 Sep 2024
+ 02:21:03 -0700 (PDT)
+Date: Sat, 14 Sep 2024 02:21:03 -0700
+In-Reply-To: <20240914090051.636332-1-lizhi.xu@windriver.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <66e5557f.050a0220.175489.0004.GAE@google.com>
+Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_can_free_eofblocks (2)
+From: syzbot <syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, lizhi.xu@windriver.com, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-we use GFP_NOFS for sbp
+Hello,
 
-#syz test
+syzbot has tested the proposed patch and the reproducer did not trigger any issue:
 
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 7db386304875..0dc4600010b8 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -114,7 +114,7 @@ xfs_attr_shortform_list(
- 	 * It didn't all fit, so we have to sort everything on hashval.
- 	 */
- 	sbsize = sf->count * sizeof(*sbuf);
--	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
-+	sbp = sbuf = kmalloc(sbsize, GFP_NOFS | __GFP_NOFAIL);
- 
- 	/*
- 	 * Scan the attribute list for the rest of the entries, storing
+Reported-by: syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com
+Tested-by: syzbot+53d541c7b07d55a392ca@syzkaller.appspotmail.com
+
+Tested on:
+
+commit:         b7718454 Merge tag 'pci-v6.11-fixes-4' of git://git.ke..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=16e18407980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=709406cf7915cc0e
+dashboard link: https://syzkaller.appspot.com/bug?extid=53d541c7b07d55a392ca
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+patch:          https://syzkaller.appspot.com/x/patch.diff?x=134350a9980000
+
+Note: testing is done by a robot and is best-effort only.
