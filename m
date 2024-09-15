@@ -1,67 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 792D63CF65;
-	Sun, 15 Sep 2024 08:21:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BAE41C68A8
+	for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 14:39:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726388500; cv=none; b=u7dwMO8bFgRa4QVeyFpjIhzEg6ZlR8bvymBqt4xyqPxe7tG8eh0OdcLVuFbRDxoiLgXfYyOqIWwcL1App8ckdroUhHZTB4VwMq4N4dTxU/Cxgwkme3e9knABQAb1hTejiPCQqQSF1c0e0MMVaEJoUoO9BuYI7S0zGgugO8+hGxE=
+	t=1726411164; cv=none; b=nD65hf6Ha7A6pRzu10ifgsnMqGPhMjmKVpQSN/hC2QiuFqO1muUG/bPYaKSPZQ6OVZQ/KFWgV6txtvN7gltROoRUn6BeHqbWgDrL3e4RbE9T+G4k66GN9RgGL8RKXbRe6mPyFgzoLtg9tkk/sXoWKGDcCYrRNTxCrO+RcbUK7i0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726388500; c=relaxed/simple;
-	bh=PeoedWCKagiT8z+bdtbNESZCqWIWuC6HOpNq4s4KZmI=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y8gwJNJR6ngGxlpNFgIznIZEo1zUwAFnslMpX/WHJ+8SBPPvud4X72u+HuA5TkcXtjKwfQSAfOFPoU2vcGYzwT2cwJnT/wVFR5jhGwEZWSuZ+YKWTEGOlrard6aDaxUrJ/bcaQsycOGr+cd4uiFAbP+K5jDZS54gfwyTb+djfCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98D9DC4CEC3;
-	Sun, 15 Sep 2024 08:21:28 +0000 (UTC)
-Date: Sun, 15 Sep 2024 04:21:22 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: John Stultz <jstultz@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- Stephen Boyd <sboyd@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Masami
- Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers
- <mathieu.desnoyers@efficios.com>, Jonathan Corbet <corbet@lwn.net>, Chandan
- Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>,
- Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>,
- Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, David Sterba
- <dsterba@suse.com>, Hugh Dickins <hughd@google.com>, Andrew Morton
- <akpm@linux-foundation.org>, Chuck Lever <chuck.lever@oracle.com>, Vadim
- Fedorenko <vadim.fedorenko@linux.dev>, Randy Dunlap
- <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH v8 05/11] fs: tracepoints around multigrain timestamp
- events
-Message-ID: <20240915042122.50635cc8@rorschach.local.home>
-In-Reply-To: <20240914-mgtime-v8-5-5bd872330bed@kernel.org>
-References: <20240914-mgtime-v8-0-5bd872330bed@kernel.org>
-	<20240914-mgtime-v8-5-5bd872330bed@kernel.org>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1726411164; c=relaxed/simple;
+	bh=ugIgT3P62YyJVUICzflGXO4+NPncChk5Efv/8bam+Lk=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=XVW7plBl6CLdzRFLLMmNQ8jHM0moG4zmNRs4XKoddTpy6tXudF0oogcTP2bjnVhkDQlVgyflc1vq181XTHzAHSNdF9lFGdVG1PJHgk3zVj3UHly6SG96IoNzy7kL+nw1muSM20mFTJ7t5yZq1qEJciHIiq+rq09TfNPtSwlCcMc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-82ce3316d51so695520339f.1
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 07:39:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726411162; x=1727015962;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ZCeSY0Tg+irvuLC3MHarMWgiDRbCnO96UywqFeUzQRo=;
+        b=q+0DeEIM5Dpf8oXYT4mObpEq5EXd1cZ0C7FDNAf2pzRxrUyVRAtITf4hwhIEpyLyoL
+         v1k+6jVdk2R1FOHRSWgxD4E/QuGiNnnih78RR2oqLYEDUq0x77X1QZvc3gRhGlw1dpDA
+         2+wnfV1xNeyfWYYOL8hXxZ4oiiRaawpSPOeq4ta+vA6MFBV0yCs7NNVX4ISTR5wa93nY
+         lhPX0q+48KidxKG2JDrE7SpRP6gdkq6ntcpp4MZHdg4YlYv+Fe7PXDiPg8QCR/A9CDfu
+         XdV1kisB6klYbcJDy1ZAHDgHw6BDLcGxN/aFr+SPixooCSi8IN+KRrvF82rS7miknuA4
+         xaIA==
+X-Forwarded-Encrypted: i=1; AJvYcCUw2vLY2SzWTNHOfkWb+7/0gHpDkm4fFNSpdX0VFkBbFN7SYP6lXE2eWuM2BdypBxoO3sLJjVqSTYs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0auuer3hrTudeNWkKRBk22JpPTQNffZh0EJ70IRuZDDfdYOJI
+	3eJ5p3bvmRNVS2FNuZ4LchC5zkCRuZTmShOA3dwny4uKaDB8PcYGaY7nPlj4Pm444GYlOH1vlLw
+	buXlVwlVBoKoBIsX4UlWI7n2Lnwe0mYrPmQJbMpbdJQs9ijSzLf26hUY=
+X-Google-Smtp-Source: AGHT+IFQCy/4x1+qIcUS78qlxaHEfbLJHaTgAyEWKHIOreX4S4vfwVxeiKiC7YC0stMLhACcVCG1HXNalqL/gA77UIQLT179hvEc
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+X-Received: by 2002:a05:6e02:198b:b0:39e:68f8:43e5 with SMTP id
+ e9e14a558f8ab-3a0848cb45cmr123293255ab.9.1726411162418; Sun, 15 Sep 2024
+ 07:39:22 -0700 (PDT)
+Date: Sun, 15 Sep 2024 07:39:22 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000012905e0622296c1e@google.com>
+Subject: [syzbot] Monthly xfs report (Sep 2024)
+From: syzbot <syzbot+list09475edf415676cc6e2c@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, 14 Sep 2024 13:07:18 -0400
-Jeff Layton <jlayton@kernel.org> wrote:
+Hello xfs maintainers/developers,
 
-> Add some tracepoints around various multigrain timestamp events.
->=20
-> Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-=46rom a tracing POV, nothing looks out of ordinary.
+During the period, 1 new issues were detected and 0 were fixed.
+In total, 13 issues are still open and 23 have been fixed so far.
 
-Reviewed-by: Steven Rostedt (Google) <rostedt@goodmis.org>
+Some of the still happening issues:
 
--- Steve
+Ref Crashes Repro Title
+<1> 602     Yes   possible deadlock in xfs_ilock_attr_map_shared
+                  https://syzkaller.appspot.com/bug?extid=069cc167ecbee6e3e91a
+<2> 137     Yes   possible deadlock in xfs_icwalk_ag (2)
+                  https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
+<3> 78      No    KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<4> 74      Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<5> 3       No    possible deadlock in xfs_fs_dirty_inode (2)
+                  https://syzkaller.appspot.com/bug?extid=1116a7b7b96b9c426a1a
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
