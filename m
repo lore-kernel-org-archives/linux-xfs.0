@@ -1,87 +1,143 @@
-Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BAE41C68A8
-	for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 14:39:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C7B13B590;
+	Sun, 15 Sep 2024 23:30:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726411164; cv=none; b=nD65hf6Ha7A6pRzu10ifgsnMqGPhMjmKVpQSN/hC2QiuFqO1muUG/bPYaKSPZQ6OVZQ/KFWgV6txtvN7gltROoRUn6BeHqbWgDrL3e4RbE9T+G4k66GN9RgGL8RKXbRe6mPyFgzoLtg9tkk/sXoWKGDcCYrRNTxCrO+RcbUK7i0=
+	t=1726443018; cv=none; b=nvGu90V1QYVjMbI6foAPA/Q9sowrEZ6xary19FWZbYlWDBq98rQh8+uFhHkrTxLShCHDiA9f2zsxf5D+ykYH7aMtyhoFDvngO9Y3he8G+uCmL37bkt3geo8ClHntbEa6FPA/PWiMvdaujDUBNVR9slAG6Zc2Lh4WLN5J9P/19A0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726411164; c=relaxed/simple;
-	bh=ugIgT3P62YyJVUICzflGXO4+NPncChk5Efv/8bam+Lk=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=XVW7plBl6CLdzRFLLMmNQ8jHM0moG4zmNRs4XKoddTpy6tXudF0oogcTP2bjnVhkDQlVgyflc1vq181XTHzAHSNdF9lFGdVG1PJHgk3zVj3UHly6SG96IoNzy7kL+nw1muSM20mFTJ7t5yZq1qEJciHIiq+rq09TfNPtSwlCcMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-82ce3316d51so695520339f.1
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 07:39:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726411162; x=1727015962;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ZCeSY0Tg+irvuLC3MHarMWgiDRbCnO96UywqFeUzQRo=;
-        b=q+0DeEIM5Dpf8oXYT4mObpEq5EXd1cZ0C7FDNAf2pzRxrUyVRAtITf4hwhIEpyLyoL
-         v1k+6jVdk2R1FOHRSWgxD4E/QuGiNnnih78RR2oqLYEDUq0x77X1QZvc3gRhGlw1dpDA
-         2+wnfV1xNeyfWYYOL8hXxZ4oiiRaawpSPOeq4ta+vA6MFBV0yCs7NNVX4ISTR5wa93nY
-         lhPX0q+48KidxKG2JDrE7SpRP6gdkq6ntcpp4MZHdg4YlYv+Fe7PXDiPg8QCR/A9CDfu
-         XdV1kisB6klYbcJDy1ZAHDgHw6BDLcGxN/aFr+SPixooCSi8IN+KRrvF82rS7miknuA4
-         xaIA==
-X-Forwarded-Encrypted: i=1; AJvYcCUw2vLY2SzWTNHOfkWb+7/0gHpDkm4fFNSpdX0VFkBbFN7SYP6lXE2eWuM2BdypBxoO3sLJjVqSTYs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz0auuer3hrTudeNWkKRBk22JpPTQNffZh0EJ70IRuZDDfdYOJI
-	3eJ5p3bvmRNVS2FNuZ4LchC5zkCRuZTmShOA3dwny4uKaDB8PcYGaY7nPlj4Pm444GYlOH1vlLw
-	buXlVwlVBoKoBIsX4UlWI7n2Lnwe0mYrPmQJbMpbdJQs9ijSzLf26hUY=
-X-Google-Smtp-Source: AGHT+IFQCy/4x1+qIcUS78qlxaHEfbLJHaTgAyEWKHIOreX4S4vfwVxeiKiC7YC0stMLhACcVCG1HXNalqL/gA77UIQLT179hvEc
+	s=arc-20240116; t=1726443018; c=relaxed/simple;
+	bh=fNi8iRIHBUc/y5xpNdMAWcrLKlYdm2FtKG98edSv+Lg=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Tv2XY886dfu94HotQxqEpIhJzdpLc7MqZTNUbDQYk2Z877i9c86eGoU4nr83xim5yAcWZ9yxEzfVBjJnqefI9e3EQru/C15JMOGeuIqpHrr0K94X+G0kDkKoIVbnYoXbgjAPvJPsOT/ci0qVw1Cc4GcvX2DCPxmfBFzSqsZoUbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=lvf+qAV+; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="lvf+qAV+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1726443013;
+	bh=Y1h5tBB4yQZthgHIVPPlEF11vZNIxCjyn316QTsFtvk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=lvf+qAV+hi6Tjgll66dQTIDb7P/Ov87EbW4wTv3DtGR/V3XlVKR/hNvox0WA2aozw
+	 smfCQHGVOApxgg6UtLuyfSAyRT8pYZou4Ttg+b7/6aq8pgVOprk40fY2YeahimlJ/c
+	 zwHAPRoqYu9L91TKcHZQse9WL3fVAVIpGNYxT1aQo1VlP67t/hFhpnHqT4WoZ3/008
+	 UNs9CiW5BJVig19dOG9N2cjhd2diyFs2eHF+oZHPWcqWePtmLC32iBhQlNek1IP/yZ
+	 fnwpfCOQUWtwodvRMFBnFaMOFeAiX+J4ZalM6NVBnB9HCTgm4/pHkb5DgDL1/KvTDD
+	 Ktj52D8/H1Dag==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4X6PR92HCsz4x8H;
+	Mon, 16 Sep 2024 09:30:13 +1000 (AEST)
+Date: Mon, 16 Sep 2024 09:30:12 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: David Chinner <david@fromorbit.com>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Daniel Borkmann <daniel@iogearbox.net>, Alexei Starovoitov
+ <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, "Darrick J. Wong"
+ <djwong@kernel.org>, <linux-xfs@vger.kernel.org>, bpf
+ <bpf@vger.kernel.org>, Networking <netdev@vger.kernel.org>, Linux Kernel
+ Mailing List <linux-kernel@vger.kernel.org>, Linux Next Mailing List
+ <linux-next@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the bpf-next tree
+Message-ID: <20240916093012.3a4dbb3f@canb.auug.org.au>
+In-Reply-To: <20240913135551.4156251c@canb.auug.org.au>
+References: <20240913135551.4156251c@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:198b:b0:39e:68f8:43e5 with SMTP id
- e9e14a558f8ab-3a0848cb45cmr123293255ab.9.1726411162418; Sun, 15 Sep 2024
- 07:39:22 -0700 (PDT)
-Date: Sun, 15 Sep 2024 07:39:22 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000012905e0622296c1e@google.com>
-Subject: [syzbot] Monthly xfs report (Sep 2024)
-From: syzbot <syzbot+list09475edf415676cc6e2c@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; boundary="Sig_/n+py4hQiflHSYe1wuWUP..Q";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-Hello xfs maintainers/developers,
+--Sig_/n+py4hQiflHSYe1wuWUP..Q
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+Hi all,
 
-During the period, 1 new issues were detected and 0 were fixed.
-In total, 13 issues are still open and 23 have been fixed so far.
+On Fri, 13 Sep 2024 13:55:51 +1000 Stephen Rothwell <sfr@canb.auug.org.au> =
+wrote:
+>
+> After merging the bpf-next tree, today's linux-next build (powerpc
+> ppc64_defconfig) failed like this:
+>=20
+> fs/xfs/xfs_exchrange.c: In function 'xfs_ioc_commit_range':
+> fs/xfs/xfs_exchrange.c:938:19: error: 'struct fd' has no member named 'fi=
+le'
+>   938 |         if (!file1.file)
+>       |                   ^
+> fs/xfs/xfs_exchrange.c:940:26: error: 'struct fd' has no member named 'fi=
+le'
+>   940 |         fxr.file1 =3D file1.file;
+>       |                          ^
+>=20
+> Caused by commit
+>=20
+>   1da91ea87aef ("introduce fd_file(), convert all accessors to it.")
+>=20
+> interacting with commit
+>=20
+>   398597c3ef7f ("xfs: introduce new file range commit ioctls")
+>=20
+> I have applied the following patch for today.
+>=20
+> From: Stephen Rothwell <sfr@canb.auug.org.au>
+> Date: Fri, 13 Sep 2024 13:53:35 +1000
+> Subject: [PATCH] fix up 3 for "introduce fd_file(), convert all accessors=
+ to
+>  it."
+>=20
+> interacting with commit "xfs: introduce new file range commit ioctls"
+> from the xfs tree.
+>=20
+> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> ---
+>  fs/xfs/xfs_exchrange.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
+> index 39fe02a8deac..75cb53f090d1 100644
+> --- a/fs/xfs/xfs_exchrange.c
+> +++ b/fs/xfs/xfs_exchrange.c
+> @@ -935,9 +935,9 @@ xfs_ioc_commit_range(
+>  	fxr.file2_ctime.tv_nsec	=3D kern_f->file2_ctime_nsec;
+> =20
+>  	file1 =3D fdget(args.file1_fd);
+> -	if (!file1.file)
+> +	if (fd_empty(file1))
+>  		return -EBADF;
+> -	fxr.file1 =3D file1.file;
+> +	fxr.file1 =3D fd_file(file1);
+> =20
+>  	error =3D xfs_exchange_range(&fxr);
+>  	fdput(file1);
+> --=20
+> 2.45.2
 
-Some of the still happening issues:
+This is now required in the merge of the vfs tree.
+--=20
+Cheers,
+Stephen Rothwell
 
-Ref Crashes Repro Title
-<1> 602     Yes   possible deadlock in xfs_ilock_attr_map_shared
-                  https://syzkaller.appspot.com/bug?extid=069cc167ecbee6e3e91a
-<2> 137     Yes   possible deadlock in xfs_icwalk_ag (2)
-                  https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
-<3> 78      No    KASAN: slab-use-after-free Read in xfs_inode_item_push
-                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
-<4> 74      Yes   INFO: task hung in xfs_buf_item_unpin (2)
-                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
-<5> 3       No    possible deadlock in xfs_fs_dirty_inode (2)
-                  https://syzkaller.appspot.com/bug?extid=1116a7b7b96b9c426a1a
+--Sig_/n+py4hQiflHSYe1wuWUP..Q
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+-----BEGIN PGP SIGNATURE-----
 
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmbnbgQACgkQAVBC80lX
+0GxOmQf9EqVOabb35jmctfoGwKoCRx2hkULOJK0zMnSI5LXbUbGgjybTQ/hQ3xY2
+dPkX0WvpfX2EaGvAAPgqjLrUvKOtAvEWMwzXnwXNimeGI8oDAc0j45X4BekNrkmJ
+rr53OSCgdTX/VgT1r/aHSW+XGmvG4fUiK2IDZRytHUMaiwr8uNtuqaEakqYHmfKW
+WC01w7FkTBxH/n21XTRXmbGt/9nh0r0IhhBBi9jBXF2obZ8NytYxbOUdUmSuh2tj
+WyBBVM6DwKU6RGAcadhvpySOdy/zwhfGjW5fvnAs29nKXc0KeFrp1uH+KELF305S
+r0SvOJVp1H6c55YzStwo1Sg2PWSQwA==
+=q4nB
+-----END PGP SIGNATURE-----
 
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
+--Sig_/n+py4hQiflHSYe1wuWUP..Q--
