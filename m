@@ -1,119 +1,238 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE922F5B
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 04:21:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15C402209F
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 05:25:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726460463; cv=none; b=qKhu4nAOjk3EVOFDk1iHeIO6h7E+GECrWyazhNkX3wtBB9pJgITQNSmg263A7kMcZVi4g1BED5isVHrdxGbvKdlREDZ5zxYfNCu6gCeF8gwX5pReHomvgzs7+jzVPd+JxK5TJasHhaOqbVRu45L6oUGiTKwtyFM5dt+jtU5Zrig=
+	t=1726464312; cv=none; b=dH9mZaC4dbyXf26gZ2Im0moVSMcrGjE8an0FNcuPJ0qgx47iHDZJXhCX0la7KbBDya9qoykjvUAMIEGRCEoVRgR6ZCD1bv5Y2UiFZImZqWxs6vNrZHZV4SUrc+OGliVmRLdZZBURNPUkDKDfG70mMMpOTVSaf1q+EUvL2a2P0so=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726460463; c=relaxed/simple;
-	bh=OTJ/oKsnoisoc9GbqLHkeCIc2BFxmDrQOsJxcfR3nk4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RbRvNNDme8xYmZ0TP/5cf1CESWtVJT7hPGMnxz2z8nVwXVZRfRMw67IOKosnVxYxqfmwhnNcmrL2MSbVLjyiVfMVZww1EErZXMdIBgwIhTDPcjDjlAnIVA9QdS2MbOz59CNs43KzcwAMaoCWn6QtAOIn59e0kLKIUVFyLpd6CkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=W1152b/P; arc=none smtp.client-ip=209.85.218.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1726464312; c=relaxed/simple;
+	bh=PhJ/SoT4Su2eCZ3H9ERTVVKe4Gr+MBCEFQis4hJXPUY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FJcvkAKLRmbIr/0C5FgF8+DCAvYRJLfpI6m3vBdZ91s6WHF/lW9di8NfiDL+ahFIbPEPDC1/dr5vR2Hn33FOcCBD3SalJ0DIe1b2AExVocH7CaGp6QEaAGKezfmYKSwuC51A6tuNSIBHCqCTZ1S7pnuPo8rVnlq0esjSKLsI6UE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=DDyNIUed; arc=none smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="W1152b/P"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a8a6d1766a7so520111466b.3
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 21:21:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="DDyNIUed"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-7db53a20d1fso529481a12.0
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 22:25:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1726460460; x=1727065260; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=jwnw+7buV/Co6cDy6nKRIoLyua67GCD7ZNv0sYBhUOM=;
-        b=W1152b/P/CRuwXIhT/+AISMTiWayok3ekr74HS0WXX7JxRJwdbcICyi2vh/2Xs9QY9
-         mJTuMHJZYp5OlN0BWU7fZ5xd01wSfiLkBazHZdQp31jYWTH8eI5utA71MklpU211UOx3
-         hv54Rr8c0EzzW5VJ8Xxw+euNJOPe4jREw2iq8=
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726464309; x=1727069109; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=t95e1qcO4+iPyF80N5QwYplS3cfQKDQlUQ1sYj2roR8=;
+        b=DDyNIUedvasIB61jCxDVj6dfDkDxTgW5krMgI0ALuUs9549+f4N8VA2tnaiJQB6d7q
+         zfFaU+oJvVUovpt6JyHFZEvUq/S4ehh1waCO7PzMebt7UHL4ke62xZhsNy0eERCVEdbR
+         bRwu3xWE4ERi5iNG3rbZEkTjkO30WVlfx/nBqsuazpT0Vap8suUG8YdqXmw5N3eSm0Tu
+         mk6QhcW3AUD4tcbgOMM+7ttNBHBfmpX8n2QXizJGbrkOcB6uEs3P7/vDtsOWpfa3A/el
+         /CXuhTJgQ/DsWKhGpJhsfKLiR+c7MxvJxMtN9EgZgbiWalqWRx0/uaDQuQml6cIOZtiU
+         dW6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726460460; x=1727065260;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=jwnw+7buV/Co6cDy6nKRIoLyua67GCD7ZNv0sYBhUOM=;
-        b=fwmKnCx8O8BNJP0cx8VJtsnByMlraRYLoogUYz7WaAftJ7dgBumo+2w9uBYZFYRykH
-         oOuuv5h/qEuI3JiDJsNdGcM9FU/gN2aUHACRE1R79r52zWikSXt6nZpLYEMCREsHsB0S
-         avudTZzBosxs0Ig75XWhoPVavFs1WaU3h9lO4WPmVBarsspJsd3T3PliYnmUPd7NJkLj
-         U4UAEO1MrJnjHizva/0fJaeRtlkooDnQ/D7iQBtY2KVZuv6DtdBg60XAjpWMKXi1gDOi
-         UVfFM0gBP9C3fqn5u1qBE4T0kSSisI+cb/NOvoIN6CzaEur1oJx1t9Ve3a/7ElroQi55
-         fCBw==
-X-Forwarded-Encrypted: i=1; AJvYcCXNu7KeSiYTFeOyoBczzavxvMI5Ki95hDCOq1rQ91kTXdfkCSXmqdpIwavh2sXTNG6Nu8Eo2AhKT4w=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz5DYpiUtQ3mwjCMs8L1KtSFWgdLyyWCBSKE3rMf8/4CX+HyFKL
-	HOdBBudSwZdEQZOsf89BCUhMdhw5blViLwD05arAUo3MziZFFuvuRNWbcoFC+C/n46Orbb/f6Bd
-	vxtxG6Q==
-X-Google-Smtp-Source: AGHT+IEqLwmfHH6u9uGyPSybx5AxbAGDXiNedy7wESv96nwpSfA+bXzRboQocLbHgmdZ2G3ZjpJ8zA==
-X-Received: by 2002:a17:907:940e:b0:a8d:2ab2:c9b1 with SMTP id a640c23a62f3a-a90296716efmr1444604066b.56.1726460459339;
-        Sun, 15 Sep 2024 21:20:59 -0700 (PDT)
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com. [209.85.208.49])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a90610f4510sm258173366b.67.2024.09.15.21.20.58
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 15 Sep 2024 21:20:58 -0700 (PDT)
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-5c25f01879fso4600638a12.1
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 21:20:58 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCV8GcOC/OwxC/i+KEIcJe4t+OUttRkrLb5Zv7rJIqU6gnmQUXL+6+XIOOAOeuugwtRgSRn0UVK6CAE=@vger.kernel.org
-X-Received: by 2002:a05:6402:2107:b0:5c4:367e:c874 with SMTP id
- 4fb4d7f45d1cf-5c4367ec9dfmr3443219a12.11.1726460457889; Sun, 15 Sep 2024
- 21:20:57 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1726464309; x=1727069109;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=t95e1qcO4+iPyF80N5QwYplS3cfQKDQlUQ1sYj2roR8=;
+        b=ctVShLWb5f2e2p4UKmlap6b7hUEkCNpij/BFJHrJ8Q0AnZUjo1Q+B+AuIdNvRVMh/d
+         /shWW34HCbDKROnoG45/30/x89tyfgtEKy0HariirxZhWfxYDIToG12rwkB9GuPfO7fG
+         eBIDNfiaWdtM+aRJjfq1wJGlqBhXc7kk9IasnXAT4T+nQ4arRlRzDMaoCZv5fMLc4Z5I
+         RlNtqdlaZFPOof2G7pZ5fq3IDCulG45LgeTO4w3u+EqL2SzQVdzl2ndtWfgQnJ22C9du
+         W1Rh27TCWZrBlKXR9o+0lImFyYVGnpUYNzaxZPjIc4lvTJYYfXOjigksM6MapgHB21Kx
+         r+vQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXkPMs0DMIwuaQgzzUwFqkf2QGBYOrVdEoZ+BgKtlQuNXK+9hoDSrIDoDTQNNi9RnjjbZtcFx49Ves=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYfI/776HmzwiYvoMQC2s6QX8sCaICNOIXx5OiZk9xTtk96m/w
+	x8PemG59haJ38RzGEcfv3Eycl7uFoDzJEGJ6ClLie4H9Rlgux8Soxsvmkz1Gy4s=
+X-Google-Smtp-Source: AGHT+IEHGbm4xNdN5V7XtNCeTolX7s6jFjSEe/NND3t9+4BGW16UNLZLW4kw1PWvx4PK910j+Os2uQ==
+X-Received: by 2002:a05:6a21:e97:b0:1cf:337e:9919 with SMTP id adf61e73a8af0-1cf75ebadf6mr18034189637.16.1726464309278;
+        Sun, 15 Sep 2024 22:25:09 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7db4998fb22sm3455524a12.65.2024.09.15.22.25.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 15 Sep 2024 22:25:08 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sq4EU-005nVa-1M;
+	Mon, 16 Sep 2024 15:25:06 +1000
+Date: Mon, 16 Sep 2024 15:25:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
+	djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
+	martin.petersen@oracle.com
+Subject: Re: [PATCH v4 00/14] forcealign for xfs
+Message-ID: <ZufBMioqpwjSFul+@dread.disaster.area>
+References: <20240813163638.3751939-1-john.g.garry@oracle.com>
+ <87frqf2smy.fsf@gmail.com>
+ <ZtjrUI+oqqABJL2j@dread.disaster.area>
+ <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
+ <Ztom6uI0L4uEmDjT@dread.disaster.area>
+ <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
+ <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
+ <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
- <ZuNjNNmrDPVsVK03@casper.infradead.org> <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
- <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com> <Zud1EhTnoWIRFPa/@dread.disaster.area>
-In-Reply-To: <Zud1EhTnoWIRFPa/@dread.disaster.area>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 16 Sep 2024 06:20:40 +0200
-X-Gmail-Original-Message-ID: <CAHk-=wgY-PVaVRBHem2qGnzpAQJheDOWKpqsteQxbRop6ey+fQ@mail.gmail.com>
-Message-ID: <CAHk-=wgY-PVaVRBHem2qGnzpAQJheDOWKpqsteQxbRop6ey+fQ@mail.gmail.com>
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>, 
-	Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Daniel Dao <dqminh@cloudflare.com>, clm@meta.com, 
-	regressions@lists.linux.dev, regressions@leemhuis.info
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
 
-On Mon, 16 Sept 2024 at 02:00, Dave Chinner <david@fromorbit.com> wrote:
->
-> I don't think this is a data corruption/loss problem - it certainly
-> hasn't ever appeared that way to me.  The "data loss" appeared to be
-> in incomplete postgres dump files after the system was rebooted and
-> this is exactly what would happen when you randomly crash the
-> system.
+On Mon, Sep 09, 2024 at 05:18:43PM +0100, John Garry wrote:
+> > > > Patch 10 also modifies xfs_can_free_eofblocks() to take alignment
+> > > > into account for the post-eof block removal, but doesn't change
+> > > > xfs_free_eofblocks() at all. i.e  it also relies on
+> > > > xfs_itruncate_extents_flags() to do the right thing for force
+> > > > aligned inodes.
+> > > 
+> > > What state should the blocks post-EOF blocks be? A simple example of
+> > > partially truncating an alloc unit is:
+> > > 
+> > > $xfs_io -c "extsize" mnt/file
+> > > [16384] mnt/file
+> > > 
+> > > 
+> > > $xfs_bmap -vvp mnt/file
+> > > mnt/file:
+> > >   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+> > >     0: [0..20479]:      192..20671        0 (192..20671)     20480 000000
+> > > 
+> > > 
+> > > $truncate -s 10461184 mnt/file # 10M - 6FSB
+> > > 
+> > > $xfs_bmap -vvp mnt/file
+> > > mnt/file:
+> > >   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+> > >     0: [0..20431]:      192..20623        0 (192..20623)     20432 000000
+> > >     1: [20432..20447]:  20624..20639      0 (20624..20639)      16 010000
+> > >   FLAG Values:
+> > >      0010000 Unwritten preallocated extent
+> > > 
+> > > Is that incorrect state?
+> > 
+> > Think about it: what happens if you now truncate it back up to 10MB
+> > (i.e. aligned length) and then do an aligned atomic write on it.
+> > 
+> > First: What happens when you truncate up?
+> > 
+> > ......
+> > 
+> > Yes, iomap_zero_range() will see the unwritten extent and skip it.
+> > i.e. The unwritten extent stays as an unwritten extent, it's now
+> > within EOF. That written->unwritten extent boundary is not on an
+> > aligned file offset.
+> 
+> Right
+> 
+> > 
+> > Second: What happens when you do a correctly aligned atomic write
+> > that spans this range now?
+> > 
+> > ......
+> > 
+> > Iomap only maps a single extent at a time, so it will only map the
+> > written range from the start of the IO (aligned) to the start of the
+> > unwritten extent (unaligned).  Hence the atomic write will be
+> > rejected because we can't do the atomic write to such an unaligned
+> > extent.
+> 
+> It was being considered to change this handling for atomic writes. More
+> below at *.
 
-Ok, that sounds better, indeed.
+I don't think that this is something specific to atomic writes -
+forced alignment means -alignment is guaranteed- regardless of what
+ends up using it.
 
-Of course, "hang due to internal xarray corruption" isn't _much_
-better, but still..
+Yes, we can track unwritten extents on an -unaligned- boundary, but
+that doesn't mean that we should allow it when we are trying to
+guarantee logical and physical alignment of the file offset and
+extent boundaries. i.e. The definition of forced alignment behaviour
+is that all file offsets and extents in the file are aligned to the
+same alignment.
 
-> All the hangs seem to be caused by folio lookup getting stuck
-> on a rogue xarray entry in truncate or readahead. If we find an
-> invalid entry or a folio from a different mapping or with a
-> unexpected index, we skip it and try again.
+I don't see an exception that allows for unaligned unwritten
+extents in that definition.
 
-We *could* perhaps change the "retry the optimistic lookup forever" to
-be a "retry and take lock after optimistic failure". At least in the
-common paths.
 
-That's what we do with some dcache locking, because the "retry on
-race" caused some potential latency issues under ridiculous loads.
+> > That's not a bug in the atomic write path - this failure occurs
+> > because of the truncate behaviour doing post-eof unwritten extent
+> > conversion....
+> > 
+> > Yes, I agree that the entire -physical- extent is still correctly
+> > aligned on disk so you could argue that the unwritten conversion
+> > that xfs_bunmapi_range is doing is valid forced alignment behaviour.
+> > However, the fact is that breaking the aligned physical extent into
+> > two unaligned contiguous extents in different states in the BMBT
+> > means that they are treated as two seperate unaligned extents, not
+> > one contiguous aligned physical extent.
+> 
+> Right, this is problematic.
+> 
+> * I guess that you had not been following the recent discussion on this
+> topic in the latest xfs atomic writes series @ https://lore.kernel.org/linux-xfs/20240817094800.776408-1-john.g.garry@oracle.com/
+> and also mentioned earlier in
+> https://lore.kernel.org/linux-xfs/20240726171358.GA27612@lst.de/
+> 
+> There I dropped the sub-alloc unit zeroing. The concept to iter for a single
+> bio seems sane, but as Darrick mentioned, we have issue of non-atomically
+> committing all the extent conversions.
 
-And if we retry with the lock, at that point we can actually notice
-corruption, because at that point we can say "we have the lock, and we
-see a bad folio with the wrong mapping pointer, and now it's not some
-possible race condition due to RCU".
+Yes, I understand these problems exist.  My entire point is that the
+forced alignment implemention should never allow such unaligned
+extent patterns to be created in the first place. If we avoid
+creating such situations in the first place, then we never have to
+care about about unaligned unwritten extent conversion breaking
+atomic IO.
 
-That, in turn, might then result in better bug reports. Which would at
-least be forward progress rather than "we have this bug".
+FWIW, I also understand things are different if we are doing 128kB
+atomic writes on 16kB force aligned files. However, in this
+situation we are treating the 128kB atomic IO as eight individual
+16kB atomic IOs that are physically contiguous. Hence in this
+situation it doesn't matter if we have a mix of 16kB aligned
+written/unwritten/hole extents as each 16kB chunks is independent of
+the others.
 
-Let me think about it. Unless somebody else gets to it before I do
-(hint hint to anybody who is comfy with that filemap_read() path etc).
+What matters is that each indivudal 16kB chunk shows either the old
+data or the new data - we are not guaranteeing that the entire 128kB
+write is atomic. Hence in this situation we can both submit and
+process each 16kB shunk as independent IOs with independent IO
+compeltion transactions. All that matters is that we don't signal
+completion to userspace until all the IO is complete, and we already
+do that for fragmented DIO writes...
 
-                 Linus
+> > Again, this is different to the traditional RT file behaviour - it
+> > can use unwritten extents for sub-alloc-unit alignment unmaps
+> > because the RT device can align file offset to any physical offset,
+> > and issue unaligned sector sized IO without any restrictions. Forced
+> > alignment does not have this freedom, and when we extend forced
+> > alignment to RT files, it will not have the freedom to use
+> > unwritten extents for sub-alloc-unit unmapping, either.
+> > 
+> So how do you think that we should actually implement
+> xfs_itruncate_extents_flags() properly for forcealign? Would it simply be
+> like:
+> 
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1050,7 +1050,7 @@ xfs_itruncate_extents_flags(
+>                 WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
+>                 return 0;
+>         }
+> +	if (xfs_inode_has_forcealign(ip))
+> +	       first_unmap_block = xfs_inode_roundup_alloc_unit(ip,
+> first_unmap_block);
+>         error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
+
+Yes, it would be something like that, except it would have to be
+done before first_unmap_block is verified.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
