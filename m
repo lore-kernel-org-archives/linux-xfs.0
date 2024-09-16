@@ -1,41 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D03D2233B
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 06:55:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7593B4C62A
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 07:03:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726469752; cv=none; b=Aw7jtK3gGQ5GrgFHKEXHBb+Tk22CyJlqUK6c0Br9uacnlJkuGDl6egoIOHYC+fZzYVdJhUTSkXjXKz+MxTU0W6DimMVpHvujfj/gv8LRGLrusEzx89RqQArhEEFnyEGwI0/L1RWJ3qDMpIlmMsaNmxy8w6ZCgPzlxECAyCofZsQ=
+	t=1726470220; cv=none; b=hEN/jJHFN2OOsmkYONsccb7mDE1UQQkK/6lqQYShGmddjE8Axm/Dpo0ohuTZ6h0pi2tZq80nHlH+/SP49oOUhWaR3y0mY0ePxQQ7Uvg7QoN5FpOMqxPao0irxerMhtDTM6ngVN0hZEPm0gIoH6vTJaMcAJA2BBCMt5g1e8b+0q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726469752; c=relaxed/simple;
-	bh=BsgYoGTsDqbCL4aepved9xj9PWFHkuc+Rox9umyIzEo=;
+	s=arc-20240116; t=1726470220; c=relaxed/simple;
+	bh=p0HRwb7dckvpqsAEI1/7frDLgt0lW6OPyF4zHs0P8lE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lnDXDjO2axsfdxRObmxwJT61nExp9xKUGmxU1J0Z7dWg6eUK2HpCnezY+6CYdhjRRgog5A+mro/K1d/M5Goz57tPxabXx9kR1/9xl87Ca25z/DWhW+olQLpnbYeGdKBCmrnkuZAyLx3weY1jaVBQxQF8fbYTaTG1YUIXf1ARzEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aJRergHh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=gL5DFTvEpTQz3WwZUFbBHbvdARIGtxqy2ud+yzjGkMMVjPDc4NJFYSspFrw0uC1Yq2ns6JU0N2FzMkGypmNu5i2IGg7dfCNsHSrRxAnoECZDqDUKeaqFqvwKlT5eyvfaXdOpGsm4pJ14JSW0ouvnKooM04hcV7DrBqZoQ5gVRdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=uacM8CBQ; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aJRergHh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 417F9C4CEC4;
-	Mon, 16 Sep 2024 06:55:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726469751;
-	bh=BsgYoGTsDqbCL4aepved9xj9PWFHkuc+Rox9umyIzEo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aJRergHhCZLX4JnbvO4vj/lXgE7JV+MGb6gJnst5nUwy4kL+qnS6J5FLqk6qK9f6X
-	 l8bSBMZokVZxZqk7YeuV8t9ahe7CeiuVM0wRIyxhRUIn5oYWpjNGkKI/5Fo2OhUHS4
-	 wet+lqTRAt7Mug1TrQ7t3RRgYFRvIaC6VQTpgqhtNrPjlIb/GIqrUMjqrORd7XHOwQ
-	 g6DdRW4ulEHAllzNSLgfOKYnhl/zuesxBkQH4vFZMNpVlhPF7B3cG4Me69JdIA7ta2
-	 cntwcWILLRIQcYA6CCg6xLl+GAy4bCbCJFVxkzgkBnItQJdEt55fHRuC+QvS9BtZbf
-	 XW7oFv7kCZzQg==
-Date: Mon, 16 Sep 2024 08:55:47 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: liuhuan01@kylinos.cn
-Cc: david@fromorbit.com, cmaiolino@redhat.com, djwong@kernel.org, 
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3] xfs_db: make sure agblocks is valid to prevent
- corruption
-Message-ID: <mjsnnp3nuilpltftn4wekvnegwa4dnwu2d3n2wh7bzy3shktxf@q5mozedlxnez>
-References: <ZtZ0Z58+XHoFt84Q@dread.disaster.area>
- <20240903102401.14085-1-liuhuan01@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="uacM8CBQ"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2d8a54f1250so2706206a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 00:03:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726470218; x=1727075018; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=rZLEn0Q9zViAeMpnzS+Dnq04taHJPJso6pfVCKuErcs=;
+        b=uacM8CBQ2YTGMGXW9M1xXKYXDgwn8/OSFC33WCT3b6kiTcMp5H75DQFyTKUs5LVS6s
+         56PPDBTfDxUwfXayNVVF93060ZWqV8Vzi+tomk1ZuAM4A33XwpXXBxbAkr1XaH+HdC1r
+         +Z2Tvg1ZEregiWNZWUC4ZVrmfEjnIF5veYQFFP9UDXVvRNiJIuliVWN9RBlvqQpPJv7U
+         t+MrxHLqhekD/DChZoSVH6gXtC+ekq8NTzQuYNJwtFRJk3XuodZs0gL5p9+Ph6PMWmtk
+         FtHKkRgSXY4do+QrsunPd+Mv96KPaDyokG5CS5vygbIymSn5Duag07JNrJkVKV5vdfzx
+         DvMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726470218; x=1727075018;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rZLEn0Q9zViAeMpnzS+Dnq04taHJPJso6pfVCKuErcs=;
+        b=uXqPxqvQc8jUjK4UisJyRPmVgvNgyy+0mXhza9tLBcGfbOryEdygumnT4wpqcB9Rf6
+         iTHEVGr8wbyvBh2n13q3ByaeQNErfX9Sdr+AkBWr1iMbBbJdwb2htZtSzWlAF0kBlYyz
+         WCe7BX6cB2RncdQu2gLuEhei/Cm8y2WjmbM97nGaZwDuVH0epyGLVbvT8G4V3CVbrgOV
+         ma0qgYl3xArlCkLm717PiwDE8BKh9ADS3HLWsBrhqFMO3yPbK9JI7uxSWdwAbOuI0ku8
+         62Pz+GBqTmv2d+qVDR1Zw0N7JgdbvWsJmyaCtwJcJt61+HVIuDk9Q4+1MLMydgj1I7Vy
+         Dt9w==
+X-Forwarded-Encrypted: i=1; AJvYcCWwyAuyUVNslAPUU7QAEPJMmurqlVQdAommiw1Jr5u3UPPYtD/nrCRhjdAND2YaXFVMrvXUSYYCX4Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YycXYArVZ91/5OdyOggHhle3hETMsg5vrmvsRiczG+P7YnQ+cxY
+	wk66G2sDW1DmGyGIvyT/sRPxiFKzqwRGiARaRHRena3eG31WI0rSqnAYp15dRwQ=
+X-Google-Smtp-Source: AGHT+IGq42CTY7GghG9ZTc+fqKHl5k23VXJfZNsjb0N1GaK6i7O2LyGs84PhBoOXpuTO1FVLs75q9Q==
+X-Received: by 2002:a17:90a:684c:b0:2d3:d414:4511 with SMTP id 98e67ed59e1d1-2db9ffefa37mr16283390a91.24.1726470217587;
+        Mon, 16 Sep 2024 00:03:37 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dbb9c7c7b4sm6581412a91.17.2024.09.16.00.03.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Sep 2024 00:03:37 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sq5lm-005pLT-1M;
+	Mon, 16 Sep 2024 17:03:34 +1000
+Date: Mon, 16 Sep 2024 17:03:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com,
+	djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
+	martin.petersen@oracle.com
+Subject: Re: [PATCH v4 00/14] forcealign for xfs
+Message-ID: <ZufYRolfyUqEOS1c@dread.disaster.area>
+References: <20240813163638.3751939-1-john.g.garry@oracle.com>
+ <87frqf2smy.fsf@gmail.com>
+ <ZtjrUI+oqqABJL2j@dread.disaster.area>
+ <877cbq3g9i.fsf@gmail.com>
+ <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
+ <8734m7henr.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,215 +80,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240903102401.14085-1-liuhuan01@kylinos.cn>
+In-Reply-To: <8734m7henr.fsf@gmail.com>
 
-On Tue, Sep 03, 2024 at 06:24:02PM GMT, liuhuan01@kylinos.cn wrote:
-> From: liuh <liuhuan01@kylinos.cn>
+On Tue, Sep 10, 2024 at 06:03:12PM +0530, Ritesh Harjani wrote:
+> >> Is it something to just prevent users from destroying their own data
+> >> by not allowing a rw mount from an older kernel where users could do
+> >> unaligned writes to files marked for atomic writes?
+> >> Or is there any other reasoning to prevent XFS filesystem from becoming
+> >> inconsistent if an older kernel does a rw mount here.
+> >
+> > The older kernel does not know what the unknown inode flag means
+> > (i.e. atomic writes) and so, by definition, we cannot allow it to
+> > modify metadata or file data because it may not modify it in the
+> > correct way for that flag being set on the inode.
+> >
+> > Kernels that don't understand feature flags need to treat the
+> > filesystem as read-only, no matter how trivial the feature addition
+> > might seem.
+> >
 > 
-> Recently, I was testing xfstests. When I run xfs/350 case, it always generate coredump during the process.
-> 	xfs_db -c "sb 0" -c "p agblocks" /dev/loop1
+> 1. Will it require a fresh formatting of filesystem with mkfs.xfs for
+> enabling atomic writes (/forcealign) on XFS?
 
-Please, don't send new versions in reply to old versions.
+Initially, yes.
 
-Carlos
+>   a. Is that because reflink is not support with atomic writes
+>   (/forcealign) today?
 
-> 
-> System will generate signal SIGFPE corrupt the process. And the stack as follow:
-> corrupt at: (*bpp)->b_pag = xfs_perag_get(btp->bt_mount, xfs_daddr_to_agno(btp->bt_mount, blkno)); in function libxfs_getbuf_flags
-> 	#0  libxfs_getbuf_flags
-> 	#1  libxfs_getbuf_flags
-> 	#2  libxfs_buf_read_map
-> 	#3  libxfs_buf_read
-> 	#4  libxfs_mount
-> 	#5  init
-> 	#6  main
-> 
-> The coredump was caused by the corrupt superblock metadata: (mp)->m_sb.sb_agblocks, it was 0.
-> In this case, user cannot run in expert mode also.
-> 
-> So, try to get agblocks from agf/agi 0, if agf/agi 0 length match, use it as agblocks.
-> If failed use the default geometry to calc agblocks.
-> 
-> Signed-off-by: liuh <liuhuan01@kylinos.cn>
-> ---
->  db/Makefile |   2 +-
->  db/init.c   | 142 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 143 insertions(+), 1 deletion(-)
-> 
-> diff --git a/db/Makefile b/db/Makefile
-> index 83389376..322d5617 100644
-> --- a/db/Makefile
-> +++ b/db/Makefile
-> @@ -68,7 +68,7 @@ CFILES = $(HFILES:.h=.c) \
->  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
->  
->  LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
-> -	  $(LIBPTHREAD)
-> +	  $(LIBPTHREAD) $(LIBBLKID)
->  LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
->  LLDFLAGS += -static-libtool-libs
->  
-> diff --git a/db/init.c b/db/init.c
-> index cea25ae5..167bc777 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -38,6 +38,138 @@ usage(void)
->  	exit(1);
->  }
->  
-> +static void
-> +xfs_guess_default_ag_geometry(uint64_t *agsize, uint64_t *agcount, struct libxfs_init *x)
-> +{
-> +	struct fs_topology	ft;
-> +	int			blocklog;
-> +	uint64_t		dblocks;
-> +	int			multidisk;
-> +
-> +	fprintf(stderr, "Attempting to guess AG length from device geometry. This may not work.\n");
-> +
-> +	memset(&ft, 0, sizeof(ft));
-> +	get_topology(x, &ft, 1);
-> +
-> +	/*
-> +	 * get geometry from get_topology result.
-> +	 * Use default block size (2^12)
-> +	 */
-> +	blocklog = 12;
-> +	multidisk = ft.data.swidth | ft.data.sunit;
-> +	dblocks = x->data.size >> (blocklog - BBSHIFT);
-> +	calc_default_ag_geometry(blocklog, dblocks, multidisk,
-> +				 agsize, agcount);
-> +
-> +	if (*agsize >= XFS_MIN_AG_BLOCKS && *agsize <= XFS_MAX_AG_BLOCKS)
-> +		fprintf(stderr, "Guessed AG length is %lu blocks.\n", *agsize);
-> +}
-> +
-> +static xfs_agblock_t
-> +xfs_get_agblock_from_agf(struct xfs_mount *mp)
-> +{
-> +	xfs_agblock_t agblocks = NULLAGBLOCK;
-> +	int error;
-> +	struct xfs_buf *bp;
-> +	struct xfs_agf *agf;
-> +
-> +	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
-> +			XFS_AGF_DADDR(mp), 1, 0, &bp, NULL);
-> +	if (error) {
-> +		fprintf(stderr, "AGF 0 length recovery failed\n");
-> +		return NULLAGBLOCK;
-> +	}
-> +
-> +	agf = bp->b_addr;
-> +	if (be32_to_cpu(agf->agf_magicnum) == XFS_AGF_MAGIC)
-> +		agblocks = be32_to_cpu(agf->agf_length);
-> +
-> +	libxfs_buf_relse(bp);
-> +
-> +	if (agblocks != NULLAGBLOCK)
-> +		fprintf(stderr, "AGF 0 length %u blocks found.\n", agblocks);
-> +	else
-> +		fprintf(stderr, "AGF 0 length recovery failed.\n");
-> +
-> +	return agblocks;
-> +}
-> +
-> +static xfs_agblock_t
-> +xfs_get_agblock_from_agi(struct xfs_mount *mp)
-> +{
-> +	xfs_agblock_t agblocks = NULLAGBLOCK;
-> +	int error;
-> +	struct xfs_buf *bp;
-> +	struct xfs_agi *agi;
-> +
-> +	error = -libxfs_buf_read_uncached(mp->m_ddev_targp,
-> +			XFS_AGI_DADDR(mp), 1, 0, &bp, NULL);
-> +	if (error) {
-> +		fprintf(stderr, "AGI 0 length recovery failed\n");
-> +		return NULLAGBLOCK;
-> +	}
-> +
-> +
-> +	agi = bp->b_addr;
-> +	if (be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC)
-> +		agblocks = be32_to_cpu(agi->agi_length);
-> +
-> +	libxfs_buf_relse(bp);
-> +
-> +	if (agblocks != NULLAGBLOCK)
-> +		fprintf(stderr, "AGI 0 length %u blocks found.\n", agblocks);
-> +	else
-> +		fprintf(stderr, "AGI 0 length recovery failed.\n");
-> +
-> +	return agblocks;
-> +}
-> +
-> +/*
-> + * Try to get it from agf/agi length when primary superblock agblocks damaged.
-> + * If agf matchs agi length, use it as agblocks, otherwise use the default geometry
-> + * to calc agblocks
-> + */
-> +static xfs_agblock_t
-> +xfs_try_get_agblocks(struct xfs_mount *mp, struct libxfs_init *x)
-> +{
-> +	xfs_agblock_t agblocks = NULLAGBLOCK;
-> +	xfs_agblock_t agblocks_agf, agblocks_agi;
-> +	uint64_t agsize, agcount;
-> +
-> +	fprintf(stderr, "Attempting recovery from AGF/AGI 0 metadata...\n");
-> +
-> +	agblocks_agf = xfs_get_agblock_from_agf(mp);
-> +	agblocks_agi = xfs_get_agblock_from_agi(mp);
-> +
-> +	if (agblocks_agf == agblocks_agi && agblocks_agf >= XFS_MIN_AG_BLOCKS && agblocks_agf <= XFS_MAX_AG_BLOCKS) {
-> +		fprintf(stderr, "AGF/AGI 0 length matches.\n");
-> +		fprintf(stderr, "Using %u blocks for superblock agblocks\n", agblocks_agf);
-> +		return agblocks_agf;
-> +	}
-> +
-> +	/* use default geometry to calc agblocks/agcount */
-> +	xfs_guess_default_ag_geometry(&agsize, &agcount, x);
-> +
-> +	/* choose the agblocks among agf/agi length and agsize */
-> +	if (agblocks_agf == agsize && agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
-> +		fprintf(stderr, "Guessed AG matchs AGF length\n");
-> +		agblocks = agsize;
-> +	} else if (agblocks_agi == agsize && agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
-> +		fprintf(stderr, "Guessed AG matchs AGI length\n");
-> +		agblocks = agsize;
-> +	} else if (agsize >= XFS_MIN_AG_BLOCKS && agsize <= XFS_MAX_AG_BLOCKS) {
-> +		fprintf(stderr, "Guessed AG does not match AGF/AGI 0 length.\n");
-> +		agblocks =  agsize;
-> +	} else {
-> +		fprintf(stderr, "_(%s: device too small to hold a valid XFS filesystem)", progname);
-> +		exit(1);
-> +	}
-> +
-> +	fprintf(stderr, "Using %u blocks for superblock agblocks.\n", agblocks);
-> +
-> +	return agblocks;
-> +}
-> +
->  static void
->  init(
->  	int		argc,
-> @@ -129,6 +261,16 @@ init(
->  		}
->  	}
->  
-> +	/* If sb_agblocks was damaged, try to get agblocks */
-> +	if (sbp->sb_agblocks < XFS_MIN_AG_BLOCKS || sbp->sb_agblocks > XFS_MAX_AG_BLOCKS) {
-> +		xfs_agblock_t agblocks;
-> +
-> +		fprintf(stderr, "Out of bounds superblock agblocks (%u) found.\n", sbp->sb_agblocks);
-> +
-> +		agblocks = xfs_try_get_agblocks(&xmount, &x);
-> +		sbp->sb_agblocks = agblocks;
-> +	}
-> +
->  	agcount = sbp->sb_agcount;
->  	mp = libxfs_mount(&xmount, sbp, &x, LIBXFS_MOUNT_DEBUGGER);
->  	if (!mp) {
-> -- 
-> 2.43.0
-> 
-> 
+It's much more complex than that.
+
+e.g. How does force-align and COW interact, especially w.r.t.
+sub-alloc unit overwrites, cowextsz based preallocation and
+unwritten extents in the COW fork?
+
+> As I understand for setting forcealign attr on any inode it checks for
+> whether xfs_has_forcealign(mp). That means forcealign can _only_ be
+> enabled during mkfs time and it also needs reflink to be disabled with
+> -m reflink=0. Right?
+
+forcealign doesn't need to be completely turned off when reflink is
+enabled and/or vice versa. Both can co-exist in the filesytsem at
+the same time, but the current implementation does not allow
+forcealign and reflink to be used on the same inode at the same
+time.
+
+It was decided that the best way to handle the lack of reflink
+support initially was to make the two feature bits incompatible at
+mount time. Hence we currently have to make a non-reflink filesystem
+to test forcealign based functionality.
+
+However, doing it this way means that when we fix the implementation
+to support reflink and forcealign together, we just remove the mount
+time check and all existing reflink filesystems can be immediately
+upgraded to support forcealign.
+
+OTOH, we can't do this with atomic writes. Atomic writes require
+some mkfs help because they require explicit physical alignment of
+the filesystem to the underlying storage. Hence we'll eventually end
+up with atomic writes needing to be enabled at mkfs time, but force
+align will be an upgradeable feature flag.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
