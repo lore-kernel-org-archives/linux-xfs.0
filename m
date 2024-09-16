@@ -1,79 +1,77 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15C402209F
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 05:25:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4572745C
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 06:33:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726464312; cv=none; b=dH9mZaC4dbyXf26gZ2Im0moVSMcrGjE8an0FNcuPJ0qgx47iHDZJXhCX0la7KbBDya9qoykjvUAMIEGRCEoVRgR6ZCD1bv5Y2UiFZImZqWxs6vNrZHZV4SUrc+OGliVmRLdZZBURNPUkDKDfG70mMMpOTVSaf1q+EUvL2a2P0so=
+	t=1726468403; cv=none; b=hkrikTgQRZn0a3/Kg4ASb494Z47cy2Wl5C4SFr4ODsWNgkk9O1e3JBiUa3ILrsUxJna8ShtG0jLlrRTyk/ugfgPD7I/1OaY92AXN0dm7gOspodAL70VNgQ3+N5qK3Pu6ZB1hGxvTk+n9xu0UEWS6e7t8+WJzMVpa4nVTnwPpJYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726464312; c=relaxed/simple;
-	bh=PhJ/SoT4Su2eCZ3H9ERTVVKe4Gr+MBCEFQis4hJXPUY=;
+	s=arc-20240116; t=1726468403; c=relaxed/simple;
+	bh=DqUYrFG4Enz4+34W0+Vi1GhOjS3l28KXSdLtSsJa/4g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FJcvkAKLRmbIr/0C5FgF8+DCAvYRJLfpI6m3vBdZ91s6WHF/lW9di8NfiDL+ahFIbPEPDC1/dr5vR2Hn33FOcCBD3SalJ0DIe1b2AExVocH7CaGp6QEaAGKezfmYKSwuC51A6tuNSIBHCqCTZ1S7pnuPo8rVnlq0esjSKLsI6UE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=DDyNIUed; arc=none smtp.client-ip=209.85.215.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=R/I8zjhbReOOKEMaq2Rrn4MG0XYYBy6kDgczZC7WqOnfVjFbe67xndOc/7b8XYG5xc6BS2CCzIcFsdzW0FSj8JjHccuvQGczp3XbMB7lp5uAh6lCAM45M7t2KE4b/uYE9OjBBlLxJdXEg2qIxTpx064VQvTj0E1PFU1b0IifMFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=fEab7XNw; arc=none smtp.client-ip=209.85.216.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="DDyNIUed"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-7db53a20d1fso529481a12.0
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 22:25:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="fEab7XNw"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2d889ba25f7so1964084a91.0
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2024 23:33:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726464309; x=1727069109; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726468401; x=1727073201; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=t95e1qcO4+iPyF80N5QwYplS3cfQKDQlUQ1sYj2roR8=;
-        b=DDyNIUedvasIB61jCxDVj6dfDkDxTgW5krMgI0ALuUs9549+f4N8VA2tnaiJQB6d7q
-         zfFaU+oJvVUovpt6JyHFZEvUq/S4ehh1waCO7PzMebt7UHL4ke62xZhsNy0eERCVEdbR
-         bRwu3xWE4ERi5iNG3rbZEkTjkO30WVlfx/nBqsuazpT0Vap8suUG8YdqXmw5N3eSm0Tu
-         mk6QhcW3AUD4tcbgOMM+7ttNBHBfmpX8n2QXizJGbrkOcB6uEs3P7/vDtsOWpfa3A/el
-         /CXuhTJgQ/DsWKhGpJhsfKLiR+c7MxvJxMtN9EgZgbiWalqWRx0/uaDQuQml6cIOZtiU
-         dW6g==
+        bh=XSZMwApg+gmjCJugiWkUy18xuz6LW9w5SgWcaqjuE8w=;
+        b=fEab7XNwBicl3kreywesAAHZfEk18jsD0/zz2Ua4qP2CIHVZYko2DvmMG0vUsiAqbh
+         RQRRbtlAWCvj7GuGZBMQzUgak5TniNUdaIoJYXlHS6jalMraRogG1KVnS/0SpTGvTdiD
+         AcwBvmjNZ9oANcoyQGrgXTMDjsKpwF7OCcWXMCwP2eSs2fXv8YwDXpatLT6jsaw4gEBC
+         rYS8uvYxso+UiHbF5wR0/OSlINnWUq6eReTZzba5I8bU+VRCEH0GsJkkbFmYtcMFXbQ2
+         gnOj00Xchz3s5QyxsBWcncovvYL+EWQu6roH96bzSC0Tucbj6Do8z+1/55imaMs11Wu5
+         mMfg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726464309; x=1727069109;
+        d=1e100.net; s=20230601; t=1726468401; x=1727073201;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=t95e1qcO4+iPyF80N5QwYplS3cfQKDQlUQ1sYj2roR8=;
-        b=ctVShLWb5f2e2p4UKmlap6b7hUEkCNpij/BFJHrJ8Q0AnZUjo1Q+B+AuIdNvRVMh/d
-         /shWW34HCbDKROnoG45/30/x89tyfgtEKy0HariirxZhWfxYDIToG12rwkB9GuPfO7fG
-         eBIDNfiaWdtM+aRJjfq1wJGlqBhXc7kk9IasnXAT4T+nQ4arRlRzDMaoCZv5fMLc4Z5I
-         RlNtqdlaZFPOof2G7pZ5fq3IDCulG45LgeTO4w3u+EqL2SzQVdzl2ndtWfgQnJ22C9du
-         W1Rh27TCWZrBlKXR9o+0lImFyYVGnpUYNzaxZPjIc4lvTJYYfXOjigksM6MapgHB21Kx
-         r+vQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXkPMs0DMIwuaQgzzUwFqkf2QGBYOrVdEoZ+BgKtlQuNXK+9hoDSrIDoDTQNNi9RnjjbZtcFx49Ves=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzYfI/776HmzwiYvoMQC2s6QX8sCaICNOIXx5OiZk9xTtk96m/w
-	x8PemG59haJ38RzGEcfv3Eycl7uFoDzJEGJ6ClLie4H9Rlgux8Soxsvmkz1Gy4s=
-X-Google-Smtp-Source: AGHT+IEHGbm4xNdN5V7XtNCeTolX7s6jFjSEe/NND3t9+4BGW16UNLZLW4kw1PWvx4PK910j+Os2uQ==
-X-Received: by 2002:a05:6a21:e97:b0:1cf:337e:9919 with SMTP id adf61e73a8af0-1cf75ebadf6mr18034189637.16.1726464309278;
-        Sun, 15 Sep 2024 22:25:09 -0700 (PDT)
+        bh=XSZMwApg+gmjCJugiWkUy18xuz6LW9w5SgWcaqjuE8w=;
+        b=O3Nw0vYi5yAp/EbojOzRrYJH4EQH5u0MY21cf9ShrTkRj3qhPZycVcHxYiyQ1Zd9RM
+         ZwF/PFOwWTeRTWBQfGtDEK5ob6OBmptWoP4xyuNdICBXKN0iVqZL9om2DEtQkER3EIYd
+         yELXgGE3S4fu7Km4BSM6qwudthGxbto6M/b9FCmgHC8KibnTWzvZXXrdWznMcA/YtNvQ
+         hLtEWCYq98x4NN0Mm9/afqVviHlacj+qAI7beQ1mAJY6iXiSYIIUNhB6HPv+pCG4RqPN
+         JxJtTRFgSUJ+P7bIUYFFnw6OrMtGAFB3TuqHaBf+VNBsPgs8GjuqzHgoUkCWqnL+mOEi
+         0mqw==
+X-Forwarded-Encrypted: i=1; AJvYcCWQsSKx7WAycPX5aiWnerIDb5I+xhX05MC2DdWppBYilLMCeG9CmLLJg4N07mM2SsYlMRpCxqXDs00=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwTfIAgLsysrPHhP1papwELO7rpI86N2kGTizBSCwnw3MG5Ztba
+	ljCk7xrjy0RXScGscyli5DB9wqJXyc19rVQBJTDh66y7FNvSu+InKXKmK/cHlHA=
+X-Google-Smtp-Source: AGHT+IH4SEadADz/E/S4sALk5BvwV5RWIKEOxqYtfNoR4jCgfo646bDgJygGp2QyNxqm298HKo6Q6g==
+X-Received: by 2002:a17:90b:3758:b0:2da:88b3:d001 with SMTP id 98e67ed59e1d1-2dbb9e1d271mr13104116a91.18.1726468401331;
+        Sun, 15 Sep 2024 23:33:21 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7db4998fb22sm3455524a12.65.2024.09.15.22.25.08
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dbb9d5c9d1sm6465575a91.35.2024.09.15.23.33.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Sep 2024 22:25:08 -0700 (PDT)
+        Sun, 15 Sep 2024 23:33:20 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sq4EU-005nVa-1M;
-	Mon, 16 Sep 2024 15:25:06 +1000
-Date: Mon, 16 Sep 2024 15:25:06 +1000
+	id 1sq5IU-005oml-09;
+	Mon, 16 Sep 2024 16:33:18 +1000
+Date: Mon, 16 Sep 2024 16:33:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com,
 	djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
 	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
 	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
 	martin.petersen@oracle.com
 Subject: Re: [PATCH v4 00/14] forcealign for xfs
-Message-ID: <ZufBMioqpwjSFul+@dread.disaster.area>
+Message-ID: <ZufRLhUxhMn2HGYB@dread.disaster.area>
 References: <20240813163638.3751939-1-john.g.garry@oracle.com>
  <87frqf2smy.fsf@gmail.com>
  <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
- <Ztom6uI0L4uEmDjT@dread.disaster.area>
- <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
- <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
- <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
+ <877cbq3g9i.fsf@gmail.com>
+ <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
+ <877cbkgr04.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,155 +80,146 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
+In-Reply-To: <877cbkgr04.fsf@gmail.com>
 
-On Mon, Sep 09, 2024 at 05:18:43PM +0100, John Garry wrote:
-> > > > Patch 10 also modifies xfs_can_free_eofblocks() to take alignment
-> > > > into account for the post-eof block removal, but doesn't change
-> > > > xfs_free_eofblocks() at all. i.e  it also relies on
-> > > > xfs_itruncate_extents_flags() to do the right thing for force
-> > > > aligned inodes.
-> > > 
-> > > What state should the blocks post-EOF blocks be? A simple example of
-> > > partially truncating an alloc unit is:
-> > > 
-> > > $xfs_io -c "extsize" mnt/file
-> > > [16384] mnt/file
-> > > 
-> > > 
-> > > $xfs_bmap -vvp mnt/file
-> > > mnt/file:
-> > >   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-> > >     0: [0..20479]:      192..20671        0 (192..20671)     20480 000000
-> > > 
-> > > 
-> > > $truncate -s 10461184 mnt/file # 10M - 6FSB
-> > > 
-> > > $xfs_bmap -vvp mnt/file
-> > > mnt/file:
-> > >   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-> > >     0: [0..20431]:      192..20623        0 (192..20623)     20432 000000
-> > >     1: [20432..20447]:  20624..20639      0 (20624..20639)      16 010000
-> > >   FLAG Values:
-> > >      0010000 Unwritten preallocated extent
-> > > 
-> > > Is that incorrect state?
-> > 
-> > Think about it: what happens if you now truncate it back up to 10MB
-> > (i.e. aligned length) and then do an aligned atomic write on it.
-> > 
-> > First: What happens when you truncate up?
-> > 
-> > ......
-> > 
-> > Yes, iomap_zero_range() will see the unwritten extent and skip it.
-> > i.e. The unwritten extent stays as an unwritten extent, it's now
-> > within EOF. That written->unwritten extent boundary is not on an
-> > aligned file offset.
+On Tue, Sep 10, 2024 at 08:21:55AM +0530, Ritesh Harjani wrote:
+> Dave Chinner <david@fromorbit.com> writes:
 > 
-> Right
+> > On Thu, Sep 05, 2024 at 09:26:25AM +0530, Ritesh Harjani wrote:
+> >> Dave Chinner <david@fromorbit.com> writes:
+> >> > On Wed, Sep 04, 2024 at 11:44:29PM +0530, Ritesh Harjani wrote:
+> >> >> 3. It is the FORCEALIGN feature which _mandates_ both allocation
+> >> >> (by using extsize hint) and de-allocation to happen _only_ in
+> >> >> extsize chunks.
+> >> >>
+> >> >>    i.e. forcealign mandates -
+> >> >>    - the logical and physical start offset should be aligned as
+> >> >>    per args->alignment
+> >> >>    - extent length be aligned as per args->prod/mod.
+> >> >>      If above two cannot be satisfied then return -ENOSPC.
+> >> >
+> >> > Yes.
+> >> >
+> >> >> 
+> >> >>    - Does the unmapping of extents also only happens in extsize
+> >> >>    chunks (with forcealign)?
+> >> >
+> >> > Yes, via use of xfs_inode_alloc_unitsize() in the high level code
+> >> > aligning the fsbno ranges to be unmapped.
+> >> >
+> >> > Remember, force align requires both logical file offset and
+> >> > physical block number to be correctly aligned,
+> >> 
+> >> This is where I would like to double confirm it again. Even the
+> >> extsize hint feature (w/o FORCEALIGN) will try to allocate aligned
+> >> physical start and logical start file offset and length right?
+> >
+> > No.
+> >
+> >> (Or does extsize hint only restricts alignment to logical start file
+> >> offset + length and not the physical start?)
+> >
+> > Neither.
+> >
 > 
-> > 
-> > Second: What happens when you do a correctly aligned atomic write
-> > that spans this range now?
-> > 
-> > ......
-> > 
-> > Iomap only maps a single extent at a time, so it will only map the
-> > written range from the start of the IO (aligned) to the start of the
-> > unwritten extent (unaligned).  Hence the atomic write will be
-> > rejected because we can't do the atomic write to such an unaligned
-> > extent.
+> Yes, thanks for the correction. Indeed extsize hint does not take care
+> of the physical start alignment at all.
 > 
-> It was being considered to change this handling for atomic writes. More
-> below at *.
-
-I don't think that this is something specific to atomic writes -
-forced alignment means -alignment is guaranteed- regardless of what
-ends up using it.
-
-Yes, we can track unwritten extents on an -unaligned- boundary, but
-that doesn't mean that we should allow it when we are trying to
-guarantee logical and physical alignment of the file offset and
-extent boundaries. i.e. The definition of forced alignment behaviour
-is that all file offsets and extents in the file are aligned to the
-same alignment.
-
-I don't see an exception that allows for unaligned unwritten
-extents in that definition.
-
-
-> > That's not a bug in the atomic write path - this failure occurs
-> > because of the truncate behaviour doing post-eof unwritten extent
-> > conversion....
-> > 
-> > Yes, I agree that the entire -physical- extent is still correctly
-> > aligned on disk so you could argue that the unwritten conversion
-> > that xfs_bunmapi_range is doing is valid forced alignment behaviour.
-> > However, the fact is that breaking the aligned physical extent into
-> > two unaligned contiguous extents in different states in the BMBT
-> > means that they are treated as two seperate unaligned extents, not
-> > one contiguous aligned physical extent.
+> > extsize hint by itself (i.e. existing behaviour) has no alignment
+> > effect at all. All it affects is -size- of the extent. i.e. once
+> > the extent start is chosen, extent size hints will trim the length
+> > of the extent to a multiple of the extent size hint. Alignment is
+> > not considered at all.
+> >
 > 
-> Right, this is problematic.
+> Please correct me I wrong here... but XFS considers aligning the logical
+> start and the length of the allocated extent (for extsize) as per below
+> code right? 
+
+Sorry, I was talking about physical alignment, not logical file
+offset alignment. The logical file offset alignment that is done
+for extent size hints is much more convoluted and dependent on
+certain preconditions existing for it to function as forced
+alignment/atomic writes require.
+
 > 
-> * I guess that you had not been following the recent discussion on this
-> topic in the latest xfs atomic writes series @ https://lore.kernel.org/linux-xfs/20240817094800.776408-1-john.g.garry@oracle.com/
-> and also mentioned earlier in
-> https://lore.kernel.org/linux-xfs/20240726171358.GA27612@lst.de/
+> i.e.
+> 1) xfs_direct_write_iomap_begin()
+> {
+>     <...>
+>     if (offset + length > XFS_ISIZE(ip))
+> 		end_fsb = xfs_iomap_eof_align_last_fsb(ip, end_fsb);
+>                   => xfs_fileoff_t aligned_end_fsb = roundup_64(end_fsb, align);
+>                      return aligned_end_fsb
+> }
+
+That's calculating the file offset of the end of the extent for an
+extending write. It's not really an alignment - it's simply
+calculating the file offset the allocation needs to cover to allow
+for aligned allocation. This length needs to be fed into the
+transaction reservation (i.e. ENOSPC checks) before we start the
+allocation, so we have to have some idea of the extent size we are
+going to allocate here...
+
+
+> 2) xfs_bmap_compute_alignments()
+> {
+>     <...>
+>     	else if (ap->datatype & XFS_ALLOC_USERDATA)
+> 		     align = xfs_get_extsz_hint(ap->ip);
 > 
-> There I dropped the sub-alloc unit zeroing. The concept to iter for a single
-> bio seems sane, but as Darrick mentioned, we have issue of non-atomically
-> committing all the extent conversions.
-
-Yes, I understand these problems exist.  My entire point is that the
-forced alignment implemention should never allow such unaligned
-extent patterns to be created in the first place. If we avoid
-creating such situations in the first place, then we never have to
-care about about unaligned unwritten extent conversion breaking
-atomic IO.
-
-FWIW, I also understand things are different if we are doing 128kB
-atomic writes on 16kB force aligned files. However, in this
-situation we are treating the 128kB atomic IO as eight individual
-16kB atomic IOs that are physically contiguous. Hence in this
-situation it doesn't matter if we have a mix of 16kB aligned
-written/unwritten/hole extents as each 16kB chunks is independent of
-the others.
-
-What matters is that each indivudal 16kB chunk shows either the old
-data or the new data - we are not guaranteeing that the entire 128kB
-write is atomic. Hence in this situation we can both submit and
-process each 16kB shunk as independent IOs with independent IO
-compeltion transactions. All that matters is that we don't signal
-completion to userspace until all the IO is complete, and we already
-do that for fragmented DIO writes...
-
-> > Again, this is different to the traditional RT file behaviour - it
-> > can use unwritten extents for sub-alloc-unit alignment unmaps
-> > because the RT device can align file offset to any physical offset,
-> > and issue unaligned sector sized IO without any restrictions. Forced
-> > alignment does not have this freedom, and when we extend forced
-> > alignment to RT files, it will not have the freedom to use
-> > unwritten extents for sub-alloc-unit unmapping, either.
-> > 
-> So how do you think that we should actually implement
-> xfs_itruncate_extents_flags() properly for forcealign? Would it simply be
-> like:
+>         if (align) {
+>             if (xfs_bmap_extsize_align(mp, &ap->got, &ap->prev, align, 0,
+>                         ap->eof, 0, ap->conv, &ap->offset,
+>                         &ap->length))
+>                 ASSERT(0);
+>             ASSERT(ap->length);
 > 
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1050,7 +1050,7 @@ xfs_itruncate_extents_flags(
->                 WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
->                 return 0;
+>             args->prod = align;
+>             div_u64_rem(ap->offset, args->prod, &args->mod);
+>             if (args->mod)
+>                 args->mod = args->prod - args->mod;
 >         }
-> +	if (xfs_inode_has_forcealign(ip))
-> +	       first_unmap_block = xfs_inode_roundup_alloc_unit(ip,
-> first_unmap_block);
->         error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
+>         <...>
+> }
+> 
+> So args->prod and args->mod... aren't they use to align the logical
+> start and the length of the extent?
 
-Yes, it would be something like that, except it would have to be
-done before first_unmap_block is verified.
+Nope. They are only used way down in xfs_alloc_fix_len(), which
+trims the length of the selected *physical* extent to the required
+length.
+
+Look further up - ap->offset is the logical file offset the
+allocation needs to cover.  Logical alignment of the offset (i.e.
+determining where in the file the physical extent will be placed) is
+done in xfs_bmap_extsize_align(). As i said above, it's not purely
+an extent size alignment calculation....
+
+> However, I do notice that when the file is closed XFS trims the length
+> allocated beyond EOF boundary (for extsize but not for forcealign from
+> the new forcealign series) i.e.
+> 
+> xfs_file_release() -> xfs_release() -> xfs_free_eofblocks()
+> 
+> I guess that is because xfs_can_free_eofblocks() does not consider
+> alignment for extsize in this function 
+
+Of course - who wants large chunks of space allocated beyond EOF
+when you are never going to write to the file again?
+
+i.e. If you have large extsize hints then the post-eof tail can
+consume a -lot- of space that won't otherwise get freed. This can
+lead to rapid, unexpected ENOSPC, and it's not clear to users what
+the cause is.
+
+Hence we don't care if extsz is set on the inode or not when we
+decide to remove post-eof blocks - reclaiming the unused space is
+much more important that an occasional unaligned or small extent.
+
+Forcealign changes that equation, but if you choose forcealign you
+are doing it for a specific reason and likely not applying it to the
+entire filesystem.....
 
 -Dave.
 -- 
