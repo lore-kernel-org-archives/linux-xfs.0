@@ -1,148 +1,91 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A8EA13BC0E;
-	Mon, 16 Sep 2024 07:15:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FD6645979
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Sep 2024 07:19:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726470922; cv=none; b=Cytw4EEw7cIC6JMGHZJd/qSI6jrGXLIo6UOQBLqBjKfoqYSvYX72zs6P1vUBoXWBXm2fc3Q+PepeEY5RxlnctuXY/M5kLBu8kKZ+Pj/mdzjxK5YsTGHqq9lcCIltbtMIrsk5ZyTveX0mBuUotDAOfq8mJPhFUsZgXx6ljocav3M=
+	t=1726471173; cv=none; b=nIipnMJOF9ssSdy4frRKZkFCTYg0j1OTOVuWe8LcVekReUP5SCZrEx8OmTPH1bqxeLvAq7qZFpLEt+nxGMKa9x6qU9vcvzlG4wSF5604sHTxFLZc5Q8TZU2/m8okczo3/6j1bXQRTK5S4yGQPrhJjXXJQllCuCkE51x5UFfyGFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726470922; c=relaxed/simple;
-	bh=RBngxJaZL4GTM0BgQCbsFFJ3NPAyFTCVteDqTkYdZFE=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=mfz63E4FtoZbDyEBGlBb3hulLLbcFa9B4zNzv/DJYRZryRgmDBVprRzeFmagyzHA10AJt9rS9IVGkpG9BBnZf8Lz7wotre9U4sR9B4zvoqEGqQAS+GO2Ngrj7CUYbBjNW3+14EbdfPW4KHo6u6xF/M0EElkoOD/HcU1/iKpIrR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=E9epe5D3; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1726471173; c=relaxed/simple;
+	bh=RPVjtQMTdC0M0fasCkjZ1Bz005RgU2tTFSfLvLO3NpE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V1CX7xYhQtqd40vqkOH9Gt8Rz0ulrii0v/osKarTWay6hYRwOelrMW+6qsV8sarvHMBDl/uQKPzK5HZqCbgZNB1sH+6gKQpa1V6Sq4P03yHQjwpN5SLvZYc2CsQ18YRmczuYW7HIxU/OaBgulvV6Rcb/7M2faEccKfY07I5zkDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DDZBKYNW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="E9epe5D3"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1726470908;
-	bh=t9TGglCebkVwz3Xfy8T8OgJ7gnTHiWWWEXfL6kuEj/E=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=E9epe5D3D1j+Q+sICOdAlUUKkZN6QetDxnUXPHefyIa63ZlqWP1lclUkb+7l8cWEf
-	 rsaAiCHiWmruiNdTaYBVwekXCY0u0mcMUF5vAWHLDxbPL2nuIattrWFD2EJ6Z3IXw9
-	 N9n65hNnyi+a/Ys2GeVYLfnN3+1xaQrrJtvsJpJg=
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DDZBKYNW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AC10C4CECE;
+	Mon, 16 Sep 2024 07:19:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726471173;
+	bh=RPVjtQMTdC0M0fasCkjZ1Bz005RgU2tTFSfLvLO3NpE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DDZBKYNW8AD8NQY5bfr5we9Ar80zlmazMtk1vXzgzXNto2veGPv2x0Z7f7R0IrDsY
+	 xHnB7/JPciJH1Ko2q2JXcAs7hR48ws1ZO/QtdJgeQsEggT7NEQkx3V6+Y4uNHR0/Sc
+	 3NRWIBtqR+Y4a9xe+tqhN2oyKTERXG4B7eHAzlIgs/Z+jpu9xjh8WgxCSz24AbhCIn
+	 r/GdW1jdnzEAXQbuB+wGDvatSJpWHBtA933UTX+G1fkg2myVvIXmBZOl5Obd9Ak3qU
+	 fRnzwyqZ9Bv+vHfF+8TOeCv9QANTmsziPBpFSKT/EVgbDW1v/q0UgLokq4rD4Bl5jm
+	 cN0l7VcNlgJkQ==
+Date: Mon, 16 Sep 2024 09:19:29 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Jakub Bogusz <qboosh@pld-linux.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] Polish translation update for xfsprogs 6.10.1
+Message-ID: <qh24ibwuiwnz3sdlq3yr7sevfvyiqy3eox5rzdc5ckc3wnfzii@hwlo4h35rloo>
+References: <20240909194355.GA10345@stranger.qboosh.pl>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <Zud1EhTnoWIRFPa/@dread.disaster.area>
-Date: Mon, 16 Sep 2024 09:14:45 +0200
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
- Jens Axboe <axboe@kernel.dk>,
- Matthew Wilcox <willy@infradead.org>,
- linux-mm@kvack.org,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Daniel Dao <dqminh@cloudflare.com>,
- clm@meta.com,
- regressions@lists.linux.dev,
- regressions@leemhuis.info
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <686D222E-3CA3-49BE-A9E5-E5E2F5AFD5DA@flyingcircus.io>
-References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
- <ZuNjNNmrDPVsVK03@casper.infradead.org>
- <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
- <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
- <Zud1EhTnoWIRFPa/@dread.disaster.area>
-To: Dave Chinner <david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240909194355.GA10345@stranger.qboosh.pl>
 
+Hi,
 
-> On 16. Sep 2024, at 02:00, Dave Chinner <david@fromorbit.com> wrote:
->=20
-> On Thu, Sep 12, 2024 at 03:25:50PM -0700, Linus Torvalds wrote:
->> On Thu, 12 Sept 2024 at 15:12, Jens Axboe <axboe@kernel.dk> wrote:
->> Honestly, the fact that it hasn't been reverted after apparently
->> people knowing about it for months is a bit shocking to me. =
-Filesystem
->> people tend to take unknown corruption issues as a big deal. What
->> makes this so special? Is it because the XFS people don't consider it
->> an XFS issue, so...
->=20
-> I don't think this is a data corruption/loss problem - it certainly
-> hasn't ever appeared that way to me.  The "data loss" appeared to be
-> in incomplete postgres dump files after the system was rebooted and
-> this is exactly what would happen when you randomly crash the
-> system. i.e. dirty data in memory is lost, and application data
-> being written at the time is in an inconsistent state after the
-> system recovers. IOWs, there was no clear evidence of actual data
-> corruption occuring, and data loss is definitely expected when the
-> page cache iteration hangs and the system is forcibly rebooted
-> without being able to sync or unmount the filesystems=E2=80=A6
-> All the hangs seem to be caused by folio lookup getting stuck
-> on a rogue xarray entry in truncate or readahead. If we find an
-> invalid entry or a folio from a different mapping or with a
-> unexpected index, we skip it and try again.  Hence this does not
-> appear to be a data corruption vector, either - it results in a
-> livelock from endless retry because of the bad entry in the xarray.
-> This endless retry livelock appears to be what is being reported.
->=20
-> IOWs, there is no evidence of real runtime data corruption or loss
-> from this pagecache livelock bug.  We also haven't heard of any
-> random file data corruption events since we've enabled large folios
-> on XFS. Hence there really is no evidence to indicate that there is
-> a large folio xarray lookup bug that results in data corruption in
-> the existing code, and therefore there is no obvious reason for
-> turning off the functionality we are already building significant
-> new functionality on top of.
+On Mon, Sep 09, 2024 at 09:43:55PM GMT, Jakub Bogusz wrote:
+> Hello,
+> 
+> I prepared an update of Polish translation of xfsprogs 6.10.1.
+> As previously, because of size (whole file is ~628kB, diff is ~746kB),
+> I'm sending just diff header to the list and whole file is available
+> to download at:
+> http://qboosh.pl/pl.po/xfsprogs-6.10.1.pl.po
+> (sha256: 1fd88c1055d72f1836eff4871e056aea3c484e6a33d73cd3a28fe2709bb41853)
 
-Right, understood.=20
+Could you please send a pull request instead of a file we should download from
+somewhere?
 
-However, the timeline of one of the encounters with PostgreSQL (the =
-first comment in Bugzilla) involved still makes me feel uneasy:
-=20
-T0                   : one postgresql process blocked with a different =
-trace (not involving xas_load)
-T+a few minutes      : another process stuck with the relevant =
-xas_load/descend trace
-T+a few more minutes : other processes blocked in xas_load (this time =
-the systemd journal)
-T+14m                : the journal gets coredumped, likely due to some =
-watchdog=20
+Although we've been accepting it for a while, this breaks the process, so,
+please create a pull request and we'll pull it into the tree.
 
-Things go back to normal.
+Carlos
 
-T+14h                : another postgres process gets fully stuck on the =
-xas_load/descend trace
-
-
-I agree with your analysis if the process gets stuck in an infinite =
-loop, but I=E2=80=99ve seen at least one instance where it appears to =
-have left the loop at some point and IMHO that would be a condition that =
-would allow data corruption.
-
-> It's been 10 months since I asked Christain to help isolate a
-> reproducer so we can track this down. Nothing came from that, so
-> we're still at exactly where we were at back in november 2023 -
-> waiting for information on a way to reproduce this issue more
-> reliably.
-
-Sorry for dropping the ball from my side as well - I=E2=80=99ve learned =
-my lesson from trying to go through Bugzilla here. ;)
-
-You mentioned above that this might involve read-ahead code and that=E2=80=
-=99s something I noticed before: the machines that carry databases do =
-run with a higher read-ahead setting (1MiB vs. 128k elsewhere).
-
-Also, I=E2=80=99m still puzzled about the one variation that seems to =
-involve page faults and not XFS. That=E2=80=99s something I haven=E2=80=99=
-t seen a response to yet whether this IS in fact interesting or not.=20
-
-Christian
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
+> 
+> Whole diff is available at:
+> http://qboosh.pl/pl.po/xfsprogs-6.10.1-pl.po-update.patch
+> (sha256: 993b7aecd46ada0d277ce19a2b42351f2a1492efafd6d99879575b964ece72ec)
+> 
+> Please update.
+> 
+> Note that diff could be significantly smaller if files order is preserved
+> between pot regenerations or merges - I strongly suggest adding "-F" option to
+> xgettext and/or msgmerge commands.
+> 
+> 
+> Diff header is:
+> 
+> Polish translation update for xfsprogs 6.10.1.
+> 
+> Signed-off-by: Jakub Bogusz <qboosh@pld-linux.org>
+> 
+>  pl.po |16343 +++++++++++++++++++++++++++++++++++-------------------------------
+>  1 file changed, 8871 insertions(+), 7472 deletions(-)
+> 
+> 
+> 
+> -- 
+> Jakub Bogusz    http://qboosh.pl/
+> 
