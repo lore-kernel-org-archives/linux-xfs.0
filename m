@@ -1,54 +1,52 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DF1EA95E;
-	Mon, 16 Sep 2024 13:29:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14930155C98;
+	Mon, 16 Sep 2024 16:08:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726493399; cv=none; b=lHloRflUsSDytShkpdjIwCCjDhdq9EknbNv3pqU6rS/nH0MCfgYayPerq7Qwib67e9hRxgiWC4yMdNBRtsfg1HYFHlenqnLyklfjxFMafXc5AtRiBYiFyh03+IwoD080B0KL6kbEQSuZ5/oZPsKQ8TVPK+uNmqKSb0RaWczlPkY=
+	t=1726502882; cv=none; b=YfepXuXthnKf9PwNw6YsQNH5PuZMqwQkgR0x55N2X5IfA0virzCpRi7zXVWhBKTDa8AzDyLBO5FcEVyUdG/xUcAKMOx8JfYzSOqar6biL9PTESD7QtN09ONUw8APejOVpZm06gA+I55C6tkLpBy8dE6wjaTq9TiwKZpYHorQpoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726493399; c=relaxed/simple;
-	bh=5358DHb00/riUqxFwGC1LquJns98OBanNtye9TBg7Vs=;
+	s=arc-20240116; t=1726502882; c=relaxed/simple;
+	bh=SWTvLUexMhFlY181nJ/U8NnITWW9fyYDLU1b0tWo3xw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZK8UWWgmRUS4FmwIE+RF9JmLFNE4AYg+lKC1nUO5q7xrZtsu3NuE6jqibIGfHIbDnU+5Wico1sn8G4exM7RMZTQsrXmCi7cNgAGuZfKw2PfabYjLzSOcM824u+q2JRBCBAs+tCpp/B4ACYXmlkcIFb30B+t6So0xh4hnyMlMuqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gNjxOfWA; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=sdGWPSNSSalPGmV1hlEGD5Lco9s+ixq4IdW3iqFCPq8hN9YIOUd1DDW3+/yKctaeAo9DMf64pDQDH3jIRFiY2I7TRaD0/3HsuK3b4v41U/fs0aa4rhr+sNSpHsa8UBwQg5nulUImQU2Lo8xCHBbdB+nwNspjDEu7wJBXnw2Sg9c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fSi9rUnh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gNjxOfWA"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=qq8tYo1JEcSLEHueBFlP6ppnnitpWT6xJFK+HA9N1s0=; b=gNjxOfWAvf+YsKYoElIQn4rni0
-	6N+tyQGjTWwWB1p4IFbKCksWfwTK7CmArJcHKg5rz91aJxEPAVWecr0Y9M9vejYbwmAoWA2aJCLLB
-	J/uks525IrO4RGWjZAAcuRThdIQ5IHwN8CQFqNDhHmBBqa1uUqK/5D0v7n67gjqh5zI6h/bAT1Mz/
-	aVUqdsdNInRz+TbFlT0DbUG+6fkXcsQgFiBLTKJ8Z/sJtwJ3JLiZyvP49i+O7mGt1GR9TzYC34oC5
-	PnSMfQrrNW7qF101SjvfsAZkqcmm2IFYQjVwK9Fb3qIhkBCaTJyXJH+a4dMbUAEVJbMABK9nUyULh
-	HhCf5eYw==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1sqBna-00000001zL5-0aWo;
-	Mon, 16 Sep 2024 13:29:50 +0000
-Date: Mon, 16 Sep 2024 14:29:49 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Luis Chamberlain <mcgrof@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Dao <dqminh@cloudflare.com>,
-	Dave Chinner <david@fromorbit.com>, clm@meta.com,
-	regressions@lists.linux.dev, regressions@leemhuis.info
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-Message-ID: <ZugyzR8Ak6hJNlXF@casper.infradead.org>
-References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
- <ZuNjNNmrDPVsVK03@casper.infradead.org>
- <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
- <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
- <20240913-ortsausgang-baustart-1dae9a18254d@brauner>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fSi9rUnh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE3C5C4CEC5;
+	Mon, 16 Sep 2024 16:08:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726502881;
+	bh=SWTvLUexMhFlY181nJ/U8NnITWW9fyYDLU1b0tWo3xw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fSi9rUnhjnilk07rjUOY4raDWQMon8jbujKcgOberEG9A4tTNd68VwAREvC8DtEHm
+	 6IuP2d8VH0ZfYEZmc7YIdLgJ4yX6dGRrVptQLtLTjrvfWNm6l9RWgZMCbBHdCDE5RK
+	 jVL11Vq2itVqnTrLPkZrp50AverAoqW3I/JcUoP4pNiTyER8uB8xPA4JukJabefOMh
+	 4r/vofE/exFGW6DObcWLVjFM0GXYHBIgf8DXhoOEdBvgYx8rds6TitWeku8oTMEWAJ
+	 VH0DqZp5SD1sByHncw4o7YrPpm7YWo5c7HEG153grmlHfHcfEQMqDHnThH7lAR63oI
+	 kMSPh7S32kQCg==
+Date: Mon, 16 Sep 2024 09:08:01 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Chandan Babu R <chandanbabu@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org
+Subject: Re: Are jump labels broken on 6.11-rc1?
+Message-ID: <20240916160801.GA182194@frogsfrogsfrogs>
+References: <20240805143522.GA623936@frogsfrogsfrogs>
+ <20240806094413.GS37996@noisy.programming.kicks-ass.net>
+ <20240806103808.GT37996@noisy.programming.kicks-ass.net>
+ <875xsc4ehr.ffs@tglx>
+ <20240807143407.GC31338@noisy.programming.kicks-ass.net>
+ <87wmks2xhi.ffs@tglx>
+ <20240807150503.GF6051@frogsfrogsfrogs>
+ <20240827033506.GH865349@frogsfrogsfrogs>
+ <20240905081241.GM4723@noisy.programming.kicks-ass.net>
+ <20240905091605.GE4928@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,22 +55,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240913-ortsausgang-baustart-1dae9a18254d@brauner>
+In-Reply-To: <20240905091605.GE4928@noisy.programming.kicks-ass.net>
 
-On Fri, Sep 13, 2024 at 02:11:22PM +0200, Christian Brauner wrote:
-> So this issue it new to me as well. One of the items this cycle is the
-> work to enable support for block sizes that are larger than page sizes
-> via the large block size (LBS) series that's been sitting in -next for a
-> long time. That work specifically targets xfs and builds on top of the
-> large folio support.
+On Thu, Sep 05, 2024 at 11:16:05AM +0200, Peter Zijlstra wrote:
+> On Thu, Sep 05, 2024 at 10:12:41AM +0200, Peter Zijlstra wrote:
+> > On Mon, Aug 26, 2024 at 08:35:06PM -0700, Darrick J. Wong wrote:
 > 
-> If the support for large folios is going to be reverted in xfs then I
-> see no point to merge the LBS work now. So I'm holding off on sending
-> that pull request until a decision is made (for xfs). As far as I
-> understand, supporting larger block sizes will not be meaningful without
-> large folio support.
+> > > [33965.988873] ------------[ cut here ]------------
+> > > [33966.013870] WARNING: CPU: 1 PID: 8992 at kernel/jump_label.c:295 __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
+> 
+> > > [33966.040184] pc : __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
+> > > [33966.042845] lr : __static_key_slow_dec_cpuslocked.part.0+0x48/0xc0
+> 
+> > > [33966.072840] Call trace:
+> > > [33966.073838]  __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
+> > > [33966.076105]  static_key_slow_dec+0x48/0x88
+> 
+> > > This corresponds to the:
+> > > 
+> > > 	WARN_ON_ONCE(!static_key_slow_try_dec(key));
+> > 
+> > But but but,... my patch killed that function. So are you sure it is
+> > applied ?!
+> > 
+> > Because this sounds like exactly that issue again.
+> > 
+> > Anyway, it appears I had totally forgotten about this issue again due to
+> > holidays, sorry. Let me stare hard at Thomas' patch and make a 'pretty'
+> > one that does boot.
+> 
+> I've taken tglx's version with a small change (added comment) and boot
+> tested it and queued it here:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/peterz/queue.git locking/urgent
+> 
+> Could you please double check on both x86_64 and arm64?
 
-This is unwarranted; please send this pull request.  We're not going to
-rip out all of the infrastructure although we might end up disabling it
-by default.  There's a bunch of other work queued up behind that, and not
-having it in Linus' tree is just going to make everything more painful.
+Will send this out on the test farm tonight, thanks for the patch.
+
+> If green by with the build robots and your own testing I'll push this
+> into tip/locking/urgent to be sent to Linus on Sunday. Hopefully finally
+> resolving this issue.
+
+Sorry I didn't get to this earlier; I've been on vacation since the end
+of August.  Now to get to the ~1300 fsdevel emails... ;)
+
+--D
