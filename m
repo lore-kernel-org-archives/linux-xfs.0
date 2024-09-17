@@ -1,43 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A532516087B;
-	Tue, 17 Sep 2024 16:19:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11231178368
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 18:19:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726589980; cv=none; b=b7YMsKj7ADvaSNOfjd6LES7bWSKjIpmYYWTLsB26gggT+GUrn1JdpbTQXhHK0gN1NGQKwtIAI2UBP0CwldIxV/1Bt/lfCfcS01g/MSx97zFRa+z5SCVCbjv6LfJ5Q/pWpP0mmR6XwtlRYwteKqbnycJmikJjQoj6rCko/OiyhRM=
+	t=1726597187; cv=none; b=oFjE2TYIUUKQTgx4ggmF3PUCV0VQ2kXdx7N5Jo52qoxh2TujGEkGZX9M9ooIcdnpLs5jAL0rry3r1wI1uiu1V8SO4monkYjQrZDlbMJTM/o9rdLE+gTV6n3+uIYWpl+4sOTwzIMptDPzCz4DVVakPPynNzZEtY4kjc+4XG9UNu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726589980; c=relaxed/simple;
-	bh=NN9m8NfqK3If83ueuNG5dcHBTu5/SNVFoZo04xRw6b8=;
+	s=arc-20240116; t=1726597187; c=relaxed/simple;
+	bh=JQLOuUpBKwpTdurDQUlBUhA1DttI85HBD8rT8qf2RRk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QA4WMOX1yCm6dF73UHUmrQw7YPXXRepAKYaF4FtYxQepr40WnnYq54EYhMf3A9q7ZlTYpK5sFqhRHPM8Z6PXEcq9vQs4EWLFwfvajTOELmAnOTzDPe9K5A0k8lwpyumRUqEL1TT6E1kL0BKa7gbNkV9AuItJzd/ZAM9/hMJ/cKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jG6DhWt6; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nDMqVGjD5WCApe2Ib5qzQN8dMt2rn4rV2j6YeEeEiiMJf+PG2iHHE7yhkMcyZEDt93Hde6P35fm3oGyr5FWuokvQ462dcu48v/l85l4oBBiGLaklvsBkNZdhgFw5yIoAvtHlZ8Sduz8np4L7L2/91BpVkh9xyu6wvf9npU6UrZI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FBidT5nl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jG6DhWt6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 262EBC4CEC5;
-	Tue, 17 Sep 2024 16:19:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FBidT5nl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBF84C4CEC5;
+	Tue, 17 Sep 2024 18:19:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726589980;
-	bh=NN9m8NfqK3If83ueuNG5dcHBTu5/SNVFoZo04xRw6b8=;
+	s=k20201202; t=1726597186;
+	bh=JQLOuUpBKwpTdurDQUlBUhA1DttI85HBD8rT8qf2RRk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jG6DhWt6w0s07Ozk0gztKd3I50b9LzszgG8/smjqdA6BFBkj4JXa/9RPFKL96W+m3
-	 I3BUTVGeANrKokdqRr7W0eotKeBCq4PekWuPvZBdLvMaAW3ZDBxZqD7OBYrCJyEMGn
-	 hlrJ+O/E67EM/Pv0macAnpgIWLiC7BPnMQs5i7gs6xALOU0r2OzJH0itg0qe1+BnX2
-	 1yiwTkAmlpeA3jbcz/Eqghi/Q3x+UmlEcUfLKQ/tD1635P/7O6liAkRIWa4H1S+jsP
-	 NuFbCAv+1Xegi2lqlizO6lc+iXwRi3gme0gS1uwc/E6s8Tsi0aMYX7ZDCYYRivDnUV
-	 idRfyUFn87nyA==
-Date: Tue, 17 Sep 2024 09:19:38 -0700
+	b=FBidT5nlbyiX/+Ow7ttUowlHUXK1fYHB0sJdnZHrduKP4WUYnoPwT8US1x671nx6i
+	 xWXOb9xTbmAFSpuYFYgPcqdel1DsIeXJG49sRz07tSrpNQN/0GUo0jWbw/9wzmYCh5
+	 T6NQFyjFB0ueKdebo1zmNBRtHPIJ9wDxdORrpTpYzJFulqOcgOVcyEMpkWSCXNmMdS
+	 20OW7zcDsQK7aoeQLifBSY5123tLZ+IKtn3aU8HTP0RgSy+PmLNMalkIs97K3ZOaeY
+	 KGL2HgjUujx6/L3AIgXZ2PrreOWxLxKm3P09Jnp6JeM1OZdIbyLJFKJxYb2rEoV8o7
+	 L1+7RRPkwcCAw==
+Date: Tue, 17 Sep 2024 11:19:46 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH] Documentation: iomap: fix a typo
-Message-ID: <20240917161938.GE182218@frogsfrogsfrogs>
-References: <20240820161329.1293718-1-kernel@pankajraghav.com>
- <20240912-frist-backfisch-a5badbdd5752@brauner>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/8] xfs: distinguish extra split from real ENOSPC from
+ xfs_attr_node_try_addname
+Message-ID: <20240917181946.GF182194@frogsfrogsfrogs>
+References: <20240904053820.2836285-1-hch@lst.de>
+ <20240904053820.2836285-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,34 +43,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240912-frist-backfisch-a5badbdd5752@brauner>
+In-Reply-To: <20240904053820.2836285-5-hch@lst.de>
 
-On Thu, Sep 12, 2024 at 02:07:39PM +0200, Christian Brauner wrote:
-> On Tue, 20 Aug 2024 18:13:29 +0200, Pankaj Raghav (Samsung) wrote:
-> > Change voidw -> void.
-> > 
-> > 
+On Wed, Sep 04, 2024 at 08:37:55AM +0300, Christoph Hellwig wrote:
+> Just like xfs_attr3_leaf_split, xfs_attr_node_try_addname can return
+> -ENOSPC both for an actual failure to allocate a disk block, but also
+> to signal the caller to convert the format of the attr fork.  Use magic
+> 1 to ask for the conversion here as well.
 > 
-> Applied to the vfs.blocksize branch of the vfs/vfs.git tree.
-> Patches in the vfs.blocksize branch should appear in linux-next soon.
+> Note that unlike the similar issue in xfs_attr3_leaf_split, this one was
+> only found by code review.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks correct to me,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
 > 
-> Please report any outstanding bugs that were missed during review in a
-> new review to the original patch series allowing us to drop it.
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 0bf4f718be462f..c63da14eee0432 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -597,7 +597,7 @@ xfs_attr_node_addname(
+>  		return error;
+>  
+>  	error = xfs_attr_node_try_addname(attr);
+> -	if (error == -ENOSPC) {
+> +	if (error == 1) {
+>  		error = xfs_attr3_leaf_to_node(args);
+>  		if (error)
+>  			return error;
+> @@ -1386,9 +1386,12 @@ xfs_attr_node_addname_find_attr(
+>  /*
+>   * Add a name to a Btree-format attribute list.
+>   *
+> - * This will involve walking down the Btree, and may involve splitting
+> - * leaf nodes and even splitting intermediate nodes up to and including
+> - * the root node (a special case of an intermediate node).
+> + * This will involve walking down the Btree, and may involve splitting leaf
+> + * nodes and even splitting intermediate nodes up to and including the root
+> + * node (a special case of an intermediate node).
+> + *
+> + * If the tree was still in single leaf format and needs to converted to
+> + * real node format return 1 and let the caller handle that.
+>   */
+>  static int
+>  xfs_attr_node_try_addname(
+> @@ -1410,7 +1413,7 @@ xfs_attr_node_try_addname(
+>  			 * out-of-line values so it looked like it *might*
+>  			 * have been a b-tree. Let the caller deal with this.
+>  			 */
+> -			error = -ENOSPC;
+> +			error = 1;
+>  			goto out;
+>  		}
+>  
+> -- 
+> 2.45.2
 > 
-> It's encouraged to provide Acked-bys and Reviewed-bys even though the
-> patch has now been applied. If possible patch trailers will be updated.
 > 
-> Note that commit hashes shown below are subject to change due to rebase,
-> trailer updates or similar. If in doubt, please check the listed branch.
-> 
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-> branch: vfs.blocksize
-> 
-> [1/1] Documentation: iomap: fix a typo
->       https://git.kernel.org/vfs/vfs/c/71fdfcdd0dc8
