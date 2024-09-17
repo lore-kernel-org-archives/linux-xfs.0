@@ -1,82 +1,80 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9D45A29
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 22:27:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56F1EA29
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 23:34:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726612078; cv=none; b=bHu9HJPrkHBgGJRusVTcKqG0rE/egxTc51FwXJAej4bEe2GSa4i4K3mf6DYhlAu+853SZhCYM6q29RqxKrzYFMCfIjka7XnTYPzHNnJjgwYF4bOnnz8Pay3WyhltGBhIGXmxEWCdQQbrAiDDzwYjjKYXWAYb0xGd6cEEcQalVBA=
+	t=1726616084; cv=none; b=YCckjdZCdf9dBSemnYEdvhnK30zfXZ6hNv23WbrvbrzXjatObTTC3GcpYU+gF8zzpwm3EI3b5GUvMQ1LkR/YuzlVmPVMWYgy0Oio0jud3wQqN1nJlpuDyIhckztTQKRkk3tRS8ebgbpv/6gsffLeggoN5I516i4OL4g6JVZxSbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726612078; c=relaxed/simple;
-	bh=EBE/kDYbk7dbdt1bwZQbkSfHD+9mMbCAVxtBBX4iXd4=;
+	s=arc-20240116; t=1726616084; c=relaxed/simple;
+	bh=NT3D74mJDKPinv7EfAHmJxpIy4X3CPvCZzITyCth3sQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Q7E0KZpAc347ZHhcdVBvYAP65Wspzeof2gltiO2JRXtDSvBR6vrCN/zzCjCHjptbxaqkJ0BAAN3cnPD1KRhajrszLztb8pH7uFChQRpFFl0HncwnRDm3Xn+yCSrZ+yY0WhF4J0XdI09sXiufDdUzPKNH86jM4LqZyhrqtkNeBzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=GLy4aq7E; arc=none smtp.client-ip=209.85.215.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=nEz5w/hYfrSeQVLFbf2Ukftj0U/5OOR7USFqPjMA0F7AuY301Cr2y8v+sE6y+fdzE3wglb5c4y8vNYd5SVeR+x3tkdWhkEC95wTBuaf8R1EmrxoWDu2CVj0KE6lZHdHoOl4Ycd1nOwOhflKYw/bUQp8evHBD7bPvgxx/ScWDog8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=3Dq+i2mf; arc=none smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="GLy4aq7E"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-7db233cef22so3594341a12.0
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 15:27:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="3Dq+i2mf"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1fee6435a34so54829855ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 16:34:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726612076; x=1727216876; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726616082; x=1727220882; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ccch/CYLhuEpupgCKar2vNrhn2tuHqzaZ85afBvK4mk=;
-        b=GLy4aq7EVIZnz9mrA3JPZRvCxApyShjN4Wj7Qq3M7gnwM0YhDZ2Zq6VJKQnfFZoGgl
-         XU6lp94UnvDLVdS/+nhTsceFmQgT/IRPfoBDcWeqxTJGOrDRLDApzLP9zNzM7N6a+NIo
-         xPaZAAtjtst09mph6zpDWh4RHiPxTp0OtwgsKRYKYDWju691nFkonIneFdHWjcWLvDOs
-         y9L3p+hCyL365/6RqIM7AtdvpqjVm87JleY7h0DloXuhRRI1pTknhc0LkCrNgNDHLKYo
-         CQw32WR4MhoLt80tQUOAb0icz731QBiz5lx1u5Ul6v/8/Fvr82GdhEMwYlp/csGSrtmn
-         WCmw==
+        bh=07uea7yJ0apHmLqc69KT0AE+/9P9TTFiIR2vNmcXQ50=;
+        b=3Dq+i2mfiDIU9ePiYf2mNTXsIq5zrfsH0tNs7WMn5UGv7MQKm+3pU8lJ2QMD52kbUO
+         m4eczv7zKYOwxwEzXZdcdDvUUVs61PdBaCGN93iRTqIQ3YG9iCoOtkAUEEdXevHEFllr
+         FHQXx64SW5un87vxTOrcJjF4jxb5PN0lvrmVOnAfZRbmKgH7t40q5wGDclvNXDdulzzQ
+         Oi5mpDZGKS3/hcTWeNGzY07T8vCQK1vRizCk5KvY2aUYvQppf8JKbGqX5FsU30fDQ1GK
+         UAmSD1WgyvWgqbBXJyI8LpqS6/POWmvcytqALiUP7QrVS7XvNhiJjygiMzaPvfVEqptt
+         1euw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726612076; x=1727216876;
+        d=1e100.net; s=20230601; t=1726616082; x=1727220882;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ccch/CYLhuEpupgCKar2vNrhn2tuHqzaZ85afBvK4mk=;
-        b=POMgGtkv1PcGshFjelWIu/OUqk/qTnEG5PZ32oqqA5ocWe/gfyt4I7kLq+KDBSZgvK
-         +TsJYyEY1UCOPD2nty4LRfBogzGfaFfxJGelgrZQC5TlHFtN4BqZJCeVp1L4o5dGahW6
-         MlUmbj/FlucyDrht/joaoPPr5Vagajyzm3HnpYrhBOlrab81otWb4ID2falzzhlfY88C
-         46rhGu39cz6ruVEg49N9V9vCK2asUYqYK41q1oL9YQTiMsvzaKF75pMWWpWVd2qlAMmS
-         AdS5k2rFgEH0NrnNKh773JXmaCocBkLY8ENpydsGsNqrpL3KSRBIlX5tgBT5a+XhN7Z3
-         E2dA==
-X-Forwarded-Encrypted: i=1; AJvYcCUltk5CUpMBRDIR05fp71qf+0JMI+ZKtrk+23xXWqBKO2e5RfelKpvP58hAffRyvBS94Ut3e4hpaG4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxny6zuUP9eEU/x+PUIHPjxlfV3HVXCKLAqHUUJz3ytld1U4dv5
-	Gr9DEQSMGyIXDFmem6iKRw68zL1qbCMRbvd57LeXWzWxtAa2Jnstk6/FK9cMilArbnychrnOU3M
-	r
-X-Google-Smtp-Source: AGHT+IF0NtHcWGgQkVG/yMvHatmnpgG/DEnu8eXNlMFeupDDsk0kMCwvT1TDHdDTmoFzXGa/p8UhJg==
-X-Received: by 2002:a05:6a21:a4c4:b0:1d2:e793:b35 with SMTP id adf61e73a8af0-1d2e7930d35mr5104220637.47.1726612076095;
-        Tue, 17 Sep 2024 15:27:56 -0700 (PDT)
+        bh=07uea7yJ0apHmLqc69KT0AE+/9P9TTFiIR2vNmcXQ50=;
+        b=q81xC+hPWgsiH79Ufo1fRoYPIOcAKJZxfy7xjfw8nnAUmmg2TtkyVY1giqPrXAOXHe
+         cqjbTOSBX3b1ZjPxacAhBitkOorKBvKNJf6kwmi57+lzmOv7H3JkDj7bv0LWyf2uTUnd
+         WqkBVYJnlsEk0eTcf3yeSgoH8MUTv/iYP3aRIp4B+yOs/ciz8bBo+5c8v44tNQjStxp9
+         Fa82R7H1acicNN7FF32eHHjnNJlfO2skrncIa63u/eUq7ANkZcTYC62ZlZt9AULvHnex
+         H63gVclTiaosZCZPjtjElB3O+jUlpQfXgApAb1hmK4Yjj8HsTSEEjcz/p3VGaTrXa7wy
+         taVg==
+X-Forwarded-Encrypted: i=1; AJvYcCUJvk+mI3J68bjolfPTikwrP9vmBAFKS1TRQZBV51cvp3YNrmEr4qjP8eFIbsWLFWImD4RhS1jkzyQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwGtlIF20lEAsqpOEVrKFojAt4bXIJvIXOGlhlYzq3smxLy28gz
+	YmSNHXz8E+uiNro1/OsDwm5V7vHydhwIECBLe1SkMdLfvv0jIiSM72FgS6CCQBQ=
+X-Google-Smtp-Source: AGHT+IEeRN7SJSiVdQD32+EIk70Z7O5kuCKkOZtCUoWPrKpS2lC478IZc1STDoJy29E1/hZeqgFG+Q==
+X-Received: by 2002:a17:902:f54d:b0:207:3a5d:69b7 with SMTP id d9443c01a7336-2076e33c532mr289966395ad.15.1726616081593;
+        Tue, 17 Sep 2024 16:34:41 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71944a9809esm5583859b3a.39.2024.09.17.15.27.55
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-207945da8dfsm54969715ad.46.2024.09.17.16.34.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Sep 2024 15:27:55 -0700 (PDT)
+        Tue, 17 Sep 2024 16:34:40 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sqgfp-006XwE-0D;
-	Wed, 18 Sep 2024 08:27:53 +1000
-Date: Wed, 18 Sep 2024 08:27:53 +1000
+	id 1sqhiP-006ZBD-29;
+	Wed, 18 Sep 2024 09:34:37 +1000
+Date: Wed, 18 Sep 2024 09:34:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
-	djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-	martin.petersen@oracle.com
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: John Garry <john.g.garry@oracle.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
+	dchinner@redhat.com, hch@lst.de, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	catherine.hoang@oracle.com, martin.petersen@oracle.com
 Subject: Re: [PATCH v4 00/14] forcealign for xfs
-Message-ID: <ZuoCafOAVqSN6AIK@dread.disaster.area>
+Message-ID: <ZuoSDVJPOX44Fww/@dread.disaster.area>
 References: <20240813163638.3751939-1-john.g.garry@oracle.com>
  <87frqf2smy.fsf@gmail.com>
  <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
- <Ztom6uI0L4uEmDjT@dread.disaster.area>
- <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
- <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
- <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
- <ZufBMioqpwjSFul+@dread.disaster.area>
- <0e9dc6f8-df1b-48f3-a9e0-f5f5507d92c1@oracle.com>
+ <877cbq3g9i.fsf@gmail.com>
+ <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
+ <8734m7henr.fsf@gmail.com>
+ <ZufYRolfyUqEOS1c@dread.disaster.area>
+ <c8a9dba5-7d02-4aa2-a01f-dd7f53b24938@oracle.com>
+ <20240917205420.GB182177@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -85,100 +83,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0e9dc6f8-df1b-48f3-a9e0-f5f5507d92c1@oracle.com>
+In-Reply-To: <20240917205420.GB182177@frogsfrogsfrogs>
 
-On Mon, Sep 16, 2024 at 10:44:38AM +0100, John Garry wrote:
+On Tue, Sep 17, 2024 at 01:54:20PM -0700, Darrick J. Wong wrote:
+> On Mon, Sep 16, 2024 at 11:24:56AM +0100, John Garry wrote:
+> > On 16/09/2024 08:03, Dave Chinner wrote:
+> > > OTOH, we can't do this with atomic writes. Atomic writes require
+> > > some mkfs help because they require explicit physical alignment of
+> > > the filesystem to the underlying storage.
 > 
-> > > * I guess that you had not been following the recent discussion on this
-> > > topic in the latest xfs atomic writes series @ https://urldefense.com/v3/__https://lore.kernel.org/linux-xfs/20240817094800.776408-1-john.g.garry@oracle.com/__;!!ACWV5N9M2RV99hQ!JIzCbkyp3JuPyzBx1n80WAdog5rLxMRB65FYrs1sFf3ei-wOdqrU_DZBE5zwrJXhrj949HSE0TwOEV0ciu8$
-> > > and also mentioned earlier in
-> > > https://urldefense.com/v3/__https://lore.kernel.org/linux-xfs/20240726171358.GA27612@lst.de/__;!!ACWV5N9M2RV99hQ!JIzCbkyp3JuPyzBx1n80WAdog5rLxMRB65FYrs1sFf3ei-wOdqrU_DZBE5zwrJXhrj949HSE0TwOiiEnYSk$
-> > > 
-> > > There I dropped the sub-alloc unit zeroing. The concept to iter for a single
-> > > bio seems sane, but as Darrick mentioned, we have issue of non-atomically
-> > > committing all the extent conversions.
-> > 
-> > Yes, I understand these problems exist.  My entire point is that the
-> > forced alignment implemention should never allow such unaligned
-> > extent patterns to be created in the first place. If we avoid
-> > creating such situations in the first place, then we never have to
-> > care about about unaligned unwritten extent conversion breaking
-> > atomic IO.
-> 
-> OK, but what about this situation with non-EOF unaligned extents:
-> 
-> # xfs_io -c "lsattr -v" mnt/file
-> [extsize, has-xattr, force-align] mnt/file
-> # xfs_io -c "extsize" mnt/file
-> [65536] mnt/file
-> #
-> # xfs_io  -d -c "pwrite 64k 64k" mnt/file
-> # xfs_io  -d -c "pwrite 8k 8k" mnt/file
-> # xfs_bmap -vvp  mnt/file
-> mnt/file:
-> EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->   0: [0..15]:         384..399          0 (384..399)          16 010000
->   1: [16..31]:        400..415          0 (400..415)          16 000000
->   2: [32..127]:       416..511          0 (416..511)          96 010000
->   3: [128..255]:      256..383          0 (256..383)         128 000000
-> FLAG Values:
->    0010000 Unwritten preallocated extent
-> 
-> Here we have unaligned extents wrt extsize.
-> 
-> The sub-alloc unit zeroing would solve that - is that what you would still
-> advocate (to solve that issue)?
+> Forcealign requires agsize%extsize==0,
 
-Yes, I thought that was already implemented for force-align with the
-DIO code via the extsize zero-around changes in the iomap code. Why
-isn't that zero-around code ensuring the correct extent layout here?
+No it doesn't.
 
-> > FWIW, I also understand things are different if we are doing 128kB
-> > atomic writes on 16kB force aligned files. However, in this
-> > situation we are treating the 128kB atomic IO as eight individual
-> > 16kB atomic IOs that are physically contiguous.
-> 
-> Yes, if 16kB force aligned, userspace can only issue 16KB atomic writes.
+AG size is irrelevant when aligning extents - all
+that matters is that we can find a free extent that can be trimmed
+to the alignment defined by extsize. 
 
-Right, but the eventual goal (given the statx parameters) is to be
-able to do 8x16kB sequential atomic writes as a single 128kB IO, yes?
+> it's atomicwrites that adds the
+> requirement that extsize be a power of 2...
 
-> > > > Again, this is different to the traditional RT file behaviour - it
-> > > > can use unwritten extents for sub-alloc-unit alignment unmaps
-> > > > because the RT device can align file offset to any physical offset,
-> > > > and issue unaligned sector sized IO without any restrictions. Forced
-> > > > alignment does not have this freedom, and when we extend forced
-> > > > alignment to RT files, it will not have the freedom to use
-> > > > unwritten extents for sub-alloc-unit unmapping, either.
-> > > > 
-> > > So how do you think that we should actually implement
-> > > xfs_itruncate_extents_flags() properly for forcealign? Would it simply be
-> > > like:
-> > > 
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -1050,7 +1050,7 @@ xfs_itruncate_extents_flags(
-> > >                  WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
-> > >                  return 0;
-> > >          }
-> > > +	if (xfs_inode_has_forcealign(ip))
-> > > +	       first_unmap_block = xfs_inode_roundup_alloc_unit(ip,
-> > > first_unmap_block);
-> > >          error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
-> > 
-> > Yes, it would be something like that, except it would have to be
-> > done before first_unmap_block is verified.
-> > 
-> 
-> ok, and are you still of the opinion that this does not apply to rtvol?
+Only by explicit implementation constraint.
 
-The rtvol is *not* force-aligned. It -may- have some aligned
-allocation requirements that are similar (i.e. sb_rextsize > 1 fsb)
-but it does *not* force-align extents, written or unwritten.
+Atomic writes do not require power of two extsize - they only
+require correctly aligned physical extents.
 
-The moment we add force-align support to RT files (as is the plan),
-then the force-aligned inodes on the rtvol will need to behave as
-force aligned inodes, not "rtvol" inodes.
+e.g an 8kB atomic write is always guaranteed to succeed if
+we have an extsize of 24kB for laying out the physical extents
+because a 24kB physical extent is always 8kB aligned and is an exact
+multiple of 8kB. This meets the requirements for 8kB atomic writes to
+always succeed, and hence there is no fundamental requirement for
+extsize to be a power of 2.
+
+We have *chosen* to simplify the implementation by only allowing
+a single aligned atomic write to be issued at a time. This means
+the alignment and size of atomic writes is always the minimum size
+the hardware advertises, and that is (at present) always a power of
+2.
+
+Hence the "extsize needs to be a power of 2" comes from the
+constraints exposed from the block device configuration (i.e.
+minimum atomic write unit), not from a filesystem design or
+implementation constraint.
+
+At the filesystem level, we have further simplified things by only
+allowing extsize = atomic write size. Hence the initial
+implementation ends up only support power of 2 extsize values. This
+is not a hard design or implementation constraint, however.
+
+.....
+
+hmmmmm.
+
+.....
+
+In writing this I've had further thoughts on force-align and the
+sub-alloc-unit unwritten extent issue we've been discussing here.
+i.e. I've stopped and considered the existing design constraints
+given what I wrote above and considered what is needed for
+supporting large extsize for small atomic writes.
+
+I think we need to support large extsize with small atomic write
+size for two reasons:
+
+1. extsize is still going to be needed for preventing excessive
+fragmentation with atomic writes. It's the small DIO write workloads
+that see lots of fragmentation, and applications using atomic writes
+are essentially being forced down the path of being small DIO write
+workloads.
+
+2. we can allow force-align w/o atomic writes behaviour to match the
+existing rtvol sb_rextsize > 1 fsb behaviour without impacting
+atomic write behaviour. (i.e. less behavioural differences, more
+common code, better performance, etc).
+
+To do this (and I think we do want to do this), then we have to do
+two things:
+
+1. force-align needs to add a "unwritten align" inode parameter to
+allow sub-extsize unwritten extent boundaries to exist in the BMBT.
+(i.e.  similar to how rt files w/ sb_rextsize > 1 fsb currently
+behave.)
+
+This is purely an in-memory value - for pure "force-align" we can
+set it 1 fsb and then the behaviour will match existing RT
+behaviour.  We can abstract this behaviour by replacing the hard
+coded 1 block alignment for unwritten conversion with an "unwritten
+align" value which would initially be set to 1.
+
+We can also abstract this code away from being "rt specific" and
+make it entirely dependent on "alloc-unit" configuration. This means
+rt, force-align and atomic write will all be running the same code,
+which makes testing a lot easier..
+
+2. inodes with atomic write enabled must set the unwritten align
+value to the atomic write size exposed by the hardware, and the
+extsize must be an exact integer multiple of the unwritten align
+size.
+
+The initial settings of unwritten align == extsize gives the current
+behaviour of all allocation and extent conversion being aligned to
+atomic write constraints.
+
+The separation of unwritten conversion from the extsize then allows
+allows the situation I described above with 8kB atomic writes
+and 24kB extsize. Because unwritten conversion is aligned to atomic
+wriet boundaries, we can use sub-alloc-unit unwritten extents
+without violating atomic write boundaries.
+
+This would allow us to use extsize for atomic writes in the same
+manner we use it for now - enable large contiguous allocations to
+prevent fragmentation when doing lots of concurrent small
+"immediate write" operations across many files.
+
+I think this can all be added on top of the existing patchset - it's
+not really a fundamental change to any of it. It's a little bit more
+abstraction and unification, but it enables a lot more flexibility
+for optimising atomic write functionality in the future.
+
+Thoughts?
 
 -Dave.
 -- 
