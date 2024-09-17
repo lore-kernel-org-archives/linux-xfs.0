@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24339762E0;
-	Tue, 17 Sep 2024 21:14:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A1434CE5;
+	Tue, 17 Sep 2024 21:24:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726607660; cv=none; b=I9Hx3q2eQ0edPKMITy6NXW/rG7B3c8txBvyCEv5VfW9YhHmqudnpaM4jp3eHNmaGK+9OSxpoiYlKnn7XaXIspNQGeyGJsZbxJ7WUQR4ii3wf0cRGvg9iz8UjEl3gcopFchtogZqYdBgDDbm9VlGaepKOEQLikVNi8uRke97R5O8=
+	t=1726608268; cv=none; b=nTXtFtykEaSLrsvXa9LdYYY46+6pd9NfKEc1zsNvqTLZ8Ro8MZwkWj2cbc/BCtLfCnBkUsYAUgy0ykjCCqcLEupYMgNQ3JNlLT5jT9fH8BOWCOcvi+o9IQHF3GFzLXXtCp4fWi8yHbMDKcdmhY6oHUiLp7l1244zEU/eoV2djsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726607660; c=relaxed/simple;
-	bh=8P63ar+vDTXf5ivxQ/vJ2sKq85OTabVrl8wJoceTiLo=;
+	s=arc-20240116; t=1726608268; c=relaxed/simple;
+	bh=XB356tuhb8WcK5oGmhNFmnCjnK51SM0uq6FcoCCopic=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dXol+mhZesSXrbyxlaJbgbE7+1h8IbOaONH4jERkDxr/6Sb92nymL/qdOt4o3mE+S2e38hIwPQGPbn8Dl5nl16Qe+zhVuN3rZ6/v9CQ2/1nc0KYaca280FF1TYNlfI6JPUEJVqhnvB6xysosB8x3LS1EJKAl3GWVD9b/I6lKSw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/lPpMuN; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jv2UaxnacGdMl3P+10OpEuRVmSU6XyRVJYHBAwthD1Ys0GSumVCXfz91Wp4lhvg0V7BbOuqwq7FkBCvyp0zOLfTZBQUZ7UD0TDKx+ZqXvhTcGUU9SyJP6II3i98KwyJURJ1l/75okicBglymehjfFo+RpmTYgK8ZTOMXB4X3D0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rpOgcbr4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/lPpMuN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4746C4CEC5;
-	Tue, 17 Sep 2024 21:14:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rpOgcbr4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0B9DC4CEC5;
+	Tue, 17 Sep 2024 21:24:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726607659;
-	bh=8P63ar+vDTXf5ivxQ/vJ2sKq85OTabVrl8wJoceTiLo=;
+	s=k20201202; t=1726608267;
+	bh=XB356tuhb8WcK5oGmhNFmnCjnK51SM0uq6FcoCCopic=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=J/lPpMuN6t1lPgDK8TYx7F1yhWn3Er3ps7fTJCzx23TyuR372cauTJUtOviLMym/9
-	 1yrN2f0dnc2f/M2cmYI0zgr201cJnEyPoQ6X56cYFjzeHHRarAC++ZfrdMfqNVSQFA
-	 l/t2Ui0NpnGVNHADd0I8NmFlNM+XC4M3uBOLmyde6Kyj45qwk9s14xw1vaH6Bq3OGm
-	 6SCT2OnhL1/ql2kTR2MvK+bOiRQ8XMJXy2+HP63fX4/Uamc5BI/L7COQ54JHHj2Q6e
-	 W1l4PXvNYfF52aemoacWCJPmj2PwwdORNOy6EvQ7nvyfYchH+7vcSgg5lhqglOzBex
-	 Qh9MVQ9ipVg+A==
-Date: Tue, 17 Sep 2024 14:14:19 -0700
+	b=rpOgcbr4xnWIHQ7LQX7bKRUaNb2WZd9IQzYdlRkSNosomn5O5uAN7qdvRwWK9azg8
+	 fsVu9M+C68KM2fniLUfKC0MRRyGQCcOtygrmgoQ4+5XVrfqa3bDIoJ7SA6lvubaaql
+	 Es/4YC84HSUQIfzVkD3NeLJ/FjCzlSblcFxjmHGsM6VnMvWnSsZaE1NU/SQO6OqSL8
+	 K1mnVCLcCEfpzNnusaTrBzjEhe/5m22/JfcYHRdQKvOKTdNvM/pVVocOZSWiHXgcxB
+	 uGB9Z9VNAvZzvkf5NiTBAJmR22fBM3XLsXlWbN+Gce/v6XsMCIbAsKnhLzCkEz2N1B
+	 mqwWbolWHz/kQ==
+Date: Tue, 17 Sep 2024 14:24:27 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 06/12] xfs: factor out a xfs_file_write_zero_eof helper
-Message-ID: <20240917211419.GC182177@frogsfrogsfrogs>
+Subject: Re: [PATCH 07/12] xfs: take XFS_MMAPLOCK_EXCL xfs_file_write_zero_eof
+Message-ID: <20240917212427.GD182177@frogsfrogsfrogs>
 References: <20240910043949.3481298-1-hch@lst.de>
- <20240910043949.3481298-7-hch@lst.de>
+ <20240910043949.3481298-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,201 +44,80 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240910043949.3481298-7-hch@lst.de>
+In-Reply-To: <20240910043949.3481298-8-hch@lst.de>
 
-On Tue, Sep 10, 2024 at 07:39:08AM +0300, Christoph Hellwig wrote:
-> Split a helper from xfs_file_write_checks that just deal with the
-> post-EOF zeroing to keep the code readable.
+On Tue, Sep 10, 2024 at 07:39:09AM +0300, Christoph Hellwig wrote:
+> xfs_file_write_zero_eof is the only caller of xfs_zero_range that does
+> not take XFS_MMAPLOCK_EXCL (aka the invalidate lock).  Currently that
+> is acrually the right thing, as an error in the iomap zeroing code will
+
+     actually
+
+> also take the invalidate_lock to clean up, but to fix that deadlock we
+> need a consistent locking pattern first.
+> 
+> The only extra thing that XFS_MMAPLOCK_EXCL will lock out are read
+> pagefaults, which isn't really needed here, but also not actively
+> harmful.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_file.c | 133 ++++++++++++++++++++++++++--------------------
->  1 file changed, 75 insertions(+), 58 deletions(-)
+>  fs/xfs/xfs_file.c  | 8 +++++++-
+>  fs/xfs/xfs_iomap.c | 2 ++
+>  2 files changed, 9 insertions(+), 1 deletion(-)
 > 
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 0d258c21b9897f..a30fda1985e6af 100644
+> index a30fda1985e6af..37dc26f51ace65 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -347,10 +347,70 @@ xfs_file_splice_read(
->  	return ret;
->  }
+> @@ -357,6 +357,7 @@ xfs_file_write_zero_eof(
+>  {
+>  	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+>  	loff_t			isize;
+> +	int			error;
 >  
-> +static ssize_t
-> +xfs_file_write_zero_eof(
-> +	struct kiocb		*iocb,
-> +	struct iov_iter		*from,
-> +	unsigned int		*iolock,
-> +	size_t			count,
-> +	bool			*drained_dio)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
-> +	loff_t			isize;
+>  	/*
+>  	 * We need to serialise against EOF updates that occur in IO completions
+> @@ -404,7 +405,12 @@ xfs_file_write_zero_eof(
+>  	}
+>  
+>  	trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
+> -	return xfs_zero_range(ip, isize, iocb->ki_pos - isize, NULL);
 > +
-> +	/*
-> +	 * We need to serialise against EOF updates that occur in IO completions
-> +	 * here. We want to make sure that nobody is changing the size while
-> +	 * we do this check until we have placed an IO barrier (i.e. hold
-> +	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
-> +	 * spinlock effectively forms a memory barrier once we have
-> +	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
-> +	 * hence be able to correctly determine if we need to run zeroing.
-> +	 */
-> +	spin_lock(&ip->i_flags_lock);
-> +	isize = i_size_read(VFS_I(ip));
-> +	if (iocb->ki_pos <= isize) {
-> +		spin_unlock(&ip->i_flags_lock);
-> +		return 0;
-> +	}
-> +	spin_unlock(&ip->i_flags_lock);
-> +
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EAGAIN;
-> +
-> +	if (!*drained_dio) {
-> +		/*
-> +		 * If zeroing is needed and we are currently holding the iolock
-> +		 * shared, we need to update it to exclusive which implies
-> +		 * having to redo all checks before.
-> +		 */
-> +		if (*iolock == XFS_IOLOCK_SHARED) {
-> +			xfs_iunlock(ip, *iolock);
-> +			*iolock = XFS_IOLOCK_EXCL;
-> +			xfs_ilock(ip, *iolock);
-> +			iov_iter_reexpand(from, count);
-> +		}
-> +
-> +		/*
-> +		 * We now have an IO submission barrier in place, but AIO can do
-> +		 * EOF updates during IO completion and hence we now need to
-> +		 * wait for all of them to drain.  Non-AIO DIO will have drained
-> +		 * before we are given the XFS_IOLOCK_EXCL, and so for most
-> +		 * cases this wait is a no-op.
-> +		 */
-> +		inode_dio_wait(VFS_I(ip));
-> +		*drained_dio = true;
-> +		return 1;
+> +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> +	error = xfs_zero_range(ip, isize, iocb->ki_pos - isize, NULL);
+> +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
 
-I gotta say, I'm not a big fan of the "return 1 to loop again" behavior.
-Can you add a comment at the top stating that this is a possible return
-value and why it gets returned?
+Ah, ok, so we're taking the invalidate_lock so that we can't have page
+faults that might add folios (or dirty existing ones) in the mapping.
+We're the only ones who can access the page cache, and we're doing that
+so that we can zero the folios between the old EOF and the start of the
+write region.
+
+Is that right?  Then
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +	}
+
 > +
-> +	trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
-> +	return xfs_zero_range(ip, isize, iocb->ki_pos - isize, NULL);
-> +}
-> +
->  /*
->   * Common pre-write limit and setup checks.
->   *
-> - * Called with the iolocked held either shared and exclusive according to
-> + * Called with the iolock held either shared and exclusive according to
->   * @iolock, and returns with it held.  Might upgrade the iolock to exclusive
->   * if called for a direct write beyond i_size.
->   */
-> @@ -360,13 +420,10 @@ xfs_file_write_checks(
->  	struct iov_iter		*from,
->  	unsigned int		*iolock)
->  {
-> -	struct file		*file = iocb->ki_filp;
-> -	struct inode		*inode = file->f_mapping->host;
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	ssize_t			error = 0;
-> +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
->  	size_t			count = iov_iter_count(from);
->  	bool			drained_dio = false;
-> -	loff_t			isize;
-> +	ssize_t			error;
->  
->  restart:
->  	error = generic_write_checks(iocb, from);
-> @@ -389,7 +446,7 @@ xfs_file_write_checks(
->  	 * exclusively.
->  	 */
->  	if (*iolock == XFS_IOLOCK_SHARED && !IS_NOSEC(inode)) {
-> -		xfs_iunlock(ip, *iolock);
-> +		xfs_iunlock(XFS_I(inode), *iolock);
->  		*iolock = XFS_IOLOCK_EXCL;
->  		error = xfs_ilock_iocb(iocb, *iolock);
->  		if (error) {
-> @@ -400,64 +457,24 @@ xfs_file_write_checks(
->  	}
->  
->  	/*
-> -	 * If the offset is beyond the size of the file, we need to zero any
-> +	 * If the offset is beyond the size of the file, we need to zero all
->  	 * blocks that fall between the existing EOF and the start of this
-> -	 * write.  If zeroing is needed and we are currently holding the iolock
-> -	 * shared, we need to update it to exclusive which implies having to
-> -	 * redo all checks before.
-> -	 *
-> -	 * We need to serialise against EOF updates that occur in IO completions
-> -	 * here. We want to make sure that nobody is changing the size while we
-> -	 * do this check until we have placed an IO barrier (i.e.  hold the
-> -	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
-> -	 * spinlock effectively forms a memory barrier once we have the
-> -	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
-> -	 * hence be able to correctly determine if we need to run zeroing.
-> +	 * write.
->  	 *
-> -	 * We can do an unlocked check here safely as IO completion can only
-> -	 * extend EOF. Truncate is locked out at this point, so the EOF can
-> -	 * not move backwards, only forwards. Hence we only need to take the
-> -	 * slow path and spin locks when we are at or beyond the current EOF.
-> +	 * We can do an unlocked check for i_size here safely as I/O completion
-> +	 * can only extend EOF.  Truncate is locked out at this point, so the
-> +	 * EOF can not move backwards, only forwards. Hence we only need to take
-> +	 * the slow path when we are at or beyond the current EOF.
->  	 */
-> -	if (iocb->ki_pos <= i_size_read(inode))
-> -		goto out;
-> -
-> -	spin_lock(&ip->i_flags_lock);
-> -	isize = i_size_read(inode);
-> -	if (iocb->ki_pos > isize) {
-> -		spin_unlock(&ip->i_flags_lock);
-> -
-> -		if (iocb->ki_flags & IOCB_NOWAIT)
-> -			return -EAGAIN;
-> -
-> -		if (!drained_dio) {
-> -			if (*iolock == XFS_IOLOCK_SHARED) {
-> -				xfs_iunlock(ip, *iolock);
-> -				*iolock = XFS_IOLOCK_EXCL;
-> -				xfs_ilock(ip, *iolock);
-> -				iov_iter_reexpand(from, count);
-> -			}
-> -			/*
-> -			 * We now have an IO submission barrier in place, but
-> -			 * AIO can do EOF updates during IO completion and hence
-> -			 * we now need to wait for all of them to drain. Non-AIO
-> -			 * DIO will have drained before we are given the
-> -			 * XFS_IOLOCK_EXCL, and so for most cases this wait is a
-> -			 * no-op.
-> -			 */
-> -			inode_dio_wait(inode);
-> -			drained_dio = true;
-> +	if (iocb->ki_pos > i_size_read(inode)) {
-> +		error = xfs_file_write_zero_eof(iocb, from, iolock, count,
-> +				&drained_dio);
-> +		if (error == 1)
->  			goto restart;
-> -		}
-> -
-> -		trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
-> -		error = xfs_zero_range(ip, isize, iocb->ki_pos - isize, NULL);
->  		if (error)
->  			return error;
-> -	} else
-> -		spin_unlock(&ip->i_flags_lock);
-> +	}
->  
-> -out:
->  	return kiocb_modified(iocb);
+> +	return error;
 >  }
 >  
+>  /*
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 1e11f48814c0d0..3c98d82c0ad0dc 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -1435,6 +1435,8 @@ xfs_zero_range(
+>  {
+>  	struct inode		*inode = VFS_I(ip);
+>  
+> +	xfs_assert_ilocked(ip, XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL);
+> +
+>  	if (IS_DAX(inode))
+>  		return dax_zero_range(inode, pos, len, did_zero,
+>  				      &xfs_dax_write_iomap_ops);
 > -- 
 > 2.45.2
 > 
