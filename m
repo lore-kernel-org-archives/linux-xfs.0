@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F29175D5D
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 18:22:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A1D313BAFA
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 18:24:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726597364; cv=none; b=MLzZxf/QxmGwtNnQvCJxgABJjfrvUKhkTIF7hK3XsKoNyYusZlVHwium/BJ+Awzk6NMWScEqA2GAKvg7iLUbailptPgf0bLSZ3guUGM/883HglkHrBRclfuz4DwEzyaIOm+GNlUaTbg0D+aMhAbT7/eNJgS1q/M76vxQqj0oggE=
+	t=1726597483; cv=none; b=DByfI4PsKzVZzuMWXP032nExyManzmjboYu4QAcfXdolkDOjk0MeIJJjMNCnbdTEAtyco+8zbpjuF0H3PTWP2cPvhBVfSWYFeIb4RhXntyqPAbzbTJUEPAjb/WPtZwPQhccjU1TddMc28mVVzzqPd6FRG9KD4kpX7wcm07ozEuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726597364; c=relaxed/simple;
-	bh=1QxUNHnZpOiMgB60KuPsnkfRjp2u+0Pj9WUKphFOArc=;
+	s=arc-20240116; t=1726597483; c=relaxed/simple;
+	bh=jhoX+EYh63JRrGULqecVogBHopYIPkeB1KBdrjHAdt0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Iah8DhQ+IlPU/KNqZHd5H2JHr1lo0ynH9AREg1mO6UJcV7YJgPtL7UN6ivqkxojfGKVR+ETR/4cc2gh8bM7KHV77QnXiTdiHWTQVcvmNcgbp5u4/UxSryZif+KkfNLrAKUN3evnekCqbimnGb0mbilf5L9ioXP2ZA+fx/DUGDgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i+1LuVbX; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=l6iGeSXDGt+Z5YmE4GySJhtLpVu7JTsBWr3TypTl8PUxwqhtWOEWzBGScyNdFsVWLZ2Lu8lEnAHsQFfuyjOwFbkKSlDosPAuD9W9rFApY/X2SbNwexO39u9spPfmQidVcyAUHujFLyr7LfWjwHjG1pOFeDoX7dsatFwhPvbyF6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oBwRkj7U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i+1LuVbX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAED4C4CEC5;
-	Tue, 17 Sep 2024 18:22:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oBwRkj7U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82B0EC4CEC5;
+	Tue, 17 Sep 2024 18:24:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726597363;
-	bh=1QxUNHnZpOiMgB60KuPsnkfRjp2u+0Pj9WUKphFOArc=;
+	s=k20201202; t=1726597482;
+	bh=jhoX+EYh63JRrGULqecVogBHopYIPkeB1KBdrjHAdt0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=i+1LuVbXYyq3fFqw8u4NWMlNV9d1RtJait+kdhPA7HWmPUpv9dYPlDne6GMdLyOj1
-	 o03BawnM+XXbQYsspbJmKXfGdZ7cgwbIrmUWX4t7uEkWPxaDN38lU4aNpmFiCkB/X/
-	 s2vje6/WNtRyE/eCue5Ijhp45CN0CVWXWtXOYOb3QOO5UJ0W5PMxdJHq8lqeJbNeEb
-	 SO+SbMx83qFkdQtIKg9oxphOogMx+Tc/bJa/hJpS72bpFWWPdxENUZIMiUdbDoRb8a
-	 PpspFrzsbvkQQtaDzmIV09ijMuqJlxYYIOmXXkrxShlckSaXZNM9Kw1dWUxoA8j440
-	 WLehyekGJlWYg==
-Date: Tue, 17 Sep 2024 11:22:43 -0700
+	b=oBwRkj7UsjzU/f2cT4H0p6ompkKBikfHn/HBdxBkYojUiPVkD+pOJcmnOImUR+AeQ
+	 RLwUp6wUhnC35LR0afSJwyoExQethvw0/7RHsNyoEZhJ4PL+NgZ2sozmecxtZJZOfE
+	 /g4VJzXkHtS98eYLTk3b2bnmSEZAyXaJ0B2MrOwwLgS2r5i14jVLbyhxpklMg3h4v5
+	 XkpxEDe9k7P3GO+xPnze2Mbj8xgdlwyuNfz8JSvMGl+KVU9cdAEMX+4UmDjYGmi4Pr
+	 9PjN8Gm5ehyGkyEG4kYjkgNgKptaFlqvit1QaF6VlcfyzFIdzELYuGwNRkUa/i89rA
+	 l4qh1mlBGHZFQ==
+Date: Tue, 17 Sep 2024 11:24:41 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/8] xfs: don't ifdef around the exact minlen allocations
-Message-ID: <20240917182243.GG182194@frogsfrogsfrogs>
-References: <20240904053820.2836285-1-hch@lst.de>
- <20240904053820.2836285-7-hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: skip background cowblock trims on inodes open
+ for write
+Message-ID: <20240917182441.GH182194@frogsfrogsfrogs>
+References: <20240903124713.23289-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,108 +42,135 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240904053820.2836285-7-hch@lst.de>
+In-Reply-To: <20240903124713.23289-1-bfoster@redhat.com>
 
-On Wed, Sep 04, 2024 at 08:37:57AM +0300, Christoph Hellwig wrote:
-> Exact minlen allocations only exist as an error injection tool for debug
-> builds.  Currently this is implemented using ifdefs, which means the code
-> isn't even compiled for non-XFS_DEBUG builds.  Enhance the compile test
-> coverage by always building the code and use the compilers' dead code
-> elimination to remove it from the generated binary instead.
+On Tue, Sep 03, 2024 at 08:47:13AM -0400, Brian Foster wrote:
+> The background blockgc scanner runs on a 5m interval by default and
+> trims preallocation (post-eof and cow fork) from inodes that are
+> otherwise idle. Idle effectively means that iolock can be acquired
+> without blocking and that the inode has no dirty pagecache or I/O in
+> flight.
 > 
-> The only downside is that the new bitfield is unconditionally added to
-> struct xfs_alloc_args now.
+> This simple mechanism and heuristic has worked fairly well for
+> post-eof speculative preallocations. Support for reflink and COW
+> fork preallocations came sometime later and plugged into the same
+> mechanism, with similar heuristics. Some recent testing has shown
+> that COW fork preallocation may be notably more sensitive to blockgc
+> processing than post-eof preallocation, however.
+> 
+> For example, consider an 8GB reflinked file with a COW extent size
+> hint of 1MB. A worst case fully randomized overwrite of this file
+> results in ~8k extents of an average size of ~1MB. If the same
+> workload is interrupted a couple times for blockgc processing
+> (assuming the file goes idle), the resulting extent count explodes
+> to over 100k extents with an average size <100kB. This is
+> significantly worse than ideal and essentially defeats the COW
+> extent size hint mechanism.
+> 
+> While this particular test is instrumented, it reflects a fairly
+> reasonable pattern in practice where random I/Os might spread out
+> over a large period of time with varying periods of (in)activity.
+> For example, consider a cloned disk image file for a VM or container
+> with long uptime and variable and bursty usage. A background blockgc
+> scan that races and processes the image file when it happens to be
+> clean and idle can have a significant effect on the future
+> fragmentation level of the file, even when still in use.
+> 
+> To help combat this, update the heuristic to skip cowblocks inodes
+> that are currently opened for write access during non-sync blockgc
+> scans. This allows COW fork preallocations to persist for as long as
+> possible unless otherwise needed for functional purposes (i.e. a
+> sync scan), the file is idle and closed, or the inode is being
+> evicted from cache. While here, update the comments to help
+> distinguish performance oriented heuristics from the logic that
+> exists to maintain functional correctness.
+> 
+> Suggested-by: Darrick Wong <djwong@kernel.org>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> v2:
+> - Reorder logic and update comments in xfs_prep_free_cowblocks().
+> v1: https://lore.kernel.org/linux-xfs/20240214165231.84925-1-bfoster@redhat.com/
+> 
+>  fs/xfs/xfs_icache.c | 31 +++++++++++++++++++++++--------
+>  1 file changed, 23 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index cf629302d48e..900a6277d931 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1241,14 +1241,17 @@ xfs_inode_clear_eofblocks_tag(
+>  }
+>  
+>  /*
+> - * Set ourselves up to free CoW blocks from this file.  If it's already clean
+> - * then we can bail out quickly, but otherwise we must back off if the file
+> - * is undergoing some kind of write.
+> + * Prepare to free COW fork blocks from an inode.
+>   */
+>  static bool
+>  xfs_prep_free_cowblocks(
+> -	struct xfs_inode	*ip)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_icwalk	*icw)
+>  {
+> +	bool			sync;
+> +
+> +	sync = icw && (icw->icw_flags & XFS_ICWALK_FLAG_SYNC);
+> +
+>  	/*
+>  	 * Just clear the tag if we have an empty cow fork or none at all. It's
+>  	 * possible the inode was fully unshared since it was originally tagged.
+> @@ -1260,9 +1263,21 @@ xfs_prep_free_cowblocks(
+>  	}
+>  
+>  	/*
+> -	 * If the mapping is dirty or under writeback we cannot touch the
+> -	 * CoW fork.  Leave it alone if we're in the midst of a directio.
+> +	 * A cowblocks trim of an inode can have a significant effect on
+> +	 * fragmentation even when a reasonable COW extent size hint is set.
+> +	 * Therefore, we prefer to not process cowblocks unless they are clean
+> +	 * and idle. We can never process a cowblocks inode that is dirty or has
+> +	 * in-flight I/O under any circumstances, because outstanding writeback
+> +	 * or dio expects targeted COW fork blocks exist through write
+> +	 * completion where they can be remapped into the data fork.
+> +	 *
+> +	 * Therefore, the heuristic used here is to never process inodes
+> +	 * currently opened for write from background (i.e. non-sync) scans. For
+> +	 * sync scans, use the pagecache/dio state of the inode to ensure we
+> +	 * never free COW fork blocks out from under pending I/O.
 
-Could you move it to one of the holes in that struct so that we don't
-bloat the size of this structure by 4 bytes for everyone?  I think some
-light reorganization could shrink it from 136 to 128 bytes.
+Sounds good to me!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 7 ++-----
->  fs/xfs/libxfs/xfs_alloc.h | 2 --
->  fs/xfs/libxfs/xfs_bmap.c  | 6 ------
->  3 files changed, 2 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 59326f84f6a571..04f64cf9777e21 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2766,7 +2766,6 @@ xfs_alloc_commit_autoreap(
->  		xfs_defer_item_unpause(tp, aarp->dfp);
+>  	 */
+> +	if (!sync && inode_is_open_for_write(VFS_I(ip)))
+> +		return false;
+>  	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
+>  	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+>  	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+> @@ -1298,7 +1313,7 @@ xfs_inode_free_cowblocks(
+>  	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
+>  		return 0;
+>  
+> -	if (!xfs_prep_free_cowblocks(ip))
+> +	if (!xfs_prep_free_cowblocks(ip, icw))
+>  		return 0;
+>  
+>  	if (!xfs_icwalk_match(ip, icw))
+> @@ -1327,7 +1342,7 @@ xfs_inode_free_cowblocks(
+>  	 * Check again, nobody else should be able to dirty blocks or change
+>  	 * the reflink iflag now that we have the first two locks held.
+>  	 */
+> -	if (xfs_prep_free_cowblocks(ip))
+> +	if (xfs_prep_free_cowblocks(ip, icw))
+>  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+>  	return ret;
 >  }
->  
-> -#ifdef DEBUG
->  /*
->   * Check if an AGF has a free extent record whose length is equal to
->   * args->minlen.
-> @@ -2806,7 +2805,6 @@ xfs_exact_minlen_extent_available(
->  
->  	return error;
->  }
-> -#endif
->  
->  /*
->   * Decide whether to use this allocation group for this allocation.
-> @@ -2880,15 +2878,14 @@ xfs_alloc_fix_freelist(
->  	if (!xfs_alloc_space_available(args, need, alloc_flags))
->  		goto out_agbp_relse;
->  
-> -#ifdef DEBUG
-> -	if (args->alloc_minlen_only) {
-> +	if (IS_ENABLED(CONFIG_XFS_DEBUG) && args->alloc_minlen_only) {
->  		int stat;
->  
->  		error = xfs_exact_minlen_extent_available(args, agbp, &stat);
->  		if (error || !stat)
->  			goto out_agbp_relse;
->  	}
-> -#endif
-> +
->  	/*
->  	 * Make the freelist shorter if it's too long.
->  	 *
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index fae170825be064..3e927e628f4418 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -55,9 +55,7 @@ typedef struct xfs_alloc_arg {
->  	char		wasfromfl;	/* set if allocation is from freelist */
->  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
->  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
-> -#ifdef DEBUG
->  	bool		alloc_minlen_only; /* allocate exact minlen extent */
-> -#endif
->  } xfs_alloc_arg_t;
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 36ff4c553ba5f7..2f7cfbacec952b 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3468,7 +3468,6 @@ xfs_bmap_process_allocated_extent(
->  	xfs_bmap_alloc_account(ap);
->  }
->  
-> -#ifdef DEBUG
->  static int
->  xfs_bmap_exact_minlen_extent_alloc(
->  	struct xfs_bmalloca	*ap)
-> @@ -3530,11 +3529,6 @@ xfs_bmap_exact_minlen_extent_alloc(
->  
->  	return 0;
->  }
-> -#else
-> -
-> -#define xfs_bmap_exact_minlen_extent_alloc(bma) (-EFSCORRUPTED)
-> -
-> -#endif
->  
->  /*
->   * If we are not low on available data blocks and we are allocating at
 > -- 
-> 2.45.2
+> 2.45.0
 > 
 > 
