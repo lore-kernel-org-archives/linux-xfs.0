@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11231178368
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 18:19:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F29175D5D
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 18:22:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726597187; cv=none; b=oFjE2TYIUUKQTgx4ggmF3PUCV0VQ2kXdx7N5Jo52qoxh2TujGEkGZX9M9ooIcdnpLs5jAL0rry3r1wI1uiu1V8SO4monkYjQrZDlbMJTM/o9rdLE+gTV6n3+uIYWpl+4sOTwzIMptDPzCz4DVVakPPynNzZEtY4kjc+4XG9UNu8=
+	t=1726597364; cv=none; b=MLzZxf/QxmGwtNnQvCJxgABJjfrvUKhkTIF7hK3XsKoNyYusZlVHwium/BJ+Awzk6NMWScEqA2GAKvg7iLUbailptPgf0bLSZ3guUGM/883HglkHrBRclfuz4DwEzyaIOm+GNlUaTbg0D+aMhAbT7/eNJgS1q/M76vxQqj0oggE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726597187; c=relaxed/simple;
-	bh=JQLOuUpBKwpTdurDQUlBUhA1DttI85HBD8rT8qf2RRk=;
+	s=arc-20240116; t=1726597364; c=relaxed/simple;
+	bh=1QxUNHnZpOiMgB60KuPsnkfRjp2u+0Pj9WUKphFOArc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nDMqVGjD5WCApe2Ib5qzQN8dMt2rn4rV2j6YeEeEiiMJf+PG2iHHE7yhkMcyZEDt93Hde6P35fm3oGyr5FWuokvQ462dcu48v/l85l4oBBiGLaklvsBkNZdhgFw5yIoAvtHlZ8Sduz8np4L7L2/91BpVkh9xyu6wvf9npU6UrZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FBidT5nl; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Iah8DhQ+IlPU/KNqZHd5H2JHr1lo0ynH9AREg1mO6UJcV7YJgPtL7UN6ivqkxojfGKVR+ETR/4cc2gh8bM7KHV77QnXiTdiHWTQVcvmNcgbp5u4/UxSryZif+KkfNLrAKUN3evnekCqbimnGb0mbilf5L9ioXP2ZA+fx/DUGDgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i+1LuVbX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FBidT5nl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBF84C4CEC5;
-	Tue, 17 Sep 2024 18:19:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i+1LuVbX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAED4C4CEC5;
+	Tue, 17 Sep 2024 18:22:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726597186;
-	bh=JQLOuUpBKwpTdurDQUlBUhA1DttI85HBD8rT8qf2RRk=;
+	s=k20201202; t=1726597363;
+	bh=1QxUNHnZpOiMgB60KuPsnkfRjp2u+0Pj9WUKphFOArc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FBidT5nlbyiX/+Ow7ttUowlHUXK1fYHB0sJdnZHrduKP4WUYnoPwT8US1x671nx6i
-	 xWXOb9xTbmAFSpuYFYgPcqdel1DsIeXJG49sRz07tSrpNQN/0GUo0jWbw/9wzmYCh5
-	 T6NQFyjFB0ueKdebo1zmNBRtHPIJ9wDxdORrpTpYzJFulqOcgOVcyEMpkWSCXNmMdS
-	 20OW7zcDsQK7aoeQLifBSY5123tLZ+IKtn3aU8HTP0RgSy+PmLNMalkIs97K3ZOaeY
-	 KGL2HgjUujx6/L3AIgXZ2PrreOWxLxKm3P09Jnp6JeM1OZdIbyLJFKJxYb2rEoV8o7
-	 L1+7RRPkwcCAw==
-Date: Tue, 17 Sep 2024 11:19:46 -0700
+	b=i+1LuVbXYyq3fFqw8u4NWMlNV9d1RtJait+kdhPA7HWmPUpv9dYPlDne6GMdLyOj1
+	 o03BawnM+XXbQYsspbJmKXfGdZ7cgwbIrmUWX4t7uEkWPxaDN38lU4aNpmFiCkB/X/
+	 s2vje6/WNtRyE/eCue5Ijhp45CN0CVWXWtXOYOb3QOO5UJ0W5PMxdJHq8lqeJbNeEb
+	 SO+SbMx83qFkdQtIKg9oxphOogMx+Tc/bJa/hJpS72bpFWWPdxENUZIMiUdbDoRb8a
+	 PpspFrzsbvkQQtaDzmIV09ijMuqJlxYYIOmXXkrxShlckSaXZNM9Kw1dWUxoA8j440
+	 WLehyekGJlWYg==
+Date: Tue, 17 Sep 2024 11:22:43 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/8] xfs: distinguish extra split from real ENOSPC from
- xfs_attr_node_try_addname
-Message-ID: <20240917181946.GF182194@frogsfrogsfrogs>
+Subject: Re: [PATCH 6/8] xfs: don't ifdef around the exact minlen allocations
+Message-ID: <20240917182243.GG182194@frogsfrogsfrogs>
 References: <20240904053820.2836285-1-hch@lst.de>
- <20240904053820.2836285-5-hch@lst.de>
+ <20240904053820.2836285-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,65 +42,107 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240904053820.2836285-5-hch@lst.de>
+In-Reply-To: <20240904053820.2836285-7-hch@lst.de>
 
-On Wed, Sep 04, 2024 at 08:37:55AM +0300, Christoph Hellwig wrote:
-> Just like xfs_attr3_leaf_split, xfs_attr_node_try_addname can return
-> -ENOSPC both for an actual failure to allocate a disk block, but also
-> to signal the caller to convert the format of the attr fork.  Use magic
-> 1 to ask for the conversion here as well.
+On Wed, Sep 04, 2024 at 08:37:57AM +0300, Christoph Hellwig wrote:
+> Exact minlen allocations only exist as an error injection tool for debug
+> builds.  Currently this is implemented using ifdefs, which means the code
+> isn't even compiled for non-XFS_DEBUG builds.  Enhance the compile test
+> coverage by always building the code and use the compilers' dead code
+> elimination to remove it from the generated binary instead.
 > 
-> Note that unlike the similar issue in xfs_attr3_leaf_split, this one was
-> only found by code review.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> The only downside is that the new bitfield is unconditionally added to
+> struct xfs_alloc_args now.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Could you move it to one of the holes in that struct so that we don't
+bloat the size of this structure by 4 bytes for everyone?  I think some
+light reorganization could shrink it from 136 to 128 bytes.
 
 --D
 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c | 7 ++-----
+>  fs/xfs/libxfs/xfs_alloc.h | 2 --
+>  fs/xfs/libxfs/xfs_bmap.c  | 6 ------
+>  3 files changed, 2 insertions(+), 13 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 0bf4f718be462f..c63da14eee0432 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -597,7 +597,7 @@ xfs_attr_node_addname(
->  		return error;
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 59326f84f6a571..04f64cf9777e21 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2766,7 +2766,6 @@ xfs_alloc_commit_autoreap(
+>  		xfs_defer_item_unpause(tp, aarp->dfp);
+>  }
 >  
->  	error = xfs_attr_node_try_addname(attr);
-> -	if (error == -ENOSPC) {
-> +	if (error == 1) {
->  		error = xfs_attr3_leaf_to_node(args);
->  		if (error)
->  			return error;
-> @@ -1386,9 +1386,12 @@ xfs_attr_node_addname_find_attr(
+> -#ifdef DEBUG
 >  /*
->   * Add a name to a Btree-format attribute list.
->   *
-> - * This will involve walking down the Btree, and may involve splitting
-> - * leaf nodes and even splitting intermediate nodes up to and including
-> - * the root node (a special case of an intermediate node).
-> + * This will involve walking down the Btree, and may involve splitting leaf
-> + * nodes and even splitting intermediate nodes up to and including the root
-> + * node (a special case of an intermediate node).
-> + *
-> + * If the tree was still in single leaf format and needs to converted to
-> + * real node format return 1 and let the caller handle that.
->   */
->  static int
->  xfs_attr_node_try_addname(
-> @@ -1410,7 +1413,7 @@ xfs_attr_node_try_addname(
->  			 * out-of-line values so it looked like it *might*
->  			 * have been a b-tree. Let the caller deal with this.
->  			 */
-> -			error = -ENOSPC;
-> +			error = 1;
->  			goto out;
->  		}
+>   * Check if an AGF has a free extent record whose length is equal to
+>   * args->minlen.
+> @@ -2806,7 +2805,6 @@ xfs_exact_minlen_extent_available(
 >  
+>  	return error;
+>  }
+> -#endif
+>  
+>  /*
+>   * Decide whether to use this allocation group for this allocation.
+> @@ -2880,15 +2878,14 @@ xfs_alloc_fix_freelist(
+>  	if (!xfs_alloc_space_available(args, need, alloc_flags))
+>  		goto out_agbp_relse;
+>  
+> -#ifdef DEBUG
+> -	if (args->alloc_minlen_only) {
+> +	if (IS_ENABLED(CONFIG_XFS_DEBUG) && args->alloc_minlen_only) {
+>  		int stat;
+>  
+>  		error = xfs_exact_minlen_extent_available(args, agbp, &stat);
+>  		if (error || !stat)
+>  			goto out_agbp_relse;
+>  	}
+> -#endif
+> +
+>  	/*
+>  	 * Make the freelist shorter if it's too long.
+>  	 *
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index fae170825be064..3e927e628f4418 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -55,9 +55,7 @@ typedef struct xfs_alloc_arg {
+>  	char		wasfromfl;	/* set if allocation is from freelist */
+>  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
+>  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
+> -#ifdef DEBUG
+>  	bool		alloc_minlen_only; /* allocate exact minlen extent */
+> -#endif
+>  } xfs_alloc_arg_t;
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 36ff4c553ba5f7..2f7cfbacec952b 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3468,7 +3468,6 @@ xfs_bmap_process_allocated_extent(
+>  	xfs_bmap_alloc_account(ap);
+>  }
+>  
+> -#ifdef DEBUG
+>  static int
+>  xfs_bmap_exact_minlen_extent_alloc(
+>  	struct xfs_bmalloca	*ap)
+> @@ -3530,11 +3529,6 @@ xfs_bmap_exact_minlen_extent_alloc(
+>  
+>  	return 0;
+>  }
+> -#else
+> -
+> -#define xfs_bmap_exact_minlen_extent_alloc(bma) (-EFSCORRUPTED)
+> -
+> -#endif
+>  
+>  /*
+>   * If we are not low on available data blocks and we are allocating at
 > -- 
 > 2.45.2
 > 
