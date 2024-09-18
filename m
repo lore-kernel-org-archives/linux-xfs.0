@@ -1,202 +1,310 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1790166F1A
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 06:37:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726641428; cv=none; b=mxNv4bnzXn4T6q3pY4mH7Fi7RsAJirkI5jhZFhuGJrJIgOxEqLnDn3QQDqeJH+VMOFlODCnY22UAs2FzRQ7aAjAwnK/fo0taINHLvZ6gR6J3jO5xxHOD2KSHeUY+tPFDFrL59DkS8glE7ANtuQMO3TmQzXdrV27p4GKz3ach8Bs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726641428; c=relaxed/simple;
-	bh=04wFRTmhaMNLEIfkaR4jRwa5fJu4Gu8BgBWpgBSxiTA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s/jVskTtm1/dHPOltKEuSPmrniRkjmHLOEKCECrHBRATwwoEVz8hnjI3/oABPAqoyNwTCigbACypUdeJpZxmXC34EMpMRrmiKj2vr71HmuVx2ASQA+u4C8aWyeJ2BzC+D8PkX7oyz+LO8bPuTLwBIK1hZ/kFJOQx04ik48/6SKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=CRXEfWNE; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F051170836;
+	Wed, 18 Sep 2024 08:00:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1726646405; cv=fail; b=hpfuQaOma4LqJLRmnJ5/c30HTNgHjvIaRqzIkAyr5q6f8pig5H9/TQXzOUMeQgWj3RVqcTzqd2jA9AqU1RFkAKx1BA4Ip/8rCgeBWZQEUsGXKvkxX8DMfn65wd/cpHgXkRRCEDmoBxoaUyaTnq5lOiFrH70C9oeMUg0M54owV3w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1726646405; c=relaxed/simple;
+	bh=JrEw7ra8mj3OIykIEES5GMvNcbCv5RzgNETSIvyAyVU=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=i0XRndMrDGV7V47zn7Wz/pXXciL46W6ghkVk2Jgk+p673/jTlPdMnpy+UJ/kjGstTDOZG+FJtvXlyL0esutFCmbYBnHEaTCMzXzfpptcPuzRdcc90fABIM75Niiu+fBHQ9yzDAh/oFIlbQoWQ6Jx3N4MEJC22d07Vxkq+YLqydQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jla3drzP; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=JWgEWhPM; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="CRXEfWNE"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-42cde6b5094so52372185e9.3
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 23:37:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jla3drzP";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="JWgEWhPM"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48I7tqLD011237;
+	Wed, 18 Sep 2024 07:59:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=O2pqjaNlJjXubMFDNqhhjH8mnbvrRt4/0DJYTPR2A7g=; b=
+	jla3drzP6OaHpn2eQOl7QrYVIKoH67fXCYYbnkqXDVQYmRVGYHQ7Zar0PdzS5Avi
+	aNMy6AgtLRZeRJiUo/PKFlrZFZU9GPdNeIlZLi3FvfTyDVAoueqnQ2pjGXp8Mw+w
+	IJv04DH54ATmWmhADUGKEJjQhkT02+yza8yuKN0PA6RGG9EyOYUZrBzht4A49d1b
+	YuIjQvbyMSLX1LHQmxDQ9sgrd9dOdYZTrw7URf5s88b+xRRvcmN4vzQZxloixo21
+	mvvuCsT3w9xlqrdWKzN61OyMoilvPw3EVH8PfluRCY5I7MuFWqK00U3odg72/E6i
+	DhywxJsDo/zav/kPJZh2hw==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41n3nsgmgu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Sep 2024 07:59:48 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 48I7YHf9017831;
+	Wed, 18 Sep 2024 07:59:47 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 41nycxpg4u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Sep 2024 07:59:47 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=a2QVYJ3UjtOtsv/lcx6ZpUuswjSMRRA/f6zuEnIGS1WI7NWg66KYiAuAX/DcmgWzZ1Aur3g/m8KwMK6Jubyc5I1lceysFELoU6BpGNP0YXBtdrdQ8VmrxYFFWv49fo9OfAhfH++5Bee9PMIkwv3e8wrxz+yRYZiv9hD8xG7xmJ/65NYbOlS4S8LUeWVjM81xIYlXe3enV76rBTerEUQG2uIgvE+oLIJmiHfYJdTjo4bJU+LPdSqYbCqGoYslwpaR9xiwv7Hyi0YHF2EdeJzZRBIfJaCUviVxdHGUXjdnH2ElhP1LJR/61SRso/fPuuIYsai1uFL8VnZhm9qgt6FHpw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=O2pqjaNlJjXubMFDNqhhjH8mnbvrRt4/0DJYTPR2A7g=;
+ b=cYkcDjQIi9IDDz1frFyGbmL8H0yZhEiiTEhSOPfts0OrbNRglvSugoMB1Fn+MncdPnO9wnklfltYIwIBP5DcxxNUmvcdeUIrPj9wZ0Bnx6nHLU24Dph7wv4sYta9k5hFoAJ1BOD+i8cCssO9RojKE5wCVrZPsD9bfWgWYXZf7Vw90zUSODEOxCbEOK7/bVN5m2o88ITpf1lW2VN5oVSCPQqwEar8o2lY3x1LX4Nrf8k3h/Ivv1FcvJT+gwhQDj8c7PApM0hWla2sC+jlxCfvOUkPf0ru6EAFyChF4j3TnQuk5xpfvvCQ5Ty9ioJeMc9md2cZnLi50IS6vaK6zshs1w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1726641424; x=1727246224; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ONBa+excFFO7rQj3mSGSspHjsKaP6ICID9dssfbxrK8=;
-        b=CRXEfWNEXvQs7ImCG6MHdU9GC0DDp184/WUnzRV1MipdN1FBmPZAANC0hm8YK2ncIH
-         9vL06xcgUGOONXoVXBZl+h30C0FRCG/pJLTcTZ7CDHWRa9876tDusnRxetPNViK2hOna
-         pbU6HzKsyP73jbXTVSZrgkx4mapUslY27UhejR36ZQKU28CbjEbg1Gbf3Z1v1JKXUohz
-         hZvzQ2FDBGAyh1U9BQGT2OIODlGaNfqGMwhGqyDeFAnBLib9cjvMpoKFZV865Vpkijd8
-         zDRaItIg909HW62F/80MRHou4+yHJwxorQvvTIHYiHqSTGW/kNMiub4LedgchFpCKWft
-         fASg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726641424; x=1727246224;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ONBa+excFFO7rQj3mSGSspHjsKaP6ICID9dssfbxrK8=;
-        b=vT8Jo5AkeWxE4/HuBK2ZirrwinYq8mAY/N8Y0iy/BfifN5zE2229xjoRmysQ0/xtVE
-         gg5jThwGjwp5GHvMcKaHzVPgYOmJ/MbvAAGVFz21RwrICfhax05GfRxMwzEkQze4E0rr
-         dUycCvsP3CXLwMxLSkBz92Wqu4UeUfH0DveRZeOc3f9XQRYlMWZo7p4y/bApXLP1Kp8a
-         4rSkVZiQdEhpV3jli7dV+raNPXVBG3oz/djzMzL52m3MO0fxRj51uO5vMLyrCoLR7f+E
-         WmjwnB3NHLTk22SEt1Gpbo9lILwEiPrBVPFkC65+zx0MPSHni22j8iS4pU1qMULJoRUe
-         S98w==
-X-Forwarded-Encrypted: i=1; AJvYcCXN5igMxDVkmWs6WwHdvV6PRjKIYob+GPRE2ZCG15cfYVH1WRILznPdL4kgm5pDcgMTZC0824iPZHQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy7lPzlkdytQDKn87YPxvAe6V+rzrVjb3UbyjGiTjyR2mTvj7Mh
-	dgPWnfxlg5dDdIlAab3j27Zqm75ifk2UD9lZpYWy7BeAv/wA3MQrKwBYv85Doag=
-X-Google-Smtp-Source: AGHT+IFuyOiC/XvUY4Wd1OtS/NrMuj2AqikvELaUO76m0bhp4vCBZtJUmcPgp8JUIdbzh/H1w+GxiA==
-X-Received: by 2002:a05:600c:1e0f:b0:42c:bc04:58a5 with SMTP id 5b1f17b1804b1-42cdb58e4b1mr140112675e9.33.1726641423740;
-        Tue, 17 Sep 2024 23:37:03 -0700 (PDT)
-Received: from [192.168.0.216] ([185.44.53.103])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42e7054c580sm7966815e9.45.2024.09.17.23.37.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Sep 2024 23:37:02 -0700 (PDT)
-Message-ID: <5bee194c-9cd3-47e7-919b-9f352441f855@kernel.dk>
-Date: Wed, 18 Sep 2024 00:37:02 -0600
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=O2pqjaNlJjXubMFDNqhhjH8mnbvrRt4/0DJYTPR2A7g=;
+ b=JWgEWhPM9XJBbqQZdoWzIvCN+s87x6olj8Rzjac3l0LGNha01sfdcy5ChYLGzFvkOCgsCKoZIgB8uKuYhjubabZIzyq2ffso2Q216dHMv/DdqaWsdI3B1273PIOz78yMvR4yBFA3QeXOk4EvFZWbjK2iZdJU8krmOCAX5aax7CM=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by SA1PR10MB5823.namprd10.prod.outlook.com (2603:10b6:806:235::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7982.15; Wed, 18 Sep
+ 2024 07:59:45 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%3]) with mapi id 15.20.7982.011; Wed, 18 Sep 2024
+ 07:59:45 +0000
+Message-ID: <8e13fa74-f8f7-49d3-b640-0daf50da5acb@oracle.com>
+Date: Wed, 18 Sep 2024 08:59:41 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 00/14] forcealign for xfs
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
+        djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
+        martin.petersen@oracle.com
+References: <20240813163638.3751939-1-john.g.garry@oracle.com>
+ <87frqf2smy.fsf@gmail.com> <ZtjrUI+oqqABJL2j@dread.disaster.area>
+ <877cbq3g9i.fsf@gmail.com> <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
+ <8734m7henr.fsf@gmail.com> <ZufYRolfyUqEOS1c@dread.disaster.area>
+ <c8a9dba5-7d02-4aa2-a01f-dd7f53b24938@oracle.com>
+ <Zun+yci6CeiuNS2o@dread.disaster.area>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <Zun+yci6CeiuNS2o@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0316.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:197::15) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-To: Matthew Wilcox <willy@infradead.org>, Chris Mason <clm@meta.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
- Dave Chinner <david@fromorbit.com>, Christian Theune <ct@flyingcircus.io>,
- linux-mm@kvack.org, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- Daniel Dao <dqminh@cloudflare.com>, regressions@lists.linux.dev,
- regressions@leemhuis.info
-References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
- <ZuNjNNmrDPVsVK03@casper.infradead.org>
- <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
- <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
- <Zud1EhTnoWIRFPa/@dread.disaster.area>
- <CAHk-=wgY-PVaVRBHem2qGnzpAQJheDOWKpqsteQxbRop6ey+fQ@mail.gmail.com>
- <74cceb67-2e71-455f-a4d4-6c5185ef775b@meta.com>
- <ZulMlPFKiiRe3iFd@casper.infradead.org>
- <52d45d22-e108-400e-a63f-f50ef1a0ae1a@meta.com>
- <ZumDPU7RDg5wV0Re@casper.infradead.org>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <ZumDPU7RDg5wV0Re@casper.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SA1PR10MB5823:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9bae5142-47c6-40f0-a3f7-08dcd7b7dc19
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|1800799024|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?bERyTmYxR2Z5aGFMTDlQUGNMV2tVekhjbzk5b01Cd04velRHd0w0RW9nRlVw?=
+ =?utf-8?B?M0dyOE1LTCtrVWdwcnpBOEtTT2dwbjdrSnB3RW5wMEcwbFUrcnBLTGU0bDlt?=
+ =?utf-8?B?RWdMTzNieEIvWE94dDhFMGhBbVJNZFJ3WG1LaHh6cWVMdDhNWFhvWktqRUts?=
+ =?utf-8?B?ajdrd2tYR0ZFZTEzYUJORk5SbE1aMDZDQXJIZTc0L0JyL25LbVhKeG1BNHVq?=
+ =?utf-8?B?U1FWUnVld216SGpMMWRyaktuOUpDWXBlazdnWkhQamhYUGlwcUtKUHhrcmNJ?=
+ =?utf-8?B?QmpPV1ovcCttcXRWRFNjenFRb3NYQzU0SklVd0RHSHdsWjZwVHhLNis0UCs3?=
+ =?utf-8?B?VU5mUmg1bU9pS25kNHVMWTlFWE1vTHA3Vy9zK2lzc0ZjdVh0a0lkS3ZJWnRt?=
+ =?utf-8?B?RWg3VVpNL1pOeVdqcE1aYnZidTdyWlc4dlNWdFQ4aUpJNkh0Z25wa1ZBY1BS?=
+ =?utf-8?B?L0w5WDM3MUpldko5eDBnNFZocHJiVXdUUE4vZTJISjNpSFFRbE1mcW9SVkxy?=
+ =?utf-8?B?K1ZFWFBxV0lmZTM0VHBFNEZjaHNsK3VzQUZhMUd4MFdJVTlQY0RXbnZDQU5N?=
+ =?utf-8?B?UlZQUGthcDVmTTZJWm56RUp4UzNxNzZMSFFYekxMWWx2d3o4K3ovNlowcytv?=
+ =?utf-8?B?a0p4L0VUVkIzbEpuMkppQmEwS0l6MDJmVkx5VVo3TVJUcEdkejFySE1CU2VL?=
+ =?utf-8?B?YmlIZHBaTDBWZzRXNkZOWHRUbDBTU0lrbzBtUlprMmIxeENkNUVBRklvNi9a?=
+ =?utf-8?B?eDJQTUpxSFF4MDBiV2hSdGlhRUl1OW1aUDdBZnprdEdCRzJuNmIwVE1ydFVs?=
+ =?utf-8?B?Z3E1cTJNV3RDcFMxOXgrd1d6bUl2UEZLeFVRNmFiK3JMZTlzWDBjVFRjY0N1?=
+ =?utf-8?B?WUdNUUlEZkFldXFkbWNpSXhXU0E2WWJBM1JIaEZ6ZkV6a1p2RlpUS3ZWU253?=
+ =?utf-8?B?WW4rRlZNOHQ0b2xENjNaMTIrbzBJdWQ4bG1XRmdPZzRuY3cyZEx5bXltTGRt?=
+ =?utf-8?B?UmEwU1U2NTVQY3lMcEU1SmkvY2I3T2RjbXVqc0E5Uno4c0UyMXJibjR3Ym5l?=
+ =?utf-8?B?UnpIWlVPTzJnakN3dS8wVWJTNzhjTVNzYU1oZEVEem53bnAxQ2p5K0ZIc2NG?=
+ =?utf-8?B?Z3VDeFV6U0lmblJxMWxpZnArZk9oU1J4WEsxVXBLRVBOWkxTNHpTT3Z3K0g5?=
+ =?utf-8?B?Ui9UdFhiVkthS01hVVpyZURZVHBDeEZNRHlya08ydmszeUZkd0FwQzJIVGV0?=
+ =?utf-8?B?bFU4MG8zMDU3RHpXUWRnL092ek9ObnhGU0ZDa2ViMTJKeWJyTXRYdlhseHZY?=
+ =?utf-8?B?QS83SnBWczQ4SEJ4Vy9naURFeUloRkU2ckduUmZGNFNjTFRYZ2l3SEQzRElU?=
+ =?utf-8?B?OWFLaUU1TndDTW1neVRuZ2RnM2J6MHBSQ1VqYmxJK0M1c2diVXpvZzYzY2hq?=
+ =?utf-8?B?QW8vM1MxamNvTnkxSU5kNzNLZmJIcUowV25aKzA5elpVTGMzdWs2SllFOXc1?=
+ =?utf-8?B?ZW5VcGhEU2pqNzk4NG5uN2wraGRRTmNXSG02dmdTczU4WG1OcXFrMHVuT2pF?=
+ =?utf-8?B?aVRrN2kvMnhzYXZjeXY1Y3Q3WHFIQld5NTVDdlpneUtPMlQvRHVOcDlDSGV5?=
+ =?utf-8?B?emo5Vk9tdDIrVU0zQ0IwOG5iNjA5dG1RaUJ3cytmaXlnYUdDV0ZwR3hMcnFU?=
+ =?utf-8?B?K2JJb0RvdUhKVTRYR29mOFgwcFRFM09JcDl5Z0xsaVBIZGV4cTZMaktBbFZJ?=
+ =?utf-8?B?NnFSaWt2OWZ3MXpaYlZGWVVPZFRLSHg1WmdBNVNTc1VZRjlUcUI2ZGM5TnlC?=
+ =?utf-8?B?QzJ1MlBLNnh6QXFIRmx5Zz09?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?eHJxS1dlTFJNSGlDU0pLWjRrSkR6Yk0ySjcwRTNGN3R4RXNxVE42MUhiczJT?=
+ =?utf-8?B?TlN3cURDMm50S2pHREhzeEkzQVkwWnRaYUxaREFCQ2JQbG9SUFFYY1k0ZVB2?=
+ =?utf-8?B?bDdRTStueUVtR3p6Vm9kcWlDN1ZSNUR6QThoNjAxcTlIZ0pJREdRTU5CTG5j?=
+ =?utf-8?B?cUJrbnpaejE3NlRoZjNCVDhMQlI2ZlAvYkRvRkJuMUlpdXd4anJmMlNVYlR3?=
+ =?utf-8?B?dlB3Q3FhcnVpYWZsUDRmM3NSZGE4R2JnbVZxOFkraldXNXRiaHRrYzVIaHk4?=
+ =?utf-8?B?QmdleG5NZG5TcDhQL0NNVlV1VUVmQ2wxS0NkVmRENGxBaHdDMFE1ZlZrRmsw?=
+ =?utf-8?B?SGJTaUN6VnpTR3IrNXlveU5wamVSeEhvMDl5MmFOQm9nc0NPUWEzVmx0VDdU?=
+ =?utf-8?B?ajUyZVh1R1hYekZmSlBKajhaaXhOL0xsOUgyclpoWjFydjdmVS9vcnB1ZTBD?=
+ =?utf-8?B?cGw2QzJKUk9EZlBmdmFxM2ZLNS9Jd1BTU0cwMnA5cWtXRmdLSEZEVktyVkFo?=
+ =?utf-8?B?a28wWGVuTVdoQWdmNEhhOU14ak1wdHhEOUtCN09XSFJkSkluVWduR0s5dGtR?=
+ =?utf-8?B?WGZHN1VTWHF4RzBnOEozQmNXL09JOUppVU9VVXlxVGlHRGUrN25TMExlbmJh?=
+ =?utf-8?B?TW5MZFIrc1Y1NEYrVUJidlVIRlNadkhFWmxLbEw4NTJtVmhmNmViVWM0ZEFH?=
+ =?utf-8?B?WVlxdlZHYkNXcFdIZWgzbVJRaFNYOHpiY1QwUHRPa1JZN3BFNHFQdXZWVFhO?=
+ =?utf-8?B?U3luU3lCNXRVd2doTGtHYVlXMlRseWNLM3hsT2VSNFZFblFNR09NS3N5a1Y2?=
+ =?utf-8?B?STFtRUNGaXlDaUlmTlVHWWEyenlZMnpjMXE1NjNiQkpKcVFTUjFabndqNElJ?=
+ =?utf-8?B?UlVtcUg0c1FoOUhzU3JqMVMrS2RiVUQ1NWVTQkxjUnVHdjNHaEpXVDFEbFVP?=
+ =?utf-8?B?ZkZLUkRKRENnTm5HUjFBTzVLWWxEZFY0cjJPRDhvTmZicERUaDBYWUhzbWlx?=
+ =?utf-8?B?OWMzU0Z5RVVyTmdqOGJpbkQyRVd0OUo4NmpMR0lWSXFRSTRSRytoa2dTRmhM?=
+ =?utf-8?B?U2lLNkt4dW9ObGlVZ0M1QWRmQkdTUFJMejdDb3ZJK0ZPb3c3TC9WUURCOHM3?=
+ =?utf-8?B?RjBSeTNHbHVBS0x6T3U1Z082cGxDUUFpZjYrVU1HME9qSjhLTFp3OEtqeFZQ?=
+ =?utf-8?B?Tm90UForRTVxUG5HbGdtQnVienMveHhadzZlVEc0cVlJNTRTTGdJUUkwZzFS?=
+ =?utf-8?B?QlRyRmVmK3pjNTZ4U2pmTGtZK21zQ2NoWFd0eW00dEFkVDE2M3JzMUZsRHQr?=
+ =?utf-8?B?a1dDYXA1dGtQY1QvZFBKQldVNVJoQUdvdjM5cUFaWGl6WENpYVQ2dnoyR2FI?=
+ =?utf-8?B?NmhEZmNueXpHOUJreXA4MFhxZ2pqazBUT1Q5Wk1ETTVoU0VFb2dHTU95bnB5?=
+ =?utf-8?B?VWZjSW1NT25qWlE0NVhvRVl2STk4TWxrbWNadGNqOUF1TXk3LzZ1Tmgva2pr?=
+ =?utf-8?B?Z054TDlPN0g2TGd6V0llQjhpQkJXM0tGcDlPdkRCNFpkWHpwYVJLeW4xQ2Rh?=
+ =?utf-8?B?NUIzd0orVWpaN01KWHZVY2hPZVpwdmtzWjFJaG9NTWZrTTV1OTZIYnhWSVhO?=
+ =?utf-8?B?NXVlc0RKUktHakhiY0hFajhwU0FxbllsWFBzRUd3NHNUajNZU0VucFZOWVN2?=
+ =?utf-8?B?OUU3cGRBdUVSWi9VUXdpSnlPRXpSTTB2cDYxQ0h3bmdhK0JreDkxZnhxOUJn?=
+ =?utf-8?B?QS9Db3RxNFVCMmJTQzlUTTJ2Vnp0c3RIZkJJa21adUxXR3JRVUxOVkhMWkgw?=
+ =?utf-8?B?d25LeG05TVhobzVHMkdRK1FHbkxXVHBDUFdGVmdhMnBFeXZiVkYvT3dBc1Fr?=
+ =?utf-8?B?bDNldXN5TGVHeVo5Sm1ldWE1SEVzTklkNy85eVNNdFhLem1HY25md3I3akVG?=
+ =?utf-8?B?UjE3K2FKeEVWOEZLRGtyZ2djcTh2OGMzb24yY1B4ZC9UUlhLbnZHQ3NxMWtI?=
+ =?utf-8?B?UFkvblUvcnZRcXd5SUVqeE44T3R5eW9YQ28yajBHUkVzWlNIM2Z1T2NWVG9W?=
+ =?utf-8?B?Qmh0NmJmMkI3SkE3alc5TGpPalc4V0dNS1hrSXZSbmYyVm9JR2dlOHJmbHZ4?=
+ =?utf-8?Q?5R6h8omkL7cKVf29Xp75NSB8l?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	C7a5YPWgSQbtEg4tlPlCA88EgmpFX6Q8XAnaD5TgA2RDXI+NI2TmuYyVPSu9VvnmeOLA/uvheE0vW0oY7ji28lxZQjYl20jboUoO4jY6d4KMsdqoM22ByqnOD6j95wkzOlJU23mQZMzgE4iOUJlvWaiFBby7m7cYmZXYzDMqUeJ8pEtKaDpXNKTgY7OTgr+q8gUOvZIcegk266ca0U9qTYWQKbRUrVRi4YK2KgrpDvvtYvqDWQJxUm3aZFTlOQ7xEWFQ35jQZkMbyNrIZFcvC2PiQWgdbKV9EqqPS9OTZe939TN2BKk8nB5hPdvzaCI8ievZx3FNtlk7PTNCGHF6fM4vvh3OE8rOYqZIECZotF7Eq2tEgJfrbXQdMBtYmDflDmNnx5N9hQHnjjXv/7Ddxkubmq8TYupsWzUVwWvBQ+z5McFY8dG1SIWikcKOB7lbsKhzO/6ZryAnyR/JDZd8GY/+Ex4sU4tY83xEjztXvDWQkYO9u+ZkAMGLTGi1tzvhZG93NMpxjtlLHZ0yKjtbzFwpH+t8yqftTgAk0yD85knWl/Gkcd2I2/IWbOIJw6JvrHQ4QEWyVoRqf4ln5PDbRWHpLfxpeq/XN37OKEvrjLE=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9bae5142-47c6-40f0-a3f7-08dcd7b7dc19
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Sep 2024 07:59:45.3538
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ECQd08bEZ/nPSzL4or0lfd2uke1vAXE4UFjeUfImjO+LI6ML7159FBfv3CzQ5yufQcCnrxq95KJAmVqqWrvllw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB5823
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-18_06,2024-09-16_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ spamscore=0 mlxscore=0 phishscore=0 malwarescore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2408220000 definitions=main-2409180049
+X-Proofpoint-GUID: ZAeYvnWsaRCtLavqAsXz3aewXj6WmDda
+X-Proofpoint-ORIG-GUID: ZAeYvnWsaRCtLavqAsXz3aewXj6WmDda
 
-On 9/17/24 7:25 AM, Matthew Wilcox wrote:
-> On Tue, Sep 17, 2024 at 01:13:05PM +0200, Chris Mason wrote:
->> On 9/17/24 5:32 AM, Matthew Wilcox wrote:
->>> On Mon, Sep 16, 2024 at 10:47:10AM +0200, Chris Mason wrote:
->>>> I've got a bunch of assertions around incorrect folio->mapping and I'm
->>>> trying to bash on the ENOMEM for readahead case.  There's a GFP_NOWARN
->>>> on those, and our systems do run pretty short on ram, so it feels right
->>>> at least.  We'll see.
->>>
->>> I've been running with some variant of this patch the whole way across
->>> the Atlantic, and not hit any problems.  But maybe with the right
->>> workload ...?
->>>
->>> There are two things being tested here.  One is whether we have a
->>> cross-linked node (ie a node that's in two trees at the same time).
->>> The other is whether the slab allocator is giving us a node that already
->>> contains non-NULL entries.
->>>
->>> If you could throw this on top of your kernel, we might stand a chance
->>> of catching the problem sooner.  If it is one of these problems and not
->>> something weirder.
->>>
+On 17/09/2024 23:12, Dave Chinner wrote:
+> On Mon, Sep 16, 2024 at 11:24:56AM +0100, John Garry wrote:
+>> On 16/09/2024 08:03, Dave Chinner wrote:
+>>> OTOH, we can't do this with atomic writes. Atomic writes require
+>>> some mkfs help because they require explicit physical alignment of
+>>> the filesystem to the underlying storage.
 >>
->> This fires in roughly 10 seconds for me on top of v6.11.  Since array seems
->> to always be 1, I'm not sure if the assertion is right, but hopefully you
->> can trigger yourself.
+>> If we are enabling atomic writes at mkfs time, then we can ensure agsize %
+>> extsize == 0. That provides the physical alignment guarantee. It also makes
+>> sense to ensure extsize is a power-of-2.
 > 
-> Whoops.
+> No, mkfs does not want to align anything to "extsize". It needs to
+> align the filesystem geometry to be compatible with the underlying
+> block device atomic write alignment parameters.
 > 
-> $ git grep XA_RCU_FREE
-> lib/xarray.c:#define XA_RCU_FREE        ((struct xarray *)1)
-> lib/xarray.c:   node->array = XA_RCU_FREE;
+> We just don't care if extsize is not an exact multiple of agsize.
+> As long as extsize is aligned to the atomic write boundaries and the
+> start of the AG is aligned to atomic write boundaries, we can
+> allocate hardware aligned extsize sized extents from the AG.
 > 
-> so you walked into a node which is currently being freed by RCU.  Which
-> isn't a problem, of course.  I don't know why I do that; it doesn't seem
-> like anyone tests it.  The jetlag is seriously kicking in right now,
-> so I'm going to refrain from saying anything more because it probably
-> won't be coherent.
+> AGs are always going to contain lots of non-aligned, randomly sized
+> extents for other stuff like metadata and unaligned file data.
+> Aligned allocation is all about finding extsized aligned free space
+> within the AG and has nothing to do with the size of the AG itself.
 
-Based on a modified reproducer from Chris (N threads reading from a
-file, M threads dropping pages), I can pretty quickly reproduce the
-xas_descend() spin on 6.9 in a vm with 128 cpus. Here's some debugging
-output with a modified version of your patch too, that ignores
-XA_RCU_FREE:
+Fine, we can go the way of aligning the agsize to the atomic write unit 
+max for mkfs.
 
-node ffff8e838a01f788 max 59 parent 0000000000000000 shift 0 count 0 values 0 array ffff8e839dfa86a0 list ffff8e838a01f7a0 ffff8e838a01f7a0 marks 0 0 0
-WARNING: CPU: 106 PID: 1554 at lib/xarray.c:405 xas_alloc.cold+0x26/0x4b
+> 
+>> However, extsize is re-configurble per inode. So, for an inode enabled for
+>> atomic writes, we must still ensure agsize % new extsize == 0 (and also new
+>> extsize is a power-of-2)
+> 
+> Ensuring that the extsize is aligned to the hardware atomic write
+> limits is a kernel runtime check when enabling atomic writes on an
+> inode.
+> 
+> In this case, we do not care what the AG size is - it is completely
+> irrelevant to these per-inode runtime checks because mkfs has
+> already guaranteed that the AG is correctly aligned to the
+> underlying hardware. That means is extsize is also aligned to the
+> underlying hardware, physical extent layout is guaranteed to be
+> compatible with the hardware constraints for atomic writes...
 
-which is:
+Sure, we would just need to enforce that extsize is a power-of-2 then.
 
-XA_NODE_BUG_ON(node, memchr_inv(&node->slots, 0, sizeof(void *) * XA_CHUN  K_SIZE));
+> 
+>>> Hence we'll eventually end
+>>> up with atomic writes needing to be enabled at mkfs time, but force
+>>> align will be an upgradeable feature flag.
+>>
+>> Could atomic writes also be an upgradeable feature? We just need to ensure
+>> that agsize % extsize == 0 for an inode enabled for atomic writes.
+> 
+> To turn the superblock feature bit on, we have to check the AGs are
+> correctly aligned to the *underlying hardware*. If they aren't
+> correctly aligned (and there is a good chance they will not be)
+> then we can't enable atomic writes at all. The only way to change
+> this is to physically move AGs around in the block device (i.e. via
+> xfs_expand tool I proposed).
+ > > i.e. the mkfs dependency on having the AGs aligned to the underlying
+> atomic write capabilities of the block device never goes away, even
+> if we want to make the feature dynamically enabled.
+> 
+> IOWs, yes, an existing filesystem -could- be upgradeable, but there
+> is no guarantee that is will be.
+> 
+> Quite frankly, we aren't going to see block devices that filesystems
+> already exist on suddenly sprout support for atomic writes mid-life.
 
-and:
+I would not be so sure. Some SCSI devices used in production which I 
+know implicitly write 32KB atomically. And we would like to use them for 
+atomic writes. 32KB is small and I guess that there is a small chance of 
+pre-existing AGs not being 32KB aligned. I would need to check if there 
+is even a min alignment for AGs...
 
-node ffff8e838a01f788 offset 59 parent ffff8e838b0419c8 shift 0 count 252 values 0 array ffff8e839dfa86a0 list ffff8e838a01f7a0 ffff8e838a01f7a0 marks 0 0 0
+> Hence if mkfs detects atomic write support in the underlying device,
+> it should *always* modify the geometry to be compatible with atomic
+> writes and enable atomic write support.
 
-which is:
+The current solution is to enable via commandline.
 
-XA_NODE_BUG_ON(node, node->count > XA_CHUNK_SIZE);
+> 
+> Yes, that means the "incompat with reflink" issue needs to be fixed
+> before we take atomic writes out of experimental (i.e. we consistently
+> apply the same "full support" criteria we applied to DAX).
 
-and for this particular run, 2 threads spinning:
+In the meantime, if mkfs auto-enables atomic writes (when the HW 
+supports), what will it do to reflink feature (in terms of enabling)?
 
-rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
-rcu: 	Tasks blocked on level-1 rcu_node (CPUs 16-31): P1555
-rcu: 	Tasks blocked on level-1 rcu_node (CPUs 64-79): P1556
-rcu: 	(detected by 97, t=2102 jiffies, g=7821, q=293800 ncpus=128)
-task:reader          state:R  running task     stack:0     pid:1555  tgid:1551  ppid:1      flags:0x00004006
-Call Trace:
- <TASK>
- ? __schedule+0x37f/0xaa0
- ? sysvec_apic_timer_interrupt+0x96/0xb0
- ? asm_sysvec_apic_timer_interrupt+0x16/0x20
- ? xas_load+0x74/0xe0
- ? xas_load+0x10/0xe0
- ? xas_find+0x162/0x1b0
- ? find_lock_entries+0x1ac/0x360
- ? find_lock_entries+0x76/0x360
- ? mapping_try_invalidate+0x5d/0x130
- ? generic_fadvise+0x110/0x240
- ? xfd_validate_state+0x1e/0x70
- ? ksys_fadvise64_64+0x50/0x90
- ? __x64_sys_fadvise64+0x18/0x20
- ? do_syscall_64+0x5d/0x180
- ? entry_SYSCALL_64_after_hwframe+0x4b/0x53
- </TASK>
-task:reader          state:R  running task     stack:0     pid:1556  tgid:1551  ppid:1      flags:0x00004006
+> 
+> Hence by the time atomic writes are a fully supported feature, we're
+> going to be able to enable them by default at mkfs time for any
+> hardware that supports them...
+> 
+>> Valid
+>> extsize values may be quite limited, though, depending on the value of
+>> agsize.
+> 
+> No. The only limit agsize puts on extsize is that a single aligned
+> extent can't be larger than half the AG size. Forced alignment and
+> atomic writes don't change that.
+> 
 
-The reproducer takes ~30 seconds, and will lead to anywhere from 1..N
-threads spinning here.
+ok
 
-Now for the kicker - this doesn't reproduce in 6.10 and onwards. There
-are only a few changes here that are relevant, seemingly, and the prime
-candidates are:
+Thanks,
+John
 
-commit a4864671ca0bf51c8e78242951741df52c06766f
-Author: Kairui Song <kasong@tencent.com>
-Date:   Tue Apr 16 01:18:55 2024 +0800
-
-    lib/xarray: introduce a new helper xas_get_order
-
-and the followup filemap change:
-
-commit 6758c1128ceb45d1a35298912b974eb4895b7dd9
-Author: Kairui Song <kasong@tencent.com>
-Date:   Tue Apr 16 01:18:56 2024 +0800
-
-    mm/filemap: optimize filemap folio adding
-
-and reverting those two on 6.10 hits it again almost immediately. Didn't
-look into these commit, but looks like they inadvertently also fixed
-this corruption issue.
-
--- 
-Jens Axboe
