@@ -1,88 +1,74 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F106F9CB;
-	Wed, 18 Sep 2024 14:12:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA8A1BA886
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 14:36:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726668759; cv=none; b=hb3wxdFPXXwKgjefU7oansjuMsYOPaCntp4iSvQNJE25R9duYpH42HHDDMtxEqARrhy1EXjz0Xzqf3mjy2UfRYJ44wORPWIlOPuNm1/NzBjA4Lsk7rXT+iuSi8zG/PKeMxhjvDQ5W76ekYSxgzJ1xHpr10mdJnaHXY9jQqyD/tQ=
+	t=1726670213; cv=none; b=jBGokZ8cv9EHfmv5V2XdvAsTVqKfv6q9tJE/w+a8etTfsVXQWN6/aqWsyVDzbOy2zS/rMi0mZhCHocKxr59QlXeWTRKBJw2+kPnHjb78pv80813fY9997Ht2ooP7x/IHuP+5niuRpHPjS56z+Wp2e1l5vUgQ0zf3WuX6/WrU4Vs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726668759; c=relaxed/simple;
-	bh=6NlMDn6G8FUuzCdG6WBURoTQNIUtKbtdI6OB1EeRH+4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NHOzfZts4/L2f7mKTj7FSkDIMDyzATx3dpOeMMSzsG+YaNJrKyLt6EJ7zLyYkaSydAvodUAOeH6uFB6zgbN0+wXe2Tb+WcbYmhDF+BkIdkC6UTcRWUq7C/Ug4cK2hy9cOcVAXyPoI7M5x/JOfXZFImfq4/gMlmGUD0vqi3jq2IU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HNeVUv6i; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1726670213; c=relaxed/simple;
+	bh=5Lmrge2FRLMR1Idv9U6kGYvYjFkPXKOjytpn5lRal0w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=J/lUQ6m16OfsBaTOnyO13zrQ0JRg3SxC++SsK9I0IlkwcYl9S6BiD/X8hdPS//o84BEGrIu6alvkjX+sBP1tCqeKstCIcDMfoK6jYbqc8wdnHQnVTJI1cL5g0M9WOJxxQO8J5DNMkyB+ed1Plu6U583HDZqufIsTDcCLarXkRxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=UBxqWFvo; arc=none smtp.client-ip=82.195.75.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HNeVUv6i"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Ni/akaMESxhEbLiyAWV6aj2aPhfND/QItwuWAkzArog=; b=HNeVUv6iwFCo/iQBMWywvV3X+F
-	3k8CBU7k+sHoZOahkAZyNNbUcNMseYbno1kbdALrlcNhSr/fCjzk3TsjYfdRIPDxo27yzb0MQkU8/
-	wp6Owt6JTPKWq/29Bq043kYpK2LYzWP5Fnhkjo6IDmh5F8mxnzc8Rx/7oFcblMJyoThQbntw9OzFm
-	vOaHlGQ3WX3a2FFku+S2m8JTnFl72JNv1dYquzJE/weqFVE3iymBho4wx0cCrugR+pTvMrY0km8m6
-	85Jdk2A4+J/L+RznjV0ud0aPOudzZfKoiLAA9BzrHCZuV/CggzefYbZaEETK2RWCWygnhfDfVJlmO
-	sYLL9rOQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1sqvQ0-00000005cxD-0wKA;
-	Wed, 18 Sep 2024 14:12:32 +0000
-Date: Wed, 18 Sep 2024 15:12:31 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Chris Mason <clm@meta.com>, Jens Axboe <axboe@kernel.dk>,
-	Dave Chinner <david@fromorbit.com>,
-	Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Dao <dqminh@cloudflare.com>, regressions@lists.linux.dev,
-	regressions@leemhuis.info
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-Message-ID: <Zurfz7CNeyxGrfRr@casper.infradead.org>
-References: <Zud1EhTnoWIRFPa/@dread.disaster.area>
- <CAHk-=wgY-PVaVRBHem2qGnzpAQJheDOWKpqsteQxbRop6ey+fQ@mail.gmail.com>
- <74cceb67-2e71-455f-a4d4-6c5185ef775b@meta.com>
- <ZulMlPFKiiRe3iFd@casper.infradead.org>
- <52d45d22-e108-400e-a63f-f50ef1a0ae1a@meta.com>
- <ZumDPU7RDg5wV0Re@casper.infradead.org>
- <5bee194c-9cd3-47e7-919b-9f352441f855@kernel.dk>
- <459beb1c-defd-4836-952c-589203b7005c@meta.com>
- <ZurXAco1BKqf8I2E@casper.infradead.org>
- <CAHk-=wjix8S7_049hd=+9NjiYr90TnT0LLt-HiYvwf6XMPQq6Q@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="UBxqWFvo"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:MIME-Version
+	:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=Abv7hhrk7eVgGnlO/chZPG60OHaRx3vOteGPG1aHDsc=; b=UBxqWFvovJfqaL+146PwMdeld8
+	N3gYYtZNzMeKx0rt7UZ1WoP9GFZjlAaR20EOwSGIj0OP78RWaZsRu16PXss6cK/gPeJ3WwfU4x9rm
+	RhMPoQpwHLBFdD0ySVe4AkLCW/J3wGaqX82RNUName0L62rNWLqHsQRqsJi7tU5nJ2pK/4l+DvYpz
+	QRiL9rSGsYJnzbCYhPsnzGxEuJKNudGA3rp1jVAr7tiVR998ftqE8ZcMrEOL15sSaD3r/kXyBvJVw
+	FfNjREGC1po0eAWPszI5PMlLmhs11vY4EQ5Aki6Ecu7nkZ5FOC9IfSaTSYypMQHrDjn6OpzYCptC9
+	bxl/zLpQ==;
+Received: from authenticated user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <bage@debian.org>)
+	id 1sqvnP-00B7VF-NN; Wed, 18 Sep 2024 14:36:43 +0000
+From: Bastian Germann <bage@debian.org>
+To: linux-xfs@vger.kernel.org
+Cc: Bastian Germann <bage@debian.org>
+Subject: [PATCH v2 0/6] debian: Debian and Ubuntu archive changes
+Date: Wed, 18 Sep 2024 16:36:12 +0200
+Message-ID: <20240918143640.29981-1-bage@debian.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wjix8S7_049hd=+9NjiYr90TnT0LLt-HiYvwf6XMPQq6Q@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+X-Debian-User: bage
 
-On Wed, Sep 18, 2024 at 03:51:39PM +0200, Linus Torvalds wrote:
-> On Wed, 18 Sept 2024 at 15:35, Matthew Wilcox <willy@infradead.org> wrote:
-> >
-> > Oh god, that's it.
-> >
-> > there should have been an xas_reset() after calling xas_split_alloc().
-> 
-> I think it is worse than that.
-> 
-> Even *without* an xas_split_alloc(), I think the old code was wrong,
-> because it drops the xas lock without doing the xas_reset.
+Hi,
 
-That's actually OK.  The first time around the loop, we haven't walked the
-tree, so we start from the top as you'd expect.  The only other reason to
-go around the loop again is that memory allocation failed for a node, and
-in that case we call xas_nomem() and that (effectively) calls xas_reset().
+I am forwarding all the changes that are in the Debian and Ubuntu
+archives with a major structural change in the debian/rules file,
+which gets the package to a more modern dh-based build flavor.
 
-So in terms of the expected API for xa_state users, it would be consistent
-for xas_split_alloc() to call xas_reset().
+v2: Let the package build on releases that do not have systemd-dev
 
-You might argue that this API is too subtle, but it was intended to
-be easy to use.  The problem was that xas_split_alloc() got added much
-later and I forgot to maintain the invariant that makes it work as well
-as be easy to use.
+Bastian Germann (6):
+  debian: Update debhelper-compat level
+  debian: Update public release key
+  debian: Prevent recreating the orig tarball
+  debian: Add Build-Depends on pkg with systemd.pc
+  debian: Modernize build script
+  debian: Correct the day-of-week on 2024-09-04
+
+ debian/changelog                |   2 +-
+ debian/compat                   |   2 +-
+ debian/control                  |   2 +-
+ debian/rules                    |  81 ++++++++----------------
+ debian/upstream/signing-key.asc | 106 ++++++++++++++------------------
+ 5 files changed, 75 insertions(+), 118 deletions(-)
+
+-- 
+2.45.2
+
