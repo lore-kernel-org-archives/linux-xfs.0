@@ -1,80 +1,70 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56F1EA29
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 23:34:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4DD14405
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 01:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726616084; cv=none; b=YCckjdZCdf9dBSemnYEdvhnK30zfXZ6hNv23WbrvbrzXjatObTTC3GcpYU+gF8zzpwm3EI3b5GUvMQ1LkR/YuzlVmPVMWYgy0Oio0jud3wQqN1nJlpuDyIhckztTQKRkk3tRS8ebgbpv/6gsffLeggoN5I516i4OL4g6JVZxSbo=
+	t=1726622418; cv=none; b=hN2S2LU+vvXZ5wpVlomZG1Rb9H1QSPkYU9WpcSgbHMATxM2eU5gbTFIHO+vEx4wwEe734VShauU6BWHPAB2iVp5LBhWwtvRUOKl2WfkE2LFA6XnhlCB/HeyjscmvdFn1MeQQe5pxHt4nti5KeN8I1Mre0JS5x3mzTZI5Uz6hUOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726616084; c=relaxed/simple;
-	bh=NT3D74mJDKPinv7EfAHmJxpIy4X3CPvCZzITyCth3sQ=;
+	s=arc-20240116; t=1726622418; c=relaxed/simple;
+	bh=KFhPYXA9lQgLtfWa/MtVHQdZh7+GCpLUv68ffS2XVgs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nEz5w/hYfrSeQVLFbf2Ukftj0U/5OOR7USFqPjMA0F7AuY301Cr2y8v+sE6y+fdzE3wglb5c4y8vNYd5SVeR+x3tkdWhkEC95wTBuaf8R1EmrxoWDu2CVj0KE6lZHdHoOl4Ycd1nOwOhflKYw/bUQp8evHBD7bPvgxx/ScWDog8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=3Dq+i2mf; arc=none smtp.client-ip=209.85.214.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=efRpGlzDY1TKHXzBkq9BgRBXd80ofqUKn3BFhUMfw0vn7L6alU9KONfCA3oYW2DzmeuODZUyBhQvl/mLvP58QkkEXAeNRQqVRFuLjyBfsM2R7snT7x5lDs39xgkRw3cF14JZ8eDlh0BgnwllVEbTI6eJiUrTiEjZd1wlSSDtWGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=zEZ0zjgO; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="3Dq+i2mf"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1fee6435a34so54829855ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 16:34:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="zEZ0zjgO"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2059204f448so57660835ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Sep 2024 18:20:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726616082; x=1727220882; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726622416; x=1727227216; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=07uea7yJ0apHmLqc69KT0AE+/9P9TTFiIR2vNmcXQ50=;
-        b=3Dq+i2mfiDIU9ePiYf2mNTXsIq5zrfsH0tNs7WMn5UGv7MQKm+3pU8lJ2QMD52kbUO
-         m4eczv7zKYOwxwEzXZdcdDvUUVs61PdBaCGN93iRTqIQ3YG9iCoOtkAUEEdXevHEFllr
-         FHQXx64SW5un87vxTOrcJjF4jxb5PN0lvrmVOnAfZRbmKgH7t40q5wGDclvNXDdulzzQ
-         Oi5mpDZGKS3/hcTWeNGzY07T8vCQK1vRizCk5KvY2aUYvQppf8JKbGqX5FsU30fDQ1GK
-         UAmSD1WgyvWgqbBXJyI8LpqS6/POWmvcytqALiUP7QrVS7XvNhiJjygiMzaPvfVEqptt
-         1euw==
+        bh=qxxW1IuM04esdHxBQxHHr5oO9yZy5/DXPKQpJTg35JQ=;
+        b=zEZ0zjgOf8XW1OQ4E0+srS7RquVnw/iPn/gdcc/TQet583qZDHoLDuOgokJLStsST+
+         P4oCAR/9HP4cLDPN4y27bM+GLvyu1qu0lWexsN8QZi45Uk5mQwtP0tNtn3nOvaifn8qC
+         SPqP8Mel964PbFde600pC+7B1r7fHNjP6wwyF+i3FfTdqQj8/TfBlmc3F9qQeIESKUCZ
+         IVAxblXpfQbB+gRKWCAilMcAB10dZM6PY7Hs/nABq9y819WuyunKfShT1MFe1stTr58A
+         99z7l+ylLeQ/0yNndU2Q0jJ67MXKpmAKRpJYKXBOI+il5B7xZ+7EeEzS8SmOeSkihUCB
+         sk/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726616082; x=1727220882;
+        d=1e100.net; s=20230601; t=1726622416; x=1727227216;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=07uea7yJ0apHmLqc69KT0AE+/9P9TTFiIR2vNmcXQ50=;
-        b=q81xC+hPWgsiH79Ufo1fRoYPIOcAKJZxfy7xjfw8nnAUmmg2TtkyVY1giqPrXAOXHe
-         cqjbTOSBX3b1ZjPxacAhBitkOorKBvKNJf6kwmi57+lzmOv7H3JkDj7bv0LWyf2uTUnd
-         WqkBVYJnlsEk0eTcf3yeSgoH8MUTv/iYP3aRIp4B+yOs/ciz8bBo+5c8v44tNQjStxp9
-         Fa82R7H1acicNN7FF32eHHjnNJlfO2skrncIa63u/eUq7ANkZcTYC62ZlZt9AULvHnex
-         H63gVclTiaosZCZPjtjElB3O+jUlpQfXgApAb1hmK4Yjj8HsTSEEjcz/p3VGaTrXa7wy
-         taVg==
-X-Forwarded-Encrypted: i=1; AJvYcCUJvk+mI3J68bjolfPTikwrP9vmBAFKS1TRQZBV51cvp3YNrmEr4qjP8eFIbsWLFWImD4RhS1jkzyQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwGtlIF20lEAsqpOEVrKFojAt4bXIJvIXOGlhlYzq3smxLy28gz
-	YmSNHXz8E+uiNro1/OsDwm5V7vHydhwIECBLe1SkMdLfvv0jIiSM72FgS6CCQBQ=
-X-Google-Smtp-Source: AGHT+IEeRN7SJSiVdQD32+EIk70Z7O5kuCKkOZtCUoWPrKpS2lC478IZc1STDoJy29E1/hZeqgFG+Q==
-X-Received: by 2002:a17:902:f54d:b0:207:3a5d:69b7 with SMTP id d9443c01a7336-2076e33c532mr289966395ad.15.1726616081593;
-        Tue, 17 Sep 2024 16:34:41 -0700 (PDT)
+        bh=qxxW1IuM04esdHxBQxHHr5oO9yZy5/DXPKQpJTg35JQ=;
+        b=pSQ+AJv0M0ZenJxCvJl9VzYW1aQ1ZSEt1oLzG5V2yJN1NbbMn36ERXqxpOym05Lme1
+         o6M2Vt0FpwfVvqDcwAA40jlEB6HKCYGw/ePxBJ0g+pEraegTADthN2SgKbXXwZ9TqZmQ
+         GPWP9tsSJHl8R4yhrvCm70FzoS2vxPghfvUb3aqkK3DqbWx8r94kbrl2ISyEKjzVHnVe
+         53i0afhyP9GAcFv5fUiLlaPdWWJ3MXI5Kik8LzknRPjQZJoc/LRbhjvOd/9UlkJeuLEA
+         IQGrDr2TLSi6LIbwuFpXeHnaze+4+bXPR1LG0kr60FcYX9KkTv7dEGTaWbjKAEq0+vNw
+         17Bw==
+X-Gm-Message-State: AOJu0Yy8EbVjRt/pzK4BbLRbnKwYiW+TkXQ9NbS/G5Sx/MASR0mRVAfJ
+	6OLhjK0jN519fyXOOeb18ow8PDoCaU3+5pi6eAmnpmhtc119y29BeVv9WA656ek=
+X-Google-Smtp-Source: AGHT+IFjQmvaIG7B6dO5jArvP6cNKhjxyHtpJmaEBYazv8+oYjr7hY9BQZ/p08eER/kGRqRXYe9pgw==
+X-Received: by 2002:a17:902:e881:b0:203:a0b4:3e28 with SMTP id d9443c01a7336-2076e37b238mr280437385ad.27.1726622415856;
+        Tue, 17 Sep 2024 18:20:15 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-207945da8dfsm54969715ad.46.2024.09.17.16.34.40
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-207946016cesm55589945ad.97.2024.09.17.18.20.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Sep 2024 16:34:40 -0700 (PDT)
+        Tue, 17 Sep 2024 18:20:15 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1sqhiP-006ZBD-29;
-	Wed, 18 Sep 2024 09:34:37 +1000
-Date: Wed, 18 Sep 2024 09:34:37 +1000
+	id 1sqjMa-006b1d-0D;
+	Wed, 18 Sep 2024 11:20:12 +1000
+Date: Wed, 18 Sep 2024 11:20:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
-	dchinner@redhat.com, hch@lst.de, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	catherine.hoang@oracle.com, martin.petersen@oracle.com
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-Message-ID: <ZuoSDVJPOX44Fww/@dread.disaster.area>
-References: <20240813163638.3751939-1-john.g.garry@oracle.com>
- <87frqf2smy.fsf@gmail.com>
- <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <877cbq3g9i.fsf@gmail.com>
- <ZtlQt/7VHbOtQ+gY@dread.disaster.area>
- <8734m7henr.fsf@gmail.com>
- <ZufYRolfyUqEOS1c@dread.disaster.area>
- <c8a9dba5-7d02-4aa2-a01f-dd7f53b24938@oracle.com>
- <20240917205420.GB182177@frogsfrogsfrogs>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH] xfs: Prevent umount from indefinitely waiting on
+ XFS_IFLUSHING flag on stale inodes
+Message-ID: <ZuoqzHHHwNbCv+dQ@dread.disaster.area>
+References: <20240902075045.1037365-1-chandanbabu@kernel.org>
+ <ZtW8cIgjK88RrB77@dread.disaster.area>
+ <87v7z0xevx.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <87zfo8dly5.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,125 +73,162 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240917205420.GB182177@frogsfrogsfrogs>
+In-Reply-To: <87zfo8dly5.fsf@debian-BULLSEYE-live-builder-AMD64>
 
-On Tue, Sep 17, 2024 at 01:54:20PM -0700, Darrick J. Wong wrote:
-> On Mon, Sep 16, 2024 at 11:24:56AM +0100, John Garry wrote:
-> > On 16/09/2024 08:03, Dave Chinner wrote:
-> > > OTOH, we can't do this with atomic writes. Atomic writes require
-> > > some mkfs help because they require explicit physical alignment of
-> > > the filesystem to the underlying storage.
+On Mon, Sep 16, 2024 at 11:14:32AM +0530, Chandan Babu R wrote:
+> On Thu, Sep 05, 2024 at 06:12:29 PM +0530, Chandan Babu R wrote:
+> >>> To overcome this bug, this commit removes the check for log shutdown during
+> >>> high level transaction commit operation. The log items in the high level
+> >>> transaction will now be committed to the CIL despite the log being
+> >>> shutdown. This will allow the CIL processing logic (i.e. xlog_cil_push_work())
+> >>> to invoke xlog_cil_committed() as part of error handling. This will cause
+> >>> xfs_buf log item to to be unpinned and the corresponding inodes to be aborted
+> >>> and have their XFS_IFLUSHING flag cleared.
+> >>
+> >> I don't know exactly how the problem arose, but I can say for
+> >> certain that the proposed fix is not valid.  Removing that specific
+> >> log shutdown check re-opens a race condition which can causes on
+> >> disk corruption. The shutdown was specifically placed to close that
+> >> race - See commit 3c4cb76bce43 ("xfs: xfs_trans_commit() path must
+> >> check for log shutdown") for details.
+> >>
+> >> I have no idea what the right way to fix this is yet, but removing
+> >> the shutdown check isn't it...
+> >>
 > 
-> Forcealign requires agsize%extsize==0,
+> Commit 3c4cb76bce43 describes the following scenario,
+> 
+> 1. Filesystem is shutdown but the log remains operational.
+> 2. High-level transaction commit (i.e. xfs_trans_commit()) notices the fs
+>    shutdown. Hence it aborts the dirty log items. One of the log items being
+>    aborted is an inode log item.
+> 3. An inode cluster writeback is executed. Here, we come across the previously
+>    aborted inode log item. The inode log item is currently unpinned and
+>    dirty. Hence, the inode is included in the cluster buffer writeback.
+> 4. Cluster buffer IO completion tries to remove the inode log item from the
+>    AIL and hence trips over an assert statement since the log item was never
+>    on the AIL. This indicates that the inode was never written to the journal.
+> 
+> Hence the commit 3c4cb76bce43 will abort the transaction commit only when the
+> log has been shutdown.
+> 
+> With the log shutdown check removed, we can end up with the following cases
+> during high-level transaction commit operation,
+> 1. The filesystem is shutdown while the log remains operational.
+>    In this case, the log items are committed to the CIL where they are pinned
+>    before unlocking them.
+>    This should prevent the inode cluster writeback code
+>    from including such an inode for writeback since the corresponding log item
+>    is pinned. From here onwards, the normal flow of log items from the CIL to
+>    the AIL occurs after the contents of the log items are written to the
+>    journal and then later unpinned.
+>    The above logic holds true even without applying the "RFC patch" presented
+>    in the mail.
+>  
+> 2. The log is shutdown.
+>    As in the previous case, the log items are moved to the CIL where they are
+>    pinned before unlocking them. The pinning of the log items prevents
+>    the inode cluster writeback code from including the pinned inode in its
+>    writeback operation. These log items are then processed by
+>    xlog_cil_committed() which gets invoked as part of error handling by
+>    xlog_cil_push_work().
 
-No it doesn't.
+It's more complex than that.
 
-AG size is irrelevant when aligning extents - all
-that matters is that we can find a free extent that can be trimmed
-to the alignment defined by extsize. 
+3. We get an error returned from xfs_defer_finish_noroll() or
+xfs_trans_run_precommits().
 
-> it's atomicwrites that adds the
-> requirement that extsize be a power of 2...
+In these cases we skip the insertion into the CIL altogether and
+cancel the dirty transaction with dirty log items exactly as we
+currently do right now.
 
-Only by explicit implementation constraint.
+This is why, in that series of commits, I changed all the shutdown
+checks for metadata operations to use xlog_is_shutdown() as opposed
+to xfs_is_shutdown() - to ensure that shutdown checks are consistent
+with what __xfs_trans_commit() required. Hence these paths would all
+behave the same way when dirty transactions are canceled, and that
+leads to the next point:
 
-Atomic writes do not require power of two extsize - they only
-require correctly aligned physical extents.
+4. Random high level code that does this:
 
-e.g an 8kB atomic write is always guaranteed to succeed if
-we have an extsize of 24kB for laying out the physical extents
-because a 24kB physical extent is always 8kB aligned and is an exact
-multiple of 8kB. This meets the requirements for 8kB atomic writes to
-always succeed, and hence there is no fundamental requirement for
-extsize to be a power of 2.
+	if (xlog_is_shutdown(log))
+		xfs_trans_cancel(tp);
 
-We have *chosen* to simplify the implementation by only allowing
-a single aligned atomic write to be issued at a time. This means
-the alignment and size of atomic writes is always the minimum size
-the hardware advertises, and that is (at present) always a power of
-2.
+has the same problem - we abort dirty items and release them when
+the log has been shut down. In these cases, we have no possible
+mechanism to insert them into the CIL to avoid the same shutdown
+race condition.
 
-Hence the "extsize needs to be a power of 2" comes from the
-constraints exposed from the block device configuration (i.e.
-minimum atomic write unit), not from a filesystem design or
-implementation constraint.
+IOWs, removing the shutdown check from __xfs_trans_commit() doesn't
+resolve the problem entirely as there are other paths that lead to
+the same situation where we cancel transactions due to the log being
+shut down.
 
-At the filesystem level, we have further simplified things by only
-allowing extsize = atomic write size. Hence the initial
-implementation ends up only support power of 2 extsize values. This
-is not a hard design or implementation constraint, however.
+5.  An the architectural issue with the fix: inserting the items
+into the CIL instead of aborting them requires something or someone
+to push the CIL to error out the items and release them.
 
-.....
+Who is responsible for invoking that push?
 
-hmmmmm.
+It's not xlog_cil_commit(). That only pushes on the CIL if the
+amount of queued work is over the push threshold, otherwise it will
+not queue xlog_cil_push_work() to run again.
 
-.....
+Hence every call to xfs_trans_commit() is now absolutely reliant on
+some future code pushing the CIL to free the items that were
+committed to the CIL after the log is shut down.
 
-In writing this I've had further thoughts on force-align and the
-sub-alloc-unit unwritten extent issue we've been discussing here.
-i.e. I've stopped and considered the existing design constraints
-given what I wrote above and considered what is needed for
-supporting large extsize for small atomic writes.
+I think that is eventually caught by the xfs_log_unmount() path
+doing a log force. i.e.
 
-I think we need to support large extsize with small atomic write
-size for two reasons:
+xfs_log_unmount
+  xfs_log_clean
+    xfs_log_quiesce
+      xfs_log_force
+        xlog_cil_force
+	  xlog_cil_force_seq
+	    xlog_cil_push_now
 
-1. extsize is still going to be needed for preventing excessive
-fragmentation with atomic writes. It's the small DIO write workloads
-that see lots of fragmentation, and applications using atomic writes
-are essentially being forced down the path of being small DIO write
-workloads.
+However, this is reliant on there being no shutdown checks in this
+path, and xlog_cil_push_work() avoiding any shutdown checks until
+it's done all the work needed to be able to cancle the pending log
+items, right?
 
-2. we can allow force-align w/o atomic writes behaviour to match the
-existing rtvol sb_rextsize > 1 fsb behaviour without impacting
-atomic write behaviour. (i.e. less behavioural differences, more
-common code, better performance, etc).
+IOWs, there's lots of things that have to be done just right for
+this "future cleanup" mechanism to work, and we have to be very
+careful not to place a shutdown check in just the wrong spot
+otherwise we can break the shutdown processing.
 
-To do this (and I think we do want to do this), then we have to do
-two things:
+We know how problematic this can be - this "cleanup is somebody
+else's future problem" model is how we used to handle shutdown and
+it was an -utter mess-.  Christoph and I spent a lot of time years
+ago fixing the shutdown mess by moving to a model where the current
+holder of an item is responsible for releasing that item when a
+shutdown is detected. That included xfs_trans_commit().
 
-1. force-align needs to add a "unwritten align" inode parameter to
-allow sub-extsize unwritten extent boundaries to exist in the BMBT.
-(i.e.  similar to how rt files w/ sb_rextsize > 1 fsb currently
-behave.)
+This change of shutdown processing model was one of the reasons that
+tests like generic/388 (and other fstress+shutdown tests) are
+largely reliable now - they don't crash, hang, leak or trigger UAF
+errors all the time like they used to. Shutdown reliability used to
+be -horrible-.
 
-This is purely an in-memory value - for pure "force-align" we can
-set it 1 fsb and then the behaviour will match existing RT
-behaviour.  We can abstract this behaviour by replacing the hard
-coded 1 block alignment for unwritten conversion with an "unwritten
-align" value which would initially be set to 1.
+Hence I really don't want to see us moving back towards a "cleanup is
+somebody else's future problem" model, regardless of whether it
+works in this case or not, because it's proven to be a broken model.
 
-We can also abstract this code away from being "rt specific" and
-make it entirely dependent on "alloc-unit" configuration. This means
-rt, force-align and atomic write will all be running the same code,
-which makes testing a lot easier..
+It's probably obvious by now that racing shutdowns with cancelling
+dirty transaction safely isn't a simple problem.  That's why I said
+"I have no idea what the right way to fix this is yet" - I didn't
+have time to write a long, long email explaining all this.
 
-2. inodes with atomic write enabled must set the unwritten align
-value to the atomic write size exposed by the hardware, and the
-extsize must be an exact integer multiple of the unwritten align
-size.
-
-The initial settings of unwritten align == extsize gives the current
-behaviour of all allocation and extent conversion being aligned to
-atomic write constraints.
-
-The separation of unwritten conversion from the extsize then allows
-allows the situation I described above with 8kB atomic writes
-and 24kB extsize. Because unwritten conversion is aligned to atomic
-wriet boundaries, we can use sub-alloc-unit unwritten extents
-without violating atomic write boundaries.
-
-This would allow us to use extsize for atomic writes in the same
-manner we use it for now - enable large contiguous allocations to
-prevent fragmentation when doing lots of concurrent small
-"immediate write" operations across many files.
-
-I think this can all be added on top of the existing patchset - it's
-not really a fundamental change to any of it. It's a little bit more
-abstraction and unification, but it enables a lot more flexibility
-for optimising atomic write functionality in the future.
-
-Thoughts?
+I -think- that the ->iop_shutdown() mechanism I described to
+Christoph recently can be applied here, too. That provided a
+mechanism for the AIL push to be able to process items safely once a
+shutdown had been detected, and I think it applies equally here.
+i.e. we know the log has been shut down, and so we need to error out
+the dirty log items via IO error mechanisms rather than simply
+aborting the log items and hoping everyone notices that it's been
+aborted....
 
 -Dave.
 -- 
