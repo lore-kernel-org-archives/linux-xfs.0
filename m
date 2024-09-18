@@ -1,43 +1,43 @@
 Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA3D1BA867
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 14:36:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E7681BA899
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 14:36:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726670214; cv=none; b=e7NmAvwoBiWNk2enZ5ArCJuwL2dPR7mzE4hbJejIBlasxPKvtrLOni1X4GfhtdvNWPzxtzdPJGFc1nz/1XZs3mOBgZ9zV4Qv7z4kXlG72VyTUkjl/9TeRWK63JzFsQECL7EgPFjj34xqzKXx6bwuL/VHO1R4cl7lGjV8VvVndeM=
+	t=1726670214; cv=none; b=ACGtA9FmOyGrSKgooGqoYPcuxS1ZSJm9v3esM//lKAhsrrRrNfJZvLA5e16Ik4lXnvqIYYH/TdcSUbH1wJTA7twtgkBrJKIbjTeVfy97JiPnewc6aTeFI7d+F+Tzc/F7/ETnkWyXmk+KJ2dLToq0dH6RF7PEfkcGFEg2mSylAWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1726670214; c=relaxed/simple;
-	bh=p+sTY5i3Muo+sYfakUJa4Fzu7LAH3ldS7izQz0n68JQ=;
+	bh=N9UTrbEemOediUMCqKHtMKeXJPbDKeu8r1+2OHXp0KQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X8ZOKkWlBaCs565I32YJGNGb16VytS5i6EpgqiDtaO6Z30LD7zeEq0J3XgKzIWA7evFgaM7HkhlbAiC3lfHLrua5w8Ex2GPwQYrhu7ny4nuudUGCtLJ+f6ki/WP52tAjqRXEKKfitYUwaXB31bCEFDbMN3QGUYKelMQDY9aJzNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=mH43gaE+; arc=none smtp.client-ip=82.195.75.108
+	 MIME-Version; b=Igk2lS9j5L52eXz100NSdDqIVAtFlNVKayDUnWn9XVQb4k+A1k8iiraOUy0KCfgYBZy5lNvm9I5It7HKLaxRrHZoXnRpqhrhEr+CK4n9b1QTLceUfLgcn9ho2hbzBOqoLAh1vM3yoCNuwLcIR9IxJuDiKoZdWx3t6FQidOpnZfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=i4hE29Z1; arc=none smtp.client-ip=82.195.75.108
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="mH43gaE+"
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="i4hE29Z1"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
 	s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:MIME-Version
 	:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To:
 	Content-Type:Content-ID:Content-Description;
-	bh=nC0SGV/TB+yx4AYF/itFzZwBDTAj6+XR0Mt1eh6Vd4Q=; b=mH43gaE+4o6S0hRSMsgLP1HmdZ
-	2MGIxpvUkRiqes6TPc/c2tiz642lB75ey9Ol1vySk29VK8CKKMMJjfOyzJA99OZZ42NlPd+cgU6C6
-	WqJeN2eWme2iG+7aPfqX/yCgRfC8wUDRRidW4akVSv/tEcKi4VqP3X5nE+X/9dxIVFJuk1CyGhQS1
-	K9HrMJHfg08R92iLqZbvi3TpyrWq3+euotG2lXJ15hb2HiP5MFOvIr6EoESGlzGldTZdVvdR4NdeP
-	JWuQ6Bn+4lCMb098xlEBdR1q5g3qevAvjQRfFzNhHCm4YBBksdjlONuhnmGh0qkJ85C8iK9tQ344V
-	OlTCH79Q==;
+	bh=rwXC/nitC5e3o4Agg8rpmTQAgDktB76vaVEZZVcp3Dc=; b=i4hE29Z1Wx/PXnCIzewayjE0UN
+	fN4+Tsc38ZdjABCbNveU2ZVxIKVzXh9xa1NFobrXj4t3rvl5cxOTsFoLJKCmjFDHfwdmekkHHpwoa
+	AWTYp4O7b1oYSMt3hVgrZiu+LC2TUUe7RGcXfCvGbpvaaThvTV/E/3otDdjFwLhRF29Jk4o1NYDDg
+	BKIv6FN6vMQpfIdj88+rJ6ug2ncBQ/M2m2s1oCUfQD4/VI8QcUhSAp74KrFD9nlDme1M7nAuhW4ZY
+	Uz/XFLP4q/YQPnGHYczAFptQqwbtEbvgAWhFupzJgc4ImZmP2yLlv7Os5K6iL1Hyphw2D/6P+wyJ4
+	TAQK2Xow==;
 Received: from authenticated user
 	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.94.2)
 	(envelope-from <bage@debian.org>)
-	id 1sqvnQ-00B7VF-0a; Wed, 18 Sep 2024 14:36:44 +0000
+	id 1sqvnS-00B7VF-DS; Wed, 18 Sep 2024 14:36:46 +0000
 From: Bastian Germann <bage@debian.org>
 To: linux-xfs@vger.kernel.org
 Cc: Bastian Germann <bage@debian.org>,
 	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v2 1/6] debian: Update debhelper-compat level
-Date: Wed, 18 Sep 2024 16:36:13 +0200
-Message-ID: <20240918143640.29981-2-bage@debian.org>
+Subject: [PATCH v2 6/6] debian: Correct the day-of-week on 2024-09-04
+Date: Wed, 18 Sep 2024 16:36:18 +0200
+Message-ID: <20240918143640.29981-7-bage@debian.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240918143640.29981-1-bage@debian.org>
 References: <20240918143640.29981-1-bage@debian.org>
@@ -50,35 +50,24 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Debian-User: bage
 
-debhelper-compat-upgrade-checklist.7 discourages using level 11.
-Update to compat level 12, which is supported back to buster.
-
 Signed-off-by: Bastian Germann <bage@debian.org>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- debian/compat  | 2 +-
- debian/control | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ debian/changelog | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/debian/compat b/debian/compat
-index b4de3947..48082f72 100644
---- a/debian/compat
-+++ b/debian/compat
-@@ -1 +1 @@
--11
-+12
-diff --git a/debian/control b/debian/control
-index 31773e53..369d11a4 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bage@debian.org>
--Build-Depends: libinih-dev (>= 53), uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config, liburcu-dev
-+Build-Depends: libinih-dev (>= 53), uuid-dev, debhelper (>= 12), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config, liburcu-dev
- Standards-Version: 4.0.0
- Homepage: https://xfs.wiki.kernel.org/
+diff --git a/debian/changelog b/debian/changelog
+index cf7fcb4c..82d4a488 100644
+--- a/debian/changelog
++++ b/debian/changelog
+@@ -2,7 +2,7 @@ xfsprogs (6.10.1-1) unstable; urgency=low
+ 
+   * New upstream release
+ 
+- -- Nathan Scott <nathans@debian.org>  Mon, 04 Sep 2024 14:00:00 +0100
++ -- Nathan Scott <nathans@debian.org>  Wed, 04 Sep 2024 14:00:00 +0100
+ 
+ xfsprogs (6.10.0-1) unstable; urgency=low
  
 -- 
 2.45.2
