@@ -1,220 +1,220 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E61A2E64B
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 12:21:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726662112; cv=none; b=GmkmKJnl2MOt0J/4viNjAUOf2qVnXUKN335dwLfxLsWIknDRlvO2+p0FsdcLLbZyOsqD/hNNDS8/8CclsINkBSUKjAEX/0CNz1T9AQ8Z72kNAZsywugFTEsPPfuGfJna4DsIuv6kTW4MeGebqlBY83LuMe0YtqrHrEAGVecWO78=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726662112; c=relaxed/simple;
-	bh=PIH2MVmpa479jBpT5qS04GGWMKGVCk3tdH8HlcGhZpE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aXmBG1Q0QYQO1IiR5z2UMHcUxCBhfqO1hkUApiWly1iXY8ScFFsKg2yWZ9UvcekJN49wqcMiHVYEfJGlC4dWrn1hwMRd90URC9O1L4BIT6mrLvX/VX+OcMxkHbZHWxQSJ48xg2KPJozQFYfkpuKKSApEVQH0eDL25kBnCmsWv1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C5ZiV9Eg; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F2D176248;
+	Wed, 18 Sep 2024 12:24:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1726662251; cv=fail; b=WjCjLSlqY/oFJ2IMDQghOaIGBExa2RozgpU+DB+F6u7+WOkBFZ5EzcQhPdQkF6jTd5tNlGyKXBPxVVDJk0mts0kRsEmgCqfw9883QJfowQuh5OAitQ8t6h5+bI0+5BHXsUMRZZrwbBaMVGG4wTG9Jm2ufYFkApcZ16kO6N53DX4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1726662251; c=relaxed/simple;
+	bh=9wVgA/9ngA8hc5bnSJRjY9H3zZSNt8KGHjRFd9+ZbSU=;
+	h=Message-ID:Date:Subject:From:To:Cc:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=I2RmdU3ESqDcENs/bOEoLVjW7G+0j8ipkQaBCXjm7PigGhqFEbhk2d0yWeUanvKLHwfund2Q2L0Ja6wF+6l0A1Af7m4URVECkuVD/caqB3xhZ6VwtDIME5icSmMMv09OzLMGroSv5FFSwnoXkprp7Vw2lmAStQwWYiSz4tAqXF4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=F6h4Teq+; arc=fail smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C5ZiV9Eg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1726662109;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZnYfNYNvKzMtBisGm5i7LLVAYcterxx3NjCo+s4EHuc=;
-	b=C5ZiV9EgaW1CenOram2yGAw6UXTOpjNBQg21GiykmnrbIEXcXWLf7UxRgbwx5Q9eT0iLJv
-	4RWW0eZBhfnGMiJoCIKq+zyvhyEPXhVN/g1hGS9mVehSRuWXEuRVz5MFj6CPHEJmxCwGjr
-	wykzoA0e2vvDaOKoj+14Ct2u3IxhydY=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-435-DZQp13IBM2i8HE6Q3vERpw-1; Wed,
- 18 Sep 2024 08:21:47 -0400
-X-MC-Unique: DZQp13IBM2i8HE6Q3vERpw-1
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B6E9C19773FC;
-	Wed, 18 Sep 2024 12:21:37 +0000 (UTC)
-Received: from bfoster (unknown [10.22.9.175])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 00A65195608A;
-	Wed, 18 Sep 2024 12:21:36 +0000 (UTC)
-Date: Wed, 18 Sep 2024 08:22:43 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/1] xfs: don't free cowblocks from under dirty pagecache
- on unshare
-Message-ID: <ZurGE3Cn0LNZMVOn@bfoster>
-References: <20240903124713.23289-1-bfoster@redhat.com>
- <20240906114051.120743-1-bfoster@redhat.com>
- <20240917183142.GI182194@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="F6h4Teq+"
+Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48I5EjqW024907;
+	Wed, 18 Sep 2024 05:23:50 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=
+	message-id:date:subject:from:to:cc:references:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	s2048-2021-q4; bh=5u8o42XBDAn94JOWX47xRTOgYv86fAmr1HrVVTIJgWM=; b=
+	F6h4Teq+7RXaYBukqjcfv42HgVHx5VxvUjkURmRC4l1XpsHNq/m92gPMt4pkk/rF
+	yBPHdaVt8Ll/DHMxJUAma5BJWbXmmyOmZShX1WdR06B0RAing5sB0+xTBGrYn8FE
+	KrpLK8BGHSkyigTpRdyzThA3GZKE2r5QSovYLM9yDXvIQz5RTlYTtLSKWLHijpZz
+	F0HHLHF9vGNjZa7yFWZH8+cJLQzhxOIwRhE94Ag/tw/MSkQ1nsOBvyvqBhTkT6Bc
+	xMDuTT3A8z9dbLnV3s4B/3KWWdagYcK98hRsLhnaslga2jdBMNXZyF6pwljehAve
+	FUipFF0HIhoFNZvlUYH22A==
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2040.outbound.protection.outlook.com [104.47.55.40])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 41qrhehxs2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Sep 2024 05:23:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ayjdIH9YQ3cuwBtBwEvdW2Dy3EVYrKXY8NkaeHkZrNj9sixFjlCaeZhtogYcK0D3kH2cV61M1JiriINPI6ubr92xslXPo87QfJIGa2NFMd8kg5HC6fatAg8N4Df/CA/uvDixzpDPNesJea+Nwcm7gKoKAMBMSVpYh3ayjjeVehucmUXV0KZk6UWAKgkzeKoGIsrOY6/8nCy/vXuPL0YKJpfIjznCZEbfoInmAG/1Q25yTYj0wIPoIfyhzW1UriqNiNLPCHazkO0M/7aJod3yFYHyp2MT6Li+zWqheVM3qwLTP1YV07YhlscsMZidF+WanIWwFz2nDxo64PgVRcnVbw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5u8o42XBDAn94JOWX47xRTOgYv86fAmr1HrVVTIJgWM=;
+ b=sVs+4fbzfn+bk5bY6lMtPxRY663vIObfhR5RZ2o5Jxre7Oj8R/Y4lbLHXGThI3OsOGe4ejNgSNKLgKnZcaIQEzSmYVRdD58v6O6tHgfr0kE/MkwqSAKd0RDw4SBqrQslTiXqkRoAMp7vZlhaOIJ+gLClpSA1cLGroP9SAtxqwRY1pfEbfO17JJgF5EDEPPjUGhtwRgE9o6LAqoTuM7jIw88vWRj1AmVQ/PDLFk3uuP4iJcyGnlPnwlMgx2YYvckl/0qKhmhk4mm69BsgNZQInPc9HdtrxSRqB09K0LeF7jhFX+r7ZZMu4NbC4j2hf3nyHsrHGZ1eeXriIQ9fmZSwiQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
+ dkim=pass header.d=meta.com; arc=none
+Received: from LV3PR15MB6455.namprd15.prod.outlook.com (2603:10b6:408:1ad::10)
+ by SA1PR15MB4853.namprd15.prod.outlook.com (2603:10b6:806:1e0::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7982.16; Wed, 18 Sep
+ 2024 12:23:47 +0000
+Received: from LV3PR15MB6455.namprd15.prod.outlook.com
+ ([fe80::740a:ec4a:6e81:cf28]) by LV3PR15MB6455.namprd15.prod.outlook.com
+ ([fe80::740a:ec4a:6e81:cf28%7]) with mapi id 15.20.7962.022; Wed, 18 Sep 2024
+ 12:23:47 +0000
+Message-ID: <8148432d-5865-49a2-affb-71fe79df2e4e@meta.com>
+Date: Wed, 18 Sep 2024 14:23:35 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
+ folios since Dec 2021 (any kernel from 6.1 upwards)
+From: Chris Mason <clm@meta.com>
+To: Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Daniel Dao <dqminh@cloudflare.com>, regressions@lists.linux.dev,
+        regressions@leemhuis.info
+References: <A5A976CB-DB57-4513-A700-656580488AB6@flyingcircus.io>
+ <ZuNjNNmrDPVsVK03@casper.infradead.org>
+ <0fc8c3e7-e5d2-40db-8661-8c7199f84e43@kernel.dk>
+ <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
+ <Zud1EhTnoWIRFPa/@dread.disaster.area>
+ <CAHk-=wgY-PVaVRBHem2qGnzpAQJheDOWKpqsteQxbRop6ey+fQ@mail.gmail.com>
+ <74cceb67-2e71-455f-a4d4-6c5185ef775b@meta.com>
+ <ZulMlPFKiiRe3iFd@casper.infradead.org>
+ <52d45d22-e108-400e-a63f-f50ef1a0ae1a@meta.com>
+ <ZumDPU7RDg5wV0Re@casper.infradead.org>
+ <5bee194c-9cd3-47e7-919b-9f352441f855@kernel.dk>
+ <459beb1c-defd-4836-952c-589203b7005c@meta.com>
+Content-Language: en-US
+In-Reply-To: <459beb1c-defd-4836-952c-589203b7005c@meta.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: ZR0P278CA0034.CHEP278.PROD.OUTLOOK.COM
+ (2603:10a6:910:1c::21) To LV3PR15MB6455.namprd15.prod.outlook.com
+ (2603:10b6:408:1ad::10)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240917183142.GI182194@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV3PR15MB6455:EE_|SA1PR15MB4853:EE_
+X-MS-Office365-Filtering-Correlation-Id: 13175a48-2f53-42bd-72f5-08dcd7dcbeb7
+X-FB-Source: Internal
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?ODBkNVFtaU9yK2hzaVMvdnNpMUhrbmxBaU5nVTZPL1BNMkhpWjhJYkZyL0d6?=
+ =?utf-8?B?OWJzNHM5cHlwNlNTVjFCWHpjVUZpTCtqZ1daeml0VEFkVmpNT3RjakhGZGhC?=
+ =?utf-8?B?WU1UN3dWMTNwL3E4QUgwbURndXJJWU1menNUU2Z2b2VXVWpjcUxsTGNiRXpt?=
+ =?utf-8?B?eGtHRFRwYTVXeTg5V3JLdmZPQmNISlVWbzNuOExlTGxsM0J3SG0rR2s3Tm40?=
+ =?utf-8?B?bDEwODBBRnUxOUxCNGJGenZvMmNXd095VTFiVGhaTkhFdGtGbGFoWEdLdGVi?=
+ =?utf-8?B?cmU4T3VGc3prY216VmJUcUF1bkVHQUw3VkdGSUoxY3lmQjc4N3ZPT21nWmxh?=
+ =?utf-8?B?bWZZaHYxMGVTVDA1aUtaQ0hTWithY2VMZnM2TVhNcDdqYUNuUkF4OUhRREgz?=
+ =?utf-8?B?V2hkL1FpRWhha3F1MmJHZm9RS05HN0g3ZEdmd2NjRXlRSHRtaWVCc1ZOQUlt?=
+ =?utf-8?B?RTdoK2Y1NEtsMXJJV0x6R2JrWlRtL0xUQzZxcTJNVEdkMG5ZTDZVc3A2UThl?=
+ =?utf-8?B?Qm0yd29RblNwUE5jSUU1VHhQZmVnRjVOSGwyN3JIYi94bFozMWFBQTAxVmE2?=
+ =?utf-8?B?UEs1RVlNMGRBeFc1VjFXM1h6c0Jlb3FmVG1tK0lXZlQyYTlLb2pjUTFUeVRW?=
+ =?utf-8?B?YldSeEVKazRyRlhwa0xTWll6K2FmZ0VjRGdSeVlpM09CbWRyWVRYR0NWQmJh?=
+ =?utf-8?B?SXVWSHZpekgzKzdVV0ZrbEgvbVExMGxMN3JKOGE1K1c4K1BnYmc1dnZtRlNp?=
+ =?utf-8?B?dmpZMjdWaVNsTGpQc0l6UEVtMlNhR2NEem1Jdm9nbTlFMHFzK2VIRnBCVFh1?=
+ =?utf-8?B?N0hidVcwaG5CZ3dwTXBmQnI1Mng5Y3ZmSHRyZGVNUVdQM25GcU1RdFpNNmRI?=
+ =?utf-8?B?RFdsazFWL0FtcXVzTHBlbmV5VHYyTlRyNXYrVnBhSWxSLzhQMHhwb0FTYk9Z?=
+ =?utf-8?B?ZGs5Z1lORkdZZlZxb0M2bmpZWUFKREMxaW1ET2t4NWFYTng1QmFJNjdEanZi?=
+ =?utf-8?B?cVJrNE55QVpxSzh0UklTaDRpcHNJN2lISEdkeFNQZlFKZFhMWW5nTzBJUCtj?=
+ =?utf-8?B?OUs3YjZrUUpxdEpzVVJrd1dSY0kvRzhWODZncWU2MW5XdGJOK2NDN2M3ZlJJ?=
+ =?utf-8?B?UDlucS9VTGNiT0FZT21FRUZFQXNTcmltOHhVYVFST1pHMnFheXAxV21SNWcv?=
+ =?utf-8?B?d3JTa29TVjEyYVBIYW9ReVh3NHArMGM2dzIrRmdpVjhibVFGdjNaUjJMMEpI?=
+ =?utf-8?B?Zlg5UUVqd3ZYV0d6Z3ZCUkdzZVB0WmlVcGVhcStOVzhYRUJ3dFJVamxuY08r?=
+ =?utf-8?B?dVlvR1VsbEpMRUx6Y2h6QzBzMGc5ZmJyZDdHYlNaZ0FkaERJUXlTd2Erb0RC?=
+ =?utf-8?B?SEhrZGxUSlpBaHBoN0dUZzlwZElwakxUS1RUZ3AyR0o1cTVuL1lsVm1tOXp1?=
+ =?utf-8?B?ZnNxb1dFUU9OMTFidWNVOERKWGs4ajVoTXFlNHRMNHMvRE1RL0FZN01QTHI4?=
+ =?utf-8?B?Skx0V3ZzLzkvVUo0bVdWbmxsT0R4ZDdOTFEvRWF5NGZhdk5MWjIwR0VhYkdG?=
+ =?utf-8?B?WkhFTFlNWno1dGlSbDdIWXJSOEJDTXVOZFhLTGg0UEw4bXh4V1FiUXp4bWlI?=
+ =?utf-8?B?S2QzaDgxUTF4dW1qdzdNa1lSNitIaTAyOVJ0d0NUcFVZNWNpY2J3cWo1RStU?=
+ =?utf-8?B?WnlRYVc1QTl2blFkMktrOENPUGIvSTYxT0g2QzRKc2UwM0NETTE1S1FtS29m?=
+ =?utf-8?B?Z1dndlRyZ09WTjVqREtLUGd1czdDRDdmN2R0S2w1TkZUL1JmTjV6a1IrVUFu?=
+ =?utf-8?B?QXlobzY5N2tPRzdGT0FrQT09?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR15MB6455.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?aEZOYzFIeU9qYW8zSW42aEtFNTYyaDhhblBEL3dCV0c2WThxM1dBWWtKVGpR?=
+ =?utf-8?B?QWNvTGlaTUpzU0phcXBTS0dKNlNWbjk4cllXY1RYYTlSSjJTbld3bjQxMW9U?=
+ =?utf-8?B?Q25wUVpWOE96ZHpBNks4dFU2L09VeFpDR05aTDMycHk5WjBOK2huSE1xYWFJ?=
+ =?utf-8?B?enRJekh3ZGFqMXd4WjYxRituc2hVbjNwNE4wdWxSVEFqZUxFYXNNY3Mxc1Jj?=
+ =?utf-8?B?ODQxeXBOMmwyL25Ka3lvdDJiS2ZMUEIzamRYVFpQN0NjczlkbThnL0hCUStk?=
+ =?utf-8?B?WCtqblA4bW9OU2NTWFNiT0g0YkU5NHVYQU5jTkVVV0JqaVN0dDZ2YldyaWFX?=
+ =?utf-8?B?UmlIK0p6M1doSTZhWVdWUUdFQk9ySGo4Q2F1TTFlUjVRRy9MYTd0eHVlQWRK?=
+ =?utf-8?B?bEJkNGx5ZTh6UWQ1Q0hGS2xsZi9uWnBsdHNJZHR0WkIxVm43a2dPM1hNQWhw?=
+ =?utf-8?B?NzBhTVlsV1pES3V2SWNVVGRUYTBvUnVsYTVYUTF6Y3VqUXRKZHpEQ1U5aVJX?=
+ =?utf-8?B?SlBqT1pFendKM3d4U1pPS2JRZTk0S3c0YjY0aEd0WGgrQ3U3Yk01OTg3MkpR?=
+ =?utf-8?B?OGZVdHV3MVdpSW12bmcxUklKazBXd0JmWnZqMEs5TCtmK1RiWFhPS0JHend0?=
+ =?utf-8?B?RTZDLzdXRlFYcnlMRUMrTngwckhKQklUc1Z3OWlLZTkzQTBFSG9rOGt2QXlq?=
+ =?utf-8?B?Q1FNUlZlanRWcGN3cFZ4aHRYVVdoTWtKUTB3VUJnaWpGcFJ2emJMYWlJMWtX?=
+ =?utf-8?B?VmVwNWk1bFQ2a2VUZFQwaVlaZyszNi9kalhNYnMzTUpXRkRhNGFNSFdxNEh6?=
+ =?utf-8?B?dHV0ZTR3OWk3RTNSOUR5QlNxZ09UODVLWFkrRTZHL0creG54OXZlM2FvdllS?=
+ =?utf-8?B?RzgxOHBBbEJDM1MxQVpNejRUNGZDK3Zpc2tLc0FGRGRxM0ZvVnNsS1M3WHpt?=
+ =?utf-8?B?TjZzOUNEdWpJdG1PYVFQUGlOcWc1UWlNSGlCSWUzRkQ3WlZCQmxYK2hrdFNq?=
+ =?utf-8?B?VWNZWjFsVXN1TkljOEJBZS9MSWorTDJoektHTWdVMVVqclFzaEhSRGUrb3h6?=
+ =?utf-8?B?T2t5cU5GenUydFV3TGtpdXRrQm5RdTRTakxDTkVDNDlhRGo0SStwVXp1bUNO?=
+ =?utf-8?B?U3c4cEVheGFMdHYwKzNQRC9jdjAzdi9WVjJnYUlVY01jcjcvZEdvNHBEVHo0?=
+ =?utf-8?B?dktsb0xJbEttUlJzeEtjeE4yS3NVblV0OHJ3dFJjSUZZNC9wamZPTkx5dGI0?=
+ =?utf-8?B?bU9wN0hmUjEvU2dzQXVrOVdGV2V3OGR4cW1Ld0tTaGxLTEgzNTJSWUMwR3Ry?=
+ =?utf-8?B?RlhMQTNQMTFvWkFpaWlVNXJvS1ViZFNYWnJWQUduci8yMllNVTJ1SDMrUFVE?=
+ =?utf-8?B?OW9hNW9zY2dFUkZMU2pFc3hoRFVNU0lWUkorL3d5VnNRbktpT3U5c1paV3c4?=
+ =?utf-8?B?MFlVZzhEMFR3NzMvWDdnSEF6ZXNWN1lsZm9lN2xrd1dWWFc2MGFWZTM2dU1u?=
+ =?utf-8?B?SU94dHFlYTA4OWo5TThNanVBQUx4OFdOaDQ5Q1V6c3FoWE1FMXRhVGZyeUht?=
+ =?utf-8?B?TklCaUNXU3NaU1hCblZQYWE0ZElHUVdEMVVJWm5yemkvU3YvdE5oOXhYSHJ4?=
+ =?utf-8?B?SkRROVFoQjlpMlJidmw5Vk1mblNFeHJMQ0FqV0tzMzN3VFByajdYZCtaZjFY?=
+ =?utf-8?B?SThOK0d6OHI4S0VKV1ZKOTl6TDY3dlNHSnNieEdJY0c5MmtZVnk1QUV5ZFd5?=
+ =?utf-8?B?Z2NWRlhpM0lmd1pQbkRHSnU0MHEwZzljQ2M5aC91VDZwOEVxdTlIWmNZREVl?=
+ =?utf-8?B?cUhxbGwweStyNUxoQWJvcXR4by90LzdTeG1sMnhBOGhYNkE1N3drcFpUeGJU?=
+ =?utf-8?B?Q04wclRsMzJ4RWdnbk45L0hPamhpOTBqM0VEaFdnOXNXL1FLdTltMzFKV21X?=
+ =?utf-8?B?NU1OZ2IrcWVMbnF4UTJ2b0Q2TlF4Y2RuQkhDRzIvSkR4OGJOTW1waTVMNnZn?=
+ =?utf-8?B?YnhQQ2ZoUWo2WlRtaXRpMGw0aWlUS2hSdllTOTB2Rkl0S0ZMZ0kwMExGR2x4?=
+ =?utf-8?B?QzVaYW1GOFliYk1VbHZ4bFpLY2VnS3dyVGF2enlhZy9iVnF3bGcxU2dKRmZV?=
+ =?utf-8?Q?hvnI=3D?=
+X-OriginatorOrg: meta.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 13175a48-2f53-42bd-72f5-08dcd7dcbeb7
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR15MB6455.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Sep 2024 12:23:47.4345
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: cxq8vKvbM9IdqfD3n9zfM22mIeENw0mnOWSIPUp19atlwiMt/sVxO/5jpG5ohe9G
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR15MB4853
+X-Proofpoint-GUID: RKmFRkLPH_XyXU0dBMHM5d-r7M6NGv8A
+X-Proofpoint-ORIG-GUID: RKmFRkLPH_XyXU0dBMHM5d-r7M6NGv8A
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-18_09,2024-09-18_01,2024-09-02_01
 
-On Tue, Sep 17, 2024 at 11:31:42AM -0700, Darrick J. Wong wrote:
-> On Fri, Sep 06, 2024 at 07:40:51AM -0400, Brian Foster wrote:
-> > fallocate unshare mode explicitly breaks extent sharing. When a
-> > command completes, it checks the data fork for any remaining shared
-> > extents to determine whether the reflink inode flag and COW fork
-> > preallocation can be removed. This logic doesn't consider in-core
-> > pagecache and I/O state, however, which means we can unsafely remove
-> > COW fork blocks that are still needed under certain conditions.
-> > 
-> > For example, consider the following command sequence:
-> > 
-> > xfs_io -fc "pwrite 0 1k" -c "reflink <file> 0 256k 1k" \
-> > 	-c "pwrite 0 32k" -c "funshare 0 1k" <file>
-> > 
-> > This allocates a data block at offset 0, shares it, and then
-> > overwrites it with a larger buffered write. The overwrite triggers
-> > COW fork preallocation, 32 blocks by default, which maps the entire
-> > 32k write to delalloc in the COW fork. All but the shared block at
-> > offset 0 remains hole mapped in the data fork. The unshare command
-> > redirties and flushes the folio at offset 0, removing the only
-> > shared extent from the inode. Since the inode no longer maps shared
-> > extents, unshare purges the COW fork before the remaining 28k may
-> > have written back.
-> > 
-> > This leaves dirty pagecache backed by holes, which writeback quietly
-> > skips, thus leaving clean, non-zeroed pagecache over holes in the
-> > file. To verify, fiemap shows holes in the first 32k of the file and
-> > reads return different data across a remount:
-> > 
-> > $ xfs_io -c "fiemap -v" <file>
-> > <file>:
-> >  EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
-> >    ...
-> >    1: [8..511]:        hole               504
-> >    ...
-> > $ xfs_io -c "pread -v 4k 8" <file>
-> > 00001000:  cd cd cd cd cd cd cd cd  ........
-> > $ umount <mnt>; mount <dev> <mnt>
-> > $ xfs_io -c "pread -v 4k 8" <file>
-> > 00001000:  00 00 00 00 00 00 00 00  ........
-> > 
-> > To avoid this problem, make unshare follow the same rules used for
-> > background cowblock scanning and never purge the COW fork for inodes
-> > with dirty pagecache or in-flight I/O.
-> > 
-> > Fixes: 46afb0628b ("xfs: only flush the unshared range in xfs_reflink_unshare")
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> 
-> Question: Does xfs_repair report orphaned cow staging blocks after this?
-> There's a longstanding bug that I've seen in the long soak xfs/286 VM
-> where we slowly leak cow fork blocks (~80 per ~1 billion fsxops over 7
-> days).
-> 
+On 9/18/24 5:28 AM, Chris Mason wrote:
+> And I attached radixcheck.py if you want to see the full script.
 
-I've not seen that, at least in the test case I have. I think what's
-happening here is more that we clean up the COW fork correctly from an
-accounting standpoint, but we do so prematurely because the pagecache is
-dirty in ranges that are still only backed by COW fork blocks.
+Since the attachment didn't actually make it through:
 
-> Anyhow this looks correct on its own so
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
+#!/usr/bin/env -S drgn -c vmcore
 
-Thanks!
+from drgn.helpers.linux.fs import *
+from drgn.helpers.linux.mm import *
+from drgn.helpers.linux.list import *
+from drgn.helpers.linux.xarray import *
+from drgn import *
+import os
+import sys
+import time
 
-Brian
+mapping = Object(prog, 'struct  address_space', address=0xffff88a22a9614e8)
+#p = path_lookup(prog, sys.argv[1]);
+#mapping = p.dentry.d_inode.i_mapping
 
-> --D
-> 
-> > ---
-> > 
-> > Here's another COW issue I came across via some unshare testing. A quick
-> > hack to enable unshare in fsx uncovered it. I'll follow up with a proper
-> > patch for that.
-> > 
-> > I'm sending this as a 2/1 here just to reflect patch order in my local
-> > tree. Also note that I haven't explicitly tested the fixes commit, but a
-> > quick test to switch back to the old full flush behavior on latest
-> > master also makes the problem go away, so I suspect that's where the
-> > regression was introduced.
-> > 
-> > Brian
-> > 
-> >  fs/xfs/xfs_icache.c  |  8 +-------
-> >  fs/xfs/xfs_reflink.c |  3 +++
-> >  fs/xfs/xfs_reflink.h | 19 +++++++++++++++++++
-> >  3 files changed, 23 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 900a6277d931..a1b34e6ccfe2 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1278,13 +1278,7 @@ xfs_prep_free_cowblocks(
-> >  	 */
-> >  	if (!sync && inode_is_open_for_write(VFS_I(ip)))
-> >  		return false;
-> > -	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-> > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-> > -	    atomic_read(&VFS_I(ip)->i_dio_count))
-> > -		return false;
-> > -
-> > -	return true;
-> > +	return xfs_can_free_cowblocks(ip);
-> >  }
-> >  
-> >  /*
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 6fde6ec8092f..5bf6682e701b 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1595,6 +1595,9 @@ xfs_reflink_clear_inode_flag(
-> >  
-> >  	ASSERT(xfs_is_reflink_inode(ip));
-> >  
-> > +	if (!xfs_can_free_cowblocks(ip))
-> > +		return 0;
-> > +
-> >  	error = xfs_reflink_inode_has_shared_extents(*tpp, ip, &needs_flag);
-> >  	if (error || needs_flag)
-> >  		return error;
-> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > index fb55e4ce49fa..4a58e4533671 100644
-> > --- a/fs/xfs/xfs_reflink.h
-> > +++ b/fs/xfs/xfs_reflink.h
-> > @@ -6,6 +6,25 @@
-> >  #ifndef __XFS_REFLINK_H
-> >  #define __XFS_REFLINK_H 1
-> >  
-> > +/*
-> > + * Check whether it is safe to free COW fork blocks from an inode. It is unsafe
-> > + * to do so when an inode has dirty cache or I/O in-flight, even if no shared
-> > + * extents exist in the data fork, because outstanding I/O may target blocks
-> > + * that were speculatively allocated to the COW fork.
-> > + */
-> > +static inline bool
-> > +xfs_can_free_cowblocks(struct xfs_inode *ip)
-> > +{
-> > +	struct inode *inode = VFS_I(ip);
-> > +
-> > +	if ((inode->i_state & I_DIRTY_PAGES) ||
-> > +	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> > +	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-> > +	    atomic_read(&inode->i_dio_count))
-> > +		return false;
-> > +	return true;
-> > +}
-> > +
-> >  extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
-> >  		struct xfs_bmbt_irec *irec, bool *shared);
-> >  int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
-> > -- 
-> > 2.45.0
-> > 
-> > 
-> 
+for index, x in xa_for_each(mapping.i_pages.address_of_()):
+    if xa_is_zero(x):
+        continue
+    if xa_is_value(x):
+        continue
+
+    page = Object(prog, 'struct page', address=x)
+    folio = Object(prog, 'struct folio', address=x)
+
+    print("0x%x mapping 0x%x radix index %d page index %d flags 0x%x (%s) size %d" % (page.address_of_(), page.mapping.value_(), index, page.index, page.flags, decode_page_flags(page), folio._folio_nr_pages))
 
