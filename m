@@ -1,43 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2621FD299;
-	Wed, 18 Sep 2024 15:32:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE0712AEEE
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 15:40:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726673579; cv=none; b=SZDzqPdCV6TWgdD+cS73I/XRII9EbS5xJ3ZkG375ecVFjR3eDqWvsAF/lTArMgQhB3+DHj/Ke0TfV/gjuetqoHdzsISN91VPyX8h5Aya9P/6hCRawyfx4MSP0UX7WMGZpzYaNLwH+mfj+aTnSwW62ptn+b3mRbtNTI9ZQh/ez8I=
+	t=1726674040; cv=none; b=Uac+PRBPZ6weuHIg6yMjGcQ1SC83DKvo1jA63yc37snX7/QmJvRfqQpyHMwpCrsOgcEm+8kTYer4XRw5LESsiR42MtMlyOa83jE7vmiF0U1Jh/GO0doGkNUWxF6YY0Imj5ZdRFYow+d8lix+p6GBC9V17XQ9fNdXZLMDbvfJCfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726673579; c=relaxed/simple;
-	bh=JhMFgCyRE2KJsygDkKnL8ouO9rP8dH+5wF5gcuklGsk=;
+	s=arc-20240116; t=1726674040; c=relaxed/simple;
+	bh=qiHumHAE/d2awfqwRieXmzE8yzdHNM+gMilTT2kC6r0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EnPfzB5jtbyJ7+Hao0jUCizSZZiHkMaULTqF2iiRAkZnJr/BODWKIQCl/dLgC36os2slwTPZgWRLTvYzl/l9qOXYUbkVUZRtx58wgybPZ2GgOsTSpb4fgF04gcxbsq/FCgwP7Dw93UAWHcNKxQgWesKZjPCkce0jvfo+fuFrJWE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k9Lkfi3m; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=g/V2ocE0WZr9aoBkyKxrVxqjtLmpJDzMQ8LI8TVVE+AGfb4ke9PVuY4yVxvVtITiZd54vvQ3/sSA9o37PNtN4x9jNA/ov9RXC8iXyxTTQ+/KwmZ79Mwwl84FpSFGfyX9riornqbHvrVxzKGvVHDnxjUmAgTeO5KY2JdB3kve5fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i4FnlZzs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k9Lkfi3m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A0EAC4CEC3;
-	Wed, 18 Sep 2024 15:32:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i4FnlZzs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A12AC4CEC2;
+	Wed, 18 Sep 2024 15:40:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726673578;
-	bh=JhMFgCyRE2KJsygDkKnL8ouO9rP8dH+5wF5gcuklGsk=;
+	s=k20201202; t=1726674040;
+	bh=qiHumHAE/d2awfqwRieXmzE8yzdHNM+gMilTT2kC6r0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=k9Lkfi3mPJJlpc2ufLbTvGPnClz89I5jrJE5Y7TzmlWKiT8kWMUj/l6V/CtEhbfMp
-	 uUatZtQnmxnHDe1Ur4BtOw4UZrxntgEnBpe4YglpPXG0vjHb1gZTv0SIW6EUIKvgc0
-	 9E3y71aqtY4Iec3M0vcUp7rvqGPZbTlrBsGjWlu48Anzic1gW2FegvBjztacKYq/Gr
-	 5XVH4UfsRR8MEFeIBFsHHbeCxYDS41s6Znmt3GqpczTGBAIuOIndBbfdLLSckn0LaO
-	 dSs9cla2iKYE+lL0/Id+mQRQWU71kWgpIe42NVzD3eXkDT/Mj2wELSgwtm2i298Mea
-	 HiT2jzNcmnVsg==
-Date: Wed, 18 Sep 2024 08:32:58 -0700
+	b=i4FnlZzsXRpKTzkUPv8q4OBlokPdx4qLfK5OkIdTP26tx1Bbj4ok8+3peaPBBeDIu
+	 DYHxO+/sYlipCEGFnALT3qkDKMSCVgtVG1V4yg+6d94DbRh+lYjfmvd4AhrHw4Z7QV
+	 SgOjp8EPphjPeZtArTso+GILCMa085tug93kdJsavPed1SmDmfddGoZeO+6nIdpB1U
+	 dJNa736nClqJizRGoIn3VpcqAQreiwz9zBm1FYs5aQdZM6NygFRN11PvGPKq+Bnc9M
+	 LevflmFhJAfaEI4gCP1Gq3CnTzx2DT3wtQfNjbSRLUXm9oza1FDbhVQi6CI4mJgYlT
+	 jH0au8MSb90rw==
+Date: Wed, 18 Sep 2024 08:40:39 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 08/12] iomap: zeroing already holds invalidate_lock
-Message-ID: <20240918153258.GG182177@frogsfrogsfrogs>
-References: <20240910043949.3481298-1-hch@lst.de>
- <20240910043949.3481298-9-hch@lst.de>
- <20240917212935.GE182177@frogsfrogsfrogs>
- <20240918051523.GC31238@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/8] xfs: don't ifdef around the exact minlen allocations
+Message-ID: <20240918154039.GN182194@frogsfrogsfrogs>
+References: <20240918053117.774001-1-hch@lst.de>
+ <20240918053117.774001-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,47 +42,112 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240918051523.GC31238@lst.de>
+In-Reply-To: <20240918053117.774001-7-hch@lst.de>
 
-On Wed, Sep 18, 2024 at 07:15:23AM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 17, 2024 at 02:29:35PM -0700, Darrick J. Wong wrote:
-> > On Tue, Sep 10, 2024 at 07:39:10AM +0300, Christoph Hellwig wrote:
-> > > All callers of iomap_zero_range already hold invalidate_lock, so we can't
-> > > take it again in iomap_file_buffered_write_punch_delalloc.
-> > > 
-> > > Use the passed in flags argument to detect if we're called from a zeroing
-> > > operation and don't take the lock again in this case.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/iomap/buffered-io.c | 10 ++++++++--
-> > >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > index 52f285ae4bddcb..3d7e69a542518a 100644
-> > > --- a/fs/iomap/buffered-io.c
-> > > +++ b/fs/iomap/buffered-io.c
-> > > @@ -1188,8 +1188,13 @@ static void iomap_write_delalloc_release(struct inode *inode, loff_t start_byte,
-> > >  	 * folios and dirtying them via ->page_mkwrite whilst we walk the
-> > >  	 * cache and perform delalloc extent removal. Failing to do this can
-> > >  	 * leave dirty pages with no space reservation in the cache.
-> > > +	 *
-> > > +	 * For zeroing operations the callers already hold invalidate_lock.
-> > >  	 */
-> > > -	filemap_invalidate_lock(inode->i_mapping);
-> > > +	if (flags & IOMAP_ZERO)
-> > > +		rwsem_assert_held_write(&inode->i_mapping->invalidate_lock);
-> > 
-> > Does the other iomap_zero_range user (gfs2) take the invalidate lock?
-> > AFAICT it doesn't.  Shouldn't we annotate iomap_zero_range to say that
-> > callers have to hold i_rwsem and the invalidate_lock?
+On Wed, Sep 18, 2024 at 07:30:08AM +0200, Christoph Hellwig wrote:
+> Exact minlen allocations only exist as an error injection tool for debug
+> builds.  Currently this is implemented using ifdefs, which means the code
+> isn't even compiled for non-XFS_DEBUG builds.  Enhance the compile test
+> coverage by always building the code and use the compilers' dead code
+> elimination to remove it from the generated binary instead.
 > 
-> gfs2 does not hold invalidate_lock over iomap_zero_range.  But
-> it also does not use iomap_file_buffered_write_punch_delalloc at
-> all, which is what requires the lock (and asserts that it is held).
+> The only downside is that the alloc_minlen_only field is unconditionally
+> added to struct xfs_alloc_args now, but by moving it around and packing
+> it tightly this doesn't actually increase the size of the structure.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Aha, that's why it works.  Silly me, forgetting that gfs2 doesn't do
-delalloc.  It was quite relaxing to let everything page out of my brain
-these past two weeks... :)
+Looks good now,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 7 ++-----
+>  fs/xfs/libxfs/xfs_alloc.h | 4 +---
+>  fs/xfs/libxfs/xfs_bmap.c  | 6 ------
+>  3 files changed, 3 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 59326f84f6a571..04f64cf9777e21 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2766,7 +2766,6 @@ xfs_alloc_commit_autoreap(
+>  		xfs_defer_item_unpause(tp, aarp->dfp);
+>  }
+>  
+> -#ifdef DEBUG
+>  /*
+>   * Check if an AGF has a free extent record whose length is equal to
+>   * args->minlen.
+> @@ -2806,7 +2805,6 @@ xfs_exact_minlen_extent_available(
+>  
+>  	return error;
+>  }
+> -#endif
+>  
+>  /*
+>   * Decide whether to use this allocation group for this allocation.
+> @@ -2880,15 +2878,14 @@ xfs_alloc_fix_freelist(
+>  	if (!xfs_alloc_space_available(args, need, alloc_flags))
+>  		goto out_agbp_relse;
+>  
+> -#ifdef DEBUG
+> -	if (args->alloc_minlen_only) {
+> +	if (IS_ENABLED(CONFIG_XFS_DEBUG) && args->alloc_minlen_only) {
+>  		int stat;
+>  
+>  		error = xfs_exact_minlen_extent_available(args, agbp, &stat);
+>  		if (error || !stat)
+>  			goto out_agbp_relse;
+>  	}
+> -#endif
+> +
+>  	/*
+>  	 * Make the freelist shorter if it's too long.
+>  	 *
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index fae170825be064..0165452e7cd055 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -53,11 +53,9 @@ typedef struct xfs_alloc_arg {
+>  	int		datatype;	/* mask defining data type treatment */
+>  	char		wasdel;		/* set if allocation was prev delayed */
+>  	char		wasfromfl;	/* set if allocation is from freelist */
+> +	bool		alloc_minlen_only; /* allocate exact minlen extent */
+>  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
+>  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
+> -#ifdef DEBUG
+> -	bool		alloc_minlen_only; /* allocate exact minlen extent */
+> -#endif
+>  } xfs_alloc_arg_t;
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index d5a8403b469b9d..5263b66bbd3c60 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3477,7 +3477,6 @@ xfs_bmap_process_allocated_extent(
+>  	xfs_bmap_alloc_account(ap);
+>  }
+>  
+> -#ifdef DEBUG
+>  static int
+>  xfs_bmap_exact_minlen_extent_alloc(
+>  	struct xfs_bmalloca	*ap)
+> @@ -3539,11 +3538,6 @@ xfs_bmap_exact_minlen_extent_alloc(
+>  
+>  	return 0;
+>  }
+> -#else
+> -
+> -#define xfs_bmap_exact_minlen_extent_alloc(bma) (-EFSCORRUPTED)
+> -
+> -#endif
+>  
+>  /*
+>   * If we are not low on available data blocks and we are allocating at
+> -- 
+> 2.45.2
+> 
+> 
