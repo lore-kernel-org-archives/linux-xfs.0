@@ -1,315 +1,220 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B208EF9E4;
-	Wed, 18 Sep 2024 10:13:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726654387; cv=fail; b=p+jGyUmnNkWwGAz+Fja62O1OrR+4ajtdd3oDbHlhODAc2bQIUjvXwlEWe9MLA3ojMnYjbyR08QKtrhpCUpyC9exa6ACtIvwEDqKuFV2zxL2+sIPgpbeWg2Y/KA8XCbbAioLwzFUjGGbuu0Az8GI/PywVxJBXGXumsUCyP0dUBxg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726654387; c=relaxed/simple;
-	bh=wxJatCalx+eSPB9yY7b1sGYkSVPeYqAzu9QuQ83KzmM=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=nk4Vl8ovpibDmLpFv95OanBUbeNxPl4Nkv4B29n8F2sco44vqnusHux3akbR7DSEYoDC4YNGCs/Rat7pViduoCbZTQ5XSTOHOi6ISdu36ic4kjFN/t8nonZrMTsPbZ4OAfTRx+fxm3ofas9r07Iwp5+FxnNBAjNPF7ECsv1Wcgc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=aPlo/RCF; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=PGvYMnUR; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E61A2E64B
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 12:21:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1726662112; cv=none; b=GmkmKJnl2MOt0J/4viNjAUOf2qVnXUKN335dwLfxLsWIknDRlvO2+p0FsdcLLbZyOsqD/hNNDS8/8CclsINkBSUKjAEX/0CNz1T9AQ8Z72kNAZsywugFTEsPPfuGfJna4DsIuv6kTW4MeGebqlBY83LuMe0YtqrHrEAGVecWO78=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1726662112; c=relaxed/simple;
+	bh=PIH2MVmpa479jBpT5qS04GGWMKGVCk3tdH8HlcGhZpE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aXmBG1Q0QYQO1IiR5z2UMHcUxCBhfqO1hkUApiWly1iXY8ScFFsKg2yWZ9UvcekJN49wqcMiHVYEfJGlC4dWrn1hwMRd90URC9O1L4BIT6mrLvX/VX+OcMxkHbZHWxQSJ48xg2KPJozQFYfkpuKKSApEVQH0eDL25kBnCmsWv1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C5ZiV9Eg; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aPlo/RCF";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="PGvYMnUR"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48I7tXE6031985;
-	Wed, 18 Sep 2024 10:12:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=
-	corp-2023-11-20; bh=xKaeWupqAON5rlZu+0qcD8al9zPkMIyAhL7e8GYe/Q4=; b=
-	aPlo/RCF82BblhoniyAqmJQSPpWzciWjH8vgUxHf3t/rH+VJGaOTplupQGEpyGMJ
-	gH8GwlaPCnT5PpJz6JPeRommm1O5QtgdpjYBPkIQx39xO4Ax8jdXx/HDM6sdNs8s
-	s6lX8TcEZqEvabl/SAD5JQIV+7ZU152R45CXR/WQ14KMid3w14Q4Fko64vmJcXh5
-	/zrM7DK3fO1HMHuSzYL2mrHpsmB4jIXT+B1DCx/fFaSQl/ACsZMx1QuASomSC3EI
-	xrSuz7q4r4xpnlslVdFbOuKZei8+xCwoP3Jo3M5fK+qiSOp5IsF0GwFKpYac9jHV
-	ntSDTVIKJpxOCeSqcTLiaA==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41n3nfrtm6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 18 Sep 2024 10:12:54 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 48I8jVX7014976;
-	Wed, 18 Sep 2024 10:12:53 GMT
-Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02lp2040.outbound.protection.outlook.com [104.47.57.40])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 41nyg4cabt-2
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 18 Sep 2024 10:12:53 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GWsjCYpzl1U+FPU9IoM2o5Cr0/aniMitwoL3L1Uy2I+F/8QzCUmLeUe67qUKUtdyFKRsOJPFlZxdKJePaD5mPRvLbhu9ZzKiFjGNl5kUZvUSvFxH+o1pm8Sb2mBD+w9exPC3aR+KwgivXMba0HZJYMJT4nncAgGHAArUfqwBaTBnOMXkO91a2ygW4ByyLOTYN4mJ+Qz41KcvtFj7DapfccPXMkbZlop8JfU9Kx7VpsUhbxHnI43Yty2eFB4Q37TtfI4aegIFV/ioLNnnHMOOJT3xPRi/h957XeH7A9fdENo/Celv/fhIsXjUXNAHyAVGtkoxoM0D/gn2+Ati8QArcA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xKaeWupqAON5rlZu+0qcD8al9zPkMIyAhL7e8GYe/Q4=;
- b=JHxUlgUgOEOubdV8GpdmcP/6NTtyDb58UCEdHiVA3jm2t9AAW31lYObOHo5Pfb+HE5BGoO+qfSp3eOzfdrTIO6QlNgUCglvicXM+lXu4UDpuMeQBQcoBBJTidq4Uda/92v4BWKmQL1/NMbyLbyUrOib+iZKcPYQdH7Ds/5JSld19H2zRgHGUZtSKsFCNM5iujfBCX/vSJnsDSZ7UE8fki9Jo6iPX6IlvXkNlVBj05mYDPmSOTk3QTXEFZoccGzfIpImxLOMF0DZnQiUD3wM4ltnahociFklFxFMS3gFOL4yR27DU51/5tbwSbThjWkFwar8MH9AF/rxYsJxKPBUV5w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xKaeWupqAON5rlZu+0qcD8al9zPkMIyAhL7e8GYe/Q4=;
- b=PGvYMnURTahxFR+d7nOBdWF9m3+Bm4a/PaTicHAewTCKGwPcuOxComIWnMgoxS8awO4Z+fIXedXTOmPLotC46gRU9fbk9EMvMT+w+fO+bwBpNXdogrDr+NEVr7/7E16hvaDjeQC1641yBVX4/mQn4IAmap6Npe9qke+3Z04+AG8=
-Received: from CH2PR10MB4312.namprd10.prod.outlook.com (2603:10b6:610:7b::9)
- by PH7PR10MB7107.namprd10.prod.outlook.com (2603:10b6:510:27a::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7982.15; Wed, 18 Sep
- 2024 10:12:50 +0000
-Received: from CH2PR10MB4312.namprd10.prod.outlook.com
- ([fe80::fd5e:682a:f1ac:d0a2]) by CH2PR10MB4312.namprd10.prod.outlook.com
- ([fe80::fd5e:682a:f1ac:d0a2%3]) with mapi id 15.20.8005.006; Wed, 18 Sep 2024
- 10:12:50 +0000
-Message-ID: <1394ceeb-ce8c-4d0f-aec8-ba93bf1afb90@oracle.com>
-Date: Wed, 18 Sep 2024 11:12:47 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
-        djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-        martin.petersen@oracle.com
-References: <20240813163638.3751939-1-john.g.garry@oracle.com>
- <87frqf2smy.fsf@gmail.com> <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
- <Ztom6uI0L4uEmDjT@dread.disaster.area>
- <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
- <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
- <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
- <ZufBMioqpwjSFul+@dread.disaster.area>
- <0e9dc6f8-df1b-48f3-a9e0-f5f5507d92c1@oracle.com>
- <ZuoCafOAVqSN6AIK@dread.disaster.area>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <ZuoCafOAVqSN6AIK@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P265CA0325.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:390::14) To CH2PR10MB4312.namprd10.prod.outlook.com
- (2603:10b6:610:7b::9)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C5ZiV9Eg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1726662109;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZnYfNYNvKzMtBisGm5i7LLVAYcterxx3NjCo+s4EHuc=;
+	b=C5ZiV9EgaW1CenOram2yGAw6UXTOpjNBQg21GiykmnrbIEXcXWLf7UxRgbwx5Q9eT0iLJv
+	4RWW0eZBhfnGMiJoCIKq+zyvhyEPXhVN/g1hGS9mVehSRuWXEuRVz5MFj6CPHEJmxCwGjr
+	wykzoA0e2vvDaOKoj+14Ct2u3IxhydY=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-435-DZQp13IBM2i8HE6Q3vERpw-1; Wed,
+ 18 Sep 2024 08:21:47 -0400
+X-MC-Unique: DZQp13IBM2i8HE6Q3vERpw-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B6E9C19773FC;
+	Wed, 18 Sep 2024 12:21:37 +0000 (UTC)
+Received: from bfoster (unknown [10.22.9.175])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 00A65195608A;
+	Wed, 18 Sep 2024 12:21:36 +0000 (UTC)
+Date: Wed, 18 Sep 2024 08:22:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/1] xfs: don't free cowblocks from under dirty pagecache
+ on unshare
+Message-ID: <ZurGE3Cn0LNZMVOn@bfoster>
+References: <20240903124713.23289-1-bfoster@redhat.com>
+ <20240906114051.120743-1-bfoster@redhat.com>
+ <20240917183142.GI182194@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR10MB4312:EE_|PH7PR10MB7107:EE_
-X-MS-Office365-Filtering-Correlation-Id: b81490b6-c0a7-4ddd-b271-08dcd7ca73c6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?QzJiOTV1cU1SSlNRRlVPNVQ4SDQyQ2hyUE5RMTZUcktMaTNiRFFtNE5zZ2Fs?=
- =?utf-8?B?OHFtVExqOFl4TmkyNE5OS2ZDaCtUWER2Y1lBbk4rSkVSam1yd2U5M0NBMTMv?=
- =?utf-8?B?NTkvTmIyWG5MeW9qM1pwVGtJUGtWdHU3eVR2c2NKbi9BZXd5TG96Y0pTRCtj?=
- =?utf-8?B?bCt2WUxybXBtNXJ4Z2RUb0tUUzZwQkR2R2ZmZjljUHN1d2RhaWRHM21UekN0?=
- =?utf-8?B?NDNLanZYR0t1TDNmRVB4Z2ZWdlFFbTliSzRPNkZLbjkyTG4yOGErTFRIQkVr?=
- =?utf-8?B?UndTRGZJNWdZWU4yZHVkdkh5eVZUUzJ4Snh5MTJhNVBoZFdReHJkcFZuK3Ir?=
- =?utf-8?B?TWJhcWFESXR5dmZYN0s5VWxpaHpZbDlQTVIzTjlVWmd6Sk1ZNHBCc2Rwdm40?=
- =?utf-8?B?WjducmRRN3JZTCt0ams3N3FVbUVTMk9CVHNVSWdaY3pCeUlTT0tFdGlCQ3Jn?=
- =?utf-8?B?aDlvR25Kd0RPRzU3bFI5aGd6Z0xBWUtTbDY0Rjg1Vld6cDdDWjJrTE1JUDcr?=
- =?utf-8?B?OFBiak5ZcThicFBDQ3FPLzMyc2lIMGgrUk4zcUw3c3Jmb05UaWRDd0c4aHVL?=
- =?utf-8?B?NjREVTZpUVhBNkN0R0J6NVJjTFhQY1VjMFlsSS9XNENMSDk0ZnV6SUsyeE5Q?=
- =?utf-8?B?M2VDOXVTQStnd05hME9XeVBncCsyRkFwODhtUk14UlZtK3FZWUZrc29kaWFG?=
- =?utf-8?B?T1lEa2NGZ3RZYnZLcFBOazNiN3ZOU1ZoaG1pakx6YitUSW1yZStVMzBvLzV0?=
- =?utf-8?B?QXNIOUt6NGRhQ1ZEb1hTUVJSZ1E1QXUvWmFHdlZLTlcxZEc3YWRpZndIQkJE?=
- =?utf-8?B?SDdOWFZEMXh1MVBRM3NNQTNnUkR3QVdhUDRUcEpBMlF4dHZIeG5IUHpkK3R4?=
- =?utf-8?B?ZWplQWowcnYrOVNrNytRM0dWd0dCL0tVaXgwcC9NY2FIWWFDdmZXSVpWdk5Q?=
- =?utf-8?B?WDB1SmlBdE51ZkQzZzAvaHVWdU10U0xYbmRQR2JQWVFqc2xrZDRKMWNBeDFV?=
- =?utf-8?B?VW0zUUJRZElERXp2dXR5RTF1dkYxUE4xOE5WaHVSbzhnTE1VMjlsSEEyMUpU?=
- =?utf-8?B?WmFzN21rQ21MQ1NMVitRVzJabXVnZWxSbU5CaGNoVm5Fek5XN3Q4bFh1QmUx?=
- =?utf-8?B?MkNTV0krbkhTeVhDeXRKSzVCeEM1UE9zSzdlVnhMcHhrNDFjOWIwc00vWVQz?=
- =?utf-8?B?VlNQVVI4dkR0cjEvVG9JUVlra25IUklTM0NhOWl3RUtNVFhMSm5TbElJeFdC?=
- =?utf-8?B?Rmk4ZkJ3WHdsU1JHYnBJN2hXQUtLY2xPMWlOZnRGdFRyZ3I0TUd3a1ZWcUVw?=
- =?utf-8?B?TlVOS1Z1aER4QkNRR2U5UFhvQjc5TUFuUHNMK2pYL0I3eGFRUWJRU0haeGVB?=
- =?utf-8?B?TXVLTHhMemhkZS9oSHA1WVBML1JORHNJR2d2YVN6Z3c3cTU3bUFrdUJsS2sx?=
- =?utf-8?B?Tk5qcHBwcXFOZWlFTUwydXNjRlZBSFFqa0tXZU5ZQ2xRYWxmVlZKMDUzN3JN?=
- =?utf-8?B?d08xbEg2Um91K3M4TTNYR3U1dHVRZFg1UllXMkZkMEZqNjFJdUMvZXJpRDhm?=
- =?utf-8?B?SFRNMUNRK3RMOGR1c1N5UmNLbzdvWEhGWmJNaFE1WkdqNExIZGpBWklTalNV?=
- =?utf-8?B?SnhaYU1FZlBmWUdmK1RFd1VKVjlHUHVGRFN1S2xIMFFBeWZGSDE4cDNLV0Z0?=
- =?utf-8?B?dXBvOHFZbDZlUklrWERxd2FhS1ZvZStkZHR3MWNPakVCYlEyMFVkT1BHV3N1?=
- =?utf-8?B?U1BDa25BSkJDUWt6dUZyM1prUVZCVUpDVmhlOXBtSnhqTi9ldHhLamtOZksr?=
- =?utf-8?B?WEJLU1JMQW0vTVpuYWxCZz09?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR10MB4312.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?LzZXMVFOMWsrQ09QdUJYVWFQQ0Y3MWwwZkJ5RmlsQWF1blh1NGV4bmkyM2hR?=
- =?utf-8?B?dHhzTExYUlRmRzRxL3lqV25oQ1p1OWFGeG9lVzloK0trUlNPRXZ5bkVnUlVJ?=
- =?utf-8?B?NzJWR0cwQlV0bWNXN2YwWVhrV3dvV2pDZU9sUGU5VG95VktUaDRpNSt0K2Y3?=
- =?utf-8?B?NERmV0JyeDNZRVNsTmx3eHhJN2VBYk9VTS9VTGZmOEVRYjNDQ1Rvam9naW1a?=
- =?utf-8?B?dlBsR3BHU1BGdC9DUnVJSkVRVkRrUjRvR29CZXd2RGcxMGNxUk0xSmlMWGZz?=
- =?utf-8?B?elRDYk9meXJnZnpvdE5zYWEwZnk2dVUyaGNIbEU1bG9DSG5WTTNtcmh6cW1C?=
- =?utf-8?B?YUJ6YVBlc2c1Q2FFS2RBMkpXc1lSOHlnTElaSW45MkNwcFhHMVM4Zk1OejFD?=
- =?utf-8?B?eFcrMEZ1UFFlMWxGRmpXR3FXN3FzZGEvamRtQjFoVC96dkVCYWV4Q3FhanBj?=
- =?utf-8?B?c2tSaGR1OStWbzFZclp3Ymo4eEEzZHlUOFBGdmNXeDkzVUQ0MXdHaHVNcnhL?=
- =?utf-8?B?UWwrVmYwSzhReU82NDFNS0s2OXJXa2RhRkVXWUR2U3MrVTFCQnF3OUMzbmZx?=
- =?utf-8?B?T2d5WTVDelFFallpU0JyaXVZTEg0ZURQMGxDVTB4V3kwMGdZVTQxTUMwWXcv?=
- =?utf-8?B?cFo5NW10OW04YmlRd2NUYmVIUmxWTkdaM1NwWjdjSHpKVVRoQ0FsckZCYTdh?=
- =?utf-8?B?OEcxR1dzYS93UDRqMi96N3BwUU1zOEcraFdEOGg0TTUvN2VJdmJnaU9kSWhn?=
- =?utf-8?B?blZTQ25yaTRpbWVoT3dZNUIwTFgzL3hVenFsQXFsMitJaWE3QkxKZ3lEVWVO?=
- =?utf-8?B?UUNtWklobzZZbmt4dXBqbzY2MHJxVE5vZzMxVUd3YURyb3V6YjJCL1lqUllx?=
- =?utf-8?B?MDJmYUxGTkVYM2J1Q0hONFg3VmhReVh0V0ZmUWZhSEJUVi9MWXNWdTFsanZH?=
- =?utf-8?B?TlExMS9uTFlTcjZFbWswbTF2cVdoMjRJU3JjK3hNYUZJbDBkRHQwYWpNNG85?=
- =?utf-8?B?M3d3ZXhSdjdDbHZnQ2VuQ21UaVdPNFZ3bUdzZ2ZqMHZWQUE2dHc0Uzk2UThi?=
- =?utf-8?B?MTF1YkpCcG9Ibi8zVnZUUGlLM3VkS1F5NGNHczRmV2s2NUxORndxMUFRelQy?=
- =?utf-8?B?ZjNpaUlIcTBhdWxSRGZPdkRJd3hzT1lxaTN1UkQyNllhOEZ0ak43TENWSm0r?=
- =?utf-8?B?UC91a1YzRXZScjZTd3EvUEVReEI2dXBLOFhwVklaVE9KcS9lZlBGRGxTLzFE?=
- =?utf-8?B?M29FRXBDY3hrRlMrMmkreldTK0JsQUw2aWVNbFU4dlIwd0VHb01CaTg0VFJ1?=
- =?utf-8?B?U1NWWHFGaytaYUlBN1N0V01TRTQ0WlJNRUxRYjFYZTBENGQ1ZWlSVWpjRG83?=
- =?utf-8?B?WmtiSzIwODdicnFPeUJ1amlWUHR3UTF1SDJEN0F4MGFLYmh6cExIS3ZLb3Qy?=
- =?utf-8?B?b085SndGSTJiODF6dUdUNUdIb2hsTk9Jb245MTdxc0huWXZxM1QxNjZoRmlG?=
- =?utf-8?B?NzEyNmx1UDQ5eXdDZEY1NUdFY1BJN0x0YXprNTQvU2txVHJNQTZWMHo5eURp?=
- =?utf-8?B?TGFzNUJBeE9KOG9oTDQyRHgvL09PQkQ5NWJYcFB4RWFUeWRURGdLeGR1SEd4?=
- =?utf-8?B?QXA3eHlORkhhUzZQZDFDeWxoTXhHRWl1QUdtTURrVzlOV0FacmI0QmxiVTJl?=
- =?utf-8?B?dktmbEl6dDZpZlB4eFByNmhTbXlZd3FxeHVIYjZwWmhXdWpYbjJKNDN6L1lj?=
- =?utf-8?B?UGYzSzhRYXJSbFJreVJlSStSZ3BqYXViUkFWY0szUzJKMitsMDUzRVU1ZXVG?=
- =?utf-8?B?VWlqSW1nVDU3NFJkTWZUaE1taXl5WHB5cjkzZWRiM3poNGkyeVZmQ01XSUNC?=
- =?utf-8?B?SzJDbjZzUmEyRDNUbi9NM3VhamZMSGZzcUdoUUovUnU2MXh4dFJwV3N3RFZC?=
- =?utf-8?B?K0dpMUZBQ2ZhNGRqMHRyYnNBRFlZNTBiL2libHJvbDNwVEljVHA4WUZCdktN?=
- =?utf-8?B?MzU0OUxlUWU4eXFYbUhYS0dDaXBpcVhKWFFrZWFIa2h3WGR2b216WUh6MWJp?=
- =?utf-8?B?YkdVWktnUHZaQ09ycEptYW12RTN0MWM5Z2lXcWI2SXlUQ0NkUk80eGJWblMx?=
- =?utf-8?Q?CwkHpLHmsE0KFtLVPY+4caDMv?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	2BTfO/3WCQWUZ3ppmZ0nC36rf0PBlZU2o5m3lgBoIar0lQnmlS9IgE9+ggPb5KrpYCpFQxMntirhCBviP6Fbpq5sIAKc+nlPewds9Zq0AKng7nRTXzVo2mSoG6QX0CTY3OhfO/iWiFzqaVFiQN/ZprwDwJiwKW4uYyGbZZ7arEmfDPNgDQGPWCDy5hUL+LXiWWi0+4P+B7qtkq/ms1qZKsjobR5PWAkARG1YuZlpaeBCdntJmSiHivC40p4WbF9uc0Y+Mv71v+yVeqm8EQBU92YO87OkdvUtEQ7DjupAx6p57gZZeB9Nv6O8oto+SMbA50aorgNwjUrNsGAzN0xEfpr5aDlzQfVsYLaJ+F7zHme+DJ0Nrb/Nv43Yl70xxXFmI6XAWrB0lB+mQ9Stry5/1nidQVduhXwyAbM4Fn6Bq3dQTLArxuNvuALBK+9A7PiZq6lQbWG9R5GW7ihvS6FsMcgM/t2nnPLvPGVWvU2kPtZhyWYJWI6MS8sgLUEdNBbeVjXoffRbBhl82KfFqz2C7R1thEBUoiiaG4j2Yu+AMsmIWBWH4UXCcX686ifLb86oG0TKDW9oHGsBctDKO9p1C0QyjAUfPcKWSs2Rc+mxR7Y=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b81490b6-c0a7-4ddd-b271-08dcd7ca73c6
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR10MB4312.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Sep 2024 10:12:50.7645
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5ZNJUR0PEEW14n3P22/CeYNw7LMEo5uyH73t7ONG162NNUyRal4rtgoUMoiFpgoGNc09t6JZ7DRDlA1J5L0tuA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB7107
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-18_07,2024-09-16_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 adultscore=0
- suspectscore=0 mlxlogscore=999 phishscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2408220000
- definitions=main-2409180060
-X-Proofpoint-GUID: kF6r0GyP0OgmRHMpieiy7rw2UC1QmHGe
-X-Proofpoint-ORIG-GUID: kF6r0GyP0OgmRHMpieiy7rw2UC1QmHGe
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240917183142.GI182194@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On 17/09/2024 23:27, Dave Chinner wrote:
->> # xfs_bmap -vvp  mnt/file
->> mnt/file:
->> EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->>    0: [0..15]:         384..399          0 (384..399)          16 010000
->>    1: [16..31]:        400..415          0 (400..415)          16 000000
->>    2: [32..127]:       416..511          0 (416..511)          96 010000
->>    3: [128..255]:      256..383          0 (256..383)         128 000000
->> FLAG Values:
->>     0010000 Unwritten preallocated extent
->>
->> Here we have unaligned extents wrt extsize.
->>
->> The sub-alloc unit zeroing would solve that - is that what you would still
->> advocate (to solve that issue)?
-> Yes, I thought that was already implemented for force-align with the
-> DIO code via the extsize zero-around changes in the iomap code. Why
-> isn't that zero-around code ensuring the correct extent layout here?
-
-I just have not included the extsize zero-around changes here. They were 
-just grouped with the atomic writes support, as they were added 
-specifically for the atomic writes support. Indeed - to me at least - it 
-is strange that the DIO code changes are required for XFS forcealign 
-implementation. And, even if we use extsize zero-around changes for DIO 
-path, what about buffered IO?
-
-BTW, I still have concern with this extsize zero-around change which I 
-was making:
-
-xfs_iomap_write_unwritten()
-{
-	unsigned int rounding;
-
-	/* when converting anything unwritten, we must be spanning an 	alloc 
-unit, so round up/down */
-	if (rounding > 1) {
-		offset_fsb = rounddown(rounding);
-		count_fsb = roundup(rounding);
-	}
-
-	...
-	do {
-		xfs_bmapi_write();
-		...
-		xfs_trans_commit();
-	} while ();
-}
-
-As mentioned elsewhere, it's a bit of a bodge (to do this rounding).
-
+On Tue, Sep 17, 2024 at 11:31:42AM -0700, Darrick J. Wong wrote:
+> On Fri, Sep 06, 2024 at 07:40:51AM -0400, Brian Foster wrote:
+> > fallocate unshare mode explicitly breaks extent sharing. When a
+> > command completes, it checks the data fork for any remaining shared
+> > extents to determine whether the reflink inode flag and COW fork
+> > preallocation can be removed. This logic doesn't consider in-core
+> > pagecache and I/O state, however, which means we can unsafely remove
+> > COW fork blocks that are still needed under certain conditions.
+> > 
+> > For example, consider the following command sequence:
+> > 
+> > xfs_io -fc "pwrite 0 1k" -c "reflink <file> 0 256k 1k" \
+> > 	-c "pwrite 0 32k" -c "funshare 0 1k" <file>
+> > 
+> > This allocates a data block at offset 0, shares it, and then
+> > overwrites it with a larger buffered write. The overwrite triggers
+> > COW fork preallocation, 32 blocks by default, which maps the entire
+> > 32k write to delalloc in the COW fork. All but the shared block at
+> > offset 0 remains hole mapped in the data fork. The unshare command
+> > redirties and flushes the folio at offset 0, removing the only
+> > shared extent from the inode. Since the inode no longer maps shared
+> > extents, unshare purges the COW fork before the remaining 28k may
+> > have written back.
+> > 
+> > This leaves dirty pagecache backed by holes, which writeback quietly
+> > skips, thus leaving clean, non-zeroed pagecache over holes in the
+> > file. To verify, fiemap shows holes in the first 32k of the file and
+> > reads return different data across a remount:
+> > 
+> > $ xfs_io -c "fiemap -v" <file>
+> > <file>:
+> >  EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
+> >    ...
+> >    1: [8..511]:        hole               504
+> >    ...
+> > $ xfs_io -c "pread -v 4k 8" <file>
+> > 00001000:  cd cd cd cd cd cd cd cd  ........
+> > $ umount <mnt>; mount <dev> <mnt>
+> > $ xfs_io -c "pread -v 4k 8" <file>
+> > 00001000:  00 00 00 00 00 00 00 00  ........
+> > 
+> > To avoid this problem, make unshare follow the same rules used for
+> > background cowblock scanning and never purge the COW fork for inodes
+> > with dirty pagecache or in-flight I/O.
+> > 
+> > Fixes: 46afb0628b ("xfs: only flush the unshared range in xfs_reflink_unshare")
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > 
->>> FWIW, I also understand things are different if we are doing 128kB
->>> atomic writes on 16kB force aligned files. However, in this
->>> situation we are treating the 128kB atomic IO as eight individual
->>> 16kB atomic IOs that are physically contiguous.
->> Yes, if 16kB force aligned, userspace can only issue 16KB atomic writes.
-> Right, but the eventual goal (given the statx parameters) is to be
-> able to do 8x16kB sequential atomic writes as a single 128kB IO, yes?
-
-No, if atomic write unit max is 16KB, then userspace can only issue a 
-single 16KB atomic write.
-
-However, some things to consider:
-a. the block layer may merge those 16KB atomic writes
-b. userspace may also merge 16KB atomic writes and issue a larger atomic 
-write (if atomic write unit max is > 16KB)
-
-I had been wondering if there is any value in a lib for helping with b.
-
+> Question: Does xfs_repair report orphaned cow staging blocks after this?
+> There's a longstanding bug that I've seen in the long soak xfs/286 VM
+> where we slowly leak cow fork blocks (~80 per ~1 billion fsxops over 7
+> days).
 > 
->>>>> Again, this is different to the traditional RT file behaviour - it
->>>>> can use unwritten extents for sub-alloc-unit alignment unmaps
->>>>> because the RT device can align file offset to any physical offset,
->>>>> and issue unaligned sector sized IO without any restrictions. Forced
->>>>> alignment does not have this freedom, and when we extend forced
->>>>> alignment to RT files, it will not have the freedom to use
->>>>> unwritten extents for sub-alloc-unit unmapping, either.
->>>>>
->>>> So how do you think that we should actually implement
->>>> xfs_itruncate_extents_flags() properly for forcealign? Would it simply be
->>>> like:
->>>>
->>>> --- a/fs/xfs/xfs_inode.c
->>>> +++ b/fs/xfs/xfs_inode.c
->>>> @@ -1050,7 +1050,7 @@ xfs_itruncate_extents_flags(
->>>>                   WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
->>>>                   return 0;
->>>>           }
->>>> +	if (xfs_inode_has_forcealign(ip))
->>>> +	       first_unmap_block = xfs_inode_roundup_alloc_unit(ip,
->>>> first_unmap_block);
->>>>           error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
->>> Yes, it would be something like that, except it would have to be
->>> done before first_unmap_block is verified.
->>>
->> ok, and are you still of the opinion that this does not apply to rtvol?
-> The rtvol is*not* force-aligned. It -may- have some aligned
-> allocation requirements that are similar (i.e. sb_rextsize > 1 fsb)
-> but it does*not* force-align extents, written or unwritten.
+
+I've not seen that, at least in the test case I have. I think what's
+happening here is more that we clean up the COW fork correctly from an
+accounting standpoint, but we do so prematurely because the pagecache is
+dirty in ranges that are still only backed by COW fork blocks.
+
+> Anyhow this looks correct on its own so
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > 
-> The moment we add force-align support to RT files (as is the plan),
-> then the force-aligned inodes on the rtvol will need to behave as
-> force aligned inodes, not "rtvol" inodes.
 
-ok, fine
+Thanks!
 
-Thanks,
-John
+Brian
 
+> --D
+> 
+> > ---
+> > 
+> > Here's another COW issue I came across via some unshare testing. A quick
+> > hack to enable unshare in fsx uncovered it. I'll follow up with a proper
+> > patch for that.
+> > 
+> > I'm sending this as a 2/1 here just to reflect patch order in my local
+> > tree. Also note that I haven't explicitly tested the fixes commit, but a
+> > quick test to switch back to the old full flush behavior on latest
+> > master also makes the problem go away, so I suspect that's where the
+> > regression was introduced.
+> > 
+> > Brian
+> > 
+> >  fs/xfs/xfs_icache.c  |  8 +-------
+> >  fs/xfs/xfs_reflink.c |  3 +++
+> >  fs/xfs/xfs_reflink.h | 19 +++++++++++++++++++
+> >  3 files changed, 23 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index 900a6277d931..a1b34e6ccfe2 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -1278,13 +1278,7 @@ xfs_prep_free_cowblocks(
+> >  	 */
+> >  	if (!sync && inode_is_open_for_write(VFS_I(ip)))
+> >  		return false;
+> > -	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
+> > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+> > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+> > -	    atomic_read(&VFS_I(ip)->i_dio_count))
+> > -		return false;
+> > -
+> > -	return true;
+> > +	return xfs_can_free_cowblocks(ip);
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 6fde6ec8092f..5bf6682e701b 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -1595,6 +1595,9 @@ xfs_reflink_clear_inode_flag(
+> >  
+> >  	ASSERT(xfs_is_reflink_inode(ip));
+> >  
+> > +	if (!xfs_can_free_cowblocks(ip))
+> > +		return 0;
+> > +
+> >  	error = xfs_reflink_inode_has_shared_extents(*tpp, ip, &needs_flag);
+> >  	if (error || needs_flag)
+> >  		return error;
+> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> > index fb55e4ce49fa..4a58e4533671 100644
+> > --- a/fs/xfs/xfs_reflink.h
+> > +++ b/fs/xfs/xfs_reflink.h
+> > @@ -6,6 +6,25 @@
+> >  #ifndef __XFS_REFLINK_H
+> >  #define __XFS_REFLINK_H 1
+> >  
+> > +/*
+> > + * Check whether it is safe to free COW fork blocks from an inode. It is unsafe
+> > + * to do so when an inode has dirty cache or I/O in-flight, even if no shared
+> > + * extents exist in the data fork, because outstanding I/O may target blocks
+> > + * that were speculatively allocated to the COW fork.
+> > + */
+> > +static inline bool
+> > +xfs_can_free_cowblocks(struct xfs_inode *ip)
+> > +{
+> > +	struct inode *inode = VFS_I(ip);
+> > +
+> > +	if ((inode->i_state & I_DIRTY_PAGES) ||
+> > +	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
+> > +	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+> > +	    atomic_read(&inode->i_dio_count))
+> > +		return false;
+> > +	return true;
+> > +}
+> > +
+> >  extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+> >  		struct xfs_bmbt_irec *irec, bool *shared);
+> >  int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+> > -- 
+> > 2.45.0
+> > 
+> > 
+> 
 
