@@ -1,75 +1,92 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D85313A3EC;
-	Wed, 18 Sep 2024 05:15:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 806762582
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 05:31:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726636529; cv=none; b=COinpf9IY/koBZcS8/mWcUeL1HDL/DPqheXesavkkBxY+jCZMO7E1woa8DgBXzdS2AMfOqx9RuI/6C1NyVBHpGAOmRQTdKn9egbbi9wsavqGl0qP3YcrC103YGxc4loNRZ4MlH+0YIGaVYU0b61Zkl5duL1NGCjGDq9FZf3/BHo=
+	t=1726637487; cv=none; b=m0ZNHS+hyDf7wVlMrc85zd3Qq80KlKlUTL/md+AA712XFaVmH7iJZ4vfzLWERhnDgIk0gATT6fuLBY/Dgml4Ko5tEpcf462o4Z/ao1NKrCUjziyitUaGADPJSTCIV2rQqQmnH6LZvl5RTSv+P8cS+wrS2ELwvnI/48SXVU0LR9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726636529; c=relaxed/simple;
-	bh=CwxHztH+gWBZMyLxch/dTrF/ZYXcuboyr07EfNJR1ro=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OOiQ4aVjvZg1aVA4UY83U9dVuH5Puy3UYK5gYjIYuXHxJ7D3Pm/w47WtiThMcibgVdda7FNrmyivPIB5fd0DJeivoJYW24M6LEENMgBebl08g3dGNuKfYFr3BuPwp/poS2Y2gRpz1hAfGh/AlywJhYgMLS6Cm4S9u0oUAud3lfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+	s=arc-20240116; t=1726637487; c=relaxed/simple;
+	bh=UCvjJdSb7P9eRBJsorfNp1lAWXDAA8MIGHCGpYV1Y+Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UvofaT9jk3d45fMN+dN3uy/L74RezgRYhPJjK+ofcvTViS5d7o2CuREOtuv9GIGVGL8gk59P829CAirCAEABHw8+i5LWLV5BgMKU67jlLF6rmY5LHDPXj9hkrHUr7cEJSYUM4cAnP42yN8wEKXlRf1YN+VxDIpd/l1hd8uUMeJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=34zCvj9W; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 64C66227AB6; Wed, 18 Sep 2024 07:15:23 +0200 (CEST)
-Date: Wed, 18 Sep 2024 07:15:23 +0200
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="34zCvj9W"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=LXJj/k6oR04FBOjuxkWz0S80FgfMAZayEJqDvvzCV7M=; b=34zCvj9Ww8ze+OQyYyDjhzmh4n
+	0YCCKf9kdIGCz1PSgdBU5jKtut2T8OMsOvpET85CBdxxV6hSIUxtro/LtPYjSXgfVoy6eu48o1TK0
+	H1hQ//0DepYJQuyhXvLtOvSUyo9lm75hoxxTk4rEU6CLNtF/U59Lii6Xbly9Y8ZdizUFGFqgfj66r
+	d5+7tIAMSRoRSM6m3X1gofsEtCiOX25KmH2FVxTeIccPy0OlITLZLnY8rfLpx/EpT/zrjjfe0iSmn
+	jQYB8TgXy+Jn7iV2O/45u7R+RqmiEqwrn+lYTph2SLQwYJHkroUk8V27ASmR1aCEVg95IPuNO3LPG
+	SbZML2dA==;
+Received: from [62.218.44.93] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1sqnHg-00000007TkB-0oCY;
+	Wed, 18 Sep 2024 05:31:24 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 08/12] iomap: zeroing already holds invalidate_lock
-Message-ID: <20240918051523.GC31238@lst.de>
-References: <20240910043949.3481298-1-hch@lst.de> <20240910043949.3481298-9-hch@lst.de> <20240917212935.GE182177@frogsfrogsfrogs>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: fix a DEBUG-only assert failure in xfs/538 v5
+Date: Wed, 18 Sep 2024 07:30:02 +0200
+Message-ID: <20240918053117.774001-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240917212935.GE182177@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Sep 17, 2024 at 02:29:35PM -0700, Darrick J. Wong wrote:
-> On Tue, Sep 10, 2024 at 07:39:10AM +0300, Christoph Hellwig wrote:
-> > All callers of iomap_zero_range already hold invalidate_lock, so we can't
-> > take it again in iomap_file_buffered_write_punch_delalloc.
-> > 
-> > Use the passed in flags argument to detect if we're called from a zeroing
-> > operation and don't take the lock again in this case.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/iomap/buffered-io.c | 10 ++++++++--
-> >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 52f285ae4bddcb..3d7e69a542518a 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -1188,8 +1188,13 @@ static void iomap_write_delalloc_release(struct inode *inode, loff_t start_byte,
-> >  	 * folios and dirtying them via ->page_mkwrite whilst we walk the
-> >  	 * cache and perform delalloc extent removal. Failing to do this can
-> >  	 * leave dirty pages with no space reservation in the cache.
-> > +	 *
-> > +	 * For zeroing operations the callers already hold invalidate_lock.
-> >  	 */
-> > -	filemap_invalidate_lock(inode->i_mapping);
-> > +	if (flags & IOMAP_ZERO)
-> > +		rwsem_assert_held_write(&inode->i_mapping->invalidate_lock);
-> 
-> Does the other iomap_zero_range user (gfs2) take the invalidate lock?
-> AFAICT it doesn't.  Shouldn't we annotate iomap_zero_range to say that
-> callers have to hold i_rwsem and the invalidate_lock?
+Hi all,
 
-gfs2 does not hold invalidate_lock over iomap_zero_range.  But
-it also does not use iomap_file_buffered_write_punch_delalloc at
-all, which is what requires the lock (and asserts that it is held).
+when testing with very small rtgroups I've seen relatively frequent
+failures in xfs/538 where an assert about the da block type triggers
+that should be entirely impossible to trigger by the expected code
+flow.
 
+It turns out for this two things had to come together:  a bug in the
+attr code to uses ENOSPC to signal a condition that is not related
+to run out free blocks, but which can also be triggered when we
+actually run out of free blocks, and a debug in the DEBUG only
+xfs_bmap_exact_minlen_extent_alloc allocator trigger only by the
+specific error injection used in this and a few other tests.
+
+This series tries to fix both issues and clean up the surrounding
+code a bit to make it more obvious.
+
+Changes since v4:
+ - pack struct xfs_alloc_arg more tightly
+
+Changes since v3:
+ - fix compile for !DEBUG again by making sure the minlen error
+   injection code is always compiled and then eliminated by the
+   compiler
+
+Changes since v2:
+ - add back a missing -ENOSPC return from xfs_attr_node_try_addname
+ - add another patch to fix potential -ENOSPC confusing from
+   xfs_attr_node_try_addname
+
+Changes since v1:
+ - fix build for !DEBUG builds
+ - improve a comment
+ - fix a comment typo
+
+Diffstat;
+ xfs_alloc.c     |    7 --
+ xfs_alloc.h     |    2 
+ xfs_attr.c      |  190 +++++++++++++++++++++++---------------------------------
+ xfs_attr_leaf.c |   40 ++++++-----
+ xfs_attr_leaf.h |    2 
+ xfs_bmap.c      |  140 ++++++++++++-----------------------------
+ xfs_da_btree.c  |    5 -
+ 7 files changed, 153 insertions(+), 233 deletions(-)
