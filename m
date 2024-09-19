@@ -1,115 +1,71 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C08492F28;
-	Thu, 19 Sep 2024 23:41:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A145917C8B
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2024 23:53:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726789308; cv=none; b=kW66ksIpjOpUxf9vq1GBYQVtASHB2NHhnjuFFybfGJI5xc+j7h7M+bSicXsYKd2X51oKyUXSPFGSHoVzHCPHzJeu1/g1VRmNCnnyBXZP/gRr9doMP9vSlUNm3U4Jd+DcCO8zA90vYD6pkTebA4TyGrLDRLSEj7gaOC4UG5DYAL8=
+	t=1726789980; cv=none; b=GfUjkhIuxLjic8uF2yjUzr1X1OyYVPGgVmBG3Oe/O+bMgLmy9E8O9N2sQagWxHLHtVmkdG4biVJqOrA+CfcMAGmq3g3uzyTLPggSArGoK9y3NKditWd7IO7EOmkzCQUMmJY4mKA6Oh6POJzO6AEyQH0n7o5ER5auDRo3+MQcJac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726789308; c=relaxed/simple;
-	bh=vz/QIZDB47L93JWTsoRjr27Dol6C67qi2DrzrtiaLPw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dCUxCaiwPOGbXYtcpScEl/4iEt765hAQn6Mz7Z3NLkecwCpsD20KbG1akbs5/ZTxzfMa29c1or3qSkOcdi9e2Lr4/0Eqf1ElmtJBMFlXCNygij5OjjfeyWhVu9AU+fUsFdqAtCiYwqVz9E7U4mVr60SR9NXt0w3k18SGsy7diN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BjEPNxsU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1726789980; c=relaxed/simple;
+	bh=hKcWRKlNrNO1yuILd5NcqnP78XgBHhE6oPFgOGMC4dg=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=CEm8hq5ZfYAETDEyOoYPH3Cp5QD3m4zW8NT/IHKaz3UDfez+gt1jIqro2dITK2+kjBbOwkUfI57xxXaA+AMtPyhytJFdYqXThyNSPXUHYdY+riirpVPqQkPd8/DzVnom1Hlb+BUZ6IqDWV8ivDaKW7J4DpZD8oXkAS2kZBfxmHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mo8C0VZH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BjEPNxsU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 399D2C4CEC5;
-	Thu, 19 Sep 2024 23:41:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mo8C0VZH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 123E6C4CEC4;
+	Thu, 19 Sep 2024 23:53:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726789308;
-	bh=vz/QIZDB47L93JWTsoRjr27Dol6C67qi2DrzrtiaLPw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BjEPNxsU2EAHVeelpw9uycRMHeln01mG9DBbcO7HUYJVYDsHHZjh83g8LZMrwBd93
-	 bH+4FhJ4HFvRA2sKid7WgTQydB4t4y6JCxE+NM6BQcImT1/3x4ZJpHDQFuyJ15Q6tB
-	 xAuvrIXgNYn5Ur3aawTuu3quwbduJgGzY+dFMwcAP1eri9+zqYxeUSe7Db3/ByrXjS
-	 eeogUXERW2ouBk5o7dRINrJISxdhZBCbTDckbLIW1ha2owy8IuTpfy7edJwtVpJHdH
-	 qM1AfpMNbRxF43f9j27z2n9cZUNfLgr8rZk4O5YeML4r702pPdCdu7sns/467N30gH
-	 ZkqZIevq/r86g==
-Date: Thu, 19 Sep 2024 16:41:46 -0700
+	s=k20201202; t=1726789980;
+	bh=hKcWRKlNrNO1yuILd5NcqnP78XgBHhE6oPFgOGMC4dg=;
+	h=Date:Subject:From:To:Cc:From;
+	b=mo8C0VZHZj9MvAqGjgfaRkejZV3ZdgR0J37R2PGu3bYSMfrHaRUcWbm0dfBUPwSc9
+	 qdNwbDVh8uN6nt3V89IscvFputtzZW3FY10SIbInohv8yyjUdl5q6Bk6ztB7G9/pAp
+	 t6R3lRI/UV0mgtms855WFFXLK9QwFATzHiJn0Jeydta8HOmtEGBxX/4ucRMKI7aEpd
+	 c8e/PgbO0UimJO/BdNQ15WKsobGpij9kWDOmkurizxiR7wbMDkO2T4vl8fMym4oQ8R
+	 fUkGMNxrrG8boC5H+R6G5hKkFiF9iz+ieqdubJ5v0kTw3YEFoGzqaT1hl7HQs8+7eC
+	 ePbqtxKZN6AFw==
+Date: Thu, 19 Sep 2024 16:52:59 -0700
+Subject: [PATCHSET] xfsprogs: do not depend on deprecated libattr
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>, x86@kernel.org
-Subject: Re: Are jump labels broken on 6.11-rc1?
-Message-ID: <20240919234146.GH182177@frogsfrogsfrogs>
-References: <20240806094413.GS37996@noisy.programming.kicks-ass.net>
- <20240806103808.GT37996@noisy.programming.kicks-ass.net>
- <875xsc4ehr.ffs@tglx>
- <20240807143407.GC31338@noisy.programming.kicks-ass.net>
- <87wmks2xhi.ffs@tglx>
- <20240807150503.GF6051@frogsfrogsfrogs>
- <20240827033506.GH865349@frogsfrogsfrogs>
- <20240905081241.GM4723@noisy.programming.kicks-ass.net>
- <20240905091605.GE4928@noisy.programming.kicks-ass.net>
- <20240916160801.GA182194@frogsfrogsfrogs>
+To: djwong@kernel.org, cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <172678988199.4013721.16925840378603009022.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240916160801.GA182194@frogsfrogsfrogs>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Mon, Sep 16, 2024 at 09:08:01AM -0700, Darrick J. Wong wrote:
-> On Thu, Sep 05, 2024 at 11:16:05AM +0200, Peter Zijlstra wrote:
-> > On Thu, Sep 05, 2024 at 10:12:41AM +0200, Peter Zijlstra wrote:
-> > > On Mon, Aug 26, 2024 at 08:35:06PM -0700, Darrick J. Wong wrote:
-> > 
-> > > > [33965.988873] ------------[ cut here ]------------
-> > > > [33966.013870] WARNING: CPU: 1 PID: 8992 at kernel/jump_label.c:295 __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
-> > 
-> > > > [33966.040184] pc : __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
-> > > > [33966.042845] lr : __static_key_slow_dec_cpuslocked.part.0+0x48/0xc0
-> > 
-> > > > [33966.072840] Call trace:
-> > > > [33966.073838]  __static_key_slow_dec_cpuslocked.part.0+0xb0/0xc0
-> > > > [33966.076105]  static_key_slow_dec+0x48/0x88
-> > 
-> > > > This corresponds to the:
-> > > > 
-> > > > 	WARN_ON_ONCE(!static_key_slow_try_dec(key));
-> > > 
-> > > But but but,... my patch killed that function. So are you sure it is
-> > > applied ?!
-> > > 
-> > > Because this sounds like exactly that issue again.
-> > > 
-> > > Anyway, it appears I had totally forgotten about this issue again due to
-> > > holidays, sorry. Let me stare hard at Thomas' patch and make a 'pretty'
-> > > one that does boot.
-> > 
-> > I've taken tglx's version with a small change (added comment) and boot
-> > tested it and queued it here:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/peterz/queue.git locking/urgent
-> > 
-> > Could you please double check on both x86_64 and arm64?
-> 
-> Will send this out on the test farm tonight, thanks for the patch.
-> 
-> > If green by with the build robots and your own testing I'll push this
-> > into tip/locking/urgent to be sent to Linus on Sunday. Hopefully finally
-> > resolving this issue.
-> 
-> Sorry I didn't get to this earlier; I've been on vacation since the end
-> of August.  Now to get to the ~1300 fsdevel emails... ;)
+Hi all,
 
-After 3.5 days of continuous pounding on the jump labels I haven't seen
-any complaints from the kernel, so consider commit 6b01e5a8c11611
-("jump_label: Fix static_key_slow_dec() yet again")
+Remove xfsprogs dependence on libattr for certain attr_list_by_handle support
+macros because libattr is deprecated.  The code in that library came from XFS
+originally anyway, so we can do a special one-off for ourselves.
 
-Tested-by: Darrick J. Wong <djwong@kernel.org>
-
-Thanks for your help!
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
+---
+Commits in this patchset:
+ * misc: clean up code around attr_list_by_handle calls
+ * libfrog: emulate deprecated attrlist functionality in libattr
+---
+ configure.ac          |    2 --
+ debian/control        |    2 +-
+ include/builddefs.in  |    1 -
+ libfrog/Makefile      |    8 ++-----
+ libfrog/fakelibattr.h |   36 ++++++++++++++++++++++++++++++
+ libfrog/fsprops.c     |   22 ++++++++++--------
+ m4/package_attr.m4    |   25 ---------------------
+ scrub/Makefile        |    4 ---
+ scrub/phase5.c        |   59 +++++++++++++++++++++++++++----------------------
+ 9 files changed, 85 insertions(+), 74 deletions(-)
+ create mode 100644 libfrog/fakelibattr.h
+ delete mode 100644 m4/package_attr.m4
 
-> --D
-> 
