@@ -1,37 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98CF61CB324
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 21:00:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 469EC2594
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2024 01:09:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726693211; cv=none; b=VNYFvOudRdenMdccwzhMEFxnVzcKCamio4qqmLiFGCzojkrZvaCjGQXSAY7s2c+GtNIN9cLSkcwR3eHAVTnEf94ZoNUq1DKweGuJmTDRumJWckGfaLFaN9K0l5gzZl+sJQ5Re+7h7K+F5/yHZGUsdXsbNG28f5zbGZ2hIQW58X0=
+	t=1726708187; cv=none; b=SR1DRvhZ8sOqpHfBY945+Jam+juYue+r7togeuINSjaiVLOb6MWdlEET57n4OE/G+HiPrvB1LmJFiuyspb6dXEtu5+76/nEvtW/ICmsj1zfRHJLV6xJBtHif0S0UcuDMr7UQ9m2nhlXTXgv4bKIg0e7W7ytaTEcZKa7B/N6mR80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726693211; c=relaxed/simple;
-	bh=RPmfzUqY32USML4gwB+/dtUIyNKokPHbkR+LsN2VPfQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=uxB1n1J4vRIWH8OeOJv+d9VTsIOxnm5+Q8uuT+aN2ozGuzSRDazutSeT/9d86lUqMM4XU5I885EputbWwQTKhUSlx7SHcWVdy18hMKSS3r7Z4lZnYonkUZGQgpwEZyvZ4zrM63B4jH0hrs+RlutrvbJMQ4uY8fThq0b1y7shJZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uI/lSzuy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1726708187; c=relaxed/simple;
+	bh=OTIv3FYiCIKI4C9BBf7c3x9fNMkPVEVXbvX5VB10dNc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f227fna5jWbXaMxh9Dz0FAe3YMMGmVBqckRe2zZHvTlQeqdAP434CuWa7oRbD1niLV8KPZ1Kpd2yc9ci6zUhdgpoinaLWxXEPQH8gAQBJzLgbdn/QrK17zbQQqbseLbs8yoiJIFCqrrsMjal3WSBcrIMAB1s3yRtpMHERZZqLww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=1+uIFkOP; arc=none smtp.client-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uI/lSzuy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06F47C4CEC2;
-	Wed, 18 Sep 2024 21:00:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726693211;
-	bh=RPmfzUqY32USML4gwB+/dtUIyNKokPHbkR+LsN2VPfQ=;
-	h=Date:From:To:Cc:Subject:From;
-	b=uI/lSzuyltkj3UKf8bi0jtAe7j6o1Im49W42zGXcBM2mXZx+r0C43LCuheNvYldsc
-	 Dq/4pE06ZC4jaanHQXr8h0NCjRm+8u8+ql5Q6QMCtrordyRl/OJyBUyVlxZaid5tPE
-	 LDv3+XtH8KoGI4+qsJIiIUe48b5kB/3sh+yuQHjkmxVWyshrhgjGgG5jOOcpEatCix
-	 txZ7hSvdxi63Rl+rC0IXX/RgNqBFzxzt3ahCsphNa+UfkEdUxL43FAyt5+VSRDTbpW
-	 YaVIUDEAG9sUAcGPBUR0d1XgK/OQFEk0cx+yIQf6t3NqoMhJz/sj7OPVGLZgIWiV8j
-	 BZqpJDYCaUljw==
-Date: Wed, 18 Sep 2024 14:00:10 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] libfrog: emulate deprecated attrlist functionality in libattr
-Message-ID: <20240918210010.GP182194@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1+uIFkOP"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-7db299608e7so170451a12.1
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2024 18:09:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726708184; x=1727312984; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=1Nay4qHIlTHvHCivOqitUXDgZRhfldRmAw4zYGRzdmE=;
+        b=1+uIFkOPh6KENfCoMZ5U4Ja/2WTWXdvok+ae/LbQx7GsIFDt7jNqZJwLizvTAt/7Ie
+         VhHhyWChhi2CDCJYJtwmX6ZO4z0ucHisnPbj9eDwnr2DOOVDrc+EzlOULi7GgiSbGEQu
+         GUWGAaxqod4owmbJ5B5vVhmjWoJEzjNJvafJq2ux5Cg/OdszprtVhDm4QicQbQodw0uc
+         drpcBZ3v2whhUgrYBzVG7+vYbmtB5tQAOP5fZ1FUKZecRRihXA97YVWwRATFlZGMWEeT
+         Y9Xjq71BiChax6uyt8TUf2BTTZLaQmpJOIWm1vXyTzY/juQSSyrl/JA7Wfg+vkGQSDO1
+         aRLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726708184; x=1727312984;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1Nay4qHIlTHvHCivOqitUXDgZRhfldRmAw4zYGRzdmE=;
+        b=SoUbNpE8cUaacJdRb80Qb44x3dBxIFsooanaCzPwbtALZmRTCt/Mh8+u6T4Mek41Mz
+         2H0kbEg5iN8LmhGhWV/NcJiZm6Nd4x0IGw09ygTxRlDkp2yo+P2+rVWd06AXnOb3S6eq
+         lVLeTsommLidW50Fs4XwOUysaw9c4RSp+DN/pXf2IT6Vf2TaZVjTp8EDCp8Aatu21/fP
+         FKLb8GSKOCspiJ5vCD8sCWF4TbONwuP42fYHNIhHXUSJtROQ+nyJoj3S6kPVTPXz+H6z
+         6WAV+ZJuF24wgyYsgoxYYbXav0k8q2DMHysakXdpB3kIUC4FI6StLQGeY1kcQVz5Hlj/
+         gdtg==
+X-Forwarded-Encrypted: i=1; AJvYcCWVLOrsV+9U7uNaTtdAkj3QbiPG+zNHFu1cq9QeH0vvyrnUN8jtiNRnlexixL1iMq7i1vrvWdepVC8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YznxiV83Zk28nGSq8A+qqk/Lpuz6ZoGYNdaU+iuoLnUS/TsPpUT
+	678jhb5fYzGWQdaNHmgTeXPA9nyj5gtOWlx9m+ii5cVW9ck/TOXTLGvK8sm9ZLQ=
+X-Google-Smtp-Source: AGHT+IGSG5yV4WYTD3jKrpAA1YdO9HrP5nHKxT/ZVsTj8zhh2TKzKu2DW4NxE8tW7De0UOym/nmDog==
+X-Received: by 2002:a17:90a:c784:b0:2c8:e888:26a2 with SMTP id 98e67ed59e1d1-2dbb9df174dmr24745674a91.13.1726708184360;
+        Wed, 18 Sep 2024 18:09:44 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dd6eecf0a0sm374988a91.31.2024.09.18.18.09.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Sep 2024 18:09:43 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sr5fw-00720Z-18;
+	Thu, 19 Sep 2024 11:09:40 +1000
+Date: Thu, 19 Sep 2024 11:09:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: create perag structures as soon as possible
+ during log recovery
+Message-ID: <Zut51Ftv/46Oj386@dread.disaster.area>
+References: <20240910042855.3480387-1-hch@lst.de>
+ <20240910042855.3480387-4-hch@lst.de>
+ <ZueJusTG7CJ4jcp5@dread.disaster.area>
+ <20240918061105.GA31947@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,323 +75,207 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20240918061105.GA31947@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Sep 18, 2024 at 08:11:05AM +0200, Christoph Hellwig wrote:
+> On Mon, Sep 16, 2024 at 11:28:26AM +1000, Dave Chinner wrote:
+> > I'm missing something - the intents aren't processed until the log
+> > has been recovered - queuing an intent to be processed does
+> > not require the per-ag to be present. We don't take per-ag
+> > references until we are recovering the intent. i.e. we've completed
+> > journal recovery and haven't found the corresponding EFD.
+> > 
+> > That leaves the EFI in the log->r_dfops, and we then run
+> > ->recover_work in the second phase of recovery. It is
+> > xfs_extent_free_recover_work() that creates the
+> > new transaction and runs the EFI processing that requires the
+> > perag references, isn't it?
+> > 
+> > IOWs, I don't see where the initial EFI/EFD recovery during the
+> > checkpoint processing requires the newly created perags to be
+> > present in memory for processing incomplete EFIs before the journal
+> > recovery phase has completed.
+> 
+> So my new test actually blows up before creating intents:
+> 
+> [   81.695529] XFS (nvme1n1): Mounting V5 Filesystem 07057234-4bec-4f17-97c5-420c71c83292
+> [   81.704541] XFS (nvme1n1): Starting recovery (logdev: internal)
+> [   81.707260] XFS (nvme1n1): xfs_buf_map_verify: daddr 0x40003 out of range, EOFS 0x40000
+> [   81.707974] ------------[ cut here ]------------
+> [   81.708376] WARNING: CPU: 1 PID: 5004 at fs/xfs/xfs_buf.c:553 xfs_buf_get_map+0x8b4/0xb70
+> 
+> Because sb_dblocks hasn't been updated yet.
 
-Break our dependence on the (deprecated) libattr by emulating the
-necessary pieces in libfrog.  It's a little sketchy to open-code these
-symbols, but they're originally from XFS so we trust ourselves.
+Hmmmmm. Ok, I can see how this would be an issue, but it's not the
+issue the commit message describes :)
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- configure.ac          |    2 --
- debian/control        |    2 +-
- include/builddefs.in  |    1 -
- libfrog/Makefile      |    8 +++-----
- libfrog/fakelibattr.h |   34 ++++++++++++++++++++++++++++++++++
- libfrog/fsprops.c     |   17 +++++++++--------
- m4/package_attr.m4    |   25 -------------------------
- scrub/Makefile        |    4 ----
- scrub/phase5.c        |   28 +++++++++++-----------------
- 9 files changed, 58 insertions(+), 63 deletions(-)
- create mode 100644 libfrog/fakelibattr.h
- delete mode 100644 m4/package_attr.m4
+....
 
-diff --git a/configure.ac b/configure.ac
-index 33b01399ae3b..d021c519d538 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -152,8 +152,6 @@ AC_HAVE_DEVMAPPER
- AC_HAVE_MALLINFO
- AC_HAVE_MALLINFO2
- AC_HAVE_MEMFD_CREATE
--AC_PACKAGE_WANT_ATTRIBUTES_H
--AC_HAVE_LIBATTR
- if test "$enable_scrub" = "yes"; then
-         if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
-                 AC_HAVE_LIBICU
-diff --git a/debian/control b/debian/control
-index 3f05d4e3797c..66b0a47a36ee 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bage@debian.org>
--Build-Depends: libinih-dev (>= 53), uuid-dev, debhelper (>= 12), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config, liburcu-dev, systemd-dev | systemd (<< 253-2~)
-+Build-Depends: libinih-dev (>= 53), uuid-dev, debhelper (>= 12), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libicu-dev, pkg-config, liburcu-dev, systemd-dev | systemd (<< 253-2~)
- Standards-Version: 4.0.0
- Homepage: https://xfs.wiki.kernel.org/
- 
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 9900a0f858ad..57fa527b60ae 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -175,7 +175,6 @@ HAVE_DEVMAPPER = @have_devmapper@
- HAVE_MALLINFO = @have_mallinfo@
- HAVE_MALLINFO2 = @have_mallinfo2@
- HAVE_MEMFD_CREATE = @have_memfd_create@
--HAVE_LIBATTR = @have_libattr@
- HAVE_LIBICU = @have_libicu@
- HAVE_SYSTEMD = @have_systemd@
- SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index acddc894ee93..4da427789411 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -21,6 +21,7 @@ crc32.c \
- file_exchange.c \
- fsgeom.c \
- fsproperties.c \
-+fsprops.c \
- getparents.c \
- histogram.c \
- list_sort.c \
-@@ -46,9 +47,11 @@ crc32defs.h \
- crc32table.h \
- dahashselftest.h \
- div64.h \
-+fakelibattr.h \
- file_exchange.h \
- fsgeom.h \
- fsproperties.h \
-+fsprops.h \
- getparents.h \
- histogram.h \
- logging.h \
-@@ -62,11 +65,6 @@ workqueue.h
- 
- LSRCFILES += gen_crc32table.c
- 
--ifeq ($(HAVE_LIBATTR),yes)
--CFILES+=fsprops.c
--HFILES+=fsprops.h
--endif
--
- LDIRT = gen_crc32table crc32table.h
- 
- default: ltdepend $(LTLIBRARY)
-diff --git a/libfrog/fakelibattr.h b/libfrog/fakelibattr.h
-new file mode 100644
-index 000000000000..82b5c8a34d1a
---- /dev/null
-+++ b/libfrog/fakelibattr.h
-@@ -0,0 +1,34 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (c) 2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __LIBFROG_FAKELIBATTR_H__
-+#define __LIBFROG_FAKELIBATTR_H__
-+
-+struct attrlist_cursor;
-+
-+static inline struct xfs_attrlist_ent *
-+libfrog_attr_entry(
-+	struct xfs_attrlist	*list,
-+	unsigned int		index)
-+{
-+	char			*buffer = (char *)list;
-+
-+	return (struct xfs_attrlist_ent *)&buffer[list->al_offset[index]];
-+}
-+
-+static inline int
-+libfrog_attr_list_by_handle(
-+	void				*hanp,
-+	size_t				hlen,
-+	void				*buf,
-+	size_t				bufsize,
-+	int				flags,
-+	struct xfs_attrlist_cursor	*cursor)
-+{
-+	return attr_list_by_handle(hanp, hlen, buf, bufsize, flags,
-+			(struct attrlist_cursor *)cursor);
-+}
-+
-+#endif /* __LIBFROG_FAKELIBATTR_H__ */
-diff --git a/libfrog/fsprops.c b/libfrog/fsprops.c
-index 88046b7a0738..eb15c3b9792c 100644
---- a/libfrog/fsprops.c
-+++ b/libfrog/fsprops.c
-@@ -10,8 +10,7 @@
- #include "libfrog/bulkstat.h"
- #include "libfrog/fsprops.h"
- #include "libfrog/fsproperties.h"
--
--#include <attr/attributes.h>
-+#include "libfrog/fakelibattr.h"
- 
- /*
-  * Given an xfd and a mount table path, get us the handle for the root dir so
-@@ -68,20 +67,22 @@ fsprops_walk_names(
- 	fsprops_name_walk_fn	walk_fn,
- 	void			*priv)
- {
--	struct attrlist_cursor	cur = { };
--	char			attrbuf[XFS_XATTR_LIST_MAX];
--	struct attrlist		*attrlist = (struct attrlist *)attrbuf;
--	int			ret;
-+	struct xfs_attrlist_cursor	cur = { };
-+	char				attrbuf[XFS_XATTR_LIST_MAX];
-+	struct xfs_attrlist		*attrlist =
-+				(struct xfs_attrlist *)attrbuf;
-+	int				ret;
- 
- 	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
- 
--	while ((ret = attr_list_by_handle(fph->hanp, fph->hlen, attrbuf,
-+	while ((ret = libfrog_attr_list_by_handle(fph->hanp, fph->hlen, attrbuf,
- 				XFS_XATTR_LIST_MAX, XFS_IOC_ATTR_ROOT,
- 				&cur)) == 0) {
- 		unsigned int	i;
- 
- 		for (i = 0; i < attrlist->al_count; i++) {
--			struct attrlist_ent	*ent = ATTR_ENTRY(attrlist, i);
-+			struct xfs_attrlist_ent	*ent =
-+				libfrog_attr_entry(attrlist, i);
- 			const char		*p =
- 				attr_name_to_fsprop_name(ent->a_name);
- 
-diff --git a/m4/package_attr.m4 b/m4/package_attr.m4
-deleted file mode 100644
-index 05e02b38fb5a..000000000000
---- a/m4/package_attr.m4
-+++ /dev/null
-@@ -1,25 +0,0 @@
--AC_DEFUN([AC_PACKAGE_WANT_ATTRIBUTES_H],
--  [
--    AC_CHECK_HEADERS(attr/attributes.h)
--  ])
--
--#
--# Check if we have a ATTR_ROOT flag and libattr structures
--#
--AC_DEFUN([AC_HAVE_LIBATTR],
--  [ AC_MSG_CHECKING([for struct attrlist_cursor])
--    AC_COMPILE_IFELSE(
--    [	AC_LANG_PROGRAM([[
--#include <sys/types.h>
--#include <attr/attributes.h>
--	]], [[
--struct attrlist_cursor *cur;
--struct attrlist *list;
--struct attrlist_ent *ent;
--int flags = ATTR_ROOT;
--	]])
--    ], have_libattr=yes
--          AC_MSG_RESULT(yes),
--          AC_MSG_RESULT(no))
--    AC_SUBST(have_libattr)
--  ])
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 53e8cb02a926..1e1109048c2a 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -100,10 +100,6 @@ ifeq ($(HAVE_MALLINFO2),yes)
- LCFLAGS += -DHAVE_MALLINFO2
- endif
- 
--ifeq ($(HAVE_LIBATTR),yes)
--LCFLAGS += -DHAVE_LIBATTR
--endif
--
- ifeq ($(HAVE_LIBICU),yes)
- CFILES += unicrash.c
- LCFLAGS += -DHAVE_LIBICU $(LIBICU_CFLAGS)
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index f6c295c64ada..0f8dc2de01ba 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -8,9 +8,6 @@
- #include <dirent.h>
- #include <sys/types.h>
- #include <sys/statvfs.h>
--#ifdef HAVE_LIBATTR
--# include <attr/attributes.h>
--#endif
- #include <linux/fs.h>
- #include "handle.h"
- #include "list.h"
-@@ -20,6 +17,7 @@
- #include "libfrog/scrub.h"
- #include "libfrog/bitmap.h"
- #include "libfrog/bulkstat.h"
-+#include "libfrog/fakelibattr.h"
- #include "xfs_scrub.h"
- #include "common.h"
- #include "inodes.h"
-@@ -164,7 +162,6 @@ check_dirent_names(
- 	return ret;
- }
- 
--#ifdef HAVE_LIBATTR
- /* Routines to scan all of an inode's xattrs for name problems. */
- struct attrns_decode {
- 	int			flags;
-@@ -173,8 +170,8 @@ struct attrns_decode {
- 
- static const struct attrns_decode attr_ns[] = {
- 	{0,			"user"},
--	{ATTR_ROOT,		"system"},
--	{ATTR_SECURE,		"secure"},
-+	{XFS_IOC_ATTR_ROOT,	"system"},
-+	{XFS_IOC_ATTR_SECURE,	"secure"},
- 	{0, NULL},
- };
- 
-@@ -190,11 +187,11 @@ check_xattr_ns_names(
- 	struct xfs_bulkstat		*bstat,
- 	const struct attrns_decode	*attr_ns)
- {
--	struct attrlist_cursor		cur;
-+	struct xfs_attrlist_cursor	cur = { };
- 	char				attrbuf[XFS_XATTR_LIST_MAX];
- 	char				keybuf[XATTR_NAME_MAX + 1];
--	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
--	struct attrlist_ent		*ent;
-+	struct xfs_attrlist		*attrlist = (struct xfs_attrlist *)attrbuf;
-+	struct xfs_attrlist_ent		*ent;
- 	struct unicrash			*uc = NULL;
- 	int				i;
- 	int				error;
-@@ -206,14 +203,13 @@ check_xattr_ns_names(
- 	}
- 
- 	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
--	memset(&cur, 0, sizeof(cur));
- 	memset(keybuf, 0, XATTR_NAME_MAX + 1);
--	error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
-+	error = libfrog_attr_list_by_handle(handle, sizeof(*handle), attrbuf,
- 			XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
- 	while (!error) {
- 		/* Examine the xattrs. */
- 		for (i = 0; i < attrlist->al_count; i++) {
--			ent = ATTR_ENTRY(attrlist, i);
-+			ent = libfrog_attr_entry(attrlist, i);
- 			snprintf(keybuf, XATTR_NAME_MAX, "%s.%s", attr_ns->name,
- 					ent->a_name);
- 			if (uc)
-@@ -231,8 +227,9 @@ check_xattr_ns_names(
- 
- 		if (!attrlist->al_more)
- 			break;
--		error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
--				XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
-+		error = libfrog_attr_list_by_handle(handle, sizeof(*handle),
-+				attrbuf, XFS_XATTR_LIST_MAX, attr_ns->flags,
-+				&cur);
- 	}
- 	if (error) {
- 		if (errno == ESTALE)
-@@ -267,9 +264,6 @@ check_xattr_names(
- 	}
- 	return ret;
- }
--#else
--# define check_xattr_names(c, d, h, b)	(0)
--#endif /* HAVE_LIBATTR */
- 
- static int
- render_ino_from_handle(
+Oh, this is a -much worse- problem that I thought.
+
+This is a replay for a modification to a new AGFL, and that *must*
+only be replayed after the superblock modifications have been
+replayed.
+
+Ideally, we should not be using the new AGs until *after* the growfs
+transaction has hit stable storage (i.e. the journal has fully
+commmitted the growfs transaction), not just committed to the CIL.
+
+If anything can access the new AGs beyond the old EOFS *before* the
+growfs transaction is stable in the journal, then we have a nasty
+set of race condtions where we can be making modifications to
+metadata that is beyond EOFS in the journal *before* we've replayed
+the superblock growfs modification.
+
+For example:
+
+growfs task		allocating task			log worker
+
+xfs_trans_set_sync
+xfs_trans_commit
+  xlog_cil_commit
+    <items added to CIL>
+    xfs_trans_unreserve_and_mod_sb
+      mp->m_sb.sb_agcount += tp->t_agcount_delta;
+    ->iop_committing()
+      xfs_buf_item_committing
+        xfs_buf_item_release
+          <superblock buffer unlocked>
+
+<preempt>
+
+			xfs_bmap_btalloc
+			  xfs_bmap_btalloc_best_length
+			    for_each_perag_wrap(...)
+			      <sees new, uncommitted mp->m_sb.sb_agcount>
+			      <selects new AG beyond EOFS in journal>
+			  <does allocation in new AG beyond EOFS in journal>
+			  xfs_trans_commit()
+			    xlog_cil_commit()
+			      <items added to CIL>
+			  ....
+
+							<log state in XLOG_STATE_COVER_NEED>
+							xfs_sync_sb(wait)
+							  locks sb buffer
+							  xfs_trans_set_sync
+							  xfs_trans_commit
+							    xlog_cil_commit
+							      <sb already in CIL>
+							      <updates sb item order id>
+							    xfs_log_force(SYNC)
+							    <pushes CIL>
+
+<runs again>
+  xfs_log_force(SYNC)
+  <pushes CIL>
+
+This growfs vs allocating task race results in a checkpoint in the
+journal where the new AGs are modified in the same checkpoint as the
+growfs transaction. This will work if the superblock item is placed
+in the journal before the items for the new AGs with your new code.
+
+However...
+
+.... when we add in the log worker (or some other transaction)
+updating the superblock again before the CIL is pushed, we now have
+a reordering problem. The CIL push will order all the items in the
+CIL according to the order id attached to the log item, and this
+causes the superblock item to be placed -after- the new AG items.
+
+That will result in the exact recovery error you quoted above,
+regardless of the fixes in this series.
+
+<thinks about how to fix it>
+
+I think the first step in avoiding this is ensuring we can't relog
+the superblock until the growfs transaction is on disk. We can
+do that by explicitly grabbing the superblock buffer and holding it
+before we commit the transaction so the superblock buffer remains
+locked until xfs_trans_commit() returns. That will prevent races
+with other sb updates by blocking them on the sb buffer lock.
+
+The second step is preventing allocations that are running from
+seeing the mp->m_sb.sb_agcount update until after the transaction is
+stable.
+
+Ok, xfs_trans_mod_sb(XFS_TRANS_SB_AGCOUNT) is only used by the
+grwofs code and the first step above means we have explicitly locked
+the sb buffer. Hence the whole xfs_trans_mod_sb() -> delta in trans
+-> xfs_trans_commit -> xfs_trans_apply_sb_deltas() -> lock sb buffer,
+modify sb and log it -> xlog_cil_commit() song and dance routine can
+go away.
+
+i.e. We can modify the superblock buffer directly in the growfs
+code, and then when xfs_trans_commit() returns we directly update
+the in-memory superblock before unlocking the superblock buffer.
+
+This means that nothing can update the superblock before the growfs
+transaction is stable in the journal, and nothing at runtime will
+see that there are new AGs or space available until after the on
+disk state has changed.
+
+This then allows recovery to be able to update the superblock and
+perag state after checkpoint processing is complete. All future
+checkpoint recoveries will now be guaranteed to see the correct
+superblock state, whilst the checkpoint the growfs update is in
+is guaranteed to only be dependent on the old superblock state...
+
+I suspect that we might have to move all superblock updates to this
+model - we don't update the in-memory state until after the on-disk
+update is on stable storage in the journal - that will avoid the
+possibility of racing/reordered feature bit update being replayed,
+too.
+
+The only issue with this is that I have a nagging memory of holding
+the superblock buffer locked across a synchronous transaction could
+deadlock the log force in some way. I can't find a reference to that
+situation anywhere - maybe it wasn't a real issue, or someone else
+remembers that situation better than I do....
+
+> I'd kinda assume we run
+> into the intents next, but maybe we don't.
+
+I don't think intents are the problem because they are run after
+the superblock and perags are updated.
+
+> > > +	xfs_sb_from_disk(&mp->m_sb, dsb);
+> > > +	if (mp->m_sb.sb_agcount < old_agcount) {
+> > > +		xfs_alert(mp, "Shrinking AG count in log recovery");
+> > > +		return -EFSCORRUPTED;
+> > > +	}
+> > > +	mp->m_features |= xfs_sb_version_to_features(&mp->m_sb);
+> > 
+> > I'm not sure this is safe. The item order in the checkpoint recovery
+> > isn't guaranteed to be exactly the same as when feature bits are
+> > modified at runtime. Hence there could be items in the checkpoint
+> > that haven't yet been recovered that are dependent on the original
+> > sb feature mask being present.  It may be OK to do this at the end
+> > of the checkpoint being recovered.
+> > 
+> > I'm also not sure why this feature update code is being changed
+> > because it's not mentioned at all in the commit message.
+> 
+> Mostly to keep the features in sync with the in-memory sb fields
+> updated above.  I'll switch to keep this as-is, but I fail to see how
+> updating features only after the entire reocvery is done will be safe
+> for all cases either.
+> 
+> Where would we depend on the old feature setting?
+
+One possibility is a similar reordering race to what I describe
+above; another is simply that the superblock feature update is not
+serialised at runtime with anything that checks that feature. Hence
+the order of modifications in the journal may not reflect the order
+in which the checks and modifications were done at runtime....
+
+Hence I'm not convinced that it is safe to update superblock state
+in the middle of a checkpoint - between checkpoints (i.e. after
+checkpoint commit record processing) can be made safe (as per
+above), but the relogging of items in the CIL makes mid-checkpoint
+updates somewhat ... problematic.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
