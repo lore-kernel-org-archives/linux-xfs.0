@@ -1,41 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E46103A1AC;
-	Thu, 19 Sep 2024 20:13:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1AAE14A088
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2024 21:50:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726776792; cv=none; b=QnBG5P5WbR+pIa4azQxNspSJB8EVWXl7J4FXTb6sX+mAFmMg1nJjjXclUASPVe8/DOhzufc7Zcxr4nwhgEBOZ3QFId7z2W4a8fQcf11MKf5cCeRAYNhgo3kqz3Y+iKW9xPSlEgF4t8rdJocE1PUAtHsIW5Wp/cGiTvpP3jEjCNM=
+	t=1726782606; cv=none; b=gjs9fZ5jZR7wTL9OIEtfYMIIwG6P5lE2fFBuFLmv3FDBzjm9QI7jv/sDejaiEaRUwpz1/SAWBtDlo2IY9/3w709YE2rQLBNn40PgQTzq09jQtvPmo7i7Vs3Yob7Y386cvhJ0w4XWolp4BeKh2WkdMvq/dEvhByMfcK7P5lH0SwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726776792; c=relaxed/simple;
-	bh=gWqu0caasJYRq5B0Vjhqbg09uOFenaZa8N/mrImzzsQ=;
+	s=arc-20240116; t=1726782606; c=relaxed/simple;
+	bh=DW0dVq2n3eznhoNhg3FnBdHAxOgHgQ2Ixdka2nib8Ag=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M+QASEi+MpybsBLdhWStKiFg82wsDNPTVOAmNX3GReQ7Q0LSrnfGkfgZ1sE4VW+yD29a4HE16WERXCJNAsUljjK7huofG1nR/Ndkj4UVVahTIaXLuhhihBPB4RTS+TGmUH6+caMY3/l6Vom3VInPGJgIGyPK5x0WJ7aJi1ancEs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gnsAoAQh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PjUIYSduPayTBnJdPEJfbAWenD4q/Qo0zPxl4rpi+kHa+advaCQKi3WatqpoJ3oIXITHBoVcB4mXHxK6h/leBhrFrXZKCDlookqZGI2zeBHdzw6EX4HVt7BqKsG16F9rJFegtBLLw8+y3PE9XQLYVexhVGI1xp2hVXmHgzdd7sE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=FmhFkfzX; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnsAoAQh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56E11C4CEC4;
-	Thu, 19 Sep 2024 20:13:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726776791;
-	bh=gWqu0caasJYRq5B0Vjhqbg09uOFenaZa8N/mrImzzsQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gnsAoAQhQXpT1oyxY6g1iOJY4/vm3MZyapEV91llOLG5GRQegPh0fsvEYyQ0KMAmt
-	 43gZui1mo26zZEHBDCUnCfJk+QlW2xHODvSBIpSNeRkWlPJu4c8Lhm5JkXjH+HJuzl
-	 A7v/9m2hSfHfWFd5NrO/uWqRnilf8Yzn1JQvvXTEl9PHVT6MXwnOajE97g0d3wG1Gj
-	 TgNcyvk4jpAdnpYCNfTv0wEMMcZR2jFtMtvJTjc/wyVK7vLZ6Vqvsrseoc1BDU7LUA
-	 UFK7FwPLAvsT7+xtBBYBK5w71bs88sYsMScQF0Fvu8W6RDoTMQFRhPq9nViOIaWyjp
-	 vBIW1IfercQ7w==
-Date: Thu, 19 Sep 2024 13:13:10 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] generic: add a regression test for sub-block fsmap
- queries
-Message-ID: <20240919201310.GL182218@frogsfrogsfrogs>
-References: <172669301283.3083764.4996516594612212560.stgit@frogsfrogsfrogs>
- <172669301299.3083764.15063882630075709199.stgit@frogsfrogsfrogs>
- <20240919200703.xyn5tqv5knqzgiq3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="FmhFkfzX"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2055a3f80a4so9999615ad.2
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2024 14:50:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1726782604; x=1727387404; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=L6x7ZdkvoVVjEQHpZUF/64NyMjRa52YcivfU8ppBgzY=;
+        b=FmhFkfzXWLu+7+D5c4QwktfzUW1sMb46WNRxITCuNgvHqj4MccW63Zh9TyemiCY8vy
+         staP3T/A1vZ58DG2nv9e/USUd0gFNWJ8pPmhBBn7hBW4FKUWX5aS3Svn0WNt1PVQBunW
+         bQyhyxjFXpbBSoJNIKtBegpmGQpRnd0YZjfDHwCU2zBLu9E62IWDHa9JtEX2YzxJF7po
+         Ng1Q/1Jf7HsBS+DaNTaGUWIkEBXXKlzzqN/hx8WwNgmnhiGmfHZnEiQ/8vmn1plM8Djh
+         ZqgSZ9KQg/fLBihewxgwZFq883PEO4TM/+7Vhe8uI0gR7D6eMoJmw6DFQIF2rY02S1mt
+         UPlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726782604; x=1727387404;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=L6x7ZdkvoVVjEQHpZUF/64NyMjRa52YcivfU8ppBgzY=;
+        b=xE3ViNc7xjheu/wxiLNkTOdXak3c1XfjIIbgkTVO7CJNgj8scUXPMH97dX0wI/B40b
+         gLsdHvL3hQOn259f/manwHjnNWR00xvZux8d04IdLTU609e4AeO9kFtqII0Z8WSeCAkI
+         hsvXR9wqah4EYqRxActKoThDRgfdaF9Ys3UqTkPgN1HInN412smLGrh0n//MOB8haz8Z
+         XEMQEqTo1O1rcMCZw3F/To8Qn1W6nMYbgrWS2/L/Ry9fZBpHzO5S6ADr/l8uQQ5xW0dj
+         Ilk7dHTl3HBZsf9uJhcgfBlThFB/pS9Wm2sroYngLUGE+E+r3wWViivw2EXKncbaLVO4
+         8Z6Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXoLdJmxzpucw8HKn/oySCsX9Q8hn1aQs+r06zw6HvYDPNK8Z/X9EIKg7/5QdQg2OypcPBjT3P95Rk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXF+gayFNDsaMcsNChvz1Ke0XkIma4Qxep5S0/AFY8KS21YdTA
+	KZL76Yil8VsSvQBE3uDrvU+YSGj3VaJQ/5CzC2pz5J8Rdoq5LBsIjdW7Ut41MQM=
+X-Google-Smtp-Source: AGHT+IGn46XGCpwtH+QDECMERZKD+6txGMJw/v/awgG6z5OZlSMhAjgg1+8EOhxh8RjkLB2OSikZWQ==
+X-Received: by 2002:a17:902:e541:b0:206:8db4:481b with SMTP id d9443c01a7336-208d9849480mr3319735ad.32.1726782603849;
+        Thu, 19 Sep 2024 14:50:03 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-207946d15fesm84497045ad.162.2024.09.19.14.50.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Sep 2024 14:50:03 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1srP2G-007PJj-0g;
+	Fri, 20 Sep 2024 07:50:00 +1000
+Date: Fri, 20 Sep 2024 07:50:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: create perag structures as soon as possible
+ during log recovery
+Message-ID: <ZuyciHNmweoltuA4@dread.disaster.area>
+References: <20240910042855.3480387-1-hch@lst.de>
+ <20240910042855.3480387-4-hch@lst.de>
+ <ZueJusTG7CJ4jcp5@dread.disaster.area>
+ <20240918061105.GA31947@lst.de>
+ <Zut51Ftv/46Oj386@dread.disaster.area>
+ <20240919074631.GA23841@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,178 +77,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240919200703.xyn5tqv5knqzgiq3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <20240919074631.GA23841@lst.de>
 
-On Fri, Sep 20, 2024 at 04:07:03AM +0800, Zorro Lang wrote:
-> On Wed, Sep 18, 2024 at 01:57:19PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Zizhi Wo found some bugs in the GETFSMAP implementation if it is fed
-> > sub-fsblock ranges.  Add a regression test for this.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/generic/1954     |   79 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/1954.out |   15 +++++++++
-> >  2 files changed, 94 insertions(+)
-> >  create mode 100755 tests/generic/1954
-> >  create mode 100644 tests/generic/1954.out
-> > 
-> > 
-> > diff --git a/tests/generic/1954 b/tests/generic/1954
-> > new file mode 100755
-> > index 0000000000..cfdfaf15e2
-> > --- /dev/null
-> > +++ b/tests/generic/1954
-> > @@ -0,0 +1,79 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2024 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 1954
-> > +#
-> > +# Regression test for sub-fsblock key handling errors in GETFSMAP.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto rmap fsmap
-> > +
-> > +_fixed_by_kernel_commit XXXXXXXXXXXX \
-> > +	"xfs: Fix the owner setting issue for rmap query in xfs fsmap"
-> > +_fixed_by_kernel_commit XXXXXXXXXXXX \
-> > +	"xfs: Fix missing interval for missing_owner in xfs fsmap"
+On Thu, Sep 19, 2024 at 09:46:31AM +0200, Christoph Hellwig wrote:
+> On Thu, Sep 19, 2024 at 11:09:40AM +1000, Dave Chinner wrote:
+> > Ideally, we should not be using the new AGs until *after* the growfs
+> > transaction has hit stable storage (i.e. the journal has fully
+> > commmitted the growfs transaction), not just committed to the CIL.
 > 
-> These 2 patches have been merged:
-> 
->   68415b349f3f xfs: Fix the owner setting issue for rmap query in xfs fsmap
->   ca6448aed4f1 xfs: Fix missing interval for missing_owner in xfs fsmap
-> 
-> I'll help to update the commit id when I merge it.
+> Yes.  A crude version of that - freeze/unfreeze before setting the
+> AG live was my other initial idea, but Darrick wasn't exactly
+> excited about that..
 
-Oops, will go fix that.
+I'm not exactly excited by that idea, either...
 
-> > +
-> > +. ./common/filter
-> > +
-> > +_require_xfs_io_command "fsmap"
-> > +_require_scratch
-> > +
-> > +_scratch_mkfs >> $seqres.full
-> > +_scratch_mount
-> > +
-> > +blksz=$(_get_block_size "$SCRATCH_MNT")
-> > +if ((blksz < 2048)); then
-> > +	_notrun "test requires at least 4 bblocks per fsblock"
+> > The second step is preventing allocations that are running from
+> > seeing the mp->m_sb.sb_agcount update until after the transaction is
+> > stable.
 > 
-> What if the device is hard 4k sector size?
+> Or just not seeing the pag as active by not setting the initial
+> active reference until after the transaction is stable.  Given
+> all the issues outlined by you about sb locking that might be the
+> easier approach.
 
-Doesn't matter, because the bug is in converting GETFSMAP inputs that
-are a multiple of 512 but not a multiple of $fsblocksize.
+Yeah, that's a good idea for avoiding perag references from
+iterations before the growfs is stable.
 
-> > +fi
-> > +
-> > +$XFS_IO_PROG -c 'fsmap' $SCRATCH_MNT >> $seqres.full
-> > +
-> > +find_freesp() {
-> > +	$XFS_IO_PROG -c 'fsmap -d' $SCRATCH_MNT | tr '.[]:' '    ' | \
-> > +		grep 'free space' | awk '{printf("%s:%s\n", $4, $5);}' | \
-> > +		head -n 1
-> > +}
-> > +
-> > +filter_fsmap() {
-> > +	_filter_xfs_io_numbers | sed \
-> > +		-e 's/inode XXXX data XXXX..XXXX/inode data/g' \
-> > +		-e 's/inode XXXX attr XXXX..XXXX/inode attr/g' \
-> > +		-e 's/: free space XXXX/: FREE XXXX/g' \
-> > +		-e 's/: [a-z].*XXXX/: USED XXXX/g'
-> 
-> As this's a generic test case, I tried it on btrfs and ext4. btrfs got
-> _notrun "xfs_io fsmap support is missing", ext4 got failure as:
-> 
->   # diff -u /root/git/xfstests/tests/generic/1954.out /root/git/xfstests/results//default/generic/1954.out.bad
->   --- /root/git/xfstests/tests/generic/1954.out   2024-09-20 03:51:02.545504285 +0800
->   +++ /root/git/xfstests/results//default/generic/1954.out.bad    2024-09-20 03:58:51.505271227 +0800
->   @@ -1,15 +1,11 @@
->    QA output created by 1954
->    test incorrect setting of high key
->   -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
->    test missing free space extent
->           XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
->    test whatever came before freesp
->   -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
->    test whatever came after freesp
->   -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
->    test crossing start of freesp
->           XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
->           XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
->    test crossing end of freesp
->           XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
->   -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+However, my concern is whether that is sufficient.  Whilst I didn't
+mention it, changing sb_agcount and sb_dblocks before the grwofs is
+stable affects things like size calculations for the old end runt
+AG(*) because it is no longer considered a runt the moment we change
+the in-memory size fields in the superblock. That will, at least,
+affect ino/fsbno/agbno verification, as well as corruption checks
+through the code.
 
-Yep, we'll still have to patch ext4 for this.  btrfs doesn't support
-GETFSMAP.
+An alternative is to delay the perag initialisation until after the
+growfs is stable, because we don't want the old runt AG size to
+visibly change until after the growfs is stable.
 
---D
+There may be more potential issues, but I haven't done a careful
+code audit and that's kinda why I suggested simply delaying the
+in-memory state update. Delaying the update removes the whole
+in-memory transient state situation altogether...
 
-> Thanks,
-> Zorro
-> 
-> > +}
-> > +
-> > +$XFS_IO_PROG -c 'fsmap -d' $SCRATCH_MNT | filter_fsmap >> $seqres.full
-> > +
-> > +freesp="$(find_freesp)"
-> > +
-> > +freesp_start="$(echo "$freesp" | cut -d ':' -f 1)"
-> > +freesp_end="$(echo "$freesp" | cut -d ':' -f 2)"
-> > +echo "$freesp:$freesp_start:$freesp_end" >> $seqres.full
-> > +
-> > +echo "test incorrect setting of high key"
-> > +$XFS_IO_PROG -c 'fsmap -d 0 3' $SCRATCH_MNT | filter_fsmap
-> > +
-> > +echo "test missing free space extent"
-> > +$XFS_IO_PROG -c "fsmap -d $((freesp_start + 1)) $((freesp_start + 2))" $SCRATCH_MNT | \
-> > +	filter_fsmap
-> > +
-> > +echo "test whatever came before freesp"
-> > +$XFS_IO_PROG -c "fsmap -d $((freesp_start - 3)) $((freesp_start - 2))" $SCRATCH_MNT | \
-> > +	filter_fsmap
-> > +
-> > +echo "test whatever came after freesp"
-> > +$XFS_IO_PROG -c "fsmap -d $((freesp_end + 2)) $((freesp_end + 3))" $SCRATCH_MNT | \
-> > +	filter_fsmap
-> > +
-> > +echo "test crossing start of freesp"
-> > +$XFS_IO_PROG -c "fsmap -d $((freesp_start - 2)) $((freesp_start + 1))" $SCRATCH_MNT | \
-> > +	filter_fsmap
-> > +
-> > +echo "test crossing end of freesp"
-> > +$XFS_IO_PROG -c "fsmap -d $((freesp_end - 1)) $((freesp_end + 2))" $SCRATCH_MNT | \
-> > +	filter_fsmap
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/1954.out b/tests/generic/1954.out
-> > new file mode 100644
-> > index 0000000000..6baec43511
-> > --- /dev/null
-> > +++ b/tests/generic/1954.out
-> > @@ -0,0 +1,15 @@
-> > +QA output created by 1954
-> > +test incorrect setting of high key
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
-> > +test missing free space extent
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
-> > +test whatever came before freesp
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
-> > +test whatever came after freesp
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
-> > +test crossing start of freesp
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
-> > +test crossing end of freesp
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
-> > +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
-> > 
-> > 
-> 
+-Dave.
+
+(*) The precalculated AG length and inode min/max values we've added
+to the perag (calculated at perag init time) should be used for
+these calculations. That gets around this 'growfs changes sb values
+dynamically' issue, but not all the places where we do these
+verifications have a valid perag reference to pass these
+functions. 
+
+-- 
+Dave Chinner
+david@fromorbit.com
