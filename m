@@ -1,161 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB711A0AE0;
-	Thu, 19 Sep 2024 16:53:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F237F3A1AC
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2024 20:07:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726764798; cv=none; b=cCjRBC/R9SE5qGikUHS2MSznh8QYNdwRpNeGcn0a4l1l2Cb4TBOgDALf9VgQUdnAGM3GkrGIhC8EkUWqA3T4FqmFpU1WnnwJbE14EtDy3HJU/TFIxNlR1MICFmUpNikZ42erEvXo94nxSMofJeFHorDHb7IOHdPxHknBPcZtLIQ=
+	t=1726776437; cv=none; b=bJFRbIlmqBkN5bTl37MlpfGv+M9B/4/1G/bhAyt0SiT2YjPkRtq9ihifuYwmd0dVu/Y64ycKjBpyKCYQ04KA3OYcoISUI38RhwleWvlv44XzMl5VP5roTQGsv5Mu65CVFwi001IX4Z+DuY6YrgiYs3dzhD+5JcZEg98CDK8x3wc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726764798; c=relaxed/simple;
-	bh=Je6wFZQCPBSr3AfMwUUK1hMoXTyJ5WbhpknR8qleYo0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=uRtDG/mR8JExGrdkOw9AljtQLKGG4fQpGsYsj9fC840NkUdPPvcaVu58DWMR9qZkVPEuqF8n2XBpLJzG8jIC85CdpWlGz117jUz6KOOiDUg8M2hhMilfASNKdOyUG1qqXlYgHMYwVnl7JWpYMFVRt+tfx262zhRosTQ1n/d9G4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sCf15Y6D; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1726776437; c=relaxed/simple;
+	bh=wohWVWBt656j2gIzHGa1bJgbDMrby0RZDe9OH8PtnGc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R8TVQGop+JzDTXRmA6BiP8vhHsjn3r52jKPjEAnCE3QnqY0sf8XCRQ6EsTkP9LDGNG/N+2Kb49TJwvXrQ7X7+BF1munVkPYiFM8OyoPSjeciTr38nDq6PUAUwlGIeTrrqKUAMsxkbZIzF8SKxJf7lIk1UnbhB8xn1lX6/CmU7Aw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aJfr60YG; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sCf15Y6D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EAD2C4CEC4;
-	Thu, 19 Sep 2024 16:53:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726764797;
-	bh=Je6wFZQCPBSr3AfMwUUK1hMoXTyJ5WbhpknR8qleYo0=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=sCf15Y6D/7qLmt1xcsgp5oTgn1LEKq4le6ePb9p9YwzGRjGr+qLAxw75M8+pDVGbT
-	 dK15XZfncqIHLYA5wv5JQkEHFjZ4CXbMBeCXH7V2xjSNfcSjOJ41k+GQXYMyUPPzuK
-	 h0Dp5PJ+i6kDSWwDnrkBUjlQ/T/TJatoTrQqwILsXx0bzQzBMbQ6czqCwynhWk1haq
-	 eUTSbgXSYMMuw27mt9XyZpEM3mo3URy7tZhnx8ZcdIYUfBPScOPOuoOmidUzRcGuTA
-	 Gzf3z9RldS/pC6TnxC7qzGMygheQV64sIrnqfAQckyEqZDuPYhtJo1TOKjYRUqdCa3
-	 RKFw8TYK2280Q==
-Message-ID: <135fb33cc23ba1ff07045637916e44f6d6614851.camel@kernel.org>
-Subject: Re: [PATCH v8 07/11] Documentation: add a new file documenting
- multigrain timestamps
-From: Jeff Layton <jlayton@kernel.org>
-To: Bagas Sanjaya <bagasdotme@gmail.com>, John Stultz <jstultz@google.com>, 
- Thomas Gleixner <tglx@linutronix.de>, Stephen Boyd <sboyd@kernel.org>,
- Alexander Viro <viro@zeniv.linux.org.uk>,  Christian Brauner
- <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Steven Rostedt
- <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, Mathieu
- Desnoyers <mathieu.desnoyers@efficios.com>, Jonathan Corbet
- <corbet@lwn.net>, Chandan Babu R <chandan.babu@oracle.com>, "Darrick J.
- Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger
- <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, Josef Bacik
- <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,  Hugh Dickins
- <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Chuck Lever
- <chuck.lever@oracle.com>, Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Cc: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
- linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-ext4@vger.kernel.org,  linux-btrfs@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-mm@kvack.org
-Date: Thu, 19 Sep 2024 18:53:08 +0200
-In-Reply-To: <ZueDYmduQtlAnX_5@archie.me>
-References: <20240914-mgtime-v8-0-5bd872330bed@kernel.org>
-	 <20240914-mgtime-v8-7-5bd872330bed@kernel.org> <ZueDYmduQtlAnX_5@archie.me>
-Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
- keydata=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
- QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aJfr60YG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1726776431;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VNt1sU0+eq8ChEgSPeO4lqDYucWAiLg+nimt5cESx6c=;
+	b=aJfr60YGapgQFOftuBpY5W6l/brnGmBY3PHJr4AWAIAsvnxAey48k5Vvjm2x1uZRXfCwtZ
+	F9UgzkfbXUzMSW0SWhht4720AnOOZU9dkHr5fzf1jS/WuHPSr+GxB3yZKGCYrMAzoj8wde
+	UX1QrKpJNk1CSp1wP/nXP+nCA4Fwgm4=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-594-mQJVinF4MAyo85m-_aagcA-1; Thu, 19 Sep 2024 16:07:08 -0400
+X-MC-Unique: mQJVinF4MAyo85m-_aagcA-1
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-7d511de6348so842186a12.0
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2024 13:07:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726776427; x=1727381227;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VNt1sU0+eq8ChEgSPeO4lqDYucWAiLg+nimt5cESx6c=;
+        b=Il6eFVPfXPe4ySt1hdOUXJn7wafJER1VLMKdg0YPlNgt//qZ8K6W3joR/4LJP0qpPE
+         oBa82Q9xpU4/dBHeKZH5PxU7pIhdFDR67vDO/efCvMB6YBc7H+lo8cfI0OmQxzyV2QR4
+         XdvWGL4nfnH0bWVVFI3WopX+R1GQF7LkJr2OAPBEMFMOsYrLTi2H3xdUoYbspISDhq5s
+         IFDKnU62veC4Q5ArHCYL9pi4Pbha7yj7Do5VEpXPlegygp7v9nY6IMQK1y4sfkqPX9x7
+         1XanMszhlt0BcLxvli4if99Rf4PEkqhCLMyk2CotfemZMF+cYoqQ1udQREZCR1cuxTcN
+         eDMw==
+X-Gm-Message-State: AOJu0YwYIbVOzIVSKa2KsBf5IwS4FUrnOOd6IerESxf/UQMZNk9YGzYT
+	hu+4nnRzBIBbOpYM2lWYXd0Y/Hha3RESUSDe2+Fg8Mad7noT85T5x5dXWzqS6vTQNWwUtddXndj
+	cjrQRCWIySCG5V4K8jFFNo7tB0uLoX6VMXuGQNrT2G6y7VP7zdtwnV34lht7DO58Ydb25
+X-Received: by 2002:a17:902:db12:b0:207:5cfc:504a with SMTP id d9443c01a7336-208d836cb41mr7607745ad.4.1726776427272;
+        Thu, 19 Sep 2024 13:07:07 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFzHNIfdaF1D8LcmUP6tBZMMwzhEZWBWt+XYEwFqlB9g+bB85zWkCTgZG9/tk0hfvPjiqpz9A==
+X-Received: by 2002:a17:902:db12:b0:207:5cfc:504a with SMTP id d9443c01a7336-208d836cb41mr7607285ad.4.1726776426776;
+        Thu, 19 Sep 2024 13:07:06 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-207945dc13fsm83760445ad.24.2024.09.19.13.07.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Sep 2024 13:07:06 -0700 (PDT)
+Date: Fri, 20 Sep 2024 04:07:03 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/1] generic: add a regression test for sub-block fsmap
+ queries
+Message-ID: <20240919200703.xyn5tqv5knqzgiq3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <172669301283.3083764.4996516594612212560.stgit@frogsfrogsfrogs>
+ <172669301299.3083764.15063882630075709199.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <172669301299.3083764.15063882630075709199.stgit@frogsfrogsfrogs>
 
-On Mon, 2024-09-16 at 08:01 +0700, Bagas Sanjaya wrote:
-> On Sat, Sep 14, 2024 at 01:07:20PM -0400, Jeff Layton wrote:
-> > +Multigrain timestamps aim to remedy this by selectively using fine-gra=
-ined
-> > +timestamps when a file has had its timestamps queried recently, and th=
-e current
-> > +coarse-grained time does not cause a change.
->=20
-> Do you mean using fine-grained timestamps when timestamps of a file has b=
-een
-> recently queried/modified BUT its coarse-grained timestamps aren't change=
-d?
->=20
-> Confused...
->=20
+On Wed, Sep 18, 2024 at 01:57:19PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Zizhi Wo found some bugs in the GETFSMAP implementation if it is fed
+> sub-fsblock ranges.  Add a regression test for this.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/generic/1954     |   79 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/1954.out |   15 +++++++++
+>  2 files changed, 94 insertions(+)
+>  create mode 100755 tests/generic/1954
+>  create mode 100644 tests/generic/1954.out
+> 
+> 
+> diff --git a/tests/generic/1954 b/tests/generic/1954
+> new file mode 100755
+> index 0000000000..cfdfaf15e2
+> --- /dev/null
+> +++ b/tests/generic/1954
+> @@ -0,0 +1,79 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2024 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 1954
+> +#
+> +# Regression test for sub-fsblock key handling errors in GETFSMAP.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto rmap fsmap
+> +
+> +_fixed_by_kernel_commit XXXXXXXXXXXX \
+> +	"xfs: Fix the owner setting issue for rmap query in xfs fsmap"
+> +_fixed_by_kernel_commit XXXXXXXXXXXX \
+> +	"xfs: Fix missing interval for missing_owner in xfs fsmap"
 
-Yes, I'll do an s/and/but/ there in the Documentation. Basically, we
-want to avoid updating the floor whenever we can (since it's a global
-variable), so we only get a fine-grained time if there is no other way
-to effect a change to the timestamps.
+These 2 patches have been merged:
 
-Thanks!
---=20
-Jeff Layton <jlayton@kernel.org>
+  68415b349f3f xfs: Fix the owner setting issue for rmap query in xfs fsmap
+  ca6448aed4f1 xfs: Fix missing interval for missing_owner in xfs fsmap
+
+I'll help to update the commit id when I merge it.
+
+> +
+> +. ./common/filter
+> +
+> +_require_xfs_io_command "fsmap"
+> +_require_scratch
+> +
+> +_scratch_mkfs >> $seqres.full
+> +_scratch_mount
+> +
+> +blksz=$(_get_block_size "$SCRATCH_MNT")
+> +if ((blksz < 2048)); then
+> +	_notrun "test requires at least 4 bblocks per fsblock"
+
+What if the device is hard 4k sector size?
+
+> +fi
+> +
+> +$XFS_IO_PROG -c 'fsmap' $SCRATCH_MNT >> $seqres.full
+> +
+> +find_freesp() {
+> +	$XFS_IO_PROG -c 'fsmap -d' $SCRATCH_MNT | tr '.[]:' '    ' | \
+> +		grep 'free space' | awk '{printf("%s:%s\n", $4, $5);}' | \
+> +		head -n 1
+> +}
+> +
+> +filter_fsmap() {
+> +	_filter_xfs_io_numbers | sed \
+> +		-e 's/inode XXXX data XXXX..XXXX/inode data/g' \
+> +		-e 's/inode XXXX attr XXXX..XXXX/inode attr/g' \
+> +		-e 's/: free space XXXX/: FREE XXXX/g' \
+> +		-e 's/: [a-z].*XXXX/: USED XXXX/g'
+
+As this's a generic test case, I tried it on btrfs and ext4. btrfs got
+_notrun "xfs_io fsmap support is missing", ext4 got failure as:
+
+  # diff -u /root/git/xfstests/tests/generic/1954.out /root/git/xfstests/results//default/generic/1954.out.bad
+  --- /root/git/xfstests/tests/generic/1954.out   2024-09-20 03:51:02.545504285 +0800
+  +++ /root/git/xfstests/results//default/generic/1954.out.bad    2024-09-20 03:58:51.505271227 +0800
+  @@ -1,15 +1,11 @@
+   QA output created by 1954
+   test incorrect setting of high key
+  -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+   test missing free space extent
+          XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
+   test whatever came before freesp
+  -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+   test whatever came after freesp
+  -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+   test crossing start of freesp
+          XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+          XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
+   test crossing end of freesp
+          XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
+  -       XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+
+Thanks,
+Zorro
+
+> +}
+> +
+> +$XFS_IO_PROG -c 'fsmap -d' $SCRATCH_MNT | filter_fsmap >> $seqres.full
+> +
+> +freesp="$(find_freesp)"
+> +
+> +freesp_start="$(echo "$freesp" | cut -d ':' -f 1)"
+> +freesp_end="$(echo "$freesp" | cut -d ':' -f 2)"
+> +echo "$freesp:$freesp_start:$freesp_end" >> $seqres.full
+> +
+> +echo "test incorrect setting of high key"
+> +$XFS_IO_PROG -c 'fsmap -d 0 3' $SCRATCH_MNT | filter_fsmap
+> +
+> +echo "test missing free space extent"
+> +$XFS_IO_PROG -c "fsmap -d $((freesp_start + 1)) $((freesp_start + 2))" $SCRATCH_MNT | \
+> +	filter_fsmap
+> +
+> +echo "test whatever came before freesp"
+> +$XFS_IO_PROG -c "fsmap -d $((freesp_start - 3)) $((freesp_start - 2))" $SCRATCH_MNT | \
+> +	filter_fsmap
+> +
+> +echo "test whatever came after freesp"
+> +$XFS_IO_PROG -c "fsmap -d $((freesp_end + 2)) $((freesp_end + 3))" $SCRATCH_MNT | \
+> +	filter_fsmap
+> +
+> +echo "test crossing start of freesp"
+> +$XFS_IO_PROG -c "fsmap -d $((freesp_start - 2)) $((freesp_start + 1))" $SCRATCH_MNT | \
+> +	filter_fsmap
+> +
+> +echo "test crossing end of freesp"
+> +$XFS_IO_PROG -c "fsmap -d $((freesp_end - 1)) $((freesp_end + 2))" $SCRATCH_MNT | \
+> +	filter_fsmap
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/1954.out b/tests/generic/1954.out
+> new file mode 100644
+> index 0000000000..6baec43511
+> --- /dev/null
+> +++ b/tests/generic/1954.out
+> @@ -0,0 +1,15 @@
+> +QA output created by 1954
+> +test incorrect setting of high key
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+> +test missing free space extent
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
+> +test whatever came before freesp
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+> +test whatever came after freesp
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+> +test crossing start of freesp
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
+> +test crossing end of freesp
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: FREE XXXX
+> +	XXXX: XXXX:XXXX [XXXX..XXXX]: USED XXXX
+> 
+> 
+
