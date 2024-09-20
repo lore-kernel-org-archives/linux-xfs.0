@@ -1,73 +1,106 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D437E17C22A;
-	Fri, 20 Sep 2024 15:07:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C51B11CA9;
+	Fri, 20 Sep 2024 16:10:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726844852; cv=none; b=rwUx4E8oHK+x+3TNHY93+RnPtYTUtR3Tu/002a0jZFz/G2iN9pnWpBA6NlXAdpqrAh7iN6nDxIE+F/oZphDJJqf0+3esTIveB1kz4KfrLVxalc991VV+pfyV6aFalaj+kcr09YX6R48dGE5MOAx8zqsOhynn4FiUfJn/r/Vif9U=
+	t=1726848624; cv=none; b=Qd4PMtQ06md1L/x+85++7tITufffGZHN4LeETgScYCI4k9cDJo24RL8+epxGqvaTHaF5qAs9/6GU0apStvopJ5f6/VXmreiQ8rWPBKntE176YzDfpPHlDhkxDVo5LUtDkGn5gVn0Yd6NzlAZZ4JbRLgWBxCv7OsJaeM+VsC5NII=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726844852; c=relaxed/simple;
-	bh=YSB/R5z7mV9kKTgso8yheN7y0ygQZYcVM4zbKGdn/dU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ouhM8Bs695OsKFsZmN2qJhuZqddo3ZnuyM/eI4+8TDu6+Lin477tyQK1gHcEScpjtWnQtbtwugpXmP7sK0fnt6I0MVOeoxJ03FiMcllqEdseobaLk1Fl6KF92sQt54kf4I9aIHsZo29KzY4VhkF4rQSPpTypAq70L61Q8DptcpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0JsXRzHO; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1726848624; c=relaxed/simple;
+	bh=RWEMaJGaXsfxEE0C0lo9T9ZyPmvAAJNaokH0TQxxmw0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lDvvdFIzlrMnnPqqY5A6as1jFV8rCONSGrbqy7jjadnoOa2Jawo+ftPOFsdHVl/HUkjqweNoLqxP7yfNj0F8cdOqVxdqGGxoQ6c1+t4bNsvMSxmD6qDn1piz7J4X62lJdQBAo/hhLnUoIhsSMUp6lkl1xGrnPW43kjcZ5nPMb0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R3pylaOe; arc=none smtp.client-ip=209.85.208.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0JsXRzHO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uRhXd76oG6Xe53GNWENSD8ghUB51x6RYup6HPOJq9xE=; b=0JsXRzHOC8YB6Cgoa8esQ4h6VK
-	3bJ23TlyAI8Vjw8ycaVkCNCeEvGVwwBDRcz9cG9hoIhF/jNLvnDTVFsGIflEfJwAf9jeFxXVBovfm
-	vPOwCvnmUJbmclLkyC5bMHazO+qfeezrPsFXFJB/6+W5oNU+eaTbLZ2hoxMCptdGoptUYRRvKPoYj
-	hNxPWNR3lT8KKGG3/G+JPJPPivLkJAj8tJcP/LqVg9TH/abYV8JRfNBkEtS3sB4r6b2/oLuVHQjUX
-	ZpvlGRGPI4Yrt1LL+FsQX5aaBVupIXatZKj/JFJplVBpZgK9Hq/HpF1in2uReBNiqmXrDQ2t3oz16
-	JOzMZKwQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1srfEH-0000000CRd9-28GT;
-	Fri, 20 Sep 2024 15:07:29 +0000
-Date: Fri, 20 Sep 2024 08:07:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Julian Sun <sunjunchao2870@gmail.com>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 3/3] vfs: return -EOVERFLOW in generic_remap_checks()
- when overflow check fails
-Message-ID: <Zu2PsafDRpsu3Ryu@infradead.org>
-References: <20240920123022.215863-1-sunjunchao2870@gmail.com>
- <Zu2EcEnlW1KJfzzR@infradead.org>
- <20240920143727.GB21853@frogsfrogsfrogs>
- <Zu2NeawWugiaWxKA@infradead.org>
- <20240920150213.GD21853@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R3pylaOe"
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-5c25f01879fso2690900a12.1;
+        Fri, 20 Sep 2024 09:10:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1726848621; x=1727453421; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Cr7XGOcXUziTvyQlX8y4MaSV3P+QXr0/0cPRJVwRwZw=;
+        b=R3pylaOeye/T9XNN9JS7dUvXb/NhqFgdGBSTGZ+GJaNxw/Q1wr1d+TYiZY3Huoft/F
+         x64731mQjWt5cAcLb2U5INz4KHwQzZ/C2LOz/0ZxeeSwpWI9InFEg4a8BZ0u41ejVdkJ
+         NshTb85y4rNfooePpz/V0Z406PPArN2ma5WooRuwTV1ZOfTE2iDNZTS8q89dMQImAFFu
+         xs5oBBFQjYc2mM9leAIjUFyn9YkPGVK3RO0KTpRK7p3FMJMlAszKqeJzM/HR5MrxVC9K
+         1Q7MkMzMw2V4kcBNArUsQRtLS0lhaEYgORS2GiO+0CzKSluVcYE0gYbUt3FrAJ4cbR0S
+         Ddcw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726848621; x=1727453421;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Cr7XGOcXUziTvyQlX8y4MaSV3P+QXr0/0cPRJVwRwZw=;
+        b=NituikGtLZnrSDVUzvcKtp/ZlJv3iPqbv54uirG7qAFKbyGd7oCckQClJRBM2PunDO
+         cSZEmQaxbvBGOGdre953GxEZlgQxj/WDL6CEvYfnmO3uv+cS97Z/e6WcrGWMesQ0yFrW
+         TCnmjJtgOfR/5icfEkTzhWP60D1KC1YSIeOwvrWweQ5Nf1XVakhQOUM0M4TVgzo20B+7
+         HOu6W1XXa/xhdkhtpPuC5lUFyHaEU+BAaYoP/Z9EReTtQPHL3qrwKuxuCu1vJtJgFPXG
+         ggbRCFyyiM+6GEPmLDaaYEgoDJVQC4v540i1NVTjmkt9+P1vv5fDZVhgy1v3IgSB+KFR
+         aptg==
+X-Forwarded-Encrypted: i=1; AJvYcCU7QSmX0YvKch4vwkWxTIwQ07AQ2kzO8zLnOVYtphSto3w9ovmsat2uJVTJm/+vJPOF9+T455asUeeU@vger.kernel.org, AJvYcCUCJd1ozGQ1UhAkGhfGyuZfepK4auhdBbANKo3mw5Jvjf7Gkipt1S50o3JXABirUc8WoHIwOVqH@vger.kernel.org, AJvYcCVVYgUDf3SlgZ1hZ2Fc1BM44y5nQWg634mv6iEsBEs6XPQut3VePqEgsE/+TcEQYH4dI+pKkkErlkz91rEn@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz9H5geGu69a5JRF5g/07BqsNllXUVNmoAjtxm7YED7JRk0Qigu
+	x2vSXpQQNvHdzJhN2jVs4jPP+oz0rVtCk7nQb6XY9m5OJCOhVxt65vplK0Tskvy7siCLx/oyc+B
+	C2cYWKWIaJ+bpJtLv3iusa1lPe0o=
+X-Google-Smtp-Source: AGHT+IGB1VoPgmOEpq+79L6y06ORo5qnfiSPcOleFXvXlBXrfzDDPKj98YPlqM00JgvUC/DGeu1v7WP7Lhtg0Vobn2o=
+X-Received: by 2002:a05:6402:3588:b0:5c3:cc6d:19eb with SMTP id
+ 4fb4d7f45d1cf-5c464a384b5mr2119053a12.2.1726848621078; Fri, 20 Sep 2024
+ 09:10:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240920150213.GD21853@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20240920123022.215863-1-sunjunchao2870@gmail.com>
+ <Zu2EcEnlW1KJfzzR@infradead.org> <20240920143727.GB21853@frogsfrogsfrogs>
+ <Zu2NeawWugiaWxKA@infradead.org> <20240920150213.GD21853@frogsfrogsfrogs> <Zu2PsafDRpsu3Ryu@infradead.org>
+In-Reply-To: <Zu2PsafDRpsu3Ryu@infradead.org>
+From: Julian Sun <sunjunchao2870@gmail.com>
+Date: Sat, 21 Sep 2024 00:10:10 +0800
+Message-ID: <CAHB1NagfhamaCnV_spH_uSU4u0sDWrESVy3uU=TfGN51tSBm6A@mail.gmail.com>
+Subject: Re: [PATCH 3/3] vfs: return -EOVERFLOW in generic_remap_checks() when
+ overflow check fails
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org, 
+	jack@suse.cz, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Sep 20, 2024 at 08:02:13AM -0700, Darrick J. Wong wrote:
-> > Which isn't exactly the integer overflow case described here :)
-> 
-> Hm?  This patch is touching the error code you get for failing alignment
-> checks, not the one you get for failing check_add_overflow.  EOVERFLOW
-> seems like an odd return code for unaligned arguments.  Though you're
-> right that EINVAL is verrry vague.
+Christoph Hellwig <hch@infradead.org> =E4=BA=8E2024=E5=B9=B49=E6=9C=8820=E6=
+=97=A5=E5=91=A8=E4=BA=94 23:07=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Fri, Sep 20, 2024 at 08:02:13AM -0700, Darrick J. Wong wrote:
+> > > Which isn't exactly the integer overflow case described here :)
+> >
+> > Hm?  This patch is touching the error code you get for failing alignmen=
+t
+> > checks, not the one you get for failing check_add_overflow.  EOVERFLOW
+> > seems like an odd return code for unaligned arguments.  Though you're
+> > right that EINVAL is verrry vague.
+>
+> I misread the patch (or rather mostly read the description).  Yes,
+> -EOVERFLOW is rather odd here.  And generic_copy_file_checks doesn't
+> even have alignment checks, so the message is wrong as well.  I'll
+> wait for Jun what the intention was here - maybe the diff got
+> misapplied and this was supposed to be applied to an  overflow
+> check that returns -EINVAL?
 
-I misread the patch (or rather mostly read the description).  Yes,
--EOVERFLOW is rather odd here.  And generic_copy_file_checks doesn't
-even have alignment checks, so the message is wrong as well.  I'll
-wait for Jun what the intention was here - maybe the diff got
-misapplied and this was supposed to be applied to an  overflow
-check that returns -EINVAL?
+Yeah... The patch was originally intended for overflow check and
+sourced from [1], differs from its description. After applying it to
+the latest kernel version, there were no warnings or errors, but I
+suspect there may be an issue with the git apply process. I'll fix it
+in the patch v2, thanks.
 
+[1]: https://lore.kernel.org/linux-fsdevel/20240906033202.1252195-1-sunjunc=
+hao2870@gmail.com/
+>
+
+Thanks,
+--=20
+Julian Sun <sunjunchao2870@gmail.com>
