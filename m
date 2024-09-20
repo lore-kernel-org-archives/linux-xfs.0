@@ -1,104 +1,127 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C51B11CA9;
-	Fri, 20 Sep 2024 16:10:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97CEC14900E;
+	Fri, 20 Sep 2024 16:17:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726848624; cv=none; b=Qd4PMtQ06md1L/x+85++7tITufffGZHN4LeETgScYCI4k9cDJo24RL8+epxGqvaTHaF5qAs9/6GU0apStvopJ5f6/VXmreiQ8rWPBKntE176YzDfpPHlDhkxDVo5LUtDkGn5gVn0Yd6NzlAZZ4JbRLgWBxCv7OsJaeM+VsC5NII=
+	t=1726849035; cv=none; b=bdShM1NlAHQMXayx3VBjx3CqwmHu5dxnQsxm6Qf/2watr7QMJZTDf7NtNBndVogefIxnDg2Tzrd/ubrWL6foAMlgtvAAxTDHpATQ4VKIunJn3Q3fVQwQckq1lJEdR4tPHKFeV6oeqhHql3fSIfrWcE1rTP+O/Fea4hspQhEYaIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726848624; c=relaxed/simple;
-	bh=RWEMaJGaXsfxEE0C0lo9T9ZyPmvAAJNaokH0TQxxmw0=;
+	s=arc-20240116; t=1726849035; c=relaxed/simple;
+	bh=HuuF0HTQ6WFY+mXiK4pXlbFhB5BaCKiY2zhgmUaNu9E=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lDvvdFIzlrMnnPqqY5A6as1jFV8rCONSGrbqy7jjadnoOa2Jawo+ftPOFsdHVl/HUkjqweNoLqxP7yfNj0F8cdOqVxdqGGxoQ6c1+t4bNsvMSxmD6qDn1piz7J4X62lJdQBAo/hhLnUoIhsSMUp6lkl1xGrnPW43kjcZ5nPMb0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R3pylaOe; arc=none smtp.client-ip=209.85.208.54
+	 To:Cc:Content-Type; b=nVCUQAQzPryOZ4d1Xp68fqMY+DwihZAWFnFSPF0sgmoNDATZU5xbP0eXApEKaGxgTNoCq0wgaIy29d1YrbYxmvRURkBaha8RlQQ4T6wJvQnYbM0HssqN/dkZ4A9Mul+oMtT7gCCe5RMEt+b2+PDx+CwemfRAYMXh6c5BKqJiLxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nj64M9N3; arc=none smtp.client-ip=209.85.208.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R3pylaOe"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-5c25f01879fso2690900a12.1;
-        Fri, 20 Sep 2024 09:10:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nj64M9N3"
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2f74e468baeso25709731fa.2;
+        Fri, 20 Sep 2024 09:17:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1726848621; x=1727453421; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1726849032; x=1727453832; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Cr7XGOcXUziTvyQlX8y4MaSV3P+QXr0/0cPRJVwRwZw=;
-        b=R3pylaOeye/T9XNN9JS7dUvXb/NhqFgdGBSTGZ+GJaNxw/Q1wr1d+TYiZY3Huoft/F
-         x64731mQjWt5cAcLb2U5INz4KHwQzZ/C2LOz/0ZxeeSwpWI9InFEg4a8BZ0u41ejVdkJ
-         NshTb85y4rNfooePpz/V0Z406PPArN2ma5WooRuwTV1ZOfTE2iDNZTS8q89dMQImAFFu
-         xs5oBBFQjYc2mM9leAIjUFyn9YkPGVK3RO0KTpRK7p3FMJMlAszKqeJzM/HR5MrxVC9K
-         1Q7MkMzMw2V4kcBNArUsQRtLS0lhaEYgORS2GiO+0CzKSluVcYE0gYbUt3FrAJ4cbR0S
-         Ddcw==
+        bh=yus/AQyI3rsCXQIWU3lsDABmOqGllelGHD+9XPDtl5E=;
+        b=Nj64M9N3Z8dhcU56U7nQkJQy3kHeowv/X9ouXOMatXyM1sQmFwJsbTgXRJlV0YA7sd
+         3QsDek2bIVqk1yYUMLq+1EhFBeEQo95nL/5S5rDc3d+kWQLAAbC99nNZhi31t/5ARlqg
+         3w5ZVx7RNwi7zkSEzNkxm+O7kPQY8cMLF+jIdin0fLvfI9DuSHtWdRP6lim+JF48X6aM
+         BplcsyimKAChC0tQFMYxIYBMux7bJ/RJxXvzqzbItEP9LGnBEMlCh0U7qp0VWeXmtU+x
+         1cGOjsbivnV6qVKowMA5DLPKi8wJ9CYSXZ3LakszMkHBuLzAq/+VlSTvo4WnyYIA+cZs
+         K4Ug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726848621; x=1727453421;
+        d=1e100.net; s=20230601; t=1726849032; x=1727453832;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Cr7XGOcXUziTvyQlX8y4MaSV3P+QXr0/0cPRJVwRwZw=;
-        b=NituikGtLZnrSDVUzvcKtp/ZlJv3iPqbv54uirG7qAFKbyGd7oCckQClJRBM2PunDO
-         cSZEmQaxbvBGOGdre953GxEZlgQxj/WDL6CEvYfnmO3uv+cS97Z/e6WcrGWMesQ0yFrW
-         TCnmjJtgOfR/5icfEkTzhWP60D1KC1YSIeOwvrWweQ5Nf1XVakhQOUM0M4TVgzo20B+7
-         HOu6W1XXa/xhdkhtpPuC5lUFyHaEU+BAaYoP/Z9EReTtQPHL3qrwKuxuCu1vJtJgFPXG
-         ggbRCFyyiM+6GEPmLDaaYEgoDJVQC4v540i1NVTjmkt9+P1vv5fDZVhgy1v3IgSB+KFR
-         aptg==
-X-Forwarded-Encrypted: i=1; AJvYcCU7QSmX0YvKch4vwkWxTIwQ07AQ2kzO8zLnOVYtphSto3w9ovmsat2uJVTJm/+vJPOF9+T455asUeeU@vger.kernel.org, AJvYcCUCJd1ozGQ1UhAkGhfGyuZfepK4auhdBbANKo3mw5Jvjf7Gkipt1S50o3JXABirUc8WoHIwOVqH@vger.kernel.org, AJvYcCVVYgUDf3SlgZ1hZ2Fc1BM44y5nQWg634mv6iEsBEs6XPQut3VePqEgsE/+TcEQYH4dI+pKkkErlkz91rEn@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9H5geGu69a5JRF5g/07BqsNllXUVNmoAjtxm7YED7JRk0Qigu
-	x2vSXpQQNvHdzJhN2jVs4jPP+oz0rVtCk7nQb6XY9m5OJCOhVxt65vplK0Tskvy7siCLx/oyc+B
-	C2cYWKWIaJ+bpJtLv3iusa1lPe0o=
-X-Google-Smtp-Source: AGHT+IGB1VoPgmOEpq+79L6y06ORo5qnfiSPcOleFXvXlBXrfzDDPKj98YPlqM00JgvUC/DGeu1v7WP7Lhtg0Vobn2o=
-X-Received: by 2002:a05:6402:3588:b0:5c3:cc6d:19eb with SMTP id
- 4fb4d7f45d1cf-5c464a384b5mr2119053a12.2.1726848621078; Fri, 20 Sep 2024
- 09:10:21 -0700 (PDT)
+        bh=yus/AQyI3rsCXQIWU3lsDABmOqGllelGHD+9XPDtl5E=;
+        b=aB0K3yNz9CpDGLqVoceyNnGuWuYgCpx4PQHL6aaIYRPlRwxsfl1T0y+Y9cmBZ9vjP/
+         15h4wT+vAOAgApAHMJqq29yi7vckEnwNxAPLCHeBOB1nuh8q5vZVCKGb5SjAzfpQVvMQ
+         NV+PICe9txXxdioIBu05Tcc/MqrV/UoCvCoI5ZvEeYw+nCSo2GSeJpCuFJ7H5KgraLVK
+         +/BGEtYauVA6RNiuo/mytfGAkNTlWR4JonG3eTtqd0pTWcExlNM4sKh1VdkTDEYH6+Sa
+         zc9DgditwEQqKTi6tU5X+RRbDPBtqAzr/oTbOBhDOah1m/n3Ym1BpK6NgMzHyZ34l6ce
+         2czw==
+X-Forwarded-Encrypted: i=1; AJvYcCWrYVmm9iVZdxkUf7IYvyLcMjJt6vK5NIT/tEz9BSLPysIl5vx6lPFor/gab6BWs4cz+6jyv1eR@vger.kernel.org, AJvYcCXZcE+6M3JKzN/sqGZv36XYu50lcbMBthGD9e0mfPP++ln3J52q+2TdT5HDPNBbTfjuEupGx2q6zzg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywq8JawW6LPt/S6vDTaRtkug4EzME0VteLPHvU4Wv5LRTcJhBZE
+	k6dKxZRTqAUNiN2ZWQ8Dv72yk7yaelbcIlDIzJ7asbyxTj+NIsTPe3NH05yZT2BrRr5jZf37Cqc
+	9trgqX6JMyhvdpzz/fHiMnHIhhjY=
+X-Google-Smtp-Source: AGHT+IHo9BDi/pflKc3O3aaWxueD/163MygMaTuY1VPxsuWcW3rm/uyqrSfTPlmBoWGONGKWDf8+AHlcmIp3wpBErq0=
+X-Received: by 2002:a05:651c:150b:b0:2f1:929b:af03 with SMTP id
+ 38308e7fff4ca-2f7cb329399mr23628841fa.30.1726849031286; Fri, 20 Sep 2024
+ 09:17:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240920123022.215863-1-sunjunchao2870@gmail.com>
- <Zu2EcEnlW1KJfzzR@infradead.org> <20240920143727.GB21853@frogsfrogsfrogs>
- <Zu2NeawWugiaWxKA@infradead.org> <20240920150213.GD21853@frogsfrogsfrogs> <Zu2PsafDRpsu3Ryu@infradead.org>
-In-Reply-To: <Zu2PsafDRpsu3Ryu@infradead.org>
+References: <20240920122621.215397-1-sunjunchao2870@gmail.com> <Zu2FWuonuO97Q6V8@infradead.org>
+In-Reply-To: <Zu2FWuonuO97Q6V8@infradead.org>
 From: Julian Sun <sunjunchao2870@gmail.com>
-Date: Sat, 21 Sep 2024 00:10:10 +0800
-Message-ID: <CAHB1NagfhamaCnV_spH_uSU4u0sDWrESVy3uU=TfGN51tSBm6A@mail.gmail.com>
-Subject: Re: [PATCH 3/3] vfs: return -EOVERFLOW in generic_remap_checks() when
- overflow check fails
+Date: Sat, 21 Sep 2024 00:17:00 +0800
+Message-ID: <CAHB1NagASLvnGiwB1kQwG4qEn+U_2SNxMfG+wnZ9C29d-Ov6Sg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] xfs: Do not unshare ranges beyond EOF
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org, 
-	jack@suse.cz, stable@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	chandan.babu@oracle.com, djwong@kernel.org, stable@vger.kernel.org, 
+	syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com, 
+	Dave Chinner <david@fromorbit.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 Christoph Hellwig <hch@infradead.org> =E4=BA=8E2024=E5=B9=B49=E6=9C=8820=E6=
-=97=A5=E5=91=A8=E4=BA=94 23:07=E5=86=99=E9=81=93=EF=BC=9A
+=97=A5=E5=91=A8=E4=BA=94 22:23=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On Fri, Sep 20, 2024 at 08:02:13AM -0700, Darrick J. Wong wrote:
-> > > Which isn't exactly the integer overflow case described here :)
+> On Fri, Sep 20, 2024 at 08:26:21PM +0800, Julian Sun wrote:
+> > Attempting to unshare extents beyond EOF will trigger
+> > the need zeroing case, which in turn triggers a warning.
+> > Therefore, let's skip the unshare process if extents are
+> > beyond EOF.
 > >
-> > Hm?  This patch is touching the error code you get for failing alignmen=
-t
-> > checks, not the one you get for failing check_add_overflow.  EOVERFLOW
-> > seems like an odd return code for unaligned arguments.  Though you're
-> > right that EINVAL is verrry vague.
+> > Reported-and-tested-by: syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotma=
+il.com
+> > Closes: https://syzkaller.appspot.com/bug?extid=3D296b1c84b9cbf306e5a0
+> > Fixes: 32a38a499104 ("iomap: use write_begin to read pages to unshare")
+> > Inspired-by: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Julian Sun <sunjunchao2870@gmail.com>
+> > ---
+> >  fs/xfs/xfs_reflink.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> >
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 6fde6ec8092f..65509ff6aba0 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -3,6 +3,7 @@
+> >   * Copyright (C) 2016 Oracle.  All Rights Reserved.
+> >   * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> >   */
+> > +#include "linux/fs.h"
 >
-> I misread the patch (or rather mostly read the description).  Yes,
-> -EOVERFLOW is rather odd here.  And generic_copy_file_checks doesn't
-> even have alignment checks, so the message is wrong as well.  I'll
-> wait for Jun what the intention was here - maybe the diff got
-> misapplied and this was supposed to be applied to an  overflow
-> check that returns -EINVAL?
+> This really should not be needed (and is the wrong way to include
+> non-local headers anyway).
 
-Yeah... The patch was originally intended for overflow check and
-sourced from [1], differs from its description. After applying it to
-the latest kernel version, there were no warnings or errors, but I
-suspect there may be an issue with the git apply process. I'll fix it
-in the patch v2, thanks.
+Yes, it was added automatically by vscode... I will recheck the patch
+before sending it.
+>
+> >  #include "xfs.h"
+> >  #include "xfs_fs.h"
+> >  #include "xfs_shared.h"
+> > @@ -1669,6 +1670,9 @@ xfs_reflink_unshare(
+> >
+> >       if (!xfs_is_reflink_inode(ip))
+> >               return 0;
+> > +     /* don't try to unshare any ranges beyond EOF. */
+> > +     if (offset + len > i_size_read(inode))
+> > +             len =3D i_size_read(inode) - offset;
+>
+> So i_size is a byte granularity value, but later on iomap_file_unshare
+> operates on blocks.  If you reduce the value like this here this means
+> we can't ever unshare the last block of a file if the file size is
+> not block aligned, which feels odd.
 
-[1]: https://lore.kernel.org/linux-fsdevel/20240906033202.1252195-1-sunjunc=
-hao2870@gmail.com/
+Got it, will fix it in patch v2. Thanks for your review and explantion.
 >
 
 Thanks,
