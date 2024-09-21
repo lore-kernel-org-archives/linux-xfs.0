@@ -1,226 +1,135 @@
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 708C9605BA
-	for <linux-xfs@vger.kernel.org>; Sat, 21 Sep 2024 12:30:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39CE23BB25
+	for <linux-xfs@vger.kernel.org>; Sat, 21 Sep 2024 23:03:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726921826; cv=none; b=Ic5HFou3+XX1WHvuoZorO5GezYUcrc+EB/28UYqujKqZar3kXTXfW4mDi1AzP3g+dnUhnpTH6F7XUS3yK6d7NTFBtHjiPu9ISluWHanqXyc4ipeN0X2Y5ViHqCeqNGNxxsgWMnTFQNtvYLvJYRrUTidC0kkFnKHoNkevsp6bGSs=
+	t=1726959783; cv=none; b=JSGQiQsbRlFDnFrhyldOTMv9p/xJzOySysirAs+UKiK+I7oKq8Zsp7MxYOoVPwtqwvHFXppkaSwHNLt93XZuJL4/ivm18Sb1cXHyB1imYlUzAg8hpKI1esfb2We7H72FF/mVbv8KurvtBGzcsRrJ0BQFhQ9uKj4uc6/5Rc/6zbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726921826; c=relaxed/simple;
-	bh=hs5m+THVTu0oYo5eRourhPtOSy5GTYZDCEI4DYW57Gw=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=rV9HUGiWezxnlf2dSArA557p2u3JU8gJ32rH4aWAVLRV7VefQjI4QnEpZ20Ds+kdryOJlsvPPDHXDEmZnyfxOJ3r8+Tv0dUMjd2DVHciMUkkH5hvrBgFOt/TA/jVk1gIyW/c5+CCb7aMAZCAodP+3yb0Qi4By3PtTC4dUb67uzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3a0ce4692a4so8651075ab.0
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Sep 2024 05:30:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726921823; x=1727526623;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=oXh049IlUMXetBW9qT3DncLxl3GlaSQJHmaMqTgr4UU=;
-        b=qopz7dNrnpuoeIbYZeDdq1gQNYGq9fAXjeyFa/FWbN9h/BAFeyMWuoXhRwJgar13zn
-         ibOVzJlysjnyt69UwYzphwUag5cqDDACNW2LjbT0pY3t8pQ/difhqCfABt+ZbbTermv1
-         RM1VFrNTW/307xBzhR6fHir9ZEH5/kEP74QrD5KhIlnALCdfuD0tmomXtQ3c12+QG54p
-         162BY5tHYw3jScarnUFnPO/mGuevB2AS66SnGizDriyLGSo+m6Ar3YCPOP1WdywF+WrF
-         EoV5scJXF4MiLUWNCU78XjZ+6ekji6y03vNn0LwKQI5yAMHyE1+W4RC/ECrYp2EGNhyB
-         G5mA==
-X-Forwarded-Encrypted: i=1; AJvYcCUiigDr7EYb72QnHgiafKZnPMxTB1NvuGlUl1t0LiinqvorUXyyranXdqoYo3pe/XEgF77hcj/d8CQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzUJ47MjUvrUOpEOYIRPnaLpEcxd0DoipTPX6DOrr6Z8HCWp7Pa
-	SwzOCtPYcDzUva5OZ/2CTuhRTBEHV8edahh++KyL/wYZ7Pcu68YKZKBh3EGrBPlHs6KmnnoZXDB
-	QfJshn5gs3tRZI1b//hP1QNkV1kgUKOM31kZwsILkJOLCdTPLdpl0iNc=
-X-Google-Smtp-Source: AGHT+IGnuBhg8j/2xIKI/VxtNA5Xv5ExRO2minvL86NMdvyqUFP78LO5M3sqzyCt5k9zVP908SU+EsN0/C6uiqDU0RixCrknvTWJ
+	s=arc-20240116; t=1726959783; c=relaxed/simple;
+	bh=xOHb1+cDcoaugQo2SmeYNgv9ywf2IOExG0eNy6thMD8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=kV9tRz0Nyoaxt87gyBiXc8mtPgqr92+8Rq0FS6fLeeTyVJBjWkUsCaCXoCG+IFM5vg4UN6saaxBDm6ND6hLAQ0l4fR/yFWvZqOPKC6uaIDy0vYH+gcWBThjvydOBQc2BZ6ybKkRC+SCKaqOZeNvemXo7Kn41APlr8izGNrIeaB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rurPnkPF; arc=none smtp.client-ip=91.218.175.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rurPnkPF"
+Date: Sat, 21 Sep 2024 19:02:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1726959778;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=UT7Rox1ZPcS4JOm3wspSy1yWoABHikamMD3mgcBRds4=;
+	b=rurPnkPFzQS/5u+BGUPfHRLx54bRJU/72H5iagG+xH0tXRAL1bHxTUCi1q6LsucE/SBAcC
+	cKT7sBtQro0O4UDwj7jhh+B/LlybMg93SvfRVAjNGrhOq+RXIDeWuOq/CPjArhny37ZzFQ
+	YB0mfWXfKDLkH6LSmixT0vHo4umlzbY=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Kent Overstreet <kent.overstreet@linux.dev>
+To: linux-bcachefs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+	Thomas Bertschinger <tahbertschinger@gmail.com>
+Subject: [bcachefs] self healing design doc
+Message-ID: <h63p6m5snken2ps7lvnmxmgnjrkzeegprjdweghw4styticya5@obigqaasdwyc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1c2f:b0:3a0:9ee3:d85b with SMTP id
- e9e14a558f8ab-3a0c8997974mr48203585ab.4.1726921823543; Sat, 21 Sep 2024
- 05:30:23 -0700 (PDT)
-Date: Sat, 21 Sep 2024 05:30:23 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <66eebc5f.050a0220.3195df.0053.GAE@google.com>
-Subject: [syzbot] [xfs?] INFO: task hung in xfs_ail_push_all_sync
-From: syzbot <syzbot+bf0143df12877cb1a21b@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Migadu-Flow: FLOW_OUT
 
-Hello,
+So, I'm sketching out self healing for bcachefs - that is, repairing
+errors automatically, instead of requiring the user to run fsck
+manually.
 
-syzbot found the following issue on:
+This can be divided up into two different categories, or strategies:
 
-HEAD commit:    a430d95c5efa Merge tag 'lsm-pr-20240911' of git://git.kern..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=15569d00580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d9ab5893ec5191eb
-dashboard link: https://syzkaller.appspot.com/bug?extid=bf0143df12877cb1a21b
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=109e6a77980000
+ - Repairing errors/damage as they are noticed in normal operation: i.e.
+   follow a backpointer to an extent, notice that there is no extent,
+   and then simply delete the backpointer and continue
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/f8549392ace4/disk-a430d95c.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/9b866ef0c06c/vmlinux-a430d95c.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/9d6691641029/bzImage-a430d95c.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/dd50a033ca89/mount_2.gz
+ - Flagging in the superblock that either there's an unfixed error, or
+   that a fsck pass is required, and then running it automatically
+   either on next mount or scheduling it for some later time
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+bf0143df12877cb1a21b@syzkaller.appspotmail.com
+The first is going to be a big focus in the future, as on larger
+filesystems we _really_ want to avoid running full fsck passes unless
+absolutely required.
 
-INFO: task syz.0.75:6468 blocked for more than 143 seconds.
-      Not tainted 6.11.0-syzkaller-02574-ga430d95c5efa #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz.0.75        state:D stack:24864 pid:6468  tgid:6446  ppid:6378   flags:0x00004004
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:5188 [inline]
- __schedule+0x17ae/0x4a10 kernel/sched/core.c:6529
- __schedule_loop kernel/sched/core.c:6606 [inline]
- schedule+0x14b/0x320 kernel/sched/core.c:6621
- xfs_ail_push_all_sync+0x236/0x310 fs/xfs/xfs_trans_ail.c:726
- xfs_log_quiesce+0xdf/0x5b0 fs/xfs/xfs_log.c:1018
- xfs_fs_freeze+0x8d/0x1a0 fs/xfs/xfs_super.c:936
- freeze_super+0x81b/0xee0 fs/super.c:2107
- fs_bdev_freeze+0x1ac/0x320 fs/super.c:1484
- bdev_freeze+0xd6/0x220 block/bdev.c:257
- xfs_fs_goingdown+0xa9/0x160 fs/xfs/xfs_fsops.c:446
- xfs_file_ioctl+0x12d4/0x19e0 fs/xfs/xfs_ioctl.c:1473
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:907 [inline]
- __se_sys_ioctl+0xf9/0x170 fs/ioctl.c:893
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fc862d7def9
-RSP: 002b:00007fc863b4a038 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007fc862f36058 RCX: 00007fc862d7def9
-RDX: 0000000020000080 RSI: 000000008004587d RDI: 0000000000000006
-RBP: 00007fc862df0b76 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 0000000000000000 R14: 00007fc862f36058 R15: 00007ffd1aceae18
- </TASK>
+For now though, getting the second mode implemented is higher priority;
+we need that so that users aren't having to jump through hoops in order
+to get their filesystem working if their root filesystem encounters
+corruption - i.e. this is needed before we can take the EXPERIMENTAL
+label off.
 
-Showing all locks held in the system:
-1 lock held by khungtaskd/30:
- #0: ffffffff8e738660 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire include/linux/rcupdate.h:326 [inline]
- #0: ffffffff8e738660 (rcu_read_lock){....}-{1:2}, at: rcu_read_lock include/linux/rcupdate.h:838 [inline]
- #0: ffffffff8e738660 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x55/0x2a0 kernel/locking/lockdep.c:6626
-2 locks held by getty/4972:
- #0: ffff888034b890a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70 drivers/tty/tty_ldisc.c:243
- #1: ffffc9000311b2f0 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0x6a6/0x1e00 drivers/tty/n_tty.c:2211
-5 locks held by syz.0.75/6468:
- #0: ffff888022c9c6b0 (&bdev->bd_fsfreeze_mutex){+.+.}-{3:3}, at: bdev_freeze+0x2a/0x220 block/bdev.c:248
- #1: ffff888031aac420 (sb_writers#12){++++}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
- #1: ffff888031aac420 (sb_writers#12){++++}-{0:0}, at: freeze_super+0x4e9/0xee0 fs/super.c:2085
- #2: ffff888031aac0e0 (&type->s_umount_key#53){+.+.}-{3:3}, at: __super_lock fs/super.c:56 [inline]
- #2: ffff888031aac0e0 (&type->s_umount_key#53){+.+.}-{3:3}, at: __super_lock_excl fs/super.c:71 [inline]
- #2: ffff888031aac0e0 (&type->s_umount_key#53){+.+.}-{3:3}, at: freeze_super+0x4f1/0xee0 fs/super.c:2086
- #3: ffff888031aac518 (sb_pagefaults#2){+.+.}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
- #3: ffff888031aac518 (sb_pagefaults#2){+.+.}-{0:0}, at: freeze_super+0x519/0xee0 fs/super.c:2090
- #4: ffff888031aac610 (sb_internal#2){++++}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
- #4: ffff888031aac610 (sb_internal#2){++++}-{0:0}, at: freeze_super+0x7cc/0xee0 fs/super.c:2104
-1 lock held by syz-executor/6470:
- #0: ffffffff8e73da38 (rcu_state.exp_mutex){+.+.}-{3:3}, at: exp_funnel_lock kernel/rcu/tree_exp.h:296 [inline]
- #0: ffffffff8e73da38 (rcu_state.exp_mutex){+.+.}-{3:3}, at: synchronize_rcu_expedited+0x381/0x830 kernel/rcu/tree_exp.h:958
+(I recently had to dig out my nixos recovery usb stick to recovery from
+the bug where online fsck was deleting inodes that were unlinked but
+still in use - whoops, don't want normal users to have to do that).
 
-=============================================
+Background, things we already have:
 
-NMI backtrace for cpu 0
-CPU: 0 UID: 0 PID: 30 Comm: khungtaskd Not tainted 6.11.0-syzkaller-02574-ga430d95c5efa #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/06/2024
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:93 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:119
- nmi_cpu_backtrace+0x49c/0x4d0 lib/nmi_backtrace.c:113
- nmi_trigger_cpumask_backtrace+0x198/0x320 lib/nmi_backtrace.c:62
- trigger_all_cpu_backtrace include/linux/nmi.h:162 [inline]
- check_hung_uninterruptible_tasks kernel/hung_task.c:223 [inline]
- watchdog+0xff4/0x1040 kernel/hung_task.c:379
- kthread+0x2f0/0x390 kernel/kthread.c:389
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
-Sending NMI from CPU 0 to CPUs 1:
-NMI backtrace for cpu 1
-CPU: 1 UID: 0 PID: 4661 Comm: klogd Not tainted 6.11.0-syzkaller-02574-ga430d95c5efa #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/06/2024
-RIP: 0010:filter_irq_stacks+0x4f/0xa0 kernel/stacktrace.c:397
-Code: f0 84 bd 8b 48 89 fb eb 0c 49 ff c7 48 83 c3 08 4d 39 fc 74 4f 48 89 d8 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df 80 3c 08 00 <74> 08 48 89 df e8 e7 6a 78 00 4b 8b 04 fe 48 39 e8 72 0c 48 c7 c1
-RSP: 0018:ffffc90003137418 EFLAGS: 00000246
-RAX: 1ffff92000626e96 RBX: ffffc900031374b0 RCX: dffffc0000000000
-RDX: 0000000000400cc0 RSI: 000000000000000c RDI: ffffc900031374b0
-RBP: ffffffff8bc00230 R08: ffffffff81378892 R09: 1ffffffff1ff501d
-R10: dffffc0000000000 R11: fffffbfff1ff501e R12: 000000000000000c
-R13: ffffffff8bbd84f0 R14: ffffc900031374b0 R15: 0000000000000000
-FS:  00007f80f557f380(0000) GS:ffff8880b8900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f37b7714000 CR3: 0000000063a2e000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <NMI>
- </NMI>
- <TASK>
- stack_depot_save_flags+0x29/0x830 lib/stackdepot.c:609
- kasan_save_stack mm/kasan/common.c:48 [inline]
- kasan_save_track+0x51/0x80 mm/kasan/common.c:68
- unpoison_slab_object mm/kasan/common.c:312 [inline]
- __kasan_slab_alloc+0x66/0x80 mm/kasan/common.c:338
- kasan_slab_alloc include/linux/kasan.h:201 [inline]
- slab_post_alloc_hook mm/slub.c:3989 [inline]
- slab_alloc_node mm/slub.c:4038 [inline]
- kmem_cache_alloc_node_noprof+0x16b/0x320 mm/slub.c:4081
- __alloc_skb+0x1c3/0x440 net/core/skbuff.c:668
- alloc_skb include/linux/skbuff.h:1322 [inline]
- alloc_skb_with_frags+0xc3/0x820 net/core/skbuff.c:6612
- sock_alloc_send_pskb+0x91a/0xa60 net/core/sock.c:2883
- unix_dgram_sendmsg+0x6d3/0x1f80 net/unix/af_unix.c:2027
- sock_sendmsg_nosec net/socket.c:730 [inline]
- __sock_sendmsg+0x221/0x270 net/socket.c:745
- __sys_sendto+0x398/0x4f0 net/socket.c:2210
- __do_sys_sendto net/socket.c:2222 [inline]
- __se_sys_sendto net/socket.c:2218 [inline]
- __x64_sys_sendto+0xde/0x100 net/socket.c:2218
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f80f56e19b5
-Code: 8b 44 24 08 48 83 c4 28 48 98 c3 48 98 c3 41 89 ca 64 8b 04 25 18 00 00 00 85 c0 75 26 45 31 c9 45 31 c0 b8 2c 00 00 00 0f 05 <48> 3d 00 f0 ff ff 76 7a 48 8b 15 44 c4 0c 00 f7 d8 64 89 02 48 83
-RSP: 002b:00007ffe65f0c128 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f80f56e19b5
-RDX: 000000000000004f RSI: 000055b41fbcd6b0 RDI: 0000000000000003
-RBP: 000055b41fbc8910 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000004000 R11: 0000000000000246 R12: 0000000000000013
-R13: 00007f80f586f212 R14: 00007ffe65f0c228 R15: 0000000000000000
- </TASK>
+- Recovery passes are enumerated, with stable identifiers. This is used
+  for upgrades and downgrades: upgrades and downgrades may specify
+  recovery passes to run and errors to silently fix, and those are
+  listed in the superblock until complete - in case of an interrupted
+  upgrade/downgrade.
 
+- fsck errors are also enumerated. This is currently used by the
+  superblock 'errors' section, which lists counts and date of last error
+  of every error the filesystem has ever seen. This section is purely
+  informational (it's highly useful in bug reports) - it doesn't (yet?)
+  have fields for whether a given error type has unfixed errors.
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+Todo items:
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+- Convert 'bch2_fs_inconsistent()' calls to fsck_err() calls.
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
+  bch2_fs_inconsistent() just goes emergency read-only (or panics, or
+  does nothing, according to options). fsck_err() logs the error (by
+  type) in the superblock, and returns true/false/error if we should fix
+  the error, just continue, or shut down.
 
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+  One of the goals here is that any time there's a serious error that
+  causes us to go ERO/offline or needs repair, it should be logged in
+  the superblock.
 
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
+  I'm also hoping to get an opt-in telemetry tool written to upload
+  superblocks once a week (a bit like debian popcon); since many users
+  don't report bugs if they can work around them, this will give us some
+  valuable info on how buggy or not buggy bcachefs is in the wild, and
+  where to hunt for bugs.
 
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
+- Add a field to BCH_SB_ERRS() in sb-errors_format.h for which recovery
+  pass(es?) are required to fix each error.
 
-If you want to undo deduplication, reply with:
-#syz undup
+New superblock fields for self healing:
+
+The existing sb_ext.recovery_passes_required field that is used for
+upgrades/downgrades probably isn't what we want here - some errors need
+to be fixed right away, for others we just want to schedule fsck for at
+some point in the future.
+
+Q: What determines which errors need to be fixed right away, and should
+this get a bit in the superblock? Or is it static per-error-type?
+
+Not sure on this one yet.
+
+Q: In the superblock, should we be listing
+ A: unfixed errors, or
+ B: recovery passes we need to run (immediately or when scheduled), or
+ C: perhaps both
+
+I think we'll be going with option A, which means we can just add a bit
+or two to the sb_errors superblock section - this works provided the
+sb_err -> recovery passing mapping is static, and I believe the sb_err
+enum is fine grained enough that it is.
+
+Once I've added the 'recovery passes to repair' field to BCH_SB_ERRS()
+I'll have a better feeling on this.
+
+Thoughts? Corner cases?
