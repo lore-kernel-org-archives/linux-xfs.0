@@ -1,119 +1,132 @@
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B0F632;
-	Sun, 22 Sep 2024 16:51:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E58B2581;
+	Sun, 22 Sep 2024 17:08:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727023884; cv=none; b=FfdlOtj4A5hMnKEr+hAvZ7T97s1HtPw56a2bSYhCNTaWmYYJSBQ+eFevhaKw7a2CwGj6Em6FNAQfHT2YOjanbUTJr6qb4nl1QC6Ys5YiJ1uKj1e6og06fAWV5WehNk0f7TvWYeJCL5gdVkZ5mDFNXgYG7sx1HsuZpn08NwfkdtE=
+	t=1727024884; cv=none; b=T5H+8V2TYlzbIYPfDW+i/zP0LWW8RXtBbFBkGszMWImeeRzTHp/qIY6CJHFcuHYUlUfAUM6sv+1iXHwQ0WTYbHraGOr0j+w1S+8Ig+oeVKFN/exgNhMdYbp6GnaJSuuUeuHw+0DTGkmRT/N5q15jOGBEE3+T6FuUV3ESt8oToHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727023884; c=relaxed/simple;
-	bh=bnXL/CBG6WeT0vqoQrrnx+ndunnjF44ffiYICMaEYoU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=t0xxp1LsaecL1ZCnlGom3U89UAmi8przOQE1qH0e2+PrJV39m84ke4yoC01/9QhrtX99PoSNVn2jGV4VFHAx4tMUzMlZRiMt/LFGEWkyaDQ7rzSuzdDM+7Pt6f/CI7PiEsWxHpxcragKqdepXjwiy1lXKULoDuYmrjPnJE86FB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E6X/LSMi; arc=none smtp.client-ip=209.85.208.181
+	s=arc-20240116; t=1727024884; c=relaxed/simple;
+	bh=x7s8RISRd78v3+3BDolULM9nVmrkU4bjG9Pa+rjeYWU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NQVovl39yQCurI+eDmsI+8wfJahD3E17OHLOsmg6UfjFuzB6clkuXnjZxfXqo7QeSM7jnXR8QQOrTiVUqqK0pLhidv1yOJLrE9+lL5xFV3JSaEQVVOERkMk1e4jHLWGV0kuZ/TQvfpz5rKozIDFLEkNFEI3LeOsxTa1rfPhaPpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lsEXIJbe; arc=none smtp.client-ip=209.85.218.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E6X/LSMi"
-Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2f7657f9f62so39422021fa.3;
-        Sun, 22 Sep 2024 09:51:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lsEXIJbe"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a8a789c4fc5so779020766b.0;
+        Sun, 22 Sep 2024 10:08:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727023881; x=1727628681; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=g1oL5S/B37tEUQ5pYbFLSlwc7f6+AmoEVqGKun0bI4g=;
-        b=E6X/LSMi72nxCjHfIVeNE0jHiRczFIFYMQWNPKerwYYk7N1MiPX0erWTL5q+j4MUYW
-         VcMRk9t30duAqxAGqQzOxGQ2C/WMiwVFkNk/b2Zydran7NNvCQ6q24i9H+CVCvtWk28I
-         OA97oJStIZLPc0omB5DtTntYknXLyGI67L1+iT6q6gB0gBcmJ8hjFLJf+R48AVU+AoLi
-         Feo8qrD+ug6iQZk2GIgN+SRS1BRZdfTUZrKRorPD1MqgjzZR158wVFjYcYMlfIdTz774
-         KxUoDhW0lBO8Vw1WdYvjvL9aLHZY5kSXoav3uXIZylFRfbJwqWHnU8Zg93cNJf78MZw2
-         84jg==
+        d=gmail.com; s=20230601; t=1727024880; x=1727629680; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=UfUFTKvz+3D7GwXrYdNdqlyY+ceafuxUEvLi56eVGDo=;
+        b=lsEXIJbecYBYyF9H6af/z8xvewCER75qEMXCj3fcJSZwa5Dw/IdOW6Vabm/VAIcgUY
+         4YXvKEEIRJx9x65HlZrkjonsd94O4w2RF43sqxJ36a76cLv9x2WwlYwrbjmUlKpAhCTN
+         cv/FnVg2hxPxS4lGvpNAF3Nc7G8/l9Dlalq5TObBXlr1rbqDm+gvhOno7p5Li7DECd5A
+         sGPdNn+aTFk1NfZYsYNNjkJkF/bf3cZTt0ae9EvH9BfCb89RKuWx7U9X61JA//aYvU6C
+         kkb3JFJj3NNEWDiHXpbWDqGi9yq2YJSi0N+LJLMPgSSGpgbVN9qEPbH63D2i+agoUn8T
+         JvIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727023881; x=1727628681;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=g1oL5S/B37tEUQ5pYbFLSlwc7f6+AmoEVqGKun0bI4g=;
-        b=LvMQNYL701lg/4gxSI0/yDtg1eyVYlLHXErSvmX2FOK6yNJRbt73i4DUSJ11ZK1NZt
-         pjbpgfiJXjspjftOBn2sGy+6lsg+eg/JseRB2YiQm8Io/lBRJt7xQTmPQXBMC+lVjjpk
-         MR9WKib7i7sOY4KAnJ0hvFVPpJOMDd9+lpro7SpNiKEmRJ7R3MTtcoEmtqWvaHGKgYfw
-         R2K5KoQ5Nbh2c7MRpdjsU2c3NzYRDMdExr8TWYtonQaBJ2B51C2UM7jPDVxcd7xL0O7N
-         4jIZv2QZxNeQbwrBjHZuO+GMCkNRa88QxXr43TOE/v4jst9siSdVhSgkh8u+qnablIzx
-         khXw==
-X-Forwarded-Encrypted: i=1; AJvYcCXqxhdpZ4309YTkLv0Bnlf1JneOTFHz6gp+QsgzwHgj3vmyjLxcMiaLAI6wYd9ZXrXw7N9WqQ89qrieyqU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwikFRl8fMEwg4qL2UUYTI7eHu6v1+sHtAjW5QQ0GAIp8jr772b
-	Km7caFvnVNboVItWfrjLWJ2NP/C6n3WY8v8wGh0gxLmOr7n54IwmAogD67mEpk4zVFYu97DoNyT
-	2YdP78Ju3V1sHpOL8dnFqJp44E8TB/Q80
-X-Google-Smtp-Source: AGHT+IFaIFXNew6YSptZuEfp/uuOAp4TfLFde0avBFcvfvo5FnXC5exEtiYyCltVa5Z+vNKKF6YE38TF+QAL+A1cz5k=
-X-Received: by 2002:a2e:515a:0:b0:2ef:2dc7:a8f7 with SMTP id
- 38308e7fff4ca-2f7cc356047mr34091961fa.7.1727023880842; Sun, 22 Sep 2024
- 09:51:20 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1727024880; x=1727629680;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=UfUFTKvz+3D7GwXrYdNdqlyY+ceafuxUEvLi56eVGDo=;
+        b=jbkaUY+kP6G0kXDRM8blHnXyX6G2K9KUQo5Q0W8QzNvDB3k4tucfy68aXuWvXMeQdD
+         V3gLus87F3xutpX72x8QmPATrXIIpGMDFeekprGmOYtZ2hu8bkmGJMGvo1PcFjZuu7UF
+         ioqJns3YZZMbo28HMp1ekn+uQ36y6uB/aZSW6ZsTMzVdDIxje/xEMXlGcV67Q7+dTuTM
+         o7jcCBzmd/lbfx8pY5DHzWDHx2O50MmeOKINFzpgeaF7z6dCbzybBAIdDI0+GjNoH836
+         g5yJUK80rj9d0jNtHIBIKjSiMbBEnkSTa3FUNYN1BKa/uiPWjU/AvMhtf42Smc6QN73k
+         ENxA==
+X-Forwarded-Encrypted: i=1; AJvYcCXhLCaQnBq15IKIiQB96FeX4uhSExwktVvL60VPp3aY6WPaIoMUZQh9ZwHnfEKjeuLTu+rlNehCZQItHr8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwnEtzTwzf49MeJhSbHU7Ogq06QRpU14uGF+O7CATgNo2kA/Qpa
+	6GxY5EhX7GsRnoihJ2tPNLGdzQfK71r0ahib2vQH2LXmZDA44WM7SzTk/IbT
+X-Google-Smtp-Source: AGHT+IHhorG+TYexZcYTn6Yu61PuNduE83pZTN8Btpz4Dy0RGopV9j/L9lvjMv9tECSMa7GyDPcD0g==
+X-Received: by 2002:a17:907:1b20:b0:a90:34e8:6761 with SMTP id a640c23a62f3a-a90c1c37176mr1416981866b.6.1727024879593;
+        Sun, 22 Sep 2024 10:07:59 -0700 (PDT)
+Received: from localhost.localdomain ([46.248.82.114])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a90610f429bsm1098376866b.61.2024.09.22.10.07.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 22 Sep 2024 10:07:59 -0700 (PDT)
+From: Uros Bizjak <ubizjak@gmail.com>
+To: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Uros Bizjak <ubizjak@gmail.com>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH v2] xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
+Date: Sun, 22 Sep 2024 19:07:16 +0200
+Message-ID: <20240922170746.11361-1-ubizjak@gmail.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240919081432.23431-1-ubizjak@gmail.com> <Zu2D0AamCdaTUUhZ@infradead.org>
-In-Reply-To: <Zu2D0AamCdaTUUhZ@infradead.org>
-From: Uros Bizjak <ubizjak@gmail.com>
-Date: Sun, 22 Sep 2024 18:51:09 +0200
-Message-ID: <CAFULd4afM8UA7Xitd4d39+zAixFJjJUu9Yq0K0bHa9XN8aU_EA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Sep 20, 2024 at 4:16=E2=80=AFPM Christoph Hellwig <hch@infradead.or=
-g> wrote:
->
-> On Thu, Sep 19, 2024 at 10:14:05AM +0200, Uros Bizjak wrote:
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -171,13 +171,12 @@ xlog_cil_insert_pcp_aggregate(
-> >        * structures that could have a nonzero space_used.
-> >        */
-> >       for_each_cpu(cpu, &ctx->cil_pcpmask) {
-> > -             int     old, prev;
-> > +             int     old;
-> >
-> >               cilpcp =3D per_cpu_ptr(cil->xc_pcp, cpu);
-> > +             old =3D READ_ONCE(cilpcp->space_used);
->
-> Maybe it is just me, but this would probably look nicer if the cilpcp
-> variable moved into the loop scope, and both were initialized at
-> declaration time:
->
->                 struct xlog_cil_pcp     *cilpcp =3D per_cpu_ptr(cil->xc_p=
-cp, cpu);
->                 int                     old =3D READ_ONCE(cilpcp->space_u=
-sed);
+Use !try_cmpxchg instead of cmpxchg (*ptr, old, new) != old in
+xlog_cil_insert_pcp_aggregate().  x86 CMPXCHG instruction returns
+success in ZF flag, so this change saves a compare after cmpxchg.
 
-No problem, I just tried to keep the number of changed lines as low as
-possible. Some maintainers don't like functional and cosmetic changes
-mixed together.
+Also, try_cmpxchg implicitly assigns old *ptr value to "old" when
+cmpxchg fails. There is no need to re-read the value in the loop.
 
->
-> >               do {
-> > +             } while (!try_cmpxchg(&cilpcp->space_used, &old, 0));
->
-> And this also looks a bit odd.  Again, probably preference, but a:
->
->                 while (!try_cmpxchg(&cilpcp->space_used, &old, 0))
->                         ;
->
-> looks somewhat more normal (although still not pretty).
+Note that the value from *ptr should be read using READ_ONCE to
+prevent the compiler from merging, refetching or reordering the read.
 
-Yes, the alternative form is what some maintainers prefer.
+No functional change intended.
 
-> Sorry for not having anything more substantial to see, but the diff
-> just looked a bit odd..
+Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
+Cc: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+---
+v2: Move cilpcp variable into the loop scope. Initialize cilcpc and
+    old variables at the declaration time. Use alternative form of
+    the while loop.
+---
+ fs/xfs/xfs_log_cil.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-I'll prepare a v2 patch with the suggested changes.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 391a938d690c..d4e06e6f050f 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -156,9 +156,8 @@ xlog_cil_insert_pcp_aggregate(
+ 	struct xfs_cil		*cil,
+ 	struct xfs_cil_ctx	*ctx)
+ {
+-	struct xlog_cil_pcp	*cilpcp;
+-	int			cpu;
+-	int			count = 0;
++	int	cpu;
++	int	count = 0;
+ 
+ 	/* Trigger atomic updates then aggregate only for the first caller */
+ 	if (!test_and_clear_bit(XLOG_CIL_PCP_SPACE, &cil->xc_flags))
+@@ -171,13 +170,11 @@ xlog_cil_insert_pcp_aggregate(
+ 	 * structures that could have a nonzero space_used.
+ 	 */
+ 	for_each_cpu(cpu, &ctx->cil_pcpmask) {
+-		int	old, prev;
++		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
++		int			old = READ_ONCE(cilpcp->space_used);
+ 
+-		cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
+-		do {
+-			old = cilpcp->space_used;
+-			prev = cmpxchg(&cilpcp->space_used, old, 0);
+-		} while (old != prev);
++		while (!try_cmpxchg(&cilpcp->space_used, &old, 0))
++			;
+ 		count += old;
+ 	}
+ 	atomic_add(count, &ctx->space_used);
+-- 
+2.42.0
 
-Thanks,
-Uros.
