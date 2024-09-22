@@ -1,132 +1,210 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E58B2581;
-	Sun, 22 Sep 2024 17:08:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D400D7347E
+	for <linux-xfs@vger.kernel.org>; Sun, 22 Sep 2024 23:15:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727024884; cv=none; b=T5H+8V2TYlzbIYPfDW+i/zP0LWW8RXtBbFBkGszMWImeeRzTHp/qIY6CJHFcuHYUlUfAUM6sv+1iXHwQ0WTYbHraGOr0j+w1S+8Ig+oeVKFN/exgNhMdYbp6GnaJSuuUeuHw+0DTGkmRT/N5q15jOGBEE3+T6FuUV3ESt8oToHc=
+	t=1727046926; cv=none; b=QR4zVeAj7nKu5hd/JuK29lpAsL4OHOflpecLyXV1wo3tf76oNebB3Qeoxuc2dC5HhKlfpMLj5sIViiJqrp2galgYQQunvBwOHkPkCKTr6f503LHQeZKjNxDllX1k6JCxGhR8muZVETROKpa2W5MeQhow6PEF4ezHhcPZ9yzggME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727024884; c=relaxed/simple;
-	bh=x7s8RISRd78v3+3BDolULM9nVmrkU4bjG9Pa+rjeYWU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NQVovl39yQCurI+eDmsI+8wfJahD3E17OHLOsmg6UfjFuzB6clkuXnjZxfXqo7QeSM7jnXR8QQOrTiVUqqK0pLhidv1yOJLrE9+lL5xFV3JSaEQVVOERkMk1e4jHLWGV0kuZ/TQvfpz5rKozIDFLEkNFEI3LeOsxTa1rfPhaPpY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lsEXIJbe; arc=none smtp.client-ip=209.85.218.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1727046926; c=relaxed/simple;
+	bh=IOKFUjrmEw81LaaNRTH/ux2RuIwuKk4fePPJpmJ/xQo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=INczqBlSykpiskaXo/kQGZhETxDZcTxi9+AGCleE14LHo4StO2MRzx8k49/tKz9SJEBLiSe9i/h7Cj6N4qP6TnDY6lN5UihXbygvCGmZBAQPZUOfLQFq6bQbdViTefE0suxTpckUL3EfK0is8Zl5a58I79s88kN5q95of5DcWJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Xo95JDKo; arc=none smtp.client-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lsEXIJbe"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a8a789c4fc5so779020766b.0;
-        Sun, 22 Sep 2024 10:08:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Xo95JDKo"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7db53a20d1fso2302263a12.0
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Sep 2024 16:15:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727024880; x=1727629680; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=UfUFTKvz+3D7GwXrYdNdqlyY+ceafuxUEvLi56eVGDo=;
-        b=lsEXIJbecYBYyF9H6af/z8xvewCER75qEMXCj3fcJSZwa5Dw/IdOW6Vabm/VAIcgUY
-         4YXvKEEIRJx9x65HlZrkjonsd94O4w2RF43sqxJ36a76cLv9x2WwlYwrbjmUlKpAhCTN
-         cv/FnVg2hxPxS4lGvpNAF3Nc7G8/l9Dlalq5TObBXlr1rbqDm+gvhOno7p5Li7DECd5A
-         sGPdNn+aTFk1NfZYsYNNjkJkF/bf3cZTt0ae9EvH9BfCb89RKuWx7U9X61JA//aYvU6C
-         kkb3JFJj3NNEWDiHXpbWDqGi9yq2YJSi0N+LJLMPgSSGpgbVN9qEPbH63D2i+agoUn8T
-         JvIQ==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727046923; x=1727651723; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=UlsXTJCziqLDA1kEeYpppJidhLEUsbWQlazGKgEoouE=;
+        b=Xo95JDKo5sA84jZJM63vo79qX7S8Rk0oOR2Kp7ITmtxDERy4+PqDyEl/hsPN+o2pvD
+         2/RLK26ypWwNLId99pjzQ7/AN6W19NPpEA+ZC8WCnxaf2FnuOKpliByR4nL7zG6onaW0
+         /08k7Oam45liXPawKT2ZwcSSWLye+uj7Q2zijLWm0TFGI6tpOIiFAo96siCVu9rt1wI3
+         CQ5a7SbkcvMI3FjsjsCBfMHU7XLgNwO4Vox7gI87LPWYPK9H3tfP/KEtFHJpCPQpraZm
+         UT8t7gZWwcIE7OHw33C4qahxqgCLAOo7sLVK8dR5xET9r4f3zGqFenxNvIjIygvWzxAN
+         cZ/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727024880; x=1727629680;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=UfUFTKvz+3D7GwXrYdNdqlyY+ceafuxUEvLi56eVGDo=;
-        b=jbkaUY+kP6G0kXDRM8blHnXyX6G2K9KUQo5Q0W8QzNvDB3k4tucfy68aXuWvXMeQdD
-         V3gLus87F3xutpX72x8QmPATrXIIpGMDFeekprGmOYtZ2hu8bkmGJMGvo1PcFjZuu7UF
-         ioqJns3YZZMbo28HMp1ekn+uQ36y6uB/aZSW6ZsTMzVdDIxje/xEMXlGcV67Q7+dTuTM
-         o7jcCBzmd/lbfx8pY5DHzWDHx2O50MmeOKINFzpgeaF7z6dCbzybBAIdDI0+GjNoH836
-         g5yJUK80rj9d0jNtHIBIKjSiMbBEnkSTa3FUNYN1BKa/uiPWjU/AvMhtf42Smc6QN73k
-         ENxA==
-X-Forwarded-Encrypted: i=1; AJvYcCXhLCaQnBq15IKIiQB96FeX4uhSExwktVvL60VPp3aY6WPaIoMUZQh9ZwHnfEKjeuLTu+rlNehCZQItHr8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwnEtzTwzf49MeJhSbHU7Ogq06QRpU14uGF+O7CATgNo2kA/Qpa
-	6GxY5EhX7GsRnoihJ2tPNLGdzQfK71r0ahib2vQH2LXmZDA44WM7SzTk/IbT
-X-Google-Smtp-Source: AGHT+IHhorG+TYexZcYTn6Yu61PuNduE83pZTN8Btpz4Dy0RGopV9j/L9lvjMv9tECSMa7GyDPcD0g==
-X-Received: by 2002:a17:907:1b20:b0:a90:34e8:6761 with SMTP id a640c23a62f3a-a90c1c37176mr1416981866b.6.1727024879593;
-        Sun, 22 Sep 2024 10:07:59 -0700 (PDT)
-Received: from localhost.localdomain ([46.248.82.114])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a90610f429bsm1098376866b.61.2024.09.22.10.07.58
+        d=1e100.net; s=20230601; t=1727046923; x=1727651723;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UlsXTJCziqLDA1kEeYpppJidhLEUsbWQlazGKgEoouE=;
+        b=WszLaaGWis+aVOK2+H5Jb+3ZJEbrSh62+NCDt2beeFbKX9/uSs8a/cjSTYdRreiHhN
+         TjbIYiDvripEssjpEjKNQDRjXVir88aDC32UQOSZcsy/W2Nyfbg/pXbN0ADGMNkKLHcy
+         U5+hRocaZnyDBAZqDlZW8Ygoh7hWL4gDB7bqnZfJq98tAaWLhHC7irkD0oYX+z5chRW1
+         eVa2uD0QoijOXP2FQ9HG7hxb1M+U/rMojBJbuLSEWcLqMqkIbw2YXSPt45sznxPpCDsb
+         KXlp1my5e8kk+podjiEfP94zr+MeN5kUrdBp0wMtovuPv+OyH/UUla5Ue5CEieQtZSvz
+         auEw==
+X-Forwarded-Encrypted: i=1; AJvYcCXWrhsaEIZzV/JLLBDprgesbjmNhi9cKXhPJju3Jv/GCIVZbotxorn4XYSLu0WDZY/LGVTBO9WOD0A=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywk2CdAKw54l9hg7OmlNZ5lqnJrxn3mNCq9MI14volYL+iNaFM8
+	VK4jbeecWFDpbrAJedpnAgDjOrgc2m2R9v1SU8ge8oi52SGF8Q4CzmMVTKUeVZ4=
+X-Google-Smtp-Source: AGHT+IFLGsoYS4nkygjOYQ6T6MjfnuxG4sxP2bIE6luDvx3JVi00ybPnZU93vr6k1Rs5zWvJ3g1fxw==
+X-Received: by 2002:a05:6a21:398a:b0:1d2:e807:7854 with SMTP id adf61e73a8af0-1d30ca2035emr11435044637.22.1727046922936;
+        Sun, 22 Sep 2024 16:15:22 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71944b7b127sm12782575b3a.125.2024.09.22.16.15.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 Sep 2024 10:07:59 -0700 (PDT)
-From: Uros Bizjak <ubizjak@gmail.com>
-To: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Uros Bizjak <ubizjak@gmail.com>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v2] xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
-Date: Sun, 22 Sep 2024 19:07:16 +0200
-Message-ID: <20240922170746.11361-1-ubizjak@gmail.com>
-X-Mailer: git-send-email 2.42.0
+        Sun, 22 Sep 2024 16:15:22 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1ssVnT-008k5e-0I;
+	Mon, 23 Sep 2024 09:15:19 +1000
+Date: Mon, 23 Sep 2024 09:15:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: syzbot <syzbot+bf0143df12877cb1a21b@syzkaller.appspotmail.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] INFO: task hung in xfs_ail_push_all_sync
+Message-ID: <ZvClBwxeuRQKnM8S@dread.disaster.area>
+References: <66eebc5f.050a0220.3195df.0053.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <66eebc5f.050a0220.3195df.0053.GAE@google.com>
 
-Use !try_cmpxchg instead of cmpxchg (*ptr, old, new) != old in
-xlog_cil_insert_pcp_aggregate().  x86 CMPXCHG instruction returns
-success in ZF flag, so this change saves a compare after cmpxchg.
+On Sat, Sep 21, 2024 at 05:30:23AM -0700, syzbot wrote:
+> Hello,
+> 
+> syzbot found the following issue on:
+> 
+> HEAD commit:    a430d95c5efa Merge tag 'lsm-pr-20240911' of git://git.kern..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=15569d00580000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=d9ab5893ec5191eb
+> dashboard link: https://syzkaller.appspot.com/bug?extid=bf0143df12877cb1a21b
+> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=109e6a77980000
+> 
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/f8549392ace4/disk-a430d95c.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/9b866ef0c06c/vmlinux-a430d95c.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/9d6691641029/bzImage-a430d95c.xz
+> mounted in repro: https://storage.googleapis.com/syzbot-assets/dd50a033ca89/mount_2.gz
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+bf0143df12877cb1a21b@syzkaller.appspotmail.com
+> 
+> INFO: task syz.0.75:6468 blocked for more than 143 seconds.
+>       Not tainted 6.11.0-syzkaller-02574-ga430d95c5efa #0
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> task:syz.0.75        state:D stack:24864 pid:6468  tgid:6446  ppid:6378   flags:0x00004004
+> Call Trace:
+>  <TASK>
+>  context_switch kernel/sched/core.c:5188 [inline]
+>  __schedule+0x17ae/0x4a10 kernel/sched/core.c:6529
+>  __schedule_loop kernel/sched/core.c:6606 [inline]
+>  schedule+0x14b/0x320 kernel/sched/core.c:6621
+>  xfs_ail_push_all_sync+0x236/0x310 fs/xfs/xfs_trans_ail.c:726
+>  xfs_log_quiesce+0xdf/0x5b0 fs/xfs/xfs_log.c:1018
+>  xfs_fs_freeze+0x8d/0x1a0 fs/xfs/xfs_super.c:936
+>  freeze_super+0x81b/0xee0 fs/super.c:2107
+>  fs_bdev_freeze+0x1ac/0x320 fs/super.c:1484
+>  bdev_freeze+0xd6/0x220 block/bdev.c:257
+>  xfs_fs_goingdown+0xa9/0x160 fs/xfs/xfs_fsops.c:446
+>  xfs_file_ioctl+0x12d4/0x19e0 fs/xfs/xfs_ioctl.c:1473
+>  vfs_ioctl fs/ioctl.c:51 [inline]
+>  __do_sys_ioctl fs/ioctl.c:907 [inline]
+>  __se_sys_ioctl+0xf9/0x170 fs/ioctl.c:893
+>  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+>  do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> RIP: 0033:0x7fc862d7def9
+> RSP: 002b:00007fc863b4a038 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+> RAX: ffffffffffffffda RBX: 00007fc862f36058 RCX: 00007fc862d7def9
+> RDX: 0000000020000080 RSI: 000000008004587d RDI: 0000000000000006
+> RBP: 00007fc862df0b76 R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+> R13: 0000000000000000 R14: 00007fc862f36058 R15: 00007ffd1aceae18
+>  </TASK>
 
-Also, try_cmpxchg implicitly assigns old *ptr value to "old" when
-cmpxchg fails. There is no need to re-read the value in the loop.
+Not a bug.
 
-Note that the value from *ptr should be read using READ_ONCE to
-prevent the compiler from merging, refetching or reordering the read.
+The reproducer is mounting the filesystem, then some other thread
+is immediately resizing the block device underneath the filesystem
+to zero length.
 
-No functional change intended.
+In the cases where the test "passes", this happens:
 
-Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
----
-v2: Move cilpcp variable into the loop scope. Initialize cilcpc and
-    old variables at the declaration time. Use alternative form of
-    the while loop.
----
- fs/xfs/xfs_log_cil.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+[  215.851387][ T6299] XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
+[  215.895695][ T6299] XFS (loop0): Ending clean mount
+[  215.953257][ T6299] loop0: detected capacity change from 32768 to 0
+[  215.963786][ T6299] syz.0.70: attempt to access beyond end of device
+[  215.963786][ T6299] loop0: rw=432129, sector=768, nr_sectors = 128 limit=0
+[  215.978206][   T45] XFS (loop0): log I/O error -5
+[  215.984613][   T45] XFS (loop0): Filesystem has been shut down due to log error (0x2).
+[  215.992720][   T45] XFS (loop0): Please unmount the filesystem and rectify the problem(s).
+[  216.011609][ T6230] XFS (loop0): Unmounting Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791o
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 391a938d690c..d4e06e6f050f 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -156,9 +156,8 @@ xlog_cil_insert_pcp_aggregate(
- 	struct xfs_cil		*cil,
- 	struct xfs_cil_ctx	*ctx)
- {
--	struct xlog_cil_pcp	*cilpcp;
--	int			cpu;
--	int			count = 0;
-+	int	cpu;
-+	int	count = 0;
- 
- 	/* Trigger atomic updates then aggregate only for the first caller */
- 	if (!test_and_clear_bit(XLOG_CIL_PCP_SPACE, &cil->xc_flags))
-@@ -171,13 +170,11 @@ xlog_cil_insert_pcp_aggregate(
- 	 * structures that could have a nonzero space_used.
- 	 */
- 	for_each_cpu(cpu, &ctx->cil_pcpmask) {
--		int	old, prev;
-+		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
-+		int			old = READ_ONCE(cilpcp->space_used);
- 
--		cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
--		do {
--			old = cilpcp->space_used;
--			prev = cmpxchg(&cilpcp->space_used, old, 0);
--		} while (old != prev);
-+		while (!try_cmpxchg(&cilpcp->space_used, &old, 0))
-+			;
- 		count += old;
- 	}
- 	atomic_add(count, &ctx->space_used);
+The loop device change of size happens about 600ms after the mount
+finishes, and the next IO that is issued is a log IO. That gets
+errored out and the filesystem shuts itseld down.
+
+In the case where it has hung:
+
+231.577098][ T6447] loop0: detected capacity change from 0 to 32768
+[  231.590389][ T6447] XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
+[  231.642021][ T6447] XFS (loop0): Ending clean mount
+[  231.713195][ T6447] loop0: detected capacity change from 32768 to 0
+[  231.727969][ T6467] xfsaild/loop0: attempt to access beyond end of device
+[  231.727969][ T6467] loop0: rw=4097, sector=2, nr_sectors = 1 limit=0
+[  231.742236][ T6467] xfsaild/loop0: attempt to access beyond end of device
+[  231.742236][ T6467] loop0: rw=4097, sector=12, nr_sectors = 4 limit=0
+....
+
+The loop dev changes size about 700ms afte the mount, and the log IO
+has already completed. Hence the next IOs are from the user driven
+shutdown (not sure where that is coming from - nothing in syzbot
+logs, and no C reproducer was provided) freezing the device before
+shutting down the filesystem. These error out, but don't cause a
+shutdown because the default XFS config for async metadata writeback
+failures is "retry forever":
+
+.....
+[  231.849797][   T52] kworker/1:1: attempt to access beyond end of device
+[  231.849797][   T52] loop0: rw=4097, sector=18560, nr_sectors = 64 limit=0
+[  231.933061][ T6467] XFS (loop0): Failing async write on buffer block 0x2. Retrying async write.
+[  231.942187][ T6467] XFS (loop0): Failing async write on buffer block 0x10. Retrying async write.
+[  231.951196][ T6467] XFS (loop0): Failing async write on buffer block 0xc. Retrying async write.
+[  231.960108][ T6467] xfsaild/loop0: attempt to access beyond end of device
+[  231.960108][ T6467] loop0: rw=4097, sector=2, nr_sectors = 1 limit=0
+[  231.973536][ T6467] xfsaild/loop0: attempt to access beyond end of device
+[  231.973536][ T6467] loop0: rw=4097, sector=12, nr_sectors = 4 limit=0
+[  232.053094][ T6467] XFS (loop0): Failing async write on buffer block 0x2. Retrying async write.
+[  232.061978][ T6467] XFS (loop0): Failing async write on buffer block 0x10. Retrying async write.
+[  232.070960][ T6467] XFS (loop0): Failing async write on buffer block 0xc. Retrying async write.
+[  232.143152][ T6467] XFS (loop0): Failing async write on buffer block 0x2. Retrying async write.
+[  232.152027][ T6467] XFS (loop0): Failing async write on buffer block 0x10. Retrying async write.
+.....
+
+And so the user driven shutdown hangs at this point waiting for
+metadata to flush.
+
+This is expected behaviour. If the user wants metadata writes to
+fail immediately in this situation, then they need to do:
+
+# echo 1 > /sys/fs/xfs/<dev>/error/metadata/EIO/max_retries
+
+So on IO error the writeback code will only retry once before
+failing and shutting down the filesystem immediately.
+
+So, no bug here, just syzbot not understanding how metadata IO
+errors are handled by different filesystems. Hence:
+
+#syz invalid
+
+-Dave.
 -- 
-2.42.0
-
+Dave Chinner
+david@fromorbit.com
