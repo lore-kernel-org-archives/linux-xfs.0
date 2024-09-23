@@ -1,95 +1,126 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B78199FC6;
-	Mon, 23 Sep 2024 15:29:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 263B1197A9B;
+	Mon, 23 Sep 2024 15:53:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727105388; cv=none; b=rKOEEehCTP3UCDs8xY1MdWt1WPx6KtnZq636bm7XbUPD5+nbF4AOltSZOUbGx4WZENpTTtYXa8TUxBKgRMexRfGB1UvJO0HpOxZ3abfyJkaHSEPQguB90tbnuunx+oztDeIO2CtFX7py6zkkuBxRhyV4AcQk4gaR+KudgDKzYeg=
+	t=1727106800; cv=none; b=m9rf1FKGyv2ctOGfyvzV/OfaAH+kvyWl6sFEbRoqQwF3YG61DgwnG3hYx5RJgQwqol7g4ediggzcjeVF01XhHRFQtWHsCpnL/j17h0QEL8FDSq4P5uSLSwhUXjU7nwcxB8UwucaI37ziDaJzutzFa8mpbLHTHypZerHfKKwFT8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727105388; c=relaxed/simple;
-	bh=dO7DPx9lr+A6EiTToDNsMt0eMLyFbcysQqhoPY9lCwM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XlTdkE0aPD0qEatQZHBkU0OiJlQ/zm+QBou15/GptTRx3D19SO4WewYkRWH+1UVFTprModjJkCKbvnJqbQ+tffQZwwSIpgXSUWK6Bqq/41oa5FZQTUkCgYanWr56l1/dxXw5tEFqkBfh+faffr45fFKRMvo43rj+M+6rdQZPQuE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3vJg4i0v; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1727106800; c=relaxed/simple;
+	bh=QNgb9hMdvEcyozNtaS81ANiyuzRgkFkGC8w6qUB9R8M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EYIFkacEfTVmF08B8EsCT3oHNFQK9GXmJINe+5hJbGUkPJjfFhxlxaYHZcEWyD0joJQYAMjDI5tFK4WGwfI5PN7QbLAEUI+VEPiT+4JnvHA/t6Q4BaIneEDv00QOS9s2udr7dSO7se9HOraeJA2awM7Mhqje9Rgix/y3k4Bv7J8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s6roe/Ey; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3vJg4i0v"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=YNRHAj4pG2z8wKAOo6HVGGA4NzRephlTf1ufR3qBIbg=; b=3vJg4i0vM214BtReHxm3G8RafI
-	+418TqQcNlmwIzKNzgV6OcI9WkuGZFoSxxXux2MO/9IF2OQMY/8t3iquT8JPIAE/N+TyFAFhHNJUY
-	5K+zUWrKnTw+Ul9Gs65WmKDc6bNKAmfIAlwO2cbHaBcDWUJnT4rsC6Zc5u4E/vkBDLuqUFkotv0U7
-	NmuaGMLZwtJSPY48+WA7kebC5sQ4A3J/ONvPmCNGFJ51muzZFDQX7yahRfTjcAPOSJKlSI/IEOsY6
-	1ndDTFnzjiFaBOlpzzwyclpAxCX/IiLML6tFa0ZgouEo+yiHUJIEvYRfjiurndfgpuqYV1xLBVXsn
-	oYOZkoog==;
-Received: from 2a02-8389-2341-5b80-4c13-f559-77bd-3c36.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:4c13:f559:77bd:3c36] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1ssl0U-0000000HVIB-0cAl;
-	Mon, 23 Sep 2024 15:29:46 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s6roe/Ey"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1A13C4CED1;
+	Mon, 23 Sep 2024 15:53:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727106800;
+	bh=QNgb9hMdvEcyozNtaS81ANiyuzRgkFkGC8w6qUB9R8M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=s6roe/EyAEQpGIIzY82nSmDss6TVt62/qnlh4yG8BOhKuHKpWyDc0mUXhgEWOrcV9
+	 7IY4ZkcH0ne/YpUxwUYkczFSQ0wkVrazP86W3o1jNfn/6qZzeaJ+Rvyi7WDBsv6CFE
+	 7AhjCLNQEDQS85BNAVwABCiMAWXx2YeBlUJh7PLRHz/psC9RxqzAjfYeEYNN1kq9XJ
+	 aWJtc/htvTS+aybuTVnO+1/guivprwzLTc4fIcVQQfRLYPv2F0p8FqHHnt64E8jbSf
+	 LHxP/3SBND8MoDEJ2YQc/aJLBB2+zRaAJkBgqYgZHiSx6yhoiPIEyuyMp60xicuzXi
+	 EgOls3CE1JW1w==
+Date: Mon, 23 Sep 2024 08:53:19 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 10/10] xfs: punch delalloc extents from the COW fork for COW writes
-Date: Mon, 23 Sep 2024 17:28:24 +0200
-Message-ID: <20240923152904.1747117-11-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240923152904.1747117-1-hch@lst.de>
+Subject: Re: [PATCH 01/10] iomap: factor out a iomap_last_written_block helper
+Message-ID: <20240923155319.GC21877@frogsfrogsfrogs>
 References: <20240923152904.1747117-1-hch@lst.de>
+ <20240923152904.1747117-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240923152904.1747117-2-hch@lst.de>
 
-When ->iomap_end is called on a short write to the COW fork it needs to
-punch stale delalloc data from the COW fork and not the data fork.
+On Mon, Sep 23, 2024 at 05:28:15PM +0200, Christoph Hellwig wrote:
+> Split out a pice of logic from iomap_file_buffered_write_punch_delalloc
+> that is useful for all iomap_end implementations.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/buffered-io.c | 13 ++-----------
+>  include/linux/iomap.h  | 14 ++++++++++++++
+>  2 files changed, 16 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 11ea747228aeec..884891ac7a226c 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1280,7 +1280,6 @@ void iomap_file_buffered_write_punch_delalloc(struct inode *inode,
+>  {
+>  	loff_t			start_byte;
+>  	loff_t			end_byte;
+> -	unsigned int		blocksize = i_blocksize(inode);
+>  
+>  	if (iomap->type != IOMAP_DELALLOC)
+>  		return;
+> @@ -1289,16 +1288,8 @@ void iomap_file_buffered_write_punch_delalloc(struct inode *inode,
+>  	if (!(iomap->flags & IOMAP_F_NEW))
+>  		return;
+>  
+> -	/*
+> -	 * start_byte refers to the first unused block after a short write. If
+> -	 * nothing was written, round offset down to point at the first block in
+> -	 * the range.
+> -	 */
+> -	if (unlikely(!written))
+> -		start_byte = round_down(pos, blocksize);
+> -	else
+> -		start_byte = round_up(pos + written, blocksize);
+> -	end_byte = round_up(pos + length, blocksize);
+> +	start_byte = iomap_last_written_block(inode, pos, written);
+> +	end_byte = round_up(pos + length, i_blocksize(inode));
+>  
+>  	/* Nothing to do if we've written the entire delalloc extent */
+>  	if (start_byte >= end_byte)
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 4ad12a3c8bae22..e62df5d93f04de 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -256,6 +256,20 @@ static inline const struct iomap *iomap_iter_srcmap(const struct iomap_iter *i)
+>  	return &i->iomap;
+>  }
+>  
+> +/*
+> + * Return the file offset for the first unused block after a short write.
 
-Ensure that IOMAP_F_NEW is set for new COW fork allocations in
-xfs_buffered_write_iomap_begin, and then use the IOMAP_F_SHARED flag
-in xfs_buffered_write_delalloc_punch to decide which fork to punch.
+the first *unchanged* block after a short write?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_iomap.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+> + *
+> + * If nothing was written, round offset down to point at the first block in
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index cc768f0139d365..8a4e5f14ec0c77 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1195,7 +1195,7 @@ xfs_buffered_write_iomap_begin(
- 		xfs_trim_extent(&cmap, offset_fsb, imap.br_startoff - offset_fsb);
- 	}
- 
--	iomap_flags = IOMAP_F_SHARED;
-+	iomap_flags |= IOMAP_F_SHARED;
- 	seq = xfs_iomap_inode_sequence(ip, iomap_flags);
- 	xfs_iunlock(ip, lockmode);
- 	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, iomap_flags, seq);
-@@ -1212,8 +1212,10 @@ xfs_buffered_write_delalloc_punch(
- 	loff_t			length,
- 	struct iomap		*iomap)
- {
--	xfs_bmap_punch_delalloc_range(XFS_I(inode), XFS_DATA_FORK, offset,
--			offset + length);
-+	xfs_bmap_punch_delalloc_range(XFS_I(inode),
-+			(iomap->flags & IOMAP_F_SHARED) ?
-+				XFS_COW_FORK : XFS_DATA_FORK,
-+			offset, offset + length);
- }
- 
- static int
--- 
-2.45.2
+Might as well make explicit which variable we're operating on:
+"...round @pos down..."
 
+--D
+
+> + * the range, else round up to include the partially written block.
+> + */
+> +static inline loff_t iomap_last_written_block(struct inode *inode, loff_t pos,
+> +		ssize_t written)
+> +{
+> +	if (unlikely(!written))
+> +		return round_down(pos, i_blocksize(inode));
+> +	return round_up(pos + written, i_blocksize(inode));
+> +}
+> +
+>  ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+>  		const struct iomap_ops *ops, void *private);
+>  int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops);
+> -- 
+> 2.45.2
+> 
