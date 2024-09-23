@@ -1,45 +1,33 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6397C1990C4;
-	Mon, 23 Sep 2024 12:03:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BBE9433D6;
+	Mon, 23 Sep 2024 12:07:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727093047; cv=none; b=gQdIyyDBuLR1JRkiatFUf7/i2rT3PBSuoPYLcYEnAe62dxdQcJ3Ezf95Eo1V7X8SQxnnDAe/B0c+2py3WTTrMCRCAVtv+/37NNRt7c3inZjRb6wdW7qia/32+5xoNNfoK9I5u0YD6tZgR7rrPUKIp+ujUMuWIEq/SN6WiM27Z/E=
+	t=1727093242; cv=none; b=NUSF/BqKMX4+8183ye7H+av6+WkSl/I57dYdrcY6EImHh9vqF/agxzXVaqzgNflbefftf6VKvXWwlVUTzNmZ+nIYh+s3Dpl2NMvn5kPNNv786F11YkF/D/QeHs/EzLaPIiDDU0iOsVTd1lg+ajhhYl7Mah41NAq06W3lIvVixxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727093047; c=relaxed/simple;
-	bh=60JPb/SxVp0k0GzxfIDVVzpaHFf60YyWCTt78PnVF3w=;
+	s=arc-20240116; t=1727093242; c=relaxed/simple;
+	bh=JUPknFSBZHM4Zd+Mg+lJ0b9E0WgLwSiwYFLhdIjEimc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p5eYt+Wpwx5Dy9lKTTI0ebuQMXCHnHHmN28ytHA90B1mQubRZ2KyiEv1baDB59syAsnlI1Sy8pysi3Nw7hCGO89HTD32HKVBbCFnaBzbVaYPNpvwlDRrfKCNZQnAt4wL7ggqZRn50mkcTFncbM+QBvQ9HO2Hvl0UAe24g3geJRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BU+45pDj; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BU+45pDj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=9WrfLD09J1aGLdGEu8N8g2HJpWPSa/jlk0R+UCPenVE=; b=BU+45pDj5KRKiUpsDZUJiKgPK5
-	pja6PIM1vIPcO2X+9uUUG83uCwoyMWiM9UmGYHuErTQf5eqag/NLL/M8QTGXc6PNl0Ad3SjqByzG9
-	67lli4krgmyQLqXB8Mzd/WpYEoWDY+TmQ2VLvagnCAzk3PG7XN/jxxxhkJldaLxvr8nvxj0zuhT0S
-	1pinKBDdQ5YAOIZEZmn2jX47uj8Ih0ykohCe2BbuHjK6qreyVxbypa8mBRrKIQhdzj3afIVnjTJ7o
-	kwB3HzatUz6yCumDx6jKP/E3OEEFS5ExAQGDgOj9bo8cpOllIB4ZEX3JAwr8YTrObpWRzM8MpJ2Ui
-	O57KfSAQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1sshnI-0000000H8IN-2ahM;
-	Mon, 23 Sep 2024 12:03:56 +0000
-Date: Mon, 23 Sep 2024 05:03:56 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Uros Bizjak <ubizjak@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: Use try_cmpxchg() in
- xlog_cil_insert_pcp_aggregate()
-Message-ID: <ZvFZLKMVMMig4ZCh@infradead.org>
-References: <20240922170746.11361-1-ubizjak@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=S0u9Si176PRH/b6E/Gndy6NGkiJNP0wsZbYbIhgG3dM4YUmbpLzcLkfLH0PpMRiopCiQqKxQxaVdhMtpij4hPrLB6lI58AfNzyBcKXjId+JqC90YvrVP/W94EAe+53l4CGGM4uwLrbp9c542cJ4n8RyON2081COXwNtys2q4bbo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DF02B68AFE; Mon, 23 Sep 2024 14:07:15 +0200 (CEST)
+Date: Mon, 23 Sep 2024 14:07:15 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
+	djwong@kernel.org, dchinner@redhat.com, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	catherine.hoang@oracle.com, martin.petersen@oracle.com
+Subject: Re: [PATCH v4 00/14] forcealign for xfs
+Message-ID: <20240923120715.GA13585@lst.de>
+References: <877cbq3g9i.fsf@gmail.com> <ZtlQt/7VHbOtQ+gY@dread.disaster.area> <8734m7henr.fsf@gmail.com> <ZufYRolfyUqEOS1c@dread.disaster.area> <c8a9dba5-7d02-4aa2-a01f-dd7f53b24938@oracle.com> <Zun+yci6CeiuNS2o@dread.disaster.area> <8e13fa74-f8f7-49d3-b640-0daf50da5acb@oracle.com> <ZvDZHC1NJWlOR6Uf@dread.disaster.area> <20240923033305.GA30200@lst.de> <cfdbb625-90b8-45d1-838b-bf5b670f49f1@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,18 +36,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240922170746.11361-1-ubizjak@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <cfdbb625-90b8-45d1-838b-bf5b670f49f1@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
->  {
-> -	struct xlog_cil_pcp	*cilpcp;
-> -	int			cpu;
-> -	int			count = 0;
-> +	int	cpu;
-> +	int	count = 0;
+On Mon, Sep 23, 2024 at 09:16:22AM +0100, John Garry wrote:
+> Outside the block allocator changes, most changes for forcealign are just 
+> refactoring the RT big alloc unit checks. So - as you have said previously 
+> - this so-called madness is already there. How can the sanity be improved?
 
-This should not be reformatted, but maye Carlos can fix it up when
-applying the patch.  Otherwise looks good:
+As a first step by not making it worse, and that not only means not
+spreading the rtextent stuff further, but more importantly not introducing
+additional complexities by requiring to be able to write over the
+written/unwritten boundaries created by either rtextentsize > 1 or
+the forcealign stuff if you actually want atomic writes.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> To me, yes, there are so many "if (RT)" checks and special cases in the 
+> code, which makes a maintenance headache.
 
+Replacing them with a different condition doesn't really make that
+any better.
