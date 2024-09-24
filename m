@@ -1,108 +1,96 @@
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A0961AC89B
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 19:24:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A2FC81741
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 22:03:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727205876; cv=none; b=Pw9Wys9GRvGHirNz33TOAArb3HNGf5exTszzYJLcXqYlvc4HF2oSmXllDNOVFrFMSC2QyuKipLTWNfq/D+yooMVfbbXxsCobePw2PnfAaAQrYcY/wpZW6kzK2iXxeprm5NlgoTrRkS8hB28pql7TDUeIoGckECtBvq/34fPvTmQ=
+	t=1727215436; cv=none; b=sn6KWX4w/AEyxpQvc0s4M2JYc15z2WuGOmxZeLBUU0EOJguajCSu6ehvz3q0TrIlRMzV69J9gNtfU5OcphPxxw4ZA3nZdTXfzF+pAc1iE2x8Qz0JeMTjASLOkTclbGDEFBd87AZiZJ9ikRsecDcg/Es8WBAd1AL+YDsLlQgMsBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727205876; c=relaxed/simple;
-	bh=SIeQoyCxYAQebwPctse0ec/xuA/Q6FV0i8cdsXtARic=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SS3EyHOXATL8BERR1COklUmkAwiQAtwLAxA4OKFwDIqmpEY+JKSfLFVeysXUiGds3SQfb14m454DkMKQYFwA6yWdk2xHEYDdJt54nsQURrhVc06H8X30DURABACauYbcaK6n7nnbwNlc72R90xxUtecfkSm66/gqDPnXT9NWq1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=eSyd9mhF; arc=none smtp.client-ip=209.85.218.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1727215436; c=relaxed/simple;
+	bh=Di3HHVeMmvsPvxJZ02RPKqpJDdCNdHt5T9u4XXK2OJA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VgOPsxD4mEczTxO76IjborZRAJzVAMJ4wjHw+7vX11usqRkmI9Mo7Nxl01nkTd9WVv8cwMbNl/vaF9BZBwrBjnPibFFTkXoPboNpIdgf/K3O7jRqRi0Wi+jpdjMM/94LAxN+dnY5oHvtDqT7rDdzf92gbr8WRYA9attiAH2UlcU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=kdzyzaWV; arc=none smtp.client-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="eSyd9mhF"
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-a8d24f98215so788387366b.1
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 12:24:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="kdzyzaWV"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-7e6b738acd5so605214a12.0
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 15:03:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1727205873; x=1727810673; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=3AEQwCgf5wgX6ZTyJ9aWNB159Y5/5DzJz6MiCsxsiWg=;
-        b=eSyd9mhFdtmsq3dEfWRKP5ZMJdd0egIpa3MuPtXvCvm0GeTBw3AGpd8v0eqBZ9Ouwm
-         VjzPrXseWGXNRss6ChzLXcZuP2YUNy77dC1keB0SQ+D040jNoPG2pmfbcUPPayaqOPdH
-         VttoI3U4Ub8/RXc8k6dd4+sxzBHRxJSFWz3ec=
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727215434; x=1727820234; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=GEs+9DP+HE2tK5M1HclRjQdhyaSyms1rELLomIrD//s=;
+        b=kdzyzaWVuXKSTjbDfZF/3IMS820IIgL02WVNLfjxFk5VQVcjKbiJGXwlKYdBG8wltU
+         Rz8K4sUMKTUq4VDst+tCEe4Oq32GZ+dZgcqK1XqnEFQkNbWe1EUMLn6NNvrLb+VeQROq
+         N7QMod6PoUXEjjJDxcRrambAo6zcEeZvc60tKvxaQE44ZQ5Az/c0dbMoVYi07qcEYG9q
+         RBpNkgvr77+J/On8aCwlPCiarGMJ/DY+LB8oV5fvYoRDEc3YuzBUZcuqRmapkXmXhmdr
+         DbZotR4g3i92QLs61obu5H1ENQvzgArt5chcT7rYZ8bg3zYDxZaFAqq0JVxM7UEhGbp7
+         1SjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727205873; x=1727810673;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3AEQwCgf5wgX6ZTyJ9aWNB159Y5/5DzJz6MiCsxsiWg=;
-        b=IrTmpJ4CP4sg5pz9av/HEZaBOxZrt9xDXzi3eIahfqoGLNo3PQvIYRw6+ahMHUuF08
-         eax8a3LouOeA6Tl5ExGhgLix1DxwY+ay48gpn4jUVe6a3NSQUu4QhJGxksJ6qfHrm2/+
-         VUJsm24tBNQ+/ZiyDHtuO0iYws2bgW2w4xboQ0Wv6g6Wj9SB7lBTvcu0gQAu6c+qNxQk
-         jxyA6Nf+QVEOarewhePfkw36puIET8khZo8cQBRM8gJErh+rhIC5fMwgXn4hCgKQX14L
-         Q5YNe/u/NEapq3xAulOk8gVALIKzuQqRWqATCqkx9Cr12jAM8KIlArjbgnFTLpO/x3Ha
-         RF2w==
-X-Forwarded-Encrypted: i=1; AJvYcCVbjp9XsrzMTPQgpqjXaD5MxeTFRoKJQsIxbIpHcBo/ZjwV2QqJp1FDy1TZmxJqOZ5jNTKUZ19tqPQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzFt5b932s3auLEnVgRRsgvzSJ9OOnA7xce4hf1r2LCt6r/GXmD
-	FSIzvlPG3AeDVlvd74SDvgjSR4kS4+cgLoIFyDIEIA+n2uQIg3IaSDh5u/BZ0xgonYLC8o5TfHI
-	1yZZRuA==
-X-Google-Smtp-Source: AGHT+IHBIcsQbsHRtxjb8XeJrF6KuMHR7SG1WZd0ElR2OzzppbZB7CMB5VZ/e2HJBYqQVohsoKDU4g==
-X-Received: by 2002:a17:907:c0a:b0:a7a:aa35:408c with SMTP id a640c23a62f3a-a93a0342190mr32007266b.8.1727205872637;
-        Tue, 24 Sep 2024 12:24:32 -0700 (PDT)
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com. [209.85.208.47])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a93930cae43sm120755166b.135.2024.09.24.12.24.31
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Sep 2024 12:24:31 -0700 (PDT)
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5c43003a667so8273411a12.3
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 12:24:31 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUbmecuTWMtGGASCT6cqgxG42QRVtUSwzM1skDVxZJyigqWSBf0JUyfKddFxpPnPYfqR+Q4DqCC8hE=@vger.kernel.org
-X-Received: by 2002:a17:907:9726:b0:a86:799d:f8d1 with SMTP id
- a640c23a62f3a-a93a06333edmr32505866b.47.1727205871314; Tue, 24 Sep 2024
- 12:24:31 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1727215434; x=1727820234;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GEs+9DP+HE2tK5M1HclRjQdhyaSyms1rELLomIrD//s=;
+        b=el6b8QgSOw19k++o68GRGl/qj+sXKyLMzVdKYEODSkPWKTUklSdQZ3Q6sfaw66WwJb
+         TiCikI+Xpu+Gak6nccU0gh6xZUksmqyZppOGjWFYsokuV+I4nDJd+SwslA4d7S1yYkBQ
+         /2Zhmf6xTGKRGAD21xUcAw6CMfBV9sgM9ZFy6bZV1SqQ8EUBdFFUNHADrdkbhx2jRtEG
+         x0Pqa6DtRMogd5pNK2asYxXBBvH1WRJn12EokAKmn/I37S1nakNEGbKQ+wRdFfzWRHdu
+         1JNnev60q8XH7O9ya/o/uiEeHKs5Q0mnhnS60/JphLPBX+U6AX0p9R23N9sWoKXDMJCd
+         NN5A==
+X-Forwarded-Encrypted: i=1; AJvYcCWWrL75w9VcaJblE3qu16Zu0Ahs5q6TyPXkHQLxDPoVFSQvF7Cjyewb7WY8uGHaA3c+/I8bxV4f4vQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywr/h1WKt3pCJZ9gla/2mhpRa3sdpnEFkQgV2QJ+lJFPMvFQX3c
+	YJU9LpR/Z6KNHsRbGZ+adNlHLVPC9miX9EKnJvFopvDxRqWTFENLpboLLbua/U4=
+X-Google-Smtp-Source: AGHT+IHr/pTSH7JQH7QpJpwhHbi24g03qWDkFXAfKmtvvfuiQsgnuZctfyMui+Rb0qd8IWWwkBBIJw==
+X-Received: by 2002:a05:6300:668a:b0:1d3:4301:3c86 with SMTP id adf61e73a8af0-1d4c6f2c90cmr879386637.7.1727215434408;
+        Tue, 24 Sep 2024 15:03:54 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71afc9c5a9bsm1611318b3a.186.2024.09.24.15.03.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Sep 2024 15:03:53 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1stDdO-009bHt-13;
+	Wed, 25 Sep 2024 08:03:50 +1000
+Date: Wed, 25 Sep 2024 08:03:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Leah Rumancik <leah.rumancik@gmail.com>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, amir73il@gmail.com,
+	chandan.babu@oracle.com, cem@kernel.org, catherine.hoang@oracle.com
+Subject: Re: [PATCH 6.1 00/26] xfs backports to catch 6.1.y up to 6.6
+Message-ID: <ZvM3RhJxJuMeARbV@dread.disaster.area>
+References: <20240924183851.1901667-1-leah.rumancik@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <ZulMlPFKiiRe3iFd@casper.infradead.org> <52d45d22-e108-400e-a63f-f50ef1a0ae1a@meta.com>
- <ZumDPU7RDg5wV0Re@casper.infradead.org> <5bee194c-9cd3-47e7-919b-9f352441f855@kernel.dk>
- <459beb1c-defd-4836-952c-589203b7005c@meta.com> <ZurXAco1BKqf8I2E@casper.infradead.org>
- <ZuuBs762OrOk58zQ@dread.disaster.area> <CAHk-=wjsrwuU9uALfif4WhSg=kpwXqP2h1ZB+zmH_ORDsrLCnQ@mail.gmail.com>
- <CAHk-=wgQ_OeAaNMA7A=icuf66r7Atz1-NNs9Qk8O=2gEjd=qTw@mail.gmail.com>
- <8697e349-d22f-43a0-8469-beb857eb44a1@kernel.dk> <ZuuqPEtIliUJejvw@casper.infradead.org>
- <0a3b09db-23e8-4a06-85f8-a0d7bbc3228b@meta.com> <15f15df9-ec90-486a-a784-effb8b2cb292@meta.com>
-In-Reply-To: <15f15df9-ec90-486a-a784-effb8b2cb292@meta.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 24 Sep 2024 12:24:14 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wiAQ23ongRsJTdYhpQRn2YP-2-Z4_NkWiSJRyv6wf_dxg@mail.gmail.com>
-Message-ID: <CAHk-=wiAQ23ongRsJTdYhpQRn2YP-2-Z4_NkWiSJRyv6wf_dxg@mail.gmail.com>
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-To: Chris Mason <clm@meta.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>, 
-	Dave Chinner <david@fromorbit.com>, Christian Theune <ct@flyingcircus.io>, linux-mm@kvack.org, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Daniel Dao <dqminh@cloudflare.com>, 
-	regressions@lists.linux.dev, regressions@leemhuis.info
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240924183851.1901667-1-leah.rumancik@gmail.com>
 
-On Tue, 24 Sept 2024 at 12:18, Chris Mason <clm@meta.com> wrote:
->
-> A few days of load later and some extra printks, it turns out that
-> taking the writer lock in __filemap_add_folio() makes us dramatically
-> more likely to just return EEXIST than go into the xas_split_alloc() dance.
+On Tue, Sep 24, 2024 at 11:38:25AM -0700, Leah Rumancik wrote:
+> Hello again,
+> 
+> Here is the next set of XFS backports, this set is for 6.1.y and I will
+> be following up with a set for 5.15.y later. There were some good
+> suggestions made at LSF to survey test coverage to cut back on
+> testing but I've been a bit swamped and a backport set was overdue.
+> So for this set, I have run the auto group 3 x 8 configs with no
+> regressions seen. Let me know if you spot any issues.
+> 
+> This set has already been ack'd on the XFS list.
 
-.. and that sounds like a good thing, except for the test coverage, I guess.
+Hi Leah, can you pick up this recently requested fix for the series,
+too?
 
-Which you seem to have fixed:
+https://lore.kernel.org/linux-xfs/20240923155752.8443-1-kalachev@swemel.ru/T/
 
-> With the changes in 6.10, we only get into that xas_destroy() case above
-> when the conflicting entry is a shadow entry, so I changed my repro to
-> use memory pressure instead of fadvise.
->
-> I also added a schedule_timeout(1) after the split alloc, and with all
-> of that I'm able to consistently make the xas_destroy() case trigger
-> without causing any system instability.  Kairui Song's patches do seem
-> to have fixed things nicely.
-
-<confused thumbs up / fingers crossed emoji>
-
-              Linus
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
