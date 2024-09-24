@@ -1,56 +1,56 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A0D51AE850;
-	Tue, 24 Sep 2024 18:39:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 645DE1AE85E;
+	Tue, 24 Sep 2024 18:39:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727203172; cv=none; b=GBVuznR7LlY2tzQLt2A2FnaiRrat/+hcLN6SLx9it+D3Xzc3I9bGjxb2n+EI99/IAFHR8Gd7fx+5kvYOkDT6pd1y6MVrJ52OPSBthpj5RHGFeuEMAghEy4K4RHXT+8VW7uCRIE6heA03zHNSG4IO2Z//+1kkpfTsteGOwYDiqrY=
+	t=1727203173; cv=none; b=Q1PZFpFQLCgZRqOMTN+ZZFgswWf6TFWWRAycuKyVRhi99QkftPaa/GNyNvpDG/4Wa/3yCVI0Ad/3NlCz4gwDfCs7ZqioqwCEOWghfg25b+kQKdCyyGLZmWeGjxUfKXf1YtVv34fvOwHbUwighgKR1Ns3GoZMU+IWxw7xJd9cOb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727203172; c=relaxed/simple;
-	bh=MJ6LUi4hISTd8UZRPe2I8Sknsxu1sivFQVTG5DDtNI8=;
+	s=arc-20240116; t=1727203173; c=relaxed/simple;
+	bh=8Ixj3FOqUYJNs/W6ZWsxAuz3Mg1c1IJvpiZ0tJJJOGg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZHbVMM+VmjW9UbnpYM/0x44siB9RusN3iK/ObpHC7Xez9lzLPNSaqcjS+VliC4QuO4Iezyxe+CebyPM4SohFLOliQP8Mwqpf6UH2ADo+qWpTuKdu0PgS5AyvjGi04KFSdn5c/q5CZCuSHtbCAO5JXXlpRt2Vgr1YbMwx9Jt6B7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PrTkBXjK; arc=none smtp.client-ip=209.85.216.45
+	 MIME-Version; b=ZvtykTxBg0qezM5GFDnB3gkBrHg1Hy4mRzb/XpBAcBne2LplrFRRSLQJUgHKS+1+DrVhMrfH/6H3Rzf2Ktf4msYDX+jayqj11jfw0opWlwitI82cHM1H+9lFXW1lKXblHqhBGeyyi2MYyXZaKYv/+vCh6e8FBlC84cpdBgVX26k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UU+29lEB; arc=none smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PrTkBXjK"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2d88c0f8e79so4688787a91.3;
-        Tue, 24 Sep 2024 11:39:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UU+29lEB"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2d8881850d9so4781419a91.3;
+        Tue, 24 Sep 2024 11:39:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727203170; x=1727807970; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1727203171; x=1727807971; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=GwHenpa9G1DzD4VLD9ZfYSVIPY3k6s5QJDZYwbzAJLQ=;
-        b=PrTkBXjK9OjXvJfxzYDesdJoc6nEpvl/z09qjRKppGYmWqjPhPp4xzBOizvJgzlCCI
-         JAda1KPG9pWXHgj5F3rGTEyfD8MDCGYjxHUIrTRjNFSgRRjWZBCrI9AjcvtzWw8MEiVd
-         q+ZGV7uMMDgOgMcob6/y9WPfulZQt/YbRhLmlQhT8fz6D1uSSRKa7c/gA1JiNvBLA3qx
-         rUVPI7+FO3f8Rh7imYIZu2MoOg6uB7qoKuAd/IaJOQ6TMnvF/B6nkBBG0Ipb/Cvj6SQk
-         KyhvqdEAd7KGU5ajGH8Q/Y1uhKcP4idgERg0UkYSqpp2GARKp1p6dV+reUizd7wp+VuR
-         phcg==
+        bh=nO3YBG5o73Vw2lWjqc0u+EarG5ykEMqbJfL066qNrLI=;
+        b=UU+29lEBxb5tmjQV5xUNlAx+jGQx9cfmLmabGzUO5MTwh66VA6t5v96AJGSOE8mUno
+         A+uX4FB3QtsCHUhQq03dQOGqtEjVTeMg/cVLLt6Txt74lL8t6i9V5hF7iBHkjFYkHvsP
+         ii28nndagNTzqZrd69/yzCqs7uCoQjyOoPl9dCJf6ZzbE3Yq8LBKg46KxXxnD5vhoaaU
+         pjpmVjEqJeY+omX7t/SF+55aRmC9gGIoLs/t2XHNs63gvLcm1/vkIEUicZAIfYaEHqbI
+         kPPNzEiPFBNNnVcdRj8Tf9MCHpo6bClkq7addxV5Mad6lXIa8jxvKNbfU0xZ75XPxCRM
+         aQIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727203170; x=1727807970;
+        d=1e100.net; s=20230601; t=1727203171; x=1727807971;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=GwHenpa9G1DzD4VLD9ZfYSVIPY3k6s5QJDZYwbzAJLQ=;
-        b=YCWcFKjSmz8wNX6rgFhnqmiide59Z/6BWwmsBc37vXiOO/UPW2Fb47cZI6Bo0JhaFn
-         ApOw+Tie1hRv8Y9XKGjR5fpGYXX45bgzFnZxbwatbw17vt4rQWuNSoI0oXJGgBNcaxoK
-         /eLkO9tGzyBc9lXHipWcj0eRXqiWd+9iIcFzGZpoEcpuNx5XroXbL0hsVlXW7+jEm3Hc
-         Sw2deAPwaM0X30F+mvk9BuN2fpdjOcwcQAlvYkk3bmvivmtX5NyMehFf2kgg1CUhFgoc
-         vmbh8NFaPRGOnpnN16QBsPvz6JxOP3Bs7TqeGjmkMh+7jllaWuw1WTLzXpNoYF5uV3db
-         KdFg==
-X-Gm-Message-State: AOJu0YwhnfnrYP3J8ippXiRgMaxXMDGUOojm4djWCPJTWFdzOMEbLFsW
-	+yyr94M60sRlrL5VBfkpqJX6Q9ugawfTAPSxkFT7uR25Z3+S9LAeO/3UkqI3
-X-Google-Smtp-Source: AGHT+IGCY0k8VvBMPabQgk6LNQvv0O1qgN4RR2JAcnG5TJGmr95yd90Qsv8G+9neTsSlbVWe4CfERQ==
-X-Received: by 2002:a17:90b:96:b0:2d8:a672:186d with SMTP id 98e67ed59e1d1-2e06ae7896fmr122247a91.20.1727203170220;
-        Tue, 24 Sep 2024 11:39:30 -0700 (PDT)
+        bh=nO3YBG5o73Vw2lWjqc0u+EarG5ykEMqbJfL066qNrLI=;
+        b=GX22r7MCjTcUcDKAx5GYn2+Ewrz0J87yqut701wcTP/9SkQEI+uISuWcNmaY2iTMdY
+         hhfxjpOzgBgAtJ18dvzfifWBlpyiqRzGrXjhLrAJLcdrExusjRmD8+YXq2Vbvxt+oe82
+         Vs1L+wEamV/wpgv8wQxcAGCuBX1JSrIncxJ0gt0c+bgmsX7tGuXGDtPDg+dCKf7g5L7G
+         uzHlnQpo+t3fFLB+dIALhXwhjSVHcKY8roL1hX+5Q+nGLlC7+sshF8Q9KPpaPFCgKj3i
+         0rRk5F55d8UQ57MjZdcnXj9QGBK/DgCwLA6I9CVjQt0KRikMP9bU8FdZsHlZ4Fnp8XCA
+         Jagw==
+X-Gm-Message-State: AOJu0YxBYrtmeLXi/1cfHM15kJzlMaKMRe1DH4dp1WMTA7H5KaOVw63Y
+	8FvM72oqjAEMSuunG99uLtwoGunrRGf75nLFhy+gLvBG9GsWjdXopY8yk4eF
+X-Google-Smtp-Source: AGHT+IEe7ekUuaJs1FtbV7LouEUTTdoCxb5fDVD386fAI8gR3WD/a+5wsFjCHrVkynR7VvvoT3ZRDQ==
+X-Received: by 2002:a17:90b:94f:b0:2d8:a373:481e with SMTP id 98e67ed59e1d1-2e06ae8446fmr104388a91.24.1727203171508;
+        Tue, 24 Sep 2024 11:39:31 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:3987:6b77:4621:58ca])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dd6ef93b2fsm11644349a91.49.2024.09.24.11.39.29
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dd6ef93b2fsm11644349a91.49.2024.09.24.11.39.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Sep 2024 11:39:29 -0700 (PDT)
+        Tue, 24 Sep 2024 11:39:31 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -60,11 +60,12 @@ Cc: linux-xfs@vger.kernel.org,
 	catherine.hoang@oracle.com,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
+	Dave Chinner <david@fromorbit.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>,
 	Chandan Babu R <chandanbabu@kernel.org>
-Subject: [PATCH 6.1 25/26] xfs: fix reloading entire unlinked bucket lists
-Date: Tue, 24 Sep 2024 11:38:50 -0700
-Message-ID: <20240924183851.1901667-26-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 26/26] xfs: set bnobt/cntbt numrecs correctly when formatting new AGs
+Date: Tue, 24 Sep 2024 11:38:51 -0700
+Message-ID: <20240924183851.1901667-27-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.46.0.792.g87dc391469-goog
 In-Reply-To: <20240924183851.1901667-1-leah.rumancik@gmail.com>
 References: <20240924183851.1901667-1-leah.rumancik@gmail.com>
@@ -78,201 +79,125 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 537c013b140d373d1ffe6290b841dc00e67effaa ]
+[ Upstream commit 8e698ee72c4ecbbf18264568eb310875839fd601 ]
 
-During review of the patcheset that provided reloading of the incore
-iunlink list, Dave made a few suggestions, and I updated the copy in my
-dev tree.  Unfortunately, I then got distracted by ... who even knows
-what ... and forgot to backport those changes from my dev tree to my
-release candidate branch.  I then sent multiple pull requests with stale
-patches, and that's what was merged into -rc3.
+Through generic/300, I discovered that mkfs.xfs creates corrupt
+filesystems when given these parameters:
 
-So.
+Filesystems formatted with --unsupported are not supported!!
+meta-data=/dev/sda               isize=512    agcount=8, agsize=16352 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+data     =                       bsize=4096   blocks=130816, imaxpct=25
+         =                       sunit=32     swidth=128 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=8192, version=2
+         =                       sectsz=512   sunit=32 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+         =                       rgcount=0    rgsize=0 blks
+Discarding blocks...Done.
+Phase 1 - find and verify superblock...
+        - reporting progress in intervals of 15 minutes
+Phase 2 - using internal log
+        - zero log...
+        - 16:30:50: zeroing log - 16320 of 16320 blocks done
+        - scan filesystem freespace and inode maps...
+agf_freeblks 25, counted 0 in ag 4
+sb_fdblocks 8823, counted 8798
 
-This patch re-adds the use of an unlocked iunlink list check to
-determine if we want to allocate the resources to recreate the incore
-list.  Since lost iunlinked inodes are supposed to be rare, this change
-helps us avoid paying the transaction and AGF locking costs every time
-we open any inode.
+The root cause of this problem is the numrecs handling in
+xfs_freesp_init_recs, which is used to initialize a new AG.  Prior to
+calling the function, we set up the new bnobt block with numrecs == 1
+and rely on _freesp_init_recs to format that new record.  If the last
+record created has a blockcount of zero, then it sets numrecs = 0.
 
-This also re-adds the shutdowns on failure, and re-applies the
-restructuring of the inner loop in xfs_inode_reload_unlinked_bucket, and
-re-adds a requested comment about the quotachecking code.
+That last bit isn't correct if the AG contains the log, the start of the
+log is not immediately after the initial blocks due to stripe alignment,
+and the end of the log is perfectly aligned with the end of the AG.  For
+this case, we actually formatted a single bnobt record to handle the
+free space before the start of the (stripe aligned) log, and incremented
+arec to try to format a second record.  That second record turned out to
+be unnecessary, so what we really want is to leave numrecs at 1.
 
-Retain the original RVB tag from Dave since there's no code change from
-the last submission.
+The numrecs handling itself is overly complicated because a different
+function sets numrecs == 1.  Change the bnobt creation code to start
+with numrecs set to zero and only increment it after successfully
+formatting a free space extent into the btree block.
 
-Fixes: 68b957f64fca1 ("xfs: load uncached unlinked inodes into memory on demand")
+Fixes: f327a00745ff ("xfs: account for log space when formatting new AGs")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- fs/xfs/xfs_export.c | 16 +++++++++++----
- fs/xfs/xfs_inode.c  | 48 +++++++++++++++++++++++++++++++++------------
- fs/xfs/xfs_itable.c |  2 ++
- fs/xfs/xfs_qm.c     | 15 +++++++++++---
- 4 files changed, 61 insertions(+), 20 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-index f71ea786a6d2..7cd09c3a82cb 100644
---- a/fs/xfs/xfs_export.c
-+++ b/fs/xfs/xfs_export.c
-@@ -146,10 +146,18 @@ xfs_nfs_get_inode(
- 		return ERR_PTR(error);
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index bb0c700afe3c..bf47efe08a58 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -415,10 +415,12 @@ xfs_freesp_init_recs(
+ 		ASSERT(start >= mp->m_ag_prealloc_blocks);
+ 		if (start != mp->m_ag_prealloc_blocks) {
+ 			/*
+-			 * Modify first record to pad stripe align of log
++			 * Modify first record to pad stripe align of log and
++			 * bump the record count.
+ 			 */
+ 			arec->ar_blockcount = cpu_to_be32(start -
+ 						mp->m_ag_prealloc_blocks);
++			be16_add_cpu(&block->bb_numrecs, 1);
+ 			nrec = arec + 1;
+ 
+ 			/*
+@@ -429,7 +431,6 @@ xfs_freesp_init_recs(
+ 					be32_to_cpu(arec->ar_startblock) +
+ 					be32_to_cpu(arec->ar_blockcount));
+ 			arec = nrec;
+-			be16_add_cpu(&block->bb_numrecs, 1);
+ 		}
+ 		/*
+ 		 * Change record start to after the internal log
+@@ -438,15 +439,13 @@ xfs_freesp_init_recs(
  	}
  
--	error = xfs_inode_reload_unlinked(ip);
--	if (error) {
--		xfs_irele(ip);
--		return ERR_PTR(error);
-+	/*
-+	 * Reload the incore unlinked list to avoid failure in inodegc.
-+	 * Use an unlocked check here because unrecovered unlinked inodes
-+	 * should be somewhat rare.
-+	 */
-+	if (xfs_inode_unlinked_incomplete(ip)) {
-+		error = xfs_inode_reload_unlinked(ip);
-+		if (error) {
-+			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+			xfs_irele(ip);
-+			return ERR_PTR(error);
-+		}
- 	}
+ 	/*
+-	 * Calculate the record block count and check for the case where
+-	 * the log might have consumed all available space in the AG. If
+-	 * so, reset the record count to 0 to avoid exposure of an invalid
+-	 * record start block.
++	 * Calculate the block count of this record; if it is nonzero,
++	 * increment the record count.
+ 	 */
+ 	arec->ar_blockcount = cpu_to_be32(id->agsize -
+ 					  be32_to_cpu(arec->ar_startblock));
+-	if (!arec->ar_blockcount)
+-		block->bb_numrecs = 0;
++	if (arec->ar_blockcount)
++		be16_add_cpu(&block->bb_numrecs, 1);
+ }
  
- 	if (VFS_I(ip)->i_generation != generation) {
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 00f41bc76bd7..909085269227 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1744,6 +1744,14 @@ xfs_inactive(
- 		truncate = 1;
+ /*
+@@ -458,7 +457,7 @@ xfs_bnoroot_init(
+ 	struct xfs_buf		*bp,
+ 	struct aghdr_init_data	*id)
+ {
+-	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, id->agno);
++	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 0, id->agno);
+ 	xfs_freesp_init_recs(mp, bp, id);
+ }
  
- 	if (xfs_iflags_test(ip, XFS_IQUOTAUNCHECKED)) {
-+		/*
-+		 * If this inode is being inactivated during a quotacheck and
-+		 * has not yet been scanned by quotacheck, we /must/ remove
-+		 * the dquots from the inode before inactivation changes the
-+		 * block and inode counts.  Most probably this is a result of
-+		 * reloading the incore iunlinked list to purge unrecovered
-+		 * unlinked inodes.
-+		 */
- 		xfs_qm_dqdetach(ip);
- 	} else {
- 		error = xfs_qm_dqattach(ip);
-@@ -3657,6 +3665,16 @@ xfs_inode_reload_unlinked_bucket(
- 	if (error)
- 		return error;
- 
-+	/*
-+	 * We've taken ILOCK_SHARED and the AGI buffer lock to stabilize the
-+	 * incore unlinked list pointers for this inode.  Check once more to
-+	 * see if we raced with anyone else to reload the unlinked list.
-+	 */
-+	if (!xfs_inode_unlinked_incomplete(ip)) {
-+		foundit = true;
-+		goto out_agibp;
-+	}
-+
- 	bucket = agino % XFS_AGI_UNLINKED_BUCKETS;
- 	agi = agibp->b_addr;
- 
-@@ -3671,25 +3689,27 @@ xfs_inode_reload_unlinked_bucket(
- 	while (next_agino != NULLAGINO) {
- 		struct xfs_inode	*next_ip = NULL;
- 
-+		/* Found this caller's inode, set its backlink. */
- 		if (next_agino == agino) {
--			/* Found this inode, set its backlink. */
- 			next_ip = ip;
- 			next_ip->i_prev_unlinked = prev_agino;
- 			foundit = true;
-+			goto next_inode;
- 		}
--		if (!next_ip) {
--			/* Inode already in memory. */
--			next_ip = xfs_iunlink_lookup(pag, next_agino);
--		}
--		if (!next_ip) {
--			/* Inode not in memory, reload. */
--			error = xfs_iunlink_reload_next(tp, agibp, prev_agino,
--					next_agino);
--			if (error)
--				break;
- 
--			next_ip = xfs_iunlink_lookup(pag, next_agino);
--		}
-+		/* Try in-memory lookup first. */
-+		next_ip = xfs_iunlink_lookup(pag, next_agino);
-+		if (next_ip)
-+			goto next_inode;
-+
-+		/* Inode not in memory, try reloading it. */
-+		error = xfs_iunlink_reload_next(tp, agibp, prev_agino,
-+				next_agino);
-+		if (error)
-+			break;
-+
-+		/* Grab the reloaded inode. */
-+		next_ip = xfs_iunlink_lookup(pag, next_agino);
- 		if (!next_ip) {
- 			/* No incore inode at all?  We reloaded it... */
- 			ASSERT(next_ip != NULL);
-@@ -3697,10 +3717,12 @@ xfs_inode_reload_unlinked_bucket(
- 			break;
- 		}
- 
-+next_inode:
- 		prev_agino = next_agino;
- 		next_agino = next_ip->i_next_unlinked;
- 	}
- 
-+out_agibp:
- 	xfs_trans_brelse(tp, agibp);
- 	/* Should have found this inode somewhere in the iunlinked bucket. */
- 	if (!error && !foundit)
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index ee3eb3181e3e..44d603364d5a 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -80,10 +80,12 @@ xfs_bulkstat_one_int(
- 	if (error)
- 		goto out;
- 
-+	/* Reload the incore unlinked list to avoid failure in inodegc. */
- 	if (xfs_inode_unlinked_incomplete(ip)) {
- 		error = xfs_inode_reload_unlinked_bucket(tp, ip);
- 		if (error) {
- 			xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 			xfs_irele(ip);
- 			return error;
- 		}
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index bbd0805fa94e..bd907bbc389c 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1160,9 +1160,18 @@ xfs_qm_dqusage_adjust(
- 	if (error)
- 		return error;
- 
--	error = xfs_inode_reload_unlinked(ip);
--	if (error)
--		goto error0;
-+	/*
-+	 * Reload the incore unlinked list to avoid failure in inodegc.
-+	 * Use an unlocked check here because unrecovered unlinked inodes
-+	 * should be somewhat rare.
-+	 */
-+	if (xfs_inode_unlinked_incomplete(ip)) {
-+		error = xfs_inode_reload_unlinked(ip);
-+		if (error) {
-+			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+			goto error0;
-+		}
-+	}
- 
- 	ASSERT(ip->i_delayed_blks == 0);
+@@ -468,7 +467,7 @@ xfs_cntroot_init(
+ 	struct xfs_buf		*bp,
+ 	struct aghdr_init_data	*id)
+ {
+-	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, id->agno);
++	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 0, id->agno);
+ 	xfs_freesp_init_recs(mp, bp, id);
+ }
  
 -- 
 2.46.0.792.g87dc391469-goog
