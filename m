@@ -1,54 +1,54 @@
-Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
+Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9FAB155742
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 22:41:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29D501AB6E7
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 22:41:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727217711; cv=none; b=Kp0nwT9OxOEbTN5TdZa6I3DCcl5HKCihJBPdNTQtVbXoL36hEf9DmdOAUH81SPqlusSSfk9UCV5Xvl3CrTI1EIgPWpmB4cO55CT3/gV20fryIgkZXrhOlFMyF7FjoH13pASolCjhpaNGKETJttNj1y1IYqX+s6QrblgTRQvO6WQ=
+	t=1727217714; cv=none; b=uzCxKC80zGGArt+KyLL836TkepcSoF3nBxR+in5yPrkPPqDnfTcgbP+olWzbnZLwFmDvfXenUS8P5S4bwkMc2ivUba6zbjzcjf1y3VwLfM5SUV+scNO4Ny29T4fUATHmap8J8qioxKhDwS6aIecNOZDL7yhfcZ74CzM6oHnRXXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727217711; c=relaxed/simple;
-	bh=Myyp8NBhaLrbvyMytpCoFFH0i9Qb2P8Vdv0CCqOLW4Y=;
+	s=arc-20240116; t=1727217714; c=relaxed/simple;
+	bh=Rdr8TSS4Iwh4qeHM/cdtAjEt19818xzhxC0cUa9WajM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Jp0U42AdGyxFxAkx6lhk0Qs3QIpEsDXZiIuHtJ6dpH2hgeZcnnTbzP7sSQGBbqqpg5/uOdz7a60PCgLtNNl8NfRJ0eJmVHrcEZBI+INiwDQ+EssUVB4xgCCMe9/1Kyacc2f4dmATz47l+xCRicE3dYK2JBNCgd46lOde0YQ2SLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=gFnTGghM; arc=none smtp.client-ip=209.85.222.182
+	 MIME-Version; b=klqCJe85N+dgqERjLX5T34pnyufD5tyhZw5mLz/jBxQQ88XDGr8LoLbltlz/H690gaTY/xdazvtfkjOW+fkRUNbbIxN++bQ1nccq54nS63njLSsF2bHg3XT33KvATwJ/dMeErCBITmkDkzmLst1omDUb7XlJ0yJDeur6tyopdYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=A2XnA0FG; arc=none smtp.client-ip=209.85.222.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="gFnTGghM"
-Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-7a9aec89347so384051385a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 15:41:49 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="A2XnA0FG"
+Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-7a99e8d5df1so607331685a.2
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Sep 2024 15:41:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1727217708; x=1727822508; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1727217712; x=1727822512; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=kMkBt2ndnZsJ25ZrZgkjn9Q08hjBkXqiZSvNSy1oUMg=;
-        b=gFnTGghMaKq/afSXO6GI1uDVFMxy5+5q/YAi1E4Yq14R77/hsRqnWaLnvo3G9zHF1K
-         RlyzYBNpKz41mVWbjlCU3GEgT/BtPAUvg6hWXZu+9frwZX4qtqOZtq0y4Ou9yeZ/t38v
-         sRsi+DEbFCJuDBsi+dtl7XcXhJW070IMtXXkA=
+        bh=u/a9bPAvhWH1p+W4Rny/nJHlIlCLE5pbW2+6lAK0+Ac=;
+        b=A2XnA0FGluxqnTk1jg9eAjMDDk8Czcq47vc6ET1Dr4OAokDAqyjLDX24KV22XKxlZQ
+         mfkGlSCOUO9odQOAru7xTLyoRAsdRvUqDJ7lKfVPNJABqU757Rjgg4dD9TtbVtMP8tEq
+         SGYeunoU0uo7nG0KUG7fvMG2D5t9f2dqWdCMc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727217708; x=1727822508;
+        d=1e100.net; s=20230601; t=1727217712; x=1727822512;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=kMkBt2ndnZsJ25ZrZgkjn9Q08hjBkXqiZSvNSy1oUMg=;
-        b=JfhBzgaxQR6CZNR4EKVm7O16QS+sFHC0WrOx1PBDdrKSSU+3HSn/g41Jas6yYVwNbE
-         yUDIWaB0sdIQcn6bZHgyss0Zm/nzGd9A38FgaB0A+pXUo1JwyUURBFRnyB/zVa/JZGDu
-         5s3u32Hdb8ORz66rzCBNJWKg3hlI7/PNSX9DiIZNyIIo7Ma4ssePdoWFKYcXH7w3Ch5G
-         z08LVQ/9npUfbMiHmJmMldeIQJCiBGtUPdW4S75T4kIPL4lTkEHq8wscUyk8j9WUm/mG
-         h9zOlp8GmU1jGckQfB++jxPuvzENpP4gCc/R5zPFpKb2gCtLhmHFnat84sNN4Qw/VtDD
-         VMMQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXRVSvuTd3fBpuVwBNkdRC6iMMMugZ0N6pThzBfOSZMeRVfp/u2j28RzXhu9yU42dWbOXdnANXQHFs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzApn7ZEv2boI7faMS8zcQ4orECvHVBUpaN0LkU9KPunm9QPLav
-	GD6w+awGZ7X/d4gIlkeviz4YWwyXoEPW6lu/mX285++fN0QI+ChGmfoMC69oPw==
-X-Google-Smtp-Source: AGHT+IF7y2j5ElY99xoXAzTQLdIolfNsFnQAlor+9pe/omCt0w6+bj82DMuXvGASyjMB8LAXhWdU/w==
-X-Received: by 2002:a05:620a:1786:b0:7a9:d0d2:a5fd with SMTP id af79cd13be357-7ace744d8femr137981085a.49.1727217708492;
-        Tue, 24 Sep 2024 15:41:48 -0700 (PDT)
+        bh=u/a9bPAvhWH1p+W4Rny/nJHlIlCLE5pbW2+6lAK0+Ac=;
+        b=VvvxEnboMfT9aIPwVZY1ldjY0Dd7VZwpuCv32mQTPAUfPZh4UlhWRRaqB0fi3Dnf1/
+         AZrZXEWLJKOTZM4CjTi6PSppSLHFKWjIKW7lcueWjFpUVscMtySpkuFQ6uxIaepx/tC5
+         7ecGnEWf/gXZ14etXIe+JqdA1gCNLcn9UHEtbSFYXctCUI8AEy9SzfT6ebQGZQoBH8nP
+         42B2X1fN/Eh+zmGABp9/AA4ymq+kmPQDQFK97QtHR4cheCKNug8OKz5Hic3RvnHEWZ7r
+         Oey50kysWgzN02f47uDuM3a0OMZyPiEp9T9X3YUss5lnRdJ/M3kM8/8/VzdyyVreP4Gs
+         SJFA==
+X-Forwarded-Encrypted: i=1; AJvYcCVHHBf5hmvuMLCy6/ZuT7XvtYdZEYh8o+vCzanfMVFCUGpG6XvogzVAhbr6mH+22VU2kVq/mbch0gU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YycYPScdmisRsDpkGUd+f0GKsHPLd3D+Drgq/C+R9SxiCk/EqYZ
+	NUr2r/BLeW3itVhqBod6DwtHuLBzw3e8Ip3Ip/BB1t/EynotmlNT+A2ySuRxOA==
+X-Google-Smtp-Source: AGHT+IHtrHM9uSFNGuTueIdUjBDfNePVRPHZDWy5NLhLxjIwwHImFGO4nwimLqt9qoFoZHpVX/ayOQ==
+X-Received: by 2002:a05:620a:190f:b0:7a9:aba6:d012 with SMTP id af79cd13be357-7ace73ff065mr116593685a.22.1727217711792;
+        Tue, 24 Sep 2024 15:41:51 -0700 (PDT)
 Received: from ubuntu-vm.dhcp.broadcom.net ([192.19.144.250])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7acde53d6d3sm114843285a.42.2024.09.24.15.41.46
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7acde53d6d3sm114843285a.42.2024.09.24.15.41.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Sep 2024 15:41:47 -0700 (PDT)
+        Tue, 24 Sep 2024 15:41:50 -0700 (PDT)
 From: Kuntal Nayak <kuntal.nayak@broadcom.com>
 To: leah.rumancik@gmail.com,
 	jwong@kernel.org,
@@ -58,13 +58,13 @@ To: leah.rumancik@gmail.com,
 Cc: ajay.kaher@broadcom.com,
 	alexey.makhalov@broadcom.com,
 	vasavi.sirnapalli@broadcom.com,
-	Dave Chinner <dchinner@redhat.com>,
+	lei lu <llfamsec@gmail.com>,
 	"Darrick J . Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandanbabu@kernel.org>,
 	Kuntal Nayak <kuntal.nayak@broadcom.com>
-Subject: [PATCH v5.10] xfs: No need for inode number error injection in __xfs_dir3_data_check
-Date: Tue, 24 Sep 2024 15:39:57 -0700
-Message-Id: <20240924223958.347475-2-kuntal.nayak@broadcom.com>
+Subject: [PATCH v5.10] xfs: don't walk off the end of a directory data block
+Date: Tue, 24 Sep 2024 15:39:58 -0700
+Message-Id: <20240924223958.347475-3-kuntal.nayak@broadcom.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240924223958.347475-1-kuntal.nayak@broadcom.com>
 References: <20240924223958.347475-1-kuntal.nayak@broadcom.com>
@@ -76,64 +76,127 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Dave Chinner <dchinner@redhat.com>
+From: lei lu <llfamsec@gmail.com>
 
-[ Upstream commit 39d3c0b5968b5421922e2fc939b6d6158df8ac1c ]
+[ Upstream commit 0c7fcdb6d06cdf8b19b57c17605215b06afa864a ]
 
-We call xfs_dir_ino_validate() for every dir entry in a directory
-when doing validity checking of the directory. It calls
-xfs_verify_dir_ino() then emits a corruption report if bad or does
-error injection if good. It is extremely costly:
+This adds sanity checks for xfs_dir2_data_unused and xfs_dir2_data_entry
+to make sure don't stray beyond valid memory region. Before patching, the
+loop simply checks that the start offset of the dup and dep is within the
+range. So in a crafted image, if last entry is xfs_dir2_data_unused, we
+can change dup->length to dup->length-1 and leave 1 byte of space. In the
+next traversal, this space will be considered as dup or dep. We may
+encounter an out of bound read when accessing the fixed members.
 
-  43.27%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.28%  [kernel]  [k] __xfs_dir3_data_check
-   6.61%  [kernel]  [k] xfs_verify_dir_ino
-   4.16%  [kernel]  [k] xfs_errortag_test
-   4.00%  [kernel]  [k] memcpy
-   3.48%  [kernel]  [k] xfs_dir_ino_validate
+In the patch, we make sure that the remaining bytes large enough to hold
+an unused entry before accessing xfs_dir2_data_unused and
+xfs_dir2_data_unused is XFS_DIR2_DATA_ALIGN byte aligned. We also make
+sure that the remaining bytes large enough to hold a dirent with a
+single-byte name before accessing xfs_dir2_data_entry.
 
-7% of the cpu usage in this directory traversal workload is
-xfs_dir_ino_validate() doing absolutely nothing.
-
-We don't need error injection to simulate a bad inode numbers in the
-directory structure because we can do that by fuzzing the structure
-on disk.
-
-And we don't need a corruption report, because the
-__xfs_dir3_data_check() will emit one if the inode number is bad.
-
-So just call xfs_verify_dir_ino() directly here, and get rid of all
-this unnecessary overhead:
-
-  40.30%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.98%  [kernel]  [k] __xfs_dir3_data_check
-   8.10%  [kernel]  [k] xfs_verify_dir_ino
-   4.42%  [kernel]  [k] memcpy
-   2.22%  [kernel]  [k] xfs_dir2_data_get_ftype
-   1.52%  [kernel]  [k] do_raw_spin_lock
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: lei lu <llfamsec@gmail.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Kuntal Nayak <kuntal.nayak@broadcom.com>
 ---
- fs/xfs/libxfs/xfs_dir2_data.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_dir2_data.c | 31 ++++++++++++++++++++++++++-----
+ fs/xfs/libxfs/xfs_dir2_priv.h |  7 +++++++
+ 2 files changed, 33 insertions(+), 5 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 375b3edb2..e67fa086f 100644
+index e67fa086f..72e4c3678 100644
 --- a/fs/xfs/libxfs/xfs_dir2_data.c
 +++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -218,7 +218,7 @@ __xfs_dir3_data_check(
+@@ -177,6 +177,14 @@ __xfs_dir3_data_check(
+ 	while (offset < end) {
+ 		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+ 		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
++		unsigned int	reclen;
++
++		/*
++		 * Are the remaining bytes large enough to hold an
++		 * unused entry?
++		 */
++		if (offset > end - xfs_dir2_data_unusedsize(1))
++			return __this_address;
+ 
+ 		/*
+ 		 * If it's unused, look for the space in the bestfree table.
+@@ -186,9 +194,13 @@ __xfs_dir3_data_check(
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+ 			xfs_failaddr_t	fa;
+ 
++			reclen = xfs_dir2_data_unusedsize(
++					be16_to_cpu(dup->length));
+ 			if (lastfree != 0)
+ 				return __this_address;
+-			if (offset + be16_to_cpu(dup->length) > end)
++			if (be16_to_cpu(dup->length) != reclen)
++				return __this_address;
++			if (offset + reclen > end)
+ 				return __this_address;
+ 			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+ 			    offset)
+@@ -206,10 +218,18 @@ __xfs_dir3_data_check(
+ 				    be16_to_cpu(bf[2].length))
+ 					return __this_address;
+ 			}
+-			offset += be16_to_cpu(dup->length);
++			offset += reclen;
+ 			lastfree = 1;
+ 			continue;
+ 		}
++
++		/*
++		 * This is not an unused entry. Are the remaining bytes
++		 * large enough for a dirent with a single-byte name?
++		 */
++		if (offset > end - xfs_dir2_data_entsize(mp, 1))
++			return __this_address;
++
+ 		/*
+ 		 * It's a real entry.  Validate the fields.
+ 		 * If this is a block directory then make sure it's
+@@ -218,9 +238,10 @@ __xfs_dir3_data_check(
  		 */
  		if (dep->namelen == 0)
  			return __this_address;
--		if (xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)))
+-		if (!xfs_verify_dir_ino(mp, be64_to_cpu(dep->inumber)))
++		reclen = xfs_dir2_data_entsize(mp, dep->namelen);
++		if (offset + reclen > end)
+ 			return __this_address;
+-		if (offset + xfs_dir2_data_entsize(mp, dep->namelen) > end)
 +		if (!xfs_verify_dir_ino(mp, be64_to_cpu(dep->inumber)))
  			return __this_address;
- 		if (offset + xfs_dir2_data_entsize(mp, dep->namelen) > end)
+ 		if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(mp, dep)) != offset)
  			return __this_address;
+@@ -244,7 +265,7 @@ __xfs_dir3_data_check(
+ 			if (i >= be32_to_cpu(btp->count))
+ 				return __this_address;
+ 		}
+-		offset += xfs_dir2_data_entsize(mp, dep->namelen);
++		offset += reclen;
+ 	}
+ 	/*
+ 	 * Need to have seen all the entries and all the bestfree slots.
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 44c6a77cb..e46063cde 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -186,6 +186,13 @@ void xfs_dir2_sf_put_ftype(struct xfs_mount *mp,
+ extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		       struct dir_context *ctx, size_t bufsize);
+ 
++static inline unsigned int
++xfs_dir2_data_unusedsize(
++	unsigned int	len)
++{
++	return round_up(len, XFS_DIR2_DATA_ALIGN);
++}
++
+ static inline unsigned int
+ xfs_dir2_data_entsize(
+ 	struct xfs_mount	*mp,
 -- 
 2.39.3
 
