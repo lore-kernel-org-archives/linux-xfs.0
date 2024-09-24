@@ -1,64 +1,92 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 757691B85EB;
-	Tue, 24 Sep 2024 06:17:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16B4C148308;
+	Tue, 24 Sep 2024 07:41:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727158646; cv=none; b=F2ii59nHFhI9v8HZzAsJUjnaQzoGQ75uQRr1DA+9GuE/5j1XzmoDpq0tHkasb98yaRoiVocJFQ7kUGewR1h8OCz9awL6uEuUb6506zL3YqH5sStxHtHThGGr2zO+cjFffzNBFjgXGGphFWa/7BT08OqWHBMGRwfEGL/arDh4HB0=
+	t=1727163683; cv=none; b=eI50nohBknNlqQUT5Ql/9gYdEiSwRunuHHF4GGVTJQ4fvwreld4Ed0WVK+ykXcDEqU+f1EZg7M1NPcyBv2b0kJhRDN7JMExKxl7NbEuCIVtDTB36nhdbPqW4KV1e2fzEpaiiFKB4XN0I+ua6QOgay/vhd5FUhWzp5UtGJ78Svqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727158646; c=relaxed/simple;
-	bh=EynF5x8i3TEKTkw8e7/bXdZ5YKiX3VLUSu5fx0A/UYs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jGCd8yH56Gq6jx9vQ1a24h8Bhecq8RhI5ZTMvpABfcKXym44cd+VZqfLXzK5ZgAD3RvK8L5qcSNLZ9Mcjo2HL2P8iUcv7JLJBHzr3YJRuCi89KOEw/23gmWLojiQa6elU96LzLcZOkCwaCYCFDu+j/OvpvEnP4anDxPJMWdpXFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+	s=arc-20240116; t=1727163683; c=relaxed/simple;
+	bh=3y/KgGu+DFDq9jdV1IYbbcdKd3yJf7K1UjMdUwtM+a0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FXYQmegCWJIai0z3VhlSpnMF0bNkoj4ETBfCtF6rHbe/zVW0bFc28/VP1w5ofwTGyEfvNRFRLpyu3+DkKXC4JpgDkHclZ+kD96QCLg3ORT0p8vzH4ONAP7occHNOTbLjvGrPKzzurQhLz7XB0zo0ryU61iNBGUbc7be1EhzQV84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cGpJXv8W; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id AE9AB227A8E; Tue, 24 Sep 2024 08:17:19 +0200 (CEST)
-Date: Tue, 24 Sep 2024 08:17:19 +0200
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cGpJXv8W"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=Kgzuw5U5Gcr5LsvIf7qKXEELA+dEJrXd1rbQ3xSrbso=; b=cGpJXv8W/WS8IjQZXC45/DpS2e
+	bPb9RtTkh0w5DZMq23nr4cUfaftM8Bu/m2pG23+EJkML1Q8mHmM8HvlfrPen57ObZsUCGaZ7dGDP0
+	ayWmHsXKptakY7R4fp5rwPHasJKClRn/O2dS4Q4zdBCRZckz9rHV7sye5ZCetWLg8DjJ/g1OliNLi
+	AyrrYpaXEpGWxhw32nyuSL35sEjyypaso/8+MT5TnpYDdjQg4liOMpCiYJs6piTGJyMTINQcanouQ
+	WwzgLfECHr9H6vAxzlOszwfc+VsAPxpxeZEHF+BHiY5sC3VfQ+a8s0KdQAtWhePNv168+e57MQCBP
+	OYO5G8Sw==;
+Received: from 2a02-8389-2341-5b80-b62d-f525-8e84-d569.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:b62d:f525:8e84:d569] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1st0Ai-00000001SGh-1G0N;
+	Tue, 24 Sep 2024 07:41:20 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
-	djwong@kernel.org, dchinner@redhat.com, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	catherine.hoang@oracle.com, martin.petersen@oracle.com
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-Message-ID: <20240924061719.GA11211@lst.de>
-References: <8734m7henr.fsf@gmail.com> <ZufYRolfyUqEOS1c@dread.disaster.area> <c8a9dba5-7d02-4aa2-a01f-dd7f53b24938@oracle.com> <Zun+yci6CeiuNS2o@dread.disaster.area> <8e13fa74-f8f7-49d3-b640-0daf50da5acb@oracle.com> <ZvDZHC1NJWlOR6Uf@dread.disaster.area> <20240923033305.GA30200@lst.de> <cfdbb625-90b8-45d1-838b-bf5b670f49f1@oracle.com> <20240923120715.GA13585@lst.de> <c702379b-3f37-448d-ac28-ec1e248a6c65@oracle.com>
+To: Chandan Babu R <chandan.babu@oracle.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: fix stale delalloc punching for COW I/O v4
+Date: Tue, 24 Sep 2024 09:40:42 +0200
+Message-ID: <20240924074115.1797231-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c702379b-3f37-448d-ac28-ec1e248a6c65@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Sep 23, 2024 at 01:33:12PM +0100, John Garry wrote:
->> As a first step by not making it worse, and that not only means not
->> spreading the rtextent stuff further,
->
-> I assume that refactoring rtextent into "big alloc unit" is spreading 
-> (rtextent stuff), right? If so, what other solution? CoW?
+Hi all,
 
-Well, if you look at the force align series you'd agree that it
-spreads the thing out into the btree allocator.  Or do I misread it?
+this is another fallout from the zoned XFS work, which stresses the XFS
+COW I/O path very heavily.  It affects normal I/O to reflinked files as
+well, but is very hard to hit there.
 
->
->> but more importantly not introducing
->> additional complexities by requiring to be able to write over the
->> written/unwritten boundaries created by either rtextentsize > 1 or
->> the forcealign stuff if you actually want atomic writes.
->
-> The very original solution required a single mapping and in written state 
-> for atomic writes. Reverting to that would save a lot of hassle in the 
-> kernel. It just means that the user needs to manually pre-zero.
+The main problem here is that we only punch out delalloc reservations
+from the data fork, but COW I/O places delalloc extents into the COW
+fork, which means that it won't get punched out forshort writes.
 
-What atomic I/O sizes do your users require?  Would they fit into
-a large sector size now supported by XFS (i.e. 32k for now).
+[Sorry for the rapid fire repost, but as we're down to comment changes
+ and the series has been fully reviewed except for the trivial
+ refactoring patch at the beginning I'd like to get it out before being
+ semi-offline for a few days]
 
+Changes since v3:
+ - improve two comments
+
+Changes since v2:
+ - drop the patches already merged and rebased to latest Linus' tree
+ - moved taking invalidate_lock from iomap to the caller to avoid a
+   too complicated locking protocol
+ - better document the xfs_file_write_zero_eof return value
+ - fix a commit log typo
+
+Changes since v1:
+ - move the already reviewed iomap prep changes to the beginning in case
+   Christian wants to take them ASAP
+ - take the invalidate_lock for post-EOF zeroing so that we have a
+   consistent locking pattern for zeroing.
+
+Diffstat:
+ Documentation/filesystems/iomap/operations.rst |    2 
+ fs/iomap/buffered-io.c                         |  111 ++++++-------------
+ fs/xfs/xfs_aops.c                              |    4 
+ fs/xfs/xfs_bmap_util.c                         |   10 +
+ fs/xfs/xfs_bmap_util.h                         |    2 
+ fs/xfs/xfs_file.c                              |  146 +++++++++++++++----------
+ fs/xfs/xfs_iomap.c                             |   65 +++++++----
+ include/linux/iomap.h                          |   20 ++-
+ 8 files changed, 196 insertions(+), 164 deletions(-)
