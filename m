@@ -1,56 +1,56 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C2D1AC884;
-	Tue, 24 Sep 2024 18:39:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A0D51AE850;
+	Tue, 24 Sep 2024 18:39:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727203171; cv=none; b=Y7VO4j+0qIK+3z+5EyZ0ccpYMrD3vbaRuiZE5a6KaOcpLAZbqDH72WwTsWKks7Qa5jG2kHk3JlOA/hf5arVrvlyowAVPckmtyPItALAg0n5ROMltAUkVMN5SJWQ4DhZEYvrTbsTkfXDIuJxT0ifSqxyU6joC68IvmRrOEHcr5gI=
+	t=1727203172; cv=none; b=GBVuznR7LlY2tzQLt2A2FnaiRrat/+hcLN6SLx9it+D3Xzc3I9bGjxb2n+EI99/IAFHR8Gd7fx+5kvYOkDT6pd1y6MVrJ52OPSBthpj5RHGFeuEMAghEy4K4RHXT+8VW7uCRIE6heA03zHNSG4IO2Z//+1kkpfTsteGOwYDiqrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727203171; c=relaxed/simple;
-	bh=6xLbpDitZiIPFDwXSGtLReWkN8SDx5sBqQL1AYJGfcg=;
+	s=arc-20240116; t=1727203172; c=relaxed/simple;
+	bh=MJ6LUi4hISTd8UZRPe2I8Sknsxu1sivFQVTG5DDtNI8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HBobkSj2AHBJtnTnIDvRvK2G50+HMj6ibCaiy6Vgacj4rbTyUvMPmhye4QPVL8Iyg68dLx56xKzp2PU0kfbNF2m5YByQ+VPzYmlSCJsRYHe8dV59W0EzobbbxsiS5bX/PkyRCmGqxGRy/Am+NpTbPyblq1svWYe1lJUnYUgfX6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nq+KV6HG; arc=none smtp.client-ip=209.85.215.179
+	 MIME-Version; b=ZHbVMM+VmjW9UbnpYM/0x44siB9RusN3iK/ObpHC7Xez9lzLPNSaqcjS+VliC4QuO4Iezyxe+CebyPM4SohFLOliQP8Mwqpf6UH2ADo+qWpTuKdu0PgS5AyvjGi04KFSdn5c/q5CZCuSHtbCAO5JXXlpRt2Vgr1YbMwx9Jt6B7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PrTkBXjK; arc=none smtp.client-ip=209.85.216.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nq+KV6HG"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-7c1324be8easo113583a12.1;
-        Tue, 24 Sep 2024 11:39:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PrTkBXjK"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2d88c0f8e79so4688787a91.3;
+        Tue, 24 Sep 2024 11:39:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727203169; x=1727807969; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1727203170; x=1727807970; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=dPoDCUrC5ElHF7Zfg36m2emgueaMlx0UA0ALS/+pe9c=;
-        b=nq+KV6HGBS5kTNqdiA0oKTtkqEn3TvvE9TvBGy019lE4rnRGkQOT1V7YA0wXfqujPl
-         5a3afMnwifuIU0dFFVe6/bpTmtfi6X0H+VQe/KFNe2bRYCd38weiQ/IH9PtpW+90IByv
-         OYbmi51tVJS8zU2OlFgntTwyeNlStEhDj2Rwxy6nm9jMjIYCCRgpXIT+lyMsSh4HAwgt
-         7R8Qpxobi0n2qlqxIh3hOJkMxwWiF9s6BGaw6lxAJlOjPAOv2HeFeJVaM0xrwZJLCdmp
-         4YKTPkhTQ4Hs50bilu9oHDjHImH/tJtugFNPlUpGTibim32hfxy+pAbXPdeZ0e7pU91A
-         J8oQ==
+        bh=GwHenpa9G1DzD4VLD9ZfYSVIPY3k6s5QJDZYwbzAJLQ=;
+        b=PrTkBXjK9OjXvJfxzYDesdJoc6nEpvl/z09qjRKppGYmWqjPhPp4xzBOizvJgzlCCI
+         JAda1KPG9pWXHgj5F3rGTEyfD8MDCGYjxHUIrTRjNFSgRRjWZBCrI9AjcvtzWw8MEiVd
+         q+ZGV7uMMDgOgMcob6/y9WPfulZQt/YbRhLmlQhT8fz6D1uSSRKa7c/gA1JiNvBLA3qx
+         rUVPI7+FO3f8Rh7imYIZu2MoOg6uB7qoKuAd/IaJOQ6TMnvF/B6nkBBG0Ipb/Cvj6SQk
+         KyhvqdEAd7KGU5ajGH8Q/Y1uhKcP4idgERg0UkYSqpp2GARKp1p6dV+reUizd7wp+VuR
+         phcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727203169; x=1727807969;
+        d=1e100.net; s=20230601; t=1727203170; x=1727807970;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=dPoDCUrC5ElHF7Zfg36m2emgueaMlx0UA0ALS/+pe9c=;
-        b=ljwegWJvGDwMiNI//vBm9oczWTDTIaRl5yljjmjQXQ5SPFvwynNPS4+pjOy+ONErjI
-         HyIQn5gMyjjwQ9gVPWPtpH8QC0gkGsj32KTirdmCpv7L68YiXk8owNxwojFI1voVuJ4r
-         44sqs0C5D3j5qegZraVEXpdEPyeEF8k1FzBpPIRrYmbI3nNKlpftUHDjrp4aJf/6KSHO
-         FjiCkxDBjEL1lTY8bbwMkx3shJVBiibqKIW9x/Qs1WaHLp8ZJ3PNssyRZFAyOaIvr4N2
-         t5xVd5RmflOlhaQJDeEeHkXaCdH3Lsan5chIjfTXEXJiHbLvlf0VnJ7/t0XVAPatn09G
-         fQlQ==
-X-Gm-Message-State: AOJu0YxZ6F/+5Qe9yPPm5DMAiTA6spWovEuhZYrCsr/0kH0KKSN1Sp6c
-	4XjgRMWHl09ugsHxyd5aZ6pViQ4LeT6QtE6GxuskH68XdhT3QVCpbpS6CsRj
-X-Google-Smtp-Source: AGHT+IG2YuPgU5PZ7SWyvJmupHd4nlNCiJ7UoQWFkzUlV4BYRvNktIsHPLzgshieNnvXzwd2/yn0FA==
-X-Received: by 2002:a17:90a:ca0f:b0:2d8:8a3a:7b88 with SMTP id 98e67ed59e1d1-2e0567e8c63mr6294150a91.6.1727203168964;
-        Tue, 24 Sep 2024 11:39:28 -0700 (PDT)
+        bh=GwHenpa9G1DzD4VLD9ZfYSVIPY3k6s5QJDZYwbzAJLQ=;
+        b=YCWcFKjSmz8wNX6rgFhnqmiide59Z/6BWwmsBc37vXiOO/UPW2Fb47cZI6Bo0JhaFn
+         ApOw+Tie1hRv8Y9XKGjR5fpGYXX45bgzFnZxbwatbw17vt4rQWuNSoI0oXJGgBNcaxoK
+         /eLkO9tGzyBc9lXHipWcj0eRXqiWd+9iIcFzGZpoEcpuNx5XroXbL0hsVlXW7+jEm3Hc
+         Sw2deAPwaM0X30F+mvk9BuN2fpdjOcwcQAlvYkk3bmvivmtX5NyMehFf2kgg1CUhFgoc
+         vmbh8NFaPRGOnpnN16QBsPvz6JxOP3Bs7TqeGjmkMh+7jllaWuw1WTLzXpNoYF5uV3db
+         KdFg==
+X-Gm-Message-State: AOJu0YwhnfnrYP3J8ippXiRgMaxXMDGUOojm4djWCPJTWFdzOMEbLFsW
+	+yyr94M60sRlrL5VBfkpqJX6Q9ugawfTAPSxkFT7uR25Z3+S9LAeO/3UkqI3
+X-Google-Smtp-Source: AGHT+IGCY0k8VvBMPabQgk6LNQvv0O1qgN4RR2JAcnG5TJGmr95yd90Qsv8G+9neTsSlbVWe4CfERQ==
+X-Received: by 2002:a17:90b:96:b0:2d8:a672:186d with SMTP id 98e67ed59e1d1-2e06ae7896fmr122247a91.20.1727203170220;
+        Tue, 24 Sep 2024 11:39:30 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:3987:6b77:4621:58ca])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dd6ef93b2fsm11644349a91.49.2024.09.24.11.39.27
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2dd6ef93b2fsm11644349a91.49.2024.09.24.11.39.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Sep 2024 11:39:28 -0700 (PDT)
+        Tue, 24 Sep 2024 11:39:29 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -59,11 +59,12 @@ Cc: linux-xfs@vger.kernel.org,
 	cem@kernel.org,
 	catherine.hoang@oracle.com,
 	"Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>,
 	Chandan Babu R <chandanbabu@kernel.org>
-Subject: [PATCH 6.1 24/26] xfs: make inode unlinked bucket recovery work with quotacheck
-Date: Tue, 24 Sep 2024 11:38:49 -0700
-Message-ID: <20240924183851.1901667-25-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 25/26] xfs: fix reloading entire unlinked bucket lists
+Date: Tue, 24 Sep 2024 11:38:50 -0700
+Message-ID: <20240924183851.1901667-26-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.46.0.792.g87dc391469-goog
 In-Reply-To: <20240924183851.1901667-1-leah.rumancik@gmail.com>
 References: <20240924183851.1901667-1-leah.rumancik@gmail.com>
@@ -77,159 +78,202 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 49813a21ed57895b73ec4ed3b99d4beec931496f ]
+[ Upstream commit 537c013b140d373d1ffe6290b841dc00e67effaa ]
 
-Teach quotacheck to reload the unlinked inode lists when walking the
-inode table.  This requires extra state handling, since it's possible
-that a reloaded inode will get inactivated before quotacheck tries to
-scan it; in this case, we need to ensure that the reloaded inode does
-not have dquots attached when it is freed.
+During review of the patcheset that provided reloading of the incore
+iunlink list, Dave made a few suggestions, and I updated the copy in my
+dev tree.  Unfortunately, I then got distracted by ... who even knows
+what ... and forgot to backport those changes from my dev tree to my
+release candidate branch.  I then sent multiple pull requests with stale
+patches, and that's what was merged into -rc3.
 
+So.
+
+This patch re-adds the use of an unlocked iunlink list check to
+determine if we want to allocate the resources to recreate the incore
+list.  Since lost iunlinked inodes are supposed to be rare, this change
+helps us avoid paying the transaction and AGF locking costs every time
+we open any inode.
+
+This also re-adds the shutdowns on failure, and re-applies the
+restructuring of the inner loop in xfs_inode_reload_unlinked_bucket, and
+re-adds a requested comment about the quotachecking code.
+
+Retain the original RVB tag from Dave since there's no code change from
+the last submission.
+
+Fixes: 68b957f64fca1 ("xfs: load uncached unlinked inodes into memory on demand")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- fs/xfs/xfs_attr_inactive.c |  1 -
- fs/xfs/xfs_inode.c         | 12 +++++++++---
- fs/xfs/xfs_inode.h         |  5 ++++-
- fs/xfs/xfs_mount.h         | 10 +++++++++-
- fs/xfs/xfs_qm.c            |  7 +++++++
- 5 files changed, 29 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_export.c | 16 +++++++++++----
+ fs/xfs/xfs_inode.c  | 48 +++++++++++++++++++++++++++++++++------------
+ fs/xfs/xfs_itable.c |  2 ++
+ fs/xfs/xfs_qm.c     | 15 +++++++++++---
+ 4 files changed, 61 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 5db87b34fb6e..89c7a9f4f930 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -333,7 +333,6 @@ xfs_attr_inactive(
- 	int			error = 0;
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index f71ea786a6d2..7cd09c3a82cb 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -146,10 +146,18 @@ xfs_nfs_get_inode(
+ 		return ERR_PTR(error);
+ 	}
  
- 	mp = dp->i_mount;
--	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
+-	error = xfs_inode_reload_unlinked(ip);
+-	if (error) {
+-		xfs_irele(ip);
+-		return ERR_PTR(error);
++	/*
++	 * Reload the incore unlinked list to avoid failure in inodegc.
++	 * Use an unlocked check here because unrecovered unlinked inodes
++	 * should be somewhat rare.
++	 */
++	if (xfs_inode_unlinked_incomplete(ip)) {
++		error = xfs_inode_reload_unlinked(ip);
++		if (error) {
++			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++			xfs_irele(ip);
++			return ERR_PTR(error);
++		}
+ 	}
  
- 	xfs_ilock(dp, lock_mode);
- 	if (!xfs_inode_has_attr_fork(dp))
+ 	if (VFS_I(ip)->i_generation != generation) {
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 06cdf5dd88af..00f41bc76bd7 100644
+index 00f41bc76bd7..909085269227 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1743,9 +1743,13 @@ xfs_inactive(
- 	     ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0))
+@@ -1744,6 +1744,14 @@ xfs_inactive(
  		truncate = 1;
  
--	error = xfs_qm_dqattach(ip);
--	if (error)
--		goto out;
-+	if (xfs_iflags_test(ip, XFS_IQUOTAUNCHECKED)) {
-+		xfs_qm_dqdetach(ip);
-+	} else {
-+		error = xfs_qm_dqattach(ip);
-+		if (error)
-+			goto out;
-+	}
- 
- 	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		error = xfs_inactive_symlink(ip);
-@@ -1963,6 +1967,8 @@ xfs_iunlink_reload_next(
- 	trace_xfs_iunlink_reload_next(next_ip);
- rele:
- 	ASSERT(!(VFS_I(next_ip)->i_state & I_DONTCACHE));
-+	if (xfs_is_quotacheck_running(mp) && next_ip)
-+		xfs_iflags_set(next_ip, XFS_IQUOTAUNCHECKED);
- 	xfs_irele(next_ip);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 0467d297531e..85395ad2859c 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -344,6 +344,9 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
-  */
- #define XFS_INACTIVATING	(1 << 13)
- 
-+/* Quotacheck is running but inode has not been added to quota counts. */
-+#define XFS_IQUOTAUNCHECKED	(1 << 14)
-+
- /* All inode state flags related to inode reclaim. */
- #define XFS_ALL_IRECLAIM_FLAGS	(XFS_IRECLAIMABLE | \
- 				 XFS_IRECLAIM | \
-@@ -358,7 +361,7 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
- #define XFS_IRECLAIM_RESET_FLAGS	\
- 	(XFS_IRECLAIMABLE | XFS_IRECLAIM | \
- 	 XFS_IDIRTY_RELEASE | XFS_ITRUNCATED | XFS_NEED_INACTIVE | \
--	 XFS_INACTIVATING)
-+	 XFS_INACTIVATING | XFS_IQUOTAUNCHECKED)
- 
- /*
-  * Flags for inode locking.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index c8e72f0d3965..9dc0acf7314f 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -401,6 +401,8 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
- #define XFS_OPSTATE_WARNED_SHRINK	8
- /* Kernel has logged a warning about logged xattr updates being used. */
- #define XFS_OPSTATE_WARNED_LARP		9
-+/* Mount time quotacheck is running */
-+#define XFS_OPSTATE_QUOTACHECK_RUNNING	10
- 
- #define __XFS_IS_OPSTATE(name, NAME) \
- static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
-@@ -423,6 +425,11 @@ __XFS_IS_OPSTATE(inode32, INODE32)
- __XFS_IS_OPSTATE(readonly, READONLY)
- __XFS_IS_OPSTATE(inodegc_enabled, INODEGC_ENABLED)
- __XFS_IS_OPSTATE(blockgc_enabled, BLOCKGC_ENABLED)
-+#ifdef CONFIG_XFS_QUOTA
-+__XFS_IS_OPSTATE(quotacheck_running, QUOTACHECK_RUNNING)
-+#else
-+# define xfs_is_quotacheck_running(mp)	(false)
-+#endif
- 
- static inline bool
- xfs_should_warn(struct xfs_mount *mp, long nr)
-@@ -440,7 +447,8 @@ xfs_should_warn(struct xfs_mount *mp, long nr)
- 	{ (1UL << XFS_OPSTATE_BLOCKGC_ENABLED),		"blockgc" }, \
- 	{ (1UL << XFS_OPSTATE_WARNED_SCRUB),		"wscrub" }, \
- 	{ (1UL << XFS_OPSTATE_WARNED_SHRINK),		"wshrink" }, \
--	{ (1UL << XFS_OPSTATE_WARNED_LARP),		"wlarp" }
-+	{ (1UL << XFS_OPSTATE_WARNED_LARP),		"wlarp" }, \
-+	{ (1UL << XFS_OPSTATE_QUOTACHECK_RUNNING),	"quotacheck" }
- 
- /*
-  * Max and min values for mount-option defined I/O
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index f51960d7dcbd..bbd0805fa94e 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1160,6 +1160,10 @@ xfs_qm_dqusage_adjust(
+ 	if (xfs_iflags_test(ip, XFS_IQUOTAUNCHECKED)) {
++		/*
++		 * If this inode is being inactivated during a quotacheck and
++		 * has not yet been scanned by quotacheck, we /must/ remove
++		 * the dquots from the inode before inactivation changes the
++		 * block and inode counts.  Most probably this is a result of
++		 * reloading the incore iunlinked list to purge unrecovered
++		 * unlinked inodes.
++		 */
+ 		xfs_qm_dqdetach(ip);
+ 	} else {
+ 		error = xfs_qm_dqattach(ip);
+@@ -3657,6 +3665,16 @@ xfs_inode_reload_unlinked_bucket(
  	if (error)
  		return error;
  
-+	error = xfs_inode_reload_unlinked(ip);
-+	if (error)
-+		goto error0;
++	/*
++	 * We've taken ILOCK_SHARED and the AGI buffer lock to stabilize the
++	 * incore unlinked list pointers for this inode.  Check once more to
++	 * see if we raced with anyone else to reload the unlinked list.
++	 */
++	if (!xfs_inode_unlinked_incomplete(ip)) {
++		foundit = true;
++		goto out_agibp;
++	}
 +
+ 	bucket = agino % XFS_AGI_UNLINKED_BUCKETS;
+ 	agi = agibp->b_addr;
+ 
+@@ -3671,25 +3689,27 @@ xfs_inode_reload_unlinked_bucket(
+ 	while (next_agino != NULLAGINO) {
+ 		struct xfs_inode	*next_ip = NULL;
+ 
++		/* Found this caller's inode, set its backlink. */
+ 		if (next_agino == agino) {
+-			/* Found this inode, set its backlink. */
+ 			next_ip = ip;
+ 			next_ip->i_prev_unlinked = prev_agino;
+ 			foundit = true;
++			goto next_inode;
+ 		}
+-		if (!next_ip) {
+-			/* Inode already in memory. */
+-			next_ip = xfs_iunlink_lookup(pag, next_agino);
+-		}
+-		if (!next_ip) {
+-			/* Inode not in memory, reload. */
+-			error = xfs_iunlink_reload_next(tp, agibp, prev_agino,
+-					next_agino);
+-			if (error)
+-				break;
+ 
+-			next_ip = xfs_iunlink_lookup(pag, next_agino);
+-		}
++		/* Try in-memory lookup first. */
++		next_ip = xfs_iunlink_lookup(pag, next_agino);
++		if (next_ip)
++			goto next_inode;
++
++		/* Inode not in memory, try reloading it. */
++		error = xfs_iunlink_reload_next(tp, agibp, prev_agino,
++				next_agino);
++		if (error)
++			break;
++
++		/* Grab the reloaded inode. */
++		next_ip = xfs_iunlink_lookup(pag, next_agino);
+ 		if (!next_ip) {
+ 			/* No incore inode at all?  We reloaded it... */
+ 			ASSERT(next_ip != NULL);
+@@ -3697,10 +3717,12 @@ xfs_inode_reload_unlinked_bucket(
+ 			break;
+ 		}
+ 
++next_inode:
+ 		prev_agino = next_agino;
+ 		next_agino = next_ip->i_next_unlinked;
+ 	}
+ 
++out_agibp:
+ 	xfs_trans_brelse(tp, agibp);
+ 	/* Should have found this inode somewhere in the iunlinked bucket. */
+ 	if (!error && !foundit)
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index ee3eb3181e3e..44d603364d5a 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -80,10 +80,12 @@ xfs_bulkstat_one_int(
+ 	if (error)
+ 		goto out;
+ 
++	/* Reload the incore unlinked list to avoid failure in inodegc. */
+ 	if (xfs_inode_unlinked_incomplete(ip)) {
+ 		error = xfs_inode_reload_unlinked_bucket(tp, ip);
+ 		if (error) {
+ 			xfs_iunlock(ip, XFS_ILOCK_SHARED);
++			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ 			xfs_irele(ip);
+ 			return error;
+ 		}
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index bbd0805fa94e..bd907bbc389c 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1160,9 +1160,18 @@ xfs_qm_dqusage_adjust(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_inode_reload_unlinked(ip);
+-	if (error)
+-		goto error0;
++	/*
++	 * Reload the incore unlinked list to avoid failure in inodegc.
++	 * Use an unlocked check here because unrecovered unlinked inodes
++	 * should be somewhat rare.
++	 */
++	if (xfs_inode_unlinked_incomplete(ip)) {
++		error = xfs_inode_reload_unlinked(ip);
++		if (error) {
++			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++			goto error0;
++		}
++	}
+ 
  	ASSERT(ip->i_delayed_blks == 0);
  
- 	if (XFS_IS_REALTIME_INODE(ip)) {
-@@ -1173,6 +1177,7 @@ xfs_qm_dqusage_adjust(
- 	}
- 
- 	nblks = (xfs_qcnt_t)ip->i_nblocks - rtblks;
-+	xfs_iflags_clear(ip, XFS_IQUOTAUNCHECKED);
- 
- 	/*
- 	 * Add the (disk blocks and inode) resources occupied by this
-@@ -1319,8 +1324,10 @@ xfs_qm_quotacheck(
- 		flags |= XFS_PQUOTA_CHKD;
- 	}
- 
-+	xfs_set_quotacheck_running(mp);
- 	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
- 			NULL);
-+	xfs_clear_quotacheck_running(mp);
- 
- 	/*
- 	 * On error, the inode walk may have partially populated the dquot
 -- 
 2.46.0.792.g87dc391469-goog
 
