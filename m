@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B61BA18E36F
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Sep 2024 13:44:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0496341C71
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Sep 2024 14:45:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727271879; cv=none; b=pE7FgcK4TSC2/nnOV01UKTgO4WKqUz+X5ViKnOsntNFX4ETC3bWyX2Vmw/syMxTeein6P42AJExgQD3NcZVTHgqmBFWGanp7VObXzwBUl7JwV3qdry047Q/OAxWwrGsHvntdMf3ueCOAHNM2++0MUtu4YOtP5praeaRhJKauKFg=
+	t=1727275512; cv=none; b=YzHonvtT9JiCPuS2vvQmAxFg8pzRFXUNCR8+/yccacA28HyWrJSCVe2c1rJ0RJC/PWEKHspUQCcRzXPGgjOVOdg/Y9smPWyWNRkWoON3roGT0yYOOczsYXehjz34SVQv5Dt9Ixa+YhVtGWbJ56mEX8udIZBIW3Sx5GpPSS0adTA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727271879; c=relaxed/simple;
-	bh=bjfX+W9ecYLv2KQyc3vgCwpL46k/Rza0dMtW8zcvyXw=;
+	s=arc-20240116; t=1727275512; c=relaxed/simple;
+	bh=rvtppgw1DEnK2KMmTO/Rg1BTeH+CbCbVt5FkNgMWj20=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NGdg4JjbWZCqdc7Zm+9uHtb3JjXRgpfji9nuP1vXGuHF4Pu2pmOEgVGAmDtfV2GMUK+0jJ1dw6YUNzwym383dBmrnHJMdsa0nVQUkZrodHYfamTXBI3Cq4gBnqHGQMHNGojpiAfYwW3wxT5c0hF23yfnN44Bn7AEKY18fKbsrEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PXapPhDJ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nuvbhgNDtP4gjEwfqWv/zyxENe8X3QFeF5zQZfYGWUx+ZVb+v1pzOEJN5jBH8ZIjos05ByvYLeW1MZntJGP4NBgXjY4a6nQ9WkJOe7jF1kTEC0NNY+3nM6eeRpn/ea9mY47OA46CYgObwqNf+bditkuxdlQHHpzt0ZB0bTzZl7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MWGEkdpN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PXapPhDJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FE0FC4CEC3;
-	Wed, 25 Sep 2024 13:44:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MWGEkdpN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69AFAC4CEC3;
+	Wed, 25 Sep 2024 14:45:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727271879;
-	bh=bjfX+W9ecYLv2KQyc3vgCwpL46k/Rza0dMtW8zcvyXw=;
+	s=k20201202; t=1727275511;
+	bh=rvtppgw1DEnK2KMmTO/Rg1BTeH+CbCbVt5FkNgMWj20=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PXapPhDJZWWxmbgXVAyOD/F1r4OouUXCOUSH32VONV9dkpjXvqnrvr7RVpkWw0dxh
-	 AV+dJtqUJ59vYmF5/HEgxLRvh0x+n2SF2X0+aWk4rTwMBeedk4k+ZIzTanyjuLE1VZ
-	 X71EI03x9uZFA3SGuXEXG0jFTF+5oP0XJT4qZLKIqbey7qmWts33mZRnfawhp4udAE
-	 RsBJzRXJ6xL3PNSqnkDpNeMBtP6thZsWx0GRemryVYemZRtY7Bf7TVWqQJ390mxODF
-	 24PcMpP5G/zZdWntObhGPwjSL1hCQFV7vIwgwzb9o2aL+0KRNOMpoIB66sj5NWrgyD
-	 7K7mqo7mFKtlQ==
-Date: Wed, 25 Sep 2024 15:44:35 +0200
-From: Carlos Maiolino <cem@kernel.org>
+	b=MWGEkdpNK/o8+oY0qzIz3G4Ydy0ssKtv60M34F7burfGc6NurkCAFiAf0TovjNcE1
+	 /Rp7uED0/zMH8lUUUnGYUGzYb97o6c9ev9EE0yQkKNMjTe3TJzG29Iu6oQrdLfx2jD
+	 esJRvI9e9bmqC2TtckRhCyOUhyc0rZxFwxAow4hHa2Y0hvMOp7ZrptoIlvUema+nXJ
+	 OqkvfyiPTEf8PgTijivfy/3Gc54lI64bShQ5ttsiC5q0D8OSYsGPVE6cnaZBOQ6f/Q
+	 gOpEAMJ+xvtTkFH8k8Kf1CBVFsqbseXks69ywIMSirg4vqNQO56cLqzMwN3YSBQW9/
+	 Hmb3uSzuLQ3Zw==
+Date: Wed, 25 Sep 2024 07:45:10 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org
 Subject: Re: [PATCH] MAINTAINERS: add Carlos Maiolino as XFS release manager
-Message-ID: <tndiwahfjnavpwo2oscfhqkkk6lszw7pttlbow75ld4dkfrvv6@r7rdt6rsdosy>
+Message-ID: <20240925144510.GJ21853@frogsfrogsfrogs>
 References: <20240925115512.2313780-1-chandanbabu@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -43,7 +43,7 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20240925115512.2313780-1-chandanbabu@kernel.org>
 
-On Wed, Sep 25, 2024 at 05:25:09PM GMT, Chandan Babu R wrote:
+On Wed, Sep 25, 2024 at 05:25:09PM +0530, Chandan Babu R wrote:
 > I nominate Carlos Maiolino to take over linux-xfs tree maintainer role for
 > upstream kernel's XFS code. He has enough experience in Linux kernel and he's
 > been maintaining xfsprogs and xfsdump trees for a few years now, so he has
@@ -51,7 +51,11 @@ On Wed, Sep 25, 2024 at 05:25:09PM GMT, Chandan Babu R wrote:
 > 
 > Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 
-Acked-by: Carlos Maiolino <cem@kernel.org>
+Thanks for all your hard work this past year, Chandan!
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
 
 > ---
 >  MAINTAINERS | 2 +-
