@@ -1,522 +1,206 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8E64126C1C
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Sep 2024 11:15:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C4C41C9EC9;
+	Wed, 25 Sep 2024 11:53:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727262941; cv=none; b=d5Uf3OJ8++S7ETqW15ctrniBdWvlsK/sXiJbGY8H/w+wIeNVxQbMOp97V+2soIoS8ITrdAjUHHjaqz7fy/cKkpNsZvy+FvaknuekJWhLpmBkc2lsCrfLOwnWbZ2Iu7Dr2xKK4JIdEJTfs6zBgTfD2lbWwGZ6uqxFYS9Uv2kTKYU=
+	t=1727265202; cv=none; b=MWMla0iu1gzKQR/3nh0oWCUzcrjK+5eZ4ps2hhmJs0MNz6Z0aGsrkp8rCNtqROKeQBsrTJs7BC352ChExw73s17OMXeAZZBh3IdE2qdjYjj5SopCzk2iO79EprdFjbXqhbIi28VUx9GKlneGuUJgEweLfamTHusgC427Lc+rX58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727262941; c=relaxed/simple;
-	bh=TyzMD6cWNRSJJA9W1BVRPPwWWPauxyu2ZNquEMGRqno=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oceFnVXgxc3IAokMHdOU2Xy8h+61RISZB0pudVPfll7pKbdHAroxMczqLSHuz9tuF4fzSPKxqmUaeHjK82aqfZDyFNz8/Jr5zNQYUE/qfPvAin/tGXGxflw7VNkdL1HEEoe/Ecq7+zqrMZs+u5HuQVoBSNsvVdIb4mearsmQHM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hDuvRwVM; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1727265202; c=relaxed/simple;
+	bh=MJzmWT6AHwLeoV55B/mEguR8hVitLpdD11bbWACmNpk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=gFf4+h1LoqiGoDPtbeqBFyhWiQgqoLyZzIY7xnicrZpMblcUQUZk+C0G04dhRXWIRXY+StYt4xsrLGf1wWM9D/cP8Ig+g+bXQAs5BCBZO3ESNfxo5kZwNru68nQ/f616gSIHDwgU8Y1UIwO/Vvg3h5Q7/EfYg57X4oQrlfaKrjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d/HMj5sh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hDuvRwVM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1727262938;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pXRcar87hVLEkI8TfvQHnR01o5Y4Km15BgS8tvGNowg=;
-	b=hDuvRwVM0cgQuh16/suXsiwheeaDXsAHPcQpRVkyd2FyGxzFT/T+E60mj6AmpEcMMECBZ7
-	oDdEfa9z9EGdHdhxDwCT7ZIFhjci5WkZglsAJae25bA8MsN/sVM/9egP54CsIEorGmR/8f
-	3Yv8d6BDcfMhPGmZPoLMGLhKbmbcEuo=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-642-XN41VA26MsKGXXe1U0wGcg-1; Wed, 25 Sep 2024 07:15:37 -0400
-X-MC-Unique: XN41VA26MsKGXXe1U0wGcg-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2070e327014so57131495ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Sep 2024 04:15:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727262936; x=1727867736;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pXRcar87hVLEkI8TfvQHnR01o5Y4Km15BgS8tvGNowg=;
-        b=ma3F+2lDKsP5t8za3vamjfkYq4PL7UbYx2KvoIy9Stk80G1sURg/GzdGWoxABWoGnI
-         1/2orYeUY68KqeApFTYK1tZoEx9bAIIJK0WwxFNdx6IaKAUkulrK+PRG+3UJaW3Pzkrk
-         81j3+WRroPj98koah6ogdSlJe4e++l8VWEdUSDwdqhMCb0BezUK9r5ZdbR/rKxdSN+D2
-         S2kSvWaNtD//ztI6duV5akwkPsFJxNDwkJELzLsZi/7oW0ut3t0YR9tWWJ5kIeTDLSoX
-         PrfUqobnA146XgjKVI2Buvl0T5FVqLAUt1kg6524O+HZY08sxCG1farHgYoEPbiCIOUa
-         As1w==
-X-Forwarded-Encrypted: i=1; AJvYcCXL307FNjdYFwqs4Jyav7CrLqproOaApLR9rJSdAJsDiwsOErO7JyM91qmzHC6QT/08NY4Jrr3AHdU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3tYTKoNaR/Su5kVWJJM3ZW8R7Hrdrx6iEiaH5mgi55sHu6++/
-	vABtkOd8BSoxOjqGofrGmQlwkC9KdzYYXQC+BHA9xHcB+tereCGTnM+ALqMzWKD3xJWgVJ59Pui
-	xSbcR+QBO9rkUz8u8x0odjDJTg2Ooco4BenQYFUsT4UCM/6xZUhXcomJnbw==
-X-Received: by 2002:a17:902:ecc8:b0:206:ac11:f3bb with SMTP id d9443c01a7336-20afc5ee705mr23919035ad.47.1727262936400;
-        Wed, 25 Sep 2024 04:15:36 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGRR5lBFGS2iWO176br9Ok4y6tRKh1xas+W2wsFli95rNISseXzJsdUJy7EKgf1j5BYIiQCkw==
-X-Received: by 2002:a17:902:ecc8:b0:206:ac11:f3bb with SMTP id d9443c01a7336-20afc5ee705mr23918665ad.47.1727262935856;
-        Wed, 25 Sep 2024 04:15:35 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20af16e5478sm23081025ad.1.2024.09.25.04.15.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Sep 2024 04:15:35 -0700 (PDT)
-Date: Wed, 25 Sep 2024 19:15:32 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH] xfs: new EOF fragmentation tests
-Message-ID: <20240925111532.me7szmoqedt7ta63@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240924084551.1802795-1-hch@lst.de>
- <20240924084551.1802795-2-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d/HMj5sh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0ECFC4CEC7;
+	Wed, 25 Sep 2024 11:53:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727265202;
+	bh=MJzmWT6AHwLeoV55B/mEguR8hVitLpdD11bbWACmNpk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=d/HMj5shWLxiCxKOaQQ4t+eNZYitJ/j/sd1I3FYbggGCcwZEdMy34a9oA7akWwxuB
+	 /mVsTdMIyKhMoCy6ZnrVWrX7X0cj6JI6K5FiJn5TEWdDw3uettBA/JsJRNtgIh4rpo
+	 zzP2SD/E9J8I41V2VwdkS53khIhCfrgg2BLBwmskYOMzl0STOeDJ5ouUjTW1Omt0SM
+	 H9ZWQ7CFv/JGq15tO56tHTM8O6Zp/+0mZ3lRQNN2vWOOGW0wa+85jamnxtOaADfC4k
+	 J2IIFJvq5C7dw9rOevsrOZC2CHV8/Dqd/ZrWoLN78QGHDGdl6thOXGbGrYnt16CMWI
+	 lbZeKYfbGd17g==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Pankaj Raghav <p.raghav@samsung.com>,
+	Hannes Reinecke <hare@suse.de>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Christian Brauner <brauner@kernel.org>,
+	Sasha Levin <sashal@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.11 237/244] iomap: fix iomap_dio_zero() for fs bs > system page size
+Date: Wed, 25 Sep 2024 07:27:38 -0400
+Message-ID: <20240925113641.1297102-237-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240925113641.1297102-1-sashal@kernel.org>
+References: <20240925113641.1297102-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240924084551.1802795-2-hch@lst.de>
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.11
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 24, 2024 at 10:45:48AM +0200, Christoph Hellwig wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> These tests create substantial file fragmentation as a result of
-> application actions that defeat post-EOF preallocation
-> optimisations. They are intended to replicate known vectors for
-> these problems, and provide a check that the fragmentation levels
-> have been controlled. The mitigations we make may not completely
-> remove fragmentation (e.g. they may demonstrate speculative delalloc
-> related extent size growth) so the checks don't assume we'll end up
-> with perfect layouts and hence check for an exceptable level of
-> fragmentation rather than none.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [move to different test number, update to current xfstest APIs]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-This patch looks good to me, just a few nit-picking below...
+[ Upstream commit 10553a91652d995274da63fc317470f703765081 ]
 
->  tests/xfs/1500     | 66 +++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1500.out |  9 ++++++
->  tests/xfs/1501     | 68 ++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1501.out |  9 ++++++
->  tests/xfs/1502     | 68 ++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1502.out |  9 ++++++
->  tests/xfs/1503     | 77 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1503.out | 33 ++++++++++++++++++++
->  8 files changed, 339 insertions(+)
->  create mode 100755 tests/xfs/1500
->  create mode 100644 tests/xfs/1500.out
->  create mode 100755 tests/xfs/1501
->  create mode 100644 tests/xfs/1501.out
->  create mode 100755 tests/xfs/1502
->  create mode 100644 tests/xfs/1502.out
->  create mode 100755 tests/xfs/1503
->  create mode 100644 tests/xfs/1503.out
-> 
-> diff --git a/tests/xfs/1500 b/tests/xfs/1500
-> new file mode 100755
-> index 000000000..de0e1df62
-> --- /dev/null
-> +++ b/tests/xfs/1500
-> @@ -0,0 +1,66 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test xfs/500
-> +#
-> +# Post-EOF preallocation defeat test for O_SYNC buffered I/O.
-> +#
-> +
-> +. ./common/preamble
-> +_begin_fstest auto quick prealloc rw
-> +
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +_require_scratch
-> +
-> +_cleanup()
-> +{
-> +	# try to kill all background processes
+iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+< fs block size. iomap_dio_zero() has an implicit assumption that fs block
+size < page_size. This is true for most filesystems at the moment.
 
-I didn't see "kill" below, maybe "wait all background processes done"? Or you'd
-like to use "kill" but forgot? If you don't want to use "kill", please tell me,
-then I'll help to change the comment when I merge it.
+If the block size > page size, this will send the contents of the page
+next to zero page(as len > PAGE_SIZE) to the underlying block device,
+causing FS corruption.
 
-> +	wait
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +
-> +_scratch_mkfs > "$seqres.full" 2>&1
-> +_scratch_mount
-> +
-> +# Write multiple files in parallel using synchronous buffered writes. Aim is to
-> +# interleave allocations to fragment the files. Synchronous writes defeat the
-> +# open/write/close heuristics in xfs_file_release() that prevent EOF block
-> +# removal, so this should fragment badly. Typical problematic behaviour shows
-> +# per-file extent counts of >900 (almost worse case) whilst fixed behaviour
-> +# typically shows extent counts in the low 20s.
-> +#
-> +# Failure is determined by golden output mismatch from _within_tolerance().
-> +
-> +workfile=$SCRATCH_MNT/file
-> +nfiles=8
-> +wsize=4096
-> +wcnt=1000
-> +
-> +write_sync_file()
-> +{
-> +	idx=$1
-> +
-> +	for ((cnt=0; cnt<$wcnt; cnt++)); do
-> +		$XFS_IO_PROG -f -s -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
-> +	done
-> +}
-> +
-> +rm -f $workfile*
+iomap is a generic infrastructure and it should not make any assumptions
+about the fs block size and the page size of the system.
 
-Hmm, "rm -f $XXX*", but looks like the $workdfile doesn't have chance to be
-null :) Maybe rm -f $workfile.* is safer, as all test files are $workfile.$idx
-or $workfile.$n. I can do this change when I merge it.
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Link: https://lore.kernel.org/r/20240822135018.1931258-7-kernel@pankajraghav.com
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Daniel Gomez <da.gomez@samsung.com>
+Signed-off-by: Christian Brauner <brauner@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/iomap/buffered-io.c |  4 ++--
+ fs/iomap/direct-io.c   | 45 ++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 41 insertions(+), 8 deletions(-)
 
-Thanks,
-Zorro
-
-> +for ((n=0; n<$nfiles; n++)); do
-> +	write_sync_file $n > /dev/null 2>&1 &
-> +done
-> +wait
-> +sync
-> +
-> +for ((n=0; n<$nfiles; n++)); do
-> +	count=$(_count_extents $workfile.$n)
-> +	# Acceptible extent count range is 1-40
-> +	_within_tolerance "file.$n extent count" $count 21 19 -v
-> +done
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/1500.out b/tests/xfs/1500.out
-> new file mode 100644
-> index 000000000..414df87ed
-> --- /dev/null
-> +++ b/tests/xfs/1500.out
-> @@ -0,0 +1,9 @@
-> +QA output created by 1500
-> +file.0 extent count is in range
-> +file.1 extent count is in range
-> +file.2 extent count is in range
-> +file.3 extent count is in range
-> +file.4 extent count is in range
-> +file.5 extent count is in range
-> +file.6 extent count is in range
-> +file.7 extent count is in range
-> diff --git a/tests/xfs/1501 b/tests/xfs/1501
-> new file mode 100755
-> index 000000000..cf3cbf8b5
-> --- /dev/null
-> +++ b/tests/xfs/1501
-> @@ -0,0 +1,68 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test xfs/501
-> +#
-> +# Post-EOF preallocation defeat test for buffered I/O with extent size hints.
-> +#
-> +
-> +. ./common/preamble
-> +_begin_fstest auto quick prealloc rw
-> +
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +_require_scratch
-> +
-> +_cleanup()
-> +{
-> +	# try to kill all background processes
-> +	wait
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +
-> +_scratch_mkfs > "$seqres.full" 2>&1
-> +_scratch_mount
-> +
-> +# Write multiple files in parallel using buffered writes with extent size hints.
-> +# Aim is to interleave allocations to fragment the files. Writes w/ extent size
-> +# hints set defeat the open/write/close heuristics in xfs_file_release() that
-> +# prevent EOF block removal, so this should fragment badly. Typical problematic
-> +# behaviour shows per-file extent counts of 1000 (worst case!) whilst
-> +# fixed behaviour should show very few extents (almost best case).
-> +#
-> +# Failure is determined by golden output mismatch from _within_tolerance().
-> +
-> +workfile=$SCRATCH_MNT/file
-> +nfiles=8
-> +wsize=4096
-> +wcnt=1000
-> +extent_size=16m
-> +
-> +write_extsz_file()
-> +{
-> +	idx=$1
-> +
-> +	$XFS_IO_PROG -f -c "extsize $extent_size" $workfile.$idx
-> +	for ((cnt=0; cnt<$wcnt; cnt++)); do
-> +		$XFS_IO_PROG -f -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
-> +	done
-> +}
-> +
-> +rm -f $workfile*
-> +for ((n=0; n<$nfiles; n++)); do
-> +	write_extsz_file $n > /dev/null 2>&1 &
-> +done
-> +wait
-> +sync
-> +
-> +for ((n=0; n<$nfiles; n++)); do
-> +	count=$(_count_extents $workfile.$n)
-> +	# Acceptible extent count range is 1-10
-> +	_within_tolerance "file.$n extent count" $count 2 1 8 -v
-> +done
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/1501.out b/tests/xfs/1501.out
-> new file mode 100644
-> index 000000000..a266ef74b
-> --- /dev/null
-> +++ b/tests/xfs/1501.out
-> @@ -0,0 +1,9 @@
-> +QA output created by 1501
-> +file.0 extent count is in range
-> +file.1 extent count is in range
-> +file.2 extent count is in range
-> +file.3 extent count is in range
-> +file.4 extent count is in range
-> +file.5 extent count is in range
-> +file.6 extent count is in range
-> +file.7 extent count is in range
-> diff --git a/tests/xfs/1502 b/tests/xfs/1502
-> new file mode 100755
-> index 000000000..f4228667a
-> --- /dev/null
-> +++ b/tests/xfs/1502
-> @@ -0,0 +1,68 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test xfs/502
-> +#
-> +# Post-EOF preallocation defeat test for direct I/O with extent size hints.
-> +#
-> +
-> +. ./common/preamble
-> +_begin_fstest auto quick prealloc rw
-> +
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +_require_scratch
-> +
-> +_cleanup()
-> +{
-> +	# try to kill all background processes
-> +	wait
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +
-> +_scratch_mkfs > "$seqres.full" 2>&1
-> +_scratch_mount
-> +
-> +# Write multiple files in parallel using O_DIRECT writes w/ extent size hints.
-> +# Aim is to interleave allocations to fragment the files. O_DIRECT writes defeat
-> +# the open/write/close heuristics in xfs_file_release() that prevent EOF block
-> +# removal, so this should fragment badly. Typical problematic behaviour shows
-> +# per-file extent counts of ~1000 (worst case) whilst fixed behaviour typically
-> +# shows extent counts in the low single digits (almost best case)
-> +#
-> +# Failure is determined by golden output mismatch from _within_tolerance().
-> +
-> +workfile=$SCRATCH_MNT/file
-> +nfiles=8
-> +wsize=4096
-> +wcnt=1000
-> +extent_size=16m
-> +
-> +write_direct_file()
-> +{
-> +	idx=$1
-> +
-> +	$XFS_IO_PROG -f -c "extsize $extent_size" $workfile.$idx
-> +	for ((cnt=0; cnt<$wcnt; cnt++)); do
-> +		$XFS_IO_PROG -f -d -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
-> +	done
-> +}
-> +
-> +rm -f $workfile*
-> +for ((n=0; n<$nfiles; n++)); do
-> +	write_direct_file $n > /dev/null 2>&1 &
-> +done
-> +wait
-> +sync
-> +
-> +for ((n=0; n<$nfiles; n++)); do
-> +	count=$(_count_extents $workfile.$n)
-> +	# Acceptible extent count range is 1-10
-> +	_within_tolerance "file.$n extent count" $count 2 1 8 -v
-> +done
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/1502.out b/tests/xfs/1502.out
-> new file mode 100644
-> index 000000000..82c8760a3
-> --- /dev/null
-> +++ b/tests/xfs/1502.out
-> @@ -0,0 +1,9 @@
-> +QA output created by 1502
-> +file.0 extent count is in range
-> +file.1 extent count is in range
-> +file.2 extent count is in range
-> +file.3 extent count is in range
-> +file.4 extent count is in range
-> +file.5 extent count is in range
-> +file.6 extent count is in range
-> +file.7 extent count is in range
-> diff --git a/tests/xfs/1503 b/tests/xfs/1503
-> new file mode 100755
-> index 000000000..9002f87e6
-> --- /dev/null
-> +++ b/tests/xfs/1503
-> @@ -0,0 +1,77 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test xfs/503
-> +#
-> +# Post-EOF preallocation defeat test with O_SYNC buffered I/O that repeatedly
-> +# closes and reopens the files.
-> +#
-> +
-> +. ./common/preamble
-> +_begin_fstest auto prealloc rw
-> +
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +_require_scratch
-> +
-> +_cleanup()
-> +{
-> +	# try to kill all background processes
-> +	wait
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +
-> +_scratch_mkfs > "$seqres.full" 2>&1
-> +_scratch_mount
-> +
-> +# Write multiple files in parallel using synchronous buffered writes that
-> +# repeatedly close and reopen the fails. Aim is to interleave allocations to
-> +# fragment the files. Assuming we've fixed the synchronous write defeat, we can
-> +# still trigger the same issue with a open/read/close on O_RDONLY files. We
-> +# should not be triggering EOF preallocation removal on files we don't have
-> +# permission to write, so until this is fixed it should fragment badly.  Typical
-> +# problematic behaviour shows per-file extent counts of 50-350 whilst fixed
-> +# behaviour typically demonstrates post-eof speculative delalloc growth in
-> +# extent size (~6 extents for 50MB file).
-> +#
-> +# Failure is determined by golden output mismatch from _within_tolerance().
-> +
-> +workfile=$SCRATCH_MNT/file
-> +nfiles=32
-> +wsize=4096
-> +wcnt=1000
-> +
-> +write_file()
-> +{
-> +	idx=$1
-> +
-> +	$XFS_IO_PROG -f -s -c "pwrite -b 64k 0 50m" $workfile.$idx
-> +}
-> +
-> +read_file()
-> +{
-> +	idx=$1
-> +
-> +	for ((cnt=0; cnt<$wcnt; cnt++)); do
-> +		$XFS_IO_PROG -f -r -c "pread 0 28" $workfile.$idx
-> +	done
-> +}
-> +
-> +rm -f $workdir/file*
-> +for ((n=0; n<$((nfiles)); n++)); do
-> +	write_file $n > /dev/null 2>&1 &
-> +	read_file $n > /dev/null 2>&1 &
-> +done
-> +wait
-> +
-> +for ((n=0; n<$nfiles; n++)); do
-> +	count=$(_count_extents $workfile.$n)
-> +	# Acceptible extent count range is 1-40
-> +	_within_tolerance "file.$n extent count" $count 6 5 10 -v
-> +done
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/1503.out b/tests/xfs/1503.out
-> new file mode 100644
-> index 000000000..1780b16df
-> --- /dev/null
-> +++ b/tests/xfs/1503.out
-> @@ -0,0 +1,33 @@
-> +QA output created by 1503
-> +file.0 extent count is in range
-> +file.1 extent count is in range
-> +file.2 extent count is in range
-> +file.3 extent count is in range
-> +file.4 extent count is in range
-> +file.5 extent count is in range
-> +file.6 extent count is in range
-> +file.7 extent count is in range
-> +file.8 extent count is in range
-> +file.9 extent count is in range
-> +file.10 extent count is in range
-> +file.11 extent count is in range
-> +file.12 extent count is in range
-> +file.13 extent count is in range
-> +file.14 extent count is in range
-> +file.15 extent count is in range
-> +file.16 extent count is in range
-> +file.17 extent count is in range
-> +file.18 extent count is in range
-> +file.19 extent count is in range
-> +file.20 extent count is in range
-> +file.21 extent count is in range
-> +file.22 extent count is in range
-> +file.23 extent count is in range
-> +file.24 extent count is in range
-> +file.25 extent count is in range
-> +file.26 extent count is in range
-> +file.27 extent count is in range
-> +file.28 extent count is in range
-> +file.29 extent count is in range
-> +file.30 extent count is in range
-> +file.31 extent count is in range
-> -- 
-> 2.45.2
-> 
-> 
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index f420c53d86acc..d745f718bcde8 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -2007,10 +2007,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+ }
+ EXPORT_SYMBOL_GPL(iomap_writepages);
+ 
+-static int __init iomap_init(void)
++static int __init iomap_buffered_init(void)
+ {
+ 	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+ 			   offsetof(struct iomap_ioend, io_bio),
+ 			   BIOSET_NEED_BVECS);
+ }
+-fs_initcall(iomap_init);
++fs_initcall(iomap_buffered_init);
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index f3b43d223a46e..c02b266bba525 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -11,6 +11,7 @@
+ #include <linux/iomap.h>
+ #include <linux/backing-dev.h>
+ #include <linux/uio.h>
++#include <linux/set_memory.h>
+ #include <linux/task_io_accounting_ops.h>
+ #include "trace.h"
+ 
+@@ -27,6 +28,13 @@
+ #define IOMAP_DIO_WRITE		(1U << 30)
+ #define IOMAP_DIO_DIRTY		(1U << 31)
+ 
++/*
++ * Used for sub block zeroing in iomap_dio_zero()
++ */
++#define IOMAP_ZERO_PAGE_SIZE (SZ_64K)
++#define IOMAP_ZERO_PAGE_ORDER (get_order(IOMAP_ZERO_PAGE_SIZE))
++static struct page *zero_page;
++
+ struct iomap_dio {
+ 	struct kiocb		*iocb;
+ 	const struct iomap_dio_ops *dops;
+@@ -232,13 +240,20 @@ void iomap_dio_bio_end_io(struct bio *bio)
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_bio_end_io);
+ 
+-static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
++static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+ 		loff_t pos, unsigned len)
+ {
+ 	struct inode *inode = file_inode(dio->iocb->ki_filp);
+-	struct page *page = ZERO_PAGE(0);
+ 	struct bio *bio;
+ 
++	if (!len)
++		return 0;
++	/*
++	 * Max block size supported is 64k
++	 */
++	if (WARN_ON_ONCE(len > IOMAP_ZERO_PAGE_SIZE))
++		return -EINVAL;
++
+ 	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+ 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
+ 				  GFP_KERNEL);
+@@ -246,8 +261,9 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+ 	bio->bi_private = dio;
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
+ 
+-	__bio_add_page(bio, page, len, 0);
++	__bio_add_page(bio, zero_page, len, 0);
+ 	iomap_dio_submit_bio(iter, dio, bio, pos);
++	return 0;
+ }
+ 
+ /*
+@@ -356,8 +372,10 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 	if (need_zeroout) {
+ 		/* zero out from the start of the block to the write offset */
+ 		pad = pos & (fs_block_size - 1);
+-		if (pad)
+-			iomap_dio_zero(iter, dio, pos - pad, pad);
++
++		ret = iomap_dio_zero(iter, dio, pos - pad, pad);
++		if (ret)
++			goto out;
+ 	}
+ 
+ 	/*
+@@ -431,7 +449,8 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 		/* zero out from the end of the write to the end of the block */
+ 		pad = pos & (fs_block_size - 1);
+ 		if (pad)
+-			iomap_dio_zero(iter, dio, pos, fs_block_size - pad);
++			ret = iomap_dio_zero(iter, dio, pos,
++					     fs_block_size - pad);
+ 	}
+ out:
+ 	/* Undo iter limitation to current extent */
+@@ -753,3 +772,17 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return iomap_dio_complete(dio);
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_rw);
++
++static int __init iomap_dio_init(void)
++{
++	zero_page = alloc_pages(GFP_KERNEL | __GFP_ZERO,
++				IOMAP_ZERO_PAGE_ORDER);
++
++	if (!zero_page)
++		return -ENOMEM;
++
++	set_memory_ro((unsigned long)page_address(zero_page),
++		      1U << IOMAP_ZERO_PAGE_ORDER);
++	return 0;
++}
++fs_initcall(iomap_dio_init);
+-- 
+2.43.0
 
