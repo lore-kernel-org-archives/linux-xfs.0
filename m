@@ -1,130 +1,204 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67831157E61;
-	Thu, 26 Sep 2024 16:59:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47310186E25
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Sep 2024 21:46:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727369988; cv=none; b=KFZqSsudVxjUOnB/wp+EfxywikuXBeE8mdaTfQHbAfkgrDzUzZbovkJcKcgG+UsQDjRYSQzd5DAD+8Upt2RWhXNr0SD5LQ2aFp9JdFqjxxmVMao4sWuVt6b6pCd4NFOI0+U+OZSNXRV4cY8O5LFcVyzd8Hzx5Qw3h7Fp0oXmy4I=
+	t=1727387187; cv=none; b=PdWMK/cqILMnzqepk+PGCMK3QKjFwudY2Sy1ErAnwbE1/A81sg2FKK9tqvpQ0NwdzjpPK2nXau+395Fx6nlVjWvleUi4koGya/I+8tnzAhd4XpOHeaJ9rCGjtgyFymD/LtihK+n6HtQW74q2ttwO4nUwrWSRlUuh5zW7hSTcOjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727369988; c=relaxed/simple;
-	bh=FvyFBt+Vd5UF2A+sqhYijCe2ynDIwnVNWV+evOwSXP0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B1SiIdFW46NHrhcKA1/acXKyGIfdRGzUO6oJuUKaO7IE995Z9i8dJ/BGNLPEXukuznYmuKMF8u2++mxYIMAZf1zO4VUmYKPWbE0C+E9tQSWDzm1kWYne+2qbSMhCE2v2YiytYXjJQE03FGKxmPteJxz7JnSgnr0CgGvlulVFyuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OyPAll4O; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OyPAll4O"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description;
-	bh=vZZTa11CAK73ciRtK/MoLNusDFg6dIj6Gmywiet9pEk=; b=OyPAll4OChxKP8zrcRtGRnwDsS
-	zgKDZwCOCsLmEc3+M7QxVMRw982AGTIfUzIiE0r3n23a11U3UDZEMxLYNM618gxtGhCmRWJP9IslZ
-	9+fiZSZkbwBnKX2dlUHKkc3YWMFduEcnt37crCl9ejx+ykHfIKIsY2xu7mT6c09KLkFB6Nj2shRI/
-	b9o0cncTZMvy1eY9nrSfrqswutAzEmxTAPzp6LD6L9+WM7TNgOssSkIjNUWpwRnM5fRfscLCL093N
-	0O2bR8GyaCgxQdhUQxbDRrz9hy5l7wu9KZI/IeAiNOYxC27i+h5n/x1QgIcty/TPcFVrW1NPOWxWe
-	lyN231og==;
-Received: from [50.53.2.24] (helo=[192.168.254.17])
-	by casper.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1strpz-000000078sX-1WvG;
-	Thu, 26 Sep 2024 16:59:32 +0000
-Message-ID: <fadc1ea2-fb43-41e2-af8c-8a93cf9e7865@infradead.org>
-Date: Thu, 26 Sep 2024 09:59:21 -0700
+	s=arc-20240116; t=1727387187; c=relaxed/simple;
+	bh=muAc2f3ggDvfFdmGpZIpkJmvmZ6jlMxKr0TXVU1fA3A=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=fFr/T5wCG+tYJACsj/P7K+SI6SMXzbj5a32J2KM/D7ICbAa5tQtIsDYJKT45CycdHt6Fk0qJ4g2cZe8/t+fhQWoNecDIza4m8oR+lqmRZ+umWktGhhMbv1OAK/ATZR9R6ujA0At1XJ7l2fM+/Ki9780lcH/smR511vqx5bGQddw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-39f56ac8d88so18663725ab.2
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Sep 2024 14:46:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727387184; x=1727991984;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=cNgbayoTOzKBvWrjYumPyMvg/L25cqWyA8SYhwXXaDs=;
+        b=lUOoonLiYrUIXikjLfLPWuUc3lnsbRbtExNnXFTh2rRMFjNyPKccg7oky0ga/QWrTE
+         WnX0waKhDlPXC5Mnu+RR/wgp41nEKj4E0GFDW/h507ligAPjmXg80s4I4xYWVS6T/xh2
+         wdqQe1ghC8TVdWbyonxDc7lM1YZX2DjpxJLkDGtg3D/mtVuvSULych2zI7+IFqdb5BBx
+         6ZcYrL3mwftCGPstk4+/L49fmQUgZRbouCAwq9Bbn3gvG8vX3Hs1DSdWciHJBDe80bxK
+         y+Z9zAwsCeKytGf+1FL2YeRIerelI4RECOhAl4ffQUGzxp9Yy1fg3qAiQBRBfkkJVbxk
+         xOIg==
+X-Forwarded-Encrypted: i=1; AJvYcCUntAyOUTwpaRqFFs5VbNaquYOHDluQq1jjd76m70MTXqWTSd4+vtK+1pcNkRgpX7r2OWCNP8nbxc8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBAz68E5p6Y4PQur5ZJMT0pu/T8HEAgYj+o89bNGbBf0awEiZS
+	6tFKEWghU9guwAExVX1gMw+ijnBOojLZVD1Uz33S5DQcEB2ykv43iqyBZzyAD02fFoiMipvEU+R
+	uteO9D/m03gQx9eC7ozEp0dtkaifQib0zZRMZL3Bdflbbib/hUAIbDsw=
+X-Google-Smtp-Source: AGHT+IFfrez6KMJIjDYgXUjVg12E6nXuskHGP9TO/HB6U+bF4bqJLYb1tnC/7E6DZ57EKzocqXlDJKZPBb3xy1Fn4Ox6BSfDLP2r
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 00/11] fs: multigrain timestamp redux
-To: Jeff Layton <jlayton@kernel.org>, John Stultz <jstultz@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, Stephen Boyd <sboyd@kernel.org>,
- Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
- Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu
- <mhiramat@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Jonathan Corbet <corbet@lwn.net>, Chandan Babu R <chandan.babu@oracle.com>,
- "Darrick J. Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>,
- Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
- Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
- Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- Chuck Lever <chuck.lever@oracle.com>,
- Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org
-References: <20240914-mgtime-v8-0-5bd872330bed@kernel.org>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20240914-mgtime-v8-0-5bd872330bed@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6e02:1d84:b0:3a0:8c5f:90c0 with SMTP id
+ e9e14a558f8ab-3a345169bd7mr9937715ab.10.1727387184517; Thu, 26 Sep 2024
+ 14:46:24 -0700 (PDT)
+Date: Thu, 26 Sep 2024 14:46:24 -0700
+In-Reply-To: <0000000000002af6530615bd6932@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <66f5d630.050a0220.38ace9.0002.GAE@google.com>
+Subject: Re: [syzbot] [xfs?] KASAN: slab-use-after-free Read in xfs_inode_item_push
+From: syzbot <syzbot+1a28995e12fd13faa44e@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Jeff,
+syzbot has found a reproducer for the following issue on:
 
-On 9/14/24 10:07 AM, Jeff Layton wrote:
-> This is a fairly small update to the v7 set. It seems to pass all of my
-> testing. Again, most of the changes are in the first two patches, but
-> there are some differences in the patch that adds percpu counters as
-> well.
-> 
-> Since the report of a performance regression came just before the merge
-> window, it looks like we're going to have to wait for yet another
-> release, so consider this version v6.13 material.
-> 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
+HEAD commit:    11a299a7933e Merge tag 'for-6.12/block-20240925' of git://..
+git tree:       upstream
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=1378aaa9980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=31f49563bb05c4a8
+dashboard link: https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=164f7627980000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10923a80580000
 
-> ---
-> Jeff Layton (11):
->       timekeeping: move multigrain timestamp floor handling into timekeeper
->       fs: add infrastructure for multigrain timestamps
->       fs: have setattr_copy handle multigrain timestamps appropriately
->       fs: handle delegated timestamps in setattr_copy_mgtime
->       fs: tracepoints around multigrain timestamp events
->       fs: add percpu counters for significant multigrain timestamp events
->       Documentation: add a new file documenting multigrain timestamps
->       xfs: switch to multigrain timestamps
->       ext4: switch to multigrain timestamps
->       btrfs: convert to multigrain timestamps
->       tmpfs: add support for multigrain timestamps
-> 
->  Documentation/filesystems/index.rst         |   1 +
->  Documentation/filesystems/multigrain-ts.rst | 121 ++++++++++++
->  fs/attr.c                                   |  60 +++++-
->  fs/btrfs/file.c                             |  25 +--
->  fs/btrfs/super.c                            |   3 +-
->  fs/ext4/super.c                             |   2 +-
->  fs/inode.c                                  | 278 +++++++++++++++++++++++++---
->  fs/stat.c                                   |  42 ++++-
->  fs/xfs/libxfs/xfs_trans_inode.c             |   6 +-
->  fs/xfs/xfs_iops.c                           |  10 +-
->  fs/xfs/xfs_super.c                          |   2 +-
->  include/linux/fs.h                          |  36 +++-
->  include/linux/timekeeping.h                 |   5 +
->  include/trace/events/timestamp.h            | 124 +++++++++++++
->  kernel/time/timekeeping.c                   |  83 +++++++++
->  kernel/time/timekeeping_debug.c             |  12 ++
->  kernel/time/timekeeping_internal.h          |   3 +
->  mm/shmem.c                                  |   2 +-
->  18 files changed, 742 insertions(+), 73 deletions(-)
-> ---
-> base-commit: da3ea35007d0af457a0afc87e84fddaebc4e0b63
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/e97035004495/disk-11a299a7.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/0be318a25b1d/vmlinux-11a299a7.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/91f17271baa3/bzImage-11a299a7.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/971400d21e6d/mount_0.gz
 
-IME it would be better to make this series apply to linux-next-($latest)
-instead of base mainline Linux. for integration reasons.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+1a28995e12fd13faa44e@syzkaller.appspotmail.com
 
-You can add
+BUG: KASAN: slab-use-after-free in xfs_inode_item_push+0x293/0x2e0 fs/xfs/xfs_inode_item.c:775
+Read of size 8 at addr ffff8880774cfa70 by task xfsaild/loop2/10928
 
-Tested-by: Randy Dunlap <rdunlap@infradead.org> # documentation bits
+CPU: 1 UID: 0 PID: 10928 Comm: xfsaild/loop2 Not tainted 6.11.0-syzkaller-10669-g11a299a7933e #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:377 [inline]
+ print_report+0x169/0x550 mm/kasan/report.c:488
+ kasan_report+0x143/0x180 mm/kasan/report.c:601
+ xfs_inode_item_push+0x293/0x2e0 fs/xfs/xfs_inode_item.c:775
+ xfsaild_push_item fs/xfs/xfs_trans_ail.c:395 [inline]
+ xfsaild_push fs/xfs/xfs_trans_ail.c:523 [inline]
+ xfsaild+0x112a/0x2e00 fs/xfs/xfs_trans_ail.c:705
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+ </TASK>
 
-for all patches if you want to.
+Allocated by task 10907:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ unpoison_slab_object mm/kasan/common.c:319 [inline]
+ __kasan_slab_alloc+0x66/0x80 mm/kasan/common.c:345
+ kasan_slab_alloc include/linux/kasan.h:247 [inline]
+ slab_post_alloc_hook mm/slub.c:4086 [inline]
+ slab_alloc_node mm/slub.c:4135 [inline]
+ kmem_cache_alloc_noprof+0x135/0x2a0 mm/slub.c:4142
+ xfs_inode_item_init+0x33/0xc0 fs/xfs/xfs_inode_item.c:870
+ xfs_trans_ijoin+0xeb/0x130 fs/xfs/libxfs/xfs_trans_inode.c:36
+ xfs_create+0x8a0/0xf60 fs/xfs/xfs_inode.c:720
+ xfs_generic_create+0x5d5/0xf50 fs/xfs/xfs_iops.c:213
+ vfs_mkdir+0x2f9/0x4f0 fs/namei.c:4257
+ do_mkdirat+0x264/0x3a0 fs/namei.c:4280
+ __do_sys_mkdir fs/namei.c:4300 [inline]
+ __se_sys_mkdir fs/namei.c:4298 [inline]
+ __x64_sys_mkdir+0x6c/0x80 fs/namei.c:4298
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+Freed by task 5213:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ kasan_save_free_info+0x40/0x50 mm/kasan/generic.c:579
+ poison_slab_object mm/kasan/common.c:247 [inline]
+ __kasan_slab_free+0x59/0x70 mm/kasan/common.c:264
+ kasan_slab_free include/linux/kasan.h:230 [inline]
+ slab_free_hook mm/slub.c:2343 [inline]
+ slab_free mm/slub.c:4580 [inline]
+ kmem_cache_free+0x1a2/0x420 mm/slub.c:4682
+ xfs_inode_free_callback+0x152/0x1d0 fs/xfs/xfs_icache.c:158
+ rcu_do_batch kernel/rcu/tree.c:2567 [inline]
+ rcu_core+0xaaa/0x17a0 kernel/rcu/tree.c:2823
+ handle_softirqs+0x2c5/0x980 kernel/softirq.c:554
+ __do_softirq kernel/softirq.c:588 [inline]
+ invoke_softirq kernel/softirq.c:428 [inline]
+ __irq_exit_rcu+0xf4/0x1c0 kernel/softirq.c:637
+ irq_exit_rcu+0x9/0x30 kernel/softirq.c:649
+ instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1037 [inline]
+ sysvec_apic_timer_interrupt+0xa6/0xc0 arch/x86/kernel/apic/apic.c:1037
+ asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:702
+
+The buggy address belongs to the object at ffff8880774cfa40
+ which belongs to the cache xfs_ili of size 264
+The buggy address is located 48 bytes inside of
+ freed 264-byte region [ffff8880774cfa40, ffff8880774cfb48)
+
+The buggy address belongs to the physical page:
+page: refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x774cf
+ksm flags: 0xfff00000000000(node=0|zone=1|lastcpupid=0x7ff)
+page_type: f5(slab)
+raw: 00fff00000000000 ffff888142abe140 ffffea0001d56080 0000000000000007
+raw: 0000000000000000 00000000000c000c 00000001f5000000 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Reclaimable, gfp_mask 0x52c50(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_RECLAIMABLE), pid 5289, tgid 5289 (syz-executor269), ts 76754520423, free_ts 21942205490
+ set_page_owner include/linux/page_owner.h:32 [inline]
+ post_alloc_hook+0x1f3/0x230 mm/page_alloc.c:1537
+ prep_new_page mm/page_alloc.c:1545 [inline]
+ get_page_from_freelist+0x3039/0x3180 mm/page_alloc.c:3457
+ __alloc_pages_noprof+0x256/0x6c0 mm/page_alloc.c:4733
+ alloc_pages_mpol_noprof+0x3e8/0x680 mm/mempolicy.c:2265
+ alloc_slab_page+0x6a/0x120 mm/slub.c:2413
+ allocate_slab+0x5a/0x2f0 mm/slub.c:2579
+ new_slab mm/slub.c:2632 [inline]
+ ___slab_alloc+0xcd1/0x14b0 mm/slub.c:3819
+ __slab_alloc+0x58/0xa0 mm/slub.c:3909
+ __slab_alloc_node mm/slub.c:3962 [inline]
+ slab_alloc_node mm/slub.c:4123 [inline]
+ kmem_cache_alloc_noprof+0x1c1/0x2a0 mm/slub.c:4142
+ xfs_inode_item_init+0x33/0xc0 fs/xfs/xfs_inode_item.c:870
+ xfs_trans_ijoin+0xeb/0x130 fs/xfs/libxfs/xfs_trans_inode.c:36
+ xfs_icreate+0x13a/0x1f0 fs/xfs/xfs_inode.c:593
+ xfs_symlink+0xa74/0x1230 fs/xfs/xfs_symlink.c:170
+ xfs_vn_symlink+0x1f5/0x740 fs/xfs/xfs_iops.c:443
+ vfs_symlink+0x137/0x2e0 fs/namei.c:4615
+ do_symlinkat+0x222/0x3a0 fs/namei.c:4641
+page last free pid 1 tgid 1 stack trace:
+ reset_page_owner include/linux/page_owner.h:25 [inline]
+ free_pages_prepare mm/page_alloc.c:1108 [inline]
+ free_unref_page+0xcd0/0xf00 mm/page_alloc.c:2638
+ free_contig_range+0x152/0x550 mm/page_alloc.c:6748
+ destroy_args+0x8a/0x840 mm/debug_vm_pgtable.c:1017
+ debug_vm_pgtable+0x4be/0x550 mm/debug_vm_pgtable.c:1397
+ do_one_initcall+0x248/0x880 init/main.c:1269
+ do_initcall_level+0x157/0x210 init/main.c:1331
+ do_initcalls+0x3f/0x80 init/main.c:1347
+ kernel_init_freeable+0x435/0x5d0 init/main.c:1580
+ kernel_init+0x1d/0x2b0 init/main.c:1469
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+
+Memory state around the buggy address:
+ ffff8880774cf900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8880774cf980: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff8880774cfa00: fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb fb
+                                                             ^
+ ffff8880774cfa80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8880774cfb00: fb fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc
+==================================================================
 
 
-> change-id: 20240913-mgtime-20c98bcda88e
-> 
-> Best regards,
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
