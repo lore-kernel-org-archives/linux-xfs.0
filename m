@@ -1,99 +1,102 @@
-Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FCC41591EA;
-	Thu, 26 Sep 2024 00:58:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD0D919004E;
+	Thu, 26 Sep 2024 07:58:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727312339; cv=none; b=dmu8aSXxSkDFMdl8Mt8/7HM/xuTYsqhGQdvBwva4mhhaXe42HvQQ5vTHhaaLR+7lfHuNQHaWqrgF01vW7fo9C+qxsxLHcUj9H38wjg+G5A5LwwrNqMunQrNeNx2x//idSasmKbi3eqPjgnS9VTKWHs1PBj8BeOtb9RHChcVl/fI=
+	t=1727337529; cv=none; b=gecXNE+N8obsRk3DKxMITwxBpTsFAd7z2EZ/WAsBZwctUGneLN51RdCRUvPoRXv5HixduZfoDy78pt2yyUbXv1awgXgADqnKlE1/TSLauCtEAYRMrsMR/cnRmXUa4lLtFRypS+Bk4q6cu5cCbh8E9C551mb1Og+A7kW6aA6Xvys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727312339; c=relaxed/simple;
-	bh=C8dnDRKX/425nySvjD8Am05y6IONl60+SgSXKzq5Vgw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Pww5R7lfKkkxlj/eC95T0+5xYgBLiq0vGv03yn8tt9d12NaSyW/wklR2+dIulp5ILK2G4mEKej+yfDxVCZZbjG6GZv/6tlkAhu1gZD3yrQ8fWayFeMrui9Pe38gKxixb6luLrAIFsChMVGyhmoFbgM2Io0oN+ZmaakevahZzHVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YrOcAw3s; arc=none smtp.client-ip=209.85.128.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1727337529; c=relaxed/simple;
+	bh=hOACXsUaXZM3G9sSR9a9lWI69dxAQWzSYa3/0XrmnQE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nuE5l5jhVuxcrqHknM1+NmLFxCXCUWxOKiMY1K+pEH4MUmkR55CKYpIhmeVaIpYeg3IUV0+fZ6tbNHJVHo6pu/wg2WHhQ5AJIpkxL35GaPDMwaQkxzht2Ly9W9cN1NxE3IN1fHVe7ttR3VN1bjWRky0m/TGawMVjWgGPathkShU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=W99n5ECV; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YrOcAw3s"
-Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-6dbb24ee34dso4811067b3.2;
-        Wed, 25 Sep 2024 17:58:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727312336; x=1727917136; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=C8dnDRKX/425nySvjD8Am05y6IONl60+SgSXKzq5Vgw=;
-        b=YrOcAw3stpq9xOvetNHl90J9Me96xB3TLYBOJxgO26rFiy3RTxdnyo3/hrlSppCWBQ
-         QniWnOyz8R1zy+yGlwjaUK+TMKKggzUK8kwGDhc3021Z1FxLk9n3bum5naEZ3EsK8HuC
-         T7OPC+YvQmTc9DGaJJ7SyIARja1CYi+2XS6/6uuGD7Ktnd96iyHWyK4Si1fvHWK/cgNH
-         0PAVByHt7/XTEv4T7oI04dDn/rnL0RRugStKH9/B+TBCNpl6jtHHoMv5zoKOaV8S4gDV
-         aNf/GsWiKfGh9HC0pTebUUacO83MX/gh/k50em48wH/yDupvVy9jIdNWUdSjx8n4QAKj
-         dmAg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727312336; x=1727917136;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=C8dnDRKX/425nySvjD8Am05y6IONl60+SgSXKzq5Vgw=;
-        b=DCBHf7lb9JPZpuDuKdg+1HKQQ+3+fnILV1l0zRnNOenZ0hxVw+PWb+OZHLwDi9z/zh
-         x6OVUzRYpY/HN7pRxpz0pZhQy30sYlyR5cCOJZHCWbsPoatVYQ5s9/QaMEsySaYhsBiS
-         BMtOufpqt302LXuaMBUnvud4pW0Qf9zKk65IP3A480P8cqVLUpBbtfP0zqCAIlvT1QIe
-         BEYGcNPTp4yU20Ak9IPjjAU/j3IJwfGsI2V8+jXql1wCWnwlEr8HYSbPydKjtfqNFtTd
-         GmIjaQaY729XupLFIAsIvUBKRo2rsyJKiFZZU/xqRKMBgo0nlGSCwSmONQo4/CCsnvKg
-         CbJg==
-X-Forwarded-Encrypted: i=1; AJvYcCX89F7i5Qhzyzw7MI/87yXq09+g8FuzPKHu56WtCTlj3fdP538Wibkkpuw4OR+PAhAu3YL0xrLuzPA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxCT/o8kIgrt3NmoBeMzPBW8CdNADJAc3ZBd3IR8HNKUsbd1W3s
-	Dt8xYZ36WdZd/MTQpwnDxvV4b6xiOmV5zngWlMv3p+5y8Tv0oMCF+AijoP1M+xSYy/ftl5N2V4f
-	WjUtnbNDl30DeOuK+uwze6Rfmypo=
-X-Google-Smtp-Source: AGHT+IHAUYDTr/7RqOp4RPqij+QDEXIo3VNN3JiAy1DLmc4hBL6OydG1Haxfrj8B551qJEU2A2DvxpYGNR8uOJM1vnk=
-X-Received: by 2002:a05:690c:f87:b0:64a:f237:e0b0 with SMTP id
- 00721157ae682-6e21d6bf7a3mr50889557b3.5.1727312336465; Wed, 25 Sep 2024
- 17:58:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="W99n5ECV"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4XDmFB4t1Dz9v5K;
+	Thu, 26 Sep 2024 09:58:38 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1727337518;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zP6EkeLNzBCjBcgWBhh6/S1x/x0ehOHzgIwTNXBy7DI=;
+	b=W99n5ECVLXncsEOrPWn0S2NvdkcQvJ0kL/wFIMFI7QEJxxqA2h5/JAoLQbRux0rnpcWrkV
+	kRUzezmgww318fsoUKdQyxlLAp+Cbl2mnBjrSQcKTTl3DoOohvE+fwoIhRqTU/M+zF8GXl
+	3GZzG6qp6Qotf290hKZ9tWqM3lOIe/64baRZjIr2CF+/nKY3tTih/2634m4uKm9PD1d81i
+	w884pba/EiKQEG/U7ICFMG/jQ5au9lNoyJGM/kqExD1hMhyb4x1Qyp0wke1zq0kzx7p6vH
+	zKYcJoXa2Msbmebsr9JQS8NkUYyo2/aWd5g3u/gZnu4tlUjIUz+RdBkLLMKFWg==
+Date: Thu, 26 Sep 2024 09:58:24 +0200
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Sasha Levin <sashal@kernel.org>, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>, 
+	Hannes Reinecke <hare@suse.de>, "Darrick J . Wong" <djwong@kernel.org>, 
+	Dave Chinner <dchinner@redhat.com>, Daniel Gomez <da.gomez@samsung.com>, 
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: Re: [PATCH AUTOSEL 6.11 237/244] iomap: fix iomap_dio_zero() for
+ fs bs > system page size
+Message-ID: <xoxm6xlxqew2l3cbuahvkepcnckkiwa3ywetcyqep5hsq62mx5@xgmt3issrki6>
+References: <20240925113641.1297102-1-sashal@kernel.org>
+ <20240925113641.1297102-237-sashal@kernel.org>
+ <ZvQJuuGxixcPgTUG@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240924183851.1901667-1-leah.rumancik@gmail.com> <ZvM3RhJxJuMeARbV@dread.disaster.area>
-In-Reply-To: <ZvM3RhJxJuMeARbV@dread.disaster.area>
-From: Leah Rumancik <leah.rumancik@gmail.com>
-Date: Wed, 25 Sep 2024 17:58:45 -0700
-Message-ID: <CACzhbgQwjgweYPNHqgRR46Tev4=4YAuLb724CN8_xouH1nNGqg@mail.gmail.com>
-Subject: Re: [PATCH 6.1 00/26] xfs backports to catch 6.1.y up to 6.6
-To: Dave Chinner <david@fromorbit.com>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, amir73il@gmail.com, 
-	chandan.babu@oracle.com, cem@kernel.org, catherine.hoang@oracle.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZvQJuuGxixcPgTUG@dread.disaster.area>
 
-Sure, just sent it as [PATCH 6.1 27/26]
+On Wed, Sep 25, 2024 at 11:01:46PM +1000, Dave Chinner wrote:
+> On Wed, Sep 25, 2024 at 07:27:38AM -0400, Sasha Levin wrote:
+> > From: Pankaj Raghav <p.raghav@samsung.com>
+> > 
+> > [ Upstream commit 10553a91652d995274da63fc317470f703765081 ]
+> > 
+> > iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+> > < fs block size. iomap_dio_zero() has an implicit assumption that fs block
+> > size < page_size. This is true for most filesystems at the moment.
+> > 
+> > If the block size > page size, this will send the contents of the page
+> > next to zero page(as len > PAGE_SIZE) to the underlying block device,
+> > causing FS corruption.
+> > 
+> > iomap is a generic infrastructure and it should not make any assumptions
+> > about the fs block size and the page size of the system.
+> 
+> Please drop this. It is for support of new functionality that was
+> just merged and has no relevance to older kernels. It is not a bug
+> fix.
+> 
 
-- leah
+I did not have any fixes by tag for this reason. So please drop this commit
+from the queue.
 
-On Tue, Sep 24, 2024 at 3:03=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> On Tue, Sep 24, 2024 at 11:38:25AM -0700, Leah Rumancik wrote:
-> > Hello again,
-> >
-> > Here is the next set of XFS backports, this set is for 6.1.y and I will
-> > be following up with a set for 5.15.y later. There were some good
-> > suggestions made at LSF to survey test coverage to cut back on
-> > testing but I've been a bit swamped and a backport set was overdue.
-> > So for this set, I have run the auto group 3 x 8 configs with no
-> > regressions seen. Let me know if you spot any issues.
-> >
-> > This set has already been ack'd on the XFS list.
->
-> Hi Leah, can you pick up this recently requested fix for the series,
-> too?
->
-> https://lore.kernel.org/linux-xfs/20240923155752.8443-1-kalachev@swemel.r=
-u/T/
->
+> And ....
+> 
+> > +
+> > +	set_memory_ro((unsigned long)page_address(zero_page),
+> > +		      1U << IOMAP_ZERO_PAGE_ORDER);
+> 
+> .... this will cause stable kernel regressions.
+> 
+> It was removed later in the merge because it is unnecessary and
+> causes boot failures on (at least) some Power architectures.
+> 
 > -Dave.
-> --
+> -- 
 > Dave Chinner
 > david@fromorbit.com
+
+-- 
+Pankaj Raghav
