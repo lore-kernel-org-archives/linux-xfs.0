@@ -1,122 +1,63 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 366A516E87D
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 16:20:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87A8A136E28
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 18:45:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727454053; cv=none; b=PRhcGmPRJmSJY04wwEoo7LL+UMxLMZg4OOsKxG18SH2t8ddQu7v1YcIOYtXkad3SPlGhdlgnfNicCBduKgYP3HVZrXHHwRyYaeyBo0Ja6muiFoR7mpyaGXN+oixrXBMEUTD4wRCwVqJvWwHTs4M0WMjSS5AYwGpByFn0feehEYk=
+	t=1727462732; cv=none; b=Bl0Jbh3ojy6UKjnU5EKOZSE9L3Fx2HbvU3RdrtEKac2TSBT0sYHx+kZcuedNuskBuv5geVvtOb5phqgvoqEMVcsnZrXW3xY9ZTuURXXSsTwEeoX8cF9zmYlU3SgOlHaQ5gvR76kvJ660ggA4YWjgFzmOpnXXR9dDWXIl3aeWRjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727454053; c=relaxed/simple;
-	bh=li8KTNOxmik3LBkm7+Pn2PAeZe0aJQ7lYsdvT4bGgJk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RPvjvXjPU9ambQKbRjihxxGdGinlXcqNhUJzYeqs29p+PxDcM2lRb1qUeRKqmxD5yns222baJC09TYAcKBFPYcU0FZW9qG5buHIynxt8A5vEiuCc3dj711CnHF2F7VJMotz7pUD4o2GJEcmCH9+x10cYAg7YIumoA0a145V4W6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DcJAQGuI; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1727462732; c=relaxed/simple;
+	bh=uRQvImmKzTQFTm3jUGBmCzDyIf2NiROGeq/3XFSd7mU=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=OHRcMI7wPhbk14XYEhEANr+7i08X8ZkvVK0DJq+c0Boh4ZRamUNv0KDwtnxHFdC9NqhUZHTyEHA9Kzk1hWkZh6T4zjjv8gfGMEuAif7sW85KR7SPRBRgblktnKuBfDU44HQsH7kQlmWJVMeUCxVVGoCD9q/bh3UcRGF/hHCWJXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WNIx/12X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DcJAQGuI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1727454051;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NyE4yVVoPJL67rRMkyJhq1CZsbrT2fQEf/OZrkvabMs=;
-	b=DcJAQGuIRqUD0hBVSLnhh1T2vJl/dPDxFtFf6ih00XDhPk0tI7xepq76p0PqaF3HdKywCZ
-	QREBJ//gLWuMrmxhWyHnFbR85wIeOjSfvtW0Lsn7l5wa9n8mqf+42YEkPkNCJSvJcK+Xnf
-	rgztfs080JAjpEKQ9Oug37v9Jakx6rA=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-99-n852YM69MoGSUCq6v0-ohA-1; Fri, 27 Sep 2024 12:20:49 -0400
-X-MC-Unique: n852YM69MoGSUCq6v0-ohA-1
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-42cceb06940so14815765e9.0
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 09:20:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727454046; x=1728058846;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NyE4yVVoPJL67rRMkyJhq1CZsbrT2fQEf/OZrkvabMs=;
-        b=rkmdJaQglFqLmfeQnn/BRqrSFTtG7MkQxnda0kcnfeGL41ZfivIvte445E9NK6aKej
-         0lNlQbzRILyoFNE0eJyLhxuqUKgJpCz653Xj22xtxQYZ+U9wD4U+mKGjMrklgWC/SC7S
-         Cswdyd9qCsSwAmm3r4RaXm+UATMkBU0OYTumTEHUNqarxeRqJalbiXSZUg16K1jLeKRI
-         t2C/Idvg0D7PDQ+SXM8OkJnp/NKBdB2kaVYXxZQiS13/UhJ4peQrhiRJNfkeIA3IWIQT
-         k56ApUB3wXgQP2BeaXfoHlsIme77m5odhPF/xMGXBLzOBfZ/ukToPjqTSErVUlUsSUdh
-         zf1g==
-X-Gm-Message-State: AOJu0Yzc9xn5dSAbuWedZqaxf5Pa/RYmKt79V4nY11FShRkPXGUDqPFe
-	KcKZBKb0ChY68V1ZLsrS7clW4zQ5jbIg0xKavfNSjcE23nje5gIhQfjPszs+sw/Oww5Yglj4qd/
-	dN3f0mZXtnbJl9ar+r5/Y8htuvJ6cUPQH51a9QV5tnUf3epqdJhyjX6GsMIiQuR+hAQ9++9Eslk
-	mz13N4rPahTpP9lvYgXoBf6yS5OWOvu94La9Qa1Fy0
-X-Received: by 2002:a05:600c:3c94:b0:42c:bbd5:af70 with SMTP id 5b1f17b1804b1-42f5849109cmr29424885e9.30.1727454046521;
-        Fri, 27 Sep 2024 09:20:46 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFhlmNdYRRh/AfvfNMUk5Uhd/dMKbYdivlBq8UR769G5t3z8IfWfrwPbwVz1adzFo7YZ2vAhQ==
-X-Received: by 2002:a05:600c:3c94:b0:42c:bbd5:af70 with SMTP id 5b1f17b1804b1-42f5849109cmr29424675e9.30.1727454046090;
-        Fri, 27 Sep 2024 09:20:46 -0700 (PDT)
-Received: from thinky.redhat.com (ip-217-030-065-002.aim-net.cz. [217.30.65.2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42f57e2fe7dsm30650475e9.46.2024.09.27.09.20.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Sep 2024 09:20:45 -0700 (PDT)
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v2 2/2] xfsprogs: update gitignore
-Date: Fri, 27 Sep 2024 18:20:40 +0200
-Message-ID: <20240927162040.247308-3-aalbersh@redhat.com>
-X-Mailer: git-send-email 2.44.1
-In-Reply-To: <20240927162040.247308-1-aalbersh@redhat.com>
-References: <20240927162040.247308-1-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WNIx/12X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5B2AC4CEC4;
+	Fri, 27 Sep 2024 18:45:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727462732;
+	bh=uRQvImmKzTQFTm3jUGBmCzDyIf2NiROGeq/3XFSd7mU=;
+	h=From:To:In-Reply-To:References:Subject:Date:From;
+	b=WNIx/12XUkav1qqWye1RJJcidEBY9ZmGBTwlESM44yRLFPw52zDyJwsDBJqcFFxgH
+	 vcMORpwijpKBwLEJ6A9/ns/c1bwrl19muHs98mDp1k1K/M32ros6N5d2+vxkvj+7nR
+	 hfV7Jtw7iG0HMBIcO7ftE3goQqbTbN3n/1PzWUr+uJOIhThemR4xQ9ULlGc8Wst9ZR
+	 UhJtLwKrYkiD5eUBhnrv3OOGKnWeOCo0XLy+VSIPNNykM88yBgibeGGnW8KMZcJ78K
+	 lIRSqNXP+WyNegv5HGT5LqASbV4Wsk0jCEaRD0+LiMj+qvQa9QgzztfT5bqt82AHHM
+	 75bNf0OgTGFbA==
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org, Chandan Babu R <chandanbabu@kernel.org>
+In-Reply-To: <20240925115512.2313780-1-chandanbabu@kernel.org>
+References: <20240925115512.2313780-1-chandanbabu@kernel.org>
+Subject: Re: [PATCH] MAINTAINERS: add Carlos Maiolino as XFS release
+ manager
+Message-Id: <172746273127.131348.9834411622718917032.b4-ty@kernel.org>
+Date: Fri, 27 Sep 2024 20:45:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.1
 
-Building xfsprogs seems to produce many build artifacts which are
-not tracked by git. Ignore them.
+On Wed, 25 Sep 2024 17:25:09 +0530, Chandan Babu R wrote:
+> I nominate Carlos Maiolino to take over linux-xfs tree maintainer role for
+> upstream kernel's XFS code. He has enough experience in Linux kernel and he's
+> been maintaining xfsprogs and xfsdump trees for a few years now, so he has
+> sufficient experience with xfs workflow to take over this role.
+> 
+> 
 
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
----
- .gitignore | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+Applied to xfs-6.12-rc2, thanks!
 
-diff --git a/.gitignore b/.gitignore
-index fd131b6fde52..b80efa1758ee 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -33,6 +33,7 @@
- /config.status
- /config.sub
- /configure
-+/configure~
- 
- # libtool
- /libtool
-@@ -69,13 +70,16 @@ cscope.*
- /rtcp/xfs_rtcp
- /spaceman/xfs_spaceman
- /scrub/xfs_scrub
--/scrub/xfs_scrub@.service
- /scrub/xfs_scrub_all
--/scrub/xfs_scrub_all.cron
--/scrub/xfs_scrub_all.service
--/scrub/xfs_scrub_fail@.service
-+/scrub/xfs_scrub_fail
-+/scrub/*.cron
-+/scrub/*.service
- 
- # generated crc files
- /libfrog/crc32selftest
- /libfrog/crc32table.h
- /libfrog/gen_crc32table
-+
-+# docs
-+/man/man8/mkfs.xfs.8
-+/man/man8/xfs_scrub_all.8
+[1/1] MAINTAINERS: add Carlos Maiolino as XFS release manager
+      commit: 70a8efc12268346370c8e6bb3f7610f771915316
+
+Best regards,
 -- 
-2.44.1
+Carlos Maiolino <cem@kernel.org>
 
