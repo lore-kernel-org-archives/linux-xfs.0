@@ -1,139 +1,208 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB09A80034
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 14:18:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A20148FEC
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 14:21:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727446683; cv=none; b=u8lxVXND/cghi8xdsf3lWHkScKZ5wyJADfq7bhk3TAG8d2dOQOo3dsedUMXgHD/R2erZtni/JlTb16NBrpwdJNz95QAyVXmzjsGey7zuzEYBydTj3ylmxvBb+Qlvc3fwzjiGBbnAoU0emA+wXv48kgttNH4HE8GvL+9spKaozoQ=
+	t=1727446891; cv=none; b=gx8oHIz5f3w8QXJu3/xl0GTWkbFpN2Uud1iB/jl3pkyGN521nYD12SETyvivi5G5wrNxS6HqYreAO8uuFy7F5+SHOS2VNZfPfMSU1Vx3Pnd0PGhwVjye8TP0Qk78tJb2s1mX67YHLyRP2FvZKpN2CKBP7S622ff1lnp2ecd1uCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727446683; c=relaxed/simple;
-	bh=M7VV9lVwVRozdGEecyn+Z61KNcOE4t+84jF3+ebCTzo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G8YmU3TmNQSJEwMfrL7m+MHzlGlBV77PVmPqRg3VerqQgyLunyR28SDzlSvr+HSBKm+Ug+l5YgcRUcGwOJlo52hLquiwHReH5QQau+ufdXjouTZWRMWPZ5R2xeZGbXxEpYsn4RgSJWpxJNSJ+B6ziN8Mp7CXQYuKgB7zV+byyuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Egq2wAvk; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Egq2wAvk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1727446680;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vtSq7rJJHzzMOS68cfX6ZtqANxI01Yn3PgT0bCb2a+Q=;
-	b=Egq2wAvkHwknZPw30hOAahZx7A41/v0RhQcqwzvHtBzH1iGyXwaxUPWSCxOC8rLo+LmlLw
-	N+lsKWnxrjjIjoJZj61GKYI/lQ50KYs9ibAc96iW0aJ0IVr64KXXuIKLK81ytiks2l9YeK
-	hkW3E5bgtdnqY3jx1UgkRklGFUxLV1s=
-Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
- [209.85.208.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-658-TzLIKfmrOz-xh_hXhpYK6A-1; Fri, 27 Sep 2024 10:17:59 -0400
-X-MC-Unique: TzLIKfmrOz-xh_hXhpYK6A-1
-Received: by mail-lj1-f198.google.com with SMTP id 38308e7fff4ca-2f7538dc9d7so19069691fa.1
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 07:17:59 -0700 (PDT)
+	s=arc-20240116; t=1727446891; c=relaxed/simple;
+	bh=kBdGDmu4BrnzWVq7fO4/kVE9GaDCeLSyIG2tYuvtP9s=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Kl9VdDsN0FJOO6I7Q1wWVFOGwwpA7ENCNN5oP1uvBOK2aJ0kDkWi+8J6CXDk4ilB5ioa71/41B12R9Fg6rTVx6rpFV2bOQznIAghyELUoXalAjY12sC+IRY1yaL20BDQcCDsRJvaKIovV2oEhrE4r8b/vYhqGcXYQRLxp4E1hRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-82d40afd0ddso234999839f.0
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 07:21:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727446678; x=1728051478;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vtSq7rJJHzzMOS68cfX6ZtqANxI01Yn3PgT0bCb2a+Q=;
-        b=CkNwhHjiF2GNdRwRPZb5PEiikHiZNDuUoWAINsToiUmdfwq5ilxIKfM3H+E/IchZKs
-         CuBYHxcUmqalLByJk+yFqFxpOaIl1Y7ma+KDrasQvb9w9KTOUacW50IVzpZWrLdQJagX
-         B6m/7Th81GmSFvfAyqmDFB8mY+ybfbPlMl7ADNPYOJK08tuNmx++ZlkZM8wl5oJYCmTk
-         vuVfP5CwX3CIN9jpaSjVAHGGlvEKgPWKo6TMVbOxUVy4Nqwzt/nt8BFHwRgZiJzdVckc
-         J4M1Z2BkP19nAoTO9SyX/Ev08zRwXdYoG293cIBoL477wnWwG/+ce9JfZbjVDoKQwZ1q
-         ALYQ==
-X-Gm-Message-State: AOJu0YzfVWYIKcj6eRGv5YuX5fGI/ByOmix3WC6N83Dm+MS7JvN65V05
-	hMRUxIrYfWjjmtl7IZ/pA+y02MFi29Nr/n+8pAd+x20wi+Qh6vN7+RwO02ogjyROLKCEev+LD3y
-	R6DZ3pInj7jcUF8juZ+8MATFGfnpOc8pA60oj3E9/iwWvsNC1Con04G8E
-X-Received: by 2002:a05:651c:2226:b0:2f7:5818:a234 with SMTP id 38308e7fff4ca-2f9d3e55d4fmr23423981fa.19.1727446677951;
-        Fri, 27 Sep 2024 07:17:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IH7szO+VdHjg6WylQjskoAW6XFE+VFtqs+rcdQaFtK+EVnRh7CDmQrkxPG8f64jXcKrkbClOA==
-X-Received: by 2002:a05:651c:2226:b0:2f7:5818:a234 with SMTP id 38308e7fff4ca-2f9d3e55d4fmr23423751fa.19.1727446677416;
-        Fri, 27 Sep 2024 07:17:57 -0700 (PDT)
-Received: from thinky (ip-217-030-065-002.aim-net.cz. [217.30.65.2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42f57de10e8sm28088245e9.13.2024.09.27.07.17.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Sep 2024 07:17:57 -0700 (PDT)
-Date: Fri, 27 Sep 2024 16:17:56 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org
-Subject: Re: Re: [PATCH 2/2] xfsprogs: update gitignore
-Message-ID: <xsfgvilxt524gct2jrjplcbu2irjjoapwmmy4qj6bnzwyq3lys@hfp5d3hkkou7>
-References: <20240927134142.200642-2-aalbersh@redhat.com>
- <20240927134142.200642-4-aalbersh@redhat.com>
- <65wlm36uziggutarpnmmy3uxbnrwdrv6bf3co54gjipbwxp2ej@r2sbabrc5m23>
+        d=1e100.net; s=20230601; t=1727446889; x=1728051689;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=2yL/ISSFIb67LIpk12RYQN0TT8GPax7QbX5Qh6IEsAo=;
+        b=w8J3//eRG3EtNeaq+nztHCMHSFOpJ/9ePvQioivFCTstGZi4nkpght84003tO1i9iv
+         y0KFge5nuT5TYPgadaeT36gunPeoVfUQif8BDHLbyyZLFgwaGZPYFOUStfgbPuSsMC6t
+         l36PBm3+Lk57UWHvyydW9UYMcS6i2ymdghhSc/t88u7DSgseJaGRIGd2JzohBlgHOoLo
+         N4VHxioMJgrGpKkzpMxKJAncUj7vG1BwgTQq5PU2WPw8lx5sK4lV1+cF4F+DNd6jurqx
+         JVVH8B+ybnzvxUK3Cg06mxCPZ1mXVHT8g1DN6oCCqFepGG6h0ChdJ0KS11sUmG11IG6L
+         cdrQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWl6Ppa+0+IIsmgSuPXrGIJYf3aX0Xmy17ZpXOLAA3FdbNGg4h/Z1Y5Jx1vJYP8CgVPUdK186rTO/4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyZC+dtzVddm/YE92zfp4ZTpe3TwzndiVFJrm56Z7FTtyK9Kt+b
+	j3UkyUYPLgapvOBf+cKN7Cy6GGuLozMO1DhQgZ35c42/+vZiElJITbLFHrREcUu4aN9OAcsUjoK
+	u6jmTtNwBC/7T9+rYH6inYBCXaOQORtIP4Is7ZCzPz7xssoS4J05W1JE=
+X-Google-Smtp-Source: AGHT+IG6K6x5dR8ZyF/HwB6FhpDJpgxI/diuue/G/t2xMxKOJLxKtpNCG2S3IwXSNZ9LtfRhMKDlhWoIoT/Ytu8topidhQHchBPu
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <65wlm36uziggutarpnmmy3uxbnrwdrv6bf3co54gjipbwxp2ej@r2sbabrc5m23>
+X-Received: by 2002:a92:c24d:0:b0:3a0:b631:76d4 with SMTP id
+ e9e14a558f8ab-3a34516037amr29740405ab.1.1727446889343; Fri, 27 Sep 2024
+ 07:21:29 -0700 (PDT)
+Date: Fri, 27 Sep 2024 07:21:29 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <66f6bf69.050a0220.46d20.001a.GAE@google.com>
+Subject: [syzbot] [iomap?] KASAN: use-after-free Read in iomap_read_inline_data
+From: syzbot <syzbot+c297885a2650fbdcfdc1@syzkaller.appspotmail.com>
+To: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 2024-09-27 16:09:20, Carlos Maiolino wrote:
-> On Fri, Sep 27, 2024 at 03:41:43PM GMT, Andrey Albershteyn wrote:
-> > Building xfsprogs seems to produce many build artifacts which are
-> > not tracked by git. Ignore them.
-> > 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > ---
-> >  .gitignore | 12 ++++++++++++
-> >  1 file changed, 12 insertions(+)
-> > 
-> > diff --git a/.gitignore b/.gitignore
-> > index fd131b6fde52..26a7339add42 100644
-> > --- a/.gitignore
-> > +++ b/.gitignore
-> > @@ -33,6 +33,7 @@
-> >  /config.status
-> >  /config.sub
-> >  /configure
-> > +/configure~
-> 
-> This smells like your vim configuration, not the make system.
+Hello,
 
-opsie, you're right
+syzbot found the following issue on:
 
-Andrey
+HEAD commit:    88264981f208 Merge tag 'sched_ext-for-6.12' of git://git.k..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=10b5dca9980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=e851828834875d6f
+dashboard link: https://syzkaller.appspot.com/bug?extid=c297885a2650fbdcfdc1
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-> 
-> Carlos
-> 
-> >  
-> >  # libtool
-> >  /libtool
-> > @@ -73,9 +74,20 @@ cscope.*
-> >  /scrub/xfs_scrub_all
-> >  /scrub/xfs_scrub_all.cron
-> >  /scrub/xfs_scrub_all.service
-> > +/scrub/xfs_scrub_all_fail.service
-> > +/scrub/xfs_scrub_fail
-> >  /scrub/xfs_scrub_fail@.service
-> > +/scrub/xfs_scrub_media@.service
-> > +/scrub/xfs_scrub_media_fail@.service
-> >  
-> >  # generated crc files
-> > +/libxfs/crc32selftest
-> > +/libxfs/crc32table.h
-> > +/libxfs/gen_crc32table
-> >  /libfrog/crc32selftest
-> >  /libfrog/crc32table.h
-> >  /libfrog/gen_crc32table
-> > +
-> > +# docs
-> > +/man/man8/mkfs.xfs.8
-> > +/man/man8/xfs_scrub_all.8
-> > -- 
-> > 2.44.1
-> > 
-> > 
-> 
+Unfortunately, I don't have any reproducer for this issue yet.
 
--- 
-- Andrey
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-88264981.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/df2a0a047a7a/vmlinux-88264981.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/bbdb25081712/bzImage-88264981.xz
 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+c297885a2650fbdcfdc1@syzkaller.appspotmail.com
+
+loop0: detected capacity change from 0 to 32768
+gfs2: fsid=syz:syz: Trying to join cluster "lock_nolock", "syz:syz"
+gfs2: fsid=syz:syz: Now mounting FS (format 1801)...
+gfs2: fsid=syz:syz.0: journal 0 mapped with 16 extents in 0ms
+gfs2: fsid=syz:syz.0: first mount done, others may mount
+==================================================================
+BUG: KASAN: use-after-free in folio_fill_tail include/linux/highmem.h:577 [inline]
+BUG: KASAN: use-after-free in iomap_read_inline_data+0x2bb/0x440 fs/iomap/buffered-io.c:354
+Read of size 192 at addr ffff888000e800e8 by task syz.0.0/5123
+
+CPU: 0 UID: 0 PID: 5123 Comm: syz.0.0 Not tainted 6.11.0-syzkaller-08481-g88264981f208 #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:377 [inline]
+ print_report+0x169/0x550 mm/kasan/report.c:488
+ kasan_report+0x143/0x180 mm/kasan/report.c:601
+ kasan_check_range+0x282/0x290 mm/kasan/generic.c:189
+ __asan_memcpy+0x29/0x70 mm/kasan/shadow.c:105
+ folio_fill_tail include/linux/highmem.h:577 [inline]
+ iomap_read_inline_data+0x2bb/0x440 fs/iomap/buffered-io.c:354
+ iomap_readpage_iter+0x2d6/0xba0 fs/iomap/buffered-io.c:382
+ iomap_read_folio_iter fs/iomap/buffered-io.c:454 [inline]
+ iomap_read_folio+0x532/0x8d0 fs/iomap/buffered-io.c:477
+ gfs2_read_folio+0x12c/0x540 fs/gfs2/aops.c:454
+ filemap_read_folio+0x14b/0x630 mm/filemap.c:2363
+ do_read_cache_folio+0x3f5/0x850 mm/filemap.c:3821
+ gfs2_internal_read+0x9d/0x4c0 fs/gfs2/aops.c:487
+ read_rindex_entry fs/gfs2/rgrp.c:906 [inline]
+ gfs2_ri_update+0x24a/0x1830 fs/gfs2/rgrp.c:1001
+ gfs2_rindex_update+0x304/0x3d0 fs/gfs2/rgrp.c:1051
+ init_inodes+0x24d/0x320 fs/gfs2/ops_fstype.c:892
+ gfs2_fill_super+0x1c18/0x2500 fs/gfs2/ops_fstype.c:1249
+ get_tree_bdev+0x3f7/0x570 fs/super.c:1635
+ gfs2_get_tree+0x54/0x220 fs/gfs2/ops_fstype.c:1329
+ vfs_get_tree+0x90/0x2b0 fs/super.c:1800
+ do_new_mount+0x2be/0xb40 fs/namespace.c:3507
+ do_mount fs/namespace.c:3847 [inline]
+ __do_sys_mount fs/namespace.c:4055 [inline]
+ __se_sys_mount+0x2d6/0x3c0 fs/namespace.c:4032
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f2c5a77f69a
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 1a 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f2c5b61ce68 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007f2c5b61cef0 RCX: 00007f2c5a77f69a
+RDX: 00000000200002c0 RSI: 0000000020000100 RDI: 00007f2c5b61ceb0
+RBP: 00000000200002c0 R08: 00007f2c5b61cef0 R09: 0000000000008c9b
+R10: 0000000000008c9b R11: 0000000000000246 R12: 0000000020000100
+R13: 00007f2c5b61ceb0 R14: 0000000000012760 R15: 0000000020000400
+ </TASK>
+
+The buggy address belongs to the physical page:
+page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x923 pfn:0xe80
+flags: 0x7ff00000000000(node=0|zone=0|lastcpupid=0x7ff)
+page_type: f0(buddy)
+raw: 007ff00000000000 ffffea000000e808 ffffea0000004288 0000000000000000
+raw: 0000000000000923 0000000000000000 00000000f0000000 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as freed
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x48c40(GFP_NOFS|__GFP_NOFAIL|__GFP_COMP), pid 5123, tgid 5121 (syz.0.0), ts 142142458203, free_ts 142143773467
+ set_page_owner include/linux/page_owner.h:32 [inline]
+ post_alloc_hook+0x1f3/0x230 mm/page_alloc.c:1537
+ prep_new_page mm/page_alloc.c:1545 [inline]
+ get_page_from_freelist+0x3045/0x3190 mm/page_alloc.c:3457
+ __alloc_pages_noprof+0x256/0x6c0 mm/page_alloc.c:4733
+ alloc_pages_mpol_noprof+0x3e8/0x680 mm/mempolicy.c:2265
+ alloc_pages_noprof mm/mempolicy.c:2345 [inline]
+ folio_alloc_noprof+0x128/0x180 mm/mempolicy.c:2352
+ filemap_alloc_folio_noprof+0xdf/0x500 mm/filemap.c:1010
+ __filemap_get_folio+0x446/0xbd0 mm/filemap.c:1952
+ gfs2_getbuf+0x150/0x6a0 fs/gfs2/meta_io.c:132
+ gfs2_meta_read+0x1e5/0x9b0 fs/gfs2/meta_io.c:261
+ gfs2_meta_buffer+0x19a/0x410 fs/gfs2/meta_io.c:489
+ gfs2_meta_inode_buffer fs/gfs2/meta_io.h:72 [inline]
+ gfs2_inode_refresh+0xec/0x10b0 fs/gfs2/glops.c:478
+ gfs2_instantiate+0x190/0x260 fs/gfs2/glock.c:468
+ gfs2_glock_holder_ready fs/gfs2/glock.c:1345 [inline]
+ gfs2_glock_wait+0x1df/0x2b0 fs/gfs2/glock.c:1365
+ gfs2_glock_nq_init fs/gfs2/glock.h:238 [inline]
+ gfs2_rindex_update+0x274/0x3d0 fs/gfs2/rgrp.c:1045
+ init_inodes+0x24d/0x320 fs/gfs2/ops_fstype.c:892
+ gfs2_fill_super+0x1c18/0x2500 fs/gfs2/ops_fstype.c:1249
+page last free pid 80 tgid 80 stack trace:
+ reset_page_owner include/linux/page_owner.h:25 [inline]
+ free_pages_prepare mm/page_alloc.c:1108 [inline]
+ free_unref_folios+0xf12/0x18d0 mm/page_alloc.c:2686
+ shrink_folio_list+0x81fd/0x8cc0 mm/vmscan.c:1550
+ evict_folios+0x549b/0x7b50 mm/vmscan.c:4583
+ try_to_shrink_lruvec+0x9ab/0xbb0 mm/vmscan.c:4778
+ shrink_one+0x3b9/0x850 mm/vmscan.c:4816
+ shrink_many mm/vmscan.c:4879 [inline]
+ lru_gen_shrink_node mm/vmscan.c:4957 [inline]
+ shrink_node+0x3799/0x3de0 mm/vmscan.c:5937
+ kswapd_shrink_node mm/vmscan.c:6765 [inline]
+ balance_pgdat mm/vmscan.c:6957 [inline]
+ kswapd+0x1ca3/0x3700 mm/vmscan.c:7226
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+
+Memory state around the buggy address:
+ ffff888000e7ff80: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff888000e80000: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>ffff888000e80080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                                                          ^
+ ffff888000e80100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff888000e80180: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
