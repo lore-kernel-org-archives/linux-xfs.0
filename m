@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63B06143C4C
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 15:17:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF44B13AD1C
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 15:20:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727450230; cv=none; b=qPT6o49u0yaKIXf/oyMMNgFCrUttJOPIteVVvMqOMQSOgL/VDt04ds3MUy7r5et5ckHLSuJBipMYv8lCPePG3Vu5aPhDqoLpOX2eGBYR1gCao9OtEiWd3Xv0WI1iYE3hrD6gaE7wRn482vSxNkJ5WA9ywxu6H26ab8IUoZKijPk=
+	t=1727450436; cv=none; b=l8rRy+AKgnWXpyBLBSV9Fj2okU65wjz+Y9VRi02VL9H0uKVnY1qbGIx2M/EHjDjZOQmbfrjfPHzTjrkYqfiEfOSE7WcBoKgXpxVT1wJsbYoKNTuzEt/aBZIO+r8M87kdLpWT/99Jju0bIj5XqlY3vOcELHxKZs7bCa/oilzmhgc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727450230; c=relaxed/simple;
-	bh=ThiT1vJPUsQvZ87i855TNtIu3trQMCVbIqdU/nUSP18=;
+	s=arc-20240116; t=1727450436; c=relaxed/simple;
+	bh=RKDch64SXXu2k8D+St6jiXvN/5mr/5vDbPYIK/o+1R0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fiR6FUCWtNq5WM6Bj+hHMgM154MCEogYfO8XNUKeoPQegwTb+mmRNy1fvpKAB7rGrz+UrMHIfkU0+BlINv6asqq60QTL/hfIqKujYidHYTbCkF1BT3Z6K0E9u5c2BSGEhGRYYHHoVbfYqPcpv//E5cPTBPe0IlmcwTYvu73Q+wE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H+Cf+Yy0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OENF7jt+3Y1ClWyqqsvdvn/Qh4q6b/8g8IPE05/ZHQ4qfs1ltNBLlsS02jeoBor5f9cGqP0X5LfKRwW1g+Sf2nRLEEQ64fFx/7DnqO3y2JSLGW1mmQW4nyiyoM52E/BO+vyRoLQdCr7HKXu8KqMoMomGeG7Qs3Fs0osU2IfcbXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GaKEp2EF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H+Cf+Yy0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3714C4CECD;
-	Fri, 27 Sep 2024 15:17:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GaKEp2EF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39C95C4CEC4;
+	Fri, 27 Sep 2024 15:20:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727450230;
-	bh=ThiT1vJPUsQvZ87i855TNtIu3trQMCVbIqdU/nUSP18=;
+	s=k20201202; t=1727450436;
+	bh=RKDch64SXXu2k8D+St6jiXvN/5mr/5vDbPYIK/o+1R0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=H+Cf+Yy0tml+qX/hSatmSzzGvOBsRcKQjNCgp1pm6Bk5m5IPMZDiWvT8QGrYLEGXL
-	 wfrzZKDshIDDLpES1UNalWqOFBiUoqrr1JJ/ujzWFGo4n5fkOYS2LNL/yfknDZj+VQ
-	 RHgIREAW6apXom58sCp/AutgI9BAn5rtHvNJroRserTbH1aLsWPll7BVf/z6PJWkvI
-	 7JY8CkQ9SDj7UIVpXG6KPOq6wgPYt/eR8Ksc2wXgjsoOQiZ6PnNUR8CsurKMk/icFU
-	 jsf9O88Y+6JoQgyUpmdoTRqh6QiG/vhzYX+xHJXEfO3OwJUo0WwfvJgytqEDZPdIyb
-	 byYLjkqtboWQQ==
-Date: Fri, 27 Sep 2024 08:17:09 -0700
+	b=GaKEp2EFeZL/gzIJsKGDExkS5tJqu+F2thQtFY/2HiCW8tbsxKLWXwFv7senTHWi2
+	 rWLyybC2v+LV2CcZ83l33VCK9/2wnLHXNoUSJbC0K9gQM4zhp3iIT1Mdfh+YXr3a4T
+	 92QRGvVPzpXM0uBkPRtfwMc3SJTpI9EDeugI6UH01IA3RCkpDr4jgSTxTt08r7Aki5
+	 p/HOmCpuy8LpJ1yPm/SdXpz7hOtm5D7QHd3PDQSkhlT7AtXWq5o8F19Br81NayLzvb
+	 5GDn9Lx3M5icnmeewB8fTTkvAZguBXIgTKL+oxNn9WZIlmHltZeGv6gSGrflWr3YWK
+	 kYtUnfwGx2ovg==
+Date: Fri, 27 Sep 2024 08:20:35 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org
-Subject: Re: [PATCH 1/2] xfsprogs: fix permissions on files installed by
- libtoolize
-Message-ID: <20240927151709.GK21853@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/2] xfsprogs: update gitignore
+Message-ID: <20240927152035.GL21853@frogsfrogsfrogs>
 References: <20240927134142.200642-2-aalbersh@redhat.com>
- <20240927134142.200642-3-aalbersh@redhat.com>
+ <20240927134142.200642-4-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,44 +42,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240927134142.200642-3-aalbersh@redhat.com>
+In-Reply-To: <20240927134142.200642-4-aalbersh@redhat.com>
 
-On Fri, Sep 27, 2024 at 03:41:42PM +0200, Andrey Albershteyn wrote:
-> Libtoolize installs some set of AUX files from its system package.
-> Not all distributions have the same permissions set on these files.
-> For example, read-only libtoolize system package will copy those
-> files without write permissions. This causes build to fail as next
-> line copies ./include/install-sh over ./install-sh which is not
-> writable.
-
-Does cp -f include/install-sh . work for this?
-
-Aside from the install script, the build system doesn't modify any of
-the files that come in from libtol, does it?
-
---D
-
-> Fix this by setting permission explicitly on files copied by
-> libtoolize.
+On Fri, Sep 27, 2024 at 03:41:43PM +0200, Andrey Albershteyn wrote:
+> Building xfsprogs seems to produce many build artifacts which are
+> not tracked by git. Ignore them.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 > ---
->  Makefile | 2 ++
->  1 file changed, 2 insertions(+)
+>  .gitignore | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
 > 
-> diff --git a/Makefile b/Makefile
-> index 4e768526c6fe..11cace1112e6 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -109,6 +109,8 @@ endif
+> diff --git a/.gitignore b/.gitignore
+> index fd131b6fde52..26a7339add42 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -33,6 +33,7 @@
+>  /config.status
+>  /config.sub
+>  /configure
+> +/configure~
 >  
->  configure: configure.ac
->  	libtoolize -c -i -f
-> +	chmod 755 config.guess config.sub install-sh
-> +	chmod 644 ltmain.sh m4/{libtool,ltoptions,ltsugar,ltversion,lt~obsolete}.m4
->  	cp include/install-sh .
->  	aclocal -I m4
->  	autoconf
+>  # libtool
+>  /libtool
+> @@ -73,9 +74,20 @@ cscope.*
+>  /scrub/xfs_scrub_all
+>  /scrub/xfs_scrub_all.cron
+>  /scrub/xfs_scrub_all.service
+> +/scrub/xfs_scrub_all_fail.service
+> +/scrub/xfs_scrub_fail
+>  /scrub/xfs_scrub_fail@.service
+> +/scrub/xfs_scrub_media@.service
+> +/scrub/xfs_scrub_media_fail@.service
+
+/me wonders if *.service/*.cron should be a wildcard to match
+scrub/Makefile's LDIRT definition.
+
+>  # generated crc files
+> +/libxfs/crc32selftest
+> +/libxfs/crc32table.h
+> +/libxfs/gen_crc32table
+
+This all moved to libfrog in 2018, how is it still building in libxfs?
+
+>  /libfrog/crc32selftest
+>  /libfrog/crc32table.h
+>  /libfrog/gen_crc32table
+> +
+> +# docs
+> +/man/man8/mkfs.xfs.8
+> +/man/man8/xfs_scrub_all.8
+
+Looks good.
+
+--D
+
 > -- 
 > 2.44.1
 > 
