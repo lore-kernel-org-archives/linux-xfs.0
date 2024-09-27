@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0AF136663
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2024 18:45:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C11B18872D;
+	Fri, 27 Sep 2024 18:45:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727462736; cv=none; b=HMX7KjBIZ4xnr8HuijdzDSUpd+tfxTuTySyy6eM/jk4CSLYHxOVbyLmRqo9O7UdNvfMjtvyr4a4tMQNZ8hjGdcxYc61y5Fgt8fpkdzss/S9k4cOtO34T86XxPZ6eId0hRI9pwLFcBPBCR1pGs23rCKcmzXptT9+MKKlgSIP6i4U=
+	t=1727462738; cv=none; b=R33MjwzrPDqdVuOonLzP4ZgDGk56BKg3Ge5gXG64ZKC3KqPm1XnEEKa/EfX67CKCupxldtRsfjtmmW/lq2FDFF+z+m88Srm2UqlmK29k3WqAPJRVtAiO9r8fjXINkqK4EGVmFEWwWwRKNa6I/kQvY2i731iF5cGtFXsedIcV/oQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727462736; c=relaxed/simple;
-	bh=UbNun1NRKf/oU7a7Cp2I/mkwjI8YVp+hCP5PPeJ7aYU=;
+	s=arc-20240116; t=1727462738; c=relaxed/simple;
+	bh=M7iP7v9Qt9Zh+X/r4YT1GybGDs7MmvkGkWj3mjCDMEs=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=NgGs0TassPYPa8iYIQHjw+B/9iPvXRMssVGLY4dpGMIk892MgCv0/xVPaiuNIjcvQ+4ni2QJIIIDd2pjaiAcVXQ0OgCslrPHjofhdtxXD9TuDWERZtn7X+HUtzrvPUJAr91vwnckEiTxl3A7gykXl0G3IhdO8Co03qD944Bi91Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eml1HHpb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=oz9h32Nx1Y3A+GSt00bjAnPh43akcOvasv3zA/amTcOZhA3ssjnXZmcPHKTQtPcnMNpSse3VJE/t4HOKZ78Uu+mD+DFwLWTFh1lnydbkawc6a5f/CkiqmxST6u/1hDEnk24aBLddIVMrtHzXhaFaur08bU8DpdBqFnn4jrRo9Zs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eE+hc+mQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eml1HHpb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75710C4CEC9;
-	Fri, 27 Sep 2024 18:45:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eE+hc+mQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ACADC4CECE;
+	Fri, 27 Sep 2024 18:45:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727462735;
-	bh=UbNun1NRKf/oU7a7Cp2I/mkwjI8YVp+hCP5PPeJ7aYU=;
+	s=k20201202; t=1727462737;
+	bh=M7iP7v9Qt9Zh+X/r4YT1GybGDs7MmvkGkWj3mjCDMEs=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=Eml1HHpbbxj/VxlVERD64Pds+DLVUaDZh4D8l/S2yLwtnxai8mUzrLgFHewC4vtKC
-	 iYYgLb3+eVoAzZxvcYWs+h9caLV9xgU4HK7YRRopelPaqscjSpuVz9dNF/KfmcbX19
-	 ZiU3kTzxRCwuiD1uSzd2IszWUnTdYoGBUdlpa6DJPl3GZRIK5qua6C4wThR+Ztjyd5
-	 fOanojqX0+9sIaqQImJgRRA8KUQI0tstVOsAPbuEKjRQffrAgDgWJmoRRxJMjTNMJu
-	 hcmkmpSkoyLF6oKTsdv6bZNsYh+rfcpsbGzagB8Bkp+wPUWtA8zcbSZnY0BsbXLVch
-	 7DERfqG4DkzUg==
+	b=eE+hc+mQk5GFR0EPRkfOmwrhP9FZoIPH5vzh2KQMpod/7lBZ04KzlPAcPHBcAsQb/
+	 TklPYFUMNnwNZrRuUd7ZZa3Fpd45MEtQ+pr7dcYzTr5ryI/j3SZitqnAD+ixlY0Ghb
+	 qLB6GyTZHqyiXvXao75KviyGKlxy0bDQ2w9n8aRhLr5SBoBMiRcBT19KuuR/n7HgLA
+	 uwDPHyq1aSIbhl2RB32OQj+joK8FNuWJto1u6hd7CP2wAnsNYDIz65BLDL3Tp2NirR
+	 QrlLcq185sym4qc5XiL23Hw/75MWY/tVf6voufRC0+fdzJHw5ift16sZPhzICpjuV7
+	 6LU2KfAlDVf/w==
 From: Carlos Maiolino <cem@kernel.org>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org, 
- Zhang Zekun <zhangzekun11@huawei.com>
-Cc: chenjun102@huawei.com
-In-Reply-To: <20240906060243.4502-1-zhangzekun11@huawei.com>
-References: <20240906060243.4502-1-zhangzekun11@huawei.com>
-Subject: Re: [PATCH] xfs: Remove empty declartion in header file
-Message-Id: <172746273414.131348.3767602780741482976.b4-ty@kernel.org>
-Date: Fri, 27 Sep 2024 20:45:34 +0200
+To: chandan.babu@oracle.com, Yan Zhen <yanzhen@vivo.com>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, opensource.kernel@vivo.com
+In-Reply-To: <20240910122842.3269966-1-yanzhen@vivo.com>
+References: <20240910122842.3269966-1-yanzhen@vivo.com>
+Subject: Re: [PATCH v1] xfs: scrub: convert comma to semicolon
+Message-Id: <172746273590.131348.11997711109844038194.b4-ty@kernel.org>
+Date: Fri, 27 Sep 2024 20:45:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,17 +45,15 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.1
 
-On Fri, 06 Sep 2024 14:02:43 +0800, Zhang Zekun wrote:
-> The definition of xfs_attr_use_log_assist() has been removed since
-> commit d9c61ccb3b09 ("xfs: move xfs_attr_use_log_assist out of xfs_log.c").
-> So, Remove the empty declartion in header files.
+On Tue, 10 Sep 2024 20:28:42 +0800, Yan Zhen wrote:
+> Replace a comma between expression statements by a semicolon.
 > 
 > 
 
 Applied to xfs-6.12-rc2, thanks!
 
-[1/1] xfs: Remove empty declartion in header file
-      commit: 4cf4f2fca988b2aefd76bef8bcedd4e752387537
+[1/1] xfs: scrub: convert comma to semicolon
+      commit: 4956580c2d9ae8c81cdbe9ce19f5c8d14d56dac6
 
 Best regards,
 -- 
