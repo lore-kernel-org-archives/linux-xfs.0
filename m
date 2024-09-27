@@ -1,204 +1,385 @@
-Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47310186E25
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Sep 2024 21:46:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727387187; cv=none; b=PdWMK/cqILMnzqepk+PGCMK3QKjFwudY2Sy1ErAnwbE1/A81sg2FKK9tqvpQ0NwdzjpPK2nXau+395Fx6nlVjWvleUi4koGya/I+8tnzAhd4XpOHeaJ9rCGjtgyFymD/LtihK+n6HtQW74q2ttwO4nUwrWSRlUuh5zW7hSTcOjk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727387187; c=relaxed/simple;
-	bh=muAc2f3ggDvfFdmGpZIpkJmvmZ6jlMxKr0TXVU1fA3A=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=fFr/T5wCG+tYJACsj/P7K+SI6SMXzbj5a32J2KM/D7ICbAa5tQtIsDYJKT45CycdHt6Fk0qJ4g2cZe8/t+fhQWoNecDIza4m8oR+lqmRZ+umWktGhhMbv1OAK/ATZR9R6ujA0At1XJ7l2fM+/Ki9780lcH/smR511vqx5bGQddw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-39f56ac8d88so18663725ab.2
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Sep 2024 14:46:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727387184; x=1727991984;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cNgbayoTOzKBvWrjYumPyMvg/L25cqWyA8SYhwXXaDs=;
-        b=lUOoonLiYrUIXikjLfLPWuUc3lnsbRbtExNnXFTh2rRMFjNyPKccg7oky0ga/QWrTE
-         WnX0waKhDlPXC5Mnu+RR/wgp41nEKj4E0GFDW/h507ligAPjmXg80s4I4xYWVS6T/xh2
-         wdqQe1ghC8TVdWbyonxDc7lM1YZX2DjpxJLkDGtg3D/mtVuvSULych2zI7+IFqdb5BBx
-         6ZcYrL3mwftCGPstk4+/L49fmQUgZRbouCAwq9Bbn3gvG8vX3Hs1DSdWciHJBDe80bxK
-         y+Z9zAwsCeKytGf+1FL2YeRIerelI4RECOhAl4ffQUGzxp9Yy1fg3qAiQBRBfkkJVbxk
-         xOIg==
-X-Forwarded-Encrypted: i=1; AJvYcCUntAyOUTwpaRqFFs5VbNaquYOHDluQq1jjd76m70MTXqWTSd4+vtK+1pcNkRgpX7r2OWCNP8nbxc8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBAz68E5p6Y4PQur5ZJMT0pu/T8HEAgYj+o89bNGbBf0awEiZS
-	6tFKEWghU9guwAExVX1gMw+ijnBOojLZVD1Uz33S5DQcEB2ykv43iqyBZzyAD02fFoiMipvEU+R
-	uteO9D/m03gQx9eC7ozEp0dtkaifQib0zZRMZL3Bdflbbib/hUAIbDsw=
-X-Google-Smtp-Source: AGHT+IFfrez6KMJIjDYgXUjVg12E6nXuskHGP9TO/HB6U+bF4bqJLYb1tnC/7E6DZ57EKzocqXlDJKZPBb3xy1Fn4Ox6BSfDLP2r
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2607579CD;
+	Fri, 27 Sep 2024 02:48:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1727405296; cv=fail; b=bIjBC3AKXsoqSGILbhvofmw3Zkphc8aYgeDuk44ua7sgYxEVJJLuZo0CZrmbx3FbzCmEnFZFDjsl+ZvlWapvuN4jLlDuZM7FLWfEOdFDkcJzzWruJv1OHo0c2EkL/cOsW0gUEiFQX96R4z158EITHuD4ITXykzEg/zY8q1xRQXg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1727405296; c=relaxed/simple;
+	bh=P7uSKunTz0gvA/gFp/hxEb3he626IQZO0xvHwFgrl1w=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=LkzYXldasFbOfNwtkxRE/ORMF3tuaKczntGEf/qkbODRYFrmkKZ6t0drGNCdIGTLmWCco0haKh9wljJMIEDpLDQnS6jHihbZRA+RO+K5l4WLiYzuILReqa3yu5Sw5bYrItir6pYZCbwg0C5EpFuXZ5j+Hn2qVHuzY17YUWYYHkc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BqReVcb4; arc=fail smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BqReVcb4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1727405294; x=1758941294;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=P7uSKunTz0gvA/gFp/hxEb3he626IQZO0xvHwFgrl1w=;
+  b=BqReVcb4dUFP5M7t89NqmW+P/svlMm47Da6FUTvB2hAIHJQV5+vPKC9q
+   UwoP7ntR3loJ9chdljMUw8Sk4zF9zVustWJ9YwVu/YtVvYMj2cOvsRSiL
+   X+plsEg7GLXSdimpBEf8iAZAWPkG8nlvPlo/T1GxBbAhR/gYn0/nMIZnT
+   r07X1u4oLazmHxP0DGK79huyq++jf19lg19fvu50TmySuGI/0a07tvk+K
+   b5zpBBJIYMuuCI9o/GAq2xcPdbuaj/RIoxtT8Vis0dXa7rZHmYydijNNS
+   n4jrM/sdAHvfGXSaG46ikEZPjDZu3PDN1Axm+MMF3Kf38UoD7tiNnQ/qq
+   Q==;
+X-CSE-ConnectionGUID: A8in4DivQ0uumLkLEbGLyQ==
+X-CSE-MsgGUID: yL/h575OQN25MvhmjEe4nQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11207"; a="26485487"
+X-IronPort-AV: E=Sophos;i="6.11,157,1725346800"; 
+   d="scan'208";a="26485487"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2024 19:48:13 -0700
+X-CSE-ConnectionGUID: chOiHM1QRt2iIKqNNIxpEw==
+X-CSE-MsgGUID: lbRjEyChQvmau+ejQAa9Jw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,157,1725346800"; 
+   d="scan'208";a="73174220"
+Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
+  by orviesa008.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 26 Sep 2024 19:48:12 -0700
+Received: from fmsmsx611.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Thu, 26 Sep 2024 19:48:12 -0700
+Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx611.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Thu, 26 Sep 2024 19:48:11 -0700
+Received: from fmsedg601.ED.cps.intel.com (10.1.192.135) by
+ fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39 via Frontend Transport; Thu, 26 Sep 2024 19:48:11 -0700
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.47) by
+ edgegateway.intel.com (192.55.55.70) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Thu, 26 Sep 2024 19:48:10 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=yK6CMK4OoHg7eWImF1ri19H9owDTeHVLtZ7jCigDk0i18Y/93a7OzdHkFAaGBCNaOqvC4dChmvj1hyErTi6jSlNU9qq2nxSIWDaXolLy0sjYBKwACIPaiWr90NfNaGsJTwyXJjKA3OmkPFJI+2Legdz2KniAVhkB3VbFOUPltdgIlPS49IQhP/nUeFZW+7EMET0GivlbsCTfD5HyFk9Glz3MFyeAj9dx4RIQxV1Ro3dbDf8ZrDceA8d18Vyc+kNB8hi4nkBaF/tZrundVDiIYqjzx+wOBGyRYOFzM5mz5TYXpwdX0jlKACIPLHX/ZH8k4mJ3J4gP0SaW3OZZbu+o3w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4Xqx2ve2MuiimKagANTTyc7vFLBsDBaCWB/Gjjr2LpQ=;
+ b=hdSiZny0Ra4WTXOhF1u3QkBLXnACu8B2oVEQ4hD/6R7HXebvgv0PIaHY8KwIgs0oNzrIPNBcbegPCl26pWHfpgjWvd++vlWMfq/gefx3FPxohTwqc/eLsptMlkgdcCYEL8qQJRSrzL1HLMzZ2uqfzQCLvqAqUgulEAXrLP3p5lHCdnvQCMYfxe5j/RlhShpzKZ5OASfMEr9CfKollSidly9lmJkgKgOiZvSMPuDhZiiAU3M6SCVopt9BQ2b/hQ7v3NJOCnj/vt2SjgqLfx91NJWESJ7pn8bSJ9pRWBO0jiNgg8zQRmae4ET39aYvKqKdxc83r7FKji/6yy5UbNGsPA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by CYXPR11MB8755.namprd11.prod.outlook.com (2603:10b6:930:e3::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7982.27; Fri, 27 Sep
+ 2024 02:48:08 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6b05:74cf:a304:ecd8%7]) with mapi id 15.20.7982.022; Fri, 27 Sep 2024
+ 02:48:08 +0000
+Date: Thu, 26 Sep 2024 19:48:04 -0700
+From: Dan Williams <dan.j.williams@intel.com>
+To: Alistair Popple <apopple@nvidia.com>, <dan.j.williams@intel.com>,
+	<linux-mm@kvack.org>
+CC: Alistair Popple <apopple@nvidia.com>, <vishal.l.verma@intel.com>,
+	<dave.jiang@intel.com>, <logang@deltatee.com>, <bhelgaas@google.com>,
+	<jack@suse.cz>, <jgg@ziepe.ca>, <catalin.marinas@arm.com>, <will@kernel.org>,
+	<mpe@ellerman.id.au>, <npiggin@gmail.com>, <dave.hansen@linux.intel.com>,
+	<ira.weiny@intel.com>, <willy@infradead.org>, <djwong@kernel.org>,
+	<tytso@mit.edu>, <linmiaohe@huawei.com>, <david@redhat.com>,
+	<peterx@redhat.com>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <nvdimm@lists.linux.dev>,
+	<linux-cxl@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+	<jhubbard@nvidia.com>, <hch@lst.de>, <david@fromorbit.com>
+Subject: Re: [PATCH 07/12] huge_memory: Allow mappings of PMD sized pages
+Message-ID: <66f61ce4da80_964f2294fb@dwillia2-xfh.jf.intel.com.notmuch>
+References: <cover.9f0e45d52f5cff58807831b6b867084d0b14b61c.1725941415.git-series.apopple@nvidia.com>
+ <b63e8b07ceed8cf7b9cd07332132d6713853c777.1725941415.git-series.apopple@nvidia.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <b63e8b07ceed8cf7b9cd07332132d6713853c777.1725941415.git-series.apopple@nvidia.com>
+X-ClientProxiedBy: MW4PR03CA0324.namprd03.prod.outlook.com
+ (2603:10b6:303:dd::29) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1d84:b0:3a0:8c5f:90c0 with SMTP id
- e9e14a558f8ab-3a345169bd7mr9937715ab.10.1727387184517; Thu, 26 Sep 2024
- 14:46:24 -0700 (PDT)
-Date: Thu, 26 Sep 2024 14:46:24 -0700
-In-Reply-To: <0000000000002af6530615bd6932@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <66f5d630.050a0220.38ace9.0002.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: slab-use-after-free Read in xfs_inode_item_push
-From: syzbot <syzbot+1a28995e12fd13faa44e@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|CYXPR11MB8755:EE_
+X-MS-Office365-Filtering-Correlation-Id: e81ef09d-7bb8-4f0f-8efd-08dcde9ed166
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?kH6cof3yPhSHyLUEP5xZwVna4777PUGOxiA4+yGJW0XjnGIuPJRaQpL9Q4hL?=
+ =?us-ascii?Q?PTzdIQLRcQEyrFdKPBAej2/H7/kfjbM0zLZsaujYFNzyclAO7TZ2VvzsTeTx?=
+ =?us-ascii?Q?I1IqPQFcaVILc4ExfNruZyFMSMqFsbGItk0yEbI4sZPr9Cm44sW6zDWiF6UX?=
+ =?us-ascii?Q?9pYUpDAeBoR8LEDXmZA7QRG9noPb0tGUw/IXse9IajqV8UtDUEDm8n2UtqAN?=
+ =?us-ascii?Q?ixfBwtm6pwmuqcVRHZ0L4biE3TqS+bLNTLB3MhHHjgg05YS4DyFtLmjwEOhp?=
+ =?us-ascii?Q?11iUEVQ3nledqMUdl3fl16gqxQ3evs/cRvVi/d2KtJXALXDlZvi4xXP8VPjm?=
+ =?us-ascii?Q?rLum8Q42P5TOs0ioH0gog7TwCveAsSBUC8yJyLBL5PjzOn42Z5TkKOW6Nsjs?=
+ =?us-ascii?Q?QCv6Diyi0Ar/7PctVoGL+/Xhfnv+OQKTer4ebFb35ZB83L07qwPByqoZnlaj?=
+ =?us-ascii?Q?LOORMokIyBiwF5L1ZDuNLDfgDQGWEPzA3FhuxOKf8TRqaurl0f3UR7I0s9tB?=
+ =?us-ascii?Q?n4B1N7k7il40PpA76fSARxKRcaqvaCdILrpsuNhDjZSvY3qdOtaYFI1yUK/D?=
+ =?us-ascii?Q?2l6DnvqyUMxcOC8WvT5mjB6lD5kBu9O5s/6bWgZ7j2lZDsGy0dCpc86u1xb6?=
+ =?us-ascii?Q?rkGGRjgWwOZH3IE1H1M2v/7DkEDgcDm8HnhHvcBQetKgQqlCqbSxhatzGaC4?=
+ =?us-ascii?Q?UHy+GiP/PIU3gvontc78WOp62LwMaWqokFDhw6LspD4PIVvcT0AmCFvWetqf?=
+ =?us-ascii?Q?62T5FOkibUUWAPng/jhevgVlFnQ/S1K07UU/0ULsN0xwDR5MQFZxpfQTpVBW?=
+ =?us-ascii?Q?htc1CYeNEp5N3ZKleIdzR4P5c7UDkAyExvN7kXJlMvEwxcAtiLAkv6miUVeR?=
+ =?us-ascii?Q?XWVxDQTW0WyLzSgdtOj5/6yl01qF6C76YoqATgSE9EwwfTeNPC1Dxd1NsjWj?=
+ =?us-ascii?Q?jtf/UGjCkbm3UFxdt5+qWdgmCJZmU8hozMB0D4pFrwFc56RHLl+ovtaH/dmf?=
+ =?us-ascii?Q?Gu56gNBM3wAWectLlups7rU/t9dRMPZgQlAKVAnPTHHPjYid4dw7Zy8lRfwy?=
+ =?us-ascii?Q?XqcT94KUNUKngRsQrhEGag/BTdCxLpW1QJizliNw9YrXPbGn8op6U/mnnlw1?=
+ =?us-ascii?Q?GymCMSV0U1oMd9ME+9IglO1rVv/jIl49Xf8FboBneziN1VcR/SEch8hD5bWb?=
+ =?us-ascii?Q?Mb9NukjahuM9XPA/i2CkJwQOoNl1xJ7IIVOHM2Ar0hn3zJ20itccEO1sX9+p?=
+ =?us-ascii?Q?cdfW1TQOCKnTPgGArjigfkSCULaEqVdcrqO85yBNan69L+cZrWUdwC3A4jVd?=
+ =?us-ascii?Q?2haPslZnntNGbelckK88XOSdpGvw4+iy9YkwLTKT24eciQ=3D=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?c6oA/bz7PblOQXPbxuqSw2IcxmE6OAcMymnMEpd1ScKeic0DpDOPBRva+BvD?=
+ =?us-ascii?Q?SW4V+GaJZYbDjHIxrqKHaGmvm1dmG1YrJLU/W9O0kGv3W5QksIU83rbwmknE?=
+ =?us-ascii?Q?vAqzxDYJ59k4uZjjXGvzcsRyP75EQQAWING+DgOm1fISDNMprDXbHrcVWDJ2?=
+ =?us-ascii?Q?KvAUsiWKdQOewUO8mX5zqX0sMcw3vQf3MsSVhfbixB+IOTECSMm5enANmy+p?=
+ =?us-ascii?Q?toRylbmj7BjlwLW+MNEZVQlHhhGbPaffkifiIotlQSpiKohYfRuXfKtuiTrp?=
+ =?us-ascii?Q?ckZDjxtbMyEmhxdFPdtwAq5ioEUPtE/vCPiAK4C8wX3uRZOg3jbIsO8HBUXc?=
+ =?us-ascii?Q?q7AsKzNS4z0n4JiIA5Eudy+hF0giu9LOgC7VKw5EhERyTkJjcbUJyKmhN7Ea?=
+ =?us-ascii?Q?oEAimGv30jN8Gdg4bwZV78lSaqPJgc4hPPUqxXb6WlLdLaKX2syoBoHHzPD4?=
+ =?us-ascii?Q?wh6qKV+w3VSUhOZpt4f2txEmc9qy4PtiwG5co6D8L2ziFZDrYJssw2Yz8qw5?=
+ =?us-ascii?Q?akSUpSFQx6hHQKfhrjMD6KjbkPeeCMfoCvnAR3uN7AJi2R7z+9bsM6WK8nJc?=
+ =?us-ascii?Q?cT7wNWh1gy8gWyO35VhFQgx7C+L0L7fUtdaKplBh5cJmj03/Jgp927Kde2tT?=
+ =?us-ascii?Q?y36zwtUakBhInyDhbQeNZUNp+PSPg3Ep+Fg3xmwihT/K8fiW8wMK3YDb+6CH?=
+ =?us-ascii?Q?t4u1bK2KkJlDJkO1lfA0Cp1OAsBUjIbifUsG1y1SOoR7XmJIOIKiAlU1Kntl?=
+ =?us-ascii?Q?haQqGl0DGorRy5h01tt+JSgIHx4S79hQX3Q+n5T3yAFwxWN33wdvP48tWTtH?=
+ =?us-ascii?Q?q0c3eSGHEmnl82fZ/dtHVqV4srPdCxUDA5B94ml0vweP2SU5u3YQoMpqkVOe?=
+ =?us-ascii?Q?DxYnpeFfakdkW8ZAFLQ1fUM2eHBUADz36IP5vCDhi5E/VEeFtZkceJGemXAq?=
+ =?us-ascii?Q?7ZhAajG/3CoawaAnb1BetZLFW0+bIXEdjA1ZGA67frqyQrDH3dx1TU+Es3MX?=
+ =?us-ascii?Q?5vjzrSuYYK7NcSbatB62RDWY7e2sKvgycHmlc9zJUDg5EX8dxYu+6Zpgf2BA?=
+ =?us-ascii?Q?8KeOsnwMUFLp9+32nRjoZGsGY+1AT7WGt3PahZ7PpRSsLRN6SiUDq3D51jrS?=
+ =?us-ascii?Q?wWoyPEvJr/u37dM9TJ3sGNmx2h6CFkzH4iXgjTmiBsrQUjYGzVE7Uqubn7eX?=
+ =?us-ascii?Q?eLQ9Iv1s6NwF3DDnzv6NSY4mHCK1M4939jeu/OmFrBH2xzTxT6uUq4rGeY6g?=
+ =?us-ascii?Q?us73f0Lm3DEeISbyylPuTQFJF4x/AaSWzUeqxP3v8QS70sOr+ftPxo44e4bA?=
+ =?us-ascii?Q?Z2vzl5MlDbu1sUx/d+Qfn5xOxMPnFGdZdyzlYqO9LSLSB87DSe34SWXIkfxD?=
+ =?us-ascii?Q?4NfnKcHEZbuW5HURocu2GhbymGI6YpJERu4vIeVTaV3qIyOFWzIISCNMv0be?=
+ =?us-ascii?Q?mccPxpLJIWWaK54Bdh0BljrMgF4tQBP9BD+OaLX/tjsHLOPtd295ND6IiRZP?=
+ =?us-ascii?Q?VChUrRJ8W8Y/pV16WVK1zc9mJBDVL78JFgJ6CEDzTjBm4m/9O2dZZeGO55z7?=
+ =?us-ascii?Q?BRsg5Ey6eO4lnoeGDKPH9Cj//KFMCz4/2RYFACfKEQvCj15ID+2XkX9T3Q5c?=
+ =?us-ascii?Q?lQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: e81ef09d-7bb8-4f0f-8efd-08dcde9ed166
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Sep 2024 02:48:08.0432
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: FrsdWkKYOjyq+BR9rRyY1MYkDILaqGST1ZBCC0yHbrO8GZejnUPFVicYIYjTHkdmqwH/HTf3fYnStX7KoJXXyNOCc1wH2TaOHmgeqCY2gYM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYXPR11MB8755
+X-OriginatorOrg: intel.com
 
-syzbot has found a reproducer for the following issue on:
+Alistair Popple wrote:
+> Currently DAX folio/page reference counts are managed differently to
+> normal pages. To allow these to be managed the same as normal pages
+> introduce dax_insert_pfn_pmd. This will map the entire PMD-sized folio
+> and take references as it would for a normally mapped page.
+> 
+> This is distinct from the current mechanism, vmf_insert_pfn_pmd, which
+> simply inserts a special devmap PMD entry into the page table without
+> holding a reference to the page for the mapping.
 
-HEAD commit:    11a299a7933e Merge tag 'for-6.12/block-20240925' of git://..
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=1378aaa9980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=31f49563bb05c4a8
-dashboard link: https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=164f7627980000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10923a80580000
+It would be useful to mention the rationale for the locking changes and
+your understanding of the new "pgtable deposit" handling, because those
+things make this not a trivial conversion.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/e97035004495/disk-11a299a7.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/0be318a25b1d/vmlinux-11a299a7.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/91f17271baa3/bzImage-11a299a7.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/971400d21e6d/mount_0.gz
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+1a28995e12fd13faa44e@syzkaller.appspotmail.com
+> 
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> ---
+>  include/linux/huge_mm.h |  1 +-
+>  mm/huge_memory.c        | 57 ++++++++++++++++++++++++++++++++++--------
+>  2 files changed, 48 insertions(+), 10 deletions(-)
+> 
+> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
+> index d3a1872..eaf3f78 100644
+> --- a/include/linux/huge_mm.h
+> +++ b/include/linux/huge_mm.h
+> @@ -40,6 +40,7 @@ int change_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
+>  
+>  vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write);
+>  vm_fault_t vmf_insert_pfn_pud(struct vm_fault *vmf, pfn_t pfn, bool write);
+> +vm_fault_t dax_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write);
+>  vm_fault_t dax_insert_pfn_pud(struct vm_fault *vmf, pfn_t pfn, bool write);
+>  
+>  enum transparent_hugepage_flag {
+> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> index e8985a4..790041e 100644
+> --- a/mm/huge_memory.c
+> +++ b/mm/huge_memory.c
+> @@ -1237,14 +1237,12 @@ static void insert_pfn_pmd(struct vm_area_struct *vma, unsigned long addr,
+>  {
+>  	struct mm_struct *mm = vma->vm_mm;
+>  	pmd_t entry;
+> -	spinlock_t *ptl;
+>  
+> -	ptl = pmd_lock(mm, pmd);
+>  	if (!pmd_none(*pmd)) {
+>  		if (write) {
+>  			if (pmd_pfn(*pmd) != pfn_t_to_pfn(pfn)) {
+>  				WARN_ON_ONCE(!is_huge_zero_pmd(*pmd));
+> -				goto out_unlock;
+> +				return;
+>  			}
+>  			entry = pmd_mkyoung(*pmd);
+>  			entry = maybe_pmd_mkwrite(pmd_mkdirty(entry), vma);
+> @@ -1252,7 +1250,7 @@ static void insert_pfn_pmd(struct vm_area_struct *vma, unsigned long addr,
+>  				update_mmu_cache_pmd(vma, addr, pmd);
+>  		}
+>  
+> -		goto out_unlock;
+> +		return;
+>  	}
+>  
+>  	entry = pmd_mkhuge(pfn_t_pmd(pfn, prot));
+> @@ -1271,11 +1269,6 @@ static void insert_pfn_pmd(struct vm_area_struct *vma, unsigned long addr,
+>  
+>  	set_pmd_at(mm, addr, pmd, entry);
+>  	update_mmu_cache_pmd(vma, addr, pmd);
+> -
+> -out_unlock:
+> -	spin_unlock(ptl);
+> -	if (pgtable)
+> -		pte_free(mm, pgtable);
+>  }
+>  
+>  /**
+> @@ -1294,6 +1287,7 @@ vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write)
+>  	struct vm_area_struct *vma = vmf->vma;
+>  	pgprot_t pgprot = vma->vm_page_prot;
+>  	pgtable_t pgtable = NULL;
+> +	spinlock_t *ptl;
+>  
+>  	/*
+>  	 * If we had pmd_special, we could avoid all these restrictions,
+> @@ -1316,12 +1310,55 @@ vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write)
+>  	}
+>  
+>  	track_pfn_insert(vma, &pgprot, pfn);
+> -
+> +	ptl = pmd_lock(vma->vm_mm, vmf->pmd);
+>  	insert_pfn_pmd(vma, addr, vmf->pmd, pfn, pgprot, write, pgtable);
+> +	spin_unlock(ptl);
+> +	if (pgtable)
+> +		pte_free(vma->vm_mm, pgtable);
+> +
+>  	return VM_FAULT_NOPAGE;
+>  }
+>  EXPORT_SYMBOL_GPL(vmf_insert_pfn_pmd);
+>  
+> +vm_fault_t dax_insert_pfn_pmd(struct vm_fault *vmf, pfn_t pfn, bool write)
+> +{
+> +	struct vm_area_struct *vma = vmf->vma;
+> +	unsigned long addr = vmf->address & PMD_MASK;
+> +	struct mm_struct *mm = vma->vm_mm;
+> +	spinlock_t *ptl;
+> +	pgtable_t pgtable = NULL;
+> +	struct folio *folio;
+> +	struct page *page;
+> +
+> +	if (addr < vma->vm_start || addr >= vma->vm_end)
+> +		return VM_FAULT_SIGBUS;
+> +
+> +	if (arch_needs_pgtable_deposit()) {
+> +		pgtable = pte_alloc_one(vma->vm_mm);
+> +		if (!pgtable)
+> +			return VM_FAULT_OOM;
+> +	}
+> +
+> +	track_pfn_insert(vma, &vma->vm_page_prot, pfn);
+> +
+> +	ptl = pmd_lock(mm, vmf->pmd);
+> +	if (pmd_none(*vmf->pmd)) {
+> +		page = pfn_t_to_page(pfn);
+> +		folio = page_folio(page);
+> +		folio_get(folio);
+> +		folio_add_file_rmap_pmd(folio, page, vma);
+> +		add_mm_counter(mm, mm_counter_file(folio), HPAGE_PMD_NR);
+> +	}
+> +	insert_pfn_pmd(vma, addr, vmf->pmd, pfn, vma->vm_page_prot,
+> +		write, pgtable);
+> +	spin_unlock(ptl);
+> +	if (pgtable)
+> +		pte_free(mm, pgtable);
 
-BUG: KASAN: slab-use-after-free in xfs_inode_item_push+0x293/0x2e0 fs/xfs/xfs_inode_item.c:775
-Read of size 8 at addr ffff8880774cfa70 by task xfsaild/loop2/10928
-
-CPU: 1 UID: 0 PID: 10928 Comm: xfsaild/loop2 Not tainted 6.11.0-syzkaller-10669-g11a299a7933e #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
- print_address_description mm/kasan/report.c:377 [inline]
- print_report+0x169/0x550 mm/kasan/report.c:488
- kasan_report+0x143/0x180 mm/kasan/report.c:601
- xfs_inode_item_push+0x293/0x2e0 fs/xfs/xfs_inode_item.c:775
- xfsaild_push_item fs/xfs/xfs_trans_ail.c:395 [inline]
- xfsaild_push fs/xfs/xfs_trans_ail.c:523 [inline]
- xfsaild+0x112a/0x2e00 fs/xfs/xfs_trans_ail.c:705
- kthread+0x2f0/0x390 kernel/kthread.c:389
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
-
-Allocated by task 10907:
- kasan_save_stack mm/kasan/common.c:47 [inline]
- kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
- unpoison_slab_object mm/kasan/common.c:319 [inline]
- __kasan_slab_alloc+0x66/0x80 mm/kasan/common.c:345
- kasan_slab_alloc include/linux/kasan.h:247 [inline]
- slab_post_alloc_hook mm/slub.c:4086 [inline]
- slab_alloc_node mm/slub.c:4135 [inline]
- kmem_cache_alloc_noprof+0x135/0x2a0 mm/slub.c:4142
- xfs_inode_item_init+0x33/0xc0 fs/xfs/xfs_inode_item.c:870
- xfs_trans_ijoin+0xeb/0x130 fs/xfs/libxfs/xfs_trans_inode.c:36
- xfs_create+0x8a0/0xf60 fs/xfs/xfs_inode.c:720
- xfs_generic_create+0x5d5/0xf50 fs/xfs/xfs_iops.c:213
- vfs_mkdir+0x2f9/0x4f0 fs/namei.c:4257
- do_mkdirat+0x264/0x3a0 fs/namei.c:4280
- __do_sys_mkdir fs/namei.c:4300 [inline]
- __se_sys_mkdir fs/namei.c:4298 [inline]
- __x64_sys_mkdir+0x6c/0x80 fs/namei.c:4298
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
-Freed by task 5213:
- kasan_save_stack mm/kasan/common.c:47 [inline]
- kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
- kasan_save_free_info+0x40/0x50 mm/kasan/generic.c:579
- poison_slab_object mm/kasan/common.c:247 [inline]
- __kasan_slab_free+0x59/0x70 mm/kasan/common.c:264
- kasan_slab_free include/linux/kasan.h:230 [inline]
- slab_free_hook mm/slub.c:2343 [inline]
- slab_free mm/slub.c:4580 [inline]
- kmem_cache_free+0x1a2/0x420 mm/slub.c:4682
- xfs_inode_free_callback+0x152/0x1d0 fs/xfs/xfs_icache.c:158
- rcu_do_batch kernel/rcu/tree.c:2567 [inline]
- rcu_core+0xaaa/0x17a0 kernel/rcu/tree.c:2823
- handle_softirqs+0x2c5/0x980 kernel/softirq.c:554
- __do_softirq kernel/softirq.c:588 [inline]
- invoke_softirq kernel/softirq.c:428 [inline]
- __irq_exit_rcu+0xf4/0x1c0 kernel/softirq.c:637
- irq_exit_rcu+0x9/0x30 kernel/softirq.c:649
- instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1037 [inline]
- sysvec_apic_timer_interrupt+0xa6/0xc0 arch/x86/kernel/apic/apic.c:1037
- asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:702
-
-The buggy address belongs to the object at ffff8880774cfa40
- which belongs to the cache xfs_ili of size 264
-The buggy address is located 48 bytes inside of
- freed 264-byte region [ffff8880774cfa40, ffff8880774cfb48)
-
-The buggy address belongs to the physical page:
-page: refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x774cf
-ksm flags: 0xfff00000000000(node=0|zone=1|lastcpupid=0x7ff)
-page_type: f5(slab)
-raw: 00fff00000000000 ffff888142abe140 ffffea0001d56080 0000000000000007
-raw: 0000000000000000 00000000000c000c 00000001f5000000 0000000000000000
-page dumped because: kasan: bad access detected
-page_owner tracks the page as allocated
-page last allocated via order 0, migratetype Reclaimable, gfp_mask 0x52c50(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_RECLAIMABLE), pid 5289, tgid 5289 (syz-executor269), ts 76754520423, free_ts 21942205490
- set_page_owner include/linux/page_owner.h:32 [inline]
- post_alloc_hook+0x1f3/0x230 mm/page_alloc.c:1537
- prep_new_page mm/page_alloc.c:1545 [inline]
- get_page_from_freelist+0x3039/0x3180 mm/page_alloc.c:3457
- __alloc_pages_noprof+0x256/0x6c0 mm/page_alloc.c:4733
- alloc_pages_mpol_noprof+0x3e8/0x680 mm/mempolicy.c:2265
- alloc_slab_page+0x6a/0x120 mm/slub.c:2413
- allocate_slab+0x5a/0x2f0 mm/slub.c:2579
- new_slab mm/slub.c:2632 [inline]
- ___slab_alloc+0xcd1/0x14b0 mm/slub.c:3819
- __slab_alloc+0x58/0xa0 mm/slub.c:3909
- __slab_alloc_node mm/slub.c:3962 [inline]
- slab_alloc_node mm/slub.c:4123 [inline]
- kmem_cache_alloc_noprof+0x1c1/0x2a0 mm/slub.c:4142
- xfs_inode_item_init+0x33/0xc0 fs/xfs/xfs_inode_item.c:870
- xfs_trans_ijoin+0xeb/0x130 fs/xfs/libxfs/xfs_trans_inode.c:36
- xfs_icreate+0x13a/0x1f0 fs/xfs/xfs_inode.c:593
- xfs_symlink+0xa74/0x1230 fs/xfs/xfs_symlink.c:170
- xfs_vn_symlink+0x1f5/0x740 fs/xfs/xfs_iops.c:443
- vfs_symlink+0x137/0x2e0 fs/namei.c:4615
- do_symlinkat+0x222/0x3a0 fs/namei.c:4641
-page last free pid 1 tgid 1 stack trace:
- reset_page_owner include/linux/page_owner.h:25 [inline]
- free_pages_prepare mm/page_alloc.c:1108 [inline]
- free_unref_page+0xcd0/0xf00 mm/page_alloc.c:2638
- free_contig_range+0x152/0x550 mm/page_alloc.c:6748
- destroy_args+0x8a/0x840 mm/debug_vm_pgtable.c:1017
- debug_vm_pgtable+0x4be/0x550 mm/debug_vm_pgtable.c:1397
- do_one_initcall+0x248/0x880 init/main.c:1269
- do_initcall_level+0x157/0x210 init/main.c:1331
- do_initcalls+0x3f/0x80 init/main.c:1347
- kernel_init_freeable+0x435/0x5d0 init/main.c:1580
- kernel_init+0x1d/0x2b0 init/main.c:1469
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-
-Memory state around the buggy address:
- ffff8880774cf900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff8880774cf980: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->ffff8880774cfa00: fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb fb
-                                                             ^
- ffff8880774cfa80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff8880774cfb00: fb fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc
-==================================================================
-
+Are not the deposit rules that the extra page table stick around for the
+lifetime of the inserted pte? So would that not require this incremental
+change?
 
 ---
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index ea65c2db2bb1..5ef1e5d21a96 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -1232,7 +1232,7 @@ vm_fault_t do_huge_pmd_anonymous_page(struct vm_fault *vmf)
+ 
+ static void insert_pfn_pmd(struct vm_area_struct *vma, unsigned long addr,
+ 			   pmd_t *pmd, unsigned long pfn, pgprot_t prot,
+-			   bool write, pgtable_t pgtable)
++			   bool write, pgtable_t *pgtable)
+ {
+ 	struct mm_struct *mm = vma->vm_mm;
+ 	pmd_t entry;
+@@ -1258,10 +1258,10 @@ static void insert_pfn_pmd(struct vm_area_struct *vma, unsigned long addr,
+ 		entry = maybe_pmd_mkwrite(entry, vma);
+ 	}
+ 
+-	if (pgtable) {
+-		pgtable_trans_huge_deposit(mm, pmd, pgtable);
++	if (*pgtable) {
++		pgtable_trans_huge_deposit(mm, pmd, *pgtable);
+ 		mm_inc_nr_ptes(mm);
+-		pgtable = NULL;
++		*pgtable = NULL;
+ 	}
+ 
+ 	set_pmd_at(mm, addr, pmd, entry);
+@@ -1306,7 +1306,7 @@ vm_fault_t vmf_insert_pfn_pmd(struct vm_fault *vmf, unsigned long pfn, bool writ
+ 
+ 	track_pfn_insert(vma, &pgprot, pfn);
+ 	ptl = pmd_lock(vma->vm_mm, vmf->pmd);
+-	insert_pfn_pmd(vma, addr, vmf->pmd, pfn, pgprot, write, pgtable);
++	insert_pfn_pmd(vma, addr, vmf->pmd, pfn, pgprot, write, &pgtable);
+ 	spin_unlock(ptl);
+ 	if (pgtable)
+ 		pte_free(vma->vm_mm, pgtable);
+@@ -1344,8 +1344,8 @@ vm_fault_t dax_insert_pfn_pmd(struct vm_fault *vmf, unsigned long pfn, bool writ
+ 		folio_add_file_rmap_pmd(folio, page, vma);
+ 		add_mm_counter(mm, mm_counter_file(folio), HPAGE_PMD_NR);
+ 	}
+-	insert_pfn_pmd(vma, addr, vmf->pmd, pfn, vma->vm_page_prot,
+-		write, pgtable);
++	insert_pfn_pmd(vma, addr, vmf->pmd, pfn, vma->vm_page_prot, write,
++		       &pgtable);
+ 	spin_unlock(ptl);
+ 	if (pgtable)
+ 		pte_free(mm, pgtable);
+---
+
+Along these lines it would be lovely if someone from the PowerPC side
+could test these changes, or if someone has a canned qemu command line
+to test radix vs hash with pmem+dax that they can share?
+
+> +
+> +	return VM_FAULT_NOPAGE;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_insert_pfn_pmd);
+
+Like I mentioned before, lets make the exported function
+vmf_insert_folio() and move the pte, pmd, pud internal private / static
+details of the implementation. The "dax_" specific aspect of this was
+removed at the conversion of a dax_pfn to a folio.
