@@ -1,69 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208611C1ABE;
-	Fri, 27 Sep 2024 18:45:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F280419A28B;
+	Sat, 28 Sep 2024 04:43:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727462740; cv=none; b=m5xrhxy1zxMfYIuDC2cPPvjWifmh84Uv9zCwc15Oh/FJNr6/aUJR4vNp2skrDfY1+u1x7M8wqu1EwrRsxvbpoHgTVRxeaq6900PsqL+ayvpCDsSEcqlL6X9G9yni0aY/4FLNQSyyy8JZ44Q99+T37AEXaPMXneoltF6xXexW50g=
+	t=1727498640; cv=none; b=Gb6j96wP37vYelFtX+b7buVXiBC1GEwNRWqx9WT5Ay9c1ZgM9eY4KEh1OH1lLTZ41injxh6bjn0U5Qoas7BCeXrIbY/rKR7kRxwtwiK7gjeEH0CJarHR65FZvI2h2qlCAQqrt7ARZhkwP0ibB9RWGtiPO71T5DRXOHLUSLUHCkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727462740; c=relaxed/simple;
-	bh=uE8mZid6AM9SjAKFwfUA7F5bA9Qbgqo/SlQasxBOdOM=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=W8DERRzeZfFjZuaL4DIs+TLYtDgZmhni8tfoeMvzFkeqRz9gg/p7OtPi6EA6jn84Qh/wLedvrfFDxviTCtG08pvyBLmNUbh+g7gUEAMIr5Dpkryg3wiciz1hnF8ffhnMGjnDTNuscsvjIMDnfW4pwTgCibfVFYedBjRkVosCv6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BrThnMmY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727498640; c=relaxed/simple;
+	bh=Ugeo2BHOgYL84BLxp7+mymmTqHWfdd2WfTZ5oSkFj9U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RcHJTf4aHXihoYRkM9qWhAHrxqZvs5rAMixJ6zNrc5aeGZemNl8R80nfjBQVjstWD5/UsBUL0zMlVeMsJSQYltXPBYrIc6FQvIYhVWDs/bZaZane5HOMo+67YVeaeJnXkYGSi7UnjtOX5xGHEhLT0E5CkqhsvJnNZYd0uFxEOrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UUOypE8A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BrThnMmY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48946C4CEC4;
-	Fri, 27 Sep 2024 18:45:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UUOypE8A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63642C4CEC3;
+	Sat, 28 Sep 2024 04:43:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727462739;
-	bh=uE8mZid6AM9SjAKFwfUA7F5bA9Qbgqo/SlQasxBOdOM=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=BrThnMmYww28L53PSyMbF4iSw9DrjcFESjd9//+HSxwdGSelKCYqTb+w3vdoJZBLt
-	 g0bwHcq+Bmrqcb7NUKPysikLFTXea+wCZgrBqm4Xu1ougruAQij4oxrCRXL0z+8Jg7
-	 T1arRrO64Zln33P192ZOkm7ZPr5CJ0OkzkLtq52NkfRKC1riV8Z58SBrtCNaOTU0m/
-	 ocb2yOQE2oVyNkYwWZ20p2OctjfdP8AmlYaMzhgvJKZDHWqAWm4y3kOMve1HJC2ZiT
-	 HDRbTmj4+ic5740nIvsMrPM8spM//FMJl4Zn6RZcd+cL2Y4r+uFNCNVUQQHC4ENxkZ
-	 CZzf5mdfXJmIw==
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Uros Bizjak <ubizjak@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, 
- Chandan Babu R <chandan.babu@oracle.com>, 
- "Darrick J. Wong" <djwong@kernel.org>
-In-Reply-To: <20240923122311.914319-1-ubizjak@gmail.com>
-References: <20240923122311.914319-1-ubizjak@gmail.com>
-Subject: Re: [PATCH v3] xfs: Use try_cmpxchg() in
- xlog_cil_insert_pcp_aggregate()
-Message-Id: <172746273791.131348.18071682105497639956.b4-ty@kernel.org>
-Date: Fri, 27 Sep 2024 20:45:37 +0200
+	s=k20201202; t=1727498639;
+	bh=Ugeo2BHOgYL84BLxp7+mymmTqHWfdd2WfTZ5oSkFj9U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UUOypE8AlqU78PSDrPL/0b9pXc3RNbPDUghcJYzwSVchLcxNxIUrwyqi6OXdnHSIZ
+	 bL3AsiNzF9E0oA2B2dpWGKDRIPZ28Xy0HeaGeApfNNmdd3RCY6zvEVIQbXvJLWYC7v
+	 AfiNGL3WzBgZN2MqiedRCePPbMVo079xyIJvpFY5vtMp8s1gJs4AQ7LxC+ynDYLyot
+	 alSvtuDIE6WMaRBWSV2CCfwjbqZ71o2FONw2Sq2FNyGtJqD7qnR0pHPiGIJ9HvCoWr
+	 HNOjEuTEcB27I9WIdaOMk1DtBROckRrXWMEh2j1pzP7CI/RBcLIlVBf5XvOCvZd+xA
+	 0HVtotdX3JR+w==
+Date: Fri, 27 Sep 2024 21:43:58 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Julian Sun <sunjunchao2870@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	hch@lst.de, syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com,
+	Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] xfs: do not unshare any blocks beyond eof
+Message-ID: <20240928044358.GV21877@frogsfrogsfrogs>
+References: <20240927065344.2628691-1-sunjunchao2870@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240927065344.2628691-1-sunjunchao2870@gmail.com>
 
-On Mon, 23 Sep 2024 14:22:17 +0200, Uros Bizjak wrote:
-> Use !try_cmpxchg instead of cmpxchg (*ptr, old, new) != old in
-> xlog_cil_insert_pcp_aggregate().  x86 CMPXCHG instruction returns
-> success in ZF flag, so this change saves a compare after cmpxchg.
+[cc linux-xfs]
+
+On Fri, Sep 27, 2024 at 02:53:44PM +0800, Julian Sun wrote:
+> Attempting to unshare extents beyond EOF will trigger
+> the need zeroing case, which in turn triggers a warning.
+> Therefore, let's skip the unshare process if blocks are
+> beyond EOF.
 > 
-> Also, try_cmpxchg implicitly assigns old *ptr value to "old" when
-> cmpxchg fails. There is no need to re-read the value in the loop.
+> This patch passed the xfstests using './check -g quick', without
+> causing any additional failure
 > 
-> [...]
+> Reported-and-tested-by: syzbot+296b1c84b9cbf306e5a0@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=296b1c84b9cbf306e5a0
+> Fixes: 32a38a499104 ("iomap: use write_begin to read pages to unshare")
+> Inspired-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Julian Sun <sunjunchao2870@gmail.com>
+> ---
+>  fs/xfs/xfs_iomap.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 72c981e3dc92..81a0514b8652 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -976,6 +976,7 @@ xfs_buffered_write_iomap_begin(
 
-Applied to xfs-6.12-rc2, thanks!
+I'm unsure about why this correction is in
+xfs_buffered_write_iomap_begin.  If extent size hints are enabled, this
+function delegates to xfs_direct_write_iomap_begin, which means that
+this isn't a complete fix.
 
-[1/1] xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
-      commit: 6e19fd40d755a64f271687a21cd304ecba41a571
+Shouldn't it suffice to clamp offset/len in xfs_reflink_unshare?
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+--D
 
+>  	int			error = 0;
+>  	unsigned int		lockmode = XFS_ILOCK_EXCL;
+>  	u64			seq;
+> +	xfs_fileoff_t eof_fsb;
+>  
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+> @@ -1016,6 +1017,13 @@ xfs_buffered_write_iomap_begin(
+>  	if (eof)
+>  		imap.br_startoff = end_fsb; /* fake hole until the end */
+>  
+> +	/* Don't try to unshare any blocks beyond EOF. */
+> +	eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> +	if (flags & IOMAP_UNSHARE && end_fsb > eof_fsb) {
+> +		xfs_trim_extent(&imap, offset_fsb, eof_fsb - offset_fsb);
+> +		end_fsb = eof_fsb;
+> +	}
+> +
+>  	/* We never need to allocate blocks for zeroing or unsharing a hole. */
+>  	if ((flags & (IOMAP_UNSHARE | IOMAP_ZERO)) &&
+>  	    imap.br_startoff > offset_fsb) {
+> @@ -1030,7 +1038,6 @@ xfs_buffered_write_iomap_begin(
+>  	 */
+>  	if ((flags & IOMAP_ZERO) && imap.br_startoff <= offset_fsb &&
+>  	    isnullstartblock(imap.br_startblock)) {
+> -		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+>  
+>  		if (offset_fsb >= eof_fsb)
+>  			goto convert_delay;
+> -- 
+> 2.39.2
+> 
