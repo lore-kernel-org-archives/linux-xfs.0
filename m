@@ -1,111 +1,141 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D6C9EDE;
-	Mon, 30 Sep 2024 21:35:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D91E21373
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 22:53:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727732117; cv=none; b=naEh++21QmxFDDKo6Dfl0rDBnD3dCjZpaXQgR83FzX6sgU47Fz1pbAkTx3Dmkao9Y2lwFqS04ThIKwpv1B68+WmTcQy29LMYdyodBmfXys3sXzOS+YA3TItpqIBbZedCqYJhhTfpfAtwi75Uym5z99vO8BNFNfGtE3xB3GCVPvE=
+	t=1727736820; cv=none; b=aayQ/VrNDsZY34k4hgIubdOvutnliaGIQjeZx7PO4kyaU69M8m9hmnvpeKthHqrCBTBnsqScQsvFtNvi1IviSoB4tLu5ubA8OfyAnomnOTmawpUE4WWwsoXxIsKusRgj13ZKkgt46AUYU6JDRfI9NY8/y0SDQD0WM+/OfEvRWEA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727732117; c=relaxed/simple;
-	bh=dxuL2+8ZVHuUyZGDZyBs/XcF0TJ+A4SDCBg5GNm49/8=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=QoGacCURkZJ84TA7yV+AECPhkWqYMUcLtIoI8OjAlrnRLO8G2LgMQuDTiQ7jvBmSdyfF5pwSL4nIoEp0mjHLNeo5a2j2c4kNl+gxcpWsCg27c5ZqaxzjdgOUALM0kRN9/7KBNW+zADvEmZItFf8GZ7QEqNKtDI7Z25ExrKPnyE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=YgR2fuSG; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=OLBn3xaq; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1727736820; c=relaxed/simple;
+	bh=J3rvnH3FdvtJ5wDpJKLxH3H4+FhnCYXfdxLwv3Q6jQo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ENrBFCuZME8kaS6aRxdbw6sp3Yp94rChCf2IQWxQP6f7HJ1gTewIhbBLYfadASw0AoMv2RDbdQ4gAO1R47LptECTQMNkTyUQY1Qp0dB5b4bqeR8ooWeA5tEKer177ZmWBP49V/0tpkYbl4Lt+FUiajcJlOo6X5s9XBpJPLbgrbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ov85AWO/; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="YgR2fuSG";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="OLBn3xaq"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1727732113;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uVbdFg6I8fwu/3AqZyEvbGS1WvCMLB3EhLlpsNhR5nI=;
-	b=YgR2fuSGQ+1CC0G5H4MzE4t8olbAFU5BafUyaLxjF2QIjTs3UbzCwwk7QvMFHeeLW8vuY5
-	HIuz05kBaI+PAU5kDbE9O5ysw0ZigkKVd+8BT9ZePG9tf2kJcuF4pv35EhkZ99cPbhVZbC
-	GQ7Jjbx9vgE0Rcx85zIefGMO0cL2dvmr4gN0aD9m2NtQeKfb7b8TsCdFADjl1RJyD/x6T5
-	2c0wF9l6tXZjPe+9VRbHHcVyeREQUnQ1EWRZc+6eA8hsmw0RLjF4PEs0g0/Gf5TgScX/Mf
-	xmwiJC8MCArfDFIIe+35ZCXxip+JZBfa+y8nD1s/uIVBn02yxnXIdg3SaXmy3A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1727732113;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uVbdFg6I8fwu/3AqZyEvbGS1WvCMLB3EhLlpsNhR5nI=;
-	b=OLBn3xaqldkwQyCXLWWfC5gXBWhLeCEwb2syNUFGVZ4mPsvyd455m2aCZBRPk2SHmQTkzb
-	bQfsnyFmm/fDZ2Dg==
-To: Jeff Layton <jlayton@kernel.org>, John Stultz <jstultz@google.com>,
- Stephen Boyd <sboyd@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Steven
- Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Jonathan Corbet
- <corbet@lwn.net>, Chandan Babu R <chandan.babu@oracle.com>, "Darrick J.
- Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger
- <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, Josef Bacik
- <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Hugh Dickins
- <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Chuck Lever
- <chuck.lever@oracle.com>, Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Cc: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH v8 01/11] timekeeping: move multigrain timestamp floor
- handling into timekeeper
-In-Reply-To: <79a32ab9308d6e63e066aa17c5c2492b51b55850.camel@kernel.org>
-References: <20240914-mgtime-v8-0-5bd872330bed@kernel.org>
- <20240914-mgtime-v8-1-5bd872330bed@kernel.org> <87a5g79aag.ffs@tglx>
- <874j6f99dg.ffs@tglx>
- <b300fec8b6f611662195e0339f290d473a41607c.camel@kernel.org>
- <878qv90x6w.ffs@tglx>
- <4933075b1023f466edb516e86608e0938de28c1d.camel@kernel.org>
- <87y138zyfu.ffs@tglx>
- <79a32ab9308d6e63e066aa17c5c2492b51b55850.camel@kernel.org>
-Date: Mon, 30 Sep 2024 23:35:13 +0200
-Message-ID: <87plokzuy6.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ov85AWO/"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-20ba733b6faso5267135ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 15:53:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727736818; x=1728341618; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Pgp5JKh5leY7tqoP1ESqMVgnos2B4G5hEQe2yB61B94=;
+        b=ov85AWO/ihqNiIwSzjZxOlijQDUg/6oIlOnas87mlLb7T1WMdbUBuUTCYiR4oll1dS
+         mdjyJ5s4hpveQtL4dhKmHrtAn+sCeO7rh6eX6+E3OAtKDWiAoMaJKTHUgOu85FCAaZTO
+         zz/W8eAwduNB+5dWn9lDeiT3SNYT+BMQ2fC9XicFxklglqy2L3G+VuSMavnRU7tm5kjU
+         GZVo95hAYCJ1SFZ0tIxi/PtFepzCbKDMmsmRf4yRD6JrrHzirGuRKtXoW6YilaV9QRVX
+         FQJgq0HdhBzEjirMNPtwFz+5jcpZIHACLSxELeNu3pNpyDvLHx22fhUzjBSXjvMBKNvz
+         xRpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727736818; x=1728341618;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Pgp5JKh5leY7tqoP1ESqMVgnos2B4G5hEQe2yB61B94=;
+        b=RGXGL56qCPfo7Y/VDOcHU4IWzXRKZWVWOcyWZb6xZg+dOXvL3fi9OeQncRYPN98Am+
+         mDYiYmWlm/QSsFDbJc7KMBtZK4SBs3106KRFzZsTgQ4z7iWX/f+9po/s9e3RTP4zKvAe
+         wHx2WzB0i5bOpF0QQDmcmYxV/4OZjUYMqmgyUKf0SI+3vkXPOE8mNjNPmypuIoDFG5ak
+         kDOKYvfU58JzvNsv5aOTIu8YVAOJTB0wDy+yEoNqC4/C4vaGN9Vg6tajqSGm5J4gxXzB
+         91pyyJ95aftcZau+VMYBOEYJBS7kesAqZM3FPG5cS+pTt05Pj7ffnD8bOVOkECGsXj1F
+         q4mQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWz1irsm2oderTT63kdLlqi90lhm6jUOY4zxBA67IiUcbZmXPZCN5TOXGtyLDRCokehztZTkKbOP1g=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxTCo1vqKkEdLIi80xOfMNws1uxV3tstGvWTH2hVpNj8/zEqeXK
+	RLH9kvwnrbmjiXwIZFCJln5q42drCDUnmOU7Ca9FcqFOfshZXn0iyQmHPtxh4ihLd8/nhhq+RCb
+	8
+X-Google-Smtp-Source: AGHT+IEF8BEkk0IN+81hYa2ZOkh8wLYdy6mi8kdrGn30rQ6f6oZX06lZ9QaDRhKWfAXT2N9xyRUEdA==
+X-Received: by 2002:a17:902:ecd0:b0:20b:51f0:c82e with SMTP id d9443c01a7336-20b51f0ccd2mr150153965ad.51.1727736818492;
+        Mon, 30 Sep 2024 15:53:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20b37e4e54dsm59215095ad.249.2024.09.30.15.53.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Sep 2024 15:53:38 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1svPGp-00CFN1-1y;
+	Tue, 01 Oct 2024 08:53:35 +1000
+Date: Tue, 1 Oct 2024 08:53:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Fix circular locking during xfs inode reclamation
+Message-ID: <Zvsr76vifZeNDArE@dread.disaster.area>
+References: <20240930034406.7600-1-laoar.shao@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240930034406.7600-1-laoar.shao@gmail.com>
 
-On Mon, Sep 30 2024 at 16:53, Jeff Layton wrote:
-> On Mon, 2024-09-30 at 22:19 +0200, Thomas Gleixner wrote:
->> On Mon, Sep 30 2024 at 15:37, Jeff Layton wrote:
->> > If however, two threads have racing syscalls that overlap in time, then there                       
->> > is no such guarantee, and the second file may appear to have been modified                          
->> > before, after or at the same time as the first, regardless of which one was                         
->> > submitted first.
->> 
->> That makes me ask a question. Are the timestamps always taken in thread
->> (syscall) context or can they be taken in other contexts (worker,
->> [soft]interrupt, etc.) too?
->> 
->
-> That's a good question.
->
-> The main place we do this is inode_set_ctime_current(). That is mostly
-> called in the context of a syscall or similar sort of operation
-> (io_uring, nfsd RPC request, etc.).
->
-> I certainly wouldn't rule out a workqueue job calling that function,
-> but this is something we do while dirtying an inode, and that's not
-> typically done in interrupt context.
+On Mon, Sep 30, 2024 at 11:44:06AM +0800, Yafang Shao wrote:
+> I encountered the following error messages on our test servers:
+> 
+> [ 2553.303035] ======================================================
+> [ 2553.303692] WARNING: possible circular locking dependency detected
+> [ 2553.304363] 6.11.0+ #27 Not tainted
+> [ 2553.304732] ------------------------------------------------------
+> [ 2553.305398] python/129251 is trying to acquire lock:
+> [ 2553.305940] ffff89b18582e318 (&xfs_nondir_ilock_class){++++}-{3:3}, at: xfs_ilock+0x70/0x190 [xfs]
+> [ 2553.307066]
+> but task is already holding lock:
+> [ 2553.307682] ffffffffb4324de0 (fs_reclaim){+.+.}-{0:0}, at: __alloc_pages_slowpath.constprop.0+0x368/0xb10
+> [ 2553.308670]
+> which lock already depends on the new lock.
 
-The reason I'm asking is that if it's always syscall context,
-i.e. write() or io_uring()/RPC request etc., then you can avoid the
-whole global floor value dance and make it strictly per thread, which
-simplifies the exercise significantly.
+.....
 
-But even if it's not syscall/thread context then the worker or io_uring
-state machine might just require to serialize against itself and not
-coordinate with something else. But what do I know.
+> [ 2553.342664]  Possible unsafe locking scenario:
+> 
+> [ 2553.343621]        CPU0                    CPU1
+> [ 2553.344300]        ----                    ----
+> [ 2553.344957]   lock(fs_reclaim);
+> [ 2553.345510]                                lock(&xfs_nondir_ilock_class);
+> [ 2553.346326]                                lock(fs_reclaim);
+> [ 2553.347015]   rlock(&xfs_nondir_ilock_class);
+> [ 2553.347639]
+>  *** DEADLOCK ***
+> 
+> The deadlock is as follows,
+> 
+>     CPU0                                  CPU1
+>    ------                                ------
+> 
+>   alloc_anon_folio()
+>     vma_alloc_folio(__GFP_FS)
+>      fs_reclaim_acquire(__GFP_FS);
+>        __fs_reclaim_acquire();
+> 
+>                                     xfs_attr_list()
+>                                       xfs_ilock()
+>                                       kmalloc(__GFP_FS);
+>                                         __fs_reclaim_acquire();
+> 
+>        xfs_ilock
 
-Thanks,
+Yet another lockdep false positive. listxattr() is not in a
+transaction context on a referenced inode, so GFP_KERNEL is correct.
+The problem is lockdep has no clue that fs_reclaim context can only
+lock unreferenced inodes, so we can actualy run GFP_KERNEL context
+memory allocation with a locked, referenced inode safely.
 
-        tglx
+We typically use __GFP_NOLOCKDEP on these sorts of allocations, but
+the long term fix is to address the lockdep annotations to take
+reclaim context into account. We can't do that until the realtime
+inode subclasses are removed which will give use the spare lockdep
+subclasses to add a reclaim context subclass. That is buried in the
+middle of a much large rework:
+
+https://lore.kernel.org/linux-xfs/172437087542.59588.13853236455832390956.stgit@frogsfrogsfrogs/
+
+-Dave.
+
+
+-- 
+Dave Chinner
+david@fromorbit.com
