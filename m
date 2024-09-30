@@ -1,101 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 205CA18F2D4;
-	Mon, 30 Sep 2024 16:41:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B2F6194C85
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 16:42:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727714493; cv=none; b=bF0/yd8Bt1rvGgb++eBrpta2O0GJkTyQ3TtWjHOr5hENQ3UJ4ZAuAMerPl71nVtFfxZm1Dx8M6OveSeafsKEz76WjuLpOXQChpObHmRaHDWpyWqVPArgzCnvk52/SJBVSvRyPCfJGkEZz+I5XY8rt9liIRuyMxcNOlgRJ6zjsWc=
+	t=1727714543; cv=none; b=FCjU/3axTC8RlO+C5Yg75ay5T1iUHMwhetdIa5sUbCbSLocS5MiG8rYvABzWJbrZW4X5v18ANeDY9bnEjZSayErdUf7dLd/vqhiA1zvRZ7etjC5+y2CDd+yvIy5uH+rDG+WvGDaG9fTIjeL7LD1SYetkuGIVGaSjwTQm57ef79k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727714493; c=relaxed/simple;
-	bh=1coCZtPIlem9r2aOca7Bq6JfUeE4Sx1YImfzkb+He6U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O2GcBP3l3nt0q61E1zJCbOIByIRY9owmZcrRdekwM/DEN//N4pBUjXONyR81fUa1NFOIMtKlg46VRTMycK3qCtRb3tHQa7SYacGSb3+k82J8as30CJbhXt3kCJ2OQsI8NHx7iLL/maY+Tffbc8xZfe7MLvpIbdMSFffx97ZnfYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XtvppcTe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727714543; c=relaxed/simple;
+	bh=4uT7v9/R63shHE9EmKtVr+NcO1ZGrYeqAJfiMgIo3r8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tIfV744S7fuZC0tQraDAl3wHdydH9iNtGGR79as0aJKHsZyJsg2qQKnmKL/Mnuny+K2Dl3jUBsBVIYdIbMyiNQSKi3qYLsm429w90IE/hIYyDoXP6F5mX4EFAipIxZSPb6MJDMOA6MR7rQqyE1xikXDWJsK/Tetxs8C9SAZ3xzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JNgn2K+7; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XtvppcTe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91DE2C4CEC7;
-	Mon, 30 Sep 2024 16:41:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727714490;
-	bh=1coCZtPIlem9r2aOca7Bq6JfUeE4Sx1YImfzkb+He6U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XtvppcTeHQaEI7o00rbs7e1NtJXT0MdSbeelfzZkQuubN4n230tEBRITeUj+4TGlr
-	 BZbvH/0NlThjulMRferPO+c5ICyAT8LV1y2u7Yk5XA6O8O0QhvtQC/aOHEXxG+G11n
-	 +pZnxKqzLdRjENS8ObdCN7zYufGk+B95QrfaFDZEZU4aImBsrOZ0bmvqq4iouITf/P
-	 2k0th3l3CXXwFFvcUHWxRvgxW4ZMHiO390YVD6R1l3cJF5wzSsUsIp0tHQCmcSSivI
-	 4jxDGMUHhHKbLQWIgEGujiYhiHvyPsIXiF3iTbADCwKOlaUvFXLWbRDGbXawe1q+x+
-	 D0ebLYFkX6Ewg==
-Date: Mon, 30 Sep 2024 09:41:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
-	jack@suse.cz, dchinner@redhat.com, hch@lst.de, cem@kernel.org,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	hare@suse.de, martin.petersen@oracle.com,
-	catherine.hoang@oracle.com, mcgrof@kernel.org,
-	ritesh.list@gmail.com, ojaswin@linux.ibm.com
-Subject: Re: [PATCH v6 7/7] xfs: Support setting FMODE_CAN_ATOMIC_WRITE
-Message-ID: <20240930164130.GQ21853@frogsfrogsfrogs>
-References: <20240930125438.2501050-1-john.g.garry@oracle.com>
- <20240930125438.2501050-8-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JNgn2K+7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=oi2O6GABKXjTFAwJOEb+m+24s6VvPFfqNhc+x2GnsKg=; b=JNgn2K+7wMdRXyxLQ/iBlXrvwp
+	y0HzV6vsbROQD8b+X2+bSgFm8FqWjl1pZQzjwxerKrdVlyw36BPM6MgIj9svfZ7DhaB3AGcV0P+v9
+	6dTQdjFUGj+LX499U512yGV9LF8s+VaRZjvXyCFgnOult0ruFQkoxlSOYXEI/KGdCJRYISPLk8Wbs
+	Bm6+sAEcuHp5LBaPjID0rUNlxiMBQfwQaXcofzIGB6FbYEvNwCol4FrBr5TL+N6ZFyHPRm28KWOsG
+	v13M2Aqf5pSVLHg0uMatptRX8cTQE2qzOjMwA4HLCRjv0O8coemy1EoqOdJXj99Cu4Y74pX7blS2h
+	Bnukdpow==;
+Received: from 2a02-8389-2341-5b80-2b91-e1b6-c99c-08ea.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:2b91:e1b6:c99c:8ea] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1svJTW-00000000GTT-3UlU;
+	Mon, 30 Sep 2024 16:42:19 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: fix recovery of allocator ops after a growfs
+Date: Mon, 30 Sep 2024 18:41:41 +0200
+Message-ID: <20240930164211.2357358-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240930125438.2501050-8-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Sep 30, 2024 at 12:54:38PM +0000, John Garry wrote:
-> For when an inode is enabled for atomic writes, set FMODE_CAN_ATOMIC_WRITE
-> flag. Only direct IO is currently supported, so check for that also.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+Hi all,
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+auditing the perag code for the generic groups feature found an issue
+where recovery of an extfree intent without a logged done entry will
+fail when the log also contained the transaction that added the AG
+to the extent is freed to because the file system geometry in the
+superblock is only updated updated and the perag structures are only
+created after log recovery has finished.
 
---D
+This version now also ensures the transactions using the new AGs
+are not in the same CIL checkpoint as the growfs transaction.
 
-> ---
->  fs/xfs/xfs_file.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index fa6a44b88ecc..a358657a1ae6 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1208,6 +1208,16 @@ xfs_file_remap_range(
->  	return remapped > 0 ? remapped : ret;
->  }
->  
-> +static bool
-> +xfs_file_open_can_atomicwrite(
-> +	struct inode		*inode,
-> +	struct file		*file)
-> +{
-> +	if (!(file->f_flags & O_DIRECT))
-> +		return false;
-> +	return xfs_inode_can_atomicwrite(XFS_I(inode));
-> +}
-> +
->  STATIC int
->  xfs_file_open(
->  	struct inode	*inode,
-> @@ -1216,6 +1226,8 @@ xfs_file_open(
->  	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
->  		return -EIO;
->  	file->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
-> +	if (xfs_file_open_can_atomicwrite(inode, file))
-> +		file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
->  	return generic_file_open(inode, file);
->  }
->  
-> -- 
-> 2.31.1
-> 
-> 
+Diffstat:
+ libxfs/xfs_ag.c          |   69 +++-----------
+ libxfs/xfs_ag.h          |   10 +-
+ libxfs/xfs_ag_resv.c     |   18 +--
+ libxfs/xfs_ialloc.c      |   14 +-
+ libxfs/xfs_log_recover.h |    2 
+ libxfs/xfs_rtbitmap.c    |    3 
+ libxfs/xfs_sb.c          |   97 +++++++++++++++----
+ libxfs/xfs_sb.h          |    3 
+ libxfs/xfs_shared.h      |   18 ---
+ scrub/rtbitmap_repair.c  |   26 ++---
+ xfs_buf_item_recover.c   |   27 +++++
+ xfs_fsops.c              |  102 ++++++++++++--------
+ xfs_log_recover.c        |   30 ++++--
+ xfs_mount.c              |    9 -
+ xfs_rtalloc.c            |   98 ++++++++++---------
+ xfs_trans.c              |  231 ++++++++++++-----------------------------------
+ xfs_trans.h              |   15 +--
+ xfs_trans_dquot.c        |    2 
+ 18 files changed, 368 insertions(+), 406 deletions(-)
