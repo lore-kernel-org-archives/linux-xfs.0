@@ -1,122 +1,109 @@
-Received: from flamingo.ash.relay.mailchannels.net (flamingo.ash.relay.mailchannels.net [23.83.222.60])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CE5F183CA4;
-	Mon, 30 Sep 2024 23:02:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=23.83.222.60
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727737324; cv=pass; b=dME5yLjry+PkkIhIKUJfQ781FZJUrj/lrl+DBlJGGA1rVBoeXhWY9aiaBxUSNtK2wh/rd1lAtInjpbM5mmG9s5YCsB4pPbWzwSvp3mA/RfcUbE2puEX5oNqqlBY9a9l1Y2p16+TbfCZgBLdZOH5C8O3CjJxG7tnAVeJa8lvoLEA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727737324; c=relaxed/simple;
-	bh=UZjevEb+aS9Z63T3PhLuFwnTl0m/XfMMUJJ9gK77NXk=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D2+3ZRNdyGZeZKN/dk/8mB+nAJAH1bqcKx2omd8Sxqp7C0Je/BvSrllnRvOYtTIVun/Y0tCv89UEtw5wJ2c3tpjPQhsK6vlTXwkfsFYLPdHMaN4Ejy0qNXkU37pS1RSLRLbvNf1qCWRZIAywo4MrElk1AUeWM+hwEPnRfb1F+JI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stgolabs.net; spf=pass smtp.mailfrom=stgolabs.net; dkim=pass (2048-bit key) header.d=stgolabs.net header.i=@stgolabs.net header.b=aJ66WVtF; arc=pass smtp.client-ip=23.83.222.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stgolabs.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stgolabs.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C7D5339F
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 23:19:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1727738380; cv=none; b=tKb3hXcv5rtsZ0cGrepSftzS/Dzc2MORZDgi11TsI6cfpazo+rUbqVixX1neUWPDJpQCyDIbI4DenGoZ2tizIGRaCxq4nTvnD7ZRqQYbep7FtUsXaq3w22NiGQrry05HSRrpG2i1g96zJ/3U2Ii2jTcbDOcKJaB3b01Fs9yslUE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1727738380; c=relaxed/simple;
+	bh=dXCXD5wrJmdqTWj0YHYVjrXP6eqVQATpBMpQrbW8Ry0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Kv2sXfRFV/blHGX5MUgtt28ltwC2Rl7SUsggL1nzNKu2jnl+45eb1tQzhczLX+TQjoODat2m481ljJ37z+sPAC0kachOapJJHQUrsIQGwcPSAK16GxwyrfB1dq3gZbcbJ0ldNkBbuhsWbEDXliZAu4rOhBCtANBpB7GIq0Cx5GA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=fkclomyF; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=stgolabs.net header.i=@stgolabs.net header.b="aJ66WVtF"
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-	by relay.mailchannels.net (Postfix) with ESMTP id C49C3877F3;
-	Mon, 30 Sep 2024 23:02:00 +0000 (UTC)
-Received: from pdx1-sub0-mail-a315.dreamhost.com (unknown [127.0.0.6])
-	(Authenticated sender: dreamhost)
-	by relay.mailchannels.net (Postfix) with ESMTPA id 567D187790;
-	Mon, 30 Sep 2024 23:02:00 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1727737320; a=rsa-sha256;
-	cv=none;
-	b=Ui2hSs7GgIhX4NwUwrhzLnWJ6QAiIDsDlnAEyw7vdsWF5Z9SHAT7DiQjOqQeouhYa0zofR
-	UfmhY7y8pN2yly+OTm18mUOR0RBeARpF9YH/QGPS2xnWOUZABn8qd9td388PNumi87gs9y
-	MrtYRaHMXNze7OUh6H0ttuOxRzy7gR3RL2W7FDNZ7HvBDTXdVGCZ+ZY9rDiCbrRMNHc5k+
-	Y9BOR+L8bhTTLYiMfm2bRZ7Q/iPmikXabppaUrniWqIZTbR9rN2haj3qIn8Sa7/O5j0upp
-	EcImNoUB4kgShhl6JNPDuuAhccbQ05fnw03t5KwYLrZxUOqYK98j/LNFPN6OUg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-	s=arc-2022; t=1727737320;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references:dkim-signature;
-	bh=UZjevEb+aS9Z63T3PhLuFwnTl0m/XfMMUJJ9gK77NXk=;
-	b=BL+z4FsSjYGaeN4JrxZ0kvgtVtlyTJu2rloiY3mZ1alW+M+Ik3pb2cZfNPJFi6YLRGLRtD
-	TVNbdLxEy5tw9YIFOLXpQf2NP4yr3z7ascWKeboF3LeIKOy1R2fToCMU5HZg0/m9eP1eCG
-	gxipDsBZX5JNWa/H5RKM3Fv+iwyXG45fFw3C49g8EXcuQgz8W/WFgghvBy4Ltf33tkaqyj
-	upjeujNDsMsJc8asZ3UnSmImR1BxX8bdbp18rBedgCOUT2uFSAfaqEOtXKBZ2i7Hk4Qb39
-	aoP9p48lYHMNXWSQhX5NVnA8HEf46yZKuU9m2+Z60Xwwx289KKblsLtCcm+8Tw==
-ARC-Authentication-Results: i=1;
-	rspamd-5b468d8b77-b49wv;
-	auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Arithmetic-Soft: 65da47ab268e88ae_1727737320645_3666780444
-X-MC-Loop-Signature: 1727737320645:2171171602
-X-MC-Ingress-Time: 1727737320645
-Received: from pdx1-sub0-mail-a315.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-	by 100.112.95.152 (trex/7.0.2);
-	Mon, 30 Sep 2024 23:02:00 +0000
-Received: from offworld (unknown [104.36.31.106])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: dave@stgolabs.net)
-	by pdx1-sub0-mail-a315.dreamhost.com (Postfix) with ESMTPSA id 4XHc5g3BpWz2J;
-	Mon, 30 Sep 2024 16:01:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-	s=dreamhost; t=1727737320;
-	bh=UZjevEb+aS9Z63T3PhLuFwnTl0m/XfMMUJJ9gK77NXk=;
-	h=Date:From:To:Subject:Content-Type;
-	b=aJ66WVtF5wadplucglcPzJTORrapS6eiZLyCsEngTYvMz+nBtMQoNKpasMjVPzM6i
-	 Wttxf1Q5Q6RXv381nD/ai2/g72lHZpMyJMe50DdyheTAinmfL7cyMLTVQL4er/2WxY
-	 gPK0z8nx8xUWqxo/0vREjwNRPOQ8LURXUSzS3hYjH5RmKKrLinXidPBpLQHtTeB6v2
-	 AOGYuVmXJul9LcVI3bsGtEc9AMiXhCl9ltBiwdfHicMj8j58Ay7V4trpupd53cYnCI
-	 zhEYROi6hDS2QbzsQNi5LrKByKYi2qqsoe7NPj4FgUU1KIEniTMJJJZWctoNeVg/FC
-	 33IUFFM4Lwtdg==
-Date: Mon, 30 Sep 2024 16:00:32 -0700
-From: Davidlohr Bueso <dave@stgolabs.net>
-To: Matthew Wilcox <willy@infradead.org>, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Christian Theune <ct@flyingcircus.io>, 
-	Dave Chinner <david@fromorbit.com>, Chris Mason <clm@meta.com>, Jens Axboe <axboe@kernel.dk>, 
-	linux-mm@kvack.org, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Daniel Dao <dqminh@cloudflare.com>, 
-	regressions@lists.linux.dev, regressions@leemhuis.info
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-Message-ID: <ymp5wtjaup6tjlbc3kkt3xkit4q5bmbvasdvbcdxfc2l77zx47@xalqc57xkkyb>
-Mail-Followup-To: Matthew Wilcox <willy@infradead.org>, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Christian Theune <ct@flyingcircus.io>, 
-	Dave Chinner <david@fromorbit.com>, Chris Mason <clm@meta.com>, Jens Axboe <axboe@kernel.dk>, 
-	linux-mm@kvack.org, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Daniel Dao <dqminh@cloudflare.com>, 
-	regressions@lists.linux.dev, regressions@leemhuis.info
-References: <CAHk-=wgQ_OeAaNMA7A=icuf66r7Atz1-NNs9Qk8O=2gEjd=qTw@mail.gmail.com>
- <E6728F3E-374A-4A86-A5F2-C67CCECD6F7D@flyingcircus.io>
- <CAHk-=wgtHDOxi+1uXo8gJcDKO7yjswQr5eMs0cgAB6=mp+yWxw@mail.gmail.com>
- <D49C9D27-7523-41C9-8B8D-82B2A7CBE97B@flyingcircus.io>
- <02121707-E630-4E7E-837B-8F53B4C28721@flyingcircus.io>
- <CAHk-=wj6YRm2fpYHjZxNfKCC_N+X=T=ay+69g7tJ2cnziYT8=g@mail.gmail.com>
- <295BE120-8BF4-41AE-A506-3D6B10965F2B@flyingcircus.io>
- <CAHk-=wgF3LV2wuOYvd+gqri7=ZHfHjKpwLbdYjUnZpo49Hh4tA@mail.gmail.com>
- <ZvsQmJM2q7zMf69e@casper.infradead.org>
- <cldkpg3wtz2ovbyh53verlcauhqla7x2bi5ru4qo3kf4ehbiwz@ou56y3qjr5cv>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="fkclomyF"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2e109539aedso1626459a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 16:19:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727738378; x=1728343178; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=YU82hqcu3AmyXYClRxGGlvm1J9lCdXT7ZaoZ+qqkZug=;
+        b=fkclomyFLBET0VMNkSKfMCE90ntPhrCUo21LSTFc6XwiGt6lFM30kxeoaDHlM92Er/
+         f/IDUCR4GBly6HNKbjgyHke4F+eJgUJ2lx2H7/56KIYAcYHXgpV+nHfguzwiEFhOTFH0
+         Ded8WqD2vg8I6PiGF/pAJgu5eXkgsTvbRSUTq073KF97SAhAWEEKhOJEfl/cCGGwHhbB
+         tie9D9I/Ubxmt679HyvHLmGJRT6Wr1WMOgZMxz1MbxUyJO/JYxUwaqfYg+TpI+m7r1SL
+         lv1j4VXXvnu942Rr1sq7ty+oeBLhhTYlgrgAP7TaKe4/hpBGgZAGoS2vlZm7f6IX63wq
+         t3lQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727738378; x=1728343178;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YU82hqcu3AmyXYClRxGGlvm1J9lCdXT7ZaoZ+qqkZug=;
+        b=YTxVZmuqJ8MPoU14hHd1GSK1N5SWGo08ZPtYbPnPWQCEZMypfcIdiU1/yZUYN5KH7q
+         qh5cEotS93tzTlZXsNvWYANr8bb1wwctbRy3dsBmjK97acu6978WTbqT3CqFJXF1cHja
+         eVkFdanU3aEEnqhQM+iCc9Na1KxjZ+3asMfs6lLe/2iezPUqpOKlt/k4evOQeAfC9+qK
+         meicaSIZxmuUAgf26cbdUXHbeB7ChnKMzbU1DHCE3peo7i5ZVCTTgtz7lxSqFOc1+JHE
+         PGjtuDSMyYNX8NPaxM31zNy5EDrn5imiQHiNibL6KVtmgaBozhNwQ6oo+M2hS+73iLTd
+         I35g==
+X-Forwarded-Encrypted: i=1; AJvYcCWMILNFujYdT8cjUk7xiEV2YZQgTGilrUvuET0/LX58NDmsh/soZvHa8N6foA7nRJTXlnUZbR2IsRM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwTrINHlGEYYDW4g8XwziVD6/flMtCihRvZbBU8LVFWgoZtP7NP
+	JTJ3APYeoVIyswQOarY7mi4cPrydb7SbXXZJjfsu0teqUQpe+j7e5nlihkuLhGE=
+X-Google-Smtp-Source: AGHT+IEGrY3dHhFNHeOESvTCbVszKpY2A5f5D7dN9U01R5cFHlJYIKcKzPUQN3zGv59u+QdQq4RiGA==
+X-Received: by 2002:a17:90a:df01:b0:2d3:c8e5:e548 with SMTP id 98e67ed59e1d1-2e0b89dff8cmr16755521a91.13.1727738378524;
+        Mon, 30 Sep 2024 16:19:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e16812547esm1239a91.1.2024.09.30.16.19.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Sep 2024 16:19:38 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1svPfy-00CFto-1b;
+	Tue, 01 Oct 2024 09:19:34 +1000
+Date: Tue, 1 Oct 2024 09:19:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: djwong@kernel.org, chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
+Subject: Re: [next] xfs: remove the redundant xfs_alloc_log_agf
+Message-ID: <ZvsyBj3jBjuTjXey@dread.disaster.area>
+References: <20240930104217.2184941-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cldkpg3wtz2ovbyh53verlcauhqla7x2bi5ru4qo3kf4ehbiwz@ou56y3qjr5cv>
-User-Agent: NeoMutt/20240425
+In-Reply-To: <20240930104217.2184941-1-leo.lilong@huawei.com>
 
-On Mon, 30 Sep 2024, Davidlohr Bueso wrote:\n
+[ Your email is being being classified as spam by gmail because it
+does not have a valid DKIM authentication signature.  Hence it
+doesn't get delivered to anyone who's mail is backed by gmail.... ]
 
->Also, the last sentence in the description would need to be dropped.
+On Mon, Sep 30, 2024 at 06:42:17PM +0800, Long Li wrote:
+> There are two invocations of xfs_alloc_log_agf in xfs_alloc_put_freelist.
+> The AGF does not change between the two calls. Although this does not pose
+> any practical problems, it seems like a small mistake. Therefore, fix it
+> by removing the first xfs_alloc_log_agf invocation.
+> 
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 59326f84f6a5..cce32b2f3ffd 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -3159,8 +3159,6 @@ xfs_alloc_put_freelist(
+>  		logflags |= XFS_AGF_BTREEBLKS;
+>  	}
+>  
+> -	xfs_alloc_log_agf(tp, agbp, logflags);
+> -
 
-No never mind this, it is fine. I was mostly thinking about the pathological
-unbounded scenario which is removed, but after re-reading the description
-it is still valid.
+Looks fine. That's been there since commit 92821e2ba4ae ("[XFS] Lazy
+Superblock Counters") was merged back in 2007...
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
