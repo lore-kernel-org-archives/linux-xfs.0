@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2669A192B66
-	for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 16:42:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A94E193078
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 16:42:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727714555; cv=none; b=TKGqyPEFHTtACw7vC7cKxksZnceQGyLt7CLmp8bpuPXBYJQLi6PgKXvJavv+pWVNhF8tKSE357/H1tR/OwL7U/XlGSf3Dp0bo6awJOvKqM6/FcXTAPhIr2q88K9SBNg3wgij6UsQkDaPdYhA6bKCXgmuQhTY9WD/690x0LCcDoU=
+	t=1727714558; cv=none; b=g+NMCXTn2f3JVShVMpFKanIm0hZ52VSdWuWY5ymVW5gb3lJHJgiw+q9nCTMhgCJ0Cf8y8HaSu2xdpi9EnaK4Ng/MEP3Dy3G8VTVr3IlFJ5md8AqxbfEPT8debZ5VWhmlmKGsfOvJa9nvMYh1gA3ChlJW12wYvPr3dMNKXrEIm5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727714555; c=relaxed/simple;
-	bh=csiXkm9vLYpB/wDtTKOPdLshfjYMThFeas4O33vo+Q8=;
+	s=arc-20240116; t=1727714558; c=relaxed/simple;
+	bh=Hyq/YE0NzZRi39khtV+3zvGIK6fFPEVvfsNoDNKwKow=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pBoQQQmspT1h5FUMc/vfjXleNgWY9WXsbluZ+zLNmctVF+tTamrFPAu+EA2Qg67uRiYwLy8tKBUE2YcbpSuuHN/t/IHoD3dqlS5evOhfPGSJW362cD0pUjZ9zaRPIyaERTUaB+MLH2BuG7TXYxVX5VChY/0AQCHnf4X8jDBDUC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DRJ1jEli; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=OIRcNeRL1SSfVfDe14co47svZ7Vil5E4V1jw5/h6ZwCfLHL33/r5b5NMlhLCtz0WGssZRp9aM/c2NH4MEsm4Pk0wyalMhDjDorSaAQkLWcptf/8we6kdlCMk1YPhZ124ivd+VoNEQ4l9ToFUL5v6S2ZwkXFm0a1Ox4SPCaoDebo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=x2qObWBb; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DRJ1jEli"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="x2qObWBb"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=ZmN5qUZnIFtGEoSl8QZXsDwkoBiJZHzhE9f0dF+Kq+0=; b=DRJ1jEliUuYqSFdjY/GVs760+C
-	+koST6Gr/HJqh5gs+TZGXE5W7BCOqiIqv0RJlpyvsr/1TL/n8WkKo3bPteA0487MnfHCMWO2aH4M4
-	6SkEZPT8OIbnbE0ApKxfpBMg+btdleOYccXBTBOmCHwmk8Vir/ICVrI+xLg0wsmdfno9szb9REX82
-	bXrHrX4I052gJ5MbypmltQuTLI5lmLEeQO82xh4r16qass3aGDbroz2KotRx5j0T4B594M1mr47xS
-	e60xKho9x6E+kx9j1Pxk41VitI0p60SeP0JJEpGHYTrv6BMrdixfZHlFQu4580J38EDEMBP5nJAqB
-	wVTopkQQ==;
+	bh=qDh2ssTVh7WPcnLxh1UUgBjhIzyN5CLUw8IZbvq/w08=; b=x2qObWBb4Ijlo5MuS2XFLeOnAt
+	yWDu0jwmrungjfBO+ZgL5eUL3VTg4Eakj2zSQ8ZHNnTowy4PPvbExJX1F/lre/3COZMXJv3/NfLlo
+	0F+DhWEYveMlmEW4SzbpqJas5sDrZ6WeL2ndRfjLEx+BznyqkTceBpTDuK/t4gVGsp1WEFd/0mMLz
+	WqNLQfZPORBl2hSp+81EDdhb/ZYuFVo5sTYHRrK0kM4bpXRV99t0bPIJW67RWr4fHY9v4cUvXEQWH
+	ug2dhXfs+MVGu9t1+OY23C5ynNhTMALdj3OtpVG3PcGTmCZlIhoRwKWjEd0Cp2tKWBHlEOyipwuRG
+	vJEznzZQ==;
 Received: from 2a02-8389-2341-5b80-2b91-e1b6-c99c-08ea.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:2b91:e1b6:c99c:8ea] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1svJTl-00000000GZZ-17YQ;
-	Mon, 30 Sep 2024 16:42:33 +0000
+	id 1svJTo-00000000GcK-1pNz;
+	Mon, 30 Sep 2024 16:42:36 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/7] xfs: error out when a superblock buffer updates reduces the agcount
-Date: Mon, 30 Sep 2024 18:41:45 +0200
-Message-ID: <20240930164211.2357358-5-hch@lst.de>
+Subject: [PATCH 5/7] xfs: don't use __GFP_RETRY_MAYFAIL in xfs_initialize_perag
+Date: Mon, 30 Sep 2024 18:41:46 +0200
+Message-ID: <20240930164211.2357358-6-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240930164211.2357358-1-hch@lst.de>
 References: <20240930164211.2357358-1-hch@lst.de>
@@ -49,29 +49,29 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-XFS currently does not support reducing the agcount, so error out if
-a logged sb buffer tries to shrink the agcount.
+__GFP_RETRY_MAYFAIL increases the likelyhood of allocations to fail,
+which isn't really helpful during log recovery.  Remove the flag and
+stick to the default GFP_KERNEL policies.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_recover.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/libxfs/xfs_ag.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 03701409c7dcd6..3b5cd240bb62ef 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3343,6 +3343,10 @@ xlog_recover_update_agcount(
- 	int				error;
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 8fac0ce45b1559..29feaed7c8f880 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -289,7 +289,7 @@ xfs_initialize_perag(
+ 		return 0;
  
- 	xfs_sb_from_disk(&mp->m_sb, dsb);
-+	if (mp->m_sb.sb_agcount < old_agcount) {
-+		xfs_alert(mp, "Shrinking AG count in log recovery");
-+		return -EFSCORRUPTED;
-+	}
- 	error = xfs_initialize_perag(mp, old_agcount, mp->m_sb.sb_agcount,
- 			mp->m_sb.sb_dblocks, &mp->m_maxagi);
- 	if (error) {
+ 	for (index = old_agcount; index < new_agcount; index++) {
+-		pag = kzalloc(sizeof(*pag), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++		pag = kzalloc(sizeof(*pag), GFP_KERNEL);
+ 		if (!pag) {
+ 			error = -ENOMEM;
+ 			goto out_unwind_new_pags;
 -- 
 2.45.2
 
