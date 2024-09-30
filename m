@@ -1,68 +1,57 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D91E21373
-	for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 22:53:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37DE421373;
+	Mon, 30 Sep 2024 22:58:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727736820; cv=none; b=aayQ/VrNDsZY34k4hgIubdOvutnliaGIQjeZx7PO4kyaU69M8m9hmnvpeKthHqrCBTBnsqScQsvFtNvi1IviSoB4tLu5ubA8OfyAnomnOTmawpUE4WWwsoXxIsKusRgj13ZKkgt46AUYU6JDRfI9NY8/y0SDQD0WM+/OfEvRWEA=
+	t=1727737123; cv=none; b=lb0O8PM6pyXbScmUtxqZrqbEk82QGlrbEx0cKesCq7mbO3JS//8D0+reg7NaTqiBq4jW5WnMDN0xLnCLDjcJRjbQFMHsiFWxbeS5fG+rFZTh4vXyq1fLN/TA5zTeh8MWLYC9E37prCXaS1ZaIRvCWKk8KxFuAn2j663DtPaOkDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727736820; c=relaxed/simple;
-	bh=J3rvnH3FdvtJ5wDpJKLxH3H4+FhnCYXfdxLwv3Q6jQo=;
+	s=arc-20240116; t=1727737123; c=relaxed/simple;
+	bh=MFG/hKEGiIm7gD4UtzPR9o5FvknYmjbixdWJbVryyLQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ENrBFCuZME8kaS6aRxdbw6sp3Yp94rChCf2IQWxQP6f7HJ1gTewIhbBLYfadASw0AoMv2RDbdQ4gAO1R47LptECTQMNkTyUQY1Qp0dB5b4bqeR8ooWeA5tEKer177ZmWBP49V/0tpkYbl4Lt+FUiajcJlOo6X5s9XBpJPLbgrbg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ov85AWO/; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=i2nBDvT0FcTtiCai7eLfDBrAzVS56Dlvnf5ba9laSvlJzs36PSSAPgMhmlmtn/lVxIYNTWfUsrqROcIDPSE6VOBpzdYAz/1i2QMW+qoisDsbGAx/HIOkToRSMW0yo3Ug4OTTVnUdzuLHSDiGMUKPAq0BUyXfMSNJ3DFtJYmiUA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AmK8S4jc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ov85AWO/"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-20ba733b6faso5267135ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2024 15:53:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727736818; x=1728341618; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pgp5JKh5leY7tqoP1ESqMVgnos2B4G5hEQe2yB61B94=;
-        b=ov85AWO/ihqNiIwSzjZxOlijQDUg/6oIlOnas87mlLb7T1WMdbUBuUTCYiR4oll1dS
-         mdjyJ5s4hpveQtL4dhKmHrtAn+sCeO7rh6eX6+E3OAtKDWiAoMaJKTHUgOu85FCAaZTO
-         zz/W8eAwduNB+5dWn9lDeiT3SNYT+BMQ2fC9XicFxklglqy2L3G+VuSMavnRU7tm5kjU
-         GZVo95hAYCJ1SFZ0tIxi/PtFepzCbKDMmsmRf4yRD6JrrHzirGuRKtXoW6YilaV9QRVX
-         FQJgq0HdhBzEjirMNPtwFz+5jcpZIHACLSxELeNu3pNpyDvLHx22fhUzjBSXjvMBKNvz
-         xRpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727736818; x=1728341618;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Pgp5JKh5leY7tqoP1ESqMVgnos2B4G5hEQe2yB61B94=;
-        b=RGXGL56qCPfo7Y/VDOcHU4IWzXRKZWVWOcyWZb6xZg+dOXvL3fi9OeQncRYPN98Am+
-         mDYiYmWlm/QSsFDbJc7KMBtZK4SBs3106KRFzZsTgQ4z7iWX/f+9po/s9e3RTP4zKvAe
-         wHx2WzB0i5bOpF0QQDmcmYxV/4OZjUYMqmgyUKf0SI+3vkXPOE8mNjNPmypuIoDFG5ak
-         kDOKYvfU58JzvNsv5aOTIu8YVAOJTB0wDy+yEoNqC4/C4vaGN9Vg6tajqSGm5J4gxXzB
-         91pyyJ95aftcZau+VMYBOEYJBS7kesAqZM3FPG5cS+pTt05Pj7ffnD8bOVOkECGsXj1F
-         q4mQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWz1irsm2oderTT63kdLlqi90lhm6jUOY4zxBA67IiUcbZmXPZCN5TOXGtyLDRCokehztZTkKbOP1g=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxTCo1vqKkEdLIi80xOfMNws1uxV3tstGvWTH2hVpNj8/zEqeXK
-	RLH9kvwnrbmjiXwIZFCJln5q42drCDUnmOU7Ca9FcqFOfshZXn0iyQmHPtxh4ihLd8/nhhq+RCb
-	8
-X-Google-Smtp-Source: AGHT+IEF8BEkk0IN+81hYa2ZOkh8wLYdy6mi8kdrGn30rQ6f6oZX06lZ9QaDRhKWfAXT2N9xyRUEdA==
-X-Received: by 2002:a17:902:ecd0:b0:20b:51f0:c82e with SMTP id d9443c01a7336-20b51f0ccd2mr150153965ad.51.1727736818492;
-        Mon, 30 Sep 2024 15:53:38 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20b37e4e54dsm59215095ad.249.2024.09.30.15.53.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Sep 2024 15:53:38 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1svPGp-00CFN1-1y;
-	Tue, 01 Oct 2024 08:53:35 +1000
-Date: Tue, 1 Oct 2024 08:53:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Fix circular locking during xfs inode reclamation
-Message-ID: <Zvsr76vifZeNDArE@dread.disaster.area>
-References: <20240930034406.7600-1-laoar.shao@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AmK8S4jc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 946CFC4CEC7;
+	Mon, 30 Sep 2024 22:58:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727737122;
+	bh=MFG/hKEGiIm7gD4UtzPR9o5FvknYmjbixdWJbVryyLQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AmK8S4jcmacgW3nxCQGf39B6DLurLzrRW2UoNTUquIt9BYul23uLhgSQF4pSjXlxV
+	 SqJfazNTX3FjcWVBLBds7K5/NA9xZGt7Dppv9Ure8AW6fPs70mhaKT9bvFM3M8iHks
+	 Ql/pAenPCrTGFr8Ptwhid1l5DT9b+QES/yVzszfJsyOOI1esnUCDooGmQmYUgy6U53
+	 2FrKs1em64GBX92a2ZcTDf7I2QJHWzgL/zpNMq8PtgQHcX2q9tz6raha/EtAbugzyv
+	 Zh68nAdAwsD4wKclyiyXCn1G3BRCwNSjc4Uqv1LmyzhZtOLNfWX88C5K+0of4z4M3a
+	 x8uOUhrp3hmqQ==
+Date: Mon, 30 Sep 2024 22:58:39 +0000
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+	Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>,
+	akpm@linux-foundation.org, Christian Brauner <brauner@kernel.org>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.cz>,
+	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+	cgroups@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, mcgrof@kernel.org,
+	gost.dev@samsung.com, linux-doc@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH] fs/writeback: convert wbc_account_cgroup_owner to take a
+ folio
+Message-ID: <ZvstH7UHpdnnDxW6@google.com>
+References: <20240926140121.203821-1-kernel@pankajraghav.com>
+ <ZvVrmBYTyNL3UDyR@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,71 +60,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240930034406.7600-1-laoar.shao@gmail.com>
+In-Reply-To: <ZvVrmBYTyNL3UDyR@casper.infradead.org>
 
-On Mon, Sep 30, 2024 at 11:44:06AM +0800, Yafang Shao wrote:
-> I encountered the following error messages on our test servers:
+On 09/26, Matthew Wilcox wrote:
+> On Thu, Sep 26, 2024 at 04:01:21PM +0200, Pankaj Raghav (Samsung) wrote:
+> > Convert wbc_account_cgroup_owner() to take a folio instead of a page,
+> > and convert all callers to pass a folio directly except f2fs.
+> > 
+> > Convert the page to folio for all the callers from f2fs as they were the
+> > only callers calling wbc_account_cgroup_owner() with a page. As f2fs is
+> > already in the process of converting to folios, these call sites might
+> > also soon be calling wbc_account_cgroup_owner() with a folio directly in
+> > the future.
 > 
-> [ 2553.303035] ======================================================
-> [ 2553.303692] WARNING: possible circular locking dependency detected
-> [ 2553.304363] 6.11.0+ #27 Not tainted
-> [ 2553.304732] ------------------------------------------------------
-> [ 2553.305398] python/129251 is trying to acquire lock:
-> [ 2553.305940] ffff89b18582e318 (&xfs_nondir_ilock_class){++++}-{3:3}, at: xfs_ilock+0x70/0x190 [xfs]
-> [ 2553.307066]
-> but task is already holding lock:
-> [ 2553.307682] ffffffffb4324de0 (fs_reclaim){+.+.}-{0:0}, at: __alloc_pages_slowpath.constprop.0+0x368/0xb10
-> [ 2553.308670]
-> which lock already depends on the new lock.
-
-.....
-
-> [ 2553.342664]  Possible unsafe locking scenario:
+> I was hoping for more from f2fs.  I still don't have an answer from them
+> whether they're going to support large folios.  There's all kinds of
+> crud already in these functions like:
 > 
-> [ 2553.343621]        CPU0                    CPU1
-> [ 2553.344300]        ----                    ----
-> [ 2553.344957]   lock(fs_reclaim);
-> [ 2553.345510]                                lock(&xfs_nondir_ilock_class);
-> [ 2553.346326]                                lock(fs_reclaim);
-> [ 2553.347015]   rlock(&xfs_nondir_ilock_class);
-> [ 2553.347639]
->  *** DEADLOCK ***
+>         f2fs_set_bio_crypt_ctx(bio, fio->page->mapping->host,
+>                         page_folio(fio->page)->index, fio, GFP_NOIO);
 > 
-> The deadlock is as follows,
+> and this patch is making it worse, not better.  A series of patches
+> which at least started to spread folios throughout f2fs would be better.
+> I think that struct f2fs_io_info should have its page converted to
+> a folio, for example.  Although maybe not; perhaps this structure can
+> carry data which doesn't belong to a folio that came from the page cache.
+> It's very hard to tell because f2fs is so mind-numbingly complex and
+> riddled with stupid abstraction layers.
+
+Hah, I don't think it's too complex at all tho, there's a somewhat complexity to
+support file-based encryption, compression, and fsverity, which are useful
+for Android users. Well, I don't see any strong needs to support large folio,
+but some requests exist which was why we had to do some conversion.
+
 > 
->     CPU0                                  CPU1
->    ------                                ------
-> 
->   alloc_anon_folio()
->     vma_alloc_folio(__GFP_FS)
->      fs_reclaim_acquire(__GFP_FS);
->        __fs_reclaim_acquire();
-> 
->                                     xfs_attr_list()
->                                       xfs_ilock()
->                                       kmalloc(__GFP_FS);
->                                         __fs_reclaim_acquire();
-> 
->        xfs_ilock
-
-Yet another lockdep false positive. listxattr() is not in a
-transaction context on a referenced inode, so GFP_KERNEL is correct.
-The problem is lockdep has no clue that fs_reclaim context can only
-lock unreferenced inodes, so we can actualy run GFP_KERNEL context
-memory allocation with a locked, referenced inode safely.
-
-We typically use __GFP_NOLOCKDEP on these sorts of allocations, but
-the long term fix is to address the lockdep annotations to take
-reclaim context into account. We can't do that until the realtime
-inode subclasses are removed which will give use the spare lockdep
-subclasses to add a reclaim context subclass. That is buried in the
-middle of a much large rework:
-
-https://lore.kernel.org/linux-xfs/172437087542.59588.13853236455832390956.stgit@frogsfrogsfrogs/
-
--Dave.
-
-
--- 
-Dave Chinner
-david@fromorbit.com
+> But I don't know what the f2fs maintainers have planned.  And they won't
+> tell me despite many times of asking.
