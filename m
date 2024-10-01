@@ -1,35 +1,30 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9014319B587;
-	Tue,  1 Oct 2024 08:43:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9591619D88A
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Oct 2024 08:47:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727772189; cv=none; b=qvKHXQ382OX62swoKxgdSOE6dOBNhGsssIZEVxFAZDavddeHrIQ+35iLrGI61Rdmn3OT0D1gHkJ6zTlv1yb4R3atu86IQlytD2Xn7oYMveDpxlP5kzPkFjfhd/MHXKRwACtovycLTYXHNA8S1UDFGfk6gsKjuoEz/Wq15Dijs0o=
+	t=1727772477; cv=none; b=VBUY1Ja7Ri5UUndFG8qxzm6K2zIrQ6TFfaL7Cbd59Lcbf0z+9ngqbz5dODb57b/0eDTQ4EhCe5hdCm6M/zQ8VNzc7u17aXu/tKRO+qMJRT+eNfGbjiSG1z2ilNXrLZRhW4PwDEZ6FzP27oOZup4QSG+COwAvMeV+uDvjG20JbGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727772189; c=relaxed/simple;
-	bh=47m0NuQueB2uxpcTSyYqVnsgzJVO7bg0RTDz2umFsAA=;
+	s=arc-20240116; t=1727772477; c=relaxed/simple;
+	bh=VSk/z5jJ/PAt+2tOMqbR+w/S7Zwhgpsy1y8k/JU7VUM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c4dM7S88C965e3Jfy9CfkZ+jJf9aeGY1lLvA3nFVoQEVMsYDrJH1L+PM36RhhyugQnC2yhgDBTZjRsCrLHlph044DkXsZnhIDwtlH8YINk53Lup/H4F4BVop9Yswo07LzKNQefGXKKIHghzk42NsOHIz/Jj6gf/uBPz8WQ8QY4s=
+	 Content-Type:Content-Disposition:In-Reply-To; b=fCCRDD4H7AsZvdwmXrXrWqKk18ZOJ6SOi2hOydZeHiRrXyVWLhIk8EI/Time7XZmS/rWiI/EkN5/VrllXlG+QfEs8Lu0Xl3jidIqh6LqQu1E8tkABm5aRuBDv2IhUNeSbAAVEKUFZBY/3lAYRQKq5JGu5yMfPWI0Z3RS0QJvY7o=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 0CBED227AAE; Tue,  1 Oct 2024 10:43:03 +0200 (CEST)
-Date: Tue, 1 Oct 2024 10:43:02 +0200
+	id AE24D227AAE; Tue,  1 Oct 2024 10:47:51 +0200 (CEST)
+Date: Tue, 1 Oct 2024 10:47:51 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
-	brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
-	dchinner@redhat.com, hch@lst.de, cem@kernel.org,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	hare@suse.de, martin.petersen@oracle.com,
-	catherine.hoang@oracle.com, mcgrof@kernel.org,
-	ritesh.list@gmail.com, ojaswin@linux.ibm.com
-Subject: Re: [PATCH v6 5/7] xfs: Support atomic write for statx
-Message-ID: <20241001084302.GD20648@lst.de>
-References: <20240930125438.2501050-1-john.g.garry@oracle.com> <20240930125438.2501050-6-john.g.garry@oracle.com> <20240930163716.GO21853@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/7] xfs: error out when a superblock buffer updates
+ reduces the agcount
+Message-ID: <20241001084750.GA21122@lst.de>
+References: <20240930164211.2357358-1-hch@lst.de> <20240930164211.2357358-5-hch@lst.de> <20240930165116.GT21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,24 +33,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240930163716.GO21853@frogsfrogsfrogs>
+In-Reply-To: <20240930165116.GT21853@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Sep 30, 2024 at 09:37:16AM -0700, Darrick J. Wong wrote:
-> Ok, so we're only supporting untorn writes if they're exactly the fs
-> blocksize, and 1 fsblock is between awu_min/max.  That simplifies a lot
-> of things. :)
+On Mon, Sep 30, 2024 at 09:51:16AM -0700, Darrick J. Wong wrote:
+> On Mon, Sep 30, 2024 at 06:41:45PM +0200, Christoph Hellwig wrote:
+> > XFS currently does not support reducing the agcount, so error out if
+> > a logged sb buffer tries to shrink the agcount.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Not supporting sub-fsblock atomic writes means that we'll never hit the
-> directio COW fallback code, which uses the pagecache.
+> Looks good,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > 
-> Not supporting multi-fsblock atomic writes means that you don't have to
-> figure out how to ensure that we always do cow on forcealign
-> granularity.  Though as I pointed out elsewhere in this thread, that's a
-> forcealign problem.
+> /me notes that cem is the release manager now, not chandan.  Patches
+> should go to him.
+> 
+> /me updates his scripts
 
-It does simplify things a lot, and is probably a good idea for
-the initial version.  But I suspect support for atomic writes
-smaller than the block size will be really useful and we should
-eventually support them, but maybe now on reflinked files or
-alwayscow.
+Yeah, it'll be a while until all old cover letters are updated :)
+
