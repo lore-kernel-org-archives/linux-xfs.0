@@ -1,263 +1,143 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90717191F81
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Oct 2024 18:28:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727807337; cv=fail; b=UEpXR1pXvSqNFX0dUbjVbUEdzuO4s8xCm0ucF7cXYiM2qHFtCeTYvBLqXq1eZna5jjlCF9yrOn1pKXv0Aa+Xk4ZUTyiUwbC3UlaZTJR4nn2XZZakZSYTUgKSlqy0knTuRSs4LYthZBLt1GyrihUyjGTpCjoYcfyBgvwpj5MqshI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727807337; c=relaxed/simple;
-	bh=+EuVvDqraPzzOkGaNPEcN6gyKBoWHJkD8RE5bYVoMdw=;
-	h=From:To:Subject:Date:Message-Id:Content-Type:MIME-Version; b=bk4EWFqo+o6Lp/K5545hqq1uPm+A6mqQk2aWB58ekh64Y9dcF0yC1112lioJzd+jJUDNeONmIBh7owAsrCy+U/XNfgdVPgrexM2kQPUZr4l3vtFbk9pgg2emvCA+Etr8Vxx9GeC44GvXjHhUm5vfsLZHOP3b/+xI6FdsN7T5spY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=GUwNh5fR; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=KkhNiaah; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D42114B972;
+	Tue,  1 Oct 2024 21:10:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1727817040; cv=none; b=uvY0s/2Kyv8GAz5oT8IUhS0B77UIdAdZ1KIF1GshFAsg4Y42k2KOrNdezJkbozi+APt5UXJkM9mOutAO+1frQDRUB5Eq+GvxDoAdKFBaYfN6ockU4B3t4dpdsWWCh/eR6DqyPhhsoSqDNRdHBTiYROC/XJI8NZWI76rhnCqlCV0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1727817040; c=relaxed/simple;
+	bh=BdLPaNlX/F3gzkLxlYzljybqQgCh1CZlleMAH3/NzJA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VyEv0zt22UyABkfHXCyzY5oIknqfdRsewP23oaPtCmDkDaxFjFpGilr12uUD9PsDUEhMSZkBjeFkux19QhiDj/zY+BidKsKJQcAWPlNNdp5IHsL7VSOp25087pQAJTd25/Nb+vwe4KMkkVCgW9bCqJ2SEYo8YpFDlzqUF++mwTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CLgn3b9K; arc=none smtp.client-ip=209.85.208.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GUwNh5fR";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="KkhNiaah"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 491HMZcf017541
-	for <linux-xfs@vger.kernel.org>; Tue, 1 Oct 2024 18:28:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	from:to:subject:date:message-id:content-transfer-encoding
-	:content-type:mime-version; s=corp-2023-11-20; bh=npDFlY5rKeuvTK
-	L0l5MLvSbVZCpWl5H2NSGp43ZkDkQ=; b=GUwNh5fRuMD9AYK7W5UhcJxc9ONRpb
-	l3CYzVZwlKW0rhMGNelLkQ5nLKv+RCSnbYcVok2XdaOtOswnuWdEgol+K4EU6ak6
-	5G0K4skE1PRBdJ2hGDjVSg+K15GepzzUtQ/Rr6cjPDkLEs7fOIx9X5ULibJwFnLR
-	MsdjBQWvmyaPxcFB/l7S1bvpaRTl9UuPAOQ4Qrv1zea8ZIiE9OCrFejyzVF9naT2
-	n8yA0lCl6gOFI29OIMHKBER4pGGwAKpNXdS3D3FngyDhcrXqI2L9bzdf5iI9uiSu
-	mvRZhnccFeUUPV5ZE1XklhZPp/W77Qnrztd5CjMp7qumZgiTOM5aqePw==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41x8qb71ww-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Tue, 01 Oct 2024 18:28:54 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 491H8YQb026273
-	for <linux-xfs@vger.kernel.org>; Tue, 1 Oct 2024 18:28:53 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2175.outbound.protection.outlook.com [104.47.59.175])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 41x887yb3a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Tue, 01 Oct 2024 18:28:53 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XHlsKacxxegDYgV/W44TldxCu8QZqxgmRw2vLdVI2JtXS6tr0N3HNjxq6Aibv7nYH/x67lJEZPjTnR9cQ4O+RbJqH3sYRlMAREv8BRA07lHjSyDtaW4oOtgS8Zv4fYZ56/pC1zlyxjWN6C9jGGXdVdvI2gxtRkadxuXyGiToV+df6CdCZ7ZCmGBk0dDI6Y/yz8mxyK/eVF7HLNPwnik1V/Jxn8XGx6IgE/fO48LRIs5ajTzbHdP97w2q7bhZLhAKKuub3O6+9987twRqOKnaWfXKfKFCGSiD3mzaGJCJ0TUGZ2o60KctbxJG5LTAmPhMzzXyNP4by7NUq8ArFkE/NQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=npDFlY5rKeuvTKL0l5MLvSbVZCpWl5H2NSGp43ZkDkQ=;
- b=hFA7LoK+fjA1JWpzUlTvNHgW0VBgtSq4Spn7GVUfZXhrUozHYpfQtkMixPc4DmmL0BQx1Mw4A+BFpaFXNEDNAGBaIpeu0sVcn7yFTNML+a13TThWiHp3Xoae56XXIEjUfQwavPuKATRpfPHYachx4EkkQw4R1N56EE3mHYDHCE0JnrKcqvy6j7tXnVQu4agPSqDtSGBfvtn4p0EXZA5F+mrJnbpuVYZ5K35KHHphrFAgbJQXLt0Fdoq2fAYSPggu/Ae6AH379yEQ1V867M7zVd2Qzwx5lDV/6tWhsRQZpuICCwTJZ5cOSbm/7qhJphgTD9bjAwXZsECa/mL11Jwyjg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CLgn3b9K"
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2faccada15bso28636491fa.3;
+        Tue, 01 Oct 2024 14:10:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=npDFlY5rKeuvTKL0l5MLvSbVZCpWl5H2NSGp43ZkDkQ=;
- b=KkhNiaahz+hleClfZ8VBjtGBbeeepeJwWinkPDjECdpKZMxR6a/9JmBrlQFk32o+cK+VcUts5P4a5BP1aLfQnd5A6ok1BwbiqU3GlqyON6iIKajGf+1GAeUIOT8m+hAw3LchlHgEckweQziUclYjXSJFuabhmyWkzsZ9DDAQuD4=
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
- by LV3PR10MB7772.namprd10.prod.outlook.com (2603:10b6:408:1b4::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8026.15; Tue, 1 Oct
- 2024 18:28:51 +0000
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::a63b:c94b:7ed8:4142]) by BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::a63b:c94b:7ed8:4142%4]) with mapi id 15.20.8026.016; Tue, 1 Oct 2024
- 18:28:51 +0000
-From: Catherine Hoang <catherine.hoang@oracle.com>
-To: linux-xfs@vger.kernel.org
-Subject: [PATCH v1] xfs_io: add RWF_ATOMIC support to pwrite
-Date: Tue,  1 Oct 2024 11:28:49 -0700
-Message-Id: <20241001182849.7272-1-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.39.3 (Apple Git-146)
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0049.namprd03.prod.outlook.com
- (2603:10b6:a03:33e::24) To BLAPR10MB5316.namprd10.prod.outlook.com
- (2603:10b6:208:326::6)
+        d=gmail.com; s=20230601; t=1727817037; x=1728421837; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=j5FPHhbte4Tmc4ZuPG7hVMprQvRDLf4/a9y4DExRTII=;
+        b=CLgn3b9KoSx9JIAdndd0qu5wGcg/6R4xE0JJJWHm3hYT7fHVTwpv2UbZDk6QFhqQ5z
+         qCFq+K/UsssncG5hieEIqSui913bI5MwRgRjdy7DxdYZg1vEaFQpTx3XUm02AvA8/NOL
+         6nKmxML9RPR8VOMp7BPkoC49urkG5ruColaQQRo1G/OwitDFgCp15YYA4XQtyyWA0edh
+         bwy+UWbgZUafvH4Htuc+8Dlu1y+2yYvKdKsCD+VD048C1ODs/YBBKrDQyis3A9O0aPN3
+         94wMwQhdF5cz2Uey+enmfo0+0NqU+PDaI2bGTi5RXxd2oTsjPJVVe34Qn7AepqxFT8BD
+         N4qQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727817037; x=1728421837;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=j5FPHhbte4Tmc4ZuPG7hVMprQvRDLf4/a9y4DExRTII=;
+        b=SwSHGP0feJ1qzJccy4YePLClZ2/H14zA4upYAkPMpW9mz4RoozF7ZNq7t2iXS+wDAa
+         B1QcSa7RoDwGMBgtQRc5N7ujE5r1ZRP11Ic1Zhzpf8mNDwXaHeQGypKtnqfZfPcKX+I0
+         bhN3ZwbN7IRnTvJP9y74t7I0Mp3WEybAtYsKeRR3oh4KmsoiwacaIOYih0q3Q4S2XJot
+         Rh9tUkshpVLd3ExzQI4BjDvEVZWmy7a/nDatruvuYcc5pHLgQc9JOTgIvwoQoxTtq6dP
+         ir4Y2gNz9ehGx53Ofce+QBR/ULw0y1QYrlKI9tDFT9gg7+aA9tpvAa3UjtdghkEBOiXF
+         ldOA==
+X-Forwarded-Encrypted: i=1; AJvYcCV9YkoWBif9GTfBcV5t7ZAk/OSPRFBkn8YueSErk2UC1i1sv+GNfljRiWVJI+TtmbDdHX/BRRBW8oGe@vger.kernel.org, AJvYcCXHMEpBT7rBMI/uAO/9dwOlfjVh/Ypaf9+Xdb4CQFOjAMaS0Ubm8hCUz2kKWYI6Ff3kbzahC5Y0fa/l+TcM@vger.kernel.org, AJvYcCXM0afpXGUmhICT0DuK7bhe0GNEUuyNEmgDwfCFTmDvsANejPM0W5zkIBcAm7fre4D43PkvFlwZaZdYATMF@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxc5BIjiGD2SnclvtEoruDbfViQVcH1IY5h//vMrYlewnW6b/vI
+	X7uaRTePvrblI1g7Zmve3hOdFBx3AjsYg9fJ2mAdBBmvCLg+g/sUjOSP/Jcuc2PBrHfQSOGm9pf
+	mCEm+nskbWfDpTuMNVrk8ymqMNmM=
+X-Google-Smtp-Source: AGHT+IHyH38WiVX8HHUwc+OFQWovZwKbJEqW/O3u3XocYkPNvtQCAvFmTdZx0nP6F2Y0oSa7jC6KgiPT019755iLMPg=
+X-Received: by 2002:a2e:be9e:0:b0:2f7:6e3a:7c1d with SMTP id
+ 38308e7fff4ca-2fae1044cf5mr8284241fa.15.1727817036745; Tue, 01 Oct 2024
+ 14:10:36 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|LV3PR10MB7772:EE_
-X-MS-Office365-Filtering-Correlation-Id: 62edd1e6-0d1b-46d5-b0bf-08dce246e5c7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014|10070799003;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?bIIIGk1CDv7DDDwDDo8FnTH1Nhb9cpvGHc4anRNXi5nPq7xZbjHDKyOvjiJP?=
- =?us-ascii?Q?UVmaws2Vz11g6lTCerHp6mpJ0KCXYyCVwzznoo+9X3J3CSJyhyK5wAdyPUOX?=
- =?us-ascii?Q?1FUMH9Mkpghekml0qoFDi7Pl0CFN92LaWZvpzxtcePeD0640kaf0rrWQ2dci?=
- =?us-ascii?Q?LnKjnHBSoo58yIxMxwrgK2oC43Jqs5fX7lwwLAzW6x2/xc2USBEN2tlqViF1?=
- =?us-ascii?Q?+1UVqY0uDJqfxKAuaKse50eQ9zCVd16scWS6j4JExBdtupLtTyaB/Q6bg0bz?=
- =?us-ascii?Q?SNIn2eRgV9Zhk7K7w+sUScpXhYbtkudEAQcYgznFMDWSD/wk/7QV1HbesRxA?=
- =?us-ascii?Q?kBTIVsJxLIp6ws6ol9IrZpzcixkCT2YJh65s0ow26IbXNYKSxYKZDi1Fwcpi?=
- =?us-ascii?Q?GXkCvV/BQgcONgUsCSPjE3Ht9Lzs6rDyrEON7V/oB1hUAgHdFXkjl7JMvUxu?=
- =?us-ascii?Q?EiK8aiGA333kWL6kXjHFXLHsNV6SGXzJLnC0+MD/Xg5dP3EjtTaZF+gbuD6q?=
- =?us-ascii?Q?hXlX8RPD8KUlqQZaaCfMx8TovdAWSzDXpGt0EcSeak1dlTZVP7XKj1hiV4Jg?=
- =?us-ascii?Q?SR4YQDPaUyMR7r8bKh1bj9C3xkz24Ze+B8qSvutQDh356rrxf60eTdOJ6hIN?=
- =?us-ascii?Q?2sqr3Jnxf8UtRX4h/jzayLpwYe5JQsJqa8Vqfe+wC/63Cg1rU1Vc8adZMRGW?=
- =?us-ascii?Q?CSt6BedXuZu7dRHs65Wcu1bbfToBRKiSl0VTAaDGuFcP2Y3l45cPrYPtJC8d?=
- =?us-ascii?Q?Ark+ozv6vp+v2CAYWa1gmRJ5ALPkQlxXhcgKL/XVGHgv0fuv6CcFEIg3j4Hi?=
- =?us-ascii?Q?3oQch2OcogzTZn1v6NKsssGa+bD9+6f0xa9rMdHJsZKEyiqrxFldz3TioM+r?=
- =?us-ascii?Q?63XlcTp8T3+dYLYmmqaCYbtJRKI0jDXEP3hW9TTXWzsRFI8+6SuXacFYmQcq?=
- =?us-ascii?Q?2R45OJnfYPqWugSXlriH+iM4a5tlyZ1vhUNRMJ0qGbZc6hvq79lvCkIYSc1L?=
- =?us-ascii?Q?CKIN0LZn2Ie+aJAdVOhl/0AUHyOfSg2RLjI6bdWbyV9GHrs14zxWw17OdA9c?=
- =?us-ascii?Q?J4s/BDYrT7srAJkWVrk3vjg1mCevcOHm3xymY9d3VBLM6GADWjUBc3pK4ITJ?=
- =?us-ascii?Q?BNiIzhn4rZMIGnML6YM9v9MfKcqz8EH0ekUlq+uXIuo+DXq8y5TOavSHf92y?=
- =?us-ascii?Q?4TXK/wYUcOrAowlX8t4dwyLajTG6tNlbvjVMdUIluGWqNs0l+pSeNBH3Epaw?=
- =?us-ascii?Q?RIy1OMclk3C/cjB6Xi1CCMgChiNMl5hzrcCRP5pyZX+hDpSL3pw6teRdtHGT?=
- =?us-ascii?Q?qLhUSf5brjEwd0Yd3b4eMd3q9s+OI1xCEqBCp77X669yxg=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(10070799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?F97UrYXFCHww8vTWwtY9RzmIObasm29VWR20PQd+JAZzZtYCP0B+gxL1OO/1?=
- =?us-ascii?Q?IybfXIqEcl87Nk256kk326K8rrbnewKqScQB4z+5SGHkfbe8/hGv8sBAaXyi?=
- =?us-ascii?Q?LPGYuWzi5HtEcJBX3Y4jZ5yShU6o/hlnm8B92M44FmPFFEscbHXWa5iYp+iG?=
- =?us-ascii?Q?CpcK3C70KeMV2N8oXX49Fmp7mIZj82R/BTodLbxcMTFxo691sGxGBNaZBgdO?=
- =?us-ascii?Q?aWF+/G1NqyYifhqiKKGmh7+DvInkN26WDY7QCHF3pAgXq4J4vVkyN3Y/Q0a3?=
- =?us-ascii?Q?fpYn0LOFvv2Tqd/jnK50ZaFrH8yNlN2AnfkyqABv6d9IZ+ZARq3lMevZc5Kn?=
- =?us-ascii?Q?chve1DQ+hhi2Zt7NVZx0EhncX8crQRV/r/2OzF7qJ/XZcR2wB9frVmhHHlOq?=
- =?us-ascii?Q?jQnIrBHlj+tgcc7VtHfxO5QX8LXbtH/u3tdEeoMvdfhqk49CzLa9Yr6pgrd1?=
- =?us-ascii?Q?1ph/ourlFJTCdgGhaSreWJuAzm1e8N2cdWDDABylAxngRp8bJYHamCWDE6Yk?=
- =?us-ascii?Q?SQtJX7CsUX/kwOSQ14XlxqYjDoJvPrI3GiR1w2dawfigrxzFhrtEhRdOxUD7?=
- =?us-ascii?Q?a/b8RoKoIRTOWpR9M/gXk9kg3d6o4/H5ueG+bj/4z4kXIJFbAvh0Y4mvQGk0?=
- =?us-ascii?Q?Gp4kp4mSgTmPytRqmky8LQ5nNaWZnXbHxTkfNMarog9II9OMuqctFQmVyVik?=
- =?us-ascii?Q?rmwd38ITPNShOdKguaEa69FH2DYr+3297lxqUERw/DHlo+UqiazeQEeesehx?=
- =?us-ascii?Q?O17D06x/qJif+X5wcqv04PzWzPiU5zuc4G7GoaESrHPUfxN1ee4AxaK/FRTW?=
- =?us-ascii?Q?m4Tih/YpfBllEHT8aHvfyqsHTK93w8oOHQUZLUJ1bxw5FESgwLG7EAvcstYc?=
- =?us-ascii?Q?GbRyl+mML1lKTDoY4SUcjIE8agVuc7RiOcVH+zG/wrZNCBWw2auugLB1KfvR?=
- =?us-ascii?Q?xoDxvKHMKtFP3qGlQ7J7bCjwGq52glF0w++C98xoSR805OFxBd7+8XXtPezj?=
- =?us-ascii?Q?OnrzvRR91ZpmPNvecolyoFHF+UMek0tnYn9zz14Jdwbax7KEKOUHZX0CYwEn?=
- =?us-ascii?Q?oorW5lZuYa++LqYlBK09HNzNhpKcihDXSKlD03jnlxMVY1LSBQkJtj9Tcc2b?=
- =?us-ascii?Q?EIkBan06fW7Uv3HfObPj3PaLkIh16ZP+HmHjrLqQmYhaTBGkq+/EB+QzFq0u?=
- =?us-ascii?Q?7ODN6SWLYzCGUn8DPB2XuPtjGbYE/dSqEfxp5N3F0FJ3flHCDdfTp/se1feK?=
- =?us-ascii?Q?Kj/wp4cKnOSa+w+zPcgA2aFZbg7vMlBYRAOcoarQoSwH8MqTbFkZzW0Ok2ud?=
- =?us-ascii?Q?F9TQXcVpxD/c8bMrEA9XMGRpQWTPrQQH9+HvmTgPuzmLwHD4G3WrIksjAUt5?=
- =?us-ascii?Q?cBjquFlhLhntgzyykh5YixRA1iUh/ekzUgAvyahxae4YL5jnnxceStl9TITt?=
- =?us-ascii?Q?4klqZNJ8Cm/j4g9MrfUh10F95RFk3eu33NDTtAAoEFygSupZrRrkco2+o1X9?=
- =?us-ascii?Q?r9/r06jyenl913HfWvlNoW0e3x6Ucn8wL5Q5joWkFwdOUgqdVeDvvQqYG6Ay?=
- =?us-ascii?Q?yZz2vJ1yJ1pqnPPw/BXYEZAgWQTmnnHVsqyo35mrYsE/o5PB5mjjoR4afzmN?=
- =?us-ascii?Q?okHxc7E1dt6oiFIeXkH2TqZ/hc7c++kBeG+kJwbOSMiBto6TMwA5Blgdj9QU?=
- =?us-ascii?Q?8U3LLA=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	Tr0C7eeokDEAbHQCFQaW+810pRxoeFmMA0pyv3V/FV7MFm1YNyQS1BymonzUE1VxO5nUS+lFad7HI5x158/jRBL57dTyfDU/21P9jysVwyhAZ8EVFgVmpRqPmA2cqMPSsoljXw7QNH2jQNAAwqmEbpo5QAkI8t/YL1/8LSP1ncPXrIV1hpCocZanmEhJGV19VA3avX/DnblFuTpoK4uonRqHuc5PFS7K9Gqpcm5bx9Pgrcxh+Gw/VplocqBfJrLiW40Ta9uLZ3b0EN7fiezFykU0inCbIIsnKNeBVw8X+CYQpK7gnD2TEFAHCiDwUGAUwFCY2G0Da8BijEsRIbFlNMKUju7lWoSfrRb3psh6xAJ0tDEVJEAtjKSzw9GIUvmm6it9eua1eCzbby1DMJyAI5FI+NJ2G3R5YYx46ZrY2+bB95+Qzh5zYab0qfDB+9cwQyQwUgmu3nxCN/TNNumMLZ0s4OZGfUtnxtIl4piKLetFrUTxYY4zWdKVqLCwIeyORj76GuZsLLQSfBwrj0vM2+jSup3b9kAAEPlUQ+v4GZCa5B6+DTiTB5QbmLBeXRW2amct4k+vO2BSEtDHAQ48pahPReOiEGvl+4LQKRQ5q8g=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 62edd1e6-0d1b-46d5-b0bf-08dce246e5c7
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2024 18:28:51.1341
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YECiLUAIcyGCjsU/CSPSlHIhsv/WX3rETTvW/8aWZSpz8HVrl5LGCrEle2pPNfdcSx3dV6xiMAXA+8Fqs+ZZwvQJ/ULJOSvecrxO7V9cKyk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR10MB7772
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-01_14,2024-09-30_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 suspectscore=0
- malwarescore=0 mlxlogscore=999 phishscore=0 spamscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2408220000
- definitions=main-2410010120
-X-Proofpoint-GUID: 8O3kvOLqSiOvvSA7ltXLDIOFkUOQg4Aa
-X-Proofpoint-ORIG-GUID: 8O3kvOLqSiOvvSA7ltXLDIOFkUOQg4Aa
+References: <0a3b09db-23e8-4a06-85f8-a0d7bbc3228b@meta.com>
+ <87plotvuo1.fsf@gentoo.org> <CAMgjq7A3uRcr5VzPYo-hvM91fT+01tB-D3HPvk6_wcx3pq+m+Q@mail.gmail.com>
+ <87y13dtaih.fsf@gentoo.org> <0bdce668-5711-4315-ab05-1a3492cb8bf6@kernel.dk>
+In-Reply-To: <0bdce668-5711-4315-ab05-1a3492cb8bf6@kernel.dk>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Wed, 2 Oct 2024 05:10:20 +0800
+Message-ID: <CAMgjq7DMWGyXDdf86tkZ=1N6CnFQza4xzRhZXcw1j1WQXWBn=g@mail.gmail.com>
+Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
+ folios since Dec 2021 (any kernel from 6.1 upwards)
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Sam James <sam@gentoo.org>, Greg KH <gregkh@linuxfoundation.org>, stable@kernel.org, 
+	clm@meta.com, Matthew Wilcox <willy@infradead.org>, ct@flyingcircus.io, david@fromorbit.com, 
+	dqminh@cloudflare.com, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, 
+	regressions@leemhuis.info, regressions@lists.linux.dev, 
+	torvalds@linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Enable testing write behavior with the per-io RWF_ATOMIC flag.
+On Fri, Sep 27, 2024 at 10:58=E2=80=AFPM Jens Axboe <axboe@kernel.dk> wrote=
+:
+>
+> On 9/27/24 8:51 AM, Sam James wrote:
+> > Kairui Song <ryncsn@gmail.com> writes:
+> >
+> >> On Wed, Sep 25, 2024 at 1:16?AM Sam James <sam@gentoo.org> wrote:
+> >>>
+> >>> Kairui, could you send them to the stable ML to be queued if Willy is
+> >>> fine with it?
+> >>>
+> >>
+> >> Hi Sam,
+> >
+> > Hi Kairui,
+> >
+> >>
+> >> Thanks for adding me to the discussion.
+> >>
+> >> Yes I'd like to, just not sure if people are still testing and
+> >> checking the commits.
+> >>
+> >> And I haven't sent seperate fix just for stable fix before, so can
+> >> anyone teach me, should I send only two patches for a minimal change,
+> >> or send a whole series (with some minor clean up patch as dependency)
+> >> for minimal conflicts? Or the stable team can just pick these up?
+> >
+> > Please see https://www.kernel.org/doc/html/v6.11/process/stable-kernel-=
+rules.html.
+> >
+> > If Option 2 can't work (because of conflicts), please follow Option 3
+> > (https://www.kernel.org/doc/html/v6.11/process/stable-kernel-rules.html=
+#option-3).
+> >
+> > Just explain the background and link to this thread in a cover letter
+> > and mention it's your first time. Greg didn't bite me when I fumbled my
+> > way around it :)y
+> >
+> > (greg, please correct me if I'm talking rubbish)
+>
+> It needs two cherry picks, one of them won't pick cleanly. So I suggest
+> whoever submits this to stable does:
+>
+> 1) Cherry pick the two commits, fixup the simple issue with one of them.
+>    I forget what it was since it's been a week and a half since I did
+>    it, but it's trivial to fixup.
+>
+>    Don't forget to add the "commit XXX upstream" to the commit message.
+>
+> 2) Test that it compiles and boots and send an email to
+>    stable@vger.kernel.org with the patches attached and CC the folks in
+>    this thread, to help spot if there are mistakes.
+>
+> and that should be it. Worst case, we'll need a few different patches
+> since this affects anything back to 5.19, and each currently maintained
+> stable kernel version will need it.
+>
 
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
----
- include/linux.h   | 5 +++++
- io/pwrite.c       | 8 ++++++--
- man/man8/xfs_io.8 | 8 +++++++-
- 3 files changed, 18 insertions(+), 3 deletions(-)
+Hi Sam, Jens,
 
-diff --git a/include/linux.h b/include/linux.h
-index a13072d2..e9eb7bfb 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -231,6 +231,11 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
- 
-+/* Atomic Write */
-+#ifndef RWF_ATOMIC
-+#define RWF_ATOMIC	((__kernel_rwf_t)0x00000040)
-+#endif
-+
- /*
-  * Reminder: anything added to this file will be compiled into downstream
-  * userspace projects!
-diff --git a/io/pwrite.c b/io/pwrite.c
-index a88cecc7..fab59be4 100644
---- a/io/pwrite.c
-+++ b/io/pwrite.c
-@@ -44,6 +44,7 @@ pwrite_help(void)
- #ifdef HAVE_PWRITEV2
- " -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
- " -D   -- Perform the pwritev2() with RWF_DSYNC\n"
-+" -A   -- Perform the pwritev2() with RWF_ATOMIC\n"
- #endif
- "\n"));
- }
-@@ -284,7 +285,7 @@ pwrite_f(
- 	init_cvtnum(&fsblocksize, &fssectsize);
- 	bsize = fsblocksize;
- 
--	while ((c = getopt(argc, argv, "b:BCdDf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
-+	while ((c = getopt(argc, argv, "Ab:BCdDf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
- 		switch (c) {
- 		case 'b':
- 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
-@@ -324,6 +325,9 @@ pwrite_f(
- 		case 'D':
- 			pwritev2_flags |= RWF_DSYNC;
- 			break;
-+		case 'A':
-+			pwritev2_flags |= RWF_ATOMIC;
-+			break;
- #endif
- 		case 's':
- 			skip = cvtnum(fsblocksize, fssectsize, optarg);
-@@ -476,7 +480,7 @@ pwrite_init(void)
- 	pwrite_cmd.argmax = -1;
- 	pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
- 	pwrite_cmd.args =
--_("[-i infile [-qdDwNOW] [-s skip]] [-b bs] [-S seed] [-FBR [-Z N]] [-V N] off len");
-+_("[-i infile [-qAdDwNOW] [-s skip]] [-b bs] [-S seed] [-FBR [-Z N]] [-V N] off len");
- 	pwrite_cmd.oneline =
- 		_("writes a number of bytes at a specified offset");
- 	pwrite_cmd.help = pwrite_help;
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 303c6447..1e790139 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -244,7 +244,7 @@ See the
- .B pread
- command.
- .TP
--.BI "pwrite [ \-i " file " ] [ \-qdDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
-+.BI "pwrite [ \-i " file " ] [ \-qAdDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
- Writes a range of bytes in a specified blocksize from the given
- .IR offset .
- The bytes written can be either a set pattern or read in from another
-@@ -281,6 +281,12 @@ Perform the
- call with
- .IR RWF_DSYNC .
- .TP
-+.B \-A
-+Perform the
-+.BR pwritev2 (2)
-+call with
-+.IR RWF_ATOMIC .
-+.TP
- .B \-O
- perform pwrite once and return the (maybe partial) bytes written.
- .TP
--- 
-2.34.1
+Thanks very much, currently maintained upstream kernels are
+6.10, 6.6, 6.1, 5.15, 5.10, 5.4, 4.19.
 
+I think only 6.6 and 6.1 need backport, I've sent a fix for these two,
+it's three checkpicks from the one 6.10 series so the conflict is
+minimal. The stable series can be applied without conflict for both.
