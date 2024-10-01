@@ -1,394 +1,302 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50B4536C;
-	Tue,  1 Oct 2024 13:20:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727788836; cv=none; b=YHVqL096iATi16J2kOOWKVVViooq8jm0IB05nl05cnsML7VG+zDw5wFDBm4PCCIlWIYX9hc9+pB2NEsFD3zMY3OcEBXcg4p1CQ5SqsKyGV+c0hqsoZQNklx7NzP9hJXkMMbBQlyTQj0RNVXEP/dZ/+L0s9K7el1dRoRDtOT4IyY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727788836; c=relaxed/simple;
-	bh=1ubil/7TxmeZD5hymJFMuAWIci6zBIUbEPBzgacDiNY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QpxZWFmMFlBUPOuUuCaZAbnkx49NsiB441ujLBcren1BUS6lUriaA4gwHX/ZODyOXaKolki/EG93DY9OGiYxdZd12CJAKx1zV/ZKgzJNUHZsWGsVlueB8Noc8/SXHY6Pq7hZfDGHlO+Tv7UMaudtVaN/3yMuUd2B4O656BWsT6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=xIV3S/+L; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+R3f1HAg; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=xIV3S/+L; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+R3f1HAg; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95361C2DD6;
+	Tue,  1 Oct 2024 13:23:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1727788989; cv=fail; b=ogSWVJgVLEkDRIVPAUteEGUucquEMm7jrqEafAP5meQIV2CyLdmcC0PhZnBlaY5RldqErKHJm9tBXHYLt4wG4NotXcySaujbxr3TpNqG0wHIVlEUxO0xcplZapwvZZWWaWqzZCG/IypCOI7tRR/PNrOODYmfr2oHiMPsowu640M=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1727788989; c=relaxed/simple;
+	bh=kDtDOKIfetDC4RtJkBw7z6DzRG1y7hY4Bb/45rusS44=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=nDz3LgmjJoxACFRyZ8HQhMMJBOGLhJ4xqb61Ra1u+G4IcRqAd2IKQ6wYAkaZ+KyNG73unl+K2MoHuxdyMS8+b3BCH6GuNPqJui6hPmUoVzKVV5lKYzvF8Bw3oxNrNvFju7stO/StqU2XRyWY5F3ux58d6RWdAxWFdNMzBbDE0RY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SvBfY+jE; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=DB+gsiSr; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="xIV3S/+L";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+R3f1HAg";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="xIV3S/+L";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+R3f1HAg"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 3787F1FCD5;
-	Tue,  1 Oct 2024 13:20:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1727788832; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oTHUTx26u1Zm7t+hO3jWr5zq9TUpeNIsYN8Z7Hb7OSs=;
-	b=xIV3S/+LwfzEYtIDCydLw+Wy/yUwjtVxzZA6yTqRJceVGe3a43oyQm+LI7e5nkwu7721zB
-	Eh8Is2beSc0kbmu2HypHxSXVgPjHFxBjDdr/RZ7tx/6ZD9438fer6uSed9f/6nUsdU0fpO
-	RHOAL+cGiPEToGudOqEooTTnVclvQF0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1727788832;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oTHUTx26u1Zm7t+hO3jWr5zq9TUpeNIsYN8Z7Hb7OSs=;
-	b=+R3f1HAgINp9IR2Q8zdasbBUQ60FRy2PlwzItyuOYH6S9jY3OkdWlF3glpvyRr7v5QI3w/
-	UEppUOtDZEVJrwDA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="xIV3S/+L";
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=+R3f1HAg
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1727788832; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oTHUTx26u1Zm7t+hO3jWr5zq9TUpeNIsYN8Z7Hb7OSs=;
-	b=xIV3S/+LwfzEYtIDCydLw+Wy/yUwjtVxzZA6yTqRJceVGe3a43oyQm+LI7e5nkwu7721zB
-	Eh8Is2beSc0kbmu2HypHxSXVgPjHFxBjDdr/RZ7tx/6ZD9438fer6uSed9f/6nUsdU0fpO
-	RHOAL+cGiPEToGudOqEooTTnVclvQF0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1727788832;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oTHUTx26u1Zm7t+hO3jWr5zq9TUpeNIsYN8Z7Hb7OSs=;
-	b=+R3f1HAgINp9IR2Q8zdasbBUQ60FRy2PlwzItyuOYH6S9jY3OkdWlF3glpvyRr7v5QI3w/
-	UEppUOtDZEVJrwDA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1C73713A73;
-	Tue,  1 Oct 2024 13:20:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 0wjrBiD3+2a4CwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 01 Oct 2024 13:20:32 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id A0DA2A0881; Tue,  1 Oct 2024 15:20:27 +0200 (CEST)
-Date: Tue, 1 Oct 2024 15:20:27 +0200
-From: Jan Kara <jack@suse.cz>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: John Stultz <jstultz@google.com>, Thomas Gleixner <tglx@linutronix.de>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
-	Hugh Dickins <hughd@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [PATCH v8 02/12] fs: add infrastructure for multigrain timestamps
-Message-ID: <20241001132027.ynzp4sahjek5umbb@quack3>
-References: <20241001-mgtime-v8-0-903343d91bc3@kernel.org>
- <20241001-mgtime-v8-2-903343d91bc3@kernel.org>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SvBfY+jE";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="DB+gsiSr"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 491D5a1G025631;
+	Tue, 1 Oct 2024 13:22:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=FvcJFrj1SEmQVQzz6y6b1Seb51DId/gotYqDGi+i0KY=; b=
+	SvBfY+jEYVpttZPhw996nNKqdHpLNinUiOSiX+tDTp0awtqTeSB1kwWowslhPDXD
+	JN2Q9RFaizrDjolDfUdD20dON5ouN+PiiM84RHP3ELgF9j+jzkoxWL8BOX4xBG+a
+	5Syyqcp1/2XknP+M3beSLB6ki28SedMaG6CKcQGmXOKnpPdUmp2/3WYBwt/hHdLm
+	2XWFrXrRZSfEGgtNkFr5UKUiqBFobJgbQ137QZPJ81ZwLI3/Qqd2GutHC1GrfoXQ
+	5Cuj8vKwnstmfv6csD5tQIGbD52cl/gxSGCv7TpqMrys0kuxBwNl3H/0DDsPdza+
+	walM2QGliRMYBCjMI0a5Vw==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41x8d1e7r9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 01 Oct 2024 13:22:36 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 491ChVE7017372;
+	Tue, 1 Oct 2024 13:22:35 GMT
+Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2046.outbound.protection.outlook.com [104.47.74.46])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 41x887gesw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 01 Oct 2024 13:22:35 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=RfswBkATd3Gq13pJ/4kZ9PZI8w1ea1pequBVutFfVfMGz7N8pcuv+6C5RbMRd4J21d1031Ui4o8cxmwHn47h8RyEy6iD9wb9jo+vhddm3tSlv1S+h6QVc6I8y/NgZmiSbZMVPqh0r4jby7pYBy/B8PLyFv+5QPHvb2znxJRyRhMOQJjGisR4YOLQwXumUdSAa2igNVv5p2VkZRIhpI/Mq/VQXF4MHgoKR5suOdVOSKVyoum4WfVMVE2J4kWOHbYVTw2kThOnaPl0UM8wLQSwYXb4VPMwh5MYAvu7jmsubdGUMkmbjyVQd50jHDD4J4HoDpfxdev/n3h3f+M0uweBVg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=FvcJFrj1SEmQVQzz6y6b1Seb51DId/gotYqDGi+i0KY=;
+ b=U3eai5GlUOFj6AhZr2ZfG8GG617YtX1NeCNdpiPXZHZnziKuEsKGi4uo7Sm+qchEWQIOFQlHXLXUp0HLAhkpzCNbmgQwjENdO2cz7D0z+jurnVzZPm2OLy4MgkBAAIVmS75NBTo9TObjgtV6XiBlKrBChBmHti8DMRagcaCPPYRLwveaUsOAEbvwj8GsAYUQdXmBRvcDrBQKh4Ud730zIfP3Pt7xiMhNDSnaQ+yi4BfoHTrQ8oPkkf3HdTjKfu384wBhsBeTQOJ3SgpkKnbex3hCG/4hzRqu1bYFeYH8FKrkYqBEuiGADHkH9TuwXgPGiqv9kIYaxyt+5kx3UsjQPA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FvcJFrj1SEmQVQzz6y6b1Seb51DId/gotYqDGi+i0KY=;
+ b=DB+gsiSrB1iZ82dnHAb0Daqzx6ZuuokE9TriJqqDCtFh2YbgPfzQo+9EtgHlnkGaZyKjZFwdWj/dpo0YM6vO5+4Mnnskcr+vuF5T5XmRzmREw40YSLvvABZhsBmgc3Rvdw65ZIRU/eGGS3TGTFX3eAzkSnkyXBLIl+5q75GogPg=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by SJ0PR10MB6301.namprd10.prod.outlook.com (2603:10b6:a03:44d::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8026.14; Tue, 1 Oct
+ 2024 13:22:28 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%3]) with mapi id 15.20.8026.005; Tue, 1 Oct 2024
+ 13:22:28 +0000
+Message-ID: <7fa598f5-3920-4b13-9d15-49337688713f@oracle.com>
+Date: Tue, 1 Oct 2024 14:22:23 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 6/7] xfs: Validate atomic writes
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
+        dchinner@redhat.com, hch@lst.de, cem@kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hare@suse.de,
+        martin.petersen@oracle.com, catherine.hoang@oracle.com,
+        mcgrof@kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com
+References: <20240930125438.2501050-1-john.g.garry@oracle.com>
+ <20240930125438.2501050-7-john.g.garry@oracle.com>
+ <20240930164116.GP21853@frogsfrogsfrogs>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240930164116.GP21853@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AM0PR02CA0162.eurprd02.prod.outlook.com
+ (2603:10a6:20b:28d::29) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241001-mgtime-v8-2-903343d91bc3@kernel.org>
-X-Rspamd-Queue-Id: 3787F1FCD5
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	MISSING_XM_UA(0.00)[];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[32];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,infradead.org:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
-	R_RATELIMIT(0.00)[to_ip_from(RLswiucb9kpekg6cnj18gdugi4)];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.01
-X-Spam-Flag: NO
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SJ0PR10MB6301:EE_
+X-MS-Office365-Filtering-Correlation-Id: 12f87ba2-e074-4249-b309-08dce21c18c1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|7416014|376014|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?WEFXQjRDYWdEQ0RodXE5Uy9RSHZsYUVvZytVWWV6eDQxRCt6eUhlOVVic29s?=
+ =?utf-8?B?WUsxQ2ViVGJ2SUxQSWFqSUdZWUk2dGc1TmpxVXI5L3F5aGFrd3dYb3Blc1dW?=
+ =?utf-8?B?cXdEYitpSmRhZHV3THVVSDg2QmRyaDVkdTJXdjc3N01MemwzYm5PMG5Md2J5?=
+ =?utf-8?B?bkhSZ0NianBMOFRBMTJGSjVuUDRPVmErUmhZSnVXN291ZkFsbTIwV1FBRXBR?=
+ =?utf-8?B?STUyM2Rrb0UrZnUwb3NuZk5RWjh6TWZGenQra3AxQVp5ZlA4Z1hIeitGTmFV?=
+ =?utf-8?B?b09iTkpPS0pjdERzak15ejI0QWFWUlY4MWc4UC9RUkhTN1F2STdKZEdMeW9R?=
+ =?utf-8?B?WHVwRjlGYU0rbW5KOURLSU82dlZhdk9rTnN2YWYvN0wySlkxTTlVdHJ6T1g1?=
+ =?utf-8?B?ZGthN3pYWnYxT0dtK1p4N0FTOWpLK05mQkFXMkhzM1c5V0RVQWpleVRUcjds?=
+ =?utf-8?B?NkxPZHQrMTdOaGtDN3lFbnRETmlia1hDbDRwdXM4MnBucTNsblBEVDdhVkhP?=
+ =?utf-8?B?NURML25RcHF0NVNyZjJhRysybFlnRFNCOFRwQ0RXVFBaKzlnZTFheXBLRm1H?=
+ =?utf-8?B?VXFHVVNyLzNybENNMVJobUZmamxlSC9TQng1SEdibkJIbjZqeGxuVjJZOWoz?=
+ =?utf-8?B?cFZuekJIRkpia0hYSjZleVZSNzZPK0ZDOEhZcXFXdTVvT1FzZXNVYTZFL1VS?=
+ =?utf-8?B?Z003WjhwcGR1TmdvSFd6SDdNVENjMHJsQ1YzRmM5dnE0TmUrN3hRa2tZdWhi?=
+ =?utf-8?B?R3k2Slg0T0x3bUZPRytoMi9nNktteFFac1krYUcxNU1FaUhrRDQvTU9ETnhk?=
+ =?utf-8?B?TjRqc2tSOWU5S0VGRHFGQ0RQVXB0ajZkaG1uSmEwR3pNbFg5Q2R3K3dJM2wr?=
+ =?utf-8?B?ZzRiQkI3TklnRGx5NnBGc0tPU2h4eFdtTzBmVEdpeW1CZjkrUW1JbnFYa1hx?=
+ =?utf-8?B?ZWZkN1ZucjFEbEZ4bGNWUzcvcGQwb0tYUVdGaXNJUWJXQlRXYVF1Rk1yT29N?=
+ =?utf-8?B?eE85NWFSM1J4NEc4OXNUbDh6ZFlhL2J3aXFlb1dqR3c0d0FuZ01TSFRXNnAv?=
+ =?utf-8?B?TlFZOEs1MnIya09lYjJQcEpjREVieXhQRG80ZEVFVUlpdkZBc0dTMmVsWEk4?=
+ =?utf-8?B?bGpOSlljTm8vTnovSndwcDdlSmJERXpBendOU2h4Sk1vMElTVUpLL05HSzFy?=
+ =?utf-8?B?ZGxELzV1RUxBZWs1ZldGOEw0RmZtclpSTzVIZTk2TGoyM0RRc3l4WUs0V2V4?=
+ =?utf-8?B?U3UrbTJ3UmNkaHBhL05CNXZ5NGZyVkJITU0wTElKbkVGWHBHVVdMMkhLUXhQ?=
+ =?utf-8?B?L2gvNW53U3g1WDhrT0tpVndNRlQ4cUlLWkZWZllOTFhlZlYvT0NBdUNaZlkv?=
+ =?utf-8?B?UUN1MUxHeGdrWjNEa0pvaFliQU5iRm51cUp3bVVOQXE3WFIxczFPbkgrRERs?=
+ =?utf-8?B?NlBBTkpPalJSbEZYSUJqSW9rMmdzelZXOFBSa0JOWkhLZHdHMFhBdlRoaHZk?=
+ =?utf-8?B?aDFPUllCbTJFTEQrcDFIaGkzNmNVQXdYOWFCQ29CUEN0ODFwcWJuc0p6dWVh?=
+ =?utf-8?B?R05UdVBsbTZIL0dCM2JGQjdTMWNlQVFkZ3NMUDBSN2pjT0s5RVAyMDJ1bkJs?=
+ =?utf-8?B?cEZtUUt6eEZPQiswR2ZHaE5XQ2I1Y0pHRHdUSm9WWDlpanhGOUlOTXlBZm5B?=
+ =?utf-8?B?SzBCK2NWM0hxZ3k5Y1pwYlVUWkdTU0pkTHRFd2tMWTIrVCtnSXhCZ0tnPT0=?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?UkF6VE9DVEwyVkdURWFwRGlDVjVpRElIZjExeGxhZ0pTWVlxczNTZGl5SHZV?=
+ =?utf-8?B?WC9MSHV0L0FuUWZWMVFicFlKdXhmU0VGNmhXU0ltVUxma1FvUkdEenFLbnpr?=
+ =?utf-8?B?a1hMV1R6STdiSkh0UXVDT1hLL2E1WUtBM1ZyeWpROFNYQ0FDS3Q2VVQrTEpa?=
+ =?utf-8?B?ejJtM29ua2tDZGcwVi9uejFRMXVXQk1KRmZqRTlkYXN2NmJWZWVUZnN6b2oy?=
+ =?utf-8?B?SFlGZG05TzlYTVZyMFZFeWtQUHI3RTM2UEpmeHlvZXZna012dnZXTDFobHRH?=
+ =?utf-8?B?QjZGOExNek9lbVNmR25yRmxKTFllSGtlMFR1VjN0dWk5Y3R6WFEwelAzbjRt?=
+ =?utf-8?B?a2pqTThXdVVPLzd0SlQ1YnhlanpKN24yc2xmRENDa25HZG1ZcGNJZGdsbjE2?=
+ =?utf-8?B?THdCNytwMGE4T3hVdVZDblhKTXNtTUd1a0EvdlppdERNWForT0xNdWJGVndy?=
+ =?utf-8?B?Q3VhcFlTczFtaDdHaTVaZStRdlcvbkNaTlpmeXE2OFIrcDc4SVdndFRuKys4?=
+ =?utf-8?B?c0NqS0tkYTN1K2ZvQ2I1VGVmTlY2VlEwWGJqNDVYWC9oUFcwVlA1dytPdjJX?=
+ =?utf-8?B?Z1p6cS9La3BqeUxjNWxDUUdQaHlKK0N6d2VDQWFRN1lYRktrdVJranJUWG5k?=
+ =?utf-8?B?Szg5ejA5MDNhbU5iTDlUOTkvTzNYeHpIbXVPS1dYTzI4azNidzlsbHBlMVdt?=
+ =?utf-8?B?WWlManBCR25kT1BqSUJUV0pXVWM2aS8xdWp5bHFnZmRJaDhqSzR4VnZVRVFS?=
+ =?utf-8?B?OVplNDZNQ2t1MTgrZGFxL3RlckdxdXB4bVFxRzVaclg5ZzBUcTVDWWtCcTcr?=
+ =?utf-8?B?dC96NktPekwwNWJOczJieXJJWFVpQVYveFI5ZXY1dW85VUUwbWYwMUcxYS9I?=
+ =?utf-8?B?VUVzTG1DRHZYMkQ2UUpjbFB3RUM5MS9IUW9sZFJ0RmtCc3g2cHhZSUk2WUtI?=
+ =?utf-8?B?OFlaY1lPbGJkTmNpbllpQW05RW1BSlNyWXcwYVZOczhwMGNiSlIvVUFJcmVm?=
+ =?utf-8?B?dGQvRVpKcTZVN2FDYlNuOVNJb3VaZHpRc1l0SWZKTTBpd0JCa2lQNmVGUE55?=
+ =?utf-8?B?Mk1PSmlGbndPSVNMYVM3OFR3NTRFaTk3c28wWnZuMmZ6UTQvZlZpWVZ3Tzgy?=
+ =?utf-8?B?UjdubmpubDQrTzNYK1U4UmMzbDdWdE9EaWlnd3k0QWUrdDhzRzRRTEdUZmR1?=
+ =?utf-8?B?WG5JSjdoOXhpdTYxZ2s1Q09FN2l5amFyaVVycllXVFpXSnhHc0lDbUhIb2wz?=
+ =?utf-8?B?dTViNGNtT3JrNEhWYWRrdXpaZXVLNVdIUXJXR1ZBdDlHNW8zQStEeXR5UmlE?=
+ =?utf-8?B?UmYwb1pkaEllL0QwSWVZTHhQbVZEOW1VWEhxZ1RwVVFOUVc4bE1MblNyZDV3?=
+ =?utf-8?B?T0xPL2t2Q1ZlQzNITGcrR2JVdmtkV3lJZ29IM3V2WDhlbnhyVXJ1eWpzc3ZW?=
+ =?utf-8?B?NUZVYW9ra3I3TXFoR3U5aGZDbnFsYkxqeEh3bS9JWFBudllLWldPVVhMT3Zn?=
+ =?utf-8?B?SWhuYUNhd2xkQ0l2K0hIM0c4dy94U0NyTjk5YXdveFVhQ2JEWUNORTE3K2ZE?=
+ =?utf-8?B?SXQ5cEphelpLT01BMjZ4SjVKRStCME5RMkhuM1BiQlU5dmVldjhHT2xMZFIx?=
+ =?utf-8?B?Zm9XSGtjQnpVRjdTa0QwZzFsMFB6WGRITlVuZDQ1bUtpdkpjRFB3WG5jNmZr?=
+ =?utf-8?B?VStqRzRtUW1rVUZtZ2VuQVNRZ3grYmNpT2pvNjNYNDd2cnVncnRFaUZUem9P?=
+ =?utf-8?B?cGpEdWRQZXBXaDZlVFJtN1B5SENhQ1AzZnhoV1pXZ0ZnK0dJNDVKL21JV0hN?=
+ =?utf-8?B?U2hCcGJscm1LSFMzQnptMlBCZVJyODZGcGk3RU1xcHk1R2svTXZ5MHRETEVG?=
+ =?utf-8?B?OTlBL05NaTlrUGYycVdhZ2ozTFg3ME9RemVISkhWcWd1SXRWRXdhc3VicXEz?=
+ =?utf-8?B?eTh6UHQxRlhhTFFUazJOdmdMc0lxV2lHRzJkS3VQR2gvMUZrUUlrR1dON0Ji?=
+ =?utf-8?B?U1o1a09yOU5ZMU5PY1ZZdDR4V3AyRzFPWE1mUG1xMVNpeUh0RTljckNHajR0?=
+ =?utf-8?B?eDVJVnFHdTMwSkE0MkR6anFxTU1mK2Q4ZkJIMktpdWUzL21sbWx0YUE2M2F6?=
+ =?utf-8?Q?1in3Evo6CoC4SShOYORN+q1cO?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	3ChrETXICpXrDCBfhY/O4uTp/lYhqjphv3kkeNJgTOOLFBEnjXaiudiZSYe9wUnPCD2ckNHcol62AgufXyraND5pX4R7VvG2RWm5XwpAOSJkjnkh9kctMLuwolEoQVKOrHSKHiztTS8y5gDE1DA6QWVZmbUyo4A1UwLb2YGaAgD8dez62PwleuArTD0dlsNqL6fEBwsPoyzy9s0XJeBNFSjfySbCrcYXmJ0XDi+rZj+9VTWTumqQWWqiORkl/9253aWOJLDOUb1e0B04M6hhsSoLzh5vCutR/LrQW3FWyHuv6RRwZU8CaHByY7hSXygcQLx01swQ1WlytpSTR7qlssZ1ukAePjvbfDs1pnfr3rGNbFf5JM/s3tBrNi2pxVxmeYB7JN2h2y0epOl7d9CEHizcTVvLsezLq0oZDfrUfFeuUmdzroHRu+BHnMa2C7CZOmUL8m8ZSaDmX2EJOIJBrI2rIyMQb4lgj1QlhfYjVNVYxH5KuudTr8xzuLLr9v7qA56H+UBOYAK23HuiZnixWxnXOGekldionK/WaHI6V+coIKqgfZf6ZCJNC5RLfGa6lXrItm//vSOHmP7rfqZSwZDTELPUr27/qUuoIyAkZks=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 12f87ba2-e074-4249-b309-08dce21c18c1
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2024 13:22:28.4711
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qXWzielIYDMAEpjKEQCwB/3EkQlxf//5IQxwGCF0tbbb3VsnuxPyAqMVZADz2ykKpTuV6P41X97PJ6HeTQegwQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB6301
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-01_09,2024-09-30_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 suspectscore=0
+ bulkscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2408220000
+ definitions=main-2410010085
+X-Proofpoint-ORIG-GUID: JKcpKTLjJrH9E5GB26acZXJgJFztBc8v
+X-Proofpoint-GUID: JKcpKTLjJrH9E5GB26acZXJgJFztBc8v
 
-On Tue 01-10-24 06:58:56, Jeff Layton wrote:
-> The VFS has always used coarse-grained timestamps when updating the
-> ctime and mtime after a change. This has the benefit of allowing
-> filesystems to optimize away a lot metadata updates, down to around 1
-> per jiffy, even when a file is under heavy writes.
+On 30/09/2024 17:41, Darrick J. Wong wrote:
+> On Mon, Sep 30, 2024 at 12:54:37PM +0000, John Garry wrote:
+>> Validate that an atomic write adheres to length/offset rules. Currently
+>> we can only write a single FS block.
+>>
+>> For an IOCB with IOCB_ATOMIC set to get as far as xfs_file_dio_write(),
+>> FMODE_CAN_ATOMIC_WRITE will need to be set for the file; for this,
+>> ATOMICWRITES flags would also need to be set for the inode.
+>>
+>> Signed-off-by: John Garry <john.g.garry@oracle.com>
+>> ---
+>>   fs/xfs/xfs_file.c | 7 +++++++
+>>   1 file changed, 7 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index 412b1d71b52b..fa6a44b88ecc 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -688,6 +688,13 @@ xfs_file_dio_write(
+>>   	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
+>>   	size_t			count = iov_iter_count(from);
+>>   
+>> +	if (iocb->ki_flags & IOCB_ATOMIC) {
+>> +		if (count != ip->i_mount->m_sb.sb_blocksize)
+>> +			return -EINVAL;
+>> +		if (!generic_atomic_write_valid(iocb, from))
+>> +			return -EINVAL;
+>> +	}
 > 
-> Unfortunately, this has always been an issue when we're exporting via
-> NFSv3, which relies on timestamps to validate caches. A lot of changes
-> can happen in a jiffy, so timestamps aren't sufficient to help the
-> client decide when to invalidate the cache. Even with NFSv4, a lot of
-> exported filesystems don't properly support a change attribute and are
-> subject to the same problems with timestamp granularity. Other
-> applications have similar issues with timestamps (e.g backup
-> applications).
+> Does xfs_file_write_iter need a catch-all so that we don't fall back to
+> buffered write for a directio write that returns ENOTBLK?
 > 
-> If we were to always use fine-grained timestamps, that would improve the
-> situation, but that becomes rather expensive, as the underlying
-> filesystem would have to log a lot more metadata updates.
+> 	if (iocb->ki_flags & IOCB_DIRECT) {
+> 		/*
+> 		 * Allow a directio write to fall back to a buffered
+> 		 * write *only* in the case that we're doing a reflink
+> 		 * CoW.  In all other directio scenarios we do not
+> 		 * allow an operation to fall back to buffered mode.
+> 		 */
+> 		ret = xfs_file_dio_write(iocb, from);
+> 		if (ret != -ENOTBLK || (iocb->ki_flags & IOCB_ATOMIC))
+> 			return ret;
+> 	}
 > 
-> What we need is a way to only use fine-grained timestamps when they are
-> being actively queried. Use the (unused) top bit in inode->i_ctime_nsec
-> as a flag that indicates whether the current timestamps have been
-> queried via stat() or the like. When it's set, we allow the kernel to
-> use a fine-grained timestamp iff it's necessary to make the ctime show
-> a different value.
-> 
-> This solves the problem of being able to distinguish the timestamp
-> between updates, but introduces a new problem: it's now possible for a
-> file being changed to get a fine-grained timestamp. A file that is
-> altered just a bit later can then get a coarse-grained one that appears
-> older than the earlier fine-grained time. This violates timestamp
-> ordering guarantees.
-> 
-> To remedy this, keep a global monotonic atomic64_t value that acts as a
-> timestamp floor.  When we go to stamp a file, we first get the latter of
-> the current floor value and the current coarse-grained time. If the
-> inode ctime hasn't been queried then we just attempt to stamp it with
-> that value.
-> 
-> If it has been queried, then first see whether the current coarse time
-> is later than the existing ctime. If it is, then we accept that value.
-> If it isn't, then we get a fine-grained timestamp.
-> 
-> Filesystems can opt into this by setting the FS_MGTIME fstype flag.
-> Others should be unaffected (other than being subject to the same floor
-> value as multigrain filesystems).
-> 
-> Tested-by: Randy Dunlap <rdunlap@infradead.org> # documentation bits
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> IIRC iomap_dio_rw can return ENOTBLK if pagecache invalidation fails for
+> the region that we're trying to directio write.
 
-Mostly looks good. Some smaller comments below.
+I see where you are talking about. There is also a ENOTBLK from 
+unaligned write for CoW, but we would not see that.
 
-> +/**
-> + * current_time - Return FS time (possibly fine-grained)
-> + * @inode: inode.
-> + *
-> + * Return the current time truncated to the time granularity supported by
-> + * the fs, as suitable for a ctime/mtime change. If the ctime is flagged
-> + * as having been QUERIED, get a fine-grained timestamp, but don't update
-> + * the floor.
-> + *
-> + * For a multigrain inode, this is effectively an estimate of the timestamp
-> + * that a file would receive. An actual update must go through
-> + * inode_set_ctime_current().
-> + */
-> +struct timespec64 current_time(struct inode *inode)
-> +{
-> +	struct timespec64 now;
-> +	u32 cns;
-> +
-> +	ktime_get_coarse_real_ts64_mg(&now);
-> +
-> +	if (!is_mgtime(inode))
-> +		goto out;
-> +
-> +	/* If nothing has queried it, then coarse time is fine */
-> +	cns = smp_load_acquire(&inode->i_ctime_nsec);
-> +	if (cns & I_CTIME_QUERIED) {
-> +		/*
-> +		 * If there is no apparent change, then get a fine-grained
-> +		 * timestamp.
-> +		 */
-> +		if (now.tv_nsec == (cns & ~I_CTIME_QUERIED))
-> +			ktime_get_real_ts64(&now);
-> +	}
-> +out:
-> +	return timestamp_truncate(now, inode);
-> +}
-> +EXPORT_SYMBOL(current_time);
-> +
->  static int inode_needs_update_time(struct inode *inode)
->  {
-> +	struct timespec64 now, ts;
->  	int sync_it = 0;
-> -	struct timespec64 now = current_time(inode);
-> -	struct timespec64 ts;
->  
->  	/* First try to exhaust all avenues to not sync */
->  	if (IS_NOCMTIME(inode))
->  		return 0;
->  
-> +	now = current_time(inode);
-> +
->  	ts = inode_get_mtime(inode);
->  	if (!timespec64_equal(&ts, &now))
-> -		sync_it = S_MTIME;
-> +		sync_it |= S_MTIME;
->  
->  	ts = inode_get_ctime(inode);
->  	if (!timespec64_equal(&ts, &now))
-> @@ -2598,6 +2637,15 @@ void inode_nohighmem(struct inode *inode)
->  }
->  EXPORT_SYMBOL(inode_nohighmem);
->  
-> +struct timespec64 inode_set_ctime_to_ts(struct inode *inode, struct timespec64 ts)
-> +{
-> +	set_normalized_timespec64(&ts, ts.tv_sec, ts.tv_nsec);
-> +	inode->i_ctime_sec = ts.tv_sec;
-> +	inode->i_ctime_nsec = ts.tv_nsec;
-> +	return ts;
-> +}
-> +EXPORT_SYMBOL(inode_set_ctime_to_ts);
-> +
->  /**
->   * timestamp_truncate - Truncate timespec to a granularity
->   * @t: Timespec
-> @@ -2630,36 +2678,75 @@ struct timespec64 timestamp_truncate(struct timespec64 t, struct inode *inode)
->  EXPORT_SYMBOL(timestamp_truncate);
->  
->  /**
-> - * current_time - Return FS time
-> - * @inode: inode.
-> + * inode_set_ctime_current - set the ctime to current_time
-> + * @inode: inode
->   *
-> - * Return the current time truncated to the time granularity supported by
-> - * the fs.
-> + * Set the inode's ctime to the current value for the inode. Returns the
-> + * current value that was assigned. If this is not a multigrain inode, then we
-> + * set it to the later of the coarse time and floor value.
->   *
-> - * Note that inode and inode->sb cannot be NULL.
-> - * Otherwise, the function warns and returns time without truncation.
-> + * If it is multigrain, then we first see if the coarse-grained timestamp is
-> + * distinct from what we have. If so, then we'll just use that. If we have to
-> + * get a fine-grained timestamp, then do so, and try to swap it into the floor.
-> + * We accept the new floor value regardless of the outcome of the cmpxchg.
-> + * After that, we try to swap the new value into i_ctime_nsec. Again, we take
-> + * the resulting ctime, regardless of the outcome of the swap.
+But I was thinking to use a common helper to catch this, like 
+generic_write_checks_count() [which is called on the buffered IO path]:
 
-This comment seems outdated now. No floor in this function anymore...
+----8<-----
 
-> -struct timespec64 current_time(struct inode *inode)
-> +struct timespec64 inode_set_ctime_current(struct inode *inode)
->  {
->  	struct timespec64 now;
-> +	u32 cns, cur;
-...
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 32b476bf9be0..222f25c6439c 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1774,6 +1774,10 @@ int generic_write_checks_count(struct kiocb 
+*iocb, loff_t *count)
+  	if (!*count)
+  		return 0;
 
-> diff --git a/fs/stat.c b/fs/stat.c
-> index 41e598376d7e..381926fb405f 100644
-> --- a/fs/stat.c
-> +++ b/fs/stat.c
-> @@ -26,6 +26,35 @@
->  #include "internal.h"
->  #include "mount.h"
->  
-> +/**
-> + * fill_mg_cmtime - Fill in the mtime and ctime and flag ctime as QUERIED
-> + * @stat: where to store the resulting values
-> + * @request_mask: STATX_* values requested
-> + * @inode: inode from which to grab the c/mtime
-> + *
-> + * Given @inode, grab the ctime and mtime out if it and store the result
-						 ^^ of
++	if (iocb->ki_flags & IOCB_ATOMIC &&
++	    !(iocb->ki_flags & IOCB_DIRECT))
++		return -EINVAL;
++
+  	if (iocb->ki_flags & IOCB_APPEND)
+  		iocb->ki_pos = i_size_read(inode);
 
-> + * in @stat. When fetching the value, flag it as QUERIED (if not already)
-> + * so the next write will record a distinct timestamp.
-> + */
-> +void fill_mg_cmtime(struct kstat *stat, u32 request_mask, struct inode *inode)
-> +{
+---->8-----
 
-Given how things worked out in the end, it seems this function doesn't need
-to handle mtime at all and we can move mtime handling back to shared generic
-code?
+But we keep the IOCB_DIRECT flag for the buffered IO fallback (so no good).
 
-> +	atomic_t *pcn = (atomic_t *)&inode->i_ctime_nsec;
-> +
-> +	/* If neither time was requested, then don't report them */
-> +	if (!(request_mask & (STATX_CTIME|STATX_MTIME))) {
-> +		stat->result_mask &= ~(STATX_CTIME|STATX_MTIME);
-> +		return;
-> +	}
-> +
-> +	stat->mtime = inode_get_mtime(inode);
-> +	stat->ctime.tv_sec = inode->i_ctime_sec;
-> +	stat->ctime.tv_nsec = (u32)atomic_read(pcn);
-> +	if (!(stat->ctime.tv_nsec & I_CTIME_QUERIED))
-> +		stat->ctime.tv_nsec = ((u32)atomic_fetch_or(I_CTIME_QUERIED, pcn));
-> +	stat->ctime.tv_nsec &= ~I_CTIME_QUERIED;
-> +}
-> +EXPORT_SYMBOL(fill_mg_cmtime);
-> +
->  /**
->   * generic_fillattr - Fill in the basic attributes from the inode struct
->   * @idmap:		idmap of the mount the inode was found from
-> @@ -58,8 +87,14 @@ void generic_fillattr(struct mnt_idmap *idmap, u32 request_mask,
->  	stat->rdev = inode->i_rdev;
->  	stat->size = i_size_read(inode);
->  	stat->atime = inode_get_atime(inode);
-> -	stat->mtime = inode_get_mtime(inode);
-> -	stat->ctime = inode_get_ctime(inode);
-> +
-> +	if (is_mgtime(inode)) {
-> +		fill_mg_cmtime(stat, request_mask, inode);
-> +	} else {
-> +		stat->ctime = inode_get_ctime(inode);
-> +		stat->mtime = inode_get_mtime(inode);
-> +	}
-> +
->  	stat->blksize = i_blocksize(inode);
->  	stat->blocks = inode->i_blocks;
->  
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index e3c603d01337..23908bad166c 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1653,6 +1653,17 @@ static inline struct timespec64 inode_set_mtime(struct inode *inode,
->  	return inode_set_mtime_to_ts(inode, ts);
->  }
->  
-> +/*
-> + * Multigrain timestamps
-> + *
-> + * Conditionally use fine-grained ctime and mtime timestamps when there
-> + * are users actively observing them via getattr. The primary use-case
-> + * for this is NFS clients that use the ctime to distinguish between
-> + * different states of the file, and that are often fooled by multiple
-> + * operations that occur in the same coarse-grained timer tick.
+Another option would be:
 
-Again, mtime seems unaffected by mgtime changes now.
+----8<-----
 
-> + */
-> +#define I_CTIME_QUERIED		((u32)BIT(31))
-> +
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -679,7 +679,12 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter 
+*iter,
+  			if (ret != -EAGAIN) {
+  				trace_iomap_dio_invalidate_fail(inode, iomi.pos,
+  								iomi.len);
+-				ret = -ENOTBLK;
++				if (iocb->ki_flags & IOCB_ATOMIC) {
++					if (ret == -ENOTBLK)
++						ret = -EAGAIN;
++				}else {
++					ret = -ENOTBLK;
++				}
+  			}
+  			goto out_free_dio;
+  		}
+---->8-----
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I suggest that, as other FSes (like ext4) handle -ENOTBLK and would need 
+to be changed similar to XFS. But I am not sure if changing the error 
+code from -ENOTBLK for IOCB_ATOMIC is ok.
+
+Let me know what you think about possible alternative solutions.
+
+Thanks,
+John
