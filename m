@@ -1,302 +1,325 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95361C2DD6;
-	Tue,  1 Oct 2024 13:23:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727788989; cv=fail; b=ogSWVJgVLEkDRIVPAUteEGUucquEMm7jrqEafAP5meQIV2CyLdmcC0PhZnBlaY5RldqErKHJm9tBXHYLt4wG4NotXcySaujbxr3TpNqG0wHIVlEUxO0xcplZapwvZZWWaWqzZCG/IypCOI7tRR/PNrOODYmfr2oHiMPsowu640M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727788989; c=relaxed/simple;
-	bh=kDtDOKIfetDC4RtJkBw7z6DzRG1y7hY4Bb/45rusS44=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=nDz3LgmjJoxACFRyZ8HQhMMJBOGLhJ4xqb61Ra1u+G4IcRqAd2IKQ6wYAkaZ+KyNG73unl+K2MoHuxdyMS8+b3BCH6GuNPqJui6hPmUoVzKVV5lKYzvF8Bw3oxNrNvFju7stO/StqU2XRyWY5F3ux58d6RWdAxWFdNMzBbDE0RY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SvBfY+jE; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=DB+gsiSr; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CFCCEEC5;
+	Tue,  1 Oct 2024 13:32:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1727789547; cv=none; b=n4614+MK8rmcjreLV2CKTZFDGz1mya1HVW+h0GDmGLxNADJxVE/VVRkMA2C0nlY7ba+9fQhtoa+lhP3TzbuJHvqf54Ov667qEAE3tNon9qxtcnCyeZtTCzgGmD3a4mc2aQn0icDZvIIXLEPYhRYUVh0SUA4Cqn0cbPb01mvFBV4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1727789547; c=relaxed/simple;
+	bh=HW2VSXeX/jBgYNRhPYF7a3Igw5CEPNBegW6vQHHcbU0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tyw4fZth/0ucL94Go2LLyUd1x5dMcfXJ6MChZo86rlL4DFRcQKI+hWyN7xeQIAcEG4QPYl8HMwcwGDYFtl0tRUcWEm+BfW3wV6EJW/KpDdnsGKEVs81RyjxUPCG6zIYVWMXFEFV2xJNtyWQWsDXSk2txA96zGckXE6yLWni7Z0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=rDj2Daeg; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=B1A5Czx/; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=rDj2Daeg; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=B1A5Czx/; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SvBfY+jE";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="DB+gsiSr"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 491D5a1G025631;
-	Tue, 1 Oct 2024 13:22:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=
-	corp-2023-11-20; bh=FvcJFrj1SEmQVQzz6y6b1Seb51DId/gotYqDGi+i0KY=; b=
-	SvBfY+jEYVpttZPhw996nNKqdHpLNinUiOSiX+tDTp0awtqTeSB1kwWowslhPDXD
-	JN2Q9RFaizrDjolDfUdD20dON5ouN+PiiM84RHP3ELgF9j+jzkoxWL8BOX4xBG+a
-	5Syyqcp1/2XknP+M3beSLB6ki28SedMaG6CKcQGmXOKnpPdUmp2/3WYBwt/hHdLm
-	2XWFrXrRZSfEGgtNkFr5UKUiqBFobJgbQ137QZPJ81ZwLI3/Qqd2GutHC1GrfoXQ
-	5Cuj8vKwnstmfv6csD5tQIGbD52cl/gxSGCv7TpqMrys0kuxBwNl3H/0DDsPdza+
-	walM2QGliRMYBCjMI0a5Vw==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41x8d1e7r9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 01 Oct 2024 13:22:36 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 491ChVE7017372;
-	Tue, 1 Oct 2024 13:22:35 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2046.outbound.protection.outlook.com [104.47.74.46])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 41x887gesw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 01 Oct 2024 13:22:35 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RfswBkATd3Gq13pJ/4kZ9PZI8w1ea1pequBVutFfVfMGz7N8pcuv+6C5RbMRd4J21d1031Ui4o8cxmwHn47h8RyEy6iD9wb9jo+vhddm3tSlv1S+h6QVc6I8y/NgZmiSbZMVPqh0r4jby7pYBy/B8PLyFv+5QPHvb2znxJRyRhMOQJjGisR4YOLQwXumUdSAa2igNVv5p2VkZRIhpI/Mq/VQXF4MHgoKR5suOdVOSKVyoum4WfVMVE2J4kWOHbYVTw2kThOnaPl0UM8wLQSwYXb4VPMwh5MYAvu7jmsubdGUMkmbjyVQd50jHDD4J4HoDpfxdev/n3h3f+M0uweBVg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FvcJFrj1SEmQVQzz6y6b1Seb51DId/gotYqDGi+i0KY=;
- b=U3eai5GlUOFj6AhZr2ZfG8GG617YtX1NeCNdpiPXZHZnziKuEsKGi4uo7Sm+qchEWQIOFQlHXLXUp0HLAhkpzCNbmgQwjENdO2cz7D0z+jurnVzZPm2OLy4MgkBAAIVmS75NBTo9TObjgtV6XiBlKrBChBmHti8DMRagcaCPPYRLwveaUsOAEbvwj8GsAYUQdXmBRvcDrBQKh4Ud730zIfP3Pt7xiMhNDSnaQ+yi4BfoHTrQ8oPkkf3HdTjKfu384wBhsBeTQOJ3SgpkKnbex3hCG/4hzRqu1bYFeYH8FKrkYqBEuiGADHkH9TuwXgPGiqv9kIYaxyt+5kx3UsjQPA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FvcJFrj1SEmQVQzz6y6b1Seb51DId/gotYqDGi+i0KY=;
- b=DB+gsiSrB1iZ82dnHAb0Daqzx6ZuuokE9TriJqqDCtFh2YbgPfzQo+9EtgHlnkGaZyKjZFwdWj/dpo0YM6vO5+4Mnnskcr+vuF5T5XmRzmREw40YSLvvABZhsBmgc3Rvdw65ZIRU/eGGS3TGTFX3eAzkSnkyXBLIl+5q75GogPg=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by SJ0PR10MB6301.namprd10.prod.outlook.com (2603:10b6:a03:44d::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8026.14; Tue, 1 Oct
- 2024 13:22:28 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%3]) with mapi id 15.20.8026.005; Tue, 1 Oct 2024
- 13:22:28 +0000
-Message-ID: <7fa598f5-3920-4b13-9d15-49337688713f@oracle.com>
-Date: Tue, 1 Oct 2024 14:22:23 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 6/7] xfs: Validate atomic writes
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
-        dchinner@redhat.com, hch@lst.de, cem@kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hare@suse.de,
-        martin.petersen@oracle.com, catherine.hoang@oracle.com,
-        mcgrof@kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com
-References: <20240930125438.2501050-1-john.g.garry@oracle.com>
- <20240930125438.2501050-7-john.g.garry@oracle.com>
- <20240930164116.GP21853@frogsfrogsfrogs>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20240930164116.GP21853@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM0PR02CA0162.eurprd02.prod.outlook.com
- (2603:10a6:20b:28d::29) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="rDj2Daeg";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="B1A5Czx/";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="rDj2Daeg";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="B1A5Czx/"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id BC9501F813;
+	Tue,  1 Oct 2024 13:32:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727789543; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EJyVh7xpKFUerqgpvOUGQtwMuhiG+vMZUA+eKVSBOeQ=;
+	b=rDj2Daegw8acNetwuj+igR8urk35s9IZ5Ei4I5Xxg1Hf1yqHsGh07lzo6akylF2rlreVuA
+	RBAeL6aZkGoF0vKutQUZhkX3qKm/b1/jlPlXDc2TU6/f+CeVzyg5lpcXpqHqMArMLoBpqB
+	v9XWD2kMJCRuN9Moac3CaUXQnIsYDQE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727789543;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EJyVh7xpKFUerqgpvOUGQtwMuhiG+vMZUA+eKVSBOeQ=;
+	b=B1A5Czx/JU851NEzyiwPym53Dc/Uk7kviKL8OOcS1KkhL/cvrtNrUAxf40xEk6CgQKiBQn
+	jRfTdeTqntkjpyCA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727789543; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EJyVh7xpKFUerqgpvOUGQtwMuhiG+vMZUA+eKVSBOeQ=;
+	b=rDj2Daegw8acNetwuj+igR8urk35s9IZ5Ei4I5Xxg1Hf1yqHsGh07lzo6akylF2rlreVuA
+	RBAeL6aZkGoF0vKutQUZhkX3qKm/b1/jlPlXDc2TU6/f+CeVzyg5lpcXpqHqMArMLoBpqB
+	v9XWD2kMJCRuN9Moac3CaUXQnIsYDQE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727789543;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EJyVh7xpKFUerqgpvOUGQtwMuhiG+vMZUA+eKVSBOeQ=;
+	b=B1A5Czx/JU851NEzyiwPym53Dc/Uk7kviKL8OOcS1KkhL/cvrtNrUAxf40xEk6CgQKiBQn
+	jRfTdeTqntkjpyCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AEA3713A73;
+	Tue,  1 Oct 2024 13:32:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id vHWbKuf5+2ZwDwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 01 Oct 2024 13:32:23 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 6A189A0881; Tue,  1 Oct 2024 15:32:19 +0200 (CEST)
+Date: Tue, 1 Oct 2024 15:32:19 +0200
+From: Jan Kara <jack@suse.cz>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: John Stultz <jstultz@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [PATCH v8 04/12] fs: handle delegated timestamps in
+ setattr_copy_mgtime
+Message-ID: <20241001133219.aenkpa5ydeefqqyd@quack3>
+References: <20241001-mgtime-v8-0-903343d91bc3@kernel.org>
+ <20241001-mgtime-v8-4-903343d91bc3@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SJ0PR10MB6301:EE_
-X-MS-Office365-Filtering-Correlation-Id: 12f87ba2-e074-4249-b309-08dce21c18c1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|7416014|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?WEFXQjRDYWdEQ0RodXE5Uy9RSHZsYUVvZytVWWV6eDQxRCt6eUhlOVVic29s?=
- =?utf-8?B?WUsxQ2ViVGJ2SUxQSWFqSUdZWUk2dGc1TmpxVXI5L3F5aGFrd3dYb3Blc1dW?=
- =?utf-8?B?cXdEYitpSmRhZHV3THVVSDg2QmRyaDVkdTJXdjc3N01MemwzYm5PMG5Md2J5?=
- =?utf-8?B?bkhSZ0NianBMOFRBMTJGSjVuUDRPVmErUmhZSnVXN291ZkFsbTIwV1FBRXBR?=
- =?utf-8?B?STUyM2Rrb0UrZnUwb3NuZk5RWjh6TWZGenQra3AxQVp5ZlA4Z1hIeitGTmFV?=
- =?utf-8?B?b09iTkpPS0pjdERzak15ejI0QWFWUlY4MWc4UC9RUkhTN1F2STdKZEdMeW9R?=
- =?utf-8?B?WHVwRjlGYU0rbW5KOURLSU82dlZhdk9rTnN2YWYvN0wySlkxTTlVdHJ6T1g1?=
- =?utf-8?B?ZGthN3pYWnYxT0dtK1p4N0FTOWpLK05mQkFXMkhzM1c5V0RVQWpleVRUcjds?=
- =?utf-8?B?NkxPZHQrMTdOaGtDN3lFbnRETmlia1hDbDRwdXM4MnBucTNsblBEVDdhVkhP?=
- =?utf-8?B?NURML25RcHF0NVNyZjJhRysybFlnRFNCOFRwQ0RXVFBaKzlnZTFheXBLRm1H?=
- =?utf-8?B?VXFHVVNyLzNybENNMVJobUZmamxlSC9TQng1SEdibkJIbjZqeGxuVjJZOWoz?=
- =?utf-8?B?cFZuekJIRkpia0hYSjZleVZSNzZPK0ZDOEhZcXFXdTVvT1FzZXNVYTZFL1VS?=
- =?utf-8?B?Z003WjhwcGR1TmdvSFd6SDdNVENjMHJsQ1YzRmM5dnE0TmUrN3hRa2tZdWhi?=
- =?utf-8?B?R3k2Slg0T0x3bUZPRytoMi9nNktteFFac1krYUcxNU1FaUhrRDQvTU9ETnhk?=
- =?utf-8?B?TjRqc2tSOWU5S0VGRHFGQ0RQVXB0ajZkaG1uSmEwR3pNbFg5Q2R3K3dJM2wr?=
- =?utf-8?B?ZzRiQkI3TklnRGx5NnBGc0tPU2h4eFdtTzBmVEdpeW1CZjkrUW1JbnFYa1hx?=
- =?utf-8?B?ZWZkN1ZucjFEbEZ4bGNWUzcvcGQwb0tYUVdGaXNJUWJXQlRXYVF1Rk1yT29N?=
- =?utf-8?B?eE85NWFSM1J4NEc4OXNUbDh6ZFlhL2J3aXFlb1dqR3c0d0FuZ01TSFRXNnAv?=
- =?utf-8?B?TlFZOEs1MnIya09lYjJQcEpjREVieXhQRG80ZEVFVUlpdkZBc0dTMmVsWEk4?=
- =?utf-8?B?bGpOSlljTm8vTnovSndwcDdlSmJERXpBendOU2h4Sk1vMElTVUpLL05HSzFy?=
- =?utf-8?B?ZGxELzV1RUxBZWs1ZldGOEw0RmZtclpSTzVIZTk2TGoyM0RRc3l4WUs0V2V4?=
- =?utf-8?B?U3UrbTJ3UmNkaHBhL05CNXZ5NGZyVkJITU0wTElKbkVGWHBHVVdMMkhLUXhQ?=
- =?utf-8?B?L2gvNW53U3g1WDhrT0tpVndNRlQ4cUlLWkZWZllOTFhlZlYvT0NBdUNaZlkv?=
- =?utf-8?B?UUN1MUxHeGdrWjNEa0pvaFliQU5iRm51cUp3bVVOQXE3WFIxczFPbkgrRERs?=
- =?utf-8?B?NlBBTkpPalJSbEZYSUJqSW9rMmdzelZXOFBSa0JOWkhLZHdHMFhBdlRoaHZk?=
- =?utf-8?B?aDFPUllCbTJFTEQrcDFIaGkzNmNVQXdYOWFCQ29CUEN0ODFwcWJuc0p6dWVh?=
- =?utf-8?B?R05UdVBsbTZIL0dCM2JGQjdTMWNlQVFkZ3NMUDBSN2pjT0s5RVAyMDJ1bkJs?=
- =?utf-8?B?cEZtUUt6eEZPQiswR2ZHaE5XQ2I1Y0pHRHdUSm9WWDlpanhGOUlOTXlBZm5B?=
- =?utf-8?B?SzBCK2NWM0hxZ3k5Y1pwYlVUWkdTU0pkTHRFd2tMWTIrVCtnSXhCZ0tnPT0=?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UkF6VE9DVEwyVkdURWFwRGlDVjVpRElIZjExeGxhZ0pTWVlxczNTZGl5SHZV?=
- =?utf-8?B?WC9MSHV0L0FuUWZWMVFicFlKdXhmU0VGNmhXU0ltVUxma1FvUkdEenFLbnpr?=
- =?utf-8?B?a1hMV1R6STdiSkh0UXVDT1hLL2E1WUtBM1ZyeWpROFNYQ0FDS3Q2VVQrTEpa?=
- =?utf-8?B?ejJtM29ua2tDZGcwVi9uejFRMXVXQk1KRmZqRTlkYXN2NmJWZWVUZnN6b2oy?=
- =?utf-8?B?SFlGZG05TzlYTVZyMFZFeWtQUHI3RTM2UEpmeHlvZXZna012dnZXTDFobHRH?=
- =?utf-8?B?QjZGOExNek9lbVNmR25yRmxKTFllSGtlMFR1VjN0dWk5Y3R6WFEwelAzbjRt?=
- =?utf-8?B?a2pqTThXdVVPLzd0SlQ1YnhlanpKN24yc2xmRENDa25HZG1ZcGNJZGdsbjE2?=
- =?utf-8?B?THdCNytwMGE4T3hVdVZDblhKTXNtTUd1a0EvdlppdERNWForT0xNdWJGVndy?=
- =?utf-8?B?Q3VhcFlTczFtaDdHaTVaZStRdlcvbkNaTlpmeXE2OFIrcDc4SVdndFRuKys4?=
- =?utf-8?B?c0NqS0tkYTN1K2ZvQ2I1VGVmTlY2VlEwWGJqNDVYWC9oUFcwVlA1dytPdjJX?=
- =?utf-8?B?Z1p6cS9La3BqeUxjNWxDUUdQaHlKK0N6d2VDQWFRN1lYRktrdVJranJUWG5k?=
- =?utf-8?B?Szg5ejA5MDNhbU5iTDlUOTkvTzNYeHpIbXVPS1dYTzI4azNidzlsbHBlMVdt?=
- =?utf-8?B?WWlManBCR25kT1BqSUJUV0pXVWM2aS8xdWp5bHFnZmRJaDhqSzR4VnZVRVFS?=
- =?utf-8?B?OVplNDZNQ2t1MTgrZGFxL3RlckdxdXB4bVFxRzVaclg5ZzBUcTVDWWtCcTcr?=
- =?utf-8?B?dC96NktPekwwNWJOczJieXJJWFVpQVYveFI5ZXY1dW85VUUwbWYwMUcxYS9I?=
- =?utf-8?B?VUVzTG1DRHZYMkQ2UUpjbFB3RUM5MS9IUW9sZFJ0RmtCc3g2cHhZSUk2WUtI?=
- =?utf-8?B?OFlaY1lPbGJkTmNpbllpQW05RW1BSlNyWXcwYVZOczhwMGNiSlIvVUFJcmVm?=
- =?utf-8?B?dGQvRVpKcTZVN2FDYlNuOVNJb3VaZHpRc1l0SWZKTTBpd0JCa2lQNmVGUE55?=
- =?utf-8?B?Mk1PSmlGbndPSVNMYVM3OFR3NTRFaTk3c28wWnZuMmZ6UTQvZlZpWVZ3Tzgy?=
- =?utf-8?B?UjdubmpubDQrTzNYK1U4UmMzbDdWdE9EaWlnd3k0QWUrdDhzRzRRTEdUZmR1?=
- =?utf-8?B?WG5JSjdoOXhpdTYxZ2s1Q09FN2l5amFyaVVycllXVFpXSnhHc0lDbUhIb2wz?=
- =?utf-8?B?dTViNGNtT3JrNEhWYWRrdXpaZXVLNVdIUXJXR1ZBdDlHNW8zQStEeXR5UmlE?=
- =?utf-8?B?UmYwb1pkaEllL0QwSWVZTHhQbVZEOW1VWEhxZ1RwVVFOUVc4bE1MblNyZDV3?=
- =?utf-8?B?T0xPL2t2Q1ZlQzNITGcrR2JVdmtkV3lJZ29IM3V2WDhlbnhyVXJ1eWpzc3ZW?=
- =?utf-8?B?NUZVYW9ra3I3TXFoR3U5aGZDbnFsYkxqeEh3bS9JWFBudllLWldPVVhMT3Zn?=
- =?utf-8?B?SWhuYUNhd2xkQ0l2K0hIM0c4dy94U0NyTjk5YXdveFVhQ2JEWUNORTE3K2ZE?=
- =?utf-8?B?SXQ5cEphelpLT01BMjZ4SjVKRStCME5RMkhuM1BiQlU5dmVldjhHT2xMZFIx?=
- =?utf-8?B?Zm9XSGtjQnpVRjdTa0QwZzFsMFB6WGRITlVuZDQ1bUtpdkpjRFB3WG5jNmZr?=
- =?utf-8?B?VStqRzRtUW1rVUZtZ2VuQVNRZ3grYmNpT2pvNjNYNDd2cnVncnRFaUZUem9P?=
- =?utf-8?B?cGpEdWRQZXBXaDZlVFJtN1B5SENhQ1AzZnhoV1pXZ0ZnK0dJNDVKL21JV0hN?=
- =?utf-8?B?U2hCcGJscm1LSFMzQnptMlBCZVJyODZGcGk3RU1xcHk1R2svTXZ5MHRETEVG?=
- =?utf-8?B?OTlBL05NaTlrUGYycVdhZ2ozTFg3ME9RemVISkhWcWd1SXRWRXdhc3VicXEz?=
- =?utf-8?B?eTh6UHQxRlhhTFFUazJOdmdMc0lxV2lHRzJkS3VQR2gvMUZrUUlrR1dON0Ji?=
- =?utf-8?B?U1o1a09yOU5ZMU5PY1ZZdDR4V3AyRzFPWE1mUG1xMVNpeUh0RTljckNHajR0?=
- =?utf-8?B?eDVJVnFHdTMwSkE0MkR6anFxTU1mK2Q4ZkJIMktpdWUzL21sbWx0YUE2M2F6?=
- =?utf-8?Q?1in3Evo6CoC4SShOYORN+q1cO?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	3ChrETXICpXrDCBfhY/O4uTp/lYhqjphv3kkeNJgTOOLFBEnjXaiudiZSYe9wUnPCD2ckNHcol62AgufXyraND5pX4R7VvG2RWm5XwpAOSJkjnkh9kctMLuwolEoQVKOrHSKHiztTS8y5gDE1DA6QWVZmbUyo4A1UwLb2YGaAgD8dez62PwleuArTD0dlsNqL6fEBwsPoyzy9s0XJeBNFSjfySbCrcYXmJ0XDi+rZj+9VTWTumqQWWqiORkl/9253aWOJLDOUb1e0B04M6hhsSoLzh5vCutR/LrQW3FWyHuv6RRwZU8CaHByY7hSXygcQLx01swQ1WlytpSTR7qlssZ1ukAePjvbfDs1pnfr3rGNbFf5JM/s3tBrNi2pxVxmeYB7JN2h2y0epOl7d9CEHizcTVvLsezLq0oZDfrUfFeuUmdzroHRu+BHnMa2C7CZOmUL8m8ZSaDmX2EJOIJBrI2rIyMQb4lgj1QlhfYjVNVYxH5KuudTr8xzuLLr9v7qA56H+UBOYAK23HuiZnixWxnXOGekldionK/WaHI6V+coIKqgfZf6ZCJNC5RLfGa6lXrItm//vSOHmP7rfqZSwZDTELPUr27/qUuoIyAkZks=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 12f87ba2-e074-4249-b309-08dce21c18c1
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2024 13:22:28.4711
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qXWzielIYDMAEpjKEQCwB/3EkQlxf//5IQxwGCF0tbbb3VsnuxPyAqMVZADz2ykKpTuV6P41X97PJ6HeTQegwQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB6301
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-01_09,2024-09-30_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 suspectscore=0
- bulkscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2408220000
- definitions=main-2410010085
-X-Proofpoint-ORIG-GUID: JKcpKTLjJrH9E5GB26acZXJgJFztBc8v
-X-Proofpoint-GUID: JKcpKTLjJrH9E5GB26acZXJgJFztBc8v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241001-mgtime-v8-4-903343d91bc3@kernel.org>
+X-Spam-Score: -3.80
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[32];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RLy4jt9zmnbk4oncb1qwahh5jo)];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	RCVD_TLS_LAST(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,infradead.org:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On 30/09/2024 17:41, Darrick J. Wong wrote:
-> On Mon, Sep 30, 2024 at 12:54:37PM +0000, John Garry wrote:
->> Validate that an atomic write adheres to length/offset rules. Currently
->> we can only write a single FS block.
->>
->> For an IOCB with IOCB_ATOMIC set to get as far as xfs_file_dio_write(),
->> FMODE_CAN_ATOMIC_WRITE will need to be set for the file; for this,
->> ATOMICWRITES flags would also need to be set for the inode.
->>
->> Signed-off-by: John Garry <john.g.garry@oracle.com>
->> ---
->>   fs/xfs/xfs_file.c | 7 +++++++
->>   1 file changed, 7 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->> index 412b1d71b52b..fa6a44b88ecc 100644
->> --- a/fs/xfs/xfs_file.c
->> +++ b/fs/xfs/xfs_file.c
->> @@ -688,6 +688,13 @@ xfs_file_dio_write(
->>   	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
->>   	size_t			count = iov_iter_count(from);
->>   
->> +	if (iocb->ki_flags & IOCB_ATOMIC) {
->> +		if (count != ip->i_mount->m_sb.sb_blocksize)
->> +			return -EINVAL;
->> +		if (!generic_atomic_write_valid(iocb, from))
->> +			return -EINVAL;
->> +	}
+On Tue 01-10-24 06:58:58, Jeff Layton wrote:
+> When updating the ctime on an inode for a SETATTR with a multigrain
+> filesystem, we usually want to take the latest time we can get for the
+> ctime. The exception to this rule is when there is a nfsd write
+> delegation and the server is proxying timestamps from the client.
 > 
-> Does xfs_file_write_iter need a catch-all so that we don't fall back to
-> buffered write for a directio write that returns ENOTBLK?
+> When nfsd gets a CB_GETATTR response, we want to update the timestamp
+> value in the inode to the values that the client is tracking. The client
+> doesn't send a ctime value (since that's always determined by the
+> exported filesystem), but it can send a mtime value. In the case where
+> it does, then we may need to update the ctime to a value commensurate
+> with that instead of the current time.
 > 
-> 	if (iocb->ki_flags & IOCB_DIRECT) {
-> 		/*
-> 		 * Allow a directio write to fall back to a buffered
-> 		 * write *only* in the case that we're doing a reflink
-> 		 * CoW.  In all other directio scenarios we do not
-> 		 * allow an operation to fall back to buffered mode.
-> 		 */
-> 		ret = xfs_file_dio_write(iocb, from);
-> 		if (ret != -ENOTBLK || (iocb->ki_flags & IOCB_ATOMIC))
-> 			return ret;
-> 	}
+> If ATTR_DELEG is set, then use ia_ctime value instead of setting the
+> timestamp to the current time.
 > 
-> IIRC iomap_dio_rw can return ENOTBLK if pagecache invalidation fails for
-> the region that we're trying to directio write.
+> With the addition of delegated timestamps we can also receive a request
+> to update only the atime, but we may not need to set the ctime. Trust
+> the ATTR_CTIME flag in the update and only update the ctime when it's
+> set.
+> 
+> Tested-by: Randy Dunlap <rdunlap@infradead.org> # documentation bits
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-I see where you are talking about. There is also a ENOTBLK from 
-unaligned write for CoW, but we would not see that.
+Looks good. Feel free to add:
 
-But I was thinking to use a common helper to catch this, like 
-generic_write_checks_count() [which is called on the buffered IO path]:
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-----8<-----
+								Honza
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 32b476bf9be0..222f25c6439c 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1774,6 +1774,10 @@ int generic_write_checks_count(struct kiocb 
-*iocb, loff_t *count)
-  	if (!*count)
-  		return 0;
-
-+	if (iocb->ki_flags & IOCB_ATOMIC &&
-+	    !(iocb->ki_flags & IOCB_DIRECT))
-+		return -EINVAL;
-+
-  	if (iocb->ki_flags & IOCB_APPEND)
-  		iocb->ki_pos = i_size_read(inode);
-
----->8-----
-
-But we keep the IOCB_DIRECT flag for the buffered IO fallback (so no good).
-
-Another option would be:
-
-----8<-----
-
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -679,7 +679,12 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter 
-*iter,
-  			if (ret != -EAGAIN) {
-  				trace_iomap_dio_invalidate_fail(inode, iomi.pos,
-  								iomi.len);
--				ret = -ENOTBLK;
-+				if (iocb->ki_flags & IOCB_ATOMIC) {
-+					if (ret == -ENOTBLK)
-+						ret = -EAGAIN;
-+				}else {
-+					ret = -ENOTBLK;
-+				}
-  			}
-  			goto out_free_dio;
-  		}
----->8-----
-
-I suggest that, as other FSes (like ext4) handle -ENOTBLK and would need 
-to be changed similar to XFS. But I am not sure if changing the error 
-code from -ENOTBLK for IOCB_ATOMIC is ok.
-
-Let me know what you think about possible alternative solutions.
-
-Thanks,
-John
+> ---
+>  fs/attr.c          | 28 +++++++++++++--------
+>  fs/inode.c         | 72 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/fs.h |  2 ++
+>  3 files changed, 92 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/attr.c b/fs/attr.c
+> index 3bcbc45708a3..392eb62aa609 100644
+> --- a/fs/attr.c
+> +++ b/fs/attr.c
+> @@ -286,16 +286,20 @@ static void setattr_copy_mgtime(struct inode *inode, const struct iattr *attr)
+>  	unsigned int ia_valid = attr->ia_valid;
+>  	struct timespec64 now;
+>  
+> -	/*
+> -	 * If the ctime isn't being updated then nothing else should be
+> -	 * either.
+> -	 */
+> -	if (!(ia_valid & ATTR_CTIME)) {
+> -		WARN_ON_ONCE(ia_valid & (ATTR_ATIME|ATTR_MTIME));
+> -		return;
+> +	if (ia_valid & ATTR_CTIME) {
+> +		/*
+> +		 * In the case of an update for a write delegation, we must respect
+> +		 * the value in ia_ctime and not use the current time.
+> +		 */
+> +		if (ia_valid & ATTR_DELEG)
+> +			now = inode_set_ctime_deleg(inode, attr->ia_ctime);
+> +		else
+> +			now = inode_set_ctime_current(inode);
+> +	} else {
+> +		/* If ATTR_CTIME isn't set, then ATTR_MTIME shouldn't be either. */
+> +		WARN_ON_ONCE(ia_valid & ATTR_MTIME);
+>  	}
+>  
+> -	now = inode_set_ctime_current(inode);
+>  	if (ia_valid & ATTR_ATIME_SET)
+>  		inode_set_atime_to_ts(inode, attr->ia_atime);
+>  	else if (ia_valid & ATTR_ATIME)
+> @@ -354,8 +358,12 @@ void setattr_copy(struct mnt_idmap *idmap, struct inode *inode,
+>  		inode_set_atime_to_ts(inode, attr->ia_atime);
+>  	if (ia_valid & ATTR_MTIME)
+>  		inode_set_mtime_to_ts(inode, attr->ia_mtime);
+> -	if (ia_valid & ATTR_CTIME)
+> -		inode_set_ctime_to_ts(inode, attr->ia_ctime);
+> +	if (ia_valid & ATTR_CTIME) {
+> +		if (ia_valid & ATTR_DELEG)
+> +			inode_set_ctime_deleg(inode, attr->ia_ctime);
+> +		else
+> +			inode_set_ctime_to_ts(inode, attr->ia_ctime);
+> +	}
+>  }
+>  EXPORT_SYMBOL(setattr_copy);
+>  
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 4ec1e71e9a9d..7a324d999816 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -2751,6 +2751,78 @@ struct timespec64 inode_set_ctime_current(struct inode *inode)
+>  }
+>  EXPORT_SYMBOL(inode_set_ctime_current);
+>  
+> +/**
+> + * inode_set_ctime_deleg - try to update the ctime on a delegated inode
+> + * @inode: inode to update
+> + * @update: timespec64 to set the ctime
+> + *
+> + * Attempt to atomically update the ctime on behalf of a delegation holder.
+> + *
+> + * The nfs server can call back the holder of a delegation to get updated
+> + * inode attributes, including the mtime. When updating the mtime we may
+> + * need to update the ctime to a value at least equal to that.
+> + *
+> + * This can race with concurrent updates to the inode, in which
+> + * case we just don't do the update.
+> + *
+> + * Note that this works even when multigrain timestamps are not enabled,
+> + * so use it in either case.
+> + */
+> +struct timespec64 inode_set_ctime_deleg(struct inode *inode, struct timespec64 update)
+> +{
+> +	struct timespec64 now, cur_ts;
+> +	u32 cur, old;
+> +
+> +	/* pairs with try_cmpxchg below */
+> +	cur = smp_load_acquire(&inode->i_ctime_nsec);
+> +	cur_ts.tv_nsec = cur & ~I_CTIME_QUERIED;
+> +	cur_ts.tv_sec = inode->i_ctime_sec;
+> +
+> +	/* If the update is older than the existing value, skip it. */
+> +	if (timespec64_compare(&update, &cur_ts) <= 0)
+> +		return cur_ts;
+> +
+> +	ktime_get_coarse_real_ts64_mg(&now);
+> +
+> +	/* Clamp the update to "now" if it's in the future */
+> +	if (timespec64_compare(&update, &now) > 0)
+> +		update = now;
+> +
+> +	update = timestamp_truncate(update, inode);
+> +
+> +	/* No need to update if the values are already the same */
+> +	if (timespec64_equal(&update, &cur_ts))
+> +		return cur_ts;
+> +
+> +	/*
+> +	 * Try to swap the nsec value into place. If it fails, that means
+> +	 * we raced with an update due to a write or similar activity. That
+> +	 * stamp takes precedence, so just skip the update.
+> +	 */
+> +retry:
+> +	old = cur;
+> +	if (try_cmpxchg(&inode->i_ctime_nsec, &cur, update.tv_nsec)) {
+> +		inode->i_ctime_sec = update.tv_sec;
+> +		mgtime_counter_inc(mg_ctime_swaps);
+> +		return update;
+> +	}
+> +
+> +	/*
+> +	 * Was the change due to someone marking the old ctime QUERIED?
+> +	 * If so then retry the swap. This can only happen once since
+> +	 * the only way to clear I_CTIME_QUERIED is to stamp the inode
+> +	 * with a new ctime.
+> +	 */
+> +	if (!(old & I_CTIME_QUERIED) && (cur == (old | I_CTIME_QUERIED)))
+> +		goto retry;
+> +
+> +	/* Otherwise, it was a new timestamp. */
+> +	cur_ts.tv_sec = inode->i_ctime_sec;
+> +	cur_ts.tv_nsec = cur & ~I_CTIME_QUERIED;
+> +	return cur_ts;
+> +}
+> +EXPORT_SYMBOL(inode_set_ctime_deleg);
+> +
+>  /**
+>   * in_group_or_capable - check whether caller is CAP_FSETID privileged
+>   * @idmap:	idmap of the mount @inode was found from
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 23908bad166c..b1a3bd07711b 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1584,6 +1584,8 @@ static inline bool fsuidgid_has_mapping(struct super_block *sb,
+>  
+>  struct timespec64 current_time(struct inode *inode);
+>  struct timespec64 inode_set_ctime_current(struct inode *inode);
+> +struct timespec64 inode_set_ctime_deleg(struct inode *inode,
+> +					struct timespec64 update);
+>  
+>  static inline time64_t inode_get_atime_sec(const struct inode *inode)
+>  {
+> 
+> -- 
+> 2.46.2
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
