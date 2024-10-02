@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 901FA79D0
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:21:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 274781C2E
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:21:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727832098; cv=none; b=VavsUfozPjDEjCg3QGegcXBVpRD9T4EmYOZKsqggLP14ThEZCWqz2pM3M5E+6F6IrzU7aq7fzhHtwv8CYzCG+SqfuPxcvmenSoi6EcLfJEDiGGcgArvHN5MgrvcKqTnitUS9Vb3qhLuQVfd6rjhDojePzcLvyI4WeA6ubg6iyIg=
+	t=1727832114; cv=none; b=Om2vaQM57AT7Sqbv8YLt7Y636Vp2H+uOgxaS7UH2Iwkh7RmPEOUrzUtnVnH3KoWGrG24uWd7j/s8Jyhhd5INYYPfcFfLpGxsrhH8JWuOQhfhr/d6ZFPSz89F994dn7xgpZ+hiGn6shSYGpwW8lTWmSXBxQLnTyZOafkkGPfjgiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727832098; c=relaxed/simple;
-	bh=R5v8HIevhYsb2hd1oSxeY+XrtCJoRndcij9Unwvh5mw=;
+	s=arc-20240116; t=1727832114; c=relaxed/simple;
+	bh=+vQNiwRf6PlrdMFfUjeRkfMnbpGue/Czf6gRwZzLJz8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f4tEVCOY18axAIhydYtVByEz6ZX8EPygg+RghOVhRPCWQOr6YRK5E3M1mXy32w3bzz2+ffuuvxKr6wKv5wy8jDDoB8IU5/Ag8g+vIqKFHuKlRWIDfc7csoe/+xqlG2Mz39ZdtHusUaH04nyM36B7IVLM/pg0SHvsT/wZCxlModc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=svIvJ+tM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=k7OtOQ2LVi51NAmcK4M2z5+4C033XgHUPsoGJw1NuM9nQoCJFP/LTJpSZvH2P8cHJve/+2gYen5RX4Pfq5A32NfN4jZuzoece33WMoNMwDvU/I5oD0fVch/BiNTKDs6EiPPig39HvaWwoUL+6eTWypjtOWyxcI/4rQXOtayOc7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xrxe2oMq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="svIvJ+tM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1078FC4CEC6;
-	Wed,  2 Oct 2024 01:21:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xrxe2oMq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A47AEC4CEC6;
+	Wed,  2 Oct 2024 01:21:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727832098;
-	bh=R5v8HIevhYsb2hd1oSxeY+XrtCJoRndcij9Unwvh5mw=;
+	s=k20201202; t=1727832113;
+	bh=+vQNiwRf6PlrdMFfUjeRkfMnbpGue/Czf6gRwZzLJz8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=svIvJ+tMAKpp7rzfRLVP1DISD6vYjvpceWlT1i1RP7IQaZScweLjUPLCcb/BAZkxt
-	 LnS7KEeWMZIYEiGwbotvsSdCT3Jm5fZ8mLEv4ltJYlOoSUnENna3oWZDiJqx5wKVJI
-	 kX/gigFAPwRqDb1vKYabQWTSF+DN5YyAbAtbqq4wOjP/dznBYYm0T5TYWBzYsSdzNt
-	 yrIsuqQwdEdMNaK7j0rkHEwdR9SpOYpRQPwZiljMYIpvJgR1nlK881juywNUi1r7cf
-	 E404vnUh4sXl75FHqrryHzv9aOiV4bRZvW5Y94LmowlwF2KUgR675vIKEXJXmEcLhF
-	 znY0CTtmC7/eQ==
-Date: Tue, 01 Oct 2024 18:21:37 -0700
-Subject: [PATCH 53/64] xfs: add a ci_entry helper
+	b=Xrxe2oMqpA9yi1WdnsVxceNhNwZj66PZkFOqMbsfpsIX3h8u0AzeMYYM5nCfNGrZu
+	 vZmZAHkxTJw9aJSS+AOxJe7tLv4rhLGtiuyyoSy5yeWKb5jsS+2sbaA4HfX2hg5BxN
+	 vSjjSFTYFT9mgYkkqeCETwB8bXdfh00ovyHe/Yfu9YQjZ76u8TquGLY0B46jiCEmD5
+	 IY2YvWb/qfkWLqnkvaNT8TuSs5hN1zBiFt1YH8E9hn0O2UPWVwD01z+JZLIwn8y/Hc
+	 +U2jyWhjMW0tD90iAQyfvBW2v38xGYZUvNCiiUMQNtAfB1WH+PvtAopUGps2XtlybQ
+	 1P/j+kq/kOFEA==
+Date: Tue, 01 Oct 2024 18:21:53 -0700
+Subject: [PATCH 54/64] xfs: reuse xfs_refcount_update_cancel_item
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172783102580.4036371.16891509761067297377.stgit@frogsfrogsfrogs>
+Message-ID: <172783102595.4036371.5644862752921995440.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,71 +46,67 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 0e9254861f980bd60a58b7c2b57ba0414c038409
+Source kernel commit: 8aef79928b3ddd8c10a3235f982933addc15a977
 
-Add a helper to translate from the item list head to the
-refcount_intent_item structure and use it so shorten assignments and
-avoid the need for extra local variables.
+Reuse xfs_refcount_update_cancel_item to put the AG/RTG and free the
+item in a few places that currently open code the logic.
 
 Inspired-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/defer_item.c |   19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+ libxfs/defer_item.c |   25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
 
 diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 1c106b844..53902d775 100644
+index 53902d775..8cf360567 100644
 --- a/libxfs/defer_item.c
 +++ b/libxfs/defer_item.c
-@@ -321,6 +321,11 @@ const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
+@@ -381,6 +381,17 @@ xfs_refcount_update_put_group(
+ 	xfs_perag_intent_put(ri->ri_pag);
+ }
  
- /* Reference Counting */
- 
-+static inline struct xfs_refcount_intent *ci_entry(const struct list_head *e)
++/* Cancel a deferred refcount update. */
++STATIC void
++xfs_refcount_update_cancel_item(
++	struct list_head		*item)
 +{
-+	return list_entry(e, struct xfs_refcount_intent, ri_list);
++	struct xfs_refcount_intent	*ri = ci_entry(item);
++
++	xfs_refcount_update_put_group(ri);
++	kmem_cache_free(xfs_refcount_intent_cache, ri);
 +}
 +
- /* Sort refcount intents by AG. */
- static int
- xfs_refcount_update_diff_items(
-@@ -328,11 +333,8 @@ xfs_refcount_update_diff_items(
- 	const struct list_head		*a,
- 	const struct list_head		*b)
- {
--	const struct xfs_refcount_intent *ra;
--	const struct xfs_refcount_intent *rb;
--
--	ra = container_of(a, struct xfs_refcount_intent, ri_list);
--	rb = container_of(b, struct xfs_refcount_intent, ri_list);
-+	struct xfs_refcount_intent	*ra = ci_entry(a);
-+	struct xfs_refcount_intent	*rb = ci_entry(b);
+ /* Process a deferred refcount update. */
+ STATIC int
+ xfs_refcount_update_finish_item(
+@@ -401,8 +412,7 @@ xfs_refcount_update_finish_item(
+ 		return -EAGAIN;
+ 	}
  
- 	return ra->ri_pag->pag_agno - rb->ri_pag->pag_agno;
+-	xfs_refcount_update_put_group(ri);
+-	kmem_cache_free(xfs_refcount_intent_cache, ri);
++	xfs_refcount_update_cancel_item(item);
+ 	return error;
  }
-@@ -387,10 +389,9 @@ xfs_refcount_update_finish_item(
- 	struct list_head		*item,
- 	struct xfs_btree_cur		**state)
- {
--	struct xfs_refcount_intent	*ri;
-+	struct xfs_refcount_intent	*ri = ci_entry(item);
- 	int				error;
  
--	ri = container_of(item, struct xfs_refcount_intent, ri_list);
- 	error = xfs_refcount_finish_one(tp, ri, state);
- 
- 	/* Did we run out of reservation?  Requeue what we didn't finish. */
-@@ -417,9 +418,7 @@ STATIC void
- xfs_refcount_update_cancel_item(
- 	struct list_head		*item)
+@@ -413,17 +423,6 @@ xfs_refcount_update_abort_intent(
  {
--	struct xfs_refcount_intent	*ri;
+ }
+ 
+-/* Cancel a deferred refcount update. */
+-STATIC void
+-xfs_refcount_update_cancel_item(
+-	struct list_head		*item)
+-{
+-	struct xfs_refcount_intent	*ri = ci_entry(item);
 -
--	ri = container_of(item, struct xfs_refcount_intent, ri_list);
-+	struct xfs_refcount_intent	*ri = ci_entry(item);
- 
- 	xfs_refcount_update_put_group(ri);
- 	kmem_cache_free(xfs_refcount_intent_cache, ri);
+-	xfs_refcount_update_put_group(ri);
+-	kmem_cache_free(xfs_refcount_intent_cache, ri);
+-}
+-
+ const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
+ 	.name		= "refcount",
+ 	.create_intent	= xfs_refcount_update_create_intent,
 
