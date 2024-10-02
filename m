@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B8055227
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:26:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EAEF1C2E
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:26:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727832394; cv=none; b=CgcK89g2Kt+WVTiGS7rZWI7FL++71B6O1XZTgKxYx8/6lbwbo/j85cZQ2GjUy6ss/XWhp7/4cZ6Yo9h9sML/Ak9waBt1HEl2hnla+IyiDxL62wO27XknxSG+lvwCdeO2uNRj7z+p19Dg38TqvJNBSWgNpJCqgTkk59UOnm9yKnw=
+	t=1727832410; cv=none; b=XwIdkTUULz9X11SlvO1ZI5AfyEjoEf9v/8pP5oW8DB08tMI7jHDr0wVCPimM4hgWHz6dxzWOB9eQ6PGEDqkvrmZZfA+oZnECYr+PfWaE4clo2tXOCpwf/Nr9j9Qr5efrjPJIVNvqQ+JWWefjklE/6aHrZ19nczdcHOjOtohOr6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727832394; c=relaxed/simple;
-	bh=17xRBm9NEQC/bwtFPZTggGZ5uQqd40Bo4mSA5sCX8Hw=;
+	s=arc-20240116; t=1727832410; c=relaxed/simple;
+	bh=/Pa1Pb0kQ7f3+pp35ls/QyNQCL1eprE9+JzA51RTlhY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lGyG8IAf2p6UG8iJbuk4Um4Z9nfVmda7sdT5VZDmjT133GAj4dA7L2ymv7f0CUBCrPKootWJwKYCliQP7J0F1x//bKJ2iJLLTo96zAXVD8If0T7RLrQ/PRSUSwxeqSaroJQqdoOnsmLV8iF4UioBBKcyuZUdmFpr0HYI0/bUwMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C76nSkLU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RagZApA5EJQeoqNXEGGn2fJDp+1icmygDKhwM5qhICfbtUXWHENP+ziFDHJnPyVBUYJjeetkgbrEgSdfj5DjD2CHA5kmMTJ23WX81i+qQ1k8l/azsDgdqsjiiSMU49pTQ38r4IRhvdOhfBkcKLKHakVRs3924VHvcUjrD4e3KgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nL2NOFrD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C76nSkLU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 667F6C4CEC6;
-	Wed,  2 Oct 2024 01:26:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nL2NOFrD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDCBFC4CEC6;
+	Wed,  2 Oct 2024 01:26:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727832394;
-	bh=17xRBm9NEQC/bwtFPZTggGZ5uQqd40Bo4mSA5sCX8Hw=;
+	s=k20201202; t=1727832410;
+	bh=/Pa1Pb0kQ7f3+pp35ls/QyNQCL1eprE9+JzA51RTlhY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=C76nSkLULRErh4+a23WeVXJXX8yLmuyy0UlESnUZSqe/2K/4G5YCAAUFIxRggZFLR
-	 YtiyamUByekyZ+GoB+1OSRx9nZeFFquJbKoLAwkY009dgU3BJjFVtjgfMCJznAEHg/
-	 XJL1/9z6PXHGqshoeonEo84J4R+fPkftlf5dUczi+uIOY2KrG1PKwquqvy8ICWY18Z
-	 4MmEbUCcPDky9F89QTS9uGh5ezyPm5OX0uq9NbBRBYoB3aELZIIc975Znt1U7KauIG
-	 11efxJEBL7rJL3/l5eGNcBQZIBrbTUh8+mX2EQ5AwoU2xT5P8Hx3Y8oMdYFbctWs7F
-	 qHjEh4C7Fb1bA==
-Date: Tue, 01 Oct 2024 18:26:34 -0700
-Subject: [PATCH 4/4] xfs_repair: use library functions for orphanage creation
+	b=nL2NOFrDzgLlZmSqO2HzwzNdtoleLJsXD/ECGi/wy8nSFYu0kz8vBm9/ygmSG0/u6
+	 Z2zsqtnvV7bMEQgB7wdKl5xN4bpUGj8UgxytMKrYnTZsR4Em0J9hP5YenkuNk7hj3U
+	 K/8FJXbrydVIgJg9S6Ay9UO2Zs/WNJOXm5aGmgsVVMtdfu2IxE2rJQzst35VbyrXcY
+	 xIxkVvjIg2I6VmlQRlFvKXPXnC80pDztEQl280OwCdW5mNn3459391dmgvHyrO2fyc
+	 A9q1NmY5Uq+hVogcF4FRYWPlEpSETfGIFeN/Xc3CY5mYXQTlM25/mrBKf59gbqcrTv
+	 ip2V8W6RWoyfg==
+Date: Tue, 01 Oct 2024 18:26:49 -0700
+Subject: [PATCH 1/2] mkfs: clean up the rtinit() function
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783103438.4038674.13322754481588384282.stgit@frogsfrogsfrogs>
-In-Reply-To: <172783103374.4038674.1366196250873191221.stgit@frogsfrogsfrogs>
-References: <172783103374.4038674.1366196250873191221.stgit@frogsfrogsfrogs>
+Message-ID: <172783103735.4038865.17704760289119478.stgit@frogsfrogsfrogs>
+In-Reply-To: <172783103720.4038865.18392358908456498224.stgit@frogsfrogsfrogs>
+References: <172783103720.4038865.18392358908456498224.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,147 +46,141 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use new library functions to create lost+found.
+Clean up some of the warts in this function, like the inconsistent use
+of @i for @error, missing comments, and make this more visually pleasing
+by adding some whitespace between major sections.  Some things are left
+untouched for the next patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    1 +
- repair/phase6.c          |   53 ++++++++++++++++++----------------------------
- 2 files changed, 22 insertions(+), 32 deletions(-)
+ mkfs/proto.c |   70 ++++++++++++++++++++++++++++------------------------------
+ 1 file changed, 34 insertions(+), 36 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index ee9794782..a4173e5f7 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -148,6 +148,7 @@
- #define xfs_dir2_shrink_inode		libxfs_dir2_shrink_inode
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 251e3a9ee..65072f7b5 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -755,28 +755,26 @@ parse_proto(
+  */
+ static void
+ rtinit(
+-	xfs_mount_t	*mp)
++	struct xfs_mount	*mp)
+ {
+-	xfs_fileoff_t	bno;
+-	xfs_bmbt_irec_t	*ep;
+-	int		error;
+-	int		i;
+-	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
+-	xfs_extlen_t	nsumblocks;
+-	uint		blocks;
+-	int		nmap;
+-	xfs_inode_t	*rbmip;
+-	xfs_inode_t	*rsumip;
+-	xfs_trans_t	*tp;
+-	struct cred	creds;
+-	struct fsxattr	fsxattrs;
++	struct cred		creds;
++	struct fsxattr		fsxattrs;
++	struct xfs_bmbt_irec	map[XFS_BMAP_MAX_NMAP];
++	struct xfs_inode	*rbmip;
++	struct xfs_inode	*rsumip;
++	struct xfs_trans	*tp;
++	struct xfs_bmbt_irec	*ep;
++	xfs_fileoff_t		bno;
++	xfs_extlen_t		nsumblocks;
++	uint			blocks;
++	int			i;
++	int			nmap;
++	int			error;
  
- #define xfs_dir_createname		libxfs_dir_createname
-+#define xfs_dir_create_child		libxfs_dir_create_child
- #define xfs_dir_init			libxfs_dir_init
- #define xfs_dir_ino_validate		libxfs_dir_ino_validate
- #define xfs_dir_lookup			libxfs_dir_lookup
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 2c4f23010..ba28edaa4 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -826,19 +826,23 @@ mk_orphanage(
- 		.idmap		= libxfs_nop_idmap,
- 		.mode		= S_IFDIR | 0755,
- 	};
-+	struct xfs_name		xname = {
-+		.name		= (unsigned char *)ORPHANAGE,
-+		.len		= strlen(ORPHANAGE),
-+		.type		= XFS_DIR3_FT_DIR,
-+	};
-+	struct xfs_dir_update	du = {
-+		.name		= &xname,
-+	};
- 	struct xfs_trans	*tp;
--	struct xfs_inode	*ip;
--	struct xfs_inode	*pip;
- 	struct ino_tree_node	*irec;
- 	xfs_ino_t		ino;
- 	int			ino_offset = 0;
- 	int			i;
- 	int			error;
- 	int			nres;
--	struct xfs_name		xname;
--	struct xfs_parent_args	*ppargs = NULL;
+-	/*
+-	 * First, allocate the inodes.
+-	 */
+-	i = -libxfs_trans_alloc_rollable(mp, MKFS_BLOCKRES_INODE, &tp);
+-	if (i)
+-		res_failed(i);
++	/* Create the realtime bitmap inode. */
++	error = -libxfs_trans_alloc_rollable(mp, MKFS_BLOCKRES_INODE, &tp);
++	if (error)
++		res_failed(error);
  
--	i = -libxfs_parent_start(mp, &ppargs);
-+	i = -libxfs_parent_start(mp, &du.ppargs);
- 	if (i)
- 		do_error(_("%d - couldn't allocate parent pointer for %s\n"),
- 			i, ORPHANAGE);
-@@ -849,18 +853,15 @@ mk_orphanage(
- 	 * would have been cleared in phase3 and phase4.
- 	 */
- 
--	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip);
-+	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &du.dp);
- 	if (i)
- 		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
- 			i, ORPHANAGE);
- 
--	args.pip = pip;
--	xname.name = (unsigned char *)ORPHANAGE;
--	xname.len = strlen(ORPHANAGE);
--	xname.type = XFS_DIR3_FT_DIR;
-+	args.pip = du.dp;
- 
- 	/* If the lookup of /lost+found succeeds, return the inumber. */
--	error = -libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL);
-+	error = -libxfs_dir_lookup(NULL, du.dp, &xname, &ino, NULL);
- 	if (error == 0)
- 		goto out_pip;
- 
-@@ -877,7 +878,7 @@ mk_orphanage(
- 		do_error(_("%s inode allocation failed %d\n"),
- 			ORPHANAGE, error);
- 
--	error = -libxfs_icreate(tp, ino, &args, &ip);
-+	error = -libxfs_icreate(tp, ino, &args, &du.ip);
- 	if (error)
- 		do_error(_("%s inode initialization failed %d\n"),
- 			ORPHANAGE, error);
-@@ -915,49 +916,37 @@ mk_orphanage(
- 	 * now that we know the transaction will stay around,
- 	 * add the root inode to it
- 	 */
--	libxfs_trans_ijoin(tp, pip, 0);
-+	libxfs_trans_ijoin(tp, du.dp, 0);
- 
- 	/*
- 	 * create the actual entry
- 	 */
--	error = -libxfs_dir_createname(tp, pip, &xname, ip->i_ino, nres);
-+	error = -libxfs_dir_create_child(tp, nres, &du);
- 	if (error)
- 		do_error(
- 		_("can't make %s, createname error %d\n"),
- 			ORPHANAGE, error);
--	add_parent_ptr(ip->i_ino, (unsigned char *)ORPHANAGE, pip, false);
--
--	if (ppargs) {
--		error = -libxfs_parent_addname(tp, ppargs, pip, &xname, ip);
--		if (error)
--			do_error(
-- _("can't make %s, parent addname error %d\n"),
--					ORPHANAGE, error);
--	}
-+	add_parent_ptr(du.ip->i_ino, (unsigned char *)ORPHANAGE, du.dp, false);
- 
- 	/*
--	 * bump up the link count in the root directory to account
--	 * for .. in the new directory, and update the irec copy of the
-+	 * We bumped up the link count in the root directory to account
-+	 * for .. in the new directory, so now update the irec copy of the
- 	 * on-disk nlink so we don't fail the link count check later.
- 	 */
--	libxfs_bumplink(tp, pip);
- 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
- 				  XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
- 	add_inode_ref(irec, 0);
- 	set_inode_disk_nlinks(irec, 0, get_inode_disk_nlinks(irec, 0) + 1);
- 
--	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
--	libxfs_dir_init(tp, ip, pip);
--	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
+ 	memset(&creds, 0, sizeof(creds));
+ 	memset(&fsxattrs, 0, sizeof(fsxattrs));
+@@ -796,6 +794,8 @@ rtinit(
+ 	libxfs_trans_log_inode(tp, rbmip, XFS_ILOG_CORE);
+ 	libxfs_log_sb(tp);
+ 	mp->m_rbmip = rbmip;
++
++	/* Create the realtime summary inode. */
+ 	error = creatproto(&tp, NULL, S_IFREG, 0, &creds, &fsxattrs, &rsumip);
  	if (error) {
- 		do_error(_("%s directory creation failed -- bmapf error %d\n"),
- 			ORPHANAGE, error);
- 	}
--	libxfs_irele(ip);
-+	libxfs_irele(du.ip);
- out_pip:
--	libxfs_irele(pip);
--	libxfs_parent_finish(mp, ppargs);
-+	libxfs_irele(du.dp);
-+	libxfs_parent_finish(mp, du.ppargs);
+ 		fail(_("Realtime summary inode allocation failed"), error);
+@@ -809,14 +809,13 @@ rtinit(
+ 		fail(_("Completion of the realtime summary inode failed"),
+ 				error);
+ 	mp->m_rsumip = rsumip;
+-	/*
+-	 * Next, give the bitmap file some zero-filled blocks.
+-	 */
++
++	/* Zero the realtime bitmap. */
+ 	blocks = mp->m_sb.sb_rbmblocks +
+ 			XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
+-	i = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
+-	if (i)
+-		res_failed(i);
++	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
++	if (error)
++		res_failed(error);
  
- 	return(ino);
- }
+ 	libxfs_trans_ijoin(tp, rbmip, 0);
+ 	bno = 0;
+@@ -825,10 +824,10 @@ rtinit(
+ 		error = -libxfs_bmapi_write(tp, rbmip, bno,
+ 				(xfs_extlen_t)(mp->m_sb.sb_rbmblocks - bno),
+ 				0, mp->m_sb.sb_rbmblocks, map, &nmap);
+-		if (error) {
++		if (error)
+ 			fail(_("Allocation of the realtime bitmap failed"),
+ 				error);
+-		}
++
+ 		for (i = 0, ep = map; i < nmap; i++, ep++) {
+ 			libxfs_device_zero(mp->m_ddev_targp,
+ 				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
+@@ -842,25 +841,24 @@ rtinit(
+ 		fail(_("Block allocation of the realtime bitmap inode failed"),
+ 				error);
+ 
+-	/*
+-	 * Give the summary file some zero-filled blocks.
+-	 */
++	/* Zero the summary file. */
+ 	nsumblocks = mp->m_rsumsize >> mp->m_sb.sb_blocklog;
+ 	blocks = nsumblocks + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
+-	i = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
+-	if (i)
+-		res_failed(i);
++	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
++	if (error)
++		res_failed(error);
+ 	libxfs_trans_ijoin(tp, rsumip, 0);
++
+ 	bno = 0;
+ 	while (bno < nsumblocks) {
+ 		nmap = XFS_BMAP_MAX_NMAP;
+ 		error = -libxfs_bmapi_write(tp, rsumip, bno,
+ 				(xfs_extlen_t)(nsumblocks - bno),
+ 				0, nsumblocks, map, &nmap);
+-		if (error) {
++		if (error)
+ 			fail(_("Allocation of the realtime summary failed"),
+ 				error);
+-		}
++
+ 		for (i = 0, ep = map; i < nmap; i++, ep++) {
+ 			libxfs_device_zero(mp->m_ddev_targp,
+ 				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
 
