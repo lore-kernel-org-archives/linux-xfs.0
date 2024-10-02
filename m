@@ -1,77 +1,110 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43A46221E4E;
-	Wed,  2 Oct 2024 21:28:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C77C52225D9;
+	Wed,  2 Oct 2024 21:28:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727904482; cv=none; b=EbtB4on6TeAkwspMqxFsjwxkPiV3SHO/pZffHa24w9/kF/qAwkBc5Go47/C032R2TIJLxHd1NAh2MCNUT3rhhX8ci2KIMe2/pRRU5nL1CsrgF9x01pVSpBxTwWZZ2mDWwi5FoCrUVxyrkeC8r3grr9hPP+Je1zPtppt5WZc1kM8=
+	t=1727904484; cv=none; b=l+HcEFYaQQjtnnmY4idEFq+BA2N2v64VfmPuR0bhwRoeLmSaTPcX61xw+SPsh29YXQfhFyFoIS+R6tIYMblxProIZPdVoIWzYi1WN4NyUkyYL+I/P7PgyuS3nQgmPNJtqEpyPpmKDJvz71daYNvL+5ghpHGROCrnxvIqLMC1C5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727904482; c=relaxed/simple;
-	bh=zs6gKrHbBNwdhRQTvo6Z5b0hCuUiP9uhriiml0z0JTw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jmChn5Mq+2ClXbhQIrLfk5EehNpUStDYg1gjczQmLh+X2eLVitVzzNdXIkPh8pRVpH6ubHuPaz1shu7iRtUHhUeD/jlhc/AUEdr4ZIiNfYhTogP47E7WqIi0wOH/+MFfY0G/hCusoDP76J8je0MXSGhnOWyV75DS29lKPq5YQu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GY12d9iQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727904484; c=relaxed/simple;
+	bh=5/dsLO8cNmOaM6p0rv+Qvzx/xMvPBJnx6tvOBbPfMzs=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=dcUa7mhcQ8lr/TLJfNg75UgjQkB79jsi2EJOkQko4x4xekno8YFYkWMk/2/GnF0mWwndmohbkUNdaKh9iPHHg25rrgbHcfJXDr17yXTwURXhAwEUUUXFAAZKqOYfcB3Wlg6sP584izJ1fIVBH4+mwSO8TT9xxN6Okysx517og5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pY4qgNaa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GY12d9iQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9E2BC4CEDF;
-	Wed,  2 Oct 2024 21:28:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pY4qgNaa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF362C4CEE1;
+	Wed,  2 Oct 2024 21:28:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727904481;
-	bh=zs6gKrHbBNwdhRQTvo6Z5b0hCuUiP9uhriiml0z0JTw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GY12d9iQlu2/+qtxOwlVMDSQINY8dQIDh7CpTZoJf4iVqNgj1v0+nCuJx9dO9cGp1
-	 0MEgTWYfL+cF/OzjecimxdvMdKD1PYdDWgvv37oLdSrPMrZllfTROibkTgV6y31x4o
-	 UIcHXGCISD0qpol/Z/F+meXwyo5bflPT9jD5adspiG/IBnqrJzq4vokmsUMNcGBmna
-	 iXbIaSBsKTdo4z6r39Nmgo2X9k62P29thAnENXRDdGkS5ilCnRhsHpsIX3cCV04luY
-	 xAfHmEDirgICnWCwAKQoj+NZS97cQLRnY0FU7/rbRNymaKGMlR4gRCyx4nr3Q885NF
-	 8paFQT1Ss+Z1g==
-Date: Wed, 2 Oct 2024 14:28:00 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrew Kreimer <algonell@gmail.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix a typo
-Message-ID: <20241002212800.GF21853@frogsfrogsfrogs>
-References: <20241002211948.10919-1-algonell@gmail.com>
+	s=k20201202; t=1727904484;
+	bh=5/dsLO8cNmOaM6p0rv+Qvzx/xMvPBJnx6tvOBbPfMzs=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=pY4qgNaaCqezS32qjDZEbsRs2uGb8OTkbND/gQNC3DZDk0GQyrjGRmxHYO6BtyTWX
+	 EQfJp0qmbpEp8Y4fEBEdJjYyDC1X6D/lcrtX9zhRMFR6vrtcr9gEpaw9lqhsBV4dzt
+	 hc/hRRGOV1mrRGkkpHthnO5R0XB4+yg2XN5Y8PwXRYhYvmUUyN5X088MqLAETzHPqn
+	 O26reMyyJqwCWRtn9LB+2DwWyURABcR1Pa7VdYMKNk9ArrOhg9DFEh4PfCmVFPe9Be
+	 NqUMbmrsKxgNgWyLK1sCeoxlIVRcC4VfPN2PcY5JZrL6kxFEm9kVwZtbsg1V1uskh8
+	 uQiYUVOkUhxhA==
+From: Jeff Layton <jlayton@kernel.org>
+Date: Wed, 02 Oct 2024 17:27:27 -0400
+Subject: [PATCH v10 12/12] tmpfs: add support for multigrain timestamps
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241002211948.10919-1-algonell@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20241002-mgtime-v10-12-d1c4717f5284@kernel.org>
+References: <20241002-mgtime-v10-0-d1c4717f5284@kernel.org>
+In-Reply-To: <20241002-mgtime-v10-0-d1c4717f5284@kernel.org>
+To: John Stultz <jstultz@google.com>, Thomas Gleixner <tglx@linutronix.de>, 
+ Stephen Boyd <sboyd@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+ Steven Rostedt <rostedt@goodmis.org>, 
+ Masami Hiramatsu <mhiramat@kernel.org>, 
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Randy Dunlap <rdunlap@infradead.org>, 
+ Chandan Babu R <chandan.babu@oracle.com>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, 
+ Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, 
+ Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
+ Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+ Chuck Lever <chuck.lever@oracle.com>, 
+ Vadim Fedorenko <vadim.fedorenko@linux.dev>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+ linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
+ linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, 
+ Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=988; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=5/dsLO8cNmOaM6p0rv+Qvzx/xMvPBJnx6tvOBbPfMzs=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBm/brALjfB22SLtWrZvbq9dOIudVwmi0I1qA+aV
+ n4HN6LIytCJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZv26wAAKCRAADmhBGVaC
+ FRSFEACPohqXeTh7KgceuIiMgaiZvFEfTN6SD/E380ADOa3A/9s4jdNxUzvvIUF5TGO3RjuqvXp
+ vQ39lbU+sN/EReWdsZdlcuP9wIJTEDPEo0Sd1UVdKEqRfvB7MXkHnFyhigbts8E4EeZm3vtO5Um
+ dEueBuYGU/uHUQ+C6uWNdEqboX38koaVM6De2O+XxmDB25xapHTAlc+OjmcQvs6DpWxF5RNdpJg
+ 84pcISszclA73/fk3T5S6O5wVNqceFy6Rj/wOaY0mSjy0XDKDJKGBWz7VJtKWZKTPmcLIh46ehW
+ D3rEEFjv/THx5b+VU8ecQynhSjyfgPRiRgZ/ZFcxmYMlGzxi639VSAmecRyY4j1lwNLBwcaxP3U
+ qfns+SkW0ZRePXxgunj1ox6ARPkr5OFR5Pa7/h0JkK0hjguHgiSpu5K82GofgSxXHpUFOv0Dkyj
+ Ee32pebJG1fZRa4wWzJRSNqUvn+2uXCZvk35HWRS2uPOeNohiJVtbaJ34ZRn78lHec+pf5Z7ZJ5
+ GKT64vZ0wq2zEDEprVAk5g9Pid6BM0mn2dixzCz1QwYLKWJdWrcK7YfU6uGpmvh/UiXzYOPesTz
+ zpKM7FScCuy994O5F+7EBot7sYRW87SFI2Nu0MwRE5tPQdBY/CHLfBwZP8GTD2ThHGIm8ZnGudD
+ XIxJwAEylXRaCkQ==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 
-On Thu, Oct 03, 2024 at 12:19:48AM +0300, Andrew Kreimer wrote:
-> Fix a typo in comments.
-> 
-> Signed-off-by: Andrew Kreimer <algonell@gmail.com>
+Enable multigrain timestamps, which should ensure that there is an
+apparent change to the timestamp whenever it has been written after
+being actively observed via getattr.
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+tmpfs only requires the FS_MGTIME flag.
 
---D
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Tested-by: Randy Dunlap <rdunlap@infradead.org> # documentation bits
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+ mm/shmem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->  fs/xfs/xfs_log_recover.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index ec766b4bc853..a13bf53fea49 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -1849,7 +1849,7 @@ xlog_find_item_ops(
->   *	   from the transaction. However, we can't do that until after we've
->   *	   replayed all the other items because they may be dependent on the
->   *	   cancelled buffer and replaying the cancelled buffer can remove it
-> - *	   form the cancelled buffer table. Hence they have tobe done last.
-> + *	   form the cancelled buffer table. Hence they have to be done last.
->   *
->   *	3. Inode allocation buffers must be replayed before inode items that
->   *	   read the buffer and replay changes into it. For filesystems using the
-> -- 
-> 2.39.5
-> 
-> 
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 5a77acf6ac6a621dc7b5e7b46402b2b714b45bea..5f17eaaa32e2902228be7b245c5b3b11c5fb6a56 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -4804,7 +4804,7 @@ static struct file_system_type shmem_fs_type = {
+ 	.parameters	= shmem_fs_parameters,
+ #endif
+ 	.kill_sb	= kill_litter_super,
+-	.fs_flags	= FS_USERNS_MOUNT | FS_ALLOW_IDMAP,
++	.fs_flags	= FS_USERNS_MOUNT | FS_ALLOW_IDMAP | FS_MGTIME,
+ };
+ 
+ void __init shmem_init(void)
+
+-- 
+2.46.2
+
