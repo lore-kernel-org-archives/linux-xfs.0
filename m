@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8257B440C
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:16:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 585505227
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:17:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831817; cv=none; b=aa60GVsJEPN6m4gli9ZBSH0J/DKqhzcbBEifa2gxsqkYqrOyhwAuqV9qn+j6gpeUjmrYLAYB9j6fml1JgVkLpyR0ydXOV0+VEoY3uqXMGKhVwSnUrt7r1lcrRxDLnF77d384Qb6jKMChOuC8DjenUZrSKsC5fh1CcQ7C9C8Fr4c=
+	t=1727831833; cv=none; b=TbCh/MEhJrg7azn1HEL+D1oaSNFGAWI6Wxjo8fgJXRvYWrn8maOwnI9YVGi15lNNxOhBLhEHDqEMtm+UWJKAICyripiNMgFO69fDz8rj5cAnC7hiC4e3q7lr/clcQXEjM8x5unis8QNvBb/Qjy5QxnH22Qtsqju6MHIVbUIvmlk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831817; c=relaxed/simple;
-	bh=wChfyRlWjaUnPBHHGd+DrvIHE2BKkzsvYcW2KSxTQGM=;
+	s=arc-20240116; t=1727831833; c=relaxed/simple;
+	bh=9zBkSri2gDsGj5K6ZkaoHXVv/VXtLLs7/JZRaS49pLo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PdDUMPTNoO+teNT2PAypCBXni3x1y+RNxcZfQw+cfMJsko00ksq3diSAhC7nhDjJBFmk1lPdMHdEW1vP2QGlShsT2qjvihbZtF9Rs4LSQ8u6WCB3sr2fuMjwjBkymLsW7pZkATAX5lJU/bZjABnPzMC6C1K7zoNH1W2o5OY5tt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gcCunsE3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EBfN6WDN933XvWwasZ3TPf4w1a8CXRDnY/jHK3jvazzQrMrkfvGffV5Sd+M40Cca3Fkn4y+JMcZCt84+jYNm9tMDdkGuubnyNAiiRbkVvX+HaRYfP3nd2Qw6EG4jkHQqb7KGy8Npt9qfKOjdXxOIr+gmxxZYwV7SIQQ6b5iK4gU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TqBBGHVG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gcCunsE3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F3FFC4CEC6;
-	Wed,  2 Oct 2024 01:16:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TqBBGHVG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E60E1C4CEC6;
+	Wed,  2 Oct 2024 01:17:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831817;
-	bh=wChfyRlWjaUnPBHHGd+DrvIHE2BKkzsvYcW2KSxTQGM=;
+	s=k20201202; t=1727831833;
+	bh=9zBkSri2gDsGj5K6ZkaoHXVv/VXtLLs7/JZRaS49pLo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gcCunsE3ghQfP+lD5uUGx1FyKfugmQ/P6rO9XbFev5/Oqm/XetmrrL9NXptz3xPFT
-	 zrcvLwKqy6XBLXwKrJzc4Kp365Bzw+6PLk5mEtfe1s0vCZmyN0FiVVpkXosmNGFzR4
-	 RUaSDWZEhd8pHMV3JkC/N0YQbbe3kkdS/rA5ntkWY1qZ06IPn9h9x83o42efQcgM4G
-	 4eH109DdIYv6FVioL+txrXXeQIY+mH+NgyRAWYcBflSLFCcIVvooYJ7j8c8E6eW2/u
-	 hjrny07cuHzPl2FBAABkLNNNUMFprD8pL2Nli7JGWS3EOdn497gpI7wKbjyFrwGClG
-	 nOTfTsOsGPajQ==
-Date: Tue, 01 Oct 2024 18:16:56 -0700
-Subject: [PATCH 35/64] xfs: pass the fsbno to xfs_perag_intent_get
+	b=TqBBGHVGPFXqEun7yGSkCdVsmGGhJJ5WXwcBq4rXta9ZdTO9UU9/ibmGnYI9PSGAP
+	 5y7SpsBIDvPwS1G7dOHlnKcwKYWx0tvOnngw7Y7ylJB19+gfsLE8UXT2tC3ofC7W0y
+	 atPGtQ6jV0Ynvvv7uWq7+mExSrrA3TMilp61fexRhFJUIxFic6MZRWcGiSWVm6GBww
+	 HoQOtHE9o+BFE2lzA86SPTV+aP3coir7/qFTMD7KokQp3yN7hQ0wqS3SGXLprBVhr0
+	 Sx+QydGyAs6r3Q0Un5z3f0rNjopJRVNNs3JD5ZDAohHtPzjnS1c2MIUcOG82FWlKeq
+	 rm7REoN4J0UXg==
+Date: Tue, 01 Oct 2024 18:17:12 -0700
+Subject: [PATCH 36/64] xfs: add a xefi_entry helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172783102308.4036371.13809692517073671265.stgit@frogsfrogsfrogs>
+Message-ID: <172783102323.4036371.17179419501364622946.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,96 +46,88 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 62d597a197e390a89eadff60b98231e91b32ab83
+Source kernel commit: 649c0c2b86ee944a1a9962b310b1b97ead12e97a
 
-All callers of xfs_perag_intent_get have a fsbno and need boilerplate
-code to turn that into an agno.  Just pass the fsbno to
-xfs_perag_intent_get and look up the agno there.
+Add a helper to translate from the item list head to the
+xfs_extent_free_item structure and use it so shorten assignments
+and avoid the need for extra local variables.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/xfs_mount.h |    3 ++-
- libxfs/defer_item.c |   21 ++++-----------------
- 2 files changed, 6 insertions(+), 18 deletions(-)
+ libxfs/defer_item.c |   24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 4492a2f28..a60474a8d 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -298,7 +298,8 @@ struct xfs_defer_drain { /* empty */ };
- #define xfs_defer_drain_init(dr)		((void)0)
- #define xfs_defer_drain_free(dr)		((void)0)
- 
--#define xfs_perag_intent_get(mp, agno)		xfs_perag_get((mp), (agno))
-+#define xfs_perag_intent_get(mp, agno) \
-+	xfs_perag_get((mp), XFS_FSB_TO_AGNO((mp), (agno)))
- #define xfs_perag_intent_put(pag)		xfs_perag_put(pag)
- 
- static inline void xfs_perag_intent_hold(struct xfs_perag *pag) {}
 diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 77a368e6f..fb40a6625 100644
+index fb40a6625..8cb27912f 100644
 --- a/libxfs/defer_item.c
 +++ b/libxfs/defer_item.c
-@@ -79,10 +79,7 @@ xfs_extent_free_get_group(
- 	struct xfs_mount		*mp,
- 	struct xfs_extent_free_item	*xefi)
+@@ -32,6 +32,11 @@
+ 
+ /* Extent Freeing */
+ 
++static inline struct xfs_extent_free_item *xefi_entry(const struct list_head *e)
++{
++	return list_entry(e, struct xfs_extent_free_item, xefi_list);
++}
++
+ /* Sort bmap items by AG. */
+ static int
+ xfs_extent_free_diff_items(
+@@ -39,11 +44,8 @@ xfs_extent_free_diff_items(
+ 	const struct list_head		*a,
+ 	const struct list_head		*b)
  {
--	xfs_agnumber_t			agno;
+-	const struct xfs_extent_free_item *ra;
+-	const struct xfs_extent_free_item *rb;
 -
--	agno = XFS_FSB_TO_AGNO(mp, xefi->xefi_startblock);
--	xefi->xefi_pag = xfs_perag_intent_get(mp, agno);
-+	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
- }
+-	ra = container_of(a, struct xfs_extent_free_item, xefi_list);
+-	rb = container_of(b, struct xfs_extent_free_item, xefi_list);
++	struct xfs_extent_free_item	*ra = xefi_entry(a);
++	struct xfs_extent_free_item	*rb = xefi_entry(b);
  
- /* Release an active AG ref after some freeing work. */
-@@ -256,10 +253,7 @@ xfs_rmap_update_get_group(
- 	struct xfs_mount	*mp,
- 	struct xfs_rmap_intent	*ri)
+ 	return ra->xefi_pag->pag_agno - rb->xefi_pag->pag_agno;
+ }
+@@ -99,12 +101,10 @@ xfs_extent_free_finish_item(
+ 	struct xfs_btree_cur		**state)
  {
--	xfs_agnumber_t	agno;
--
--	agno = XFS_FSB_TO_AGNO(mp, ri->ri_bmap.br_startblock);
--	ri->ri_pag = xfs_perag_intent_get(mp, agno);
-+	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_bmap.br_startblock);
- }
+ 	struct xfs_owner_info		oinfo = { };
+-	struct xfs_extent_free_item	*xefi;
++	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+ 	xfs_agblock_t			agbno;
+ 	int				error = 0;
  
- /* Release an active AG ref after finishing rmapping work. */
-@@ -369,10 +363,7 @@ xfs_refcount_update_get_group(
- 	struct xfs_mount		*mp,
- 	struct xfs_refcount_intent	*ri)
+-	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
+-
+ 	oinfo.oi_owner = xefi->xefi_owner;
+ 	if (xefi->xefi_flags & XFS_EFI_ATTR_FORK)
+ 		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
+@@ -143,9 +143,7 @@ STATIC void
+ xfs_extent_free_cancel_item(
+ 	struct list_head		*item)
  {
--	xfs_agnumber_t			agno;
+-	struct xfs_extent_free_item	*xefi;
 -
--	agno = XFS_FSB_TO_AGNO(mp, ri->ri_startblock);
--	ri->ri_pag = xfs_perag_intent_get(mp, agno);
-+	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_startblock);
- }
+-	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
++	struct xfs_extent_free_item	*xefi = xefi_entry(item);
  
- /* Release an active AG ref after finishing refcounting work. */
-@@ -490,13 +481,9 @@ xfs_bmap_update_get_group(
- 	struct xfs_mount	*mp,
- 	struct xfs_bmap_intent	*bi)
+ 	xfs_extent_free_put_group(xefi);
+ 	kmem_cache_free(xfs_extfree_item_cache, xefi);
+@@ -173,13 +171,11 @@ xfs_agfl_free_finish_item(
  {
--	xfs_agnumber_t		agno;
--
- 	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
- 		return;
+ 	struct xfs_owner_info		oinfo = { };
+ 	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_extent_free_item	*xefi;
++	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+ 	struct xfs_buf			*agbp;
+ 	int				error;
+ 	xfs_agblock_t			agbno;
  
--	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
+-	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
 -
- 	/*
- 	 * Bump the intent count on behalf of the deferred rmap and refcount
- 	 * intent items that that we can queue when we finish this bmap work.
-@@ -504,7 +491,7 @@ xfs_bmap_update_get_group(
- 	 * intent drops the intent count, ensuring that the intent count
- 	 * remains nonzero across the transaction roll.
- 	 */
--	bi->bi_pag = xfs_perag_intent_get(mp, agno);
-+	bi->bi_pag = xfs_perag_intent_get(mp, bi->bi_bmap.br_startblock);
- }
- 
- /* Add this deferred BUI to the transaction. */
+ 	ASSERT(xefi->xefi_blockcount == 1);
+ 	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
+ 	oinfo.oi_owner = xefi->xefi_owner;
 
