@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3D05227
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:25:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37A275227
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:25:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727832316; cv=none; b=DkRJJm9ZhkoPY97/yssd+V8b/MeVPv2El9eyjwVfciyyCVJxxAchuZueVHKL81UAufgiP5WX23RxuYP2KM3cMQX/X1eJSxsUDhScisKKHzIEtC2p2u02j2n+oo4iMVG7DLTGT40vhBQR4VucOLtJrK6oWn7s/OkDbMoahsBDhRg=
+	t=1727832332; cv=none; b=XaorVRurDATUkdg1qKlKE79vFack0JHnNYiz5NDok6PFsteHYPDuRNVEAW/Wv+iWtfGl8+JyxC/8ZwANUhdK+qf1PwvbXtgppmm5bm5Jtc5JnEmCEHzjh24HCaZmZ8K0NOdg4CA7NqDCbYZeIXdp2icmCHRKUPNEk0F45jmJXxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727832316; c=relaxed/simple;
-	bh=IHzsb+/GRr4mxDJ9HLY0iXbJJwb8fesFPdcHfFk0XoY=;
+	s=arc-20240116; t=1727832332; c=relaxed/simple;
+	bh=sX0YfV4RkmoJT5ju7Mk1w6jPWSf/cjad2hLUrYcjnXw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IjUgcV3LcIfGq9TcJWfQFSsODouHRozafIAPxFZULrID68inKkrnsiCkV0nsEg2yzg6l4UtLAA/TKVG60OELFtVsho57EUa7f8BkT7ig6SApZ5in4AieGV8i618xDYDxWj/SQTeUmHCsMg3Hw6nsas39eHrkfndr2N2M2byI0Kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pWc14p4v; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jKirE/+r3m585nA67cXjqkj5moR2burMiYR5x1jNoZpundZ+plK6p5nJ98eYRFG8KKPU6JEjYDaMHDcu9t8jjBjJJzB0Ks5gh9mIlJf7qTxZp9wiSX3XZ04NRHjaBE8J4KpFIHA4wdRa0yq6awEtROb7TcDi3eMN1jfBAGHBSwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uEFhUeeg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pWc14p4v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70BEEC4CEC6;
-	Wed,  2 Oct 2024 01:25:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uEFhUeeg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 148E5C4CEC6;
+	Wed,  2 Oct 2024 01:25:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727832316;
-	bh=IHzsb+/GRr4mxDJ9HLY0iXbJJwb8fesFPdcHfFk0XoY=;
+	s=k20201202; t=1727832332;
+	bh=sX0YfV4RkmoJT5ju7Mk1w6jPWSf/cjad2hLUrYcjnXw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pWc14p4vCYUDLkV+W9UYM6BUc1EHZOo/LeTpifLEmtVk8Yh3AP0PZ1u1/F1pfR+9H
-	 5Y84UNI+5RffoY9NKUVIRQyMCGpesQQsN0AzEsgfyHcgb0wr6XrjmBe5cr8df+WxQ/
-	 RfOkupgbaL3t17KlKBFuNiSEp/AiAT7Ry0muJBy7nwwd4CH4yt/nqV3a8YDyFB1e36
-	 HzVMouF2KzlX+Uj6GeeOT6/QkzQTbeEn70QrlR2wrl02WVAhpbPSxm+s3CuBkUGQMB
-	 GsdIU+uBKJVAcQI6Ggm0d3JePs5L8uI6gizzVDQdamPFl0N5wTauJxqH6YfdmfBMqH
-	 Y6MIUobQWVdjQ==
-Date: Tue, 01 Oct 2024 18:25:16 -0700
-Subject: [PATCH 3/4] xfs_db/mdrestore/repair: don't use the incore struct
- xfs_sb for offsets into struct xfs_dsb
+	b=uEFhUeegNSVg36cHIbV/ZKaLqX5Xk4uotuXN8BGPr8tqaOq+0T+41MSc7WndJUBZV
+	 UMZ9+sAdbODis7icByuvn3onQyHEbY8l2sMQZ2MypqoGggrgQCB6J642xI9OUf5xUV
+	 xOmGSAP1cBwkKSaxrRJ9F3f4b9GmnDMziN1beubvykSUcW4McMZNKZyFRAeuV/bkz1
+	 gX2QyqOrL4yNPhse25Eyq5oPhT0UOr2RCytLEEKkgVBP3cg8uxrPQeCH2uNCvjMS9o
+	 pmgE18lSC9btReJMbkMlqb2oMCuizGa+j/giNbkp0a6I1Cs0p256x2aZg+OLLwxbC5
+	 U6/KwesR3R/RQ==
+Date: Tue, 01 Oct 2024 18:25:31 -0700
+Subject: [PATCH 4/4] xfs_db: port the iunlink command to use the libxfs
+ iunlink function
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783103075.4038482.16400875402327891337.stgit@frogsfrogsfrogs>
+Message-ID: <172783103090.4038482.8296139533705611698.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783103027.4038482.10618338363884807798.stgit@frogsfrogsfrogs>
 References: <172783103027.4038482.10618338363884807798.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,88 +47,154 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: ac3a0275165b4f80d9b7b516d6a8f8b308644fff
-
-Currently, the XFS_SB_CRC_OFF macro uses the incore superblock struct
-(xfs_sb) to compute the address of sb_crc within the ondisk superblock
-struct (xfs_dsb).  This is a landmine if we ever change the layout of
-the incore superblock (as we're about to do), so redefine the macro
-to use xfs_dsb to compute the layout of xfs_dsb.
-
-Port the userspace utilities to the new code just like we did for the
-kernel.
+Now that we've ported the kernel's iunlink code to userspace, adapt the
+debugger command to use it instead of duplicating the logic.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/sb.c                   |    4 ++--
- mdrestore/xfs_mdrestore.c |    6 ++----
- repair/agheader.c         |   12 ++++++------
- 3 files changed, 10 insertions(+), 12 deletions(-)
+ db/iunlink.c             |  110 ----------------------------------------------
+ libxfs/libxfs_api_defs.h |    1 
+ 2 files changed, 2 insertions(+), 109 deletions(-)
 
 
-diff --git a/db/sb.c b/db/sb.c
-index 7836384a1..9fcb7340f 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -50,8 +50,8 @@ sb_init(void)
- 	add_command(&version_cmd);
- }
+diff --git a/db/iunlink.c b/db/iunlink.c
+index 2ca9096f1..0dc68b724 100644
+--- a/db/iunlink.c
++++ b/db/iunlink.c
+@@ -200,114 +200,6 @@ static const cmdinfo_t	dump_iunlinked_cmd =
+ 	  N_("[-a agno] [-b bucket] [-q] [-v]"),
+ 	  N_("dump chain of unlinked inode buckets"), NULL };
  
--#define	OFF(f)	bitize(offsetof(xfs_sb_t, sb_ ## f))
--#define	SZC(f)	szcount(xfs_sb_t, sb_ ## f)
-+#define	OFF(f)	bitize(offsetof(struct xfs_dsb, sb_ ## f))
-+#define	SZC(f)	szcount(struct xfs_dsb, sb_ ## f)
- const field_t	sb_flds[] = {
- 	{ "magicnum", FLDT_UINT32X, OI(OFF(magicnum)), C1, 0, TYP_NONE },
- 	{ "blocksize", FLDT_UINT32D, OI(OFF(blocksize)), C1, 0, TYP_NONE },
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 334bdd228..269edb8f8 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -101,10 +101,8 @@ fixup_superblock(
- 	memset(block_buffer, 0, sb->sb_sectsize);
- 	sb->sb_inprogress = 0;
- 	libxfs_sb_to_disk((struct xfs_dsb *)block_buffer, sb);
--	if (xfs_sb_version_hascrc(sb)) {
--		xfs_update_cksum(block_buffer, sb->sb_sectsize,
--				 offsetof(struct xfs_sb, sb_crc));
+-/*
+- * Look up the inode cluster buffer and log the on-disk unlinked inode change
+- * we need to make.
+- */
+-static int
+-iunlink_log_dinode(
+-	struct xfs_trans	*tp,
+-	struct xfs_inode	*ip,
+-	struct xfs_perag	*pag,
+-	xfs_agino_t		next_agino)
+-{
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_dinode	*dip;
+-	struct xfs_buf		*ibp;
+-	int			offset;
+-	int			error;
+-
+-	error = -libxfs_imap_to_bp(mp, tp, &ip->i_imap, &ibp);
+-	if (error)
+-		return error;
+-
+-	dip = xfs_buf_offset(ibp, ip->i_imap.im_boffset);
+-
+-	dip->di_next_unlinked = cpu_to_be32(next_agino);
+-	offset = ip->i_imap.im_boffset +
+-			offsetof(struct xfs_dinode, di_next_unlinked);
+-
+-	libxfs_dinode_calc_crc(mp, dip);
+-	libxfs_trans_log_buf(tp, ibp, offset, offset + sizeof(xfs_agino_t) - 1);
+-	return 0;
+-}
+-
+-static int
+-iunlink_insert_inode(
+-	struct xfs_trans	*tp,
+-	struct xfs_perag	*pag,
+-	struct xfs_buf		*agibp,
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_agi		*agi = agibp->b_addr;
+-	xfs_agino_t		next_agino;
+-	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+-	short			bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+-	int			offset;
+-	int			error;
+-
+-	/*
+-	 * Get the index into the agi hash table for the list this inode will
+-	 * go on.  Make sure the pointer isn't garbage and that this inode
+-	 * isn't already on the list.
+-	 */
+-	next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
+-	if (next_agino == agino || !xfs_verify_agino_or_null(pag, next_agino))
+-		return EFSCORRUPTED;
+-
+-	if (next_agino != NULLAGINO) {
+-		/*
+-		 * There is already another inode in the bucket, so point this
+-		 * inode to the current head of the list.
+-		 */
+-		error = iunlink_log_dinode(tp, ip, pag, next_agino);
+-		if (error)
+-			return error;
 -	}
-+	if (xfs_sb_version_hascrc(sb))
-+		xfs_update_cksum(block_buffer, sb->sb_sectsize, XFS_SB_CRC_OFF);
+-
+-	/* Update the bucket. */
+-	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
+-	offset = offsetof(struct xfs_agi, agi_unlinked) +
+-			(sizeof(xfs_agino_t) * bucket_index);
+-	libxfs_trans_log_buf(tp, agibp, offset,
+-			offset + sizeof(xfs_agino_t) - 1);
+-	return 0;
+-}
+-
+-/*
+- * This is called when the inode's link count has gone to 0 or we are creating
+- * a tmpfile via O_TMPFILE.  The inode @ip must have nlink == 0.
+- *
+- * We place the on-disk inode on a list in the AGI.  It will be pulled from this
+- * list when the inode is freed.
+- */
+-static int
+-iunlink(
+-	struct xfs_trans	*tp,
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_perag	*pag;
+-	struct xfs_buf		*agibp;
+-	int			error;
+-
+-	ASSERT(VFS_I(ip)->i_nlink == 0);
+-	ASSERT(VFS_I(ip)->i_mode != 0);
+-
+-	pag = libxfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+-
+-	/* Get the agi buffer first.  It ensures lock ordering on the list. */
+-	error = -libxfs_read_agi(pag, tp, 0, &agibp);
+-	if (error)
+-		goto out;
+-
+-	error = iunlink_insert_inode(tp, pag, agibp, ip);
+-out:
+-	libxfs_perag_put(pag);
+-	return error;
+-}
+-
+ static int
+ create_unlinked(
+ 	struct xfs_mount	*mp)
+@@ -343,7 +235,7 @@ create_unlinked(
+ 		goto out_cancel;
+ 	}
  
- 	if (pwrite(ddev_fd, block_buffer, sb->sb_sectsize, 0) < 0)
- 		fatal("error writing primary superblock: %s\n", strerror(errno));
-diff --git a/repair/agheader.c b/repair/agheader.c
-index 762901581..3930a0ac0 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -358,22 +358,22 @@ secondary_sb_whack(
- 	 * size is the size of data which is valid for this sb.
- 	 */
- 	if (xfs_sb_version_hasmetauuid(sb))
--		size = offsetof(xfs_sb_t, sb_meta_uuid)
-+		size = offsetof(struct xfs_dsb, sb_meta_uuid)
- 			+ sizeof(sb->sb_meta_uuid);
- 	else if (xfs_sb_version_hascrc(sb))
--		size = offsetof(xfs_sb_t, sb_lsn)
-+		size = offsetof(struct xfs_dsb, sb_lsn)
- 			+ sizeof(sb->sb_lsn);
- 	else if (xfs_sb_version_hasmorebits(sb))
--		size = offsetof(xfs_sb_t, sb_bad_features2)
-+		size = offsetof(struct xfs_dsb, sb_bad_features2)
- 			+ sizeof(sb->sb_bad_features2);
- 	else if (xfs_sb_version_haslogv2(sb))
--		size = offsetof(xfs_sb_t, sb_logsunit)
-+		size = offsetof(struct xfs_dsb, sb_logsunit)
- 			+ sizeof(sb->sb_logsunit);
- 	else if (xfs_sb_version_hassector(sb))
--		size = offsetof(xfs_sb_t, sb_logsectsize)
-+		size = offsetof(struct xfs_dsb, sb_logsectsize)
- 			+ sizeof(sb->sb_logsectsize);
- 	else /* only support dirv2 or more recent */
--		size = offsetof(xfs_sb_t, sb_dirblklog)
-+		size = offsetof(struct xfs_dsb, sb_dirblklog)
- 			+ sizeof(sb->sb_dirblklog);
+-	error = iunlink(tp, ip);
++	error = -libxfs_iunlink(tp, ip);
+ 	if (error) {
+ 		dbprintf(_("unlink inode: %s\n"), strerror(error));
+ 		goto out_rele;
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 903f7dc69..a51c14a27 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -200,6 +200,7 @@
  
- 	/* Check the buffer we read from disk for garbage outside size */
+ #define xfs_iread_extents		libxfs_iread_extents
+ #define xfs_irele			libxfs_irele
++#define xfs_iunlink			libxfs_iunlink
+ #define xfs_link_space_res		libxfs_link_space_res
+ #define xfs_log_calc_minimum_size	libxfs_log_calc_minimum_size
+ #define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
 
