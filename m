@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63BBA1FA4
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:14:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1C317D2
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:14:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831677; cv=none; b=TTzfQiSG31rsDgi2YOWMdj87SJKldlRs8oAn0G2A/XHmnwi2d8ZEtkHY3ydnfsO+8Fpry/YXJf8cWfKb8sGxNDk9t2XgTA7QJaCcKJ6VSWNto3TLKbR1UWtYuy4l9VI1t4iNkYFFU5IYywueQ6ANZiQk/DYQiJPJ6B4y3Gw8QEs=
+	t=1727831693; cv=none; b=JLpSuAAqEwhJt+hgOD1JC0C/iP4GdNdo9/UWkrITREhEpkBkVCz2WwasdL+75hkO3XJRO9DaG7FMgrwuK1bt5HuyiruP0L1ZEQfKPt0XlZd2xqdjKmHnZ6WlHFsSVhHmzwxkdGcz+J5N7j1tPyJoIJhBdZ8UuoS9g8OSvV6G/7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831677; c=relaxed/simple;
-	bh=kxY2UhaMT3oa3bw1Jixnyw1U84GVJm1a8Zl2L9Y+UO4=;
+	s=arc-20240116; t=1727831693; c=relaxed/simple;
+	bh=cQTJopVtZw73GmkO+eAKJS8Drtg/iFfFEsCgj2zwz48=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fT1AiTV2u5iEBTNFSBP62YlvmB43QFp4SrEz0xusQjWgrWyrHTGbfCNz8RfmAJCvOYW09fqQVdYpWVdw4eTckOd1TtvbwCGULn7mA2EW11EGJt4wntRZ0zT4f9H8rzy30RxzuQgvMnArSTlmzwsmui9BWomiPqYPsCHP07emQx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sdEVgi0e; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gPvupxOMR6Tp+LrK5yDE574/rsoIfPuqlg3vLdmfAIXShxZoXkAAIQYXG4NKMuCGsdB6CDXTGekmTBuiP0UMkx/lT6a+N0w86qI20nV70NglnzscWOrYAqdTIK7Z/zvb7zcM73Vv56lmKfxbgMKxyzAY2DXwQc6yCQSQ0wagD1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bacLRz29; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sdEVgi0e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6961C4CECD;
-	Wed,  2 Oct 2024 01:14:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bacLRz29"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92193C4CEC6;
+	Wed,  2 Oct 2024 01:14:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831677;
-	bh=kxY2UhaMT3oa3bw1Jixnyw1U84GVJm1a8Zl2L9Y+UO4=;
+	s=k20201202; t=1727831692;
+	bh=cQTJopVtZw73GmkO+eAKJS8Drtg/iFfFEsCgj2zwz48=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sdEVgi0eNLIzmTjA+1XFVpKfYxCqja5DOgvjkdrkpQlbRMDryp3O3im8OWO5LQv6A
-	 Gw+HU2M9Z/SHOZvVug38TENE5tOiACptXMUK/9nSoYuktXwxiHDlmWrfaDGYsOFa0Y
-	 3ZeDBuima4Ou9FthH02AErxB//vBF/xFjOCzc3ihc3osTBepuqmEJ6BwXK5GOUG12L
-	 Gx/JODjWdSmvUAFKOST0oQ1A/R9LFKSu7MDucowLa+97DdVafhpUxDxioZg3di43GJ
-	 AE/VS/wfLeO7m6wXevrsLF+RdV+etScGQHkx4M++5fzPmjeSJZ9rCU06oyO++FXh/5
-	 B03ZglfFYiitA==
-Date: Tue, 01 Oct 2024 18:14:36 -0700
-Subject: [PATCH 26/64] xfs: create libxfs helper to link an existing inode
- into a directory
+	b=bacLRz29vdlk3zyY6qf0gQdcuM2cpaCzI7KJYXu/RQ+1Y2Wz9IrKK7e88vuh3MkAS
+	 DHZ2muFoniwK373oJjff8gB6UZeWRLUp3dK8fMzuafAPpl9RNxiir2V0uapcBx8fVz
+	 AHHiodEBaQVxdNxnffURgSqwpT0B26gbu/cLk0HlWbA/sNPGXL/Ou0wJMcdysBK8L8
+	 f85139RM32vZ0hOgadrj1PhewMjbErGyY7ltDLbhOQN5DF8H/rJqzn16qaLFzGGMtR
+	 mrhCdvyHxHyi/LqSFANyuRQqGUREyEfK6m9GLe0fdCr0rFiEmf9JAUMelukY67VhzK
+	 70wnCbNTtey3Q==
+Date: Tue, 01 Oct 2024 18:14:52 -0700
+Subject: [PATCH 27/64] xfs: hoist inode free function to libxfs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172783102173.4036371.5713397225646237655.stgit@frogsfrogsfrogs>
+Message-ID: <172783102188.4036371.13924418007546965939.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,132 +46,98 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: c1f0bad4232fd309b2fe849153fcf473e775b1f7
+Source kernel commit: 1964435d19d947b8626379d09db3e33b9669f333
 
-Create a new libxfs function to link an existing inode into a directory.
-The upcoming metadata directory feature will need this to create a
-metadata directory tree.
+Create a libxfs helper function that marks an inode free on disk.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_dir2.c |   71 +++++++++++++++++++++++++++++++++++++++++++++++++++--
- libxfs/xfs_dir2.h |    4 ++-
- 2 files changed, 71 insertions(+), 4 deletions(-)
+ libxfs/xfs_inode_util.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_inode_util.h |    5 +++++
+ 2 files changed, 56 insertions(+)
 
 
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index e98b28024..802b9a1b3 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -21,6 +21,7 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_trans_space.h"
- #include "xfs_parent.h"
-+#include "xfs_ag.h"
+diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
+index 13c32d114..74d2b5960 100644
+--- a/libxfs/xfs_inode_util.c
++++ b/libxfs/xfs_inode_util.c
+@@ -693,3 +693,54 @@ xfs_bumplink(
  
- const struct xfs_name xfs_name_dotdot = {
- 	.name	= (const unsigned char *)"..",
-@@ -586,9 +587,9 @@ xfs_dir_replace(
-  */
- int
- xfs_dir_canenter(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*dp,
--	struct xfs_name	*name)		/* name of entry to add */
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	const struct xfs_name	*name)		/* name of entry to add */
- {
- 	return xfs_dir_createname(tp, dp, name, 0, 0);
- }
-@@ -808,3 +809,67 @@ xfs_dir_create_child(
- 
- 	return 0;
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  }
 +
-+/*
-+ * Given a directory @dp, an existing non-directory inode @ip, and a @name,
-+ * link @ip into @dp under the given @name.  Both inodes must have the ILOCK
-+ * held.
-+ */
++/* Free an inode in the ondisk index and zero it out. */
 +int
-+xfs_dir_add_child(
++xfs_inode_uninit(
 +	struct xfs_trans	*tp,
-+	unsigned int		resblks,
-+	struct xfs_dir_update	*du)
++	struct xfs_perag	*pag,
++	struct xfs_inode	*ip,
++	struct xfs_icluster	*xic)
 +{
-+	struct xfs_inode	*dp = du->dp;
-+	const struct xfs_name	*name = du->name;
-+	struct xfs_inode	*ip = du->ip;
-+	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_mount	*mp = ip->i_mount;
 +	int			error;
 +
-+	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
-+	xfs_assert_ilocked(dp, XFS_ILOCK_EXCL);
-+	ASSERT(!S_ISDIR(VFS_I(ip)->i_mode));
-+
-+	if (!resblks) {
-+		error = xfs_dir_canenter(tp, dp, name);
-+		if (error)
-+			return error;
-+	}
-+
 +	/*
-+	 * Handle initial link state of O_TMPFILE inode
++	 * Free the inode first so that we guarantee that the AGI lock is going
++	 * to be taken before we remove the inode from the unlinked list. This
++	 * makes the AGI lock -> unlinked list modification order the same as
++	 * used in O_TMPFILE creation.
 +	 */
-+	if (VFS_I(ip)->i_nlink == 0) {
-+		struct xfs_perag	*pag;
-+
-+		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-+		error = xfs_iunlink_remove(tp, pag, ip);
-+		xfs_perag_put(pag);
-+		if (error)
-+			return error;
-+	}
-+
-+	error = xfs_dir_createname(tp, dp, name, ip->i_ino, resblks);
++	error = xfs_difree(tp, pag, ip->i_ino, xic);
 +	if (error)
 +		return error;
 +
-+	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
-+
-+	xfs_bumplink(tp, ip);
++	error = xfs_iunlink_remove(tp, pag, ip);
++	if (error)
++		return error;
 +
 +	/*
-+	 * If we have parent pointers, we now need to add the parent record to
-+	 * the attribute fork of the inode. If this is the initial parent
-+	 * attribute, we need to create it correctly, otherwise we can just add
-+	 * the parent to the inode.
++	 * Free any local-format data sitting around before we reset the
++	 * data fork to extents format.  Note that the attr fork data has
++	 * already been freed by xfs_attr_inactive.
 +	 */
-+	if (du->ppargs) {
-+		error = xfs_parent_addname(tp, du->ppargs, dp, name, ip);
-+		if (error)
-+			return error;
++	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
++		kfree(ip->i_df.if_data);
++		ip->i_df.if_data = NULL;
++		ip->i_df.if_bytes = 0;
 +	}
 +
++	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
++	ip->i_diflags = 0;
++	ip->i_diflags2 = mp->m_ino_geo.new_diflags2;
++	ip->i_forkoff = 0;		/* mark the attr fork not in use */
++	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
++
++	/*
++	 * Bump the generation count so no one will be confused
++	 * by reincarnations of this inode.
++	 */
++	VFS_I(ip)->i_generation++;
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 +	return 0;
 +}
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index a1ba6fd0a..4f9711509 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -74,7 +74,7 @@ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				const struct xfs_name *name, xfs_ino_t inum,
- 				xfs_extlen_t tot);
- extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
--				struct xfs_name *name);
-+				const struct xfs_name *name);
+diff --git a/libxfs/xfs_inode_util.h b/libxfs/xfs_inode_util.h
+index 1c54c3b0c..060242998 100644
+--- a/libxfs/xfs_inode_util.h
++++ b/libxfs/xfs_inode_util.h
+@@ -6,6 +6,8 @@
+ #ifndef	__XFS_INODE_UTIL_H__
+ #define	__XFS_INODE_UTIL_H__
  
- int xfs_dir_lookup_args(struct xfs_da_args *args);
- int xfs_dir_createname_args(struct xfs_da_args *args);
-@@ -320,5 +320,7 @@ struct xfs_dir_update {
++struct xfs_icluster;
++
+ uint16_t	xfs_flags2diflags(struct xfs_inode *ip, unsigned int xflags);
+ uint64_t	xfs_flags2diflags2(struct xfs_inode *ip, unsigned int xflags);
+ uint32_t	xfs_dic2xflags(struct xfs_inode *ip);
+@@ -48,6 +50,9 @@ void xfs_trans_ichgtime(struct xfs_trans *tp, struct xfs_inode *ip, int flags);
+ void xfs_inode_init(struct xfs_trans *tp, const struct xfs_icreate_args *args,
+ 		struct xfs_inode *ip);
  
- int xfs_dir_create_child(struct xfs_trans *tp, unsigned int resblks,
- 		struct xfs_dir_update *du);
-+int xfs_dir_add_child(struct xfs_trans *tp, unsigned int resblks,
-+		struct xfs_dir_update *du);
- 
- #endif	/* __XFS_DIR2_H__ */
++int xfs_inode_uninit(struct xfs_trans *tp, struct xfs_perag *pag,
++		struct xfs_inode *ip, struct xfs_icluster *xic);
++
+ int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
+ int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+ 		struct xfs_inode *ip);
 
