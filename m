@@ -1,182 +1,528 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2E461CF5FB;
-	Wed,  2 Oct 2024 12:41:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C021D07AD
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 13:38:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727872898; cv=none; b=RPJntls7GLKI6t+51l2DQ6irBtYYL7iSY6QLen0N3xlL0CyYfL+USBxDIZeMGPA753fmSHFFbBFMdXykgS/l0IkBsCRasbWx9Qm9iXjpBjtXL6uUrVsgNc9E1ncplBG77ZDyl0/pEC4dSNDHkdPNx+DOWa9nLps9PSNucpYSXk0=
+	t=1727876292; cv=none; b=U8/GXeB9bbCUU5UDeahAwUjvj+DHwiei5V5G639+Fb1NwV+SjLxoDUcr264re1rrS4qq2WadnwdT0adtv4IshkXaPPWeNFvcw1bsc2Ia6KatgGwLHGBoDHaQPLS8mH66p/PfEBM7kUGOjez54UtZtBNc5VCo0BAeuQl5UPUNMZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727872898; c=relaxed/simple;
-	bh=rsPFbKpiXtzp1H3myI10Z6ZOCFH7i1QWjc4oSum17fs=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=mS59feWlyvSwyq7bEKOtriG2dwcDU6XoLVfpjf53ZQ5Cmz7xOe7nZ7JLmq7sFgEpLYb0OlsoKGFFPdkFYoSKwDo9UwgyFPpUK/tf6pW7fcdhdqC8YfaLY7njfIiGRKJX8SuMzpWDzLkeh4/Mdgs91+GyW/3GF2hcPo7ZcVj9MXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uUsPMd5D; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727876292; c=relaxed/simple;
+	bh=4B4o4MunQ60c7QX8isbEEPPv1ilfRH3c9KmCzcf7tEo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=K5E9l0aXvOe7ePjpzSDpiSLPthpE2a/zGeh4rgcCR70wgGB9SkgyHh3ezKHezBZkRlwf6KD4vpZ4F/rVeeGkZzZyI0+1j+RJnOSZkrbOsJaHNDkI7tYvZT1mvmgzgcub0MBtNb6uXhfcRLjTnu0dspstKTaYYP27HmLXcR7xUWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ni3AiffY; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uUsPMd5D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FD79C4CEC5;
-	Wed,  2 Oct 2024 12:41:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727872897;
-	bh=rsPFbKpiXtzp1H3myI10Z6ZOCFH7i1QWjc4oSum17fs=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=uUsPMd5DAJcObXgz3J7RuwYOJ5aQ/VM/X8j30UiD9e0dS8zc3rx9yMv+m6jawNrFU
-	 abqeiBCcQWsyuYwhrzFyLvjmkB5+7Wln4h/GddMHtPTiznXwAUxludoVy43TTKV5wy
-	 06/uhbE0wivgMh8PgauEiVLMS1OPjp7z6YS0gN/jr+kItrj/P6udkuyRN4xir9WL8m
-	 h9QLFKM6aNs2/OPC72rTGrx/QFQl4v2UcN/4CCYeeaH4QZSZt/QND/9Xw3Bs5dvgYT
-	 GzqQNrZM9H/HHO/j12SXQkZ8FQWD65uA+byHiyrcyRA16zGK7YJTzUGKSk82CDqFr0
-	 Tc1d4edlcQuPg==
-Message-ID: <53bd978054a2ebfef490c8816629a6d9c59ed199.camel@kernel.org>
-Subject: Re: [PATCH v8 01/11] timekeeping: move multigrain timestamp floor
- handling into timekeeper
-From: Jeff Layton <jlayton@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, John Stultz <jstultz@google.com>, 
- Stephen Boyd <sboyd@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Steven
- Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Jonathan Corbet
- <corbet@lwn.net>, Chandan Babu R <chandan.babu@oracle.com>, "Darrick J.
- Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger
- <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>, Josef Bacik
- <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,  Hugh Dickins
- <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Chuck Lever
- <chuck.lever@oracle.com>, Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Cc: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
- linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-ext4@vger.kernel.org,  linux-btrfs@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-mm@kvack.org
-Date: Wed, 02 Oct 2024 08:41:34 -0400
-In-Reply-To: <8734lgyote.ffs@tglx>
-References: <20240914-mgtime-v8-0-5bd872330bed@kernel.org>
-	 <20240914-mgtime-v8-1-5bd872330bed@kernel.org> <87a5g79aag.ffs@tglx>
-	 <874j6f99dg.ffs@tglx>
-	 <b300fec8b6f611662195e0339f290d473a41607c.camel@kernel.org>
-	 <878qv90x6w.ffs@tglx>
-	 <4933075b1023f466edb516e86608e0938de28c1d.camel@kernel.org>
-	 <87y138zyfu.ffs@tglx>
-	 <79a32ab9308d6e63e066aa17c5c2492b51b55850.camel@kernel.org>
-	 <87plokzuy6.ffs@tglx>
-	 <4aa41dcb6f4be736355506dd500c4d255e008764.camel@kernel.org>
-	 <8734lgyote.ffs@tglx>
-Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
- keydata=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
- QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40app2) 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ni3AiffY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1727876288;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qzX5jq71qX2Xyvp0wNt4hZOZU3FceZiufZfnSmf6GwA=;
+	b=Ni3AiffYSOFLXVPNhOkU5JZJRQ6Pef4P9ti3eK6dnLYSGbjHrRGl8xxSnWRyjIOtA7nKk8
+	WZiDjNHHGzTQTzeCzKMNqM2scd5dtN0b+TWQByx1jHg3jqx92NYhSlXBVknNAZg05Q740K
+	92Hy1/wjsped79PHluqaE0F7iGWX1d4=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-454-Y_Yh9qO_OaKhnOC7f78d6w-1; Wed, 02 Oct 2024 09:38:07 -0400
+X-MC-Unique: Y_Yh9qO_OaKhnOC7f78d6w-1
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-7db9418552fso5860192a12.0
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 06:38:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727876286; x=1728481086;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qzX5jq71qX2Xyvp0wNt4hZOZU3FceZiufZfnSmf6GwA=;
+        b=hWQ5D0t/wSFMfy9uVeDMNPbCXuQ5Yrrnl2IXWB528bDY2v7agX1LfedKDZWKpKbKT0
+         mef36Hi5qVZ7Uskq6xbtk4Bwu4F+QSNRhvos9cdF4U4xUG+U6X71aTDps5jTmDzL7vjv
+         R6hI52e0PtceOK8VEevNJkGLfpyG24k/6ZPU0nP6V7ovIPK+1UJYfKGmCbpVULS1+3hV
+         7c2FX0Ck/yuChBp2vkIG1wCh9u3bg7AnI6R7VUiefx3cEFx2pcPoQBSEvRQtnuuYx+hk
+         Lju6fdC/vL5204E0HjtEt53nl2HWjxT3Ggx5eNBsN6l++/f0oUVmtNNbOMSQh1QDLMIK
+         xyaQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWyY63Ut1OCgMF60dKVZJp3HWOlvZGq0mi1q55bg6K9Fhbg98//hNN08zLwfg4Cf1l/YiXbtaf3Cc8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyPgOcvyDI1tF39D/hSgPWMPXibBpZ5f5/uvqnmHPbIbu6b5eJp
+	3FTCAVvNS6RMP2uPJtX6ACuubbYFYR5iUvrxU6CyZM8BN6MsEt54PpepFMNBUhprSP/8W5WtDa/
+	YwiulwvwT54QHsRi25qJTCuyxprXDcYlQyQ+FD5TceWbL4H1aSCe68L5HPTgBOWwwGfo7
+X-Received: by 2002:a17:90b:4f43:b0:2e0:7560:9338 with SMTP id 98e67ed59e1d1-2e184901f61mr3984071a91.25.1727876285920;
+        Wed, 02 Oct 2024 06:38:05 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEgIDIHXeQa3/vlWtaSL8dXbMdxyjeHTc3x6E9eii/+OoRndJCqpknfGxnPEMQW9g+6khib1Q==
+X-Received: by 2002:a17:90b:4f43:b0:2e0:7560:9338 with SMTP id 98e67ed59e1d1-2e184901f61mr3984048a91.25.1727876285517;
+        Wed, 02 Oct 2024 06:38:05 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e18f8cda33sm1534518a91.44.2024.10.02.06.38.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Oct 2024 06:38:05 -0700 (PDT)
+Date: Wed, 2 Oct 2024 21:38:00 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>, bfoster@redhat.com
+Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs: new EOF fragmentation tests
+Message-ID: <20241002133800.pk3kb5powlqjbm3m@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240924084551.1802795-1-hch@lst.de>
+ <20240924084551.1802795-2-hch@lst.de>
+ <20241001145944.GE21840@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241001145944.GE21840@frogsfrogsfrogs>
 
-On Tue, 2024-10-01 at 14:45 +0200, Thomas Gleixner wrote:
-> On Tue, Oct 01 2024 at 05:45, Jeff Layton wrote:
-> > On Mon, 2024-09-30 at 23:35 +0200, Thomas Gleixner wrote:
-> > > > I certainly wouldn't rule out a workqueue job calling that function=
-,
-> > > > but this is something we do while dirtying an inode, and that's not
-> > > > typically done in interrupt context.
-> > >=20
-> > > The reason I'm asking is that if it's always syscall context,
-> > > i.e. write() or io_uring()/RPC request etc., then you can avoid the
-> > > whole global floor value dance and make it strictly per thread, which
-> > > simplifies the exercise significantly.
-> > >=20
-> >=20
-> > I'm not sure I follow what you're proposing here.
-> >=20
-> > Consider two threads doing writes serially to different files. IOW, the
-> > second thread enters the write() syscall after the first thread returns
-> > from its write(). In that situation, the second timestamp mustn't
-> > appear to be earlier than the first (assuming no backward clock jump,
-> > of course).
-> >=20
-> > How would we ensure that with only per-thread structures?
->=20
-> Bah. Right. Ignore my sleep deprived rambling.
+On Tue, Oct 01, 2024 at 07:59:44AM -0700, Darrick J. Wong wrote:
+> On Tue, Sep 24, 2024 at 10:45:48AM +0200, Christoph Hellwig wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > These tests create substantial file fragmentation as a result of
+> > application actions that defeat post-EOF preallocation
+> > optimisations. They are intended to replicate known vectors for
+> > these problems, and provide a check that the fragmentation levels
+> > have been controlled. The mitigations we make may not completely
+> > remove fragmentation (e.g. they may demonstrate speculative delalloc
+> > related extent size growth) so the checks don't assume we'll end up
+> > with perfect layouts and hence check for an exceptable level of
+> > fragmentation rather than none.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > [move to different test number, update to current xfstest APIs]
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  tests/xfs/1500     | 66 +++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1500.out |  9 ++++++
+> >  tests/xfs/1501     | 68 ++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1501.out |  9 ++++++
+> >  tests/xfs/1502     | 68 ++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1502.out |  9 ++++++
+> >  tests/xfs/1503     | 77 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1503.out | 33 ++++++++++++++++++++
+> >  8 files changed, 339 insertions(+)
+> >  create mode 100755 tests/xfs/1500
+> >  create mode 100644 tests/xfs/1500.out
+> >  create mode 100755 tests/xfs/1501
+> >  create mode 100644 tests/xfs/1501.out
+> >  create mode 100755 tests/xfs/1502
+> >  create mode 100644 tests/xfs/1502.out
+> >  create mode 100755 tests/xfs/1503
+> >  create mode 100644 tests/xfs/1503.out
+> > 
+> > diff --git a/tests/xfs/1500 b/tests/xfs/1500
+> > new file mode 100755
+> > index 000000000..de0e1df62
+> > --- /dev/null
+> > +++ b/tests/xfs/1500
+> > @@ -0,0 +1,66 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test xfs/500
+> > +#
+> > +# Post-EOF preallocation defeat test for O_SYNC buffered I/O.
+> > +#
+> > +
+> > +. ./common/preamble
+> > +_begin_fstest auto quick prealloc rw
+> > +
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +_require_scratch
+> > +
+> > +_cleanup()
+> > +{
+> > +	# try to kill all background processes
+> > +	wait
+> > +	cd /
+> > +	rm -r -f $tmp.*
+> > +}
+> > +
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +
+> > +# Write multiple files in parallel using synchronous buffered writes. Aim is to
+> > +# interleave allocations to fragment the files. Synchronous writes defeat the
+> > +# open/write/close heuristics in xfs_file_release() that prevent EOF block
+> > +# removal, so this should fragment badly. Typical problematic behaviour shows
+> > +# per-file extent counts of >900 (almost worse case) whilst fixed behaviour
+> > +# typically shows extent counts in the low 20s.
+> 
+> Now that these are in for-next, I've noticed that these new tests
+> consistently fail in the above-documented manner on various configs --
+> fsdax, always_cow, rtextsize > 1fsb, and sometimes 1k fsblock size.
+> 
+> I'm not sure why this happens, but it probably needs to be looked at
+> along with all the FALLOC_FL_UNSHARE_RANGE brokenness that's also been
+> exposed by fstests that /does/ need to be fixed.
 
-No worries. My one big takeaway from working on all of this is that
-anything dealing with clocks and time is just difficult to
-conceptualize.
+Yes, some fsx tests fail on xfs, after the FALLOC_FL_UNSHARE_RANGE supporting.
+e.g. g/091, g/127, g/263, g/363 and g/616. I thought they're known issues as
+you known. If they're not, better to check. Hi Brian, are these failures as you
+known?
 
-Could I trouble you for an Acked-by on this patch? I think this series
-should probably go in via Christian's tree, but I don't think he wants
-to merge it without an explicit ack from the timekeeping maintainers.
+Thanks,
+Zorro
 
-Thanks again for the review!
---=20
-Jeff Layton <jlayton@kernel.org>
+> 
+> --D
+> 
+> > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > +
+> > +workfile=$SCRATCH_MNT/file
+> > +nfiles=8
+> > +wsize=4096
+> > +wcnt=1000
+> > +
+> > +write_sync_file()
+> > +{
+> > +	idx=$1
+> > +
+> > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > +		$XFS_IO_PROG -f -s -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
+> > +	done
+> > +}
+> > +
+> > +rm -f $workfile*
+> > +for ((n=0; n<$nfiles; n++)); do
+> > +	write_sync_file $n > /dev/null 2>&1 &
+> > +done
+> > +wait
+> > +sync
+> > +
+> > +for ((n=0; n<$nfiles; n++)); do
+> > +	count=$(_count_extents $workfile.$n)
+> > +	# Acceptible extent count range is 1-40
+> > +	_within_tolerance "file.$n extent count" $count 21 19 -v
+> > +done
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1500.out b/tests/xfs/1500.out
+> > new file mode 100644
+> > index 000000000..414df87ed
+> > --- /dev/null
+> > +++ b/tests/xfs/1500.out
+> > @@ -0,0 +1,9 @@
+> > +QA output created by 1500
+> > +file.0 extent count is in range
+> > +file.1 extent count is in range
+> > +file.2 extent count is in range
+> > +file.3 extent count is in range
+> > +file.4 extent count is in range
+> > +file.5 extent count is in range
+> > +file.6 extent count is in range
+> > +file.7 extent count is in range
+> > diff --git a/tests/xfs/1501 b/tests/xfs/1501
+> > new file mode 100755
+> > index 000000000..cf3cbf8b5
+> > --- /dev/null
+> > +++ b/tests/xfs/1501
+> > @@ -0,0 +1,68 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test xfs/501
+> > +#
+> > +# Post-EOF preallocation defeat test for buffered I/O with extent size hints.
+> > +#
+> > +
+> > +. ./common/preamble
+> > +_begin_fstest auto quick prealloc rw
+> > +
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +_require_scratch
+> > +
+> > +_cleanup()
+> > +{
+> > +	# try to kill all background processes
+> > +	wait
+> > +	cd /
+> > +	rm -r -f $tmp.*
+> > +}
+> > +
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +
+> > +# Write multiple files in parallel using buffered writes with extent size hints.
+> > +# Aim is to interleave allocations to fragment the files. Writes w/ extent size
+> > +# hints set defeat the open/write/close heuristics in xfs_file_release() that
+> > +# prevent EOF block removal, so this should fragment badly. Typical problematic
+> > +# behaviour shows per-file extent counts of 1000 (worst case!) whilst
+> > +# fixed behaviour should show very few extents (almost best case).
+> > +#
+> > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > +
+> > +workfile=$SCRATCH_MNT/file
+> > +nfiles=8
+> > +wsize=4096
+> > +wcnt=1000
+> > +extent_size=16m
+> > +
+> > +write_extsz_file()
+> > +{
+> > +	idx=$1
+> > +
+> > +	$XFS_IO_PROG -f -c "extsize $extent_size" $workfile.$idx
+> > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > +		$XFS_IO_PROG -f -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
+> > +	done
+> > +}
+> > +
+> > +rm -f $workfile*
+> > +for ((n=0; n<$nfiles; n++)); do
+> > +	write_extsz_file $n > /dev/null 2>&1 &
+> > +done
+> > +wait
+> > +sync
+> > +
+> > +for ((n=0; n<$nfiles; n++)); do
+> > +	count=$(_count_extents $workfile.$n)
+> > +	# Acceptible extent count range is 1-10
+> > +	_within_tolerance "file.$n extent count" $count 2 1 8 -v
+> > +done
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1501.out b/tests/xfs/1501.out
+> > new file mode 100644
+> > index 000000000..a266ef74b
+> > --- /dev/null
+> > +++ b/tests/xfs/1501.out
+> > @@ -0,0 +1,9 @@
+> > +QA output created by 1501
+> > +file.0 extent count is in range
+> > +file.1 extent count is in range
+> > +file.2 extent count is in range
+> > +file.3 extent count is in range
+> > +file.4 extent count is in range
+> > +file.5 extent count is in range
+> > +file.6 extent count is in range
+> > +file.7 extent count is in range
+> > diff --git a/tests/xfs/1502 b/tests/xfs/1502
+> > new file mode 100755
+> > index 000000000..f4228667a
+> > --- /dev/null
+> > +++ b/tests/xfs/1502
+> > @@ -0,0 +1,68 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test xfs/502
+> > +#
+> > +# Post-EOF preallocation defeat test for direct I/O with extent size hints.
+> > +#
+> > +
+> > +. ./common/preamble
+> > +_begin_fstest auto quick prealloc rw
+> > +
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +_require_scratch
+> > +
+> > +_cleanup()
+> > +{
+> > +	# try to kill all background processes
+> > +	wait
+> > +	cd /
+> > +	rm -r -f $tmp.*
+> > +}
+> > +
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +
+> > +# Write multiple files in parallel using O_DIRECT writes w/ extent size hints.
+> > +# Aim is to interleave allocations to fragment the files. O_DIRECT writes defeat
+> > +# the open/write/close heuristics in xfs_file_release() that prevent EOF block
+> > +# removal, so this should fragment badly. Typical problematic behaviour shows
+> > +# per-file extent counts of ~1000 (worst case) whilst fixed behaviour typically
+> > +# shows extent counts in the low single digits (almost best case)
+> > +#
+> > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > +
+> > +workfile=$SCRATCH_MNT/file
+> > +nfiles=8
+> > +wsize=4096
+> > +wcnt=1000
+> > +extent_size=16m
+> > +
+> > +write_direct_file()
+> > +{
+> > +	idx=$1
+> > +
+> > +	$XFS_IO_PROG -f -c "extsize $extent_size" $workfile.$idx
+> > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > +		$XFS_IO_PROG -f -d -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
+> > +	done
+> > +}
+> > +
+> > +rm -f $workfile*
+> > +for ((n=0; n<$nfiles; n++)); do
+> > +	write_direct_file $n > /dev/null 2>&1 &
+> > +done
+> > +wait
+> > +sync
+> > +
+> > +for ((n=0; n<$nfiles; n++)); do
+> > +	count=$(_count_extents $workfile.$n)
+> > +	# Acceptible extent count range is 1-10
+> > +	_within_tolerance "file.$n extent count" $count 2 1 8 -v
+> > +done
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1502.out b/tests/xfs/1502.out
+> > new file mode 100644
+> > index 000000000..82c8760a3
+> > --- /dev/null
+> > +++ b/tests/xfs/1502.out
+> > @@ -0,0 +1,9 @@
+> > +QA output created by 1502
+> > +file.0 extent count is in range
+> > +file.1 extent count is in range
+> > +file.2 extent count is in range
+> > +file.3 extent count is in range
+> > +file.4 extent count is in range
+> > +file.5 extent count is in range
+> > +file.6 extent count is in range
+> > +file.7 extent count is in range
+> > diff --git a/tests/xfs/1503 b/tests/xfs/1503
+> > new file mode 100755
+> > index 000000000..9002f87e6
+> > --- /dev/null
+> > +++ b/tests/xfs/1503
+> > @@ -0,0 +1,77 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test xfs/503
+> > +#
+> > +# Post-EOF preallocation defeat test with O_SYNC buffered I/O that repeatedly
+> > +# closes and reopens the files.
+> > +#
+> > +
+> > +. ./common/preamble
+> > +_begin_fstest auto prealloc rw
+> > +
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +_require_scratch
+> > +
+> > +_cleanup()
+> > +{
+> > +	# try to kill all background processes
+> > +	wait
+> > +	cd /
+> > +	rm -r -f $tmp.*
+> > +}
+> > +
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +
+> > +# Write multiple files in parallel using synchronous buffered writes that
+> > +# repeatedly close and reopen the fails. Aim is to interleave allocations to
+> > +# fragment the files. Assuming we've fixed the synchronous write defeat, we can
+> > +# still trigger the same issue with a open/read/close on O_RDONLY files. We
+> > +# should not be triggering EOF preallocation removal on files we don't have
+> > +# permission to write, so until this is fixed it should fragment badly.  Typical
+> > +# problematic behaviour shows per-file extent counts of 50-350 whilst fixed
+> > +# behaviour typically demonstrates post-eof speculative delalloc growth in
+> > +# extent size (~6 extents for 50MB file).
+> > +#
+> > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > +
+> > +workfile=$SCRATCH_MNT/file
+> > +nfiles=32
+> > +wsize=4096
+> > +wcnt=1000
+> > +
+> > +write_file()
+> > +{
+> > +	idx=$1
+> > +
+> > +	$XFS_IO_PROG -f -s -c "pwrite -b 64k 0 50m" $workfile.$idx
+> > +}
+> > +
+> > +read_file()
+> > +{
+> > +	idx=$1
+> > +
+> > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > +		$XFS_IO_PROG -f -r -c "pread 0 28" $workfile.$idx
+> > +	done
+> > +}
+> > +
+> > +rm -f $workdir/file*
+> > +for ((n=0; n<$((nfiles)); n++)); do
+> > +	write_file $n > /dev/null 2>&1 &
+> > +	read_file $n > /dev/null 2>&1 &
+> > +done
+> > +wait
+> > +
+> > +for ((n=0; n<$nfiles; n++)); do
+> > +	count=$(_count_extents $workfile.$n)
+> > +	# Acceptible extent count range is 1-40
+> > +	_within_tolerance "file.$n extent count" $count 6 5 10 -v
+> > +done
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1503.out b/tests/xfs/1503.out
+> > new file mode 100644
+> > index 000000000..1780b16df
+> > --- /dev/null
+> > +++ b/tests/xfs/1503.out
+> > @@ -0,0 +1,33 @@
+> > +QA output created by 1503
+> > +file.0 extent count is in range
+> > +file.1 extent count is in range
+> > +file.2 extent count is in range
+> > +file.3 extent count is in range
+> > +file.4 extent count is in range
+> > +file.5 extent count is in range
+> > +file.6 extent count is in range
+> > +file.7 extent count is in range
+> > +file.8 extent count is in range
+> > +file.9 extent count is in range
+> > +file.10 extent count is in range
+> > +file.11 extent count is in range
+> > +file.12 extent count is in range
+> > +file.13 extent count is in range
+> > +file.14 extent count is in range
+> > +file.15 extent count is in range
+> > +file.16 extent count is in range
+> > +file.17 extent count is in range
+> > +file.18 extent count is in range
+> > +file.19 extent count is in range
+> > +file.20 extent count is in range
+> > +file.21 extent count is in range
+> > +file.22 extent count is in range
+> > +file.23 extent count is in range
+> > +file.24 extent count is in range
+> > +file.25 extent count is in range
+> > +file.26 extent count is in range
+> > +file.27 extent count is in range
+> > +file.28 extent count is in range
+> > +file.29 extent count is in range
+> > +file.30 extent count is in range
+> > +file.31 extent count is in range
+> > -- 
+> > 2.45.2
+> > 
+> > 
+> 
+
