@@ -1,39 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8BA084A36
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 22:54:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33C3219645C
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 23:17:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727909696; cv=none; b=NAN0vgpQhXDsF0VWLz2464N2cQi2JMeovF83jsZ6b47Z28LGsTPtFp5vwKjENs2+7mHAE3Hi4DeDeo0bRlNmz7UhfLlKZGvfb6sfK26bbn0O6JkbCCrGlANyswGaqVphYU2I4knQCY+vfoy5kcp5HxRBsGl4oKlXHOGc8m3DRhE=
+	t=1727911034; cv=none; b=m8sC/cOsoX+Aeoq1gNNjyqzBtbJ5kq2cYyG3TM1Tdj6tdMQutgL5iwlWhunj/GTp4or9/CC2zoboZBfHl5dyFLbQTlQ/B40ct1i0QlFL7wGQCi0dFvgWGTDKd0eCKOrFiYJKagOPY7OjvL5xf0BE0FTTYBW/tipgdGcvHpyb4dI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727909696; c=relaxed/simple;
-	bh=4IchS0sfWs4/INrPby2Ujn6yW54gjfoy6AuD+H+voeE=;
+	s=arc-20240116; t=1727911034; c=relaxed/simple;
+	bh=ueXZgqXcltWhHmOo5GuFmhl7XKfITk7ap1bdRDsapt8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Xz0FQwATK2RpqKhUtmXgrTxRz8s7Plyd66OKtdLD38CAMzIUEvJYwbd5Pk9vg7t0gERHRI4+WKjYh3UtyVmKoWrNM9cvfNstV+2no/Xr5SN0V9mfW/X96/KtuWLDQbcqnDX2VKYXzxAs01QdpIaHZ3qjZ7vOK6AJqt6sjBc3pxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GJjPX2cV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PJFeS9uMAXdlhk8wtCs2P2sDoN1ZfwgLKHG8STiG2I4Ccuq7OmZ1cInKfOXzrQ4gO3DWmxhgccCQW0Bdym6lDGbDrhID/OMe7jjZBL6b4EkIIWlnyrD0AeZWEwnLxJc63llVLzC95hTk9svE4/S79LoRh+L/ccy3xsrjgb7XaFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rOxtE119; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GJjPX2cV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7707AC4CEC2;
-	Wed,  2 Oct 2024 22:54:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727909695;
-	bh=4IchS0sfWs4/INrPby2Ujn6yW54gjfoy6AuD+H+voeE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GJjPX2cVrk9Fox6V1NmI3G7zSaZL/YfbqwcUXpD5UAsgVPVpLHCR5TM8UTDMz9r0E
-	 hlMaUU9nRdCNBHmZkvyGJd8oxh2A7JfZNidffG6z62n2UdbIAuw77x1ElCLzcCngDL
-	 YxRxhL69gq0gpOXp5axqMjedHsp6dtS11trEBzIGsWcbr7E9xdUm6dBUU6kcJKt/YE
-	 zfc4GcdXTc1T+IbrBymWUEBIQFO0CfiRTH6VAum1BdXPxEN7lUQVvgPszu9nTfJXD9
-	 Sr/vINXuO/3w8Tn4B1qQoNdS+QDefv+1IWbvo9jDTpswAVhU76Ot6AKY9+AFNs0mXg
-	 rjfQNkALOKlcA==
-Date: Wed, 2 Oct 2024 15:54:55 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org
-Subject: Re: [PATCH v3 2/2] xfsprogs: update gitignore
-Message-ID: <20241002225455.GK21853@frogsfrogsfrogs>
-References: <20241002103624.1323492-1-aalbersh@redhat.com>
- <20241002103624.1323492-3-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rOxtE119"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-20b64584fd4so2820965ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 16:17:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727911032; x=1728515832; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/Z/Ic3M14z4k0N449edFTfEglK97UCAmXdYoocS2tZA=;
+        b=rOxtE119WsUN9x8gVIsZSEGfe1JI2gyiLt9WzUp4SblsCtx8LVXZk8IExmXhU9w0mh
+         MS1XCHKejXQ2K4npsNUAvDlCFqvgVJtgaK1guW8CEjVlTYlyU3ojvK9HDdy21BB0RzY3
+         zU5XnEZpuKPnL8Pea73ULPf1MZMnZ1FJVJrA5pYIjrwBKOZpniCsrwqhdaPWN6vxfcp2
+         p9J/DhYNhq/SM3mmQ+CHosI3XYuPblqVWdzoDvDYKEZ5jEFlFXEfJDP7bCK7uSttY0sm
+         fXbql05+ivOoILbG2qlUAYJY6yLB0TnEBjujdvO1jc+0sTuWlSuNhnRv933GkAepQv1N
+         Fujw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727911032; x=1728515832;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/Z/Ic3M14z4k0N449edFTfEglK97UCAmXdYoocS2tZA=;
+        b=d72LtnHpcsh3ja9YG41HImXwgGOO5A7uXwUj5wTuEWXMYJ61l/cQhvwivFSfgjXoiu
+         AbBUk5ffmyf/pbKP7sLSws7YubDoAmXIhwwg1O2CdyGiEt72QD9R8ViAQyelQdscqSkt
+         xSTok2aSGrys54p7HoCw/V0jwq2YVcwL/UxkBo4fLHRhTtzC0QAT5Yh3gfDpSyCYdLuk
+         a7cYtNEdsSFBvdAkhKfnDwb8xlfpIbCuHm6/Hbr9iEYwKxQkKVDay7JvJRwXtwzDPnhE
+         G/TTCMxZZ5GJW8vPrpMTk6IRpTopbp0JvI5YOJ3R4X9B9oL4hPtTBMVI3LZ8kH47KSPH
+         iSdQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXiVyWC8LkkB+csjgechhfsxxge4sbO3AcLqQ+QF1i/xjPa4cHRUZgqGy7/tX87q1UMVnNl8hfYfGg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxmJNK9NVxaAfeIWpoXygo5265lfukySVMbXnE0r6jGCc+Ea30Q
+	x2jX+kbWtl49gqLMUaA47Xej3yu8fln0MnXl08dGi0RuL8Jta5Sha1KAtsqLhNc=
+X-Google-Smtp-Source: AGHT+IH7WJ42XNgOeesZtbp7YL6BOo4tFeeppiLhsp/zWGFlXUghda8M1czU2W5a9Jr12wLI34XrbQ==
+X-Received: by 2002:a17:902:f68d:b0:206:8acc:8871 with SMTP id d9443c01a7336-20bc5a13640mr53059595ad.31.1727911032538;
+        Wed, 02 Oct 2024 16:17:12 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20beabaa00esm220445ad.69.2024.10.02.16.17.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Oct 2024 16:17:12 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sw8ai-00D8sy-3C;
+	Thu, 03 Oct 2024 09:17:09 +1000
+Date: Thu, 3 Oct 2024 09:17:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org
+Subject: Re: [RFC PATCH 0/7] vfs: improving inode cache iteration scalability
+Message-ID: <Zv3UdBPLutZkBeNg@dread.disaster.area>
+References: <20241002014017.3801899-1-david@fromorbit.com>
+ <20241002-lethargisch-hypnose-fd06ae7a0977@brauner>
+ <Zv098heGHOtGfw1R@dread.disaster.area>
+ <CAHk-=wgBqi+1YjH=-AiSDqx8p0uA6yGZ=HmMKtkGC3Ey=OhXhw@mail.gmail.com>
+ <kz36dz2tzysa7ih7qf6iuhvzrfvwytzcpcv46hzedtpdebazam@2op5ojw3xvse>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,62 +77,108 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241002103624.1323492-3-aalbersh@redhat.com>
+In-Reply-To: <kz36dz2tzysa7ih7qf6iuhvzrfvwytzcpcv46hzedtpdebazam@2op5ojw3xvse>
 
-On Wed, Oct 02, 2024 at 12:36:24PM +0200, Andrey Albershteyn wrote:
-> Building xfsprogs seems to produce many build artifacts which are
-> not tracked by git. Ignore them.
+On Wed, Oct 02, 2024 at 04:28:35PM -0400, Kent Overstreet wrote:
+> On Wed, Oct 02, 2024 at 12:49:13PM GMT, Linus Torvalds wrote:
+> > On Wed, 2 Oct 2024 at 05:35, Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Wed, Oct 02, 2024 at 12:00:01PM +0200, Christian Brauner wrote:
+> > >
+> > > > I don't have big conceptual issues with the series otherwise. The only
+> > > > thing that makes me a bit uneasy is that we are now providing an api
+> > > > that may encourage filesystems to do their own inode caching even if
+> > > > they don't really have a need for it just because it's there.  So really
+> > > > a way that would've solved this issue generically would have been my
+> > > > preference.
+> > >
+> > > Well, that's the problem, isn't it? :/
+> > >
+> > > There really isn't a good generic solution for global list access
+> > > and management.  The dlist stuff kinda works, but it still has
+> > > significant overhead and doesn't get rid of spinlock contention
+> > > completely because of the lack of locality between list add and
+> > > remove operations.
+> > 
+> > I much prefer the approach taken in your patch series, to let the
+> > filesystem own the inode list and keeping the old model as the
+> > "default list".
+> > 
+> > In many ways, that is how *most* of the VFS layer works - it exposes
+> > helper functions that the filesystems can use (and most do), but
+> > doesn't force them.
+> > 
+> > Yes, the VFS layer does force some things - you can't avoid using
+> > dentries, for example, because that's literally how the VFS layer
+> > deals with filenames (and things like mounting etc). And honestly, the
+> > VFS layer does a better job of filename caching than any filesystem
+> > really can do, and with the whole UNIX mount model, filenames
+> > fundamentally cross filesystem boundaries anyway.
+> > 
+> > But clearly the VFS layer inode list handling isn't the best it can
+> > be, and unless we can fix that in some fundamental way (and I don't
+> > love the "let's use crazy lists instead of a simple one" models) I do
+> > think that just letting filesystems do their own thing if they have
+> > something better is a good model.
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
-> 
-> Notes:
->     Replace ./configure~ with wildcard ./*~ to remove all backup files
->     which autoconf (or any other tool) can create
+> Well, I don't love adding more indirection and callbacks.
 
-Seems fine to me...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+It's way better than open coding inode cache traversals everywhere.
 
---D
+The callback model is simply "call this function on every object",
+and it allows implementations the freedom to decide how they are
+going to run those callbacks.
 
-> 
->  .gitignore | 12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/.gitignore b/.gitignore
-> index fd131b6fde52..756867124a02 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -33,6 +33,7 @@
->  /config.status
->  /config.sub
->  /configure
-> +/*~
->  
->  # libtool
->  /libtool
-> @@ -69,13 +70,16 @@ cscope.*
->  /rtcp/xfs_rtcp
->  /spaceman/xfs_spaceman
->  /scrub/xfs_scrub
-> -/scrub/xfs_scrub@.service
->  /scrub/xfs_scrub_all
-> -/scrub/xfs_scrub_all.cron
-> -/scrub/xfs_scrub_all.service
-> -/scrub/xfs_scrub_fail@.service
-> +/scrub/xfs_scrub_fail
-> +/scrub/*.cron
-> +/scrub/*.service
->  
->  # generated crc files
->  /libfrog/crc32selftest
->  /libfrog/crc32table.h
->  /libfrog/gen_crc32table
-> +
-> +# docs
-> +/man/man8/mkfs.xfs.8
-> +/man/man8/xfs_scrub_all.8
-> -- 
-> 2.44.1
-> 
-> 
+For example, this abstraction allows XFS to parallelise the
+traversal. We currently run the traversal across all inodes in a
+single thread, but now that XFS is walking the inode cache we can
+push each shard off to a workqueue and run each shard concurrently.
+IOWs, we can actually make the traversal of large caches much, much
+faster without changing the semantics of the operation the traversal
+is trying to acheive.
+
+We simply cannot do things like that without a new iteration model.
+Abstraction is necessary to facilitate a new iteration model, and a
+model that provides independent object callbacks allows scope for
+concurrent processing of individual objects.
+
+> The underlying approach in this patchset of "just use the inode hash
+> table if that's available" - that I _do_ like, but this seems like
+> the wrong way to go about it, we're significantly adding to the amount
+> of special purpose "things" filesystems have to do if they want to
+> perform well.
+
+I've already addressed this in my response to Christian. This is a
+mechanism that allows filesystems to be moved one-by-one to a new
+generic cache and iteration implementation without impacting
+existing code. Once we have that, scalability of the inode cache and
+traversals should not be a reason for filesystems "doing their own
+thing" because the generic infrastructure will be sufficient for
+most filesystem implementations.
+
+> Converting the standard inode hash table to an rhashtable (or more
+> likely, creating a new standard implementation and converting
+> filesystems one at a time) still needs to happen, and then the "use the
+> hash table for iteration" approach could use that without every
+> filesystem having to specialize.
+
+Yes, but this still doesn't help filesystems like XFS where the
+structure of the inode cache is highly optimised for the specific
+on-disk and in-memory locality of inodes. We aren't going to be
+converting XFS to a rhashtable based inode cache anytime soon
+because it simply doesn't provide the functionality we require.
+e.g. efficient lockless sequential inode number ordered traversal in
+-every- inode cluster writeback operation.
+
+> Failing that, or even regardless, I think we do need either dlock-list
+> or fast-list. "I need some sort of generic list, but fast" is something
+> I've seen come up way too many times.
+
+There's nothing stopping you from using the dlist patchset for your
+own purposes. It's public code - just make sure you retain the
+correct attributions. :)
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
