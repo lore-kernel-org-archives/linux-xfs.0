@@ -1,132 +1,578 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7BA19340F
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 19:49:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271DC19309D;
+	Wed,  2 Oct 2024 20:04:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727898576; cv=none; b=l4yd01p53k6y0AasU9KmfhaINoaCmvjZcMrm3Ilv2+XYWbMZi2jbtcwE0jdiFVDNgGe6IeM95s8dIcXJ4k8kdd9ot6zFFhXMCCxWEOvvjbAcvbB2rKf8XPvaHbrvkeVBXS2RCO9dCCIY5NjSwD1qzArQD70zhCYcuVuGqjSBepY=
+	t=1727899479; cv=none; b=r3KTnhd7slchY+Ox8Sj3Xgo1GxQp8lrReRuXhAl8XDSoHCPLCIvGuw4OU5jmK/w8g4UeyOiCFKHGDyfTpvmor3CFgltoyKNoWPtf2fpkOudr38l8Wab8lEZuY9vKqDqg3WfEMpZLO13YqiSdYspC6cBLPlN309HqbVEmDF+9fco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727898576; c=relaxed/simple;
-	bh=RnO6uv8HRi8ObI+RtKyEOrQ+9Cm9ALlIkZ6dw4lENc8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DYHSLDA9TnP96fTC2Rue9H4snMguCutmYuUS2F3K2n5fYiWmYVWgeZSBOY4lbJIPonJLNS/Kh5ht/Xdhl1gQCSNIliz7N5KDKn774DXcZQ9Kg5fpelvP/+mhgJlKot49cmjzjbYit3NCMy59DDzUfuof2J3vA7/0MXbcn63LxVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=TtB3ZKLF; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1727899479; c=relaxed/simple;
+	bh=4X7jZNMinE+tR1PGpxpNhOkZZdvkdx//GfP5jkf5fYg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mzWGCaZGxwxVRquTj+qaxelmJmSyyWhOIC/CldTLZl1vnn3YmJEf1/95Zl5PVo2CZpB0M4ygaOIaT1XlUOedliHiDhiU6t6RHgHEZfS4oKSaURGC5dCsHla0iusZyt5xT/c3rqHEkRNdfZY/zOBj6kVsu7pUHTUoBIiT2R2GImQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kKhyt4Zf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="TtB3ZKLF"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-42cb6f3a5bcso1369675e9.2
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 12:49:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1727898572; x=1728503372; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Dzdt4GqtyHMMk9bZurHX/Y4rm7tRkS7KSsld1cCXB3k=;
-        b=TtB3ZKLFBiF+fpY9r09+zyH+7q+AMG/AsF2RW+nuPatUtcyhwj3ykSh56XFUFUUppE
-         HwYnap2hpv+Vwxta+od8h2VOZ2ZNRiSwkY6BsaefG4ad9XN5VGjjp65+TVxPfo7GXQy5
-         vl8Yq5NSPSdMZz3Nt3uoHfK6iqiu2AWzRi854=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727898572; x=1728503372;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Dzdt4GqtyHMMk9bZurHX/Y4rm7tRkS7KSsld1cCXB3k=;
-        b=cdLEzSplhtGM+LCMTzPIep89O0dVNtnSgO19heEE0ZH7MHbPTI93cbxDtHFkRilagG
-         eUrDbt+eR3yznUhj5lwyh3wqM9TbmQGD/+9ibZoR724/TcBf2JT9+C5yOjJZkbBFCLog
-         H8zBMHqBeWGlAj0OA8L0/4hAwQwLe2NgBAQu4P/kOVZiboLONr1QvErqFRRmSQB0FB6I
-         Fm6u1pjWppuCQbLuOKy0v32fAnYaKHP8yGRVu3unKBX1Mv79Wk5Cn7fDyC98jAEV6Gfp
-         ZvmtQjMmQJYfUcvsxfqXyvmboZheZBNdQpTlqGyHj7eWe+01KlQYLNHfCRQgwAKtdgaH
-         LdZw==
-X-Forwarded-Encrypted: i=1; AJvYcCXAnEV63PtOIn4jqEzept5wgP8lEio5675Qj+R53v/CJKbAK5YcqLH5xeSpnMYFN/HweATNFKZRSvg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/Df4ekTjwOFJjJH+6/t7Zz/fElZGTOLG1elmyaANNhraDmU9H
-	7t2iZALQlsD1PeOkdxXVfYtBqoISa2kKve3VU8bzxONLn0WvJfNuwaGqQevd1D1BMHyYvWogfCx
-	+YbfH4g==
-X-Google-Smtp-Source: AGHT+IFsr+TpHFO/8cd8bcnu4vMwWIV5qiKg2RGA9D/1f/GLg26+3vOVRUbA1ustKFeypHhQtEc6dA==
-X-Received: by 2002:a05:6000:2cb:b0:374:c658:706e with SMTP id ffacd0b85a97d-37cfba0a536mr4926631f8f.39.1727898571986;
-        Wed, 02 Oct 2024 12:49:31 -0700 (PDT)
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com. [209.85.221.51])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a93c27773cbsm899912666b.45.2024.10.02.12.49.30
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Oct 2024 12:49:30 -0700 (PDT)
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-37cdac05af9so188212f8f.0
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 12:49:30 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXZrUhZLxb5XPKcCRDwQj0DZHFJZ2BjOrksW5T7w4wz7JjM/DMZnqsnu6SnkKX5vaXuoqaY7gI1UiE=@vger.kernel.org
-X-Received: by 2002:adf:e712:0:b0:37c:d1c6:7e45 with SMTP id
- ffacd0b85a97d-37cfba0a614mr3298213f8f.40.1727898570159; Wed, 02 Oct 2024
- 12:49:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kKhyt4Zf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AAB7C4CEC2;
+	Wed,  2 Oct 2024 20:04:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727899478;
+	bh=4X7jZNMinE+tR1PGpxpNhOkZZdvkdx//GfP5jkf5fYg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kKhyt4ZfJtgNiP4P3EBH8GBfsz8HSiWIatNmN5r/dSMX1Td02NZs46e6VfAK5YocP
+	 ErNMPw9xlCyBThY1kxW35xtcQiEm9mpJ3nbVWBbBeeAElUq4td+lozl+ipRClxTLSk
+	 QTrU/MmuvaTm9m6Max+g3ZiFjTFzGcg9LVAEqP79jgTlHwRUIxINCsyVC8uVEjLHkE
+	 d5v2JYdtjaf9XOVvcWfSsXsfB2fjgN1pTcOL0+XNtXwVxiG2OWfQDWgi9fLsP6dYDZ
+	 HAD5GWNRMr5/VXPUw8sqZiYg7H0DcZVdCbsLz/+JQENAEc8KEb9DiABmVIpFIfHbOG
+	 XFmtmTReh57Tg==
+Date: Wed, 2 Oct 2024 13:04:38 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Zorro Lang <zlang@redhat.com>, Christoph Hellwig <hch@lst.de>,
+	Zorro Lang <zlang@kernel.org>, Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>
+Subject: Re: [PATCH] xfs: new EOF fragmentation tests
+Message-ID: <20241002200438.GG21840@frogsfrogsfrogs>
+References: <20240924084551.1802795-1-hch@lst.de>
+ <20240924084551.1802795-2-hch@lst.de>
+ <20241001145944.GE21840@frogsfrogsfrogs>
+ <20241002133800.pk3kb5powlqjbm3m@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <Zv1aS4vk55b8sPgN@bfoster>
+ <20241002145715.GF21840@frogsfrogsfrogs>
+ <Zv1tOC8L6qSjGUuS@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241002014017.3801899-1-david@fromorbit.com> <20241002-lethargisch-hypnose-fd06ae7a0977@brauner>
- <Zv098heGHOtGfw1R@dread.disaster.area>
-In-Reply-To: <Zv098heGHOtGfw1R@dread.disaster.area>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 2 Oct 2024 12:49:13 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wgBqi+1YjH=-AiSDqx8p0uA6yGZ=HmMKtkGC3Ey=OhXhw@mail.gmail.com>
-Message-ID: <CAHk-=wgBqi+1YjH=-AiSDqx8p0uA6yGZ=HmMKtkGC3Ey=OhXhw@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/7] vfs: improving inode cache iteration scalability
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	kent.overstreet@linux.dev
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zv1tOC8L6qSjGUuS@bfoster>
 
-On Wed, 2 Oct 2024 at 05:35, Dave Chinner <david@fromorbit.com> wrote:
->
-> On Wed, Oct 02, 2024 at 12:00:01PM +0200, Christian Brauner wrote:
->
-> > I don't have big conceptual issues with the series otherwise. The only
-> > thing that makes me a bit uneasy is that we are now providing an api
-> > that may encourage filesystems to do their own inode caching even if
-> > they don't really have a need for it just because it's there.  So really
-> > a way that would've solved this issue generically would have been my
-> > preference.
->
-> Well, that's the problem, isn't it? :/
->
-> There really isn't a good generic solution for global list access
-> and management.  The dlist stuff kinda works, but it still has
-> significant overhead and doesn't get rid of spinlock contention
-> completely because of the lack of locality between list add and
-> remove operations.
+On Wed, Oct 02, 2024 at 11:56:40AM -0400, Brian Foster wrote:
+> On Wed, Oct 02, 2024 at 07:57:15AM -0700, Darrick J. Wong wrote:
+> > On Wed, Oct 02, 2024 at 10:35:55AM -0400, Brian Foster wrote:
+> > > On Wed, Oct 02, 2024 at 09:38:00PM +0800, Zorro Lang wrote:
+> > > > On Tue, Oct 01, 2024 at 07:59:44AM -0700, Darrick J. Wong wrote:
+> > > > > On Tue, Sep 24, 2024 at 10:45:48AM +0200, Christoph Hellwig wrote:
+> > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > 
+> > > > > > These tests create substantial file fragmentation as a result of
+> > > > > > application actions that defeat post-EOF preallocation
+> > > > > > optimisations. They are intended to replicate known vectors for
+> > > > > > these problems, and provide a check that the fragmentation levels
+> > > > > > have been controlled. The mitigations we make may not completely
+> > > > > > remove fragmentation (e.g. they may demonstrate speculative delalloc
+> > > > > > related extent size growth) so the checks don't assume we'll end up
+> > > > > > with perfect layouts and hence check for an exceptable level of
+> > > > > > fragmentation rather than none.
+> > > > > > 
+> > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > > [move to different test number, update to current xfstest APIs]
+> > > > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > > > > ---
+> > > > > >  tests/xfs/1500     | 66 +++++++++++++++++++++++++++++++++++++++
+> > > > > >  tests/xfs/1500.out |  9 ++++++
+> > > > > >  tests/xfs/1501     | 68 ++++++++++++++++++++++++++++++++++++++++
+> > > > > >  tests/xfs/1501.out |  9 ++++++
+> > > > > >  tests/xfs/1502     | 68 ++++++++++++++++++++++++++++++++++++++++
+> > > > > >  tests/xfs/1502.out |  9 ++++++
+> > > > > >  tests/xfs/1503     | 77 ++++++++++++++++++++++++++++++++++++++++++++++
+> > > > > >  tests/xfs/1503.out | 33 ++++++++++++++++++++
+> > > > > >  8 files changed, 339 insertions(+)
+> > > > > >  create mode 100755 tests/xfs/1500
+> > > > > >  create mode 100644 tests/xfs/1500.out
+> > > > > >  create mode 100755 tests/xfs/1501
+> > > > > >  create mode 100644 tests/xfs/1501.out
+> > > > > >  create mode 100755 tests/xfs/1502
+> > > > > >  create mode 100644 tests/xfs/1502.out
+> > > > > >  create mode 100755 tests/xfs/1503
+> > > > > >  create mode 100644 tests/xfs/1503.out
+> > > > > > 
+> > > > > > diff --git a/tests/xfs/1500 b/tests/xfs/1500
+> > > > > > new file mode 100755
+> > > > > > index 000000000..de0e1df62
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1500
+> > > > > > @@ -0,0 +1,66 @@
+> > > > > > +#! /bin/bash
+> > > > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > > > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > > > > > +#
+> > > > > > +# FS QA Test xfs/500
+> > > > > > +#
+> > > > > > +# Post-EOF preallocation defeat test for O_SYNC buffered I/O.
+> > > > > > +#
+> > > > > > +
+> > > > > > +. ./common/preamble
+> > > > > > +_begin_fstest auto quick prealloc rw
+> > > > > > +
+> > > > > > +. ./common/rc
+> > > > > > +. ./common/filter
+> > > > > > +
+> > > > > > +_require_scratch
+> > > > > > +
+> > > > > > +_cleanup()
+> > > > > > +{
+> > > > > > +	# try to kill all background processes
+> > > > > > +	wait
+> > > > > > +	cd /
+> > > > > > +	rm -r -f $tmp.*
+> > > > > > +}
+> > > > > > +
+> > > > > > +_scratch_mkfs > "$seqres.full" 2>&1
+> > > > > > +_scratch_mount
+> > > > > > +
+> > > > > > +# Write multiple files in parallel using synchronous buffered writes. Aim is to
+> > > > > > +# interleave allocations to fragment the files. Synchronous writes defeat the
+> > > > > > +# open/write/close heuristics in xfs_file_release() that prevent EOF block
+> > > > > > +# removal, so this should fragment badly. Typical problematic behaviour shows
+> > > > > > +# per-file extent counts of >900 (almost worse case) whilst fixed behaviour
+> > > > > > +# typically shows extent counts in the low 20s.
+> > > > > 
+> > > > > Now that these are in for-next, I've noticed that these new tests
+> > > > > consistently fail in the above-documented manner on various configs --
+> > > > > fsdax, always_cow, rtextsize > 1fsb, and sometimes 1k fsblock size.
+> > > > > 
+> > > > > I'm not sure why this happens, but it probably needs to be looked at
+> > > > > along with all the FALLOC_FL_UNSHARE_RANGE brokenness that's also been
+> > > > > exposed by fstests that /does/ need to be fixed.
+> > > > 
+> > > > Yes, some fsx tests fail on xfs, after the FALLOC_FL_UNSHARE_RANGE supporting.
+> > > > e.g. g/091, g/127, g/263, g/363 and g/616. I thought they're known issues as
+> > > > you known. If they're not, better to check. Hi Brian, are these failures as you
+> > > > known?
+> > > > 
+> > > 
+> > > So I'm aware of two fundamental issues that fsx unshare range support
+> > > uncovers. First is the XFS data loss issue that is addressed here[1],
+> > > second is the iomap unshare range warning/error splat that Julian Sun
+> > > has been working on (last version posted here[2] I believe).
+> > > 
+> > > My initial testing of the fsx unshare range patch was to run fsx
+> > > directly on the fs until I could run for some notable number of
+> > > operations without triggering a failure (probably at least 1m+, but I
+> > > don't recall exactly). I was initially able to do that with the patches
+> > > from [1] plus a local hack to trim to i_size in iomap_unshare_range(),
+> > > so based on that I _think_ these are the only two outstanding issues
+> > > with unshare range.
+> > > 
+> > > [1] https://lore.kernel.org/linux-xfs/20240906114051.120743-1-bfoster@redhat.com/
+> > > [2] https://lore.kernel.org/linux-fsdevel/20240927065344.2628691-1-sunjunchao2870@gmail.com/
+> > > 
+> > > The patches at [1] have been reviewed, but I'm not really sure where
+> > > they stand in terms of the XFS pipeline. Carlos?
+> > > 
+> > > It looks like the fix associated with [2] is still under
+> > > development/review. In any event, I just ran the set of tests noted by
+> > > Zorro above (w/ unshare range support) and they all fail on my distro
+> > > kernel, but all but generic/363 pass on current master (6.12.0-rc1+)
+> > > plus [1]. The generic/363 failure produces the iomap error associated
+> > > with [2], so I suspect that all of these test failures can be
+> > > categorized into one of those two known issues.
+> > 
+> > Yep.  [1] fixes a lot of the splats, and the rest of the splats can be
+> > fixed by a couple of other patches that I'll send out today.
+> > 
+> > Those same fsx tests above are still broken on fsdax though, so
+> > something is still wrong. :(
+> > 
+> 
+> Ah, Ok.. I hadn't tested for fsdax. Is that fixed by your corresponding
+> i_size fix, or even with that we're still failing? Note that if it's
+> isolated to generic/363 and not explicitly the iomap warning it could be
+> a zeroing issue rather than unshare. That could probably be confirmed by
+> disabling unshare and the eof pollution bits one at a time in fsx..
 
-I much prefer the approach taken in your patch series, to let the
-filesystem own the inode list and keeping the old model as the
-"default list".
+Oh, no, it's anything that uses fsx on fsdax.
 
-In many ways, that is how *most* of the VFS layer works - it exposes
-helper functions that the filesystems can use (and most do), but
-doesn't force them.
+Roughly speaking, the "is this really shared?" predicate didn't get
+updated when the iomap_unshare_iter version did; the "if srcmap is hole
+or unwritten" code makes no sense because you can't share holes or
+unwritten extents; the range to memcpy should have been extended to
+align with the fsblocks because we cow whole blocks; the rounding down
+that the dax_iomap_direct_access method does to the returned pointer
+means it's been corrupting data; and it doesn't invalidate the mappings
+before doing the cow which means any real fsdax programs access the
+wrong memory afterwards.  IOWs, we've been corrupting data since 2022.
 
-Yes, the VFS layer does force some things - you can't avoid using
-dentries, for example, because that's literally how the VFS layer
-deals with filenames (and things like mounting etc). And honestly, the
-VFS layer does a better job of filename caching than any filesystem
-really can do, and with the whole UNIX mount model, filenames
-fundamentally cross filesystem boundaries anyway.
+Oh and also xfs_direct_write_iomap_begin shouldn't be allocating cow
+extents for an unshare operation over a hole.
 
-But clearly the VFS layer inode list handling isn't the best it can
-be, and unless we can fix that in some fundamental way (and I don't
-love the "let's use crazy lists instead of a simple one" models) I do
-think that just letting filesystems do their own thing if they have
-something better is a good model.
+So, uh, a big thank you to you for exposing this untested crap code
+(both iomap and fsdax versions).  Patches coming. :)
 
-That's how we deal with all the basic IO, after all. The VFS layer has
-lots of support routines, but filesystems don't *have* to use things
-like generic_file_read_iter() and friends.
+--D
 
-Yes, most filesystems do use generic_file_read_iter() in some form or
-other (sometimes raw, sometimes wrapped with filesystem logic),
-because it fits their model, it's convenient, and it handles all the
-normal stuff well, but you don't *have* to use it if you have special
-needs.
-
-Taking that approach to the inode caching sounds sane to me, and I
-generally like Dave's series. It looks like an improvement to me.
-
-              Linus
+> Brian
+> 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > Thanks,
+> > > > Zorro
+> > > > 
+> > > > > 
+> > > > > --D
+> > > > > 
+> > > > > > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > > > > > +
+> > > > > > +workfile=$SCRATCH_MNT/file
+> > > > > > +nfiles=8
+> > > > > > +wsize=4096
+> > > > > > +wcnt=1000
+> > > > > > +
+> > > > > > +write_sync_file()
+> > > > > > +{
+> > > > > > +	idx=$1
+> > > > > > +
+> > > > > > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > > > > > +		$XFS_IO_PROG -f -s -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
+> > > > > > +	done
+> > > > > > +}
+> > > > > > +
+> > > > > > +rm -f $workfile*
+> > > > > > +for ((n=0; n<$nfiles; n++)); do
+> > > > > > +	write_sync_file $n > /dev/null 2>&1 &
+> > > > > > +done
+> > > > > > +wait
+> > > > > > +sync
+> > > > > > +
+> > > > > > +for ((n=0; n<$nfiles; n++)); do
+> > > > > > +	count=$(_count_extents $workfile.$n)
+> > > > > > +	# Acceptible extent count range is 1-40
+> > > > > > +	_within_tolerance "file.$n extent count" $count 21 19 -v
+> > > > > > +done
+> > > > > > +
+> > > > > > +status=0
+> > > > > > +exit
+> > > > > > diff --git a/tests/xfs/1500.out b/tests/xfs/1500.out
+> > > > > > new file mode 100644
+> > > > > > index 000000000..414df87ed
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1500.out
+> > > > > > @@ -0,0 +1,9 @@
+> > > > > > +QA output created by 1500
+> > > > > > +file.0 extent count is in range
+> > > > > > +file.1 extent count is in range
+> > > > > > +file.2 extent count is in range
+> > > > > > +file.3 extent count is in range
+> > > > > > +file.4 extent count is in range
+> > > > > > +file.5 extent count is in range
+> > > > > > +file.6 extent count is in range
+> > > > > > +file.7 extent count is in range
+> > > > > > diff --git a/tests/xfs/1501 b/tests/xfs/1501
+> > > > > > new file mode 100755
+> > > > > > index 000000000..cf3cbf8b5
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1501
+> > > > > > @@ -0,0 +1,68 @@
+> > > > > > +#! /bin/bash
+> > > > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > > > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > > > > > +#
+> > > > > > +# FS QA Test xfs/501
+> > > > > > +#
+> > > > > > +# Post-EOF preallocation defeat test for buffered I/O with extent size hints.
+> > > > > > +#
+> > > > > > +
+> > > > > > +. ./common/preamble
+> > > > > > +_begin_fstest auto quick prealloc rw
+> > > > > > +
+> > > > > > +. ./common/rc
+> > > > > > +. ./common/filter
+> > > > > > +
+> > > > > > +_require_scratch
+> > > > > > +
+> > > > > > +_cleanup()
+> > > > > > +{
+> > > > > > +	# try to kill all background processes
+> > > > > > +	wait
+> > > > > > +	cd /
+> > > > > > +	rm -r -f $tmp.*
+> > > > > > +}
+> > > > > > +
+> > > > > > +_scratch_mkfs > "$seqres.full" 2>&1
+> > > > > > +_scratch_mount
+> > > > > > +
+> > > > > > +# Write multiple files in parallel using buffered writes with extent size hints.
+> > > > > > +# Aim is to interleave allocations to fragment the files. Writes w/ extent size
+> > > > > > +# hints set defeat the open/write/close heuristics in xfs_file_release() that
+> > > > > > +# prevent EOF block removal, so this should fragment badly. Typical problematic
+> > > > > > +# behaviour shows per-file extent counts of 1000 (worst case!) whilst
+> > > > > > +# fixed behaviour should show very few extents (almost best case).
+> > > > > > +#
+> > > > > > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > > > > > +
+> > > > > > +workfile=$SCRATCH_MNT/file
+> > > > > > +nfiles=8
+> > > > > > +wsize=4096
+> > > > > > +wcnt=1000
+> > > > > > +extent_size=16m
+> > > > > > +
+> > > > > > +write_extsz_file()
+> > > > > > +{
+> > > > > > +	idx=$1
+> > > > > > +
+> > > > > > +	$XFS_IO_PROG -f -c "extsize $extent_size" $workfile.$idx
+> > > > > > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > > > > > +		$XFS_IO_PROG -f -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
+> > > > > > +	done
+> > > > > > +}
+> > > > > > +
+> > > > > > +rm -f $workfile*
+> > > > > > +for ((n=0; n<$nfiles; n++)); do
+> > > > > > +	write_extsz_file $n > /dev/null 2>&1 &
+> > > > > > +done
+> > > > > > +wait
+> > > > > > +sync
+> > > > > > +
+> > > > > > +for ((n=0; n<$nfiles; n++)); do
+> > > > > > +	count=$(_count_extents $workfile.$n)
+> > > > > > +	# Acceptible extent count range is 1-10
+> > > > > > +	_within_tolerance "file.$n extent count" $count 2 1 8 -v
+> > > > > > +done
+> > > > > > +
+> > > > > > +status=0
+> > > > > > +exit
+> > > > > > diff --git a/tests/xfs/1501.out b/tests/xfs/1501.out
+> > > > > > new file mode 100644
+> > > > > > index 000000000..a266ef74b
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1501.out
+> > > > > > @@ -0,0 +1,9 @@
+> > > > > > +QA output created by 1501
+> > > > > > +file.0 extent count is in range
+> > > > > > +file.1 extent count is in range
+> > > > > > +file.2 extent count is in range
+> > > > > > +file.3 extent count is in range
+> > > > > > +file.4 extent count is in range
+> > > > > > +file.5 extent count is in range
+> > > > > > +file.6 extent count is in range
+> > > > > > +file.7 extent count is in range
+> > > > > > diff --git a/tests/xfs/1502 b/tests/xfs/1502
+> > > > > > new file mode 100755
+> > > > > > index 000000000..f4228667a
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1502
+> > > > > > @@ -0,0 +1,68 @@
+> > > > > > +#! /bin/bash
+> > > > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > > > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > > > > > +#
+> > > > > > +# FS QA Test xfs/502
+> > > > > > +#
+> > > > > > +# Post-EOF preallocation defeat test for direct I/O with extent size hints.
+> > > > > > +#
+> > > > > > +
+> > > > > > +. ./common/preamble
+> > > > > > +_begin_fstest auto quick prealloc rw
+> > > > > > +
+> > > > > > +. ./common/rc
+> > > > > > +. ./common/filter
+> > > > > > +
+> > > > > > +_require_scratch
+> > > > > > +
+> > > > > > +_cleanup()
+> > > > > > +{
+> > > > > > +	# try to kill all background processes
+> > > > > > +	wait
+> > > > > > +	cd /
+> > > > > > +	rm -r -f $tmp.*
+> > > > > > +}
+> > > > > > +
+> > > > > > +_scratch_mkfs > "$seqres.full" 2>&1
+> > > > > > +_scratch_mount
+> > > > > > +
+> > > > > > +# Write multiple files in parallel using O_DIRECT writes w/ extent size hints.
+> > > > > > +# Aim is to interleave allocations to fragment the files. O_DIRECT writes defeat
+> > > > > > +# the open/write/close heuristics in xfs_file_release() that prevent EOF block
+> > > > > > +# removal, so this should fragment badly. Typical problematic behaviour shows
+> > > > > > +# per-file extent counts of ~1000 (worst case) whilst fixed behaviour typically
+> > > > > > +# shows extent counts in the low single digits (almost best case)
+> > > > > > +#
+> > > > > > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > > > > > +
+> > > > > > +workfile=$SCRATCH_MNT/file
+> > > > > > +nfiles=8
+> > > > > > +wsize=4096
+> > > > > > +wcnt=1000
+> > > > > > +extent_size=16m
+> > > > > > +
+> > > > > > +write_direct_file()
+> > > > > > +{
+> > > > > > +	idx=$1
+> > > > > > +
+> > > > > > +	$XFS_IO_PROG -f -c "extsize $extent_size" $workfile.$idx
+> > > > > > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > > > > > +		$XFS_IO_PROG -f -d -c "pwrite $((cnt * wsize)) $wsize" $workfile.$idx
+> > > > > > +	done
+> > > > > > +}
+> > > > > > +
+> > > > > > +rm -f $workfile*
+> > > > > > +for ((n=0; n<$nfiles; n++)); do
+> > > > > > +	write_direct_file $n > /dev/null 2>&1 &
+> > > > > > +done
+> > > > > > +wait
+> > > > > > +sync
+> > > > > > +
+> > > > > > +for ((n=0; n<$nfiles; n++)); do
+> > > > > > +	count=$(_count_extents $workfile.$n)
+> > > > > > +	# Acceptible extent count range is 1-10
+> > > > > > +	_within_tolerance "file.$n extent count" $count 2 1 8 -v
+> > > > > > +done
+> > > > > > +
+> > > > > > +status=0
+> > > > > > +exit
+> > > > > > diff --git a/tests/xfs/1502.out b/tests/xfs/1502.out
+> > > > > > new file mode 100644
+> > > > > > index 000000000..82c8760a3
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1502.out
+> > > > > > @@ -0,0 +1,9 @@
+> > > > > > +QA output created by 1502
+> > > > > > +file.0 extent count is in range
+> > > > > > +file.1 extent count is in range
+> > > > > > +file.2 extent count is in range
+> > > > > > +file.3 extent count is in range
+> > > > > > +file.4 extent count is in range
+> > > > > > +file.5 extent count is in range
+> > > > > > +file.6 extent count is in range
+> > > > > > +file.7 extent count is in range
+> > > > > > diff --git a/tests/xfs/1503 b/tests/xfs/1503
+> > > > > > new file mode 100755
+> > > > > > index 000000000..9002f87e6
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1503
+> > > > > > @@ -0,0 +1,77 @@
+> > > > > > +#! /bin/bash
+> > > > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > > > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > > > > > +#
+> > > > > > +# FS QA Test xfs/503
+> > > > > > +#
+> > > > > > +# Post-EOF preallocation defeat test with O_SYNC buffered I/O that repeatedly
+> > > > > > +# closes and reopens the files.
+> > > > > > +#
+> > > > > > +
+> > > > > > +. ./common/preamble
+> > > > > > +_begin_fstest auto prealloc rw
+> > > > > > +
+> > > > > > +. ./common/rc
+> > > > > > +. ./common/filter
+> > > > > > +
+> > > > > > +_require_scratch
+> > > > > > +
+> > > > > > +_cleanup()
+> > > > > > +{
+> > > > > > +	# try to kill all background processes
+> > > > > > +	wait
+> > > > > > +	cd /
+> > > > > > +	rm -r -f $tmp.*
+> > > > > > +}
+> > > > > > +
+> > > > > > +_scratch_mkfs > "$seqres.full" 2>&1
+> > > > > > +_scratch_mount
+> > > > > > +
+> > > > > > +# Write multiple files in parallel using synchronous buffered writes that
+> > > > > > +# repeatedly close and reopen the fails. Aim is to interleave allocations to
+> > > > > > +# fragment the files. Assuming we've fixed the synchronous write defeat, we can
+> > > > > > +# still trigger the same issue with a open/read/close on O_RDONLY files. We
+> > > > > > +# should not be triggering EOF preallocation removal on files we don't have
+> > > > > > +# permission to write, so until this is fixed it should fragment badly.  Typical
+> > > > > > +# problematic behaviour shows per-file extent counts of 50-350 whilst fixed
+> > > > > > +# behaviour typically demonstrates post-eof speculative delalloc growth in
+> > > > > > +# extent size (~6 extents for 50MB file).
+> > > > > > +#
+> > > > > > +# Failure is determined by golden output mismatch from _within_tolerance().
+> > > > > > +
+> > > > > > +workfile=$SCRATCH_MNT/file
+> > > > > > +nfiles=32
+> > > > > > +wsize=4096
+> > > > > > +wcnt=1000
+> > > > > > +
+> > > > > > +write_file()
+> > > > > > +{
+> > > > > > +	idx=$1
+> > > > > > +
+> > > > > > +	$XFS_IO_PROG -f -s -c "pwrite -b 64k 0 50m" $workfile.$idx
+> > > > > > +}
+> > > > > > +
+> > > > > > +read_file()
+> > > > > > +{
+> > > > > > +	idx=$1
+> > > > > > +
+> > > > > > +	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> > > > > > +		$XFS_IO_PROG -f -r -c "pread 0 28" $workfile.$idx
+> > > > > > +	done
+> > > > > > +}
+> > > > > > +
+> > > > > > +rm -f $workdir/file*
+> > > > > > +for ((n=0; n<$((nfiles)); n++)); do
+> > > > > > +	write_file $n > /dev/null 2>&1 &
+> > > > > > +	read_file $n > /dev/null 2>&1 &
+> > > > > > +done
+> > > > > > +wait
+> > > > > > +
+> > > > > > +for ((n=0; n<$nfiles; n++)); do
+> > > > > > +	count=$(_count_extents $workfile.$n)
+> > > > > > +	# Acceptible extent count range is 1-40
+> > > > > > +	_within_tolerance "file.$n extent count" $count 6 5 10 -v
+> > > > > > +done
+> > > > > > +
+> > > > > > +status=0
+> > > > > > +exit
+> > > > > > diff --git a/tests/xfs/1503.out b/tests/xfs/1503.out
+> > > > > > new file mode 100644
+> > > > > > index 000000000..1780b16df
+> > > > > > --- /dev/null
+> > > > > > +++ b/tests/xfs/1503.out
+> > > > > > @@ -0,0 +1,33 @@
+> > > > > > +QA output created by 1503
+> > > > > > +file.0 extent count is in range
+> > > > > > +file.1 extent count is in range
+> > > > > > +file.2 extent count is in range
+> > > > > > +file.3 extent count is in range
+> > > > > > +file.4 extent count is in range
+> > > > > > +file.5 extent count is in range
+> > > > > > +file.6 extent count is in range
+> > > > > > +file.7 extent count is in range
+> > > > > > +file.8 extent count is in range
+> > > > > > +file.9 extent count is in range
+> > > > > > +file.10 extent count is in range
+> > > > > > +file.11 extent count is in range
+> > > > > > +file.12 extent count is in range
+> > > > > > +file.13 extent count is in range
+> > > > > > +file.14 extent count is in range
+> > > > > > +file.15 extent count is in range
+> > > > > > +file.16 extent count is in range
+> > > > > > +file.17 extent count is in range
+> > > > > > +file.18 extent count is in range
+> > > > > > +file.19 extent count is in range
+> > > > > > +file.20 extent count is in range
+> > > > > > +file.21 extent count is in range
+> > > > > > +file.22 extent count is in range
+> > > > > > +file.23 extent count is in range
+> > > > > > +file.24 extent count is in range
+> > > > > > +file.25 extent count is in range
+> > > > > > +file.26 extent count is in range
+> > > > > > +file.27 extent count is in range
+> > > > > > +file.28 extent count is in range
+> > > > > > +file.29 extent count is in range
+> > > > > > +file.30 extent count is in range
+> > > > > > +file.31 extent count is in range
+> > > > > > -- 
+> > > > > > 2.45.2
+> > > > > > 
+> > > > > > 
+> > > > > 
+> > > > 
+> > > 
+> > > 
+> > 
+> 
+> 
