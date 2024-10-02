@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D806F8F40
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:20:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9F86BA27
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:20:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727832035; cv=none; b=lBHNQsH/k6L986D8gRxnmV1GZhm4sja3VTUU3536x+PI4s1yrObsD30N0dyUmz31iJETebnePLiaSNDJQS9ftro4XpVZxU3qWGOMuZ16mvv7uVxwq2HDdkgcwHBLJnwpRx7rOdGcVO/6UfrHy43CKl9Vlpe3kIAZm6TyktBCeuc=
+	t=1727832051; cv=none; b=arSoFlXTFyWsLbYRnSzdlnsCUDrldAZPzbbI6IiZ1UGuhEJyP2sFME2QoSuGocITL1x3ev6NMCkgtGXA7+/8A/jy24RghLA2yWMZV/tHZ4az1OwYuTRtPdL/z8LlVqLWs7sQ3/y3P+IX0vaLQ+Gynk1lnpJe+fjZ7/M2iJavFm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727832035; c=relaxed/simple;
-	bh=EtiuB3M2n9APjs1uSaZM/3EX2x+mSeghXy8dZT8kTyE=;
+	s=arc-20240116; t=1727832051; c=relaxed/simple;
+	bh=4T23vnS53igHUl1zgQQbMtlItpC8kn+t3rqhKJCnFu8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=W8/t1Uy3vdk6POO4HANfYd1YFlHcOS6eI1PpONP9csG4GRg9EpaiLA613esx+EMoVn9o0QB8c9gB9N7a8iJ8yaQ2pulM2b1IEqeKDyJcl+RmeDnQ5aGabWAZf5I1RfgwaNeQUZn5oANh9ncfWFkDBBwXj2FQeLZ1HWb4VrhZBug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sv6jhHwx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AQg6aQBM+nLKPkxjmhQoxDfMBx0HJx9gpp1NRfpSCxaXautc05SXQN7p6iFPRrz+YPALdXi+fMLMv4oe9hA4rLS26sMJSXAMrFEhPnicbVOStsn8S6+0XJffEUa5jhotFHa9/Tkfz+sKGQEQt8GhZsZOleG3UdhEZ+k7WtM9BUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j4p5HunD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sv6jhHwx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B438EC4CEC6;
-	Wed,  2 Oct 2024 01:20:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j4p5HunD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F3AAC4CEC6;
+	Wed,  2 Oct 2024 01:20:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727832035;
-	bh=EtiuB3M2n9APjs1uSaZM/3EX2x+mSeghXy8dZT8kTyE=;
+	s=k20201202; t=1727832051;
+	bh=4T23vnS53igHUl1zgQQbMtlItpC8kn+t3rqhKJCnFu8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Sv6jhHwxgS1paK3iJzar70cwrnIHbqiHS6C+XuWBWRoP7U1x6T4DzUKvmhfxS5BqE
-	 u8xyBrbxaVWREZhpPu4j8T5VT+6I6WKmDmdqJZ3WF1qxZlfw9pdMQXdRffEvhRU6fd
-	 oME+ax8qpE6O+dr7L823kQlofn/lhn04RCG96I+wjq5UvhNqUdmANFEnAQyH+WECBI
-	 fq/lstwiQ++hfbeW8w6JyOyhFcb2q/RjkwEbsaPdFK7xUq7VGlI7BXdrD4Ej9fXA6M
-	 mwaUU6HzNRXvCU8FtLPfdgtyNK1FN+I7WBNkg0sLRn6ExNEEYclVM9PtH9MNu1qIBh
-	 zOjVOn4EPjQbg==
-Date: Tue, 01 Oct 2024 18:20:35 -0700
-Subject: [PATCH 49/64] xfs: give refcount btree cursor error tracepoints their
- own class
+	b=j4p5HunD7TkYd5MlBJM7iRvxOehUoATUW/2iJgI5LWI0zvCTqNxHRocR4NQSh04WG
+	 xkwcnwlJKBYqKF6tVq1bDzxB/COjYJECBvQGIqAQP3pR6dCJdFknkv69C2B9tqp3/t
+	 OukUqJ0GYhzk2YRZVlFLhXQZ8Mpw6GCIg4b6AtKO0JKMuxIu1n5UqZw8B8MAj129zu
+	 ZNUkVtnZbaVI4Dd8sDOsSUqSCsYPiLsemarUbyVkNwtMeBYdl9rfPXbwmJfWjk+DAW
+	 9v+dXul9iv9WTj6TkG7KS60clvYhICI7/ArUODDAWCYtz2+TYy/BZJqQDZtKLXkx4h
+	 290zOvQ1exyXg==
+Date: Tue, 01 Oct 2024 18:20:50 -0700
+Subject: [PATCH 50/64] xfs: create specialized classes for refcount
+ tracepoints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172783102520.4036371.2374416951894228476.stgit@frogsfrogsfrogs>
+Message-ID: <172783102535.4036371.3450732570657162424.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,160 +47,103 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 7cf2663ff1cfb20f5fe025122016b68920b28041
+Source kernel commit: bb0efb0d0a2885b4c65ca31e2815da2281b99153
 
-Convert all the refcount tracepoints to use the btree error tracepoint
-class.
+The only user of the "ag" tracepoint event classes is the refcount
+btree, so rename them to make that obvious and make them take the btree
+cursor to simplify the arguments.  This will save us a lot of trouble
+later on.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_refcount.c |   42 ++++++++++++++----------------------------
- 1 file changed, 14 insertions(+), 28 deletions(-)
+ libxfs/xfs_refcount.c |   24 +++++++++---------------
+ 1 file changed, 9 insertions(+), 15 deletions(-)
 
 
 diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index b4e6900be..c78d42728 100644
+index c78d42728..4143aca5f 100644
 --- a/libxfs/xfs_refcount.c
 +++ b/libxfs/xfs_refcount.c
-@@ -210,8 +210,7 @@ xfs_refcount_update(
+@@ -50,7 +50,7 @@ xfs_refcount_lookup_le(
+ 	xfs_agblock_t		bno,
+ 	int			*stat)
+ {
+-	trace_xfs_refcount_lookup(cur->bc_mp, cur->bc_ag.pag->pag_agno,
++	trace_xfs_refcount_lookup(cur,
+ 			xfs_refcount_encode_startblock(bno, domain),
+ 			XFS_LOOKUP_LE);
+ 	cur->bc_rec.rc.rc_startblock = bno;
+@@ -70,7 +70,7 @@ xfs_refcount_lookup_ge(
+ 	xfs_agblock_t		bno,
+ 	int			*stat)
+ {
+-	trace_xfs_refcount_lookup(cur->bc_mp, cur->bc_ag.pag->pag_agno,
++	trace_xfs_refcount_lookup(cur,
+ 			xfs_refcount_encode_startblock(bno, domain),
+ 			XFS_LOOKUP_GE);
+ 	cur->bc_rec.rc.rc_startblock = bno;
+@@ -90,7 +90,7 @@ xfs_refcount_lookup_eq(
+ 	xfs_agblock_t		bno,
+ 	int			*stat)
+ {
+-	trace_xfs_refcount_lookup(cur->bc_mp, cur->bc_ag.pag->pag_agno,
++	trace_xfs_refcount_lookup(cur,
+ 			xfs_refcount_encode_startblock(bno, domain),
+ 			XFS_LOOKUP_LE);
+ 	cur->bc_rec.rc.rc_startblock = bno;
+@@ -1261,11 +1261,9 @@ xfs_refcount_adjust(
+ 	int			error;
  
- 	error = xfs_btree_update(cur, &rec);
- 	if (error)
--		trace_xfs_refcount_update_error(cur->bc_mp,
--				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+		trace_xfs_refcount_update_error(cur, error, _RET_IP_);
- 	return error;
- }
+ 	if (adj == XFS_REFCOUNT_ADJUST_INCREASE)
+-		trace_xfs_refcount_increase(cur->bc_mp,
+-				cur->bc_ag.pag->pag_agno, *agbno, *aglen);
++		trace_xfs_refcount_increase(cur, *agbno, *aglen);
+ 	else
+-		trace_xfs_refcount_decrease(cur->bc_mp,
+-				cur->bc_ag.pag->pag_agno, *agbno, *aglen);
++		trace_xfs_refcount_decrease(cur, *agbno, *aglen);
  
-@@ -246,8 +245,7 @@ xfs_refcount_insert(
+ 	/*
+ 	 * Ensure that no rcextents cross the boundary of the adjustment range.
+@@ -1525,8 +1523,7 @@ xfs_refcount_find_shared(
+ 	int				have;
+ 	int				error;
  
- out_error:
- 	if (error)
--		trace_xfs_refcount_insert_error(cur->bc_mp,
--				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+		trace_xfs_refcount_insert_error(cur, error, _RET_IP_);
- 	return error;
- }
+-	trace_xfs_refcount_find_shared(cur->bc_mp, cur->bc_ag.pag->pag_agno,
+-			agbno, aglen);
++	trace_xfs_refcount_find_shared(cur, agbno, aglen);
  
-@@ -287,8 +285,7 @@ xfs_refcount_delete(
- 			&found_rec);
- out_error:
- 	if (error)
--		trace_xfs_refcount_delete_error(cur->bc_mp,
--				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+		trace_xfs_refcount_delete_error(cur, error, _RET_IP_);
- 	return error;
- }
+ 	/* By default, skip the whole range */
+ 	*fbno = NULLAGBLOCK;
+@@ -1613,8 +1610,7 @@ xfs_refcount_find_shared(
+ 	}
  
-@@ -437,8 +434,7 @@ xfs_refcount_split_extent(
- 	return error;
- 
- out_error:
--	trace_xfs_refcount_split_extent_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_split_extent_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -521,8 +517,7 @@ xfs_refcount_merge_center_extents(
- 	return error;
- 
- out_error:
--	trace_xfs_refcount_merge_center_extents_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_merge_center_extents_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -588,8 +583,7 @@ xfs_refcount_merge_left_extent(
- 	return error;
- 
- out_error:
--	trace_xfs_refcount_merge_left_extent_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_merge_left_extent_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -657,8 +651,7 @@ xfs_refcount_merge_right_extent(
- 	return error;
- 
- out_error:
--	trace_xfs_refcount_merge_right_extent_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_merge_right_extent_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -752,8 +745,7 @@ xfs_refcount_find_left_extents(
- 	return error;
- 
- out_error:
--	trace_xfs_refcount_find_left_extent_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_find_left_extent_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -847,8 +839,7 @@ xfs_refcount_find_right_extents(
- 	return error;
- 
- out_error:
--	trace_xfs_refcount_find_right_extent_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_find_right_extent_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -1253,8 +1244,7 @@ xfs_refcount_adjust_extents(
- 
- 	return error;
- out_error:
--	trace_xfs_refcount_modify_extent_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_modify_extent_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -1314,8 +1304,7 @@ xfs_refcount_adjust(
- 	return 0;
- 
- out_error:
--	trace_xfs_refcount_adjust_error(cur->bc_mp, cur->bc_ag.pag->pag_agno,
--			error, _RET_IP_);
-+	trace_xfs_refcount_adjust_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -1629,8 +1618,7 @@ xfs_refcount_find_shared(
+ done:
+-	trace_xfs_refcount_find_shared_result(cur->bc_mp,
+-			cur->bc_ag.pag->pag_agno, *fbno, *flen);
++	trace_xfs_refcount_find_shared_result(cur, *fbno, *flen);
  
  out_error:
  	if (error)
--		trace_xfs_refcount_find_shared_error(cur->bc_mp,
--				cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+		trace_xfs_refcount_find_shared_error(cur, error, _RET_IP_);
- 	return error;
- }
+@@ -1832,8 +1828,7 @@ __xfs_refcount_cow_alloc(
+ 	xfs_agblock_t		agbno,
+ 	xfs_extlen_t		aglen)
+ {
+-	trace_xfs_refcount_cow_increase(rcur->bc_mp, rcur->bc_ag.pag->pag_agno,
+-			agbno, aglen);
++	trace_xfs_refcount_cow_increase(rcur, agbno, aglen);
  
-@@ -1785,8 +1773,7 @@ xfs_refcount_adjust_cow_extents(
+ 	/* Add refcount btree reservation */
+ 	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
+@@ -1849,8 +1844,7 @@ __xfs_refcount_cow_free(
+ 	xfs_agblock_t		agbno,
+ 	xfs_extlen_t		aglen)
+ {
+-	trace_xfs_refcount_cow_decrease(rcur->bc_mp, rcur->bc_ag.pag->pag_agno,
+-			agbno, aglen);
++	trace_xfs_refcount_cow_decrease(rcur, agbno, aglen);
  
- 	return error;
- out_error:
--	trace_xfs_refcount_modify_extent_error(cur->bc_mp,
--			cur->bc_ag.pag->pag_agno, error, _RET_IP_);
-+	trace_xfs_refcount_modify_extent_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -1832,8 +1819,7 @@ xfs_refcount_adjust_cow(
- 	return 0;
- 
- out_error:
--	trace_xfs_refcount_adjust_cow_error(cur->bc_mp, cur->bc_ag.pag->pag_agno,
--			error, _RET_IP_);
-+	trace_xfs_refcount_adjust_cow_error(cur, error, _RET_IP_);
- 	return error;
- }
- 
+ 	/* Remove refcount btree reservation */
+ 	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
 
