@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89592391
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:00:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7517B391
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:01:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727830823; cv=none; b=MhxgBvCe0/mSuvhmr94ddH/iH9qbvSBQrioVtjdu1x3LLnUlNzlZ3L0usPuzsAOrxlJyC27m4ZKUsG4TOLnOaZcc3fjNrtLRhFfZ1M8l0M+9gquoqhmw5ZMXPcC24SJ7FOxtJ1iKHalmujjAqOLcLjFvbXgmj5QGNDd6UvCpFAI=
+	t=1727830867; cv=none; b=JxFIZXhAOM8mxPSbe06iqClkcVnAttXIOou80DbyRli/amMLm4liVvAWSr9qzCBo2VN1PWh3xfhx0Rv0q3SktlyXc8R5LxdUzAOajUxlXmXdkKTEUurMEXYRAwFM7Ze3vMXezZXbhCEktnfwFO/mJu8CKosO9hhogNkZa34qj78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727830823; c=relaxed/simple;
-	bh=iuO/47p3bV+JUJZBnkpN4GWPW4rJ5NZrYsMrYdkhRkw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=IqWMxMYUrMf0GrcBQwE73rNaT3VW/ZjZfpxxSReASsHqzGfzDdIaoPMGdz4dZbkNGEfSVain0wqplDY8wtvK0FMT9IQQ+a7RLMzMFFivwTOXI+GS5PF+K5o2CTGVFYMNFBJ/OrQ8eRlTtSniYLtS7T4x+L8Gt1XzOGjv1/iFQfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Queqs9MT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727830867; c=relaxed/simple;
+	bh=t5XPurXdKpjZ222fkTUjxs9XQpihyHHQkExZXhmlF/Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i8HnZ/jDNsooFy+cgJbIJp17uu6BT/C4OVUVAYKCktf+arL+Xg7QZNboLRx6UdCIhiiafGAq3QAF40IYGZJHHfpIQv3zoxj5i4JpCl2G/FTCBD4+kO8ryKwyya4157kYHJ/HMw9wLHg4RgyXBLGgspdZvvP+vBHjmDb1PufaJns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nkt6+1C6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Queqs9MT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15E5AC4CEC6;
-	Wed,  2 Oct 2024 01:00:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nkt6+1C6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED828C4CEC6;
+	Wed,  2 Oct 2024 01:01:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727830823;
-	bh=iuO/47p3bV+JUJZBnkpN4GWPW4rJ5NZrYsMrYdkhRkw=;
-	h=Date:From:To:Cc:Subject:From;
-	b=Queqs9MT9rCI8pm0iht92t530WTxmnzc+8Zb6I8Agcff+KkVNH6ppa+Qzfi7V+Q0k
-	 MiolJvS103eL3as96m/O9sO7+h1dF3FdQm+HQBdcSiPAF3QkfwJ6P4W5wI4+To7PtM
-	 yD+Q8kAABo7N6wBVaPTYlpqa4v7FkKR2YSPzef8xVxIRKcTkwq0n9uk7nXpaKwrgDX
-	 BkCDnvzKQ99IwvYojCYuFKatbs++u1b3wh2vkSHxeEg0uU8Zvq2dJwBI5hH7ObLpPF
-	 uink0JYs07IfBjSw+umEygkmm5HVdzu9cZPYGqHd7yAFF3/nj9oLKXY/nVU8ciz6QV
-	 yr3EULkb5YHsA==
-Date: Tue, 1 Oct 2024 18:00:22 -0700
+	s=k20201202; t=1727830867;
+	bh=t5XPurXdKpjZ222fkTUjxs9XQpihyHHQkExZXhmlF/Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nkt6+1C6Pb9QMwer1Vs3sRF5ktibxhFdXB5TwG24mNmttjraF3PqVXZWW++bCEoC0
+	 cposKPpEn8u+Xdleprz83UTtfMPgf1N2mPn08aLqQwOjJMv+KUS5A+RDBHwj8swliL
+	 XFEErwzYWyKMj68uAnhv7cfi6zf8hhnp9LJNijs2WXcH1kP4r8Dj055uhdSx0ulFLZ
+	 6Q2vH924Tv+1n4SZyIXhhfoR//GJJ39H0wxdf5LmGjRughX1BKrzyMmDZtmsLldVqU
+	 J2O5ZjZmfcDsKgpkyR1kleMEAqAsybUm7PuhwmbC9GK1cSG3R5/OAp+AtNK2AVKnIS
+	 8YlZenaK1NQuQ==
+Date: Tue, 1 Oct 2024 18:01:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Subject: [PATCHBOMB] xfsprogs: catch us up to 6.11
-Message-ID: <20241002010022.GA21836@frogsfrogsfrogs>
+To: Catherine Hoang <catherine.hoang@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1] xfs_io: add RWF_ATOMIC support to pwrite
+Message-ID: <20241002010106.GX21853@frogsfrogsfrogs>
+References: <20241001182849.7272-1-catherine.hoang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,50 +41,107 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20241001182849.7272-1-catherine.hoang@oracle.com>
 
-Hi Andrey & Christoph,
+On Tue, Oct 01, 2024 at 11:28:49AM -0700, Catherine Hoang wrote:
+> Enable testing write behavior with the per-io RWF_ATOMIC flag.
+> 
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 
-Here's all the patches that I was going to submit for xfsprogs 6.11.
-The following patches have not been reviewed:
-
-The 6.11 libxfs sync is a bit intense this time, because we're merging
-all the inode creation code with the kernel's versions of those
-functions.  I tried to reconcile the versions gradually, but then you
-get this:
-
-[PATCHSET v4.2 3/6] libxfs: resync with 6.11
-[PATCH 07/64] libxfs: put all the inode functions in a single file
-[PATCH 08/64] libxfs: pass IGET flags through to xfs_iread
-[PATCH 10/64] libxfs: pack icreate initialization parameters into a
-[PATCH 12/64] libxfs: rearrange libxfs_trans_ichgtime call when
-[PATCH 13/64] libxfs: set access time when creating files
-[PATCH 14/64] libxfs: when creating a file in a directory,
-[PATCH 15/64] libxfs: pass flags2 from parent to child when creating
-[PATCH 17/64] libxfs: split new inode creation into two pieces
-[PATCH 18/64] libxfs: backport inode init code from the kernel
-[PATCH 19/64] libxfs: remove libxfs_dir_ialloc
-
-The only new functionality is that new child files get real (i.e.
-nonzero) i_generation values:
-
-[PATCH 20/64] libxfs: implement get_random_u32
-
-The rest of these patches are ports, fixes, and cleanups:
-
-[PATCHSET v4.2 4/6] xfsprogs: port tools to new 6.11 APIs
-[PATCH 1/4] xfs_db: port the unlink command to use libxfs_droplink
-[PATCH 2/4] xfs_db/mkfs/xfs_repair: port to use
-[PATCH 3/4] xfs_db/mdrestore/repair: don't use the incore struct
-[PATCH 4/4] xfs_db: port the iunlink command to use the libxfs
-
-[PATCHSET 5/6] xfs_repair: cleanups for 6.11
-[PATCH 1/4] xfs_repair: fix exchrange upgrade
-[PATCH 2/4] xfs_repair: don't crash in get_inode_parent
-[PATCH 3/4] xfs_repair: use library functions to reset root/rbm/rsum
-[PATCH 4/4] xfs_repair: use library functions for orphanage creation
-
-[PATCHSET v4.2 6/6] mkfs: clean up inode initialization code
-[PATCH 1/2] mkfs: clean up the rtinit() function
-[PATCH 2/2] mkfs: break up the rest of the rtinit() function
+Looks ok, though are there testcases for us to look at as well?
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
+
+> ---
+>  include/linux.h   | 5 +++++
+>  io/pwrite.c       | 8 ++++++--
+>  man/man8/xfs_io.8 | 8 +++++++-
+>  3 files changed, 18 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/linux.h b/include/linux.h
+> index a13072d2..e9eb7bfb 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -231,6 +231,11 @@ struct fsxattr {
+>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+>  #endif
+>  
+> +/* Atomic Write */
+> +#ifndef RWF_ATOMIC
+> +#define RWF_ATOMIC	((__kernel_rwf_t)0x00000040)
+> +#endif
+> +
+>  /*
+>   * Reminder: anything added to this file will be compiled into downstream
+>   * userspace projects!
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index a88cecc7..fab59be4 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -44,6 +44,7 @@ pwrite_help(void)
+>  #ifdef HAVE_PWRITEV2
+>  " -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
+>  " -D   -- Perform the pwritev2() with RWF_DSYNC\n"
+> +" -A   -- Perform the pwritev2() with RWF_ATOMIC\n"
+>  #endif
+>  "\n"));
+>  }
+> @@ -284,7 +285,7 @@ pwrite_f(
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  	bsize = fsblocksize;
+>  
+> -	while ((c = getopt(argc, argv, "b:BCdDf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "Ab:BCdDf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
+>  		switch (c) {
+>  		case 'b':
+>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+> @@ -324,6 +325,9 @@ pwrite_f(
+>  		case 'D':
+>  			pwritev2_flags |= RWF_DSYNC;
+>  			break;
+> +		case 'A':
+> +			pwritev2_flags |= RWF_ATOMIC;
+> +			break;
+>  #endif
+>  		case 's':
+>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
+> @@ -476,7 +480,7 @@ pwrite_init(void)
+>  	pwrite_cmd.argmax = -1;
+>  	pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+>  	pwrite_cmd.args =
+> -_("[-i infile [-qdDwNOW] [-s skip]] [-b bs] [-S seed] [-FBR [-Z N]] [-V N] off len");
+> +_("[-i infile [-qAdDwNOW] [-s skip]] [-b bs] [-S seed] [-FBR [-Z N]] [-V N] off len");
+>  	pwrite_cmd.oneline =
+>  		_("writes a number of bytes at a specified offset");
+>  	pwrite_cmd.help = pwrite_help;
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 303c6447..1e790139 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -244,7 +244,7 @@ See the
+>  .B pread
+>  command.
+>  .TP
+> -.BI "pwrite [ \-i " file " ] [ \-qdDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
+> +.BI "pwrite [ \-i " file " ] [ \-qAdDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
+>  Writes a range of bytes in a specified blocksize from the given
+>  .IR offset .
+>  The bytes written can be either a set pattern or read in from another
+> @@ -281,6 +281,12 @@ Perform the
+>  call with
+>  .IR RWF_DSYNC .
+>  .TP
+> +.B \-A
+> +Perform the
+> +.BR pwritev2 (2)
+> +call with
+> +.IR RWF_ATOMIC .
+> +.TP
+>  .B \-O
+>  perform pwrite once and return the (maybe partial) bytes written.
+>  .TP
+> -- 
+> 2.34.1
+> 
+> 
