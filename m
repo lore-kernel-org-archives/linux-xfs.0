@@ -1,56 +1,58 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5381CF7C9
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 12:24:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AA01D041B
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 12:24:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727871854; cv=none; b=sUHEdG81CiMfq03QboSQZZJrqGfXMwb7MA4TrJU+RoRc+uV8cDU2uYhlqLQt8ddLJZOZNHsQAdGDW0Fa7zQin8gOgFGXDglijQAsXXMsG6IE2fgKq6D12BoHcovX8x4T4FsP4PCxVhy/Sw5LcA89vWeYDbj2etG/E/yVmG+GQyU=
+	t=1727871859; cv=none; b=T+Vv4FrkL2u2H6BC0QE8b1x/3Zw2GvRESPLy8IKcgmZ2/Eljb2HwLrRzMqAcZsAivRUIwWSnKXBmYoYOV5QvZjgTeUzpnBHstIUb6QASr8KzAywkWVn97bXgzFT1TRZaDfCaHCe2m7SDMAek1inHzyci1mOUJI+BSo2IxpBmb40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727871854; c=relaxed/simple;
-	bh=L9+1a4Nvhl4tzEYVdSqhW0osk5/oToIvRvPo4KJU228=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kxiMrDq3K9RTCZGqJgSkIyXR6ZlKD/XeIN7MQAcoeR27/S3k1Gmf7GiuKWl65gvcv9wZndRr51oOUkTJOZp3gMsQZAFTtMSma6mL99AQQdOP42ZzYjIjbBLFdp+tnVcKZndLxhyNg3x1UmkqJbpteQRGzRX5EkktqAz2qJntbKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=jAkW0I2x; arc=none smtp.client-ip=209.85.214.174
+	s=arc-20240116; t=1727871859; c=relaxed/simple;
+	bh=AXfgQFgrYOWrr1JI0a2AUh317kck3OzTKiZdxvH344w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=bGraE1ggcxpzo/pXRaJ2Mwwt1Y6wNxAhH5wzqalBovQGPiOk+Fu4xuYnvjstFXnK1uu7+GEI9i4kFTHNH7OV2Tg0ReEPj3UT26nN4Mqa0+E2n+J+9mrItufMXlc9h2lAz4NMsq4hwvUwVxI/D6qPihLfeFnL6IP/nHyVWC2DYEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=X5COiSNU; arc=none smtp.client-ip=209.85.214.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="jAkW0I2x"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-20b90984971so33037275ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 05:24:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="X5COiSNU"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-208cf673b8dso66703875ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 05:24:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1727871852; x=1728476652; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=lSRpGgRiOL4V7C0v24EhN3UDSCpKvNuqNV1m3ZjKLE0=;
-        b=jAkW0I2xxb4HrDS825RLiYGeHBgKtNd0oncymsY4hnVBOylwrJhCXA2PGUS4E0LiHk
-         7QaDW+FBEcCENayIbTW/bHRtKB2BjFjEJd5dqqySf/LeacdQ+jU/tukgkMnHUyUQXckH
-         EH9cOU0iIMQAhE5yLLSPOihc5JdZsO+ZtAmZJFoy7aTg42J8Q4GNjyMQsYjnp9lpwL/A
-         xsKqGUziwSr3VpwjiwZLwgmaBG5NNnWux/UoPmSq7iH9KuBwqEQwH6v1hr0rot+9vuDJ
-         d3dFOci4Qi6xK5EymVKPGSWApbVR3l1g+N9Q3lPXKSbfGiypUn474apwLy3SBYzDNpL5
-         TnGQ==
+        d=shopee.com; s=shopee.com; t=1727871857; x=1728476657; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kA+m8L+34Dl8O49FU4PLpLTBcMA/CbhBqEQpr8t9PhM=;
+        b=X5COiSNUO1jubtf/RZP48gYL1T72GZ1N1vpOIcu0pP1dsbIoXUytpRCqGYyIjg9tRa
+         mIKpaWwA40Vztnd6p8o7HWfnHCsnBjY5K49Nd3Adl/kWIo5sFCWVFXV1ZWe5C55Oq9sp
+         ah9/6cIWPalpq2Nph6xU0F12xD3nSTkqhXXHmJ0oinNh41q+cI4AhPB/Pok5Uv7SFNxT
+         lplA5vMI/PuPkArhqGhs+K1gE1UykR4hjmOwo0pa95HPyMpcOwW2M+PiRiuKQJWDzei5
+         KdgQHRAIy22a1nu9n0AiRc2QgYfAvOo2WzuUe5AmuUtLgqmKJkpm2Sg6BUBJIB8VCslj
+         PiGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727871852; x=1728476652;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=lSRpGgRiOL4V7C0v24EhN3UDSCpKvNuqNV1m3ZjKLE0=;
-        b=PafdcVmpkphYzONimPJUJQHL3WQ7i75gqlt9OdDFPP7Xsv6XpCQLiLyqQ2h2LuoI1W
-         G39efWNVwWyFE3u31Lj/qIOXE+9q+dcjz4CGEdIeWLKi7PbmWVL/zafcpwvqww8gwZrH
-         u06+/oXdwOwLQcBD2j30MOoFSShJSPibjp3CpN9gZWUnNaOAs2YDsLOfQ/WniJzoybsz
-         yRScMbeK7sl5cIsWbdr2Fe93XkXZJjB2qIMgpN42fj4+XJiHSaHXSMfXBQteRMVg1J7i
-         etdnFapTDZPPdlHbvunBt+toFwGW0/ozn3Cl1HW5XS/C6kWcdkntdXj/tOhOVErH/5xC
-         7NjQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVlaoyQfDoS1Em6XRLebJ9xaOxpcey0HpahYY8v0A5xNgBWrunFG1kdh1HQAJR1DeUV2loBUXZMvuI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkJUmgd4vnCyrKr+Y+0BygScI/Wx5yR8Whb5mwLvQ2Z1owGYKf
-	ZM1rW0uxFDB5+8eX3jAClExVShVZW7IE4a5XfvK9MliThNEY+FHDv2pWmxGT+ifurf6BFALCjoZ
-	R
-X-Google-Smtp-Source: AGHT+IEwQwMtyKjJs5mIPiMJsYOnVLsxcA/9aIPnlYTc9sY8VpaQdegvup3iaqWg5jZXNodocqXfoA==
-X-Received: by 2002:a17:902:e88f:b0:20b:c258:2a74 with SMTP id d9443c01a7336-20bc5a3d3cemr40438745ad.29.1727871852063;
-        Wed, 02 Oct 2024 05:24:12 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1727871857; x=1728476657;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=kA+m8L+34Dl8O49FU4PLpLTBcMA/CbhBqEQpr8t9PhM=;
+        b=jC3xcGpWPR5YZYRwr8/w4WBFLo0MsoJYXgYYlxObuVM8wkGGNRyW2eNwE2MnDTVCIf
+         J8w/7pDePNn7JxgnKzyHv5t5jm9RgwWFt0urbQs0TpSf4MTSdFP3vlUj67xsbKoJ0jw9
+         bmRGshz+aX2asJCTDUZnlYPOHhLjtgk5K/Fw5kp5EblGnXf6IP1pY3VI4hNhOKP3udUV
+         krLE5sRT66NJ0vHucTS92D2O4VuyERUbbFjreGoLMrIeJhw7mSV1+3Z2qk6OEFjloupf
+         snr+n3Mza77pwBFWq2F3WJJV+QVXgZKaiKUslvAb9qyoRAQBG2IY4bi2Sn72eNlm73EQ
+         a1cw==
+X-Forwarded-Encrypted: i=1; AJvYcCUUbF8Yul9fPzInLK3BOxBphkOqaehZZSQ7JF8ydedDXHbuuiFIWnpi9KHSkapU7z6SIr7lNomumwo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyVpy83jAag/iWr+mkbBO4+QRYumyEXMgT7QNCk/3XDLxQvzcwE
+	cn1eZ+LXE27UyBws5qiqVZ5CZHySer7ko0GCJBzh6nD/Tfsnve7fDwtUDEUkdT8mP7+NlzvQaHU
+	RB+M=
+X-Google-Smtp-Source: AGHT+IGt1z9+omq+f5JaU2ZY1Ce+XkUfn+29/8n0xvI3+pkAWKeOkerZ/xgR4+AORmpbU5JcYBBz7Q==
+X-Received: by 2002:a17:902:da8e:b0:20b:9062:7b08 with SMTP id d9443c01a7336-20bc5a94f9dmr46308555ad.45.1727871857345;
+        Wed, 02 Oct 2024 05:24:17 -0700 (PDT)
 Received: from localhost.localdomain ([143.92.64.18])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20b37e33852sm83508625ad.199.2024.10.02.05.24.09
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20b37e33852sm83508625ad.199.2024.10.02.05.24.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Oct 2024 05:24:11 -0700 (PDT)
+        Wed, 02 Oct 2024 05:24:16 -0700 (PDT)
 From: Tang Yizhou <yizhou.tang@shopee.com>
 X-Google-Original-From: Tang Yizhou
 To: willy@infradead.org,
@@ -60,10 +62,12 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	Tang Yizhou <yizhou.tang@shopee.com>
-Subject: [PATCH 0/3] Cleanup some writeback codes
-Date: Wed,  2 Oct 2024 21:00:01 +0800
-Message-Id: <20241002130004.69010-1-yizhou.tang@shopee.com>
+Subject: [PATCH 1/3] mm/page-writeback.c: Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL
+Date: Wed,  2 Oct 2024 21:00:02 +0800
+Message-Id: <20241002130004.69010-2-yizhou.tang@shopee.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20241002130004.69010-1-yizhou.tang@shopee.com>
+References: <20241002130004.69010-1-yizhou.tang@shopee.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,17 +78,85 @@ Content-Transfer-Encoding: 8bit
 
 From: Tang Yizhou <yizhou.tang@shopee.com>
 
-Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL and update some comments.
+The name of the BANDWIDTH_INTERVAL macro is misleading, as it is not
+only used in the bandwidth update functions wb_update_bandwidth() and
+__wb_update_bandwidth(), but also in the dirty limit update function
+domain_update_dirty_limit().
 
-Tang Yizhou (3):
-  mm/page-writeback.c: Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL
-  mm/page-writeback.c: Fix comment of wb_domain_writeout_add()
-  xfs: Fix comment of xfs_buffered_write_iomap_begin()
+Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL to make things clear.
 
- fs/xfs/xfs_iomap.c  |  2 +-
- mm/page-writeback.c | 18 +++++++++---------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+This patche doesn't introduce any behavioral changes.
 
+Signed-off-by: Tang Yizhou <yizhou.tang@shopee.com>
+---
+ mm/page-writeback.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index fcd4c1439cb9..a848e7f0719d 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -54,9 +54,9 @@
+ #define DIRTY_POLL_THRESH	(128 >> (PAGE_SHIFT - 10))
+ 
+ /*
+- * Estimate write bandwidth at 200ms intervals.
++ * Estimate write bandwidth or update dirty limit at 200ms intervals.
+  */
+-#define BANDWIDTH_INTERVAL	max(HZ/5, 1)
++#define UPDATE_INTERVAL		max(HZ/5, 1)
+ 
+ #define RATELIMIT_CALC_SHIFT	10
+ 
+@@ -1331,11 +1331,11 @@ static void domain_update_dirty_limit(struct dirty_throttle_control *dtc,
+ 	/*
+ 	 * check locklessly first to optimize away locking for the most time
+ 	 */
+-	if (time_before(now, dom->dirty_limit_tstamp + BANDWIDTH_INTERVAL))
++	if (time_before(now, dom->dirty_limit_tstamp + UPDATE_INTERVAL))
+ 		return;
+ 
+ 	spin_lock(&dom->lock);
+-	if (time_after_eq(now, dom->dirty_limit_tstamp + BANDWIDTH_INTERVAL)) {
++	if (time_after_eq(now, dom->dirty_limit_tstamp + UPDATE_INTERVAL)) {
+ 		update_dirty_limit(dtc);
+ 		dom->dirty_limit_tstamp = now;
+ 	}
+@@ -1928,7 +1928,7 @@ static int balance_dirty_pages(struct bdi_writeback *wb,
+ 		wb->dirty_exceeded = gdtc->dirty_exceeded ||
+ 				     (mdtc && mdtc->dirty_exceeded);
+ 		if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stamp) +
+-					   BANDWIDTH_INTERVAL))
++					   UPDATE_INTERVAL))
+ 			__wb_update_bandwidth(gdtc, mdtc, true);
+ 
+ 		/* throttle according to the chosen dtc */
+@@ -2705,7 +2705,7 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+ 	 * writeback bandwidth is updated once in a while.
+ 	 */
+ 	if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stamp) +
+-				   BANDWIDTH_INTERVAL))
++				   UPDATE_INTERVAL))
+ 		wb_update_bandwidth(wb);
+ 	return ret;
+ }
+@@ -3057,14 +3057,14 @@ static void wb_inode_writeback_end(struct bdi_writeback *wb)
+ 	atomic_dec(&wb->writeback_inodes);
+ 	/*
+ 	 * Make sure estimate of writeback throughput gets updated after
+-	 * writeback completed. We delay the update by BANDWIDTH_INTERVAL
++	 * writeback completed. We delay the update by UPDATE_INTERVAL
+ 	 * (which is the interval other bandwidth updates use for batching) so
+ 	 * that if multiple inodes end writeback at a similar time, they get
+ 	 * batched into one bandwidth update.
+ 	 */
+ 	spin_lock_irqsave(&wb->work_lock, flags);
+ 	if (test_bit(WB_registered, &wb->state))
+-		queue_delayed_work(bdi_wq, &wb->bw_dwork, BANDWIDTH_INTERVAL);
++		queue_delayed_work(bdi_wq, &wb->bw_dwork, UPDATE_INTERVAL);
+ 	spin_unlock_irqrestore(&wb->work_lock, flags);
+ }
+ 
 -- 
 2.25.1
 
