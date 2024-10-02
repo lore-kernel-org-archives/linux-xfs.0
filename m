@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F1D804
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:05:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8626539A
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:06:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831145; cv=none; b=SJN2GGaAR264G/WNrIiykyJ6JwrrDyM5yUGBZSAV1zEewMGSnOZs0CC958dGMjjD7vRCgwD/1EgWD7WtXK4pQXFJx8bPyV4MfceJyW0rVdIUBv3me8z3x2XVE4Y8ucW13VfW5vHUAsLDRPKkQj/CDJKpn/dQL8+BDiVrXjRKgmw=
+	t=1727831160; cv=none; b=dXWCsq3kjkdXcFvuEK6s1gkaK9Wj4S3QI6fsuy7bFB2JfnDZjyDa1rHm1tBZjnFrxpMAT70N4L13hKtFE4NLPG30CUQFZPfg+Hmam/WcxK32ZpXtNhnNP1R9U4p2s/YWdle0PgeYqBBl13KP2agpR7JurRCOVqkX1c4mLcjZRVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831145; c=relaxed/simple;
-	bh=HwLdylRtbL4k68jI7JZ6hnXv4sIKjvorvVxsvoVMcVQ=;
+	s=arc-20240116; t=1727831160; c=relaxed/simple;
+	bh=Y3MpRjIxtNAHNwWF+EVBoyJW5CXDH7mr8qzOONf98iw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HevEb3ZQE4fAPqI25H4mhcdnkYzX7Q86Nnji/+Alnqecty4nrA9IximpuN7aEbZk2wrzmZuM2LRN7sZ0UkQLgsd3fzqmiLtiIBROn/22ers3WHAr3OJGaGuPMDrvrGWLrOLhZpobNlNO0wRpwVLRSCnn0RWK2WrT5SnHAPHygmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n7qcs9rQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=k8cJezalUbpvj4xazXLjXxpIbl8BojQ7OYLgZ2w8r5F2OxSth20u8r7S262Xp04gmct+HUP8JuvKPB4RSW4QrYE9UNiqFyERpmjZ7JJ2bpRVzaenGIwl40RgE/1Ybd0f4/pU5R0h5oLBZcCJnCxKPijbbyH0/+OqzMJfBxO+O1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cMUKaGW4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n7qcs9rQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B899AC4CEC6;
-	Wed,  2 Oct 2024 01:05:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cMUKaGW4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53E77C4CEC6;
+	Wed,  2 Oct 2024 01:06:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831144;
-	bh=HwLdylRtbL4k68jI7JZ6hnXv4sIKjvorvVxsvoVMcVQ=;
+	s=k20201202; t=1727831160;
+	bh=Y3MpRjIxtNAHNwWF+EVBoyJW5CXDH7mr8qzOONf98iw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=n7qcs9rQrpvZjevRlXl+Rbnej9g5b+9KAahsxjsbUtJmTGl/4/K6nfK8dI4zH1Oki
-	 XHaDlLbb63GjrEAI0a20rxcAUq5gLm9RZPMOKYdD1+z+z0D22/xCLxcTLEgj3/feP8
-	 GTyd2R0qZHsCN4r+BkR2jACIJ33eR/RbttCHD1XCHNETbe0CeNydh6UxBM7++v9foq
-	 6y+3N8NdgPbVPmD5PhDwJdoxgdFKQimiKlmOIhVeOHmwZs2P4IaErUTPx8XZ6kMlPV
-	 l0YWqLtmlwIilTwbh9TBaSZnxHH+BImBU98erf2gnS0JiRomatIE/dUJd8rVPV9CJk
-	 1mrEXFQJJmtJQ==
-Date: Tue, 01 Oct 2024 18:05:44 -0700
-Subject: [PATCHSET v2.5 6/6] mkfs: clean up inode initialization code
+	b=cMUKaGW4nVJPA/vplqUC2aI/HGKagKi1baYXGFMB74D9xaZNTX9Uv3y2J71OeiCEx
+	 ZRY720+m6qBsCZqUxsraPVh14bnv8AUFqeeP0XkMPy3rksR9840XjcVnBuhfyjTGQK
+	 MBBgJPz8mfrU6HTmaZ6X5iswsKOb3T1wZRYU7bmKsyKN2+NoGFNd+WsSZ1WLBQdnyR
+	 F5GeilmMmwu04Ic5rXStCwaFXgjRRzP6qF6KJU70oHidwTnsliSGOG7ycFLBiAM9qs
+	 FssweNgTmCjOMgLt7mYdpUC+MDclspKYOigc1GCQwK3X5JTdOX4GOQEsfGoP5ROVHr
+	 pyhcoWQnPFHTA==
+Date: Tue, 01 Oct 2024 18:05:59 -0700
+Subject: [PATCH 1/6] debian: Update debhelper-compat level
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783103720.4038865.18392358908456498224.stgit@frogsfrogsfrogs>
-In-Reply-To: <20241002010022.GA21836@frogsfrogsfrogs>
-References: <20241002010022.GA21836@frogsfrogsfrogs>
+Cc: Bastian Germann <bage@debian.org>, linux-xfs@vger.kernel.org
+Message-ID: <172783100985.4034333.10098962525264479766.stgit@frogsfrogsfrogs>
+In-Reply-To: <172783100964.4034333.14645939288722831394.stgit@frogsfrogsfrogs>
+References: <172783100964.4034333.14645939288722831394.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -44,23 +44,38 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Bastian Germann <bage@debian.org>
 
-Just a couple of patches to clean up the realtime metadata inode
-creation code in mkfs.
+debhelper-compat-upgrade-checklist.7 discourages using level 11.
+Update to compat level 12, which is supported back to buster.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-Comments and questions are, as always, welcome.
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-icreate-cleanups-6.11
+Signed-off-by: Bastian Germann <bage@debian.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Commits in this patchset:
- * mkfs: clean up the rtinit() function
- * mkfs: break up the rest of the rtinit() function
----
- mkfs/proto.c |  198 ++++++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 124 insertions(+), 74 deletions(-)
+ debian/compat  |    2 +-
+ debian/control |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+
+diff --git a/debian/compat b/debian/compat
+index b4de39476..48082f72f 100644
+--- a/debian/compat
++++ b/debian/compat
+@@ -1 +1 @@
+-11
++12
+diff --git a/debian/control b/debian/control
+index 31773e53a..369d11a4e 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,7 +3,7 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bage@debian.org>
+-Build-Depends: libinih-dev (>= 53), uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config, liburcu-dev
++Build-Depends: libinih-dev (>= 53), uuid-dev, debhelper (>= 12), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config, liburcu-dev
+ Standards-Version: 4.0.0
+ Homepage: https://xfs.wiki.kernel.org/
+ 
 
