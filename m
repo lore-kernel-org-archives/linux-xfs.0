@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0DE71103
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:23:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A161C1C2E
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:24:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727832238; cv=none; b=O9usR7fuUr016wZtAsQQBUemy3/T+0BpuE80+XTEF4lDkh8SCV9Y/GllYgiayvF55swmpjKHSVybEhvCWwjWyID/hfYO6jR2wLybyvLer5WAx/nkKvokDn8OzG9Ke0HVfTnugRYSTrPr9mDxbC9NbPwfIL/rfIh1BP1HqvksLlU=
+	t=1727832255; cv=none; b=aS2DpGNFVuNDwHUbMF+outsUHR7RKa4BBJ6kGCdkhmcbCdVbLTvQkFRCeZZeDiycH4OKi2lxqgBnQezXf0+80zB/KphGcajjNqdmoSjpaW2TlgSoudOO8mqlT8Bw21d13GOwQH1Qo42evvUdueFeFnaYcT8OBvitVZXRsUc+ckc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727832238; c=relaxed/simple;
-	bh=5CDuHlLmqVlHs4VssZ8SFz+l9POi62XYPlOdRERMwTk=;
+	s=arc-20240116; t=1727832255; c=relaxed/simple;
+	bh=bj246EJFF1yqsRBtqytpnfNmK54uBC1lVEcPZOVAw5k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UJI2LaPjsJg+kSA8BKgzyFEkYmyEQJMKJyWslaFTvKORHX94p3b+MneZlrxwTEqJSrcG950cq/2EnkWZqd/i1+v6CThwwwEFtC05y2vPJza91z9twolq5VpOdIvHrGlGrFA9I+MMtwGnKdloaktWiWq45T2mDO0j+lM9HCCQ1Zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=licgJIGU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YAZjcOeDTz2vn45WCLtNTTYVIsBxBb88Lu1FT5N7/xeCAT0oIMCX4Bot2W1ZlrKNP55wIeNYbcEjRFz2Y9T4IRaXZASdWl72PUHI7tfznTqVoifzke9Nu7IWDQoRx02AxqPGILvuD3hsEQmJmtXb1KCiBXi+ou3KzWuQ9D9nGCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bG8OzOBM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="licgJIGU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85AAAC4CEC6;
-	Wed,  2 Oct 2024 01:23:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bG8OzOBM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25857C4CEC6;
+	Wed,  2 Oct 2024 01:24:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727832238;
-	bh=5CDuHlLmqVlHs4VssZ8SFz+l9POi62XYPlOdRERMwTk=;
+	s=k20201202; t=1727832254;
+	bh=bj246EJFF1yqsRBtqytpnfNmK54uBC1lVEcPZOVAw5k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=licgJIGUQcBTrraycOF2r23sk6DgQk/Vqgj4VoOFTvr3lUYDGTLxBf3R/nR1GND7U
-	 be+BE6NM+AOwMVNK3qJbbfGD5+ZizjBgXCLE2hwvPG3I92O99IAia7Xy/JUQuAkxLv
-	 9MfD2H8kYABntGKruJtx6OwfL4WFQFCCY2mdrGFXd9Ux17DVX4qcjdARLTgpMfxZhJ
-	 mWFx+t9NUD/9EkUtwSWixcXs0PI08/NgoHKby+2pSJ/PEtWd8OoN24EVNQuKQDJjaV
-	 nBiyCh+v/zACT+EQ0bSip3wuBKTs5eFeqKLpluAI61jsE37xBMAGVkhz1ecu7FxUvq
-	 p5rmGso1oYYcg==
-Date: Tue, 01 Oct 2024 18:23:58 -0700
-Subject: [PATCH 62/64] xfs: remove unused parameter in macro XFS_DQUOT_LOGRES
+	b=bG8OzOBMbE9Z+LC2Y8EU0HqZyKCdGe/rWh2ML0GmR963AvtBf1iRfV32MNzqJFbin
+	 vCG2G9EPd3amAcXQI76rqWSZZYPF7+/Z9aOG53nHnZXJVA3U+NiLcFcceR2Iuz7Nwn
+	 YIiPOnJNf0Xr5yxsPgMXfkNU3ObvEV4Iu4bAZoH4Q94jREQ+XKfgcrn4/lQTzOcvcD
+	 TJlmiEvmo2Hm5RD0jj5HxUPsx5cr+O2US3fyiyxNChVcA3Px4WFnARqH8yVUDkgAWj
+	 zOCTFOjOd8LTbHGDilnQehqSAuAhAMkR0lulCt4eOWAwdgqWjFJqCtzlehxTn5Jwjd
+	 FP8C9xaU4OcfQ==
+Date: Tue, 01 Oct 2024 18:24:13 -0700
+Subject: [PATCH 63/64] xfs: fix di_onlink checking for V1/V2 inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
-Cc: Julian Sun <sunjunchao2870@gmail.com>,
+Cc: kjell.m.randa@gmail.com, Christoph Hellwig <hch@lst.de>,
  Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-Message-ID: <172783102714.4036371.5964586442120497902.stgit@frogsfrogsfrogs>
+Message-ID: <172783102729.4036371.17966851447524960790.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,157 +45,78 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Julian Sun <sunjunchao2870@gmail.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: af5d92f2fad818663da2ce073b6fe15b9d56ffdc
+Source kernel commit: e21fea4ac3cf12eba1921fbbf7764bf69c6d4b2c
 
-In the macro definition of XFS_DQUOT_LOGRES, a parameter is accepted,
-but it is not used. Hence, it should be removed.
+"KjellR" complained on IRC that an old V4 filesystem suddenly stopped
+mounting after upgrading from 6.9.11 to 6.10.3, with the following splat
+when trying to read the rt bitmap inode:
 
-This patch has only passed compilation test, but it should be fine.
+00000000: 49 4e 80 00 01 02 00 01 00 00 00 00 00 00 00 00  IN..............
+00000010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 43 d2 a9 da 21 0f d6 30  ........C...!..0
+00000030: 43 d2 a9 da 21 0f d6 30 00 00 00 00 00 00 00 00  C...!..0........
+00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000050: 00 00 00 02 00 00 00 00 00 00 00 04 00 00 00 00  ................
+00000060: ff ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
 
-Signed-off-by: Julian Sun <sunjunchao2870@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+As Dave Chinner points out, this is a V1 inode with both di_onlink and
+di_nlink set to 1 and di_flushiter == 0.  In other words, this inode was
+formatted this way by mkfs and hasn't been touched since then.
+
+Back in the old days of xfsprogs 3.2.3, I observed that libxfs_ialloc
+would set di_nlink, but if the filesystem didn't have NLINK, it would
+then set di_version = 1.  libxfs_iflush_int later sees the V1 inode and
+copies the value of di_nlink to di_onlink without zeroing di_onlink.
+
+Eventually this filesystem must have been upgraded to support NLINK
+because 6.10 doesn't support !NLINK filesystems, which is how we tripped
+over this old behavior.  The filesystem doesn't have a realtime section,
+so that's why the rtbitmap inode has never been touched.
+
+Fix this by removing the di_onlink/di_nlink checking for all V1/V2
+inodes because this is a muddy mess.  The V3 inode handling code has
+always supported NLINK and written di_onlink==0 so keep that check.
+The removal of the V1 inode handling code when we dropped support for
+!NLINK obscured this old behavior.
+
+Reported-by: kjell.m.randa@gmail.com
+Fixes: 40cb8613d612 ("xfs: check unused nlink fields in the ondisk inode")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_quota_defs.h |    2 +-
- libxfs/xfs_trans_resv.c |   28 ++++++++++++++--------------
- 2 files changed, 15 insertions(+), 15 deletions(-)
+ libxfs/xfs_inode_buf.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
-index cb035da3f..fb05f44f6 100644
---- a/libxfs/xfs_quota_defs.h
-+++ b/libxfs/xfs_quota_defs.h
-@@ -56,7 +56,7 @@ typedef uint8_t		xfs_dqtype_t;
-  * And, of course, we also need to take into account the dquot log format item
-  * used to describe each dquot.
-  */
--#define XFS_DQUOT_LOGRES(mp)	\
-+#define XFS_DQUOT_LOGRES	\
- 	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
- 
- #define XFS_IS_QUOTA_ON(mp)		((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index a2cb4d63e..6b87bf4d5 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -335,11 +335,11 @@ xfs_calc_write_reservation(
- 					blksz);
- 		t1 += adj;
- 		t3 += adj;
--		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
-+		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 856659cc3..5970ee705 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -511,12 +511,18 @@ xfs_dinode_verify(
+ 			return __this_address;
  	}
  
- 	t4 = xfs_calc_refcountbt_reservation(mp, 1);
--	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
-+	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
- }
- 
- unsigned int
-@@ -407,11 +407,11 @@ xfs_calc_itruncate_reservation(
- 					xfs_refcountbt_block_count(mp, 4),
- 					blksz);
- 
--		return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
-+		return XFS_DQUOT_LOGRES + max3(t1, t2, t3);
+-	if (dip->di_version > 1) {
++	/*
++	 * Historical note: xfsprogs in the 3.2 era set up its incore inodes to
++	 * have di_nlink track the link count, even if the actual filesystem
++	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
++	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
++	 * the the incore di_nlink value, which is why we cannot check for
++	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
++	 * di_onlink==0, so we can check that.
++	 */
++	if (dip->di_version >= 2) {
+ 		if (dip->di_onlink)
+ 			return __this_address;
+-	} else {
+-		if (dip->di_nlink)
+-			return __this_address;
  	}
  
- 	t4 = xfs_calc_refcountbt_reservation(mp, 2);
--	return XFS_DQUOT_LOGRES(mp) + max(t4, max3(t1, t2, t3));
-+	return XFS_DQUOT_LOGRES + max(t4, max3(t1, t2, t3));
- }
- 
- unsigned int
-@@ -463,7 +463,7 @@ STATIC uint
- xfs_calc_rename_reservation(
- 	struct xfs_mount	*mp)
- {
--	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
-+	unsigned int		overhead = XFS_DQUOT_LOGRES;
- 	struct xfs_trans_resv	*resp = M_RES(mp);
- 	unsigned int		t1, t2, t3 = 0;
- 
-@@ -574,7 +574,7 @@ STATIC uint
- xfs_calc_link_reservation(
- 	struct xfs_mount	*mp)
- {
--	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
-+	unsigned int		overhead = XFS_DQUOT_LOGRES;
- 	struct xfs_trans_resv	*resp = M_RES(mp);
- 	unsigned int		t1, t2, t3 = 0;
- 
-@@ -638,7 +638,7 @@ STATIC uint
- xfs_calc_remove_reservation(
- 	struct xfs_mount	*mp)
- {
--	unsigned int            overhead = XFS_DQUOT_LOGRES(mp);
-+	unsigned int            overhead = XFS_DQUOT_LOGRES;
- 	struct xfs_trans_resv   *resp = M_RES(mp);
- 	unsigned int            t1, t2, t3 = 0;
- 
-@@ -726,7 +726,7 @@ xfs_calc_icreate_reservation(
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_trans_resv	*resp = M_RES(mp);
--	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
-+	unsigned int		overhead = XFS_DQUOT_LOGRES;
- 	unsigned int		t1, t2, t3 = 0;
- 
- 	t1 = xfs_calc_icreate_resv_alloc(mp);
-@@ -744,7 +744,7 @@ STATIC uint
- xfs_calc_create_tmpfile_reservation(
- 	struct xfs_mount        *mp)
- {
--	uint	res = XFS_DQUOT_LOGRES(mp);
-+	uint	res = XFS_DQUOT_LOGRES;
- 
- 	res += xfs_calc_icreate_resv_alloc(mp);
- 	return res + xfs_calc_iunlink_add_reservation(mp);
-@@ -826,7 +826,7 @@ STATIC uint
- xfs_calc_ifree_reservation(
- 	struct xfs_mount	*mp)
- {
--	return XFS_DQUOT_LOGRES(mp) +
-+	return XFS_DQUOT_LOGRES +
- 		xfs_calc_inode_res(mp, 1) +
- 		xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
- 		xfs_calc_iunlink_remove_reservation(mp) +
-@@ -843,7 +843,7 @@ STATIC uint
- xfs_calc_ichange_reservation(
- 	struct xfs_mount	*mp)
- {
--	return XFS_DQUOT_LOGRES(mp) +
-+	return XFS_DQUOT_LOGRES +
- 		xfs_calc_inode_res(mp, 1) +
- 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
- 
-@@ -952,7 +952,7 @@ STATIC uint
- xfs_calc_addafork_reservation(
- 	struct xfs_mount	*mp)
- {
--	return XFS_DQUOT_LOGRES(mp) +
-+	return XFS_DQUOT_LOGRES +
- 		xfs_calc_inode_res(mp, 1) +
- 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
-@@ -1000,7 +1000,7 @@ STATIC uint
- xfs_calc_attrsetm_reservation(
- 	struct xfs_mount	*mp)
- {
--	return XFS_DQUOT_LOGRES(mp) +
-+	return XFS_DQUOT_LOGRES +
- 		xfs_calc_inode_res(mp, 1) +
- 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
- 		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
-@@ -1040,7 +1040,7 @@ STATIC uint
- xfs_calc_attrrm_reservation(
- 	struct xfs_mount	*mp)
- {
--	return XFS_DQUOT_LOGRES(mp) +
-+	return XFS_DQUOT_LOGRES +
- 		max((xfs_calc_inode_res(mp, 1) +
- 		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
- 				      XFS_FSB_TO_B(mp, 1)) +
+ 	/* don't allow invalid i_size */
 
