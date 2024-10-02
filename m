@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21B714400
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:12:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E84916FB0
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:12:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831521; cv=none; b=qIQ/ZYsleESOPUaEEW6QgDM0m6U8UHfM+ugzIS6mzb3GAINcZ5BEvsoiZCVX5XCMpX1XUIQHVdlyKbi3pomtHQe8U+8Y9p40Pd1KRtSTZeDsZU1OgWUlJv9757N9s0waEAsuXAxlEd/VAQC+lEq6jYZAvgRU4iPtIWs0zOp+MLs=
+	t=1727831537; cv=none; b=ibRxUC1R4aWQyqUzn742+NtpL/9xpYO8w9X15anJaw2jV0s4OYP/guBigH0tLbTwVelfyYFOLOiNXQLWTI9v9HKO0PrPDFg6wQT8/Hwi2J6Pg/DWl3P/REcVFWCYLKD2pyq4hWTFHY+WLMXuhUZfGCAMSa09XFyraXEsp4WnMyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831521; c=relaxed/simple;
-	bh=YbSImtedkp+OGC5XAMS/Pv+k/LMgdtbNpFErTQD1etg=;
+	s=arc-20240116; t=1727831537; c=relaxed/simple;
+	bh=VxhscAfx8P5+i7zOvB2d8BcPkAkFaJRa1qB2vIUMOXo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qCACuq3052fybPpCTthDVzvIqZCLn26a15NvoMZYJ6qoQJrwCYefd1NuogSsPDpOQaA8ZrXk/QnDOnqPVxnc1lMgu4r6frXmOBkQJOuolDaEs2FZ0+IqRF3gK2GqwlbX97b8Qb8NMgmH+skepZDTQdSkQ4OGVi7NbYkXa28VVRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sXH0l09H; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=C76rgU44j0WnsYJoFvmweglVctTVrK7mwksNn+GojDRRIMwQ1ex2n6eCDCTLmHb/k+21/umng4wFALq2r1TXu1MyNxee9/ijDZHL+NXyM6TXV4jSJB4oDgrsRoYJvGSjqvPhJbCBLEz+EAAXtJ3h5j8KuAJYjsOzx87NBERatPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+sMIIdD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sXH0l09H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4906C4CEC6;
-	Wed,  2 Oct 2024 01:12:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+sMIIdD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85EDCC4CEC6;
+	Wed,  2 Oct 2024 01:12:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831520;
-	bh=YbSImtedkp+OGC5XAMS/Pv+k/LMgdtbNpFErTQD1etg=;
+	s=k20201202; t=1727831536;
+	bh=VxhscAfx8P5+i7zOvB2d8BcPkAkFaJRa1qB2vIUMOXo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sXH0l09H222AFdYav0rvs7pqi7RYAOb8YARHOZJys/QmPoMVA+YGGK5NlicvjZVvM
-	 O2OF/wTv3WxqFi9SzUYG9jsdvWbDmT5+2ozYKAhPI/yKcv+VbywACokbmgVzQFI3n6
-	 0F0kiOwJ5PwCHDPT2PWxcMCamRDdzZy1MMrX7brzJd3XNI2w0yfhi9d5dS5DmhyAtQ
-	 cfyDBm+so1c5333sPVp/a9jDIAXAX9wlnk71IlY9PrtenGikfnH41lcCAA/xrbJbLM
-	 30Xi42K7TR8FILYWdNjkAYvhkwH+n3V3h2kWEoLDmZQJyuGggMEepxuQgdOuvZRoT0
-	 pOAKEq5oRW06A==
-Date: Tue, 01 Oct 2024 18:12:00 -0700
-Subject: [PATCH 16/64] xfs: split new inode creation into two pieces
+	b=b+sMIIdDbeOhzxIDj9mYeTDFIl5KnsqVwJnLYd4mh2BHxwDBnFlTYQoNU6b9Gq1BK
+	 G+aUDOa8vx6v58jpUBvPNrOhS/II5EU1n4M4kH84w3Y8Dw/8ojS0DJsMibgbK7bzKT
+	 83cTnAZ/r8QfGzShDvNLwQ5VRCkAK/YvscnW3h+PCdZdlXV6S6SkXo3jHY2E4jt6Ic
+	 WyZdVWX4vGErTCxLwohLjDf/qHDzaf3WQelMMqmSQ1UbPsNHFJcpwxqQeYhXDNG/f2
+	 GaM/haUPHohKPKCts02tmpr9baIKd5N3c0+CKNZI187x36AcAaGNbYtwE3xpnq2Sa0
+	 n1XVqCJhlQ4BQ==
+Date: Tue, 01 Oct 2024 18:12:16 -0700
+Subject: [PATCH 17/64] libxfs: split new inode creation into two pieces
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172783102022.4036371.17986883848922355216.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <172783102037.4036371.5213093405295760719.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -56,36 +56,89 @@ userspace by hoisting it to libxfs.  Therefore, split xfs_icreate into
 separate functions to prepare for the next few patches.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_ialloc.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ libxfs/inode.c |   51 ++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 30 insertions(+), 21 deletions(-)
 
 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index d8697561e..cef2819aa 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1941,6 +1941,21 @@ xfs_dialloc(
+diff --git a/libxfs/inode.c b/libxfs/inode.c
+index 3e72b25cc..206b779a8 100644
+--- a/libxfs/inode.c
++++ b/libxfs/inode.c
+@@ -91,33 +91,21 @@ libxfs_bumplink(
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ }
+ 
+-/*
+- * Initialise a newly allocated inode and return the in-core inode to the
+- * caller locked exclusively.
+- */
+-static int
+-libxfs_icreate(
++/* Initialise an inode's attributes. */
++static void
++xfs_inode_init(
+ 	struct xfs_trans	*tp,
+-	xfs_ino_t		ino,
+ 	const struct xfs_icreate_args *args,
+-	struct xfs_inode	**ipp)
++	struct xfs_inode	*ip)
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_inode	*pip = args->pip;
+ 	struct inode		*dir = pip ? VFS_I(pip) : NULL;
+-	struct inode		*inode;
+-	struct xfs_inode	*ip;
++	struct inode		*inode = VFS_I(ip);
+ 	unsigned int		flags;
+ 	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG |
+ 					XFS_ICHGTIME_ACCESS;
+-	int			error;
+ 
+-	error = libxfs_iget(mp, tp, ino, XFS_IGET_CREATE, &ip);
+-	if (error != 0)
+-		return error;
+-	ASSERT(ip != NULL);
+-
+-	inode = VFS_I(ip);
+ 	inode->i_mode = args->mode;
+ 	if (args->flags & XFS_ICREATE_TMPFILE)
+ 		set_nlink(inode, 0);
+@@ -201,11 +189,32 @@ libxfs_icreate(
  		}
- 		return -ENOSPC;
  	}
+ 
+-	/*
+-	 * Log the new values stuffed into the inode.
+-	 */
+-	xfs_trans_ijoin(tp, ip, 0);
+ 	xfs_trans_log_inode(tp, ip, flags);
++}
 +
-+	/*
-+	 * Protect against obviously corrupt allocation btree records. Later
-+	 * xfs_iget checks will catch re-allocation of other active in-memory
-+	 * and on-disk inodes. If we don't catch reallocating the parent inode
-+	 * here we will deadlock in xfs_iget() so we have to do these checks
-+	 * first.
-+	 */
-+	if (ino == parent || !xfs_verify_dir_ino(mp, ino)) {
-+		xfs_alert(mp, "Allocated a known in-use inode 0x%llx!", ino);
-+		xfs_agno_mark_sick(mp, XFS_INO_TO_AGNO(mp, ino),
-+				XFS_SICK_AG_INOBT);
-+		return -EFSCORRUPTED;
-+	}
++/*
++ * Initialise a newly allocated inode and return the in-core inode to the
++ * caller locked exclusively.
++ */
++static int
++libxfs_icreate(
++	struct xfs_trans	*tp,
++	xfs_ino_t		ino,
++	const struct xfs_icreate_args *args,
++	struct xfs_inode	**ipp)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_inode	*ip = NULL;
++	int			error;
 +
- 	*new_ino = ino;
++	error = libxfs_iget(mp, tp, ino, XFS_IGET_CREATE, &ip);
++	if (error)
++		return error;
++
++	ASSERT(ip != NULL);
++	xfs_trans_ijoin(tp, ip, 0);
++	xfs_inode_init(tp, args, ip);
++
+ 	*ipp = ip;
  	return 0;
  }
 
