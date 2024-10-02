@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 379A55227
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:13:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF2E55227
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:13:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831599; cv=none; b=DQXlS6geEOIDqXB9+AdTKsEzSWYyIl6lOWZvhryuhj3t/EPOFVLCMwm6EQ8g09BTpN4yxXuUugUZyUXdpAY/EvZVwWoIudYPV6bJVI8D+55nDP7tisfin57Myam/EhEnotBL63xij2r7PU5qNYqWnIM9sIPkK6HGQOMA/KWeztg=
+	t=1727831614; cv=none; b=UyMVPMhcA4UEz9ClqEDdzL7maNGmlZh/NGtSTd84pN0hGZJLPhErquWJKRMNCZ/ug6TmLyBeqQ7UoJf3TV/A7QD9fKTA1EbuJAvZigANFtO5lgeieRGBjVcUwBWbb28ExLhXQRxUGSmku9YwMSW83O/1eomk0U5Zg46F3giNin4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831599; c=relaxed/simple;
-	bh=9jf1RQCM5ISJec5x0fQLODEQOt+Ll56Bf9FHvs7Cd4g=;
+	s=arc-20240116; t=1727831614; c=relaxed/simple;
+	bh=LR+lbwsA1eywz5aHI+dnIiTGXNvDKCQ34eTRQhVZyKE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Hv4zAFDrI4IDIKEW+Gvz+KjdJ103L0kMACZAK6gq8JHwAda5QoxcWPUDNAzlSF7TzVZOLPUG6Cta9hHtSwmBIK5F1WtdM+JgO2kZQiIYHra41M0NLcefTvUvKKsjlNCTywsRzpVu5C3eKG4jn7w7/FEmIcvE0EVrYBDqJnp6V5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZliJRHj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=LDwOreuzADHvZveqBhHTs9g9mw1EY+K7LvAsgH6M1AdCWntpyG82aah2mbHpO9ZB3bXLBc0EOdIT8pmThfuVU0eG/4raxAcSwuh4sAUZ7GMKjbFHVPHxVzqMWoMlrTMJsQsDp5bhFHyO3T+PHsBJJhKEpzxn+mBdaUO1lRebsH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dmzsy62g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZliJRHj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A082C4CEC6;
-	Wed,  2 Oct 2024 01:13:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dmzsy62g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A060C4CEC6;
+	Wed,  2 Oct 2024 01:13:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831599;
-	bh=9jf1RQCM5ISJec5x0fQLODEQOt+Ll56Bf9FHvs7Cd4g=;
+	s=k20201202; t=1727831614;
+	bh=LR+lbwsA1eywz5aHI+dnIiTGXNvDKCQ34eTRQhVZyKE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AZliJRHjoZZH77zan2tEzZw8OH643I27UlKeZN5OBUusozrKP7omAfM7d/TSejCta
-	 UMP0xf77mfMh6LuNZP3srIbxpuoxGRvDywtK/DWf10WbqEntWcTtaHVV/M+C3v9N5e
-	 tgizTAJ9yb3ZJ9igUE1nKvjudt7ds8RPU3W6hCRcMBVZxYO6dJDaUy5vC4ENlzXeXn
-	 sYTau/NlF6eFD81NkZaqbala/er5EWiST3kn/vnTuU8GQ/2vfnn8mewxEsh27nNIZN
-	 ++efXcoB3CO3ebMKwc7PdfPeaLFewAZDDWHJTt5sqqpEv7yDs+5HClbfCEPp9zGJnU
-	 GBtW5L7DTrgCA==
-Date: Tue, 01 Oct 2024 18:13:18 -0700
-Subject: [PATCH 21/64] xfs: hoist new inode initialization functions to libxfs
+	b=dmzsy62gw73T2El1AjrL1lPk68EJD72Q6ItfEFesJInAwsKK68RtcDFxD4wZ7zPS5
+	 GgI7oAQLHBjRla33SCcaE2xrb1FxjOTTxy0NCd4H795Wj3+seVnZM/lujmrK4TzcTD
+	 /vrFrXQu69S7sMzDNuMib8yUBokEoGyXk5zkuALO1eJMsKCYzHm4QsdWSk18mLv8M3
+	 MZejHHBCSH1qv13seJvRtbaH2UN3HBEAm0vGsavrHD/lwOA0ypWy6KzKBMR8CT5DCg
+	 6wV22Oi3Ljdk/nvQmPVFvW6e9gRcI7C8K8dfRgtKGXoiQA07XBCmoXC5dqqI3+pHfd
+	 Vw4fu+lHdVY7Q==
+Date: Tue, 01 Oct 2024 18:13:34 -0700
+Subject: [PATCH 22/64] xfs: hoist xfs_iunlink to libxfs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172783102097.4036371.10921999929547033243.stgit@frogsfrogsfrogs>
+Message-ID: <172783102113.4036371.7383365525499447986.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,495 +46,606 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: e9d2b35bb9d3ff372fad27998fc3969ced3f563d
+Source kernel commit: b8a6107921ca799330ff3efdd154b7fa0ff54582
 
-Move all the code that initializes a new inode's attributes from the
-icreate_args structure and the parent directory into libxfs.
+Move xfs_iunlink and xfs_iunlink_remove to libxfs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/xfs_inode.h     |    6 +
- libxfs/inode.c          |  161 ------------------------------------
- libxfs/xfs_inode_util.c |  211 +++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_inode_util.h |   12 +++
- libxfs/xfs_shared.h     |    8 --
- repair/phase6.c         |    3 -
- 6 files changed, 231 insertions(+), 170 deletions(-)
+ include/xfs_inode.h     |    1 
+ include/xfs_trace.h     |    6 +
+ libxfs/Makefile         |    2 
+ libxfs/inode.c          |    2 
+ libxfs/iunlink.c        |  163 +++++++++++++++++++++++++++
+ libxfs/iunlink.h        |   24 ++++
+ libxfs/libxfs_priv.h    |    2 
+ libxfs/xfs_inode_util.c |  281 +++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_inode_util.h |    4 +
+ 9 files changed, 485 insertions(+)
+ create mode 100644 libxfs/iunlink.c
+ create mode 100644 libxfs/iunlink.h
 
 
 diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 1f9b07a53..7ce6f0183 100644
+index 7ce6f0183..19aaa78f3 100644
 --- a/include/xfs_inode.h
 +++ b/include/xfs_inode.h
-@@ -420,4 +420,10 @@ extern void	libxfs_irele(struct xfs_inode *ip);
+@@ -237,6 +237,7 @@ typedef struct xfs_inode {
  
- #define XFS_INHERIT_GID(pip)		(VFS_I(pip)->i_mode & S_ISGID)
+ 	/* unlinked list pointers */
+ 	xfs_agino_t		i_next_unlinked;
++	xfs_agino_t		i_prev_unlinked;
  
-+#define xfs_inherit_noatime		(false)
-+#define xfs_inherit_nodump		(false)
-+#define xfs_inherit_sync		(false)
-+#define xfs_inherit_nosymlinks		(false)
-+#define xfs_inherit_nodefrag		(false)
+ 	xfs_extnum_t		i_cnextents;	/* # of extents in cow fork */
+ 	unsigned int		i_cformat;	/* format of cow fork */
+diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+index fe0854b20..812fbb38e 100644
+--- a/include/xfs_trace.h
++++ b/include/xfs_trace.h
+@@ -361,4 +361,10 @@
+ 
+ #define trace_xlog_intent_recovery_failed(...)	((void) 0)
+ 
++#define trace_xfs_iunlink_update_bucket(...)	((void) 0)
++#define trace_xfs_iunlink_update_dinode(...)	((void) 0)
++#define trace_xfs_iunlink(...)			((void) 0)
++#define trace_xfs_iunlink_reload_next(...)	((void) 0)
++#define trace_xfs_iunlink_remove(...)		((void) 0)
 +
- #endif /* __XFS_INODE_H__ */
+ #endif /* __TRACE_H__ */
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index fd623cf40..72e287b8b 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -25,6 +25,7 @@ HFILES = \
+ 	libxfs_api_defs.h \
+ 	listxattr.h \
+ 	init.h \
++	iunlink.h \
+ 	libxfs_priv.h \
+ 	linux-err.h \
+ 	topology.h \
+@@ -71,6 +72,7 @@ CFILES = buf_mem.c \
+ 	defer_item.c \
+ 	init.c \
+ 	inode.c \
++	iunlink.c \
+ 	kmem.c \
+ 	listxattr.c \
+ 	logitem.c \
 diff --git a/libxfs/inode.c b/libxfs/inode.c
-index eb71f90bc..61068078a 100644
+index 61068078a..20b9c483a 100644
 --- a/libxfs/inode.c
 +++ b/libxfs/inode.c
-@@ -29,50 +29,6 @@
- #include "xfs_da_btree.h"
- #include "xfs_dir2_priv.h"
+@@ -173,6 +173,8 @@ libxfs_iget(
+ 	ip->i_mount = mp;
+ 	ip->i_diflags2 = mp->m_ino_geo.new_diflags2;
+ 	ip->i_af.if_format = XFS_DINODE_FMT_EXTENTS;
++	ip->i_next_unlinked = NULLAGINO;
++	ip->i_prev_unlinked = NULLAGINO;
+ 	spin_lock_init(&VFS_I(ip)->i_lock);
  
--/* Propagate di_flags from a parent inode to a child inode. */
--static void
--xfs_inode_inherit_flags(
--	struct xfs_inode	*ip,
--	const struct xfs_inode	*pip)
--{
--	unsigned int		di_flags = 0;
--	umode_t			mode = VFS_I(ip)->i_mode;
--
--	if ((mode & S_IFMT) == S_IFDIR) {
--		if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
--			di_flags |= XFS_DIFLAG_RTINHERIT;
--		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
--			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
--			ip->i_extsize = pip->i_extsize;
--		}
--	} else {
--		if ((pip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
--		    xfs_has_realtime(ip->i_mount))
--			di_flags |= XFS_DIFLAG_REALTIME;
--		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
--			di_flags |= XFS_DIFLAG_EXTSIZE;
--			ip->i_extsize = pip->i_extsize;
--		}
--	}
--	if (pip->i_diflags & XFS_DIFLAG_PROJINHERIT)
--		di_flags |= XFS_DIFLAG_PROJINHERIT;
--	ip->i_diflags |= di_flags;
--}
--
--/* Propagate di_flags2 from a parent inode to a child inode. */
--static void
--xfs_inode_inherit_flags2(
--	struct xfs_inode	*ip,
--	const struct xfs_inode	*pip)
--{
--	if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
--		ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
--		ip->i_cowextsize = pip->i_cowextsize;
--	}
--	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
--		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
--}
--
- /*
-  * Increment the link count on an inode & log the change.
-  */
-@@ -91,123 +47,6 @@ libxfs_bumplink(
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- }
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+diff --git a/libxfs/iunlink.c b/libxfs/iunlink.c
+new file mode 100644
+index 000000000..6d0554535
+--- /dev/null
++++ b/libxfs/iunlink.c
+@@ -0,0 +1,163 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2020-2022, Red Hat, Inc.
++ * All Rights Reserved.
++ */
++
++#include "libxfs_priv.h"
++#include "libxfs.h"
++#include "libxfs_io.h"
++#include "init.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_inode.h"
++#include "xfs_trans.h"
++#include "xfs_ag.h"
++#include "iunlink.h"
++#include "xfs_trace.h"
++
++/* in memory log item structure */
++struct xfs_iunlink_item {
++	struct xfs_inode	*ip;
++	struct xfs_perag	*pag;
++	xfs_agino_t		next_agino;
++	xfs_agino_t		old_agino;
++};
++
++/*
++ * Look up the inode cluster buffer and log the on-disk unlinked inode change
++ * we need to make.
++ */
++static int
++xfs_iunlink_log_dinode(
++	struct xfs_trans	*tp,
++	struct xfs_iunlink_item	*iup)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_inode	*ip = iup->ip;
++	struct xfs_dinode	*dip;
++	struct xfs_buf		*ibp;
++	int			offset;
++	int			error;
++
++	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &ibp);
++	if (error)
++		return error;
++	/*
++	 * Don't log the unlinked field on stale buffers as this may be the
++	 * transaction that frees the inode cluster and relogging the buffer
++	 * here will incorrectly remove the stale state.
++	 */
++	if (ibp->b_flags & LIBXFS_B_STALE)
++		goto out;
++
++	dip = xfs_buf_offset(ibp, ip->i_imap.im_boffset);
++
++	/* Make sure the old pointer isn't garbage. */
++	if (be32_to_cpu(dip->di_next_unlinked) != iup->old_agino) {
++		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
++				sizeof(*dip), __this_address);
++		error = -EFSCORRUPTED;
++		goto out;
++	}
++
++	trace_xfs_iunlink_update_dinode(mp, iup->pag->pag_agno,
++			XFS_INO_TO_AGINO(mp, ip->i_ino),
++			be32_to_cpu(dip->di_next_unlinked), iup->next_agino);
++
++	dip->di_next_unlinked = cpu_to_be32(iup->next_agino);
++	offset = ip->i_imap.im_boffset +
++			offsetof(struct xfs_dinode, di_next_unlinked);
++
++	xfs_dinode_calc_crc(mp, dip);
++	xfs_trans_inode_buf(tp, ibp);
++	xfs_trans_log_buf(tp, ibp, offset, offset + sizeof(xfs_agino_t) - 1);
++	return 0;
++out:
++	xfs_trans_brelse(tp, ibp);
++	return error;
++}
++
++/*
++ * Initialize the inode log item for a newly allocated (in-core) inode.
++ *
++ * Inode extents can only reside within an AG. Hence specify the starting
++ * block for the inode chunk by offset within an AG as well as the
++ * length of the allocated extent.
++ *
++ * This joins the item to the transaction and marks it dirty so
++ * that we don't need a separate call to do this, nor does the
++ * caller need to know anything about the iunlink item.
++ */
++int
++xfs_iunlink_log_inode(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	struct xfs_perag	*pag,
++	xfs_agino_t		next_agino)
++{
++	struct xfs_iunlink_item	iup = {
++		.ip		= ip,
++		.pag		= pag,
++		.next_agino	= next_agino,
++		.old_agino	= ip->i_next_unlinked,
++	};
++
++	ASSERT(xfs_verify_agino_or_null(pag, next_agino));
++	ASSERT(xfs_verify_agino_or_null(pag, ip->i_next_unlinked));
++
++	/*
++	 * Since we're updating a linked list, we should never find that the
++	 * current pointer is the same as the new value, unless we're
++	 * terminating the list.
++	 */
++	if (ip->i_next_unlinked == next_agino) {
++		if (next_agino != NULLAGINO)
++			return -EFSCORRUPTED;
++		return 0;
++	}
++
++	return xfs_iunlink_log_dinode(tp, &iup);
++}
++
++/*
++ * Load the inode @next_agino into the cache and set its prev_unlinked pointer
++ * to @prev_agino.  Caller must hold the AGI to synchronize with other changes
++ * to the unlinked list.
++ */
++int
++xfs_iunlink_reload_next(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agibp,
++	xfs_agino_t		prev_agino,
++	xfs_agino_t		next_agino)
++{
++	struct xfs_perag	*pag = agibp->b_pag;
++	struct xfs_mount	*mp = pag->pag_mount;
++	struct xfs_inode	*next_ip = NULL;
++	xfs_ino_t		ino;
++	int			error;
++
++	ASSERT(next_agino != NULLAGINO);
++
++	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
++	error = libxfs_iget(mp, tp, ino, XFS_IGET_UNTRUSTED, &next_ip);
++	if (error)
++		return error;
++
++	/* If this is not an unlinked inode, something is very wrong. */
++	if (VFS_I(next_ip)->i_nlink != 0) {
++		error = -EFSCORRUPTED;
++		goto rele;
++	}
++
++	next_ip->i_prev_unlinked = prev_agino;
++	trace_xfs_iunlink_reload_next(next_ip);
++rele:
++	xfs_irele(next_ip);
++	return error;
++}
+diff --git a/libxfs/iunlink.h b/libxfs/iunlink.h
+new file mode 100644
+index 000000000..8d8032cf9
+--- /dev/null
++++ b/libxfs/iunlink.h
+@@ -0,0 +1,24 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2020-2022, Red Hat, Inc.
++ * All Rights Reserved.
++ */
++#ifndef XFS_IUNLINK_ITEM_H
++#define XFS_IUNLINK_ITEM_H	1
++
++struct xfs_trans;
++struct xfs_inode;
++struct xfs_perag;
++
++static inline struct xfs_inode *
++xfs_iunlink_lookup(struct xfs_perag *pag, xfs_agino_t agino)
++{
++	return NULL;
++}
++
++int xfs_iunlink_log_inode(struct xfs_trans *tp, struct xfs_inode *ip,
++			struct xfs_perag *pag, xfs_agino_t next_agino);
++int xfs_iunlink_reload_next(struct xfs_trans *tp, struct xfs_buf *agibp,
++		xfs_agino_t prev_agino, xfs_agino_t next_agino);
++
++#endif	/* XFS_IUNLINK_ITEM_H */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 8dd364b0d..a77524dfd 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -482,6 +482,8 @@ xfs_buf_readahead(
+ #define xfs_filestream_new_ag(ip,ag)		(0)
+ #define xfs_filestream_select_ag(...)		(-ENOSYS)
  
--/* Initialise an inode's attributes. */
--static void
--xfs_inode_init(
--	struct xfs_trans	*tp,
--	const struct xfs_icreate_args *args,
--	struct xfs_inode	*ip)
--{
--	struct xfs_mount	*mp = tp->t_mountp;
--	struct xfs_inode	*pip = args->pip;
--	struct inode		*dir = pip ? VFS_I(pip) : NULL;
--	struct inode		*inode = VFS_I(ip);
--	unsigned int		flags;
--	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG |
--					XFS_ICHGTIME_ACCESS;
--
--	if (args->flags & XFS_ICREATE_TMPFILE)
--		set_nlink(inode, 0);
--	else if (S_ISDIR(args->mode))
--		set_nlink(inode, 2);
--	else
--		set_nlink(inode, 1);
--	inode->i_rdev = args->rdev;
--
--	if (!args->idmap || pip == NULL) {
--		/* creating a tree root, sb rooted, or detached file */
--		inode->i_uid = GLOBAL_ROOT_UID;
--		inode->i_gid = GLOBAL_ROOT_GID;
--		ip->i_projid = 0;
--		inode->i_mode = args->mode;
--	} else {
--		/* creating a child in the directory tree */
--		if (dir && !(dir->i_mode & S_ISGID) && xfs_has_grpid(mp)) {
--			inode_fsuid_set(inode, args->idmap);
--			inode->i_gid = dir->i_gid;
--			inode->i_mode = args->mode;
--		} else {
--			inode_init_owner(args->idmap, inode, dir, args->mode);
--		}
--
--		/*
--		 * If the group ID of the new file does not match the effective
--		 * group ID or one of the supplementary group IDs, the S_ISGID
--		 * bit is cleared (and only if the irix_sgid_inherit
--		 * compatibility variable is set).
--		 */
--		if (irix_sgid_inherit && (inode->i_mode & S_ISGID) &&
--		    !vfsgid_in_group_p(i_gid_into_vfsgid(args->idmap, inode)))
--			inode->i_mode &= ~S_ISGID;
--
--		ip->i_projid = pip ? xfs_get_initial_prid(pip) : 0;
--	}
--
--	ip->i_disk_size = 0;
--	ip->i_df.if_nextents = 0;
--	ASSERT(ip->i_nblocks == 0);
--
--	ip->i_extsize = 0;
--	ip->i_diflags = 0;
--
--	if (xfs_has_v3inodes(mp)) {
--		inode_set_iversion(inode, 1);
--		ip->i_cowextsize = 0;
--		times |= XFS_ICHGTIME_CREATE;
--	}
--
--	xfs_trans_ichgtime(tp, ip, times);
--
--	flags = XFS_ILOG_CORE;
--	switch (args->mode & S_IFMT) {
--	case S_IFIFO:
--	case S_IFSOCK:
--	case S_IFCHR:
--	case S_IFBLK:
--		ip->i_df.if_format = XFS_DINODE_FMT_DEV;
--		flags |= XFS_ILOG_DEV;
--		break;
--	case S_IFREG:
--	case S_IFDIR:
--		if (pip && (pip->i_diflags & XFS_DIFLAG_ANY))
--			xfs_inode_inherit_flags(ip, pip);
--		if (pip && (pip->i_diflags2 & XFS_DIFLAG2_ANY))
--			xfs_inode_inherit_flags2(ip, pip);
--		fallthrough;
--	case S_IFLNK:
--		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
--		ip->i_df.if_bytes = 0;
--		ip->i_df.if_data = NULL;
--		break;
--	default:
--		ASSERT(0);
--	}
--
--	/*
--	 * If we need to create attributes immediately after allocating the
--	 * inode, initialise an empty attribute fork right now. We use the
--	 * default fork offset for attributes here as we don't know exactly what
--	 * size or how many attributes we might be adding. We can do this
--	 * safely here because we know the data fork is completely empty and
--	 * this saves us from needing to run a separate transaction to set the
--	 * fork offset in the immediate future.
--	 */
--	if ((args->flags & XFS_ICREATE_INIT_XATTRS) &&
--	    (xfs_has_attr(tp->t_mountp) || xfs_has_attr2(tp->t_mountp))) {
--		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
--		xfs_ifork_init_attr(ip, XFS_DINODE_FMT_EXTENTS, 0);
--
--		if (!xfs_has_attr(mp)) {
--			spin_lock(&mp->m_sb_lock);
--			xfs_add_attr(mp);
--			spin_unlock(&mp->m_sb_lock);
--			xfs_log_sb(tp);
--		}
--	}
--
--	xfs_trans_log_inode(tp, ip, flags);
--}
--
- /*
-  * Initialise a newly allocated inode and return the in-core inode to the
-  * caller locked exclusively.
++#define xfs_trans_inode_buf(tp, bp)		((void) 0)
++
+ /* quota bits */
+ #define xfs_trans_mod_dquot_byino(t,i,f,d)		({ \
+ 	uint _f = (f); \
 diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
-index 0a9ea03e2..633c7616c 100644
+index 633c7616c..2d7e970d7 100644
 --- a/libxfs/xfs_inode_util.c
 +++ b/libxfs/xfs_inode_util.c
-@@ -13,6 +13,10 @@
- #include "xfs_mount.h"
- #include "xfs_inode.h"
- #include "xfs_inode_util.h"
-+#include "xfs_trans.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_health.h"
-+#include "xfs_bmap.h"
+@@ -17,6 +17,9 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_health.h"
+ #include "xfs_bmap.h"
++#include "xfs_trace.h"
++#include "xfs_ag.h"
++#include "iunlink.h"
  
  uint16_t
  xfs_flags2diflags(
-@@ -132,3 +136,210 @@ xfs_get_initial_prid(struct xfs_inode *dp)
- 	/* Assign to the root project by default. */
- 	return 0;
+@@ -343,3 +346,281 @@ xfs_inode_init(
+ 
+ 	xfs_trans_log_inode(tp, ip, flags);
  }
 +
-+/* Propagate di_flags from a parent inode to a child inode. */
-+static inline void
-+xfs_inode_inherit_flags(
-+	struct xfs_inode	*ip,
-+	const struct xfs_inode	*pip)
++/*
++ * In-Core Unlinked List Lookups
++ * =============================
++ *
++ * Every inode is supposed to be reachable from some other piece of metadata
++ * with the exception of the root directory.  Inodes with a connection to a
++ * file descriptor but not linked from anywhere in the on-disk directory tree
++ * are collectively known as unlinked inodes, though the filesystem itself
++ * maintains links to these inodes so that on-disk metadata are consistent.
++ *
++ * XFS implements a per-AG on-disk hash table of unlinked inodes.  The AGI
++ * header contains a number of buckets that point to an inode, and each inode
++ * record has a pointer to the next inode in the hash chain.  This
++ * singly-linked list causes scaling problems in the iunlink remove function
++ * because we must walk that list to find the inode that points to the inode
++ * being removed from the unlinked hash bucket list.
++ *
++ * Hence we keep an in-memory double linked list to link each inode on an
++ * unlinked list. Because there are 64 unlinked lists per AGI, keeping pointer
++ * based lists would require having 64 list heads in the perag, one for each
++ * list. This is expensive in terms of memory (think millions of AGs) and cache
++ * misses on lookups. Instead, use the fact that inodes on the unlinked list
++ * must be referenced at the VFS level to keep them on the list and hence we
++ * have an existence guarantee for inodes on the unlinked list.
++ *
++ * Given we have an existence guarantee, we can use lockless inode cache lookups
++ * to resolve aginos to xfs inodes. This means we only need 8 bytes per inode
++ * for the double linked unlinked list, and we don't need any extra locking to
++ * keep the list safe as all manipulations are done under the AGI buffer lock.
++ * Keeping the list up to date does not require memory allocation, just finding
++ * the XFS inode and updating the next/prev unlinked list aginos.
++ */
++
++/*
++ * Update the prev pointer of the next agino.  Returns -ENOLINK if the inode
++ * is not in cache.
++ */
++static int
++xfs_iunlink_update_backref(
++	struct xfs_perag	*pag,
++	xfs_agino_t		prev_agino,
++	xfs_agino_t		next_agino)
 +{
-+	unsigned int		di_flags = 0;
-+	xfs_failaddr_t		failaddr;
-+	umode_t			mode = VFS_I(ip)->i_mode;
++	struct xfs_inode	*ip;
 +
-+	if (S_ISDIR(mode)) {
-+		if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
-+			di_flags |= XFS_DIFLAG_RTINHERIT;
-+		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
-+			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
-+			ip->i_extsize = pip->i_extsize;
-+		}
-+		if (pip->i_diflags & XFS_DIFLAG_PROJINHERIT)
-+			di_flags |= XFS_DIFLAG_PROJINHERIT;
-+	} else if (S_ISREG(mode)) {
-+		if ((pip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
-+		    xfs_has_realtime(ip->i_mount))
-+			di_flags |= XFS_DIFLAG_REALTIME;
-+		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
-+			di_flags |= XFS_DIFLAG_EXTSIZE;
-+			ip->i_extsize = pip->i_extsize;
-+		}
-+	}
-+	if ((pip->i_diflags & XFS_DIFLAG_NOATIME) &&
-+	    xfs_inherit_noatime)
-+		di_flags |= XFS_DIFLAG_NOATIME;
-+	if ((pip->i_diflags & XFS_DIFLAG_NODUMP) &&
-+	    xfs_inherit_nodump)
-+		di_flags |= XFS_DIFLAG_NODUMP;
-+	if ((pip->i_diflags & XFS_DIFLAG_SYNC) &&
-+	    xfs_inherit_sync)
-+		di_flags |= XFS_DIFLAG_SYNC;
-+	if ((pip->i_diflags & XFS_DIFLAG_NOSYMLINKS) &&
-+	    xfs_inherit_nosymlinks)
-+		di_flags |= XFS_DIFLAG_NOSYMLINKS;
-+	if ((pip->i_diflags & XFS_DIFLAG_NODEFRAG) &&
-+	    xfs_inherit_nodefrag)
-+		di_flags |= XFS_DIFLAG_NODEFRAG;
-+	if (pip->i_diflags & XFS_DIFLAG_FILESTREAM)
-+		di_flags |= XFS_DIFLAG_FILESTREAM;
++	/* No update necessary if we are at the end of the list. */
++	if (next_agino == NULLAGINO)
++		return 0;
 +
-+	ip->i_diflags |= di_flags;
++	ip = xfs_iunlink_lookup(pag, next_agino);
++	if (!ip)
++		return -ENOLINK;
++
++	ip->i_prev_unlinked = prev_agino;
++	return 0;
++}
++
++/*
++ * Point the AGI unlinked bucket at an inode and log the results.  The caller
++ * is responsible for validating the old value.
++ */
++STATIC int
++xfs_iunlink_update_bucket(
++	struct xfs_trans	*tp,
++	struct xfs_perag	*pag,
++	struct xfs_buf		*agibp,
++	unsigned int		bucket_index,
++	xfs_agino_t		new_agino)
++{
++	struct xfs_agi		*agi = agibp->b_addr;
++	xfs_agino_t		old_value;
++	int			offset;
++
++	ASSERT(xfs_verify_agino_or_null(pag, new_agino));
++
++	old_value = be32_to_cpu(agi->agi_unlinked[bucket_index]);
++	trace_xfs_iunlink_update_bucket(tp->t_mountp, pag->pag_agno, bucket_index,
++			old_value, new_agino);
 +
 +	/*
-+	 * Inode verifiers on older kernels only check that the extent size
-+	 * hint is an integer multiple of the rt extent size on realtime files.
-+	 * They did not check the hint alignment on a directory with both
-+	 * rtinherit and extszinherit flags set.  If the misaligned hint is
-+	 * propagated from a directory into a new realtime file, new file
-+	 * allocations will fail due to math errors in the rt allocator and/or
-+	 * trip the verifiers.  Validate the hint settings in the new file so
-+	 * that we don't let broken hints propagate.
++	 * We should never find the head of the list already set to the value
++	 * passed in because either we're adding or removing ourselves from the
++	 * head of the list.
 +	 */
-+	failaddr = xfs_inode_validate_extsize(ip->i_mount, ip->i_extsize,
-+			VFS_I(ip)->i_mode, ip->i_diflags);
-+	if (failaddr) {
-+		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
-+				   XFS_DIFLAG_EXTSZINHERIT);
-+		ip->i_extsize = 0;
++	if (old_value == new_agino) {
++		xfs_buf_mark_corrupt(agibp);
++		xfs_ag_mark_sick(pag, XFS_SICK_AG_AGI);
++		return -EFSCORRUPTED;
 +	}
++
++	agi->agi_unlinked[bucket_index] = cpu_to_be32(new_agino);
++	offset = offsetof(struct xfs_agi, agi_unlinked) +
++			(sizeof(xfs_agino_t) * bucket_index);
++	xfs_trans_log_buf(tp, agibp, offset, offset + sizeof(xfs_agino_t) - 1);
++	return 0;
 +}
 +
-+/* Propagate di_flags2 from a parent inode to a child inode. */
-+static inline void
-+xfs_inode_inherit_flags2(
-+	struct xfs_inode	*ip,
-+	const struct xfs_inode	*pip)
-+{
-+	xfs_failaddr_t		failaddr;
-+
-+	if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
-+		ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
-+		ip->i_cowextsize = pip->i_cowextsize;
-+	}
-+	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
-+		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
-+
-+	/* Don't let invalid cowextsize hints propagate. */
-+	failaddr = xfs_inode_validate_cowextsize(ip->i_mount, ip->i_cowextsize,
-+			VFS_I(ip)->i_mode, ip->i_diflags, ip->i_diflags2);
-+	if (failaddr) {
-+		ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
-+		ip->i_cowextsize = 0;
-+	}
-+}
-+
-+/* Initialise an inode's attributes. */
-+void
-+xfs_inode_init(
++static int
++xfs_iunlink_insert_inode(
 +	struct xfs_trans	*tp,
-+	const struct xfs_icreate_args *args,
++	struct xfs_perag	*pag,
++	struct xfs_buf		*agibp,
 +	struct xfs_inode	*ip)
 +{
-+	struct xfs_inode	*pip = args->pip;
-+	struct inode		*dir = pip ? VFS_I(pip) : NULL;
 +	struct xfs_mount	*mp = tp->t_mountp;
-+	struct inode		*inode = VFS_I(ip);
-+	unsigned int		flags;
-+	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG |
-+					XFS_ICHGTIME_ACCESS;
++	struct xfs_agi		*agi = agibp->b_addr;
++	xfs_agino_t		next_agino;
++	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	short			bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
++	int			error;
 +
-+	if (args->flags & XFS_ICREATE_TMPFILE)
-+		set_nlink(inode, 0);
-+	else if (S_ISDIR(args->mode))
-+		set_nlink(inode, 2);
-+	else
-+		set_nlink(inode, 1);
-+	inode->i_rdev = args->rdev;
-+
-+	if (!args->idmap || pip == NULL) {
-+		/* creating a tree root, sb rooted, or detached file */
-+		inode->i_uid = GLOBAL_ROOT_UID;
-+		inode->i_gid = GLOBAL_ROOT_GID;
-+		ip->i_projid = 0;
-+		inode->i_mode = args->mode;
-+	} else {
-+		/* creating a child in the directory tree */
-+		if (dir && !(dir->i_mode & S_ISGID) && xfs_has_grpid(mp)) {
-+			inode_fsuid_set(inode, args->idmap);
-+			inode->i_gid = dir->i_gid;
-+			inode->i_mode = args->mode;
-+		} else {
-+			inode_init_owner(args->idmap, inode, dir, args->mode);
-+		}
-+
-+		/*
-+		 * If the group ID of the new file does not match the effective
-+		 * group ID or one of the supplementary group IDs, the S_ISGID
-+		 * bit is cleared (and only if the irix_sgid_inherit
-+		 * compatibility variable is set).
-+		 */
-+		if (irix_sgid_inherit && (inode->i_mode & S_ISGID) &&
-+		    !vfsgid_in_group_p(i_gid_into_vfsgid(args->idmap, inode)))
-+			inode->i_mode &= ~S_ISGID;
-+
-+		ip->i_projid = pip ? xfs_get_initial_prid(pip) : 0;
-+	}
-+
-+	ip->i_disk_size = 0;
-+	ip->i_df.if_nextents = 0;
-+	ASSERT(ip->i_nblocks == 0);
-+
-+	ip->i_extsize = 0;
-+	ip->i_diflags = 0;
-+
-+	if (xfs_has_v3inodes(mp)) {
-+		inode_set_iversion(inode, 1);
-+		ip->i_cowextsize = 0;
-+		times |= XFS_ICHGTIME_CREATE;
-+	}
-+
-+	xfs_trans_ichgtime(tp, ip, times);
-+
-+	flags = XFS_ILOG_CORE;
-+	switch (args->mode & S_IFMT) {
-+	case S_IFIFO:
-+	case S_IFCHR:
-+	case S_IFBLK:
-+	case S_IFSOCK:
-+		ip->i_df.if_format = XFS_DINODE_FMT_DEV;
-+		flags |= XFS_ILOG_DEV;
-+		break;
-+	case S_IFREG:
-+	case S_IFDIR:
-+		if (pip && (pip->i_diflags & XFS_DIFLAG_ANY))
-+			xfs_inode_inherit_flags(ip, pip);
-+		if (pip && (pip->i_diflags2 & XFS_DIFLAG2_ANY))
-+			xfs_inode_inherit_flags2(ip, pip);
-+		fallthrough;
-+	case S_IFLNK:
-+		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
-+		ip->i_df.if_bytes = 0;
-+		ip->i_df.if_data = NULL;
-+		break;
-+	default:
-+		ASSERT(0);
++	/*
++	 * Get the index into the agi hash table for the list this inode will
++	 * go on.  Make sure the pointer isn't garbage and that this inode
++	 * isn't already on the list.
++	 */
++	next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
++	if (next_agino == agino ||
++	    !xfs_verify_agino_or_null(pag, next_agino)) {
++		xfs_buf_mark_corrupt(agibp);
++		xfs_ag_mark_sick(pag, XFS_SICK_AG_AGI);
++		return -EFSCORRUPTED;
 +	}
 +
 +	/*
-+	 * If we need to create attributes immediately after allocating the
-+	 * inode, initialise an empty attribute fork right now. We use the
-+	 * default fork offset for attributes here as we don't know exactly what
-+	 * size or how many attributes we might be adding. We can do this
-+	 * safely here because we know the data fork is completely empty and
-+	 * this saves us from needing to run a separate transaction to set the
-+	 * fork offset in the immediate future.
++	 * Update the prev pointer in the next inode to point back to this
++	 * inode.
 +	 */
-+	if (args->flags & XFS_ICREATE_INIT_XATTRS) {
-+		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
-+		xfs_ifork_init_attr(ip, XFS_DINODE_FMT_EXTENTS, 0);
++	error = xfs_iunlink_update_backref(pag, agino, next_agino);
++	if (error == -ENOLINK)
++		error = xfs_iunlink_reload_next(tp, agibp, agino, next_agino);
++	if (error)
++		return error;
 +
-+		if (!xfs_has_attr(mp)) {
-+			spin_lock(&mp->m_sb_lock);
-+			xfs_add_attr(mp);
-+			spin_unlock(&mp->m_sb_lock);
-+			xfs_log_sb(tp);
-+		}
++	if (next_agino != NULLAGINO) {
++		/*
++		 * There is already another inode in the bucket, so point this
++		 * inode to the current head of the list.
++		 */
++		error = xfs_iunlink_log_inode(tp, ip, pag, next_agino);
++		if (error)
++			return error;
++		ip->i_next_unlinked = next_agino;
 +	}
 +
-+	xfs_trans_log_inode(tp, ip, flags);
++	/* Point the head of the list to point to this inode. */
++	ip->i_prev_unlinked = NULLAGINO;
++	return xfs_iunlink_update_bucket(tp, pag, agibp, bucket_index, agino);
++}
++
++/*
++ * This is called when the inode's link count has gone to 0 or we are creating
++ * a tmpfile via O_TMPFILE.  The inode @ip must have nlink == 0.
++ *
++ * We place the on-disk inode on a list in the AGI.  It will be pulled from this
++ * list when the inode is freed.
++ */
++int
++xfs_iunlink(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_perag	*pag;
++	struct xfs_buf		*agibp;
++	int			error;
++
++	ASSERT(VFS_I(ip)->i_nlink == 0);
++	ASSERT(VFS_I(ip)->i_mode != 0);
++	trace_xfs_iunlink(ip);
++
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++
++	/* Get the agi buffer first.  It ensures lock ordering on the list. */
++	error = xfs_read_agi(pag, tp, 0, &agibp);
++	if (error)
++		goto out;
++
++	error = xfs_iunlink_insert_inode(tp, pag, agibp, ip);
++out:
++	xfs_perag_put(pag);
++	return error;
++}
++
++static int
++xfs_iunlink_remove_inode(
++	struct xfs_trans	*tp,
++	struct xfs_perag	*pag,
++	struct xfs_buf		*agibp,
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_agi		*agi = agibp->b_addr;
++	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	xfs_agino_t		head_agino;
++	short			bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
++	int			error;
++
++	trace_xfs_iunlink_remove(ip);
++
++	/*
++	 * Get the index into the agi hash table for the list this inode will
++	 * go on.  Make sure the head pointer isn't garbage.
++	 */
++	head_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
++	if (!xfs_verify_agino(pag, head_agino)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++				agi, sizeof(*agi));
++		xfs_ag_mark_sick(pag, XFS_SICK_AG_AGI);
++		return -EFSCORRUPTED;
++	}
++
++	/*
++	 * Set our inode's next_unlinked pointer to NULL and then return
++	 * the old pointer value so that we can update whatever was previous
++	 * to us in the list to point to whatever was next in the list.
++	 */
++	error = xfs_iunlink_log_inode(tp, ip, pag, NULLAGINO);
++	if (error)
++		return error;
++
++	/*
++	 * Update the prev pointer in the next inode to point back to previous
++	 * inode in the chain.
++	 */
++	error = xfs_iunlink_update_backref(pag, ip->i_prev_unlinked,
++			ip->i_next_unlinked);
++	if (error == -ENOLINK)
++		error = xfs_iunlink_reload_next(tp, agibp, ip->i_prev_unlinked,
++				ip->i_next_unlinked);
++	if (error)
++		return error;
++
++	if (head_agino != agino) {
++		struct xfs_inode	*prev_ip;
++
++		prev_ip = xfs_iunlink_lookup(pag, ip->i_prev_unlinked);
++		if (!prev_ip) {
++			xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
++			return -EFSCORRUPTED;
++		}
++
++		error = xfs_iunlink_log_inode(tp, prev_ip, pag,
++				ip->i_next_unlinked);
++		prev_ip->i_next_unlinked = ip->i_next_unlinked;
++	} else {
++		/* Point the head of the list to the next unlinked inode. */
++		error = xfs_iunlink_update_bucket(tp, pag, agibp, bucket_index,
++				ip->i_next_unlinked);
++	}
++
++	ip->i_next_unlinked = NULLAGINO;
++	ip->i_prev_unlinked = 0;
++	return error;
++}
++
++/*
++ * Pull the on-disk inode from the AGI unlinked list.
++ */
++int
++xfs_iunlink_remove(
++	struct xfs_trans	*tp,
++	struct xfs_perag	*pag,
++	struct xfs_inode	*ip)
++{
++	struct xfs_buf		*agibp;
++	int			error;
++
++	trace_xfs_iunlink_remove(ip);
++
++	/* Get the agi buffer first.  It ensures lock ordering on the list. */
++	error = xfs_read_agi(pag, tp, 0, &agibp);
++	if (error)
++		return error;
++
++	return xfs_iunlink_remove_inode(tp, pag, agibp, ip);
 +}
 diff --git a/libxfs/xfs_inode_util.h b/libxfs/xfs_inode_util.h
-index 9226482fd..bf5393db4 100644
+index bf5393db4..42a032afe 100644
 --- a/libxfs/xfs_inode_util.h
 +++ b/libxfs/xfs_inode_util.h
-@@ -35,4 +35,16 @@ struct xfs_icreate_args {
- 	uint16_t		flags;
- };
+@@ -47,4 +47,8 @@ void xfs_trans_ichgtime(struct xfs_trans *tp, struct xfs_inode *ip, int flags);
+ void xfs_inode_init(struct xfs_trans *tp, const struct xfs_icreate_args *args,
+ 		struct xfs_inode *ip);
  
-+/*
-+ * Flags for xfs_trans_ichgtime().
-+ */
-+#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
-+#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
-+#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
-+#define	XFS_ICHGTIME_ACCESS	0x8	/* last access timestamp */
-+void xfs_trans_ichgtime(struct xfs_trans *tp, struct xfs_inode *ip, int flags);
-+
-+void xfs_inode_init(struct xfs_trans *tp, const struct xfs_icreate_args *args,
++int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
++int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
 +		struct xfs_inode *ip);
 +
  #endif /* __XFS_INODE_UTIL_H__ */
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index 9a705381f..2f7413afb 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -177,14 +177,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define	XFS_REFC_BTREE_REF	1
- #define	XFS_SSB_REF		0
- 
--/*
-- * Flags for xfs_trans_ichgtime().
-- */
--#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
--#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
--#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
--#define	XFS_ICHGTIME_ACCESS	0x8	/* last access timestamp */
--
- /* Computed inode geometry for the filesystem. */
- struct xfs_ino_geometry {
- 	/* Maximum inode count in this filesystem. */
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 7a5694284..52e42d4c0 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -842,7 +842,8 @@ mk_root_dir(xfs_mount_t *mp)
- 	}
- 
- 	/*
--	 * take care of the core -- initialization from xfs_ialloc()
-+	 * take care of the core since we didn't call the libxfs ialloc function
-+	 * (comment changed to avoid tangling xfs/437)
- 	 */
- 	reset_inode_fields(ip);
- 
 
