@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9B634431
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:13:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 379A55227
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:13:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831584; cv=none; b=qY3ZFRYxsPdjjZNpWD0y2Su7CSi25RvFMkCro/Cf1ic7gaXZ6OdsniAyuvhLKONAenYEqCG/URANuQgMQAvow8NCzo0jt8PimE4CTBlKIdr89Ay3y8IxCuw4t624OhQhNfSjN3Z8TzKicaaBHPUehegvp67/YqnbA9Akg3tUG1o=
+	t=1727831599; cv=none; b=DQXlS6geEOIDqXB9+AdTKsEzSWYyIl6lOWZvhryuhj3t/EPOFVLCMwm6EQ8g09BTpN4yxXuUugUZyUXdpAY/EvZVwWoIudYPV6bJVI8D+55nDP7tisfin57Myam/EhEnotBL63xij2r7PU5qNYqWnIM9sIPkK6HGQOMA/KWeztg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831584; c=relaxed/simple;
-	bh=NTcS6/c8hfHS//N10CXgenOQeKh9HJeqsAoBg5YzLcE=;
+	s=arc-20240116; t=1727831599; c=relaxed/simple;
+	bh=9jf1RQCM5ISJec5x0fQLODEQOt+Ll56Bf9FHvs7Cd4g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d6Lqbej8Vx1E1/s8GFSXeBtxTvtjXzmLJ+phGjsJ0VX7DbPMYZOIQzCHsMiPDY9AdraqeO9n9DXQp0fnU3dWdPcgJ6X/eb2Zw3UNjD03qbDQjo00s0xrlGq4Sn7YhDHhWjNlyNMed4fC/9tnKTfg32oNW5MuoYcSHyzewAKcOLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uFpuHGGQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Hv4zAFDrI4IDIKEW+Gvz+KjdJ103L0kMACZAK6gq8JHwAda5QoxcWPUDNAzlSF7TzVZOLPUG6Cta9hHtSwmBIK5F1WtdM+JgO2kZQiIYHra41M0NLcefTvUvKKsjlNCTywsRzpVu5C3eKG4jn7w7/FEmIcvE0EVrYBDqJnp6V5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZliJRHj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uFpuHGGQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F8DCC4CEC6;
-	Wed,  2 Oct 2024 01:13:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZliJRHj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A082C4CEC6;
+	Wed,  2 Oct 2024 01:13:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831583;
-	bh=NTcS6/c8hfHS//N10CXgenOQeKh9HJeqsAoBg5YzLcE=;
+	s=k20201202; t=1727831599;
+	bh=9jf1RQCM5ISJec5x0fQLODEQOt+Ll56Bf9FHvs7Cd4g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uFpuHGGQr7vTcxJoF/Cpx8tCTWMDZcBqGiyqdUO0A483GKdVwevZdd3cq96tje/yC
-	 stUdsBeMcqOrNwuVGbNJYlMRGhvgQaACADb+Gm2fqelC8QXwPNLntModjfoRgslhT3
-	 4Im3hEgtGjnsDdOs8BaYF6Ub5XmuK/C6XGKh716tlXhQmwvr5bYeEd12PYxFsLnAkG
-	 AJxQDEJGegqcnlcfvH0j5b47r+RrKFYXGGBQ3C1xrNCjVK3B9uM7ROzqp7ERJQ1fIy
-	 chAqfURcOtVtChuyT1NW+kJyQTe8qOqQp+WKtq1ZQ21cMDyrkRStzPOj2gIel5R6K5
-	 UzonRnE5YDukw==
-Date: Tue, 01 Oct 2024 18:13:02 -0700
-Subject: [PATCH 20/64] libxfs: implement get_random_u32
+	b=AZliJRHjoZZH77zan2tEzZw8OH643I27UlKeZN5OBUusozrKP7omAfM7d/TSejCta
+	 UMP0xf77mfMh6LuNZP3srIbxpuoxGRvDywtK/DWf10WbqEntWcTtaHVV/M+C3v9N5e
+	 tgizTAJ9yb3ZJ9igUE1nKvjudt7ds8RPU3W6hCRcMBVZxYO6dJDaUy5vC4ENlzXeXn
+	 sYTau/NlF6eFD81NkZaqbala/er5EWiST3kn/vnTuU8GQ/2vfnn8mewxEsh27nNIZN
+	 ++efXcoB3CO3ebMKwc7PdfPeaLFewAZDDWHJTt5sqqpEv7yDs+5HClbfCEPp9zGJnU
+	 GBtW5L7DTrgCA==
+Date: Tue, 01 Oct 2024 18:13:18 -0700
+Subject: [PATCH 21/64] xfs: hoist new inode initialization functions to libxfs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783102082.4036371.11970213127667558908.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <172783102097.4036371.10921999929547033243.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,158 +46,495 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Actually query the kernel for some random bytes instead of returning
-zero, if that's possible.  The most noticeable effect of this is that
-mkfs will now create the rtbitmap file, the rtsummary file, and children
-of the root directory with a nonzero generation.  Apparently xfsdump
-requires that the root directory have a generation number of zero.
+Source kernel commit: e9d2b35bb9d3ff372fad27998fc3969ced3f563d
+
+Move all the code that initializes a new inode's attributes from the
+icreate_args structure and the parent directory into libxfs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- configure.ac          |    1 +
- include/builddefs.in  |    1 +
- libxfs/Makefile       |    4 ++++
- libxfs/libxfs_priv.h  |   11 +++++++----
- libxfs/util.c         |   19 +++++++++++++++++++
- m4/package_libcdev.m4 |   15 +++++++++++++++
- mkfs/proto.c          |    3 +++
- 7 files changed, 50 insertions(+), 4 deletions(-)
+ include/xfs_inode.h     |    6 +
+ libxfs/inode.c          |  161 ------------------------------------
+ libxfs/xfs_inode_util.c |  211 +++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_inode_util.h |   12 +++
+ libxfs/xfs_shared.h     |    8 --
+ repair/phase6.c         |    3 -
+ 6 files changed, 231 insertions(+), 170 deletions(-)
 
 
-diff --git a/configure.ac b/configure.ac
-index d021c519d..1c9fa8173 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -152,6 +152,7 @@ AC_HAVE_DEVMAPPER
- AC_HAVE_MALLINFO
- AC_HAVE_MALLINFO2
- AC_HAVE_MEMFD_CREATE
-+AC_HAVE_GETRANDOM_NONBLOCK
- if test "$enable_scrub" = "yes"; then
-         if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
-                 AC_HAVE_LIBICU
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 07c4a43f7..c8c7de7fd 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -102,6 +102,7 @@ HAVE_DEVMAPPER = @have_devmapper@
- HAVE_MALLINFO = @have_mallinfo@
- HAVE_MALLINFO2 = @have_mallinfo2@
- HAVE_MEMFD_CREATE = @have_memfd_create@
-+HAVE_GETRANDOM_NONBLOCK = @have_getrandom_nonblock@
- HAVE_LIBICU = @have_libicu@
- HAVE_SYSTEMD = @have_systemd@
- SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 8c93d7b53..fd623cf40 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -135,6 +135,10 @@ ifeq ($(HAVE_MEMFD_CREATE),yes)
- LCFLAGS += -DHAVE_MEMFD_CREATE
- endif
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 1f9b07a53..7ce6f0183 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -420,4 +420,10 @@ extern void	libxfs_irele(struct xfs_inode *ip);
  
-+ifeq ($(HAVE_GETRANDOM_NONBLOCK),yes)
-+LCFLAGS += -DHAVE_GETRANDOM_NONBLOCK
-+endif
+ #define XFS_INHERIT_GID(pip)		(VFS_I(pip)->i_mode & S_ISGID)
+ 
++#define xfs_inherit_noatime		(false)
++#define xfs_inherit_nodump		(false)
++#define xfs_inherit_sync		(false)
++#define xfs_inherit_nosymlinks		(false)
++#define xfs_inherit_nodefrag		(false)
 +
- FCFLAGS = -I.
+ #endif /* __XFS_INODE_H__ */
+diff --git a/libxfs/inode.c b/libxfs/inode.c
+index eb71f90bc..61068078a 100644
+--- a/libxfs/inode.c
++++ b/libxfs/inode.c
+@@ -29,50 +29,6 @@
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_priv.h"
  
- LTLIBS = $(LIBPTHREAD) $(LIBRT)
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index ecacfff82..8dd364b0d 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -63,6 +63,9 @@
- #include "libfrog/crc32c.h"
+-/* Propagate di_flags from a parent inode to a child inode. */
+-static void
+-xfs_inode_inherit_flags(
+-	struct xfs_inode	*ip,
+-	const struct xfs_inode	*pip)
+-{
+-	unsigned int		di_flags = 0;
+-	umode_t			mode = VFS_I(ip)->i_mode;
+-
+-	if ((mode & S_IFMT) == S_IFDIR) {
+-		if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
+-			di_flags |= XFS_DIFLAG_RTINHERIT;
+-		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
+-			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
+-			ip->i_extsize = pip->i_extsize;
+-		}
+-	} else {
+-		if ((pip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+-		    xfs_has_realtime(ip->i_mount))
+-			di_flags |= XFS_DIFLAG_REALTIME;
+-		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
+-			di_flags |= XFS_DIFLAG_EXTSIZE;
+-			ip->i_extsize = pip->i_extsize;
+-		}
+-	}
+-	if (pip->i_diflags & XFS_DIFLAG_PROJINHERIT)
+-		di_flags |= XFS_DIFLAG_PROJINHERIT;
+-	ip->i_diflags |= di_flags;
+-}
+-
+-/* Propagate di_flags2 from a parent inode to a child inode. */
+-static void
+-xfs_inode_inherit_flags2(
+-	struct xfs_inode	*ip,
+-	const struct xfs_inode	*pip)
+-{
+-	if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
+-		ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
+-		ip->i_cowextsize = pip->i_cowextsize;
+-	}
+-	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
+-		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
+-}
+-
+ /*
+  * Increment the link count on an inode & log the change.
+  */
+@@ -91,123 +47,6 @@ libxfs_bumplink(
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ }
  
- #include <sys/xattr.h>
-+#ifdef HAVE_GETRANDOM_NONBLOCK
-+#include <sys/random.h>
-+#endif
+-/* Initialise an inode's attributes. */
+-static void
+-xfs_inode_init(
+-	struct xfs_trans	*tp,
+-	const struct xfs_icreate_args *args,
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_inode	*pip = args->pip;
+-	struct inode		*dir = pip ? VFS_I(pip) : NULL;
+-	struct inode		*inode = VFS_I(ip);
+-	unsigned int		flags;
+-	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG |
+-					XFS_ICHGTIME_ACCESS;
+-
+-	if (args->flags & XFS_ICREATE_TMPFILE)
+-		set_nlink(inode, 0);
+-	else if (S_ISDIR(args->mode))
+-		set_nlink(inode, 2);
+-	else
+-		set_nlink(inode, 1);
+-	inode->i_rdev = args->rdev;
+-
+-	if (!args->idmap || pip == NULL) {
+-		/* creating a tree root, sb rooted, or detached file */
+-		inode->i_uid = GLOBAL_ROOT_UID;
+-		inode->i_gid = GLOBAL_ROOT_GID;
+-		ip->i_projid = 0;
+-		inode->i_mode = args->mode;
+-	} else {
+-		/* creating a child in the directory tree */
+-		if (dir && !(dir->i_mode & S_ISGID) && xfs_has_grpid(mp)) {
+-			inode_fsuid_set(inode, args->idmap);
+-			inode->i_gid = dir->i_gid;
+-			inode->i_mode = args->mode;
+-		} else {
+-			inode_init_owner(args->idmap, inode, dir, args->mode);
+-		}
+-
+-		/*
+-		 * If the group ID of the new file does not match the effective
+-		 * group ID or one of the supplementary group IDs, the S_ISGID
+-		 * bit is cleared (and only if the irix_sgid_inherit
+-		 * compatibility variable is set).
+-		 */
+-		if (irix_sgid_inherit && (inode->i_mode & S_ISGID) &&
+-		    !vfsgid_in_group_p(i_gid_into_vfsgid(args->idmap, inode)))
+-			inode->i_mode &= ~S_ISGID;
+-
+-		ip->i_projid = pip ? xfs_get_initial_prid(pip) : 0;
+-	}
+-
+-	ip->i_disk_size = 0;
+-	ip->i_df.if_nextents = 0;
+-	ASSERT(ip->i_nblocks == 0);
+-
+-	ip->i_extsize = 0;
+-	ip->i_diflags = 0;
+-
+-	if (xfs_has_v3inodes(mp)) {
+-		inode_set_iversion(inode, 1);
+-		ip->i_cowextsize = 0;
+-		times |= XFS_ICHGTIME_CREATE;
+-	}
+-
+-	xfs_trans_ichgtime(tp, ip, times);
+-
+-	flags = XFS_ILOG_CORE;
+-	switch (args->mode & S_IFMT) {
+-	case S_IFIFO:
+-	case S_IFSOCK:
+-	case S_IFCHR:
+-	case S_IFBLK:
+-		ip->i_df.if_format = XFS_DINODE_FMT_DEV;
+-		flags |= XFS_ILOG_DEV;
+-		break;
+-	case S_IFREG:
+-	case S_IFDIR:
+-		if (pip && (pip->i_diflags & XFS_DIFLAG_ANY))
+-			xfs_inode_inherit_flags(ip, pip);
+-		if (pip && (pip->i_diflags2 & XFS_DIFLAG2_ANY))
+-			xfs_inode_inherit_flags2(ip, pip);
+-		fallthrough;
+-	case S_IFLNK:
+-		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
+-		ip->i_df.if_bytes = 0;
+-		ip->i_df.if_data = NULL;
+-		break;
+-	default:
+-		ASSERT(0);
+-	}
+-
+-	/*
+-	 * If we need to create attributes immediately after allocating the
+-	 * inode, initialise an empty attribute fork right now. We use the
+-	 * default fork offset for attributes here as we don't know exactly what
+-	 * size or how many attributes we might be adding. We can do this
+-	 * safely here because we know the data fork is completely empty and
+-	 * this saves us from needing to run a separate transaction to set the
+-	 * fork offset in the immediate future.
+-	 */
+-	if ((args->flags & XFS_ICREATE_INIT_XATTRS) &&
+-	    (xfs_has_attr(tp->t_mountp) || xfs_has_attr2(tp->t_mountp))) {
+-		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
+-		xfs_ifork_init_attr(ip, XFS_DINODE_FMT_EXTENTS, 0);
+-
+-		if (!xfs_has_attr(mp)) {
+-			spin_lock(&mp->m_sb_lock);
+-			xfs_add_attr(mp);
+-			spin_unlock(&mp->m_sb_lock);
+-			xfs_log_sb(tp);
+-		}
+-	}
+-
+-	xfs_trans_log_inode(tp, ip, flags);
+-}
+-
+ /*
+  * Initialise a newly allocated inode and return the in-core inode to the
+  * caller locked exclusively.
+diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
+index 0a9ea03e2..633c7616c 100644
+--- a/libxfs/xfs_inode_util.c
++++ b/libxfs/xfs_inode_util.c
+@@ -13,6 +13,10 @@
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_inode_util.h"
++#include "xfs_trans.h"
++#include "xfs_ialloc.h"
++#include "xfs_health.h"
++#include "xfs_bmap.h"
  
- /* Zones used in libxfs allocations that aren't in shared header files */
- extern struct kmem_cache *xfs_buf_item_cache;
-@@ -212,11 +215,11 @@ static inline bool WARN_ON(bool expr) {
- #define percpu_counter_read_positive(x)	((*x) > 0 ? (*x) : 0)
- #define percpu_counter_sum_positive(x)	((*x) > 0 ? (*x) : 0)
- 
--/*
-- * get_random_u32 is used for di_gen inode allocation, it must be zero for
-- * libxfs or all sorts of badness can occur!
-- */
-+#ifdef HAVE_GETRANDOM_NONBLOCK
-+uint32_t get_random_u32(void);
-+#else
- #define get_random_u32()	(0)
-+#endif
- 
- #define PAGE_SIZE		getpagesize()
- 
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 7aa92c0e4..a3f3ad299 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -462,3 +462,22 @@ void xfs_dirattr_mark_sick(struct xfs_inode *ip, int whichfork) { }
- void xfs_da_mark_sick(struct xfs_da_args *args) { }
- void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask) { }
- void xfs_rt_mark_sick(struct xfs_mount *mp, unsigned int mask) { }
+ uint16_t
+ xfs_flags2diflags(
+@@ -132,3 +136,210 @@ xfs_get_initial_prid(struct xfs_inode *dp)
+ 	/* Assign to the root project by default. */
+ 	return 0;
+ }
 +
-+#ifdef HAVE_GETRANDOM_NONBLOCK
-+uint32_t
-+get_random_u32(void)
++/* Propagate di_flags from a parent inode to a child inode. */
++static inline void
++xfs_inode_inherit_flags(
++	struct xfs_inode	*ip,
++	const struct xfs_inode	*pip)
 +{
-+	uint32_t	ret;
-+	ssize_t		sz;
++	unsigned int		di_flags = 0;
++	xfs_failaddr_t		failaddr;
++	umode_t			mode = VFS_I(ip)->i_mode;
++
++	if (S_ISDIR(mode)) {
++		if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
++			di_flags |= XFS_DIFLAG_RTINHERIT;
++		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
++			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
++			ip->i_extsize = pip->i_extsize;
++		}
++		if (pip->i_diflags & XFS_DIFLAG_PROJINHERIT)
++			di_flags |= XFS_DIFLAG_PROJINHERIT;
++	} else if (S_ISREG(mode)) {
++		if ((pip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
++		    xfs_has_realtime(ip->i_mount))
++			di_flags |= XFS_DIFLAG_REALTIME;
++		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
++			di_flags |= XFS_DIFLAG_EXTSIZE;
++			ip->i_extsize = pip->i_extsize;
++		}
++	}
++	if ((pip->i_diflags & XFS_DIFLAG_NOATIME) &&
++	    xfs_inherit_noatime)
++		di_flags |= XFS_DIFLAG_NOATIME;
++	if ((pip->i_diflags & XFS_DIFLAG_NODUMP) &&
++	    xfs_inherit_nodump)
++		di_flags |= XFS_DIFLAG_NODUMP;
++	if ((pip->i_diflags & XFS_DIFLAG_SYNC) &&
++	    xfs_inherit_sync)
++		di_flags |= XFS_DIFLAG_SYNC;
++	if ((pip->i_diflags & XFS_DIFLAG_NOSYMLINKS) &&
++	    xfs_inherit_nosymlinks)
++		di_flags |= XFS_DIFLAG_NOSYMLINKS;
++	if ((pip->i_diflags & XFS_DIFLAG_NODEFRAG) &&
++	    xfs_inherit_nodefrag)
++		di_flags |= XFS_DIFLAG_NODEFRAG;
++	if (pip->i_diflags & XFS_DIFLAG_FILESTREAM)
++		di_flags |= XFS_DIFLAG_FILESTREAM;
++
++	ip->i_diflags |= di_flags;
 +
 +	/*
-+	 * Try to extract a u32 of randomness from /dev/urandom.  If that
-+	 * fails, fall back to returning zero like we used to do.
++	 * Inode verifiers on older kernels only check that the extent size
++	 * hint is an integer multiple of the rt extent size on realtime files.
++	 * They did not check the hint alignment on a directory with both
++	 * rtinherit and extszinherit flags set.  If the misaligned hint is
++	 * propagated from a directory into a new realtime file, new file
++	 * allocations will fail due to math errors in the rt allocator and/or
++	 * trip the verifiers.  Validate the hint settings in the new file so
++	 * that we don't let broken hints propagate.
 +	 */
-+	sz = getrandom(&ret, sizeof(ret), GRND_NONBLOCK);
-+	if (sz != sizeof(ret))
-+		return 0;
-+
-+	return ret;
++	failaddr = xfs_inode_validate_extsize(ip->i_mount, ip->i_extsize,
++			VFS_I(ip)->i_mode, ip->i_diflags);
++	if (failaddr) {
++		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
++				   XFS_DIFLAG_EXTSZINHERIT);
++		ip->i_extsize = 0;
++	}
 +}
-+#endif
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 6de8b33ee..13cb5156d 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -195,6 +195,21 @@ memfd_create(0, 0);
-     AC_SUBST(have_memfd_create)
-   ])
++
++/* Propagate di_flags2 from a parent inode to a child inode. */
++static inline void
++xfs_inode_inherit_flags2(
++	struct xfs_inode	*ip,
++	const struct xfs_inode	*pip)
++{
++	xfs_failaddr_t		failaddr;
++
++	if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
++		ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
++		ip->i_cowextsize = pip->i_cowextsize;
++	}
++	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
++		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
++
++	/* Don't let invalid cowextsize hints propagate. */
++	failaddr = xfs_inode_validate_cowextsize(ip->i_mount, ip->i_cowextsize,
++			VFS_I(ip)->i_mode, ip->i_diflags, ip->i_diflags2);
++	if (failaddr) {
++		ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
++		ip->i_cowextsize = 0;
++	}
++}
++
++/* Initialise an inode's attributes. */
++void
++xfs_inode_init(
++	struct xfs_trans	*tp,
++	const struct xfs_icreate_args *args,
++	struct xfs_inode	*ip)
++{
++	struct xfs_inode	*pip = args->pip;
++	struct inode		*dir = pip ? VFS_I(pip) : NULL;
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct inode		*inode = VFS_I(ip);
++	unsigned int		flags;
++	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG |
++					XFS_ICHGTIME_ACCESS;
++
++	if (args->flags & XFS_ICREATE_TMPFILE)
++		set_nlink(inode, 0);
++	else if (S_ISDIR(args->mode))
++		set_nlink(inode, 2);
++	else
++		set_nlink(inode, 1);
++	inode->i_rdev = args->rdev;
++
++	if (!args->idmap || pip == NULL) {
++		/* creating a tree root, sb rooted, or detached file */
++		inode->i_uid = GLOBAL_ROOT_UID;
++		inode->i_gid = GLOBAL_ROOT_GID;
++		ip->i_projid = 0;
++		inode->i_mode = args->mode;
++	} else {
++		/* creating a child in the directory tree */
++		if (dir && !(dir->i_mode & S_ISGID) && xfs_has_grpid(mp)) {
++			inode_fsuid_set(inode, args->idmap);
++			inode->i_gid = dir->i_gid;
++			inode->i_mode = args->mode;
++		} else {
++			inode_init_owner(args->idmap, inode, dir, args->mode);
++		}
++
++		/*
++		 * If the group ID of the new file does not match the effective
++		 * group ID or one of the supplementary group IDs, the S_ISGID
++		 * bit is cleared (and only if the irix_sgid_inherit
++		 * compatibility variable is set).
++		 */
++		if (irix_sgid_inherit && (inode->i_mode & S_ISGID) &&
++		    !vfsgid_in_group_p(i_gid_into_vfsgid(args->idmap, inode)))
++			inode->i_mode &= ~S_ISGID;
++
++		ip->i_projid = pip ? xfs_get_initial_prid(pip) : 0;
++	}
++
++	ip->i_disk_size = 0;
++	ip->i_df.if_nextents = 0;
++	ASSERT(ip->i_nblocks == 0);
++
++	ip->i_extsize = 0;
++	ip->i_diflags = 0;
++
++	if (xfs_has_v3inodes(mp)) {
++		inode_set_iversion(inode, 1);
++		ip->i_cowextsize = 0;
++		times |= XFS_ICHGTIME_CREATE;
++	}
++
++	xfs_trans_ichgtime(tp, ip, times);
++
++	flags = XFS_ILOG_CORE;
++	switch (args->mode & S_IFMT) {
++	case S_IFIFO:
++	case S_IFCHR:
++	case S_IFBLK:
++	case S_IFSOCK:
++		ip->i_df.if_format = XFS_DINODE_FMT_DEV;
++		flags |= XFS_ILOG_DEV;
++		break;
++	case S_IFREG:
++	case S_IFDIR:
++		if (pip && (pip->i_diflags & XFS_DIFLAG_ANY))
++			xfs_inode_inherit_flags(ip, pip);
++		if (pip && (pip->i_diflags2 & XFS_DIFLAG2_ANY))
++			xfs_inode_inherit_flags2(ip, pip);
++		fallthrough;
++	case S_IFLNK:
++		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
++		ip->i_df.if_bytes = 0;
++		ip->i_df.if_data = NULL;
++		break;
++	default:
++		ASSERT(0);
++	}
++
++	/*
++	 * If we need to create attributes immediately after allocating the
++	 * inode, initialise an empty attribute fork right now. We use the
++	 * default fork offset for attributes here as we don't know exactly what
++	 * size or how many attributes we might be adding. We can do this
++	 * safely here because we know the data fork is completely empty and
++	 * this saves us from needing to run a separate transaction to set the
++	 * fork offset in the immediate future.
++	 */
++	if (args->flags & XFS_ICREATE_INIT_XATTRS) {
++		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
++		xfs_ifork_init_attr(ip, XFS_DINODE_FMT_EXTENTS, 0);
++
++		if (!xfs_has_attr(mp)) {
++			spin_lock(&mp->m_sb_lock);
++			xfs_add_attr(mp);
++			spin_unlock(&mp->m_sb_lock);
++			xfs_log_sb(tp);
++		}
++	}
++
++	xfs_trans_log_inode(tp, ip, flags);
++}
+diff --git a/libxfs/xfs_inode_util.h b/libxfs/xfs_inode_util.h
+index 9226482fd..bf5393db4 100644
+--- a/libxfs/xfs_inode_util.h
++++ b/libxfs/xfs_inode_util.h
+@@ -35,4 +35,16 @@ struct xfs_icreate_args {
+ 	uint16_t		flags;
+ };
  
-+#
-+# Check if we have a getrandom syscall with a GRND_NONBLOCK flag
-+#
-+AC_DEFUN([AC_HAVE_GETRANDOM_NONBLOCK],
-+  [ AC_MSG_CHECKING([for getrandom and GRND_NONBLOCK])
-+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-+#include <sys/random.h>
-+    ]], [[
-+         unsigned int moo;
-+         return getrandom(&moo, sizeof(moo), GRND_NONBLOCK);
-+    ]])],[have_getrandom_nonblock=yes
-+       AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
-+    AC_SUBST(have_getrandom_nonblock)
-+  ])
++/*
++ * Flags for xfs_trans_ichgtime().
++ */
++#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
++#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
++#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
++#define	XFS_ICHGTIME_ACCESS	0x8	/* last access timestamp */
++void xfs_trans_ichgtime(struct xfs_trans *tp, struct xfs_inode *ip, int flags);
 +
- AC_DEFUN([AC_PACKAGE_CHECK_LTO],
-   [ AC_MSG_CHECKING([if C compiler supports LTO])
-     OLD_CFLAGS="$CFLAGS"
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 58edc59f7..96cb9f854 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -462,6 +462,9 @@ creatproto(
- 							fsx->fsx_xflags);
- 			ip->i_cowextsize = fsx->fsx_cowextsize;
- 		}
++void xfs_inode_init(struct xfs_trans *tp, const struct xfs_icreate_args *args,
++		struct xfs_inode *ip);
 +
-+		/* xfsdump breaks if the root dir has a nonzero generation */
-+		inode->i_generation = 0;
+ #endif /* __XFS_INODE_UTIL_H__ */
+diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
+index 9a705381f..2f7413afb 100644
+--- a/libxfs/xfs_shared.h
++++ b/libxfs/xfs_shared.h
+@@ -177,14 +177,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+ #define	XFS_REFC_BTREE_REF	1
+ #define	XFS_SSB_REF		0
+ 
+-/*
+- * Flags for xfs_trans_ichgtime().
+- */
+-#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
+-#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
+-#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
+-#define	XFS_ICHGTIME_ACCESS	0x8	/* last access timestamp */
+-
+ /* Computed inode geometry for the filesystem. */
+ struct xfs_ino_geometry {
+ 	/* Maximum inode count in this filesystem. */
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 7a5694284..52e42d4c0 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -842,7 +842,8 @@ mk_root_dir(xfs_mount_t *mp)
  	}
  
- 	libxfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+ 	/*
+-	 * take care of the core -- initialization from xfs_ialloc()
++	 * take care of the core since we didn't call the libxfs ialloc function
++	 * (comment changed to avoid tangling xfs/437)
+ 	 */
+ 	reset_inode_fields(ip);
+ 
 
