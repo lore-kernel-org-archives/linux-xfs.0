@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED826FB0
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:11:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D41C110E9
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:11:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831490; cv=none; b=kUZLlHxM4wXhuFN0oUSKvNiUY7T45QjGlCmE9Q1v/Rv40AHnc5LsrZM3BBqnaDclRiHANjOMDqsrwjNImNMEDRlxXyT8H/4+Hzb5jbJn1g+7/JCMSyCMzJ5ZzKuaPik6dyxzXHxHvmyp6YIMc+2BbBkNvAm4HjEqpm5GrL+V00I=
+	t=1727831505; cv=none; b=tZ3V5FulJUe+QLh/3nwFCY1p6ileoMwHQkdZzRy4lhB0sfUeX2vcZw7lqs4Se6iwMB0eHTx/6OorOf068ac3QvAqnzpSQtpCrhclHanla5cm9Nj6XJfNAPjmgjPMXHwJI3b6X3RhkMetnmX3zsWqRHEinsm7auCk7ePgJfNPmlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831490; c=relaxed/simple;
-	bh=dhWj5VhQH+zH6sfABZA/E4qZ9AzlMSfv6oxQbkX2fCs=;
+	s=arc-20240116; t=1727831505; c=relaxed/simple;
+	bh=HHRHmhvif5XlpQQVLnqaI3armtxkr/jthCr/jlvNwZY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u7iVsEn208rNvRltqBhgFsTG/qFJ/xhmuTWWe1TzJ9azSUgqQpD4+h3GZnR6D5NiwnMvh0OtcLC85M61zuQZcyhhClOhHxvEHFYeUIh/Aw1LxuTtbN5XwnVY6ewiF8W2FAwfXsJ15nZSycRJWuCCAvHf8TokRi+rvNCDRDZiADI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sWxObT/B; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gH7HV+x2mTPdk4cc4vorjggVdP0+Am7RNsSvrZLGyLDd6WQv8GZgqjLJuyzF4qyIBruLVyd58oXPB806mZUxR6mq+ni4EZG3aQWcsVlS2zqjaKIzEH5xoDwIFjOn7Ft7HYI/ynXaTF4Ac2llTMom25Sfj5B5n0AKWRwNKJ6CZVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EnIhcD8d; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sWxObT/B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA8B6C4CEC6;
-	Wed,  2 Oct 2024 01:11:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EnIhcD8d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50532C4CEC6;
+	Wed,  2 Oct 2024 01:11:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831489;
-	bh=dhWj5VhQH+zH6sfABZA/E4qZ9AzlMSfv6oxQbkX2fCs=;
+	s=k20201202; t=1727831505;
+	bh=HHRHmhvif5XlpQQVLnqaI3armtxkr/jthCr/jlvNwZY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sWxObT/Bs8ox8PqtWCi6JTwd676iXDHkSVPVZ9ulEu6h8O5t1Ei5w3/SOWUoLun2t
-	 XNKV6SyPw2vK5VE9hFfc+fyL+2g0sK4QAVrapcgykUnmsJVRtI7snx0T6KlkwuObMo
-	 k9Q11xkDgcYEG/YKEnr5ecM7ivW/msnX4P+iH71cMX1Ghcq543enbwpetfapCOh9p1
-	 l0mmGk7JQ70lPMVkvJnckuW4lZrK56eZfR0HFrnJGyrMD+veUstQ7STeuMiDMLeHk0
-	 Chrph1f+yMAY8dcxth2dgPxSc908uL4SzykCH+QQxu0uTUaPdDRV4cUx6VzKCSTIVW
-	 SNh91mnmrvLtA==
-Date: Tue, 01 Oct 2024 18:11:29 -0700
-Subject: [PATCH 14/64] libxfs: when creating a file in a directory,
- set the project id based on the parent
+	b=EnIhcD8dJuSiR4Z9HjOegOg0BRr4+p9Gqcp6p+2W9Q/KVjjLLE2wOR3BK6g8d8Phm
+	 dmcGuhnWYu6Pq3gPTbszXKahkU450nUOt25hDapoi5sj1oMGWppEg0SryePJyEVi1z
+	 O1uE6w5Tdaux7smrfmhHT4G7XYfJon9KusrELQdrC+qorzJCsnitbMrkK01SVkgqlq
+	 dTVFdTC4KNg0vIIs+kIq7O93NeSYqva1UZ/ryRMv0Al9D1Ll1YOO0pnybzzvK0TlGb
+	 3/g57aUUnrBSfaSsjJg5BDz/eUj2QI2WHHnB/fALgoAIP2be2LxLU5uiVDoHbkP10R
+	 qZmLFAdLmfTIA==
+Date: Tue, 01 Oct 2024 18:11:44 -0700
+Subject: [PATCH 15/64] libxfs: pass flags2 from parent to child when creating
+ files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783101992.4036371.12940733887668033364.stgit@frogsfrogsfrogs>
+Message-ID: <172783102007.4036371.6326005460816006792.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,43 +47,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're creating a file as a child of an existing directory, use
-xfs_get_initial_prid to have the child inherit the project id of the
-directory if the directory has PROJINHERIT set, just like the kernel
-does.  This fixes mkfs project id propagation with -d projinherit=X when
+When mkfs creates a new file as a child of an existing directory, we
+should propagate the flags2 field from parent to child like the kernel
+does.  This ensures that mkfs propagates cowextsize hints properly when
 protofiles are in use.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/inode.c           |    3 +++
- libxfs/libxfs_api_defs.h |    1 +
- 2 files changed, 4 insertions(+)
+ libxfs/inode.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 
 diff --git a/libxfs/inode.c b/libxfs/inode.c
-index 132cf990d..d022b41b6 100644
+index d022b41b6..3e72b25cc 100644
 --- a/libxfs/inode.c
 +++ b/libxfs/inode.c
-@@ -121,6 +121,9 @@ libxfs_icreate(
- 			inode->i_mode |= S_ISGID;
- 	}
+@@ -59,6 +59,20 @@ xfs_inode_propagate_flags(
+ 	ip->i_diflags |= di_flags;
+ }
  
-+	if (pip)
-+		ip->i_projid = libxfs_get_initial_prid(pip);
++/* Propagate di_flags2 from a parent inode to a child inode. */
++static void
++xfs_inode_inherit_flags2(
++	struct xfs_inode	*ip,
++	const struct xfs_inode	*pip)
++{
++	if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
++		ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
++		ip->i_cowextsize = pip->i_cowextsize;
++	}
++	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
++		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
++}
 +
- 	ip->i_disk_size = 0;
- 	ip->i_df.if_nextents = 0;
- 	ASSERT(ip->i_nblocks == 0);
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index df316727b..a507904f2 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -166,6 +166,7 @@
- #define xfs_free_extent_later		libxfs_free_extent_later
- #define xfs_free_perag			libxfs_free_perag
- #define xfs_fs_geometry			libxfs_fs_geometry
-+#define xfs_get_initial_prid		libxfs_get_initial_prid
- #define xfs_highbit32			libxfs_highbit32
- #define xfs_highbit64			libxfs_highbit64
- #define xfs_ialloc_calc_rootino		libxfs_ialloc_calc_rootino
+ /*
+  * Increment the link count on an inode & log the change.
+  */
+@@ -153,6 +167,8 @@ libxfs_icreate(
+ 	case S_IFDIR:
+ 		if (pip && (pip->i_diflags & XFS_DIFLAG_ANY))
+ 			xfs_inode_propagate_flags(ip, pip);
++		if (pip && (pip->i_diflags2 & XFS_DIFLAG2_ANY))
++			xfs_inode_inherit_flags2(ip, pip);
+ 		/* FALLTHROUGH */
+ 	case S_IFLNK:
+ 		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
 
