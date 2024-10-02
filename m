@@ -1,143 +1,89 @@
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D42114B972;
-	Tue,  1 Oct 2024 21:10:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89592391
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:00:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727817040; cv=none; b=uvY0s/2Kyv8GAz5oT8IUhS0B77UIdAdZ1KIF1GshFAsg4Y42k2KOrNdezJkbozi+APt5UXJkM9mOutAO+1frQDRUB5Eq+GvxDoAdKFBaYfN6ockU4B3t4dpdsWWCh/eR6DqyPhhsoSqDNRdHBTiYROC/XJI8NZWI76rhnCqlCV0=
+	t=1727830823; cv=none; b=MhxgBvCe0/mSuvhmr94ddH/iH9qbvSBQrioVtjdu1x3LLnUlNzlZ3L0usPuzsAOrxlJyC27m4ZKUsG4TOLnOaZcc3fjNrtLRhFfZ1M8l0M+9gquoqhmw5ZMXPcC24SJ7FOxtJ1iKHalmujjAqOLcLjFvbXgmj5QGNDd6UvCpFAI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727817040; c=relaxed/simple;
-	bh=BdLPaNlX/F3gzkLxlYzljybqQgCh1CZlleMAH3/NzJA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VyEv0zt22UyABkfHXCyzY5oIknqfdRsewP23oaPtCmDkDaxFjFpGilr12uUD9PsDUEhMSZkBjeFkux19QhiDj/zY+BidKsKJQcAWPlNNdp5IHsL7VSOp25087pQAJTd25/Nb+vwe4KMkkVCgW9bCqJ2SEYo8YpFDlzqUF++mwTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CLgn3b9K; arc=none smtp.client-ip=209.85.208.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1727830823; c=relaxed/simple;
+	bh=iuO/47p3bV+JUJZBnkpN4GWPW4rJ5NZrYsMrYdkhRkw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=IqWMxMYUrMf0GrcBQwE73rNaT3VW/ZjZfpxxSReASsHqzGfzDdIaoPMGdz4dZbkNGEfSVain0wqplDY8wtvK0FMT9IQQ+a7RLMzMFFivwTOXI+GS5PF+K5o2CTGVFYMNFBJ/OrQ8eRlTtSniYLtS7T4x+L8Gt1XzOGjv1/iFQfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Queqs9MT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CLgn3b9K"
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2faccada15bso28636491fa.3;
-        Tue, 01 Oct 2024 14:10:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727817037; x=1728421837; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=j5FPHhbte4Tmc4ZuPG7hVMprQvRDLf4/a9y4DExRTII=;
-        b=CLgn3b9KoSx9JIAdndd0qu5wGcg/6R4xE0JJJWHm3hYT7fHVTwpv2UbZDk6QFhqQ5z
-         qCFq+K/UsssncG5hieEIqSui913bI5MwRgRjdy7DxdYZg1vEaFQpTx3XUm02AvA8/NOL
-         6nKmxML9RPR8VOMp7BPkoC49urkG5ruColaQQRo1G/OwitDFgCp15YYA4XQtyyWA0edh
-         bwy+UWbgZUafvH4Htuc+8Dlu1y+2yYvKdKsCD+VD048C1ODs/YBBKrDQyis3A9O0aPN3
-         94wMwQhdF5cz2Uey+enmfo0+0NqU+PDaI2bGTi5RXxd2oTsjPJVVe34Qn7AepqxFT8BD
-         N4qQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727817037; x=1728421837;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=j5FPHhbte4Tmc4ZuPG7hVMprQvRDLf4/a9y4DExRTII=;
-        b=SwSHGP0feJ1qzJccy4YePLClZ2/H14zA4upYAkPMpW9mz4RoozF7ZNq7t2iXS+wDAa
-         B1QcSa7RoDwGMBgtQRc5N7ujE5r1ZRP11Ic1Zhzpf8mNDwXaHeQGypKtnqfZfPcKX+I0
-         bhN3ZwbN7IRnTvJP9y74t7I0Mp3WEybAtYsKeRR3oh4KmsoiwacaIOYih0q3Q4S2XJot
-         Rh9tUkshpVLd3ExzQI4BjDvEVZWmy7a/nDatruvuYcc5pHLgQc9JOTgIvwoQoxTtq6dP
-         ir4Y2gNz9ehGx53Ofce+QBR/ULw0y1QYrlKI9tDFT9gg7+aA9tpvAa3UjtdghkEBOiXF
-         ldOA==
-X-Forwarded-Encrypted: i=1; AJvYcCV9YkoWBif9GTfBcV5t7ZAk/OSPRFBkn8YueSErk2UC1i1sv+GNfljRiWVJI+TtmbDdHX/BRRBW8oGe@vger.kernel.org, AJvYcCXHMEpBT7rBMI/uAO/9dwOlfjVh/Ypaf9+Xdb4CQFOjAMaS0Ubm8hCUz2kKWYI6Ff3kbzahC5Y0fa/l+TcM@vger.kernel.org, AJvYcCXM0afpXGUmhICT0DuK7bhe0GNEUuyNEmgDwfCFTmDvsANejPM0W5zkIBcAm7fre4D43PkvFlwZaZdYATMF@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxc5BIjiGD2SnclvtEoruDbfViQVcH1IY5h//vMrYlewnW6b/vI
-	X7uaRTePvrblI1g7Zmve3hOdFBx3AjsYg9fJ2mAdBBmvCLg+g/sUjOSP/Jcuc2PBrHfQSOGm9pf
-	mCEm+nskbWfDpTuMNVrk8ymqMNmM=
-X-Google-Smtp-Source: AGHT+IHyH38WiVX8HHUwc+OFQWovZwKbJEqW/O3u3XocYkPNvtQCAvFmTdZx0nP6F2Y0oSa7jC6KgiPT019755iLMPg=
-X-Received: by 2002:a2e:be9e:0:b0:2f7:6e3a:7c1d with SMTP id
- 38308e7fff4ca-2fae1044cf5mr8284241fa.15.1727817036745; Tue, 01 Oct 2024
- 14:10:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Queqs9MT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15E5AC4CEC6;
+	Wed,  2 Oct 2024 01:00:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727830823;
+	bh=iuO/47p3bV+JUJZBnkpN4GWPW4rJ5NZrYsMrYdkhRkw=;
+	h=Date:From:To:Cc:Subject:From;
+	b=Queqs9MT9rCI8pm0iht92t530WTxmnzc+8Zb6I8Agcff+KkVNH6ppa+Qzfi7V+Q0k
+	 MiolJvS103eL3as96m/O9sO7+h1dF3FdQm+HQBdcSiPAF3QkfwJ6P4W5wI4+To7PtM
+	 yD+Q8kAABo7N6wBVaPTYlpqa4v7FkKR2YSPzef8xVxIRKcTkwq0n9uk7nXpaKwrgDX
+	 BkCDnvzKQ99IwvYojCYuFKatbs++u1b3wh2vkSHxeEg0uU8Zvq2dJwBI5hH7ObLpPF
+	 uink0JYs07IfBjSw+umEygkmm5HVdzu9cZPYGqHd7yAFF3/nj9oLKXY/nVU8ciz6QV
+	 yr3EULkb5YHsA==
+Date: Tue, 1 Oct 2024 18:00:22 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Subject: [PATCHBOMB] xfsprogs: catch us up to 6.11
+Message-ID: <20241002010022.GA21836@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <0a3b09db-23e8-4a06-85f8-a0d7bbc3228b@meta.com>
- <87plotvuo1.fsf@gentoo.org> <CAMgjq7A3uRcr5VzPYo-hvM91fT+01tB-D3HPvk6_wcx3pq+m+Q@mail.gmail.com>
- <87y13dtaih.fsf@gentoo.org> <0bdce668-5711-4315-ab05-1a3492cb8bf6@kernel.dk>
-In-Reply-To: <0bdce668-5711-4315-ab05-1a3492cb8bf6@kernel.dk>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Wed, 2 Oct 2024 05:10:20 +0800
-Message-ID: <CAMgjq7DMWGyXDdf86tkZ=1N6CnFQza4xzRhZXcw1j1WQXWBn=g@mail.gmail.com>
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Sam James <sam@gentoo.org>, Greg KH <gregkh@linuxfoundation.org>, stable@kernel.org, 
-	clm@meta.com, Matthew Wilcox <willy@infradead.org>, ct@flyingcircus.io, david@fromorbit.com, 
-	dqminh@cloudflare.com, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, 
-	regressions@leemhuis.info, regressions@lists.linux.dev, 
-	torvalds@linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Fri, Sep 27, 2024 at 10:58=E2=80=AFPM Jens Axboe <axboe@kernel.dk> wrote=
-:
->
-> On 9/27/24 8:51 AM, Sam James wrote:
-> > Kairui Song <ryncsn@gmail.com> writes:
-> >
-> >> On Wed, Sep 25, 2024 at 1:16?AM Sam James <sam@gentoo.org> wrote:
-> >>>
-> >>> Kairui, could you send them to the stable ML to be queued if Willy is
-> >>> fine with it?
-> >>>
-> >>
-> >> Hi Sam,
-> >
-> > Hi Kairui,
-> >
-> >>
-> >> Thanks for adding me to the discussion.
-> >>
-> >> Yes I'd like to, just not sure if people are still testing and
-> >> checking the commits.
-> >>
-> >> And I haven't sent seperate fix just for stable fix before, so can
-> >> anyone teach me, should I send only two patches for a minimal change,
-> >> or send a whole series (with some minor clean up patch as dependency)
-> >> for minimal conflicts? Or the stable team can just pick these up?
-> >
-> > Please see https://www.kernel.org/doc/html/v6.11/process/stable-kernel-=
-rules.html.
-> >
-> > If Option 2 can't work (because of conflicts), please follow Option 3
-> > (https://www.kernel.org/doc/html/v6.11/process/stable-kernel-rules.html=
-#option-3).
-> >
-> > Just explain the background and link to this thread in a cover letter
-> > and mention it's your first time. Greg didn't bite me when I fumbled my
-> > way around it :)y
-> >
-> > (greg, please correct me if I'm talking rubbish)
->
-> It needs two cherry picks, one of them won't pick cleanly. So I suggest
-> whoever submits this to stable does:
->
-> 1) Cherry pick the two commits, fixup the simple issue with one of them.
->    I forget what it was since it's been a week and a half since I did
->    it, but it's trivial to fixup.
->
->    Don't forget to add the "commit XXX upstream" to the commit message.
->
-> 2) Test that it compiles and boots and send an email to
->    stable@vger.kernel.org with the patches attached and CC the folks in
->    this thread, to help spot if there are mistakes.
->
-> and that should be it. Worst case, we'll need a few different patches
-> since this affects anything back to 5.19, and each currently maintained
-> stable kernel version will need it.
->
+Hi Andrey & Christoph,
 
-Hi Sam, Jens,
+Here's all the patches that I was going to submit for xfsprogs 6.11.
+The following patches have not been reviewed:
 
-Thanks very much, currently maintained upstream kernels are
-6.10, 6.6, 6.1, 5.15, 5.10, 5.4, 4.19.
+The 6.11 libxfs sync is a bit intense this time, because we're merging
+all the inode creation code with the kernel's versions of those
+functions.  I tried to reconcile the versions gradually, but then you
+get this:
 
-I think only 6.6 and 6.1 need backport, I've sent a fix for these two,
-it's three checkpicks from the one 6.10 series so the conflict is
-minimal. The stable series can be applied without conflict for both.
+[PATCHSET v4.2 3/6] libxfs: resync with 6.11
+[PATCH 07/64] libxfs: put all the inode functions in a single file
+[PATCH 08/64] libxfs: pass IGET flags through to xfs_iread
+[PATCH 10/64] libxfs: pack icreate initialization parameters into a
+[PATCH 12/64] libxfs: rearrange libxfs_trans_ichgtime call when
+[PATCH 13/64] libxfs: set access time when creating files
+[PATCH 14/64] libxfs: when creating a file in a directory,
+[PATCH 15/64] libxfs: pass flags2 from parent to child when creating
+[PATCH 17/64] libxfs: split new inode creation into two pieces
+[PATCH 18/64] libxfs: backport inode init code from the kernel
+[PATCH 19/64] libxfs: remove libxfs_dir_ialloc
+
+The only new functionality is that new child files get real (i.e.
+nonzero) i_generation values:
+
+[PATCH 20/64] libxfs: implement get_random_u32
+
+The rest of these patches are ports, fixes, and cleanups:
+
+[PATCHSET v4.2 4/6] xfsprogs: port tools to new 6.11 APIs
+[PATCH 1/4] xfs_db: port the unlink command to use libxfs_droplink
+[PATCH 2/4] xfs_db/mkfs/xfs_repair: port to use
+[PATCH 3/4] xfs_db/mdrestore/repair: don't use the incore struct
+[PATCH 4/4] xfs_db: port the iunlink command to use the libxfs
+
+[PATCHSET 5/6] xfs_repair: cleanups for 6.11
+[PATCH 1/4] xfs_repair: fix exchrange upgrade
+[PATCH 2/4] xfs_repair: don't crash in get_inode_parent
+[PATCH 3/4] xfs_repair: use library functions to reset root/rbm/rsum
+[PATCH 4/4] xfs_repair: use library functions for orphanage creation
+
+[PATCHSET v4.2 6/6] mkfs: clean up inode initialization code
+[PATCH 1/2] mkfs: clean up the rtinit() function
+[PATCH 2/2] mkfs: break up the rest of the rtinit() function
+
+--D
