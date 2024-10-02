@@ -1,65 +1,65 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56B95748F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B18E79CC
 	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727833227; cv=none; b=hUbcGHdBhFgPCgCscen+fJ9I3cvr2WEQurpfg9LRXFXa6Ef9hSl3k6dM+qaXxWqozkmSfH/Uq0mbBDapiEpa07cFzu2kpMlXeW3AUFVX6qJ5ktegIFDTwweYgt1Ay+2YBDuQ8bzNbdYUvEVJC8t3l5RQWbilCxbhV69A83uqqCE=
+	t=1727833228; cv=none; b=Cp5ld9c/z40HQBLFWKiMtyiOVIgcXUZf+GbssSw4BT1WjyOXxJNzbhRyz8B7qEt5sfOqsnhGizk007Ak1wnGOwdCY5/wRlP5KIx2EbYGVkENfYFygBLIteRPGfEh+vFTtS13TJL/wRPFruIIrTByFg78nc3zDURnJAtLrYZqQjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727833227; c=relaxed/simple;
-	bh=bpHYf/Ad8ZsA0mRcGw7Z3I00cIH6+OQCTVVfVhvX/+g=;
+	s=arc-20240116; t=1727833228; c=relaxed/simple;
+	bh=+XKGTg2Fm2Vz3At0AuJQbYflFNLhbpQLe87wbKWotS4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cC8UF8sormbNwNUquzIji+aa9g+PE3y0qsHRKSlQcsHG9/CvpcFWTNQHrDqc4CDA/x7mIcH+ULJFaM9oib8kVGRoOZq/uA63/9ooQKmzCa/k45JNi6BlJBVsHWVKFvWen2fVDsaKvFdpje4yzaziHS5E/pfh+MG94fP/+kxlx7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=C2QKZDwO; arc=none smtp.client-ip=209.85.214.178
+	 MIME-Version; b=qVJ6uJxiPLaCZzxjLzfk6f0nv0Rp4QlV5zj3FVbLo7L5xAjR+z03RWQtJALVLomfTSnyhWVmAxdODysDlPdjm6aJgpwqhiWqfrvu0YY5hzmg1ZWu3AxPOl8+F9PshCuCd9zzl1IgBS3bv9wQTJVCaBxNsH8yY9wefEmQmQMEWyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=IEBqPUxS; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="C2QKZDwO"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-20b90ab6c19so27205975ad.0
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="IEBqPUxS"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-7193010d386so5301981b3a.1
         for <linux-xfs@vger.kernel.org>; Tue, 01 Oct 2024 18:40:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727833225; x=1728438025; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727833224; x=1728438024; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=j2KUInWGphvxBKuc1DE8mW4DxZdaRvJhqE8Ppwgsdrk=;
-        b=C2QKZDwOu+o06vyjqdvR17lD6yc7uD1ohVskO15G7t/7Iv4PkpeCd4pt3eqAuQ4k5O
-         G6GtKMskGNFlaEWimF5zCzdjhL1AUo/ZN5pnkyAtX6s0APSggtzaWHyRrQXPPaI/0fZS
-         EiL+PA0Z8sthoQFzLiCUYAkfUgJOAW6uxCW7bmGmv0xERl8l69YF+jX4Zc1bZY76kFHB
-         gjQXtK8bBzXys0py4gMnDUTWrPpXrbbzQL+QT7bOmP4Zg8uiOKkGOrfLozB6ermMylVU
-         NvtLI7FB0asN3KQN/JMF20MivdYYD8uq7Hn4menLMO4hdLyGmnH/hlsRip0A1bN8jWEX
-         77Vw==
+        bh=lcwJDAj1IFVpreD1ammGhtQbYCd8gl9K3mp7z+9tlY8=;
+        b=IEBqPUxSztEu5nQGwcIjCoyJPHNlsPs5IJKGyi7iD8WWXdx2B38b4wbwA/qAhrL8gP
+         vHAGLpGqNQJcTN9K5GMHp23RYTcsSA+xpZlSlLtcSf66qPe3knfMO/zrNtaesAtX/f6F
+         3DLVkSjP8xZzL1rc8IgLB0cESFGxf7x0EQtbKL6r9af2J/ypEDdkmm37Akh9a01cPjWi
+         QtMT9C64vQuQAk+d9pnsdIEgAQalYx4rJTDlVck/CHzGJuSPIkh5TBiHv/J40kZxCoWs
+         q5qGC0mB0guQ03wfJ3pIbnErDfpfGDTOtwt5YC9gGiW5TtVmEMXe3g3pFSQxBYLFkyds
+         kjrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727833225; x=1728438025;
+        d=1e100.net; s=20230601; t=1727833224; x=1728438024;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=j2KUInWGphvxBKuc1DE8mW4DxZdaRvJhqE8Ppwgsdrk=;
-        b=PF16gOYXCqJvQqfxvK7220c8l23lIUjZ4TDsZHSfhKQK8T/nbItAiBAI02q/LpyrEi
-         2XsfbCe3TS96IOcSL43V78O0AVa7zvOE60aQ29Q/jb5Reo0x+/urVJCyxvtUw6ruhD6f
-         XB/VCreLZaATREl2hi6KBquxEUrQKpWvVS6FjZYvFTvAKfIDOp9ODbglW7RpovIhca6x
-         dOwnmRxv0+o9W5OqVasHhziZku4QQxNT+7e+rXdiT7ErrP+YAQaARpjfHJMLHw6qRVhF
-         hkj8+97YmE+Ofq1gXoVNShP9RzGJTnhcxk0V1tsemQcQTh/VJrEeYO+oAEU619Mg9Yr1
-         MMsA==
-X-Gm-Message-State: AOJu0Yz0jtcFqasFBArkzlJyDvQ+xMUm7AtMGEoJcy81t1jv4cleSagm
-	MDq+WgPpIE9To+qk79y7PnkfXynY7kIe+MCMsSIu5j174NCfnsVcYz20kwpVvRl1oS+hjvQQeEt
-	Y
-X-Google-Smtp-Source: AGHT+IHbPXlGNlNBNCwkCtbLzpCwjr2fEuu8pNhpcjZTuOCY+/oRjkGhWGKft7Fxs8iSyiQkUNBAEQ==
-X-Received: by 2002:a17:90b:1811:b0:2d8:8c95:ebb6 with SMTP id 98e67ed59e1d1-2e18480148dmr2230415a91.19.1727833224689;
+        bh=lcwJDAj1IFVpreD1ammGhtQbYCd8gl9K3mp7z+9tlY8=;
+        b=opxX0otWAGPjVM4tX1PuvO+6loL97vavVbSZAhXI6lY0hsjcBu/5yxJGVsSSuJ7BTF
+         pRJKUbeUyuPlceYQDf3XZYYWirVUCNtOhJltda/hp2bGtIgQJEdeHBx85Yfha4G0tCzj
+         o0kb27yoH5VDdU40nGePiOjb9fFQSfJor0BTZAAsokB02d7u0/Kke2rdpeTvbsJQjXEu
+         AsjxcLmyRtrogwVb68IQuxenhmeU90D3Uat2qUzL4Zwo1jRL7cKHU4eovUYbknm8xl/e
+         T3JnqVm3GRtnbryvwW+xyNWtkGFdd7PbApgIgoYlg+OFTP5o8+2fZ3I4BGM/XtGXY1RR
+         sMEw==
+X-Gm-Message-State: AOJu0YwK+RtG4IcKE7Uk8Q5IRSiPYGyjwsGteGq66mVgEI1TRJTKc1z8
+	DcXCI7T6eP21hZOshDUsgbno5L7w/GSD3YPfElgBpe43LmmBB9Tw+LduS0iojAE6m59hovDSqmj
+	o
+X-Google-Smtp-Source: AGHT+IFa5VKdpW6OvBWszejvcA/9C9ZTu/6tm7n5XHiTdlPJ5OMaqnIPrAPaDLI1mfIM4f+OniOK5w==
+X-Received: by 2002:a05:6a00:ace:b0:717:8cef:4053 with SMTP id d2e1a72fcca58-71dc5ca5780mr2190927b3a.14.1727833224360;
         Tue, 01 Oct 2024 18:40:24 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e18f93798bsm329604a91.53.2024.10.01.18.40.22
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71b2649c2bfsm8742445b3a.28.2024.10.01.18.40.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 01 Oct 2024 18:40:22 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
 	by dread.disaster.area with esmtp (Exim 4.96)
 	(envelope-from <dave@fromorbit.com>)
-	id 1svoLj-00Ck8m-0n;
+	id 1svoLj-00Ck8Y-0N;
 	Wed, 02 Oct 2024 11:40:19 +1000
 Received: from dave by devoid.disaster.area with local (Exim 4.98)
 	(envelope-from <dave@devoid.disaster.area>)
-	id 1svoLj-0000000FxGa-2nwW;
+	id 1svoLj-0000000FxGK-2Iqj;
 	Wed, 02 Oct 2024 11:40:19 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: linux-fsdevel@vger.kernel.org
@@ -67,9 +67,9 @@ Cc: linux-xfs@vger.kernel.org,
 	linux-bcachefs@vger.kernel.org,
 	kent.overstreet@linux.dev,
 	torvalds@linux-foundation.org
-Subject: [PATCH 6/7] xfs: implement sb->iter_vfs_inodes
-Date: Wed,  2 Oct 2024 11:33:23 +1000
-Message-ID: <20241002014017.3801899-7-david@fromorbit.com>
+Subject: [PATCH 3/7] vfs: convert vfs inode iterators to super_iter_inodes_unsafe()
+Date: Wed,  2 Oct 2024 11:33:20 +1000
+Message-ID: <20241002014017.3801899-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20241002014017.3801899-1-david@fromorbit.com>
 References: <20241002014017.3801899-1-david@fromorbit.com>
@@ -83,287 +83,260 @@ Content-Transfer-Encoding: 8bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We can iterate all the in-memory VFS inodes via the xfs_icwalk()
-interface, so implement the new superblock operation to walk inodes
-in this way.
+Convert VFS internal superblock inode iterators that cannot use
+referenced inodes to the new super_iter_inodes_unsafe() iterator.
+Dquot and inode eviction require this special handling due to
+special eviction handling requirements. The special
+nr_blockdev_pages() statistics code needs it as well, as this is
+called from si_meminfo() and so can potentially be run from
+locations where arbitrary blocking is not allowed or desirable.
 
-This removes the dependency XFS has on the sb->s_inodes list and
-allows us to avoid the global lock that marshalls this list and
-must be taken on every VFS inode instantiation and eviction. This
-greatly improves the rate at which we can stream inodes through the
-VFS inode cache.
-
-Sharded, share-nothing cold cache workload with 100,000 files per
-thread in per-thread directories.
-
-Before:
-
-Filesystem      Files  Threads  Create       Walk      Chmod      Unlink     Bulkstat
-       xfs     400000     4      4.269      3.225      4.557      7.316      1.306
-       xfs     800000     8      4.844      3.227      4.702      7.905      1.908
-       xfs    1600000    16      6.286      3.296      5.592      8.838      4.392
-       xfs    3200000    32      8.912      5.681      8.505     11.724      7.085
-       xfs    6400000    64     15.344     11.144     14.162     18.604     15.494
-
-After:
-
-Filesystem      Files  Threads  Create       Walk      Chmod      Unlink     Bulkstat
-       xfs     400000     4      4.140      3.502      4.154      7.242      1.164
-       xfs     800000     8      4.637      2.836      4.444      7.896      1.093
-       xfs    1600000    16      5.549      3.054      5.213      8.696      1.107
-       xfs    3200000    32      8.387      3.218      6.867     10.668      1.125
-       xfs    6400000    64     14.112      3.953     10.365     18.620      1.270
-
-Bulkstat shows the real story here - before we start to see
-scalability problems at 16 threads. Patched shows almost perfect
-scalability up to 64 threads streaming inodes through the VFS cache
-using I_DONTCACHE semantics.
-
-Note: this is an initial, unoptimised implementation that could be
-significantly improved and reduced in size by using a radix tree tag
-filter for VFS inodes and so use the generic tag-filtered
-xfs_icwalk() implementation instead of special casing it like this
-patch does.
+New cases using this iterator need careful consideration.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c | 151 +++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_icache.h |   3 +
- fs/xfs/xfs_iops.c   |   1 -
- fs/xfs/xfs_super.c  |  11 ++++
- 4 files changed, 163 insertions(+), 3 deletions(-)
+ block/bdev.c     | 24 +++++++++++----
+ fs/inode.c       | 79 ++++++++++++++++++++++++++----------------------
+ fs/quota/dquot.c | 72 ++++++++++++++++++++++++-------------------
+ 3 files changed, 102 insertions(+), 73 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index a680e5b82672..ee544556cee7 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1614,6 +1614,155 @@ xfs_blockgc_free_quota(
- 			xfs_inode_dquot(ip, XFS_DQTYPE_PROJ), iwalk_flags);
+diff --git a/block/bdev.c b/block/bdev.c
+index 33f9c4605e3a..b5a362156ca1 100644
+--- a/block/bdev.c
++++ b/block/bdev.c
+@@ -472,16 +472,28 @@ void bdev_drop(struct block_device *bdev)
+ 	iput(BD_INODE(bdev));
  }
  
-+/* VFS Inode Cache Walking Code */
-+
-+/* XFS inodes in these states are not visible to the VFS. */
-+#define XFS_ITER_VFS_NOGRAB_IFLAGS	(XFS_INEW | \
-+					 XFS_NEED_INACTIVE | \
-+					 XFS_INACTIVATING | \
-+					 XFS_IRECLAIMABLE | \
-+					 XFS_IRECLAIM)
-+/*
-+ * If the inode we found is visible to the VFS inode cache, then return it to
-+ * the caller.
-+ *
-+ * In the normal case, we need to validate the VFS inode state and take a
-+ * reference to it here. We will drop that reference once the VFS inode has been
-+ * processed by the ino_iter_fn.
-+ *
-+ * However, if the INO_ITER_UNSAFE flag is set, we do not take references to the
-+ * inode - it is the ino_iter_fn's responsibility to validate the inode is still
-+ * a VFS inode once we hand it to them. We do not drop references after
-+ * processing these inodes; the processing function may have evicted the VFS
-+ * inode from cache as part of it's processing.
-+ */
-+static bool
-+xfs_iter_vfs_igrab(
-+	struct xfs_inode	*ip,
-+	int			flags)
++static int bdev_pages_count(struct inode *inode, void *data)
 +{
-+	struct inode		*inode = VFS_I(ip);
-+	bool			ret = false;
++	long	*pages = data;
 +
-+	ASSERT(rcu_read_lock_held());
-+
-+	/* Check for stale RCU freed inode */
-+	spin_lock(&ip->i_flags_lock);
-+	if (!ip->i_ino)
-+		goto out_unlock_noent;
-+
-+	if (ip->i_flags & XFS_ITER_VFS_NOGRAB_IFLAGS)
-+		goto out_unlock_noent;
-+
-+	if ((flags & INO_ITER_UNSAFE) ||
-+	    super_iter_iget(inode, flags))
-+		ret = true;
-+
-+out_unlock_noent:
-+	spin_unlock(&ip->i_flags_lock);
-+	return ret;
++	*pages += inode->i_mapping->nrpages;
++	return INO_ITER_DONE;
 +}
 +
-+/*
-+ * Initial implementation of vfs inode walker. This does not use batched lookups
-+ * for initial simplicity and testing, though it could use them quite
-+ * efficiently for both safe and unsafe iteration contexts.
-+ */
-+static int
-+xfs_icwalk_vfs_inodes_ag(
-+	struct xfs_perag	*pag,
-+	ino_iter_fn		iter_fn,
-+	void			*private_data,
-+	int			flags)
-+{
-+	struct xfs_mount	*mp = pag->pag_mount;
-+	uint32_t		first_index = 0;
-+	int			ret = 0;
-+	int			nr_found;
-+	bool			done = false;
-+
-+	do {
-+		struct xfs_inode *ip;
-+
-+		rcu_read_lock();
-+		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
-+				(void **)&ip, first_index, 1);
-+		if (!nr_found) {
-+			rcu_read_unlock();
-+			break;
-+		}
-+
-+		/*
-+		 * Update the index for the next lookup. Catch
-+		 * overflows into the next AG range which can occur if
-+		 * we have inodes in the last block of the AG and we
-+		 * are currently pointing to the last inode.
-+		 */
-+		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
-+		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
-+			done = true;
-+
-+		if (!xfs_iter_vfs_igrab(ip, flags)) {
-+			rcu_read_unlock();
-+			continue;
-+		}
-+
-+		/*
-+		 * If we are doing an unsafe iteration, we must continue to hold
-+		 * the RCU lock across the callback to guarantee the existence
-+		 * of inode. We can't hold the rcu lock for reference counted
-+		 * inodes because the callback is allowed to block in that case.
-+		 */
-+		if (!(flags & INO_ITER_UNSAFE))
-+			rcu_read_unlock();
-+
-+		ret = iter_fn(VFS_I(ip), private_data);
-+
-+		/*
-+		 * We've run the callback, so we can drop the existence
-+		 * guarantee we hold on the inode now.
-+		 */
-+		if (!(flags & INO_ITER_UNSAFE))
-+			iput(VFS_I(ip));
-+		else
-+			rcu_read_unlock();
-+
-+		if (ret == INO_ITER_ABORT) {
-+			ret = 0;
-+			break;
-+		}
-+		if (ret < 0)
-+			break;
-+
-+	} while (!done);
-+
-+	return ret;
-+}
-+
-+int
-+xfs_icwalk_vfs_inodes(
-+	struct xfs_mount	*mp,
-+	ino_iter_fn		iter_fn,
-+	void			*private_data,
-+	int			flags)
-+{
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
-+	int			ret;
-+
-+	for_each_perag(mp, agno, pag) {
-+		ret = xfs_icwalk_vfs_inodes_ag(pag, iter_fn,
-+				private_data, flags);
-+		if (ret == INO_ITER_ABORT) {
-+			ret = 0;
-+			break;
-+		}
-+		if (ret < 0)
-+			break;
-+	}
-+	return ret;
-+}
-+
- /* XFS Inode Cache Walking Code */
+ long nr_blockdev_pages(void)
+ {
+-	struct inode *inode;
+ 	long ret = 0;
  
- /*
-@@ -1624,7 +1773,6 @@ xfs_blockgc_free_quota(
+-	spin_lock(&blockdev_superblock->s_inode_list_lock);
+-	list_for_each_entry(inode, &blockdev_superblock->s_inodes, i_sb_list)
+-		ret += inode->i_mapping->nrpages;
+-	spin_unlock(&blockdev_superblock->s_inode_list_lock);
+-
++	/*
++	 * We can be called from contexts where blocking is not
++	 * desirable. The count is advisory at best, and we only
++	 * need to access the inode mapping. Hence as long as we
++	 * have an inode existence guarantee, we can safely count
++	 * the cached pages on each inode without needing reference
++	 * counted inodes.
++	 */
++	super_iter_inodes_unsafe(blockdev_superblock,
++			bdev_pages_count, &ret);
+ 	return ret;
+ }
+ 
+diff --git a/fs/inode.c b/fs/inode.c
+index 0a53d8c34203..3f335f78c5b2 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -761,8 +761,11 @@ static void evict(struct inode *inode)
+  * Dispose-list gets a local list with local inodes in it, so it doesn't
+  * need to worry about list corruption and SMP locks.
   */
- #define XFS_LOOKUP_BATCH	32
- 
--
- /*
-  * Decide if we want to grab this inode in anticipation of doing work towards
-  * the goal.
-@@ -1700,7 +1848,6 @@ xfs_icwalk_ag(
- 		int		i;
- 
- 		rcu_read_lock();
--
- 		nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
- 				(void **) batch, first_index,
- 				XFS_LOOKUP_BATCH, goal);
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 905944dafbe5..c2754ea28a88 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -18,6 +18,9 @@ struct xfs_icwalk {
- 	long		icw_scan_limit;
- };
- 
-+int xfs_icwalk_vfs_inodes(struct xfs_mount *mp, ino_iter_fn iter_fn,
-+		void *private_data, int flags);
+-static void dispose_list(struct list_head *head)
++static bool dispose_list(struct list_head *head)
+ {
++	if (list_empty(head))
++		return false;
 +
- /* Flags that reflect xfs_fs_eofblocks functionality. */
- #define XFS_ICWALK_FLAG_SYNC		(1U << 0) /* sync/wait mode scan */
- #define XFS_ICWALK_FLAG_UID		(1U << 1) /* filter by uid */
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ee79cf161312..5375c17ed69c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1293,7 +1293,6 @@ xfs_setup_inode(
- 	inode->i_ino = ip->i_ino;
- 	inode->i_state |= I_NEW;
+ 	while (!list_empty(head)) {
+ 		struct inode *inode;
  
--	inode_sb_list_add(inode);
- 	/* make the inode look hashed for the writeback code */
- 	inode_fake_hash(inode);
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fbb3a1594c0d..a2ef1b582066 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1179,6 +1179,16 @@ xfs_fs_shutdown(
- 	xfs_force_shutdown(XFS_M(sb), SHUTDOWN_DEVICE_REMOVED);
+@@ -772,6 +775,7 @@ static void dispose_list(struct list_head *head)
+ 		evict(inode);
+ 		cond_resched();
+ 	}
++	return true;
  }
  
-+static int
-+xfs_fs_iter_vfs_inodes(
-+	struct super_block	*sb,
-+	ino_iter_fn		iter_fn,
-+	void			*private_data,
-+	int			flags)
+ /**
+@@ -783,47 +787,50 @@ static void dispose_list(struct list_head *head)
+  * so any inode reaching zero refcount during or after that call will
+  * be immediately evicted.
+  */
++static int evict_inode_fn(struct inode *inode, void *data)
 +{
-+	return xfs_icwalk_vfs_inodes(XFS_M(sb), iter_fn, private_data, flags);
++	struct list_head *dispose = data;
++
++	spin_lock(&inode->i_lock);
++	if (atomic_read(&inode->i_count) ||
++	    (inode->i_state & (I_NEW | I_FREEING | I_WILL_FREE))) {
++		spin_unlock(&inode->i_lock);
++		return INO_ITER_DONE;
++	}
++
++	inode->i_state |= I_FREEING;
++	inode_lru_list_del(inode);
++	spin_unlock(&inode->i_lock);
++	list_add(&inode->i_lru, dispose);
++
++	/*
++	 * If we've run long enough to need rescheduling, abort the
++	 * iteration so we can return to evict_inodes() and dispose of the
++	 * inodes before collecting more inodes to evict.
++	 */
++	if (need_resched())
++		return INO_ITER_ABORT;
++	return INO_ITER_DONE;
 +}
 +
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1193,6 +1203,7 @@ static const struct super_operations xfs_super_operations = {
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
- 	.shutdown		= xfs_fs_shutdown,
-+	.iter_vfs_inodes	= xfs_fs_iter_vfs_inodes,
- };
+ void evict_inodes(struct super_block *sb)
+ {
+-	struct inode *inode, *next;
+ 	LIST_HEAD(dispose);
  
- static int
+-again:
+-	spin_lock(&sb->s_inode_list_lock);
+-	list_for_each_entry_safe(inode, next, &sb->s_inodes, i_sb_list) {
+-		if (atomic_read(&inode->i_count))
+-			continue;
+-
+-		spin_lock(&inode->i_lock);
+-		if (atomic_read(&inode->i_count)) {
+-			spin_unlock(&inode->i_lock);
+-			continue;
+-		}
+-		if (inode->i_state & (I_NEW | I_FREEING | I_WILL_FREE)) {
+-			spin_unlock(&inode->i_lock);
+-			continue;
+-		}
+-
+-		inode->i_state |= I_FREEING;
+-		inode_lru_list_del(inode);
+-		spin_unlock(&inode->i_lock);
+-		list_add(&inode->i_lru, &dispose);
+-
++	do {
+ 		/*
+-		 * We can have a ton of inodes to evict at unmount time given
+-		 * enough memory, check to see if we need to go to sleep for a
+-		 * bit so we don't livelock.
++		 * We do not want to take references to inodes whilst iterating
++		 * because we are trying to evict unreferenced inodes from
++		 * the cache. Hence we need to use the unsafe iteration
++		 * mechanism and do all the required inode validity checks in
++		 * evict_inode_fn() to safely queue unreferenced inodes for
++		 * eviction.
++		 *
++		 * We repeat the iteration until it doesn't find any more
++		 * inodes to dispose of.
+ 		 */
+-		if (need_resched()) {
+-			spin_unlock(&sb->s_inode_list_lock);
+-			cond_resched();
+-			dispose_list(&dispose);
+-			goto again;
+-		}
+-	}
+-	spin_unlock(&sb->s_inode_list_lock);
+-
+-	dispose_list(&dispose);
++		super_iter_inodes_unsafe(sb, evict_inode_fn, &dispose);
++	} while (dispose_list(&dispose));
+ }
+ EXPORT_SYMBOL_GPL(evict_inodes);
+ 
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index b40410cd39af..ea0bd807fed7 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -1075,41 +1075,51 @@ static int add_dquot_ref(struct super_block *sb, int type)
+ 	return err;
+ }
+ 
++struct dquot_ref_data {
++	int	type;
++	int	reserved;
++};
++
++static int remove_dquot_ref_fn(struct inode *inode, void *data)
++{
++	struct dquot_ref_data *ref = data;
++
++	spin_lock(&dq_data_lock);
++	if (!IS_NOQUOTA(inode)) {
++		struct dquot __rcu **dquots = i_dquot(inode);
++		struct dquot *dquot = srcu_dereference_check(
++			dquots[ref->type], &dquot_srcu,
++			lockdep_is_held(&dq_data_lock));
++
++#ifdef CONFIG_QUOTA_DEBUG
++		if (unlikely(inode_get_rsv_space(inode) > 0))
++			ref->reserved++;
++#endif
++		rcu_assign_pointer(dquots[ref->type], NULL);
++		if (dquot)
++			dqput(dquot);
++	}
++	spin_unlock(&dq_data_lock);
++	return INO_ITER_DONE;
++}
++
+ static void remove_dquot_ref(struct super_block *sb, int type)
+ {
+-	struct inode *inode;
+-#ifdef CONFIG_QUOTA_DEBUG
+-	int reserved = 0;
+-#endif
+-
+-	spin_lock(&sb->s_inode_list_lock);
+-	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
+-		/*
+-		 *  We have to scan also I_NEW inodes because they can already
+-		 *  have quota pointer initialized. Luckily, we need to touch
+-		 *  only quota pointers and these have separate locking
+-		 *  (dq_data_lock).
+-		 */
+-		spin_lock(&dq_data_lock);
+-		if (!IS_NOQUOTA(inode)) {
+-			struct dquot __rcu **dquots = i_dquot(inode);
+-			struct dquot *dquot = srcu_dereference_check(
+-				dquots[type], &dquot_srcu,
+-				lockdep_is_held(&dq_data_lock));
++	struct dquot_ref_data ref = {
++		.type = type,
++	};
+ 
++	/*
++	 * We have to scan I_NEW inodes because they can already
++	 * have quota pointer initialized. Luckily, we need to touch
++	 * only quota pointers and these have separate locking
++	 * (dq_data_lock) so the existence guarantee that
++	 * super_iter_inodes_unsafe() provides inodes passed to
++	 * remove_dquot_ref_fn() is sufficient for this operation.
++	 */
++	super_iter_inodes_unsafe(sb, remove_dquot_ref_fn, &ref);
+ #ifdef CONFIG_QUOTA_DEBUG
+-			if (unlikely(inode_get_rsv_space(inode) > 0))
+-				reserved = 1;
+-#endif
+-			rcu_assign_pointer(dquots[type], NULL);
+-			if (dquot)
+-				dqput(dquot);
+-		}
+-		spin_unlock(&dq_data_lock);
+-	}
+-	spin_unlock(&sb->s_inode_list_lock);
+-#ifdef CONFIG_QUOTA_DEBUG
+-	if (reserved) {
++	if (ref.reserved) {
+ 		printk(KERN_WARNING "VFS (%s): Writes happened after quota"
+ 			" was disabled thus quota information is probably "
+ 			"inconsistent. Please run quotacheck(8).\n", sb->s_id);
 -- 
 2.45.2
 
