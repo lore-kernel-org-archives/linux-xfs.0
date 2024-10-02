@@ -1,73 +1,69 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC3BD1E7646
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 10:36:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5381CF7C9
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 12:24:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727865398; cv=none; b=br+A512PJGSoHz3/j7FgE+jk338viHtPojs5/5KemzcieRXKNIlzuvUnMBM3IsoTrCpAHcXfYETJhuHGa89f85ur7WVenqR9ECVbou4/V8sZG1A9zs26U3NW8tKRIH60DB+4bq6PR/z5pTtBq/5zq7y10vI6Lm2oYzbRLnZ4pfI=
+	t=1727871854; cv=none; b=sUHEdG81CiMfq03QboSQZZJrqGfXMwb7MA4TrJU+RoRc+uV8cDU2uYhlqLQt8ddLJZOZNHsQAdGDW0Fa7zQin8gOgFGXDglijQAsXXMsG6IE2fgKq6D12BoHcovX8x4T4FsP4PCxVhy/Sw5LcA89vWeYDbj2etG/E/yVmG+GQyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727865398; c=relaxed/simple;
-	bh=2JGhr2kkz0fNOAfQaItublnT7KxF9+P/zjt89rABLU4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=s46mXvRkwjB8+akut5aOhS1ebluMTJf1en3/SiOC2laWjANbVCGx4jnYd7+JO9aI33J80/Om7fBuc9JrmpX3tEUiL/kubmPwLA8LCzJw2Uid9VF/WNKa7wCl8CO01A/z1g5/wQ3KIy3iGUIBF1gPOrcgcg+czvvz7j8vbeJQveQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fh7ehCWh; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1727871854; c=relaxed/simple;
+	bh=L9+1a4Nvhl4tzEYVdSqhW0osk5/oToIvRvPo4KJU228=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kxiMrDq3K9RTCZGqJgSkIyXR6ZlKD/XeIN7MQAcoeR27/S3k1Gmf7GiuKWl65gvcv9wZndRr51oOUkTJOZp3gMsQZAFTtMSma6mL99AQQdOP42ZzYjIjbBLFdp+tnVcKZndLxhyNg3x1UmkqJbpteQRGzRX5EkktqAz2qJntbKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=jAkW0I2x; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fh7ehCWh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1727865395;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ct3IrjSWViW5uDKl2N8YUeca9H+66kn6vgV1IZITSKM=;
-	b=fh7ehCWhT1S383Sk7H5X6lViISNYPwas6ZCaCwvHguCFZUIAaGctm4mDckV6UBWgPLmz6Y
-	Pt2Nfmt3OeqsO+daEZqZfdN/VeoPBdVOwCPXrDys7Skmn0Xi9OqsxLVEGqzG6i7KCFMQHR
-	tje3ArhqZ+ms7P3haKC3Tye7F4XvNBY=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-616-ycdWJbxmNrGWxot1LTsyRQ-1; Wed, 02 Oct 2024 06:36:33 -0400
-X-MC-Unique: ycdWJbxmNrGWxot1LTsyRQ-1
-Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-a8d26b5857cso45104766b.0
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 03:36:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="jAkW0I2x"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-20b90984971so33037275ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 05:24:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shopee.com; s=shopee.com; t=1727871852; x=1728476652; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lSRpGgRiOL4V7C0v24EhN3UDSCpKvNuqNV1m3ZjKLE0=;
+        b=jAkW0I2xxb4HrDS825RLiYGeHBgKtNd0oncymsY4hnVBOylwrJhCXA2PGUS4E0LiHk
+         7QaDW+FBEcCENayIbTW/bHRtKB2BjFjEJd5dqqySf/LeacdQ+jU/tukgkMnHUyUQXckH
+         EH9cOU0iIMQAhE5yLLSPOihc5JdZsO+ZtAmZJFoy7aTg42J8Q4GNjyMQsYjnp9lpwL/A
+         xsKqGUziwSr3VpwjiwZLwgmaBG5NNnWux/UoPmSq7iH9KuBwqEQwH6v1hr0rot+9vuDJ
+         d3dFOci4Qi6xK5EymVKPGSWApbVR3l1g+N9Q3lPXKSbfGiypUn474apwLy3SBYzDNpL5
+         TnGQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727865391; x=1728470191;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ct3IrjSWViW5uDKl2N8YUeca9H+66kn6vgV1IZITSKM=;
-        b=u60K92NR31vW7G2gFotjUIpaZuV/IpOJIYyTnVBQCzRzqCwPt4bVWdx4CzIPx6MJaU
-         IOhjk5N9ILo1Da7j1ARcCfa7g8ZViFC8mrYuMBT/VkEj2LUSB4iHZ/wUzbdPJ+wNzyky
-         5ro5NTytTIpoIfajZhRix89v7RuV7IlyCVMcScZ0lGR8uzv1wtF8i+UDDYUxJ2dV2gVG
-         UG24pIrhhhm/y3oili0GiSjgs9BKpp1A7gGjapffcqazIi1JBSVO3xMB2FwninotceoP
-         sWB/Ub3zrEP9Dzm1Bk0VOf43uCRzJwaVDExH7ti1kRZMlZeuLsqlBmoFuDvPU93GJxSB
-         5mHQ==
-X-Gm-Message-State: AOJu0Yx5Hfwqv5zPB4HyU5SpnA7v1iJhMis0E/DRycaxnzvUHpb0vICF
-	bX3UljZLANjRyGvYb0YAQpV+g0MLHSv2CChj/tXz6DtYeia/bDRFYXrvcYEN3hx8dDuzYeiw+1b
-	oo8WBv+RhIH/OIcMB6lKphxKW6lT63aEW9sxsSuVAheSKxb+iXx5eRHY7Jx70P9A+6NZhr08zKE
-	NGT5H1HOjv/8EY6qO5owju2oSQrlj1tIqCsaunjxCh
-X-Received: by 2002:a17:907:934d:b0:a8a:8127:4af with SMTP id a640c23a62f3a-a98f8268fc8mr253001866b.39.1727865391144;
-        Wed, 02 Oct 2024 03:36:31 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGNrIT9OBu7ZUWlTOGQEw/V/L8ZH3XeOiEGVoqNHrTkwMPVWkUKGMNwlPWY7Bvp3jEuOLWp2g==
-X-Received: by 2002:a17:907:934d:b0:a8a:8127:4af with SMTP id a640c23a62f3a-a98f8268fc8mr252999766b.39.1727865390658;
-        Wed, 02 Oct 2024 03:36:30 -0700 (PDT)
-Received: from thinky.redhat.com (ip-217-030-065-002.aim-net.cz. [217.30.65.2])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a93c2947e49sm845978266b.135.2024.10.02.03.36.30
+        d=1e100.net; s=20230601; t=1727871852; x=1728476652;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lSRpGgRiOL4V7C0v24EhN3UDSCpKvNuqNV1m3ZjKLE0=;
+        b=PafdcVmpkphYzONimPJUJQHL3WQ7i75gqlt9OdDFPP7Xsv6XpCQLiLyqQ2h2LuoI1W
+         G39efWNVwWyFE3u31Lj/qIOXE+9q+dcjz4CGEdIeWLKi7PbmWVL/zafcpwvqww8gwZrH
+         u06+/oXdwOwLQcBD2j30MOoFSShJSPibjp3CpN9gZWUnNaOAs2YDsLOfQ/WniJzoybsz
+         yRScMbeK7sl5cIsWbdr2Fe93XkXZJjB2qIMgpN42fj4+XJiHSaHXSMfXBQteRMVg1J7i
+         etdnFapTDZPPdlHbvunBt+toFwGW0/ozn3Cl1HW5XS/C6kWcdkntdXj/tOhOVErH/5xC
+         7NjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVlaoyQfDoS1Em6XRLebJ9xaOxpcey0HpahYY8v0A5xNgBWrunFG1kdh1HQAJR1DeUV2loBUXZMvuI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwkJUmgd4vnCyrKr+Y+0BygScI/Wx5yR8Whb5mwLvQ2Z1owGYKf
+	ZM1rW0uxFDB5+8eX3jAClExVShVZW7IE4a5XfvK9MliThNEY+FHDv2pWmxGT+ifurf6BFALCjoZ
+	R
+X-Google-Smtp-Source: AGHT+IEwQwMtyKjJs5mIPiMJsYOnVLsxcA/9aIPnlYTc9sY8VpaQdegvup3iaqWg5jZXNodocqXfoA==
+X-Received: by 2002:a17:902:e88f:b0:20b:c258:2a74 with SMTP id d9443c01a7336-20bc5a3d3cemr40438745ad.29.1727871852063;
+        Wed, 02 Oct 2024 05:24:12 -0700 (PDT)
+Received: from localhost.localdomain ([143.92.64.18])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20b37e33852sm83508625ad.199.2024.10.02.05.24.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Oct 2024 03:36:30 -0700 (PDT)
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v3 2/2] xfsprogs: update gitignore
-Date: Wed,  2 Oct 2024 12:36:24 +0200
-Message-ID: <20241002103624.1323492-3-aalbersh@redhat.com>
-X-Mailer: git-send-email 2.44.1
-In-Reply-To: <20241002103624.1323492-1-aalbersh@redhat.com>
-References: <20241002103624.1323492-1-aalbersh@redhat.com>
+        Wed, 02 Oct 2024 05:24:11 -0700 (PDT)
+From: Tang Yizhou <yizhou.tang@shopee.com>
+X-Google-Original-From: Tang Yizhou
+To: willy@infradead.org,
+	akpm@linux-foundation.org,
+	chandan.babu@oracle.com
+Cc: linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Tang Yizhou <yizhou.tang@shopee.com>
+Subject: [PATCH 0/3] Cleanup some writeback codes
+Date: Wed,  2 Oct 2024 21:00:01 +0800
+Message-Id: <20241002130004.69010-1-yizhou.tang@shopee.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,52 +72,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Building xfsprogs seems to produce many build artifacts which are
-not tracked by git. Ignore them.
+From: Tang Yizhou <yizhou.tang@shopee.com>
 
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
----
+Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL and update some comments.
 
-Notes:
-    Replace ./configure~ with wildcard ./*~ to remove all backup files
-    which autoconf (or any other tool) can create
+Tang Yizhou (3):
+  mm/page-writeback.c: Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL
+  mm/page-writeback.c: Fix comment of wb_domain_writeout_add()
+  xfs: Fix comment of xfs_buffered_write_iomap_begin()
 
- .gitignore | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_iomap.c  |  2 +-
+ mm/page-writeback.c | 18 +++++++++---------
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/.gitignore b/.gitignore
-index fd131b6fde52..756867124a02 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -33,6 +33,7 @@
- /config.status
- /config.sub
- /configure
-+/*~
- 
- # libtool
- /libtool
-@@ -69,13 +70,16 @@ cscope.*
- /rtcp/xfs_rtcp
- /spaceman/xfs_spaceman
- /scrub/xfs_scrub
--/scrub/xfs_scrub@.service
- /scrub/xfs_scrub_all
--/scrub/xfs_scrub_all.cron
--/scrub/xfs_scrub_all.service
--/scrub/xfs_scrub_fail@.service
-+/scrub/xfs_scrub_fail
-+/scrub/*.cron
-+/scrub/*.service
- 
- # generated crc files
- /libfrog/crc32selftest
- /libfrog/crc32table.h
- /libfrog/gen_crc32table
-+
-+# docs
-+/man/man8/mkfs.xfs.8
-+/man/man8/xfs_scrub_all.8
 -- 
-2.44.1
+2.25.1
 
