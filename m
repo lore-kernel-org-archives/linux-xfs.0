@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA1FB2F22
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:16:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8257B440C
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:16:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831802; cv=none; b=NqP0qv82QCCfH3qCNMpxQCjk4PsXo+pFrKvfuU+4DjxkY+mMCCRYNf6z9w+ZFj3wlIbE5g0fHrD5fnIsBV1FqFqghhGypZs8kxLQb36tzS+gNWTaYdyqFd39Kz5a36To9tNruEIkET1whKtsK9j6vxhsHeFbB3qxF04WGqb0ejc=
+	t=1727831817; cv=none; b=aa60GVsJEPN6m4gli9ZBSH0J/DKqhzcbBEifa2gxsqkYqrOyhwAuqV9qn+j6gpeUjmrYLAYB9j6fml1JgVkLpyR0ydXOV0+VEoY3uqXMGKhVwSnUrt7r1lcrRxDLnF77d384Qb6jKMChOuC8DjenUZrSKsC5fh1CcQ7C9C8Fr4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831802; c=relaxed/simple;
-	bh=Sn0tvy1BP6CbrPhRoKkFGkzKEZGPx7sqEfBM1MJsNX0=;
+	s=arc-20240116; t=1727831817; c=relaxed/simple;
+	bh=wChfyRlWjaUnPBHHGd+DrvIHE2BKkzsvYcW2KSxTQGM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hHfPcIV6zrQQ2m7qdFvx3DzrZUot453itS7l/yPjLeFSyNmdaJatjJuTfiz00mVDFlEUQejdvz+TJw3Sfy1Tcbp6HEuWWb/8ertpAqdtuDKP6i4LeyETNjPJCB5d+TE83LiXFbjgM2vxgP00zPVgXgQ/xTd1Bv7D3Nw5C7JfkUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HwKEqUpk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=PdDUMPTNoO+teNT2PAypCBXni3x1y+RNxcZfQw+cfMJsko00ksq3diSAhC7nhDjJBFmk1lPdMHdEW1vP2QGlShsT2qjvihbZtF9Rs4LSQ8u6WCB3sr2fuMjwjBkymLsW7pZkATAX5lJU/bZjABnPzMC6C1K7zoNH1W2o5OY5tt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gcCunsE3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HwKEqUpk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE5BAC4CEC6;
-	Wed,  2 Oct 2024 01:16:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gcCunsE3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F3FFC4CEC6;
+	Wed,  2 Oct 2024 01:16:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831801;
-	bh=Sn0tvy1BP6CbrPhRoKkFGkzKEZGPx7sqEfBM1MJsNX0=;
+	s=k20201202; t=1727831817;
+	bh=wChfyRlWjaUnPBHHGd+DrvIHE2BKkzsvYcW2KSxTQGM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HwKEqUpk+dAAHmP6Llk3XAbn6TfhTXbTJ31pP60vgglO8T+z1S7sqIIrtMQfHwXEM
-	 VjWhJXEYEbOTd+cthC1IJhzsPO4QCqMWDRG676y79n1h9KlpD0jGxcOlj27AIf3xt9
-	 EDMoOXv2kWFoyoykaRe5gJIi59h452bIyi4BLAt/RVF7iniS5XTEUiQqCLwO6Mln0t
-	 GhGWxF2+0gh7QFhNdQ++6kQj/FfgKbgOb9d2bry8t3uex5ffq8aW7y0XQebDRRTFYl
-	 CWTQb3ilGP+SjaFHaU/zB16wfKVR3vao/dEiaMO8sF3QAq43E1ohlcpvlano2FN64/
-	 KShJKIM0SFAog==
-Date: Tue, 01 Oct 2024 18:16:41 -0700
-Subject: [PATCH 34/64] xfs: convert "skip_discard" to a proper flags bitset
+	b=gcCunsE3ghQfP+lD5uUGx1FyKfugmQ/P6rO9XbFev5/Oqm/XetmrrL9NXptz3xPFT
+	 zrcvLwKqy6XBLXwKrJzc4Kp365Bzw+6PLk5mEtfe1s0vCZmyN0FiVVpkXosmNGFzR4
+	 RUaSDWZEhd8pHMV3JkC/N0YQbbe3kkdS/rA5ntkWY1qZ06IPn9h9x83o42efQcgM4G
+	 4eH109DdIYv6FVioL+txrXXeQIY+mH+NgyRAWYcBflSLFCcIVvooYJ7j8c8E6eW2/u
+	 hjrny07cuHzPl2FBAABkLNNNUMFprD8pL2Nli7JGWS3EOdn497gpI7wKbjyFrwGClG
+	 nOTfTsOsGPajQ==
+Date: Tue, 01 Oct 2024 18:16:56 -0700
+Subject: [PATCH 35/64] xfs: pass the fsbno to xfs_perag_intent_get
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <172783102294.4036371.16777725362646870986.stgit@frogsfrogsfrogs>
+Message-ID: <172783102308.4036371.13809692517073671265.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,266 +44,98 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 980faece91a60c279e7c24cb1d1a378bbbb74bb9
+Source kernel commit: 62d597a197e390a89eadff60b98231e91b32ab83
 
-Convert the boolean to skip discard on free into a proper flags field so
-that we can add more flags in the next patch.
+All callers of xfs_perag_intent_get have a fsbno and need boilerplate
+code to turn that into an agno.  Just pass the fsbno to
+xfs_perag_intent_get and look up the agno there.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_ag.c             |    2 +-
- libxfs/xfs_alloc.c          |   13 +++++++------
- libxfs/xfs_alloc.h          |    9 +++++++--
- libxfs/xfs_bmap.c           |   12 ++++++++----
- libxfs/xfs_bmap_btree.c     |    2 +-
- libxfs/xfs_ialloc.c         |    5 ++---
- libxfs/xfs_ialloc_btree.c   |    2 +-
- libxfs/xfs_refcount.c       |    6 +++---
- libxfs/xfs_refcount_btree.c |    2 +-
- repair/bulkload.c           |    3 ++-
- 10 files changed, 33 insertions(+), 23 deletions(-)
+ include/xfs_mount.h |    3 ++-
+ libxfs/defer_item.c |   21 ++++-----------------
+ 2 files changed, 6 insertions(+), 18 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index 47522d0fc..ed9ac7f58 100644
---- a/libxfs/xfs_ag.c
-+++ b/libxfs/xfs_ag.c
-@@ -1006,7 +1006,7 @@ xfs_ag_shrink_space(
- 			goto resv_err;
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index 4492a2f28..a60474a8d 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -298,7 +298,8 @@ struct xfs_defer_drain { /* empty */ };
+ #define xfs_defer_drain_init(dr)		((void)0)
+ #define xfs_defer_drain_free(dr)		((void)0)
  
- 		err2 = xfs_free_extent_later(*tpp, args.fsbno, delta, NULL,
--				XFS_AG_RESV_NONE, true);
-+				XFS_AG_RESV_NONE, XFS_FREE_EXTENT_SKIP_DISCARD);
- 		if (err2)
- 			goto resv_err;
+-#define xfs_perag_intent_get(mp, agno)		xfs_perag_get((mp), (agno))
++#define xfs_perag_intent_get(mp, agno) \
++	xfs_perag_get((mp), XFS_FSB_TO_AGNO((mp), (agno)))
+ #define xfs_perag_intent_put(pag)		xfs_perag_put(pag)
  
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 48fdffd46..6f792d280 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -2558,7 +2558,7 @@ xfs_defer_extent_free(
- 	xfs_filblks_t			len,
- 	const struct xfs_owner_info	*oinfo,
- 	enum xfs_ag_resv_type		type,
--	bool				skip_discard,
-+	unsigned int			free_flags,
- 	struct xfs_defer_pending	**dfpp)
+ static inline void xfs_perag_intent_hold(struct xfs_perag *pag) {}
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index 77a368e6f..fb40a6625 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -79,10 +79,7 @@ xfs_extent_free_get_group(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_extent_free_item	*xefi)
  {
- 	struct xfs_extent_free_item	*xefi;
-@@ -2578,6 +2578,7 @@ xfs_defer_extent_free(
- 	ASSERT(len < mp->m_sb.sb_agblocks);
- 	ASSERT(agbno + len <= mp->m_sb.sb_agblocks);
- #endif
-+	ASSERT(!(free_flags & ~XFS_FREE_EXTENT_ALL_FLAGS));
- 	ASSERT(xfs_extfree_item_cache != NULL);
- 	ASSERT(type != XFS_AG_RESV_AGFL);
- 
-@@ -2589,7 +2590,7 @@ xfs_defer_extent_free(
- 	xefi->xefi_startblock = bno;
- 	xefi->xefi_blockcount = (xfs_extlen_t)len;
- 	xefi->xefi_agresv = type;
--	if (skip_discard)
-+	if (free_flags & XFS_FREE_EXTENT_SKIP_DISCARD)
- 		xefi->xefi_flags |= XFS_EFI_SKIP_DISCARD;
- 	if (oinfo) {
- 		ASSERT(oinfo->oi_offset == 0);
-@@ -2617,11 +2618,11 @@ xfs_free_extent_later(
- 	xfs_filblks_t			len,
- 	const struct xfs_owner_info	*oinfo,
- 	enum xfs_ag_resv_type		type,
--	bool				skip_discard)
-+	unsigned int			free_flags)
- {
- 	struct xfs_defer_pending	*dontcare = NULL;
- 
--	return xfs_defer_extent_free(tp, bno, len, oinfo, type, skip_discard,
-+	return xfs_defer_extent_free(tp, bno, len, oinfo, type, free_flags,
- 			&dontcare);
+-	xfs_agnumber_t			agno;
+-
+-	agno = XFS_FSB_TO_AGNO(mp, xefi->xefi_startblock);
+-	xefi->xefi_pag = xfs_perag_intent_get(mp, agno);
++	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
  }
  
-@@ -2646,13 +2647,13 @@ xfs_free_extent_later(
- int
- xfs_alloc_schedule_autoreap(
- 	const struct xfs_alloc_arg	*args,
--	bool				skip_discard,
-+	unsigned int			free_flags,
- 	struct xfs_alloc_autoreap	*aarp)
+ /* Release an active AG ref after some freeing work. */
+@@ -256,10 +253,7 @@ xfs_rmap_update_get_group(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_rmap_intent	*ri)
  {
- 	int				error;
- 
- 	error = xfs_defer_extent_free(args->tp, args->fsbno, args->len,
--			&args->oinfo, args->resv, skip_discard, &aarp->dfp);
-+			&args->oinfo, args->resv, free_flags, &aarp->dfp);
- 	if (error)
- 		return error;
- 
-diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index 3dc8e44fe..7f51b3cb0 100644
---- a/libxfs/xfs_alloc.h
-+++ b/libxfs/xfs_alloc.h
-@@ -235,7 +235,12 @@ xfs_buf_to_agfl_bno(
- 
- int xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
- 		xfs_filblks_t len, const struct xfs_owner_info *oinfo,
--		enum xfs_ag_resv_type type, bool skip_discard);
-+		enum xfs_ag_resv_type type, unsigned int free_flags);
-+
-+/* Don't issue a discard for the blocks freed. */
-+#define XFS_FREE_EXTENT_SKIP_DISCARD	(1U << 0)
-+
-+#define XFS_FREE_EXTENT_ALL_FLAGS	(XFS_FREE_EXTENT_SKIP_DISCARD)
- 
- /*
-  * List of extents to be free "later".
-@@ -264,7 +269,7 @@ struct xfs_alloc_autoreap {
- };
- 
- int xfs_alloc_schedule_autoreap(const struct xfs_alloc_arg *args,
--		bool skip_discard, struct xfs_alloc_autoreap *aarp);
-+		unsigned int free_flags, struct xfs_alloc_autoreap *aarp);
- void xfs_alloc_cancel_autoreap(struct xfs_trans *tp,
- 		struct xfs_alloc_autoreap *aarp);
- void xfs_alloc_commit_autoreap(struct xfs_trans *tp,
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 5f4446104..4b10f169f 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -599,7 +599,7 @@ xfs_bmap_btree_to_extents(
- 
- 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
- 	error = xfs_free_extent_later(cur->bc_tp, cbno, 1, &oinfo,
--			XFS_AG_RESV_NONE, false);
-+			XFS_AG_RESV_NONE, 0);
- 	if (error)
- 		return error;
- 
-@@ -5375,11 +5375,15 @@ xfs_bmap_del_extent_real(
- 			error = xfs_rtfree_blocks(tp, del->br_startblock,
- 					del->br_blockcount);
- 		} else {
-+			unsigned int	efi_flags = 0;
-+
-+			if ((bflags & XFS_BMAPI_NODISCARD) ||
-+			    del->br_state == XFS_EXT_UNWRITTEN)
-+				efi_flags |= XFS_FREE_EXTENT_SKIP_DISCARD;
-+
- 			error = xfs_free_extent_later(tp, del->br_startblock,
- 					del->br_blockcount, NULL,
--					XFS_AG_RESV_NONE,
--					((bflags & XFS_BMAPI_NODISCARD) ||
--					del->br_state == XFS_EXT_UNWRITTEN));
-+					XFS_AG_RESV_NONE, efi_flags);
- 		}
- 		if (error)
- 			return error;
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 2a603b4d1..a14ca3595 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -281,7 +281,7 @@ xfs_bmbt_free_block(
- 
- 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
- 	error = xfs_free_extent_later(cur->bc_tp, fsbno, 1, &oinfo,
--			XFS_AG_RESV_NONE, false);
-+			XFS_AG_RESV_NONE, 0);
- 	if (error)
- 		return error;
- 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index cef2819aa..c526f677e 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1985,7 +1985,7 @@ xfs_difree_inode_chunk(
- 		return xfs_free_extent_later(tp,
- 				XFS_AGB_TO_FSB(mp, agno, sagbno),
- 				M_IGEO(mp)->ialloc_blks, &XFS_RMAP_OINFO_INODES,
--				XFS_AG_RESV_NONE, false);
-+				XFS_AG_RESV_NONE, 0);
- 	}
- 
- 	/* holemask is only 16-bits (fits in an unsigned long) */
-@@ -2031,8 +2031,7 @@ xfs_difree_inode_chunk(
- 		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
- 		error = xfs_free_extent_later(tp,
- 				XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
--				&XFS_RMAP_OINFO_INODES, XFS_AG_RESV_NONE,
--				false);
-+				&XFS_RMAP_OINFO_INODES, XFS_AG_RESV_NONE, 0);
- 		if (error)
- 			return error;
- 
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 5db9d0b33..5042cc62f 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -169,7 +169,7 @@ __xfs_inobt_free_block(
- 	xfs_inobt_mod_blockcount(cur, -1);
- 	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp));
- 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
--			&XFS_RMAP_OINFO_INOBT, resv, false);
-+			&XFS_RMAP_OINFO_INOBT, resv, 0);
+-	xfs_agnumber_t	agno;
+-
+-	agno = XFS_FSB_TO_AGNO(mp, ri->ri_bmap.br_startblock);
+-	ri->ri_pag = xfs_perag_intent_get(mp, agno);
++	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_bmap.br_startblock);
  }
  
- STATIC int
-diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index 47049488b..b4e6900be 100644
---- a/libxfs/xfs_refcount.c
-+++ b/libxfs/xfs_refcount.c
-@@ -1172,7 +1172,7 @@ xfs_refcount_adjust_extents(
- 						tmp.rc_startblock);
- 				error = xfs_free_extent_later(cur->bc_tp, fsbno,
- 						  tmp.rc_blockcount, NULL,
--						  XFS_AG_RESV_NONE, false);
-+						  XFS_AG_RESV_NONE, 0);
- 				if (error)
- 					goto out_error;
- 			}
-@@ -1236,7 +1236,7 @@ xfs_refcount_adjust_extents(
- 					ext.rc_startblock);
- 			error = xfs_free_extent_later(cur->bc_tp, fsbno,
- 					ext.rc_blockcount, NULL,
--					XFS_AG_RESV_NONE, false);
-+					XFS_AG_RESV_NONE, 0);
- 			if (error)
- 				goto out_error;
- 		}
-@@ -2021,7 +2021,7 @@ xfs_refcount_recover_cow_leftovers(
- 		/* Free the block. */
- 		error = xfs_free_extent_later(tp, fsb,
- 				rr->rr_rrec.rc_blockcount, NULL,
--				XFS_AG_RESV_NONE, false);
-+				XFS_AG_RESV_NONE, 0);
- 		if (error)
- 			goto out_trans;
- 
-diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index 362b2a2d7..162f9e689 100644
---- a/libxfs/xfs_refcount_btree.c
-+++ b/libxfs/xfs_refcount_btree.c
-@@ -108,7 +108,7 @@ xfs_refcountbt_free_block(
- 	be32_add_cpu(&agf->agf_refcount_blocks, -1);
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);
- 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
--			&XFS_RMAP_OINFO_REFC, XFS_AG_RESV_METADATA, false);
-+			&XFS_RMAP_OINFO_REFC, XFS_AG_RESV_METADATA, 0);
+ /* Release an active AG ref after finishing rmapping work. */
+@@ -369,10 +363,7 @@ xfs_refcount_update_get_group(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_refcount_intent	*ri)
+ {
+-	xfs_agnumber_t			agno;
+-
+-	agno = XFS_FSB_TO_AGNO(mp, ri->ri_startblock);
+-	ri->ri_pag = xfs_perag_intent_get(mp, agno);
++	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_startblock);
  }
  
- STATIC int
-diff --git a/repair/bulkload.c b/repair/bulkload.c
-index d36e32d99..c96e569ef 100644
---- a/repair/bulkload.c
-+++ b/repair/bulkload.c
-@@ -196,7 +196,8 @@ bulkload_free_extent(
+ /* Release an active AG ref after finishing refcounting work. */
+@@ -490,13 +481,9 @@ xfs_bmap_update_get_group(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_bmap_intent	*bi)
+ {
+-	xfs_agnumber_t		agno;
+-
+ 	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
+ 		return;
+ 
+-	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
+-
+ 	/*
+ 	 * Bump the intent count on behalf of the deferred rmap and refcount
+ 	 * intent items that that we can queue when we finish this bmap work.
+@@ -504,7 +491,7 @@ xfs_bmap_update_get_group(
+ 	 * intent drops the intent count, ensuring that the intent count
+ 	 * remains nonzero across the transaction roll.
  	 */
- 	fsbno = XFS_AGB_TO_FSB(sc->mp, resv->pag->pag_agno, free_agbno);
- 	error = -libxfs_free_extent_later(sc->tp, fsbno, free_aglen,
--			&bkl->oinfo, XFS_AG_RESV_NONE, true);
-+			&bkl->oinfo, XFS_AG_RESV_NONE,
-+			XFS_FREE_EXTENT_SKIP_DISCARD);
- 	if (error)
- 		return error;
+-	bi->bi_pag = xfs_perag_intent_get(mp, agno);
++	bi->bi_pag = xfs_perag_intent_get(mp, bi->bi_bmap.br_startblock);
+ }
  
+ /* Add this deferred BUI to the transaction. */
 
