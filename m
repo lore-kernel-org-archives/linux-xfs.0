@@ -1,37 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A8E1D0BA8
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 14:59:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9B4C10E9;
+	Wed,  2 Oct 2024 15:00:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727881162; cv=none; b=YdImQAoUaMV78uvqzTraGMl8Ye8uPvWoWpnHj6/WyI1lwj2rHhaQBD6Ve5mSso0Z+Gg9HFppSllTBjwqIuCRreYvPXi/PNMQU7SxZwFvHPpnHrks9aptKBgY/SEyBKSYxtPueAmD8X8Xsqt43S3a3MExcFZqhhKuE2Xi2545cNA=
+	t=1727881240; cv=none; b=basKsrr+6ZKurDnF15lnVLEuxBw3uOUx7+Jg3Y+eMmGu9fBL2ySeAbE02D6V3yBJcx6k5nyVWeK1xoxDT736TOSJyIL71NLeDbkuji/wBOjPlg3m9J0G2+TEwp1V2G5PP9AyM5SzETrre9vIAXFqoZbODhbPVfgrzg3fXIl5nJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727881162; c=relaxed/simple;
-	bh=9Epu+RanUTvYjEWUanBLlngtcNIUkk+oW77vlue7OqY=;
+	s=arc-20240116; t=1727881240; c=relaxed/simple;
+	bh=tXnFgNCaLBW8SJWvyMBianXDwLFKOg09fZTo/9GFZ10=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=K+eOGxvmuU1EgG5hR679W/vi50CcpsrWEnCf5uGUB+RjeJU6fcxm3+n/ZAkUO2dMzukwLrdSPyweeK94aA22LEU9fkhNsMeUFwNuOH0NtqWlQlDiNaVF0lYoPr6ZhClJ+W7Hg++9imqROjn9b5rSJRMulSFqkGEF9I5vk37svCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NRqcpaGw; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=RJ91F9rjeJcAV3zrhSUh0mzyNj5ndeGFVpDTFeeI7JVZHgkPWpWtK8SNkLJtA+rLBE0Gp4bhIIAe3tyX+Baa+DG7mlaLtYCo2xWLM3haRifPIdt0b9QGg8zuPuXcTwsDrzSHcgqhTIlQz7F0Q1gMOWS7XBXDttGESO8RU0NRi28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mOuc1o9i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NRqcpaGw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C61F0C4CEC2;
-	Wed,  2 Oct 2024 14:59:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mOuc1o9i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B098FC4CEC2;
+	Wed,  2 Oct 2024 15:00:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727881161;
-	bh=9Epu+RanUTvYjEWUanBLlngtcNIUkk+oW77vlue7OqY=;
+	s=k20201202; t=1727881240;
+	bh=tXnFgNCaLBW8SJWvyMBianXDwLFKOg09fZTo/9GFZ10=;
 	h=Date:From:To:Cc:Subject:From;
-	b=NRqcpaGwz+lTrhefCdfq0riXNpmaXUykFqujbtPb2Qb+w3jLit5bkkgHARPv7OvtB
-	 xpwOHU3xcGqsz7Mak2nwY5Nrnh1av+ZUoZL+l9jePVyk9fKyTeAEjhvJuM9+4Qh5+e
-	 VaG4wTfbvawO4913AjN4n2u8WSbZtEHOTPzu3YbIM0a8HEwmyeqgP1qcpwjgJjKe9e
-	 OFuls/tTd9C5hi14gSEvQRWE+dssHPqh7j5GTAW+ai//sUfI0qOA6Nou6AzoQYQVHz
-	 CIZ531NT4kM9/5LUQwKohNw2DagZ32nUnxT4o35uOgRVd0J22hU2xLLAkt2fLje+Dz
-	 T/KldPv1roy8A==
-Date: Wed, 2 Oct 2024 07:59:21 -0700
+	b=mOuc1o9iDPjOe2rihsONpiBJ/yfWC3hlENrHd6bpNCLGNKdgQOXIhESj4oz5fbnnW
+	 ZPdy+QNVNBtb+WSGJBxT2WjScC5C3fw3bKxW1Frvtir49JR4z930EVJkT+X8V43WFW
+	 8fnvyDBI2Y6QZxFBwjxymgrlXGwKgdnWV1COziw4mb6QWmLuRUjDhQlUBPgzb1tmVH
+	 llcUVbYu/Xz00YE7fny5C+/4CYaAjvU11N0klnthSJI/kSMWr+lqq1+Cx2020NWK/D
+	 GHp7/kGh16WEiSst1v4jl+q6R4jBsL3jsLs9lCnjcsDBhB6HzTISWR33Cl/q7HV29N
+	 5fQgMSGfVNF0g==
+Date: Wed, 2 Oct 2024 08:00:40 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: fix simplify extent lookup in xfs_can_free_eofblocks
-Message-ID: <20241002145921.GA21853@frogsfrogsfrogs>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/2] iomap: don't bother unsharing delalloc extents
+Message-ID: <20241002150040.GB21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,51 +45,33 @@ Content-Disposition: inline
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In commit 11f4c3a53adde, we tried to simplify the extent lookup in
-xfs_can_free_eofblocks so that it doesn't incur the overhead of all the
-extra stuff that xfs_bmapi_read does around the iext lookup.
+If unshare encounters a delalloc reservation in the srcmap, that means
+that the file range isn't shared because delalloc reservations cannot be
+reflinked.  Therefore, don't try to unshare them.
 
-Unfortunately, this causes regressions on generic/603, xfs/108,
-generic/219, xfs/173, generic/694, xfs/052, generic/230, and xfs/441
-when always_cow is turned on.  In all cases, the regressions take the
-form of alwayscow files consuming rather more space than the golden
-output is expecting.  I observed that in all these cases, the cause of
-the excess space usage was due to CoW fork delalloc reservations that go
-beyond EOF.
-
-For alwayscow files we allow posteof delalloc CoW reservations because
-all writes go through the CoW fork.  Recall that all extents in the CoW
-fork are accounted for via i_delayed_blks, which means that prior to
-this patch, we'd invoke xfs_free_eofblocks on first close if anything
-was in the CoW fork.  Now we don't do that.
-
-Fix the problem by reverting the removal of the i_delayed_blks check.
-
-Fixes: 11f4c3a53adde ("xfs: simplify extent lookup in xfs_can_free_eofblocks")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ fs/iomap/buffered-io.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 053d567c91084..b0e0f83ff348a 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -542,10 +542,15 @@ xfs_can_free_eofblocks(
- 		return false;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 11ea747228aee..c1c559e0cc07c 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1321,7 +1321,7 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+ 		return length;
  
  	/*
--	 * Check if there is an post-EOF extent to free.
-+	 * Check if there is an post-EOF extent to free.  If there are any
-+	 * delalloc blocks attached to the inode (data fork delalloc
-+	 * reservations or CoW extents of any kind), we need to free them so
-+	 * that inactivation doesn't fail to erase them.
+-	 * Don't bother with holes or unwritten extents.
++	 * Don't bother with delalloc reservations, holes or unwritten extents.
+ 	 *
+ 	 * Note that we use srcmap directly instead of iomap_iter_srcmap as
+ 	 * unsharing requires providing a separate source map, and the presence
+@@ -1330,6 +1330,7 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+ 	 * fork for XFS.
  	 */
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	if (xfs_iext_lookup_extent(ip, &ip->i_df, end_fsb, &icur, &imap))
-+	if (ip->i_delayed_blks)
-+		found_blocks = true;
-+	else if (xfs_iext_lookup_extent(ip, &ip->i_df, end_fsb, &icur, &imap))
- 		found_blocks = true;
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 	return found_blocks;
+ 	if (iter->srcmap.type == IOMAP_HOLE ||
++	    iter->srcmap.type == IOMAP_DELALLOC ||
+ 	    iter->srcmap.type == IOMAP_UNWRITTEN)
+ 		return length;
+ 
