@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D8B23AD
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:10:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D16D6FB0
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:11:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727831459; cv=none; b=N68oOf5eRX2kS6OB4s3d4OKF3wTSJ5sCjKDvcibRNkmuHw0VePPxR0jEHVkld0hUe7t226iuh/ON7L9uwSDtVmrXno3tnctREuLlsvfi6Me1uLlvPJweeN6dA4LaiLLl9SMo0IfXPb+7yKznF66pVhmgPDenYpG4yMGQi/lJa4A=
+	t=1727831474; cv=none; b=HkgbX83cecqKQHzMAkccjN0E28FkESCN/DTdz/C5xA5D4z+dCUBr8SKjcW1nVaNm9KObZVFYCBudrSCKUnunx7a47JYJqvf9F3JMOAckYi6KuTGiaW2mkbhqxzm88ik1t0ZgOXkxD6Cx4NBGQysTF9yqB4P8kPXWjn+XpIrjLio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727831459; c=relaxed/simple;
-	bh=kNbj90Z13inUhXPa4PSMwrGCZOUkh6VtzpQwsnetYMg=;
+	s=arc-20240116; t=1727831474; c=relaxed/simple;
+	bh=7Rtv2aOlmsM+Xkx391mVSbmJMa/z2v+V7GayPgjZlNI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ykwm9NkwRMLEXBKeBtI+3WkwngxcZQ+YQM4bOaScTxXQb9QXq8am5oenBgBn+TxSPRM+iNB4IgDqPcTg4gU5j4SIhQj4bDkXwMAakmvX28p1NCr21ZzO8I8ky4sYuQ3Lv35u5w6uHOjkgJJ4p7E4c2T8M0vkGWuQHFltn4EuNaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=spnSmTU2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ZrYz9q5VjUnnyaANNxUfnCTVbzaOQaBTFUqoPkXjINJDcIE10r4S3nCF6ZYcPsD90kiZU948tpD0tsR7ShlRnfaJN7rVXYRgxJBN/k8pGMZ7J1UVtuYVXyLYwoXNawF1SGaMdMLBqyxsGbdpo6W5Hu7zpETc8vLe4aqbKea0E9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fZ4N/FRC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="spnSmTU2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DD95C4CEC6;
-	Wed,  2 Oct 2024 01:10:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fZ4N/FRC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A465C4CEC6;
+	Wed,  2 Oct 2024 01:11:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727831458;
-	bh=kNbj90Z13inUhXPa4PSMwrGCZOUkh6VtzpQwsnetYMg=;
+	s=k20201202; t=1727831474;
+	bh=7Rtv2aOlmsM+Xkx391mVSbmJMa/z2v+V7GayPgjZlNI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=spnSmTU2Rzi7D4R3ovMlqkPM8mvqJI1dvCEcHXx7B8PA/4kSqKZXn4TOAuf0iRUss
-	 CKRw/AyzPz37tCrWMPOZkudPbE7onLfq4J00rzrava57ntJ8MuYahGXIrgByxJaT8g
-	 JlREFdXaOQ6QpDVmgN4kp/Xt4/MkYlPtPM9ApuGaTs5VPnAvy4L0mFM3thYE52RfMt
-	 xei2EW8jadRH7BW8CX2dUgqsj3GY6kFdZ9HGb3oKJK8Z8dOLvZZThLEVjJXv2+8rjb
-	 o6ouivVuH7xKxVbGZaFUVAK94FZa3FWPzTfqLLxq1zCvacPAtrEGBeqWNkMAs8JOv2
-	 PyLomYq6Tp7GA==
-Date: Tue, 01 Oct 2024 18:10:58 -0700
-Subject: [PATCH 12/64] libxfs: rearrange libxfs_trans_ichgtime call when
- creating inodes
+	b=fZ4N/FRCo3fu+RidkEBanYbwOQpilEJh4x+9/5n/eYfMYItYIQGFmZZHYmi9mxjMx
+	 w1E544KQ6T2uhdZ6Q1fwWlGx6Bc97o4p5h3oF5RNODGt2fT/+xyjP2Ei2pjZ0WcrIC
+	 5PTJJm2CRiS++2NLAwrg2MnkfiGZl+laseGN0PzA5WMiaWROaQyU4EZ7VEgHBhluoc
+	 TUixWuZtygJ7JxvagePaYKaINN73+J3SbDAD+llgm1qI05oY4u1FhfTsB6sV9jQYMV
+	 qZ3cR8F7fepU6AfP82MgIUz65IEr7zw3aWQONexaPYss8POb2EZ7kGsGXEE3mMJQoI
+	 HuHFFMtxf5GBQ==
+Date: Tue, 01 Oct 2024 18:11:13 -0700
+Subject: [PATCH 13/64] libxfs: set access time when creating files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783101962.4036371.5415910489198519953.stgit@frogsfrogsfrogs>
+Message-ID: <172783101977.4036371.15734675602815750733.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 References: <172783101710.4036371.10020616537589726441.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,47 +46,27 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Rearrange the libxfs_trans_ichgtime call in libxfs_ialloc so that we
-call it once with the flags we want.
+Set the access time on files that we're creating, to match the behavior
+of the kernel.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/inode.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ libxfs/inode.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/inode.c b/libxfs/inode.c
-index 9ccc22adf..b302bbbfd 100644
+index b302bbbfd..132cf990d 100644
 --- a/libxfs/inode.c
 +++ b/libxfs/inode.c
-@@ -94,6 +94,7 @@ libxfs_icreate(
+@@ -94,7 +94,8 @@ libxfs_icreate(
  	struct inode		*inode;
  	struct xfs_inode	*ip;
  	unsigned int		flags;
-+	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
+-	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
++	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG |
++					XFS_ICHGTIME_ACCESS;
  	int			error;
  
  	error = libxfs_iget(mp, tp, ino, XFS_IGET_CREATE, &ip);
-@@ -112,7 +113,6 @@ libxfs_icreate(
- 	inode->i_uid = GLOBAL_ROOT_UID;
- 	inode->i_gid = GLOBAL_ROOT_GID;
- 	ip->i_projid = 0;
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD);
- 
- 	if (pip && (dir->i_mode & S_ISGID)) {
- 		inode->i_gid = dir->i_gid;
-@@ -129,10 +129,12 @@ libxfs_icreate(
- 	if (xfs_has_v3inodes(ip->i_mount)) {
- 		inode->i_version = 1;
- 		ip->i_diflags2 = ip->i_mount->m_ino_geo.new_diflags2;
--		ip->i_crtime = inode_get_mtime(inode); /* struct copy */
- 		ip->i_cowextsize = 0;
-+		times |= XFS_ICHGTIME_CREATE;
- 	}
- 
-+	xfs_trans_ichgtime(tp, ip, times);
-+
- 	flags = XFS_ILOG_CORE;
- 	switch (args->mode & S_IFMT) {
- 	case S_IFIFO:
 
