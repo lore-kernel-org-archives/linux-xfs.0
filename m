@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E6446BA
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:26:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B8055227
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:26:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727832379; cv=none; b=hqNNm372hFs66pBCRvXa1XUYrqxgFs3LBA6/9PtDMeynoy0dJsLnveobXQ2M5GZJ4NdbsxPEkZDG3jaShWhNC9mzDrJlAfnefjaosUktktA3un650N++35Tma59yyUKKLiLmEcGsQ/JRbnrjyxJubkORhw+q9IK+5HD37StJTwQ=
+	t=1727832394; cv=none; b=CgcK89g2Kt+WVTiGS7rZWI7FL++71B6O1XZTgKxYx8/6lbwbo/j85cZQ2GjUy6ss/XWhp7/4cZ6Yo9h9sML/Ak9waBt1HEl2hnla+IyiDxL62wO27XknxSG+lvwCdeO2uNRj7z+p19Dg38TqvJNBSWgNpJCqgTkk59UOnm9yKnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727832379; c=relaxed/simple;
-	bh=FVZUC0SSQE3SCnLB66FJ4fLYiTCLqvyftZPxrrIHmEs=;
+	s=arc-20240116; t=1727832394; c=relaxed/simple;
+	bh=17xRBm9NEQC/bwtFPZTggGZ5uQqd40Bo4mSA5sCX8Hw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=G3oddj87alZT+IWY5DBtO9tAL8I6rjDgGvAGNIdJOGukgPTjH+axMbT8MMQejUrfDG0w/h07qerpSGx7OoxJ9/XxSTCrux3bp2FLMRwNvWxPvErR2tI1hZj51i/+8U7uweypEKCqK32amlNx6tgpzSsgDrAEdtRPddXwYKrqUwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aV2aeW6k; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lGyG8IAf2p6UG8iJbuk4Um4Z9nfVmda7sdT5VZDmjT133GAj4dA7L2ymv7f0CUBCrPKootWJwKYCliQP7J0F1x//bKJ2iJLLTo96zAXVD8If0T7RLrQ/PRSUSwxeqSaroJQqdoOnsmLV8iF4UioBBKcyuZUdmFpr0HYI0/bUwMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C76nSkLU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aV2aeW6k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB2ADC4CECD;
-	Wed,  2 Oct 2024 01:26:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C76nSkLU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 667F6C4CEC6;
+	Wed,  2 Oct 2024 01:26:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727832378;
-	bh=FVZUC0SSQE3SCnLB66FJ4fLYiTCLqvyftZPxrrIHmEs=;
+	s=k20201202; t=1727832394;
+	bh=17xRBm9NEQC/bwtFPZTggGZ5uQqd40Bo4mSA5sCX8Hw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aV2aeW6k2Z0qsSHJz6vSMFm8ObWDhJMF3HiRlAqiLWNEy+FlC0ujol6SK2RyeGSux
-	 w/hd19eHU5KN7djVoN+Uloe4HUXkfksYM3qEZi4wpai/ROsI0/xowlJJfkyO/r07QF
-	 GwWG29wjQ2GuA73h5ifAf+N4HkYIlQqMk9LRgf6APE96kc7/mpxGYOJxmIDSwWpubI
-	 7cM8gu/ag0toAUlS6js4nc7EYb1rP2k2+sZXLGwyWfrxl67ht/wH9G2PHo0Erz5ZgZ
-	 4LP+m1OT0JM7LxKHzXIGy/+0bSVyGyK5y/3r5rvfKl6MQVIvYbA16PvDAR64XiNpHB
-	 BEGo/Tx45BP1A==
-Date: Tue, 01 Oct 2024 18:26:18 -0700
-Subject: [PATCH 3/4] xfs_repair: use library functions to reset root/rbm/rsum
- inodes
+	b=C76nSkLULRErh4+a23WeVXJXX8yLmuyy0UlESnUZSqe/2K/4G5YCAAUFIxRggZFLR
+	 YtiyamUByekyZ+GoB+1OSRx9nZeFFquJbKoLAwkY009dgU3BJjFVtjgfMCJznAEHg/
+	 XJL1/9z6PXHGqshoeonEo84J4R+fPkftlf5dUczi+uIOY2KrG1PKwquqvy8ICWY18Z
+	 4MmEbUCcPDky9F89QTS9uGh5ezyPm5OX0uq9NbBRBYoB3aELZIIc975Znt1U7KauIG
+	 11efxJEBL7rJL3/l5eGNcBQZIBrbTUh8+mX2EQ5AwoU2xT5P8Hx3Y8oMdYFbctWs7F
+	 qHjEh4C7Fb1bA==
+Date: Tue, 01 Oct 2024 18:26:34 -0700
+Subject: [PATCH 4/4] xfs_repair: use library functions for orphanage creation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783103423.4038674.11965044394724233118.stgit@frogsfrogsfrogs>
+Message-ID: <172783103438.4038674.13322754481588384282.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783103374.4038674.1366196250873191221.stgit@frogsfrogsfrogs>
 References: <172783103374.4038674.1366196250873191221.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,213 +46,147 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use the iroot reset function to reset root inodes instead of open-coding
-the reset routine.  While we're at it, fix a longstanding memory leak if
-the inode being reset actually had an xattr fork full of mappings.
+Use new library functions to create lost+found.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    1 
- repair/phase6.c          |  129 ++++++++++------------------------------------
- 2 files changed, 30 insertions(+), 100 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/phase6.c          |   53 ++++++++++++++++++----------------------------
+ 2 files changed, 22 insertions(+), 32 deletions(-)
 
 
 diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index a51c14a27..ee9794782 100644
+index ee9794782..a4173e5f7 100644
 --- a/libxfs/libxfs_api_defs.h
 +++ b/libxfs/libxfs_api_defs.h
-@@ -192,6 +192,7 @@
- #define xfs_inode_from_disk		libxfs_inode_from_disk
- #define xfs_inode_from_disk_ts		libxfs_inode_from_disk_ts
- #define xfs_inode_hasattr		libxfs_inode_hasattr
-+#define xfs_inode_init			libxfs_inode_init
- #define xfs_inode_to_disk		libxfs_inode_to_disk
- #define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
- #define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
+@@ -148,6 +148,7 @@
+ #define xfs_dir2_shrink_inode		libxfs_dir2_shrink_inode
+ 
+ #define xfs_dir_createname		libxfs_dir_createname
++#define xfs_dir_create_child		libxfs_dir_create_child
+ #define xfs_dir_init			libxfs_dir_init
+ #define xfs_dir_ino_validate		libxfs_dir_ino_validate
+ #define xfs_dir_lookup			libxfs_dir_lookup
 diff --git a/repair/phase6.c b/repair/phase6.c
-index 85f122ec7..2c4f23010 100644
+index 2c4f23010..ba28edaa4 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -447,20 +447,31 @@ res_failed(
- 		do_error(_("xfs_trans_reserve returned %d\n"), err);
- }
- 
--static inline void
--reset_inode_fields(struct xfs_inode *ip)
-+/*
-+ * Forcibly reinitialize a file that is a child of the superblock and has a
-+ * statically defined inumber.  These files are the root of a directory tree or
-+ * the realtime free space inodes.  The inode must not otherwise be in use; the
-+ * data fork must be empty, and the attr fork will be reset.
-+ */
-+static void
-+reset_sbroot_ino(
-+	struct xfs_trans	*tp,
-+	umode_t			mode,
-+	struct xfs_inode	*ip)
- {
--	ip->i_projid = 0;
--	ip->i_disk_size = 0;
--	ip->i_nblocks = 0;
--	ip->i_extsize = 0;
--	ip->i_cowextsize = 0;
--	ip->i_flushiter = 0;
-+	struct xfs_icreate_args	args = {
-+		.idmap		= libxfs_nop_idmap,
-+		.mode		= mode,
-+		/* Root directories cannot be linked to a parent. */
-+		.flags		= XFS_ICREATE_UNLINKABLE,
+@@ -826,19 +826,23 @@ mk_orphanage(
+ 		.idmap		= libxfs_nop_idmap,
+ 		.mode		= S_IFDIR | 0755,
+ 	};
++	struct xfs_name		xname = {
++		.name		= (unsigned char *)ORPHANAGE,
++		.len		= strlen(ORPHANAGE),
++		.type		= XFS_DIR3_FT_DIR,
 +	};
-+
-+	/* Erase the attr fork since libxfs_inode_init won't do it for us. */
- 	ip->i_forkoff = 0;
--	ip->i_diflags = 0;
--	ip->i_diflags2 = 0;
--	ip->i_crtime.tv_sec = 0;
--	ip->i_crtime.tv_nsec = 0;
-+	libxfs_ifork_zap_attr(ip);
-+
-+	libxfs_trans_ijoin(tp, ip, 0);
-+	libxfs_inode_init(tp, &args, ip);
- }
++	struct xfs_dir_update	du = {
++		.name		= &xname,
++	};
+ 	struct xfs_trans	*tp;
+-	struct xfs_inode	*ip;
+-	struct xfs_inode	*pip;
+ 	struct ino_tree_node	*irec;
+ 	xfs_ino_t		ino;
+ 	int			ino_offset = 0;
+ 	int			i;
+ 	int			error;
+ 	int			nres;
+-	struct xfs_name		xname;
+-	struct xfs_parent_args	*ppargs = NULL;
  
- static void
-@@ -474,7 +485,6 @@ mk_rbmino(xfs_mount_t *mp)
- 	int		error;
- 	xfs_fileoff_t	bno;
- 	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
--	int		times;
- 	uint		blocks;
+-	i = -libxfs_parent_start(mp, &ppargs);
++	i = -libxfs_parent_start(mp, &du.ppargs);
+ 	if (i)
+ 		do_error(_("%d - couldn't allocate parent pointer for %s\n"),
+ 			i, ORPHANAGE);
+@@ -849,18 +853,15 @@ mk_orphanage(
+ 	 * would have been cleared in phase3 and phase4.
+ 	 */
+ 
+-	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip);
++	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &du.dp);
+ 	if (i)
+ 		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
+ 			i, ORPHANAGE);
+ 
+-	args.pip = pip;
+-	xname.name = (unsigned char *)ORPHANAGE;
+-	xname.len = strlen(ORPHANAGE);
+-	xname.type = XFS_DIR3_FT_DIR;
++	args.pip = du.dp;
+ 
+ 	/* If the lookup of /lost+found succeeds, return the inumber. */
+-	error = -libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL);
++	error = -libxfs_dir_lookup(NULL, du.dp, &xname, &ino, NULL);
+ 	if (error == 0)
+ 		goto out_pip;
+ 
+@@ -877,7 +878,7 @@ mk_orphanage(
+ 		do_error(_("%s inode allocation failed %d\n"),
+ 			ORPHANAGE, error);
+ 
+-	error = -libxfs_icreate(tp, ino, &args, &ip);
++	error = -libxfs_icreate(tp, ino, &args, &du.ip);
+ 	if (error)
+ 		do_error(_("%s inode initialization failed %d\n"),
+ 			ORPHANAGE, error);
+@@ -915,49 +916,37 @@ mk_orphanage(
+ 	 * now that we know the transaction will stay around,
+ 	 * add the root inode to it
+ 	 */
+-	libxfs_trans_ijoin(tp, pip, 0);
++	libxfs_trans_ijoin(tp, du.dp, 0);
  
  	/*
-@@ -491,34 +501,9 @@ mk_rbmino(xfs_mount_t *mp)
- 			error);
- 	}
- 
--	reset_inode_fields(ip);
--
--	VFS_I(ip)->i_mode = S_IFREG;
--	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
--	libxfs_ifork_zap_attr(ip);
--
--	set_nlink(VFS_I(ip), 1);	/* account for sb ptr */
--
--	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
--	if (xfs_has_v3inodes(mp)) {
--		VFS_I(ip)->i_version = 1;
--		ip->i_diflags2 = 0;
--		times |= XFS_ICHGTIME_CREATE;
--	}
--	libxfs_trans_ichgtime(tp, ip, times);
--
--	/*
--	 * now the ifork
--	 */
--	ip->i_df.if_bytes = 0;
--	ip->i_df.if_data = NULL;
--
-+	/* Reset the realtime bitmap inode. */
-+	reset_sbroot_ino(tp, S_IFREG, ip);
- 	ip->i_disk_size = mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize;
--
--	/*
--	 * commit changes
--	 */
--	libxfs_trans_ijoin(tp, ip, 0);
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
+ 	 * create the actual entry
+ 	 */
+-	error = -libxfs_dir_createname(tp, pip, &xname, ip->i_ino, nres);
++	error = -libxfs_dir_create_child(tp, nres, &du);
  	if (error)
-@@ -729,7 +714,6 @@ mk_rsumino(xfs_mount_t *mp)
- 	int		nsumblocks;
- 	xfs_fileoff_t	bno;
- 	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
--	int		times;
- 	uint		blocks;
+ 		do_error(
+ 		_("can't make %s, createname error %d\n"),
+ 			ORPHANAGE, error);
+-	add_parent_ptr(ip->i_ino, (unsigned char *)ORPHANAGE, pip, false);
+-
+-	if (ppargs) {
+-		error = -libxfs_parent_addname(tp, ppargs, pip, &xname, ip);
+-		if (error)
+-			do_error(
+- _("can't make %s, parent addname error %d\n"),
+-					ORPHANAGE, error);
+-	}
++	add_parent_ptr(du.ip->i_ino, (unsigned char *)ORPHANAGE, du.dp, false);
  
  	/*
-@@ -746,34 +730,9 @@ mk_rsumino(xfs_mount_t *mp)
- 			error);
- 	}
+-	 * bump up the link count in the root directory to account
+-	 * for .. in the new directory, and update the irec copy of the
++	 * We bumped up the link count in the root directory to account
++	 * for .. in the new directory, so now update the irec copy of the
+ 	 * on-disk nlink so we don't fail the link count check later.
+ 	 */
+-	libxfs_bumplink(tp, pip);
+ 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+ 				  XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
+ 	add_inode_ref(irec, 0);
+ 	set_inode_disk_nlinks(irec, 0, get_inode_disk_nlinks(irec, 0) + 1);
  
--	reset_inode_fields(ip);
--
--	VFS_I(ip)->i_mode = S_IFREG;
--	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
--	libxfs_ifork_zap_attr(ip);
--
--	set_nlink(VFS_I(ip), 1);	/* account for sb ptr */
--
--	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
--	if (xfs_has_v3inodes(mp)) {
--		VFS_I(ip)->i_version = 1;
--		ip->i_diflags2 = 0;
--		times |= XFS_ICHGTIME_CREATE;
--	}
--	libxfs_trans_ichgtime(tp, ip, times);
--
--	/*
--	 * now the ifork
--	 */
--	ip->i_df.if_bytes = 0;
--	ip->i_df.if_data = NULL;
--
-+	/* Reset the rt summary inode. */
-+	reset_sbroot_ino(tp, S_IFREG, ip);
- 	ip->i_disk_size = mp->m_rsumsize;
--
--	/*
--	 * commit changes
--	 */
--	libxfs_trans_ijoin(tp, ip, 0);
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
- 	if (error)
-@@ -829,7 +788,6 @@ mk_root_dir(xfs_mount_t *mp)
- 	int		error;
- 	const mode_t	mode = 0755;
- 	ino_tree_node_t	*irec;
--	int		times;
- 
- 	ip = NULL;
- 	i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 10, 0, 0, &tp);
-@@ -841,37 +799,8 @@ mk_root_dir(xfs_mount_t *mp)
- 		do_error(_("could not iget root inode -- error - %d\n"), error);
- 	}
- 
--	/*
--	 * take care of the core since we didn't call the libxfs ialloc function
--	 * (comment changed to avoid tangling xfs/437)
--	 */
--	reset_inode_fields(ip);
--
--	VFS_I(ip)->i_mode = mode|S_IFDIR;
--	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
--	libxfs_ifork_zap_attr(ip);
--
--	set_nlink(VFS_I(ip), 2);	/* account for . and .. */
--
--	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
--	if (xfs_has_v3inodes(mp)) {
--		VFS_I(ip)->i_version = 1;
--		ip->i_diflags2 = 0;
--		times |= XFS_ICHGTIME_CREATE;
--	}
--	libxfs_trans_ichgtime(tp, ip, times);
--	libxfs_trans_ijoin(tp, ip, 0);
+-	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+-	libxfs_dir_init(tp, ip, pip);
 -	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--	/*
--	 * now the ifork
--	 */
--	ip->i_df.if_bytes = 0;
--	ip->i_df.if_data = NULL;
--
--	/*
--	 * initialize the directory
--	 */
-+	/* Reset the root directory. */
-+	reset_sbroot_ino(tp, mode | S_IFDIR, ip);
- 	libxfs_dir_init(tp, ip, ip);
- 
  	error = -libxfs_trans_commit(tp);
+ 	if (error) {
+ 		do_error(_("%s directory creation failed -- bmapf error %d\n"),
+ 			ORPHANAGE, error);
+ 	}
+-	libxfs_irele(ip);
++	libxfs_irele(du.ip);
+ out_pip:
+-	libxfs_irele(pip);
+-	libxfs_parent_finish(mp, ppargs);
++	libxfs_irele(du.dp);
++	libxfs_parent_finish(mp, du.ppargs);
+ 
+ 	return(ino);
+ }
 
