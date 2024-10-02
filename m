@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A23E5227
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:25:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3D05227
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Oct 2024 01:25:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727832301; cv=none; b=XwnT2fyanIo4DDwnGTDZedLmS5KUIF+zEtyQiAkRLsFkKi6+kq+krZLXq3N5We64jFN5dZeJvtlq1nafrVip0ignHqA2k1oqltNFOMPk5IROrA/F8Vvgna3UPjCig6bpZBO4rKwO49yY7KRaCDFuSLLtoxkqA6MT4QDivC2VNWI=
+	t=1727832316; cv=none; b=DkRJJm9ZhkoPY97/yssd+V8b/MeVPv2El9eyjwVfciyyCVJxxAchuZueVHKL81UAufgiP5WX23RxuYP2KM3cMQX/X1eJSxsUDhScisKKHzIEtC2p2u02j2n+oo4iMVG7DLTGT40vhBQR4VucOLtJrK6oWn7s/OkDbMoahsBDhRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727832301; c=relaxed/simple;
-	bh=MBgDJFBTRXeXFjkU+2qWwpU3pVMPnq1izmatXi98YmA=;
+	s=arc-20240116; t=1727832316; c=relaxed/simple;
+	bh=IHzsb+/GRr4mxDJ9HLY0iXbJJwb8fesFPdcHfFk0XoY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KBrGAlEzW55WoAluzvnnBZCzJI3C9bO0guyH1tytjYUYUa2/6eUjPAnTwnGOraor/0Q6atS6Obool3EOza+6VBINYxqV9oyKlocFfB8vo3nlGn9Eq1Wv9eAfQzc5KqYuUHsEBkBSOjbje+bSJhASqlADiRc92TrG7K1VnlnQBt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZ9feDWu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=IjUgcV3LcIfGq9TcJWfQFSsODouHRozafIAPxFZULrID68inKkrnsiCkV0nsEg2yzg6l4UtLAA/TKVG60OELFtVsho57EUa7f8BkT7ig6SApZ5in4AieGV8i618xDYDxWj/SQTeUmHCsMg3Hw6nsas39eHrkfndr2N2M2byI0Kw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pWc14p4v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZ9feDWu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE2ADC4CEC6;
-	Wed,  2 Oct 2024 01:25:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pWc14p4v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70BEEC4CEC6;
+	Wed,  2 Oct 2024 01:25:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727832300;
-	bh=MBgDJFBTRXeXFjkU+2qWwpU3pVMPnq1izmatXi98YmA=;
+	s=k20201202; t=1727832316;
+	bh=IHzsb+/GRr4mxDJ9HLY0iXbJJwb8fesFPdcHfFk0XoY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dZ9feDWuUnhZ3FeM0mTtFhYuuV9hPk/HSnkJx/Ojx1Kpp2u1EfDTzXZa4lfcubffz
-	 g8goT8QLtY5WV2V218enSzAhG+k9ZrWOqP5mq1HQqzyi8Sr21x36T+ew78q9t9biqe
-	 QC0jwd7QlvKmJVYjcEU48yiDWBAwqVd7AU7RHSml6WpDfpFoiUhlvxPJSb1EpmkMzh
-	 qwUM7de3IatHi+Rbcj9KnecdBY4TAUspAHei0YCntADeF9T+vxX2p3L4QN8WVkH+Kl
-	 t9wEfEzdp/hfH1th/2bhHVoQ1HdHAYqr/mZHv7WxlooAzAfo5MfSg3L9+0qnr/zJRB
-	 TPoytsTH7qAOA==
-Date: Tue, 01 Oct 2024 18:25:00 -0700
-Subject: [PATCH 2/4] xfs_db/mkfs/xfs_repair: port to use
- XFS_ICREATE_UNLINKABLE
+	b=pWc14p4vCYUDLkV+W9UYM6BUc1EHZOo/LeTpifLEmtVk8Yh3AP0PZ1u1/F1pfR+9H
+	 5Y84UNI+5RffoY9NKUVIRQyMCGpesQQsN0AzEsgfyHcgb0wr6XrjmBe5cr8df+WxQ/
+	 RfOkupgbaL3t17KlKBFuNiSEp/AiAT7Ry0muJBy7nwwd4CH4yt/nqV3a8YDyFB1e36
+	 HzVMouF2KzlX+Uj6GeeOT6/QkzQTbeEn70QrlR2wrl02WVAhpbPSxm+s3CuBkUGQMB
+	 GsdIU+uBKJVAcQI6Ggm0d3JePs5L8uI6gizzVDQdamPFl0N5wTauJxqH6YfdmfBMqH
+	 Y6MIUobQWVdjQ==
+Date: Tue, 01 Oct 2024 18:25:16 -0700
+Subject: [PATCH 3/4] xfs_db/mdrestore/repair: don't use the incore struct
+ xfs_sb for offsets into struct xfs_dsb
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172783103061.4038482.13766864255481933120.stgit@frogsfrogsfrogs>
+Message-ID: <172783103075.4038482.16400875402327891337.stgit@frogsfrogsfrogs>
 In-Reply-To: <172783103027.4038482.10618338363884807798.stgit@frogsfrogsfrogs>
 References: <172783103027.4038482.10618338363884807798.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,73 +47,88 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: b11b11e3b7a72606cfef527255a9467537bcaaa5
+Source kernel commit: ac3a0275165b4f80d9b7b516d6a8f8b308644fff
 
-INIT_XATTRS is overloaded here -- it's set during the creat process when
-we think that we're immediately going to set some ACL xattrs to save
-time.  However, it's also used by the parent pointers code to enable the
-attr fork in preparation to receive ppptr xattrs.  This results in
-xfs_has_parent() branches scattered around the codebase to turn on
-INIT_XATTRS.
+Currently, the XFS_SB_CRC_OFF macro uses the incore superblock struct
+(xfs_sb) to compute the address of sb_crc within the ondisk superblock
+struct (xfs_dsb).  This is a landmine if we ever change the layout of
+the incore superblock (as we're about to do), so redefine the macro
+to use xfs_dsb to compute the layout of xfs_dsb.
 
-Linkable files are created far more commonly than unlinkable temporary
-files or directory tree roots, so we should centralize this logic in
-xfs_inode_init.  For the three callers that don't want parent pointers
-(online repiar tempfiles, unlinkable tempfiles, rootdir creation) we
-provide an UNLINKABLE flag to skip attr fork initialization.
-
-Port these three utilities to use XFS_ICREATE_UNLINKABLE the same as we
-did for the kernel.
+Port the userspace utilities to the new code just like we did for the
+kernel.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/iunlink.c    |    2 +-
- mkfs/proto.c    |    5 +++--
- repair/phase6.c |    3 ---
- 3 files changed, 4 insertions(+), 6 deletions(-)
+ db/sb.c                   |    4 ++--
+ mdrestore/xfs_mdrestore.c |    6 ++----
+ repair/agheader.c         |   12 ++++++------
+ 3 files changed, 10 insertions(+), 12 deletions(-)
 
 
-diff --git a/db/iunlink.c b/db/iunlink.c
-index fcc824d9a..2ca9096f1 100644
---- a/db/iunlink.c
-+++ b/db/iunlink.c
-@@ -315,7 +315,7 @@ create_unlinked(
- 	struct xfs_icreate_args	args = {
- 		.idmap		= libxfs_nop_idmap,
- 		.mode		= S_IFREG | 0600,
--		.flags		= XFS_ICREATE_TMPFILE,
-+		.flags		= XFS_ICREATE_TMPFILE | XFS_ICREATE_UNLINKABLE,
- 	};
- 	struct xfs_inode	*ip;
- 	struct xfs_trans	*tp;
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 96cb9f854..251e3a9ee 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -432,8 +432,9 @@ creatproto(
- 	xfs_ino_t		ino;
- 	int			error;
+diff --git a/db/sb.c b/db/sb.c
+index 7836384a1..9fcb7340f 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -50,8 +50,8 @@ sb_init(void)
+ 	add_command(&version_cmd);
+ }
  
--	if (dp && xfs_has_parent(dp->i_mount))
--		args.flags |= XFS_ICREATE_INIT_XATTRS;
-+	/* Root directories cannot be linked to a parent. */
-+	if (!dp)
-+		args.flags |= XFS_ICREATE_UNLINKABLE;
+-#define	OFF(f)	bitize(offsetof(xfs_sb_t, sb_ ## f))
+-#define	SZC(f)	szcount(xfs_sb_t, sb_ ## f)
++#define	OFF(f)	bitize(offsetof(struct xfs_dsb, sb_ ## f))
++#define	SZC(f)	szcount(struct xfs_dsb, sb_ ## f)
+ const field_t	sb_flds[] = {
+ 	{ "magicnum", FLDT_UINT32X, OI(OFF(magicnum)), C1, 0, TYP_NONE },
+ 	{ "blocksize", FLDT_UINT32D, OI(OFF(blocksize)), C1, 0, TYP_NONE },
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index 334bdd228..269edb8f8 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -101,10 +101,8 @@ fixup_superblock(
+ 	memset(block_buffer, 0, sb->sb_sectsize);
+ 	sb->sb_inprogress = 0;
+ 	libxfs_sb_to_disk((struct xfs_dsb *)block_buffer, sb);
+-	if (xfs_sb_version_hascrc(sb)) {
+-		xfs_update_cksum(block_buffer, sb->sb_sectsize,
+-				 offsetof(struct xfs_sb, sb_crc));
+-	}
++	if (xfs_sb_version_hascrc(sb))
++		xfs_update_cksum(block_buffer, sb->sb_sectsize, XFS_SB_CRC_OFF);
  
- 	/*
- 	 * Call the space management code to pick the on-disk inode to be
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 52e42d4c0..85f122ec7 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -909,9 +909,6 @@ mk_orphanage(
- 	struct xfs_name		xname;
- 	struct xfs_parent_args	*ppargs = NULL;
+ 	if (pwrite(ddev_fd, block_buffer, sb->sb_sectsize, 0) < 0)
+ 		fatal("error writing primary superblock: %s\n", strerror(errno));
+diff --git a/repair/agheader.c b/repair/agheader.c
+index 762901581..3930a0ac0 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -358,22 +358,22 @@ secondary_sb_whack(
+ 	 * size is the size of data which is valid for this sb.
+ 	 */
+ 	if (xfs_sb_version_hasmetauuid(sb))
+-		size = offsetof(xfs_sb_t, sb_meta_uuid)
++		size = offsetof(struct xfs_dsb, sb_meta_uuid)
+ 			+ sizeof(sb->sb_meta_uuid);
+ 	else if (xfs_sb_version_hascrc(sb))
+-		size = offsetof(xfs_sb_t, sb_lsn)
++		size = offsetof(struct xfs_dsb, sb_lsn)
+ 			+ sizeof(sb->sb_lsn);
+ 	else if (xfs_sb_version_hasmorebits(sb))
+-		size = offsetof(xfs_sb_t, sb_bad_features2)
++		size = offsetof(struct xfs_dsb, sb_bad_features2)
+ 			+ sizeof(sb->sb_bad_features2);
+ 	else if (xfs_sb_version_haslogv2(sb))
+-		size = offsetof(xfs_sb_t, sb_logsunit)
++		size = offsetof(struct xfs_dsb, sb_logsunit)
+ 			+ sizeof(sb->sb_logsunit);
+ 	else if (xfs_sb_version_hassector(sb))
+-		size = offsetof(xfs_sb_t, sb_logsectsize)
++		size = offsetof(struct xfs_dsb, sb_logsectsize)
+ 			+ sizeof(sb->sb_logsectsize);
+ 	else /* only support dirv2 or more recent */
+-		size = offsetof(xfs_sb_t, sb_dirblklog)
++		size = offsetof(struct xfs_dsb, sb_dirblklog)
+ 			+ sizeof(sb->sb_dirblklog);
  
--	if (xfs_has_parent(mp))
--		args.flags |= XFS_ICREATE_INIT_XATTRS;
--
- 	i = -libxfs_parent_start(mp, &ppargs);
- 	if (i)
- 		do_error(_("%d - couldn't allocate parent pointer for %s\n"),
+ 	/* Check the buffer we read from disk for garbage outside size */
 
