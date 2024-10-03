@@ -1,66 +1,92 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C9204AEF5;
-	Thu,  3 Oct 2024 08:30:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9C113CA8A;
+	Thu,  3 Oct 2024 09:17:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727944214; cv=none; b=KUebA3RvDp2u/0VZ9rQ5Ct/EMVtKkczEEzG7+RH4Hp0WSUVfbZRXXIjvd11NYL9qezsUp4WCt8eGyNo42JQwtXyNUDTLLqDsT5ni5eqKBIE++hVhUk01+Zgv2/0nA9tdqHy97I5EKDMsYBU8/08ZulhgUJbbK/yYDmEQuVcvLDo=
+	t=1727947081; cv=none; b=CewIXx4QrCFN+WveH00pHYCKmV1PyyACN0OEa2WmIPC45Ovdp8GCJ2E//tYnm9sNjJ2hR/60SjihnSUBG4/Jf3XYdkBWQlBGCy88+aO0s1gi1XwcBJUdSafGgCE88ysPIjp/qrLhymI2oeGOnAM8Ud5bspXU0SdIvgszqTo+S90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727944214; c=relaxed/simple;
-	bh=C4YjVWwucQlnFc3Bdyk1mQx7bTga0KsdWJhPjx/3d+A=;
+	s=arc-20240116; t=1727947081; c=relaxed/simple;
+	bh=OsX5LvzLfEbbA6tnyO9NNhgDkPy3QtONIGlX3EPocGk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cNYoQi7YFkRDWChbDN0TMXmZEk5hh1BxPdA1olb4JT1g6TIWwKqlo0PfRCuKRzLskX/0meuqJ+gucUZoNP0qtp/xrGuCzEjFNR2ytJOWvQ1/hy7TsjjCrfzw4EnwId2gRPbFe3SJMZemQjrCmJUZ5yYhhXnuq+7PmrXTXWbucVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z3mY8x/Z; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Izgu4+8iiP/yNHvrnKWMY4v0lYvAXDNw/lgVgPGTDF9PISHQtT56cJ1R6TopZbXUDGi6oYKsSMAnVFQtObYWDBNQgCk2KKL6AvF8itxxD+P5Q8jKBl0hjZypU+ki/lFZeqinbTgexs2mGA43DjaOySHQvXdZMNEbIHqtWxo2Nco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=c55mC8a7; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=Bc58g8Px; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=LKdg5f9T; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=4cK16X8d; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z3mY8x/Z"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-37cd0b5515fso417630f8f.2;
-        Thu, 03 Oct 2024 01:30:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727944211; x=1728549011; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=KgYlSRPdGNueMfiTMqgmWS1pTsWnaZpjKo5fJ+jS3mg=;
-        b=Z3mY8x/Zr1Qt1o7oX3krQqfq/+J0dTxKLzlEoFw5BSlyhsCXY8PGJmudEVcOGUsgY1
-         YCGvTT1MEDR08hIeYfefb81u3NbraqtHl+QkyrWQ0PlMhVkgB+0uEovm6q0/zDzTVIVx
-         sIj9Lz+xaLE8sa8nd7A2DFu8JAQlSFMInvgJ/rm4i5aukpErCJvGtl0Kn0aFa3w21YpK
-         M/X+PmGMtLh43JIpDrKjNYOFFrZ7CJuex9A8xd6PCQ00yvhAg9VAdOTfNlQYJXdGf4wi
-         yitHwyrYc1318/YetOKSuHdn3ftzMUy88wzM83jSlbyviKRw1Dyr+7dyCPKYNQUQHc0l
-         hiQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727944211; x=1728549011;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KgYlSRPdGNueMfiTMqgmWS1pTsWnaZpjKo5fJ+jS3mg=;
-        b=FCBfE9nFPaq25fXZVnQTZffw5fbtuzn/6yp7248bj23IPx3rMBI/GwNVr0OJ+FSPUE
-         3bVRN11QOL0KyfnmvFV5JRvdEm6HT4isQip04YIptpPNHrDwWvPd26oOA+rDXTOn2kAU
-         9IJiRpBxp6PWUVMfWieahHi4Rot0lDVnmXGTLS5YOp5uZ7fzrUZxhJahdwiWkvB5KGRu
-         lqndvzSRtVizUb7KPSJxg4IQeysRKoGhumhsLvSdG8LGS7yrYJyxqGdFNPUbo3k6ny8Y
-         yAXtuVVRoGqOMoYcZHjSvzAG4SqwCZHZXlLru9OPPG92U1w4OPZnbI/Dday0yNaZ9F+0
-         kl/A==
-X-Forwarded-Encrypted: i=1; AJvYcCU2i2sHRcNmX7zwgvlbY6fNSym2dk/5qZ7OtySxPIIA6Eg4d09zYsI2LuPqNK2f72XcopI9BtuYWflu@vger.kernel.org, AJvYcCUx0TIpPBo0if8zWrQJ9s4f6kU9i1wWS1aWCxlkxiQ1PzUjetFoM2g/kSkLEV5sbGAkxf2Yk7lLjH02gA0g@vger.kernel.org, AJvYcCXfzqH8ElxQGIFTCn35W4RIDixauE53MCr7FJb9glcX7WyNybxqwBeFrcxNJQq4EsBQOTo+8u9sIBkieEQcrK4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJEwOyaXGCUewSyFPSXOI1ZGQUky9YAySyaJ53fBJNrszmcpCD
-	p0s4amisPSsD5g/OzzKIeVgZ0uHRbn4/FvRMg+15NSqUnlmwFbP7cOQ5FzAI
-X-Google-Smtp-Source: AGHT+IF8npkmOhbojp5KXFi8cInd8zqhM4R+86JiZ/fJ268SNIVJdHBDzgQCRAJIvhOjCnLqlbpAug==
-X-Received: by 2002:adf:fc49:0:b0:37c:c9b9:3732 with SMTP id ffacd0b85a97d-37cfb8b58d9mr3700396f8f.21.1727944210905;
-        Thu, 03 Oct 2024 01:30:10 -0700 (PDT)
-Received: from void.void ([31.210.180.79])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d081f70b1sm735887f8f.22.2024.10.03.01.30.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Oct 2024 01:30:10 -0700 (PDT)
-Date: Thu, 3 Oct 2024 11:30:07 +0300
-From: Andrew Kreimer <algonell@gmail.com>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix a typo
-Message-ID: <Zv5WD6z0uHtcS6wd@void.void>
-References: <20241002211948.10919-1-algonell@gmail.com>
- <1fe2c97a-fbb3-42bd-941a-c2538eefab0a@stanley.mountain>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="c55mC8a7";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="Bc58g8Px";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="LKdg5f9T";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="4cK16X8d"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id EFAA81FDCA;
+	Thu,  3 Oct 2024 09:17:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727947062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z6rC28lPlVyJkPEpD0jTearCgkAnHWLvKQEnr4BvZRo=;
+	b=c55mC8a7e9eQVrl6WhrH7R5cIA5hiM/gdiub4wz/eOx/fxTr5rfF2uLKq8WwxT+dcX6dY1
+	MXDPXhljnmEIHD0NcJ/xymjl/xz/NNtxWqr3YVstXCdXMhzKTibS//9BtS7daVREPoWAZV
+	MIkFYjIavdTlIHXlpRV2p/p037RTlas=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727947062;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z6rC28lPlVyJkPEpD0jTearCgkAnHWLvKQEnr4BvZRo=;
+	b=Bc58g8PxJyjy7onvsqucX1e7Gj1Y0pHcGomYWucn40ll9tIb4HZjRnkFcEcLTaNqbFqX75
+	84KUXcecO54dggCw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727947061; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z6rC28lPlVyJkPEpD0jTearCgkAnHWLvKQEnr4BvZRo=;
+	b=LKdg5f9TDyMEBHkqeFh/mHUEPwksCbHNY29XVr6hSG+TSBQVxv3ogapbELTdosu/kL+eJg
+	p5nRdnx0E1cOwJuy6SHJt2YVExesmMukjPBX4UjcXaetGImKHDBkGL7B2xOOh8/q7+XOJm
+	Hb/kUKPriQt+DhLTUg0H+2tbcgbSefc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727947061;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z6rC28lPlVyJkPEpD0jTearCgkAnHWLvKQEnr4BvZRo=;
+	b=4cK16X8dZnxiTsbm8Zg9mn7xqpoWELf4AyuaJcx7QlntW0wo6i+GiQU0SRRBQT9BmElY5W
+	gY/6bcR1vkpZ8pBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E46E8139CE;
+	Thu,  3 Oct 2024 09:17:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id qlu+NzVh/mavaQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 03 Oct 2024 09:17:41 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 95D63A086F; Thu,  3 Oct 2024 11:17:41 +0200 (CEST)
+Date: Thu, 3 Oct 2024 11:17:41 +0200
+From: Jan Kara <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Kent Overstreet <kent.overstreet@linux.dev>,
+	Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, torvalds@linux-foundation.org
+Subject: Re: [RFC PATCH 0/7] vfs: improving inode cache iteration scalability
+Message-ID: <20241003091741.vmw3muqt5xagjion@quack3>
+References: <20241002014017.3801899-1-david@fromorbit.com>
+ <20241002-lethargisch-hypnose-fd06ae7a0977@brauner>
+ <Zv098heGHOtGfw1R@dread.disaster.area>
+ <3lukwhxkfyqz5xsp4r7byjejrgvccm76azw37pmudohvxcxqld@kiwf5f5vjshk>
+ <Zv3H8BxJX2GwNW2Y@dread.disaster.area>
+ <lngs2n3kfwermwuadhrfq2loff3k4psydbjullhecuutthpqz3@4w6cybx7boxw>
+ <Zv32Vow1YdYgB8KC@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -69,14 +95,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1fe2c97a-fbb3-42bd-941a-c2538eefab0a@stanley.mountain>
+In-Reply-To: <Zv32Vow1YdYgB8KC@dread.disaster.area>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.993];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email]
+X-Spam-Score: -3.80
+X-Spam-Flag: NO
 
-On Thu, Oct 03, 2024 at 08:59:42AM +0300, Dan Carpenter wrote:
-> On Thu, Oct 03, 2024 at 12:19:48AM +0300, Andrew Kreimer wrote:
-> > Fix a typo in comments.
-> > 
+On Thu 03-10-24 11:41:42, Dave Chinner wrote:
+> On Wed, Oct 02, 2024 at 07:20:16PM -0400, Kent Overstreet wrote:
+> > A couple things that help - we've already determined that the inode LRU
+> > can go away for most filesystems,
 > 
-> Could you explain what the typos are in the commit message so that we can spot
-> it more easily?  It saves a little review time.
+> We haven't determined that yet. I *think* it is possible, but there
+> is a really nasty inode LRU dependencies that has been driven deep
+> down into the mm page cache writeback code.  We have to fix that
+> awful layering violation before we can get rid of the inode LRU.
+> 
+> I *think* we can do it by requiring dirty inodes to hold an explicit
+> inode reference, thereby keeping the inode pinned in memory whilst
+> it is being tracked for writeback. That would also get rid of the
+> nasty hacks needed in evict() to wait on writeback to complete on
+> unreferenced inodes.
+> 
+> However, this isn't simple to do, and so getting rid of the inode
+> LRU is not going to happen in the near term.
 
-Noted, thank you.
+Yeah. I agree the way how writeback protects from inode eviction is not the
+prettiest one but the problem with writeback holding normal inode reference
+is that then flush worker for the device can end up deleting unlinked
+inodes which was causing writeback stalls and generally unexpected lock
+ordering issues for some filesystems (already forgot the details). Now this
+was more that 12 years ago so maybe we could find a better solution to
+those problems these days (e.g. interactions between page writeback and
+page reclaim are very different these days) but I just wanted to warn there
+may be nasty surprises there.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
