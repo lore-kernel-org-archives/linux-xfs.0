@@ -1,47 +1,65 @@
-Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 582D217C77
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Oct 2024 02:42:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5944EB45
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Oct 2024 05:59:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727923367; cv=none; b=UemYtIOA73+Oyo9GurfoF1qGM2zfsXE4rc5LDmQ4PtmiP5iN3NJQzA/rFxZpYft42nbn6iW/10jd6IC8hOFAIVBJXjkTHgW0NDiQDt9p31HXIhC9z4a38Iu6S/Zj9bn6kPEniO2Znhrz4GD9RYr+OtOHhRaTGSVcUCZeYvOQI4o=
+	t=1727935190; cv=none; b=WTBUQNFxPKvHeXz1WyPWTTvhm7AuQHFdAQP2sNQioRFeP1noBxitzDEBOSv0qDT7VGdS7sCqcq1lIJzEK/R9hu3kGOamNgWkQdC0Ql77A8BpGIVy2/3lZvF4N4mp7q+z3+r5v//Lp02Ns5rwZhzNmg7LDEUjA1CJ+JKGQwXDZa8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727923367; c=relaxed/simple;
-	bh=EstBgqcCx9wF+j1CJtDJFD6Mz//CxVTndewL8R6/bww=;
+	s=arc-20240116; t=1727935190; c=relaxed/simple;
+	bh=OWOsm7ZxtLM/gvpBAV1VPiDsfc0QEqjnnA4NgVabO3A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LYOctJW+hGegP4YEl4hMofdkCl5eQqNHcvNs7iaeMKNJO/m+WRSob1nP2RjC5KYvGzoTfDcRPMGtxsm4koWX8efkkD0hYjn656l5HglQVJUeSFS1L2a/oEvxG+ItMlFwA74NQXUfYNrgX0v0BpSrV+h7FL1bJcUbJGg1vj0gDT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KKtgXLvx; arc=none smtp.client-ip=91.218.175.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=iXcgBhR4y8EJ1I0W9Lk6dXJmidXecENtc9AN9/nCKAET2WpSrrAoIjaYOVgY9QcJi/t9e8VhupRlhNbM6pBVhkSAvRrYyiXTKhnBHM1bXjfsxJTztpjVMWK0zk1Q6GFoYe1/oe0iaNDf9VikDcxNz6lrIpMe3yiTkS5+t10ujGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=wwOV8QwM; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KKtgXLvx"
-Date: Wed, 2 Oct 2024 22:42:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1727923363;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LchHZOpX/HshgZN2Su0Emej4j0jOoeX5Sse4gQbVQSQ=;
-	b=KKtgXLvxTgHCrPSAbUP9oQ+UcIQ7u5NJgM/m9+JTd8+PDC1QGC74WPT73wZTRdFr3+heG1
-	C4B4zvtzfD3K/LmfOV1GsH3DvMNS1G6lgzvjUZjP9MIDUDQGDrp8c40QbZDQRk7Z2TCuCQ
-	AHTQD7ivWin9HFu7h5ZnHabMug6Z1xE=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
-	Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-bcachefs@vger.kernel.org
-Subject: Re: [RFC PATCH 0/7] vfs: improving inode cache iteration scalability
-Message-ID: <rd7boyrdyurefoko73sfgemzu2lhwkfoletcaqfyrs6sdnjukr@do4ogpf2ykg7>
-References: <20241002014017.3801899-1-david@fromorbit.com>
- <20241002-lethargisch-hypnose-fd06ae7a0977@brauner>
- <Zv098heGHOtGfw1R@dread.disaster.area>
- <CAHk-=wgBqi+1YjH=-AiSDqx8p0uA6yGZ=HmMKtkGC3Ey=OhXhw@mail.gmail.com>
- <kz36dz2tzysa7ih7qf6iuhvzrfvwytzcpcv46hzedtpdebazam@2op5ojw3xvse>
- <Zv3UdBPLutZkBeNg@dread.disaster.area>
- <dhv3pbtrwyt6myltrhvgxobsvrejpsguo4xn6p572j3t3t3axl@d6x455tgwi2s>
- <Zv3/hQs+Rz/dcQnP@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wwOV8QwM"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-37cc84c12c2so296125f8f.3
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2024 22:59:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1727935187; x=1728539987; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=QaLuPXFwFEMXzwdJuRm9nCMZ+olqm02WUGH6BxqckLE=;
+        b=wwOV8QwMYJIe29CHF6Jm7wNuItOkmA2jflTOnILTFIs6zJ7+8vAo3nXsXvxczh7czE
+         AdJ3/Am4M3b6/uPejys37Ps5eqUyeMCkuxfiPz3z4xf/5NMa3qn6SfYmSqVQKA8cZt5T
+         JrtOSMuPc+kaBwzwVbTw77jxWnRgWpQLMXgT+JJbHqs5TYr3cfA7QMGKHqCKr+Laq9Oe
+         dAHJvf6L7i56wgQVnjafAwsCSM1DuGd5MHsQ8HJCzUXJhTm53j0gx7JSnsA+lzKu061V
+         XPsW384+4brQG8whDWcFaWmgmAg4ziudNwcC6x6mcDwsM9svR/ROcRnxg1K+7CtQCOnf
+         EiGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727935187; x=1728539987;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QaLuPXFwFEMXzwdJuRm9nCMZ+olqm02WUGH6BxqckLE=;
+        b=gTaliviG/tqZE+Ej1TOsmK66QmBhTnqerAy662HyVx0N8gzNVXtj1RvbqwlQWA/K1p
+         XkoayrSU2/HyHv8zUhxXSbvBvW8yHq7/m+UA2CK/0cXBU2L1lwrzhlsZqDyIgn7ApS8l
+         0dnJTDQA3QXhI31pG0I76Ktb9dJws+H1N0tRqSgf5TtPpG0qyCj6BhBrHNJPilDSt6H5
+         Vt0u3BDUhgU5xqXklsq7K4xhLRkNRiNvlKDDUzzRutfwo7ZtKqf5Zfy6Q+r6Ngc7e4M7
+         C7VJ0fjYobBWbZJRj6fmKIhHTWEAG0JYxerbLivgzONHL0NVamyvWS6XwVDzRBx7z3tz
+         aQXw==
+X-Forwarded-Encrypted: i=1; AJvYcCWWh7wRLGPPX4J4Y+0KLbzS8p38+QbazS4wazeRg4sJl1bdB4iPzswkwvrf8f0Z6/d22ouvptLUFh8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXALJjbr1Quz4l6bR8/epNAfSHWUQf+hHnWvTonSjjyja6rfA2
+	4WDJ43si+nTEuF0O7XXL+qhaUkMtnMCQuIlj92F+lcvxPYSgWddShFzjJOWmRM0=
+X-Google-Smtp-Source: AGHT+IFhfzemxSCvKHPyI9lyhE5X9vj54jqzCvp5GjX9CuBFrvGGQSyGFB2LBZXOwoC5OjFWE4N+sQ==
+X-Received: by 2002:a05:6000:bd0:b0:365:f52f:cd44 with SMTP id ffacd0b85a97d-37cfba0aa23mr2849115f8f.57.1727935186868;
+        Wed, 02 Oct 2024 22:59:46 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d082d22b0sm464564f8f.102.2024.10.02.22.59.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Oct 2024 22:59:46 -0700 (PDT)
+Date: Thu, 3 Oct 2024 08:59:42 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Andrew Kreimer <algonell@gmail.com>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix a typo
+Message-ID: <1fe2c97a-fbb3-42bd-941a-c2538eefab0a@stanley.mountain>
+References: <20241002211948.10919-1-algonell@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,91 +68,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zv3/hQs+Rz/dcQnP@dread.disaster.area>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <20241002211948.10919-1-algonell@gmail.com>
 
-On Thu, Oct 03, 2024 at 12:20:53PM GMT, Dave Chinner wrote:
-> On Wed, Oct 02, 2024 at 09:22:38PM -0400, Kent Overstreet wrote:
-> > On Thu, Oct 03, 2024 at 09:17:08AM GMT, Dave Chinner wrote:
-> Which was painful to work with because
-> it maintains the existing spin lock based traversal pattern. This
-> was necessary because the iterator held a spinlock internally. I
-> really didn't like that aspect of it because it perpeutated the need
-> to open code the iget/iput game to allow the spinlock to be dropped
-> across the inode operation that needed to be performed.
+On Thu, Oct 03, 2024 at 12:19:48AM +0300, Andrew Kreimer wrote:
+> Fix a typo in comments.
 > 
-> i.e. adding an dlist iterator didn't clean up any of the other mess
-> that sb->s_inodes iteration required...
 
-yeah, true.
+Could you explain what the typos are in the commit message so that we can spot
+it more easily?  It saves a little review time.
 
-that's actually something that does get cleaner with fast-list; because
-we're iterating over a radix tree and our iterator is a radix tree
-index, the crab-walk thing naturally goes away.
+regards,
+dan carpenter
 
-> > My concern is that we've been trying to get away from callbacks for
-> > iteration - post spectre they're quite a bit more expensive than
-> > external iterators, and we've generally been successful with that. 
-> 
-> So everyone keeps saying, but the old adage applies here: Penny
-> wise, pound foolish.
-> 
-> Optimising away the callbacks might bring us a few percent
-> performance improvement for each operation (e.g. via the dlist
-> iterator mechanisms) in a traversal, but that iteration is still
-> only single threaded. Hence the maximum processing rate is
-> determined by the performance of a single CPU core.
-> 
-> However, if we change the API to allow for parallelism at the cost
-> of a few percent per object operation, then a single CPU core will
-> not process quite as many objects as before. However, the moment we
-> allow multiple CPU cores to process in parallel, we acheive
-> processing rate improvements measured in integer multiples.
-> 
-> Modern CPUs have concurrency to burn.  Optimising APIs for minimum
-> per-operation overhead rather than for concurrent processing
-> implementations is the wrong direction to be taking....
-
-OTOH - this is all academic because none of the uses of s_inodes are
-_remotely_ fastpaths. Aside from nr_blockdev_pages() it's more or less
-all filesystem teardown, or similar frequency.
-
-> > Radix tree doesn't work for us, since our keys are { inum, subvol } - 96
-> > bits -
-> 
-> Sure it does - you just need two layers of radix trees. i.e have a
-> radix tree per subvol to index inodes by inum, and a per-sb radix
-> tree to index the subvols. With some code to propagate radix tree
-> bits from the inode radix tree to the subvol radix tree they then
-> largely work in conjunction for filtered searches.
-
-It'd have to be the reverse - index by inum, then subvol, and then we'd
-need to do bit stuffing so that a radix tree with a single element is
-just a pointer to the element. But - yeah, if the current approach (not
-considering the subvol when calculating the hash) becomes an issue, that
-might be the way to go.
-
-> This is -exactly- the internal inode cache structure that XFS has.
-> We have a per-sb radix tree indexing the allocation groups, and a
-> radix tree per allocation group indexing inodes by inode number.
-> Hence an inode lookup involves splitting the inum into agno/agino
-> pairs, then doing a perag lookup with the agno, and doing a perag
-> inode cache lookup with the agino. All of these radix tree
-> lookups are lockless...
-
-Speaking of, I'd like to pick your brain on AGIs at some point. We've
-been sketching out future scalability work in bcachefs, and I think
-that's going to be one of the things we'll end up needing.
-
-Right now the scalability limit is backpointers fsck, but that looks
-fairly trivial to solve: there's no reason to run the backpointers ->
-extents pass except for debug testing, we can check and repair those
-references at runtime, and we can sum up backpointers in a bucket and
-check them against the bucket sector counts and skip extents ->
-backpointers if they match.
-
-After that, the next scalability limitation should be the main
-check_alloc_info pass, and we'll need something analagous to AGIs to
-shard that and run it efficiently when the main allocation info doesn't
-fit in memory - and it sounds like you have other optimizations that
-leverage AGIs as well.
