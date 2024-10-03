@@ -1,83 +1,77 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1485613D8A3;
-	Thu,  3 Oct 2024 07:38:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7745812C473;
+	Thu,  3 Oct 2024 08:23:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727941088; cv=none; b=QX7cjHS+3NPsw1XF8DdU13yXrvLHaFOzYzTl7fh4+aFuC3PKgXH1uZZllV1xiXA/sHCKf5AsZqrBlJAOsRW5oeIJ+k2a80s/nBxEi0uRbL2LsJMDvs4V3DFNUkE4jBXcWKkhouWCLQ/DMDiiT91mHGormpcBb61jA8EvfhBI6ag=
+	t=1727943838; cv=none; b=Sly+WIRbilwqbs20diAi13wb1sMQh1/UL/TZaX21is/ng/odLSsA41hirFMVxotBvMkqY8XD+KZz4b4UiWXXbiGswstjzs1CeYfpdJwlbLmhYrhD7aeNINoE1b5oV+Cv3z2BPehZzGVS7bJxVh1NXwRNu6PbFweiyO42yFe6B54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727941088; c=relaxed/simple;
-	bh=Z8vxIMP8M5qWA1eWQH4xk72EVHr7rDe+WWkK7RKFCKk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e2db529ixbUAuhNOhapE6jb+Z4W62mDgi5i2QUAbeF5BhUGatCovigvz/gARSKmQ1K0O+EAi6qqlKUVTl1FJL8G5Rjglw0emosBX62eg81pzor4BKxLfpc7loNkk2rsHHlyM7Z029KF3LhKgA0+01TgGTUKQRbaOp4Vhqp1w4H8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gvZoT49b; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1727943838; c=relaxed/simple;
+	bh=e+cIkQtMZLBK6Z2bEpeCAUcdUT9M5Ca88NIVa+LpYYQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=hsGUj+HRYoeJWwGRyPE8e1uGnfqM1NhePSw8wCAr2mOf03lErHnjyQwPA4r1azMiO7OX6x0CzNKGPOt6lTW7vRuPEH16CimKiclEjh7wji8A9m1oyPXGATOWyAC5mt7dvJXvSqSqQapZ4GhCY8GNG2fPeWO4v9pPdrgUfa3w2Fg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KUC47KR0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gvZoT49b"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=8OnmhiQjCnWTVMeAh5YC42peUZpmpY/M4dDvvKxMHi4=; b=gvZoT49bQWyRtbkYqv0gR67IkY
-	lso8bhxu9Y17FdTd36poSIFeQYYQ4I/XQIv9Vu78yjP+9ZJvaUSQxqK8EEB31QrmBCwZC4THB+kKK
-	y7R+sQ2cGAfUNclQTeP7Hxy0pbJKjtW1KublKGmQaIsxZY5tyfG5csw67GTLqykHAFv+tB+Y6A0zP
-	xaT5nBf92OoESVvE+tSUCm11d38Lpn7kfp4XPruqVjd/sfO72t2jYe1nibEzQzqVTlaLrubEuAgvv
-	j5YWHJkJwXTGL0MZj5JAEEKbSg+Ln4QdTwjoqBZ33tj6fcrVmsMI9aZZNvvSRHUYVCq4eRAF7z+5B
-	uWGeBC3g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1swGPV-00000008P6G-2Qbd;
-	Thu, 03 Oct 2024 07:38:05 +0000
-Date: Thu, 3 Oct 2024 00:38:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
-	torvalds@linux-foundation.org,
-	=?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@linux.microsoft.com>,
-	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
-	Kees Cook <keescook@chromium.org>,
-	linux-security-module@vger.kernel.org, Jan Kara <jack@suse.cz>,
-	Amir Goldstein <amir73il@gmail.com>
-Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
- sb->s_inodes iteration to super_iter_inodes()
-Message-ID: <Zv5J3VTGqdjUAu1J@infradead.org>
-References: <20241002014017.3801899-1-david@fromorbit.com>
- <20241002014017.3801899-5-david@fromorbit.com>
- <Zv5GfY1WS_aaczZM@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KUC47KR0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E9DBC4CEC7;
+	Thu,  3 Oct 2024 08:23:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727943838;
+	bh=e+cIkQtMZLBK6Z2bEpeCAUcdUT9M5Ca88NIVa+LpYYQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=KUC47KR0aZ8lajtCDtFFxqlKkL5xbk3+XIA8O1yalr8kNHJc3SnN4cCXSAKLSI9vg
+	 AV+ZQVxfTmr8JCrJQzWsnaiK9B1a9kwNdcazis3Bt12CuFwssVyr1ROerlVsegx/Jo
+	 NTamZotGfQSnG5A1Hh4WLLUERzCaXD2MFUZi/x7MQLYZrhLEiVo0dF27mEneCq+/CR
+	 lX7v9gCVIl+jZ7/cdpjHi76wqgBGl3U/YuNVtIB6aLW6wNL6ihdVJRRcXRJW5QwwIX
+	 xA/JldV8yIGCKg+Rl9xjoo53AKG4Mp0iCi5T/KwYQ4kYte6Qb2ty6GmXvGGkaemwLL
+	 7XnUehgmPfEzQ==
+From: Christian Brauner <brauner@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] iomap: don't bother unsharing delalloc extents
+Date: Thu,  3 Oct 2024 10:23:51 +0200
+Message-ID: <20241003-qualifizieren-skalpell-553802f6ac9f@brauner>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20241002150040.GB21853@frogsfrogsfrogs>
+References: <20241002150040.GB21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zv5GfY1WS_aaczZM@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1153; i=brauner@kernel.org; h=from:subject:message-id; bh=e+cIkQtMZLBK6Z2bEpeCAUcdUT9M5Ca88NIVa+LpYYQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaT9C5nxsK5xa0EdW865h4dP6s63DfH8ujDTxjVI/suS2 HOKrn/edJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEwkcw7DX7k6b3+1Tzu8noVv i7pkbxHtavHjkOtB9UUKn7YoMIYd3szI8OQ9b2n3NSWRvRImqjnuymkS07x7dNs3Tf6zJeDu0+l RDAA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Thu, Oct 03, 2024 at 12:23:41AM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 02, 2024 at 11:33:21AM +1000, Dave Chinner wrote:
-> > --- a/security/landlock/fs.c
-> > +++ b/security/landlock/fs.c
-> > @@ -1223,109 +1223,60 @@ static void hook_inode_free_security_rcu(void *inode_security)
-> >  
-> >  /*
-> >   * Release the inodes used in a security policy.
-> > - *
-> > - * Cf. fsnotify_unmount_inodes() and invalidate_inodes()
-> >   */
-> > +static int release_inode_fn(struct inode *inode, void *data)
+On Wed, 02 Oct 2024 08:00:40 -0700, Darrick J. Wong wrote:
+> If unshare encounters a delalloc reservation in the srcmap, that means
+> that the file range isn't shared because delalloc reservations cannot be
+> reflinked.  Therefore, don't try to unshare them.
 > 
-> Looks like this is called from the sb_delete LSM hook, which
-> is only implemented by landlock, and only called from
-> generic_shutdown_super, separated from evict_inodes only by call
-> to fsnotify_sb_delete.  Why did LSM not hook into that and instead
+> 
 
-An the main thing that fsnotify_sb_delete does is yet another inode
-iteration..
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-Ay chance you all could get together an figure out how to get down
-to a single sb inode iteration per unmount?
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/2] iomap: don't bother unsharing delalloc extents
+      https://git.kernel.org/vfs/vfs/c/f7a4874d977b
+[2/2] iomap: constrain the file range passed to iomap_file_unshare
+      https://git.kernel.org/vfs/vfs/c/a311a08a4237
