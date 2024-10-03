@@ -1,77 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7745812C473;
-	Thu,  3 Oct 2024 08:23:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C9204AEF5;
+	Thu,  3 Oct 2024 08:30:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727943838; cv=none; b=Sly+WIRbilwqbs20diAi13wb1sMQh1/UL/TZaX21is/ng/odLSsA41hirFMVxotBvMkqY8XD+KZz4b4UiWXXbiGswstjzs1CeYfpdJwlbLmhYrhD7aeNINoE1b5oV+Cv3z2BPehZzGVS7bJxVh1NXwRNu6PbFweiyO42yFe6B54=
+	t=1727944214; cv=none; b=KUebA3RvDp2u/0VZ9rQ5Ct/EMVtKkczEEzG7+RH4Hp0WSUVfbZRXXIjvd11NYL9qezsUp4WCt8eGyNo42JQwtXyNUDTLLqDsT5ni5eqKBIE++hVhUk01+Zgv2/0nA9tdqHy97I5EKDMsYBU8/08ZulhgUJbbK/yYDmEQuVcvLDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727943838; c=relaxed/simple;
-	bh=e+cIkQtMZLBK6Z2bEpeCAUcdUT9M5Ca88NIVa+LpYYQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hsGUj+HRYoeJWwGRyPE8e1uGnfqM1NhePSw8wCAr2mOf03lErHnjyQwPA4r1azMiO7OX6x0CzNKGPOt6lTW7vRuPEH16CimKiclEjh7wji8A9m1oyPXGATOWyAC5mt7dvJXvSqSqQapZ4GhCY8GNG2fPeWO4v9pPdrgUfa3w2Fg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KUC47KR0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727944214; c=relaxed/simple;
+	bh=C4YjVWwucQlnFc3Bdyk1mQx7bTga0KsdWJhPjx/3d+A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cNYoQi7YFkRDWChbDN0TMXmZEk5hh1BxPdA1olb4JT1g6TIWwKqlo0PfRCuKRzLskX/0meuqJ+gucUZoNP0qtp/xrGuCzEjFNR2ytJOWvQ1/hy7TsjjCrfzw4EnwId2gRPbFe3SJMZemQjrCmJUZ5yYhhXnuq+7PmrXTXWbucVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z3mY8x/Z; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KUC47KR0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E9DBC4CEC7;
-	Thu,  3 Oct 2024 08:23:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727943838;
-	bh=e+cIkQtMZLBK6Z2bEpeCAUcdUT9M5Ca88NIVa+LpYYQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=KUC47KR0aZ8lajtCDtFFxqlKkL5xbk3+XIA8O1yalr8kNHJc3SnN4cCXSAKLSI9vg
-	 AV+ZQVxfTmr8JCrJQzWsnaiK9B1a9kwNdcazis3Bt12CuFwssVyr1ROerlVsegx/Jo
-	 NTamZotGfQSnG5A1Hh4WLLUERzCaXD2MFUZi/x7MQLYZrhLEiVo0dF27mEneCq+/CR
-	 lX7v9gCVIl+jZ7/cdpjHi76wqgBGl3U/YuNVtIB6aLW6wNL6ihdVJRRcXRJW5QwwIX
-	 xA/JldV8yIGCKg+Rl9xjoo53AKG4Mp0iCi5T/KwYQ4kYte6Qb2ty6GmXvGGkaemwLL
-	 7XnUehgmPfEzQ==
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] iomap: don't bother unsharing delalloc extents
-Date: Thu,  3 Oct 2024 10:23:51 +0200
-Message-ID: <20241003-qualifizieren-skalpell-553802f6ac9f@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241002150040.GB21853@frogsfrogsfrogs>
-References: <20241002150040.GB21853@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z3mY8x/Z"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-37cd0b5515fso417630f8f.2;
+        Thu, 03 Oct 2024 01:30:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1727944211; x=1728549011; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=KgYlSRPdGNueMfiTMqgmWS1pTsWnaZpjKo5fJ+jS3mg=;
+        b=Z3mY8x/Zr1Qt1o7oX3krQqfq/+J0dTxKLzlEoFw5BSlyhsCXY8PGJmudEVcOGUsgY1
+         YCGvTT1MEDR08hIeYfefb81u3NbraqtHl+QkyrWQ0PlMhVkgB+0uEovm6q0/zDzTVIVx
+         sIj9Lz+xaLE8sa8nd7A2DFu8JAQlSFMInvgJ/rm4i5aukpErCJvGtl0Kn0aFa3w21YpK
+         M/X+PmGMtLh43JIpDrKjNYOFFrZ7CJuex9A8xd6PCQ00yvhAg9VAdOTfNlQYJXdGf4wi
+         yitHwyrYc1318/YetOKSuHdn3ftzMUy88wzM83jSlbyviKRw1Dyr+7dyCPKYNQUQHc0l
+         hiQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727944211; x=1728549011;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KgYlSRPdGNueMfiTMqgmWS1pTsWnaZpjKo5fJ+jS3mg=;
+        b=FCBfE9nFPaq25fXZVnQTZffw5fbtuzn/6yp7248bj23IPx3rMBI/GwNVr0OJ+FSPUE
+         3bVRN11QOL0KyfnmvFV5JRvdEm6HT4isQip04YIptpPNHrDwWvPd26oOA+rDXTOn2kAU
+         9IJiRpBxp6PWUVMfWieahHi4Rot0lDVnmXGTLS5YOp5uZ7fzrUZxhJahdwiWkvB5KGRu
+         lqndvzSRtVizUb7KPSJxg4IQeysRKoGhumhsLvSdG8LGS7yrYJyxqGdFNPUbo3k6ny8Y
+         yAXtuVVRoGqOMoYcZHjSvzAG4SqwCZHZXlLru9OPPG92U1w4OPZnbI/Dday0yNaZ9F+0
+         kl/A==
+X-Forwarded-Encrypted: i=1; AJvYcCU2i2sHRcNmX7zwgvlbY6fNSym2dk/5qZ7OtySxPIIA6Eg4d09zYsI2LuPqNK2f72XcopI9BtuYWflu@vger.kernel.org, AJvYcCUx0TIpPBo0if8zWrQJ9s4f6kU9i1wWS1aWCxlkxiQ1PzUjetFoM2g/kSkLEV5sbGAkxf2Yk7lLjH02gA0g@vger.kernel.org, AJvYcCXfzqH8ElxQGIFTCn35W4RIDixauE53MCr7FJb9glcX7WyNybxqwBeFrcxNJQq4EsBQOTo+8u9sIBkieEQcrK4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJEwOyaXGCUewSyFPSXOI1ZGQUky9YAySyaJ53fBJNrszmcpCD
+	p0s4amisPSsD5g/OzzKIeVgZ0uHRbn4/FvRMg+15NSqUnlmwFbP7cOQ5FzAI
+X-Google-Smtp-Source: AGHT+IF8npkmOhbojp5KXFi8cInd8zqhM4R+86JiZ/fJ268SNIVJdHBDzgQCRAJIvhOjCnLqlbpAug==
+X-Received: by 2002:adf:fc49:0:b0:37c:c9b9:3732 with SMTP id ffacd0b85a97d-37cfb8b58d9mr3700396f8f.21.1727944210905;
+        Thu, 03 Oct 2024 01:30:10 -0700 (PDT)
+Received: from void.void ([31.210.180.79])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d081f70b1sm735887f8f.22.2024.10.03.01.30.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Oct 2024 01:30:10 -0700 (PDT)
+Date: Thu, 3 Oct 2024 11:30:07 +0300
+From: Andrew Kreimer <algonell@gmail.com>
+To: Dan Carpenter <dan.carpenter@linaro.org>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix a typo
+Message-ID: <Zv5WD6z0uHtcS6wd@void.void>
+References: <20241002211948.10919-1-algonell@gmail.com>
+ <1fe2c97a-fbb3-42bd-941a-c2538eefab0a@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1153; i=brauner@kernel.org; h=from:subject:message-id; bh=e+cIkQtMZLBK6Z2bEpeCAUcdUT9M5Ca88NIVa+LpYYQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaT9C5nxsK5xa0EdW865h4dP6s63DfH8ujDTxjVI/suS2 HOKrn/edJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEwkcw7DX7k6b3+1Tzu8noVv i7pkbxHtavHjkOtB9UUKn7YoMIYd3szI8OQ9b2n3NSWRvRImqjnuymkS07x7dNs3Tf6zJeDu0+l RDAA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1fe2c97a-fbb3-42bd-941a-c2538eefab0a@stanley.mountain>
 
-On Wed, 02 Oct 2024 08:00:40 -0700, Darrick J. Wong wrote:
-> If unshare encounters a delalloc reservation in the srcmap, that means
-> that the file range isn't shared because delalloc reservations cannot be
-> reflinked.  Therefore, don't try to unshare them.
+On Thu, Oct 03, 2024 at 08:59:42AM +0300, Dan Carpenter wrote:
+> On Thu, Oct 03, 2024 at 12:19:48AM +0300, Andrew Kreimer wrote:
+> > Fix a typo in comments.
+> > 
 > 
-> 
+> Could you explain what the typos are in the commit message so that we can spot
+> it more easily?  It saves a little review time.
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
-
-[1/2] iomap: don't bother unsharing delalloc extents
-      https://git.kernel.org/vfs/vfs/c/f7a4874d977b
-[2/2] iomap: constrain the file range passed to iomap_file_unshare
-      https://git.kernel.org/vfs/vfs/c/a311a08a4237
+Noted, thank you.
