@@ -1,128 +1,205 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1893513D8AC;
-	Thu,  3 Oct 2024 11:03:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68E4313D245;
+	Thu,  3 Oct 2024 11:46:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727953385; cv=none; b=g46OVW9dScBmuc4BHmotyc5o0j/l9CXF+HVGSa0odf3HcxHYDu7i2jjU2xy8eMh3cMJU/PmoFd7KzZMfOyg2IN/5r48vjXUiJ4cZbFALfCR1CR3kLBNlBdfg4q6TNr6zIbFIx9RHHn9VyWITJrdl60+ikylM1Y0ujeuAk8/Pjxw=
+	t=1727955968; cv=none; b=DL1s6jAVrkvZbConfRBz4WuEI9v7Lct3k/dc58xZPjTM9RPU+HXMbZE8LIE/dTc4Xsi77fQK9D97+sXM/RYka9cqBT827crw8qzub84iPtp/GtXA5M1YUWvNTV7Eu+A6a5xb0oCCqT3YCFdcIbjRMJga5ro3Swj0n+qMpu6M7/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727953385; c=relaxed/simple;
-	bh=vsCv+tUHiFaWN8KpmPI5wjINPuThCTLc+DXFhE/dMtw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ro5Vl2uw04i6kGrIXGeWeTqp816FNOicSGPryLE2qLirq4LULzvxYTolhLLyClMgbRX21cGtkMQw7k/dVE4eusrbF7vckv/LKcon8+DEHAeI772Tiae/0WyNnaS6r/0jrltl29KEVEsYAivctFmakuwMt5xt38oKWC8p1S0cHD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TcJ3AUMV; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1727955968; c=relaxed/simple;
+	bh=uYxntOLomNurH/glEymVuBYbQJqrhAopyIorvKSj8zQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z4CBAGstm//0rstAPbypd/AepsVeIuuaTOPprbqG4K3l/fowJLJwUpd1kCSWFrJp0OiwM4cL9rsfDnb7eCYccdQK6XL7N/tGMSdSgNxLvJY45qjP5qx3MISaYjfjJle0bie1bon0eCyxWygtkMic8LxgDjzTp4x2eGl/G+n//b4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=feY+wyL9; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=sz6F9+5Z; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=feY+wyL9; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=sz6F9+5Z; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TcJ3AUMV"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-71979bf5e7aso591203b3a.1;
-        Thu, 03 Oct 2024 04:03:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727953383; x=1728558183; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=vsCv+tUHiFaWN8KpmPI5wjINPuThCTLc+DXFhE/dMtw=;
-        b=TcJ3AUMVvs000uDH7DQtB2Rrbyt05Cg/P5/U6a5nJggrPkK1ns4R50+7U9EKY9zxue
-         z6+7jzAbvLeYPOVnmM/MPuwUwvEMw3A91/MZzOVnvjFCDt/hayYz8sVs5By40p1AMU3l
-         tzqG269DoN6ti1/ytv8R+JbCtkt5Pga5VNBS3ccqqF/lNto8autOHeOw65KuZ5DjXU/b
-         XnlybDLbVh7Er3RggoPuGM4F7g8l/nCh3HbahQZ2iE4IbL1+KFhaBTZ193Ws+pfLW60B
-         7QTdAj504FPiU544EeZfbkzRQd5YOxQgSD3nDFgb5GS5eJf3edwc6yzVsnAwVIT4Y1T+
-         KnQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727953383; x=1728558183;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=vsCv+tUHiFaWN8KpmPI5wjINPuThCTLc+DXFhE/dMtw=;
-        b=RxuqtmJDT5N7x4S4eP6m8szVT5HoSJOTLAgGRwNWLqH6YTBDIPUTapRQ/q1tKpoTCr
-         9jlDgmoPaK1dxmFgTgKOy3IdI93olQFvqF+sfRB32AYoRcs6BSlDXm64y2nSRxjnU7of
-         JqVQv1N8RRaLF4D50UgB3Rs7zQPfEIh6uHOLjywbfXIJpwS4XKAbLOfhlXjjAO2gtMHD
-         CXOWnDYpuFJLwilg6auTVxqcRAXBoJzaTBTjiGlqRNhRO1+uUcCseqqVjjmhB2t1qNfr
-         sAsxIWqnPTwQx4VArZbshhFI1q0TBgD6OGJYFw/s6JNVQ6o3nXWy+hKyZ5/x/COv8+tG
-         Grog==
-X-Forwarded-Encrypted: i=1; AJvYcCXYYd4t7mBnMsaOLgWvIG0TlDh5hkyAgC+Rvr/Wd1Ba5riaipHLCaV7NlDOU/2bBNnB199g7AYNJ6s=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1ClVxkO3Nm/YUZLVcLIMuhAION+wFpM/fyqt8H94QzdUdLopO
-	ZxMDI+eJucEJ/gXcgYchMe/HolahBcZQi806LGYWKXrT/t9skD5r
-X-Google-Smtp-Source: AGHT+IGYh3VfpLMGmYt+kGqDimvOWMw77H3g1qA/Bn6vaVdplJxzhFFTTMdX0XgfsBcCXHzWjyxiEA==
-X-Received: by 2002:a05:6a00:a08:b0:710:5825:5ba0 with SMTP id d2e1a72fcca58-71dc5c43f46mr10324406b3a.3.1727953383281;
-        Thu, 03 Oct 2024 04:03:03 -0700 (PDT)
-Received: from [192.168.51.233] ([206.237.119.150])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71dd9d6f944sm1055203b3a.42.2024.10.03.04.02.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Oct 2024 04:03:02 -0700 (PDT)
-Message-ID: <7cdbc4b1f7634e650168fa6cb83fc832e6c9b803.camel@gmail.com>
-Subject: Re: [PATCH 2/2] iomap: constrain the file range passed to
- iomap_file_unshare
-From: Julian Sun <sunjunchao2870@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>, Christian Brauner
-	 <brauner@kernel.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs
-	 <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Brian
-	Foster <bfoster@redhat.com>, jack@suse.cz
-Date: Thu, 03 Oct 2024 19:02:57 +0800
-In-Reply-To: <20241002150213.GC21853@frogsfrogsfrogs>
-References: <20241002150040.GB21853@frogsfrogsfrogs>
-	 <20241002150213.GC21853@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.46.4-2 
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="feY+wyL9";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="sz6F9+5Z";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="feY+wyL9";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="sz6F9+5Z"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 9047F1FDE6;
+	Thu,  3 Oct 2024 11:46:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727955964; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YcC68ZzlwFoukPB1up1folji2OO+BVaGy0P+ZZAdd5Y=;
+	b=feY+wyL94AZGixecMwLvGBEloL+wvtyZGZlf6Da4/pw0GOWAYk+9bElFoMMIUzIaBksBFt
+	IktvpH7NuVDiCD7/w2V8AXkoHL78X1yKvSZU9/y8u4r2cHcGQNuoUO9awhjvlXhrdoU3Rf
+	MedlNd8WYcmzI2/u9d0tuwQxTeCcLtE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727955964;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YcC68ZzlwFoukPB1up1folji2OO+BVaGy0P+ZZAdd5Y=;
+	b=sz6F9+5Za9PWzZFXOsZGjNi9C9aj46at2HjHlbluoZ4/HWH+eLHQRGMC/zRJZFiDuQ5YGO
+	Jeke18qX0qlVLECQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727955964; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YcC68ZzlwFoukPB1up1folji2OO+BVaGy0P+ZZAdd5Y=;
+	b=feY+wyL94AZGixecMwLvGBEloL+wvtyZGZlf6Da4/pw0GOWAYk+9bElFoMMIUzIaBksBFt
+	IktvpH7NuVDiCD7/w2V8AXkoHL78X1yKvSZU9/y8u4r2cHcGQNuoUO9awhjvlXhrdoU3Rf
+	MedlNd8WYcmzI2/u9d0tuwQxTeCcLtE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727955964;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YcC68ZzlwFoukPB1up1folji2OO+BVaGy0P+ZZAdd5Y=;
+	b=sz6F9+5Za9PWzZFXOsZGjNi9C9aj46at2HjHlbluoZ4/HWH+eLHQRGMC/zRJZFiDuQ5YGO
+	Jeke18qX0qlVLECQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7DAD2139CE;
+	Thu,  3 Oct 2024 11:46:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id f8GoHvyD/mZ+GgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 03 Oct 2024 11:46:04 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 0B8AAA086F; Thu,  3 Oct 2024 13:45:56 +0200 (CEST)
+Date: Thu, 3 Oct 2024 13:45:55 +0200
+From: Jan Kara <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
+	torvalds@linux-foundation.org
+Subject: Re: [RFC PATCH 0/7] vfs: improving inode cache iteration scalability
+Message-ID: <20241003114555.bl34fkqsja4s5tok@quack3>
+References: <20241002014017.3801899-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241002014017.3801899-1-david@fromorbit.com>
+X-Spam-Score: -3.79
+X-Spamd-Result: default: False [-3.79 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.19)[-0.967];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MISSING_XM_UA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-T24gV2VkLCAyMDI0LTEwLTAyIGF0IDA4OjAyIC0wNzAwLCBEYXJyaWNrIEouIFdvbmcgd3JvdGU6
-Cj4gRnJvbTogRGFycmljayBKLiBXb25nIDxkandvbmdAa2VybmVsLm9yZz4KPiAKPiBGaWxlIGNv
-bnRlbnRzIGNhbiBvbmx5IGJlIHNoYXJlZCAoaS5lLiByZWZsaW5rZWQpIGJlbG93IEVPRiwgc28g
-aXQgbWFrZXMKPiBubyBzZW5zZSB0byB0cnkgdG8gdW5zaGFyZSByYW5nZXMgYmV5b25kIEVPRi7C
-oCBDb25zdHJhaW4gdGhlIGZpbGUgcmFuZ2UKPiBwYXJhbWV0ZXJzIGhlcmUgc28gdGhhdCB3ZSBk
-b24ndCBoYXZlIHRvIGRvIHRoYXQgaW4gdGhlIGNhbGxlcnMuCj4gCj4gRml4ZXM6IDVmNGU1NzUy
-YThhMyAoImZzOiBhZGQgaW9tYXBfZmlsZV9kaXJ0eSIpCj4gU2lnbmVkLW9mZi1ieTogRGFycmlj
-ayBKLiBXb25nIDxkandvbmdAa2VybmVsLm9yZz4KPiAtLS0KPiDCoGZzL2RheC5jwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoCB8wqDCoMKgIDYgKysrKystCj4gwqBmcy9pb21hcC9idWZmZXJl
-ZC1pby5jIHzCoMKgwqAgNiArKysrKy0KPiDCoDIgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9u
-cygrKSwgMiBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZnMvZGF4LmMgYi9mcy9kYXgu
-Ywo+IGluZGV4IGJlY2I0YTY5MjBjNmEuLmM2MmFjZDI4MTJmOGQgMTAwNjQ0Cj4gLS0tIGEvZnMv
-ZGF4LmMKPiArKysgYi9mcy9kYXguYwo+IEBAIC0xMzA1LDExICsxMzA1LDE1IEBAIGludCBkYXhf
-ZmlsZV91bnNoYXJlKHN0cnVjdCBpbm9kZSAqaW5vZGUsIGxvZmZfdAo+IHBvcywgbG9mZl90IGxl
-biwKPiDCoMKgwqDCoMKgwqDCoMKgc3RydWN0IGlvbWFwX2l0ZXIgaXRlciA9IHsKPiDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoC5pbm9kZcKgwqDCoMKgwqDCoMKgwqDCoMKgPSBpbm9k
-ZSwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoC5wb3PCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqA9IHBvcywKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLmxlbsKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoD0gbGVuLAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgLmZsYWdzwqDCoMKgwqDCoMKgwqDCoMKgwqA9IElPTUFQX1dSSVRFIHwgSU9NQVBfVU5TSEFS
-RSB8Cj4gSU9NQVBfREFYLAo+IMKgwqDCoMKgwqDCoMKgwqB9Owo+ICvCoMKgwqDCoMKgwqDCoGxv
-ZmZfdCBzaXplID0gaV9zaXplX3JlYWQoaW5vZGUpOwo+IMKgwqDCoMKgwqDCoMKgwqBpbnQgcmV0
-Owo+IMKgCj4gK8KgwqDCoMKgwqDCoMKgaWYgKHBvcyA8IDAgfHwgcG9zID49IHNpemUpCj4gK8Kg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJldHVybiAwOwo+ICsKPiArwqDCoMKgwqDCoMKg
-wqBpdGVyLmxlbiA9IG1pbihsZW4sIHNpemUgLSBwb3MpOwo+IMKgwqDCoMKgwqDCoMKgwqB3aGls
-ZSAoKHJldCA9IGlvbWFwX2l0ZXIoJml0ZXIsIG9wcykpID4gMCkKPiDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoGl0ZXIucHJvY2Vzc2VkID0gZGF4X3Vuc2hhcmVfaXRlcigmaXRlcik7
-Cj4gwqDCoMKgwqDCoMKgwqDCoHJldHVybiByZXQ7Cj4gZGlmZiAtLWdpdCBhL2ZzL2lvbWFwL2J1
-ZmZlcmVkLWlvLmMgYi9mcy9pb21hcC9idWZmZXJlZC1pby5jCj4gaW5kZXggYzFjNTU5ZTBjYzA3
-Yy4uNzhlYmQyNjVmNDI1OSAxMDA2NDQKPiAtLS0gYS9mcy9pb21hcC9idWZmZXJlZC1pby5jCj4g
-KysrIGIvZnMvaW9tYXAvYnVmZmVyZWQtaW8uYwo+IEBAIC0xMzc1LDExICsxMzc1LDE1IEBAIGlv
-bWFwX2ZpbGVfdW5zaGFyZShzdHJ1Y3QgaW5vZGUgKmlub2RlLCBsb2ZmX3QKPiBwb3MsIGxvZmZf
-dCBsZW4sCj4gwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBpb21hcF9pdGVyIGl0ZXIgPSB7Cj4gwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAuaW5vZGXCoMKgwqDCoMKgwqDCoMKgwqDCoD0g
-aW5vZGUsCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAucG9zwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgPSBwb3MsCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoC5sZW7C
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqA9IGxlbiwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoC5mbGFnc8KgwqDCoMKgwqDCoMKgwqDCoMKgPSBJT01BUF9XUklURSB8IElPTUFQX1VO
-U0hBUkUsCj4gwqDCoMKgwqDCoMKgwqDCoH07Cj4gK8KgwqDCoMKgwqDCoMKgbG9mZl90IHNpemUg
-PSBpX3NpemVfcmVhZChpbm9kZSk7Cj4gwqDCoMKgwqDCoMKgwqDCoGludCByZXQ7Cj4gwqAKPiAr
-wqDCoMKgwqDCoMKgwqBpZiAocG9zIDwgMCB8fCBwb3MgPj0gc2l6ZSkKPiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuIDA7Cj4gKwo+ICvCoMKgwqDCoMKgwqDCoGl0ZXIubGVu
-ID0gbWluKGxlbiwgc2l6ZSAtIHBvcyk7Cj4gwqDCoMKgwqDCoMKgwqDCoHdoaWxlICgocmV0ID0g
-aW9tYXBfaXRlcigmaXRlciwgb3BzKSkgPiAwKQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgaXRlci5wcm9jZXNzZWQgPSBpb21hcF91bnNoYXJlX2l0ZXIoJml0ZXIpOwo+IMKgwqDC
-oMKgwqDCoMKgwqByZXR1cm4gcmV0OwoKU29ycnkgSSBkaWRu4oCZdCB1cGRhdGUgdGhlIHBhdGNo
-IHNvb25lcuKAlEkgd2FzIHBsYW5uaW5nIHRvIGdldCB0byBpdCBhZnRlcgp3cmFwcGluZyB1cCBt
-eSB3ZWVrLWxvbmcgdmFjYXRpb24uLi4gQW55d2F5LCB0aGFua3MgZm9yIHRoZSBwYXRjaCwgaXQg
-bG9va3MKZ3JlYXQhCgpUaGFua3MsCi0tIApKdWxpYW4gU3VuIDxzdW5qdW5jaGFvMjg3MEBnbWFp
-bC5jb20+Cg==
+Hi Dave!
 
+On Wed 02-10-24 11:33:17, Dave Chinner wrote:
+> There are two superblock iterator functions provided. The first is a
+> generic iterator that provides safe, reference counted inodes for
+> the callback to operate on. This is generally what most sb->s_inodes
+> iterators use, and it allows the iterator to drop locks and perform
+> blocking operations on the inode before moving to the next inode in
+> the sb->s_inodes list.
+> 
+> There is one quirk to this interface - INO_ITER_REFERENCE - because
+> fsnotify iterates the inode cache -after- evict_inodes() has been
+> called during superblock shutdown to evict all non-referenced
+> inodes. Hence it should only find referenced inodes, and it has
+> a check to skip unreferenced inodes. This flag does the same.
+
+Overall I really like the series. A lot of duplicated code removed and
+scalability improved, we don't get such deals frequently :) Regarding
+INO_ITER_REFERENCE I think that after commit 1edc8eb2e9313 ("fs: call
+fsnotify_sb_delete after evict_inodes") the check for 0 i_count in
+fsnotify_unmount_inodes() isn't that useful anymore so I'd be actually fine
+dropping it (as a separate patch please).
+
+That being said I'd like to discuss one thing: As you have surely noticed,
+some of the places iterating inodes perform additional checks on the inode
+to determine whether the inode is interesting or not (e.g. the Landlock
+iterator or iterators in quota code) to avoid the unnecessary iget / iput
+and locking dance. The inode refcount check you've worked-around with
+INO_ITER_REFERENCE is a special case of that. Have you considered option to
+provide callback for the check inside the iterator?
+
+Also maybe I'm went a *bit* overboard here with macro magic but the code
+below should provide an iterator that you can use like:
+
+	for_each_sb_inode(sb, inode, inode_eligible_check(inode)) {
+		do my stuff here
+	}
+
+that will avoid any indirect calls and will magically handle all the
+cleanup that needs to be done if you break / jump out of the loop or
+similar. I actually find such constructs more convenient to use than your
+version of the iterator because there's no need to create & pass around the
+additional data structure for the iterator body, no need for special return
+values to abort iteration etc.
+
+								Honza
+
+/* Find next inode on the inode list eligible for processing */
+#define sb_inode_iter_next(sb, inode, old_inode, inode_eligible) 	\
+({									\
+	struct inode *ret = NULL;					\
+									\
+	cond_resched();							\
+	spin_lock(&(sb)->s_inode_list_lock);				\
+	if (!(inode))							\
+		inode = list_first_entry((sb)->s_inodes, struct inode,	\
+					 i_sb_list);			\
+	while (1) {							\
+		if (list_entry_is_head(inode, (sb)->s_inodes, i_sb_list)) { \
+			spin_unlock(&(sb)->s_inode_list_lock);		\
+			break;						\
+		}							\
+		spin_lock(&inode->i_lock);				\
+		if ((inode)->i_state & (I_NEW | I_FREEING | I_WILL_FREE) || \
+		    !inode_eligible) {					\
+			spin_unlock(&(inode)->i_lock);			\
+			continue;					\
+		}							\
+		__iget(inode);						\
+		spin_unlock(&(inode)->i_lock);				\
+		spin_unlock(&(sb)->s_inode_list_lock);			\
+		iput(*old_inode);					\
+		*old_inode = inode;					\
+		ret = inode;						\
+		break;							\
+	}								\
+	ret;								\
+})
+
+#define for_each_sb_inode(sb, inode, inode_eligible)			\
+	for (DEFINE_FREE(old_inode, struct inode *, if (_T) iput(_T)),	\
+	     inode = NULL;						\
+	     inode = sb_inode_iter_next((sb), inode, &old_inode,	\
+					 inode_eligible);		\
+	    )
+	     
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
