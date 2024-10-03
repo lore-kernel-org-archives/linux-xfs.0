@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B699D1E52C
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Oct 2024 15:08:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8349A1E52C;
+	Thu,  3 Oct 2024 15:08:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727968092; cv=none; b=t4Appn/J/ODGZA2ibRlWlJWUTP33IlRJNDwke6Qp1vySD7/fAukDxCW1TjD//wfw7Re5RZca2S7xma60fpRzGG71yGC0DnidY4apR5aGMbzgTWIpqonCNGiaKbVuhelVfZwsw2Sf9pZcnvJC/QfBNqvmnIyzLCTA0gqS9tag+1g=
+	t=1727968136; cv=none; b=ZWRsQTn+L99X+LlHK0P2Z2nHCYNeXvkwDm9jxDEnTFdtm5qt3VE3b1LcVGztuFhfy+al55kLAwHUKtqDqXnxYE5D4Sk8NWTTWQMK3k30pmI5MHTKd316iDnk2u/ASiMJ3u5UB2y8DRyevk/2ueSiC+Px3bKE5pROZKus3vZkpBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727968092; c=relaxed/simple;
+	s=arc-20240116; t=1727968136; c=relaxed/simple;
 	bh=bYHbMDFdgJDEt8lUvQXp1KBTl3OYgaXTHCRAdASXRj8=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=fo0HosYCx4nynaGUv9J8BaB9CbFlCM4XMfkujD4IWSwdnbyoVBx3nTiTGRrc3l/YsrX1vY4rZSmJc0DkHu/kBNXLcSB4kGsw2Lk57rg+rjaMljmbZqCXb405TrDB4MfSLwsXXKyqC13PgxL7yC9ScVO5zs3OWEkYO7MkBrWspvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YP4gTBuC; arc=none smtp.client-ip=10.30.226.201
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=GtWeMNGj1JcR7nHq7Tcv7ThRUmr9ghjyhMMDdjRfNMtbVJxTPorGNly4x88GP/IiDrXaB9tmQNIlKvDSKXFrhFv0iZBMX3dteVT63rGdwZgizO2E7uhXoWF17ob65mj4kKyoSAAzu2GEFKB4jy5ARfEnFVf1huhChfcJKcADNwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KxSx+nQJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YP4gTBuC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 263F4C4CEC5;
-	Thu,  3 Oct 2024 15:08:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KxSx+nQJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF1D5C4CEC5;
+	Thu,  3 Oct 2024 15:08:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727968092;
+	s=k20201202; t=1727968135;
 	bh=bYHbMDFdgJDEt8lUvQXp1KBTl3OYgaXTHCRAdASXRj8=;
 	h=Date:Subject:From:To:Cc:From;
-	b=YP4gTBuCINrfGxWSXAjfKovKSUAdDgrvQ6DBLp1X87I9Z5zEqnD59lFBpYh12nN6A
-	 9G6pZlIXIubV9vgnIwEEpSkwNRnkEWY2v//eqij7jWmgoqAE1hOHyYKZ4fLZ4OVzRv
-	 v0oyVPvq8w3oBjF41dVzSje1EtuDjpsM1syxqV05GJMO681SVwZpcJQ/F8p4Ab1/sx
-	 sNPibk/XWNwU0z1FXGLlGNEa9sLig6yqd2xK9Br8aDStdSAGMysGfpUONylnq+akls
-	 0xg2EjBUEeVbJrONG4lcpgUpZggIEPmbFKRQIHIOHgvil+qnmKFB2xrT+v0aZ9y/cU
-	 9srBqV3D8OhEg==
-Date: Thu, 03 Oct 2024 08:08:11 -0700
+	b=KxSx+nQJqsKjDfSZ5Mx3pPKMvrVMozM+/iNrKDcpMIsBMzXNcnlzZBDhPccJhqyJJ
+	 hkMl79J5iVuTbn8wDTXhyFWDk7lOVeazxahoDWlxWGKSq0xXktFR48D2E0LLtRoDhb
+	 y56o4Nz0I2yaO3W9dV9iePgjuduOHcVYYCtTWgrpCedLl4vIlweWXoyxBuairdS53Z
+	 1CKjDQUWC5oQmcAO1LMthkF3rp8plxzwIbAFrIXDr/mi9X+OOuCWM71ll7ZziGOlaD
+	 qTNRoKVjpeSXNZbzP2AvE0NK3OZRy7L/rr7p4qCA0W5zdg6FvBTnQ89ek9flRY/aFg
+	 3kvD4xwWA7MpQ==
+Date: Thu, 03 Oct 2024 08:08:55 -0700
 Subject: [PATCHSET] fsdax/xfs: unshare range fixes for 6.12
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: brauner@kernel.org, cem@kernel.org, willy@infradead.org, djwong@kernel.org
-Cc: ruansy.fnst@fujitsu.com, linux-xfs@vger.kernel.org,
- ruansy.fnst@fujitsu.com, hch@lst.de
-Message-ID: <172796802770.1129629.8841039898082413241.stgit@frogsfrogsfrogs>
+To: willy@infradead.org, brauner@kernel.org, djwong@kernel.org, cem@kernel.org
+Cc: ruansy.fnst@fujitsu.com, ruansy.fnst@fujitsu.com,
+ linux-fsdevel@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <172796813251.1131942.12184885574609980777.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
