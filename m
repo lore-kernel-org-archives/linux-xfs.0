@@ -1,129 +1,159 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2159613B780;
-	Thu,  3 Oct 2024 10:12:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6008378289
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Oct 2024 10:36:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727950346; cv=none; b=ZEYIdt/Ed+jOd35MjbPp4gCYeMmHm5GkGmRtRjttzEo4+gnmLF5m4CIQpU25xj7fi71+FL4VfMjhDlx6lVIvd4pRvJgfZQuSvQuyxD0XvfehrRW7/6E1JNx+SxFw5i37j1CDcaqytCKQoqACSrT4YBE2n+gh3MY7RGvJRJeRXlE=
+	t=1727951766; cv=none; b=XIHIQX0o+sFrxCxhYqsMo2/RColjq4gZQcdgENLcdZuWZt+0PCezLxwHKLNRNnOwOABxq8tfhROa8sisP1QlR7H0BQeBuT2ddSof5UE15tmT1s6qUnik6z0rMwIEGAlyzLRWYBYimr9xDHT/nFYnjR9uRw/x/7tUo7YMkV7eJcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727950346; c=relaxed/simple;
-	bh=KzG8zL4AzG1hFYloYuqzq+fGW6PcU8QWSrNexnu3abE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oAOXPV9NXgkdwUAJV/V3MPGPVZB1n401LOeUatHibCkczmXzNf4SLtt9qwGiHEkTchJoIrNTDmf+8tfzKMjlTnaOqRYUpAclbqns8Zq3FNc6sNMo9+hHzy/Y8pNPOkZjRFD9jRABRd9ck4YnuQbGIp+RZ7QRdP/P0FN6ei0EJWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=f+UPzySf; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1727951766; c=relaxed/simple;
+	bh=8oK4I+JBIU/DL1qfcLk0wLwR/KnTVzyuzZnecZa4deU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=smkYD/UVYP2fNif6FsPj39+drfhr3sn3dnvbJuyVB4jhXSSMrTxlztTZp4Nfl/OxzHtobECcsz4OcKd0GAXzrrp1QddReyiCNQxCr7OC5oVbOtSAE14yl1weBpDMXI5d/M8s+u5zwAfu/UqN/SnzLyPq/OfZPlGl//HF+Wa6/YU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=tBT6MHGK; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="f+UPzySf"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4939tOFn021499;
-	Thu, 3 Oct 2024 10:12:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from
-	:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding; s=pp1; bh=/JQEd6iw662ZfguHaBbkaGClwE
-	ytKH5/pcNOoNSB/s4=; b=f+UPzySf0lV0cbfE/4H2NRAwEe2doG0sLcNJeZi1n0
-	3mpLYoM2jrI+F3ndmZ4Z1Egvv4JLlSi76DcL87mkC4C5DC5Q+BqVXCcTcIJbOjSK
-	RML9zkzam3oOjndgU/qOLGkIxeDJXG3YWapTgyC0aX1sQSLU0pcYS3ZaH6buMPxK
-	2fXA0TAoFg/kdqRuISPUT3IJ83HdSQX7cz1FxwfCmEl23OQsV7lsktxWhSOWheUn
-	mQNJxBicbmR9dRp8hXHy8PQVMWSIipCzDEZDXxBxq89ni7RJs6bUA0nCQWdbXgrz
-	lkOrn4giVqyeiFPfMeoQF5SGe1/0Ukr+7ASuhfY9g3bA==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 421s2cr2ea-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Oct 2024 10:12:14 +0000 (GMT)
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 493ACDex030614;
-	Thu, 3 Oct 2024 10:12:13 GMT
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 421s2cr2e5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Oct 2024 10:12:13 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4938AMPg017866;
-	Thu, 3 Oct 2024 10:12:12 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 41xw4n76wq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Oct 2024 10:12:12 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 493ACAw857999672
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 3 Oct 2024 10:12:10 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8D49C2004B;
-	Thu,  3 Oct 2024 10:12:10 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 50D282004E;
-	Thu,  3 Oct 2024 10:12:09 +0000 (GMT)
-Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.in.ibm.com (unknown [9.109.253.82])
-	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu,  3 Oct 2024 10:12:09 +0000 (GMT)
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: linux-xfs@vger.kernel.org
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>, dchinner@redhat.com,
-        Chandan Babu R <chandan.babu@oracle.com>
-Subject: [PATCH] xfs: Check for deallayed allocations before setting extsize
-Date: Thu,  3 Oct 2024 15:42:07 +0530
-Message-ID: <20241003101207.205083-1-ojaswin@linux.ibm.com>
-X-Mailer: git-send-email 2.43.5
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="tBT6MHGK"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-20bb39d97d1so6105055ad.2
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Oct 2024 03:36:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727951764; x=1728556564; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=meBlkFYSu8tQQG8fzuHlW0Llugrqw0c4D3dP4w0sd0k=;
+        b=tBT6MHGKDoVN6TKilxvrhHMf7tMu/9GjUI4PWr7im5rMk0zLW4UlNJrW+jSCGXKZts
+         rdeprrrtJMFXrOMbKIwFdcTJE/W6ihpZdbq19h3ZAqJNpALTWR1Fim6/8i2JOYD6/x7+
+         fgL5KHJFVKRH798UKo9r1KTlkc1ggz0Quw7kD3wKhel+IcdaeamNrsLA675i7hGq32rW
+         jbmOAoPavdiyq808JBj4Ft3cx2HwpKtXCb+DVr2GdMa/nOiygJHDcCvjXqXYzUvbY4RX
+         uYwaSZv0cwZfWrin/onvdeT5iOS4+xV7IY/VMxtil+UWy1A9XownGQKDfx8yf1PBX8QQ
+         1+mw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727951764; x=1728556564;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=meBlkFYSu8tQQG8fzuHlW0Llugrqw0c4D3dP4w0sd0k=;
+        b=XdKrRICsWLEQyGtfNaNIsw3vg7k742Fz5MZXm+sFyfr9MPwrqVUnH4dr+XgVN7WrYm
+         rY0KlHM1Adr/GrM8GSR03/q5Lzwl/0Vql6TpHcRX43I3l9tGGO9lIDLK0BDtu30wq6KD
+         AzFLJT/cG5C+g/MbCHJWtB/I/R+BbSKaG1iv/EvZxMTOOI4ap7pteRTMwqRGumPWBCYV
+         eHzVsfV/Ug4ZSA3uf8f+J/ozDXDcs/ULavG9SQLzimxnYH956XUJ8HwuwhTGG/qigVMK
+         pZthqdMH0TymdijAcuac/63OcmswkIsPrR/DXH/v4cHYP5KX30faFz9gJ4rRNw4iRyTd
+         y00w==
+X-Forwarded-Encrypted: i=1; AJvYcCWvzFNtqlEi37USLM2AB3Y7XGpHNlfo/wjzxXvaNDIGAwehvWD5X1gx7ZaImdWR631GcPnGBAFV7JA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzQprYXy+WDpeCKbEukuk/TXBFqQr/TFuLuSf0QGgqpZOIDsv0I
+	uSTZ+uyu0xfwg2ngFsZjnLdmiCkh/NNZmRlqAlE9SPZk45aun0B1+DMoIXH8/rM=
+X-Google-Smtp-Source: AGHT+IHAbmLCjTe9ucPXUjhaOkLLAkmHqYr94XYuHe2VWk7hgIGyvqHOxEgqNzNISkYi8RQMpJxqkg==
+X-Received: by 2002:a17:902:f68d:b0:206:8acc:8871 with SMTP id d9443c01a7336-20bc5a13640mr66308755ad.31.1727951763533;
+        Thu, 03 Oct 2024 03:36:03 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20beeca2256sm6720985ad.91.2024.10.03.03.36.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Oct 2024 03:36:02 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1swJBf-00DLiE-2H;
+	Thu, 03 Oct 2024 20:35:59 +1000
+Date: Thu, 3 Oct 2024 20:35:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
+	torvalds@linux-foundation.org
+Subject: Re: [PATCH 2/7] vfs: add inode iteration superblock method
+Message-ID: <Zv5zj2k8X3ZasfYB@dread.disaster.area>
+References: <20241002014017.3801899-1-david@fromorbit.com>
+ <20241002014017.3801899-3-david@fromorbit.com>
+ <Zv5D3ag3HlYFsCAX@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: nux7zMiW8P7ENlx94t1xnhuJK9F4SMeA
-X-Proofpoint-ORIG-GUID: 0kZIqqGFzDMT8mS0f47tBTu1BpvJ3cGJ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-03_06,2024-10-03_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=572
- adultscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0 clxscore=1011
- priorityscore=1501 bulkscore=0 impostorscore=0 spamscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2408220000
- definitions=main-2410030065
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zv5D3ag3HlYFsCAX@infradead.org>
 
-Extsize is allowed to be set on files with no data in it. For this,
-we were checking if the files have extents but missed to check if
-delayed extents were present. This patch adds that check.
+On Thu, Oct 03, 2024 at 12:12:29AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 02, 2024 at 11:33:19AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Add a new superblock method for iterating all cached inodes in the
+> > inode cache.
+> 
+> The method is added later, this just adds an abstraction.
 
-**Without the patch (SUCCEEDS)**
+Ah, I forgot to remove that from the commit message when I split the
+patch up....
 
-$ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
+> > +/**
+> > + * super_iter_inodes - iterate all the cached inodes on a superblock
+> > + * @sb: superblock to iterate
+> > + * @iter_fn: callback to run on every inode found.
+> > + *
+> > + * This function iterates all cached inodes on a superblock that are not in
+> > + * the process of being initialised or torn down. It will run @iter_fn() with
+> > + * a valid, referenced inode, so it is safe for the caller to do anything
+> > + * it wants with the inode except drop the reference the iterator holds.
+> > + *
+> > + */
+> 
+> Spurious empty comment line above.
+> 
+> > +void super_iter_inodes_unsafe(struct super_block *sb, ino_iter_fn iter_fn,
+> > +		void *private_data)
+> > +{
+> > +	struct inode *inode;
+> > +	int ret;
+> > +
+> > +	rcu_read_lock();
+> > +	spin_lock(&sb->s_inode_list_lock);
+> > +	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
+> > +		ret = iter_fn(inode, private_data);
+> > +		if (ret == INO_ITER_ABORT)
+> > +			break;
+> > +	}
+> 
+> Looking at the entire series, splitting the helpers for the unsafe
+> vs safe iteration feels a bit of an odd API design given that the
+> INO_ITER_REFERENCED can be passed to super_iter_inodes, but is an
+> internal flag pass here to the file system method.
 
-wrote 1024/1024 bytes at offset 0
-1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
+The INO_ITER_REFERENCED flag is a hack to support the whacky
+fsnotify and landlock iterators that are run after evict_inodes()
+(which you already noticed...).  i.e.  there should not be any
+unreferenced inodes at this point, so if any are found they should
+be skipped.
 
-**With the patch (FAILS as expected)**
+I think it might be better to remove that flag and replace the
+iterator implementation with some kind of SB flag and
+WARN_ON_ONCE that fires if a referenced inode is found. With that,
+the flags field for super_iter_inodes() can go away...
 
-$ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
+> Not sure what
+> the best way to do it, but maybe just make super_iter_inodes
+> a wrapper that calls into the method if available, or
+> a generic_iter_inodes_unsafe if the unsafe flag is set, else
+> a plain generic_iter_inodes?
 
-wrote 1024/1024 bytes at offset 0
-1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
-xfs_io: FS_IOC_FSSETXATTR testfile: Invalid argument
+Perhaps. I'll look into it.
 
-Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
----
- fs/xfs/xfs_ioctl.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> > +/* Inode iteration callback return values */
+> > +#define INO_ITER_DONE		0
+> > +#define INO_ITER_ABORT		1
+> > +
+> > +/* Inode iteration control flags */
+> > +#define INO_ITER_REFERENCED	(1U << 0)
+> > +#define INO_ITER_UNSAFE		(1U << 1)
+> 
+> Please adjust the naming a bit to make clear these are different
+> namespaces, e.g. INO_ITER_RET_ and INO_ITER_F_.
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 7226d27e8afc..55b574b43617 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -602,7 +602,8 @@ xfs_ioctl_setattr_check_extsize(
- 	if (!fa->fsx_valid)
- 		return 0;
- 
--	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
-+	if (S_ISREG(VFS_I(ip)->i_mode) &&
-+	    (ip->i_df.if_nextents || ip->i_delayed_blks) &&
- 	    XFS_FSB_TO_B(mp, ip->i_extsize) != fa->fsx_extsize)
- 		return -EINVAL;
- 
+Will do.
+
+-Dave.
 -- 
-2.43.5
-
+Dave Chinner
+david@fromorbit.com
