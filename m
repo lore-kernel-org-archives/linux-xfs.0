@@ -1,87 +1,77 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760E3142E7C;
-	Thu,  3 Oct 2024 09:20:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5ED714AD0C
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Oct 2024 09:59:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727947213; cv=none; b=rXv3XijHoR1CL4a7+5V+OIPG1Bd6V80aiEvI5CUWffRsd8TQlSDrJscXlACocncRxgzvLuDqajdklMQ8hjXdAhfEnIfwBTrwzxLK8ae8O7rAp3xXvpgaTLpfevCjPQo1+crKTZrm7d7BtSP406Y6l8YCFEIGgQuhez59/H0Awn0=
+	t=1727949575; cv=none; b=TvnwVTpdFwkw8lpG1qIhILe2L5hLXyBZR6RZ5qPQSkF1cxb3cOKDhLTm2aWyJZF3VHcFTFanj3biv6eiP9mb7ZI2SL3+jzRdGNIAaa+ckB+KNSBjYMWZo44EaiOOoSeKsYRECTTbBeGcpRmehKdh0HiQxuzNrKEgNfR9HwuUATQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727947213; c=relaxed/simple;
-	bh=HpSg4uPT57z+yFVjv2qUWXRrtFmbShFKEto95tZFuto=;
+	s=arc-20240116; t=1727949575; c=relaxed/simple;
+	bh=ws++fftyryHhCAETNNzTX0HjvxlfudjsCorBxr25E9Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NTrV/pbkCZ1Njz9pZpr0UOu7Z8HakM+UWQ76f1nJMiFtta98P9A0d2iox79ElKk9ogRpaRvAUtZiI7GFW+EQlIO43T7rQfXCKh18ETyJE76RRQlRdzITD2A2O1wZZTwVWmpjzO6S2wt2k9YJSJtYiHy+k/rt6xGkYXielBvQD9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=kINfBTiO; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=XopqQ4Hh; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=kINfBTiO; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=XopqQ4Hh; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=VuBqFUGKqSxwfRzlKrnLzHYJ25+JZ1rwwJJtrnJBBvBrK5oP7EUrmzGnVe8/ETh70cFxRdlg+sRWmXBgYPvpbM3ZsbNdMl4GC5dmRq9q6L5GLjAIX/SHJI6dxBbgosTfwsJJfA9ddfGv9HU9w7h/wfYNXmaOyF8iXk/J/C4ZxLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ixkIPFsQ; arc=none smtp.client-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="kINfBTiO";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="XopqQ4Hh";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="kINfBTiO";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="XopqQ4Hh"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 0994721D1C;
-	Thu,  3 Oct 2024 09:20:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1727947203; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jtiHrCDe2cBAFXvqtg+ujXCV8xUpYaNIQo/MxZah8zs=;
-	b=kINfBTiOs46E5+lwjBmfaTewMASHQMuEx3imq8916qdWtOUloHJO/wibONsr5IXPOpYpAQ
-	2NK77PgCQLL+ZEUon5sSdrOglvd2Rj/ScGkrj9jewMrvRLf08Xh6RdhoGUW+Um8cFIV+IB
-	xTaxfqb2R0tooQl0B01OLli972chZ0E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1727947203;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jtiHrCDe2cBAFXvqtg+ujXCV8xUpYaNIQo/MxZah8zs=;
-	b=XopqQ4Hhpnfww9fNxDYALkapBPpSOo3v9OhDRG0lVS0e1TiwuFDinqG9HRkSupVLgbhc8o
-	IZtHe3qrsm5lElCQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=kINfBTiO;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=XopqQ4Hh
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1727947203; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jtiHrCDe2cBAFXvqtg+ujXCV8xUpYaNIQo/MxZah8zs=;
-	b=kINfBTiOs46E5+lwjBmfaTewMASHQMuEx3imq8916qdWtOUloHJO/wibONsr5IXPOpYpAQ
-	2NK77PgCQLL+ZEUon5sSdrOglvd2Rj/ScGkrj9jewMrvRLf08Xh6RdhoGUW+Um8cFIV+IB
-	xTaxfqb2R0tooQl0B01OLli972chZ0E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1727947203;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jtiHrCDe2cBAFXvqtg+ujXCV8xUpYaNIQo/MxZah8zs=;
-	b=XopqQ4Hhpnfww9fNxDYALkapBPpSOo3v9OhDRG0lVS0e1TiwuFDinqG9HRkSupVLgbhc8o
-	IZtHe3qrsm5lElCQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F3C66139CE;
-	Thu,  3 Oct 2024 09:20:02 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id sQuCO8Jh/mZqagAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 03 Oct 2024 09:20:02 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id B1314A086F; Thu,  3 Oct 2024 11:20:02 +0200 (CEST)
-Date: Thu, 3 Oct 2024 11:20:02 +0200
-From: Jan Kara <jack@suse.cz>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
-	torvalds@linux-foundation.org
-Subject: Re: [PATCH 1/7] vfs: replace invalidate_inodes() with evict_inodes()
-Message-ID: <20241003092002.h4p46cifkodeubjb@quack3>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ixkIPFsQ"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-71c702b2d50so596986b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Oct 2024 02:59:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727949573; x=1728554373; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=FZoVePEjRG3urznVwj0SIfeUiNk8Ws/Gg0iUzR96R7c=;
+        b=ixkIPFsQcNrsGNxCOjHKFh2AFYRm6FRDqg2JkLijTz9+X1TrczYA0uAqvoOXekDvtG
+         uc1VgRBOBHwZpTGKoDmUqRRmKo8j2AE6uL+NaAAdRxQaEyTlFy2wsgBNOScunA/XjWNH
+         gemZhcos3TMMn3L9O6yIbHxpGeU3FbusIxMUhH7KBKexdojjF5c+d5yRtMR0+OxnPCPi
+         gSc4pL5GgIgL46/ZL30Ztb7k+v/X3eNBx0FFpFeqZ3vDnqLiHolbYnYjbiUZJMhIvmIE
+         S6urCvkJLyqxU+zcC7f6KGJDUpZ3mElBOM+RBG7NiD1IR1I27Vd2ikpJxaEmZaqZtSFM
+         Uxuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727949573; x=1728554373;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FZoVePEjRG3urznVwj0SIfeUiNk8Ws/Gg0iUzR96R7c=;
+        b=K3uS+9yRDMXNFYPIG9dRyDknQQZWJ32BrJSGZA0/ueD5SOE3WJi9r2Unr32yZv/C29
+         1tog33w4eFZV+Os+I8oOKVReRzYInRROlJMPZDO49ZeUSZlQ/16M0a1UboZSEv5IG3UV
+         MRm9Y2LlXP4SlUZh3aMjIkC0ZytHM4IvAWZ64Iqzmn3KE7xd9+fPfFkm7sKIsJXoqg1t
+         fBMA8VsfVBEDwMOPjSU7XR765Uf0FZuJZ6QzVe6TwB1IG7Th5iRFvVLo9R/RTjItvuP1
+         zNpXkGSSEaOTDtl/CRst2FQrfo79RZ2UNpQv1SUcckmnX6vzJr7SyQyFpKDIMMPvqMon
+         9B0w==
+X-Forwarded-Encrypted: i=1; AJvYcCUDPN16Be51pLuFuGRcldP+Gb5NxLrBU4aa8WRxIBy5/wMidOx8BoP98iGxAGHOswvGhnfIfAjVhkM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy/5XFBpYKRkz9AhuIAHGly3++/xRs1uuqqkxMYC0NL4QR5KXow
+	LJuqw4H3ia8t1Kw58gNpeDVvyfcWzW/PwIZN4oF+TtVa4YM7iy1n1skGqPyoSzc=
+X-Google-Smtp-Source: AGHT+IHRE80iIS0vtT8WICPYgmm1vV8aDhQHpiTupQ0As/uP52it766oR+Cw0QAYw1lPazD0ArHY1g==
+X-Received: by 2002:a05:6a21:1643:b0:1d5:14ff:a15f with SMTP id adf61e73a8af0-1d5db20a5c0mr10402698637.11.1727949573106;
+        Thu, 03 Oct 2024 02:59:33 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71dd9dee6adsm974968b3a.144.2024.10.03.02.59.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Oct 2024 02:59:32 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1swIcL-00DL4k-2o;
+	Thu, 03 Oct 2024 19:59:29 +1000
+Date: Thu, 3 Oct 2024 19:59:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Kent Overstreet <kent.overstreet@linux.dev>,
+	Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, torvalds@linux-foundation.org
+Subject: Re: [RFC PATCH 0/7] vfs: improving inode cache iteration scalability
+Message-ID: <Zv5rAYEgY3o7Rhju@dread.disaster.area>
 References: <20241002014017.3801899-1-david@fromorbit.com>
- <20241002014017.3801899-2-david@fromorbit.com>
+ <20241002-lethargisch-hypnose-fd06ae7a0977@brauner>
+ <Zv098heGHOtGfw1R@dread.disaster.area>
+ <3lukwhxkfyqz5xsp4r7byjejrgvccm76azw37pmudohvxcxqld@kiwf5f5vjshk>
+ <Zv3H8BxJX2GwNW2Y@dread.disaster.area>
+ <lngs2n3kfwermwuadhrfq2loff3k4psydbjullhecuutthpqz3@4w6cybx7boxw>
+ <Zv32Vow1YdYgB8KC@dread.disaster.area>
+ <20241003091741.vmw3muqt5xagjion@quack3>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -90,139 +80,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241002014017.3801899-2-david@fromorbit.com>
-X-Rspamd-Queue-Id: 0994721D1C
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.01
-X-Spam-Flag: NO
+In-Reply-To: <20241003091741.vmw3muqt5xagjion@quack3>
 
-On Wed 02-10-24 11:33:18, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Oct 03, 2024 at 11:17:41AM +0200, Jan Kara wrote:
+> On Thu 03-10-24 11:41:42, Dave Chinner wrote:
+> > On Wed, Oct 02, 2024 at 07:20:16PM -0400, Kent Overstreet wrote:
+> > > A couple things that help - we've already determined that the inode LRU
+> > > can go away for most filesystems,
+> > 
+> > We haven't determined that yet. I *think* it is possible, but there
+> > is a really nasty inode LRU dependencies that has been driven deep
+> > down into the mm page cache writeback code.  We have to fix that
+> > awful layering violation before we can get rid of the inode LRU.
+> > 
+> > I *think* we can do it by requiring dirty inodes to hold an explicit
+> > inode reference, thereby keeping the inode pinned in memory whilst
+> > it is being tracked for writeback. That would also get rid of the
+> > nasty hacks needed in evict() to wait on writeback to complete on
+> > unreferenced inodes.
+> > 
+> > However, this isn't simple to do, and so getting rid of the inode
+> > LRU is not going to happen in the near term.
 > 
-> As of commit e127b9bccdb0 ("fs: simplify invalidate_inodes"),
-> invalidate_inodes() is functionally identical to evict_inodes().
-> Replace calls to invalidate_inodes() with a call to
-> evict_inodes() and kill the former.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Yeah. I agree the way how writeback protects from inode eviction is not the
+> prettiest one but the problem with writeback holding normal inode reference
+> is that then flush worker for the device can end up deleting unlinked
+> inodes which was causing writeback stalls and generally unexpected lock
+> ordering issues for some filesystems (already forgot the details).
 
-Indeed :). Looks good. Feel free to add:
+Yeah, if we end up in evict() on ext4 it will can then do all sorts
+of whacky stuff that involves blocking, running transactions and
+doing other IO. XFS, OTOH, has been changed to defer all that crap
+to background threads (the xfs_inodegc infrastructure) that runs
+after the VFS thinks the inode is dead and destroyed. There are some
+benefits to having the filesystem inode exist outside the VFS inode
+life cycle....
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+> Now this
+> was more that 12 years ago so maybe we could find a better solution to
+> those problems these days (e.g. interactions between page writeback and
+> page reclaim are very different these days) but I just wanted to warn there
+> may be nasty surprises there.
 
-								Honza
+I don't think the situation has improved with filesytsems like ext4.
+I think they've actually gotten worse - I recently learnt that ext4
+inode eviction can recurse back into the inode cache to instantiate
+extended attribute inodes so they can be truncated to allow inode
+eviction to make progress.
 
-> ---
->  fs/inode.c    | 40 ----------------------------------------
->  fs/internal.h |  1 -
->  fs/super.c    |  2 +-
->  3 files changed, 1 insertion(+), 42 deletions(-)
-> 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 471ae4a31549..0a53d8c34203 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -827,46 +827,6 @@ void evict_inodes(struct super_block *sb)
->  }
->  EXPORT_SYMBOL_GPL(evict_inodes);
->  
-> -/**
-> - * invalidate_inodes	- attempt to free all inodes on a superblock
-> - * @sb:		superblock to operate on
-> - *
-> - * Attempts to free all inodes (including dirty inodes) for a given superblock.
-> - */
-> -void invalidate_inodes(struct super_block *sb)
-> -{
-> -	struct inode *inode, *next;
-> -	LIST_HEAD(dispose);
-> -
-> -again:
-> -	spin_lock(&sb->s_inode_list_lock);
-> -	list_for_each_entry_safe(inode, next, &sb->s_inodes, i_sb_list) {
-> -		spin_lock(&inode->i_lock);
-> -		if (inode->i_state & (I_NEW | I_FREEING | I_WILL_FREE)) {
-> -			spin_unlock(&inode->i_lock);
-> -			continue;
-> -		}
-> -		if (atomic_read(&inode->i_count)) {
-> -			spin_unlock(&inode->i_lock);
-> -			continue;
-> -		}
-> -
-> -		inode->i_state |= I_FREEING;
-> -		inode_lru_list_del(inode);
-> -		spin_unlock(&inode->i_lock);
-> -		list_add(&inode->i_lru, &dispose);
-> -		if (need_resched()) {
-> -			spin_unlock(&sb->s_inode_list_lock);
-> -			cond_resched();
-> -			dispose_list(&dispose);
-> -			goto again;
-> -		}
-> -	}
-> -	spin_unlock(&sb->s_inode_list_lock);
-> -
-> -	dispose_list(&dispose);
-> -}
-> -
->  /*
->   * Isolate the inode from the LRU in preparation for freeing it.
->   *
-> diff --git a/fs/internal.h b/fs/internal.h
-> index 8c1b7acbbe8f..37749b429e80 100644
-> --- a/fs/internal.h
-> +++ b/fs/internal.h
-> @@ -207,7 +207,6 @@ bool in_group_or_capable(struct mnt_idmap *idmap,
->   * fs-writeback.c
->   */
->  extern long get_nr_dirty_inodes(void);
-> -void invalidate_inodes(struct super_block *sb);
->  
->  /*
->   * dcache.c
-> diff --git a/fs/super.c b/fs/super.c
-> index 1db230432960..a16e6a6342e0 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -1417,7 +1417,7 @@ static void fs_bdev_mark_dead(struct block_device *bdev, bool surprise)
->  	if (!surprise)
->  		sync_filesystem(sb);
->  	shrink_dcache_sb(sb);
-> -	invalidate_inodes(sb);
-> +	evict_inodes(sb);
->  	if (sb->s_op->shutdown)
->  		sb->s_op->shutdown(sb);
->  
-> -- 
-> 2.45.2
-> 
-> 
+I suspect the ext4 eviction behaviour is unfixable in any reasonable
+time frame, so the only solution I can come up with is to run the
+iput() call from a background thread context.  (e.g. defer it to a
+workqueue). That way iput_final() and eviction processing will not
+interfere with other writeback operations....
+
+-Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
