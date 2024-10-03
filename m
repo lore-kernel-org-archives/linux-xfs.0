@@ -1,147 +1,226 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7AE51B969;
-	Thu,  3 Oct 2024 15:09:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F4A519D077;
+	Thu,  3 Oct 2024 16:17:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727968189; cv=none; b=OrunVc/l2vbMZc0Pjt4of2f9RuXVYSgmsFdHJ9lKaah/U9u4erELf1MrreiovtM0eMnKGQ+9U72Q1/Tqkpqle9MvfmqrKtCfiGcrCq7NxsDwbWTcyfwxGOuPn+rvLdniw47nw1ZaJ/6ah9+TKqBdpqHmBBIpdcBmfCt63MxVAqc=
+	t=1727972258; cv=none; b=WpdyoZqacEuSLCvyd4fo0gGWxW8iLzobMasOCoqGkDMK6F1IbySK0zD1Eb4dqVOY/gDoUaiDGx5zROEFEavQOsS6wGiT4ty3pmjJn/Qg2n5NYS4eDZS7f+eayAb/+FaCIdsror1dJxzW2/opklM/KWM2ULJ+VO3nbP1LmXcqQd8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727968189; c=relaxed/simple;
-	bh=t1erP4051fKxjeO5bhlf4vXNm9QCAZdEkniTTG/tkWU=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cvkXmRsqPu68mzhO1cF2xANpK4xwS76BMTfkAqRnU+CJThBuWVtvmfOVL3JzKRnQcoSvbbALt5i6z2LCqsZtjqnElqmO/fcXAbbfixM6KSELy4m3q/BJ7p8Z4kucDzdx5Q8mFbhxJN0IDiYe9YREyQ0HNBqVLRAPHL3o7PTn4s0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b5hrQQIc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727972258; c=relaxed/simple;
+	bh=2c8c8dyaaznI0fOEDaxMu6U2YcdGwR4Lgr+JksfC2cE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YU7r9EhN8KJOtfm4QgbG8ZoZGl44vtyoxPLQYdG6lnCZH3KB5rlD+Sy85xchKzbELSfA2UqgIo6fomnJaAPL6CP97GZpEXv1k8gUKcfFW7FUS6l/mZzYyYTzMhZ2Iaw5o27X2KifhQmNZ5mDtTa58jQYadhgnwMp3wOT7WWAB6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Ceaws/fq; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=PfWjCOhE; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Ceaws/fq; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=PfWjCOhE; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b5hrQQIc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75C88C4CEC7;
-	Thu,  3 Oct 2024 15:09:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727968188;
-	bh=t1erP4051fKxjeO5bhlf4vXNm9QCAZdEkniTTG/tkWU=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=b5hrQQIc8tWiAxg1Dl9aDiFL6H9CqgDR/NzOUCbzp8PhFSRxed4dL4kotgU0kUvs3
-	 KzvijsmaSQ/y1xmRxX8AxU5R39B+rDrZQYw0Ps/yYWlM+u+nAydKFxUVYW9r+o1ZVz
-	 MBlRIC0ZFppfw2K88UbOqY/bwg8fmpFRHPX4T86Bo5AKfZ2Ydjkb/UIC2c1EQ7IfBG
-	 9I19KQpcm4/RGxErLe3uQrlPBksjCWZejM2746ByhpdyROZqPfaf62WNT8eqDmISQV
-	 Kd2tM8G21oRzwzWLi8gAZgNFGjaZtw/RpDDDYOIspFr2lTK8Pjp5kvVEJaZ9XHfSMR
-	 2lsMz57LzArZQ==
-Date: Thu, 03 Oct 2024 08:09:48 -0700
-Subject: [PATCH 4/4] fsdax: dax_unshare_iter needs to copy entire blocks
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: willy@infradead.org, brauner@kernel.org, djwong@kernel.org, cem@kernel.org
-Cc: ruansy.fnst@fujitsu.com, ruansy.fnst@fujitsu.com,
- linux-fsdevel@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172796813328.1131942.16777025316348797355.stgit@frogsfrogsfrogs>
-In-Reply-To: <172796813251.1131942.12184885574609980777.stgit@frogsfrogsfrogs>
-References: <172796813251.1131942.12184885574609980777.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Ceaws/fq";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="PfWjCOhE";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Ceaws/fq";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="PfWjCOhE"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 4EE501FE04;
+	Thu,  3 Oct 2024 16:17:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727972252; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1SkCvgbyLtxw38crET3p5i3VwsvsmrMyJ5rZxKdl8Zg=;
+	b=Ceaws/fq+jiDpwm4FLn6tTlN0PXv2FUN27+FBweb7SKeaqSMMFlSwraRoKCDYCqFdU0pkC
+	RAYdHI27lqMemSvAjYgN0amiLlf/OuHo+M4NsogLDIK/rkVLFHVZmzxiSpR+xDJ8h62BdY
+	dReuz9PlbL/8y6KW0azdgNv2P+uREYA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727972252;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1SkCvgbyLtxw38crET3p5i3VwsvsmrMyJ5rZxKdl8Zg=;
+	b=PfWjCOhERqJD0aQm+oUPI2PhCck2lsA4gf+J4EpiYNtEKMIqr8hLLp5yD8iEiLAzvtAJC1
+	JcJ7d02hlmxJ7qBg==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1727972252; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1SkCvgbyLtxw38crET3p5i3VwsvsmrMyJ5rZxKdl8Zg=;
+	b=Ceaws/fq+jiDpwm4FLn6tTlN0PXv2FUN27+FBweb7SKeaqSMMFlSwraRoKCDYCqFdU0pkC
+	RAYdHI27lqMemSvAjYgN0amiLlf/OuHo+M4NsogLDIK/rkVLFHVZmzxiSpR+xDJ8h62BdY
+	dReuz9PlbL/8y6KW0azdgNv2P+uREYA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1727972252;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1SkCvgbyLtxw38crET3p5i3VwsvsmrMyJ5rZxKdl8Zg=;
+	b=PfWjCOhERqJD0aQm+oUPI2PhCck2lsA4gf+J4EpiYNtEKMIqr8hLLp5yD8iEiLAzvtAJC1
+	JcJ7d02hlmxJ7qBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 420C313882;
+	Thu,  3 Oct 2024 16:17:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 80kbEJzD/mZcbwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 03 Oct 2024 16:17:32 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id CD33AA086F; Thu,  3 Oct 2024 18:17:31 +0200 (CEST)
+Date: Thu, 3 Oct 2024 18:17:31 +0200
+From: Jan Kara <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
+	torvalds@linux-foundation.org,
+	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@linux.microsoft.com>,
+	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
+	Kees Cook <keescook@chromium.org>,
+	linux-security-module@vger.kernel.org,
+	Amir Goldstein <amir73il@gmail.com>
+Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
+ sb->s_inodes iteration to super_iter_inodes()
+Message-ID: <20241003161731.kwveypqzu4bivesv@quack3>
+References: <20241002014017.3801899-1-david@fromorbit.com>
+ <20241002014017.3801899-5-david@fromorbit.com>
+ <Zv5GfY1WS_aaczZM@infradead.org>
+ <Zv5J3VTGqdjUAu1J@infradead.org>
+ <20241003115721.kg2caqgj2xxinnth@quack3>
+ <Zv6J34fwj3vNOrIH@infradead.org>
+ <20241003122657.mrqwyc5tzeggrzbt@quack3>
+ <Zv6Qe-9O44g6qnSu@infradead.org>
+ <20241003125650.jtkqezmtnzfoysb2@quack3>
+ <Zv6jV40xKIJYuePA@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zv6jV40xKIJYuePA@dread.disaster.area>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_COUNT_THREE(0.00)[3];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[suse.cz,infradead.org,vger.kernel.org,linux.dev,linux-foundation.org,linux.microsoft.com,google.com,hallyn.com,chromium.org,gmail.com];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -3.80
+X-Spam-Flag: NO
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu 03-10-24 23:59:51, Dave Chinner wrote:
+> On Thu, Oct 03, 2024 at 02:56:50PM +0200, Jan Kara wrote:
+> > On Thu 03-10-24 05:39:23, Christoph Hellwig wrote:
+> > > @@ -789,11 +789,23 @@ static bool dispose_list(struct list_head *head)
+> > >   */
+> > >  static int evict_inode_fn(struct inode *inode, void *data)
+> > >  {
+> > > +	struct super_block *sb = inode->i_sb;
+> > >  	struct list_head *dispose = data;
+> > > +	bool post_unmount = !(sb->s_flags & SB_ACTIVE);
+> > >  
+> > >  	spin_lock(&inode->i_lock);
+> > > -	if (atomic_read(&inode->i_count) ||
+> > > -	    (inode->i_state & (I_NEW | I_FREEING | I_WILL_FREE))) {
+> > > +	if (atomic_read(&inode->i_count)) {
+> > > +		spin_unlock(&inode->i_lock);
+> > > +
+> > > +		/* for each watch, send FS_UNMOUNT and then remove it */
+> > > +		if (post_unmount && fsnotify_sb_info(sb)) {
+> > > +			fsnotify_inode(inode, FS_UNMOUNT);
+> > > +			fsnotify_inode_delete(inode);
+> > > +		}
+> > 
+> > This will not work because you are in unsafe iterator holding
+> > sb->s_inode_list_lock. To be able to call into fsnotify, you need to do the
+> > iget / iput dance and releasing of s_inode_list_lock which does not work
+> > when a filesystem has its own inodes iterator AFAICT... That's why I've
+> > called it a layering violation.
+> 
+> The whole point of the iget/iput dance is to stabilise the
+> s_inodes list iteration whilst it is unlocked - the actual fsnotify
+> calls don't need an inode reference to work correctly.
+> 
+> IOWs, we don't need to run the fsnotify stuff right here - we can
+> defer that like we do with the dispose list for all the inodes we
+> mark as I_FREEING here.
+> 
+> So if we pass a structure:
+> 
+> struct evict_inode_args {
+> 	struct list_head	dispose;
+> 	struct list_head	fsnotify;
+> };
+> 
+> If we use __iget() instead of requiring an inode state flag to keep
+> the inode off the LRU for the fsnotify cleanup, then the code
+> fragment above becomes:
+> 
+> 	if (atomic_read(&inode->i_count)) {
+> 		if (post_unmount && fsnotify_sb_info(sb)) {
+> 			__iget(inode);
+> 			inode_lru_list_del(inode);
+> 			spin_unlock(&inode->i_lock);
+> 			list_add(&inode->i_lru, &args->fsnotify);
+> 		}
 
-The code that copies data from srcmap to iomap in dax_unshare_iter is
-very very broken, which bfoster's recent fsx changes have exposed.
+Nit: Need to release i_lock in else branch here.  Otherwise interesting
+idea. Yes, something like this could work even in unsafe iterator.
 
-If the pos and len passed to dax_file_unshare are not aligned to an
-fsblock boundary, the iter pos and length in the _iter function will
-reflect this unalignment.
+> 		return INO_ITER_DONE;
+> 	}
+> And then once we return to evict_inodes(), we do this:
+> 
+> 	while (!list_empty(args->fsnotify)) {
+> 		struct inode *inode
+> 
+> 		inode = list_first_entry(head, struct inode, i_lru);
+>                 list_del_init(&inode->i_lru);
+> 
+> 		fsnotify_inode(inode, FS_UNMOUNT);
+> 		fsnotify_inode_delete(inode);
+> 		iput(inode);
+> 		cond_resched();
+> 	}
+> 
+> And so now all the fsnotify cleanup is done outside the traversal in
+> one large batch from evict_inodes().
 
-dax_iomap_direct_access always returns a pointer to the start of the
-kmapped fsdax page, even if its pos argument is in the middle of that
-page.  This is catastrophic for data integrity when iter->pos is not
-aligned to a page, because daddr/saddr do not point to the same byte in
-the file as iter->pos.  Hence we corrupt user data by copying it to the
-wrong place.
+Yup.
 
-If iter->pos + iomap_length() in the _iter function not aligned to a
-page, then we fail to copy a full block, and only partially populate the
-destination block.  This is catastrophic for data confidentiality
-because we expose stale pmem contents.
+> As for the landlock code, I think it needs to have it's own internal
+> tracking mechanism and not search the sb inode list for inodes that
+> it holds references to. LSM cleanup should be run before before we
+> get to tearing down the inode cache, not after....
 
-Fix both of these issues by aligning copy_pos/copy_len to a page
-boundary (remember, this is fsdax so 1 fsblock == 1 base page) so that
-we always copy full blocks.
-
-We're not done yet -- there's no call to invalidate_inode_pages2_range,
-so programs that have the file range mmap'd will continue accessing the
-old memory mapping after the file metadata updates have completed.
-
-Be careful with the return value -- if the unshare succeeds, we still
-need to return the number of bytes that the iomap iter thinks we're
-operating on.
-
-Cc: ruansy.fnst@fujitsu.com
-Fixes: d984648e428b ("fsdax,xfs: port unshare to fsdax")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/dax.c |   34 +++++++++++++++++++++++++++-------
- 1 file changed, 27 insertions(+), 7 deletions(-)
+Well, I think LSM cleanup could in principle be handled together with the
+fsnotify cleanup but I didn't check the details.
 
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 9fbbdaa784b4..21b47402b3dc 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1262,26 +1262,46 @@ static s64 dax_unshare_iter(struct iomap_iter *iter)
- {
- 	struct iomap *iomap = &iter->iomap;
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
--	loff_t pos = iter->pos;
--	loff_t length = iomap_length(iter);
-+	loff_t copy_pos = iter->pos;
-+	u64 copy_len = iomap_length(iter);
-+	u32 mod;
- 	int id = 0;
- 	s64 ret = 0;
- 	void *daddr = NULL, *saddr = NULL;
- 
- 	if (!iomap_want_unshare_iter(iter))
--		return length;
-+		return iomap_length(iter);
-+
-+	/*
-+	 * Extend the file range to be aligned to fsblock/pagesize, because
-+	 * we need to copy entire blocks, not just the byte range specified.
-+	 * Invalidate the mapping because we're about to CoW.
-+	 */
-+	mod = offset_in_page(copy_pos);
-+	if (mod) {
-+		copy_len += mod;
-+		copy_pos -= mod;
-+	}
-+
-+	mod = offset_in_page(copy_pos + copy_len);
-+	if (mod)
-+		copy_len += PAGE_SIZE - mod;
-+
-+	invalidate_inode_pages2_range(iter->inode->i_mapping,
-+				      copy_pos >> PAGE_SHIFT,
-+				      (copy_pos + copy_len - 1) >> PAGE_SHIFT);
- 
- 	id = dax_read_lock();
--	ret = dax_iomap_direct_access(iomap, pos, length, &daddr, NULL);
-+	ret = dax_iomap_direct_access(iomap, copy_pos, copy_len, &daddr, NULL);
- 	if (ret < 0)
- 		goto out_unlock;
- 
--	ret = dax_iomap_direct_access(srcmap, pos, length, &saddr, NULL);
-+	ret = dax_iomap_direct_access(srcmap, copy_pos, copy_len, &saddr, NULL);
- 	if (ret < 0)
- 		goto out_unlock;
- 
--	if (copy_mc_to_kernel(daddr, saddr, length) == 0)
--		ret = length;
-+	if (copy_mc_to_kernel(daddr, saddr, copy_len) == 0)
-+		ret = iomap_length(iter);
- 	else
- 		ret = -EIO;
- 
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
