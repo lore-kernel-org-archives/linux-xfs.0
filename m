@@ -1,140 +1,129 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5ED714AD0C
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Oct 2024 09:59:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2159613B780;
+	Thu,  3 Oct 2024 10:12:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727949575; cv=none; b=TvnwVTpdFwkw8lpG1qIhILe2L5hLXyBZR6RZ5qPQSkF1cxb3cOKDhLTm2aWyJZF3VHcFTFanj3biv6eiP9mb7ZI2SL3+jzRdGNIAaa+ckB+KNSBjYMWZo44EaiOOoSeKsYRECTTbBeGcpRmehKdh0HiQxuzNrKEgNfR9HwuUATQ=
+	t=1727950346; cv=none; b=ZEYIdt/Ed+jOd35MjbPp4gCYeMmHm5GkGmRtRjttzEo4+gnmLF5m4CIQpU25xj7fi71+FL4VfMjhDlx6lVIvd4pRvJgfZQuSvQuyxD0XvfehrRW7/6E1JNx+SxFw5i37j1CDcaqytCKQoqACSrT4YBE2n+gh3MY7RGvJRJeRXlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727949575; c=relaxed/simple;
-	bh=ws++fftyryHhCAETNNzTX0HjvxlfudjsCorBxr25E9Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VuBqFUGKqSxwfRzlKrnLzHYJ25+JZ1rwwJJtrnJBBvBrK5oP7EUrmzGnVe8/ETh70cFxRdlg+sRWmXBgYPvpbM3ZsbNdMl4GC5dmRq9q6L5GLjAIX/SHJI6dxBbgosTfwsJJfA9ddfGv9HU9w7h/wfYNXmaOyF8iXk/J/C4ZxLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ixkIPFsQ; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1727950346; c=relaxed/simple;
+	bh=KzG8zL4AzG1hFYloYuqzq+fGW6PcU8QWSrNexnu3abE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oAOXPV9NXgkdwUAJV/V3MPGPVZB1n401LOeUatHibCkczmXzNf4SLtt9qwGiHEkTchJoIrNTDmf+8tfzKMjlTnaOqRYUpAclbqns8Zq3FNc6sNMo9+hHzy/Y8pNPOkZjRFD9jRABRd9ck4YnuQbGIp+RZ7QRdP/P0FN6ei0EJWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=f+UPzySf; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ixkIPFsQ"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-71c702b2d50so596986b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Oct 2024 02:59:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1727949573; x=1728554373; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=FZoVePEjRG3urznVwj0SIfeUiNk8Ws/Gg0iUzR96R7c=;
-        b=ixkIPFsQcNrsGNxCOjHKFh2AFYRm6FRDqg2JkLijTz9+X1TrczYA0uAqvoOXekDvtG
-         uc1VgRBOBHwZpTGKoDmUqRRmKo8j2AE6uL+NaAAdRxQaEyTlFy2wsgBNOScunA/XjWNH
-         gemZhcos3TMMn3L9O6yIbHxpGeU3FbusIxMUhH7KBKexdojjF5c+d5yRtMR0+OxnPCPi
-         gSc4pL5GgIgL46/ZL30Ztb7k+v/X3eNBx0FFpFeqZ3vDnqLiHolbYnYjbiUZJMhIvmIE
-         S6urCvkJLyqxU+zcC7f6KGJDUpZ3mElBOM+RBG7NiD1IR1I27Vd2ikpJxaEmZaqZtSFM
-         Uxuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727949573; x=1728554373;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FZoVePEjRG3urznVwj0SIfeUiNk8Ws/Gg0iUzR96R7c=;
-        b=K3uS+9yRDMXNFYPIG9dRyDknQQZWJ32BrJSGZA0/ueD5SOE3WJi9r2Unr32yZv/C29
-         1tog33w4eFZV+Os+I8oOKVReRzYInRROlJMPZDO49ZeUSZlQ/16M0a1UboZSEv5IG3UV
-         MRm9Y2LlXP4SlUZh3aMjIkC0ZytHM4IvAWZ64Iqzmn3KE7xd9+fPfFkm7sKIsJXoqg1t
-         fBMA8VsfVBEDwMOPjSU7XR765Uf0FZuJZ6QzVe6TwB1IG7Th5iRFvVLo9R/RTjItvuP1
-         zNpXkGSSEaOTDtl/CRst2FQrfo79RZ2UNpQv1SUcckmnX6vzJr7SyQyFpKDIMMPvqMon
-         9B0w==
-X-Forwarded-Encrypted: i=1; AJvYcCUDPN16Be51pLuFuGRcldP+Gb5NxLrBU4aa8WRxIBy5/wMidOx8BoP98iGxAGHOswvGhnfIfAjVhkM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy/5XFBpYKRkz9AhuIAHGly3++/xRs1uuqqkxMYC0NL4QR5KXow
-	LJuqw4H3ia8t1Kw58gNpeDVvyfcWzW/PwIZN4oF+TtVa4YM7iy1n1skGqPyoSzc=
-X-Google-Smtp-Source: AGHT+IHRE80iIS0vtT8WICPYgmm1vV8aDhQHpiTupQ0As/uP52it766oR+Cw0QAYw1lPazD0ArHY1g==
-X-Received: by 2002:a05:6a21:1643:b0:1d5:14ff:a15f with SMTP id adf61e73a8af0-1d5db20a5c0mr10402698637.11.1727949573106;
-        Thu, 03 Oct 2024 02:59:33 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71dd9dee6adsm974968b3a.144.2024.10.03.02.59.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Oct 2024 02:59:32 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1swIcL-00DL4k-2o;
-	Thu, 03 Oct 2024 19:59:29 +1000
-Date: Thu, 3 Oct 2024 19:59:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Jan Kara <jack@suse.cz>
-Cc: Kent Overstreet <kent.overstreet@linux.dev>,
-	Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, torvalds@linux-foundation.org
-Subject: Re: [RFC PATCH 0/7] vfs: improving inode cache iteration scalability
-Message-ID: <Zv5rAYEgY3o7Rhju@dread.disaster.area>
-References: <20241002014017.3801899-1-david@fromorbit.com>
- <20241002-lethargisch-hypnose-fd06ae7a0977@brauner>
- <Zv098heGHOtGfw1R@dread.disaster.area>
- <3lukwhxkfyqz5xsp4r7byjejrgvccm76azw37pmudohvxcxqld@kiwf5f5vjshk>
- <Zv3H8BxJX2GwNW2Y@dread.disaster.area>
- <lngs2n3kfwermwuadhrfq2loff3k4psydbjullhecuutthpqz3@4w6cybx7boxw>
- <Zv32Vow1YdYgB8KC@dread.disaster.area>
- <20241003091741.vmw3muqt5xagjion@quack3>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="f+UPzySf"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4939tOFn021499;
+	Thu, 3 Oct 2024 10:12:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from
+	:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding; s=pp1; bh=/JQEd6iw662ZfguHaBbkaGClwE
+	ytKH5/pcNOoNSB/s4=; b=f+UPzySf0lV0cbfE/4H2NRAwEe2doG0sLcNJeZi1n0
+	3mpLYoM2jrI+F3ndmZ4Z1Egvv4JLlSi76DcL87mkC4C5DC5Q+BqVXCcTcIJbOjSK
+	RML9zkzam3oOjndgU/qOLGkIxeDJXG3YWapTgyC0aX1sQSLU0pcYS3ZaH6buMPxK
+	2fXA0TAoFg/kdqRuISPUT3IJ83HdSQX7cz1FxwfCmEl23OQsV7lsktxWhSOWheUn
+	mQNJxBicbmR9dRp8hXHy8PQVMWSIipCzDEZDXxBxq89ni7RJs6bUA0nCQWdbXgrz
+	lkOrn4giVqyeiFPfMeoQF5SGe1/0Ukr+7ASuhfY9g3bA==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 421s2cr2ea-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 03 Oct 2024 10:12:14 +0000 (GMT)
+Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 493ACDex030614;
+	Thu, 3 Oct 2024 10:12:13 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 421s2cr2e5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 03 Oct 2024 10:12:13 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4938AMPg017866;
+	Thu, 3 Oct 2024 10:12:12 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 41xw4n76wq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 03 Oct 2024 10:12:12 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 493ACAw857999672
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 3 Oct 2024 10:12:10 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8D49C2004B;
+	Thu,  3 Oct 2024 10:12:10 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 50D282004E;
+	Thu,  3 Oct 2024 10:12:09 +0000 (GMT)
+Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.in.ibm.com (unknown [9.109.253.82])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  3 Oct 2024 10:12:09 +0000 (GMT)
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: linux-xfs@vger.kernel.org
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
+        "Darrick J . Wong" <djwong@kernel.org>, dchinner@redhat.com,
+        Chandan Babu R <chandan.babu@oracle.com>
+Subject: [PATCH] xfs: Check for deallayed allocations before setting extsize
+Date: Thu,  3 Oct 2024 15:42:07 +0530
+Message-ID: <20241003101207.205083-1-ojaswin@linux.ibm.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241003091741.vmw3muqt5xagjion@quack3>
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: nux7zMiW8P7ENlx94t1xnhuJK9F4SMeA
+X-Proofpoint-ORIG-GUID: 0kZIqqGFzDMT8mS0f47tBTu1BpvJ3cGJ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-03_06,2024-10-03_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=572
+ adultscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0 clxscore=1011
+ priorityscore=1501 bulkscore=0 impostorscore=0 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2408220000
+ definitions=main-2410030065
 
-On Thu, Oct 03, 2024 at 11:17:41AM +0200, Jan Kara wrote:
-> On Thu 03-10-24 11:41:42, Dave Chinner wrote:
-> > On Wed, Oct 02, 2024 at 07:20:16PM -0400, Kent Overstreet wrote:
-> > > A couple things that help - we've already determined that the inode LRU
-> > > can go away for most filesystems,
-> > 
-> > We haven't determined that yet. I *think* it is possible, but there
-> > is a really nasty inode LRU dependencies that has been driven deep
-> > down into the mm page cache writeback code.  We have to fix that
-> > awful layering violation before we can get rid of the inode LRU.
-> > 
-> > I *think* we can do it by requiring dirty inodes to hold an explicit
-> > inode reference, thereby keeping the inode pinned in memory whilst
-> > it is being tracked for writeback. That would also get rid of the
-> > nasty hacks needed in evict() to wait on writeback to complete on
-> > unreferenced inodes.
-> > 
-> > However, this isn't simple to do, and so getting rid of the inode
-> > LRU is not going to happen in the near term.
-> 
-> Yeah. I agree the way how writeback protects from inode eviction is not the
-> prettiest one but the problem with writeback holding normal inode reference
-> is that then flush worker for the device can end up deleting unlinked
-> inodes which was causing writeback stalls and generally unexpected lock
-> ordering issues for some filesystems (already forgot the details).
+Extsize is allowed to be set on files with no data in it. For this,
+we were checking if the files have extents but missed to check if
+delayed extents were present. This patch adds that check.
 
-Yeah, if we end up in evict() on ext4 it will can then do all sorts
-of whacky stuff that involves blocking, running transactions and
-doing other IO. XFS, OTOH, has been changed to defer all that crap
-to background threads (the xfs_inodegc infrastructure) that runs
-after the VFS thinks the inode is dead and destroyed. There are some
-benefits to having the filesystem inode exist outside the VFS inode
-life cycle....
+**Without the patch (SUCCEEDS)**
 
-> Now this
-> was more that 12 years ago so maybe we could find a better solution to
-> those problems these days (e.g. interactions between page writeback and
-> page reclaim are very different these days) but I just wanted to warn there
-> may be nasty surprises there.
+$ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
 
-I don't think the situation has improved with filesytsems like ext4.
-I think they've actually gotten worse - I recently learnt that ext4
-inode eviction can recurse back into the inode cache to instantiate
-extended attribute inodes so they can be truncated to allow inode
-eviction to make progress.
+wrote 1024/1024 bytes at offset 0
+1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
 
-I suspect the ext4 eviction behaviour is unfixable in any reasonable
-time frame, so the only solution I can come up with is to run the
-iput() call from a background thread context.  (e.g. defer it to a
-workqueue). That way iput_final() and eviction processing will not
-interfere with other writeback operations....
+**With the patch (FAILS as expected)**
 
--Dave.
+$ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
+
+wrote 1024/1024 bytes at offset 0
+1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
+xfs_io: FS_IOC_FSSETXATTR testfile: Invalid argument
+
+Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+---
+ fs/xfs/xfs_ioctl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 7226d27e8afc..55b574b43617 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -602,7 +602,8 @@ xfs_ioctl_setattr_check_extsize(
+ 	if (!fa->fsx_valid)
+ 		return 0;
+ 
+-	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
++	if (S_ISREG(VFS_I(ip)->i_mode) &&
++	    (ip->i_df.if_nextents || ip->i_delayed_blks) &&
+ 	    XFS_FSB_TO_B(mp, ip->i_extsize) != fa->fsx_extsize)
+ 		return -EINVAL;
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.43.5
+
