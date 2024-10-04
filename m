@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD8FA21B441;
-	Fri,  4 Oct 2024 18:18:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C3361F28E8;
+	Fri,  4 Oct 2024 18:22:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728065934; cv=none; b=UzHm215PLSqfC3ot4AEH6RRgt8qei0WrM9L2HyKNl7cRV2+jRruzESJRfLP7Q9XGc6tiIkrDHqrMd9zgLcmbhQUftEw3qQ5fqq4G0sTajJfjFSrAJN89zgSvz3ekUeFG6LbIDrYa63M4NLH3z+H+1tjru4546/hn7O4tmAYZThA=
+	t=1728066147; cv=none; b=GE3Q+qKVSybh0+0aOMdfcyIYvMExbrSHL4k/chhuoQWk5/KKPWMy/ysLDD2TV1ixpuHd0t5FMPsjPUczLkQVHuolOxIgyDELZvAJ6k8LqRV7o/kaehuhrr8kpEuj8/H4cbCALBpAzS41Uyoo+HVpXasSjflYjW2T6DY/5THZZxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728065934; c=relaxed/simple;
-	bh=MJzmWT6AHwLeoV55B/mEguR8hVitLpdD11bbWACmNpk=;
+	s=arc-20240116; t=1728066147; c=relaxed/simple;
+	bh=AlL/cEzKLl15zkHTK7TgA36+mPFnbFkFmC/iRiGtAPs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NTXPXy8pb9JBeVMSO06Z9fH57wmCLBk52pGSUq029CA3ibPhhnmnmr0201XBdMGiSLVLSJEyKSj71wP5dedMo5W96aymAotQ1q8hBKzVIkhfpuXGBuUTourguSTSVi9Ctd3PotqFTCFmf6l65Ku4Y+fKJQUiUBq6NeBqrWWZCxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VN8qgzWA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=DEAXnsibh1VrRFx77ziwM8a4pMHPYSak0CLH1Im9k2nPIAWUp2S7GEbl71V02W4GisyBOC5I6jmG9OT75H7pivRvSHsV9YSXw9ivubd0f6rk5Fi9hhByOuTXPLJ5R3ADWiFJms+xjDH2dZDiWNEuIjjOWE4N0wyGO0kvz+t/BhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bf6TL3ki; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VN8qgzWA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A7F2C4CEC6;
-	Fri,  4 Oct 2024 18:18:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bf6TL3ki"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7078C4CECC;
+	Fri,  4 Oct 2024 18:22:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728065934;
-	bh=MJzmWT6AHwLeoV55B/mEguR8hVitLpdD11bbWACmNpk=;
+	s=k20201202; t=1728066147;
+	bh=AlL/cEzKLl15zkHTK7TgA36+mPFnbFkFmC/iRiGtAPs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=VN8qgzWA0WStPt8o8tO0khDSlBXxWyUz6c707Li+ycx/Mwi3Hn138Ao4YKRT/st/E
-	 GJYcnSTL6a4giwKQB8XgxD+SsbqjfbaEEB48BuwNUkHmO0GKcpASUaUTf04MH+hlaM
-	 4oriUhzuk7Z6/j2Jt6LjX7jkdSt6hB87X01PV3aKy3ZnQvze6TBIESjf53yBkjk0Qo
-	 QymYANL/Av3+rlV5/xsj5MoBuMOXy88ZbUVReZrHvGNFPOqq3xa1vSyREz72+nO83W
-	 ARpwpbhXPZ66ZPsTjru61geZAEk6V9zhQSLUUhzUNlrgJLNUawgEnhAqX8p7EAbYg9
-	 ozOxjg9q+QEXw==
+	b=Bf6TL3kidBWcuOIxHkrbhpRdjtP4VPM9eZ0ok43S92nIfo5Tm8aleC6HkGvJn51Od
+	 ZoiXdpsyKfNjUg2eGhV1HnbnJUUdDMM/MgfSu3epRRDCO/bIjJxx7LfkhouSGO0m2K
+	 R17P01WfjQ3uPvawYtPalNlozBd+rv+/y3ZIrWDRy9DFiz/ZKS9tzHDjw8IfzORDA5
+	 6SJ6ItcVr00J6IIiVTCrXUGL9q2gwL7OcoJhG9mLp1g1pZTEUH0kv3oq3vWp+QXPBJ
+	 U+ZKs2lTy4FF05aK2S0YdLQLQRjRZ9/KLSnso+ov0i6jRLZjnl7Elss4bB4vacCh/k
+	 dY438iAdO1r/A==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -38,12 +38,12 @@ Cc: Pankaj Raghav <p.raghav@samsung.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.11 14/76] iomap: fix iomap_dio_zero() for fs bs > system page size
-Date: Fri,  4 Oct 2024 14:16:31 -0400
-Message-ID: <20241004181828.3669209-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.10 14/70] iomap: fix iomap_dio_zero() for fs bs > system page size
+Date: Fri,  4 Oct 2024 14:20:12 -0400
+Message-ID: <20241004182200.3670903-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20241004181828.3669209-1-sashal@kernel.org>
-References: <20241004181828.3669209-1-sashal@kernel.org>
+In-Reply-To: <20241004182200.3670903-1-sashal@kernel.org>
+References: <20241004182200.3670903-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,7 +52,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.11.2
+X-stable-base: Linux 6.10.13
 Content-Transfer-Encoding: 8bit
 
 From: Pankaj Raghav <p.raghav@samsung.com>
@@ -84,10 +84,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 41 insertions(+), 8 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index f420c53d86acc..d745f718bcde8 100644
+index d465589902790..d505636035af3 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -2007,10 +2007,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+@@ -1992,10 +1992,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
  }
  EXPORT_SYMBOL_GPL(iomap_writepages);
  
