@@ -1,127 +1,89 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021819475;
-	Fri,  4 Oct 2024 04:49:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E1958C1A;
+	Fri,  4 Oct 2024 07:21:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728017368; cv=none; b=QJqXhmXioBBS/Ij9ez1rK/DT9XPBR4z2Yo6Ougf5ONJ97BVXHgoudQxmX2/Aw3rGP7dBgLVjhNM7O8+v9jaoY4dX8FUbwy2rSMRxMTWMhulcXg0JgugMtebYbjlRfKp6Jm22LBHUUG6pEaroc2YEV9dyM1dvOcNqUfmC0SmsI1Y=
+	t=1728026485; cv=none; b=ozgFo1+V9y5VEOJwPQK6xtcxvxO1R3VR88xb63Y/CmYpfVd6++/rWSPAWwJlYmG1M8xy6R8og+FUiD9m3zza4kpS8LEzLWVC1El85eZyFoKTccX4fW42+HzCbNBgcdrtylYlqfUojaE4TFsa6z+zNt8z8Xv40YPeIfpRtNBK90A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728017368; c=relaxed/simple;
-	bh=TUsrG1YURfFbI9ZQ5O9KwQkkpUD3OiESPgahQWq2Rus=;
+	s=arc-20240116; t=1728026485; c=relaxed/simple;
+	bh=n/54bgSIzo01R4ZrkXvfkm2/9pgFHNkd2Tqp8OzR28Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dQXOooEoqL21yRBaPHJ8i6qFu++3c+hZc0QA5OJydLIGGocFyAp5/HdU+lYmhg4MKa7BNvjfpZeSFpilEfsBWFmATkPAqMe/MAIHXfLk/a5rZxnBNil+VddPrhHBwUpPxbApR/I5RLPD7njcinx5EIecMHhDwnHesGhtGVTm+UE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hVi6pqYK; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=B9ycqhWgG7t3KcOrCXj9aKLgHYajUYVEaTGv0jGHDhstMI1Wxb2pqX/wYnwfJWkgZ+TgaGVQ3iCSsYW1O3fer50ehFg8+WNRMx634QGkeZx9y+11FQPMxnH/ESIqXAYnzBNAnhZ2Hx4lJj1FxH2KtkDQDzSUlrsaq2n4cCt8Bxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R4jeFEId; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hVi6pqYK"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-20b64584fd4so16764895ad.1;
-        Thu, 03 Oct 2024 21:49:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728017366; x=1728622166; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TUsrG1YURfFbI9ZQ5O9KwQkkpUD3OiESPgahQWq2Rus=;
-        b=hVi6pqYKrn8dgM0eI9ixdE8WIexPLQwey+MXTfB7nkMehLW5N3wwatdfeCYP5P02+P
-         2aMcfARvvz6lnmj9H4QNS8Chz3SCOo/wpbpjaKnt67xRwmxyEBC3Uh+qL9jGRgcttizR
-         Y3obqhXJYcJtmHgppDwYb6UgiuyKEn5X7OuhkL6Jemp7p56srEJI9qiiwuoB7P4s81Zx
-         4Xfk9k9xx7B8gfvGyNaDO5sCPtOkqllD66J9SwR9p3xoqS9JFydoFzsnzeMV3+zy/TwC
-         HQ0+jUweQGQLIi8GVThtk9Mgkegm2Wndm0gsgyV0QfDwMDawVRGsoMhX+hwa4J7M8biJ
-         x1AQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728017366; x=1728622166;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TUsrG1YURfFbI9ZQ5O9KwQkkpUD3OiESPgahQWq2Rus=;
-        b=Uez4rjhsNmKsYoe/XaFg5wOnVucWeobAg6vKPA4F7oT0SCiuIO6JvRz/l/lF1FpvVN
-         +HqU7MoeRGpedZyghSTDfz8D/9UrZAnQJwZmPwB00knZMY8mbt2Z04RH0ICFdWkh7c82
-         XRyB3290xnQtSTENukEB+C1yu51eDxHKNcgSLYfb+Jq0Du0bhdWPOST3rwljGhfxv1um
-         aWnkmOs2J7btwWymgTGvnWn1hc1lFB4htCTABQd3mTAjiDqdkaJZ6wb+b4HZ50+qNqUt
-         ChHrU65wjXyUb6C9UHo2ao5XOehiyZmGIdT7sd6k3N7yRw64BQ+S4fkdzAOjWz2T0vll
-         Q1Bg==
-X-Forwarded-Encrypted: i=1; AJvYcCUE9Wo63qg9LZj4tgHdX9hTRtxJIIiYRmo1O3MQLP0Iqaoqb3c5m6kZYSKVBzUKFHgGx/DkS39rrbwF@vger.kernel.org, AJvYcCUO6FHwqC5n1RM1ObWoHF1jDCASQwObgBmxEKd5qUNpW4knWog6o+ILbUHBsnI7E1AT5X8Wf7lXwu/g4SbOAg==@vger.kernel.org, AJvYcCVJ/w4XsBf3ZYT4XO/1DJevRd02A//DnFnyQKwT5ApSIg6hxObHOlJRm4x+WOGrCbqkCokIcpUvNGF9hQ==@vger.kernel.org, AJvYcCVSB36FTaycSaEu8J8sAXgWHEPjodeUcSstg1neePtKwxZIJ1oxj077SUtUpJJl7lTDHZpfxymIUcv4@vger.kernel.org, AJvYcCX/AmP27C06Gn1XnE8fi1EJ3uGc1/p3E4ioPVh64bpYWIQuU/WyO4cYRW3ExQsdiCvhG3oQ2AKVbkWm@vger.kernel.org, AJvYcCXCAgarJlzAGjaaSpZ4eQYgEiJo+XufLAUWqej1/qz/QjzFxnBb8WIp/Vw5LzXBu6Q0eAW3i67JxyvJ6y7sfRv5ET5u@vger.kernel.org, AJvYcCXuSJ94SmW3oLDSqh4gEuVSZ6cpIMwNINwHrW0saYiWLOpYh56DNlcoeLdW0XJAR7i/DYF+261CeGn+OQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz7szFqV9+BoQphTwgaC/Agvqk6AH1gOSDsgquNsL8WDjZo5XDK
-	2on3CWckidUp6/2J0bwVQkcP+KBJZfZXoH4fXQ0rRaeEolu+HQTf
-X-Google-Smtp-Source: AGHT+IEOZ5VHabq4uat+pKHrLZtskvm5qkTvRMBGxvUt1yb7vzghAthcJh027s31hSLyjL6Ys/bM7A==
-X-Received: by 2002:a17:902:ec87:b0:20b:5046:356 with SMTP id d9443c01a7336-20bff04fad3mr14990785ad.36.1728017366009;
-        Thu, 03 Oct 2024 21:49:26 -0700 (PDT)
-Received: from archie.me ([103.124.138.155])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20beef8decasm16481015ad.142.2024.10.03.21.49.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Oct 2024 21:49:25 -0700 (PDT)
-Received: by archie.me (Postfix, from userid 1000)
-	id CE80345D328D; Fri, 04 Oct 2024 11:49:22 +0700 (WIB)
-Date: Fri, 4 Oct 2024 11:49:22 +0700
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-To: Jeff Layton <jlayton@kernel.org>, John Stultz <jstultz@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
-	Hugh Dickins <hughd@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [PATCH v9 08/12] Documentation: add a new file documenting
- multigrain timestamps
-Message-ID: <Zv9z0qWAvTuS8zg7@archie.me>
-References: <20241002-mgtime-v9-0-77e2baad57ac@kernel.org>
- <20241002-mgtime-v9-8-77e2baad57ac@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R4jeFEId"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652EDC4CEC6;
+	Fri,  4 Oct 2024 07:21:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728026485;
+	bh=n/54bgSIzo01R4ZrkXvfkm2/9pgFHNkd2Tqp8OzR28Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=R4jeFEIdbUdRnMhuPRZd+fY4uCZe5og7w9s0i9zphoCi2lo5KNMlDkvXKaZhdfEl3
+	 j090edszQIjuPEidbSwREM27YkZd2tGGMzEXkx8TIZWEzgZgtZI2j2YXeBMD/sr2ng
+	 ckOE4v8cvXQeLcHWOTTa3hbF8vARUk1R+WJZW73jk97C66AAqx0jcwisc5d72HGIWF
+	 SHE9JBt/g3/Tb3aaE977AbtQxExPSa3IGiDzq5foZALjvfGVqOnJIOqA5QtdrBBJlY
+	 QMtOuzLWZ3IOKjBuHVfULsfazmpK/ibw06PJwGrOzWxr1ktxli1YammjoR7t8cAo+c
+	 3NdftA9G/95Pw==
+Date: Fri, 4 Oct 2024 09:21:19 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
+	kent.overstreet@linux.dev, torvalds@linux-foundation.org, 
+	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@linux.microsoft.com>, Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>, 
+	Kees Cook <keescook@chromium.org>, linux-security-module@vger.kernel.org, 
+	Amir Goldstein <amir73il@gmail.com>
+Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
+ sb->s_inodes iteration to super_iter_inodes()
+Message-ID: <20241004-abgemacht-amortisieren-9d54cca35cab@brauner>
+References: <Zv5GfY1WS_aaczZM@infradead.org>
+ <Zv5J3VTGqdjUAu1J@infradead.org>
+ <20241003115721.kg2caqgj2xxinnth@quack3>
+ <Zv6J34fwj3vNOrIH@infradead.org>
+ <20241003122657.mrqwyc5tzeggrzbt@quack3>
+ <Zv6Qe-9O44g6qnSu@infradead.org>
+ <20241003125650.jtkqezmtnzfoysb2@quack3>
+ <Zv6jV40xKIJYuePA@dread.disaster.area>
+ <20241003161731.kwveypqzu4bivesv@quack3>
+ <Zv8648YMT10TMXSL@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="OBP6+ccGLM5fNBOy"
-Content-Disposition: inline
-In-Reply-To: <20241002-mgtime-v9-8-77e2baad57ac@kernel.org>
-
-
---OBP6+ccGLM5fNBOy
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <Zv8648YMT10TMXSL@dread.disaster.area>
 
-On Wed, Oct 02, 2024 at 02:49:36PM -0400, Jeff Layton wrote:
-> Add a high-level document that describes how multigrain timestamps work,
-> rationale for them, and some info about implementation and tradeoffs.
->=20
+On Fri, Oct 04, 2024 at 10:46:27AM GMT, Dave Chinner wrote:
+> On Thu, Oct 03, 2024 at 06:17:31PM +0200, Jan Kara wrote:
+> > On Thu 03-10-24 23:59:51, Dave Chinner wrote:
+> > > As for the landlock code, I think it needs to have it's own internal
+> > > tracking mechanism and not search the sb inode list for inodes that
+> > > it holds references to. LSM cleanup should be run before before we
+> > > get to tearing down the inode cache, not after....
+> > 
+> > Well, I think LSM cleanup could in principle be handled together with the
+> > fsnotify cleanup but I didn't check the details.
+> 
+> I'm not sure how we tell if an inode potentially has a LSM related
+> reference hanging off it. The landlock code looks to make an
+> assumption in that the only referenced inodes it sees will have a
+> valid inode->i_security pointer if landlock is enabled. i.e. it
+> calls landlock_inode(inode) and dereferences the returned value
+> without ever checking if inode->i_security is NULL or not.
+> 
+> I mean, we could do a check for inode->i_security when the refcount
+> is elevated and replace the security_sb_delete hook with an
+> security_evict_inode hook similar to the proposed fsnotify eviction
+> from evict_inodes().
+> 
+> But screwing with LSM instructure looks ....  obnoxiously complex
+> from the outside...
 
-LGTM, thanks!
-
-Reviewed-by: Bagas Sanjaya <bagasdotme@gmail.com>
-
---=20
-An old man doll... just what I always wanted! - Clara
-
---OBP6+ccGLM5fNBOy
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZv9zzgAKCRD2uYlJVVFO
-o8z+AQDazz4grBaoJ/mtVu4UdxF3vdyAVG6PXKSWPFhB0JejcwD9E8qbXnSUInxR
-88neK7F3Iq9tS3rwTgLVOuOzET6WWAE=
-=TFot
------END PGP SIGNATURE-----
-
---OBP6+ccGLM5fNBOy--
+Imho, please just focus on the immediate feedback and ignore all the
+extra bells and whistles that we could or should do. I prefer all of
+that to be done after this series lands.
