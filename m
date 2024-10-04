@@ -1,69 +1,74 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD0015535B
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2024 11:57:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26B99157487
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2024 11:57:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728043036; cv=none; b=lapOma0pSpmKqphFK5FhzUdtp3hEiZxnVskxrx6L4D7BFByPG3fw+BsX2Th2sbFlOKjdeh7L6iG9i5JhldfbCxBqgaPo/14hk9Bfrp0Rqim066jCdKNABoJWu3Zi8ERkZC9ZS5MODQQmdh6vTG80qwMCa0uP1m/NVsvLsXArn0c=
+	t=1728043037; cv=none; b=b9tU8DzU6fIqhgEGIkCVkLePK7yu61wNwT2pKtv5Y1y7IfB6nKrhmYrQLgRDpPlcJonWys2rh5b4zTImuOTN7PzZpM6sHiCukJ2ds12pxKwp3+MujWWneMpwfi/5La7Nl+MjtlIFG6xkGsmtaX2kNKl7cGlyESb+K+rGr5Rvj5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728043036; c=relaxed/simple;
-	bh=SsLg5q61aqjWYFoNqlNNYenaAxw/Ja50R7MaDDjZRp4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CMM1va5PkZ92SzPMltNhSUfQpWMKf2QCSFMKi1Jn+ZReEI0V2o6PsFRmhbpi66ExvXwbwXEZ4Cdpnok3rUvpAmEm5TevZ/1CCc/kVlBg/9NuErFXUfgoK2uN5pTd8vT+epFujOPbHuND09KbNzgz2RmMi1oSiBs4ZA+3HsevmsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KjKU11PB; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1728043037; c=relaxed/simple;
+	bh=URXEBJreisPCa4lLw/TAGR4MFn1cgcSg1bIs53k/0OA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=C0GPAwuGlJxlhLbYhbj5d3KYH3DBZVpLHnHgyAbyED7cklnttbSvbnLWOEJN+bJLPDMhmK6Hu1+Zg3qB+OyjadH6OYS/74Ur0IURJuJnVCFnN3mzfQICAX3GMed8VvXSiT1U+w8LIW6+9vC1smWv4SBgTlKg97o3gkWWxErKvzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eGfWoq4o; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KjKU11PB"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eGfWoq4o"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1728043033;
+	s=mimecast20190719; t=1728043034;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=tTT5SzdIVWnhouuIl0n2MCwUbHCUNiyKRAsM1DK6Mic=;
-	b=KjKU11PBVsn/6rPtOPYuJTej3b9GYGjmweEO41A8T8pSakB7i7yzB5sWrXpPtWJD3yKMQ2
-	LOMrX7F5YuqgcF4SLHvD2Z+JkNRAZAVBoeegi3DP3zl6pS30WG8ZCwhlTB49xRrWK3tnCz
-	p1SHJiY/lkCp74ELa4xBkkAnzPfhOPU=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0KN0fYPeHsc3j1Q0Gn6HCPdjsFTgSR6ExkB4Wg8g7WI=;
+	b=eGfWoq4o9UN8KVhOi3dRfS2L1TS06f1W6RY7MrztRWNJKFX7ohv5XF2VnlCbQ7xAILfJEe
+	UCMyGHu/gBfhfghQwRuN/1D0Q1ZH6siu4nFLARRA4zqrmGo2bR2/BaNsPKltLQ22uoqmU5
+	f9UeN0HNPggWidToix/ludTwQiZvM8U=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-277-Rt2nSqIIPw6H7xkJ8C3JlA-1; Fri, 04 Oct 2024 07:57:12 -0400
-X-MC-Unique: Rt2nSqIIPw6H7xkJ8C3JlA-1
-Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-a8a80667ad8so178231566b.2
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Oct 2024 04:57:11 -0700 (PDT)
+ us-mta-413-3k3DLOW_OiGuLaJZF7N1pg-1; Fri, 04 Oct 2024 07:57:13 -0400
+X-MC-Unique: 3k3DLOW_OiGuLaJZF7N1pg-1
+Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-a8d26b5857cso156198566b.0
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Oct 2024 04:57:13 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728043030; x=1728647830;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tTT5SzdIVWnhouuIl0n2MCwUbHCUNiyKRAsM1DK6Mic=;
-        b=APsZBM10CqAVIZHA3VqJsJ4bN3jWWmvwDi63g03ZHikL3r6A3MzKy6D4zku1sy/Cgc
-         DIklgfgGGfRMg3QIZPl8LQTaW/npV0eRCZRTIvO7bFrFY9UvZi04bxL69VP2Mk8QgMXx
-         DiPbcTXxg1ruuxWp9LrbQUf0pyLbayju/o/nkS7z5b2ujMw8vIEyU+o51mFATvk1Dy/2
-         zGFuiMS0zok6o/XuJ9vic7TKxoh+pjqOjhGQSS9TwbU59DTj3juO6GH9fbX+fPTjQnLt
-         72xkgya3ba9wRzL37+e2Q5vIbUwg9T7t/uoK3PP7S7ZhKZDMEYX/A26oe596Us8KWofQ
-         CJaQ==
-X-Gm-Message-State: AOJu0Yy8gfK6/dVY09BYif8CQ2EU922HdM4m7BhoCis+KUOlmyBbnBqj
-	sOmXh5irbvaPoC9ARbMmH5SXximsEYeW8nbVboR5olE9wGcohL0en1ftJOAssOSP/4CiHpL+rLA
-	gU4DVMysCIkA5/ZXO4I+h5TxOFdC23qkKBpX3hOdolQnFMbAFlh6dicUxjzF3TwlI7IugFtNAR1
-	nvgn48ieP9aVXznB8ac+7iWtORBHzDg4Y8NCZFRe39
-X-Received: by 2002:a17:907:e8e:b0:a86:851e:3a2b with SMTP id a640c23a62f3a-a991bd79ff2mr240859966b.29.1728043030568;
-        Fri, 04 Oct 2024 04:57:10 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEgoOcVYVf3fkiUc2++f+/4uaRCcIMYvQUt9UNBk3wgBNCwVaYXhjytjcVbgQKfoYg00k0BSQ==
-X-Received: by 2002:a17:907:e8e:b0:a86:851e:3a2b with SMTP id a640c23a62f3a-a991bd79ff2mr240858066b.29.1728043030148;
-        Fri, 04 Oct 2024 04:57:10 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1728043032; x=1728647832;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=0KN0fYPeHsc3j1Q0Gn6HCPdjsFTgSR6ExkB4Wg8g7WI=;
+        b=pRUnQFLw0zAfd5Ymc9p8Id/G7XTNzE4MPOmAUUOMv6clMSLBCNCM+KXrQGcAtiyPAa
+         agHRY/BoSvCVw8U63LwSPdIaUjJ6kRADJ87csP5GVertoAGcCn1AqJPk0wgyZUzluMKq
+         5S02qRNNpxAewZ8AXx2h4WRCKZJ6t3LPYZpZ3HwxrKtUjS5vF2SBqBY9SZv+HfCPGz3g
+         5UF2pTX/FO1kaeQfVBhWm3O9WdVsxSiw2dLWUOpJBXb6Jh6SJeyCLxYNdpyFxLzQi+vc
+         s9XxvKo9tT1BJ7/MicaNf9kwwmbIJtELKS3Heu6eId5wYWm8DqhXyX2lq5r8BmmwIZkk
+         dQDg==
+X-Gm-Message-State: AOJu0YxHfiGJVjnravl7OE5wHGnVwoBEnyPCOW7FqCQY6qMECxJjQj3e
+	b/+LhabzEM8x1eMyRD9y1cKK72VrzsgAmmsaHy2bBh2gynOLBbbnjHUbDN6t3ichd1dzs7LJ84i
+	Yp4bo1ecU/Oop180p038uHBzr6t3U9Yc5XB7/inRwKNXkCQbZpj4B9hZCYGm8WZKF4zLaGXlsAm
+	X6A9pGWR3oRiDJpg2sCUXwM5fw1rWS92XGfoWykyk6
+X-Received: by 2002:a17:907:26c7:b0:a86:fa3d:e984 with SMTP id a640c23a62f3a-a991bd401d1mr268908066b.20.1728043031881;
+        Fri, 04 Oct 2024 04:57:11 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHJyB9t2IlxO0Dd64oFjv/7SHyb6+DmwA8ffnkh3Op0NzPHiFatj3pgPGcMbFjmF90diKWNUQ==
+X-Received: by 2002:a17:907:26c7:b0:a86:fa3d:e984 with SMTP id a640c23a62f3a-a991bd401d1mr268904766b.20.1728043031334;
+        Fri, 04 Oct 2024 04:57:11 -0700 (PDT)
 Received: from thinky.redhat.com (ip-217-030-065-002.aim-net.cz. [217.30.65.2])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a99102a64a5sm216734566b.76.2024.10.04.04.57.09
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a99102a64a5sm216734566b.76.2024.10.04.04.57.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Oct 2024 04:57:09 -0700 (PDT)
+        Fri, 04 Oct 2024 04:57:10 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: linux-xfs@vger.kernel.org
 Cc: aalbersh@kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v4 0/2] Minor fixes for xfsprogs
-Date: Fri,  4 Oct 2024 13:57:02 +0200
-Message-ID: <20241004115704.2105777-1-aalbersh@redhat.com>
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH v4 2/2] xfsprogs: update gitignore
+Date: Fri,  4 Oct 2024 13:57:04 +0200
+Message-ID: <20241004115704.2105777-3-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.44.1
+In-Reply-To: <20241004115704.2105777-1-aalbersh@redhat.com>
+References: <20241004115704.2105777-1-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,26 +77,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+Building xfsprogs seems to produce many build artifacts which are
+not tracked by git. Ignore them.
 
-These two patches are fix for building xfsprogs in immutable distros
-and update to .gitignore.
-
-v4:
-- Explicitly list m4/ files instead of shell globbing
-v3:
-- Use wildcard or backup files
-v2:
-- Use wildcard for scrub systemd/cron files
-
-Andrey Albershteyn (2):
-  xfsprogs: fix permissions on files installed by libtoolize
-  xfsprogs: update gitignore
-
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+---
  .gitignore | 12 ++++++++----
- Makefile   |  3 +++
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
+diff --git a/.gitignore b/.gitignore
+index fd131b6fde52..756867124a02 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -33,6 +33,7 @@
+ /config.status
+ /config.sub
+ /configure
++/*~
+ 
+ # libtool
+ /libtool
+@@ -69,13 +70,16 @@ cscope.*
+ /rtcp/xfs_rtcp
+ /spaceman/xfs_spaceman
+ /scrub/xfs_scrub
+-/scrub/xfs_scrub@.service
+ /scrub/xfs_scrub_all
+-/scrub/xfs_scrub_all.cron
+-/scrub/xfs_scrub_all.service
+-/scrub/xfs_scrub_fail@.service
++/scrub/xfs_scrub_fail
++/scrub/*.cron
++/scrub/*.service
+ 
+ # generated crc files
+ /libfrog/crc32selftest
+ /libfrog/crc32table.h
+ /libfrog/gen_crc32table
++
++# docs
++/man/man8/mkfs.xfs.8
++/man/man8/xfs_scrub_all.8
 -- 
 2.44.1
 
