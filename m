@@ -1,75 +1,40 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7F4512D75C;
-	Fri,  4 Oct 2024 08:56:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D88E13B7B3;
+	Fri,  4 Oct 2024 09:05:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728032186; cv=none; b=gYeXOqgn+TQNgYrTQT9RdtN84WK2V4cmdGAFQD+Jm+J7+bq4P8mx9+ph0pMsELhRDww47wkI4XAP/Matzgp7MadRgThlbI2UBcwSTOfWVcQ5+nw9NiS2/cSpzfVDNBv9uM/UJfSI7Hym/F7GmlULY2ndklHJ44YrdOsJZPcywlc=
+	t=1728032725; cv=none; b=XFp/rLzqUslSGESNcrgjjrB+EbxyPTb1rBmwIqV4r9JDpcKMNmJ8OFl9IXUDmVRvzUFj/6rw9dkMc6wkPGHrt42vWg0D1VcaYUCLd8zTsPXK8JYxbhBf2alNYcwpMoLGsHrFsk/sWvT2S3JgLMxpIlF8LnBOXDcTR8Z4ouIwt2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728032186; c=relaxed/simple;
-	bh=lS3HUIKLQ8WqglmBcueM1aFx4v3vrUwt6x3/lWmlwzs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=psOQjJji7myeXDPrhPqY99VjRwuwXXeAyd/Z1nDWUQIkvL2ec3vQFSLCTWfH1GS93aOnty61ioPVJJBNKUxUVHyfoCKOqTVM2b2kAtTyApq/4Rt4c1PYpdcUNeDPefYwLHi7v71Kio+znOZUd1+WZRWn/8Av//eqAynU+pPvHHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=MjllzRRr; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1728032725; c=relaxed/simple;
+	bh=Wx/PthyK7u37Dlo4XmAudCyVDraW/qj3CqiGEMo8BRM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=k90OkaGX0gqagfB/2gGvSODs4dDsn7he2HKZaDKpQu7BKQcahPwQFKVrZeMGJcbDg8NghEz+zF1/7aRJ3UixS4SqyeZIAIw41VcC7ekXl9NFhO/HQBkEe/vXISgQ97C8pJ8GWWLz8bo4PSz4ujVOpPeDSPM2qkfxfq59HLICgtI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jA3Ze55Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="MjllzRRr"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4948qX9i024974;
-	Fri, 4 Oct 2024 08:56:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date
-	:from:to:cc:subject:message-id:references:mime-version
-	:content-type:in-reply-to; s=pp1; bh=nBwjeGPrXf2Nj/xVxGJ8mzlowNt
-	ZWESSqNzgTAsTDL8=; b=MjllzRRrlFRwK0VmZKhLsakynh7LXjqeVDgHUo0N8s7
-	nL1JWFxO2Z9DgyAbURKwth39LbC5zGfzTzVJhjTmc2EbR3/2dZZ2MZfWagCgxdqt
-	uFV6oxGSsP4CKDqoCmbvJv/46cmgJgfV7HsRIKzdZzbYx5Xq+Yv73qpgqeNPUIXU
-	+t9J53reSErsMB36zegoxL8qbZvdlum0lE3PMgK2q+wKyfPZWU75kHSsv7YJWRge
-	2u2JrccmJwl4LTxyppYWP4Mq2gGpVpmWUvj+NShZ36Hr9IBpyKHO0TBMQIY44Xic
-	kf/D0XIo2rf3g1vj5M8ufVHBU/SzWSWhzQaaWhTuaIg==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 422d7vr0ss-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 04 Oct 2024 08:56:15 +0000 (GMT)
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4948uErx002617;
-	Fri, 4 Oct 2024 08:56:14 GMT
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 422d7vr0sm-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 04 Oct 2024 08:56:14 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 49471uM0001035;
-	Fri, 4 Oct 2024 08:56:13 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 42207kk1q1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 04 Oct 2024 08:56:13 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4948uBYj47972780
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 4 Oct 2024 08:56:11 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 75E4B2004B;
-	Fri,  4 Oct 2024 08:56:11 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0D50420040;
-	Fri,  4 Oct 2024 08:56:10 +0000 (GMT)
-Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com (unknown [9.124.214.133])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri,  4 Oct 2024 08:56:09 +0000 (GMT)
-Date: Fri, 4 Oct 2024 14:26:07 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-        linux-kernel@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
-        dchinner@redhat.com, Chandan Babu R <chandan.babu@oracle.com>
-Subject: Re: [PATCH] xfs: Check for deallayed allocations before setting
- extsize
-Message-ID: <Zv+tfQhBdxuownfv@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
-References: <20241003101207.205083-1-ojaswin@linux.ibm.com>
- <Zv6sU5eF4OCPTzNH@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jA3Ze55Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2493C4CEC6;
+	Fri,  4 Oct 2024 09:05:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728032725;
+	bh=Wx/PthyK7u37Dlo4XmAudCyVDraW/qj3CqiGEMo8BRM=;
+	h=Date:From:To:Cc:Subject:From;
+	b=jA3Ze55QwjRAvIupcMpl/TtW8t3o8XdzAqVq1a0VSIF2KTB7IQwxB/lCxRfyOu9Wy
+	 HNPBP5P43+KqGXFBErOKL+jHwwV2ymWiGCed+FroP7ruZjMZFRVexTlIL4K0UV2iSL
+	 LMYxb0LvPppQ9cS03cxA50wCTyMFCyLls4VDdeEepToF8S8c1VPdrKzdyEKJUduWjI
+	 H8ubyGPcdX7qpTeXyn3AV+zva2AFQWwvZDO5XJMu1SIZYkAWgpaUTZ9xVyQqBqEV+I
+	 X50q2GhPnKUXuwFKHy3vmCxtZXDJ/ZgbteKpwEEc2PurDU389JS8DvzmC1KS32yed0
+	 ESYcaqlRPaY9Q==
+Date: Fri, 4 Oct 2024 11:05:18 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kerne.org, chandan.babu@oracle.com, chandanbabu@kernel.org, 
+	dchinner@redhat.com, djwong@kernel.org, hch@infradead.org, hch@lst.de, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, ubizjak@gmail.com, yanzhen@vivo.com, 
+	zhangzekun11@huawei.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to fddb9740e775
+Message-ID: <ljjtohz7moxjr6zrwc57gbzcjczuu5eb7anmtgv4waasubioi2@gowemfb2k3pa>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,63 +43,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zv6sU5eF4OCPTzNH@infradead.org>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: 86Jid2pEkAqYG89wWqwL4I6iq0w8Pjss
-X-Proofpoint-GUID: BWALg5qlPipqkLEwDiJzfOqXPkZtOG5u
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-04_06,2024-10-03_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- impostorscore=0 suspectscore=0 malwarescore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 phishscore=0 mlxscore=0 bulkscore=0 adultscore=0
- mlxlogscore=809 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2410040064
 
-On Thu, Oct 03, 2024 at 07:38:11AM -0700, Christoph Hellwig wrote:
-> On Thu, Oct 03, 2024 at 03:42:07PM +0530, Ojaswin Mujoo wrote:
-> > Extsize is allowed to be set on files with no data in it. For this,
-> > we were checking if the files have extents but missed to check if
-> > delayed extents were present. This patch adds that check.
-> > 
-> > **Without the patch (SUCCEEDS)**
-> > 
-> > $ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
-> 
-> Can you add a testcase for this to xfstests?
+Subject: [ANNOUNCE] xfs-linux: for-next updated to fddb9740e775
 
-Hi Christoph, actually now that we are also planning to use this for
-atomic writes, we are thinking to add a generic extsize ioctl 
-test to check for:
+Hi folks,
 
-1. Setting hint on empty file should pass
-2. Setting hint on a file with delayed allocation data should fail
-3. Setting hint on a file with allocated data should fail
-4. Setting hint on a file which is truncated to size 0 after write should pass
+The for-next branch of the xfs-linux repository at:
 
-So that should cover this for ext4 and xfs as well.
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> 
-> > -	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
-> > +	if (S_ISREG(VFS_I(ip)->i_mode) &&
-> > +	    (ip->i_df.if_nextents || ip->i_delayed_blks) &&
-> 
-> We have two other copies of the
-> 
-> 	ip->i_df.if_nextents || ip->i_delayed_blks
-> 
-> pattern to check if there is any data on the inode in xfs_inactive and
-> xfs_ioctl_setattr_xflags.  Maybe facto this into a documented helper?
+has just been updated.
 
-Sure I can do this.
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-> 
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
+The new head of the for-next branch is commit:
 
-Thanks for the review.
+fddb9740e775 xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
 
-Regards,
-ojaswin
+4 new commits:
+
+Chandan Babu R (1):
+      [c2790266d822] MAINTAINERS: add Carlos Maiolino as XFS release manager
+
+Uros Bizjak (1):
+      [fddb9740e775] xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
+
+Yan Zhen (1):
+      [a52d631f3fe5] xfs: scrub: convert comma to semicolon
+
+Zhang Zekun (1):
+      [8a81fe8a3c7e] xfs: Remove empty declartion in header file
+
+Code Diffstat:
+
+ MAINTAINERS                  |  2 +-
+ fs/xfs/scrub/ialloc_repair.c |  4 ++--
+ fs/xfs/xfs_log.h             |  2 --
+ fs/xfs/xfs_log_cil.c         | 11 ++++-------
+ 4 files changed, 7 insertions(+), 12 deletions(-)
