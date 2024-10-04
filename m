@@ -1,120 +1,127 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59CD51862
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2024 00:46:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021819475;
+	Fri,  4 Oct 2024 04:49:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728002793; cv=none; b=eOhYJvbeaAKc2L6ZgjnFUz4G4cjRP2CgKHm3CkTs162m5PvozWDdTXleV2H9pUomm9UVFIykVQKlAd8wPw0tnmy7u5WasgMsrf7+lfeYSw34TuWTgWh0KHBRjkLYh35euB9GdpKYt+MsB4Uwplw125P5jxQ8ieADcqzyxCL6bFE=
+	t=1728017368; cv=none; b=QJqXhmXioBBS/Ij9ez1rK/DT9XPBR4z2Yo6Ougf5ONJ97BVXHgoudQxmX2/Aw3rGP7dBgLVjhNM7O8+v9jaoY4dX8FUbwy2rSMRxMTWMhulcXg0JgugMtebYbjlRfKp6Jm22LBHUUG6pEaroc2YEV9dyM1dvOcNqUfmC0SmsI1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728002793; c=relaxed/simple;
-	bh=Gd8MWtiHNW0MP5r1VtRnLKSyPvxQq14CoCngTLSmOdI=;
+	s=arc-20240116; t=1728017368; c=relaxed/simple;
+	bh=TUsrG1YURfFbI9ZQ5O9KwQkkpUD3OiESPgahQWq2Rus=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JsIbj7+DpJ86mpu27D9lffmh4UCiQwpfTYy0+fzDH2row/Lrx/n3PwsCcV5kQd6nxo+VhaPjfj7zZglYlEuW8H6HUlTlNCe3gnLKrYyEHUV+V0NAUuJ5I8gjrVyd9jwtcQzXl4/EXlfwZCa+F2k9G4L2+bMZQEed/m0uU+DJxeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=M8+tPrBw; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=dQXOooEoqL21yRBaPHJ8i6qFu++3c+hZc0QA5OJydLIGGocFyAp5/HdU+lYmhg4MKa7BNvjfpZeSFpilEfsBWFmATkPAqMe/MAIHXfLk/a5rZxnBNil+VddPrhHBwUpPxbApR/I5RLPD7njcinx5EIecMHhDwnHesGhtGVTm+UE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hVi6pqYK; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="M8+tPrBw"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-20b5affde14so12119825ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Oct 2024 17:46:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hVi6pqYK"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-20b64584fd4so16764895ad.1;
+        Thu, 03 Oct 2024 21:49:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1728002792; x=1728607592; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1728017366; x=1728622166; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5oL7aA9ZouY5ZFpXF1+6PljZFIX5q9qbYeaK5yp3f5o=;
-        b=M8+tPrBwYIbphBh7sXBhSafwnM3UJX4rDEmRugHziIwF4Tpyc1ODaKoHunejPU8JzC
-         7KAC4DPp1NnsZ8wtyct3AagloaNoKMOAoo5iUaN7q0PIazO5JJKWG0VN/E5xJYs24lui
-         ztgvePCmTvzmOWeVX807LHuGY84DuhDSHQ/ypEiGjPMba6VJdjEg7TxsO58Gx5XCabpE
-         MVQrkz+dX0DlWWQUoxT2mbjqqzgv57rR5M+w645KsK9V4+Y37n1kLXGRqxSRUEbBF3H5
-         p93N41+ivMvv6NJEKsA8S4ZhjJMzWmqqLSbxSDF8GeC+blgPM7G+aePkT9VcIZO7jBxC
-         pKGA==
+        bh=TUsrG1YURfFbI9ZQ5O9KwQkkpUD3OiESPgahQWq2Rus=;
+        b=hVi6pqYKrn8dgM0eI9ixdE8WIexPLQwey+MXTfB7nkMehLW5N3wwatdfeCYP5P02+P
+         2aMcfARvvz6lnmj9H4QNS8Chz3SCOo/wpbpjaKnt67xRwmxyEBC3Uh+qL9jGRgcttizR
+         Y3obqhXJYcJtmHgppDwYb6UgiuyKEn5X7OuhkL6Jemp7p56srEJI9qiiwuoB7P4s81Zx
+         4Xfk9k9xx7B8gfvGyNaDO5sCPtOkqllD66J9SwR9p3xoqS9JFydoFzsnzeMV3+zy/TwC
+         HQ0+jUweQGQLIi8GVThtk9Mgkegm2Wndm0gsgyV0QfDwMDawVRGsoMhX+hwa4J7M8biJ
+         x1AQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728002792; x=1728607592;
+        d=1e100.net; s=20230601; t=1728017366; x=1728622166;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5oL7aA9ZouY5ZFpXF1+6PljZFIX5q9qbYeaK5yp3f5o=;
-        b=m1Bx+SzMpV2cN3LfESdTS+5og9KRt0jIsq2Vy9nYQyH3oVPCssK8FKcxKcLzmsm3Rb
-         ljK3Yxlzh6YdwfRDaFKfQ2R1yGJZ09XGDVYTn8LZm6jWXynK7BYHcNXTr7zvWQqIDPUF
-         FMTeSgvQdZjuCsOz7bb4OZs4hzNekHTfwcVUvE3mDrvOnaRpVLlFuUsKRE5ITtVR9ojh
-         TVaosvTRkY057+ocmyQljBeHaPaNK+aVojSE8mvBpPC/ovNul2pg2xzfp4asy/Cjd8mT
-         Goy5TzS+gWkTGbIwx4zPc6Pn6BFKbu8AxKpwTZx+DPNWTLiAlyEEX340Sv86+tpZqNAh
-         YUcg==
-X-Forwarded-Encrypted: i=1; AJvYcCWKDyrykeqYfPKFp7DuHuTVseWGBILwcmMPi/ASB8j3PDWwRqDBOzqFc/+L/j0AOViMfzJGZGPhEB8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxLGfjdufmUJX4rN0GbXba+KWpuxhXMceahoRiWNArmG+CP8kHu
-	XgQNm3LMmwDqmqhTPOLOP4ofkeuiIKb4ljOLWAJYNp3SvuA6aeRvEHhmSBnMdXY=
-X-Google-Smtp-Source: AGHT+IGYTOOZ0nv/cNl+WLKR+qQb6xrz41gIx2II56JGm8tfocsfbkKKQHENHQ+D1/d4e6k46fplVQ==
-X-Received: by 2002:a17:903:2443:b0:20b:61c0:43ed with SMTP id d9443c01a7336-20bfe181244mr12642925ad.30.1728002791570;
-        Thu, 03 Oct 2024 17:46:31 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20beeca1989sm14559075ad.118.2024.10.03.17.46.30
+        bh=TUsrG1YURfFbI9ZQ5O9KwQkkpUD3OiESPgahQWq2Rus=;
+        b=Uez4rjhsNmKsYoe/XaFg5wOnVucWeobAg6vKPA4F7oT0SCiuIO6JvRz/l/lF1FpvVN
+         +HqU7MoeRGpedZyghSTDfz8D/9UrZAnQJwZmPwB00knZMY8mbt2Z04RH0ICFdWkh7c82
+         XRyB3290xnQtSTENukEB+C1yu51eDxHKNcgSLYfb+Jq0Du0bhdWPOST3rwljGhfxv1um
+         aWnkmOs2J7btwWymgTGvnWn1hc1lFB4htCTABQd3mTAjiDqdkaJZ6wb+b4HZ50+qNqUt
+         ChHrU65wjXyUb6C9UHo2ao5XOehiyZmGIdT7sd6k3N7yRw64BQ+S4fkdzAOjWz2T0vll
+         Q1Bg==
+X-Forwarded-Encrypted: i=1; AJvYcCUE9Wo63qg9LZj4tgHdX9hTRtxJIIiYRmo1O3MQLP0Iqaoqb3c5m6kZYSKVBzUKFHgGx/DkS39rrbwF@vger.kernel.org, AJvYcCUO6FHwqC5n1RM1ObWoHF1jDCASQwObgBmxEKd5qUNpW4knWog6o+ILbUHBsnI7E1AT5X8Wf7lXwu/g4SbOAg==@vger.kernel.org, AJvYcCVJ/w4XsBf3ZYT4XO/1DJevRd02A//DnFnyQKwT5ApSIg6hxObHOlJRm4x+WOGrCbqkCokIcpUvNGF9hQ==@vger.kernel.org, AJvYcCVSB36FTaycSaEu8J8sAXgWHEPjodeUcSstg1neePtKwxZIJ1oxj077SUtUpJJl7lTDHZpfxymIUcv4@vger.kernel.org, AJvYcCX/AmP27C06Gn1XnE8fi1EJ3uGc1/p3E4ioPVh64bpYWIQuU/WyO4cYRW3ExQsdiCvhG3oQ2AKVbkWm@vger.kernel.org, AJvYcCXCAgarJlzAGjaaSpZ4eQYgEiJo+XufLAUWqej1/qz/QjzFxnBb8WIp/Vw5LzXBu6Q0eAW3i67JxyvJ6y7sfRv5ET5u@vger.kernel.org, AJvYcCXuSJ94SmW3oLDSqh4gEuVSZ6cpIMwNINwHrW0saYiWLOpYh56DNlcoeLdW0XJAR7i/DYF+261CeGn+OQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz7szFqV9+BoQphTwgaC/Agvqk6AH1gOSDsgquNsL8WDjZo5XDK
+	2on3CWckidUp6/2J0bwVQkcP+KBJZfZXoH4fXQ0rRaeEolu+HQTf
+X-Google-Smtp-Source: AGHT+IEOZ5VHabq4uat+pKHrLZtskvm5qkTvRMBGxvUt1yb7vzghAthcJh027s31hSLyjL6Ys/bM7A==
+X-Received: by 2002:a17:902:ec87:b0:20b:5046:356 with SMTP id d9443c01a7336-20bff04fad3mr14990785ad.36.1728017366009;
+        Thu, 03 Oct 2024 21:49:26 -0700 (PDT)
+Received: from archie.me ([103.124.138.155])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20beef8decasm16481015ad.142.2024.10.03.21.49.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Oct 2024 17:46:30 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1swWSh-00Dbsy-2p;
-	Fri, 04 Oct 2024 10:46:27 +1000
-Date: Fri, 4 Oct 2024 10:46:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org,
-	kent.overstreet@linux.dev, torvalds@linux-foundation.org,
-	=?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@linux.microsoft.com>,
-	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
-	Kees Cook <keescook@chromium.org>,
-	linux-security-module@vger.kernel.org,
-	Amir Goldstein <amir73il@gmail.com>
-Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
- sb->s_inodes iteration to super_iter_inodes()
-Message-ID: <Zv8648YMT10TMXSL@dread.disaster.area>
-References: <20241002014017.3801899-5-david@fromorbit.com>
- <Zv5GfY1WS_aaczZM@infradead.org>
- <Zv5J3VTGqdjUAu1J@infradead.org>
- <20241003115721.kg2caqgj2xxinnth@quack3>
- <Zv6J34fwj3vNOrIH@infradead.org>
- <20241003122657.mrqwyc5tzeggrzbt@quack3>
- <Zv6Qe-9O44g6qnSu@infradead.org>
- <20241003125650.jtkqezmtnzfoysb2@quack3>
- <Zv6jV40xKIJYuePA@dread.disaster.area>
- <20241003161731.kwveypqzu4bivesv@quack3>
+        Thu, 03 Oct 2024 21:49:25 -0700 (PDT)
+Received: by archie.me (Postfix, from userid 1000)
+	id CE80345D328D; Fri, 04 Oct 2024 11:49:22 +0700 (WIB)
+Date: Fri, 4 Oct 2024 11:49:22 +0700
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+To: Jeff Layton <jlayton@kernel.org>, John Stultz <jstultz@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [PATCH v9 08/12] Documentation: add a new file documenting
+ multigrain timestamps
+Message-ID: <Zv9z0qWAvTuS8zg7@archie.me>
+References: <20241002-mgtime-v9-0-77e2baad57ac@kernel.org>
+ <20241002-mgtime-v9-8-77e2baad57ac@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="OBP6+ccGLM5fNBOy"
 Content-Disposition: inline
-In-Reply-To: <20241003161731.kwveypqzu4bivesv@quack3>
+In-Reply-To: <20241002-mgtime-v9-8-77e2baad57ac@kernel.org>
 
-On Thu, Oct 03, 2024 at 06:17:31PM +0200, Jan Kara wrote:
-> On Thu 03-10-24 23:59:51, Dave Chinner wrote:
-> > As for the landlock code, I think it needs to have it's own internal
-> > tracking mechanism and not search the sb inode list for inodes that
-> > it holds references to. LSM cleanup should be run before before we
-> > get to tearing down the inode cache, not after....
-> 
-> Well, I think LSM cleanup could in principle be handled together with the
-> fsnotify cleanup but I didn't check the details.
 
-I'm not sure how we tell if an inode potentially has a LSM related
-reference hanging off it. The landlock code looks to make an
-assumption in that the only referenced inodes it sees will have a
-valid inode->i_security pointer if landlock is enabled. i.e. it
-calls landlock_inode(inode) and dereferences the returned value
-without ever checking if inode->i_security is NULL or not.
+--OBP6+ccGLM5fNBOy
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I mean, we could do a check for inode->i_security when the refcount
-is elevated and replace the security_sb_delete hook with an
-security_evict_inode hook similar to the proposed fsnotify eviction
-from evict_inodes().
+On Wed, Oct 02, 2024 at 02:49:36PM -0400, Jeff Layton wrote:
+> Add a high-level document that describes how multigrain timestamps work,
+> rationale for them, and some info about implementation and tradeoffs.
+>=20
 
-But screwing with LSM instructure looks ....  obnoxiously complex
-from the outside...
+LGTM, thanks!
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Bagas Sanjaya <bagasdotme@gmail.com>
+
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--OBP6+ccGLM5fNBOy
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZv9zzgAKCRD2uYlJVVFO
+o8z+AQDazz4grBaoJ/mtVu4UdxF3vdyAVG6PXKSWPFhB0JejcwD9E8qbXnSUInxR
+88neK7F3Iq9tS3rwTgLVOuOzET6WWAE=
+=TFot
+-----END PGP SIGNATURE-----
+
+--OBP6+ccGLM5fNBOy--
