@@ -1,124 +1,64 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26B99157487
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2024 11:57:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 945E71FAA;
+	Fri,  4 Oct 2024 12:07:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728043037; cv=none; b=b9tU8DzU6fIqhgEGIkCVkLePK7yu61wNwT2pKtv5Y1y7IfB6nKrhmYrQLgRDpPlcJonWys2rh5b4zTImuOTN7PzZpM6sHiCukJ2ds12pxKwp3+MujWWneMpwfi/5La7Nl+MjtlIFG6xkGsmtaX2kNKl7cGlyESb+K+rGr5Rvj5k=
+	t=1728043644; cv=none; b=qHjLLj2nusBCypv/fV3m4TX2QfPSrHHVbMJTbZivmRSNziY7IKlVJzHvJMHXtTbdfNP+HfaMBCFCGjDgUdLKQPZm5/lAvw7ewIHXNL8UCVXrd8eQP2OoVxpl6vzL98Yhagu7QduKAZUaVGD7xdGA2o0m8uB0lwoYXS66oO27RGs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728043037; c=relaxed/simple;
-	bh=URXEBJreisPCa4lLw/TAGR4MFn1cgcSg1bIs53k/0OA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=C0GPAwuGlJxlhLbYhbj5d3KYH3DBZVpLHnHgyAbyED7cklnttbSvbnLWOEJN+bJLPDMhmK6Hu1+Zg3qB+OyjadH6OYS/74Ur0IURJuJnVCFnN3mzfQICAX3GMed8VvXSiT1U+w8LIW6+9vC1smWv4SBgTlKg97o3gkWWxErKvzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eGfWoq4o; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1728043644; c=relaxed/simple;
+	bh=VR8FzVGzGfnb4KaMGg3Jnm4JbWFQm+fBU3FHMey2U84=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dj4SpPuEeMHvrpu2L3gfnynWLqTcsSKwNjZEO5mCIjzwvUvY7cIUf4Q9J6SflZ9zJFmcZ2pH5/AKvyMhj9fJXPH6pJkkCN8uhsLwmuEMPqfEqa8W2541P10KXMsaHPiF1lutkICL73LHRDGKX5cDn+x7hcFTCboPMwECkoeMU1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eea6kWcd; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eGfWoq4o"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1728043034;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0KN0fYPeHsc3j1Q0Gn6HCPdjsFTgSR6ExkB4Wg8g7WI=;
-	b=eGfWoq4o9UN8KVhOi3dRfS2L1TS06f1W6RY7MrztRWNJKFX7ohv5XF2VnlCbQ7xAILfJEe
-	UCMyGHu/gBfhfghQwRuN/1D0Q1ZH6siu4nFLARRA4zqrmGo2bR2/BaNsPKltLQ22uoqmU5
-	f9UeN0HNPggWidToix/ludTwQiZvM8U=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-413-3k3DLOW_OiGuLaJZF7N1pg-1; Fri, 04 Oct 2024 07:57:13 -0400
-X-MC-Unique: 3k3DLOW_OiGuLaJZF7N1pg-1
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-a8d26b5857cso156198566b.0
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Oct 2024 04:57:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728043032; x=1728647832;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0KN0fYPeHsc3j1Q0Gn6HCPdjsFTgSR6ExkB4Wg8g7WI=;
-        b=pRUnQFLw0zAfd5Ymc9p8Id/G7XTNzE4MPOmAUUOMv6clMSLBCNCM+KXrQGcAtiyPAa
-         agHRY/BoSvCVw8U63LwSPdIaUjJ6kRADJ87csP5GVertoAGcCn1AqJPk0wgyZUzluMKq
-         5S02qRNNpxAewZ8AXx2h4WRCKZJ6t3LPYZpZ3HwxrKtUjS5vF2SBqBY9SZv+HfCPGz3g
-         5UF2pTX/FO1kaeQfVBhWm3O9WdVsxSiw2dLWUOpJBXb6Jh6SJeyCLxYNdpyFxLzQi+vc
-         s9XxvKo9tT1BJ7/MicaNf9kwwmbIJtELKS3Heu6eId5wYWm8DqhXyX2lq5r8BmmwIZkk
-         dQDg==
-X-Gm-Message-State: AOJu0YxHfiGJVjnravl7OE5wHGnVwoBEnyPCOW7FqCQY6qMECxJjQj3e
-	b/+LhabzEM8x1eMyRD9y1cKK72VrzsgAmmsaHy2bBh2gynOLBbbnjHUbDN6t3ichd1dzs7LJ84i
-	Yp4bo1ecU/Oop180p038uHBzr6t3U9Yc5XB7/inRwKNXkCQbZpj4B9hZCYGm8WZKF4zLaGXlsAm
-	X6A9pGWR3oRiDJpg2sCUXwM5fw1rWS92XGfoWykyk6
-X-Received: by 2002:a17:907:26c7:b0:a86:fa3d:e984 with SMTP id a640c23a62f3a-a991bd401d1mr268908066b.20.1728043031881;
-        Fri, 04 Oct 2024 04:57:11 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHJyB9t2IlxO0Dd64oFjv/7SHyb6+DmwA8ffnkh3Op0NzPHiFatj3pgPGcMbFjmF90diKWNUQ==
-X-Received: by 2002:a17:907:26c7:b0:a86:fa3d:e984 with SMTP id a640c23a62f3a-a991bd401d1mr268904766b.20.1728043031334;
-        Fri, 04 Oct 2024 04:57:11 -0700 (PDT)
-Received: from thinky.redhat.com (ip-217-030-065-002.aim-net.cz. [217.30.65.2])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a99102a64a5sm216734566b.76.2024.10.04.04.57.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Oct 2024 04:57:10 -0700 (PDT)
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v4 2/2] xfsprogs: update gitignore
-Date: Fri,  4 Oct 2024 13:57:04 +0200
-Message-ID: <20241004115704.2105777-3-aalbersh@redhat.com>
-X-Mailer: git-send-email 2.44.1
-In-Reply-To: <20241004115704.2105777-1-aalbersh@redhat.com>
-References: <20241004115704.2105777-1-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eea6kWcd"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=ERT8foYooX8pdrVgrItLKj04LRorxaL+eplhzZTEXe4=; b=eea6kWcdtj0JG7WclrxFPpKAUk
+	jstdhS9Z6Hdkc4DrwZvREkffLbzSAuwbAQEI1HrJn9lxssdB8qhAzELM+8IMJzDA3g7/kZ87SHJVz
+	Cbg10S0GwL60Mxx30D4ut4bx05quawAk2X/OTMyc7H4F7Uxu44KlfsWhiHbpytYeRf5/p22g+KbnZ
+	HhCzKHSQUdU5OD3wXEy0+Fna62ypyPE8YKotQC7iftCrrvxkTLpxElH7HNOn+6PgwOilpGCNmq03K
+	lsXk5IUYxQKSQsB7l0DrJqxGZC5glxRdg+k8adnE64zcOglmE4R9EdB06xhzvHU0avSA60Wza8wS2
+	hyKis9UQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1swh5c-0000000CErF-02rH;
+	Fri, 04 Oct 2024 12:07:20 +0000
+Date: Fri, 4 Oct 2024 05:07:19 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: willy@infradead.org, brauner@kernel.org, cem@kernel.org,
+	ruansy.fnst@fujitsu.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: don't allocate COW extents when unsharing a hole
+Message-ID: <Zv_ad7FI-_LwWp1d@infradead.org>
+References: <172796813251.1131942.12184885574609980777.stgit@frogsfrogsfrogs>
+ <172796813277.1131942.5486112889531210260.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <172796813277.1131942.5486112889531210260.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Building xfsprogs seems to produce many build artifacts which are
-not tracked by git. Ignore them.
+On Thu, Oct 03, 2024 at 08:09:01AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> It doesn't make sense to allocate a COW extent when unsharing a hole
+> because holes cannot be shared.
+> 
+> Fixes: 1f1397b7218d7 ("xfs: don't allocate into the data fork for an unshare request")
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
----
- .gitignore | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+Looks good:
 
-diff --git a/.gitignore b/.gitignore
-index fd131b6fde52..756867124a02 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -33,6 +33,7 @@
- /config.status
- /config.sub
- /configure
-+/*~
- 
- # libtool
- /libtool
-@@ -69,13 +70,16 @@ cscope.*
- /rtcp/xfs_rtcp
- /spaceman/xfs_spaceman
- /scrub/xfs_scrub
--/scrub/xfs_scrub@.service
- /scrub/xfs_scrub_all
--/scrub/xfs_scrub_all.cron
--/scrub/xfs_scrub_all.service
--/scrub/xfs_scrub_fail@.service
-+/scrub/xfs_scrub_fail
-+/scrub/*.cron
-+/scrub/*.service
- 
- # generated crc files
- /libfrog/crc32selftest
- /libfrog/crc32table.h
- /libfrog/gen_crc32table
-+
-+# docs
-+/man/man8/mkfs.xfs.8
-+/man/man8/xfs_scrub_all.8
--- 
-2.44.1
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
