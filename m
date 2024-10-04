@@ -1,39 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2685748D;
-	Thu,  3 Oct 2024 21:37:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59CD51862
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2024 00:46:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727991436; cv=none; b=n27UpOI87FlEsSzw2a65J2omUYxVN3DJb58pDRod1xvQpC/GCi9kUb+x9lzzEKgowjB49b8zEFf934+rVXit+okJcJGMjFo5e9eBmquNhVk/Bee/PB/qg82PTNUr07nXtFR63z099ySx+5RUEh4q5dhzbvjq/ywDwdj6r3ScB7U=
+	t=1728002793; cv=none; b=eOhYJvbeaAKc2L6ZgjnFUz4G4cjRP2CgKHm3CkTs162m5PvozWDdTXleV2H9pUomm9UVFIykVQKlAd8wPw0tnmy7u5WasgMsrf7+lfeYSw34TuWTgWh0KHBRjkLYh35euB9GdpKYt+MsB4Uwplw125P5jxQ8ieADcqzyxCL6bFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727991436; c=relaxed/simple;
-	bh=JfEo9mJvBwCQGNJhYIJAP82kyzmqEaHc9LUkun9bYDU=;
+	s=arc-20240116; t=1728002793; c=relaxed/simple;
+	bh=Gd8MWtiHNW0MP5r1VtRnLKSyPvxQq14CoCngTLSmOdI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ChzIJKBJ6kfbY6Ou9I0+0ardmcm6Juxg4Z/W+kbB+Q3V9MOL6zsxofuTCB9dmu9m5bCH9CL+ife45WOSoyivhYbgSpUv3cS0n4Vor5EVew6U/IQ6PoGlRkO+l/B8OUUn/5KzmVAxq85k18S3QCNjV9NzpgYy3X/RZRLLh6uhss8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mp8AlnPr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JsIbj7+DpJ86mpu27D9lffmh4UCiQwpfTYy0+fzDH2row/Lrx/n3PwsCcV5kQd6nxo+VhaPjfj7zZglYlEuW8H6HUlTlNCe3gnLKrYyEHUV+V0NAUuJ5I8gjrVyd9jwtcQzXl4/EXlfwZCa+F2k9G4L2+bMZQEed/m0uU+DJxeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=M8+tPrBw; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mp8AlnPr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75647C4CEC5;
-	Thu,  3 Oct 2024 21:37:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727991435;
-	bh=JfEo9mJvBwCQGNJhYIJAP82kyzmqEaHc9LUkun9bYDU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Mp8AlnPrx6Fwo5vnu7r83cs4kNQFxbR/1pE/06dOzW7IsmS1eyp4HiIaCRuIkBOVP
-	 jLxAVVwNWiQh5L2MPjgYrsmY4tReGZd3/zR/q7fGKUeB6XXMs8SMvDsPYhwLzjEJNG
-	 JULSFSqzYbhJo2maNoPvRjjRJk8jZ9uZ4geiuCnzN/Ra/xhAXff52eW7w60n4RFaNy
-	 y2Gv12h348qjJBlX4wCAodPfnI03NsmfjYv9jdwQhlmII929I7eLZ1u9j5KYCVYLyj
-	 jmNGHRgX+vZuVdxOYAtiffMDDwQyGlJvyNT8+8WtxsYVm37BwCeZ0DBqm3ZZ5Dx3On
-	 2zNPl4wGG8ppQ==
-Date: Thu, 3 Oct 2024 14:37:14 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] fsstress: add support for FALLOC_FL_UNSHARE_RANGE
-Message-ID: <20241003213714.GH21840@frogsfrogsfrogs>
-References: <172780126017.3586479.18209378224774919872.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="M8+tPrBw"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-20b5affde14so12119825ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Oct 2024 17:46:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1728002792; x=1728607592; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=5oL7aA9ZouY5ZFpXF1+6PljZFIX5q9qbYeaK5yp3f5o=;
+        b=M8+tPrBwYIbphBh7sXBhSafwnM3UJX4rDEmRugHziIwF4Tpyc1ODaKoHunejPU8JzC
+         7KAC4DPp1NnsZ8wtyct3AagloaNoKMOAoo5iUaN7q0PIazO5JJKWG0VN/E5xJYs24lui
+         ztgvePCmTvzmOWeVX807LHuGY84DuhDSHQ/ypEiGjPMba6VJdjEg7TxsO58Gx5XCabpE
+         MVQrkz+dX0DlWWQUoxT2mbjqqzgv57rR5M+w645KsK9V4+Y37n1kLXGRqxSRUEbBF3H5
+         p93N41+ivMvv6NJEKsA8S4ZhjJMzWmqqLSbxSDF8GeC+blgPM7G+aePkT9VcIZO7jBxC
+         pKGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728002792; x=1728607592;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5oL7aA9ZouY5ZFpXF1+6PljZFIX5q9qbYeaK5yp3f5o=;
+        b=m1Bx+SzMpV2cN3LfESdTS+5og9KRt0jIsq2Vy9nYQyH3oVPCssK8FKcxKcLzmsm3Rb
+         ljK3Yxlzh6YdwfRDaFKfQ2R1yGJZ09XGDVYTn8LZm6jWXynK7BYHcNXTr7zvWQqIDPUF
+         FMTeSgvQdZjuCsOz7bb4OZs4hzNekHTfwcVUvE3mDrvOnaRpVLlFuUsKRE5ITtVR9ojh
+         TVaosvTRkY057+ocmyQljBeHaPaNK+aVojSE8mvBpPC/ovNul2pg2xzfp4asy/Cjd8mT
+         Goy5TzS+gWkTGbIwx4zPc6Pn6BFKbu8AxKpwTZx+DPNWTLiAlyEEX340Sv86+tpZqNAh
+         YUcg==
+X-Forwarded-Encrypted: i=1; AJvYcCWKDyrykeqYfPKFp7DuHuTVseWGBILwcmMPi/ASB8j3PDWwRqDBOzqFc/+L/j0AOViMfzJGZGPhEB8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxLGfjdufmUJX4rN0GbXba+KWpuxhXMceahoRiWNArmG+CP8kHu
+	XgQNm3LMmwDqmqhTPOLOP4ofkeuiIKb4ljOLWAJYNp3SvuA6aeRvEHhmSBnMdXY=
+X-Google-Smtp-Source: AGHT+IGYTOOZ0nv/cNl+WLKR+qQb6xrz41gIx2II56JGm8tfocsfbkKKQHENHQ+D1/d4e6k46fplVQ==
+X-Received: by 2002:a17:903:2443:b0:20b:61c0:43ed with SMTP id d9443c01a7336-20bfe181244mr12642925ad.30.1728002791570;
+        Thu, 03 Oct 2024 17:46:31 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20beeca1989sm14559075ad.118.2024.10.03.17.46.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Oct 2024 17:46:30 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1swWSh-00Dbsy-2p;
+	Fri, 04 Oct 2024 10:46:27 +1000
+Date: Fri, 4 Oct 2024 10:46:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org,
+	kent.overstreet@linux.dev, torvalds@linux-foundation.org,
+	=?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@linux.microsoft.com>,
+	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
+	Kees Cook <keescook@chromium.org>,
+	linux-security-module@vger.kernel.org,
+	Amir Goldstein <amir73il@gmail.com>
+Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
+ sb->s_inodes iteration to super_iter_inodes()
+Message-ID: <Zv8648YMT10TMXSL@dread.disaster.area>
+References: <20241002014017.3801899-5-david@fromorbit.com>
+ <Zv5GfY1WS_aaczZM@infradead.org>
+ <Zv5J3VTGqdjUAu1J@infradead.org>
+ <20241003115721.kg2caqgj2xxinnth@quack3>
+ <Zv6J34fwj3vNOrIH@infradead.org>
+ <20241003122657.mrqwyc5tzeggrzbt@quack3>
+ <Zv6Qe-9O44g6qnSu@infradead.org>
+ <20241003125650.jtkqezmtnzfoysb2@quack3>
+ <Zv6jV40xKIJYuePA@dread.disaster.area>
+ <20241003161731.kwveypqzu4bivesv@quack3>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,68 +87,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <172780126017.3586479.18209378224774919872.stgit@frogsfrogsfrogs>
+In-Reply-To: <20241003161731.kwveypqzu4bivesv@quack3>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Oct 03, 2024 at 06:17:31PM +0200, Jan Kara wrote:
+> On Thu 03-10-24 23:59:51, Dave Chinner wrote:
+> > As for the landlock code, I think it needs to have it's own internal
+> > tracking mechanism and not search the sb inode list for inodes that
+> > it holds references to. LSM cleanup should be run before before we
+> > get to tearing down the inode cache, not after....
+> 
+> Well, I think LSM cleanup could in principle be handled together with the
+> fsnotify cleanup but I didn't check the details.
 
-Teach fsstress to try to unshare file blocks on filesystems, seeing how
-the recent addition to fsx has uncovered a lot of bugs.
+I'm not sure how we tell if an inode potentially has a LSM related
+reference hanging off it. The landlock code looks to make an
+assumption in that the only referenced inodes it sees will have a
+valid inode->i_security pointer if landlock is enabled. i.e. it
+calls landlock_inode(inode) and dereferences the returned value
+without ever checking if inode->i_security is NULL or not.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- ltp/fsstress.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+I mean, we could do a check for inode->i_security when the refcount
+is elevated and replace the security_sb_delete hook with an
+security_evict_inode hook similar to the proposed fsnotify eviction
+from evict_inodes().
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index b8d025d3a0..8cd45c7a85 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -139,6 +139,7 @@ typedef enum {
- 	OP_TRUNCATE,
- 	OP_UNLINK,
- 	OP_UNRESVSP,
-+	OP_UNSHARE,
- 	OP_URING_READ,
- 	OP_URING_WRITE,
- 	OP_WRITE,
-@@ -246,6 +247,7 @@ void	punch_f(opnum_t, long);
- void	zero_f(opnum_t, long);
- void	collapse_f(opnum_t, long);
- void	insert_f(opnum_t, long);
-+void	unshare_f(opnum_t, long);
- void	read_f(opnum_t, long);
- void	readlink_f(opnum_t, long);
- void	readv_f(opnum_t, long);
-@@ -339,6 +341,7 @@ struct opdesc	ops[OP_LAST]	= {
- 	[OP_TRUNCATE]	   = {"truncate",      truncate_f,	2, 1 },
- 	[OP_UNLINK]	   = {"unlink",	       unlink_f,	1, 1 },
- 	[OP_UNRESVSP]	   = {"unresvsp",      unresvsp_f,	1, 1 },
-+	[OP_UNSHARE]	   = {"unshare",       unshare_f,	1, 1 },
- 	[OP_URING_READ]	   = {"uring_read",    uring_read_f,	-1, 0 },
- 	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	-1, 1 },
- 	[OP_WRITE]	   = {"write",	       write_f,		4, 1 },
-@@ -3767,6 +3770,7 @@ struct print_flags falloc_flags [] = {
- 	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
- 	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
- 	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
-+	{ FALLOC_FL_UNSHARE_RANGE, "UNSHARE_RANGE"},
- 	{ -1, NULL}
- };
- 
-@@ -4469,6 +4473,16 @@ insert_f(opnum_t opno, long r)
- #endif
- }
- 
-+void
-+unshare_f(opnum_t opno, long r)
-+{
-+#ifdef HAVE_LINUX_FALLOC_H
-+# ifdef FALLOC_FL_UNSHARE_RANGE
-+	do_fallocate(opno, r, FALLOC_FL_UNSHARE_RANGE);
-+# endif
-+#endif
-+}
-+
- void
- read_f(opnum_t opno, long r)
- {
+But screwing with LSM instructure looks ....  obnoxiously complex
+from the outside...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
