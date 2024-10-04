@@ -1,60 +1,48 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AE6815B0FF;
-	Fri,  4 Oct 2024 12:14:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4F8A156861;
+	Fri,  4 Oct 2024 12:15:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728044079; cv=none; b=smTN1pUaNPfn+yV5EsIMSLINyjCtJLUvGj/38pqTxFPEgGnE19aL3Ow7N3ewbSrNKFhd+f8Q3zT30qY8M6euoufoqpHgulPIYQszQT7CGxJFijMh1FDDF0nIKgEj+wcFw8EBdnBwdMIuVG0mxT4V9iCSDjdkAZ7wGdq3u3GypcY=
+	t=1728044112; cv=none; b=bQd7o1SsFHjRCAHu7YzabMZY8ODV9JKT4380nnbC0kLuI6GG++DzsKRXSzmP69tMge1p83T1nnuE7tbvS4YZtWZffr6ix3ZZEyVw6A32ZMVDWblowF9lC2ciU9ewUWiBSQr1TZxc0asTzA4GO+qHPUqwkhvi7oo/mDsf8BTqeWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728044079; c=relaxed/simple;
-	bh=9PPLlK1ccyzDFpw+b+MDJFtdCCKRfJD+OQMnxoX30s8=;
+	s=arc-20240116; t=1728044112; c=relaxed/simple;
+	bh=IHG2rcO6niAgj79p0iS4MJY2rxo4OZlyjNpg5GwV7YI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PafkcuF8PLpknhJYEHn9YCQw0wo8JHEUodTGncUbl0k2Y+BgSWGdFRMzOSQ063fUYu45VSXSB7L6ogwYAFub2JoeoknDWzPUKth9jpkXTMFfDYxcWeoU85bIZpQVOJ9poVGyOvJHRcJlwYMX8PWjWHEJ3do11iCLwO7ORlLc7D0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PU2W09TE; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=dMaxM6i6CsR0gw2jz11MgMyv3Gvi3n80AIIou1G+bBOuvdEFqCcEXX09Ug1eSdmEvCFtdGJHt6Q8NEuX8ZnrplyXqGTG3rsgB+o0tbFMb05iSuPmpFo355IPTiSByb8MNsXEXMcPyT4zrciarrw2FVjayySYbPiBoKyk/nrX4v4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=r+llvOsv; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PU2W09TE"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="r+llvOsv"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=g6vBL1gA3+PxhIH3omajxsBuXtvGPDUikCn7RpNpROs=; b=PU2W09TETmz65qYt7/hG0zBv3F
-	AUZl3xxevjAipthUCnSR4UM74U+ujoDUswdUlUI7A7tGpYjXZ/ESkIt22i1ELlqcYNNBwfeoFQuVb
-	h3J2B8a54amGBxtocafqrV/qPC11F4ujntp0OB2p7/qtAtr0ECMezbOs2jeLL3ahnUQMdW6iuCvRH
-	DZeNr9ygFI75DJl4SvIi1Vz8xahMUda0hY0l3lTEuEc1bMQUYMYAn2ClPzj2KutgKe1YqcuIDOa2n
-	ILvJ9KQR3oPkaQFgDARoEkcwARP6GWi3dnA5yMujlr8g306LlEQabL313OD3wHq86tBov4Eup0/gL
-	J6zLwicg==;
+	bh=nw5UII9YlPkj6j45/pAA7ubQBhrRGKthR1EkfAJseas=; b=r+llvOsvNVnIiYKbA8xEsley8V
+	mCvR8043OQuDf6ORA0/apbv7pTNDXEn+G6VIrah18lPf03JW+4Nz+xrYigfutje7LkaY00+7Tk/+L
+	xHutqPwWTDO5xW4hVVgi1Re5osh2CCuSphV3ws/kag49PImn9bJeyRCjZfCQ1+mxL6oPsNJXH3Oy3
+	k4Ndi73CLTE9aRh3V0JvFuKNCfl8Vqct9otdbd7rJhhSyPDR/NEbYn5eM9XtogbgW3NPwAT8xhHH1
+	2IlVWPqrT9j6ZSwi+vtYkEbqthBRkI8z5jqa+VyeZJNYbDfuYcJ2PG9lv4al0SA6/+hw2BIcnq4Jy
+	+BkswE2A==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1swhCe-0000000CGSU-3Vxl;
-	Fri, 04 Oct 2024 12:14:36 +0000
-Date: Fri, 4 Oct 2024 05:14:36 -0700
+	id 1swhDB-0000000CGZY-406v;
+	Fri, 04 Oct 2024 12:15:09 +0000
+Date: Fri, 4 Oct 2024 05:15:09 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-	Christoph Hellwig <hch@infradead.org>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
-	torvalds@linux-foundation.org,
-	=?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@linux.microsoft.com>,
-	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
-	Kees Cook <keescook@chromium.org>,
-	linux-security-module@vger.kernel.org,
-	Amir Goldstein <amir73il@gmail.com>
-Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
- sb->s_inodes iteration to super_iter_inodes()
-Message-ID: <Zv_cLNUpBxpLUe1Q@infradead.org>
-References: <Zv5J3VTGqdjUAu1J@infradead.org>
- <20241003115721.kg2caqgj2xxinnth@quack3>
- <Zv6J34fwj3vNOrIH@infradead.org>
- <20241003122657.mrqwyc5tzeggrzbt@quack3>
- <Zv6Qe-9O44g6qnSu@infradead.org>
- <20241003125650.jtkqezmtnzfoysb2@quack3>
- <Zv6jV40xKIJYuePA@dread.disaster.area>
- <20241003161731.kwveypqzu4bivesv@quack3>
- <Zv8648YMT10TMXSL@dread.disaster.area>
- <20241004-abgemacht-amortisieren-9d54cca35cab@brauner>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"Darrick J . Wong" <djwong@kernel.org>, dchinner@redhat.com,
+	Chandan Babu R <chandan.babu@oracle.com>
+Subject: Re: [PATCH] xfs: Check for deallayed allocations before setting
+ extsize
+Message-ID: <Zv_cTc6cgxszKGy3@infradead.org>
+References: <20241003101207.205083-1-ojaswin@linux.ibm.com>
+ <Zv6sU5eF4OCPTzNH@infradead.org>
+ <Zv+tfQhBdxuownfv@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -63,18 +51,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241004-abgemacht-amortisieren-9d54cca35cab@brauner>
+In-Reply-To: <Zv+tfQhBdxuownfv@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Oct 04, 2024 at 09:21:19AM +0200, Christian Brauner wrote:
-> > But screwing with LSM instructure looks ....  obnoxiously complex
-> > from the outside...
+On Fri, Oct 04, 2024 at 02:26:07PM +0530, Ojaswin Mujoo wrote:
+> Hi Christoph, actually now that we are also planning to use this for
+> atomic writes, we are thinking to add a generic extsize ioctl 
+> test to check for:
 > 
-> Imho, please just focus on the immediate feedback and ignore all the
-> extra bells and whistles that we could or should do. I prefer all of
-> that to be done after this series lands.
+> 1. Setting hint on empty file should pass
+> 2. Setting hint on a file with delayed allocation data should fail
+> 3. Setting hint on a file with allocated data should fail
+> 4. Setting hint on a file which is truncated to size 0 after write should pass
+> 
+> So that should cover this for ext4 and xfs as well.
 
-For the LSM mess: absolutely.  For fsnotify it seems like Dave has
-a good idea to integrate it, and it removes the somewhat awkward
-need for the reffed flag.  So if that delayed notify idea works out
-I'd prefer to see that in over the flag.
+Sounds good.
+
