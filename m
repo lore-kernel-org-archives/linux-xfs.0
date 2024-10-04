@@ -1,44 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 945E71FAA;
-	Fri,  4 Oct 2024 12:07:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 670CE1FAA;
+	Fri,  4 Oct 2024 12:07:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728043644; cv=none; b=qHjLLj2nusBCypv/fV3m4TX2QfPSrHHVbMJTbZivmRSNziY7IKlVJzHvJMHXtTbdfNP+HfaMBCFCGjDgUdLKQPZm5/lAvw7ewIHXNL8UCVXrd8eQP2OoVxpl6vzL98Yhagu7QduKAZUaVGD7xdGA2o0m8uB0lwoYXS66oO27RGs=
+	t=1728043660; cv=none; b=iBIeaCuj6vl6FvfVJ4kozbaPW7EyVeBEwsDX1m08o4oVWX9MDbi7LTvbo5ebI4tmIJNYZzX6N6wLyXw+8s0kTZ152POv0BLpX0qDxtsCLYg0PNXTNJXANa/VW8Jdl7nofWt60oOQSU994J6byR3RjInnw/mvc3W440mhDUNdGmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728043644; c=relaxed/simple;
-	bh=VR8FzVGzGfnb4KaMGg3Jnm4JbWFQm+fBU3FHMey2U84=;
+	s=arc-20240116; t=1728043660; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dj4SpPuEeMHvrpu2L3gfnynWLqTcsSKwNjZEO5mCIjzwvUvY7cIUf4Q9J6SflZ9zJFmcZ2pH5/AKvyMhj9fJXPH6pJkkCN8uhsLwmuEMPqfEqa8W2541P10KXMsaHPiF1lutkICL73LHRDGKX5cDn+x7hcFTCboPMwECkoeMU1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eea6kWcd; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=nSXRhYTGSDJLMQg6KnVB9JCktd7jkGLp3MceE9+3Sn0gnDT2EGUtEDamLi271+JRXGfJBzaUW8ZNaXELUepd9ZcbbN+qUMadFK8QAiqq5TzBUYoc+e5iQ11mygP65OY/kxp0rst7DecB2YCsT2Poyu2Gm3Uu5/ZbkDstfVNS9Ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JiNkRwXY; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eea6kWcd"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JiNkRwXY"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ERT8foYooX8pdrVgrItLKj04LRorxaL+eplhzZTEXe4=; b=eea6kWcdtj0JG7WclrxFPpKAUk
-	jstdhS9Z6Hdkc4DrwZvREkffLbzSAuwbAQEI1HrJn9lxssdB8qhAzELM+8IMJzDA3g7/kZ87SHJVz
-	Cbg10S0GwL60Mxx30D4ut4bx05quawAk2X/OTMyc7H4F7Uxu44KlfsWhiHbpytYeRf5/p22g+KbnZ
-	HhCzKHSQUdU5OD3wXEy0+Fna62ypyPE8YKotQC7iftCrrvxkTLpxElH7HNOn+6PgwOilpGCNmq03K
-	lsXk5IUYxQKSQsB7l0DrJqxGZC5glxRdg+k8adnE64zcOglmE4R9EdB06xhzvHU0avSA60Wza8wS2
-	hyKis9UQ==;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=JiNkRwXYg5IujTertZEXPHBjd6
+	jfAnisrjifvv1fY4wFYCQWtW/p2ASAcfFzIm2SUv5UJsidumF+lwomMGHr32fTzGYijzphzD7ArvC
+	B+Rj0iNY0PrVUZza5GzWhoXDDwmkWjvKbfC0LGYJKSlb5VEx4X8fZGuKJzkeBMcN7cJZVFjgKrGoO
+	gyrU9JwAdAWP9iOrITRQ+Pr8+fkhhhEHfXRAOcIAIzsgyipI/CFrUZk0pn616ilJThMttOvpX4BRu
+	nt4325E1kiKyGHI4eFviQGtIN4IaPy54s1Qek1LPy70pVVGQmDPNm9oHqp+B0SqxaSvWJuvHR8ug6
+	ZdEFiuPg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1swh5c-0000000CErF-02rH;
-	Fri, 04 Oct 2024 12:07:20 +0000
-Date: Fri, 4 Oct 2024 05:07:19 -0700
+	id 1swh5t-0000000CEwR-4AVv;
+	Fri, 04 Oct 2024 12:07:37 +0000
+Date: Fri, 4 Oct 2024 05:07:37 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: willy@infradead.org, brauner@kernel.org, cem@kernel.org,
 	ruansy.fnst@fujitsu.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: don't allocate COW extents when unsharing a hole
-Message-ID: <Zv_ad7FI-_LwWp1d@infradead.org>
+Subject: Re: [PATCH 2/4] iomap: share iomap_unshare_iter predicate code with
+ fsdax
+Message-ID: <Zv_aiQGbRhO-ChTZ@infradead.org>
 References: <172796813251.1131942.12184885574609980777.stgit@frogsfrogsfrogs>
- <172796813277.1131942.5486112889531210260.stgit@frogsfrogsfrogs>
+ <172796813294.1131942.15762084021076932620.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,16 +48,8 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <172796813277.1131942.5486112889531210260.stgit@frogsfrogsfrogs>
+In-Reply-To: <172796813294.1131942.15762084021076932620.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
-
-On Thu, Oct 03, 2024 at 08:09:01AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> It doesn't make sense to allocate a COW extent when unsharing a hole
-> because holes cannot be shared.
-> 
-> Fixes: 1f1397b7218d7 ("xfs: don't allocate into the data fork for an unshare request")
 
 Looks good:
 
