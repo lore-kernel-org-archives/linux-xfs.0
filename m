@@ -1,206 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF5C2022D7;
-	Fri,  4 Oct 2024 18:25:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 411D713D89D
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2024 22:46:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728066325; cv=none; b=joq/kE4z/WonpxiFeY6KWMLBqA3aQoaRj6lxcGgfVwVBVhK4zn5vcWBSevOZw9KSO9IpVdyAEfkNg1jvrMkRnXWKn2qzEgko9DGR2P8B80ERqdXxZBQr9NFYG5NcgejqGLzUP0BKd2zbXpcVIc/X8mAfjaaK4aaPV1hLIdGvu7c=
+	t=1728081998; cv=none; b=MJa1XgvmeKaghcHaXsaVmjj4DtgpxYHA/BoNBeY3ahVGzLlc6YzUeqbMy6tzVaAbU+4P0Zq9OhDelm9HcmChEAABKRHVHdeCQkv62lR/ZTXD1DPHi+OQAvZS35M3lDHsqI2b6DrPIMwuk/FMnT+S89mqiV5vAD48KuWk38a2eOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728066325; c=relaxed/simple;
-	bh=L46bPyYoG91u3ZbZDaYScM15XmP2KiD6b35+UXfWRyU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OaxQeM8KfRnnAlWjqPMXZ/K7JwusES1n+4Zma5sBJaQzk4WnZhDNPoODQjSwtZqFG5U+CPEZDNAWL00M1dU/Cy9hoGr7uPcmrFVCjIIeQov/QcRWLsaA8x8CRzMevyr7VW7ACLR354dr53FQJfgDm6SgZKlufJdgMohuiyKSGPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fH8lovuf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728081998; c=relaxed/simple;
+	bh=KGDBW+VzICTuok5HmgYwSc6Q3qKxP7NeiQvuKpfuJj8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Zm3zmBznfjm180QbgfdAnBn4bGI3GfmxCPfuptUWFJbtJ0YmmoygWcsy6DboJiLaYGRFlYnAOqhfYO/bx7ko0B+w9sruCV6MqzBqzXhZFZa1GFlRzeh5bXhxDvfbv0avzkGwdrLFLhpq0ely2t5PEPtTK61BnlYm66S+TPbuOXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=iNcLVTFV; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fH8lovuf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33D99C4CEC6;
-	Fri,  4 Oct 2024 18:25:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728066325;
-	bh=L46bPyYoG91u3ZbZDaYScM15XmP2KiD6b35+UXfWRyU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=fH8lovufw3UoGshs+nALrPfXvLkrqX7bZ4JFfep3kejJD8+8JqhNkhOjAA+cyCAJM
-	 2WUXonnvGhWT43S++j+R/d+y+O4LxGo4Jj5atyQh0JHKX4b9oV+hGi5MD5Radi2ZQz
-	 LqGlu/ad6niXJpFP54mkmSygHsEZgAfQYqDu7jgZsAPEdrgC3XMz5kLkYqio0iDGcr
-	 telbcwluYI2L70QJMS7rO9Pc7UrPEsvs3eQs8tNIh7RQs8s9dXa80S34akEYPILIzo
-	 cXC428ecJuvqXfyyOquhOwp8ZJTxLGg9C9mklTXjFo9GfheQk2ya2VMMwXeZQUKdsq
-	 n4nN713bs2ekQ==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Pankaj Raghav <p.raghav@samsung.com>,
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="iNcLVTFV"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-71ddfc61c78so1471974b3a.2
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Oct 2024 15:46:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1728081994; x=1728686794; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=mfPYWu0zoQuwrp1D6VKi5ike7t96l9DXCZP1d6TBs20=;
+        b=iNcLVTFVEhfPpmJZiXGLhSTr6HJNAURf1G6aOa5qkkUggoVAu42F5VeraclLkx2sBg
+         oA8T/zD7Gp2PcY/p84c2darNZGHnCFo5KXMA7YkLdVot4SNYl3fpkJowKl84piJAUFga
+         NJTfVB3Tz94sSGh3EN2J1sxvjdzqjKQVBYVWjk5+h1mq9HHWpaf384ZrOujuD1X0+oOQ
+         xx88+wtYtElrZ/UzuCy7N7j4EFVtmlLp2ZrQ9DDMXt1mcijzMAf3uqDQ0PMMpI60yzt4
+         awXGt2+DRMuPZlkeS8pE44Tk5D/IXVaTcsXfF2lK1seORExX5N65iK6xyaesurDnYQH1
+         etYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728081994; x=1728686794;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mfPYWu0zoQuwrp1D6VKi5ike7t96l9DXCZP1d6TBs20=;
+        b=s0uQSx2qBUzAA1XRXm8A9koOfNOyuVicvM2xr9q1Es4zIT0hRAgW2VGxZKrDz+J6w/
+         DH6mlmqgsuen1xtBWJmKvetuAQjoURUb4Y/onmArTrqehMSlNBxK2X+e2bazMr7WeX+U
+         FHhLgq/c/csRMhJjKQGWujL42RDSMHYhnlyDN2I8H2FncLTo26mXyl/CpXAwi8N4dK/Z
+         cuaRAKDXSHI6+37A/15Vi00XgAMtUoQGZAQMnR8S4I9LPukEr/c26ZTkJRWj9BeBoAOt
+         1NLMtH476KFhRyovfr185ZrnUfilQqxsKtNXehRoJKxn2NkJr7SYbLzYyd9N7zwb2jlH
+         kBAw==
+X-Forwarded-Encrypted: i=1; AJvYcCWuQa0iK0XCwBSqNvGc2Vdqt+LhX/lz3QqpSIhhRh1TQS3SNT2pCvOIGWlnSNe+Fyg1Nd3uHxiHgdw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyUczn/EfWafHr4nRanSHqMfJuMUrGuULjZtVCNmYJNDzvBAPOo
+	HUXDux1vF27a+D2D4Sy8Q5om1h61mGyltO+HWsNsS5syuKYUzNZXhKv6nr+ifNBqWd1+llAt73n
+	X
+X-Google-Smtp-Source: AGHT+IHH6D+mR+kPDuhUqfvHx3wFJkWq0SHSNLLQousrnyeEieGnCefv4dnbkilmvTDOj0X5j+GnTQ==
+X-Received: by 2002:a05:6a00:23d5:b0:718:dc55:728a with SMTP id d2e1a72fcca58-71de23b5e95mr6803811b3a.8.1728081994552;
+        Fri, 04 Oct 2024 15:46:34 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71df0d47863sm384166b3a.119.2024.10.04.15.46.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Oct 2024 15:46:34 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1swr4A-00E116-26;
+	Sat, 05 Oct 2024 08:46:30 +1000
+Date: Sat, 5 Oct 2024 08:46:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Sasha Levin <sashal@kernel.org>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Pankaj Raghav <p.raghav@samsung.com>,
 	Hannes Reinecke <hare@suse.de>,
 	"Darrick J . Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
 	Daniel Gomez <da.gomez@samsung.com>,
-	Christian Brauner <brauner@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-xfs@vger.kernel.org,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 12/58] iomap: fix iomap_dio_zero() for fs bs > system page size
-Date: Fri,  4 Oct 2024 14:23:45 -0400
-Message-ID: <20241004182503.3672477-12-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20241004182503.3672477-1-sashal@kernel.org>
-References: <20241004182503.3672477-1-sashal@kernel.org>
+Subject: Re: [PATCH AUTOSEL 6.11 14/76] iomap: fix iomap_dio_zero() for fs bs
+ > system page size
+Message-ID: <ZwBwRqGRwoDd2eT4@dread.disaster.area>
+References: <20241004181828.3669209-1-sashal@kernel.org>
+ <20241004181828.3669209-14-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.54
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241004181828.3669209-14-sashal@kernel.org>
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+On Fri, Oct 04, 2024 at 02:16:31PM -0400, Sasha Levin wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
+> 
+> [ Upstream commit 10553a91652d995274da63fc317470f703765081 ]
+> 
+> iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+> < fs block size. iomap_dio_zero() has an implicit assumption that fs block
+> size < page_size. This is true for most filesystems at the moment.
+> 
+> If the block size > page size, this will send the contents of the page
+> next to zero page(as len > PAGE_SIZE) to the underlying block device,
+> causing FS corruption.
+> 
+> iomap is a generic infrastructure and it should not make any assumptions
+> about the fs block size and the page size of the system.
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Link: https://lore.kernel.org/r/20240822135018.1931258-7-kernel@pankajraghav.com
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Daniel Gomez <da.gomez@samsung.com>
+> Signed-off-by: Christian Brauner <brauner@kernel.org>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
+> ---
+>  fs/iomap/buffered-io.c |  4 ++--
+>  fs/iomap/direct-io.c   | 45 ++++++++++++++++++++++++++++++++++++------
+>  2 files changed, 41 insertions(+), 8 deletions(-)
 
-[ Upstream commit 10553a91652d995274da63fc317470f703765081 ]
+For the second time: NACK to this patch for -all- LTS kernels.
 
-iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
-< fs block size. iomap_dio_zero() has an implicit assumption that fs block
-size < page_size. This is true for most filesystems at the moment.
+It is a support patch for a new feature introduced in 6.12-rc1 - it
+is *not* a bug fix, it is not in any way relevant to LTS kernels,
+and it will *break some architectures* as it stands.
 
-If the block size > page size, this will send the contents of the page
-next to zero page(as len > PAGE_SIZE) to the underlying block device,
-causing FS corruption.
-
-iomap is a generic infrastructure and it should not make any assumptions
-about the fs block size and the page size of the system.
-
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-Link: https://lore.kernel.org/r/20240822135018.1931258-7-kernel@pankajraghav.com
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Daniel Gomez <da.gomez@samsung.com>
-Signed-off-by: Christian Brauner <brauner@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/iomap/buffered-io.c |  4 ++--
- fs/iomap/direct-io.c   | 45 ++++++++++++++++++++++++++++++++++++------
- 2 files changed, 41 insertions(+), 8 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 975fd88c1f0f4..6b89b5589ba28 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1998,10 +1998,10 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
- }
- EXPORT_SYMBOL_GPL(iomap_writepages);
- 
--static int __init iomap_init(void)
-+static int __init iomap_buffered_init(void)
- {
- 	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
- 			   offsetof(struct iomap_ioend, io_inline_bio),
- 			   BIOSET_NEED_BVECS);
- }
--fs_initcall(iomap_init);
-+fs_initcall(iomap_buffered_init);
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index bcd3f8cf5ea42..409a21144a555 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -11,6 +11,7 @@
- #include <linux/iomap.h>
- #include <linux/backing-dev.h>
- #include <linux/uio.h>
-+#include <linux/set_memory.h>
- #include <linux/task_io_accounting_ops.h>
- #include "trace.h"
- 
-@@ -27,6 +28,13 @@
- #define IOMAP_DIO_WRITE		(1U << 30)
- #define IOMAP_DIO_DIRTY		(1U << 31)
- 
-+/*
-+ * Used for sub block zeroing in iomap_dio_zero()
-+ */
-+#define IOMAP_ZERO_PAGE_SIZE (SZ_64K)
-+#define IOMAP_ZERO_PAGE_ORDER (get_order(IOMAP_ZERO_PAGE_SIZE))
-+static struct page *zero_page;
-+
- struct iomap_dio {
- 	struct kiocb		*iocb;
- 	const struct iomap_dio_ops *dops;
-@@ -232,13 +240,20 @@ void iomap_dio_bio_end_io(struct bio *bio)
- }
- EXPORT_SYMBOL_GPL(iomap_dio_bio_end_io);
- 
--static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
-+static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
- 		loff_t pos, unsigned len)
- {
- 	struct inode *inode = file_inode(dio->iocb->ki_filp);
--	struct page *page = ZERO_PAGE(0);
- 	struct bio *bio;
- 
-+	if (!len)
-+		return 0;
-+	/*
-+	 * Max block size supported is 64k
-+	 */
-+	if (WARN_ON_ONCE(len > IOMAP_ZERO_PAGE_SIZE))
-+		return -EINVAL;
-+
- 	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
- 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
- 				  GFP_KERNEL);
-@@ -246,8 +261,9 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
- 	bio->bi_private = dio;
- 	bio->bi_end_io = iomap_dio_bio_end_io;
- 
--	__bio_add_page(bio, page, len, 0);
-+	__bio_add_page(bio, zero_page, len, 0);
- 	iomap_dio_submit_bio(iter, dio, bio, pos);
-+	return 0;
- }
- 
- /*
-@@ -356,8 +372,10 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 	if (need_zeroout) {
- 		/* zero out from the start of the block to the write offset */
- 		pad = pos & (fs_block_size - 1);
--		if (pad)
--			iomap_dio_zero(iter, dio, pos - pad, pad);
-+
-+		ret = iomap_dio_zero(iter, dio, pos - pad, pad);
-+		if (ret)
-+			goto out;
- 	}
- 
- 	/*
-@@ -430,7 +448,8 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		/* zero out from the end of the write to the end of the block */
- 		pad = pos & (fs_block_size - 1);
- 		if (pad)
--			iomap_dio_zero(iter, dio, pos, fs_block_size - pad);
-+			ret = iomap_dio_zero(iter, dio, pos,
-+					     fs_block_size - pad);
- 	}
- out:
- 	/* Undo iter limitation to current extent */
-@@ -752,3 +771,17 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return iomap_dio_complete(dio);
- }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
-+
-+static int __init iomap_dio_init(void)
-+{
-+	zero_page = alloc_pages(GFP_KERNEL | __GFP_ZERO,
-+				IOMAP_ZERO_PAGE_ORDER);
-+
-+	if (!zero_page)
-+		return -ENOMEM;
-+
-+	set_memory_ro((unsigned long)page_address(zero_page),
-+		      1U << IOMAP_ZERO_PAGE_ORDER);
-+	return 0;
-+}
-+fs_initcall(iomap_dio_init);
+-Dave.
 -- 
-2.43.0
-
+Dave Chinner
+david@fromorbit.com
