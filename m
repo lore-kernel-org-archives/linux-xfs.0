@@ -1,62 +1,74 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88BB2146D65;
-	Fri,  4 Oct 2024 10:56:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97F3114B94C
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2024 11:09:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728039378; cv=none; b=kDAyyxlTFSUEPKiki0k6uijGPtI5j6Xat/L2CqM5L+9tJMTn4s6IHxHx0wg27DtPpRRjqLxug76zjofvHcfNej67K0rzNIwCnJ2iD+LjcIf4QHCTPBZkkkWYtwLPKrd1PVEKgPloe2Yc+1H7Io+d78Hg7eTVlmTBGJ4kAn9n9go=
+	t=1728040147; cv=none; b=lpGcsCPyMCN6kWHmBGYjoELXL9CcWaAV0cfR3rmJo2eq/w4AvbL2mh6I439bYZT4Q6g/PxqqgGXrv1nYFz+Vs1ogGopbUCBOD6CWmsgqrm2iHrskgA+jV4bN4iSlp2AS6If6K+Jtkya8sHhYYk9YDtaRAGjuzXszOV+kcYAJcSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728039378; c=relaxed/simple;
-	bh=AYq+Depz6SZzgWi309iNgbm1eMigTRimnQb8POgFbds=;
+	s=arc-20240116; t=1728040147; c=relaxed/simple;
+	bh=Im7hS+a9bmuFmPguwuWcWz+SVH+S8ioqsknSf6atxqo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sSVqoVchTwnUilFr6V54zW5Je7ubFCgvd2idRrrWgvEVmjE+bl58Ke7jRSX67uKY0+p2Niip1kORJyLcbcU+N+QBeuzcA3TnpawA8RkGbeEfU2gYyLLVXRhkfoNJCXkLTcDcX5KRAhiyQes5GjmuWGQde4vMOW9TOD8S/P3t0Ok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VTvF3lbH; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fuxvzjn7PBhsZ8QBNkaQ+RmFpMIM63Qtd9dbZ+OjJEEp557/SxnV2+znYH/NMzu1cut1et4C8IW7puQI5KRpNhFtlClrs2v8QryEkqofdSDx9L2fmFaG7+hqpD/58T9Y50JOZEag+huWu98yVn4ANmtBuFFN/0u9BczZo+ThdzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hf+CVNhA; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VTvF3lbH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1728039377; x=1759575377;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=AYq+Depz6SZzgWi309iNgbm1eMigTRimnQb8POgFbds=;
-  b=VTvF3lbH70hfCk7xnxPdrKADNoD5GehKbAxzJ6QA48xstAOxH3MBg2G7
-   1REL4xwsLKlAiLc4jTMiBRSiMRgXEIP774gLWqW8tmyYMYUnUYXYZ4b/M
-   zuZEYIXV7Oy2bJ6FHhXxidfrWqJZWYO8zzJswFnGz65gbdxdoMLU87OSu
-   ivgrdx7avCk8EXWOYNC7M1XhY0MT3mjac/Hgvn07Ju7UvKjmdNHznLsFZ
-   +J5O0ChzYu5LUs8cf7DeMBzIdcRSXZtvALTMLbfICXVenzUEYfKU3mbsU
-   7OVmaSUTDvgQmZRCdWQi9jwgAlaycsQrKVVD8+JEQTnh1QIpYrS6A2eGR
-   A==;
-X-CSE-ConnectionGUID: MyuqwGzwTB2KrZLYFibz+Q==
-X-CSE-MsgGUID: piG7NdRVRw2MOigJJqVY2g==
-X-IronPort-AV: E=McAfee;i="6700,10204,11214"; a="27392549"
-X-IronPort-AV: E=Sophos;i="6.11,177,1725346800"; 
-   d="scan'208";a="27392549"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2024 03:56:16 -0700
-X-CSE-ConnectionGUID: 1s6oyzRRRUyGPVMEB7cNdg==
-X-CSE-MsgGUID: vr8Wd7JVRDGF8l/R/hoZIg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,177,1725346800"; 
-   d="scan'208";a="74500301"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 04 Oct 2024 03:56:14 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1swfyl-0001X3-2c;
-	Fri, 04 Oct 2024 10:56:11 +0000
-Date: Fri, 4 Oct 2024 18:55:30 +0800
-From: kernel test robot <lkp@intel.com>
-To: Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
-	torvalds@linux-foundation.org
-Subject: Re: [PATCH 3/7] vfs: convert vfs inode iterators to
- super_iter_inodes_unsafe()
-Message-ID: <202410041848.j3wt7yFP-lkp@intel.com>
-References: <20241002014017.3801899-4-david@fromorbit.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hf+CVNhA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728040144;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=aHSfT+tHPOx8LCBAypdcHTzDtgrD2sNHRZ9LLPt/lJ8=;
+	b=hf+CVNhAuFwmtELOPq4vt+HH5Ux89/M8bA/+gx1UCxnSr1FBNfgiDXsPMQv5Bn2dz3kuIa
+	JDzBf75aibYzX8sA+UFR4r7mc72j/Sxymm4JYqqWgLlvPvxh8gzh+3LdFBH1bz9+SIosfF
+	mAgsa121q8NO5tDjf4g3EXzDWXXPY7s=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-295-o9gUOUV5MG6Wt0msT5UB5g-1; Fri, 04 Oct 2024 07:09:01 -0400
+X-MC-Unique: o9gUOUV5MG6Wt0msT5UB5g-1
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-a8a8d9a2a12so158222866b.3
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Oct 2024 04:09:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728040140; x=1728644940;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aHSfT+tHPOx8LCBAypdcHTzDtgrD2sNHRZ9LLPt/lJ8=;
+        b=fKgfn9jDRqmypyI1dgUntvzApUwJpeJQBJGZePzrpD1PqxMYNtpr5F3NKVx/lC0/94
+         bLw8F5sYcnw4BGEj/GX8JOLYH94fDEK9B71TMGxLj5E81ZJYNbg3ldwdTwwg2NlMw5C+
+         0Hl29Us6wTQCKaaQH1LzltLiEQTshVQ4T5zoUgOskorQHDmr25n94UiunkJrpIhCZBEU
+         s0koYeqFYfXLYjU8oz252jlminRUd2p1geEvHKCDqy5W+0lbhOmMWlfJIvjS7ubnFjof
+         /Mo8NFtuwHo/ZDJT2I6nYOJ+ThoK8oDvkfw1PpmCVXW97/n/oLVFtp3ADME8DWEGFRFe
+         IjnA==
+X-Forwarded-Encrypted: i=1; AJvYcCW9V4vIpaUNv3cu7s9wIMT9fgdzyaQFTuBekMIknOigNIuaCzbxHppnHFgZtNCQrMolrYlgYJ4l9bI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSXOUjJS0IoiaumrEoviha8Td89MMM7D8M6LarS/3DV5MlNXH9
+	w1aJje0erS8xHp6+hc9zhTPsYKK/JoSMbtzsdHEhnL/euj0kTO5IReSQRgGr/L8UbO40wYF3UV8
+	cOCbG76LnkbY/0jUkW2ulCaRMMhKKW772VT/thNowNuDaZMxV03q4sUNa
+X-Received: by 2002:a17:907:d3cf:b0:a86:96ca:7f54 with SMTP id a640c23a62f3a-a991bd4998emr223701866b.21.1728040140020;
+        Fri, 04 Oct 2024 04:09:00 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHX01dgDDgI0w+zpeV6fR+5oAiOZ2rA5Lbh7TQBEZXR7Gno2SDfrT8+OJw1FBE8V6aCYB9keg==
+X-Received: by 2002:a17:907:d3cf:b0:a86:96ca:7f54 with SMTP id a640c23a62f3a-a991bd4998emr223699666b.21.1728040139636;
+        Fri, 04 Oct 2024 04:08:59 -0700 (PDT)
+Received: from thinky (ip-217-030-065-002.aim-net.cz. [217.30.65.2])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a99104c4f17sm210167966b.199.2024.10.04.04.08.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Oct 2024 04:08:59 -0700 (PDT)
+Date: Fri, 4 Oct 2024 13:08:58 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@kernel.org, 
+	cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: Re: [PATCH 2/4] xfs_db/mkfs/xfs_repair: port to use
+ XFS_ICREATE_UNLINKABLE
+Message-ID: <3tpg7lruq7mjnujagq5oujnicqhlgbgtoi257e7l5b5s6w6iyy@n26xmg24z2jq>
+References: <172783103027.4038482.10618338363884807798.stgit@frogsfrogsfrogs>
+ <172783103061.4038482.13766864255481933120.stgit@frogsfrogsfrogs>
+ <ZvzfytE-q1WwJULo@infradead.org>
+ <20241002225029.GH21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -65,77 +77,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241002014017.3801899-4-david@fromorbit.com>
+In-Reply-To: <20241002225029.GH21853@frogsfrogsfrogs>
 
-Hi Dave,
+On 2024-10-02 15:50:29, Darrick J. Wong wrote:
+> On Tue, Oct 01, 2024 at 10:53:14PM -0700, Christoph Hellwig wrote:
+> > On Tue, Oct 01, 2024 at 06:25:00PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Source kernel commit: b11b11e3b7a72606cfef527255a9467537bcaaa5
+> > 
+> > How is this a source kernel commit when it purely touched non-libxfs
+> > code?
+> 
+> scripts gone wild :(
 
-kernel test robot noticed the following build warnings:
-
-[auto build test WARNING on brauner-vfs/vfs.all]
-[also build test WARNING on xfs-linux/for-next axboe-block/for-next linus/master v6.12-rc1 next-20241004]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/vfs-replace-invalidate_inodes-with-evict_inodes/20241002-094254
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
-patch link:    https://lore.kernel.org/r/20241002014017.3801899-4-david%40fromorbit.com
-patch subject: [PATCH 3/7] vfs: convert vfs inode iterators to super_iter_inodes_unsafe()
-config: openrisc-allnoconfig (https://download.01.org/0day-ci/archive/20241004/202410041848.j3wt7yFP-lkp@intel.com/config)
-compiler: or1k-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241004/202410041848.j3wt7yFP-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410041848.j3wt7yFP-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> fs/inode.c:874: warning: Function parameter or struct member 'inode' not described in 'evict_inode_fn'
->> fs/inode.c:874: warning: Function parameter or struct member 'data' not described in 'evict_inode_fn'
->> fs/inode.c:874: warning: expecting prototype for evict_inodes(). Prototype was for evict_inode_fn() instead
-
-
-vim +874 fs/inode.c
-
-^1da177e4c3f41 Linus Torvalds 2005-04-16  863  
-63997e98a3be68 Al Viro        2010-10-25  864  /**
-63997e98a3be68 Al Viro        2010-10-25  865   * evict_inodes	- evict all evictable inodes for a superblock
-63997e98a3be68 Al Viro        2010-10-25  866   * @sb:		superblock to operate on
-63997e98a3be68 Al Viro        2010-10-25  867   *
-63997e98a3be68 Al Viro        2010-10-25  868   * Make sure that no inodes with zero refcount are retained.  This is
-1751e8a6cb935e Linus Torvalds 2017-11-27  869   * called by superblock shutdown after having SB_ACTIVE flag removed,
-63997e98a3be68 Al Viro        2010-10-25  870   * so any inode reaching zero refcount during or after that call will
-63997e98a3be68 Al Viro        2010-10-25  871   * be immediately evicted.
-^1da177e4c3f41 Linus Torvalds 2005-04-16  872   */
-f3df82b20474b6 Dave Chinner   2024-10-02  873  static int evict_inode_fn(struct inode *inode, void *data)
-^1da177e4c3f41 Linus Torvalds 2005-04-16 @874  {
-f3df82b20474b6 Dave Chinner   2024-10-02  875  	struct list_head *dispose = data;
-250df6ed274d76 Dave Chinner   2011-03-22  876  
-250df6ed274d76 Dave Chinner   2011-03-22  877  	spin_lock(&inode->i_lock);
-f3df82b20474b6 Dave Chinner   2024-10-02  878  	if (atomic_read(&inode->i_count) ||
-f3df82b20474b6 Dave Chinner   2024-10-02  879  	    (inode->i_state & (I_NEW | I_FREEING | I_WILL_FREE))) {
-250df6ed274d76 Dave Chinner   2011-03-22  880  		spin_unlock(&inode->i_lock);
-f3df82b20474b6 Dave Chinner   2024-10-02  881  		return INO_ITER_DONE;
-250df6ed274d76 Dave Chinner   2011-03-22  882  	}
-63997e98a3be68 Al Viro        2010-10-25  883  
-63997e98a3be68 Al Viro        2010-10-25  884  	inode->i_state |= I_FREEING;
-02afc410f363f9 Dave Chinner   2011-03-22  885  	inode_lru_list_del(inode);
-250df6ed274d76 Dave Chinner   2011-03-22  886  	spin_unlock(&inode->i_lock);
-f3df82b20474b6 Dave Chinner   2024-10-02  887  	list_add(&inode->i_lru, dispose);
-ac05fbb4006241 Josef Bacik    2015-03-04  888  
-ac05fbb4006241 Josef Bacik    2015-03-04  889  	/*
-f3df82b20474b6 Dave Chinner   2024-10-02  890  	 * If we've run long enough to need rescheduling, abort the
-f3df82b20474b6 Dave Chinner   2024-10-02  891  	 * iteration so we can return to evict_inodes() and dispose of the
-f3df82b20474b6 Dave Chinner   2024-10-02  892  	 * inodes before collecting more inodes to evict.
-ac05fbb4006241 Josef Bacik    2015-03-04  893  	 */
-f3df82b20474b6 Dave Chinner   2024-10-02  894  	if (need_resched())
-f3df82b20474b6 Dave Chinner   2024-10-02  895  		return INO_ITER_ABORT;
-f3df82b20474b6 Dave Chinner   2024-10-02  896  	return INO_ITER_DONE;
-ac05fbb4006241 Josef Bacik    2015-03-04  897  }
-63997e98a3be68 Al Viro        2010-10-25  898  
+I will drop it then when merging
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+- Andrey
+> 
+> Turns out that editing these free-form commit messages with computer
+> programs is a bit fraught.
+> 
+> > The code changes themselves look good, though:
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Thanks!
+> 
+> --D
+> 
+
