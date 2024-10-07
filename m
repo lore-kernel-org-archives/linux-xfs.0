@@ -1,56 +1,129 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A2115B130;
-	Mon,  7 Oct 2024 06:46:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F386315D5C1;
+	Mon,  7 Oct 2024 10:58:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728283616; cv=none; b=eozA1KkZyzgOf5tDOqwnPpTfCBzbZfyj9qPDBcsxqrnB/hKeiBBWNvfoxegbslNoXv2h7YLT0oGK9MP8rde70WkS0oVxqvDE9KP4BNCqQZJ0zETzo95yjF2cRg0pp418aQjdUFHRdfG4LXzX/EcGuJY+ub/pH+kdk7ixjEGHJvQ=
+	t=1728298714; cv=none; b=jwJnNg5UFPdwvncNbgOHpU3ge8MnLePNH36mNBmYPLDggaqB9IT8bqjihmIFsdr5KXyjsX0mx4uSFYtFuKLPIlKr1f4AwljXKeq8P3ta/lVcf9uPMSUGDYTmmbJLaqkhOQNejJk0wpQTg4am/SD+QuWHtlXUmDGDo0CY65H3Cn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728283616; c=relaxed/simple;
-	bh=jj2pSTv5JXWP9SanIcaG3tEISQXWkliCyyRZwFkELYA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gqn/mCkinXEC34z0Ygqu/bml4H8V4dumwVCfN2oWYLMCNG3ywuusyZ+CSRqqbTxZsLV4i00YnJ9h2quk2fQKD97fmRTDSXZORkzzfW0s3COe8EOetVVcc/HeszyPuc96P0oZof0RhW7V7G/Xs1ht/+xwUEj8Cn9Go+IXwQUtuCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id B1036227A8E; Mon,  7 Oct 2024 08:46:50 +0200 (CEST)
-Date: Mon, 7 Oct 2024 08:46:50 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
+	s=arc-20240116; t=1728298714; c=relaxed/simple;
+	bh=2GHIYkn8cRFjuA6UoXjds38baJgePZQPA32Pa4pACIs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lRDly8FY6G9BuBtQstwR5mm4mJtcBabfECSTlYEtxqE1Uv96++qT8p1FEvkiQLz0f7EEMKYB01BCaCk8Kfrrp7ZhTPc74i6jT5TO5ixuf3VGwXTC8Baf7HvZGQXZ/JOqeEWohuJnTZvMnJSNTd/Ia7oAmWxr9aASZNiiBluOXvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xo6a7QoP; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xo6a7QoP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69F3CC4CECF;
+	Mon,  7 Oct 2024 10:58:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728298713;
+	bh=2GHIYkn8cRFjuA6UoXjds38baJgePZQPA32Pa4pACIs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Xo6a7QoPaAsdhkEDock0VKt30RgKQGDYB55iSjs8d7YTjilKAWw7i3RESilp0cQmJ
+	 RkjDVaYeEP4FP9Um0SKIfeDcDl7H+Fi+NhKi0FBYdFB987Lxfsc/g9l1JNp8UGKwMc
+	 Fw4+iKLZ4j5+PeS1HlhU82WbFMjMgy9PbJI3nNlnMDRZI+xMrTIf9oliBkKKNKIEUV
+	 3iQt4cjUHMHjHCiQn6OAZh2AOaoIPFY3DYE1VAJSG1MGdziqr64pvzgt8d9LGQCH6l
+	 6Yp4ik5VqzQOvKusiZPsiQyiGE/GDJ+EKPs8F/8xOnQ5XAM59NbuIRCxgjag482bXQ
+	 /nWr7X/hM+SpQ==
+From: Christian Brauner <brauner@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Jeff Layton <jlayton@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-mm@kvack.org,
+	John Stultz <jstultz@google.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Jan Kara <jack@suse.cz>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
 	Chandan Babu R <chandan.babu@oracle.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: fix stale delalloc punching for COW I/O v4
-Message-ID: <20241007064650.GA1205@lst.de>
-References: <20240924074115.1797231-1-hch@lst.de> <20241005155312.GM21853@frogsfrogsfrogs> <20241007054101.GA32670@lst.de> <20241007062841.GP21877@frogsfrogsfrogs>
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>,
+	Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	David Sterba <dsterba@suse.com>,
+	Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>
+Subject: Re: (subset) [PATCH v10 00/12] timekeeping/fs: multigrain timestamp redux
+Date: Mon,  7 Oct 2024 12:58:21 +0200
+Message-ID: <20241007-restlaufzeit-birnen-2f412852441e@brauner>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20241002-mgtime-v10-0-d1c4717f5284@kernel.org>
+References: <20241002-mgtime-v10-0-d1c4717f5284@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241007062841.GP21877@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2375; i=brauner@kernel.org; h=from:subject:message-id; bh=2GHIYkn8cRFjuA6UoXjds38baJgePZQPA32Pa4pACIs=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQz7zt3ROG96vKmhmAJRb2iW0lPrWYvcrN65X025sO3H TIF+Vq3O0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZSuo7hD++GxO7jd4sfeZ2Y e2VOTlbbRvlo2xPWddtPcQQeKVu3dBrDP+O0xuMVC6u2NJnKzzd25XLIvFWufkOs6q/e5LaD4Z3 LWQE=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Sun, Oct 06, 2024 at 11:28:41PM -0700, Darrick J. Wong wrote:
-> On Mon, Oct 07, 2024 at 07:41:01AM +0200, Christoph Hellwig wrote:
-> > On Sat, Oct 05, 2024 at 08:53:12AM -0700, Darrick J. Wong wrote:
-> > > Hmmm so I tried applying this series, but now I get this splat:
-> > > 
-> > > [  217.170122] run fstests xfs/574 at 2024-10-04 16:36:30
-> > 
-> > I don't.  What xfstests tree is this with?
+On Wed, 02 Oct 2024 17:27:15 -0400, Jeff Layton wrote:
+> This is a replacement for the v6 series sitting in Christian's
+> vfs.mgtime branch. The main changes here are to the changelogs,
+> documentation and comments. I've also moved the timekeeping patches to
+> the front of the series, and done some minor cleanups.
 > 
-> Hum.  My latest djwong-wtf xfstests tree.  You might have to have the
-> new funshare patch I sent for fsstress, though iirc that's already in my
-> -wtf branch.
+> The pipe1_threads test shows these averages on my test rig with this
+> series:
+> 
+> [...]
 
-No recent fsstress.c changes in your tree, but then again the last
-update is from Oct 1st, so you might have just not pushed it out.
+I've merged the tag that Thomas provided with the time specific changes and
+pulled the remaining patches - excluding 01/12 and 02/12.
 
+---
+
+Applied to the vfs.mgtime branch of the vfs/vfs.git tree.
+Patches in the vfs.mgtime branch should appear in linux-next soon.
+
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.mgtime
+
+[03/12] fs: add infrastructure for multigrain timestamps
+        https://git.kernel.org/vfs/vfs/c/4e40eff0b573
+[04/12] fs: have setattr_copy handle multigrain timestamps appropriately
+        https://git.kernel.org/vfs/vfs/c/b82f92d5dd1a
+[05/12] fs: handle delegated timestamps in setattr_copy_mgtime
+        https://git.kernel.org/vfs/vfs/c/d8d11298e8a1
+[06/12] fs: tracepoints around multigrain timestamp events
+        https://git.kernel.org/vfs/vfs/c/a80f53809ccc
+[07/12] fs: add percpu counters for significant multigrain timestamp events
+        https://git.kernel.org/vfs/vfs/c/7b1aba010c47
+[08/12] Documentation: add a new file documenting multigrain timestamps
+        https://git.kernel.org/vfs/vfs/c/95c6907be544
+[09/12] xfs: switch to multigrain timestamps
+        https://git.kernel.org/vfs/vfs/c/0f4865448420
+[10/12] ext4: switch to multigrain timestamps
+        https://git.kernel.org/vfs/vfs/c/e44ab3151adc
+[11/12] btrfs: convert to multigrain timestamps
+        https://git.kernel.org/vfs/vfs/c/0d4f9f7ad685
+[12/12] tmpfs: add support for multigrain timestamps
+        https://git.kernel.org/vfs/vfs/c/cba2a92eff80
