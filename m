@@ -1,88 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9FB18A6AD;
-	Mon,  7 Oct 2024 11:52:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBF6B1D2796
+	for <linux-xfs@vger.kernel.org>; Mon,  7 Oct 2024 13:17:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728301966; cv=none; b=CtUvdwvsWwHoywiuMhIX0OwEzu+O/YQOqDyqxBAP660FoHjTE0dOAO92pCwE0SQS7GhWCIDCyhMyla5zhz+AXBfUJwO/hOhvlF0Y4enaL5qjWtQLfD9y8ad7uQWYoYHe/ses4yVqeYpESXDVA9lU7SVGPoqxXh0a8afQfwVukPw=
+	t=1728307044; cv=none; b=TTuJp7KqQxoPZQZx4E1condZgED9BBGu48MYzf80u2q7jG0xhu+KltF6SwnOFmcPcEvTb8RW+Jt0OWB9bETkb1b/bzl+UsRlF5fAdZRFgLUkpZuvzpZ7DzY0r651Z3SiuK4M7pQF9UJEYKK050KnI4/Yf7a0N6I6yTJLP/XuHYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728301966; c=relaxed/simple;
-	bh=kkh1KDw439FhZrjuBMAW7t/oHJ7sEBlkTIxdKS3CpjE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JxtQgWUkxXRj4GJRenWIgljy267ZQwfVSADNvS/bqAkE60NVLnBHgYCIGVnzIBUrwUN1Vzac9Ky9riqDG5Bj0HYN2SZLII2w2U7Po3w6nGzLQ19RqdMn0DpWfhtFW0tT0ypylX04d1uzgp5DI4PFal8rQ2uTcmdNVeguVLbJQL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E6BMZ5NR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728307044; c=relaxed/simple;
+	bh=3Y3W4TPXz+djIj0GTI/M6VGPryGPktFKGRRJOTojHzA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=d4plIYOAHsFRcwWvHifbHNXYg7haRGj19BWQQ2/e4WRN/OtQH7lr4rXLsYBm7xl6/nRcz5FBpjjiNY+dn2c5D8MA1Nx6PdY1/lYrZdbIEjagwSuh1fsiP+Ix2gOZ85O1ZwwtImG0QcmH1qtayHCTqvqaMIe5r+pj8LZissg/uTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Up2lHAwu; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E6BMZ5NR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CE55C4CECC;
-	Mon,  7 Oct 2024 11:52:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728301966;
-	bh=kkh1KDw439FhZrjuBMAW7t/oHJ7sEBlkTIxdKS3CpjE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=E6BMZ5NRSJC++5ZtIiYYkiTQtqsnwgb/8NCCdN2Wgi+Bc9wri30t2grThU4eCeWSk
-	 I7kDYVZxA45pT4aSRD8/6Qim7l37HpDvLuKv0gE48yzxmgR4gtaqyrfMC7n4RYUh1Z
-	 S7NFtBsgodWlyKVybz/umwa1ndLT3OvX0PuBsrG0OtAq2UztOQsOYU5E1iZkfeecMY
-	 WJQabbuBgY0UqnHk2GDfX25n9M0JiSl/CGt/jjtoY6ZbEceZ4EvtgZ/p02d5n09Xqb
-	 ke84DbO5a9chddxYe3LwNNTyvOZr1gnJal5+9WXhfluT3x89Wy73R/E9yyAPOhACnk
-	 uc9NmE3VrIe9A==
-From: Christian Brauner <brauner@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Up2lHAwu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728307041;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TMPsygK1tkvFqK8GhAGgWkT04xvmaArXRcEeKLcN37g=;
+	b=Up2lHAwuprwoRT8g007MBUhUBuo6dtbQex80RsOEutkJGVf/E3pcyZzOU/4eNjFFXZfQl8
+	xMW1xKK0HRigojJDOJeZ17kkR5slK/+tcD/5Q7nzZ+w7U1F4GSgl+yByXlPpUBj8Dj41Ss
+	BWlH9AhFK0zr4aE9PWTuiN35WePn6x8=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-137-l-NqEBikP--MOFoSt_ct4g-1; Mon,
+ 07 Oct 2024 09:17:20 -0400
+X-MC-Unique: l-NqEBikP--MOFoSt_ct4g-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F278019560BF;
+	Mon,  7 Oct 2024 13:17:18 +0000 (UTC)
+Received: from bfoster (unknown [10.22.32.133])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E79DA1955F54;
+	Mon,  7 Oct 2024 13:17:17 +0000 (UTC)
+Date: Mon, 7 Oct 2024 09:18:33 -0400
+From: Brian Foster <bfoster@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>,
-	ruansy.fnst@fujitsu.com,
-	linux-fsdevel@vger.kernel.org,
-	hch@lst.de,
-	linux-xfs@vger.kernel.org,
-	willy@infradead.org,
-	cem@kernel.org
-Subject: Re: [PATCHSET] fsdax/xfs: unshare range fixes for 6.12
-Date: Mon,  7 Oct 2024 13:52:18 +0200
-Message-ID: <20241007-ortstarif-zeugnis-bfffcb7177aa@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <172796813251.1131942.12184885574609980777.stgit@frogsfrogsfrogs>
-References: <172796813251.1131942.12184885574609980777.stgit@frogsfrogsfrogs>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] fsstress: add support for FALLOC_FL_UNSHARE_RANGE
+Message-ID: <ZwPfqadLFFGGcamE@bfoster>
+References: <172780126017.3586479.18209378224774919872.stgit@frogsfrogsfrogs>
+ <20241003213714.GH21840@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1413; i=brauner@kernel.org; h=from:subject:message-id; bh=kkh1KDw439FhZrjuBMAW7t/oHJ7sEBlkTIxdKS3CpjE=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQzn27vtnWyfqUqv2jrrkD/qi0df1TE2+u0Xkw//HJC+ 9e/8T9jOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbyrISR4eiNUwGWwpfu/34j ce33o7N1J9q9gxYeu2uy+Tpbg5kY12OG/8nf1VxOH/hqyS7ya+mEO5Oqv8gWRS5T83n92nba7KV nzXkA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241003213714.GH21840@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On Thu, 03 Oct 2024 08:08:55 -0700, Darrick J. Wong wrote:
-> This patchset fixes multiple data corruption bugs in the fallocate unshare
-> range implementation for fsdax.
+On Thu, Oct 03, 2024 at 02:37:14PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> With a bit of luck, this should all go splendidly.
-> Comments and questions are, as always, welcome.
+> Teach fsstress to try to unshare file blocks on filesystems, seeing how
+> the recent addition to fsx has uncovered a lot of bugs.
 > 
-> --D
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+
+LGTM. Thanks for sending this:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  ltp/fsstress.c |   14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
 > 
-> [...]
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index b8d025d3a0..8cd45c7a85 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -139,6 +139,7 @@ typedef enum {
+>  	OP_TRUNCATE,
+>  	OP_UNLINK,
+>  	OP_UNRESVSP,
+> +	OP_UNSHARE,
+>  	OP_URING_READ,
+>  	OP_URING_WRITE,
+>  	OP_WRITE,
+> @@ -246,6 +247,7 @@ void	punch_f(opnum_t, long);
+>  void	zero_f(opnum_t, long);
+>  void	collapse_f(opnum_t, long);
+>  void	insert_f(opnum_t, long);
+> +void	unshare_f(opnum_t, long);
+>  void	read_f(opnum_t, long);
+>  void	readlink_f(opnum_t, long);
+>  void	readv_f(opnum_t, long);
+> @@ -339,6 +341,7 @@ struct opdesc	ops[OP_LAST]	= {
+>  	[OP_TRUNCATE]	   = {"truncate",      truncate_f,	2, 1 },
+>  	[OP_UNLINK]	   = {"unlink",	       unlink_f,	1, 1 },
+>  	[OP_UNRESVSP]	   = {"unresvsp",      unresvsp_f,	1, 1 },
+> +	[OP_UNSHARE]	   = {"unshare",       unshare_f,	1, 1 },
+>  	[OP_URING_READ]	   = {"uring_read",    uring_read_f,	-1, 0 },
+>  	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	-1, 1 },
+>  	[OP_WRITE]	   = {"write",	       write_f,		4, 1 },
+> @@ -3767,6 +3770,7 @@ struct print_flags falloc_flags [] = {
+>  	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
+>  	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
+>  	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
+> +	{ FALLOC_FL_UNSHARE_RANGE, "UNSHARE_RANGE"},
+>  	{ -1, NULL}
+>  };
+>  
+> @@ -4469,6 +4473,16 @@ insert_f(opnum_t opno, long r)
+>  #endif
+>  }
+>  
+> +void
+> +unshare_f(opnum_t opno, long r)
+> +{
+> +#ifdef HAVE_LINUX_FALLOC_H
+> +# ifdef FALLOC_FL_UNSHARE_RANGE
+> +	do_fallocate(opno, r, FALLOC_FL_UNSHARE_RANGE);
+> +# endif
+> +#endif
+> +}
+> +
+>  void
+>  read_f(opnum_t opno, long r)
+>  {
+> 
 
-Applied to the vfs.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs.iomap branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.iomap
-
-[1/4] xfs: don't allocate COW extents when unsharing a hole
-      https://git.kernel.org/vfs/vfs/c/b8c4076db5fd
-[2/4] iomap: share iomap_unshare_iter predicate code with fsdax
-      https://git.kernel.org/vfs/vfs/c/6ef6a0e821d3
-[3/4] fsdax: remove zeroing code from dax_unshare_iter
-      https://git.kernel.org/vfs/vfs/c/95472274b6fe
-[4/4] fsdax: dax_unshare_iter needs to copy entire blocks
-      https://git.kernel.org/vfs/vfs/c/50793801fc7f
