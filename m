@@ -1,43 +1,32 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C7A242077;
-	Mon,  7 Oct 2024 06:28:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A2115B130;
+	Mon,  7 Oct 2024 06:46:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728282522; cv=none; b=na+iLagGh9z/E7a28+jvSK15ULXqiFF2cXyA1OKfALF9YoQhp4TqKm79V+TjPEyGsE1Z00cAZ0V+Rgs5j4U6KtpQ8ft7pExAtSwN3HRfKmMMS5ZeMsRN1tO89KmLpw45auDeIBv5jKUJQFCC4tbJDyZ9RYHIaydLjPfxdlRiLfI=
+	t=1728283616; cv=none; b=eozA1KkZyzgOf5tDOqwnPpTfCBzbZfyj9qPDBcsxqrnB/hKeiBBWNvfoxegbslNoXv2h7YLT0oGK9MP8rde70WkS0oVxqvDE9KP4BNCqQZJ0zETzo95yjF2cRg0pp418aQjdUFHRdfG4LXzX/EcGuJY+ub/pH+kdk7ixjEGHJvQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728282522; c=relaxed/simple;
-	bh=phS/Fzp54b05V4hjNB8UmovsSEQCm96hKFPTECSNJwU=;
+	s=arc-20240116; t=1728283616; c=relaxed/simple;
+	bh=jj2pSTv5JXWP9SanIcaG3tEISQXWkliCyyRZwFkELYA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e2oi+yDUiGzht+83OWWzbwxPkFe8I8IjcorVxFTREXUBFe/VH92/D2HnnBQIfK/r7ZPytzBejBifwgbXJMJO5udvDqRAhvg2eCjuSqeAP30HcGilXXPE+QBRojixnt7PkukK74ppBdWcIvY98XePY07fmCTJE1oDLnEq9fx4lOI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZFBDLC/o; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZFBDLC/o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 003FCC4CEC6;
-	Mon,  7 Oct 2024 06:28:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728282522;
-	bh=phS/Fzp54b05V4hjNB8UmovsSEQCm96hKFPTECSNJwU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZFBDLC/oEX6bu8Ygwa5yLb2ndomNMqmgBgF/bDtWVVBms2qbird6cJG5eUMF21yNZ
-	 fTKySWVKIeKeh7vo/aD3EUOdGyNvNhM6q3smt/MoPfoHK43tWO4Elja9CPb72wecjS
-	 8AgBmykDh9eHbxMjICerhJQw4JQw31xuwS2A3PdQWNIdd4b4gZHYrtGjW8d+ebvc93
-	 hQPenjW00lJaCYAAUlMZX0QNIasaSv7uafQKoq6uLQEFZSP2f/noVJKJCwaBvxhZiu
-	 RWIVUzq3FFut3fHY/oN+RkhDCqs3efBmgfAE+nM2M5VV3cd9RGBFPtWfFrNxR6yBn7
-	 BuKvUpjsobddQ==
-Date: Sun, 6 Oct 2024 23:28:41 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=gqn/mCkinXEC34z0Ygqu/bml4H8V4dumwVCfN2oWYLMCNG3ywuusyZ+CSRqqbTxZsLV4i00YnJ9h2quk2fQKD97fmRTDSXZORkzzfW0s3COe8EOetVVcc/HeszyPuc96P0oZof0RhW7V7G/Xs1ht/+xwUEj8Cn9Go+IXwQUtuCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B1036227A8E; Mon,  7 Oct 2024 08:46:50 +0200 (CEST)
+Date: Mon, 7 Oct 2024 08:46:50 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
 	Carlos Maiolino <cem@kernel.org>,
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
 Subject: Re: fix stale delalloc punching for COW I/O v4
-Message-ID: <20241007062841.GP21877@frogsfrogsfrogs>
-References: <20240924074115.1797231-1-hch@lst.de>
- <20241005155312.GM21853@frogsfrogsfrogs>
- <20241007054101.GA32670@lst.de>
+Message-ID: <20241007064650.GA1205@lst.de>
+References: <20240924074115.1797231-1-hch@lst.de> <20241005155312.GM21853@frogsfrogsfrogs> <20241007054101.GA32670@lst.de> <20241007062841.GP21877@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,27 +35,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241007054101.GA32670@lst.de>
+In-Reply-To: <20241007062841.GP21877@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Oct 07, 2024 at 07:41:01AM +0200, Christoph Hellwig wrote:
-> On Sat, Oct 05, 2024 at 08:53:12AM -0700, Darrick J. Wong wrote:
-> > Hmmm so I tried applying this series, but now I get this splat:
+On Sun, Oct 06, 2024 at 11:28:41PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 07, 2024 at 07:41:01AM +0200, Christoph Hellwig wrote:
+> > On Sat, Oct 05, 2024 at 08:53:12AM -0700, Darrick J. Wong wrote:
+> > > Hmmm so I tried applying this series, but now I get this splat:
+> > > 
+> > > [  217.170122] run fstests xfs/574 at 2024-10-04 16:36:30
 > > 
-> > [  217.170122] run fstests xfs/574 at 2024-10-04 16:36:30
+> > I don't.  What xfstests tree is this with?
 > 
-> I don't.  What xfstests tree is this with?
+> Hum.  My latest djwong-wtf xfstests tree.  You might have to have the
+> new funshare patch I sent for fsstress, though iirc that's already in my
+> -wtf branch.
 
-Hum.  My latest djwong-wtf xfstests tree.  You might have to have the
-new funshare patch I sent for fsstress, though iirc that's already in my
--wtf branch.
+No recent fsstress.c changes in your tree, but then again the last
+update is from Oct 1st, so you might have just not pushed it out.
 
-> > I think this series needs to assert that the invalidatelock is held
-> > (instead of taking it) for the IOMAP_UNSHARE case too, since UNSHARE is
-> > called from fallocate, which has already taken the MMAPLOCK.
-> 
-> Yes.  I'll look into fixing it, but so far I haven't managed to
-> reproduce the actual splat.
-
-<nod>
-
---D
