@@ -1,101 +1,70 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18813125A9
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 02:04:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88F7634CF5
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 04:07:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728353076; cv=none; b=uhVqSpWqzuxiI4HlQnfe+KYOA1/Hotg+qbAEEy8DfelLiIqN6wQTq3hjp5XZvS7fR96boMmAF96UuV8s1EYKWi9kzbAN5WYO+GsFi4fQQbxk+X7k6sYBbff/0l1+cb/rqoVxVclP3Gkyyur2P+Gj88w5fkL1UuOywe9ENi6ZddI=
+	t=1728360429; cv=none; b=YkdIybG0ReIyreBqXBAMYOjDsTWrKbNDcZXFeRPuUxY+i+ALTsRS80gI0PFi111CUwBGaMXaBr4shjtjw23olUsZ1pmgchNwwTU5pJqomA+umB5pf6EBPaH0tYzhQEVZCzOuAPtg9pWSkQGjKTBif/8xJ7VSs4xZTj7VBON9Rmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728353076; c=relaxed/simple;
-	bh=ZIaDB+alYlJJ7VnulCPB9dlfPZU278NftcdsCKR+D8Y=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WS5HPNtd/acVjHIYwHkhWOxqtCgeBiRzSEtxsAl6D95OFN5RYmP8ClytB1Q1C9txgaFDeMzXBplHlUmzzT1WP7YjAEdlpNkG9KDIgjUEkFzqdt3ddfdJd960Rod+Kk64dSh6mAzhS5g+exhWckOgTPvEXvk2689nz+7BXTH/MA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.17])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4XMznp47Xlz2DdH3;
-	Tue,  8 Oct 2024 10:03:26 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1CF2D1A0188;
-	Tue,  8 Oct 2024 10:04:30 +0800 (CST)
-Received: from localhost (10.175.127.227) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 8 Oct
- 2024 10:04:29 +0800
-Date: Tue, 8 Oct 2024 10:19:07 +0800
-From: Long Li <leo.lilong@huawei.com>
+	s=arc-20240116; t=1728360429; c=relaxed/simple;
+	bh=eJYoXGY8kAtPyrL1An+UhubefBNG28Qsa8vQK/FGuGk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=hJ4nxz2bpPKqR9eK1b771CzeaMX1PslqzplpJFviSkrzLffmNjJDd7Zlt9auPqaN1N1QpEkNikaspk2agHvh4IlNgZPvujw7nA3FxXK77Rr02tOUITHoSBELWXAGcQPrG/i++6PE8z8tM3RiHOGfr+3UBFMv9Fx0LghBQTh4U3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C6fyuS/K; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C6fyuS/K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16DF4C4CEC7;
+	Tue,  8 Oct 2024 04:07:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728360429;
+	bh=eJYoXGY8kAtPyrL1An+UhubefBNG28Qsa8vQK/FGuGk=;
+	h=Date:From:To:Cc:Subject:From;
+	b=C6fyuS/KdNbThn5ukUkU73hEtlqzaCrNX/jz5jJ0ekxMRoExBhen6dpwGNlY1AwEf
+	 5zGOVVfeVENkO7lwuwiFFynYbk9jkutFQ74Mg17NqS1/we2FRMbMIOOtQYAR9DpU2h
+	 K+epooC9cVUdeGXSjopaQ8fnSMY75MT9NQwAtTHrhjwV+0iROE+hGw1qPC4GjXTk3N
+	 lD4a8dAO2gc5dle04gweOs9F/fauvPe1Vme5q0GKSPc7tj8U/T5cTd/YR32pGZkhHs
+	 qYNClGjzaSO2eW04I3tdTrEgKb0UxCi+8t1nYoLVidzhHWX50cp5JWp7ZjRQezdXiL
+	 pPJMteznWT6PA==
+Date: Mon, 7 Oct 2024 21:07:08 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Carlos Maiolino <cem@kernel.org>
-CC: <djwong@kernel.org>, <chandanbabu@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <yangerkun@huawei.com>
-Subject: Re: [next] xfs: remove the redundant xfs_alloc_log_agf
-Message-ID: <20241008021907.GA361858@ceph-admin>
-References: <20240930104217.2184941-1-leo.lilong@huawei.com>
- <5zvq7ax2ih27chjwl65keftyplz3bzyz4deblrnq4xe5pvoudb@va4yxbk7tqkb>
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: fix integer overflow in xrep_bmap
+Message-ID: <20241008040708.GQ21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5zvq7ax2ih27chjwl65keftyplz3bzyz4deblrnq4xe5pvoudb@va4yxbk7tqkb>
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Mon, Sep 30, 2024 at 02:55:47PM +0200, Carlos Maiolino wrote:
-> Hello.
-> 
-> What do you mean with the [next] tag in the subject, instead of usual [PATCH]
-> tag?
+From: Darrick J. Wong <djwong@kernel.org>
 
-I intended to use [PATCH-next] in the subject, but I made a mistake. Do I
-need to resend?
+The variable declaration in this function predates the merge of the
+nrext64 (aka 64-bit extent counters) feature, which means that the
+variable declaration type is insufficient to avoid an integer overflow.
+Fix that by redeclaring the variable to be xfs_extnum_t.
 
-> 
-> On Mon, Sep 30, 2024 at 06:42:17PM GMT, Long Li wrote:
-> > There are two invocations of xfs_alloc_log_agf in xfs_alloc_put_freelist.
-> > The AGF does not change between the two calls. Although this does not pose
-> > any practical problems, it seems like a small mistake. Therefore, fix it
-> > by removing the first xfs_alloc_log_agf invocation.
-> > 
-> > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c | 2 --
-> >  1 file changed, 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 59326f84f6a5..cce32b2f3ffd 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -3159,8 +3159,6 @@ xfs_alloc_put_freelist(
-> >  		logflags |= XFS_AGF_BTREEBLKS;
-> >  	}
-> >  
-> > -	xfs_alloc_log_agf(tp, agbp, logflags);
-> > -
-> 
-> Hmm.. Isn't this logged twice because of lazy-count?
-> 
-> 
-> Carlos
-> 
+Coverity-id: 1630958
+Fixes: 8f71bede8efd ("xfs: repair inode fork block mapping data structures")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/scrub/bmap_repair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I think that logging twice is unrelated to the lazy superblock count,
-as the lazy superblock count is rebuilt using information from the AGF.
-We only need to log AGF normally, not twice.
-
-Thanks,
-Long Li
-
-> 
-> >  	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
-> >  
-> >  	agfl_bno = xfs_buf_to_agfl_bno(agflbp);
-> > -- 
-> > 2.39.2
-> > 
-> > 
+diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
+index 49dc38acc66bf..4505f4829d53f 100644
+--- a/fs/xfs/scrub/bmap_repair.c
++++ b/fs/xfs/scrub/bmap_repair.c
+@@ -801,7 +801,7 @@ xrep_bmap(
+ {
+ 	struct xrep_bmap	*rb;
+ 	char			*descr;
+-	unsigned int		max_bmbt_recs;
++	xfs_extnum_t		max_bmbt_recs;
+ 	bool			large_extcount;
+ 	int			error = 0;
+ 
