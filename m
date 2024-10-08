@@ -1,99 +1,101 @@
-Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEFDFDF58
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 00:54:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18813125A9
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 02:04:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728348877; cv=none; b=C6svRTSi9y8TKy20SqJEofQWshnrwdT9hYxIzodphL7dVCd2rXLt5hoVJ88ua24/a5/JUd3YXJHxLMs2UHnj/2KRbtj8pf9UDgwB5ap2V2pZSu9KXbB2kKD7XFrcUFoL4OKkI7Xx2VT7NkThwuQ831RNtAYi+9bKulqPhLMvryI=
+	t=1728353076; cv=none; b=uhVqSpWqzuxiI4HlQnfe+KYOA1/Hotg+qbAEEy8DfelLiIqN6wQTq3hjp5XZvS7fR96boMmAF96UuV8s1EYKWi9kzbAN5WYO+GsFi4fQQbxk+X7k6sYBbff/0l1+cb/rqoVxVclP3Gkyyur2P+Gj88w5fkL1UuOywe9ENi6ZddI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728348877; c=relaxed/simple;
-	bh=NqYO63ftG4Vh81Um6zsjfmC5SEgFzFYHUlSf+opM8ws=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FeCiPsyZprb/Hs/OWo/a30AcHaR/GTW9aNp56oH1BwzOfImPcwEpbYwwCK9FhqUGNjfAZ0rHfCxGYUv3FYq8Im01djH7lm2ux546A6WZ0mqDH0Xv/cM2UtbDi8+xwGRMcZ3lwltEUMoBrd5W/9wXF5O6okZ3te0uaUWGY1jOCfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=NdaZhrdV; arc=none smtp.client-ip=209.85.167.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="NdaZhrdV"
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5399041167cso7866113e87.0
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Oct 2024 17:54:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1728348874; x=1728953674; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=tnmN82gruhjoauaDPVFxp6c7gOVhPQGFyw+79HJzqU8=;
-        b=NdaZhrdVGnvC+ynbG0T9KCf7DMjktaeRH4d4I6bNUmXk6Ilf1uLQo+62QMJeoeYD/O
-         t/anE2EUJPZC+Jg3HfplLd1VxFoiK1cbfEqGiVFasyiWbSZH9caf/Y2rwIbjw0BG4tR8
-         e4AvmBDn0+VOW6eArHhZ20eckBBH4xwa3Qdec=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728348874; x=1728953674;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tnmN82gruhjoauaDPVFxp6c7gOVhPQGFyw+79HJzqU8=;
-        b=hSlg0NfF2PpMcl/xALJx1JIVScR0g//VrDHUlDFDtQyepdMItyRnWPV1LLrakb31hj
-         qWMGwhRqXHmxEazaJKsEJPxQg+5QuPZJ8DpoS6BHnmLw/ucHVsNLe3UdYNgMlum2137M
-         fHla2vyr68eSDPphCFy6M5wh9Ydd5cd3iIDM5Kbo06Ha2wO+KKO8MvAg8ehcoGGrzxz4
-         /5Y6lGXDmzZFkdjqI1Rbg/fdgvx2zFFmhYUQl+QjmwoTA4zK4nYRfHwd4kxXQxjwmwtl
-         78jio7V3aYAbsLQvvVn6EnF6awbohndasMkb+UoyDiWn67lNem1SE1Q7xORLsbJ1uqmv
-         3jsQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVUQ7dwQlaFpmHjwTn7JzNFwfKzx8KxFn9/j3QTgjZEhTRbJOwyd6vMmWr5BiJgYrOGsDn3dYufG34=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzz+6Qx0qdO3VS2eKunLII7mpiY3mdzq56GaQafcurPA17iT0Yb
-	3dHYyrVbP8dT9XwvDpEDxSFez2aUjshQvdqVqV/4au7LmCQiZvdXcqXvbC55E56KhhG38CnMjTC
-	RjCiNng==
-X-Google-Smtp-Source: AGHT+IFPaHSPn3dCeFNmIv4V9QKpj55OWiEGa7Xnr6bLGOKoGtuVtBYh+WmdQp0iegzaOrhTY4KoXw==
-X-Received: by 2002:a05:6512:3da2:b0:539:94f5:bf with SMTP id 2adb3069b0e04-539ab9e8706mr9543048e87.59.1728348873625;
-        Mon, 07 Oct 2024 17:54:33 -0700 (PDT)
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com. [209.85.167.45])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-539afec1592sm1000267e87.34.2024.10.07.17.54.32
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Oct 2024 17:54:32 -0700 (PDT)
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5399041167cso7866088e87.0
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Oct 2024 17:54:32 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUl6xr8GOVwbozED57/hj6OScxfsBQHOkduK7RArK2dY0QVc6XNBc4uTpLOklGvQXFxZErY/3REi/g=@vger.kernel.org
-X-Received: by 2002:a05:6512:3d07:b0:52e:fa5f:b6a7 with SMTP id
- 2adb3069b0e04-539ab8659c5mr8118408e87.13.1728348872429; Mon, 07 Oct 2024
- 17:54:32 -0700 (PDT)
+	s=arc-20240116; t=1728353076; c=relaxed/simple;
+	bh=ZIaDB+alYlJJ7VnulCPB9dlfPZU278NftcdsCKR+D8Y=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WS5HPNtd/acVjHIYwHkhWOxqtCgeBiRzSEtxsAl6D95OFN5RYmP8ClytB1Q1C9txgaFDeMzXBplHlUmzzT1WP7YjAEdlpNkG9KDIgjUEkFzqdt3ddfdJd960Rod+Kk64dSh6mAzhS5g+exhWckOgTPvEXvk2689nz+7BXTH/MA4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4XMznp47Xlz2DdH3;
+	Tue,  8 Oct 2024 10:03:26 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1CF2D1A0188;
+	Tue,  8 Oct 2024 10:04:30 +0800 (CST)
+Received: from localhost (10.175.127.227) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 8 Oct
+ 2024 10:04:29 +0800
+Date: Tue, 8 Oct 2024 10:19:07 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Carlos Maiolino <cem@kernel.org>
+CC: <djwong@kernel.org>, <chandanbabu@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <yangerkun@huawei.com>
+Subject: Re: [next] xfs: remove the redundant xfs_alloc_log_agf
+Message-ID: <20241008021907.GA361858@ceph-admin>
+References: <20240930104217.2184941-1-leo.lilong@huawei.com>
+ <5zvq7ax2ih27chjwl65keftyplz3bzyz4deblrnq4xe5pvoudb@va4yxbk7tqkb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241002014017.3801899-1-david@fromorbit.com> <20241002014017.3801899-5-david@fromorbit.com>
- <Zv5GfY1WS_aaczZM@infradead.org> <Zv5J3VTGqdjUAu1J@infradead.org>
- <20241003115721.kg2caqgj2xxinnth@quack3> <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
- <ZwRvshM65rxXTwxd@dread.disaster.area> <CAHk-=wi5ZpW73nLn5h46Jxcng6wn_bCUxj6JjxyyEMAGzF5KZg@mail.gmail.com>
-In-Reply-To: <CAHk-=wi5ZpW73nLn5h46Jxcng6wn_bCUxj6JjxyyEMAGzF5KZg@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 7 Oct 2024 17:54:16 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wgW0RspdggU630JYUe5CyzNi5MHT4UEfx2+yZKoeezawg@mail.gmail.com>
-Message-ID: <CAHk-=wgW0RspdggU630JYUe5CyzNi5MHT4UEfx2+yZKoeezawg@mail.gmail.com>
-Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert sb->s_inodes
- iteration to super_iter_inodes()
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	kent.overstreet@linux.dev, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@linux.microsoft.com>, 
-	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>, Kees Cook <keescook@chromium.org>, 
-	linux-security-module@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <5zvq7ax2ih27chjwl65keftyplz3bzyz4deblrnq4xe5pvoudb@va4yxbk7tqkb>
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Mon, 7 Oct 2024 at 17:28, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> And yes, this changes the timing on when fsnotify events happen, but
-> what I'm actually hoping for is that Jan will agree that it doesn't
-> actually matter semantically.
+On Mon, Sep 30, 2024 at 02:55:47PM +0200, Carlos Maiolino wrote:
+> Hello.
+> 
+> What do you mean with the [next] tag in the subject, instead of usual [PATCH]
+> tag?
 
-.. and yes, I realize it might actually matter. fsnotify does do
-'ihold()' to hold an inode ref, and with this that would actually be
-more or less pointless, because the mark would be removed _despite_
-such a ref.
+I intended to use [PATCH-next] in the subject, but I made a mistake. Do I
+need to resend?
 
-So maybe it's not an option to do what I suggested. I don't know the
-users well enough.
+> 
+> On Mon, Sep 30, 2024 at 06:42:17PM GMT, Long Li wrote:
+> > There are two invocations of xfs_alloc_log_agf in xfs_alloc_put_freelist.
+> > The AGF does not change between the two calls. Although this does not pose
+> > any practical problems, it seems like a small mistake. Therefore, fix it
+> > by removing the first xfs_alloc_log_agf invocation.
+> > 
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_alloc.c | 2 --
+> >  1 file changed, 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index 59326f84f6a5..cce32b2f3ffd 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -3159,8 +3159,6 @@ xfs_alloc_put_freelist(
+> >  		logflags |= XFS_AGF_BTREEBLKS;
+> >  	}
+> >  
+> > -	xfs_alloc_log_agf(tp, agbp, logflags);
+> > -
+> 
+> Hmm.. Isn't this logged twice because of lazy-count?
+> 
+> 
+> Carlos
+> 
 
-         Linus
+I think that logging twice is unrelated to the lazy superblock count,
+as the lazy superblock count is rebuilt using information from the AGF.
+We only need to log AGF normally, not twice.
+
+Thanks,
+Long Li
+
+> 
+> >  	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
+> >  
+> >  	agfl_bno = xfs_buf_to_agfl_bno(agflbp);
+> > -- 
+> > 2.39.2
+> > 
+> > 
