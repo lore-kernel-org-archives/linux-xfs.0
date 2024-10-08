@@ -1,177 +1,217 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 074B21DFE1A
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 13:24:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765BF1DF98C
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 14:14:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728393886; cv=none; b=mxMskTZB50Ke5NKcc3XBebchjkORjN2DxzPsBN1RLXnfrfrXgItuBY+ZfqXgaqFzyP/A1Sb0REJf7qs/VnwSJcNdXO2jclrSTYiupJ4KpRTGaWjh2/F2sW3U9B/J2PhG54eDyjGrsDWNzELL7K49vO+sFdUg7n1cbbPAOrqiljA=
+	t=1728396871; cv=none; b=fi/e2zgALLQyOSQk7iqzhoF+nF9SANPBSbac/DlwL4nI6UYkkkfpATIJ+yOhWhIoUQvuTYrx41s73v+5cUTnBEEYM9xpEWUR7NNZlp3odJ8sNnckz0ZflkkppePkTZ2JZlDEZVJciBKxMTODVkpHXh8yq2QIQwFn4f968spu8gM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728393886; c=relaxed/simple;
-	bh=BpB3IM5TWKstNye9m48Vqz2q9sJ03uNMJCT8ovxgAPk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=StfMRCVAR2F5lCs7RF4BhAI6XNBbCR5vsRtJav/QOgeRNO+tEIIETkae34X+vj2pn54UDf4CxUnVn4HwmzmcoEawg9rCrlHP3AiMQDEj6IwyMFBSL3hGNv7bV+GaR4Y7HE2F7oR8P/aDZBG7Z4RrIKVEI8DuzurvysfgqEl1+Zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PWYutqU6; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1728396871; c=relaxed/simple;
+	bh=5aoQfcWfquO8q33TtZ1UTCdHm8yAW/7J4xonT60sqmE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XUa+2mM8dOwE2ivYgEDoMCb4s6qaoGb0GchydGa6zLKrwzvRiVmSYlK+CdCgvIjylnipgjWSmOsulS5WhYbF3MfuwYnEL/L7TFOZ2fvy2LZxvvKa7Wt8D+SgorFMORNhbG27yhUOptAjuIatYpSJzGsIoC1OE1pI9CzUokUcVh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=W/H8XNDF; arc=none smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PWYutqU6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1728393884;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Y/HsfpZySGCEe7YAO5xU4Mllsq/gAJtGfw7aSWiHJYg=;
-	b=PWYutqU6qo9k7klpgH/cvCOJyUTz94+xPgUQyDvpZ/OH1AliRgpDfbZUmrF37HNw1+E9P1
-	RCb2PzBEJOJBjLF4ub5JG8RBlZdUcBF4Ip+7LHHKtWNR9NBKfnFKLypBy2IhL+Qq+gB5WF
-	tHU98vs7dsBFLgo8L1Xrc88tmHnFdoE=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-628-3_O-wuk0OaK7PH3xpxjDQQ-1; Tue,
- 08 Oct 2024 09:24:41 -0400
-X-MC-Unique: 3_O-wuk0OaK7PH3xpxjDQQ-1
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3A8861945105;
-	Tue,  8 Oct 2024 13:24:40 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.32.133])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 48B0319560A2;
-	Tue,  8 Oct 2024 13:24:39 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org,
-	sandeen@sandeen.net
-Subject: [PATCH] xfsprogs/mkfs: prototype XFS image mode format for scalable AG growth
-Date: Tue,  8 Oct 2024 09:25:56 -0400
-Message-ID: <20241008132556.81878-1-bfoster@redhat.com>
-In-Reply-To: <20241008131348.81013-1-bfoster@redhat.com>
-References: <20241008131348.81013-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="W/H8XNDF"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-a83562f9be9so619075366b.0
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Oct 2024 07:14:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shopee.com; s=shopee.com; t=1728396868; x=1729001668; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YBVGFNELeNzrNE/pUTBOb0mu55heBoVv/TX9AMKEIYw=;
+        b=W/H8XNDFivUW9VLnSktT+XzOQXUH3KE0rFITwhcgz4btk/AWlmh/OdsClCUOhNcIXh
+         W8zoHvo3Zr5sTMs/BuZFX3HGv/oqz6buC4/Qv9ylna96il+m/MjNkPlPiDrga3DgBJ5U
+         bfsQs6p5jHvrLnUnP0XiWOMda6XCWr/LvSiEwRJgEHKXoz3isJgoWzRmBjBVKBQOdhMl
+         0t/pD1r+4ic95bt1qmkneU6jZujZV8e0O13lqEnvF7UTLA96A49rX3dvudq2CEaxz35q
+         D9JFCI/I4r0CUW8ka1ylAmLpSsHK31R6wOxGcBTUpV76wivYVk3HcfYT8M4VaRv5UnJx
+         2Jtw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728396868; x=1729001668;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=YBVGFNELeNzrNE/pUTBOb0mu55heBoVv/TX9AMKEIYw=;
+        b=kLzNOcGWYrwcOMSqdGYJoqOwZvZDnyhnR51TMyKIXDS6QAApA+Z3PXNba9Yrf5mirO
+         IEmiye7KtG1UFOlMfN6aZTNRmpYe+si7IQULsHSlCAXnzozNcCWCnkVVVQvPU+2ZpU+F
+         SbURi/XLH51X6xs9wmOXsUNIrybWsXXFMhV4WxFIQhGHXPqT1YnVBTslfGB0Eo5Dn0UA
+         81U7ab+dm+hpiVXzMgT5+TrYS/N8BwSiviRlXmbQ++mfpA+yY2DTHzzZ3/sxG3kOP3C4
+         Hw4PQoeP9Q3Fj+9cwv0TsKQ3drJwIbuk3tY7HT6NoNPty+slgjQTk6ILegYGLW8O1LqC
+         x8Lw==
+X-Forwarded-Encrypted: i=1; AJvYcCV1VHHZkMwYvyFprwuY6j2t+LUr2hSf6CynMqIQG1FNivjjayE+lfU2JBLcTvqIjko9353TwFM5bjQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzCdV1Pqgn7Br1bgb9cmWOZmEEmHu0FTh4oHH5jCYS4CZmof1zn
+	oJvBYpgVxVGyLUQtA+NUURqIUHsFucNZun1/Xot1XgtPwjY74M4q2YPuuzPgaR4LR7F1eD3sNV7
+	IgiB49BeX5TEceGy062RGxjZdBu4iFs3FsEANrQ==
+X-Google-Smtp-Source: AGHT+IHk7euKn0dAZXT3q629EL9K9j/synWTQJVFme/t1o1SfzpypUdoyToXvWJFg+KpMfYuEfL1GEA/mnXYkTqoe0k=
+X-Received: by 2002:a17:907:7fab:b0:a99:4649:af69 with SMTP id
+ a640c23a62f3a-a994649b64bmr886505266b.15.1728396867688; Tue, 08 Oct 2024
+ 07:14:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+References: <20241002130004.69010-1-yizhou.tang@shopee.com>
+ <20241002130004.69010-2-yizhou.tang@shopee.com> <20241003130127.45kinxoh77xm5qfb@quack3>
+ <CACuPKxmwZgNx242x5HgTUCpu6v6QC3XtFY2ZDOE-mcu=ARK=Ag@mail.gmail.com> <20241007162311.77r5rra2tdhzszek@quack3>
+In-Reply-To: <20241007162311.77r5rra2tdhzszek@quack3>
+From: Tang Yizhou <yizhou.tang@shopee.com>
+Date: Tue, 8 Oct 2024 22:14:16 +0800
+Message-ID: <CACuPKx=-wmNOHbHFEqYEwnw6X7uzaZ+JU7pHqG+FCsAgKjePnQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] mm/page-writeback.c: Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL
+To: Jan Kara <jack@suse.cz>
+Cc: willy@infradead.org, akpm@linux-foundation.org, chandan.babu@oracle.com, 
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Tweak a few checks to facilitate experimentation with an agcount=1
-filesystem format with a larger agsize than the filesystem data
-size. The purpose of this is to POC a filesystem image mode format
-for XFS that better supports the typical cloud filesystem image
-deployment use case where a very small fs image is created and then
-immediately grown orders of magnitude in size once deployed to
-container environments. The large grow size delta produces
-filesystems with excessive AG counts, which leads to various other
-functional problems that eventually derive from this sort of
-pathological geometry.
+On Tue, Oct 8, 2024 at 12:23=E2=80=AFAM Jan Kara <jack@suse.cz> wrote:
+>
+> On Sun 06-10-24 20:41:11, Tang Yizhou wrote:
+> > On Thu, Oct 3, 2024 at 9:01=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
+> > >
+> > > On Wed 02-10-24 21:00:02, Tang Yizhou wrote:
+> > > > From: Tang Yizhou <yizhou.tang@shopee.com>
+> > > >
+> > > > The name of the BANDWIDTH_INTERVAL macro is misleading, as it is no=
+t
+> > > > only used in the bandwidth update functions wb_update_bandwidth() a=
+nd
+> > > > __wb_update_bandwidth(), but also in the dirty limit update functio=
+n
+> > > > domain_update_dirty_limit().
+> > > >
+> > > > Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL to make things clear.
+> > > >
+> > > > This patche doesn't introduce any behavioral changes.
+> > > >
+> > > > Signed-off-by: Tang Yizhou <yizhou.tang@shopee.com>
+> > >
+> > > Umm, I agree BANDWIDTH_INTERVAL may be confusing but UPDATE_INTERVAL =
+does
+> > > not seem much better to be honest. I actually have hard time coming u=
+p with
+> > > a more descriptive name so what if we settled on updating the comment=
+ only
+> > > instead of renaming to something not much better?
+> > >
+> > >                                                                 Honza
+> >
+> > Thank you for your review. I agree that UPDATE_INTERVAL is not a good
+> > name. How about
+> > renaming it to BW_DIRTYLIMIT_INTERVAL?
+>
+> Maybe WB_STAT_INTERVAL? Because it is interval in which we maintain
+> statistics about writeback behavior.
+>
 
-To experiment with this patch, format a small fs with something like
-the following:
+I don't think this is a good name, as it suggests a relation to enum
+wb_stat_item, but bandwidth and dirty limit are not in wb_stat_item.
 
-  mkfs.xfs -f -lsize=64m -dsize=512m,agcount=1,agsize=8g <imgfile>
+Yi
 
-Increase the underlying image file size, mount and grow. The
-filesystem will grow according to the format time AG size as if the
-AG was a typical runt AG on a traditional multi-AG fs.
-
-This means that the filesystem remains with an AG count of 1 until
-fs size grows beyond AG size. Since the typical deployment workflow
-is an immediate very small -> very large, one-time grow, the image
-fs can set a reasonable enough default or configurable AG size
-(based on user input) that ensures deployed filesystems end up in a
-generally supportable geometry (i.e. with multiple AGs for
-superblock redundancy) before seeing production workloads.
-
-Further optional changes are possible on the kernel side to help
-provide some simple guardrails against misuse of this mechanism. For
-example, the kernel could do anything from warn/fail or restrict
-runtime functionality for an insufficient grow. The image mode
-itself could set a backwards incompat feature bit that requires a
-mount option to enable full functionality (with the exception of
-growfs). More discussion is required to determine whether this
-provides a usable solution for the common cloud workflows that
-exhibit this problem and what the right interface and/or limitations
-are to ensure it is used correctly.
-
-Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-This is mostly a repost of the previous RFD patch to allow mkfs to
-create single AG filesystems with AG sizes larger than the filesystem
-itself. The main tweak in this version is that agcount=1 is allowed not
-just for explicitly outsized AG sizes, but for any file-based target
-device. This supports either setting a large AG size at format time or
-sticking with the default size and letting the kernel set a new AG size
-at growfs time.
-
-Brian
-
- mkfs/xfs_mkfs.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index bbd0dbb6c..20168b58d 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -329,8 +329,7 @@ static struct opt_params dopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = D_AGCOUNT,
--		  .conflicts = { { &dopts, D_AGSIZE },
--				 { &dopts, D_CONCURRENCY },
-+		  .conflicts = { { &dopts, D_CONCURRENCY },
- 				 { NULL, LAST_CONFLICT } },
- 		  .minval = 1,
- 		  .maxval = XFS_MAX_AGNUMBER,
-@@ -372,8 +371,7 @@ static struct opt_params dopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_AGSIZE,
--		  .conflicts = { { &dopts, D_AGCOUNT },
--				 { &dopts, D_CONCURRENCY },
-+		  .conflicts = { { &dopts, D_CONCURRENCY },
- 				 { NULL, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = XFS_AG_MIN_BYTES,
-@@ -1264,7 +1262,7 @@ validate_ag_geometry(
- 		usage();
- 	}
- 
--	if (agsize > dblocks) {
-+	if (agsize > dblocks && agcount != 1) {
- 		fprintf(stderr,
- 	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
- 			(long long)agsize, (long long)dblocks);
-@@ -2812,12 +2810,20 @@ validate_supported(
- 
- 	/*
- 	 * Filesystems should not have fewer than two AGs, because we need to
--	 * have redundant superblocks.
-+	 * have redundant superblocks. The exception is filesystem image files
-+	 * that are intended to be grown on deployment before production use.
-+	 *
-+	 * A single AG provides more flexibility to grow the filesystem because
-+	 * the AG size can be grown until a second AG is added. This helps
-+	 * prevent tiny image filesystems being grown to unwieldy AG counts.
- 	 */
- 	if (mp->m_sb.sb_agcount < 2) {
- 		fprintf(stderr,
-- _("Filesystem must have at least 2 superblocks for redundancy!\n"));
--		usage();
-+ _("Filesystem must have at least 2 superblocks for redundancy.\n"));
-+		if (!cli->xi->data.isfile)
-+			usage();
-+		fprintf(stderr,
-+ _("Proceeding for image file, grow before use.\n"));
- 	}
- }
- 
--- 
-2.46.2
-
+>                                                                 Honza
+>
+> > > > ---
+> > > >  mm/page-writeback.c | 16 ++++++++--------
+> > > >  1 file changed, 8 insertions(+), 8 deletions(-)
+> > > >
+> > > > diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> > > > index fcd4c1439cb9..a848e7f0719d 100644
+> > > > --- a/mm/page-writeback.c
+> > > > +++ b/mm/page-writeback.c
+> > > > @@ -54,9 +54,9 @@
+> > > >  #define DIRTY_POLL_THRESH    (128 >> (PAGE_SHIFT - 10))
+> > > >
+> > > >  /*
+> > > > - * Estimate write bandwidth at 200ms intervals.
+> > > > + * Estimate write bandwidth or update dirty limit at 200ms interva=
+ls.
+> > > >   */
+> > > > -#define BANDWIDTH_INTERVAL   max(HZ/5, 1)
+> > > > +#define UPDATE_INTERVAL              max(HZ/5, 1)
+> > > >
+> > > >  #define RATELIMIT_CALC_SHIFT 10
+> > > >
+> > > > @@ -1331,11 +1331,11 @@ static void domain_update_dirty_limit(struc=
+t dirty_throttle_control *dtc,
+> > > >       /*
+> > > >        * check locklessly first to optimize away locking for the mo=
+st time
+> > > >        */
+> > > > -     if (time_before(now, dom->dirty_limit_tstamp + BANDWIDTH_INTE=
+RVAL))
+> > > > +     if (time_before(now, dom->dirty_limit_tstamp + UPDATE_INTERVA=
+L))
+> > > >               return;
+> > > >
+> > > >       spin_lock(&dom->lock);
+> > > > -     if (time_after_eq(now, dom->dirty_limit_tstamp + BANDWIDTH_IN=
+TERVAL)) {
+> > > > +     if (time_after_eq(now, dom->dirty_limit_tstamp + UPDATE_INTER=
+VAL)) {
+> > > >               update_dirty_limit(dtc);
+> > > >               dom->dirty_limit_tstamp =3D now;
+> > > >       }
+> > > > @@ -1928,7 +1928,7 @@ static int balance_dirty_pages(struct bdi_wri=
+teback *wb,
+> > > >               wb->dirty_exceeded =3D gdtc->dirty_exceeded ||
+> > > >                                    (mdtc && mdtc->dirty_exceeded);
+> > > >               if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stam=
+p) +
+> > > > -                                        BANDWIDTH_INTERVAL))
+> > > > +                                        UPDATE_INTERVAL))
+> > > >                       __wb_update_bandwidth(gdtc, mdtc, true);
+> > > >
+> > > >               /* throttle according to the chosen dtc */
+> > > > @@ -2705,7 +2705,7 @@ int do_writepages(struct address_space *mappi=
+ng, struct writeback_control *wbc)
+> > > >        * writeback bandwidth is updated once in a while.
+> > > >        */
+> > > >       if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stamp) +
+> > > > -                                BANDWIDTH_INTERVAL))
+> > > > +                                UPDATE_INTERVAL))
+> > > >               wb_update_bandwidth(wb);
+> > > >       return ret;
+> > > >  }
+> > > > @@ -3057,14 +3057,14 @@ static void wb_inode_writeback_end(struct b=
+di_writeback *wb)
+> > > >       atomic_dec(&wb->writeback_inodes);
+> > > >       /*
+> > > >        * Make sure estimate of writeback throughput gets updated af=
+ter
+> > > > -      * writeback completed. We delay the update by BANDWIDTH_INTE=
+RVAL
+> > > > +      * writeback completed. We delay the update by UPDATE_INTERVA=
+L
+> > > >        * (which is the interval other bandwidth updates use for bat=
+ching) so
+> > > >        * that if multiple inodes end writeback at a similar time, t=
+hey get
+> > > >        * batched into one bandwidth update.
+> > > >        */
+> > > >       spin_lock_irqsave(&wb->work_lock, flags);
+> > > >       if (test_bit(WB_registered, &wb->state))
+> > > > -             queue_delayed_work(bdi_wq, &wb->bw_dwork, BANDWIDTH_I=
+NTERVAL);
+> > > > +             queue_delayed_work(bdi_wq, &wb->bw_dwork, UPDATE_INTE=
+RVAL);
+> > > >       spin_unlock_irqrestore(&wb->work_lock, flags);
+> > > >  }
+> > > >
+> > > > --
+> > > > 2.25.1
+> > > >
+> > > >
+> > > --
+> > > Jan Kara <jack@suse.com>
+> > > SUSE Labs, CR
+> --
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
