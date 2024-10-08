@@ -1,270 +1,244 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6842CA8;
-	Tue,  8 Oct 2024 10:52:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.141.245
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728384739; cv=fail; b=Zw2IuokH1dKCynHoDJOPan2RjT1ul6AEHCLz8Owh3/wwTYYSJZ2D5jm5GbOxjY+DRpCyhrUmyceYV8FxWGQBrA5jfeGqVmfNL62QLeRLG8TNmtLsPqVPsHP8I7GFAzUc+n3BZTDUzdLhOpYLgy09QGA2A/HUJPVnha1a4/LsuRg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728384739; c=relaxed/simple;
-	bh=frpmCQa/61DcSWQKsBKa8tHrMCFPDkyMDBSNwUnXzRc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Byx48ALGrmSqgLXVwwLv+jtfH3YA5AOiU1zR9cDxuD4n/uk20q8ygGOhfLpNizm39HVufLBZd1C/3+FhkKaUjY/JoM42pE7WNva9Vk6zvl+RHypddmK98l+n1dtODY2nFSnpqoshoWwtGt4omx5uEoNhlLfweIwf5Na/Ai+BAGI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ikTmpvmk; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=a2LVr+/O; arc=fail smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498F81D0BAE;
+	Tue,  8 Oct 2024 11:23:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1728386629; cv=none; b=I0gp/kugT6YY9wq/jo+9NBMzxyPCiZuUq3x78AdPThLYNHLiIOM8M0qfinQJU+lb/31xWT3DQHTKGgUsDTGxwmfXbqhCZCqimD4fs48Nbo4G3IfKzhC7s6ODINYJoChhpMnKeuqZpFMT72UVdVFhltHbMzb+iwjx1DUUvnm0nrU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1728386629; c=relaxed/simple;
+	bh=hYdtROrYP/bEVNFJahX1QKAU4GyQcc9i+//1GTNu+0k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eymJbbZpIsC1TKSoY5O2ThSE5Q2ps9iQ3FzQVp/xCc3c9UfSwq8AD+XJeaByWwN1uBUtHSLlEgYKEEXvad/kH0EkjiWuCRv69drqaJAuDQ8YpojJ+YHz5eVoaBx+fY0hUTTmHs5MZbGReT4zQO9c0X794qnqXQCxWXVny/DUA5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=v+4e7ZpL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=y+KXu5ot; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=v+4e7ZpL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=y+KXu5ot; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ikTmpvmk";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="a2LVr+/O"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1728384737; x=1759920737;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=frpmCQa/61DcSWQKsBKa8tHrMCFPDkyMDBSNwUnXzRc=;
-  b=ikTmpvmkhCX/X/v35DHPrx99Y0BkjFhkawargYVZASDaZbvQ9/8ZJ/dH
-   RG9/xcZQi/zcoNnz+Tayggkylwp2DHctXsfGo3zBcMV0bGHK5kquMc5Mb
-   +OoB7rrk6SYAuJskeVkomQZUvwBiB/5oPWQKj3O7UUt6mrZcviB9EXba1
-   1xwzTyR2MQttW1hXILU5kpc4gRsv2+pQc0pZaX3nvo0mKMW7xlqbTdpWx
-   QL0rVnEIxTdTdFJz5T8YQPJNS8m9KiVjTdsbw6D6s1G1XwBvqdmIpwAW5
-   w7XAC9AgmCcR+Vkm5WXBJRlV/n9SR8es3a+0voKqIsLcDxCyMV1HSUzkI
-   Q==;
-X-CSE-ConnectionGUID: X1j82LKXQ8iz1yf5CPezLg==
-X-CSE-MsgGUID: zoclcAFyT8SxaenPZml2pA==
-X-IronPort-AV: E=Sophos;i="6.11,186,1725292800"; 
-   d="scan'208";a="29398712"
-Received: from mail-southcentralusazlp17012054.outbound.protection.outlook.com (HELO SN4PR2101CU001.outbound.protection.outlook.com) ([40.93.14.54])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Oct 2024 18:52:09 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Z/krIrA/bffVAFJNzJLi3ijfPFRONIaFWQESrUXGojVBTBrXetDkGf7458dQc0W4v5HuIMaEec2/Tvp0YAvGkp+Jfe3J66bb66bbePZCROz8fkkhZhaF/hjYq7dbP3I36KouPzkq1mmsSFoV6XdboQJKCVf+rJbgkW4nw4NPI6i1ixlUqzDWTw6kFMBJZFGTEDhebwOB+1X2CF2fVq7QVESEK2tT1PIRynI/1k4AtZB7maPPSqh1eOGEttfzXs2Q91RKK+j7m8teZnzihKMmn9rwTnEB5+3/PPcBEAdb5OOX+1KlCdVgcxkiUDLkYaeqzdu1Rh+4A47slIF8DVy2Tw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wMEdsm+K1Dr0vaZo1ScEcvqX+J+LrsLvq9+fiXad0ns=;
- b=FRH/KdbzIKv6qyLMWoOzqegRWMsQ7nA7n9X9FEg6n22P4Vfjn9vRRAxzNV4cJ3urWZ/o8xFM8rth7L1a2jj0J1jUT4Kw5541fKPUb+RcghSTiPOJB4V/2DffPMdLeBq7gXMs4EKqSXW54hqLrXOloo8uSr1k4t2uTZUHzjij6IdsIZxmpCCUTr7y8Bq7Klp1bTyuW8vtRhdz5ZZb8o+9st6wjhOAu0VcJG3j9z1yADnpFYK2fT8OdHWDGpvObE9ahujgzK3vxM830Y3jKTAB3yTiKWNWZ8zpcAmzpAfUlBMrm1UY9NRZGzHIW/Q3LdNV/RxsnDX39cWqNhoW9mofQg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wMEdsm+K1Dr0vaZo1ScEcvqX+J+LrsLvq9+fiXad0ns=;
- b=a2LVr+/OphhKsjYNwIgky14fYCmcgIYiq8TfHqFfafFcZp4TSmDpGuFl9G5mR6tZ121D2AO8/2OIVw8L2Ni2Fi2xKbR8uHA/B1ZoNoBOToDMcB+ASwV2W9/N1H8eSvBS9MG00XRJ/Vkg+lN32aH+6lcFEz8MiECFaeJ7Y9T/xTw=
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com (2603:10b6:510:236::8)
- by CO6PR04MB7553.namprd04.prod.outlook.com (2603:10b6:303:a8::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8026.23; Tue, 8 Oct
- 2024 10:52:04 +0000
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b]) by PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b%4]) with mapi id 15.20.8026.020; Tue, 8 Oct 2024
- 10:52:04 +0000
-From: Hans Holmberg <Hans.Holmberg@wdc.com>
-To: "zlang@redhat.com" <zlang@redhat.com>, "djwong@kernel.org"
-	<djwong@kernel.org>
-CC: hch <hch@lst.de>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Hans Holmberg
-	<Hans.Holmberg@wdc.com>, Hans Holmberg <Hans.Holmberg@wdc.com>
-Subject: [PATCH 2/2] xfs/157,xfs/547,xfs/548: switch to using
- _scratch_mkfs_sized
-Thread-Topic: [PATCH 2/2] xfs/157,xfs/547,xfs/548: switch to using
- _scratch_mkfs_sized
-Thread-Index: AQHbGXAcO8L/aUmkt06VOR0qHTTj/w==
-Date: Tue, 8 Oct 2024 10:52:04 +0000
-Message-ID: <20241008105055.11928-3-hans.holmberg@wdc.com>
-References: <20241008105055.11928-1-hans.holmberg@wdc.com>
-In-Reply-To: <20241008105055.11928-1-hans.holmberg@wdc.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-mailer: git-send-email 2.46.2
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH7PR04MB8755:EE_|CO6PR04MB7553:EE_
-x-ms-office365-filtering-correlation-id: 185d15d9-b299-44ed-175a-08dce7873f56
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|1800799024|366016|38070700018;
-x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?t1d6m4v5OoYFJlnXiLALg/Qpro5aN6DpY17GK9rxjCj+VG/Z2pUreC9MN7?=
- =?iso-8859-1?Q?uPxG/SlZfdvC+9DdLfKtplhos7ArpdbpKIxG5GgexPfsrcXXWPRcHtswJH?=
- =?iso-8859-1?Q?AuqVZ+epGCptB5CoACqR6CngHOwJa0GDZlCttLG8G28l/hGLTqf5jXi0Uo?=
- =?iso-8859-1?Q?y4WVq3rWBXw2BULbNt8Z+x+PuZjPwYIlZZzH3wgQUiiEK7Z4tIeQAAF8f8?=
- =?iso-8859-1?Q?kKl6zEiHJZqNl00mTvhHJ0XO8S+ZsaXFzhd38JBq5RlOXQg68OLiOxiw3Z?=
- =?iso-8859-1?Q?4j362BkKHWiE+I/rfeU+IHFCvpBkeDxfo+Ech7PLefQNN64GO8CrDqkmbO?=
- =?iso-8859-1?Q?8kGTodfSNI/kNnurU3gHe/0WKZ3zxxOpSd4SkOZ4+niny88OSHmQlfOXw0?=
- =?iso-8859-1?Q?vWX57pjU4IiFucwwle8MGgpp3D3Cj88pKb52ks+WCxCsZ8IlDfhbBvnxrF?=
- =?iso-8859-1?Q?cWk6FZrDrMYyTECRL17PVzEixLhpdx6BKT3E6EPSXgWgevPffp9ig+Iwck?=
- =?iso-8859-1?Q?mHLy8muELsUWBFpnzEABDTG/BcMyUqy9fkCHNaA0bdmopFj9dha8bNoWGy?=
- =?iso-8859-1?Q?EKlEht6q+pFcSHHgZQ5AI6NwvQPrX0JiZu34BFqIqqsWGo1xPQV5DAINRr?=
- =?iso-8859-1?Q?jrJUEYapCtubCoW3lov6xEUhtrs7ThTOOjc7N5FnLImrFzxpK6p7iG/V2F?=
- =?iso-8859-1?Q?cpuIDA0ErDsXu1ILanb/5mWPVpyRc6YpSzzx2btjCrBvcooIyrbm7QFjPM?=
- =?iso-8859-1?Q?Q/I5zdStd+LL3d0dzay4mH0apwMjginY1P1m5rIggxx00n7dKNRlpyJcn1?=
- =?iso-8859-1?Q?SfmR1X4KWfr6S7SbIcL7hD2hYmo2JLZsEhDOAbvRYMuRngGrMT5CadFfXN?=
- =?iso-8859-1?Q?1MOsGjL7NSlrXZKBYy0/MAfrEM7essJiFuKfobyKjglDnvEDOY15ekOpbx?=
- =?iso-8859-1?Q?TPmzkmx8C8nFiu0MwMXIA8X5Ezuya5Q2rlQ19AY8rPxAuepkNjj3TKlmg4?=
- =?iso-8859-1?Q?LSAMIBl8LM0wFsFdxH3ZdXCjg5edzz81VI2V0rlB5Njg7drJDEgwI1uzAe?=
- =?iso-8859-1?Q?zkCha/NJnjRtjzzhNi6isVWg1A02gv1W5ksdv1OCXHvxZZATL6yZuEoY+6?=
- =?iso-8859-1?Q?N77sNEvP9aRU7y8A1w1fyTJ4wQ2oIfPeRImhNTEs/AwdZFfJR0Q0MwCaQG?=
- =?iso-8859-1?Q?nnJqN+3tFumF0zeDdyO0NrIswjE+Fh9SbkUYlDfthIIxeK2oYttY2DwNWv?=
- =?iso-8859-1?Q?Hp9NXojzc9GnDKC0TyPKoUpuNZM8itOAPcL3U4JmUxKnAgOY/Trob7+a9m?=
- =?iso-8859-1?Q?zHivMA5onogrnXF6tszxkDKDM95ULS8HpgMuXGnFqAsFywuYP+9X5RWMkf?=
- =?iso-8859-1?Q?b5w3tFDtzOaRbh+aCBXxCe3hjwmMWVUQ=3D=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR04MB8755.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?EnpdhkJs4S7ugXj+Rpx+Ee3fFT5prYSkzbSJDBlasEjdWjl08g8Xbu1R3/?=
- =?iso-8859-1?Q?T9jD+8qg1Erj3ahR+UNnydL9XHrySZwZSLgZEU5nv11mlXVdFWtae3YKCp?=
- =?iso-8859-1?Q?nJ7Y/ldjXWr/0vdB+R7qEWbWWHYGm51Mgnp7mhLZ5DWqZIi+FsxFBY4fIt?=
- =?iso-8859-1?Q?xXpHrTtv+qujLH5zZeigFtMHLTftrvyhw6qr3dy3RzrkLuRMm++SDh6HnL?=
- =?iso-8859-1?Q?Q9HkFriV9cIxgujt2FTz/nBe0ybVVi130nIU7yuvxohr3g/Xdvoq1M4uod?=
- =?iso-8859-1?Q?kCRtrCP6YVDkh6W/lBLKs0ZRLt5f6BoEzAzsN0Bcug5HO5ehVtfb3Z8Q7O?=
- =?iso-8859-1?Q?SETSVlHrlKvxbwuWozkKdOCxEw3OeTq2xDpc5C5babj8vhX6+Xou0bNMvY?=
- =?iso-8859-1?Q?5V7bgVCz8JwgvKXxTVg8OvTB2aKo8k0Hv+jHzvCs7epl4gJLhcRIKNcskw?=
- =?iso-8859-1?Q?jKDDfDetCUWJJ+fFW1tg10T1xcxEqicleyJ5ZiwjVgF5RZ1l4hSy6RKVM1?=
- =?iso-8859-1?Q?eABSVdR6/RQLF71ievOUEacHtk868qUtq+nzmGMef81dh6UcDvjJSu63Qe?=
- =?iso-8859-1?Q?NkzEpkKTmPjuWVLvi+kPkxsRg7gMZ6SttVDP/kvfc3PMcRGEHGCyMCuzcq?=
- =?iso-8859-1?Q?41O7cSgIyuTwK8Syg43dhJ7gizmc7zRAdtcw1tZANdEu3UDm9vAsBojnmo?=
- =?iso-8859-1?Q?qrr6VyHwRAG7L0+FmFzbENkt9470ipWYuhls7s5hteX/JdymqwKdIKMlMX?=
- =?iso-8859-1?Q?kQxKKrxlqVvqa8JY5mbdG/WloxfgHsGqUzIzN0us3t8RtTtXUhFcHO0y2g?=
- =?iso-8859-1?Q?jJLvsK3X8HMRdNrCi4/4FuTy8m5gzE1UJZPBZbnNhsfJpsZAHY6hqneRMr?=
- =?iso-8859-1?Q?Ubg2+fZqk/SUYvWO/BsMxfNpXkx69iQKxzRFa9vn1Y7Q82Pprtqw4FERVv?=
- =?iso-8859-1?Q?a8oq0EX5phjKxeX1or0L0+JY+BlUYJ/ktYjMsIhU0RWYyO8oFpvsTtuWP4?=
- =?iso-8859-1?Q?c515fVVZZWhhCjYupOpisAlIuLjUdzl+6cDLobe61Jnm6YLx2Cb2SCoqMt?=
- =?iso-8859-1?Q?Feo1l3OdQlDItXag9C0nPlbuMdsqwnJ/Xv8FHH648hPCG4cLlMDEHrojBl?=
- =?iso-8859-1?Q?qdge2UeWYTLnuSapxPNEJbCAx9SC6DOOrDlPog9STjr/B5wmbhlCzUvilQ?=
- =?iso-8859-1?Q?vsHYtqYal4zffgbI9WuHPO+ehbkpPZScsC/tZkgIzM3IaJxuAh/V/us9pS?=
- =?iso-8859-1?Q?WSoekZYjyctZ08iMk4JBWnoeC6OJfkXMJfMf2Sr0mHY65vEXaY2VIuBhh1?=
- =?iso-8859-1?Q?EOeih3KwP4uovPBgbD5T09gQalXf2Bj1MfCGaVcfqXYZAdHoAxOqp5XvU6?=
- =?iso-8859-1?Q?/wbs7JPUO21HeWPMi3EkcRwf9RLLllAcAhZUZroViU1SIRDIiTd/jyhjJY?=
- =?iso-8859-1?Q?WggkFkAhfWbvTNnJG4b/9NQtmsszdDK+kWN0IPsE3s1PWPnlRoHWtxxWG/?=
- =?iso-8859-1?Q?+x5vpsM+0/Mxdr0+ai5flWoWKT1X1OlKLx4lNg7UuZBhRCJqeJ6jr4mCTk?=
- =?iso-8859-1?Q?t0GakceerhbbR/Fe1tFemC3gMTyGaEr4wsrQoA5AldBzIuuVsMbwz+j09l?=
- =?iso-8859-1?Q?pUDuMZtRejgkJ99M0sF+s1RQRzyjhlaXbQ?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="v+4e7ZpL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="y+KXu5ot";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="v+4e7ZpL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="y+KXu5ot"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 339B821CE4;
+	Tue,  8 Oct 2024 11:23:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1728386625; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IXgVBUemQdrxxP01R5PokGPlWKDzV/xnrwqUaIFFHT8=;
+	b=v+4e7ZpLfn+SyG6XIaZw/19TplVltpzFln/dMVAy3JJpiP0PKqyS5u1SmoIM9cR60jjXr9
+	Sh3eqtOTMEJ9f9lgZ4Xxlb1xCOEtW7FNnQmWoS4P8/EOoJ9WUgbqaZAXIdVk3dvOwJWOEh
+	Q+QIq1uCchuwMHOWc1ok8knmS+X5gwA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1728386625;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IXgVBUemQdrxxP01R5PokGPlWKDzV/xnrwqUaIFFHT8=;
+	b=y+KXu5ot5dLsjkWuiEWG/lRb7Pech7RhVHcKhlwdfnNeEEN+PcFzWdRVPuYPIFRVIMQR3Q
+	x83ya3j9umg5fyCw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1728386625; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IXgVBUemQdrxxP01R5PokGPlWKDzV/xnrwqUaIFFHT8=;
+	b=v+4e7ZpLfn+SyG6XIaZw/19TplVltpzFln/dMVAy3JJpiP0PKqyS5u1SmoIM9cR60jjXr9
+	Sh3eqtOTMEJ9f9lgZ4Xxlb1xCOEtW7FNnQmWoS4P8/EOoJ9WUgbqaZAXIdVk3dvOwJWOEh
+	Q+QIq1uCchuwMHOWc1ok8knmS+X5gwA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1728386625;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IXgVBUemQdrxxP01R5PokGPlWKDzV/xnrwqUaIFFHT8=;
+	b=y+KXu5ot5dLsjkWuiEWG/lRb7Pech7RhVHcKhlwdfnNeEEN+PcFzWdRVPuYPIFRVIMQR3Q
+	x83ya3j9umg5fyCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 242611340C;
+	Tue,  8 Oct 2024 11:23:45 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id iW/NCEEWBWcGXwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 08 Oct 2024 11:23:45 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id BC177A086F; Tue,  8 Oct 2024 13:23:44 +0200 (CEST)
+Date: Tue, 8 Oct 2024 13:23:44 +0200
+From: Jan Kara <jack@suse.cz>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
+	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@linux.microsoft.com>,
+	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
+	Kees Cook <keescook@chromium.org>,
+	linux-security-module@vger.kernel.org
+Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
+ sb->s_inodes iteration to super_iter_inodes()
+Message-ID: <20241008112344.mzi2qjpaszrkrsxg@quack3>
+References: <20241002014017.3801899-1-david@fromorbit.com>
+ <20241002014017.3801899-5-david@fromorbit.com>
+ <Zv5GfY1WS_aaczZM@infradead.org>
+ <Zv5J3VTGqdjUAu1J@infradead.org>
+ <20241003115721.kg2caqgj2xxinnth@quack3>
+ <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
+ <ZwRvshM65rxXTwxd@dread.disaster.area>
+ <CAOQ4uxgzPM4e=Wc=UVe=rpuug=yaWwu5zEtLJmukJf6d7MUJow@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	mOmZJi2b9w3wVVrgp1lEdNIQEwyQ1YhAMSTH90qz2l3sYVsEdnifx60S2XoK+haP7fHxuGeRmoi8sb94t2ADbZ/WsWpWmduNETXTQ8PjbIJ0UQZ4K77SLK9jLZMYxcxa6GSkqElIfzdHtDi/PBznPxN61NJ5fK4XaBu+gywQEBwahkEhO//MZimP/y3KEnzyAbpgzqchNf+NKr6Tsx6DE4NIUM0U6Bn1Njy+KO8/sYUEPXZepVHENJBx1b/+BdsiLWlNsrflX5Z79wDEgLRPKahp0IL8J8mGylA8o1QMMjpfHMY8ttORAi5J8nvXVfDgJYskJ23TpAnPeb7rtqSV2GgvAvdNkvZZdqwo+f8krSSVdmO429MYsor8uZP0+H+UGfnaqiAlPp7H57LAcNjwlR8RNE2py9QXm2vjxwJuiqEjFM3Qoqyb8EH7uZT/b0uv6wLlQ6a9QMitz5wKixCZ2jXVkkfqhUUc+3whXzr9WaxQ/B66rOROo7djLCqx4BHEPO1vBUal8oWx+/qr8h8/2iTSdBE6VfVfAcSbn0YvqGUyNU3yqQJUi3Yz2uMLZXeLnUCRBgaN5exoQOqWKjKpXmiKt+gLutF1yusuJ+FSG5YWwh6cy0tVlK9eqySIWN+0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR04MB8755.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 185d15d9-b299-44ed-175a-08dce7873f56
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Oct 2024 10:52:04.8600
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: gYf9Lzj/rOP6DBQt6tBnT3cRxG+BkyR5Vueozfs6omln4gSIZ1YwNST7HDNxtUrJNhNaG3NWfXzb0gyZ5sjdVQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR04MB7553
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxgzPM4e=Wc=UVe=rpuug=yaWwu5zEtLJmukJf6d7MUJow@mail.gmail.com>
+X-Spam-Score: -3.80
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.998];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	FREEMAIL_TO(0.00)[gmail.com];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email,suse.cz:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-From: Hans Holmberg <Hans.Holmberg@wdc.com>
+On Tue 08-10-24 10:57:22, Amir Goldstein wrote:
+> On Tue, Oct 8, 2024 at 1:33 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Mon, Oct 07, 2024 at 01:37:19PM -0700, Linus Torvalds wrote:
+> > > On Thu, 3 Oct 2024 at 04:57, Jan Kara <jack@suse.cz> wrote:
+> > > >
+> > > > Fair enough. If we go with the iterator variant I've suggested to Dave in
+> > > > [1], we could combine the evict_inodes(), fsnotify_unmount_inodes() and
+> > > > Landlocks hook_sb_delete() into a single iteration relatively easily. But
+> > > > I'd wait with that convertion until this series lands.
+> > >
+> > > Honza, I looked at this a bit more, particularly with an eye of "what
+> > > happens if we just end up making the inode lifetimes subject to the
+> > > dentry lifetimes" as suggested by Dave elsewhere.
+> >
+> > ....
+> >
+> > > which makes the fsnotify_inode_delete() happen when the inode is
+> > > removed from the dentry.
+> >
+> > There may be other inode references being held that make
+> > the inode live longer than the dentry cache. When should the
+> > fsnotify marks be removed from the inode in that case? Do they need
+> > to remain until, e.g, writeback completes?
+> >
+> 
+> fsnotify inode marks remain until explicitly removed or until sb
+> is unmounted (*), so other inode references are irrelevant to
+> inode mark removal.
+> 
+> (*) fanotify has "evictable" inode marks, which do not hold inode
+> reference and go away on inode evict, but those mark evictions
+> do not generate any event (i.e. there is no FAN_UNMOUNT).
 
-These test cases specify small -d sizes which combined with a rt dev of
-unrestricted size and the rtrmap feature can cause mkfs to fail with
-error:
+Yes. Amir beat me with the response so let me just add that FS_UMOUNT event
+is for inotify which guarantees that either you get an event about somebody
+unlinking the inode (e.g. IN_DELETE_SELF) or event about filesystem being
+unmounted (IN_UMOUNT) if you place mark on some inode. I also don't see how
+we would maintain this behavior with what Linus proposes.
 
-mkfs.xfs: cannot handle expansion of realtime rmap btree; need <x> free
-blocks, have <y>
+> > > Then at umount time, the dentry shrinking will deal with all live
+> > > dentries, and at most the fsnotify layer would send the FS_UNMOUNT to
+> > > just the root dentry inodes?
+> >
+> > I don't think even that is necessary, because
+> > shrink_dcache_for_umount() drops the sb->s_root dentry after
+> > trimming the dentry tree. Hence the dcache drop would cleanup all
+> > inode references, roots included.
+> >
+> > > Wouldn't that make things much cleaner, and remove at least *one* odd
+> > > use of the nasty s_inodes list?
+> >
+> > Yes, it would, but someone who knows exactly when the fsnotify
+> > marks can be removed needs to chime in here...
 
-This is due to that the -d size is not big enough to support the
-metadata space allocation required for the rt groups.
+So fsnotify needs a list of inodes for the superblock which have marks
+attached and for which we hold inode reference. We can keep it inside
+fsnotify code although it would practically mean another list_head for the
+inode for this list (probably in our fsnotify_connector structure which
+connects list of notification marks to the inode). If we actually get rid
+of i_sb_list in struct inode, this will be a win for the overall system,
+otherwise it is a net loss IMHO. So if we can figure out how to change
+other s_inodes owners we can certainly do this fsnotify change.
 
-Switch to use _scratch_mkfs_sized that sets up the -r size parameter
-to avoid this. If -r size=3Dx and -d size=3Dx we will not risk running
-out of space on the ddev as the metadata size is just a fraction of
-the rt data size.
+> > > And I wonder if the quota code (which uses the s_inodes list to enable
+> > > quotas on already mounted filesystems) could for all the same reasons
+> > > just walk the dentry tree instead (and remove_dquot_ref similarly
+> > > could just remove it at dentry_unlink_inode() time)?
+> >
+> > I don't think that will work because we have to be able to modify
+> > quota in evict() processing. This is especially true for unlinked
+> > inodes being evicted from cache, but also the dquots need to stay
+> > attached until writeback completes.
+> >
+> > Hence I don't think we can remove the quota refs from the inode
+> > before we call iput_final(), and so I think quotaoff (at least)
+> > still needs to iterate inodes...
 
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/157 | 12 ++++++++----
- tests/xfs/547 |  4 +++-
- tests/xfs/548 |  2 +-
- 3 files changed, 12 insertions(+), 6 deletions(-)
+Yeah, I'm not sure how to get rid of the s_inodes use in quota code. One of
+the things we need s_inodes list for is during quotaoff on a mounted
+filesystem when we need to iterate all inodes which are referencing quota
+structures and free them.  In theory we could keep a list of inodes
+referencing quota structures but that would require adding list_head to
+inode structure for filesystems that support quotas. Now for the sake of
+full context I'll also say that enabling / disabling quotas on a mounted
+filesystem is a legacy feature because it is quite easy that quota
+accounting goes wrong with it. So ext4 and f2fs support for quite a few
+years a mode where quota tracking is enabled on mount and disabled on
+unmount (if appropriate fs feature is enabled) and you can only enable /
+disable enforcement of quota limits during runtime.  So I could see us
+deprecating this functionality altogether although jfs never adapted to
+this new way we do quotas so we'd have to deal with that somehow.  But one
+way or another it would take a significant amount of time before we can
+completely remove this so it is out of question for this series.
 
-diff --git a/tests/xfs/157 b/tests/xfs/157
-index 79d45ac2bb34..9b5badbaeb3c 100755
---- a/tests/xfs/157
-+++ b/tests/xfs/157
-@@ -34,18 +34,21 @@ _require_test
- _require_scratch_nocheck
- _require_command "$XFS_ADMIN_PROG" "xfs_admin"
-=20
-+
- # Create some fake sparse files for testing external devices and whatnot
-+fs_size=3D$((500 * 1024 * 1024))
-+
- fake_datafile=3D$TEST_DIR/$seq.scratch.data
- rm -f $fake_datafile
--truncate -s 500m $fake_datafile
-+truncate -s $fs_size $fake_datafile
-=20
- fake_logfile=3D$TEST_DIR/$seq.scratch.log
- rm -f $fake_logfile
--truncate -s 500m $fake_logfile
-+truncate -s $fs_size $fake_logfile
-=20
- fake_rtfile=3D$TEST_DIR/$seq.scratch.rt
- rm -f $fake_rtfile
--truncate -s 500m $fake_rtfile
-+truncate -s $fs_size $fake_rtfile
-=20
- # Save the original variables
- orig_ddev=3D$SCRATCH_DEV
-@@ -63,7 +66,8 @@ scenario() {
- }
-=20
- check_label() {
--	_scratch_mkfs -L oldlabel >> $seqres.full
-+	MKFS_OPTIONS=3D"-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size \
-+		>> $seqres.full
- 	_scratch_xfs_db -c label
- 	_scratch_xfs_admin -L newlabel "$@" >> $seqres.full
- 	_scratch_xfs_db -c label
-diff --git a/tests/xfs/547 b/tests/xfs/547
-index eada4aadc27f..ffac546be4cd 100755
---- a/tests/xfs/547
-+++ b/tests/xfs/547
-@@ -24,10 +24,12 @@ _require_xfs_db_command path
- _require_test_program "punch-alternating"
- _require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-=20
-+fs_size=3D$((512 * 1024 * 1024))
-+
- for nrext64 in 0 1; do
- 	echo "* Verify extent counter fields with nrext64=3D${nrext64} option"
-=20
--	_scratch_mkfs -i nrext64=3D${nrext64} -d size=3D$((512 * 1024 * 1024)) \
-+	MKFS_OPTIONS=3D"-i nrext64=3D${nrext64} $MKFS_OPTIONS" _scratch_mkfs_size=
-d $fs_size \
- 		      >> $seqres.full
- 	_scratch_mount >> $seqres.full
-=20
-diff --git a/tests/xfs/548 b/tests/xfs/548
-index f0b58563e64d..af72885a9c6e 100755
---- a/tests/xfs/548
-+++ b/tests/xfs/548
-@@ -24,7 +24,7 @@ _require_xfs_db_command path
- _require_test_program "punch-alternating"
- _require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-=20
--_scratch_mkfs -d size=3D$((512 * 1024 * 1024)) >> $seqres.full
-+_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
- _scratch_mount >> $seqres.full
-=20
- bsize=3D$(_get_file_block_size $SCRATCH_MNT)
---=20
-2.34.1
+I see one problem with the idea "whoever has a need to iterate inodes needs
+to keep track of inodes it needs to iterate through". It is fine
+conceptually but with s_inodes list we pay the cost only once and multiple
+users benefit. With each subsystem tracking inodes we pay the cost for each
+user (both in terms of memory and CPU). So if you don't use any of the
+subsystems that need iteration, you win, but if you use two or more of
+these subsystems, in particular those which need to track significant
+portion of all inodes, you are losing.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
