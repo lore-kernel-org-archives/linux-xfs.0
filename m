@@ -1,217 +1,243 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765BF1DF98C
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 14:14:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62F961E008E
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 16:27:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728396871; cv=none; b=fi/e2zgALLQyOSQk7iqzhoF+nF9SANPBSbac/DlwL4nI6UYkkkfpATIJ+yOhWhIoUQvuTYrx41s73v+5cUTnBEEYM9xpEWUR7NNZlp3odJ8sNnckz0ZflkkppePkTZ2JZlDEZVJciBKxMTODVkpHXh8yq2QIQwFn4f968spu8gM=
+	t=1728404850; cv=none; b=e9ohzUXEnLqWQfdVyXSAeycxg6LWczLK0amToEGQNLR1JOCalaFdBcDJe1FgGm6E1zYFsEnPouOg5xpm7qC/1v8A1eMsH0TXSjI9+r49NVCYfyhmUV74s+d9W2zbjQdh9ctdHA67zfPGOiqTK2B5vpG+g535PEvPutl+nPx5rJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728396871; c=relaxed/simple;
-	bh=5aoQfcWfquO8q33TtZ1UTCdHm8yAW/7J4xonT60sqmE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XUa+2mM8dOwE2ivYgEDoMCb4s6qaoGb0GchydGa6zLKrwzvRiVmSYlK+CdCgvIjylnipgjWSmOsulS5WhYbF3MfuwYnEL/L7TFOZ2fvy2LZxvvKa7Wt8D+SgorFMORNhbG27yhUOptAjuIatYpSJzGsIoC1OE1pI9CzUokUcVh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=W/H8XNDF; arc=none smtp.client-ip=209.85.218.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
+	s=arc-20240116; t=1728404850; c=relaxed/simple;
+	bh=NQcQiiohC+srGxx5UGMfwjaerCnAVCXvA3rwTWFKL/M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kDR9x8ydeDu6rtlOjJbaj5YXxl/MCjXSQDb1SskJHQFhLopog2Jw3xpETRED46Oqr+ebn8clwoCpcODoqp/QU4oE79KFUzaZhvKYyWkDsvnON+03WxteZ9UdXldYfGGItULkFCxpAXtQ/K4NmiKfhPICmEYccrWI2OHXWOFMM+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Skrtvunp; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="W/H8XNDF"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-a83562f9be9so619075366b.0
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Oct 2024 07:14:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1728396868; x=1729001668; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YBVGFNELeNzrNE/pUTBOb0mu55heBoVv/TX9AMKEIYw=;
-        b=W/H8XNDFivUW9VLnSktT+XzOQXUH3KE0rFITwhcgz4btk/AWlmh/OdsClCUOhNcIXh
-         W8zoHvo3Zr5sTMs/BuZFX3HGv/oqz6buC4/Qv9ylna96il+m/MjNkPlPiDrga3DgBJ5U
-         bfsQs6p5jHvrLnUnP0XiWOMda6XCWr/LvSiEwRJgEHKXoz3isJgoWzRmBjBVKBQOdhMl
-         0t/pD1r+4ic95bt1qmkneU6jZujZV8e0O13lqEnvF7UTLA96A49rX3dvudq2CEaxz35q
-         D9JFCI/I4r0CUW8ka1ylAmLpSsHK31R6wOxGcBTUpV76wivYVk3HcfYT8M4VaRv5UnJx
-         2Jtw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728396868; x=1729001668;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YBVGFNELeNzrNE/pUTBOb0mu55heBoVv/TX9AMKEIYw=;
-        b=kLzNOcGWYrwcOMSqdGYJoqOwZvZDnyhnR51TMyKIXDS6QAApA+Z3PXNba9Yrf5mirO
-         IEmiye7KtG1UFOlMfN6aZTNRmpYe+si7IQULsHSlCAXnzozNcCWCnkVVVQvPU+2ZpU+F
-         SbURi/XLH51X6xs9wmOXsUNIrybWsXXFMhV4WxFIQhGHXPqT1YnVBTslfGB0Eo5Dn0UA
-         81U7ab+dm+hpiVXzMgT5+TrYS/N8BwSiviRlXmbQ++mfpA+yY2DTHzzZ3/sxG3kOP3C4
-         Hw4PQoeP9Q3Fj+9cwv0TsKQ3drJwIbuk3tY7HT6NoNPty+slgjQTk6ILegYGLW8O1LqC
-         x8Lw==
-X-Forwarded-Encrypted: i=1; AJvYcCV1VHHZkMwYvyFprwuY6j2t+LUr2hSf6CynMqIQG1FNivjjayE+lfU2JBLcTvqIjko9353TwFM5bjQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzCdV1Pqgn7Br1bgb9cmWOZmEEmHu0FTh4oHH5jCYS4CZmof1zn
-	oJvBYpgVxVGyLUQtA+NUURqIUHsFucNZun1/Xot1XgtPwjY74M4q2YPuuzPgaR4LR7F1eD3sNV7
-	IgiB49BeX5TEceGy062RGxjZdBu4iFs3FsEANrQ==
-X-Google-Smtp-Source: AGHT+IHk7euKn0dAZXT3q629EL9K9j/synWTQJVFme/t1o1SfzpypUdoyToXvWJFg+KpMfYuEfL1GEA/mnXYkTqoe0k=
-X-Received: by 2002:a17:907:7fab:b0:a99:4649:af69 with SMTP id
- a640c23a62f3a-a994649b64bmr886505266b.15.1728396867688; Tue, 08 Oct 2024
- 07:14:27 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Skrtvunp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728404847;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=w2f6vw4GUq07c24oJVc+v6LtvRaid+4S8euVvP+QP7E=;
+	b=Skrtvunpa5bPzZPsx/Gd/ebXpYndTmTPZDW3w2dmfza58tBpeccPJV7gyfu7mweM9sgbSp
+	z/Jc7Pmnocp3sq160k4jVgCe7eZmlun7FOYXmzxHMQT5KiGxkqQ4ijLUVh332mg4MBZPZP
+	V2mmhYRRZM9tlRtjkOqybnBBC0bmysY=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-201-mbUwGm-5OwSQLPVLGsz6Wg-1; Tue,
+ 08 Oct 2024 12:27:24 -0400
+X-MC-Unique: mbUwGm-5OwSQLPVLGsz6Wg-1
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 93C38195608A;
+	Tue,  8 Oct 2024 16:27:22 +0000 (UTC)
+Received: from bfoster (unknown [10.22.32.133])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 65BCA19560AA;
+	Tue,  8 Oct 2024 16:27:21 +0000 (UTC)
+Date: Tue, 8 Oct 2024 12:28:37 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, djwong@kernel.org, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test log recovery for extent frees right after
+ growfs
+Message-ID: <ZwVdtXUSwEXRpcuQ@bfoster>
+References: <20240910043127.3480554-1-hch@lst.de>
+ <ZuBVhszqs-fKmc9X@bfoster>
+ <20240910151053.GA22643@lst.de>
+ <ZuBwKQBMsuV-dp18@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241002130004.69010-1-yizhou.tang@shopee.com>
- <20241002130004.69010-2-yizhou.tang@shopee.com> <20241003130127.45kinxoh77xm5qfb@quack3>
- <CACuPKxmwZgNx242x5HgTUCpu6v6QC3XtFY2ZDOE-mcu=ARK=Ag@mail.gmail.com> <20241007162311.77r5rra2tdhzszek@quack3>
-In-Reply-To: <20241007162311.77r5rra2tdhzszek@quack3>
-From: Tang Yizhou <yizhou.tang@shopee.com>
-Date: Tue, 8 Oct 2024 22:14:16 +0800
-Message-ID: <CACuPKx=-wmNOHbHFEqYEwnw6X7uzaZ+JU7pHqG+FCsAgKjePnQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] mm/page-writeback.c: Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL
-To: Jan Kara <jack@suse.cz>
-Cc: willy@infradead.org, akpm@linux-foundation.org, chandan.babu@oracle.com, 
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZuBwKQBMsuV-dp18@bfoster>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Tue, Oct 8, 2024 at 12:23=E2=80=AFAM Jan Kara <jack@suse.cz> wrote:
->
-> On Sun 06-10-24 20:41:11, Tang Yizhou wrote:
-> > On Thu, Oct 3, 2024 at 9:01=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
-> > >
-> > > On Wed 02-10-24 21:00:02, Tang Yizhou wrote:
-> > > > From: Tang Yizhou <yizhou.tang@shopee.com>
-> > > >
-> > > > The name of the BANDWIDTH_INTERVAL macro is misleading, as it is no=
-t
-> > > > only used in the bandwidth update functions wb_update_bandwidth() a=
-nd
-> > > > __wb_update_bandwidth(), but also in the dirty limit update functio=
-n
-> > > > domain_update_dirty_limit().
-> > > >
-> > > > Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL to make things clear.
-> > > >
-> > > > This patche doesn't introduce any behavioral changes.
-> > > >
-> > > > Signed-off-by: Tang Yizhou <yizhou.tang@shopee.com>
-> > >
-> > > Umm, I agree BANDWIDTH_INTERVAL may be confusing but UPDATE_INTERVAL =
-does
-> > > not seem much better to be honest. I actually have hard time coming u=
-p with
-> > > a more descriptive name so what if we settled on updating the comment=
- only
-> > > instead of renaming to something not much better?
-> > >
-> > >                                                                 Honza
-> >
-> > Thank you for your review. I agree that UPDATE_INTERVAL is not a good
-> > name. How about
-> > renaming it to BW_DIRTYLIMIT_INTERVAL?
->
-> Maybe WB_STAT_INTERVAL? Because it is interval in which we maintain
-> statistics about writeback behavior.
->
+On Tue, Sep 10, 2024 at 12:13:29PM -0400, Brian Foster wrote:
+> On Tue, Sep 10, 2024 at 05:10:53PM +0200, Christoph Hellwig wrote:
+> > On Tue, Sep 10, 2024 at 10:19:50AM -0400, Brian Foster wrote:
+> > > No real issue with the test, but I wonder if we could do something more
+> > > generic. Various XFS shutdown and log recovery issues went undetected
+> > > for a while until we started adding more of the generic stress tests
+> > > currently categorized in the recoveryloop group.
+> > > 
+> > > So for example, I'm wondering if you took something like generic/388 or
+> > > 475 and modified it to start with a smallish fs, grew it in 1GB or
+> > > whatever increments on each loop iteration, and then ran the same
+> > > generic stress/timeout/shutdown/recovery sequence, would that eventually
+> > > reproduce the issue you've fixed? I don't think reproducibility would
+> > > need to be 100% for the test to be useful, fwiw.
+> > > 
+> > > Note that I'm assuming we don't have something like that already. I see
+> > > growfs and shutdown tests in tests/xfs/group.list, but nothing in both
+> > > groups and I haven't looked through the individual tests. Just a
+> > > thought.
+> > 
+> > It turns out reproducing this bug was surprisingly complicated.
+> > After a growfs we can now dip into reserves that made the test1
+> > file start filling up the existing AGs first for a while, and thus
+> > the error injection would hit on that and never even reach a new
+> > AG.
+> > 
+> > So while agree with your sentiment and like the highlevel idea, I
+> > suspect it will need a fair amount of work to actually be useful.
+> > Right now I'm too busy with various projects to look into it
+> > unfortunately.
+> > 
+> 
+> Fair enough, maybe I'll play with it a bit when I have some more time.
+> 
+> Brian
+> 
+> 
 
-I don't think this is a good name, as it suggests a relation to enum
-wb_stat_item, but bandwidth and dirty limit are not in wb_stat_item.
+FWIW, here's a quick hack at such a test. This is essentially a copy of
+xfs/104, tweaked to remove some of the output noise and whatnot, and
+hacked in some bits from generic/388 to do a shutdown and mount cycle
+per iteration.
 
-Yi
+I'm not sure if this reproduces your original problem, but this blows up
+pretty quickly on 6.12.0-rc2. I see a stream of warnings that start like
+this (buffer readahead path via log recovery):
 
->                                                                 Honza
->
-> > > > ---
-> > > >  mm/page-writeback.c | 16 ++++++++--------
-> > > >  1 file changed, 8 insertions(+), 8 deletions(-)
-> > > >
-> > > > diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> > > > index fcd4c1439cb9..a848e7f0719d 100644
-> > > > --- a/mm/page-writeback.c
-> > > > +++ b/mm/page-writeback.c
-> > > > @@ -54,9 +54,9 @@
-> > > >  #define DIRTY_POLL_THRESH    (128 >> (PAGE_SHIFT - 10))
-> > > >
-> > > >  /*
-> > > > - * Estimate write bandwidth at 200ms intervals.
-> > > > + * Estimate write bandwidth or update dirty limit at 200ms interva=
-ls.
-> > > >   */
-> > > > -#define BANDWIDTH_INTERVAL   max(HZ/5, 1)
-> > > > +#define UPDATE_INTERVAL              max(HZ/5, 1)
-> > > >
-> > > >  #define RATELIMIT_CALC_SHIFT 10
-> > > >
-> > > > @@ -1331,11 +1331,11 @@ static void domain_update_dirty_limit(struc=
-t dirty_throttle_control *dtc,
-> > > >       /*
-> > > >        * check locklessly first to optimize away locking for the mo=
-st time
-> > > >        */
-> > > > -     if (time_before(now, dom->dirty_limit_tstamp + BANDWIDTH_INTE=
-RVAL))
-> > > > +     if (time_before(now, dom->dirty_limit_tstamp + UPDATE_INTERVA=
-L))
-> > > >               return;
-> > > >
-> > > >       spin_lock(&dom->lock);
-> > > > -     if (time_after_eq(now, dom->dirty_limit_tstamp + BANDWIDTH_IN=
-TERVAL)) {
-> > > > +     if (time_after_eq(now, dom->dirty_limit_tstamp + UPDATE_INTER=
-VAL)) {
-> > > >               update_dirty_limit(dtc);
-> > > >               dom->dirty_limit_tstamp =3D now;
-> > > >       }
-> > > > @@ -1928,7 +1928,7 @@ static int balance_dirty_pages(struct bdi_wri=
-teback *wb,
-> > > >               wb->dirty_exceeded =3D gdtc->dirty_exceeded ||
-> > > >                                    (mdtc && mdtc->dirty_exceeded);
-> > > >               if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stam=
-p) +
-> > > > -                                        BANDWIDTH_INTERVAL))
-> > > > +                                        UPDATE_INTERVAL))
-> > > >                       __wb_update_bandwidth(gdtc, mdtc, true);
-> > > >
-> > > >               /* throttle according to the chosen dtc */
-> > > > @@ -2705,7 +2705,7 @@ int do_writepages(struct address_space *mappi=
-ng, struct writeback_control *wbc)
-> > > >        * writeback bandwidth is updated once in a while.
-> > > >        */
-> > > >       if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stamp) +
-> > > > -                                BANDWIDTH_INTERVAL))
-> > > > +                                UPDATE_INTERVAL))
-> > > >               wb_update_bandwidth(wb);
-> > > >       return ret;
-> > > >  }
-> > > > @@ -3057,14 +3057,14 @@ static void wb_inode_writeback_end(struct b=
-di_writeback *wb)
-> > > >       atomic_dec(&wb->writeback_inodes);
-> > > >       /*
-> > > >        * Make sure estimate of writeback throughput gets updated af=
-ter
-> > > > -      * writeback completed. We delay the update by BANDWIDTH_INTE=
-RVAL
-> > > > +      * writeback completed. We delay the update by UPDATE_INTERVA=
-L
-> > > >        * (which is the interval other bandwidth updates use for bat=
-ching) so
-> > > >        * that if multiple inodes end writeback at a similar time, t=
-hey get
-> > > >        * batched into one bandwidth update.
-> > > >        */
-> > > >       spin_lock_irqsave(&wb->work_lock, flags);
-> > > >       if (test_bit(WB_registered, &wb->state))
-> > > > -             queue_delayed_work(bdi_wq, &wb->bw_dwork, BANDWIDTH_I=
-NTERVAL);
-> > > > +             queue_delayed_work(bdi_wq, &wb->bw_dwork, UPDATE_INTE=
-RVAL);
-> > > >       spin_unlock_irqrestore(&wb->work_lock, flags);
-> > > >  }
-> > > >
-> > > > --
-> > > > 2.25.1
-> > > >
-> > > >
-> > > --
-> > > Jan Kara <jack@suse.com>
-> > > SUSE Labs, CR
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+[ 2807.764283] XFS (vdb2): xfs_buf_map_verify: daddr 0x3e803 out of range, EOFS 0x3e800
+[ 2807.768094] ------------[ cut here ]------------
+[ 2807.770629] WARNING: CPU: 0 PID: 28386 at fs/xfs/xfs_buf.c:553 xfs_buf_get_map+0x184e/0x2670 [xfs]
+
+... and then end up with an unrecoverable/unmountable fs. From the title
+it sounds like this may be a different issue though.. hm?
+
+Brian
+
+--- 8< ---
+
+diff --git a/tests/xfs/609 b/tests/xfs/609
+new file mode 100755
+index 00000000..b9c23869
+--- /dev/null
++++ b/tests/xfs/609
+@@ -0,0 +1,100 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 609
++#
++# XFS online growfs-while-allocating tests (data subvol variant)
++#
++. ./common/preamble
++_begin_fstest growfs ioctl prealloc auto stress
++
++# Import common functions.
++. ./common/filter
++
++_create_scratch()
++{
++	_scratch_mkfs_xfs $@ >> $seqres.full
++
++	if ! _try_scratch_mount 2>/dev/null
++	then
++		echo "failed to mount $SCRATCH_DEV"
++		exit 1
++	fi
++
++	# fix the reserve block pool to a known size so that the enospc
++	# calculations work out correctly.
++	_scratch_resvblks 1024 >  /dev/null 2>&1
++}
++
++_fill_scratch()
++{
++	$XFS_IO_PROG -f -c "resvsp 0 ${1}" $SCRATCH_MNT/resvfile
++}
++
++_stress_scratch()
++{
++	procs=3
++	nops=1000
++	# -w ensures that the only ops are ones which cause write I/O
++	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs \
++	    -n $nops $FSSTRESS_AVOID`
++	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1 &
++}
++
++_require_scratch
++_require_xfs_io_command "falloc"
++
++_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
++. $tmp.mkfs	# extract blocksize and data size for scratch device
++
++endsize=`expr 550 \* 1048576`	# stop after growing this big
++incsize=`expr  42 \* 1048576`	# grow in chunks of this size
++modsize=`expr   4 \* $incsize`	# pause after this many increments
++
++[ `expr $endsize / $dbsize` -lt $dblocks ] || _notrun "Scratch device too small"
++
++nags=4
++size=`expr 125 \* 1048576`	# 120 megabytes initially
++sizeb=`expr $size / $dbsize`	# in data blocks
++logblks=$(_scratch_find_xfs_min_logblocks -dsize=${size} -dagcount=${nags})
++_create_scratch -lsize=${logblks}b -dsize=${size} -dagcount=${nags}
++
++for i in `seq 125 -1 90`; do
++	fillsize=`expr $i \* 1048576`
++	out="$(_fill_scratch $fillsize 2>&1)"
++	echo "$out" | grep -q 'No space left on device' && continue
++	test -n "${out}" && echo "$out"
++	break
++done
++
++#
++# Grow the filesystem while actively stressing it...
++# Kick off more stress threads on each iteration, grow; repeat.
++#
++while [ $size -le $endsize ]; do
++	echo "*** stressing a ${sizeb} block filesystem" >> $seqres.full
++	_stress_scratch
++	size=`expr $size + $incsize`
++	sizeb=`expr $size / $dbsize`	# in data blocks
++	echo "*** growing to a ${sizeb} block filesystem" >> $seqres.full
++	xfs_growfs -D ${sizeb} $SCRATCH_MNT >> $seqres.full
++	echo AGCOUNT=$agcount >> $seqres.full
++	echo >> $seqres.full
++
++	sleep $((RANDOM % 3))
++	_scratch_shutdown
++	ps -e | grep fsstress > /dev/null 2>&1
++	while [ $? -eq 0 ]; do
++		killall -9 fsstress > /dev/null 2>&1
++		wait > /dev/null 2>&1
++		ps -e | grep fsstress > /dev/null 2>&1
++	done
++	_scratch_cycle_mount || _fail "cycle mount failed"
++done > /dev/null 2>&1
++wait	# stop for any remaining stress processes
++
++_scratch_unmount
++
++status=0
++exit
+diff --git a/tests/xfs/609.out b/tests/xfs/609.out
+new file mode 100644
+index 00000000..1853cc65
+--- /dev/null
++++ b/tests/xfs/609.out
+@@ -0,0 +1,7 @@
++QA output created by 609
++meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
++data     = bsize=XXX blocks=XXX, imaxpct=PCT
++         = sunit=XXX swidth=XXX, unwritten=X
++naming   =VERN bsize=XXX
++log      =LDEV bsize=XXX blocks=XXX
++realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+
