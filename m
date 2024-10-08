@@ -1,174 +1,320 @@
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83D82185B0
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 23:43:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18C08218D6A
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 23:44:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728431005; cv=none; b=X1YSmGuJOV1DdhEn1Hc/MfnDQUGzpWZBvcoQiW5KNRZOWqNZLSEyoLE5DsrGerRjooGdVDHtVkDplxCMQsolApERr1sH0sGUGk6bcaj4mHYqY2Xn+1grSO1SiBV96LrKPpnZv0mD/FT6t44p5Cz5dqwbH2T9dtjzSc6LTmyShec=
+	t=1728431058; cv=none; b=WynhRhoIepSlg87zLay4Nhum9HqcQIMXhDPGKIBQSNfFkO84ub1MUs+UWPH5UsmbjOc34DVBOD/FofGzpGlfPjqxDcTSuR6iK74yPgfzXfaO5i9wriXv3/Hzxnko5Rk99JcjDUnqaKi8dhedLtXIPQLjV6MlKEqLJsJvIUT9Uz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728431005; c=relaxed/simple;
-	bh=hvFwZ685hyIt21w8mmdVedVdoaIqNJBwbKnv8axuuro=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=YC2/Es9Ep8BLtubjZSpnlsCfnUrRI8JvrlWKsd62rRaCC+YrA0nTkmFpaNDH5eMQtF4P+PIyimpzM6p58ZE3hmw1QSjSjdS0vxtHOVvSY8A1CY1tgT9GDZ80LJnlg5lkmCPOLR5YmPoL4aIkfEHGnQRJDU6ThD/DzRfNsGg0UJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3a3972c435dso4000065ab.0
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Oct 2024 16:43:23 -0700 (PDT)
+	s=arc-20240116; t=1728431058; c=relaxed/simple;
+	bh=gr6FKS/fgp3Bt3UvUPqDQm3Fvij7K+mg5ynIoHd60HM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gzktf7RyKhBr7lqxW8z0M5IEL0/J6bhJU/AyjFce9apUUES5satJuECL5RqiRxoPr/HU9iZ4XI/mxmQk5tkJg6bvWQnGyRtO3Eka5oRDFVNAexxN+uBofkpCtJwSP+CalgWBg6dKQZ6JYf0kaCnHvQV7j/xaDuwEukkrxRVSOK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=t7frXyRq; arc=none smtp.client-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="t7frXyRq"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-7db238d07b3so5226881a12.2
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Oct 2024 16:44:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1728431056; x=1729035856; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=GiMT3+ioX4OJkgsUPnWfwXeHQkRJoDKEHMA1xTybSY0=;
+        b=t7frXyRq8Q4QfuwRNNVeSK3wkYjm+JEw2uWUsdYZkfDDea627JcYe580In6pH0RsVv
+         idwpJqvkIBtdKsdy79OUyE5bBcY8McdBqBL5VVu3AASxi+LXAvmZkU9P+xscmj2wb1iz
+         t9vxJyimjq3r4TfZTSMncaEgMNb3StGL9ceX0k5MY9XbJmy2smdfzKhiZFWSqtqjBp19
+         IHJfOZyb20NFe4jxvnLJhzCNyLoX9wnunt/v2d4iQmTr0hMbzOsfiyEoWfhIcVpwGyAu
+         aU89fiNPnmWaDP3xwpdnEGy7a2Bzu2ZxIKMeC+O+jgpQdYejv6wXYS2xG4+ixDdu/1tY
+         fLQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728431003; x=1729035803;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=xXzKkitN8PR+TnJMD7nb2qAAUzE05QdQUBobAP0aOT4=;
-        b=hqw6lnchzyhxAhfGxfcIpmJgafD+GAFVnzCmBcnwz0+FBWFlzgAvprGu2rzxypsuMb
-         XOWW4I+lIXOO+Q2GLnicxEcbuzURwl7klhkICQUStZ/+QDfwXfgQMtXt9+xr7ZDaQxyj
-         68zjgz6UsU+axI/AnQ7Z/8z4dnOpRD5Kp6WqFgf67rOvCGn/qtdvbpQHVkefe531iX3y
-         +YuD/s7r+uvq3bKcqr2U6XTimwcAAoDZ8oSD571JoL3vYB4U+/nY1NHqY0Yh10Rb2JFR
-         ofuBKXrW7q/5Gl4OLb53R2q+YHn5WhteAUKwXshcCTzyvncY65xKnantXtDmL5gCvfFd
-         nDZQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWLO0H2/J8XqC8J0dOnseOMDVO9CcbmXupUpHY750h9GVC5eNu5fT17pYlZFh5jHzsW4rHDKFlfOlI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxIyo8t5bFr9bJg50KZFx1jv2Mnl/h+NYH1IgpwHAbk2zlyQFSl
-	dNnV13Opp7vfaJfHP8YlmNUfKIqdSGhcrNo3AviJq7ooIoegP7uT0WyixWep6w+Mh6JLto1y6d+
-	e08sQLJ/+hIePL3PlQJoZ/7BDWIvG+Y37P6ogJqJSOny/D7mt91M1Pp0=
-X-Google-Smtp-Source: AGHT+IHOEOB1mxvcC94blicK1WU6cHtMi0YFohOr/46UT26ZKSKjL/HJqShcOVupslfDZ+mBlIEZaUH/7bXqYKTr0+ian45vBTpB
+        d=1e100.net; s=20230601; t=1728431056; x=1729035856;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=GiMT3+ioX4OJkgsUPnWfwXeHQkRJoDKEHMA1xTybSY0=;
+        b=A+u3KvWHuMUNobsIRIhw0LroIulRgcH+RmhOd4vg41y41N0KygNPiV3B4OhOeGchLS
+         AWC2rwLNaYqUNgtoxJGPHN90asLRRHDF8OD7L7M9qiwuApFKliqf1jkOb0QQCzGrzeQx
+         aGmPzb5NofWqqvRCmNE00kzYWz5SFw/uKV0bTDS+1U+Bo2q9seQWUoyZBfTGbAfCVLz8
+         bY7CoIptmqLrX5F+LuvuwMU9r1f2Rfp2S/pxyJoqDe/QcCWbG3Jeimi9bn7DLiyjCDcw
+         vvPrlTQ3U63wEdw4a4ELakpnNfODx7zwzig43xRurMdW+fZmiOKeHsULlv08D/NJAck6
+         Q7Vw==
+X-Forwarded-Encrypted: i=1; AJvYcCXUr3urHW2snowBq7uaH8y7qS7mOHJimGukqQUQ9aaHZDJEhmpcd/ftvg9KJILmiWcBre8EPBZ4P/o=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw0Qgl0JyxK3+wWIFlYQBhg8YPuqCpL0uZ8/dlFoFKy2x/12h1h
+	aHilmhFv5JiuBATPoMGYE36iQnLf4Qu3c2c/MbWLenfUPbsC+p8ppGGMPQIFXpE=
+X-Google-Smtp-Source: AGHT+IErL9DtnYrhJ81B8yQlr3pV9QWY0/ePlDYtB4l7BqgVYVn5E3S2vZ4yVD+4U/rbsNo6DJMwvg==
+X-Received: by 2002:a17:90a:d50e:b0:2cd:4593:2a8e with SMTP id 98e67ed59e1d1-2e2a2335d1cmr706669a91.15.1728431056406;
+        Tue, 08 Oct 2024 16:44:16 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-78-197.pa.nsw.optusnet.com.au. [49.179.78.197])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e2a5a7a7e3sm167059a91.52.2024.10.08.16.44.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Oct 2024 16:44:15 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1syJsC-00Fnhp-04;
+	Wed, 09 Oct 2024 10:44:12 +1100
+Date: Wed, 9 Oct 2024 10:44:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Amir Goldstein <amir73il@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
+	=?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@linux.microsoft.com>,
+	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
+	Kees Cook <keescook@chromium.org>,
+	linux-security-module@vger.kernel.org
+Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
+ sb->s_inodes iteration to super_iter_inodes()
+Message-ID: <ZwXDzKGj6Bp28kYe@dread.disaster.area>
+References: <20241002014017.3801899-1-david@fromorbit.com>
+ <20241002014017.3801899-5-david@fromorbit.com>
+ <Zv5GfY1WS_aaczZM@infradead.org>
+ <Zv5J3VTGqdjUAu1J@infradead.org>
+ <20241003115721.kg2caqgj2xxinnth@quack3>
+ <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
+ <ZwRvshM65rxXTwxd@dread.disaster.area>
+ <CAOQ4uxgzPM4e=Wc=UVe=rpuug=yaWwu5zEtLJmukJf6d7MUJow@mail.gmail.com>
+ <20241008112344.mzi2qjpaszrkrsxg@quack3>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a92:c56e:0:b0:3a2:76c9:f2b7 with SMTP id
- e9e14a558f8ab-3a397d17d54mr5288605ab.24.1728431003100; Tue, 08 Oct 2024
- 16:43:23 -0700 (PDT)
-Date: Tue, 08 Oct 2024 16:43:23 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6705c39b.050a0220.22840d.000a.GAE@google.com>
-Subject: [syzbot] [xfs?] KFENCE: memory corruption in xfs_idata_realloc
-From: syzbot <syzbot+8a8170685a482c92e86a@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241008112344.mzi2qjpaszrkrsxg@quack3>
 
-Hello,
+On Tue, Oct 08, 2024 at 01:23:44PM +0200, Jan Kara wrote:
+> On Tue 08-10-24 10:57:22, Amir Goldstein wrote:
+> > On Tue, Oct 8, 2024 at 1:33 AM Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Mon, Oct 07, 2024 at 01:37:19PM -0700, Linus Torvalds wrote:
+> > > > On Thu, 3 Oct 2024 at 04:57, Jan Kara <jack@suse.cz> wrote:
+> > > > >
+> > > > > Fair enough. If we go with the iterator variant I've suggested to Dave in
+> > > > > [1], we could combine the evict_inodes(), fsnotify_unmount_inodes() and
+> > > > > Landlocks hook_sb_delete() into a single iteration relatively easily. But
+> > > > > I'd wait with that convertion until this series lands.
+> > > >
+> > > > Honza, I looked at this a bit more, particularly with an eye of "what
+> > > > happens if we just end up making the inode lifetimes subject to the
+> > > > dentry lifetimes" as suggested by Dave elsewhere.
+> > >
+> > > ....
+> > >
+> > > > which makes the fsnotify_inode_delete() happen when the inode is
+> > > > removed from the dentry.
+> > >
+> > > There may be other inode references being held that make
+> > > the inode live longer than the dentry cache. When should the
+> > > fsnotify marks be removed from the inode in that case? Do they need
+> > > to remain until, e.g, writeback completes?
+> > >
+> > 
+> > fsnotify inode marks remain until explicitly removed or until sb
+> > is unmounted (*), so other inode references are irrelevant to
+> > inode mark removal.
+> > 
+> > (*) fanotify has "evictable" inode marks, which do not hold inode
+> > reference and go away on inode evict, but those mark evictions
+> > do not generate any event (i.e. there is no FAN_UNMOUNT).
+> 
+> Yes. Amir beat me with the response so let me just add that FS_UMOUNT event
+> is for inotify which guarantees that either you get an event about somebody
+> unlinking the inode (e.g. IN_DELETE_SELF) or event about filesystem being
+> unmounted (IN_UMOUNT) if you place mark on some inode. I also don't see how
+> we would maintain this behavior with what Linus proposes.
 
-syzbot found the following issue on:
+Thanks. I didn't respond last night when I read Amir's decription
+because I wanted to think it over. Knowing where the unmount event
+requirement certainly helps.
 
-HEAD commit:    c02d24a5af66 Add linux-next specific files for 20241003
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=164f779f980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=94f9caf16c0af42d
-dashboard link: https://syzkaller.appspot.com/bug?extid=8a8170685a482c92e86a
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13012707980000
+I am probably missing something important, but it really seems to me
+that the object reference counting model is the back to
+front.  Currently the mark is being attached to the inode and then
+the inode pinned by a reference count to make the mark attached
+to the inode persistent until unmount. This then requires the inodes
+to be swept by unmount because fsnotify has effectively leaked them
+as it isn't tracking such inodes itself.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/641e642c9432/disk-c02d24a5.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/98aaf20c29e0/vmlinux-c02d24a5.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/c23099f2d86b/bzImage-c02d24a5.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/547c3034fd79/mount_0.gz
+[ Keep in mind that I'm not saying this was a bad or wrong thing to
+do because the s_inodes list was there to be able to do this sort of
+lazy cleanup. But now that we want to remove the s_inodes list if at
+all possible, it is a problem we need to solve differently. ]
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+8a8170685a482c92e86a@syzkaller.appspotmail.com
+AFAICT, inotify does not appear to require the inode to send events
+- it only requires access to the inode mark itself. Hence it does
+not the inode in cache to generate IN_UNMOUNT events, it just
+needs the mark itself to be findable at unmount.  Do any of the
+other backends that require unmount notifications that require
+special access to the inode itself?
 
-XFS (loop2): Quotacheck: Done.
-==================================================================
-BUG: KFENCE: memory corruption in krealloc_noprof+0x160/0x2e0
+If not, and the fsnotify sb info is tracking these persistent marks,
+then we don't need to iterate inodes at unmount. This means we don't
+need to pin inodes when they have marks attached, and so the
+dependency on the s_inodes list goes away.
 
-Corrupted memory at 0xffff88823bedafeb [ 0x03 0x00 0xd8 0x62 0x75 0x73 0x01 0x00 0x00 0x11 0x4c 0x00 0x00 0x00 0x00 0x00 ] (in kfence-#108):
- krealloc_noprof+0x160/0x2e0
- xfs_idata_realloc+0x116/0x1b0 fs/xfs/libxfs/xfs_inode_fork.c:523
- xfs_dir2_sf_addname_easy fs/xfs/libxfs/xfs_dir2_sf.c:469 [inline]
- xfs_dir2_sf_addname+0x899/0x1b60 fs/xfs/libxfs/xfs_dir2_sf.c:432
- xfs_dir_createname_args+0x152/0x200 fs/xfs/libxfs/xfs_dir2.c:308
- xfs_dir_createname+0x4b3/0x640 fs/xfs/libxfs/xfs_dir2.c:361
- xfs_dir_create_child+0xe3/0x490 fs/xfs/libxfs/xfs_dir2.c:860
- xfs_create+0x8cc/0xf60 fs/xfs/xfs_inode.c:722
- xfs_generic_create+0x5d5/0xf50 fs/xfs/xfs_iops.c:213
- lookup_open fs/namei.c:3595 [inline]
- open_last_lookups fs/namei.c:3694 [inline]
- path_openat+0x1c03/0x3590 fs/namei.c:3930
- do_filp_open+0x235/0x490 fs/namei.c:3960
- do_sys_openat2+0x13e/0x1d0 fs/open.c:1415
- do_sys_open fs/open.c:1430 [inline]
- __do_sys_openat fs/open.c:1446 [inline]
- __se_sys_openat fs/open.c:1441 [inline]
- __x64_sys_openat+0x247/0x2a0 fs/open.c:1441
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
+With this inverted model, we need the first fsnotify event callout
+after the inode is instantiated to look for a persistent mark for
+the inode. We know how to do this efficiently - it's exactly the
+same caching model we use for ACLs. On the first lookup, we check
+the inode for ACL data and set the ACL pointer appropriately to
+indicate that a lookup has been done and there are no ACLs
+associated with the inode.
 
-kfence-#108: 0xffff88823bedafa0-0xffff88823bedafea, size=75, cache=kmalloc-96
+At this point, the fsnotify inode marks can all be removed from the
+inode when it is being evicted and there's no need for fsnotify to
+pin inodes at all.
 
-allocated by task 7203 on cpu 1 at 147.184900s (0.409032s ago):
- kmalloc_noprof include/linux/slab.h:882 [inline]
- xfs_init_local_fork fs/xfs/libxfs/xfs_inode_fork.c:55 [inline]
- xfs_iformat_local+0x2db/0x620 fs/xfs/libxfs/xfs_inode_fork.c:97
- xfs_iformat_data_fork+0x38f/0x7b0 fs/xfs/libxfs/xfs_inode_fork.c:264
- xfs_inode_from_disk+0xaa9/0xf60 fs/xfs/libxfs/xfs_inode_buf.c:254
- xfs_iget_cache_miss fs/xfs/xfs_icache.c:683 [inline]
- xfs_iget+0xc5a/0x2f00 fs/xfs/xfs_icache.c:821
- xfs_mountfs+0x1040/0x2020 fs/xfs/xfs_mount.c:873
- xfs_fs_fill_super+0x11f0/0x1460 fs/xfs/xfs_super.c:1765
- get_tree_bdev+0x3f7/0x570 fs/super.c:1635
- vfs_get_tree+0x90/0x2b0 fs/super.c:1800
- do_new_mount+0x2be/0xb40 fs/namespace.c:3507
- do_mount fs/namespace.c:3847 [inline]
- __do_sys_mount fs/namespace.c:4055 [inline]
- __se_sys_mount+0x2d6/0x3c0 fs/namespace.c:4032
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> > > > Then at umount time, the dentry shrinking will deal with all live
+> > > > dentries, and at most the fsnotify layer would send the FS_UNMOUNT to
+> > > > just the root dentry inodes?
+> > >
+> > > I don't think even that is necessary, because
+> > > shrink_dcache_for_umount() drops the sb->s_root dentry after
+> > > trimming the dentry tree. Hence the dcache drop would cleanup all
+> > > inode references, roots included.
+> > >
+> > > > Wouldn't that make things much cleaner, and remove at least *one* odd
+> > > > use of the nasty s_inodes list?
+> > >
+> > > Yes, it would, but someone who knows exactly when the fsnotify
+> > > marks can be removed needs to chime in here...
+> 
+> So fsnotify needs a list of inodes for the superblock which have marks
+> attached and for which we hold inode reference. We can keep it inside
+> fsnotify code although it would practically mean another list_head for the
+> inode for this list (probably in our fsnotify_connector structure which
+> connects list of notification marks to the inode).
 
-freed by task 7203 on cpu 0 at 147.535434s (0.189887s ago):
- krealloc_noprof+0x160/0x2e0
- xfs_idata_realloc+0x116/0x1b0 fs/xfs/libxfs/xfs_inode_fork.c:523
- xfs_dir2_sf_addname_easy fs/xfs/libxfs/xfs_dir2_sf.c:469 [inline]
- xfs_dir2_sf_addname+0x899/0x1b60 fs/xfs/libxfs/xfs_dir2_sf.c:432
- xfs_dir_createname_args+0x152/0x200 fs/xfs/libxfs/xfs_dir2.c:308
- xfs_dir_createname+0x4b3/0x640 fs/xfs/libxfs/xfs_dir2.c:361
- xfs_dir_create_child+0xe3/0x490 fs/xfs/libxfs/xfs_dir2.c:860
- xfs_create+0x8cc/0xf60 fs/xfs/xfs_inode.c:722
- xfs_generic_create+0x5d5/0xf50 fs/xfs/xfs_iops.c:213
- lookup_open fs/namei.c:3595 [inline]
- open_last_lookups fs/namei.c:3694 [inline]
- path_openat+0x1c03/0x3590 fs/namei.c:3930
- do_filp_open+0x235/0x490 fs/namei.c:3960
- do_sys_openat2+0x13e/0x1d0 fs/open.c:1415
- do_sys_open fs/open.c:1430 [inline]
- __do_sys_openat fs/open.c:1446 [inline]
- __se_sys_openat fs/open.c:1441 [inline]
- __x64_sys_openat+0x247/0x2a0 fs/open.c:1441
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
+I don't think that is necessary. We need to get rid of the inode
+reference, not move where we track inode references. The persistent
+object is the fsnotify mark, not the cached inode. It's the mark
+that needs to be persistent, and that's what the fsnotify code
+should be tracking.
 
-CPU: 0 UID: 0 PID: 7203 Comm: syz.2.194 Not tainted 6.12.0-rc1-next-20241003-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
-==================================================================
+The fsnotify marks are much smaller than inodes, and there going to
+be fewer cached marks than inodes, especially once inode pinning is
+removed. Hence I think this will result in a net reduction in memory
+footprint for "marked-until-unmount" configurations as we won't pin
+nearly as many inodes in cache...
 
+> If we actually get rid
+> of i_sb_list in struct inode, this will be a win for the overall system,
+> otherwise it is a net loss IMHO. So if we can figure out how to change
+> other s_inodes owners we can certainly do this fsnotify change.
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+Yes, I am exploring what it would take to get rid of i_sb_list
+altogether right now. That, I don't think this is a concern given
+the difference in memory footprint of the same number of persistent
+marks. i.e. "persistent mark, reclaimable inode" will always have a
+significantly lower memory footprint than "persistent inode and
+mark" under memory pressure....
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+> > > > And I wonder if the quota code (which uses the s_inodes list
+> > > > to enable quotas on already mounted filesystems) could for
+> > > > all the same reasons just walk the dentry tree instead (and
+> > > > remove_dquot_ref similarly could just remove it at
+> > > > dentry_unlink_inode() time)?
+> > >
+> > > I don't think that will work because we have to be able to
+> > > modify quota in evict() processing. This is especially true
+> > > for unlinked inodes being evicted from cache, but also the
+> > > dquots need to stay attached until writeback completes.
+> > >
+> > > Hence I don't think we can remove the quota refs from the
+> > > inode before we call iput_final(), and so I think quotaoff (at
+> > > least) still needs to iterate inodes...
+> 
+> Yeah, I'm not sure how to get rid of the s_inodes use in quota
+> code. One of the things we need s_inodes list for is during
+> quotaoff on a mounted filesystem when we need to iterate all
+> inodes which are referencing quota structures and free them.  In
+> theory we could keep a list of inodes referencing quota structures
+> but that would require adding list_head to inode structure for
+> filesystems that support quotas.
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
+I don't think that's quite true. Quota is not modular, so we can
+lazily free quota objects even when quota is turned off. All we need
+to ensure is that code checks whether quota is enabled, not for the
+existence of quota objects attached to the inode.
 
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+Hence quota-off simply turns off all the quota operations in memory,
+and normal inode eviction cleans up the stale quota objects
+naturally.
 
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
+My main question is why the quota-on add_dquot_ref() pass is
+required. AFAICT all of the filesystem operations that will modify
+quota call dquot_initialize() directly to attach the required dquots
+to the inode before the operation is started. If that's true, then
+why does quota-on need to do this for all the inodes that are
+already in cache?
 
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
+i.e. I'm not sure I understand why we need quota to do these
+iterations at all...
 
-If you want to undo deduplication, reply with:
-#syz undup
+> Now for the sake of
+> full context I'll also say that enabling / disabling quotas on a mounted
+> filesystem is a legacy feature because it is quite easy that quota
+> accounting goes wrong with it. So ext4 and f2fs support for quite a few
+> years a mode where quota tracking is enabled on mount and disabled on
+> unmount (if appropriate fs feature is enabled) and you can only enable /
+> disable enforcement of quota limits during runtime.
+
+Sure, this is how XFS works, too. But I think this behaviour is
+largely irrelevant because there are still filesystems out there
+that do stuff the old way...
+
+> So I could see us
+> deprecating this functionality altogether although jfs never adapted to
+> this new way we do quotas so we'd have to deal with that somehow.  But one
+> way or another it would take a significant amount of time before we can
+> completely remove this so it is out of question for this series.
+
+I'm not sure that matters, though it adds to the reasons why we
+should be removing old, unmaintained filesystems from the tree
+and old, outdated formats from maintained filesystems....
+
+> I see one problem with the idea "whoever has a need to iterate inodes needs
+> to keep track of inodes it needs to iterate through". It is fine
+> conceptually but with s_inodes list we pay the cost only once and multiple
+> users benefit. With each subsystem tracking inodes we pay the cost for each
+> user (both in terms of memory and CPU). So if you don't use any of the
+> subsystems that need iteration, you win, but if you use two or more of
+> these subsystems, in particular those which need to track significant
+> portion of all inodes, you are losing.
+
+AFAICT, most of the subsystems don't need to track inodes directly.
+
+We don't need s_inodes for evict_inodes() - we have the inode LRU
+tracking all unreferenced inodes on the superblock. The GFS2 use
+case can probably walk the inode LRU directly, too.
+
+It looks to me that we can avoid needing unmount iteration for
+fsnotify, and I suspect landlock can likely use the same persistence
+inversion as fsnotify (same persistent ruleset model).
+
+The bdev superblock can implement it's own internal list using
+inode->i_devices as this list_head is only used by chardev
+inodes.
+
+All that then remains is the page cache dropping code, and that's
+not really critical to have exacting behaviour. We certainly
+shouldn't be taking a runtime penalty just to optimise the rare
+case of dropping caches..
+
+IOWs, there aren't that many users, and I think there are ways to
+make all these iterations go away without adding new per-inode
+list heads to track inodes.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
