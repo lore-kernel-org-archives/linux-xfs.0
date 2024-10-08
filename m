@@ -1,198 +1,117 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 521A014A82;
-	Tue,  8 Oct 2024 08:57:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7063185B5B
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 08:59:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728377857; cv=none; b=WcPbE0Eu/IjSBmE/djk1iuk1nfKglkm9yzPlWs9ToLRpshIJr5wD+dnHQU/9JmxKDfJ9jNEvFJM9b8t+5uByHCGdUAJRjpEFDetEjI0Gp6OhEs+see+GpMEXkr7lq7dELDisLcZ5FN9dCfjpDQlPdF00LtTZEmoHQvwxA+YIIBk=
+	t=1728377970; cv=none; b=MHWm/0D5i7wafcgehgIpYDOpqto4u+xZ3YazzHqbKUdFfWyiIC+Y4pO1UQFmR3OzNgtNaz//khcHpAyC76/AonvFrVykNefZlDKIsrJYP5oItINcitNvt3NUpCpMqX/WNV49xYY3yd2YVvnZe4l7f6Iwvi6GzfwMl8mjlBlKQQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728377857; c=relaxed/simple;
-	bh=zjSwpKSamL/oaVYFaBilZq7b5Csh6FwSM6IroSnQ7pY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=q9Eu/k2+f1pa6n0KdB8bcK39AGTKNpZQpFJelW2lLG5DnxAlmtYeu9dv2Ww5oH7yLYdOowV+ZTdZFYzlBwoeeyVqVlFo/emwRZ1PlYlwMA4OHHAtVOhkHKpRIxCuCMgnsEy6JEgqZaA0g8YsVJXw6xU5mDDzQe/cj7ONtCMjZ/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L29s8qM3; arc=none smtp.client-ip=209.85.222.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728377970; c=relaxed/simple;
+	bh=d8GBRYw9fxfWMEJX3NWuEL8Yb1+DsU5ohy27YqJo6zA=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=bQv3kRa1j0WT+IZTxyUvfSZ3KBer9IriHJ7+YJAgRw8UEt4b6Fyzjn4ub6V+WQ5nYNz4IsBvLUDpKdyyhwsTCvGiBJXK1IsOg/v22tlOTUAZJ+AigaqIX5H8PJkUshHuHUnQD0MMM+6AxtlyGMqXz0Zv0xWGQEs8zTgbox/cYOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FWJrh66l; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L29s8qM3"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-7ae3e3db294so308048985a.2;
-        Tue, 08 Oct 2024 01:57:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728377854; x=1728982654; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oSiZA2g8NuCGsh8+CWZXtusESif7cpDAvfOKhygbhTs=;
-        b=L29s8qM37nSQ0BnF7hGJKa/dRBRnmTKbXiPdTRN+8TL5mEgqz2muTuaKxUG2C3AX7E
-         3WGK5q1zU5VrATMZMmhbwkz1WZEewAz5WULb84NFO42+BXpXWlV2yn5tJMbXNpe2zTVu
-         BReblqtyQ62ZaFC8QBtCcvclWfqbZmz7x/LBsw14YUAZIsMBTslTbcTAaaDL0S/ZnsfW
-         dQmR2V0mO/gnLXHzt2MqpTnKOavJhVosmd0VdV/YN54cikLRU0LrNqlA9NE63l+Q2xp7
-         WAjT9q/nq2rODi6cvM9Cz9aS5IAt5H8KJ1/3V79Erg0+uac9uxfXrGb/10wCk38eQrAW
-         3DYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728377854; x=1728982654;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oSiZA2g8NuCGsh8+CWZXtusESif7cpDAvfOKhygbhTs=;
-        b=DB8CN/PgPoEhMhBa/p/qcKdTKScU80gENKsH5gKc0BbDAAAjxUWB5dpQAB+RWWlliK
-         LFAFbsPShV2cfRxHdUVpqG/QcWt3sMdrGJWv+/t1BWu8pvQQXNkmgg7X0B8u/CHM13C9
-         usf6zDs7okAlhuQ1+nxckSuKky2twoMQfTPTUHX/mZgs/ipU4TzfTVy6ExZ5W2He7vCc
-         JwbAIb2sSgC5hzjJJGw90q0MlIZUK+vHzSEMEQ6PVpwj90VP5MkWnk1M7S3cfrksPiS+
-         uEbaDH4omWiN22LXp6J0kohrtgYCM+2dMU8C6Ujn9E74Fe9YqWpIxYClsWE19hxVyi6J
-         /Gkw==
-X-Forwarded-Encrypted: i=1; AJvYcCV2mQnObKI3siZi4ptvroCJp/JPS6Z4lva7dD3AVHGw8DExYZZxxNJZkopNQTO6gF04kg005moQAv71ND/Sww==@vger.kernel.org, AJvYcCWJwerMr1LTNeb9HsrztDOlCwIrIMWf1HVWH4dpNozwMfucotXPqXWs9gDYcRdx/tgzzCcY7AeqZWrT@vger.kernel.org, AJvYcCWiQcM/VUC7tU12z18VzfOtJWDIGYdI6dgQHi4TulakGaTRyOBiB7NnBQOIHJqpvYawDDkWn2OvdA3xL51gKZH6B3jQ2LyC@vger.kernel.org, AJvYcCXkYKD39+OvxILbpvPxJLAxUb5DmWAi9wVTHwLUYZ0nOMyk934lavJYQsHrv+ssKMKmkqW12PKkr+DyWlnPjw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw/7wB3vhev0NM6QG8f983NX9aF/npFEQQljIuqQe3VpPB43iEW
-	7ckPC9YJdloodLnv2sJUpZCAMOFyswJADdG4Fv0Z8BC0OXHazZkJVzPL8ukt8FZqYqiJBo+g4xd
-	tuVVj2ou5GX5c9wNqmoSgtTsuts8=
-X-Google-Smtp-Source: AGHT+IGyUy4LRGOpbCvoasZRQSP2dmC4WlY6qXQ/VCE3WYJa800SCIs9IYs3KTeh7/Puyqv+pCrRSAP4UIBx9Xwdwpg=
-X-Received: by 2002:a05:620a:400d:b0:7ac:a0a5:9bf4 with SMTP id
- af79cd13be357-7ae6f48604fmr2483131085a.40.1728377854081; Tue, 08 Oct 2024
- 01:57:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FWJrh66l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C75E4C4CEC7
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2024 08:59:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728377969;
+	bh=d8GBRYw9fxfWMEJX3NWuEL8Yb1+DsU5ohy27YqJo6zA=;
+	h=Date:From:To:Subject:From;
+	b=FWJrh66lbW6K0ARIRtgGxOU2teeKVUQ3PA1xMAzH5V5UpP+Ado7d//B7qXYAla2iQ
+	 HGRYAbkHv5AXIWxRcXnEGE40m2JXsIHLRj/7D4YXXcH9d6YgXaWOgajnBJSjX/imDD
+	 3pwet6x9dvg9TJL0igEm8b7/obvTGAljicvTsRGGLAZukSJzvLLNTO1fXK5nI34D9A
+	 UV+o0l+QzC33dgnJL+g0k4UJH4kyiKT5699W3kjaqav6bpgyMcWM5fB/tuYhSGNG/k
+	 sujZgUu4cRplP1HcYggG5M1cf5HMNTHsmnjIaYZr00YCY2LP44HbRcwGNaOc2sLFVo
+	 tk+RNSk+gOX8Q==
+Date: Tue, 8 Oct 2024 10:59:25 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: foo
+Message-ID: <ju73v7yffteh4abhp7liyyz6ta2thc7tkjimp25rosv6uaqzc7@swtwurbl7gnp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241002014017.3801899-1-david@fromorbit.com> <20241002014017.3801899-5-david@fromorbit.com>
- <Zv5GfY1WS_aaczZM@infradead.org> <Zv5J3VTGqdjUAu1J@infradead.org>
- <20241003115721.kg2caqgj2xxinnth@quack3> <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
- <ZwRvshM65rxXTwxd@dread.disaster.area>
-In-Reply-To: <ZwRvshM65rxXTwxd@dread.disaster.area>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 8 Oct 2024 10:57:22 +0200
-Message-ID: <CAOQ4uxgzPM4e=Wc=UVe=rpuug=yaWwu5zEtLJmukJf6d7MUJow@mail.gmail.com>
-Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert sb->s_inodes
- iteration to super_iter_inodes()
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, 
-	Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	kent.overstreet@linux.dev, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@linux.microsoft.com>, 
-	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>, Kees Cook <keescook@chromium.org>, 
-	linux-security-module@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Tue, Oct 8, 2024 at 1:33=E2=80=AFAM Dave Chinner <david@fromorbit.com> w=
-rote:
->
-> On Mon, Oct 07, 2024 at 01:37:19PM -0700, Linus Torvalds wrote:
-> > On Thu, 3 Oct 2024 at 04:57, Jan Kara <jack@suse.cz> wrote:
-> > >
-> > > Fair enough. If we go with the iterator variant I've suggested to Dav=
-e in
-> > > [1], we could combine the evict_inodes(), fsnotify_unmount_inodes() a=
-nd
-> > > Landlocks hook_sb_delete() into a single iteration relatively easily.=
- But
-> > > I'd wait with that convertion until this series lands.
-> >
-> > Honza, I looked at this a bit more, particularly with an eye of "what
-> > happens if we just end up making the inode lifetimes subject to the
-> > dentry lifetimes" as suggested by Dave elsewhere.
->
-> ....
->
-> > which makes the fsnotify_inode_delete() happen when the inode is
-> > removed from the dentry.
->
-> There may be other inode references being held that make
-> the inode live longer than the dentry cache. When should the
-> fsnotify marks be removed from the inode in that case? Do they need
-> to remain until, e.g, writeback completes?
->
+Subject: [ANNOUNCE] xfs-linux: for-next **rebased** to 44adde15022d
 
-fsnotify inode marks remain until explicitly removed or until sb
-is unmounted (*), so other inode references are irrelevant to
-inode mark removal.
+Hi folks,
 
-(*) fanotify has "evictable" inode marks, which do not hold inode
-reference and go away on inode evict, but those mark evictions
-do not generate any event (i.e. there is no FAN_UNMOUNT).
+The for-next branch of the xfs-linux repository at:
 
-> > Then at umount time, the dentry shrinking will deal with all live
-> > dentries, and at most the fsnotify layer would send the FS_UNMOUNT to
-> > just the root dentry inodes?
->
-> I don't think even that is necessary, because
-> shrink_dcache_for_umount() drops the sb->s_root dentry after
-> trimming the dentry tree. Hence the dcache drop would cleanup all
-> inode references, roots included.
->
-> > Wouldn't that make things much cleaner, and remove at least *one* odd
-> > use of the nasty s_inodes list?
->
-> Yes, it would, but someone who knows exactly when the fsnotify
-> marks can be removed needs to chime in here...
->
-> > I have this feeling that maybe we can just remove the other users too
-> > using similar models. I think the LSM layer use (in landlock) is bogus
-> > for exactly the same reason - there's really no reason to keep things
-> > around for a random cached inode without a dentry.
->
-> Perhaps, but I'm not sure what the landlock code is actually trying
-> to do. It seems to be trying to avoid races between syscalls
-> releasing inode references and unmount calling security_sb_delete()
-> to clean up inode references that it has leaked. This implies that
-> it's not a) tracking inodes itself, and b) not cleaning up internal
-> state early enough in unmount.
->
-> Hence, to me, the lifecycle and reference counting of inode related
-> objects in landlock doesn't seem quite right, and the use of the
-> security_sb_delete() callout appears to be papering over an internal
-> lifecycle issue.
->
-> I'd love to get rid of it altogether.
->
-> > And I wonder if the quota code (which uses the s_inodes list to enable
-> > quotas on already mounted filesystems) could for all the same reasons
-> > just walk the dentry tree instead (and remove_dquot_ref similarly
-> > could just remove it at dentry_unlink_inode() time)?
->
-> I don't think that will work because we have to be able to modify
-> quota in evict() processing. This is especially true for unlinked
-> inodes being evicted from cache, but also the dquots need to stay
-> attached until writeback completes.
->
-> Hence I don't think we can remove the quota refs from the inode
-> before we call iput_final(), and so I think quotaoff (at least)
-> still needs to iterate inodes...
->
-> > It really feels like most (all?) of the s_inode list users are
-> > basically historical, and shouldn't use that list at all. And there
-> > aren't _that_ many of them. I think Dave was right in just saying that
-> > this list should go away entirely (or was it somebody else who made
-> > that comment?)
->
-> Yeah, I said that it should go away entirely.
->
-> My view of this whole s_inodes list is that subsystems that are
-> taking references to inodes *must* track or manage the references to
-> the inodes themselves.
->
-> The canonical example is the VFS itself: evict_inodes() doesn't need
-> to iterate s_inodes at all. It can walk the inode LRU to purge all
-> the unreferenced cached inodes from memory. iput_final() guarantees
-> that all unreferenced inodes are either put on the LRU or torn down
-> immediately.
->
-> Hence I think that it is a poor architectural decision to require
-> superblock teardown to clean up inode references random subsystems
-> have *leaked* to prevent UAFs.  It forces the sb to track all
-> inodes whether the VFS actually needs to track them or not.
->
+	git@gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git
 
-For fsnotify, I think we can/should maintain a list of marked inodes
-inside sb->s_fsnotify_info, we can iterate this private list in
-fsnotify_unmount_inodes() to remove the marks.
+has just been **REBASED**.
 
-TBH, I am not sure I understand the suggested change for inode
-lifetime. An inode can have a reference from dentry or from some
-subsystem (e.g. fsnotify) which is responsible for putting their held
-reference before unmount. What is the alternative?
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-Thanks,
-Amir.
+This is a rebase of the for-next push from past week, where due problems with
+testing the new patches to be included in the -rc, I needed to create a new tag
+with the whole series to be sent to Linus later this week.
+
+The patch list below contains the patches pushed past week + new patches that I
+managed to test this weekend.
+
+The new head of the for-next branch is commit:
+
+44adde15022d xfs: fix a typo
+
+15 new commits:
+
+Andrew Kreimer (1):
+      [44adde15022d] xfs: fix a typo
+
+Brian Foster (2):
+      [90a71daaf73f] xfs: skip background cowblock trims on inodes open for write
+      [df81db024ef7] xfs: don't free cowblocks from under dirty pagecache on unshare
+
+Chandan Babu R (1):
+      [ae6f70c66748] MAINTAINERS: add Carlos Maiolino as XFS release manager
+
+Christoph Hellwig (8):
+      [b1c649da15c2] xfs: merge xfs_attr_leaf_try_add into xfs_attr_leaf_addname
+      [346c1d46d4c6] xfs: return bool from xfs_attr3_leaf_add
+      [a5f73342abe1] xfs: distinguish extra split from real ENOSPC from xfs_attr3_leaf_split
+      [b3f4e84e2f43] xfs: distinguish extra split from real ENOSPC from xfs_attr_node_try_addname
+      [865469cd41bc] xfs: fold xfs_bmap_alloc_userdata into xfs_bmapi_allocate
+      [b611fddc0435] xfs: don't ifdef around the exact minlen allocations
+      [405ee87c6938] xfs: call xfs_bmap_exact_minlen_extent_alloc from xfs_bmap_btalloc
+      [6aac77059881] xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
+
+Uros Bizjak (1):
+      [20195d011c84] xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
+
+Yan Zhen (1):
+      [6148b77960cc] xfs: scrub: convert comma to semicolon
+
+Zhang Zekun (1):
+      [f6225eebd76f] xfs: Remove empty declartion in header file
+
+Code Diffstat:
+
+ MAINTAINERS                   |   2 +-
+ fs/xfs/libxfs/xfs_alloc.c     |   7 +-
+ fs/xfs/libxfs/xfs_alloc.h     |   4 +-
+ fs/xfs/libxfs/xfs_attr.c      | 190 ++++++++++++++++++------------------------
+ fs/xfs/libxfs/xfs_attr_leaf.c |  40 +++++----
+ fs/xfs/libxfs/xfs_attr_leaf.h |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c      | 140 ++++++++++---------------------
+ fs/xfs/libxfs/xfs_da_btree.c  |   5 +-
+ fs/xfs/scrub/ialloc_repair.c  |   4 +-
+ fs/xfs/xfs_icache.c           |  37 ++++----
+ fs/xfs/xfs_log.h              |   2 -
+ fs/xfs/xfs_log_cil.c          |  11 +--
+ fs/xfs/xfs_log_recover.c      |   2 +-
+ fs/xfs/xfs_reflink.c          |   3 +
+ fs/xfs/xfs_reflink.h          |  19 +++++
+ 15 files changed, 207 insertions(+), 261 deletions(-)
