@@ -1,41 +1,30 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47AD518785D;
-	Wed,  9 Oct 2024 07:58:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E06F188018;
+	Wed,  9 Oct 2024 08:04:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728460712; cv=none; b=tt9ZU2dfx3LC5liqsWisAo4wu0tYLLGD/EiO+aOpCgUWTVnHtZa7ag1atv/ck2Qlz4mYXI9113VqE99ERq3n3crJw1zIEwVgmrPk5XQGWpljrXmNgZ6kItaEABMM9RA7xRlvbzWctKg3wnWRPKHRqsBpsKf2tmPnRvPv9I/f39Q=
+	t=1728461096; cv=none; b=j9+uV/EtudbN9PgpVw+JDF9rqtluUexxaghQAxm3qlWN7Y2TZr9Y6woqiYaDeo7S2UVww7mnlv2pjGkKfWh4g6X+9AC0+dJx0rZ3u+CdOIohrsfgEn8VwUjhxbPFAwBt8wvi2QkvD28KAo7vH0cZmlVL6tMCaGJdxqdUpwNsRwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728460712; c=relaxed/simple;
-	bh=OiSvJoFqE3RDKS8VC4qSGaitatIaICqKep4cPYpdMFA=;
+	s=arc-20240116; t=1728461096; c=relaxed/simple;
+	bh=DpEYPqZ/j2zayeJPeum8SmrpmqB2hzC45m9t62tD+VY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C3/CTTKiej2wQ6wmHT5mfM1aFHYbUpdXEYnN7sP98KbaHJCV63zKx3qq1mBfJ65yIphLuYSqmBtfvbY8mjfYQCzD8iGW3xdS2spyKL0pa7hCZkBDCedMF0xjnbZPWqva0lddXt9QffyftkU+f/FZkZxDUBpWtMmJTyFWk1FnqeE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dF+HMa8K; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dF+HMa8K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E67B7C4CECF;
-	Wed,  9 Oct 2024 07:58:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728460711;
-	bh=OiSvJoFqE3RDKS8VC4qSGaitatIaICqKep4cPYpdMFA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dF+HMa8KRv169gxNzf47E6L9GVHL79VUlZmBeZr9PhvqvCBB9aLodrxkg3Yszzkxm
-	 Hd/eHDnYoZFdFZtTP5njmsQo9IdXKytmyM752j0llhnKZxbytqVpv9/qqbdRH+1O7L
-	 3KxL+8pZIEa7SLp6ZgV0pgTkM271WCz2bCKqlc8Tgnll/+Crbxc3yYAFMtVe97Ug1j
-	 ERkL/gAjNl2LHGbf5IspOV9kYtfVFGsUBuVFeZpzzZKe+7jUl67VAXothnrm3YMyd5
-	 u3JZ3HJDVM5QLaJc1hqkEtRq7v71iqojw5R9LI0Rf1Lyesy0MH5HeQ8Cz23d4EjC9l
-	 i+8w/SfJb0srg==
-Date: Wed, 9 Oct 2024 09:58:27 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: David Chinner <david@fromorbit.com>, Carlos@web.codeaurora.org, 
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: adding Carlos and Darrick as contacts for the xfs
- tree
-Message-ID: <csesgvzll3sgddkhf6j2jo75h6wwwwe23dln64vccszm3s2g4n@y5cf3siupab6>
-References: <20241009070735.166eb5e9@canb.auug.org.au>
+	 Content-Type:Content-Disposition:In-Reply-To; b=ApfnWnpvbXqxgrAQqKgrpoQhVvR2jX/zqRi5y94yC4ln+mE7+CAobIGdOpb5fonRFhlq4ALaZ23xAisrEpOA1ISXRK0fFrjBYv2jBWIfgw3+k7bUo2j27lp/6FVxY2gK6FqYEepO9LKjVpeUemfKUax4HPASM6PaUnVhZgy3ZHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id BDBEE227A8E; Wed,  9 Oct 2024 10:04:51 +0200 (CEST)
+Date: Wed, 9 Oct 2024 10:04:51 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, zlang@kernel.org, djwong@kernel.org,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test log recovery for extent frees right after
+ growfs
+Message-ID: <20241009080451.GA16822@lst.de>
+References: <20240910043127.3480554-1-hch@lst.de> <ZuBVhszqs-fKmc9X@bfoster> <20240910151053.GA22643@lst.de> <ZuBwKQBMsuV-dp18@bfoster> <ZwVdtXUSwEXRpcuQ@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,20 +33,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241009070735.166eb5e9@canb.auug.org.au>
+In-Reply-To: <ZwVdtXUSwEXRpcuQ@bfoster>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Oct 09, 2024 at 07:07:35AM GMT, Stephen Rothwell wrote:
-> Hi all,
+On Tue, Oct 08, 2024 at 12:28:37PM -0400, Brian Foster wrote:
+> FWIW, here's a quick hack at such a test. This is essentially a copy of
+> xfs/104, tweaked to remove some of the output noise and whatnot, and
+> hacked in some bits from generic/388 to do a shutdown and mount cycle
+> per iteration.
 > 
-> I have added Carlos and Darrick as contacts for linux-next problems with
-> the xfs tree.  I hope that makes sense.
-
-Thanks Stephen.
-
-	Carlos
+> I'm not sure if this reproduces your original problem, but this blows up
+> pretty quickly on 6.12.0-rc2. I see a stream of warnings that start like
+> this (buffer readahead path via log recovery):
 > 
-> -- 
-> Cheers,
-> Stephen Rothwell
+> [ 2807.764283] XFS (vdb2): xfs_buf_map_verify: daddr 0x3e803 out of range, EOFS 0x3e800
+> [ 2807.768094] ------------[ cut here ]------------
+> [ 2807.770629] WARNING: CPU: 0 PID: 28386 at fs/xfs/xfs_buf.c:553 xfs_buf_get_map+0x184e/0x2670 [xfs]
+> 
+> ... and then end up with an unrecoverable/unmountable fs. From the title
+> it sounds like this may be a different issue though.. hm?
 
+That's at least the same initial message I hit.
 
