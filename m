@@ -1,42 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3702188737
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Oct 2024 08:05:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C5B13A409;
+	Wed,  9 Oct 2024 08:08:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728461134; cv=none; b=S+1xVuv7EqMzD4jRFyQKcFL0oo5kARjHBPswDsd8BUcNBNLvS0OeeCqDXscplHAr8yFPgJHlHHMBnCYkCuEYXuWUm5P9JtY/+qrhqaHrCB32mf9ct5IuEl/PaPsQ4/q7r4oYEa0l4VMfbjNbOL1WUYk/ob2qaa9F+RhsnltZiGg=
+	t=1728461308; cv=none; b=slr5j6ADDgvw7rlZK8Yiz7vXEguGyjyh9tevHPbz6XfRABRRKlg3LMO6mbtHKFHRBACkmaJrVSYB7bHkS2UmheoPC5u5TUb23MemNDV1WkBmAZph3HoBcCoTC63BR3coZd6x5KpyiavBrZtJvBt8Th6uiBxm7OnpNnMb6aK5Vck=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728461134; c=relaxed/simple;
-	bh=WcBLUHvOmU6myP/gfI0+Gj8akfppDE2BaWPtjns/XA8=;
+	s=arc-20240116; t=1728461308; c=relaxed/simple;
+	bh=ML6e2fA5rJV5Uq3y3Qus9PWMu9J+hGyVJlUhyJ+qB5s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qdIYC1DVIi46PQBCqly/cxQS+OOfnPu2JZQ6PDl/cRu3nSr8k1KxJ2vKyb3b3vAudym/U5dJ8GiV9Bvzs44pq2O2CUucTzhzKzzxjUrb6yvp+PVCCh+hE89NpDzdp8jTKQA6dDTTAiXUVBniat+XISjzN8psEhOTAPRZ8ZFXd6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Fiv3Z0GJ; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=mx6ZLwPQmEbmfFllbk88lL0VVbQeA2W1oPzde4K8BeWLaajxciz12FT0u9TyI2aLGcNkKLLKSb5AdsqCIfO7S4GzT6AMRbEBltFBK8/fhg8qSBdyc1aRtEc61BpmRqkwbVnMrb8oKN6Ie0+LMPv9a/mwQDFdJTeXHE7OZ61o3FM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bFzpqu7M; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Fiv3Z0GJ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bFzpqu7M"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=F8W2BvTCB23krSDBFllPgLRu8rkjZ5J4JGWzO5e7jQ4=; b=Fiv3Z0GJeQKxRbZcrJalzd8/hk
-	4bnRRcHlINbCFWwdBTTFaymucPtT/oZVOUR2a8Nx5H2IySGTSfIRx77iOlDlxmQz7eTJ6tLVMQBe4
-	2mM3zQ7cmD7qdskJw1rQtw9lhfK3FqoN4QXmRHDKL2pBMjryNa0ooEN36Hvtf1CHyrs24RUuuGWb6
-	htKraVZe6PiIEDYRPT7/YiCr6lRolf0lZx2YZDuXIN1sssTQi1kfCiBlcp+05EH/Z6kfWLkjkFh5E
-	iv1xT2WRP9ayQf8iiIk+X0Lt8hBRsLoUQFjWkEhpKJr00T7G83gkv4wa2miNFYZ7T8CZymasqC/ey
-	eBjG6XvA==;
+	bh=ML6e2fA5rJV5Uq3y3Qus9PWMu9J+hGyVJlUhyJ+qB5s=; b=bFzpqu7MQeX7gS5YFKRW6OBHdJ
+	W/f7e9r3dQmuZ2lki3/QdnGB1MpG0rF0dmrRgzbOq8eixP57TshQfKvVgzwF6SXv9Jl3ky0mDjB0R
+	MgjoruotiVs6wBIYEFSAWyh0+dpzuMOVBt+ppTHgz5ZIwEZYAonC2Qqk4QVfmnXLVlVQD7IvnC7eW
+	OA+PPpLgbSw1RIJ24SgzmfafyUocvwYMeHWEWcZfoZD9J9pwpamO/Mfy204oTVKzl33AxA1HVYHMv
+	StxUqJ8ZLfSDxfC+4BhmKgPKntSlL3Im+fCy6aRex/4vD0TQmFqOnhBj0fkalxIPj0syNc+jg3h6v
+	50q6Ji+w==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1syRhM-00000008N3g-0uYd;
-	Wed, 09 Oct 2024 08:05:32 +0000
-Date: Wed, 9 Oct 2024 01:05:32 -0700
+	id 1syRkA-00000008NRS-3skF;
+	Wed, 09 Oct 2024 08:08:26 +0000
+Date: Wed, 9 Oct 2024 01:08:26 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, sandeen@sandeen.net
-Subject: Re: [RFC 2/4] xfs: transaction support for sb_agblocks updates
-Message-ID: <ZwY5TGnmqq91xsSJ@infradead.org>
-References: <20241008131348.81013-1-bfoster@redhat.com>
- <20241008131348.81013-3-bfoster@redhat.com>
+To: syzbot <syzbot+3d96bb110d05e208ae9e@syzkaller.appspotmail.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_buffered_write_iomap_end
+Message-ID: <ZwY5-lv5L-X_TlL-@infradead.org>
+References: <670610b7.050a0220.22840d.000e.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,13 +46,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241008131348.81013-3-bfoster@redhat.com>
+In-Reply-To: <670610b7.050a0220.22840d.000e.GAE@google.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Oct 08, 2024 at 09:13:46AM -0400, Brian Foster wrote:
-> Support transactional changes to superblock agblocks and related
-> fields.
+This should be fixed by my
 
-The growfs log recovery fix requires moving all the growfs sb updates
-out of the transaction deltas.  (It also despertely needs a review or
-two)
+"fix stale delalloc punching for COW I/O v5" series.
+
