@@ -1,164 +1,245 @@
-Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E19C02F46
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Oct 2024 05:12:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D55F36D;
+	Wed,  9 Oct 2024 06:10:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728450746; cv=none; b=uFx66dwjF8yD+zQTFQgBTEaUGlUyCXNpcW9/xbvjWbST4dJ29ifd0gZj907qbub69GtoDTlrtYGGQ6YdBLy9DtEvBYhldDRiopwA4dj7jV4A9by0lHYep5TGJgU3H76uyGnkNLa06p/KfrEs//4lcByWXmpqYf7OjHbF0ufLcuA=
+	t=1728454245; cv=none; b=JXQgsEEh5KMF11HjLI8Qnz1uJafU70Crpt9L3ahyKP3LJkat7KXVEpAuFjBvU7frPlHysd0YqbFAUdpGzTnoimwCZ+I6S01+JL8cIUBQV0NC2mn1I1E6QgMNQ/4NUwD9Nwfalx5Vmbk0czWEhuAmP3rdAiE9OZsXywZzzAgQ9pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728450746; c=relaxed/simple;
-	bh=7WTn9XEairr5J5mf2GodM9sUaNrqxM4Dlbe+8MGhhIw=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=IWsZVFthiV4mAq5dM07w1NjW3XjZq64nNtuv97ftRwuhFnzq3k+QhguRbgGSVwKxtIiiRvTWNzk82Eg3XK5XFjf0WO7cFxAdfifGYbhEJfjnb2Xxp2gLCPutBKzexnEtu1iAndftRVNf06VW6IW4vA/L7c7h99mDK4FFRQ+Rifg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-3a36ada9ce7so61532655ab.2
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Oct 2024 22:12:24 -0700 (PDT)
+	s=arc-20240116; t=1728454245; c=relaxed/simple;
+	bh=RdBWdWxGVyp+5Nof5w3sn1QFaGwjFcn9GtLFXgl7wk4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=athg0imYJOBFWMNqKcy97r5F7rDQ7AajrOSizGXLW3JKDEf6hi5GdMVzWwXZ8oA12qnViEpP+2x4zXcI4AtX9+hU9EbDHzOVY3CviKVoumuOxyjJOUeF/ehi1Di2h8fB9zLdEU318e1vkARakN4VZW5p2rKshzDt/a06bdh5xVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UiNZ14H2; arc=none smtp.client-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UiNZ14H2"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-7acdd65fbceso503458885a.3;
+        Tue, 08 Oct 2024 23:10:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1728454242; x=1729059042; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ui4szlwk2nThXCz611znwbVCqX5LskAI+9OcNuaAK/4=;
+        b=UiNZ14H2d1DkVsV4iEERndE9xv38MV16o0OTL+SZzCpYwDVc3jZPu69IcleHkO9Ds+
+         1XMS2tZsKmiUHwLO/E1KavHeR0IuHWSuF7dEkUlvEQRiPTOtFDU/Cnxv3+c9PfpRVT0M
+         bbMOpSbQHUqi6cKPtup2CFNPcSMT4kIG2GnUlcO+PdpZcU6Ybbm8Fd4ml4erZMMHH6Uj
+         JXi882Z7xBu+nZW2/rsbf7BEM/FbstB23kEdoFDdzDFfT10HPv8VVxsgC61+DKcBEyXQ
+         CjiKtxUoZLvpYmxHWKKrAT7zIW8K4RvYcylGqnjBIMrZJmQFhE870hScPwXFma3KBs5O
+         lZfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728450744; x=1729055544;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=9B2xga9VYJ2YPNvVTsksZaRz3GiKA9SnvAWY0ThC3vE=;
-        b=e7kHuWDR7AqoC1kpHgzb9nXx6AUOlSxWLyUKi4FnRBWCEJU+nUrFu3s3x0ZXVeD9lM
-         lqVG3kWu5qw3S5Q5Gqzr5rRsD5ubB535oEZ1PvvYA0x02/M2qFtrVeOY1RzPNgqUmz3r
-         HgVCh5bESVpPkZj1SKRrYymVoJoOFRy0eTvbEhlwR2JMt8n9bbMPifPtjLvkKTBScj/b
-         /j2msZgZgP6ViDe4kuW3u+WPm3hRcvEvh99KqtrdZXuuOW5jE6uLL7AJ+z8BK+DxIC+k
-         /wyCNuo5HbSkWzvuWSfZg2F0g8ZqtIS0XMablh/dEENoYq0AdGwi3TE+b2ej/OwBfQS+
-         afwQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVi1h5iZrkXvcSrthlduDxvY+ykIxWPwo3kLbfjH0ZnrFZ0LnW/VUEfrGnCD9Nk1r2fIGJLZRLjsGs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyGsL5JPcgxzehACzGqihcCRnk6tHn6bNBP8x+lxXdVvZZxMW2x
-	OBrApRnteo3WHKhF8bbHEAKHQoNoTCCPHXOwDOHo4jqQ4Bf3VyLY3szeAJOm8Xt8CwafETCOElx
-	+MY6TLStPzL+va3LtMwY/QYw62MkjRi3s0A6T4eZgtM2vOIPT/zaC/20=
-X-Google-Smtp-Source: AGHT+IFvmGbFFcmNTETDDtH9cpf5HoAmSWOED7xwdt13G21V3SOkcutg2DLIi+iSZVDZAlsvB9RwroX8Yb+PCIhqzRejiLX1UXoS
+        d=1e100.net; s=20230601; t=1728454242; x=1729059042;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ui4szlwk2nThXCz611znwbVCqX5LskAI+9OcNuaAK/4=;
+        b=P57bW3gEZ6EMKYc8PtsGbBw3jPi1RxA1ulnQE5NUdmNOSLy4k+Vv211UiS/9cVx6VT
+         jyR94IkSg2Z7Y4tVxKgUu4LqmLlg4L0p+wFsKUaUrS0lbqAf1hpFIntV8mVWIqgomznx
+         j48pwBDBjuxTk9MAIUOU8Bsv5mZLDFyMPE0NIYJ0WoIpXoAGZR7ecdblYY6NlcM2Wrht
+         B7JMq3CF4bKepdTtpvfX0ic9cCSoTO/RU93/usL/sKo4hoVK4k1GCCU2TTj4tOB4M3Cc
+         /+jF5SgLUXENFhRwxzmx1zXItQRnEfpTBZjGNQbD651sSDI9jGxB32pLOP+cX9miLsNN
+         7GgQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUp7vACIDIioA07Qpb/hr6RAX+EoFUw7LPoRun1ot25OyJomuGEi5EocW8p34Rk2xp8MvbLodHzJ/QhFszoWw==@vger.kernel.org, AJvYcCVgmvAOaPasGlxM4Jk3EjWKIuFzSGGwQ0jsmTh0gq5eXg4aHeQThRH8a348dTFnLS5a0vqK79xi0DS+11CpVQ==@vger.kernel.org, AJvYcCWBwqq4qxYFsa0HjfVRqNtuoPoDOwKa4WPe3ExdW/ZXneWLOcupTMhO/HAxV7GSwsoGzn7ZTPXLB0ya@vger.kernel.org, AJvYcCWawYHx/a1Ow+bYr3tksQkj8uk2fpwTSy1UOzs9yeqezfkPlm9yLaDJLIoqKvHlLCIWHO1HrlmyALe86vv8QqDs8sb4NUsY@vger.kernel.org
+X-Gm-Message-State: AOJu0YxVGsrwj+uMXI5W0Kh7jxu6wM6dzXaWvXa0kmXJIj+/zJRO9Mc5
+	OdEtTUCFYp3jw/eBy3DpTSBvLebpO+QFhhAzeUo10jzrCl+SU8SCVr4vYkt2I68rUXRxcPMGvpu
+	JIm962ZOWNDtjDO2/gN2FPoUEU2E=
+X-Google-Smtp-Source: AGHT+IEp/EChg31sRq6snrYUHTCq45Fud33e1ZXwlB8Ptwi9260S6FJYBUXMRk1No6Tvrdjftgfxa7/NPyoljVuvkAc=
+X-Received: by 2002:a05:620a:191e:b0:7a3:7889:4af0 with SMTP id
+ af79cd13be357-7b07954bf54mr183899385a.28.1728454242249; Tue, 08 Oct 2024
+ 23:10:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1ca1:b0:3a0:4a91:224f with SMTP id
- e9e14a558f8ab-3a397ce85b3mr10545185ab.1.1728450743994; Tue, 08 Oct 2024
- 22:12:23 -0700 (PDT)
-Date: Tue, 08 Oct 2024 22:12:23 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <670610b7.050a0220.22840d.000e.GAE@google.com>
-Subject: [syzbot] [xfs?] possible deadlock in xfs_buffered_write_iomap_end
-From: syzbot <syzbot+3d96bb110d05e208ae9e@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+References: <20241002014017.3801899-1-david@fromorbit.com> <20241002014017.3801899-5-david@fromorbit.com>
+ <Zv5GfY1WS_aaczZM@infradead.org> <Zv5J3VTGqdjUAu1J@infradead.org>
+ <20241003115721.kg2caqgj2xxinnth@quack3> <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
+ <ZwRvshM65rxXTwxd@dread.disaster.area> <CAOQ4uxgzPM4e=Wc=UVe=rpuug=yaWwu5zEtLJmukJf6d7MUJow@mail.gmail.com>
+ <20241008112344.mzi2qjpaszrkrsxg@quack3> <ZwXDzKGj6Bp28kYe@dread.disaster.area>
+In-Reply-To: <ZwXDzKGj6Bp28kYe@dread.disaster.area>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 9 Oct 2024 08:10:30 +0200
+Message-ID: <CAOQ4uxhXOifdohHE+3t-2hznsJfYf0KEy1XEkc653ub2OjeO4A@mail.gmail.com>
+Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert sb->s_inodes
+ iteration to super_iter_inodes()
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Linus Torvalds <torvalds@linux-foundation.org>, 
+	Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
+	kent.overstreet@linux.dev, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@linux.microsoft.com>, 
+	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>, Kees Cook <keescook@chromium.org>, 
+	linux-security-module@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On Wed, Oct 9, 2024 at 1:44=E2=80=AFAM Dave Chinner <david@fromorbit.com> w=
+rote:
+>
+> On Tue, Oct 08, 2024 at 01:23:44PM +0200, Jan Kara wrote:
+> > On Tue 08-10-24 10:57:22, Amir Goldstein wrote:
+> > > On Tue, Oct 8, 2024 at 1:33=E2=80=AFAM Dave Chinner <david@fromorbit.=
+com> wrote:
+> > > >
+> > > > On Mon, Oct 07, 2024 at 01:37:19PM -0700, Linus Torvalds wrote:
+> > > > > On Thu, 3 Oct 2024 at 04:57, Jan Kara <jack@suse.cz> wrote:
+> > > > > >
+> > > > > > Fair enough. If we go with the iterator variant I've suggested =
+to Dave in
+> > > > > > [1], we could combine the evict_inodes(), fsnotify_unmount_inod=
+es() and
+> > > > > > Landlocks hook_sb_delete() into a single iteration relatively e=
+asily. But
+> > > > > > I'd wait with that convertion until this series lands.
+> > > > >
+> > > > > Honza, I looked at this a bit more, particularly with an eye of "=
+what
+> > > > > happens if we just end up making the inode lifetimes subject to t=
+he
+> > > > > dentry lifetimes" as suggested by Dave elsewhere.
+> > > >
+> > > > ....
+> > > >
+> > > > > which makes the fsnotify_inode_delete() happen when the inode is
+> > > > > removed from the dentry.
+> > > >
+> > > > There may be other inode references being held that make
+> > > > the inode live longer than the dentry cache. When should the
+> > > > fsnotify marks be removed from the inode in that case? Do they need
+> > > > to remain until, e.g, writeback completes?
+> > > >
+> > >
+> > > fsnotify inode marks remain until explicitly removed or until sb
+> > > is unmounted (*), so other inode references are irrelevant to
+> > > inode mark removal.
+> > >
+> > > (*) fanotify has "evictable" inode marks, which do not hold inode
+> > > reference and go away on inode evict, but those mark evictions
+> > > do not generate any event (i.e. there is no FAN_UNMOUNT).
+> >
+> > Yes. Amir beat me with the response so let me just add that FS_UMOUNT e=
+vent
+> > is for inotify which guarantees that either you get an event about some=
+body
+> > unlinking the inode (e.g. IN_DELETE_SELF) or event about filesystem bei=
+ng
+> > unmounted (IN_UMOUNT) if you place mark on some inode. I also don't see=
+ how
+> > we would maintain this behavior with what Linus proposes.
+>
+> Thanks. I didn't respond last night when I read Amir's decription
+> because I wanted to think it over. Knowing where the unmount event
+> requirement certainly helps.
+>
+> I am probably missing something important, but it really seems to me
+> that the object reference counting model is the back to
+> front.  Currently the mark is being attached to the inode and then
+> the inode pinned by a reference count to make the mark attached
+> to the inode persistent until unmount. This then requires the inodes
+> to be swept by unmount because fsnotify has effectively leaked them
+> as it isn't tracking such inodes itself.
+>
+> [ Keep in mind that I'm not saying this was a bad or wrong thing to
+> do because the s_inodes list was there to be able to do this sort of
+> lazy cleanup. But now that we want to remove the s_inodes list if at
+> all possible, it is a problem we need to solve differently. ]
+>
+> AFAICT, inotify does not appear to require the inode to send events
+> - it only requires access to the inode mark itself. Hence it does
+> not the inode in cache to generate IN_UNMOUNT events, it just
+> needs the mark itself to be findable at unmount.  Do any of the
+> other backends that require unmount notifications that require
+> special access to the inode itself?
+>
 
-syzbot found the following issue on:
+No other backend supports IN_UNMOUNT/FS_UNMOUNT.
+We want to add unmount events support to fanotify, but those are
+only going to be possible for watching a mount or an sb, not inodes.
 
-HEAD commit:    c02d24a5af66 Add linux-next specific files for 20241003
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=126f5307980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=94f9caf16c0af42d
-dashboard link: https://syzkaller.appspot.com/bug?extid=3d96bb110d05e208ae9e
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> If not, and the fsnotify sb info is tracking these persistent marks,
+> then we don't need to iterate inodes at unmount. This means we don't
+> need to pin inodes when they have marks attached, and so the
+> dependency on the s_inodes list goes away.
+>
+> With this inverted model, we need the first fsnotify event callout
+> after the inode is instantiated to look for a persistent mark for
+> the inode. We know how to do this efficiently - it's exactly the
+> same caching model we use for ACLs. On the first lookup, we check
+> the inode for ACL data and set the ACL pointer appropriately to
+> indicate that a lookup has been done and there are no ACLs
+> associated with the inode.
+>
+> At this point, the fsnotify inode marks can all be removed from the
+> inode when it is being evicted and there's no need for fsnotify to
+> pin inodes at all.
+>
+> > > > > Then at umount time, the dentry shrinking will deal with all live
+> > > > > dentries, and at most the fsnotify layer would send the FS_UNMOUN=
+T to
+> > > > > just the root dentry inodes?
+> > > >
+> > > > I don't think even that is necessary, because
+> > > > shrink_dcache_for_umount() drops the sb->s_root dentry after
+> > > > trimming the dentry tree. Hence the dcache drop would cleanup all
+> > > > inode references, roots included.
+> > > >
+> > > > > Wouldn't that make things much cleaner, and remove at least *one*=
+ odd
+> > > > > use of the nasty s_inodes list?
+> > > >
+> > > > Yes, it would, but someone who knows exactly when the fsnotify
+> > > > marks can be removed needs to chime in here...
+> >
+> > So fsnotify needs a list of inodes for the superblock which have marks
+> > attached and for which we hold inode reference. We can keep it inside
+> > fsnotify code although it would practically mean another list_head for =
+the
+> > inode for this list (probably in our fsnotify_connector structure which
+> > connects list of notification marks to the inode).
+>
+> I don't think that is necessary. We need to get rid of the inode
+> reference, not move where we track inode references. The persistent
+> object is the fsnotify mark, not the cached inode. It's the mark
+> that needs to be persistent, and that's what the fsnotify code
+> should be tracking.
+>
+> The fsnotify marks are much smaller than inodes, and there going to
+> be fewer cached marks than inodes, especially once inode pinning is
+> removed. Hence I think this will result in a net reduction in memory
+> footprint for "marked-until-unmount" configurations as we won't pin
+> nearly as many inodes in cache...
+>
 
-Unfortunately, I don't have any reproducer for this issue yet.
+It is a feasible design which has all the benefits that you listed.
+But it is a big change, just to get away from s_inodes
+(much easier to maintain a private list of pinned inodes).
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/641e642c9432/disk-c02d24a5.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/98aaf20c29e0/vmlinux-c02d24a5.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/c23099f2d86b/bzImage-c02d24a5.xz
+inotify (recursive tree watches for that matter) has been
+inefficient that way for a long time, and users now have less
+memory hogging solutions like fanotify mount and sb marks.
+granted, not unprivileged users, but still.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+3d96bb110d05e208ae9e@syzkaller.appspotmail.com
+So there needs to be a good justification to make this design change.
+One such justification would be to provide the infrastructure to
+the feature that Jan referred to as the "holy grail" in his LPC talk,
+namely, subtree watches.
 
-loop0: detected capacity change from 32768 to 0
-syz.0.409: attempt to access beyond end of device
-loop0: rw=2048, sector=18728, nr_sectors = 4 limit=0
-============================================
-WARNING: possible recursive locking detected
-6.12.0-rc1-next-20241003-syzkaller #0 Not tainted
---------------------------------------------
-syz.0.409/9596 is trying to acquire lock:
-ffff88805e4b0c90 (mapping.invalidate_lock#6){++++}-{3:3}, at: filemap_invalidate_lock include/linux/fs.h:860 [inline]
-ffff88805e4b0c90 (mapping.invalidate_lock#6){++++}-{3:3}, at: xfs_buffered_write_iomap_end+0x20c/0x490 fs/xfs/xfs_iomap.c:1246
+If we introduce code that looks up persistent "mark rules" on
+inode instantiation, then we could use it to "reconnect" inotify
+persistent inode marks (by ino/fid) or to establish automatic
+marks based on subtree/path based rules.
 
-but task is already holding lock:
-ffff88805e4b0c90 (mapping.invalidate_lock#6){++++}-{3:3}, at: xfs_ilock+0x193/0x3d0 fs/xfs/xfs_inode.c:156
+audit code has something that resembles this and I suspect that
+this Landlock is doing something similar (?), but I didn't check.
+path based rules are always going to be elusive and tricky and
+Al is always going to hate them ;)
 
-other info that might help us debug this:
- Possible unsafe locking scenario:
+Bottom line - good idea, not easy, requires allocating development resource=
+s.
 
-       CPU0
-       ----
-  lock(mapping.invalidate_lock#6);
-  lock(mapping.invalidate_lock#6);
-
- *** DEADLOCK ***
-
- May be due to missing lock nesting notation
-
-3 locks held by syz.0.409/9596:
- #0: ffff888077bc0420 (sb_writers#19){++++}-{0:0}, at: file_start_write include/linux/fs.h:2950 [inline]
- #0: ffff888077bc0420 (sb_writers#19){++++}-{0:0}, at: vfs_fallocate+0x4fe/0x6e0 fs/open.c:332
- #1: ffff88805e4b0af0 (&sb->s_type->i_mutex_key#27){++++}-{3:3}, at: xfs_ilock+0x102/0x3d0 fs/xfs/xfs_inode.c:148
- #2: ffff88805e4b0c90 (mapping.invalidate_lock#6){++++}-{3:3}, at: xfs_ilock+0x193/0x3d0 fs/xfs/xfs_inode.c:156
-
-stack backtrace:
-CPU: 1 UID: 0 PID: 9596 Comm: syz.0.409 Not tainted 6.12.0-rc1-next-20241003-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
- print_deadlock_bug+0x483/0x620 kernel/locking/lockdep.c:3037
- check_deadlock kernel/locking/lockdep.c:3089 [inline]
- validate_chain+0x15e2/0x5920 kernel/locking/lockdep.c:3891
- __lock_acquire+0x1384/0x2050 kernel/locking/lockdep.c:5202
- lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5825
- down_write+0x99/0x220 kernel/locking/rwsem.c:1577
- filemap_invalidate_lock include/linux/fs.h:860 [inline]
- xfs_buffered_write_iomap_end+0x20c/0x490 fs/xfs/xfs_iomap.c:1246
- iomap_iter+0x220/0xf60 fs/iomap/iter.c:79
- iomap_file_unshare+0x380/0x6d0 fs/iomap/buffered-io.c:1343
- xfs_reflink_unshare+0x173/0x5f0 fs/xfs/xfs_reflink.c:1681
- xfs_falloc_unshare_range+0x164/0x390 fs/xfs/xfs_file.c:1033
- xfs_file_fallocate+0x289/0x3d0 fs/xfs/xfs_file.c:1125
- vfs_fallocate+0x569/0x6e0 fs/open.c:333
- ksys_fallocate fs/open.c:356 [inline]
- __do_sys_fallocate fs/open.c:364 [inline]
- __se_sys_fallocate fs/open.c:362 [inline]
- __x64_sys_fallocate+0xbd/0x110 fs/open.c:362
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f3f1df7dff9
-Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f3f1ee0b038 EFLAGS: 00000246 ORIG_RAX: 000000000000011d
-RAX: ffffffffffffffda RBX: 00007f3f1e135f80 RCX: 00007f3f1df7dff9
-RDX: 000000000000000a RSI: 0000000000000040 RDI: 0000000000000004
-RBP: 00007f3f1dff0296 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000005 R11: 0000000000000246 R12: 0000000000000000
-R13: 0000000000000000 R14: 00007f3f1e135f80 R15: 00007fffd33b9598
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+Thanks,
+Amir.
