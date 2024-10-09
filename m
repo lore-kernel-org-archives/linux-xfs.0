@@ -1,245 +1,264 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D55F36D;
-	Wed,  9 Oct 2024 06:10:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728454245; cv=none; b=JXQgsEEh5KMF11HjLI8Qnz1uJafU70Crpt9L3ahyKP3LJkat7KXVEpAuFjBvU7frPlHysd0YqbFAUdpGzTnoimwCZ+I6S01+JL8cIUBQV0NC2mn1I1E6QgMNQ/4NUwD9Nwfalx5Vmbk0czWEhuAmP3rdAiE9OZsXywZzzAgQ9pw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728454245; c=relaxed/simple;
-	bh=RdBWdWxGVyp+5Nof5w3sn1QFaGwjFcn9GtLFXgl7wk4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=athg0imYJOBFWMNqKcy97r5F7rDQ7AajrOSizGXLW3JKDEf6hi5GdMVzWwXZ8oA12qnViEpP+2x4zXcI4AtX9+hU9EbDHzOVY3CviKVoumuOxyjJOUeF/ehi1Di2h8fB9zLdEU318e1vkARakN4VZW5p2rKshzDt/a06bdh5xVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UiNZ14H2; arc=none smtp.client-ip=209.85.222.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 102181547F0;
+	Wed,  9 Oct 2024 06:46:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.143.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1728456369; cv=fail; b=gf3TCg/2mLch9a5Jvjj32hNbbXJ6GBgeZ9om/9jkPweDnS9DNmYEQbHksEH+lKYhyaW0X5H4QaB4vmwAUXv0aKIb4rG6qoArqGfu00Lj4Aq8O+jLN5SWDlG5M3Cxfuw9b/rtX4uJ2WjjeDZuWi96mkaGVA7zqCERp412/jP1JVM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1728456369; c=relaxed/simple;
+	bh=Hv0gDh0U+xu/Nxii4SOYg/d2Awt62QKuC0jVTQ7nons=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=i18YgdcN6piMC73eUbhhDe+HAgTjeB4IzyJh+cNHkuX0VNI7kXmuVmhtKDm+rB8VevY75X7fTKUAA9CFqNM9kZa8RS1hDlER81Wq1k75iMY+9iabAONLLKh5JzUJQzGU8h8KwE9yimyrO8k05ivs0V+l7IX/N4ozOLdVIxh/+QY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=hWP6EVuv; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=dir/EwCY; arc=fail smtp.client-ip=68.232.143.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UiNZ14H2"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-7acdd65fbceso503458885a.3;
-        Tue, 08 Oct 2024 23:10:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="hWP6EVuv";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="dir/EwCY"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1728456366; x=1759992366;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=Hv0gDh0U+xu/Nxii4SOYg/d2Awt62QKuC0jVTQ7nons=;
+  b=hWP6EVuvj6CkE+tKCevDxxYpCtgK06s17m27ZXCke57vH17oKZ7PpcN8
+   EkrIU6M+23sasRJIBBy7kI+hBSUoNFr0N3QHGmtjp71HloJ4zXz0YIh6P
+   fYTnMC8a19lN5ViMQZD/l3UREhuHggJULRcL8YWjZTEo/XDRQW28kBeT3
+   Yf1DemXSw2JZOs9klb+fTgOOAKIyzZ3Qn//6R0AWTbprI1c6o1oBX21Ma
+   VDwFyl/OHNeczIo/WDOb6ERs/R6b+SzBR6PmZUZAjgTVanZCn+4PxIfh+
+   TkRYHHdY6J+wQYdl9uONfb8l+fm3PwO2+n7cdOQsbgLMdQGZHArmo2Zo9
+   w==;
+X-CSE-ConnectionGUID: qW2+Q4Z5RpyfzxFU1nQ7/g==
+X-CSE-MsgGUID: cx0YrrFGQhCHjdajB12hlw==
+X-IronPort-AV: E=Sophos;i="6.11,189,1725292800"; 
+   d="scan'208";a="28994332"
+Received: from mail-dm6nam10lp2101.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.101])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Oct 2024 14:45:59 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=hXcxFvACNqE+szv5iuoroI5uOuovuAULrRKuCQe0ChLztta9wYPKj/uxqJg8lDtAjVwGjWCAji+McnIp4EH2Rf7E79kA7z7rVFdXmuh+sbxcr/oQeaphZA/fdpIc4Wa+85prBjNnb5lWtYIVTb1kfNBNomeT2A49+qQ5Url4YhCZljkTCm6bl+zl+D1FtNuaEkN8yAJLqmm+2EOLga2Y7TWjySztqZLpi51KxlPxIWkygFcvKW4qjc4ZTN8JcNbOqoGbbstyYRQSru+U73wzyk+mqmqtim7ybl22vUNzPGuZukH4FoTBpRj55iZmD5zyPE1WQOSEaD/IRcnj14zLwQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Hv0gDh0U+xu/Nxii4SOYg/d2Awt62QKuC0jVTQ7nons=;
+ b=XM/cnkkPYDhy5ba0eYczlXVSJ6IOEKDlYdsHyATPqmNTB11kOQwc6SEhGCTvbVRy/a+kFbIppo6zpCgen++ii7uVVYRrUSmMgBcGMd8o69CWq3lLoST+RpI42MJ6y6OG/MeZfBurLVesBVixfTGKj28PGhsQitBvJ9YwB/sCpoEwnHrfOnweW+yFs8k+X9zEaB6ng25cr4NivIFwtQ+O5TSsWBrO9fzsmRp8mj064RGVqm8g0THtUtembymtsCfgY/PXgkTnJ8/81M/L6DJ0NcYBBf0a56Ht2cshEqouOuQ+nDI2qklaBP/kd8RFbvq8azmFADQjb/BS06AYb1LQVQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728454242; x=1729059042; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ui4szlwk2nThXCz611znwbVCqX5LskAI+9OcNuaAK/4=;
-        b=UiNZ14H2d1DkVsV4iEERndE9xv38MV16o0OTL+SZzCpYwDVc3jZPu69IcleHkO9Ds+
-         1XMS2tZsKmiUHwLO/E1KavHeR0IuHWSuF7dEkUlvEQRiPTOtFDU/Cnxv3+c9PfpRVT0M
-         bbMOpSbQHUqi6cKPtup2CFNPcSMT4kIG2GnUlcO+PdpZcU6Ybbm8Fd4ml4erZMMHH6Uj
-         JXi882Z7xBu+nZW2/rsbf7BEM/FbstB23kEdoFDdzDFfT10HPv8VVxsgC61+DKcBEyXQ
-         CjiKtxUoZLvpYmxHWKKrAT7zIW8K4RvYcylGqnjBIMrZJmQFhE870hScPwXFma3KBs5O
-         lZfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728454242; x=1729059042;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ui4szlwk2nThXCz611znwbVCqX5LskAI+9OcNuaAK/4=;
-        b=P57bW3gEZ6EMKYc8PtsGbBw3jPi1RxA1ulnQE5NUdmNOSLy4k+Vv211UiS/9cVx6VT
-         jyR94IkSg2Z7Y4tVxKgUu4LqmLlg4L0p+wFsKUaUrS0lbqAf1hpFIntV8mVWIqgomznx
-         j48pwBDBjuxTk9MAIUOU8Bsv5mZLDFyMPE0NIYJ0WoIpXoAGZR7ecdblYY6NlcM2Wrht
-         B7JMq3CF4bKepdTtpvfX0ic9cCSoTO/RU93/usL/sKo4hoVK4k1GCCU2TTj4tOB4M3Cc
-         /+jF5SgLUXENFhRwxzmx1zXItQRnEfpTBZjGNQbD651sSDI9jGxB32pLOP+cX9miLsNN
-         7GgQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUp7vACIDIioA07Qpb/hr6RAX+EoFUw7LPoRun1ot25OyJomuGEi5EocW8p34Rk2xp8MvbLodHzJ/QhFszoWw==@vger.kernel.org, AJvYcCVgmvAOaPasGlxM4Jk3EjWKIuFzSGGwQ0jsmTh0gq5eXg4aHeQThRH8a348dTFnLS5a0vqK79xi0DS+11CpVQ==@vger.kernel.org, AJvYcCWBwqq4qxYFsa0HjfVRqNtuoPoDOwKa4WPe3ExdW/ZXneWLOcupTMhO/HAxV7GSwsoGzn7ZTPXLB0ya@vger.kernel.org, AJvYcCWawYHx/a1Ow+bYr3tksQkj8uk2fpwTSy1UOzs9yeqezfkPlm9yLaDJLIoqKvHlLCIWHO1HrlmyALe86vv8QqDs8sb4NUsY@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVGsrwj+uMXI5W0Kh7jxu6wM6dzXaWvXa0kmXJIj+/zJRO9Mc5
-	OdEtTUCFYp3jw/eBy3DpTSBvLebpO+QFhhAzeUo10jzrCl+SU8SCVr4vYkt2I68rUXRxcPMGvpu
-	JIm962ZOWNDtjDO2/gN2FPoUEU2E=
-X-Google-Smtp-Source: AGHT+IEp/EChg31sRq6snrYUHTCq45Fud33e1ZXwlB8Ptwi9260S6FJYBUXMRk1No6Tvrdjftgfxa7/NPyoljVuvkAc=
-X-Received: by 2002:a05:620a:191e:b0:7a3:7889:4af0 with SMTP id
- af79cd13be357-7b07954bf54mr183899385a.28.1728454242249; Tue, 08 Oct 2024
- 23:10:42 -0700 (PDT)
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Hv0gDh0U+xu/Nxii4SOYg/d2Awt62QKuC0jVTQ7nons=;
+ b=dir/EwCY0KE1A34VwedIVY2vF0UjNdJOO77Jm86FKa9Ba55mU86jkwDMsagHfaRoSEL4/uNft8DAPqC/Q+OIwz4Ip+Z4RB3wH31s9VKwLCEaXdWR7Q7k5o4ylaQkNvffHw1D7FAhOfH8RAJgooBI8VCLYY2zirMMr1dCK610kxk=
+Received: from PH7PR04MB8755.namprd04.prod.outlook.com (2603:10b6:510:236::8)
+ by SA1PR04MB8221.namprd04.prod.outlook.com (2603:10b6:806:1e4::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8026.23; Wed, 9 Oct
+ 2024 06:45:57 +0000
+Received: from PH7PR04MB8755.namprd04.prod.outlook.com
+ ([fe80::4372:e8cb:5341:9a9b]) by PH7PR04MB8755.namprd04.prod.outlook.com
+ ([fe80::4372:e8cb:5341:9a9b%4]) with mapi id 15.20.8026.020; Wed, 9 Oct 2024
+ 06:45:57 +0000
+From: Hans Holmberg <Hans.Holmberg@wdc.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: "zlang@redhat.com" <zlang@redhat.com>, hch <hch@lst.de>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 2/2] xfs/157,xfs/547,xfs/548: switch to using
+ _scratch_mkfs_sized
+Thread-Topic: [PATCH 2/2] xfs/157,xfs/547,xfs/548: switch to using
+ _scratch_mkfs_sized
+Thread-Index: AQHbGXAcO8L/aUmkt06VOR0qHTTj/7J9F2UAgADjgwA=
+Date: Wed, 9 Oct 2024 06:45:57 +0000
+Message-ID: <e81d2e10-5b13-4d3a-937e-d7cd48c21ba3@wdc.com>
+References: <20241008105055.11928-1-hans.holmberg@wdc.com>
+ <20241008105055.11928-3-hans.holmberg@wdc.com>
+ <20241008171138.GJ21840@frogsfrogsfrogs>
+In-Reply-To: <20241008171138.GJ21840@frogsfrogsfrogs>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Mozilla Thunderbird
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH7PR04MB8755:EE_|SA1PR04MB8221:EE_
+x-ms-office365-filtering-correlation-id: 6afa198c-c9b1-44fd-9219-08dce82e07b0
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?aEVEdUh2dUx3bFhUdUZLNlZzYmNuN3FuY3krL3NRRXltZnh5Kzdib2o4RUZz?=
+ =?utf-8?B?OGY1ZTRJSnRTVndHT3ZpZ2JGUk1hL0JOQ2ZkZnJjK2hIbGI5RENKdGVvSlNx?=
+ =?utf-8?B?eFpabnBtZklHVHRVK1hmOXRjN2hRczNwK3BPT215UklONTNiOS85TGgyT2JC?=
+ =?utf-8?B?d1Q2eFJlVEE0Q3c0d0pMNTlEVHFTdVFNV2MvdFljQWttdUwvRll5dlFLY3Z2?=
+ =?utf-8?B?b1RZUW5ldUNnZGhqUVZrV1Q0QXBJVFFxY3ZxTVBvVGx4SEtuSEdBZ3hqZFkv?=
+ =?utf-8?B?WU9ENXlFb0dGUVBkMEhHTEcxbCs0enQvZXRnTElOeENrU3htdndKNTROYUtI?=
+ =?utf-8?B?R2czNWtxWEtkWkREU0oxc0ltTWR0RDBqeFdzeHFER2UvVG5Ed3kyMHVoNits?=
+ =?utf-8?B?b25oU3JpdUE2ZmVlTDhsaGJHVTMwNUVVaStCamhlblN4YTNmOXRnSHBCNnN3?=
+ =?utf-8?B?SjVUN2xrL3hIeVkyS3VScFpDZ1o1cVkrazkrTW5xSkdSTHF6aWJMdkY1cUJP?=
+ =?utf-8?B?YU4wbjg3WXZxcCtsaUlGcTY2QVJjUG4rNVg1SXZsV0FleW9SajRyL1ZGV1Nj?=
+ =?utf-8?B?ZEJDVEljbTRSSjVLbXNYajROazJFSEVTclBnK1YvRmhEbzNpUEhQb0VTWmtt?=
+ =?utf-8?B?WmVodEVqTHpDblA0TzZuR25YL1hJdndUQ1VzM1RDaldvN3I4WStMeExZWHdE?=
+ =?utf-8?B?VWE2UWROREF2WFJmWnBVTDhsV3pka0psOElaOTRHV2pzQTBrVE1WVnFONUQ0?=
+ =?utf-8?B?aTZiTkg4ODFKYTM0STVlN1R3N0FNUkRsdVBtUTVNNDZVdWdiUzJ1dklRYnNN?=
+ =?utf-8?B?bjdRMzc3eHl5OEVIZSs3U01lWExRQjdXTkJ3NkY0ZzM1UlZmWnVqdTg0NUpS?=
+ =?utf-8?B?OUYxQ0lPVXByczdrMS84TC9UZzBDWTk0SzdHWnlGZUdvR090dHdIUlJWS09X?=
+ =?utf-8?B?U1hLRDNNN04wL3BTNXV4UGJYeHhiVkRTd2d2QmtSenhjWmRpWGo0QWFVbFFE?=
+ =?utf-8?B?QTJiRUN4cFU4OGhBNHJVSnhtUEFSRGZYSXlER2FVcXNxTjFKaDh6bDNtenlW?=
+ =?utf-8?B?MnhBUzdXcjVNRlgwdlg1YnU5R05TdDhIZTRIMnpaczZSZE5aWEFYZ1lwUU9D?=
+ =?utf-8?B?cE9HMm5XU0daaFIycmR1eitVREVBUEVyb2N1bFRTbVh6SkszOUpIRG82SHow?=
+ =?utf-8?B?ZDJYYmw4cW5pdW9kV2pNbHZEOVNBTUV0ODZWNkppUm14dncwNnVSOGNUd1da?=
+ =?utf-8?B?Ym5ucDNrM3RBbnYrSjBXbDRTaDV1Z1VxQjNwYnRPcEJaT1R5MHdzcm9NRzVD?=
+ =?utf-8?B?RkRhR3VOVUhXRTk0U2lyVjVvUEswU2tPNW9NOXZ0ejY4VFQrSVVoRFVxZjZD?=
+ =?utf-8?B?bXlxajRPZXNLRVpJUnUrd3BxZUpwck9DZDlCL1NUT3VERGhWRXJ5VS8xNlo1?=
+ =?utf-8?B?a2tGWGNFOFFkbnFYSE80UDFIWjJZeFZzYXUvNm1pdnhIQ1BzMVkwSTNEN3VZ?=
+ =?utf-8?B?cEg1WU5TenlObWJtV1k4OE9vOWpxcHpaaGxzY2t1d0paeVBKYVYxRUhhekZq?=
+ =?utf-8?B?WnR1WGNiNm5BbFdlcnU4M2JQM21FalE3KzU1bnVIeURIUDBhTlpVdFM5cHlt?=
+ =?utf-8?B?dlgzZ0M1MkNwOUlOeld2T3h6QzBydkxDQmhtdi82VUN1OTNuMTlBaW1zNStK?=
+ =?utf-8?B?M3ErUWNEaWQydmJuUEZPUUswSDhQeDVWZW5uL1BCc2NJTHZnd0kycEJ6bFhV?=
+ =?utf-8?B?ajZpL1dmdlFxaGtXbHJrbTU2V29qS0ZpTzRha0hoRE1aMG9uejZJT1NiZEJt?=
+ =?utf-8?B?ekJWMGFkM1lKWDRYZEtnQT09?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR04MB8755.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?Y3VuWlltZDk1TmpaWEhTYmZ0NmowcHM2cFhrMEdXV2VPd1hqVGxxOCtidFp6?=
+ =?utf-8?B?WnpoTG4reGthdjhRb1liWDEzb3J2cmVTOWZjNmY2RFN1c0RtcU0wWG4wc291?=
+ =?utf-8?B?aUw0UjBJN1I5U3RXOXdFTWxhMHNXbUZRQUFoYzdIUTNUTEJwWkt1ZTc0OUxS?=
+ =?utf-8?B?MTV6MzN3SzBCNDBSR0xSMERpSDJzK1hrbjZSTWlZeFZwRkVMa1NwaytHQUV0?=
+ =?utf-8?B?MXRoaTR0OXZVYXpEWTBRckg3OUJuNUROZkQzUmQ1YTFjeTVWalB4QjhLVFkx?=
+ =?utf-8?B?TldrSnJiMHBmdUJPaVZXTDZDNnY5WUJ2SC9mWmFxVmJTWldCMjU3eW5Tb3Rx?=
+ =?utf-8?B?bmtrVittM0NiU3pqejVsamtMcDQ4dDhsSVpvZVVoRUp2RTJqZ3g5ek9tdm80?=
+ =?utf-8?B?Qm9BaWFkViswUUNkeFNiZkNLcHFpVkhYVGdrK0x4cGxJNE55azUvRnd1ZlZR?=
+ =?utf-8?B?Rm9pRHU0bElMNS9wb3dlTDZwNFdyWkxXZDVJU3FFV3hxUm5CVUIwWVFxd05F?=
+ =?utf-8?B?NHFFYW5DVERwUzFJU3pCVnNXemx5NDRpMUFGOUZtQmlhVHFYMGZYa2lqeloy?=
+ =?utf-8?B?Z0w5ZG42Y0ZoRGdabmFkdFd5N0FaYlg5VzZHaVhCYkdOMXoyL1cxcEl3OHJv?=
+ =?utf-8?B?YS94ZGJmRVRQZlBncjVxZWlDZDlWRGxPejJsaFlmQWpwN205RklLdmRsd1RE?=
+ =?utf-8?B?czB2Z0pERjkrUE1xckRkNHZvajRUZEdxRE8xbUxTU2dETFdtVkZ2MWdlM3Qy?=
+ =?utf-8?B?YXlndGRDZWdWWXgrY2IyK1NsdXQxVzc0UFkvMVprQVZ3NE9PU0RNV1VuQThy?=
+ =?utf-8?B?ZXRkWnhieXgzUTYza09MOTJiR3luUkg2OUNiN1cxeFg0MG9UbmJ4SEtkZzFZ?=
+ =?utf-8?B?LzlvVlUwZWg1TXZUSG5RbnZIVnRoMEVOUWRYZWtPeGFRcE1mbUFZMUZRMTlk?=
+ =?utf-8?B?cEx2UmJ6UEp4SktLUjF3UHpJZlpUV3lnbXFLdXB0TjF2NGFqMGtIWDczRUt3?=
+ =?utf-8?B?cWNkbmV1L1RyNTR5bjZNK1V6QmJFbDB3SEhRdG5YN3lwR1IyNWdXZlhsUTFQ?=
+ =?utf-8?B?eTFZcXM4N3hOczhlN2U0UDVXeWxKN0RKRjI5WXdPWWRqTmlkcWtTTWtIdmNS?=
+ =?utf-8?B?U3lVRjVsbFBURXRTSUFKcWNVTTJTK2xWSWl4ZEMvUExQVjlINHBxd0hZSWtZ?=
+ =?utf-8?B?ckdsREZzRVZGRUZMeVQyTEIyR2RFME93cXpRNzdaOFBNVUs2MFY4Mkc1dTFl?=
+ =?utf-8?B?UGNCcjNjdEorTk91VnhjeFkzWWhOc1dOUVYvNjJEM3dBWFJNZ3E2ZXpRa1gw?=
+ =?utf-8?B?VVdKdXVybm1lUmtpbTJJSnYvS05Wb3RPYnhZdmF6cWZTUW5tT2VHaHExT0hS?=
+ =?utf-8?B?SmJQb2RVSDN0N25xV1I3UEQyWlZVS3NsKzcrMmlrdTRST2dkWTJZVzBseWxr?=
+ =?utf-8?B?azBvMTN6cWtPNXlqZ1NDVVVrbVY0ekJES3BSczdCVm1hbFJKRHhSWFZacUxh?=
+ =?utf-8?B?SGVFRytWWCtPbDIwa1BWdGNZZjRkL2VCdWIrdDFLeUtNWCtQZjUveENLRDhQ?=
+ =?utf-8?B?RFdHbFU3TnhNc3R1VDlGcnQvY3ZGSTB2MHZsU2ROZDNiNkpVSUl6TmpnU1N5?=
+ =?utf-8?B?ajJEL3pNc3NjYXg4Nk9maC9rWEV0N0h1SHZTcEh3a0hlcjlMeSswbWY2MFY5?=
+ =?utf-8?B?VFU4Z3J0MTM3dHFUUlRDQkdZMWpzeGdqUWlmTlFwSEZ1MEFadzNsTVNsaHMz?=
+ =?utf-8?B?OXJyUTh2VzZmUzVHaU1ib0Znc2UzRmJqRElNU0dwcEJuL0o4a1BiQkdIS1lC?=
+ =?utf-8?B?eXQwWWY3SWtNQWxmMysrRDk5bHlPMW5tamloSVpYYkRkaG9mcmlYUUtXNkhZ?=
+ =?utf-8?B?S0tvelNHazhzaHk5ZXU5MFVUdlFzclp3T2NzUGZxZGFDRGJqUm1JVDZqbm5B?=
+ =?utf-8?B?VW5SS0h2N09IRG9jNjRWYjdhM1NNNTkxeXFtejRIeUlrdnVmV01FbnRtTFZK?=
+ =?utf-8?B?UVpXYWpkKzlPbmZ5NGZrYnk5Z2FHNERFUUV0V2pVRVhQUG5vWW5UTTE2NE1U?=
+ =?utf-8?B?eERVOW1RdzJpdi9JMU96MHE0Q3JHbG1nS3pQS3ZObm9DQVZtc1IvdWZKcnh6?=
+ =?utf-8?B?UkhlOU50d3FRdUVMOHRiRzRJU1ZsaTQvS1RBTkNab21kQmNUYmQzMlAxSlVX?=
+ =?utf-8?B?VXc9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <3E6F1AEB1EBF60429353A1A9B449E71B@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241002014017.3801899-1-david@fromorbit.com> <20241002014017.3801899-5-david@fromorbit.com>
- <Zv5GfY1WS_aaczZM@infradead.org> <Zv5J3VTGqdjUAu1J@infradead.org>
- <20241003115721.kg2caqgj2xxinnth@quack3> <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
- <ZwRvshM65rxXTwxd@dread.disaster.area> <CAOQ4uxgzPM4e=Wc=UVe=rpuug=yaWwu5zEtLJmukJf6d7MUJow@mail.gmail.com>
- <20241008112344.mzi2qjpaszrkrsxg@quack3> <ZwXDzKGj6Bp28kYe@dread.disaster.area>
-In-Reply-To: <ZwXDzKGj6Bp28kYe@dread.disaster.area>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 9 Oct 2024 08:10:30 +0200
-Message-ID: <CAOQ4uxhXOifdohHE+3t-2hznsJfYf0KEy1XEkc653ub2OjeO4A@mail.gmail.com>
-Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert sb->s_inodes
- iteration to super_iter_inodes()
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Linus Torvalds <torvalds@linux-foundation.org>, 
-	Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	kent.overstreet@linux.dev, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@linux.microsoft.com>, 
-	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>, Kees Cook <keescook@chromium.org>, 
-	linux-security-module@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	jw0VcJmwvMpnRddMh8Z6sQKlOS6IXD3CH2EultgIRfla4Kz5fd+Tb/PtgSLFXoAX4JtHGnEo9+KAeS7oOQbB/c2/xhG2YzDYebPeFzuJVly6MG7KIbQUFvIWlCi3IB6WPQDrCkU7tEEJHVXNkrXGn9OQzQRFz+ymImCAIPiNpdY13vHLU7KiO5HpE4CIvRpjJVA2zuCo0uCh187oDVcoXAutBlBzaTe3YNZLPtp1yWB6WJq0GZoMPv32nL2aetTdYRWAuQhEQtc4wjsjI/1ZYwB37omOlN1iElqk31eg6k8SloC/ILmXR8aa+c9a9W3VHIvw+2T2wjNIXU9nA4xND7xUyMgMFj03CsCJr3yqWanqorX0SRhfbrI9Uz7CuTqCF3AIPId2wo8YkA6iQ9Z88nagCcXjz82wY/AD6TYY56CuB4Cua9b9C37Vw5WCSCC9448DEVoP2H/bxEudPxad7KymFPI2iljfMJHeFD/8T/D19J7Vv4sl/n15HbtEn+O6Bakref04ASipyhITDzsfmsozFz3MYAHFpTCMYtrvJWTnU2dNOsLPLlWkQ5DJEcSsal+ozfHeHYaf492zfEihGRep8lY8NOS1JPzKghC0jO19Mv01eKWtQ+prnZwqCo5c
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR04MB8755.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6afa198c-c9b1-44fd-9219-08dce82e07b0
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Oct 2024 06:45:57.4410
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 8vhsXw9Z1mP3lMuHLVQqjZgh957kKguuLT+ADjmHurfolO6nGI42FSxzz3Q1uMoU+0lc/b1zAEkoxWjZtQeZkQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR04MB8221
 
-On Wed, Oct 9, 2024 at 1:44=E2=80=AFAM Dave Chinner <david@fromorbit.com> w=
-rote:
->
-> On Tue, Oct 08, 2024 at 01:23:44PM +0200, Jan Kara wrote:
-> > On Tue 08-10-24 10:57:22, Amir Goldstein wrote:
-> > > On Tue, Oct 8, 2024 at 1:33=E2=80=AFAM Dave Chinner <david@fromorbit.=
-com> wrote:
-> > > >
-> > > > On Mon, Oct 07, 2024 at 01:37:19PM -0700, Linus Torvalds wrote:
-> > > > > On Thu, 3 Oct 2024 at 04:57, Jan Kara <jack@suse.cz> wrote:
-> > > > > >
-> > > > > > Fair enough. If we go with the iterator variant I've suggested =
-to Dave in
-> > > > > > [1], we could combine the evict_inodes(), fsnotify_unmount_inod=
-es() and
-> > > > > > Landlocks hook_sb_delete() into a single iteration relatively e=
-asily. But
-> > > > > > I'd wait with that convertion until this series lands.
-> > > > >
-> > > > > Honza, I looked at this a bit more, particularly with an eye of "=
-what
-> > > > > happens if we just end up making the inode lifetimes subject to t=
-he
-> > > > > dentry lifetimes" as suggested by Dave elsewhere.
-> > > >
-> > > > ....
-> > > >
-> > > > > which makes the fsnotify_inode_delete() happen when the inode is
-> > > > > removed from the dentry.
-> > > >
-> > > > There may be other inode references being held that make
-> > > > the inode live longer than the dentry cache. When should the
-> > > > fsnotify marks be removed from the inode in that case? Do they need
-> > > > to remain until, e.g, writeback completes?
-> > > >
-> > >
-> > > fsnotify inode marks remain until explicitly removed or until sb
-> > > is unmounted (*), so other inode references are irrelevant to
-> > > inode mark removal.
-> > >
-> > > (*) fanotify has "evictable" inode marks, which do not hold inode
-> > > reference and go away on inode evict, but those mark evictions
-> > > do not generate any event (i.e. there is no FAN_UNMOUNT).
-> >
-> > Yes. Amir beat me with the response so let me just add that FS_UMOUNT e=
-vent
-> > is for inotify which guarantees that either you get an event about some=
-body
-> > unlinking the inode (e.g. IN_DELETE_SELF) or event about filesystem bei=
-ng
-> > unmounted (IN_UMOUNT) if you place mark on some inode. I also don't see=
- how
-> > we would maintain this behavior with what Linus proposes.
->
-> Thanks. I didn't respond last night when I read Amir's decription
-> because I wanted to think it over. Knowing where the unmount event
-> requirement certainly helps.
->
-> I am probably missing something important, but it really seems to me
-> that the object reference counting model is the back to
-> front.  Currently the mark is being attached to the inode and then
-> the inode pinned by a reference count to make the mark attached
-> to the inode persistent until unmount. This then requires the inodes
-> to be swept by unmount because fsnotify has effectively leaked them
-> as it isn't tracking such inodes itself.
->
-> [ Keep in mind that I'm not saying this was a bad or wrong thing to
-> do because the s_inodes list was there to be able to do this sort of
-> lazy cleanup. But now that we want to remove the s_inodes list if at
-> all possible, it is a problem we need to solve differently. ]
->
-> AFAICT, inotify does not appear to require the inode to send events
-> - it only requires access to the inode mark itself. Hence it does
-> not the inode in cache to generate IN_UNMOUNT events, it just
-> needs the mark itself to be findable at unmount.  Do any of the
-> other backends that require unmount notifications that require
-> special access to the inode itself?
->
-
-No other backend supports IN_UNMOUNT/FS_UNMOUNT.
-We want to add unmount events support to fanotify, but those are
-only going to be possible for watching a mount or an sb, not inodes.
-
-> If not, and the fsnotify sb info is tracking these persistent marks,
-> then we don't need to iterate inodes at unmount. This means we don't
-> need to pin inodes when they have marks attached, and so the
-> dependency on the s_inodes list goes away.
->
-> With this inverted model, we need the first fsnotify event callout
-> after the inode is instantiated to look for a persistent mark for
-> the inode. We know how to do this efficiently - it's exactly the
-> same caching model we use for ACLs. On the first lookup, we check
-> the inode for ACL data and set the ACL pointer appropriately to
-> indicate that a lookup has been done and there are no ACLs
-> associated with the inode.
->
-> At this point, the fsnotify inode marks can all be removed from the
-> inode when it is being evicted and there's no need for fsnotify to
-> pin inodes at all.
->
-> > > > > Then at umount time, the dentry shrinking will deal with all live
-> > > > > dentries, and at most the fsnotify layer would send the FS_UNMOUN=
-T to
-> > > > > just the root dentry inodes?
-> > > >
-> > > > I don't think even that is necessary, because
-> > > > shrink_dcache_for_umount() drops the sb->s_root dentry after
-> > > > trimming the dentry tree. Hence the dcache drop would cleanup all
-> > > > inode references, roots included.
-> > > >
-> > > > > Wouldn't that make things much cleaner, and remove at least *one*=
- odd
-> > > > > use of the nasty s_inodes list?
-> > > >
-> > > > Yes, it would, but someone who knows exactly when the fsnotify
-> > > > marks can be removed needs to chime in here...
-> >
-> > So fsnotify needs a list of inodes for the superblock which have marks
-> > attached and for which we hold inode reference. We can keep it inside
-> > fsnotify code although it would practically mean another list_head for =
-the
-> > inode for this list (probably in our fsnotify_connector structure which
-> > connects list of notification marks to the inode).
->
-> I don't think that is necessary. We need to get rid of the inode
-> reference, not move where we track inode references. The persistent
-> object is the fsnotify mark, not the cached inode. It's the mark
-> that needs to be persistent, and that's what the fsnotify code
-> should be tracking.
->
-> The fsnotify marks are much smaller than inodes, and there going to
-> be fewer cached marks than inodes, especially once inode pinning is
-> removed. Hence I think this will result in a net reduction in memory
-> footprint for "marked-until-unmount" configurations as we won't pin
-> nearly as many inodes in cache...
->
-
-It is a feasible design which has all the benefits that you listed.
-But it is a big change, just to get away from s_inodes
-(much easier to maintain a private list of pinned inodes).
-
-inotify (recursive tree watches for that matter) has been
-inefficient that way for a long time, and users now have less
-memory hogging solutions like fanotify mount and sb marks.
-granted, not unprivileged users, but still.
-
-So there needs to be a good justification to make this design change.
-One such justification would be to provide the infrastructure to
-the feature that Jan referred to as the "holy grail" in his LPC talk,
-namely, subtree watches.
-
-If we introduce code that looks up persistent "mark rules" on
-inode instantiation, then we could use it to "reconnect" inotify
-persistent inode marks (by ino/fid) or to establish automatic
-marks based on subtree/path based rules.
-
-audit code has something that resembles this and I suspect that
-this Landlock is doing something similar (?), but I didn't check.
-path based rules are always going to be elusive and tricky and
-Al is always going to hate them ;)
-
-Bottom line - good idea, not easy, requires allocating development resource=
-s.
-
-Thanks,
-Amir.
+T24gMDgvMTAvMjAyNCAxOToxMSwgRGFycmljayBKLiBXb25nIHdyb3RlOg0KPiBPbiBUdWUsIE9j
+dCAwOCwgMjAyNCBhdCAxMDo1MjowNEFNICswMDAwLCBIYW5zIEhvbG1iZXJnIHdyb3RlOg0KPj4g
+RnJvbTogSGFucyBIb2xtYmVyZyA8SGFucy5Ib2xtYmVyZ0B3ZGMuY29tPg0KPj4NCj4+IFRoZXNl
+IHRlc3QgY2FzZXMgc3BlY2lmeSBzbWFsbCAtZCBzaXplcyB3aGljaCBjb21iaW5lZCB3aXRoIGEg
+cnQgZGV2IG9mDQo+PiB1bnJlc3RyaWN0ZWQgc2l6ZSBhbmQgdGhlIHJ0cm1hcCBmZWF0dXJlIGNh
+biBjYXVzZSBta2ZzIHRvIGZhaWwgd2l0aA0KPj4gZXJyb3I6DQo+Pg0KPj4gbWtmcy54ZnM6IGNh
+bm5vdCBoYW5kbGUgZXhwYW5zaW9uIG9mIHJlYWx0aW1lIHJtYXAgYnRyZWU7IG5lZWQgPHg+IGZy
+ZWUNCj4+IGJsb2NrcywgaGF2ZSA8eT4NCj4+DQo+PiBUaGlzIGlzIGR1ZSB0byB0aGF0IHRoZSAt
+ZCBzaXplIGlzIG5vdCBiaWcgZW5vdWdoIHRvIHN1cHBvcnQgdGhlDQo+PiBtZXRhZGF0YSBzcGFj
+ZSBhbGxvY2F0aW9uIHJlcXVpcmVkIGZvciB0aGUgcnQgZ3JvdXBzLg0KPj4NCj4+IFN3aXRjaCB0
+byB1c2UgX3NjcmF0Y2hfbWtmc19zaXplZCB0aGF0IHNldHMgdXAgdGhlIC1yIHNpemUgcGFyYW1l
+dGVyDQo+PiB0byBhdm9pZCB0aGlzLiBJZiAtciBzaXplPXggYW5kIC1kIHNpemU9eCB3ZSB3aWxs
+IG5vdCByaXNrIHJ1bm5pbmcNCj4+IG91dCBvZiBzcGFjZSBvbiB0aGUgZGRldiBhcyB0aGUgbWV0
+YWRhdGEgc2l6ZSBpcyBqdXN0IGEgZnJhY3Rpb24gb2YNCj4+IHRoZSBydCBkYXRhIHNpemUuDQo+
+Pg0KPj4gU2lnbmVkLW9mZi1ieTogSGFucyBIb2xtYmVyZyA8aGFucy5ob2xtYmVyZ0B3ZGMuY29t
+Pg0KPj4gU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+PiAt
+LS0NCj4+ICB0ZXN0cy94ZnMvMTU3IHwgMTIgKysrKysrKystLS0tDQo+PiAgdGVzdHMveGZzLzU0
+NyB8ICA0ICsrKy0NCj4+ICB0ZXN0cy94ZnMvNTQ4IHwgIDIgKy0NCj4+ICAzIGZpbGVzIGNoYW5n
+ZWQsIDEyIGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pDQo+Pg0KPj4gZGlmZiAtLWdpdCBh
+L3Rlc3RzL3hmcy8xNTcgYi90ZXN0cy94ZnMvMTU3DQo+PiBpbmRleCA3OWQ0NWFjMmJiMzQuLjli
+NWJhZGJhZWIzYyAxMDA3NTUNCj4+IC0tLSBhL3Rlc3RzL3hmcy8xNTcNCj4+ICsrKyBiL3Rlc3Rz
+L3hmcy8xNTcNCj4+IEBAIC0zNCwxOCArMzQsMjEgQEAgX3JlcXVpcmVfdGVzdA0KPj4gIF9yZXF1
+aXJlX3NjcmF0Y2hfbm9jaGVjaw0KPj4gIF9yZXF1aXJlX2NvbW1hbmQgIiRYRlNfQURNSU5fUFJP
+RyIgInhmc19hZG1pbiINCj4+ICANCj4+ICsNCj4+ICAjIENyZWF0ZSBzb21lIGZha2Ugc3BhcnNl
+IGZpbGVzIGZvciB0ZXN0aW5nIGV4dGVybmFsIGRldmljZXMgYW5kIHdoYXRub3QNCj4+ICtmc19z
+aXplPSQoKDUwMCAqIDEwMjQgKiAxMDI0KSkNCj4+ICsNCj4+ICBmYWtlX2RhdGFmaWxlPSRURVNU
+X0RJUi8kc2VxLnNjcmF0Y2guZGF0YQ0KPj4gIHJtIC1mICRmYWtlX2RhdGFmaWxlDQo+PiAtdHJ1
+bmNhdGUgLXMgNTAwbSAkZmFrZV9kYXRhZmlsZQ0KPj4gK3RydW5jYXRlIC1zICRmc19zaXplICRm
+YWtlX2RhdGFmaWxlDQo+PiAgDQo+PiAgZmFrZV9sb2dmaWxlPSRURVNUX0RJUi8kc2VxLnNjcmF0
+Y2gubG9nDQo+PiAgcm0gLWYgJGZha2VfbG9nZmlsZQ0KPj4gLXRydW5jYXRlIC1zIDUwMG0gJGZh
+a2VfbG9nZmlsZQ0KPj4gK3RydW5jYXRlIC1zICRmc19zaXplICRmYWtlX2xvZ2ZpbGUNCj4+ICAN
+Cj4+ICBmYWtlX3J0ZmlsZT0kVEVTVF9ESVIvJHNlcS5zY3JhdGNoLnJ0DQo+PiAgcm0gLWYgJGZh
+a2VfcnRmaWxlDQo+PiAtdHJ1bmNhdGUgLXMgNTAwbSAkZmFrZV9ydGZpbGUNCj4+ICt0cnVuY2F0
+ZSAtcyAkZnNfc2l6ZSAkZmFrZV9ydGZpbGUNCj4+ICANCj4+ICAjIFNhdmUgdGhlIG9yaWdpbmFs
+IHZhcmlhYmxlcw0KPj4gIG9yaWdfZGRldj0kU0NSQVRDSF9ERVYNCj4+IEBAIC02Myw3ICs2Niw4
+IEBAIHNjZW5hcmlvKCkgew0KPj4gIH0NCj4+ICANCj4+ICBjaGVja19sYWJlbCgpIHsNCj4+IC0J
+X3NjcmF0Y2hfbWtmcyAtTCBvbGRsYWJlbCA+PiAkc2VxcmVzLmZ1bGwNCj4+ICsJTUtGU19PUFRJ
+T05TPSItTCBvbGRsYWJlbCAkTUtGU19PUFRJT05TIiBfc2NyYXRjaF9ta2ZzX3NpemVkICRmc19z
+aXplIFwNCj4+ICsJCT4+ICRzZXFyZXMuZnVsbA0KPiANCj4gSSB3YXMgc3VycHJpc2VkIHRoYXQg
+dGhpcyB3YXMgbmVjZXNzYXJ5IHVudGlsIEkgcmVtZW1iZXJlZCB0aGF0IHRoaXMNCj4gdGVzdCBj
+aGVja3MgdmFyaW91cyAqY29tYmluYXRpb25zKiBvZiBibG9jayBkZXZpY2VzIGFuZCA1MDBNIGZp
+bGVzLg0KPiBUaGUgYmxvY2sgZGV2aWNlIGNhbiBiZSBxdWl0ZSBsYXJnZSwgc28gdGhhdCdzIHdo
+eSB5b3Ugd2FudA0KPiBfc2NyYXRjaF9ta2ZzX3NpemVkIHRvIGZvcmNlIHRoZSBzaXplIG9mIGJv
+dGggc2VjdGlvbnMgdG8gNTAwTS4NCg0KWWVhaCwgZXhhY3RseS4NCg0KPiBIZWgsIG9vcHMuICBN
+eSBiYWQsIEkgc2hvdWxkIGhhdmUgY2F1Z2h0IHRoYXQuIDooDQoNClRoaXMgd2FzIGEgdHJpY2t5
+IG9uZSwgYnV0IHRoZSBmaXggc3RyYWlnaHQtZm9yd2FyZCA6KQ0KDQpUaGFua3MsDQpIYW5zDQoN
+Cg0KPiANCj4+ICAJX3NjcmF0Y2hfeGZzX2RiIC1jIGxhYmVsDQo+PiAgCV9zY3JhdGNoX3hmc19h
+ZG1pbiAtTCBuZXdsYWJlbCAiJEAiID4+ICRzZXFyZXMuZnVsbA0KPj4gIAlfc2NyYXRjaF94ZnNf
+ZGIgLWMgbGFiZWwNCj4+IGRpZmYgLS1naXQgYS90ZXN0cy94ZnMvNTQ3IGIvdGVzdHMveGZzLzU0
+Nw0KPj4gaW5kZXggZWFkYTRhYWRjMjdmLi5mZmFjNTQ2YmU0Y2QgMTAwNzU1DQo+PiAtLS0gYS90
+ZXN0cy94ZnMvNTQ3DQo+PiArKysgYi90ZXN0cy94ZnMvNTQ3DQo+PiBAQCAtMjQsMTAgKzI0LDEy
+IEBAIF9yZXF1aXJlX3hmc19kYl9jb21tYW5kIHBhdGgNCj4+ICBfcmVxdWlyZV90ZXN0X3Byb2dy
+YW0gInB1bmNoLWFsdGVybmF0aW5nIg0KPj4gIF9yZXF1aXJlX3hmc19pb19lcnJvcl9pbmplY3Rp
+b24gImJtYXBfYWxsb2NfbWlubGVuX2V4dGVudCINCj4+ICANCj4+ICtmc19zaXplPSQoKDUxMiAq
+IDEwMjQgKiAxMDI0KSkNCj4+ICsNCj4+ICBmb3IgbnJleHQ2NCBpbiAwIDE7IGRvDQo+PiAgCWVj
+aG8gIiogVmVyaWZ5IGV4dGVudCBjb3VudGVyIGZpZWxkcyB3aXRoIG5yZXh0NjQ9JHtucmV4dDY0
+fSBvcHRpb24iDQo+PiAgDQo+PiAtCV9zY3JhdGNoX21rZnMgLWkgbnJleHQ2ND0ke25yZXh0NjR9
+IC1kIHNpemU9JCgoNTEyICogMTAyNCAqIDEwMjQpKSBcDQo+PiArCU1LRlNfT1BUSU9OUz0iLWkg
+bnJleHQ2ND0ke25yZXh0NjR9ICRNS0ZTX09QVElPTlMiIF9zY3JhdGNoX21rZnNfc2l6ZWQgJGZz
+X3NpemUgXA0KPj4gIAkJICAgICAgPj4gJHNlcXJlcy5mdWxsDQo+PiAgCV9zY3JhdGNoX21vdW50
+ID4+ICRzZXFyZXMuZnVsbA0KPj4gIA0KPj4gZGlmZiAtLWdpdCBhL3Rlc3RzL3hmcy81NDggYi90
+ZXN0cy94ZnMvNTQ4DQo+PiBpbmRleCBmMGI1ODU2M2U2NGQuLmFmNzI4ODVhOWM2ZSAxMDA3NTUN
+Cj4+IC0tLSBhL3Rlc3RzL3hmcy81NDgNCj4+ICsrKyBiL3Rlc3RzL3hmcy81NDgNCj4+IEBAIC0y
+NCw3ICsyNCw3IEBAIF9yZXF1aXJlX3hmc19kYl9jb21tYW5kIHBhdGgNCj4+ICBfcmVxdWlyZV90
+ZXN0X3Byb2dyYW0gInB1bmNoLWFsdGVybmF0aW5nIg0KPj4gIF9yZXF1aXJlX3hmc19pb19lcnJv
+cl9pbmplY3Rpb24gImJtYXBfYWxsb2NfbWlubGVuX2V4dGVudCINCj4+ICANCj4+IC1fc2NyYXRj
+aF9ta2ZzIC1kIHNpemU9JCgoNTEyICogMTAyNCAqIDEwMjQpKSA+PiAkc2VxcmVzLmZ1bGwNCj4+
+ICtfc2NyYXRjaF9ta2ZzX3NpemVkICQoKDUxMiAqIDEwMjQgKiAxMDI0KSkgPj4gJHNlcXJlcy5m
+dWxsDQo+IA0KPiBUaGVzZSBvdGhlciB0d28gYXJlIHByZXR0eSBzZWxmIGV2aWRlbnQgc28NCj4g
+UmV2aWV3ZWQtYnk6IERhcnJpY2sgSi4gV29uZyA8ZGp3b25nQGtlcm5lbC5vcmc+DQo+IA0KPiAt
+LUQNCj4gDQo+PiAgX3NjcmF0Y2hfbW91bnQgPj4gJHNlcXJlcy5mdWxsDQo+PiAgDQo+PiAgYnNp
+emU9JChfZ2V0X2ZpbGVfYmxvY2tfc2l6ZSAkU0NSQVRDSF9NTlQpDQo+PiAtLSANCj4+IDIuMzQu
+MQ0KPj4NCj4gDQoNCg==
