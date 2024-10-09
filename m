@@ -1,46 +1,91 @@
-Received: from smtp-190d.mail.infomaniak.ch (smtp-190d.mail.infomaniak.ch [185.125.25.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC1E418F2E3
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Oct 2024 09:29:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.25.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC92328EF;
+	Wed,  9 Oct 2024 09:49:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728466176; cv=none; b=gFuXhXDAGk4mIxx/X0zeAY2FLk0IBVrhBCt/A5GowF7EU73VsEy0a7LqeQQvr1HpcYLQz98Jw0APBK4oDiCm4L916lTLCoG3EhWVwt5deyvKTsGI1nBhuLVj24GobKj8I/y8pRZj77/iOGr3GgdZgXFSx+v2bcXhR8PnU8HhXwI=
+	t=1728467350; cv=none; b=I7Eisqkjh4fUb277+4vjSkGeKgJ90HHSZjrTrEVtZUoDdj1qho4FgGWOKzB1h6Uyzsh8mGvA++LaQbYpmCTyJJMNEtFV/g+/99MYXtCxeREENzAwSEOmsQ6ut6vANrSkcAAYl15G3mYV9fJqaTTU2mYV060BZy8OQauWl94LA14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728466176; c=relaxed/simple;
-	bh=ONtueM1gqREWHqmOIvRzqtdC3Krgfse7HXNTxHKZ38M=;
+	s=arc-20240116; t=1728467350; c=relaxed/simple;
+	bh=eh4BxI52PQAK5fm5qC88knwJADaCMCLFIaEWxNMBKoM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RoZMEmAx9fAUV6giCOXLrcVYKOxe99Ww1Y6Eaf0SXrkxSCqsgqfMR4mr6OijEVkaI6B4awmDBIGoHP5H4r3BTTYMAFCaMSIKmmFvnnjbHUGNzEgGu1tU38DjVrXAdtoDJ1J5z9l9/GlEwTG6xdeihXDB+TkAXS5ibiKiZNXk5Bo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=digikod.net; spf=pass smtp.mailfrom=digikod.net; dkim=pass (1024-bit key) header.d=digikod.net header.i=@digikod.net header.b=t43BIip7; arc=none smtp.client-ip=185.125.25.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=digikod.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=digikod.net
+	 Content-Type:Content-Disposition:In-Reply-To; b=roa6csdQkFxrEYpZDl7Y05Kb22zvB+k8I+DZ0ZDaczTHm+0GZZ/Y/hm8AQBLvYHnM1kSIQZco954UMd6SEr0Mb7Q4z8BMkcXNto3fwJ9m4OD943X8Dgfv/PIAuC0esPG1us2wmv23mMtvAgZ4y23iSKl/eUlxlIsmjoSfZj72q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=j+mCq6vY; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=L+MgORri; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=j+mCq6vY; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=L+MgORri; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=digikod.net header.i=@digikod.net header.b="t43BIip7"
-Received: from smtp-4-0000.mail.infomaniak.ch (unknown [IPv6:2001:1600:7:10:40ca:feff:fe05:0])
-	by smtp-4-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4XNnVn5rf8zmZT;
-	Wed,  9 Oct 2024 11:23:13 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=digikod.net;
-	s=20191114; t=1728465793;
-	bh=9XSgRXbHiCpJWmwmNiOoFAhALnNoTndsEpArLPQ0BE0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=t43BIip7VaLyq7+fs5XgJmklzq0feIE2XM2ftXWXeEE88/ACSDLS9RZ0ItFHZ0I8c
-	 sbDuql08eOZ9rIXDneggHKjfl2H4Kd2gB4oUvsH+RVKDBRli0W5TEfM8DCHe+KnuWw
-	 65T9TnC+2qlltFJEcyZeyEqha6Q57gQxHOUWPxn8=
-Received: from unknown by smtp-4-0000.mail.infomaniak.ch (Postfix) with ESMTPA id 4XNnVj2fnLzgMT;
-	Wed,  9 Oct 2024 11:23:09 +0200 (CEST)
-Date: Wed, 9 Oct 2024 11:23:06 +0200
-From: =?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
-	Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	kent.overstreet@linux.dev, Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>, 
-	Kees Cook <keescook@chromium.org>, linux-security-module@vger.kernel.org, 
-	Amir Goldstein <amir73il@gmail.com>, =?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>, 
-	Christian Brauner <brauner@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="j+mCq6vY";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="L+MgORri";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="j+mCq6vY";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="L+MgORri"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 186DB1FB93;
+	Wed,  9 Oct 2024 09:49:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1728467347; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=i2qdj0Nc8sTi+dG8p4WXxx/mzAKRX5B8QIkHtbq6ptU=;
+	b=j+mCq6vYSQXmGdJs1sZBPLyqdZvd0QBxNAJqW+0x87Qcgbt19i2gG+9A81/3++u6wRCU+9
+	m7CB2sOSLYdz/Onx1ufSgH1PR8BMOu7rH82eksGdAao39CMrqX/NsylyMxb1XjYotyBv9/
+	DTT6NEtE287SlTqaGbHpdLL5XCUMeEU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1728467347;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=i2qdj0Nc8sTi+dG8p4WXxx/mzAKRX5B8QIkHtbq6ptU=;
+	b=L+MgORrigHEYPjH9RYa+KbOcnIOChPh03lkHOxD8n+7i9LfAQ0yCjEFp3Peds44o07gqtd
+	XWVYh3K+gCbCmiCQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1728467347; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=i2qdj0Nc8sTi+dG8p4WXxx/mzAKRX5B8QIkHtbq6ptU=;
+	b=j+mCq6vYSQXmGdJs1sZBPLyqdZvd0QBxNAJqW+0x87Qcgbt19i2gG+9A81/3++u6wRCU+9
+	m7CB2sOSLYdz/Onx1ufSgH1PR8BMOu7rH82eksGdAao39CMrqX/NsylyMxb1XjYotyBv9/
+	DTT6NEtE287SlTqaGbHpdLL5XCUMeEU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1728467347;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=i2qdj0Nc8sTi+dG8p4WXxx/mzAKRX5B8QIkHtbq6ptU=;
+	b=L+MgORrigHEYPjH9RYa+KbOcnIOChPh03lkHOxD8n+7i9LfAQ0yCjEFp3Peds44o07gqtd
+	XWVYh3K+gCbCmiCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0B7FB13A58;
+	Wed,  9 Oct 2024 09:49:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ewvLApNRBmfwZwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 09 Oct 2024 09:49:07 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id BA7A0A0851; Wed,  9 Oct 2024 11:49:06 +0200 (CEST)
+Date: Wed, 9 Oct 2024 11:49:06 +0200
+From: Jan Kara <jack@suse.cz>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, kent.overstreet@linux.dev,
+	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@linux.microsoft.com>,
+	Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>,
+	Kees Cook <keescook@chromium.org>,
+	linux-security-module@vger.kernel.org,
+	Amir Goldstein <amir73il@gmail.com>
 Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
  sb->s_inodes iteration to super_iter_inodes()
-Message-ID: <20241009.ahqu6AeW3cow@digikod.net>
+Message-ID: <20241009094906.m3e2ye4oo7qhhbax@quack3>
 References: <20241002014017.3801899-1-david@fromorbit.com>
  <20241002014017.3801899-5-david@fromorbit.com>
  <Zv5GfY1WS_aaczZM@infradead.org>
@@ -49,161 +94,68 @@ References: <20241002014017.3801899-1-david@fromorbit.com>
  <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
  <ZwRvshM65rxXTwxd@dread.disaster.area>
  <CAHk-=wi5ZpW73nLn5h46Jxcng6wn_bCUxj6JjxyyEMAGzF5KZg@mail.gmail.com>
- <20241008.Pohc0dixeiZ8@digikod.net>
- <ZwXMdqxz5PWNjW3C@dread.disaster.area>
+ <CAHk-=wgW0RspdggU630JYUe5CyzNi5MHT4UEfx2+yZKoeezawg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZwXMdqxz5PWNjW3C@dread.disaster.area>
-X-Infomaniak-Routing: alpha
+In-Reply-To: <CAHk-=wgW0RspdggU630JYUe5CyzNi5MHT4UEfx2+yZKoeezawg@mail.gmail.com>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_COUNT_THREE(0.00)[3];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[fromorbit.com,suse.cz,infradead.org,vger.kernel.org,linux.dev,linux.microsoft.com,google.com,hallyn.com,chromium.org,gmail.com];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email]
+X-Spam-Score: -3.80
+X-Spam-Flag: NO
 
-On Wed, Oct 09, 2024 at 11:21:10AM +1100, Dave Chinner wrote:
-> On Tue, Oct 08, 2024 at 02:59:07PM +0200, Mickaël Salaün wrote:
-> > On Mon, Oct 07, 2024 at 05:28:57PM -0700, Linus Torvalds wrote:
-> > > On Mon, 7 Oct 2024 at 16:33, Dave Chinner <david@fromorbit.com> wrote:
-> > > >
-> > > > There may be other inode references being held that make
-> > > > the inode live longer than the dentry cache. When should the
-> > > > fsnotify marks be removed from the inode in that case? Do they need
-> > > > to remain until, e.g, writeback completes?
-> > > 
-> > > Note that my idea is to just remove the fsnotify marks when the dentry
-> > > discards the inode.
-> > > 
-> > > That means that yes, the inode may still have a lifetime after the
-> > > dentry (because of other references, _or_ just because I_DONTCACHE
-> > > isn't set and we keep caching the inode).
-> > > 
-> > > BUT - fsnotify won't care. There won't be any fsnotify marks on that
-> > > inode any more, and without a dentry that points to it, there's no way
-> > > to add such marks.
-> > > 
-> > > (A new dentry may be re-attached to such an inode, and then fsnotify
-> > > could re-add new marks, but that doesn't change anything - the next
-> > > time the dentry is detached, the marks would go away again).
-> > > 
-> > > And yes, this changes the timing on when fsnotify events happen, but
-> > > what I'm actually hoping for is that Jan will agree that it doesn't
-> > > actually matter semantically.
-> > > 
-> > > > > Then at umount time, the dentry shrinking will deal with all live
-> > > > > dentries, and at most the fsnotify layer would send the FS_UNMOUNT to
-> > > > > just the root dentry inodes?
-> > > >
-> > > > I don't think even that is necessary, because
-> > > > shrink_dcache_for_umount() drops the sb->s_root dentry after
-> > > > trimming the dentry tree. Hence the dcache drop would cleanup all
-> > > > inode references, roots included.
-> > > 
-> > > Ahh - even better.
-> > > 
-> > > I didn't actually look very closely at the actual umount path, I was
-> > > looking just at the fsnotify_inoderemove() place in
-> > > dentry_unlink_inode() and went "couldn't we do _this_ instead?"
-> > > 
-> > > > > Wouldn't that make things much cleaner, and remove at least *one* odd
-> > > > > use of the nasty s_inodes list?
-> > > >
-> > > > Yes, it would, but someone who knows exactly when the fsnotify
-> > > > marks can be removed needs to chime in here...
-> > > 
-> > > Yup. Honza?
-> > > 
-> > > (Aside: I don't actually know if you prefer Jan or Honza, so I use
-> > > both randomly and interchangeably?)
-> > > 
-> > > > > I have this feeling that maybe we can just remove the other users too
-> > > > > using similar models. I think the LSM layer use (in landlock) is bogus
-> > > > > for exactly the same reason - there's really no reason to keep things
-> > > > > around for a random cached inode without a dentry.
-> > > >
-> > > > Perhaps, but I'm not sure what the landlock code is actually trying
-> > > > to do.
-> > 
-> > In Landlock, inodes (see landlock_object) may be referenced by several
-> > rulesets, either tied to a task's cred or a ruleset's file descriptor.
-> > A ruleset may outlive its referenced inodes, and this should not block
-> > related umounts.  security_sb_delete() is used to gracefully release
-> > such references.
+On Mon 07-10-24 17:54:16, Linus Torvalds wrote:
+> On Mon, 7 Oct 2024 at 17:28, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> >
+> > And yes, this changes the timing on when fsnotify events happen, but
+> > what I'm actually hoping for is that Jan will agree that it doesn't
+> > actually matter semantically.
 > 
-> Ah, there's the problem. The ruleset is persistent, not the inode.
-> Like fsnotify, the life cycle and reference counting is upside down.
-> The inode should cache the ruleset rather than the ruleset pinning
-> the inode.
-
-A ruleset needs to takes a reference to the inode as for an opened file
-and keep it "alive" as long as it may be re-used by user space (i.e. as
-long as the superblock exists).  One of the goal of a ruleset is to
-identify inodes as long as they are accessible.  When a sandboxed
-process request to open a file, its sandbox's ruleset checks against the
-referenced inodes (in a nutshell).
-
-In practice, rulesets reference a set of struct landlock_object which
-references an inode or not (if it vanished).  There is only one
-landlock_object referenced per inode.  This makes it possible to have a
-dynamic N:M mapping between rulesets and inodes which enables a ruleset
-to be deleted before its referenced inodes, or the other way around.
-
+> .. and yes, I realize it might actually matter. fsnotify does do
+> 'ihold()' to hold an inode ref, and with this that would actually be
+> more or less pointless, because the mark would be removed _despite_
+> such a ref.
 > 
-> See my reply to Jan about fsnotify.
-> 
-> > > Yeah, I wouldn't be surprised if it's just confused - it's very odd.
-> > > 
-> > > But I'd be perfectly happy just removing one use at a time - even if
-> > > we keep the s_inodes list around because of other users, it would
-> > > still be "one less thing".
-> > > 
-> > > > Hence, to me, the lifecycle and reference counting of inode related
-> > > > objects in landlock doesn't seem quite right, and the use of the
-> > > > security_sb_delete() callout appears to be papering over an internal
-> > > > lifecycle issue.
-> > > >
-> > > > I'd love to get rid of it altogether.
-> > 
-> > I'm not sure to fully understand the implications for now, but it would
-> > definitely be good to simplify this lifetime management.  The only
-> > requirement for Landlock is that inodes references should live as long
-> > as the related inodes are accessible by user space or already in use.
-> > The sooner these references are removed from related ruleset, the
-> > better.
-> 
-> I'm missing something.  Inodes are accessible to users even when
-> they are not in cache - we just read them from disk and instantiate
-> a new VFS inode.
-> 
-> So how do you attach the correct ruleset to a newly instantiated
-> inode?
+> So maybe it's not an option to do what I suggested. I don't know the
+> users well enough.
 
-We can see a Landlock ruleset as a set of weakly opened files/inodes.  A
-Landolck ruleset call iget() to keep the related VFS inodes alive, which
-means that when user space opens a file pointing to the same inode, the
-same VFS inode will be re-used and then we can match it against a ruleset.
+Yeah, we need to keep the notification mark alive either until the inode is
+deleted or until the filesystem is unmounted to maintain behavior of
+inotify and fanotify APIs.
 
-> 
-> i.e. If you can find the ruleset for any given inode that is brought
-> into cache (e.g. opening an existing, uncached file), then why do
-> you need to take inode references so they are never evicted?
+That being said we could rework lifetime rules inside fsnotify subsystem as
+Dave suggests so that fsnotify would not pin inodes, detach it's structures
+from inodes on inode reclaim and associate notification marks with inodes
+when they are loaded from disk.  But it's a relatively big overhaul.
 
-A landlock_object only keep a reference to an inode, not to the rulesets
-pointing to it:
-* inode -> 1 landlock_object or NULL
-* landlock_object -> 1 inode or NULL
-* ruleset -> N landlock_object
-
-There are mainly two different operations:
-1. Match 1 inode against a set of N inode references (i.e. a ruleset).
-2. Drop the references of N rulesets (in practice 1 intermediate
-   landlock_object) pointing to 1 inode.
-
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
