@@ -1,30 +1,45 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 711A219A281;
-	Wed,  9 Oct 2024 12:43:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0871B1991B5
+	for <linux-xfs@vger.kernel.org>; Wed,  9 Oct 2024 12:44:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728477801; cv=none; b=BHTDh6+/Zos5lvOtXOoW2JzZNdTqfxvK9M8tKo9bCCZTZfACvkDXh7QYkkQmF32lrHdqMHsCbd44RGBzj3VYR5P1DFAbyHhSLpdF+z8doRWvOMyc4OKbs8ks3DecTUmnkTxd27D9jBztKK5q5sGZ+IvWbhM09R2TXOBCPWNL5J0=
+	t=1728477891; cv=none; b=pH+Q8SdV6Xxer/dYaTqYLHK5qobIYviANA7jEp/UbayA0CmCg1Qpp/cp/RMWcCApJTmd1TDFEunn//Zihu0pT4VV46SIKYSKTQL+r49gk+fIKtT+22SJyN0Fh45rcOZDpzWjJOhdJ0x69V+wGLPYlesVVWVHW9xhS4CWlI9lxf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728477801; c=relaxed/simple;
-	bh=eMRXjPsz8XzwTaVo9nRgYPhHgFEuEXmk2EkxSa/XP7c=;
+	s=arc-20240116; t=1728477891; c=relaxed/simple;
+	bh=zkPC7fvoDHO8JnnqQ4iNTt2piII8I73fYjyaYLsceOM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FHS+ZGTNgGJlmKvR38fNczsTDrDZbUaQiEfKnb6x3BnNwEU4QdiY0QqO2/VL/j07OiXUTpPnlbLYVe3CHnAMp4Qu3lxH7JMAuszLRe3ldalHq34YAkA6Gf1pLV47aHsGMdL0zRirBKLt6dzXhr1vW2ENDGHMyUGVqyYajdwMslw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 591F7227A8E; Wed,  9 Oct 2024 14:43:16 +0200 (CEST)
-Date: Wed, 9 Oct 2024 14:43:16 +0200
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=W1rOzB7BoFJSxoz3wLQz3EPXg4Ji7nlCfNP+G1tP50VUizi8sBYrBK2spX6ZWo554C+MPffcdEhW4/AsUXPKWVo5y6E+tPaMiw9QVW2Yu3cFAtvBJEHC77xKJfLNMTs1oGwxbexNSQWtNNQTkiStw587jTzPuHebRN/WdQV9sLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Y+fpZTKw; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y+fpZTKw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=zkPC7fvoDHO8JnnqQ4iNTt2piII8I73fYjyaYLsceOM=; b=Y+fpZTKwSw1EvIPg9gbY9dxBRq
+	RMYN3YLR/3gEb5/YnhSxzChh1EN3/feIc+J483OInGY3S9mnn825kF7LfV41bXNACm+VcQWGcUVEq
+	l20lj5iRllmvkkCHdRTRxjUX7pjupWn8RKFqKNtOjk9laZlQFFu75+IWsvOwoZ7kl2wQXZhu7p/8u
+	4g4InC6uY7rxPt4+KK4acOvszwav5/LN+TRjsBK4aweVxsIqlgadWSvLdfUuOtoxOQzpJ4JACrzDI
+	spAVy7An7ja2KcW7L4bPna/n3frreA3gqtO09tzguY2mSEynwIFxgxRtKxsLZ2d5PHnRIkbOw+eCf
+	Rr+N7XRg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1syW3d-00000009G6t-2GCF;
+	Wed, 09 Oct 2024 12:44:49 +0000
+Date: Wed, 9 Oct 2024 05:44:49 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, zlang@kernel.org, djwong@kernel.org,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: test log recovery for extent frees right after
- growfs
-Message-ID: <20241009124316.GB21408@lst.de>
-References: <20240910043127.3480554-1-hch@lst.de> <ZuBVhszqs-fKmc9X@bfoster> <20240910151053.GA22643@lst.de> <ZuBwKQBMsuV-dp18@bfoster> <ZwVdtXUSwEXRpcuQ@bfoster> <20241009080451.GA16822@lst.de> <ZwZ4oviaUHI4Ed6Z@bfoster>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	djwong@kernel.org, sandeen@sandeen.net
+Subject: Re: [RFC 2/4] xfs: transaction support for sb_agblocks updates
+Message-ID: <ZwZ6wduuxvpE_Nqy@infradead.org>
+References: <20241008131348.81013-1-bfoster@redhat.com>
+ <20241008131348.81013-3-bfoster@redhat.com>
+ <ZwY5TGnmqq91xsSJ@infradead.org>
+ <ZwZ5KGHKyrmBJxkj@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,12 +48,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZwZ4oviaUHI4Ed6Z@bfoster>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <ZwZ5KGHKyrmBJxkj@bfoster>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Oct 09, 2024 at 08:35:46AM -0400, Brian Foster wrote:
-> Ok, so then what happened? :) Are there outstanding patches somewhere to
-> fix this problem? If so, I can give it a test with this.
+On Wed, Oct 09, 2024 at 08:38:00AM -0400, Brian Foster wrote:
+> Ok, got a link to that fix?
 
-Yes, "fix recovery of allocator ops after a growfs" from Sep 30.
+https://lore.kernel.org/linux-xfs/20240930164211.2357358-1-hch@lst.de/
+
+> Is this the same as for that growfs related fstest?
+
+Yes.
 
