@@ -1,146 +1,209 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from smtp-190d.mail.infomaniak.ch (smtp-190d.mail.infomaniak.ch [185.125.25.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09A3D175D4C;
-	Wed,  9 Oct 2024 08:27:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC1E418F2E3
+	for <linux-xfs@vger.kernel.org>; Wed,  9 Oct 2024 09:29:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.25.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728462467; cv=none; b=N5eKUoA0e+8556QQ82gl52/OHcuEMG3wVjXBfpUvH7+pgj+fe7PQGpouzxd4HeGKmI7Pp+XWQbU0uqCi8Qx48bh5Bis1Z1vHaByoxAJeiB7I4FbuG/aWIBPpGTRrGlirSlvAAhSVcg8ye8Idx3ynvGB4VlCV5kA6txioqv3VtBQ=
+	t=1728466176; cv=none; b=gFuXhXDAGk4mIxx/X0zeAY2FLk0IBVrhBCt/A5GowF7EU73VsEy0a7LqeQQvr1HpcYLQz98Jw0APBK4oDiCm4L916lTLCoG3EhWVwt5deyvKTsGI1nBhuLVj24GobKj8I/y8pRZj77/iOGr3GgdZgXFSx+v2bcXhR8PnU8HhXwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728462467; c=relaxed/simple;
-	bh=2FpFUMarsu8M9dnnDu129HfHD3t925/h1nSZ+wj/9Zg=;
+	s=arc-20240116; t=1728466176; c=relaxed/simple;
+	bh=ONtueM1gqREWHqmOIvRzqtdC3Krgfse7HXNTxHKZ38M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kuzb+9+Bs9nB2bO4TNJeqpYjblsuca44rvWSruY8IJ6/rs70uwRoIDTqhlO0vBKD+D94xSebF/ukk1yImw6FqJs9eEDYA7aojroTpckOYdUIFlrR1mOtoAQ+ZdcUDOD2qUs1vXMlSNzB7GIt6ib6+9RolLg5w5Lqk+PDlIJAmZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FysrNx5S; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=RoZMEmAx9fAUV6giCOXLrcVYKOxe99Ww1Y6Eaf0SXrkxSCqsgqfMR4mr6OijEVkaI6B4awmDBIGoHP5H4r3BTTYMAFCaMSIKmmFvnnjbHUGNzEgGu1tU38DjVrXAdtoDJ1J5z9l9/GlEwTG6xdeihXDB+TkAXS5ibiKiZNXk5Bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=digikod.net; spf=pass smtp.mailfrom=digikod.net; dkim=pass (1024-bit key) header.d=digikod.net header.i=@digikod.net header.b=t43BIip7; arc=none smtp.client-ip=185.125.25.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=digikod.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=digikod.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FysrNx5S"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1728462466; x=1759998466;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=2FpFUMarsu8M9dnnDu129HfHD3t925/h1nSZ+wj/9Zg=;
-  b=FysrNx5So5QtNPrSQLCyULqkd/LIC9OItNt+nX5DJKeyH2I0aZiqv2XA
-   kjV8uqEPZCJUlXEFQns5IFm5Ep6cTNQO/N988aN9t4jCNDPYUbILjKQtE
-   wKMhCodZyUVmorD6TPjCEVAH6ff37HlhklBzyE8Gn83F2GsbqFMM/n0fj
-   E+NDNKeySOGufCt7j5VV0cC3GZg5D5iMNn9R99WaV15bvVpLVCzTudSEf
-   jTupUXRJwtbl8YykwS5LGuKvet0KTfbVNJuBAZGcE2qydFAayAxS94NJK
-   ldbEz3X7qEfuLZqK+IgbQlLHGMxmVsggKZnDX5U+j8vLSmZDINin8mPA7
-   Q==;
-X-CSE-ConnectionGUID: y8g49PEvQjm2LaNhdKe/1w==
-X-CSE-MsgGUID: 9OresjWyRiueCJJgPJSDuQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11219"; a="45267633"
-X-IronPort-AV: E=Sophos;i="6.11,189,1725346800"; 
-   d="scan'208";a="45267633"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2024 01:27:45 -0700
-X-CSE-ConnectionGUID: 5uR5IR++R0+M5stWNSg57A==
-X-CSE-MsgGUID: g12ceAbYQHeVUjPm3weNgQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,189,1725346800"; 
-   d="scan'208";a="76137983"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 09 Oct 2024 01:27:43 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1syS2m-000904-18;
-	Wed, 09 Oct 2024 08:27:40 +0000
-Date: Wed, 9 Oct 2024 16:26:47 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tang Yizhou <yizhou.tang@shopee.com>, jack@suse.cz, hch@infradead.org,
-	willy@infradead.org, akpm@linux-foundation.org,
-	chandan.babu@oracle.com
-Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Tang Yizhou <yizhou.tang@shopee.com>
-Subject: Re: [PATCH v2 3/3] xfs: Let the max iomap length be consistent with
- the writeback code
-Message-ID: <202410091647.eyo14ayt-lkp@intel.com>
-References: <20241006152849.247152-4-yizhou.tang@shopee.com>
+	dkim=pass (1024-bit key) header.d=digikod.net header.i=@digikod.net header.b="t43BIip7"
+Received: from smtp-4-0000.mail.infomaniak.ch (unknown [IPv6:2001:1600:7:10:40ca:feff:fe05:0])
+	by smtp-4-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4XNnVn5rf8zmZT;
+	Wed,  9 Oct 2024 11:23:13 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=digikod.net;
+	s=20191114; t=1728465793;
+	bh=9XSgRXbHiCpJWmwmNiOoFAhALnNoTndsEpArLPQ0BE0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=t43BIip7VaLyq7+fs5XgJmklzq0feIE2XM2ftXWXeEE88/ACSDLS9RZ0ItFHZ0I8c
+	 sbDuql08eOZ9rIXDneggHKjfl2H4Kd2gB4oUvsH+RVKDBRli0W5TEfM8DCHe+KnuWw
+	 65T9TnC+2qlltFJEcyZeyEqha6Q57gQxHOUWPxn8=
+Received: from unknown by smtp-4-0000.mail.infomaniak.ch (Postfix) with ESMTPA id 4XNnVj2fnLzgMT;
+	Wed,  9 Oct 2024 11:23:09 +0200 (CEST)
+Date: Wed, 9 Oct 2024 11:23:06 +0200
+From: =?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
+	Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
+	kent.overstreet@linux.dev, Jann Horn <jannh@google.com>, Serge Hallyn <serge@hallyn.com>, 
+	Kees Cook <keescook@chromium.org>, linux-security-module@vger.kernel.org, 
+	Amir Goldstein <amir73il@gmail.com>, =?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>, 
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: lsm sb_delete hook, was Re: [PATCH 4/7] vfs: Convert
+ sb->s_inodes iteration to super_iter_inodes()
+Message-ID: <20241009.ahqu6AeW3cow@digikod.net>
+References: <20241002014017.3801899-1-david@fromorbit.com>
+ <20241002014017.3801899-5-david@fromorbit.com>
+ <Zv5GfY1WS_aaczZM@infradead.org>
+ <Zv5J3VTGqdjUAu1J@infradead.org>
+ <20241003115721.kg2caqgj2xxinnth@quack3>
+ <CAHk-=whg7HXYPV4wNO90j22VLKz4RJ2miCe=s0C8ZRc0RKv9Og@mail.gmail.com>
+ <ZwRvshM65rxXTwxd@dread.disaster.area>
+ <CAHk-=wi5ZpW73nLn5h46Jxcng6wn_bCUxj6JjxyyEMAGzF5KZg@mail.gmail.com>
+ <20241008.Pohc0dixeiZ8@digikod.net>
+ <ZwXMdqxz5PWNjW3C@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20241006152849.247152-4-yizhou.tang@shopee.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZwXMdqxz5PWNjW3C@dread.disaster.area>
+X-Infomaniak-Routing: alpha
 
-Hi Tang,
+On Wed, Oct 09, 2024 at 11:21:10AM +1100, Dave Chinner wrote:
+> On Tue, Oct 08, 2024 at 02:59:07PM +0200, Mickaël Salaün wrote:
+> > On Mon, Oct 07, 2024 at 05:28:57PM -0700, Linus Torvalds wrote:
+> > > On Mon, 7 Oct 2024 at 16:33, Dave Chinner <david@fromorbit.com> wrote:
+> > > >
+> > > > There may be other inode references being held that make
+> > > > the inode live longer than the dentry cache. When should the
+> > > > fsnotify marks be removed from the inode in that case? Do they need
+> > > > to remain until, e.g, writeback completes?
+> > > 
+> > > Note that my idea is to just remove the fsnotify marks when the dentry
+> > > discards the inode.
+> > > 
+> > > That means that yes, the inode may still have a lifetime after the
+> > > dentry (because of other references, _or_ just because I_DONTCACHE
+> > > isn't set and we keep caching the inode).
+> > > 
+> > > BUT - fsnotify won't care. There won't be any fsnotify marks on that
+> > > inode any more, and without a dentry that points to it, there's no way
+> > > to add such marks.
+> > > 
+> > > (A new dentry may be re-attached to such an inode, and then fsnotify
+> > > could re-add new marks, but that doesn't change anything - the next
+> > > time the dentry is detached, the marks would go away again).
+> > > 
+> > > And yes, this changes the timing on when fsnotify events happen, but
+> > > what I'm actually hoping for is that Jan will agree that it doesn't
+> > > actually matter semantically.
+> > > 
+> > > > > Then at umount time, the dentry shrinking will deal with all live
+> > > > > dentries, and at most the fsnotify layer would send the FS_UNMOUNT to
+> > > > > just the root dentry inodes?
+> > > >
+> > > > I don't think even that is necessary, because
+> > > > shrink_dcache_for_umount() drops the sb->s_root dentry after
+> > > > trimming the dentry tree. Hence the dcache drop would cleanup all
+> > > > inode references, roots included.
+> > > 
+> > > Ahh - even better.
+> > > 
+> > > I didn't actually look very closely at the actual umount path, I was
+> > > looking just at the fsnotify_inoderemove() place in
+> > > dentry_unlink_inode() and went "couldn't we do _this_ instead?"
+> > > 
+> > > > > Wouldn't that make things much cleaner, and remove at least *one* odd
+> > > > > use of the nasty s_inodes list?
+> > > >
+> > > > Yes, it would, but someone who knows exactly when the fsnotify
+> > > > marks can be removed needs to chime in here...
+> > > 
+> > > Yup. Honza?
+> > > 
+> > > (Aside: I don't actually know if you prefer Jan or Honza, so I use
+> > > both randomly and interchangeably?)
+> > > 
+> > > > > I have this feeling that maybe we can just remove the other users too
+> > > > > using similar models. I think the LSM layer use (in landlock) is bogus
+> > > > > for exactly the same reason - there's really no reason to keep things
+> > > > > around for a random cached inode without a dentry.
+> > > >
+> > > > Perhaps, but I'm not sure what the landlock code is actually trying
+> > > > to do.
+> > 
+> > In Landlock, inodes (see landlock_object) may be referenced by several
+> > rulesets, either tied to a task's cred or a ruleset's file descriptor.
+> > A ruleset may outlive its referenced inodes, and this should not block
+> > related umounts.  security_sb_delete() is used to gracefully release
+> > such references.
+> 
+> Ah, there's the problem. The ruleset is persistent, not the inode.
+> Like fsnotify, the life cycle and reference counting is upside down.
+> The inode should cache the ruleset rather than the ruleset pinning
+> the inode.
 
-kernel test robot noticed the following build errors:
+A ruleset needs to takes a reference to the inode as for an opened file
+and keep it "alive" as long as it may be re-used by user space (i.e. as
+long as the superblock exists).  One of the goal of a ruleset is to
+identify inodes as long as they are accessible.  When a sandboxed
+process request to open a file, its sandbox's ruleset checks against the
+referenced inodes (in a nutshell).
 
-[auto build test ERROR on akpm-mm/mm-everything]
-[also build test ERROR on brauner-vfs/vfs.all xfs-linux/for-next linus/master v6.12-rc2 next-20241008]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+In practice, rulesets reference a set of struct landlock_object which
+references an inode or not (if it vanished).  There is only one
+landlock_object referenced per inode.  This makes it possible to have a
+dynamic N:M mapping between rulesets and inodes which enables a ruleset
+to be deleted before its referenced inodes, or the other way around.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Tang-Yizhou/mm-page-writeback-c-Rename-BANDWIDTH_INTERVAL-to-BW_DIRTYLIMIT_INTERVAL/20241006-225445
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20241006152849.247152-4-yizhou.tang%40shopee.com
-patch subject: [PATCH v2 3/3] xfs: Let the max iomap length be consistent with the writeback code
-config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20241009/202410091647.eyo14ayt-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241009/202410091647.eyo14ayt-lkp@intel.com/reproduce)
+> 
+> See my reply to Jan about fsnotify.
+> 
+> > > Yeah, I wouldn't be surprised if it's just confused - it's very odd.
+> > > 
+> > > But I'd be perfectly happy just removing one use at a time - even if
+> > > we keep the s_inodes list around because of other users, it would
+> > > still be "one less thing".
+> > > 
+> > > > Hence, to me, the lifecycle and reference counting of inode related
+> > > > objects in landlock doesn't seem quite right, and the use of the
+> > > > security_sb_delete() callout appears to be papering over an internal
+> > > > lifecycle issue.
+> > > >
+> > > > I'd love to get rid of it altogether.
+> > 
+> > I'm not sure to fully understand the implications for now, but it would
+> > definitely be good to simplify this lifetime management.  The only
+> > requirement for Landlock is that inodes references should live as long
+> > as the related inodes are accessible by user space or already in use.
+> > The sooner these references are removed from related ruleset, the
+> > better.
+> 
+> I'm missing something.  Inodes are accessible to users even when
+> they are not in cache - we just read them from disk and instantiate
+> a new VFS inode.
+> 
+> So how do you attach the correct ruleset to a newly instantiated
+> inode?
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410091647.eyo14ayt-lkp@intel.com/
+We can see a Landlock ruleset as a set of weakly opened files/inodes.  A
+Landolck ruleset call iget() to keep the related VFS inodes alive, which
+means that when user space opens a file pointing to the same inode, the
+same VFS inode will be re-used and then we can match it against a ruleset.
 
-All errors (new ones prefixed by >>):
+> 
+> i.e. If you can find the ruleset for any given inode that is brought
+> into cache (e.g. opening an existing, uncached file), then why do
+> you need to take inode references so they are never evicted?
 
-   fs/xfs/xfs_iomap.c: In function 'xfs_max_map_length':
-   fs/xfs/xfs_iomap.c:768:14: error: implicit declaration of function 'inode_to_wb' [-Wimplicit-function-declaration]
-     768 |         wb = inode_to_wb(wb);
-         |              ^~~~~~~~~~~
->> fs/xfs/xfs_iomap.c:768:12: error: assignment to 'struct bdi_writeback *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-     768 |         wb = inode_to_wb(wb);
-         |            ^
+A landlock_object only keep a reference to an inode, not to the rulesets
+pointing to it:
+* inode -> 1 landlock_object or NULL
+* landlock_object -> 1 inode or NULL
+* ruleset -> N landlock_object
 
-Kconfig warnings: (for reference only)
-   WARNING: unmet direct dependencies detected for GET_FREE_REGION
-   Depends on [n]: SPARSEMEM [=n]
-   Selected by [m]:
-   - RESOURCE_KUNIT_TEST [=m] && RUNTIME_TESTING_MENU [=y] && KUNIT [=m]
+There are mainly two different operations:
+1. Match 1 inode against a set of N inode references (i.e. a ruleset).
+2. Drop the references of N rulesets (in practice 1 intermediate
+   landlock_object) pointing to 1 inode.
 
-
-vim +768 fs/xfs/xfs_iomap.c
-
-   748	
-   749	/*
-   750	 * We cap the maximum length we map to a sane size to keep the chunks
-   751	 * of work done where somewhat symmetric with the work writeback does.
-   752	 * This is a completely arbitrary number pulled out of thin air as a
-   753	 * best guess for initial testing.
-   754	 *
-   755	 * Following the logic of writeback_chunk_size(), the length will be
-   756	 * rounded to the nearest 4MB boundary.
-   757	 *
-   758	 * Note that the values needs to be less than 32-bits wide until the
-   759	 * lower level functions are updated.
-   760	 */
-   761	static loff_t
-   762	xfs_max_map_length(struct inode *inode, loff_t length)
-   763	{
-   764		struct bdi_writeback *wb;
-   765		long pages;
-   766	
-   767		spin_lock(&inode->i_lock);
- > 768		wb = inode_to_wb(wb);
-   769		pages = min(wb->avg_write_bandwidth / 2,
-   770			    global_wb_domain.dirty_limit / DIRTY_SCOPE);
-   771		spin_unlock(&inode->i_lock);
-   772		pages = round_down(pages + MIN_WRITEBACK_PAGES, MIN_WRITEBACK_PAGES);
-   773	
-   774		return min_t(loff_t, length, pages * PAGE_SIZE);
-   775	}
-   776	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
