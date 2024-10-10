@@ -1,37 +1,55 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B84C1C3309;
-	Thu, 10 Oct 2024 11:35:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C964F1BFDF7
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Oct 2024 14:01:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728560152; cv=none; b=UuOuT2Aox1BEJl5JkzHGmy5rL1XXkTiitxdlmkpG30v956k76ehyD1SUxV/FW8gDX66erqeNZ2HK31r+EFFKHdkYV27E80sStQMnwHAhSAzJgJ9FuJiuDt+tRvuYufCsBmowTGBIvW3AnfgZvvXJCKOxvEM/7PWs6kD3+VVRMu0=
+	t=1728568906; cv=none; b=Xg7BZuYMG100kjFJz72ezFnFD25tCAb1amWRQTCfXvTR6goIlsu4UDEpUes/FBauU9XllrAUDbZ/7KD8QMFnq2cNe59X/lcNU6OD3SRvbiRhApyXt0dmTFr1aA50xtbpDKyamQXIIAhx4FWzvf3qexOFCOnWKzuAMUuaFa5J9ig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728560152; c=relaxed/simple;
-	bh=Wtz5Xrjtx1jJsHvUJrpxoPdBEDCmRN5XufUeSqQkcL0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=VENOBqjBmwkDLiwI5RmzY+iQCXLN/xC4mX6uuRJAGs3ZsHm68LjU7YOlSl/Uzamgv6r3w6kpD1KG/5kAY9YI/FaLJfWGqG5yfcIgqsWSBugRNJ01INAZZG1Pgfo7qDzaemy21A/zMJv3PauIpbm3sAtygl+4OIcgDLVudH7j6hI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qWYFEtV+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728568906; c=relaxed/simple;
+	bh=/8NBAinZ8EgkzvQXzoDbQ3tLu4qThe0woTws9+sEhHM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=j0muwdBWN5jlm+I/1SZ/Lp9PCBVCb57XemT7MmeK/vmxuWd8/D4c4hEy8qAEcjq31FYt1HTfx4+NBkN57E05/Q6CMCEruX2hK/aCNWdDys5a7OTNAk4odsu9MjuTAYh+GrLVp9rLYZlHRRFyHDt1cWRLJDa6i8egon6kfnGzze0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UAIWC8ty; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qWYFEtV+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD1AAC4CEC5;
-	Thu, 10 Oct 2024 11:35:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728560151;
-	bh=Wtz5Xrjtx1jJsHvUJrpxoPdBEDCmRN5XufUeSqQkcL0=;
-	h=Date:From:To:Cc:Subject:From;
-	b=qWYFEtV+3KAiwc0i7xeBfhs6sXw+cgJqSVGg4u4E27O3gcNyDVFAqv/XBcKCLBNzl
-	 U6N+Z6zOA5+5ljrA4EO86ED6up5heEBkzK5iT/1+enyfKwNEpUckOREN7XFgLQPzhr
-	 yPkdLHHqcWW5840VDw0vmdwe4jwhnVE2MR2rwfdukg58X1DGz8yZOkqFz8vQx33U4P
-	 e1bx2GbHlf0kkIhwU8GHo21VUGr/SGXjx/6xlWJndi+B1tEoWGIyLsprjw+TUq76sm
-	 5zxGnG5njA+yWMHQPvgXWIIU/ttrAmPO86jgyHF1wQblOe8olTtOiVPi8CfU7qeNWs
-	 6EOwjr5NWiUEg==
-Date: Thu, 10 Oct 2024 13:35:47 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: bug fixes for 6.12-rc3
-Message-ID: <ftxj7acikfuwhh2spky4jlnqdob7vjxxxtoibq5ekiriirrxy2@uer37e2phsit>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UAIWC8ty"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728568902;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z1lT0aWNqnHum+Bslu5Ayu5fpgktm7Iker7z7HQieFA=;
+	b=UAIWC8tysAcy87DVR0R1v9KD5/XRl94lAae/tDzPCk/4eMOiFxVf5NJjbL+sXnHFmcUV+E
+	LMNHjHAcaH7EIfsJZNxTF58C6S8RV4iNHJYWQu+J/r5am2O3Nom/rQ4ZMt7UgjeStf50rr
+	kXgBEMrfMzr95wdbhCQyasq1fbpncl8=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-220-l8wb3KyNMdCHU70RIjAriQ-1; Thu,
+ 10 Oct 2024 10:01:36 -0400
+X-MC-Unique: l8wb3KyNMdCHU70RIjAriQ-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C82071955F57;
+	Thu, 10 Oct 2024 14:01:34 +0000 (UTC)
+Received: from bfoster (unknown [10.22.32.133])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DA5F719560A3;
+	Thu, 10 Oct 2024 14:01:33 +0000 (UTC)
+Date: Thu, 10 Oct 2024 10:02:49 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: pass the exact range to initialize to
+ xfs_initialize_perag
+Message-ID: <ZwfeiYzopK-iD24Y@bfoster>
+References: <20240930164211.2357358-1-hch@lst.de>
+ <20240930164211.2357358-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,90 +58,87 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20240930164211.2357358-2-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Hi Linus,
+On Mon, Sep 30, 2024 at 06:41:42PM +0200, Christoph Hellwig wrote:
+> Currently only the new agcount is passed to xfs_initialize_perag, which
+> requires lookups of existing AGs to skip them and complicates error
+> handling.  Also pass the previous agcount so that the range that
+> xfs_initialize_perag operates on is exactly defined.  That way the
+> extra lookups can be avoided, and error handling can clean up the
+> exact range from the old count to the last added perag structure.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_ag.c   | 29 ++++++++---------------------
+>  fs/xfs/libxfs/xfs_ag.h   |  5 +++--
+>  fs/xfs/xfs_fsops.c       | 18 ++++++++----------
+>  fs/xfs/xfs_log_recover.c |  5 +++--
+>  fs/xfs/xfs_mount.c       |  4 ++--
+>  5 files changed, 24 insertions(+), 37 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index ec766b4bc8537b..6a165ca55da1a8 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3346,6 +3346,7 @@ xlog_do_recover(
+>  	struct xfs_mount	*mp = log->l_mp;
+>  	struct xfs_buf		*bp = mp->m_sb_bp;
+>  	struct xfs_sb		*sbp = &mp->m_sb;
+> +	xfs_agnumber_t		old_agcount = sbp->sb_agcount;
+>  	int			error;
+>  
+>  	trace_xfs_log_recover(log, head_blk, tail_blk);
+> @@ -3393,8 +3394,8 @@ xlog_do_recover(
+>  	/* re-initialise in-core superblock and geometry structures */
+>  	mp->m_features |= xfs_sb_version_to_features(sbp);
+>  	xfs_reinit_percpu_counters(mp);
+> -	error = xfs_initialize_perag(mp, sbp->sb_agcount, sbp->sb_dblocks,
+> -			&mp->m_maxagi);
+> +	error = xfs_initialize_perag(mp, old_agcount, sbp->sb_agcount,
+> +			sbp->sb_dblocks, &mp->m_maxagi);
 
-Could you please pull the patches below? They are fixes aiming 6.12-rc3.
+I assume this is because the superblock can change across recovery, but
+code wise this seems kind of easy to misread into thinking the variable
+is the same. I think the whole old/new terminology is kind of clunky for
+an interface that is not just for growfs. Maybe it would be more clear
+to use start/end terminology for xfs_initialize_perag(), then it's more
+straightforward that mount would init the full range whereas growfs
+inits a subrange.
 
-I did a test merge against current TOT and I didn't hit any conflicts.
+A oneliner comment or s/old_agcount/orig_agcount/ wouldn't hurt here
+either. Actually if that's the only purpose for this call and if you
+already have to sample sb_agcount, maybe just lifting/copying the if
+(old_agcount >= new_agcount) check into the caller would make the logic
+more self-explanatory. Hm?
 
-These patches are in linux-next for a couple days, already, and nothing got
-reported so far, other than a short hash on a Fixes tag, which I fixed and
-rebased the tree today before submitting the patches.
+Otherwise the logic changes look Ok to me functionally.
 
-Hope I got everything right. Thanks!
-Carlos
+Brian
 
+>  	if (error) {
+>  		xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
+>  		return error;
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 1fdd79c5bfa04e..6fa7239a4a01b6 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -810,8 +810,8 @@ xfs_mountfs(
+>  	/*
+>  	 * Allocate and initialize the per-ag data.
+>  	 */
+> -	error = xfs_initialize_perag(mp, sbp->sb_agcount, mp->m_sb.sb_dblocks,
+> -			&mp->m_maxagi);
+> +	error = xfs_initialize_perag(mp, 0, sbp->sb_agcount,
+> +			mp->m_sb.sb_dblocks, &mp->m_maxagi);
+>  	if (error) {
+>  		xfs_warn(mp, "Failed per-ag init: %d", error);
+>  		goto out_free_dir;
+> -- 
+> 2.45.2
+> 
+> 
 
-The following changes since commit 8cf0b93919e13d1e8d4466eb4080a4c4d9d66d7b:
-
-  Linux 6.12-rc2 (2024-10-06 15:32:27 -0700)
-
-are available in the Git repository at:
-
-  git@gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.12-fixes-3
-
-for you to fetch changes up to 77bfe1b11ea0c0c4b0ce19b742cd1aa82f60e45d:
-
-  xfs: fix a typo (2024-10-09 10:05:26 +0200)
-
-----------------------------------------------------------------
-Bug fixes for 6.12-rc3
-
-* A few small typo fixes
-* fstests xfs/538 DEBUG-only fix
-* Performance fix on blockgc on COW'ed files,
-  by skipping trims on cowblock inodes currently
-  opened for write
-* Prevent cowblocks to be freed under dirty pagecache
-  during unshare
-* Update MAINTAINERS file to quote the new maintainer
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Andrew Kreimer (1):
-      xfs: fix a typo
-
-Brian Foster (2):
-      xfs: skip background cowblock trims on inodes open for write
-      xfs: don't free cowblocks from under dirty pagecache on unshare
-
-Chandan Babu R (1):
-      MAINTAINERS: add Carlos Maiolino as XFS release manager
-
-Christoph Hellwig (8):
-      xfs: merge xfs_attr_leaf_try_add into xfs_attr_leaf_addname
-      xfs: return bool from xfs_attr3_leaf_add
-      xfs: distinguish extra split from real ENOSPC from xfs_attr3_leaf_split
-      xfs: distinguish extra split from real ENOSPC from xfs_attr_node_try_addname
-      xfs: fold xfs_bmap_alloc_userdata into xfs_bmapi_allocate
-      xfs: don't ifdef around the exact minlen allocations
-      xfs: call xfs_bmap_exact_minlen_extent_alloc from xfs_bmap_btalloc
-      xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
-
-Uros Bizjak (1):
-      xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
-
-Yan Zhen (1):
-      xfs: scrub: convert comma to semicolon
-
-Zhang Zekun (1):
-      xfs: Remove empty declartion in header file
-
- MAINTAINERS                   |   2 +-
- fs/xfs/libxfs/xfs_alloc.c     |   7 +-
- fs/xfs/libxfs/xfs_alloc.h     |   4 +-
- fs/xfs/libxfs/xfs_attr.c      | 190 ++++++++++++++++++------------------------
- fs/xfs/libxfs/xfs_attr_leaf.c |  40 +++++----
- fs/xfs/libxfs/xfs_attr_leaf.h |   2 +-
- fs/xfs/libxfs/xfs_bmap.c      | 140 ++++++++++---------------------
- fs/xfs/libxfs/xfs_da_btree.c  |   5 +-
- fs/xfs/scrub/ialloc_repair.c  |   4 +-
- fs/xfs/xfs_icache.c           |  37 ++++----
- fs/xfs/xfs_log.h              |   2 -
- fs/xfs/xfs_log_cil.c          |  11 +--
- fs/xfs/xfs_log_recover.c      |   2 +-
- fs/xfs/xfs_reflink.c          |   3 +
- fs/xfs/xfs_reflink.h          |  19 +++++
- 15 files changed, 207 insertions(+), 261 deletions(-)
