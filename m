@@ -1,239 +1,220 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4537718FDC5
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Oct 2024 03:26:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D28C18F2FF;
+	Thu, 10 Oct 2024 04:58:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728530821; cv=none; b=UqVCOdx4phCcaRO/6oQB+ERVQhIaFuB/YoiWZM/dmNssmKMvSaKKCkVB00NRMWKxjgy6HaYrMjwLJdm7wUIq20lUCzpAQslro2egLEmkI6/ukhFovd3PHafqS1JragcJYhn2KLDxdNIyhMHg5odfA77H90oc/MZYuSXAMcJw00E=
+	t=1728536334; cv=none; b=Lvo7YpxW+9BUPBaQPoYMGfmR6KlVvc3cgA88c+OZ/dXfbsuZ3eXDfhrgPcRTAdAEIwUYeHAW2E+J+K9crKK8mw3RtHKuaXUE3lzA1ZsA/8MjzYP0t9BFlDRXNOdse7yqqF8Hv4nrIa7VHsKUIe2rNoS5AVHE7GAMtFc1NmLPRnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728530821; c=relaxed/simple;
-	bh=UVQpwLVau/arCRg+UIUQe+wNoqj/iKEwa0exLFVD3tw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uDQoiB1GiK/eJ9OGsFcQSNnzCnlG4TgKb8Fbdn8yMVb27wa9SIoTp/Gd+mFGTO3AazfYdFuKWzhTFqtF4Fq0oRm7tX9Sp9vkb3KALp3Lkn6B4x14b2a6QksMrLJ2W8jBXDT24sIOS3QLzZYfLWTB0Tl67DhrUnzbdSsGGK8BZOM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=cinOGTlS; arc=none smtp.client-ip=209.85.218.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
+	s=arc-20240116; t=1728536334; c=relaxed/simple;
+	bh=rvPvWpE0WNaL4hil9zTCJfZ9UGfGvYk05TegTskFXHQ=;
+	h=From:Date:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=rIqAdAH/tGQvJs3R25tY3OUQwBWmIahjCyYfyC2zhG5FdR3Dux6iqTCXoWnJ3iMSKdgavq6Q28Cn/gRl9YO8KYCmHB2tEKxQ2Wxa6SmDaIwmV1hrXheNjlFhSCHt4IGGegS007m5VyjUBt3GL8Ku228YiE4fVbUivLLevm2lLnc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YfFUKLer; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="cinOGTlS"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-a991fedbd04so34942166b.3
-        for <linux-xfs@vger.kernel.org>; Wed, 09 Oct 2024 20:26:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YfFUKLer"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-71df0dbee46so397349b3a.0;
+        Wed, 09 Oct 2024 21:58:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1728530816; x=1729135616; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jBS8JqacgTJusHIYvpWe9mJdsd0pZO5EBVeF/1faiJE=;
-        b=cinOGTlS+Caz7/pSGACKgYXp/u2KBS83pO6yu0K00kuqD8Zc94xXLxCwxRoFlJgqK4
-         p+UBgL7r0Piug13lyBr8InNNqkKdi1cfFNcdlsWVkmtdub3hL4PiOsamogIernp/zmY3
-         0IohYS+edCVMFVqd3ry6Ma+58T4e+clGwwGjQAY2TgMX+CatVcJvzq7cUuGem7hHojft
-         8EJQhlpgGk/nwnQlqW7JmUbZCGcJ1cFxhvoTFp5fG7SvaVHP/WRgpIs+rcihc5nKnYlr
-         7F+900fctv3VZaMt51siHX32lwqwcEq0eOdeOfxlRxK3ko07k88E4ESdoIzdgZRXgTE/
-         qUfQ==
+        d=gmail.com; s=20230601; t=1728536332; x=1729141132; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:date:from
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9e/VPAlIyAZCli/ofmVddbzqeYWWWHaTukcajHAji3A=;
+        b=YfFUKLeryAGFC/4v2XD5bWxCujaWW6K6nK3a9L8DPxgkuV2uY1uSLZOTcFz2GJhUAg
+         Xiw+K8n0VXPTs6t49mDvC3VMsS2UCqXn/O/ju4w7MK1N1MNDVpcGuGqO4iO73IRUJpdg
+         4cfsPfzPNeIm0KDl29nFb+ojbh0ZK/ksG+a2yN+40pzBM3iXXBLcIwHA97wXAz/p83mm
+         PCIXUZ4dbkTING2+53X6+418BmdbEAz7EDM5yIXf/Y/h/YLJYlHIYlNYDLxPrIpdhTKs
+         NNqNwIYjh2/m9QxUFrltefdUHDVnfkiZ4XNVEcXbEtPrJZGf9qxm9tzVdZQGrZW/KXHR
+         sj1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728530816; x=1729135616;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jBS8JqacgTJusHIYvpWe9mJdsd0pZO5EBVeF/1faiJE=;
-        b=BFeqhXjnIz1gZpGUfBrwIp55rLxYGTS/HjrTCjuaNC0YgSXyDIZxhEiA91Wf0bbnXR
-         T1Vtcv1b1VhvmiMW5CLej6GnK5ps89rf8ik+qQOhhgZRpUsDLb+eIlEmHABGT7ymslcS
-         dPyDbOvzYLTKS1OhNVeVAfeTMLLAon72tzVa99HK16gczYazxqpK2KEDtAbN5s4wcLUM
-         VNvJ/KCy8EKdxsOr4bjeYj2fqlL5USlgyGfu2snhLUfloODydMroRi4Cqot8sq2bycjI
-         VGIQs9HrF12O3bJofRWkR2bOBPX1Ihg6gUQtpIiGi7Yk68lA1dzHBcGNmatkJLL+ixkA
-         XC+g==
-X-Forwarded-Encrypted: i=1; AJvYcCWd43/mbrjsQF0fGKp0Dr8YCFgqFTOwAPu1EDQl7tYpQE4AvZjKU8hJFR89S/s2KzO5vmUQhDGFiJA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyAuHPrxhtQxr9b3NrGM5yTY5nOMDeBApUKSomlqhbHV7bzzqI/
-	wo/AbnxZLIwokcvjrIEwixIx2GCOTYXaGjRI7wJNwq2OxngbEGrE6jtTMvaOqD8H7YjRtIntq8R
-	GAMai32jfUA5dq4fQ6RNQxTxhyukQ7nCATf8uGQ==
-X-Google-Smtp-Source: AGHT+IElv3jiZuNqPx5fdmdxSlpoVa0Q8karhVN65OPF7QDuCpOS35zdKNnZrlzGF5zq1QCy/a86F1ShHUHR/om3h30=
-X-Received: by 2002:a05:6402:40cf:b0:5c5:b6ee:e95b with SMTP id
- 4fb4d7f45d1cf-5c91d550a90mr5979696a12.8.1728530816554; Wed, 09 Oct 2024
- 20:26:56 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1728536332; x=1729141132;
+        h=content-disposition:mime-version:message-id:subject:cc:to:date:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9e/VPAlIyAZCli/ofmVddbzqeYWWWHaTukcajHAji3A=;
+        b=VvEBWefcq3KHKKT6NuOrepZEbC47AvEzCw71gnMn13zhikXXL1UKt+BvI+V/HXInka
+         VxBJtpg5s0ZpsMqtEzyBrIOWXiYhJyB+fhszTAH6nauxkC134Emkw3zCZu7ZynFBUbNF
+         LtpfvpMwbiINYBALK/wHvTKKoMMZZLIrHlXWI3f2wKL2iLudxEkT2oWBfB1gfk54X+66
+         rtvFWrryxm5T7OjqUM5/+1HIFM8iUkqfQN3A0eRBeZSovh6U2DgoksFK9b7bd9J8FcKO
+         SU1+ag+KBKo9x3eLgCp5ai3xRYiUBm83bvfkEbaxmD2/vC5bsDaCL0uIEOjNSUBilf2B
+         iZMQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWaPTW015YYRlGZjKRa/onu0ARCHes90zvo0oytuvjTf6MdLvHuuVsGx3dZHbG6N3H+pcOiCW2yZfOmxJw=@vger.kernel.org, AJvYcCWc/OACV/Lvzoy0oT5oEqBYc7q4X3C46uWK4bPWaNVeWa8SlvVAsqlwteVIvuA1CFFWIHTsYpkb4IKk@vger.kernel.org
+X-Gm-Message-State: AOJu0YxT9cnsiCuf0g09PUhvXjSpArKAnHwS0z6Zdy5RmwxRMA0hKlJ+
+	cDSDQjdN+CUS2LNbPCKCirz6NROMcwB42ZnhpGQsV+m0dnlPcTpa5IQcHkn77Pk=
+X-Google-Smtp-Source: AGHT+IG2nyCkFOO52IwqGEVeGZFUcEZh6aaC4IsBlYqOzlbxD2W9HXO0B7BsiNtsD8i3f6tY+uFRHg==
+X-Received: by 2002:a05:6a00:3e16:b0:71e:14c:8d31 with SMTP id d2e1a72fcca58-71e1db858d1mr8318997b3a.16.1728536332042;
+        Wed, 09 Oct 2024 21:58:52 -0700 (PDT)
+Received: from gmail.com ([24.130.68.0])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71e2ab0a50dsm262899b3a.195.2024.10.09.21.58.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Oct 2024 21:58:49 -0700 (PDT)
+From: Guo Xuenan <marcus.yu.56@gmail.com>
+X-Google-Original-From: Guo Xuenan <guoxuenan@huawei.com>
+Date: Wed, 9 Oct 2024 21:58:46 -0700
+To: stable@vger.kernel.org, gregkh@linuxfoundation.org, sashal@kernel.org
+Cc: leah.rumancik@gmail.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, skhan@linuxfoundation.org,
+	marcus.yu.56@gmail.com
+Subject: [PATCH 5.15.y] xfs: fix super block buf log item UAF during force
+ shutdown
+Message-ID: <ZwdfBhBsMEG2_1Tr@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241002130004.69010-1-yizhou.tang@shopee.com>
- <20241002130004.69010-2-yizhou.tang@shopee.com> <20241003130127.45kinxoh77xm5qfb@quack3>
- <CACuPKxmwZgNx242x5HgTUCpu6v6QC3XtFY2ZDOE-mcu=ARK=Ag@mail.gmail.com>
- <20241007162311.77r5rra2tdhzszek@quack3> <CACuPKx=-wmNOHbHFEqYEwnw6X7uzaZ+JU7pHqG+FCsAgKjePnQ@mail.gmail.com>
- <20241009145505.5ol3mushw6uqjefc@quack3>
-In-Reply-To: <20241009145505.5ol3mushw6uqjefc@quack3>
-From: Tang Yizhou <yizhou.tang@shopee.com>
-Date: Thu, 10 Oct 2024 11:26:45 +0800
-Message-ID: <CACuPKxnLNK144yS9=PzStbPk_q0vSEj5fE1Aveg5Ourg088Lag@mail.gmail.com>
-Subject: Re: [PATCH 1/3] mm/page-writeback.c: Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL
-To: Jan Kara <jack@suse.cz>
-Cc: willy@infradead.org, akpm@linux-foundation.org, chandan.babu@oracle.com, 
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Wed, Oct 9, 2024 at 10:55=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
->
-> On Tue 08-10-24 22:14:16, Tang Yizhou wrote:
-> > On Tue, Oct 8, 2024 at 12:23=E2=80=AFAM Jan Kara <jack@suse.cz> wrote:
-> > >
-> > > On Sun 06-10-24 20:41:11, Tang Yizhou wrote:
-> > > > On Thu, Oct 3, 2024 at 9:01=E2=80=AFPM Jan Kara <jack@suse.cz> wrot=
-e:
-> > > > >
-> > > > > On Wed 02-10-24 21:00:02, Tang Yizhou wrote:
-> > > > > > From: Tang Yizhou <yizhou.tang@shopee.com>
-> > > > > >
-> > > > > > The name of the BANDWIDTH_INTERVAL macro is misleading, as it i=
-s not
-> > > > > > only used in the bandwidth update functions wb_update_bandwidth=
-() and
-> > > > > > __wb_update_bandwidth(), but also in the dirty limit update fun=
-ction
-> > > > > > domain_update_dirty_limit().
-> > > > > >
-> > > > > > Rename BANDWIDTH_INTERVAL to UPDATE_INTERVAL to make things cle=
-ar.
-> > > > > >
-> > > > > > This patche doesn't introduce any behavioral changes.
-> > > > > >
-> > > > > > Signed-off-by: Tang Yizhou <yizhou.tang@shopee.com>
-> > > > >
-> > > > > Umm, I agree BANDWIDTH_INTERVAL may be confusing but UPDATE_INTER=
-VAL does
-> > > > > not seem much better to be honest. I actually have hard time comi=
-ng up with
-> > > > > a more descriptive name so what if we settled on updating the com=
-ment only
-> > > > > instead of renaming to something not much better?
-> > > > >
-> > > > >                                                                 H=
-onza
-> > > >
-> > > > Thank you for your review. I agree that UPDATE_INTERVAL is not a go=
-od
-> > > > name. How about
-> > > > renaming it to BW_DIRTYLIMIT_INTERVAL?
-> > >
-> > > Maybe WB_STAT_INTERVAL? Because it is interval in which we maintain
-> > > statistics about writeback behavior.
-> > >
-> >
-> > I don't think this is a good name, as it suggests a relation to enum
-> > wb_stat_item, but bandwidth and dirty limit are not in wb_stat_item.
->
-> OK, so how about keeping BANDWIDTH_INTERVAL as is and adding
-> DIRTY_LIMIT_INTERVAL with the same value? There's nothing which would
-> strictly tie them to the same value.
->
+commit 575689fc0ffa6c4bb4e72fd18e31a6525a6124e0 upstream.
 
-Good idea, but this patch has already been merged. If there is any
-writeback-related code that needs to be modified next time, I will
-update this part as well.
+xfs log io error will trigger xlog shut down, and end_io worker call
+xlog_state_shutdown_callbacks to unpin and release the buf log item.
+The race condition is that when there are some thread doing transaction
+commit and happened not to be intercepted by xlog_is_shutdown, then,
+these log item will be insert into CIL, when unpin and release these
+buf log item, UAF will occur. BTW, add delay before `xlog_cil_commit`
+can increase recurrence probability.
 
-Yi
+The following call graph actually encountered this bad situation.
+fsstress                    io end worker kworker/0:1H-216
+                            xlog_ioend_work
+                              ->xlog_force_shutdown
+                                ->xlog_state_shutdown_callbacks
+                                  ->xlog_cil_process_committed
+                                    ->xlog_cil_committed
+                                      ->xfs_trans_committed_bulk
+->xfs_trans_apply_sb_deltas             ->li_ops->iop_unpin(lip, 1);
+  ->xfs_trans_getsb
+    ->_xfs_trans_bjoin
+      ->xfs_buf_item_init
+        ->if (bip) { return 0;} //relog
+->xlog_cil_commit
+  ->xlog_cil_insert_items //insert into CIL
+                                           ->xfs_buf_ioend_fail(bp);
+                                             ->xfs_buf_ioend
+                                               ->xfs_buf_item_done
+                                                 ->xfs_buf_item_relse
+                                                   ->xfs_buf_item_free
 
->                                                                 Honza
->
-> > > > > > ---
-> > > > > >  mm/page-writeback.c | 16 ++++++++--------
-> > > > > >  1 file changed, 8 insertions(+), 8 deletions(-)
-> > > > > >
-> > > > > > diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> > > > > > index fcd4c1439cb9..a848e7f0719d 100644
-> > > > > > --- a/mm/page-writeback.c
-> > > > > > +++ b/mm/page-writeback.c
-> > > > > > @@ -54,9 +54,9 @@
-> > > > > >  #define DIRTY_POLL_THRESH    (128 >> (PAGE_SHIFT - 10))
-> > > > > >
-> > > > > >  /*
-> > > > > > - * Estimate write bandwidth at 200ms intervals.
-> > > > > > + * Estimate write bandwidth or update dirty limit at 200ms int=
-ervals.
-> > > > > >   */
-> > > > > > -#define BANDWIDTH_INTERVAL   max(HZ/5, 1)
-> > > > > > +#define UPDATE_INTERVAL              max(HZ/5, 1)
-> > > > > >
-> > > > > >  #define RATELIMIT_CALC_SHIFT 10
-> > > > > >
-> > > > > > @@ -1331,11 +1331,11 @@ static void domain_update_dirty_limit(s=
-truct dirty_throttle_control *dtc,
-> > > > > >       /*
-> > > > > >        * check locklessly first to optimize away locking for th=
-e most time
-> > > > > >        */
-> > > > > > -     if (time_before(now, dom->dirty_limit_tstamp + BANDWIDTH_=
-INTERVAL))
-> > > > > > +     if (time_before(now, dom->dirty_limit_tstamp + UPDATE_INT=
-ERVAL))
-> > > > > >               return;
-> > > > > >
-> > > > > >       spin_lock(&dom->lock);
-> > > > > > -     if (time_after_eq(now, dom->dirty_limit_tstamp + BANDWIDT=
-H_INTERVAL)) {
-> > > > > > +     if (time_after_eq(now, dom->dirty_limit_tstamp + UPDATE_I=
-NTERVAL)) {
-> > > > > >               update_dirty_limit(dtc);
-> > > > > >               dom->dirty_limit_tstamp =3D now;
-> > > > > >       }
-> > > > > > @@ -1928,7 +1928,7 @@ static int balance_dirty_pages(struct bdi=
-_writeback *wb,
-> > > > > >               wb->dirty_exceeded =3D gdtc->dirty_exceeded ||
-> > > > > >                                    (mdtc && mdtc->dirty_exceede=
-d);
-> > > > > >               if (time_is_before_jiffies(READ_ONCE(wb->bw_time_=
-stamp) +
-> > > > > > -                                        BANDWIDTH_INTERVAL))
-> > > > > > +                                        UPDATE_INTERVAL))
-> > > > > >                       __wb_update_bandwidth(gdtc, mdtc, true);
-> > > > > >
-> > > > > >               /* throttle according to the chosen dtc */
-> > > > > > @@ -2705,7 +2705,7 @@ int do_writepages(struct address_space *m=
-apping, struct writeback_control *wbc)
-> > > > > >        * writeback bandwidth is updated once in a while.
-> > > > > >        */
-> > > > > >       if (time_is_before_jiffies(READ_ONCE(wb->bw_time_stamp) +
-> > > > > > -                                BANDWIDTH_INTERVAL))
-> > > > > > +                                UPDATE_INTERVAL))
-> > > > > >               wb_update_bandwidth(wb);
-> > > > > >       return ret;
-> > > > > >  }
-> > > > > > @@ -3057,14 +3057,14 @@ static void wb_inode_writeback_end(stru=
-ct bdi_writeback *wb)
-> > > > > >       atomic_dec(&wb->writeback_inodes);
-> > > > > >       /*
-> > > > > >        * Make sure estimate of writeback throughput gets update=
-d after
-> > > > > > -      * writeback completed. We delay the update by BANDWIDTH_=
-INTERVAL
-> > > > > > +      * writeback completed. We delay the update by UPDATE_INT=
-ERVAL
-> > > > > >        * (which is the interval other bandwidth updates use for=
- batching) so
-> > > > > >        * that if multiple inodes end writeback at a similar tim=
-e, they get
-> > > > > >        * batched into one bandwidth update.
-> > > > > >        */
-> > > > > >       spin_lock_irqsave(&wb->work_lock, flags);
-> > > > > >       if (test_bit(WB_registered, &wb->state))
-> > > > > > -             queue_delayed_work(bdi_wq, &wb->bw_dwork, BANDWID=
-TH_INTERVAL);
-> > > > > > +             queue_delayed_work(bdi_wq, &wb->bw_dwork, UPDATE_=
-INTERVAL);
-> > > > > >       spin_unlock_irqrestore(&wb->work_lock, flags);
-> > > > > >  }
-> > > > > >
-> > > > > > --
-> > > > > > 2.25.1
-> > > > > >
-> > > > > >
-> > > > > --
-> > > > > Jan Kara <jack@suse.com>
-> > > > > SUSE Labs, CR
-> > > --
-> > > Jan Kara <jack@suse.com>
-> > > SUSE Labs, CR
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+when cil push worker gather percpu cil and insert super block buf log item
+into ctx->log_items then uaf occurs.
+
+==================================================================
+BUG: KASAN: use-after-free in xlog_cil_push_work+0x1c8f/0x22f0
+Write of size 8 at addr ffff88801800f3f0 by task kworker/u4:4/105
+
+CPU: 0 PID: 105 Comm: kworker/u4:4 Tainted: G W
+6.1.0-rc1-00001-g274115149b42 #136
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Workqueue: xfs-cil/sda xlog_cil_push_work
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report+0x171/0x4a6
+ kasan_report+0xb3/0x130
+ xlog_cil_push_work+0x1c8f/0x22f0
+ process_one_work+0x6f9/0xf70
+ worker_thread+0x578/0xf30
+ kthread+0x28c/0x330
+ ret_from_fork+0x1f/0x30
+ </TASK>
+
+Allocated by task 2145:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ __kasan_slab_alloc+0x54/0x60
+ kmem_cache_alloc+0x14a/0x510
+ xfs_buf_item_init+0x160/0x6d0
+ _xfs_trans_bjoin+0x7f/0x2e0
+ xfs_trans_getsb+0xb6/0x3f0
+ xfs_trans_apply_sb_deltas+0x1f/0x8c0
+ __xfs_trans_commit+0xa25/0xe10
+ xfs_symlink+0xe23/0x1660
+ xfs_vn_symlink+0x157/0x280
+ vfs_symlink+0x491/0x790
+ do_symlinkat+0x128/0x220
+ __x64_sys_symlink+0x7a/0x90
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 216:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ kasan_save_free_info+0x2a/0x40
+ __kasan_slab_free+0x105/0x1a0
+ kmem_cache_free+0xb6/0x460
+ xfs_buf_ioend+0x1e9/0x11f0
+ xfs_buf_item_unpin+0x3d6/0x840
+ xfs_trans_committed_bulk+0x4c2/0x7c0
+ xlog_cil_committed+0xab6/0xfb0
+ xlog_cil_process_committed+0x117/0x1e0
+ xlog_state_shutdown_callbacks+0x208/0x440
+ xlog_force_shutdown+0x1b3/0x3a0
+ xlog_ioend_work+0xef/0x1d0
+ process_one_work+0x6f9/0xf70
+ worker_thread+0x578/0xf30
+ kthread+0x28c/0x330
+ ret_from_fork+0x1f/0x30
+
+The buggy address belongs to the object at ffff88801800f388
+ which belongs to the cache xfs_buf_item of size 272
+The buggy address is located 104 bytes inside of
+ 272-byte region [ffff88801800f388, ffff88801800f498)
+
+The buggy address belongs to the physical page:
+page:ffffea0000600380 refcount:1 mapcount:0 mapping:0000000000000000
+index:0xffff88801800f208 pfn:0x1800e
+head:ffffea0000600380 order:1 compound_mapcount:0 compound_pincount:0
+flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
+raw: 001fffff80010200 ffffea0000699788 ffff88801319db50 ffff88800fb50640
+raw: ffff88801800f208 000000000015000a 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff88801800f280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801800f300: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88801800f380: fc fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                             ^
+ ffff88801800f400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801800f480: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+Disabling lock debugging due to kernel taint
+
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Chang Yu <marcus.yu.56@gmail.com>
+---
+
+The fix 575689fc0ffa ("xfs: fix super block buf log item UAF
+during force shutdown") was first introduced in v6.2-rc1. Syzkaller
+reports that the UAF bug is still present in linux-5.15.y
+(https://syzkaller.appspot.com/bug?extid=4d9a694803b65e21655b).
+I think a backport should be beneficial here.
+
+---
+
+ fs/xfs/xfs_buf_item.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index b1ab100c09e1..ffe318eb897f 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1017,6 +1017,8 @@ xfs_buf_item_relse(
+ 	trace_xfs_buf_item_relse(bp, _RET_IP_);
+ 	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
+ 
++	if (atomic_read(&bip->bli_refcount))
++		return;
+ 	bp->b_log_item = NULL;
+ 	xfs_buf_rele(bp);
+ 	xfs_buf_item_free(bip);
+-- 
+2.46.2
+
