@@ -1,126 +1,109 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FD91C8FA2
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Oct 2024 07:50:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F6011CF29D;
+	Thu, 10 Oct 2024 08:01:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728546647; cv=none; b=VZOYIKtwTu7KqVvuN+Y3zYYvFIivV047D0N/KU/kM5ULpWbb0BIr2CFedTYSSL5eoBSCscXZGxbsPvnp3uH8J34+/AAZfG5OOlbzJyU5DqHrc212KNNtC8XRxmGQpXbbLs9m6fyMvU9u6Z/wocDhMMV6RySAGkWSibvddPxRrkU=
+	t=1728547300; cv=none; b=jpFZlz1kXSlmsw79/W643lgJafpBJPFv3zCGdbpTIyVaj/hpAt6SxnvtPCpE6o5eqSexuLY8uDO0L8zRPmQxGKtQP7cYEZteaor6dcxLv2SwJpH37ZWcR/AE5RINx2Miq9SjCSTyYtorTbeF+ThBjRCmuMnjdLtqhN9ZCetYW2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728546647; c=relaxed/simple;
-	bh=h98qP67ENFBhQ8PzFpiz15au4EHuD/oL34SEByQ/3Ec=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=H974DCiI6+cS0l/rYIje8l7uwqkTfK9h3nzvtJ7fkoeaHujpIWXDYqLnofyXWs5eICWr4S+RyNoFSixaNHgfExzd2FuhRnx0h0XtyG1FpxpV0dDtpUHUN2DpRdlsr4uyZHRotUc6vB8T+kIIL+ZDlHNRutzlkVStUA5p3hUdPz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hk/u2SM/; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1728547300; c=relaxed/simple;
+	bh=SPNWE67wljUpgDt6cdCP1UZ5g+mrt3I94xuS2flkUjw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Zz+/MQz+F7wq5DSsLk8j0MN0HLmpgJviH+fMuQj6U6caEL21wUbRxWR/S9zam6Q+KVvUNh31oLUk10k1znjEIIcPjSh+bQGPviG+PlY/sMfw6PQzfcXdRB0d6WxIzsZft7NGrANlhHlphKabAZeZet/mu+nsCMELp/Y22WsT7lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ODlnf31z; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hk/u2SM/"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-20bc506347dso4675625ad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Oct 2024 00:50:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1728546646; x=1729151446; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=jvmR8o1Zd7WNMFxg04YvM6ScNptO0BgRV3DizZHFUZ8=;
-        b=hk/u2SM/YDsezExANsrKkV3hBj0heJa4zSiqIw7jCyxetWa2mRAa21kLUt11DG9/HM
-         oPUCH7aHEMhD9I0TvFVxJjvg3CkvKlL02perOW8HNAJFTh5z6FXofgyxjiYshGDysyeL
-         Zk5SKauVeT00sdQZ1YZwwjAg64kqRM8u4Y2HtsfcGSlSuXDc03doDkbbNxsZE/JJolfB
-         46FgAXw++i3aeUNusaRrClVFk2az+BhAC2eSq3qKzlGk1WLWVCJ9m3ee1iLkze/3FF2W
-         Uy7az8mw/TPBB1m3lfOPoIvMSdN9bZxjPlgv0Kb2G9eZTEozIYePwsY3UNDR6C/1PyTu
-         vYPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728546646; x=1729151446;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=jvmR8o1Zd7WNMFxg04YvM6ScNptO0BgRV3DizZHFUZ8=;
-        b=xJQZPyYv9SsEJEfOiwliz6znLmsi75AC9ZtroqyXrAFMcQQ1nvb6jBOnX63ZlnXI2i
-         H2YvUupcFCzKKC8aZ9jQrc5z1avqta4b9xrNTL6E4FhHdnO0KA6J7KNEoLOftRp1vb3Z
-         Ceh0jWc8Fe3xTt3Mt9F585pi8KzPNoSrYna/CsSMUWEU1/UY2Ge1sVtzjnyWzluDAcQU
-         N8VWARJ32aWQfiZaPss3uXVsswNIuzS2tvpUFirZ7+7SR05VeQSAPYMKa++tYPAQRX3G
-         SBKjYOwNyOVLEmLQQZq0J4hfhBKm6pIlodSMEAdZ36Z/7Y3JykUYtQzTkuVUfhVe+4pP
-         epig==
-X-Forwarded-Encrypted: i=1; AJvYcCWGiyNs+aAP97/J3CNqwpSFx0IT0hYcCXqzT0PUjea4opOG+G6mhvPtKcDGLcZ91jgnVkBj1425oCo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxnuQllR19kkt6K8alZ1Gr6LdVbfEwmoTOqn/PtvwdrBMGcrhZP
-	q1ygmumpt5f1Z2pmWjtm38tROHwGEDvJi1vFKKryv9EopZiHchOlXSHTtkCQGAvMp7LsqSTuHlk
-	zr2UnKtLxtHdA9sTVOqEfdrULob2QNdd87fNz
-X-Google-Smtp-Source: AGHT+IG4NUyfVCXyCU8Jz4aqTBl4CgLaNqotRYOmed8iiKV8Huh04xpDq0iTWoUYrpHsJPdMC8FpAz5yJ6lXTTaMXU4=
-X-Received: by 2002:a17:903:1c7:b0:20c:5c37:e2e3 with SMTP id
- d9443c01a7336-20c6378011dmr65091635ad.42.1728546645201; Thu, 10 Oct 2024
- 00:50:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ODlnf31z"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=3M9KdA8DamcHX+t4Rs6QLSY8A6xBoeXjIByTZaRvvrw=; b=ODlnf31zkBA60pAMsLKUz4NwQA
+	0d1+qf2OpwXb5xM7RrOyWLDPmzgckueE+AckkkbX9AeLzNNKH9DDQ20L3tNKen95IQxJ4AaT1NaDk
+	2rt9oonqWGhcxNDoPLDPP3VzdqkNfjEiI2U9f7Hq+xSMWHk2PfvhbyqeEYvcmasG3J7l7Rxr46mcv
+	lpM0TA1sM5LlScvxNz87yz3ey/jdIwfJh7YL7E1yumpCqhm//sWjUujlYuKyb6xyScH/hQD9Z9H/w
+	E7hZ09vvysbAVWRm1tkP+SLzPEm544ZxZ82wA5c4jRZLGqPSkMMvLItACcRiBNMUyNY6nDlkpN83W
+	H3CaLIVg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1syo77-0000000BtRj-1dcm;
+	Thu, 10 Oct 2024 08:01:37 +0000
+Date: Thu, 10 Oct 2024 01:01:37 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Marco Elver <elver@google.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	syzbot <syzbot+8a8170685a482c92e86a@syzkaller.appspotmail.com>,
+	chandan.babu@oracle.com, djwong@kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	Alexander Potapenko <glider@google.com>,
+	Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
+	Vlastimil Babka <vbabka@suse.cz>, Feng Tang <feng.tang@intel.com>
+Subject: Re: [syzbot] [xfs?] KFENCE: memory corruption in xfs_idata_realloc
+Message-ID: <ZweJ4UiFpOtxyeB-@infradead.org>
+References: <6705c39b.050a0220.22840d.000a.GAE@google.com>
+ <Zwd4vxcqoGi6Resh@infradead.org>
+ <CANpmjNMV+KfJqwTgV9vZ_JSwfZfdt7oBeGUmv3+fAttxXvRXhg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <6705c39b.050a0220.22840d.000a.GAE@google.com> <Zwd4vxcqoGi6Resh@infradead.org>
-In-Reply-To: <Zwd4vxcqoGi6Resh@infradead.org>
-From: Marco Elver <elver@google.com>
-Date: Thu, 10 Oct 2024 09:50:06 +0200
-Message-ID: <CANpmjNMV+KfJqwTgV9vZ_JSwfZfdt7oBeGUmv3+fAttxXvRXhg@mail.gmail.com>
-Subject: Re: [syzbot] [xfs?] KFENCE: memory corruption in xfs_idata_realloc
-To: Christoph Hellwig <hch@infradead.org>
-Cc: syzbot <syzbot+8a8170685a482c92e86a@syzkaller.appspotmail.com>, 
-	chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com, 
-	Alexander Potapenko <glider@google.com>, Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com, 
-	Vlastimil Babka <vbabka@suse.cz>, Feng Tang <feng.tang@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANpmjNMV+KfJqwTgV9vZ_JSwfZfdt7oBeGUmv3+fAttxXvRXhg@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, 10 Oct 2024 at 08:48, Christoph Hellwig <hch@infradead.org> wrote:
->
-> [adding the kfence maintainers]
->
-> On Tue, Oct 08, 2024 at 04:43:23PM -0700, syzbot wrote:
-> > dashboard link: https://syzkaller.appspot.com/bug?extid=8a8170685a482c92e86a
->
-> [...]
->
-> > XFS (loop2): Quotacheck: Done.
-> > ==================================================================
-> > BUG: KFENCE: memory corruption in krealloc_noprof+0x160/0x2e0
+On Thu, Oct 10, 2024 at 09:50:06AM +0200, Marco Elver wrote:
+> > I've tried to make sense of this report and failed.
 > >
-> > Corrupted memory at 0xffff88823bedafeb [ 0x03 0x00 0xd8 0x62 0x75 0x73 0x01 0x00 0x00 0x11 0x4c 0x00 0x00 0x00 0x00 0x00 ] (in kfence-#108):
-> >  krealloc_noprof+0x160/0x2e0
-> >  xfs_idata_realloc+0x116/0x1b0 fs/xfs/libxfs/xfs_inode_fork.c:523
->
-> I've tried to make sense of this report and failed.
->
-> Documentation/dev-tools/kfence.rst explains these messages as:
->
-> KFENCE also uses pattern-based redzones on the other side of an object's guard
-> page, to detect out-of-bounds writes on the unprotected side of the object.
-> These are reported on frees::
->
-> But doesn't explain what "the other side of an object's guard page" is.
+> > Documentation/dev-tools/kfence.rst explains these messages as:
+> >
+> > KFENCE also uses pattern-based redzones on the other side of an object's guard
+> > page, to detect out-of-bounds writes on the unprotected side of the object.
+> > These are reported on frees::
+> >
+> > But doesn't explain what "the other side of an object's guard page" is.
+> 
+> Every kfence object has a guard page right next to where it's allocated:
+> 
+>   [ GUARD | OBJECT + "wasted space" ]
+> 
+> or
+> 
+>   [ "wasted space" + OBJECT | GUARD ]
+> 
+> The GUARD is randomly on the left or right. If an OOB access straddles
+> into the GUARD, we get a page fault. For objects smaller than
+> page-size, there'll be some "wasted space" on the object page, which
+> is on "the other side" vs. where the guard page is. If a OOB write or
+> other random memory corruption doesn't hit the GUARD, but the "wasted
+> space" portion next to an object that would be detected as "Corrupted
+> memory" on free because the redzone pattern was likely stomped on.
 
-Every kfence object has a guard page right next to where it's allocated:
+Thanks!  Searching kfence.txt for random I find that explaination in
+the intro now.  Can you maybe expand the section I quoted to make
+this more clear, by saying something like:
 
-  [ GUARD | OBJECT + "wasted space" ]
+KFENCE also uses pattern-based redzones on the side of the object that
+is not covered by the GUARD (which is randomly allocated to either the
+left or the right), to detect out-of-bounds writes there as well.
+These are reported on frees::
 
-or
 
-  [ "wasted space" + OBJECT | GUARD ]
+> 
+> > Either way this is in the common krealloc code, which is a bit special
+> > as it uses ksize to figure out what the actual underlying allocation
+> > size of an object is to make use of that.  Without understanding the
+> > actual error I wonder if that's something kfence can't cope with?
+> 
+> krealloc + KFENCE broke in next-20241003:
+> https://lore.kernel.org/all/CANpmjNM5XjwwSc8WrDE9=FGmSScftYrbsvC+db+82GaMPiQqvQ@mail.gmail.com/T/#u
+> It's been removed from -next since then.
+> 
+> It's safe to ignore.
 
-The GUARD is randomly on the left or right. If an OOB access straddles
-into the GUARD, we get a page fault. For objects smaller than
-page-size, there'll be some "wasted space" on the object page, which
-is on "the other side" vs. where the guard page is. If a OOB write or
-other random memory corruption doesn't hit the GUARD, but the "wasted
-space" portion next to an object that would be detected as "Corrupted
-memory" on free because the redzone pattern was likely stomped on.
+Thanks!
 
-> Either way this is in the common krealloc code, which is a bit special
-> as it uses ksize to figure out what the actual underlying allocation
-> size of an object is to make use of that.  Without understanding the
-> actual error I wonder if that's something kfence can't cope with?
-
-krealloc + KFENCE broke in next-20241003:
-https://lore.kernel.org/all/CANpmjNM5XjwwSc8WrDE9=FGmSScftYrbsvC+db+82GaMPiQqvQ@mail.gmail.com/T/#u
-It's been removed from -next since then.
-
-It's safe to ignore.
-
-#syz dup: KFENCE: memory corruption in add_sysfs_param
