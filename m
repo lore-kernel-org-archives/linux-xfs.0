@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36BE91CDFD1;
-	Thu, 10 Oct 2024 18:34:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC48413774D
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Oct 2024 19:01:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728585288; cv=none; b=n1kyX3h+CEZaNd6VdKSANikQmnqmfJky5Lu5Ej93etQNAipBzrppjQMGvuEwRUCdxp2EwRgZWoMHxPvTqH8aAMbmvzNa0SXLS9ul3j/xXYp3F/OBBDiy+ft1l1fO/CdojT7c6VoNy2IhI1AWsKIT+NyL0WNrZl6KEbuHO0a3jjw=
+	t=1728586908; cv=none; b=OMLy6l7bXzTLsPzAWFDrxpehFgMBDTfBCSyw0n4CZJt6eSi5yO/nIpAGFgRDkJdoHwTKVb8iuvkVoAfSDwKdYfBqaqD1a14Lx3PNg4PFizTrSCWiaMGWFyctnqKgVc6lKzQYX9QOnFt2rDU8G2Z7hLTvXEgrhabpc29O7ppbCsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728585288; c=relaxed/simple;
-	bh=O58ekROBdmY/vq3y4FFQCY46xDbcUzaQxRhSDfTEe80=;
+	s=arc-20240116; t=1728586908; c=relaxed/simple;
+	bh=g4y+UofWw+cQgc2W+i97hdt+/HiB2b1ROvC6bmk7nWA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tDFPAdBbU6TkayAWk8Thm07V++na9m2kMmVgoidnY8SeKSz2fHwX8fk0aG/1t3ZBu+6PaUnpxlNyzwvDZcC2XOuRAYMzfho3H+LVAFM/j/mSp/CYvECYZsYQrXOvfSK8RfMXnWDHqKQKUKoxOrF8mai6KsU73d1MgzXAp/Vh4O8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K6MAJpbX; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jE0BdsTq/v29S6SS5D50PbUYzhlz21/zeksP3R/170FfWQ13GJ0T7rKCZXxepgScERWr1KmXCqkAIbcgdOHAA6EXedVFwQZXf7zjKXpTH0ru1JITVBRRfP6cLx8vAmyTQm3gROccIXfBFW41aCfAcgk8t6YjzqtxcdZoGL1i7gE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s2sKh2Zh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K6MAJpbX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B408FC4CEC5;
-	Thu, 10 Oct 2024 18:34:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s2sKh2Zh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D9EBC4CEC5;
+	Thu, 10 Oct 2024 19:01:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728585287;
-	bh=O58ekROBdmY/vq3y4FFQCY46xDbcUzaQxRhSDfTEe80=;
+	s=k20201202; t=1728586908;
+	bh=g4y+UofWw+cQgc2W+i97hdt+/HiB2b1ROvC6bmk7nWA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=K6MAJpbXJ/juYrXizFel7RzMYghxOCR6haXiKl++BBL1PkhuXaOfzOR7BkaJswYdL
-	 2cNw6BlM+mRikySaqUIUY+o0st+xaVp2FPLbnmhI08tnjLIeiSHZZpO82w/MCDOSPR
-	 nYiqlV6gOti9GQ7S4CKfOB/zGiqEXDMGCnpHt5Qz90DlHQcDOdSnhwH9qWMG8rU6/Q
-	 cxnN4Wj0XaEykjCEuEFcvwYo1czGYM2uU7k9z17youb0vmHW89ljp+cw6B0ekFLCVC
-	 +qNy4Pne4u51covv7UHDyL6Ji6WRVsnJNUrXg7RrG1pFp5QNgU2FDbHxBDIFDOuHiK
-	 qmCcCAd6Yk/GA==
-Date: Thu, 10 Oct 2024 11:34:47 -0700
+	b=s2sKh2ZhOSISyagO1YuIb8nezDsdDzC6zj2FxH27HGt5dsDx0H7xPkpM9LYl7GG9T
+	 H1/Je2KdCIZsytXUIOQ/tjw1slcxcicG/OJ9pJAS9Y45E9EWb+0grmjbBKaPd7/3hx
+	 xU27y91CqPyQbddeODMAJafA/PNt9UKou2uBcO5kVrhmlWQ62u+4Fw64jP0Jiobq8B
+	 fHVohOCk3ESYJ9SntDPwrp6uys7wrOkA//FJI7Pz7imGpMDos5RxALg896SNVRw4GJ
+	 KoqhoowzIyrXQbwaz/X6rUNwrXNwL16F/OEl/bBucIEofPqP/s9bHBkHaWO+ndQXeC
+	 y5dfmdWISln+g==
+Date: Thu, 10 Oct 2024 12:01:47 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: linux-xfs@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-	linux-kernel@vger.kernel.org, dchinner@redhat.com,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: Check for deallayed allocations before setting
- extsize
-Message-ID: <20241010183447.GZ21877@frogsfrogsfrogs>
-References: <20241010063617.563365-1-ojaswin@linux.ibm.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/7] xfs: don't update file system geometry through
+ transaction deltas
+Message-ID: <20241010190147.GU21853@frogsfrogsfrogs>
+References: <20240930164211.2357358-1-hch@lst.de>
+ <20240930164211.2357358-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,111 +43,668 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241010063617.563365-1-ojaswin@linux.ibm.com>
+In-Reply-To: <20240930164211.2357358-7-hch@lst.de>
 
-On Thu, Oct 10, 2024 at 12:06:17PM +0530, Ojaswin Mujoo wrote:
-> Extsize is allowed to be set on files with no data in it. For this,
-> we were checking if the files have extents but missed to check if
-> delayed extents were present. This patch adds that check.
+On Mon, Sep 30, 2024 at 06:41:47PM +0200, Christoph Hellwig wrote:
+> Updates to the file system geometry in growfs need to be committed to
+> stable store before the allocator can see them to avoid that they are
+> in the same CIL checkpoint as transactions that make use of this new
+> information, which will make recovery impossible or broken.
 > 
-> While we are at it, also refactor this check into a helper since
-> its used in some other places as well like xfs_inactive() or
-> xfs_ioctl_setattr_xflags()
-> 
-> **Without the patch (SUCCEEDS)**
-> 
-> $ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
-> 
-> wrote 1024/1024 bytes at offset 0
-> 1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
-> 
-> **With the patch (FAILS as expected)**
-> 
-> $ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
-> 
-> wrote 1024/1024 bytes at offset 0
-> 1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
-> xfs_io: FS_IOC_FSSETXATTR testfile: Invalid argument
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> ---
-> 
-> * Changes since v1 *
-> 
->  - RVB by Christoph
->  - Added a helper to check if inode has data instead of
->    open coding.
-> 	
-> v1:
-> https://lore.kernel.org/linux-xfs/Zv_cTc6cgxszKGy3@infradead.org/T/#mf949dafb2b2f63bea1f7c0ce5265a2527aaf22a9
-> 
->  fs/xfs/xfs_inode.c | 2 +-
->  fs/xfs/xfs_inode.h | 5 +++++
->  fs/xfs/xfs_ioctl.c | 5 +++--
->  3 files changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index bcc277fc0a83..3d083a8fd8ed 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1409,7 +1409,7 @@ xfs_inactive(
->  
->  	if (S_ISREG(VFS_I(ip)->i_mode) &&
->  	    (ip->i_disk_size != 0 || XFS_ISIZE(ip) != 0 ||
-> -	     ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0))
-> +	     xfs_inode_has_data(ip)))
->  		truncate = 1;
->  
->  	if (xfs_iflags_test(ip, XFS_IQUOTAUNCHECKED)) {
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 97ed912306fd..ae1ccf2a3c8b 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -292,6 +292,11 @@ static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
->  	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
->  }
->  
-> +static inline bool xfs_inode_has_data(struct xfs_inode *ip)
+> To do this add two new helpers to prepare a superblock for direct
+> manipulation of the on-disk buffer, and to commit these updates while
+> holding the buffer locked (similar to what xfs_sync_sb_buf does) and use
+> those in growfs instead of applying the changes through the deltas in the
+> xfs_trans structure (which also happens to shrink the xfs_trans structure
+> a fair bit).
 
-Can you please change this to "const struct xfs_inode *ip"?
-This predicate function doesn't change @ip.
+Yay for shrinking xfs_trans!
 
-I might've called it xfs_inode_has_filedata fwiw, but the current name
-is fine with me.
+> The rtbmimap repair code was also using the transaction deltas and is
+> converted to also update the superblock buffer directly under the buffer
+> lock.
+> 
+> This new method establishes a locking protocol where even in-core
+> superblock fields must only be updated with the superblock buffer
+> locked.  For now it is only applied to affected geometry fields,
+> but in the future it would make sense to apply it universally.
+
+Hmm.  One thing that I don't quite like here is the separation between
+updating the ondisk sb fields and updating the incore sb/recomputing the
+cached geometry fields.  I think that's been handled correctly here, but
+the pending changes in growfsrt for rtgroups is going to make this more
+ugly.
+
+What if instead this took the form of a new defer_ops type?  The
+xfs_prepare_sb_update function would allocate a tracking object where
+we'd pin the sb buffer and record which fields get changed, as well as
+the new values.  xfs_commit_sb_update then xfs_defer_add()s it to the
+transaction and commits it.  (The ->create_intent function would return
+NULL so that no log item is created.)
+
+The ->finish_item function would then bhold the sb buffer, update the
+ondisk super like how xfs_commit_sb_update does in this patch, set
+XFS_SB_TRANS_SYNC, and return -EAGAIN.  The defer ops would commit and
+flush that transaction and call ->finish_item again, at which point it
+would recompute the incore/cached geometry as necessary, bwrite the sb
+buffer, and release it.
+
+The downside is that it's more complexity, but the upside is that the
+geometry changes are contained in one place instead of being scattered
+around, and the incore changes only happen if the synchronous
+transaction actually gets written to disk.  IOWs, the end result is the
+same as what you propose here, but structured differently.  
+
+I guess the biggest downside is that log recovery has to call the
+incore/cached geometry recomputation function directly because there's
+no actual log intent item to recover.
+
+(The code changes themselves look acceptable to me.)
 
 --D
 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_sb.c         |  97 ++++++++++++++++++++++++-------
+>  fs/xfs/libxfs/xfs_sb.h         |   3 +
+>  fs/xfs/libxfs/xfs_shared.h     |   8 ---
+>  fs/xfs/scrub/rtbitmap_repair.c |  26 +++++----
+>  fs/xfs/xfs_fsops.c             |  80 ++++++++++++++++----------
+>  fs/xfs/xfs_rtalloc.c           |  92 +++++++++++++++++-------------
+>  fs/xfs/xfs_trans.c             | 101 ++-------------------------------
+>  fs/xfs/xfs_trans.h             |   8 ---
+>  8 files changed, 198 insertions(+), 217 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index d95409f3cba667..2c83ab7441ade5 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -1025,6 +1025,80 @@ xfs_sb_mount_common(
+>  	mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
+>  }
+>  
+> +/*
+> + * Mirror the lazy sb counters to the in-core superblock.
+> + *
+> + * If this is at unmount, the counters will be exactly correct, but at any other
+> + * time they will only be ballpark correct because of reservations that have
+> + * been taken out percpu counters.  If we have an unclean shutdown, this will be
+> + * corrected by log recovery rebuilding the counters from the AGF block counts.
+> + *
+> + * Do not update sb_frextents here because it is not part of the lazy sb
+> + * counters, despite having a percpu counter.  It is always kept consistent with
+> + * the ondisk rtbitmap by xfs_trans_apply_sb_deltas() and hence we don't need
+> + * have to update it here.
+> + */
+> +static void
+> +xfs_flush_sb_counters(
+> +	struct xfs_mount	*mp)
 > +{
-> +	return (ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0);
+> +	if (xfs_has_lazysbcount(mp)) {
+> +		mp->m_sb.sb_icount = percpu_counter_sum_positive(&mp->m_icount);
+> +		mp->m_sb.sb_ifree = min_t(uint64_t,
+> +				percpu_counter_sum_positive(&mp->m_ifree),
+> +				mp->m_sb.sb_icount);
+> +		mp->m_sb.sb_fdblocks =
+> +				percpu_counter_sum_positive(&mp->m_fdblocks);
+> +	}
+> +}
+> +
+> +/*
+> + * Prepare a direct update to the superblock through the on-disk buffer.
+> + *
+> + * This locks out other modifications through the buffer lock and then syncs all
+> + * in-core values to the on-disk buffer (including the percpu counters).
+> + *
+> + * The caller then directly manipulates the on-disk fields and calls
+> + * xfs_commit_sb_update to the updates to disk them.  The caller is responsible
+> + * to also update the in-core field, but it can do so after the transaction has
+> + * been committed to disk.
+> + *
+> + * Updating the in-core field only after xfs_commit_sb_update ensures that other
+> + * processes only see the update once it is stable on disk, and is usually the
+> + * right thing to do for superblock updates.
+> + *
+> + * Note that writes to superblock fields updated using this helper are
+> + * synchronized using the superblock buffer lock, which must be taken around
+> + * all updates to the in-core fields as well.
+> + */
+> +struct xfs_dsb *
+> +xfs_prepare_sb_update(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		**bpp)
+> +{
+> +	*bpp = xfs_trans_getsb(tp);
+> +	xfs_flush_sb_counters(tp->t_mountp);
+> +	xfs_sb_to_disk((*bpp)->b_addr, &tp->t_mountp->m_sb);
+> +	return (*bpp)->b_addr;
+> +}
+> +
+> +/*
+> + * Commit a direct update to the on-disk superblock.  Keeps @bp locked and
+> + * referenced, so the caller must call xfs_buf_relse() manually.
+> + */
+> +int
+> +xfs_commit_sb_update(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*bp)
+> +{
+> +	xfs_trans_bhold(tp, bp);
+> +	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+> +	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
+> +
+> +	xfs_trans_set_sync(tp);
+> +	return xfs_trans_commit(tp);
 > +}
 > +
 >  /*
->   * Check if an inode has any data in the COW fork.  This might be often false
->   * even for inodes with the reflink flag when there is no pending COW operation.
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index a20d426ef021..88b9c8cf0272 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -481,7 +481,7 @@ xfs_ioctl_setattr_xflags(
+>   * xfs_log_sb() can be used to copy arbitrary changes to the in-core superblock
+>   * into the superblock buffer to be logged.  It does not provide the higher
+> @@ -1038,28 +1112,7 @@ xfs_log_sb(
+>  	struct xfs_mount	*mp = tp->t_mountp;
+>  	struct xfs_buf		*bp = xfs_trans_getsb(tp);
 >  
->  	if (rtflag != XFS_IS_REALTIME_INODE(ip)) {
->  		/* Can't change realtime flag if any extents are allocated. */
-> -		if (ip->i_df.if_nextents || ip->i_delayed_blks)
-> +		if (xfs_inode_has_data(ip))
->  			return -EINVAL;
+> -	/*
+> -	 * Lazy sb counters don't update the in-core superblock so do that now.
+> -	 * If this is at unmount, the counters will be exactly correct, but at
+> -	 * any other time they will only be ballpark correct because of
+> -	 * reservations that have been taken out percpu counters. If we have an
+> -	 * unclean shutdown, this will be corrected by log recovery rebuilding
+> -	 * the counters from the AGF block counts.
+> -	 *
+> -	 * Do not update sb_frextents here because it is not part of the lazy
+> -	 * sb counters, despite having a percpu counter. It is always kept
+> -	 * consistent with the ondisk rtbitmap by xfs_trans_apply_sb_deltas()
+> -	 * and hence we don't need have to update it here.
+> -	 */
+> -	if (xfs_has_lazysbcount(mp)) {
+> -		mp->m_sb.sb_icount = percpu_counter_sum_positive(&mp->m_icount);
+> -		mp->m_sb.sb_ifree = min_t(uint64_t,
+> -				percpu_counter_sum_positive(&mp->m_ifree),
+> -				mp->m_sb.sb_icount);
+> -		mp->m_sb.sb_fdblocks =
+> -				percpu_counter_sum_positive(&mp->m_fdblocks);
+> -	}
+> -
+> +	xfs_flush_sb_counters(mp);
+>  	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+>  	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 885c837559914d..3649d071687e33 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -13,6 +13,9 @@ struct xfs_trans;
+>  struct xfs_fsop_geom;
+>  struct xfs_perag;
 >  
+> +struct xfs_dsb *xfs_prepare_sb_update(struct xfs_trans *tp,
+> +			struct xfs_buf **bpp);
+> +int		xfs_commit_sb_update(struct xfs_trans *tp, struct xfs_buf *bp);
+>  extern void	xfs_log_sb(struct xfs_trans *tp);
+>  extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
+>  extern int	xfs_sync_sb_buf(struct xfs_mount *mp);
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index 33b84a3a83ff63..45a32ea426164a 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -149,14 +149,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+>  #define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
+>  #define	XFS_TRANS_SB_FREXTENTS		0x00000010
+>  #define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
+> -#define	XFS_TRANS_SB_DBLOCKS		0x00000040
+> -#define	XFS_TRANS_SB_AGCOUNT		0x00000080
+> -#define	XFS_TRANS_SB_IMAXPCT		0x00000100
+> -#define	XFS_TRANS_SB_REXTSIZE		0x00000200
+> -#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
+> -#define	XFS_TRANS_SB_RBLOCKS		0x00000800
+> -#define	XFS_TRANS_SB_REXTENTS		0x00001000
+> -#define	XFS_TRANS_SB_REXTSLOG		0x00002000
+>  
+>  /*
+>   * Here we centralize the specification of XFS meta-data buffer reference count
+> diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
+> index 0fef98e9f83409..be9d31f032b1bf 100644
+> --- a/fs/xfs/scrub/rtbitmap_repair.c
+> +++ b/fs/xfs/scrub/rtbitmap_repair.c
+> @@ -16,6 +16,7 @@
+>  #include "xfs_bit.h"
+>  #include "xfs_bmap.h"
+>  #include "xfs_bmap_btree.h"
+> +#include "xfs_sb.h"
+>  #include "scrub/scrub.h"
+>  #include "scrub/common.h"
+>  #include "scrub/trace.h"
+> @@ -127,20 +128,21 @@ xrep_rtbitmap_geometry(
+>  	struct xchk_rtbitmap	*rtb)
+>  {
+>  	struct xfs_mount	*mp = sc->mp;
+> -	struct xfs_trans	*tp = sc->tp;
+>  
+>  	/* Superblock fields */
+> -	if (mp->m_sb.sb_rextents != rtb->rextents)
+> -		xfs_trans_mod_sb(sc->tp, XFS_TRANS_SB_REXTENTS,
+> -				rtb->rextents - mp->m_sb.sb_rextents);
+> -
+> -	if (mp->m_sb.sb_rbmblocks != rtb->rbmblocks)
+> -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_RBMBLOCKS,
+> -				rtb->rbmblocks - mp->m_sb.sb_rbmblocks);
+> -
+> -	if (mp->m_sb.sb_rextslog != rtb->rextslog)
+> -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_REXTSLOG,
+> -				rtb->rextslog - mp->m_sb.sb_rextslog);
+> +	if (mp->m_sb.sb_rextents != rtb->rextents ||
+> +	    mp->m_sb.sb_rbmblocks != rtb->rbmblocks ||
+> +	    mp->m_sb.sb_rextslog != rtb->rextslog) {
+> +		struct xfs_buf		*bp = xfs_trans_getsb(sc->tp);
+> +
+> +		mp->m_sb.sb_rextents = rtb->rextents;
+> +		mp->m_sb.sb_rbmblocks = rtb->rbmblocks;
+> +		mp->m_sb.sb_rextslog = rtb->rextslog;
+> +		xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+> +
+> +		xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
+> +		xfs_trans_log_buf(sc->tp, bp, 0, sizeof(struct xfs_dsb) - 1);
+> +	}
+>  
+>  	/* Fix broken isize */
+>  	sc->ip->i_disk_size = roundup_64(sc->ip->i_disk_size,
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index b247d895c276d2..4168ccf21068cb 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -79,6 +79,46 @@ xfs_resizefs_init_new_ags(
+>  	return error;
+>  }
+>  
+> +static int
+> +xfs_growfs_data_update_sb(
+> +	struct xfs_trans	*tp,
+> +	xfs_agnumber_t		nagcount,
+> +	xfs_rfsblock_t		nb,
+> +	xfs_agnumber_t		nagimax)
+> +{
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xfs_dsb		*sbp;
+> +	struct xfs_buf		*bp;
+> +	int			error;
+> +
+> +	/*
+> +	 * Update the geometry in the on-disk superblock first, and ensure
+> +	 * they make it to disk before the superblock can be relogged.
+> +	 */
+> +	sbp = xfs_prepare_sb_update(tp, &bp);
+> +	sbp->sb_agcount = cpu_to_be32(nagcount);
+> +	sbp->sb_dblocks = cpu_to_be64(nb);
+> +	error = xfs_commit_sb_update(tp, bp);
+> +	if (error)
+> +		goto out_unlock;
+> +
+> +	/*
+> +	 * Propagate the new values to the live mount structure after they made
+> +	 * it to disk with the superblock buffer still locked.
+> +	 */
+> +	mp->m_sb.sb_agcount = nagcount;
+> +	mp->m_sb.sb_dblocks = nb;
+> +
+> +	if (nagimax)
+> +		mp->m_maxagi = nagimax;
+> +	xfs_set_low_space_thresholds(mp);
+> +	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+> +
+> +out_unlock:
+> +	xfs_buf_relse(bp);
+> +	return error;
+> +}
+> +
+>  /*
+>   * growfs operations
+>   */
+> @@ -171,37 +211,13 @@ xfs_growfs_data_private(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> -	/*
+> -	 * Update changed superblock fields transactionally. These are not
+> -	 * seen by the rest of the world until the transaction commit applies
+> -	 * them atomically to the superblock.
+> -	 */
+> -	if (nagcount > oagcount)
+> -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT, nagcount - oagcount);
+> -	if (delta)
+> -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS, delta);
+>  	if (id.nfree)
+>  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+>  
+> -	/*
+> -	 * Sync sb counters now to reflect the updated values. This is
+> -	 * particularly important for shrink because the write verifier
+> -	 * will fail if sb_fdblocks is ever larger than sb_dblocks.
+> -	 */
+> -	if (xfs_has_lazysbcount(mp))
+> -		xfs_log_sb(tp);
+> -
+> -	xfs_trans_set_sync(tp);
+> -	error = xfs_trans_commit(tp);
+> +	error = xfs_growfs_data_update_sb(tp, nagcount, nb, nagimax);
+>  	if (error)
+>  		return error;
+>  
+> -	/* New allocation groups fully initialized, so update mount struct */
+> -	if (nagimax)
+> -		mp->m_maxagi = nagimax;
+> -	xfs_set_low_space_thresholds(mp);
+> -	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+> -
+>  	if (delta > 0) {
 >  		/*
-> @@ -602,7 +602,8 @@ xfs_ioctl_setattr_check_extsize(
->  	if (!fa->fsx_valid)
->  		return 0;
+>  		 * If we expanded the last AG, free the per-AG reservation
+> @@ -260,8 +276,9 @@ xfs_growfs_imaxpct(
+>  	struct xfs_mount	*mp,
+>  	__u32			imaxpct)
+>  {
+> +	struct xfs_dsb		*sbp;
+> +	struct xfs_buf		*bp;
+>  	struct xfs_trans	*tp;
+> -	int			dpct;
+>  	int			error;
 >  
-> -	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
-> +	if (S_ISREG(VFS_I(ip)->i_mode) &&
-> +	    xfs_inode_has_data(ip) &&
->  	    XFS_FSB_TO_B(mp, ip->i_extsize) != fa->fsx_extsize)
->  		return -EINVAL;
+>  	if (imaxpct > 100)
+> @@ -272,10 +289,13 @@ xfs_growfs_imaxpct(
+>  	if (error)
+>  		return error;
 >  
+> -	dpct = imaxpct - mp->m_sb.sb_imax_pct;
+> -	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+> -	xfs_trans_set_sync(tp);
+> -	return xfs_trans_commit(tp);
+> +	sbp = xfs_prepare_sb_update(tp, &bp);
+> +	sbp->sb_imax_pct = imaxpct;
+> +	error = xfs_commit_sb_update(tp, bp);
+> +	if (!error)
+> +		mp->m_sb.sb_imax_pct = imaxpct;
+> +	xfs_buf_relse(bp);
+> +	return error;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 3a2005a1e673dc..994e5efedab20f 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -698,6 +698,56 @@ xfs_growfs_rt_fixup_extsize(
+>  	return error;
+>  }
+>  
+> +static int
+> +xfs_growfs_rt_update_sb(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_mount	*mp,
+> +	struct xfs_mount	*nmp,
+> +	xfs_rtbxlen_t		freed_rtx)
+> +{
+> +	struct xfs_dsb		*sbp;
+> +	struct xfs_buf		*bp;
+> +	int			error;
+> +
+> +	/*
+> +	 * Update the geometry in the on-disk superblock first, and ensure
+> +	 * they make it to disk before the superblock can be relogged.
+> +	 */
+> +	sbp = xfs_prepare_sb_update(tp, &bp);
+> +	sbp->sb_rextsize = cpu_to_be32(nmp->m_sb.sb_rextsize);
+> +	sbp->sb_rbmblocks = cpu_to_be32(nmp->m_sb.sb_rbmblocks);
+> +	sbp->sb_rblocks = cpu_to_be64(nmp->m_sb.sb_rblocks);
+> +	sbp->sb_rextents = cpu_to_be64(nmp->m_sb.sb_rextents);
+> +	sbp->sb_rextslog = nmp->m_sb.sb_rextslog;
+> +	error = xfs_commit_sb_update(tp, bp);
+> +	if (error)
+> +		return error;
+> +
+> +	/*
+> +	 * Propagate the new values to the live mount structure after they made
+> +	 * it to disk with the superblock buffer still locked.
+> +	 */
+> +	mp->m_sb.sb_rextsize = nmp->m_sb.sb_rextsize;
+> +	mp->m_sb.sb_rbmblocks = nmp->m_sb.sb_rbmblocks;
+> +	mp->m_sb.sb_rblocks = nmp->m_sb.sb_rblocks;
+> +	mp->m_sb.sb_rextents = nmp->m_sb.sb_rextents;
+> +	mp->m_sb.sb_rextslog = nmp->m_sb.sb_rextslog;
+> +	mp->m_rsumlevels = nmp->m_rsumlevels;
+> +	mp->m_rsumblocks = nmp->m_rsumblocks;
+> +
+> +	/*
+> +	 * Recompute the growfsrt reservation from the new rsumsize.
+> +	 */
+> +	xfs_trans_resv_calc(mp, &mp->m_resv);
+> +
+> +	/*
+> +	 * Ensure the mount RT feature flag is now set.
+> +	 */
+> +	mp->m_features |= XFS_FEAT_REALTIME;
+> +	xfs_buf_relse(bp);
+> +	return 0;
+> +}
+> +
+>  static int
+>  xfs_growfs_rt_bmblock(
+>  	struct xfs_mount	*mp,
+> @@ -780,25 +830,6 @@ xfs_growfs_rt_bmblock(
+>  			goto out_cancel;
+>  	}
+>  
+> -	/*
+> -	 * Update superblock fields.
+> -	 */
+> -	if (nmp->m_sb.sb_rextsize != mp->m_sb.sb_rextsize)
+> -		xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_REXTSIZE,
+> -			nmp->m_sb.sb_rextsize - mp->m_sb.sb_rextsize);
+> -	if (nmp->m_sb.sb_rbmblocks != mp->m_sb.sb_rbmblocks)
+> -		xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_RBMBLOCKS,
+> -			nmp->m_sb.sb_rbmblocks - mp->m_sb.sb_rbmblocks);
+> -	if (nmp->m_sb.sb_rblocks != mp->m_sb.sb_rblocks)
+> -		xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_RBLOCKS,
+> -			nmp->m_sb.sb_rblocks - mp->m_sb.sb_rblocks);
+> -	if (nmp->m_sb.sb_rextents != mp->m_sb.sb_rextents)
+> -		xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_REXTENTS,
+> -			nmp->m_sb.sb_rextents - mp->m_sb.sb_rextents);
+> -	if (nmp->m_sb.sb_rextslog != mp->m_sb.sb_rextslog)
+> -		xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_REXTSLOG,
+> -			nmp->m_sb.sb_rextslog - mp->m_sb.sb_rextslog);
+> -
+>  	/*
+>  	 * Free the new extent.
+>  	 */
+> @@ -807,33 +838,12 @@ xfs_growfs_rt_bmblock(
+>  	xfs_rtbuf_cache_relse(&nargs);
+>  	if (error)
+>  		goto out_cancel;
+> -
+> -	/*
+> -	 * Mark more blocks free in the superblock.
+> -	 */
+>  	xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_FREXTENTS, freed_rtx);
+>  
+> -	/*
+> -	 * Update the calculated values in the real mount structure.
+> -	 */
+> -	mp->m_rsumlevels = nmp->m_rsumlevels;
+> -	mp->m_rsumblocks = nmp->m_rsumblocks;
+> -	xfs_mount_sb_set_rextsize(mp, &mp->m_sb);
+> -
+> -	/*
+> -	 * Recompute the growfsrt reservation from the new rsumsize.
+> -	 */
+> -	xfs_trans_resv_calc(mp, &mp->m_resv);
+> -
+> -	error = xfs_trans_commit(args.tp);
+> +	error = xfs_growfs_rt_update_sb(args.tp, mp, nmp, freed_rtx);
+>  	if (error)
+>  		goto out_free;
+>  
+> -	/*
+> -	 * Ensure the mount RT feature flag is now set.
+> -	 */
+> -	mp->m_features |= XFS_FEAT_REALTIME;
+> -
+>  	kfree(nmp);
+>  	return 0;
+>  
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index bdf3704dc30118..56505cb94f877d 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -430,31 +430,6 @@ xfs_trans_mod_sb(
+>  		ASSERT(delta < 0);
+>  		tp->t_res_frextents_delta += delta;
+>  		break;
+> -	case XFS_TRANS_SB_DBLOCKS:
+> -		tp->t_dblocks_delta += delta;
+> -		break;
+> -	case XFS_TRANS_SB_AGCOUNT:
+> -		ASSERT(delta > 0);
+> -		tp->t_agcount_delta += delta;
+> -		break;
+> -	case XFS_TRANS_SB_IMAXPCT:
+> -		tp->t_imaxpct_delta += delta;
+> -		break;
+> -	case XFS_TRANS_SB_REXTSIZE:
+> -		tp->t_rextsize_delta += delta;
+> -		break;
+> -	case XFS_TRANS_SB_RBMBLOCKS:
+> -		tp->t_rbmblocks_delta += delta;
+> -		break;
+> -	case XFS_TRANS_SB_RBLOCKS:
+> -		tp->t_rblocks_delta += delta;
+> -		break;
+> -	case XFS_TRANS_SB_REXTENTS:
+> -		tp->t_rextents_delta += delta;
+> -		break;
+> -	case XFS_TRANS_SB_REXTSLOG:
+> -		tp->t_rextslog_delta += delta;
+> -		break;
+>  	default:
+>  		ASSERT(0);
+>  		return;
+> @@ -475,12 +450,8 @@ STATIC void
+>  xfs_trans_apply_sb_deltas(
+>  	xfs_trans_t	*tp)
+>  {
+> -	struct xfs_dsb	*sbp;
+> -	struct xfs_buf	*bp;
+> -	int		whole = 0;
+> -
+> -	bp = xfs_trans_getsb(tp);
+> -	sbp = bp->b_addr;
+> +	struct xfs_buf	*bp = xfs_trans_getsb(tp);
+> +	struct xfs_dsb	*sbp = bp->b_addr;
+>  
+>  	/*
+>  	 * Only update the superblock counters if we are logging them
+> @@ -522,53 +493,10 @@ xfs_trans_apply_sb_deltas(
+>  		spin_unlock(&mp->m_sb_lock);
+>  	}
+>  
+> -	if (tp->t_dblocks_delta) {
+> -		be64_add_cpu(&sbp->sb_dblocks, tp->t_dblocks_delta);
+> -		whole = 1;
+> -	}
+> -	if (tp->t_agcount_delta) {
+> -		be32_add_cpu(&sbp->sb_agcount, tp->t_agcount_delta);
+> -		whole = 1;
+> -	}
+> -	if (tp->t_imaxpct_delta) {
+> -		sbp->sb_imax_pct += tp->t_imaxpct_delta;
+> -		whole = 1;
+> -	}
+> -	if (tp->t_rextsize_delta) {
+> -		be32_add_cpu(&sbp->sb_rextsize, tp->t_rextsize_delta);
+> -		whole = 1;
+> -	}
+> -	if (tp->t_rbmblocks_delta) {
+> -		be32_add_cpu(&sbp->sb_rbmblocks, tp->t_rbmblocks_delta);
+> -		whole = 1;
+> -	}
+> -	if (tp->t_rblocks_delta) {
+> -		be64_add_cpu(&sbp->sb_rblocks, tp->t_rblocks_delta);
+> -		whole = 1;
+> -	}
+> -	if (tp->t_rextents_delta) {
+> -		be64_add_cpu(&sbp->sb_rextents, tp->t_rextents_delta);
+> -		whole = 1;
+> -	}
+> -	if (tp->t_rextslog_delta) {
+> -		sbp->sb_rextslog += tp->t_rextslog_delta;
+> -		whole = 1;
+> -	}
+> -
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+> -	if (whole)
+> -		/*
+> -		 * Log the whole thing, the fields are noncontiguous.
+> -		 */
+> -		xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
+> -	else
+> -		/*
+> -		 * Since all the modifiable fields are contiguous, we
+> -		 * can get away with this.
+> -		 */
+> -		xfs_trans_log_buf(tp, bp, offsetof(struct xfs_dsb, sb_icount),
+> -				  offsetof(struct xfs_dsb, sb_frextents) +
+> -				  sizeof(sbp->sb_frextents) - 1);
+> +	xfs_trans_log_buf(tp, bp, offsetof(struct xfs_dsb, sb_icount),
+> +			  offsetof(struct xfs_dsb, sb_frextents) +
+> +			  sizeof(sbp->sb_frextents) - 1);
+>  }
+>  
+>  /*
+> @@ -656,26 +584,7 @@ xfs_trans_unreserve_and_mod_sb(
+>  	 * must be consistent with the ondisk rtbitmap and must never include
+>  	 * incore reservations.
+>  	 */
+> -	mp->m_sb.sb_dblocks += tp->t_dblocks_delta;
+> -	mp->m_sb.sb_agcount += tp->t_agcount_delta;
+> -	mp->m_sb.sb_imax_pct += tp->t_imaxpct_delta;
+> -	mp->m_sb.sb_rextsize += tp->t_rextsize_delta;
+> -	if (tp->t_rextsize_delta) {
+> -		mp->m_rtxblklog = log2_if_power2(mp->m_sb.sb_rextsize);
+> -		mp->m_rtxblkmask = mask64_if_power2(mp->m_sb.sb_rextsize);
+> -	}
+> -	mp->m_sb.sb_rbmblocks += tp->t_rbmblocks_delta;
+> -	mp->m_sb.sb_rblocks += tp->t_rblocks_delta;
+> -	mp->m_sb.sb_rextents += tp->t_rextents_delta;
+> -	mp->m_sb.sb_rextslog += tp->t_rextslog_delta;
+>  	spin_unlock(&mp->m_sb_lock);
+> -
+> -	/*
+> -	 * Debug checks outside of the spinlock so they don't lock up the
+> -	 * machine if they fail.
+> -	 */
+> -	ASSERT(mp->m_sb.sb_imax_pct >= 0);
+> -	ASSERT(mp->m_sb.sb_rextslog >= 0);
+>  }
+>  
+>  /* Add the given log item to the transaction's list of log items. */
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index f06cc0f41665ad..e5911cf09be444 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -140,14 +140,6 @@ typedef struct xfs_trans {
+>  	int64_t			t_res_fdblocks_delta; /* on-disk only chg */
+>  	int64_t			t_frextents_delta;/* superblock freextents chg*/
+>  	int64_t			t_res_frextents_delta; /* on-disk only chg */
+> -	int64_t			t_dblocks_delta;/* superblock dblocks change */
+> -	int64_t			t_agcount_delta;/* superblock agcount change */
+> -	int64_t			t_imaxpct_delta;/* superblock imaxpct change */
+> -	int64_t			t_rextsize_delta;/* superblock rextsize chg */
+> -	int64_t			t_rbmblocks_delta;/* superblock rbmblocks chg */
+> -	int64_t			t_rblocks_delta;/* superblock rblocks change */
+> -	int64_t			t_rextents_delta;/* superblocks rextents chg */
+> -	int64_t			t_rextslog_delta;/* superblocks rextslog chg */
+>  	struct list_head	t_items;	/* log item descriptors */
+>  	struct list_head	t_busy;		/* list of busy extents */
+>  	struct list_head	t_dfops;	/* deferred operations */
 > -- 
-> 2.43.5
+> 2.45.2
+> 
 > 
