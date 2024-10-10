@@ -1,50 +1,75 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F6011CF29D;
-	Thu, 10 Oct 2024 08:01:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611351BBBC1;
+	Thu, 10 Oct 2024 08:56:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728547300; cv=none; b=jpFZlz1kXSlmsw79/W643lgJafpBJPFv3zCGdbpTIyVaj/hpAt6SxnvtPCpE6o5eqSexuLY8uDO0L8zRPmQxGKtQP7cYEZteaor6dcxLv2SwJpH37ZWcR/AE5RINx2Miq9SjCSTyYtorTbeF+ThBjRCmuMnjdLtqhN9ZCetYW2U=
+	t=1728550576; cv=none; b=VlrLECHBVGldokAG8jbWnq4wKmp3HBZYqT7NUHhr+/7do8yAcZ1lIXXKJHNeXU519PMAloHdbJ72O1J2Ck6gVWxCahThiI0bg53ku4vWVl9uLp2H27Ryyf/q6eDbuLq92ouWm5Y2aXiUXbKuhoSWxJB+PfAdfoYMhnSJxgnwXzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728547300; c=relaxed/simple;
-	bh=SPNWE67wljUpgDt6cdCP1UZ5g+mrt3I94xuS2flkUjw=;
+	s=arc-20240116; t=1728550576; c=relaxed/simple;
+	bh=zC9p66fE7VMCFNoontq1h7Rr2Vasynv+ZTzxgtVQxiA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Zz+/MQz+F7wq5DSsLk8j0MN0HLmpgJviH+fMuQj6U6caEL21wUbRxWR/S9zam6Q+KVvUNh31oLUk10k1znjEIIcPjSh+bQGPviG+PlY/sMfw6PQzfcXdRB0d6WxIzsZft7NGrANlhHlphKabAZeZet/mu+nsCMELp/Y22WsT7lc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ODlnf31z; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=GEXEJWsq95y6md5e9Fl6u556gNnuA3gLS3uHnsxVw/M8B7P/jhEjChz5r09XBm0KKqXs0BBysGiLRGjK06BeomS6NZR9EnLxzzg9sLw53TdvYcFz/R1FF/2Yc5nge7L8Rl+Q5Nz7GnaD87ebB3nnzJl5iFM4+vhhNETB9fvjpaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Fftw3fjA; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ODlnf31z"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=3M9KdA8DamcHX+t4Rs6QLSY8A6xBoeXjIByTZaRvvrw=; b=ODlnf31zkBA60pAMsLKUz4NwQA
-	0d1+qf2OpwXb5xM7RrOyWLDPmzgckueE+AckkkbX9AeLzNNKH9DDQ20L3tNKen95IQxJ4AaT1NaDk
-	2rt9oonqWGhcxNDoPLDPP3VzdqkNfjEiI2U9f7Hq+xSMWHk2PfvhbyqeEYvcmasG3J7l7Rxr46mcv
-	lpM0TA1sM5LlScvxNz87yz3ey/jdIwfJh7YL7E1yumpCqhm//sWjUujlYuKyb6xyScH/hQD9Z9H/w
-	E7hZ09vvysbAVWRm1tkP+SLzPEm544ZxZ82wA5c4jRZLGqPSkMMvLItACcRiBNMUyNY6nDlkpN83W
-	H3CaLIVg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1syo77-0000000BtRj-1dcm;
-	Thu, 10 Oct 2024 08:01:37 +0000
-Date: Thu, 10 Oct 2024 01:01:37 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Marco Elver <elver@google.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	syzbot <syzbot+8a8170685a482c92e86a@syzkaller.appspotmail.com>,
-	chandan.babu@oracle.com, djwong@kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com,
-	Alexander Potapenko <glider@google.com>,
-	Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
-	Vlastimil Babka <vbabka@suse.cz>, Feng Tang <feng.tang@intel.com>
-Subject: Re: [syzbot] [xfs?] KFENCE: memory corruption in xfs_idata_realloc
-Message-ID: <ZweJ4UiFpOtxyeB-@infradead.org>
-References: <6705c39b.050a0220.22840d.000a.GAE@google.com>
- <Zwd4vxcqoGi6Resh@infradead.org>
- <CANpmjNMV+KfJqwTgV9vZ_JSwfZfdt7oBeGUmv3+fAttxXvRXhg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Fftw3fjA"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49A733ew015364;
+	Thu, 10 Oct 2024 08:56:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date
+	:from:to:cc:subject:message-id:references:mime-version
+	:content-type:in-reply-to; s=pp1; bh=LT6OpCAjFdPGcnZd9zmNLgVTeN6
+	FJCyMAB7EAQjVRnA=; b=Fftw3fjAAxljDpDVzrcNDMR1MqaK2fOjEJgLvburyaY
+	EmkxMJ6wyORxdpAHfiIGSHRqUqjFX88QP89hTOVazriNqcUAUXFzibdzKVOxsHSF
+	HsFppXSNZM+a461y/aGsVAtqCCb9ZjJ+Co23atbKDRwyZcFB1YhbFSIjTRWueoOi
+	WZeIdSbamuMNS0V0NPltUsjL5HorE7+hkSIHwn/THMApOxyVXsyLd1mybvUl5/cR
+	UYgYFnGW4LbZZWcJvmtza7PlD72jGOUuH7t1Lrx9pOn0vQjOl46U2Xegqr7b7gtG
+	6E39BDjhVKd195VRxv6BInGZBoij4cMwQ5l/A8Gr0tw==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 426a6mgjq6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 10 Oct 2024 08:56:07 +0000 (GMT)
+Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 49A8pJTM009118;
+	Thu, 10 Oct 2024 08:56:07 GMT
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 426a6mgjq0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 10 Oct 2024 08:56:07 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 49A8tGkr013833;
+	Thu, 10 Oct 2024 08:56:06 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 423fsseygj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 10 Oct 2024 08:56:06 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 49A8u4He51577226
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 10 Oct 2024 08:56:04 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 684052004B;
+	Thu, 10 Oct 2024 08:56:04 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1417E20043;
+	Thu, 10 Oct 2024 08:56:03 +0000 (GMT)
+Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com (unknown [9.124.218.86])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu, 10 Oct 2024 08:56:02 +0000 (GMT)
+Date: Thu, 10 Oct 2024 14:26:00 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+        linux-kernel@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
+        dchinner@redhat.com, Chandan Babu R <chandan.babu@oracle.com>
+Subject: Re: [PATCH v2] xfs: Check for deallayed allocations before setting
+ extsize
+Message-ID: <ZweWoArbBSDRNDbJ@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
+References: <20241010063617.563365-1-ojaswin@linux.ibm.com>
+ <20241010065021.GA6611@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,57 +78,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CANpmjNMV+KfJqwTgV9vZ_JSwfZfdt7oBeGUmv3+fAttxXvRXhg@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20241010065021.GA6611@lst.de>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: kbbXE1BCWgDbNUQnk1N0K8VomxAo0rFe
+X-Proofpoint-GUID: DmzNeESTfuHJaPC-eIy4c3TJgudHKsqN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-10_05,2024-10-09_02,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 bulkscore=0
+ mlxlogscore=455 clxscore=1011 lowpriorityscore=0 impostorscore=0
+ mlxscore=0 suspectscore=0 phishscore=0 spamscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410100056
 
-On Thu, Oct 10, 2024 at 09:50:06AM +0200, Marco Elver wrote:
-> > I've tried to make sense of this report and failed.
-> >
-> > Documentation/dev-tools/kfence.rst explains these messages as:
-> >
-> > KFENCE also uses pattern-based redzones on the other side of an object's guard
-> > page, to detect out-of-bounds writes on the unprotected side of the object.
-> > These are reported on frees::
-> >
-> > But doesn't explain what "the other side of an object's guard page" is.
-> 
-> Every kfence object has a guard page right next to where it's allocated:
-> 
->   [ GUARD | OBJECT + "wasted space" ]
-> 
-> or
-> 
->   [ "wasted space" + OBJECT | GUARD ]
-> 
-> The GUARD is randomly on the left or right. If an OOB access straddles
-> into the GUARD, we get a page fault. For objects smaller than
-> page-size, there'll be some "wasted space" on the object page, which
-> is on "the other side" vs. where the guard page is. If a OOB write or
-> other random memory corruption doesn't hit the GUARD, but the "wasted
-> space" portion next to an object that would be detected as "Corrupted
-> memory" on free because the redzone pattern was likely stomped on.
+On Thu, Oct 10, 2024 at 08:50:21AM +0200, Christoph Hellwig wrote:
+> s/deallayed/delayed/
 
-Thanks!  Searching kfence.txt for random I find that explaination in
-the intro now.  Can you maybe expand the section I quoted to make
-this more clear, by saying something like:
-
-KFENCE also uses pattern-based redzones on the side of the object that
-is not covered by the GUARD (which is randomly allocated to either the
-left or the right), to detect out-of-bounds writes there as well.
-These are reported on frees::
-
-
+Hi Christoph, sorry I missed this, will fix it.
 > 
-> > Either way this is in the common krealloc code, which is a bit special
-> > as it uses ksize to figure out what the actual underlying allocation
-> > size of an object is to make use of that.  Without understanding the
-> > actual error I wonder if that's something kfence can't cope with?
+> >  
+> > +static inline bool xfs_inode_has_data(struct xfs_inode *ip)
+> > +{
+> > +	return (ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0);
 > 
-> krealloc + KFENCE broke in next-20241003:
-> https://lore.kernel.org/all/CANpmjNM5XjwwSc8WrDE9=FGmSScftYrbsvC+db+82GaMPiQqvQ@mail.gmail.com/T/#u
-> It's been removed from -next since then.
+> Nit: no need for the braces.
 > 
-> It's safe to ignore.
+> > +	if (S_ISREG(VFS_I(ip)->i_mode) &&
+> > +	    xfs_inode_has_data(ip) &&
+> 
+> This can now be condensed to:
+> 
+> 	if (S_ISREG(VFS_I(ip)->i_mode) && xfs_inode_has_data(ip) &&
+> 
+> Otherwise this still looks good to me.
+> 
 
-Thanks!
+Got it, I'll make the changes and send v3 by end of day.
 
+Regards,
+ojaswin
