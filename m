@@ -1,109 +1,84 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76A3519DF95;
-	Thu, 10 Oct 2024 06:39:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E6CE64D;
+	Thu, 10 Oct 2024 06:48:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728542386; cv=none; b=hL0XG0X/Y/Xdv29kmB8e19z+nSNfE5yHZhFJJk2xbmxscmraKhPtEF/v8eku/+JihAcv+zbXc+dI76p+89Fq+plYfV1uP6D90SiXhS3LdFk4Ppz2zr9M9P7nF/01IcjqDJq7WvwFkz21ATEEevLErWm6phgNhXQJUX+Epl/5vMs=
+	t=1728542915; cv=none; b=t1mM8M12ZMwBr9yQaiO6jfvOxoQUB+PqH15JcgjaTDDYC3UEFDEOuEw6zQW26jHnoc776CzjUDhex6fdw3hrbSLLkUJwMfvnjDyOw4/annYwBFPPmy0KUvlhDEgh7WWByTF6epb+PetRYTbRj0quQem4I9Y5Ux0Jde02Unf1yHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728542386; c=relaxed/simple;
-	bh=A9aoV4pLUkmqg5hExqZjkeGcYEq4lkw5kEjIYiFUbCI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=n8X7xhj4EJD6k8K/VdEGAOSltnaIO/y1/eUlBhdWH/44TJx1na2FnheJN01rYfYTVwWoAGG39k5WDSC8qvsTymBXix1Q5NqlVBIviUiclUo7K6tplb67nq1ZDiOWYL0Nd3elN/a3xLJ8LHaelEUeusD9tKtVXmC8C8AmmNb2Jao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=GKMXlb1b; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1728542915; c=relaxed/simple;
+	bh=hdLGx4sCQY3IQTyyuCIwgMHT42pwdh2t3gFJVbsw4gY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c9puDM+jhgdIk5yzag5tEdR8KVLgXqVYj2/mTvbDlI7DUNUHRNT9bQmRmxhtPBX2KdAbWWVHC2J0GcZdmp9f5jxhjF6xi09N3hYu9/9To7YE5LLdesKgS7OtlLdF6nVZ4vx10aCkQ4xjJtxQX+c+o7hDXJkZTM/f4zeyJgFhRl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JLXBKQfE; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="GKMXlb1b"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1728541781;
-	bh=vOuCUK01oxy5k7JbXkIGuKuHjfVwEEjE3/abMmPSBdE=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=GKMXlb1b3NZjYTYbzmtz//XxClHYQHHhFh2EOhA8sM7KjLDSs/PVVrRoPZlK8PkVP
-	 g4WI2ufab656vcuQZ+2RXKLZKLs6T9PhaIlZ8SUVz5f27XBfim2UtKqvfgTaM4fApr
-	 mAIY80OovTFfuWA+9SYacshCY8KUljhCIdESO5Fc=
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JLXBKQfE"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=iVsCjrjUVGkyDrGz/5v9GR6eRnt67kS6CddzSgVmS5U=; b=JLXBKQfE//CMLG+4v+vSRYYqq4
+	qXW6K+XJAqGhvhZpV4tehgKXGKleOaDX9iLRcZY05OUAUmlM9/ZmjWLrwdSx5uYlsVkeWmdDfamaU
+	zFj2lbZni7Z2OGeSAAWhJ07AXkerPRvk6JQl4EFLRynLjImKbslZVGEZtx8vGCwvaP9FdT1Jk1XLW
+	czeyXl+CJ4hPF/V2Lg+8e5ct7y2B3lxxeAo1f6tfXVt5IrCLGVKE/DE/uLaX7NnkrkmKS9wFy1MD9
+	IimStoIqSWZs3Kn7UUijf2Ps0Ju2wLO3n1LK7rmXtU3vKAhoujPkuhiDyLG5uUnt4rnpPukjlTw92
+	TSUBx2yQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1symyN-0000000BjJc-1SeY;
+	Thu, 10 Oct 2024 06:48:31 +0000
+Date: Wed, 9 Oct 2024 23:48:31 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: syzbot <syzbot+8a8170685a482c92e86a@syzkaller.appspotmail.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	Alexander Potapenko <glider@google.com>,
+	Marco Elver <elver@google.com>, Dmitry Vyukov <dvyukov@google.com>,
+	kasan-dev@googlegroups.com
+Subject: Re: [syzbot] [xfs?] KFENCE: memory corruption in xfs_idata_realloc
+Message-ID: <Zwd4vxcqoGi6Resh@infradead.org>
+References: <6705c39b.050a0220.22840d.000a.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3818.100.11.1.3\))
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <f8232f8b-06e0-4d1a-bee4-cfc2ac23194e@meta.com>
-Date: Thu, 10 Oct 2024 08:29:14 +0200
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
- Dave Chinner <david@fromorbit.com>,
- Matthew Wilcox <willy@infradead.org>,
- Jens Axboe <axboe@kernel.dk>,
- linux-mm@kvack.org,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Daniel Dao <dqminh@cloudflare.com>,
- regressions@lists.linux.dev,
- regressions@leemhuis.info
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <E07B71C9-A22A-4C0C-B4AD-247CECC74DFA@flyingcircus.io>
-References: <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
- <Zud1EhTnoWIRFPa/@dread.disaster.area>
- <CAHk-=wgY-PVaVRBHem2qGnzpAQJheDOWKpqsteQxbRop6ey+fQ@mail.gmail.com>
- <74cceb67-2e71-455f-a4d4-6c5185ef775b@meta.com>
- <ZulMlPFKiiRe3iFd@casper.infradead.org>
- <52d45d22-e108-400e-a63f-f50ef1a0ae1a@meta.com>
- <ZumDPU7RDg5wV0Re@casper.infradead.org>
- <5bee194c-9cd3-47e7-919b-9f352441f855@kernel.dk>
- <459beb1c-defd-4836-952c-589203b7005c@meta.com>
- <ZurXAco1BKqf8I2E@casper.infradead.org>
- <ZuuBs762OrOk58zQ@dread.disaster.area>
- <CAHk-=wjsrwuU9uALfif4WhSg=kpwXqP2h1ZB+zmH_ORDsrLCnQ@mail.gmail.com>
- <CAHk-=wgQ_OeAaNMA7A=icuf66r7Atz1-NNs9Qk8O=2gEjd=qTw@mail.gmail.com>
- <E6728F3E-374A-4A86-A5F2-C67CCECD6F7D@flyingcircus.io>
- <CAHk-=wgtHDOxi+1uXo8gJcDKO7yjswQr5eMs0cgAB6=mp+yWxw@mail.gmail.com>
- <D49C9D27-7523-41C9-8B8D-82B2A7CBE97B@flyingcircus.io>
- <02121707-E630-4E7E-837B-8F53B4C28721@flyingcircus.io>
- <f8232f8b-06e0-4d1a-bee4-cfc2ac23194e@meta.com>
-To: Chris Mason <clm@meta.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6705c39b.050a0220.22840d.000a.GAE@google.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+[adding the kfence maintainers]
 
-> On 1. Oct 2024, at 02:56, Chris Mason <clm@meta.com> wrote:
->=20
-> Not disagreeing with Linus at all, but given that you've got IO
-> throttling too, we might really just be waiting.  It's hard to tell
-> because the hung task timeouts only give you information about one =
-process.
->=20
-> I've attached a minimal version of a script we use here to show all =
-the
-> D state processes, it might help explain things.  The only problem is
-> you have to actually ssh to the box and run it when you're stuck.
->=20
-> The idea is to print the stack trace of every D state process, and =
-then
-> also print out how often each unique stack trace shows up.  When we're
-> deadlocked on something, there are normally a bunch of the same stack
-> (say waiting on writeback) and then one jerk sitting around in a
-> different stack who is causing all the trouble.
+On Tue, Oct 08, 2024 at 04:43:23PM -0700, syzbot wrote:
+> dashboard link: https://syzkaller.appspot.com/bug?extid=8a8170685a482c92e86a
 
-I think I should be able to trigger this. I=E2=80=99ve seen around a 100 =
-of those issues over the last week and the chance of it happening =
-correlates with a certain workload that should be easy to trigger. Also, =
-the condition remains for at around 5 minutes, so I should be able to =
-trace it when I see the alert in an interactive session.
+[...]
 
-I=E2=80=99ve verified I can run your script and I=E2=80=99ll get back to =
-you in the next days.
+> XFS (loop2): Quotacheck: Done.
+> ==================================================================
+> BUG: KFENCE: memory corruption in krealloc_noprof+0x160/0x2e0
+> 
+> Corrupted memory at 0xffff88823bedafeb [ 0x03 0x00 0xd8 0x62 0x75 0x73 0x01 0x00 0x00 0x11 0x4c 0x00 0x00 0x00 0x00 0x00 ] (in kfence-#108):
+>  krealloc_noprof+0x160/0x2e0
+>  xfs_idata_realloc+0x116/0x1b0 fs/xfs/libxfs/xfs_inode_fork.c:523
 
-Christian
+I've tried to make sense of this report and failed.
 
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
+Documentation/dev-tools/kfence.rst explains these messages as:
+
+KFENCE also uses pattern-based redzones on the other side of an object's guard
+page, to detect out-of-bounds writes on the unprotected side of the object.
+These are reported on frees::
+
+But doesn't explain what "the other side of an object's guard page" is.
+
+Either way this is in the common krealloc code, which is a bit special
+as it uses ksize to figure out what the actual underlying allocation
+size of an object is to make use of that.  Without understanding the
+actual error I wonder if that's something kfence can't cope with?
 
