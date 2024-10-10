@@ -1,36 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783D41C2336
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Oct 2024 11:12:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B84C1C3309;
+	Thu, 10 Oct 2024 11:35:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728558766; cv=none; b=sHhNaTOKfvHTmGTSh+syjszwoKvBJLXhcnXOLc67ULsa4mJXldjy/R2hItZOa4Ox/NWcw+svu19Xm37Fr8TSFH2Yn8MV43J27I/c1YYRXD18xqJyvvutDrcgCBunqlfxAHaOVJr36s+zRLMU5NamgWjecx9KOsPHsHzHNl3Dw1E=
+	t=1728560152; cv=none; b=UuOuT2Aox1BEJl5JkzHGmy5rL1XXkTiitxdlmkpG30v956k76ehyD1SUxV/FW8gDX66erqeNZ2HK31r+EFFKHdkYV27E80sStQMnwHAhSAzJgJ9FuJiuDt+tRvuYufCsBmowTGBIvW3AnfgZvvXJCKOxvEM/7PWs6kD3+VVRMu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728558766; c=relaxed/simple;
-	bh=tYVuvCmSPPkNurzhLMBkx576UfEBuvULU7zURDzx5io=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=ekurm4HN+y/j2vEuU65/zCNqV4inSbgIBJJSDZSBXNQzTj0xOu4DWT/TFJWpvp6SEbJ01zERYwRsvZ0wXaDNyka4WPo3iDPnClL6X63hG7sO9Si1n4MaoglkXSMXHesIvHbKDRY7t7V7aV+zc5wkvPZLYQ+nY7SHk3k+PGybprg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nYjCy24Y; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728560152; c=relaxed/simple;
+	bh=Wtz5Xrjtx1jJsHvUJrpxoPdBEDCmRN5XufUeSqQkcL0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=VENOBqjBmwkDLiwI5RmzY+iQCXLN/xC4mX6uuRJAGs3ZsHm68LjU7YOlSl/Uzamgv6r3w6kpD1KG/5kAY9YI/FaLJfWGqG5yfcIgqsWSBugRNJ01INAZZG1Pgfo7qDzaemy21A/zMJv3PauIpbm3sAtygl+4OIcgDLVudH7j6hI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qWYFEtV+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nYjCy24Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C54AC4CEC5
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Oct 2024 11:12:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qWYFEtV+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD1AAC4CEC5;
+	Thu, 10 Oct 2024 11:35:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728558766;
-	bh=tYVuvCmSPPkNurzhLMBkx576UfEBuvULU7zURDzx5io=;
-	h=Date:From:To:Subject:From;
-	b=nYjCy24YEoQTP6yjtJcWffcoinwDrtw3/VHPO6OCvZ3CSNsTy5wcoln4xJAqAopnp
-	 z8+Is8w0lPLMstVDlh6mnNIHREHaO+Z8Dfsy0cd/ETqW0xtoPYw59LXrguRoYa+Ej9
-	 j2dKv8bsa1Wx1MaUekJu13YvMDFMGjv1x/6QsWI3fVlcaNRP17+XCnIMndOfRPojDU
-	 OTDEG/2FXuC8AdKjz4HdmRFuc0WJr8FWsFmFBJ2SH95nO/aBnQME68yn0Io2jxfphq
-	 KcuXupKfV2mbYO4TVlKa3sFy4x7VCV61w4cDwi6mvEowCKJocXfUQNFrKdBcCP20ru
-	 8rx4Ka3EwBULg==
-Date: Thu, 10 Oct 2024 13:12:42 +0200
+	s=k20201202; t=1728560151;
+	bh=Wtz5Xrjtx1jJsHvUJrpxoPdBEDCmRN5XufUeSqQkcL0=;
+	h=Date:From:To:Cc:Subject:From;
+	b=qWYFEtV+3KAiwc0i7xeBfhs6sXw+cgJqSVGg4u4E27O3gcNyDVFAqv/XBcKCLBNzl
+	 U6N+Z6zOA5+5ljrA4EO86ED6up5heEBkzK5iT/1+enyfKwNEpUckOREN7XFgLQPzhr
+	 yPkdLHHqcWW5840VDw0vmdwe4jwhnVE2MR2rwfdukg58X1DGz8yZOkqFz8vQx33U4P
+	 e1bx2GbHlf0kkIhwU8GHo21VUGr/SGXjx/6xlWJndi+B1tEoWGIyLsprjw+TUq76sm
+	 5zxGnG5njA+yWMHQPvgXWIIU/ttrAmPO86jgyHF1wQblOe8olTtOiVPi8CfU7qeNWs
+	 6EOwjr5NWiUEg==
+Date: Thu, 10 Oct 2024 13:35:47 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next **REBASED** to 77bfe1b11ea0
-Message-ID: <hwgxagdixozds3karl5rlpyoquar7aiwcvhork527xnnyng27a@eunr3xdspko4>
+To: torvalds@linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: bug fixes for 6.12-rc3
+Message-ID: <ftxj7acikfuwhh2spky4jlnqdob7vjxxxtoibq5ekiriirrxy2@uer37e2phsit>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,65 +41,75 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-Hi folks,
+Hi Linus,
 
-The for-next branch of the xfs-linux repository at:
+Could you please pull the patches below? They are fixes aiming 6.12-rc3.
 
-	git@gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git
+I did a test merge against current TOT and I didn't hit any conflicts.
 
-has just been **REBASED**.
+These patches are in linux-next for a couple days, already, and nothing got
+reported so far, other than a short hash on a Fixes tag, which I fixed and
+rebased the tree today before submitting the patches.
 
-
-My apologies for rebasing it again for the second time and I hope it doesn't
-disrupt anybody's work. The reason for the rebase was a simple issue on one
-of the patches descriptions pointed by Stephen Rothwell during the time the
-patches were on linux-next. The patches are still exactly the same, nothing
-has changed other than a 'Fixes:' tag in one of the patches, I'm just rebasing
-it so I don't sent my first pull to Linus with some obvious mistake..
+Hope I got everything right. Thanks!
+Carlos
 
 
+The following changes since commit 8cf0b93919e13d1e8d4466eb4080a4c4d9d66d7b:
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+  Linux 6.12-rc2 (2024-10-06 15:32:27 -0700)
 
-The new head of the for-next branch is commit:
+are available in the Git repository at:
 
-77bfe1b11ea0 xfs: fix a typo
+  git@gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.12-fixes-3
 
-15 new commits:
+for you to fetch changes up to 77bfe1b11ea0c0c4b0ce19b742cd1aa82f60e45d:
 
+  xfs: fix a typo (2024-10-09 10:05:26 +0200)
+
+----------------------------------------------------------------
+Bug fixes for 6.12-rc3
+
+* A few small typo fixes
+* fstests xfs/538 DEBUG-only fix
+* Performance fix on blockgc on COW'ed files,
+  by skipping trims on cowblock inodes currently
+  opened for write
+* Prevent cowblocks to be freed under dirty pagecache
+  during unshare
+* Update MAINTAINERS file to quote the new maintainer
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
 Andrew Kreimer (1):
-      [77bfe1b11ea0] xfs: fix a typo
+      xfs: fix a typo
 
 Brian Foster (2):
-      [90a71daaf73f] xfs: skip background cowblock trims on inodes open for write
-      [4390f019ad78] xfs: don't free cowblocks from under dirty pagecache on unshare
+      xfs: skip background cowblock trims on inodes open for write
+      xfs: don't free cowblocks from under dirty pagecache on unshare
 
 Chandan Babu R (1):
-      [ae6f70c66748] MAINTAINERS: add Carlos Maiolino as XFS release manager
+      MAINTAINERS: add Carlos Maiolino as XFS release manager
 
 Christoph Hellwig (8):
-      [b1c649da15c2] xfs: merge xfs_attr_leaf_try_add into xfs_attr_leaf_addname
-      [346c1d46d4c6] xfs: return bool from xfs_attr3_leaf_add
-      [a5f73342abe1] xfs: distinguish extra split from real ENOSPC from xfs_attr3_leaf_split
-      [b3f4e84e2f43] xfs: distinguish extra split from real ENOSPC from xfs_attr_node_try_addname
-      [865469cd41bc] xfs: fold xfs_bmap_alloc_userdata into xfs_bmapi_allocate
-      [b611fddc0435] xfs: don't ifdef around the exact minlen allocations
-      [405ee87c6938] xfs: call xfs_bmap_exact_minlen_extent_alloc from xfs_bmap_btalloc
-      [6aac77059881] xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
+      xfs: merge xfs_attr_leaf_try_add into xfs_attr_leaf_addname
+      xfs: return bool from xfs_attr3_leaf_add
+      xfs: distinguish extra split from real ENOSPC from xfs_attr3_leaf_split
+      xfs: distinguish extra split from real ENOSPC from xfs_attr_node_try_addname
+      xfs: fold xfs_bmap_alloc_userdata into xfs_bmapi_allocate
+      xfs: don't ifdef around the exact minlen allocations
+      xfs: call xfs_bmap_exact_minlen_extent_alloc from xfs_bmap_btalloc
+      xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
 
 Uros Bizjak (1):
-      [20195d011c84] xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
+      xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
 
 Yan Zhen (1):
-      [6148b77960cc] xfs: scrub: convert comma to semicolon
+      xfs: scrub: convert comma to semicolon
 
 Zhang Zekun (1):
-      [f6225eebd76f] xfs: Remove empty declartion in header file
-
-Code Diffstat:
+      xfs: Remove empty declartion in header file
 
  MAINTAINERS                   |   2 +-
  fs/xfs/libxfs/xfs_alloc.c     |   7 +-
