@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602B6FBF0
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:24:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF0463209
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:24:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609859; cv=none; b=Jm8QdP4KzDrW18c9VZcfBzcMpY3KCxxVw/fnTnwmHVK2Ue3OiXxABhnN4XAfh3DgM0FdhPCyQv8qP8GxzRbptZPJXNMwJ9kJrNooejEeFVwRWbpqWAvV8xftUVryE4DHoQc+aoY1/b+8TFxii84K3mgeAwmCcVC8SXW30FrJ+r4=
+	t=1728609875; cv=none; b=QIv14c3MqkFMkWJEnI/pa39VLdjN8Yp1T/+LtN9BUnZdHNTUU2CLHvJeu+/KnNsou7+rFMQ2oKDVpUKrGtyZEuuvhlP9iIjOW/ZoNAQuPTEgwz4kO4nNZsYknTpeGb+A0EEJvkYfFSxd5rW9cYZsM3UdvBa+g4ijbj+eizn8zKg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609859; c=relaxed/simple;
-	bh=tyK3U5oSCZMQIXwd6OCZCZnVz9ACqxKbgA9cFRbQw0s=;
+	s=arc-20240116; t=1728609875; c=relaxed/simple;
+	bh=9r16Wkgpxmnh52bp4NyjvArv+7J3/X3msdSXeE/4SME=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=spoWUp37vSrSpoymbaog4FEA3LedDujDFs4JPDsbMz3GOydpqQDilxGi+OdctoB0Sm/crpRcJMnQKBZ9/icElaqGLYI8k31q0978uGbkD5XhJE+LDUoJ9QsLH8HT4pVn+hyc1AvaqM8TyiGMXrsVSGoZNUbAOVkIkZqJvFGgA5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h1FQeeBs; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tpopmfN3kee1AxvINVtvucn/z3IeXTluF3ZKJ7A3bYM2Ry0mwH3kHFKNNJgk2rAEAaJapIb9o/RzMQtqFIfvB7bBv2ejB692eXywiG0bpsZCsJhS6PrXXD7hSQt+vjKDaZXd7vtfAicoTmN6IfeRf4IF+znEJ1gzkOwQD5QDlQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mSy+9y76; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h1FQeeBs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B291C4CEC5;
-	Fri, 11 Oct 2024 01:24:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mSy+9y76"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD383C4CEC5;
+	Fri, 11 Oct 2024 01:24:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609859;
-	bh=tyK3U5oSCZMQIXwd6OCZCZnVz9ACqxKbgA9cFRbQw0s=;
+	s=k20201202; t=1728609874;
+	bh=9r16Wkgpxmnh52bp4NyjvArv+7J3/X3msdSXeE/4SME=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=h1FQeeBsFS5BArt49pouppcsxJAxlP5E2XNsiVoalsYA7Txqb1zdWAf9uZbJNEGkX
-	 tkJZ5lXdKVeMAm5ZqVhcq+ynVA+jkjdibxtLGfSUdhUob8Y3ERHzp+fXoOj5OfU0Nt
-	 DAo61KQ9yL+mcrs93BUkqHoaKdAn3otzpEpJCFr0ssRmcGDm1RY/Aua1PBPyoiRQAk
-	 W8+DqiCGXs4PEBb6JXd2t+yIoZ386wuCMTaM29rTorodNfhjoegqNeG7gsXUhCLq+J
-	 eiGTFxlY8yxe4hQ6nT8+56dorkazuKpWRoaC/WEXvN+SjZQibbyBanhqwFLzUkhBIt
-	 3msNFz9Br+SWw==
-Date: Thu, 10 Oct 2024 18:24:18 -0700
-Subject: [PATCH 1/2] libfrog: add memchr_inv
+	b=mSy+9y76kDP0JOAnfgp1Lo6cmkfNBlwjllr6nW5zrVstp3TXcmltHzAB06gNaooF3
+	 mwrIsFKpTq7zBahzNF0HwbpXp+vxvog13eQsCnTzhiHuiQA/zRTZNRUS+D23n8YjLL
+	 3M9+HtHMi8RNmm8ANnNW1snxj6HiOM21KHEjIWUWKRmcB6zoLvpJnoC4EnYvwIKsq1
+	 b9XNT25ESHzwlAVv2lxcfVbwaG/1sUGVgcF43jujUmFfODYzV4OaxaLOxHd0auNblW
+	 Fz4FLBiwBU083AYJTnO3jd1c1SN0zVBeR5NXFZyeVBnmy6zVAiWfLjGGGz5AQdcGUa
+	 lxUflTioG88JQ==
+Date: Thu, 10 Oct 2024 18:24:34 -0700
+Subject: [PATCH 2/2] xfs_repair: remove calls to xfs_rtb_round{up,down}_rtx
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860654897.4184510.847299719986927364.stgit@frogsfrogsfrogs>
+Message-ID: <172860654913.4184510.2431581462692155722.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860654880.4184510.591452825012506934.stgit@frogsfrogsfrogs>
 References: <172860654880.4184510.591452825012506934.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,57 +46,39 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add this kernel function so we can use it in userspace.
+The kernel will remove xfs_rtb_roundup_rtx soon, so open code the single
+caller using the mod value that we already computed.
+
+The kernel will remove xfs_rtb_rounddown_rtx soon, so remove the call
+because the xfs_rtb_to_rtx call below it already does the rounding for
+us.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-[hch: split from a larger patch]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/util.c |   14 ++++++++++++++
- libfrog/util.h |    4 ++++
- 2 files changed, 18 insertions(+)
+ repair/dinode.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/libfrog/util.c b/libfrog/util.c
-index 8fb10cf82f5ca4..46047571a5531f 100644
---- a/libfrog/util.c
-+++ b/libfrog/util.c
-@@ -22,3 +22,17 @@ log2_roundup(unsigned int i)
- 	}
- 	return rval;
- }
-+
-+void *
-+memchr_inv(const void *start, int c, size_t bytes)
-+{
-+	const unsigned char	*p = start;
-+
-+	while (bytes > 0) {
-+		if (*p != (unsigned char)c)
-+			return (void *)p;
-+		bytes--;
-+	}
-+
-+	return NULL;
-+}
-diff --git a/libfrog/util.h b/libfrog/util.h
-index 5df95e69cd11da..8b4ee7c1333b6b 100644
---- a/libfrog/util.h
-+++ b/libfrog/util.h
-@@ -6,6 +6,8 @@
- #ifndef __LIBFROG_UTIL_H__
- #define __LIBFROG_UTIL_H__
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 1d2d4ffa6d0e53..e59d358e8439a2 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -197,7 +197,7 @@ process_rt_rec_dups(
+ 	xfs_rtblock_t		b;
+ 	xfs_rtxnum_t		ext;
  
-+#include <sys/types.h>
-+
- unsigned int	log2_roundup(unsigned int i);
+-	for (b = xfs_rtb_rounddown_rtx(mp, irec->br_startblock);
++	for (b = irec->br_startblock;
+ 	     b < irec->br_startblock + irec->br_blockcount;
+ 	     b += mp->m_sb.sb_rextsize) {
+ 		ext = xfs_rtb_to_rtx(mp, b);
+@@ -245,7 +245,7 @@ process_rt_rec_state(
+ 				do_error(
+ _("data fork in rt inode %" PRIu64 " found invalid rt extent %"PRIu64" state %d at rt block %"PRIu64"\n"),
+ 					ino, ext, state, b);
+-			b = xfs_rtb_roundup_rtx(mp, b);
++			b += mp->m_sb.sb_rextsize - mod;
+ 			continue;
+ 		}
  
- #define min_t(type,x,y) \
-@@ -13,4 +15,6 @@ unsigned int	log2_roundup(unsigned int i);
- #define max_t(type,x,y) \
- 	({ type __x = (x); type __y = (y); __x > __y ? __x: __y; })
- 
-+void *memchr_inv(const void *start, int c, size_t bytes);
-+
- #endif /* __LIBFROG_UTIL_H__ */
 
