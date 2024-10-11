@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06B3B1C36
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:35:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9082610C
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:35:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728606921; cv=none; b=s6sD54d28C4YDnMhI72NbWtNhsx7mZgaLxgUK3zXLVI4S9bYD1+MMTCrJrybhOjvaSErMODQUyM4vkSJGXc/G69BwGgGGsxGhDM0IVukR1cg7fN1kl2Y+eafYgjj4sAsM9Npaob+nJEBvxZdL6Iz/di0AGkDzvJoTV65xF+ZFb0=
+	t=1728606936; cv=none; b=KAneA4HvRu2o2GBat4BymHd+P1Y5H9+e3vWvZsHt3FjuvAYFdnNatxZRljV/MwVVMenaO5kRBG0/cgwrON/0ZT1RQ1+CGx7hKcR4o82o/tagyNF7HpvAex5Dsw6j0nlQJ2vVpkCjyImyXqLGULShFWcLuwOeAG9Z4/fjkVMuOyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728606921; c=relaxed/simple;
-	bh=dyMcNBcxJPiQDAiz1uNXkJg3DL4aFmlFMCDl/VRxX6A=;
+	s=arc-20240116; t=1728606936; c=relaxed/simple;
+	bh=I2i1O0EJeryCEq2p56u60xm0BD/X0XqaiLHipuzT6GY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZKs45a+n90lbxY/l53M39NjxikIFs4uID9qBIUm4C21A4BPR0G+RdmDknELSPEFHCYXxjvWBCdC0p/o34BaCcl5AY/ey6JLQWJuBBOPoBg2OtSZhL/nZToQ6w3OZvT3Xsb3+TK2eMzNUjZHN3ixD+/VRY1mI8ruUPSUFahW+2nI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cTvdom8l; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=egPwiFvEvbsuYoil9+tb7G5uLpmk06pglPRJz36Hx6SFePhee26RWRUTfsO9mw/ynLgE0tK9Qnn+0gM6Pt3MxC8W2jCJcW4Cuw+Fph5YKqATXkHofGCFofujfvEpbj30Fi4mDdPv3rv+l+FCZBr1YFO392XNFpvp9GXxIiQeOPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FMeG4fgj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cTvdom8l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBC67C4CEC5;
-	Fri, 11 Oct 2024 00:35:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FMeG4fgj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EF69C4CEC5;
+	Fri, 11 Oct 2024 00:35:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728606920;
-	bh=dyMcNBcxJPiQDAiz1uNXkJg3DL4aFmlFMCDl/VRxX6A=;
+	s=k20201202; t=1728606936;
+	bh=I2i1O0EJeryCEq2p56u60xm0BD/X0XqaiLHipuzT6GY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cTvdom8l9FP43U7+tYVu1OwzR94shkpUqaVQ/IF2qubKvEdTSIMNTJ9kShQFYQf0k
-	 eFK10RK9xDCy48538oPpynRkaQQkHeA6I+Hlheq33NyPOc4i7Y7N/J+q2ZwJpC+T29
-	 Hx5WcNzw2jciEAS34eZUEEgcQjwf50ZiB3ofbvv8cWa1J0pwR1fKO6P5XHMajpq5XX
-	 TgWPaEJBoARcjUVLAC3Cs+4Z6dCLyo99Wa6m50LKGx7G/+Bj6hghPrbNja87jh2Kki
-	 2TKYQhV/idqf+0i94cM09ZeceSqUqxIrYFjU/h4/CH+8fCDC018Hy4vzHfR8ag7ms7
-	 c2LV3rO/1V/Hg==
-Date: Thu, 10 Oct 2024 17:35:20 -0700
-Subject: [PATCHSET v5.0 8/9] xfs: enable quota for realtime volumes
+	b=FMeG4fgjU7u9fzSnGLlFPPa3OxhH1ai+pNZ0TCUhYiTZIvHxSrByCR5GAW9gNCDux
+	 awpH0Z9u5taByfYWUJZ+KLPvmhEttBMSJGXbKqxGtSzfFogxMuF2obDjJPn+/93OA6
+	 P67MJvPk+UwUtbedd4oDejTplcrALOZKyCLgKRgUnJF0zuQD7wy0QSzcuNVOqJSI60
+	 ZfSb6H4OyH3TX5EjZbtRqglPLxVOrZoWNyOo132dzwNWbx3OckEvsZ6esjyPNEhcwZ
+	 /T/WTvgfzN4fWOxWaKeiThTPIDm/OX0m1uit1RajTuKUVYevEQr33NoRYZVL/CXc38
+	 oUo0EQwtVbReg==
+Date: Thu, 10 Oct 2024 17:35:36 -0700
+Subject: [PATCHSET v5.0 9/9] xfs: enable metadir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860645659.4180109.14821543026500028245.stgit@frogsfrogsfrogs>
+Message-ID: <172860646128.4180365.15337586086476354855.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241011002402.GB21877@frogsfrogsfrogs>
 References: <20241011002402.GB21877@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,13 +46,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-At some point, I realized that I've refactored enough of the quota code
-in XFS that I should evaluate whether or not quota actually works on
-realtime volumes.  It turns out that it nearly works: the only broken
-pieces are chown and delayed allocation, and reporting of project
-quotas in the statvfs output for projinherit+rtinherit directories.
-
-Fix these things and we can have realtime quotas again after 20 years.
+Actually enable this very large feature.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -63,32 +57,22 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-quotas
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=metadir
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-quotas
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadir
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-quotas
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=metadir
+
+xfsdocs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=metadir
 ---
 Commits in this patchset:
- * xfs: fix chown with rt quota
- * xfs: advertise realtime quota support in the xqm stat files
- * xfs: report realtime block quota limits on realtime directories
- * xfs: create quota preallocation watermarks for realtime quota
- * xfs: reserve quota for realtime files correctly
- * xfs: enable realtime quota again
+ * xfs: update sb field checks when metadir is turned on
+ * xfs: enable metadata directory feature
 ---
- fs/xfs/xfs_dquot.c       |   41 +++++++++++++++----------
- fs/xfs/xfs_dquot.h       |   18 +++++++++--
- fs/xfs/xfs_iomap.c       |   37 ++++++++++++++++++-----
- fs/xfs/xfs_qm.c          |   75 +++++++++++++++++++++++++++++++---------------
- fs/xfs/xfs_qm_bhv.c      |   18 +++++++----
- fs/xfs/xfs_quota.h       |   12 ++++---
- fs/xfs/xfs_rtalloc.c     |    4 ++
- fs/xfs/xfs_stats.c       |   12 ++++++-
- fs/xfs/xfs_super.c       |   11 +++----
- fs/xfs/xfs_trans.c       |   31 ++++++++++++++++++-
- fs/xfs/xfs_trans_dquot.c |   11 +++++++
- 11 files changed, 194 insertions(+), 76 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ fs/xfs/scrub/agheader.c    |   36 ++++++++++++++++++++++++------------
+ 2 files changed, 26 insertions(+), 13 deletions(-)
 
