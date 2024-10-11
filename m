@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5BA74A2D
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:16:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5A129450
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:16:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609375; cv=none; b=UeQx0ahnlkm49GlNNIXuvMjr5L9tGTj+s32J8fzeZp9FvuNtEgD8OqkfRHaYysK1a516W5s5hC1xZ5kpZ5oXs+Dw+gf3Kh1CSOSjGc/DKHu1Ynpjt9OmregiGuiY3Nb2Iu4afzGingKxpH4RWRsssVtj8jkFrGcaXQzufLVGLfA=
+	t=1728609391; cv=none; b=cB1a/NoOjhqSYUDWjX5z3bk92Nbd7EX8BLsu1NqP+goWem7gtwzcMs4a5I+4Um8/Huiu4QTw+ku2AejJjT3XXGATMK2bdEeAbbe/f+tnvPLEkYb6W8SGnR7uvaxG3U3dJoQUldhYi/BnXwvGL4KQGE9YKm5R9gd4CHT19ChnZIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609375; c=relaxed/simple;
-	bh=a5Cgect2+Drs7mHck8UNEVV6z3l7vNCM2zY7oGGOTho=;
+	s=arc-20240116; t=1728609391; c=relaxed/simple;
+	bh=0Xkx1wEl6LF5N5X8XFPryObYW9N1j6DthOBPReL/P4Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TRNab+2KBiPdTZm4kdAIUZce4hTcKOE7DD9LjAD7RqkeHbvKuA/bkwSDUP6DIKgdRtH66Vqmx5pD8QI+2Fs5yWNDol0qk7jXQlemISmxrDfUJk7HkcoY4+KpWSoSRFbQbxsiGzGLV237ty7Bj1RG6M33V1ODm+eghhYIwwJ65mE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uwr8dbfp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=b/UFzgowzYcjbvqxrLhuJM1ZpJIfLisNMimH6ao9mB/HqJiznST/F93hz9vZT/Xqjv9oc7jApwMhOhPydGMKLSn8DZsbCcUzCOLoLXTrccQptI5/2sjQe5QDtpunhIiuFjFwxHFqK+mTFYMB5DK1vof+1oVOdE0aq6qFg45TkSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UI1MdKHl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uwr8dbfp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1EC8C4CEC5;
-	Fri, 11 Oct 2024 01:16:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UI1MdKHl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5315BC4CEC5;
+	Fri, 11 Oct 2024 01:16:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609375;
-	bh=a5Cgect2+Drs7mHck8UNEVV6z3l7vNCM2zY7oGGOTho=;
+	s=k20201202; t=1728609391;
+	bh=0Xkx1wEl6LF5N5X8XFPryObYW9N1j6DthOBPReL/P4Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Uwr8dbfptP6vZLpAIAzfB7NJgeXCd/m5BKNfUFCL8Epk2fX9UtYPnvKJaFZOAlLAe
-	 MDe3pqCVsNhuKK0yDasXRqCey2qKcSPSSJ8NXGmsXeqWjaxkpBXgd4VXoQ9VoUe3r7
-	 ZI6luF3T0rLfb1dHCeq2ZgdH2MkcOtbl/qhwqnouSn9e9Vf3dKfEhsEmQt7NQgUr5j
-	 qeaLMHBk3O2tL4KF0fOyfu2fHOxWvDiL1fvR6cXmcB6fvZqI5pq86hh1tif2RfDKTA
-	 WSC4wRVgbpAiZ60PoftzYJ2gT4YZA0WBKRKwyNdaUGkn9N//5BRuqpVhpmHUn6n71o
-	 bkkLtuwD7msZA==
-Date: Thu, 10 Oct 2024 18:16:15 -0700
-Subject: [PATCH 08/38] xfs_db: show the metadata root directory when dumping
- superblocks
+	b=UI1MdKHlznbZa5NULQck9CAm+LfAlIxsgCTB99Fbm3FWigc4c0Rly5WEvENBOOddQ
+	 FOhvBgtwnnaKnShRPkYVtjyqI+2eUBm5mR3rhmB5+h3sCJVxZxbL7hzMO717cQtci/
+	 LzZ/LRM9j9wfHgeU8bGltinxZswhmJCYQDhyvcn+HGAzjRmEmjf3jYlLHIgihFWY/v
+	 c4r2pjIv5HcW2AIPPir6UbeGjzGH1Vs/s3yDC45aQiaREm6KFvN0WAPbXLyPwyq+JJ
+	 2emsxwAZ3yTNJ14DbjlfCsX4jz18UdploqkDJEeobP4jua8yKu3FQ+uuKRF5w99ErV
+	 skC0lwhqtUmlw==
+Date: Thu, 10 Oct 2024 18:16:30 -0700
+Subject: [PATCH 09/38] xfs_db: display di_metatype
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860654099.4183231.5070655775862456.stgit@frogsfrogsfrogs>
+Message-ID: <172860654115.4183231.8861218890099262.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 References: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,67 +46,189 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Show the metadirino field when appropriate.
+Print the metadata file type if available.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/sb.c |   30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
+ db/field.c |    2 +
+ db/field.h |    1 +
+ db/inode.c |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ db/inode.h |    2 +
+ 4 files changed, 78 insertions(+), 10 deletions(-)
 
 
-diff --git a/db/sb.c b/db/sb.c
-index b47477631af824..2c5f4882c894f5 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -50,6 +50,30 @@ sb_init(void)
- 	add_command(&version_cmd);
+diff --git a/db/field.c b/db/field.c
+index a61ccc9ef6d072..946684415f65d3 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -212,6 +212,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  SI(bitsz(struct xfs_dinode)), 0, NULL, inode_core_flds },
+ 	{ FLDT_DINODE_FMT, "dinode_fmt", fp_dinode_fmt, NULL,
+ 	  SI(bitsz(int8_t)), 0, NULL, NULL },
++	{ FLDT_DINODE_METATYPE, "metatype", fp_metatype, NULL,
++	  SI(bitsz(uint16_t)), 0, NULL, NULL },
+ 	{ FLDT_DINODE_U, "dinode_u", NULL, (char *)inode_u_flds, inode_u_size,
+ 	  FTARG_SIZE|FTARG_OKEMPTY, NULL, inode_u_flds },
+ 	{ FLDT_DINODE_V3, "dinode_v3", NULL, (char *)inode_v3_flds,
+diff --git a/db/field.h b/db/field.h
+index b1bfdbed19cea3..9746676a6c7ac9 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -95,6 +95,7 @@ typedef enum fldt	{
+ 	FLDT_DINODE_A,
+ 	FLDT_DINODE_CORE,
+ 	FLDT_DINODE_FMT,
++	FLDT_DINODE_METATYPE,
+ 	FLDT_DINODE_U,
+ 	FLDT_DINODE_V3,
+ 
+diff --git a/db/inode.c b/db/inode.c
+index 74cf4958c0f7b7..8a7c665bdb54f3 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -25,6 +25,7 @@ static int	inode_a_offset(void *obj, int startoff, int idx);
+ static int	inode_a_sfattr_count(void *obj, int startoff);
+ static int	inode_core_nlinkv2_count(void *obj, int startoff);
+ static int	inode_core_onlink_count(void *obj, int startoff);
++static int	inode_core_metatype_count(void *obj, int startoff);
+ static int	inode_core_projid_count(void *obj, int startoff);
+ static int	inode_core_nlinkv1_count(void *obj, int startoff);
+ static int	inode_core_v3_pad_count(void *obj, int startoff);
+@@ -94,6 +95,8 @@ const field_t	inode_core_flds[] = {
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "onlink", FLDT_UINT16D, OI(COFF(onlink)), inode_core_onlink_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "metatype", FLDT_DINODE_METATYPE, OI(COFF(metatype)),
++	  inode_core_metatype_count, FLD_COUNT, TYP_NONE },
+ 	{ "uid", FLDT_UINT32D, OI(COFF(uid)), C1, 0, TYP_NONE },
+ 	{ "gid", FLDT_UINT32D, OI(COFF(gid)), C1, 0, TYP_NONE },
+ 	{ "nlinkv2", FLDT_UINT32D, OI(COFF(nlink)), inode_core_nlinkv2_count,
+@@ -247,9 +250,8 @@ static const char	*dinode_fmt_name[] =
+ static const int	dinode_fmt_name_size =
+ 	sizeof(dinode_fmt_name) / sizeof(dinode_fmt_name[0]);
+ 
+-/*ARGSUSED*/
+-int
+-fp_dinode_fmt(
++static int
++fp_enum_fmt(
+ 	void			*obj,
+ 	int			bit,
+ 	int			count,
+@@ -257,26 +259,65 @@ fp_dinode_fmt(
+ 	int			size,
+ 	int			arg,
+ 	int			base,
+-	int			array)
++	int			array,
++	const char		**names,
++	unsigned int		nr_names)
+ {
+ 	int			bitpos;
+-	enum xfs_dinode_fmt	f;
++	int			f;
+ 	int			i;
+ 
+ 	for (i = 0, bitpos = bit; i < count; i++, bitpos += size) {
+-		f = (enum xfs_dinode_fmt)getbitval(obj, bitpos, size, BVUNSIGNED);
++		f = getbitval(obj, bitpos, size, BVUNSIGNED);
+ 		if (array)
+ 			dbprintf("%d:", i + base);
+-		if (f < 0 || f >= dinode_fmt_name_size)
+-			dbprintf("%d", (int)f);
++		if (f < 0 || f >= nr_names)
++			dbprintf("%d", f);
+ 		else
+-			dbprintf("%d (%s)", (int)f, dinode_fmt_name[(int)f]);
++			dbprintf("%d (%s)", f, names[f]);
+ 		if (i < count - 1)
+ 			dbprintf(" ");
+ 	}
+ 	return 1;
  }
  
-+/*
-+ * Counts superblock fields that only exist when the metadata directory feature
-+ * is enabled.
-+ */
-+static int
-+metadirfld_count(
-+	void		*obj,
-+	int		startoff)
++/*ARGSUSED*/
++int
++fp_dinode_fmt(
++	void			*obj,
++	int			bit,
++	int			count,
++	char			*fmtstr,
++	int			size,
++	int			arg,
++	int			base,
++	int			array)
 +{
-+	return xfs_has_metadir(mp) ? 1 : 0;
++	return fp_enum_fmt(obj, bit, count, fmtstr, size, arg, base, array,
++			dinode_fmt_name, dinode_fmt_name_size);
 +}
 +
-+/*
-+ * Counts superblock fields that do not exist when the metadata directory
-+ * feature is enabled.
-+ */
-+static int
-+premetadirfld_count(
-+	void		*obj,
-+	int		startoff)
++static const char	*metatype_name[] =
++	{ "unknown", "dir", "usrquota", "grpquota", "prjquota", "rtbitmap",
++	  "rtsummary"
++	};
++static const int	metatype_name_size = ARRAY_SIZE(metatype_name);
++
++int
++fp_metatype(
++	void			*obj,
++	int			bit,
++	int			count,
++	char			*fmtstr,
++	int			size,
++	int			arg,
++	int			base,
++	int			array)
 +{
-+	return xfs_has_metadir(mp) ? 0 : 1;
++	return fp_enum_fmt(obj, bit, count, fmtstr, size, arg, base, array,
++			metatype_name, metatype_name_size);
 +}
 +
- #define	OFF(f)	bitize(offsetof(struct xfs_dsb, sb_ ## f))
- #define	SZC(f)	szcount(struct xfs_dsb, sb_ ## f)
- const field_t	sb_flds[] = {
-@@ -99,7 +123,9 @@ const field_t	sb_flds[] = {
- 	{ "logsunit", FLDT_UINT32D, OI(OFF(logsunit)), C1, 0, TYP_NONE },
- 	{ "features2", FLDT_UINT32X, OI(OFF(features2)), C1, 0, TYP_NONE },
- 	{ "bad_features2", FLDT_UINT32X, OI(OFF(bad_features2)),
--		C1, 0, TYP_NONE },
-+		premetadirfld_count, FLD_COUNT, TYP_NONE },
-+	{ "metadirpad", FLDT_UINT32X, OI(OFF(metadirpad)), metadirfld_count,
-+		FLD_COUNT, TYP_NONE },
- 	{ "features_compat", FLDT_UINT32X, OI(OFF(features_compat)),
- 		C1, 0, TYP_NONE },
- 	{ "features_ro_compat", FLDT_UINT32X, OI(OFF(features_ro_compat)),
-@@ -113,6 +139,8 @@ const field_t	sb_flds[] = {
- 	{ "pquotino", FLDT_INO, OI(OFF(pquotino)), C1, 0, TYP_INODE },
- 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
- 	{ "meta_uuid", FLDT_UUID, OI(OFF(meta_uuid)), C1, 0, TYP_NONE },
-+	{ "metadirino", FLDT_INO, OI(OFF(metadirino)), metadirfld_count,
-+	  FLD_COUNT, TYP_INODE },
- 	{ NULL }
- };
+ static int
+ inode_a_bmbt_count(
+ 	void			*obj,
+@@ -414,7 +455,29 @@ inode_core_onlink_count(
+ 	ASSERT(startoff == 0);
+ 	ASSERT(obj == iocur_top->data);
+ 	dic = obj;
+-	return dic->di_version >= 2;
++	if (dic->di_version < 2)
++		return 0;
++	if (dic->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA))
++		return 0;
++	return 1;
++}
++
++static int
++inode_core_metatype_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dinode	*dic;
++
++	ASSERT(startoff == 0);
++	ASSERT(obj == iocur_top->data);
++	dic = obj;
++
++	if (dic->di_version < 3)
++		return 0;
++	if (dic->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA))
++		return 1;
++	return 0;
+ }
  
+ static int
+diff --git a/db/inode.h b/db/inode.h
+index 31a2ebbba6a175..e281cdff15c096 100644
+--- a/db/inode.h
++++ b/db/inode.h
+@@ -16,6 +16,8 @@ extern const struct field	timestamp_flds[];
+ 
+ extern int	fp_dinode_fmt(void *obj, int bit, int count, char *fmtstr,
+ 			      int size, int arg, int base, int array);
++extern int	fp_metatype(void *obj, int bit, int count, char *fmtstr,
++			      int size, int arg, int base, int array);
+ extern int	inode_a_size(void *obj, int startoff, int idx);
+ extern void	inode_init(void);
+ extern typnm_t	inode_next_type(void);
 
