@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE5918F5E
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:19:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43EEF5227
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:19:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609547; cv=none; b=XNjIiz1YNbCF5196anAZANmN25HUN4RvN3z8kPFdYvY7Z6dVkVsotZgjG7X71cHUWKHJMu2tYeP1FRabM5VpTn9IGpiSbllLS7gb52Gzn/3trpKlFApWIJunILwcYjR4yBAKpMerc/xuUggo4DmvHiriY6oJJ+yNz4wqQg4SEN4=
+	t=1728609563; cv=none; b=AMv0Owv/a+lloznQWKVAnK+BPZ5YJyJc7earWpdw5aTIwsB3cw76EINTuCFvuAT1U1vhCdptysVUEzyqnymM0D1+0swoHIv+wb8cXeKW2hUJpn6YQaFtU7HYAQpPEjt8A1I8Xc+KpeLgKrmJIz5r+dB1/pYneNJl5oLrF8YQpfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609547; c=relaxed/simple;
-	bh=vAp61FzaEeWT1l2JwsW7N6EevQgOWtbm6Lvx5j3zfcY=;
+	s=arc-20240116; t=1728609563; c=relaxed/simple;
+	bh=UYDBF/PO8rIIFEygyTn376bsoWQrEvmjwIAWMzA/pWE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YFz4VZZTfeRX9LcxKnYyWqjggEEGc9EIhvvPNcZqscZiBQuqZyOd7RoBQ8SI2js7ZlUFSRC43kP6H8P2Uf2NCRon+eBDD2CgSGWiI2JTExLlXJ3w9p8BkLOK3vwlGpKuq8smtOPA/hO2+/o32Di+m0E9VQKESsiunQXq7dGxaFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q4RhARDw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RrXvkyk7rTQW8ivNjzhFONc8jKewBCSOl+3h2tfrxDOMkdqDsFiiRUHKY6ClLickAa+pOgl9XVak5UET4CUn9rESdsWORBbJ0Z9K6zhObE5spN12dv6gu6ZwmuRPXg/GnQ4EvsuSMMejXhMBVidZxwSouf4cLrGbLQ7WM78yIDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GvjEefZi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q4RhARDw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C6DCC4CEC5;
-	Fri, 11 Oct 2024 01:19:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GvjEefZi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFEEBC4CEC5;
+	Fri, 11 Oct 2024 01:19:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609547;
-	bh=vAp61FzaEeWT1l2JwsW7N6EevQgOWtbm6Lvx5j3zfcY=;
+	s=k20201202; t=1728609562;
+	bh=UYDBF/PO8rIIFEygyTn376bsoWQrEvmjwIAWMzA/pWE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=q4RhARDw84jsa3xt9VGJtC7ObcmFWJ2QtzSmzXzl5+k6HEC8ouZ+Efu3sD8G8cP/l
-	 JaaEGLCv+kA1gTAUBH1Ae0c2Z4G4/s3sJjnus9A8dfsBqpWoNoRS8ssVK9XjbHjsgY
-	 +3HTVWkEMMxtv+PaaXtb5ab0CUoThBUjD94W9fg5bh0LmudAks3n+OG/zYqj5KTw0+
-	 TtlGNISrCWH2c8wxyW/l5Svrf6h2SwqmjLVE3KOYxBegkMYQ4DNmzGx28/BrfiIbjd
-	 nQ4IzG7o6C4On1nlTNcY1Tk3lxCl4j8xfzm1cEq5zWseSYvHJcn+wwngzc/sO2JWqU
-	 eQqBYZiwHaP8g==
-Date: Thu, 10 Oct 2024 18:19:06 -0700
-Subject: [PATCH 19/38] xfs_repair: refactor fixing dotdot
+	b=GvjEefZioIDlwQcy4cPZTdY5Oq/whCLfZ4zet4npKVTWckWq9oLUSvRYUGFhLr5hK
+	 Z+CaIKHZJvWEL3lEb7Fq5vmGsYQTU+vzPJyz/JZo2UrN2hNjQY9dvYxWdDz4S99Rlh
+	 LFsWEycGDRu3S/Di/wwYCoqFaTy75t0GJWVRkrKwWb06TnaGPLOaMsz5AU1LK8b5Un
+	 zVgy0zAvNufFgU6eNhWw8dvVZNQAsfiirS55DYee05/etcmdKcafzyljQNyl355vER
+	 PMCZ8h1gc9qxefWflv9X4SiwBduFDFvU9iJ+0iAduUPrlCZFfZlHKcFP4kM2TwzjBE
+	 XRSVq6rZBTGbg==
+Date: Thu, 10 Oct 2024 18:19:22 -0700
+Subject: [PATCH 20/38] xfs_repair: refactor marking of metadata inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860654267.4183231.12434205260500740198.stgit@frogsfrogsfrogs>
+Message-ID: <172860654282.4183231.13044241893441384330.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 References: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,128 +46,108 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Pull the code that fixes a directory's dot-dot entry into a separate
-helper function so that we can call it on the rootdir and (later) the
-metadir.
+Refactor the mechanics of marking a metadata inode into a helper
+function so that we don't have to open-code that for every single
+metadata inode.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/phase6.c |   96 +++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 57 insertions(+), 39 deletions(-)
+ repair/phase6.c |   76 ++++++++++++++++++++-----------------------------------
+ 1 file changed, 28 insertions(+), 48 deletions(-)
 
 
 diff --git a/repair/phase6.c b/repair/phase6.c
-index 630617ef8ab8fe..0f13d996fe726a 100644
+index 0f13d996fe726a..0c80c4aa36af4a 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -2649,6 +2649,62 @@ dir_hash_add_parent_ptrs(
- 	}
+@@ -2891,6 +2891,22 @@ _("error %d fixing shortform directory %llu\n"),
+ 	libxfs_irele(ip);
  }
  
-+/*
-+ * If we have to create a .. for /, do it now *before* we delete the bogus
-+ * entries, otherwise the directory could transform into a shortform dir which
-+ * would probably cause the simulation to choke.  Even if the illegal entries
-+ * get shifted around, it's ok because the entries are structurally intact and
-+ * in in hash-value order so the simulation won't get confused if it has to
-+ * move them around.
-+ */
 +static void
-+fix_dotdot(
++mark_inode(
 +	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	struct xfs_inode	*ip,
-+	xfs_ino_t		rootino,
-+	const char		*tag,
-+	int			*need_dotdot)
++	xfs_ino_t		ino)
 +{
-+	struct xfs_trans	*tp;
-+	int			nres;
-+	int			error;
++	struct ino_tree_node	*irec;
++	int			offset;
 +
-+	if (ino != rootino || !*need_dotdot)
-+		return;
++	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, ino),
++			XFS_INO_TO_AGINO(mp, ino));
 +
-+	if (no_modify) {
-+		do_warn(_("would recreate %s directory .. entry\n"), tag);
-+		return;
-+	}
++	offset = XFS_INO_TO_AGINO(mp, ino) - irec->ino_startnum;
 +
-+	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
-+
-+	do_warn(_("recreating %s directory .. entry\n"), tag);
-+
-+	nres = libxfs_mkdir_space_res(mp, 2);
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_mkdir, nres, 0, 0, &tp);
-+	if (error)
-+		res_failed(error);
-+
-+	libxfs_trans_ijoin(tp, ip, 0);
-+
-+	error = -libxfs_dir_createname(tp, ip, &xfs_name_dotdot, ip->i_ino,
-+			nres);
-+	if (error)
-+		do_error(
-+_("can't make \"..\" entry in %s inode %" PRIu64 ", createname error %d\n"),
-+			tag ,ino, error);
-+
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(
-+_("%s inode \"..\" entry recreation failed (%d)\n"), tag, error);
-+
-+	*need_dotdot = 0;
++	add_inode_reached(irec, offset);
 +}
 +
  /*
-  * processes all reachable inodes in directories
-  */
-@@ -2778,45 +2834,7 @@ _("error %d fixing shortform directory %llu\n"),
- 	dir_hash_add_parent_ptrs(ip, hashtab);
- 	dir_hash_done(hashtab);
- 
--	/*
--	 * if we have to create a .. for /, do it now *before*
--	 * we delete the bogus entries, otherwise the directory
--	 * could transform into a shortform dir which would
--	 * probably cause the simulation to choke.  Even
--	 * if the illegal entries get shifted around, it's ok
--	 * because the entries are structurally intact and in
--	 * in hash-value order so the simulation won't get confused
--	 * if it has to move them around.
--	 */
--	if (!no_modify && need_root_dotdot && ino == mp->m_sb.sb_rootino)  {
--		ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
+  * mark realtime bitmap and summary inodes as reached.
+  * quota inode will be marked here as well
+@@ -2898,54 +2914,18 @@ _("error %d fixing shortform directory %llu\n"),
+ static void
+ mark_standalone_inodes(xfs_mount_t *mp)
+ {
+-	ino_tree_node_t		*irec;
+-	int			offset;
 -
--		do_warn(_("recreating root directory .. entry\n"));
+-	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rbmino),
+-			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rbmino));
 -
--		nres = libxfs_mkdir_space_res(mp, 2);
--		error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_mkdir,
--					    nres, 0, 0, &tp);
--		if (error)
--			res_failed(error);
+-	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rbmino) -
+-			irec->ino_startnum;
 -
--		libxfs_trans_ijoin(tp, ip, 0);
+-	add_inode_reached(irec, offset);
 -
--		error = -libxfs_dir_createname(tp, ip, &xfs_name_dotdot,
--					ip->i_ino, nres);
--		if (error)
--			do_error(
--	_("can't make \"..\" entry in root inode %" PRIu64 ", createname error %d\n"), ino, error);
+-	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
+-			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
 -
--		libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--		error = -libxfs_trans_commit(tp);
--		if (error)
--			do_error(
--	_("root inode \"..\" entry recreation failed (%d)\n"), error);
+-	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
+-			irec->ino_startnum;
 -
--		need_root_dotdot = 0;
--	} else if (need_root_dotdot && ino == mp->m_sb.sb_rootino)  {
--		do_warn(_("would recreate root directory .. entry\n"));
+-	add_inode_reached(irec, offset);
+-
+-	if (fs_quotas)  {
+-		if (mp->m_sb.sb_uquotino
+-				&& mp->m_sb.sb_uquotino != NULLFSINO)  {
+-			irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp,
+-						mp->m_sb.sb_uquotino),
+-				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino));
+-			offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino)
+-					- irec->ino_startnum;
+-			add_inode_reached(irec, offset);
+-		}
+-		if (mp->m_sb.sb_gquotino
+-				&& mp->m_sb.sb_gquotino != NULLFSINO)  {
+-			irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp,
+-						mp->m_sb.sb_gquotino),
+-				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino));
+-			offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino)
+-					- irec->ino_startnum;
+-			add_inode_reached(irec, offset);
+-		}
+-		if (mp->m_sb.sb_pquotino
+-				&& mp->m_sb.sb_pquotino != NULLFSINO)  {
+-			irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp,
+-						mp->m_sb.sb_pquotino),
+-				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_pquotino));
+-			offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_pquotino)
+-					- irec->ino_startnum;
+-			add_inode_reached(irec, offset);
+-		}
 -	}
-+	fix_dotdot(mp, ino, ip, mp->m_sb.sb_rootino, "root", &need_root_dotdot);
++	mark_inode(mp, mp->m_sb.sb_rbmino);
++	mark_inode(mp, mp->m_sb.sb_rsumino);
++
++	if (!fs_quotas)
++		return;
++
++	if (mp->m_sb.sb_uquotino && mp->m_sb.sb_uquotino != NULLFSINO)
++		mark_inode(mp, mp->m_sb.sb_uquotino);
++	if (mp->m_sb.sb_gquotino && mp->m_sb.sb_gquotino != NULLFSINO)
++		mark_inode(mp, mp->m_sb.sb_gquotino);
++	if (mp->m_sb.sb_pquotino && mp->m_sb.sb_pquotino != NULLFSINO)
++		mark_inode(mp, mp->m_sb.sb_pquotino);
+ }
  
- 	/*
- 	 * if we need to create the '.' entry, do so only if
+ static void
 
