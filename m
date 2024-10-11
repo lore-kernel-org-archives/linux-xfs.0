@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9237464
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:47:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3801747F
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:47:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728607625; cv=none; b=ldUwjQ9g2MhV82W70fqwS3uLYU3LkE4gfLM8ZYOGebXS4+yzl88qS0cjQJRbnDFgkHeLd0+pHHDnQ11UW8qGWdpmJSfHxxWVyjIeoMvDvnPbm8aEz+rHlh2wfvn0RgDYfoW3nvbeAdg3EysrobWOiVHaSPdphBh1DJd6JHJ+qaY=
+	t=1728607640; cv=none; b=j1fR+G5rLzcPJo3V64NQdWAUfnC29iQPToPvmcR2fUG7CDq/k/mdk+KxvsCDwawQtbTFgpJw0EpuAaATcLZGLLmKf0WkdHKZY0lcsGiXsxutR0hWti3MTstWQnT4LXRD+F2u/uhwYjnDsE28jUImqiNBbRv7C08b9WidJNHQ6M4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728607625; c=relaxed/simple;
-	bh=482FaR1D0/HbBWqnWqGw5b/KtQ4G30rxcuD+L8bsClE=;
+	s=arc-20240116; t=1728607640; c=relaxed/simple;
+	bh=tOumYOd8/fQ/GZz0r0kZh3atw1mSEwdfU9BzcSslnUE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=idnKccfDKpU1CjqH7sy+7kc6/T8Md/+w6uF+epHylLQszfnqQMnNuNiyh1J1AaNXoeLudGwelJUdHj7VdUx3C9/9JXYgzENoePRiPX9qBXJ5KP0HIlk6yjlEXc0YZpgjHlxdUGFh9i6WRHjew058LmKhvS/uE7jdBCOSYzcGHAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bDkUnPzK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ML4/RHybQ6tqzi8O3PjMWQB393fqXgD2jcLzXngYnY8L5BDcJVd+IT3PpRLdrde0lGnvSp/XxrmlUPAZcuUvuMzzOkSFzwvZaYjUpkIdUJyksC6ca18IuaUmz950NnvSsMBDvNBFvL1n1TCJ7XUAsHtW+NcPeiAUEuZwLuB+ISU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hkOkqtpJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bDkUnPzK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF60DC4CEC5;
-	Fri, 11 Oct 2024 00:47:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hkOkqtpJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96266C4CEC5;
+	Fri, 11 Oct 2024 00:47:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728607625;
-	bh=482FaR1D0/HbBWqnWqGw5b/KtQ4G30rxcuD+L8bsClE=;
+	s=k20201202; t=1728607640;
+	bh=tOumYOd8/fQ/GZz0r0kZh3atw1mSEwdfU9BzcSslnUE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bDkUnPzK++8GF5qeS5bWIJPIOKQmIVgj1H3CObIK0FM0CpDeJNxgc2oYSpHk3XY9B
-	 Ehklskumlw43NmzHckTisZp+0bX8m7iRp0gcXINUUm2crcBZquYG4SqO5lxLXqpdZo
-	 AJMXPI/2ZMpf0+3Wcn0he6U6ezwf936SlEaqK5xQHlzGXfMAWvgxbd9RcNFZglMLVf
-	 xIG5uVhJjNdVxA1xiEnSNhten1dbyqVppnxD/oq9EgUKXZyXlMWOTtCumbsCerNaoH
-	 s1FbCTmymEpWShB+H/bO9X3d9zUw/W00KxhSD50tUBzEbaM6y7B5xDPULjgZyvlLSx
-	 v+T9H45/1hc7Q==
-Date: Thu, 10 Oct 2024 17:47:04 -0700
-Subject: [PATCH 11/16] xfs: convert busy extent tracking to the generic group
- structure
+	b=hkOkqtpJE2vx1I77bTe8mEiODOGdfsyTRKqOdXjrBYqDT9XnVUhlEkt8zTFkX2DHd
+	 7ncteB3qehe0UK4aZJXchdCRET7qgtuYGnWHYmZ/du3U0RPJj+jwcOAlbymXlsO+te
+	 ro0sPNAMxvob4fsSmqKnQuh94rmEdq67zkiQt1kmPGhlvbeALUDR7+HmOVUdBFmELg
+	 6WBpLVuZ8dH24Ei+1SfVqHRalMBrHrDoPhgARKOoPhHnBGIyjfHMey8Z83EuRuwRod
+	 sYGD+7ZlyvQnt+B4EBGEoy4xof1orIJ2kffqNR+pi6S00Yul/LiscNEOoUVQ2JyZFJ
+	 f5B9TL9Ekfkmg==
+Date: Thu, 10 Oct 2024 17:47:20 -0700
+Subject: [PATCH 12/16] xfs: add a generic group pointer to the btree cursor
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860641452.4176300.4852338052220344991.stgit@frogsfrogsfrogs>
+Message-ID: <172860641471.4176300.17811783731579673565.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860641207.4176300.780787546464458623.stgit@frogsfrogsfrogs>
 References: <172860641207.4176300.780787546464458623.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,918 +46,1051 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Split busy extent tracking from struct xfs_perag into its own private
-structure, which can be pointed to by the generic group structure.
-
-Note that this structure is now dynamically allocated instead of embedded
-as the upcoming zone XFS code doesn't need it and will also have an
-unusually high number of groups due to hardware constraints.  Dynamically
-allocating the structure this is a big memory saver for this case.
+Replace the pag pointers in the type specific union with a generic
+xfs_group pointer.  This prepares for adding realtime group support.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.c          |    3 -
- fs/xfs/libxfs/xfs_ag.h          |    5 -
- fs/xfs/libxfs/xfs_alloc.c       |   29 +++---
- fs/xfs/libxfs/xfs_alloc_btree.c |    4 -
- fs/xfs/libxfs/xfs_group.c       |   16 +++
- fs/xfs/libxfs/xfs_group.h       |    5 +
- fs/xfs/libxfs/xfs_rmap_btree.c  |    4 -
- fs/xfs/scrub/alloc_repair.c     |    9 +-
- fs/xfs/scrub/reap.c             |    2 
- fs/xfs/xfs_discard.c            |   10 +-
- fs/xfs/xfs_extent_busy.c        |  198 +++++++++++++++++++++++----------------
- fs/xfs/xfs_extent_busy.h        |   59 ++++--------
- 12 files changed, 193 insertions(+), 151 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c          |    8 ++++----
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   28 ++++++++++++++--------------
+ fs/xfs/libxfs/xfs_btree.c          |   35 ++++++++++++-----------------------
+ fs/xfs/libxfs/xfs_btree.h          |    3 +--
+ fs/xfs/libxfs/xfs_btree_mem.c      |    6 ++----
+ fs/xfs/libxfs/xfs_ialloc.c         |   12 +++++++-----
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   15 ++++++++-------
+ fs/xfs/libxfs/xfs_refcount.c       |   17 +++++++++--------
+ fs/xfs/libxfs/xfs_refcount_btree.c |   10 +++++-----
+ fs/xfs/libxfs/xfs_rmap.c           |    8 +++-----
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   19 ++++++++++---------
+ fs/xfs/scrub/alloc.c               |    2 +-
+ fs/xfs/scrub/bmap.c                |    3 ++-
+ fs/xfs/scrub/bmap_repair.c         |    4 ++--
+ fs/xfs/scrub/cow_repair.c          |    9 ++++++---
+ fs/xfs/scrub/health.c              |    2 +-
+ fs/xfs/scrub/ialloc.c              |   14 +++++++-------
+ fs/xfs/scrub/refcount.c            |    3 ++-
+ fs/xfs/scrub/rmap.c                |    2 +-
+ fs/xfs/scrub/rmap_repair.c         |    2 +-
+ fs/xfs/xfs_fsmap.c                 |    6 ++++--
+ fs/xfs/xfs_health.c                |   23 ++++++-----------------
+ fs/xfs/xfs_trace.h                 |   28 ++++++++++++++--------------
+ 23 files changed, 122 insertions(+), 137 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index d2ed559a700cee..a0b2b54309522f 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -209,11 +209,8 @@ xfs_perag_alloc(
- #ifdef __KERNEL__
- 	/* Place kernel structure only init below this point. */
- 	spin_lock_init(&pag->pag_ici_lock);
--	spin_lock_init(&pag->pagb_lock);
- 	INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
- 	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
--	init_waitqueue_head(&pag->pagb_wait);
--	pag->pagb_tree = RB_ROOT;
- #endif /* __KERNEL__ */
- 
- 	error = xfs_buf_cache_init(&pag->pag_bcache);
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index a8c27906de98a2..242346872351c1 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -80,11 +80,6 @@ struct xfs_perag {
- 	uint8_t		pagf_repair_rmap_level;
- #endif
- 
--	spinlock_t	pagb_lock;	/* lock for pagb_tree */
--	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
--	unsigned int	pagb_gen;	/* generation count for pagb_tree */
--	wait_queue_head_t pagb_wait;	/* woken when pagb_gen changes */
--
- 	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
- 
- 	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 66e38310a13129..820ffa6ea6bd75 100644
+index 820ffa6ea6bd75..db25c8ad104206 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -331,7 +331,8 @@ xfs_alloc_compute_aligned(
- 	bool		busy;
+@@ -275,7 +275,7 @@ xfs_alloc_complain_bad_rec(
  
- 	/* Trim busy sections out of found extent */
--	busy = xfs_extent_busy_trim(args, &bno, &len, busy_gen);
-+	busy = xfs_extent_busy_trim(&args->pag->pag_group, args->minlen,
-+			args->maxlen, &bno, &len, busy_gen);
+ 	xfs_warn(mp,
+ 		"%sbt record corruption in AG %d detected at %pS!",
+-		cur->bc_ops->name, pag_agno(cur->bc_ag.pag), fa);
++		cur->bc_ops->name, cur->bc_group->xg_index, fa);
+ 	xfs_warn(mp,
+ 		"start block 0x%x block count 0x%x", irec->ar_startblock,
+ 		irec->ar_blockcount);
+@@ -303,7 +303,7 @@ xfs_alloc_get_rec(
+ 		return error;
  
- 	/*
- 	 * If we have a largish extent that happens to start before min_agbno,
-@@ -1251,7 +1252,7 @@ xfs_alloc_ag_vextent_small(
- 	if (fbno == NULLAGBLOCK)
- 		goto out;
+ 	xfs_alloc_btrec_to_irec(rec, &irec);
+-	fa = xfs_alloc_check_irec(cur->bc_ag.pag, &irec);
++	fa = xfs_alloc_check_irec(to_perag(cur->bc_group), &irec);
+ 	if (fa)
+ 		return xfs_alloc_complain_bad_rec(cur, fa, &irec);
  
--	xfs_extent_busy_reuse(args->pag, fbno, 1,
-+	xfs_extent_busy_reuse(&args->pag->pag_group, fbno, 1,
- 			      (args->datatype & XFS_ALLOC_NOBUSY));
+@@ -540,7 +540,7 @@ static int
+ xfs_alloc_fixup_longest(
+ 	struct xfs_btree_cur	*cnt_cur)
+ {
+-	struct xfs_perag	*pag = cnt_cur->bc_ag.pag;
++	struct xfs_perag	*pag = to_perag(cnt_cur->bc_group);
+ 	struct xfs_buf		*bp = cnt_cur->bc_ag.agbp;
+ 	struct xfs_agf		*agf = bp->b_addr;
+ 	xfs_extlen_t		longest = 0;
+@@ -4047,7 +4047,7 @@ xfs_alloc_query_range_helper(
+ 	xfs_failaddr_t				fa;
  
- 	if (args->datatype & XFS_ALLOC_USERDATA) {
-@@ -1364,7 +1365,8 @@ xfs_alloc_ag_vextent_exact(
- 	 */
- 	tbno = fbno;
- 	tlen = flen;
--	xfs_extent_busy_trim(args, &tbno, &tlen, &busy_gen);
-+	xfs_extent_busy_trim(&args->pag->pag_group, args->minlen, args->maxlen,
-+			&tbno, &tlen, &busy_gen);
+ 	xfs_alloc_btrec_to_irec(rec, &irec);
+-	fa = xfs_alloc_check_irec(cur->bc_ag.pag, &irec);
++	fa = xfs_alloc_check_irec(to_perag(cur->bc_group), &irec);
+ 	if (fa)
+ 		return xfs_alloc_complain_bad_rec(cur, fa, &irec);
  
- 	/*
- 	 * Give up if the start of the extent is busy, or the freespace isn't
-@@ -1757,8 +1759,9 @@ xfs_alloc_ag_vextent_near(
- 			 * the allocation can be retried.
- 			 */
- 			trace_xfs_alloc_near_busy(args);
--			error = xfs_extent_busy_flush(args->tp, args->pag,
--					acur.busy_gen, alloc_flags);
-+			error = xfs_extent_busy_flush(args->tp,
-+					&args->pag->pag_group, acur.busy_gen,
-+					alloc_flags);
- 			if (error)
- 				goto out;
- 
-@@ -1873,8 +1876,9 @@ xfs_alloc_ag_vextent_size(
- 			 * the allocation can be retried.
- 			 */
- 			trace_xfs_alloc_size_busy(args);
--			error = xfs_extent_busy_flush(args->tp, args->pag,
--					busy_gen, alloc_flags);
-+			error = xfs_extent_busy_flush(args->tp,
-+					&args->pag->pag_group, busy_gen,
-+					alloc_flags);
- 			if (error)
- 				goto error0;
- 
-@@ -1972,8 +1976,9 @@ xfs_alloc_ag_vextent_size(
- 			 * the allocation can be retried.
- 			 */
- 			trace_xfs_alloc_size_busy(args);
--			error = xfs_extent_busy_flush(args->tp, args->pag,
--					busy_gen, alloc_flags);
-+			error = xfs_extent_busy_flush(args->tp,
-+					&args->pag->pag_group, busy_gen,
-+					alloc_flags);
- 			if (error)
- 				goto error0;
- 
-@@ -3618,8 +3623,8 @@ xfs_alloc_vextent_finish(
- 		if (error)
- 			goto out_drop_perag;
- 
--		ASSERT(!xfs_extent_busy_search(args->pag, args->agbno,
--				args->len));
-+		ASSERT(!xfs_extent_busy_search(&args->pag->pag_group,
-+				args->agbno, args->len));
- 	}
- 
- 	xfs_ag_resv_alloc_extent(args->pag, args->resv, args);
-@@ -4017,7 +4022,7 @@ __xfs_free_extent(
- 
- 	if (skip_discard)
- 		busy_flags |= XFS_EXTENT_BUSY_SKIP_DISCARD;
--	xfs_extent_busy_insert(tp, pag, agbno, len, busy_flags);
-+	xfs_extent_busy_insert(tp, &pag->pag_group, agbno, len, busy_flags);
- 	return 0;
- 
- err_release:
 diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 88e1545ed4c9dc..843174a5903658 100644
+index 843174a5903658..22a65d09e647a3 100644
 --- a/fs/xfs/libxfs/xfs_alloc_btree.c
 +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -28,7 +28,7 @@ xfs_bnobt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+ 	return xfs_bnobt_init_cursor(cur->bc_mp, cur->bc_tp, cur->bc_ag.agbp,
+-			cur->bc_ag.pag);
++			to_perag(cur->bc_group));
+ }
+ 
+ STATIC struct xfs_btree_cur *
+@@ -36,29 +36,29 @@ xfs_cntbt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+ 	return xfs_cntbt_init_cursor(cur->bc_mp, cur->bc_tp, cur->bc_ag.agbp,
+-			cur->bc_ag.pag);
++			to_perag(cur->bc_group));
+ }
+ 
+-
+ STATIC void
+ xfs_allocbt_set_root(
+ 	struct xfs_btree_cur		*cur,
+ 	const union xfs_btree_ptr	*ptr,
+ 	int				inc)
+ {
+-	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+-	struct xfs_agf		*agf = agbp->b_addr;
++	struct xfs_perag		*pag = to_perag(cur->bc_group);
++	struct xfs_buf			*agbp = cur->bc_ag.agbp;
++	struct xfs_agf			*agf = agbp->b_addr;
+ 
+ 	ASSERT(ptr->s != 0);
+ 
+ 	if (xfs_btree_is_bno(cur->bc_ops)) {
+ 		agf->agf_bno_root = ptr->s;
+ 		be32_add_cpu(&agf->agf_bno_level, inc);
+-		cur->bc_ag.pag->pagf_bno_level += inc;
++		pag->pagf_bno_level += inc;
+ 	} else {
+ 		agf->agf_cnt_root = ptr->s;
+ 		be32_add_cpu(&agf->agf_cnt_level, inc);
+-		cur->bc_ag.pag->pagf_cnt_level += inc;
++		pag->pagf_cnt_level += inc;
+ 	}
+ 
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
+@@ -75,7 +75,7 @@ xfs_allocbt_alloc_block(
+ 	xfs_agblock_t		bno;
+ 
+ 	/* Allocate the new block from the freelist. If we can't, give up.  */
+-	error = xfs_alloc_get_freelist(cur->bc_ag.pag, cur->bc_tp,
++	error = xfs_alloc_get_freelist(to_perag(cur->bc_group), cur->bc_tp,
+ 			cur->bc_ag.agbp, &bno, 1);
+ 	if (error)
+ 		return error;
 @@ -86,7 +86,7 @@ xfs_allocbt_alloc_block(
  	}
  
  	atomic64_inc(&cur->bc_mp->m_allocbt_blks);
--	xfs_extent_busy_reuse(cur->bc_ag.pag, bno, 1, false);
-+	xfs_extent_busy_reuse(&cur->bc_ag.pag->pag_group, bno, 1, false);
+-	xfs_extent_busy_reuse(&cur->bc_ag.pag->pag_group, bno, 1, false);
++	xfs_extent_busy_reuse(cur->bc_group, bno, 1, false);
  
  	new->s = cpu_to_be32(bno);
  
-@@ -110,7 +110,7 @@ xfs_allocbt_free_block(
- 		return error;
- 
- 	atomic64_dec(&cur->bc_mp->m_allocbt_blks);
--	xfs_extent_busy_insert(cur->bc_tp, agbp->b_pag, bno, 1,
-+	xfs_extent_busy_insert(cur->bc_tp, &agbp->b_pag->pag_group, bno, 1,
- 			      XFS_EXTENT_BUSY_SKIP_DISCARD);
- 	return 0;
- }
-diff --git a/fs/xfs/libxfs/xfs_group.c b/fs/xfs/libxfs/xfs_group.c
-index 50e35d07a915d7..8f0ddf0d7131a1 100644
---- a/fs/xfs/libxfs/xfs_group.c
-+++ b/fs/xfs/libxfs/xfs_group.c
-@@ -10,6 +10,7 @@
- #include "xfs_mount.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
-+#include "xfs_extent_busy.h"
- #include "xfs_group.h"
- 
- /*
-@@ -161,6 +162,9 @@ xfs_group_free(
- 	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_ref) != 0);
- 
- 	xfs_defer_drain_free(&xg->xg_intents_drain);
-+#ifdef __KERNEL__
-+	kfree(xg->xg_busy_extents);
-+#endif
- 
- 	if (uninit)
- 		uninit(xg);
-@@ -185,6 +189,9 @@ xfs_group_insert(
- 	xg->xg_type = type;
- 
- #ifdef __KERNEL__
-+	xg->xg_busy_extents = xfs_extent_busy_alloc();
-+	if (!xg->xg_busy_extents)
-+		return -ENOMEM;
- 	spin_lock_init(&xg->xg_state_lock);
- 	xfs_hooks_init(&xg->xg_rmap_update_hooks);
- #endif
-@@ -196,9 +203,14 @@ xfs_group_insert(
- 	error = xa_insert(&mp->m_groups[type].xa, index, xg, GFP_KERNEL);
- 	if (error) {
- 		WARN_ON_ONCE(error == -EBUSY);
--		xfs_defer_drain_free(&xg->xg_intents_drain);
--		return error;
-+		goto out_drain;
- 	}
- 
- 	return 0;
-+out_drain:
-+	xfs_defer_drain_free(&xg->xg_intents_drain);
-+#ifdef __KERNEL__
-+	kfree(xg->xg_busy_extents);
-+#endif
-+	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
-index 485cc5ce99f03f..2f685b04e1d0c9 100644
---- a/fs/xfs/libxfs/xfs_group.h
-+++ b/fs/xfs/libxfs/xfs_group.h
-@@ -15,6 +15,11 @@ struct xfs_group {
- #ifdef __KERNEL__
- 	/* -- kernel only structures below this line -- */
- 
-+	/*
-+	 * Track freed but not yet committed extents.
-+	 */
-+	struct xfs_extent_busy_tree *xg_busy_extents;
-+
- 	/*
- 	 * Bitsets of per-ag metadata that have been checked and/or are sick.
- 	 * Callers should hold xg_state_lock before accessing this field.
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 6fd460fc7c9c1d..dca5e29296400b 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -102,7 +102,7 @@ xfs_rmapbt_alloc_block(
- 		return 0;
- 	}
- 
--	xfs_extent_busy_reuse(pag, bno, 1, false);
-+	xfs_extent_busy_reuse(&pag->pag_group, bno, 1, false);
- 
- 	new->s = cpu_to_be32(bno);
- 	be32_add_cpu(&agf->agf_rmap_blocks, 1);
-@@ -136,7 +136,7 @@ xfs_rmapbt_free_block(
- 	if (error)
- 		return error;
- 
--	xfs_extent_busy_insert(cur->bc_tp, pag, bno, 1,
-+	xfs_extent_busy_insert(cur->bc_tp, &pag->pag_group, bno, 1,
- 			      XFS_EXTENT_BUSY_SKIP_DISCARD);
- 
- 	xfs_ag_resv_free_extent(pag, XFS_AG_RESV_RMAPBT, NULL, 1);
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index f07cd93012c675..79a8adff21ffdd 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -132,13 +132,16 @@ int
- xrep_setup_ag_allocbt(
- 	struct xfs_scrub	*sc)
- {
-+	struct xfs_group	*xg = &sc->sa.pag->pag_group;
-+	unsigned int		busy_gen;
-+
- 	/*
- 	 * Make sure the busy extent list is clear because we can't put extents
- 	 * on there twice.
- 	 */
--	if (xfs_extent_busy_list_empty(sc->sa.pag, &busy_gen))
-+	if (xfs_extent_busy_list_empty(xg, &busy_gen))
- 		return 0;
--	return xfs_extent_busy_flush(sc->tp, sc->sa.pag, busy_gen, 0);
-+	return xfs_extent_busy_flush(sc->tp, xg, busy_gen, 0);
- }
- 
- /* Check for any obvious conflicts in the free extent. */
-@@ -866,7 +869,7 @@ xrep_allocbt(
- 	 * on there twice.  In theory we cleared this before we started, but
- 	 * let's not risk the filesystem.
- 	 */
--	if (!xfs_extent_busy_list_empty(sc->sa.pag, &busy_gen)) {
-+	if (!xfs_extent_busy_list_empty(&sc->sa.pag->pag_group, &busy_gen)) {
- 		error = -EDEADLOCK;
- 		goto out_ra;
- 	}
-diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index d65ad6aa856f4d..316cf70e3a8fd8 100644
---- a/fs/xfs/scrub/reap.c
-+++ b/fs/xfs/scrub/reap.c
-@@ -137,7 +137,7 @@ xreap_put_freelist(
- 			agfl_bp, agbno, 0);
- 	if (error)
- 		return error;
--	xfs_extent_busy_insert(sc->tp, sc->sa.pag, agbno, 1,
-+	xfs_extent_busy_insert(sc->tp, &sc->sa.pag->pag_group, agbno, 1,
- 			XFS_EXTENT_BUSY_SKIP_DISCARD);
- 
- 	return 0;
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 739ec69c44281c..9c6d3b136826cc 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -117,10 +117,12 @@ xfs_discard_extents(
- 
- 	blk_start_plug(&plug);
- 	list_for_each_entry(busyp, &extents->extent_list, list) {
--		trace_xfs_discard_extent(busyp->pag, busyp->bno, busyp->length);
-+		struct xfs_perag	*pag = to_perag(busyp->group);
-+
-+		trace_xfs_discard_extent(pag, busyp->bno, busyp->length);
- 
- 		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
--				xfs_agbno_to_daddr(busyp->pag, busyp->bno),
-+				xfs_agbno_to_daddr(pag, busyp->bno),
- 				XFS_FSB_TO_BB(mp, busyp->length),
- 				GFP_KERNEL, &bio);
- 		if (error && error != -EOPNOTSUPP) {
-@@ -271,12 +273,12 @@ xfs_trim_gather_extents(
- 		 * If any blocks in the range are still busy, skip the
- 		 * discard and try again the next time.
- 		 */
--		if (xfs_extent_busy_search(pag, fbno, flen)) {
-+		if (xfs_extent_busy_search(&pag->pag_group, fbno, flen)) {
- 			trace_xfs_discard_busy(pag, fbno, flen);
- 			goto next_extent;
- 		}
- 
--		xfs_extent_busy_insert_discard(pag, fbno, flen,
-+		xfs_extent_busy_insert_discard(&pag->pag_group, fbno, flen,
- 				&extents->extent_list);
- next_extent:
- 		if (tcur->by_bno)
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index ff10307702f011..d63208a87f1d7e 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -19,14 +19,22 @@
- #include "xfs_log.h"
- #include "xfs_ag.h"
- 
-+struct xfs_extent_busy_tree {
-+	spinlock_t		eb_lock;
-+	struct rb_root		eb_tree;
-+	unsigned int		eb_gen;
-+	wait_queue_head_t	eb_wait;
-+};
-+
- static void
- xfs_extent_busy_insert_list(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len,
- 	unsigned int		flags,
- 	struct list_head	*busy_list)
- {
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 	struct xfs_extent_busy	*new;
- 	struct xfs_extent_busy	*busyp;
- 	struct rb_node		**rbp;
-@@ -34,17 +42,17 @@ xfs_extent_busy_insert_list(
- 
- 	new = kzalloc(sizeof(struct xfs_extent_busy),
- 			GFP_KERNEL | __GFP_NOFAIL);
--	new->pag = xfs_perag_hold(pag);
-+	new->group = xfs_group_hold(xg);
- 	new->bno = bno;
- 	new->length = len;
- 	INIT_LIST_HEAD(&new->list);
- 	new->flags = flags;
- 
- 	/* trace before insert to be able to see failed inserts */
--	trace_xfs_extent_busy(&pag->pag_group, bno, len);
-+	trace_xfs_extent_busy(xg, bno, len);
- 
--	spin_lock(&pag->pagb_lock);
--	rbp = &pag->pagb_tree.rb_node;
-+	spin_lock(&eb->eb_lock);
-+	rbp = &eb->eb_tree.rb_node;
- 	while (*rbp) {
- 		parent = *rbp;
- 		busyp = rb_entry(parent, struct xfs_extent_busy, rb_node);
-@@ -61,32 +69,32 @@ xfs_extent_busy_insert_list(
- 	}
- 
- 	rb_link_node(&new->rb_node, parent, rbp);
--	rb_insert_color(&new->rb_node, &pag->pagb_tree);
-+	rb_insert_color(&new->rb_node, &eb->eb_tree);
- 
- 	/* always process discard lists in fifo order */
- 	list_add_tail(&new->list, busy_list);
--	spin_unlock(&pag->pagb_lock);
-+	spin_unlock(&eb->eb_lock);
- }
- 
- void
- xfs_extent_busy_insert(
- 	struct xfs_trans	*tp,
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len,
- 	unsigned int		flags)
- {
--	xfs_extent_busy_insert_list(pag, bno, len, flags, &tp->t_busy);
-+	xfs_extent_busy_insert_list(xg, bno, len, flags, &tp->t_busy);
- }
- 
- void
- xfs_extent_busy_insert_discard(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len,
- 	struct list_head	*busy_list)
- {
--	xfs_extent_busy_insert_list(pag, bno, len, XFS_EXTENT_BUSY_DISCARDED,
-+	xfs_extent_busy_insert_list(xg, bno, len, XFS_EXTENT_BUSY_DISCARDED,
- 			busy_list);
- }
- 
-@@ -101,17 +109,18 @@ xfs_extent_busy_insert_discard(
-  */
- int
- xfs_extent_busy_search(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len)
- {
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 	struct rb_node		*rbp;
- 	struct xfs_extent_busy	*busyp;
- 	int			match = 0;
- 
- 	/* find closest start bno overlap */
--	spin_lock(&pag->pagb_lock);
--	rbp = pag->pagb_tree.rb_node;
-+	spin_lock(&eb->eb_lock);
-+	rbp = eb->eb_tree.rb_node;
- 	while (rbp) {
- 		busyp = rb_entry(rbp, struct xfs_extent_busy, rb_node);
- 		if (bno < busyp->bno) {
-@@ -130,7 +139,7 @@ xfs_extent_busy_search(
- 			break;
- 		}
- 	}
--	spin_unlock(&pag->pagb_lock);
-+	spin_unlock(&eb->eb_lock);
- 	return match;
- }
- 
-@@ -147,13 +156,15 @@ xfs_extent_busy_search(
-  */
- STATIC bool
- xfs_extent_busy_update_extent(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	struct xfs_extent_busy	*busyp,
- 	xfs_agblock_t		fbno,
- 	xfs_extlen_t		flen,
--	bool			userdata) __releases(&pag->pagb_lock)
--					  __acquires(&pag->pagb_lock)
-+	bool			userdata)
-+		__releases(&eb->eb_lock)
-+		__acquires(&eb->eb_lock)
- {
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 	xfs_agblock_t		fend = fbno + flen;
- 	xfs_agblock_t		bbno = busyp->bno;
- 	xfs_agblock_t		bend = bbno + busyp->length;
-@@ -164,9 +175,9 @@ xfs_extent_busy_update_extent(
- 	 * and retry.
- 	 */
- 	if (busyp->flags & XFS_EXTENT_BUSY_DISCARDED) {
--		spin_unlock(&pag->pagb_lock);
-+		spin_unlock(&eb->eb_lock);
- 		delay(1);
--		spin_lock(&pag->pagb_lock);
-+		spin_lock(&eb->eb_lock);
- 		return false;
- 	}
- 
-@@ -239,7 +250,7 @@ xfs_extent_busy_update_extent(
- 		 * tree root, because erasing the node can rearrange the
- 		 * tree topology.
- 		 */
--		rb_erase(&busyp->rb_node, &pag->pagb_tree);
-+		rb_erase(&busyp->rb_node, &eb->eb_tree);
- 		busyp->length = 0;
- 		return false;
- 	} else if (fend < bend) {
-@@ -278,14 +289,14 @@ xfs_extent_busy_update_extent(
- 		ASSERT(0);
- 	}
- 
--	trace_xfs_extent_busy_reuse(&pag->pag_group, fbno, flen);
-+	trace_xfs_extent_busy_reuse(xg, fbno, flen);
- 	return true;
- 
- out_force_log:
--	spin_unlock(&pag->pagb_lock);
--	xfs_log_force(pag_mount(pag), XFS_LOG_SYNC);
--	trace_xfs_extent_busy_force(&pag->pag_group, fbno, flen);
--	spin_lock(&pag->pagb_lock);
-+	spin_unlock(&eb->eb_lock);
-+	xfs_log_force(xg->xg_mount, XFS_LOG_SYNC);
-+	trace_xfs_extent_busy_force(xg, fbno, flen);
-+	spin_lock(&eb->eb_lock);
- 	return false;
- }
- 
-@@ -294,17 +305,18 @@ xfs_extent_busy_update_extent(
-  */
- void
- xfs_extent_busy_reuse(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	xfs_agblock_t		fbno,
- 	xfs_extlen_t		flen,
- 	bool			userdata)
- {
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 	struct rb_node		*rbp;
- 
- 	ASSERT(flen > 0);
--	spin_lock(&pag->pagb_lock);
-+	spin_lock(&eb->eb_lock);
- restart:
--	rbp = pag->pagb_tree.rb_node;
-+	rbp = eb->eb_tree.rb_node;
- 	while (rbp) {
- 		struct xfs_extent_busy *busyp =
- 			rb_entry(rbp, struct xfs_extent_busy, rb_node);
-@@ -319,11 +331,11 @@ xfs_extent_busy_reuse(
- 			continue;
- 		}
- 
--		if (!xfs_extent_busy_update_extent(pag, busyp, fbno, flen,
-+		if (!xfs_extent_busy_update_extent(xg, busyp, fbno, flen,
- 						  userdata))
- 			goto restart;
- 	}
--	spin_unlock(&pag->pagb_lock);
-+	spin_unlock(&eb->eb_lock);
- }
- 
- /*
-@@ -332,7 +344,7 @@ xfs_extent_busy_reuse(
-  * args->minlen no suitable extent could be found, and the higher level
-  * code needs to force out the log and retry the allocation.
-  *
-- * Return the current busy generation for the AG if the extent is busy. This
-+ * Return the current busy generation for the group if the extent is busy. This
-  * value can be used to wait for at least one of the currently busy extents
-  * to be cleared. Note that the busy list is not guaranteed to be empty after
-  * the gen is woken. The state of a specific extent must always be confirmed
-@@ -340,11 +352,14 @@ xfs_extent_busy_reuse(
-  */
- bool
- xfs_extent_busy_trim(
--	struct xfs_alloc_arg	*args,
-+	struct xfs_group	*xg,
-+	xfs_extlen_t		minlen,
-+	xfs_extlen_t		maxlen,
- 	xfs_agblock_t		*bno,
- 	xfs_extlen_t		*len,
- 	unsigned		*busy_gen)
- {
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 	xfs_agblock_t		fbno;
- 	xfs_extlen_t		flen;
- 	struct rb_node		*rbp;
-@@ -352,11 +367,11 @@ xfs_extent_busy_trim(
- 
- 	ASSERT(*len > 0);
- 
--	spin_lock(&args->pag->pagb_lock);
-+	spin_lock(&eb->eb_lock);
- 	fbno = *bno;
- 	flen = *len;
--	rbp = args->pag->pagb_tree.rb_node;
--	while (rbp && flen >= args->minlen) {
-+	rbp = eb->eb_tree.rb_node;
-+	while (rbp && flen >= minlen) {
- 		struct xfs_extent_busy *busyp =
- 			rb_entry(rbp, struct xfs_extent_busy, rb_node);
- 		xfs_agblock_t	fend = fbno + flen;
-@@ -477,13 +492,13 @@ xfs_extent_busy_trim(
- 			 * good chance subsequent allocations will be
- 			 * contiguous.
- 			 */
--			if (bbno - fbno >= args->maxlen) {
-+			if (bbno - fbno >= maxlen) {
- 				/* left candidate fits perfect */
- 				fend = bbno;
--			} else if (fend - bend >= args->maxlen * 4) {
-+			} else if (fend - bend >= maxlen * 4) {
- 				/* right candidate has enough free space */
- 				fbno = bend;
--			} else if (bbno - fbno >= args->minlen) {
-+			} else if (bbno - fbno >= minlen) {
- 				/* left candidate fits minimum requirement */
- 				fend = bbno;
- 			} else {
-@@ -496,14 +511,13 @@ xfs_extent_busy_trim(
- out:
- 
- 	if (fbno != *bno || flen != *len) {
--		trace_xfs_extent_busy_trim(&args->pag->pag_group, *bno, *len,
--				fbno, flen);
-+		trace_xfs_extent_busy_trim(xg, *bno, *len, fbno, flen);
- 		*bno = fbno;
- 		*len = flen;
--		*busy_gen = args->pag->pagb_gen;
-+		*busy_gen = eb->eb_gen;
- 		ret = true;
- 	}
--	spin_unlock(&args->pag->pagb_lock);
-+	spin_unlock(&eb->eb_lock);
- 	return ret;
- fail:
- 	/*
-@@ -516,23 +530,24 @@ xfs_extent_busy_trim(
- 
- static bool
- xfs_extent_busy_clear_one(
--	struct xfs_perag	*pag,
- 	struct xfs_extent_busy	*busyp,
- 	bool			do_discard)
- {
-+	struct xfs_extent_busy_tree *eb = busyp->group->xg_busy_extents;
-+
- 	if (busyp->length) {
- 		if (do_discard &&
- 		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD)) {
- 			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
- 			return false;
- 		}
--		trace_xfs_extent_busy_clear(&pag->pag_group, busyp->bno,
-+		trace_xfs_extent_busy_clear(busyp->group, busyp->bno,
- 				busyp->length);
--		rb_erase(&busyp->rb_node, &pag->pagb_tree);
-+		rb_erase(&busyp->rb_node, &eb->eb_tree);
- 	}
- 
- 	list_del_init(&busyp->list);
--	xfs_perag_put(busyp->pag);
-+	xfs_group_put(busyp->group);
- 	kfree(busyp);
- 	return true;
- }
-@@ -554,29 +569,30 @@ xfs_extent_busy_clear(
- 		return;
- 
- 	do {
--		struct xfs_perag	*pag = xfs_perag_hold(busyp->pag);
-+		struct xfs_group	*xg = xfs_group_hold(busyp->group);
-+		struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 		bool			wakeup = false;
- 
--		spin_lock(&pag->pagb_lock);
-+		spin_lock(&eb->eb_lock);
- 		do {
- 			next = list_next_entry(busyp, list);
--			if (xfs_extent_busy_clear_one(pag, busyp, do_discard))
-+			if (xfs_extent_busy_clear_one(busyp, do_discard))
- 				wakeup = true;
- 			busyp = next;
- 		} while (!list_entry_is_head(busyp, list, list) &&
--			 busyp->pag == pag);
-+			 busyp->group == xg);
- 
- 		if (wakeup) {
--			pag->pagb_gen++;
--			wake_up_all(&pag->pagb_wait);
-+			eb->eb_gen++;
-+			wake_up_all(&eb->eb_wait);
- 		}
--		spin_unlock(&pag->pagb_lock);
--		xfs_perag_put(pag);
-+		spin_unlock(&eb->eb_lock);
-+		xfs_group_put(xg);
- 	} while (!list_entry_is_head(busyp, list, list));
- }
- 
- /*
-- * Flush out all busy extents for this AG.
-+ * Flush out all busy extents for this group.
-  *
-  * If the current transaction is holding busy extents, the caller may not want
-  * to wait for committed busy extents to resolve. If we are being told just to
-@@ -592,10 +608,11 @@ xfs_extent_busy_clear(
- int
- xfs_extent_busy_flush(
- 	struct xfs_trans	*tp,
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	unsigned		busy_gen,
- 	uint32_t		alloc_flags)
- {
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 	DEFINE_WAIT		(wait);
+@@ -104,8 +104,8 @@ xfs_allocbt_free_block(
  	int			error;
  
-@@ -608,7 +625,7 @@ xfs_extent_busy_flush(
- 		if (alloc_flags & XFS_ALLOC_FLAG_TRYFLUSH)
- 			return 0;
+ 	bno = xfs_daddr_to_agbno(cur->bc_mp, xfs_buf_daddr(bp));
+-	error = xfs_alloc_put_freelist(cur->bc_ag.pag, cur->bc_tp, agbp, NULL,
+-			bno, 1);
++	error = xfs_alloc_put_freelist(to_perag(cur->bc_group), cur->bc_tp,
++			agbp, NULL, bno, 1);
+ 	if (error)
+ 		return error;
  
--		if (busy_gen != READ_ONCE(pag->pagb_gen))
-+		if (busy_gen != READ_ONCE(eb->eb_gen))
- 			return 0;
+@@ -178,7 +178,7 @@ xfs_allocbt_init_ptr_from_cur(
+ {
+ 	struct xfs_agf		*agf = cur->bc_ag.agbp->b_addr;
  
- 		if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
-@@ -617,36 +634,44 @@ xfs_extent_busy_flush(
+-	ASSERT(pag_agno(cur->bc_ag.pag) == be32_to_cpu(agf->agf_seqno));
++	ASSERT(cur->bc_group->xg_index == be32_to_cpu(agf->agf_seqno));
  
- 	/* Wait for committed busy extents to resolve. */
- 	do {
--		prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
--		if  (busy_gen != READ_ONCE(pag->pagb_gen))
-+		prepare_to_wait(&eb->eb_wait, &wait, TASK_KILLABLE);
-+		if  (busy_gen != READ_ONCE(eb->eb_gen))
+ 	if (xfs_btree_is_bno(cur->bc_ops))
+ 		ptr->s = agf->agf_bno_root;
+@@ -492,7 +492,7 @@ xfs_bnobt_init_cursor(
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_bnobt_ops,
+ 			mp->m_alloc_maxlevels, xfs_allocbt_cur_cache);
+-	cur->bc_ag.pag = xfs_perag_hold(pag);
++	cur->bc_group = xfs_group_hold(&pag->pag_group);
+ 	cur->bc_ag.agbp = agbp;
+ 	if (agbp) {
+ 		struct xfs_agf		*agf = agbp->b_addr;
+@@ -518,7 +518,7 @@ xfs_cntbt_init_cursor(
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_cntbt_ops,
+ 			mp->m_alloc_maxlevels, xfs_allocbt_cur_cache);
+-	cur->bc_ag.pag = xfs_perag_hold(pag);
++	cur->bc_group = xfs_group_hold(&pag->pag_group);
+ 	cur->bc_ag.agbp = agbp;
+ 	if (agbp) {
+ 		struct xfs_agf		*agf = agbp->b_addr;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 9a13dbf5f54a33..37f2c91e319102 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -225,7 +225,7 @@ __xfs_btree_check_agblock(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = cur->bc_mp;
+-	struct xfs_perag	*pag = cur->bc_ag.pag;
++	struct xfs_perag	*pag = to_perag(cur->bc_group);
+ 	xfs_failaddr_t		fa;
+ 	xfs_agblock_t		agbno;
+ 
+@@ -331,7 +331,7 @@ __xfs_btree_check_ptr(
+ 			return -EFSCORRUPTED;
+ 		break;
+ 	case XFS_BTREE_TYPE_AG:
+-		if (!xfs_verify_agbno(cur->bc_ag.pag,
++		if (!xfs_verify_agbno(to_perag(cur->bc_group),
+ 				be32_to_cpu((&ptr->s)[index])))
+ 			return -EFSCORRUPTED;
+ 		break;
+@@ -372,7 +372,7 @@ xfs_btree_check_ptr(
+ 		case XFS_BTREE_TYPE_AG:
+ 			xfs_err(cur->bc_mp,
+ "AG %u: Corrupt %sbt pointer at level %d index %d.",
+-				pag_agno(cur->bc_ag.pag), cur->bc_ops->name,
++				cur->bc_group->xg_index, cur->bc_ops->name,
+ 				level, index);
  			break;
- 		schedule();
- 	} while (1);
+ 		}
+@@ -523,20 +523,8 @@ xfs_btree_del_cursor(
+ 	ASSERT(!xfs_btree_is_bmap(cur->bc_ops) || cur->bc_bmap.allocated == 0 ||
+ 	       xfs_is_shutdown(cur->bc_mp) || error != 0);
  
--	finish_wait(&pag->pagb_wait, &wait);
-+	finish_wait(&eb->eb_wait, &wait);
+-	switch (cur->bc_ops->type) {
+-	case XFS_BTREE_TYPE_AG:
+-		if (cur->bc_ag.pag)
+-			xfs_perag_put(cur->bc_ag.pag);
+-		break;
+-	case XFS_BTREE_TYPE_INODE:
+-		/* nothing to do */
+-		break;
+-	case XFS_BTREE_TYPE_MEM:
+-		if (cur->bc_mem.pag)
+-			xfs_perag_put(cur->bc_mem.pag);
+-		break;
+-	}
+-
++	if (cur->bc_group)
++		xfs_group_put(cur->bc_group);
+ 	kmem_cache_free(cur->bc_cache, cur);
+ }
+ 
+@@ -1017,21 +1005,22 @@ xfs_btree_readahead_agblock(
+ 	struct xfs_btree_block	*block)
+ {
+ 	struct xfs_mount	*mp = cur->bc_mp;
++	struct xfs_perag	*pag = to_perag(cur->bc_group);
+ 	xfs_agblock_t		left = be32_to_cpu(block->bb_u.s.bb_leftsib);
+ 	xfs_agblock_t		right = be32_to_cpu(block->bb_u.s.bb_rightsib);
+ 	int			rval = 0;
+ 
+ 	if ((lr & XFS_BTCUR_LEFTRA) && left != NULLAGBLOCK) {
+ 		xfs_buf_readahead(mp->m_ddev_targp,
+-				xfs_agbno_to_daddr(cur->bc_ag.pag, left),
+-				mp->m_bsize, cur->bc_ops->buf_ops);
++				xfs_agbno_to_daddr(pag, left), mp->m_bsize,
++				cur->bc_ops->buf_ops);
+ 		rval++;
+ 	}
+ 
+ 	if ((lr & XFS_BTCUR_RIGHTRA) && right != NULLAGBLOCK) {
+ 		xfs_buf_readahead(mp->m_ddev_targp,
+-				xfs_agbno_to_daddr(cur->bc_ag.pag, right),
+-				mp->m_bsize, cur->bc_ops->buf_ops);
++				xfs_agbno_to_daddr(pag, right), mp->m_bsize,
++				cur->bc_ops->buf_ops);
+ 		rval++;
+ 	}
+ 
+@@ -1090,7 +1079,7 @@ xfs_btree_ptr_to_daddr(
+ 
+ 	switch (cur->bc_ops->type) {
+ 	case XFS_BTREE_TYPE_AG:
+-		*daddr = xfs_agbno_to_daddr(cur->bc_ag.pag,
++		*daddr = xfs_agbno_to_daddr(to_perag(cur->bc_group),
+ 				be32_to_cpu(ptr->s));
+ 		break;
+ 	case XFS_BTREE_TYPE_INODE:
+@@ -1312,7 +1301,7 @@ xfs_btree_owner(
+ 	case XFS_BTREE_TYPE_INODE:
+ 		return cur->bc_ino.ip->i_ino;
+ 	case XFS_BTREE_TYPE_AG:
+-		return pag_agno(cur->bc_ag.pag);
++		return cur->bc_group->xg_index;
+ 	default:
+ 		ASSERT(0);
+ 		return 0;
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 10b7ddc3b2b34e..3b739459ebb0f4 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -254,6 +254,7 @@ struct xfs_btree_cur
+ 	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
+ 	uint8_t			bc_nlevels; /* number of levels in the tree */
+ 	uint8_t			bc_maxlevels; /* maximum levels for this btree type */
++	struct xfs_group	*bc_group;
+ 
+ 	/* per-type information */
+ 	union {
+@@ -264,13 +265,11 @@ struct xfs_btree_cur
+ 			struct xbtree_ifakeroot	*ifake;	/* for staging cursor */
+ 		} bc_ino;
+ 		struct {
+-			struct xfs_perag	*pag;
+ 			struct xfs_buf		*agbp;
+ 			struct xbtree_afakeroot	*afake;	/* for staging cursor */
+ 		} bc_ag;
+ 		struct {
+ 			struct xfbtree		*xfbtree;
+-			struct xfs_perag	*pag;
+ 		} bc_mem;
+ 	};
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree_mem.c b/fs/xfs/libxfs/xfs_btree_mem.c
+index 036061fe32cc90..df3d613675a15a 100644
+--- a/fs/xfs/libxfs/xfs_btree_mem.c
++++ b/fs/xfs/libxfs/xfs_btree_mem.c
+@@ -57,10 +57,8 @@ xfbtree_dup_cursor(
+ 	ncur->bc_flags = cur->bc_flags;
+ 	ncur->bc_nlevels = cur->bc_nlevels;
+ 	ncur->bc_mem.xfbtree = cur->bc_mem.xfbtree;
+-
+-	if (cur->bc_mem.pag)
+-		ncur->bc_mem.pag = xfs_perag_hold(cur->bc_mem.pag);
+-
++	if (cur->bc_group)
++		ncur->bc_group = xfs_group_hold(cur->bc_group);
+ 	return ncur;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 78e1920c1ff964..846e3fa141b04b 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -142,7 +142,7 @@ xfs_inobt_complain_bad_rec(
+ 
+ 	xfs_warn(mp,
+ 		"%sbt record corruption in AG %d detected at %pS!",
+-		cur->bc_ops->name, pag_agno(cur->bc_ag.pag), fa);
++		cur->bc_ops->name, cur->bc_group->xg_index, fa);
+ 	xfs_warn(mp,
+ "start inode 0x%x, count 0x%x, free 0x%x freemask 0x%llx, holemask 0x%x",
+ 		irec->ir_startino, irec->ir_count, irec->ir_freecount,
+@@ -170,7 +170,7 @@ xfs_inobt_get_rec(
+ 		return error;
+ 
+ 	xfs_inobt_btrec_to_irec(mp, rec, irec);
+-	fa = xfs_inobt_check_irec(cur->bc_ag.pag, irec);
++	fa = xfs_inobt_check_irec(to_perag(cur->bc_group), irec);
+ 	if (fa)
+ 		return xfs_inobt_complain_bad_rec(cur, fa, irec);
+ 
+@@ -275,8 +275,10 @@ xfs_check_agi_freecount(
+ 			}
+ 		} while (i == 1);
+ 
+-		if (!xfs_is_shutdown(cur->bc_mp))
+-			ASSERT(freecount == cur->bc_ag.pag->pagi_freecount);
++		if (!xfs_is_shutdown(cur->bc_mp)) {
++			ASSERT(freecount ==
++				to_perag(cur->bc_group)->pagi_freecount);
++		}
+ 	}
  	return 0;
  }
+@@ -2880,7 +2882,7 @@ xfs_ialloc_count_inodes_rec(
+ 	xfs_failaddr_t			fa;
  
-+static void
-+xfs_extent_busy_wait_group(
-+	struct xfs_group	*xg)
-+{
-+	DEFINE_WAIT		(wait);
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
-+
-+	do {
-+		prepare_to_wait(&eb->eb_wait, &wait, TASK_KILLABLE);
-+		if  (RB_EMPTY_ROOT(&eb->eb_tree))
-+			break;
-+		schedule();
-+	} while (1);
-+	finish_wait(&eb->eb_wait, &wait);
-+}
-+
- void
- xfs_extent_busy_wait_all(
- 	struct xfs_mount	*mp)
+ 	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, &irec);
+-	fa = xfs_inobt_check_irec(cur->bc_ag.pag, &irec);
++	fa = xfs_inobt_check_irec(to_perag(cur->bc_group), &irec);
+ 	if (fa)
+ 		return xfs_inobt_complain_bad_rec(cur, fa, &irec);
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 91d44be2ce48bc..138c687545295d 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -37,7 +37,7 @@ STATIC struct xfs_btree_cur *
+ xfs_inobt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
  {
- 	struct xfs_perag	*pag = NULL;
--	DEFINE_WAIT		(wait);
+-	return xfs_inobt_init_cursor(cur->bc_ag.pag, cur->bc_tp,
++	return xfs_inobt_init_cursor(to_perag(cur->bc_group), cur->bc_tp,
+ 			cur->bc_ag.agbp);
+ }
  
--	while ((pag = xfs_perag_next(mp, pag))) {
--		do {
--			prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
--			if  (RB_EMPTY_ROOT(&pag->pagb_tree))
--				break;
--			schedule();
--		} while (1);
--		finish_wait(&pag->pagb_wait, &wait);
--	}
-+	while ((pag = xfs_perag_next(mp, pag)))
-+		xfs_extent_busy_wait_group(&pag->pag_group);
+@@ -45,7 +45,7 @@ STATIC struct xfs_btree_cur *
+ xfs_finobt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+-	return xfs_finobt_init_cursor(cur->bc_ag.pag, cur->bc_tp,
++	return xfs_finobt_init_cursor(to_perag(cur->bc_group), cur->bc_tp,
+ 			cur->bc_ag.agbp);
+ }
+ 
+@@ -112,7 +112,7 @@ __xfs_inobt_alloc_block(
+ 	memset(&args, 0, sizeof(args));
+ 	args.tp = cur->bc_tp;
+ 	args.mp = cur->bc_mp;
+-	args.pag = cur->bc_ag.pag;
++	args.pag = to_perag(cur->bc_group);
+ 	args.oinfo = XFS_RMAP_OINFO_INOBT;
+ 	args.minlen = 1;
+ 	args.maxlen = 1;
+@@ -248,7 +248,7 @@ xfs_inobt_init_ptr_from_cur(
+ {
+ 	struct xfs_agi		*agi = cur->bc_ag.agbp->b_addr;
+ 
+-	ASSERT(pag_agno(cur->bc_ag.pag) == be32_to_cpu(agi->agi_seqno));
++	ASSERT(cur->bc_group->xg_index == be32_to_cpu(agi->agi_seqno));
+ 
+ 	ptr->s = agi->agi_root;
+ }
+@@ -260,7 +260,8 @@ xfs_finobt_init_ptr_from_cur(
+ {
+ 	struct xfs_agi		*agi = cur->bc_ag.agbp->b_addr;
+ 
+-	ASSERT(pag_agno(cur->bc_ag.pag) == be32_to_cpu(agi->agi_seqno));
++	ASSERT(cur->bc_group->xg_index == be32_to_cpu(agi->agi_seqno));
++
+ 	ptr->s = agi->agi_free_root;
+ }
+ 
+@@ -483,7 +484,7 @@ xfs_inobt_init_cursor(
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_inobt_ops,
+ 			M_IGEO(mp)->inobt_maxlevels, xfs_inobt_cur_cache);
+-	cur->bc_ag.pag = xfs_perag_hold(pag);
++	cur->bc_group = xfs_group_hold(&pag->pag_group);
+ 	cur->bc_ag.agbp = agbp;
+ 	if (agbp) {
+ 		struct xfs_agi		*agi = agbp->b_addr;
+@@ -509,7 +510,7 @@ xfs_finobt_init_cursor(
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_finobt_ops,
+ 			M_IGEO(mp)->inobt_maxlevels, xfs_inobt_cur_cache);
+-	cur->bc_ag.pag = xfs_perag_hold(pag);
++	cur->bc_group = xfs_group_hold(&pag->pag_group);
+ 	cur->bc_ag.agbp = agbp;
+ 	if (agbp) {
+ 		struct xfs_agi		*agi = agbp->b_addr;
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index b8789c42c230b4..c2924ffa7e60bc 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -154,7 +154,7 @@ xfs_refcount_complain_bad_rec(
+ 
+ 	xfs_warn(mp,
+  "Refcount BTree record corruption in AG %d detected at %pS!",
+-				pag_agno(cur->bc_ag.pag), fa);
++				cur->bc_group->xg_index, fa);
+ 	xfs_warn(mp,
+ 		"Start block 0x%x, block count 0x%x, references 0x%x",
+ 		irec->rc_startblock, irec->rc_blockcount, irec->rc_refcount);
+@@ -180,7 +180,7 @@ xfs_refcount_get_rec(
+ 		return error;
+ 
+ 	xfs_refcount_btrec_to_irec(rec, irec);
+-	fa = xfs_refcount_check_irec(cur->bc_ag.pag, irec);
++	fa = xfs_refcount_check_irec(to_perag(cur->bc_group), irec);
+ 	if (fa)
+ 		return xfs_refcount_complain_bad_rec(cur, fa, irec);
+ 
+@@ -1154,7 +1154,7 @@ xfs_refcount_adjust_extents(
+ 					goto out_error;
+ 				}
+ 			} else {
+-				fsbno = xfs_agbno_to_fsb(cur->bc_ag.pag,
++				fsbno = xfs_agbno_to_fsb(to_perag(cur->bc_group),
+ 						tmp.rc_startblock);
+ 				error = xfs_free_extent_later(cur->bc_tp, fsbno,
+ 						  tmp.rc_blockcount, NULL,
+@@ -1216,7 +1216,7 @@ xfs_refcount_adjust_extents(
+ 			}
+ 			goto advloop;
+ 		} else {
+-			fsbno = xfs_agbno_to_fsb(cur->bc_ag.pag,
++			fsbno = xfs_agbno_to_fsb(to_perag(cur->bc_group),
+ 					ext.rc_startblock);
+ 			error = xfs_free_extent_later(cur->bc_tp, fsbno,
+ 					ext.rc_blockcount, NULL,
+@@ -1310,7 +1310,7 @@ xfs_refcount_continue_op(
+ 	xfs_agblock_t			new_agbno)
+ {
+ 	struct xfs_mount		*mp = cur->bc_mp;
+-	struct xfs_perag		*pag = cur->bc_ag.pag;
++	struct xfs_perag		*pag = to_perag(cur->bc_group);
+ 
+ 	if (XFS_IS_CORRUPT(mp, !xfs_verify_agbext(pag, new_agbno,
+ 					ri->ri_blockcount))) {
+@@ -1358,7 +1358,7 @@ xfs_refcount_finish_one(
+ 	 * If we haven't gotten a cursor or the cursor AG doesn't match
+ 	 * the startblock, get one now.
+ 	 */
+-	if (rcur != NULL && rcur->bc_ag.pag != ri->ri_pag) {
++	if (rcur != NULL && to_perag(rcur->bc_group) != ri->ri_pag) {
+ 		nr_ops = rcur->bc_refc.nr_ops;
+ 		shape_changes = rcur->bc_refc.shape_changes;
+ 		xfs_btree_del_cursor(rcur, 0);
+@@ -1878,7 +1878,8 @@ xfs_refcount_recover_extent(
+ 	INIT_LIST_HEAD(&rr->rr_list);
+ 	xfs_refcount_btrec_to_irec(rec, &rr->rr_rrec);
+ 
+-	if (xfs_refcount_check_irec(cur->bc_ag.pag, &rr->rr_rrec) != NULL ||
++	if (xfs_refcount_check_irec(to_perag(cur->bc_group), &rr->rr_rrec) !=
++			NULL ||
+ 	    XFS_IS_CORRUPT(cur->bc_mp,
+ 			   rr->rr_rrec.rc_domain != XFS_REFC_DOMAIN_COW)) {
+ 		xfs_btree_mark_sick(cur);
+@@ -2026,7 +2027,7 @@ xfs_refcount_query_range_helper(
+ 	xfs_failaddr_t			fa;
+ 
+ 	xfs_refcount_btrec_to_irec(rec, &irec);
+-	fa = xfs_refcount_check_irec(cur->bc_ag.pag, &irec);
++	fa = xfs_refcount_check_irec(to_perag(cur->bc_group), &irec);
+ 	if (fa)
+ 		return xfs_refcount_complain_bad_rec(cur, fa, &irec);
+ 
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index db389fdbd929a4..8242a986d1e591 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -30,7 +30,7 @@ xfs_refcountbt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+ 	return xfs_refcountbt_init_cursor(cur->bc_mp, cur->bc_tp,
+-			cur->bc_ag.agbp, cur->bc_ag.pag);
++			cur->bc_ag.agbp, to_perag(cur->bc_group));
+ }
+ 
+ STATIC void
+@@ -68,7 +68,7 @@ xfs_refcountbt_alloc_block(
+ 	memset(&args, 0, sizeof(args));
+ 	args.tp = cur->bc_tp;
+ 	args.mp = cur->bc_mp;
+-	args.pag = cur->bc_ag.pag;
++	args.pag = to_perag(cur->bc_group);
+ 	args.oinfo = XFS_RMAP_OINFO_REFC;
+ 	args.minlen = args.maxlen = args.prod = 1;
+ 	args.resv = XFS_AG_RESV_METADATA;
+@@ -81,7 +81,7 @@ xfs_refcountbt_alloc_block(
+ 		*stat = 0;
+ 		return 0;
+ 	}
+-	ASSERT(args.agno == pag_agno(cur->bc_ag.pag));
++	ASSERT(args.agno == cur->bc_group->xg_index);
+ 	ASSERT(args.len == 1);
+ 
+ 	new->s = cpu_to_be32(args.agbno);
+@@ -169,7 +169,7 @@ xfs_refcountbt_init_ptr_from_cur(
+ {
+ 	struct xfs_agf		*agf = cur->bc_ag.agbp->b_addr;
+ 
+-	ASSERT(pag_agno(cur->bc_ag.pag) == be32_to_cpu(agf->agf_seqno));
++	ASSERT(cur->bc_group->xg_index == be32_to_cpu(agf->agf_seqno));
+ 
+ 	ptr->s = agf->agf_refcount_root;
+ }
+@@ -365,7 +365,7 @@ xfs_refcountbt_init_cursor(
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_refcountbt_ops,
+ 			mp->m_refc_maxlevels, xfs_refcountbt_cur_cache);
+-	cur->bc_ag.pag = xfs_perag_hold(pag);
++	cur->bc_group = xfs_group_hold(&pag->pag_group);
+ 	cur->bc_refc.nr_ops = 0;
+ 	cur->bc_refc.shape_changes = 0;
+ 	cur->bc_ag.agbp = agbp;
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 53c4b51c8a8217..0bf0dd44433b3f 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -269,9 +269,7 @@ xfs_rmap_check_btrec(
+ 	struct xfs_btree_cur		*cur,
+ 	const struct xfs_rmap_irec	*irec)
+ {
+-	if (xfs_btree_is_mem_rmap(cur->bc_ops))
+-		return xfs_rmap_check_irec(cur->bc_mem.pag, irec);
+-	return xfs_rmap_check_irec(cur->bc_ag.pag, irec);
++	return xfs_rmap_check_irec(to_perag(cur->bc_group), irec);
+ }
+ 
+ static inline int
+@@ -288,7 +286,7 @@ xfs_rmap_complain_bad_rec(
+ 	else
+ 		xfs_warn(mp,
+  "Reverse Mapping BTree record corruption in AG %d detected at %pS!",
+-			pag_agno(cur->bc_ag.pag), fa);
++			cur->bc_group->xg_index, fa);
+ 	xfs_warn(mp,
+ 		"Owner 0x%llx, flags 0x%x, start block 0x%x block count 0x%x",
+ 		irec->rm_owner, irec->rm_flags, irec->rm_startblock,
+@@ -2588,7 +2586,7 @@ xfs_rmap_finish_one(
+ 	 * If we haven't gotten a cursor or the cursor AG doesn't match
+ 	 * the startblock, get one now.
+ 	 */
+-	if (rcur != NULL && rcur->bc_ag.pag != ri->ri_pag) {
++	if (rcur != NULL && to_perag(rcur->bc_group) != ri->ri_pag) {
+ 		xfs_btree_del_cursor(rcur, 0);
+ 		rcur = NULL;
+ 		*pcur = NULL;
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index dca5e29296400b..a361e75bb323d5 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -57,7 +57,7 @@ xfs_rmapbt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+ 	return xfs_rmapbt_init_cursor(cur->bc_mp, cur->bc_tp,
+-				cur->bc_ag.agbp, cur->bc_ag.pag);
++				cur->bc_ag.agbp, to_perag(cur->bc_group));
+ }
+ 
+ STATIC void
+@@ -66,14 +66,15 @@ xfs_rmapbt_set_root(
+ 	const union xfs_btree_ptr	*ptr,
+ 	int				inc)
+ {
+-	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+-	struct xfs_agf		*agf = agbp->b_addr;
++	struct xfs_buf			*agbp = cur->bc_ag.agbp;
++	struct xfs_agf			*agf = agbp->b_addr;
++	struct xfs_perag		*pag = to_perag(cur->bc_group);
+ 
+ 	ASSERT(ptr->s != 0);
+ 
+ 	agf->agf_rmap_root = ptr->s;
+ 	be32_add_cpu(&agf->agf_rmap_level, inc);
+-	cur->bc_ag.pag->pagf_rmap_level += inc;
++	pag->pagf_rmap_level += inc;
+ 
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
+ }
+@@ -87,7 +88,7 @@ xfs_rmapbt_alloc_block(
+ {
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agf		*agf = agbp->b_addr;
+-	struct xfs_perag	*pag = cur->bc_ag.pag;
++	struct xfs_perag	*pag = to_perag(cur->bc_group);
+ 	struct xfs_alloc_arg    args = { .len = 1 };
+ 	int			error;
+ 	xfs_agblock_t		bno;
+@@ -125,7 +126,7 @@ xfs_rmapbt_free_block(
+ {
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agf		*agf = agbp->b_addr;
+-	struct xfs_perag	*pag = cur->bc_ag.pag;
++	struct xfs_perag	*pag = to_perag(cur->bc_group);
+ 	xfs_agblock_t		bno;
+ 	int			error;
+ 
+@@ -227,7 +228,7 @@ xfs_rmapbt_init_ptr_from_cur(
+ {
+ 	struct xfs_agf		*agf = cur->bc_ag.agbp->b_addr;
+ 
+-	ASSERT(pag_agno(cur->bc_ag.pag) == be32_to_cpu(agf->agf_seqno));
++	ASSERT(cur->bc_group->xg_index == be32_to_cpu(agf->agf_seqno));
+ 
+ 	ptr->s = agf->agf_rmap_root;
+ }
+@@ -538,7 +539,7 @@ xfs_rmapbt_init_cursor(
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_rmapbt_ops,
+ 			mp->m_rmap_maxlevels, xfs_rmapbt_cur_cache);
+-	cur->bc_ag.pag = xfs_perag_hold(pag);
++	cur->bc_group = xfs_group_hold(&pag->pag_group);
+ 	cur->bc_ag.agbp = agbp;
+ 	if (agbp) {
+ 		struct xfs_agf		*agf = agbp->b_addr;
+@@ -653,7 +654,7 @@ xfs_rmapbt_mem_cursor(
+ 	cur->bc_mem.xfbtree = xfbt;
+ 	cur->bc_nlevels = xfbt->nlevels;
+ 
+-	cur->bc_mem.pag = xfs_perag_hold(pag);
++	cur->bc_group = xfs_group_hold(&pag->pag_group);
+ 	return cur;
+ }
+ 
+diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+index d1b8a4997dd2ce..8b282138097fb8 100644
+--- a/fs/xfs/scrub/alloc.c
++++ b/fs/xfs/scrub/alloc.c
+@@ -139,7 +139,7 @@ xchk_allocbt_rec(
+ 	struct xchk_alloc	*ca = bs->private;
+ 
+ 	xfs_alloc_btrec_to_irec(rec, &irec);
+-	if (xfs_alloc_check_irec(bs->cur->bc_ag.pag, &irec) != NULL) {
++	if (xfs_alloc_check_irec(to_perag(bs->cur->bc_group), &irec) != NULL) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		return 0;
+ 	}
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index fb022b403716b1..64168f2e42220a 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -601,7 +601,8 @@ xchk_bmap_check_rmap(
+ 			xchk_fblock_set_corrupt(sc, sbcri->whichfork,
+ 					check_rec.rm_offset);
+ 		if (irec.br_startblock !=
+-		    xfs_agbno_to_fsb(cur->bc_ag.pag, check_rec.rm_startblock))
++		    xfs_agbno_to_fsb(to_perag(cur->bc_group),
++				check_rec.rm_startblock))
+ 			xchk_fblock_set_corrupt(sc, sbcri->whichfork,
+ 					check_rec.rm_offset);
+ 		if (irec.br_blockcount > check_rec.rm_blockcount)
+diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
+index be408e50484b54..7c4955482641f7 100644
+--- a/fs/xfs/scrub/bmap_repair.c
++++ b/fs/xfs/scrub/bmap_repair.c
+@@ -196,7 +196,7 @@ xrep_bmap_check_fork_rmap(
+ 		return -EFSCORRUPTED;
+ 
+ 	/* Check that this is within the AG. */
+-	if (!xfs_verify_agbext(cur->bc_ag.pag, rec->rm_startblock,
++	if (!xfs_verify_agbext(to_perag(cur->bc_group), rec->rm_startblock,
+ 				rec->rm_blockcount))
+ 		return -EFSCORRUPTED;
+ 
+@@ -268,7 +268,7 @@ xrep_bmap_walk_rmap(
+ 	if ((rec->rm_flags & XFS_RMAP_UNWRITTEN) && !rb->allow_unwritten)
+ 		return -EFSCORRUPTED;
+ 
+-	fsbno = xfs_agbno_to_fsb(cur->bc_ag.pag, rec->rm_startblock);
++	fsbno = xfs_agbno_to_fsb(to_perag(cur->bc_group), rec->rm_startblock);
+ 
+ 	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK) {
+ 		rb->old_bmbt_block_count += rec->rm_blockcount;
+diff --git a/fs/xfs/scrub/cow_repair.c b/fs/xfs/scrub/cow_repair.c
+index 19bded43c4fe1e..5b6194cef3e5e3 100644
+--- a/fs/xfs/scrub/cow_repair.c
++++ b/fs/xfs/scrub/cow_repair.c
+@@ -145,7 +145,8 @@ xrep_cow_mark_shared_staging(
+ 	xrep_cow_trim_refcount(xc, &rrec, rec);
+ 
+ 	return xrep_cow_mark_file_range(xc,
+-			xfs_agbno_to_fsb(cur->bc_ag.pag, rrec.rc_startblock),
++			xfs_agbno_to_fsb(to_perag(cur->bc_group),
++				rrec.rc_startblock),
+ 			rrec.rc_blockcount);
+ }
+ 
+@@ -176,8 +177,9 @@ xrep_cow_mark_missing_staging(
+ 	if (xc->next_bno >= rrec.rc_startblock)
+ 		goto next;
+ 
++
+ 	error = xrep_cow_mark_file_range(xc,
+-			xfs_agbno_to_fsb(cur->bc_ag.pag, xc->next_bno),
++			xfs_agbno_to_fsb(to_perag(cur->bc_group), xc->next_bno),
+ 			rrec.rc_startblock - xc->next_bno);
+ 	if (error)
+ 		return error;
+@@ -220,7 +222,8 @@ xrep_cow_mark_missing_staging_rmap(
+ 	}
+ 
+ 	return xrep_cow_mark_file_range(xc,
+-			xfs_agbno_to_fsb(cur->bc_ag.pag, rec_bno), rec_len);
++			xfs_agbno_to_fsb(to_perag(cur->bc_group), rec_bno),
++			rec_len);
  }
  
  /*
-- * Callback for list_sort to sort busy extents by the AG they reside in.
-+ * Callback for list_sort to sort busy extents by the group they reside in.
-  */
- int
- xfs_extent_busy_ag_cmp(
-@@ -660,23 +685,38 @@ xfs_extent_busy_ag_cmp(
- 		container_of(l2, struct xfs_extent_busy, list);
- 	s32 diff;
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index 9afe630c4b1ee6..cd3afa67c636da 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -276,7 +276,7 @@ xchk_ag_btree_del_cursor_if_sick(
+ 	    type_to_health_flag[sc->sm->sm_type].group == XHG_AG)
+ 		mask &= ~sc->sick_mask;
  
--	diff = pag_agno(b1->pag) - pag_agno(b2->pag);
-+	diff = b1->group->xg_index - b2->group->xg_index;
- 	if (!diff)
- 		diff = b1->bno - b2->bno;
- 	return diff;
- }
- 
--/* Are there any busy extents in this AG? */
-+/* Are there any busy extents in this group? */
- bool
- xfs_extent_busy_list_empty(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	unsigned		*busy_gen)
+-	if (xfs_ag_has_sickness((*curp)->bc_ag.pag, mask)) {
++	if (xfs_group_has_sickness((*curp)->bc_group, mask)) {
+ 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
+ 		xfs_btree_del_cursor(*curp, XFS_BTREE_NOERROR);
+ 		*curp = NULL;
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index ee71cf2050b72e..abad54c3621d44 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -258,7 +258,7 @@ xchk_iallocbt_chunk(
  {
-+	struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
- 	bool			res;
+ 	struct xfs_scrub		*sc = bs->sc;
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+-	struct xfs_perag		*pag = bs->cur->bc_ag.pag;
++	struct xfs_perag		*pag = to_perag(bs->cur->bc_group);
+ 	xfs_agblock_t			agbno;
+ 	xfs_extlen_t			len;
  
--	spin_lock(&pag->pagb_lock);
--	res = RB_EMPTY_ROOT(&pag->pagb_tree);
--	*busy_gen = READ_ONCE(pag->pagb_gen);
--	spin_unlock(&pag->pagb_lock);
-+	spin_lock(&eb->eb_lock);
-+	res = RB_EMPTY_ROOT(&eb->eb_tree);
-+	*busy_gen = READ_ONCE(eb->eb_gen);
-+	spin_unlock(&eb->eb_lock);
- 	return res;
+@@ -318,7 +318,7 @@ xchk_iallocbt_check_cluster_ifree(
+ 	 * the record, compute which fs inode we're talking about.
+ 	 */
+ 	agino = irec->ir_startino + irec_ino;
+-	fsino = xfs_agino_to_ino(bs->cur->bc_ag.pag, agino);
++	fsino = xfs_agino_to_ino(to_perag(bs->cur->bc_group), agino);
+ 	irec_free = (irec->ir_free & XFS_INOBT_MASK(irec_ino));
+ 
+ 	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC ||
+@@ -394,7 +394,7 @@ xchk_iallocbt_check_cluster(
+ 	 * ir_startino can be large enough to make im_boffset nonzero.
+ 	 */
+ 	ir_holemask = (irec->ir_holemask & cluster_mask);
+-	imap.im_blkno = xfs_agbno_to_daddr(bs->cur->bc_ag.pag, agbno);
++	imap.im_blkno = xfs_agbno_to_daddr(to_perag(bs->cur->bc_group), agbno);
+ 	imap.im_len = XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster);
+ 	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino) <<
+ 			mp->m_sb.sb_inodelog;
+@@ -405,9 +405,9 @@ xchk_iallocbt_check_cluster(
+ 		return 0;
+ 	}
+ 
+-	trace_xchk_iallocbt_check_cluster(bs->cur->bc_ag.pag, irec->ir_startino,
+-			imap.im_blkno, imap.im_len, cluster_base, nr_inodes,
+-			cluster_mask, ir_holemask,
++	trace_xchk_iallocbt_check_cluster(to_perag(bs->cur->bc_group),
++			irec->ir_startino, imap.im_blkno, imap.im_len,
++			cluster_base, nr_inodes, cluster_mask, ir_holemask,
+ 			XFS_INO_TO_OFFSET(mp, irec->ir_startino +
+ 					  cluster_base));
+ 
+@@ -583,7 +583,7 @@ xchk_iallocbt_rec(
+ 	uint16_t			holemask;
+ 
+ 	xfs_inobt_btrec_to_irec(mp, rec, &irec);
+-	if (xfs_inobt_check_irec(bs->cur->bc_ag.pag, &irec) != NULL) {
++	if (xfs_inobt_check_irec(to_perag(bs->cur->bc_group), &irec) != NULL) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		return 0;
+ 	}
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index d0c7d4a29c0feb..2b6be75e942415 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -453,7 +453,8 @@ xchk_refcountbt_rec(
+ 	struct xchk_refcbt_records *rrc = bs->private;
+ 
+ 	xfs_refcount_btrec_to_irec(rec, &irec);
+-	if (xfs_refcount_check_irec(bs->cur->bc_ag.pag, &irec) != NULL) {
++	if (xfs_refcount_check_irec(to_perag(bs->cur->bc_group), &irec) !=
++			NULL) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		return 0;
+ 	}
+diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
+index 26b5c90b3f6aee..39e9ad7cd8aea5 100644
+--- a/fs/xfs/scrub/rmap.c
++++ b/fs/xfs/scrub/rmap.c
+@@ -358,7 +358,7 @@ xchk_rmapbt_rec(
+ 	struct xfs_rmap_irec	irec;
+ 
+ 	if (xfs_rmap_btrec_to_irec(rec, &irec) != NULL ||
+-	    xfs_rmap_check_irec(bs->cur->bc_ag.pag, &irec) != NULL) {
++	    xfs_rmap_check_irec(to_perag(bs->cur->bc_group), &irec) != NULL) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		return 0;
+ 	}
+diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
+index 4ab0ae4919c1a8..3ce0f2a442db17 100644
+--- a/fs/xfs/scrub/rmap_repair.c
++++ b/fs/xfs/scrub/rmap_repair.c
+@@ -622,7 +622,7 @@ xrep_rmap_walk_inobt(
+ 		return error;
+ 
+ 	xfs_inobt_btrec_to_irec(mp, rec, &irec);
+-	if (xfs_inobt_check_irec(cur->bc_ag.pag, &irec) != NULL)
++	if (xfs_inobt_check_irec(to_perag(cur->bc_group), &irec) != NULL)
+ 		return -EFSCORRUPTED;
+ 
+ 	agino = irec.ir_startino;
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index a26fb054346b68..5d5e54a16f23c8 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -394,7 +394,8 @@ xfs_getfsmap_datadev_helper(
+ 	struct xfs_getfsmap_info	*info = priv;
+ 
+ 	return xfs_getfsmap_helper(cur->bc_tp, info, rec,
+-			xfs_agbno_to_daddr(cur->bc_ag.pag, rec->rm_startblock),
++			xfs_agbno_to_daddr(to_perag(cur->bc_group),
++				rec->rm_startblock),
+ 			0);
  }
-+
-+struct xfs_extent_busy_tree *
-+xfs_extent_busy_alloc(void)
-+{
-+	struct xfs_extent_busy_tree *eb;
-+
-+	eb = kzalloc(sizeof(*eb), GFP_KERNEL);
-+	if (!eb)
-+		return NULL;
-+	spin_lock_init(&eb->eb_lock);
-+	init_waitqueue_head(&eb->eb_wait);
-+	eb->eb_tree = RB_ROOT;
-+	return eb;
-+}
-diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-index c803dcd124a628..f069b04e8ea184 100644
---- a/fs/xfs/xfs_extent_busy.h
-+++ b/fs/xfs/xfs_extent_busy.h
-@@ -8,19 +8,18 @@
- #ifndef __XFS_EXTENT_BUSY_H__
- #define	__XFS_EXTENT_BUSY_H__
  
-+struct xfs_group;
- struct xfs_mount;
--struct xfs_perag;
- struct xfs_trans;
--struct xfs_alloc_arg;
+@@ -415,7 +416,8 @@ xfs_getfsmap_datadev_bnobt_helper(
+ 	irec.rm_flags = 0;
  
- /*
-- * Busy block/extent entry.  Indexed by a rbtree in perag to mark blocks that
-- * have been freed but whose transactions aren't committed to disk yet.
-+ * Busy block/extent entry.  Indexed by a rbtree in the group to mark blocks
-+ * that have been freed but whose transactions aren't committed to disk yet.
-  */
- struct xfs_extent_busy {
--	struct rb_node	rb_node;	/* ag by-bno indexed search tree */
-+	struct rb_node	rb_node;	/* group by-bno indexed search tree */
- 	struct list_head list;		/* transaction busy extent list */
--	struct xfs_perag *pag;
-+	struct xfs_group *group;
- 	xfs_agblock_t	bno;
- 	xfs_extlen_t	length;
- 	unsigned int	flags;
-@@ -44,45 +43,29 @@ struct xfs_busy_extents {
- 	void			*owner;
- };
+ 	return xfs_getfsmap_helper(cur->bc_tp, info, &irec,
+-			xfs_agbno_to_daddr(cur->bc_ag.pag, rec->ar_startblock),
++			xfs_agbno_to_daddr(to_perag(cur->bc_group),
++				rec->ar_startblock),
+ 			0);
+ }
  
--void
--xfs_extent_busy_insert(struct xfs_trans *tp, struct xfs_perag *pag,
--	xfs_agblock_t bno, xfs_extlen_t len, unsigned int flags);
--
--void
--xfs_extent_busy_insert_discard(struct xfs_perag *pag, xfs_agblock_t bno,
--	xfs_extlen_t len, struct list_head *busy_list);
--
--void
--xfs_extent_busy_clear(struct list_head *list, bool do_discard);
--
--int
--xfs_extent_busy_search(struct xfs_perag *pag, xfs_agblock_t bno,
-+void xfs_extent_busy_insert(struct xfs_trans *tp, struct xfs_group *xg,
-+		xfs_agblock_t bno, xfs_extlen_t len, unsigned int flags);
-+void xfs_extent_busy_insert_discard(struct xfs_group *xg, xfs_agblock_t bno,
-+		xfs_extlen_t len, struct list_head *busy_list);
-+void xfs_extent_busy_clear(struct list_head *list, bool do_discard);
-+int xfs_extent_busy_search(struct xfs_group *xg, xfs_agblock_t bno,
- 		xfs_extlen_t len);
--
--void
--xfs_extent_busy_reuse(struct xfs_perag *pag, xfs_agblock_t fbno,
-+void xfs_extent_busy_reuse(struct xfs_group *xg, xfs_agblock_t fbno,
- 		xfs_extlen_t flen, bool userdata);
--
--bool
--xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t *bno,
--		xfs_extlen_t *len, unsigned *busy_gen);
--
--int
--xfs_extent_busy_flush(struct xfs_trans *tp, struct xfs_perag *pag,
-+bool xfs_extent_busy_trim(struct xfs_group *xg, xfs_extlen_t minlen,
-+		xfs_extlen_t maxlen, xfs_agblock_t *bno, xfs_extlen_t *len,
-+		unsigned *busy_gen);
-+int xfs_extent_busy_flush(struct xfs_trans *tp, struct xfs_group *xg,
- 		unsigned busy_gen, uint32_t alloc_flags);
-+void xfs_extent_busy_wait_all(struct xfs_mount *mp);
-+bool xfs_extent_busy_list_empty(struct xfs_group *xg, unsigned int *busy_gen);
-+struct xfs_extent_busy_tree *xfs_extent_busy_alloc(void);
- 
--void
--xfs_extent_busy_wait_all(struct xfs_mount *mp);
--
--int
--xfs_extent_busy_ag_cmp(void *priv, const struct list_head *a,
--	const struct list_head *b);
--
-+int xfs_extent_busy_ag_cmp(void *priv, const struct list_head *a,
-+		const struct list_head *b);
- static inline void xfs_extent_busy_sort(struct list_head *list)
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 962eec51f95913..ef1c48dc5a52a0 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -531,24 +531,13 @@ void
+ xfs_btree_mark_sick(
+ 	struct xfs_btree_cur		*cur)
  {
- 	list_sort(NULL, list, xfs_extent_busy_ag_cmp);
+-	switch (cur->bc_ops->type) {
+-	case XFS_BTREE_TYPE_MEM:
+-		/* no health state tracking for ephemeral btrees */
+-		return;
+-	case XFS_BTREE_TYPE_AG:
++	if (xfs_btree_is_bmap(cur->bc_ops)) {
++		xfs_bmap_mark_sick(cur->bc_ino.ip, cur->bc_ino.whichfork);
++	/* no health state tracking for ephemeral btrees */
++	} else if (cur->bc_ops->type != XFS_BTREE_TYPE_MEM) {
++		ASSERT(cur->bc_group);
+ 		ASSERT(cur->bc_ops->sick_mask);
+-		xfs_ag_mark_sick(cur->bc_ag.pag, cur->bc_ops->sick_mask);
+-		return;
+-	case XFS_BTREE_TYPE_INODE:
+-		if (xfs_btree_is_bmap(cur->bc_ops)) {
+-			xfs_bmap_mark_sick(cur->bc_ino.ip,
+-					   cur->bc_ino.whichfork);
+-			return;
+-		}
+-		fallthrough;
+-	default:
+-		ASSERT(0);
+-		return;
++		xfs_group_mark_sick(cur->bc_group, cur->bc_ops->sick_mask);
+ 	}
  }
  
--bool xfs_extent_busy_list_empty(struct xfs_perag *pag, unsigned int *busy_gen);
--
- #endif /* __XFS_EXTENT_BUSY_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 4674ef01e38d9c..fd71f932f89932 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2593,7 +2593,7 @@ TRACE_EVENT(xfs_btree_alloc_block,
+ 			__entry->ino = cur->bc_ino.ip->i_ino;
+ 			break;
+ 		case XFS_BTREE_TYPE_AG:
+-			__entry->agno = pag_agno(cur->bc_ag.pag);
++			__entry->agno = cur->bc_group->xg_index;
+ 			__entry->ino = 0;
+ 			break;
+ 		case XFS_BTREE_TYPE_MEM:
+@@ -2849,7 +2849,7 @@ DECLARE_EVENT_CLASS(xfs_rmap_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->agbno = agbno;
+ 		__entry->len = len;
+ 		__entry->owner = oinfo->oi_owner;
+@@ -2894,7 +2894,7 @@ DECLARE_EVENT_CLASS(xfs_btree_error_class,
+ 			__entry->ino = cur->bc_ino.ip->i_ino;
+ 			break;
+ 		case XFS_BTREE_TYPE_AG:
+-			__entry->agno = pag_agno(cur->bc_ag.pag);
++			__entry->agno = cur->bc_group->xg_index;
+ 			__entry->ino = 0;
+ 			break;
+ 		case XFS_BTREE_TYPE_MEM:
+@@ -2948,7 +2948,7 @@ TRACE_EVENT(xfs_rmap_convert_state,
+ 			__entry->ino = cur->bc_ino.ip->i_ino;
+ 			break;
+ 		case XFS_BTREE_TYPE_AG:
+-			__entry->agno = pag_agno(cur->bc_ag.pag);
++			__entry->agno = cur->bc_group->xg_index;
+ 			__entry->ino = 0;
+ 			break;
+ 		case XFS_BTREE_TYPE_MEM:
+@@ -2983,7 +2983,7 @@ DECLARE_EVENT_CLASS(xfs_rmapbt_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->agbno = agbno;
+ 		__entry->len = len;
+ 		__entry->owner = owner;
+@@ -3227,7 +3227,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->agbno = agbno;
+ 		__entry->len = len;
+ 	),
+@@ -3258,7 +3258,7 @@ TRACE_EVENT(xfs_refcount_lookup,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->agbno = agbno;
+ 		__entry->dir = dir;
+ 	),
+@@ -3284,7 +3284,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->domain = irec->rc_domain;
+ 		__entry->startblock = irec->rc_startblock;
+ 		__entry->blockcount = irec->rc_blockcount;
+@@ -3320,7 +3320,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_at_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->domain = irec->rc_domain;
+ 		__entry->startblock = irec->rc_startblock;
+ 		__entry->blockcount = irec->rc_blockcount;
+@@ -3362,7 +3362,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->i1_domain = i1->rc_domain;
+ 		__entry->i1_startblock = i1->rc_startblock;
+ 		__entry->i1_blockcount = i1->rc_blockcount;
+@@ -3412,7 +3412,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_at_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->i1_domain = i1->rc_domain;
+ 		__entry->i1_startblock = i1->rc_startblock;
+ 		__entry->i1_blockcount = i1->rc_blockcount;
+@@ -3467,7 +3467,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_triple_extent_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->i1_domain = i1->rc_domain;
+ 		__entry->i1_startblock = i1->rc_startblock;
+ 		__entry->i1_blockcount = i1->rc_blockcount;
+@@ -4357,7 +4357,7 @@ TRACE_EVENT(xfs_btree_commit_afakeroot,
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+ 		__assign_str(name);
+-		__entry->agno = pag_agno(cur->bc_ag.pag);
++		__entry->agno = cur->bc_group->xg_index;
+ 		__entry->agbno = cur->bc_ag.afake->af_root;
+ 		__entry->levels = cur->bc_ag.afake->af_levels;
+ 		__entry->blocks = cur->bc_ag.afake->af_blocks;
+@@ -4472,7 +4472,7 @@ TRACE_EVENT(xfs_btree_bload_block,
+ 			__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsb);
+ 			__entry->agbno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsb);
+ 		} else {
+-			__entry->agno = pag_agno(cur->bc_ag.pag);
++			__entry->agno = cur->bc_group->xg_index;
+ 			__entry->agbno = be32_to_cpu(ptr->s);
+ 		}
+ 		__entry->nr_records = nr_records;
 
