@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D433C2ED;
-	Fri, 11 Oct 2024 01:38:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7390C2ED;
+	Fri, 11 Oct 2024 01:38:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728610719; cv=none; b=Jvi6LeHTMpdebzcTPhtY45sVA07H+9V7EEsUrhc/bHsqBu3xuhbFUKTWNN2GWUJoYLQdnLM3adjORYuU8XE9Y2ph39u+icYO3v/2tpsgRvcl6cRoxsfdnr+b7ye7feY8kDrMRoprI9Q6IOgB73gnItDIZodSWnlxRUemhrCAM9k=
+	t=1728610735; cv=none; b=KQmYCn1WOHIilWxNmbyP28s8lU2lj0aB90LDRg+NhrMuA15UBartYR2CxKFe1lv8XR61X94iC3yKmEqssa2emd1iF7+vVBXUa6xcPnu+fwrXlxxujLxqXw2sqbKIz6L/wUjHKmY41jtU5YBTCNmyQDQ+UZdbGrllkxAbkKNeits=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728610719; c=relaxed/simple;
-	bh=s0ai5DTScLKwEvTTcc041vfaNz/lvK1e9d6Tni/62oY=;
+	s=arc-20240116; t=1728610735; c=relaxed/simple;
+	bh=pjs3VXMwd5WdEc7oXC3aEGDxKinjiU6VcMtm+NtAzhU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=S1suulJkEOfFYFZ10Coh9Ue1GJ95RhMtSDxShApIjsuqcSuP+EtHSZDzylo4BsMpdQy24qiUCI4DQY+Nj0DQyk9MvplEnUrjIuzRfulJcuy2YUWELFDCQAhaRWiG+UP05vrsHoby6OUpTf24gEcN3f+MelUjXKfj0MLGqHK/1L4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u6WO2qyD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VzPYRU0ST8vKeXw/WwuBv4lOXdrd2iZMDZAlDP77yV2L5dWAa3rxzDvO7ps9VUHO80GdJZ1IpE2oQHj3c4XcwClUwN/Mmoh8uL+ViS7S1AEKMuxNYr92H2fUeAtwYXCDX9UVJhe2TwhClJZHtZhELkzo91IaV/2GEW9oRafp7oU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VJLIyij6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u6WO2qyD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4337C4CEC5;
-	Fri, 11 Oct 2024 01:38:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VJLIyij6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E600C4CEC5;
+	Fri, 11 Oct 2024 01:38:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728610718;
-	bh=s0ai5DTScLKwEvTTcc041vfaNz/lvK1e9d6Tni/62oY=;
+	s=k20201202; t=1728610734;
+	bh=pjs3VXMwd5WdEc7oXC3aEGDxKinjiU6VcMtm+NtAzhU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=u6WO2qyDNoqfiUTn3tdJYP2Tvdp+JT7UxcqPv58+dIfJGyb8FhtY5fwtfla20YjaL
-	 2Z1kTIknf+zJL1sgnd+ZZk6bz3duxNhR2/E9lV3mlz1T0UC6DwO+NDPAn8afv8aJ67
-	 wLyCQNiBWo8USwDdn7wY7NfUW/JYFQz8HKJWMV//ZBRHGertAM26IkTYLciJe3SjrG
-	 dz8uvi53cewb1FJkw6XEZo76+R4yga7S5OwjJrrtpKyqW2Ezhw798683yj3xaeJDfI
-	 ows0YX+OmSjkNAt/7yqaqB8YTKSibuRNrS2qKvImqnxTiiIf4TJ4tRicI0nO14Pl1f
-	 FLa03hz97tPmw==
-Date: Thu, 10 Oct 2024 18:38:38 -0700
-Subject: [PATCH 02/11] various: fix finding metadata inode numbers when
- metadir is enabled
+	b=VJLIyij6jWagAFK84n+SrhX9m1LjoFbJYJULbOoTEsOWdFGZDGOqYvlbfJ5V7atKH
+	 rYYiUl1lgQUWt/yIdLaENyc7sZ1UjvzNehUg+ROs6zvIKQSTbu5AMUqe+tQCyeJNkN
+	 xiDIKD0ti3uloVkizEVwFX74NtkGct14Iy869RWLBpJO77ncZL/FG1M9e8ae/TAU7/
+	 pWL3FWK0QhSjr/rDXfdXDcnTW+MKc4PFw+ilp4FAZ2l4jNpfBWmPaWuFa8G+S/v/Op
+	 KiqbpTvD9iJCScswt1Zq+L1diVS+obh86y5xPQ1TvnYITpGckz/trQUjlZMuUGiHup
+	 1w2BBzElCaXsA==
+Date: Thu, 10 Oct 2024 18:38:53 -0700
+Subject: [PATCH 03/11] xfs/{030,033,178}: forcibly disable metadata directory
+ trees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de, fstests@vger.kernel.org
-Message-ID: <172860658028.4187056.18362387796681471507.stgit@frogsfrogsfrogs>
+Message-ID: <172860658043.4187056.14504092342033103535.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860657983.4187056.5472629319415849070.stgit@frogsfrogsfrogs>
 References: <172860657983.4187056.5472629319415849070.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,304 +47,78 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There are a number of tests that use xfs_db to examine the contents of
-metadata inodes to check correct functioning.  The logic is scattered
-everywhere and won't work with metadata directory trees, so make a
-shared helper to find these inodes.
+The golden output for thests tests encode the xfs_repair output when we
+fuzz various parts of the filesystem.  With metadata directory trees
+enabled, however, the golden output changes dramatically to reflect
+reconstruction of the metadata directory tree.
+
+To avoid regressions, add a helper to force metadata directories off via
+MKFS_OPTIONS.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/xfs    |   21 +++++++++++++++++++--
- tests/xfs/007 |   16 +++++++++-------
- tests/xfs/529 |    5 ++---
- tests/xfs/530 |    6 ++----
- tests/xfs/739 |    9 ++-------
- tests/xfs/740 |    9 ++-------
- tests/xfs/741 |    9 ++-------
- tests/xfs/742 |    9 ++-------
- tests/xfs/743 |    9 ++-------
- tests/xfs/744 |    9 ++-------
- tests/xfs/745 |    9 ++-------
- tests/xfs/746 |    9 ++-------
- 12 files changed, 48 insertions(+), 72 deletions(-)
+ common/xfs    |   13 +++++++++++++
+ tests/xfs/030 |    1 +
+ tests/xfs/033 |    1 +
+ tests/xfs/178 |    1 +
+ 4 files changed, 16 insertions(+)
 
 
 diff --git a/common/xfs b/common/xfs
-index 62e3100ee117a7..ae32710072671e 100644
+index ae32710072671e..20217ea7365a4d 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -1385,7 +1385,7 @@ _scratch_get_bmx_prefix() {
- 
- _scratch_get_iext_count()
- {
--	local ino=$1
-+	local selector=$1
- 	local whichfork=$2
- 	local field=""
- 
-@@ -1400,7 +1400,7 @@ _scratch_get_iext_count()
- 			return 1
- 	esac
- 
--	_scratch_xfs_get_metadata_field $field "inode $ino"
-+	_scratch_xfs_get_metadata_field $field "$selector"
- }
- 
- #
-@@ -1870,3 +1870,20 @@ _wipe_xfs_properties()
- 		setfattr --remove="$name" "$1"
- 	done
+@@ -1887,3 +1887,16 @@ _scratch_xfs_find_metafile()
+ 	echo "inode $sb_field"
+ 	return 0
  }
 +
-+# Return the xfs_db selector for a superblock-rooted metadata file on the
-+# scratch filesystem.  The sole argument is the name of the field within the
-+# superblock.  This helper cannot be used to find files under the metadata
-+# directory tree.
-+_scratch_xfs_find_metafile()
++# Force metadata directories off.
++_scratch_xfs_force_no_metadir()
 +{
-+	local metafile="$1"
-+	local sb_field
-+
-+	sb_field="$(_scratch_xfs_get_sb_field "$metafile")"
-+	if echo "$sb_field" | grep -q -w 'not found'; then
-+		return 1
++	if echo "$MKFS_OPTIONS" | grep -q 'metadir='; then
++		MKFS_OPTIONS="$(echo "$MKFS_OPTIONS" | sed -e 's/metadir=[0-9]*/metadir=0/g' -e 's/metadir\([, ]\)/metadir=0\1/g')"
++		return
 +	fi
-+	echo "inode $sb_field"
-+	return 0
-+}
-diff --git a/tests/xfs/007 b/tests/xfs/007
-index 2535f04cac36a5..e35a069f9bd5c5 100755
---- a/tests/xfs/007
-+++ b/tests/xfs/007
-@@ -21,6 +21,11 @@ _require_xfs_quota
- _scratch_mkfs_xfs | _filter_mkfs > /dev/null 2> $tmp.mkfs
- . $tmp.mkfs
- 
-+get_qfile_nblocks() {
-+	local selector="$(_scratch_xfs_find_metafile "$1")"
-+	_scratch_xfs_db -c "$selector" -c "p core.nblocks"
-+}
 +
- do_test()
- {
- 	qino_1=$1
-@@ -30,12 +35,9 @@ do_test()
- 	echo "*** umount"
- 	_scratch_unmount
++	if grep -q 'metadir=' $MKFS_XFS_PROG; then
++		MKFS_OPTIONS="-m metadir=0 $MKFS_OPTIONS"
++	fi
++}
+diff --git a/tests/xfs/030 b/tests/xfs/030
+index 7ce5ffce38693c..22fbdb2fdbc999 100755
+--- a/tests/xfs/030
++++ b/tests/xfs/030
+@@ -48,6 +48,7 @@ _check_ag()
  
--	QINO_1=`_scratch_xfs_get_sb_field $qino_1`
--	QINO_2=`_scratch_xfs_get_sb_field $qino_2`
--
- 	echo "*** Usage before quotarm ***"
--	_scratch_xfs_db -c "inode $QINO_1" -c "p core.nblocks"
--	_scratch_xfs_db -c "inode $QINO_2" -c "p core.nblocks"
-+	get_qfile_nblocks $qino_1
-+	get_qfile_nblocks $qino_2
+ _require_scratch
+ _require_no_large_scratch_dev
++_scratch_xfs_force_no_metadir
  
- 	_qmount
- 	echo "*** turn off $off_opts quotas"
-@@ -65,8 +67,8 @@ do_test()
- 	_scratch_unmount
+ DSIZE="-dsize=100m,agcount=6"
  
- 	echo "*** Usage after quotarm ***"
--	_scratch_xfs_db -c "inode $QINO_1" -c "p core.nblocks"
--	_scratch_xfs_db -c "inode $QINO_2" -c "p core.nblocks"
-+	get_qfile_nblocks $qino_1
-+	get_qfile_nblocks $qino_2
- }
+diff --git a/tests/xfs/033 b/tests/xfs/033
+index d7b02a9c51b3f0..e0b0dd58212d61 100755
+--- a/tests/xfs/033
++++ b/tests/xfs/033
+@@ -51,6 +51,7 @@ _filter_bad_ids()
  
- # Test user and group first
-diff --git a/tests/xfs/529 b/tests/xfs/529
-index 14bdd2eebf7047..aab8668c76f46c 100755
---- a/tests/xfs/529
-+++ b/tests/xfs/529
-@@ -161,9 +161,8 @@ done
- _scratch_unmount >> $seqres.full
+ _require_scratch
+ _require_no_large_scratch_dev
++_scratch_xfs_force_no_metadir
  
- echo "Verify uquota inode's extent count"
--uquotino=$(_scratch_xfs_get_metadata_field 'uquotino' 'sb 0')
--
--nextents=$(_scratch_get_iext_count $uquotino data || \
-+selector="$(_scratch_xfs_find_metafile uquotino)"
-+nextents=$(_scratch_get_iext_count "$selector" data || \
- 		   _fail "Unable to obtain inode fork's extent count")
- if (( $nextents > 10 )); then
- 	echo "Extent count overflow check failed: nextents = $nextents"
-diff --git a/tests/xfs/530 b/tests/xfs/530
-index 8a182bd6a3928a..f6c88cd12e187c 100755
---- a/tests/xfs/530
-+++ b/tests/xfs/530
-@@ -102,10 +102,8 @@ _scratch_unmount >> $seqres.full
+ # devzero blows away 512byte blocks, so make 512byte inodes (at least)
+ _scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+diff --git a/tests/xfs/178 b/tests/xfs/178
+index a22e626706ec49..0cc0e3f5bb88b4 100755
+--- a/tests/xfs/178
++++ b/tests/xfs/178
+@@ -50,6 +50,7 @@ _dd_repair_check()
+ #             fix filesystem, new mkfs.xfs will be fine.
  
- echo "Verify rbmino's and rsumino's extent count"
- for rtino in rbmino rsumino; do
--	ino=$(_scratch_xfs_get_metadata_field $rtino "sb 0")
--	echo "$rtino = $ino" >> $seqres.full
--
--	nextents=$(_scratch_get_iext_count $ino data || \
-+	selector="$(_scratch_xfs_find_metafile "$rtino")"
-+	nextents=$(_scratch_get_iext_count "$selector" data || \
- 			_fail "Unable to obtain inode fork's extent count")
- 	if (( $nextents > 10 )); then
- 		echo "Extent count overflow check failed: nextents = $nextents"
-diff --git a/tests/xfs/739 b/tests/xfs/739
-index a4f553d818c2be..a143325e3facb6 100755
---- a/tests/xfs/739
-+++ b/tests/xfs/739
-@@ -25,13 +25,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
+ _require_scratch
++_scratch_xfs_force_no_metadir
+ _scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
  
- echo "Fuzz rtbitmap"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.bitmap')
--else
--	path=('sb' 'addr rbmino')
--fi
--_scratch_xfs_fuzz_metadata '' 'online' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rbmino)"
-+_scratch_xfs_fuzz_metadata '' 'online' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtbitmap"
- 
- # success, all done
-diff --git a/tests/xfs/740 b/tests/xfs/740
-index 971bf31e3239b1..e867d591fd99cb 100755
---- a/tests/xfs/740
-+++ b/tests/xfs/740
-@@ -25,13 +25,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
- echo "Fuzz rtsummary"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.summary')
--else
--	path=('sb' 'addr rsumino')
--fi
--_scratch_xfs_fuzz_metadata '' 'online' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rsumino)"
-+_scratch_xfs_fuzz_metadata '' 'online' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtsummary"
- 
- # success, all done
-diff --git a/tests/xfs/741 b/tests/xfs/741
-index 4e24fb4e2fef31..ea4aa75b24741b 100755
---- a/tests/xfs/741
-+++ b/tests/xfs/741
-@@ -25,13 +25,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
- echo "Fuzz rtbitmap"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.bitmap')
--else
--	path=('sb' 'addr rbmino')
--fi
--_scratch_xfs_fuzz_metadata '' 'offline' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rbmino)"
-+_scratch_xfs_fuzz_metadata '' 'offline' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtbitmap"
- 
- # success, all done
-diff --git a/tests/xfs/742 b/tests/xfs/742
-index eabe766d725c07..967e384f659f72 100755
---- a/tests/xfs/742
-+++ b/tests/xfs/742
-@@ -25,13 +25,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
- echo "Fuzz rtsummary"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.summary')
--else
--	path=('sb' 'addr rsumino')
--fi
--_scratch_xfs_fuzz_metadata '' 'offline' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rsumino)"
-+_scratch_xfs_fuzz_metadata '' 'offline' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtsummary"
- 
- # success, all done
-diff --git a/tests/xfs/743 b/tests/xfs/743
-index b5cec7d71a4002..82b87b33792cdd 100755
---- a/tests/xfs/743
-+++ b/tests/xfs/743
-@@ -26,13 +26,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
- echo "Fuzz rtbitmap"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.bitmap')
--else
--	path=('sb' 'addr rbmino')
--fi
--_scratch_xfs_fuzz_metadata '' 'both' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rbmino)"
-+_scratch_xfs_fuzz_metadata '' 'both' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtbitmap"
- 
- # success, all done
-diff --git a/tests/xfs/744 b/tests/xfs/744
-index e2d097c2f0d59f..4840e78c4427ab 100755
---- a/tests/xfs/744
-+++ b/tests/xfs/744
-@@ -26,13 +26,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
- echo "Fuzz rtsummary"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.summary')
--else
--	path=('sb' 'addr rsumino')
--fi
--_scratch_xfs_fuzz_metadata '' 'both' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rsumino)"
-+_scratch_xfs_fuzz_metadata '' 'both' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtsummary"
- 
- # success, all done
-diff --git a/tests/xfs/745 b/tests/xfs/745
-index d139aeefdd8a37..6cc3805d4c9df8 100755
---- a/tests/xfs/745
-+++ b/tests/xfs/745
-@@ -25,13 +25,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
- echo "Fuzz rtbitmap"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.bitmap')
--else
--	path=('sb' 'addr rbmino')
--fi
--_scratch_xfs_fuzz_metadata '' 'none' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rbmino)"
-+_scratch_xfs_fuzz_metadata '' 'none' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtbitmap"
- 
- # success, all done
-diff --git a/tests/xfs/746 b/tests/xfs/746
-index 696d024532982a..b6ec74524b0eaa 100755
---- a/tests/xfs/746
-+++ b/tests/xfs/746
-@@ -25,13 +25,8 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
- echo "Fuzz rtsummary"
--is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
--if [ -n "$is_metadir" ]; then
--	path=('path -m /realtime/0.summary')
--else
--	path=('sb' 'addr rsumino')
--fi
--_scratch_xfs_fuzz_metadata '' 'none' "${path[@]}" 'dblock 0' >> $seqres.full
-+path="$(_scratch_xfs_find_metafile rsumino)"
-+_scratch_xfs_fuzz_metadata '' 'none' "$path" 'dblock 0' >> $seqres.full
- echo "Done fuzzing rtsummary"
- 
- # success, all done
+ # By executing the followint tmp file, will get on the mkfs options stored in
 
