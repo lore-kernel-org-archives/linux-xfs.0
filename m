@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86EDB7E1
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:40:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30F7B1372
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:40:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728607233; cv=none; b=mpE/02tzq4tUtyw2UCD0Q6oY6IO4vUAcapfXri3LsWVDQYzwTejhAR36U2/KTTlB6EccBYp+M5X49RSHS3rHENbNo12k13skg2yCqq2h7t8czcbB7KFbm5lNPzgdwBvgnVj5tjmxvEmxaABMKCSVrIunXshcvbY/f/LALI3fNkk=
+	t=1728607249; cv=none; b=kpDJN86Rd8Ft78R+JIWPxlSp0tHF3kSs6MFqlXw22p/vZ9WdZrM0YCYV+Hgfmf969MhbxnZYOjQUzE8L12hsrLdeu5G7Rh2QIKdcf/Dr5a484TNsuIQTJhX2Jk3pRPwKP+fXNPDEDJF4oD5wrbfSClPs22bDWYfJocbh3jdcV0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728607233; c=relaxed/simple;
-	bh=Njb4tR1HzrHFrhQB+MpmWm7Lm9rp5dY5/bP3sLIXoqs=;
+	s=arc-20240116; t=1728607249; c=relaxed/simple;
+	bh=zVjXzrBoB+v+Ly71o3jpegDafoehVrmff5I4IZBIyEk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i3prum9mvuu6S2mpIVpN1etpI+6hJ/jv97u2rrzdxmTfjNDyfnd9nnbATiESg6L2ciD56b9+rzylLf1dh+I9McspiL+itucm7Wlht6+sfX2ScrbuNYyyzIG9sTDZRVu3m5djgOGz+7qLZAQTUirTtKGgMXA8Hk2kc2Ghqvvw2yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V7FZR3kb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=cbSg8a8PPCehh79XURa8ynMODwvYhj8jQi/CqUvLyfOKDCtc9ZQFvK9cwFkD2It5pkP61OJ31zRaaNDtIIjmKbMgP/fBFD0qBcGeckKg9S845fEqTleK41sn6tLf2AvxAHTdph83cfXXzfPtv4t7mD6qohFmlfUbs8ahDAukPCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l6OcQPmr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V7FZR3kb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60D67C4CEC5;
-	Fri, 11 Oct 2024 00:40:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l6OcQPmr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C45EC4CEC5;
+	Fri, 11 Oct 2024 00:40:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728607233;
-	bh=Njb4tR1HzrHFrhQB+MpmWm7Lm9rp5dY5/bP3sLIXoqs=;
+	s=k20201202; t=1728607249;
+	bh=zVjXzrBoB+v+Ly71o3jpegDafoehVrmff5I4IZBIyEk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=V7FZR3kb9nc6AMqKa81QaZL88xLTerKJcv6bsDMovV5HEXL18OL2FQo7MzBt/DDdL
-	 vl9GdsBeu6CixuUUivpxWpmj00uJVBr74rrCTiUhyeSKx24DLkgnpoL3qDlNMO1inx
-	 9eIGZhik+X5EHqma89RXC/lv9I3qhlMhZmZj+QjJ0O6RG3qkGhD1IXRex/DpqxTRaT
-	 KTPWfo79DAUb99obNjCH/u+hi6MDhR/JtJGYfMRktlT3SBOJGTg7fEyEnQCOG8nL6l
-	 Lx6J2MUznk/bAaU4dXyHoWf6LB4LJU//DxnPqqTFxX4J5zvKvpaGlr/GS1nkqxgAWk
-	 0ZvwgumePbQgg==
-Date: Thu, 10 Oct 2024 17:40:32 -0700
-Subject: [PATCH 11/25] xfs: pass a pag to xfs_extent_busy_{search,reuse}
+	b=l6OcQPmrGAUkhWR7AS5hHQWR7e3BTvlFam72ZDs+9PykX3/EWoWIOYB1Vsn1sJU3k
+	 EDug6gd4X7pKY/aF4lSmr7RrJG3Slwefr3ID1hUmRuVH1Q+TD23WSR7D83HozntrFa
+	 eow4RZdm9TkYnb3cKrOFLD0DkaXG1WEfcF5t8okwwBTNNNvGH3Pm49K9lg/31eOtgp
+	 Fwkxc+SCZQPAp1jVT8TaKyifVTb6zjRRLVbmuM15Y/CWInf0wPMxrlvp0L5A2aAVDB
+	 yDH9uJ1Vm8qLjPygmezZ/in7SBcF++UW3QXrCHxolqKKqpWDg54EYXDuo88ezxnh5h
+	 s3/OlMjwtNjYA==
+Date: Thu, 10 Oct 2024 17:40:48 -0700
+Subject: [PATCH 12/25] xfs: keep a reference to the pag for busy extents
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860640600.4175438.10362083773245467427.stgit@frogsfrogsfrogs>
+Message-ID: <172860640618.4175438.10788954055439694158.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860640343.4175438.4901957495273325461.stgit@frogsfrogsfrogs>
 References: <172860640343.4175438.4901957495273325461.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,159 +46,108 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Replace the [mp,agno] tuple with the perag structure, which will become
-more useful later.
+Processing of busy extents requires the perag structure, so keep the
+reference while they are in flight.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c       |    4 ++--
- fs/xfs/libxfs/xfs_alloc_btree.c |    2 +-
- fs/xfs/libxfs/xfs_rmap_btree.c  |    2 +-
- fs/xfs/xfs_discard.c            |    2 +-
- fs/xfs/xfs_extent_busy.c        |   12 ++++--------
- fs/xfs/xfs_extent_busy.h        |    8 ++++----
- 6 files changed, 13 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_discard.c     |    4 ++--
+ fs/xfs/xfs_extent_busy.c |   15 ++++++++-------
+ fs/xfs/xfs_extent_busy.h |    2 +-
+ 3 files changed, 11 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 9071e1cb97f72a..3627d730d01e2d 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1252,7 +1252,7 @@ xfs_alloc_ag_vextent_small(
- 	if (fbno == NULLAGBLOCK)
- 		goto out;
- 
--	xfs_extent_busy_reuse(args->mp, args->pag, fbno, 1,
-+	xfs_extent_busy_reuse(args->pag, fbno, 1,
- 			      (args->datatype & XFS_ALLOC_NOBUSY));
- 
- 	if (args->datatype & XFS_ALLOC_USERDATA) {
-@@ -3619,7 +3619,7 @@ xfs_alloc_vextent_finish(
- 		if (error)
- 			goto out_drop_perag;
- 
--		ASSERT(!xfs_extent_busy_search(mp, args->pag, args->agbno,
-+		ASSERT(!xfs_extent_busy_search(args->pag, args->agbno,
- 				args->len));
- 	}
- 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index aada676eee519c..5175d0b4d32e48 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -86,7 +86,7 @@ xfs_allocbt_alloc_block(
- 	}
- 
- 	atomic64_inc(&cur->bc_mp->m_allocbt_blks);
--	xfs_extent_busy_reuse(cur->bc_mp, cur->bc_ag.pag, bno, 1, false);
-+	xfs_extent_busy_reuse(cur->bc_ag.pag, bno, 1, false);
- 
- 	new->s = cpu_to_be32(bno);
- 
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index ac2f1f499b76f6..b49006c1ca7eee 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -102,7 +102,7 @@ xfs_rmapbt_alloc_block(
- 		return 0;
- 	}
- 
--	xfs_extent_busy_reuse(cur->bc_mp, pag, bno, 1, false);
-+	xfs_extent_busy_reuse(pag, bno, 1, false);
- 
- 	new->s = cpu_to_be32(bno);
- 	be32_add_cpu(&agf->agf_rmap_blocks, 1);
 diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index d8c4a5dcca7aea..1a91e97d25ffba 100644
+index 1a91e97d25ffba..5c00904e439305 100644
 --- a/fs/xfs/xfs_discard.c
 +++ b/fs/xfs/xfs_discard.c
-@@ -272,7 +272,7 @@ xfs_trim_gather_extents(
- 		 * If any blocks in the range are still busy, skip the
- 		 * discard and try again the next time.
- 		 */
--		if (xfs_extent_busy_search(mp, pag, fbno, flen)) {
-+		if (xfs_extent_busy_search(pag, fbno, flen)) {
- 			trace_xfs_discard_busy(mp, pag->pag_agno, fbno, flen);
- 			goto next_extent;
- 		}
+@@ -117,11 +117,11 @@ xfs_discard_extents(
+ 
+ 	blk_start_plug(&plug);
+ 	list_for_each_entry(busyp, &extents->extent_list, list) {
+-		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
++		trace_xfs_discard_extent(mp, busyp->pag->pag_agno, busyp->bno,
+ 					 busyp->length);
+ 
+ 		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
+-				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
++				xfs_agbno_to_daddr(busyp->pag, busyp->bno),
+ 				XFS_FSB_TO_BB(mp, busyp->length),
+ 				GFP_KERNEL, &bio);
+ 		if (error && error != -EOPNOTSUPP) {
 diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index a73e7c73b664c6..22c16fa56bcc44 100644
+index 22c16fa56bcc44..7c0595db29857f 100644
 --- a/fs/xfs/xfs_extent_busy.c
 +++ b/fs/xfs/xfs_extent_busy.c
-@@ -101,7 +101,6 @@ xfs_extent_busy_insert_discard(
-  */
- int
- xfs_extent_busy_search(
--	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len)
-@@ -148,7 +147,6 @@ xfs_extent_busy_search(
-  */
- STATIC bool
- xfs_extent_busy_update_extent(
--	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
- 	struct xfs_extent_busy	*busyp,
- 	xfs_agblock_t		fbno,
-@@ -280,24 +278,22 @@ xfs_extent_busy_update_extent(
- 		ASSERT(0);
- 	}
+@@ -34,7 +34,7 @@ xfs_extent_busy_insert_list(
  
--	trace_xfs_extent_busy_reuse(mp, pag->pag_agno, fbno, flen);
-+	trace_xfs_extent_busy_reuse(pag->pag_mount, pag->pag_agno, fbno, flen);
- 	return true;
- 
- out_force_log:
- 	spin_unlock(&pag->pagb_lock);
--	xfs_log_force(mp, XFS_LOG_SYNC);
--	trace_xfs_extent_busy_force(mp, pag->pag_agno, fbno, flen);
-+	xfs_log_force(pag->pag_mount, XFS_LOG_SYNC);
-+	trace_xfs_extent_busy_force(pag->pag_mount, pag->pag_agno, fbno, flen);
- 	spin_lock(&pag->pagb_lock);
- 	return false;
- }
- 
--
- /*
-  * For a given extent [fbno, flen], make sure we can reuse it safely.
-  */
- void
- xfs_extent_busy_reuse(
--	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
- 	xfs_agblock_t		fbno,
- 	xfs_extlen_t		flen,
-@@ -323,7 +319,7 @@ xfs_extent_busy_reuse(
- 			continue;
+ 	new = kzalloc(sizeof(struct xfs_extent_busy),
+ 			GFP_KERNEL | __GFP_NOFAIL);
+-	new->agno = pag->pag_agno;
++	new->pag = xfs_perag_hold(pag);
+ 	new->bno = bno;
+ 	new->length = len;
+ 	INIT_LIST_HEAD(&new->list);
+@@ -526,12 +526,14 @@ xfs_extent_busy_clear_one(
+ 			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
+ 			return false;
  		}
- 
--		if (!xfs_extent_busy_update_extent(mp, pag, busyp, fbno, flen,
-+		if (!xfs_extent_busy_update_extent(pag, busyp, fbno, flen,
- 						  userdata))
- 			goto restart;
+-		trace_xfs_extent_busy_clear(pag->pag_mount, busyp->agno,
+-				busyp->bno, busyp->length);
++		trace_xfs_extent_busy_clear(pag->pag_mount,
++				busyp->pag->pag_agno, busyp->bno,
++				busyp->length);
+ 		rb_erase(&busyp->rb_node, &pag->pagb_tree);
  	}
+ 
+ 	list_del_init(&busyp->list);
++	xfs_perag_put(busyp->pag);
+ 	kfree(busyp);
+ 	return true;
+ }
+@@ -554,10 +556,9 @@ xfs_extent_busy_clear(
+ 		return;
+ 
+ 	do {
++		struct xfs_perag	*pag = xfs_perag_hold(busyp->pag);
+ 		bool			wakeup = false;
+-		struct xfs_perag	*pag;
+ 
+-		pag = xfs_perag_get(mp, busyp->agno);
+ 		spin_lock(&pag->pagb_lock);
+ 		do {
+ 			next = list_next_entry(busyp, list);
+@@ -565,7 +566,7 @@ xfs_extent_busy_clear(
+ 				wakeup = true;
+ 			busyp = next;
+ 		} while (!list_entry_is_head(busyp, list, list) &&
+-			 busyp->agno == pag->pag_agno);
++			 busyp->pag == pag);
+ 
+ 		if (wakeup) {
+ 			pag->pagb_gen++;
+@@ -662,7 +663,7 @@ xfs_extent_busy_ag_cmp(
+ 		container_of(l2, struct xfs_extent_busy, list);
+ 	s32 diff;
+ 
+-	diff = b1->agno - b2->agno;
++	diff = b1->pag->pag_agno - b2->pag->pag_agno;
+ 	if (!diff)
+ 		diff = b1->bno - b2->bno;
+ 	return diff;
 diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-index 470032de31391b..847c904a19386c 100644
+index 847c904a19386c..72be61912c005f 100644
 --- a/fs/xfs/xfs_extent_busy.h
 +++ b/fs/xfs/xfs_extent_busy.h
-@@ -58,12 +58,12 @@ xfs_extent_busy_clear(struct xfs_mount *mp, struct list_head *list,
- 	bool do_discard);
- 
- int
--xfs_extent_busy_search(struct xfs_mount *mp, struct xfs_perag *pag,
--	xfs_agblock_t bno, xfs_extlen_t len);
-+xfs_extent_busy_search(struct xfs_perag *pag, xfs_agblock_t bno,
-+		xfs_extlen_t len);
- 
- void
--xfs_extent_busy_reuse(struct xfs_mount *mp, struct xfs_perag *pag,
--	xfs_agblock_t fbno, xfs_extlen_t flen, bool userdata);
-+xfs_extent_busy_reuse(struct xfs_perag *pag, xfs_agblock_t fbno,
-+		xfs_extlen_t flen, bool userdata);
- 
- bool
- xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t *bno,
+@@ -20,7 +20,7 @@ struct xfs_alloc_arg;
+ struct xfs_extent_busy {
+ 	struct rb_node	rb_node;	/* ag by-bno indexed search tree */
+ 	struct list_head list;		/* transaction busy extent list */
+-	xfs_agnumber_t	agno;
++	struct xfs_perag *pag;
+ 	xfs_agblock_t	bno;
+ 	xfs_extlen_t	length;
+ 	unsigned int	flags;
 
