@@ -1,65 +1,67 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36F9C1CDA19
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 07:44:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B65209F22
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 07:53:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728632696; cv=none; b=GW91xOASndiCGuMOLXCs7NYnCXn6oapcwWSfihPoX1+jPfWabaN0aj150Grjj4dN/nhtaH9GVG8WOh0kKiwp/k9VT4aMgGF5iVEQZTzVHUMDy2d4UX+thuBS7xIa3/5hwKyKROFyUKDIWEyQ60csjqNqY0pJpfTZ9bUMkr6JylM=
+	t=1728633200; cv=none; b=ZcIOyj7c/BH1KkQIUA8JJBtGuRQJT+um5JhEY7MbzVtRTXZDzeP4lEBCCdZfICyFi5GIWdtSncwJUcuWZzi9kDUNx6g7x3pRyICMXnznvtbaPSqWKl1s4gJZ8XJvgocqBBiueGTuFxvzSBCbVevfHNAvgkolXPXQveDeKgO4HKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728632696; c=relaxed/simple;
-	bh=WoDgltAzSTOU+FpjCQ3cdnWLBuyoa+JYorj6KnpdPiE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=IrZB4Uado87p+DkYpSs+8KN+bnsQqTzdrMEd/w1fYsyY8mGOkUup9CQ7dMgCoIM7FSX9pNPkECzvUsTy0YDixab7wB64Rrrnn1z0J+7sNhuLDrsiiwekUk16KUWfCmf4S5yth7fMqE7T5CoGtIcdcfsptdc4g5lr7F/6naciHaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XS7T/G6W; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XS7T/G6W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E252C4CEC3;
-	Fri, 11 Oct 2024 07:44:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728632696;
-	bh=WoDgltAzSTOU+FpjCQ3cdnWLBuyoa+JYorj6KnpdPiE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=XS7T/G6W+XVo+AW5weWc1ze+r28piO2CnSiBP73fYajHIb4cl517grTSYFFObZpnS
-	 tswIhFzTYyEJz9dOqWi1E2ySwrY+tYwpksv5xbc8bXUYq6c4VP6VrUm/cd4SDplJce
-	 +HBZ4r4OwKwVNxN3/LqTGpWEhuVxnD/eAMJ+PSX1YyqG4dYjhm96H+rA8u7gR0dUSr
-	 KAOftNi6VBY1AkacVY/rNjFXJNDvZ9bA3BoD+OgE5b14lM3Nm3CgjD9kvYIkPgJQT7
-	 OJmGGKqtER3QWUrszaYzSuevEDN3aVEjj2Zg5t/26ZxUlaI+n/62TSrm8hcWpWg/sH
-	 9/exSITbePtAQ==
-From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, chandanbabu@kernel.org, 
- Long Li <leo.lilong@huawei.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, yi.zhang@huawei.com, 
- houtao1@huawei.com, yangerkun@huawei.com
-In-Reply-To: <20240930104217.2184941-1-leo.lilong@huawei.com>
-References: <20240930104217.2184941-1-leo.lilong@huawei.com>
-Subject: Re: [next] xfs: remove the redundant xfs_alloc_log_agf
-Message-Id: <172863269409.1112815.4154437152344391162.b4-ty@kernel.org>
-Date: Fri, 11 Oct 2024 09:44:54 +0200
+	s=arc-20240116; t=1728633200; c=relaxed/simple;
+	bh=nRg5mkpgQlWPD3wvA6rNPzXVHxYblP3q/IQ1Bo+cE7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cUh7hZYjDIGn1t4sSbaSQpLAre6h7N8T9f/ybQJersCtHZNinHj96klsRwp/SkuELIbJFFnX8JU8z14OKRdvi0pNB8g+Rhk+VLfIMBELRO2ueDIdakLKDfeyIKE7tGOKR6hpMAi2+7FEDgaFBwA3ZhExG7YSRQy+WhID7lCPMVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id CBBB0227AB3; Fri, 11 Oct 2024 09:53:14 +0200 (CEST)
+Date: Fri, 11 Oct 2024 09:53:14 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: pass the exact range to initialize to
+ xfs_initialize_perag
+Message-ID: <20241011075314.GA2749@lst.de>
+References: <20240930164211.2357358-1-hch@lst.de> <20240930164211.2357358-2-hch@lst.de> <ZwfeiYzopK-iD24Y@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZwfeiYzopK-iD24Y@bfoster>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, 30 Sep 2024 18:42:17 +0800, Long Li wrote:
-> There are two invocations of xfs_alloc_log_agf in xfs_alloc_put_freelist.
-> The AGF does not change between the two calls. Although this does not pose
-> any practical problems, it seems like a small mistake. Therefore, fix it
-> by removing the first xfs_alloc_log_agf invocation.
+On Thu, Oct 10, 2024 at 10:02:49AM -0400, Brian Foster wrote:
+> > -	error = xfs_initialize_perag(mp, sbp->sb_agcount, sbp->sb_dblocks,
+> > -			&mp->m_maxagi);
+> > +	error = xfs_initialize_perag(mp, old_agcount, sbp->sb_agcount,
+> > +			sbp->sb_dblocks, &mp->m_maxagi);
 > 
-> 
+> I assume this is because the superblock can change across recovery, but
+> code wise this seems kind of easy to misread into thinking the variable
+> is the same.
 
-Applied to for-next, thanks!
+Which variable?
 
-[1/1] xfs: remove the redundant xfs_alloc_log_agf
-      (no commit info)
+> I think the whole old/new terminology is kind of clunky for
+> an interface that is not just for growfs. Maybe it would be more clear
+> to use start/end terminology for xfs_initialize_perag(), then it's more
+> straightforward that mount would init the full range whereas growfs
+> inits a subrange.
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+fine with me.
+
+> A oneliner comment or s/old_agcount/orig_agcount/ wouldn't hurt here
+> either. Actually if that's the only purpose for this call and if you
+> already have to sample sb_agcount, maybe just lifting/copying the if
+> (old_agcount >= new_agcount) check into the caller would make the logic
+> more self-explanatory. Hm?
+
+Sure.
 
