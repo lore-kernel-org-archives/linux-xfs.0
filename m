@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BE6C14A85
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:33:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 261BE8BE8
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:34:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728610437; cv=none; b=EHfiWjWlQhV+feXN7Gto7eNryvJM0WB2fRvtST2g5TXfP+hZTNumazPtRHC7P7MNMn0mNx/dnyhi7ENsyYC6/A5xhZF4fOeIPbXRp7pYsvErvkXKuLyT/Iifl9zO4ZkLbOdJtOfZXXcVdeCI8U9wOKSiGcCrLOgD6AWOkE2sICY=
+	t=1728610453; cv=none; b=s1zc0K2osYe2IvD2R2u8CTiLljqGPZV+s7qMrp909/r4ka0ICGSTMwIXV7fbj8ssmP91HkzxLwaBjd4XtxsJJjOTZVLXbLYMlzxSlz5G2FoUE0toXHKcg+xR1EBc5EkahD9RgOM9yknQHCPw9yVgs8WDdNLBpFbuApojpYBHEeg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728610437; c=relaxed/simple;
-	bh=HMqY5oVh0vhl6GgC4yCVRY6jexExDCXyicotrIaCok0=;
+	s=arc-20240116; t=1728610453; c=relaxed/simple;
+	bh=UGirZHk/K5ZV+hZri3HA7RAha+ZUQkPl4haCW73kQ1M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=J7bZYcHjmx9ufidFr5W9uvAl1PXxp9XQNr28IqAB50++LggdhzbI0DEnI+T/3AmS9avmW3uTs9Esf3/Yf6eep7it8987mwvvxk/2DTzkQ92Qw/Unxg6xDHsM8ePrGWQmLCpvrw6C2AtmZ3TqNV8qARd3ISK/bHS5fBlIbwJ65qU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tTYijLhr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nz6kQ3uw5+/SEGJiXKUHkLRlpEIrEyCqDcSHZHtgIWXqjlHDcy+IPqBCjXLMRWFrt7avNLdz4+7+dmDoY8TAimxA4Z9V06czEB5KXVPnzsMalA4ThQT52n8R+Hswk/iBVQZ+7AKB4+WPO7xveKCSgdIKWbcDzGRaS+iYOyQnh38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oLdEtTKx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tTYijLhr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18A18C4CEC5;
-	Fri, 11 Oct 2024 01:33:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oLdEtTKx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADF0EC4CEC5;
+	Fri, 11 Oct 2024 01:34:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728610437;
-	bh=HMqY5oVh0vhl6GgC4yCVRY6jexExDCXyicotrIaCok0=;
+	s=k20201202; t=1728610452;
+	bh=UGirZHk/K5ZV+hZri3HA7RAha+ZUQkPl4haCW73kQ1M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tTYijLhrF1WdQ31crNzKiHzjRDE2GsV5mtXQeigUhXWwSo0Ora+jGIajaRLa4O74U
-	 jr5YjxBMJSr/o5dvLKl9RzaZXoGOs5qxtMLyTq0wE1FlRqjE4oa2M1qXxzEQicJOyr
-	 I3tK0SNHANaGZe9peeEoa+ZPgxKmFOfPgIT+bFJUR6G6SbvXg58bD9y+DF5C6JrXoD
-	 61BhAqyjIjVZ97bjqFb493sFz+dqjtHdow7v0pgBXHiXlhAXEoGL7m3iy2UGsVGAIB
-	 0/4CG2nHRQdVL0pNyJqv+zvuxnPqbmAd+Nlsdar8y2HBhBEGDPtMbn1TOXv32AYmHn
-	 0shljS0IGNYLw==
-Date: Thu, 10 Oct 2024 18:33:56 -0700
-Subject: [PATCH 36/43] xfs_spaceman: report on realtime group health
+	b=oLdEtTKxrZtTWFMGEtJNUkQoHoQ38ce0k3CHmJD3LLv5MD497bMpGt4uGO2m+ZYnS
+	 ANXH7TfzbY6ILFPFQtJ+YGv39yUF0QtEyYWISarAWPHGyKV3yciTJ3MFrrXujDDtdA
+	 0rMSzqC0lr94LgTbEzifBnOyqUZsnDaE8p8zpIX02Ci9v86W4cqOiy9bboYhXnErhP
+	 2lvnf/byE2e1qIm9mDMRgafKn5HEnAE3Q5qWCYvTwAVDI2Hg96WSCFnP3Rcb130sWT
+	 Y6GK2hz9BIdDg3cz2vi5ALSG7UZhu4AF3Z1sxVNmkuL8yB9Lljl2UhoH1YoLcyYKUn
+	 DvQNiLcO3JRPA==
+Date: Thu, 10 Oct 2024 18:34:12 -0700
+Subject: [PATCH 37/43] xfs_scrub: scrub realtime allocation group metadata
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860655918.4184637.14275220356581301589.stgit@frogsfrogsfrogs>
+Message-ID: <172860655933.4184637.13511720071459479813.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 References: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,167 +46,274 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add the realtime group status to the health reporting done by
-xfs_spaceman.
+Scan realtime group metadata as part of phase 2, just like we do for AG
+metadata.  For pre-rtgroup filesystems, pretend that this is a "rtgroup
+0" scrub request because the kernel expects that.  Replace the old
+cond_wait code with a scrub barrier because they're equivalent for two
+items that cannot be scrubbed in parallel.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- man/man8/xfs_spaceman.8 |    5 +++-
- spaceman/health.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 65 insertions(+), 3 deletions(-)
+ libfrog/scrub.c |    4 +-
+ scrub/phase2.c  |  124 ++++++++++++++++++++++++++++++++++++++-----------------
+ scrub/scrub.c   |    1 
+ scrub/scrub.h   |    9 ++++
+ 4 files changed, 98 insertions(+), 40 deletions(-)
 
 
-diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
-index 0d299132a7881b..7d2d1ff94eeb55 100644
---- a/man/man8/xfs_spaceman.8
-+++ b/man/man8/xfs_spaceman.8
-@@ -91,7 +91,7 @@ .SH COMMANDS
- .BR "xfs_info" "(8)"
- prints when querying a filesystem.
- .TP
--.BI "health [ \-a agno] [ \-c ] [ \-f ] [ \-i inum ] [ \-n ] [ \-q ] [ paths ]"
-+.BI "health [ \-a agno] [ \-c ] [ \-f ] [ \-i inum ] [ \-n ] [ \-q ] [ \-r rgno ] [ paths ]"
- Reports the health of the given group of filesystem metadata.
- .RS 1.0i
- .PD 0
-@@ -119,6 +119,9 @@ .SH COMMANDS
- .B \-q
- Report only unhealthy metadata.
- .TP
-+.B \-r
-+Report on the health of the given realtime group.
-+.TP
- .B paths
- Report on the health of the files at the given path.
- .PD
-diff --git a/spaceman/health.c b/spaceman/health.c
-index c4d570363fbbf1..4281589324cd44 100644
---- a/spaceman/health.c
-+++ b/spaceman/health.c
-@@ -132,6 +132,22 @@ static const struct flag_map ag_flags[] = {
- 	{0},
+diff --git a/libfrog/scrub.c b/libfrog/scrub.c
+index 66000f1ed66be4..d40364d35ce0b4 100644
+--- a/libfrog/scrub.c
++++ b/libfrog/scrub.c
+@@ -107,12 +107,12 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
+ 	[XFS_SCRUB_TYPE_RTBITMAP] = {
+ 		.name	= "rtbitmap",
+ 		.descr	= "realtime bitmap",
+-		.group	= XFROG_SCRUB_GROUP_FS,
++		.group	= XFROG_SCRUB_GROUP_RTGROUP,
+ 	},
+ 	[XFS_SCRUB_TYPE_RTSUM] = {
+ 		.name	= "rtsummary",
+ 		.descr	= "realtime summary",
+-		.group	= XFROG_SCRUB_GROUP_FS,
++		.group	= XFROG_SCRUB_GROUP_RTGROUP,
+ 	},
+ 	[XFS_SCRUB_TYPE_UQUOTA] = {
+ 		.name	= "usrquota",
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index c24d137358c74d..c7828c332e7c3a 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -21,12 +21,10 @@
+ 
+ struct scan_ctl {
+ 	/*
+-	 * Control mechanism to signal that the rt bitmap file scan is done and
+-	 * wake up any waiters.
++	 * Control mechanism to signal that each group's scan of the rt bitmap
++	 * file scan is done and wake up any waiters.
+ 	 */
+-	pthread_cond_t		rbm_wait;
+-	pthread_mutex_t		rbm_waitlock;
+-	bool			rbm_done;
++	unsigned int		rbm_group_count;
+ 
+ 	bool			aborted;
  };
+@@ -202,7 +200,7 @@ scan_fs_metadata(
+ 	int			ret;
  
-+static const struct flag_map rtgroup_flags[] = {
-+	{
-+		.mask = XFS_RTGROUP_GEOM_SICK_SUPER,
-+		.descr = "superblock",
-+	},
-+	{
-+		.mask = XFS_RTGROUP_GEOM_SICK_BITMAP,
-+		.descr = "realtime bitmap",
-+	},
-+	{
-+		.mask = XFS_RTGROUP_GEOM_SICK_SUMMARY,
-+		.descr = "realtime summary",
-+	},
-+	{0},
-+};
-+
- static const struct flag_map inode_flags[] = {
- 	{
- 		.mask = XFS_BS_SICK_INODE,
-@@ -216,6 +232,25 @@ report_ag_sick(
- 	return 0;
- }
+ 	if (sctl->aborted)
+-		goto out;
++		return;
  
-+/* Report on a rt group's health. */
-+static int
-+report_rtgroup_sick(
-+	xfs_rgnumber_t		rgno)
+ 	/*
+ 	 * Try to check all of the metadata files that we just scheduled.  If
+@@ -215,14 +213,14 @@ scan_fs_metadata(
+ 	ret = scrub_item_check(ctx, &sri);
+ 	if (ret) {
+ 		sctl->aborted = true;
+-		goto out;
++		return;
+ 	}
+ 
+ 	ret = repair_and_scrub_loop(ctx, &sri, xfrog_scrubbers[type].descr,
+ 			&defer_repairs);
+ 	if (ret) {
+ 		sctl->aborted = true;
+-		goto out;
++		return;
+ 	}
+ 	if (defer_repairs)
+ 		goto defer;
+@@ -235,15 +233,60 @@ scan_fs_metadata(
+ 	ret = defer_fs_repair(ctx, &sri);
+ 	if (ret) {
+ 		sctl->aborted = true;
+-		goto out;
++		return;
+ 	}
++}
+ 
+-out:
+-	if (type == XFS_SCRUB_TYPE_RTBITMAP) {
+-		pthread_mutex_lock(&sctl->rbm_waitlock);
+-		sctl->rbm_done = true;
+-		pthread_cond_broadcast(&sctl->rbm_wait);
+-		pthread_mutex_unlock(&sctl->rbm_waitlock);
++/*
++ * Scrub each rt group's metadata.  For pre-rtgroup filesystems, we ask to
++ * scrub "rtgroup 0" because that's how the kernel ioctl works.
++ */
++static void
++scan_rtgroup_metadata(
++	struct workqueue	*wq,
++	xfs_agnumber_t		rgno,
++	void			*arg)
 +{
-+	struct xfs_rtgroup_geometry rgeo = { 0 };
-+	char			descr[256];
++	struct scrub_item	sri;
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	struct scan_ctl		*sctl = arg;
++	char			descr[DESCR_BUFSZ];
++	bool			defer_repairs;
 +	int			ret;
 +
-+	ret = -xfrog_rtgroup_geometry(file->xfd.fd, rgno, &rgeo);
-+	if (ret) {
-+		xfrog_perror(ret, "rtgroup_geometry");
-+		return 1;
-+	}
-+	snprintf(descr, sizeof(descr) - 1, _("rtgroup %u"), rgno);
-+	report_sick(descr, rtgroup_flags, rgeo.rg_sick, rgeo.rg_checked);
-+	return 0;
-+}
++	if (sctl->aborted)
++		return;
 +
- /* Report on an inode's health. */
- static int
- report_inode_health(
-@@ -342,7 +377,7 @@ report_bulkstat_health(
- 	return error;
++	scrub_item_init_rtgroup(&sri, rgno);
++	if (ctx->mnt.fsgeom.rgcount == 0)
++		snprintf(descr, DESCR_BUFSZ, _("realtime"));
++	else
++		snprintf(descr, DESCR_BUFSZ, _("rtgroup %u"), rgno);
++
++	/*
++	 * Try to check all of the rtgroup metadata items that we just
++	 * scheduled.  If we return with some types still needing a check, try
++	 * repairing any damaged metadata that we've found so far, and try
++	 * again.  Abort if we stop making forward progress.
++	 */
++	scrub_item_schedule_group(&sri, XFROG_SCRUB_GROUP_RTGROUP);
++	ret = scrub_item_check(ctx, &sri);
++	if (ret) {
++		sctl->aborted = true;
++		return;
++	}
++
++	ret = repair_and_scrub_loop(ctx, &sri, descr, &defer_repairs);
++	if (ret) {
++		sctl->aborted = true;
++		return;
++	}
++
++	/* Everything else gets fixed during phase 4. */
++	ret = defer_fs_repair(ctx, &sri);
++	if (ret) {
++		sctl->aborted = true;
++		return;
+ 	}
  }
  
--#define OPT_STRING ("a:cfi:nq")
-+#define OPT_STRING ("a:cfi:nqr:")
- 
- /* Report on health problems in XFS filesystem. */
- static int
-@@ -352,6 +387,7 @@ health_f(
- {
- 	unsigned long long	x;
+@@ -255,17 +298,14 @@ phase2_func(
+ 	struct workqueue	wq;
+ 	struct scan_ctl		sctl = {
+ 		.aborted	= false,
+-		.rbm_done	= false,
+ 	};
+ 	struct scrub_item	sri;
+ 	const struct xfrog_scrub_descr *sc = xfrog_scrubbers;
  	xfs_agnumber_t		agno;
 +	xfs_rgnumber_t		rgno;
- 	bool			default_report = true;
- 	int			c;
- 	int			ret;
-@@ -399,6 +435,17 @@ health_f(
- 		case 'q':
- 			quiet = true;
- 			break;
-+		case 'r':
-+			default_report = false;
-+			errno = 0;
-+			x = strtoll(optarg, NULL, 10);
-+			if (!errno && x >= NULLRGNUMBER)
-+				errno = ERANGE;
-+			if (errno) {
-+				perror("rtgroup health");
-+				return 1;
-+			}
-+			break;
- 		default:
- 			return command_usage(&health_cmd);
- 		}
-@@ -434,6 +481,12 @@ health_f(
- 			if (ret)
- 				return 1;
- 			break;
-+		case 'r':
-+			rgno = strtoll(optarg, NULL, 10);
-+			ret = report_rtgroup_sick(rgno);
-+			if (ret)
-+				return 1;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -455,6 +508,11 @@ health_f(
- 			if (ret)
- 				return 1;
- 		}
-+		for (rgno = 0; rgno < file->xfd.fsgeom.rgcount; rgno++) {
-+			ret = report_rtgroup_sick(rgno);
-+			if (ret)
-+				return 1;
-+		}
- 		if (comprehensive) {
- 			ret = report_bulkstat_health(NULLAGNUMBER);
- 			if (ret)
-@@ -485,6 +543,7 @@ health_help(void)
- " -i inum  -- Report health of a given inode number.\n"
- " -n       -- Try to report file names.\n"
- " -q       -- Only report unhealthy metadata.\n"
-+" -r rgno  -- Report health of the given realtime group.\n"
- " paths    -- Report health of the given file path.\n"
- "\n"));
+ 	unsigned int		type;
+ 	int			ret, ret2;
  
-@@ -495,7 +554,7 @@ static cmdinfo_t health_cmd = {
- 	.cfunc = health_f,
- 	.argmin = 0,
- 	.argmax = -1,
--	.args = "[-a agno] [-c] [-f] [-i inum] [-n] [-q] [paths]",
-+	.args = "[-a agno] [-c] [-f] [-i inum] [-n] [-q] [-r rgno] [paths]",
- 	.flags = CMD_FLAG_ONESHOT,
- 	.help = health_help,
+-	pthread_mutex_init(&sctl.rbm_waitlock, NULL);
+-	pthread_cond_init(&sctl.rbm_wait, NULL);
+-
+ 	ret = -workqueue_create(&wq, (struct xfs_mount *)ctx,
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+@@ -311,8 +351,6 @@ phase2_func(
+ 	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
+ 		if (sc->group != XFROG_SCRUB_GROUP_FS)
+ 			continue;
+-		if (type == XFS_SCRUB_TYPE_RTSUM)
+-			continue;
+ 
+ 		ret = -workqueue_add(&wq, scan_fs_metadata, type, &sctl);
+ 		if (ret) {
+@@ -325,24 +363,37 @@ phase2_func(
+ 	if (sctl.aborted)
+ 		goto out_wq;
+ 
+-	/*
+-	 * Wait for the rt bitmap to finish scanning, then scan the rt summary
+-	 * since the summary can be regenerated completely from the bitmap.
+-	 */
+-	pthread_mutex_lock(&sctl.rbm_waitlock);
+-	while (!sctl.rbm_done)
+-		pthread_cond_wait(&sctl.rbm_wait, &sctl.rbm_waitlock);
+-	pthread_mutex_unlock(&sctl.rbm_waitlock);
++	if (ctx->mnt.fsgeom.rgcount == 0) {
++		/*
++		 * When rtgroups were added, the bitmap and summary files
++		 * became per-rtgroup metadata so the scrub interface for the
++		 * two started to accept sm_agno.  For pre-rtgroups
++		 * filesystems, we still accept sm_agno==0, so invoke scrub in
++		 * this manner.
++		 */
++		ret = -workqueue_add(&wq, scan_rtgroup_metadata, 0, &sctl);
++		if (ret) {
++			str_liberror(ctx, ret,
++					_("queueing realtime scrub work"));
++			goto out_wq;
++		}
++	}
++
++	/* Scan each rtgroup in parallel. */
++	for (rgno = 0;
++	     rgno < ctx->mnt.fsgeom.rgcount && !sctl.aborted;
++	     rgno++) {
++		ret = -workqueue_add(&wq, scan_rtgroup_metadata, rgno, &sctl);
++		if (ret) {
++			str_liberror(ctx, ret,
++					_("queueing rtgroup scrub work"));
++			goto out_wq;
++		}
++	}
+ 
+ 	if (sctl.aborted)
+ 		goto out_wq;
+ 
+-	ret = -workqueue_add(&wq, scan_fs_metadata, XFS_SCRUB_TYPE_RTSUM, &sctl);
+-	if (ret) {
+-		str_liberror(ctx, ret, _("queueing rtsummary scrub work"));
+-		goto out_wq;
+-	}
+-
+ out_wq:
+ 	ret2 = -workqueue_terminate(&wq);
+ 	if (ret2) {
+@@ -352,9 +403,6 @@ phase2_func(
+ 	}
+ 	workqueue_destroy(&wq);
+ out_wait:
+-	pthread_cond_destroy(&sctl.rbm_wait);
+-	pthread_mutex_destroy(&sctl.rbm_waitlock);
+-
+ 	if (!ret && sctl.aborted)
+ 		ret = ECANCELED;
+ 	return ret;
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index a2fd8d77d82be0..de687af687d32d 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -50,6 +50,7 @@ static const unsigned int scrub_deps[XFS_SCRUB_TYPE_NR] = {
+ 	[XFS_SCRUB_TYPE_QUOTACHECK]	= DEP(XFS_SCRUB_TYPE_UQUOTA) |
+ 					  DEP(XFS_SCRUB_TYPE_GQUOTA) |
+ 					  DEP(XFS_SCRUB_TYPE_PQUOTA),
++	[XFS_SCRUB_TYPE_RTSUM]		= DEP(XFS_SCRUB_TYPE_RTBITMAP),
  };
+ #undef DEP
+ 
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 3bb3ea1d07bf40..bb94a11dcfce71 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -90,6 +90,15 @@ scrub_item_init_ag(struct scrub_item *sri, xfs_agnumber_t agno)
+ 	sri->sri_gen = -1U;
+ }
+ 
++static inline void
++scrub_item_init_rtgroup(struct scrub_item *sri, xfs_rgnumber_t rgno)
++{
++	memset(sri, 0, sizeof(*sri));
++	sri->sri_agno = rgno;
++	sri->sri_ino = -1ULL;
++	sri->sri_gen = -1U;
++}
++
+ static inline void
+ scrub_item_init_fs(struct scrub_item *sri)
+ {
 
