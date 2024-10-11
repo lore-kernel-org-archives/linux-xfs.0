@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE9E223C9
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:08:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 585D05228
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:08:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728608907; cv=none; b=rp93JpmvX2sX00m6HtqsmNTvdGueM75YQ3Zmr5uP3U2F8yOwAOW2vWkCza/Wev64zVL2W3MoW2yuXC8GbGJ9as9EZnWXg25HnpkvopGRRPxBVos1oYUg2YF+vLex710BawwILjmm+NPSn4FOp9B9O4aoAmV8Vwcm76lTncBFU3M=
+	t=1728608923; cv=none; b=l8jp1JbY/rbgQzymdbDnnCRGB8UUXwGWzoVLJnVtIpiQ5P8+5oWedz/j/acAIgxkWYhxALppO2C73D9WcRXJCaX2Hp41qQVlnUSoCTt/7jcqGj44z0xxmTkeDpZjEcsvpQKrmXCxcyWhtuTiHGRwPQOQQnwnjirMxwltCJwLImw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728608907; c=relaxed/simple;
-	bh=eBSmiH0P6UQMvDRAOUEbj0A1YcI/NeaxKfIhtF82Jg8=;
+	s=arc-20240116; t=1728608923; c=relaxed/simple;
+	bh=ZfgBfRs+2MUjqWeFLFVixFmr3wSrUp+TM98DEakC4do=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OHm/q1oL5Boe1Sar0JQWpOJYA7Hfbz0Hf6Wo0ucjlDuIloSy9U0KpufpaN2GYl4HsqOvjhBjXNaG2seSQOajkEO5p8I1bQ8wjG2UC64JT8wQxqFq52AgX9ij20WPhjLhMxW/7tZYEAZdKy80hbgbwmv61lSgi0aubp6kB1nQ1RU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=egGQDSSG; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Gv3udVNgjK3Sb+5H07cWjybazDB8K1pHiIDXIWpy10JLzyplhrp2ob/15UAJknkdveeE6cPLXYp8yvUP/xt22Fc8I5N4MgavrPPOzggvvr+SG9RnRkfb0wPXMMeSsQQ8+hY2M1ruiOJRFuNfz92WtW8ebC6zi1o+DNnPYqGJIvA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lC7xGw0P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="egGQDSSG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B7C1C4CEC5;
-	Fri, 11 Oct 2024 01:08:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lC7xGw0P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36CBBC4CEC5;
+	Fri, 11 Oct 2024 01:08:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728608907;
-	bh=eBSmiH0P6UQMvDRAOUEbj0A1YcI/NeaxKfIhtF82Jg8=;
+	s=k20201202; t=1728608923;
+	bh=ZfgBfRs+2MUjqWeFLFVixFmr3wSrUp+TM98DEakC4do=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=egGQDSSGTnydpyH+J1NYbOSwMICCos8Yf27gIDhykGr5XFVQRvTV88yBu7TEbaMG6
-	 nsyBIHt+nYai8++M2074jh2vnkFv03X8abDufyW6pVGJuakTjk+Foi1p5Rq1pPxZ9F
-	 423VIwk6DdQT9QlAgN9QPHYKbw04UgaCZ0yD18nykLeKQEm1nWtUzAyoi9iGI9KTIH
-	 gkyuYv5gm/tgVlsURmkKiz5Igx3rtAnLrKel1eVp7c+QC1MRLNW50XzClNRSsaDPmJ
-	 5kPV2MCV87eDGpXPQrb5CtQuSRTWCTGw0KaT/jfDblUDqHa+1BxuicSPq2lUVtVqtq
-	 x9uZVjOX559Vg==
-Date: Thu, 10 Oct 2024 18:08:27 -0700
-Subject: [PATCH 26/36] xfs: mask off the rtbitmap and summary inodes when
- metadir in use
+	b=lC7xGw0P8+spV6OB+ktBjy/iGWdRlwh4CC+c9HioNNZyBxtPz1K6kiVQNG6VMOlrW
+	 MgSHRFlDh97Ekpx6L2zDmrftPemU62m1IKcxmLLQQCj18IO0l9w6y6yZe3aKyuIK6Z
+	 gweAyEehW2ntv77A21er2E8ytdYacRMqeUi8O+yqyPle56h6wwLFPcI9/batjpjmaj
+	 ldTW00KiBTjbbd40mC4/lJ4ZzQ+TtpdmOlzrQ3jso2rMW8PJdK7h1PfUEM4x4F1oYT
+	 k8bCf+28qTEpViMldQC00FBgbbT4v1k9cQxyRNqAXLbZfZh05Rh6mYhaZ8G2y+YYAZ
+	 ShJc/IeDwmo7A==
+Date: Thu, 10 Oct 2024 18:08:42 -0700
+Subject: [PATCH 27/36] xfs: create helpers to deal with rounding xfs_fileoff_t
+ to rtx boundaries
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860644690.4178701.12155004418920264753.stgit@frogsfrogsfrogs>
+Message-ID: <172860644707.4178701.6278873000359043020.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860644112.4178701.15760945842194801432.stgit@frogsfrogsfrogs>
 References: <172860644112.4178701.15760945842194801432.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,65 +47,70 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Set the rtbitmap and summary file inumbers to NULLFSINO in the
-superblock and make sure they're zeroed whenever we write the superblock
-to disk, to mimic mkfs behavior.
+We're about to segment xfs_rtblock_t addresses, so we must create
+type-specific helpers to do rt extent rounding of file block offsets
+because the rtb helpers soon will not do the right thing there.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_sb.c |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ fs/xfs/libxfs/xfs_rtbitmap.h |   17 +++++++++++++----
+ fs/xfs/xfs_bmap_util.c       |    6 +++---
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index e1c9ed7828dc57..f6b3b377b850aa 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -660,6 +660,13 @@ xfs_validate_sb_common(
- void
- xfs_sb_quota_from_disk(struct xfs_sb *sbp)
- {
-+	if (xfs_sb_version_hasmetadir(sbp)) {
-+		sbp->sb_uquotino = NULLFSINO;
-+		sbp->sb_gquotino = NULLFSINO;
-+		sbp->sb_pquotino = NULLFSINO;
-+		return;
-+	}
-+
- 	/*
- 	 * older mkfs doesn't initialize quota inodes to NULLFSINO. This
- 	 * leads to in-core values having two different values for a quota
-@@ -788,6 +795,8 @@ __xfs_sb_from_disk(
- 		to->sb_metadirpad = be32_to_cpu(from->sb_metadirpad);
- 		to->sb_rgcount = be32_to_cpu(from->sb_rgcount);
- 		to->sb_rgextents = be32_to_cpu(from->sb_rgextents);
-+		to->sb_rbmino = NULLFSINO;
-+		to->sb_rsumino = NULLFSINO;
- 	} else {
- 		to->sb_metadirino = NULLFSINO;
- 		to->sb_bad_features2 = be32_to_cpu(from->sb_bad_features2);
-@@ -811,6 +820,13 @@ xfs_sb_quota_to_disk(
- {
- 	uint16_t	qflags = from->sb_qflags;
- 
-+	if (xfs_sb_version_hasmetadir(from)) {
-+		to->sb_uquotino = cpu_to_be64(0);
-+		to->sb_gquotino = cpu_to_be64(0);
-+		to->sb_pquotino = cpu_to_be64(0);
-+		return;
-+	}
-+
- 	to->sb_uquotino = cpu_to_be64(from->sb_uquotino);
- 
- 	/*
-@@ -949,6 +965,8 @@ xfs_sb_to_disk(
- 		to->sb_metadirpad = 0;
- 		to->sb_rgcount = cpu_to_be32(from->sb_rgcount);
- 		to->sb_rgextents = cpu_to_be32(from->sb_rgextents);
-+		to->sb_rbmino = cpu_to_be64(0);
-+		to->sb_rsumino = cpu_to_be64(0);
- 	}
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index 7be76490a31879..dc2b8beadfc331 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -135,13 +135,22 @@ xfs_rtb_roundup_rtx(
+ 	return roundup_64(rtbno, mp->m_sb.sb_rextsize);
  }
  
+-/* Round this rtblock down to the nearest rt extent size. */
++/* Round this file block offset up to the nearest rt extent size. */
+ static inline xfs_rtblock_t
+-xfs_rtb_rounddown_rtx(
++xfs_fileoff_roundup_rtx(
+ 	struct xfs_mount	*mp,
+-	xfs_rtblock_t		rtbno)
++	xfs_fileoff_t		off)
+ {
+-	return rounddown_64(rtbno, mp->m_sb.sb_rextsize);
++	return roundup_64(off, mp->m_sb.sb_rextsize);
++}
++
++/* Round this file block offset down to the nearest rt extent size. */
++static inline xfs_rtblock_t
++xfs_fileoff_rounddown_rtx(
++	struct xfs_mount	*mp,
++	xfs_fileoff_t		off)
++{
++	return rounddown_64(off, mp->m_sb.sb_rextsize);
+ }
+ 
+ /* Convert an rt extent number to a file block offset in the rt bitmap file. */
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index aa745cc5922246..dff27c69fccb6f 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -537,7 +537,7 @@ xfs_can_free_eofblocks(
+ 	 */
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+ 	if (xfs_inode_has_bigrtalloc(ip))
+-		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
++		end_fsb = xfs_fileoff_roundup_rtx(mp, end_fsb);
+ 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+ 	if (last_fsb <= end_fsb)
+ 		return false;
+@@ -859,8 +859,8 @@ xfs_free_file_space(
+ 
+ 	/* We can only free complete realtime extents. */
+ 	if (xfs_inode_has_bigrtalloc(ip)) {
+-		startoffset_fsb = xfs_rtb_roundup_rtx(mp, startoffset_fsb);
+-		endoffset_fsb = xfs_rtb_rounddown_rtx(mp, endoffset_fsb);
++		startoffset_fsb = xfs_fileoff_roundup_rtx(mp, startoffset_fsb);
++		endoffset_fsb = xfs_fileoff_rounddown_rtx(mp, endoffset_fsb);
+ 	}
+ 
+ 	/*
 
