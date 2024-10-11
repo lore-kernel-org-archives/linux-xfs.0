@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0C704A06
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:56:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE03E4A06
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:57:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728608219; cv=none; b=Oj5XwlC0sq6MHoolO+E5xFH1DUjt2bGvWOPJvMamE2J4H3ZtbW8dAvgZsf2auG3sfA2/ZHsyjnVDjWJcf7iCQllATTn015aj6vKo89MGpDz7qesxyZsMdiKfjpvKsKdAx3KvxqTpz417sfKmJkXxSkBBSKN29QRsr7z9GGulcgU=
+	t=1728608235; cv=none; b=nzFstU1nrD8A3+8iSCBXRtYk2Kgr7AJrXSMNu4BKoKY+ZH8qrn2rDZKya1JWqblfFVvj1bVr4r7cicw4JjC9desj6nmhCJdW8YxIAnUkPwRRPiqY+4dgjeCcsHu7PF8EA+kB59B9qKOCinaEOduMiSkt+27s6aIsfKf5nNkhRM4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728608219; c=relaxed/simple;
-	bh=CH1N3tfS8C0vFg7n5SA8d4EARCMomSWma9+gyRZ0cAA=;
+	s=arc-20240116; t=1728608235; c=relaxed/simple;
+	bh=xjCRDt++paOYSc3Q1GBXtQuEYKSKq4cqyDd3jEWZJqI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DpjlPucfdY9Eh52UJS1OPKDZJEgNIOMhkohK+RVA5/UX4+dwnmFZN2K+fdOFGDFcmmyoin5b0g8FCCIYW4zwlq2ZZHepBZbLDTIdeCkup2mqrvrvMM7yF24FJUkrU6AEec7lkxJMzSaQoxDmU7Q9gj23UA/qd5kn7ue/hb+EpA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VSFxCflI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=d1YwbvcGPrmRuTWLLTU9O5j38tQJMGCmmWP0mqF5YqdPyNLQsES8gHSuydNt2bF09hLu9FVS5X67XhesVIazxeY4L0rTao0eh3tnjvT63Sb/QoQUV8EXp2V0VYNegYvEyACe1+saEVrJa3VwFdODeKdGQgcfC8HS14PW+vB0kwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E9F3Jw9S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VSFxCflI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE29AC4CEC5;
-	Fri, 11 Oct 2024 00:56:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E9F3Jw9S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51490C4CEC5;
+	Fri, 11 Oct 2024 00:57:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728608219;
-	bh=CH1N3tfS8C0vFg7n5SA8d4EARCMomSWma9+gyRZ0cAA=;
+	s=k20201202; t=1728608235;
+	bh=xjCRDt++paOYSc3Q1GBXtQuEYKSKq4cqyDd3jEWZJqI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VSFxCflIlbtpBV2tl4R/I5Ysu9uziRlAunM7G5Yq5eMnI6xo9vh+n+L1iFlfVWsZC
-	 HO325ykoR6kq4EIY6wrlNgZV0usFub9aMnHSORwip9G/TX3y6sWzW7OZTBVWl9W2bX
-	 EYT8TKI9TMhgUOrOp4MsQ1trOGH4Fi0UyppetrIfWSqsSsh6EnteLsxGbnmpjDfD7E
-	 ufJeblJomYJ9DKQl6TkZgTZGFBk36CyE5unncfwczzhhAOgIpUrW5DIjjTCvnNK8te
-	 PUtkiHNzY4wyqaCQYuwcP4FOhq9IULQgao9gXZy65Ngdsr0aF4x9LZSEN7NafAD+4D
-	 8SICkvtGEYFDw==
-Date: Thu, 10 Oct 2024 17:56:59 -0700
-Subject: [PATCH 05/21] xfs: support caching rtgroup metadata inodes
+	b=E9F3Jw9SK1Orha6Lb9dVmXRa8BEHMZEYrzmLnI0LpaMTuzd1uRdztByRZiNVb07Wm
+	 kLzFguCPlgE1sgPbTv806hc2kPtLMYqJ9ACK2P/scDFWsgFJrDqiSrod6KOKul3/eE
+	 PGL3xqULpRytFGuEP7iKSV88BZzouNSv11BpILHGrA7vpQOH47bfPTRPiWv+aLezOB
+	 /RnJuxPoDMWBCsOln8Pze+nAMvhovm5KQVqgjAVXmp7Tw7rHSCzwRONRL+1QxeYrTm
+	 l9LgWfaQlpCL8jNtn5tG/ANcCWunokCB47+XTEeRBdIvdYIqJ/3bxT+ifsVas3J/yd
+	 mlnY3fpvwSETQ==
+Date: Thu, 10 Oct 2024 17:57:14 -0700
+Subject: [PATCH 06/21] xfs: add rtgroup-based realtime scrubbing context
+ management
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860643032.4177836.6620713800192997454.stgit@frogsfrogsfrogs>
+Message-ID: <172860643050.4177836.10646272905273414892.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860642881.4177836.4401344305682380131.stgit@frogsfrogsfrogs>
 References: <172860642881.4177836.4401344305682380131.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,332 +47,325 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create the necessary per-rtgroup infrastructure that we need to load
-metadata inodes into memory.
+Create a state tracking structure and helpers to initialize the tracking
+structure so that we can check metadata records against the realtime
+space management metadata.  Right now this is limited to grabbing the
+incore rtgroup object, but we'll eventually add to the tracking
+structure the ILOCK state and btree cursors.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtgroup.c |  123 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtgroup.h |   27 +++++++++
- fs/xfs/xfs_mount.h          |    1 
- fs/xfs/xfs_rtalloc.c        |   69 +++++++++++++++++++++++-
- 4 files changed, 217 insertions(+), 3 deletions(-)
+ fs/xfs/scrub/common.c |   78 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.h |   30 +++++++++++++++++++
+ fs/xfs/scrub/repair.c |   24 +++++++++++++++
+ fs/xfs/scrub/repair.h |    7 ++++
+ fs/xfs/scrub/scrub.c  |   29 ++++++++++++++++++
+ fs/xfs/scrub/scrub.h  |   13 ++++++++
+ 6 files changed, 181 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
-index 7d7608c38e0e37..dac5d5b51aed05 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.c
-+++ b/fs/xfs/libxfs/xfs_rtgroup.c
-@@ -30,6 +30,8 @@
- #include "xfs_icache.h"
- #include "xfs_rtgroup.h"
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 2bedc053400a83..296a0b95ff79f9 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -34,6 +34,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_exchmaps.h"
  #include "xfs_rtbitmap.h"
-+#include "xfs_metafile.h"
-+#include "xfs_metadir.h"
++#include "xfs_rtgroup.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+@@ -121,6 +122,17 @@ xchk_process_error(
+ 			XFS_SCRUB_OFLAG_CORRUPT, __return_address);
+ }
  
- int
- xfs_rtgroup_alloc(
-@@ -228,3 +230,124 @@ xfs_rtginode_lockdep_setup(
- #else
- #define xfs_rtginode_lockdep_setup(ip, rgno, type)	do { } while (0)
- #endif /* CONFIG_PROVE_LOCKING */
-+
-+struct xfs_rtginode_ops {
-+	const char		*name;	/* short name */
-+
-+	enum xfs_metafile_type	metafile_type;
-+
-+	/* Does the fs have this feature? */
-+	bool			(*enabled)(struct xfs_mount *mp);
-+};
-+
-+static const struct xfs_rtginode_ops xfs_rtginode_ops[XFS_RTGI_MAX] = {
-+};
-+
-+/* Return the shortname of this rtgroup inode. */
-+const char *
-+xfs_rtginode_name(
-+	enum xfs_rtg_inodes	type)
-+{
-+	return xfs_rtginode_ops[type].name;
-+}
-+
-+/* Return the metafile type of this rtgroup inode. */
-+enum xfs_metafile_type
-+xfs_rtginode_metafile_type(
-+	enum xfs_rtg_inodes	type)
-+{
-+	return xfs_rtginode_ops[type].metafile_type;
-+}
-+
-+/* Should this rtgroup inode be present? */
 +bool
-+xfs_rtginode_enabled(
-+	struct xfs_rtgroup	*rtg,
-+	enum xfs_rtg_inodes	type)
++xchk_process_rt_error(
++	struct xfs_scrub	*sc,
++	xfs_rgnumber_t		rgno,
++	xfs_rgblock_t		rgbno,
++	int			*error)
 +{
-+	const struct xfs_rtginode_ops *ops = &xfs_rtginode_ops[type];
-+
-+	if (!ops->enabled)
-+		return true;
-+	return ops->enabled(rtg_mount(rtg));
++	return __xchk_process_error(sc, rgno, rgbno, error,
++			XFS_SCRUB_OFLAG_CORRUPT, __return_address);
 +}
 +
-+/* Load and existing rtgroup inode into the rtgroup structure. */
+ bool
+ xchk_xref_process_error(
+ 	struct xfs_scrub	*sc,
+@@ -684,6 +696,72 @@ xchk_ag_init(
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_XFS_RT
++/*
++ * For scrubbing a realtime group, grab all the in-core resources we'll need to
++ * check the metadata, which means taking the ILOCK of the realtime group's
++ * metadata inodes.  Callers must not join these inodes to the transaction with
++ * non-zero lockflags or concurrency problems will result.  The @rtglock_flags
++ * argument takes XFS_RTGLOCK_* flags.
++ */
 +int
-+xfs_rtginode_load(
-+	struct xfs_rtgroup	*rtg,
-+	enum xfs_rtg_inodes	type,
-+	struct xfs_trans	*tp)
++xchk_rtgroup_init(
++	struct xfs_scrub	*sc,
++	xfs_rgnumber_t		rgno,
++	struct xchk_rt		*sr)
 +{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	const char		*path;
-+	struct xfs_inode	*ip;
-+	const struct xfs_rtginode_ops *ops = &xfs_rtginode_ops[type];
-+	int			error;
++	ASSERT(sr->rtg == NULL);
++	ASSERT(sr->rtlock_flags == 0);
 +
-+	if (!xfs_rtginode_enabled(rtg, type))
-+		return 0;
-+
-+	if (!mp->m_rtdirip)
-+		return -EFSCORRUPTED;
-+
-+	path = xfs_rtginode_path(rtg_rgno(rtg), type);
-+	if (!path)
-+		return -ENOMEM;
-+	error = xfs_metadir_load(tp, mp->m_rtdirip, path, ops->metafile_type,
-+			&ip);
-+	kfree(path);
-+
-+	if (error)
-+		return error;
-+
-+	if (XFS_IS_CORRUPT(mp, ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
-+			       ip->i_df.if_format != XFS_DINODE_FMT_BTREE)) {
-+		xfs_irele(ip);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (XFS_IS_CORRUPT(mp, ip->i_projid != rtg_rgno(rtg))) {
-+		xfs_irele(ip);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	xfs_rtginode_lockdep_setup(ip, rtg_rgno(rtg), type);
-+	rtg->rtg_inodes[type] = ip;
++	sr->rtg = xfs_rtgroup_get(sc->mp, rgno);
++	if (!sr->rtg)
++		return -ENOENT;
 +	return 0;
 +}
 +
-+/* Release an rtgroup metadata inode. */
 +void
-+xfs_rtginode_irele(
-+	struct xfs_inode	**ipp)
++xchk_rtgroup_lock(
++	struct xchk_rt		*sr,
++	unsigned int		rtglock_flags)
 +{
-+	if (*ipp)
-+		xfs_irele(*ipp);
-+	*ipp = NULL;
++	xfs_rtgroup_lock(sr->rtg, rtglock_flags);
++	sr->rtlock_flags = rtglock_flags;
 +}
 +
-+/* Create the parent directory for all rtgroup inodes and load it. */
-+int
-+xfs_rtginode_mkdir_parent(
-+	struct xfs_mount	*mp)
++/*
++ * Unlock the realtime group.  This must be done /after/ committing (or
++ * cancelling) the scrub transaction.
++ */
++static void
++xchk_rtgroup_unlock(
++	struct xchk_rt		*sr)
 +{
-+	if (!mp->m_metadirip)
-+		return -EFSCORRUPTED;
++	ASSERT(sr->rtg != NULL);
 +
-+	return xfs_metadir_mkdir(mp->m_metadirip, "rtgroups", &mp->m_rtdirip);
++	if (sr->rtlock_flags) {
++		xfs_rtgroup_unlock(sr->rtg, sr->rtlock_flags);
++		sr->rtlock_flags = 0;
++	}
 +}
 +
-+/* Load the parent directory of all rtgroup inodes. */
-+int
-+xfs_rtginode_load_parent(
-+	struct xfs_trans	*tp)
++/*
++ * Unlock the realtime group and release its resources.  This must be done
++ * /after/ committing (or cancelling) the scrub transaction.
++ */
++void
++xchk_rtgroup_free(
++	struct xfs_scrub	*sc,
++	struct xchk_rt		*sr)
 +{
-+	struct xfs_mount	*mp = tp->t_mountp;
++	ASSERT(sr->rtg != NULL);
 +
-+	if (!mp->m_metadirip)
-+		return -EFSCORRUPTED;
++	xchk_rtgroup_unlock(sr);
 +
-+	return xfs_metadir_load(tp, mp->m_metadirip, "rtgroups",
-+			XFS_METAFILE_DIR, &mp->m_rtdirip);
++	xfs_rtgroup_put(sr->rtg);
++	sr->rtg = NULL;
 +}
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index 87932fce81fcfe..2ef028c88f102f 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -11,12 +11,23 @@
- struct xfs_mount;
- struct xfs_trans;
++#endif /* CONFIG_XFS_RT */
++
+ /* Per-scrubber setup functions */
  
-+enum xfs_rtg_inodes {
-+	XFS_RTGI_MAX,
+ void
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index b2a81e85ded9cf..672ed48d4a9fc3 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -12,6 +12,8 @@ void xchk_trans_cancel(struct xfs_scrub *sc);
+ 
+ bool xchk_process_error(struct xfs_scrub *sc, xfs_agnumber_t agno,
+ 		xfs_agblock_t bno, int *error);
++bool xchk_process_rt_error(struct xfs_scrub *sc, xfs_rgnumber_t rgno,
++		xfs_rgblock_t rgbno, int *error);
+ bool xchk_fblock_process_error(struct xfs_scrub *sc, int whichfork,
+ 		xfs_fileoff_t offset, int *error);
+ 
+@@ -118,6 +120,34 @@ xchk_ag_init_existing(
+ 	return error == -ENOENT ? -EFSCORRUPTED : error;
+ }
+ 
++#ifdef CONFIG_XFS_RT
++
++/* All the locks we need to check an rtgroup. */
++#define XCHK_RTGLOCK_ALL	(XFS_RTGLOCK_BITMAP)
++
++int xchk_rtgroup_init(struct xfs_scrub *sc, xfs_rgnumber_t rgno,
++		struct xchk_rt *sr);
++
++static inline int
++xchk_rtgroup_init_existing(
++	struct xfs_scrub	*sc,
++	xfs_rgnumber_t		rgno,
++	struct xchk_rt		*sr)
++{
++	int			error = xchk_rtgroup_init(sc, rgno, sr);
++
++	return error == -ENOENT ? -EFSCORRUPTED : error;
++}
++
++void xchk_rtgroup_lock(struct xchk_rt *sr, unsigned int rtglock_flags);
++void xchk_rtgroup_free(struct xfs_scrub *sc, struct xchk_rt *sr);
++#else
++# define xchk_rtgroup_init(sc, rgno, sr)		(-EFSCORRUPTED)
++# define xchk_rtgroup_init_existing(sc, rgno, sr)	(-EFSCORRUPTED)
++# define xchk_rtgroup_lock(sc, lockflags)		do { } while (0)
++# define xchk_rtgroup_free(sc, sr)			do { } while (0)
++#endif /* CONFIG_XFS_RT */
++
+ int xchk_ag_read_headers(struct xfs_scrub *sc, xfs_agnumber_t agno,
+ 		struct xchk_ag *sa);
+ void xchk_ag_btcur_free(struct xchk_ag *sa);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index f80000d7755242..5fdd00029cd6c0 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -21,6 +21,7 @@
+ #include "xfs_rmap.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_refcount_btree.h"
++#include "xfs_rtgroup.h"
+ #include "xfs_extent_busy.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+@@ -952,6 +953,29 @@ xrep_ag_init(
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_XFS_RT
++/*
++ * Given a reference to a rtgroup structure, lock rtgroup btree inodes and
++ * create btree cursors.  Must only be called to repair a regular rt file.
++ */
++int
++xrep_rtgroup_init(
++	struct xfs_scrub	*sc,
++	struct xfs_rtgroup	*rtg,
++	struct xchk_rt		*sr,
++	unsigned int		rtglock_flags)
++{
++	ASSERT(sr->rtg == NULL);
++
++	xfs_rtgroup_lock(rtg, rtglock_flags);
++	sr->rtlock_flags = rtglock_flags;
++
++	/* Grab our own passive reference from the caller's ref. */
++	sr->rtg = xfs_rtgroup_hold(rtg);
++	return 0;
++}
++#endif /* CONFIG_XFS_RT */
++
+ /* Reinitialize the per-AG block reservation for the AG we just fixed. */
+ int
+ xrep_reset_perag_resv(
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 90f9cb3b5ad8ba..4052185743910d 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -8,6 +8,7 @@
+ 
+ #include "xfs_quota_defs.h"
+ 
++struct xfs_rtgroup;
+ struct xchk_stats_run;
+ 
+ static inline int xrep_notsupported(struct xfs_scrub *sc)
+@@ -106,6 +107,12 @@ int xrep_setup_inode(struct xfs_scrub *sc, const struct xfs_imap *imap);
+ void xrep_ag_btcur_init(struct xfs_scrub *sc, struct xchk_ag *sa);
+ int xrep_ag_init(struct xfs_scrub *sc, struct xfs_perag *pag,
+ 		struct xchk_ag *sa);
++#ifdef CONFIG_XFS_RT
++int xrep_rtgroup_init(struct xfs_scrub *sc, struct xfs_rtgroup *rtg,
++		struct xchk_rt *sr, unsigned int rtglock_flags);
++#else
++# define xrep_rtgroup_init(sc, rtg, sr, lockflags)	(-ENOSYS)
++#endif /* CONFIG_XFS_RT */
+ 
+ /* Metadata revalidators */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 04a7a5944837d7..9d9990d5c6c482 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -225,6 +225,8 @@ xchk_teardown(
+ 			xfs_trans_cancel(sc->tp);
+ 		sc->tp = NULL;
+ 	}
++	if (sc->sr.rtg)
++		xchk_rtgroup_free(sc, &sc->sr);
+ 	if (sc->ip) {
+ 		if (sc->ilock_flags)
+ 			xchk_iunlock(sc, sc->ilock_flags);
+@@ -498,6 +500,33 @@ xchk_validate_inputs(
+ 		break;
+ 	case ST_GENERIC:
+ 		break;
++	case ST_RTGROUP:
++		if (sm->sm_ino || sm->sm_gen)
++			goto out;
++		if (xfs_has_rtgroups(mp)) {
++			/*
++			 * On a rtgroups filesystem, there won't be an rtbitmap
++			 * or rtsummary file for group 0 unless there's
++			 * actually a realtime volume attached.  However, older
++			 * xfs_scrub always calls the rtbitmap/rtsummary
++			 * scrubbers with sm_agno==0 so transform the error
++			 * code to ENOENT.
++			 */
++			if (sm->sm_agno >= mp->m_sb.sb_rgcount) {
++				if (sm->sm_agno == 0)
++					error = -ENOENT;
++				goto out;
++			}
++		} else {
++			/*
++			 * Prior to rtgroups, the rtbitmap/rtsummary scrubbers
++			 * accepted sm_agno==0, so we still accept that for
++			 * scrubbing pre-rtgroups filesystems.
++			 */
++			if (sm->sm_agno != 0)
++				goto out;
++		}
++		break;
+ 	default:
+ 		goto out;
+ 	}
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index c688ff4fc7fc4c..f73c6d0d90a11a 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -74,6 +74,7 @@ enum xchk_type {
+ 	ST_FS,		/* per-FS metadata */
+ 	ST_INODE,	/* per-inode metadata */
+ 	ST_GENERIC,	/* determined by the scrubber */
++	ST_RTGROUP,	/* rtgroup metadata */
+ };
+ 
+ struct xchk_meta_ops {
+@@ -118,6 +119,15 @@ struct xchk_ag {
+ 	struct xfs_btree_cur	*refc_cur;
+ };
+ 
++/* Inode lock state for the RT volume. */
++struct xchk_rt {
++	/* incore rtgroup, if applicable */
++	struct xfs_rtgroup	*rtg;
++
++	/* XFS_RTGLOCK_* lock state if locked */
++	unsigned int		rtlock_flags;
 +};
 +
-+#ifdef MAX_LOCKDEP_SUBCLASSES
-+static_assert(XFS_RTGI_MAX <= MAX_LOCKDEP_SUBCLASSES);
-+#endif
-+
- /*
-  * Realtime group incore structure, similar to the per-AG structure.
-  */
- struct xfs_rtgroup {
- 	struct xfs_group	rtg_group;
+ struct xfs_scrub {
+ 	/* General scrub state. */
+ 	struct xfs_mount		*mp;
+@@ -179,6 +189,9 @@ struct xfs_scrub {
  
-+	/* per-rtgroup metadata inodes */
-+	struct xfs_inode	*rtg_inodes[1 /* hack */];
+ 	/* State tracking for single-AG operations. */
+ 	struct xchk_ag			sa;
 +
- 	/* Number of blocks in this group */
- 	xfs_rtxnum_t		rtg_extents;
++	/* State tracking for realtime operations. */
++	struct xchk_rt			sr;
  };
-@@ -202,6 +213,22 @@ void xfs_rtgroup_lock(struct xfs_rtgroup *rtg, unsigned int rtglock_flags);
- void xfs_rtgroup_unlock(struct xfs_rtgroup *rtg, unsigned int rtglock_flags);
- void xfs_rtgroup_trans_join(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
- 		unsigned int rtglock_flags);
-+
-+int xfs_rtginode_mkdir_parent(struct xfs_mount *mp);
-+int xfs_rtginode_load_parent(struct xfs_trans *tp);
-+
-+const char *xfs_rtginode_name(enum xfs_rtg_inodes type);
-+enum xfs_metafile_type xfs_rtginode_metafile_type(enum xfs_rtg_inodes type);
-+bool xfs_rtginode_enabled(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type);
-+int xfs_rtginode_load(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
-+		struct xfs_trans *tp);
-+void xfs_rtginode_irele(struct xfs_inode **ipp);
-+
-+static inline const char *xfs_rtginode_path(xfs_rgnumber_t rgno,
-+		enum xfs_rtg_inodes type)
-+{
-+	return kasprintf(GFP_KERNEL, "%u.%s", rgno, xfs_rtginode_name(type));
-+}
- #else
- static inline void xfs_free_rtgroups(struct xfs_mount *mp,
- 		xfs_rgnumber_t first_rgno, xfs_rgnumber_t end_rgno)
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 02e5eab959d015..b5424a5fb48524 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -98,6 +98,7 @@ typedef struct xfs_mount {
- 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
- 	struct xfs_inode	*m_rootip;	/* pointer to root directory */
- 	struct xfs_inode	*m_metadirip;	/* ptr to metadata directory */
-+	struct xfs_inode	*m_rtdirip;	/* ptr to realtime metadir */
- 	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
- 	struct xfs_buftarg	*m_ddev_targp;	/* data device */
- 	struct xfs_buftarg	*m_logdev_targp;/* log device */
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 917c1a5e8f3180..96225313686414 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -28,6 +28,7 @@
- #include "xfs_da_format.h"
- #include "xfs_metafile.h"
- #include "xfs_rtgroup.h"
-+#include "xfs_error.h"
  
- /*
-  * Return whether there are any free extents in the size range given
-@@ -652,6 +653,16 @@ xfs_rtallocate_extent_size(
- 	return -ENOSPC;
- }
- 
-+static void
-+xfs_rtunmount_rtg(
-+	struct xfs_rtgroup	*rtg)
-+{
-+	int			i;
-+
-+	for (i = 0; i < XFS_RTGI_MAX; i++)
-+		xfs_rtginode_irele(&rtg->rtg_inodes[i]);
-+}
-+
- static int
- xfs_alloc_rsum_cache(
- 	struct xfs_mount	*mp,
-@@ -1127,6 +1138,43 @@ xfs_rtmount_iread_extents(
- 	return error;
- }
- 
-+static void
-+xfs_rtgroup_unmount_inodes(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_rtgroup	*rtg = NULL;
-+
-+	while ((rtg = xfs_rtgroup_next(mp, rtg)))
-+		xfs_rtunmount_rtg(rtg);
-+	xfs_rtginode_irele(&mp->m_rtdirip);
-+}
-+
-+static int
-+xfs_rtmount_rtg(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_rtgroup	*rtg)
-+{
-+	int			error, i;
-+
-+	rtg->rtg_extents = xfs_rtgroup_extents(mp, rtg_rgno(rtg));
-+
-+	for (i = 0; i < XFS_RTGI_MAX; i++) {
-+		error = xfs_rtginode_load(rtg, i, tp);
-+		if (error)
-+			return error;
-+
-+		if (rtg->rtg_inodes[i]) {
-+			error = xfs_rtmount_iread_extents(tp,
-+					rtg->rtg_inodes[i], 0);
-+			if (error)
-+				return error;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Get the bitmap and summary inodes and the summary cache into the mount
-  * structure at mount time.
-@@ -1168,15 +1216,28 @@ xfs_rtmount_inodes(
- 	if (error)
- 		goto out_rele_summary;
- 
--	while ((rtg = xfs_rtgroup_next(mp, rtg)))
--		rtg->rtg_extents = xfs_rtgroup_extents(mp, rtg_rgno(rtg));
-+	if (xfs_has_rtgroups(mp) && mp->m_sb.sb_rgcount > 0) {
-+		error = xfs_rtginode_load_parent(tp);
-+		if (error)
-+			goto out_rele_summary;
-+	}
-+
-+	while ((rtg = xfs_rtgroup_next(mp, rtg))) {
-+		error = xfs_rtmount_rtg(mp, tp, rtg);
-+		if (error) {
-+			xfs_rtgroup_rele(rtg);
-+			goto out_rele_inodes;
-+		}
-+	}
- 
- 	error = xfs_alloc_rsum_cache(mp, sbp->sb_rbmblocks);
- 	if (error)
--		goto out_rele_summary;
-+		goto out_rele_inodes;
- 	xfs_trans_cancel(tp);
- 	return 0;
- 
-+out_rele_inodes:
-+	xfs_rtgroup_unmount_inodes(mp);
- out_rele_summary:
- 	xfs_irele(mp->m_rsumip);
- out_rele_bitmap:
-@@ -1191,6 +1252,8 @@ xfs_rtunmount_inodes(
- 	struct xfs_mount	*mp)
- {
- 	kvfree(mp->m_rsum_cache);
-+
-+	xfs_rtgroup_unmount_inodes(mp);
- 	if (mp->m_rbmip)
- 		xfs_irele(mp->m_rbmip);
- 	if (mp->m_rsumip)
+ /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
 
