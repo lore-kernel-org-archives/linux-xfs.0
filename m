@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B952DDBE
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:19:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25F56EADA
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:20:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609594; cv=none; b=t2hXB+jRtu5BRWtG+zQVMHn2M312rpjGj9OUcno0k8KFp4LJA+dEMDXgNeGEoqqtALLqqZA7sdt/4JcgR8D/ACK5CM613nzTf1a6Cr5bb20snZ51YP5ApjGQW43dmUEWb+rOifKKsNFAELRtk5NTBFQok38rvFCqDsjtSot7SNY=
+	t=1728609610; cv=none; b=cKJyluGq4q3YCvjKj/HpSz79RzYH8JWT7L2kO3yp/ray7hP6QDeT2CRnckr0GJaW7U1isI7gNYleOvHr3DJhcZdTlbZGlnDyQGgvUjjyoWZNVOzu1oqK1uPWMQRnFOgBLz4K8EIabgjvmsz7jlh5VZhP9q3SOEqdsBz4UnI4NSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609594; c=relaxed/simple;
-	bh=hhcXxyaJx+bH2hhbg6QCxBewRW12k0a1gatM+1uvvUU=;
+	s=arc-20240116; t=1728609610; c=relaxed/simple;
+	bh=AFSIuPg8xNA42fNEYqfk7+JGvesyH64IpEMa2v24oKA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CvmBwZ8Q0LAEL5CzULgxIJw4HK4UfmYBrVmwIJPzYG4v0lg8Xd5MlwZF0Um3n4OqlhnDZVCaIMC/4l/7oPzk/F1GR2PORM5+MFzUh3Tz2muaDi4a0ujoSABrhqqejpxk10dicDKPRkrJThtt1Y7cRm0n9dvVRsBipNdOs40RW0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iibHsuOy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=P8ATVPPm5493IFQr6LTf8+xkzOkoAy2E2hr2kAZ0qhzU+CONJQks09zEpUBA4I0tzkhq+ZjnYt/VoEqq2GFlxriJuyrdTu91+6vKL9uLKRAuyWn0dbkHjKIxzjRQ23A/HIUxyaMfnVd2E18f2T9uDaDIdZ63q0ApW93fwEIg1mI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CeUGohQx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iibHsuOy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CB3EC4CEC5;
-	Fri, 11 Oct 2024 01:19:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CeUGohQx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADD87C4CEC5;
+	Fri, 11 Oct 2024 01:20:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609594;
-	bh=hhcXxyaJx+bH2hhbg6QCxBewRW12k0a1gatM+1uvvUU=;
+	s=k20201202; t=1728609609;
+	bh=AFSIuPg8xNA42fNEYqfk7+JGvesyH64IpEMa2v24oKA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iibHsuOyyVtg8G7Gaf9R2Sk9Bp3DDf1xPJR4NQwxWHaoL51gu/7Hniw9i1lz345fT
-	 dPAy/cDyZDU2aTaHxJIMOMhHanG02ZnmlBdQKzysKQFDNjYyvQV82GToYffv9VTpRG
-	 Tod5xM/XwjNk9qx0Gum7XYuJIMLESELOjYfq+adKBBrbm3jVnOGlMFBtBU8WQ9Zu89
-	 hwllh/37cQg6JWWm83q4HfWS9uuxSlfdkTX37tf2l1P9pWH0WzCvWE13Z6OX7mDKdO
-	 LpMc1ZsL2z0EtJiVUvpKPBXGcFxrS8bPmsiEppjquNNx1HoT3wT+25o4k2qZhi+TWY
-	 QuO2/UM+7xKJw==
-Date: Thu, 10 Oct 2024 18:19:53 -0700
-Subject: [PATCH 22/38] xfs_repair: refactor grabbing realtime metadata inodes
+	b=CeUGohQx1EVrX+FNPF1gzX8PfVI3sXgr6Gs30JsU+0im1Ljzjxel3xczbkRXgqlKz
+	 u5s2HWiPfMmmwJIJUuwZZNUbwJqfPUy2eo4WrY3+7BSRvbA+cmYrRIdphjfug2W1C/
+	 zGsYfLkal5R8NCK7sYUL5pG7P8/tfPG63vcNAY2QnuYtP+4bLw+zizRQ/isgqiuS0r
+	 qAbH2JDm+crTopU++nbd7uuIyDsmiFmuYfD+xFLQjKuLFoUgo1ugag4VDL2I+5oJ56
+	 TcRN+ayN4U9PgbRUYUxbjrcjANEQCOWQ4NASDsEFo9+Sr8ntLGDFSOm2CqfrAYBG5c
+	 Cfp2phSQo+oCg==
+Date: Thu, 10 Oct 2024 18:20:09 -0700
+Subject: [PATCH 23/38] xfs_repair: check metadata inode flag
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860654313.4183231.12520181687042722649.stgit@frogsfrogsfrogs>
+Message-ID: <172860654329.4183231.6161847704126574260.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 References: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,99 +46,71 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a helper function to grab a realtime metadata inode.  When
-metadir arrives, the bitmap and summary inodes can float, so we'll
-turn this function into a "load or allocate" function.
+Check whether or not the metadata inode flag is set appropriately.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/phase6.c |   51 ++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 34 insertions(+), 17 deletions(-)
+ repair/dinode.c |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index ae83d69fe12cd3..e15d728ddc0469 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -474,6 +474,24 @@ reset_sbroot_ino(
- 	libxfs_inode_init(tp, &args, ip);
+diff --git a/repair/dinode.c b/repair/dinode.c
+index cd4c8820854604..91507cf13c2690 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2331,6 +2331,26 @@ _("Bad extent size hint %u on inode %" PRIu64 ", "),
+ 	}
  }
  
-+/* Load a realtime freespace metadata inode from disk and reset it. */
-+static int
-+ensure_rtino(
-+	struct xfs_trans		*tp,
-+	xfs_ino_t			ino,
-+	struct xfs_inode		**ipp)
++static inline bool
++should_have_metadir_iflag(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino)
 +{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	int				error;
-+
-+	error = -libxfs_iget(mp, tp, ino, 0, ipp);
-+	if (error)
-+		return error;
-+
-+	reset_sbroot_ino(tp, S_IFREG, *ipp);
-+	return 0;
++	if (ino == mp->m_sb.sb_metadirino)
++		return true;
++	if (ino == mp->m_sb.sb_rbmino)
++		return true;
++	if (ino == mp->m_sb.sb_rsumino)
++		return true;
++	if (ino == mp->m_sb.sb_uquotino)
++		return true;
++	if (ino == mp->m_sb.sb_gquotino)
++		return true;
++	if (ino == mp->m_sb.sb_pquotino)
++		return true;
++	return false;
 +}
 +
- static void
- mk_rbmino(
- 	struct xfs_mount	*mp)
-@@ -486,15 +504,14 @@ mk_rbmino(
- 	if (error)
- 		res_failed(error);
+ /*
+  * returns 0 if the inode is ok, 1 if the inode is corrupt
+  * check_dups can be set to 1 *only* when called by the
+@@ -2680,6 +2700,27 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 			}
+ 		}
  
--	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
--	if (error) {
--		do_error(
--		_("couldn't iget realtime bitmap inode -- error - %d\n"),
--			error);
--	}
--
- 	/* Reset the realtime bitmap inode. */
--	reset_sbroot_ino(tp, S_IFREG, ip);
-+	error = ensure_rtino(tp, mp->m_sb.sb_rbmino, &ip);
-+	if (error) {
-+		do_error(
-+		_("couldn't iget realtime bitmap inode -- error - %d\n"),
-+			error);
-+	}
++		if (flags2 & XFS_DIFLAG2_METADATA) {
++			xfs_failaddr_t	fa;
 +
- 	ip->i_disk_size = mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize;
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
-@@ -560,7 +577,8 @@ _("couldn't re-initialize realtime summary inode, error %d\n"), error);
- }
- 
- static void
--mk_rsumino(xfs_mount_t *mp)
-+mk_rsumino(
-+	struct xfs_mount	*mp)
- {
- 	struct xfs_trans	*tp;
- 	struct xfs_inode	*ip;
-@@ -570,15 +588,14 @@ mk_rsumino(xfs_mount_t *mp)
- 	if (error)
- 		res_failed(error);
- 
--	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
--	if (error) {
--		do_error(
--		_("couldn't iget realtime summary inode -- error - %d\n"),
--			error);
--	}
--
- 	/* Reset the rt summary inode. */
--	reset_sbroot_ino(tp, S_IFREG, ip);
-+	error = ensure_rtino(tp, mp->m_sb.sb_rsumino, &ip);
-+	if (error) {
-+		do_error(
-+		_("couldn't iget realtime summary inode -- error - %d\n"),
-+			error);
-+	}
++			fa = libxfs_dinode_verify_metadir(mp, dino, di_mode,
++					be16_to_cpu(dino->di_flags), flags2);
++			if (fa) {
++				if (!uncertain)
++					do_warn(
++	_("inode %" PRIu64 " is incorrectly marked as metadata\n"),
++						lino);
++				goto clear_bad_out;
++			}
++		} else if (xfs_has_metadir(mp) &&
++			   should_have_metadir_iflag(mp, lino)) {
++			if (!uncertain)
++				do_warn(
++	_("inode %" PRIu64 " should be marked as metadata\n"),
++					lino);
++			goto clear_bad_out;
++		}
 +
- 	ip->i_disk_size = mp->m_rsumblocks * mp->m_sb.sb_blocksize;
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
+ 		if ((flags2 & XFS_DIFLAG2_REFLINK) &&
+ 		    !xfs_has_reflink(mp)) {
+ 			if (!uncertain) {
 
