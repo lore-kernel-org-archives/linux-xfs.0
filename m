@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E935C8C7
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:23:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00BAF8BE5
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:24:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609828; cv=none; b=CjfplvcV9P+s8sHxD5tcndSBz2UyQn6FVzjn2smDsSu6oGSEfRQsfsyh/VFwB+DgYwES94MHBtlyyU4NPSxH40Krt4cjAC79jYczL0qstN6jdJStaMmF9vZGiqdohsF+jQuEirnQHCLXGQMskqRBk5KohjtrqlXbGCTqnw/N8JA=
+	t=1728609844; cv=none; b=HFVwM2nJ7Ll4ZyMW0AK2S5W+RRX11SepZAurWoPPA262hsBCxMYJRAcFVO5t0z+iXaiKkbRXcCIsTPd899lzI6g7kvGwsiR8BQ+4Q/qi6ZLxqa7LrOivHu566sFXP/WcZIqT5J7xv1Ox4ZXEA5QTY8/5JdaTGS2/PHIMqYeveNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609828; c=relaxed/simple;
-	bh=J/YC+DqB/J1IJo9h8TGxElXs6z2gJ9b+3MLZMyAtTLI=;
+	s=arc-20240116; t=1728609844; c=relaxed/simple;
+	bh=atDUkiPddkn6bgJVZPTTIzg8qtxA6DXQ/2FpmiwJMiM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Kjbb/kPCl23jymJiwMTd7YjgPjfi1Az+wqOryhtj/Ft+HWi3nsQIJuQfYoasharefoJW4x85PDOc3DizlDriabOEv8y2c3Wr66IrQTPUCNjcr1BRPN+S+jQMJ6Qrv7jCC1V3MVADoG3YzAhyyU8DDkioX4nH5bRzrLf6+9XXA7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PcRBZqFT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MmcWJupTsexnupUz9ZUHWUmze06Jwr2hzohWl9Cb95MoQaCwtfltVBjvaHSJzDRE2Zv+kjLAQ2OgxI7XV0vIPLVYFZAmNJ1yO4fGTJ/96aKnHee/t6shDwywjxP/ue02FyplrypUIcxFX5zpRPu3gv8VRDzohVO7uXatE/QI3o8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lw5PQ94L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PcRBZqFT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 017A1C4CEC5;
-	Fri, 11 Oct 2024 01:23:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lw5PQ94L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8864DC4CEC5;
+	Fri, 11 Oct 2024 01:24:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609828;
-	bh=J/YC+DqB/J1IJo9h8TGxElXs6z2gJ9b+3MLZMyAtTLI=;
+	s=k20201202; t=1728609843;
+	bh=atDUkiPddkn6bgJVZPTTIzg8qtxA6DXQ/2FpmiwJMiM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PcRBZqFTWDNY0+q6dsXCcFRdoBg2VVduUCbNKdPjf2hhydXv0lEoHMVqo/zwiabZ5
-	 x7tTq9SinWmK589OLjhoTVR3fClNrbB7UD9OwswLTNlJd5moEZZWe0YJqVDGrzx2Sc
-	 xo74LcJ0j1yzdonrzizZ11OEx321QjTAVQ+/fpaK5//kLmNTIZAEJaE6MiSDT9dwlx
-	 8AcOoFUBlzQGfat/YQexGwdaVmkTBVKscCLI/ciTr1LuiyLz3iJQacXyBJ+IcoEsZC
-	 EqfArq+DOH0LysnKoz6xbePT7udOYwbWTB1QwHXT5OiGKBygJOgyogLeRBjTjXEvF5
-	 SN42SSglkhFbA==
-Date: Thu, 10 Oct 2024 18:23:47 -0700
-Subject: [PATCH 37/38] mkfs.xfs: enable metadata directories
+	b=Lw5PQ94LSD7/IFYNHJscK+7r4Ilje6yrA0QuAAO7z2Szp/K/j3dCnyoxvwOqppReL
+	 ZRFAX6yrMdLkBC9eV6qnAV916FPKJPb/ZJ6qFzi/3y65koCxQlkGEakBQ7gqllYZs5
+	 7GaDM9VeRquIUaogbRpE345xZruGzEWhsVLe0fSjWdJo978AEYPO1dcQKkKdMF3bgK
+	 F5XdJR6/0Le/F9zydstq4Zrb/LbrkzCI/O4HPu2zA9YJhakJphEK2B+GGrgVljgmTB
+	 LHlxok/IekZvtdefyjpUQXRedFhx3uAlzeaPKAwLBdnXVzKJ3Pw3jpWGewbPQJw0NH
+	 Z0Fm6MDxllVaA==
+Date: Thu, 10 Oct 2024 18:24:03 -0700
+Subject: [PATCH 38/38] mkfs: add a utility to generate protofiles
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860654544.4183231.9365433694511078.stgit@frogsfrogsfrogs>
+Message-ID: <172860654559.4183231.18270494913694170837.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 References: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,318 +46,248 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable formatting filesystems with metadata directories.
+Add a new utility to generate mkfs protofiles from a directory tree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    2 +
- man/man8/mkfs.xfs.8.in   |   11 +++++++
- mkfs/lts_4.19.conf       |    1 +
- mkfs/lts_5.10.conf       |    1 +
- mkfs/lts_5.15.conf       |    1 +
- mkfs/lts_5.4.conf        |    1 +
- mkfs/lts_6.1.conf        |    1 +
- mkfs/lts_6.6.conf        |    1 +
- mkfs/proto.c             |   68 +++++++++++++++++++++++++++++++++++++++++++++-
- mkfs/xfs_mkfs.c          |   29 ++++++++++++++++++--
- 10 files changed, 113 insertions(+), 3 deletions(-)
+ man/man8/xfs_protofile.8 |   33 ++++++++++
+ mkfs/Makefile            |   10 +++
+ mkfs/xfs_protofile.in    |  152 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 194 insertions(+), 1 deletion(-)
+ create mode 100644 man/man8/xfs_protofile.8
+ create mode 100644 mkfs/xfs_protofile.in
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index beabb47fcd9c40..dd9ae59032eb22 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -216,6 +216,8 @@
- #define xfs_metafile_iget		libxfs_metafile_iget
- #define xfs_trans_metafile_iget		libxfs_trans_metafile_iget
- #define xfs_metafile_set_iflag		libxfs_metafile_set_iflag
-+#define xfs_metadir_cancel		libxfs_metadir_cancel
-+#define xfs_metadir_commit		libxfs_metadir_commit
- #define xfs_metadir_link		libxfs_metadir_link
- #define xfs_metadir_lookup		libxfs_metadir_lookup
- #define xfs_metadir_start_create	libxfs_metadir_start_create
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index a854b0e87cb1a2..a76c6a9ee695b3 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -271,6 +271,17 @@ .SH OPTIONS
- When the option
- .B \-m finobt=0
- is used, the inode btree counter feature is not supported and is disabled.
-+.TP
-+.BI metadir= value
-+This option creates an internal directory tree to store filesystem metadata.
-+.IP
-+By default,
-+.B mkfs.xfs
-+will not enable this feature.
-+If the option
-+.B \-m crc=0
-+is used, the metadata directory feature is not supported and is disabled.
+diff --git a/man/man8/xfs_protofile.8 b/man/man8/xfs_protofile.8
+new file mode 100644
+index 00000000000000..75090c138f3393
+--- /dev/null
++++ b/man/man8/xfs_protofile.8
+@@ -0,0 +1,33 @@
++.TH xfs_protofile 8
++.SH NAME
++xfs_protofile \- create a protofile for use with mkfs.xfs
++.SH SYNOPSIS
++.B xfs_protofile
++.I path
++[
++.I paths...
++]
++.br
++.B xfs_protofile \-V
++.SH DESCRIPTION
++.B xfs_protofile
++walks a directory tree to generate a protofile.
++The protofile format is specified in the
++.BR mkfs.xfs (8)
++manual page and is derived from 3rd edition Unix.
++.SH OPTIONS
++.TP 1.0i
++.I path
++Create protofile directives to copy this path into the root directory.
++If the path is a directory, protofile directives will be emitted to
++replicate the entire subtree as a subtree of the root directory.
++If the path is a not a directory, protofile directives will be emitted
++to create the file as an entry in the root directory.
++The first path must resolve to a directory.
 +
- .TP
- .BI uuid= value
- Use the given value as the filesystem UUID for the newly created filesystem.
-diff --git a/mkfs/lts_4.19.conf b/mkfs/lts_4.19.conf
-index 4f190bacf9780c..4aa12f429ca2dd 100644
---- a/mkfs/lts_4.19.conf
-+++ b/mkfs/lts_4.19.conf
-@@ -6,6 +6,7 @@
- crc=1
- finobt=1
- inobtcount=0
-+metadir=0
- reflink=0
- rmapbt=0
- autofsck=0
-diff --git a/mkfs/lts_5.10.conf b/mkfs/lts_5.10.conf
-index a55fc68e4e3f2f..9625135c011f08 100644
---- a/mkfs/lts_5.10.conf
-+++ b/mkfs/lts_5.10.conf
-@@ -6,6 +6,7 @@
- crc=1
- finobt=1
- inobtcount=0
-+metadir=0
- reflink=1
- rmapbt=0
- autofsck=0
-diff --git a/mkfs/lts_5.15.conf b/mkfs/lts_5.15.conf
-index daea0b40671936..5306fad7e02f0f 100644
---- a/mkfs/lts_5.15.conf
-+++ b/mkfs/lts_5.15.conf
-@@ -6,6 +6,7 @@
- crc=1
- finobt=1
- inobtcount=1
-+metadir=0
- reflink=1
- rmapbt=0
- autofsck=0
-diff --git a/mkfs/lts_5.4.conf b/mkfs/lts_5.4.conf
-index 0f807fc35e34b4..9114388b0248a5 100644
---- a/mkfs/lts_5.4.conf
-+++ b/mkfs/lts_5.4.conf
-@@ -6,6 +6,7 @@
- crc=1
- finobt=1
- inobtcount=0
-+metadir=0
- reflink=1
- rmapbt=0
- autofsck=0
-diff --git a/mkfs/lts_6.1.conf b/mkfs/lts_6.1.conf
-index 0ff5bbad5a1c2d..1d5378042eed6c 100644
---- a/mkfs/lts_6.1.conf
-+++ b/mkfs/lts_6.1.conf
-@@ -6,6 +6,7 @@
- crc=1
- finobt=1
- inobtcount=1
-+metadir=0
- reflink=1
- rmapbt=0
- autofsck=0
-diff --git a/mkfs/lts_6.6.conf b/mkfs/lts_6.6.conf
-index 2ef5957e0b3a3f..d2649c562fac12 100644
---- a/mkfs/lts_6.6.conf
-+++ b/mkfs/lts_6.6.conf
-@@ -6,6 +6,7 @@
- crc=1
- finobt=1
- inobtcount=1
-+metadir=0
- reflink=1
- rmapbt=1
- autofsck=0
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index d8eb6ca33672bd..05c2621f8a0b13 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -471,6 +471,65 @@ creatproto(
- 	return 0;
- }
++.SH BUGS
++Filenames cannot contain spaces.
++Extended attributes are not copied into the filesystem.
++
++.PD
++.RE
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index a6173083e4c2d4..ae571c18e5520b 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -6,6 +6,7 @@ TOPDIR = ..
+ include $(TOPDIR)/include/builddefs
  
-+/* Create a new metadata root directory. */
-+static int
-+create_metadir(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_inode	*ip = NULL;
-+	struct xfs_trans	*tp;
-+	int			error;
-+	struct xfs_icreate_args	args = {
-+		.mode		= S_IFDIR,
-+		.flags		= XFS_ICREATE_UNLINKABLE,
-+	};
-+	xfs_ino_t		ino;
-+
-+	if (!xfs_has_metadir(mp))
-+		return 0;
-+
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_create,
-+			libxfs_create_space_res(mp, MAXNAMELEN), 0, 0, &tp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Create a new inode and set the sb pointer.  The primary super is
-+	 * still marked inprogress, so we do not need to log the metadirino
-+	 * change ourselves.
-+	 */
-+	error = -libxfs_dialloc(&tp, &args, &ino);
-+	if (error)
-+		goto out_cancel;
-+	error = -libxfs_icreate(tp, ino, &args, &ip);
-+	if (error)
-+		goto out_cancel;
-+	mp->m_sb.sb_metadirino = ino;
-+
-+	/*
-+	 * Initialize the root directory.  There are no ILOCKs in userspace
-+	 * so we do not need to drop it here.
-+	 */
-+	libxfs_metafile_set_iflag(tp, ip, XFS_METAFILE_DIR);
-+	error = -libxfs_dir_init(tp, ip, ip);
-+	if (error)
-+		goto out_cancel;
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		goto out_rele;
-+
-+	mp->m_metadirip = ip;
-+	return 0;
-+
-+out_cancel:
-+	libxfs_trans_cancel(tp);
-+out_rele:
-+	if (ip)
-+		libxfs_irele(ip);
-+	return error;
-+}
-+
- static void
- parseproto(
- 	xfs_mount_t	*mp,
-@@ -709,8 +768,15 @@ parseproto(
- 		 * RT initialization.  Do this here to ensure that
- 		 * the RT inodes get placed after the root inode.
- 		 */
--		if (isroot)
-+		if (isroot) {
-+			error = create_metadir(mp);
-+			if (error)
-+				fail(
-+	_("Creation of the metadata directory inode failed"),
-+					error);
-+
- 			rtinit(mp);
-+		}
- 		tp = NULL;
- 		for (;;) {
- 			name = getdirentname(pp);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index bbd0dbb6c80ab6..aa8b189a9ac0df 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -150,6 +150,7 @@ enum {
- 	M_INOBTCNT,
- 	M_BIGTIME,
- 	M_AUTOFSCK,
-+	M_METADIR,
- 	M_MAX_OPTS,
- };
+ LTCOMMAND = mkfs.xfs
++XFS_PROTOFILE = xfs_protofile
  
-@@ -812,6 +813,7 @@ static struct opt_params mopts = {
- 		[M_INOBTCNT] = "inobtcount",
- 		[M_BIGTIME] = "bigtime",
- 		[M_AUTOFSCK] = "autofsck",
-+		[M_METADIR] = "metadir",
- 		[M_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -861,6 +863,12 @@ static struct opt_params mopts = {
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
-+		{ .index = M_METADIR,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
- 	},
- };
+ HFILES =
+ CFILES = proto.c xfs_mkfs.c
+@@ -22,14 +23,21 @@ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
+ 	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
++DIRT = $(XFS_PROTOFILE)
  
-@@ -913,6 +921,7 @@ struct sb_feat_args {
- 	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
- 	bool	inobtcnt;		/* XFS_SB_FEAT_RO_COMPAT_INOBTCNT */
- 	bool	bigtime;		/* XFS_SB_FEAT_INCOMPAT_BIGTIME */
-+	bool	metadir;		/* XFS_SB_FEAT_INCOMPAT_METADIR */
- 	bool	nodalign;
- 	bool	nortalign;
- 	bool	nrext64;
-@@ -1048,7 +1057,8 @@ usage( void )
- /* blocksize */		[-b size=num]\n\
- /* config file */	[-c options=xxx]\n\
- /* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
--			    inobtcount=0|1,bigtime=0|1,autofsck=xxx]\n\
-+			    inobtcount=0|1,bigtime=0|1,autofsck=xxx,\n\
-+			    metadir=0|1]\n\
- /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
- 			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
- 			    sectsize=num,concurrency=num]\n\
-@@ -1883,6 +1893,9 @@ meta_opts_parser(
- 				illegal(value, "m autofsck");
- 		}
- 		break;
-+	case M_METADIR:
-+		cli->sb_feat.metadir = getnum(value, opts, subopt);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2465,6 +2478,14 @@ _("autofsck not supported without CRC support\n"));
- 			usage();
- 		}
- 		cli->autofsck = FSPROP_AUTOFSCK_UNSET;
+-default: depend $(LTCOMMAND) $(CFGFILES)
++default: depend $(LTCOMMAND) $(CFGFILES) $(XFS_PROTOFILE)
+ 
+ include $(BUILDRULES)
+ 
++$(XFS_PROTOFILE): $(XFS_PROTOFILE).in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@pkg_version@|$(PKG_VERSION)|g" < $< > $@
++	$(Q)chmod a+x $@
 +
-+		if (cli->sb_feat.metadir &&
-+		    cli_opt_set(&mopts, M_METADIR)) {
-+			fprintf(stderr,
-+_("metadata directory not supported without CRC support\n"));
-+			usage();
-+		}
-+		cli->sb_feat.metadir = false;
- 	}
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
++	$(INSTALL) -m 755 $(XFS_PROTOFILE) $(PKG_SBIN_DIR)
+ 	$(INSTALL) -m 755 -d $(MKFS_CFG_DIR)
+ 	$(INSTALL) -m 644 $(CFGFILES) $(MKFS_CFG_DIR)
  
- 	if (!cli->sb_feat.finobt) {
-@@ -3568,7 +3589,8 @@ sb_set_features(
- 	 * the sb_bad_features2 field. To avoid older kernels mounting
- 	 * filesystems they shouldn't, set both field to the same value.
- 	 */
--	sbp->sb_bad_features2 = sbp->sb_features2;
-+	if (!fp->metadir)
-+		sbp->sb_bad_features2 = sbp->sb_features2;
- 
- 	if (!fp->crcs_enabled)
- 		return;
-@@ -3618,6 +3640,8 @@ sb_set_features(
- 		 */
- 		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
- 	}
-+	if (fp->metadir)
-+		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_METADIR;
- }
- 
- /*
-@@ -4053,6 +4077,7 @@ finish_superblock_setup(
- 	platform_uuid_copy(&sbp->sb_meta_uuid, &cfg->uuid);
- 	sbp->sb_logstart = cfg->logstart;
- 	sbp->sb_rootino = sbp->sb_rbmino = sbp->sb_rsumino = NULLFSINO;
-+	sbp->sb_metadirino = NULLFSINO;
- 	sbp->sb_agcount = (xfs_agnumber_t)cfg->agcount;
- 	sbp->sb_rbmblocks = cfg->rtbmblocks;
- 	sbp->sb_logblocks = (xfs_extlen_t)cfg->logblocks;
+diff --git a/mkfs/xfs_protofile.in b/mkfs/xfs_protofile.in
+new file mode 100644
+index 00000000000000..9aee4336888523
+--- /dev/null
++++ b/mkfs/xfs_protofile.in
+@@ -0,0 +1,152 @@
++#!/usr/bin/python3
++
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2018-2024 Oracle.  All rights reserved.
++#
++# Author: Darrick J. Wong <djwong@kernel.org>
++
++# Walk a filesystem tree to generate a protofile for mkfs.
++
++import os
++import argparse
++import sys
++import stat
++
++def emit_proto_header():
++	'''Emit the protofile header.'''
++	print('/')
++	print('0 0')
++
++def stat_to_str(statbuf):
++	'''Convert a stat buffer to a proto string.'''
++
++	if stat.S_ISREG(statbuf.st_mode):
++		type = '-'
++	elif stat.S_ISCHR(statbuf.st_mode):
++		type = 'c'
++	elif stat.S_ISBLK(statbuf.st_mode):
++		type = 'b'
++	elif stat.S_ISFIFO(statbuf.st_mode):
++		type = 'p'
++	elif stat.S_ISDIR(statbuf.st_mode):
++		type = 'd'
++	elif stat.S_ISLNK(statbuf.st_mode):
++		type = 'l'
++
++	if statbuf.st_mode & stat.S_ISUID:
++		suid = 'u'
++	else:
++		suid = '-'
++
++	if statbuf.st_mode & stat.S_ISGID:
++		sgid = 'g'
++	else:
++		sgid = '-'
++
++	perms = stat.S_IMODE(statbuf.st_mode)
++
++	return '%s%s%s%o %d %d' % (type, suid, sgid, perms, statbuf.st_uid, \
++			statbuf.st_gid)
++
++def stat_to_extra(statbuf, fullpath):
++	'''Compute the extras column for a protofile.'''
++
++	if stat.S_ISREG(statbuf.st_mode):
++		return ' %s' % fullpath
++	elif stat.S_ISCHR(statbuf.st_mode) or stat.S_ISBLK(statbuf.st_mode):
++		return ' %d %d' % (statbuf.st_rdev, statbuf.st_rdev)
++	elif stat.S_ISLNK(statbuf.st_mode):
++		return ' %s' % os.readlink(fullpath)
++	return ''
++
++def max_fname_len(s1):
++	'''Return the length of the longest string in s1.'''
++	ret = 0
++	for s in s1:
++		if len(s) > ret:
++			ret = len(s)
++	return ret
++
++def walk_tree(path, depth):
++	'''Walk the directory tree rooted by path.'''
++	dirs = []
++	files = []
++
++	for fname in os.listdir(path):
++		fullpath = os.path.join(path, fname)
++		sb = os.lstat(fullpath)
++
++		if stat.S_ISDIR(sb.st_mode):
++			dirs.append(fname)
++			continue
++		elif stat.S_ISSOCK(sb.st_mode):
++			continue
++		else:
++			files.append(fname)
++
++	for fname in files:
++		if ' ' in fname:
++			raise ValueError( \
++				f'{fname}: Spaces not allowed in file names.')
++	for fname in dirs:
++		if ' ' in fname:
++			raise Exception( \
++				f'{fname}: Spaces not allowed in file names.')
++
++	fname_width = max_fname_len(files)
++	for fname in files:
++		fullpath = os.path.join(path, fname)
++		sb = os.lstat(fullpath)
++		extra = stat_to_extra(sb, fullpath)
++		print('%*s%-*s %s%s' % (depth, ' ', fname_width, fname, \
++				stat_to_str(sb), extra))
++
++	for fname in dirs:
++		fullpath = os.path.join(path, fname)
++		sb = os.lstat(fullpath)
++		extra = stat_to_extra(sb, fullpath)
++		print('%*s%s %s' % (depth, ' ', fname, \
++				stat_to_str(sb)))
++		walk_tree(fullpath, depth + 1)
++
++	if depth > 1:
++		print('%*s$' % (depth - 1, ' '))
++
++def main():
++	parser = argparse.ArgumentParser( \
++			description = "Generate mkfs.xfs protofile for a directory tree.")
++	parser.add_argument('paths', metavar = 'paths', type = str, \
++			nargs = '*', help = 'Directory paths to walk.')
++	parser.add_argument("-V", help = "Report version and exit.", \
++			action = "store_true")
++	args = parser.parse_args()
++
++	if args.V:
++		print("xfs_protofile version @pkg_version@")
++		sys.exit(0)
++
++	emit_proto_header()
++	if len(args.paths) == 0:
++		print('d--755 0 0')
++		print('$')
++	else:
++		# Copy the first argument's stat to the rootdir
++		statbuf = os.stat(args.paths[0])
++		if not stat.S_ISDIR(statbuf.st_mode):
++			raise NotADirectoryError(path)
++		print(stat_to_str(statbuf))
++
++		# All files under each path go in the root dir, recursively
++		for path in args.paths:
++			print(': Descending path %s' % path)
++			try:
++				walk_tree(path, 1)
++			except Exception as e:
++				print(e, file = sys.stderr)
++				return 1
++
++		print('$')
++	return 0
++
++if __name__ == '__main__':
++	sys.exit(main())
 
