@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81F0DD2FB;
-	Fri, 11 Oct 2024 01:39:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46EDCEEA9;
+	Fri, 11 Oct 2024 01:39:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728610750; cv=none; b=qWOC/YCEAqXK7LQPkkLDw/JJr8DTR6SYgkgFm1VTQcFkUXu+l8VAvYYOnCrRDuNFEWiFUBHSWZTyb0UjU6GPDAMBHiE6ffOPkiYTXWffGDQ1JICZC98DIxyVUXlswPLdE8JI7v8RvHk2oNthaDTh2vHi7gq0duGGxY1D1B9CIgU=
+	t=1728610768; cv=none; b=VTxHnMeufQn3sZ38aslSmgH6Yy+VB1qF9M1vDnDgVLkrUE1iKAgO1U8c9fki+CjqdqpeFlMbA8KFN6FMTH1QdFLX5Jpc3ZK4f3Xqi/EMj3y43fdz6oHM8007RtS1gVIXxJ3ElDfAA3KXErxNpL4o5LDk/59FrSZ+6NgWZxRZDak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728610750; c=relaxed/simple;
-	bh=RCpBLW8f1X1nKon5OraOTm78Gw4dmejOF+tA/gYj33I=;
+	s=arc-20240116; t=1728610768; c=relaxed/simple;
+	bh=oqjvkm0PnXzl6YOECnpywfiM5l8JO4iHUBCX7RR05gk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a1nStR6240BQ81qKP5o4nCYVHiqEO2C7OJzukNEqBCCsa7D/aNfd9HfWLNyfv6cMZrSUJ411XuHdxYfxH9aeGJZmEw5xC53s6qMsbPfgx3cbbHV36oN/NyCBBH1gLJ+ee0Y3DFmi/hmUMU7zxCUbIqYfZguoY4xPJXtUZxmsMRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PayRBMb/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MQgZ3+vGp/riG+RveH4xqu8RLMw+g5MSmUAY1CLTePHP6etyQLfUdxfMYa7jx4rhNyNilXxXJ/oc3WGMl7J/R1UVErWifUIVo4r+4AJlOyLfPiOaevfA5N+RLG+v5A44va83i4g1uWOuFPv2Y6NjFYrZphB3HhDvYa7doHOubJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NzTi6Zoj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PayRBMb/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 138D6C4CEC5;
-	Fri, 11 Oct 2024 01:39:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NzTi6Zoj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B080BC4CEC5;
+	Fri, 11 Oct 2024 01:39:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728610750;
-	bh=RCpBLW8f1X1nKon5OraOTm78Gw4dmejOF+tA/gYj33I=;
+	s=k20201202; t=1728610765;
+	bh=oqjvkm0PnXzl6YOECnpywfiM5l8JO4iHUBCX7RR05gk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PayRBMb/prwrxpPB3u1hcLqCMua9d5Jy9HP335oXy3Ae9RQG47FJ9jdrXVPGu36ly
-	 h5V1HEQvvsx9tcu/p/CaJmnIyGXw+BPqRBG4jMyGz5ttIjlvCd0dOed5RbUO+f3iNM
-	 gAfkV+QnJfxJWQ/kvFFS/tSCPCJqkm7gNn1ojBXeuOBizW4XHxdlL9PkuVJViwbJZO
-	 Gd320Czi3lqI8RNgP3T/jVPp4o5XrpUMlNQ/UZZ7xJLfey41kKT44mklxaEhqlzj50
-	 DMdQ0sdPZjnO38RqdngEvxEb0dz3uZLOQHlmrjF6ZTF5vV7d0CiAWuIdXngrfUH4nd
-	 gmhRebd4kXasw==
-Date: Thu, 10 Oct 2024 18:39:09 -0700
-Subject: [PATCH 04/11] common/repair: patch up repair sb inode value
- complaints
+	b=NzTi6Zoj9fazP0qmD9WCKRaQHjgb4SD3weMNM3PMYO26t1mWy4u2pH/QkAcdigxpx
+	 FvvulWcYiUUFCEnvfKULfq4Yhimwrr9I8d3tlkw7F9uGxg8IQ+oVh2WghnzY+RS9PL
+	 /UU7aAFQpTzjDjxzxMNvuOw1qzbILo0nMBRxlMnq+L+Td3WOlr/fABvTzCIjRfdnqQ
+	 bZIRNqTUMncoMjs0PP4X025i7gAYGgbtx5acPzrYgJhB7cQ6I9A8TVfRYlUKZt5gvO
+	 LfLalS3wljwfRSb0BVfw+Xe8NW2SeTd4OulCNnvMfudGU2B5m4BeMcibM6BNylG4Hp
+	 xuVSXjVHBsOig==
+Date: Thu, 10 Oct 2024 18:39:25 -0700
+Subject: [PATCH 05/11] xfs/206: update for metadata directory support
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de, fstests@vger.kernel.org
-Message-ID: <172860658058.4187056.2385244245034025475.stgit@frogsfrogsfrogs>
+Message-ID: <172860658073.4187056.12493388618887137873.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860657983.4187056.5472629319415849070.stgit@frogsfrogsfrogs>
 References: <172860657983.4187056.5472629319415849070.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,29 +46,25 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we've refactored xfs_repair to be more consistent in how it
-reports unexpected superblock inode pointer values, we have to fix up
-the fstests repair filters to emulate the old golden output.
+Filter 'metadir=' out of the golden output so that metadata directories
+don't cause this test to regress.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/repair |    4 ++++
- 1 file changed, 4 insertions(+)
+ tests/xfs/206 |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/common/repair b/common/repair
-index 8945d0028c47a4..c3afcfb3e6966a 100644
---- a/common/repair
-+++ b/common/repair
-@@ -28,6 +28,10 @@ _filter_repair()
- 	perl -ne '
- # for sb
- /- agno = / && next;	# remove each AG line (variable number)
-+s/realtime bitmap inode pointer/realtime bitmap ino pointer/;
-+s/sb realtime bitmap inode value/sb realtime bitmap inode/;
-+s/realtime summary inode pointer/realtime summary ino pointer/;
-+s/sb realtime summary inode value/sb realtime summary inode/;
- s/(pointer to) (\d+)/\1 INO/;
- # Changed inode output in 5.5.0
- s/sb root inode value /sb root inode /;
+diff --git a/tests/xfs/206 b/tests/xfs/206
+index 1297433188e868..ef5f4868e9bdca 100755
+--- a/tests/xfs/206
++++ b/tests/xfs/206
+@@ -63,6 +63,7 @@ mkfs_filter()
+ 	    -e "s/, lazy-count=[0-9]//" \
+ 	    -e "/.*crc=/d" \
+ 	    -e "/exchange=/d" \
++	    -e '/metadir=.*/d' \
+ 	    -e 's/, parent=[01]//' \
+ 	    -e "/^Default configuration/d"
+ }
 
