@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 165D9EADA
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:14:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C4641373
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:14:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609251; cv=none; b=gAB5B6Lz/lyxslB1HJoPncY3rT5UDj7FtZfoPUTs5lS72rY7do73ppFOmkUgK0Okh/ld0Civt5y+ruzjuN7aB5hbQOTgahSO2r0pnvxKxhGGkAP4SSlPvQpA+/QjEkDeZhBkl7yUXvmKYcXwO/JFyRy3hwa9wmg2iaNZi2xWztE=
+	t=1728609266; cv=none; b=PWpfb9XXmvIlwqJfIRldZqmfl8znQFJmF8a6ZLufcuH6kgf5Y7iponBP14yS20jPIzknyZiaWGhqa7IzF4zIMnxVUrhJzhgMvcmVMeYmLApoNFM2hVIM7ygkfH3++YctA85FNxu4MnxnA4azr289psdkwiI3RV9oahsDuhrLmJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609251; c=relaxed/simple;
-	bh=dvILRHLIo+ei2ZZ5pWFTNt6qSPiXZeamjnShEKr6Hb8=;
+	s=arc-20240116; t=1728609266; c=relaxed/simple;
+	bh=k6mnIx9dVwW8RLLyfgTl0iEhIMm0HV7cdgqET+RelyE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Vyy+OY8toycwq2bh703UgStcfddS11vTtw6H3t9QzeUCwz0B9l4gZNG3G88TUmVEbllvCwP6kfdSX8SruuDpy7Qu5zj1VShtpSzk97Hfu8JuqSaSC/POwKf0/QTyYbzKKHH+RcScd2bIIEXhdjUx5ypWC+1Opc5wMOXcVYhvgug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uvEIUPJo; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jgVmtxLVXAOcSAE1DkEn3pVd61rGdJzKWJx32n5DhCgsLLZx45dZGzvqy0KTC+8thp/G4kjX/Cp7JPjJZQkTxBO5J00QQYAt/1QTtcE+CUQGL/TbQoOcEv6c3TA5EXpFcdCy8FUep4gB7pFAfMiozjNNc+ZThuQJBUl4lgGeq28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N65/kq6k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uvEIUPJo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5DEEC4CEC5;
-	Fri, 11 Oct 2024 01:14:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N65/kq6k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46BF6C4CEC5;
+	Fri, 11 Oct 2024 01:14:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609250;
-	bh=dvILRHLIo+ei2ZZ5pWFTNt6qSPiXZeamjnShEKr6Hb8=;
+	s=k20201202; t=1728609266;
+	bh=k6mnIx9dVwW8RLLyfgTl0iEhIMm0HV7cdgqET+RelyE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uvEIUPJoJ3X5h7VZ3UjMcsLsYpwrsAHwisf86XuDw+3lIFvMI+zR+drA1UvBCV/RV
-	 aR64ho/bxuMNDnKPbukwPu8euAg2WRyLQ718jD7Px+3TExtIZFT+zjSr8EVbCY31SM
-	 shM1BsnL0ByRAIjy0WpK2pjocQ0ndv/hxyFCO1x0TgVH/wMfL/BJgINNuJLj0zcyKF
-	 76ncs7swoxoL1261ZuRoDKfnFUovfmwwwRnCZecaUve9EODgTEVLsW29jxqIIw4cpR
-	 rvTPxg7Wqs77vFF+ytP4qCv95xRW3wAhZaBQWtltA+ECo1o+Lqjjfazoez0KmFEfw5
-	 xcPAX9y9biI8g==
-Date: Thu, 10 Oct 2024 18:14:10 -0700
-Subject: [PATCH 2/2] xfs: enable metadata directory feature
+	b=N65/kq6kfXNKY9fY1wihDiPQqQwutjmKaZRgt6jnJjAXkNmiRP1A6K0tByicn3Jnn
+	 A9Z7pHNT8CMjS7QeiJR5aNwM8CshU6R2ZaCE6j/Z5nSkzDgsr8ZD8kXIg6v85pk3Fw
+	 EpbEGBvHIJ9UA9GeylnEAN5+cvcws5UtkUxaPw693cNoIA27Fcx6PWFzDNqgyBVtgp
+	 kkoWf6Vlu3qN3I9kUcka6CgM9EmtfN3aP8CDrwYr/8XnNx+3qrYKH8xX5LJV0RqxOF
+	 RIYvptDUCK9Qmk9vZ7/n9+bkrGO5CFVjOgBC8ECqMStStou4uE5r/0j0r0rzBJ1UZx
+	 ErmxCT7FGbgFQ==
+Date: Thu, 10 Oct 2024 18:14:25 -0700
+Subject: [PATCH 01/38] libfrog: report metadata directories in the geometry
+ report
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860646167.4180365.12478247512548125047.stgit@frogsfrogsfrogs>
-In-Reply-To: <172860646128.4180365.15337586086476354855.stgit@frogsfrogsfrogs>
-References: <172860646128.4180365.15337586086476354855.stgit@frogsfrogsfrogs>
+To: djwong@kernel.org, aalbersh@kernel.org
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <172860653993.4183231.5439809537198316883.stgit@frogsfrogsfrogs>
+In-Reply-To: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
+References: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,38 +47,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable the metadata directory feature.  With this feature, all metadata
-inodes are placed in the metadata directory, and the only inumbers in
-the superblock are the roots of the two directory trees.
-
-The RT device is now sharded into a number of rtgroups, where 0 rtgroups
-mean that no RT extents are supported, and the traditional XFS stub RT
-bitmap and summary inodes don't exist.  A single rtgroup gives roughly
-identical behavior to the traditional RT setup, but now with checksummed
-and self identifying free space metadata.
-
-For quota, the quota options are read from the superblock unless
-explicitly overridden via mount options.
+Report the presence of a metadata directory tree in the geometry report.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ libfrog/fsgeom.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index ac1fbc6ca28870..e75545f9161d61 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -414,7 +414,8 @@ xfs_sb_has_ro_compat_feature(
- 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
- 		 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
- 		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
--		 XFS_SB_FEAT_INCOMPAT_PARENT)
-+		 XFS_SB_FEAT_INCOMPAT_PARENT | \
-+		 XFS_SB_FEAT_INCOMPAT_METADIR)
+diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+index 597c38b1140250..67b4e65713be5b 100644
+--- a/libfrog/fsgeom.c
++++ b/libfrog/fsgeom.c
+@@ -33,6 +33,7 @@ xfs_report_geom(
+ 	int			nrext64;
+ 	int			exchangerange;
+ 	int			parent;
++	int			metadir;
  
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
+ 	isint = geo->logstart > 0;
+ 	lazycount = geo->flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
+@@ -53,13 +54,14 @@ xfs_report_geom(
+ 	nrext64 = geo->flags & XFS_FSOP_GEOM_FLAGS_NREXT64 ? 1 : 0;
+ 	exchangerange = geo->flags & XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE ? 1 : 0;
+ 	parent = geo->flags & XFS_FSOP_GEOM_FLAGS_PARENT ? 1 : 0;
++	metadir = geo->flags & XFS_FSOP_GEOM_FLAGS_METADIR ? 1 : 0;
+ 
+ 	printf(_(
+ "meta-data=%-22s isize=%-6d agcount=%u, agsize=%u blks\n"
+ "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+ "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
+ "         =%-22s reflink=%-4u bigtime=%u inobtcount=%u nrext64=%u\n"
+-"         =%-22s exchange=%-3u\n"
++"         =%-22s exchange=%-3u metadir=%u\n"
+ "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ "         =%-22s sunit=%-6u swidth=%u blks\n"
+ "naming   =version %-14u bsize=%-6u ascii-ci=%d, ftype=%d, parent=%d\n"
+@@ -70,7 +72,7 @@ xfs_report_geom(
+ 		"", geo->sectsize, attrversion, projid32bit,
+ 		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
+ 		"", reflink_enabled, bigtime_enabled, inobtcount, nrext64,
+-		"", exchangerange,
++		"", exchangerange, metadir,
+ 		"", geo->blocksize, (unsigned long long)geo->datablocks,
+ 			geo->imaxpct,
+ 		"", geo->sunit, geo->swidth,
 
