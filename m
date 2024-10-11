@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E212D10F9
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:00:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7613010F9
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:00:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728608423; cv=none; b=q8I/dXHza6sFftBp5KytJetOwmAaYHkRLl003bMY1H0LOC3dxyiYdvlEo8v8tpLOpVuK1+KH1aU15HyIpg6UjilrpX6y3PMyW0btdgKnHEAFqE9d6bxIqKwGOAd706YcrV5fZJCqZRacnxti8Oz0e5dWKqNca3PitqFxqRgvcaM=
+	t=1728608438; cv=none; b=mfZrNh5/uMgOeg7YJmU9WxVaZzWFEzuWqB+vLt2+cNhamR3X8TL4/PUmM0cSnS83VF/jun2M11dvfG2wEn3XuTAYqEIIMO564fSIoUdbCmQPHczIZKdSpPAD9lnyVvXDSlD3aFKVhe7BR+6BpcEFmVptGHeXl/jsT1Zeh4KoSdg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728608423; c=relaxed/simple;
-	bh=g43W6Gf8r8714Oo/QOsTCnIkIoQtL69sglPqxiJAHtM=;
+	s=arc-20240116; t=1728608438; c=relaxed/simple;
+	bh=iqn+HSDKPDnEm4BEBrm5XoXXu0NogVWTn3pP8RZCPnc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ocnKATooPG5mofMrnw+SJGXBxq+xFaemBO+CYW4Nr4e7J421ry46KECKikzAgGFbqsk+owwa2j6yg8unUT6zM6nVk5BltTHFaZ6S3BWPjDrEb8/BhuxDZwHOJN3B4+4yY7EEMk+0frM7xmySq4x8oTvUglZbmR0ne7AFIXc545A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJdN/Ukj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nadK3xPp5Afmq5LIXFkOyd9sZM0Bz3G02czFFTIP2fk4plV/d/4/lehgukepCkD/kA3uApfA/rAdAjxT90vNt6xzed3I8RL16IAJ6DnzYzjPFlR4t8zaiaAAPEIeDwgyYfh7an0bq8FFb2wylbjTV7jxO09q8io2Ms5m1ESeuwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g4hkL20x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJdN/Ukj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEBD2C4CEC5;
-	Fri, 11 Oct 2024 01:00:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g4hkL20x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AD28C4CEC5;
+	Fri, 11 Oct 2024 01:00:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728608422;
-	bh=g43W6Gf8r8714Oo/QOsTCnIkIoQtL69sglPqxiJAHtM=;
+	s=k20201202; t=1728608438;
+	bh=iqn+HSDKPDnEm4BEBrm5XoXXu0NogVWTn3pP8RZCPnc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UJdN/UkjJUC11jkfW9PdWDYxXUKnPbG2BD3N4gkzUk/mYZCQCpG8uhQrrMmUV6aWs
-	 ZcE3kAmm1IHA/mztIW+fvlpNwSaLk9GU81mXnMOi7ccCo0LOhFcgRLSmUFVsGJUGbq
-	 oI6LYT4dKq4G/gXEotHwefcdDwWyiX//aukydwkGAGYKCgf4hktIg/3yZ6hlcfuFKU
-	 75RshgfFq9zaIUPw4JsoTARgw+sFQxbD6EHb9ikawx74xmCByniZb74u6OlsOi5RRa
-	 29/OqDuuibBEkGOSAGRdvdHPb4D7xki7r25YVvhC12jkhvzGuxHvVgdzwygSWhjzi4
-	 /cSfjtMhUNV9w==
-Date: Thu, 10 Oct 2024 18:00:22 -0700
-Subject: [PATCH 18/21] xfs: factor out a xfs_growfs_check_rtgeom helper
+	b=g4hkL20xYc2EX3MWVORPTHrjeNFWbFjXyEOkXMaAlHkFTJE5vWyQtqbs6FjgTrwGX
+	 fclsDUck7mhOl+zJugIr0wZRvFAWf30LfG/bPgmUPNYbAI3wI+o3MUPHwXFHjbrq2S
+	 5rEeuBYptVZCy4FSsvVPofhm63Mwy/OLRYhJwjFcHP7QeBr2AI1GV+ZzTTEyvkIZ3L
+	 Zcfq3rdnETcGAWznogx0J6qojfX1VleFboA4meF5+pBkB1LuGCONg49/sAvpAywqKr
+	 1aJlWibKzgzkuhVxwsSqAsColDJemfyiBwCwemiXZhWmj50G4TOCQdtnoY5T8zNIXS
+	 ZYmeKdRYnzCdA==
+Date: Thu, 10 Oct 2024 18:00:37 -0700
+Subject: [PATCH 19/21] xfs: refactor xfs_rtbitmap_blockcount
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860643257.4177836.7356816178869872203.stgit@frogsfrogsfrogs>
+Message-ID: <172860643274.4177836.16249392005001628986.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860642881.4177836.4401344305682380131.stgit@frogsfrogsfrogs>
 References: <172860642881.4177836.4401344305682380131.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,88 +46,146 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Split the check that the rtsummary fits into the log into a separate
-helper, and use xfs_growfs_rt_alloc_fake_mount to calculate the new RT
-geometry.
+Rename the existing xfs_rtbitmap_blockcount to
+xfs_rtbitmap_blockcount_len and add a new xfs_rtbitmap_blockcount wrapper
+around it that takes the number of extents from the mount structure.
+
+This will simplify the move to per-rtgroup bitmaps as those will need to
+pass in the number of extents per rtgroup instead.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: avoid division for the 0-rtx growfs check]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   43 +++++++++++++++++++++++++++++--------------
- 1 file changed, 29 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c   |   12 +++++++++++-
+ fs/xfs/libxfs/xfs_rtbitmap.h   |    7 ++++---
+ fs/xfs/libxfs/xfs_trans_resv.c |    2 +-
+ fs/xfs/scrub/rtbitmap.c        |    3 +--
+ fs/xfs/scrub/rtsummary.c       |    7 ++-----
+ fs/xfs/xfs_rtalloc.c           |    3 +--
+ 6 files changed, 20 insertions(+), 14 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 16d633da1614c3..785ff3e49295b5 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1023,6 +1023,31 @@ xfs_growfs_rtg(
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 6c3354c8efdafa..e9b80ef166c0e8 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1149,13 +1149,23 @@ xfs_rtalloc_extent_is_free(
+  * extents.
+  */
+ xfs_filblks_t
+-xfs_rtbitmap_blockcount(
++xfs_rtbitmap_blockcount_len(
+ 	struct xfs_mount	*mp,
+ 	xfs_rtbxlen_t		rtextents)
+ {
+ 	return howmany_64(rtextents, NBBY * mp->m_sb.sb_blocksize);
  }
  
-+static int
-+xfs_growfs_check_rtgeom(
-+	const struct xfs_mount	*mp,
-+	xfs_rfsblock_t		rblocks,
-+	xfs_extlen_t		rextsize)
++/*
++ * Compute the number of rtbitmap blocks used for a given file system.
++ */
++xfs_filblks_t
++xfs_rtbitmap_blockcount(
++	struct xfs_mount	*mp)
 +{
-+	struct xfs_mount	*nmp;
-+	int			error = 0;
-+
-+	nmp = xfs_growfs_rt_alloc_fake_mount(mp, rblocks, rextsize);
-+	if (!nmp)
-+		return -ENOMEM;
-+
-+	/*
-+	 * New summary size can't be more than half the size of the log.  This
-+	 * prevents us from getting a log overflow, since we'll log basically
-+	 * the whole summary file at once.
-+	 */
-+	if (nmp->m_rsumblocks > (mp->m_sb.sb_logblocks >> 1))
-+		error = -EINVAL;
-+
-+	kfree(nmp);
-+	return error;
++	return xfs_rtbitmap_blockcount_len(mp, mp->m_sb.sb_rextents);
 +}
 +
- /*
-  * Grow the realtime area of the filesystem.
-  */
-@@ -1031,9 +1056,6 @@ xfs_growfs_rt(
- 	xfs_mount_t	*mp,		/* mount point for filesystem */
- 	xfs_growfs_rt_t	*in)		/* growfs rt input struct */
+ /* Compute the number of rtsummary blocks needed to track the given rt space. */
+ xfs_filblks_t
+ xfs_rtsummary_blockcount(
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index e4994a3e461d33..58672863053a94 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -307,8 +307,9 @@ int xfs_rtfree_extent(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
+ int xfs_rtfree_blocks(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
+ 		xfs_fsblock_t rtbno, xfs_filblks_t rtlen);
+ 
+-xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
+-		rtextents);
++xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp);
++xfs_filblks_t xfs_rtbitmap_blockcount_len(struct xfs_mount *mp,
++		xfs_rtbxlen_t rtextents);
+ xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
+ 		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
+ 
+@@ -336,7 +337,7 @@ static inline int xfs_rtfree_blocks(struct xfs_trans *tp,
+ # define xfs_rtbuf_cache_relse(a)			(0)
+ # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
+ static inline xfs_filblks_t
+-xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
++xfs_rtbitmap_blockcount_len(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
  {
--	xfs_rtxnum_t		nrextents;
--	xfs_extlen_t		nrbmblocks;
--	xfs_extlen_t		nrsumblocks;
- 	struct xfs_buf		*bp;
- 	xfs_agblock_t		old_rextsize = mp->m_sb.sb_rextsize;
- 	int			error;
-@@ -1082,20 +1104,13 @@ xfs_growfs_rt(
- 	/*
- 	 * Calculate new parameters.  These are the final values to be reached.
- 	 */
--	nrextents = div_u64(in->newblocks, in->extsize);
- 	error = -EINVAL;
--	if (nrextents == 0)
-+	if (in->newblocks < in->extsize)
- 		goto out_unlock;
--	nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
--	nrsumblocks = xfs_rtsummary_blockcount(mp,
--			xfs_compute_rextslog(nrextents) + 1, nrbmblocks);
+ 	/* shut up gcc */
+ 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 1a7f95bcf06955..bab402340b5da8 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -224,7 +224,7 @@ xfs_rtalloc_block_count(
+ 	xfs_rtxlen_t		rtxlen;
  
--	/*
--	 * New summary size can't be more than half the size of
--	 * the log.  This prevents us from getting a log overflow,
--	 * since we'll log basically the whole summary file at once.
--	 */
--	if (nrsumblocks > (mp->m_sb.sb_logblocks >> 1))
-+	/* Make sure the new fs size won't cause problems with the log. */
-+	error = xfs_growfs_check_rtgeom(mp, in->newblocks, in->extsize);
-+	if (error)
- 		goto out_unlock;
+ 	rtxlen = xfs_extlen_to_rtxlen(mp, XFS_MAX_BMBT_EXTLEN);
+-	rtbmp_blocks = xfs_rtbitmap_blockcount(mp, rtxlen);
++	rtbmp_blocks = xfs_rtbitmap_blockcount_len(mp, rtxlen);
+ 	return (rtbmp_blocks + 1) * num_ops;
+ }
  
- 	error = xfs_growfs_rtg(mp, in->newblocks, in->extsize);
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index 5b42e01a07ac8b..ababbf4068d600 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -67,8 +67,7 @@ xchk_setup_rtbitmap(
+ 	if (mp->m_sb.sb_rblocks) {
+ 		rtb->rextents = xfs_rtb_to_rtx(mp, mp->m_sb.sb_rblocks);
+ 		rtb->rextslog = xfs_compute_rextslog(rtb->rextents);
+-		rtb->rbmblocks = xfs_rtbitmap_blockcount(mp,
+-				mp->m_sb.sb_rextents);
++		rtb->rbmblocks = xfs_rtbitmap_blockcount(mp);
+ 	}
+ 
+ 	return 0;
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index 7c2b6add44e8c9..0a6b7902a04cbb 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -107,8 +107,7 @@ xchk_setup_rtsummary(
+ 		rts->rextents = xfs_rtb_to_rtx(mp, mp->m_sb.sb_rblocks);
+ 		rextslog = xfs_compute_rextslog(mp->m_sb.sb_rextents);
+ 		rts->rsumlevels = rextslog + 1;
+-		rts->rbmblocks = xfs_rtbitmap_blockcount(mp,
+-				mp->m_sb.sb_rextents);
++		rts->rbmblocks = xfs_rtbitmap_blockcount(mp);
+ 		rts->rsumblocks = xfs_rtsummary_blockcount(mp, rts->rsumlevels,
+ 				rts->rbmblocks);
+ 	}
+@@ -215,11 +214,9 @@ xchk_rtsum_compute(
+ {
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xfs_rtgroup	*rtg = sc->sr.rtg;
+-	unsigned long long	rtbmp_blocks;
+ 
+ 	/* If the bitmap size doesn't match the computed size, bail. */
+-	rtbmp_blocks = xfs_rtbitmap_blockcount(mp, mp->m_sb.sb_rextents);
+-	if (XFS_FSB_TO_B(mp, rtbmp_blocks) !=
++	if (XFS_FSB_TO_B(mp, xfs_rtbitmap_blockcount(mp)) !=
+ 	    rtg->rtg_inodes[XFS_RTGI_BITMAP]->i_disk_size)
+ 		return -EFSCORRUPTED;
+ 
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 785ff3e49295b5..858013d6f5187d 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -749,8 +749,7 @@ xfs_growfs_rt_alloc_fake_mount(
+ 	xfs_mount_sb_set_rextsize(nmp, &nmp->m_sb);
+ 	nmp->m_sb.sb_rblocks = rblocks;
+ 	nmp->m_sb.sb_rextents = xfs_rtb_to_rtx(nmp, nmp->m_sb.sb_rblocks);
+-	nmp->m_sb.sb_rbmblocks = xfs_rtbitmap_blockcount(nmp,
+-			nmp->m_sb.sb_rextents);
++	nmp->m_sb.sb_rbmblocks = xfs_rtbitmap_blockcount(nmp);
+ 	nmp->m_sb.sb_rextslog = xfs_compute_rextslog(nmp->m_sb.sb_rextents);
+ 	nmp->m_rsumlevels = nmp->m_sb.sb_rextslog + 1;
+ 	nmp->m_rsumblocks = xfs_rtsummary_blockcount(nmp, nmp->m_rsumlevels,
 
