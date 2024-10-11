@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D96021A00DF
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 17:13:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11B2638DF9;
+	Fri, 11 Oct 2024 18:19:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728666784; cv=none; b=p39lR8l3Ud96Bzr6OM3pOxY3BDU7WwHz8fu7G3YTCOQ2TuYzMTibqmwn/lhKszWvVShz3tnmkwmBkymkJv4wH/RlODUaS1m5i0i64NZ7YxLRcxNR5F0MZmxQmESLxaRkvx4euadjTCBGFYcQHognPoXTvHTFOdajURh/RfxxHBI=
+	t=1728670762; cv=none; b=n7ymQLH31Y7ph4Edej4PlB/OvSuSSwCQml6WK4jqqui9+5xHCWORlm4KiuIjPSCkBw9EcE+mLz62xDYHscysf6NUv8jePGZOy+IHa+ybkzNd7brxERQQf9gMko0e6tOgXtEvqYy/vuHy8rqT0D4AXNUqkORXNPqaPG4SonBbmA4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728666784; c=relaxed/simple;
-	bh=84UJpo00BunE/Rhb5VjBM2R82vWUvAlukcp0iBu/3KM=;
+	s=arc-20240116; t=1728670762; c=relaxed/simple;
+	bh=rasa6/SvZ4L4zkORf4p4Ln99RF1ZEJ7z1Z8/hhVND7I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E43hbMQVzQxVo+RYXbSkz4OyzTOAQo8kfwVpEA7OrC2CV7wbVX1rzqsRt+tN93NxWJ9KOWzDanNTgBLRhzVPdPEnQlBZSYhXKdooYgtlH6vJ/HZ6Bod/3NydBSVK/f2WDuwEDEjNfGgvjKi96Wl7xYxravvsAoLF816hFmsg368=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d1xhxfR7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BXIOfFJkMX6IRYR5nH5xFoU5vfYdZ/RHAFp4O9GHj7ZaI0+RkTZjg8SxCap99Q9+6jlOKYgWy8cUqHhQaAoIEKHfVsePLcbyyOkvHCtn/coV/KfRZHciFl7bXF1Nbjw3Ot0abvLJGhdK8NwVlfLQRRJz2Y5eMsYRwcwdDGPwO4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LPT3br+S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d1xhxfR7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59F81C4CEC3;
-	Fri, 11 Oct 2024 17:13:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LPT3br+S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FCC8C4CEC3;
+	Fri, 11 Oct 2024 18:19:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728666784;
-	bh=84UJpo00BunE/Rhb5VjBM2R82vWUvAlukcp0iBu/3KM=;
+	s=k20201202; t=1728670761;
+	bh=rasa6/SvZ4L4zkORf4p4Ln99RF1ZEJ7z1Z8/hhVND7I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=d1xhxfR7Lpw1cNC6ROYBxxLIzOoBHwgyo+aI/hLCmDtRqZGVtsBG1j0xEy7ZFiL1D
-	 +kXlN1GXW3U6fLE965nK0F9FMamYKsd3DV9iirtlM8eUsByveGbYkqVK53JJNENyaT
-	 qiNYq8OEOP4dt51mDucan1ZpsVGsDVrvY25qbaoIaWUvIU+NYns1Q5bymvx5Y+02Ef
-	 VR/2A9t5gL9dcwY3E2L12FnZ/OXbWD3YY2XmM2SzQY85cbY/k4Ztaco9O5wfmozTbt
-	 174l66AAq1xpbgN4/+DQVwoE0ZL3JImdzV9QQuZJzBHKVrILkmLc2ArAG0jRrpt+DO
-	 lj1ZvaTZqEPYw==
-Date: Fri, 11 Oct 2024 10:13:03 -0700
+	b=LPT3br+SYTWiYgh46FZnUPEYJ2UExs/zucAjG7DiqYts0rbVAR+3h9y3tMtSe6swQ
+	 VwOhyj0gUsjCDcKwJhBHwLz3fpB65hDtbR4VC9yrA9wbAJVU4IHanDSsDMCOFG1n8t
+	 dlKl2858mY0RsqJSukDovQsqljJiwbJ0OkSORpmEk7JkUoacayFInKKytsGwR8msS3
+	 rVKEh6EhwIcOIeqkp+PKwf7UebfbLgBVZWps9+WrQ5iY0lmriIjiryma66vxMzwWzE
+	 f8qa9SooA+ApQKaM9yOSQk6XdJp48HgkxctxZFXgMGCLokdeUC7htG96kP5A8hcGa+
+	 1ThsNFh1JcQPA==
+Date: Fri, 11 Oct 2024 11:19:20 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/7] xfs: don't update file system geometry through
- transaction deltas
-Message-ID: <20241011171303.GB21853@frogsfrogsfrogs>
-References: <20240930164211.2357358-1-hch@lst.de>
- <20240930164211.2357358-7-hch@lst.de>
- <ZwffQQuVx_CyVgLc@bfoster>
- <20241011075709.GC2749@lst.de>
- <Zwkv6G1ZMIdE5vs2@bfoster>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs/122: add tests for commitrange structures
+Message-ID: <20241011181920.GO21840@frogsfrogsfrogs>
+References: <172780126017.3586479.18209378224774919872.stgit@frogsfrogsfrogs>
+ <172780126049.3586479.7813790327650448381.stgit@frogsfrogsfrogs>
+ <ZvzeDhbIUPEHCP2D@infradead.org>
+ <20241002224700.GG21853@frogsfrogsfrogs>
+ <20241011062858.p5tewpiewwgzpzbo@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,83 +46,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zwkv6G1ZMIdE5vs2@bfoster>
+In-Reply-To: <20241011062858.p5tewpiewwgzpzbo@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Fri, Oct 11, 2024 at 10:02:16AM -0400, Brian Foster wrote:
-> On Fri, Oct 11, 2024 at 09:57:09AM +0200, Christoph Hellwig wrote:
-> > On Thu, Oct 10, 2024 at 10:05:53AM -0400, Brian Foster wrote:
-> > > Ok, so we don't want geometry changes transactions in the same CIL
-> > > checkpoint as alloc related transactions that might depend on the
-> > > geometry changes. That seems reasonable and on a first pass I have an
-> > > idea of what this is doing, but the description is kind of vague.
-> > > Obviously this fixes an issue on the recovery side (since I've tested
-> > > it), but it's not quite clear to me from the description and/or logic
-> > > changes how that issue manifests.
+On Fri, Oct 11, 2024 at 02:28:58PM +0800, Zorro Lang wrote:
+> On Wed, Oct 02, 2024 at 03:47:00PM -0700, Darrick J. Wong wrote:
+> > On Tue, Oct 01, 2024 at 10:45:50PM -0700, Christoph Hellwig wrote:
+> > > On Tue, Oct 01, 2024 at 09:49:27AM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Update this test to check the ioctl structure for XFS_IOC_COMMIT_RANGE.
 > > > 
-> > > Could you elaborate please? For example, is this some kind of race
-> > > situation between an allocation request and a growfs transaction, where
-> > > the former perhaps sees a newly added AG between the time the growfs
-> > > transaction commits (applying the sb deltas) and it actually commits to
-> > > the log due to being a sync transaction, thus allowing an alloc on a new
-> > > AG into the same checkpoint that adds the AG?
+> > > Meh.  Can we please not add more to xfs/122, as that's alway just
+> > > a pain?  We can just static_assert the size in xfsprogs (or the
+> > > xfstests code using it) instead of this mess.
 > > 
-> > This is based on the feedback by Dave on the previous version:
-> > 
-> > https://lore.kernel.org/linux-xfs/Zut51Ftv%2F46Oj386@dread.disaster.area/
-> > 
+> > Oh right, we had a plan to autotranslate the xfs/122 stuff to
+> > xfs_ondisk.h didn't we... I'll put that back on my list.
 > 
-> Ah, Ok. That all seems reasonably sane to me on a first pass, but I'm
-> not sure I'd go straight to this change given the situation...
+> Hi Darrick,
 > 
-> > Just doing the perag/in-core sb updates earlier fixes all the issues
-> > with my test case, so I'm not actually sure how to get more updates
-> > into the check checkpoint.  I'll try your exercisers if it could hit
-> > that.
-> > 
-> 
-> Ok, that explains things a bit. My observation is that the first 5
-> patches or so address the mount failure problem, but from there I'm not
-> reproducing much difference with or without the final patch.
+> Do you want to have this patch at first, or just wait for your
+> next version which does the "autotranslate"?
 
-Does this change to flush the log after committing the new sb fix the
-recovery problems on older kernels?  I /think/ that's the point of this
-patch.
-
->                                                              Either way,
-> I see aborts and splats all over the place, which implies at minimum
-> this isn't the only issue here.
-
-Ugh.  I've recently noticed the long soak logrecovery test vm have seen
-a slight tick up in failure rates -- random blocks that have clearly had
-garbage written to them such that recovery tries to read the block to
-recover a buffer log item and kaboom.  At this point it's unclear if
-that's a problem with xfs or somewhere else. :(
-
-> So given that 1. growfs recovery seems pretty much broken, 2. this
-> particular patch has no straightforward way to test that it fixes
-> something and at the same time doesn't break anything else, and 3. we do
-
-I'm curious, what might break?  Was that merely a general comment, or do
-you have something specific in mind?  (iows: do you see more string to
-pull? :))
-
-> have at least one fairly straightforward growfs/recovery test in the
-> works that reliably explodes, personally I'd suggest to split this work
-> off into separate series.
-> 
-> It seems reasonable enough to me to get patches 1-5 in asap once they're
-> fully cleaned up, and then leave the next two as part of a followon
-> series pending further investigation into these other issues. As part of
-> that I'd like to know whether the recovery test reproduces (or can be
-> made to reproduce) the issue this patch presumably fixes, but I'd also
-> settle for "the grow recovery test now passes reliably and this doesn't
-> regress it." But once again, just my .02.
-
-Yeah, it's too bad there's no good way to test recovery with older
-kernels either. :(
+Let's drop this for now, machine-converting xfs/122 to xfs_ondisk.h
+wasn't as hard as I thought it might be.  Would you be ok with merging
+the fiexchange.h patch and the fsstress funshare patch this week?
 
 --D
 
-> Brian
+> Thanks,
+> Zorro
+> 
+> > 
+> > --D
+> > 
 > 
 > 
