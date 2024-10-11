@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1127F8BE5
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:47:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D21A2F22
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:48:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728607672; cv=none; b=sQmy7KRf0j9Tinbir+f9DZdwq0+M5dkBY2mnpcYSmeX5u3h7e7M+ea6O8nJXfJ2NRy5y0pPiZ0JTuqtWWxv0qbEcqQqNvlAPIp0Dnq9kr/q3wLlLxolZI11fp0vviYjOFH0mTjxKi1F7NR6wPvMghl9rqlnL+vtwVo0C6f8e80Q=
+	t=1728607687; cv=none; b=OGUzyN7poIEt0jr8FR9t6bbDFATkJdPhu/cCngTvNe/6fUz6S2Sbrr2DftAildsLCJ79aq8/0P0C4g3G0HE5/THrq5pKgCFxs0RWi/39vvEqTz0kGtMV8KMo0/qkcGBONab9kuXgTf9Uvr6Ky0Diab/maOHktPFd40j0xvQUVD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728607672; c=relaxed/simple;
-	bh=Q+e7GTjjoED0ayIBn7HPL2GBoKyUHUbgSnKI6S/6+W8=;
+	s=arc-20240116; t=1728607687; c=relaxed/simple;
+	bh=L4MT07is5lU0vHYQ3f1HA7iVPk9ohj5bQRZckksiYPw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HR/FtuuIGKZfiXgb1r8AOGJpLc8ycse1L4fla9gPzShyY1Wb0KgeYMWETV+55l95gKRUxHVFX/vFdlpAfXwi+GEzaKgOgKAOdqKQCodzeI5v5/iNZXkzW5CUnmsF5z60lJGUCj9rWU4xrr2LYshd5eTv3iJDtgBddtZWCNymwe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C9iVy78h; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jcxeGvliY1D2B8Tod6BRTk5FlFtpL0QxAK+uLrVbSdTyRKU2sE/C4ODrg0r1rJpo33OEHzemf94AdNV2Xfy2RvJZsw3Tw9cHb/6gFMuxe9lvKn1d+hAweF2dNP033d7Hj0ECeoB/UN5HhnBlZgvzNPC7g6m0r6DcyBDwbQUuodw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QVXs7Aj+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C9iVy78h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D94A3C4CEC5;
-	Fri, 11 Oct 2024 00:47:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QVXs7Aj+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74FDEC4CEC5;
+	Fri, 11 Oct 2024 00:48:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728607671;
-	bh=Q+e7GTjjoED0ayIBn7HPL2GBoKyUHUbgSnKI6S/6+W8=;
+	s=k20201202; t=1728607687;
+	bh=L4MT07is5lU0vHYQ3f1HA7iVPk9ohj5bQRZckksiYPw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=C9iVy78h1MvCugAKWb3J9cTzUEkCfZs5HNqq6OgOFazBlHFAxx6sPI4JzADXh0S5X
-	 soYjJD1kWn//SQ9udzdmb3YuqtV3j2E6kP17djpM31roc0DjV5TaKj3GX6GcSY6fAP
-	 2XEr64XkiiWkc+88dfjkWD6pbJ3SynulDThl9AX3OxZf/ZPZY021Y23XI5C/5U0tCR
-	 68hwbtXf47Gys74UBbQuRzTX5jkYCunVRb0hGGMWN8fLfisbDsyKCPlY6ZuBXCt9OB
-	 7x4hlUUP57bvUSK9GFMil2oLQp0OmiaTlBWDIi6sFaopEGFuDzFr5assdaJFMrM8qq
-	 PCg6c+e/lbIAQ==
-Date: Thu, 10 Oct 2024 17:47:51 -0700
-Subject: [PATCH 14/16] xfs: add group based bno conversion helpers
+	b=QVXs7Aj+fBNW0iC2Belztl6qjbq13ZJclXY1DrZnjnJO20t0V+XxKGbPW5WN82DIy
+	 r+eXTxYhOHTmrMFezvmf5c3HW/EA1fV4dRAKvPr3jXZCwLcG9Yg9zV99n7xsT3HhAU
+	 EtMNLr6cXTvBs1H2obr9Q3E5mb41eSK11rKF6ardB2anFMV7K6sXsZ1kP17leCVhGR
+	 prBeoDr/8aVqwSOcimbRP/EY6Uc4nGZqBWIpu4eUJ2kFFxCNNN5B9rpFzjAHvptIRo
+	 B2qsljkbM2fqNgAD4pL2jGauD/B+MG1myQ9A8NyZLs1EwIobG6zIt/bsS6GjHEJqrf
+	 OvPXWUq3+ShOg==
+Date: Thu, 10 Oct 2024 17:48:07 -0700
+Subject: [PATCH 15/16] xfs: remove xfs_group_intent_hold and
+ xfs_group_intent_rele
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860641508.4176300.6000252513142489143.stgit@frogsfrogsfrogs>
+Message-ID: <172860641525.4176300.529169402041656435.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860641207.4176300.780787546464458623.stgit@frogsfrogsfrogs>
 References: <172860641207.4176300.780787546464458623.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,83 +47,75 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Add convenience helpers to convert block numbers based on the generic
-group.  This will allow writing code that doesn't care if it is used
-on AGs or the upcoming realtime groups.
+Each of them just has a single caller, so fold them.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_group.c |   35 +++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_group.h |    7 +++++++
- 2 files changed, 42 insertions(+)
+ fs/xfs/xfs_drain.c |   36 +++++++++---------------------------
+ 1 file changed, 9 insertions(+), 27 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_group.c b/fs/xfs/libxfs/xfs_group.c
-index 8f0ddf0d7131a1..07b96de47e2b56 100644
---- a/fs/xfs/libxfs/xfs_group.c
-+++ b/fs/xfs/libxfs/xfs_group.c
-@@ -12,6 +12,7 @@
- #include "xfs_trace.h"
- #include "xfs_extent_busy.h"
- #include "xfs_group.h"
-+#include "xfs_ag.h"
+diff --git a/fs/xfs/xfs_drain.c b/fs/xfs/xfs_drain.c
+index 3d234016c53547..b84109bf7cad51 100644
+--- a/fs/xfs/xfs_drain.c
++++ b/fs/xfs/xfs_drain.c
+@@ -94,31 +94,11 @@ static inline int xfs_defer_drain_wait(struct xfs_defer_drain *dr)
+ }
  
  /*
-  * Groups can have passive and active references.
-@@ -214,3 +215,37 @@ xfs_group_insert(
- #endif
- 	return error;
- }
-+
-+xfs_fsblock_t
-+xfs_gbno_to_fsb(
-+	struct xfs_group	*xg,
-+	xfs_agblock_t		gbno)
-+{
-+	return xfs_agbno_to_fsb(to_perag(xg), gbno);
-+}
-+
-+xfs_daddr_t
-+xfs_gbno_to_daddr(
-+	struct xfs_group	*xg,
-+	xfs_agblock_t		gbno)
-+{
-+	return xfs_agbno_to_daddr(to_perag(xg), gbno);
-+}
-+
-+uint32_t
-+xfs_fsb_to_gno(
-+	struct xfs_mount	*mp,
-+	xfs_fsblock_t		fsbno,
-+	enum xfs_group_type	type)
-+{
-+	return XFS_FSB_TO_AGNO(mp, fsbno);
-+}
-+
-+struct xfs_group *
-+xfs_group_get_by_fsb(
-+	struct xfs_mount	*mp,
-+	xfs_fsblock_t		fsbno,
-+	enum xfs_group_type	type)
-+{
-+	return xfs_group_get(mp, xfs_fsb_to_gno(mp, fsbno, type), type);
-+}
-diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
-index 2f685b04e1d0c9..93a6302e738246 100644
---- a/fs/xfs/libxfs/xfs_group.h
-+++ b/fs/xfs/libxfs/xfs_group.h
-@@ -72,4 +72,11 @@ int xfs_group_insert(struct xfs_mount *mp, struct xfs_group *xg,
- #define xfs_group_marked(_mp, _type, _mark) \
- 	xa_marked(&(_mp)->m_groups[(_type)].xa, (_mark))
+- * Declare an intent to update group metadata.  Other threads that need
+- * exclusive access can decide to back off if they see declared intentions.
+- */
+-static void
+-xfs_group_intent_hold(
+-	struct xfs_group	*xg)
+-{
+-	trace_xfs_group_intent_hold(xg, __return_address);
+-	xfs_defer_drain_grab(&xg->xg_intents_drain);
+-}
+-
+-/*
+- * Release our intent to update this groups metadata.
+- */
+-static void
+-xfs_group_intent_rele(
+-	struct xfs_group	*xg)
+-{
+-	trace_xfs_group_intent_rele(xg, __return_address);
+-	xfs_defer_drain_rele(&xg->xg_intents_drain);
+-}
+-
+-/*
+- * Get a passive reference to the AG that contains a fsbno and declare an intent
+- * to update its metadata.
++ * Get a passive reference to the AG that contains a fsbno and declare an
++ * intent to update its metadata.
++ *
++ * Other threads that need exclusive access can decide to back off if they see
++ * declared intentions.
+  */
+ struct xfs_perag *
+ xfs_perag_intent_get(
+@@ -131,7 +111,8 @@ xfs_perag_intent_get(
+ 	if (!pag)
+ 		return NULL;
  
-+xfs_fsblock_t xfs_gbno_to_fsb(struct xfs_group *xg, xfs_agblock_t gbno);
-+xfs_daddr_t xfs_gbno_to_daddr(struct xfs_group *xg, xfs_agblock_t gbno);
-+uint32_t xfs_fsb_to_gno(struct xfs_mount *mp, xfs_fsblock_t fsbno,
-+		enum xfs_group_type type);
-+struct xfs_group *xfs_group_get_by_fsb(struct xfs_mount *mp,
-+		xfs_fsblock_t fsbno, enum xfs_group_type type);
-+
- #endif /* __LIBXFS_GROUP_H */
+-	xfs_group_intent_hold(&pag->pag_group);
++	trace_xfs_group_intent_hold(&pag->pag_group, __return_address);
++	xfs_defer_drain_grab(&pag->pag_group.xg_intents_drain);
+ 	return pag;
+ }
+ 
+@@ -143,7 +124,8 @@ void
+ xfs_perag_intent_put(
+ 	struct xfs_perag	*pag)
+ {
+-	xfs_group_intent_rele(&pag->pag_group);
++	trace_xfs_group_intent_rele(&pag->pag_group, __return_address);
++	xfs_defer_drain_rele(&pag->pag_group.xg_intents_drain);
+ 	xfs_perag_put(pag);
+ }
+ 
 
