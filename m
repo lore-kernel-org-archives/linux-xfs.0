@@ -1,30 +1,43 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5553120A5EC
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 07:59:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DEDC20A5D3;
+	Fri, 11 Oct 2024 08:50:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728633549; cv=none; b=hEophODNa2uVzzwiLF3VXYECi1e1jmavkFg0ojAfIPeS9dfJep5hGyHnnWPKfLnAPpffoCSjaorKEinjKMZwgyQvUz83L+xIYIaitTCVamuY/WI+kVkmt1n5/ZxvjJvy7c5MrH6WRnLiqEI/WqBjk2IYsZhU+TDFG2UkDxjnYQs=
+	t=1728636654; cv=none; b=cXAX8Bkrz9sGY/O5NlT1pA406MadPCuDVNmdlnoJZaZZGvr9eWLJlnwWoky04UY5BMgdVVuglO2bU+QinhmyFUYi9cUmzW6sOgS4+YuIibtPKljHSCsYQ0/WyLzZV6l1nkEm37OZ3oo93U5xwNrKcURetmu962zEDyNMGVWZA/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728633549; c=relaxed/simple;
-	bh=XoxAgkoZo7cq+0y//UgpNTUoLxBIRe13hWdfqygg3bY=;
+	s=arc-20240116; t=1728636654; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T3o+ZHJgWqOv7CADHr9KmzrNFljxdTDw8c/yWAZrqw9h4cUTxUfcjHkAtEvuaTGxGpdhuvt3PJH0T0e+R4NPwLJsFoCTO7RBU0qjmCc2OWyPmIRxtfaO5v3fy0CCuyWmsJRalKwAoJB7sw5beUp+eEUQvB6+YyLhlP/8lx85Txg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id ABC11227AB3; Fri, 11 Oct 2024 09:59:04 +0200 (CEST)
-Date: Fri, 11 Oct 2024 09:59:03 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/7] xfs: don't update file system geometry through
- transaction deltas
-Message-ID: <20241011075903.GD2749@lst.de>
-References: <20240930164211.2357358-1-hch@lst.de> <20240930164211.2357358-7-hch@lst.de> <20241010190147.GU21853@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=S6t27KSsnrybyJixSGEzIWknPItbFYhgb1tf0mBWTv+jDgSHRiDTkqtA5jbrQI0eVROZg/BmFczAMfZ6fCfuH3AR8xl7O0A1g+4LtvAb8gHz3K88wkVTVUDZgd6HMdyl0hyVwfFOcnNZ7gq0cICFosjqn2EPaYBvjBUh+xMjkO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LIGxc7DE; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LIGxc7DE"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=LIGxc7DEbWTRPIy7xRgUuR2FfS
+	/PhyQs77EAPi2l5TSjvGFlKlf7AjKSXnAsUG1YY1Lk2BUddJ5VfSKJq40SmfyDuHJCEBW1m2J9B7a
+	iWtnATttRtFChAIj5mVzaxG3iIgqedIF3V9sdX4we7h1ZXZQvkyd5hnaYVLrvCWVc/neFPdWVRSaR
+	yqP6Nl52eOxAtPvXQL1K0UjtBDyKAiX1jlh2WwMNKaTRQ5sNJfcRTzd4nnjViJeQKQY/Yu0gyKZxa
+	GmT2iZVXeZ9oSGJUfH+NoyiZHBRuHKo58OdrDK1Cz75EJ/8ff/a/ALFFKYS2xTpQrAHJl4pgtthIP
+	LgkcOUMA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1szBMK-0000000Fjf8-0GWf;
+	Fri, 11 Oct 2024 08:50:52 +0000
+Date: Fri, 11 Oct 2024 01:50:52 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Chi Zhiling <chizhiling@163.com>
+Cc: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>
+Subject: Re: [PATCH v2] xfs_logprint: Fix super block buffer interpretation
+ issue
+Message-ID: <Zwjm7KgmRHym6kbv@infradead.org>
+References: <20241011075253.2369053-1-chizhiling@163.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,30 +46,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241010190147.GU21853@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20241011075253.2369053-1-chizhiling@163.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Oct 10, 2024 at 12:01:47PM -0700, Darrick J. Wong wrote:
-> What if instead this took the form of a new defer_ops type?  The
-> xfs_prepare_sb_update function would allocate a tracking object where
-> we'd pin the sb buffer and record which fields get changed, as well as
-> the new values.  xfs_commit_sb_update then xfs_defer_add()s it to the
-> transaction and commits it.  (The ->create_intent function would return
-> NULL so that no log item is created.)
-> 
-> The ->finish_item function would then bhold the sb buffer, update the
-> ondisk super like how xfs_commit_sb_update does in this patch, set
-> XFS_SB_TRANS_SYNC, and return -EAGAIN.  The defer ops would commit and
-> flush that transaction and call ->finish_item again, at which point it
-> would recompute the incore/cached geometry as necessary, bwrite the sb
-> buffer, and release it.
-> 
-> The downside is that it's more complexity, but the upside is that the
-> geometry changes are contained in one place instead of being scattered
-> around, and the incore changes only happen if the synchronous
-> transaction actually gets written to disk.  IOWs, the end result is the
-> same as what you propose here, but structured differently.  
+Looks good:
 
-That sounds overkill at first, but if we want to move all sb updates
-to that model more strutured infrastructure might be very useful.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
