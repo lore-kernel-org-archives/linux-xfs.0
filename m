@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F03D4A06
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:54:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3C13D2FB
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:54:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728608048; cv=none; b=hYHg34WF1tKdJvJEB9vXxc+G9IEH/IzXuAykukRXR+Rdjy9JmkT4B3r/fk/s3L11vr5SnrKU3G5h4YAfOCnKWiDvgfD3mGwmIqfXusegecwNvs4sfcvUdVFgtuvsH+1QtuUTrSE42TuxVRyAF3CY48uxPrBEFWRcr7y1HWpyX74=
+	t=1728608063; cv=none; b=uECrA03Rub/L/M8Gr7MMz9jSNCdGG0lbPl6IBaSX3V8iKYV3A1bPR5pC77hTlX4JfiFNa9dxYWVtwwM8pat+D+yjhqaQMf+FfviNqswtvpfDi+ljmw9sgjRJLTSlBRhmEUzRtcONtp9PJvjlbKkmCbyXnl8LAus7GfjNlmhjlZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728608048; c=relaxed/simple;
-	bh=lbURMy/FbWkRPt8jnTgH29kZ63UJQ5lcPDVQ7b9f3Rc=;
+	s=arc-20240116; t=1728608063; c=relaxed/simple;
+	bh=Vs2fnJzrT2GSr4nFGbhqExuczZRFLjTwzR20GMbQW2Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YDF2MW5hrkUCJ8ZWkNbOc2xbtNS5kF2bVHqRoHPr3qXiFYyTDEApu92UXrFeWtT5yMV8iETS9kj2Gu0nEhhb+UKzqn+V8tYPy7QZ+ew7S8CUAxMXnQy9JAimiGohcnpUw5zvr75rau5zyHm3u81qoCyqpcFb6mXU+T0+PTdK00o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i6vrMA9y; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=LeP+553SFX7oHS+MwqxrGq2As7U8U+xtJtUL2R19+5eDoMSao+g3TbwyXty54//NnTBbdOmDf9kjBgRvEjdeJHYx0M9D8tUh2lx+UZFvH7VDu2MJi7CS2NApkmJ3jJ1BWIk8fjB7b6j/QHjNna0xtk92IKFjdwOnjz73JsrrtCQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NZnAOJAp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i6vrMA9y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1231AC4CEC5;
-	Fri, 11 Oct 2024 00:54:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NZnAOJAp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E4B7C4CEC5;
+	Fri, 11 Oct 2024 00:54:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728608048;
-	bh=lbURMy/FbWkRPt8jnTgH29kZ63UJQ5lcPDVQ7b9f3Rc=;
+	s=k20201202; t=1728608063;
+	bh=Vs2fnJzrT2GSr4nFGbhqExuczZRFLjTwzR20GMbQW2Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=i6vrMA9yCg2E6YRNsUvxZm+2X0abK1r2dYhYwH0kvJN62VwMyp5Dvp9PSWQNzphoa
-	 8KWPFVE8C8Ff3qaotNQzDniSEt1YbXnGmym/QL76gtaLm63aIGimBYxVZggF66J8OX
-	 pBF5lQTKIqrJ7oDX5ya09T5bPLypZFQtRBeZ2s4ugFcEkKeAaFBxeMpRGAr8VmsIE3
-	 9bRGv4qO1WIGhTIVdL/geE+S+Q7qi9WS40g8f+UTC5bcjSqMEV/FxAm7h9PBQOktt2
-	 5WvxLk7Qtn3/lgBzXFC/Jmj8zOjTvmw/gnTOojyTJGZtluJYtw5tDMgQn4bPDDs9SP
-	 Squ6cCTDCEKJA==
-Date: Thu, 10 Oct 2024 17:54:07 -0700
-Subject: [PATCH 22/28] xfs: fix di_metatype field of inodes that won't load
+	b=NZnAOJApi7PAdPwPx7f/74fD9cIivI2skFcBrM4z+lR+q6y7+eLRGkZezJGAOSUcz
+	 Ceq5zSL4o9FlSRMxkWsPSkYydt66aifYEYk1TPaQ3QKfoFKHcKDFV4pmQwBBQBWsPP
+	 jZiolOHr9Gv18vytx8EkLquSfr12AQUF7Ffh+mqXh5OM0RcMPnGjG0CBXRIxUpiaBq
+	 ANu5+/cHj8rt7ekdUHwx2yDMgpb8R0C41UMF/uiyhqWowYn2A7CqqNxozCVMT4YY44
+	 1i3RUFWlsk2A6m4AiyJY60B5FGVc27jJ/kXjwgYZa+rrty/nmYLdMSOKzb/7HOpSB2
+	 eDoqogHaT8jiw==
+Date: Thu, 10 Oct 2024 17:54:23 -0700
+Subject: [PATCH 23/28] xfs: scrub metadata directories
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860642396.4176876.17543625218590151849.stgit@frogsfrogsfrogs>
+Message-ID: <172860642413.4176876.614167028512444473.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860641935.4176876.5699259080908526243.stgit@frogsfrogsfrogs>
 References: <172860641935.4176876.5699259080908526243.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,54 +46,199 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that the di_metatype field is at least set plausibly so that
-later scrubbers could set the real type.
+Teach online scrub about the metadata directory tree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/inode.c        |   10 +++++++---
- fs/xfs/scrub/inode_repair.c |    6 +++++-
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/dir.c        |    8 ++++++++
+ fs/xfs/scrub/dir_repair.c |    6 ++++++
+ fs/xfs/scrub/dirtree.c    |   17 ++++++++++++++---
+ fs/xfs/scrub/findparent.c |   13 +++++++++++++
+ fs/xfs/scrub/parent.c     |   14 ++++++++++++++
+ fs/xfs/scrub/trace.h      |    1 +
+ 6 files changed, 56 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 45222552a51ccb..07987a6569c43a 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -443,9 +443,13 @@ xchk_dinode(
- 		break;
- 	case 2:
- 	case 3:
--		if (!(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)) &&
--		    dip->di_onlink != 0)
--			xchk_ino_set_corrupt(sc, ino);
-+		if (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)) {
-+			if (be16_to_cpu(dip->di_metatype) >= XFS_METAFILE_MAX)
-+				xchk_ino_set_corrupt(sc, ino);
-+		} else {
-+			if (dip->di_onlink != 0)
-+				xchk_ino_set_corrupt(sc, ino);
-+		}
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 6b719c8885ef75..c877bde71e6280 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -100,6 +100,14 @@ xchk_dir_check_ftype(
  
- 		if (dip->di_mode == 0 && sc->ip)
- 			xchk_ino_set_corrupt(sc, ino);
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 7700fcd8170448..b0808b54a51285 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -526,8 +526,12 @@ xrep_dinode_nlinks(
- 		return;
- 	}
- 
--	if (!(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)))
-+	if (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)) {
-+		if (be16_to_cpu(dip->di_metatype) >= XFS_METAFILE_MAX)
-+			dip->di_metatype = cpu_to_be16(XFS_METAFILE_UNKNOWN);
-+	} else {
- 		dip->di_onlink = 0;
-+	}
+ 	if (xfs_mode_to_ftype(VFS_I(ip)->i_mode) != ftype)
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
++
++	/*
++	 * Metadata and regular inodes cannot cross trees.  This property
++	 * cannot change without a full inode free and realloc cycle, so it's
++	 * safe to check this without holding locks.
++	 */
++	if (xfs_is_metadir_inode(ip) != xfs_is_metadir_inode(sc->ip))
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
  }
  
- /* Fix any conflicting flags that the verifiers complain about. */
+ /*
+diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+index 0c2cd42b3110f2..2456cf1cb74411 100644
+--- a/fs/xfs/scrub/dir_repair.c
++++ b/fs/xfs/scrub/dir_repair.c
+@@ -415,6 +415,12 @@ xrep_dir_salvage_entry(
+ 	if (error)
+ 		return 0;
+ 
++	/* Don't mix metadata and regular directory trees. */
++	if (xfs_is_metadir_inode(ip) != xfs_is_metadir_inode(rd->sc->ip)) {
++		xchk_irele(sc, ip);
++		return 0;
++	}
++
+ 	xname.type = xfs_mode_to_ftype(VFS_I(ip)->i_mode);
+ 	xchk_irele(sc, ip);
+ 
+diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
+index e43840733de946..3a9cdf8738b6db 100644
+--- a/fs/xfs/scrub/dirtree.c
++++ b/fs/xfs/scrub/dirtree.c
+@@ -362,7 +362,8 @@ xchk_dirpath_set_outcome(
+ STATIC int
+ xchk_dirpath_step_up(
+ 	struct xchk_dirtree	*dl,
+-	struct xchk_dirpath	*path)
++	struct xchk_dirpath	*path,
++	bool			is_metadir)
+ {
+ 	struct xfs_scrub	*sc = dl->sc;
+ 	struct xfs_inode	*dp;
+@@ -435,6 +436,14 @@ xchk_dirpath_step_up(
+ 		goto out_scanlock;
+ 	}
+ 
++	/* Parent must be in the same directory tree. */
++	if (is_metadir != xfs_is_metadir_inode(dp)) {
++		trace_xchk_dirpath_crosses_tree(dl->sc, dp, path->path_nr,
++				path->nr_steps, &dl->xname, &dl->pptr_rec);
++		error = -EFSCORRUPTED;
++		goto out_scanlock;
++	}
++
+ 	/*
+ 	 * If the extended attributes look as though they has been zapped by
+ 	 * the inode record repair code, we cannot scan for parent pointers.
+@@ -508,6 +517,7 @@ xchk_dirpath_walk_upwards(
+ 	struct xchk_dirpath	*path)
+ {
+ 	struct xfs_scrub	*sc = dl->sc;
++	bool			is_metadir;
+ 	int			error;
+ 
+ 	ASSERT(sc->ilock_flags & XFS_ILOCK_EXCL);
+@@ -538,6 +548,7 @@ xchk_dirpath_walk_upwards(
+ 	 * ILOCK state is no longer tracked in the scrub context.  Hence we
+ 	 * must drop @sc->ip's ILOCK during the walk.
+ 	 */
++	is_metadir = xfs_is_metadir_inode(sc->ip);
+ 	mutex_unlock(&dl->lock);
+ 	xchk_iunlock(sc, XFS_ILOCK_EXCL);
+ 
+@@ -547,7 +558,7 @@ xchk_dirpath_walk_upwards(
+ 	 * If we see any kind of error here (including corruptions), the parent
+ 	 * pointer of @sc->ip is corrupt.  Stop the whole scan.
+ 	 */
+-	error = xchk_dirpath_step_up(dl, path);
++	error = xchk_dirpath_step_up(dl, path, is_metadir);
+ 	if (error) {
+ 		xchk_ilock(sc, XFS_ILOCK_EXCL);
+ 		mutex_lock(&dl->lock);
+@@ -560,7 +571,7 @@ xchk_dirpath_walk_upwards(
+ 	 * *somewhere* in the path, but we don't need to stop scanning.
+ 	 */
+ 	while (!error && path->outcome == XCHK_DIRPATH_SCANNING)
+-		error = xchk_dirpath_step_up(dl, path);
++		error = xchk_dirpath_step_up(dl, path, is_metadir);
+ 
+ 	/* Retake the locks we had, mark paths, etc. */
+ 	xchk_ilock(sc, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/scrub/findparent.c b/fs/xfs/scrub/findparent.c
+index 153d185190d8ad..84487072b6dd6f 100644
+--- a/fs/xfs/scrub/findparent.c
++++ b/fs/xfs/scrub/findparent.c
+@@ -172,6 +172,10 @@ xrep_findparent_walk_directory(
+ 	 */
+ 	lock_mode = xfs_ilock_data_map_shared(dp);
+ 
++	/* Don't mix metadata and regular directory trees. */
++	if (xfs_is_metadir_inode(dp) != xfs_is_metadir_inode(sc->ip))
++		goto out_unlock;
++
+ 	/*
+ 	 * If this directory is known to be sick, we cannot scan it reliably
+ 	 * and must abort.
+@@ -368,6 +372,12 @@ xrep_findparent_confirm(
+ 		return 0;
+ 	}
+ 
++	/* The metadata root directory always points to itself. */
++	if (sc->ip == sc->mp->m_metadirip) {
++		*parent_ino = sc->mp->m_sb.sb_metadirino;
++		return 0;
++	}
++
+ 	/* Unlinked dirs can point anywhere; point them up to the root dir. */
+ 	if (VFS_I(sc->ip)->i_nlink == 0) {
+ 		*parent_ino = xchk_inode_rootdir_inum(sc->ip);
+@@ -415,6 +425,9 @@ xrep_findparent_self_reference(
+ 	if (sc->ip->i_ino == sc->mp->m_sb.sb_rootino)
+ 		return sc->mp->m_sb.sb_rootino;
+ 
++	if (sc->ip->i_ino == sc->mp->m_sb.sb_metadirino)
++		return sc->mp->m_sb.sb_metadirino;
++
+ 	if (VFS_I(sc->ip)->i_nlink == 0)
+ 		return xchk_inode_rootdir_inum(sc->ip);
+ 
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index d8ea393f505970..3b692c4acc1e6f 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -132,6 +132,14 @@ xchk_parent_validate(
+ 		return 0;
+ 	}
+ 
++	/* Is this the metadata root dir?  Then '..' must point to itself. */
++	if (sc->ip == mp->m_metadirip) {
++		if (sc->ip->i_ino != mp->m_sb.sb_metadirino ||
++		    sc->ip->i_ino != parent_ino)
++			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
++		return 0;
++	}
++
+ 	/* '..' must not point to ourselves. */
+ 	if (sc->ip->i_ino == parent_ino) {
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+@@ -185,6 +193,12 @@ xchk_parent_validate(
+ 		goto out_unlock;
+ 	}
+ 
++	/* Metadata and regular inodes cannot cross trees. */
++	if (xfs_is_metadir_inode(dp) != xfs_is_metadir_inode(sc->ip)) {
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
++		goto out_unlock;
++	}
++
+ 	/* Look for a directory entry in the parent pointing to the child. */
+ 	error = xchk_dir_walk(sc, dp, xchk_parent_actor, &spc);
+ 	if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 58cc61f2ed5372..bc246d86a5c89f 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -1753,6 +1753,7 @@ DEFINE_XCHK_DIRPATH_EVENT(xchk_dirpath_badgen);
+ DEFINE_XCHK_DIRPATH_EVENT(xchk_dirpath_nondir_parent);
+ DEFINE_XCHK_DIRPATH_EVENT(xchk_dirpath_unlinked_parent);
+ DEFINE_XCHK_DIRPATH_EVENT(xchk_dirpath_found_next_step);
++DEFINE_XCHK_DIRPATH_EVENT(xchk_dirpath_crosses_tree);
+ 
+ TRACE_DEFINE_ENUM(XCHK_DIRPATH_SCANNING);
+ TRACE_DEFINE_ENUM(XCHK_DIRPATH_DELETE);
 
