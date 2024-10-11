@@ -1,197 +1,116 @@
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2086.outbound.protection.outlook.com [40.107.220.86])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 257922107;
-	Fri, 11 Oct 2024 00:21:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.220.86
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728606067; cv=fail; b=h5yMUvICjyytJa+R/FfasynGNvtUx/R0kn73l/cJDp3S+sAq3jnNNws/Fk86QjeqxWsSKEzL/Q6KtkClDdDwbDKnDKfa9DQv/mu1yRmWvy67l7P/yY+ExP5v0rEMdzT2vuyHhtTsPCchMaQT11GLCSRxAdp94DCg+koRuLYBbhI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728606067; c=relaxed/simple;
-	bh=UhlJOORSiePNaja/tfFLj699ZA92Y24ApLC7jQfIJOM=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 Content-Type:MIME-Version; b=ctug/KbKXqIXOEUI+z9Pdj4znX5GsbEIjEWVr3esQruuobxl3X3PW4dA/5G28fFuK27VMzWmFZWD2DDOUKs1kSsD9TJ3XaqgBVhc3unXpQv8zpNv131fk8QeiHnAlHKoLVbVwWWMNzpcCy5zc9bL9n6DaqNpadQT++MGf/my4KY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Lxcv5cg6; arc=fail smtp.client-ip=40.107.220.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D71E198A0C;
+	Fri, 11 Oct 2024 00:24:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1728606243; cv=none; b=YJhPgksOf0cSNH1nFew+i8vOPgYZW40y3ubivdGwOhhg7wVMjpAcN9R0pGx9riw0R+JnfunJMcPEwgzc1pmJu1+xBq7JsETlg7lo8frynohZQC+aHWW9UXfSnT4laLDsYbe5MbxxONeNtaheMUK3HB97bgGizuLa3w4RL0USGSg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1728606243; c=relaxed/simple;
+	bh=DELmYecsq1E9KWWDDj9O7O0jbF4sqTL0kvNA5fibT+c=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=kD+1JSzbceeEGKGv9f4xCN3XXT62NztPZbA5c+xAeNqs0zWnyhvR1QaJySQ/7h4BCAc8sdrBIyAhXtemHKYpEIfIMWqVbttGJOUmlbrLhjnFejv5wAq0wrhFdB/1BwURFmPK4dscye0H0h/kOzabeg+YK8nz/hjMNItwoAGVuPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HFW+WI1s; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Lxcv5cg6"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XasFqBX8WysBi/Y07/QLUk02TKPgSVzrjkisYJo5Mo2dchJtuJzsaLkOWHSo/C3K1yjJktjbUdqo7z9Y9xSLbiMpUVIoMT4mfNSkf/P7tQmSWwHXOINE4bRCd1uvY8/Gw70S8uLFWaUG/TPQCOA2OjbU0kNWUyfsMikgCE9hh4J5BW1+s0YPzwfT0OW9rW7s0wdjNq/wW5zT152OQsZiITD6WURF5ZJ5ef2UHotImiCtVX6MIw+vCNZIuMlASz+pURE8owyjxrrIl5QwanDVXH7eHS/bbYxh4lnom8lUX4K7/m8/QoFIreGt5Ej6rVqS7eekXlvCJG39Sh4cBDuKmw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pDe4Gg0Ncrhhdu95WT6ZItmrm5Cnmkgs4KZzgV8WFQY=;
- b=Df71QhfDcMlLYGSimOao8P45MRFQTJttsajMuUj+rVzyCcVrEbt2s0Y2RXput/RdnLS0+5KeNnvtuWv/zJMShg9xHT+CQfyBWMywptcfOoiWJPtbA25ywvhakfdYtOomnjqWGgfuv8yi8NixcWQBhXVy/xQ08sGMwHWgjZvqVYgkV431/tuvbvL1INe3ueiuh0QM2TlMHUWm4ZT3+LW30m8xWIgflABE35SxE6/xR/OUSPDZy7cW9xNzw8ISzhNcP9PCI4xzAjVSUxkZGcNC1vh7kaq7It1lsB7Hp+8Hc8YBSFHAscZaeQtyJJP89QZU9xfBYKQ3ZRH1Gsy2e9ZlFg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pDe4Gg0Ncrhhdu95WT6ZItmrm5Cnmkgs4KZzgV8WFQY=;
- b=Lxcv5cg6Qw1FfahyZ97zVDm978KO0DtPRdqjCjceFFgpFImoqgkTGr2Y2BxeDd8Gu7vQJwrrGP/FUdrQTXhQBQLOrlQ/yOMqQ3cVubkDvobPYHPfouPS3/4FVCvC5Wd4rywVbwc/CZZPOHrOemN4KrhUwQVpBFhEVdeX3N3TFgcKooQHokYVv2H02DTI600LPmHF1mPLgK1E/YPCa02651ELtlvEE2fQUCqAFkYNV3fZ4aOxUTKTfDY97rnkEPK9afEak0DcKYDEPeaUJaO3Uipk1N1DbXWgSGcXAoJzDS9+s1w2dZSBqVLT4xqn0i72gxmtttT/NejzvBYpZ/GZgQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
- SJ0PR12MB6829.namprd12.prod.outlook.com (2603:10b6:a03:47b::8) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8048.16; Fri, 11 Oct 2024 00:21:03 +0000
-Received: from DS0PR12MB7726.namprd12.prod.outlook.com
- ([fe80::953f:2f80:90c5:67fe]) by DS0PR12MB7726.namprd12.prod.outlook.com
- ([fe80::953f:2f80:90c5:67fe%3]) with mapi id 15.20.8048.017; Fri, 11 Oct 2024
- 00:21:03 +0000
-References: <cover.9f0e45d52f5cff58807831b6b867084d0b14b61c.1725941415.git-series.apopple@nvidia.com>
- <4f8326d9d9e81f1cb893c2bd6f17878b138cf93d.1725941415.git-series.apopple@nvidia.com>
- <6f3402ae-01ad-4764-8941-f88bc77f5227@deltatee.com>
-User-agent: mu4e 1.10.8; emacs 29.1
-From: Alistair Popple <apopple@nvidia.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: dan.j.williams@intel.com, linux-mm@kvack.org, vishal.l.verma@intel.com,
- dave.jiang@intel.com, bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca,
- catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au,
- npiggin@gmail.com, dave.hansen@linux.intel.com, ira.weiny@intel.com,
- willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
- linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
- nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
- david@fromorbit.com
-Subject: Re: [PATCH 02/12] pci/p2pdma: Don't initialise page refcount to one
-Date: Fri, 11 Oct 2024 11:20:03 +1100
-In-reply-to: <6f3402ae-01ad-4764-8941-f88bc77f5227@deltatee.com>
-Message-ID: <87ttdjxzf9.fsf@nvdebian.thelocal>
-Content-Type: text/plain
-X-ClientProxiedBy: SY5PR01CA0084.ausprd01.prod.outlook.com
- (2603:10c6:10:1f5::14) To DS0PR12MB7726.namprd12.prod.outlook.com
- (2603:10b6:8:130::6)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HFW+WI1s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A0A3C4CEC5;
+	Fri, 11 Oct 2024 00:24:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728606243;
+	bh=DELmYecsq1E9KWWDDj9O7O0jbF4sqTL0kvNA5fibT+c=;
+	h=Date:From:To:Cc:Subject:From;
+	b=HFW+WI1sp28+gXi6j6csp6ppm/2gSdpguUZuLWLLbptaiOBAW6zMByge2sGfw0UrY
+	 PHOEyqnyaC45OfA5XxcoIV9VFRzS17OdXUN9adun56k/zQHzvqDkZapg3sSj2qnZDN
+	 VipQZgZDumhOPbhU0VPSl4OmaTZO+U8aM8lcS62G01bVFoQlUbM7HeEU2d4tfDqrw+
+	 VRHpHyEGXZ7RhA/UbPE67yakxydnXfZkdLgjcmgbQsSTDHQ1RcVcs6tXAEhn3CrFwP
+	 +vjTmjh0HwjpQlxZ81a7d19pTVNuVU3Ya2eWjefhXiXMBbZFlTVSDBkJ6RE5hBJW4V
+	 JNVbP7lFa1+hg==
+Date: Thu, 10 Oct 2024 17:24:02 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: [PATCHBOMB 6.13] xfs: metadata directories and realtime groups
+Message-ID: <20241011002402.GB21877@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|SJ0PR12MB6829:EE_
-X-MS-Office365-Filtering-Correlation-Id: c91e47eb-77ab-4ac0-7062-08dce98a9732
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?o+4UJ73iqY5GCP1+7egAxS3C14Jrwhpfx7towZ47gP/FTrfZFvdkMXRrf7w4?=
- =?us-ascii?Q?Q2Z+N+RqwrE1HEUrDhWk0wb/Yx3I4n7kszFIKcEyHc3Jq00m1Kngquzqqmsl?=
- =?us-ascii?Q?FqWqbOrYtA4GymeOqqSEPeFKwa223eY55iROTdP8S5TTXCVdILQBUDrNWU1z?=
- =?us-ascii?Q?gCYmWWKmZIMmyhhoiBLkO9APlXJLtgkeczdZvFnnnzQ8glsIob4xVRY6aOLi?=
- =?us-ascii?Q?DqCnKDs3tpp96Nh8VjlFfIwR7grnxjuWhvaVBVsQdcvSi78JnBpxL4ejrdfD?=
- =?us-ascii?Q?krrGtQC2mZ2K25Flu8sGwVAa/ZwfHQfmBshf2vxYVhn3055Xa8bMXmYJ1/DI?=
- =?us-ascii?Q?6dBTUvzXarDerrmgRSHOrjU2PzWVbOUCx8/cnX7lZ7a3m0LQAcs7CsPObNcF?=
- =?us-ascii?Q?0fOUbE1vztWFOP8P0NEjh0CwJ75Zfyt76KvdImVjoJyYT8py2YLR2dNdRd4R?=
- =?us-ascii?Q?fAUl6DcEZO61BTRiSEXxqslhgyFbFEWUieQlOqE2ZW+HHAo3FZnlP1s8E1cx?=
- =?us-ascii?Q?XfvIqVlJ5/RvXRM8g5QByNaoTWXy9mpC2btPU3lh4lsYgei/itavnDRJ8WH/?=
- =?us-ascii?Q?Ce20EgTBYZRcDPghAw49gx6ImcYdUlFb/5YnD782zEAefr+GAZCdWhVU/ZdS?=
- =?us-ascii?Q?G09tULESRQnkmA4YRV1xbJJgDRfvc0muaZdQaQKMnCcAU9ehQUyZWDHi4Zat?=
- =?us-ascii?Q?0IlGGv4Ejf5D9CTylyHjfMEp3YDEXvpex7YctMwI52awZTtspDuVkKPQ8zIr?=
- =?us-ascii?Q?f3XuC4iLTSpz9s3HDNx9iVkVoTrIG6g324eJIl3xnnMSfEgme1/QTxo4gZMI?=
- =?us-ascii?Q?8+J1qPbN4/zwyOFJhEyVUypvGIEK+cOBQLc8caIuLqCPwz63sH5xhmrDo2fF?=
- =?us-ascii?Q?VDZ9eIsX1+Afw3hg6JloRm8GEnhcd2GM+Z1ix+GOb8bLsH5Y1ApZ48qoIoTQ?=
- =?us-ascii?Q?GnAYa/A7VqHht8v3TbpN4p4AAFBpT4KJfbvu6At+NjXkf5GvgBmYlyI4O2tC?=
- =?us-ascii?Q?qsf0U/K8qmPsQo18x+phTFvt5tB+6nwg389CgSwYWNrBeuVcErEtLdNMECkL?=
- =?us-ascii?Q?2yS0MguThCSzUodGEZ7Wvdmu0r0mdhuLaAhNqPRRKDQMB8oIlBP7LNzKP1AF?=
- =?us-ascii?Q?S2n/Y2RnfdlED2VjueJ/R160MitGtqEj7nbDdJCpO+0I6fawdFJoXJwE4D39?=
- =?us-ascii?Q?IfjaQrL2jhYK9cCK7WWdKFKQ0WCAEvS6bnpRyc2eTDfOKRZV1Rws0C1WGF7e?=
- =?us-ascii?Q?IIy9ubmQ7qPD2zzdzp+euEzP5s0TuIk26uGGBe5iKA=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?JLAmfjGU8ICnI9TPxyjltd84Iu/es1D59C8h3GhKCCPu30NJGyxrzzJeUPPZ?=
- =?us-ascii?Q?KeE7U6etMbXXDO09lij/fk5qAAYz8/mXxHr0+KPDl6xMaQGJDv+G3oTAHAIW?=
- =?us-ascii?Q?NTuxkQgufD6T1tRW1PEwjWQN63foAM5y9UCWtfrWrh/Zjd4CM35oVEfJm/0x?=
- =?us-ascii?Q?jnUVd2dIDVihjE/HLK6O7nZUm8qudG+TsOX2ViabF5jbOqIpDI2WlufR0cfC?=
- =?us-ascii?Q?VNOZJ5ZYGPXqedZQVsnnrwLXd0YUeRt5IUprC/r8j59CmgK6GJ9JXBPxoqJ6?=
- =?us-ascii?Q?1ZiIe0RMLuSAuBqNDuOAAlfISCeAaA9nvY2zlpN9qRh0SIR0/zcn7kktX8WW?=
- =?us-ascii?Q?YrEE99hbzkCB345nZq1E8gAM9NcdHZWHEU/VWpZBQ+jNUe8Xy4n3yXnxZHjU?=
- =?us-ascii?Q?eLJcdpOEuVqdlHSCAGi18HptKGFsRPG8ZkG/im3UsnmzvUl5iM6FxGfi5MMb?=
- =?us-ascii?Q?7BGbXkWN6sAjtIbMvXn62FJIeV0grvEjbWO0vIJjWtQic4FWm/M7LeUB7fDj?=
- =?us-ascii?Q?sZz3ovBimeBNsYG4QgLUSEnCemuvrnTypFOJTHgeX8SiD0RFznBm6DaByJy5?=
- =?us-ascii?Q?mNHKBVtj9lEUm3QqYZDC+7mQ8SZRYKlbVUNr2kAVIS61h18OFexvnQZbpVCw?=
- =?us-ascii?Q?ent33hoiEXUyDgqlCL3pscTyL01Ke5xj1oNPjI6nHG1gWDqkubp4howAKOq5?=
- =?us-ascii?Q?XeZHgaWyyEiikkr2IzQR3gRTp6gTNOm0vIOX6gRtxMJ4DVjMbUDC/CMIOvCc?=
- =?us-ascii?Q?/pUjIftBIdbsEQ44uQQmxz8tWbnBkMe6ooP2R/Mp7YQUrf2Bg4BhGISje0C2?=
- =?us-ascii?Q?k9darQ7xW5Xu+5fGIQvilhmkHT3jtbijRWav6kzEZPfLVoSBKhwXifn3n6pV?=
- =?us-ascii?Q?H+N7CpAN7aXOV3SZs9oWOAougtTkUZe5ay8lQm6/4eIEE6QjJql8ORmINAsq?=
- =?us-ascii?Q?RWzXSa/KXk2+fpMVw6IGoTpI7sCCesOR7cyNBh35KSJ9b4TB69th2fLI5UYP?=
- =?us-ascii?Q?6m9/YmO/0Jf/pNkPq1f3oHWJe8OC1jhbfjybe5rQSSoR2o2MwvqGA29nkWPS?=
- =?us-ascii?Q?6RFJwDO0HXpQDqL3MLdeKWP5YeQt4fzb9r5umIHXD69+hTwtXxvHrFR9cBza?=
- =?us-ascii?Q?LyCAweagAH4m1K7togLykg3C5sqPMcgudvPWyGomxRu/BDpSWwYjQwbdi2pQ?=
- =?us-ascii?Q?lQzCvtIhvrWZcyYgR3C4RzwygxENwgfPUNhnD4jwqUmqhWrVz0agHWjT7jAU?=
- =?us-ascii?Q?MGe0h8oOEjIpFEXHPoCRgvvcu0ju1EpMJsHeR29hE1itA685NvQeg/t/gYiv?=
- =?us-ascii?Q?qNtt8ltpogKESNka0SJqxWs23fOjaHmoSas07KStBWTkv+j46E9Q1S+P2LPg?=
- =?us-ascii?Q?qFZr7t4LWxzxV76UardcWXPfTbp3NzSdlSU4W72FgrU9hWktPQGqWF8CkLoX?=
- =?us-ascii?Q?76kvCl2fo2LLxdRGT2brQlhiLuXGTonzH4aW0zk5ygV7PtM7R9k+eBz1hcOD?=
- =?us-ascii?Q?dP9t05ZGtn5RPXTe8TfJ/jSLKeVz7DSBZUMBo+GZojj/41eK9cobyg/fdFDG?=
- =?us-ascii?Q?qg/uHG+unqbKoZ7ebWDaq2MaXBvIWnySRQkiVbKQ?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c91e47eb-77ab-4ac0-7062-08dce98a9732
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Oct 2024 00:21:03.2194
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: KS4EGb1kQUqN5jHM+VhpV7qHMZN8MrIjIFw/WeYMaU5pIteO/QKr6p0HAm14hxmCTGyvuslaUGzOQjD73uVWNQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6829
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hi everyone,
 
-Logan Gunthorpe <logang@deltatee.com> writes:
+Christoph and I have been working on getting the long-delayed metadata
+directory tree patchset into mergeable shape, and I think we're now
+satisfied that we've gotten the code to where we want it for 6.13.
+This time around we've included a ton of cleanups and refactorings that
+Dave requested during the 6.12 cycle.
 
-> On 2024-09-09 22:14, Alistair Popple wrote:
->> The reference counts for ZONE_DEVICE private pages should be
->> initialised by the driver when the page is actually allocated by the
->> driver allocator, not when they are first created. This is currently
->> the case for MEMORY_DEVICE_PRIVATE and MEMORY_DEVICE_COHERENT pages
->> but not MEMORY_DEVICE_PCI_P2PDMA pages so fix that up.
->> 
->> Signed-off-by: Alistair Popple <apopple@nvidia.com>
->> ---
->>  drivers/pci/p2pdma.c |  6 ++++++
->>  mm/memremap.c        | 17 +++++++++++++----
->>  mm/mm_init.c         | 22 ++++++++++++++++++----
->>  3 files changed, 37 insertions(+), 8 deletions(-)
->> 
->> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
->> index 4f47a13..210b9f4 100644
->> --- a/drivers/pci/p2pdma.c
->> +++ b/drivers/pci/p2pdma.c
->> @@ -129,6 +129,12 @@ static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
->>  	}
->>  
->>  	/*
->> +	 * Initialise the refcount for the freshly allocated page. As we have
->> +	 * just allocated the page no one else should be using it.
->> +	 */
->> +	set_page_count(virt_to_page(kaddr), 1);
->> +
->> +	/*
->>  	 * vm_insert_page() can sleep, so a reference is taken to mapping
->>  	 * such that rcu_read_unlock() can be done before inserting the
->>  	 * pages
-> This seems to only set reference count to the first page, when there can
-> be more than one page referenced by kaddr.
+The metadata directory tree sets us up for much more flexible metadata
+within an XFS filesystem.  Instead of rooting inodes in the superblock
+which has very limited space, we instead create a directory tree that
+can contain arbitrary numbers of metadata files.
 
-Good point.
+Having done that, we can now shard the realtime volume into multiple
+allocation groups, much as we do with AGs for the data device.  However,
+the realtime volume has a fun twist -- each rtgroup gets its own space
+metadata files, and for that we need a metadata directory tree.
+Note that we also implement busy free(d) extent tracking, which means
+that we can do discards asynchronously.
 
-> I suspect the page count adjustment should be done in the for loop
-> that's a few lines lower than this.
+Metadata directory trees and realtime groups also enable us to complete
+the realtime modernization project, which will add reverse mapping
+btrees, reflink, quota support, and zoned storage support for rt
+volumes.
 
-Have moved it there for the next version, thanks!
+Finally, quota inodes now live in the metadata directory tree, which is
+a pretty simple conversion.  However, we added yet another new feature,
+which is that xfs will now remember the quota accounting and enforcement
+state across unmounts.  You can still tweak them via mount options, but
+not specifying any is no longer interpreted the same as 'noquota'.
+Quotas for the realtime are now supported.
 
-> I think a similar mistake was made by other recent changes.
->
-> Thanks,
->
-> Logan
+I'm only sending the kernel patches to the list for now, but please have
+a look at the git tree links for xfsprogs and fstests changes.
 
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/tag/?h=metadir_2024-10-10
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/tag/?h=metadir_2024-10-10
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/tag/?h=metadir-quotas_2024-10-10
+
+This is a list of the kernel patches that remain unreviewed:
+
+[PATCHSET v5.0 3/9] xfs: metadata inode directory trees
+  [PATCH 01/28] xfs: constify the xfs_sb predicates
+  [PATCH 02/28] xfs: constify the xfs_inode predicates
+  [PATCH 04/28] xfs: undefine the sb_bad_features2 when metadir is
+[PATCHSET v5.0 4/9] xfs: create incore rt allocation groups
+  [PATCH 08/21] xfs: add a xfs_qm_unmount_rt helper
+  [PATCH 09/21] xfs: factor out a xfs_growfs_rt_alloc_blocks helper
+  [PATCH 10/21] xfs: cleanup xfs_getfsmap_rtdev_rtbitmap
+  [PATCH 11/21] xfs: split xfs_trim_rtdev_extents
+[PATCHSET v5.0 5/9] xfs: preparation for realtime allocation groups
+  [PATCH 1/2] xfs: fix rt device offset calculations for FITRIM
+[PATCHSET v5.0 6/9] xfs: shard the realtime section
+  [PATCH 15/36] xfs: store rtgroup information with a bmap intent
+  [PATCH 27/36] xfs: create helpers to deal with rounding xfs_fileoff_t
+  [PATCH 28/36] xfs: create helpers to deal with rounding xfs_filblks_t
+  [PATCH 29/36] xfs: make xfs_rtblock_t a segmented address like
+  [PATCH 32/36] xfs: fix minor bug in xfs_verify_agbno
+  [PATCH 33/36] xfs: move the min and max group block numbers to
+  [PATCH 34/36] xfs: port the perag discard code to handle generic
+  [PATCH 35/36] xfs: implement busy extent tracking for rtgroups
+  [PATCH 36/36] xfs: use rtgroup busy extent list for FITRIM
+[PATCHSET v5.0 8/9] xfs: enable quota for realtime volumes
+  [PATCH 1/6] xfs: fix chown with rt quota
+  [PATCH 2/6] xfs: advertise realtime quota support in the xqm stat
+  [PATCH 3/6] xfs: report realtime block quota limits on realtime
+  [PATCH 4/6] xfs: create quota preallocation watermarks for realtime
+  [PATCH 5/6] xfs: reserve quota for realtime files correctly
+  [PATCH 6/6] xfs: enable realtime quota again
+
+None of the userspace and fstests patches have been reviewed.
+
+--D
