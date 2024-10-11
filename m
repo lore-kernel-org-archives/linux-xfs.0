@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45D7CC2C6
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:18:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE5918F5E
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:19:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609532; cv=none; b=CRsKXkR/K3omAYZMawM6HtlDu3VezK2n7NMPbLEzh9umKMtPVtKPaN1DvbKdCujZJLLq63hShk2bDC1OBVAmDS6REqTg8vU+NHBNNtAqJJoSTBmhJtvFBaTRLoDqTwFiClUw3c85Rdep2stbsSwEYjVRSEgSmmF1GxisquTH3wc=
+	t=1728609547; cv=none; b=XNjIiz1YNbCF5196anAZANmN25HUN4RvN3z8kPFdYvY7Z6dVkVsotZgjG7X71cHUWKHJMu2tYeP1FRabM5VpTn9IGpiSbllLS7gb52Gzn/3trpKlFApWIJunILwcYjR4yBAKpMerc/xuUggo4DmvHiriY6oJJ+yNz4wqQg4SEN4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609532; c=relaxed/simple;
-	bh=xwjCb1g6BjH1A89ZxzntZf/g+lH/Rh0PaaWPe8I7jZw=;
+	s=arc-20240116; t=1728609547; c=relaxed/simple;
+	bh=vAp61FzaEeWT1l2JwsW7N6EevQgOWtbm6Lvx5j3zfcY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DE9XDle5TV9b9BGERbOIPyQ0XYgZpeiB3kxF0S9rLCvcfvg4MQiHpDFFz6ZZolyP7rvVrk9U6tnDc96XCC6pH0ceQDrA5wLVL+IyT4b8HLXH4+KgSHx5UdXJfyx68GxGyTyEaHsKShKFc02HthJRtaCmXYamUIrFqUZZl/7eUIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q02TUIsR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YFz4VZZTfeRX9LcxKnYyWqjggEEGc9EIhvvPNcZqscZiBQuqZyOd7RoBQ8SI2js7ZlUFSRC43kP6H8P2Uf2NCRon+eBDD2CgSGWiI2JTExLlXJ3w9p8BkLOK3vwlGpKuq8smtOPA/hO2+/o32Di+m0E9VQKESsiunQXq7dGxaFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q4RhARDw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q02TUIsR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADA93C4CEC5;
-	Fri, 11 Oct 2024 01:18:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q4RhARDw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C6DCC4CEC5;
+	Fri, 11 Oct 2024 01:19:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609531;
-	bh=xwjCb1g6BjH1A89ZxzntZf/g+lH/Rh0PaaWPe8I7jZw=;
+	s=k20201202; t=1728609547;
+	bh=vAp61FzaEeWT1l2JwsW7N6EevQgOWtbm6Lvx5j3zfcY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=q02TUIsROTJXrFHTkmU8ITdxLL9RC2kpXcdobO5NzcW9S2dXea+LvhPMjulU9sBFF
-	 IKwoskLckDyT0QXM+iuuHmqehjr209KTlcfNpidD1sVq4i3tPkVfDIIwSC4pYZu2W7
-	 Gv6LlFmgzXwChKKEWXfn0ZKtafBc2NP1MySYiabLa+nnnU0q8AifP5OD+s8Yd3zb60
-	 noqFfrtyFPPKxtojGx+nJ36nX9PjHu9j09QdQpz7iykWEiV8cPCVZL3IJh8VLVvI+Z
-	 9lNz/51PkIVkSMh6B9HgSQE3JAp0+PPX3TlD1oPwgxkJLpdIv2RBKKG7VYFVwIO8RR
-	 8WruYugiL3UIw==
-Date: Thu, 10 Oct 2024 18:18:51 -0700
-Subject: [PATCH 18/38] xfs_repair: dont check metadata directory dirent
- inumbers
+	b=q4RhARDw84jsa3xt9VGJtC7ObcmFWJ2QtzSmzXzl5+k6HEC8ouZ+Efu3sD8G8cP/l
+	 JaaEGLCv+kA1gTAUBH1Ae0c2Z4G4/s3sJjnus9A8dfsBqpWoNoRS8ssVK9XjbHjsgY
+	 +3HTVWkEMMxtv+PaaXtb5ab0CUoThBUjD94W9fg5bh0LmudAks3n+OG/zYqj5KTw0+
+	 TtlGNISrCWH2c8wxyW/l5Svrf6h2SwqmjLVE3KOYxBegkMYQ4DNmzGx28/BrfiIbjd
+	 nQ4IzG7o6C4On1nlTNcY1Tk3lxCl4j8xfzm1cEq5zWseSYvHJcn+wwngzc/sO2JWqU
+	 eQqBYZiwHaP8g==
+Date: Thu, 10 Oct 2024 18:19:06 -0700
+Subject: [PATCH 19/38] xfs_repair: refactor fixing dotdot
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860654252.4183231.3311923341938565785.stgit@frogsfrogsfrogs>
+Message-ID: <172860654267.4183231.12434205260500740198.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 References: <172860653916.4183231.1358667198522212154.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,92 +46,128 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Phase 6 always rebuilds the entire metadata directory tree, and repair
-quietly ignores all the DIFLAG2_METADATA directory inodes that it finds.
-As a result, none of the metadata directories are marked inuse in the
-incore data.  Therefore, the is_inode_free checks are not valid for
-anything we find in a metadata directory.
-
-Therefore, avoid checking is_inode_free when scanning metadata directory
-dirents.
+Pull the code that fixes a directory's dot-dot entry into a separate
+helper function so that we can call it on the rootdir and (later) the
+metadir.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    1 +
- repair/dir2.c            |   35 +++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+)
+ repair/phase6.c |   96 +++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 57 insertions(+), 39 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 80eedb2064416d..978796a5c6a281 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -121,6 +121,7 @@
- #define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
- #define xfs_dinode_good_version		libxfs_dinode_good_version
- #define xfs_dinode_verify		libxfs_dinode_verify
-+#define xfs_dinode_verify_metadir	libxfs_dinode_verify_metadir
- 
- #define xfs_dir2_data_bestfree_p	libxfs_dir2_data_bestfree_p
- #define xfs_dir2_data_entry_tag_p	libxfs_dir2_data_entry_tag_p
-diff --git a/repair/dir2.c b/repair/dir2.c
-index bfeaddd07d2058..dab6523f676a34 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -136,6 +136,29 @@ process_sf_dir2_fixoff(
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 630617ef8ab8fe..0f13d996fe726a 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -2649,6 +2649,62 @@ dir_hash_add_parent_ptrs(
  	}
  }
  
-+static inline bool
-+is_metadata_directory(
++/*
++ * If we have to create a .. for /, do it now *before* we delete the bogus
++ * entries, otherwise the directory could transform into a shortform dir which
++ * would probably cause the simulation to choke.  Even if the illegal entries
++ * get shifted around, it's ok because the entries are structurally intact and
++ * in in hash-value order so the simulation won't get confused if it has to
++ * move them around.
++ */
++static void
++fix_dotdot(
 +	struct xfs_mount	*mp,
-+	struct xfs_dinode	*dip)
++	xfs_ino_t		ino,
++	struct xfs_inode	*ip,
++	xfs_ino_t		rootino,
++	const char		*tag,
++	int			*need_dotdot)
 +{
-+	xfs_failaddr_t		fa;
-+	uint16_t		mode;
-+	uint16_t		flags;
-+	uint64_t		flags2;
++	struct xfs_trans	*tp;
++	int			nres;
++	int			error;
 +
-+	if (!xfs_has_metadir(mp))
-+		return false;
-+	if (dip->di_version < 3 ||
-+	    !(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)))
-+		return false;
++	if (ino != rootino || !*need_dotdot)
++		return;
 +
-+	mode = be16_to_cpu(dip->di_mode);
-+	flags = be16_to_cpu(dip->di_flags);
-+	flags2 = be64_to_cpu(dip->di_flags2);
-+	fa = libxfs_dinode_verify_metadir(mp, dip, mode, flags, flags2);
-+	return fa == NULL;
++	if (no_modify) {
++		do_warn(_("would recreate %s directory .. entry\n"), tag);
++		return;
++	}
++
++	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
++
++	do_warn(_("recreating %s directory .. entry\n"), tag);
++
++	nres = libxfs_mkdir_space_res(mp, 2);
++	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_mkdir, nres, 0, 0, &tp);
++	if (error)
++		res_failed(error);
++
++	libxfs_trans_ijoin(tp, ip, 0);
++
++	error = -libxfs_dir_createname(tp, ip, &xfs_name_dotdot, ip->i_ino,
++			nres);
++	if (error)
++		do_error(
++_("can't make \"..\" entry in %s inode %" PRIu64 ", createname error %d\n"),
++			tag ,ino, error);
++
++	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(
++_("%s inode \"..\" entry recreation failed (%d)\n"), tag, error);
++
++	*need_dotdot = 0;
 +}
 +
  /*
-  * this routine performs inode discovery and tries to fix things
-  * in place.  available redundancy -- inode data size should match
-@@ -227,6 +250,12 @@ process_sf_dir2(
- 		} else if (!libxfs_verify_dir_ino(mp, lino)) {
- 			junkit = 1;
- 			junkreason = _("invalid");
-+		} else if (is_metadata_directory(mp, dip)) {
-+			/*
-+			 * Metadata directories are always rebuilt, so don't
-+			 * bother checking if the child inode is free or not.
-+			 */
-+			junkit = 0;
- 		} else if (lino == mp->m_sb.sb_rbmino)  {
- 			junkit = 1;
- 			junkreason = _("realtime bitmap");
-@@ -698,6 +727,12 @@ process_dir2_data(
- 			 * directory since it's still structurally intact.
- 			 */
- 			clearreason = _("invalid");
-+		} else if (is_metadata_directory(mp, dip)) {
-+			/*
-+			 * Metadata directories are always rebuilt, so don't
-+			 * bother checking if the child inode is free or not.
-+			 */
-+			clearino = 0;
- 		} else if (ent_ino == mp->m_sb.sb_rbmino) {
- 			clearreason = _("realtime bitmap");
- 		} else if (ent_ino == mp->m_sb.sb_rsumino) {
+  * processes all reachable inodes in directories
+  */
+@@ -2778,45 +2834,7 @@ _("error %d fixing shortform directory %llu\n"),
+ 	dir_hash_add_parent_ptrs(ip, hashtab);
+ 	dir_hash_done(hashtab);
+ 
+-	/*
+-	 * if we have to create a .. for /, do it now *before*
+-	 * we delete the bogus entries, otherwise the directory
+-	 * could transform into a shortform dir which would
+-	 * probably cause the simulation to choke.  Even
+-	 * if the illegal entries get shifted around, it's ok
+-	 * because the entries are structurally intact and in
+-	 * in hash-value order so the simulation won't get confused
+-	 * if it has to move them around.
+-	 */
+-	if (!no_modify && need_root_dotdot && ino == mp->m_sb.sb_rootino)  {
+-		ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
+-
+-		do_warn(_("recreating root directory .. entry\n"));
+-
+-		nres = libxfs_mkdir_space_res(mp, 2);
+-		error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_mkdir,
+-					    nres, 0, 0, &tp);
+-		if (error)
+-			res_failed(error);
+-
+-		libxfs_trans_ijoin(tp, ip, 0);
+-
+-		error = -libxfs_dir_createname(tp, ip, &xfs_name_dotdot,
+-					ip->i_ino, nres);
+-		if (error)
+-			do_error(
+-	_("can't make \"..\" entry in root inode %" PRIu64 ", createname error %d\n"), ino, error);
+-
+-		libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-		error = -libxfs_trans_commit(tp);
+-		if (error)
+-			do_error(
+-	_("root inode \"..\" entry recreation failed (%d)\n"), error);
+-
+-		need_root_dotdot = 0;
+-	} else if (need_root_dotdot && ino == mp->m_sb.sb_rootino)  {
+-		do_warn(_("would recreate root directory .. entry\n"));
+-	}
++	fix_dotdot(mp, ino, ip, mp->m_sb.sb_rootino, "root", &need_root_dotdot);
+ 
+ 	/*
+ 	 * if we need to create the '.' entry, do so only if
 
