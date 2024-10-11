@@ -1,174 +1,143 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE624405FB;
-	Fri, 11 Oct 2024 14:54:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC1C85381E;
+	Fri, 11 Oct 2024 16:08:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728658484; cv=none; b=nOpV9nuTk0M1HpSV+jtj95NQUEdbRQbXz6O5aPHyB6Jy+otrWIuOccCV+/4a7nv0iYw+UuKMOjJQyTM6yQLAh8FOjDPAHV+Er1V8rS3JV0fIxwVeEvix9UZlzUpvxQVsFxPgXLhVBWYKs6ghIfuEktpJbnIbp4CZPM2b1ARvgIc=
+	t=1728662906; cv=none; b=kLKUqla9wXRMGdAmRHez9RgwpjMRW1mMqpNFuRQO0KLKzct9W6DoowJcAtjp1bTdQ0RYq3evOtcuhi6yG4T23Z8dGPSMJoRlQYrvxzfeYnZNCz0f8vpuPiFW1D0s4Bi21mY+RJ5ekEBfZ8Cejx6XdjxUzr/zOM+HI2JXj0a3IlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728658484; c=relaxed/simple;
-	bh=HbD+0DZ7uSOon6FsWTus1Wp4ty2aeDZ8yPUIDdFm6ks=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uk9vI/HcyYT14lLIgeskQRC1UV7fJP08Q1Ri/jEVucfK/Ed6HLH/o2Lua4oQbRzkb+aBsQY72gdvMKKajxStpJwTVio/U071moVkAWRR29BI3rMX0DId+MmzG6sNXb9zNfOvOf0wMI+j77S6DQXxg9mGjqDQrH+GJ81iF+H/4T0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=j2McDrjL; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1728662906; c=relaxed/simple;
+	bh=DaA+kF/qkoahcN36NNm0XC+rEL+tEz7AaVnGruu9pDA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JIiVo+O8rnnKAh5uXczEbmgJaqYRfEovDVEgXrF4D+qj8U9OJ7luP/4c64iwnESuMygtC3/44RC6KX6qDS7SCUZg+dQyv5+fbcxnRrspq+UFwXWrA/eTx7rreM5vcqpVmfnYNCXFsKmGujqDAlqo2066boSDJFa4YrJvEzkC0YA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U8X9rL1M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="j2McDrjL"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49BEp9B2020953;
-	Fri, 11 Oct 2024 14:54:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from
-	:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding; s=pp1; bh=1nW3ns0be370qJXLUWaF0DIVtw
-	d5rFgqdUauE+6ZAcw=; b=j2McDrjLUoLwnCBwU/WsOJ5ZK9IwaGLGPZJ95AK48T
-	K+hop6quAfE3jEdZIZTlK0temM0NJ/0MluuVCGwhsJFjq8gdI2g4TavQusdwipFT
-	XgOwgMP/vhLrkrC0Q58j5FTPI6vTu20MgZmD1CzwGG5OLRElQxQFnMa24ayqYJ4L
-	apO/9CpAW7MsFd6eE5CXggeyoQPVkM0IgtJBR3tjNQEd6/Y+2WB+020chiydV1bg
-	mtunB7zofclI5AE33Ryu7/sEZFq7/enoJ2aekaphWjy59QCyZL7xJn+zwvaZf0tL
-	7Cwa6mCUmNbaufguMMfEzGkberVnyp3hfGooCq2UNYxA==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4275gqg8gb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 11 Oct 2024 14:54:35 +0000 (GMT)
-Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 49BErXlk026175;
-	Fri, 11 Oct 2024 14:54:34 GMT
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4275gqg8g2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 11 Oct 2024 14:54:34 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 49BE5N0n030152;
-	Fri, 11 Oct 2024 14:54:33 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 423gsn6563-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 11 Oct 2024 14:54:33 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 49BEsVOQ53281102
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 11 Oct 2024 14:54:31 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 77B1920040;
-	Fri, 11 Oct 2024 14:54:31 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 10E1C20043;
-	Fri, 11 Oct 2024 14:54:30 +0000 (GMT)
-Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com.com (unknown [9.124.219.114])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 11 Oct 2024 14:54:29 +0000 (GMT)
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: linux-xfs@vger.kernel.org
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>, dchinner@redhat.com,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3] xfs: Check for delayed allocations before setting extsize
-Date: Fri, 11 Oct 2024 20:24:27 +0530
-Message-ID: <20241011145427.266614-1-ojaswin@linux.ibm.com>
-X-Mailer: git-send-email 2.43.5
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U8X9rL1M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EFF9C4CEC3;
+	Fri, 11 Oct 2024 16:08:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728662906;
+	bh=DaA+kF/qkoahcN36NNm0XC+rEL+tEz7AaVnGruu9pDA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=U8X9rL1M8azo8mA3HQadBvyrojMFOm5epVJI2sBBVVkhniKG7rhR77P8bAsNoJ/Al
+	 +w4A5A/n5YVGBORyudq2GJjx/BEsKAu/aG+84zNbflhUENpImDvCVLJbIM+vsKlVKL
+	 0djzJHbdxmgp5Kvskjn28f/dPWfX8gi71KU1OA9LgZoYFoI8j4n0qnRksBUCVhuBXE
+	 HZU2ALWY5WvAhwlclsoX9g31iDpK3vqsrJOSvF8lbWMo2bhKh8U8dv2J2CfatrwJFD
+	 Ms3OvwoyeDNA8m9XBGV4hKqE+flOXrQpQAE2/vNNP1RScO0iGizZYTzqHm9EsANQ3E
+	 7hpgdzrfz6dfw==
+Date: Fri, 11 Oct 2024 09:08:25 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] fsstress: add support for FALLOC_FL_UNSHARE_RANGE
+Message-ID: <20241011160825.GN21840@frogsfrogsfrogs>
+References: <172780126017.3586479.18209378224774919872.stgit@frogsfrogsfrogs>
+ <20241003213714.GH21840@frogsfrogsfrogs>
+ <20241011051356.mjaoarskwedmjs75@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241011052133.vrq3nzic5fpjkzvr@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: bPrMwPXMmJBFfcoOwa7l8cDmQG9zqlTz
-X-Proofpoint-GUID: cTJ-vbu4Cn0SE4xAfc9NRpNcVd9cWmgY
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-11_12,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
- impostorscore=0 priorityscore=1501 clxscore=1015 suspectscore=0
- lowpriorityscore=0 adultscore=0 mlxscore=0 mlxlogscore=912 malwarescore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2410110100
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241011052133.vrq3nzic5fpjkzvr@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-Extsize is allowed to be set on files with no data in it. For this,
-we were checking if the files have extents but missed to check if
-delayed extents were present. This patch adds that check.
+On Fri, Oct 11, 2024 at 01:21:33PM +0800, Zorro Lang wrote:
+> On Fri, Oct 11, 2024 at 01:13:56PM +0800, Zorro Lang wrote:
+> > On Thu, Oct 03, 2024 at 02:37:14PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Teach fsstress to try to unshare file blocks on filesystems, seeing how
+> > > the recent addition to fsx has uncovered a lot of bugs.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > 
+> > Thanks for this new test coverage on fsstress. Although it's conflict with
+> > current for-next branch, I've merged it manually, don't need one more
+> > version :)
+> > 
+> > Reviewed-by: Zorro Lang <zlang@redhat.com>
+> 
+> And...
+> 
+> I'm not sure why this patch is contained in this patchset:
+> [PATCHSET v31.1 2/2] fstests: atomic file content commits
 
-While we are at it, also refactor this check into a helper since
-its used in some other places as well like xfs_inactive() or
-xfs_ioctl_setattr_xflags()
+I hit reply-all to get the same to/cc list and forgot to strip out the
+in-reply-to header. :(
 
-**Without the patch (SUCCEEDS)**
+> As that patchset still need change, I'll merge this patch singly this week.
 
-$ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
+Thanks. :)
 
-wrote 1024/1024 bytes at offset 0
-1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
+--D
 
-**With the patch (FAILS as expected)**
-
-$ xfs_io -c 'open -f testfile' -c 'pwrite 0 1024' -c 'extsize 65536'
-
-wrote 1024/1024 bytes at offset 0
-1 KiB, 1 ops; 0.0002 sec (4.628 MiB/sec and 4739.3365 ops/sec)
-xfs_io: FS_IOC_FSSETXATTR testfile: Invalid argument
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
----
- fs/xfs/xfs_inode.c | 2 +-
- fs/xfs/xfs_inode.h | 5 +++++
- fs/xfs/xfs_ioctl.c | 4 ++--
- 3 files changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index bcc277fc0a83..19dcb569a3e7 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1409,7 +1409,7 @@ xfs_inactive(
- 
- 	if (S_ISREG(VFS_I(ip)->i_mode) &&
- 	    (ip->i_disk_size != 0 || XFS_ISIZE(ip) != 0 ||
--	     ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0))
-+	     xfs_inode_has_filedata(ip)))
- 		truncate = 1;
- 
- 	if (xfs_iflags_test(ip, XFS_IQUOTAUNCHECKED)) {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 97ed912306fd..03944b6c5fba 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -292,6 +292,11 @@ static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
- 	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
- }
- 
-+static inline bool xfs_inode_has_filedata(const struct xfs_inode *ip)
-+{
-+	return ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0;
-+}
-+
- /*
-  * Check if an inode has any data in the COW fork.  This might be often false
-  * even for inodes with the reflink flag when there is no pending COW operation.
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index a20d426ef021..2567fd2a0994 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -481,7 +481,7 @@ xfs_ioctl_setattr_xflags(
- 
- 	if (rtflag != XFS_IS_REALTIME_INODE(ip)) {
- 		/* Can't change realtime flag if any extents are allocated. */
--		if (ip->i_df.if_nextents || ip->i_delayed_blks)
-+		if (xfs_inode_has_filedata(ip))
- 			return -EINVAL;
- 
- 		/*
-@@ -602,7 +602,7 @@ xfs_ioctl_setattr_check_extsize(
- 	if (!fa->fsx_valid)
- 		return 0;
- 
--	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
-+	if (S_ISREG(VFS_I(ip)->i_mode) && xfs_inode_has_filedata(ip) &&
- 	    XFS_FSB_TO_B(mp, ip->i_extsize) != fa->fsx_extsize)
- 		return -EINVAL;
- 
--- 
-2.43.5
-
+> Thanks,
+> Zorro
+> 
+> > 
+> > >  ltp/fsstress.c |   14 ++++++++++++++
+> > >  1 file changed, 14 insertions(+)
+> > > 
+> > > diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> > > index b8d025d3a0..8cd45c7a85 100644
+> > > --- a/ltp/fsstress.c
+> > > +++ b/ltp/fsstress.c
+> > > @@ -139,6 +139,7 @@ typedef enum {
+> > >  	OP_TRUNCATE,
+> > >  	OP_UNLINK,
+> > >  	OP_UNRESVSP,
+> > > +	OP_UNSHARE,
+> > >  	OP_URING_READ,
+> > >  	OP_URING_WRITE,
+> > >  	OP_WRITE,
+> > > @@ -246,6 +247,7 @@ void	punch_f(opnum_t, long);
+> > >  void	zero_f(opnum_t, long);
+> > >  void	collapse_f(opnum_t, long);
+> > >  void	insert_f(opnum_t, long);
+> > > +void	unshare_f(opnum_t, long);
+> > >  void	read_f(opnum_t, long);
+> > >  void	readlink_f(opnum_t, long);
+> > >  void	readv_f(opnum_t, long);
+> > > @@ -339,6 +341,7 @@ struct opdesc	ops[OP_LAST]	= {
+> > >  	[OP_TRUNCATE]	   = {"truncate",      truncate_f,	2, 1 },
+> > >  	[OP_UNLINK]	   = {"unlink",	       unlink_f,	1, 1 },
+> > >  	[OP_UNRESVSP]	   = {"unresvsp",      unresvsp_f,	1, 1 },
+> > > +	[OP_UNSHARE]	   = {"unshare",       unshare_f,	1, 1 },
+> > >  	[OP_URING_READ]	   = {"uring_read",    uring_read_f,	-1, 0 },
+> > >  	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	-1, 1 },
+> > >  	[OP_WRITE]	   = {"write",	       write_f,		4, 1 },
+> > > @@ -3767,6 +3770,7 @@ struct print_flags falloc_flags [] = {
+> > >  	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
+> > >  	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
+> > >  	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
+> > > +	{ FALLOC_FL_UNSHARE_RANGE, "UNSHARE_RANGE"},
+> > >  	{ -1, NULL}
+> > >  };
+> > >  
+> > > @@ -4469,6 +4473,16 @@ insert_f(opnum_t opno, long r)
+> > >  #endif
+> > >  }
+> > >  
+> > > +void
+> > > +unshare_f(opnum_t opno, long r)
+> > > +{
+> > > +#ifdef HAVE_LINUX_FALLOC_H
+> > > +# ifdef FALLOC_FL_UNSHARE_RANGE
+> > > +	do_fallocate(opno, r, FALLOC_FL_UNSHARE_RANGE);
+> > > +# endif
+> > > +#endif
+> > > +}
+> > > +
+> > >  void
+> > >  read_f(opnum_t opno, long r)
+> > >  {
+> > > 
+> 
+> 
