@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 293A3C2C6
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:11:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B3BD23CE
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:11:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609095; cv=none; b=uVng9GWQftcZi/ieVySIr0/XZFCpiKfEhNOMhG8XnySNtixjkQrJDU6YU5W0JLMuXvvqpn8eahoxOzXyPKv78bYnIMtn4gLr7sjekCDKCVirzKetzgZkNCiUzUM5fHKyP/OiW+5Ha5/UJZuoTZEAakmJuAkty7qanTWVfwVqe9E=
+	t=1728609110; cv=none; b=IRupN+yd5fAPQWH5NKu4RIUTzj3DqwqPnpYDiLPDWJVWJ4fFlH/lYpEuNMSmF7KLLQ05G/iWutvP2yvR88QVIIlm3MRuSOj3KDYfOHIJctyH57JmiNuUnrLdin2PnCuGiDrPMqQOa+ArXNCPtGURN2D467Jgh2kBbBPEFd+u708=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609095; c=relaxed/simple;
-	bh=JOvy0mmFoCjfDpyOsjL/49QS1g5y9q6pJ2Ji8y9SR8E=;
+	s=arc-20240116; t=1728609110; c=relaxed/simple;
+	bh=DfZdJlt35Pt4byfusuv43YzRV3eBwUCOfc2LPAmj87M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PmEp3frVOaWltDEUAWA+Gl+hEOyQxLBF8XEuhCfYfaHZ4tUEnGGOn2TIEs/M5BT17GNtJDBLIEeBS7tX9kTnxsXCR0Kd0s/5lkppe3nRSnqM7eztY359J+040fhMPKz2o2no4F75P4YYnDb8G9j3HVuo/5e2h3wJpudEnliFCMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Du/yKfs3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=X40K2qvmTeIvcSD37IxHfsMkxvvhK/9hInuR6fV/Zvl1Q+uhbXDeDxdeB9Ye63xcvOnTUY5hJGlItMg+IDfTBid+L0ZBUCXyWHT7cpTgc9MZuAoDsPa4Cm6eogUlDt9kUwqDSofu+IqSvK85XCMMEOJZ1i/Bj6986uJDIVQ/Tu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sKsAgpav; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Du/yKfs3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7FFEC4CEC5;
-	Fri, 11 Oct 2024 01:11:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sKsAgpav"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55948C4CEC5;
+	Fri, 11 Oct 2024 01:11:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609094;
-	bh=JOvy0mmFoCjfDpyOsjL/49QS1g5y9q6pJ2Ji8y9SR8E=;
+	s=k20201202; t=1728609110;
+	bh=DfZdJlt35Pt4byfusuv43YzRV3eBwUCOfc2LPAmj87M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Du/yKfs3iUduyJuG3ktbSllgfiGEkm1bFxF+JeTOyDJtcshqaZZMvuD/K5d8YnAOe
-	 PHo7Rp50aP3ptD3Kyml34mqJgyCZpLqO1lWzOh8vazQyktHa6QGJeNa33JtXqT2Ppl
-	 NupFxza1xjpeADKcj8lqzUj/59XqYL6TIbN4YhJqNdHpKT68ONaFhcitM9ZV2TVx3E
-	 t/ji/i9uf6yWOKDXO290UbvLyCxMjUxaZXHTun/mN8NuGKD6VS0PnrftPOOLkSyhft
-	 1F6mUofIXufHtIW4l2B/M7XgiPDD4+cOQVC0mjxj/yLagohAymA0Rm93t5if0l8Sug
-	 MxwK0O+vQ1U8A==
-Date: Thu, 10 Oct 2024 18:11:34 -0700
-Subject: [PATCH 2/4] xfs: use metadir for quota inodes
+	b=sKsAgpav0oXZW1Y+CJp+dY/lMwzPw0vPRnd3LJ5cbU1KKAn5boimL2uX9Rd1KDheO
+	 7DwmoTzD8Ml5/jwRQUmy3FfaOjfo06V3PVYMWB6k7tOCr2hL6gjD0A3ZtGwdjd+Dal
+	 9V0lXusty2w130yu/YjeNscArv8oqGhs69Rcb+99PzGO4m1IE8ExazQiRo0iExzHHS
+	 Z5H3U1HepqDw2ZKA/5S82uLWKm0VRdK6ATEi6Pjq7E9nejKeW1bJXTncD2wg66nrMJ
+	 Z9Zq8b/HViEVnz7paOOfKf+v/EzEFLSev4KEk4IbsIkWdOrCrAah1pNe5a7NDym8tC
+	 PR+nQ+fuVfPEQ==
+Date: Thu, 10 Oct 2024 18:11:49 -0700
+Subject: [PATCH 3/4] xfs: scrub quota file metapaths
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860645266.4179917.5398413946152157275.stgit@frogsfrogsfrogs>
+Message-ID: <172860645283.4179917.17833294466846585744.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860645220.4179917.14075452764287165701.stgit@frogsfrogsfrogs>
 References: <172860645220.4179917.14075452764287165701.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,520 +46,127 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Store the quota inodes in the /quota metadata directory if metadir is
-enabled.  This enables us to stop using the sb_[ugp]uotino fields in the
-superblock.  From this point on, all metadata files will be children of
-the metadata directory tree root.
+Enable online fsck for quota file metadata directory paths.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dquot_buf.c  |  190 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_quota_defs.h |   43 +++++++++
- fs/xfs/libxfs/xfs_sb.c         |    1 
- fs/xfs/xfs_qm.c                |  197 +++++++++++++++++++++++++++++++++++-----
- 4 files changed, 407 insertions(+), 24 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h  |    6 +++-
+ fs/xfs/scrub/metapath.c |   76 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 81 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 15a362e2f5ea70..dceef2abd4e2a3 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -16,6 +16,9 @@
- #include "xfs_trans.h"
- #include "xfs_qm.h"
- #include "xfs_error.h"
-+#include "xfs_health.h"
-+#include "xfs_metadir.h"
-+#include "xfs_metafile.h"
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 6ed4b38e864d22..23511fecc07d75 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -825,9 +825,13 @@ struct xfs_scrub_vec_head {
+ #define XFS_SCRUB_METAPATH_RTDIR	(1)  /* rtrgroups metadir */
+ #define XFS_SCRUB_METAPATH_RTBITMAP	(2)  /* per-rtg bitmap */
+ #define XFS_SCRUB_METAPATH_RTSUMMARY	(3)  /* per-rtg summary */
++#define XFS_SCRUB_METAPATH_QUOTADIR	(4)  /* quota metadir */
++#define XFS_SCRUB_METAPATH_USRQUOTA	(5)  /* user quota */
++#define XFS_SCRUB_METAPATH_GRPQUOTA	(6)  /* group quota */
++#define XFS_SCRUB_METAPATH_PRJQUOTA	(7)  /* project quota */
  
- int
- xfs_calc_dquots_per_chunk(
-@@ -323,3 +326,190 @@ xfs_dquot_to_disk_ts(
+ /* Number of metapath sm_ino values */
+-#define XFS_SCRUB_METAPATH_NR		(4)
++#define XFS_SCRUB_METAPATH_NR		(8)
  
- 	return cpu_to_be32(t);
- }
-+
-+inline unsigned int
-+xfs_dqinode_sick_mask(xfs_dqtype_t type)
-+{
-+	switch (type) {
-+	case XFS_DQTYPE_USER:
-+		return XFS_SICK_FS_UQUOTA;
-+	case XFS_DQTYPE_GROUP:
-+		return XFS_SICK_FS_GQUOTA;
-+	case XFS_DQTYPE_PROJ:
-+		return XFS_SICK_FS_PQUOTA;
-+	}
-+
-+	ASSERT(0);
-+	return 0;
-+}
-+
-+/*
-+ * Load the inode for a given type of quota, assuming that the sb fields have
-+ * been sorted out.  This is not true when switching quota types on a V4
-+ * filesystem, so do not use this function for that.  If metadir is enabled,
-+ * @dp must be the /quota metadir.
-+ *
-+ * Returns -ENOENT if the quota inode field is NULLFSINO; 0 and an inode on
-+ * success; or a negative errno.
-+ */
-+int
-+xfs_dqinode_load(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	xfs_dqtype_t		type,
-+	struct xfs_inode	**ipp)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_inode	*ip;
-+	enum xfs_metafile_type	metafile_type = xfs_dqinode_metafile_type(type);
-+	int			error;
-+
-+	if (!xfs_has_metadir(mp)) {
-+		xfs_ino_t	ino;
-+
-+		switch (type) {
-+		case XFS_DQTYPE_USER:
-+			ino = mp->m_sb.sb_uquotino;
-+			break;
-+		case XFS_DQTYPE_GROUP:
-+			ino = mp->m_sb.sb_gquotino;
-+			break;
-+		case XFS_DQTYPE_PROJ:
-+			ino = mp->m_sb.sb_pquotino;
-+			break;
-+		default:
-+			ASSERT(0);
-+			return -EFSCORRUPTED;
-+		}
-+
-+		/* Should have set 0 to NULLFSINO when loading superblock */
-+		if (ino == NULLFSINO)
-+			return -ENOENT;
-+
-+		error = xfs_trans_metafile_iget(tp, ino, metafile_type, &ip);
-+	} else {
-+		error = xfs_metadir_load(tp, dp, xfs_dqinode_path(type),
-+				metafile_type, &ip);
-+		if (error == -ENOENT)
-+			return error;
-+	}
-+	if (error) {
-+		if (xfs_metadata_is_sick(error))
-+			xfs_fs_mark_sick(mp, xfs_dqinode_sick_mask(type));
-+		return error;
-+	}
-+
-+	if (XFS_IS_CORRUPT(mp, ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
-+			       ip->i_df.if_format != XFS_DINODE_FMT_BTREE)) {
-+		xfs_irele(ip);
-+		xfs_fs_mark_sick(mp, xfs_dqinode_sick_mask(type));
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (XFS_IS_CORRUPT(mp, ip->i_projid != 0)) {
-+		xfs_irele(ip);
-+		xfs_fs_mark_sick(mp, xfs_dqinode_sick_mask(type));
-+		return -EFSCORRUPTED;
-+	}
-+
-+	*ipp = ip;
-+	return 0;
-+}
-+
-+/* Create a metadata directory quota inode. */
-+int
-+xfs_dqinode_metadir_create(
-+	struct xfs_inode		*dp,
-+	xfs_dqtype_t			type,
-+	struct xfs_inode		**ipp)
-+{
-+	struct xfs_metadir_update	upd = {
-+		.dp			= dp,
-+		.metafile_type		= xfs_dqinode_metafile_type(type),
-+		.path			= xfs_dqinode_path(type),
-+	};
-+	int				error;
-+
-+	error = xfs_metadir_start_create(&upd);
-+	if (error)
-+		return error;
-+
-+	error = xfs_metadir_create(&upd, S_IFREG);
-+	if (error)
-+		return error;
-+
-+	xfs_trans_log_inode(upd.tp, upd.ip, XFS_ILOG_CORE);
-+
-+	error = xfs_metadir_commit(&upd);
-+	if (error)
-+		return error;
-+
-+	xfs_finish_inode_setup(upd.ip);
-+	*ipp = upd.ip;
-+	return 0;
-+}
-+
-+#ifndef __KERNEL__
-+/* Link a metadata directory quota inode. */
-+int
-+xfs_dqinode_metadir_link(
-+	struct xfs_inode		*dp,
-+	xfs_dqtype_t			type,
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_metadir_update	upd = {
-+		.dp			= dp,
-+		.metafile_type		= xfs_dqinode_metafile_type(type),
-+		.path			= xfs_dqinode_path(type),
-+		.ip			= ip,
-+	};
-+	int				error;
-+
-+	error = xfs_metadir_start_link(&upd);
-+	if (error)
-+		return error;
-+
-+	error = xfs_metadir_link(&upd);
-+	if (error)
-+		return error;
-+
-+	xfs_trans_log_inode(upd.tp, upd.ip, XFS_ILOG_CORE);
-+
-+	return xfs_metadir_commit(&upd);
-+}
-+#endif /* __KERNEL__ */
-+
-+/* Create the parent directory for all quota inodes and load it. */
-+int
-+xfs_dqinode_mkdir_parent(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	**dpp)
-+{
-+	if (!mp->m_metadirip) {
-+		xfs_fs_mark_sick(mp, XFS_SICK_FS_METADIR);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return xfs_metadir_mkdir(mp->m_metadirip, "quota", dpp);
-+}
-+
-+/*
-+ * Load the parent directory of all quota inodes.  Pass the inode to the caller
-+ * because quota functions (e.g. QUOTARM) can be called on the quota files even
-+ * if quotas are not enabled.
-+ */
-+int
-+xfs_dqinode_load_parent(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	**dpp)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+
-+	if (!mp->m_metadirip) {
-+		xfs_fs_mark_sick(mp, XFS_SICK_FS_METADIR);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return xfs_metadir_load(tp, mp->m_metadirip, "quota", XFS_METAFILE_DIR,
-+			dpp);
-+}
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index fb05f44f6c754a..763d941a8420c5 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -143,4 +143,47 @@ time64_t xfs_dquot_from_disk_ts(struct xfs_disk_dquot *ddq,
- 		__be32 dtimer);
- __be32 xfs_dquot_to_disk_ts(struct xfs_dquot *ddq, time64_t timer);
+ /*
+  * ioctl limits
+diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
+index b8e427fd7fa73e..b78db651346518 100644
+--- a/fs/xfs/scrub/metapath.c
++++ b/fs/xfs/scrub/metapath.c
+@@ -165,6 +165,74 @@ xchk_setup_metapath_rtginode(
+ # define xchk_setup_metapath_rtginode(...)	(-ENOENT)
+ #endif /* CONFIG_XFS_RT */
  
-+static inline const char *
-+xfs_dqinode_path(xfs_dqtype_t type)
-+{
-+	switch (type) {
-+	case XFS_DQTYPE_USER:
-+		return "user";
-+	case XFS_DQTYPE_GROUP:
-+		return "group";
-+	case XFS_DQTYPE_PROJ:
-+		return "project";
-+	}
-+
-+	ASSERT(0);
-+	return NULL;
-+}
-+
-+static inline enum xfs_metafile_type
-+xfs_dqinode_metafile_type(xfs_dqtype_t type)
-+{
-+	switch (type) {
-+	case XFS_DQTYPE_USER:
-+		return XFS_METAFILE_USRQUOTA;
-+	case XFS_DQTYPE_GROUP:
-+		return XFS_METAFILE_GRPQUOTA;
-+	case XFS_DQTYPE_PROJ:
-+		return XFS_METAFILE_PRJQUOTA;
-+	}
-+
-+	ASSERT(0);
-+	return XFS_METAFILE_UNKNOWN;
-+}
-+
-+unsigned int xfs_dqinode_sick_mask(xfs_dqtype_t type);
-+
-+int xfs_dqinode_load(struct xfs_trans *tp, struct xfs_inode *dp,
-+		xfs_dqtype_t type, struct xfs_inode **ipp);
-+int xfs_dqinode_metadir_create(struct xfs_inode *dp, xfs_dqtype_t type,
-+		struct xfs_inode **ipp);
-+int xfs_dqinode_metadir_link(struct xfs_inode *dp, xfs_dqtype_t type,
-+		struct xfs_inode *ip);
-+int xfs_dqinode_mkdir_parent(struct xfs_mount *mp, struct xfs_inode **dpp);
-+int xfs_dqinode_load_parent(struct xfs_trans *tp, struct xfs_inode **dpp);
-+
- #endif	/* __XFS_QUOTA_H__ */
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index e5584adde31405..2331dba6253738 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -841,6 +841,7 @@ xfs_sb_quota_to_disk(
- 	uint16_t	qflags = from->sb_qflags;
- 
- 	if (xfs_sb_version_hasmetadir(from)) {
-+		to->sb_qflags = cpu_to_be16(from->sb_qflags);
- 		to->sb_uquotino = cpu_to_be64(0);
- 		to->sb_gquotino = cpu_to_be64(0);
- 		to->sb_pquotino = cpu_to_be64(0);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b37e80fe7e86a6..d9d09195eabb0d 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -645,6 +645,157 @@ xfs_qm_init_timelimits(
- 	xfs_qm_dqdestroy(dqp);
- }
- 
++#ifdef CONFIG_XFS_QUOTA
++/* Scan the /quota directory itself. */
 +static int
-+xfs_qm_load_metadir_qinos(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qi,
-+	struct xfs_inode	**dpp)
++xchk_setup_metapath_quotadir(
++	struct xfs_scrub	*sc)
 +{
 +	struct xfs_trans	*tp;
-+	int			error;
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_dqinode_load_parent(tp, dpp);
-+	if (error == -ENOENT) {
-+		/* no quota dir directory, but we'll create one later */
-+		error = 0;
-+		goto out_trans;
-+	}
-+	if (error)
-+		goto out_trans;
-+
-+	if (XFS_IS_UQUOTA_ON(mp)) {
-+		error = xfs_dqinode_load(tp, *dpp, XFS_DQTYPE_USER,
-+				&qi->qi_uquotaip);
-+		if (error && error != -ENOENT)
-+			goto out_trans;
-+	}
-+
-+	if (XFS_IS_GQUOTA_ON(mp)) {
-+		error = xfs_dqinode_load(tp, *dpp, XFS_DQTYPE_GROUP,
-+				&qi->qi_gquotaip);
-+		if (error && error != -ENOENT)
-+			goto out_trans;
-+	}
-+
-+	if (XFS_IS_PQUOTA_ON(mp)) {
-+		error = xfs_dqinode_load(tp, *dpp, XFS_DQTYPE_PROJ,
-+				&qi->qi_pquotaip);
-+		if (error && error != -ENOENT)
-+			goto out_trans;
-+	}
-+
-+	error = 0;
-+out_trans:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+/* Create quota inodes in the metadata directory tree. */
-+STATIC int
-+xfs_qm_create_metadir_qinos(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qi,
-+	struct xfs_inode	**dpp)
-+{
-+	int			error;
-+
-+	if (!*dpp) {
-+		error = xfs_dqinode_mkdir_parent(mp, dpp);
-+		if (error && error != -EEXIST)
-+			return error;
-+	}
-+
-+	if (XFS_IS_UQUOTA_ON(mp) && !qi->qi_uquotaip) {
-+		error = xfs_dqinode_metadir_create(*dpp, XFS_DQTYPE_USER,
-+				&qi->qi_uquotaip);
-+		if (error)
-+			return error;
-+	}
-+
-+	if (XFS_IS_GQUOTA_ON(mp) && !qi->qi_gquotaip) {
-+		error = xfs_dqinode_metadir_create(*dpp, XFS_DQTYPE_GROUP,
-+				&qi->qi_gquotaip);
-+		if (error)
-+			return error;
-+	}
-+
-+	if (XFS_IS_PQUOTA_ON(mp) && !qi->qi_pquotaip) {
-+		error = xfs_dqinode_metadir_create(*dpp, XFS_DQTYPE_PROJ,
-+				&qi->qi_pquotaip);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Add QUOTABIT to sb_versionnum and initialize qflags in preparation for
-+ * creating quota files on a metadir filesystem.
-+ */
-+STATIC int
-+xfs_qm_prep_metadir_sb(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
-+	if (error)
-+		return error;
-+
-+	spin_lock(&mp->m_sb_lock);
-+
-+	xfs_add_quota(mp);
-+
-+	/* qflags will get updated fully _after_ quotacheck */
-+	mp->m_sb.sb_qflags = mp->m_qflags & XFS_ALL_QUOTA_ACCT;
-+
-+	spin_unlock(&mp->m_sb_lock);
-+	xfs_log_sb(tp);
-+
-+	return xfs_trans_commit(tp);
-+}
-+
-+/*
-+ * Load existing quota inodes or create them.  Since this is a V5 filesystem,
-+ * we don't have to deal with the grp/prjquota switcheroo thing from V4.
-+ */
-+STATIC int
-+xfs_qm_init_metadir_qinos(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_quotainfo	*qi = mp->m_quotainfo;
 +	struct xfs_inode	*dp = NULL;
 +	int			error;
 +
-+	if (!xfs_has_quota(mp)) {
-+		error = xfs_qm_prep_metadir_sb(mp);
-+		if (error)
-+			return error;
-+	}
-+
-+	error = xfs_qm_load_metadir_qinos(mp, qi, &dp);
++	error = xfs_trans_alloc_empty(sc->mp, &tp);
 +	if (error)
-+		goto out_err;
++		return error;
 +
-+	error = xfs_qm_create_metadir_qinos(mp, qi, &dp);
++	error = xfs_dqinode_load_parent(tp, &dp);
++	xfs_trans_cancel(tp);
 +	if (error)
-+		goto out_err;
++		return error;
 +
++	error = xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
++			kasprintf(GFP_KERNEL, "quota"), dp);
 +	xfs_irele(dp);
-+	return 0;
-+out_err:
-+	xfs_qm_destroy_quotainos(mp->m_quotainfo);
-+	if (dp)
-+		xfs_irele(dp);
 +	return error;
 +}
 +
- /*
-  * This initializes all the quota information that's kept in the
-  * mount structure
-@@ -669,7 +820,10 @@ xfs_qm_init_quotainfo(
- 	 * See if quotainodes are setup, and if not, allocate them,
- 	 * and change the superblock accordingly.
- 	 */
--	error = xfs_qm_init_quotainos(mp);
-+	if (xfs_has_metadir(mp))
-+		error = xfs_qm_init_metadir_qinos(mp);
-+	else
-+		error = xfs_qm_init_quotainos(mp);
- 	if (error)
- 		goto out_free_lru;
- 
-@@ -1581,7 +1735,7 @@ xfs_qm_mount_quotas(
- 	}
- 
- 	if (error) {
--		xfs_warn(mp, "Failed to initialize disk quotas.");
-+		xfs_warn(mp, "Failed to initialize disk quotas, err %d.", error);
- 		return;
- 	}
- }
-@@ -1600,31 +1754,26 @@ xfs_qm_qino_load(
- 	xfs_dqtype_t		type,
- 	struct xfs_inode	**ipp)
- {
--	xfs_ino_t		ino = NULLFSINO;
--	enum xfs_metafile_type	metafile_type = XFS_METAFILE_UNKNOWN;
-+	struct xfs_trans	*tp;
++/* Scan a quota inode under the /quota directory. */
++static int
++xchk_setup_metapath_dqinode(
++	struct xfs_scrub	*sc,
++	xfs_dqtype_t		type)
++{
++	struct xfs_trans	*tp = NULL;
 +	struct xfs_inode	*dp = NULL;
++	struct xfs_inode	*ip = NULL;
++	const char		*path;
 +	int			error;
- 
--	switch (type) {
--	case XFS_DQTYPE_USER:
--		ino = mp->m_sb.sb_uquotino;
--		metafile_type = XFS_METAFILE_USRQUOTA;
--		break;
--	case XFS_DQTYPE_GROUP:
--		ino = mp->m_sb.sb_gquotino;
--		metafile_type = XFS_METAFILE_GRPQUOTA;
--		break;
--	case XFS_DQTYPE_PROJ:
--		ino = mp->m_sb.sb_pquotino;
--		metafile_type = XFS_METAFILE_PRJQUOTA;
--		break;
--	default:
--		ASSERT(0);
--		return -EFSCORRUPTED;
-+	error = xfs_trans_alloc_empty(mp, &tp);
++
++	error = xfs_trans_alloc_empty(sc->mp, &tp);
 +	if (error)
 +		return error;
 +
-+	if (xfs_has_metadir(mp)) {
-+		error = xfs_dqinode_load_parent(tp, &dp);
-+		if (error)
-+			goto out_cancel;
- 	}
- 
--	if (ino == NULLFSINO)
--		return -ENOENT;
--
--	return xfs_metafile_iget(mp, ino, metafile_type, ipp);
-+	error = xfs_dqinode_load(tp, dp, type, ipp);
-+	if (dp)
-+		xfs_irele(dp);
-+out_cancel:
++	error = xfs_dqinode_load_parent(tp, &dp);
++	if (error)
++		goto out_cancel;
++
++	error = xfs_dqinode_load(tp, dp, type, &ip);
++	if (error)
++		goto out_dp;
++
 +	xfs_trans_cancel(tp);
++	tp = NULL;
++
++	path = kasprintf(GFP_KERNEL, "%s", xfs_dqinode_path(type));
++	error = xchk_setup_metapath_scan(sc, dp, path, ip);
++
++	xfs_irele(ip);
++out_dp:
++	xfs_irele(dp);
++out_cancel:
++	if (tp)
++		xfs_trans_cancel(tp);
 +	return error;
- }
- 
- /*
++}
++#else
++# define xchk_setup_metapath_quotadir(...)	(-ENOENT)
++# define xchk_setup_metapath_dqinode(...)	(-ENOENT)
++#endif /* CONFIG_XFS_QUOTA */
++
+ int
+ xchk_setup_metapath(
+ 	struct xfs_scrub	*sc)
+@@ -186,6 +254,14 @@ xchk_setup_metapath(
+ 		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_BITMAP);
+ 	case XFS_SCRUB_METAPATH_RTSUMMARY:
+ 		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_SUMMARY);
++	case XFS_SCRUB_METAPATH_QUOTADIR:
++		return xchk_setup_metapath_quotadir(sc);
++	case XFS_SCRUB_METAPATH_USRQUOTA:
++		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_USER);
++	case XFS_SCRUB_METAPATH_GRPQUOTA:
++		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_GROUP);
++	case XFS_SCRUB_METAPATH_PRJQUOTA:
++		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_PROJ);
+ 	default:
+ 		return -ENOENT;
+ 	}
 
