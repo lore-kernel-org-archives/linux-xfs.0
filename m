@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8040C944F
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:10:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D1458F5E
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:10:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609032; cv=none; b=qSspwLxZpTynwQDUJToPoi78AbYaKKarHuIboAiGb942kghgiRoFlavLdYmxcMaPUyVuVUmx/4QKw16D20osXPbMYxxv7srBCSYY63b8wlUwI6a6xrol18wcaPY5DtbMl4mtf2s2MjYlamwdbkrv+wUMFtZwSwpNgUR+lHQV++I=
+	t=1728609048; cv=none; b=sgrBXyWDqfzTXpGAnYJwhn8rXC01g2P9CiDp5sNq1ULcvKnWhi/Qxa6rwiO8vZoTGlibaJpo6z9O6RppvI3/HxaPefOsYpqcOU2enSHih/UiaBwc3Eik4kjhZ/hW2eI/EO3qNCKIU7aQCunt9cGuwZZDRhrF++cFLbxoeVTqHSI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609032; c=relaxed/simple;
-	bh=BKifZ7Q3HDgqg5PHAi7drnAQaDJiqKMDm8IjCOOJy7Y=;
+	s=arc-20240116; t=1728609048; c=relaxed/simple;
+	bh=JFMWTrFDGNjoDi3Fp+Cl95H8CzlzP2NYnijS57uq9jA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Bj0gNDfbGBwp5qAwuspPBJC2K6lDv2g7Yo1DmDc6+r2MewjjhK9xrbhP95lLQwI0uUmAUwPT1mUCd1yUQkLxVG6wsDmsEaPOnoIupPMnwT2QJHXDdhUuHL7WMb+Pr8pTMOHTLNqsuX/sTtN7J5IlwATxUkL4EkgkQ7NakFKHCqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mmbkyRXt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mtYSBOiA2jcO2SvHR/dOFp8mPYnJ5wPvKoDGPEpraaK/IgBtBT5widQgVgzhiUebh6GOTWM9aDjmCPAGpx3TIwEcUTKnCWw7sFcV7AY/Xdg/liko3J+d4PGVzrD/j6bUsN+gMy81r/gwlTFzfoqfxFWmZKHDSxwDZqOgF7TuiiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L5UxDeMZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mmbkyRXt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58D9AC4CEC5;
-	Fri, 11 Oct 2024 01:10:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L5UxDeMZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBB11C4CEC5;
+	Fri, 11 Oct 2024 01:10:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609032;
-	bh=BKifZ7Q3HDgqg5PHAi7drnAQaDJiqKMDm8IjCOOJy7Y=;
+	s=k20201202; t=1728609048;
+	bh=JFMWTrFDGNjoDi3Fp+Cl95H8CzlzP2NYnijS57uq9jA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mmbkyRXt7wJwb+aTSDmCPbFHCO2zzaVZCzt8GB48aVtZDreB3Fh+1SdN1d/h5Ftr1
-	 SO/xjmbSweqqw/fS2A9Pnx+1mBZgb9/mF1AF94UD5WwG5h/WgiVhUJ8bxMgq4iLDjR
-	 GWrVn0p2cUQwfb+s5hk4rLhNjcst8+TTqJ0S1ARXnGLFOmcOfVFFcykpz6gk5wJ6N9
-	 DHfIY/Pl+iAWqy2jhwS3K3PJ09y9WAJyNzf9F+r5n2aFibPBIvPGtIg/5+4loOoDsD
-	 s4SL59kh8QS0AXckpsUjUqLfK3IqK4RD8Kq9lYRQrdc7AwvsX0cxzsyexPfi0o9D50
-	 9iwaEWE2vdI8g==
-Date: Thu, 10 Oct 2024 18:10:31 -0700
-Subject: [PATCH 34/36] xfs: port the perag discard code to handle generic
- groups
+	b=L5UxDeMZTd7YrvuIAF1VsDkHpVbldBAhX6AvRwPrcZRALFsMXp5cnA3pvqKZaIcmt
+	 D6SULtXiwtcGWSQCTpcUsoPEApcK1Ux9KjYFTKxbCvb+Dv6NaoSMacJhb0kTdiwK1R
+	 cJQFVrXjTqbtfb5Ui4dztP7Bl9qwNHM7hRNzV6pQgt64asdPFogqxxg8sIudsE9NJi
+	 0GvmGwrcAywTk4LVai5q/ljRvr7Hlj6kzYmLIzJl9rflQvOtg5LzJTgQ5bJKJvY6rI
+	 7RyP1vUHgIQL5YNhyMlvjl66TmawcWfvwkebDB7N7EI7P4VwFaE6EImKVVoGiwnReB
+	 tT4Ey9MK/M+rA==
+Date: Thu, 10 Oct 2024 18:10:47 -0700
+Subject: [PATCH 35/36] xfs: implement busy extent tracking for rtgroups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860644830.4178701.10909954990936352067.stgit@frogsfrogsfrogs>
+Message-ID: <172860644848.4178701.6141796872423816632.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860644112.4178701.15760945842194801432.stgit@frogsfrogsfrogs>
 References: <172860644112.4178701.15760945842194801432.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,142 +46,365 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Port xfs_discard_extents and its tracepoints to handle generic groups
-instead of just perags.  This is needed to enable busy extent tracking
-for rtgroups.
+For rtgroups filesystems, track newly freed (rt) space through the log
+until the rt EFIs have been committed to disk.  This way we ensure that
+space cannot be reused until all traces of the old owner are gone.
+
+As a fringe benefit, we now support -o discard on the realtime device.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_discard.c |   35 ++++++++++++++++++++++++++---------
- fs/xfs/xfs_trace.h   |   19 +++++++++++--------
- 2 files changed, 37 insertions(+), 17 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |   12 ++++
+ fs/xfs/libxfs/xfs_rtgroup.h  |   13 ++++
+ fs/xfs/xfs_extent_busy.c     |    6 ++
+ fs/xfs/xfs_rtalloc.c         |  127 ++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_trace.h           |   75 +++++++++++++++++++++++++
+ 5 files changed, 227 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index bcc904e749b276..2200b119e55b6b 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -101,6 +101,24 @@ xfs_discard_endio(
- 	bio_put(bio);
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 30220bf8c3f430..3623e55fd6860b 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -24,6 +24,7 @@
+ #include "xfs_errortag.h"
+ #include "xfs_log.h"
+ #include "xfs_buf_item.h"
++#include "xfs_extent_busy.h"
+ 
+ /*
+  * Realtime allocator bitmap functions shared with userspace.
+@@ -1120,6 +1121,7 @@ xfs_rtfree_blocks(
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	xfs_extlen_t		mod;
++	int			error;
+ 
+ 	ASSERT(rtlen <= XFS_MAX_BMBT_EXTLEN);
+ 
+@@ -1135,8 +1137,16 @@ xfs_rtfree_blocks(
+ 		return -EIO;
+ 	}
+ 
+-	return xfs_rtfree_extent(tp, rtg, xfs_rtb_to_rtx(mp, rtbno),
++	error = xfs_rtfree_extent(tp, rtg, xfs_rtb_to_rtx(mp, rtbno),
+ 			xfs_extlen_to_rtxlen(mp, rtlen));
++	if (error)
++		return error;
++
++	if (xfs_has_rtgroups(mp))
++		xfs_extent_busy_insert(tp, &rtg->rtg_group,
++				xfs_rtb_to_rgbno(mp, rtbno), rtlen, 0);
++
++	return 0;
  }
  
-+static inline struct block_device *
-+xfs_group_bdev(
-+	const struct xfs_group	*xg)
+ /* Find all the free records within a given range. */
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index 9b7866607528ea..320ae3d59290e2 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -150,6 +150,19 @@ xfs_rtbno_is_group_start(
+ 	return (rtbno & mp->m_groups[XG_TYPE_RTG].blkmask) == 0;
+ }
+ 
++/* Convert an rtgroups rt extent number into an rgbno. */
++static inline xfs_rgblock_t
++xfs_rtx_to_rgbno(
++	struct xfs_rtgroup	*rtg,
++	xfs_rtxnum_t		rtx)
 +{
-+	struct xfs_mount	*mp = xg->xg_mount;
++	struct xfs_mount	*mp = rtg_mount(rtg);
 +
-+	switch (xg->xg_type) {
-+	case XG_TYPE_AG:
-+		return mp->m_ddev_targp->bt_bdev;
-+	case XG_TYPE_RTG:
-+		return mp->m_rtdev_targp->bt_bdev;
-+	default:
-+		ASSERT(0);
-+		break;
-+	}
-+	return NULL;
++	if (likely(mp->m_rtxblklog >= 0))
++		return rtx << mp->m_rtxblklog;
++	return rtx * mp->m_sb.sb_rextsize;
 +}
 +
+ static inline xfs_daddr_t
+ xfs_rtb_to_daddr(
+ 	struct xfs_mount	*mp,
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index d63208a87f1d7e..1f5e1b860d15c4 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -18,6 +18,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_log.h"
+ #include "xfs_ag.h"
++#include "xfs_rtgroup.h"
+ 
+ struct xfs_extent_busy_tree {
+ 	spinlock_t		eb_lock;
+@@ -665,9 +666,14 @@ xfs_extent_busy_wait_all(
+ 	struct xfs_mount	*mp)
+ {
+ 	struct xfs_perag	*pag = NULL;
++	struct xfs_rtgroup	*rtg = NULL;
+ 
+ 	while ((pag = xfs_perag_next(mp, pag)))
+ 		xfs_extent_busy_wait_group(&pag->pag_group);
++
++	if (xfs_has_rtgroups(mp))
++		while ((rtg = xfs_rtgroup_next(mp, rtg)))
++			xfs_extent_busy_wait_group(&rtg->rtg_group);
+ }
+ 
  /*
-  * Walk the discard list and issue discards on all the busy extents in the
-  * list. We plug and chain the bios so that we only need a single completion
-@@ -118,12 +136,11 @@ xfs_discard_extents(
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 8f56d5fbe7413a..0575b9553f40a9 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -29,6 +29,7 @@
+ #include "xfs_metafile.h"
+ #include "xfs_rtgroup.h"
+ #include "xfs_error.h"
++#include "xfs_trace.h"
  
- 	blk_start_plug(&plug);
- 	list_for_each_entry(busyp, &extents->extent_list, list) {
--		struct xfs_perag	*pag = to_perag(busyp->group);
-+		trace_xfs_discard_extent(busyp->group, busyp->bno,
-+				busyp->length);
+ /*
+  * Return whether there are any free extents in the size range given
+@@ -1657,6 +1658,114 @@ xfs_rtalloc_align_minmax(
+ 	*raminlen = newminlen;
+ }
  
--		trace_xfs_discard_extent(pag, busyp->bno, busyp->length);
--
--		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
--				xfs_agbno_to_daddr(pag, busyp->bno),
-+		error = __blkdev_issue_discard(xfs_group_bdev(busyp->group),
-+				xfs_gbno_to_daddr(busyp->group, busyp->bno),
- 				XFS_FSB_TO_BB(mp, busyp->length),
- 				GFP_KERNEL, &bio);
- 		if (error && error != -EOPNOTSUPP) {
-@@ -241,11 +258,11 @@ xfs_trim_gather_extents(
- 		 * overlapping ranges for now.
- 		 */
- 		if (fbno + flen < tcur->start) {
--			trace_xfs_discard_exclude(pag, fbno, flen);
-+			trace_xfs_discard_exclude(&pag->pag_group, fbno, flen);
- 			goto next_extent;
- 		}
- 		if (fbno > tcur->end) {
--			trace_xfs_discard_exclude(pag, fbno, flen);
-+			trace_xfs_discard_exclude(&pag->pag_group, fbno, flen);
- 			if (tcur->by_bno) {
- 				tcur->count = 0;
- 				break;
-@@ -263,7 +280,7 @@ xfs_trim_gather_extents(
++/* Given a free extent, find any part of it that isn't busy, if possible. */
++STATIC bool
++xfs_rtalloc_check_busy(
++	struct xfs_rtalloc_args	*args,
++	xfs_rtxnum_t		start,
++	xfs_rtxlen_t		minlen_rtx,
++	xfs_rtxlen_t		maxlen_rtx,
++	xfs_rtxlen_t		len_rtx,
++	xfs_rtxlen_t		prod,
++	xfs_rtxnum_t		rtx,
++	xfs_rtxlen_t		*reslen,
++	xfs_rtxnum_t		*resrtx,
++	unsigned		*busy_gen)
++{
++	struct xfs_rtgroup	*rtg = args->rtg;
++	struct xfs_mount	*mp = rtg_mount(rtg);
++	xfs_agblock_t		rgbno = xfs_rtx_to_rgbno(rtg, rtx);
++	xfs_rgblock_t		min_rgbno = xfs_rtx_to_rgbno(rtg, start);
++	xfs_extlen_t		minlen = xfs_rtxlen_to_extlen(mp, minlen_rtx);
++	xfs_extlen_t		len = xfs_rtxlen_to_extlen(mp, len_rtx);
++	xfs_extlen_t		diff;
++	bool			busy;
++
++	busy = xfs_extent_busy_trim(&rtg->rtg_group, minlen,
++			xfs_rtxlen_to_extlen(mp, maxlen_rtx), &rgbno, &len,
++			busy_gen);
++
++	/*
++	 * If we have a largish extent that happens to start before min_rgbno,
++	 * see if we can shift it into range...
++	 */
++	if (rgbno < min_rgbno && rgbno + len > min_rgbno) {
++		diff = min_rgbno - rgbno;
++		if (len > diff) {
++			rgbno += diff;
++			len -= diff;
++		}
++	}
++
++	if (prod > 1 && len >= minlen) {
++		xfs_rgblock_t	aligned_rgbno = roundup(rgbno, prod);
++
++		diff = aligned_rgbno - rgbno;
++
++		*resrtx = xfs_rgbno_to_rtx(mp, aligned_rgbno);
++		*reslen = xfs_extlen_to_rtxlen(mp,
++				diff >= len ? 0 : len - diff);
++	} else {
++		*resrtx = xfs_rgbno_to_rtx(mp, rgbno);
++		*reslen = xfs_extlen_to_rtxlen(mp, len);
++	}
++
++	return busy;
++}
++
++/*
++ * Adjust the given free extent so that it isn't busy, or flush the log and
++ * wait for the space to become unbusy.  Only needed for rtgroups.
++ */
++STATIC int
++xfs_rtallocate_adjust_for_busy(
++	struct xfs_rtalloc_args	*args,
++	xfs_rtxnum_t		start,
++	xfs_rtxlen_t		minlen,
++	xfs_rtxlen_t		maxlen,
++	xfs_rtxlen_t		*len,
++	xfs_rtxlen_t		prod,
++	xfs_rtxnum_t		*rtx)
++{
++	xfs_rtxnum_t		resrtx;
++	xfs_rtxlen_t		reslen;
++	unsigned		busy_gen;
++	bool			busy;
++	int			error;
++
++again:
++	busy = xfs_rtalloc_check_busy(args, start, minlen, maxlen, *len, prod,
++			*rtx, &reslen, &resrtx, &busy_gen);
++	if (!busy)
++		return 0;
++
++	if (reslen < minlen || (start != 0 && resrtx != *rtx)) {
++		/*
++		 * Enough of the extent was busy that we cannot satisfy the
++		 * allocation, or this is a near allocation and the start of
++		 * the extent is busy.  Flush the log and wait for the busy
++		 * situation to resolve.
++		 */
++		trace_xfs_rtalloc_extent_busy(args->rtg, start, minlen, maxlen,
++				*len, prod, *rtx, busy_gen);
++
++		error = xfs_extent_busy_flush(args->tp, &args->rtg->rtg_group,
++				busy_gen, 0);
++		if (error)
++			return error;
++
++		goto again;
++	}
++
++	/* Some of the free space wasn't busy, hand that back to the caller. */
++	trace_xfs_rtalloc_extent_busy_trim(args->rtg, *rtx, *len, resrtx,
++			reslen);
++	*len = reslen;
++	*rtx = resrtx;
++
++	return 0;
++}
++
+ static int
+ xfs_rtallocate_rtg(
+ 	struct xfs_trans	*tp,
+@@ -1738,15 +1847,19 @@ xfs_rtallocate_rtg(
+ 	}
  
- 		/* Too small?  Give up. */
- 		if (flen < tcur->minlen) {
--			trace_xfs_discard_toosmall(pag, fbno, flen);
-+			trace_xfs_discard_toosmall(&pag->pag_group, fbno, flen);
- 			if (tcur->by_bno)
- 				goto next_extent;
- 			tcur->count = 0;
-@@ -275,7 +292,7 @@ xfs_trim_gather_extents(
- 		 * discard and try again the next time.
- 		 */
- 		if (xfs_extent_busy_search(&pag->pag_group, fbno, flen)) {
--			trace_xfs_discard_busy(pag, fbno, flen);
-+			trace_xfs_discard_busy(&pag->pag_group, fbno, flen);
- 			goto next_extent;
- 		}
+ 	if (error) {
+-		if (xfs_has_rtgroups(args.mp)) {
+-			xfs_rtgroup_unlock(args.rtg, XFS_RTGLOCK_BITMAP);
+-			*rtlocked = false;
+-		}
++		if (xfs_has_rtgroups(args.mp))
++			goto out_unlock;
+ 		goto out_release;
+ 	}
  
+-	if (xfs_has_rtgroups(args.mp))
++	if (xfs_has_rtgroups(args.mp)) {
++		error = xfs_rtallocate_adjust_for_busy(&args, start, minlen,
++				maxlen, &len, prod, &rtx);
++		if (error)
++			goto out_unlock;
++
+ 		xfs_rtgroup_trans_join(tp, args.rtg, XFS_RTGLOCK_BITMAP);
++	}
+ 
+ 	error = xfs_rtallocate_range(&args, rtx, len);
+ 	if (error)
+@@ -1762,6 +1875,10 @@ xfs_rtallocate_rtg(
+ 	xfs_rtgroup_rele(args.rtg);
+ 	xfs_rtbuf_cache_relse(&args);
+ 	return error;
++out_unlock:
++	xfs_rtgroup_unlock(args.rtg, XFS_RTGLOCK_BITMAP);
++	*rtlocked = false;
++	goto out_release;
+ }
+ 
+ static int
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7beeaac0ad4cf0..64af1470b838f0 100644
+index 64af1470b838f0..7b1ad2e0572645 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -2480,23 +2480,26 @@ DEFINE_LOG_RECOVER_ICREATE_ITEM(xfs_log_recover_icreate_cancel);
- DEFINE_LOG_RECOVER_ICREATE_ITEM(xfs_log_recover_icreate_recover);
+@@ -97,6 +97,7 @@ struct xfs_extent_free_item;
+ struct xfs_rmap_intent;
+ struct xfs_refcount_intent;
+ struct xfs_metadir_update;
++struct xfs_rtgroup;
  
- DECLARE_EVENT_CLASS(xfs_discard_class,
--	TP_PROTO(const struct xfs_perag *pag, xfs_agblock_t agbno,
-+	TP_PROTO(const struct xfs_group *xg, xfs_agblock_t agbno,
- 		 xfs_extlen_t len),
--	TP_ARGS(pag, agbno, len),
-+	TP_ARGS(xg, agbno, len),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
-+		__field(enum xfs_group_type, type)
- 		__field(xfs_agnumber_t, agno)
- 		__field(xfs_agblock_t, agbno)
- 		__field(xfs_extlen_t, len)
- 	),
- 	TP_fast_assign(
--		__entry->dev = pag_mount(pag)->m_super->s_dev;
--		__entry->agno = pag_agno(pag);
-+		__entry->dev = xg->xg_mount->m_super->s_dev;
-+		__entry->type = xg->xg_type;
-+		__entry->agno = xg->xg_index;
- 		__entry->agbno = agbno;
- 		__entry->len = len;
- 	),
--	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x",
-+	TP_printk("dev %d:%d %sno 0x%x gbno 0x%x fsbcount 0x%x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
- 		  __entry->agno,
- 		  __entry->agbno,
- 		  __entry->len)
-@@ -2504,9 +2507,9 @@ DECLARE_EVENT_CLASS(xfs_discard_class,
+ #define XFS_ATTR_FILTER_FLAGS \
+ 	{ XFS_ATTR_ROOT,	"ROOT" }, \
+@@ -1749,6 +1750,80 @@ TRACE_EVENT(xfs_extent_busy_trim,
+ 		  __entry->tlen)
+ );
  
- #define DEFINE_DISCARD_EVENT(name) \
- DEFINE_EVENT(xfs_discard_class, name, \
--	TP_PROTO(const struct xfs_perag *pag, xfs_agblock_t agbno, \
--		xfs_extlen_t len), \
--	TP_ARGS(pag, agbno, len))
-+	TP_PROTO(const struct xfs_group *xg, xfs_agblock_t agbno, \
-+		 xfs_extlen_t len), \
-+	TP_ARGS(xg, agbno, len))
- DEFINE_DISCARD_EVENT(xfs_discard_extent);
- DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
- DEFINE_DISCARD_EVENT(xfs_discard_exclude);
++#ifdef CONFIG_XFS_RT
++TRACE_EVENT(xfs_rtalloc_extent_busy,
++	TP_PROTO(struct xfs_rtgroup *rtg, xfs_rtxnum_t start,
++		 xfs_rtxlen_t minlen, xfs_rtxlen_t maxlen,
++		 xfs_rtxlen_t len, xfs_rtxlen_t prod, xfs_rtxnum_t rtx,
++		 unsigned busy_gen),
++	TP_ARGS(rtg, start, minlen, maxlen, len, prod, rtx, busy_gen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_rgnumber_t, rgno)
++		__field(xfs_rtxnum_t, start)
++		__field(xfs_rtxlen_t, minlen)
++		__field(xfs_rtxlen_t, maxlen)
++		__field(xfs_rtxlen_t, mod)
++		__field(xfs_rtxlen_t, prod)
++		__field(xfs_rtxlen_t, len)
++		__field(xfs_rtxnum_t, rtx)
++		__field(unsigned, busy_gen)
++	),
++	TP_fast_assign(
++		__entry->dev = rtg_mount(rtg)->m_super->s_dev;
++		__entry->rgno = rtg_rgno(rtg);
++		__entry->start = start;
++		__entry->minlen = minlen;
++		__entry->maxlen = maxlen;
++		__entry->prod = prod;
++		__entry->len = len;
++		__entry->rtx = rtx;
++		__entry->busy_gen = busy_gen;
++	),
++	TP_printk("dev %d:%d rgno 0x%x startrtx 0x%llx minlen %u maxlen %u "
++		  "prod %u len %u rtx 0%llx busy_gen 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->rgno,
++		  __entry->start,
++		  __entry->minlen,
++		  __entry->maxlen,
++		  __entry->prod,
++		  __entry->len,
++		  __entry->rtx,
++		  __entry->busy_gen)
++)
++
++TRACE_EVENT(xfs_rtalloc_extent_busy_trim,
++	TP_PROTO(struct xfs_rtgroup *rtg, xfs_rtxnum_t old_rtx,
++		 xfs_rtxlen_t old_len, xfs_rtxnum_t new_rtx,
++		 xfs_rtxlen_t new_len),
++	TP_ARGS(rtg, old_rtx, old_len, new_rtx, new_len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_rgnumber_t, rgno)
++		__field(xfs_rtxnum_t, old_rtx)
++		__field(xfs_rtxnum_t, new_rtx)
++		__field(xfs_rtxlen_t, old_len)
++		__field(xfs_rtxlen_t, new_len)
++	),
++	TP_fast_assign(
++		__entry->dev = rtg_mount(rtg)->m_super->s_dev;
++		__entry->rgno = rtg_rgno(rtg);
++		__entry->old_rtx = old_rtx;
++		__entry->old_len = old_len;
++		__entry->new_rtx = new_rtx;
++		__entry->new_len = new_len;
++	),
++	TP_printk("dev %d:%d rgno 0x%x rtx 0x%llx rtxcount 0x%x -> rtx 0x%llx rtxcount 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->rgno,
++		  __entry->old_rtx,
++		  __entry->old_len,
++		  __entry->new_rtx,
++		  __entry->new_len)
++);
++#endif /* CONFIG_XFS_RT */
++
+ DECLARE_EVENT_CLASS(xfs_agf_class,
+ 	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
+ 		 unsigned long caller_ip),
 
