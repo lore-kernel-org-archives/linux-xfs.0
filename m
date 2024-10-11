@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BDBF14A85
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:31:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 563DC17BCA
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:31:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728610265; cv=none; b=JMyfxRcNyrXibaFEl87Hg3qD19yvwL03MoOIDBQKlnoHQgo70sCM1BXrStBSCMM8rwPjAtLI35WbpqHy5JFcvTchRWZfUct6pstediPYbzmThgA3Xvos+me2ixsK/9xicm30+Rh0OPgAl5gsvrtAuQLz5bBD8WOieVjFgbWMdZY=
+	t=1728610281; cv=none; b=p/wD8fZ3JFZzD3+BYBX9YlyqgRfnMENlJ7uKteN71W/TDAtzCS6JTs+saTi+1XKCPt08kjdwQBx6xvycaaqLlWi1KjW1ZWc7xIOWJbDVyLavzV1gvMD4ZJP7ZsrFIYobq71glvRykObQuvPyxZ7ZDvkKQBRyvA+CSdzQdF/HxtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728610265; c=relaxed/simple;
-	bh=0AqJWYjHGTUR9wJVWSk0ZPouceqg/CtSSHfLkqga9ls=;
+	s=arc-20240116; t=1728610281; c=relaxed/simple;
+	bh=vFhkiublCqf2G9aqEaQ1+dyUfnyvq8/NyR2COfZN6ZQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OYzWMEtbWUfwv7HEeuY/rnStKXMda4ptkrEkd45wn1AsYirKnNQFv7nlU5/Uc5HqCPPjcDHg09EJlczaSAFI9YY8fiBR8KGzTWOU/ZKkf61SintapKlyslm2XMp+axy+/cLkdznKisO8s6NyuxHYW/6NlGBagNntQjh5fu1wXWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F4KYpYlK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=DJcYRGv0LDeu6WTyNnOmio3aVXuIb5LRjAXHaYym7bB3oX4oVi0VRjt00/yLHSd8+cPFAkGBlrkX5YhrTa3vtCE+vKlv1U+IEjv/XNrGNUjpBe3yrvNYIltICVOzUoDX28dA3zSfn9Gwoc01ULN+LCdqsjEMbS/9BSQJQd68Gu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BJzac9ZR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F4KYpYlK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4350FC4CEC5;
-	Fri, 11 Oct 2024 01:31:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BJzac9ZR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E26B3C4CEC5;
+	Fri, 11 Oct 2024 01:31:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728610265;
-	bh=0AqJWYjHGTUR9wJVWSk0ZPouceqg/CtSSHfLkqga9ls=;
+	s=k20201202; t=1728610280;
+	bh=vFhkiublCqf2G9aqEaQ1+dyUfnyvq8/NyR2COfZN6ZQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=F4KYpYlKnr+JSKOxoexZAD2J7xiPEVELHPkWsdF3libzuf9z7tEOLOlnrIX5t2K21
-	 BXng/5D4fX71+MLthYOlTR+e80Wntn1HOMhuvTU68TBF3gbY5Di1cbiOf4xhnr399h
-	 S4zTXoGhD4ZKNgVXFGmc2YQYNXC4quN6ftjkq+QBM+YnpCWIw64TdXpd8AfAClQbW1
-	 6adM7Dv7b2T+cqeDdqZj6gFsxb4jD3FICnYDmms385StgJBL3+fblzpzbs2I/D1XQx
-	 aWqWQejBwee9hY3ywtuDaF/nd8alJyQJRkdcyHSYYZbEmyDOUlpzfakBEYW6qtRWRG
-	 rJN7dhTtKgKhQ==
-Date: Thu, 10 Oct 2024 18:31:04 -0700
-Subject: [PATCH 25/43] xfs_db: metadump realtime devices
+	b=BJzac9ZRRIbAYztq/sTEh/POetdYAaZQVLc/5QUe4tIdxQEnFnv8Kg6apI+TcR2wD
+	 +/gQLD5umJ5upiY7PSeO/qxjytDHJ2oqm01hqj9kCrD9DsasUaBu7VQoSgDNk3xMmk
+	 ew9t/a7cLYtlkjsP+8RBrloBoUbheHv81eOt7iI0JKvQA2LFgWJ6pGn1HCbInXbahD
+	 jdbiydsZVnNowExEmK3JedgMllcK2OwZRXW1c/jTri1ohvD716cRH5GiGL39ns6R2D
+	 3OwZlJYmUNP6xopk3ZorulRWAExC2QPjv+dVhrfHK064hUImCuPYgKAIjhArK5RvL7
+	 v4KgarEc/EunA==
+Date: Thu, 10 Oct 2024 18:31:20 -0700
+Subject: [PATCH 26/43] xfs_db: dump rt bitmap blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860655750.4184637.17944265572139431669.stgit@frogsfrogsfrogs>
+Message-ID: <172860655765.4184637.13261131709242863199.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 References: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,240 +46,201 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach the metadump device to dump the filesystem metadata of a realtime
-device to the metadump file.  Currently, this is limited to the realtime
-superblock.
+Now that rtbitmap blocks have a header, make it so that xfs_db can
+analyze the structure.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/metadump.c             |   52 +++++++++++++++++++++++++++++++++++++++++++++
- db/xfs_metadump.sh        |    5 +++-
- include/xfs_metadump.h    |    8 +++++++
- man/man8/xfs_metadump.8   |   11 ++++++++++
- mdrestore/xfs_mdrestore.c |    5 +++-
- 5 files changed, 78 insertions(+), 3 deletions(-)
+ db/field.c   |    6 ++++++
+ db/field.h   |    3 +++
+ db/inode.c   |   34 +++++++++++++++++++++++++---------
+ db/rtgroup.c |   34 ++++++++++++++++++++++++++++++++++
+ db/rtgroup.h |    3 +++
+ db/type.c    |    5 +++++
+ db/type.h    |    1 +
+ 7 files changed, 77 insertions(+), 9 deletions(-)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 8eb4b8eb69e45c..1941f633ac1397 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -85,6 +85,7 @@ static struct metadump {
- 	bool			dirty_log;
- 	bool			external_log;
- 	bool			stdout_metadump;
-+	bool			realtime_data;
- 	xfs_ino_t		cur_ino;
- 	/* Metadump file */
- 	FILE			*outf;
-@@ -3027,6 +3028,7 @@ init_metadump_v2(void)
+diff --git a/db/field.c b/db/field.c
+index f70955ef57a323..ad1ccb9877aca5 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -406,6 +406,12 @@ const ftattr_t	ftattrtab[] = {
+ 	{ FLDT_UUID, "uuid", fp_uuid, NULL, SI(bitsz(uuid_t)), 0, NULL, NULL },
+ 	{ FLDT_PARENT_REC, "parent", NULL, (char *)parent_flds,
+ 	  SI(bitsz(struct xfs_parent_rec)), 0, NULL, parent_flds },
++
++	{ FLDT_RTWORD, "rtword", fp_num, "%#x", SI(bitsz(xfs_rtword_t)),
++	  0, NULL, NULL },
++	{ FLDT_RGBITMAP, "rgbitmap", NULL, (char *)rgbitmap_flds, btblock_size,
++	  FTARG_SIZE, NULL, rgbitmap_flds },
++
+ 	{ FLDT_ZZZ, NULL }
+ };
+ 
+diff --git a/db/field.h b/db/field.h
+index 8797a75f669246..aace89c90d79eb 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -196,6 +196,9 @@ typedef enum fldt	{
+ 
+ 	FLDT_PARENT_REC,
+ 
++	FLDT_RTWORD,
++	FLDT_RGBITMAP,
++
+ 	FLDT_ZZZ			/* mark last entry */
+ } fldt_t;
+ 
+diff --git a/db/inode.c b/db/inode.c
+index 8a7c665bdb54f3..0ecfdd18058c79 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -705,16 +705,32 @@ inode_next_type(void)
+ 	case S_IFLNK:
+ 		return TYP_SYMLINK;
+ 	case S_IFREG:
+-		if (iocur_top->ino == mp->m_sb.sb_rbmino)
+-			return TYP_RTBITMAP;
+-		else if (iocur_top->ino == mp->m_sb.sb_rsumino)
+-			return TYP_RTSUMMARY;
+-		else if (iocur_top->ino == mp->m_sb.sb_uquotino ||
+-			 iocur_top->ino == mp->m_sb.sb_gquotino ||
+-			 iocur_top->ino == mp->m_sb.sb_pquotino)
++		if (xfs_has_rtgroups(mp)) {
++			struct xfs_dinode	*dic = iocur_top->data;
++
++			switch (be16_to_cpu(dic->di_metatype)) {
++			case XFS_METAFILE_USRQUOTA:
++			case XFS_METAFILE_GRPQUOTA:
++			case XFS_METAFILE_PRJQUOTA:
++				return TYP_DQBLK;
++			case XFS_METAFILE_RTBITMAP:
++				return TYP_RGBITMAP;
++			default:
++				return TYP_DATA;
++			}
++		} else {
++			if (iocur_top->ino == mp->m_sb.sb_rbmino)
++				return TYP_RTBITMAP;
++			if (iocur_top->ino == mp->m_sb.sb_rsumino)
++				return TYP_RTSUMMARY;
++		}
++
++		if (iocur_top->ino == mp->m_sb.sb_uquotino ||
++		    iocur_top->ino == mp->m_sb.sb_gquotino ||
++		    iocur_top->ino == mp->m_sb.sb_pquotino)
+ 			return TYP_DQBLK;
+-		else
+-			return TYP_DATA;
++
++		return TYP_DATA;
+ 	default:
+ 		return TYP_NONE;
+ 	}
+diff --git a/db/rtgroup.c b/db/rtgroup.c
+index 5cda1a4f35efb6..3ef2dc8fe7f031 100644
+--- a/db/rtgroup.c
++++ b/db/rtgroup.c
+@@ -44,6 +44,7 @@ const field_t	rtsb_flds[] = {
+ 	{ "meta_uuid", FLDT_UUID, OI(OFF(meta_uuid)), C1, 0, TYP_NONE },
+ 	{ NULL }
+ };
++#undef OFF
+ 
+ const field_t	rtsb_hfld[] = {
+ 	{ "", FLDT_RTSB, OI(0), C1, 0, TYP_NONE },
+@@ -98,3 +99,36 @@ rtsb_size(
  {
- 	struct xfs_metadump_header	xmh = {0};
- 	uint32_t			compat_flags = 0;
-+	uint32_t			incompat_flags = 0;
- 
- 	xmh.xmh_magic = cpu_to_be32(XFS_MD_MAGIC_V2);
- 	xmh.xmh_version = cpu_to_be32(2);
-@@ -3039,8 +3041,11 @@ init_metadump_v2(void)
- 		compat_flags |= XFS_MD2_COMPAT_DIRTYLOG;
- 	if (metadump.external_log)
- 		compat_flags |= XFS_MD2_COMPAT_EXTERNALLOG;
-+	if (metadump.realtime_data)
-+		incompat_flags |= XFS_MD2_INCOMPAT_RTDEVICE;
- 
- 	xmh.xmh_compat_flags = cpu_to_be32(compat_flags);
-+	xmh.xmh_incompat_flags = cpu_to_be32(incompat_flags);
- 
- 	if (fwrite(&xmh, sizeof(xmh), 1, metadump.outf) != 1) {
- 		print_warning("error writing to target file");
-@@ -3050,6 +3055,30 @@ init_metadump_v2(void)
- 	return 0;
+ 	return bitize(mp->m_sb.sb_blocksize);
  }
- 
++
 +static int
-+copy_rtsb(void)
++rtwords_count(
++	void			*obj,
++	int			startoff)
 +{
-+	int		error;
++	unsigned int		blksz = mp->m_sb.sb_blocksize;
 +
-+	if (metadump.show_progress)
-+		print_progress("Copying realtime superblock");
++	if (xfs_has_rtgroups(mp))
++		blksz -= sizeof(struct xfs_rtbuf_blkinfo);
 +
-+	push_cur();
-+	error = set_rt_cur(&typtab[TYP_RTSB], XFS_RTSB_DADDR,
-+			XFS_FSB_TO_BB(mp, 1), DB_RING_ADD, NULL);
-+	if (error)
-+		return 0;
-+	if (iocur_top->data == NULL) {
-+		pop_cur();
-+		print_warning("cannot read realtime superblock");
-+		return !metadump.stop_on_read_error;
-+	}
-+	error = write_buf(iocur_top);
-+	pop_cur();
-+
-+	return error ? 0 : 1;
++	return blksz >> XFS_WORDLOG;
 +}
 +
- static int
- write_metadump_v2(
- 	enum typnm		type,
-@@ -3064,6 +3093,8 @@ write_metadump_v2(
- 	if (type == TYP_LOG &&
- 	    mp->m_logdev_targp->bt_bdev != mp->m_ddev_targp->bt_bdev)
- 		addr |= XME_ADDR_LOG_DEVICE;
-+	else if (type == TYP_RTSB)
-+		addr |= XME_ADDR_RT_DEVICE;
- 	else
- 		addr |= XME_ADDR_DATA_DEVICE;
- 
-@@ -3112,6 +3143,7 @@ metadump_f(
- 	metadump.zero_stale_data = true;
- 	metadump.dirty_log = false;
- 	metadump.external_log = false;
-+	metadump.realtime_data = false;
- 
- 	if (mp->m_sb.sb_magicnum != XFS_SB_MAGIC) {
- 		print_warning("bad superblock magic number %x, giving up",
-@@ -3190,6 +3222,20 @@ metadump_f(
- 		return 1;
- 	}
- 
-+	/* The realtime device only contains metadata if rtgroups is enabled. */
-+	if (mp->m_rtdev_targp->bt_bdev && xfs_has_rtgroups(mp))
-+		metadump.realtime_data = true;
++#define	OFF(f)	bitize(offsetof(struct xfs_rtbuf_blkinfo, rt_ ## f))
++const field_t	rgbitmap_flds[] = {
++	{ "magicnum", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(OFF(owner)), C1, 0, TYP_NONE },
++	{ "bno", FLDT_DFSBNO, OI(OFF(blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
++	/* the rtword array is after the actual structure */
++	{ "rtwords", FLDT_RTWORD, OI(bitize(sizeof(struct xfs_rtbuf_blkinfo))),
++	  rtwords_count, FLD_ARRAY | FLD_COUNT, TYP_DATA },
++	{ NULL }
++};
++#undef OFF
 +
-+	if (metadump.realtime_data && !version_opt_set)
-+		metadump.version = 2;
++const field_t	rgbitmap_hfld[] = {
++	{ "", FLDT_RGBITMAP, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
+diff --git a/db/rtgroup.h b/db/rtgroup.h
+index 85960a3fb9f5c9..06f554e1862851 100644
+--- a/db/rtgroup.h
++++ b/db/rtgroup.h
+@@ -9,6 +9,9 @@
+ extern const struct field	rtsb_flds[];
+ extern const struct field	rtsb_hfld[];
+ 
++extern const struct field	rgbitmap_flds[];
++extern const struct field	rgbitmap_hfld[];
 +
-+	if (metadump.version == 2 && xfs_has_realtime(mp) &&
-+	    xfs_has_rtgroups(mp) &&
-+	    !metadump.realtime_data) {
-+		print_warning("realtime device not loaded, use -R");
-+		return 1;
-+	}
-+
- 	/*
- 	 * If we'll copy the log, see if the log is dirty.
- 	 *
-@@ -3289,6 +3335,12 @@ metadump_f(
- 	if (!exitcode && !(metadump.version == 1 && metadump.external_log))
- 		exitcode = !copy_log();
+ extern void	rtsb_init(void);
+ extern int	rtsb_size(void *obj, int startoff, int idx);
  
-+	/* copy rt superblock */
-+	if (!exitcode && metadump.realtime_data && xfs_has_rtsb(mp)) {
-+		if (!copy_rtsb())
-+			exitcode = 1;
-+	}
-+
- 	/* write the remaining index */
- 	if (!exitcode && metadump.mdops->finish_dump)
- 		exitcode = metadump.mdops->finish_dump() < 0;
-diff --git a/db/xfs_metadump.sh b/db/xfs_metadump.sh
-index 9e8f86e53eb45d..b5c6959f2007f8 100755
---- a/db/xfs_metadump.sh
-+++ b/db/xfs_metadump.sh
-@@ -6,9 +6,9 @@
+diff --git a/db/type.c b/db/type.c
+index d875c0c636553b..65e7b24146f170 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -67,6 +67,7 @@ static const typ_t	__typtab[] = {
+ 	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_FINOBT, "finobt", handle_struct, finobt_hfld, NULL,
+ 		TYP_F_NO_CRC_OFF },
++	{ TYP_RGBITMAP, NULL },
+ 	{ TYP_NONE, NULL }
+ };
  
- OPTS=" "
- DBOPTS=" "
--USAGE="Usage: xfs_metadump [-aefFogwV] [-m max_extents] [-l logdev] source target"
-+USAGE="Usage: xfs_metadump [-aefFogwV] [-m max_extents] [-l logdev] [-r rtdev] [-v version] source target"
+@@ -113,6 +114,8 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_FINOBT, "finobt", handle_struct, finobt_crc_hfld,
+ 		&xfs_finobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
++	{ TYP_RGBITMAP, "rgbitmap", handle_struct, rgbitmap_hfld,
++		&xfs_rtbitmap_buf_ops, XFS_RTBUF_CRC_OFF },
+ 	{ TYP_NONE, NULL }
+ };
  
--while getopts "aefgl:m:owFv:V" c
-+while getopts "aefFgl:m:or:wv:V" c
- do
- 	case $c in
- 	a)	OPTS=$OPTS"-a ";;
-@@ -25,6 +25,7 @@ do
- 		status=$?
- 		exit $status
- 		;;
-+	r)	DBOPTS=$DBOPTS"-R "$OPTARG" ";;
- 	\?)	echo $USAGE 1>&2
- 		exit 2
- 		;;
-diff --git a/include/xfs_metadump.h b/include/xfs_metadump.h
-index e9c3dcb8f711b9..e35f791573efc2 100644
---- a/include/xfs_metadump.h
-+++ b/include/xfs_metadump.h
-@@ -68,12 +68,18 @@ struct xfs_metadump_header {
- /* Dump contains external log contents. */
- #define XFS_MD2_COMPAT_EXTERNALLOG	(1 << 3)
+@@ -159,6 +162,8 @@ static const typ_t	__typtab_spcrc[] = {
+ 	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_FINOBT, "finobt", handle_struct, finobt_spcrc_hfld,
+ 		&xfs_finobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
++	{ TYP_RGBITMAP, "rgbitmap", handle_struct, rgbitmap_hfld,
++		&xfs_rtbitmap_buf_ops, XFS_RTBUF_CRC_OFF },
+ 	{ TYP_NONE, NULL }
+ };
  
-+/* Dump contains realtime device contents. */
-+#define XFS_MD2_INCOMPAT_RTDEVICE	(1U << 0)
-+
-+#define XFS_MD2_INCOMPAT_ALL		(XFS_MD2_INCOMPAT_RTDEVICE)
-+
- struct xfs_meta_extent {
- 	/*
- 	 * Lowest 54 bits are used to store 512 byte addresses.
- 	 * Next 2 bits is used for indicating the device.
- 	 * 00 - Data device
- 	 * 01 - External log
-+	 * 10 - Realtime device
- 	 */
- 	__be64 xme_addr;
- 	/* In units of 512 byte blocks */
-@@ -88,6 +94,8 @@ struct xfs_meta_extent {
- #define XME_ADDR_DATA_DEVICE	(0ULL << XME_ADDR_DEVICE_SHIFT)
- /* Extent was copied from the log device */
- #define XME_ADDR_LOG_DEVICE	(1ULL << XME_ADDR_DEVICE_SHIFT)
-+/* Extent was copied from the rt device */
-+#define XME_ADDR_RT_DEVICE	(2ULL << XME_ADDR_DEVICE_SHIFT)
+diff --git a/db/type.h b/db/type.h
+index d4efa4b0fab541..e2148c6351d141 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -35,6 +35,7 @@ typedef enum typnm
+ 	TYP_SYMLINK,
+ 	TYP_TEXT,
+ 	TYP_FINOBT,
++	TYP_RGBITMAP,
+ 	TYP_NONE
+ } typnm_t;
  
- #define XME_ADDR_DEVICE_MASK	(3ULL << XME_ADDR_DEVICE_SHIFT)
- 
-diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
-index 496b5926603f48..8618ea99b9a57e 100644
---- a/man/man8/xfs_metadump.8
-+++ b/man/man8/xfs_metadump.8
-@@ -12,6 +12,9 @@ .SH SYNOPSIS
- .B \-l
- .I logdev
- ] [
-+.B \-r
-+.I rtdev
-+] [
- .B \-v
- .I version
- ]
-@@ -146,6 +149,14 @@ .SH OPTIONS
- .B \-o
- Disables obfuscation of file names and extended attributes.
- .TP
-+.BI \-r  " rtdev"
-+For filesystems that have a realtime section, this specifies the device where
-+the realtime section resides.
-+If the v2 metadump format is selected, the realtime group superblocks will be
-+copied to the metadump.
-+The v2 metadump format will be selected automatically if the filesystem
-+contains realtime groups.
-+.TP
- .B \-v
- The format of the metadump file to be produced.
- Valid values are 1 and 2.
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 269edb8f89969d..c6c00270234442 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -314,7 +314,7 @@ read_header_v2(
- 			sizeof(h->v2) - sizeof(h->v2.xmh_magic), 1, md_fp) != 1)
- 		fatal("error reading from metadump file\n");
- 
--	if (h->v2.xmh_incompat_flags != 0)
-+	if (h->v2.xmh_incompat_flags & cpu_to_be32(~XFS_MD2_INCOMPAT_ALL))
- 		fatal("Metadump header has unknown incompat flags set\n");
- 
- 	if (h->v2.xmh_reserved != 0)
-@@ -324,6 +324,9 @@ read_header_v2(
- 
- 	if (!mdrestore.external_log && (compat & XFS_MD2_COMPAT_EXTERNALLOG))
- 		fatal("External Log device is required\n");
-+
-+	if (h->v2.xmh_incompat_flags & cpu_to_be32(XFS_MD2_INCOMPAT_RTDEVICE))
-+		fatal("Realtime device not yet supported\n");
- }
- 
- static void
 
