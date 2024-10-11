@@ -1,188 +1,103 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 614331E501C;
-	Fri, 11 Oct 2024 13:50:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54606218D8F
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 14:00:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728654640; cv=none; b=aAavM454i9ht3rl64nmo4YuXCUMx/A1Mlj7pX6I7W88IAoPKcHHh6T16LO/w1LMUG+CZgLbGTEV71/q9jtT4IEJabcY0vY3QQKAEUBhRfyolZijRr/BuXblV55GZk+lXzThoVhq+/QBVkoFxMZ7a09U+CjdZUoo7HG7RlaPUCZk=
+	t=1728655215; cv=none; b=rbVtgbwCed/GWUfDqD5qESWiDlsDgkqBMUWP3yaUYGVWQliMycLKkbV+ocMq2Ai4+p/wob+ZeLg5X4MdYwmxykensW7cOziXREoRsp6LGS8o61WP5Qr6rEyIoxTnG89smD3JU5olm4FywbiOF9qBCDAivAjXB+ta75NXimcGCSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728654640; c=relaxed/simple;
-	bh=rkoN1t9+WGwqDDBopn4udo62u+w8ZOwNYcBJAvq9Nx0=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=IECZFPGgw1P2ctMAilnYlSvxhZY+BmKGSgqzF9wFAaXZxBGUDMfKVSgl0f8IuXdbU2FcrwCgXFcTAB30vvKTQaicIxDsZ6lz/RRKluB6P3NsDxMa/A+8y62I/uH8dmQ5h48crpcwtEv48wNWi41KW3M0G6PCTMxmSACHmHAfUmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=DRMwYd+b; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1728655215; c=relaxed/simple;
+	bh=W4h80WOZFPMc12+LlNx9x+9axZVOJ+AtFg6NE8o+S80=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aEqLsm6no/SOTc+S/sysI/HOXZGnfM2dgVBOviWPMo5wBPI1T3rpZmnZmcwjqFILEzpuXdR4EhQ287JWioJawc4ubmWFfJ0XUCWqjCJeQK97/82ii7sqEVJlfffoqE9kEsjoDAwq6KaX+HFUCuu7hQmP6TI9QdnjhcdWFxIGk9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=M24UBqwK; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="DRMwYd+b"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1728654635;
-	bh=KvNGlemhaNExRrqlaQX0CrDFggZF6YQd0fZVnjowWsM=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=DRMwYd+bbgVy+htDpLRrpNmovu27Zg0dxG7AOb97R+c4AJMEVG7JtuUnp+AolUgjv
-	 ONa2do625TUZFB7b7qLtIESnLirPx0g4oqwY6gNqwRAmMLaIiDZK4iz6TFZ2X8WAZX
-	 zEZePLfyx26unk2qsQTvoyHz51ToIUE8oIpKUzxQ=
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M24UBqwK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728655212;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0DPyN7WRsH3mIIgYx+3OE0TVMyoroZMa/gMc3BDqII4=;
+	b=M24UBqwKv1yip6QOM7QxzdCAEFSZdLr1Na85xpdPSpKWKBnRuFuz3BbYJq8I7eYdDdXt5u
+	j793vzYwcZ0Z2drADOBeYRvfgZihA/py2B9HMTOIra9psoNZmXtpKDZmffcGtDWUzR2QyZ
+	cB75aIwy54ElmUQ9DFAAvXmKOcjVkr4=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-317-lhuGFnjLM4-T2XOIOF0U8A-1; Fri,
+ 11 Oct 2024 10:00:08 -0400
+X-MC-Unique: lhuGFnjLM4-T2XOIOF0U8A-1
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3B7CD1955EE6;
+	Fri, 11 Oct 2024 14:00:07 +0000 (UTC)
+Received: from bfoster (unknown [10.22.32.133])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2D99D30001A3;
+	Fri, 11 Oct 2024 14:00:05 +0000 (UTC)
+Date: Fri, 11 Oct 2024 10:01:21 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: pass the exact range to initialize to
+ xfs_initialize_perag
+Message-ID: <ZwkvsY6B78M2GK-H@bfoster>
+References: <20240930164211.2357358-1-hch@lst.de>
+ <20240930164211.2357358-2-hch@lst.de>
+ <ZwfeiYzopK-iD24Y@bfoster>
+ <20241011075314.GA2749@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3818.100.11.1.3\))
-Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
- folios since Dec 2021 (any kernel from 6.1 upwards)
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <c6d723ca-457a-4f97-9813-a75349225e85@meta.com>
-Date: Fri, 11 Oct 2024 15:50:12 +0200
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
- Dave Chinner <david@fromorbit.com>,
- Matthew Wilcox <willy@infradead.org>,
- Jens Axboe <axboe@kernel.dk>,
- linux-mm@kvack.org,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Daniel Dao <dqminh@cloudflare.com>,
- regressions@lists.linux.dev,
- regressions@leemhuis.info
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <CCFA457F-E115-47F0-87F1-F64A51BDE96C@flyingcircus.io>
-References: <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
- <ZulMlPFKiiRe3iFd@casper.infradead.org>
- <52d45d22-e108-400e-a63f-f50ef1a0ae1a@meta.com>
- <ZumDPU7RDg5wV0Re@casper.infradead.org>
- <5bee194c-9cd3-47e7-919b-9f352441f855@kernel.dk>
- <459beb1c-defd-4836-952c-589203b7005c@meta.com>
- <ZurXAco1BKqf8I2E@casper.infradead.org>
- <ZuuBs762OrOk58zQ@dread.disaster.area>
- <CAHk-=wjsrwuU9uALfif4WhSg=kpwXqP2h1ZB+zmH_ORDsrLCnQ@mail.gmail.com>
- <CAHk-=wgQ_OeAaNMA7A=icuf66r7Atz1-NNs9Qk8O=2gEjd=qTw@mail.gmail.com>
- <E6728F3E-374A-4A86-A5F2-C67CCECD6F7D@flyingcircus.io>
- <CAHk-=wgtHDOxi+1uXo8gJcDKO7yjswQr5eMs0cgAB6=mp+yWxw@mail.gmail.com>
- <D49C9D27-7523-41C9-8B8D-82B2A7CBE97B@flyingcircus.io>
- <02121707-E630-4E7E-837B-8F53B4C28721@flyingcircus.io>
- <f8232f8b-06e0-4d1a-bee4-cfc2ac23194e@meta.com>
- <E07B71C9-A22A-4C0C-B4AD-247CECC74DFA@flyingcircus.io>
- <381863DE-17A7-4D4E-8F28-0F18A4CEFC31@flyingcircus.io>
- <0A480EBE-9B4D-49CC-9A32-3526F32426E6@flyingcircus.io>
- <c6d723ca-457a-4f97-9813-a75349225e85@meta.com>
-To: Chris Mason <clm@meta.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241011075314.GA2749@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Hi,
+On Fri, Oct 11, 2024 at 09:53:14AM +0200, Christoph Hellwig wrote:
+> On Thu, Oct 10, 2024 at 10:02:49AM -0400, Brian Foster wrote:
+> > > -	error = xfs_initialize_perag(mp, sbp->sb_agcount, sbp->sb_dblocks,
+> > > -			&mp->m_maxagi);
+> > > +	error = xfs_initialize_perag(mp, old_agcount, sbp->sb_agcount,
+> > > +			sbp->sb_dblocks, &mp->m_maxagi);
+> > 
+> > I assume this is because the superblock can change across recovery, but
+> > code wise this seems kind of easy to misread into thinking the variable
+> > is the same.
+> 
+> Which variable?
+> 
 
-> On 11. Oct 2024, at 15:06, Chris Mason <clm@meta.com> wrote:
->=20
-> - It's actually taking the IO a long time to finish.  We can poke at =
-the
-> pending requests, how does the device look in the VM?  (virtio, scsi =
-etc).
+old_agcount and sb_agcount and the fact that the value of the latter
+might change down in the recovery code isn't immediately obvious. A
+oneliner and/or logic check suggested below would clear it up IMO,
+thanks.
 
-I _think_ that=E2=80=99s not it. This is a Qemu w/ virtio-block + Ceph =
-stack with 2x10G and fully SSD backed. The last 24 hours show operation =
-latency at less than 0.016ms. Ceph=E2=80=99s slow request warning (30s =
-limit) has not triggered in the last 24 hours.
+Brian
 
-Also, aside from a VM that was exhausting its Qemu io throttling for a =
-minute (and stuck in completely different tracebacks) the only blocked =
-task reports from the last 48 hours was this specific process.
-
-I=E2=80=99d expect that we=E2=80=99d see a lot more reports about IO =
-issues from multiple VMs and multiple loads at the same time when the =
-storage misbehaves (we did experience those in the long long past in =
-older Ceph versions and with spinning rust, so I=E2=80=99m pretty =
-confident (at the moment) this isn=E2=80=99t a storage issue per se).
-
-Incidentally this now reminds me of a different (maybe not?) issue that =
-I=E2=80=99ve been trying to track down with mdraid/xfs:
-https://marc.info/?l=3Dlinux-raid&m=3D172295385102939&w=3D2
-
-This is only tested on an older kernel so far (5.15.138) and we ended up =
-seeing IOPS stuck in the md device but not below it. However, MD isn=E2=80=
-=99t involved here. I made the connection because the original traceback =
-also shows it stuck in =E2=80=9Cwait_on_page_writeback=E2=80=9D, but =
-maybe that=E2=80=99s a red herring:
-
-[Aug 6 09:35] INFO: task .backy-wrapped:2615 blocked for more than 122 =
-seconds.
-[ +0.008130] Not tainted 5.15.138 #1-NixOS
-[ +0.005194] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables =
-this message.
-[ +0.008895] task:.backy-wrapped state:D stack: 0 pid: 2615 ppid: 1 =
-flags:0x00000002
-[ +0.000005] Call Trace:
-[ +0.000002] <TASK>
-[ +0.000004] __schedule+0x373/0x1580
-[ +0.000009] ? xlog_cil_commit+0x559/0x880 [xfs]
-[ +0.000041] schedule+0x5b/0xe0
-[ +0.000001] io_schedule+0x42/0x70
-[ +0.000001] wait_on_page_bit_common+0x119/0x380
-[ +0.000005] ? __page_cache_alloc+0x80/0x80
-[ +0.000002] wait_on_page_writeback+0x22/0x70
-[ +0.000001] truncate_inode_pages_range+0x26f/0x6d0
-[ +0.000006] evict+0x15f/0x180
-[ +0.000003] __dentry_kill+0xde/0x170
-[ +0.000001] dput+0x15b/0x330
-[ +0.000002] do_renameat2+0x34e/0x5b0
-[ +0.000003] __x64_sys_rename+0x3f/0x50
-[ +0.000002] do_syscall_64+0x3a/0x90
-[ +0.000002] entry_SYSCALL_64_after_hwframe+0x62/0xcc
-[ +0.000003] RIP: 0033:0x7fdd1885275b
-[ +0.000002] RSP: 002b:00007ffde643ad18 EFLAGS: 00000246 ORIG_RAX: =
-0000000000000052
-[ +0.000002] RAX: ffffffffffffffda RBX: 00007ffde643adb0 RCX: =
-00007fdd1885275b
-[ +0.000001] RDX: 0000000000000000 RSI: 00007fdd09a3d3d0 RDI: =
-00007fdd098549d0
-[ +0.000001] RBP: 00007ffde643ad60 R08: 00000000ffffffff R09: =
-0000000000000000
-[ +0.000001] R10: 00007ffde643af90 R11: 0000000000000246 R12: =
-00000000ffffff9c
-[ +0.000000] R13: 00000000ffffff9c R14: 000000000183cab0 R15: =
-00007fdd0b128810
-[ +0.000001] </TASK>
-[ +0.000011] INFO: task kworker/u64:0:2380262 blocked for more than 122 =
-seconds.
-[ +0.008309] Not tainted 5.15.138 #1-NixOS
-[ +0.005190] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables =
-this message.
-[ +0.008895] task:kworker/u64:0 state:D stack: 0 pid:2380262 ppid: 2 =
-flags:0x00004000
-[ +0.000004] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
-[ +0.000006] Call Trace:
-[ +0.000001] <TASK>
-[ +0.000001] __schedule+0x373/0x1580
-[ +0.000003] schedule+0x5b/0xe0
-[ +0.000001] md_bitmap_startwrite+0x177/0x1e0
-[ +0.000004] ? finish_wait+0x90/0x90
-[ +0.000004] add_stripe_bio+0x449/0x770 [raid456]
-[ +0.000005] raid5_make_request+0x1cf/0xbd0 [raid456]
-[ +0.000003] ? kmem_cache_alloc_node_trace+0x391/0x3e0
-[ +0.000004] ? linear_map+0x44/0x90 [dm_mod]
-[ +0.000005] ? finish_wait+0x90/0x90
-[ +0.000001] ? __blk_queue_split+0x516/0x580
-[ +0.000003] md_handle_request+0x122/0x1b0
-[ +0.000003] md_submit_bio+0x6e/0xb0
-[ +0.000001] __submit_bio+0x18f/0x220
-[ +0.000002] ? crypt_page_alloc+0x46/0x60 [dm_crypt]
-[ +0.000002] submit_bio_noacct+0xbe/0x2d0
-[ +0.000001] kcryptd_crypt+0x392/0x550 [dm_crypt]
-[ +0.000002] process_one_work+0x1d6/0x360
-[ +0.000003] worker_thread+0x4d/0x3b0
-[ +0.000002] ? process_one_work+0x360/0x360
-[ +0.000001] kthread+0x118/0x140
-[ +0.000001] ? set_kthread_struct+0x50/0x50
-[ +0.000001] ret_from_fork+0x22/0x30
-[ +0.000004] </TASK>
-=E2=80=A6(more md kworker tasks pile up here)
-
-Christian
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
+> > I think the whole old/new terminology is kind of clunky for
+> > an interface that is not just for growfs. Maybe it would be more clear
+> > to use start/end terminology for xfs_initialize_perag(), then it's more
+> > straightforward that mount would init the full range whereas growfs
+> > inits a subrange.
+> 
+> fine with me.
+> 
+> > A oneliner comment or s/old_agcount/orig_agcount/ wouldn't hurt here
+> > either. Actually if that's the only purpose for this call and if you
+> > already have to sample sb_agcount, maybe just lifting/copying the if
+> > (old_agcount >= new_agcount) check into the caller would make the logic
+> > more self-explanatory. Hm?
+> 
+> Sure.
+> 
 
