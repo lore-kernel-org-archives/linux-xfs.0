@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6FB8BE8
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:33:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2296D2FB
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:33:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728610406; cv=none; b=B7Qc3ccPgaVQe/LGNdUkP/66gr9yNeE18VOxma83GKchM5Bz/kCLvXJtOJl1CyJjDrHxI8fBjMvNa0Xerkz6T3R28TZo4D/27MebPhdatC/lu9eycRfYGBAYuJNw8/1LZHHzsKMjXyOada4LHqmun/dP+z8n41I/gG1mz0qwK6k=
+	t=1728610421; cv=none; b=tDIBSBsUAyFaceIA815B1tNsFzg9Zp5bRcZu77ThJWZ+07Ss+QCOrjlDMRRKJ9sDECOjYuZSfajvx3a4QvO0g0dLaOoTBVNFuYzDMpZ9Xfe/CP6zK5xnuATxYWtovXY3LbdG+jLz1lwypd6iO9JPVjtE3oVzbZv8xQcTq5ljVpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728610406; c=relaxed/simple;
-	bh=AwsB+9bbgwkc2OLhxcri3q0mECFeFvK9DhcXiZb0uKk=;
+	s=arc-20240116; t=1728610421; c=relaxed/simple;
+	bh=CM3YMnoMbIRQPhJuoK651eoxPm9LqsaHPoKdACpqzh4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fKgWfF4YWvxGrodRBPHT1+npsHWiTTykiOTM2q83GNvhZCBjQ+/co2Xu36q9xgGtKNXJzvyIMAnwt3EJZ9HvTDvMTRdy7rIlAizZxiVQFNd3VVYXFgqIiRn8QtS9FaWY0GwXtwH/08+A5lA2SuhVQSoNs//Do3n8+6nTIPzoJ1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r54PJrA6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=B6aRHg/gk5zf9AdinYyG1b3pOapTK3X9jh4vlgQssbZnN90h3+gR/IClssd7rfbKQdpRaO9vleEiB7cR0SmhblJuFmMXNWjx0SG+jcSTMQKjM5OEWxDBew3pXiUbajv+LzafBJ410TC1Hzb1BoYEENgOk1AS1/bG9cKX7Dobwpo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ACXL10zU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r54PJrA6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D35DCC4CEC5;
-	Fri, 11 Oct 2024 01:33:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ACXL10zU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80997C4CEC5;
+	Fri, 11 Oct 2024 01:33:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728610405;
-	bh=AwsB+9bbgwkc2OLhxcri3q0mECFeFvK9DhcXiZb0uKk=;
+	s=k20201202; t=1728610421;
+	bh=CM3YMnoMbIRQPhJuoK651eoxPm9LqsaHPoKdACpqzh4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=r54PJrA6Pm1Tdn7NivSrEfy4A7ogb64XCX4dybi2sXOn/Fni29M1/5ah9hrPZnylr
-	 E7lQbGv2rvUQ9U2hyk56AfpJ4SW8+8NIGgifVvSUK/x/hB8HVTg7tF6AKjgslU1EWT
-	 gmYY+LZnhQ2KeH2ux91HPJLCMv+/ijo6F2OuIf9NrXYXOAGHhtCqEZSMmg5MIEWBBs
-	 Y3J5cLJuumIZhzrEiPjpyQZZowv3bQbYWYb2BSFoHde9lZ51j95rc31LDz6WrKSoNn
-	 kKxldRmXunAGdeya/W1A9FtiEzY88ZgYdGFBNrNuuvJNbzKUmMMlLMgYNzy1P9PAwp
-	 LPF853p/klmOg==
-Date: Thu, 10 Oct 2024 18:33:25 -0700
-Subject: [PATCH 34/43] xfs_io: display rt group in verbose bmap output
+	b=ACXL10zUu5dsaeN4WdW1aMhTDPdq36dwgNP+4Wb6GAR+52OYCLSGRurLBt9Ermywx
+	 jwJAtrarv9lkTfsmvc8/cXJXOjOazpsAGyFydQ+fSvXaBCXHoN5bpFff9g6BpD83Wt
+	 Q4uWlgaP6HDS1pCqrPJqKODHknVmqwBHRBxGTvOsCY38nqjLSC3+U9+H9fgytlyiC4
+	 hC4o5eX7AGDGJcCQUnFGPRVK0qkvvU/K924OsUYoDgloA5QbpEjxY11v+osde2aZy1
+	 suIAE9ZAiQPb3Ihjs4s8Q50EuAcCS3si5hzhr5uorojVPQAYWm4q3+J7MjX6Ch6u5o
+	 5NqpWR4I58vOQ==
+Date: Thu, 10 Oct 2024 18:33:41 -0700
+Subject: [PATCH 35/43] xfs_io: display rt group in verbose fsmap output
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860655887.4184637.8211766445762954492.stgit@frogsfrogsfrogs>
+Message-ID: <172860655903.4184637.9450310661916679042.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 References: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,104 +46,81 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Display the rt group number in the bmap -v output, just like we do for
+Display the rt group number in the fsmap output, just like we do for
 regular data files.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/bmap.c        |   27 ++++++++++++++++++---------
- libfrog/fsgeom.h |   12 ++++++++++++
- 2 files changed, 30 insertions(+), 9 deletions(-)
+ io/fsmap.c |   22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
 
-diff --git a/io/bmap.c b/io/bmap.c
-index 6182e1c591da18..b2f6b490528513 100644
---- a/io/bmap.c
-+++ b/io/bmap.c
-@@ -257,16 +257,18 @@ bmap_f(
- #define	FLG_BSW		0000010	/* Not on begin of stripe width */
- #define	FLG_ESW		0000001	/* Not on end   of stripe width */
- 		int	agno;
--		off_t agoff, bbperag;
-+		off_t	agoff, bbperag;
- 		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
- 		char	rbuf[32], bbuf[32], abuf[32];
- 		int	sunit, swidth;
+diff --git a/io/fsmap.c b/io/fsmap.c
+index bf1196390cf35d..545f619f5e1dc1 100644
+--- a/io/fsmap.c
++++ b/io/fsmap.c
+@@ -14,6 +14,7 @@
  
- 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
- 		tot_w = MINTOT_WIDTH;
--		if (is_rt)
--			sunit = swidth = bbperag = 0;
--		else {
-+		if (is_rt) {
-+			bbperag = bytes_per_rtgroup(&fsgeo) / BBSIZE;
-+			sunit = 0;
-+			swidth = 0;
-+		} else {
- 			bbperag = (off_t)fsgeo.agblocks *
- 				  (off_t)fsgeo.blocksize / BBSIZE;
- 			sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
-@@ -295,7 +297,7 @@ bmap_f(
- 					(long long)(map[i + 1].bmv_block +
- 						map[i + 1].bmv_length - 1LL));
- 				boff_w = max(boff_w, strlen(bbuf));
--				if (!is_rt) {
-+				if (bbperag > 0) {
- 					agno = map[i + 1].bmv_block / bbperag;
- 					agoff = map[i + 1].bmv_block -
- 							(agno * bbperag);
-@@ -312,13 +314,20 @@ bmap_f(
- 					numlen(map[i+1].bmv_length, 10));
- 			}
- 		}
--		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
-+		if (is_rt) {
-+			if (fsgeo.rgcount > 0)
-+				agno_w = max(MINAG_WIDTH, numlen(fsgeo.rgcount, 10));
-+			else
-+				agno_w = 0;
-+		} else {
-+			agno_w = max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
-+		}
- 		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
- 			_("EXT"),
- 			foff_w, _("FILE-OFFSET"),
- 			boff_w, is_rt ? _("RT-BLOCK-RANGE") : _("BLOCK-RANGE"),
--			agno_w, is_rt ? "" : _("AG"),
--			aoff_w, is_rt ? "" : _("AG-OFFSET"),
-+			agno_w, is_rt ? (fsgeo.rgcount ? _("RG") : "") : _("AG"),
-+			aoff_w, is_rt ? (fsgeo.rgcount ? _("RG-OFFSET") : "") : _("AG-OFFSET"),
- 			tot_w, _("TOTAL"),
- 			flg ? _(" FLAGS") : "");
- 		for (i = 0; i < egcnt; i++) {
-@@ -377,7 +386,7 @@ bmap_f(
- 						map[i + 1].bmv_length - 1LL));
- 				printf("%4d: %-*s %-*s", i, foff_w, rbuf,
- 					boff_w, bbuf);
--				if (!is_rt) {
-+				if (bbperag > 0) {
- 					agno = map[i + 1].bmv_block / bbperag;
- 					agoff = map[i + 1].bmv_block -
- 							(agno * bbperag);
-diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
-index c571ddbcfb9b70..b851b9bbf36a58 100644
---- a/libfrog/fsgeom.h
-+++ b/libfrog/fsgeom.h
-@@ -205,4 +205,16 @@ cvt_b_to_agbno(
- 	return cvt_daddr_to_agbno(xfd, cvt_btobbt(byteno));
- }
+ static cmdinfo_t	fsmap_cmd;
+ static dev_t		xfs_data_dev;
++static dev_t		xfs_rt_dev;
  
-+/* Return the number of bytes in an rtgroup. */
-+static inline uint64_t
-+bytes_per_rtgroup(
-+	const struct xfs_fsop_geom	*fsgeo)
-+{
-+	if (!fsgeo->rgcount)
-+		return 0;
-+
-+	return (uint64_t)fsgeo->rgextents * fsgeo->rtextsize *
-+		fsgeo->blocksize;
-+}
-+
- #endif /* __LIBFROG_FSGEOM_H__ */
+ static void
+ fsmap_help(void)
+@@ -170,7 +171,7 @@ dump_map_verbose(
+ 	unsigned long long	i;
+ 	struct fsmap		*p;
+ 	int			agno;
+-	off_t			agoff, bperag;
++	off_t			agoff, bperag, bperrtg;
+ 	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w;
+ 	int			nr_w, dev_w;
+ 	char			rbuf[40], bbuf[40], abuf[40], obuf[40];
+@@ -185,6 +186,7 @@ dump_map_verbose(
+ 	tot_w = MINTOT_WIDTH;
+ 	bperag = (off_t)fsgeo->agblocks *
+ 		  (off_t)fsgeo->blocksize;
++	bperrtg = bytes_per_rtgroup(fsgeo);
+ 	sunit = (fsgeo->sunit * fsgeo->blocksize);
+ 	swidth = (fsgeo->swidth * fsgeo->blocksize);
+ 
+@@ -243,6 +245,13 @@ dump_map_verbose(
+ 				"(%lld..%lld)",
+ 				(long long)BTOBBT(agoff),
+ 				(long long)BTOBBT(agoff + p->fmr_length - 1));
++		} else if (p->fmr_device == xfs_rt_dev && fsgeo->rgcount > 0) {
++			agno = p->fmr_physical / bperrtg;
++			agoff = p->fmr_physical - (agno * bperrtg);
++			snprintf(abuf, sizeof(abuf),
++				"(%lld..%lld)",
++				(long long)BTOBBT(agoff),
++				(long long)BTOBBT(agoff + p->fmr_length - 1));
+ 		} else
+ 			abuf[0] = 0;
+ 		aoff_w = max(aoff_w, strlen(abuf));
+@@ -315,6 +324,16 @@ dump_map_verbose(
+ 			snprintf(gbuf, sizeof(gbuf),
+ 				"%lld",
+ 				(long long)agno);
++		} else if (p->fmr_device == xfs_rt_dev && fsgeo->rgcount > 0) {
++			agno = p->fmr_physical / bperrtg;
++			agoff = p->fmr_physical - (agno * bperrtg);
++			snprintf(abuf, sizeof(abuf),
++				"(%lld..%lld)",
++				(long long)BTOBBT(agoff),
++				(long long)BTOBBT(agoff + p->fmr_length - 1));
++			snprintf(gbuf, sizeof(gbuf),
++				"%lld",
++				(long long)agno);
+ 		} else {
+ 			abuf[0] = 0;
+ 			gbuf[0] = 0;
+@@ -501,6 +520,7 @@ fsmap_f(
+ 	}
+ 	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
+ 	xfs_data_dev = fs ? fs->fs_datadev : 0;
++	xfs_rt_dev = fs ? fs->fs_rtdev : 0;
+ 
+ 	head->fmh_count = map_size;
+ 	do {
 
