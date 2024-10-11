@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 003862107
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:48:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F12B34A06
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 00:48:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728607719; cv=none; b=uibL6+BH+mXyXW13kCXar/x2jdAjvmK6TiR60KFVk3zw44k/BzhkimjKt5RiTq8KIznnFgY8yMGOs30U9BRrxY2b9ass1Tk9A7XTJ8RPFq4OA/Wkjl0ICsTp1sgRUGRsEbYBYMycfsTG0taTpb23F46HMnOWJ+syvh0Emwlqr5o=
+	t=1728607735; cv=none; b=Q0DLUtN+80yoJkKeM6jidGdKX48J9/ef65zE7Keqy0o/wbZ2OIXGC0ECbuWaZvC1LlXvPTBTDulLB3bjcUKSw2tMGIh7orPsBJkhOdfQIMyEvBQUtsUy82f/vP1BqDE+xTOeLVoIL9nP695qEsk89GOv1SPaCKgansoIroPPqc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728607719; c=relaxed/simple;
-	bh=MOCENxklL0NCYiTyOYMnZfq/OlGDAp1rb6DEmVgWnc4=;
+	s=arc-20240116; t=1728607735; c=relaxed/simple;
+	bh=Q+uOtmmBGaDnnQA5WvJ2FeAa2U5U+Ny/bIaKnhcIgQk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VJIMJHLz5pZUy5ZOWqoOSRwa78egJ1whSJ0eBpRIbJKU4vkg6Nli1CUvY/OPqSlp3EyXkh5VF7eg9JrIx+T/UP/D6YCUaRSG6fCSIN4qxtczIPrt/oww2mFt8mppz20CC51kYw2ahIVTQ8FjxbERDdVBt036lRuX/PS5NE116W8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+AkjlHk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GDmwWGNTaBdyZVtCHaxj+SWNoDfSEwM6mazC1/Wdd0wEhmUGMNxkDidLbLiBqkX8p5zB3JVN/Dt3qTyYsNZAilysHIackwJ3nS6o+JycMA92E0iN8iA75nnJPRsQ1LhAdGTsSXvyyS/8XWrmm4l59ErE/TmDwZafS+8Qf3+nPdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iEHnm++k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+AkjlHk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF0F0C4CEC5;
-	Fri, 11 Oct 2024 00:48:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iEHnm++k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76831C4CEC5;
+	Fri, 11 Oct 2024 00:48:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728607718;
-	bh=MOCENxklL0NCYiTyOYMnZfq/OlGDAp1rb6DEmVgWnc4=;
+	s=k20201202; t=1728607734;
+	bh=Q+uOtmmBGaDnnQA5WvJ2FeAa2U5U+Ny/bIaKnhcIgQk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=T+AkjlHkGWmtLXwzIo2yVHSY+o/9noWeLRcALEpkRxbzOYoEIUj1KhgzLx0Z0yNeR
-	 raHLOCPDZr6H3JPs9yVQm5JbVBCc0e5W5skbA4kR1qdXVBJBPEQOQ2LSx1UOhF4736
-	 Eq6H3bxWdD3FjE1hwDr4IJKQ7bv7Mzy/lzfuZCiaJ/BR5ml8bXd/pf2g1jCr6rkSKO
-	 qV5hX0Kj2LKKZVKFruD0pqpafGKqpbvRws0uopL40bXF8wl38TXGCPop4lfOesYZqb
-	 LaRgjhK3QUgtYYajZmqAXBMotO46Isj2bNtWyH0ukzcB0T5z1n0YR0FDHh5hYgyhwc
-	 eb7xYeo2LLtfg==
-Date: Thu, 10 Oct 2024 17:48:38 -0700
-Subject: [PATCH 01/28] xfs: constify the xfs_sb predicates
+	b=iEHnm++kOUUiLjjb7sOPYGxbIptpYDIzEHWpm92GTuUKWzthtO14JGBDGVF0zhWbE
+	 9b6VNm8mIPPFVm3GJDN/bA7sBK7uCoodgwn6b9pShAskKhLxlJVFhXNX2g5dVRGEKr
+	 z7ipjGnQaMmmDXZ3bj1aPAKiPt90yL59QFM0I3k/6s2rfGC/zBEIhVgoDfHJYcg6Oe
+	 Qa2+podENO4Yr9tfZIYzYeAi1nc9Pm+qLLBgANM5kfkzZrj+6T26udSepSSruEGlWW
+	 ga9d4ka0JDwgdydcVFRVOnSNjepM1Ejfc+3f1CgvHydpEc0J3qLfj4IrHDMCptUJiz
+	 L0W1utm20LgFA==
+Date: Thu, 10 Oct 2024 17:48:54 -0700
+Subject: [PATCH 02/28] xfs: constify the xfs_inode predicates
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172860642030.4176876.2795384731737477942.stgit@frogsfrogsfrogs>
+Message-ID: <172860642047.4176876.13639551313907624679.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860641935.4176876.5699259080908526243.stgit@frogsfrogsfrogs>
 References: <172860641935.4176876.5699259080908526243.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,94 +46,103 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Change the xfs_sb predicates to take a const struct xfs_sb pointer
-because they do not change the superblock.
+Change the xfs_inode predicates to take a const struct xfs_inode pointer
+because they do not change the inode.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h |   24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_inode.c |    2 +-
+ fs/xfs/xfs_inode.h |   20 ++++++++++----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index e1bfee0c3b1a8c..a24ab46aaebc7e 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -278,7 +278,7 @@ struct xfs_dsb {
- 
- #define	XFS_SB_VERSION_NUM(sbp)	((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
- 
--static inline bool xfs_sb_is_v5(struct xfs_sb *sbp)
-+static inline bool xfs_sb_is_v5(const struct xfs_sb *sbp)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 07356c0c1ed7cc..0439f129629937 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3040,7 +3040,7 @@ xfs_inode_alloc_unitsize(
+ /* Should we always be using copy on write for file writes? */
+ bool
+ xfs_is_always_cow_inode(
+-	struct xfs_inode	*ip)
++	const struct xfs_inode	*ip)
  {
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+ 	return ip->i_mount->m_always_cow && xfs_has_reflink(ip->i_mount);
  }
-@@ -287,12 +287,12 @@ static inline bool xfs_sb_is_v5(struct xfs_sb *sbp)
-  * Detect a mismatched features2 field.  Older kernels read/wrote
-  * this into the wrong slot, so to be safe we keep them in sync.
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 97ed912306fd06..be7d4b26aaea3f 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -100,7 +100,7 @@ static inline bool xfs_inode_on_unlinked_list(const struct xfs_inode *ip)
+ 	return ip->i_prev_unlinked != 0;
+ }
+ 
+-static inline bool xfs_inode_has_attr_fork(struct xfs_inode *ip)
++static inline bool xfs_inode_has_attr_fork(const struct xfs_inode *ip)
+ {
+ 	return ip->i_forkoff > 0;
+ }
+@@ -271,7 +271,7 @@ xfs_iflags_test_and_set(xfs_inode_t *ip, unsigned long flags)
+ 	return ret;
+ }
+ 
+-static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
++static inline bool xfs_is_reflink_inode(const struct xfs_inode *ip)
+ {
+ 	return ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
+ }
+@@ -285,9 +285,9 @@ static inline bool xfs_is_metadata_inode(const struct xfs_inode *ip)
+ 	       xfs_is_quota_inode(&mp->m_sb, ip->i_ino);
+ }
+ 
+-bool xfs_is_always_cow_inode(struct xfs_inode *ip);
++bool xfs_is_always_cow_inode(const struct xfs_inode *ip);
+ 
+-static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
++static inline bool xfs_is_cow_inode(const struct xfs_inode *ip)
+ {
+ 	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
+ }
+@@ -296,17 +296,17 @@ static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
+  * Check if an inode has any data in the COW fork.  This might be often false
+  * even for inodes with the reflink flag when there is no pending COW operation.
   */
--static inline bool xfs_sb_has_mismatched_features2(struct xfs_sb *sbp)
-+static inline bool xfs_sb_has_mismatched_features2(const struct xfs_sb *sbp)
+-static inline bool xfs_inode_has_cow_data(struct xfs_inode *ip)
++static inline bool xfs_inode_has_cow_data(const struct xfs_inode *ip)
  {
- 	return sbp->sb_bad_features2 != sbp->sb_features2;
+ 	return ip->i_cowfp && ip->i_cowfp->if_bytes;
  }
  
--static inline bool xfs_sb_version_hasmorebits(struct xfs_sb *sbp)
-+static inline bool xfs_sb_version_hasmorebits(const struct xfs_sb *sbp)
+-static inline bool xfs_inode_has_bigtime(struct xfs_inode *ip)
++static inline bool xfs_inode_has_bigtime(const struct xfs_inode *ip)
  {
- 	return xfs_sb_is_v5(sbp) ||
- 	       (sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
-@@ -342,8 +342,8 @@ static inline void xfs_sb_version_addprojid32(struct xfs_sb *sbp)
- #define XFS_SB_FEAT_COMPAT_UNKNOWN	~XFS_SB_FEAT_COMPAT_ALL
- static inline bool
- xfs_sb_has_compat_feature(
--	struct xfs_sb	*sbp,
--	uint32_t	feature)
-+	const struct xfs_sb	*sbp,
-+	uint32_t		feature)
- {
- 	return (sbp->sb_features_compat & feature) != 0;
- }
-@@ -360,8 +360,8 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
--	struct xfs_sb	*sbp,
--	uint32_t	feature)
-+	const struct xfs_sb	*sbp,
-+	uint32_t		feature)
- {
- 	return (sbp->sb_features_ro_compat & feature) != 0;
- }
-@@ -387,8 +387,8 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
- xfs_sb_has_incompat_feature(
--	struct xfs_sb	*sbp,
--	uint32_t	feature)
-+	const struct xfs_sb	*sbp,
-+	uint32_t		feature)
- {
- 	return (sbp->sb_features_incompat & feature) != 0;
- }
-@@ -399,8 +399,8 @@ xfs_sb_has_incompat_feature(
- #define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
- static inline bool
- xfs_sb_has_incompat_log_feature(
--	struct xfs_sb	*sbp,
--	uint32_t	feature)
-+	const struct xfs_sb	*sbp,
-+	uint32_t		feature)
- {
- 	return (sbp->sb_features_log_incompat & feature) != 0;
- }
-@@ -420,7 +420,7 @@ xfs_sb_add_incompat_log_features(
- 	sbp->sb_features_log_incompat |= features;
+ 	return ip->i_diflags2 & XFS_DIFLAG2_BIGTIME;
  }
  
--static inline bool xfs_sb_version_haslogxattrs(struct xfs_sb *sbp)
-+static inline bool xfs_sb_version_haslogxattrs(const struct xfs_sb *sbp)
+-static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
++static inline bool xfs_inode_has_large_extent_counts(const struct xfs_inode *ip)
  {
- 	return xfs_sb_is_v5(sbp) && (sbp->sb_features_log_incompat &
- 		 XFS_SB_FEAT_INCOMPAT_LOG_XATTRS);
+ 	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
+ }
+@@ -315,7 +315,7 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+  * Decide if this file is a realtime file whose data allocation unit is larger
+  * than a single filesystem block.
+  */
+-static inline bool xfs_inode_has_bigrtalloc(struct xfs_inode *ip)
++static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+ {
+ 	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
+ }
+@@ -620,9 +620,9 @@ void xfs_sort_inodes(struct xfs_inode **i_tab, unsigned int num_inodes);
+ 
+ static inline bool
+ xfs_inode_unlinked_incomplete(
+-	struct xfs_inode	*ip)
++	const struct xfs_inode	*ip)
+ {
+-	return VFS_I(ip)->i_nlink == 0 && !xfs_inode_on_unlinked_list(ip);
++	return VFS_IC(ip)->i_nlink == 0 && !xfs_inode_on_unlinked_list(ip);
+ }
+ int xfs_inode_reload_unlinked_bucket(struct xfs_trans *tp, struct xfs_inode *ip);
+ int xfs_inode_reload_unlinked(struct xfs_inode *ip);
 
