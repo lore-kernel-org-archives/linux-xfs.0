@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EE403232
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3208BE5
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2024 01:26:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609968; cv=none; b=IYYRPqEozEYD+lOkmi3kUSE67N4CMf02MSLao2lVUfRL0LmAIkM67F5mOCbgsjFXChOOSRnwZ9dPDlYf2kxLG0CoetG4OJxL+HCch31uQhgEI2XICjTjHa0q8piRSRQSja2f5c2UfxxldjVR2HCE9zEv1S2FjP2zSqo9Kgbpt14=
+	t=1728609984; cv=none; b=p3UiKAnp2jq2/s4DXPn1W2eduL1FrRLPvWrc6CoRri52weEIvGCH2q3kWJaRYfFdhiOsi1ITWThKL0AN+uS7JVqn9Mn0kHq06uJwX1gUXz6nOw2eNifSdtrCHQqsdlkSouJmMLRbotk4wHysYqN2xgKJDgxeiCn74/BOQtRKWro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609968; c=relaxed/simple;
-	bh=+wvC/LkyWjml/xLILMIN6s55Cm2wU4JrYFlxuDj2Yo0=;
+	s=arc-20240116; t=1728609984; c=relaxed/simple;
+	bh=hZeg7zE/q6t40g9NS3OtWgztSgVD9tb++dlxB34sfJE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f9YPbveH7Cj5WVDR68Rg26mHhnnKkPCzsN/iovrCI47ZDzUVUPXSNWfSq+ftLFSjNtgL+52yBYG3zQIbX5t6b8aXDWKqVUj6dL1DNJRKlFSgayezkIAWXDEucm5W79JE+qm3CArb0tSApTx+EioVh6cjrQdHytT5rTRfnlFniGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FfBwdLKw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=l+mKLvC8vunerBJsYdgH5VxYTi4Tcp+V+58vBX14B8b2wlegRRr/G/2Db06IsbVqOr+Ubt0+tFDNaz9lPsRVSHCGzNEKbpPQ8RWpa7oXTna1wunYCsSUIySB+tYb0IbgFRT7sI/zDBcxmUu2P+34QZolc9jde27CIj58f7LAkaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GHAj4Iu5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FfBwdLKw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77637C4CEC5;
-	Fri, 11 Oct 2024 01:26:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GHAj4Iu5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A983C4CEC5;
+	Fri, 11 Oct 2024 01:26:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728609968;
-	bh=+wvC/LkyWjml/xLILMIN6s55Cm2wU4JrYFlxuDj2Yo0=;
+	s=k20201202; t=1728609984;
+	bh=hZeg7zE/q6t40g9NS3OtWgztSgVD9tb++dlxB34sfJE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FfBwdLKwtv5WFg+OskKEbUmlPDPQyR8lwbjB6nOiVaWO9TcjP7WI8dqFiFCB15zd3
-	 aLbxO5v6aOBwOXqtbeyp6C76skjDZNl5bHn8THaC+n63dOn1HFkz9IFBqaYcartk7w
-	 d+NcZM2VPYX2fUym3jR7nfxZJ2EEAD4y89auID1lbEYy6Gbbv8TVcSsvrRjGpfPK/r
-	 D033FuqesDpvnonHx3SpSqSP4Z2FW992pXP+XeJW6pBuXt0BINr8OUVzPgLgnYA/AM
-	 v/qxhCQiEMz2CVaHdXfgoKpuClVK/43bNt4Ud4+Iq6Q5xwUYGcY5udwFNWGFUQOQwe
-	 kRSyoribm12BA==
-Date: Thu, 10 Oct 2024 18:26:08 -0700
-Subject: [PATCH 06/43] libfrog: add bitmap_clear
+	b=GHAj4Iu5sSfJArFTF9N/ZkANkXEsuxJiOBXNb5bjspGbGecW/M6+Wn5szvaG0PVyu
+	 MU90Wj/RLHeW1bEyzXya0BZLoFGk46qEi2B9egbMMXpjLfuSVK259/5EfEDzTlEl0b
+	 AvtOokUIJWppVSbbKrCXjPH10LRYWagyBuOvjFYeQCeeDNyQvxx0ID2DsAB0Dtuh6j
+	 ZVKjKYBdrTXK+126YAIPGsS4UgCPRYhq3RsfNnEHbKyDkaLz5Go70RrX7GkPl5gEkG
+	 nAGax8y7zX9nRJ0ZEs43m2sKP5+CwuqZVtavMqLDWT5I2smIpYOqIXfODI3oTQBts2
+	 SqcJknC2/1tqQ==
+Date: Thu, 10 Oct 2024 18:26:23 -0700
+Subject: [PATCH 07/43] xfs_logprint: report realtime EFIs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <172860655458.4184637.12186203328158843079.stgit@frogsfrogsfrogs>
+Message-ID: <172860655474.4184637.14546541063680887673.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 References: <172860655297.4184637.15225662719767407515.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,81 +46,194 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Uncomment and fix bitmap_clear so that xfs_repair can start using it.
+Decode the EFI format just enough to report if an EFI targets the
+realtime device or not.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-[hch: split from a larger patch]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/bitmap.c |   25 +++++++++++++++++++------
- libfrog/bitmap.h |    1 +
- 2 files changed, 20 insertions(+), 6 deletions(-)
+ logprint/log_misc.c      |    2 ++
+ logprint/log_print_all.c |    8 ++++++
+ logprint/log_redo.c      |   57 +++++++++++++++++++++++++++++++++++-----------
+ 3 files changed, 53 insertions(+), 14 deletions(-)
 
 
-diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
-index 5af5ab8dd6b3bb..0308886d446ff2 100644
---- a/libfrog/bitmap.c
-+++ b/libfrog/bitmap.c
-@@ -233,10 +233,9 @@ bitmap_set(
- 	return res;
- }
- 
--#if 0	/* Unused, provided for completeness. */
- /* Clear a region of bits. */
--int
--bitmap_clear(
-+static int
-+__bitmap_clear(
- 	struct bitmap		*bmap,
- 	uint64_t		start,
- 	uint64_t		len)
-@@ -251,8 +250,8 @@ bitmap_clear(
- 	uint64_t		new_length;
- 	struct avl64node	*node;
- 	int			stat;
-+	int			ret = 0;
- 
--	pthread_mutex_lock(&bmap->bt_lock);
- 	/* Find any existing nodes over that range. */
- 	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
- 
-@@ -312,10 +311,24 @@ bitmap_clear(
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 8e86ac347fa963..1df8c5d377c02d 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -997,12 +997,14 @@ xlog_print_record(
+ 					&i, num_ops);
+ 			break;
+ 		    }
++		    case XFS_LI_EFI_RT:
+ 		    case XFS_LI_EFI: {
+ 			skip = xlog_print_trans_efi(&ptr,
+ 					be32_to_cpu(op_head->oh_len),
+ 					continued);
+ 			break;
+ 		    }
++		    case XFS_LI_EFD_RT:
+ 		    case XFS_LI_EFD: {
+ 			skip = xlog_print_trans_efd(&ptr,
+ 					be32_to_cpu(op_head->oh_len));
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index a4a5e41f17fa64..5a9ddd05ab1288 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -410,9 +410,11 @@ xlog_recover_print_logitem(
+ 	case XFS_LI_INODE:
+ 		xlog_recover_print_inode(item);
+ 		break;
++	case XFS_LI_EFD_RT:
+ 	case XFS_LI_EFD:
+ 		xlog_recover_print_efd(item);
+ 		break;
++	case XFS_LI_EFI_RT:
+ 	case XFS_LI_EFI:
+ 		xlog_recover_print_efi(item);
+ 		break;
+@@ -474,6 +476,12 @@ xlog_recover_print_item(
+ 	case XFS_LI_INODE:
+ 		printf("INO");
+ 		break;
++	case XFS_LI_EFD_RT:
++		printf("EFD_RT");
++		break;
++	case XFS_LI_EFI_RT:
++		printf("EFI_RT");
++		break;
+ 	case XFS_LI_EFD:
+ 		printf("EFD");
+ 		break;
+diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+index 684e5f4a3f32c2..41e7c94a52dc21 100644
+--- a/logprint/log_redo.c
++++ b/logprint/log_redo.c
+@@ -67,6 +67,7 @@ xlog_print_trans_efi(
+ 	uint			src_len,
+ 	int			continued)
+ {
++	const char		*item_name = "EFI?";
+ 	xfs_efi_log_format_t	*src_f, *f = NULL;
+ 	uint			dst_len;
+ 	xfs_extent_t		*ex;
+@@ -103,8 +104,14 @@ xlog_print_trans_efi(
+ 		goto error;
  	}
  
- out:
--	pthread_mutex_unlock(&bmap->bt_lock);
- 	return ret;
- }
--#endif
+-	printf(_("EFI:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
+-		f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
++	switch (f->efi_type) {
++	case XFS_LI_EFI:	item_name = "EFI"; break;
++	case XFS_LI_EFI_RT:	item_name = "EFI_RT"; break;
++	}
 +
-+/* Clear a region of bits. */
-+int
-+bitmap_clear(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	int			res;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	res = __bitmap_clear(bmap, start, length);
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return res;
-+}
++	printf(_("%s:  #regs: %d	num_extents: %u  id: 0x%llx\n"),
++			item_name, f->efi_size, f->efi_nextents,
++			(unsigned long long)f->efi_id);
  
- /* Iterate the set regions of this bitmap. */
+ 	if (continued) {
+ 		printf(_("EFI free extent data skipped (CONTINUE set, no space)\n"));
+@@ -113,7 +120,7 @@ xlog_print_trans_efi(
+ 
+ 	ex = f->efi_extents;
+ 	for (i=0; i < f->efi_nextents; i++) {
+-		printf("(s: 0x%llx, l: %d) ",
++		printf("(s: 0x%llx, l: %u) ",
+ 			(unsigned long long)ex->ext_start, ex->ext_len);
+ 		if (i % 4 == 3) printf("\n");
+ 		ex++;
+@@ -130,6 +137,7 @@ void
+ xlog_recover_print_efi(
+ 	struct xlog_recover_item *item)
+ {
++	const char		*item_name = "EFI?";
+ 	xfs_efi_log_format_t	*f, *src_f;
+ 	xfs_extent_t		*ex;
+ 	int			i;
+@@ -155,12 +163,18 @@ xlog_recover_print_efi(
+ 		return;
+ 	}
+ 
+-	printf(_("	EFI:  #regs:%d	num_extents:%d  id:0x%llx\n"),
+-		   f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
++	switch (f->efi_type) {
++	case XFS_LI_EFI:	item_name = "EFI"; break;
++	case XFS_LI_EFI_RT:	item_name = "EFI_RT"; break;
++	}
++
++	printf(_("	%s:  #regs:%d	num_extents:%u  id:0x%llx\n"),
++			item_name, f->efi_size, f->efi_nextents,
++			(unsigned long long)f->efi_id);
+ 	ex = f->efi_extents;
+ 	printf("	");
+ 	for (i=0; i< f->efi_nextents; i++) {
+-		printf("(s: 0x%llx, l: %d) ",
++		printf("(s: 0x%llx, l: %u) ",
+ 			(unsigned long long)ex->ext_start, ex->ext_len);
+ 		if (i % 4 == 3)
+ 			printf("\n");
+@@ -174,8 +188,10 @@ xlog_recover_print_efi(
  int
-diff --git a/libfrog/bitmap.h b/libfrog/bitmap.h
-index 043b77eece65b3..47df0ad38467ce 100644
---- a/libfrog/bitmap.h
-+++ b/libfrog/bitmap.h
-@@ -14,6 +14,7 @@ struct bitmap {
- int bitmap_alloc(struct bitmap **bmap);
- void bitmap_free(struct bitmap **bmap);
- int bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
-+int bitmap_clear(struct bitmap *bmap, uint64_t start, uint64_t length);
- int bitmap_iterate(struct bitmap *bmap, int (*fn)(uint64_t, uint64_t, void *),
- 		void *arg);
- int bitmap_iterate_range(struct bitmap *bmap, uint64_t start, uint64_t length,
+ xlog_print_trans_efd(char **ptr, uint len)
+ {
+-	xfs_efd_log_format_t *f;
+-	xfs_efd_log_format_t lbuf;
++	const char		*item_name = "EFD?";
++	xfs_efd_log_format_t	*f;
++	xfs_efd_log_format_t	lbuf;
++
+ 	/* size without extents at end */
+ 	uint core_size = sizeof(xfs_efd_log_format_t);
+ 
+@@ -185,11 +201,17 @@ xlog_print_trans_efd(char **ptr, uint len)
+ 	 */
+ 	memmove(&lbuf, *ptr, min(core_size, len));
+ 	f = &lbuf;
++
++	switch (f->efd_type) {
++	case XFS_LI_EFD:	item_name = "EFD"; break;
++	case XFS_LI_EFD_RT:	item_name = "EFD_RT"; break;
++	}
++
+ 	*ptr += len;
+ 	if (len >= core_size) {
+-		printf(_("EFD:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
+-			f->efd_size, f->efd_nextents,
+-			(unsigned long long)f->efd_efi_id);
++		printf(_("%s:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
++				item_name, f->efd_size, f->efd_nextents,
++				(unsigned long long)f->efd_efi_id);
+ 
+ 		/* don't print extents as they are not used */
+ 
+@@ -204,18 +226,25 @@ void
+ xlog_recover_print_efd(
+ 	struct xlog_recover_item *item)
+ {
++	const char		*item_name = "EFD?";
+ 	xfs_efd_log_format_t	*f;
+ 
+ 	f = (xfs_efd_log_format_t *)item->ri_buf[0].i_addr;
++
++	switch (f->efd_type) {
++	case XFS_LI_EFD:	item_name = "EFD"; break;
++	case XFS_LI_EFD_RT:	item_name = "EFD_RT"; break;
++	}
++
+ 	/*
+ 	 * An xfs_efd_log_format structure contains a variable length array
+ 	 * as the last field.
+ 	 * Each element is of size xfs_extent_32_t or xfs_extent_64_t.
+ 	 * However, the extents are never used and won't be printed.
+ 	 */
+-	printf(_("	EFD:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
+-		f->efd_size, f->efd_nextents,
+-		(unsigned long long)f->efd_efi_id);
++	printf(_("	%s:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
++			item_name, f->efd_size, f->efd_nextents,
++			(unsigned long long)f->efd_efi_id);
+ }
+ 
+ /* Reverse Mapping Update Items */
 
