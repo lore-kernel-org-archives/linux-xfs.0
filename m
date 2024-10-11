@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84DAE17543;
-	Fri, 11 Oct 2024 01:43:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA25101E6;
+	Fri, 11 Oct 2024 01:43:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728610984; cv=none; b=mWS/x56FFMGjpanLoTtEfsHwoDGIU6Ts5g621bpAqm1O37ThoZIsMEd6KCXH0hfkctFu4flPLTg4h3XMmGaJa5gYBlaFuNXwiS9WoInWqNyDHo6TaeJtwROXcvGCKnNfvTPFlKWPSgONTRk1YOhcHZKBjvjlppL0lwZ+9BWasMo=
+	t=1728611000; cv=none; b=IWwwEsbJzeyr21tBjuec7zP8zJo/dK/C5HjZ2evCHOtB4aita7cSLRhMh8LVfdsV7y2MNjXw3CzPKkaOROpDsZzLSF3hjluJIh96JruGM1Ut9pRdfp2Vyh+5O8plPvpn9yuIFgz6KeNpWNN52tpDhvTbDUaxpwRZXAwhq4nWCrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728610984; c=relaxed/simple;
-	bh=NQy46sA3vGvd0gOWyN742K/wahVJMO+paEvNX5y73Vo=;
+	s=arc-20240116; t=1728611000; c=relaxed/simple;
+	bh=IBphJlXMo8kIFmosi7P1qUTbVnOjzbhZ879WsQ/vNYc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PEPZFJbuiNDjwsKdJ0dx5GMnoG6LH53p5IoQHGowtt3irrN8ylke3eLUU50sdI211PNua4cak6XOoAomkJe2LAo6+mwekV2qbgKpABJZqjqbl+5enDs58p94jKlmVvGbVIIltF/L/Tw7hNWx/Yzb0GiyRch2dp0KT/HHmEyyIVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tiJO/270; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nPQClMI1VvN8lwzW3NSOz5838Zg3GE+ApUz36DQLuyY+RtCsLMonjwGFad1QhEe089JJuG17fyCZHnh6CM6K7IKbtCCsPomc+VOAWW0vnCcUH1B2QA5MkoAuITu79hWx7F2vCovVVwRGZu5LzN5PclkL6YUEXCepHPjxWXQK1iQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p583lQRu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tiJO/270"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 515F7C4CEC5;
-	Fri, 11 Oct 2024 01:43:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p583lQRu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9B64C4CEC6;
+	Fri, 11 Oct 2024 01:43:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728610984;
-	bh=NQy46sA3vGvd0gOWyN742K/wahVJMO+paEvNX5y73Vo=;
+	s=k20201202; t=1728611000;
+	bh=IBphJlXMo8kIFmosi7P1qUTbVnOjzbhZ879WsQ/vNYc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tiJO/270I2Yo5f87ZxVsmB60C995oqw7ytKIJdui4JfrR1pbxyfwR8dpEF38fjjO7
-	 4kXcrRx1ipALKxkxEZ+MsN+EAx2r/YnGRj84NuZEDtIR2aWEYI0/jmxpX5iO3ebg2C
-	 4BvVLeQ4V54gONKYff66cdmhJIaCMBa6ZAvBOD4qziu+oJj04Kiu/GVqVpVD/CAbhG
-	 GQvYrVVf5v9FJrwhlsW/dnHB6wOb9AI0YjecqPSAkMRNtjIc/6EoontBfgwM+Lyt41
-	 aqUmZAaZv3EF/ozRUV6Vq/DEb4maoyg9uC5b/C3EKeJYqDkbqkZ4KsnJTnhlGeMUMJ
-	 U+6oTyObV5QDw==
-Date: Thu, 10 Oct 2024 18:43:03 -0700
-Subject: [PATCH 08/16] xfs/206: update mkfs filtering for rt groups feature
+	b=p583lQRurmjNbxk63wzuHjbs2JBNZ0ECQgaziBmz/KP+0nQyPp7/77yx0/WMHKLLI
+	 EI6d++/h8I9I99/qRvz16y0JazHcW1/3j5f+Es7gBrBhOVp3gClyaz0NLApLXWz6PB
+	 VFkLiQXk8MpsQP7MC8y2u1ZiZhJqV+TfM5Yrmycmy6FiNDF1QK+BiOBBo0pWM5Iv0M
+	 CkCsRGTxUvUphJNKB8RW8igwOyOQMJOst//7PPSiyP1frsnBcbvjqozNVTAoMmbo4v
+	 cDQjW/4ANfp+BMSr6KUBnWiG6VQk8Jr81ZvKaUlHTP3o8lBpbW68+k/xAyY+B5BYlS
+	 bpJRc4o5BiefQ==
+Date: Thu, 10 Oct 2024 18:43:19 -0700
+Subject: [PATCH 09/16] common: pass the realtime device to xfs_db when
+ possible
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de, fstests@vger.kernel.org
-Message-ID: <172860658642.4188964.1452550069283841602.stgit@frogsfrogsfrogs>
+Message-ID: <172860658658.4188964.5581122925265318002.stgit@frogsfrogsfrogs>
 In-Reply-To: <172860658506.4188964.2073353321745959286.stgit@frogsfrogsfrogs>
 References: <172860658506.4188964.2073353321745959286.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,25 +47,28 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Filter out the new mkfs lines that show the rtgroup information, since
-this test is heavily dependent on old mkfs output.
+Teach xfstests to pass the realtime device to xfs_db when it supports
+that option.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/206 |    1 +
- 1 file changed, 1 insertion(+)
+ common/xfs |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/tests/xfs/206 b/tests/xfs/206
-index ef5f4868e9bdca..01531e1f08c37e 100755
---- a/tests/xfs/206
-+++ b/tests/xfs/206
-@@ -65,6 +65,7 @@ mkfs_filter()
- 	    -e "/exchange=/d" \
- 	    -e '/metadir=.*/d' \
- 	    -e 's/, parent=[01]//' \
-+	    -e '/rgcount=/d' \
- 	    -e "/^Default configuration/d"
+diff --git a/common/xfs b/common/xfs
+index 39cb04ff2cddcd..ffa5f3fa6d0d7b 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -303,6 +303,10 @@ _scratch_xfs_db_options()
+ 	SCRATCH_OPTIONS=""
+ 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+ 		SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
++	if [ "$USE_EXTERNAL" = yes ] && [ ! -z "$SCRATCH_RTDEV" ]; then
++		$XFS_DB_PROG --help 2>&1 | grep -q -- '-R rtdev' && \
++			SCRATCH_OPTIONS="$SCRATCH_OPTIONS -R$SCRATCH_RTDEV"
++	fi
+ 	echo $SCRATCH_OPTIONS $* $SCRATCH_DEV
  }
  
 
