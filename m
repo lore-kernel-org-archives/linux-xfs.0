@@ -1,122 +1,266 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB6815574F
-	for <linux-xfs@vger.kernel.org>; Sat, 12 Oct 2024 14:06:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C9A11E892
+	for <linux-xfs@vger.kernel.org>; Sat, 12 Oct 2024 17:01:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728741964; cv=none; b=Ij5xSZx10OTZXLGHI9J3DHTM9ssG7g7kTdfgOv3FfntvQPe/kidb9k62kBP4QaPs5hMhlSlZNSmCAQfXAIDG2pLcYtSdiYuIfRvJqswvjkjwkBPw+hY1A3D1Ez29HjxMFkDvQ9G1OX+2PyUYBnyQjPBMazjHmzfwC7/FMoOvUds=
+	t=1728752492; cv=none; b=rZOE2xO1waLiVzuDYV6E2KWxgnMSnLG7r6d+Gb0RPZoK/E7dsMWYPw96f245zx7S+zbkNCggjjJ37XGJL1pBiq5ltazuroDT0wdf49S66JVXsf1dB6i/iULJbAys9IZSo/uIeXu3ps9asGAp+za2Am9QliWOgOGeLJw85/kJULs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728741964; c=relaxed/simple;
-	bh=NBksyTOGWe4Nt8KqI4uApjQlOLOGrnw160iwZF/dcKg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R22oxs7OgWdYf5Wcbc2j7uQPlClItC4mqV5VqJc7ApAnD8ZzGn4Y0xoCpt3/7b+vZ/sAC0wZGNMCli7zVulsxvVct3mcADdOciW2x9iDC2e9PcQ+2gRveygHZb3Ne+W6JZPQKoxzIP1Bx0TdBC+9ths6ohkQAav0rE64UzWu1Nc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DQVfXZEZ; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1728752492; c=relaxed/simple;
+	bh=OrFTEk4OJ5/oC7f++K7QTVGGih9HPx9szWtkAxs8OI0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=T+4UEEtxnMs1Y+9rYOFLIYQe+5uxO4yE+CLGpe9LYPUfyoHGCcbxTrLwAtAaaJJx93YQ9tKMSV/pmiwcINBarLt9AfOtZoN5iQitm/5ooNQMB8bEfczRW+6BXFbbj7qyWUEejHYB4s4I52qVzDnZLJ4RKTH/AxCGtVTNbertj4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Hc7SbeMs; arc=none smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DQVfXZEZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1728741962;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=waFDwgPr4QcJIxhWov0AkVYaGHbJ4W1aOqTw0mnlcSk=;
-	b=DQVfXZEZAB/o3GgF6Qy3cBUA3Sx8HO72rNnHOf7nL6hH+w/eLwXLa2Ps3DiEOndOmWVxup
-	cmTvb5DhsS5A/uI/Wsl+LJYNSrGk7B2AASXHfumGCA7pAVSitcf3Ycafllr1jIfzSRJL6W
-	1wec3AhaFB0BvzN2XRo90uQxpi2JNXw=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-79-D0QaXwS3OTqKzQjSbv-0vQ-1; Sat, 12 Oct 2024 10:05:58 -0400
-X-MC-Unique: D0QaXwS3OTqKzQjSbv-0vQ-1
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-71e03f4cbe1so3710949b3a.0
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Oct 2024 07:05:58 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Hc7SbeMs"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-a99b1f43aceso369668066b.0
+        for <linux-xfs@vger.kernel.org>; Sat, 12 Oct 2024 10:01:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1728752489; x=1729357289; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=eLK0SWU0DV/lYestXMEbl8Q5Iv6txd4W8a4XPICpv8U=;
+        b=Hc7SbeMsZaCxj3RSVe21yp3vgP6kmdiMiYUnLEyaO3rii1nXFHsCIXOIsZo3OoX2eA
+         PERij4+J4vQ0Re6kmGyv5AMTfOF/wl66/aUwL7GUEtZJ3OOVGqT6vx5ita4i6dEaQiCR
+         uCqmybPUxV7KDmMKN81JyDRLBq7/pRDGEx4Qo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728741957; x=1729346757;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=waFDwgPr4QcJIxhWov0AkVYaGHbJ4W1aOqTw0mnlcSk=;
-        b=GExh8dqW7DO/5GB3Gshkkwx2XcoJVDftkpZzbR9rmmJv+dXJALZ2huASE0aFM+PYNZ
-         6qi67dgStK6i/iyqqX1DytJC4NJ06dUEoTD3JrBDIA6MGlQOkX9XJAKoAG1sNIGtLTuK
-         qda6PcGhpHnvjAcriei/ckCT2iH7TdFtd/7TDs3k4Ka+nXgdXnL3/hW8As5l9sPsToGC
-         FfYtmrdZKyEMapD0OXBr1QREet3rA1I0Z4eYpQppCLteOp2RB4SpD9ItMT5Wo7p8oyGr
-         aK9u3kyePKeLNnCPsZJLLOjElD5rHxzqMfARfDVWEobWqm3ZndlzlWaON4YYJZpPmRFG
-         lkow==
-X-Forwarded-Encrypted: i=1; AJvYcCVgxNKYafkDNpVceACTo71uSn4Zb6pfUsTeF1I5KnUO2v6DgBzHTbpK7MfjGTuWhq8tUH+z/D6gvHk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw7QlDOPsRp/nJnmItUPhKPeXQko6icioUfR/DG6rsiKAQVrV+c
-	BYc8TCoqyLqkvAnlt/rvqC+TRl/ZgS3fDGi9kDCfnWak7sEre+vzCbxXUijIU7gW9NiBWURzCOy
-	3lhiLrABqCasbtqx95vCZ4uQFFTWwF2uVfxxRZFf6viSff77eBeR+OFsK0g==
-X-Received: by 2002:a05:6a00:1252:b0:71e:659:f2dd with SMTP id d2e1a72fcca58-71e37f4edf2mr9636647b3a.20.1728741957679;
-        Sat, 12 Oct 2024 07:05:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHOcIar4YRVXK9mEh/hhK+NDFYUIxYOnGopKwwWU/UhwCmi5Oxf/aZxhd++QLkTL7P5kcpEfg==
-X-Received: by 2002:a05:6a00:1252:b0:71e:659:f2dd with SMTP id d2e1a72fcca58-71e37f4edf2mr9636615b3a.20.1728741957349;
-        Sat, 12 Oct 2024 07:05:57 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71e2aa937cesm4163289b3a.132.2024.10.12.07.05.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 12 Oct 2024 07:05:56 -0700 (PDT)
-Date: Sat, 12 Oct 2024 22:05:53 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs/122: add tests for commitrange structures
-Message-ID: <20241012140553.hpgvmjfajdfdjtgh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <172780126017.3586479.18209378224774919872.stgit@frogsfrogsfrogs>
- <172780126049.3586479.7813790327650448381.stgit@frogsfrogsfrogs>
- <ZvzeDhbIUPEHCP2D@infradead.org>
- <20241002224700.GG21853@frogsfrogsfrogs>
- <20241011062858.p5tewpiewwgzpzbo@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241011181920.GO21840@frogsfrogsfrogs>
+        d=1e100.net; s=20230601; t=1728752489; x=1729357289;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=eLK0SWU0DV/lYestXMEbl8Q5Iv6txd4W8a4XPICpv8U=;
+        b=gmZeCvOnKd9hexfPUdWh0OzfQQU4ll0gKjzT5cKig1E0fQzO4F2YFBUMTLswln0/Lm
+         zl8aQ08sxolGcwat5KafOkzrl26nUKsop9hXYYlj/zHB8G5HNye5XP0WsbpXKoojhKBB
+         nM7bKOCr30NIIc6tbYEyIHrd5b9/NDffM//tcey+Gu0gBbmJM8PdCePxBjQFcuYcv2Dg
+         061gApiBXpEzC2Nv1W+h6AwW1qTfE9GmBuGtWZSV0VIPRekFk4Ow+KjSgOMgwX4m7Yql
+         xqPT73CmQSmmUZl7g/L2pkhgbRGfmvbL7OovYmCF9r+Muwr6OPFZ+8jz0pZmPs3N+WN3
+         Z1lQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUrTZipLK1C1uZGyriVkk1/NTedMr29ZLLk9EJqhVWbI0iYEGajqGlIcxKFl4Xn6/iT0aN6ihO/nLU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzk0UPVtCeSZGRHtlL3oCTiUDdITBn/02kw+d1EMxN1PNNxrrWp
+	7tslgEAteaWfdx6sa6y6LJw08IJQOlX770AP+iYSKswCO4otC0ri46ZkMutXTykgNJ/5RtRiM3V
+	pVwc=
+X-Google-Smtp-Source: AGHT+IGW/EF/az5T7iwjwK4k7zTAVDDROEaODTaxBa3lnztowfeYDrKsyRo5wdiRHwigPdOSOGbE/Q==
+X-Received: by 2002:a17:906:794b:b0:a90:9fb5:2c43 with SMTP id a640c23a62f3a-a99b8a67042mr639036466b.34.1728752488451;
+        Sat, 12 Oct 2024 10:01:28 -0700 (PDT)
+Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com. [209.85.218.42])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a99f92c709bsm34001266b.133.2024.10.12.10.01.26
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 12 Oct 2024 10:01:26 -0700 (PDT)
+Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-a99e3b3a411so133969166b.0
+        for <linux-xfs@vger.kernel.org>; Sat, 12 Oct 2024 10:01:26 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCWzTeIsNlu3IKwvxDAyioryeQPJ5jvzy9H67k1YUV5L4Qia389xQ2F0u3rxV8eBwxHOqyk5QfE0rjk=@vger.kernel.org
+X-Received: by 2002:a17:907:720f:b0:a98:f44d:a198 with SMTP id
+ a640c23a62f3a-a99b8775a40mr639248066b.1.1728752485597; Sat, 12 Oct 2024
+ 10:01:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241011181920.GO21840@frogsfrogsfrogs>
+References: <CAHk-=wh5LRp6Tb2oLKv1LrJWuXKOvxcucMfRMmYcT-npbo0=_A@mail.gmail.com>
+ <ZulMlPFKiiRe3iFd@casper.infradead.org> <52d45d22-e108-400e-a63f-f50ef1a0ae1a@meta.com>
+ <ZumDPU7RDg5wV0Re@casper.infradead.org> <5bee194c-9cd3-47e7-919b-9f352441f855@kernel.dk>
+ <459beb1c-defd-4836-952c-589203b7005c@meta.com> <ZurXAco1BKqf8I2E@casper.infradead.org>
+ <ZuuBs762OrOk58zQ@dread.disaster.area> <CAHk-=wjsrwuU9uALfif4WhSg=kpwXqP2h1ZB+zmH_ORDsrLCnQ@mail.gmail.com>
+ <CAHk-=wgQ_OeAaNMA7A=icuf66r7Atz1-NNs9Qk8O=2gEjd=qTw@mail.gmail.com>
+ <E6728F3E-374A-4A86-A5F2-C67CCECD6F7D@flyingcircus.io> <CAHk-=wgtHDOxi+1uXo8gJcDKO7yjswQr5eMs0cgAB6=mp+yWxw@mail.gmail.com>
+ <D49C9D27-7523-41C9-8B8D-82B2A7CBE97B@flyingcircus.io> <02121707-E630-4E7E-837B-8F53B4C28721@flyingcircus.io>
+ <f8232f8b-06e0-4d1a-bee4-cfc2ac23194e@meta.com> <E07B71C9-A22A-4C0C-B4AD-247CECC74DFA@flyingcircus.io>
+ <381863DE-17A7-4D4E-8F28-0F18A4CEFC31@flyingcircus.io> <0A480EBE-9B4D-49CC-9A32-3526F32426E6@flyingcircus.io>
+ <c6d723ca-457a-4f97-9813-a75349225e85@meta.com>
+In-Reply-To: <c6d723ca-457a-4f97-9813-a75349225e85@meta.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Sat, 12 Oct 2024 10:01:08 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wjty_0NfiZn2HVzT0Ye-RR09+Rqbd1azwJLOTJrX+V5MQ@mail.gmail.com>
+Message-ID: <CAHk-=wjty_0NfiZn2HVzT0Ye-RR09+Rqbd1azwJLOTJrX+V5MQ@mail.gmail.com>
+Subject: Re: Known and unfixed active data loss bug in MM + XFS with large
+ folios since Dec 2021 (any kernel from 6.1 upwards)
+To: Chris Mason <clm@meta.com>
+Cc: Christian Theune <ct@flyingcircus.io>, Dave Chinner <david@fromorbit.com>, 
+	Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Daniel Dao <dqminh@cloudflare.com>, 
+	regressions@lists.linux.dev, regressions@leemhuis.info
+Content-Type: multipart/mixed; boundary="000000000000cf77a306244a8d90"
 
-On Fri, Oct 11, 2024 at 11:19:20AM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 11, 2024 at 02:28:58PM +0800, Zorro Lang wrote:
-> > On Wed, Oct 02, 2024 at 03:47:00PM -0700, Darrick J. Wong wrote:
-> > > On Tue, Oct 01, 2024 at 10:45:50PM -0700, Christoph Hellwig wrote:
-> > > > On Tue, Oct 01, 2024 at 09:49:27AM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > 
-> > > > > Update this test to check the ioctl structure for XFS_IOC_COMMIT_RANGE.
-> > > > 
-> > > > Meh.  Can we please not add more to xfs/122, as that's alway just
-> > > > a pain?  We can just static_assert the size in xfsprogs (or the
-> > > > xfstests code using it) instead of this mess.
-> > > 
-> > > Oh right, we had a plan to autotranslate the xfs/122 stuff to
-> > > xfs_ondisk.h didn't we... I'll put that back on my list.
-> > 
-> > Hi Darrick,
-> > 
-> > Do you want to have this patch at first, or just wait for your
-> > next version which does the "autotranslate"?
-> 
-> Let's drop this for now, machine-converting xfs/122 to xfs_ondisk.h
-> wasn't as hard as I thought it might be.  Would you be ok with merging
-> the fiexchange.h patch and the fsstress funshare patch this week?
+--000000000000cf77a306244a8d90
+Content-Type: text/plain; charset="UTF-8"
 
-Sure, if you hope so :)
+On Fri, 11 Oct 2024 at 06:06, Chris Mason <clm@meta.com> wrote:
+>
+> - Linus's starvation observation.  It doesn't feel like there's enough
+> load to cause this, especially given us sitting in truncate, where it
+> should be pretty unlikely to have multiple procs banging on the page in
+> question.
 
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > > 
-> > > --D
-> > > 
-> > 
-> > 
-> 
+Yeah, I think the starvation can only possibly happen in
+fdatasync-like paths where it's waiting for existing writeback without
+holding the page lock. And while Christian has had those backtraces
+too, the truncate path is not one of them.
 
+That said, just because I wanted to see how nasty it is, I looked into
+changing the rules for folio_wake_bit().
+
+Christian, just to clarify, this is not for  you to test - this is
+very experimental - but maybe Willy has comments on it.
+
+Because it *might* be possible to do something like the attached,
+where we do the page flags changes atomically but without any locks if
+there are no waiters, but if there is a waiter on the page, we always
+clear the page flag bit atomically under the waitqueue lock as we wake
+up the waiter.
+
+I changed the name (and the return value) of the
+folio_xor_flags_has_waiters() function to just not have any
+possibility of semantic mixup, but basically instead of doing the xor
+atomically and unconditionally (and returning whether we had waiters),
+it now does it conditionally only if we do *not* have waiters, and
+returns true if successful.
+
+And if there were waiters, it moves the flag clearing into the wakeup function.
+
+That in turn means that the "while whiteback" loop can go back to be
+just a non-looping "if writeback", and folio_wait_writeback() can't
+get into any starvation with new writebacks always showing up.
+
+The reason I say it *might* be possible to do something like this is
+that it changes __folio_end_writeback() to no longer necessarily clear
+the writeback bit under the XA lock. If there are waiters, we'll clear
+it later (after releasing the lock) in the caller.
+
+Willy? What do you think? Clearly this now makes PG_writeback not
+synchronized with the PAGECACHE_TAG_WRITEBACK tag, but the reason I
+think it might be ok is that the code that *sets* the PG_writeback bit
+in __folio_start_writeback() only ever starts with a page that isn't
+under writeback, and has a
+
+        VM_BUG_ON_FOLIO(folio_test_writeback(folio), folio);
+
+at the top of the function even outside the XA lock. So I don't think
+these *need* to be synchronized under the XA lock, and I think the
+folio flag wakeup atomicity might be more important than the XA
+writeback tag vs folio writeback bit.
+
+But I'm not going to really argue for this patch at all - I wanted to
+look at how bad it was, I wrote it, I'm actually running it on my
+machine now and it didn't *immediately* blow up in my face, so it
+*may* work just fine.
+
+The patch is fairly simple, and apart from the XA tagging issue is
+seems very straightforward. I'm just not sure it's worth synchronizing
+one part just to at the same time de-synchronize another..
+
+                   Linus
+
+--000000000000cf77a306244a8d90
+Content-Type: text/x-patch; charset="US-ASCII"; 
+	name="0001-Test-atomic-folio-bit-waiting.patch"
+Content-Disposition: attachment; 
+	filename="0001-Test-atomic-folio-bit-waiting.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <f_m26e2grp0>
+X-Attachment-Id: f_m26e2grp0
+
+RnJvbSA5ZDRmMGQ2MGFiYzRkY2U1YjdjZmJhZDQ1NzZhMjgyOTgzMmJiODM4IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBMaW51cyBUb3J2YWxkcyA8dG9ydmFsZHNAbGludXgtZm91bmRh
+dGlvbi5vcmc+CkRhdGU6IFNhdCwgMTIgT2N0IDIwMjQgMDk6MzQ6MjQgLTA3MDAKU3ViamVjdDog
+W1BBVENIXSBUZXN0IGF0b21pYyBmb2xpbyBiaXQgd2FpdGluZwoKLS0tCiBpbmNsdWRlL2xpbnV4
+L3BhZ2UtZmxhZ3MuaCB8IDI2ICsrKysrKysrKysrKysrKystLS0tLS0tLS0tCiBtbS9maWxlbWFw
+LmMgICAgICAgICAgICAgICB8IDI4ICsrKysrKysrKysrKysrKysrKysrKysrKysrLS0KIG1tL3Bh
+Z2Utd3JpdGViYWNrLmMgICAgICAgIHwgIDYgKysrLS0tCiAzIGZpbGVzIGNoYW5nZWQsIDQ1IGlu
+c2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgv
+cGFnZS1mbGFncy5oIGIvaW5jbHVkZS9saW51eC9wYWdlLWZsYWdzLmgKaW5kZXggMWIzYTc2NzEw
+NDg3Li5iMzBhNzNlMWMyYzcgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvcGFnZS1mbGFncy5o
+CisrKyBiL2luY2x1ZGUvbGludXgvcGFnZS1mbGFncy5oCkBAIC03MzAsMjIgKzczMCwyOCBAQCBU
+RVNUUEFHRUZMQUdfRkFMU0UoS3NtLCBrc20pCiB1NjQgc3RhYmxlX3BhZ2VfZmxhZ3MoY29uc3Qg
+c3RydWN0IHBhZ2UgKnBhZ2UpOwogCiAvKioKLSAqIGZvbGlvX3hvcl9mbGFnc19oYXNfd2FpdGVy
+cyAtIENoYW5nZSBzb21lIGZvbGlvIGZsYWdzLgorICogZm9saW9feG9yX2ZsYWdzX25vX3dhaXRl
+cnMgLSBDaGFuZ2UgZm9saW8gZmxhZ3MgaWYgbm8gd2FpdGVycwogICogQGZvbGlvOiBUaGUgZm9s
+aW8uCi0gKiBAbWFzazogQml0cyBzZXQgaW4gdGhpcyB3b3JkIHdpbGwgYmUgY2hhbmdlZC4KKyAq
+IEBtYXNrOiBXaGljaCBmbGFncyB0byBjaGFuZ2UuCiAgKgotICogVGhpcyBtdXN0IG9ubHkgYmUg
+dXNlZCBmb3IgZmxhZ3Mgd2hpY2ggYXJlIGNoYW5nZWQgd2l0aCB0aGUgZm9saW8KLSAqIGxvY2sg
+aGVsZC4gIEZvciBleGFtcGxlLCBpdCBpcyB1bnNhZmUgdG8gdXNlIGZvciBQR19kaXJ0eSBhcyB0
+aGF0Ci0gKiBjYW4gYmUgc2V0IHdpdGhvdXQgdGhlIGZvbGlvIGxvY2sgaGVsZC4gIEl0IGNhbiBh
+bHNvIG9ubHkgYmUgdXNlZAotICogb24gZmxhZ3Mgd2hpY2ggYXJlIGluIHRoZSByYW5nZSAwLTYg
+YXMgc29tZSBvZiB0aGUgaW1wbGVtZW50YXRpb25zCi0gKiBvbmx5IGFmZmVjdCB0aG9zZSBiaXRz
+LgorICogVGhpcyBkb2VzIHRoZSBvcHRpbWlzdGljIGZhc3QtY2FzZSBvZiBjaGFuZ2luZyBwYWdl
+IGZsYWcgYml0cworICogdGhhdCBoYXMgbm8gd2FpdGVycy4gT25seSBmbGFncyBpbiB0aGUgZmly
+c3Qgd29yZCBjYW4gYmUgbW9kaWZpZWQsCisgKiBhbmQgdGhlIG9sZCB2YWx1ZSBtdXN0IGJlIHN0
+YWJsZSAodHlwaWNhbGx5IHRoaXMgY2xlYXJzIHRoZQorICogbG9ja2VkIG9yIHdyaXRlYmFjayBi
+aXQgb3Igc2ltaWxhcikuCiAgKgotICogUmV0dXJuOiBXaGV0aGVyIHRoZXJlIGFyZSB0YXNrcyB3
+YWl0aW5nIG9uIHRoZSBmb2xpby4KKyAqIFJldHVybjogdHJ1ZSBpZiBpdCBzdWNjZWVkZWQKICAq
+Lwotc3RhdGljIGlubGluZSBib29sIGZvbGlvX3hvcl9mbGFnc19oYXNfd2FpdGVycyhzdHJ1Y3Qg
+Zm9saW8gKmZvbGlvLAorc3RhdGljIGlubGluZSBib29sIGZvbGlvX3hvcl9mbGFnc19ub193YWl0
+ZXJzKHN0cnVjdCBmb2xpbyAqZm9saW8sCiAJCXVuc2lnbmVkIGxvbmcgbWFzaykKIHsKLQlyZXR1
+cm4geG9yX3VubG9ja19pc19uZWdhdGl2ZV9ieXRlKG1hc2ssIGZvbGlvX2ZsYWdzKGZvbGlvLCAw
+KSk7CisJY29uc3QgdW5zaWduZWQgbG9uZyB3YWl0ZXJfbWFzayA9IDF1bCA8PCBQR193YWl0ZXJz
+OworCXVuc2lnbmVkIGxvbmcgKmZsYWdzID0gZm9saW9fZmxhZ3MoZm9saW8sIDApOworCXVuc2ln
+bmVkIGxvbmcgdmFsID0gUkVBRF9PTkNFKCpmbGFncyk7CisJZG8geworCQlpZiAodmFsICYgd2Fp
+dGVyX21hc2spCisJCQlyZXR1cm4gZmFsc2U7CisJfSB3aGlsZSAoIXRyeV9jbXB4Y2hnX3JlbGVh
+c2UoZmxhZ3MsICZ2YWwsIHZhbCBeIG1hc2spKTsKKwlyZXR1cm4gdHJ1ZTsKIH0KIAogLyoqCmRp
+ZmYgLS1naXQgYS9tbS9maWxlbWFwLmMgYi9tbS9maWxlbWFwLmMKaW5kZXggNjY0ZTYwN2E3MWVh
+Li41ZmJhZjZjZWE5NjQgMTAwNjQ0Ci0tLSBhL21tL2ZpbGVtYXAuYworKysgYi9tbS9maWxlbWFw
+LmMKQEAgLTExNjQsNiArMTE2NCwxNCBAQCBzdGF0aWMgaW50IHdha2VfcGFnZV9mdW5jdGlvbih3
+YWl0X3F1ZXVlX2VudHJ5X3QgKndhaXQsIHVuc2lnbmVkIG1vZGUsIGludCBzeW5jLAogCXJldHVy
+biAoZmxhZ3MgJiBXUV9GTEFHX0VYQ0xVU0lWRSkgIT0gMDsKIH0KIAorLyoKKyAqIENsZWFyIHRo
+ZSBmb2xpbyBiaXQgYW5kIHdha2Ugd2FpdGVycyBhdG9taWNhbGx5IHVuZGVyCisgKiB0aGUgZm9s
+aW8gd2FpdHF1ZXVlIGxvY2suCisgKgorICogTm90ZSB0aGF0IHRoZSBmYXN0LXBhdGggYWx0ZXJu
+YXRpdmUgdG8gY2FsbGluZyB0aGlzIGlzCisgKiB0byBhdG9taWNhbGx5IGNsZWFyIHRoZSBiaXQg
+YW5kIGNoZWNrIHRoYXQgdGhlIFBHX3dhaXRlcnMKKyAqIGJpdCB3YXMgbm90IHNldC4KKyAqLwog
+c3RhdGljIHZvaWQgZm9saW9fd2FrZV9iaXQoc3RydWN0IGZvbGlvICpmb2xpbywgaW50IGJpdF9u
+cikKIHsKIAl3YWl0X3F1ZXVlX2hlYWRfdCAqcSA9IGZvbGlvX3dhaXRxdWV1ZShmb2xpbyk7CkBA
+IC0xMTc1LDYgKzExODMsNyBAQCBzdGF0aWMgdm9pZCBmb2xpb193YWtlX2JpdChzdHJ1Y3QgZm9s
+aW8gKmZvbGlvLCBpbnQgYml0X25yKQogCWtleS5wYWdlX21hdGNoID0gMDsKIAogCXNwaW5fbG9j
+a19pcnFzYXZlKCZxLT5sb2NrLCBmbGFncyk7CisJY2xlYXJfYml0X3VubG9jayhiaXRfbnIsIGZv
+bGlvX2ZsYWdzKGZvbGlvLCAwKSk7CiAJX193YWtlX3VwX2xvY2tlZF9rZXkocSwgVEFTS19OT1JN
+QUwsICZrZXkpOwogCiAJLyoKQEAgLTE1MDcsNyArMTUxNiw3IEBAIHZvaWQgZm9saW9fdW5sb2Nr
+KHN0cnVjdCBmb2xpbyAqZm9saW8pCiAJQlVJTERfQlVHX09OKFBHX3dhaXRlcnMgIT0gNyk7CiAJ
+QlVJTERfQlVHX09OKFBHX2xvY2tlZCA+IDcpOwogCVZNX0JVR19PTl9GT0xJTyghZm9saW9fdGVz
+dF9sb2NrZWQoZm9saW8pLCBmb2xpbyk7Ci0JaWYgKGZvbGlvX3hvcl9mbGFnc19oYXNfd2FpdGVy
+cyhmb2xpbywgMSA8PCBQR19sb2NrZWQpKQorCWlmICghZm9saW9feG9yX2ZsYWdzX25vX3dhaXRl
+cnMoZm9saW8sIDEgPDwgUEdfbG9ja2VkKSkKIAkJZm9saW9fd2FrZV9iaXQoZm9saW8sIFBHX2xv
+Y2tlZCk7CiB9CiBFWFBPUlRfU1lNQk9MKGZvbGlvX3VubG9jayk7CkBAIC0xNTM1LDEwICsxNTQ0
+LDI1IEBAIHZvaWQgZm9saW9fZW5kX3JlYWQoc3RydWN0IGZvbGlvICpmb2xpbywgYm9vbCBzdWNj
+ZXNzKQogCVZNX0JVR19PTl9GT0xJTyghZm9saW9fdGVzdF9sb2NrZWQoZm9saW8pLCBmb2xpbyk7
+CiAJVk1fQlVHX09OX0ZPTElPKGZvbGlvX3Rlc3RfdXB0b2RhdGUoZm9saW8pLCBmb2xpbyk7CiAK
+KwkvKgorCSAqIFRyeSB0byBjbGVhciAnbG9ja2VkJyBhdCB0aGUgc2FtZSB0aW1lIGFzIHNldHRp
+bmcgJ3VwdG9kYXRlJworCSAqCisJICogTm90ZSB0aGF0IGlmIHdlIGhhdmUgbG9jayBiaXQgd2Fp
+dGVycyBhbmQgdGhpcyBmYXN0LWNhc2UgZmFpbHMsCisJICogd2UnbGwgaGF2ZSB0byBjbGVhciB0
+aGUgbG9jayBiaXQgYXRvbWljYWxseSB1bmRlciB0aGUgZm9saW8gd2FpdAorCSAqIHF1ZXVlIGxv
+Y2ssIHNvIHRoZW4gd2UnbGwgc2V0ICd1cGRhdGUnIHNlcGFyYXRlbHkuCisJICoKKwkgKiBOb3Rl
+IHRoYXQgdGhpcyBpcyBwdXJlbHkgYSAiYXZvaWQgbXVsdGlwbGUgYXRvbWljcyBpbiB0aGUKKwkg
+KiBjb21tb24gY2FzZSIgLSB3aGlsZSB0aGUgbG9ja2VkIGJpdCBuZWVkcyB0byBiZSBjbGVhcmVk
+CisJICogc3luY2hyb25vdXNseSB3cnQgd2FpdGVycywgdGhlIHVwdG9kYXRlIGJpdCBoYXMgbm8g
+c3VjaAorCSAqIHJlcXVpcmVtZW50cy4KKwkgKi8KIAlpZiAobGlrZWx5KHN1Y2Nlc3MpKQogCQlt
+YXNrIHw9IDEgPDwgUEdfdXB0b2RhdGU7Ci0JaWYgKGZvbGlvX3hvcl9mbGFnc19oYXNfd2FpdGVy
+cyhmb2xpbywgbWFzaykpCisJaWYgKCFmb2xpb194b3JfZmxhZ3Nfbm9fd2FpdGVycyhmb2xpbywg
+bWFzaykpIHsKKwkJaWYgKHN1Y2Nlc3MpCisJCQlzZXRfYml0KFBHX3VwdG9kYXRlLCBmb2xpb19m
+bGFncyhmb2xpbywgMCkpOwogCQlmb2xpb193YWtlX2JpdChmb2xpbywgUEdfbG9ja2VkKTsKKwl9
+CiB9CiBFWFBPUlRfU1lNQk9MKGZvbGlvX2VuZF9yZWFkKTsKIApkaWZmIC0tZ2l0IGEvbW0vcGFn
+ZS13cml0ZWJhY2suYyBiL21tL3BhZ2Utd3JpdGViYWNrLmMKaW5kZXggZmNkNGMxNDM5Y2I5Li4z
+Mjc3YmMzY2VmZjkgMTAwNjQ0Ci0tLSBhL21tL3BhZ2Utd3JpdGViYWNrLmMKKysrIGIvbW0vcGFn
+ZS13cml0ZWJhY2suYwpAQCAtMzA4MSw3ICszMDgxLDcgQEAgYm9vbCBfX2ZvbGlvX2VuZF93cml0
+ZWJhY2soc3RydWN0IGZvbGlvICpmb2xpbykKIAkJdW5zaWduZWQgbG9uZyBmbGFnczsKIAogCQl4
+YV9sb2NrX2lycXNhdmUoJm1hcHBpbmctPmlfcGFnZXMsIGZsYWdzKTsKLQkJcmV0ID0gZm9saW9f
+eG9yX2ZsYWdzX2hhc193YWl0ZXJzKGZvbGlvLCAxIDw8IFBHX3dyaXRlYmFjayk7CisJCXJldCA9
+ICFmb2xpb194b3JfZmxhZ3Nfbm9fd2FpdGVycyhmb2xpbywgMSA8PCBQR193cml0ZWJhY2spOwog
+CQlfX3hhX2NsZWFyX21hcmsoJm1hcHBpbmctPmlfcGFnZXMsIGZvbGlvX2luZGV4KGZvbGlvKSwK
+IAkJCQkJUEFHRUNBQ0hFX1RBR19XUklURUJBQ0spOwogCQlpZiAoYmRpLT5jYXBhYmlsaXRpZXMg
+JiBCRElfQ0FQX1dSSVRFQkFDS19BQ0NUKSB7CkBAIC0zMDk5LDcgKzMwOTksNyBAQCBib29sIF9f
+Zm9saW9fZW5kX3dyaXRlYmFjayhzdHJ1Y3QgZm9saW8gKmZvbGlvKQogCiAJCXhhX3VubG9ja19p
+cnFyZXN0b3JlKCZtYXBwaW5nLT5pX3BhZ2VzLCBmbGFncyk7CiAJfSBlbHNlIHsKLQkJcmV0ID0g
+Zm9saW9feG9yX2ZsYWdzX2hhc193YWl0ZXJzKGZvbGlvLCAxIDw8IFBHX3dyaXRlYmFjayk7CisJ
+CXJldCA9ICFmb2xpb194b3JfZmxhZ3Nfbm9fd2FpdGVycyhmb2xpbywgMSA8PCBQR193cml0ZWJh
+Y2spOwogCX0KIAogCWxydXZlY19zdGF0X21vZF9mb2xpbyhmb2xpbywgTlJfV1JJVEVCQUNLLCAt
+bnIpOwpAQCAtMzE4NCw3ICszMTg0LDcgQEAgRVhQT1JUX1NZTUJPTChfX2ZvbGlvX3N0YXJ0X3dy
+aXRlYmFjayk7CiAgKi8KIHZvaWQgZm9saW9fd2FpdF93cml0ZWJhY2soc3RydWN0IGZvbGlvICpm
+b2xpbykKIHsKLQl3aGlsZSAoZm9saW9fdGVzdF93cml0ZWJhY2soZm9saW8pKSB7CisJaWYgKGZv
+bGlvX3Rlc3Rfd3JpdGViYWNrKGZvbGlvKSkgewogCQl0cmFjZV9mb2xpb193YWl0X3dyaXRlYmFj
+ayhmb2xpbywgZm9saW9fbWFwcGluZyhmb2xpbykpOwogCQlmb2xpb193YWl0X2JpdChmb2xpbywg
+UEdfd3JpdGViYWNrKTsKIAl9Ci0tIAoyLjQ2LjEuNjA4LmdjNTZmMmMxMWM4Cgo=
+--000000000000cf77a306244a8d90--
