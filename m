@@ -1,143 +1,122 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F28AD517;
-	Sat, 12 Oct 2024 08:57:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB6815574F
+	for <linux-xfs@vger.kernel.org>; Sat, 12 Oct 2024 14:06:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728723477; cv=none; b=PYtJK8kqEz+534MaySpL+o2hcrpzuk87Gjk2fIUv93ED8spkEhfYJ12Rp0I96iMbbw+SPdp625/Vvgqc0ejekO2N4/Bh0EAtftGS7LfC42AgAtiyzDr9ZNdqO6IxMf3Q8pIzVU8h58fLi9vRlLdpjSOpNLWPvO7EOtLyZtcwW/U=
+	t=1728741964; cv=none; b=Ij5xSZx10OTZXLGHI9J3DHTM9ssG7g7kTdfgOv3FfntvQPe/kidb9k62kBP4QaPs5hMhlSlZNSmCAQfXAIDG2pLcYtSdiYuIfRvJqswvjkjwkBPw+hY1A3D1Ez29HjxMFkDvQ9G1OX+2PyUYBnyQjPBMazjHmzfwC7/FMoOvUds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728723477; c=relaxed/simple;
-	bh=svtSclBz9u/qrG2oa7Ec/7nKqnQY51mTitmUQpOR/0Q=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=GqmCm06GF5MLHHweppG61Bc0jeV/TIPGxZf+7XwQZt0nAtfQtQOzzzwL+TtzuPjfbbv9H+YqjjJoxQrHsJ2ByWFbnGdXf4YWZ/lT0ucRGiN0pTBbQKKw6KOjusJt2s2ol2oHeCrdzmWlsBVFMI2W9vd3es5xyYJY27JJ33dWaK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S3mpKjcV; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728741964; c=relaxed/simple;
+	bh=NBksyTOGWe4Nt8KqI4uApjQlOLOGrnw160iwZF/dcKg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R22oxs7OgWdYf5Wcbc2j7uQPlClItC4mqV5VqJc7ApAnD8ZzGn4Y0xoCpt3/7b+vZ/sAC0wZGNMCli7zVulsxvVct3mcADdOciW2x9iDC2e9PcQ+2gRveygHZb3Ne+W6JZPQKoxzIP1Bx0TdBC+9ths6ohkQAav0rE64UzWu1Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DQVfXZEZ; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S3mpKjcV"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-20c8c50fdd9so15320905ad.0;
-        Sat, 12 Oct 2024 01:57:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728723475; x=1729328275; darn=vger.kernel.org;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=KyfF37ymaVo+9RotRE+iXjYSIUoLMLM+SfYp3V/ZJcU=;
-        b=S3mpKjcVXSDOA73n2kDgfh5h7sdklNCJKYJ2FpqwjlvKMjz+zA4zG5lX+YbYS2gU4w
-         gx9CNNyHIISpQxgUoQjzSZCZyIhJFVXhvh/DKoRvtoFLiWf/BECa5tbPMdixR5460hHq
-         JZqovNQDlA6DbvnHtKPbrdbP6XJ8Aatbh2iM+WCh3CMRsg5+KkqPUZPxiytXROgGSQeC
-         PxD5pxF/fWzmwMxqn9105QBxunMav+UhSQcELbGmPvkXpSQT6gdEp+wiYfezVxdrbF5H
-         QP3vHCJxwbqDHcx3ptmDwjKUiC29PHxFj3j9xGfHj7MLI6RJVeoyrADo26VAm8W//xp+
-         8/3g==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DQVfXZEZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728741962;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=waFDwgPr4QcJIxhWov0AkVYaGHbJ4W1aOqTw0mnlcSk=;
+	b=DQVfXZEZAB/o3GgF6Qy3cBUA3Sx8HO72rNnHOf7nL6hH+w/eLwXLa2Ps3DiEOndOmWVxup
+	cmTvb5DhsS5A/uI/Wsl+LJYNSrGk7B2AASXHfumGCA7pAVSitcf3Ycafllr1jIfzSRJL6W
+	1wec3AhaFB0BvzN2XRo90uQxpi2JNXw=
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
+ [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-79-D0QaXwS3OTqKzQjSbv-0vQ-1; Sat, 12 Oct 2024 10:05:58 -0400
+X-MC-Unique: D0QaXwS3OTqKzQjSbv-0vQ-1
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-71e03f4cbe1so3710949b3a.0
+        for <linux-xfs@vger.kernel.org>; Sat, 12 Oct 2024 07:05:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728723475; x=1729328275;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KyfF37ymaVo+9RotRE+iXjYSIUoLMLM+SfYp3V/ZJcU=;
-        b=FJCXIAw26HvUMWr1zzyqEf+yV1ZkST/nRG+vN1+x54CeKfg6j4uJdUrjdbY3ZB2XF7
-         bjYP6L2QDFbnMoznMjFSxHVnrnzoeDSv+KT+8mp5BlrJd2OlK2Fs/QexsSKuka/EGyy7
-         r3Kx1ojDOblN/jXXJF0seQ+bMWm78oBqudz+eCNpGPYuapR9YAEbzH10p4IyRVs5btIZ
-         yalMlTnyGl9nvQL6+SBkP4cJb0GZPT/NW/dVgbLJYyn36OcegfmxoyVGxXXo4LC4qnsX
-         DQYljVnI5DXOAumusRkZp27dCl+Jpwxcnr9ohcbhwQ/DigbouyGv4crqr8EpmiZfi1H5
-         zZmA==
-X-Forwarded-Encrypted: i=1; AJvYcCVQg/LX5IHNxPPtuoMTzTs87OCh0Y4gNySQtwoooJe55PVewTUz9xo6IflYeqa64xVN3gh3sj6ZTDSY0jRgeQ==@vger.kernel.org, AJvYcCW0E1FdKoXT2s6agkB8TrZ7EwlaX9jD3yi+j10DxdfZQisgwyb++ldaoAGwoO0PdfJa935QaP3dBtY+@vger.kernel.org
-X-Gm-Message-State: AOJu0Yybn7vlRU43NYIyyhAqs164K2TCB40rCK3qL5wyK6Bg4JHU7mu0
-	TQqOn0glQe7laqc+Mo6ufU0c6L/8dmFnF3yg1cnbmywNFdswCdcM
-X-Google-Smtp-Source: AGHT+IF5crCEIiWB7Wp5ggs4Q4kZZSy4b20GsXIA2qB3AhBUtt91hc4QbaMLEFyecf/SMCu6FUxj0Q==
-X-Received: by 2002:a17:902:d2c8:b0:20b:a73b:3f5 with SMTP id d9443c01a7336-20ca0399c9amr90304055ad.14.1728723475446;
-        Sat, 12 Oct 2024 01:57:55 -0700 (PDT)
-Received: from smtpclient.apple ([2402:d0c0:11:86::1])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20c8c375d86sm34054685ad.309.2024.10.12.01.57.52
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 12 Oct 2024 01:57:54 -0700 (PDT)
-From: Alan Huang <mmpgouride@gmail.com>
-Content-Type: text/plain;
-	charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+        d=1e100.net; s=20230601; t=1728741957; x=1729346757;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=waFDwgPr4QcJIxhWov0AkVYaGHbJ4W1aOqTw0mnlcSk=;
+        b=GExh8dqW7DO/5GB3Gshkkwx2XcoJVDftkpZzbR9rmmJv+dXJALZ2huASE0aFM+PYNZ
+         6qi67dgStK6i/iyqqX1DytJC4NJ06dUEoTD3JrBDIA6MGlQOkX9XJAKoAG1sNIGtLTuK
+         qda6PcGhpHnvjAcriei/ckCT2iH7TdFtd/7TDs3k4Ka+nXgdXnL3/hW8As5l9sPsToGC
+         FfYtmrdZKyEMapD0OXBr1QREet3rA1I0Z4eYpQppCLteOp2RB4SpD9ItMT5Wo7p8oyGr
+         aK9u3kyePKeLNnCPsZJLLOjElD5rHxzqMfARfDVWEobWqm3ZndlzlWaON4YYJZpPmRFG
+         lkow==
+X-Forwarded-Encrypted: i=1; AJvYcCVgxNKYafkDNpVceACTo71uSn4Zb6pfUsTeF1I5KnUO2v6DgBzHTbpK7MfjGTuWhq8tUH+z/D6gvHk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7QlDOPsRp/nJnmItUPhKPeXQko6icioUfR/DG6rsiKAQVrV+c
+	BYc8TCoqyLqkvAnlt/rvqC+TRl/ZgS3fDGi9kDCfnWak7sEre+vzCbxXUijIU7gW9NiBWURzCOy
+	3lhiLrABqCasbtqx95vCZ4uQFFTWwF2uVfxxRZFf6viSff77eBeR+OFsK0g==
+X-Received: by 2002:a05:6a00:1252:b0:71e:659:f2dd with SMTP id d2e1a72fcca58-71e37f4edf2mr9636647b3a.20.1728741957679;
+        Sat, 12 Oct 2024 07:05:57 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHOcIar4YRVXK9mEh/hhK+NDFYUIxYOnGopKwwWU/UhwCmi5Oxf/aZxhd++QLkTL7P5kcpEfg==
+X-Received: by 2002:a05:6a00:1252:b0:71e:659:f2dd with SMTP id d2e1a72fcca58-71e37f4edf2mr9636615b3a.20.1728741957349;
+        Sat, 12 Oct 2024 07:05:57 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71e2aa937cesm4163289b3a.132.2024.10.12.07.05.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 12 Oct 2024 07:05:56 -0700 (PDT)
+Date: Sat, 12 Oct 2024 22:05:53 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs/122: add tests for commitrange structures
+Message-ID: <20241012140553.hpgvmjfajdfdjtgh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <172780126017.3586479.18209378224774919872.stgit@frogsfrogsfrogs>
+ <172780126049.3586479.7813790327650448381.stgit@frogsfrogsfrogs>
+ <ZvzeDhbIUPEHCP2D@infradead.org>
+ <20241002224700.GG21853@frogsfrogsfrogs>
+ <20241011062858.p5tewpiewwgzpzbo@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241011181920.GO21840@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
-Subject: Libmount bug ?
-Message-Id: <14ADF290-5B46-44D5-83BC-9AE3732B192C@gmail.com>
-Date: Sat, 12 Oct 2024 16:57:39 +0800
-Cc: util-linux@vger.kernel.org,
- linux-bcachefs@vger.kernel.org,
- Kent Overstreet <kent.overstreet@linux.dev>,
- Hongbo Li <lihongbo22@huawei.com>,
- "Darrick J. Wong" <djwong@kernel.org>,
- xfs <linux-xfs@vger.kernel.org>
-To: kzak@redhat.com
-X-Mailer: Apple Mail (2.3776.700.51)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241011181920.GO21840@frogsfrogsfrogs>
 
-Hello Karel,
+On Fri, Oct 11, 2024 at 11:19:20AM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 11, 2024 at 02:28:58PM +0800, Zorro Lang wrote:
+> > On Wed, Oct 02, 2024 at 03:47:00PM -0700, Darrick J. Wong wrote:
+> > > On Tue, Oct 01, 2024 at 10:45:50PM -0700, Christoph Hellwig wrote:
+> > > > On Tue, Oct 01, 2024 at 09:49:27AM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > > 
+> > > > > Update this test to check the ioctl structure for XFS_IOC_COMMIT_RANGE.
+> > > > 
+> > > > Meh.  Can we please not add more to xfs/122, as that's alway just
+> > > > a pain?  We can just static_assert the size in xfsprogs (or the
+> > > > xfstests code using it) instead of this mess.
+> > > 
+> > > Oh right, we had a plan to autotranslate the xfs/122 stuff to
+> > > xfs_ondisk.h didn't we... I'll put that back on my list.
+> > 
+> > Hi Darrick,
+> > 
+> > Do you want to have this patch at first, or just wait for your
+> > next version which does the "autotranslate"?
+> 
+> Let's drop this for now, machine-converting xfs/122 to xfs_ondisk.h
+> wasn't as hard as I thought it might be.  Would you be ok with merging
+> the fiexchange.h patch and the fsstress funshare patch this week?
 
-The bcachefs has the helper called mount.bcachefs.
+Sure, if you hope so :)
 
-Currently, there are users using fstab with nofail/user fail to mount,
-we would like to know whether other filesystems using similar helper
-properly handle this.
-
-This is like commit 06e05eb0f78566b68c44328c37d7c28d8655e9df=20
-(=E2=80=9Clibmount: don't pass option "defaults" to helper")
-
-Or would you like something like this? This might be incomplete though =
-(e.g. owner, noowner etc.)
-
-diff --git a/libmount/src/optmap.c b/libmount/src/optmap.c
-index d7569a0f0..c13b9ba19 100644
---- a/libmount/src/optmap.c
-+++ b/libmount/src/optmap.c
-@@ -152,11 +152,11 @@ static const struct libmnt_optmap =
-userspace_opts_map[] =3D
-    { "auto",    MNT_MS_NOAUTO, MNT_NOHLPS | MNT_INVERT | MNT_NOMTAB },  =
-/* Can be mounted using -a */
-    { "noauto",  MNT_MS_NOAUTO, MNT_NOHLPS | MNT_NOMTAB },  /* Can only =
-be mounted explicitly */
-
--   { "user[=3D]", MNT_MS_USER },                             /* Allow =
-ordinary user to mount (mtab) */
--   { "nouser",  MNT_MS_USER, MNT_INVERT | MNT_NOMTAB },    /* Forbid =
-ordinary user to mount */
-+   { "user[=3D]", MNT_MS_USER, MNT_NOHLPS},                             =
-/* Allow ordinary user to mount (mtab) */
-+   { "nouser",  MNT_MS_USER, MNT_INVERT | MNT_NOMTAB | MNT_NOHLPS},    =
-/* Forbid ordinary user to mount */
-
--   { "users",   MNT_MS_USERS, MNT_NOMTAB },                /* Allow =
-ordinary users to mount */
--   { "nousers", MNT_MS_USERS, MNT_INVERT | MNT_NOMTAB },   /* Forbid =
-ordinary users to mount */
-+   { "users",   MNT_MS_USERS, MNT_NOMTAB | MNT_NOHLPS},                =
-/* Allow ordinary users to mount */
-+   { "nousers", MNT_MS_USERS, MNT_INVERT | MNT_NOMTAB | MNT_NOHLPS},   =
-/* Forbid ordinary users to mount */
-
-    { "owner",   MNT_MS_OWNER, MNT_NOMTAB },                /* Let the =
-owner of the device mount */
-    { "noowner", MNT_MS_OWNER, MNT_INVERT | MNT_NOMTAB },   /* Device =
-owner has no special privs */
-@@ -180,7 +180,7 @@ static const struct libmnt_optmap =
-userspace_opts_map[] =3D
-    { "sizelimit=3D", MNT_MS_SIZELIMIT, MNT_NOHLPS | MNT_NOMTAB },	 =
-  /* loop device size limit */
-    { "encryption=3D", MNT_MS_ENCRYPTION, MNT_NOHLPS | MNT_NOMTAB },	 =
-  /* loop device encryption */
-
--   { "nofail",  MNT_MS_NOFAIL, MNT_NOMTAB },               /* Do not =
-fail if ENOENT on dev */
-+   { "nofail",  MNT_MS_NOFAIL, MNT_NOMTAB | MNT_NOHLPS},               =
-/* Do not fail if ENOENT on dev */
-
-    { "uhelper=3D", MNT_MS_UHELPER },			   /* =
-/sbin/umount.<helper> */
-
-
-Thanks,
-Alan
-
-
+> 
+> --D
+> 
+> > Thanks,
+> > Zorro
+> > 
+> > > 
+> > > --D
+> > > 
+> > 
+> > 
+> 
 
