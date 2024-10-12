@@ -1,106 +1,143 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id DB260DDA8;
-	Sat, 12 Oct 2024 01:53:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F28AD517;
+	Sat, 12 Oct 2024 08:57:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728698041; cv=none; b=tvt+Gr8nfl6Js/hk3qUscdhwv49tMigunvNW9IcQnmo7uYTMxZRhuyWH3oTCvRtYIsCmuT5Vx5GZbeFr6kCtXLjCLEoMFWLOJn9XTmVMlqvXr5LSSFe59Md3kKEVegEAtJNkm8Nr6Ch+kA9F19Ktx/TEo5NnkFOLcvQv44IiAy4=
+	t=1728723477; cv=none; b=PYtJK8kqEz+534MaySpL+o2hcrpzuk87Gjk2fIUv93ED8spkEhfYJ12Rp0I96iMbbw+SPdp625/Vvgqc0ejekO2N4/Bh0EAtftGS7LfC42AgAtiyzDr9ZNdqO6IxMf3Q8pIzVU8h58fLi9vRlLdpjSOpNLWPvO7EOtLyZtcwW/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728698041; c=relaxed/simple;
-	bh=pTo9MTWv0QsKaFyXt4UL/Xq5ps9nXBmmaRoAwXWw0o4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KxZtv0nqRuTKMDSQ1AX1mLUA7M3ZS8wTgsUXsVaZTdgKm5EpqOPZwjyzdMj+EkIb0hiWuMJlFvfAmFWtbZNxJ6aY0womjXZgKXye6WUjklWOiHJ6h/qzNRs+MEkag5j3nZqEUyNY04/oCzakY9F/XhbqAmPrecXQ9ZBAOu4MpLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YNdubWUF; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1728723477; c=relaxed/simple;
+	bh=svtSclBz9u/qrG2oa7Ec/7nKqnQY51mTitmUQpOR/0Q=;
+	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=GqmCm06GF5MLHHweppG61Bc0jeV/TIPGxZf+7XwQZt0nAtfQtQOzzzwL+TtzuPjfbbv9H+YqjjJoxQrHsJ2ByWFbnGdXf4YWZ/lT0ucRGiN0pTBbQKKw6KOjusJt2s2ol2oHeCrdzmWlsBVFMI2W9vd3es5xyYJY27JJ33dWaK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S3mpKjcV; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YNdubWUF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=NOty4
-	fg+Ho7VaI0cQHA/jory4kn7TXlj/j4VXAzH1Ak=; b=YNdubWUFSuGPCHvX+eynp
-	v8Z6hxu5AH4cq5p2AaM0Z8JxY+6lUWhYGfEAiyH6FmkEKvWC1oFgWDPr5WV8SHqe
-	LS7GP1Ia0DavKw+9Y4wF3Gyj9Xlih3gNomU+GOgoEM/1VoTOEMtD/aiOlvuobWty
-	z91ft/iZNfnMU7AZTPSoPc=
-Received: from localhost.localdomain (unknown [111.48.69.246])
-	by gzsmtp1 (Coremail) with SMTP id sCgvCgAHRFWf1glnqnpaAA--.15848S2;
-	Sat, 12 Oct 2024 09:53:37 +0800 (CST)
-From: Chi Zhiling <chizhiling@163.com>
-To: cem@kernel.org,
-	djwong@kernel.org,
-	hch@lst.de
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>
-Subject: [PATCH v3] xfs_logprint: Fix super block buffer interpretation issue
-Date: Sat, 12 Oct 2024 09:52:35 +0800
-Message-Id: <20241012015235.1706690-1-chizhiling@163.com>
-X-Mailer: git-send-email 2.27.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S3mpKjcV"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-20c8c50fdd9so15320905ad.0;
+        Sat, 12 Oct 2024 01:57:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1728723475; x=1729328275; darn=vger.kernel.org;
+        h=to:cc:date:message-id:subject:mime-version
+         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=KyfF37ymaVo+9RotRE+iXjYSIUoLMLM+SfYp3V/ZJcU=;
+        b=S3mpKjcVXSDOA73n2kDgfh5h7sdklNCJKYJ2FpqwjlvKMjz+zA4zG5lX+YbYS2gU4w
+         gx9CNNyHIISpQxgUoQjzSZCZyIhJFVXhvh/DKoRvtoFLiWf/BECa5tbPMdixR5460hHq
+         JZqovNQDlA6DbvnHtKPbrdbP6XJ8Aatbh2iM+WCh3CMRsg5+KkqPUZPxiytXROgGSQeC
+         PxD5pxF/fWzmwMxqn9105QBxunMav+UhSQcELbGmPvkXpSQT6gdEp+wiYfezVxdrbF5H
+         QP3vHCJxwbqDHcx3ptmDwjKUiC29PHxFj3j9xGfHj7MLI6RJVeoyrADo26VAm8W//xp+
+         8/3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728723475; x=1729328275;
+        h=to:cc:date:message-id:subject:mime-version
+         :content-transfer-encoding:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KyfF37ymaVo+9RotRE+iXjYSIUoLMLM+SfYp3V/ZJcU=;
+        b=FJCXIAw26HvUMWr1zzyqEf+yV1ZkST/nRG+vN1+x54CeKfg6j4uJdUrjdbY3ZB2XF7
+         bjYP6L2QDFbnMoznMjFSxHVnrnzoeDSv+KT+8mp5BlrJd2OlK2Fs/QexsSKuka/EGyy7
+         r3Kx1ojDOblN/jXXJF0seQ+bMWm78oBqudz+eCNpGPYuapR9YAEbzH10p4IyRVs5btIZ
+         yalMlTnyGl9nvQL6+SBkP4cJb0GZPT/NW/dVgbLJYyn36OcegfmxoyVGxXXo4LC4qnsX
+         DQYljVnI5DXOAumusRkZp27dCl+Jpwxcnr9ohcbhwQ/DigbouyGv4crqr8EpmiZfi1H5
+         zZmA==
+X-Forwarded-Encrypted: i=1; AJvYcCVQg/LX5IHNxPPtuoMTzTs87OCh0Y4gNySQtwoooJe55PVewTUz9xo6IflYeqa64xVN3gh3sj6ZTDSY0jRgeQ==@vger.kernel.org, AJvYcCW0E1FdKoXT2s6agkB8TrZ7EwlaX9jD3yi+j10DxdfZQisgwyb++ldaoAGwoO0PdfJa935QaP3dBtY+@vger.kernel.org
+X-Gm-Message-State: AOJu0Yybn7vlRU43NYIyyhAqs164K2TCB40rCK3qL5wyK6Bg4JHU7mu0
+	TQqOn0glQe7laqc+Mo6ufU0c6L/8dmFnF3yg1cnbmywNFdswCdcM
+X-Google-Smtp-Source: AGHT+IF5crCEIiWB7Wp5ggs4Q4kZZSy4b20GsXIA2qB3AhBUtt91hc4QbaMLEFyecf/SMCu6FUxj0Q==
+X-Received: by 2002:a17:902:d2c8:b0:20b:a73b:3f5 with SMTP id d9443c01a7336-20ca0399c9amr90304055ad.14.1728723475446;
+        Sat, 12 Oct 2024 01:57:55 -0700 (PDT)
+Received: from smtpclient.apple ([2402:d0c0:11:86::1])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20c8c375d86sm34054685ad.309.2024.10.12.01.57.52
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 12 Oct 2024 01:57:54 -0700 (PDT)
+From: Alan Huang <mmpgouride@gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:sCgvCgAHRFWf1glnqnpaAA--.15848S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Ar48Wr1kJr1fGw45XF4rAFb_yoW8Zw4xpF
-	1Sgay7XrZxZ34Yg3y7ZrWjvw4rKwn3Jr9rGrZFyr1rZr98Ar4Yvr9xua48uFW5GrWDtFs0
-	v345KryY9w4Dua7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jeYL9UUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBoRd2nWcJzyV4AwAAsi
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
+Subject: Libmount bug ?
+Message-Id: <14ADF290-5B46-44D5-83BC-9AE3732B192C@gmail.com>
+Date: Sat, 12 Oct 2024 16:57:39 +0800
+Cc: util-linux@vger.kernel.org,
+ linux-bcachefs@vger.kernel.org,
+ Kent Overstreet <kent.overstreet@linux.dev>,
+ Hongbo Li <lihongbo22@huawei.com>,
+ "Darrick J. Wong" <djwong@kernel.org>,
+ xfs <linux-xfs@vger.kernel.org>
+To: kzak@redhat.com
+X-Mailer: Apple Mail (2.3776.700.51)
 
-From: Chi Zhiling <chizhiling@kylinos.cn>
+Hello Karel,
 
-When using xfs_logprint to interpret the buffer of the super block, the
-icount will always be 6360863066640355328 (0x5846534200001000). This is
-because the offset of icount is incorrect, causing xfs_logprint to
-misinterpret the MAGIC number as icount.
-This patch fixes the offset value of the SB counters in xfs_logprint.
+The bcachefs has the helper called mount.bcachefs.
 
-Before this patch:
-icount: 6360863066640355328  ifree: 5242880  fdblks: 0  frext: 0
+Currently, there are users using fstab with nofail/user fail to mount,
+we would like to know whether other filesystems using similar helper
+properly handle this.
 
-After this patch:
-icount: 10240  ifree: 4906  fdblks: 37  frext: 0
+This is like commit 06e05eb0f78566b68c44328c37d7c28d8655e9df=20
+(=E2=80=9Clibmount: don't pass option "defaults" to helper")
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- logprint/log_misc.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+Or would you like something like this? This might be incomplete though =
+(e.g. owner, noowner etc.)
 
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 8e86ac34..e366f8f5 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -282,22 +282,15 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
- 		if (be32_to_cpu(head->oh_len) < 4*8) {
- 			printf(_("Out of space\n"));
- 		} else {
--			__be64		 a, b;
-+			struct xfs_dsb	*dsb = (struct xfs_dsb *) *ptr;
- 
- 			printf("\n");
--			/*
--			 * memmove because *ptr may not be 8-byte aligned
--			 */
--			memmove(&a, *ptr, sizeof(__be64));
--			memmove(&b, *ptr+8, sizeof(__be64));
- 			printf(_("icount: %llu  ifree: %llu  "),
--			       (unsigned long long) be64_to_cpu(a),
--			       (unsigned long long) be64_to_cpu(b));
--			memmove(&a, *ptr+16, sizeof(__be64));
--			memmove(&b, *ptr+24, sizeof(__be64));
-+			       (unsigned long long) be64_to_cpu(dsb->sb_icount),
-+			       (unsigned long long) be64_to_cpu(dsb->sb_ifree));
- 			printf(_("fdblks: %llu  frext: %llu\n"),
--			       (unsigned long long) be64_to_cpu(a),
--			       (unsigned long long) be64_to_cpu(b));
-+			       (unsigned long long) be64_to_cpu(dsb->sb_fdblocks),
-+			       (unsigned long long) be64_to_cpu(dsb->sb_frextents));
- 		}
- 		super_block = 0;
- 	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGI_MAGIC) {
--- 
-2.43.0
+diff --git a/libmount/src/optmap.c b/libmount/src/optmap.c
+index d7569a0f0..c13b9ba19 100644
+--- a/libmount/src/optmap.c
++++ b/libmount/src/optmap.c
+@@ -152,11 +152,11 @@ static const struct libmnt_optmap =
+userspace_opts_map[] =3D
+    { "auto",    MNT_MS_NOAUTO, MNT_NOHLPS | MNT_INVERT | MNT_NOMTAB },  =
+/* Can be mounted using -a */
+    { "noauto",  MNT_MS_NOAUTO, MNT_NOHLPS | MNT_NOMTAB },  /* Can only =
+be mounted explicitly */
+
+-   { "user[=3D]", MNT_MS_USER },                             /* Allow =
+ordinary user to mount (mtab) */
+-   { "nouser",  MNT_MS_USER, MNT_INVERT | MNT_NOMTAB },    /* Forbid =
+ordinary user to mount */
++   { "user[=3D]", MNT_MS_USER, MNT_NOHLPS},                             =
+/* Allow ordinary user to mount (mtab) */
++   { "nouser",  MNT_MS_USER, MNT_INVERT | MNT_NOMTAB | MNT_NOHLPS},    =
+/* Forbid ordinary user to mount */
+
+-   { "users",   MNT_MS_USERS, MNT_NOMTAB },                /* Allow =
+ordinary users to mount */
+-   { "nousers", MNT_MS_USERS, MNT_INVERT | MNT_NOMTAB },   /* Forbid =
+ordinary users to mount */
++   { "users",   MNT_MS_USERS, MNT_NOMTAB | MNT_NOHLPS},                =
+/* Allow ordinary users to mount */
++   { "nousers", MNT_MS_USERS, MNT_INVERT | MNT_NOMTAB | MNT_NOHLPS},   =
+/* Forbid ordinary users to mount */
+
+    { "owner",   MNT_MS_OWNER, MNT_NOMTAB },                /* Let the =
+owner of the device mount */
+    { "noowner", MNT_MS_OWNER, MNT_INVERT | MNT_NOMTAB },   /* Device =
+owner has no special privs */
+@@ -180,7 +180,7 @@ static const struct libmnt_optmap =
+userspace_opts_map[] =3D
+    { "sizelimit=3D", MNT_MS_SIZELIMIT, MNT_NOHLPS | MNT_NOMTAB },	 =
+  /* loop device size limit */
+    { "encryption=3D", MNT_MS_ENCRYPTION, MNT_NOHLPS | MNT_NOMTAB },	 =
+  /* loop device encryption */
+
+-   { "nofail",  MNT_MS_NOFAIL, MNT_NOMTAB },               /* Do not =
+fail if ENOENT on dev */
++   { "nofail",  MNT_MS_NOFAIL, MNT_NOMTAB | MNT_NOHLPS},               =
+/* Do not fail if ENOENT on dev */
+
+    { "uhelper=3D", MNT_MS_UHELPER },			   /* =
+/sbin/umount.<helper> */
+
+
+Thanks,
+Alan
+
+
 
