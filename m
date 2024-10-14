@@ -1,59 +1,81 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14EA8762F7
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2024 06:03:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C8F413777E
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2024 06:05:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728885837; cv=none; b=pD3daJLugCVoxe5Akw4xJhCwiBganTulEwu1DErrrvp9zIgVrfZH/SEy1g8Cw1vVxwazDLXFYrEZKmTeI7s6/RuPUbjJaVMzVHSZFqHEueEeV3FaRyC2iBSa0jk21EpxJ2jKWuF1e9cPXXRDT3puOUXYzLdCpeJQRnQtbuEoBKI=
+	t=1728885922; cv=none; b=RQ9M8cigHQGY5FpCgtDX10VrRARbg54Qh68pevbFWsrOt29q+ylC/lrDICzuI/KvTtGQ17C+WE+IeSrltDQJMo4GUNp0+qMH+8um4PagYx8M/1Bi7tsgdEcaCTj8NM9YawOftITuMiHJy65b6wUl47QRDU5M5rFQi+/GMqWYjak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728885837; c=relaxed/simple;
-	bh=YiJIEcW3E2HBSbCUZ0hBWJRAfpubi2wu9Vh68gGLS6A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hHlb2jdwHcM66wlMYa15ctjL+Ato6rZwq7uZtMAdEucbIi//+Or56XJNOz17LbPo4myOJUt++btfchhXIQRl0mH1TbtTdwtsQ7O62U4kQZM9yig7nBCTkMRBCC4z3lxgKqMZt20FepPOrqWYjcgmWZAw3S/8zpJmbiFlMIetzTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=iStpUo6l; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1728885922; c=relaxed/simple;
+	bh=V6xzH/KNJzL40bqIVFD3hnM1zvIkoHXV9heAgAjC0VA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YbxnfUaH7ReNsX6CM1tAdo5ABbI2qwGQUHVC4Q1B+pbmE3Kzbi3TjhUQ4/eoQUpfV+ukN+PdMMDW/EFW6uqJPA8cM1c1X5cj/Tb4yGWfP0LGENMghrG9Zz9/NCwJcWz63VDRJZj1aGGhOTypgdCV1uKiH95HrXdsst1oi2uyykU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QQSw9YhP; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iStpUo6l"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QQSw9YhP"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=1SQhDy4HkftXoFYK1E+eT8gBd3gUJGSK7PM9+zMSIb8=; b=iStpUo6lSc08yJWztykXLKJcQm
-	JR9yisI/Ph1FRrxsM+9HVyeDeZTWxHTHKmS3U8C7M9NnyQV4uS/jlPWAh7xBDTKIWUI/eDmA+wrUT
-	0F/9W+Hop/5GdsVC64kL/Kz2UmIhD6/iSVBM9Vy+8NwZfrwryXznFfusn0hfIU595W4Z5yGoZTT4T
-	xdODHK/G/ngZNY01sIjRHajG3VXyqVjjNkPvvM3Icz3JDk4EuLA6+b3OagdkXHMMQItXm7P9d6ssg
-	N4o4CKS2MmtlpEzHztsoRakJeZgaN5gvMrGtODtD7OBvgASqLibffPrXPvDO2Au3vLwbw5EnUGA4Y
-	Ys2V9EPQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t0EBP-00000003pUp-2rCt;
-	Mon, 14 Oct 2024 06:03:55 +0000
-Date: Sun, 13 Oct 2024 23:03:55 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: port xfs/122 to the kernel
-Message-ID: <Zwy0S3hyj2bCYTwg@infradead.org>
-References: <20241011182407.GC21853@frogsfrogsfrogs>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=sellLsw+XG+iVQTLTSKjWKcPIV72oFuc5UIQsgVC32o=; b=QQSw9YhPrUk0RoMUk+Lf7XZd3w
+	NUTfJ2/rpejPmZtNOFdkbDYGpheImQZ24FFXXzMHSemUu8eCmiOibrN+Opq/WoerH2CHNYTyU/XHq
+	epHP8w6m6KYWc4I8Z4Bo4fgPyVOQK7Lvf+t+NmhvFirZLrxyJC3tPyXgDj1dNQr0+0AiOeI/qIdhe
+	4T9VDEq5lIBIgZ/vOQw1q+hbRgg4urgjKUEXYP8JaC8712rpeC5S0qx8dDmOIhYZg3M6/8G3tWIsv
+	5CH0vssh4DcglulYLcwzVK41xZktDPpms6u31TTCitoBdeZFrTxx7iTH/4zzOpyJ02GSJCpDURnat
+	GST08gdw==;
+Received: from 2a02-8389-2341-5b80-fa4a-5f67-ca73-5831.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:fa4a:5f67:ca73:5831] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1t0ECm-00000003pd1-181E;
+	Mon, 14 Oct 2024 06:05:20 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Brian Foster <bfoster@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: fix recovery of allocator ops after a growfs
+Date: Mon, 14 Oct 2024 08:04:49 +0200
+Message-ID: <20241014060516.245606-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241011182407.GC21853@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Oct 11, 2024 at 11:24:07AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Check this with every kernel and userspace build, so we can drop the
-> nonsense in xfs/122.  Roughly drafted with:
+Hi all,
 
-Is ondisk.h the right file for checks on ioctl structures?  Otherwise
-looks good.
+auditing the perag code for the generic groups feature found an issue
+where recovery of an extfree intent without a logged done entry will
+fail when the log also contained the transaction that added the AG
+to the extent is freed to because the file system geometry in the
+superblock is only updated updated and the perag structures are only
+created after log recovery has finished.
 
+This version now also ensures the transactions using the new AGs
+are not in the same CIL checkpoint as the growfs transaction.
+
+Changes since v1:
+ - rename old_agcount to orig_agcount in xlog_do_recover
+ - remove a redundant check in xfs_initialize_perag
+ - remove xlog_recover_update_agcount and fold it into the only caller
+ - add a new patch to update the pag values for the last AG
+ - add more detailed comments
+ - dropped the changes to ensure post-growfs transactions touching the
+   superblock are forced into their own checkpoint for now.  Based on
+   reviews this needs a lot more work, and isn't needed to fix the known
+   failing test. 
+
+Diffstat:
+ libxfs/xfs_ag.c        |   75 ++++++++++++++++++-------------------------------
+ libxfs/xfs_ag.h        |   23 +++++++++------
+ libxfs/xfs_alloc.c     |    4 +-
+ xfs_buf_item_recover.c |   70 +++++++++++++++++++++++++++++++++++++++++++++
+ xfs_fsops.c            |   20 +++++--------
+ xfs_log_recover.c      |    7 ----
+ xfs_mount.c            |    9 ++---
+ 7 files changed, 129 insertions(+), 79 deletions(-)
