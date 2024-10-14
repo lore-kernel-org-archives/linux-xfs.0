@@ -1,66 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75EAE1537AA
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2024 15:30:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E678C1AF4E2
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2024 15:57:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728919831; cv=none; b=oS2w3Z9Nr7bHNoojSTQWfvABYZRyiAi9byNNchm0PVIigX4m3mq20Th4R0apSBlxcq556EFFAI6uWe2oKorvd4ZWzmZFASrUyW8kqrqpvxfLacwFXcRzhHH4tNekzVDKfBrY3QpAKp8jSGXqlp1TqmLuqIJSMm1WbmSOLC4nTJA=
+	t=1728921469; cv=none; b=sQA/FU586KybKSpuk+E+g2MG50lQqEoBjaipqMSNvrzlUZPSk6WERZJeUhMXxG5PJcwOyKcoti3x8YToy1xCgU+gFBV29N2dOozyi2Ca91xe6cLE2XBxA6PVTJROQHedrWskOEcJ69xHRlQZgp2kBXW1+wfDO/1ZzAa99AZT6oY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728919831; c=relaxed/simple;
-	bh=kYjHgA0L9kJyG8cgri1pkHRjPCnBpJlayOygR0t0XAA=;
+	s=arc-20240116; t=1728921469; c=relaxed/simple;
+	bh=+buNy0g+JjO6nwiBeYM0jRkXzzScx/l1b0NrsWUBKB8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FSH2WLrPx7xtw82TWWr9xQLh9EX/q3muequMKy39JLf6se47to7RwCzxxax193Y929q3KuZgInjQRvJaJVPQH/5edEtt0yardPG7OnjXkIqTMt05ztBpRL8zS4BzAeac4kJbWmnZ4KiT2z4fxyVehHqSILIVOHKd1/yNIo0ug94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o3AX/EDU; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=orV98l1ZTsxBJZSFBC3td4E2hYQlSMmovHP6aEpZVmuCTHRepNr5cMNFxt7rFBSeSchoiKWXE7ZopZ4XrxmClxVi5mvYSjJkvqwqHseDJ9DFj68MV++pDw1PmVYeZ9lDei4nIRVmXec3nv66oARmA6weKjNsYyI//olAT6mFFY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XcD1DSr6; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o3AX/EDU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A36AC4CECF;
-	Mon, 14 Oct 2024 15:30:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728919831;
-	bh=kYjHgA0L9kJyG8cgri1pkHRjPCnBpJlayOygR0t0XAA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=o3AX/EDUdrG+PRIYmdu8xmPk4LrXLCErevEu7vu0XtuLpwksFfp4lPz9X+6eg0AZZ
-	 z5duCIPe3rfW7hOEk/gSztGKEfJq0VbBhY0Q2hWFK1zV1QgXa7x1ONS9Mq3GStPpaf
-	 DdwD0ghl1jE3xaOn0k/4/BFNOKsKrZTHkGvX0/f1Ct2Cfo0jTcjoUonYsFdTgRNc4B
-	 SU7sGWzLTOPBGyU9Pt/ThCwCglbao45d0CPRGxLIYgIiZkNpn/Zuj+n0v25gUxUezN
-	 1hPyJHpVDqZ2DXjdlAOiIYmHjuyp+Im7/10nHEx4bdJpenyWrBx+f10OVpFt3P+9vn
-	 KnTSTIOBwt2Vw==
-Date: Mon, 14 Oct 2024 08:30:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>,
-	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/7] xfs: don't update file system geometry through
- transaction deltas
-Message-ID: <20241014153030.GH21853@frogsfrogsfrogs>
-References: <20240930164211.2357358-1-hch@lst.de>
- <20240930164211.2357358-7-hch@lst.de>
- <ZwffQQuVx_CyVgLc@bfoster>
- <20241011075709.GC2749@lst.de>
- <Zwkv6G1ZMIdE5vs2@bfoster>
- <20241011171303.GB21853@frogsfrogsfrogs>
- <ZwlxTVpgeVGRfuUb@bfoster>
- <20241011231241.GD21853@frogsfrogsfrogs>
- <20241011232906.GE21853@frogsfrogsfrogs>
- <20241014055850.GA20485@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XcD1DSr6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728921466;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pF6h7VhHHBGfGvVXA7QvUSygCzoMMI9fdNXh9FBZTJw=;
+	b=XcD1DSr6FDBJUjWhKecwP/nSKEV8YP50icr1qN3/pxjfKkFwdNI2CugXkLEE/Ktj7HWWKK
+	tfqgHASfDbREiKIwt90r+CW2ETfMj01dW721lDnSxkCzy5hoWllLss4AiCGrttyH8+qMHL
+	sFQdvZaDphytxeDCbjotUgNXEOBs4xU=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-124-SqwDTzCJPqi9hleh9Jd4EQ-1; Mon,
+ 14 Oct 2024 11:57:41 -0400
+X-MC-Unique: SqwDTzCJPqi9hleh9Jd4EQ-1
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AFFF71955EB3;
+	Mon, 14 Oct 2024 15:57:39 +0000 (UTC)
+Received: from ws.net.home (unknown [10.45.224.59])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6323D19560AA;
+	Mon, 14 Oct 2024 15:57:37 +0000 (UTC)
+Date: Mon, 14 Oct 2024 17:57:34 +0200
+From: Karel Zak <kzak@redhat.com>
+To: Alan Huang <mmpgouride@gmail.com>
+Cc: util-linux@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
+	Kent Overstreet <kent.overstreet@linux.dev>, Hongbo Li <lihongbo22@huawei.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Libmount bug ?
+Message-ID: <iipuwlnf73x3zjj4kgpgqqvu4u5t4iefg3qawqgzvl546rrbz5@w7tvj3jr5h2v>
+References: <14ADF290-5B46-44D5-83BC-9AE3732B192C@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20241014055850.GA20485@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <14ADF290-5B46-44D5-83BC-9AE3732B192C@gmail.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Mon, Oct 14, 2024 at 07:58:50AM +0200, Christoph Hellwig wrote:
-> On Fri, Oct 11, 2024 at 04:29:06PM -0700, Darrick J. Wong wrote:
-> > Ahahaha awesome it corrupts the filesystem:
+
+ Hi Alan,
+
+On Sat, Oct 12, 2024 at 04:57:39PM GMT, Alan Huang wrote:
+> The bcachefs has the helper called mount.bcachefs.
+
+do you mean the following script?
+https://evilpiepirate.org/git/bcachefs-tools.git/tree/mount.bcachefs.sh
+
+I believe that if you call the regular mount(8) from the script, then
+it's probably fine to not worry about the options. mount(8) will be
+able to ignore them.
+
+> Currently, there are users using fstab with nofail/user fail to mount,
+> we would like to know whether other filesystems using similar helper
+> properly handle this.
+
+The mount.nfs command uses libmount internally to generate the
+mount(2) syscall flags, so it is not affected by any additional
+options.
+
+The mount.fuse command has a list of unwanted mount options:
+https://github.com/libfuse/libfuse/blob/master/util/mount.fuse.c#L318-L326
+
+Please note that the "EXTERNAL HELPERS" section in the mount(8) man
+page describes which options are ignored.
+
+Also, if your mount helper is setuid (like mount.nfs), you still need
+to parse fstab to obtain mount options from a safe source. This is
+because options from the command line should be ignored as they are
+considered unsafe.
+
 > 
-> Is this with a rtgroup file system?  I can't get your test to fail
-> with the latest xfs staging tree.
+> This is like commit 06e05eb0f78566b68c44328c37d7c28d8655e9df 
+> (“libmount: don't pass option "defaults" to helper")
+> 
+> Or would you like something like this? This might be incomplete though (e.g. owner, noowner etc.)
+> 
+> diff --git a/libmount/src/optmap.c b/libmount/src/optmap.c
+> index d7569a0f0..c13b9ba19 100644
+> --- a/libmount/src/optmap.c
+> +++ b/libmount/src/optmap.c
+> @@ -152,11 +152,11 @@ static const struct libmnt_optmap userspace_opts_map[] =
+>     { "auto",    MNT_MS_NOAUTO, MNT_NOHLPS | MNT_INVERT | MNT_NOMTAB },  /* Can be mounted using -a */
+>     { "noauto",  MNT_MS_NOAUTO, MNT_NOHLPS | MNT_NOMTAB },  /* Can only be mounted explicitly */
+> 
+> -   { "user[=]", MNT_MS_USER },                             /* Allow ordinary user to mount (mtab) */
+> -   { "nouser",  MNT_MS_USER, MNT_INVERT | MNT_NOMTAB },    /* Forbid ordinary user to mount */
+> +   { "user[=]", MNT_MS_USER, MNT_NOHLPS},                             /* Allow ordinary user to mount (mtab) */
 
-aha, yes, it's with rtgroups.
+This may cause issues with certain helpers (e.g. cifs) where "user="
+is a standard option. However, this is something that needs to be
+addressed in libmount, as it already handles this use-case for cifs.
+The use of MNT_NOHLPS may override this.
 
---D
+> +   { "nouser",  MNT_MS_USER, MNT_INVERT | MNT_NOMTAB | MNT_NOHLPS},    /* Forbid ordinary user to mount */
+> 
+> -   { "users",   MNT_MS_USERS, MNT_NOMTAB },                /* Allow ordinary users to mount */
+> -   { "nousers", MNT_MS_USERS, MNT_INVERT | MNT_NOMTAB },   /* Forbid ordinary users to mount */
+> +   { "users",   MNT_MS_USERS, MNT_NOMTAB | MNT_NOHLPS},                /* Allow ordinary users to mount */
+> +   { "nousers", MNT_MS_USERS, MNT_INVERT | MNT_NOMTAB | MNT_NOHLPS},   /* Forbid ordinary users to mount */
+> 
+>     { "owner",   MNT_MS_OWNER, MNT_NOMTAB },                /* Let the owner of the device mount */
+>     { "noowner", MNT_MS_OWNER, MNT_INVERT | MNT_NOMTAB },   /* Device owner has no special privs */
+> @@ -180,7 +180,7 @@ static const struct libmnt_optmap userspace_opts_map[] =
+>     { "sizelimit=", MNT_MS_SIZELIMIT, MNT_NOHLPS | MNT_NOMTAB },	   /* loop device size limit */
+>     { "encryption=", MNT_MS_ENCRYPTION, MNT_NOHLPS | MNT_NOMTAB },	   /* loop device encryption */
+> 
+> -   { "nofail",  MNT_MS_NOFAIL, MNT_NOMTAB },               /* Do not fail if ENOENT on dev */
+> +   { "nofail",  MNT_MS_NOFAIL, MNT_NOMTAB | MNT_NOHLPS},               /* Do not fail if ENOENT on dev */
+
+Could this option be usable for some helpers?
+
+I believe the best solution is to follow the Fuse way and define a
+list of options to ignore in your fs-specific helper.
+
+The ideal solution would be to implement a better libmount (perhaps
+libmount2) where the /sbin/mount.<type> helpers are replaced with
+dlopen() modules. This way, the library would handle all the details
+such as command line and fstab options.
+
+    Karel
+
+-- 
+ Karel Zak  <kzak@redhat.com>
+ http://karelzak.blogspot.com
+
