@@ -1,74 +1,77 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A74C1D5148
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 13:37:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D8E51AF0D2;
+	Tue, 15 Oct 2024 13:54:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728999425; cv=none; b=eHDxF2FqNb1q50c9ByYeDbx7EAuqpSR8L/n6zSo87ZcVHYR5q69FdbJ6ZVXFiM0NF8fG1ggaZBzA4GaVdSIDlN+VQOWohHNy5St01VKxHMlkLyn9yNYxZkp3x52hwu17qasCeDoTS+/YPGtt8M7tCZiGeq5qkcmfD7AaDl8mzdw=
+	t=1729000472; cv=none; b=nvAKNeXXthE8YdNRbcu7JyMzukuXDyKl+CBIXHe2j2mhQl6QibSNaDGBOA0YnT8yqYHJNgPU1JiqdCgVVPRdjkhXuBikcBB9vKIau+pAyl7DxfZIJWtoESJ9vuEbQ9IQAG28YI20XTPszvjlnSldzl4eHbOUoeyV99DQ1gBwlXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728999425; c=relaxed/simple;
-	bh=Fu6CbTf74KH8dk4tpXxmuw9mMw1rM8PZB0wKFTahA0g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lGAeND9RpEuqRV5gs463KXVFW83VgVYGgVNVQwicw0UVu1WSV1OjimZ5paknyka8L8nu6dOi40902ykFIM4hGQOBRxZbBO363TzYHlCgGlWFfRw5heoswIrpIW6HWpP0YFQDTWOrpF3fOLGou9FJk4A+3jiDBPEjMXEwGy0xEdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 49D8F227AAC; Tue, 15 Oct 2024 15:37:01 +0200 (CEST)
-Date: Tue, 15 Oct 2024 15:37:00 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: update the pag for the last AG at recovery
- time
-Message-ID: <20241015133700.GB4535@lst.de>
-References: <20241014060516.245606-1-hch@lst.de> <20241014060516.245606-7-hch@lst.de> <Zw5qDZXQd2UzoGQu@bfoster>
+	s=arc-20240116; t=1729000472; c=relaxed/simple;
+	bh=/eoXAF6sKjSl7j5RJ5J7LCa9D0/hptE4xTgs9Hhekbs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nP1cgcOSa3d7Wu5qsh1i1054kmdJrHbva3uUTZBu+MwWHahDROSrf0PzEKtmxmToxzNiETlk+4YVy31o7WO3A+Hq/e0PgGF8mB2YeUVrkzbwSjURoHPuuWFliREMaoKT20rEryy/H3gnigRMJdnZQqlXFQlV08N/AE/f9DkLrN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ka8D5aZk; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ka8D5aZk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 209BFC4CED0;
+	Tue, 15 Oct 2024 13:54:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729000471;
+	bh=/eoXAF6sKjSl7j5RJ5J7LCa9D0/hptE4xTgs9Hhekbs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=ka8D5aZkHEepWUB0VOleuqva3xtGtuXtj2VOrRRnEtfWgxCu+oG4iXV+vfn3NxAyQ
+	 eNSqE3P/cI1mLqdnZMjmzucvwdLodkRK00C1d2acj15ajCt6dQjNUVpp6pfdzs9Gci
+	 QpaOgPUtcsuh+MOyIK3C17ZmMaupYNcwpK/2jxf1kY54FodlWSgleSHhMPIezRfCvb
+	 FTP3jZ9Ka1htnROnlTO6iV8vM7rZ08oUdWW+wPEmAZKtDqi8txEcDHlXftc/gHBWJg
+	 7owsXv9pBbtAstUCZEaKjZjcpp64o1pNlBpeUbS/vH2HeguvRzdZEjMXwkjgn+F9ak
+	 1Jdi4SJvpB1MQ==
+From: Christian Brauner <brauner@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH] iomap: turn iomap_want_unshare_iter into an inline function
+Date: Tue, 15 Oct 2024 15:54:23 +0200
+Message-ID: <20241015-fischen-pavian-5087edf46590@brauner>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20241015041350.118403-1-hch@lst.de>
+References: <20241015041350.118403-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zw5qDZXQd2UzoGQu@bfoster>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1130; i=brauner@kernel.org; h=from:subject:message-id; bh=/eoXAF6sKjSl7j5RJ5J7LCa9D0/hptE4xTgs9Hhekbs=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTzlQjKsV9mtX0kfWTC8oT3V00ruNYVSHyb3r/bjmmqv jZvnd39jlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgInse8PwV6Zo76nkxXx6WdYM n6VndCX8fOdc75caGhwo6NrQ67bmLCPD98Vn5Db1VG2qLchwmGXy8LzwcmP/ST/bw2amxN+dUfm UDwA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Tue, Oct 15, 2024 at 09:11:41AM -0400, Brian Foster wrote:
-> > index 25cec9dc10c941..5ca8d01068273d 100644
-> > --- a/fs/xfs/libxfs/xfs_ag.c
-> > +++ b/fs/xfs/libxfs/xfs_ag.c
-> > @@ -273,6 +273,23 @@ xfs_agino_range(
-> >  	return __xfs_agino_range(mp, xfs_ag_block_count(mp, agno), first, last);
-> >  }
-> >  
+On Tue, 15 Oct 2024 06:13:50 +0200, Christoph Hellwig wrote:
+> iomap_want_unshare_iter currently sits in fs/iomap/buffered-io.c, which
+> depends on CONFIG_BLOCK.  It is also in used in fs/dax.c whіch has no
+> such dependency.  Given that it is a trivial check turn it into an inline
+> in include/linux/iomap.h to fix the DAX && !BLOCK build.
 > 
-> Comment please. I.e.,
 > 
-> /*
->  * Update the perag of the previous tail AG if it has been changed
->  * during recovery (i.e. recovery of a growfs).
->  */
 
-Sure.
+Applied to the vfs.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs.iomap branch should appear in linux-next soon.
 
-> > +	/*
-> > +	 * Growfs can also grow the last existing AG.  In this case we also need
-> 
-> It can shrink the last AG as well, FWIW.
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Indeed, I keep forgetting about the weird special case partial shrink
-that we support.
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-> > -	error = xfs_initialize_perag(mp, orig_agcount,
-> > -			mp->m_sb.sb_agcount, mp->m_sb.sb_dblocks,
-> > -			&mp->m_maxagi);
-> > +	error = xfs_initialize_perag(mp, orig_agcount, mp->m_sb.sb_agcount,
-> > +			mp->m_sb.sb_dblocks, &mp->m_maxagi);
-> 
-> Seems like this should be folded into an earlier patch?
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
-Yes.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.iomap
 
+[1/1] iomap: turn iomap_want_unshare_iter into an inline function
+      https://git.kernel.org/vfs/vfs/c/13586180450a
