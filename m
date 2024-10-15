@@ -1,60 +1,40 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C08A1171C
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 00:34:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D1433C9
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 00:47:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728952460; cv=none; b=GzRKdnq2f/3hASVsQ9rx5lf+0pMroEOmhtJIeTkaF7xlp1NlBiDsoG9KvDPOlOqK0GUahHYRtndOgg3PhYsgqfBKivUI5WfmaooMz9J7SRDXagDxJlqKTjGi1DKc1Ws16f3X4IKDIMmfCqQyNMEKPv4Vp1FuTw5XmPmboLwLijQ=
+	t=1728953249; cv=none; b=Qt5ftxUbwcbV8DI8EVpCou4sDX8ARksTXXmYFEURR4ukOWTLeAlx8Nghq+fins6w7Xeo6QBABzI0g0p2NEs1x/748nyowbHBLdBPL7YX30JTsjOTF6zKWdVKw7CyrMwo7Xtbou4fsC3wbSfzhxKFJlDJgp/dQAa45l8K99hHElQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728952460; c=relaxed/simple;
-	bh=jAKDcVh769UR2/wcexxy7ruvVcjUoNHEr65CevzA/yU=;
+	s=arc-20240116; t=1728953249; c=relaxed/simple;
+	bh=D7753Qt13w5dTrVVqH9pIjGDWstO9W/nS32GJVjwxiM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aRlpu+TcX5IH11W9K7M4fYidhCVczKT0KYUD9iYljOw116zmUVXEVhBfWasnaJ6imub3c+NJ8YZrbWnXoSfR/P/XsbmEERkY1S6IOLOJ+BJ6V2EgFmaCpwWKyuLLY7ZtvQokCJ7/1ob4RZsWeyEUCYf/pyyh8wj4epEcR/O5nA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VOGFzcy+; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=G3yoFrwp7H3bQr10FJsyLl8x8BohDURq/hUGWXJkWALjFBb686CD/ztJsHYWPmmaqJGGywUnTftPbD0F4R0Qu34KN5utC9Y4DTaSViqQ7D9JmQGf/7i0tcWatpBTe+BfAcvIw7ZXe5zJQ9Wo+zOK7GsDIFrg3D0dEWnHRZJCWw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OpxdFadJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VOGFzcy+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1728952458; x=1760488458;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=jAKDcVh769UR2/wcexxy7ruvVcjUoNHEr65CevzA/yU=;
-  b=VOGFzcy+0wCAr5aF5KzTfB1RtUAujo6f/THXBqIK8yrdc16ls2+ElcSL
-   OCOr11YU9Ru9InPNCiKnYDKSamNpYLryVeFLGEFs+3yirBtX1eF+Bs/bn
-   aBEbK74Kyk7MkFvJ2ssmY7R8e1sWyknw4SNj4iZhA0/B9F4gS4N1bZsuL
-   S5fJKwML+kb1mIPnRt8OmDkSn8KRX6KdknjqbefCdoIunHCtXO+FULnSO
-   GR309iQ50Ci6YVEpJUidX7fG9Jf2DpswymY596Vdp1PF4BJlAWZEIFmV5
-   XrNwsafNXiH2bHx0xlKgGT4VYRfJ6OhWtZ59E/gWgFC2mTHxg6hwZR+wr
-   A==;
-X-CSE-ConnectionGUID: FYupO99gTRCaP1LGGI21pg==
-X-CSE-MsgGUID: +orn3obJQgGudoaFBEScmA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11225"; a="32243158"
-X-IronPort-AV: E=Sophos;i="6.11,204,1725346800"; 
-   d="scan'208";a="32243158"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2024 17:34:18 -0700
-X-CSE-ConnectionGUID: MFn1EurHQnK/bx7YHFUr4Q==
-X-CSE-MsgGUID: +qDN62sFRPO70GWHX3jUXA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,204,1725346800"; 
-   d="scan'208";a="77810996"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 14 Oct 2024 17:34:16 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t0VVu-000HNZ-0w;
-	Tue, 15 Oct 2024 00:34:14 +0000
-Date: Tue, 15 Oct 2024 08:34:00 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>
-Cc: oe-kbuild-all@lists.linux.dev, xfs <linux-xfs@vger.kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: port xfs/122 to the kernel
-Message-ID: <202410150820.elwPtYkE-lkp@intel.com>
-References: <20241011182407.GC21853@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OpxdFadJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D32FC4CEC3;
+	Tue, 15 Oct 2024 00:47:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728953249;
+	bh=D7753Qt13w5dTrVVqH9pIjGDWstO9W/nS32GJVjwxiM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OpxdFadJi0XKNdrzs18ueXFpH0+aG6E1CZgwLoLxVMIxDq693o0oSAPffsks+NQ5Z
+	 nE6i7M1sAuvdHHlWI29sh+kJVZWNmZ/3g4/Difbe2nF4Ho3gTIMLlRFj+OFGsketHn
+	 0b8Vw61K3/pP5x5bdGW6pdD5whVuAIgsbEFvLuhKwv6eg/t/enkLt8MGP1drchyzGZ
+	 x0JD11Jsoi38d3GmIG4bhGRXa93XHkF7Jaz5iZ7dXsWI3VslAkCvCVebuSm3WYDlUA
+	 xaW5amjmcNvIZ48J+JDgIUzmXBPMiWSivMw/ibgGJHaMy3n3cMfkf5fC3UPXMyNxUa
+	 +09jRzXljevWA==
+Date: Mon, 14 Oct 2024 17:47:28 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 1/6] xfs: fix chown with rt quota
+Message-ID: <20241015004728.GM21853@frogsfrogsfrogs>
+References: <172860645659.4180109.14821543026500028245.stgit@frogsfrogsfrogs>
+ <172860645695.4180109.15774707176031680844.stgit@frogsfrogsfrogs>
+ <ZwzVMxg-Z0qtuL2v@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -63,78 +43,81 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241011182407.GC21853@frogsfrogsfrogs>
+In-Reply-To: <ZwzVMxg-Z0qtuL2v@infradead.org>
 
-Hi Darrick,
-
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on xfs-linux/for-next]
-[also build test ERROR on linus/master v6.12-rc3 next-20241014]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Darrick-J-Wong/xfs-port-xfs-122-to-the-kernel/20241012-022552
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20241011182407.GC21853%40frogsfrogsfrogs
-patch subject: [PATCH] xfs: port xfs/122 to the kernel
-config: i386-buildonly-randconfig-001-20241015 (https://download.01.org/0day-ci/archive/20241015/202410150820.elwPtYkE-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241015/202410150820.elwPtYkE-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410150820.elwPtYkE-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from include/linux/container_of.h:5,
-                    from include/linux/list.h:5,
-                    from include/linux/semaphore.h:11,
-                    from fs/xfs/xfs_linux.h:24,
-                    from fs/xfs/xfs.h:26,
-                    from fs/xfs/xfs_super.c:7:
-   fs/xfs/libxfs/xfs_ondisk.h: In function 'xfs_check_ondisk_structs':
->> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(struct xfs_fsop_geom_v1) is wrong, expected 112"
-      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-         |                                         ^~~~~~~~~~~~~~
-   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
-      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
-         |                                  ^~~~~~~~~~~~~~~
-   fs/xfs/libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
-      10 |         static_assert(sizeof(structname) == (size), \
-         |         ^~~~~~~~~~~~~
-   fs/xfs/libxfs/xfs_ondisk.h:302:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
-     302 |         XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,                  112);
-         |         ^~~~~~~~~~~~~~~~~~~~~
+On Mon, Oct 14, 2024 at 01:24:19AM -0700, Christoph Hellwig wrote:
+> On Thu, Oct 10, 2024 at 06:12:21PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Make chown's quota adjustments work with realtime files.
+> 
+> Maybe explain how you made it work here?
 
 
-vim +78 include/linux/build_bug.h
+> > @@ -1393,18 +1393,17 @@ xfs_qm_dqusage_adjust(
+> >  
+> >  	ASSERT(ip->i_delayed_blks == 0);
+> >  
+> > +	lock_mode = xfs_ilock_data_map_shared(ip);
+> >  	if (XFS_IS_REALTIME_INODE(ip)) {
+> > -		struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
+> > -
+> >  		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+> > -		if (error)
+> > +		if (error) {
+> > +			xfs_iunlock(ip, lock_mode);
+> >  			goto error0;
+> > -
+> > -		xfs_bmap_count_leaves(ifp, &rtblks);
+> > +		}
+> 
+> So this obviously was missing locking :)
 
-bc6245e5efd70c4 Ian Abbott       2017-07-10  60  
-6bab69c65013bed Rasmus Villemoes 2019-03-07  61  /**
-6bab69c65013bed Rasmus Villemoes 2019-03-07  62   * static_assert - check integer constant expression at build time
-6bab69c65013bed Rasmus Villemoes 2019-03-07  63   *
-6bab69c65013bed Rasmus Villemoes 2019-03-07  64   * static_assert() is a wrapper for the C11 _Static_assert, with a
-6bab69c65013bed Rasmus Villemoes 2019-03-07  65   * little macro magic to make the message optional (defaulting to the
-6bab69c65013bed Rasmus Villemoes 2019-03-07  66   * stringification of the tested expression).
-6bab69c65013bed Rasmus Villemoes 2019-03-07  67   *
-6bab69c65013bed Rasmus Villemoes 2019-03-07  68   * Contrary to BUILD_BUG_ON(), static_assert() can be used at global
-6bab69c65013bed Rasmus Villemoes 2019-03-07  69   * scope, but requires the expression to be an integer constant
-6bab69c65013bed Rasmus Villemoes 2019-03-07  70   * expression (i.e., it is not enough that __builtin_constant_p() is
-6bab69c65013bed Rasmus Villemoes 2019-03-07  71   * true for expr).
-6bab69c65013bed Rasmus Villemoes 2019-03-07  72   *
-6bab69c65013bed Rasmus Villemoes 2019-03-07  73   * Also note that BUILD_BUG_ON() fails the build if the condition is
-6bab69c65013bed Rasmus Villemoes 2019-03-07  74   * true, while static_assert() fails the build if the expression is
-6bab69c65013bed Rasmus Villemoes 2019-03-07  75   * false.
-6bab69c65013bed Rasmus Villemoes 2019-03-07  76   */
-6bab69c65013bed Rasmus Villemoes 2019-03-07  77  #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
-6bab69c65013bed Rasmus Villemoes 2019-03-07 @78  #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-6bab69c65013bed Rasmus Villemoes 2019-03-07  79  
-07a368b3f55a79d Maxim Levitsky   2022-10-25  80  
+Yep.  Luckily you could never mount with rt+quota before, so there
+weren't any corruption complaints.  I guess that's one way to get to
+zero bugs. :P
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> >  	}
+> > -
+> > -	nblks = (xfs_qcnt_t)ip->i_nblocks - rtblks;
+> > +	xfs_inode_count_blocks(tp, ip, &nblks, &rtblks);
+> >  	xfs_iflags_clear(ip, XFS_IQUOTAUNCHECKED);
+> > +	xfs_iunlock(ip, lock_mode);
+> 
+> But this now also forces lockign for !rt file systems, I guess
+> we don't really care about an extra ilock roundtrip in chown,
+> though.
+
+Well, it's needed for correctness because you have to distinguish data
+and rtblocks usage to keep the accounting correct.  The only way to do
+that is to walk the data fork mappings, which means ILOCK.
+
+> The changes itself look good, but a useful commit log would be nice:
+
+xfs: fix chown with rt quota
+
+Make chown's quota adjustments work with realtime files.  This is mostly
+a matter of calling xfs_inode_count_blocks on a given file to figure out
+the number of blocks allocated to the data device and to the realtime
+device, and using those quantities to update the quota accounting when
+the id changes.  Delayed allocation reservations are moved from the old
+dquot's incore reservation to the new dquot's incore reservation.
+
+Note that there was a missing ILOCK bug in xfs_qm_dqusage_adjust that we
+must fix before calling xfs_iread_extents.  Prior to 2.6.37 the locking
+was correct, but then someone removed the ILOCK as part of a cleanup.
+Nobody noticed because nowhere in the git history have we ever supported
+rt+quota so nobody can use this.
+
+I'm leaving git breadcrumbs in case anyone is desperate enough to try to
+backport the rtquota code to old kernels.
+
+Not-Cc: <stable@vger.kernel.org> # v2.6.37
+Fixes: 52fda114249578 ("xfs: simplify xfs_qm_dqusage_adjust")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Heh, thanks. :)
+
+--D
