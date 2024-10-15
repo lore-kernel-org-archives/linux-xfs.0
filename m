@@ -1,157 +1,151 @@
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04FEA1DE2A9
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 09:03:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCF7C1DACA8
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 09:09:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728983011; cv=none; b=lXUFbDZQyZFXxVFFOrxvIkcZvB0iHDwoXcsz7Gp1N48T53fuIQwotxwXXRQ0Qp27JSziGtF2nH/LgT4/QqFg25NgJpbCLZqITQ/uGrJ84yl3OKLVGCJtnoUchKPq/FLGzV5JjQkmsVbeLEXGa+FOQysQ+u8sBVnImGzg6ptof3c=
+	t=1728983399; cv=none; b=gMk8ydNN6bA5SH7Nsmw2ncnO+M4tO7+J5H/lAhBoEwXafSJsyvJHlSXBFwY1EoRD+fa1X0imq0HG1QwEs0LryNZ8AvvUNHJtbldpAcleo6LfTicwAVq5Cj4hrcYccl6m4LlOa6wk/4aSgrB3nJalZz/de99G80Db6iQozDPaIqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728983011; c=relaxed/simple;
-	bh=qVQFFuzNBQ30wmWuiudOVggx8+ryyd5OC87w1cQkeyA=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=NKGOPl346Y8I3aAGtbV9bFPM/C9QBVbcOyYEGXClHB1dSpSvTH3BcewZPZBrHZ2wfAqqMmlqYJ3iIZ7wMQvppkRLXOQ+kMUnFYmZPKWhqDeKRojkRyAcmD395ufZGwzjQfMo69Pmmg7XbW+7qj5swZOR9vKlHC4sYz5R9Tay8nU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3a3b7d1e8a0so26137355ab.0
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 02:03:29 -0700 (PDT)
+	s=arc-20240116; t=1728983399; c=relaxed/simple;
+	bh=X7rQ1e1gtRLVNKNjGKEYb2pzJlHj2mwf3dXGr2mbZEo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JS2i4+nXGrFhamXEmwlTPUhRF80XUhvux5l9Kw8XlA2ZYwR5+psNRaBbHWDnMfQpto6x+N6dxWCjFa4J9L6Vechy1VeXfr0HRA8TI45g63WmM1xjCx4XSpCRABZRqm5SZ5Ha6ZQestMdd6/0DhoGgLYHn+y5utrZQT0xFF+ASpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=igZPQYfv; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="igZPQYfv"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-208cf673b8dso53889035ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 02:09:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1728983397; x=1729588197; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=8AhULyk6snj9S3RcuiVf6TLsKGAqPkiRMcdk1wAoLOY=;
+        b=igZPQYfvHh47vdnB8yLFim03uwbi0ULKFbvM0D4aYXCSpACw64gCrU8/E1nhcASc0U
+         YOboehYhSi+SgwxlFcImAuS7sPY61WCPp5mbLsBGelwYopr/9BZ67B+gOY3aD5hX6zPl
+         UtsPBXCLoLndfoZnBxOqdRWnr12NO717tSQ38yDJeZxZMtid2xQz9Gm3z6wCDpkTkwxY
+         I+wNJjHauaE4+x1jTJ2zcWxM01LlMkr6+wBszUDauSNT7mdKhFW6lj79ydz0aasaEcPu
+         WljMm/ub9ZF82n1m0s9FmurtLWNpv+0OU8Z+KP7vy1e5zAq7PhYZ6gnG8HkF/gNfchbc
+         lMUQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728983009; x=1729587809;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=QIgyvK2789ssuMdmTWMqyL5nugwz4pmlemR7A0aasco=;
-        b=PfNLMefZbEO8wqsMOOwbaWkTkLuYHQiSw48HClq9rf3g/iQu3gJi3Eqskm48p4+nQd
-         149ZX80hB5sbVJEQTRcBk6PWQWFsRd/k56gm8SrDHux0DOvA5f3QlGcrFCFUORCwOyre
-         8cQDLqzBEtdKfh8m9v79ITOyQzLnKIVIDgCZ8zUBUwQlSt9axb1hcVlfLicdaMQa828F
-         ey9BJgbuOlLy1pwgdLKVGaITW95f6TVP5xoe0PfS0vLA9nzTYIyesMilafQW5Fu5BP8v
-         leEaVBHwOKvvIsoU/UWLGSM09U0XYwHiFnH2gjnqfOCHvX8DxYyyuf1W3ccexX22haz6
-         aRKA==
-X-Forwarded-Encrypted: i=1; AJvYcCWRrTIUa8EXtqh0r4oTAZf42gtoAybDajmtn6sG7ivZHcwhVNywF5A0Ka2d2gYOinhH1LQasej9M70=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzaRbK5oLIglwc8QQaGFNV/FboggmcUPCc9vaP9c5/oDgbA3Djp
-	pl514Bym7yGVMRA2sG97uMk+27fZUcggrXsnqb2mR9HYKWXpPCFV+TlAfxcmJk2Al78NvfHeszf
-	iDlOcxgrUblQB+4x1l4ttOZqHNGsFIrtcwIY9ph9ydrUGUxE3OyEauSo=
-X-Google-Smtp-Source: AGHT+IFFYZyrAGS/UzyHNKkwU7tGU7x9vGFAB4+n1gb4UKvA5/dsCXYHlEr8ggOao+F3qH4Y7BPYqMXRdvPY0z9Sva+IDAm93akU
+        d=1e100.net; s=20230601; t=1728983397; x=1729588197;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8AhULyk6snj9S3RcuiVf6TLsKGAqPkiRMcdk1wAoLOY=;
+        b=vfxL+GDczF7vrjPLfQGDSWmaQZGcmEIvt33MKykNsPqrJmZK4vR8vSXJSVsuNl2QNg
+         Jg6q2vlh7+yaXlZAzF1eBfuxtW809UqhsyhIhCXZVGumTqlITBsvPgG/0SOVc3mzInzw
+         lcAZSVXuXb2/dBAZaL+gFrS3cYBPIQWysnEgLptd3RTwojinCqq5MvOryHkKMXNZQYmD
+         jnikeUBUXN+d8UaRddBJtxKIIf1tE3FADX9TRJR9oweiMV/B7Gr7vDtA7fBOMbtOEPw+
+         OTWp3zZjh98iRAOFee9JiZ1eOPvWf0kj6C4dKlJH7qtcncvRg038rf/1Q7FPTou8wMlZ
+         6YMg==
+X-Forwarded-Encrypted: i=1; AJvYcCUbWHTYVHzNjZAJoXaAmZ0hULK7JW4uZn0oOfUHNFqxsIbadK5gtfjsK7MFMVktFWw1ilxIwaNPqiE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwMNMGrvtuV4HhDYBVqbOlygq8qk7RE52OTY9CtKBTgFGdMspki
+	N6N/HlWpi9RdesTsGXsA8wMjtO0Ow97I+4GImAh+oMh4F1F7MRJVWduZhYZ4Gi/4x/ghpLUZ4Ka
+	2
+X-Google-Smtp-Source: AGHT+IGwoTYwZ06lpisK07syvetoBb7P3dzuaywipqYbWXXCS6vh1cTs5znbTIEuDJEIhGkio1HQ9w==
+X-Received: by 2002:a17:902:f64f:b0:20c:d1ec:aeb with SMTP id d9443c01a7336-20cd1ec0ec4mr132762935ad.21.1728983397003;
+        Tue, 15 Oct 2024 02:09:57 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-209-182.pa.vic.optusnet.com.au. [49.186.209.182])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20d1804c282sm7781325ad.226.2024.10.15.02.09.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Oct 2024 02:09:56 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t0dYv-0014Or-36;
+	Tue, 15 Oct 2024 20:09:53 +1100
+Date: Tue, 15 Oct 2024 20:09:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: port xfs/122 to the kernel
+Message-ID: <Zw4xYRG5LOHuBn4H@dread.disaster.area>
+References: <20241011182407.GC21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:19cb:b0:3a2:463f:fd9e with SMTP id
- e9e14a558f8ab-3a3bcdbb642mr87105465ab.6.1728983009102; Tue, 15 Oct 2024
- 02:03:29 -0700 (PDT)
-Date: Tue, 15 Oct 2024 02:03:29 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <670e2fe1.050a0220.d5849.0004.GAE@google.com>
-Subject: [syzbot] [iomap?] WARNING in iomap_iter (3)
-From: syzbot <syzbot+74cc7d98ae5484c2744d@syzkaller.appspotmail.com>
-To: brauner@kernel.org, chao@kernel.org, dhavale@google.com, djwong@kernel.org, 
-	hsiangkao@linux.alibaba.com, huyue2@coolpad.com, jefflexu@linux.alibaba.com, 
-	linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com, xiang@kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241011182407.GC21853@frogsfrogsfrogs>
 
-Hello,
+On Fri, Oct 11, 2024 at 11:24:07AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Check this with every kernel and userspace build, so we can drop the
+> nonsense in xfs/122.  Roughly drafted with:
+> 
+> sed -e 's/^offsetof/\tXFS_CHECK_OFFSET/g' \
+> 	-e 's/^sizeof/\tXFS_CHECK_STRUCT_SIZE/g' \
+> 	-e 's/ = \([0-9]*\)/,\t\t\t\1);/g' \
+> 	-e 's/xfs_sb_t/struct xfs_dsb/g' \
+> 	-e 's/),/,/g' \
+> 	-e 's/xfs_\([a-z0-9_]*\)_t,/struct xfs_\1,/g' \
+> 	< tests/xfs/122.out | sort
+> 
+> and then manual fixups.
 
-syzbot found the following issue on:
+[snip on disk structures]
 
-HEAD commit:    d61a00525464 Add linux-next specific files for 20241011
-git tree:       linux-next
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=175a3b27980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=8554528c7f4bf3fb
-dashboard link: https://syzkaller.appspot.com/bug?extid=74cc7d98ae5484c2744d
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1513b840580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1313b840580000
+I don't think we can type check all these ioctl structures,
+especially the old ones.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/f615720e9964/disk-d61a0052.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/c4a45c7583c6/vmlinux-d61a0052.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/d767ab86d0d0/bzImage-d61a0052.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/fce276498eea/mount_0.gz
+i.e. The old ioctl structures are not padded to 64 bit boundaries,
+nor are they constructed without internal padding holes, and this is
+why compat ioctls exist. Hence any ioctl structure that has a compat
+definition in xfs_ioctl32.h can't be size checked like this....
 
-The issue was bisected to:
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_error_injection,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_exchange_range,		40);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_exntst_t,				4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_fid,				16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_fs_eofblocks,			128);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_fsid,				8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_counts,			32);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom,			256);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,			112);
 
-commit 56bd565ea59192bbc7d5bbcea155e861a20393f4
-Author: Gao Xiang <hsiangkao@linux.alibaba.com>
-Date:   Thu Oct 10 09:04:20 2024 +0000
+e.g. xfs_fsop_geom_v1 is 108 bytes on 32 bit systems, not 112:
 
-    erofs: get rid of kaddr in `struct z_erofs_maprecorder`
+struct compat_xfs_fsop_geom_v1 {
+        __u32                      blocksize;            /*     0     4 */
+        __u32                      rtextsize;            /*     4     4 */
+        __u32                      agblocks;             /*     8     4 */
+        __u32                      agcount;              /*    12     4 */
+        __u32                      logblocks;            /*    16     4 */
+        __u32                      sectsize;             /*    20     4 */
+        __u32                      inodesize;            /*    24     4 */
+        __u32                      imaxpct;              /*    28     4 */
+        __u64                      datablocks;           /*    32     8 */
+        __u64                      rtblocks;             /*    40     8 */
+        __u64                      rtextents;            /*    48     8 */
+        __u64                      logstart;             /*    56     8 */
+        /* --- cacheline 1 boundary (64 bytes) --- */
+        unsigned char              uuid[16];             /*    64    16 */
+        __u32                      sunit;                /*    80     4 */
+        __u32                      swidth;               /*    84     4 */
+        __s32                      version;              /*    88     4 */
+        __u32                      flags;                /*    92     4 */
+        __u32                      logsectsize;          /*    96     4 */
+        __u32                      rtsectsize;           /*   100     4 */
+        __u32                      dirblocksize;         /*   104     4 */
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=11fd305f980000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=13fd305f980000
-console output: https://syzkaller.appspot.com/x/log.txt?x=15fd305f980000
+        /* size: 108, cachelines: 2, members: 20 */
+        /* last cacheline: 44 bytes */
+} __attribute__((__packed__));
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+74cc7d98ae5484c2744d@syzkaller.appspotmail.com
-Fixes: 56bd565ea591 ("erofs: get rid of kaddr in `struct z_erofs_maprecorder`")
+I'm not sure we need to size check these structures - if they change
+size, the ioctl number will change and that means all the userspace
+test code built against the system /usr/include/xfs/xfs_fs.h file
+that exercises the ioctls will stop working, right? i.e. breakage
+should be pretty obvious...
 
-erofs: (device loop0): mounted with root inode @ nid 36.
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 5233 at fs/iomap/iter.c:51 iomap_iter_done fs/iomap/iter.c:51 [inline]
-WARNING: CPU: 1 PID: 5233 at fs/iomap/iter.c:51 iomap_iter+0x9db/0xf60 fs/iomap/iter.c:95
-Modules linked in:
-CPU: 1 UID: 0 PID: 5233 Comm: syz-executor323 Not tainted 6.12.0-rc2-next-20241011-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
-RIP: 0010:iomap_iter_done fs/iomap/iter.c:51 [inline]
-RIP: 0010:iomap_iter+0x9db/0xf60 fs/iomap/iter.c:95
-Code: 0f 0b 90 e9 0a f9 ff ff e8 d2 10 62 ff 90 0f 0b 90 e9 42 fd ff ff e8 c4 10 62 ff 90 0f 0b 90 e9 71 fd ff ff e8 b6 10 62 ff 90 <0f> 0b 90 e9 d5 fd ff ff e8 a8 10 62 ff 90 0f 0b 90 43 80 3c 2e 00
-RSP: 0018:ffffc900036af6e0 EFLAGS: 00010293
-RAX: ffffffff8232e26a RBX: 0000000000004000 RCX: ffff88802b559e00
-RDX: 0000000000000000 RSI: 0000000000018057 RDI: 0000000000004000
-RBP: 0000000000018057 R08: ffffffff8232e03a R09: 1ffffd40001490be
-R10: dffffc0000000000 R11: fffff940001490bf R12: 1ffff920006d5f05
-R13: dffffc0000000000 R14: 1ffff920006d5f04 R15: ffffc900036af820
-FS:  000055556b120380(0000) GS:ffff8880b8700000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000000000066c7e0 CR3: 000000007edfe000 CR4: 00000000003526f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- iomap_fiemap+0x73b/0x9b0 fs/iomap/fiemap.c:80
- ioctl_fiemap fs/ioctl.c:220 [inline]
- do_vfs_ioctl+0x1bf8/0x2e40 fs/ioctl.c:841
- __do_sys_ioctl fs/ioctl.c:905 [inline]
- __se_sys_ioctl+0x81/0x170 fs/ioctl.c:893
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f5ca9685679
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 61 17 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffd8eaa5b98 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007ffd8eaa5d68 RCX: 00007f5ca9685679
-RDX: 0000000020000040 RSI: 00000000c020660b RDI: 0000000000000004
-RBP: 00007f5ca96f8610 R08: 0000000000000000 R09: 00007ffd8eaa5d68
-R10: 00000000000001e1 R11: 0000000000000246 R12: 0000000000000001
-R13: 00007ffd8eaa5d58 R14: 0000000000000001 R15: 0000000000000001
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
