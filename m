@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A301D1D4341
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 11:09:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C2951E571A;
+	Tue, 15 Oct 2024 11:09:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728990584; cv=none; b=YOT/bdgW8V2yR/8HG0/BaOyNjdAkfzcYy3Fff6KGSvr/O2BZEdS45UYF7CdXBWyN7re4FkY73/6I4mCsw6lplV9o2hB0HbyNYE65THyZ4V43RcaG3es44yUKr8sYcCIiclZ6vz7+Cp2DD7MfO04G1f2niP5QXNKPTEEusilJbVk=
+	t=1728990586; cv=none; b=slTg+FEozPaERP0AabGVg4+BnYCguzGIf4embQR+Wh3Lw3PRGl0g6WZsHkOnGSQXUcZUsh4Qfy5tcU+PiWo+5N9qbbjPRnyQgnIL8rdKT/zFuK7Pt0weLfp18b9lAUjy31OVOdWUMgVRjm//yXO5qKIGZ8p9YUIt2BM9qugtEAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728990584; c=relaxed/simple;
-	bh=UzHr5py2yMRYU/730IkKH1+W9Y4MFxAi6kpukUMGWIg=;
+	s=arc-20240116; t=1728990586; c=relaxed/simple;
+	bh=1KvhG18Mgp0Xd7rZwa7rNWBfzuNqYTIEHZh1WWV57AI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=c/I7rwwLVysrNuxlsDHI/PK8fHgSzgBJflO54i7MEvymlCu1+yY5+cX6P9Ovh4DKZzviAFDoz2tKAF8Vu9mDJLG+gVH5QE/wqRRG8nOwShK2/zoObvJZchnQYMbZkCjj3rDx0RQIdpnahuQ+CrEnldTxFoWIcMaiC3wLcK7rGe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=umkaoZrw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XJjmgsJfFSzpGkGA5N9xR8maUhYYJQBRmh4AU66y+62p2wtFfFHH1RiNMAeTUg+rwKWtGS14n9I9dLWtc9sHtnuqPIhdb1s1v4PkakMVrkL2wCM9Eoy1rfjHx4i5tUbd3I2cqMyzJbIlkPqpBLKnXUhfyLr4T/u6LmCvwZc/yIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cMWRb0Rn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="umkaoZrw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAC0BC4CEC6;
-	Tue, 15 Oct 2024 11:09:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cMWRb0Rn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01501C4CED0;
+	Tue, 15 Oct 2024 11:09:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728990584;
-	bh=UzHr5py2yMRYU/730IkKH1+W9Y4MFxAi6kpukUMGWIg=;
+	s=k20201202; t=1728990586;
+	bh=1KvhG18Mgp0Xd7rZwa7rNWBfzuNqYTIEHZh1WWV57AI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=umkaoZrwgPXmKUOm/rPpVqoJNCQ/nF+btS6uKfWq3PirZagQHrPsxvS2fsoixbBJP
-	 gQE8TqRzqZbe0GFPjlEgnIK9QSeh1XIzvAncY98LQxwiHsqWpqF6Jhzw1/T/iocCU7
-	 mHqyW3j5ubvNmxlMTc6tSHlVeEUEsXfcEQhc7TJiCbhkt6GyqBQyO1/leGgf0Q2kTV
-	 PZfgWRMJ0Unt+8hEhs4kL8lJczGn1iD1FdJ52BSe9N8DCmHIJEh2qK5jD/jVu2t6Ea
-	 znj1Ats77Hb/TRCodc47GK9KfggZESljnZY2NIum9p/7fRPypEqRdSfvungadWODOo
-	 o+E9UDqKm2x8g==
+	b=cMWRb0RnpysovJ/f0wP600M2jF8wlrsxX1zQXrOOmTtE2KyPA1Cjwmm0WhxxM4Cyl
+	 bLC0j988bPo7POlLUwd5whGdkDZeHCahAheA0OYMVRaF8t8QCquwWVFSONBMG5/qa6
+	 7B2lWZLzoil0IjalfRrFFqi5d39ymaheIPZ8V9ke7RIrD3sqXwTBhAHbeHbgK7sBrI
+	 i+gbMngo+fIqJ1l0xvRiy9htP3dYAZL62JVU3HyXmPP2fhMQr7T61WVBQDLpcKOJui
+	 XWMOIszRAOIDvEbJyPdL4OV0zWJ4XnHBwKK80mIKYRpBVTTzMfvoU+5ufLoVLrStNO
+	 Z8l1Nxf0V5ZVQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-In-Reply-To: <20241008040708.GQ21853@frogsfrogsfrogs>
-References: <20241008040708.GQ21853@frogsfrogsfrogs>
-Subject: Re: [PATCH] xfs: fix integer overflow in xrep_bmap
-Message-Id: <172899058342.231867.4423719358891435687.b4-ty@kernel.org>
-Date: Tue, 15 Oct 2024 13:09:43 +0200
+To: Christian Brauner <brauner@kernel.org>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+In-Reply-To: <20241008085939.266014-1-hch@lst.de>
+References: <20241008085939.266014-1-hch@lst.de>
+Subject: Re: fix stale delalloc punching for COW I/O v5
+Message-Id: <172899058471.231867.8845545554612107226.b4-ty@kernel.org>
+Date: Tue, 15 Oct 2024 13:09:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,18 +45,39 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Mon, 07 Oct 2024 21:07:08 -0700, Darrick J. Wong wrote:
-> The variable declaration in this function predates the merge of the
-> nrext64 (aka 64-bit extent counters) feature, which means that the
-> variable declaration type is insufficient to avoid an integer overflow.
-> Fix that by redeclaring the variable to be xfs_extnum_t.
+On Tue, 08 Oct 2024 10:59:11 +0200, Christoph Hellwig wrote:
+> this is another fallout from the zoned XFS work, which stresses the XFS
+> COW I/O path very heavily.  It affects normal I/O to reflinked files as
+> well, but is very hard to hit there.
 > 
+> The main problem here is that we only punch out delalloc reservations
+> from the data fork, but COW I/O places delalloc extents into the COW
+> fork, which means that it won't get punched out forshort writes.
 > 
+> [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: fix integer overflow in xrep_bmap
-      commit: 0fb823f1cf3417e06846d1ffe2c97e10a65a847e
+[01/10] iomap: factor out a iomap_last_written_block helper
+        commit: c0adf8c3a9bf33f1dd1bf950601380f46a3fcec3
+[02/10] iomap: remove iomap_file_buffered_write_punch_delalloc
+        commit: caf0ea451d97c33c5bbaa0074dad33b0b2a4e649
+[03/10] iomap: move locking out of iomap_write_delalloc_release
+        commit: b78495166264fee1ed7ac44627e1dd080bbdf283
+[04/10] xfs: factor out a xfs_file_write_zero_eof helper
+        commit: 3c399374af28b158854701da324a7bff576f5a97
+[05/10] xfs: take XFS_MMAPLOCK_EXCL xfs_file_write_zero_eof
+        commit: acfbac776496f2093e9facf7876b4015ef8c3d1d
+[06/10] xfs: IOMAP_ZERO and IOMAP_UNSHARE already hold invalidate_lock
+        commit: abd7d651ad2cd2ab1b8cd4dd31e80a8255196db3
+[07/10] xfs: support the COW fork in xfs_bmap_punch_delalloc_range
+        commit: 8fe3b21efa075f29d64a34000e84f89cfaa6cd80
+[08/10] xfs: share more code in xfs_buffered_write_iomap_begin
+        commit: c29440ff66d6f24be5e9e313c1c0eca7212faf9e
+[09/10] xfs: set IOMAP_F_SHARED for all COW fork allocations
+        commit: 7d6fe5c586e6a866f9e69a5bdd72a72b977bab8e
+[10/10] xfs: punch delalloc extents from the COW fork for COW writes
+        commit: f6f91d290c8b9da6e671bd15f306ad2d0e635a04
 
 Best regards,
 -- 
