@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44A9D1C302E
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2024 23:41:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 920A5442F
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 00:02:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728949267; cv=none; b=MyQkQMHTUtTPuqc884C0tuimZEFsO6gC7NGlgu4XKU6EKfQqRAouMXmZV40I8vSAUV3jIy0thd+vnqN5Ud4ZrZTrFD7fK+LBzjsjdAeGBtq/OAqMN5mQwevO7iQTPC2xAatZV7Z4tg2cQhfE/NIDO3Lmn1bQw15osIe8TC2HM90=
+	t=1728950537; cv=none; b=ItM6/S7J6B4v6P68qAaDJgNPwdJNi9Wn6Td8lH/sOaUlxEBw/ZueaukYGD9bPZG9/5s2UZMQntECZhjkyCi5gwzXKS4U6MgkkDc+T7mUv7E6OnSmdvFPObji05e+cwbGHAPCdPd8xWgqc309DwU0pV5PRFZgT5tzv2BEtKwGm2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728949267; c=relaxed/simple;
-	bh=3KBn8fezGMRz9HyUgP7KnH5dBFRw9CBzIII0uRSWofQ=;
+	s=arc-20240116; t=1728950537; c=relaxed/simple;
+	bh=B/Aj2ZRWnFIfILP2onkkd/Cm4bRo/6Q1r6K8aFodMJU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mP9KUFaPi+BRRsOnqdAe+oyfUuY2C1Oy3qXfxpqoC+ZauCWzEC7dXq48rQsVs31KfuPJB+zw3jr0Lp9L8tfJo/uHvxa/sE4VgmIODCfydRxetKisZbpHGSpjp4dcTDXpUgrfKklzsMej7/fDXpKK7uWFHN1u7KZCXNBzWqxGOCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkKP7BPe; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mnc4sjOE/lLdsIO7nVvCToh7PAO0QUkfF1NjynnqhOBl5KZiqGE0HNRgZQmCMa5u2dqt9x4zCy0KHcwJKmdElD9gsqM6oWG7qUKm72UDas1uaUJndIOXF1Ry7vXbxsURK1xewKZUouralmCsUIdmwz+Tv0DpG9kOBqgxJXhmX7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lbktKGU4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkKP7BPe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE69BC4CEC3;
-	Mon, 14 Oct 2024 23:41:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lbktKGU4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11139C4CEC7;
+	Tue, 15 Oct 2024 00:02:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728949266;
-	bh=3KBn8fezGMRz9HyUgP7KnH5dBFRw9CBzIII0uRSWofQ=;
+	s=k20201202; t=1728950537;
+	bh=B/Aj2ZRWnFIfILP2onkkd/Cm4bRo/6Q1r6K8aFodMJU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YkKP7BPeysJq4QN1bANuOga47d6YmmR93zb5GxOsz7uL1EL6nxvDo3vsYHUXHIP/M
-	 ELiuyPwkRVLKgJ4Pn5+kFsEfupqHGtQZOr/RXfCw5UKdGxW+0ODGS4UJ1nZNX2iwPV
-	 ktWgKL17OgZhxN49Eg7C3O5is5epgelPJ+mVmvdjiOaFwRl34j+Xy09zDlvdZT2hmM
-	 te9w++p5laxJuKVnDqxZEM2kaYPGJapvZit0xp4FgmV3EQx25NmPQ+GTmwS6lid59Z
-	 Z7ledVlR5YSpo4QZi+m0Ay98kaTdDxDtbUNHGGzAYls28CoJ8v99UanEXHih38NPsl
-	 GsleqzzPCOSIQ==
-Date: Mon, 14 Oct 2024 16:41:06 -0700
+	b=lbktKGU4MXHl5y3e5W9YF/SqezsX2hBM3UfgAeEegzE7OQvNwDhc3eXiWuKNnToZ9
+	 tD7j0OwuplEdAHMJ1XwGd2ik/KFnpcGmwh9YgmrVzbhVi8wWWYy8A15VFh2bS2c3HC
+	 sfWs3W+i8y2UCkyxuDQ2UlBf2qhV5NMogjKxlhEn0BRC2zSmcd/jmsLKHgeoCA2d8/
+	 Q+lb4mdatqmDPdjCnpyNJJdhnPK3ZrwUyd4dBCwiamnPT1RH40kZ6tVTdmAUvxQP1n
+	 KPu2/Jp34ezpsoh4Jr6KJOSwuAf2Ac9n4AAxy15Sd6GOkKc80VyxqQQ12fZsSOtaZx
+	 GMSJMHP9Wdbrw==
+Date: Mon, 14 Oct 2024 17:02:16 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/21] xfs: add a xfs_qm_unmount_rt helper
-Message-ID: <20241014234106.GI21853@frogsfrogsfrogs>
-References: <172860642881.4177836.4401344305682380131.stgit@frogsfrogsfrogs>
- <172860643085.4177836.784622735507950940.stgit@frogsfrogsfrogs>
- <ZwzObUb46IcTP1HD@infradead.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 15/36] xfs: store rtgroup information with a bmap intent
+Message-ID: <20241015000216.GJ21853@frogsfrogsfrogs>
+References: <172860644112.4178701.15760945842194801432.stgit@frogsfrogsfrogs>
+ <172860644500.4178701.5897856828553646962.stgit@frogsfrogsfrogs>
+ <ZwzQcYRPCPAchgjY@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,24 +43,89 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZwzObUb46IcTP1HD@infradead.org>
+In-Reply-To: <ZwzQcYRPCPAchgjY@infradead.org>
 
-On Mon, Oct 14, 2024 at 12:55:25AM -0700, Christoph Hellwig wrote:
-> On Thu, Oct 10, 2024 at 05:57:46PM -0700, Darrick J. Wong wrote:
-> > From: Christoph Hellwig <hch@lst.de>
-> > 
-> > RT group enabled file systems fix the bug where we pointlessly attach
-> > quotas to the RT bitmap and summary files.  Split the code to detach the
-> > quotas into a helper, make it conditional and document the differing
-> > behavior for RT group and pre-RT group file systems.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Oct 14, 2024 at 01:04:01AM -0700, Christoph Hellwig wrote:
+> The actual intent code looks good:
 > 
-> This should have your signof below mine if you pass on the patches.
-> Same for several more patches past this one.
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> but while re-reviewing I noticed a minor thing in the tracing code:
+> 
+> > +		__entry->dev = mp->m_super->s_dev;
+> > +		__entry->type = bi->bi_group->xg_type;
+> > +		__entry->agno = bi->bi_group->xg_index;
+> > +		switch (__entry->type) {
+> > +		case XG_TYPE_RTG:
+> > +			/*
+> > +			 * Use the 64-bit version of xfs_rtb_to_rgbno because
+> > +			 * legacy rt filesystems can have group block numbers
+> > +			 * that exceed the size of an xfs_rgblock_t.
+> > +			 */
+> > +			__entry->gbno = __xfs_rtb_to_rgbno(mp,
+> >  						bi->bi_bmap.br_startblock);
+> > +			break;
+> > +		case XG_TYPE_AG:
+> > +			__entry->gbno = XFS_FSB_TO_AGBNO(mp,
+> >  						bi->bi_bmap.br_startblock);
+> > +			break;
+> > +		default:
+> > +			/* should never happen */
+> > +			__entry->gbno = -1ULL;
+> > +			break;
+> 
+> Maybe just make this an
+> 
+> 		if (type == XG_TYPE_RTG)
+> 			__xfs_rtb_to_rgbno()
+> 		else
+> 			xfs_fsb_to_gbno()
+> 
+> ?
 
-Aha, I thought I was missing something!
+Hmmm that *would* get rid of that __entry->gbno = -1ULL ugliness above.
 
-For patches 8-11:
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Ok let's do it.
+
+Until we get to patch, the helper looks like:
+
+xfs_agblock_t
+xfs_fsb_to_gbno(
+	struct xfs_mount	*mp,
+	xfs_fsblock_t		fsbno,
+	enum xfs_group_type	type)
+{
+	if (type == XG_TYPE_RTG)
+		return xfs_rtb_to_rgbno(mp, fsbno);
+	return XFS_FSB_TO_AGBNO(mp, fsbno);
+}
+
+and the tracepoint code become:
+
+		__entry->type = bi->bi_group->xg_type;
+		__entry->agno = bi->bi_group->xg_index;
+		if (bi->bi_group->xg_type == XG_TYPE_RTG &&
+		    !xfs_has_rtgroups(mp)) {
+			/*
+			 * Legacy rt filesystems do not have allocation
+			 * groups ondisk.  We emulate this incore with
+			 * one gigantic rtgroup whose size can exceed a
+			 * 32-bit block number.  For this tracepoint, we
+			 * report group 0 and a 64-bit group block
+			 * number.
+			 */
+			__entry->gbno = bi->bi_bmap.br_startblock;
+		} else {
+			__entry->gbno = xfs_fsb_to_gbno(mp,
+						bi->bi_bmap.br_startblock,
+						bi->bi_group->xg_type);
+		}
+		__entry->ino = ip->i_ino;
+
+--D
+
+> >  		  __entry->l_len,
+> > 
+> > 
+> ---end quoted text---
+> 
