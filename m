@@ -1,85 +1,88 @@
-Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 620451E378F;
-	Tue, 15 Oct 2024 10:39:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A888915C120
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 11:07:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728988748; cv=none; b=kH6nzPbvpBie65EnQuNu6BTXGOt6jpN6cZSERe8JBpOwl/OOxynXaLluK0Ql3fl5KvS98WhqirPpvmizwi87Cgqg/gON1jzTrxtCuv2x70pdaBFMNuuZyCptzixeo5qTrqGQ+xArYuzvBA5/I5wk5yN8xz4QTBoEv/s5yDpYILQ=
+	t=1728990450; cv=none; b=FQLKlhO0ngM/qbMSWOrwgor6vhCBRZKUdJygzTz/5WAGQZlQVwIzNfFACDygELRJJg/V/pzVvr9TBymMTOKy/Kyq3lKCY3Tm9Eee90sDpPufHrzkc2rXF2dEGScS6tK0KgAjhA5rjQ+kPGq6DOl3YY7rMjSrnYXGKcOv1guwZgc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728988748; c=relaxed/simple;
-	bh=UoMHr3WzhbxE3hx8+va/FD/uR7PV83fez2EgfQRf5xs=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=PaUCaYqMMYb1pbc03eRg/D3kGd89v+vBjhnueVpO7tcMvi7p8cYYO8rzHK2FSGvu9OS2v+sE0I5Qj54b5cltrM9qeElm7WQ+3JEe0PWHQrlVo4Mnz4QuvcnYkUoTj6ANdbOMfJNXGfl7aMhHAIyy2Kh2O79IpMtuxGUmT2S8ExI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=IxAhr+1Y; arc=none smtp.client-ip=115.124.30.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1728990450; c=relaxed/simple;
+	bh=LZ92OCLROAYYhdrn8E3O8SGLVSlfZGPpG7BJkGbJjOM=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=u/Q9SfdhEPUs6tmD7MGTbb95JuNWinTXiFIyzkXZRBIXl6zRw5cmpVHYr2ndDC8IQdTwG7Qjz9Zy+ghHLZLp5URJx0RrgE46KEuRjGu+2rNvqXQBO5Homu19xROJ5hIO0o1MO8bScpT9gA8ZKl/p8tC5z3qb6NTf/PQAncBmAq4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qepmm6kx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="IxAhr+1Y"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1728988744; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type;
-	bh=v+dwRPCTeAm3f9Cj5qx8sZFX+iLjtJLr7D++fvDIKQk=;
-	b=IxAhr+1YHE6bz8sED4xf/WFdHBcOjsSeNYFm4ZXik2Gtm7WwVXK8DjjNakRu/EqqN2XW2kHomLcO5j6jRLQipFVYjogNpZ/c7O6zZ3OUElHBn8s6oP1qVWCbXUszs7D9mAN5o8M/VzxhSFvD+xQt9sGwQscbjqvIWYQoeNyLlc8=
-Received: from 30.221.130.176(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0WHDPpua_1728988742 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 15 Oct 2024 18:39:03 +0800
-Message-ID: <62f54645-53cc-46d3-aaab-8583ed7f1a68@linux.alibaba.com>
-Date: Tue, 15 Oct 2024 18:39:02 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qepmm6kx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8952C4CEC6
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 11:07:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728990450;
+	bh=LZ92OCLROAYYhdrn8E3O8SGLVSlfZGPpG7BJkGbJjOM=;
+	h=Date:From:To:Subject:From;
+	b=Qepmm6kxdP3/wWeQ7bKZu+VDuhzNq5nGEV940+723H125CEo8lmvvT5bUjztixPNi
+	 JESm3+41vHoa5gUe3xHaE/3QEeOnVqbneni2rS1h6iso0yAENg+58sctVgXmdtS2Jp
+	 Mbyhh3wmnNblmBeXB8vaJAF2LQ950f2ZBQlvIX9Vf0i4cpXHTNhUnuT5MrRRN7pBby
+	 vOBtj0UqQwIyMgLPFSJXEghpG1RcmR7Qpehim+xUuyq6/FocXO6ZKRz3fGSEeRfT5u
+	 WmZBiJEzE+8nc62vHEi6LESDWoSFMaUUqstTpbsZX4lsvisXjmAXAYvIMotvtONNyP
+	 lghctF1QMvRcw==
+Date: Tue, 15 Oct 2024 13:07:26 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to f6f91d290c8b
+Message-ID: <j3wsebdnxdcyre2lug4gi5c67cdd45ak52ijgbqdopk33gcf7p@izluo6qwo2hu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [syzbot] [iomap?] WARNING in iomap_iter (3)
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-To: syzbot <syzbot+74cc7d98ae5484c2744d@syzkaller.appspotmail.com>,
- brauner@kernel.org, chao@kernel.org, dhavale@google.com, djwong@kernel.org,
- huyue2@coolpad.com, jefflexu@linux.alibaba.com,
- linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- syzkaller-bugs@googlegroups.com, xiang@kernel.org
-References: <670e2fe1.050a0220.d5849.0004.GAE@google.com>
- <5f85c28d-5d06-4639-9453-41c38854173e@linux.alibaba.com>
-In-Reply-To: <5f85c28d-5d06-4639-9453-41c38854173e@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hi folks,
 
+The for-next branch of the xfs-linux repository at:
 
-On 2024/10/15 17:10, Gao Xiang wrote:
-> Hi,
-> 
-> On 2024/10/15 17:03, syzbot wrote:
->> Hello,
->>
->> syzbot found the following issue on:
->>
->> HEAD commit:    d61a00525464 Add linux-next specific files for 20241011
->> git tree:       linux-next
+	gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git
 
-..
+has just been updated.
 
->>
->> commit 56bd565ea59192bbc7d5bbcea155e861a20393f4
->> Author: Gao Xiang <hsiangkao@linux.alibaba.com>
->> Date:   Thu Oct 10 09:04:20 2024 +0000
->>
->>      erofs: get rid of kaddr in `struct z_erofs_maprecorder`
-> 
-> I will look into that, but it seems it's just a trivial cleanup,
-> not quite sure what happens here...
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-It seems that it's only caused by an outdated version in
-next-20241011, which doesn't impact to upstream or the
-latest -next:
-https://lore.kernel.org/r/670e399e.050a0220.d9b66.014e.GAE@google.com
-https://lore.kernel.org/r/670e3f3f.050a0220.f16b.000b.GAE@google.com
+The new head of the for-next branch is commit:
 
-so
+f6f91d290c8b xfs: punch delalloc extents from the COW fork for COW writes
 
-#syz set subsystems: erofs
+11 new commits:
 
-#syz invalid
+Christoph Hellwig (10):
+      [c0adf8c3a9bf] iomap: factor out a iomap_last_written_block helper
+      [caf0ea451d97] iomap: remove iomap_file_buffered_write_punch_delalloc
+      [b78495166264] iomap: move locking out of iomap_write_delalloc_release
+      [3c399374af28] xfs: factor out a xfs_file_write_zero_eof helper
+      [acfbac776496] xfs: take XFS_MMAPLOCK_EXCL xfs_file_write_zero_eof
+      [abd7d651ad2c] xfs: IOMAP_ZERO and IOMAP_UNSHARE already hold invalidate_lock
+      [8fe3b21efa07] xfs: support the COW fork in xfs_bmap_punch_delalloc_range
+      [c29440ff66d6] xfs: share more code in xfs_buffered_write_iomap_begin
+      [7d6fe5c586e6] xfs: set IOMAP_F_SHARED for all COW fork allocations
+      [f6f91d290c8b] xfs: punch delalloc extents from the COW fork for COW writes
+
+Darrick J. Wong (1):
+      [0fb823f1cf34] xfs: fix integer overflow in xrep_bmap
+
+Code Diffstat:
+
+ Documentation/filesystems/iomap/operations.rst |   2 +-
+ fs/iomap/buffered-io.c                         | 111 ++++++-------------
+ fs/xfs/scrub/bmap_repair.c                     |   2 +-
+ fs/xfs/xfs_aops.c                              |   4 +-
+ fs/xfs/xfs_bmap_util.c                         |  10 +-
+ fs/xfs/xfs_bmap_util.h                         |   2 +-
+ fs/xfs/xfs_file.c                              | 146 +++++++++++++++----------
+ fs/xfs/xfs_iomap.c                             |  67 ++++++++----
+ include/linux/iomap.h                          |  20 +++-
+ 9 files changed, 199 insertions(+), 165 deletions(-)
