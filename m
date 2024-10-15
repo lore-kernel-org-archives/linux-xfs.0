@@ -1,141 +1,105 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4138A13C908
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 01:09:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 942F13BBF6
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 01:14:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728954542; cv=none; b=qA4YsJ1028FfaN9IHYYJ64TcGV0CLfrLaz9AuCt06twBRX26pLyWq0s+MTIy2B/wJTtwpKfIBYkqCDcMOTyF1O4dTyPYUBIofuJ7iU1N2r84DoNR5gDQvdSzjfSC1/yqxxHkz2bJXmq23TbWkyRR4cTbkqyPp7RnvTmqGvCjn7o=
+	t=1728954873; cv=none; b=UCWRI+30LW4XOKnq5nL3HLIa6i5DgZu1zby2V6Rxk05WDJ3pXNc2stZX/j7Hl5oKVQQBqwrOeTt7/VY+1AD/H1GH+bt1NOHCzH34plhw7dqHpF5MDAJ3PDqEAw45zhE6pfSaRb+X8z1aI78vXjYLR+lMk3HQoIYHOgejw82TXLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728954542; c=relaxed/simple;
-	bh=H4pmppWfGzR2gI9E1Weev2HBi2xUc1rkUCAxoQcUydo=;
+	s=arc-20240116; t=1728954873; c=relaxed/simple;
+	bh=qz98XDru2Cj8wP4JOV5u/TddLrSIrQ9QGDHyR+Mq900=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bn7LqvX5p2k/ncme8FV3unazTHvZ4NXoMaN+HOW9274ivPHWhLd/uGGAjIsnNalpIvCdMvKFFxPY5K+FrwqI9VKVJmJa+M8dgHIvC4hl5lYBZ+Rc+jVVBDUn6Sjmr+GVz/tOfpMn3vWOswFUFS3U3CioA9Mx50hyiYT9eaczkKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xI8TPr1p; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=IbiwFmzeIvCYHDQ9feuuhD8yO7Hmvkcog5j7koyK2mkOObBLOmB6113Lte85bzg7q8J6+mf839SY/i4SspeoV2IHG9WUCDAVOlKyS+ZeA5eFDQK6d2sjY5Duhn+cFQl6yu7myS4BF/tlaRomCdVdtmPw1jCdYjZ810fECD5ad2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nLkyO82f; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xI8TPr1p"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-20ce65c8e13so13635095ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2024 18:09:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1728954539; x=1729559339; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+YZrxE+kV5C0MWQkd78I3eNOxbZ7DWhLRNrPAiXAMv0=;
-        b=xI8TPr1pIct10piJib14cW4iHRgxq1hIJkzEXIAgMO2Wn1UKXOMNR4UC0OoPGotGiB
-         CApNdFCGh72hYtodkw2pTk6tDInxmxQkFJ72xT3pi1uwCIfrmcaCedn8gsyMwY4bnD2I
-         gMQGlnnpXg4iNc9nPqezDMtdRe4NhczksWzz/67+LCRkAcYGYaeT13zk1zm0bB757x/x
-         1ykD4yHZ7C/mrcnaBjd3u1NfASPd/F5s7Zufv36m7REqx/grqqFHVOHGXIAhsCGc+rcR
-         fStqojrzd6JdpIhODFxiohzPR4aVPkY9pQvdFma20eyw/Zbk4yx+qCjXcY0vohx6JJTG
-         Bolw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728954539; x=1729559339;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+YZrxE+kV5C0MWQkd78I3eNOxbZ7DWhLRNrPAiXAMv0=;
-        b=Kz/ddOZCfLy4HAqQuf+x5th/DJx3M/qU2oUOIF4QrUIxDqsvl2GFl3Kf4Rw9o6B7l4
-         sslAZcUQ1hBUApyGkdAYzLZ1RfzutOWv+Vq63Nv05M2IZLMmXt+sJedTXzF/K4MzwscO
-         jnCJMlS7uOJ2HAKXqEaw9b2jEzjGQ4DAwh0zfxjhSuhmHdI6RuDfAt/M+QEV86e2oS47
-         Vla3Buqf2phS6CHWx7XXP7nZGp/FYlw6DoSIEPQq4RRcOl5JIWa8RkQL+0XUCW3XRLc5
-         xRiioGKhgWQ/euFPriut1jyX6ZcF7Xs97aGmyIo4kbaZgCCx7dqUzwwHCEnh5vBmjb1I
-         f2QQ==
-X-Gm-Message-State: AOJu0YzrCQPIJmzSQ2L2lO3v7p8kaV5TEHEHfNVFJecHxGBaxu9MOHSo
-	UePTQ29iMrwnOYGMom6wTsAz6RGj2oU0ja/jsCTAfquzbSXIpqrjh1O+AyKen9LAFCEPOHCCTMT
-	4
-X-Google-Smtp-Source: AGHT+IGrDyCvhUOHP5X6MnCYL24AjYV6NsegZt+zv1cjFk7uKWUyYkAV/MuS4GilIu9QrrgGdY3bxw==
-X-Received: by 2002:a17:902:f707:b0:20b:a6f5:2768 with SMTP id d9443c01a7336-20ca142984emr181735235ad.10.1728954539498;
-        Mon, 14 Oct 2024 18:08:59 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-209-182.pa.vic.optusnet.com.au. [49.186.209.182])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20d1804c68bsm1572355ad.185.2024.10.14.18.08.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Oct 2024 18:08:59 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1t0W3U-000vHi-20;
-	Tue, 15 Oct 2024 12:08:56 +1100
-Date: Tue, 15 Oct 2024 12:08:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 10/16] xfs: convert extent busy tracking to the generic
- group structure
-Message-ID: <Zw3AqAuiDKKKowCa@dread.disaster.area>
-References: <172860641207.4176300.780787546464458623.stgit@frogsfrogsfrogs>
- <172860641435.4176300.8386911960329501440.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nLkyO82f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DB42C4CEC3;
+	Tue, 15 Oct 2024 01:14:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728954873;
+	bh=qz98XDru2Cj8wP4JOV5u/TddLrSIrQ9QGDHyR+Mq900=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nLkyO82f4kiKTGIMPKG6GFJu1plaNvuT8w0+md4URixQ2ExIUCoyHa/LhXE4GITqn
+	 nueSlyupiUIw3I1qSun74iMnzABQiju+3warNsQygt1UxdRcf64/UsXK3Ar1RY+rKG
+	 /XdmQMvY86QmXumWrmdY3JGw0tFtsT19mJHf8/DJHTXdjtD+brPKqcC4peVXaSZhqR
+	 6Z2WbjAw+XF8HGjtDsddqheoXNuvl2SUuVvTiUqR0aDqyzIbxLTClU3NZiUdtX2eFR
+	 bita/7QJNOYVeaJ9VRaS0dM0Wvch779UITKBdS8D16R71kM/76HyROxwoLG5P7MMAH
+	 du6dCV2H2jY6A==
+Date: Mon, 14 Oct 2024 18:14:32 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: "hch@infradead.org" <hch@infradead.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 10/36] xfs: export the geometry of realtime groups to
+ userspace
+Message-ID: <20241015011432.GQ21853@frogsfrogsfrogs>
+References: <172860644112.4178701.15760945842194801432.stgit@frogsfrogsfrogs>
+ <172860644412.4178701.5633521217539140453.stgit@frogsfrogsfrogs>
+ <ZwzXRdcbnpOh9VEe@infradead.org>
+ <8ecae4c5-aeaa-4889-8a3a-e4ba17f3bf7c@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <172860641435.4176300.8386911960329501440.stgit@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8ecae4c5-aeaa-4889-8a3a-e4ba17f3bf7c@wdc.com>
 
-On Thu, Oct 10, 2024 at 05:46:48PM -0700, Darrick J. Wong wrote:
-> From: Christoph Hellwig <hch@lst.de>
+On Mon, Oct 14, 2024 at 01:27:57PM +0000, Hans Holmberg wrote:
+> On 14/10/2024 10:33, Christoph Hellwig wrote:
+> > On Thu, Oct 10, 2024 at 06:04:17PM -0700, Darrick J. Wong wrote:
+> >> From: Darrick J. Wong <djwong@kernel.org>
+> >> +	__u32 rg_number;	/* i/o: rtgroup number */
+> >> +	__u32 rg_length;	/* o: length in blocks */
+> >> +	__u32 rg_capacity;	/* o: usable capacity in blocks */
+> > 
+> > So the separate length vs capacity reporting was needed for my previous
+> > implementation of zoned devices with LBA gaps.  Now that RT groups
+> > always use segmented addressing we shouldn't need it any more.
+> > 
+> > That being said Hans was looking into using the capacity field to
+> > optimize data placement in power users like RockѕDB, and one thing
+> > that might be useful for that is to exclude known fixed metadata from
+> > the capacity field, which really is just the rtsb on rtgroup 0.
+> > 
 > 
-> Prepare for tracking busy RT extents by passing the generic group
-> structure to the xfs_extent_busy_class tracepoints.
+> Yeah, it would be very useful for apps to know the available user capacity
+> so that file sizes could be set up to align with that.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_extent_busy.c |   12 +++++++-----
->  fs/xfs/xfs_trace.h       |   34 +++++++++++++++++++++-------------
->  2 files changed, 28 insertions(+), 18 deletions(-)
+> When files are mapped to disjoint sets of realtime groups we can avoid garbage
+> collection all together. Even if the apps can't align file sizes perfectly to
+> the number of user writable blocks, write amplification can be minimized
+> by aiming for it.
 
-Subject is basically the same as the next patch - swap "busy"
-and "extent" and they are the same. Perhaps this should be
-called "Convert extent busy trace points to generic groups".
+Hmmm so if I'm understanding you correctly: you want to define
+"capacity" to mean "maximum number of blocks available to userspace"?
 
-> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> index 2806fc6ab4800d..ff10307702f011 100644
-> --- a/fs/xfs/xfs_extent_busy.c
-> +++ b/fs/xfs/xfs_extent_busy.c
-> @@ -41,7 +41,7 @@ xfs_extent_busy_insert_list(
->  	new->flags = flags;
->  
->  	/* trace before insert to be able to see failed inserts */
-> -	trace_xfs_extent_busy(pag, bno, len);
-> +	trace_xfs_extent_busy(&pag->pag_group, bno, len);
->  
->  	spin_lock(&pag->pagb_lock);
->  	rbp = &pag->pagb_tree.rb_node;
-> @@ -278,13 +278,13 @@ xfs_extent_busy_update_extent(
->  		ASSERT(0);
->  	}
->  
-> -	trace_xfs_extent_busy_reuse(pag, fbno, flen);
-> +	trace_xfs_extent_busy_reuse(&pag->pag_group, fbno, flen);
->  	return true;
->  
->  out_force_log:
->  	spin_unlock(&pag->pagb_lock);
->  	xfs_log_force(pag_mount(pag), XFS_LOG_SYNC);
-> -	trace_xfs_extent_busy_force(pag, fbno, flen);
-> +	trace_xfs_extent_busy_force(&pag->pag_group, fbno, flen);
->  	spin_lock(&pag->pagb_lock);
->  	return false;
->  }
-> @@ -496,7 +496,8 @@ xfs_extent_busy_trim(
->  out:
->  
->  	if (fbno != *bno || flen != *len) {
-> -		trace_xfs_extent_busy_trim(args->pag, *bno, *len, fbno, flen);
-> +		trace_xfs_extent_busy_trim(&args->pag->pag_group, *bno, *len,
-> +				fbno, flen);
+Does that available block count depend on privilege level (ala ext4
+which always hides 5% of the blocks for root)?  I think the answer to
+that is 'no' because you're really just reporting the number of LBAs in
+that zone that are available to /any/ application program, and there's a
+direct mapping from 'available LBAs in a zone' to 'rgblocks available in
+a rtgroup'.
 
-Also, the more I see this sort of convert, the more I want to see a
-pag_group(args->pag) helper to match with stuff like pag_mount() and
-pag_agno()....
+But yeah, I agree that it might be nice to know total blocks available
+in a particular rtgroup.  Is it useful to track and report the number of
+unwritten blocks remaining in that group?
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+For example, if the rtgroup size is 1024 fsblocks, the zns zone actually
+only has 8000 lba == 1000 fsblocks, and you've already written to 200
+fsblocks of it, then we'd report:
+
+rg_length: 1024
+rg_capacity: 1000
+rg_avail: 800
+
+Here the program knows that every 1000*4k bytes it writes will result in
+a jump to a new rtgroup; and that the next time this will happen is
+after it writes 800*4k bytes more?  (Assume the usual frictionless
+system with no other writers :P)
+
+--D
