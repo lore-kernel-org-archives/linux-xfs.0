@@ -1,125 +1,139 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 873912B9A4;
-	Tue, 15 Oct 2024 04:13:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F6729B0
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 04:27:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728965636; cv=none; b=CamSizNyb29v8w3ijqV3Sj3fiUVZOURP6NAQ62ZvUmSI0pF9ZvL0KIYa2U2yKHbYoTnZWdyAIWbMgsIdm30pB6BKhbW3Zu29HavVPa/aPX7mPNHtgubop8R5702+NbnrS2RnWRr6mYEmi/8VOy2Z73Nz7cU9y4FGmgYGd4GmMGE=
+	t=1728966433; cv=none; b=ZCZI5iXf9LXfnFaSol2IAKbM6tzuqq/EjXGaqrDwcRBJHMhUvRssYv3pxY+GSxtQ6q7uHy/RTzzzhmC9CQey0tH2vvcfKtLu3Flx+6n+OaqFmwSLMYZUWQSlvTjUEaslmowYHXoXK4fJ1uhpzjWYWiCiZUlAKxcOT9RkbRoWD78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728965636; c=relaxed/simple;
-	bh=qhm5/G1t4ORR7apeSmEmhPgjtHdwcIyO3zWRObKhidk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=osckDCiO5eIW/LiPN0acNBwQ88reg5VSOiGxwjsUV5T1NVthjYXz+DsL8mOMqynaVSJtlyGP3BYvi/0O94h7Ii+IHm6ww0OLoGkz3B7kzxY7y9Ie+8gIyRXwYm5GCDlYSfYYoKFy3VPScQHQBxGV4ygVM1rsULdTOXop/f2GA2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wopLP0AC; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1728966433; c=relaxed/simple;
+	bh=jjrDunnrYcToF4dwSn84Z4FNcsDjxBHic6Gnb9S/T6A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ITEDYR37/gmvAvS7qKqyNhpO6RS6SvF4lJcR3AbehnlMmcV9q7GBhdKKD6l9RRDcivisfcElkgPdW5Nbwx690HPrMupHOyrSg2bYvHCl/tz3PwPbu1C+pdxu6lnqeeJEystPH+QjAh2YOY5KIHsJqP6uW9Cx0BWh027Z3ymEWNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ULLB1dKS; arc=none smtp.client-ip=209.85.216.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wopLP0AC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=mk9AtiTBk0FKZgZvBif+eyLF92Y0AH1k0wOKr5Ar35o=; b=wopLP0ACvM5+Oa0vg4sUvcmRmv
-	gZNCYRvE134XOP6kXp6iaECcznoZgzU1PF/qSn7hEUIPlTOA3vTU+KEzKLMuIQ1XgtkvD/A6n3GM1
-	xdMBAjDdQJ/uMn9C9eWF+olfKAQfW8KLi0vNW6EnEmUXKv81Y5x5mIiqjNs/IWU/v1vHoLBGJQIbH
-	dr+D4A98ZcMfDmDQuuAhJduA3aFCyLDHX4EZEYCYjp2puVIfmupM2YJn8k4+5XIoU/GA9pYTr7BWy
-	abrvy3oij2UoPJxxRq331JA8vwak1txW6ba5qqnUOK4NzX/o4Q1oU/Ga21qTMH1eOeZ32EehNn6tJ
-	et/O8H7w==;
-Received: from 2a02-8389-2341-5b80-a6f6-1cc3-c123-683b.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:a6f6:1cc3:c123:683b] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1t0YwT-000000072C4-2lrU;
-	Tue, 15 Oct 2024 04:13:54 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: brauner@kernel.org
-Cc: djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	kernel test robot <lkp@intel.com>
-Subject: [PATCH] iomap: turn iomap_want_unshare_iter into an inline function
-Date: Tue, 15 Oct 2024 06:13:50 +0200
-Message-ID: <20241015041350.118403-1-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ULLB1dKS"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-2e2ed59a35eso3502572a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2024 21:27:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1728966431; x=1729571231; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=QSr9sD/fhysut0XxpOXgihRKHZ/bFKylspXgt9gS3y0=;
+        b=ULLB1dKSYWNVSiQ46kb78OD8+M3Gfma2xuACOLYo0ba0Cgqf44jh023zSGea5JZOmH
+         XGiNMLplo+VxQTumqhP9jFX6U2TyfSIxuojtMdCebZXi6sgdQuchPVuPKmwTH3I9abSv
+         48FDjFqXKPL184vvseqCp78vHWwosldraFwxk/lBF3yPejgkFejnp9CSyO67iArzvttV
+         IHToydRUVwqqX7wxNska98pqpK2lZiF7BycuXgrWbzGVzh1QRrLhZhYtEzGhfZTGh0e+
+         zO7+SZyERiRNRdJ94/t2OpvXqkxEUZA/FNyzna6FTg6iX+Q5HxgBSBDDaPtAqyQ3zRIE
+         7f5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728966431; x=1729571231;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QSr9sD/fhysut0XxpOXgihRKHZ/bFKylspXgt9gS3y0=;
+        b=o7PGQA8LPEbADcDSpSomBncnlWbLss0ADKI1us4Yjv7qH+YSnZWa196FJClqI5OQbR
+         DjnZmnmDnJYpifjmV1823RpI0ZL242kf+7EkFO2FuDhZt47wi957Cdo45Wx9+AFQ3HSm
+         R3f8s1niH/61qdiaVLMyVgMa287tSp4+3ocQ0zlzUyjdqll1ch8UgfJ6fYfI22FJjV5X
+         vk85H+sxw9BWAWre1BRI/XR+KoGg/jq56N871NDyWz1YqZ2/sUqE1zC2e9Ca3MIxIlFB
+         zyb7N1qRPe8g2xRTXZddHu5V5gP6d1it2UnOKJ7VEu+Kv23EfG1PIHrrs0PzRNGEpLU7
+         4OIw==
+X-Gm-Message-State: AOJu0YwBqW7AqHByI3nFUb1oFc90ZABQ5QboptmghG3d1IEi2k/VSXkq
+	6AwN8vt5F8csUL71LTHoPD5RPbXsNyGlhT+O4OMAjLXtTmXZ0thrKiFOBjzbTTg=
+X-Google-Smtp-Source: AGHT+IHmhBjRKJ0RAd68Pm3IUOM3T7Z83TsPLgqnuIE1NoxYjPx8bOfifES4cULkTPqi8Fw3/fpJ7g==
+X-Received: by 2002:a17:90b:38c:b0:2e2:bb32:73eb with SMTP id 98e67ed59e1d1-2e2f0c550f7mr18044301a91.31.1728966430918;
+        Mon, 14 Oct 2024 21:27:10 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-209-182.pa.vic.optusnet.com.au. [49.186.209.182])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e392e8cf1csm470519a91.6.2024.10.14.21.27.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Oct 2024 21:27:10 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t0Z9I-000z6u-09;
+	Tue, 15 Oct 2024 15:27:08 +1100
+Date: Tue, 15 Oct 2024 15:27:08 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 04/28] xfs: undefine the sb_bad_features2 when metadir is
+ enabled
+Message-ID: <Zw3vHOiOBG28/vgv@dread.disaster.area>
+References: <172860641935.4176876.5699259080908526243.stgit@frogsfrogsfrogs>
+ <172860642083.4176876.2034736773059229041.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <172860642083.4176876.2034736773059229041.stgit@frogsfrogsfrogs>
 
-iomap_want_unshare_iter currently sits in fs/iomap/buffered-io.c, which
-depends on CONFIG_BLOCK.  It is also in used in fs/dax.c whіch has no
-such dependency.  Given that it is a trivial check turn it into an inline
-in include/linux/iomap.h to fix the DAX && !BLOCK build.
+On Thu, Oct 10, 2024 at 05:49:25PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> The metadir feature is a good opportunity to break from the past where
+> we had to do this strange dance with sb_bad_features2 due to a past bug
+> where the superblock was not kept aligned to a multiple of 8 bytes.
+> 
+> Therefore, stop this pretense when metadir is enabled.  We'll just set
+> the incore and ondisk fields to zero, thereby freeing up 4 bytes of
+> space in the superblock.  We'll reuse those 4 bytes later.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |   73 ++++++++++++++++++++++++++++----------------
+>  fs/xfs/libxfs/xfs_sb.c     |   27 +++++++++++++---
+>  fs/xfs/scrub/agheader.c    |    9 ++++-
+>  3 files changed, 75 insertions(+), 34 deletions(-)
 
-Fixes: 6ef6a0e821d3 ("iomap: share iomap_unshare_iter predicate code with fsdax")
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/buffered-io.c | 17 -----------------
- include/linux/iomap.h  | 19 +++++++++++++++++++
- 2 files changed, 19 insertions(+), 17 deletions(-)
+This is all pretty nasty. We are not short on space in the
+superblock, so I'm not sure why we want to add all this complexity
+just to save 4 bytes of space in the sueprblock.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 604f786be4bc54..ef0b68bccbb612 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1270,23 +1270,6 @@ void iomap_write_delalloc_release(struct inode *inode, loff_t start_byte,
- }
- EXPORT_SYMBOL_GPL(iomap_write_delalloc_release);
- 
--bool iomap_want_unshare_iter(const struct iomap_iter *iter)
--{
--	/*
--	 * Don't bother with blocks that are not shared to start with; or
--	 * mappings that cannot be shared, such as inline data, delalloc
--	 * reservations, holes or unwritten extents.
--	 *
--	 * Note that we use srcmap directly instead of iomap_iter_srcmap as
--	 * unsharing requires providing a separate source map, and the presence
--	 * of one is a good indicator that unsharing is needed, unlike
--	 * IOMAP_F_SHARED which can be set for any data that goes into the COW
--	 * fork for XFS.
--	 */
--	return (iter->iomap.flags & IOMAP_F_SHARED) &&
--		iter->srcmap.type == IOMAP_MAPPED;
--}
--
- static loff_t iomap_unshare_iter(struct iomap_iter *iter)
- {
- 	struct iomap *iomap = &iter->iomap;
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index e04c060e8fe185..664c5f2f0aaa2d 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -270,6 +270,25 @@ static inline loff_t iomap_last_written_block(struct inode *inode, loff_t pos,
- 	return round_up(pos + written, i_blocksize(inode));
- }
- 
-+/*
-+ * Check if the range needs to be unshared for a FALLOC_FL_UNSHARE_RANGE
-+ * operation.
-+ *
-+ * Don't bother with blocks that are not shared to start with; or mappings that
-+ * cannot be shared, such as inline data, delalloc reservations, holes or
-+ * unwritten extents.
-+ *
-+ * Note that we use srcmap directly instead of iomap_iter_srcmap as unsharing
-+ * requires providing a separate source map, and the presence of one is a good
-+ * indicator that unsharing is needed, unlike IOMAP_F_SHARED which can be set
-+ * for any data that goes into the COW fork for XFS.
-+ */
-+static inline bool iomap_want_unshare_iter(const struct iomap_iter *iter)
-+{
-+	return (iter->iomap.flags & IOMAP_F_SHARED) &&
-+		iter->srcmap.type == IOMAP_MAPPED;
-+}
-+
- ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- 		const struct iomap_ops *ops, void *private);
- int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops);
+In reality, the V5 superblock version has never had the
+bad-features2 problem at all - it was something that happened and
+was fixed long before V5 came along. Hence, IMO .....
+
+> @@ -437,6 +446,18 @@ static inline bool xfs_sb_version_hasmetadir(const struct xfs_sb *sbp)
+>  	       (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR);
+>  }
+>  
+> +/*
+> + * Detect a mismatched features2 field.  Older kernels read/wrote
+> + * this into the wrong slot, so to be safe we keep them in sync.
+> + * Newer metadir filesystems have never had this bug, so the field is always
+> + * zero.
+> + */
+> +static inline bool xfs_sb_has_mismatched_features2(const struct xfs_sb *sbp)
+> +{
+> +	return !xfs_sb_version_hasmetadir(sbp) &&
+> +		sbp->sb_bad_features2 != sbp->sb_features2;
+> +}
+
+This could be:
+
+static inline bool xfs_sb_has_mismatched_features2(const struct xfs_sb *sbp)
+{
+	return !xfs_sb_is_v5(sbp) &&
+		sbp->sb_bad_features2 != sbp->sb_features2;
+}
+
+and nobody should notice anything changes. If we then check that
+sbp->sb_bad_features2 == sbp->sb_features2 in the v5 section of
+xfs_validate_sb_common(), all we'll catch is syzbot trying to do
+stupid things to the feature fields on v5 filesystems....
+
+Then we can add whatever new fields metadir needs at the end of
+the superblock. That seems much cleaer than adding this
+conditional handling of the field in when reading, writing and
+verifying the superblock and when mounting the filesystem....
+
+-Dave.
 -- 
-2.45.2
-
+Dave Chinner
+david@fromorbit.com
