@@ -1,131 +1,177 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD7D158DD8;
-	Tue, 15 Oct 2024 16:18:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1F01CB9FC
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Oct 2024 16:19:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729009099; cv=none; b=FwTX3ba3X2Q0feQ90ZlB8UVSUuVg+a0D0NFsapQZ+/Flgix/VctEpoQndld8QNdpf1oX1b16IK4WqI11BxH7SKuLU8TLxmlnCgMjYedY2xbej30TjlxE9JzNQPACKHmq3ENLNfcoBtqHxxX98AwE2odxK83v5ysj9TY8xG/6TyU=
+	t=1729009144; cv=none; b=UTuSuMB9dSfwAZJfCoqNIP0QyCZUFzcXwkmMY+3P769Jjmd+wonI68eO629i0D6IJCwphjNOh7uW5ED8+m4jy1gTV38GZjg2oUuiervdMaSBTckmTrSjbGovGmlEHU/b2oSt7BiYhMNpoKfs3nbDG3qMdtKFBuhBPQQPohvEUrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729009099; c=relaxed/simple;
-	bh=Bk49CuJokSHPaab62GUaULtutUpU6OzNlpWflEjwOcg=;
+	s=arc-20240116; t=1729009144; c=relaxed/simple;
+	bh=AmtixfYNWoZKuzk15uzQk7KeAxEXbsF9GlNywoFtxz4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tgpAi8WQAeN3papiMHH3PJ56fet9bLH5uOAku5EFz1mjIaft5BjLuadx6CpJh4DX8K1sVpYxlx+Kts73pubf0LXjtuwbNQQbMqE7YwO8GpE7IZHED+muSkj1YroWAut77baaIhIC4QnTJd6lgOEpCkwB+GDOONkWVB4rUm9ZIkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F5SufUZW; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=dHlkcYa5tFbyY5k52x+3p3ha2oL9uvb5NPT1DeuRjRd6oJzzg9wKPZMhXseswkbHmlBDDLtNO96qAn3RdM8daYdY1aG/PPRt1rgfajBYqF+K3lZQZf7eDThuczyOGkZnrEuKVnPnDZ4JbpsucdtoPHqJE7VnO7DV5euCjjJlhu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WnWF6NZx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F5SufUZW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8A03C4CEC6;
-	Tue, 15 Oct 2024 16:18:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WnWF6NZx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61487C4CEC6;
+	Tue, 15 Oct 2024 16:19:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729009099;
-	bh=Bk49CuJokSHPaab62GUaULtutUpU6OzNlpWflEjwOcg=;
+	s=k20201202; t=1729009144;
+	bh=AmtixfYNWoZKuzk15uzQk7KeAxEXbsF9GlNywoFtxz4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=F5SufUZWl61Jcm7xuFgHRIHPLssGxS254lFv92PYN+eXBDrr5tNbx5defeW4lYpux
-	 tI2U60FkxdRmunm+0H3IC11rhG+MjZKvsxvTfOmyAwns1zhLeRRyAOQeOg/lrkMvoO
-	 HtMRjvIDVgsuVqQ///eBxjZUIOInZ6GEYceLnW/X3bIVWU5UBC+W6WhI8SBYApt19w
-	 HC9MAdmC2QRFwWsbx9EzXDnefRXOrsM/axQDmXfaTwVtQmhxIDCh64fEjKefpRQOMx
-	 IHlrwwcrPT7Ok7hl30Az9kqqavglv8bTM/J/MFdcGEqHb+9xiiZHVLO1EMsDOcOj/d
-	 LmLz115VVK3JQ==
-Date: Tue, 15 Oct 2024 09:18:18 -0700
+	b=WnWF6NZx20+51Zueqy7M2gXSqvZgCuomHvjl5IqGcS1Zk8ac+QdDRaCe/rN/Klzyu
+	 VDILymLr6GE+XaaHS1j/1WikUO9wpaarOCOCID7t2y+ADp4zuE+f97JBpLil2Ilw+l
+	 rcFpObarfRwUhoUiolA1Q64cSN48PARm9278HQDVN8s/hbUUlkIh5PFR1GV5STyfpP
+	 aFLp35MM9aANbGb7UMXEDasPVKyUfBgLvQSJgeV4r8VnH+C8Q/ZBSfMZllcy4bULpb
+	 6z0fVlsxFKiVOmyXWMIWFlm5wX1SqOzIsYA5PB+gCwvUQ/Sn5g/mCZmERTkZL/Znib
+	 drnofX19D5PWw==
+Date: Tue, 15 Oct 2024 09:19:03 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: brauner@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH] iomap: turn iomap_want_unshare_iter into an inline
- function
-Message-ID: <20241015161818.GV21853@frogsfrogsfrogs>
-References: <20241015041350.118403-1-hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Brian Foster <bfoster@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/6] xfs: update the file system geometry after
+ recoverying superblock buffers
+Message-ID: <20241015161903.GW21853@frogsfrogsfrogs>
+References: <20241014060516.245606-1-hch@lst.de>
+ <20241014060516.245606-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241015041350.118403-1-hch@lst.de>
+In-Reply-To: <20241014060516.245606-4-hch@lst.de>
 
-On Tue, Oct 15, 2024 at 06:13:50AM +0200, Christoph Hellwig wrote:
-> iomap_want_unshare_iter currently sits in fs/iomap/buffered-io.c, which
-> depends on CONFIG_BLOCK.  It is also in used in fs/dax.c whіch has no
-> such dependency.  Given that it is a trivial check turn it into an inline
-> in include/linux/iomap.h to fix the DAX && !BLOCK build.
+On Mon, Oct 14, 2024 at 08:04:52AM +0200, Christoph Hellwig wrote:
+> Primary superblock buffers that change the file system geometry after a
+> growfs operation can affect the operation of later CIL checkpoints that
+> make use of the newly added space and allocation groups.
 > 
-> Fixes: 6ef6a0e821d3 ("iomap: share iomap_unshare_iter predicate code with fsdax")
-> Reported-by: kernel test robot <lkp@intel.com>
+> Apply the changes to the in-memory structures as part of recovery pass 2,
+> to ensure recovery works fine for such cases.
+> 
+> In the future we should apply the logic to other updates such as features
+> bits as well.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Heh, whoops.  I forgot (a) that DAX && !BLOCK is a thing; and that
-FS_DAX != DAX and was puzzling over this report yesterday.
-
+Looks good to me, thanks for making the name changes I requested. :)
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/iomap/buffered-io.c | 17 -----------------
->  include/linux/iomap.h  | 19 +++++++++++++++++++
->  2 files changed, 19 insertions(+), 17 deletions(-)
+>  fs/xfs/xfs_buf_item_recover.c | 52 +++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_log_recover.c      |  8 ------
+>  2 files changed, 52 insertions(+), 8 deletions(-)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 604f786be4bc54..ef0b68bccbb612 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1270,23 +1270,6 @@ void iomap_write_delalloc_release(struct inode *inode, loff_t start_byte,
->  }
->  EXPORT_SYMBOL_GPL(iomap_write_delalloc_release);
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index 09e893cf563cb9..edf1162a8c9dd0 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -22,6 +22,9 @@
+>  #include "xfs_inode.h"
+>  #include "xfs_dir2.h"
+>  #include "xfs_quota.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_ag.h"
+> +#include "xfs_sb.h"
 >  
-> -bool iomap_want_unshare_iter(const struct iomap_iter *iter)
-> -{
-> -	/*
-> -	 * Don't bother with blocks that are not shared to start with; or
-> -	 * mappings that cannot be shared, such as inline data, delalloc
-> -	 * reservations, holes or unwritten extents.
-> -	 *
-> -	 * Note that we use srcmap directly instead of iomap_iter_srcmap as
-> -	 * unsharing requires providing a separate source map, and the presence
-> -	 * of one is a good indicator that unsharing is needed, unlike
-> -	 * IOMAP_F_SHARED which can be set for any data that goes into the COW
-> -	 * fork for XFS.
-> -	 */
-> -	return (iter->iomap.flags & IOMAP_F_SHARED) &&
-> -		iter->srcmap.type == IOMAP_MAPPED;
-> -}
-> -
->  static loff_t iomap_unshare_iter(struct iomap_iter *iter)
->  {
->  	struct iomap *iomap = &iter->iomap;
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index e04c060e8fe185..664c5f2f0aaa2d 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -270,6 +270,25 @@ static inline loff_t iomap_last_written_block(struct inode *inode, loff_t pos,
->  	return round_up(pos + written, i_blocksize(inode));
+>  /*
+>   * This is the number of entries in the l_buf_cancel_table used during
+> @@ -684,6 +687,49 @@ xlog_recover_do_inode_buffer(
+>  	return 0;
 >  }
 >  
 > +/*
-> + * Check if the range needs to be unshared for a FALLOC_FL_UNSHARE_RANGE
-> + * operation.
+> + * Update the in-memory superblock and perag structures from the primary SB
+> + * buffer.
 > + *
-> + * Don't bother with blocks that are not shared to start with; or mappings that
-> + * cannot be shared, such as inline data, delalloc reservations, holes or
-> + * unwritten extents.
-> + *
-> + * Note that we use srcmap directly instead of iomap_iter_srcmap as unsharing
-> + * requires providing a separate source map, and the presence of one is a good
-> + * indicator that unsharing is needed, unlike IOMAP_F_SHARED which can be set
-> + * for any data that goes into the COW fork for XFS.
+> + * This is required because transactions running after growfs may require the
+> + * updated values to be set in a previous fully commit transaction.
 > + */
-> +static inline bool iomap_want_unshare_iter(const struct iomap_iter *iter)
+> +static int
+> +xlog_recover_do_primary_sb_buffer(
+> +	struct xfs_mount		*mp,
+> +	struct xlog_recover_item	*item,
+> +	struct xfs_buf			*bp,
+> +	struct xfs_buf_log_format	*buf_f,
+> +	xfs_lsn_t			current_lsn)
 > +{
-> +	return (iter->iomap.flags & IOMAP_F_SHARED) &&
-> +		iter->srcmap.type == IOMAP_MAPPED;
+> +	struct xfs_dsb			*dsb = bp->b_addr;
+> +	xfs_agnumber_t			orig_agcount = mp->m_sb.sb_agcount;
+> +	int				error;
+> +
+> +	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> +
+> +	/*
+> +	 * Update the in-core super block from the freshly recovered on-disk one.
+> +	 */
+> +	xfs_sb_from_disk(&mp->m_sb, dsb);
+> +
+> +	/*
+> +	 * Initialize the new perags, and also update various block and inode
+> +	 * allocator setting based off the number of AGs or total blocks.
+> +	 * Because of the latter this also needs to happen if the agcount did
+> +	 * not change.
+> +	 */
+> +	error = xfs_initialize_perag(mp, orig_agcount,
+> +			mp->m_sb.sb_agcount, mp->m_sb.sb_dblocks,
+> +			&mp->m_maxagi);
+> +	if (error) {
+> +		xfs_warn(mp, "Failed recovery per-ag init: %d", error);
+> +		return error;
+> +	}
+> +	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+> +	return 0;
 > +}
 > +
->  ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
->  		const struct iomap_ops *ops, void *private);
->  int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops);
+>  /*
+>   * V5 filesystems know the age of the buffer on disk being recovered. We can
+>   * have newer objects on disk than we are replaying, and so for these cases we
+> @@ -967,6 +1013,12 @@ xlog_recover_buf_commit_pass2(
+>  		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+>  		if (!dirty)
+>  			goto out_release;
+> +	} else if ((xfs_blft_from_flags(buf_f) & XFS_BLFT_SB_BUF) &&
+> +			xfs_buf_daddr(bp) == 0) {
+> +		error = xlog_recover_do_primary_sb_buffer(mp, item, bp, buf_f,
+> +				current_lsn);
+> +		if (error)
+> +			goto out_release;
+>  	} else {
+>  		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+>  	}
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 60d46338f51792..08b8938e4efb7d 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3346,7 +3346,6 @@ xlog_do_recover(
+>  	struct xfs_mount	*mp = log->l_mp;
+>  	struct xfs_buf		*bp = mp->m_sb_bp;
+>  	struct xfs_sb		*sbp = &mp->m_sb;
+> -	xfs_agnumber_t		orig_agcount = sbp->sb_agcount;
+>  	int			error;
+>  
+>  	trace_xfs_log_recover(log, head_blk, tail_blk);
+> @@ -3394,13 +3393,6 @@ xlog_do_recover(
+>  	/* re-initialise in-core superblock and geometry structures */
+>  	mp->m_features |= xfs_sb_version_to_features(sbp);
+>  	xfs_reinit_percpu_counters(mp);
+> -	error = xfs_initialize_perag(mp, orig_agcount, sbp->sb_agcount,
+> -			sbp->sb_dblocks, &mp->m_maxagi);
+> -	if (error) {
+> -		xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
+> -		return error;
+> -	}
+> -	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+>  
+>  	/* Normal transactions can now occur */
+>  	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
 > -- 
 > 2.45.2
 > 
