@@ -1,170 +1,172 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A17170A3E;
-	Wed, 16 Oct 2024 23:15:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E24714EC47
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 23:22:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729120548; cv=none; b=oannaDxXrEK6CQj0q/IkSAjPLpR9GccawdVDg3srVSGNxKnjV4NyZeU5uNvEa3rc5jM5GqY7E1turJY0TweRWnmigKq34TlxwKizV3qvr/OFSmIvjcpgR+e8eLUnEm6kriF8iuJnp0Isrgt7DajiSRz6V7XZrn1LCR8z/+EklS4=
+	t=1729120949; cv=none; b=ar6S/73KAYsh8h143B73xHOXtnnlGAd+Cc6qQ9OK4bR+aYbsThdG6n2p8L65G8wd0nd77+vTvYQjFG2BTMmQ/vwQHN+52MDhUiF+DgN4w8qEmBFzscRAoUuQVhGNXLK6BLXIg0JLn8vaGBQFg7iG4AHoTpkUlIS0CGLIAmKy/s8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729120548; c=relaxed/simple;
-	bh=w4KBjhXZLW/PU4izi8hvR3UnDb5r9l8+EJc9Z55cz24=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=th2QuyQmo7Sku5hWYY1qi+5STqxNcvRRpVdvmX6HYUK89IR655+hNtyFbjzoCGOo0dIVVdWuNu5x0gZNzY3qe+pQHzhldJK+42Lxt2fPX3cF5hFnJZB2b5CTK6QZzn77LwJcnnV6CIrF3tID6Wk7EVJzHDiNduJ9KWmO24O82Jo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BLQGNcs2; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BLQGNcs2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92BA8C4CEC5;
-	Wed, 16 Oct 2024 23:15:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729120548;
-	bh=w4KBjhXZLW/PU4izi8hvR3UnDb5r9l8+EJc9Z55cz24=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BLQGNcs2MUofKPS03r2PaLGyzrdd3dIuFw2a8D7oIfbkczZboiek6D3cLmxUuEtCC
-	 84cymshwwk9bE4djylq4HrmC0W9r0+Dgr+w409yrtuJC3TjH12D+EkOc3w+zmFT1Xf
-	 addv0nMW+4MbtjUIQ14pPozIcAel6U8jsO/PZcVFJ1qN5TDyX9RunclRLaBKRousdU
-	 QLCQzBmXjWJAeHA6hSP2WjHmD1WtxPzhVqcMaQFIyGR8I03vUAchiGzMJAtLGkwZTq
-	 LSD0qsB8sGn0sEoUFMTbVljLX7BNHkAzvxtoZRZn9AsigGiATqBPVKlM8bBybihjiL
-	 xXG+BJnhHs/qQ==
-Date: Wed, 16 Oct 2024 16:15:48 -0700
-Subject: [PATCH 1/1] misc: amend unicode confusing name tests to check for
- hidden tag characters
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, zlang@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <172912045911.2584109.3860719636262870391.stgit@frogsfrogsfrogs>
-In-Reply-To: <172912045895.2584109.2643798036760972085.stgit@frogsfrogsfrogs>
-References: <172912045895.2584109.2643798036760972085.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	s=arc-20240116; t=1729120949; c=relaxed/simple;
+	bh=mVE0l1hRwBDS/FZtpe0sXBUiTBSJha3jv4Akusym25g=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=PLifm7XTxQZEQSbQOUNuQ+p0OhvttB/p0eZZ9+krMdrh0n5T8gyCvdyiICR4PVDIdC1x2C2f1wHR9g+me/8/roO3FBSy+GKyfZRkhq7CSp2icJBbZBc2XpwQgn5cF4qbh4uMY+6L+AwHPnokLPczXbmzU67ogWAaefufvVheJY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3a3c5a6c5e1so4507665ab.2
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 16:22:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729120947; x=1729725747;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=nbtPBNOsMBhRrfsUYqjp/D614SNfpBqJ7uG2QiYsvQA=;
+        b=aT2UQpwCMmq+JbK8ED9rzHPjt+rEH8gTxYz2C7FWTrX89BJPJzf+fof4bqIEmEOXht
+         At3c3q93dqUsdOnSspjbHyfUoP8nld4wT9wjOWYnYogdCEQYdqQMysU5oHZaxlX5lIWB
+         gAFx+BrZQ4UivaFqmFP71y0tJ5BIKTlxB/IXPKEs7cxx/q9SvInVS/4ZSYx7RMtqLogO
+         FcI33QeJffSE9HT8bMgf5lKZ1WpW6AieSX4RNSX04NGgeNg1QZBSUNd6VaUBYMEIqork
+         yD4Xn4LIGDmob2t0kRS3c8defqCFoofSS0mCSFCwS93FLF7aSTifwdIcURMofy6M6Ze0
+         ZfWg==
+X-Forwarded-Encrypted: i=1; AJvYcCUuRZNyyiFOASNfH0ljuU8S7Hoek89/NADyYqmMJ743fkIxjH6/CnnE5CvMg4ztXQ1cyjdhMUL7Bak=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxGfxq9/ezmIbNPNtgKCBj8Fmi7ChCiMds+d5yw5Feh9/PDWMdI
+	yToIjB3fzJuHoHmuxbHHG0sTNw5K4r6/aidz6W59oXmjJoNIKbxww2qdLJETH4GFRhcWj8B1Fdl
+	M+eh7xAwXzIYpURCHgv4yZRrlJCfsB2HLho0IlpKP8xuWtO3Jnn2zUF0=
+X-Google-Smtp-Source: AGHT+IF0Z9/TtTiy8unpNEcLnO8CgOACIjGn47ZfVzHjXJbB0BCJtpz3T25UeW8XeFU70EuzF3AJdIxNGt99Na5fG7Kvo3mYSnLG
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a92:c241:0:b0:3a0:8f20:36e7 with SMTP id
+ e9e14a558f8ab-3a3b5fb649bmr200318245ab.19.1729120947034; Wed, 16 Oct 2024
+ 16:22:27 -0700 (PDT)
+Date: Wed, 16 Oct 2024 16:22:27 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67104ab3.050a0220.d9b66.0175.GAE@google.com>
+Subject: [syzbot] [xfs?] INFO: task hung in xfs_ail_push_all_sync (2)
+From: syzbot <syzbot+611be8174be36ca5dbc9@syzkaller.appspotmail.com>
+To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hello,
 
-The Unicode consortium has twice defined (and later deprecated) special
-"tag" codepoints.  These tag codepoints are not supposed to be rendered
-(i.e. they're invisible) but you can certainly encode them in
-directories and labels to try to confuse users.
+syzbot found the following issue on:
 
-xfs_scrub already knows how complain about these tag characters because
-libicu can detect both their presence and their use in confusing name
-attacks, so add this as an explicit regression test.
+HEAD commit:    09f6b0c8904b Merge tag 'linux_kselftest-fixes-6.12-rc3' of..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=14af3fd0580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=7cd9e7e4a8a0a15b
+dashboard link: https://syzkaller.appspot.com/bug?extid=611be8174be36ca5dbc9
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16c7705f980000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14d2fb27980000
 
-Link: https://embracethered.com/blog/posts/2024/hiding-and-finding-text-with-unicode-tags/
-Link: https://arstechnica.com/security/2024/10/ai-chatbots-can-read-and-write-invisible-text-creating-an-ideal-covert-channel/
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7feb34a89c2a/non_bootable_disk-09f6b0c8.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/3844cfd6d6b9/vmlinux-09f6b0c8.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/8752e101c1ff/bzImage-09f6b0c8.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/5410decf46fa/mount_1.gz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+611be8174be36ca5dbc9@syzkaller.appspotmail.com
+
+INFO: task syz-executor279:5128 blocked for more than 143 seconds.
+      Not tainted 6.12.0-rc2-syzkaller-00291-g09f6b0c8904b #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor279 state:D stack:25488 pid:5128  tgid:5105  ppid:5102   flags:0x00004006
+Call Trace:
+ <TASK>
+ context_switch kernel/sched/core.c:5322 [inline]
+ __schedule+0x1895/0x4b30 kernel/sched/core.c:6682
+ __schedule_loop kernel/sched/core.c:6759 [inline]
+ schedule+0x14b/0x320 kernel/sched/core.c:6774
+ xfs_ail_push_all_sync+0x236/0x310 fs/xfs/xfs_trans_ail.c:726
+ xfs_log_quiesce+0xdf/0x5b0 fs/xfs/xfs_log.c:1018
+ xfs_fs_freeze+0x8d/0x1a0 fs/xfs/xfs_super.c:936
+ freeze_super+0x81b/0xee0 fs/super.c:2107
+ fs_bdev_freeze+0x1ac/0x320 fs/super.c:1484
+ bdev_freeze+0xd6/0x220 block/bdev.c:257
+ xfs_fs_goingdown+0xa9/0x160 fs/xfs/xfs_fsops.c:446
+ xfs_file_ioctl+0x12e5/0x1a30 fs/xfs/xfs_ioctl.c:1343
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:907 [inline]
+ __se_sys_ioctl+0xf9/0x170 fs/ioctl.c:893
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f70924b2539
+RSP: 002b:00007f709243f168 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f709253c6d8 RCX: 00007f70924b2539
+RDX: 0000000020000080 RSI: 000000008004587d RDI: 0000000000000005
+RBP: 00007f709253c6d0 R08: 00007f709243f6c0 R09: 0000000000000000
+R10: 00007f709243f6c0 R11: 0000000000000246 R12: 00007f709253c6dc
+R13: 000000000000006e R14: 00007ffd410540a0 R15: 00007ffd41054188
+ </TASK>
+
+Showing all locks held in the system:
+1 lock held by khungtaskd/25:
+ #0: ffffffff8e937de0 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire include/linux/rcupdate.h:337 [inline]
+ #0: ffffffff8e937de0 (rcu_read_lock){....}-{1:2}, at: rcu_read_lock include/linux/rcupdate.h:849 [inline]
+ #0: ffffffff8e937de0 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x55/0x2a0 kernel/locking/lockdep.c:6720
+2 locks held by getty/4897:
+ #0: ffff88801e2510a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70 drivers/tty/tty_ldisc.c:243
+ #1: ffffc9000039b2f0 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0x6a6/0x1e00 drivers/tty/n_tty.c:2211
+5 locks held by syz-executor279/5128:
+ #0: ffff888031ccc6b0 (&bdev->bd_fsfreeze_mutex){+.+.}-{3:3}, at: bdev_freeze+0x2a/0x220 block/bdev.c:248
+ #1: ffff888011c84420 (sb_writers#10){++++}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
+ #1: ffff888011c84420 (sb_writers#10){++++}-{0:0}, at: freeze_super+0x4e9/0xee0 fs/super.c:2085
+ #2: ffff888011c840e0 (&type->s_umount_key#44){+.+.}-{3:3}, at: __super_lock fs/super.c:56 [inline]
+ #2: ffff888011c840e0 (&type->s_umount_key#44){+.+.}-{3:3}, at: __super_lock_excl fs/super.c:71 [inline]
+ #2: ffff888011c840e0 (&type->s_umount_key#44){+.+.}-{3:3}, at: freeze_super+0x4f1/0xee0 fs/super.c:2086
+ #3: ffff888011c84518 (sb_pagefaults#2){+.+.}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
+ #3: ffff888011c84518 (sb_pagefaults#2){+.+.}-{0:0}, at: freeze_super+0x519/0xee0 fs/super.c:2090
+ #4: ffff888011c84610 (sb_internal#2){++++}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
+ #4: ffff888011c84610 (sb_internal#2){++++}-{0:0}, at: freeze_super+0x7cc/0xee0 fs/super.c:2104
+
+=============================================
+
+NMI backtrace for cpu 0
+CPU: 0 UID: 0 PID: 25 Comm: khungtaskd Not tainted 6.12.0-rc2-syzkaller-00291-g09f6b0c8904b #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ nmi_cpu_backtrace+0x49c/0x4d0 lib/nmi_backtrace.c:113
+ nmi_trigger_cpumask_backtrace+0x198/0x320 lib/nmi_backtrace.c:62
+ trigger_all_cpu_backtrace include/linux/nmi.h:162 [inline]
+ check_hung_uninterruptible_tasks kernel/hung_task.c:223 [inline]
+ watchdog+0xff4/0x1040 kernel/hung_task.c:379
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+ </TASK>
+
+
 ---
- tests/generic/453 |    8 ++++++++
- tests/generic/454 |   29 +++++++++++++++++++----------
- tests/xfs/504     |    3 +++
- 3 files changed, 30 insertions(+), 10 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-diff --git a/tests/generic/453 b/tests/generic/453
-index 855243a860b9ba..b7e686f37100da 100755
---- a/tests/generic/453
-+++ b/tests/generic/453
-@@ -199,6 +199,10 @@ setf "job offer\xdc\x82pdf" "syriac sublinear full stop"
- setf "job offer\xea\x93\xb8pdf" "lisu letter tone mya ti"
- setf "job offer.pdf" "actual period"
- 
-+# encoding hidden tag characters in filenames to create confusing names
-+setf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
-+setf "llamapirate"
-+
- ls -laR $testdir >> $seqres.full
- 
- echo "Test files"
-@@ -269,6 +273,9 @@ testf "job offer\xdc\x82pdf" "syriac sublinear full stop"
- testf "job offer\xea\x93\xb8pdf" "lisu letter tone mya ti"
- testf "job offer.pdf" "actual period"
- 
-+testf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
-+testf "llamapirate"
-+
- echo "Uniqueness of inodes?"
- stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
- 	if [ "${nr}" -gt 1 ]; then
-@@ -303,6 +310,7 @@ if _check_xfs_scrub_does_unicode "$SCRATCH_MNT" "$SCRATCH_DEV"; then
- 		grep -q "job offer.xea.x93.xb8pdf" $tmp.scrub || echo "No complaints about lisu letter tone mya ti?"
- 		grep -q "job offer.*could be confused with" $tmp.scrub || echo "No complaints about confusing job offers?"
- 		grep -q "job offer.xe2.x80.xa4.xe2.x80.x8dpdf" $tmp.scrub || echo "No complaints about one dot leader with invisible space?"
-+		grep -q "llamapirate" $tmp.scrub || echo "No complaints about hidden llm instructions in filenames?"
- 	fi
- 
- 	echo "Actual xfs_scrub output:" >> $seqres.full
-diff --git a/tests/generic/454 b/tests/generic/454
-index 3c9b39d059532d..2cc2d81ce4cc77 100755
---- a/tests/generic/454
-+++ b/tests/generic/454
-@@ -120,6 +120,10 @@ setf "zerojoin_moo\xe2\x80\x8ccow.txt" "zero width joiners"
- setf "combmark_\xe1\x80\x9c\xe1\x80\xad\xe1\x80\xaf.txt" "combining marks"
- setf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
- 
-+# encoding hidden tag characters in attrnames to create confusing xattrs
-+setf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
-+setf "llamapirate"
-+
- _getfattr --absolute-names -d "${testfile}" >> $seqres.full
- 
- echo "Test files"
-@@ -167,6 +171,9 @@ testf "zerojoin_moo\xe2\x80\x8ccow.txt" "zero width joiners"
- testf "combmark_\xe1\x80\x9c\xe1\x80\xad\xe1\x80\xaf.txt" "combining marks"
- testf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
- 
-+testf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
-+testf "llamapirate"
-+
- echo "Uniqueness of keys?"
- crazy_keys="$(_getfattr --absolute-names -d "${testfile}" | grep -E -c '(french_|chinese_|greek_|arabic_|urk)')"
- expected_keys=11
-@@ -175,16 +182,18 @@ test "${crazy_keys}" -ne "${expected_keys}" && echo "Expected ${expected_keys} k
- echo "Test XFS online scrub, if applicable"
- 
- if _check_xfs_scrub_does_unicode "$SCRATCH_MNT" "$SCRATCH_DEV"; then
--	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1 | filter_scrub)"
--	echo "${output}" | grep -q "french_" || echo "No complaints about french e accent?"
--	echo "${output}" | grep -q "greek_" || echo "No complaints about greek letter mess?"
--	echo "${output}" | grep -q "arabic_" || echo "No complaints about arabic expanded string?"
--	echo "${output}" | grep -q "mixed_" || echo "No complaints about mixed script confusables?"
--	echo "${output}" | grep -q "hyphens_" || echo "No complaints about hyphenation confusables?"
--	echo "${output}" | grep -q "dz_digraph_" || echo "No complaints about single script confusables?"
--	echo "${output}" | grep -q "inadequate_" || echo "No complaints about inadequate rendering confusables?"
--	echo "${output}" | grep -q "prohibition_" || echo "No complaints about prohibited sequence confusables?"
--	echo "${output}" | grep -q "zerojoin_" || echo "No complaints about zero-width join confusables?"
-+	LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1 | filter_scrub > $tmp.scrub
-+
-+	grep -q "french_" $tmp.scrub || echo "No complaints about french e accent?"
-+	grep -q "greek_" $tmp.scrub || echo "No complaints about greek letter mess?"
-+	grep -q "arabic_" $tmp.scrub || echo "No complaints about arabic expanded string?"
-+	grep -q "mixed_" $tmp.scrub || echo "No complaints about mixed script confusables?"
-+	grep -q "hyphens_" $tmp.scrub || echo "No complaints about hyphenation confusables?"
-+	grep -q "dz_digraph_" $tmp.scrub || echo "No complaints about single script confusables?"
-+	grep -q "inadequate_" $tmp.scrub || echo "No complaints about inadequate rendering confusables?"
-+	grep -q "prohibition_" $tmp.scrub || echo "No complaints about prohibited sequence confusables?"
-+	grep -q "zerojoin_" $tmp.scrub || echo "No complaints about zero-width join confusables?"
-+	grep -q "llamapirate" $tmp.scrub || echo "No complaints about hidden llm instructions in filenames?"
- 	echo "Actual xfs_scrub output:" >> $seqres.full
- 	echo "${output}" >> $seqres.full
- fi
-diff --git a/tests/xfs/504 b/tests/xfs/504
-index 6000923bf7bb87..a9d99cd1217203 100755
---- a/tests/xfs/504
-+++ b/tests/xfs/504
-@@ -128,6 +128,9 @@ testlabel "\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.fs"
- testlabel ".\xe2\x80\x8d"
- testlabel "..\xe2\x80\x8d"
- 
-+# encoding hidden tag characters in fslabels to create confusing names
-+testlabel "llmpir8\xf3\xa0\x81\x94"
-+
- # Did scrub choke on anything?
- if [ "$want_scrub" = "yes" ]; then
- 	grep -q "^Warning.*gnp.txt.*suspicious text direction" $tmp.scrub || \
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
