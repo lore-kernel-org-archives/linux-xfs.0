@@ -1,36 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3192F18E054;
-	Wed, 16 Oct 2024 23:15:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D956170A3E;
+	Wed, 16 Oct 2024 23:15:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729120512; cv=none; b=M47aRvW8qFTTdC26ezl6B0C3NC+pPI3DQT+f26xs5VllWuIY7tf9sLPMlf/hsNJfsHuh2AdEBdt4dprfUOI8DtMNhoQkBwL3nhqys3gvC7w7nyzvvRh8TgGpNb3L+mOdoIZ8ai0wBUt4glvjNSY0znBmMiAJmbKn+nen74DK9lw=
+	t=1729120517; cv=none; b=VkIh6KktfD7QPgIny75hFjlplq5hhx2joktb1bQv4lXfDXBBi93ZBgdBPItbwYMRRmm7GtS9OAgdQnrIXHHU46PWVZGMAIsavi3/QZElUSEqAao5qXxpIzzKKdyvv0X+RcMZMLFNDMhyJegoX0XCfPvAgb/VtxivA3CVyoZwouY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729120512; c=relaxed/simple;
-	bh=BOEzQ+I27mCfgQzYR/C1gS5uZM3g+UrVqvo5xle2LIc=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=CzHR68ZrbEpEByu7oHtNQG8CsgqrEV8om7pouGjhioMD07gKVf8WbeYB0Qlamjx/Jx2vqEcBNKMvOuG7DgKaw4wWkQNWcLpZTfXydFmG+WpBXZxMk6nW07Xeoiz460kUn0ou2SOt6TPtKAiMu0ToAu1gcYN/KgeKcsKkSq3FFB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L9umbn2C; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729120517; c=relaxed/simple;
+	bh=nPBzuVmDbErR9epDVF+Ui3A0N5zBno9pCjItZniZqYQ=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tNpCkjEkhDO0n39/IYjMqLrTbZon+Gh13NPsCPP6yiXdC0mFqytso3PbzMDp0191xY3dfQTs6LuqPC0Sih4hPbBjWrfXIAO9V+fiKbJaeeMAPzR7BOa43jdssU/m6nOKn92fT0ilxDXJ/SitS3GnajGZfdT9HV70BWnWHPjap1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bUA7Uv+u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L9umbn2C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A751DC4CEC5;
-	Wed, 16 Oct 2024 23:15:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bUA7Uv+u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A059C4CEC5;
+	Wed, 16 Oct 2024 23:15:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729120511;
-	bh=BOEzQ+I27mCfgQzYR/C1gS5uZM3g+UrVqvo5xle2LIc=;
-	h=Date:Subject:From:To:Cc:From;
-	b=L9umbn2CCfzWxKPG136yrd8bvB7AbxCtS2gntWlXIQfmtA60Qxolxc8lPck2yUAMj
-	 nrSDzNWd7r24dAduoJSxdfTBVLqMc7AU9IzpWTZ6k7GJ9Qe9R91JETmBrH8JUx3d9T
-	 zP4ofxB2E1P2w2zjbLrQSsPHug1wRgi21EfVPD5/LHWHmbr2cuZ+cEHy2bUnj3AcsH
-	 uUOuRJoPufpj2yQ43fBe4mDJ//eeVQ8T0mpWdqZFkeswhFfOw8HYcrAM4h/4GZgUd+
-	 onAziwc5xSlyAwhJkvUpcuz0uahRl5lO03iM/ahDqe023C8HeeTD5L6ReFK21UDg6G
-	 tuw2slY1Bn9Pg==
-Date: Wed, 16 Oct 2024 16:15:11 -0700
-Subject: [PATCHSET 2/2] fstests: random new stuff for v2024.10.14
+	s=k20201202; t=1729120517;
+	bh=nPBzuVmDbErR9epDVF+Ui3A0N5zBno9pCjItZniZqYQ=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=bUA7Uv+uNagpicT+VJeoZce0pONXaiTaHqJe4ztGX5QfVpMkLS+fksUmtEWgOZ7e+
+	 xxJ+jgxIwCLW0tKjptpfxRk1Z+I/j0wk59TByALL9nIo8N257u5DnEme6rkYuTEETh
+	 Z3sODsto4MtRwWQacHjzjmt2XL8YNr8R0AXuZ3SgJTIfyyB6GjqfvyuMTxJ46M0XAy
+	 SGEpbqZbsfDJdFVCdwxh3OM8NFPNeFqz0XqpXMePMLhUcMkGmnh40DP57svrl47par
+	 gF/Skzf/M0aZcwskhwU3RNvWj1vKBcicYpqS+yAL2M0CI/79vPYe6hY/O4MOfB/mLO
+	 pVwDMN+pom78w==
+Date: Wed, 16 Oct 2024 16:15:16 -0700
+Subject: [PATCH 1/2] common/xfs: _notrun tests that fail due to block size <
+ sector size
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <172912045895.2584109.2643798036760972085.stgit@frogsfrogsfrogs>
+Message-ID: <172912045609.2583984.9245803618825626168.stgit@frogsfrogsfrogs>
+In-Reply-To: <172912045589.2583984.11028192955246574508.stgit@frogsfrogsfrogs>
+References: <172912045589.2583984.11028192955246574508.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -41,26 +45,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's some new testing functionality to strengthen QA.
+It makes no sense to fail a test that failed to format a filesystem with
+a block size smaller than the sector size since the test preconditions
+are not valid.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-newstuff
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Commits in this patchset:
- * misc: amend unicode confusing name tests to check for hidden tag characters
----
- tests/generic/453 |    8 ++++++++
- tests/generic/454 |   29 +++++++++++++++++++----------
- tests/xfs/504     |    3 +++
- 3 files changed, 30 insertions(+), 10 deletions(-)
+ common/xfs |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+
+diff --git a/common/xfs b/common/xfs
+index 62e3100ee117a7..53d55f9907fbb0 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -172,6 +172,11 @@ _try_scratch_mkfs_xfs()
+ 		mkfs_status=$?
+ 	fi
+ 
++	if [ $mkfs_status -ne 0 ] && grep -q '^block size [0-9]* cannot be smaller than sector size' "$tmp.mkfserr"; then
++		errormsg="$(grep '^block size [0-9]* cannot be smaller than sector size' "$tmp.mkfserr" | head -n 1)"
++		_notrun "_scratch_mkfs_xfs: $errormsg"
++	fi
++
+ 	# output mkfs stdout and stderr
+ 	cat $tmp.mkfsstd
+ 	cat $tmp.mkfserr >&2
 
