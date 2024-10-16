@@ -1,83 +1,83 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F8DE1859;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECD19259C;
 	Wed, 16 Oct 2024 00:12:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729037552; cv=fail; b=aIONO+/EcYs8fNL9JWDBeUObGjIqLIXHey5slfSjRa5ZMRmgf1FHRDmZKPaO2WfrgapgfqsmIHaWPfeVlpGQQhR3G7va3updK/Qi7kReup07a1BGHlT5xFqZ4FqkiXJjBI1mCNdRwwz3rktZt78mcnCmLlqY+KCmCba/KL8QlOs=
+	t=1729037552; cv=fail; b=EHZPh6SHn17Pey51peLyAgvPz3n6auu+LGWmGndD59+lpDIvNPRJCu/KAjPw1r4bfXj49VOFWqxkKHXHI+PbUAkA4dvQ8MtgaOEGXsMEqWzWwgDsqN4/3EEng6FvuaZOcPnzZQzF+khy8yu1XleJCLm3YORxUPVwt+ubwkMiJzg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1729037552; c=relaxed/simple;
-	bh=QzPMIzotBrczxSqSMi8BtEqNXdiFkSkAeE9L7FNGvBg=;
+	bh=Kh0BagGJNGvBs8fmT51DDOBp71gb3F/wa0+mOCo0sAo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LqTTGz/doRK0RLNbozckSLAK6AmBnNfecXtf/8tuqiTzGliPsCK4eKsW/iY9dVu7DycCNoIXS7OO2JXAfw8dXWLT20esDv8i7Jvc08GAzAhsayAQGXCKbZaz9WhDGxH+NomnhN35AEpJZgU8OCfH4vYqK8f2IG1St9Cc2gwJMHU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=GfN//Xpe; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=zX0f7B1Q; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=LKtuCxhkkIyYSlGeshJ8M/TrLA7N+JxtE0agmuiKNvoP8ctoJRrC1FBHXN14tBT3XQ7ODe1s252Ukid75/qq6oPRhJ9/G/2MdE1vxDqS8DuzcIRWB4SnY2KXcr1pTwEpg6/qK9s/ERP+BK+SWJ04wEEl8q5wCUDHgEvwYNfQcSA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=luGUEWZp; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=VTIUX6KW; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GfN//Xpe";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="zX0f7B1Q"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49FHtikB019421;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="luGUEWZp";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="VTIUX6KW"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49FHtd0Y011654;
 	Wed, 16 Oct 2024 00:12:30 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=4yKK90hFvHiC2ND2k51QMNfbbckh0+U5eQ7ymmFQfA4=; b=
-	GfN//Xpe4lmd0MdHYLmOTMSF400s4Yl1elpaEgkxY5oRjFygPcgjYQLJvWVGY6p9
-	4+XIjZIkvaUeMkwq2YD8Sj5sZnmbZwaZBNj/AlU0NDMe34P7FbGnoRH9kFkIoI4F
-	6RogygSNfZQppgI1u7GluSny17waaFbUp7hPH9OGWV4jJx9goBP8hNU3zBIBIvHb
-	ekES4gPugDqtuOR0h+2U2RA76SmHXKqGl/fRHO7Qsl9YGQrG+ddivhRP4Cny7g56
-	eN7DQLT55zMuze/vdqyKHjFFBFF2Fo//iCwXKJBLCWVrVp1T9FSm13/vGfJw8Wvo
-	SiwEq62Dyca9im6OujVidQ==
+	corp-2023-11-20; bh=f6pO4oukCU5P/fkoPAL8CUuRf49VRR3M2BWC/wYQwMg=; b=
+	luGUEWZpojXMJLjjZbu6Cx0NIny/SLvD/pXlUm2HCEtiWiixQgjvV6x72mEvHCp4
+	Mn/En5cD9BBObnSWvlBPrlrfEk8O50PPZXYojZzgEEniVp6Z0wG50CgdadIYCJNF
+	gQuyW7wb+UnT7SB6ORIfrnUvegJmoo1NBeA2iWmIvSW8rwMk/2TGDd4lB9YgKVU8
+	V9+47F3QIU1RWgabO45OyaMCJL20yM78+tOumKMvulpR/POuha7QG86QVLMKna+t
+	O2pBySGh/pjZpPTlBKLg2Az6L/F+GJ37wfVsEoLIQNapEjs9J7hL/DlI1+K8DFHO
+	8SKz34k0k05b42hXImJ7/g==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 427gq7jhqs-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 427gqt2fpd-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Wed, 16 Oct 2024 00:12:29 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 49FLkLwB026369;
-	Wed, 16 Oct 2024 00:12:29 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 49FLkLwA026369;
+	Wed, 16 Oct 2024 00:12:28 GMT
 Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2170.outbound.protection.outlook.com [104.47.58.170])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 427fj85aps-3
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 427fj85aps-2
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Wed, 16 Oct 2024 00:12:28 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=en39S8v07A+savMTpy9K8RPvjs8+MPNWgflPN310PcTvNFNk8IwaBpWDUBqUAWobbjxh7icOcfYK7owtb/4rt1p10gCPWAypiX8sl3k+yBBVE1nnijCyhlp7JAUPagoOvI4GUGett+FlQLh1+FKDNljZJas1FwKc/mai+ntRuDATKpSSvsP/PLV8cSwAivj29pAKCjzQPgtSEg1rWrAhDUA2pdSRPcpXi0noLydyKRTN1hF50kIyfQxcHNBHl6G9d2uCSM7s/f7y39B6Srx/85rygkOxwnKLeJ59vP3DlzGBwZBAWawVYUyYD3xZ7QPkN50C9PQGlS9S/NJxdal93Q==
+ b=C8HtD9Scw4TJeOkQlQKu0GFf5hzOLk2WwyhQgWih8IyBjZX9R4ZWwuS9JWnhydqNr9LIV99QllWW4h3gGkmP0/oZ6Oht+DGMK1pBvcn9Gq+RlZQZmlZ36I91GHQLTjc1EN+ZY8+xLcoLViFu9ZMMtlPuLYaLe0ugkKDWQXyQaNTitmgJX5zXtIJaCImBg1645mClx0biF7f7nGfvF6BDI55JvAIykGBgK4xx6SD+8a3RM+Q2/Xwit/1Ada32EJFUvJHypFXvnf8rheyv8IcDGd9V6JmNMu+DX3HXqEIf/4CWyhK3+bq5HcMUYeDBYWsGlqNfD27VZM3SDD9mg88DbQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4yKK90hFvHiC2ND2k51QMNfbbckh0+U5eQ7ymmFQfA4=;
- b=UU4gOvFb/qAwUTKPAXRYwHV1MjQZIrt5RmWnLFvEHGsjBlpZeyRVR+EvzcZ/azxpdD+WN3pl2ydPwc6bz3LJIU5ahI8ItCO2wel+1+rrhaC3tHS2uXQZ59cuWlwMQNBwR0/+sapkk3p0WTqpJPduWHYaIdvJgsZBO8viw/4nQ1eg3qKjeqLK9GHZ7qO0YCO/ttRHtCWi1G+9zjUw4S3S5W8Pf0/4KDDQweGYZJD3/ykuXRUA2xOoHCaD1hM9KM8df2kdH/zKA6i5w3h0DkiI8huW2HdSLFjyGVhdw7cyx9pJEUYApxPeB60Hx1SLPtZdftZ4sa56R5B6n/qGo+Euqw==
+ bh=f6pO4oukCU5P/fkoPAL8CUuRf49VRR3M2BWC/wYQwMg=;
+ b=uaYZIobr7dIWKjqJgpOXllaeaC9W3Vy2a6Hu1fvaUKW1M9U4NmHEl4SPztVS8PjHKTCgjxAATqMYKdUbc0gGBvttWVbsUZJM23TUH9+HI+oYFoZcr/CXprFqKyU0SiMSTVvDo6MFNyt940XA89n6vcMgyeQtSRt8pyR/KAhdPRS4DYtFxL0cX5jNB6OPXPzR1TdyChfDuGIfR6vuM6xs8IzTKyutGdRy7qp8V3JlPwLvIcwZeGfvb2GDoR/ntT8qmncAkwiSVwRFahA0PKvQwnYm+lZMGj5yXgs3KbFyqvYfdvtisWFQvblwT/ksn46/CIDEp0MLGwxw5RVFge/qMQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4yKK90hFvHiC2ND2k51QMNfbbckh0+U5eQ7ymmFQfA4=;
- b=zX0f7B1QC804EMPa/bdrskvdp9syNX4IaitdQIhoc8RXOhz1riZaRe35QarNyyPdGwqA5khhlhPyCb9EGude19pcpevZcIol6kuXJlaer9YSWHdSVrpkPBAK3xm8UuAb/85IwqoFHfUXWArJiLuj3/5pLsFLjdxGn1ruWrp+r/U=
+ bh=f6pO4oukCU5P/fkoPAL8CUuRf49VRR3M2BWC/wYQwMg=;
+ b=VTIUX6KW1wezC+gp6ddkJToxtsh0rlsDdYYXzK11QJRnSL+cJ1h8aAQYDSKKpey7Kxvmigc6CMvQ5ZPbtzSJp2lyFOmfOGVjgTJWNgYCKMv+wIwzURVPA+5ifldhLavfjrb4TUaovTLMm4UkPhe+uYPnQxxaGiBfBQR01RC+OoA=
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
  by PH0PR10MB4727.namprd10.prod.outlook.com (2603:10b6:510:3f::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8048.27; Wed, 16 Oct
- 2024 00:12:06 +0000
+ 2024 00:12:04 +0000
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::a63b:c94b:7ed8:4142]) by BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::a63b:c94b:7ed8:4142%4]) with mapi id 15.20.8069.016; Wed, 16 Oct 2024
- 00:12:06 +0000
+ 00:12:04 +0000
 From: Catherine Hoang <catherine.hoang@oracle.com>
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 6.6 19/21] xfs: fix freeing speculative preallocations for preallocated files
-Date: Tue, 15 Oct 2024 17:11:24 -0700
-Message-Id: <20241016001126.3256-20-catherine.hoang@oracle.com>
+Subject: [PATCH 6.6 18/21] xfs: fix unlink vs cluster buffer instantiation race
+Date: Tue, 15 Oct 2024 17:11:23 -0700
+Message-Id: <20241016001126.3256-19-catherine.hoang@oracle.com>
 X-Mailer: git-send-email 2.39.3 (Apple Git-146)
 In-Reply-To: <20241016001126.3256-1-catherine.hoang@oracle.com>
 References: <20241016001126.3256-1-catherine.hoang@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BYAPR05CA0033.namprd05.prod.outlook.com
- (2603:10b6:a03:c0::46) To BLAPR10MB5316.namprd10.prod.outlook.com
+X-ClientProxiedBy: BYAPR05CA0029.namprd05.prod.outlook.com
+ (2603:10b6:a03:c0::42) To BLAPR10MB5316.namprd10.prod.outlook.com
  (2603:10b6:208:326::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -87,79 +87,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|PH0PR10MB4727:EE_
-X-MS-Office365-Filtering-Correlation-Id: b3c94bdc-d80a-4700-de11-08dced772afc
+X-MS-Office365-Filtering-Correlation-Id: 236b6a2d-693f-4044-78dd-08dced7729e8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230040|10070799003|366016|376014|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?EquHdzs0Pzofk3SylLM2VrUwkx9ZqPUF8IGpep1CzE/yhcitoo3xrLkfSLRO?=
- =?us-ascii?Q?rojfk7fse/eLE0D3VUt6d3grN7vdJKZUwSkq4x5DcNaZ2Nwfae5uqwLYe1C1?=
- =?us-ascii?Q?3Td4AFmy1nR9EjdhGwJrDcwe3sOUGLhiLCt+fJcqbZrqrlpAkwhqkHQnOPUy?=
- =?us-ascii?Q?hk7G8E67PZv+DxWwvGymhbUbHLmFXVhB3KGqfReTS/lDlwWwBS3KF/BmFLaq?=
- =?us-ascii?Q?uYNwB/9ighiITKhMtx5L+wVe1Gqy3rBLDsTAu76jXL2iJOzKZh3IjRvxOZuR?=
- =?us-ascii?Q?61lqdpKAfOxCM7pucEe2gc7e6KOHp2NPgpZbH6zxW+cFMTuq6xkgfIQbj8Sb?=
- =?us-ascii?Q?+DdmT5HBQdiMEYWnkQ7YRKqcGsjRzdBO5/obpHlVedQOpVjNOVTErk1Sk+i+?=
- =?us-ascii?Q?6xfo+Nirg8CniPCblCxTddWcEz/syZzQfVcDPlYgaU3KXZfycXjsp3S32Olw?=
- =?us-ascii?Q?7DxornCArI9nRYuYZTEZ8fnS/HbR9QdFa5zGr4yBk+bnDM0wqlKZ2R1ZE2rD?=
- =?us-ascii?Q?WCC1IST1Euivc9FV4GIBw2UeK3h+NTEtl7R8LAZsR8L/mu8TcFlPUOk2gAfM?=
- =?us-ascii?Q?D4Eo4rRDYS4HuIEsNYjJBpiPF6jhiztmP066/rl2aynrBOG3ZqjCPhhqashZ?=
- =?us-ascii?Q?SMHy5WNT+0LBU3ZMGZkZuZU5TcZXlByp0vy5TQC6gr0LotiDsZXlvw0wKI5N?=
- =?us-ascii?Q?H825WgQCPnBbbYnLXUjbFWrnQ4Euq2LOWlS4lwzfWgQOWJ4WLGa2kAQF2q8O?=
- =?us-ascii?Q?nEBoKxIe+3S7wRVSXIUn43/eV3eHYFOGU2zBx6rFQjyJouqgj9aVQz2djOGI?=
- =?us-ascii?Q?nL/3F7DD8rnQGPB/djnoIs7bmLy2Mjf+XT9Q3WqPadD9TQgz5HyNo5f4ku7z?=
- =?us-ascii?Q?dq5n30TPNa3EwYKYKgcdHGtQT6ybp1wg+h63JZ01H2TFXdhA+aHLqah73ryN?=
- =?us-ascii?Q?li6s+7dRXqNIr8mi08Hk+TOE1/G0ZQfDCyG1jWhxmwlG7nfFOp2HVdpB0c71?=
- =?us-ascii?Q?BJWtIflLup6dhkj+SbGnDlGTpkRV8FRD6Zzc7dbEEoOlmc/U5oha1yHVQ5f0?=
- =?us-ascii?Q?mPw8GK8BQ3poR+zB6NberqbV2ZpZVOot2L7kZ3GGtaI61kzzTkqfNQuj5Q2q?=
- =?us-ascii?Q?gpU336T/pIqXe79llEyU0LxVFxmZ9kjxA3iPoBnBkp3SJE++lTQp7nk5VODL?=
- =?us-ascii?Q?2+EtyHmyt7fNT8SlTcyC18c0+s6fgW6s01m7wIMlO8agMDSypHpNIT5n6edi?=
- =?us-ascii?Q?F7VofRamnHXelzAsJCtbnUW3AOna1M/Qoxo+/6H/JQ=3D=3D?=
+	=?us-ascii?Q?cO6bwDJ/tKe3RZxwjRISwboDv2rxmDUHJFMaX1qvP++8F0qnjofl0J/yQtF6?=
+ =?us-ascii?Q?ha+CuTdj4p2lSetY/GRRJWXvZv2knq8X6vm1JLH8ec7pSk0tue21wCQWr0i/?=
+ =?us-ascii?Q?TJOvZ/Ss4yvl6nXrnavjhDqN2H79CzJBi0/h0tungddzfPEA4I9nAJAIpqqE?=
+ =?us-ascii?Q?oRT0ckb/sHcKrnbJbUjAfwLF60pbqRhtkDrK6nv1SrzyjHyQ+iXGXqKSghtC?=
+ =?us-ascii?Q?hylFXFeS1LRP5hOwT1dpDFDvtwRO1tcoU3WXoaFnW0rIi9hgx0WF6zRosNAn?=
+ =?us-ascii?Q?0AsI1UQM5AXgIT6GeIIfXn6XVG5eqEtZ4smnNoayOruA754fDYkr8hm7knpQ?=
+ =?us-ascii?Q?BeWibCL0zdeh3UlzYdtVKkG6VN9imyer8IY/pgXbTcZqgPI5qomvjVZuhrdG?=
+ =?us-ascii?Q?VULBI1kvtrVBzf9ptRXBikLw31Cq1xZL6TEXK77vZ/R0bXdYD38DXXFEW7OP?=
+ =?us-ascii?Q?p3xk/D7mJwjGHflzWikSxlx3FbAcdJWuqAAmhDMNm3LkYjKHO9GML5ROEKS5?=
+ =?us-ascii?Q?xhvjB3dyEX/mFFiDQbBGa2MesTLa07nXWIpzpzVM+PPg71a3ntryNj8RRMte?=
+ =?us-ascii?Q?FUyMN0D/rksEkqhArTDX9KGShcKq+Dr6IdXNc+5D2U5bMFhJ8c2YADXg5r6n?=
+ =?us-ascii?Q?cpyVATazBkqZQxNtaVVx79k9Ri3XCKvSEmHZovd777bnzUZ0tlyahduX9PFB?=
+ =?us-ascii?Q?tW2qUa2nEwQU84zpDQ1oWOE9uHjp4+wvroaPnDRG5Ty5DNrMOdstxdIdhpqL?=
+ =?us-ascii?Q?gC1NpeysV6pP9HxImAf89HvNBj34nGY0kSzSIiP/PglDOGda+FrV1emFdTRy?=
+ =?us-ascii?Q?+Reg+K9zswT0NLSQ1HC2M+AC3bOaY8GYLIQFUebBASDke9GmdmaDXbNWjlDP?=
+ =?us-ascii?Q?DxfrMuVGRT+HS89Z/mPdUg/bvmJ+IU95bYVYfPA9mp62IuQcFD7oRSgb7Evs?=
+ =?us-ascii?Q?rUaQtWBkElqz1nDm5yrjT6ZxOCGLGQZThYTJsRr187vpC4W3kMHhmWudLmDL?=
+ =?us-ascii?Q?u2a7XWrRxDHltuhBLIhFVvbmIUJ9+03HsqLkUDZJf+yFgJIgNp8f0VSaTBKR?=
+ =?us-ascii?Q?IPCdfRhiXobbyIek9zsq9W2rimCdQ/lup3XDDWhMCuGO+AMFQaYCqgQ69ork?=
+ =?us-ascii?Q?o6WYiHnojcsBxED8C8Edj2IM0yE8afU+Nd1tflYgwbx5yQxZHsynIL7Sjx2V?=
+ =?us-ascii?Q?H/SG/jsJd8722QkipW1p9eoIBWSrqxiSH4yVY4WQm1JYRFlxFfXwjHp5BF/g?=
+ =?us-ascii?Q?UL0vck5G237E2bzbsprvt2HHqPDpOi5qI08kFgTtJg=3D=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?WxLyntJLOLYvNPlh/OijhpdAZNV/wqC1gjE7vUXjyBu/mblA1IFAtUQFUCwk?=
- =?us-ascii?Q?l9o1PICk9B7dNmYVbczLtPWJ+yX2fC9CpVAMhsiFMP5nV+GCcspOtjhO7SjT?=
- =?us-ascii?Q?SCH0SsW94ObCwqhD+I5rT/dRy9v0pW5tPjwNEv3QHkaAnbXCfi8Xi94Rf5ew?=
- =?us-ascii?Q?6N44sUD8gVmL5NP+AYA9SvdhpALl96ktNHxC+DRQVPzXEeEhSo9HCvMGfebq?=
- =?us-ascii?Q?7Wvky51BPN33yjbVgKSi4TQm1Tc7EIxxZ0DdrIzcx7rNxE2C9PtIy4bKCimU?=
- =?us-ascii?Q?zoDHdbO/a4zuGIT7o5CN60AZ3Z+NOT0gNHGxK0s3lLXVUQcQ1w/WJPCYwrz1?=
- =?us-ascii?Q?NXeoHH/8aiJ38aV/Wnkv/pzykoM2cN3f5siCpp3eIbedyAwL25QVcCEFNGh/?=
- =?us-ascii?Q?tl0zHEM91iSoPH04/q1BymusUNKZg2mk8uMr9bI7M7dfKjtDB8+Ka8TxNKwl?=
- =?us-ascii?Q?ih+mOdXId4KD7H2ZaiL/HQsIbEaMIl1JxF0fEWF+900zEY0jQMPNFAEZKpiO?=
- =?us-ascii?Q?NfaaX3HKoZ2uiz1pZkYelA3MkEPbm+6BRjCfxjvbxNDlB65UTfVZ2mdkX95B?=
- =?us-ascii?Q?iNKkWdQEmlyc0DOfkdQBzEpNYiz/AW9SADmBgmfxSPIldOl7+jncAEbjwfLv?=
- =?us-ascii?Q?y9Vfn2pRNDzbXAd0tDkdeCuRGzidn7nYyAY/jdOcRGIfHuu7g24b9VHwob1s?=
- =?us-ascii?Q?7LVXMoZv/wjUp+leyZxixZTa5ThRuf7vyy25zKeUtniKUQPu6cyqfsoPgNj2?=
- =?us-ascii?Q?U6JkT7Y33xBSByk0RdwWmXCqMBtr9+a4j3Y12mVmJjgqd+0XcWoV04jH7C9H?=
- =?us-ascii?Q?RSh0N7+YIZhhuOYrvYhzz31h4/Uwy5B1YxJ3HoYR79o+Y9zVYBghN5L39GSG?=
- =?us-ascii?Q?Kelrkr2oxbB+4yvw+z1R6F3D6QTdPe1BNs4LcqBL5nLLQRYi9obU41sidl9l?=
- =?us-ascii?Q?tYFB600fcdDy0/M+Zi74wT15eMOlRagNI0TMF3vUs6O7kvyYJIyzz4eLx6pQ?=
- =?us-ascii?Q?Sog+5+87fhVTzvChf6xqVTwDED+toyUHjYsKaOzhWw8yRdUuzgSK4rV7Yrmi?=
- =?us-ascii?Q?xw62/Tar/GmW36kzJyXvBv1VR+a00bLaaSXRe9dr9X7rKpX+L4FFXm+CY2Ej?=
- =?us-ascii?Q?fDKSzEma6v5SuFNnZECmQ6n5pNM4ulLDOdSW5c1DQ2iEtFMH0c3yiVlACfco?=
- =?us-ascii?Q?ctGDlcNcznNVVhCaFIRZm4h1v7tRjzmk5JAFBetiJc3g7QpAQeLrS1+qOClW?=
- =?us-ascii?Q?WaQASMmNDUFBSps5pDpuVsXzkobu9tI33SPxV1puqbPUI+wJ9ZmvSFbs1Yuu?=
- =?us-ascii?Q?Io6ctpllnDJqnHWLTDBref0D/1X7XyiNzoJ2lDfc4PaE1jrxV5LgqnixSJ1t?=
- =?us-ascii?Q?8BpcipCw7wV7wo7h4+Ksj4mGa4WlAJ8agJL7J5NFVPD5hA9pYMfa/9ENYT2T?=
- =?us-ascii?Q?gvm795qd+bAEOQUkfLKG+iaB6O5Z5fc/eWExlQaounxK+k2c4jX0la7BreZ1?=
- =?us-ascii?Q?7q9tdTRCQEVv7gEWtilUDyou6l/8IAkEyLBGFWQ8grInRAVWwPaUcLkarhiH?=
- =?us-ascii?Q?GbwrZ8NpS1SYRcins+5hV35uADlRWZ9wbvzRAte3WKW/QW5D30gkprYDN/rb?=
- =?us-ascii?Q?rM/LQY93XNwYan0qv5PFXiSockmaao5+r4eKvOnIzFXAeDp5/tGFfSNR3ni5?=
- =?us-ascii?Q?Nj3mSQ=3D=3D?=
+	=?us-ascii?Q?10blD/bPh6ffJfXmdy4MM1DNUTJDNKSaqk9YutBE5tF+GEZeEtd0exq+brtG?=
+ =?us-ascii?Q?FudjXLThzwY8r+Yc3d2CzC5bCyXoIDNop1RGjKad0HTduCyyQq+el2gwAAJL?=
+ =?us-ascii?Q?MvmYnuqR+Mgt/NhhJ+tfKxeNwa53yPh7VhSx4w3DzpQOgpvzLnbJHne9FmXP?=
+ =?us-ascii?Q?c51BkVnaY3mZO3mFDIhFqBfgdlnesbBssJTMXVCgDIOye5DcA4WXGWZ/SERh?=
+ =?us-ascii?Q?yZJWSZgtwhaWP5Bj3DRXkBRFrrkVm7r1s55kE6uVjb8qLbrUZY3GBotXs6D4?=
+ =?us-ascii?Q?upk7/HyrCqr0Wm2EvYbT2ovPGnNwu9mcX8azUhLzeCBcdor0A8woui1x19ub?=
+ =?us-ascii?Q?qOvOmfYjdOPB6I9ISFJOPmGbYSm8IuhqxH6UmR47sz5a9hL7YkTR53II6T5r?=
+ =?us-ascii?Q?QuBJJa+iynsUKDwjQMamuQUwY6sAJ4jXKLLbnj+hw4P7dcgHEXPGMf6sg30N?=
+ =?us-ascii?Q?13Lh2i5QFRi5QUnNbodaxk50CKeGQwMGppldlkpjtDKc8eHHvDQt2Fl2SY1L?=
+ =?us-ascii?Q?VEQ/GKoa6hx2sKxcwd0NZxm/V2h9jPDbqwopku7/ZxRwkDssEl9qY5Mo70jh?=
+ =?us-ascii?Q?nr4C9dQYzD6A0DDXjuQ8nSyLWd0cOKJsJ1BntvJP0N/ONRBclJrheIXK/Vqx?=
+ =?us-ascii?Q?Y+IM6aZfn/IQ27LupV1MunRyx8dbYnmFU+GOvkfeNakU9C5KxCcbAxLDAyo+?=
+ =?us-ascii?Q?G0gdwLkClPoNHQ9uO0MqyoSbvxQMJWXso0dLg87dLXdRXhv6ZmuAU3jFdGWR?=
+ =?us-ascii?Q?e2zvDmjE+T6nQor79w/D7FSeJ4dguUxKrS/ObpzNPjS3yFFSacnE6aeKSXV8?=
+ =?us-ascii?Q?tOKSC81y2UZFAHFxNmnbst37qbY8Wc94d8wz6SQqLrxT8H7wzrPVMDrDJfmQ?=
+ =?us-ascii?Q?Le1aA30HqcSTB3HSRl9Crjud9Yfp89lEUw9vOXXPQq2RcThOOWYI/ATs8mwV?=
+ =?us-ascii?Q?6l4DDLWTLomTR1dldwJXzhwQkMBZUW42cuVm8maAVc5O66LDYg4BM7w0CRye?=
+ =?us-ascii?Q?xmpag0vZdChPaQ66JO+6TsF5I1SElBV6NlNjy0hb74BXkPIHZSNazzxq0hKE?=
+ =?us-ascii?Q?riWYPopWHGcX2RVlBcQzEaYIS4zlmsEgw81x7xz7BWqgaS36HysnRDVyqHas?=
+ =?us-ascii?Q?7V/UWWi721fj/X12rnSqKm1vYrttgF4R8qeWj38dSUs2CY30C25R2OOaHkqP?=
+ =?us-ascii?Q?IlKqGCIQqBdBsS/8JYM5B0p2ZKkGnIrh3AnPXz4D9wEaCHSrWgi/9XTGuB65?=
+ =?us-ascii?Q?wluviea/a5Z33R7n/BO7XEeZUOtRJSeU2EWmxCB8i1WYYfLwMAi05xoVeU53?=
+ =?us-ascii?Q?BN3nppjGnnPz5G7jbWqTAvoh79Hm1lAnxHcncWoGbvoW6DSM9m/aLFHPooYH?=
+ =?us-ascii?Q?ashtPwiQSgXP3Z7vIA9Xgdsc0E1xg9MrjkfRiu81ahQclIsx4DbB9bODRocH?=
+ =?us-ascii?Q?QDCQZBHVZ9VjVyBXDHCA6FJzYcTJIQDl8vwR3vUy5lQO1o2GFuNnB6ZjTtIJ?=
+ =?us-ascii?Q?rixI5Ucc5FA/oauYpDDDBDD32m2sM7Lrny/y04IyRkDDmNnLVmVERscAaPpP?=
+ =?us-ascii?Q?JNBMfupJOa6s4BmLauuB5IpvJbBT4w/Z6X+KCsOZO7pwa7dadNVnZCE6yeDy?=
+ =?us-ascii?Q?bz9VLgLZerKszmguRx7nIg/UCgpUvehaGKMJ9P/4BgqJ/4QEb5xljBp9pN4G?=
+ =?us-ascii?Q?lVXoAQ=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	J+QDbfkZ1A2NO81OiEWYngEQSZaZuNvCuJsXiPpuRCHfdKSPForli1lOZrHSY4v6dRzIojM88tCJBBGWCz/i9UROW3K9LO0GoRtuX08HcLvNYiizVGOm+OCpqF6l/drdF7CzceFOiDZ07H3WdXmeb4mFGlx/DKXlEHiDRBda7UpItKkvylasZ7XXFrBTvP3WmEKrfBgBSLOF9ZcxgeDCWDlZ4cqLBwaiI07FBmyBVptSunxsVrhtI2ME8s13tqATEGrkZu0LA8tSvoLcNgQj8zoN6KYXFibFtzmx3SttcQbv8mYVJlkcM6mUIdFXIFdRhu1GacqIyaEP8Y9NU8wnCiT8zZHF0Tlxb+pr1zsIM0hNDAn1X2AgIn6A9l+4qHdI8L6ksGhbyOMMLRZedzNHM38+DUxsXOck6uWUHijH3H7f89urRcXJIQRebR8zOr64wUGTw+zcoK1nFboR5rRqg+xB8g5f/zI2b/vkJPsCe0Sz4/WCcd44S2Uo2LshboGkkMQAYhCu5NAgXSvSZOm0v1MR8gHMwu24gc9YH6/oGCf9iDzRRupguKaFKE8pErEVcAGQQsn6T9lqoiVH9O1d0RBYjRS2VeMi+yWmVGmVDXs=
+	YJVn1e/XQ1olF/9ulAMIOQa8g/FI6lgBJBSoK45PYJ2lKDAFlUDGakObYAKt+kccThVBKF2VZ3tGou6mdwb8XqnY3WEqErRZfIbT10kjsUFDUHTiESySn6TtnjEoe77TATDX6H77l8FPtB+tXdnC9ZaZz2hUiOWo6ANjpTU/wtYJ7N5xcaxWQiiPPph/gf/GHsGpxrWPxtyLKtsTqlTalfuBJyS24k6BSmfI6Yj4rjscLJn9xuRSiqUlHOBpqWQ2FBCrRmtN/EZ65ASN3EKW2AOaCxR1tZGw19GysyJfv+oGV2BIJJUB3fOg7bwhjhsAZf1mvpMvwuRsOLSGu4dejk5leDBg7j8GFoVhmyRIoyQPxzzkRAqkBbN0iR1adTIOH8arI2vSXrNLSltuQ+PQ518YHYjrnb0Q5rur1QQJjIFzcISA+TAElER/NH7NEUV8T4PysnLqRDGg8MJO+pBNfix8vCRRfB54rCZMndJXODGEoONvR9gjYj37kqRbGDhL7+moSK4EwCzS0uTTFQVpM7G2HQMF6ifxG7JEGyi74lOaqn/G/VQPUJ39QRFmKFTTK+jbdpcB6hTLh37wjGHtv5YpTH3f4t1nnGfATFqvG6Q=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b3c94bdc-d80a-4700-de11-08dced772afc
+X-MS-Exchange-CrossTenant-Network-Message-Id: 236b6a2d-693f-4044-78dd-08dced7729e8
 X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2024 00:12:06.0848
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2024 00:12:04.1023
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: a/lDt1ueyhOZQ4YUuyHP+iEtzXhJxvexSYG2Nn6Lxapy/nB5G6lWsW3nc93YqzVIwbH9vGi6S5MhM8bRaM93fVqp091nQ6gdB3aadmVsF80=
+X-MS-Exchange-CrossTenant-UserPrincipalName: oob3EAYJlXWMU9CvlIG2sZUUf8x9bZwbFo80FJK7Y7SISloClckSwjxxzf69/q+rzRcj789ffj0tRknw90aTWx16x85+dJTuuLeQONY+bXA=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4727
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
@@ -168,177 +168,182 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwar
  bulkscore=0 spamscore=0 mlxlogscore=999 phishscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2409260000
  definitions=main-2410160000
-X-Proofpoint-ORIG-GUID: Ouoqn9IgAHKB946_dpMLn8_dhoMnc2H_
-X-Proofpoint-GUID: Ouoqn9IgAHKB946_dpMLn8_dhoMnc2H_
+X-Proofpoint-GUID: J3M3AopMJpDJT17054SYj9sJNon_JR4a
+X-Proofpoint-ORIG-GUID: J3M3AopMJpDJT17054SYj9sJNon_JR4a
 
-From: Christoph Hellwig <hch@lst.de>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit 610b29161b0aa9feb59b78dc867553274f17fb01 upstream.
+commit 348a1983cf4cf5099fc398438a968443af4c9f65 upstream.
 
-xfs_can_free_eofblocks returns false for files that have persistent
-preallocations unless the force flag is passed and there are delayed
-blocks.  This means it won't free delalloc reservations for files
-with persistent preallocations unless the force flag is set, and it
-will also free the persistent preallocations if the force flag is
-set and the file happens to have delayed allocations.
+Luis has been reporting an assert failure when freeing an inode
+cluster during inode inactivation for a while. The assert looks
+like:
 
-Both of these are bad, so do away with the force flag and always free
-only post-EOF delayed allocations for files with the XFS_DIFLAG_PREALLOC
-or APPEND flags set.
+ XFS: Assertion failed: bp->b_flags & XBF_DONE, file: fs/xfs/xfs_trans_buf.c, line: 241
+ ------------[ cut here ]------------
+ kernel BUG at fs/xfs/xfs_message.c:102!
+ Oops: invalid opcode: 0000 [#1] PREEMPT SMP KASAN NOPTI
+ CPU: 4 PID: 73 Comm: kworker/4:1 Not tainted 6.10.0-rc1 #4
+ Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+ Workqueue: xfs-inodegc/loop5 xfs_inodegc_worker [xfs]
+ RIP: 0010:assfail (fs/xfs/xfs_message.c:102) xfs
+ RSP: 0018:ffff88810188f7f0 EFLAGS: 00010202
+ RAX: 0000000000000000 RBX: ffff88816e748250 RCX: 1ffffffff844b0e7
+ RDX: 0000000000000004 RSI: ffff88810188f558 RDI: ffffffffc2431fa0
+ RBP: 1ffff11020311f01 R08: 0000000042431f9f R09: ffffed1020311e9b
+ R10: ffff88810188f4df R11: ffffffffac725d70 R12: ffff88817a3f4000
+ R13: ffff88812182f000 R14: ffff88810188f998 R15: ffffffffc2423f80
+ FS:  0000000000000000(0000) GS:ffff8881c8400000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 000055fe9d0f109c CR3: 000000014426c002 CR4: 0000000000770ef0
+ DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+ DR3: 0000000000000000 DR6: 00000000fffe07f0 DR7: 0000000000000400
+ PKRU: 55555554
+ Call Trace:
+  <TASK>
+ xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:241 (discriminator 1)) xfs
+ xfs_imap_to_bp (fs/xfs/xfs_trans.h:210 fs/xfs/libxfs/xfs_inode_buf.c:138) xfs
+ xfs_inode_item_precommit (fs/xfs/xfs_inode_item.c:145) xfs
+ xfs_trans_run_precommits (fs/xfs/xfs_trans.c:931) xfs
+ __xfs_trans_commit (fs/xfs/xfs_trans.c:966) xfs
+ xfs_inactive_ifree (fs/xfs/xfs_inode.c:1811) xfs
+ xfs_inactive (fs/xfs/xfs_inode.c:2013) xfs
+ xfs_inodegc_worker (fs/xfs/xfs_icache.c:1841 fs/xfs/xfs_icache.c:1886) xfs
+ process_one_work (kernel/workqueue.c:3231)
+ worker_thread (kernel/workqueue.c:3306 (discriminator 2) kernel/workqueue.c:3393 (discriminator 2))
+ kthread (kernel/kthread.c:389)
+ ret_from_fork (arch/x86/kernel/process.c:147)
+ ret_from_fork_asm (arch/x86/entry/entry_64.S:257)
+  </TASK>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+And occurs when the the inode precommit handlers is attempt to look
+up the inode cluster buffer to attach the inode for writeback.
+
+The trail of logic that I can reconstruct is as follows.
+
+	1. the inode is clean when inodegc runs, so it is not
+	   attached to a cluster buffer when precommit runs.
+
+	2. #1 implies the inode cluster buffer may be clean and not
+	   pinned by dirty inodes when inodegc runs.
+
+	3. #2 implies that the inode cluster buffer can be reclaimed
+	   by memory pressure at any time.
+
+	4. The assert failure implies that the cluster buffer was
+	   attached to the transaction, but not marked done. It had
+	   been accessed earlier in the transaction, but not marked
+	   done.
+
+	5. #4 implies the cluster buffer has been invalidated (i.e.
+	   marked stale).
+
+	6. #5 implies that the inode cluster buffer was instantiated
+	   uninitialised in the transaction in xfs_ifree_cluster(),
+	   which only instantiates the buffers to invalidate them
+	   and never marks them as done.
+
+Given factors 1-3, this issue is highly dependent on timing and
+environmental factors. Hence the issue can be very difficult to
+reproduce in some situations, but highly reliable in others. Luis
+has an environment where it can be reproduced easily by g/531 but,
+OTOH, I've reproduced it only once in ~2000 cycles of g/531.
+
+I think the fix is to have xfs_ifree_cluster() set the XBF_DONE flag
+on the cluster buffers, even though they may not be initialised. The
+reasons why I think this is safe are:
+
+	1. A buffer cache lookup hit on a XBF_STALE buffer will
+	   clear the XBF_DONE flag. Hence all future users of the
+	   buffer know they have to re-initialise the contents
+	   before use and mark it done themselves.
+
+	2. xfs_trans_binval() sets the XFS_BLI_STALE flag, which
+	   means the buffer remains locked until the journal commit
+	   completes and the buffer is unpinned. Hence once marked
+	   XBF_STALE/XFS_BLI_STALE by xfs_ifree_cluster(), the only
+	   context that can access the freed buffer is the currently
+	   running transaction.
+
+	3. #2 implies that future buffer lookups in the currently
+	   running transaction will hit the transaction match code
+	   and not the buffer cache. Hence XBF_STALE and
+	   XFS_BLI_STALE will not be cleared unless the transaction
+	   initialises and logs the buffer with valid contents
+	   again. At which point, the buffer will be marked marked
+	   XBF_DONE again, so having XBF_DONE already set on the
+	   stale buffer is a moot point.
+
+	4. #2 also implies that any concurrent access to that
+	   cluster buffer will block waiting on the buffer lock
+	   until the inode cluster has been fully freed and is no
+	   longer an active inode cluster buffer.
+
+	5. #4 + #1 means that any future user of the disk range of
+	   that buffer will always see the range of disk blocks
+	   covered by the cluster buffer as not done, and hence must
+	   initialise the contents themselves.
+
+	6. Setting XBF_DONE in xfs_ifree_cluster() then means the
+	   unlinked inode precommit code will see a XBF_DONE buffer
+	   from the transaction match as it expects. It can then
+	   attach the stale but newly dirtied inode to the stale
+	   but newly dirtied cluster buffer without unexpected
+	   failures. The stale buffer will then sail through the
+	   journal and do the right thing with the attached stale
+	   inode during unpin.
+
+Hence the fix is just one line of extra code. The explanation of
+why we have to set XBF_DONE in xfs_ifree_cluster, OTOH, is long and
+complex....
+
+Fixes: 82842fee6e59 ("xfs: fix AGF vs inode cluster buffer deadlock")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Tested-by: Luis Chamberlain <mcgrof@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c | 30 ++++++++++++++++++++++--------
- fs/xfs/xfs_bmap_util.h |  2 +-
- fs/xfs/xfs_icache.c    |  2 +-
- fs/xfs/xfs_inode.c     | 14 ++++----------
- 4 files changed, 28 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_inode.c | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 4a7d1a1b67a3..f9d72d8e3c35 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -636,13 +636,11 @@ xfs_bmap_punch_delalloc_range(
- 
- /*
-  * Test whether it is appropriate to check an inode for and free post EOF
-- * blocks. The 'force' parameter determines whether we should also consider
-- * regular files that are marked preallocated or append-only.
-+ * blocks.
-  */
- bool
- xfs_can_free_eofblocks(
--	struct xfs_inode	*ip,
--	bool			force)
-+	struct xfs_inode	*ip)
- {
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -676,11 +674,11 @@ xfs_can_free_eofblocks(
- 		return false;
- 
- 	/*
--	 * Do not free real preallocated or append-only files unless the file
--	 * has delalloc blocks and we are forced to remove them.
-+	 * Only free real extents for inodes with persistent preallocations or
-+	 * the append-only flag.
- 	 */
- 	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
--		if (!force || ip->i_delayed_blks == 0)
-+		if (ip->i_delayed_blks == 0)
- 			return false;
- 
- 	/*
-@@ -734,6 +732,22 @@ xfs_free_eofblocks(
- 	/* Wait on dio to ensure i_size has settled. */
- 	inode_dio_wait(VFS_I(ip));
- 
-+	/*
-+	 * For preallocated files only free delayed allocations.
-+	 *
-+	 * Note that this means we also leave speculative preallocations in
-+	 * place for preallocated files.
-+	 */
-+	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
-+		if (ip->i_delayed_blks) {
-+			xfs_bmap_punch_delalloc_range(ip,
-+				round_up(XFS_ISIZE(ip), mp->m_sb.sb_blocksize),
-+				LLONG_MAX);
-+		}
-+		xfs_inode_clear_eofblocks_tag(ip);
-+		return 0;
-+	}
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
- 	if (error) {
- 		ASSERT(xfs_is_shutdown(mp));
-@@ -1048,7 +1062,7 @@ xfs_prepare_shift(
- 	 * Trim eofblocks to avoid shifting uninitialized post-eof preallocation
- 	 * into the accessible region of the file.
- 	 */
--	if (xfs_can_free_eofblocks(ip, true)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		error = xfs_free_eofblocks(ip);
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 6888078f5c31..1383019ccdb7 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -63,7 +63,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- 
- /* EOF block manipulation functions */
--bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-+bool	xfs_can_free_eofblocks(struct xfs_inode *ip);
- int	xfs_free_eofblocks(struct xfs_inode *ip);
- 
- int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index db88f41c94c6..57a9f2317525 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1149,7 +1149,7 @@ xfs_inode_free_eofblocks(
- 	}
- 	*lockflags |= XFS_IOLOCK_EXCL;
- 
--	if (xfs_can_free_eofblocks(ip, false))
-+	if (xfs_can_free_eofblocks(ip))
- 		return xfs_free_eofblocks(ip);
- 
- 	/* inode could be preallocated or append-only */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8bfde8fce6e2..7aa73855fab6 100644
+index efb6b8f35617..8bfde8fce6e2 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1469,7 +1469,7 @@ xfs_release(
- 	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
- 		return 0;
- 
--	if (xfs_can_free_eofblocks(ip, false)) {
-+	if (xfs_can_free_eofblocks(ip)) {
- 		/*
- 		 * Check if the inode is being opened, written and closed
- 		 * frequently and we have delayed allocation blocks outstanding
-@@ -1685,15 +1685,13 @@ xfs_inode_needs_inactive(
- 
- 	/*
- 	 * This file isn't being freed, so check if there are post-eof blocks
--	 * to free.  @force is true because we are evicting an inode from the
--	 * cache.  Post-eof blocks must be freed, lest we end up with broken
--	 * free space accounting.
-+	 * to free.
- 	 *
- 	 * Note: don't bother with iolock here since lockdep complains about
- 	 * acquiring it in reclaim context. We have the only reference to the
- 	 * inode at this point anyways.
- 	 */
--	return xfs_can_free_eofblocks(ip, true);
-+	return xfs_can_free_eofblocks(ip);
- }
- 
- /*
-@@ -1741,15 +1739,11 @@ xfs_inactive(
- 
- 	if (VFS_I(ip)->i_nlink != 0) {
- 		/*
--		 * force is true because we are evicting an inode from the
--		 * cache. Post-eof blocks must be freed, lest we end up with
--		 * broken free space accounting.
--		 *
- 		 * Note: don't bother with iolock here since lockdep complains
- 		 * about acquiring it in reclaim context. We have the only
- 		 * reference to the inode at this point anyways.
+@@ -2329,11 +2329,26 @@ xfs_ifree_cluster(
+ 		 * This buffer may not have been correctly initialised as we
+ 		 * didn't read it from disk. That's not important because we are
+ 		 * only using to mark the buffer as stale in the log, and to
+-		 * attach stale cached inodes on it. That means it will never be
+-		 * dispatched for IO. If it is, we want to know about it, and we
+-		 * want it to fail. We can acheive this by adding a write
+-		 * verifier to the buffer.
++		 * attach stale cached inodes on it.
++		 *
++		 * For the inode that triggered the cluster freeing, this
++		 * attachment may occur in xfs_inode_item_precommit() after we
++		 * have marked this buffer stale.  If this buffer was not in
++		 * memory before xfs_ifree_cluster() started, it will not be
++		 * marked XBF_DONE and this will cause problems later in
++		 * xfs_inode_item_precommit() when we trip over a (stale, !done)
++		 * buffer to attached to the transaction.
++		 *
++		 * Hence we have to mark the buffer as XFS_DONE here. This is
++		 * safe because we are also marking the buffer as XBF_STALE and
++		 * XFS_BLI_STALE. That means it will never be dispatched for
++		 * IO and it won't be unlocked until the cluster freeing has
++		 * been committed to the journal and the buffer unpinned. If it
++		 * is written, we want to know about it, and we want it to
++		 * fail. We can acheive this by adding a write verifier to the
++		 * buffer.
  		 */
--		if (xfs_can_free_eofblocks(ip, true))
-+		if (xfs_can_free_eofblocks(ip))
- 			error = xfs_free_eofblocks(ip);
++		bp->b_flags |= XBF_DONE;
+ 		bp->b_ops = &xfs_inode_buf_ops;
  
- 		goto out;
+ 		/*
 -- 
 2.39.3
 
