@@ -1,192 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732D221E3BA
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 04:56:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8B6418CC02;
+	Wed, 16 Oct 2024 06:23:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729054601; cv=none; b=BEpBFFtwOFYTUQafSjE8A5nkV4jl6huKZ+I3rQ7fbyKIoOScQ8Laj7dkP1z/Q/OofiuMYYCWGfUH2ED9OEzegrlGkUypksSobMhhj0QdmrXq/OoUM5qS3jOlI7BDMVGvVLJGlFY16Gys4B9hOFXBNs0EF6nbRoD/z4iEAQgwDd4=
+	t=1729059829; cv=none; b=IxwSk1zcnE4WA4T4YcvCCNJ1+v5++/N84WfW0zEXx9oafIcV34eh8w5lzlyavG+x87DgkREhXAA2tW+eOv0VDt7JfAIUGGB0RfXAUICoArnmVTRTeaTxqGjwm2/8WqRMhDWjAm/DnVMwufCUa9f+41ZcP54+sor5NPGJPoXZhWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729054601; c=relaxed/simple;
-	bh=Kaz8bU6SeNWzbws3j/CyAWMZkgnX9zUIB+kS1ToWHiM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hxB7nSZxdF9uWJXgikopuBlyQSaYf5HkKRYBNyiNdhCBOEPqtGyJNZ7PckBYn8wMfwvUJU1uVQq7l067DsCEg7tdcicgjQajvcOOaSTQ8cvcIxiFmXYMuFCM0A5K8FajPyqoCHpun73yHZiGs/Z35sLbGV82UDhyKDEsKEmzWfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AmZusqq2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729059829; c=relaxed/simple;
+	bh=Og38/G7jNcGI3shyyTG9Y9Ul1EbSQha9WhdMrb/+3zE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Y6F54QhRt2H5ZJrg2lSCd2HSriyNSld+caNGEDQB/+ePTqf63AfGoiyH9bg2LfinvmetHOUYUQzHlOFsCKNdInFZ3qNFJJ4IIbiowfj7KwMSU/BNlVn7QX7MRYxacdtyseexH/FDaCEubWPJBS/Ynd1AfKj5SgW8rlo3k/S7YUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O8BHQFiQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AmZusqq2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42589C4CEC5;
-	Wed, 16 Oct 2024 04:56:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O8BHQFiQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99CE1C4CEC5;
+	Wed, 16 Oct 2024 06:23:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729054601;
-	bh=Kaz8bU6SeNWzbws3j/CyAWMZkgnX9zUIB+kS1ToWHiM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AmZusqq2fGr59wjWSTc2DvOqttHNI91l6rntKX11QHVKV4suaJaevymUyrqooCtId
-	 1TJ6eGJpivTqDt9tzo6BcckrRAAk7gHwd8tr/cPU4XnU+DCQYKYY77w3hhHEgzZ0xU
-	 Jci8b6Ols5JxYG5KX9Z/lhfD5O/C3x6lynbUqHRH9DHtJVCUqGGCGQQfgd9b/5In3E
-	 BmzG/W3lrDr1MkvT2OClWGOjota09UBFbrYbV173g94tMNkKCWrO6CjgMP1n0Nt9m9
-	 ieJi8ogqAxbPa22UCOhuYTdQqywHpxo/RznunhuQlD8sQbpcQVsgMI8wt/qakMGKJV
-	 I8uzrnatHZ2ZA==
-Date: Tue, 15 Oct 2024 21:56:40 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 03/28] xfs: define the on-disk format for the metadir
- feature
-Message-ID: <20241016045640.GL21853@frogsfrogsfrogs>
-References: <172860641935.4176876.5699259080908526243.stgit@frogsfrogsfrogs>
- <172860642064.4176876.13567674130190367379.stgit@frogsfrogsfrogs>
- <Zw3rjkSklol5xOzE@dread.disaster.area>
- <20241015182541.GE21853@frogsfrogsfrogs>
- <Zw70vBF6adb0GAzA@dread.disaster.area>
- <20241016002051.GK21877@frogsfrogsfrogs>
- <Zw83h2swL9fqs3xm@dread.disaster.area>
+	s=k20201202; t=1729059829;
+	bh=Og38/G7jNcGI3shyyTG9Y9Ul1EbSQha9WhdMrb/+3zE=;
+	h=From:To:Cc:Subject:Date:From;
+	b=O8BHQFiQ53bGOJ5Tg2oLQXLwzT78t87mjVWWOC6SaHqciptvr8Dwb6brv0h71PLNQ
+	 NypjLMmlFqhIpH1J6Vh9XI3QxXT8WTjxqilq1quVLd5NQUS30gFtWuUOC32C7a/Oo7
+	 lWBS6OGkwUEf/UpxnE0CUZd5kGrmcdRetnGO1BnnYpku1lBG/u7xnEX7fiwzs8zw3d
+	 Q7sna6M207Gi7UICXtnj1xzHw5Ku8atlKuS4wCbUL/bb9cpnw/teVwCsZ3hu8V3IFd
+	 zUldPnNcp9q6axzDa6gOOofyOZLYBLVA3ZopCRMSRWVxk9fsCpJk+0tnSKs6zfTDja
+	 6IhjGWINC1DFg==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Josef Bacik <josef@toxicpanda.com>,
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] iomap: provide iomap_want_unshare_iter() stub for !CONFIG_BLOCK
+Date: Wed, 16 Oct 2024 06:23:40 +0000
+Message-Id: <20241016062344.2571015-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zw83h2swL9fqs3xm@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 16, 2024 at 02:48:23PM +1100, Dave Chinner wrote:
-> On Tue, Oct 15, 2024 at 05:20:51PM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 16, 2024 at 10:03:24AM +1100, Dave Chinner wrote:
-> > > On Tue, Oct 15, 2024 at 11:25:41AM -0700, Darrick J. Wong wrote:
-> > > > > > +	if (xfs_has_metadir(mp))
-> > > > > > +		xfs_warn(mp,
-> > > > > > +"EXPERIMENTAL metadata directory feature in use. Use at your own risk!");
-> > > > > > +
-> > > > > 
-> > > > > We really need a 'xfs_mark_experimental(mp, "Metadata directory")'
-> > > > > function to format all these experimental feature warnings the same
-> > > > > way....
-> > > > 
-> > > > We already have xfs_warn_mount for functionality that isn't sb feature
-> > > > bits.  Maybe xfs_warn_feat?
-> > > 
-> > > xfs_warn_mount() is only used for experimental warnings, so maybe we
-> > > should simply rename that xfs_mark_experiental().  Then we can use
-> > > it's inherent "warn once" behaviour for all the places where we
-> > > issue an experimental warning regardless of how the experimental
-> > > feature is enabled/detected. 
-> > > 
-> > > This means we'd have a single location that formats all experimental
-> > > feature warnings the same way. Having a single function explicitly
-> > > for this makes it trivial to audit and manage all the experimental
-> > > features supported by a given kernel version because we are no
-> > > longer reliant on grepping for custom format strings to find
-> > > experimental features.
-> > > 
-> > > It also means that adding a kernel taint flag indicating that the
-> > > kernel is running experimental code is trivial to do...
-> > 
-> > ...and I guess this means you can discover which forbidden features are
-> > turned on from crash dumps.  Ok, sounds good to me.
-> 
-> Yes, though I don't consider experimental features as "forbidden".
-> 
-> This is more about enabling experimental filesystem features to be
-> shipped under tech preview constraints(*). Knowing that an
-> experimental feature is in use will help manage support expectations
-> and workload. This, in turn, will also allow us to stay closer to
-> the upstream XFS code base and behaviour....
+From: Arnd Bergmann <arnd@arndb.de>
 
-<nod>
+When block device support is disabled, DAX fails to link with:
 
-> > Do you want it to return an int so that you (as a distributor, not you
-> > personally) can decide that nobody gets to use the experimental
-> > features?
-> 
-> I considered suggesting that earlier, but if we want to disable
-> specific experimental features we'll have to patch the kernel
-> anyway. Hence I don't think there's any reason for having the
-> upstream code doing anything other than tracking what experimental
-> features are in use.
+aarch64-linux/bin/aarch64-linux-ld: fs/dax.o: in function `dax_file_unshare':
+dax.c:(.text+0x2694): undefined reference to `iomap_want_unshare_iter'
 
-Here's what I have now:
+Return false in this case, as far as I can tell, this cannot happen
+without block devices.
 
-enum xfs_experimental_feat {
-	XFS_EXPERIMENTAL_SCRUB,
-	XFS_EXPERIMENTAL_SHRINK,
-	XFS_EXPERIMENTAL_LARP,
-	XFS_EXPERIMENTAL_LBS,
-	XFS_EXPERIMENTAL_EXCHRANGE,
-	XFS_EXPERIMENTAL_PPTR,
-	XFS_EXPERIMENTAL_METADIR,
+Fixes: 6ef6a0e821d3 ("iomap: share iomap_unshare_iter predicate code with fsdax")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ include/linux/iomap.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-	XFS_EXPERIMENTAL_MAX,
-};
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index e04c060e8fe1..84ec2b7419c5 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -281,7 +281,14 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len);
+ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
+ int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops);
++#ifdef CONFIG_BLOCK
+ bool iomap_want_unshare_iter(const struct iomap_iter *iter);
++#else
++static inline bool iomap_want_unshare_iter(const struct iomap_iter *iter)
++{
++	return false;
++}
++#endif
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+ 		bool *did_zero, const struct iomap_ops *ops);
+ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+-- 
+2.39.5
 
-void
-xfs_warn_experimental(
-	struct xfs_mount		*mp,
-	enum xfs_experimental_feat	feat)
-{
-	static const struct {
-		const char		*name;
-		long			opstate;
-	} features[] = {
-		[XFS_EXPERIMENTAL_SCRUB] = {
-			.opstate	= XFS_OPSTATE_WARNED_SCRUB,
-			.name		= "online scrub",
-		},
-		[XFS_EXPERIMENTAL_SHRINK] = {
-			.opstate	= XFS_OPSTATE_WARNED_SHRINK,
-			.name		= "online shrink",
-		},
-		[XFS_EXPERIMENTAL_LARP] = {
-			.opstate	= XFS_OPSTATE_WARNED_LARP,
-			.name		= "logged extended attributes",
-		},
-		[XFS_EXPERIMENTAL_LBS] = {
-			.opstate	= XFS_OPSTATE_WARNED_LBS,
-			.name		= "large block size",
-		},
-		[XFS_EXPERIMENTAL_EXCHRANGE] = {
-			.opstate	= XFS_OPSTATE_WARNED_EXCHRANGE,
-			.name		= "exchange range",
-		},
-		[XFS_EXPERIMENTAL_PPTR] = {
-			.opstate	= XFS_OPSTATE_WARNED_PPTR,
-			.name		= "parent pointer",
-		},
-		[XFS_EXPERIMENTAL_METADIR] = {
-			.opstate	= XFS_OPSTATE_WARNED_METADIR,
-			.name		= "metadata directory tree",
-		},
-	};
-	ASSERT(feat >= 0 && feat < XFS_EXPERIMENTAL_MAX);
-	BUILD_BUG_ON(ARRAY_SIZE(features) != XFS_EXPERIMENTAL_MAX);
-
-	if (xfs_should_warn(mp, features[feat].opstate))
-		xfs_warn(mp,
- "EXPERIMENTAL %s feature enabled.  Use at your own risk!",
-				features[feat].name);
-}
-
-and the callsite:
-
-	if (xfs_has_parent(mp))
-		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_PPTR);
-
-> -Dave.
-> 
-> (*) https://access.redhat.com/solutions/21101
-> 
-> "Technology Preview features are not fully supported, may not be
-> functionally complete, and are not suitable for deployment in
-> production. However, these features are provided to the customer as
-> a courtesy and the primary goal is for the feature to gain wider
-> exposure with the goal of full support in the future."
-
-Similar here, though we usually massage the dmesg text to mention that
-only certain customers are supported.
-
---D
-
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
