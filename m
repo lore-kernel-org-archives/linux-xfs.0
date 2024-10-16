@@ -1,86 +1,47 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8B6418CC02;
-	Wed, 16 Oct 2024 06:23:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B202118C927
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 06:25:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729059829; cv=none; b=IxwSk1zcnE4WA4T4YcvCCNJ1+v5++/N84WfW0zEXx9oafIcV34eh8w5lzlyavG+x87DgkREhXAA2tW+eOv0VDt7JfAIUGGB0RfXAUICoArnmVTRTeaTxqGjwm2/8WqRMhDWjAm/DnVMwufCUa9f+41ZcP54+sor5NPGJPoXZhWo=
+	t=1729059907; cv=none; b=uS1HnISqzNx5C2G35t+5/Eq4WkSvLkw/hMvlbTUZng3N18DwL0OCL3x+AZ/ioNFESIiK/W0hOZxPDq56A7dbnG50YN+H6OhJMkgB4l6XA+VKc4KyyDzfGqCv6xzQbaqL3l/0p8dveH9/yJhcHR3yoXBVTwd/EFtD8WOPUkYhNNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729059829; c=relaxed/simple;
-	bh=Og38/G7jNcGI3shyyTG9Y9Ul1EbSQha9WhdMrb/+3zE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Y6F54QhRt2H5ZJrg2lSCd2HSriyNSld+caNGEDQB/+ePTqf63AfGoiyH9bg2LfinvmetHOUYUQzHlOFsCKNdInFZ3qNFJJ4IIbiowfj7KwMSU/BNlVn7QX7MRYxacdtyseexH/FDaCEubWPJBS/Ynd1AfKj5SgW8rlo3k/S7YUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O8BHQFiQ; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O8BHQFiQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99CE1C4CEC5;
-	Wed, 16 Oct 2024 06:23:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729059829;
-	bh=Og38/G7jNcGI3shyyTG9Y9Ul1EbSQha9WhdMrb/+3zE=;
-	h=From:To:Cc:Subject:Date:From;
-	b=O8BHQFiQ53bGOJ5Tg2oLQXLwzT78t87mjVWWOC6SaHqciptvr8Dwb6brv0h71PLNQ
-	 NypjLMmlFqhIpH1J6Vh9XI3QxXT8WTjxqilq1quVLd5NQUS30gFtWuUOC32C7a/Oo7
-	 lWBS6OGkwUEf/UpxnE0CUZd5kGrmcdRetnGO1BnnYpku1lBG/u7xnEX7fiwzs8zw3d
-	 Q7sna6M207Gi7UICXtnj1xzHw5Ku8atlKuS4wCbUL/bb9cpnw/teVwCsZ3hu8V3IFd
-	 zUldPnNcp9q6axzDa6gOOofyOZLYBLVA3ZopCRMSRWVxk9fsCpJk+0tnSKs6zfTDja
-	 6IhjGWINC1DFg==
-From: Arnd Bergmann <arnd@kernel.org>
-To: Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Josef Bacik <josef@toxicpanda.com>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] iomap: provide iomap_want_unshare_iter() stub for !CONFIG_BLOCK
-Date: Wed, 16 Oct 2024 06:23:40 +0000
-Message-Id: <20241016062344.2571015-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.5
+	s=arc-20240116; t=1729059907; c=relaxed/simple;
+	bh=qQmE7J1EB4B+0OWfj5T0VlYIsS/csqZ9XtsXVUAhSrc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gLF317mKmCaaPLogu4f6MOneodi4FH0n4E+aHbBVol6CaTePpZfQGbEsUxZ59xBPQW6tTtuIXCJyn7s8JLBY5oTCZamaGYsTNFFRRXA7o8j9U0tWrt1JhP+o4IN5xaMavJZYOhIkWXLi5w9dxUa+fah+yQ7adEgS+5JJFew5K20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 10F63227AAA; Wed, 16 Oct 2024 08:25:01 +0200 (CEST)
+Date: Wed, 16 Oct 2024 08:25:00 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: pass the exact range to initialize to
+ xfs_initialize_perag
+Message-ID: <20241016062500.GA25956@lst.de>
+References: <20241014060516.245606-1-hch@lst.de> <20241014060516.245606-2-hch@lst.de> <Zw5p6k_R99zbj26a@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zw5p6k_R99zbj26a@bfoster>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Tue, Oct 15, 2024 at 09:11:06AM -0400, Brian Foster wrote:
+> What happened to using first/end or whatever terminology here like is
+> done in one of the later patches? I really find old/new unnecessarily
+> confusing in this context.
 
-When block device support is disabled, DAX fails to link with:
-
-aarch64-linux/bin/aarch64-linux-ld: fs/dax.o: in function `dax_file_unshare':
-dax.c:(.text+0x2694): undefined reference to `iomap_want_unshare_iter'
-
-Return false in this case, as far as I can tell, this cannot happen
-without block devices.
-
-Fixes: 6ef6a0e821d3 ("iomap: share iomap_unshare_iter predicate code with fsdax")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- include/linux/iomap.h | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index e04c060e8fe1..84ec2b7419c5 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -281,7 +281,14 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len);
- bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
- int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
-+#ifdef CONFIG_BLOCK
- bool iomap_want_unshare_iter(const struct iomap_iter *iter);
-+#else
-+static inline bool iomap_want_unshare_iter(const struct iomap_iter *iter)
-+{
-+	return false;
-+}
-+#endif
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
- 		bool *did_zero, const struct iomap_ops *ops);
- int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--- 
-2.39.5
+Looking into it first/end is bad because it is the acount and not
+the indices, i.e. each of them are the last index + 1.  So I'll switch
+to using orig instead of old as inthe caller here, and keep new.
 
