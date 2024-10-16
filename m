@@ -1,43 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6283D107A0
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 00:20:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9AE3B1AF;
+	Wed, 16 Oct 2024 00:52:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729038052; cv=none; b=Zw+1HvLhpGsDarp/VgayDJ3UUCwqWAFjoP2f2cvlMMrQgMUOXTxkXPgpREsQJYtTciK+AObVdEuJTg3brOF+9lCwGsj0tyQOvJR6mJHzvym7/2DGt0leIK/qhwQfn79BIkY6NPYp4W8Hsis8sVSOIUYYFJQK9B/KEzRVlaCqw/I=
+	t=1729039922; cv=none; b=GEfMRKNh0jR91QnfdOP0wplTy8crCVLxdriRtdOicQRFMj3rt7qjV7FtYEOcNK4XjaVzkBUYTuvOfKKx6nGPaYMKxUxB7fRPqGGQpo3j+f25nQo6jVO2+QEVPvdXjTU/N0ZKKmo5xWZU8gbLSuWVQ0EHdlwqhCsVq5F7ocTV0kQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729038052; c=relaxed/simple;
-	bh=Zqpnwy20dI7dcgxaxfqT0zyez8yO4kcSeBT8/79bURo=;
+	s=arc-20240116; t=1729039922; c=relaxed/simple;
+	bh=Bx/dFlbKzH10Je0iK3Rb4Fy5a5F7DDy4gj4hZJOTdTE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DHv6G0Gxp4SUlfGLpjpuTr+cqaJ78eDdnJwCiCnyDk8uBMKhNDIJf8LTM0b6/Znnn+A7Zb1zC1lMtCdtRAuuv26ODEdtvkUxVWGiVg666nvY1ZI93ojGyWGQyTYGvLw+KbGCt+MTkSIxd3FvRj2ubQtqs9PNNOtZscqY16mdobs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jBaiX+nZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=KxTkq9WRwxhxYjk4ImhGMQDlQJK6TBNCKltuJOyEjjeWjlvVK2q8Iia26+R8K44TTDfr7m4SDt+0XWI3SRhgsf5Gu8gTajdY7g4nXgFSiX+/ED7Bn/o+6IScmcMG2bqE2NgOLCUqWw6kHKwo/aUicNNpj0KPw8QB8T+W8poEeKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RaqrnVhn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jBaiX+nZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBF85C4CECF;
-	Wed, 16 Oct 2024 00:20:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RaqrnVhn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 506CAC4CECD;
+	Wed, 16 Oct 2024 00:52:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729038052;
-	bh=Zqpnwy20dI7dcgxaxfqT0zyez8yO4kcSeBT8/79bURo=;
+	s=k20201202; t=1729039922;
+	bh=Bx/dFlbKzH10Je0iK3Rb4Fy5a5F7DDy4gj4hZJOTdTE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jBaiX+nZ64H8Cqela3U9YH2+TYOF2illR1z8vYfc/yVnzoMA1646AApOZC+irBBYy
-	 xHih/3C2uHrz5zIBMirD0twvjK+214nyya92XmEfcD4ExZeNvPm+GQOqOAXMywYrFo
-	 blHRy+gLO+zfbxAuVf/BsWPGLYyiQ4X+B1xnFiQja3yr/XtmHqsQZ1hJDsJCtV+0ts
-	 q/6stHDsnLQ/kkyhQezZcKulMvanF2QpjAYgNOTbjI7zQNGwZNUmTcK/VeulN8Ve9J
-	 Hao76fbz55SFpSsArecO7JPsxlyTiKlO9TWophxsYdo6fgnZkLsUHfs8/dE7UPnMZj
-	 xjXrXvykd4iBA==
-Date: Tue, 15 Oct 2024 17:20:51 -0700
+	b=RaqrnVhnhESaXVBIKzWMfLPyKquNczQJ7PzExRn42zw9+dgbiq8qx8uwILmNzk1UW
+	 8Bd0aW4NAPxaPaGTm623pMyCrxc3jseEv+YTfFldZa1qdBRZ5VDvarAlN8PUt0Yge2
+	 qMHW9JXDdTeSdeq0fwBo/R9rByna0/qfCBh7VLkyJ5W4PvtLhcox0bAfO6rOPBukHz
+	 LJF1QbuRRfMUAv71xqPmkdk8p1x803S2qm4FN2RwqZu8u1qAulkTCMrXa248hOy6JK
+	 DtP205u1obmFlmj9hVqGFNk0i13tKJ1LVkLp66zhK0dy69f1hRzVDTWR987Ca/KvxB
+	 F5NOgY4Bin5Lw==
+Date: Tue, 15 Oct 2024 17:52:01 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 03/28] xfs: define the on-disk format for the metadir
- feature
-Message-ID: <20241016002051.GK21877@frogsfrogsfrogs>
-References: <172860641935.4176876.5699259080908526243.stgit@frogsfrogsfrogs>
- <172860642064.4176876.13567674130190367379.stgit@frogsfrogsfrogs>
- <Zw3rjkSklol5xOzE@dread.disaster.area>
- <20241015182541.GE21853@frogsfrogsfrogs>
- <Zw70vBF6adb0GAzA@dread.disaster.area>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, brauner@kernel.org,
+	viro@zeniv.linux.org.uk, jack@suse.cz, dchinner@redhat.com,
+	cem@kernel.org, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, hare@suse.de,
+	martin.petersen@oracle.com, catherine.hoang@oracle.com,
+	mcgrof@kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com
+Subject: Re: [PATCH v7 5/8] xfs: Support FS_XFLAG_ATOMICWRITES
+Message-ID: <20241016005201.GH21836@frogsfrogsfrogs>
+References: <20241004092254.3759210-1-john.g.garry@oracle.com>
+ <20241004092254.3759210-6-john.g.garry@oracle.com>
+ <20241004123520.GB19295@lst.de>
+ <f4d2180a-8baa-4636-a0a1-36e474fcd157@oracle.com>
+ <20241007054229.GA307@lst.de>
+ <f0febabf-25ee-4fbe-9dfe-77a240cc29db@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,93 +52,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zw70vBF6adb0GAzA@dread.disaster.area>
+In-Reply-To: <f0febabf-25ee-4fbe-9dfe-77a240cc29db@oracle.com>
 
-On Wed, Oct 16, 2024 at 10:03:24AM +1100, Dave Chinner wrote:
-> On Tue, Oct 15, 2024 at 11:25:41AM -0700, Darrick J. Wong wrote:
-> > > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > > > index be7d4b26aaea3f..4b36dc2c9bf48b 100644
-> > > > --- a/fs/xfs/xfs_inode.h
-> > > > +++ b/fs/xfs/xfs_inode.h
-> > > > @@ -65,6 +65,7 @@ typedef struct xfs_inode {
-> > > >  		uint16_t	i_flushiter;	/* incremented on flush */
-> > > >  	};
-> > > >  	uint8_t			i_forkoff;	/* attr fork offset >> 3 */
-> > > > +	enum xfs_metafile_type	i_metatype;	/* XFS_METAFILE_* */
-> > > >  	uint16_t		i_diflags;	/* XFS_DIFLAG_... */
-> > > >  	uint64_t		i_diflags2;	/* XFS_DIFLAG2_... */
-> > > >  	struct timespec64	i_crtime;	/* time created */
-> > > > @@ -276,10 +277,23 @@ static inline bool xfs_is_reflink_inode(const struct xfs_inode *ip)
-> > > >  	return ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
-> > > >  }
-> > > >  
-> > > > +static inline bool xfs_is_metadir_inode(const struct xfs_inode *ip)
-> > > > +{
-> > > > +	return ip->i_diflags2 & XFS_DIFLAG2_METADATA;
-> > > > +}
-> > > > +
-> > > >  static inline bool xfs_is_metadata_inode(const struct xfs_inode *ip)
+On Sun, Oct 13, 2024 at 10:06:04PM +0100, John Garry wrote:
+> On 07/10/2024 06:42, Christoph Hellwig wrote:
+> > On Fri, Oct 04, 2024 at 02:07:05PM +0100, John Garry wrote:
+> > > Sure, that is true (about being able to atomically write 1x FS block if the
+> > > bdev support it).
 > > > 
-> > > Oh, that's going to get confusing. "is_metadir" checks the inode
-> > > METADATA flag, and is "is_metadata" checks the superblock METADIR
-> > > flag....
+> > > But if we are going to add forcealign or similar later, then it would make
+> > > sense (to me) to have FS_XFLAG_ATOMICWRITES (and its other flags) from the
+> > > beginning. I mean, for example, if FS_XFLAG_FORCEALIGN were enabled and we
+> > > want atomic writes, setting FS_XFLAG_ATOMICWRITES would be rejected if AG
+> > > count is not aligned with extsize, or extsize is not a power-of-2, or
+> > > extsize exceeds bdev limits. So FS_XFLAG_ATOMICWRITES could have some value
+> > > there.
 > > > 
-> > > Can we change this to higher level function to
-> > > xfs_inode_is_internal() or something else that is not easily
-> > > confused with checking an inode flag?
+> > > As such, it makes sense to have a consistent user experience and require
+> > > FS_XFLAG_ATOMICWRITES from the beginning.
 > > 
-> > But there's already xfs_internal_inum, which only covers sb-rooted
-> > metadata inodes.  I guess first we have to rename that to xfs_is_sb_inum
-> > in a separate patch, and then this one can add xfs_inode_is_internal.
-> 
-> Fine by me.
-> 
-> > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > index 457c2d70968d9a..59953278964de9 100644
-> > > > --- a/fs/xfs/xfs_super.c
-> > > > +++ b/fs/xfs/xfs_super.c
-> > > > @@ -1733,6 +1733,10 @@ xfs_fs_fill_super(
-> > > >  		mp->m_features &= ~XFS_FEAT_DISCARD;
-> > > >  	}
-> > > >  
-> > > > +	if (xfs_has_metadir(mp))
-> > > > +		xfs_warn(mp,
-> > > > +"EXPERIMENTAL metadata directory feature in use. Use at your own risk!");
-> > > > +
-> > > 
-> > > We really need a 'xfs_mark_experimental(mp, "Metadata directory")'
-> > > function to format all these experimental feature warnings the same
-> > > way....
+> > Well, even with forcealign we're not going to lose support for atomic
+> > writes <= block size, are we?
 > > 
-> > We already have xfs_warn_mount for functionality that isn't sb feature
-> > bits.  Maybe xfs_warn_feat?
 > 
-> xfs_warn_mount() is only used for experimental warnings, so maybe we
-> should simply rename that xfs_mark_experiental().  Then we can use
-> it's inherent "warn once" behaviour for all the places where we
-> issue an experimental warning regardless of how the experimental
-> feature is enabled/detected. 
+> forcealign would not be required for atomic writes <= FS block size.
 > 
-> This means we'd have a single location that formats all experimental
-> feature warnings the same way. Having a single function explicitly
-> for this makes it trivial to audit and manage all the experimental
-> features supported by a given kernel version because we are no
-> longer reliant on grepping for custom format strings to find
-> experimental features.
+> How about this modified approach:
 > 
-> It also means that adding a kernel taint flag indicating that the
-> kernel is running experimental code is trivial to do...
+> a. Drop FS_XFLAG_ATOMICWRITES support from this series, and so we can always
+> atomic write 1x FS block (if the bdev supports it)
+> 
+> b. If we agree to support forcealign afterwards, then we can introduce 2x
+> new flags:
+> 	- FS_XFLAG_FORCEALIGN - as before
+> 	- FS_XFLAG_BIG_ATOMICWRITES - this depends on  FS_XFLAG_FORCEALIGN being
+> enabled per inode, and allows us to atomically write > 1 FS block
+> 
+> c. Later support writing < 1 FS block
+> 	- this would not depend on forcealign
+> 	- would require a real user, and I don't know one yet
+> 
+> better?
 
-...and I guess this means you can discover which forbidden features are
-turned on from crash dumps.  Ok, sounds good to me.
-
-Do you want it to return an int so that you (as a distributor, not you
-personally) can decide that nobody gets to use the experimental
-features?
+Sounds fine to /me/, but that's just my opinion. :)
 
 --D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
