@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C87720605A;
-	Wed, 16 Oct 2024 19:57:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2023C2144D7;
+	Wed, 16 Oct 2024 19:58:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729108626; cv=none; b=dZu7C1UY85xLMJWAyOdWzAbpVHk7NhQiG3hg0NAlrmkfL15Zh8TZwseoPlrmuDRFjKgNHAWzGo2GoyZZZr0G9xNrOUkK/iPG/OVFC0Y2RIz/EqisSFOGXRh0fRoVyFZdJihR8utFTz7iUpT10X3zD1jyd4EFJ8jq/NnRdBik4Zk=
+	t=1729108710; cv=none; b=bySFosnbvFTHYwyezJUtNWyULFfaDEiPx5NDhCl0bXXBHZmNOS20VUnzDW7o1L4QOqZeAzvUoOTrTzRbil+lif8h3W4mpkbSeiBbmRP6ILkmvmuMfumIiXuz7wcqgMMaglK+mVse/OZR20dXSxDC5k+h1yidCCojvRJKAeU3LOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729108626; c=relaxed/simple;
-	bh=XK0vsHUoYE5TeMTdnMkvGDa3GmUtnqn/BbD5ef1Q8W4=;
+	s=arc-20240116; t=1729108710; c=relaxed/simple;
+	bh=bMwpcs2SRczDweRPV4nmYc0jDe8Yc0sgkXksF6iRfmU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nNcpYUtIQXrqmCgV3GhFZRxrDwh46NQVgc00u2roQYXfsHPRT22LHxZr9urSGRsFsB1wO++FvF5prPcpiNooseDzvX8TaBi1PP4Zf5c3kCsL3VSHcIAaAE3PQcz//VzulKRDMVCesoyq/nu2B5iPnv+1Obn9qdyRNwsXJnr2dFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gOAotM9k; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=t4xN8DllK+OsXB7mI3XoVzhjJBpTVkq9y1caLNygGzxKKl5TkKFViVmmjoXBxmU9xq3Q2qmaB1vkC7u3faflknvTpftjwSQF2X5ORRiOKMwh7kN2pwlnDtR0zQD7+msg5934t5UC1vg+0hARx3TuSyw7bmHLD/PDa8iQsv3VcZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AlDNvqfw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gOAotM9k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8EEBC4CEC5;
-	Wed, 16 Oct 2024 19:57:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AlDNvqfw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3D99C4CEC5;
+	Wed, 16 Oct 2024 19:58:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729108625;
-	bh=XK0vsHUoYE5TeMTdnMkvGDa3GmUtnqn/BbD5ef1Q8W4=;
+	s=k20201202; t=1729108709;
+	bh=bMwpcs2SRczDweRPV4nmYc0jDe8Yc0sgkXksF6iRfmU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gOAotM9kVMO0qxulzQX32MRw4u7Qkvyke2ydb3RqqR7793BGtG6Kqkk+iVbwdKhJz
-	 y37f3HZGuk2iFKjFePm5+cZkcvDAit0hTAfmObxjtxmnnDMp1AqAwCnt5lOxeeqwwD
-	 OP3QXqLSdDD/Fcb90re8jfm/9ZTMKZ8UxjnzahR90C+cCQOJ6FHbqIPjSwwxfAk6Kw
-	 aBlIC1kx8zmt4L7PXYUOb9mWRl4CLQxxpQXuJHSPYxWhHXKvY8jbacFxyNjjb2zvdj
-	 uWZUM4UWqxb8B12YsfXjsvdHuoZs8AGq4CNEK74lqhvL17RNEIqMbMksNkzNuxWAAF
-	 kBMyRbcHGFK1Q==
-Date: Wed, 16 Oct 2024 12:57:05 -0700
+	b=AlDNvqfwcIfv7WzlnB4dL9mmJS2OyvJcF/upno04lJAgRo0P6Zb0XoWAz9yxpEmCV
+	 PkkbuQLbHg3I/FSo1Fh1hWxjGyyFb14DsBEOE8I13i2Pv24O35dXNcsiPnf/M0UukN
+	 p0hQKMEV6q7F5eUevSvNaMTqr269NtHfCz9UeWEL/nC9IXU7MiluzhsegcyvIZ8+zQ
+	 K12BSgzybo3GNPlBh0/catcyq14L52f/BgF4PMg5VK1M9WU4DVWsiVdoa7GErUh4UU
+	 IUAAZnm6rtN60dkK8Po2UiZ4zQiwsTPTXPk1TSRGqiMJeapXfOcxPLB5jeE+p9EQek
+	 uiuYKIBlaCC2g==
+Date: Wed, 16 Oct 2024 12:58:29 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: John Garry <john.g.garry@oracle.com>
 Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
@@ -36,11 +36,10 @@ Cc: axboe@kernel.dk, brauner@kernel.org, viro@zeniv.linux.org.uk,
 	hare@suse.de, martin.petersen@oracle.com,
 	catherine.hoang@oracle.com, mcgrof@kernel.org,
 	ritesh.list@gmail.com, ojaswin@linux.ibm.com
-Subject: Re: [PATCH v9 2/8] fs/block: Check for IOCB_DIRECT in
- generic_atomic_write_valid()
-Message-ID: <20241016195705.GN21853@frogsfrogsfrogs>
+Subject: Re: [PATCH v9 3/8] block: Add bdev atomic write limits helpers
+Message-ID: <20241016195829.GO21853@frogsfrogsfrogs>
 References: <20241016100325.3534494-1-john.g.garry@oracle.com>
- <20241016100325.3534494-3-john.g.garry@oracle.com>
+ <20241016100325.3534494-4-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,141 +48,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241016100325.3534494-3-john.g.garry@oracle.com>
+In-Reply-To: <20241016100325.3534494-4-john.g.garry@oracle.com>
 
-On Wed, Oct 16, 2024 at 10:03:19AM +0000, John Garry wrote:
-> Currently FMODE_CAN_ATOMIC_WRITE is set if the bdev can atomic write and
-> the file is open for direct IO. This does not work if the file is not
-> opened for direct IO, yet fcntl(O_DIRECT) is used on the fd later.
+On Wed, Oct 16, 2024 at 10:03:20AM +0000, John Garry wrote:
+> Add helpers to get atomic write limits for a bdev, so that we don't access
+> request_queue helpers outside the block layer.
 > 
-> Change to check for direct IO on a per-IO basis in
-> generic_atomic_write_valid(). Since we want to report -EOPNOTSUPP for
-> non-direct IO for an atomic write, change to return an error code.
+> We check if the bdev can actually atomic write in these helpers, so we
+> can avoid users missing using this check.
 > 
-> Relocate the block fops atomic write checks to the common write path, as to
-> catch non-direct IO.
-> 
-> Fixes: c34fc6f26ab8 ("fs: Initial atomic write support")
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Suggested-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-Looks good to me,
+Looks good,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  block/fops.c       | 18 ++++++++++--------
->  fs/read_write.c    | 13 ++++++++-----
->  include/linux/fs.h |  2 +-
->  3 files changed, 19 insertions(+), 14 deletions(-)
+>  include/linux/blkdev.h | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> diff --git a/block/fops.c b/block/fops.c
-> index 968b47b615c4..2d01c9007681 100644
-> --- a/block/fops.c
-> +++ b/block/fops.c
-> @@ -36,11 +36,8 @@ static blk_opf_t dio_bio_write_op(struct kiocb *iocb)
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 50c3b959da28..c2cc3c146d74 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1674,6 +1674,22 @@ static inline bool bdev_can_atomic_write(struct block_device *bdev)
+>  	return true;
 >  }
 >  
->  static bool blkdev_dio_invalid(struct block_device *bdev, struct kiocb *iocb,
-> -				struct iov_iter *iter, bool is_atomic)
-> +				struct iov_iter *iter)
->  {
-> -	if (is_atomic && !generic_atomic_write_valid(iocb, iter))
-> -		return true;
-> -
->  	return iocb->ki_pos & (bdev_logical_block_size(bdev) - 1) ||
->  		!bdev_iter_is_aligned(bdev, iter);
->  }
-> @@ -368,13 +365,12 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
->  static ssize_t blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
->  {
->  	struct block_device *bdev = I_BDEV(iocb->ki_filp->f_mapping->host);
-> -	bool is_atomic = iocb->ki_flags & IOCB_ATOMIC;
->  	unsigned int nr_pages;
->  
->  	if (!iov_iter_count(iter))
->  		return 0;
->  
-> -	if (blkdev_dio_invalid(bdev, iocb, iter, is_atomic))
-> +	if (blkdev_dio_invalid(bdev, iocb, iter))
->  		return -EINVAL;
->  
->  	nr_pages = bio_iov_vecs_to_alloc(iter, BIO_MAX_VECS + 1);
-> @@ -383,7 +379,7 @@ static ssize_t blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
->  			return __blkdev_direct_IO_simple(iocb, iter, bdev,
->  							nr_pages);
->  		return __blkdev_direct_IO_async(iocb, iter, bdev, nr_pages);
-> -	} else if (is_atomic) {
-> +	} else if (iocb->ki_flags & IOCB_ATOMIC) {
->  		return -EINVAL;
->  	}
->  	return __blkdev_direct_IO(iocb, iter, bdev, bio_max_segs(nr_pages));
-> @@ -625,7 +621,7 @@ static int blkdev_open(struct inode *inode, struct file *filp)
->  	if (!bdev)
->  		return -ENXIO;
->  
-> -	if (bdev_can_atomic_write(bdev) && filp->f_flags & O_DIRECT)
-> +	if (bdev_can_atomic_write(bdev))
->  		filp->f_mode |= FMODE_CAN_ATOMIC_WRITE;
->  
->  	ret = bdev_open(bdev, mode, filp->private_data, NULL, filp);
-> @@ -700,6 +696,12 @@ static ssize_t blkdev_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	if ((iocb->ki_flags & (IOCB_NOWAIT | IOCB_DIRECT)) == IOCB_NOWAIT)
->  		return -EOPNOTSUPP;
->  
-> +	if (iocb->ki_flags & IOCB_ATOMIC) {
-> +		ret = generic_atomic_write_valid(iocb, from);
-> +		if (ret)
-> +			return ret;
-> +	}
+> +static inline unsigned int
+> +bdev_atomic_write_unit_min_bytes(struct block_device *bdev)
+> +{
+> +	if (!bdev_can_atomic_write(bdev))
+> +		return 0;
+> +	return queue_atomic_write_unit_min_bytes(bdev_get_queue(bdev));
+> +}
 > +
->  	size -= iocb->ki_pos;
->  	if (iov_iter_count(from) > size) {
->  		shorted = iov_iter_count(from) - size;
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 2c3263530828..befec0b5c537 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1830,18 +1830,21 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
->  	return 0;
->  }
->  
-> -bool generic_atomic_write_valid(struct kiocb *iocb, struct iov_iter *iter)
-> +int generic_atomic_write_valid(struct kiocb *iocb, struct iov_iter *iter)
->  {
->  	size_t len = iov_iter_count(iter);
->  
->  	if (!iter_is_ubuf(iter))
-> -		return false;
-> +		return -EINVAL;
->  
->  	if (!is_power_of_2(len))
-> -		return false;
-> +		return -EINVAL;
->  
->  	if (!IS_ALIGNED(iocb->ki_pos, len))
-> -		return false;
-> +		return -EINVAL;
->  
-> -	return true;
-> +	if (!(iocb->ki_flags & IOCB_DIRECT))
-> +		return -EOPNOTSUPP;
+> +static inline unsigned int
+> +bdev_atomic_write_unit_max_bytes(struct block_device *bdev)
+> +{
+> +	if (!bdev_can_atomic_write(bdev))
+> +		return 0;
+> +	return queue_atomic_write_unit_max_bytes(bdev_get_queue(bdev));
+> +}
 > +
-> +	return 0;
->  }
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index fbfa032d1d90..ba47fb283730 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3721,6 +3721,6 @@ static inline bool vfs_empty_path(int dfd, const char __user *path)
->  	return !c;
->  }
+>  #define DEFINE_IO_COMP_BATCH(name)	struct io_comp_batch name = { }
 >  
-> -bool generic_atomic_write_valid(struct kiocb *iocb, struct iov_iter *iter);
-> +int generic_atomic_write_valid(struct kiocb *iocb, struct iov_iter *iter);
->  
->  #endif /* _LINUX_FS_H */
+>  #endif /* _LINUX_BLKDEV_H */
 > -- 
 > 2.31.1
 > 
