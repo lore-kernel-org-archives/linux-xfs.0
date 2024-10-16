@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61135170A3E;
-	Wed, 16 Oct 2024 23:15:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3192F18E054;
+	Wed, 16 Oct 2024 23:15:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729120506; cv=none; b=UOFANN2gdVfluT6dV7wrNDKnInhw8rxcdgG/4A1UlOwbBjJyApqibtn3adiv6B3pq+smWy0w7HeejWVfg1VEOKRETR9nYFAjyyQP7YUYntkDJTN+LOYe/J91JkpmylkvEvXqDIueadS5R6PyoetQDDLTanwknmiFDbqlCXlNb+A=
+	t=1729120512; cv=none; b=M47aRvW8qFTTdC26ezl6B0C3NC+pPI3DQT+f26xs5VllWuIY7tf9sLPMlf/hsNJfsHuh2AdEBdt4dprfUOI8DtMNhoQkBwL3nhqys3gvC7w7nyzvvRh8TgGpNb3L+mOdoIZ8ai0wBUt4glvjNSY0znBmMiAJmbKn+nen74DK9lw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729120506; c=relaxed/simple;
-	bh=lAPmhpeoeptZPxY9wR+QO7T6CUDz2p31LBgQ5Ax4g4g=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=u8kTif803jcj1+INlzkJgdGPoiF3dzTKlhtU/u39xFFqzAXiBq/MR09Y4h0lba9BOXymb6s7Fg5/rpIP43U13aCMaJpAoovTQWSferjSdQE0ooMxCAzJ61+z9Ewmt56BkrZVTIM+lnGBHEMNEOuYQfH9bG0eYiMfznhLf8pg0I4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YK902Qem; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729120512; c=relaxed/simple;
+	bh=BOEzQ+I27mCfgQzYR/C1gS5uZM3g+UrVqvo5xle2LIc=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=CzHR68ZrbEpEByu7oHtNQG8CsgqrEV8om7pouGjhioMD07gKVf8WbeYB0Qlamjx/Jx2vqEcBNKMvOuG7DgKaw4wWkQNWcLpZTfXydFmG+WpBXZxMk6nW07Xeoiz460kUn0ou2SOt6TPtKAiMu0ToAu1gcYN/KgeKcsKkSq3FFB8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L9umbn2C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YK902Qem"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0ADDC4CEC5;
-	Wed, 16 Oct 2024 23:15:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L9umbn2C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A751DC4CEC5;
+	Wed, 16 Oct 2024 23:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729120506;
-	bh=lAPmhpeoeptZPxY9wR+QO7T6CUDz2p31LBgQ5Ax4g4g=;
+	s=k20201202; t=1729120511;
+	bh=BOEzQ+I27mCfgQzYR/C1gS5uZM3g+UrVqvo5xle2LIc=;
 	h=Date:Subject:From:To:Cc:From;
-	b=YK902Qemgr7OLhXZCiqEbQc3raIoZbKn/iGocRlnZt8tUsl7gKFLAXsHsFv6Og4F9
-	 8f95NdFEHwtsrwIwCZSnznG3I6CwrKrrJTzItKnDs1poD/uMBslsDSwmYDm36fIFHu
-	 hyNNSDgDx56KhatyYciXq17jynr9zzrWTljp+JEd1xiR7N6z73OiJxuPIwCqfLYd6c
-	 tiDWOT7QJNYaqquYQc79EjdG1UvrvNIyEFh1mLz1h5LCcfKkUhjIbPAW19rwdzQUKn
-	 IjP/TO0Vbc7OVRYTJx0pR8esqXfKpp1WsLzCQvyZqPu1lpzbJRIqOFLpwKgH4hK3zm
-	 g6YTHQhx08few==
-Date: Wed, 16 Oct 2024 16:15:05 -0700
-Subject: [PATCHSET 1/2] fstests: fix fstests for 64k fsblock size
+	b=L9umbn2CCfzWxKPG136yrd8bvB7AbxCtS2gntWlXIQfmtA60Qxolxc8lPck2yUAMj
+	 nrSDzNWd7r24dAduoJSxdfTBVLqMc7AU9IzpWTZ6k7GJ9Qe9R91JETmBrH8JUx3d9T
+	 zP4ofxB2E1P2w2zjbLrQSsPHug1wRgi21EfVPD5/LHWHmbr2cuZ+cEHy2bUnj3AcsH
+	 uUOuRJoPufpj2yQ43fBe4mDJ//eeVQ8T0mpWdqZFkeswhFfOw8HYcrAM4h/4GZgUd+
+	 onAziwc5xSlyAwhJkvUpcuz0uahRl5lO03iM/ahDqe023C8HeeTD5L6ReFK21UDg6G
+	 tuw2slY1Bn9Pg==
+Date: Wed, 16 Oct 2024 16:15:11 -0700
+Subject: [PATCHSET 2/2] fstests: random new stuff for v2024.10.14
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <172912045589.2583984.11028192955246574508.stgit@frogsfrogsfrogs>
+Message-ID: <172912045895.2584109.2643798036760972085.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -43,26 +43,24 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Various patches to fstests to make 64k fsblock filesystems mostly pass.
-I haven't gone back through the remaining failures (mostly quota tests)
-to figure out why they fail.
+Here's some new testing functionality to strengthen QA.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
 
-This has been running on the djcloud for months with no problems.  Enjoy!
+With a bit of luck, this should all go splendidly.
 Comments and questions are, as always, welcome.
 
 --D
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fix-64k-blocksize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-newstuff
 ---
 Commits in this patchset:
- * common/xfs: _notrun tests that fail due to block size < sector size
- * xfs/161: adapt the test case for LBS filesystem
+ * misc: amend unicode confusing name tests to check for hidden tag characters
 ---
- common/xfs    |    5 +++++
- tests/xfs/161 |    6 +++++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ tests/generic/453 |    8 ++++++++
+ tests/generic/454 |   29 +++++++++++++++++++----------
+ tests/xfs/504     |    3 +++
+ 3 files changed, 30 insertions(+), 10 deletions(-)
 
