@@ -1,89 +1,203 @@
-Received: from mail-io1-f72.google.com (mail-io1-f72.google.com [209.85.166.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E5C2126F1E
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 15:36:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E4931F8189
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 15:46:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729092990; cv=none; b=ihT/FyJUFLFQAJ2TR+GaSNQXP9ioCRaUlsH4sOPP7eEz78B3WDyg+Ot3b2o9cK68clod3oX0sLho/tGHX2aARVCsvftRIJOFEaO0dbgA7HHG8EcX2z+UPbDPaqXq/Xk8H3Pq83ffnlryp1jr73/b29OtlMO0QP7mM+dn/8nv7cs=
+	t=1729093576; cv=none; b=Eick3K2Hn3lLCv7sQhKeDaHcKYL1Igy701Pm3DA1viQdjBMwujPEWVUJCoS8+f/ta22vlEr5gtsgeDEDkYfSd56AXvb/zCt3HH/QxyFxme+NNXO3mwkQapeLFRcDue+TuR6It5DzHFH2OmeYZf6biTZgxGdERCdsAAsNYRE5MSk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729092990; c=relaxed/simple;
-	bh=CgkR14pDiqmvdlVwR/10tJhB1m+jvhphe5RjoiY2EAw=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=B7dEH4iurD9830RpgZ3/d1VTz5k1Oj8ZY2Ja/wr5/TV7S8ksDMKntuwBIr3NPQYTPPAW9IUAs4PHe9twj5nq4W2ylCiDOrP3KvWA+FIzqXh5isJejpXMkdwa6RYashwOdeluN8RBZ9A/GS0qKIeLxH6c0bssfCNuzgR3+VqtN/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-835407977b0so710689739f.2
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 08:36:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729092988; x=1729697788;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=h1m8iALNdyCQ9z7Ll9FSIN7ModedATew2fjWohO2jdo=;
-        b=SQwNoJxq5HvRdRh5qpa5wDzUwyclPSBWTVZiKLt7Apt33d1UXxjkez5SwOFzzQPsqd
-         sx5bnDMWEv7RoOuyN0ArCUsr5eKQ6HqbUrrjcIJFa/0fVX5WNQ7bsiOcpOHIoHm4Smw8
-         K8NrYu27355z5S05iAWphpSNZc6UbXl1NCxdrhANOootENGTP499EWaoEuQgBCkx++Gl
-         ZidGodSlh4k3BWCqV123z3c5hs2acwUaZts6Tq9CGmKQgqhpJqB5ZqAD+GiSf6LKKY1W
-         +w6DQSkVO2Ij51nPXGMehSjsyI9X0rnhduv2y6sne0gSTizA0EI6lC0ncixcBemt7Wvn
-         Qm0w==
-X-Forwarded-Encrypted: i=1; AJvYcCWsWcHoZvj/PoPaVrfjJh0q+mzlDehpv+W8EzW/tbIvV8VEOiSvbnfH0cVm+QQ/w10Q/T+vZWE+RFY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywaz+cpjxyHyryzAFPzYO4yxKJfTiaDWFyAlD96BY9tINXB1T/s
-	wuYQ7OuXq47mHg4VfCqg8WpWFuMgDuJSLGpWQVhEhM7NcG2n4G4AmMHS2D3oFrGi6As0Cc/Kw0P
-	pYp0MBCXp5JFbdaaDtfjq7rONkeoefD2FsHUoP1JFz/9wBUCcCmhz+Yc=
-X-Google-Smtp-Source: AGHT+IGao+opzrX99U2GIYHN4x9S9xZrf9xSN6fqQL50WU3QyfGTs29jK5TwZsOTU3lIZUhaloc4/Jm7VdNoEQg030HgUP14F54y
+	s=arc-20240116; t=1729093576; c=relaxed/simple;
+	bh=5v17HX0W3McVtavPi0fHNUdsvhXZegnTOQOZGJeE6ws=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bf5wz3auxW1slDaae69ZFCjtqr+u6LSVH0w+544C++QifmbxBjLXEPWcUSj7LXrNKHfjzqu9TISRa1JxT827lfe5GFpaOrAOnJmZzdmVFRmFm+3gXHUfBRIHZ7IiwVv25assufWOYf9UZUsacfU1baGKmB1yXSqmpEDi+wqb5y8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MyATkRIL; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MyATkRIL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1729093573;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/NU9Hb4g5OFv5RQv2jPUd5Yt/H5y3tYF3G31JyGCSJo=;
+	b=MyATkRIL1droUIMa9iQXYZd74EWDixoQ7Lr04zz++QUMlprwkUVP4LoSu+j1jSbFxx/OoG
+	HqmwJ6n9coFW+9XUZQVY+wgpcQ856ZyppG2QoFctYFnoYEFpibuM0rvwlHNazcWCmUErzR
+	kyKsmqqN3fp+Pkhu/CLnpzzOyRDWa88=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-588-E_7IF1TFPMW9oeMIkXQcpQ-1; Wed,
+ 16 Oct 2024 11:46:10 -0400
+X-MC-Unique: E_7IF1TFPMW9oeMIkXQcpQ-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0BB8419560AB;
+	Wed, 16 Oct 2024 15:46:06 +0000 (UTC)
+Received: from bfoster (unknown [10.22.64.74])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9ABB3195607C;
+	Wed, 16 Oct 2024 15:46:03 +0000 (UTC)
+Date: Wed, 16 Oct 2024 11:47:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: kernel test robot <oliver.sang@intel.com>, oe-lkp@lists.linux.dev,
+	lkp@intel.com, linux-kernel@vger.kernel.org,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, ying.huang@intel.com,
+	feng.tang@intel.com, fengwei.yin@intel.com
+Subject: Re: [linus:master] [iomap]  c5c810b94c:
+ stress-ng.metamix.ops_per_sec -98.4% regression
+Message-ID: <Zw_gDDlIEgZbApU_@bfoster>
+References: <202410141536.1167190b-oliver.sang@intel.com>
+ <Zw1IHVLclhiBjDkP@bfoster>
+ <Zw7jwnvBaMwloHXG@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1aab:b0:3a3:63c3:352e with SMTP id
- e9e14a558f8ab-3a3b602269emr162928755ab.19.1729092988355; Wed, 16 Oct 2024
- 08:36:28 -0700 (PDT)
-Date: Wed, 16 Oct 2024 08:36:28 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <670fdd7c.050a0220.d5849.0016.GAE@google.com>
-Subject: [syzbot] Monthly xfs report (Oct 2024)
-From: syzbot <syzbot+list43c58946ba7cc70971ae@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zw7jwnvBaMwloHXG@dread.disaster.area>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-Hello xfs maintainers/developers,
+On Wed, Oct 16, 2024 at 08:50:58AM +1100, Dave Chinner wrote:
+> On Mon, Oct 14, 2024 at 12:34:37PM -0400, Brian Foster wrote:
+> > On Mon, Oct 14, 2024 at 03:55:24PM +0800, kernel test robot wrote:
+> > > 
+> > > 
+> > > Hello,
+> > > 
+> > > kernel test robot noticed a -98.4% regression of stress-ng.metamix.ops_per_sec on:
+> > > 
+> > > 
+> > > commit: c5c810b94cfd818fc2f58c96feee58a9e5ead96d ("iomap: fix handling of dirty folios over unwritten extents")
+> > > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
+> > > 
+> > > testcase: stress-ng
+> > > config: x86_64-rhel-8.3
+> > > compiler: gcc-12
+> > > test machine: 64 threads 2 sockets Intel(R) Xeon(R) Gold 6346 CPU @ 3.10GHz (Ice Lake) with 256G memory
+> > > parameters:
+> > > 
+> > > 	nr_threads: 100%
+> > > 	disk: 1HDD
+> > > 	testtime: 60s
+> > > 	fs: xfs
+> > > 	test: metamix
+> > > 	cpufreq_governor: performance
+> > > 
+> > > 
+> > > 
+> > > 
+> > > If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> > > the same patch/commit), kindly add following tags
+> > > | Reported-by: kernel test robot <oliver.sang@intel.com>
+> > > | Closes: https://lore.kernel.org/oe-lkp/202410141536.1167190b-oliver.sang@intel.com
+> > > 
+> > > 
+> > > Details are as below:
+> > > -------------------------------------------------------------------------------------------------->
+> > > 
+> > > 
+> > > The kernel config and materials to reproduce are available at:
+> > > https://download.01.org/0day-ci/archive/20241014/202410141536.1167190b-oliver.sang@intel.com
+> > > 
+> > 
+> > So I basically just run this on a >64xcpu guest and reproduce the delta:
+> > 
+> >   stress-ng --timeout 60 --times --verify --metrics --no-rand-seed --metamix 64
+> > 
+> > The short of it is that with tracing enabled, I see a very large number
+> > of extending writes across unwritten mappings, which basically means XFS
+> > eof zeroing is calling zero range and hitting the newly introduced
+> > flush. This is all pretty much expected given the patch.
+> 
+> Ouch.
+> 
+> The conditions required to cause this regression are that we either
+> first use fallocate() to preallocate beyond EOF, or buffered writes
+> trigger specualtive delalloc beyond EOF and they get converted to
+> unwritten beyond EOF through background writeback or fsync
+> operations. Both of these lead to unwritten extents beyond EOF that
+> extending writes will fall into.
+> 
+> All we need now is the extending writes to be slightly
+> non-sequential and those non-sequential extending writes will not
+> land at EOF but at some distance beyond it. At this point, we
+> trigger the new flush code. Unfortunately, this is actually a fairly
+> common workload pattern.
+> 
+> For example, experience tells me that NFS server processing of async
+> sequential write requests from a client will -always- end up with
+> slightly out of order extending writes because the incoming async
+> write requests are processed concurrently. Hence they always race to
+> extend the file and slightly out of order file extension happens
+> quite frequently.
+> 
+> Further, the NFS client will also periodically be sending a write
+> commit request (i.e. server side fsync), the
+> NFS server writeback will convert the speculative delalloc that
+> extends beyond EOF into unwritten extents beyond EOF whilst the
+> incoming extending write requests are still incoming from the
+> client.
+> 
+> Hence I think that there are common workloads (e.g. large sequential
+> writes on a NFS client) that set up the exact conditions and IO
+> patterns necessary to trigger this performance regression in
+> production systems...
+> 
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+It's not clear to me that purely out of order writeback via NFS would
+produce the same sort of hit here because we'd only flush on write
+extensions. I think the pathological case would have to be something
+like reordering such that every other write lands sequentially to
+maximize the number of post-eof write extensions, and then going back
+and filling in the gaps. That seems rather suboptimal to start, and
+short of that the cost of the flushes will start to amortize to some
+degree (including with commit requests, etc.).
 
-During the period, 1 new issues were detected and 0 were fixed.
-In total, 9 issues are still open and 23 have been fixed so far.
+That said, I don't have much experience with NFS and I think this is a
+reasonable enough argument to try and optimize here. If you or anybody
+has an NFS test/workload that might exacerbate this condition, let me
+know and I'll try to play around with it.
 
-Some of the still happening issues:
+> > I ran a quick experiment to skip the flush on sub-4k ranges in favor of
+> > doing explicit folio zeroing. The idea with that is that the range is
+> > likely restricted to single folio and since it's dirty, we can assume
+> > unwritten conversion is imminent and just explicitly zero the range. I
+> > still see a decent number of flushes from larger ranges in that
+> > experiment, but that still seems to get things pretty close to my
+> > baseline test (on a 6.10 distro kernel).
+> 
+> What filesystems other than XFS actually need this iomap bandaid
+> right now?  If there are none (which I think is the case), then we
+> should just revert this change it until a more performant fix is
+> available for XFS.
+> 
 
-Ref Crashes Repro Title
-<1> 1164    Yes   possible deadlock in xfs_ilock_attr_map_shared
-                  https://syzkaller.appspot.com/bug?extid=069cc167ecbee6e3e91a
-<2> 858     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
-                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
-<3> 214     Yes   possible deadlock in xfs_icwalk_ag (2)
-                  https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
-<4> 141     Yes   possible deadlock in xfs_can_free_eofblocks (2)
-                  https://syzkaller.appspot.com/bug?extid=53d541c7b07d55a392ca
-<5> 101     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
-                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
-<6> 83      Yes   INFO: task hung in xfs_buf_item_unpin (2)
-                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+I think that's a bit hasty. I had one or two ideas/prototypes to work
+around this sort of problem before the flush patches even landed, it
+just wasn't clear to me they were worth the extra logic. I'd prefer to
+try and iterate on performance from a baseline of functional correctness
+rather than the other way around, if possible.
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+A quick hack to test out some of that on latest master brings the result
+of this test right back to baseline in my local env. Let me play around
+with trying to work that into something more production worthy before we
+break out the pitchforks.. ;)
 
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
+Brian
 
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
-You may send multiple commands in a single email message.
