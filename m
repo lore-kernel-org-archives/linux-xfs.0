@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EB021C16D
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:06:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ED501E0DC3
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:06:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729191979; cv=none; b=PAFTbIhPFKbIs66r5rnFN6xSYt3tJAPezgyKSapKyCCj93kwd3+udB3Ave2fTufW0aHeZm0nRZKx42tyTCTvoXm7HGC43FaxHq/qsqKngTCxvLk3aEtaCQsWhcjYODVy3ZSluwRHalCHehYI+VGywjqUuQYMZH0vg5rDzYYa49o=
+	t=1729191990; cv=none; b=DE40Sz4QgyfW/EFRLzPfP5VPZu6GksxUQ9WFzDIjBXVyMofuYJqS39idR6KAtpoz4DPcG84nD7+kHfaZ2QyyTQINESbGzEQxwGrSOJcxF0WHhIeSUQSxGFsle59ZC+vzMAA8FDjHSxNs/1Uap3bw1kexoS1gqf/x5WMyYCT6lSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729191979; c=relaxed/simple;
-	bh=mbiy4mb6EAE03uCtTGtiCzrs6iCg0k3fMwNK1cArCTI=;
+	s=arc-20240116; t=1729191990; c=relaxed/simple;
+	bh=c+kU3CVMVG3jIUJjoCBehADbA6q2Kkqx6yUQjbhKDQg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=t7FgQbNu6A7A9HvWDFoceQTZ21/Tb8bHWtol0uMTGJ42C1vXqEpvQek7NOIyumeCiIPJJxCN81saZpbk+SqESP6xYwIrpERdBCVNb7FoSqlUFovxSjb89JyNQPItrvgzt71TjZ7UGXFEW2Vdk+IRvgeGhcPeqHzfveIIRttjes4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mfu6onll; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XjLKEpQRygtG44rzMvogXxX/YRfuMekxWU4TyiXXmsPkCq7yDiPrQ6kXXcdmLc8Fr3Vj/ZWy3P2ic20r5HVsQeGwzTFikXTWIvVUWVWJTu5gjggLLF2Cn3t9V56r4eHpu1zRuD7hSLFk3WgNHDNJ0HALQyLfA9W2yKYke741L0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U30k1Gw9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mfu6onll"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CAFDC4CEC3;
-	Thu, 17 Oct 2024 19:06:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U30k1Gw9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0C2AC4CEC3;
+	Thu, 17 Oct 2024 19:06:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729191979;
-	bh=mbiy4mb6EAE03uCtTGtiCzrs6iCg0k3fMwNK1cArCTI=;
+	s=k20201202; t=1729191989;
+	bh=c+kU3CVMVG3jIUJjoCBehADbA6q2Kkqx6yUQjbhKDQg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mfu6onll8MxnP31jjGb9vqB/8s+qoz9d5fPtrrVVCiDHudzNEyI3Z0cOf5Y1V8mCj
-	 kTq/U+CCMqqaNff0Mm5A5MVttNa3MICPN+8dm4uhwzhb/ORDQzuo9ULgab6/mKUEV7
-	 xJqbcvFlKhykTdLVIRJhCygYjiL4MyM2YU28rwyNukc4MwXfdwAMJNSDnH5thTrVoH
-	 WAeLLTP0/OhdpCrx9hyLj/5P+sHzkcJ3eNJcGSrtCLAmx+347HrYYrML/WpEwntA4U
-	 Pt2wR0aFSh5XyHZxoJKIPMPjsV10NyXC2IfclD6b6LDPEX9dW35KB/VylyMH8Q58z2
-	 XltysxZaPAXqQ==
-Date: Thu, 17 Oct 2024 12:06:18 -0700
-Subject: [PATCH 14/34] xfs: grow the realtime section when realtime groups are
- enabled
+	b=U30k1Gw9XFi+HYPp8Gmtm5ypjZMlRUQ1ztk+mevP5ReBqaKbTp9+wAASi0JZHXWEr
+	 2Mc9p4L1KrKYqQk95QWCaktTaDRTe1DjHW77p/jQ4EagCutNMij65n1Q1UMWJiYy1j
+	 CjyE+yi2/mrVMrmJTFQX6fpSUdKQNXYXkaKE0llS7AwRgxJt3Pud8eTFtVir7Ede+L
+	 q5FS65q7PJbEM2fxb6bX6llk7Uy9UN+y1WOaTlg9OyKJx7T5ULv7Vj9fVH5x6Z9YFz
+	 0qXKKjM+lcoZ+H/0gh/oQypSrZSw1REe53vT028L69A7gmc/EauwZOpzsvMbTGd9gH
+	 s9wOa1/Z9owew==
+Date: Thu, 17 Oct 2024 12:06:29 -0700
+Subject: [PATCH 15/34] xfs: store rtgroup information with a bmap intent
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919071909.3453179.2960703072292128771.stgit@frogsfrogsfrogs>
+Message-ID: <172919071927.3453179.12281599307760720574.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 References: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,454 +45,171 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable growing the rt section when realtime groups are enabled.
+Make the bmap intent items take an active reference to the rtgroup
+containing the space that is being mapped or unmapped.  We will need
+this functionality once we start enabling rmap and reflink on the rt
+volume.  Technically speaking we need it even for !rtgroups filesystems
+to prevent the (dummy) rtgroup 0 from going away, even though this will
+never happen.
+
+As a bonus, we can rework the xfs_bmap_deferred_class tracepoint to use
+the xfs_group object to figure out the type and group number, widen the
+group block number field to fit 64-bit quantities, and get rid of the
+now redundant opdev and rtblock fields.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_shared.h |    1 
- fs/xfs/xfs_rtalloc.c       |  270 ++++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_trans.c         |    9 +
- fs/xfs/xfs_trans.h         |    1 
- 4 files changed, 244 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_bmap_item.c |   25 ++++++++-----------------
+ fs/xfs/xfs_trace.h     |   41 ++++++++++++++++++++++-------------------
+ 2 files changed, 30 insertions(+), 36 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 9363f918675ac0..e7efdb9ceaf382 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -160,6 +160,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define	XFS_TRANS_SB_RBLOCKS		0x00000800
- #define	XFS_TRANS_SB_REXTENTS		0x00001000
- #define	XFS_TRANS_SB_REXTSLOG		0x00002000
-+#define XFS_TRANS_SB_RGCOUNT		0x00004000
- 
- /*
-  * Here we centralize the specification of XFS meta-data buffer reference count
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 38062c10293d6b..2093cab0cf8cb5 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -766,6 +766,31 @@ xfs_growfs_rt_alloc_fake_mount(
- 	return nmp;
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 37dab184c2dfc2..3d52e9d7ad571a 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -318,14 +318,16 @@ xfs_bmap_update_create_done(
+ 	return &budp->bud_item;
  }
  
-+/* Free all the new space and return the number of extents actually freed. */
-+static int
-+xfs_growfs_rt_free_new(
-+	struct xfs_rtgroup	*rtg,
-+	struct xfs_rtalloc_args	*nargs,
-+	xfs_rtbxlen_t		*freed_rtx)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+	xfs_rgnumber_t		rgno = rtg_rgno(rtg);
-+	xfs_rtxnum_t		start_rtx = 0, end_rtx;
-+
-+	if (rgno < mp->m_sb.sb_rgcount)
-+		start_rtx = xfs_rtgroup_extents(mp, rgno);
-+	end_rtx = xfs_rtgroup_extents(nargs->mp, rgno);
-+
-+	/*
-+	 * Compute the first new extent that we want to free, being careful to
-+	 * skip past a realtime superblock at the start of the realtime volume.
-+	 */
-+	if (xfs_has_rtsb(nargs->mp) && rgno == 0 && start_rtx == 0)
-+		start_rtx++;
-+	*freed_rtx = end_rtx - start_rtx;
-+	return xfs_rtfree_range(nargs, start_rtx, *freed_rtx);
-+}
-+
- static xfs_rfsblock_t
- xfs_growfs_rt_nrblocks(
- 	struct xfs_rtgroup	*rtg,
-@@ -786,6 +811,43 @@ xfs_growfs_rt_nrblocks(
- 	return min(nrblocks, step);
- }
- 
-+/*
-+ * If the post-grow filesystem will have an rtsb; we're initializing the first
-+ * rtgroup; and the filesystem didn't have a realtime section, write the rtsb
-+ * now, and attach the rtsb buffer to the real mount.
-+ */
-+static int
-+xfs_growfs_rt_init_rtsb(
-+	const struct xfs_rtalloc_args	*nargs,
-+	const struct xfs_rtgroup	*rtg,
-+	const struct xfs_rtalloc_args	*args)
-+{
-+	struct xfs_mount		*mp = args->mp;
-+	struct xfs_buf			*rtsb_bp;
-+	int				error;
-+
-+	if (!xfs_has_rtsb(nargs->mp))
-+		return 0;
-+	if (rtg_rgno(rtg) > 0)
-+		return 0;
-+	if (mp->m_sb.sb_rblocks)
-+		return 0;
-+
-+	error = xfs_buf_get_uncached(mp->m_rtdev_targp, XFS_FSB_TO_BB(mp, 1),
-+			0, &rtsb_bp);
-+	if (error)
-+		return error;
-+
-+	rtsb_bp->b_maps[0].bm_bn = XFS_RTSB_DADDR;
-+	rtsb_bp->b_ops = &xfs_rtsb_buf_ops;
-+
-+	xfs_update_rtsb(rtsb_bp, mp->m_sb_bp);
-+	mp->m_rtsb_bp = rtsb_bp;
-+	error = xfs_bwrite(rtsb_bp);
-+	xfs_buf_unlock(rtsb_bp);
-+	return error;
-+}
-+
- static int
- xfs_growfs_rt_bmblock(
- 	struct xfs_rtgroup	*rtg,
-@@ -808,7 +870,8 @@ xfs_growfs_rt_bmblock(
- 	int			error;
- 
- 	/*
--	 * Calculate new sb and mount fields for this round.
-+	 * Calculate new sb and mount fields for this round.  Also ensure the
-+	 * rtg_extents value is uptodate as the rtbitmap code relies on it.
- 	 */
- 	nmp = nargs.mp = xfs_growfs_rt_alloc_fake_mount(mp,
- 			xfs_growfs_rt_nrblocks(rtg, nrblocks, rextsize, bmbno),
-@@ -861,6 +924,10 @@ xfs_growfs_rt_bmblock(
- 			goto out_cancel;
- 	}
- 
-+	error = xfs_growfs_rt_init_rtsb(&nargs, rtg, &args);
-+	if (error)
-+		goto out_cancel;
-+
- 	/*
- 	 * Update superblock fields.
- 	 */
-@@ -879,12 +946,14 @@ xfs_growfs_rt_bmblock(
- 	if (nmp->m_sb.sb_rextslog != mp->m_sb.sb_rextslog)
- 		xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_REXTSLOG,
- 			nmp->m_sb.sb_rextslog - mp->m_sb.sb_rextslog);
-+	if (nmp->m_sb.sb_rgcount != mp->m_sb.sb_rgcount)
-+		xfs_trans_mod_sb(args.tp, XFS_TRANS_SB_RGCOUNT,
-+			nmp->m_sb.sb_rgcount - mp->m_sb.sb_rgcount);
- 
- 	/*
- 	 * Free the new extent.
- 	 */
--	freed_rtx = nmp->m_sb.sb_rextents - mp->m_sb.sb_rextents;
--	error = xfs_rtfree_range(&nargs, mp->m_sb.sb_rextents, freed_rtx);
-+	error = xfs_growfs_rt_free_new(rtg, &nargs, &freed_rtx);
- 	xfs_rtbuf_cache_relse(&nargs);
- 	if (error)
- 		goto out_cancel;
-@@ -925,6 +994,15 @@ xfs_growfs_rt_bmblock(
- 	return error;
- }
- 
-+static xfs_rtxnum_t
-+xfs_last_rtgroup_extents(
-+	struct xfs_mount	*mp)
-+{
-+	return mp->m_sb.sb_rextents -
-+		((xfs_rtxnum_t)(mp->m_sb.sb_rgcount - 1) *
-+		 mp->m_sb.sb_rgextents);
-+}
-+
- /*
-  * Calculate the last rbmblock currently used.
-  *
-@@ -935,11 +1013,20 @@ xfs_last_rt_bmblock(
- 	struct xfs_rtgroup	*rtg)
- {
- 	struct xfs_mount	*mp = rtg_mount(rtg);
--	xfs_fileoff_t		bmbno = mp->m_sb.sb_rbmblocks;
-+	xfs_rgnumber_t		rgno = rtg_rgno(rtg);
-+	xfs_fileoff_t		bmbno = 0;
-+
-+	ASSERT(!mp->m_sb.sb_rgcount || rgno >= mp->m_sb.sb_rgcount - 1);
-+
-+	if (mp->m_sb.sb_rgcount && rgno == mp->m_sb.sb_rgcount - 1) {
-+		xfs_rtxnum_t	nrext = xfs_last_rtgroup_extents(mp);
-+
-+		/* Also fill up the previous block if not entirely full. */
-+		bmbno = xfs_rtbitmap_blockcount_len(mp, nrext);
-+		if (xfs_rtx_to_rbmword(mp, nrext) != 0)
-+			bmbno--;
-+	}
- 
--	/* Skip the current block if it is exactly full. */
--	if (xfs_rtx_to_rbmword(mp, mp->m_sb.sb_rextents) != 0)
--		bmbno--;
- 	return bmbno;
- }
- 
-@@ -956,38 +1043,56 @@ xfs_growfs_rt_alloc_blocks(
- 	struct xfs_mount	*mp = rtg_mount(rtg);
- 	struct xfs_inode	*rbmip = rtg->rtg_inodes[XFS_RTGI_BITMAP];
- 	struct xfs_inode	*rsumip = rtg->rtg_inodes[XFS_RTGI_SUMMARY];
--	xfs_extlen_t		orbmblocks;
--	xfs_extlen_t		orsumblocks;
--	xfs_extlen_t		nrsumblocks;
-+	xfs_extlen_t		orbmblocks = 0;
-+	xfs_extlen_t		orsumblocks = 0;
- 	struct xfs_mount	*nmp;
--	int			error;
--
--	/*
--	 * Get the old block counts for bitmap and summary inodes.
--	 * These can't change since other growfs callers are locked out.
--	 */
--	orbmblocks = XFS_B_TO_FSB(mp, rbmip->i_disk_size);
--	orsumblocks = XFS_B_TO_FSB(mp, rsumip->i_disk_size);
-+	int			error = 0;
- 
- 	nmp = xfs_growfs_rt_alloc_fake_mount(mp, nrblocks, rextsize);
- 	if (!nmp)
- 		return -ENOMEM;
--
- 	*nrbmblocks = nmp->m_sb.sb_rbmblocks;
--	nrsumblocks = nmp->m_rsumblocks;
--	kfree(nmp);
-+
-+	if (xfs_has_rtgroups(mp)) {
-+		/*
-+		 * For file systems with the rtgroups feature, the RT bitmap and
-+		 * summary are always fully allocated, which means that we never
-+		 * need to grow the existing files.
-+		 *
-+		 * But we have to be careful to only fill the bitmap until the
-+		 * end of the actually used range.
-+		 */
-+		if (rtg_rgno(rtg) == nmp->m_sb.sb_rgcount - 1)
-+			*nrbmblocks = xfs_rtbitmap_blockcount_len(nmp,
-+					xfs_last_rtgroup_extents(nmp));
-+
-+		if (mp->m_sb.sb_rgcount &&
-+		    rtg_rgno(rtg) == mp->m_sb.sb_rgcount - 1)
-+			goto out_free;
-+	} else {
-+		/*
-+		 * Get the old block counts for bitmap and summary inodes.
-+		 * These can't change since other growfs callers are locked out.
-+		 */
-+		orbmblocks = XFS_B_TO_FSB(mp, rbmip->i_disk_size);
-+		orsumblocks = XFS_B_TO_FSB(mp, rsumip->i_disk_size);
-+	}
- 
- 	error = xfs_rtfile_initialize_blocks(rtg, XFS_RTGI_BITMAP, orbmblocks,
--			*nrbmblocks, NULL);
-+			nmp->m_sb.sb_rbmblocks, NULL);
- 	if (error)
--		return error;
--	return xfs_rtfile_initialize_blocks(rtg, XFS_RTGI_SUMMARY, orsumblocks,
--			nrsumblocks, NULL);
-+		goto out_free;
-+	error = xfs_rtfile_initialize_blocks(rtg, XFS_RTGI_SUMMARY, orsumblocks,
-+			nmp->m_rsumblocks, NULL);
-+out_free:
-+	kfree(nmp);
-+	return error;
- }
- 
- static int
- xfs_growfs_rtg(
+-/* Take a passive ref to the AG containing the space we're mapping. */
++/* Take a passive ref to the group containing the space we're mapping. */
+ static inline void
+ xfs_bmap_update_get_group(
  	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgno,
- 	xfs_rfsblock_t		nrblocks,
- 	xfs_agblock_t		rextsize)
+ 	struct xfs_bmap_intent	*bi)
  {
-@@ -998,7 +1103,7 @@ xfs_growfs_rtg(
- 	unsigned int		i;
- 	int			error;
- 
--	rtg = xfs_rtgroup_grab(mp, 0);
-+	rtg = xfs_rtgroup_grab(mp, rgno);
- 	if (!rtg)
- 		return -EINVAL;
- 
-@@ -1069,14 +1174,67 @@ xfs_growfs_check_rtgeom(
- 	return error;
- }
- 
-+/*
-+ * Compute the new number of rt groups and ensure that /rtgroups exists.
-+ *
-+ * Changing the rtgroup size is not allowed (even if the rt volume hasn't yet
-+ * been initialized) because the userspace ABI doesn't support it.
-+ */
-+static int
-+xfs_growfs_rt_prep_groups(
-+	struct xfs_mount	*mp,
-+	xfs_rfsblock_t		rblocks,
-+	xfs_extlen_t		rextsize,
-+	xfs_rgnumber_t		*new_rgcount)
-+{
-+	int			error;
++	enum xfs_group_type	type = XG_TYPE_AG;
 +
-+	*new_rgcount = howmany_64(rblocks, mp->m_sb.sb_rgextents * rextsize);
-+	if (*new_rgcount > XFS_MAX_RGNUMBER)
-+		return -EINVAL;
-+
-+	/* Make sure the /rtgroups dir has been created */
-+	if (!mp->m_rtdirip) {
-+		struct xfs_trans	*tp;
-+
-+		error = xfs_trans_alloc_empty(mp, &tp);
-+		if (error)
-+			return error;
-+		error = xfs_rtginode_load_parent(tp);
-+		xfs_trans_cancel(tp);
-+
-+		if (error == -ENOENT)
-+			error = xfs_rtginode_mkdir_parent(mp);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+static bool
-+xfs_grow_last_rtg(
-+	struct xfs_mount	*mp)
-+{
-+	if (!xfs_has_rtgroups(mp))
-+		return true;
-+	if (mp->m_sb.sb_rgcount == 0)
-+		return false;
-+	return xfs_rtgroup_extents(mp, mp->m_sb.sb_rgcount - 1) <=
-+			mp->m_sb.sb_rgextents;
-+}
-+
- /*
-  * Grow the realtime area of the filesystem.
-  */
- int
- xfs_growfs_rt(
--	xfs_mount_t	*mp,		/* mount point for filesystem */
--	xfs_growfs_rt_t	*in)		/* growfs rt input struct */
-+	struct xfs_mount	*mp,
-+	struct xfs_growfs_rt	*in)
- {
-+	xfs_rgnumber_t		old_rgcount = mp->m_sb.sb_rgcount;
-+	xfs_rgnumber_t		new_rgcount = 1;
-+	xfs_rgnumber_t		rgno;
- 	struct xfs_buf		*bp;
- 	xfs_agblock_t		old_rextsize = mp->m_sb.sb_rextsize;
- 	int			error;
-@@ -1134,19 +1292,57 @@ xfs_growfs_rt(
- 	if (error)
- 		goto out_unlock;
- 
--	error = xfs_growfs_rtg(mp, in->newblocks, in->extsize);
--	if (error)
--		goto out_unlock;
-+	if (xfs_has_rtgroups(mp)) {
-+		error = xfs_growfs_rt_prep_groups(mp, in->newblocks,
-+				in->extsize, &new_rgcount);
-+		if (error)
-+			goto out_unlock;
-+	}
- 
--	if (old_rextsize != in->extsize) {
-+	if (xfs_grow_last_rtg(mp)) {
-+		error = xfs_growfs_rtg(mp, old_rgcount - 1, in->newblocks,
-+				in->extsize);
-+		if (error)
-+			goto out_unlock;
-+	}
-+
-+	for (rgno = old_rgcount; rgno < new_rgcount; rgno++) {
-+		xfs_rtbxlen_t	rextents = div_u64(in->newblocks, in->extsize);
-+
-+		error = xfs_rtgroup_alloc(mp, rgno, new_rgcount, rextents);
-+		if (error)
-+			goto out_unlock;
-+
-+		error = xfs_growfs_rtg(mp, rgno, in->newblocks, in->extsize);
-+		if (error) {
-+			struct xfs_rtgroup	*rtg;
-+
-+			rtg = xfs_rtgroup_grab(mp, rgno);
-+			if (!WARN_ON_ONCE(!rtg)) {
-+				xfs_rtunmount_rtg(rtg);
-+				xfs_rtgroup_rele(rtg);
-+				xfs_rtgroup_free(mp, rgno);
-+			}
-+			break;
-+		}
-+	}
-+
-+	if (!error && old_rextsize != in->extsize)
- 		error = xfs_growfs_rt_fixup_extsize(mp);
--		if (error)
--			goto out_unlock;
-+
-+	/*
-+	 * Update secondary superblocks now the physical grow has completed.
-+	 *
-+	 * Also do this in case of an error as we might have already
-+	 * successfully updated one or more RTGs and incremented sb_rgcount.
-+	 */
-+	if (!xfs_is_shutdown(mp)) {
-+		int error2 = xfs_update_secondary_sbs(mp);
-+
-+		if (!error)
-+			error = error2;
- 	}
- 
--	/* Update secondary superblocks now the physical grow has completed */
--	error = xfs_update_secondary_sbs(mp);
--
- out_unlock:
- 	mutex_unlock(&mp->m_growlock);
- 	return error;
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 01b5f5b32af467..a29a181e684041 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -460,6 +460,10 @@ xfs_trans_mod_sb(
- 	case XFS_TRANS_SB_REXTSLOG:
- 		tp->t_rextslog_delta += delta;
- 		break;
-+	case XFS_TRANS_SB_RGCOUNT:
-+		ASSERT(delta > 0);
-+		tp->t_rgcount_delta += delta;
-+		break;
- 	default:
- 		ASSERT(0);
- 		return;
-@@ -561,6 +565,10 @@ xfs_trans_apply_sb_deltas(
- 		sbp->sb_rextslog += tp->t_rextslog_delta;
- 		whole = 1;
- 	}
-+	if (tp->t_rgcount_delta) {
-+		be32_add_cpu(&sbp->sb_rgcount, tp->t_rgcount_delta);
-+		whole = 1;
-+	}
- 
- 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
- 	if (whole)
-@@ -674,6 +682,7 @@ xfs_trans_unreserve_and_mod_sb(
- 	mp->m_sb.sb_rblocks += tp->t_rblocks_delta;
- 	mp->m_sb.sb_rextents += tp->t_rextents_delta;
- 	mp->m_sb.sb_rextslog += tp->t_rextslog_delta;
-+	mp->m_sb.sb_rgcount += tp->t_rgcount_delta;
- 	spin_unlock(&mp->m_sb_lock);
+ 	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
+-		return;
++		type = XG_TYPE_RTG;
  
  	/*
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index f97e5c416efad1..71c2e82e4dadff 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -148,6 +148,7 @@ typedef struct xfs_trans {
- 	int64_t			t_rblocks_delta;/* superblock rblocks change */
- 	int64_t			t_rextents_delta;/* superblocks rextents chg */
- 	int64_t			t_rextslog_delta;/* superblocks rextslog chg */
-+	int64_t			t_rgcount_delta; /* realtime group count */
- 	struct list_head	t_items;	/* log item descriptors */
- 	struct list_head	t_busy;		/* list of busy extents */
- 	struct list_head	t_dfops;	/* deferred operations */
+ 	 * Bump the intent count on behalf of the deferred rmap and refcount
+@@ -335,7 +337,7 @@ xfs_bmap_update_get_group(
+ 	 * remains nonzero across the transaction roll.
+ 	 */
+ 	bi->bi_group = xfs_group_intent_get(mp, bi->bi_bmap.br_startblock,
+-			XG_TYPE_AG);
++				type);
+ }
+ 
+ /* Add this deferred BUI to the transaction. */
+@@ -344,8 +346,6 @@ xfs_bmap_defer_add(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_bmap_intent	*bi)
+ {
+-	trace_xfs_bmap_defer(bi);
+-
+ 	xfs_bmap_update_get_group(tp->t_mountp, bi);
+ 
+ 	/*
+@@ -358,20 +358,11 @@ xfs_bmap_defer_add(
+ 	 */
+ 	if (bi->bi_type == XFS_BMAP_MAP)
+ 		bi->bi_owner->i_delayed_blks += bi->bi_bmap.br_blockcount;
++
++	trace_xfs_bmap_defer(bi);
+ 	xfs_defer_add(tp, &bi->bi_list, &xfs_bmap_update_defer_type);
+ }
+ 
+-/* Release a passive AG ref after finishing mapping work. */
+-static inline void
+-xfs_bmap_update_put_group(
+-	struct xfs_bmap_intent	*bi)
+-{
+-	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
+-		return;
+-
+-	xfs_group_intent_put(bi->bi_group);
+-}
+-
+ /* Cancel a deferred bmap update. */
+ STATIC void
+ xfs_bmap_update_cancel_item(
+@@ -382,7 +373,7 @@ xfs_bmap_update_cancel_item(
+ 	if (bi->bi_type == XFS_BMAP_MAP)
+ 		bi->bi_owner->i_delayed_blks -= bi->bi_bmap.br_blockcount;
+ 
+-	xfs_bmap_update_put_group(bi);
++	xfs_group_intent_put(bi->bi_group);
+ 	kmem_cache_free(xfs_bmap_intent_cache, bi);
+ }
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 33b1dda6e7cefd..419a92665f7764 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3086,11 +3086,10 @@ DECLARE_EVENT_CLASS(xfs_bmap_deferred_class,
+ 	TP_ARGS(bi),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(dev_t, opdev)
++		__field(enum xfs_group_type, type)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_ino_t, ino)
+-		__field(xfs_agblock_t, agbno)
+-		__field(xfs_fsblock_t, rtbno)
++		__field(unsigned long long, gbno)
+ 		__field(int, whichfork)
+ 		__field(xfs_fileoff_t, l_loff)
+ 		__field(xfs_filblks_t, l_len)
+@@ -3099,20 +3098,25 @@ DECLARE_EVENT_CLASS(xfs_bmap_deferred_class,
+ 	),
+ 	TP_fast_assign(
+ 		struct xfs_inode	*ip = bi->bi_owner;
++		struct xfs_mount	*mp = ip->i_mount;
+ 
+-		__entry->dev = ip->i_mount->m_super->s_dev;
+-		if (xfs_ifork_is_realtime(ip, bi->bi_whichfork)) {
+-			__entry->agno = 0;
+-			__entry->agbno = 0;
+-			__entry->rtbno = bi->bi_bmap.br_startblock;
+-			__entry->opdev = ip->i_mount->m_rtdev_targp->bt_dev;
++		__entry->dev = mp->m_super->s_dev;
++		__entry->type = bi->bi_group->xg_type;
++		__entry->agno = bi->bi_group->xg_gno;
++		if (bi->bi_group->xg_type == XG_TYPE_RTG &&
++		    !xfs_has_rtgroups(mp)) {
++			/*
++			 * Legacy rt filesystems do not have allocation groups
++			 * ondisk.  We emulate this incore with one gigantic
++			 * rtgroup whose size can exceed a 32-bit block number.
++			 * For this tracepoint, we report group 0 and a 64-bit
++			 * group block number.
++			 */
++			__entry->gbno = bi->bi_bmap.br_startblock;
+ 		} else {
+-			__entry->agno = XFS_FSB_TO_AGNO(ip->i_mount,
+-						bi->bi_bmap.br_startblock);
+-			__entry->agbno = XFS_FSB_TO_AGBNO(ip->i_mount,
+-						bi->bi_bmap.br_startblock);
+-			__entry->rtbno = 0;
+-			__entry->opdev = __entry->dev;
++			__entry->gbno = xfs_fsb_to_gbno(mp,
++						bi->bi_bmap.br_startblock,
++						bi->bi_group->xg_type);
+ 		}
+ 		__entry->ino = ip->i_ino;
+ 		__entry->whichfork = bi->bi_whichfork;
+@@ -3121,14 +3125,13 @@ DECLARE_EVENT_CLASS(xfs_bmap_deferred_class,
+ 		__entry->l_state = bi->bi_bmap.br_state;
+ 		__entry->op = bi->bi_type;
+ 	),
+-	TP_printk("dev %d:%d op %s opdev %d:%d ino 0x%llx agno 0x%x agbno 0x%x rtbno 0x%llx %s fileoff 0x%llx fsbcount 0x%llx state %d",
++	TP_printk("dev %d:%d op %s ino 0x%llx %sno 0x%x gbno 0x%llx %s fileoff 0x%llx fsbcount 0x%llx state %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __print_symbolic(__entry->op, XFS_BMAP_INTENT_STRINGS),
+-		  MAJOR(__entry->opdev), MINOR(__entry->opdev),
+ 		  __entry->ino,
++		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
+ 		  __entry->agno,
+-		  __entry->agbno,
+-		  __entry->rtbno,
++		  __entry->gbno,
+ 		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
+ 		  __entry->l_loff,
+ 		  __entry->l_len,
 
