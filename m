@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F297721D17D
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:09:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 449F821D2B0
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:09:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729192181; cv=none; b=EaMJwQOlJwqfqQwoi6PbEdNqEj7Ni84VzWEMovscb/1VhREoE0qb/cBp8pujV+kUDsrO1xqc2Clckl0Q3daj2yIRcB6nS/jd0nE8SyHnO7HiEG48UMtNw7vcbUCykrb32LJaBmtiJA5tyv989uViYr4Z9oQJgw0uIrCjqcUViDU=
+	t=1729192191; cv=none; b=lPVTUI69H5IzN2xaaQQtv1/D7JL3nEs+yjYBOB9O4uiplMV65uFZI8+miIvlsa/ogAKQO0+yeQnybJASJaIhq34yklza9C+25MiFD+7YEXXGkVWtvSjYsn8lptwjzyy7u9VCid9+ugOUrmLcsxqnRTS2aQxjGEnEROK4HRwxtEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729192181; c=relaxed/simple;
-	bh=2y3r0UR86rPVaHLqqREVkTgEYCX6UEVdG5lmXM0H1RA=;
+	s=arc-20240116; t=1729192191; c=relaxed/simple;
+	bh=/TB/0CEup4e9ubGJDB6lUB9lxWhT5oLKgd9+Nasje2k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aeD+bnjjr+03MrTOTX4YvTn5XINeh9ELXpop7QtGY4KMk5Cub66KVa9lmLLjv8A6nPsy3hYPjkepTqOhkOJDOn+RdMVC5vo2oryzUIdy9WsWFe4XGAYSizcoPdJLrwnFJRTTwu47TrGEB9RHK7ezDcH0sCGd2IItQwOg/XYyBjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i+NpWyYh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uaowJrDf904OPkI7uzSp909qv/Oziozp5h4QYc4G0iaMOYiYBvaFcE2lBykkgnqf+sdwvw1h5KA4xdVcK0EoxFwOe1FFfzt6/Jzyy77NuDhTAr64FU/6ZNodFrQrEwmPwaiYDFtrNyawJ2fizgS6yR7+/7DKLHq/4NCqZJpkSec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LiNqgS0z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i+NpWyYh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86B73C4CEC3;
-	Thu, 17 Oct 2024 19:09:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LiNqgS0z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C16EC4CED4;
+	Thu, 17 Oct 2024 19:09:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729192180;
-	bh=2y3r0UR86rPVaHLqqREVkTgEYCX6UEVdG5lmXM0H1RA=;
+	s=k20201202; t=1729192191;
+	bh=/TB/0CEup4e9ubGJDB6lUB9lxWhT5oLKgd9+Nasje2k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=i+NpWyYhMXwPLTLXGySeMvsq5ITKJVm1YwS5BaMdfQfk1HEwn+NaDXkjU1AaMvM4o
-	 HajU8b37cvkvhRQNMnWlA6HT6TP3a30QIKXj7RnRGiKx7urpeSjR9+Bf9dsGXRD5gB
-	 2PWC2Lz5o+4NekQ4UHqnE1DZZJH7WWa2gFRnTlQQI7+3PMKzMV/CKHWfekixLh/zUj
-	 0kDl1R0MS541C6UB5tZ15J1ZELAfXl7mRPgdN/TpeWwQQmctk7vJ4KOIxtBZgyO8Ag
-	 lrhWPYl93TAS5CNhVJsnb84xPzvi1QuzQ0v3s9j2me93h/X4ZhvJX0fvCQuyfPhTv/
-	 LdxCphQySXYEg==
-Date: Thu, 17 Oct 2024 12:09:40 -0700
-Subject: [PATCH 33/34] xfs: implement busy extent tracking for rtgroups
+	b=LiNqgS0zOjkeAtsga/QXFuFNXuTSOPe5hexJv8cJo78xLccLC+brvYuwvO4Ngeib2
+	 Nz4nxK9vMSVfjQBAVfyVoz7bOYqfoZaGPmNeefyc9Y7CoBf/gaWtqc8yhbf9FuBvyu
+	 f1ipbI37Gfc9xjnd1/lcTJDBMu3fpTsKIW6iTIOAGdVHQui7ZLXXRUro4wIH1UWin6
+	 9YM6ZDSsEvnaRPdrf9TSWgzv5/0u0f8MOkx9iAvHGXv20A9XfAlFf0k/CB2Oc82rsa
+	 aPcoIgOR2A6zZuKGULSdtR6UyhiS+pFtFL/TgtB22j9Zs1R96FoO528CYeVjfgMJCO
+	 Ui/vLEIthi6lg==
+Date: Thu, 17 Oct 2024 12:09:50 -0700
+Subject: [PATCH 34/34] xfs: use rtgroup busy extent list for FITRIM
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919072241.3453179.18351491157070502171.stgit@frogsfrogsfrogs>
+Message-ID: <172919072258.3453179.12429801014526643442.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 References: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,366 +45,201 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-For rtgroups filesystems, track newly freed (rt) space through the log
-until the rt EFIs have been committed to disk.  This way we ensure that
-space cannot be reused until all traces of the old owner are gone.
-
-As a fringe benefit, we now support -o discard on the realtime device.
+For filesystems that have rtgroups and hence use the busy extent list
+for freed rt space, use that busy extent list so that FITRIM can issue
+discard commands asynchronously without worrying about other callers
+accidentally allocating and using space that is being discarded.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   12 ++++
- fs/xfs/libxfs/xfs_rtgroup.h  |   13 ++++
- fs/xfs/xfs_extent_busy.c     |    6 ++
- fs/xfs/xfs_rtalloc.c         |  127 ++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_trace.h           |   75 +++++++++++++++++++++++++
- 5 files changed, 227 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_discard.c |  146 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 144 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 30220bf8c3f430..4ddfb7e395b38a 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -24,6 +24,7 @@
- #include "xfs_errortag.h"
- #include "xfs_log.h"
- #include "xfs_buf_item.h"
-+#include "xfs_extent_busy.h"
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index b7c1e09e9afefc..c4bd145f5ec1bf 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -73,6 +73,8 @@
+  * extent search so that it overlaps in flight discard IO.
+  */
  
- /*
-  * Realtime allocator bitmap functions shared with userspace.
-@@ -1120,6 +1121,7 @@ xfs_rtfree_blocks(
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	xfs_extlen_t		mod;
++#define XFS_DISCARD_MAX_EXAMINE	(100)
++
+ struct workqueue_struct *xfs_discard_wq;
+ 
+ static void
+@@ -185,7 +187,7 @@ xfs_trim_gather_extents(
+ 	struct xfs_buf		*agbp;
+ 	int			error;
+ 	int			i;
+-	int			batch = 100;
++	int			batch = XFS_DISCARD_MAX_EXAMINE;
+ 
+ 	/*
+ 	 * Force out the log.  This means any transactions that might have freed
+@@ -565,6 +567,7 @@ xfs_trim_gather_rtextent(
+ 	return 0;
+ }
+ 
++/* Trim extents on an !rtgroups realtime device */
+ static int
+ xfs_trim_rtextents(
+ 	struct xfs_rtgroup	*rtg,
+@@ -619,6 +622,140 @@ xfs_trim_rtextents(
+ 	return error;
+ }
+ 
++struct xfs_trim_rtgroup {
++	/* list of rtgroup extents to free */
++	struct xfs_busy_extents	*extents;
++
++	/* minimum length that caller allows us to trim */
++	xfs_rtblock_t		minlen_fsb;
++
++	/* restart point for the rtbitmap walk */
++	xfs_rtxnum_t		restart_rtx;
++
++	/* number of extents to examine before stopping to issue discard ios */
++	int			batch;
++
++	/* number of extents queued for discard */
++	int			queued;
++};
++
++static int
++xfs_trim_gather_rtgroup_extent(
++	struct xfs_rtgroup		*rtg,
++	struct xfs_trans		*tp,
++	const struct xfs_rtalloc_rec	*rec,
++	void				*priv)
++{
++	struct xfs_trim_rtgroup		*tr = priv;
++	xfs_rgblock_t			rgbno;
++	xfs_extlen_t			len;
++
++	if (--tr->batch <= 0) {
++		/*
++		 * If we've checked a large number of extents, update the
++		 * cursor to point at this extent so we restart the next batch
++		 * from this extent.
++		 */
++		tr->restart_rtx = rec->ar_startext;
++		return -ECANCELED;
++	}
++
++	rgbno = xfs_rtx_to_rgbno(rtg, rec->ar_startext);
++	len = xfs_rtxlen_to_extlen(rtg_mount(rtg), rec->ar_extcount);
++
++	/* Ignore too small. */
++	if (len < tr->minlen_fsb) {
++		trace_xfs_discard_toosmall(rtg_group(rtg), rgbno, len);
++		return 0;
++	}
++
++	/*
++	 * If any blocks in the range are still busy, skip the discard and try
++	 * again the next time.
++	 */
++	if (xfs_extent_busy_search(rtg_group(rtg), rgbno, len)) {
++		trace_xfs_discard_busy(rtg_group(rtg), rgbno, len);
++		return 0;
++	}
++
++	xfs_extent_busy_insert_discard(rtg_group(rtg), rgbno, len,
++			&tr->extents->extent_list);
++
++	tr->queued++;
++	tr->restart_rtx = rec->ar_startext + rec->ar_extcount;
++	return 0;
++}
++
++/* Trim extents in this rtgroup using the busy extent machinery. */
++static int
++xfs_trim_rtgroup_extents(
++	struct xfs_rtgroup	*rtg,
++	xfs_rtxnum_t		low,
++	xfs_rtxnum_t		high,
++	xfs_daddr_t		minlen)
++{
++	struct xfs_mount	*mp = rtg_mount(rtg);
++	struct xfs_trim_rtgroup	tr = {
++		.minlen_fsb	= XFS_BB_TO_FSB(mp, minlen),
++	};
++	struct xfs_trans	*tp;
 +	int			error;
- 
- 	ASSERT(rtlen <= XFS_MAX_BMBT_EXTLEN);
- 
-@@ -1135,8 +1137,16 @@ xfs_rtfree_blocks(
- 		return -EIO;
- 	}
- 
--	return xfs_rtfree_extent(tp, rtg, xfs_rtb_to_rtx(mp, rtbno),
-+	error = xfs_rtfree_extent(tp, rtg, xfs_rtb_to_rtx(mp, rtbno),
- 			xfs_extlen_to_rtxlen(mp, rtlen));
++
++	error = xfs_trans_alloc_empty(mp, &tp);
 +	if (error)
 +		return error;
 +
-+	if (xfs_has_rtgroups(mp))
-+		xfs_extent_busy_insert(tp, rtg_group(rtg),
-+				xfs_rtb_to_rgbno(mp, rtbno), rtlen, 0);
-+
-+	return 0;
- }
- 
- /* Find all the free records within a given range. */
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index 1e51dc62d1143e..7e7e491ff06fa5 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -155,6 +155,19 @@ xfs_rtbno_is_group_start(
- 	return (rtbno & mp->m_groups[XG_TYPE_RTG].blkmask) == 0;
- }
- 
-+/* Convert an rtgroups rt extent number into an rgbno. */
-+static inline xfs_rgblock_t
-+xfs_rtx_to_rgbno(
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rtxnum_t		rtx)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+
-+	if (likely(mp->m_rtxblklog >= 0))
-+		return rtx << mp->m_rtxblklog;
-+	return rtx * mp->m_sb.sb_rextsize;
-+}
-+
- static inline xfs_daddr_t
- xfs_rtb_to_daddr(
- 	struct xfs_mount	*mp,
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 457a27ab837599..ea43c9a6e54c12 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -18,6 +18,7 @@
- #include "xfs_trans.h"
- #include "xfs_log.h"
- #include "xfs_ag.h"
-+#include "xfs_rtgroup.h"
- 
- struct xfs_extent_busy_tree {
- 	spinlock_t		eb_lock;
-@@ -665,9 +666,14 @@ xfs_extent_busy_wait_all(
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_perag	*pag = NULL;
-+	struct xfs_rtgroup	*rtg = NULL;
- 
- 	while ((pag = xfs_perag_next(mp, pag)))
- 		xfs_extent_busy_wait_group(pag_group(pag));
-+
-+	if (xfs_has_rtgroups(mp))
-+		while ((rtg = xfs_rtgroup_next(mp, rtg)))
-+			xfs_extent_busy_wait_group(rtg_group(rtg));
- }
- 
- /*
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 8f56d5fbe7413a..8a8210d45f4f03 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -29,6 +29,7 @@
- #include "xfs_metafile.h"
- #include "xfs_rtgroup.h"
- #include "xfs_error.h"
-+#include "xfs_trace.h"
- 
- /*
-  * Return whether there are any free extents in the size range given
-@@ -1657,6 +1658,114 @@ xfs_rtalloc_align_minmax(
- 	*raminlen = newminlen;
- }
- 
-+/* Given a free extent, find any part of it that isn't busy, if possible. */
-+STATIC bool
-+xfs_rtalloc_check_busy(
-+	struct xfs_rtalloc_args	*args,
-+	xfs_rtxnum_t		start,
-+	xfs_rtxlen_t		minlen_rtx,
-+	xfs_rtxlen_t		maxlen_rtx,
-+	xfs_rtxlen_t		len_rtx,
-+	xfs_rtxlen_t		prod,
-+	xfs_rtxnum_t		rtx,
-+	xfs_rtxlen_t		*reslen,
-+	xfs_rtxnum_t		*resrtx,
-+	unsigned		*busy_gen)
-+{
-+	struct xfs_rtgroup	*rtg = args->rtg;
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+	xfs_agblock_t		rgbno = xfs_rtx_to_rgbno(rtg, rtx);
-+	xfs_rgblock_t		min_rgbno = xfs_rtx_to_rgbno(rtg, start);
-+	xfs_extlen_t		minlen = xfs_rtxlen_to_extlen(mp, minlen_rtx);
-+	xfs_extlen_t		len = xfs_rtxlen_to_extlen(mp, len_rtx);
-+	xfs_extlen_t		diff;
-+	bool			busy;
-+
-+	busy = xfs_extent_busy_trim(rtg_group(rtg), minlen,
-+			xfs_rtxlen_to_extlen(mp, maxlen_rtx), &rgbno, &len,
-+			busy_gen);
-+
 +	/*
-+	 * If we have a largish extent that happens to start before min_rgbno,
-+	 * see if we can shift it into range...
++	 * Walk the free ranges between low and high.  The query_range function
++	 * trims the extents returned.
 +	 */
-+	if (rgbno < min_rgbno && rgbno + len > min_rgbno) {
-+		diff = min_rgbno - rgbno;
-+		if (len > diff) {
-+			rgbno += diff;
-+			len -= diff;
++	do {
++		tr.extents = kzalloc(sizeof(*tr.extents), GFP_KERNEL);
++		if (!tr.extents) {
++			error = -ENOMEM;
++			break;
 +		}
-+	}
 +
-+	if (prod > 1 && len >= minlen) {
-+		xfs_rgblock_t	aligned_rgbno = roundup(rgbno, prod);
++		tr.queued = 0;
++		tr.batch = XFS_DISCARD_MAX_EXAMINE;
++		tr.extents->owner = tr.extents;
++		INIT_LIST_HEAD(&tr.extents->extent_list);
 +
-+		diff = aligned_rgbno - rgbno;
++		xfs_rtgroup_lock(rtg, XFS_RTGLOCK_BITMAP_SHARED);
++		error = xfs_rtalloc_query_range(rtg, tp, low, high,
++				xfs_trim_gather_rtgroup_extent, &tr);
++		xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_BITMAP_SHARED);
++		if (error == -ECANCELED)
++			error = 0;
++		if (error) {
++			kfree(tr.extents);
++			break;
++		}
 +
-+		*resrtx = xfs_rgbno_to_rtx(mp, aligned_rgbno);
-+		*reslen = xfs_extlen_to_rtxlen(mp,
-+				diff >= len ? 0 : len - diff);
-+	} else {
-+		*resrtx = xfs_rgbno_to_rtx(mp, rgbno);
-+		*reslen = xfs_extlen_to_rtxlen(mp, len);
-+	}
++		if (!tr.queued)
++			break;
 +
-+	return busy;
-+}
-+
-+/*
-+ * Adjust the given free extent so that it isn't busy, or flush the log and
-+ * wait for the space to become unbusy.  Only needed for rtgroups.
-+ */
-+STATIC int
-+xfs_rtallocate_adjust_for_busy(
-+	struct xfs_rtalloc_args	*args,
-+	xfs_rtxnum_t		start,
-+	xfs_rtxlen_t		minlen,
-+	xfs_rtxlen_t		maxlen,
-+	xfs_rtxlen_t		*len,
-+	xfs_rtxlen_t		prod,
-+	xfs_rtxnum_t		*rtx)
-+{
-+	xfs_rtxnum_t		resrtx;
-+	xfs_rtxlen_t		reslen;
-+	unsigned		busy_gen;
-+	bool			busy;
-+	int			error;
-+
-+again:
-+	busy = xfs_rtalloc_check_busy(args, start, minlen, maxlen, *len, prod,
-+			*rtx, &reslen, &resrtx, &busy_gen);
-+	if (!busy)
-+		return 0;
-+
-+	if (reslen < minlen || (start != 0 && resrtx != *rtx)) {
 +		/*
-+		 * Enough of the extent was busy that we cannot satisfy the
-+		 * allocation, or this is a near allocation and the start of
-+		 * the extent is busy.  Flush the log and wait for the busy
-+		 * situation to resolve.
++		 * We hand the extent list to the discard function here so the
++		 * discarded extents can be removed from the busy extent list.
++		 * This allows the discards to run asynchronously with
++		 * gathering the next round of extents to discard.
++		 *
++		 * However, we must ensure that we do not reference the extent
++		 * list  after this function call, as it may have been freed by
++		 * the time control returns to us.
 +		 */
-+		trace_xfs_rtalloc_extent_busy(args->rtg, start, minlen, maxlen,
-+				*len, prod, *rtx, busy_gen);
-+
-+		error = xfs_extent_busy_flush(args->tp, rtg_group(args->rtg),
-+				busy_gen, 0);
++		error = xfs_discard_extents(rtg_mount(rtg), tr.extents);
 +		if (error)
-+			return error;
++			break;
 +
-+		goto again;
-+	}
++		low = tr.restart_rtx;
++	} while (!xfs_trim_should_stop() && low <= high);
 +
-+	/* Some of the free space wasn't busy, hand that back to the caller. */
-+	trace_xfs_rtalloc_extent_busy_trim(args->rtg, *rtx, *len, resrtx,
-+			reslen);
-+	*len = reslen;
-+	*rtx = resrtx;
-+
-+	return 0;
++	xfs_trans_cancel(tp);
++	return error;
 +}
 +
  static int
- xfs_rtallocate_rtg(
- 	struct xfs_trans	*tp,
-@@ -1738,15 +1847,19 @@ xfs_rtallocate_rtg(
- 	}
+ xfs_trim_rtdev_extents(
+ 	struct xfs_mount	*mp,
+@@ -657,7 +794,12 @@ xfs_trim_rtdev_extents(
+ 		if (rtg_rgno(rtg) == end_rgno)
+ 			rtg_end = min(rtg_end, end_rtx);
  
- 	if (error) {
--		if (xfs_has_rtgroups(args.mp)) {
--			xfs_rtgroup_unlock(args.rtg, XFS_RTGLOCK_BITMAP);
--			*rtlocked = false;
--		}
-+		if (xfs_has_rtgroups(args.mp))
-+			goto out_unlock;
- 		goto out_release;
- 	}
+-		error = xfs_trim_rtextents(rtg, start_rtx, rtg_end, minlen);
++		if (xfs_has_rtgroups(mp))
++			error = xfs_trim_rtgroup_extents(rtg, start_rtx,
++					rtg_end, minlen);
++		else
++			error = xfs_trim_rtextents(rtg, start_rtx, rtg_end,
++					minlen);
+ 		if (error)
+ 			last_error = error;
  
--	if (xfs_has_rtgroups(args.mp))
-+	if (xfs_has_rtgroups(args.mp)) {
-+		error = xfs_rtallocate_adjust_for_busy(&args, start, minlen,
-+				maxlen, &len, prod, &rtx);
-+		if (error)
-+			goto out_unlock;
-+
- 		xfs_rtgroup_trans_join(tp, args.rtg, XFS_RTGLOCK_BITMAP);
-+	}
- 
- 	error = xfs_rtallocate_range(&args, rtx, len);
- 	if (error)
-@@ -1762,6 +1875,10 @@ xfs_rtallocate_rtg(
- 	xfs_rtgroup_rele(args.rtg);
- 	xfs_rtbuf_cache_relse(&args);
- 	return error;
-+out_unlock:
-+	xfs_rtgroup_unlock(args.rtg, XFS_RTGLOCK_BITMAP);
-+	*rtlocked = false;
-+	goto out_release;
- }
- 
- static int
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 79dc7620694f38..a4bd9dcccdd716 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -97,6 +97,7 @@ struct xfs_extent_free_item;
- struct xfs_rmap_intent;
- struct xfs_refcount_intent;
- struct xfs_metadir_update;
-+struct xfs_rtgroup;
- 
- #define XFS_ATTR_FILTER_FLAGS \
- 	{ XFS_ATTR_ROOT,	"ROOT" }, \
-@@ -1749,6 +1750,80 @@ TRACE_EVENT(xfs_extent_busy_trim,
- 		  __entry->tlen)
- );
- 
-+#ifdef CONFIG_XFS_RT
-+TRACE_EVENT(xfs_rtalloc_extent_busy,
-+	TP_PROTO(struct xfs_rtgroup *rtg, xfs_rtxnum_t start,
-+		 xfs_rtxlen_t minlen, xfs_rtxlen_t maxlen,
-+		 xfs_rtxlen_t len, xfs_rtxlen_t prod, xfs_rtxnum_t rtx,
-+		 unsigned busy_gen),
-+	TP_ARGS(rtg, start, minlen, maxlen, len, prod, rtx, busy_gen),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_rgnumber_t, rgno)
-+		__field(xfs_rtxnum_t, start)
-+		__field(xfs_rtxlen_t, minlen)
-+		__field(xfs_rtxlen_t, maxlen)
-+		__field(xfs_rtxlen_t, mod)
-+		__field(xfs_rtxlen_t, prod)
-+		__field(xfs_rtxlen_t, len)
-+		__field(xfs_rtxnum_t, rtx)
-+		__field(unsigned, busy_gen)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = rtg_mount(rtg)->m_super->s_dev;
-+		__entry->rgno = rtg_rgno(rtg);
-+		__entry->start = start;
-+		__entry->minlen = minlen;
-+		__entry->maxlen = maxlen;
-+		__entry->prod = prod;
-+		__entry->len = len;
-+		__entry->rtx = rtx;
-+		__entry->busy_gen = busy_gen;
-+	),
-+	TP_printk("dev %d:%d rgno 0x%x startrtx 0x%llx minlen %u maxlen %u "
-+		  "prod %u len %u rtx 0%llx busy_gen 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->rgno,
-+		  __entry->start,
-+		  __entry->minlen,
-+		  __entry->maxlen,
-+		  __entry->prod,
-+		  __entry->len,
-+		  __entry->rtx,
-+		  __entry->busy_gen)
-+)
-+
-+TRACE_EVENT(xfs_rtalloc_extent_busy_trim,
-+	TP_PROTO(struct xfs_rtgroup *rtg, xfs_rtxnum_t old_rtx,
-+		 xfs_rtxlen_t old_len, xfs_rtxnum_t new_rtx,
-+		 xfs_rtxlen_t new_len),
-+	TP_ARGS(rtg, old_rtx, old_len, new_rtx, new_len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_rgnumber_t, rgno)
-+		__field(xfs_rtxnum_t, old_rtx)
-+		__field(xfs_rtxnum_t, new_rtx)
-+		__field(xfs_rtxlen_t, old_len)
-+		__field(xfs_rtxlen_t, new_len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = rtg_mount(rtg)->m_super->s_dev;
-+		__entry->rgno = rtg_rgno(rtg);
-+		__entry->old_rtx = old_rtx;
-+		__entry->old_len = old_len;
-+		__entry->new_rtx = new_rtx;
-+		__entry->new_len = new_len;
-+	),
-+	TP_printk("dev %d:%d rgno 0x%x rtx 0x%llx rtxcount 0x%x -> rtx 0x%llx rtxcount 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->rgno,
-+		  __entry->old_rtx,
-+		  __entry->old_len,
-+		  __entry->new_rtx,
-+		  __entry->new_len)
-+);
-+#endif /* CONFIG_XFS_RT */
-+
- DECLARE_EVENT_CLASS(xfs_agf_class,
- 	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
- 		 unsigned long caller_ip),
 
