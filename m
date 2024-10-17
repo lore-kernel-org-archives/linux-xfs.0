@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13CEA2194A9
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 18:54:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB6E02194A0
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 18:54:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729191247; cv=none; b=oOgp/Gf0/tFSSapbjJw/IYZqHVM16S0lUwfJLhsy4Wx60KQdC3giE9L8bb99ELU361UwMWwtj5+Z2TAF3oeCMP7gcEedBAr1etEBCkZaA/NgZujrR2aDS4LI7A2CPqajLBPV3E9PICxMolL2HtnD0wNEOF5RPkVtQZAKkRzQVcE=
+	t=1729191259; cv=none; b=IZmSZ42soShz7JWiu4c/Ii4udantOmwKvEASxlyyXlwp/mx9gQ4RcAERkE4ninY+fZ2crACIA6rT+XVednNNZQrRp6Wsp7z2LWI5OaGc3+HtBZjQpxdsSMeuWoZPcJdDMVSCaf/5wn0+PNUJJrhmUNBoFL5wF+0Sv6Sb1yORMrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729191247; c=relaxed/simple;
-	bh=U0LQDbiSEjftj2FCRJzHtp6pnD88HBSP6PywAi5Whrg=;
+	s=arc-20240116; t=1729191259; c=relaxed/simple;
+	bh=xdSlhFWTnk7OiNjLPJy3W+tiXBvS2g7IZmo4a8qClxc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XZem4finoCH6jGYzabjm0F6LYrMY1Icp7N27kbgax3HotQnVIkzmYsFT5eoactph/rSnShjQ/D/R8lMIPmYz4eQCcnebmsevhRDa/0quEkmXiiQNzvr8Z0V9eXK1Swq3+Bm9AdrLMEyy15JghWW3eW6t/nZsUPslGnuJM0B+0Jk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lKxm0Jry; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hGHnnrStesqVByepqsxvJWpPdx3e9yQgUHiMB3Ovph9frGNY7mCd5i9zCncaQabq1WdU5Fo7x8bejkwPaHU9Sb4MeLSdvNmw9fA4KzNJ1OuBXvPYfJcWIAIwKfiyRGRw9qhhmFCoyJo9nyFvujiOVa0ALPDSOwyJhXcTAfopdqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LzSki5bp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lKxm0Jry"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A50E4C4CECD;
-	Thu, 17 Oct 2024 18:54:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LzSki5bp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A0AEC4CECD;
+	Thu, 17 Oct 2024 18:54:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729191246;
-	bh=U0LQDbiSEjftj2FCRJzHtp6pnD88HBSP6PywAi5Whrg=;
+	s=k20201202; t=1729191257;
+	bh=xdSlhFWTnk7OiNjLPJy3W+tiXBvS2g7IZmo4a8qClxc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lKxm0JryAchMK8OKzUkeCWJjHVyEDL1YFVqwm1aWk/LgsVWefmNBmJZhxQvxSRmTf
-	 lRGjYa9YGhLHEDQyF276dnj5zZYPEB54YvlyfwCcri+yV1uVOHbGDkBZIKwT4dMipi
-	 2s4QPbY5izdXmH/2bU5JUwZVJcw3vgN/gHANCgozt1/8KVrQsAdWQxkhA7JB6yeMWt
-	 MxIlgxMJ/PrWM/9F450LjzyWieoNQTcpeP0bT+jPlFDEULt9YsYClef3wUHobW+z9N
-	 /ts8Y7XRiC8cMfVmEd4hJnCe8nP+QbG4rn2gRjJbXPUGMh0Zk4YRMm+QU4x2lgxDEM
-	 GquJvmLd6ju4Q==
-Date: Thu, 17 Oct 2024 11:54:06 -0700
-Subject: [PATCH 13/16] xfs: store a generic xfs_group pointer in
- xfs_getfsmap_info
+	b=LzSki5bpwy7CS4/IIuYCdPD0PP/uRn77w4gRdwHVASZnaJfhtXvbYhAgJ9Wc5j/mJ
+	 V5hg9Lz0RniZwgTbLM7MI4hpYJetGLKPs18qyV69h090h9fwSi62stMZjQj0bwAr+u
+	 Yt3L6BkQDccnhszDHex7EWszv6f758COwJenwsKZoH2Fld65TwL97NQnHIFpk/8XQy
+	 lJ1hFrkuDKs5zC15yQpP09CFEkqqTbJmIumYtDCMfcL1M2EnWnDaaCLoARpAwDErGV
+	 Vt72z4D6TeDvscl3euZNlZz1lwV0eliu+RSHyw8BjsMEk+X/55PcpPCnLVCosRcXS6
+	 dG16k1L/y7bQw==
+Date: Thu, 17 Oct 2024 11:54:16 -0700
+Subject: [PATCH 14/16] xfs: add group based bno conversion helpers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919068905.3450737.12565441261118343352.stgit@frogsfrogsfrogs>
+Message-ID: <172919068922.3450737.1548793440571079834.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919068618.3450737.15265130869882039127.stgit@frogsfrogsfrogs>
 References: <172919068618.3450737.15265130869882039127.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,111 +45,180 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Replace the pag and rtg pointers with a generic group pointer.
+Add/move the blocks, blklog and blkmask fields to the generic groups
+structure so that code can work with AGs and RTGs by just using the
+right index into the array.
+
+Then, add convenience helpers to convert block numbers based on the
+generic group.  This will allow writing code that doesn't care if it is
+used on AGs or the upcoming realtime groups.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_fsmap.c |   26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_group.c |    9 +++++++
+ fs/xfs/libxfs/xfs_group.h |   56 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_sb.c    |    7 ++++++
+ fs/xfs/xfs_mount.h        |   30 ++++++++++++++++++++++++
+ 4 files changed, 102 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 5d5e54a16f23c8..a91677ac54e7e3 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -158,7 +158,7 @@ struct xfs_getfsmap_info {
- 	struct xfs_fsmap_head	*head;
- 	struct fsmap		*fsmap_recs;	/* mapping records */
- 	struct xfs_buf		*agf_bp;	/* AGF, for refcount queries */
--	struct xfs_perag	*pag;		/* AG info, if applicable */
-+	struct xfs_group	*group;		/* group info, if applicable */
- 	xfs_daddr_t		next_daddr;	/* next daddr we expect */
- 	/* daddr of low fsmap key when we're using the rtbitmap */
- 	xfs_daddr_t		low_daddr;
-@@ -216,12 +216,13 @@ xfs_getfsmap_is_shared(
- 	if (!xfs_has_reflink(mp))
- 		return 0;
- 	/* rt files will have no perag structure */
--	if (!info->pag)
-+	if (!info->group)
- 		return 0;
- 
- 	/* Are there any shared blocks here? */
- 	flen = 0;
--	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp, info->pag);
-+	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
-+			to_perag(info->group));
- 
- 	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
- 			rec->rm_blockcount, &fbno, &flen, false);
-@@ -353,7 +354,8 @@ xfs_getfsmap_helper(
- 		return -ECANCELED;
- 
- 	trace_xfs_fsmap_mapping(mp, info->dev,
--			info->pag ? pag_agno(info->pag) : NULLAGNUMBER, rec);
-+			info->group ? info->group->xg_gno : NULLAGNUMBER,
-+			rec);
- 
- 	fmr.fmr_device = info->dev;
- 	fmr.fmr_physical = rec_daddr;
-@@ -519,7 +521,7 @@ __xfs_getfsmap_datadev(
- 		 * Set the AG high key from the fsmap high key if this
- 		 * is the last AG that we're querying.
- 		 */
--		info->pag = pag;
-+		info->group = pag_group(pag);
- 		if (pag_agno(pag) == end_ag) {
- 			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
- 					end_fsb);
-@@ -569,7 +571,7 @@ __xfs_getfsmap_datadev(
- 			if (error)
- 				break;
- 		}
--		info->pag = NULL;
-+		info->group = NULL;
- 	}
- 
- 	if (bt_cur)
-@@ -579,9 +581,9 @@ __xfs_getfsmap_datadev(
- 		xfs_trans_brelse(tp, info->agf_bp);
- 		info->agf_bp = NULL;
- 	}
--	if (info->pag) {
--		xfs_perag_rele(info->pag);
--		info->pag = NULL;
-+	if (info->group) {
-+		xfs_perag_rele(pag);
-+		info->group = NULL;
- 	} else if (pag) {
- 		/* loop termination case */
- 		xfs_perag_rele(pag);
-@@ -604,7 +606,7 @@ xfs_getfsmap_datadev_rmapbt_query(
- 
- 	/* Allocate cursor for this AG and query_range it. */
- 	*curpp = xfs_rmapbt_init_cursor(tp->t_mountp, tp, info->agf_bp,
--			info->pag);
-+			to_perag(info->group));
- 	return xfs_rmap_query_range(*curpp, &info->low, &info->high,
- 			xfs_getfsmap_datadev_helper, info);
+diff --git a/fs/xfs/libxfs/xfs_group.c b/fs/xfs/libxfs/xfs_group.c
+index 5c6fa5d76a91b1..e9d76bcdc820dd 100644
+--- a/fs/xfs/libxfs/xfs_group.c
++++ b/fs/xfs/libxfs/xfs_group.c
+@@ -214,3 +214,12 @@ xfs_group_insert(
+ #endif
+ 	return error;
  }
-@@ -637,7 +639,7 @@ xfs_getfsmap_datadev_bnobt_query(
++
++struct xfs_group *
++xfs_group_get_by_fsb(
++	struct xfs_mount	*mp,
++	xfs_fsblock_t		fsbno,
++	enum xfs_group_type	type)
++{
++	return xfs_group_get(mp, xfs_fsb_to_gno(mp, fsbno, type), type);
++}
+diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
+index 0ff6e1d5635cb1..5b7362277c3f7a 100644
+--- a/fs/xfs/libxfs/xfs_group.h
++++ b/fs/xfs/libxfs/xfs_group.h
+@@ -46,6 +46,8 @@ struct xfs_group {
  
- 	/* Allocate cursor for this AG and query_range it. */
- 	*curpp = xfs_bnobt_init_cursor(tp->t_mountp, tp, info->agf_bp,
--			info->pag);
-+			to_perag(info->group));
- 	key->ar_startblock = info->low.rm_startblock;
- 	key[1].ar_startblock = info->high.rm_startblock;
- 	return xfs_alloc_query_range(*curpp, key, &key[1],
-@@ -997,7 +999,7 @@ xfs_getfsmap(
+ struct xfs_group *xfs_group_get(struct xfs_mount *mp, uint32_t index,
+ 		enum xfs_group_type type);
++struct xfs_group *xfs_group_get_by_fsb(struct xfs_mount *mp,
++		xfs_fsblock_t fsbno, enum xfs_group_type type);
+ struct xfs_group *xfs_group_hold(struct xfs_group *xg);
+ void xfs_group_put(struct xfs_group *xg);
  
- 		info.dev = handlers[i].dev;
- 		info.last = false;
--		info.pag = NULL;
-+		info.group = NULL;
- 		info.low_daddr = XFS_BUF_DADDR_NULL;
- 		info.low.rm_blockcount = 0;
- 		error = handlers[i].fn(tp, dkeys, &info);
+@@ -72,4 +74,58 @@ int xfs_group_insert(struct xfs_mount *mp, struct xfs_group *xg,
+ #define xfs_group_marked(_mp, _type, _mark) \
+ 	xa_marked(&(_mp)->m_groups[(_type)].xa, (_mark))
+ 
++static inline xfs_agblock_t
++xfs_group_max_blocks(
++	struct xfs_group	*xg)
++{
++	return xg->xg_mount->m_groups[xg->xg_type].blocks;
++}
++
++static inline xfs_fsblock_t
++xfs_group_start_fsb(
++	struct xfs_group	*xg)
++{
++	return ((xfs_fsblock_t)xg->xg_gno) <<
++		xg->xg_mount->m_groups[xg->xg_type].blklog;
++}
++
++static inline xfs_fsblock_t
++xfs_gbno_to_fsb(
++	struct xfs_group	*xg,
++	xfs_agblock_t		gbno)
++{
++	return xfs_group_start_fsb(xg) | gbno;
++}
++
++static inline xfs_daddr_t
++xfs_gbno_to_daddr(
++	struct xfs_group	*xg,
++	xfs_agblock_t		gbno)
++{
++	struct xfs_mount	*mp = xg->xg_mount;
++	uint32_t		blocks = mp->m_groups[xg->xg_type].blocks;
++
++	return XFS_FSB_TO_BB(mp, (xfs_fsblock_t)xg->xg_gno * blocks + gbno);
++}
++
++static inline uint32_t
++xfs_fsb_to_gno(
++	struct xfs_mount	*mp,
++	xfs_fsblock_t		fsbno,
++	enum xfs_group_type	type)
++{
++	if (!mp->m_groups[type].blklog)
++		return 0;
++	return fsbno >> mp->m_groups[type].blklog;
++}
++
++static inline xfs_agblock_t
++xfs_fsb_to_gbno(
++	struct xfs_mount	*mp,
++	xfs_fsblock_t		fsbno,
++	enum xfs_group_type	type)
++{
++	return fsbno & mp->m_groups[type].blkmask;
++}
++
+ #endif /* __LIBXFS_GROUP_H */
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 061c8c961d5bc9..f7a07e61341ded 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -988,6 +988,8 @@ xfs_sb_mount_common(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_sb		*sbp)
+ {
++	struct xfs_groups	*ags = &mp->m_groups[XG_TYPE_AG];
++
+ 	mp->m_agfrotor = 0;
+ 	atomic_set(&mp->m_agirotor, 0);
+ 	mp->m_maxagi = mp->m_sb.sb_agcount;
+@@ -998,6 +1000,11 @@ xfs_sb_mount_common(
+ 	mp->m_blockmask = sbp->sb_blocksize - 1;
+ 	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
+ 	mp->m_blockwmask = mp->m_blockwsize - 1;
++
++	ags->blocks = mp->m_sb.sb_agblocks;
++	ags->blklog = mp->m_sb.sb_agblklog;
++	ags->blkmask = xfs_mask32lo(mp->m_sb.sb_agblklog);
++
+ 	xfs_mount_sb_set_rextsize(mp, sbp);
+ 
+ 	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, true);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 530d7f025506ce..1b698878f40cb1 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -71,8 +71,38 @@ struct xfs_inodegc {
+ 	unsigned int		cpu;
+ };
+ 
++/*
++ * Container for each type of groups, used to look up individual groups and
++ * describes the geometry.
++ */
+ struct xfs_groups {
+ 	struct xarray		xa;
++
++	/*
++	 * Maximum capacity of the group in FSBs.
++	 *
++	 * Each group is laid out densely in the daddr space.  For the
++	 * degenerate case of a pre-rtgroups filesystem, the incore rtgroup
++	 * pretends to have a zero-block and zero-blklog rtgroup.
++	 */
++	uint32_t		blocks;
++
++	/*
++	 * Log(2) of the logical size of each group.
++	 *
++	 * Compared to the blocks field above this is rounded up to the next
++	 * power of two, and thus lays out the xfs_fsblock_t/xfs_rtblock_t
++	 * space sparsely with a hole from blocks to (1 << blklog) at the end
++	 * of each group.
++	 */
++	uint8_t			blklog;
++
++	/*
++	 * Mask to extract the group-relative block number from a FSB.
++	 * For a pre-rtgroups filesystem we pretend to have one very large
++	 * rtgroup, so this mask must be 64-bit.
++	 */
++	uint64_t		blkmask;
+ };
+ 
+ /*
 
