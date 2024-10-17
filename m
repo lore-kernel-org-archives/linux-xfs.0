@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E01B51E0DC3
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:08:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D182621BAF3
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:08:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729192096; cv=none; b=r2zdijWJnYWu6P6AkSzT/bnLGKC0+JUqf7GDBXSpKFe4IGyKWQflV5aVQYlMCFSF7HiI4UyJjOx8vNbGQ2dOI30DOXv5oMHaVVyv17CqSDq0X4lQF58N8M8bl4fz+JxqaHFxT364nztvBrKSNuZJVFjWYgn/RqcOJEysRMGXx1Y=
+	t=1729192106; cv=none; b=Bc5B3/cCRogjJ307Zp7rKBZc/nCzO156bBj/rVTRtepZd8ddv6xPxptIjVZGhhN5vm6Xn6etS0iRx2Gk2DloAg2veeAnRF7Urik7M8BOmr4TTIcXDWbh7JRww2EWSuFiUlBO+F5+mc4FI1osfPWON5Ce4VOfFNdJVwKxNCXA7fs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729192096; c=relaxed/simple;
-	bh=DCclybK8wzM0Nc0Qu6mAf43naRWPiYtjjY5Gi+T5GUs=;
+	s=arc-20240116; t=1729192106; c=relaxed/simple;
+	bh=ICwET0+B/TMK4Uuaz63TV3TNGsd0X2v+DEMH0t9wmtA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JQTeYth0v98bg7viobC9stbKzJtGCtRzHJQqC4QP/vwxh5NdElZ0wYPtH92ca3OPrEIGkMJZ7TSRODiz7v8s+I+uUQxOwb1VrA9lYpJvjDwLmiTqBia3Y+9YEP5Wo7nmKu9G09EAN/m9UI4Nhvl1freNIlyTNqrnBX8byp2+usM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S5loYs3x; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EnAKUIVMP6dkwLU22YrOSyip9bJXZcw3E3234/9TOD51aEfb9C3DzsC33B/WOplzbxJwwnOmw5fbpZoQdZdIsEIegCoIPr2qMwPdTUaLiLVsht8SS1EAUmbTJ/BnCPUzFnrm0wWKIjWhlPVCkY9S73HETBArwF18w8Uall4oQ4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CnXK5jR4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S5loYs3x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFE79C4CEC3;
-	Thu, 17 Oct 2024 19:08:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CnXK5jR4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57458C4CEC3;
+	Thu, 17 Oct 2024 19:08:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729192095;
-	bh=DCclybK8wzM0Nc0Qu6mAf43naRWPiYtjjY5Gi+T5GUs=;
+	s=k20201202; t=1729192106;
+	bh=ICwET0+B/TMK4Uuaz63TV3TNGsd0X2v+DEMH0t9wmtA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=S5loYs3xQJ86D+1o5Xmat+/AoobBuZ74EzOiG0DbKjsc0bayaw1MUMdatFbF84cIW
-	 rFHQbHwJbot67rQ2oSAAWhzRoPJhA6JWqkKgd4Ho4BB6yGyh2VUt5UQ5iyFRHlNiMb
-	 N6ZdqDFPdZ6Tg1OX0ahgDactYysDWvxsaVpaVeawHcogY/L3BDHrAauY4u4wWRjyBK
-	 o6UyQTORZ4viAb/X8Bb4Uw4ffee3cPzTaaxjhpwI7pvNQAYqUIiOILjApWROOvKRR9
-	 iAWEVzf/KIw98wbYji4D5KTvHggACYoxGfNNsexZkSXZ1RKWpeV6M/7+LD5NZTdJg4
-	 hzK6Iuu7MemoA==
-Date: Thu, 17 Oct 2024 12:08:15 -0700
-Subject: [PATCH 25/34] xfs: scrub metadir paths for rtgroup metadata
+	b=CnXK5jR4umZn5TMYA1/P/n2vg9jbZnA+PRFcggbWorqTR9Ckr45aj/Is6Pgr1/5+f
+	 bjV5GH2EWxqgDviQr7q1eF3ZP2NM6Z1U8+N8hY8bR71+AjeSPFDD+hGKum0+Hy40Gk
+	 vGc3TMoN7/0XXU3/aSymwYT4ELEccmfbh+ykc5GW7D6VY1RBEodNY4VHMVlZQTuxl2
+	 4L6+CsjGZkFbWB7YKqKhn7lWq3Ut3SmWNr/5fbvAgS1UvM+4O8k2b96+qe2SM6YCRN
+	 Cg4ROOIUmLjEOuoMb8DszLf9dBSNFjpOnfnWgBnCInNMBTbFUkp26K0l1O8Fs5SjbL
+	 0pBX3QgCQAYCw==
+Date: Thu, 17 Oct 2024 12:08:25 -0700
+Subject: [PATCH 26/34] xfs: mask off the rtbitmap and summary inodes when
+ metadir in use
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919072100.3453179.3999964281736504018.stgit@frogsfrogsfrogs>
+Message-ID: <172919072118.3453179.14385122365574800490.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 References: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,150 +46,67 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add the code we need to scan the metadata directory paths of rt group
-metadata files.
+Set the rtbitmap and summary file inumbers to NULLFSINO in the
+superblock and make sure they're zeroed whenever we write the superblock
+to disk, to mimic mkfs behavior.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_fs.h  |    5 ++-
- fs/xfs/scrub/metapath.c |   92 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 96 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_sb.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 50de6ad88dbe45..96f7d3c95fb4bc 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -822,9 +822,12 @@ struct xfs_scrub_vec_head {
-  * path checking.
-  */
- #define XFS_SCRUB_METAPATH_PROBE	(0)  /* do we have a metapath scrubber? */
-+#define XFS_SCRUB_METAPATH_RTDIR	(1)  /* rtrgroups metadir */
-+#define XFS_SCRUB_METAPATH_RTBITMAP	(2)  /* per-rtg bitmap */
-+#define XFS_SCRUB_METAPATH_RTSUMMARY	(3)  /* per-rtg summary */
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index c55ccecaccbda4..1af7029753ea15 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -655,6 +655,14 @@ xfs_validate_sb_common(
+ void
+ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
+ {
++	if (xfs_sb_is_v5(sbp) &&
++	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)) {
++		sbp->sb_uquotino = NULLFSINO;
++		sbp->sb_gquotino = NULLFSINO;
++		sbp->sb_pquotino = NULLFSINO;
++		return;
++	}
++
+ 	/*
+ 	 * older mkfs doesn't initialize quota inodes to NULLFSINO. This
+ 	 * leads to in-core values having two different values for a quota
+@@ -783,6 +791,8 @@ __xfs_sb_from_disk(
+ 		to->sb_metadirino = be64_to_cpu(from->sb_metadirino);
+ 		to->sb_rgcount = be32_to_cpu(from->sb_rgcount);
+ 		to->sb_rgextents = be32_to_cpu(from->sb_rgextents);
++		to->sb_rbmino = NULLFSINO;
++		to->sb_rsumino = NULLFSINO;
+ 	} else {
+ 		to->sb_metadirino = NULLFSINO;
+ 		to->sb_rgcount = 1;
+@@ -805,6 +815,14 @@ xfs_sb_quota_to_disk(
+ {
+ 	uint16_t	qflags = from->sb_qflags;
  
- /* Number of metapath sm_ino values */
--#define XFS_SCRUB_METAPATH_NR		(1)
-+#define XFS_SCRUB_METAPATH_NR		(4)
++	if (xfs_sb_is_v5(from) &&
++	    (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)) {
++		to->sb_uquotino = cpu_to_be64(0);
++		to->sb_gquotino = cpu_to_be64(0);
++		to->sb_pquotino = cpu_to_be64(0);
++		return;
++	}
++
+ 	to->sb_uquotino = cpu_to_be64(from->sb_uquotino);
  
- /*
-  * ioctl limits
-diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index edc1a395c4015a..b8e427fd7fa73e 100644
---- a/fs/xfs/scrub/metapath.c
-+++ b/fs/xfs/scrub/metapath.c
-@@ -20,6 +20,7 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_trans_space.h"
- #include "xfs_attr.h"
-+#include "xfs_rtgroup.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -79,6 +80,91 @@ xchk_metapath_cleanup(
- 	kfree(mpath->path);
+ 	/*
+@@ -940,6 +958,8 @@ xfs_sb_to_disk(
+ 		to->sb_metadirino = cpu_to_be64(from->sb_metadirino);
+ 		to->sb_rgcount = cpu_to_be32(from->sb_rgcount);
+ 		to->sb_rgextents = cpu_to_be32(from->sb_rgextents);
++		to->sb_rbmino = cpu_to_be64(0);
++		to->sb_rsumino = cpu_to_be64(0);
+ 	}
  }
  
-+/* Set up a metadir path scan.  @path must be dynamically allocated. */
-+static inline int
-+xchk_setup_metapath_scan(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	const char		*path,
-+	struct xfs_inode	*ip)
-+{
-+	struct xchk_metapath	*mpath;
-+	int			error;
-+
-+	if (!path)
-+		return -ENOMEM;
-+
-+	error = xchk_install_live_inode(sc, ip);
-+	if (error) {
-+		kfree(path);
-+		return error;
-+	}
-+
-+	mpath = kzalloc(sizeof(struct xchk_metapath), XCHK_GFP_FLAGS);
-+	if (!mpath) {
-+		kfree(path);
-+		return -ENOMEM;
-+	}
-+
-+	mpath->sc = sc;
-+	sc->buf = mpath;
-+	sc->buf_cleanup = xchk_metapath_cleanup;
-+
-+	mpath->dp = dp;
-+	mpath->path = path; /* path is now owned by mpath */
-+
-+	mpath->xname.name = mpath->path;
-+	mpath->xname.len = strlen(mpath->path);
-+	mpath->xname.type = xfs_mode_to_ftype(VFS_I(ip)->i_mode);
-+
-+	return 0;
-+}
-+
-+#ifdef CONFIG_XFS_RT
-+/* Scan the /rtgroups directory itself. */
-+static int
-+xchk_setup_metapath_rtdir(
-+	struct xfs_scrub	*sc)
-+{
-+	if (!sc->mp->m_rtdirip)
-+		return -ENOENT;
-+
-+	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
-+			kasprintf(GFP_KERNEL, "rtgroups"), sc->mp->m_rtdirip);
-+}
-+
-+/* Scan a rtgroup inode under the /rtgroups directory. */
-+static int
-+xchk_setup_metapath_rtginode(
-+	struct xfs_scrub	*sc,
-+	enum xfs_rtg_inodes	type)
-+{
-+	struct xfs_rtgroup	*rtg;
-+	struct xfs_inode	*ip;
-+	int			error;
-+
-+	rtg = xfs_rtgroup_get(sc->mp, sc->sm->sm_agno);
-+	if (!rtg)
-+		return -ENOENT;
-+
-+	ip = rtg->rtg_inodes[type];
-+	if (!ip) {
-+		error = -ENOENT;
-+		goto out_put_rtg;
-+	}
-+
-+	error = xchk_setup_metapath_scan(sc, sc->mp->m_rtdirip,
-+			xfs_rtginode_path(rtg_rgno(rtg), type), ip);
-+
-+out_put_rtg:
-+	xfs_rtgroup_put(rtg);
-+	return error;
-+}
-+#else
-+# define xchk_setup_metapath_rtdir(...)		(-ENOENT)
-+# define xchk_setup_metapath_rtginode(...)	(-ENOENT)
-+#endif /* CONFIG_XFS_RT */
-+
- int
- xchk_setup_metapath(
- 	struct xfs_scrub	*sc)
-@@ -94,6 +180,12 @@ xchk_setup_metapath(
- 		if (sc->sm->sm_agno)
- 			return -EINVAL;
- 		return 0;
-+	case XFS_SCRUB_METAPATH_RTDIR:
-+		return xchk_setup_metapath_rtdir(sc);
-+	case XFS_SCRUB_METAPATH_RTBITMAP:
-+		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_BITMAP);
-+	case XFS_SCRUB_METAPATH_RTSUMMARY:
-+		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_SUMMARY);
- 	default:
- 		return -ENOENT;
- 	}
 
