@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9309F21BAEF
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:01:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C71621D63F
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:01:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729191681; cv=none; b=HIlNPEHojP2u2D6Zq7ulUuk2JouNDLg5yF1x4GhCtgASO84v99LWx0MzVfFEBJua95t5wF5P3mt9fwLxNByKSozdyNFJ+0/S9PmhnBAJ9RfXgupB8clwwRxiYRlx9flksmRZwTok/zVp+DffPp4VF1WBUY2W15TyfRuyRbKFDHY=
+	t=1729191692; cv=none; b=eXod6A+tg3TIg0r5W2qmJEkewGH3hz3/YEzC/JqCBB0IbqsJFJ+fgx0WUZPQKALxxMgKDt4/yZLCS+llhwegP4XIbk931hoAClX7zeoIjcg5q1Rgf6YUyAIqC0k9N8QUb0Kqyxy+nK66QnGBnbIVYqPOnYQoKF+y9lZIjCsLIa8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729191681; c=relaxed/simple;
-	bh=1td6oDYyNE4XnoB4BbbIPnUt9ybeSUSwVvwa4o+otag=;
+	s=arc-20240116; t=1729191692; c=relaxed/simple;
+	bh=cPy+w3P3xrZU4SgfMIyiW/yBXoFfRtlNApIeoaG+FTo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VATUelg1fUvT7JOGAzN9JkUVFGksy4R/y1ke4O2TFpKDf4rIHYxWg2+UneBBf9uplbocT8zdX+BBGb7sx30n1/a1W9b7/Hx+Axzrm51x4hafA983o18LD3i+t6V5/UFdqbRMXQ9eoi08zmQwODct/NPkxcGr2oCd+EYAClsFAO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MP3SafKZ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jGouSUR3upvOlkw4YeNG9YwHuIrIPbih6QZELo26fHjCgwhBuLpXYa76PhhKDNm9ZQ8BCaX5xFDXuwr3tRZAmCC+ry2ajc9d6ExGP5DHxvbhdhk0PE2gcaRQkaWjjpoI6dszpoxTsO61Bzm/yrlzvPDYXItHldkNsv5VtnWcCwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GEFC5njn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MP3SafKZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AEF2C4CECE;
-	Thu, 17 Oct 2024 19:01:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GEFC5njn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E62BC4CEC3;
+	Thu, 17 Oct 2024 19:01:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729191681;
-	bh=1td6oDYyNE4XnoB4BbbIPnUt9ybeSUSwVvwa4o+otag=;
+	s=k20201202; t=1729191692;
+	bh=cPy+w3P3xrZU4SgfMIyiW/yBXoFfRtlNApIeoaG+FTo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MP3SafKZcsgkV9mHMm7aIyDYG78SoZCWluAlwhF3U2brAAVPbnwJ3GqOP1COwmz3a
-	 sshK56tzMWXydlTxhjCIW8xHZhmXovMaKmUF6qReWObSPA5Y9MXHZNkpvL9snPUoXE
-	 gELKua9h1Y17Rx7v07ICiYhhu5SOnlAc4G1gv6J3XbPSZmmx8joHvtV4nwtACsPcsd
-	 7Iyy8AA4wZmAl7dLXpjoo4e1sImAOr+uRw+mPYGK5bOTH2GlBNer5hp0HQ7qsBJlKk
-	 oVG0TNhdJteR5oF5R34bVOtwPXAFpTdET2MSO+FdG7bu6HkF/uOu0QtSinZfnFFCi9
-	 zifug3Lvh6ksw==
-Date: Thu, 17 Oct 2024 12:01:21 -0700
-Subject: [PATCH 09/21] xfs: factor out a xfs_growfs_rt_alloc_blocks helper
+	b=GEFC5njnENWfRib/i3VQEjA4gv1dIy0Tq5I77R2zdT/B803HxWm+UX+DOAU0Fd5Bq
+	 pdSPh9mFFdgofaspUeuy3VEJwbixR6aw6VR8yUurGW5Pc/dj+RHNhoPYUSLJaCNu0h
+	 txMzf0S0GWKnt0H3G90AiO6vK+I3fBEtYl7119HP/lymEoD9yb2Mw/j7WPUZl9iko1
+	 O3LXVUhWhFiW0ESlDHbZXTW5QgnnlsSYqinMgtRKLpU2zoWCSS2y7MXsiBAL8fsZzG
+	 Xg1hYTiKumkiRq6zYf7MlTwHeXXUv0WtC2pyWCXMHLeMFRq8uLINz1dh54HdirpWaZ
+	 MhO4s7UtYIDCQ==
+Date: Thu, 17 Oct 2024 12:01:31 -0700
+Subject: [PATCH 10/21] xfs: cleanup xfs_getfsmap_rtdev_rtbitmap
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919070552.3452315.7391021401533104594.stgit@frogsfrogsfrogs>
+Message-ID: <172919070568.3452315.14170778570848350294.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919070339.3452315.8623007849785117687.stgit@frogsfrogsfrogs>
 References: <172919070339.3452315.8623007849785117687.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,96 +45,74 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Split out a helper to allocate or grow the rtbitmap and rtsummary files
-in preparation of per-RT group bitmap and summary files.
+Use mp->m_sb.sb_rblocks to calculate the end instead of sb_rextents that
+needs a conversion, use consistent names to xfs_rtblock_t types, and
+only calculated them by the time they are needed.  Remove the pointless
+"high" local variable that only has a single user.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   56 +++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 39 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_fsmap.c |   25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 96225313686414..9a451f88bf4647 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -875,6 +875,43 @@ xfs_last_rt_bmblock(
- 	return bmbno;
- }
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 40beb8d75f26b1..3d42153b4bdb29 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -754,30 +754,29 @@ xfs_getfsmap_rtdev_rtbitmap(
  
-+/*
-+ * Allocate space to the bitmap and summary files, as necessary.
-+ */
-+static int
-+xfs_growfs_rt_alloc_blocks(
-+	struct xfs_mount	*mp,
-+	xfs_rfsblock_t		nrblocks,
-+	xfs_agblock_t		rextsize,
-+	xfs_extlen_t		*nrbmblocks)
-+{
-+	struct xfs_inode	*rbmip = mp->m_rbmip;
-+	struct xfs_inode	*rsumip = mp->m_rsumip;
-+	xfs_rtxnum_t		nrextents = div_u64(nrblocks, rextsize);
-+	xfs_extlen_t		orbmblocks;
-+	xfs_extlen_t		orsumblocks;
-+	xfs_extlen_t		nrsumblocks;
-+	int			error;
-+
-+	/*
-+	 * Get the old block counts for bitmap and summary inodes.
-+	 * These can't change since other growfs callers are locked out.
-+	 */
-+	orbmblocks = XFS_B_TO_FSB(mp, rbmip->i_disk_size);
-+	orsumblocks = XFS_B_TO_FSB(mp, rsumip->i_disk_size);
-+
-+	*nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
-+	nrsumblocks = xfs_rtsummary_blockcount(mp,
-+		xfs_compute_rextslog(nrextents) + 1, *nrbmblocks);
-+
-+	error = xfs_rtfile_initialize_blocks(rbmip, orbmblocks,
-+			*nrbmblocks, NULL);
-+	if (error)
-+		return error;
-+	return xfs_rtfile_initialize_blocks(rsumip, orsumblocks,
-+			nrsumblocks, NULL);
-+}
-+
- /*
-  * Grow the realtime area of the filesystem.
-  */
-@@ -889,8 +926,6 @@ xfs_growfs_rt(
- 	xfs_extlen_t	nrbmblocks;	/* new number of rt bitmap blocks */
- 	xfs_rtxnum_t	nrextents;	/* new number of realtime extents */
- 	xfs_extlen_t	nrsumblocks;	/* new number of summary blocks */
--	xfs_extlen_t	rbmblocks;	/* current number of rt bitmap blocks */
--	xfs_extlen_t	rsumblocks;	/* current number of rt summary blks */
- 	uint8_t		*rsum_cache;	/* old summary cache */
- 	xfs_agblock_t	old_rextsize = mp->m_sb.sb_rextsize;
+ 	struct xfs_rtalloc_rec		ahigh = { 0 };
+ 	struct xfs_mount		*mp = tp->t_mountp;
+-	xfs_rtblock_t			start_rtb;
+-	xfs_rtblock_t			end_rtb;
+-	xfs_rtxnum_t			high;
++	xfs_rtblock_t			start_rtbno, end_rtbno;
+ 	uint64_t			eofs;
+ 	int				error;
  
-@@ -963,21 +998,8 @@ xfs_growfs_rt(
- 		goto out_unlock;
+-	eofs = XFS_FSB_TO_BB(mp, xfs_rtx_to_rtb(mp, mp->m_sb.sb_rextents));
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
+ 	if (keys[0].fmr_physical >= eofs)
+ 		return 0;
+-	start_rtb = XFS_BB_TO_FSBT(mp,
+-				keys[0].fmr_physical + keys[0].fmr_length);
+-	end_rtb = XFS_BB_TO_FSB(mp, min(eofs - 1, keys[1].fmr_physical));
+ 
+ 	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
+ 
+ 	/* Adjust the low key if we are continuing from where we left off. */
++	start_rtbno = xfs_daddr_to_rtb(mp,
++			keys[0].fmr_physical + keys[0].fmr_length);
+ 	if (keys[0].fmr_length > 0) {
+-		info->low_daddr = xfs_rtb_to_daddr(mp, start_rtb);
++		info->low_daddr = xfs_rtb_to_daddr(mp, start_rtbno);
+ 		if (info->low_daddr >= eofs)
+ 			return 0;
  	}
  
--	/*
--	 * Get the old block counts for bitmap and summary inodes.
--	 * These can't change since other growfs callers are locked out.
--	 */
--	rbmblocks = XFS_B_TO_FSB(mp, mp->m_rbmip->i_disk_size);
--	rsumblocks = XFS_B_TO_FSB(mp, mp->m_rsumip->i_disk_size);
--	/*
--	 * Allocate space to the bitmap and summary files, as necessary.
--	 */
--	error = xfs_rtfile_initialize_blocks(mp->m_rbmip, rbmblocks,
--			nrbmblocks, NULL);
--	if (error)
--		goto out_unlock;
--	error = xfs_rtfile_initialize_blocks(mp->m_rsumip, rsumblocks,
--			nrsumblocks, NULL);
-+	error = xfs_growfs_rt_alloc_blocks(mp, in->newblocks, in->extsize,
-+			&nrbmblocks);
+-	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_rtb);
+-	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_rtb);
++	end_rtbno = xfs_daddr_to_rtb(mp, min(eofs - 1, keys[1].fmr_physical));
++
++	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_rtbno);
++	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_rtbno);
+ 
+ 	xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
+ 
+@@ -785,9 +784,9 @@ xfs_getfsmap_rtdev_rtbitmap(
+ 	 * Set up query parameters to return free rtextents covering the range
+ 	 * we want.
+ 	 */
+-	high = xfs_rtb_to_rtxup(mp, end_rtb);
+-	error = xfs_rtalloc_query_range(mp, tp, xfs_rtb_to_rtx(mp, start_rtb),
+-			high, xfs_getfsmap_rtdev_rtbitmap_helper, info);
++	error = xfs_rtalloc_query_range(mp, tp, xfs_rtb_to_rtx(mp, start_rtbno),
++			xfs_rtb_to_rtxup(mp, end_rtbno),
++			xfs_getfsmap_rtdev_rtbitmap_helper, info);
  	if (error)
- 		goto out_unlock;
+ 		goto err;
  
 
