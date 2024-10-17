@@ -1,69 +1,69 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C25D4A0F
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 00:29:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7161110F2
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 00:53:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729124995; cv=none; b=mx8WerpW9/fVINm6IYC1mAV53F/lfohig/iuTJO07XybE9cZKPjUhi3IDSRubcsC2GyyzVOrDOnX1oFazVZuOBgBbcpdDuIm7tXEyNsxzaGHe9LkXiXPKi+AAFSN3LUdwxnZTUJeEDUdqaxc4ruXcZvs550oWWQXzKlotlshVco=
+	t=1729126408; cv=none; b=G7zkkyoumfRNSq5kdKky3AV2YH/H0l0xUovS6M9/GirEbAU6Ei09p/U2iNVdlknqdFGsf4LJWYkHcDYlNy72/FtnKpCyW4AZ3XUGDDC3fOssYDvNAk1A0UAoALgyzRoKuIUdWvThyLzlN4wUyP4tsev4u0bsV0a9AewS/ZTQlmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729124995; c=relaxed/simple;
-	bh=CDT0XC42KA5kDFs8w7hrAge7hVDbt3kWQB9W64z5KD8=;
+	s=arc-20240116; t=1729126408; c=relaxed/simple;
+	bh=itmRBCyOHouzo9A+F3qhScrbBHXCrNzpvwkew3uPQ5Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A2Z+FUJvAocW3OnSYOqOR813SpNb49l8HRjsrYFrruMAPJB0LRPn+pmFotSRj3xzXAGMqHdJpL9rI87UTVHrAdy036+Cu3d9GPutgHMbj9urhXsy1FxBh+s0csKzf7LD6B8AnfR60hdV0082kwJiYTKN6eerpQUFIHjVb33z8gs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xcq5NkuB; arc=none smtp.client-ip=209.85.215.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=BFrE7dSbDPj83JyYOTUpq7pltxY1II9OfTEvr/uccK0i1Btn7kFXmQdOClLnONO1phhYpkaP5zRWZ9l9m5PVuLNX1FmPLBi4IaH66jal0ojLHjzmsG7/mzQDYiU4Wq4X7ekxOdg1PVx4UScpRwxZCYZj6ZhDF8jeiec5/E81Qzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=EX0QmdN7; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xcq5NkuB"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7db908c9c83so242272a12.2
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 17:29:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="EX0QmdN7"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-71e49ef3b2bso273365b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 17:53:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729124994; x=1729729794; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729126405; x=1729731205; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=f1wptyjhT3IFmslFEr7REugt6yoC6NkBMTWfaUPoWYo=;
-        b=xcq5NkuBaKv5OiWVApSSXaBz7DbpkbJUE/66Mk3Flaw4TRjQ7fsjHTwWPyPoj32dHM
-         HeTNrMqjxD+sXbJ8YEJGsYVzYHta4En4LhaVxYZsOoKl2cyw67r1kDOkdBT1lSmQ2oT0
-         mSDpBLYcMTWX33g6lpA4ANHOTwya+1Tc+FdoaOK+PwW5GCd3FBAw3/Au5kXNrRAbzWUF
-         pHBCIUIi/1qqhD+hjKIWYtcHrAt1Sosfpu3dwBojJ2ZMuVDdeHbRWYfAJoHTyuF6JNlX
-         kjLCxkQHw91ukNrJN0gzZCVbPvbEWppZ9b9d1Wn3rPiQh8yVRPWOlb/NkDrSuoI/cWs7
-         aB0g==
+        bh=IK5h5w5Ghva2vbT6gutysnV4jCZSHbLo7fe8Cq+2V+I=;
+        b=EX0QmdN7CqCXKAujtObtBzN+8yWwr9nkWkatqEOZ8R9mJzO2m3kBxttZQA0Q6yLEfC
+         WLLD8Ob6s+nWrsB9jK2EAKFJLY1uad1mdFqdSQxD+9mmmqcNiTgATm3eIUDvsQMDrzoZ
+         1QoXGcIx+FHtvu61mSI/JZbgUPdqVSxlRPhYG5tT/L4yn78y1kEcdpYsQ6WDeZQ3BKRq
+         VCh3sxLvBKODcwFO19QbUzrQJMvenkN4o+vTp8jOyAZ1p2CA3lj1xyD45wm3l5zBgo6x
+         /Eqd9g+huFpHM8jdPzUqs415IwiTP2y+3oEhIGayHAixchbDbTl7WKeNmCMNFgNjzEnT
+         9HDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729124994; x=1729729794;
+        d=1e100.net; s=20230601; t=1729126405; x=1729731205;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=f1wptyjhT3IFmslFEr7REugt6yoC6NkBMTWfaUPoWYo=;
-        b=ZILqynU5IxxoEO6fIWZTpKF2/lP19eAUPNzFeb/vRdUETKKJlFPpEpCzpFgNAdJGHM
-         8eec8kN5GjOuHFdS38KpN+GdqFtiBqEPr9Gbp7zHp+Aty6vlr5nz0MmEF8qmzAH+uPlX
-         6somguxwLqPnZtFTu3SwK3yHpzDa0GugCVB1oaSYXx1tF5ei1lWbF7gZEkaLIqkXAsS/
-         Qomc6QcTunlLf5EnOvPl9ZDwwGfWKx6/c/U8gWa2Ee3Px9pTqI0JYET/iB3wBMqy13xJ
-         x2+pz0Y6IeEITbvfbMuLGBiUkUWyX2Fd2SMOFDqIXaURCGxAm/byYfXMfk5RoGhMjETG
-         gKEA==
-X-Forwarded-Encrypted: i=1; AJvYcCUbmKGxEBFxjRwCf2VQnxFQ4n1h2jKiXAfWpwBGk4rvkJEPd7/whCHzj0MsPdFuyqF7XEGIwTXHYpM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwjMZGTHnV0SzArQ6HCEGwxeJGpvGE0O9l3iHtzKEeSZdBndkTc
-	Prswktf+C1SQaXd/Zu7hWMwIDzP/4D3QdChpEmglo54Y366EbNSa5YJA27ptTMk=
-X-Google-Smtp-Source: AGHT+IGUGyt85bsnX8/5grRTTn+LbgbFmLULv4/fW2j0FdiTvsodajpT5FkWWCl6tVIuG8LUNy65tQ==
-X-Received: by 2002:a05:6a21:164e:b0:1d9:f5d:b502 with SMTP id adf61e73a8af0-1d90f5db650mr4313437637.15.1729124993709;
-        Wed, 16 Oct 2024 17:29:53 -0700 (PDT)
+        bh=IK5h5w5Ghva2vbT6gutysnV4jCZSHbLo7fe8Cq+2V+I=;
+        b=C7kABUec6ONNTnDVpwhnkT8ssqcfStAGnyXpOpHvTC9+U07ejS9UtnHhkxHPyj4Rs9
+         nm7bPGksLsidfNW30AncRC+gdlrvi5L5kqdfBgjKwHxdn1t5ctQIycZYYr+kZnT+yrDY
+         UrssgYP06Cbp8mdFjWyPPJqOaf6rOP0xtbUUiT4RsRDfp5sK7AMDjdgglDTQFmRAe+dz
+         RYNFgVC7+7l3SUfnAeOp2YDljKcevUHWOCQs9Ps1xkY0FEZLx96/jofTdFiQ1RBEx7WB
+         kzcNxKiwr7R4nLQQbEE7py+Jlq3i7KbwmQxsL5DRsjtFfEoZefUVAQbZVpsD7K0nejna
+         +LfQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXfTi9+IkAYhoghuT+mlxbNMVe0OrR9CoDT/s8xC3lEWN3l+d4mGLE+g6apzagoG3oaIV25XLl3ki0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy/Um0ZN5gyAVwqQWRrYZnfUZCLWpzLNYuC1TcqME14+AduJB8T
+	lv3t64GQ326xM4r0SsePU7TM0hoivts4L3ZkfM7JZKIzgdZT3FC6FPgsufM8bdo=
+X-Google-Smtp-Source: AGHT+IESEFIczjMTnRS7nuNJYsAKWZtPSOEJF8D08vVUNv2Ii/9kat5KgkzI53i7+OFX/13ck3qaCw==
+X-Received: by 2002:a05:6a00:320b:b0:71e:41b3:a56b with SMTP id d2e1a72fcca58-71e41b3a6eemr19937994b3a.24.1729126404786;
+        Wed, 16 Oct 2024 17:53:24 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-209-182.pa.vic.optusnet.com.au. [49.186.209.182])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7ea9c715dbfsm3361295a12.87.2024.10.16.17.29.52
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71e774c315fsm3785824b3a.141.2024.10.16.17.53.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Oct 2024 17:29:52 -0700 (PDT)
+        Wed, 16 Oct 2024 17:53:24 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1t1EOj-001nfB-33;
-	Thu, 17 Oct 2024 11:29:49 +1100
-Date: Thu, 17 Oct 2024 11:29:49 +1100
+	id 1t1ElV-001nw3-2D;
+	Thu, 17 Oct 2024 11:53:21 +1100
+Date: Thu, 17 Oct 2024 11:53:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Xiongwei Song <sxwbruce@gmail.com>
-Cc: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: XFS performance degradation during running cp command with big
- test file
-Message-ID: <ZxBafdsU6ioeTBmQ@dread.disaster.area>
-References: <CALy5rjUMnocsh80gPB+4UgaFS-Gsz5KAFnAN8Nj7m_oyohFfvg@mail.gmail.com>
+To: syzbot <syzbot+611be8174be36ca5dbc9@syzkaller.appspotmail.com>
+Cc: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] INFO: task hung in xfs_ail_push_all_sync (2)
+Message-ID: <ZxBgAU7aasIzcBfj@dread.disaster.area>
+References: <67104ab3.050a0220.d9b66.0175.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,63 +72,59 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CALy5rjUMnocsh80gPB+4UgaFS-Gsz5KAFnAN8Nj7m_oyohFfvg@mail.gmail.com>
+In-Reply-To: <67104ab3.050a0220.d9b66.0175.GAE@google.com>
 
-On Wed, Oct 16, 2024 at 07:09:29PM +0800, Xiongwei Song wrote:
-> Dear Experts,
+On Wed, Oct 16, 2024 at 04:22:27PM -0700, syzbot wrote:
+> Hello,
 > 
-> We are facing a performance degradation on the XFS partition. We
-> was trying to copy a big file(200GB ~ 250GB) from a path to /dev/null,
-> when performing cp command to 60s ~ 90s, the reading speed was
-> suddenly down. At the beginning, the reading speed was around
-> 1080MB/s, 60s later the speed was down to around 350MB/s. This
-> problem  is only found with XFS + Thick LUN.
+> syzbot found the following issue on:
+> 
+> HEAD commit:    09f6b0c8904b Merge tag 'linux_kselftest-fixes-6.12-rc3' of..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=14af3fd0580000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=7cd9e7e4a8a0a15b
+> dashboard link: https://syzkaller.appspot.com/bug?extid=611be8174be36ca5dbc9
+> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16c7705f980000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14d2fb27980000
 
-There are so many potential things that this could be caused by.
+I explained this last time syzbot triggered this: this is a syzbot
+configuration problem, not a filesystem bug.
 
-> The test environment:
-> Storage Model: Dell unity XT 380 Think/Thin LUN
+[   96.418071][ T5112] XFS (loop0): Mounting V5 Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
+[   96.593743][ T5112] XFS (loop0): Ending clean mount
+[   96.791357][ T5112] loop0: detected capacity change from 32768 to 0
+[   96.814808][ T5127] xfsaild/loop0: attempt to access beyond end of device
+[   96.814808][ T5127] loop0: rw=4097, sector=2, nr_sectors = 1 limit=0
+[   96.851235][ T5127] xfsaild/loop0: attempt to access beyond end of device
+[   96.851235][ T5127] loop0: rw=4097, sector=24, nr_sectors = 8 limit=0
+[   96.860284][    T9] XFS (loop0): metadata I/O error in "xfs_buf_ioerror_alert_ratelimited+0x7b/0x1e0" at daddr 0x2 len 1 error 5
+[   96.886045][    T9] kworker/0:1: attempt to access beyond end of device
+[   96.886045][    T9] loop0: rw=4097, sector=2, nr_sectors = 1 limit=0
+[   96.900489][ T5127] xfsaild/loop0: attempt to access beyond end of device
+[   96.900489][ T5127] loop0: rw=4097, sector=32, nr_sectors = 8 limit=0
+[   96.932892][    T9] kworker/0:1: attempt to access beyond end of device
+[   96.932892][    T9] loop0: rw=4097, sector=24, nr_sectors = 8 limit=0
+[   96.940364][ T5127] xfsaild/loop0: attempt to access beyond end of device
+[   96.940364][ T5127] loop0: rw=4097, sector=8832, nr_sectors = 64 limit=0
+.....
 
-How many CPUS, RAM, etc does this have?  What disks and what is the
-configuration of the fully provisioned LUN you are testing on?
+And so it goes until something tries to freeze the filesystem and
+gets stuck waiting for writeback of metadata that is not making
+progress because XFS defaults to -retry metadata write errors
+forever- until the filesystem is shut down.
 
-> Linux Version: 4.12.14
+If the user expects an XFS filesystem to fail fast when they
+accidentally shrink the block device under a mounted filesytem, then
+they need to configure XFS to fail metadata IO fast. Otherwise
+metadata will remain dirty and be retried until the filesystem is
+shut down or the error behaviour is reconfigured.
 
-You're running an ancient kernel, so the first thing to do is move
-to a much more recent kernel (e.g. 6.11) and see if the same
-behaviour occurs. If it does, then please answer all the other
-questions I've asked and provide the information from running the
-tests on the 6.11 kernel...
+Please fix your syzbot configurations and/or tests that screw with
+the block device under filesystems to configure XFS filesystems to
+fail fast so that these tests no longer generate unwanted noise.
 
-> The steps to run test:
-> 1) Create a xfs partition with following commands
->    parted -a opt /dev/sdb mklabel gpt mkpart sdb xfs 0% 100%
->    mkfs.xfs /dev/sdbx
->    mount /dev/sdbx /xfs
-
-What is the output of mkfs.xfs?
-
-Did you drop the page cache between the initial file create and
-the measured copy?
-
-what is the layout of the file you are copying from (ie. xfs_bmap
--vvp <file> output)?
-
-> It seems the issue only can be triggered with XFS + Thick LUN,
-> no matter dd or cp to read the test file. We would like to learn
-> if there is something special with XFS in this test situation?
-> Is it known?
-
-It smells like the difference in bandwidth between the outside edge
-and the inside edge of a spinning disk, and XFS is switching
-allocation location of the very big file from the outside to the
-inside part way through the file (e.g. because the initial AG the
-file is located in is full)...
-
-> Do you have any thoughts or suggestions? Also, do you need vmstat
-> or iostat logs or blktrace or any other logs to address this issue?
-
-iostat and vmstat output in 1s increments would be useful.
+#syz invalid
 
 -Dave.
 -- 
