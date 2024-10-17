@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE4491E0DC3
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:07:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533E81E0DC3
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:07:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729192021; cv=none; b=RR866af4bbHOk+1uqr7nVTeTi6EeRpe6AbBkAdvoHXAjXe6ESW1qHKGpVp0g8YP+SPulIHTY9FwS2VGH0ZOhS/3eLzebvkAdnTS1WyODfPlJ5MKJuD0AdqPGZvdMgc2NwLyE0u4CJxVAEWJ/Bm9LGpOXEs2A2XFdLD72kA+TWqI=
+	t=1729192032; cv=none; b=ZD2JyTp/sGBKvSSwih6J5PLweDwiULliFgTm42Z+pudZ4V5WKo9Mcl+x9gIFsVHizI2elO6u8bcci/3usP8z5km0tTmDqCHH2NPl7tvehSz3X+fDsuA0XnFKmbmnZHTZax4QgTY+gkBCrvPUz0XM3sIUb/3iA50huAAsKgiqbuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729192021; c=relaxed/simple;
-	bh=UamPD1cBLp3qwNsRbPtR7FoXqQ2uWOt20uFGHhaRtR4=;
+	s=arc-20240116; t=1729192032; c=relaxed/simple;
+	bh=ugdZLp8NfxKQy/0klcxbfwdvj+NjGEDvTOY+1bc34iM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q/ODuKk71m/476OkO+i4vZhwmxbS9lWFt9BBReQZd4Nkmvz7blW3MRHxc3uMpfE0WO2nZGTK7uLgDEwi7q3C0ABRVA7OSXFQ9nqTYt6Toww6cuTN2ETpfLm/TMpen3jIL/iaP5SdBVHqiAaSyP5b+Q5Qai94MBd9p3g77cX2Eio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UuHD5DD1; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=spC+yG7ddROFG6NvFy1xynNqOmj65ZxTvgCMMrSvgiY6snnjKwhW8uNgpdR3CDYrPduLu+8AGix66UPT/ndpzvDL9qJ1bN3RPCyHt7fGERBJid14RPa15RPmDDSCbIjOMFVwF63KVMIPqGjKKHwMbAdg3rn6mCaGPtZNHjpCxKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dgsAGRWa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UuHD5DD1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C883C4CEC3;
-	Thu, 17 Oct 2024 19:07:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dgsAGRWa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E07FC4CEC3;
+	Thu, 17 Oct 2024 19:07:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729192021;
-	bh=UamPD1cBLp3qwNsRbPtR7FoXqQ2uWOt20uFGHhaRtR4=;
+	s=k20201202; t=1729192032;
+	bh=ugdZLp8NfxKQy/0klcxbfwdvj+NjGEDvTOY+1bc34iM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UuHD5DD1Ekj98iS3pTJGBiYDKBRkwzijfHErxBw50SEGVh33kAn5VXOpabWhJXTaQ
-	 YeWWq+7NngQHfxvJE6RyNdZFU9IjdpsxcLktnOZfxmLpf8vzbNirANPeAMQMFXUTpd
-	 YcsFE8nNJLn1ccp4lBcM82BtkZqcDCUPEsJs1dAYT3r6nbWofRjRGV1a5CXpgy0/vi
-	 ZMA7XuFuzqlHElfhpKoIYp/2ptVLCaVbgDapLF1Opgs00rJe/YDcFcEDKdqtYlR+ep
-	 sTsi5fLLS63QQ4pMTXViJqw+HL2AM658CdtBYodfGPirIEFFVSY+EQ6jGO3cJZTJsP
-	 jZwKGIjRX/k/w==
-Date: Thu, 17 Oct 2024 12:07:01 -0700
-Subject: [PATCH 18/34] xfs: support error injection when freeing rt extents
+	b=dgsAGRWaMtCRkMQg/LVEYIPuyC1K8468CpRMPe8B28JrOHdQhaz9eWfQk7va4mpr3
+	 59jnccG/tK9SweJS8cNfs2UPdL40yGjhhU+eyw5JZAGCxl9epDz8tUC6b/km34vhSN
+	 Ia1FMrgAulIv1bay5c1eE12XBscVhAcSYAvq6PV/5vEyXr3zgfkQbQsur+qjPaUwYh
+	 N1q+3aPNdtTGrO+T5NF1tA8glTff3e22aq+sPMOngSjbWXUTNcFGRQ3DKtRkMytYqs
+	 AKk4djlotauPh9KaZRoCdS7qO99AeBPqBCZaRI5AjWnrwSUcd7Vn+mjnqKrxY7h0jk
+	 DdCrsqx8HqBxg==
+Date: Thu, 17 Oct 2024 12:07:11 -0700
+Subject: [PATCH 19/34] xfs: use realtime EFI to free extents when rtgroups are
+ enabled
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919071979.3453179.9098747688844513291.stgit@frogsfrogsfrogs>
+Message-ID: <172919071996.3453179.4291910414964467609.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 References: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,38 +46,59 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-A handful of fstests expect to be able to test what happens when extent
-free intents fail to actually free the extent.  Now that we're
-supporting EFIs for realtime extents, add to xfs_rtfree_extent the same
-injection point that exists in the regular extent freeing code.
+When rmap is enabled, XFS expects a certain order of operations, which
+is: 1) remove the file mapping, 2) remove the reverse mapping, and then
+3) free the blocks.  When reflink is enabled, XFS replaces (3) with a
+deferred refcount decrement operation that can schedule freeing the
+blocks if that was the last refcount.
+
+For realtime files, xfs_bmap_del_extent_real tries to do 1 and 3 in the
+same transaction, which will break both rmap and reflink unless we
+switch it to use realtime EFIs.  Both rmap and reflink depend on the
+rtgroups feature, so let's turn on EFIs for all rtgroups filesystems.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/libxfs/xfs_bmap.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index cae0b22397d007..c73826aa4425af 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -21,6 +21,7 @@
- #include "xfs_rtbitmap.h"
- #include "xfs_health.h"
- #include "xfs_sb.h"
-+#include "xfs_errortag.h"
- #include "xfs_log.h"
- #include "xfs_buf_item.h"
- 
-@@ -1065,6 +1066,9 @@ xfs_rtfree_extent(
- 	ASSERT(rbmip->i_itemp != NULL);
- 	xfs_assert_ilocked(rbmip, XFS_ILOCK_EXCL);
- 
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FREE_EXTENT))
-+		return -EIO;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 482b4c0cd6b193..b15a43c18b0a57 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5383,9 +5383,11 @@ xfs_bmap_del_extent_real(
+ 	 * If we need to, add to list of extents to delete.
+ 	 */
+ 	if (!(bflags & XFS_BMAPI_REMAP)) {
++		bool	isrt = xfs_ifork_is_realtime(ip, whichfork);
 +
- 	error = xfs_rtcheck_alloc_range(&args, start, len);
- 	if (error)
- 		return error;
+ 		if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK) {
+ 			xfs_refcount_decrease_extent(tp, del);
+-		} else if (xfs_ifork_is_realtime(ip, whichfork)) {
++		} else if (isrt && !xfs_has_rtgroups(mp)) {
+ 			error = xfs_bmap_free_rtblocks(tp, del);
+ 		} else {
+ 			unsigned int	efi_flags = 0;
+@@ -5394,6 +5396,19 @@ xfs_bmap_del_extent_real(
+ 			    del->br_state == XFS_EXT_UNWRITTEN)
+ 				efi_flags |= XFS_FREE_EXTENT_SKIP_DISCARD;
+ 
++			/*
++			 * Historically, we did not use EFIs to free realtime
++			 * extents.  However, when reverse mapping is enabled,
++			 * we must maintain the same order of operations as the
++			 * data device, which is: Remove the file mapping,
++			 * remove the reverse mapping, and then free the
++			 * blocks.  Reflink for realtime volumes requires the
++			 * same sort of ordering.  Both features rely on
++			 * rtgroups, so let's gate rt EFI usage on rtgroups.
++			 */
++			if (isrt)
++				efi_flags |= XFS_FREE_EXTENT_REALTIME;
++
+ 			error = xfs_free_extent_later(tp, del->br_startblock,
+ 					del->br_blockcount, NULL,
+ 					XFS_AG_RESV_NONE, efi_flags);
 
