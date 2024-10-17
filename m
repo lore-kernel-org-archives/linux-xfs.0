@@ -1,172 +1,136 @@
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E24714EC47
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 23:22:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C25D4A0F
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 00:29:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729120949; cv=none; b=ar6S/73KAYsh8h143B73xHOXtnnlGAd+Cc6qQ9OK4bR+aYbsThdG6n2p8L65G8wd0nd77+vTvYQjFG2BTMmQ/vwQHN+52MDhUiF+DgN4w8qEmBFzscRAoUuQVhGNXLK6BLXIg0JLn8vaGBQFg7iG4AHoTpkUlIS0CGLIAmKy/s8=
+	t=1729124995; cv=none; b=mx8WerpW9/fVINm6IYC1mAV53F/lfohig/iuTJO07XybE9cZKPjUhi3IDSRubcsC2GyyzVOrDOnX1oFazVZuOBgBbcpdDuIm7tXEyNsxzaGHe9LkXiXPKi+AAFSN3LUdwxnZTUJeEDUdqaxc4ruXcZvs550oWWQXzKlotlshVco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729120949; c=relaxed/simple;
-	bh=mVE0l1hRwBDS/FZtpe0sXBUiTBSJha3jv4Akusym25g=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=PLifm7XTxQZEQSbQOUNuQ+p0OhvttB/p0eZZ9+krMdrh0n5T8gyCvdyiICR4PVDIdC1x2C2f1wHR9g+me/8/roO3FBSy+GKyfZRkhq7CSp2icJBbZBc2XpwQgn5cF4qbh4uMY+6L+AwHPnokLPczXbmzU67ogWAaefufvVheJY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3a3c5a6c5e1so4507665ab.2
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 16:22:27 -0700 (PDT)
+	s=arc-20240116; t=1729124995; c=relaxed/simple;
+	bh=CDT0XC42KA5kDFs8w7hrAge7hVDbt3kWQB9W64z5KD8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A2Z+FUJvAocW3OnSYOqOR813SpNb49l8HRjsrYFrruMAPJB0LRPn+pmFotSRj3xzXAGMqHdJpL9rI87UTVHrAdy036+Cu3d9GPutgHMbj9urhXsy1FxBh+s0csKzf7LD6B8AnfR60hdV0082kwJiYTKN6eerpQUFIHjVb33z8gs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xcq5NkuB; arc=none smtp.client-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xcq5NkuB"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7db908c9c83so242272a12.2
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Oct 2024 17:29:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729124994; x=1729729794; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=f1wptyjhT3IFmslFEr7REugt6yoC6NkBMTWfaUPoWYo=;
+        b=xcq5NkuBaKv5OiWVApSSXaBz7DbpkbJUE/66Mk3Flaw4TRjQ7fsjHTwWPyPoj32dHM
+         HeTNrMqjxD+sXbJ8YEJGsYVzYHta4En4LhaVxYZsOoKl2cyw67r1kDOkdBT1lSmQ2oT0
+         mSDpBLYcMTWX33g6lpA4ANHOTwya+1Tc+FdoaOK+PwW5GCd3FBAw3/Au5kXNrRAbzWUF
+         pHBCIUIi/1qqhD+hjKIWYtcHrAt1Sosfpu3dwBojJ2ZMuVDdeHbRWYfAJoHTyuF6JNlX
+         kjLCxkQHw91ukNrJN0gzZCVbPvbEWppZ9b9d1Wn3rPiQh8yVRPWOlb/NkDrSuoI/cWs7
+         aB0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729120947; x=1729725747;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=nbtPBNOsMBhRrfsUYqjp/D614SNfpBqJ7uG2QiYsvQA=;
-        b=aT2UQpwCMmq+JbK8ED9rzHPjt+rEH8gTxYz2C7FWTrX89BJPJzf+fof4bqIEmEOXht
-         At3c3q93dqUsdOnSspjbHyfUoP8nld4wT9wjOWYnYogdCEQYdqQMysU5oHZaxlX5lIWB
-         gAFx+BrZQ4UivaFqmFP71y0tJ5BIKTlxB/IXPKEs7cxx/q9SvInVS/4ZSYx7RMtqLogO
-         FcI33QeJffSE9HT8bMgf5lKZ1WpW6AieSX4RNSX04NGgeNg1QZBSUNd6VaUBYMEIqork
-         yD4Xn4LIGDmob2t0kRS3c8defqCFoofSS0mCSFCwS93FLF7aSTifwdIcURMofy6M6Ze0
-         ZfWg==
-X-Forwarded-Encrypted: i=1; AJvYcCUuRZNyyiFOASNfH0ljuU8S7Hoek89/NADyYqmMJ743fkIxjH6/CnnE5CvMg4ztXQ1cyjdhMUL7Bak=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxGfxq9/ezmIbNPNtgKCBj8Fmi7ChCiMds+d5yw5Feh9/PDWMdI
-	yToIjB3fzJuHoHmuxbHHG0sTNw5K4r6/aidz6W59oXmjJoNIKbxww2qdLJETH4GFRhcWj8B1Fdl
-	M+eh7xAwXzIYpURCHgv4yZRrlJCfsB2HLho0IlpKP8xuWtO3Jnn2zUF0=
-X-Google-Smtp-Source: AGHT+IF0Z9/TtTiy8unpNEcLnO8CgOACIjGn47ZfVzHjXJbB0BCJtpz3T25UeW8XeFU70EuzF3AJdIxNGt99Na5fG7Kvo3mYSnLG
+        d=1e100.net; s=20230601; t=1729124994; x=1729729794;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=f1wptyjhT3IFmslFEr7REugt6yoC6NkBMTWfaUPoWYo=;
+        b=ZILqynU5IxxoEO6fIWZTpKF2/lP19eAUPNzFeb/vRdUETKKJlFPpEpCzpFgNAdJGHM
+         8eec8kN5GjOuHFdS38KpN+GdqFtiBqEPr9Gbp7zHp+Aty6vlr5nz0MmEF8qmzAH+uPlX
+         6somguxwLqPnZtFTu3SwK3yHpzDa0GugCVB1oaSYXx1tF5ei1lWbF7gZEkaLIqkXAsS/
+         Qomc6QcTunlLf5EnOvPl9ZDwwGfWKx6/c/U8gWa2Ee3Px9pTqI0JYET/iB3wBMqy13xJ
+         x2+pz0Y6IeEITbvfbMuLGBiUkUWyX2Fd2SMOFDqIXaURCGxAm/byYfXMfk5RoGhMjETG
+         gKEA==
+X-Forwarded-Encrypted: i=1; AJvYcCUbmKGxEBFxjRwCf2VQnxFQ4n1h2jKiXAfWpwBGk4rvkJEPd7/whCHzj0MsPdFuyqF7XEGIwTXHYpM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwjMZGTHnV0SzArQ6HCEGwxeJGpvGE0O9l3iHtzKEeSZdBndkTc
+	Prswktf+C1SQaXd/Zu7hWMwIDzP/4D3QdChpEmglo54Y366EbNSa5YJA27ptTMk=
+X-Google-Smtp-Source: AGHT+IGUGyt85bsnX8/5grRTTn+LbgbFmLULv4/fW2j0FdiTvsodajpT5FkWWCl6tVIuG8LUNy65tQ==
+X-Received: by 2002:a05:6a21:164e:b0:1d9:f5d:b502 with SMTP id adf61e73a8af0-1d90f5db650mr4313437637.15.1729124993709;
+        Wed, 16 Oct 2024 17:29:53 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-209-182.pa.vic.optusnet.com.au. [49.186.209.182])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7ea9c715dbfsm3361295a12.87.2024.10.16.17.29.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Oct 2024 17:29:52 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t1EOj-001nfB-33;
+	Thu, 17 Oct 2024 11:29:49 +1100
+Date: Thu, 17 Oct 2024 11:29:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Xiongwei Song <sxwbruce@gmail.com>
+Cc: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: XFS performance degradation during running cp command with big
+ test file
+Message-ID: <ZxBafdsU6ioeTBmQ@dread.disaster.area>
+References: <CALy5rjUMnocsh80gPB+4UgaFS-Gsz5KAFnAN8Nj7m_oyohFfvg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a92:c241:0:b0:3a0:8f20:36e7 with SMTP id
- e9e14a558f8ab-3a3b5fb649bmr200318245ab.19.1729120947034; Wed, 16 Oct 2024
- 16:22:27 -0700 (PDT)
-Date: Wed, 16 Oct 2024 16:22:27 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <67104ab3.050a0220.d9b66.0175.GAE@google.com>
-Subject: [syzbot] [xfs?] INFO: task hung in xfs_ail_push_all_sync (2)
-From: syzbot <syzbot+611be8174be36ca5dbc9@syzkaller.appspotmail.com>
-To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CALy5rjUMnocsh80gPB+4UgaFS-Gsz5KAFnAN8Nj7m_oyohFfvg@mail.gmail.com>
 
-Hello,
+On Wed, Oct 16, 2024 at 07:09:29PM +0800, Xiongwei Song wrote:
+> Dear Experts,
+> 
+> We are facing a performance degradation on the XFS partition. We
+> was trying to copy a big file(200GB ~ 250GB) from a path to /dev/null,
+> when performing cp command to 60s ~ 90s, the reading speed was
+> suddenly down. At the beginning, the reading speed was around
+> 1080MB/s, 60s later the speed was down to around 350MB/s. This
+> problem  is only found with XFS + Thick LUN.
 
-syzbot found the following issue on:
+There are so many potential things that this could be caused by.
 
-HEAD commit:    09f6b0c8904b Merge tag 'linux_kselftest-fixes-6.12-rc3' of..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=14af3fd0580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=7cd9e7e4a8a0a15b
-dashboard link: https://syzkaller.appspot.com/bug?extid=611be8174be36ca5dbc9
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16c7705f980000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14d2fb27980000
+> The test environment:
+> Storage Model: Dell unity XT 380 Think/Thin LUN
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7feb34a89c2a/non_bootable_disk-09f6b0c8.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/3844cfd6d6b9/vmlinux-09f6b0c8.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/8752e101c1ff/bzImage-09f6b0c8.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/5410decf46fa/mount_1.gz
+How many CPUS, RAM, etc does this have?  What disks and what is the
+configuration of the fully provisioned LUN you are testing on?
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+611be8174be36ca5dbc9@syzkaller.appspotmail.com
+> Linux Version: 4.12.14
 
-INFO: task syz-executor279:5128 blocked for more than 143 seconds.
-      Not tainted 6.12.0-rc2-syzkaller-00291-g09f6b0c8904b #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz-executor279 state:D stack:25488 pid:5128  tgid:5105  ppid:5102   flags:0x00004006
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:5322 [inline]
- __schedule+0x1895/0x4b30 kernel/sched/core.c:6682
- __schedule_loop kernel/sched/core.c:6759 [inline]
- schedule+0x14b/0x320 kernel/sched/core.c:6774
- xfs_ail_push_all_sync+0x236/0x310 fs/xfs/xfs_trans_ail.c:726
- xfs_log_quiesce+0xdf/0x5b0 fs/xfs/xfs_log.c:1018
- xfs_fs_freeze+0x8d/0x1a0 fs/xfs/xfs_super.c:936
- freeze_super+0x81b/0xee0 fs/super.c:2107
- fs_bdev_freeze+0x1ac/0x320 fs/super.c:1484
- bdev_freeze+0xd6/0x220 block/bdev.c:257
- xfs_fs_goingdown+0xa9/0x160 fs/xfs/xfs_fsops.c:446
- xfs_file_ioctl+0x12e5/0x1a30 fs/xfs/xfs_ioctl.c:1343
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:907 [inline]
- __se_sys_ioctl+0xf9/0x170 fs/ioctl.c:893
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f70924b2539
-RSP: 002b:00007f709243f168 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007f709253c6d8 RCX: 00007f70924b2539
-RDX: 0000000020000080 RSI: 000000008004587d RDI: 0000000000000005
-RBP: 00007f709253c6d0 R08: 00007f709243f6c0 R09: 0000000000000000
-R10: 00007f709243f6c0 R11: 0000000000000246 R12: 00007f709253c6dc
-R13: 000000000000006e R14: 00007ffd410540a0 R15: 00007ffd41054188
- </TASK>
+You're running an ancient kernel, so the first thing to do is move
+to a much more recent kernel (e.g. 6.11) and see if the same
+behaviour occurs. If it does, then please answer all the other
+questions I've asked and provide the information from running the
+tests on the 6.11 kernel...
 
-Showing all locks held in the system:
-1 lock held by khungtaskd/25:
- #0: ffffffff8e937de0 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire include/linux/rcupdate.h:337 [inline]
- #0: ffffffff8e937de0 (rcu_read_lock){....}-{1:2}, at: rcu_read_lock include/linux/rcupdate.h:849 [inline]
- #0: ffffffff8e937de0 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x55/0x2a0 kernel/locking/lockdep.c:6720
-2 locks held by getty/4897:
- #0: ffff88801e2510a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70 drivers/tty/tty_ldisc.c:243
- #1: ffffc9000039b2f0 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0x6a6/0x1e00 drivers/tty/n_tty.c:2211
-5 locks held by syz-executor279/5128:
- #0: ffff888031ccc6b0 (&bdev->bd_fsfreeze_mutex){+.+.}-{3:3}, at: bdev_freeze+0x2a/0x220 block/bdev.c:248
- #1: ffff888011c84420 (sb_writers#10){++++}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
- #1: ffff888011c84420 (sb_writers#10){++++}-{0:0}, at: freeze_super+0x4e9/0xee0 fs/super.c:2085
- #2: ffff888011c840e0 (&type->s_umount_key#44){+.+.}-{3:3}, at: __super_lock fs/super.c:56 [inline]
- #2: ffff888011c840e0 (&type->s_umount_key#44){+.+.}-{3:3}, at: __super_lock_excl fs/super.c:71 [inline]
- #2: ffff888011c840e0 (&type->s_umount_key#44){+.+.}-{3:3}, at: freeze_super+0x4f1/0xee0 fs/super.c:2086
- #3: ffff888011c84518 (sb_pagefaults#2){+.+.}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
- #3: ffff888011c84518 (sb_pagefaults#2){+.+.}-{0:0}, at: freeze_super+0x519/0xee0 fs/super.c:2090
- #4: ffff888011c84610 (sb_internal#2){++++}-{0:0}, at: sb_wait_write fs/super.c:1896 [inline]
- #4: ffff888011c84610 (sb_internal#2){++++}-{0:0}, at: freeze_super+0x7cc/0xee0 fs/super.c:2104
+> The steps to run test:
+> 1) Create a xfs partition with following commands
+>    parted -a opt /dev/sdb mklabel gpt mkpart sdb xfs 0% 100%
+>    mkfs.xfs /dev/sdbx
+>    mount /dev/sdbx /xfs
 
-=============================================
+What is the output of mkfs.xfs?
 
-NMI backtrace for cpu 0
-CPU: 0 UID: 0 PID: 25 Comm: khungtaskd Not tainted 6.12.0-rc2-syzkaller-00291-g09f6b0c8904b #0
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
- nmi_cpu_backtrace+0x49c/0x4d0 lib/nmi_backtrace.c:113
- nmi_trigger_cpumask_backtrace+0x198/0x320 lib/nmi_backtrace.c:62
- trigger_all_cpu_backtrace include/linux/nmi.h:162 [inline]
- check_hung_uninterruptible_tasks kernel/hung_task.c:223 [inline]
- watchdog+0xff4/0x1040 kernel/hung_task.c:379
- kthread+0x2f0/0x390 kernel/kthread.c:389
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
+Did you drop the page cache between the initial file create and
+the measured copy?
 
+what is the layout of the file you are copying from (ie. xfs_bmap
+-vvp <file> output)?
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+> It seems the issue only can be triggered with XFS + Thick LUN,
+> no matter dd or cp to read the test file. We would like to learn
+> if there is something special with XFS in this test situation?
+> Is it known?
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+It smells like the difference in bandwidth between the outside edge
+and the inside edge of a spinning disk, and XFS is switching
+allocation location of the very big file from the outside to the
+inside part way through the file (e.g. because the initial AG the
+file is located in is full)...
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
+> Do you have any thoughts or suggestions? Also, do you need vmstat
+> or iostat logs or blktrace or any other logs to address this issue?
 
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+iostat and vmstat output in 1s increments would be useful.
 
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
