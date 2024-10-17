@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F7321C18B
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:11:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1966D21BAEB
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:11:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729192309; cv=none; b=AR69Opm81huq93VOHYm764cbyPfVaG+D3QYrJpmrdv80jzgtletnbCMr9v9M80BoXQN8ityaSJhvnGhuTUWGoBUtxea1UJ27UDsrzfkPdxbr90BQ2GnhZ0Vz8/cKsok2AThCoAEJQvHcEVZIasqsOBcXgNJwwp3jWIe5Gn+asR0=
+	t=1729192320; cv=none; b=f9+9LWDiukTqSAd1jCia5ycSSMs0yKK+tXrWiwlYlh8x/IzSuy8iupFT+QrjjnxUSjFRGowJX3UIek7OHg+qiu5FDP/Vw+Ex34LsE0kutnQjAGtfK7mrBBC/O5tAXmC1sgAHTyEbQOBTZYF0Arb7E+fQf6Nhq7TG4mX6r8sleHY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729192309; c=relaxed/simple;
-	bh=zgHGnTpLBnOuvxD5VvyzvhO+reRxOFKI9udb4kZVTwM=;
+	s=arc-20240116; t=1729192320; c=relaxed/simple;
+	bh=qnBBGtry7VGnzhAZXLDVFSZhECjhiV+XjDfjnj46xps=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=p2cg/env047DIz+y3LctfXIQGc7NMlWFnwE+ETmAulABuiLPjFMUCnMo7x0Ag6rBrF8YsAbdYnegv3QyS/FxE8ElcWSSCtxcZ4R9nGuJrNpqjuAN9/fGRySiidB1yH5D09/g0o4DhVn5Eb8YyT1iuy7m0RoI8uAt5GfshpixgSo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N3TgSx9N; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QI4l7HwLrtfO8MJgX9/CAlWw/EUVTCZMQv/dzSaOZkxrEK7K1qvMD4wxkttPEmet5JtwKBJfg91AgNIUdhN3G0VCdzG2sHk8GkDfNicZFQNd9748yjEltXpvkQ09r+FCZeoIYRW+yw8hTUz2cPtt/nTukBGAISiazICf6JPgiNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VGHut0YB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N3TgSx9N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15F1FC4CEC3;
-	Thu, 17 Oct 2024 19:11:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VGHut0YB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4AFBC4CECD;
+	Thu, 17 Oct 2024 19:11:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729192309;
-	bh=zgHGnTpLBnOuvxD5VvyzvhO+reRxOFKI9udb4kZVTwM=;
+	s=k20201202; t=1729192319;
+	bh=qnBBGtry7VGnzhAZXLDVFSZhECjhiV+XjDfjnj46xps=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=N3TgSx9Nwovj/h4h0Ufjv68qNWcgfCtZjrdBBXjHDFO2N3ceR/Gh9rQUFozUMEZ3i
-	 8/U42+VfGNKSURl1ykLom45uiP1AdGrPERMecmgYeYyxMN+nEYsIHdf9CCwjYG6SNY
-	 fxw8X0s2qu2DmPglK3HntNq8G1Izbw9foZtiLTTa+Uh6xaiBrFJGCHMI3aGzuTxXF+
-	 88sQIC1ofZtoQ8et7HVyw8pnphgZnReIvGwOBZ8GwASVEbTLc1hDhcFo1ocbU4Bg/t
-	 7CmbuBws2tFGJB2ONtExSWaqIUNkgYsCJWQvbaOgMaWEgFmKYY9WPPGyLkB0kb7bJJ
-	 d9Ek4prvOBwzg==
-Date: Thu, 17 Oct 2024 12:11:48 -0700
-Subject: [PATCH 1/2] xfs: update sb field checks when metadir is turned on
+	b=VGHut0YByCnBnah01z7h8EbmFm+xsOqP/6q+7MU1k+l/pW1xrchiFc5xnMOZtzNVM
+	 2/DmrSAmBj1XZ9yarQ6x6RPz5oq6sbMpxapdeCw+xznnhvp2yMZM+Rx8yxLMZ6r6fg
+	 TvGem7l579ZC5Ca4GMYn72p7zvHWQUFtiP3d4AbFqPK30ib3DARnpYqL9i1C5Y6/8m
+	 dEYJQjhNqu+UE+Aj9wNvUc8sFLekJrQ5hNrXZ3sAJvMNQC/ZwjDYtUhLquo8TvWD+t
+	 cdxh5F8HK+tf3cbkWjXv1hqkSw7kp1nb5IyeGyGsHTm8D1eB3q3Ombye9qpPQOptAJ
+	 L9O/w2cgxYlhw==
+Date: Thu, 17 Oct 2024 12:11:59 -0700
+Subject: [PATCH 2/2] xfs: enable metadata directory feature
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919073559.3456438.17776258383674928210.stgit@frogsfrogsfrogs>
+Message-ID: <172919073576.3456438.9149796427691706950.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919073537.3456438.5908736022117741188.stgit@frogsfrogsfrogs>
 References: <172919073537.3456438.5908736022117741188.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,85 +45,38 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When metadir is enabled, we want to check the two new rtgroups fields,
-and we don't want to check the old inumbers that are now in the metadir.
+Enable the metadata directory feature.  With this feature, all metadata
+inodes are placed in the metadata directory, and the only inumbers in
+the superblock are the roots of the two directory trees.
+
+The RT device is now sharded into a number of rtgroups, where 0 rtgroups
+mean that no RT extents are supported, and the traditional XFS stub RT
+bitmap and summary inodes don't exist.  A single rtgroup gives roughly
+identical behavior to the traditional RT setup, but now with checksummed
+and self identifying free space metadata.
+
+For quota, the quota options are read from the superblock unless
+explicitly overridden via mount options.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/agheader.c |   36 ++++++++++++++++++++++++------------
- 1 file changed, 24 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index d037de6dd821d2..61f80a6410c738 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -147,14 +147,14 @@ xchk_superblock(
- 	if (xfs_has_metadir(sc->mp)) {
- 		if (sb->sb_metadirino != cpu_to_be64(mp->m_sb.sb_metadirino))
- 			xchk_block_set_preen(sc, bp);
-+	} else {
-+		if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
-+			xchk_block_set_preen(sc, bp);
-+
-+		if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
-+			xchk_block_set_preen(sc, bp);
- 	}
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index d6c10855ab023b..4d47a3e723aa13 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -403,7 +403,8 @@ xfs_sb_has_ro_compat_feature(
+ 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
+ 		 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
+ 		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
+-		 XFS_SB_FEAT_INCOMPAT_PARENT)
++		 XFS_SB_FEAT_INCOMPAT_PARENT | \
++		 XFS_SB_FEAT_INCOMPAT_METADIR)
  
--	if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
--		xchk_block_set_preen(sc, bp);
--
--	if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
--		xchk_block_set_preen(sc, bp);
--
- 	if (sb->sb_rextsize != cpu_to_be32(mp->m_sb.sb_rextsize))
- 		xchk_block_set_corrupt(sc, bp);
- 
-@@ -229,11 +229,13 @@ xchk_superblock(
- 	 * sb_icount, sb_ifree, sb_fdblocks, sb_frexents
- 	 */
- 
--	if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
--		xchk_block_set_preen(sc, bp);
-+	if (!xfs_has_metadir(mp)) {
-+		if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
-+			xchk_block_set_preen(sc, bp);
- 
--	if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
--		xchk_block_set_preen(sc, bp);
-+		if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
-+			xchk_block_set_preen(sc, bp);
-+	}
- 
- 	/*
- 	 * Skip the quota flags since repair will force quotacheck.
-@@ -349,8 +351,10 @@ xchk_superblock(
- 		if (sb->sb_spino_align != cpu_to_be32(mp->m_sb.sb_spino_align))
- 			xchk_block_set_corrupt(sc, bp);
- 
--		if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
--			xchk_block_set_preen(sc, bp);
-+		if (!xfs_has_metadir(mp)) {
-+			if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
-+				xchk_block_set_preen(sc, bp);
-+		}
- 
- 		/* Don't care about sb_lsn */
- 	}
-@@ -361,6 +365,14 @@ xchk_superblock(
- 			xchk_block_set_corrupt(sc, bp);
- 	}
- 
-+	if (xfs_has_metadir(mp)) {
-+		if (sb->sb_rgcount != cpu_to_be32(mp->m_sb.sb_rgcount))
-+			xchk_block_set_corrupt(sc, bp);
-+
-+		if (sb->sb_rgextents != cpu_to_be32(mp->m_sb.sb_rgextents))
-+			xchk_block_set_corrupt(sc, bp);
-+	}
-+
- 	/* Everything else must be zero. */
- 	if (memchr_inv(sb + 1, 0,
- 			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
+ #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+ static inline bool
 
