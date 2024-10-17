@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F8F21C17C
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:09:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ED57218D72
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2024 19:09:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729192160; cv=none; b=jMbSsrqP4vAVwJbfWIu9wJvwPA46aEEE2VX/kRj5vhMYBzto5ADXjEm1haQp7tbpaOMclgdRgEncUrSEAz+te0kCm2T9EO93N4emC+a6oVrQ5kUUHNf1NL474NvzXOAA1FB/9yohou02BygnDmxZx6sl9FwkV/qPTVAc/FtZRBg=
+	t=1729192170; cv=none; b=tBTFRYhBPEIrH6znKsOOL3nhc4EQtGUOk0GiQZBuVeIetEdc9VMf5PVHeo0THoVUcUySEgWaGFqoh33pZNYsgUxOJYs6VBP7MULh1iOJ4+K/eZJupvP73+Bqzmj63WrNTjOHYgoEh6pJ+ocF4B5lfLFf/k6ZbnxrY/HpW8m/EO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729192160; c=relaxed/simple;
-	bh=gkfLEDcsMLznxQHBfP+gSm65EHYTQKGT982+hNWASGQ=;
+	s=arc-20240116; t=1729192170; c=relaxed/simple;
+	bh=m0BIQVyY6KNLTQM70EYzNn1kxPw3qRanF0Kfg6vPScQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YrJAuq8Kj5js5Xc1X8ATNiSIa5B+9KQ0ByMoTg7E7RR5ZteTPcN/8AbPpfoGTlo06PvKEFgfTUfsIiP9nJPHaX56MkAYraBXt/Ly+QJQD7OIgWCSlJd9qC65Zpj/sXMvNQRQ6fiKxLLYdq6fswSJiS4pLKujaFLgRhs7XHknRvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sav2Mc8E; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=IhbsGfl7UaTEvIdKHWyk5TCdDxV+ebjcaDflnVJxyek/sv7XS/gt9iVccDTL13TckvF2I+FiqRCNW6amB3QiBqGgoK45AGFRD+9DCmXGiSNwEhdR2VCikQxgbZCY6M/dS/DRvdNGD0HQN4bwBkESm2gugtIzk104c08Fg6Lp3v0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m9asmWuB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sav2Mc8E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51516C4CEC3;
-	Thu, 17 Oct 2024 19:09:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m9asmWuB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC62DC4CEC3;
+	Thu, 17 Oct 2024 19:09:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729192159;
-	bh=gkfLEDcsMLznxQHBfP+gSm65EHYTQKGT982+hNWASGQ=;
+	s=k20201202; t=1729192170;
+	bh=m0BIQVyY6KNLTQM70EYzNn1kxPw3qRanF0Kfg6vPScQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sav2Mc8EXccTd4CjB9woZ29D3kvDq3htvWeuYsLVCKXTEv3ALBR96mRMpzfNOQa3w
-	 583aBURQ6cMujX7whCzaymPKhp/Hr680+lDUjYRyO3cL72+w9n3w34XIlvwKlvx7Hb
-	 Z0nlIiflt3nZKBNsw7gT4pXZpiXjj1OzYuGFumN9xW7YsQgmm0/LHQEl/7eB+XeJ3h
-	 hgtJbLougKs7WvWQuTlks6n0UwgkyDxOU07fRxH9Oi1F5/z6LldSAqQOPzqP3+/r/i
-	 LHjMLsEgD+cfVTO9iJ0RFQLb9PVYybJ6PYe6n0lP+yV1M2qUQ1Yb34hWFN06YQ8B96
-	 BXh6MPsC4tgQQ==
-Date: Thu, 17 Oct 2024 12:09:18 -0700
-Subject: [PATCH 31/34] xfs: move the min and max group block numbers to
- xfs_group
+	b=m9asmWuBL73PaqtMSpXL50R60iv9SPw5UGMontCNXZFw10aDFYSAJVbEUAceU+4SN
+	 FgW36cqU/MKJSbxcLBIua2zNMABVJDYzwKCt5QSoDPBzJTfN2U3UNhRi4gGi1NrFZG
+	 T29aFcM+UHHyOIdAwqTBZRGaAp75soEngLHslJ1EDJmXU7BVA7ojQ27cHoFSYWPJte
+	 n2rxE31w3PvJhD9KV03NwpQ45nAHVLI3ygdFlzFZXfeEeYk2HVAM3dw+KGesf1zPlx
+	 5YkjdLPT7xBCpI11b/0ekQL+S1Zr64ResVDcVf17yN9951fXIPpGY22KAben/qGs4g
+	 Y3tTJhoOXMReQ==
+Date: Thu, 17 Oct 2024 12:09:29 -0700
+Subject: [PATCH 32/34] xfs: port the perag discard code to handle generic
+ groups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172919072205.3453179.8570166922721978112.stgit@frogsfrogsfrogs>
+Message-ID: <172919072223.3453179.8959262334258999078.stgit@frogsfrogsfrogs>
 In-Reply-To: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 References: <172919071571.3453179.15753475627202483418.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,384 +46,143 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move the min and max agblock numbers to the generic xfs_group structure
-so that we can start building validators for extents within an rtgroup.
-While we're at it, use check_add_overflow for the extent length
-computation because that has much better overflow checking.
+Port xfs_discard_extents and its tracepoints to handle generic groups
+instead of just perags.  This is needed to enable busy extent tracking
+for rtgroups.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_ag.c           |   22 ++++++++++++----------
- fs/xfs/libxfs/xfs_ag.h           |   16 ++--------------
- fs/xfs/libxfs/xfs_group.h        |   33 +++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc_btree.c |    2 +-
- fs/xfs/libxfs/xfs_rtgroup.c      |   31 ++++++++++++++++++++++++++++++-
- fs/xfs/libxfs/xfs_rtgroup.h      |    3 +++
- fs/xfs/scrub/agheader.c          |    4 ++--
- fs/xfs/scrub/agheader_repair.c   |    4 ++--
- fs/xfs/scrub/repair.c            |    6 +++---
- fs/xfs/xfs_discard.c             |    4 ++--
- fs/xfs/xfs_rtalloc.c             |    8 ++++----
- 11 files changed, 94 insertions(+), 39 deletions(-)
+ fs/xfs/xfs_discard.c |   35 ++++++++++++++++++++++++++---------
+ fs/xfs/xfs_trace.h   |   19 +++++++++++--------
+ 2 files changed, 37 insertions(+), 17 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 8fe96a9e047205..b59cb461e096ea 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -205,9 +205,10 @@ xfs_update_last_ag_size(
- 
- 	if (!pag)
- 		return -EFSCORRUPTED;
--	pag->block_count = __xfs_ag_block_count(mp, prev_agcount - 1,
--			mp->m_sb.sb_agcount, mp->m_sb.sb_dblocks);
--	__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
-+	pag_group(pag)->xg_block_count = __xfs_ag_block_count(mp,
-+			prev_agcount - 1, mp->m_sb.sb_agcount,
-+			mp->m_sb.sb_dblocks);
-+	__xfs_agino_range(mp, pag_group(pag)->xg_block_count, &pag->agino_min,
- 			&pag->agino_max);
- 	xfs_perag_rele(pag);
- 	return 0;
-@@ -241,9 +242,10 @@ xfs_perag_alloc(
- 	/*
- 	 * Pre-calculated geometry
- 	 */
--	pag->block_count = __xfs_ag_block_count(mp, index, agcount, dblocks);
--	pag->min_block = XFS_AGFL_BLOCK(mp) + 1;
--	__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
-+	pag_group(pag)->xg_block_count = __xfs_ag_block_count(mp, index, agcount,
-+				dblocks);
-+	pag_group(pag)->xg_min_gbno = XFS_AGFL_BLOCK(mp) + 1;
-+	__xfs_agino_range(mp, pag_group(pag)->xg_block_count, &pag->agino_min,
- 			&pag->agino_max);
- 
- 	error = xfs_group_insert(mp, pag_group(pag), index, XG_TYPE_AG);
-@@ -852,8 +854,8 @@ xfs_ag_shrink_space(
- 	}
- 
- 	/* Update perag geometry */
--	pag->block_count -= delta;
--	__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
-+	pag_group(pag)->xg_block_count -= delta;
-+	__xfs_agino_range(mp, pag_group(pag)->xg_block_count, &pag->agino_min,
- 			&pag->agino_max);
- 
- 	xfs_ialloc_log_agi(*tpp, agibp, XFS_AGI_LENGTH);
-@@ -924,8 +926,8 @@ xfs_ag_extend_space(
- 		return error;
- 
- 	/* Update perag geometry */
--	pag->block_count = be32_to_cpu(agf->agf_length);
--	__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
-+	pag_group(pag)->xg_block_count = be32_to_cpu(agf->agf_length);
-+	__xfs_agino_range(mp, pag_group(pag)->xg_block_count, &pag->agino_min,
- 			&pag->agino_max);
- 	return 0;
- }
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 9c22a76d58cfc2..1f24cfa2732172 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -61,8 +61,6 @@ struct xfs_perag {
- 	struct xfs_ag_resv	pag_rmapbt_resv;
- 
- 	/* Precalculated geometry info */
--	xfs_agblock_t		block_count;
--	xfs_agblock_t		min_block;
- 	xfs_agino_t		agino_min;
- 	xfs_agino_t		agino_max;
- 
-@@ -220,11 +218,7 @@ void xfs_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
- static inline bool
- xfs_verify_agbno(struct xfs_perag *pag, xfs_agblock_t agbno)
- {
--	if (agbno >= pag->block_count)
--		return false;
--	if (agbno < pag->min_block)
--		return false;
--	return true;
-+	return xfs_verify_gbno(pag_group(pag), agbno);
- }
- 
- static inline bool
-@@ -233,13 +227,7 @@ xfs_verify_agbext(
- 	xfs_agblock_t		agbno,
- 	xfs_agblock_t		len)
- {
--	if (agbno + len <= agbno)
--		return false;
--
--	if (!xfs_verify_agbno(pag, agbno))
--		return false;
--
--	return xfs_verify_agbno(pag, agbno + len - 1);
-+	return xfs_verify_gbext(pag_group(pag), agbno, len);
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
-index 5b7362277c3f7a..242b05627c7a6e 100644
---- a/fs/xfs/libxfs/xfs_group.h
-+++ b/fs/xfs/libxfs/xfs_group.h
-@@ -12,6 +12,10 @@ struct xfs_group {
- 	atomic_t		xg_ref;		/* passive reference count */
- 	atomic_t		xg_active_ref;	/* active reference count */
- 
-+	/* Precalculated geometry info */
-+	uint32_t		xg_block_count;	/* max usable gbno */
-+	uint32_t		xg_min_gbno;	/* min usable gbno */
-+
- #ifdef __KERNEL__
- 	/* -- kernel only structures below this line -- */
- 
-@@ -128,4 +132,33 @@ xfs_fsb_to_gbno(
- 	return fsbno & mp->m_groups[type].blkmask;
- }
- 
-+static inline bool
-+xfs_verify_gbno(
-+	struct xfs_group	*xg,
-+	uint32_t		gbno)
-+{
-+	if (gbno >= xg->xg_block_count)
-+		return false;
-+	if (gbno < xg->xg_min_gbno)
-+		return false;
-+	return true;
-+}
-+
-+static inline bool
-+xfs_verify_gbext(
-+	struct xfs_group	*xg,
-+	uint32_t		gbno,
-+	uint32_t		glen)
-+{
-+	uint32_t		end;
-+
-+	if (!xfs_verify_gbno(xg, gbno))
-+		return false;
-+	if (glen == 0 || check_add_overflow(gbno, glen - 1, &end))
-+		return false;
-+	if (!xfs_verify_gbno(xg, end))
-+		return false;
-+	return true;
-+}
-+
- #endif /* __LIBXFS_GROUP_H */
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 4c28deb3e9881d..9b34896dd1a32f 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -717,7 +717,7 @@ xfs_inobt_max_size(
- 	struct xfs_perag	*pag)
- {
- 	struct xfs_mount	*mp = pag_mount(pag);
--	xfs_agblock_t		agblocks = pag->block_count;
-+	xfs_agblock_t		agblocks = pag_group(pag)->xg_block_count;
- 
- 	/* Bail out if we're uninitialized, which can happen in mkfs. */
- 	if (M_IGEO(mp)->inobt_mxr[0] == 0)
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
-index 624d8b25eba0ec..e74bb059f24fa1 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.c
-+++ b/fs/xfs/libxfs/xfs_rtgroup.c
-@@ -34,6 +34,32 @@
- #include "xfs_metafile.h"
- #include "xfs_metadir.h"
- 
-+/* Find the first usable fsblock in this rtgroup. */
-+static inline uint32_t
-+xfs_rtgroup_min_block(
-+	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgno)
-+{
-+	if (xfs_has_rtsb(mp) && rgno == 0)
-+		return mp->m_sb.sb_rextsize;
-+
-+	return 0;
-+}
-+
-+/* Precompute this group's geometry */
-+void
-+xfs_rtgroup_calc_geometry(
-+	struct xfs_mount	*mp,
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgnumber_t		rgno,
-+	xfs_rgnumber_t		rgcount,
-+	xfs_rtbxlen_t		rextents)
-+{
-+	rtg->rtg_extents = __xfs_rtgroup_extents(mp, rgno, rgcount, rextents);
-+	rtg_group(rtg)->xg_block_count = rtg->rtg_extents * mp->m_sb.sb_rextsize;
-+	rtg_group(rtg)->xg_min_gbno = xfs_rtgroup_min_block(mp, rgno);
-+}
-+
- int
- xfs_rtgroup_alloc(
- 	struct xfs_mount	*mp,
-@@ -48,6 +74,8 @@ xfs_rtgroup_alloc(
- 	if (!rtg)
- 		return -ENOMEM;
- 
-+	xfs_rtgroup_calc_geometry(mp, rtg, rgno, rgcount, rextents);
-+
- 	error = xfs_group_insert(mp, rtg_group(rtg), rgno, XG_TYPE_RTG);
- 	if (error)
- 		goto out_free_rtg;
-@@ -149,6 +177,7 @@ xfs_update_last_rtgroup_size(
- 		return -EFSCORRUPTED;
- 	rtg->rtg_extents = __xfs_rtgroup_extents(mp, prev_rgcount - 1,
- 			mp->m_sb.sb_rgcount, mp->m_sb.sb_rextents);
-+	rtg_group(rtg)->xg_block_count = rtg->rtg_extents * mp->m_sb.sb_rextsize;
- 	xfs_rtgroup_rele(rtg);
- 	return 0;
- }
-@@ -223,7 +252,7 @@ xfs_rtgroup_get_geometry(
- 	/* Fill out form. */
- 	memset(rgeo, 0, sizeof(*rgeo));
- 	rgeo->rg_number = rtg_rgno(rtg);
--	rgeo->rg_length = rtg->rtg_extents * rtg_mount(rtg)->m_sb.sb_rextsize;
-+	rgeo->rg_length = rtg_group(rtg)->xg_block_count;
- 	xfs_rtgroup_geom_health(rtg, rgeo);
- 	return 0;
- }
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index c15b232e1f8e77..1e51dc62d1143e 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -199,6 +199,9 @@ int xfs_initialize_rtgroups(struct xfs_mount *mp, xfs_rgnumber_t first_rgno,
- xfs_rtxnum_t __xfs_rtgroup_extents(struct xfs_mount *mp, xfs_rgnumber_t rgno,
- 		xfs_rgnumber_t rgcount, xfs_rtbxlen_t rextents);
- xfs_rtxnum_t xfs_rtgroup_extents(struct xfs_mount *mp, xfs_rgnumber_t rgno);
-+void xfs_rtgroup_calc_geometry(struct xfs_mount *mp, struct xfs_rtgroup *rtg,
-+		xfs_rgnumber_t rgno, xfs_rgnumber_t rgcount,
-+		xfs_rtbxlen_t rextents);
- 
- int xfs_update_last_rtgroup_size(struct xfs_mount *mp,
- 		xfs_rgnumber_t prev_rgcount);
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 05f5e94b99382b..d037de6dd821d2 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -564,7 +564,7 @@ xchk_agf(
- 
- 	/* Check the AG length */
- 	eoag = be32_to_cpu(agf->agf_length);
--	if (eoag != pag->block_count)
-+	if (eoag != pag_group(pag)->xg_block_count)
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
- 	/* Check the AGF btree roots and levels */
-@@ -944,7 +944,7 @@ xchk_agi(
- 
- 	/* Check the AG length */
- 	eoag = be32_to_cpu(agi->agi_length);
--	if (eoag != pag->block_count)
-+	if (eoag != pag_group(pag)->xg_block_count)
- 		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 
- 	/* Check btree roots and levels */
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 0ea04d6e21cd83..0fad0baaba2f69 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -209,7 +209,7 @@ xrep_agf_init_header(
- 	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
- 	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
- 	agf->agf_seqno = cpu_to_be32(pag_agno(pag));
--	agf->agf_length = cpu_to_be32(pag->block_count);
-+	agf->agf_length = cpu_to_be32(pag_group(pag)->xg_block_count);
- 	agf->agf_flfirst = old_agf->agf_flfirst;
- 	agf->agf_fllast = old_agf->agf_fllast;
- 	agf->agf_flcount = old_agf->agf_flcount;
-@@ -898,7 +898,7 @@ xrep_agi_init_header(
- 	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
- 	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
- 	agi->agi_seqno = cpu_to_be32(pag_agno(pag));
--	agi->agi_length = cpu_to_be32(pag->block_count);
-+	agi->agi_length = cpu_to_be32(pag_group(pag)->xg_block_count);
- 	agi->agi_newino = cpu_to_be32(NULLAGINO);
- 	agi->agi_dirino = cpu_to_be32(NULLAGINO);
- 	if (xfs_has_crc(mp))
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 3fa009126170e6..91c8bc055a4fd7 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -306,7 +306,7 @@ xrep_calc_ag_resblks(
- 	/* Now grab the block counters from the AGF. */
- 	error = xfs_alloc_read_agf(pag, NULL, 0, &bp);
- 	if (error) {
--		aglen = pag->block_count;
-+		aglen = pag_group(pag)->xg_block_count;
- 		freelen = aglen;
- 		usedlen = aglen;
- 	} else {
-@@ -326,9 +326,9 @@ xrep_calc_ag_resblks(
- 
- 	/* If the block counts are impossible, make worst-case assumptions. */
- 	if (aglen == NULLAGBLOCK ||
--	    aglen != pag->block_count ||
-+	    aglen != pag_group(pag)->xg_block_count ||
- 	    freelen >= aglen) {
--		aglen = pag->block_count;
-+		aglen = pag_group(pag)->xg_block_count;
- 		freelen = aglen;
- 		usedlen = aglen;
- 	}
 diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index e71bd64685f900..a7635962448911 100644
+index a7635962448911..b7c1e09e9afefc 100644
 --- a/fs/xfs/xfs_discard.c
 +++ b/fs/xfs/xfs_discard.c
-@@ -337,7 +337,7 @@ xfs_trim_perag_extents(
- 	};
- 	int			error = 0;
+@@ -101,6 +101,24 @@ xfs_discard_endio(
+ 	bio_put(bio);
+ }
  
--	if (start != 0 || end != pag->block_count)
-+	if (start != 0 || end != pag_group(pag)->xg_block_count)
- 		tcur.by_bno = true;
++static inline struct block_device *
++xfs_group_bdev(
++	const struct xfs_group	*xg)
++{
++	struct xfs_mount	*mp = xg->xg_mount;
++
++	switch (xg->xg_type) {
++	case XG_TYPE_AG:
++		return mp->m_ddev_targp->bt_bdev;
++	case XG_TYPE_RTG:
++		return mp->m_rtdev_targp->bt_bdev;
++	default:
++		ASSERT(0);
++		break;
++	}
++	return NULL;
++}
++
+ /*
+  * Walk the discard list and issue discards on all the busy extents in the
+  * list. We plug and chain the bios so that we only need a single completion
+@@ -118,12 +136,11 @@ xfs_discard_extents(
  
- 	do {
-@@ -403,7 +403,7 @@ xfs_trim_datadev_extents(
- 	end_agbno = xfs_daddr_to_agbno(mp, ddev_end);
+ 	blk_start_plug(&plug);
+ 	list_for_each_entry(busyp, &extents->extent_list, list) {
+-		struct xfs_perag	*pag = to_perag(busyp->group);
++		trace_xfs_discard_extent(busyp->group, busyp->bno,
++				busyp->length);
  
- 	while ((pag = xfs_perag_next_range(mp, pag, start_agno, end_agno))) {
--		xfs_agblock_t	agend = pag->block_count;
-+		xfs_agblock_t	agend = pag_group(pag)->xg_block_count;
- 
- 		if (pag_agno(pag) == end_agno)
- 			agend = end_agbno;
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index db09c086ff1c01..8f56d5fbe7413a 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -878,7 +878,8 @@ xfs_growfs_rt_bmblock(
- 	if (!nmp)
- 		return -ENOMEM;
- 
--	rtg->rtg_extents = xfs_rtgroup_extents(nmp, rtg_rgno(rtg));
-+	xfs_rtgroup_calc_geometry(nmp, rtg, rtg_rgno(rtg),
-+			nmp->m_sb.sb_rgcount, nmp->m_sb.sb_rextents);
- 
- 	/*
- 	 * Recompute the growfsrt reservation from the new rsumsize, so that the
-@@ -1137,7 +1138,8 @@ xfs_growfs_rtg(
- 	/*
- 	 * Reset rtg_extents to the old value if adding more blocks failed.
- 	 */
--	rtg->rtg_extents = xfs_rtgroup_extents(rtg_mount(rtg), rtg_rgno(rtg));
-+	xfs_rtgroup_calc_geometry(mp, rtg, rtg_rgno(rtg), mp->m_sb.sb_rgcount,
-+			mp->m_sb.sb_rextents);
- 	if (old_rsum_cache) {
- 		kvfree(rtg->rtg_rsum_cache);
- 		rtg->rtg_rsum_cache = old_rsum_cache;
-@@ -1517,8 +1519,6 @@ xfs_rtmount_rtg(
- {
- 	int			error, i;
- 
--	rtg->rtg_extents = xfs_rtgroup_extents(mp, rtg_rgno(rtg));
+-		trace_xfs_discard_extent(pag, busyp->bno, busyp->length);
 -
- 	for (i = 0; i < XFS_RTGI_MAX; i++) {
- 		error = xfs_rtginode_load(rtg, i, tp);
- 		if (error)
+-		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
+-				xfs_agbno_to_daddr(pag, busyp->bno),
++		error = __blkdev_issue_discard(xfs_group_bdev(busyp->group),
++				xfs_gbno_to_daddr(busyp->group, busyp->bno),
+ 				XFS_FSB_TO_BB(mp, busyp->length),
+ 				GFP_KERNEL, &bio);
+ 		if (error && error != -EOPNOTSUPP) {
+@@ -241,11 +258,11 @@ xfs_trim_gather_extents(
+ 		 * overlapping ranges for now.
+ 		 */
+ 		if (fbno + flen < tcur->start) {
+-			trace_xfs_discard_exclude(pag, fbno, flen);
++			trace_xfs_discard_exclude(pag_group(pag), fbno, flen);
+ 			goto next_extent;
+ 		}
+ 		if (fbno > tcur->end) {
+-			trace_xfs_discard_exclude(pag, fbno, flen);
++			trace_xfs_discard_exclude(pag_group(pag), fbno, flen);
+ 			if (tcur->by_bno) {
+ 				tcur->count = 0;
+ 				break;
+@@ -263,7 +280,7 @@ xfs_trim_gather_extents(
+ 
+ 		/* Too small?  Give up. */
+ 		if (flen < tcur->minlen) {
+-			trace_xfs_discard_toosmall(pag, fbno, flen);
++			trace_xfs_discard_toosmall(pag_group(pag), fbno, flen);
+ 			if (tcur->by_bno)
+ 				goto next_extent;
+ 			tcur->count = 0;
+@@ -275,7 +292,7 @@ xfs_trim_gather_extents(
+ 		 * discard and try again the next time.
+ 		 */
+ 		if (xfs_extent_busy_search(pag_group(pag), fbno, flen)) {
+-			trace_xfs_discard_busy(pag, fbno, flen);
++			trace_xfs_discard_busy(pag_group(pag), fbno, flen);
+ 			goto next_extent;
+ 		}
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index e3218c0f6ac564..79dc7620694f38 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2480,23 +2480,26 @@ DEFINE_LOG_RECOVER_ICREATE_ITEM(xfs_log_recover_icreate_cancel);
+ DEFINE_LOG_RECOVER_ICREATE_ITEM(xfs_log_recover_icreate_recover);
+ 
+ DECLARE_EVENT_CLASS(xfs_discard_class,
+-	TP_PROTO(const struct xfs_perag *pag, xfs_agblock_t agbno,
++	TP_PROTO(const struct xfs_group *xg, xfs_agblock_t agbno,
+ 		 xfs_extlen_t len),
+-	TP_ARGS(pag, agbno, len),
++	TP_ARGS(xg, agbno, len),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
++		__field(enum xfs_group_type, type)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agblock_t, agbno)
+ 		__field(xfs_extlen_t, len)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = pag_mount(pag)->m_super->s_dev;
+-		__entry->agno = pag_agno(pag);
++		__entry->dev = xg->xg_mount->m_super->s_dev;
++		__entry->type = xg->xg_type;
++		__entry->agno = xg->xg_gno;
+ 		__entry->agbno = agbno;
+ 		__entry->len = len;
+ 	),
+-	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x",
++	TP_printk("dev %d:%d %sno 0x%x gbno 0x%x fsbcount 0x%x",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
+ 		  __entry->agno,
+ 		  __entry->agbno,
+ 		  __entry->len)
+@@ -2504,9 +2507,9 @@ DECLARE_EVENT_CLASS(xfs_discard_class,
+ 
+ #define DEFINE_DISCARD_EVENT(name) \
+ DEFINE_EVENT(xfs_discard_class, name, \
+-	TP_PROTO(const struct xfs_perag *pag, xfs_agblock_t agbno, \
+-		xfs_extlen_t len), \
+-	TP_ARGS(pag, agbno, len))
++	TP_PROTO(const struct xfs_group *xg, xfs_agblock_t agbno, \
++		 xfs_extlen_t len), \
++	TP_ARGS(xg, agbno, len))
+ DEFINE_DISCARD_EVENT(xfs_discard_extent);
+ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
+ DEFINE_DISCARD_EVENT(xfs_discard_exclude);
 
