@@ -1,309 +1,221 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4263318C34B
-	for <linux-xfs@vger.kernel.org>; Sat, 19 Oct 2024 10:17:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729333044; cv=none; b=Ae8xtDRREElkQB0vvmtCsEfGibPFX+MYxNX7iLWaty8M7Ca0RuKOCXQZJ5LimxtghJyzl7Z/fyTvXKeqrrESlcfRrVB1uo0zJOdIvz4XdrXaut+mbocflroeJhZbqfgcBQgmAo5Wy6TK1rwXKS324rj8n3zUXHphBZ+a3+mFiGQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729333044; c=relaxed/simple;
-	bh=HRw5qGfcRj9mHnjrF3NOAEiohGNIjkocSEUaZae4GJQ=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=J2iWpttIU9rPe6TLztD/r2kjYkxstfuWHjLyH3QmN3YgasfEDFmoL7zgBd9BFdsra0LwMdR4Igsl5idOJTMuGOL5QayzqWytT1Kq6cssrfFRYvKyY1gx5KLqO3MzTNINby/X214ntiMFxyZYEqTJyo2XmvKcM4Rqdua52b4C1s0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iQ11xl5H; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2419746E;
+	Sat, 19 Oct 2024 12:51:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729342315; cv=fail; b=QwgYt6NHtQYDeFb86MzwcXeu+fcWdSnxkulgouIUGrd8Ucb31J+DQ9JYj2xW587IlXTWI+Z0flZ7wWpHVDdsTnSjx3PGclSvNV3MMGcxOSJGJW8p4v2YRR1rst1rf6Q90QyWuK0cStCPA11zC+8MLRkBi6OiZe0AMptYGqkkv/M=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729342315; c=relaxed/simple;
+	bh=NUEk1bbDc8usjD6kSJzNyzPJWJ5mEOZbk47XAZjJD9w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=aq8huiWeRKk6ITnMN3dvG3Lw6S7qiWVcC+GFJ+qdd7z0VAATIkg7GvR+pQ5tZI3jg/jUx7SZQYsnG/zPtaNO8KklgCpkhbyKppzjR8wkQsGydiSDQLu9GBmG3SmQPvQnmkLqRmaOAl+gtsuno0ZU8nJIDcmMwLxLcL9/l2FlRQc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Z7ZMbQzL; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=zOEMqfik; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iQ11xl5H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1729333041;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type;
-	bh=5dS5T5sJYoJIZfjhKDfpYQPlvfha9YR1wvoRIatQAKg=;
-	b=iQ11xl5Hmy9BdN7BTAcsHTfnry7gXBYTKH8Q0guMsloTErUDPgbEbT+roQHI3jvwOr+/ZL
-	2YaB6LNf+VBa3pb0UhyR31smdCO0tl0k5nXAIRtVLy3EqtLouMuCaxU3hC1RCUKH+mwwz5
-	bHcMY8FViRRr1YCWvrXryeLSU2WA0KQ=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-433-SsXkWv6PM_Kf6aD4vH8vRg-1; Sat, 19 Oct 2024 06:17:19 -0400
-X-MC-Unique: SsXkWv6PM_Kf6aD4vH8vRg-1
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-a9a23eada74so170179666b.3
-        for <linux-xfs@vger.kernel.org>; Sat, 19 Oct 2024 03:17:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729333038; x=1729937838;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5dS5T5sJYoJIZfjhKDfpYQPlvfha9YR1wvoRIatQAKg=;
-        b=sKVhuVgpPwWOg/xwfrShl7chjJ91d7wKwmRo7dkP+/FjPgDl2nS3/WMPJSojgVF8Ud
-         g37+1ZGE3OXD/lTBLI51fzRQTLfMK1QDThtbqzTkcez1spBJnQkw5m6zIaTHYz8a+9sD
-         DcUWckFaWnJBdgoUT9kGgJ7MLGmU53pzLFCqyLjTjV7jxzAYuhdM5U96eNh2llsOui8M
-         b13RKtSN0jvwJZPgjkxlUbi5afjgqc8WqOa8aGOoExmuacGnPjJh15aFyOfQloArJRzr
-         +5c1cHhOQZWraKsSMVR+RYFlZ0GinmwnPMe4f1dc/wCspdVQ5KgZRnMk8gyHrCWUmwpx
-         7nbw==
-X-Gm-Message-State: AOJu0YzMbXjvsAKauomctEsB+Lk0MhnO7M051KZuiKorlqs1aHmdnKrj
-	AO7Y5rE9B6y/TYA8WnInANi8kPcARX6R4c+Y8Yrnfwo0qpkmjsOP/2p9WrkS9EFJFXO/4bdRMEG
-	aN40bqdubEH3IMp9q8sFdD2VXzpogEhghDap9DfJx9avT9FeWhRMzpbGOf+FOiqgaqF0vM2XGK6
-	h7M8USRZByP6bTBdxYLiSKAXfqGmTKh00Rir7iWAUU
-X-Received: by 2002:a05:6402:5203:b0:5be:f3ae:b9ce with SMTP id 4fb4d7f45d1cf-5ca0ae7fcbcmr3969151a12.27.1729333037722;
-        Sat, 19 Oct 2024 03:17:17 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHyvDwcSkYE9qsrDLFBAaUh9uHJoA3447e5MVzJCUgWKS89/Q2YTNNbfJS53blkPM4QKfE1FQ==
-X-Received: by 2002:a05:6402:5203:b0:5be:f3ae:b9ce with SMTP id 4fb4d7f45d1cf-5ca0ae7fcbcmr3969111a12.27.1729333036921;
-        Sat, 19 Oct 2024 03:17:16 -0700 (PDT)
-Received: from thinky (ip-217-030-065-002.aim-net.cz. [217.30.65.2])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5ca0b0f958csm1674269a12.89.2024.10.19.03.17.15
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Oct 2024 03:17:16 -0700 (PDT)
-Date: Sat, 19 Oct 2024 12:17:14 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs v6.11.0 released
-Message-ID: <3w6k7dcisoom4s2xm4vidlz2fjbxnplwvebpxi4jh2w64rs4cw@dzz3opqrzt6s>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z7ZMbQzL";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="zOEMqfik"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49JCMujB010965;
+	Sat, 19 Oct 2024 12:51:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2023-11-20; bh=wx3cU0sDj9oufseYMbZ3PwTSRTprtFQLR9CAme1UvfM=; b=
+	Z7ZMbQzLCD2oPfjj+J96PpoRvtxk8hS64hmbLsszHYKeuPsHnNMSGrisWP0a51qr
+	NqdVrewzCRf7EUDVlcPeretHWYYdxm8703K60wbcErp7MhDypmyXUDaFkmC1WSdp
+	eeNi/TYJRrepxAXukYSHX9cQ+Dp3BMU3k9Z5G1uc+k0vFvwo9OTdADNUwXkowmu7
+	ZvGQ6PHBYedoGq8Mm1p59yapvq2bb2Ep6KogzS1x0DOX5ndDIliNlL0cOesnO4Ic
+	1R3XFg9dEMgx2flxifQCmW30vFtjmkuk7WTHvib5aU4LR5A7NI+huLwNiTDM8VGU
+	VFHqsDBjyk1i1md/zK1U3w==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42c54589tn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 19 Oct 2024 12:51:35 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 49JBO4PU019660;
+	Sat, 19 Oct 2024 12:51:34 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2048.outbound.protection.outlook.com [104.47.73.48])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 42c37atge4-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 19 Oct 2024 12:51:34 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=nrVCmPazDaURfnH6AkgMHCwfFAbHQ1q37kRYkz7x6oS/9XUoIhBCP73brGakrJVfqocaVlg3+mPErwNgyIZzMakZChAqUn52QUMWsFGOAnjzXyjDi2dfhy0gKx6JbEAMy8bwh4UuDWy0IMOyeaE43PLlFxWzyxS7tYNUUOEgaD+4PXJQDMkJOHCn1+fdxbSvLo4zQigASQJkdRdwfnBeko0KV1Ci1tmKshmKDHIZLPgfQ7ELNmHAJTr+/mTfDZasX+9vNCaigzM9SIGmqbvYZ0vhp4cUGmsxgFAGORKvMz0p5XPnl/7RNUrJ8kw6SC4t4djf1myiaXxfIAv5HvpXBA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wx3cU0sDj9oufseYMbZ3PwTSRTprtFQLR9CAme1UvfM=;
+ b=rzbLQff8uFjhzTCnvmiqKvblYe04FLBQAW6gcf7Q2BNahLsgDZrWGe6Lp0IUreqZJtwJtm+8xzedLMpNxZNFmybEDeDi6x4Bk6iwiBA7HFPuvlID2dqyGxnNpdHI6afQFmZA5nIfAS3fxnRWtmLOXUs28Nto8Jp1OPrckXvBx/l91PzkPMH5Fa7EWIRGD4ssMNp1dwbHccSAXfj6o8CjjX116Mx7Js82vfg4lOf6cucW0jINk4uUSXv9Jm8sXEEObcaok5e6jttjkvi11hGS1lJgOLlEkYEQjimC862XJ9hO37Tm6oGTo3bdXoilD9PiJSg4KjWnkvbuKKZEyX3SDA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wx3cU0sDj9oufseYMbZ3PwTSRTprtFQLR9CAme1UvfM=;
+ b=zOEMqfikhrASQ7fyMflStcBIpBmDweeLI2/JxJjNI7sYhON2MVSNo4ornoIUp+AEvgiZVz+gE9ibitwThd8mbYoKZAD75VvIsSuJYDU4blGKszsqlKSE8g+cZV8rTwZ+19XwExoG0s/vBjtbslYUQtEnQUPS28gsRdEm/FF61eg=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by MW5PR10MB5874.namprd10.prod.outlook.com (2603:10b6:303:19c::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8069.26; Sat, 19 Oct
+ 2024 12:51:32 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.8069.020; Sat, 19 Oct 2024
+ 12:51:32 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: axboe@kernel.dk, brauner@kernel.org, djwong@kernel.org,
+        viro@zeniv.linux.org.uk, jack@suse.cz, dchinner@redhat.com, hch@lst.de,
+        cem@kernel.org
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hare@suse.de,
+        martin.petersen@oracle.com, catherine.hoang@oracle.com,
+        mcgrof@kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH v10 7/8] xfs: Validate atomic writes
+Date: Sat, 19 Oct 2024 12:51:12 +0000
+Message-Id: <20241019125113.369994-8-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20241019125113.369994-1-john.g.garry@oracle.com>
+References: <20241019125113.369994-1-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BL0PR0102CA0030.prod.exchangelabs.com
+ (2603:10b6:207:18::43) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|MW5PR10MB5874:EE_
+X-MS-Office365-Filtering-Correlation-Id: 823767fb-f123-47de-7587-08dcf03cc202
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014|7416014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?zKxigOy90dsc9XvSj1mV0Xik6dAQTMCfD0Iqrt+kWxKJ+sIVe8ld3N0yro0k?=
+ =?us-ascii?Q?TDLVqmpHoRcpUrao1NEIog6AK3eGIRXi6Sg8jVNVbVnRIcCVpx82gLDuybC2?=
+ =?us-ascii?Q?Y0GJS0vNy0+VZANL9sYKnLzfViRvZjrao8wYZCCxKC4GKCB3Boglxi8SLVhZ?=
+ =?us-ascii?Q?aVLgiV0DjeRfxdo+S/qIWO/v7zDJaG13RUpNL2GW6mA/YH2cAjQVg+Kvqvp2?=
+ =?us-ascii?Q?/9hsylHsHW8Kke3ds/HQXqeb90ixuOCKeIdSKKtGGilC1Z4B//HdNV3yQuc7?=
+ =?us-ascii?Q?LXP52xft56fhdUk6gNrgkf9mexfgjhq8US1YGxXAUrvXsSgE5z7q2vUMS48K?=
+ =?us-ascii?Q?niB+y2n/U8AmJoXZ5KzDE70K/d/tz3LxOs4pPy6BV/ff6e3OvIj5Xqzd+xMq?=
+ =?us-ascii?Q?4Rb2RCIVL9BW2JpXTSsjqmGZsEaUIKN5zRyxMWV+bTeS/ENeGXWo0ly77o85?=
+ =?us-ascii?Q?PPLY3+3BvkSKpOMtSlCGTL3qZE3g3tCrgtwPETkyBO4kqN14sFZA1m9MZ91G?=
+ =?us-ascii?Q?zyKUuaRBQdo/2RQvLMAKFHnsDa4TjJkLCByv6Cx8jvmBZPd6D44eRjStXgQe?=
+ =?us-ascii?Q?0tMNHLdbh0b+aPwGEIO0Ep5lGey+bhwf1i8MDanDu+0vRM6fFwpLu+W9VXhY?=
+ =?us-ascii?Q?/9VWFNX4qz/J+kHLOZroSNRiYEpPmJzVSXaDtNqM1ufZOLhW4BD5WBnk1rZg?=
+ =?us-ascii?Q?EgcVcPlJ0118EcpjB0fjZw251xWbnPLPrcWLKV9/eS9qEARFn8h5nJMMgzge?=
+ =?us-ascii?Q?zxCXzDDtcetSKMYrtm7cMqTGpYNqmbkZwOhKM0U0ZEk/6pU1fg3jYLNqZF+B?=
+ =?us-ascii?Q?mZKVny7Tm1PH5UZq1O0VjU6d1yjeZPUQp5/lt7rLNQkz91pJzDJguFf/voaJ?=
+ =?us-ascii?Q?xQnAXp8RM6JZmDeUy1Uu2kwDtLGntVYWaimvE+b2Wwol4HMRPNkE8hIB098u?=
+ =?us-ascii?Q?TYQTdgg/e/YZCrQmq6Bv6cwomTkgpzWoHAHKwM81012WkkDnw0Wks93/gbo5?=
+ =?us-ascii?Q?7/SXZAqNQUu9Q8CKk0OIqtKmNjLIAr4IRKw3mlJUCqUMYdWA7opUF5E9e8Mr?=
+ =?us-ascii?Q?ySJN7Crdxgby4p1afnHNWcGAzl9XZT1G+1P4yYCXgtvtcusewUEuKKO+HwvQ?=
+ =?us-ascii?Q?xysLSCvPiHoEVBa2qdI1cSikc9V7kh8lS0RP8ADXp7RRlEKnDaMM1c6Q2hJm?=
+ =?us-ascii?Q?du/WKr5PNxcdAfZXFBr2jNmmoYUXmbdgxyu1Hq6U9F7FFYi/nmBJlbW1ftVM?=
+ =?us-ascii?Q?+HUpnjqhiJPF+vlhQ7hMUPl9RcXHMzy6j0J6z1GiL/joXKr9YmYMUIB1sKMc?=
+ =?us-ascii?Q?CBS7VRfJKG0mlO50VbERtpzq?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?159GqL0zg/LTSKfVF11K3Lt63lVBfH+eD0btCZIsf2PX26tJ2JOpd+iqjUGK?=
+ =?us-ascii?Q?XxZoExkcKDeOZmsiZhlMvy72kP5Co1SaMPIzvKsbsZzEXKqrujXPv/3bAw5V?=
+ =?us-ascii?Q?6sMInpDG4KmdwT0o8J+bBQfOriZjqmVVGrrkzFyjNlSFEO08YCSgp/+xYWTP?=
+ =?us-ascii?Q?NV7gDt/RJJyE06pQxj0SlQgf0Skml9sUOcvQ8n+7GY+BB/ebKeU25rnA2CVm?=
+ =?us-ascii?Q?lmIaAQ7Jni6BWt97bUMPDRYMaMTG+FPZPZKZf9PLVdDbYKiK3vNw8aPvXZjg?=
+ =?us-ascii?Q?TCzR0F3ZT2nxFnLkiv75e7cdTcScm124iswpFyWJ1e/3JyK4AKlFzB33UqBk?=
+ =?us-ascii?Q?+YZFLMTVpFZwnvwJb/D6uRpmEUMNPbwIb3PXOJJwEOUPgN3tuaAS3KLxpQmH?=
+ =?us-ascii?Q?Jm7st+mBWTHjYb7OBv+Y03e0945+Q5Bmg4PkjHV6BccRgM8D7sheBo8+xL14?=
+ =?us-ascii?Q?snDTEl2WfQfXqULSzpNN9fZcRRGPkMQdmJ0bzqxcFXOehb2PBsRyX7zie/zO?=
+ =?us-ascii?Q?KVwxoGsnrIx2SsEcZSSmeynAU8d9zzRf/aQdGMiaMLkc3MfWMAqJmOchFUhV?=
+ =?us-ascii?Q?QuT9Azg5hN4362ZiE9f6CFsXEEmp5qc0zE6QzFq3bFznfsCpEeOnxz1zESMJ?=
+ =?us-ascii?Q?j/BZn/UAvblpsdjGaMjNh7N0dmmZrYfCWqI7lFp2JbTvOzSke2GQjtvyLmDo?=
+ =?us-ascii?Q?2RoeOtql59dQ8nkYvEyRyCuZn+HVHoiOAyia0fb3AkKQuy/4CSxczBz5CxOl?=
+ =?us-ascii?Q?eolf0CGbdZsJ1b0o5lh0X+dYj3CLU6ntwjPc54R9pfsUYR5JhK26Bb+g0Lyx?=
+ =?us-ascii?Q?MJx55OtS61ms/xkVjV3u7DWrBT8B/vB4o+4MV087o8LoLjEgZXH83sxKMk68?=
+ =?us-ascii?Q?bWiuwKAsFjDfiErQiX5odimFyh/TWbMi7Tdi5u6e9o31pXvTjySOkyTSq2Ik?=
+ =?us-ascii?Q?4vyQHcNtNTS7U9DEBEgLIjjhE9bJ3KOHHZWISa38DP1k6rm0YY62AVs1Xz41?=
+ =?us-ascii?Q?XDXP5fJY23dI1FmEZqQeTkh2Ph0Pq02GlYa/ryuv8AMRcKkwjttLzD5j1gqM?=
+ =?us-ascii?Q?DUYPG10EFU0vokws89ih4vRdiQDgUljTM9I5PoaVR5sEjyYMZd8uEvMBE077?=
+ =?us-ascii?Q?0fo7sqB6itscOUFpX09lvCue6xpTdgtwDXcvxp9sI9d/3S6T2Zzgw40AMVP8?=
+ =?us-ascii?Q?nG4DEQswnqYG0IyjN7scGxDdynB8EZ4bUWyN3UJ0AjGs9LlADbHELs15cL+Y?=
+ =?us-ascii?Q?fT4k5f4fr6jz2CUgQAA740hqho9xNVT/L5D2RFd0ljHwPBXNKzUTQbPGFLo9?=
+ =?us-ascii?Q?CzqzM98SrhxigaFo86BZdzAELHL3I+2NJJ92e3knvGF8t/0nPssagsRlt+1K?=
+ =?us-ascii?Q?i7N/A5s+f0sCKb3BOhWBx/zbQteK5KtN2CLz1uhidtIAilC66yszKQHV/cJP?=
+ =?us-ascii?Q?jyjiI1pvZhpVa3/whGYmnaMud2P/ZAqh/h3g5Dm1IUE5wfMJuU44+kYLl4h/?=
+ =?us-ascii?Q?B95dqBD1XDvrAGVkKLkW5elXaymAhvMTNVB6v97knlqsb0p/wrazFv+Yg6XR?=
+ =?us-ascii?Q?+KK+HjPmC9Ho/ypl9yIRcXkUjQy4v3ogefsuGyBL81XtZ7VDWUV8YKUM58a6?=
+ =?us-ascii?Q?Rw=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	AIxNlKjfiYuNryB77kL/Ss9yddP3gM65I9i3lONz3sNayp0zW2WSakZroclqq+vDTFfVfd+gdE/RhazB9YZJDZzen/SsdhDLy6yNta6TSKqO54KcshYE+C4vtGiPms3bNBOU7ubHib6nGZETWAs2TYVLKw5K6lvyHGvpTnX/2Pla8tRZHzKGw2uhpZ54Hb1ifgTwlnGIRUPF2B79XoY41jYhoJq2O1Cw9Tu3vU7WR4jg5JEa+fcwfmkr5wVy11Ubcn9gb3u9p8MvKQJvjRjlsgoV6sOiQ/rBs6g3OUWL4v0dLvqhFydrTzq6S3vcQ47WRmaTWeICrjpN/OpxYrQSqKMFWvRHHq6/BIR7QOE44hE7B4HKgwgirwpyvNVSAIaakuFLg/DEVguICaQbAqSyjhYkttS6FOQ21t1PwolS//J0LKLO92/DvnxvR5q3mZY1WRfcSH4tN+OIy/J+mafmj3b6ZFFxLGK7pNf9NYZ1phJirEf3cpn7Ub4VdPQh7MKvycz4WJVMgHvlOiMJVgCYam/8VyMyk86VlZsU/5sNfb8BroW/z+V6vr1ZfW7zOiOp3zSr3tjmttT/Zo4RmfGCHG2ew28dxmiI9qsYXalGWm8=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 823767fb-f123-47de-7587-08dcf03cc202
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Oct 2024 12:51:32.4967
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bDfloqVSlH40E12vKhQ0QpYypeHcRSY6/J/3dknEVYT+BKotvsGF/zBSllneSp61mALCKRqxFnIXqdO6laF0VQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW5PR10MB5874
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-19_10,2024-10-17_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
+ mlxlogscore=999 spamscore=0 malwarescore=0 mlxscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2409260000 definitions=main-2410190094
+X-Proofpoint-GUID: HX-dL4Bm8ey0AAENGJumuEMAfFTy0Hcs
+X-Proofpoint-ORIG-GUID: HX-dL4Bm8ey0AAENGJumuEMAfFTy0Hcs
 
-Hi folks,
+Validate that an atomic write adheres to length/offset rules. Currently
+we can only write a single FS block.
 
-The xfsprogs repository at:
+For an IOCB with IOCB_ATOMIC set to get as far as xfs_file_write_iter(),
+FMODE_CAN_ATOMIC_WRITE will need to be set for the file; for this,
+ATOMICWRITES flags would also need to be set for the inode.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: John Garry <john.g.garry@oracle.com>
+---
+ fs/xfs/xfs_file.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-has just been updated.
-
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
-
-The for-next branch has also been updated to match the state of master.
-
-The new head of the master branch is commit:
-
-e503e1e38032e9c0e04368d5d9e1cbba099232c9
-
-New commits:
-
-Andrey Albershteyn (3):
-      [6b32423addd2] xfsprogs: fix permissions on files installed by libtoolize
-      [42523142959d] xfsprogs: update gitignore
-      [e503e1e38032] xfsprogs: Release v6.11.0
-
-Bastian Germann (6):
-      [bb7c05552ac9] debian: Update debhelper-compat level
-      [5c68dee37faf] debian: Update public release key
-      [b3e43b35c298] debian: Prevent recreating the orig tarball
-      [ea75ca724ac8] debian: Add Build-Depends on pkg with systemd.pc
-      [1a608469c13f] debian: Modernize build script
-      [b92bf9bc2da7] debian: Correct the day-of-week on 2024-09-04
-
-Bill O'Donnell (1):
-      [2f0fedf94c54] xfs_db: release ip resource before returning from get_next_unlinked()
-
-Carlos Maiolino (1):
-      [aa926341398f] xfs_io: Fix fscrypt macros ordering
-
-Catherine Hoang (1):
-      [ee6c5941352a] xfs_io: add RWF_ATOMIC support to pwrite
-
-Christoph Hellwig (8):
-      [c4bef0ef27b4] xfs: pass the fsbno to xfs_perag_intent_get
-      [611d0eaeb29e] xfs: add a xefi_entry helper
-      [328b29c975cc] xfs: reuse xfs_extent_free_cancel_item
-      [b52eaa2f6ee1] xfs: remove duplicate asserts in xfs_defer_extent_free
-      [02a830d4f89f] xfs: remove xfs_defer_agfl_block
-      [8c775051ce9c] xfs: add a ri_entry helper
-      [4b7979f5f4b9] xfs: reuse xfs_rmap_update_cancel_item
-      [b8c3f60e7c3d] xfs: simplify usage of the rcur local variable in xfs_rmap_finish_one
-
-Darrick J. Wong (61):
-      [71d2969be616] libxfs: dirty buffers should be marked uptodate too
-      [8554a59c8528] misc: clean up code around attr_list_by_handle calls
-      [2ed5318f360d] libfrog: emulate deprecated attrlist functionality in libattr
-      [643778e60849] xfs: avoid redundant AGFL buffer invalidation
-      [8a8799bba2d2] xfs: hoist extent size helpers to libxfs
-      [fadb819b464c] xfs: hoist inode flag conversion functions to libxfs
-      [0687669c9afc] xfs: hoist project id get/set functions to libxfs
-      [d490a1d34ef1] libxfs: put all the inode functions in a single file
-      [4c300905db8d] libxfs: pass IGET flags through to xfs_iread
-      [7ff05ce00ebb] xfs: pack icreate initialization parameters into a separate structure
-      [04fd15692ac8] libxfs: pack icreate initialization parameters into a separate structure
-      [f3c648be19ef] xfs: implement atime updates in xfs_trans_ichgtime
-      [3af8c427dc20] libxfs: rearrange libxfs_trans_ichgtime call when creating inodes
-      [5d1e5c013750] libxfs: set access time when creating files
-      [ff9ad30a7149] libxfs: when creating a file in a directory, set the project id based on the parent
-      [66ecea3e41d2] libxfs: pass flags2 from parent to child when creating files
-      [02df725889c0] xfs: split new inode creation into two pieces
-      [62c2477deae9] libxfs: split new inode creation into two pieces
-      [fdf7f98794ac] libxfs: backport inode init code from the kernel
-      [b47055a465de] libxfs: remove libxfs_dir_ialloc
-      [2e85cabb0ee9] libxfs: implement get_random_u32
-      [fa2f7708223e] xfs: hoist new inode initialization functions to libxfs
-      [0f1f674259e7] xfs: hoist xfs_iunlink to libxfs
-      [c8fa782f3856] xfs: hoist xfs_{bump,drop}link to libxfs
-      [a8d4daf12f58] xfs: separate the icreate logic around INIT_XATTRS
-      [7ce57cdc9ce7] xfs: create libxfs helper to link a new inode into a directory
-      [926504400091] xfs: create libxfs helper to link an existing inode into a directory
-      [45555b3d8f30] xfs: hoist inode free function to libxfs
-      [ffed33c5cf10] xfs: create libxfs helper to remove an existing inode/name from a directory
-      [273c0ead0234] xfs: create libxfs helper to exchange two directory entries
-      [706961634f6b] xfs: create libxfs helper to rename two directory entries
-      [2ab755da0ddd] xfs: move dirent update hooks to xfs_dir2.c
-      [6a692a500894] xfs: don't use the incore struct xfs_sb for offsets into struct xfs_dsb
-      [9cebfe7aacb3] xfs: clean up extent free log intent item tracepoint callsites
-      [ad2fb6bca516] xfs: convert "skip_discard" to a proper flags bitset
-      [fea60f70c810] xfs: move xfs_extent_free_defer_add to xfs_extfree_item.c
-      [ff6e47b35102] xfs: give rmap btree cursor error tracepoints their own class
-      [18c3bc7f6059] xfs: pass btree cursors to rmap btree tracepoints
-      [0e95442e45f0] xfs: clean up rmap log intent item tracepoint callsites
-      [1d056f92e5a0] xfs: don't bother calling xfs_rmap_finish_one_cleanup in xfs_rmap_finish_one
-      [f8a9e37d48d3] xfs: move xfs_rmap_update_defer_add to xfs_rmap_item.c
-      [7cc6344b4414] xfs: give refcount btree cursor error tracepoints their own class
-      [27bc4731311b] xfs: create specialized classes for refcount tracepoints
-      [eea5f0e26bc8] xfs: pass btree cursors to refcount btree tracepoints
-      [efee29abb3e8] xfs: clean up refcount log intent item tracepoint callsites
-      [62ae47e4ae8b] xfs: add a ci_entry helper
-      [8c9f8f6c8c43] xfs: reuse xfs_refcount_update_cancel_item
-      [a344868860be] xfs: don't bother calling xfs_refcount_finish_one_cleanup in xfs_refcount_finish_one
-      [21f95f3ac61f] xfs: simplify usage of the rcur local variable in xfs_refcount_finish_one
-      [11a046c05508] xfs: move xfs_refcount_update_defer_add to xfs_refcount_item.c
-      [7392aa2f6881] xfs: fix di_onlink checking for V1/V2 inodes
-      [6431fe69edb6] xfs_db: port the unlink command to use libxfs_droplink
-      [cca845516ea6] xfs_db/mkfs/xfs_repair: port to use XFS_ICREATE_UNLINKABLE
-      [34f035799f30] xfs_db/mdrestore/repair: don't use the incore struct xfs_sb for offsets into struct xfs_dsb
-      [a14190323836] xfs_db: port the iunlink command to use the libxfs iunlink function
-      [a91ec6679c52] xfs_repair: fix exchrange upgrade
-      [cb62b887de3e] xfs_repair: don't crash in get_inode_parent
-      [6dc93b8b56db] xfs_repair: use library functions to reset root/rbm/rsum inodes
-      [171c8eec8da3] xfs_repair: use library functions for orphanage creation
-      [968cbaf5ae9a] mkfs: clean up the rtinit() function
-      [4727b4ff8e09] mkfs: break up the rest of the rtinit() function
-
-Dave Chinner (3):
-      [153e35fef680] xfs: AIL doesn't need manual pushing
-      [922a67a8e957] xfs: background AIL push should target physical space
-      [b2f56fe57fe8] xfs: xfs_finobt_count_blocks() walks the wrong btree
-
-Gerald Yang (1):
-      [19dde7fac0f3] fsck.xfs: fix fsck.xfs run by different shells when fsck.mode=force is set
-
-John Garry (1):
-      [871d186c79f5] man: Update unit for fsx_extsize and fsx_cowextsize
-
-Julian Sun (1):
-      [d488f8152f47] xfs: remove unused parameter in macro XFS_DQUOT_LOGRES
-
-Julien Olivain (1):
-      [baf5cde86f22] libxfs: provide a memfd_create() wrapper if not present in libc
-
-Long Li (1):
-      [9ba014e2e650] xfs: get rid of xfs_ag_resv_rmapbt_alloc
-
-Wenchao Hao (1):
-      [06b712627e0c] xfs: Remove header files which are included more than once
-
-Zizhi Wo (1):
-      [6211801f306c] xfs: Avoid races with cnt_btree lastrec updates
-
-lei lu (1):
-      [6540c8ae3485] xfs: don't walk off the end of a directory data block
-
-Code Diffstat:
-
- .gitignore                      |  12 +-
- Makefile                        |   3 +
- VERSION                         |   4 +-
- configure.ac                    |   6 +-
- db/iunlink.c                    | 132 +------
- db/namei.c                      |  23 +-
- db/sb.c                         |   4 +-
- debian/changelog                |   8 +-
- debian/compat                   |   2 +-
- debian/control                  |   2 +-
- debian/rules                    |  81 ++---
- debian/upstream/signing-key.asc | 106 +++---
- doc/CHANGES                     |   5 +
- fsck/xfs_fsck.sh                |   4 +-
- include/builddefs.in            |   3 +-
- include/libxfs.h                |   1 +
- include/linux.h                 |   5 +
- include/xfs_inode.h             |  93 ++++-
- include/xfs_mount.h             |  11 +-
- include/xfs_trace.h             |  11 +-
- include/xfs_trans.h             |   2 +-
- io/encrypt.c                    |  67 ++--
- io/pwrite.c                     |   8 +-
- libfrog/Makefile                |   8 +-
- libfrog/fakelibattr.h           |  36 ++
- libfrog/fsprops.c               |  22 +-
- libxfs/Makefile                 |  13 +
- libxfs/defer_item.c             | 222 ++++++------
- libxfs/defer_item.h             |  16 +
- libxfs/inode.c                  | 254 ++++++++++++++
- libxfs/iunlink.c                | 163 +++++++++
- libxfs/iunlink.h                |  24 ++
- libxfs/libxfs_api_defs.h        |   5 +
- libxfs/libxfs_priv.h            |  26 +-
- libxfs/rdwr.c                   |  97 +-----
- libxfs/trans.c                  |   1 +
- libxfs/util.c                   | 336 +-----------------
- libxfs/xfile.c                  |  16 +
- libxfs/xfs_ag.c                 |   2 +-
- libxfs/xfs_ag_resv.h            |  19 -
- libxfs/xfs_alloc.c              | 235 +++++++------
- libxfs/xfs_alloc.h              |  18 +-
- libxfs/xfs_alloc_btree.c        |  64 ----
- libxfs/xfs_bmap.c               |  55 ++-
- libxfs/xfs_bmap.h               |   3 +
- libxfs/xfs_bmap_btree.c         |   2 +-
- libxfs/xfs_btree.c              |  51 ---
- libxfs/xfs_btree.h              |  16 +-
- libxfs/xfs_defer.c              |   2 +-
- libxfs/xfs_dir2.c               | 661 ++++++++++++++++++++++++++++++++++-
- libxfs/xfs_dir2.h               |  49 ++-
- libxfs/xfs_dir2_data.c          |  31 +-
- libxfs/xfs_dir2_priv.h          |   7 +
- libxfs/xfs_format.h             |   9 +-
- libxfs/xfs_ialloc.c             |  20 +-
- libxfs/xfs_ialloc_btree.c       |   4 +-
- libxfs/xfs_inode_buf.c          |  14 +-
- libxfs/xfs_inode_util.c         | 746 ++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_inode_util.h         |  62 ++++
- libxfs/xfs_ondisk.h             |   1 +
- libxfs/xfs_quota_defs.h         |   2 +-
- libxfs/xfs_refcount.c           | 156 +++------
- libxfs/xfs_refcount.h           |  11 +-
- libxfs/xfs_refcount_btree.c     |   2 +-
- libxfs/xfs_rmap.c               | 268 +++++----------
- libxfs/xfs_rmap.h               |  15 +-
- libxfs/xfs_rmap_btree.c         |   7 +-
- libxfs/xfs_shared.h             |   7 -
- libxfs/xfs_trans_inode.c        |   2 +
- libxfs/xfs_trans_resv.c         |  29 +-
- m4/package_attr.m4              |  25 --
- m4/package_libcdev.m4           |  33 ++
- man/man2/ioctl_xfs_fsgetxattr.2 |   6 +-
- man/man8/xfs_io.8               |   8 +-
- mdrestore/xfs_mdrestore.c       |   6 +-
- mkfs/proto.c                    | 294 +++++++++++-----
- repair/agheader.c               |  12 +-
- repair/bulkload.c               |   3 +-
- repair/incore_ino.c             |   2 +-
- repair/phase2.c                 |   2 +-
- repair/phase6.c                 | 226 ++++--------
- scrub/Makefile                  |   4 -
- scrub/phase5.c                  |  59 ++--
- 83 files changed, 3299 insertions(+), 1783 deletions(-)
- create mode 100644 libfrog/fakelibattr.h
- create mode 100644 libxfs/inode.c
- create mode 100644 libxfs/iunlink.c
- create mode 100644 libxfs/iunlink.h
- create mode 100644 libxfs/xfs_inode_util.c
- create mode 100644 libxfs/xfs_inode_util.h
- delete mode 100644 m4/package_attr.m4
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index b19916b11fd5..1ccbc1eb75c9 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -852,6 +852,20 @@ xfs_file_write_iter(
+ 	if (IS_DAX(inode))
+ 		return xfs_file_dax_write(iocb, from);
+ 
++	if (iocb->ki_flags & IOCB_ATOMIC) {
++		/*
++		 * Currently only atomic writing of a single FS block is
++		 * supported. It would be possible to atomic write smaller than
++		 * a FS block, but there is no requirement to support this.
++		 * Note that iomap also does not support this yet.
++		 */
++		if (ocount != ip->i_mount->m_sb.sb_blocksize)
++			return -EINVAL;
++		ret = generic_atomic_write_valid(iocb, from);
++		if (ret)
++			return ret;
++	}
++
+ 	if (iocb->ki_flags & IOCB_DIRECT) {
+ 		/*
+ 		 * Allow a directio write to fall back to a buffered
+-- 
+2.31.1
 
