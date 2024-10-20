@@ -1,110 +1,98 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out203-205-221-235.mail.qq.com (out203-205-221-235.mail.qq.com [203.205.221.235])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09FC1192B88
-	for <linux-xfs@vger.kernel.org>; Sat, 19 Oct 2024 22:50:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8DA42F56;
+	Sun, 20 Oct 2024 05:36:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.235
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729378230; cv=none; b=ejouVoFYplfk5FtvUCm0mpOphHWqizIDKHLqNs+9SjBjbDN4Ya6mTDmxXNVXdA8uvNNnlo4tfyTI7mxvyTFdrUpKyYwnhLvIlwX8ZpszZ1ctVWPRwEKkRRp6ecXAdrvV3vDrrIaYjXofh+be1jKB/McyjWDnfo1qXSZpSenB2fU=
+	t=1729402593; cv=none; b=pYp1NnlYntMaukk8/uxzU4SBivU7GRgMfGPVyH8Kekcf01Uq8/tIgU4Qu+JJt2ffDDHGfU179uBZUgHdb6h2MsXmCqNLcahU5MQF6VQWt8Jo8vF1XmR46CeSGdubXUxIWs2wF57FMHNaAddjHBAjCAE6whkdR2d0iXhZKdiUM2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729378230; c=relaxed/simple;
-	bh=GWtLMRsLZGe4E3r+R/+P8YYa7gW3X+2YsqwO7F/RACA=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=JOi2aeUH9AWmoSmspnbsImLZolWnJiCpdadMwxjhoMqF9r/e/ap1umJdyNdj+tPh/88tI27dt1ksekydmODRDZ7oEwWFOEYxyrw52QwIq0lJYPVhv0kk8URCQTY7JZQUZtReIXwf0bKaxtwu39K1Oi67EBldeiZhZaE1agMfSDo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=J9T4q1FM; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1729402593; c=relaxed/simple;
+	bh=CQLS4Jdh2TrYEHMdcvsbtHJOnhRHa5bYKh7fqXhbfeM=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=CqEmJxxrg3HqCWCZxjtRrQqd6Bm0ldN+cQI8N1GtKuOChjDZzP2vfdXiB2IPvsv7XD7wNsBPsp4OL9EHPxe1lSl43Cx0BCCPUO5T6K6p7eimlm75GtnKtaXsUGA4qdDz7skopncJ/MMmYQNjLiNU26JVZez+upQ4nGnwVbW5s2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=xvzJPctv; arc=none smtp.client-ip=203.205.221.235
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="J9T4q1FM"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-20cb7139d9dso30088495ad.1
-        for <linux-xfs@vger.kernel.org>; Sat, 19 Oct 2024 15:50:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1729378228; x=1729983028; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=26D6YfFHB6mhMnWiMc1xtXuTg1J0SpdP4FmHa6OeheQ=;
-        b=J9T4q1FMkkeUOuyS4kqh3Zv2OOSboClfGFSpC6jAIixz2f9KNR6kl723zJvhjkydQZ
-         /Vt3pk8rIoSF3SuWdjR4UjYoKop0DZInd5jHJuuY+Jc4ykJOqJDW5bdzyBxKAE/1XkNf
-         CafyFSCH7K/7qoSXE0Pmm5r4E8Qb3Jq305TiRaZEmQv+xnp1TWmihq06CfFT7W8o64AJ
-         q69TmcSb4QoTzdqMF3S/nkRnViCJf8GOKqyOmef019Y39RnDBaiMaG37hPmiPKIHas0n
-         VoujHkQ5HxToaoAMLEaqcVgkCkCQBkFO0L+S/JT9t5o5040DGf2pll2nsScOTIKIgfJl
-         jmPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729378228; x=1729983028;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=26D6YfFHB6mhMnWiMc1xtXuTg1J0SpdP4FmHa6OeheQ=;
-        b=D+VhKTZSkQS81eA3mAEzFRXGVuGgIUQriJNgX7kaCz7Eqd7AXaKOhZ4eyM3d2r87+I
-         H1P+TRDg9cWNL1B8GAZt7sbZAZNhlOhyFtOwRy59/qiNmXf0gfAlo5D6SPuZDFWE0N5j
-         nw0EWfS/CUnNpK8r3T9L6XY2lnQSHbKUB0Uvh5sddoxUgpJSkOGxPK4mcpetZ8OtVZvy
-         YqABPtvKu5zzifC2f8nWHtM8+Cb1Pion1eDGA9szO4jrJYK3zcdoqtsmTJ9mJZCGzURI
-         rOMLmEHdN/SvWC6Ep90kdxTx5fOHGV9WNBrXbJeiLjNgyvY5Y4rhona00eQwuiAlEkkz
-         aw7Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVPcz7fxyeOfqxAOc6j61MJ3FclfBzSi5mIC46vJTsWTYvoIz9bvqoUyeza28UujdwffyeU3X83Q5w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyumvTICQZTZBmxbDscJ0hIMMYkEWldCJfvq7kt+OgZcQu37v/r
-	7S8nTg14WQUclfm7fhmRFk0e2JjptpxAqkI8GGvn8yW9NcEQ+a5s3o7lyHuNs5k=
-X-Google-Smtp-Source: AGHT+IG/SdolPDBlJgQXRSOz40RufwW0B9RRmCWWNyO7f6sAWOxABQs5hjD2LfcfSRzPBkj3obJ9KQ==
-X-Received: by 2002:a17:903:2301:b0:20c:9eb3:c1ff with SMTP id d9443c01a7336-20e5a94b609mr89438595ad.59.1729378228212;
-        Sat, 19 Oct 2024 15:50:28 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20e7f0bd4bbsm2095375ad.155.2024.10.19.15.50.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 19 Oct 2024 15:50:27 -0700 (PDT)
-Message-ID: <d6d920c6-9a8c-49b7-8d4a-fbeacd6906f0@kernel.dk>
-Date: Sat, 19 Oct 2024 16:50:26 -0600
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="xvzJPctv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1729402284; bh=68MuDEAkugZHHuw3z4nllIsNJNyk2fMNR0z2lft6ay0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=xvzJPctv/v8lpzz+ZqHjJDAF7akW+OeckVNd7KFjisRWT++zaqzaJMZEcKLn+8Jj2
+	 Cd2wx+huqT0Cq7KRmYsdPvIOtPoo4ScStQ+NWbvv0dtv3Fz2fB/svvMbjzRbYX4Fqb
+	 rChTYamsJQZXO79i9H4vYvkgRlr4aLxiMyN24Ucg=
+Received: from pek-lxu-l1.wrs.com ([111.198.224.50])
+	by newxmesmtplogicsvrszc16-0.qq.com (NewEsmtp) with SMTP
+	id 78496646; Sun, 20 Oct 2024 13:30:04 +0800
+X-QQ-mid: xmsmtpt1729402204tpu5ambad
+Message-ID: <tencent_1DD6B365236C297EA3A6A45DB768B76F2605@qq.com>
+X-QQ-XMAILINFO: OCYbvBDBNb9rtjglg1mFo8KR3yqhPGr5SIiDmmj/8rCInRZKzKSCIt16DX6VeA
+	 fTND/GMtJJLqloc5WuhEKLRmDBuskNeDAAwsVSywWKWK2x0aUSLzfrlsM+EvbWJqNsIV4NgwNzc5
+	 PMgJMvbwLx2axyydVhOSVVapyOW44YGUkanI7gflGSw8gP54By8d5lR0g5ORmOyn/udYSMnn+FGV
+	 9587vwT73vB2nP05uK/L4uwKPzvmMWQHza/OYDaJBUVGUrkfGTqU/mvgSjWjhBoUHR9Wo2lfZUHz
+	 H0gOFM/eGsWjusRgVS7azu7DAyPTOEAyO5I8wpbvpnrWUL7Oym81Mk4s7AUWdu56fxY5awOg+yW8
+	 L4yEoD+UtYGA3k9yomVjOvdAiJeG7CGarhJoFrWC+bwpjnjuPYUU+wmKsaBZ2TrBCv7LIJy/RKPx
+	 M3QvhEiVvHw4OFCm59vT77BSQRxGBi/3JB1CQxsHp6mfFgITQqhtlPsC8Ri/mboNwtyIGLM+An2M
+	 vst1rTWyHcEy+CEuDJvYvAuIJQ8p9oepaD0IchCi0v02Eypnk3ltXj6Bd3awr6B0cYqAcX17wjHP
+	 iORTvWOzpGnotOlkvqZJDnVd8cUY5yAstX5gzsmrCbJ67syQw4NE6ZInPXsl1sde4Jk0hkY4Luj+
+	 42+Qs112zeTZnq/RYg642JeV9qLHDg3RKmZG6DVcBmCn1sENgFJ/A4gDOJwHtzMnp3HOjDfYmBQO
+	 TfM+zi2twS9az0VkrNOgY3ZFBbT7bHBDkd9rXLg118lqXu0JIynjx7uB9ted6EWG2UkeYo0tlStk
+	 gjbgVUhf7ZJVfzzQtDWnQKk37vwiGkkXuM63XdQO0gCpJMQ33iuNRlAnjKajbDpFJsAS9QUXplPv
+	 WEZm5lBwbb4lMi1B4MPyyYrIYVNhFqVRKeail2VzuKAD4aJ26UL4ccR3jOSM9X6fEp8IpLM/DM2O
+	 z01tZxRZvlx4UGb5uBYQ==
+X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
+From: Edward Adam Davis <eadavis@qq.com>
+To: syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com
+Cc: cem@kernel.org,
+	chandan.babu@oracle.com,
+	djwong@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com
+Subject: [PATCH] xfs: If unable to pick perag an error needs to be returned
+Date: Sun, 20 Oct 2024 13:30:05 +0800
+X-OQ-MSGID: <20241020053004.2431264-2-eadavis@qq.com>
+X-Mailer: git-send-email 2.47.0
+In-Reply-To: <6712b052.050a0220.10f4f4.001a.GAE@google.com>
+References: <6712b052.050a0220.10f4f4.001a.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: (subset) [PATCH v10 0/8] block atomic writes for xfs
-From: Jens Axboe <axboe@kernel.dk>
-To: brauner@kernel.org, djwong@kernel.org, viro@zeniv.linux.org.uk,
- jack@suse.cz, dchinner@redhat.com, hch@lst.de, cem@kernel.org,
- John Garry <john.g.garry@oracle.com>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hare@suse.de,
- martin.petersen@oracle.com, catherine.hoang@oracle.com, mcgrof@kernel.org,
- ritesh.list@gmail.com, ojaswin@linux.ibm.com
-References: <20241019125113.369994-1-john.g.garry@oracle.com>
- <172937817079.551422.12024377336706116119.b4-ty@kernel.dk>
-Content-Language: en-US
-In-Reply-To: <172937817079.551422.12024377336706116119.b4-ty@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 10/19/24 4:49 PM, Jens Axboe wrote:
-> 
-> On Sat, 19 Oct 2024 12:51:05 +0000, John Garry wrote:
->> This series expands atomic write support to filesystems, specifically
->> XFS.
->>
->> Initially we will only support writing exactly 1x FS block atomically.
->>
->> Since we can now have FS block size > PAGE_SIZE for XFS, we can write
->> atomically 4K+ blocks on x86.
->>
->> [...]
-> 
-> Applied, thanks!
-> 
-> [1/8] block/fs: Pass an iocb to generic_atomic_write_valid()
->       commit: 9a8dbdadae509e5717ff6e5aa572ca0974d2101d
-> [2/8] fs/block: Check for IOCB_DIRECT in generic_atomic_write_valid()
->       commit: c3be7ebbbce5201e151f17e28a6c807602f369c9
-> [3/8] block: Add bdev atomic write limits helpers
->       commit: 1eadb157947163ca72ba8963b915fdc099ce6cca
+Syzbot reported a null-ptr-deref Write in xfs_filestream_select_ag.
+When pag is not found, xfs_filestream_pick_ag() also returns 0, which leads
+to null pointer access in xfs_filestream_create_association().
 
-These are now sitting in:
+At the end of xfs_filestream_pick_ag, we need to add a sanity check for pag,
+if we fail to grab any AG, we should return to -ENOSPC instead of 0.
 
-git://git.kernel.dk/linux for-6.13/block-atomic
+Reported-and-tested-by: syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=4125a3c514e3436a02e6
+Signed-off-by: Edward Adam Davis <eadavis@qq.com>
+---
+ fs/xfs/xfs_filestream.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-and can be pulled in by the fs/xfs people.
-
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index e3aaa0555597..dd8f193a3957 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -165,6 +165,10 @@ xfs_filestream_pick_ag(
+ 
+ 	trace_xfs_filestream_pick(pag, pino, free);
+ 	args->pag = pag;
++
++	if (!args->pag)
++		return -ENOSPC;
++
+ 	return 0;
+ 
+ }
 -- 
-Jens Axboe
+2.43.0
 
