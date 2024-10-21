@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D897A1EABB8;
-	Mon, 21 Oct 2024 10:36:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A69821EABAD;
+	Mon, 21 Oct 2024 10:36:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729507005; cv=none; b=JU3QGCYKNcmOm4e1N4viDxMGxXW9Hyet0d+0geYzwgr/xmdKC/7jvjUehOET1RvPx/QRpPFVAPv6q06gj+DDRRiWR0Ei2BP7v+KlLJhpyHP+62qMY/DfTCQcPp3llMwBUWSAxy0BF7mRw/G7bwpuGBWItRn72s0w82zrqME6HoM=
+	t=1729507007; cv=none; b=YFL5mIeLfsxL4ziUGn5KVwjSdUWP9NnUdlzRiK+j5jqNtPZRQMwFHCUTmQXYCJaolkl4LMDMZJuvKpA6ya6wlpKNTEjLLR6E14jtN+oAoSYmNNx0pGyFOjwZ0xyQ4f47AXpx5ABJjs78DpbvnYBKfDqmaIGTmn1X9OdUTrU4wcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729507005; c=relaxed/simple;
-	bh=BiKxkQLriqj0bgErBU0T/eFZWX1XYnaWiVYN22aK8jI=;
+	s=arc-20240116; t=1729507007; c=relaxed/simple;
+	bh=V/IU8NrZWvWfi38uBG01uS7vVjIAzYXld5VGSBSPo7c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=koCrtyBcG2BDLXhHnEiE1yxv4uF5Bm4xtbg123zmoxDWWgYbnF4bboTVrLKPy2aycgrI6DJ0F9Nm+yV4FrnYWRasDOj1LnhBfHIbV443FFAxo/DnRW5n2vw2BHY4ryZ4ZQnAqN5QebMkFLmRs3Vjfo8dN7uZ16D6u3bmy+AqSkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=O9Q3yOXu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=lVcs4RPbY/HN2YdntPDd4TYOhVnsws35MXrjqQkunC2NNl6DEKajBytE9p8VhjIvgtzSMwAarPYklhaOnvX6pk/CrFk+4i85VXTqdSHoDdlsR70azFHjqqWUU1NgKi6VXrR3q6CfR6hZ+4I9EdwxGLil7a2iFbUhZvMWs4/6yNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=V+gAiVOh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="O9Q3yOXu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 215FBC4CEC3;
-	Mon, 21 Oct 2024 10:36:43 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="V+gAiVOh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F0EAC4CEC3;
+	Mon, 21 Oct 2024 10:36:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1729507004;
-	bh=BiKxkQLriqj0bgErBU0T/eFZWX1XYnaWiVYN22aK8jI=;
+	s=korg; t=1729507007;
+	bh=V/IU8NrZWvWfi38uBG01uS7vVjIAzYXld5VGSBSPo7c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=O9Q3yOXu560G3q4+5rIsmndqmIn1yh8Wovo2sAMQNQ8bl+FqBp9rkv5jmS6NzED2V
-	 TFYiFnp+dZZlRq744shSN1ld0v+YWuQJFSNE1FFihyQcnMnmE4H9MwX7g6GrPu81ws
-	 hyiwjirReIVZCr42DAe68YI8qGGE/rkCbWuCPTaU=
+	b=V+gAiVOh6whPpgFRsDQqVusRE8JULVo+Py+qZWeBngOnorTXS3r3pLmSwC6HwTbgS
+	 cBGhJwsr5C2yz94l5BnDkKs5bGN+WwAzQFkPEtuQL8gojzXiXYS8wQYyChZV20Lut9
+	 HhJWhihbNNw60FxXlJoxks7ruteWFEIeUl1gjbXA=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -31,9 +31,9 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Christoph Hellwig <hch@lst.de>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 027/124] xfs: require XFS_SB_FEAT_INCOMPAT_LOG_XATTRS for attr log intent item recovery
-Date: Mon, 21 Oct 2024 12:23:51 +0200
-Message-ID: <20241021102257.776439524@linuxfoundation.org>
+Subject: [PATCH 6.6 028/124] xfs: check opcode and iovec count match in xlog_recover_attri_commit_pass2
+Date: Mon, 21 Oct 2024 12:23:52 +0200
+Message-ID: <20241021102257.815640292@linuxfoundation.org>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241021102256.706334758@linuxfoundation.org>
 References: <20241021102256.706334758@linuxfoundation.org>
@@ -54,42 +54,62 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 8ef1d96a985e4dc07ffbd71bd7fc5604a80cc644 upstream.
+commit ad206ae50eca62836c5460ab5bbf2a6c59a268e7 upstream.
 
-The XFS_SB_FEAT_INCOMPAT_LOG_XATTRS feature bit protects a filesystem
-from old kernels that do not know how to recover extended attribute log
-intent items.  Make this check mandatory instead of a debugging assert.
+Check that the number of recovered log iovecs is what is expected for
+the xattri opcode is expecting.
 
-Fixes: fd920008784ea ("xfs: Set up infrastructure for log attribute replay")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/xfs_attr_item.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_attr_item.c |   27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
 --- a/fs/xfs/xfs_attr_item.c
 +++ b/fs/xfs/xfs_attr_item.c
-@@ -510,6 +510,9 @@ xfs_attri_validate(
- 	unsigned int			op = attrp->alfi_op_flags &
- 					     XFS_ATTRI_OP_FLAGS_TYPE_MASK;
+@@ -719,6 +719,7 @@ xlog_recover_attri_commit_pass2(
+ 	const void			*attr_value = NULL;
+ 	const void			*attr_name;
+ 	size_t				len;
++	unsigned int			op;
  
-+	if (!xfs_sb_version_haslogxattrs(&mp->m_sb))
-+		return false;
+ 	attri_formatp = item->ri_buf[0].i_addr;
+ 	attr_name = item->ri_buf[1].i_addr;
+@@ -737,6 +738,32 @@ xlog_recover_attri_commit_pass2(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
++	/* Check the number of log iovecs makes sense for the op code. */
++	op = attri_formatp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++	switch (op) {
++	case XFS_ATTRI_OP_FLAGS_SET:
++	case XFS_ATTRI_OP_FLAGS_REPLACE:
++		/* Log item, attr name, attr value */
++		if (item->ri_total != 3) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					     attri_formatp, len);
++			return -EFSCORRUPTED;
++		}
++		break;
++	case XFS_ATTRI_OP_FLAGS_REMOVE:
++		/* Log item, attr name */
++		if (item->ri_total != 2) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					     attri_formatp, len);
++			return -EFSCORRUPTED;
++		}
++		break;
++	default:
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++				     attri_formatp, len);
++		return -EFSCORRUPTED;
++	}
 +
- 	if (attrp->__pad != 0)
- 		return false;
- 
-@@ -602,8 +605,6 @@ xfs_attri_item_recover(
- 	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT |
- 			 XFS_DA_OP_LOGGED;
- 
--	ASSERT(xfs_sb_version_haslogxattrs(&mp->m_sb));
--
- 	switch (attr->xattri_op_flags) {
- 	case XFS_ATTRI_OP_FLAGS_SET:
- 	case XFS_ATTRI_OP_FLAGS_REPLACE:
+ 	/* Validate the attr name */
+ 	if (item->ri_buf[1].i_len !=
+ 			xlog_calc_iovec_len(attri_formatp->alfi_name_len)) {
 
 
