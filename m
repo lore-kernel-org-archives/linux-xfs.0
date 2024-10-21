@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FF7C200C97
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 21:59:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 366CA2CA9
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 21:59:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729547983; cv=none; b=Yp501AvnBLBRILgF8AusN4WTa5+UExUnF2bQSxTe8JPiXlzsKltwlgZhmrvC+5Vu5OUI3xrgq1Iy77CoQELhyHt6jkm8Ap14OEkLJHggf540j4jXg22GFFvi+bhO82CQkSS9Qz12rm2UPcsZbobo+jVIKtWL32TQE5qQOd2veyU=
+	t=1729547999; cv=none; b=JOUjAohNjS7u4mcVzm15X3h2xH8NE/vy7fNx+woMG18h5h+HqcoqiSgXBrkppA/KUoHmGLid5T7P+XD7lU5vyOZ85/duIIObPnjF+A4Lg++FMeFDLy4Cj0jgjCwhIj2BLk0NZy3HYaK0C1yW+HcivH7TEvbO7KxP7+RyHMgoTZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729547983; c=relaxed/simple;
-	bh=JQLGJpFBOGKVwneAIfeXNaS757pLhKyadE4hKQCyQMA=;
+	s=arc-20240116; t=1729547999; c=relaxed/simple;
+	bh=p8s03YUPGL5T3AUYprap2ZNhUpLsCpMbOZdOciQjSvA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FMdSjSNriOuNJSekLLtV/H+XXCNZzzDdcKW8YoqFj5fUa7fyw3elOntkmUjBJqnkhA2ukSuWRhfIzsPSDBz7qRQJHTq29d3fksHnI9yHMiUXoM7KNoybQGUJYooZtcOzGuN7a3XAARCnFtXChtifguCDwcYRusFIxNs9d05O7Ic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iOMtJvV8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=iHJr6a3Dt15roax9/b6OzygWfw0RxpqYAXrJ4TaeRHgVRFInjQh1dsBrxhwbrHl5cJNFLLYdw0ypXKC0mmgBnT48Kjna6eSM7e1sduPCS1ITkIR8ofGL07OaFUvAdLWO4esZdKw7vIJSbSW3TJC2tCjUTvXzVBs+91JoK3YyPTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XGTh92Lx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iOMtJvV8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28D3BC4CEE6;
-	Mon, 21 Oct 2024 21:59:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XGTh92Lx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC8A2C4CEC3;
+	Mon, 21 Oct 2024 21:59:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729547983;
-	bh=JQLGJpFBOGKVwneAIfeXNaS757pLhKyadE4hKQCyQMA=;
+	s=k20201202; t=1729547998;
+	bh=p8s03YUPGL5T3AUYprap2ZNhUpLsCpMbOZdOciQjSvA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iOMtJvV8szT5F5t71wbZEBpVqNJIX1/HRhhx63GoW+RbQ/SAaxGgByyHIeusmBf7i
-	 tWR457ED9t/mR5Q4yfPufZ82gLj1Gw+1DsLQugxzasDybPRCII2I4RKTsxUWYze4J8
-	 6WHBYCTKMPu+OFA2xPakfXzn7hBy/T+ux9HQib5IBQEp+X/0wZe1NccyrEt4H7Y2q5
-	 ChLz5p+f9dDO8ZhRHpsZyhvQWrocrlsXBQC5HQUAUgBDxrgLMM08Ba4xEv7uM7HPLX
-	 I+NP0wjFA3+ozDW3J9l5JWUFu4zqDlizhXC2OSlSYbj7dLuNjDnJkJHeBZC8BHNyrO
-	 XLz7iOfW8VPig==
-Date: Mon, 21 Oct 2024 14:59:42 -0700
-Subject: [PATCH 03/37] libxfs: port IS_ENABLED from the kernel
+	b=XGTh92LxSgd1XaSqNFpsmKXYBE29ZPdXpmGWPh4XdACDjyBbmMlETRlXXhL1kKWxA
+	 3tZiMYtZJEddfdiiC+1oh6uQP1RIRoaDp+eBicQWNpMP9zVsOnWI1yVQs0nMedfcqH
+	 7nq4X4yEH+9iSXBijWDyPvQQhaA/GF3vJLCBUP6IuewM79hNj7uj3Q/Z3f/eW1e4gv
+	 EqD5lDVjgXeKavEer5lNZdqDkkoDuSRkD2q8op68ucaBj1YpT7XsbGXLro0EUUrhJ7
+	 bG2Ko4031ytR/rMTzueNKqVgDaxy/V7jIHSHfhOPNkcD2ToaJAAAQKFVO5YtOWa2ei
+	 jBCk8AXq1gSew==
+Date: Mon, 21 Oct 2024 14:59:58 -0700
+Subject: [PATCH 04/37] libfrog: add xarray emulation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172954783517.34558.6960888274382502007.stgit@frogsfrogsfrogs>
+Message-ID: <172954783532.34558.3574729108397726957.stgit@frogsfrogsfrogs>
 In-Reply-To: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
 References: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,127 +43,61 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Port the IS_ENABLED macro from the kernel so that it can be used in
-libxfs.  This requires a bit of hygiene on our part -- any CONFIG_XFS_*
-define in userspace that have counterparts in the kernel must be defined
-to 1 (and not simply define'd) so that the macro works, because the
-kernel translates CONFIG_FOO=y in .config to #define CONFIG_FOO 1.
+Implement the simple parts of the kernel xarray API on-top of the libfrog
+radix-tree.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/libxfs.h        |    6 +++-
- include/platform_defs.h |   63 +++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_priv.h    |    5 ++--
- 3 files changed, 70 insertions(+), 4 deletions(-)
+ libfrog/radix-tree.h |   35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 17cf619f0544aa..fe8e6584f1caca 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -7,10 +7,12 @@
- #ifndef __LIBXFS_H__
- #define __LIBXFS_H__
+diff --git a/libfrog/radix-tree.h b/libfrog/radix-tree.h
+index dad5f5b72039e3..fe896134eeb283 100644
+--- a/libfrog/radix-tree.h
++++ b/libfrog/radix-tree.h
+@@ -63,4 +63,39 @@ int radix_tree_tagged(struct radix_tree_root *root, unsigned int tag);
+ static inline int radix_tree_preload(int gfp_mask) { return 0; }
+ static inline void radix_tree_preload_end(void) { }
  
-+/* CONFIG_XFS_* must be defined to 1 to work with IS_ENABLED() */
-+
- /* For userspace XFS_RT is always defined */
--#define CONFIG_XFS_RT
-+#define CONFIG_XFS_RT 1
- /* Ditto in-memory btrees */
--#define CONFIG_XFS_BTREE_IN_MEM
-+#define CONFIG_XFS_BTREE_IN_MEM 1
- 
- #include "libxfs_api_defs.h"
- #include "platform_defs.h"
-diff --git a/include/platform_defs.h b/include/platform_defs.h
-index c01d4c42674669..a3644dea41cdef 100644
---- a/include/platform_defs.h
-+++ b/include/platform_defs.h
-@@ -165,4 +165,67 @@ static inline size_t __ab_c_size(size_t a, size_t b, size_t c)
- # define barrier() __memory_barrier()
- #endif
- 
-+/* stuff from include/linux/kconfig.h */
-+#define __ARG_PLACEHOLDER_1 0,
-+#define __take_second_arg(__ignored, val, ...) val
-+
 +/*
-+ * The use of "&&" / "||" is limited in certain expressions.
-+ * The following enable to calculate "and" / "or" with macro expansion only.
++ * Emulation of the kernel xarray API.  Note that unlike the kernel
++ * xarray, there is no internal locking so code using this should not
++ * allow concurrent operations in userspace.
 + */
-+#define __and(x, y)			___and(x, y)
-+#define ___and(x, y)			____and(__ARG_PLACEHOLDER_##x, y)
-+#define ____and(arg1_or_junk, y)	__take_second_arg(arg1_or_junk y, 0)
++struct xarray {
++	struct radix_tree_root	r;
++};
 +
-+#define __or(x, y)			___or(x, y)
-+#define ___or(x, y)			____or(__ARG_PLACEHOLDER_##x, y)
-+#define ____or(arg1_or_junk, y)		__take_second_arg(arg1_or_junk 1, y)
++static inline void xa_init(struct xarray *xa)
++{
++	INIT_RADIX_TREE(&xa->r, GFP_KERNEL);
++}
 +
-+/*
-+ * Helper macros to use CONFIG_ options in C/CPP expressions. Note that
-+ * these only work with boolean and tristate options.
-+ */
++static inline void *xa_load(struct xarray *xa, unsigned long index)
++{
++	return radix_tree_lookup(&xa->r, index);
++}
 +
-+/*
-+ * Getting something that works in C and CPP for an arg that may or may
-+ * not be defined is tricky.  Here, if we have "#define CONFIG_BOOGER 1"
-+ * we match on the placeholder define, insert the "0," for arg1 and generate
-+ * the triplet (0, 1, 0).  Then the last step cherry picks the 2nd arg (a one).
-+ * When CONFIG_BOOGER is not defined, we generate a (... 1, 0) pair, and when
-+ * the last step cherry picks the 2nd arg, we get a zero.
-+ */
-+#define __is_defined(x)			___is_defined(x)
-+#define ___is_defined(val)		____is_defined(__ARG_PLACEHOLDER_##val)
-+#define ____is_defined(arg1_or_junk)	__take_second_arg(arg1_or_junk 1, 0)
++static inline void *xa_erase(struct xarray *xa, unsigned long index)
++{
++	return radix_tree_delete(&xa->r, index);
++}
 +
-+/*
-+ * IS_BUILTIN(CONFIG_FOO) evaluates to 1 if CONFIG_FOO is set to 'y', 0
-+ * otherwise. For boolean options, this is equivalent to
-+ * IS_ENABLED(CONFIG_FOO).
-+ */
-+#define IS_BUILTIN(option) __is_defined(option)
++static inline int xa_insert(struct xarray *xa, unsigned long index, void *entry,
++		unsigned int gfp)
++{
++	int error;
 +
-+/*
-+ * IS_MODULE(CONFIG_FOO) evaluates to 1 if CONFIG_FOO is set to 'm', 0
-+ * otherwise.  CONFIG_FOO=m results in "#define CONFIG_FOO_MODULE 1" in
-+ * autoconf.h.
-+ */
-+#define IS_MODULE(option) __is_defined(option##_MODULE)
++	error = radix_tree_insert(&xa->r, index, entry);
++	if (error == -EEXIST)
++		return -EBUSY;
++	return error;
++}
 +
-+/*
-+ * IS_REACHABLE(CONFIG_FOO) evaluates to 1 if the currently compiled
-+ * code can call a function defined in code compiled based on CONFIG_FOO.
-+ * This is similar to IS_ENABLED(), but returns false when invoked from
-+ * built-in code when CONFIG_FOO is set to 'm'.
-+ */
-+#define IS_REACHABLE(option) __or(IS_BUILTIN(option), \
-+				__and(IS_MODULE(option), __is_defined(MODULE)))
-+
-+/*
-+ * IS_ENABLED(CONFIG_FOO) evaluates to 1 if CONFIG_FOO is set to 'y' or 'm',
-+ * 0 otherwise.  Note that CONFIG_FOO=y results in "#define CONFIG_FOO 1" in
-+ * autoconf.h, while CONFIG_FOO=m results in "#define CONFIG_FOO_MODULE 1".
-+ */
-+#define IS_ENABLED(option) __or(IS_BUILTIN(option), IS_MODULE(option))
-+
- #endif	/* __XFS_PLATFORM_DEFS_H__ */
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index b720cc5fac94ff..fa025aeb09712b 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -37,8 +37,9 @@
- #ifndef __LIBXFS_INTERNAL_XFS_H__
- #define __LIBXFS_INTERNAL_XFS_H__
- 
--#define CONFIG_XFS_RT
--#define CONFIG_XFS_BTREE_IN_MEM
-+/* CONFIG_XFS_* must be defined to 1 to work with IS_ENABLED() */
-+#define CONFIG_XFS_RT 1
-+#define CONFIG_XFS_BTREE_IN_MEM 1
- 
- #include "libxfs_api_defs.h"
- #include "platform_defs.h"
+ #endif /* __LIBFROG_RADIX_TREE_H__ */
 
