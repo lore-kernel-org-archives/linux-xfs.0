@@ -1,90 +1,89 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C003183CA5;
-	Sun, 20 Oct 2024 11:42:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40238F40
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 01:45:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729424524; cv=none; b=fidAG/QDdfFdUI0F+DZUefNc9xP/AnSGEQYiq1s4UOm0B8Jdi6m4oxRv7yRSy2HIp41JMXDZE8aBeORyeYChGxmyokoEAj4LZ9EkCuQUA6TkQ4eYbDDp1Og/4HA/bfJCWBMeLaGGcvBCJR135hTU13GB7/lofWRhYyYVh6vIwnc=
+	t=1729475160; cv=none; b=LXzJM+Wwd4l30gJZIrJKNt97iaDw2ZGFaSD74NdvbfpEZxnORBiFhPk0mCOID2ubnVYyzYQ3LV4vJzSe5ZrkMpXbiEeUE0w64SY2boOSX4N34zv9vllBd1HxiBbRuThLDK3r9n/eSu+7kQX6zbcEh4rjoOEtDDYFugQBNO4oWh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729424524; c=relaxed/simple;
-	bh=dOEtTxNoCgKNWvCOieCgqHI8eFqyxtEz3YEE1b9LO30=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=vDSgqGEEp8dnbh7GFIDfSNFggu0HfUfN3AH1Vcr7JzsPbVq/XrL25BkN15fliIDmMLSiN2HXiCF/qXgep8BQCnK38oZVlkZaSA4unCE5HF+CaUx3iVYddq5sgflO0BqKyUq92/iuVIpqQ6xyqKEfckOswcBW9f4Dbgv2Umn56vw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ievfR+FK; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ievfR+FK"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-20ca7fc4484so25227325ad.3;
-        Sun, 20 Oct 2024 04:42:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729424522; x=1730029322; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=lNLdxWPoqloigSpZiNStmiV3lY3Ajgs6rVNZxJBT/Dk=;
-        b=ievfR+FKdyYyFi1fsF2YDNW65QbzDysF++lsuGLbiSKQjhMhQoRqaxDC+VmFsgZqS1
-         q8RcFZtFdFcC++5SZQ91C6GR1qb6+rty1QDOpY7cvpeu3cTZfu/rm3GPUOtCvuQpxuh7
-         SzqSEFP7un9Zunt0zsdnWRYl79SiEEyggWb43zy8MxdKZoO3+d6baVjtuPDANJajtzGz
-         Ofn9vJZTKLgrrKWdE020BrycMZlzdFdMvHvJCsgS7epm/exKdA1njHk6OnZf+DBrhfMG
-         FFX4B6WjgSn4Z1moiODA9U2y6hyU4i1+zxt8LRxNMnwZX1X09HgY+8PXG0s5/HBFX3Nc
-         f69g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729424522; x=1730029322;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lNLdxWPoqloigSpZiNStmiV3lY3Ajgs6rVNZxJBT/Dk=;
-        b=UCP/eOErQWl3ucVGfii5ilR80y85lI7rpz2oxcPly65H2BVjztaNrVAzCCQOjY85is
-         yzPxIkuQtTQw1khakffiNnhbftMC6l6fWOiGq6X7D3gOHS2mC2difHmdOZDs/z24G58w
-         Vjd8drGOFqt0ELN/BZLTUt4txoldOuaD4t4pk+Hwh3PEjOS9Jiq8h1WQ2zh9+povmzCO
-         HGf5nEDT5Gk/ZhZXomA0IkNOkqt4yOyoWHZ84EccOFBE0y32AmPunBfv3QZwHNpSk9Fl
-         drA5ojH96Hx6Q9a+rCOKGHIYZtqSDeXluQemMVRgQztk5q5Lxp0Gu7ylO8WeDn+qDa0/
-         6lXw==
-X-Forwarded-Encrypted: i=1; AJvYcCUjsDR2M/BkxfH8zJac+nsN30RQKADBJiLb/ywdLya566G86a/6jsxsC6ix8krznqQzHP4dY2rvRSlUY7Q/@vger.kernel.org, AJvYcCX/gviPdcFQy1lI6YKNf4Ynxc4mkc47p1b4P/iaI2xlkoRTtnRwyji84lqrY/TQ10Bt3Gq0Gq3+Yr5dDX2C@vger.kernel.org, AJvYcCXZld6sYEWo3vA7UwM/QPFtaBsYG3Zxlg0qAW8B5lPNRBc1HSpM580ANaFk8qkmt3j7i+GBWp7oI1to@vger.kernel.org
-X-Gm-Message-State: AOJu0YzfpIYVeD3EV8MV6xS8VB932SJ/igv03T50C7Neltplcb7hyHij
-	wCGNkUeE7Ngm25t/bmawpimBTIpbht3Tfzh9fQic5VSWgnKomFlYDiBMLw==
-X-Google-Smtp-Source: AGHT+IEsk4OVyU6P/f71bkBDWmph0wOtG9z3xu5h9CKQvfJr+zUwppjE4FlHGneiBD+ceHX+0e2DHg==
-X-Received: by 2002:a17:902:ce89:b0:20c:7485:891c with SMTP id d9443c01a7336-20e5a95de13mr82846255ad.54.1729424521746;
-        Sun, 20 Oct 2024 04:42:01 -0700 (PDT)
-Received: from dw-tp ([171.76.81.191])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20e7eee3c88sm9120455ad.43.2024.10.20.04.41.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Oct 2024 04:42:01 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, brauner@kernel.org, djwong@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz, dchinner@redhat.com, hch@lst.de, cem@kernel.org
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hare@suse.de, martin.petersen@oracle.com, catherine.hoang@oracle.com, mcgrof@kernel.org, ojaswin@linux.ibm.com
-Subject: Re: [PATCH v10 7/8] xfs: Validate atomic writes
-In-Reply-To: <c4edb568-6fac-4c30-9ca3-12fbefc761e2@oracle.com>
-Date: Sun, 20 Oct 2024 17:11:40 +0530
-Message-ID: <87ldyjgfwr.fsf@gmail.com>
-References: <20241019125113.369994-1-john.g.garry@oracle.com> <20241019125113.369994-8-john.g.garry@oracle.com> <87plnvglck.fsf@gmail.com> <c4edb568-6fac-4c30-9ca3-12fbefc761e2@oracle.com>
+	s=arc-20240116; t=1729475160; c=relaxed/simple;
+	bh=RLEMLJmuzeaNeHEDDIK1ewnFL/ceEknbIxs5VMgoEHA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=t3tOCAzbr1vTYh1EnSQLhQSN0Quif+ELxhGxiUQvbvFvlNxeFpF1NLJ2utK+yxHOSnhHHkRYlegG50/tsbF9+B8UUnWPggyWHap8GuDW+55xmKr0kz4svaHRHA5obQqx9p40/YTK7X5sumKQLW+fOwFSJw8eDUsLKlTizcNcQTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4XWyNg74wQz20pYG;
+	Mon, 21 Oct 2024 09:27:47 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2B51C1A016C;
+	Mon, 21 Oct 2024 09:28:37 +0800 (CST)
+Received: from huawei.com (10.175.104.67) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 21 Oct
+ 2024 09:28:36 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>
+Subject: [PATCH] xfs: remove unknown compat feature check in superblock write validation
+Date: Mon, 21 Oct 2024 09:25:49 +0800
+Message-ID: <20241021012549.875726-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-John Garry <john.g.garry@oracle.com> writes:
+Compat features are new features that older kernels can safely ignore,
+allowing read-write mounts without issues. The current sb write validation
+implementation returns -EFSCORRUPTED for unknown compat features,
+preventing filesystem write operations and contradicting the feature's
+definition.
 
-> On 20/10/2024 10:44, Ritesh Harjani (IBM) wrote:
->>> +	if (iocb->ki_flags & IOCB_ATOMIC) {
->>> +		/*
->>> +		 * Currently only atomic writing of a single FS block is
->>> +		 * supported. It would be possible to atomic write smaller than
->>> +		 * a FS block, but there is no requirement to support this.
->>> +		 * Note that iomap also does not support this yet.
->>> +		 */
->>> +		if (ocount != ip->i_mount->m_sb.sb_blocksize)
->>> +			return -EINVAL;
->> Shouldn't we "return -ENOTSUPP" ?
->> Given we are later going to add support for ocount > sb_blocksize.
->
-> So far we have been reporting -EINVAL for an invalid atomic write size 
-> (according to atomic write unit min and max reported for that inode).
->
-> -ENOTSUPP is used for times when we just don't support atomic writes, 
-> like non-DIO.
->
+Additionally, if the mounted image is unclean, the log recovery may need
+to write to the superblock. Returning an error for unknown compat features
+during sb write validation can cause mount failures.
 
-Sure make sense. 
+Although XFS currently does not use compat feature flags, this issue
+affects current kernels' ability to mount images that may use compat
+feature flags in the future.
 
--ritesh
+Since superblock read validation already warns about unknown compat
+features, it's unnecessary to repeat this warning during write validation.
+Therefore, the relevant code in write validation is being removed.
+
+Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superblock write verifier")
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+ fs/xfs/libxfs/xfs_sb.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index d95409f3cba6..02ebcbc4882f 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -297,13 +297,6 @@ xfs_validate_sb_write(
+ 	 * the kernel cannot support since we checked for unsupported bits in
+ 	 * the read verifier, which means that memory is corrupt.
+ 	 */
+-	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
+-		xfs_warn(mp,
+-"Corruption detected in superblock compatible features (0x%x)!",
+-			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
+-		return -EFSCORRUPTED;
+-	}
+-
+ 	if (!xfs_is_readonly(mp) &&
+ 	    xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+ 		xfs_alert(mp,
+-- 
+2.39.2
+
