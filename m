@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB4F31E25F3
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 21:59:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FF7C200C97
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 21:59:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729547967; cv=none; b=YklVJmeBNOzy4e3DlUGcsE6i2KGkQZIkaGpSGxTSi+FPjfLq56p9q0Q8WzRZvRRyJNFZWSI+lJsOZ1kkZ6B30ZMsAwP/nlWWXj7HiKbshTMOybkD87yqQdyScTpM2aVmm/y4ESnRtsbD7/+c1Ywsz0g7zJXFr/6IqE8s+0z4If4=
+	t=1729547983; cv=none; b=Yp501AvnBLBRILgF8AusN4WTa5+UExUnF2bQSxTe8JPiXlzsKltwlgZhmrvC+5Vu5OUI3xrgq1Iy77CoQELhyHt6jkm8Ap14OEkLJHggf540j4jXg22GFFvi+bhO82CQkSS9Qz12rm2UPcsZbobo+jVIKtWL32TQE5qQOd2veyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729547967; c=relaxed/simple;
-	bh=O4sbKkydiEx+d2vw5ow4wTV+Jb4CRQxlaMzX7rb4Ur8=;
+	s=arc-20240116; t=1729547983; c=relaxed/simple;
+	bh=JQLGJpFBOGKVwneAIfeXNaS757pLhKyadE4hKQCyQMA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cTB7ufkzzzto1xkme0R8DzGmBj4bCjC/cgxEXK7kWVNNTf985lzndHD4Hz0edrpOMJalT8C5I4x553U3Kwfb2XsXUugFKJwnvdgVPKMvKicnv4UT1CoaZ7CzMgsllM6kNaGINLKMtJ9FPShrsvwU2RMsqfq0G3jjpAeSFyxe3sk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+VlYv0M; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=FMdSjSNriOuNJSekLLtV/H+XXCNZzzDdcKW8YoqFj5fUa7fyw3elOntkmUjBJqnkhA2ukSuWRhfIzsPSDBz7qRQJHTq29d3fksHnI9yHMiUXoM7KNoybQGUJYooZtcOzGuN7a3XAARCnFtXChtifguCDwcYRusFIxNs9d05O7Ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iOMtJvV8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+VlYv0M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D9AEC4CEE6;
-	Mon, 21 Oct 2024 21:59:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iOMtJvV8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28D3BC4CEE6;
+	Mon, 21 Oct 2024 21:59:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729547967;
-	bh=O4sbKkydiEx+d2vw5ow4wTV+Jb4CRQxlaMzX7rb4Ur8=;
+	s=k20201202; t=1729547983;
+	bh=JQLGJpFBOGKVwneAIfeXNaS757pLhKyadE4hKQCyQMA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=b+VlYv0Msa4BlLWCOLQ86amKDdWbkTGeic7gq0MrmziYRZEMtT9auReNkYijZVCCh
-	 otj+uNKGFrEXCtvo63ywH1JY75lgAwPQwkrg4fNV/E1sgqRm4n3S/z8zvALLiVw3VF
-	 aFJ6ezubGCBCMl8fdOzSPvAaW286Jll47hDv6w0hnqfTdfq0LEpVYgYDm7+cbxLLoG
-	 uUgnRp3lCSV39rYytefa86eO/hRiMvi42CIUMUBOf2npJdXCka4Mve+sXkHfbvzE9o
-	 IBU4BZfoB0Qc+ztY51pMAX9sHEI67blwvvJb9NCV12V+pl6YTGvq7xgx7Hrp2SvlaH
-	 qEzghrtO9bD1w==
-Date: Mon, 21 Oct 2024 14:59:27 -0700
-Subject: [PATCH 02/37] libxfs: compile with a C++ compiler
+	b=iOMtJvV8szT5F5t71wbZEBpVqNJIX1/HRhhx63GoW+RbQ/SAaxGgByyHIeusmBf7i
+	 tWR457ED9t/mR5Q4yfPufZ82gLj1Gw+1DsLQugxzasDybPRCII2I4RKTsxUWYze4J8
+	 6WHBYCTKMPu+OFA2xPakfXzn7hBy/T+ux9HQib5IBQEp+X/0wZe1NccyrEt4H7Y2q5
+	 ChLz5p+f9dDO8ZhRHpsZyhvQWrocrlsXBQC5HQUAUgBDxrgLMM08Ba4xEv7uM7HPLX
+	 I+NP0wjFA3+ozDW3J9l5JWUFu4zqDlizhXC2OSlSYbj7dLuNjDnJkJHeBZC8BHNyrO
+	 XLz7iOfW8VPig==
+Date: Mon, 21 Oct 2024 14:59:42 -0700
+Subject: [PATCH 03/37] libxfs: port IS_ENABLED from the kernel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172954783502.34558.4926204658396667428.stgit@frogsfrogsfrogs>
+Message-ID: <172954783517.34558.6960888274382502007.stgit@frogsfrogsfrogs>
 In-Reply-To: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
 References: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,189 +45,125 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Apparently C++ compilers don't like the implicit void* casts that go on
-in the system headers.  Compile a dummy program with the C++ compiler to
-make sure this works.
+Port the IS_ENABLED macro from the kernel so that it can be used in
+libxfs.  This requires a bit of hygiene on our part -- any CONFIG_XFS_*
+define in userspace that have counterparts in the kernel must be defined
+to 1 (and not simply define'd) so that the macro works, because the
+kernel translates CONFIG_FOO=y in .config to #define CONFIG_FOO 1.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: Sam James <sam@gentoo.org>
-Reviewed-by: Sam James <sam@gentoo.org>
 ---
- configure.ac               |    6 ++++++
- include/builddefs.in       |    8 ++++++++
- libxfs/Makefile            |   31 ++++++++++++++++++++++++++++++-
- libxfs/ioctl_c_dummy.c     |   11 +++++++++++
- libxfs/ioctl_cxx_dummy.cpp |   13 +++++++++++++
- m4/package_utilies.m4      |    5 +++++
- 6 files changed, 73 insertions(+), 1 deletion(-)
- create mode 100644 libxfs/ioctl_c_dummy.c
- create mode 100644 libxfs/ioctl_cxx_dummy.cpp
+ include/libxfs.h        |    6 +++-
+ include/platform_defs.h |   63 +++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/libxfs_priv.h    |    5 ++--
+ 3 files changed, 70 insertions(+), 4 deletions(-)
 
 
-diff --git a/configure.ac b/configure.ac
-index b75f7d9e7563b2..dc587f39b80533 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -9,6 +9,9 @@ AC_PREFIX_DEFAULT(/usr)
- if test "${CFLAGS+set}" != "set"; then
- 	CFLAGS="-g -O2 -std=gnu11"
- fi
-+if test "${CXXFLAGS+set}" != "set"; then
-+	CXXFLAGS="-g -O2 -std=gnu++11"
-+fi
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 17cf619f0544aa..fe8e6584f1caca 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -7,10 +7,12 @@
+ #ifndef __LIBXFS_H__
+ #define __LIBXFS_H__
  
- AC_PROG_INSTALL
- LT_INIT
-@@ -31,6 +34,9 @@ if test "${BUILD_CFLAGS+set}" != "set"; then
-   fi
- fi
++/* CONFIG_XFS_* must be defined to 1 to work with IS_ENABLED() */
++
+ /* For userspace XFS_RT is always defined */
+-#define CONFIG_XFS_RT
++#define CONFIG_XFS_RT 1
+ /* Ditto in-memory btrees */
+-#define CONFIG_XFS_BTREE_IN_MEM
++#define CONFIG_XFS_BTREE_IN_MEM 1
  
-+AC_PROG_CXX
-+# no C++ build tools yet
-+
- AC_ARG_ENABLE(shared,
- [  --enable-shared=[yes/no]  Enable use of shared libraries [default=yes]],,
- 	enable_shared=yes)
-diff --git a/include/builddefs.in b/include/builddefs.in
-index c8c7de7fd2fd38..1cbace071108dd 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -14,6 +14,7 @@ MALLOCLIB = @malloc_lib@
- LOADERFLAGS = @LDFLAGS@
- LTLDFLAGS = @LDFLAGS@
- CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64 -Wno-address-of-packed-member
-+CXXFLAGS = @CXXFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64 -Wno-address-of-packed-member
- BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+ #include "libxfs_api_defs.h"
+ #include "platform_defs.h"
+diff --git a/include/platform_defs.h b/include/platform_defs.h
+index c01d4c42674669..a3644dea41cdef 100644
+--- a/include/platform_defs.h
++++ b/include/platform_defs.h
+@@ -165,4 +165,67 @@ static inline size_t __ab_c_size(size_t a, size_t b, size_t c)
+ # define barrier() __memory_barrier()
+ #endif
  
- # make sure we don't pick up whacky LDFLAGS from the make environment and
-@@ -63,6 +64,7 @@ XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP=$(PKG_STATE_DIR)/xfs_scrub_all_media.stamp
- 
- CC		= @cc@
- BUILD_CC	= @BUILD_CC@
-+CXX		= @cxx@
- AWK		= @awk@
- SED		= @sed@
- TAR		= @tar@
-@@ -161,9 +163,15 @@ ifeq ($(ENABLE_GETTEXT),yes)
- GCFLAGS += -DENABLE_GETTEXT
- endif
- 
-+# Override these if C++ needs other options
-+SANITIZER_CXXFLAGS = $(SANITIZER_CFLAGS)
-+GCXXFLAGS = $(GCFLAGS)
-+PCXXFLAGS = $(PCFLAGS)
++/* stuff from include/linux/kconfig.h */
++#define __ARG_PLACEHOLDER_1 0,
++#define __take_second_arg(__ignored, val, ...) val
 +
- BUILD_CFLAGS += $(GCFLAGS) $(PCFLAGS)
- # First, Sanitizer, Global, Platform, Local CFLAGS
- CFLAGS += $(FCFLAGS) $(SANITIZER_CFLAGS) $(OPTIMIZER) $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
-+CXXFLAGS += $(FCXXFLAGS) $(SANITIZER_CXXFLAGS) $(OPTIMIZER) $(GCXXFLAGS) $(PCXXFLAGS) $(LCXXFLAGS)
- 
- include $(TOPDIR)/include/buildmacros
- 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 72e287b8b7957a..aca28440adac08 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -125,6 +125,18 @@ CFILES = buf_mem.c \
- 	xfs_trans_space.c \
- 	xfs_types.c
- 
-+EXTRA_CFILES=\
-+	ioctl_c_dummy.c
-+
-+EXTRA_CXXFILES=\
-+	ioctl_cxx_dummy.cpp
-+
-+EXTRA_OBJECTS=\
-+	$(patsubst %.c,%.o,$(EXTRA_CFILES)) \
-+	$(patsubst %.cpp,%.o,$(EXTRA_CXXFILES))
-+
-+LDIRT += $(EXTRA_OBJECTS)
-+
- #
- # Tracing flags:
- # -DMEM_DEBUG		all zone memory use
-@@ -148,7 +160,23 @@ LTLIBS = $(LIBPTHREAD) $(LIBRT)
- # don't try linking xfs_repair with a debug libxfs.
- DEBUG = -DNDEBUG
- 
--default: ltdepend $(LTLIBRARY)
-+default: ltdepend $(LTLIBRARY) $(EXTRA_OBJECTS)
-+
-+%dummy.o: %dummy.cpp
-+	@echo "    [CXXD]   $@"
-+	$(Q)$(CXX) $(CXXFLAGS) -c $<
-+
-+%dummy.o: %dummy.c
-+	@echo "    [CCD]    $@"
-+	$(Q)$(CC) $(CFLAGS) -c $<
-+
-+MAKECXXDEP := $(MAKEDEPEND) $(CXXFLAGS)
-+
-+.PHONY: .extradep
-+
-+.extradep: $(EXTRA_CFILES) $(EXTRA_CXXFILES) $(HFILES)
-+	$(Q)$(MAKEDEP) $(EXTRA_CFILES) > .extradep
-+	$(Q)$(MAKECXXDEP) $(EXTRA_CXXFILES) >> .extradep
- 
- # set up include/xfs header directory
- include $(BUILDRULES)
-@@ -172,4 +200,5 @@ install-dev: install
- # running the install-headers target.
- ifndef NODEP
- -include .ltdep
-+-include .extradep
- endif
-diff --git a/libxfs/ioctl_c_dummy.c b/libxfs/ioctl_c_dummy.c
-new file mode 100644
-index 00000000000000..e417332c3cf9f6
---- /dev/null
-+++ b/libxfs/ioctl_c_dummy.c
-@@ -0,0 +1,11 @@
-+// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Copyright (c) 2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
++ * The use of "&&" / "||" is limited in certain expressions.
++ * The following enable to calculate "and" / "or" with macro expansion only.
++ */
++#define __and(x, y)			___and(x, y)
++#define ___and(x, y)			____and(__ARG_PLACEHOLDER_##x, y)
++#define ____and(arg1_or_junk, y)	__take_second_arg(arg1_or_junk y, 0)
++
++#define __or(x, y)			___or(x, y)
++#define ___or(x, y)			____or(__ARG_PLACEHOLDER_##x, y)
++#define ____or(arg1_or_junk, y)		__take_second_arg(arg1_or_junk 1, y)
++
++/*
++ * Helper macros to use CONFIG_ options in C/CPP expressions. Note that
++ * these only work with boolean and tristate options.
 + */
 +
-+/* Dummy program to test C compilation of user-exported xfs headers */
-+
-+#include "include/xfs.h"
-+#include "include/handle.h"
-+#include "include/jdm.h"
-diff --git a/libxfs/ioctl_cxx_dummy.cpp b/libxfs/ioctl_cxx_dummy.cpp
-new file mode 100644
-index 00000000000000..b95babff0b0aee
---- /dev/null
-+++ b/libxfs/ioctl_cxx_dummy.cpp
-@@ -0,0 +1,13 @@
-+// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Copyright (c) 2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
++ * Getting something that works in C and CPP for an arg that may or may
++ * not be defined is tricky.  Here, if we have "#define CONFIG_BOOGER 1"
++ * we match on the placeholder define, insert the "0," for arg1 and generate
++ * the triplet (0, 1, 0).  Then the last step cherry picks the 2nd arg (a one).
++ * When CONFIG_BOOGER is not defined, we generate a (... 1, 0) pair, and when
++ * the last step cherry picks the 2nd arg, we get a zero.
 + */
++#define __is_defined(x)			___is_defined(x)
++#define ___is_defined(val)		____is_defined(__ARG_PLACEHOLDER_##val)
++#define ____is_defined(arg1_or_junk)	__take_second_arg(arg1_or_junk 1, 0)
 +
-+/* Dummy program to test C++ compilation of user-exported xfs headers */
++/*
++ * IS_BUILTIN(CONFIG_FOO) evaluates to 1 if CONFIG_FOO is set to 'y', 0
++ * otherwise. For boolean options, this is equivalent to
++ * IS_ENABLED(CONFIG_FOO).
++ */
++#define IS_BUILTIN(option) __is_defined(option)
 +
-+extern "C" {
-+#include "include/xfs.h"
-+#include "include/handle.h"
-+#include "include/jdm.h"
-+};
-diff --git a/m4/package_utilies.m4 b/m4/package_utilies.m4
-index 49f4dfbbd2d168..56ee0b266130bf 100644
---- a/m4/package_utilies.m4
-+++ b/m4/package_utilies.m4
-@@ -42,6 +42,11 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
-     AC_SUBST(cc)
-     AC_PACKAGE_NEED_UTILITY($1, "$cc", cc, [C compiler])
++/*
++ * IS_MODULE(CONFIG_FOO) evaluates to 1 if CONFIG_FOO is set to 'm', 0
++ * otherwise.  CONFIG_FOO=m results in "#define CONFIG_FOO_MODULE 1" in
++ * autoconf.h.
++ */
++#define IS_MODULE(option) __is_defined(option##_MODULE)
++
++/*
++ * IS_REACHABLE(CONFIG_FOO) evaluates to 1 if the currently compiled
++ * code can call a function defined in code compiled based on CONFIG_FOO.
++ * This is similar to IS_ENABLED(), but returns false when invoked from
++ * built-in code when CONFIG_FOO is set to 'm'.
++ */
++#define IS_REACHABLE(option) __or(IS_BUILTIN(option), \
++				__and(IS_MODULE(option), __is_defined(MODULE)))
++
++/*
++ * IS_ENABLED(CONFIG_FOO) evaluates to 1 if CONFIG_FOO is set to 'y' or 'm',
++ * 0 otherwise.  Note that CONFIG_FOO=y results in "#define CONFIG_FOO 1" in
++ * autoconf.h, while CONFIG_FOO=m results in "#define CONFIG_FOO_MODULE 1".
++ */
++#define IS_ENABLED(option) __or(IS_BUILTIN(option), IS_MODULE(option))
++
+ #endif	/* __XFS_PLATFORM_DEFS_H__ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index b720cc5fac94ff..fa025aeb09712b 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -37,8 +37,9 @@
+ #ifndef __LIBXFS_INTERNAL_XFS_H__
+ #define __LIBXFS_INTERNAL_XFS_H__
  
-+    AC_PROG_CXX
-+    cxx="$CXX"
-+    AC_SUBST(cxx)
-+    AC_PACKAGE_NEED_UTILITY($1, "$cxx", cxx, [C++ compiler])
-+
-     if test -z "$MAKE"; then
-         AC_PATH_PROG(MAKE, gmake,, $PATH)
-     fi
+-#define CONFIG_XFS_RT
+-#define CONFIG_XFS_BTREE_IN_MEM
++/* CONFIG_XFS_* must be defined to 1 to work with IS_ENABLED() */
++#define CONFIG_XFS_RT 1
++#define CONFIG_XFS_BTREE_IN_MEM 1
+ 
+ #include "libxfs_api_defs.h"
+ #include "platform_defs.h"
 
