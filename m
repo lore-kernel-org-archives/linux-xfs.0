@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2531E47CD;
-	Mon, 21 Oct 2024 10:35:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2A739FD6;
+	Mon, 21 Oct 2024 10:35:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729506941; cv=none; b=pb4PGi4smtDjLXe1U00uu7yHh0a99mpkPQA5QY6gATE2lKRrNuFqW6blxSICVEtfR5QofouNsjze8KQyDqi/RlI/c6memAjm4xRctAzrSr4SYpIDOiHCfrTIEu6DhgwL6J291N5ax1oRZB8HYGlqKZtVtmF0xULeSuixVS4Zv00=
+	t=1729506944; cv=none; b=HvnxxVvrIS3VYRZIQKhsBygJZiA7hSJ7fdtOt6wROrZAoo7+Vtp0AuwNPVRFc0LF6/ZgeB4spIeut352Lk+erODgdgni8HoA8uHRYIdwRUsUlihQyviRI4j2nbSj92xTTaC8cKd6OnlemBngm9PW5txQ4xCEquQvovp35YVZ+vs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729506941; c=relaxed/simple;
-	bh=/A04r/7fFt7deqdltVQn0QhbUeux1Lf4/w9bCKURNq0=;
+	s=arc-20240116; t=1729506944; c=relaxed/simple;
+	bh=7OQXBqTOBMXQMw2lrBXQgnEp6U7fHihy5ok+tA0p3FA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tuC+3vfccFDt+oLIu9cbVR9lTmY4tsqymqlBn8xkVTO6IlUwNv/UnTW08q9WVMTCvHtnG/lhFaS6L/0mU2hW1hJzTTU7VKupQ8zAg7vy12uWqZWKklM+3/tICSm3yaR7Pi7ohd9SI0KBpPPn9dYzoqc01tAq1SYwzN/e2i0HR9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=wBLWA+Ui; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ZT2kZVqcLi5iOXx6SaLBNVipnnyMJadb7MJnCkHDu9GA5oVmboyJxXwuw/2Y4EcZld6armzxbez4W1AXVirwq+tim5eSuzx954vuGyQIjSWxPU0UL0WCD8x9CAj4ZxlxedV5sdxPsUJGIHZdEBtKHtjAsCL/qlm2NTM5cplAZv0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=c+w669zW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="wBLWA+Ui"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDB83C4CEC3;
-	Mon, 21 Oct 2024 10:35:40 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="c+w669zW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB86FC4CEC3;
+	Mon, 21 Oct 2024 10:35:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1729506941;
-	bh=/A04r/7fFt7deqdltVQn0QhbUeux1Lf4/w9bCKURNq0=;
+	s=korg; t=1729506944;
+	bh=7OQXBqTOBMXQMw2lrBXQgnEp6U7fHihy5ok+tA0p3FA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=wBLWA+Ui334UUQ7wASJtVDokf+wmjT9eMgmumxuRg3yfdvrJRr/kaUjvyt1Vdsjt0
-	 PDlt6Kf3fazUpK1zXnmMhAOR5eclKxOyEfNY4vJAPhavbKXcgVKOZAGT9PdG+kbpJ3
-	 0Jn4aeoIGdV7ZlzpBaT/ekwGna6H2zmJU2RbAfn8=
+	b=c+w669zWqueu11Bkwc8yKpe6F3eiLMOjijWwJ9ZZHXXFgRnGuLnyJskPD1RGxMQCT
+	 YRXj5wKznskFz3uSZPLfhiEWNyBohoj+KGErMsJrWCQejKv9eZV7B8853qKwnntiHT
+	 TeebYFvqNJTR2AzwdsXVQ8yt2rTHQI+mRYjXRZA0=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
+	Dave Chinner <david@fromorbit.com>,
 	Zhang Yi <yi.zhang@huawei.com>,
-	Christoph Hellwig <hch@lst.de>,
 	"Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
 	Chandan Babu R <chandanbabu@kernel.org>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 037/124] xfs: make xfs_bmapi_convert_delalloc() to allocate the target offset
-Date: Mon, 21 Oct 2024 12:24:01 +0200
-Message-ID: <20241021102258.162033952@linuxfoundation.org>
+Subject: [PATCH 6.6 038/124] xfs: convert delayed extents to unwritten when zeroing post eof blocks
+Date: Mon, 21 Oct 2024 12:24:02 +0200
+Message-ID: <20241021102258.200070839@linuxfoundation.org>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241021102256.706334758@linuxfoundation.org>
 References: <20241021102256.706334758@linuxfoundation.org>
@@ -56,154 +57,100 @@ Content-Transfer-Encoding: 8bit
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-commit 2e08371a83f1c06fd85eea8cd37c87a224cc4cc4 upstream.
+commit 5ce5674187c345dc31534d2024c09ad8ef29b7ba upstream.
 
-Since xfs_bmapi_convert_delalloc() only attempts to allocate the entire
-delalloc extent and require multiple invocations to allocate the target
-offset. So xfs_convert_blocks() add a loop to do this job and we call it
-in the write back path, but xfs_convert_blocks() isn't a common helper.
-Let's do it in xfs_bmapi_convert_delalloc() and drop
-xfs_convert_blocks(), preparing for the post EOF delalloc blocks
-converting in the buffered write begin path.
+Current clone operation could be non-atomic if the destination of a file
+is beyond EOF, user could get a file with corrupted (zeroed) data on
+crash.
 
+The problem is about preallocations. If you write some data into a file:
+
+	[A...B)
+
+and XFS decides to preallocate some post-eof blocks, then it can create
+a delayed allocation reservation:
+
+	[A.........D)
+
+The writeback path tries to convert delayed extents to real ones by
+allocating blocks. If there aren't enough contiguous free space, we can
+end up with two extents, the first real and the second still delalloc:
+
+	[A....C)[C.D)
+
+After that, both the in-memory and the on-disk file sizes are still B.
+If we clone into the range [E...F) from another file:
+
+	[A....C)[C.D)      [E...F)
+
+then xfs_reflink_zero_posteof() calls iomap_zero_range() to zero out the
+range [B, E) beyond EOF and flush it. Since [C, D) is still a delalloc
+extent, its pagecache will be zeroed and both the in-memory and on-disk
+size will be updated to D after flushing but before cloning. This is
+wrong, because the user can see the size change and read the zeroes
+while the clone operation is ongoing.
+
+We need to keep the in-memory and on-disk size before the clone
+operation starts, so instead of writing zeroes through the page cache
+for delayed ranges beyond EOF, we convert these ranges to unwritten and
+invalidate any cached data over that range beyond EOF.
+
+Suggested-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   34 +++++++++++++++++++++++++++--
- fs/xfs/xfs_aops.c        |   54 ++++++++++++-----------------------------------
- 2 files changed, 46 insertions(+), 42 deletions(-)
+ fs/xfs/xfs_iomap.c |   29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4537,8 +4537,8 @@ error0:
-  * invocations to allocate the target offset if a large enough physical extent
-  * is not available.
-  */
--int
--xfs_bmapi_convert_delalloc(
-+static int
-+xfs_bmapi_convert_one_delalloc(
- 	struct xfs_inode	*ip,
- 	int			whichfork,
- 	xfs_off_t		offset,
-@@ -4666,6 +4666,36 @@ out_trans_cancel:
- 	return error;
- }
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1006,6 +1006,24 @@ xfs_buffered_write_iomap_begin(
+ 	}
  
-+/*
-+ * Pass in a dellalloc extent and convert it to real extents, return the real
-+ * extent that maps offset_fsb in iomap.
-+ */
-+int
-+xfs_bmapi_convert_delalloc(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	loff_t			offset,
-+	struct iomap		*iomap,
-+	unsigned int		*seq)
-+{
-+	int			error;
+ 	/*
++	 * For zeroing, trim a delalloc extent that extends beyond the EOF
++	 * block.  If it starts beyond the EOF block, convert it to an
++	 * unwritten extent.
++	 */
++	if ((flags & IOMAP_ZERO) && imap.br_startoff <= offset_fsb &&
++	    isnullstartblock(imap.br_startblock)) {
++		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
++
++		if (offset_fsb >= eof_fsb)
++			goto convert_delay;
++		if (end_fsb > eof_fsb) {
++			end_fsb = eof_fsb;
++			xfs_trim_extent(&imap, offset_fsb,
++					end_fsb - offset_fsb);
++		}
++	}
 +
 +	/*
-+	 * Attempt to allocate whatever delalloc extent currently backs offset
-+	 * and put the result into iomap.  Allocate in a loop because it may
-+	 * take several attempts to allocate real blocks for a contiguous
-+	 * delalloc extent if free space is sufficiently fragmented.
-+	 */
-+	do {
-+		error = xfs_bmapi_convert_one_delalloc(ip, whichfork, offset,
-+					iomap, seq);
-+		if (error)
-+			return error;
-+	} while (iomap->offset + iomap->length <= offset);
+ 	 * Search the COW fork extent list even if we did not find a data fork
+ 	 * extent.  This serves two purposes: first this implements the
+ 	 * speculative preallocation using cowextsize, so that we also unshare
+@@ -1150,6 +1168,17 @@ found_imap:
+ 	xfs_iunlock(ip, lockmode);
+ 	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
+ 
++convert_delay:
++	xfs_iunlock(ip, lockmode);
++	truncate_pagecache(inode, offset);
++	error = xfs_bmapi_convert_delalloc(ip, XFS_DATA_FORK, offset,
++					   iomap, NULL);
++	if (error)
++		return error;
 +
++	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &imap);
 +	return 0;
-+}
 +
- int
- xfs_bmapi_remap(
- 	struct xfs_trans	*tp,
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -233,45 +233,6 @@ xfs_imap_valid(
- 	return true;
- }
- 
--/*
-- * Pass in a dellalloc extent and convert it to real extents, return the real
-- * extent that maps offset_fsb in wpc->iomap.
-- *
-- * The current page is held locked so nothing could have removed the block
-- * backing offset_fsb, although it could have moved from the COW to the data
-- * fork by another thread.
-- */
--static int
--xfs_convert_blocks(
--	struct iomap_writepage_ctx *wpc,
--	struct xfs_inode	*ip,
--	int			whichfork,
--	loff_t			offset)
--{
--	int			error;
--	unsigned		*seq;
--
--	if (whichfork == XFS_COW_FORK)
--		seq = &XFS_WPC(wpc)->cow_seq;
--	else
--		seq = &XFS_WPC(wpc)->data_seq;
--
--	/*
--	 * Attempt to allocate whatever delalloc extent currently backs offset
--	 * and put the result into wpc->iomap.  Allocate in a loop because it
--	 * may take several attempts to allocate real blocks for a contiguous
--	 * delalloc extent if free space is sufficiently fragmented.
--	 */
--	do {
--		error = xfs_bmapi_convert_delalloc(ip, whichfork, offset,
--				&wpc->iomap, seq);
--		if (error)
--			return error;
--	} while (wpc->iomap.offset + wpc->iomap.length <= offset);
--
--	return 0;
--}
--
- static int
- xfs_map_blocks(
- 	struct iomap_writepage_ctx *wpc,
-@@ -289,6 +250,7 @@ xfs_map_blocks(
- 	struct xfs_iext_cursor	icur;
- 	int			retries = 0;
- 	int			error = 0;
-+	unsigned int		*seq;
- 
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-@@ -386,7 +348,19 @@ retry:
- 	trace_xfs_map_blocks_found(ip, offset, count, whichfork, &imap);
- 	return 0;
- allocate_blocks:
--	error = xfs_convert_blocks(wpc, ip, whichfork, offset);
-+	/*
-+	 * Convert a dellalloc extent to a real one. The current page is held
-+	 * locked so nothing could have removed the block backing offset_fsb,
-+	 * although it could have moved from the COW to the data fork by another
-+	 * thread.
-+	 */
-+	if (whichfork == XFS_COW_FORK)
-+		seq = &XFS_WPC(wpc)->cow_seq;
-+	else
-+		seq = &XFS_WPC(wpc)->data_seq;
-+
-+	error = xfs_bmapi_convert_delalloc(ip, whichfork, offset,
-+				&wpc->iomap, seq);
- 	if (error) {
- 		/*
- 		 * If we failed to find the extent in the COW fork we might have
+ found_cow:
+ 	seq = xfs_iomap_inode_sequence(ip, 0);
+ 	if (imap.br_startoff <= offset_fsb) {
 
 
