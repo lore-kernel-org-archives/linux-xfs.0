@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2A739FD6;
-	Mon, 21 Oct 2024 10:35:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE44E39FD6;
+	Mon, 21 Oct 2024 10:35:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729506944; cv=none; b=HvnxxVvrIS3VYRZIQKhsBygJZiA7hSJ7fdtOt6wROrZAoo7+Vtp0AuwNPVRFc0LF6/ZgeB4spIeut352Lk+erODgdgni8HoA8uHRYIdwRUsUlihQyviRI4j2nbSj92xTTaC8cKd6OnlemBngm9PW5txQ4xCEquQvovp35YVZ+vs=
+	t=1729506948; cv=none; b=YJsPx7SFqL5rIPGPs6elMd72U/PIVgFTHp/trRmNHD/9sa/C2FsLsIEM3jEe2uaO9dUBFEEdGtq6oKbnYCow/IGQxUeJC2bCO6nKt9BX92kosQz7uEKx/J5CDcnMfBEtqbmNnZPvhyhgnVmVL8mwTcYvd4KRfhhoz0oEbdlTIb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729506944; c=relaxed/simple;
-	bh=7OQXBqTOBMXQMw2lrBXQgnEp6U7fHihy5ok+tA0p3FA=;
+	s=arc-20240116; t=1729506948; c=relaxed/simple;
+	bh=jBmzTAC36Rd3PyfbGtmP9kYC6DrE7tRAn0B4Xp0l7+g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZT2kZVqcLi5iOXx6SaLBNVipnnyMJadb7MJnCkHDu9GA5oVmboyJxXwuw/2Y4EcZld6armzxbez4W1AXVirwq+tim5eSuzx954vuGyQIjSWxPU0UL0WCD8x9CAj4ZxlxedV5sdxPsUJGIHZdEBtKHtjAsCL/qlm2NTM5cplAZv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=c+w669zW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=bKBcxQ2abYuxt2Pi4Fy/Y4AyEbttJInq4DWAFGiOGmjdnwEZVUfTn9C+tbx5u5g1UVvbsSfvK99d5s6+4ttfhXs38JtdLFszIO7H0feLqhZe/e/f+WOr1KBykfPrIRWFlq2JOpkTw3/e+WMRx8iB6FUeUuC3koXa58234k8fT2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=y/HvD8RW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="c+w669zW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB86FC4CEC3;
-	Mon, 21 Oct 2024 10:35:43 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="y/HvD8RW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5E02C4CEC3;
+	Mon, 21 Oct 2024 10:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1729506944;
-	bh=7OQXBqTOBMXQMw2lrBXQgnEp6U7fHihy5ok+tA0p3FA=;
+	s=korg; t=1729506947;
+	bh=jBmzTAC36Rd3PyfbGtmP9kYC6DrE7tRAn0B4Xp0l7+g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=c+w669zWqueu11Bkwc8yKpe6F3eiLMOjijWwJ9ZZHXXFgRnGuLnyJskPD1RGxMQCT
-	 YRXj5wKznskFz3uSZPLfhiEWNyBohoj+KGErMsJrWCQejKv9eZV7B8853qKwnntiHT
-	 TeebYFvqNJTR2AzwdsXVQ8yt2rTHQI+mRYjXRZA0=
+	b=y/HvD8RWNsd/xEYxHHQZ+IXeyJKqcV5gnEXkBl0j/1isf5Bk/8HqVGcCly4Ht7Z0W
+	 0BLGgq1cPWDoGiZFMFwdIrZhyflA8Q5cbExqkx57+ca3MOliUe0XFpCCMTaexwLdOL
+	 JzBN6xkgdAcpawWmPZxUTnJjEImqLYZwiOBL+Wss=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
-	Dave Chinner <david@fromorbit.com>,
-	Zhang Yi <yi.zhang@huawei.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Christoph Hellwig <hch@lst.de>,
 	Chandan Babu R <chandanbabu@kernel.org>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 038/124] xfs: convert delayed extents to unwritten when zeroing post eof blocks
-Date: Mon, 21 Oct 2024 12:24:02 +0200
-Message-ID: <20241021102258.200070839@linuxfoundation.org>
+Subject: [PATCH 6.6 039/124] xfs: allow symlinks with short remote targets
+Date: Mon, 21 Oct 2024 12:24:03 +0200
+Message-ID: <20241021102258.238879982@linuxfoundation.org>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241021102256.706334758@linuxfoundation.org>
 References: <20241021102256.706334758@linuxfoundation.org>
@@ -55,102 +53,111 @@ Content-Transfer-Encoding: 8bit
 
 ------------------
 
-From: Zhang Yi <yi.zhang@huawei.com>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 5ce5674187c345dc31534d2024c09ad8ef29b7ba upstream.
+commit 38de567906d95c397d87f292b892686b7ec6fbc3 upstream.
 
-Current clone operation could be non-atomic if the destination of a file
-is beyond EOF, user could get a file with corrupted (zeroed) data on
-crash.
+An internal user complained about log recovery failing on a symlink
+("Bad dinode after recovery") with the following (excerpted) format:
 
-The problem is about preallocations. If you write some data into a file:
+core.magic = 0x494e
+core.mode = 0120777
+core.version = 3
+core.format = 2 (extents)
+core.nlinkv2 = 1
+core.nextents = 1
+core.size = 297
+core.nblocks = 1
+core.naextents = 0
+core.forkoff = 0
+core.aformat = 2 (extents)
+u3.bmx[0] = [startoff,startblock,blockcount,extentflag]
+0:[0,12,1,0]
 
-	[A...B)
+This is a symbolic link with a 297-byte target stored in a disk block,
+which is to say this is a symlink with a remote target.  The forkoff is
+0, which is to say that there's 512 - 176 == 336 bytes in the inode core
+to store the data fork.
 
-and XFS decides to preallocate some post-eof blocks, then it can create
-a delayed allocation reservation:
+Eventually, testing of generic/388 failed with the same inode corruption
+message during inode recovery.  In writing a debugging patch to call
+xfs_dinode_verify on dirty inode log items when we're committing
+transactions, I observed that xfs/298 can reproduce the problem quite
+quickly.
 
-	[A.........D)
+xfs/298 creates a symbolic link, adds some extended attributes, then
+deletes them all.  The test failure occurs when the final removexattr
+also deletes the attr fork because that does not convert the remote
+symlink back into a shortform symlink.  That is how we trip this test.
+The only reason why xfs/298 only triggers with the debug patch added is
+that it deletes the symlink, so the final iflush shows the inode as
+free.
 
-The writeback path tries to convert delayed extents to real ones by
-allocating blocks. If there aren't enough contiguous free space, we can
-end up with two extents, the first real and the second still delalloc:
+I wrote a quick fstest to emulate the behavior of xfs/298, except that
+it leaves the symlinks on the filesystem after inducing the "corrupt"
+state.  Kernels going back at least as far as 4.18 have written out
+symlink inodes in this manner and prior to 1eb70f54c445f they did not
+object to reading them back in.
 
-	[A....C)[C.D)
+Because we've been writing out inodes this way for quite some time, the
+only way to fix this is to relax the check for symbolic links.
+Directories don't have this problem because di_size is bumped to
+blocksize during the sf->data conversion.
 
-After that, both the in-memory and the on-disk file sizes are still B.
-If we clone into the range [E...F) from another file:
-
-	[A....C)[C.D)      [E...F)
-
-then xfs_reflink_zero_posteof() calls iomap_zero_range() to zero out the
-range [B, E) beyond EOF and flush it. Since [C, D) is still a delalloc
-extent, its pagecache will be zeroed and both the in-memory and on-disk
-size will be updated to D after flushing but before cloning. This is
-wrong, because the user can see the size change and read the zeroes
-while the clone operation is ongoing.
-
-We need to keep the in-memory and on-disk size before the clone
-operation starts, so instead of writing zeroes through the page cache
-for delayed ranges beyond EOF, we convert these ranges to unwritten and
-invalidate any cached data over that range beyond EOF.
-
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Fixes: 1eb70f54c445f ("xfs: validate inode fork size against fork format")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/xfs_iomap.c |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ fs/xfs/libxfs/xfs_inode_buf.c |   28 ++++++++++++++++++++++++----
+ 1 file changed, 24 insertions(+), 4 deletions(-)
 
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1006,6 +1006,24 @@ xfs_buffered_write_iomap_begin(
- 	}
- 
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -366,17 +366,37 @@ xfs_dinode_verify_fork(
  	/*
-+	 * For zeroing, trim a delalloc extent that extends beyond the EOF
-+	 * block.  If it starts beyond the EOF block, convert it to an
-+	 * unwritten extent.
-+	 */
-+	if ((flags & IOMAP_ZERO) && imap.br_startoff <= offset_fsb &&
-+	    isnullstartblock(imap.br_startblock)) {
-+		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-+
-+		if (offset_fsb >= eof_fsb)
-+			goto convert_delay;
-+		if (end_fsb > eof_fsb) {
-+			end_fsb = eof_fsb;
-+			xfs_trim_extent(&imap, offset_fsb,
-+					end_fsb - offset_fsb);
-+		}
-+	}
-+
-+	/*
- 	 * Search the COW fork extent list even if we did not find a data fork
- 	 * extent.  This serves two purposes: first this implements the
- 	 * speculative preallocation using cowextsize, so that we also unshare
-@@ -1150,6 +1168,17 @@ found_imap:
- 	xfs_iunlock(ip, lockmode);
- 	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
+ 	 * For fork types that can contain local data, check that the fork
+ 	 * format matches the size of local data contained within the fork.
+-	 *
+-	 * For all types, check that when the size says the should be in extent
+-	 * or btree format, the inode isn't claiming it is in local format.
+ 	 */
+ 	if (whichfork == XFS_DATA_FORK) {
+-		if (S_ISDIR(mode) || S_ISLNK(mode)) {
++		/*
++		 * A directory small enough to fit in the inode must be stored
++		 * in local format.  The directory sf <-> extents conversion
++		 * code updates the directory size accordingly.
++		 */
++		if (S_ISDIR(mode)) {
+ 			if (be64_to_cpu(dip->di_size) <= fork_size &&
+ 			    fork_format != XFS_DINODE_FMT_LOCAL)
+ 				return __this_address;
+ 		}
  
-+convert_delay:
-+	xfs_iunlock(ip, lockmode);
-+	truncate_pagecache(inode, offset);
-+	error = xfs_bmapi_convert_delalloc(ip, XFS_DATA_FORK, offset,
-+					   iomap, NULL);
-+	if (error)
-+		return error;
++		/*
++		 * A symlink with a target small enough to fit in the inode can
++		 * be stored in extents format if xattrs were added (thus
++		 * converting the data fork from shortform to remote format)
++		 * and then removed.
++		 */
++		if (S_ISLNK(mode)) {
++			if (be64_to_cpu(dip->di_size) <= fork_size &&
++			    fork_format != XFS_DINODE_FMT_EXTENTS &&
++			    fork_format != XFS_DINODE_FMT_LOCAL)
++				return __this_address;
++		}
 +
-+	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &imap);
-+	return 0;
-+
- found_cow:
- 	seq = xfs_iomap_inode_sequence(ip, 0);
- 	if (imap.br_startoff <= offset_fsb) {
++		/*
++		 * For all types, check that when the size says the fork should
++		 * be in extent or btree format, the inode isn't claiming to be
++		 * in local format.
++		 */
+ 		if (be64_to_cpu(dip->di_size) > fork_size &&
+ 		    fork_format == XFS_DINODE_FMT_LOCAL)
+ 			return __this_address;
 
 
