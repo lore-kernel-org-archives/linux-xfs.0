@@ -1,85 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F2BA2CA9
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 22:08:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 232991EB56
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 22:31:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729548515; cv=none; b=hCFvPeAfAwlT0dtMNLx4UtTJ+PEz/3sxrnLE7Ccut2PzqRPLIaI4/WJzbUQVMNSsWSQR48zzeG0W/qMOCy8Gvu0F1hJYwK3MsmrKXtGZoKMO0Zv7lxuWF0gceTm5vq/uxSZr6Js6uRL/B2hUV+lG1TbdkrIqKeh1qOwAoczcqV8=
+	t=1729549862; cv=none; b=haLuyZnmdJq6hyhvKiFgfY8xBf/Cp7dKjpQgAQAL/SNXzVjZcUsBtfOArzZGx/ONmQ0cteM38jqryhVrbQSwhh8aGbmkaI4UQ0NM8YUTGWBtGIo/BhtdO6Ry4ZBrTi1gRG3sFj5D4Fm2EbnvIQILyLsDnv/Tsd40QNnVnma3PpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729548515; c=relaxed/simple;
-	bh=6v9xPp+HF59XYUVGsO+s6XMsOPw8OoyuO9rkykcOyWM=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=L/jFWKp3DxgIgnZG12+7kk9l0MXgXBo88I3wIWfFKNJtluu5S32aMa/xJ2P+Z0Ljduh+r4YOKdTCoJf1PlpOWt/IPyixFxkHSEirekpxKCe1B766mdDLiXnF1a41leL0U30xhoO0myY0FnFQTsmnnEpjfhJr8+uQzUx6a8F+qsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tHBU8lEz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729549862; c=relaxed/simple;
+	bh=02WBLYn5hm46RGjKT09iky3RgWRBw1dRwnKC0MwXA8E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=izWxOtq04r27ef7pWb4QUop0Emx8yqaBgHzQlwPGRDisgd/bNXuIWpKTY02hKrdByZv49ZHcIPtktdkR2y+NCQ+4fx04xZJHfqGFwE1QUZ1ZDVlW9BjbAz+YtmCG2C4om8ZU/JVDoszybmX4NoGqlAtU6LbctVeGFUIRWUqwj5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=mgaibbP0; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tHBU8lEz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 098A2C4CEC3;
-	Mon, 21 Oct 2024 22:08:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729548515;
-	bh=6v9xPp+HF59XYUVGsO+s6XMsOPw8OoyuO9rkykcOyWM=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tHBU8lEzRFbiqdz6idNz55vxTp/o8FwAtfX52fHzuslJckvPuatXdgiL/lCv4xHGM
-	 /AxeARzPKtHEA7tYZgfzk499GXIzySZEB5PqTxQdmsCe/hpo8Bjsa5jBZ35BUzhQed
-	 Px2Sx+JUbTOCeDOgQAL0N1f1Jk6pQWC3ycAxZDQtFU5PsRizI3YhvVoo0wfN4XcQDF
-	 eDfzMWoXHMr3C9gS3dBWPvAnP3DbRHgHNMcAeqIBPlF1Lu8J4p19ceR8F51IljPBAA
-	 qlVLhm43uCRAENrwi5hVYKSzBNTqz3pSWPfHiG59z2m6mll61BjlBkPAtvW3zxdpZh
-	 5x2c+R+q9TEFg==
-Date: Mon, 21 Oct 2024 15:08:34 -0700
-Subject: [PATCH 37/37] xfs: support lowmode allocations in
- xfs_bmap_exact_minlen_extent_alloc
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <172954784031.34558.14069851291289347323.stgit@frogsfrogsfrogs>
-In-Reply-To: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
-References: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="mgaibbP0"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-20cb47387ceso44174545ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 15:31:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729549860; x=1730154660; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Gpov8qknWLMdPqHJDFq36iRXP4pxjN7UjssnKFRCVMo=;
+        b=mgaibbP0ao5eSiG3E8f/qHnKdePZqWKL0c8oPigvqb6qatxlTlO0UWJUQD5OQ2bmh8
+         37IDy2A09CIDOZfogr47ftMGJQ51w5k0d59J6e6rl53+gjITrMYRvIIqiQxCRbnq+6UH
+         HjDUt0K6Uw15ge/DV3mI5pEMlseghjxTO1Mlc2SCJyZplClsWdTWixIGvDI/Cm//Rck3
+         FzN+wDuIbwEfiF6S3c+xZuN+WFJU0sWY7g6un/pR+M/Jc5IzDTdNwEoWE4DAhl+wjJs/
+         j7pAc+DcAyTzmSNmCT50SCvDoe2vHaodunVkBSvyyxjAKt+1aS3nBpyc/8nvT9X4Lvj9
+         GKNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729549860; x=1730154660;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Gpov8qknWLMdPqHJDFq36iRXP4pxjN7UjssnKFRCVMo=;
+        b=azDRh4m26mAF8CSSOTZGJPvh9ox51F8ZXhmbHY9x9i5EzlbNLfdz08bepeCDrduoSP
+         GpAyP8Fcmd8EO9byNvlk0wEssAKv/sY4k5dIMmEBWfEhkab2Jlhf/BPVkq5q+xmK3UN/
+         Prp4FLRrP25Ut1dRpNsNi+q1/pajzpoSnpvCDeVqyukXQhRjF49ROnaSnRYPnl0sPDIX
+         gf4/Lqfcgj068YHkfq7+SdYHwDwwP/EwPmQW61Zu8WEY7Lk4EAuEyTiDE7vudhVzZcJw
+         OXNekT3LazwutQ2TdRnLEAqjfX1d2VK6t2bzLO/SB0lD+YJNTvshpq/BPgQT2Iag1yE0
+         IgFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVQQ7XSa2iTtVUxZzVz/afDFOH2XQt1G8BLiXQVaoA9BRTRBMRDdI5rxHIKqKNvIydQsOOxtzHcYnQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz50PfivQODIy9KZ/LvC/P0SFKwC/bpbuJ8nBm9O1vcX0uPGbcp
+	u4zdIo6Mwr2AvH/hxCHcYwTfYUhCDvNyzkhrlLX6CTqdmtI0WZ9o7+zuVbo7cSw=
+X-Google-Smtp-Source: AGHT+IGnZvSN/JgkvgxC51U5ZIowUxltQuOXg6wu1T2t8vfivVOuEl4426pU73OYYuA8tQqUXZlpGA==
+X-Received: by 2002:a17:902:ce85:b0:20c:c1bc:2253 with SMTP id d9443c01a7336-20e5a8a101dmr167189345ad.32.1729549860470;
+        Mon, 21 Oct 2024 15:31:00 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20e7f0f3ca3sm31011095ad.274.2024.10.21.15.30.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Oct 2024 15:30:59 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t30vQ-003zWR-2L;
+	Tue, 22 Oct 2024 09:30:56 +1100
+Date: Tue, 22 Oct 2024 09:30:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	gfs2@lists.linux.dev, linux-block@vger.kernel.org
+Subject: Re: [PATCH] iomap: writeback_control pointer part of
+ iomap_writepage_ctx
+Message-ID: <ZxbWINZwAEJEdX7S@dread.disaster.area>
+References: <326b2b66114c97b892dbcf83f3d41b86c64e93d6.1729266269.git.rgoldwyn@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <326b2b66114c97b892dbcf83f3d41b86c64e93d6.1729266269.git.rgoldwyn@suse.com>
 
-From: Christoph Hellwig <hch@lst.de>
+On Fri, Oct 18, 2024 at 11:55:50AM -0400, Goldwyn Rodrigues wrote:
+> Reduces the number of arguments to functions iomap_writepages() and
+> all functions in the writeback path which require both wpc and wbc.
+> The filesystems need to initialize wpc with wbc before calling
+> iomap_writepages().
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Source kernel commit: 6aac77059881e4419df499392c995bf02fb9630b
+Looks reasonable to me - there's only one path this comes in since
+we got rid of iomap_writepage()...
 
-Currently the debug-only xfs_bmap_exact_minlen_extent_alloc allocation
-variant fails to drop into the lowmode last resort allocator, and
-thus can sometimes fail allocations for which the caller has a
-transaction block reservation.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Fix this by using xfs_bmap_btalloc_low_space to do the actual allocation.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
----
- libxfs/xfs_bmap.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 02f26854c53cfe..aec378ff4a9193 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -3495,7 +3495,13 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	 */
- 	ap->blkno = XFS_AGB_TO_FSB(ap->ip->i_mount, 0, 0);
- 
--	return xfs_alloc_vextent_first_ag(args, ap->blkno);
-+	/*
-+	 * Call xfs_bmap_btalloc_low_space here as it first does a "normal" AG
-+	 * iteration and then drops args->total to args->minlen, which might be
-+	 * required to find an allocation for the transaction reservation when
-+	 * the file system is very full.
-+	 */
-+	return xfs_bmap_btalloc_low_space(ap, args);
- }
- 
- /*
-
+-- 
+Dave Chinner
+david@fromorbit.com
