@@ -1,137 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 940881EF949;
-	Mon, 21 Oct 2024 10:36:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52993198E69
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 13:38:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729507010; cv=none; b=uKJxw8bmrvVS9nev4G2CFFiTvk2mX7cfrToJufr905Xtn0w/0v6RvFt5anzABCADfRKLJZWb4rkwBheoWYS6pkJyZY8rmI/eZsGpAQsJYnS39gnKY3o5g2LLkPJ9KxNo3zddTsaLaFx7RPlJnPrxM8QP/qwdDmcQZ6N2rYil6Jo=
+	t=1729517909; cv=none; b=NpfYAb8aWOVh6r1DcV9I3jsxL1hsULi5MyizaIwfuZHrNtXX+SC7xZr4AzxfOcQiZkLq4J4gqcdCjPe01vCmIbVrRqgULatfiDvFp3Z9TxLUUr9wh5INbOqmczFsnFOVOu/9sgNYiKgFof1UASuTbPoNNeAHrNELP1NeM4dsr7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729507010; c=relaxed/simple;
-	bh=OLcUoQ4UHNnZnf+SEoiT46grZkCZE49PND2oo7IVlgY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WIVAufTUBHYNA9PVL1paP7gKww+5h1B9wtOyUEzr9Qyb5BgrkBxOniajUBkbOx9Sjg4Gn5VuZV9BC4nBH1aX67X/OuQBXq9VsxjBpvsjgfRtZ34/H1fAgOkivbM64MiU1sZPtaz+ToVtvUXL+JxPH85C07gRk27Y4k6ViOC7VuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=iHmyx3Vf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729517909; c=relaxed/simple;
+	bh=hBtldOqD5y7+GEf2dMKwQy9HrMh4L7vHtm20CR/QEgY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eYI0x63VHmkCbXVGqT02KBoAQF++L4Jg4XwDMwqpTXDHsKRQFBwc7ge56a3NCrQt4p5wLw2bVATbDt6HyDOam94fYZUoUPWs0sEL6V7RJjvbtXuSjWl81clzD+ra/4KaYil/h3W0Nf1arsLnoqD1XGnOX8nIt2A1j9HZTGf1l04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wRjhvAmJ; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="iHmyx3Vf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16056C4CEC3;
-	Mon, 21 Oct 2024 10:36:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1729507010;
-	bh=OLcUoQ4UHNnZnf+SEoiT46grZkCZE49PND2oo7IVlgY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=iHmyx3VfomP9MP7nChUJrmHC7nemX07Y2gdek6aw0+TODbNsLHJZ3Y3VRWC9KIJWF
-	 eOmNky7kXU9LjV1SRgCzxIVETpMi8hg9MvEHoR4+adrf2bTcm85+PFnL7r9rH1uVMV
-	 AYs0OJJwP38016d9/IUcxpeQ7tGq8wvFIz0T5VtI=
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	patches@lists.linux.dev,
-	linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 029/124] xfs: fix missing check for invalid attr flags
-Date: Mon, 21 Oct 2024 12:23:53 +0200
-Message-ID: <20241021102257.853934929@linuxfoundation.org>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241021102256.706334758@linuxfoundation.org>
-References: <20241021102256.706334758@linuxfoundation.org>
-User-Agent: quilt/0.67
-X-stable: review
-X-Patchwork-Hint: ignore
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wRjhvAmJ"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2e56750bb0dso1927265a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 06:38:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729517906; x=1730122706; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=SJ1IZSVCxSaCKmddSG5e6jyPsoinCJbOGE3b4ynb4mo=;
+        b=wRjhvAmJmAhX7hAL9C30DhILnDiHxyjgyOO4L6gJrUxxh7TcWxBt8/R0ghIwQct28I
+         OyUNpaDuOHTsCUWEuWK43R1aHcJ1OoH76FeFXpkYKwdq5HHCg8XfOBfpDLdHsPiBh807
+         u6BHSVw8vo7fL+LT+GgKHenGklf2DUXTPZqp403Tcb4Oe4HYcwSxB0kxOan6r6vynJtv
+         EeHcIIVL2c0NFv0G2Xmazoi7iOf4yFnlFvcNGjK0h92LWpQsf5AZBd1Dzc/4L1Mt7VCL
+         8VFnvd0ROpWJUjdNXTue0bbqFhq5QGDGTXcu6fdxTNK1T7h4TCtP5qtEaywDnTKRHEl9
+         WoGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729517906; x=1730122706;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SJ1IZSVCxSaCKmddSG5e6jyPsoinCJbOGE3b4ynb4mo=;
+        b=SXDCepeTDbRECRdNSAnUDsXSb+LjvOeneMm1yyc69pnRRtVTYYw316GVIVEdtlZ/jE
+         oiEkGIz6N9qZ9B1NoCaAR82VRzqQL7HRTCM9Vo5WA98XLypp+z2vcIhYPZvcupA4cT+8
+         cN3cyms14Sz4PP9/ZjFkLBNhEBoYdtcw5Wqi6RMUCLBpRogplu58ifJ7VY6ymfZSRqpt
+         uqgRAR/5Waru3qZAdVk2d7xrlDemcLRcEoEmKsbxaK19WKyGh+/PFDxxi2M6eEV90jtD
+         utvdM8rjMoQqGXEZd3Z1yEfEVJDPkOGmnpAnnyJCG7dEWXUvYHCCnU3ZlbLtgqzL+SQa
+         i1tw==
+X-Forwarded-Encrypted: i=1; AJvYcCU0WQaQfCFER9o5pW4bJo9SPtpTK2dOjFKmYQCj5R5I0JZZBCSJM9E3xuzNx96L4IJNL0z08KaUqkc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy84xV2XnC6q6z9cRjQc2984nzK2W4jRiRPBRNjJAdF96apC8Yw
+	0NLEWEcA09YSZWHpCaZWPaXrG5H1xJ+XbQkqHIrPMJWbUcCifokRpBwOuPWS3aY=
+X-Google-Smtp-Source: AGHT+IFy4QDzquWLETlpiOQqDWi+DgBmBsIwiD4hqrRAX0F7x8ic6bL74xqPkzZLkK1gqQOowDb+Tg==
+X-Received: by 2002:a17:90a:7147:b0:2e5:5e95:b389 with SMTP id 98e67ed59e1d1-2e5619021f0mr12525055a91.35.1729517906486;
+        Mon, 21 Oct 2024 06:38:26 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e5ad510744sm3729024a91.48.2024.10.21.06.38.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Oct 2024 06:38:26 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t2sc3-003pHb-1e;
+	Tue, 22 Oct 2024 00:38:23 +1100
+Date: Tue, 22 Oct 2024 00:38:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/7] xfs: don't update file system geometry through
+ transaction deltas
+Message-ID: <ZxZZT0LpkINDmJOe@dread.disaster.area>
+References: <20240930164211.2357358-1-hch@lst.de>
+ <20240930164211.2357358-7-hch@lst.de>
+ <ZwffQQuVx_CyVgLc@bfoster>
+ <20241011075709.GC2749@lst.de>
+ <Zwkv6G1ZMIdE5vs2@bfoster>
+ <20241011171303.GB21853@frogsfrogsfrogs>
+ <ZwlxTVpgeVGRfuUb@bfoster>
+ <20241011231241.GD21853@frogsfrogsfrogs>
+ <Zw1n_bkugSs6oEI6@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zw1n_bkugSs6oEI6@bfoster>
 
-6.6-stable review patch.  If anyone has any objections, please let me know.
+On Mon, Oct 14, 2024 at 02:50:37PM -0400, Brian Foster wrote:
+> So for a hacky thought/example, suppose we defined a transaction mode
+> that basically implemented an exclusive checkpoint requirement (i.e.
+> this transaction owns an entire checkpoint, nothing else is allowed in
+> the CIL concurrently).
 
-------------------
+Transactions know nothing about the CIL, nor should they. The CIL
+also has no place in ordering transactions - it's purely an
+aggregation mechanism that flushes committed transactions to stable
+storage when it is told to. i.e. when a log force is issued.
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+A globally serialised transaction requires ordering at the
+transaction allocation/reservation level, not at the CIL. i.e. it is
+essentially the same ordering problem as serialising against
+untracked DIO on the inode before we can run a truncate (lock,
+drain, do operation, unlock).
 
-commit f660ec8eaeb50d0317c29601aacabdb15e5f2203 upstream.
+> Presumably that would ensure everything before
+> the grow would flush out to disk in one checkpoint, everything
+> concurrent would block on synchronous commit of the grow trans (before
+> new geometry is exposed), and then after that point everything pending
+> would drain into another checkpoint.
 
-[backport: fix build errors in xchk_xattr_listent]
+Yup, that's high level transaction level ordering and really has
+nothing to do with the CIL. The CIL is mostly a FIFO aggregator; the
+only ordering it does is to preserve transaction commit ordering
+down to the journal.
 
-The xattr scrubber doesn't check for undefined flags in shortform attr
-entries.  Therefore, define a mask XFS_ATTR_ONDISK_MASK that has all
-possible XFS_ATTR_* flags in it, and use that to check for unknown bits
-in xchk_xattr_actor.
+> It kind of sounds like overkill, but really if it could be implemented
+> simply enough then we wouldn't have to think too hard about auditing all
+> other relog scenarios. I'd probably want to see at least some reproducer
+> for this sort of problem to prove the theory though too, even if it
+> required debug instrumentation or something. Hm?
 
-Refactor the check in the dabtree scanner function to use the new mask
-as well.  The redundant checks need to be in place because the dabtree
-check examines the hash mappings and therefore needs to decode the attr
-leaf entries to compute the namehash.  This happens before the walk of
-the xattr entries themselves.
+It's relatively straight forward to do, but it seems like total
+overkill for growfs, as growfs only requires ordering
+between the change of size and new allocations. We can do that by
+not exposing the new space until after then superblock has been
+modifed on stable storage in the case of grow.
 
-Fixes: ae0506eba78fd ("xfs: check used space of shortform xattr structures")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/libxfs/xfs_da_format.h |    5 +++++
- fs/xfs/scrub/attr.c           |   13 +++++++++----
- 2 files changed, 14 insertions(+), 4 deletions(-)
+In the case of shrink, globally serialising the growfs
+transaction for shrink won't actually do any thing useful because we
+have to deny access to the free space we are removing before we
+even start the shrink transaction. Hence we need allocation vs
+shrink co-ordination before we shrink the superblock space, not a
+globally serialised size modification transaction...
 
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -703,8 +703,13 @@ struct xfs_attr3_leafblock {
- #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
- #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
-+
- #define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
- 
-+#define XFS_ATTR_ONDISK_MASK	(XFS_ATTR_NSP_ONDISK_MASK | \
-+				 XFS_ATTR_LOCAL | \
-+				 XFS_ATTR_INCOMPLETE)
-+
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
-  * there can be only one alignment value)
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -182,6 +182,11 @@ xchk_xattr_listent(
- 		return;
- 	}
- 
-+	if (flags & ~XFS_ATTR_ONDISK_MASK) {
-+		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
-+		goto fail_xref;
-+	}
-+
- 	if (flags & XFS_ATTR_INCOMPLETE) {
- 		/* Incomplete attr key, just mark the inode for preening. */
- 		xchk_ino_set_preen(sx->sc, context->dp->i_ino);
-@@ -463,7 +468,6 @@ xchk_xattr_rec(
- 	xfs_dahash_t			hash;
- 	int				nameidx;
- 	int				hdrsize;
--	unsigned int			badflags;
- 	int				error;
- 
- 	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-@@ -493,10 +497,11 @@ xchk_xattr_rec(
- 
- 	/* Retrieve the entry and check it. */
- 	hash = be32_to_cpu(ent->hashval);
--	badflags = ~(XFS_ATTR_LOCAL | XFS_ATTR_ROOT | XFS_ATTR_SECURE |
--			XFS_ATTR_INCOMPLETE);
--	if ((ent->flags & badflags) != 0)
-+	if (ent->flags & ~XFS_ATTR_ONDISK_MASK) {
- 		xchk_da_set_corrupt(ds, level);
-+		return 0;
-+	}
-+
- 	if (ent->flags & XFS_ATTR_LOCAL) {
- 		lentry = (struct xfs_attr_leaf_name_local *)
- 				(((char *)bp->b_addr) + nameidx);
-
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
