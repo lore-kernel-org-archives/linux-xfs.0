@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 366CA2CA9
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 21:59:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8641194AF6
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Oct 2024 22:00:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729547999; cv=none; b=JOUjAohNjS7u4mcVzm15X3h2xH8NE/vy7fNx+woMG18h5h+HqcoqiSgXBrkppA/KUoHmGLid5T7P+XD7lU5vyOZ85/duIIObPnjF+A4Lg++FMeFDLy4Cj0jgjCwhIj2BLk0NZy3HYaK0C1yW+HcivH7TEvbO7KxP7+RyHMgoTZw=
+	t=1729548014; cv=none; b=Do4OcToedR53XZwWyZZzB+x9UlzcCK5ctlzPxHD8HPWsyDegp11OTZ6LNoO4IuDEHoldFMwdPAt6ei82YS5j+Y1ElcKBLxZtGIRFEzrKknHUE+WKQb6oIPNzZzJnIw+kO+oyzv5YN5zW3bhdj//yI15G1qSvv6raxyGZVyYzpmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729547999; c=relaxed/simple;
-	bh=p8s03YUPGL5T3AUYprap2ZNhUpLsCpMbOZdOciQjSvA=;
+	s=arc-20240116; t=1729548014; c=relaxed/simple;
+	bh=lzVoYZzuy3JOoP9rud6PBrHJYBfHfKzj9rizo7qWaHU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iHJr6a3Dt15roax9/b6OzygWfw0RxpqYAXrJ4TaeRHgVRFInjQh1dsBrxhwbrHl5cJNFLLYdw0ypXKC0mmgBnT48Kjna6eSM7e1sduPCS1ITkIR8ofGL07OaFUvAdLWO4esZdKw7vIJSbSW3TJC2tCjUTvXzVBs+91JoK3YyPTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XGTh92Lx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hniV19LjjCequMOLYo3tOsU/TqZBeRaHgZt8ZgjX+Joq4Boc3aeMtnSTQSL0pAuWhH8rNPCB2091zSlpEc0MVJCqccvcnQpz9kRqGIq6JNSdg/PUwmRJPZpYoDpCR7cxeQl5psuN+LU379jPQX5dLO3n7Bo+E+vbKFbJPu4/u3Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FuMUgFFX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XGTh92Lx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC8A2C4CEC3;
-	Mon, 21 Oct 2024 21:59:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FuMUgFFX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60794C4CEC3;
+	Mon, 21 Oct 2024 22:00:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729547998;
-	bh=p8s03YUPGL5T3AUYprap2ZNhUpLsCpMbOZdOciQjSvA=;
+	s=k20201202; t=1729548014;
+	bh=lzVoYZzuy3JOoP9rud6PBrHJYBfHfKzj9rizo7qWaHU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XGTh92LxSgd1XaSqNFpsmKXYBE29ZPdXpmGWPh4XdACDjyBbmMlETRlXXhL1kKWxA
-	 3tZiMYtZJEddfdiiC+1oh6uQP1RIRoaDp+eBicQWNpMP9zVsOnWI1yVQs0nMedfcqH
-	 7nq4X4yEH+9iSXBijWDyPvQQhaA/GF3vJLCBUP6IuewM79hNj7uj3Q/Z3f/eW1e4gv
-	 EqD5lDVjgXeKavEer5lNZdqDkkoDuSRkD2q8op68ucaBj1YpT7XsbGXLro0EUUrhJ7
-	 bG2Ko4031ytR/rMTzueNKqVgDaxy/V7jIHSHfhOPNkcD2ToaJAAAQKFVO5YtOWa2ei
-	 jBCk8AXq1gSew==
-Date: Mon, 21 Oct 2024 14:59:58 -0700
-Subject: [PATCH 04/37] libfrog: add xarray emulation
+	b=FuMUgFFX4Lw7QgOJAYJ3+dZyy/MO27GO5Lb1s9BTlQNfSJ4Zh5VR6qMY2HUjrWQ7Z
+	 S/mQGaKF+xjcgFBgZ9VxRRN8auxFNum30A2cG/zIfB3z58DxVZ0JUaIR9pIM2w9rs7
+	 UBU3Mj+DwkylWSbryk6988y9q/FLS4PcbeDla/klym8rvYcpGnvqzbOqRuCe3WvZij
+	 WapmxpGbw2rEUZo/CEhou6whsUAhaCSdZRCXz/VOHSN0Gt0EWIfZum0N3uur2/y5SX
+	 r3M9h8g0/52aItCmFL297NT1cRlUush6ixwY90TNctWyPPF8F1RS0jAtmt2GF6COwC
+	 qiF9Z8TR7A7GA==
+Date: Mon, 21 Oct 2024 15:00:13 -0700
+Subject: [PATCH 05/37] xfs: introduce new file range commit ioctls
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <172954783532.34558.3574729108397726957.stgit@frogsfrogsfrogs>
+Message-ID: <172954783547.34558.563053329709168007.stgit@frogsfrogsfrogs>
 In-Reply-To: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
 References: <172954783428.34558.6301509765231998083.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,61 +43,76 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Implement the simple parts of the kernel xarray API on-top of the libfrog
-radix-tree.
+Source kernel commit: 398597c3ef7fb1d8fa31491c8f4f3996cff45701
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+This patch introduces two more new ioctls to manage atomic updates to
+file contents -- XFS_IOC_START_COMMIT and XFS_IOC_COMMIT_RANGE.  The
+does, but with the additional requirement that file2 cannot have changed
+since some sampling point.  The start-commit ioctl performs the sampling
+of file attributes.
+
+Note: This patch currently samples i_ctime during START_COMMIT and
+checks that it hasn't changed during COMMIT_RANGE.  This isn't entirely
+safe in kernels prior to 6.12 because ctime only had coarse grained
+granularity and very fast updates could collide with a COMMIT_RANGE.
+With the multi-granularity ctime introduced by Jeff Layton, it's now
+possible to update ctime such that this does not happen.
+
+It is critical, then, that this patch must not be backported to any
+kernel that does not support fine-grained file change timestamps.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Acked-by: Jeff Layton <jlayton@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/radix-tree.h |   35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ libxfs/xfs_fs.h |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
 
-diff --git a/libfrog/radix-tree.h b/libfrog/radix-tree.h
-index dad5f5b72039e3..fe896134eeb283 100644
---- a/libfrog/radix-tree.h
-+++ b/libfrog/radix-tree.h
-@@ -63,4 +63,39 @@ int radix_tree_tagged(struct radix_tree_root *root, unsigned int tag);
- static inline int radix_tree_preload(int gfp_mask) { return 0; }
- static inline void radix_tree_preload_end(void) { }
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 184ccbfe708218..860284064c5aa9 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -826,6 +826,30 @@ struct xfs_exchange_range {
+ 	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
+ };
  
 +/*
-+ * Emulation of the kernel xarray API.  Note that unlike the kernel
-+ * xarray, there is no internal locking so code using this should not
-+ * allow concurrent operations in userspace.
++ * Using the same definition of file2 as struct xfs_exchange_range, commit the
++ * contents of file1 into file2 if file2 has the same inode number, mtime, and
++ * ctime as the arguments provided to the call.  The old contents of file2 will
++ * be moved to file1.
++ *
++ * Returns -EBUSY if there isn't an exact match for the file2 fields.
++ *
++ * Filesystems must be able to restart and complete the operation even after
++ * the system goes down.
 + */
-+struct xarray {
-+	struct radix_tree_root	r;
++struct xfs_commit_range {
++	__s32		file1_fd;
++	__u32		pad;		/* must be zeroes */
++	__u64		file1_offset;	/* file1 offset, bytes */
++	__u64		file2_offset;	/* file2 offset, bytes */
++	__u64		length;		/* bytes to exchange */
++
++	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
++
++	/* opaque file2 metadata for freshness checks */
++	__u64		file2_freshness[6];
 +};
 +
-+static inline void xa_init(struct xarray *xa)
-+{
-+	INIT_RADIX_TREE(&xa->r, GFP_KERNEL);
-+}
-+
-+static inline void *xa_load(struct xarray *xa, unsigned long index)
-+{
-+	return radix_tree_lookup(&xa->r, index);
-+}
-+
-+static inline void *xa_erase(struct xarray *xa, unsigned long index)
-+{
-+	return radix_tree_delete(&xa->r, index);
-+}
-+
-+static inline int xa_insert(struct xarray *xa, unsigned long index, void *entry,
-+		unsigned int gfp)
-+{
-+	int error;
-+
-+	error = radix_tree_insert(&xa->r, index, entry);
-+	if (error == -EEXIST)
-+		return -EBUSY;
-+	return error;
-+}
-+
- #endif /* __LIBFROG_RADIX_TREE_H__ */
+ /*
+  * Exchange file data all the way to the ends of both files, and then exchange
+  * the file sizes.  This flag can be used to replace a file's contents with a
+@@ -998,6 +1022,8 @@ struct xfs_getparents_by_handle {
+ #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
+ #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
+ #define XFS_IOC_EXCHANGE_RANGE	     _IOW ('X', 129, struct xfs_exchange_range)
++#define XFS_IOC_START_COMMIT	     _IOR ('X', 130, struct xfs_commit_range)
++#define XFS_IOC_COMMIT_RANGE	     _IOW ('X', 131, struct xfs_commit_range)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
 
