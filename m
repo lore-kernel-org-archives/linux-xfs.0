@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 555D71E529
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 05:49:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D7111E495
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 05:50:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729576193; cv=none; b=htFN7LgIUcyyatRs52phY+bDO/Kxw4+XJ2stBg8w5PeM00+gr5BZLMAXqoJccxuRMFtG4UlCkVABpSyU1lBBgmZEr7xuiTXNp0jmcWGjA01Sz8YBL+Ejj9Qsl1loHEXcWt06yEZBNFPtOMzcbPkHys6gkZA7cbygaUg+hR/H/II=
+	t=1729576216; cv=none; b=uuEtUb4WCuQcsGV6cEMHWcM7iOZbzXGlU3qYOu6Cu94ihrfzC2O8mAwSPs/Q3u3NZ3T4CvfCwL5j2GhfXiGP9DhNB8sfNhvZNv30DQn2qVl7jy+pOZydnqrp455jtdNfx1Bu1Nb7s619WcwhvCJ0Dxbtf1P5vbp8qRH5cK3T/tw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729576193; c=relaxed/simple;
-	bh=N+tI36g4PfA8HBN8LzE/miOmf0ZunErrMtnifXjubpA=;
+	s=arc-20240116; t=1729576216; c=relaxed/simple;
+	bh=3CtiilMsIt92EGdPA135CP6JN7/ZduKraOsouUOQ3Sg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ooaS8/mDUUrDD9gM+fHB541JnDIs4RYimlNTyYhVhhpSQAoBmCadq1eQPVKkwsh9VweSsLnZGK1hg9LEO+PXqTvV0fRn9RAZ7B8rfilwmD+ueG9A/gcVajwKG1NHh6x0w4WblzR6aTxpdG4qMAreDWVmhRfz1U+X8fl/VEM3qZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=z54ZS0SE; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=MdHvinb5maixKbxFGRMXasnc28pQmXFplHtrw9sNIoYeIl/y4ZtqGA3oAMPAHYftJJ/E/auoTbGsAqaCrQB/p1vgN8YpUq0R+V+YqLIalIH8XC/IlH8TGCoycmhJoOlXSmO9NjsIDVRAdrA9fTwpvn2Y1+pnjXcXG5U+Soue7po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0rKp100Q; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="z54ZS0SE"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0rKp100Q"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=SqRCAAezv5X59WozyWn/3ZVImfdJadBrgUQPFpWN0Xs=; b=z54ZS0SE0P65BvFlNYbk5jjZ+a
-	hVOtUT6NKULxVyhDWhKyGJl3STEHA+i6O7dWoxNkKGE9GE4/AKFoDujyLEyIcGdFRb23r3mW7FPt4
-	+g+gF8AW+WYfzq7Y6B/LBLTDuWERgpiEQilTMTKoPHVKOIuJa/zv7Sjmb9f+HdFWJ7hMrKCcBNv/k
-	G4qePxgkaT0XGlU6/mLEwEFgkCUJxwrvsy9WiEhCkcB22Vx02yGMdv9yq3F4WahuJfLS3FssLgWy1
-	IkWcEJzPK3Q9YAV7uztNm88LmRBlqCkKN8b1O/gPO9MqOrfPWYPDXgYdirlASzNhvMF0BR4Aq//XZ
-	YzmsvOGQ==;
+	bh=Q5gCFQdKCp2WL8mB+3ZDL6BPfsN8msq9eFA3C+GnMpg=; b=0rKp100Qb/l6HOTlYVoNEAefhs
+	dFx4hHbpWNEArl0r+wdrKLJ3yN9Pb/7xUqm+HRDEcscXZTgLBN4Q6xjyFvf8RUfT192qdtMwbno/u
+	XtEcZ1sLHtuv1sNOp00bWHo/0Y96sSSCMBoIMipZiJX758HNDs7lTsgDwDk/QMr4QQ9sgN/8uRTde
+	uciSCH1KBI9kVcsDl9LK01A4jQeSZLTwtMhc4jQKvozHG6y6CpffN5L2brYe61P7dsWtKj5g3SYAC
+	xJksofmRRl7fJEknB6G6Pe/RGSEGyMe0jXF2A57t/rxvOmF5fsLWZqHRbzPBOoqXQsBFrKyDVjPTX
+	CNyx4IXA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t37mB-00000009iUq-0dxa;
-	Tue, 22 Oct 2024 05:49:51 +0000
-Date: Mon, 21 Oct 2024 22:49:51 -0700
+	id 1t37mZ-00000009ibQ-0N31;
+	Tue, 22 Oct 2024 05:50:15 +0000
+Date: Mon, 21 Oct 2024 22:50:15 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 03/29] xfs: rename metadata inode predicates
-Message-ID: <Zxc8_8t64zBDTGF-@infradead.org>
+Subject: Re: [PATCH 04/29] xfs: standardize EXPERIMENTAL warning generation
+Message-ID: <Zxc9F98G-YezFSPZ@infradead.org>
 References: <172919069364.3451313.14303329469780278917.stgit@frogsfrogsfrogs>
- <172919069495.3451313.13697143366804161635.stgit@frogsfrogsfrogs>
+ <172919069514.3451313.9614601838519113907.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,22 +45,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <172919069495.3451313.13697143366804161635.stgit@frogsfrogsfrogs>
+In-Reply-To: <172919069514.3451313.9614601838519113907.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Oct 17, 2024 at 11:55:09AM -0700, Darrick J. Wong wrote:
+On Thu, Oct 17, 2024 at 11:55:20AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> The predicate xfs_internal_inum tells us if an inumber refers to one of
-> the inodes rooted in the superblock.  Soon we're going to have internal
-> inodes in a metadata directory tree, so this helper should be renamed
-> to capture its limited scope.
-> 
-> Ondisk inodes will soon have a flag to indicate that they're metadata
-> inodes.  Head off some confusion by renaming the xfs_is_metadata_inode
-> predicate to xfs_is_internal_inode.
+> Refactor the open-coded warnings about EXPERIMENTAL feature use into a
+> standard helper before we go adding more experimental features.
 
-I don't really care either way, but the patch looks correct:
+Feels like a bit of overkill, but the code looks fine:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
