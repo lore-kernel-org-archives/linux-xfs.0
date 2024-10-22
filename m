@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 275781C9B7B
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 17:59:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C86F19E833
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 18:05:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729619969; cv=none; b=B1EtHany7d6wuKBX8ETC2KIlyYqbnrCvnuHZSnxVDbDiFxaWps7kB2rBzTtvFvxdbQTbfmlTSrhBpRDg8+W1+2i3+HtlA7Cm8aTfuJ171Q3EluLa4IEBMlge5K4uy7GspOCQg7krf8SA+BD6GhdxPf+F1xWgw+zRrLVMxG4sQKU=
+	t=1729620336; cv=none; b=uSmyvOXuI4wIcF+aq0/yJzFVsT+6r0Vy6FC6DHwbF1La0HAw5teeBjbmSSoUy/3Jv2oYnn78nK+tmtxEwozAE3eIZN1QzDbowdtOvsk7aXFozYs2URzx0o9cH1jwRCG3zErShCzuMBisY1prKAU1Wp3vDIFLdZCfcpEy+cX/wWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729619969; c=relaxed/simple;
-	bh=1w8bRlaExqtU4C3dtaCMRpPH2yoOoAsw5hOXPSLxi4Q=;
+	s=arc-20240116; t=1729620336; c=relaxed/simple;
+	bh=a1Jttxsm7Uh8GzGp6onl5TJ/jXwud0DsEaylUfk2B0U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LWvT3Pt6xSgEDxeAuWSjqluW28Pt2AUiLtej2hPzvkdAeFq3yeu2tjTMi78L5njY/IqdYteCjWi6jAVrD7Ilc8R7c4Xzoft3yBavc/BlA3jsSyzLY9f+cwKjxHQPo9oO7D4nfde+mACEsa6GQM1XHC0Qdi2OCWjfShcATHeXk6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bZkUlBax; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=UoTthxom89pR+UFthIfyeDYBkE9SPWD9MFpXxAKBrg2WV+iiYeE3vxLPw8EulKlZ2YrCjj5LEHh2D6TieE2dgm+x1SSugLiPTFiAruwXKFB8HC/u3wU2G8eA9hHJYCa3hDq96VXavkudNITqfiS8aYUI2zq6A+yrIEZ+XzFvTIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RU1htEeG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bZkUlBax"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9349FC4CEC3;
-	Tue, 22 Oct 2024 17:59:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RU1htEeG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27F40C4CEC3;
+	Tue, 22 Oct 2024 18:05:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729619968;
-	bh=1w8bRlaExqtU4C3dtaCMRpPH2yoOoAsw5hOXPSLxi4Q=;
+	s=k20201202; t=1729620336;
+	bh=a1Jttxsm7Uh8GzGp6onl5TJ/jXwud0DsEaylUfk2B0U=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=bZkUlBaxF5xtuUM5G8iFKtNd5o4n5obttbxDts5f5f/UBIXIa/uPVQ1NlAC1WogDR
-	 n99JtBhunvAP1Lz9FqFs6Fgu55gVosI7ax+NrX1+hBYIOHCDLMenz/Uv59odGT7gqo
-	 SGzsdbtIC1THnhU0QQk2dr2u5FRvc+2B05FbZ3KBWtRPLtqEUk46AOkri+ZjrNOWfz
-	 LgL5LLaRuCFCOqEexGPghbLaJwuRmQrdPGDriIRrEveJ86dFI3aVGcdVTL57TSfkeG
-	 99cdqvLn6nD/Dl0rF3oMSvmM6OMyIJgXd5i3TKbeKNjUO3Z2alKMf8i/WpLI2OxpZc
-	 ugebEXrEQchZA==
-Date: Tue, 22 Oct 2024 10:59:28 -0700
+	b=RU1htEeGwbRubZHvWq3WZPCEwvglXxA2j5qUfLaZGUwPQyEbLMjbG+OOEP2vATvom
+	 PkPqqeVVIVt8n4bzK1NVo25Pr813b+CtGyw0s/3f2o3nF95VwWgr4Jc4PkOJlquPf7
+	 B8tpQGXhxhWnCnTY4G5iz+xW74yyYJkH2p5xwpxAAqEBBGkqFukfcPL2pf5Azt02sQ
+	 OkhtKHKpGf2an5QNmI3mLr7SwtPZbjuEBp1Toj4HDKLCFpboDOCVgDzPJcNtADXY71
+	 HnoFI1WexnKvGex89we3f/TpgCCgcf/tol0G3voE3Tb9aR49Lx0a3y2gNq/1duxVTK
+	 0/kGiBn6gxgVw==
+Date: Tue, 22 Oct 2024 11:05:35 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com
-Subject: Re: [PATCH 2/2] xfs: fix finding a last resort AG in
- xfs_filestream_pick_ag
-Message-ID: <20241022175928.GE21853@frogsfrogsfrogs>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: streamline xfs_filestream_pick_ag
+Message-ID: <20241022180535.GF21853@frogsfrogsfrogs>
 References: <20241022121355.261836-1-hch@lst.de>
- <20241022121355.261836-3-hch@lst.de>
+ <20241022121355.261836-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,80 +42,167 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241022121355.261836-3-hch@lst.de>
+In-Reply-To: <20241022121355.261836-2-hch@lst.de>
 
-On Tue, Oct 22, 2024 at 02:13:38PM +0200, Christoph Hellwig wrote:
-> When the main loop in xfs_filestream_pick_ag fails to find a suitable
-> AG it tries to just pick the online AG.  But the loop for that uses
-> args->pag as loop iterator while the later code expects pag to be
-> set.  Fix this by reusing the max_pag case for this last resort, and
-> also add a check for impossible case of no AG just to make sure that
-> the uninitialized pag doesn't even escape in theory.
+On Tue, Oct 22, 2024 at 02:13:37PM +0200, Christoph Hellwig wrote:
+> Directly return the error from xfs_bmap_longest_free_extent instead
+> of breaking from the loop and handling it there, and use a done
+> label to directly jump to the exist when we found a suitable perag
+> structure to reduce the indentation level and pag/max_pag check
+> complexity in the tail of the function.
 > 
-> Reported-by: syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Tested-by: syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com
 
-Well, that bug was pretty subtle. :(
+So the key change here is that now the function can exit directly from
+the for_each_perag_wrap loop if it finds a suitable perag, and that the
+rest of the function has less indentation?
+
+Ok, sounds good to me though the bugfix probably should've come first.
+
+Don't really care either way, so
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-Nit: should trace_xfs_filestream_pick() lose its third argument?
 
 --D
 
 > ---
->  fs/xfs/xfs_filestream.c | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
+>  fs/xfs/xfs_filestream.c | 95 ++++++++++++++++++++---------------------
+>  1 file changed, 46 insertions(+), 49 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> index f523027cc32586..ecf8a0f6c1362e 100644
+> index e3aaa055559781..f523027cc32586 100644
 > --- a/fs/xfs/xfs_filestream.c
 > +++ b/fs/xfs/xfs_filestream.c
-> @@ -64,7 +64,7 @@ xfs_filestream_pick_ag(
->  	struct xfs_perag	*pag;
->  	struct xfs_perag	*max_pag = NULL;
->  	xfs_extlen_t		minlen = *longest;
-> -	xfs_extlen_t		free = 0, minfree, maxfree = 0;
-> +	xfs_extlen_t		minfree, maxfree = 0;
+> @@ -67,22 +67,28 @@ xfs_filestream_pick_ag(
+>  	xfs_extlen_t		free = 0, minfree, maxfree = 0;
 >  	xfs_agnumber_t		agno;
 >  	bool			first_pass = true;
+> -	int			err;
 >  
-> @@ -113,7 +113,6 @@ xfs_filestream_pick_ag(
->  			     !(flags & XFS_PICK_USERDATA) ||
+>  	/* 2% of an AG's blocks must be free for it to be chosen. */
+>  	minfree = mp->m_sb.sb_agblocks / 50;
+>  
+>  restart:
+>  	for_each_perag_wrap(mp, start_agno, agno, pag) {
+> +		int		err;
+> +
+>  		trace_xfs_filestream_scan(pag, pino);
+> +
+>  		*longest = 0;
+>  		err = xfs_bmap_longest_free_extent(pag, NULL, longest);
+>  		if (err) {
+> -			if (err != -EAGAIN)
+> -				break;
+> -			/* Couldn't lock the AGF, skip this AG. */
+> -			err = 0;
+> -			continue;
+> +			if (err == -EAGAIN) {
+> +				/* Couldn't lock the AGF, skip this AG. */
+> +				err = 0;
+> +				continue;
+> +			}
+> +			xfs_perag_rele(pag);
+> +			if (max_pag)
+> +				xfs_perag_rele(max_pag);
+> +			return err;
+>  		}
+>  
+>  		/* Keep track of the AG with the most free blocks. */
+> @@ -108,7 +114,9 @@ xfs_filestream_pick_ag(
 >  			     (flags & XFS_PICK_LOWSPACE))) {
 >  				/* Break out, retaining the reference on the AG. */
-> -				free = pag->pagf_freeblks;
->  				if (max_pag)
->  					xfs_perag_rele(max_pag);
->  				goto done;
-> @@ -149,18 +148,19 @@ xfs_filestream_pick_ag(
->  	 * filestream. It none suit, just use whatever AG we can grab.
->  	 */
->  	if (!max_pag) {
-> -		for_each_perag_wrap(args->mp, 0, start_agno, args->pag)
-> +		for_each_perag_wrap(args->mp, 0, start_agno, pag) {
-> +			max_pag = pag;
->  			break;
-> -		atomic_inc(&args->pag->pagf_fstrms);
-> -		*longest = 0;
-> -	} else {
-> -		pag = max_pag;
-> -		free = maxfree;
-> -		atomic_inc(&pag->pagf_fstrms);
-> +		}
-> +		/* Bail if there are no AGs at all to select from. */
-> +		if (!max_pag)
-> +			return -ENOSPC;
+>  				free = pag->pagf_freeblks;
+> -				break;
+> +				if (max_pag)
+> +					xfs_perag_rele(max_pag);
+> +				goto done;
+>  			}
+>  		}
+>  
+> @@ -116,53 +124,42 @@ xfs_filestream_pick_ag(
+>  		atomic_dec(&pag->pagf_fstrms);
 >  	}
 >  
-> +	pag = max_pag;
-> +	atomic_inc(&pag->pagf_fstrms);
->  done:
-> -	trace_xfs_filestream_pick(pag, pino, free);
-> +	trace_xfs_filestream_pick(pag, pino, pag->pagf_freeblks);
+> -	if (err) {
+> -		xfs_perag_rele(pag);
+> -		if (max_pag)
+> -			xfs_perag_rele(max_pag);
+> -		return err;
+> +	/*
+> +	 * Allow a second pass to give xfs_bmap_longest_free_extent() another
+> +	 * attempt at locking AGFs that it might have skipped over before we
+> +	 * fail.
+> +	 */
+> +	if (first_pass) {
+> +		first_pass = false;
+> +		goto restart;
+>  	}
+>  
+> -	if (!pag) {
+> -		/*
+> -		 * Allow a second pass to give xfs_bmap_longest_free_extent()
+> -		 * another attempt at locking AGFs that it might have skipped
+> -		 * over before we fail.
+> -		 */
+> -		if (first_pass) {
+> -			first_pass = false;
+> -			goto restart;
+> -		}
+> -
+> -		/*
+> -		 * We must be low on data space, so run a final lowspace
+> -		 * optimised selection pass if we haven't already.
+> -		 */
+> -		if (!(flags & XFS_PICK_LOWSPACE)) {
+> -			flags |= XFS_PICK_LOWSPACE;
+> -			goto restart;
+> -		}
+> +	/*
+> +	 * We must be low on data space, so run a final lowspace optimised
+> +	 * selection pass if we haven't already.
+> +	 */
+> +	if (!(flags & XFS_PICK_LOWSPACE)) {
+> +		flags |= XFS_PICK_LOWSPACE;
+> +		goto restart;
+> +	}
+>  
+> -		/*
+> -		 * No unassociated AGs are available, so select the AG with the
+> -		 * most free space, regardless of whether it's already in use by
+> -		 * another filestream. It none suit, just use whatever AG we can
+> -		 * grab.
+> -		 */
+> -		if (!max_pag) {
+> -			for_each_perag_wrap(args->mp, 0, start_agno, args->pag)
+> -				break;
+> -			atomic_inc(&args->pag->pagf_fstrms);
+> -			*longest = 0;
+> -		} else {
+> -			pag = max_pag;
+> -			free = maxfree;
+> -			atomic_inc(&pag->pagf_fstrms);
+> -		}
+> -	} else if (max_pag) {
+> -		xfs_perag_rele(max_pag);
+> +	/*
+> +	 * No unassociated AGs are available, so select the AG with the most
+> +	 * free space, regardless of whether it's already in use by another
+> +	 * filestream. It none suit, just use whatever AG we can grab.
+> +	 */
+> +	if (!max_pag) {
+> +		for_each_perag_wrap(args->mp, 0, start_agno, args->pag)
+> +			break;
+> +		atomic_inc(&args->pag->pagf_fstrms);
+> +		*longest = 0;
+> +	} else {
+> +		pag = max_pag;
+> +		free = maxfree;
+> +		atomic_inc(&pag->pagf_fstrms);
+>  	}
+>  
+> +done:
+>  	trace_xfs_filestream_pick(pag, pino, free);
 >  	args->pag = pag;
 >  	return 0;
->  
 > -- 
 > 2.45.2
 > 
