@@ -1,74 +1,94 @@
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 135C11993AD
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 10:11:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 352AD19C559;
+	Tue, 22 Oct 2024 11:16:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729591865; cv=none; b=N0pO8Sdi5vtX/WalROINH3txJSfeGj43aNCTnYidKP1VS5Hc+iLKh5OkIRYmNwz0wioFox6Dv6taEktNNw2/CZ4Q43uL6pW5feCFf7iRL1cZHbnXmafZlpGb1c1vHPn3NuLnr0wEMGPwx7BKaudZxgLMeJAUTHWq2nuf4/72qHE=
+	t=1729595798; cv=none; b=tffdTRde11nSGi8CrrGsmHS4a6kwrqZTbw7NXjYtRp2BiZHuUgc6Q8SgPmHAAgQjNYFsJBDbWQBAZ7NnBTtU51GuOXR/5bfMDbL3nAHiWbhaTfhx79XeeedLpjkybjTmDIZk56Jx8PdYRBtfZTbIIcS+95td+3sMDvSKKNqID7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729591865; c=relaxed/simple;
-	bh=L8Uyi649s2m40I0JLwCAzmHXr0Df5flHBX+NVq+nmVA=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=AKaUg3/OchvCm98gyvym0tNs/X9haH05fVi9mVQ9PgNJ03DGa9McfzaGk5ymzaoudj6/Wu6nIVvN6zKM/5/1+wO+qqiXxywo4GZt90ZNceNOnjQuH+GGpQEkwg3+uzMf2zXJD9JVLTF4aMQYinZNWIfBDD2CDjKuQhXujF973nU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3a3b9c5bcd8so48822715ab.2
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 03:11:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729591863; x=1730196663;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=q3o3zq1GU4yds7lbg+NbzU2tEJq57lSCyXfB510B+bA=;
-        b=f5iomQ+l80XC7H6qL8j2XsJ7KvwdJmkGCC0/MOp3JyYuq0CjBMgPk71dYiiMmbZDD6
-         M9F/OomYVLn8ngSeQNzqCI/g6pylIdsM6I5eS2HpVtjDYug4IvB7jFWwzvSD5Z/oTVon
-         BxAqCDXIMmglngm29lG1mcSCYB4hK95wLz6IHCQzra96KoU/nMYpTXPqFS37UYoMET+i
-         ZB6IVpVz00LTeh7r0Y4tYFsnSJDMsAt0peKlMYAUk6agnLQM5EYBbCgLR+WVCvybzwuv
-         vR0l3UwViiz8pA2/RnAwJnL2kvIUBfLA8bbZ2TLJ4zAlL4gs7k/o4JUTz1/5y8dS7+WW
-         SUNA==
-X-Forwarded-Encrypted: i=1; AJvYcCW4d7t05yQeSY9iBdJHzcMbjm46L5jm5+udpBWe/1mn+nsn2eTuFjI0ZgXmJpua0sz7qqnnIi4ANL4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwhS8mh7S4cxb+WNMG6tAyTRnF8hP4Y/txC0DENF3bKy8Aevpnm
-	xI6uO6iYSrvHwEnBMtqFVKvkwYXv84b1cjvFgVWhq9MJNB2i6RQO1JXBvhwxoklsuA+j+NfKKhf
-	8mnSnl9FgE+WOF1pdVrFdF8GS0VfUvCC20Jzd5uDj1J3zVRmPFYs6YME=
-X-Google-Smtp-Source: AGHT+IF18dfHmvud1MzhNbZ/LjtNSGQIhn0kTO0Rx03lSMiSnRyNSbXOWomnvfZ4QkDs1XGPdLbQTaXb+gv+SRRhJchVuyK3+gej
+	s=arc-20240116; t=1729595798; c=relaxed/simple;
+	bh=kiuJLXM00R2xjoCq2cO3SkKeY3DGvebHihn+W7XV2pk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VsRJIui09vGh/0tDX2dFZ9LVjjRtPv3m67sEj/UaPgrxjkRUglx5Agw0W/mAv7uqIU09ayrsveKj4bXzRVwFopIISrYjSksBOAhlS3Gbc2HKFdcEs7W+1SE1rUBflpl3zvN43LOdjIWrJuvZF5QBKNxxAshcbo0ZP+wmXA6BZ5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZJxfEFs; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZJxfEFs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6469EC4CEE6;
+	Tue, 22 Oct 2024 11:16:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729595797;
+	bh=kiuJLXM00R2xjoCq2cO3SkKeY3DGvebHihn+W7XV2pk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jZJxfEFspbSXxF2wh+pr5+Nxk1/qHnVTX43BSYN+uhQt2uHnRLhiqGGhiF5Lhe5PD
+	 +v3TxXOfGvSlH0fjUxFGsMZv8YpUWJ2YuioRZhq+8l4c+WBHT70efkfHKUxoRORNOI
+	 kNJO3/Sd3FUpEGmfERtcFvT9b/HHlqoZl614J2B8oVzGu7BV5PN5wb75C8vZpTlsap
+	 ovwJoNlWfUTzqrFBVC3o4xJKXje9NEbzbGS5qSjze//Pi9F+kjFoTy+AVmuYQKJdD6
+	 J3VtkGe0h+W/W7ho6PkHMbVlnkbr6aIgBe8PP8IH9/on+sFBDgPvu5ZxnFGzh30XhJ
+	 bPitWxCl7ydfw==
+Date: Tue, 22 Oct 2024 13:16:33 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>, stable@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 20/29] xfs: don't fail repairs on metadata files with no
+ attr fork
+Message-ID: <xr2px4yfwpi4cak4e5z4xnjyip6zblxi537v4x4r2ibssajuie@eeubheijryrj>
+References: <172919069364.3451313.14303329469780278917.stgit@frogsfrogsfrogs>
+ <172919069796.3451313.2227454340362290952.stgit@frogsfrogsfrogs>
+ <2024101838-thickness-exposure-ec78@gregkh>
+ <20241021172751.GA21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:174c:b0:3a3:b209:650d with SMTP id
- e9e14a558f8ab-3a3f40cbd4dmr126799525ab.26.1729591863099; Tue, 22 Oct 2024
- 03:11:03 -0700 (PDT)
-Date: Tue, 22 Oct 2024 03:11:03 -0700
-In-Reply-To: <ZxdzTL4UYZtgsIiK@infradead.org>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <67177a37.050a0220.1e4b4d.0074.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: null-ptr-deref Write in
- xfs_filestream_select_ag (2)
-From: syzbot <syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com>
-To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
-	hch@infradead.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241021172751.GA21853@frogsfrogsfrogs>
 
-Hello,
+On Mon, Oct 21, 2024 at 10:27:51AM GMT, Darrick J. Wong wrote:
+> On Fri, Oct 18, 2024 at 08:00:21AM +0200, Greg KH wrote:
+> > On Thu, Oct 17, 2024 at 11:58:10AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Fix a minor bug where we fail repairs on metadata files that do not have
+> > > attr forks because xrep_metadata_inode_subtype doesn't filter ENOENT.
+> > > 
+> > > Cc: <stable@vger.kernel.org> # v6.8
+> > > Fixes: 5a8e07e799721b ("xfs: repair the inode core and forks of a metadata inode")
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/scrub/repair.c |    8 +++++---
+> > >  1 file changed, 5 insertions(+), 3 deletions(-)
+> > 
+> > Why is a bugfix / stable-tagged-patch, number 20 in a 29 patch series?
+> > Why isn't it first, or better yet, on it's own if it is fixing a bug
+> > that people want merged "soon"?
+> 
+> I have too many patches, and every time I try to get a set through the
+> review process I end up having to write *more* patches to appease the
+> reviewers, and fixes get lost.  Look at the copyrights on the other
+> patches, I've been trying to get this upstreamed since 2018.
+> 
+> This particular bugfix got lost last month probably because I forgot to
+> ping cem to take it for 6.12-rc1.  Thanks for pushing on this, Greg.
+> 
+> Hey Carlos, can you queue this one up for 6.12-rc5, please?
 
-syzbot has tested the proposed patch and the reproducer did not trigger any issue:
+Sure, it's queued now in next-rc, I'm testing it and I hope to send it to
+for-next today yet. It's the only patch for -rc5.
 
-Reported-by: syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com
-Tested-by: syzbot+4125a3c514e3436a02e6@syzkaller.appspotmail.com
+Cheers.
+Carlos
 
-Tested on:
-
-commit:         0338c38c xfs: fix finding a last resort AG in xfs_file..
-git tree:       git://git.infradead.org/users/hch/misc.git xfs-filesystems-pick-fix
-console output: https://syzkaller.appspot.com/x/log.txt?x=11150287980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=41330fd2db03893d
-dashboard link: https://syzkaller.appspot.com/bug?extid=4125a3c514e3436a02e6
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-
-Note: no patches were applied.
-Note: testing is done by a robot and is best-effort only.
+> 
+> --D
+> 
+> > thanks,
+> > 
+> > greg k-h
+> > 
+> 
