@@ -1,94 +1,52 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 352AD19C559;
-	Tue, 22 Oct 2024 11:16:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 920A014EC46
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 12:13:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729595798; cv=none; b=tffdTRde11nSGi8CrrGsmHS4a6kwrqZTbw7NXjYtRp2BiZHuUgc6Q8SgPmHAAgQjNYFsJBDbWQBAZ7NnBTtU51GuOXR/5bfMDbL3nAHiWbhaTfhx79XeeedLpjkybjTmDIZk56Jx8PdYRBtfZTbIIcS+95td+3sMDvSKKNqID7M=
+	t=1729599240; cv=none; b=gVccGVN5MTaeX+0PDfyDj7zr/vYpLUAs6UcBdnHwKu8EcKPHXNoODCStRD1BLchfTr4aTxQ+IdPd1yjlFU7ShpeiUQ6zS+Ol6oR5jMRoJkw7HOJvy2G0oDwE0hLI42LIXtr0HbDNeA1maNhlZzyThr0AOjkld6N5k0xSPF4bsEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729595798; c=relaxed/simple;
-	bh=kiuJLXM00R2xjoCq2cO3SkKeY3DGvebHihn+W7XV2pk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VsRJIui09vGh/0tDX2dFZ9LVjjRtPv3m67sEj/UaPgrxjkRUglx5Agw0W/mAv7uqIU09ayrsveKj4bXzRVwFopIISrYjSksBOAhlS3Gbc2HKFdcEs7W+1SE1rUBflpl3zvN43LOdjIWrJuvZF5QBKNxxAshcbo0ZP+wmXA6BZ5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZJxfEFs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729599240; c=relaxed/simple;
+	bh=MekrsH7FxUREyqFJTt5498M+sComXJ6EPXJbXAIvLqc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g/lN2vnyWwS3KOlRyPoTtByNyRGFZxGmto+oMvvBqgXJtRn/cEq7nylqPUsnwv95wUyaBFJ9JflD88CcolpOJoLtszhIaPXf+ODf0M7CQYaAA+hFCVzn1njJyhBo+n9mkrff49SvxnTbKXBYYnI1CxE55KJBkUMLY2ESKlJ16FA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BviLAwyJ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZJxfEFs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6469EC4CEE6;
-	Tue, 22 Oct 2024 11:16:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729595797;
-	bh=kiuJLXM00R2xjoCq2cO3SkKeY3DGvebHihn+W7XV2pk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jZJxfEFspbSXxF2wh+pr5+Nxk1/qHnVTX43BSYN+uhQt2uHnRLhiqGGhiF5Lhe5PD
-	 +v3TxXOfGvSlH0fjUxFGsMZv8YpUWJ2YuioRZhq+8l4c+WBHT70efkfHKUxoRORNOI
-	 kNJO3/Sd3FUpEGmfERtcFvT9b/HHlqoZl614J2B8oVzGu7BV5PN5wb75C8vZpTlsap
-	 ovwJoNlWfUTzqrFBVC3o4xJKXje9NEbzbGS5qSjze//Pi9F+kjFoTy+AVmuYQKJdD6
-	 J3VtkGe0h+W/W7ho6PkHMbVlnkbr6aIgBe8PP8IH9/on+sFBDgPvu5ZxnFGzh30XhJ
-	 bPitWxCl7ydfw==
-Date: Tue, 22 Oct 2024 13:16:33 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>, stable@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 20/29] xfs: don't fail repairs on metadata files with no
- attr fork
-Message-ID: <xr2px4yfwpi4cak4e5z4xnjyip6zblxi537v4x4r2ibssajuie@eeubheijryrj>
-References: <172919069364.3451313.14303329469780278917.stgit@frogsfrogsfrogs>
- <172919069796.3451313.2227454340362290952.stgit@frogsfrogsfrogs>
- <2024101838-thickness-exposure-ec78@gregkh>
- <20241021172751.GA21853@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BviLAwyJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=MekrsH7FxUREyqFJTt5498M+sComXJ6EPXJbXAIvLqc=; b=BviLAwyJJDGRppsZM28d2vEEOp
+	6olI7IjXi61Dh7DckDrlT+30Exvjd64C1ayPa3PYqXWM6hhsFI2LFnfMclqeukovPprNVwX6CbMVI
+	yeHi2gnxQvI0xebkyS96Opo18nuBX42qQ6WHQDpYd6eLiY+DEL2QBjunqRL31kV3YfJiW+/H7dnMJ
+	iNd/UDW4KjOIxuNzF9dKGgxXqUG/Ng4GDW7irSPDtV0TMLg2Na7YDAxGZnOR236had/tdqrGaHUTW
+	wo3CywQlSdDdIukcuD1s7cYe6fLClO0UV0u4TcDlHgfudeN54rBb1fuW8rLVj5US0oX3IwqX5RPfx
+	F6Xgmm/w==;
+Received: from 2a02-8389-2341-5b80-1159-405c-1641-8dd9.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:1159:405c:1641:8dd9] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1t3Dlt-0000000Ao1I-0UmI;
+	Tue, 22 Oct 2024 12:13:57 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: filestreams syzbot fix
+Date: Tue, 22 Oct 2024 14:13:36 +0200
+Message-ID: <20241022121355.261836-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241021172751.GA21853@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Oct 21, 2024 at 10:27:51AM GMT, Darrick J. Wong wrote:
-> On Fri, Oct 18, 2024 at 08:00:21AM +0200, Greg KH wrote:
-> > On Thu, Oct 17, 2024 at 11:58:10AM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Fix a minor bug where we fail repairs on metadata files that do not have
-> > > attr forks because xrep_metadata_inode_subtype doesn't filter ENOENT.
-> > > 
-> > > Cc: <stable@vger.kernel.org> # v6.8
-> > > Fixes: 5a8e07e799721b ("xfs: repair the inode core and forks of a metadata inode")
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/scrub/repair.c |    8 +++++---
-> > >  1 file changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > Why is a bugfix / stable-tagged-patch, number 20 in a 29 patch series?
-> > Why isn't it first, or better yet, on it's own if it is fixing a bug
-> > that people want merged "soon"?
-> 
-> I have too many patches, and every time I try to get a set through the
-> review process I end up having to write *more* patches to appease the
-> reviewers, and fixes get lost.  Look at the copyrights on the other
-> patches, I've been trying to get this upstreamed since 2018.
-> 
-> This particular bugfix got lost last month probably because I forgot to
-> ping cem to take it for 6.12-rc1.  Thanks for pushing on this, Greg.
-> 
-> Hey Carlos, can you queue this one up for 6.12-rc5, please?
+Hi all,
 
-Sure, it's queued now in next-rc, I'm testing it and I hope to send it to
-for-next today yet. It's the only patch for -rc5.
-
-Cheers.
-Carlos
-
-> 
-> --D
-> 
-> > thanks,
-> > 
-> > greg k-h
-> > 
-> 
+this series fixes the recently reported crash exposed by syzbot in the
+filestreams code.
