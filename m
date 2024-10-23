@@ -1,116 +1,86 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FF41136331;
-	Wed, 23 Oct 2024 10:39:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FAE61ABECF;
+	Wed, 23 Oct 2024 12:22:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729679977; cv=none; b=O9Sfn7h3d9PFrZ9iJePs3x2/zHzbTKV5GgjlCMm+DoC/h6IXU03DBWFGFVGXwQWGvUbjtYtBL2cHn0qh+VEnoOPhBUYoC9vKP+iPPZSScwGDqC76LFE30uYHRMw1oET2jb8/f4TueGCj/iLw9jg4HFgfAsTAy9cp6+Z2EgnlXTc=
+	t=1729686165; cv=none; b=UtNoVepjU8RlYy6aE5EOtWUWY7R0f+tlsaMUFXLfuS7gAubSlJmczpJL+NIWuhviQh9N5YeXecsRC5U8gyFtopjPjERU75/ttNGlWEG2Jy8QyAROCUTMmGsZfxHoQKHnOyAQDQdiPC0zSjOXAK73iTGQx0veOy8Upf43TV62lV4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729679977; c=relaxed/simple;
-	bh=Khnq2z+739cMbwfu27+o8gOWmPSgJ0FM4gCWfU1EGeE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rfFrPCPlxnGyxZDn8RmG2iojazELHCZwAtYkLZUZMxWkpffS+yLPEsvPo8iiHoM9o6+A6MuVnaTN8n4SXAfx7q2nyU1wBW2wMDiMKiReNcbeNKr6JcdnlOdf3ngUXI/GSCUJL9+P+nMZ0yaS93RxflL58Z/xnd4x4j7P52OnH5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hhZUxxZl; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1729686165; c=relaxed/simple;
+	bh=y3zcOM/4kne5pf0eeIWps+3RL3Uu2L2GFqqgFraUGwU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=YbPHYen3V+TKVhsN88mE1au6C7EENONardS/HTOIbNlFKnAbNvcDwxxFSrjBSVQx9BX008OhpSeVvEey9n+3XnlNivZWEkBfNp9eGWN6qq6yE9QkYBnpmRacvyqtrlH/PCgmUGbc4XHcxpO7xnlY6RRxfbUzfq1uUpmYtDtNoh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n/LqXfkI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hhZUxxZl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=n8ueNHK4ZpUivyR7Im3fE9aX3DpyAud3m3ChLRjWBnY=; b=hhZUxxZlW+qGisyDIej2ensfCO
-	5VkEpdQ0XeM/Xsp9hmjcw5NGTTkE6VHt+FXqdMbsvbwDpHLdV84HZvCkzAyR7eJ49Aw1pH2mOMA21
-	OQ2j8N8cc/1pEukH4rE9P8zR76E8xERf7wl3ehfcpfDoY0VwnwEHNZ+28HuXYsNnqIJmsJEFWRfgd
-	balYne2P6L97NAoRI8LTWbj3GHBr0tZ8fwErDjHwlZhFlZZZ8AWZ3+UValG9+3e1Z1AYgA1ILQoJk
-	mCH/tlLxA474CflbPt+l1LAQG+U5yyC6ginoF+zn2K7gnFXlxFW/2afQVy8Z2SksdcD1l90HF2PMj
-	I8gCe3jA==;
-Received: from 2a02-8389-2341-5b80-8c6c-e123-fc47-94a5.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:8c6c:e123:fc47:94a5] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1t3Ym5-0000000E0yQ-2i2O;
-	Wed, 23 Oct 2024 10:39:34 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: zlang@kernel.org
-Cc: djwong@kernel.org,
-	dchinner@redhat.com,
-	linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: [PATCH] xfs: remove the post-EOF prealloc tests from the auto and quick groups
-Date: Wed, 23 Oct 2024 12:39:30 +0200
-Message-ID: <20241023103930.432190-1-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n/LqXfkI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD989C4CEC6;
+	Wed, 23 Oct 2024 12:22:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729686164;
+	bh=y3zcOM/4kne5pf0eeIWps+3RL3Uu2L2GFqqgFraUGwU=;
+	h=Date:From:To:Cc:Subject:From;
+	b=n/LqXfkIpMKBLVqght/cg7LrDzCdoH/j9WwGO8A16f9aWxTRSCNxeOhTEPxzRFXvP
+	 HFiHu6NDBpKjtaYPVSXAiqHgReaTOe+bp1Me7oLqNIBfpdxuuVNJrhI4AYNMImqZh9
+	 cVBNf25qbSsaMblmxnCeLHLHNNcd3GzDN6ODpXQypQAqjCDDVXrXBr80Z51rfjRQuN
+	 +GKNoDaln6yUgjt7iU3EDzRUplPOfB83ImB6xlBNTNffXtHadf6jHawE6bVdH5rBT6
+	 qG38V66MPWBsq0bQZaGxqLopePr5I2HPq2k8qDeX+vQU1Gl052BFxJC7Cwau9mPbji
+	 zyIVPeNfrEVQQ==
+Date: Wed, 23 Oct 2024 14:22:40 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 4a201dcfa1ff
+Message-ID: <7zpzm4ddafifcbalyamwc7xip6wfu7ewjolk2wvlmkt3fykop6@5t54h6rvypiy>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-These fail for various non-default configs like DAX, alwayscow and
-small block sizes.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/629 | 2 +-
- tests/xfs/630 | 2 +-
- tests/xfs/631 | 2 +-
- tests/xfs/632 | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/tests/xfs/629 b/tests/xfs/629
-index 58beedc03a8b..e2f5af085b5f 100755
---- a/tests/xfs/629
-+++ b/tests/xfs/629
-@@ -8,7 +8,7 @@
- #
- 
- . ./common/preamble
--_begin_fstest auto quick prealloc rw
-+_begin_fstest prealloc rw
- 
- . ./common/filter
- 
-diff --git a/tests/xfs/630 b/tests/xfs/630
-index 939d8a4ac37f..df7ca60111d6 100755
---- a/tests/xfs/630
-+++ b/tests/xfs/630
-@@ -8,7 +8,7 @@
- #
- 
- . ./common/preamble
--_begin_fstest auto quick prealloc rw
-+_begin_fstest prealloc rw
- 
- . ./common/filter
- 
-diff --git a/tests/xfs/631 b/tests/xfs/631
-index 55a74297918a..1e50bc033f7c 100755
---- a/tests/xfs/631
-+++ b/tests/xfs/631
-@@ -8,7 +8,7 @@
- #
- 
- . ./common/preamble
--_begin_fstest auto quick prealloc rw
-+_begin_fstest prealloc rw
- 
- . ./common/filter
- 
-diff --git a/tests/xfs/632 b/tests/xfs/632
-index 61041d45a706..3b1c61fdc129 100755
---- a/tests/xfs/632
-+++ b/tests/xfs/632
-@@ -9,7 +9,7 @@
- #
- 
- . ./common/preamble
--_begin_fstest auto prealloc rw
-+_begin_fstest prealloc rw
- 
- . ./common/filter
- 
--- 
-2.45.2
+Hi folks,
+
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+4a201dcfa1ff xfs: update the pag for the last AG at recovery time
+
+7 new commits:
+
+Christoph Hellwig (6):
+      [82742f8c3f1a] xfs: pass the exact range to initialize to xfs_initialize_perag
+      [aa67ec6a2561] xfs: merge the perag freeing helpers
+      [6a18765b54e2] xfs: update the file system geometry after recoverying superblock buffers
+      [b882b0f8138f] xfs: error out when a superblock buffer update reduces the agcount
+      [069cf5e32b70] xfs: don't use __GFP_RETRY_MAYFAIL in xfs_initialize_perag
+      [4a201dcfa1ff] xfs: update the pag for the last AG at recovery time
+
+Darrick J. Wong (1):
+      [af8512c5277d] xfs: don't fail repairs on metadata files with no attr fork
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_ag.c        | 75 ++++++++++++++++---------------------------
+ fs/xfs/libxfs/xfs_ag.h        | 11 ++++---
+ fs/xfs/scrub/repair.c         |  8 +++--
+ fs/xfs/xfs_buf_item_recover.c | 70 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_fsops.c            | 20 ++++++------
+ fs/xfs/xfs_log_recover.c      |  7 ----
+ fs/xfs/xfs_mount.c            |  9 +++---
+ 7 files changed, 122 insertions(+), 78 deletions(-)
 
