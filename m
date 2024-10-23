@@ -1,203 +1,270 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 476AC1ABEA9
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Oct 2024 13:38:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18C041B6CF2
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Oct 2024 14:14:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729690686; cv=none; b=Nk4IjHrmn2MWbZcMnB1a9a8PkcZC3ouZK6wtLY6LOyV/8ekpAsx2rggUzBQSvBF+5AIwZj0tzYjbZ3Y6Y0yQq5XnNFtqp3FDVI15vxk9F6ZnY+GznrgOxowH6VYOop5zosghbmKPSC75+Dgxzgad2ZCPmg1UNS3adWtiN06t1xI=
+	t=1729692844; cv=none; b=H3nWGidrKkCpnZR8+9hDly+tYa1a7IwkawdL8InzcuOeR4SF+Zae9WOSb4nJuhk6Ex88xiQic2xV+73iW88ApnXPAZ/pd6KPRVPtXjj3kSHRBzJXHvBf6qTYbjWjqXSegJ1Uh3wXJWAcxbcKddo41DtAnycySBGxyf2pBOAfd9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729690686; c=relaxed/simple;
-	bh=oAp74vRkIU2XQNg4+dscI4vW6LqrY2RbbFO/uJ3+gbw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=esXyynXDHToGgsYtT9NEgOKAgkqLKoQx4kTfbjHXM/AuKvMIOVvbG0NXpi2JVvWiOEE+Fq1lB22x5qKXJwGW5gemy2WVWpXWugSEle5jDwFZAIuMA9RE5/TKBhru7ButOBRdDNNsVfD5RLt7i/acLW5mpLnVG+7qdH3wYeauaB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qKu4bm1K; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1729692844; c=relaxed/simple;
+	bh=e5lfgz9uob4k1uyFDQD3okYiID40ELTcQ6BULB07Cwo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=beRqtkk/jNS5F+Qq4E5GF1/48qGCyqJDgfTKb5iFpvjG+ZdztmfesPSrG42B2lI237AP+eG62yj8lQQccOMsYgbmYCAj7OtdpGBOeoUfLMOywrbyGeValZDiAJQxrPt1hg3FYqX+gOUAZkHH4duuuAMeY+Ip6IonjP5uBwl0Cfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DsQ4BbDF; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qKu4bm1K"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=mq2hJxX1HWeG3WjvESgrctXx7aBUC0OIOmwLfPHGXws=; b=qKu4bm1KaY0+3uhNslVzDZLPJb
-	cdv/dIcekwfdnlW8bCjksdKSMD92RtdBXA+TDyxN8Vr9q5IrgPrno8Soc7KyMXDN/Hmf+EVZEOAe6
-	JrzL8qjPjh5XXFO3HPzXckKMg/pXy+9XEWQH+zn13h9FRq0yReBQPJwBLnSFGlw7fyYpXe/4kb06z
-	QbVgxdZHvnmb3tjEKXnFdrbwgpxRrFIh/+mUgmbEGZxnUwtHq2MbAaWRO1Y9a05um7tds9mpd6xPp
-	T14H3e2ISNnYMIf4THWbVG9W28p9p5VtkISIwIuXW+Jn/MkWllekEf9cmOiXHnNJGQby6H4Pll7IT
-	vHP0ZL+Q==;
-Received: from 2a02-8389-2341-5b80-8c6c-e123-fc47-94a5.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:8c6c:e123:fc47:94a5] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1t3bYq-0000000EZWT-0n2C;
-	Wed, 23 Oct 2024 13:38:04 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: streamline xfs_filestream_pick_ag
-Date: Wed, 23 Oct 2024 15:37:23 +0200
-Message-ID: <20241023133755.524345-3-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241023133755.524345-1-hch@lst.de>
-References: <20241023133755.524345-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DsQ4BbDF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1729692841;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nI/0JofbsRUc5jiX0lc5WWWG5OVrjpTvPysCApLQIp4=;
+	b=DsQ4BbDFu9ftIQ9WAiYeJtwvdGAk/ejNj9FlSfHNQ9l+2dtlJiRFzcqqEppZcSUMkUfx0O
+	Xy7yMdSWyHKRhbfEenM5Pu7judnAenxxHGqWepuKUN+ncscDNxkI2WxHq4388FMtM5cID4
+	2WYew+CYXG18m47h84f61Pq3PdF4g/0=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-377-rVLAevbrP12kSKshpNraxw-1; Wed,
+ 23 Oct 2024 10:13:57 -0400
+X-MC-Unique: rVLAevbrP12kSKshpNraxw-1
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D920019059B4;
+	Wed, 23 Oct 2024 14:13:54 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.135])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 51E661956054;
+	Wed, 23 Oct 2024 14:13:52 +0000 (UTC)
+Date: Wed, 23 Oct 2024 10:15:19 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: kernel test robot <oliver.sang@intel.com>, oe-lkp@lists.linux.dev,
+	lkp@intel.com, linux-kernel@vger.kernel.org,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, ying.huang@intel.com,
+	feng.tang@intel.com, fengwei.yin@intel.com
+Subject: Re: [linus:master] [iomap]  c5c810b94c:
+ stress-ng.metamix.ops_per_sec -98.4% regression
+Message-ID: <ZxkE93Vz3ZQaAFO1@bfoster>
+References: <202410141536.1167190b-oliver.sang@intel.com>
+ <Zw1IHVLclhiBjDkP@bfoster>
+ <Zw7jwnvBaMwloHXG@dread.disaster.area>
+ <Zw_gDDlIEgZbApU_@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zw_gDDlIEgZbApU_@bfoster>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Directly return the error from xfs_bmap_longest_free_extent instead
-of breaking from the loop and handling it there, and use a done
-label to directly jump to the exist when we found a suitable perag
-structure to reduce the indentation level and pag/max_pag check
-complexity in the tail of the function.
+On Wed, Oct 16, 2024 at 11:47:24AM -0400, Brian Foster wrote:
+> On Wed, Oct 16, 2024 at 08:50:58AM +1100, Dave Chinner wrote:
+> > On Mon, Oct 14, 2024 at 12:34:37PM -0400, Brian Foster wrote:
+> > > On Mon, Oct 14, 2024 at 03:55:24PM +0800, kernel test robot wrote:
+> > > > 
+> > > > 
+> > > > Hello,
+> > > > 
+> > > > kernel test robot noticed a -98.4% regression of stress-ng.metamix.ops_per_sec on:
+> > > > 
+> > > > 
+> > > > commit: c5c810b94cfd818fc2f58c96feee58a9e5ead96d ("iomap: fix handling of dirty folios over unwritten extents")
+> > > > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
+> > > > 
+> > > > testcase: stress-ng
+> > > > config: x86_64-rhel-8.3
+> > > > compiler: gcc-12
+> > > > test machine: 64 threads 2 sockets Intel(R) Xeon(R) Gold 6346 CPU @ 3.10GHz (Ice Lake) with 256G memory
+> > > > parameters:
+> > > > 
+> > > > 	nr_threads: 100%
+> > > > 	disk: 1HDD
+> > > > 	testtime: 60s
+> > > > 	fs: xfs
+> > > > 	test: metamix
+> > > > 	cpufreq_governor: performance
+> > > > 
+> > > > 
+> > > > 
+> > > > 
+> > > > If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> > > > the same patch/commit), kindly add following tags
+> > > > | Reported-by: kernel test robot <oliver.sang@intel.com>
+> > > > | Closes: https://lore.kernel.org/oe-lkp/202410141536.1167190b-oliver.sang@intel.com
+> > > > 
+> > > > 
+> > > > Details are as below:
+> > > > -------------------------------------------------------------------------------------------------->
+> > > > 
+> > > > 
+> > > > The kernel config and materials to reproduce are available at:
+> > > > https://download.01.org/0day-ci/archive/20241014/202410141536.1167190b-oliver.sang@intel.com
+> > > > 
+> > > 
+> > > So I basically just run this on a >64xcpu guest and reproduce the delta:
+> > > 
+> > >   stress-ng --timeout 60 --times --verify --metrics --no-rand-seed --metamix 64
+> > > 
+> > > The short of it is that with tracing enabled, I see a very large number
+> > > of extending writes across unwritten mappings, which basically means XFS
+> > > eof zeroing is calling zero range and hitting the newly introduced
+> > > flush. This is all pretty much expected given the patch.
+> > 
+> > Ouch.
+> > 
+> > The conditions required to cause this regression are that we either
+> > first use fallocate() to preallocate beyond EOF, or buffered writes
+> > trigger specualtive delalloc beyond EOF and they get converted to
+> > unwritten beyond EOF through background writeback or fsync
+> > operations. Both of these lead to unwritten extents beyond EOF that
+> > extending writes will fall into.
+> > 
+> > All we need now is the extending writes to be slightly
+> > non-sequential and those non-sequential extending writes will not
+> > land at EOF but at some distance beyond it. At this point, we
+> > trigger the new flush code. Unfortunately, this is actually a fairly
+> > common workload pattern.
+> > 
+> > For example, experience tells me that NFS server processing of async
+> > sequential write requests from a client will -always- end up with
+> > slightly out of order extending writes because the incoming async
+> > write requests are processed concurrently. Hence they always race to
+> > extend the file and slightly out of order file extension happens
+> > quite frequently.
+> > 
+> > Further, the NFS client will also periodically be sending a write
+> > commit request (i.e. server side fsync), the
+> > NFS server writeback will convert the speculative delalloc that
+> > extends beyond EOF into unwritten extents beyond EOF whilst the
+> > incoming extending write requests are still incoming from the
+> > client.
+> > 
+> > Hence I think that there are common workloads (e.g. large sequential
+> > writes on a NFS client) that set up the exact conditions and IO
+> > patterns necessary to trigger this performance regression in
+> > production systems...
+> > 
+> 
+> It's not clear to me that purely out of order writeback via NFS would
+> produce the same sort of hit here because we'd only flush on write
+> extensions. I think the pathological case would have to be something
+> like reordering such that every other write lands sequentially to
+> maximize the number of post-eof write extensions, and then going back
+> and filling in the gaps. That seems rather suboptimal to start, and
+> short of that the cost of the flushes will start to amortize to some
+> degree (including with commit requests, etc.).
+> 
+> That said, I don't have much experience with NFS and I think this is a
+> reasonable enough argument to try and optimize here. If you or anybody
+> has an NFS test/workload that might exacerbate this condition, let me
+> know and I'll try to play around with it.
+> 
+> > > I ran a quick experiment to skip the flush on sub-4k ranges in favor of
+> > > doing explicit folio zeroing. The idea with that is that the range is
+> > > likely restricted to single folio and since it's dirty, we can assume
+> > > unwritten conversion is imminent and just explicitly zero the range. I
+> > > still see a decent number of flushes from larger ranges in that
+> > > experiment, but that still seems to get things pretty close to my
+> > > baseline test (on a 6.10 distro kernel).
+> > 
+> > What filesystems other than XFS actually need this iomap bandaid
+> > right now?  If there are none (which I think is the case), then we
+> > should just revert this change it until a more performant fix is
+> > available for XFS.
+> > 
+> 
+> I think that's a bit hasty. I had one or two ideas/prototypes to work
+> around this sort of problem before the flush patches even landed, it
+> just wasn't clear to me they were worth the extra logic. I'd prefer to
+> try and iterate on performance from a baseline of functional correctness
+> rather than the other way around, if possible.
+> 
+> A quick hack to test out some of that on latest master brings the result
+> of this test right back to baseline in my local env. Let me play around
+> with trying to work that into something more production worthy before we
+> break out the pitchforks.. ;)
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_filestream.c | 96 ++++++++++++++++++++---------------------
- 1 file changed, 46 insertions(+), 50 deletions(-)
+So it turns out there is a little bit more going on here. The regression
+is not so much the flush on its own, but the combination of the flush
+and changes in commit 5ce5674187c34 ("xfs: convert delayed extents to
+unwritten when zeroing post eof blocks"). This changes post-eof zero
+range calls on XFS to convert delalloc extents to unwritten instead of
+the prior behavior of leaving them as delalloc, zeroing in memory, and
+continuing on. IOW, the regression also goes away by bypassing this
+particular commit, even with flushing in place.
 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 88bd23ce74cd..290ba8887d29 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -67,22 +67,28 @@ xfs_filestream_pick_ag(
- 	xfs_extlen_t		minfree, maxfree = 0;
- 	xfs_agnumber_t		agno;
- 	bool			first_pass = true;
--	int			err;
- 
- 	/* 2% of an AG's blocks must be free for it to be chosen. */
- 	minfree = mp->m_sb.sb_agblocks / 50;
- 
- restart:
- 	for_each_perag_wrap(mp, start_agno, agno, pag) {
-+		int		err;
-+
- 		trace_xfs_filestream_scan(pag, pino);
-+
- 		*longest = 0;
- 		err = xfs_bmap_longest_free_extent(pag, NULL, longest);
- 		if (err) {
--			if (err != -EAGAIN)
--				break;
--			/* Couldn't lock the AGF, skip this AG. */
--			err = 0;
--			continue;
-+			if (err == -EAGAIN) {
-+				/* Couldn't lock the AGF, skip this AG. */
-+				err = 0;
-+				continue;
-+			}
-+			xfs_perag_rele(pag);
-+			if (max_pag)
-+				xfs_perag_rele(max_pag);
-+			return err;
- 		}
- 
- 		/* Keep track of the AG with the most free blocks. */
-@@ -107,7 +113,9 @@ xfs_filestream_pick_ag(
- 			     !(flags & XFS_PICK_USERDATA) ||
- 			     (flags & XFS_PICK_LOWSPACE))) {
- 				/* Break out, retaining the reference on the AG. */
--				break;
-+				if (max_pag)
-+					xfs_perag_rele(max_pag);
-+				goto done;
- 			}
- 		}
- 
-@@ -115,56 +123,44 @@ xfs_filestream_pick_ag(
- 		atomic_dec(&pag->pagf_fstrms);
- 	}
- 
--	if (err) {
--		xfs_perag_rele(pag);
--		if (max_pag)
--			xfs_perag_rele(max_pag);
--		return err;
-+	/*
-+	 * Allow a second pass to give xfs_bmap_longest_free_extent() another
-+	 * attempt at locking AGFs that it might have skipped over before we
-+	 * fail.
-+	 */
-+	if (first_pass) {
-+		first_pass = false;
-+		goto restart;
- 	}
- 
--	if (!pag) {
--		/*
--		 * Allow a second pass to give xfs_bmap_longest_free_extent()
--		 * another attempt at locking AGFs that it might have skipped
--		 * over before we fail.
--		 */
--		if (first_pass) {
--			first_pass = false;
--			goto restart;
--		}
--
--		/*
--		 * We must be low on data space, so run a final lowspace
--		 * optimised selection pass if we haven't already.
--		 */
--		if (!(flags & XFS_PICK_LOWSPACE)) {
--			flags |= XFS_PICK_LOWSPACE;
--			goto restart;
--		}
--
--		/*
--		 * No unassociated AGs are available, so select the AG with the
--		 * most free space, regardless of whether it's already in use by
--		 * another filestream. It none suit, just use whatever AG we can
--		 * grab.
--		 */
--		if (!max_pag) {
--			for_each_perag_wrap(args->mp, 0, start_agno, pag) {
--				max_pag = pag;
--				break;
--			}
-+	/*
-+	 * We must be low on data space, so run a final lowspace optimised
-+	 * selection pass if we haven't already.
-+	 */
-+	if (!(flags & XFS_PICK_LOWSPACE)) {
-+		flags |= XFS_PICK_LOWSPACE;
-+		goto restart;
-+	}
- 
--			/* Bail if there are no AGs at all to select from. */
--			if (!max_pag)
--				return -ENOSPC;
-+	/*
-+	 * No unassociated AGs are available, so select the AG with the most
-+	 * free space, regardless of whether it's already in use by another
-+	 * filestream. It none suit, just use whatever AG we can grab.
-+	 */
-+	if (!max_pag) {
-+		for_each_perag_wrap(args->mp, 0, start_agno, pag) {
-+			max_pag = pag;
-+			break;
- 		}
- 
--		pag = max_pag;
--		atomic_inc(&pag->pagf_fstrms);
--	} else if (max_pag) {
--		xfs_perag_rele(max_pag);
-+		/* Bail if there are no AGs at all to select from. */
-+		if (!max_pag)
-+			return -ENOSPC;
- 	}
- 
-+	pag = max_pag;
-+	atomic_inc(&pag->pagf_fstrms);
-+done:
- 	trace_xfs_filestream_pick(pag, pino);
- 	args->pag = pag;
- 	return 0;
--- 
-2.45.2
+The prealloc change seems fairly reasonable at face value, but the
+commit log description documents it as purely an i_size change bug fix
+associated with an internal zero range, which AFAICT isn't relevant any
+more because iomap_zero_range() doesn't update i_size AFAICS. However,
+it looks like it did so in the past and this behavior also swizzled back
+and forth a time or two in the same timeframe as this particular commit,
+so perhaps it was a problem when this was introduced and then iomap
+changed again after (or maybe I'm just missing something?).
+
+On thinking more about this, I'd be a little concerned on whether this
+will reduce effectiveness of speculative preallocation on similar sorts
+of write extending workloads as this test (i.e. strided extending
+writes). This changes behavior from doing in-memory zeroing between
+physical allocations via the writeback path to doing physical allocation
+on every write that starts beyond EOF, which feels a little like going
+from one extreme to the other. Instead, I'd expect to see something
+where this converts larger mappings to avoid excessive zeroing and
+zeroes on smallish ranges to avoid overly frequent and unnecessarily
+small physical allocations, allowing multiple speculative preallocations
+to compound.
+
+Anyways, I've not dug into this enough to know whether it's a problem,
+but since this is documented purely as a bug fix I don't see any
+evidence that potential impact on allocation patterns was tested either.
+This might be something to evaluate more closely in XFS.
+
+On the iomap side, it also seems like the current handling of i_size on
+zero range is confused. If iomap_zero_range() doesn't update i_size,
+then it basically doesn't fully support post-eof ranges. It zeroes
+through buffered writes, which writeback will just drop on the floor if
+beyond EOF. However, XFS explicitly calls zero range on post-eof ranges
+to trigger the aforementioned conversion in its begin callback (but
+never expecting to see ranges that need buffered writes).
+
+I think this is a landmine waiting to happen. If iomap decides to be
+deliberate and skip post-eof ranges, then this could break current XFS
+behavior if it skips the begin callback. OTOH if XFS were to change back
+to at least doing some speculative prealloc delalloc zeroing, IIUC this
+now introduces a race between writeback potentially throwing away the
+zeroed folios over delalloc preallocation and the subsequent write
+operation extending i_size so that doesn't happen. :/ None of this is
+particularly obvious. And FWIW, I'm also skeptical that i_size updates
+were ever consistent across mapping types. I.e., if the size was only
+ever updated via iomap_write_end() for example, then behavior is kind of
+unpredictable.
+
+Maybe this is something that should be configurable via a keepsize flag
+or some such. That would at least allow for correct behavior and/or a
+failure/warning if we ever fell into doing zeroing for post-eof ranges
+without updating i_size. Thoughts on any of this?
+
+Brian
+
+> Brian
+> 
+> > -Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > 
+> 
+> 
 
