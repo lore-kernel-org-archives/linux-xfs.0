@@ -1,84 +1,70 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC656381B9;
-	Wed, 23 Oct 2024 00:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB07F49620
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Oct 2024 04:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729644594; cv=none; b=nZiI+EV8S+TBkkl7X0wJ/kzYUGHdvGdRuMkzIkUy04jbTigmI8uNJpGKyJts4fUJuFBlKLKIXhkpZckhFMlC2pMCmV1n7YkZUbexxwlMHN3sHER6SsJzYbBAL+tGOQveyBr1x+7S390O7xO3xEEvntHFV6ng4owwpp2m7OykkcA=
+	t=1729656915; cv=none; b=OkFatBtUCVHIcMPrqBaMKT/UhT5hVapQmBtm+Wq/CTdmOdJpvDr9rRl6Ja2gEWBgns++e39TWlR83Dhn68Tx7+HdEgKqVHjGsKvvBoU2or0wIxIEo8V9MkJTnHFSUb4jp+qOOliVMenT9fTCczBjm6LM1lORyqDUkQBqGEY+EdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729644594; c=relaxed/simple;
-	bh=1H70krAFFQnKSMTdlulrx+xU/B8GJ1UDxaR4z5z72yU=;
+	s=arc-20240116; t=1729656915; c=relaxed/simple;
+	bh=JmwRdTIskf+AsMMCCxjo94Vnxe2+wbrUwIrR6N/UlE8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cszTpsqlt9Z01hHCtduccmUkoUYrM1RGndh97zxHDOBHuKaO87PAOlLSdn75+6lM8hxQ2x9ObdK177jRQESWycdn8xHFNh1veYNQuMNyJOUAkMl8N6NITLCwq1ypn96gLkVCirF+5Myp9ZksPbFe1JOpDCA5/lJnNF202ExXJ1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lwoc7yo8; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mJeezreo; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lwoc7yo8; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mJeezreo; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 Content-Type:Content-Disposition:In-Reply-To; b=lfIzKa3AS3AMNP+FmHdtZIi9h26fn9nC5lUuTeFVDS1VqDMasokl4H/525pIAqZbd0JYY/MenPjRv+y0R/P/ZjMntnak8Ev9NtL8+L06zWDF2PX3LlKMU0brhPMgB+IDs68Jb6OhldfR91yKiyyZvm+kNWJuqeygirg0GpYqBHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TU89Uvm4; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lwoc7yo8";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mJeezreo";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lwoc7yo8";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mJeezreo"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 109CB21CA1;
-	Wed, 23 Oct 2024 00:49:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1729644591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TU89Uvm4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1729656912;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=z9UnB97aT5chZUB6SsFs3xGInYZMzx2XkbtIvLb1OS0=;
-	b=lwoc7yo8Uyg/wB2NendbgT9LkyhLsE078bGJbW/CuVJzTfOsaJiERLS+i8TBmhCQynzLx6
-	tDO+LU0QM0fjn0gevQ9b3wIjUP6TNz+V/X6KsMLqfSeS/8t0bRjHjkgoKcgSjA0f5xC89Q
-	qpKNBFWyf2WRvPAZtMtzKOJHP4UxTTk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1729644591;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z9UnB97aT5chZUB6SsFs3xGInYZMzx2XkbtIvLb1OS0=;
-	b=mJeezreopOgO4lktUXkh5CsZKpaUZ/His6+18Q67/ni13W26yVgnj9PNkhOIv2jdBo08Ek
-	9jExaY9ADA3QDRDw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1729644591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z9UnB97aT5chZUB6SsFs3xGInYZMzx2XkbtIvLb1OS0=;
-	b=lwoc7yo8Uyg/wB2NendbgT9LkyhLsE078bGJbW/CuVJzTfOsaJiERLS+i8TBmhCQynzLx6
-	tDO+LU0QM0fjn0gevQ9b3wIjUP6TNz+V/X6KsMLqfSeS/8t0bRjHjkgoKcgSjA0f5xC89Q
-	qpKNBFWyf2WRvPAZtMtzKOJHP4UxTTk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1729644591;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z9UnB97aT5chZUB6SsFs3xGInYZMzx2XkbtIvLb1OS0=;
-	b=mJeezreopOgO4lktUXkh5CsZKpaUZ/His6+18Q67/ni13W26yVgnj9PNkhOIv2jdBo08Ek
-	9jExaY9ADA3QDRDw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9A37813A63;
-	Wed, 23 Oct 2024 00:49:50 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id TV/UGS5IGGc0HQAAD6G6ig
-	(envelope-from <rgoldwyn@suse.de>); Wed, 23 Oct 2024 00:49:50 +0000
-Date: Tue, 22 Oct 2024 20:49:40 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	gfs2@lists.linux.dev, linux-block@vger.kernel.org
-Subject: Re: [PATCH] iomap: writeback_control pointer part of
- iomap_writepage_ctx
-Message-ID: <4xccx2qgkqkncwtpgrfdfyzrwcv6xssgnaxsyvpasd43rcb33x@pxf33u4kryz6>
-References: <326b2b66114c97b892dbcf83f3d41b86c64e93d6.1729266269.git.rgoldwyn@suse.com>
- <Zxc8awN_MHkuNhQZ@infradead.org>
+	bh=kUoxSHiWDgCVgLsFRPvTqiN+l9Des0mYN1Ckud4gffo=;
+	b=TU89Uvm4wF5QnHyotmIluWTzuUqhvwW3C9Ub208McoNReHEdDTX+fPamhPmPDqw+VpwdSL
+	XICCSjHB5jsMX7NvbVA2THWttPsHSu+BBB32VlItmS98sZP3mNY3rSS8da227ZFpTqhgxJ
+	/DJohz01WabUUXEPAdUFvZtddlkEiKs=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-332--DR1_Y5jNCyLmNK3L61T3g-1; Wed, 23 Oct 2024 00:15:09 -0400
+X-MC-Unique: -DR1_Y5jNCyLmNK3L61T3g-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2e3ce03a701so6798667a91.0
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Oct 2024 21:15:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729656908; x=1730261708;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kUoxSHiWDgCVgLsFRPvTqiN+l9Des0mYN1Ckud4gffo=;
+        b=AIrB5FXr7lbcAiqV7X3E3Ca90p/PqcTYWumD2/uLyzNiblFaqSPL9SnPCkl8QVDlRA
+         S5XY4jiPW0LvSkPlkx56t3CVMcjnAQHlq0rDwuFK2FUWwknIrUOLE17y71WRrTvtGJ9K
+         yGQJyrrZvjR88UEHdxz6PaiGkTQI2drArBq8EroqMv+WRUDtnkKYNZxa+Tts8/7/7nbf
+         R2K+0ldwC5y3UUr6M/MWX8eLhKJLFrdyhgt1WvD1mtgCGTZDW9EiV8jjHsq/UTJ6LKCE
+         S7qSL9XTRwohUXAtAoBVSCBuNGL1MPzwxNj8rLPcli1nlVrF+nTz7NV6J+yt7EvoOr+b
+         mHow==
+X-Gm-Message-State: AOJu0Yw6wo5U/WIljDD6xytToSYlrF1DCud4A0TOpDVkDs1UrGoQEtvi
+	MaaFk1+LbIepC+ieDsxaK9cRd6TBeuGtM7X2tcBj02fRBUtXx4ZgWsegYEPhCqqsUrUXeXnzMBi
+	itp5ylOQ4n1fQBHyk8FQUIs4bq1KbX3EiGXwriuqqiuYk6BbzV/hAa2IGjg==
+X-Received: by 2002:a17:90a:2d82:b0:2e0:8e36:132 with SMTP id 98e67ed59e1d1-2e76b5b57f9mr1417841a91.3.1729656907961;
+        Tue, 22 Oct 2024 21:15:07 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGcZY+Y6w/urBHRr5QoKR+rA/UuvJ7bZl0HtBPi7B5QNkmJB1U5Hi4XPjulwGBXdqnaKriCrQ==
+X-Received: by 2002:a17:90a:2d82:b0:2e0:8e36:132 with SMTP id 98e67ed59e1d1-2e76b5b57f9mr1417825a91.3.1729656907626;
+        Tue, 22 Oct 2024 21:15:07 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e76dfeece3sm294579a91.57.2024.10.22.21.15.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Oct 2024 21:15:07 -0700 (PDT)
+Date: Wed, 23 Oct 2024 12:15:02 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] common/xfs: _notrun tests that fail due to block
+ size < sector size
+Message-ID: <20241023041502.gwnyxvngsmt4rv3b@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <172912045589.2583984.11028192955246574508.stgit@frogsfrogsfrogs>
+ <172912045609.2583984.9245803618825626168.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -87,47 +73,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zxc8awN_MHkuNhQZ@infradead.org>
-X-Spam-Score: -3.80
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-0.995];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	TO_DN_SOME(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	RCPT_COUNT_FIVE(0.00)[5]
-X-Spam-Flag: NO
-X-Spam-Level: 
+In-Reply-To: <172912045609.2583984.9245803618825626168.stgit@frogsfrogsfrogs>
 
-On 22:47 21/10, Christoph Hellwig wrote:
-> On Fri, Oct 18, 2024 at 11:55:50AM -0400, Goldwyn Rodrigues wrote:
-> > Reduces the number of arguments to functions iomap_writepages() and
-> > all functions in the writeback path which require both wpc and wbc.
-> > The filesystems need to initialize wpc with wbc before calling
-> > iomap_writepages().
+On Wed, Oct 16, 2024 at 04:15:16PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> While this looks obviously correct, I'm not sure what the point of
-> it is as it adds slightly more lines of code.  Does it generate
-> better binary code?  Do you have future changes that depend on it?
+> It makes no sense to fail a test that failed to format a filesystem with
+> a block size smaller than the sector size since the test preconditions
+> are not valid.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+
+Makes sense to me,
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+>  common/xfs |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 62e3100ee117a7..53d55f9907fbb0 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -172,6 +172,11 @@ _try_scratch_mkfs_xfs()
+>  		mkfs_status=$?
+>  	fi
+>  
+> +	if [ $mkfs_status -ne 0 ] && grep -q '^block size [0-9]* cannot be smaller than sector size' "$tmp.mkfserr"; then
+> +		errormsg="$(grep '^block size [0-9]* cannot be smaller than sector size' "$tmp.mkfserr" | head -n 1)"
+> +		_notrun "_scratch_mkfs_xfs: $errormsg"
+> +	fi
+> +
+>  	# output mkfs stdout and stderr
+>  	cat $tmp.mkfsstd
+>  	cat $tmp.mkfserr >&2
 > 
 
-No future updates depending on it. It just makes the code
-more readable.
-
-No point bouncing two pointers to different functions in the write-
-back path, when one can be encompassed into another.
-
--- 
-Goldwyn
