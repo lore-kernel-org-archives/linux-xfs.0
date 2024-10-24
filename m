@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B97B1AF0D3;
-	Thu, 24 Oct 2024 18:14:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55AE71FDFA8;
+	Thu, 24 Oct 2024 18:17:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729793685; cv=none; b=u5Yxpn+w0mtorEZGyTQvzzlM7R3ZPGy3MxT6vIv2IQW+oFl3bkqvtvILR2EFN/8Hlt3onCvgwO6ZDKZAncDPk366zlh4Iyz907KpqhnpS9pvkijzlvqtftu+GLWbhKq52dpZ1POdJsnY8JQgbC0z6zTwgwfZ4XnMuQFRD2u0yv4=
+	t=1729793830; cv=none; b=TuUBTDUqG8Qqj7EAnet+wUTwSnlnr7KXzrBVmTnxQlChkbHhtjxHmDfqGRq4KBDNMS5seTUrKiNCuCQiLXANKvp8SeMeBqcapliLCqq5b/bj13dOOJ0kTxxJO2ptankHzXwyGG7B4Nql488HkniDEmhl2UyWOkmGERw+lJrKND0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729793685; c=relaxed/simple;
-	bh=l2ebjqlL1izAgzxeZmbTDuy7WZ4hyodYRV9PyRTs3RU=;
+	s=arc-20240116; t=1729793830; c=relaxed/simple;
+	bh=UqKK59RG/9ksv9++fzD89iQGiyW6uXPnlxc95Aow3Ms=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PV8vzuZdWGdJaAE+3Pyh8tr+gc7YHWQ0LpxnspRA4HwN17Q7TsttYy4LeWZtVz//dr1IXJFDcaHoquIPf022iDld0ZAdOeulHrKHxWrhNw+7wjf9M3lWrJE57GY/NdGnfj+HJFWloNxoMXXkyILkzIRvgu7xf2DYtRXtRaaHzWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mv5r/t1K; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YBnuuaMCc8lGHDskM3PBsxb1KVdTKoqATJ195LN2ZIv9KdlTu5ndHb9I0PZugHeJSx/J168sOmHgZw7bfTkGLgnY/i3Yidq71qxYiwCWpEzhCktA6ekCj1F6+Fad2Fr21np1J07v74xw2c/V9DfzyB8W8Y7A4UWpe6NswFTexNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DIVhZmx2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mv5r/t1K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9202C4CEC7;
-	Thu, 24 Oct 2024 18:14:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DIVhZmx2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2092C4CEC7;
+	Thu, 24 Oct 2024 18:17:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729793684;
-	bh=l2ebjqlL1izAgzxeZmbTDuy7WZ4hyodYRV9PyRTs3RU=;
+	s=k20201202; t=1729793829;
+	bh=UqKK59RG/9ksv9++fzD89iQGiyW6uXPnlxc95Aow3Ms=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Mv5r/t1KYndSfRch6cL6chN4hEyyL3hzpwkz2bcA9l16Jz8UoSEDXzsZ4INrFevtO
-	 lH0C7nZsbilbb4r9kqiGKtAsbQ7iI6cv8CSLIidskZzSQCbICQEbY3+AiLK0PFfrKe
-	 oPSHs/SthU7sxhQhm6NDrmACWmsnefScJKvidMkkkXIwl99Q6EnKry6ShPxvl0DgDj
-	 ax9aRrbAA/YvrC4lSFu47gd+p4vbjBx4FqRRdYkDOYhf02X1ISK+gT8WX8QCtXPxP/
-	 Pr8N9Xb3k3zOdUf/8AXikjOlJxedcTke/chSihalXC1kN3ckxS7SgY+F/y/OTg07jf
-	 VTiQgxpgel/0Q==
-Date: Thu, 24 Oct 2024 11:14:44 -0700
+	b=DIVhZmx2V68CalcuhXQj6ysXMak2atHrFBIJRR3I2DhxWWLR0TmsQEv90itxfdh5v
+	 G+hmoI7lZbZtGO8V/TAe3boofEHdG7b1sOrHGDbqKR297Sz3Mq3nf21mbNyz6dMLom
+	 od65of9/suK94LGCrIJvGujC5dDN6qypyHcz/vkjFKRumdoxa/aAGUQSfaql4W3HP1
+	 om2wRe0pMC32oGvhhMUJewV7y2/kaPev6sBa3EqL06jPWuyNFLmV3QlaPQl9/Zx2oe
+	 Ivgz9Ddn4gl0khdkyOCriUP5LQ97WTzT/uVVLjYpOjR4h/sfCbJ0HDxQHgb68tOMkk
+	 huH2bZu1oSpdQ==
+Date: Thu, 24 Oct 2024 11:17:09 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Nirjhar Roy <nirjhar@linux.ibm.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, zlang@kernel.org
-Subject: Re: [PATCH 2/2] generic: Addition of new tests for extsize hints
-Message-ID: <20241024181444.GE2386201@frogsfrogsfrogs>
-References: <cover.1729624806.git.nirjhar@linux.ibm.com>
- <5cac327a9ee44c42035d9702b3a146aebc95e28c.1729624806.git.nirjhar@linux.ibm.com>
+To: Pankaj Raghav <p.raghav@samsung.com>
+Cc: fstests@vger.kernel.org, zlang@redhat.com, linux-xfs@vger.kernel.org,
+	gost.dev@samsung.com, mcgrof@kernel.org, kernel@pankajraghav.com,
+	david@fromorbit.com
+Subject: Re: [PATCH 2/2] generic: increase file size to match CoW delayed
+ allocation for XFS 64k bs
+Message-ID: <20241024181709.GF2386201@frogsfrogsfrogs>
+References: <20241024112311.615360-1-p.raghav@samsung.com>
+ <20241024112311.615360-3-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,237 +45,211 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5cac327a9ee44c42035d9702b3a146aebc95e28c.1729624806.git.nirjhar@linux.ibm.com>
+In-Reply-To: <20241024112311.615360-3-p.raghav@samsung.com>
 
-On Wed, Oct 23, 2024 at 12:56:20AM +0530, Nirjhar Roy wrote:
-> This commit adds new tests that checks the behaviour of xfs/ext4
-> filesystems when extsize hint is set on file with inode size as 0, non-empty
-> files with allocated and delalloc extents and so on.
-> Although currently this test is placed under tests/generic, it
-> only runs on xfs and there is an ongoing patch series[1] to enable
-> extsize hints for ext4 as well.
+On Thu, Oct 24, 2024 at 01:23:11PM +0200, Pankaj Raghav wrote:
+> generic/305,326,328 have been failing for 32k and 64k blocksizes.
 > 
-> [1] https://lore.kernel.org/linux-ext4/cover.1726034272.git.ojaswin@linux.ibm.com/
+> We do the following in the test 305 and 326 (highlighting only the part
+> that is related to failure):
 > 
-> Suggested-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
+> - create a 1M test-1/file1
+> - reflink test-1/file2 and test-1/file3 based on test-1/file1
+> - Overwrite first half of test-1/file2 to do a CoW operation
+> - Expect the size of the test-1 dir to be 3M
+> 
+> The test is failing for 32k and 64k blocksizes as the number of blocks
+> (direct + delayed) is higher than number of blocks allocated for
+> blocksizes < 32k in XFS, resulting in size of test-1 to be more than 3M.
+> Though generic/328 has a different IO pattern, the reason for failure is
+> the same.
+> 
+> This is the failure output :
+>     --- tests/generic/305.out   2024-06-05 11:52:27.430262812 +0000
+>     +++ /root/results//64k_4ks/generic/305.out.bad      2024-10-23 10:56:57.643986870 +0000
+>     @@ -11,7 +11,7 @@
+>      CoW one of the files
+>      root 0 0 0
+>      nobody 0 0 0
+>     -fsgqa 3072 0 0
+>     +fsgqa 4608 0 0
+>      Remount the FS to see if accounting changes
+>      root 0 0 0
+> 
+> In these tests, XFS is doing a delayed allocation of
+> XFS_DEFAULT_COWEXTSIZE_HINT(32). Increase the size of the file so that
+> the CoW write(sz/2) matches the maximum size of the delayed allocation
+> for the max blocksize of 64k. This will ensure that all parts of the
+> delayed extents are converted to real extents for all blocksizes.
+> 
+> Even though this is not the most complete solution to fix these tests,
+> the objective of these tests are to test quota and not the effect of delayed
+> allocations.
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 > ---
->  tests/generic/365     | 156 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/365.out |  26 +++++++
->  2 files changed, 182 insertions(+)
->  create mode 100755 tests/generic/365
->  create mode 100644 tests/generic/365.out
+>  tests/generic/305     |  2 +-
+>  tests/generic/305.out | 12 ++++++------
+>  tests/generic/326     |  2 +-
+>  tests/generic/326.out | 12 ++++++------
+>  tests/generic/328     |  2 +-
+>  tests/generic/328.out | 16 +++++++++-------
+>  6 files changed, 24 insertions(+), 22 deletions(-)
 > 
-> diff --git a/tests/generic/365 b/tests/generic/365
-> new file mode 100755
-> index 00000000..85a7ce9a
-> --- /dev/null
-> +++ b/tests/generic/365
-> @@ -0,0 +1,156 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2024 Nirjhar Roy (nirjhar@linux.ibm.com).  All Rights Reserved.
-> +#
-> +# FS QA Test 365
-> +#
-> +# This test verifies that extent allocation hint setting works correctly on files with
-> +# no extents allocated and non-empty files which are truncated. It also checks that the
-> +# extent hints setting fails with non-empty file i.e, with any file with allocated
-> +# extents or delayed allocation. We also check if the extsize value and the
-> +# xflag bit actually got reflected after setting/re-setting the extsize value.
-> +
-> +. ./common/config
-> +. ./common/filter
-> +. ./common/preamble
-> +. ./common/xfs
-> +
-> +_begin_fstest ioctl quick
-> +
-> +_supported_fs xfs
-> +
-> +_fixed_by_kernel_commit XXXXXXXXXXXX \
-> +    "xfs: Check for delayed allocations before setting extsize",
-> +
-> +_require_scratch
-> +
-> +FILE_DATA_SIZE=1M
+> diff --git a/tests/generic/305 b/tests/generic/305
+> index c89bd821..6ccbb3d0 100755
+> --- a/tests/generic/305
+> +++ b/tests/generic/305
+> @@ -32,7 +32,7 @@ quotaon $SCRATCH_MNT 2> /dev/null
+>  testdir=$SCRATCH_MNT/test-$seq
+>  mkdir $testdir
+>  
+> -sz=1048576
+> +sz=4194304
 
-Do these tests work correctly with fsblock size of 64k?  Just curious
-since Pankaj just sent a series doing 1M -> 4M bumps to fix quota
-issues.
+Hm, so you're increasing the filesize so that it exceeds 32*64k?
+Hence 4M for some nice round numbers?
 
-> +filter_extsz()
-> +{
-> +    sed "s/$EXTSIZE/EXTSIZE/g"
-> +}
-> +
-> +setup()
-> +{
-> +    _scratch_mkfs >> "$seqres.full"  2>&1
-> +    _scratch_mount >> "$seqres.full" 2>&1
-> +    BLKSZ=`_get_block_size $SCRATCH_MNT`
-> +    EXTSIZE=$(( BLKSZ*2 ))
-
-Might want to check that there isn't an extsize/cowextsize set on the
-root directory due to mkfs options.
-
-> +}
-> +
-> +read_file_extsize()
-> +{
-> +    $XFS_IO_PROG -c "extsize" $1 | _filter_scratch | filter_extsz
-> +}
-> +
-> +check_extsz_and_xflag()
-> +{
-> +    local filename=$1
-> +    read_file_extsize $filename
-> +    _test_xfs_xflags_field $filename "e" && echo "e flag set" || echo "e flag unset"
-> +}
-> +
-> +check_extsz_xflag_across_remount()
-> +{
-> +    local filename=$1
-> +    _scratch_cycle_mount
-> +    check_extsz_and_xflag $filename
-> +}
-> +
-> +# Extsize flag should be cleared when extsize is reset, so this function
-> +# checks that this behavior is followed.
-> +reset_extsz_and_recheck_extsz_xflag()
-> +{
-> +    local filename=$1
-> +    echo "Re-setting extsize hint to 0"
-> +    $XFS_IO_PROG -c "extsize 0" $filename
-> +    check_extsz_xflag_across_remount $filename
-> +}
-> +
-> +check_extsz_xflag_before_and_after_reset()
-> +{
-> +    local filename=$1
-> +    check_extsz_xflag_across_remount $filename
-> +    reset_extsz_and_recheck_extsz_xflag $filename
-> +}
-> +
-> +test_empty_file()
-> +{
-> +    echo "TEST: Set extsize on empty file"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "extsize $EXTSIZE" \
-> +
-> +    check_extsz_xflag_before_and_after_reset $filename
-> +    echo
-> +}
-> +
-> +test_data_delayed()
-> +{
-> +    echo "TEST: Set extsize on non-empty file with delayed allocation"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
-> +        -c "extsize $EXTSIZE" | _filter_scratch
-> +
-> +    check_extsz_xflag_across_remount $filename
-> +    echo
-> +}
-> +
-> +test_data_allocated()
-> +{
-> +    echo "TEST: Set extsize on non-empty file with allocated extents"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
-> +        -c "extsize $EXTSIZE" | _filter_scratch
-> +
-> +    check_extsz_xflag_across_remount $filename
-> +    echo
-> +}
-> +
-> +test_truncate_allocated()
-> +{
-> +    echo "TEST: Set extsize after truncating a file with allocated extents"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
-> +        -c "truncate 0" \
-> +        -c "extsize $EXTSIZE" \
-> +
-> +    check_extsz_xflag_across_remount $filename
-> +    echo
-> +}
-> +
-> +test_truncate_delayed()
-> +{
-> +    echo "TEST: Set extsize after truncating a file with delayed allocation"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
-> +        -c "truncate 0" \
-> +        -c "extsize $EXTSIZE" \
-> +
-> +    check_extsz_xflag_across_remount $filename
-> +    echo
-> +}
-
-Does this work for filesystems that don't have delalloc?  Like fsdax
-filesystems?
+If so then I think I'm fine with that.  Let's see what testing thinks.
+:)
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +setup
-> +echo -e "EXTSIZE = $EXTSIZE BLOCKSIZE = $BLKSZ\n" >> "$seqres.full"
-> +
-> +NEW_FILE_NAME_PREFIX=$SCRATCH_MNT/new-file-
-> +
-> +test_empty_file "$NEW_FILE_NAME_PREFIX"00
-> +test_data_delayed "$NEW_FILE_NAME_PREFIX"01
-> +test_data_allocated "$NEW_FILE_NAME_PREFIX"02
-> +test_truncate_allocated "$NEW_FILE_NAME_PREFIX"03
-> +test_truncate_delayed "$NEW_FILE_NAME_PREFIX"04
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/365.out b/tests/generic/365.out
-> new file mode 100644
-> index 00000000..38cd0885
-> --- /dev/null
-> +++ b/tests/generic/365.out
-> @@ -0,0 +1,26 @@
-> +QA output created by 365
-> +TEST: Set extsize on empty file
-> +[EXTSIZE] SCRATCH_MNT/new-file-00
-> +e flag set
-> +Re-setting extsize hint to 0
-> +[0] SCRATCH_MNT/new-file-00
-> +e flag unset
-> +
-> +TEST: Set extsize on non-empty file with delayed allocation
-> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-01: Invalid argument
-> +[0] SCRATCH_MNT/new-file-01
-> +e flag unset
-> +
-> +TEST: Set extsize on non-empty file with allocated extents
-> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-02: Invalid argument
-> +[0] SCRATCH_MNT/new-file-02
-> +e flag unset
-> +
-> +TEST: Set extsize after truncating a file with allocated extents
-> +[EXTSIZE] SCRATCH_MNT/new-file-03
-> +e flag set
-> +
-> +TEST: Set extsize after truncating a file with delayed allocation
-> +[EXTSIZE] SCRATCH_MNT/new-file-04
-> +e flag set
-> +
+>  echo "Create the original files"
+>  $XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
+>  _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
+> diff --git a/tests/generic/305.out b/tests/generic/305.out
+> index fbd4e241..1c348d1e 100644
+> --- a/tests/generic/305.out
+> +++ b/tests/generic/305.out
+> @@ -1,22 +1,22 @@
+>  QA output created by 305
+>  Format and mount
+>  Create the original files
+> -root 3072 0 0
+> +root 12288 0 0
+>  nobody 0 0 0
+>  fsgqa 0 0 0
+>  Change file ownership
+>  root 0 0 0
+>  nobody 0 0 0
+> -fsgqa 3072 0 0
+> +fsgqa 12288 0 0
+>  CoW one of the files
+>  root 0 0 0
+>  nobody 0 0 0
+> -fsgqa 3072 0 0
+> +fsgqa 12288 0 0
+>  Remount the FS to see if accounting changes
+>  root 0 0 0
+>  nobody 0 0 0
+> -fsgqa 3072 0 0
+> +fsgqa 12288 0 0
+>  Chown one of the files
+>  root 0 0 0
+> -nobody 1024 0 0
+> -fsgqa 2048 0 0
+> +nobody 4096 0 0
+> +fsgqa 8192 0 0
+> diff --git a/tests/generic/326 b/tests/generic/326
+> index 1783fbf2..321e7dc6 100755
+> --- a/tests/generic/326
+> +++ b/tests/generic/326
+> @@ -33,7 +33,7 @@ quotaon $SCRATCH_MNT 2> /dev/null
+>  testdir=$SCRATCH_MNT/test-$seq
+>  mkdir $testdir
+>  
+> -sz=1048576
+> +sz=4194304
+>  echo "Create the original files"
+>  $XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
+>  _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
+> diff --git a/tests/generic/326.out b/tests/generic/326.out
+> index de7f20b5..4ccb3250 100644
+> --- a/tests/generic/326.out
+> +++ b/tests/generic/326.out
+> @@ -1,22 +1,22 @@
+>  QA output created by 326
+>  Format and mount
+>  Create the original files
+> -root 3072 0 0
+> +root 12288 0 0
+>  nobody 0 0 0
+>  fsgqa 0 0 0
+>  Change file ownership
+>  root 0 0 0
+>  nobody 0 0 0
+> -fsgqa 3072 0 0
+> +fsgqa 12288 0 0
+>  CoW one of the files
+>  root 0 0 0
+>  nobody 0 0 0
+> -fsgqa 3072 0 0
+> +fsgqa 12288 0 0
+>  Remount the FS to see if accounting changes
+>  root 0 0 0
+>  nobody 0 0 0
+> -fsgqa 3072 0 0
+> +fsgqa 12288 0 0
+>  Chown one of the files
+>  root 0 0 0
+> -nobody 1024 0 0
+> -fsgqa 2048 0 0
+> +nobody 4096 0 0
+> +fsgqa 8192 0 0
+> diff --git a/tests/generic/328 b/tests/generic/328
+> index 0c8e1986..25e1f2a0 100755
+> --- a/tests/generic/328
+> +++ b/tests/generic/328
+> @@ -32,7 +32,7 @@ quotaon $SCRATCH_MNT 2> /dev/null
+>  testdir=$SCRATCH_MNT/test-$seq
+>  mkdir $testdir
+>  
+> -sz=1048576
+> +sz=4194304
+>  echo "Create the original files"
+>  $XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
+>  chown $qa_user $testdir/file1
+> diff --git a/tests/generic/328.out b/tests/generic/328.out
+> index b7fe9f8c..0167637e 100644
+> --- a/tests/generic/328.out
+> +++ b/tests/generic/328.out
+> @@ -2,24 +2,26 @@ QA output created by 328
+>  Format and mount
+>  Create the original files
+>  root 0 0 0
+> -fsgqa 3072 0 0
+> +fsgqa 12288 0 0
+>  Set hard quota to prevent rewrite
+>  root 0 0 0
+> -fsgqa 3072 0 1024
+> +fsgqa 12288 0 1024
+>  Try to dio write the whole file
+>  pwrite: Disk quota exceeded
+>  root 0 0 0
+> -fsgqa 3072 0 1024
+> +fsgqa 12288 0 1024
+>  Try to write the whole file
+>  pwrite: Disk quota exceeded
+>  root 0 0 0
+> -fsgqa 3072 0 1024
+> +fsgqa 12288 0 1024
+>  Set hard quota to allow rewrite
+>  root 0 0 0
+> -fsgqa 3072 0 8192
+> +fsgqa 12288 0 8192
+>  Try to dio write the whole file
+> +pwrite: Disk quota exceeded
+>  root 0 0 0
+> -fsgqa 3072 0 8192
+> +fsgqa 12288 0 8192
+>  Try to write the whole file
+> +pwrite: Disk quota exceeded
+>  root 0 0 0
+> -fsgqa 3072 0 8192
+> +fsgqa 12288 0 8192
 > -- 
-> 2.43.5
+> 2.44.1
 > 
 > 
