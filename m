@@ -1,167 +1,166 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5AF91DAC81;
-	Thu, 24 Oct 2024 13:06:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008A71E1335
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2024 13:19:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729775181; cv=none; b=hyUSP4FLmRYKBq1Atu52SVO6LUS/ywZaEWhOm+24W127mffqmA4QpjAe6VKV3z4AevAAoLA8bQ7YptrpXZ+uz0pHxUqAeek6RjEfIB8FgabfRjgcn2GRmoaYVvXxfP4vv4zp771yjOAbnXM+IOO14DMZGLK8/Yi4PI2/NhmA0kc=
+	t=1729775958; cv=none; b=Ii+v3Wcw3QukoPNHuGOqrGOfD51pxdfkWvbX3AykmOCc6NObmELAPViA4hzJvAsKe0CLH7bxy+C5iAg9CfWhqgR9ZywmWBGhEYr6FIeH97OyAB6qMSma4+r0bF9BN5eV2sq8arq9upFdvefHPyYfWfTcdpqMoNFhYAtjDplJGuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729775181; c=relaxed/simple;
-	bh=aIlKmQ9ihfSARIg+FYKEOZAZucVXvsiEVelFMuAtHng=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=I452ma5fAzfdodjnmb7MogtLSxYsMOUsGUZn6tZBjp6qnpbxlt+aXyoGFU7t7haMDhu7F0PL8jkqytXI/EnJCxEUREQJSTYZiS7jiVS1MotmOCixj/iztZo7jIR4MiWnOlndCNEfrkGny1WZZtmDSVcgTbEhtLJku/jZ1DE6h58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IUwy91ey; arc=none smtp.client-ip=209.85.160.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1729775958; c=relaxed/simple;
+	bh=KUg4/IPSz2uXjF7v2KVOvJnVnpbT9lXESWQNgAzZOoE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XNtH6+LEh0MiRy6yAox7duE3oY4sNKOmYHkLiqsgFNlYAew5se+k4ECHqlvh0I6u4kNCTRMtmncNX84eWoV6sKlFPfpb7YmFw2y3X3M7J/Ue4s9DPBZlLcKFfKrGo8QB8rwUupVS9oW2omdCBv7n+iPNnulLvPy5BWTPp1tde3c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NAqpdgnq; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IUwy91ey"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-4609e784352so5615371cf.0;
-        Thu, 24 Oct 2024 06:06:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729775179; x=1730379979; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EV440ACCLF9AlGZ+8I23qHeuAgKIxh1fOgjLQ6Jdp94=;
-        b=IUwy91eyZGO0Tj3CZCx3bmDNUYyrq0ij/X3t6JKvTz/Zxr+IO5XcOnWp/bZwXR9ghQ
-         U31TW+pTGiTUyZ5dHRBdNB1oLanpIE/sKZBn6exLRH8CtV6zv6Xm+h2gY1qb3BSP79qf
-         0N2N46S+pdb/s3hKYiftYLRoSoQNo+Of7LBi2dU1aEoJFWyk6kcbJdwbHOPiZyaIr73D
-         lgJgnMG66ms6trgkU+gRk5p6FEl1CuwlJsFizTMDtUo/vFULXouaiPdICXt+uQclnVAk
-         jTb2YVk455NKpS4ySAnr1RnHDwj5/MCHE1kYoLpVKjKM3xbFB5vfbe+6++Tqa3NvwLAl
-         TVSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729775179; x=1730379979;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=EV440ACCLF9AlGZ+8I23qHeuAgKIxh1fOgjLQ6Jdp94=;
-        b=p1uhEjK6Qyv/Gf26bPrUC95khU15hLY6KcDfreUCpkid7Ib5+ip2d0CO7vpyax9qWn
-         OPmdSNQh5WxJSmqzK4XG4FIw+7qFdW16zcl3EWB1+I5M9YBsjUcKIh1UnErfAeaYT5L7
-         6YkkDkjsnhNf9jbmC0FU0xLI/LHH49lz6wDwJozBUDK0NTFJY3YN0o6snnHIUmw7m2bV
-         6VDKdeQkdAfy9K/P3aIBTfjZDlII6N62csjRh83iYt5KVHPLge99MViM8gmLYbhodCl1
-         G7H6qCIKzBafgP0LU5LZ9xZezjUcSGui7m4yb+NkTnMyFfyTloI6swKLFs9Phkkp5HWQ
-         N+aw==
-X-Forwarded-Encrypted: i=1; AJvYcCUawHG+xYB3s/m2spNLqv8q1bQObnn24V5uP5ieAEmPYiilYfVg7daFEbh5pIJnm+3t+IxCm6o8XCobmDI=@vger.kernel.org, AJvYcCVvUyJReoCIMrQ/xObR40vFDPNUZD9hU6ng6rRkmHb89IMnk+Og718q8qOp+yRzBG377A6oTCxqaleL@vger.kernel.org, AJvYcCWcptVhwct6vKbLJWHdd3bbT8BeNRP/5z7SBWXdknaY5UUVVV/4VKXiqlvpoOv1X70h4cTtpO8zeHX+WFxJQQ==@vger.kernel.org, AJvYcCXevy/KyyYGPVEOdYUIyrXzSzCosYMPaSNgjlKKB5YyFDQEHMm/uSEDiDdeOwzE9DoINRfj2vYR+LfheZBupw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwNv2yLwNzuEW+G/p4lukqsVElr5AgM6wDzOjPgD/9voM1cSkCF
-	RUFtPCT8Vk6HuV1SiQoAShj88zNt1QaelPczXQ5jqcKXtviLQZHjgfOU8IlODKFfiZg3EFBuC9c
-	B2gLk3ws+9YQxUA90lwt0pnXqrFQ=
-X-Google-Smtp-Source: AGHT+IEIz8fnfbns+VURqZ8Fl6RXgEBHOkqEMI4OdzbZoLgol68YL2Busr8J0hKYCSW/XqtN8XJgmuR8iMUv5K38FlE=
-X-Received: by 2002:ac8:5b8d:0:b0:460:39be:10a8 with SMTP id
- d75a77b69052e-461146d6ef7mr65129111cf.32.1729775178536; Thu, 24 Oct 2024
- 06:06:18 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NAqpdgnq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1729775955;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=y+eArl/ouMtYqxGsIAmRgnol83pzCCJcNzLyiWIlwa8=;
+	b=NAqpdgnqOHVUo7D5HSkGZV6xRIQV1YwzH6XgPwq250IwpAxRBh+EzKFwYZVeYlJkRsGxxi
+	hhNnOe8VrsjRrGoPWqMljA5CyBzt+y4QXhFG+WH27HXcj6+MrltSb7XNzCy6GRt9QlAcRv
+	sOmgEccGbeD3oWTkLk+OOnKK6y5gMQY=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-12-asGBEXTbOyycdjKULKktFQ-1; Thu,
+ 24 Oct 2024 09:19:13 -0400
+X-MC-Unique: asGBEXTbOyycdjKULKktFQ-1
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C9F2C1955F43;
+	Thu, 24 Oct 2024 13:19:12 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.135])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 30A6019560A2;
+	Thu, 24 Oct 2024 13:19:12 +0000 (UTC)
+Date: Thu, 24 Oct 2024 09:20:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/3] xfs: sparse inodes overlap end of filesystem
+Message-ID: <ZxpJp48vi4NpFVqJ@bfoster>
+References: <20241024025142.4082218-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1725481503.git.josef@toxicpanda.com> <4b235bf62c99f1f1196edc9da4258167314dc3c3.1725481503.git.josef@toxicpanda.com>
-In-Reply-To: <4b235bf62c99f1f1196edc9da4258167314dc3c3.1725481503.git.josef@toxicpanda.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 24 Oct 2024 15:06:07 +0200
-Message-ID: <CAOQ4uxgxCHmKLhFHMiD39SWw7evZmfkG9dkyk2X=qQc+zXjn-w@mail.gmail.com>
-Subject: Re: [PATCH v5 03/18] fsnotify: generate pre-content permission event
- on open
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
-	brauner@kernel.org, linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241024025142.4082218-1-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Wed, Sep 4, 2024 at 10:29=E2=80=AFPM Josef Bacik <josef@toxicpanda.com> =
-wrote:
->
-> From: Amir Goldstein <amir73il@gmail.com>
->
-> FS_PRE_ACCESS or FS_PRE_MODIFY will be generated on open depending on
-> file open mode.  The pre-content event will be generated in addition to
-> FS_OPEN_PERM, but without sb_writers held and after file was truncated
-> in case file was opened with O_CREAT and/or O_TRUNC.
->
-> The event will have a range info of (0..0) to provide an opportunity
-> to fill entire file content on open.
->
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> Reviewed-by: Christian Brauner <brauner@kernel.org>
-> ---
->  fs/namei.c               |  9 +++++++++
->  include/linux/fsnotify.h | 10 +++++++++-
->  2 files changed, 18 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/namei.c b/fs/namei.c
-> index 3a4c40e12f78..c16487e3742d 100644
-> --- a/fs/namei.c
-> +++ b/fs/namei.c
-> @@ -3735,6 +3735,15 @@ static int do_open(struct nameidata *nd,
->         }
->         if (do_truncate)
->                 mnt_drop_write(nd->path.mnt);
-> +
-> +       /*
-> +        * This permission hook is different than fsnotify_open_perm() ho=
-ok.
-> +        * This is a pre-content hook that is called without sb_writers h=
-eld
-> +        * and after the file was truncated.
-> +        */
-> +       if (!error)
-> +               error =3D fsnotify_file_perm(file, MAY_OPEN);
-> +
+On Thu, Oct 24, 2024 at 01:51:02PM +1100, Dave Chinner wrote:
+> We have had a large number of recent reports about cloud filesystems
+> with "corrupt" inode records recently. They are all the same, and
+> feature a filesystem that has been grown from a small size to a
+> larger size (to 30G or 50G). In all cases, they have a very small
+> runt AG at the end of the filesystem.  In the case of the 30GB
+> filesystems, this is 1031 blocks long.
+> 
+> These filesystems start issuing corruption warnings when trying to
+> allocate an in a sparse cluster at block 1024 of the runt AG. At
+> this point, there shouldn't be a sparse inode cluster because there
+> isn't space to fit an entire inode chunk (8 blocks) at block 1024.
+> i.e. it is only 7 blocks from the end of the AG.
+> 
+> Hence the first bug is that we allowed allocation of a sparse inode
+> cluster in this location when it should not have occurred. The first
+> patch in the series addresses this.
+> 
+> However, there is actually nothing corrupt in the on-disk sparse
+> inode record or inode cluster at agbno 1024. It is a 32 inode
+> cluster, which means it is 4 blocks in length, so sits entirely
+> within the AG and every inode in the record is addressable and
+> accessible. The only thing we can't do is make the sparse inode
+> record whole - the inode allocation code cannot allocate another 4
+> blocks that span beyond the end of the AG. Hence this inode record
+> and cluster remain sparse until all the inodes in it are freed and
+> the cluster removed from disk.
+> 
+> The second bug is that we don't consider inodes beyond inode cluster
+> alignment at the end of an AG as being valid. When sparse inode
+> alignment is in use, we set the in-memory inode cluster alignment to
+> match the inode chunk alignment, and so the maximum valid inode
+> number is inode chunk aligned, not inode cluster aligned. Hence when
+> we have an inode cluster at the end of the AG - so the max inode
+> number is cluster aligned - we reject that entire cluster as being
+> invalid. 
+> 
+> As stated above, there is nothing corrupt about the sparse inode
+> cluster at the end of the AG, it just doesn't match an arbitrary
+> alignment validation restriction for inodes at the end of the AG.
+> Given we have production filesystems out there with sparse inode
+> clusters allocated with cluster alignment at the end of the AG, we
+> need to consider these inodes as valid and not error out with a
+> corruption report.  The second patch addresses this.
+> 
+> The third issue I found is that we never validate the
+> sb->sb_spino_align valid when we mount the filesystem. It could have
+> any value and we just blindly use it when calculating inode
+> allocation geometry. The third patch adds sb->sb_spino_align range
+> validation to the superblock verifier.
+> 
+> There is one question that needs to be resolved in this patchset: if
+> we take patch 2 to allow sparse inodes at the end of the AG, why
+> would we need the change in patch 1? Indeed, at this point I have to
+> ask why we even need the min/max agbno guidelines to the inode chunk
+> allocation as we end up allowing any aligned location in the AG to
+> be used by sparse inodes. i.e. if we take patch 2, then patch 1 is
+> unnecessary and now we can remove a bunch of code (min/max_agbno
+> constraints) from the allocator paths...
+> 
+> I'd prefer that we take the latter path: ignore the first patch.
+> This results in more flexible behaviour, allows existing filesystems
+> with this issue to work without needing xfs_repair to fix them, and
+> we get to remove complexity from the code.
+> 
+> Thoughts?
+> 
 
-Josef,
+This all sounds reasonable on its own if the corruption is essentially
+artifical and there is a path for code simplification, etc. That said, I
+think there's a potential counter argument for skipping patch 1 though.
+A couple things come to mind:
 
-Please change that for v6 to:
+1. When this corrupted inode chunk allocation does occur, is it possible
+to actually allocate an inode out of it, or does the error checking
+logic prevent that? My sense was the latter, but I could be wrong. This
+generally indicates whether user data is impacted or not if repair
+resolves by tossing the chunk.
 
-                   error =3D fsnotify_file_area_perm(file, MAY_OPEN,
-&file->f_pos, 0);
+2. Would we recommend a user upgrade to a new kernel with a corruption
+present that causes inode allocation failure?
 
-...
+My .02: under no circumstances would I run a distro/package upgrade on a
+filesystem in that state before running repair, nor would I recommend
+that to anyone else. The caveat to this is that even after a repair,
+there's no guarantee an upgrade wouldn't go and realloc the same bad
+chunk and end up right back in the same state, and thus fail just the
+same.
 
->         return error;
->  }
->
-> diff --git a/include/linux/fsnotify.h b/include/linux/fsnotify.h
-> index 7600a0c045ba..fb3837b8de4c 100644
-> --- a/include/linux/fsnotify.h
-> +++ b/include/linux/fsnotify.h
-> @@ -168,6 +168,10 @@ static inline int fsnotify_file_area_perm(struct fil=
-e *file, int perm_mask,
->                 fsnotify_mask =3D FS_PRE_MODIFY;
->         else if (perm_mask & (MAY_READ | MAY_ACCESS))
->                 fsnotify_mask =3D FS_PRE_ACCESS;
-> +       else if (perm_mask & MAY_OPEN && file->f_mode & FMODE_WRITER)
-> +               fsnotify_mask =3D FS_PRE_MODIFY;
-> +       else if (perm_mask & MAY_OPEN)
-> +               fsnotify_mask =3D FS_PRE_ACCESS;
->         else
->                 return 0;
->
-> @@ -176,10 +180,14 @@ static inline int fsnotify_file_area_perm(struct fi=
-le *file, int perm_mask,
->
->  /*
->   * fsnotify_file_perm - permission hook before file access
-> + *
-> + * Called from read()/write() with perm_mask MAY_READ/MAY_WRITE.
-> + * Called from open() with MAY_OPEN without sb_writers held and after th=
-e file
-> + * was truncated. Note that this is a different event from fsnotify_open=
-_perm().
->   */
->  static inline int fsnotify_file_perm(struct file *file, int perm_mask)
->  {
-> -       return fsnotify_file_area_perm(file, perm_mask, NULL, 0);
-> +       return fsnotify_file_area_perm(file, perm_mask, &file->f_pos, 0);
->  }
+For that reason, I'm not sure we can achieve a reliable workaround via a
+kernel change on its own. I'm wondering if this requires something on
+the repair side that either recommends growing the fs by a few blocks,
+or perhaps if it finds this "unaligned runt" situation, actively does
+something to prevent it.
 
-... and drop this change, because this change will make readdir()
-start reporting odd file ranges and HSM won't be able to tell the
-difference between an opendir() and a readdir().
+For example, I assume allocating the last handful of blocks out of the
+runt AG would prevent the problem. Of course that technically creates
+another corruption by leaking blocks, but as long repair knows to keep
+it in place so long as the fs geometry is susceptible, perhaps that
+would work..? Hmm.. if those blocks are free then maybe a better option
+would be to just truncate the last few blocks off the runt AG (i.e.
+effectively reduce the fs size by the size of the sparse chunk
+allocation), then the fs could be made consistent and functional. Hm?
 
-And I will send an extra patch for reporting an event with
-range [size..size] for truncate(size).
+Brian
 
-Thanks,
-Amir.
