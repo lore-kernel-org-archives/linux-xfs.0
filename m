@@ -1,52 +1,72 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008A71E1335
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2024 13:19:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F45F1E32D0
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2024 13:24:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729775958; cv=none; b=Ii+v3Wcw3QukoPNHuGOqrGOfD51pxdfkWvbX3AykmOCc6NObmELAPViA4hzJvAsKe0CLH7bxy+C5iAg9CfWhqgR9ZywmWBGhEYr6FIeH97OyAB6qMSma4+r0bF9BN5eV2sq8arq9upFdvefHPyYfWfTcdpqMoNFhYAtjDplJGuU=
+	t=1729776300; cv=none; b=b71qe0LYCvO8OZVGDv4+t1tEazcDim7slqaRJKTmwrgRqfLeD/e2wTS6TiJaUY32OoutMLbzsI57ViXpsqAyjZq6rLPWfeqBM2eloZq+f14nT1eoguw+uQb7FlkTi8kIrGaxMm95WleK2TagdioYGNHzSE3IeW/f7oGie7ifoeE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729775958; c=relaxed/simple;
-	bh=KUg4/IPSz2uXjF7v2KVOvJnVnpbT9lXESWQNgAzZOoE=;
+	s=arc-20240116; t=1729776300; c=relaxed/simple;
+	bh=sCPp8eNkui5TGNkGrJxN0F/c58rwd7lkBJs+tCntlQY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XNtH6+LEh0MiRy6yAox7duE3oY4sNKOmYHkLiqsgFNlYAew5se+k4ECHqlvh0I6u4kNCTRMtmncNX84eWoV6sKlFPfpb7YmFw2y3X3M7J/Ue4s9DPBZlLcKFfKrGo8QB8rwUupVS9oW2omdCBv7n+iPNnulLvPy5BWTPp1tde3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NAqpdgnq; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=mZ5HAYwWZgVEjKzJj+RuZPUZWdIYAhpeA1MAy2Y+SF1c3Ji5EXcdzHPGU5Kgh4IWGU7H5BHNvRSIHYLpUkk/KA5Ud3gxWIC1eDupvI79LKrmWrxMT+zmHF7U2q4yMkxUwjZKrfPvyvUU2Ty3fcCE70KP1c79NPaVsbGi6x0MLdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Bfk6uYLJ; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NAqpdgnq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bfk6uYLJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1729775955;
+	s=mimecast20190719; t=1729776296;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=y+eArl/ouMtYqxGsIAmRgnol83pzCCJcNzLyiWIlwa8=;
-	b=NAqpdgnqOHVUo7D5HSkGZV6xRIQV1YwzH6XgPwq250IwpAxRBh+EzKFwYZVeYlJkRsGxxi
-	hhNnOe8VrsjRrGoPWqMljA5CyBzt+y4QXhFG+WH27HXcj6+MrltSb7XNzCy6GRt9QlAcRv
-	sOmgEccGbeD3oWTkLk+OOnKK6y5gMQY=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-12-asGBEXTbOyycdjKULKktFQ-1; Thu,
- 24 Oct 2024 09:19:13 -0400
-X-MC-Unique: asGBEXTbOyycdjKULKktFQ-1
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C9F2C1955F43;
-	Thu, 24 Oct 2024 13:19:12 +0000 (UTC)
-Received: from bfoster (unknown [10.22.80.135])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 30A6019560A2;
-	Thu, 24 Oct 2024 13:19:12 +0000 (UTC)
-Date: Thu, 24 Oct 2024 09:20:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/3] xfs: sparse inodes overlap end of filesystem
-Message-ID: <ZxpJp48vi4NpFVqJ@bfoster>
-References: <20241024025142.4082218-1-david@fromorbit.com>
+	bh=LV+oh1RkjuJCTI87bth73hem1xdoRNhxaUyaCPHSaOE=;
+	b=Bfk6uYLJOeGqLC3IClNIUo68qzNfCnJmyn7EH16Q00lWeDFWHfiMleq+8dZZNi2Tc4W3fc
+	hgaMHjW8eWuMMRsTcF6Iris07WQOZC+/NEZdkAoo1smTkhHxZQHj0msMGWaOBUyVxWmN+M
+	5I6H7vSbynHvvTneFrtr6bAoF1SvHsI=
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
+ [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-645-R0B1Q3bSPZCbVbK-b2KEyw-1; Thu, 24 Oct 2024 09:24:54 -0400
+X-MC-Unique: R0B1Q3bSPZCbVbK-b2KEyw-1
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-71e6a7f3b67so1037246b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2024 06:24:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729776293; x=1730381093;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LV+oh1RkjuJCTI87bth73hem1xdoRNhxaUyaCPHSaOE=;
+        b=r+NqqV1UfxHLTeS8J3MuiD0OQNHPHIHzSSbFphRHtmrVO1RfeMXJSHMGWBwu5YELac
+         egTHaJIG5PLORWFWVgvzHwcLmNhHZzz6qsez4g6eTyIkkVHPyt8DkohSyp0+96+4cG2P
+         W2mG44flgmLQ2rF8tEPxwOW7C2PeT496Fhi7E85zJgNow+9rLoF+fJY7likA6WWT63Ns
+         ftLZrVg25Mpwf85OOoW4WxU20hbPSYng8iItyaBY5Y8PDS9KDYXxccCZ0g8WgctKDNjT
+         W4J1tuSgx4c0psO6jOMGWwPwQ8b1webD0RD2IFTasaYmTt0s6UBk+Jr5eSUae8ZN7Dgj
+         03eQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU4yBhY3uo9zvB/lXsgPSgR6S+x8ynMi1nOHgKmhTNMej3YNXGEXDY/JhiNpEYajRGBNmkI8Me9V/M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxGjVyq1q3OVY7Tv5bPEYs5h2iQy/iL0kIB2NcpciQFqiZ0mhGM
+	cjSu3Mgx+gyR/5qc48hblc+rpsjTnIYl0itCZJqg+8YJDBx1DjquSnDxJ4i17/5HCefuC51b3Bx
+	kfMSWBFb44YTRC8REFo0NGGVMmsqTsvJNSFfAgKGDsOGoR/03w3Qu7SSLAQ==
+X-Received: by 2002:a05:6a00:1995:b0:71e:6046:87c2 with SMTP id d2e1a72fcca58-72045fa867emr2321576b3a.26.1729776293594;
+        Thu, 24 Oct 2024 06:24:53 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEaEabVORN+hZYi8D+0zykQc3dA+B8iN1SxPjM6E0B/i4J8uOChVFt1q02hrMCsdVmx93i2gQ==
+X-Received: by 2002:a05:6a00:1995:b0:71e:6046:87c2 with SMTP id d2e1a72fcca58-72045fa867emr2321543b3a.26.1729776293103;
+        Thu, 24 Oct 2024 06:24:53 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7eaeab1dc6bsm8546749a12.23.2024.10.24.06.24.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Oct 2024 06:24:52 -0700 (PDT)
+Date: Thu, 24 Oct 2024 21:24:48 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, zlang@kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs: remove the post-EOF prealloc tests from the auto
+ and quick groups
+Message-ID: <20241024132448.uoms7lvnaanoysfi@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20241023103930.432190-1-hch@lst.de>
+ <20241023172351.GG21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,112 +75,131 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241024025142.4082218-1-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <20241023172351.GG21853@frogsfrogsfrogs>
 
-On Thu, Oct 24, 2024 at 01:51:02PM +1100, Dave Chinner wrote:
-> We have had a large number of recent reports about cloud filesystems
-> with "corrupt" inode records recently. They are all the same, and
-> feature a filesystem that has been grown from a small size to a
-> larger size (to 30G or 50G). In all cases, they have a very small
-> runt AG at the end of the filesystem.  In the case of the 30GB
-> filesystems, this is 1031 blocks long.
+On Wed, Oct 23, 2024 at 10:23:51AM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 23, 2024 at 12:39:30PM +0200, Christoph Hellwig wrote:
+> > These fail for various non-default configs like DAX, alwayscow and
+> > small block sizes.
 > 
-> These filesystems start issuing corruption warnings when trying to
-> allocate an in a sparse cluster at block 1024 of the runt AG. At
-> this point, there shouldn't be a sparse inode cluster because there
-> isn't space to fit an entire inode chunk (8 blocks) at block 1024.
-> i.e. it is only 7 blocks from the end of the AG.
+> Shouldn't we selectively _notrun these tests for configurations where
+> speculative/delayed allocations don't work?
 > 
-> Hence the first bug is that we allowed allocation of a sparse inode
-> cluster in this location when it should not have occurred. The first
-> patch in the series addresses this.
+> I had started on a helper to try to detect the situations where the
+> tests cannot ever pass, but never quite finished it:
 > 
-> However, there is actually nothing corrupt in the on-disk sparse
-> inode record or inode cluster at agbno 1024. It is a 32 inode
-> cluster, which means it is 4 blocks in length, so sits entirely
-> within the AG and every inode in the record is addressable and
-> accessible. The only thing we can't do is make the sparse inode
-> record whole - the inode allocation code cannot allocate another 4
-> blocks that span beyond the end of the AG. Hence this inode record
-> and cluster remain sparse until all the inodes in it are freed and
-> the cluster removed from disk.
-> 
-> The second bug is that we don't consider inodes beyond inode cluster
-> alignment at the end of an AG as being valid. When sparse inode
-> alignment is in use, we set the in-memory inode cluster alignment to
-> match the inode chunk alignment, and so the maximum valid inode
-> number is inode chunk aligned, not inode cluster aligned. Hence when
-> we have an inode cluster at the end of the AG - so the max inode
-> number is cluster aligned - we reject that entire cluster as being
-> invalid. 
-> 
-> As stated above, there is nothing corrupt about the sparse inode
-> cluster at the end of the AG, it just doesn't match an arbitrary
-> alignment validation restriction for inodes at the end of the AG.
-> Given we have production filesystems out there with sparse inode
-> clusters allocated with cluster alignment at the end of the AG, we
-> need to consider these inodes as valid and not error out with a
-> corruption report.  The second patch addresses this.
-> 
-> The third issue I found is that we never validate the
-> sb->sb_spino_align valid when we mount the filesystem. It could have
-> any value and we just blindly use it when calculating inode
-> allocation geometry. The third patch adds sb->sb_spino_align range
-> validation to the superblock verifier.
-> 
-> There is one question that needs to be resolved in this patchset: if
-> we take patch 2 to allow sparse inodes at the end of the AG, why
-> would we need the change in patch 1? Indeed, at this point I have to
-> ask why we even need the min/max agbno guidelines to the inode chunk
-> allocation as we end up allowing any aligned location in the AG to
-> be used by sparse inodes. i.e. if we take patch 2, then patch 1 is
-> unnecessary and now we can remove a bunch of code (min/max_agbno
-> constraints) from the allocator paths...
-> 
-> I'd prefer that we take the latter path: ignore the first patch.
-> This results in more flexible behaviour, allows existing filesystems
-> with this issue to work without needing xfs_repair to fix them, and
-> we get to remove complexity from the code.
-> 
-> Thoughts?
-> 
+> diff --git a/common/xfs b/common/xfs
+> index 557017c716e32c..5cb2c102e2c04f 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -2238,3 +2238,34 @@ _scratch_xfs_scrubbed() {
+>  
+>  	$XFS_SCRUBBED_PROG "${scrubbed_args[@]}" "$@" $SCRATCH_MNT
+>  }
+> +
+> +# Will this filesystem create speculative post-EOF preallocations for a file?
+> +_require_speculative_prealloc()
+> +{
+> +	local file="$1"
+> +	local tries
+> +	local overage
+> +
+> +	# Now that we have background garbage collection processes that can be
+> +	# triggered by low space/quota conditions, it's possible that we won't
+> +	# succeed in creating a speculative preallocation on the first try.
+> +	for ((tries = 0; tries < 5; tries++)); do
+> +		rm -f $file
+> +
+> +		# a few file extending open-write-close cycles should be enough
+> +		# to trigger the fs to retain preallocation. write 256k in 32k
+> +		# intervals to be sure
+> +		for i in $(seq 0 32768 262144); do
+> +			$XFS_IO_PROG -f -c "pwrite $i 32k" $file >> $seqres.full
+> +
+> +			# Do we have more blocks allocated than what we've
+> +			# written so far?
+> +			overage="$(stat -c '%b * %B - %s' $file | bc)"
+> +			test "$overage" -gt 0 && return 0
+> +		done
+> +	done
+> +
+> +	_notrun "Warning: No speculative preallocation for $file after " \
+> +			"$tries iterations." \
+> +			"Check use of the allocsize= mount option."
+> +}
 
-This all sounds reasonable on its own if the corruption is essentially
-artifical and there is a path for code simplification, etc. That said, I
-think there's a potential counter argument for skipping patch 1 though.
-A couple things come to mind:
+Before we remove these cases from auto group, if above function can help these
+test cases to be stable passed as expected. I'm glad to consider it at first :)
 
-1. When this corrupted inode chunk allocation does occur, is it possible
-to actually allocate an inode out of it, or does the error checking
-logic prevent that? My sense was the latter, but I could be wrong. This
-generally indicates whether user data is impacted or not if repair
-resolves by tossing the chunk.
+Thanks,
+Zorro
 
-2. Would we recommend a user upgrade to a new kernel with a corruption
-present that causes inode allocation failure?
-
-My .02: under no circumstances would I run a distro/package upgrade on a
-filesystem in that state before running repair, nor would I recommend
-that to anyone else. The caveat to this is that even after a repair,
-there's no guarantee an upgrade wouldn't go and realloc the same bad
-chunk and end up right back in the same state, and thus fail just the
-same.
-
-For that reason, I'm not sure we can achieve a reliable workaround via a
-kernel change on its own. I'm wondering if this requires something on
-the repair side that either recommends growing the fs by a few blocks,
-or perhaps if it finds this "unaligned runt" situation, actively does
-something to prevent it.
-
-For example, I assume allocating the last handful of blocks out of the
-runt AG would prevent the problem. Of course that technically creates
-another corruption by leaking blocks, but as long repair knows to keep
-it in place so long as the fs geometry is susceptible, perhaps that
-would work..? Hmm.. if those blocks are free then maybe a better option
-would be to just truncate the last few blocks off the runt AG (i.e.
-effectively reduce the fs size by the size of the sparse chunk
-allocation), then the fs could be made consistent and functional. Hm?
-
-Brian
+> 
+> --D
+> 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  tests/xfs/629 | 2 +-
+> >  tests/xfs/630 | 2 +-
+> >  tests/xfs/631 | 2 +-
+> >  tests/xfs/632 | 2 +-
+> >  4 files changed, 4 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/tests/xfs/629 b/tests/xfs/629
+> > index 58beedc03a8b..e2f5af085b5f 100755
+> > --- a/tests/xfs/629
+> > +++ b/tests/xfs/629
+> > @@ -8,7 +8,7 @@
+> >  #
+> >  
+> >  . ./common/preamble
+> > -_begin_fstest auto quick prealloc rw
+> > +_begin_fstest prealloc rw
+> >  
+> >  . ./common/filter
+> >  
+> > diff --git a/tests/xfs/630 b/tests/xfs/630
+> > index 939d8a4ac37f..df7ca60111d6 100755
+> > --- a/tests/xfs/630
+> > +++ b/tests/xfs/630
+> > @@ -8,7 +8,7 @@
+> >  #
+> >  
+> >  . ./common/preamble
+> > -_begin_fstest auto quick prealloc rw
+> > +_begin_fstest prealloc rw
+> >  
+> >  . ./common/filter
+> >  
+> > diff --git a/tests/xfs/631 b/tests/xfs/631
+> > index 55a74297918a..1e50bc033f7c 100755
+> > --- a/tests/xfs/631
+> > +++ b/tests/xfs/631
+> > @@ -8,7 +8,7 @@
+> >  #
+> >  
+> >  . ./common/preamble
+> > -_begin_fstest auto quick prealloc rw
+> > +_begin_fstest prealloc rw
+> >  
+> >  . ./common/filter
+> >  
+> > diff --git a/tests/xfs/632 b/tests/xfs/632
+> > index 61041d45a706..3b1c61fdc129 100755
+> > --- a/tests/xfs/632
+> > +++ b/tests/xfs/632
+> > @@ -9,7 +9,7 @@
+> >  #
+> >  
+> >  . ./common/preamble
+> > -_begin_fstest auto prealloc rw
+> > +_begin_fstest prealloc rw
+> >  
+> >  . ./common/filter
+> >  
+> > -- 
+> > 2.45.2
+> > 
+> > 
+> 
 
