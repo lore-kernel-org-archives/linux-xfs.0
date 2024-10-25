@@ -1,133 +1,99 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83D2F1E89C;
-	Fri, 25 Oct 2024 01:12:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C773922B64B;
+	Fri, 25 Oct 2024 02:33:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729818761; cv=none; b=Efb1koYYiSWWxUw61WAg5z0xgUHafwUimwJYbjU3HZD0n3EYqjbzNaLgXIhzhy5WurzqKRZBANF/j2n02PPYJh1pwazjnQSBFyeyGqPBWaXoffiZCxfTTCJlvme3/DYRaVGjXElFPjLl3HEnyRCP5KIAdVp4yLcpJbb+nZjwN0Y=
+	t=1729823637; cv=none; b=NXngTizHd+sw23UmanF4fE5DIj2l2L2HHlFeVd5L/9OlMhhfSfCbaZgiA4zYBqFobamk8w+JdhLsahbr0xvC8NZJuf8hBYKUF69TGwT96RkbzyHLg7VyMHO1I89tBmk9A+bfg8jb9j+fau37kL793wVuVCcM3R4EZLpvRqFnSaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729818761; c=relaxed/simple;
-	bh=PHxfFpqObkrrSBamze6sZWU16lKkQrT5urkAlZLAiog=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DoWtPRk3is84w8aq1nfmq8ZueHmUNwFLJtCdO/lHmMoA9P0PUmyT4kwyarmsGG/bbGso9GIfdm4X7QYXutSm0UXIZ/uGn+I8W/unwvol8xktF0p00YVnuI589JVajK8g/ZSE7lMe30TDPYVrH5Azm7IG8DL7KuWR/r+hAoLGUaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=w6ly9JN3; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1729823637; c=relaxed/simple;
+	bh=Dxy+NMTSpb+CMX43FySawO667J6fQoNRWNne0khqdWM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kRZeB5+wIoaMtrVcQV49HrgpvNMDNNUCFeWHqPtLW+KX1uYGbm4mZAYWQncmt8Iy+p7V3mL6kYuzuoc7Iq7UwBKw8IXeyJejk4oRQG8M66B/Jbbs9RwmYaGlvoxb3vM+u6nJuQkR2ZyjwtEGGMK6rMIdsVNSorN/KeoUfHTudl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=pCcmI1/p; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="w6ly9JN3"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4XZPs94ttLz9sdB;
-	Fri, 25 Oct 2024 03:12:29 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1729818749;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rWq8HddAxnbOButkoMRlw3wmi3/AUyLd9/aAwivCFzE=;
-	b=w6ly9JN3wXQqZ/74KIXYwBlwzaxWnhSV8AA28sFZ5obOcwjYsUefajEGjgUSTueJVwQEop
-	ZF70fPSCQvj9bYxBtEvn6CLC75YUpF+fdtkFBG3cqQ6aMRSRtX2J0g3RexGTWToFChs3ni
-	/k5quLIh1egJVDpsSQuIGGbV2HMvYxaxmTmdQeGUgNNHdv4AMXuorHMYVf5xXpNtOJbMgU
-	W1XEg1dOHS5FoxwuLN+TorLv5y9sQRxp/wuQhr5Z0ZL7XuldW42zkx8fZKQt+o5NAcnrKs
-	ql+xT8ntyNNCioRO4U2742j7KFPZ5APRRRee3UnwbIBipKOnDC06XuEKhhNI+A==
-Date: Fri, 25 Oct 2024 06:42:20 +0530
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, fstests@vger.kernel.org, 
-	zlang@redhat.com, linux-xfs@vger.kernel.org, gost.dev@samsung.com, 
-	mcgrof@kernel.org, david@fromorbit.com
-Subject: Re: Re: [PATCH 1/2] generic/219: use filesystem blocksize while
- calculating the file size
-Message-ID: <tkkmsrqrevdsjxybiheukav2tfqucb6hz2tstl2ritzsv3s5aw@gqjkppt7zie7>
-References: <20241024112311.615360-1-p.raghav@samsung.com>
- <20241024112311.615360-2-p.raghav@samsung.com>
- <20241024181910.GG2386201@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="pCcmI1/p"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-ID:MIME-Version; bh=DMZWI
+	w4jz3ayVYs49ZK9iVJIjwfzQsBjk8JXYbXvwv8=; b=pCcmI1/p9AkPkGEAsB5ic
+	BRc/zLJJuZmOL/bXymPAs9TvDl7f2nUInCqoQzgzhJ+UFQRgQackn0BlVOLf0l3s
+	7rUgeX7vfjOQNoleck1+3zOWkTHsCYJtLCd71ViJ5EOqA/m0x51fgDq+cgrcazz6
+	GitY5pqSAaeS/bb/QivGRs=
+Received: from chi-Lenovo-XiaoXin-Air-13-Pro.. (unknown [223.104.40.93])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgD336N_AxtndGQFAA--.1765S2;
+	Fri, 25 Oct 2024 10:33:35 +0800 (CST)
+From: Chi Zhiling <chizhiling@163.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chi Zhiling <chizhiling@kylinos.cn>
+Subject: [PATCH] xfs: Reduce unnecessary searches when searching for the best extents
+Date: Fri, 25 Oct 2024 10:33:20 +0800
+Message-ID: <20241025023320.591468-1-chizhiling@163.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241024181910.GG2386201@frogsfrogsfrogs>
-X-Rspamd-Queue-Id: 4XZPs94ttLz9sdB
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PSgvCgD336N_AxtndGQFAA--.1765S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Cr4kWFW5Jw1UAF47AF1UKFg_yoW8XFWfpr
+	say3W0kws8Xw4fWr9rWws2q347Cwn7Wr4jqFZY9ry3A3Z8GF13Kr92krWj93W7ZrZ5W3Wr
+	urs2yrW8Aw4YgaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jnF4_UUUUU=
+X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBawaDnWca-EqewQAAsn
 
-On Thu, Oct 24, 2024 at 11:19:10AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 24, 2024 at 01:23:10PM +0200, Pankaj Raghav wrote:
-> > generic/219 was failing for XFS with 32k and 64k blocksize. Even though
-> > we do only 48k IO, XFS will allocate blocks rounded to the nearest
-> > blocksize.
-> > 
-> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> > ---
-> >  tests/generic/219 | 18 +++++++++++++++---
-> >  1 file changed, 15 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/tests/generic/219 b/tests/generic/219
-> > index 940b902e..d72aa745 100755
-> > --- a/tests/generic/219
-> > +++ b/tests/generic/219
-> > @@ -49,12 +49,24 @@ check_usage()
-> >  	fi
-> >  }
-> >  
-> > +_round_up_to_fs_blksz()
-> > +{
-> > +	local n=$1
-> > +	local bs=$(_get_file_block_size "$SCRATCH_MNT")
-> > +	local bs_kb=$(( bs >> 10 ))
-> > +
-> > +	echo $(( (n + bs_kb - 1) & ~(bs_kb - 1) ))
-> 
-> Nit: you can divide here, right?
+From: Chi Zhiling <chizhiling@kylinos.cn>
 
-No. I think you are talking about DIV_ROUND_UP(). We are doing a
-round_up operation here.
+Recently, we found that the CPU spent a lot of time in
+xfs_alloc_ag_vextent_size when the filesystem has millions of fragmented
+spaces.
 
-We should get 64k as sz for bs 32k and 64k.
+The reason is that we conducted much extra searching for extents that
+could not yield a better result, and these searches would cost a lot of
+time when there were millions of extents to search through. Even if we
+get the same result length, we don't switch our choice to the new one,
+so we can definitely terminate the search early.
 
-round_up(48k, 32k/64k) = 64k
+Since the result length cannot exceed the found length, when the found
+length equals the best result length we already have, we can conclude
+the search.
 
-> 
-> 	echo $(( (n + bs_kb - 1) / bs_kb ))
-> 
-> The rest seems fine.
-> 
-> --D
-> 
-> > +}
-> > +
-> >  test_accounting()
-> >  {
-> > -	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
-> > -	echo "--- initiating parallel IO..." >>$seqres.full
-> >  	# Small ios here because ext3 will account for indirect blocks too ...
-> >  	# 48k will fit w/o indirect for 4k blocks (default blocksize)
-> > +	io_sz=$(_round_up_to_fs_blksz 48)
-> > +	sz=$(( io_sz * 3 ))
-> > +
-> > +	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
-> > +	echo "--- initiating parallel IO..." >>$seqres.full
-> >  	$XFS_IO_PROG -c 'pwrite 0 48k' -c 'fsync' \
-> >  					$SCRATCH_MNT/buffer >>$seqres.full 2>&1 &
-> >  	$XFS_IO_PROG -c 'pwrite 0 48k' -d \
-> > @@ -73,7 +85,7 @@ test_accounting()
-> >  	else
-> >  		id=$qa_group
-> >  	fi
-> > -	repquota -$type $SCRATCH_MNT | grep "^$id" | check_usage 144 3
-> > +	repquota -$type $SCRATCH_MNT | grep "^$id" | check_usage $sz 3
-> >  }
-> >  
-> >  
-> > -- 
-> > 2.44.1
-> > 
-> > 
+We did a test in that filesystem:
+[root@localhost ~]# xfs_db -c freesp /dev/vdb
+   from      to extents  blocks    pct
+      1       1     215     215   0.01
+      2       3  994476 1988952  99.99
 
+Before this patch:
+ 0)               |  xfs_alloc_ag_vextent_size [xfs]() {
+ 0) * 15597.94 us |  }
+
+After this patch:
+ 0)               |  xfs_alloc_ag_vextent_size [xfs]() {
+ 0)   19.176 us    |  }
+
+Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 04f64cf9777e..22bdbb3e9980 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1923,7 +1923,7 @@ xfs_alloc_ag_vextent_size(
+ 				error = -EFSCORRUPTED;
+ 				goto error0;
+ 			}
+-			if (flen < bestrlen)
++			if (flen <= bestrlen)
+ 				break;
+ 			busy = xfs_alloc_compute_aligned(args, fbno, flen,
+ 					&rbno, &rlen, &busy_gen);
 -- 
-Pankaj Raghav
+2.43.0
+
