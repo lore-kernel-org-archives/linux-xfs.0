@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A158B217F26;
-	Fri, 25 Oct 2024 21:23:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0C481D9A46
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 22:19:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729891406; cv=none; b=uSiHD6kRRoc8xTUwaYd6QnluyPKVufW/zP1Js5/IQtZOr4vv9HDU0qk4BmI8WrKeL5pFxh0tvNXxr0ckOWg168bMb4vA7eXD/or/8ubq3F2d2mq2dTlmlXKozUqOCK42cI0fBQGxLMeLuMgZSdTmMIQ3BXe/dZYVjk9bWehWlKI=
+	t=1729894760; cv=none; b=YXmr1mDIACCpNIkFWwMuGc5IYIoU+Y3iS6E7glBOZo/gfOEEbViXDCqb760Wgbf9BCl752ZiHqpUD4UgmLQQFNN/Ni2KD1EJ2rat1Wgks5BmlquwdYk66IYEQh2xWkkzqSDjeCkklFIAECAgIiaD2pHCiiHqIHnrhxggJ0uTUgQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729891406; c=relaxed/simple;
-	bh=mrvuFapWgzfrpeyCx9G7w/e8BAD5iCfoYA2KNNcmGRQ=;
+	s=arc-20240116; t=1729894760; c=relaxed/simple;
+	bh=ULUTog71d+iXYLwrJNaHVxIJGuiezm2qQCOgdSovMRQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AIMFIrP1l84J/fWhx3ctK9vpHGyDpS2so0vkKWAltYM3W2F+AuzHs/qAhkWtZomJNMCyapgYXNbvXJPS1IOdivUOnEYtVMl1bR5xcA2zrUi7DopzDEvRSTIBh6F9ouM8OVhnR++YSpu7RXKfwazYuHhzec0+rkGBNnSc1qLCF4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rhcEQjoG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YOkssQLCLuU/ARsfEcmzbWlxlt0Fw938uuYWRGUNRTad+hPdLdhWvfpTPtSMXeEN8eV6WwdoIOCHGMIYrP9rNKNnpxmSM7ReC3aV08V7vPUKeSq2AVjCetsnFDyrK8PQJdsA3io5z6LHKfZkK5nKxs3Ixe7FnOpR3C2erONl4hI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IBaLLWh+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rhcEQjoG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2789AC4CEC3;
-	Fri, 25 Oct 2024 21:23:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IBaLLWh+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67FA6C4CEC3;
+	Fri, 25 Oct 2024 22:19:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729891406;
-	bh=mrvuFapWgzfrpeyCx9G7w/e8BAD5iCfoYA2KNNcmGRQ=;
+	s=k20201202; t=1729894760;
+	bh=ULUTog71d+iXYLwrJNaHVxIJGuiezm2qQCOgdSovMRQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rhcEQjoG3kL0r1SxE+KkaaHc3kfQNIK8dtVNyxwK3Eei48VKjhQMNgUn0mpzA1AXJ
-	 /lRUqrQF/gpWBu1LxT2dDdwNtogCSQfXVBwwry8HkDkVuLgRG7i0HeOOPMFk1NcPNL
-	 61T0hgaonNT1gows/QIrP8VM1LBhcvBECywJrBtFJkcrJijrKOx1mIr1yFiUFfGgGr
-	 PaGfuelQdXpc3TWQEhjLCrIgr2BzVuNzMqS6bySUuVBjTESc0duCHXgJEf3S4gZrWi
-	 dX87XiD/x2aKOXmOQe2kHVJlQEAYiltebuhUCwJv+cHwz+MK7rxe6YgXMRDZJX2wqF
-	 7Wgpgu5vVUETg==
-Date: Fri, 25 Oct 2024 14:23:25 -0700
+	b=IBaLLWh+2NRaqjARnfA+psiazI7oFvQB2F3HZ2kcVQuBoeU6NS3jA3a78lIqLvqR2
+	 oBPLSm77R9RcTf7NUJZCNdD35TDqj2Ppdm9v9i1zZdg4lbVaZzOQmhO3tUbsNG+R4V
+	 148rGlA1H7yp/eZIPyCqAdVDYKgFdML2arA6LsTksxf06kv/oo1jr+3vvfvQ7YgfoQ
+	 y7Q5vjjHZHDx6XxUSxLd18f49Qfsz1W275bjix/Yq5fQQHu91GP/RvzkA6PB0akAms
+	 LJuVKM4L+wD+Iv4hCCycGpoAj4Y8fTvfgMwzSRij87fjhZg5eeVGTzK5kiwOWQl0q1
+	 WCYycYg4XQx6Q==
+Date: Fri, 25 Oct 2024 15:19:19 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: chandanbabu@kernel.org, Jeff Layton <jlayton@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: introduce new file range commit ioctls
-Message-ID: <20241025212325.GO2386201@frogsfrogsfrogs>
-References: <172530104958.3324894.994059142950589764.stgit@frogsfrogsfrogs>
- <172530104976.3324894.7457187634523547516.stgit@frogsfrogsfrogs>
- <20240903-kapelle-anregen-6b346d4dbead@brauner>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: allow sparse inode records at the end of runt
+ AGs
+Message-ID: <20241025221919.GP2386201@frogsfrogsfrogs>
+References: <20241024025142.4082218-1-david@fromorbit.com>
+ <20241024025142.4082218-3-david@fromorbit.com>
+ <20241024170038.GJ21853@frogsfrogsfrogs>
+ <Zxs+HQGuJziECU5i@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,438 +45,121 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240903-kapelle-anregen-6b346d4dbead@brauner>
+In-Reply-To: <Zxs+HQGuJziECU5i@dread.disaster.area>
 
-On Tue, Sep 03, 2024 at 09:52:43AM +0200, Christian Brauner wrote:
-> On Mon, Sep 02, 2024 at 11:23:07AM GMT, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Oct 25, 2024 at 05:43:41PM +1100, Dave Chinner wrote:
+> On Thu, Oct 24, 2024 at 10:00:38AM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 24, 2024 at 01:51:04PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Due to the failure to correctly limit sparse inode chunk allocation
+> > > in runt AGs, we now have many production filesystems with sparse
+> > > inode chunks allocated across the end of the runt AG. xfs_repair
+> > > or a growfs is needed to fix this situation, neither of which are
+> > > particularly appealing.
+> > > 
+> > > The on disk layout from the metadump shows AG 12 as a runt that is
+> > > 1031 blocks in length and the last inode chunk allocated on disk at
+> > > agino 8192.
 > > 
-> > This patch introduces two more new ioctls to manage atomic updates to
-> > file contents -- XFS_IOC_START_COMMIT and XFS_IOC_COMMIT_RANGE.  The
-> > commit mechanism here is exactly the same as what XFS_IOC_EXCHANGE_RANGE
-> > does, but with the additional requirement that file2 cannot have changed
-> > since some sampling point.  The start-commit ioctl performs the sampling
-> > of file attributes.
-> > 
-> > Note: This patch currently samples i_ctime during START_COMMIT and
-> > checks that it hasn't changed during COMMIT_RANGE.  This isn't entirely
-> > safe in kernels prior to 6.12 because ctime only had coarse grained
-> > granularity and very fast updates could collide with a COMMIT_RANGE.
-> > With the multi-granularity ctime introduced by Jeff Layton, it's now
-> > possible to update ctime such that this does not happen.
-> > 
-> > It is critical, then, that this patch must not be backported to any
-> > kernel that does not support fine-grained file change timestamps.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Acked-by: Jeff Layton <jlayton@kernel.org>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h |   26 +++++++++
-> >  fs/xfs/xfs_exchrange.c |  143 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_exchrange.h |   16 +++++
-> >  fs/xfs/xfs_ioctl.c     |    4 +
-> >  fs/xfs/xfs_trace.h     |   57 +++++++++++++++++++
-> >  5 files changed, 243 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 454b63ef7201..c85c8077fac3 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -825,6 +825,30 @@ struct xfs_exchange_range {
-> >  	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
-> >  };
-> >  
-> > +/*
-> > + * Using the same definition of file2 as struct xfs_exchange_range, commit the
-> > + * contents of file1 into file2 if file2 has the same inode number, mtime, and
-> > + * ctime as the arguments provided to the call.  The old contents of file2 will
-> > + * be moved to file1.
-> > + *
-> > + * Returns -EBUSY if there isn't an exact match for the file2 fields.
-> > + *
-> > + * Filesystems must be able to restart and complete the operation even after
-> > + * the system goes down.
-> > + */
-> > +struct xfs_commit_range {
-> > +	__s32		file1_fd;
-> > +	__u32		pad;		/* must be zeroes */
-> > +	__u64		file1_offset;	/* file1 offset, bytes */
-> > +	__u64		file2_offset;	/* file2 offset, bytes */
-> > +	__u64		length;		/* bytes to exchange */
-> > +
-> > +	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
-> > +
-> > +	/* opaque file2 metadata for freshness checks */
-> > +	__u64		file2_freshness[6];
-> > +};
-> > +
-> >  /*
-> >   * Exchange file data all the way to the ends of both files, and then exchange
-> >   * the file sizes.  This flag can be used to replace a file's contents with a
-> > @@ -997,6 +1021,8 @@ struct xfs_getparents_by_handle {
-> >  #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
-> >  #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
-> >  #define XFS_IOC_EXCHANGE_RANGE	     _IOW ('X', 129, struct xfs_exchange_range)
-> > +#define XFS_IOC_START_COMMIT	     _IOR ('X', 130, struct xfs_commit_range)
-> > +#define XFS_IOC_COMMIT_RANGE	     _IOW ('X', 131, struct xfs_commit_range)
-> >  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
-> >  
-> >  
-> > diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
-> > index c8a655c92c92..d0889190ab7f 100644
-> > --- a/fs/xfs/xfs_exchrange.c
-> > +++ b/fs/xfs/xfs_exchrange.c
-> > @@ -72,6 +72,34 @@ xfs_exchrange_estimate(
-> >  	return error;
-> >  }
-> >  
-> > +/*
-> > + * Check that file2's metadata agree with the snapshot that we took for the
-> > + * range commit request.
-> > + *
-> > + * This should be called after the filesystem has locked /all/ inode metadata
-> > + * against modification.
-> > + */
-> > +STATIC int
-> > +xfs_exchrange_check_freshness(
-> > +	const struct xfs_exchrange	*fxr,
-> > +	struct xfs_inode		*ip2)
-> > +{
-> > +	struct inode			*inode2 = VFS_I(ip2);
-> > +	struct timespec64		ctime = inode_get_ctime(inode2);
-> > +	struct timespec64		mtime = inode_get_mtime(inode2);
-> > +
-> > +	trace_xfs_exchrange_freshness(fxr, ip2);
-> > +
-> > +	/* Check that file2 hasn't otherwise been modified. */
-> > +	if (fxr->file2_ino != ip2->i_ino ||
-> > +	    fxr->file2_gen != inode2->i_generation ||
-> > +	    !timespec64_equal(&fxr->file2_ctime, &ctime) ||
-> > +	    !timespec64_equal(&fxr->file2_mtime, &mtime))
-> > +		return -EBUSY;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  #define QRETRY_IP1	(0x1)
-> >  #define QRETRY_IP2	(0x2)
-> >  
-> > @@ -607,6 +635,12 @@ xfs_exchrange_prep(
-> >  	if (error || fxr->length == 0)
-> >  		return error;
-> >  
-> > +	if (fxr->flags & __XFS_EXCHANGE_RANGE_CHECK_FRESH2) {
-> > +		error = xfs_exchrange_check_freshness(fxr, ip2);
-> > +		if (error)
-> > +			return error;
-> > +	}
-> > +
-> >  	/* Attach dquots to both inodes before changing block maps. */
-> >  	error = xfs_qm_dqattach(ip2);
-> >  	if (error)
-> > @@ -719,7 +753,8 @@ xfs_exchange_range(
-> >  	if (fxr->file1->f_path.mnt != fxr->file2->f_path.mnt)
-> >  		return -EXDEV;
-> >  
-> > -	if (fxr->flags & ~XFS_EXCHANGE_RANGE_ALL_FLAGS)
-> > +	if (fxr->flags & ~(XFS_EXCHANGE_RANGE_ALL_FLAGS |
-> > +			 __XFS_EXCHANGE_RANGE_CHECK_FRESH2))
-> >  		return -EINVAL;
-> >  
-> >  	/* Userspace requests only honored for regular files. */
-> > @@ -802,3 +837,109 @@ xfs_ioc_exchange_range(
-> >  	fdput(file1);
-> >  	return error;
-> >  }
-> > +
-> > +/* Opaque freshness blob for XFS_IOC_COMMIT_RANGE */
-> > +struct xfs_commit_range_fresh {
-> > +	xfs_fsid_t	fsid;		/* m_fixedfsid */
-> > +	__u64		file2_ino;	/* inode number */
-> > +	__s64		file2_mtime;	/* modification time */
-> > +	__s64		file2_ctime;	/* change time */
-> > +	__s32		file2_mtime_nsec; /* mod time, nsec */
-> > +	__s32		file2_ctime_nsec; /* change time, nsec */
-> > +	__u32		file2_gen;	/* inode generation */
-> > +	__u32		magic;		/* zero */
-> > +};
-> > +#define XCR_FRESH_MAGIC	0x444F524B	/* DORK */
-> > +
-> > +/* Set up a commitrange operation by sampling file2's write-related attrs */
-> > +long
-> > +xfs_ioc_start_commit(
-> > +	struct file			*file,
-> > +	struct xfs_commit_range __user	*argp)
-> > +{
-> > +	struct xfs_commit_range		args = { };
-> > +	struct timespec64		ts;
-> > +	struct xfs_commit_range_fresh	*kern_f;
-> > +	struct xfs_commit_range_fresh	__user *user_f;
-> > +	struct inode			*inode2 = file_inode(file);
-> > +	struct xfs_inode		*ip2 = XFS_I(inode2);
-> > +	const unsigned int		lockflags = XFS_IOLOCK_SHARED |
-> > +						    XFS_MMAPLOCK_SHARED |
-> > +						    XFS_ILOCK_SHARED;
-> > +
-> > +	BUILD_BUG_ON(sizeof(struct xfs_commit_range_fresh) !=
-> > +		     sizeof(args.file2_freshness));
-> > +
-> > +	kern_f = (struct xfs_commit_range_fresh *)&args.file2_freshness;
-> > +
-> > +	memcpy(&kern_f->fsid, ip2->i_mount->m_fixedfsid, sizeof(xfs_fsid_t));
-> > +
-> > +	xfs_ilock(ip2, lockflags);
-> > +	ts = inode_get_ctime(inode2);
-> > +	kern_f->file2_ctime		= ts.tv_sec;
-> > +	kern_f->file2_ctime_nsec	= ts.tv_nsec;
-> > +	ts = inode_get_mtime(inode2);
-> > +	kern_f->file2_mtime		= ts.tv_sec;
-> > +	kern_f->file2_mtime_nsec	= ts.tv_nsec;
-> > +	kern_f->file2_ino		= ip2->i_ino;
-> > +	kern_f->file2_gen		= inode2->i_generation;
-> > +	kern_f->magic			= XCR_FRESH_MAGIC;
-> > +	xfs_iunlock(ip2, lockflags);
-> > +
-> > +	user_f = (struct xfs_commit_range_fresh __user *)&argp->file2_freshness;
-> > +	if (copy_to_user(user_f, kern_f, sizeof(*kern_f)))
-> > +		return -EFAULT;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/*
-> > + * Exchange file1 and file2 contents if file2 has not been written since the
-> > + * start commit operation.
-> > + */
-> > +long
-> > +xfs_ioc_commit_range(
-> > +	struct file			*file,
-> > +	struct xfs_commit_range __user	*argp)
-> > +{
-> > +	struct xfs_exchrange		fxr = {
-> > +		.file2			= file,
-> > +	};
-> > +	struct xfs_commit_range		args;
-> > +	struct xfs_commit_range_fresh	*kern_f;
-> > +	struct xfs_inode		*ip2 = XFS_I(file_inode(file));
-> > +	struct xfs_mount		*mp = ip2->i_mount;
-> > +	struct fd			file1;
-> > +	int				error;
-> > +
-> > +	kern_f = (struct xfs_commit_range_fresh *)&args.file2_freshness;
-> > +
-> > +	if (copy_from_user(&args, argp, sizeof(args)))
-> > +		return -EFAULT;
-> > +	if (args.flags & ~XFS_EXCHANGE_RANGE_ALL_FLAGS)
-> > +		return -EINVAL;
-> > +	if (kern_f->magic != XCR_FRESH_MAGIC)
-> > +		return -EBUSY;
-> > +	if (memcmp(&kern_f->fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t)))
-> > +		return -EBUSY;
+> > Does this problem also happen on non-runt AGs?
 > 
-> So, I mentioned this before in another mail a few months ago and I think
-> you liked the idea so just as a reminder in case you forgot:
-> 
-> Ioctls are extensible if done correctly:
-> 
-> switch (__IOC_NR(ioctl)) {
-> 	case _IOC_NR(XFS_IOC_START_COMMIT): {
-> 	        size_t usize = _IOC_SIZE(ioctl);
-> 		struct xfs_commit_range	args;
-> 
-> 		if (usize < XFS_IOC_START_COMMIT_SIZE_VER0)
->                         return -EINVAL;
-> 
-> 		if (copy_struct_from_user(&args, sizeof(args), argp, usize))
-> 			return -EFAULT;
-> 	}
-> 
-> If you code it this way, relying on copy_struct_from_user() right from
-> the start you can easily extend your struct in a backward and forward
-> compatible manner.
+> No. The highest agbno an inode chunk can be allocated at in a full
+> size AG is aligned by rounding down from sb_agblocks.  Hence
+> sb_agblocks can be unaligned and nothing will go wrong. The problem
+> is purely that the runt AG being shorter than sb_agblocks and so
+> this highest agbno allocation guard is set beyond the end of the
+> AG...
 
-I don't know that we'd really need it for commitrange since there's
-plenty of space (~40 bytes) in the "opaque" freshness blob.  I suspect
-that if we ever add subvolumes to XFS then we might want to take over
-the 12 bytes used by mtime* for the subvolume id.
+Ah, right, and we don't want sparse inode chunks to cross EOAG because
+then you'd have a chunk whose clusters would cross into the next AG, at
+least in the linear LBA space.  That's why (for sparse inode fses) it
+makes sense that we want to round last_agino down by the chunk for
+non-last AGs, and round it down by only the cluster for the last AG.
 
-That said, I also think we could convert to this format pretty easily.
-Also, copy_struct_from_user can return -E2BIG so I think that needs to
-be:
+Waitaminute, what if the last AG is less than a chunk but more than a
+cluster's worth of blocks short of sb_agblocks?  Or what if sb_agblocks
+doesn't align with a chunk boundary?  I think the new code:
 
-	ret = copy_struct_from_user(&args, sizeof(args), argp, usize);
-	if (ret)
-		return ret;
+	if (xfs_has_sparseinodes(mp) && agno == mp->m_sb.sb_agcount - 1)
+		end_align = mp->m_sb.sb_spino_align;
+	else
+		end_align = M_IGEO(mp)->cluster_align;
+	bno = round_down(eoag, end_align);
+	*last = XFS_AGB_TO_AGINO(mp, bno) - 1;
 
-Though the overriding reason for not writing the __IOC_NR dispatch code
-this way is that every time I've tried extend an xfs ioctl in this
-manner, Dave says no because (I think) he doesn't trust how the struct
-size is opaquely encoded in the ioctl number /and/ doesn't trust the
-BUILD_BUG_ONs I put in the code to guarantee uniqueness so I pick a new
-number so I can complete the review instead of starting over with a
-different reviewer who doesn't have that particular preference.
+will allow a sparse chunk that (erroneously) crosses sb_agblocks, right?
+Let's say sb_spino_align == 4, sb_inoalignmt == 8, sb_agcount == 2,
+sb_agblocks == 100,007, and sb_dblocks == 200,014.
 
-> }
+For AG 0, eoag is 100007, end_align == cluster_align == 8, so bno is
+rounded down to 100000.  *last is thus set to the inode at the end of
+block 99999.
+
+For AG 1, eoag is also 100007, but now end_align == 4.  bno is rounded
+down to 100,004.  *last is set to the inode at the end of block 100003,
+not 99999.
+
+But now let's say we growfs another 100007 blocks onto the filesystem.
+Now we have 3x AGs, each with 100007 blocks.  But now *last for AG 1
+becomes 99999 even though we might've allocated an inode in block
+100000 before the growfs.  That will cause a corruption error too,
+right?
+
+IOWs, don't we want something more like this?
+
+	/*
+	 * The preferred inode cluster allocation size cannot ever cross
+	 * sb_agblocks.  cluster_align is one of the following:
+	 *
+	 * - For sparse inodes, this is an inode chunk.
+	 * - For aligned non-sparse inodes, this is an inode cluster.
+	 */
+	bno = round_down(sb_agblocks, cluster_align);
+	if (xfs_has_sparseinodes(mp) &&
+	    agno == mp->m_sb.sb_agcount - 1) {
+		/*
+		 * For a filesystem with sparse inodes, an inode chunk
+		 * still cannot cross sb_agblocks, but it can cross eoag
+		 * if eoag < agblocks.  Inode clusters cannot cross eoag.
+		 */
+		last_clus_bno = round_down(eoag, sb_spino_align);
+		bno = min(bno, last_clus_bno);
+	}
+	*last = XFS_AGB_TO_AGINO(mp, bno) - 1;
+
+This preserves the invariant that inode chunks cannot span sb_agblocks,
+while permitting sparse clusters going right up to EOAG so long as the
+chunk doesn't cross sb_agblocks.
+
+> > If the only free space
+> > that could be turned into a sparse cluster is unaligned space at the
+> > end of AG 0, would you still get the same corruption error?
 > 
-> > +
-> > +	fxr.file1_offset	= args.file1_offset;
-> > +	fxr.file2_offset	= args.file2_offset;
-> > +	fxr.length		= args.length;
-> > +	fxr.flags		= args.flags | __XFS_EXCHANGE_RANGE_CHECK_FRESH2;
-> > +	fxr.file2_ino		= kern_f->file2_ino;
-> > +	fxr.file2_gen		= kern_f->file2_gen;
-> > +	fxr.file2_mtime.tv_sec	= kern_f->file2_mtime;
-> > +	fxr.file2_mtime.tv_nsec	= kern_f->file2_mtime_nsec;
-> > +	fxr.file2_ctime.tv_sec	= kern_f->file2_ctime;
-> > +	fxr.file2_ctime.tv_nsec	= kern_f->file2_ctime_nsec;
-> > +
-> > +	file1 = fdget(args.file1_fd);
-> > +	if (!file1.file)
-> > +		return -EBADF;
-> 
-> Please use CLASS(fd, f)(args.file1_fd) :)
+> It will only happen if AG 0 is a runt AG, and then the same error
+> would occur. We don't currently allow single AG filesystems, nor
+> when they are set up  do we create them as a runt - the are always
+> full size. So current single AG filesystems made by mkfs won't have
+> this problem.
 
-Yeah, I saw that the fd cleanups collided with xfs in for-next, thanks
-for the heads up.
+Hmm, do you have a quick means to simulate this last-AG unaligned
+icluster situation?
+
+> That said, the proposed single AG cloud image filesystems that set
+> AG 0 up as a runt (i.e. dblocks smaller than sb_agblocks) to allow
+> the AG 0 size to grow along with the size of the filesystem could
+> definitely have this problem. i.e. sb_dblocks needs to be inode
+> chunk aligned in this sort of setup, or these filesystems need to
+> be restricted to fixed kernels....
+
+I wonder if we *should* have a compat flag for these cloud filesystems
+just as a warning sign to us all. :)
 
 --D
 
-> > +	fxr.file1 = file1.file;
-> > +
-> > +	error = xfs_exchange_range(&fxr);
-> > +	fdput(file1);
-> > +	return error;
-> > +}
-> > diff --git a/fs/xfs/xfs_exchrange.h b/fs/xfs/xfs_exchrange.h
-> > index 039abcca546e..bc1298aba806 100644
-> > --- a/fs/xfs/xfs_exchrange.h
-> > +++ b/fs/xfs/xfs_exchrange.h
-> > @@ -10,8 +10,12 @@
-> >  #define __XFS_EXCHANGE_RANGE_UPD_CMTIME1	(1ULL << 63)
-> >  #define __XFS_EXCHANGE_RANGE_UPD_CMTIME2	(1ULL << 62)
-> >  
-> > +/* Freshness check required */
-> > +#define __XFS_EXCHANGE_RANGE_CHECK_FRESH2	(1ULL << 61)
-> > +
-> >  #define XFS_EXCHANGE_RANGE_PRIV_FLAGS	(__XFS_EXCHANGE_RANGE_UPD_CMTIME1 | \
-> > -					 __XFS_EXCHANGE_RANGE_UPD_CMTIME2)
-> > +					 __XFS_EXCHANGE_RANGE_UPD_CMTIME2 | \
-> > +					 __XFS_EXCHANGE_RANGE_CHECK_FRESH2)
-> >  
-> >  struct xfs_exchrange {
-> >  	struct file		*file1;
-> > @@ -22,10 +26,20 @@ struct xfs_exchrange {
-> >  	u64			length;
-> >  
-> >  	u64			flags;	/* XFS_EXCHANGE_RANGE flags */
-> > +
-> > +	/* file2 metadata for freshness checks */
-> > +	u64			file2_ino;
-> > +	struct timespec64	file2_mtime;
-> > +	struct timespec64	file2_ctime;
-> > +	u32			file2_gen;
-> >  };
-> >  
-> >  long xfs_ioc_exchange_range(struct file *file,
-> >  		struct xfs_exchange_range __user *argp);
-> > +long xfs_ioc_start_commit(struct file *file,
-> > +		struct xfs_commit_range __user *argp);
-> > +long xfs_ioc_commit_range(struct file *file,
-> > +		struct xfs_commit_range __user	*argp);
-> >  
-> >  struct xfs_exchmaps_req;
-> >  
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 6b13666d4e96..90b3ee21e7fe 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1518,6 +1518,10 @@ xfs_file_ioctl(
-> >  
-> >  	case XFS_IOC_EXCHANGE_RANGE:
-> >  		return xfs_ioc_exchange_range(filp, arg);
-> > +	case XFS_IOC_START_COMMIT:
-> > +		return xfs_ioc_start_commit(filp, arg);
-> > +	case XFS_IOC_COMMIT_RANGE:
-> > +		return xfs_ioc_commit_range(filp, arg);
-> >  
-> >  	default:
-> >  		return -ENOTTY;
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 180ce697305a..4cf0fa71ba9c 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -4926,7 +4926,8 @@ DEFINE_INODE_ERROR_EVENT(xfs_exchrange_error);
-> >  	{ XFS_EXCHANGE_RANGE_DRY_RUN,		"DRY_RUN" }, \
-> >  	{ XFS_EXCHANGE_RANGE_FILE1_WRITTEN,	"F1_WRITTEN" }, \
-> >  	{ __XFS_EXCHANGE_RANGE_UPD_CMTIME1,	"CMTIME1" }, \
-> > -	{ __XFS_EXCHANGE_RANGE_UPD_CMTIME2,	"CMTIME2" }
-> > +	{ __XFS_EXCHANGE_RANGE_UPD_CMTIME2,	"CMTIME2" }, \
-> > +	{ __XFS_EXCHANGE_RANGE_CHECK_FRESH2,	"FRESH2" }
-> >  
-> >  /* file exchange-range tracepoint class */
-> >  DECLARE_EVENT_CLASS(xfs_exchrange_class,
-> > @@ -4986,6 +4987,60 @@ DEFINE_EXCHRANGE_EVENT(xfs_exchrange_prep);
-> >  DEFINE_EXCHRANGE_EVENT(xfs_exchrange_flush);
-> >  DEFINE_EXCHRANGE_EVENT(xfs_exchrange_mappings);
-> >  
-> > +TRACE_EVENT(xfs_exchrange_freshness,
-> > +	TP_PROTO(const struct xfs_exchrange *fxr, struct xfs_inode *ip2),
-> > +	TP_ARGS(fxr, ip2),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_ino_t, ip2_ino)
-> > +		__field(long long, ip2_mtime)
-> > +		__field(long long, ip2_ctime)
-> > +		__field(int, ip2_mtime_nsec)
-> > +		__field(int, ip2_ctime_nsec)
-> > +
-> > +		__field(xfs_ino_t, file2_ino)
-> > +		__field(long long, file2_mtime)
-> > +		__field(long long, file2_ctime)
-> > +		__field(int, file2_mtime_nsec)
-> > +		__field(int, file2_ctime_nsec)
-> > +	),
-> > +	TP_fast_assign(
-> > +		struct timespec64	ts64;
-> > +		struct inode		*inode2 = VFS_I(ip2);
-> > +
-> > +		__entry->dev = inode2->i_sb->s_dev;
-> > +		__entry->ip2_ino = ip2->i_ino;
-> > +
-> > +		ts64 = inode_get_ctime(inode2);
-> > +		__entry->ip2_ctime = ts64.tv_sec;
-> > +		__entry->ip2_ctime_nsec = ts64.tv_nsec;
-> > +
-> > +		ts64 = inode_get_mtime(inode2);
-> > +		__entry->ip2_mtime = ts64.tv_sec;
-> > +		__entry->ip2_mtime_nsec = ts64.tv_nsec;
-> > +
-> > +		__entry->file2_ino = fxr->file2_ino;
-> > +		__entry->file2_mtime = fxr->file2_mtime.tv_sec;
-> > +		__entry->file2_ctime = fxr->file2_ctime.tv_sec;
-> > +		__entry->file2_mtime_nsec = fxr->file2_mtime.tv_nsec;
-> > +		__entry->file2_ctime_nsec = fxr->file2_ctime.tv_nsec;
-> > +	),
-> > +	TP_printk("dev %d:%d "
-> > +		  "ino 0x%llx mtime %lld:%d ctime %lld:%d -> "
-> > +		  "file 0x%llx mtime %lld:%d ctime %lld:%d",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->ip2_ino,
-> > +		  __entry->ip2_mtime,
-> > +		  __entry->ip2_mtime_nsec,
-> > +		  __entry->ip2_ctime,
-> > +		  __entry->ip2_ctime_nsec,
-> > +		  __entry->file2_ino,
-> > +		  __entry->file2_mtime,
-> > +		  __entry->file2_mtime_nsec,
-> > +		  __entry->file2_ctime,
-> > +		  __entry->file2_ctime_nsec)
-> > +);
-> > +
-> >  TRACE_EVENT(xfs_exchmaps_overhead,
-> >  	TP_PROTO(struct xfs_mount *mp, unsigned long long bmbt_blocks,
-> >  		 unsigned long long rmapbt_blocks),
-> > 
+> -Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
