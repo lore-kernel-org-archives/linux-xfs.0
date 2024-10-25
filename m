@@ -1,474 +1,255 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f53.google.com (mail-oa1-f53.google.com [209.85.160.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 705A2176227;
-	Thu, 24 Oct 2024 23:53:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729813984; cv=fail; b=pN4AL+rbIKtr1LqkR2Oa8kNxcnS6g7nQDEuNFmzvXpsV/0ue3SOK09eJb9+jODF0/asz8f+3DD7ZSo0RUyRe+czFn2LfxWO0YEyABCqMwzAw6r/OK1V3yoFzYHoU82wZhosVuJ2rEH1jQmrduUTj6jUwIRmazN2DINzPJ5GjrJE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729813984; c=relaxed/simple;
-	bh=OWRUX2Yq/sgNbJqJizDqJdTxgIHSzfS4PWoR58XmnKg=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=GeT7fTUzlQEdPUnl5M8yQLmZqVcG0wnLnfyy7THARVhmqtQb1AkEWYkdHwf/ACF9lsgnl0T1hCv1qqzP14jCgI8f10uXOzOaZxaXag0Kvp2BqaINt9Y6MfVABMScibYd2MAoVpBZTL72q3Q6AfUs26kUe6Macs7gfgQYA7Wn888=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LjAAN6K5; arc=fail smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAA144430
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 00:48:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.53
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729817304; cv=none; b=YuTjCC/GOz9JyaAh9WllBxtWEUfjjTy3ey+S+FYKF0zntGp12NLUHmzvKSy9O6ZfA2bahWAWltiirX8IM+9cYMqEgXnfWGaL0OmPN+vCRyO4uXOuXzdv+90Btsrl4congrKBQmWBltS/xDdCVBCjq46GWvfNVlZsazVJ8g7Oaks=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729817304; c=relaxed/simple;
+	bh=VYgR+qJoh8D1ySUopoAOUiY4VLFg+wsAlPAb/zox9us=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZVaEA9PdNpp6BDDhqD1s7G9YMINXY2biojbtQefLEKSBdJIoXZDy8XS/aEqjZC9J5LcOM4Yf9WI96DFlWGlPOrdr80SjGYf5KQIwZHybcO9RoSSEvwe0wmjAhhTrS6bgr4faZSOdbBvFlfkfYhjfcCwsl+ehlUAkWHp7eNom3YU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xcEBVDhT; arc=none smtp.client-ip=209.85.160.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LjAAN6K5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729813980; x=1761349980;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=OWRUX2Yq/sgNbJqJizDqJdTxgIHSzfS4PWoR58XmnKg=;
-  b=LjAAN6K5NpsGst4CUxoPRFj+Fz/xn4Aqj0BJycD2va9zrsstFbtvTcQO
-   7Ifh9eBfJTAnsU5rAbi3QjU6VHya9RhUnjBWitAWNygv6o96gR24iHjv9
-   AD7buvkjsXMjkZ6Jm3CPATeC5/1fpYdTqbLSXnSBMe17cZURh7F3YHevb
-   snqgK+LY0Mp02grTMM1yheCergxIaoXsHjNmuI+5ejhNTgquxXyr6YWwO
-   gg0UMiS1hKJC6TUD8eOCiI+lAMGLIYtpTkF+I+C3sunFDXok/2TgGHfNL
-   7eJVtRUoTXhWvaTd/QFdd2rDOoORHKdqsGMKZ8U1AOvcJT/ySlH6B0/67
-   w==;
-X-CSE-ConnectionGUID: +d4WV+1eR3O+WRbh3q0riw==
-X-CSE-MsgGUID: 0W7xAEByQ42NPRojabFUmw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11235"; a="40867014"
-X-IronPort-AV: E=Sophos;i="6.11,230,1725346800"; 
-   d="scan'208";a="40867014"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2024 16:52:59 -0700
-X-CSE-ConnectionGUID: BPlmoy0VQWa5lwSU2BbZdw==
-X-CSE-MsgGUID: dXcj5KKYQwGvUptCFr6S6w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,230,1725346800"; 
-   d="scan'208";a="85545453"
-Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
-  by orviesa005.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 24 Oct 2024 16:52:59 -0700
-Received: from orsmsx601.amr.corp.intel.com (10.22.229.14) by
- ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Thu, 24 Oct 2024 16:52:58 -0700
-Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
- orsmsx601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39 via Frontend Transport; Thu, 24 Oct 2024 16:52:58 -0700
-Received: from NAM04-DM6-obe.outbound.protection.outlook.com (104.47.73.41) by
- edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Thu, 24 Oct 2024 16:52:58 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xKo5UGZSgYwBl1Ol3CBEFHFc7O0jNlLk/Y+sN3c0Tzp62LWCLN9x/5Xlesrdyw2ohC46l/RUV6LprUiX5Akk2A4upVIpw8vw/bImBbClieYqDy4tTx5YJa1fZAVg5ZokSUDgFIVoT2pgaqhaU6eehXUoz72DsimcIoFg0Ead05LsUyi9LW3O0BjsRfPXKZqtHDXRF60YdiAIY1TuNlPkGX6Z4OylrBHa1c46yHNcg0rICQQJSSzijbjCt82YnXEwyzGMqw4kI966faN0kccUFNHo1ePpbfR5Js3vLasCWGkEG6RkLYPHLFOA6Osw9z6FK2cbodlsEykE4JfAw9nrPw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OlkxyIkA+wMRBLzJNLU6Kd/gPuxuZesyfoHYM/PU1CY=;
- b=vl4iaCkX+Qm7xC/LfbXggmVoHtT6Zp3OWyr3zXd+4wBVDKUN7kFBMKnqVLwVNBIvTNaF9Kmr9BzKQKWtM/92R9QAaa27exhYxxiEO/orAd68bBPHGNy2Z16eISabnT7f3UManEsSYQj3UfcwpFnxTF7doSNcARkafcItPKssRUjujrVHDKXUhBlfgaZk/Tc1OEvwmpQmR2eCa+nLTHgZzfG15ZXMY41gJpa/PaQ/dn/JEES3DpnLhYGHG+NN4ty5JdmRQu9F+f8dxIhkM7ekzqcnjGWDC7Nzb442AtLuiu9ESkTgA4UGWVB2LBlVQ4fFS+APvvGiIJ1Cd3+uOpllVQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from SA3PR11MB8118.namprd11.prod.outlook.com (2603:10b6:806:2f1::13)
- by PH7PR11MB7147.namprd11.prod.outlook.com (2603:10b6:510:1ee::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8093.16; Thu, 24 Oct
- 2024 23:52:55 +0000
-Received: from SA3PR11MB8118.namprd11.prod.outlook.com
- ([fe80::c4e2:f07:bdaa:21ec]) by SA3PR11MB8118.namprd11.prod.outlook.com
- ([fe80::c4e2:f07:bdaa:21ec%6]) with mapi id 15.20.8093.014; Thu, 24 Oct 2024
- 23:52:55 +0000
-Date: Thu, 24 Oct 2024 16:52:50 -0700
-From: Dan Williams <dan.j.williams@intel.com>
-To: Alistair Popple <apopple@nvidia.com>, Dan Williams
-	<dan.j.williams@intel.com>
-CC: <linux-mm@kvack.org>, <vishal.l.verma@intel.com>, <dave.jiang@intel.com>,
-	<logang@deltatee.com>, <bhelgaas@google.com>, <jack@suse.cz>, <jgg@ziepe.ca>,
-	<catalin.marinas@arm.com>, <will@kernel.org>, <mpe@ellerman.id.au>,
-	<npiggin@gmail.com>, <dave.hansen@linux.intel.com>, <ira.weiny@intel.com>,
-	<willy@infradead.org>, <djwong@kernel.org>, <tytso@mit.edu>,
-	<linmiaohe@huawei.com>, <david@redhat.com>, <peterx@redhat.com>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<nvdimm@lists.linux.dev>, <linux-cxl@vger.kernel.org>,
-	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>,
-	<linux-xfs@vger.kernel.org>, <jhubbard@nvidia.com>, <hch@lst.de>,
-	<david@fromorbit.com>
-Subject: Re: [PATCH 10/12] fs/dax: Properly refcount fs dax pages
-Message-ID: <671addd27198f_10e5929472@dwillia2-xfh.jf.intel.com.notmuch>
-References: <cover.9f0e45d52f5cff58807831b6b867084d0b14b61c.1725941415.git-series.apopple@nvidia.com>
- <9f4ef8eaba4c80230904da893018ce615b5c24b2.1725941415.git-series.apopple@nvidia.com>
- <66f665d084aab_964f22948c@dwillia2-xfh.jf.intel.com.notmuch>
- <871q06c4z7.fsf@nvdebian.thelocal>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <871q06c4z7.fsf@nvdebian.thelocal>
-X-ClientProxiedBy: MW4PR03CA0110.namprd03.prod.outlook.com
- (2603:10b6:303:b7::25) To SA3PR11MB8118.namprd11.prod.outlook.com
- (2603:10b6:806:2f1::13)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xcEBVDhT"
+Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-27b7a1480bdso712127fac.2
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2024 17:48:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729817300; x=1730422100; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2SZebrm4sXQ71M/CEnUiJtPi/SjfvyVUqkbG4dZF+pk=;
+        b=xcEBVDhTo4YlAHzOup4au/tRD09Z+C9CKfw94qDjX8A/Jeb707m+gaZAJ2KCsr/e/k
+         uU9rh6KxdIwC8RWT9FV1u/f8nn5bMd9fOgGZFRPLrJ9hgRulgvt0ULthhlJi9gqx7JkD
+         MJIwExZnBb+CZQ0Ol45zArPw+ATTCR+nqEzot5ToiGemNMo/hkfITOaQPM+QiTiaoEI0
+         sOLSfzZG/pwcRE6Ogkm8+ZAk16xyzdnx+06Qq9E116QMNw07Ecd9Q7HIke3Y8t/M4jVl
+         idNPL8V8IQDm4LOsR0J5Yb+X0A/MGrZ3oAGXxOx3+kKlgl9nFkdwRWCPCUNLlMJR43vv
+         +7Kw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729817300; x=1730422100;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2SZebrm4sXQ71M/CEnUiJtPi/SjfvyVUqkbG4dZF+pk=;
+        b=qHw1U5W4e3wh8z+rGt4oewPMzNwCzLruS6bY8xov6JeWLU0fc60PZuihm863FH034d
+         LenGj4drrFT3dcx69mp515BfwgAqKgW/2g47qATZdkPNPokOf8CG0J/qMq1m8zG56b2h
+         ATpLJGlGAlVQd8iVZnpufVTEyT+zRphn5BjakYzB/iHCkD36emRG5aBYaxmts0IV2hBC
+         ZfymNPPoyo5LQoX0cabNOZMPa73bwNPLRqPyOd9x6nCiW3i5mKDP+/IIeqBMArxFKxB5
+         Sz+uaa6TJLcOeREHVJqihJgoCsiNsHWfzWJzW4WcEa7PKivRM6zNQV9H/LLJRMNOaSUu
+         vuVA==
+X-Gm-Message-State: AOJu0YzdQoIkUJeZhsFoO4x7EHppm5gy/Aq1eC8QQ0VhI6lRyP83vdgJ
+	3a6LYfiOYZDWYZg+nX7j252Vy0qWylbe/Wb23ckhBud4ek4PzsLGcH6RSzDtjow=
+X-Google-Smtp-Source: AGHT+IGTyN9VnDNNrJ42jsv8c3GiJeH/wJhgSZBQw2o3SKb39FR6WgLzFW7V3Fw91LmSoz0IyrONPA==
+X-Received: by 2002:a05:6870:c69d:b0:25e:24b:e65b with SMTP id 586e51a60fabf-28ccb68e375mr8264624fac.42.1729817300569;
+        Thu, 24 Oct 2024 17:48:20 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7edc866906dsm36811a12.10.2024.10.24.17.48.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Oct 2024 17:48:19 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t48Ux-005MhO-2x;
+	Fri, 25 Oct 2024 11:48:15 +1100
+Date: Fri, 25 Oct 2024 11:48:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/3] xfs: sparse inodes overlap end of filesystem
+Message-ID: <Zxrqz9xMV5PKQ5+f@dread.disaster.area>
+References: <20241024025142.4082218-1-david@fromorbit.com>
+ <ZxpJp48vi4NpFVqJ@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA3PR11MB8118:EE_|PH7PR11MB7147:EE_
-X-MS-Office365-Filtering-Correlation-Id: 740826d6-2291-424c-6d33-08dcf486fa92
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|1800799024|366016|376014;
-X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?WZTbXED83HRJm0ik+lh3NA6t9oz2IQPGcBHZ9Gq+iT1CRImpBSt4U+CY7ZYQ?=
- =?us-ascii?Q?vnrGiyMuVEM3i6D3h0rkAwi1AMhaM4kU9bzzOvB35gIGLYieMLzvK2ki3uiP?=
- =?us-ascii?Q?qWfbFy78CoTOViQk55tTmESZgazHJZTd4IzHqQH9/HI0GgFQQrkNPC0/kuUt?=
- =?us-ascii?Q?5xk2QjkyGCHKeYjU3JDb+pb3zIbv0YJDwN4kpCb25VP+ARtWdpxUB+9fAINw?=
- =?us-ascii?Q?6OS+Muf1BROz2rdv8sCzQ4iSxJWSlY3tPKo2RtpysOQmIq06n80KIYSh7umn?=
- =?us-ascii?Q?HDv33rSSInE4fvm6wuaHw6T+vzKXHL3xC7/UuUOtYNmxyGJ8ZSj6g2UFGM4L?=
- =?us-ascii?Q?nssqeYwl6tvpvYFh7La92WnmOoLmZ3r/Nv+iDi5wHI/SUPTU59iOb8yNiCt2?=
- =?us-ascii?Q?TMooGAMJMuvKg4cGcHws34QcfCG7v0YBUKV/GEr58XGjznnOe1FUw/EMMDOb?=
- =?us-ascii?Q?/QtBq3vx3wn5XMXCy7cMnKmj0A15l2/IUrGvzpY59j3wJ+ZxjxlBbsNzIoqP?=
- =?us-ascii?Q?fdQTtKjyIxTLzfsDe69e2txCzfgsHAw+7do+NCvEtVwrfGSo91bRW4Pw7e9D?=
- =?us-ascii?Q?mXeIxA879yy+ikSOEIJHj+HGe1kXneN2xoyJprFSWXteUKD1k8WCaZRDWVng?=
- =?us-ascii?Q?G9D0VHaOzPqPzaEOeu1ZkFQ4ZfmOSbrdabV9Y11fw7/T1RoXjHTrXCud4Uj7?=
- =?us-ascii?Q?7BsLJ3MJO90/HBc0LOdkJQNvkiY6gX/SfCW/TaTk9iMulqzGBgyIDxCk4a7o?=
- =?us-ascii?Q?TYE9uieGu9Nd46u16clKw1ykztxi6xJQf2pmmBZLXbie3Yo91+1jwnmbVcgw?=
- =?us-ascii?Q?Ex6Kee5DaacYef/Cg+iOGaNBdFp4hZfo5dvJkNlujlT32Z3X1mOJLE7lnSe3?=
- =?us-ascii?Q?R3oOEm5+ioqf7/TBfYb0Ot5POgDqFPXqwE5xZPIJybIzviNWgFxdDPqAjBy4?=
- =?us-ascii?Q?bRfOteVtZ+NsIEMGtgX6oTzMTUvBhxlSPpNtt8tm21J+vnBjWKdjVfl/YYZu?=
- =?us-ascii?Q?ar5C6xsTgRuyv913dfmiRKTUyRix/kc5yGumFAXBHDzkRkf0arf8WIvAbYOo?=
- =?us-ascii?Q?dKuZ+oMuTd/A+LXkh9fAQyHzLDCMI2vHRQkexarYpXRcYpfaNWJHmZOzGcih?=
- =?us-ascii?Q?zQuHnFSqUQS9QeJWsyKn+uvkLPx6rMRY/mPNfJ9q4FBmomDj3BrnjvTrPqYZ?=
- =?us-ascii?Q?vMkWCyX1xdWV1XUUVxigQKK6qCUppce7MlOEhE7jNGY0dgU3ORRDWCIjp/EB?=
- =?us-ascii?Q?Cc8QbhWvRDimjQLfD5uGaARj5U/2hQwu/SAdHUwNIauyni+3JgA/2s5+I/0W?=
- =?us-ascii?Q?QTgWbccMtEMd7zkRzC2x3RfR?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA3PR11MB8118.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(366016)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?WJkHGgePMQaof5yoVSB6JLrOeNR21jyDxwhIbBAnR0FFP7WsgHkdm428aT0l?=
- =?us-ascii?Q?8taYukS6EZjd00w98IxN8jZphBb0MXfkYQPKh/my+wcWwjlL9qwvyJatbfM9?=
- =?us-ascii?Q?Uyh3gj2gd3UJrBOE6rq05kky+0fk1EM14n9tPv/2At6FXiOr2uCDvMct82k4?=
- =?us-ascii?Q?poSW95x3OBjYJnO7xtqDoq6D34s5aT28HxB1lAFF7cBbB+hISl/p2cRYF/Gv?=
- =?us-ascii?Q?LVMtuShPXz8OoNn5dvLV+R2kLKpW0K2jKbnBy8t6o9rl3xGcfd60kwER6KW/?=
- =?us-ascii?Q?G6GFLzAUzbgUd3uyxU2iH6cIxWHvagjChaYwFh6mLIvjOkPoPDuY3tiyLg7+?=
- =?us-ascii?Q?4ykBPxKF37isHMoz16gX3kiJ8HOtb2J8nFRCM8LbqfMNU/CmaYfwddnxocoj?=
- =?us-ascii?Q?JArDNdMwQeCMTaEJB35MXeLRfz5BZr5mmLCYVCR4oFugK28dWFSKANK8DSis?=
- =?us-ascii?Q?jeiuqv2jlMP0C9GccNDLL/K4hCqh7JMhx8OH8zmn8G6+WFjzIe96LDQXZpST?=
- =?us-ascii?Q?t78JOTEV3eUXgEXq8xGdd327G2iv0Fplr4pHBiHVDKmpMfh9TjeDLcMAY3Fk?=
- =?us-ascii?Q?6VRdgnVbCW+IZOG6fSMkMKT6zbTGqjRlZ+ZQYkXySUtc/i2nj/yWGQkDUTTp?=
- =?us-ascii?Q?IMC0mHi360vNhaTLN5Vh7UWdXtPiUVlUwBb3WU9KgJIuSaK2gWFSgixNBFco?=
- =?us-ascii?Q?O6vFNQiP/MSBOGRWJf+0RvlDMU9nsu9+T9olJQMwq7yPyKutszCgOzXOkXAm?=
- =?us-ascii?Q?WHEtizVdJGpoGw7UWjbX8p4udZOuV+kHEzyeTqMJKtamLREaWvm1+8AR7+oV?=
- =?us-ascii?Q?0INymI8ao8/8GahoFMDCdZEMLvGLYvH/PTbbSUU0JiM+nO1GPeYKByDss0PM?=
- =?us-ascii?Q?N+RJogiHedMBa3AEQv4pzHj/7WHuKpr2tXKaRugl+0e2Tid69jeMjdZJF5Vo?=
- =?us-ascii?Q?p5Bk8JN0zG9XVM/VjQboqQTuS4SQnvXEqe1h8MsTfG1abvkgODyR4i5Jqu3j?=
- =?us-ascii?Q?9atduw92N45n1o8HeSE6iNQsWP1fo91GZXeC5RBiOOoAcsGilLkrakCvWDL/?=
- =?us-ascii?Q?b5u5W2DEC4VpQaWdlbfGXyZGv6XgWMjxYd9ETnjJKbO1AWegi6jMzoLEVkbA?=
- =?us-ascii?Q?jWbfqeWiqizmak5jYzcVc2dIVfYM6udoYUQ7tl4lAlQJQtRG2Wnl6mFxIPhS?=
- =?us-ascii?Q?FaTHzSx3F4KbAi6xBWR1cfLOPARcmNnzKHjiNZpvL7m+Ktiw8Py7QNG3TmIf?=
- =?us-ascii?Q?eScPbizv/GDNlVtbWUD/4OTtAZFoOKVoAUwI/RRxBx893JP9y/TWucy2T+LW?=
- =?us-ascii?Q?+JJTzKYfx8VlFWWLbhmQmy5/B76Gq654eSHN0bVp8RxtL2GCHoeqlCecdkAa?=
- =?us-ascii?Q?LAHrMfASCW3Aay5Is6ErmCmMxFGrAknb63AO5bOpfnfXqeFk9atuII+FXptb?=
- =?us-ascii?Q?z9vEAiY1l4rm5mn1uT1wwTdrvMk9N94gIvh/vQpHDm/mb1rvy32jhqst7014?=
- =?us-ascii?Q?HUZzZPPfLZXsszu+YByTSLbygOVABV5gy9zGEiewYkCdcZ8NiPZUja3qBWcr?=
- =?us-ascii?Q?QaJV3poPrksZ17Y2uL9mvCrZSH5KbAMnCB3dJqTAMr0V2gVH3A8MxOB/Adq2?=
- =?us-ascii?Q?GQ=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 740826d6-2291-424c-6d33-08dcf486fa92
-X-MS-Exchange-CrossTenant-AuthSource: SA3PR11MB8118.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Oct 2024 23:52:55.1413
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DGcRrIgVRXEMOAnmbv2oxmsUUEkelpjFHLCmXQizgXuIdKv5GN5wwBZ7IS4FOgTJrDhVE4pLuGaf2wlMNfooPWu0tTonobqDE+nW+OaZJO8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB7147
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZxpJp48vi4NpFVqJ@bfoster>
 
-Alistair Popple wrote:
-[..]
-> >
-> > Was there a discussion I missed about why the conversion to typical
-> > folios allows the page->share accounting to be dropped.
+On Thu, Oct 24, 2024 at 09:20:39AM -0400, Brian Foster wrote:
+> On Thu, Oct 24, 2024 at 01:51:02PM +1100, Dave Chinner wrote:
+> > We have had a large number of recent reports about cloud filesystems
+> > with "corrupt" inode records recently. They are all the same, and
+> > feature a filesystem that has been grown from a small size to a
+> > larger size (to 30G or 50G). In all cases, they have a very small
+> > runt AG at the end of the filesystem.  In the case of the 30GB
+> > filesystems, this is 1031 blocks long.
+> > 
+> > These filesystems start issuing corruption warnings when trying to
+> > allocate an in a sparse cluster at block 1024 of the runt AG. At
+> > this point, there shouldn't be a sparse inode cluster because there
+> > isn't space to fit an entire inode chunk (8 blocks) at block 1024.
+> > i.e. it is only 7 blocks from the end of the AG.
+> > 
+> > Hence the first bug is that we allowed allocation of a sparse inode
+> > cluster in this location when it should not have occurred. The first
+> > patch in the series addresses this.
+> > 
+> > However, there is actually nothing corrupt in the on-disk sparse
+> > inode record or inode cluster at agbno 1024. It is a 32 inode
+> > cluster, which means it is 4 blocks in length, so sits entirely
+> > within the AG and every inode in the record is addressable and
+> > accessible. The only thing we can't do is make the sparse inode
+> > record whole - the inode allocation code cannot allocate another 4
+> > blocks that span beyond the end of the AG. Hence this inode record
+> > and cluster remain sparse until all the inodes in it are freed and
+> > the cluster removed from disk.
+> > 
+> > The second bug is that we don't consider inodes beyond inode cluster
+> > alignment at the end of an AG as being valid. When sparse inode
+> > alignment is in use, we set the in-memory inode cluster alignment to
+> > match the inode chunk alignment, and so the maximum valid inode
+> > number is inode chunk aligned, not inode cluster aligned. Hence when
+> > we have an inode cluster at the end of the AG - so the max inode
+> > number is cluster aligned - we reject that entire cluster as being
+> > invalid. 
+> > 
+> > As stated above, there is nothing corrupt about the sparse inode
+> > cluster at the end of the AG, it just doesn't match an arbitrary
+> > alignment validation restriction for inodes at the end of the AG.
+> > Given we have production filesystems out there with sparse inode
+> > clusters allocated with cluster alignment at the end of the AG, we
+> > need to consider these inodes as valid and not error out with a
+> > corruption report.  The second patch addresses this.
+> > 
+> > The third issue I found is that we never validate the
+> > sb->sb_spino_align valid when we mount the filesystem. It could have
+> > any value and we just blindly use it when calculating inode
+> > allocation geometry. The third patch adds sb->sb_spino_align range
+> > validation to the superblock verifier.
+> > 
+> > There is one question that needs to be resolved in this patchset: if
+> > we take patch 2 to allow sparse inodes at the end of the AG, why
+> > would we need the change in patch 1? Indeed, at this point I have to
+> > ask why we even need the min/max agbno guidelines to the inode chunk
+> > allocation as we end up allowing any aligned location in the AG to
+> > be used by sparse inodes. i.e. if we take patch 2, then patch 1 is
+> > unnecessary and now we can remove a bunch of code (min/max_agbno
+> > constraints) from the allocator paths...
+> > 
+> > I'd prefer that we take the latter path: ignore the first patch.
+> > This results in more flexible behaviour, allows existing filesystems
+> > with this issue to work without needing xfs_repair to fix them, and
+> > we get to remove complexity from the code.
+> > 
+> > Thoughts?
+> > 
 > 
-> The problem with keeping it is we now treat DAX pages as "normal"
-> pages according to vm_normal_page(). As such we use the normal paths
-> for unmapping pages.
+> This all sounds reasonable on its own if the corruption is essentially
+> artifical and there is a path for code simplification, etc. That said, I
+> think there's a potential counter argument for skipping patch 1 though.
+> A couple things come to mind:
 > 
-> Specifically page->share accounting relies on PAGE_MAPPING_DAX_SHARED
-> aka PAGE_MAPPING_ANON which causes folio_test_anon(), PageAnon(),
-> etc. to return true leading to all sorts of issues in at least the
-> unmap paths.
+> 1. When this corrupted inode chunk allocation does occur, is it possible
+> to actually allocate an inode out of it, or does the error checking
+> logic prevent that?
 
-Oh, I missed that PAGE_MAPPING_DAX_SHARED aliases with
-PAGE_MAPPING_ANON.
+The error checking during finobt lookup prevents inode allocation.
+i.e. it fails after finobt lookup via the path:
 
-> There hasn't been a previous discussion on this, but given this is
-> only used to print warnings it seemed easier to get rid of it. I
-> probably should have called that out more clearly in the commit
-> message though.
-> 
-> > I assume this is because the page->mapping validation was dropped, which
-> > I think might be useful to keep at least for one development cycle to
-> > make sure this conversion is not triggering any of the old warnings.
-> >
-> > Otherwise, the ->share field of 'struct page' can also be cleaned up.
-> 
-> Yes, we should also clean up the ->share field, unless you have an
-> alternate suggestion to solve the above issue.
+xfs_dialloc_ag_finobt_newino()
+  xfs_inobt_get_rec()
+    xfs_inobt_check_irec()
+      if (!xfs_verify_agino(pag, irec->ir_startino))
+         return __this_address;
 
-kmalloc mininimum alignment is 8, so there is room to do this?
+Before any modifications are made. hence the transaction is clean
+when cancelled, and the error is propagated cleanly back out to
+userspace.
 
----
-diff --git a/fs/dax.c b/fs/dax.c
-index c62acd2812f8..a70f081c32cb 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -322,7 +322,7 @@ static unsigned long dax_end_pfn(void *entry)
- 
- static inline bool dax_page_is_shared(struct page *page)
- {
--	return page->mapping == PAGE_MAPPING_DAX_SHARED;
-+	return folio_test_dax_shared(page_folio(page));
- }
- 
- /*
-@@ -331,14 +331,14 @@ static inline bool dax_page_is_shared(struct page *page)
-  */
- static inline void dax_page_share_get(struct page *page)
- {
--	if (page->mapping != PAGE_MAPPING_DAX_SHARED) {
-+	if (!dax_page_is_shared(page)) {
- 		/*
- 		 * Reset the index if the page was already mapped
- 		 * regularly before.
- 		 */
- 		if (page->mapping)
- 			page->share = 1;
--		page->mapping = PAGE_MAPPING_DAX_SHARED;
-+		page->mapping = (void *)PAGE_MAPPING_DAX_SHARED;
- 	}
- 	page->share++;
- }
-diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-index 1b3a76710487..21b355999ce0 100644
---- a/include/linux/page-flags.h
-+++ b/include/linux/page-flags.h
-@@ -666,13 +666,14 @@ PAGEFLAG_FALSE(VmemmapSelfHosted, vmemmap_self_hosted)
- #define PAGE_MAPPING_ANON	0x1
- #define PAGE_MAPPING_MOVABLE	0x2
- #define PAGE_MAPPING_KSM	(PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
--#define PAGE_MAPPING_FLAGS	(PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
-+/* to be removed once typical page refcounting for dax proves stable */
-+#define PAGE_MAPPING_DAX_SHARED	0x4
-+#define PAGE_MAPPING_FLAGS	(PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE | PAGE_MAPPING_DAX_SHARED)
- 
- /*
-  * Different with flags above, this flag is used only for fsdax mode.  It
-  * indicates that this page->mapping is now under reflink case.
-  */
--#define PAGE_MAPPING_DAX_SHARED	((void *)0x1)
- 
- static __always_inline bool folio_mapping_flags(const struct folio *folio)
- {
-@@ -689,6 +690,11 @@ static __always_inline bool folio_test_anon(const struct folio *folio)
- 	return ((unsigned long)folio->mapping & PAGE_MAPPING_ANON) != 0;
- }
- 
-+static __always_inline bool folio_test_dax_shared(const struct folio *folio)
-+{
-+	return ((unsigned long)folio->mapping & PAGE_MAPPING_DAX_SHARED) != 0;
-+}
-+
- static __always_inline bool PageAnon(const struct page *page)
- {
- 	return folio_test_anon(page_folio(page));
----
+> 2. Would we recommend a user upgrade to a new kernel with a corruption
+> present that causes inode allocation failure?
 
-...and keep the validation around at least for one post conversion
-development cycle?
+I'm not making any sort of recommendations on how downstream distros
+handle system recovery from this issue.  System recovery once the
+problem has manifested is a separate problem - what we are concerned
+about here is modifying the kernel code to:
 
-> > It does have implications for the dax dma-idle tracking thought, see
-> > below.
-> >
-> >>  {
-> >> -	unsigned long pfn;
-> >> +	unsigned long order = dax_entry_order(entry);
-> >> +	struct folio *folio = dax_to_folio(entry);
-> >>  
-> >> -	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-> >> +	if (!dax_entry_size(entry))
-> >>  		return;
-> >>  
-> >> -	for_each_mapped_pfn(entry, pfn) {
-> >> -		struct page *page = pfn_to_page(pfn);
-> >> -
-> >> -		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
-> >> -		if (dax_page_is_shared(page)) {
-> >> -			/* keep the shared flag if this page is still shared */
-> >> -			if (dax_page_share_put(page) > 0)
-> >> -				continue;
-> >> -		} else
-> >> -			WARN_ON_ONCE(page->mapping && page->mapping != mapping);
-> >> -		page->mapping = NULL;
-> >> -		page->index = 0;
-> >> -	}
-> >> +	/*
-> >> +	 * We don't hold a reference for the DAX pagecache entry for the
-> >> +	 * page. But we need to initialise the folio so we can hand it
-> >> +	 * out. Nothing else should have a reference either.
-> >> +	 */
-> >> +	WARN_ON_ONCE(folio_ref_count(folio));
-> >
-> > Per above I would feel more comfortable if we kept the paranoia around
-> > to ensure that all the pages in this folio have dropped all references
-> > and cleared ->mapping and ->index.
-> >
-> > That paranoia can be placed behind a CONFIG_DEBUB_VM check, and we can
-> > delete in a follow-on development cycle, but in the meantime it helps to
-> > prove the correctness of the conversion.
-> 
-> I'm ok with paranoia, but as noted above the issue is that at a minimum
-> page->mapping (and probably index) now needs to be valid for any code
-> that might walk the page tables.
+a) prevent the issue from happening again; and
+b) ensure that existing filesytsems with this latent issue on disk
+   don't throw corruption errors in future.
 
-A quick look seems to say the confusion is limited to aliasing
-PAGE_MAPPING_ANON.
+How we get that kernel onto downstream distro systems is largely a
+distro support issue. Downstream distros can:
 
-> > [..]
-> >> @@ -1189,11 +1165,14 @@ static vm_fault_t dax_load_hole(struct xa_state *xas, struct vm_fault *vmf,
-> >>  	struct inode *inode = iter->inode;
-> >>  	unsigned long vaddr = vmf->address;
-> >>  	pfn_t pfn = pfn_to_pfn_t(my_zero_pfn(vaddr));
-> >> +	struct page *page = pfn_t_to_page(pfn);
-> >>  	vm_fault_t ret;
-> >>  
-> >>  	*entry = dax_insert_entry(xas, vmf, iter, *entry, pfn, DAX_ZERO_PAGE);
-> >>  
-> >> -	ret = vmf_insert_mixed(vmf->vma, vaddr, pfn);
-> >> +	page_ref_inc(page);
-> >> +	ret = dax_insert_pfn(vmf, pfn, false);
-> >> +	put_page(page);
-> >
-> > Per above I think it is problematic to have pages live in the system
-> > without a refcount.
-> 
-> I'm a bit confused by this - the pages have a reference taken on them
-> when they are mapped. They only live in the system without a refcount
-> when the mm considers them free (except for the bit between getting
-> created in dax_associate_entry() and actually getting mapped but as
-> noted I will fix that).
-> 
-> > One scenario where this might be needed is invalidate_inode_pages() vs
-> > DMA. The invaldation should pause and wait for DMA pins to be dropped
-> > before the mapping xarray is cleaned up and the dax folio is marked
-> > free.
-> 
-> I'm not really following this scenario, or at least how it relates to
-> the comment above. If the page is pinned for DMA it will have taken a
-> refcount on it and so the page won't be considered free/idle per
-> dax_wait_page_idle() or any of the other mm code.
+- run the gaunlet and upgrade in place, relying on the the
+  transactional upgrade behaviour of the package manager to handle
+  rollbacks when file create failures during installation; or
+- grow the cloud block device and filesystem to put the inode
+  cluster wholly within the bounds of the AG and so pass the
+  alignment checks without any kernel modifications, then do the
+  kernel upgrade; or
+- live patch the running kernel to allow the sparse inode cluster to
+  be considered valid (as per the second patch in this series)
+  so it won't ever fail whilst installing the kernel upgrade; or
+- do some xfs_db magic to remove the finobt record that is
+  problematic and leak the sparse inode cluster so we never try to
+  allocate inode from it, then do the kernel upgrade and run
+  xfs_repair; or
+- do some xfs_db magic to remove the finobt record and shrink the
+  filesystem down a few blocks to inode chunk align it.
+- something else...
 
-[ tl;dr: I think we're ok, analysis below, but I did talk myself into
-the proposed dax_busy_page() changes indeed being broken and needing to
-remain checking for refcount > 1, not > 0 ]
+IOWs, there are lots of ways that the downstream distros can
+mitigate the problem sufficiently to install an updated kernel that
+won't have the problem ever again.
 
-It's not the mm code I am worried about. It's the filesystem block
-allocator staying in-sync with the allocation state of the page.
+> My .02: under no circumstances would I run a distro/package upgrade on a
+> filesystem in that state before running repair, nor would I recommend
+> that to anyone else.
 
-fs/dax.c is charged with converting idle storage blocks to pfns to
-mapped folios. Once they are mapped, DMA can pin the folio, but nothing
-in fs/dax.c pins the mapping. In the pagecache case the page reference
-is sufficient to keep the DMA-busy page from being reused. In the dax
-case something needs to arrange for DMA to be idle before
-dax_delete_mapping_entry().
+Keep in mind that disallowing distro/package managers to run in this
+situation also rules out shipping a new xfsprogs package to address
+the issue. i.e. if the distro won't allow kernel package upgrades,
+then they won't allow xfsprogs package upgrades, either.
 
-However, looking at XFS it indeed makes that guarantee. First it does
-xfs_break_dax_layouts() then it does truncate_inode_pages() =>
-dax_delete_mapping_entry().
+There aren't any filesystem level problems with allowing operation
+to continue on the filesystem with a sparse inode chunk like this in
+the runt AG. Yes, file create will fail with an error every so
+often, but there aren't any issues beyond that. The "corruption"
+can't propagate, it wont' shut down the filesystem, and errors are
+returned to userspace when it is hit. There is no danger to
+other filesystem metadata or user data from this issue.
 
-It follows that that the DMA-idle condition still needs to look for the
-case where the refcount is > 1 rather than 0 since refcount == 1 is the
-page-mapped-but-DMA-idle condition.
+Hence I don't see any issues with simply installing new packages and
+rebooting to make the problem go away...
 
-[..]
-> >> @@ -1649,9 +1627,10 @@ static vm_fault_t dax_fault_iter(struct vm_fault *vmf,
-> >>  	loff_t pos = (loff_t)xas->xa_index << PAGE_SHIFT;
-> >>  	bool write = iter->flags & IOMAP_WRITE;
-> >>  	unsigned long entry_flags = pmd ? DAX_PMD : 0;
-> >> -	int err = 0;
-> >> +	int ret, err = 0;
-> >>  	pfn_t pfn;
-> >>  	void *kaddr;
-> >> +	struct page *page;
-> >>  
-> >>  	if (!pmd && vmf->cow_page)
-> >>  		return dax_fault_cow_page(vmf, iter);
-> >> @@ -1684,14 +1663,21 @@ static vm_fault_t dax_fault_iter(struct vm_fault *vmf,
-> >>  	if (dax_fault_is_synchronous(iter, vmf->vma))
-> >>  		return dax_fault_synchronous_pfnp(pfnp, pfn);
-> >>  
-> >> -	/* insert PMD pfn */
-> >> +	page = pfn_t_to_page(pfn);
-> >
-> > I think this is clearer if dax_insert_entry() returns folios with an
-> > elevated refrence count that is dropped when the folio is invalidated
-> > out of the mapping.
-> 
-> I presume this comment is for the next line:
-> 
-> +	page_ref_inc(page);
->  
-> I can move that into dax_insert_entry(), but we would still need to
-> drop it after calling vmf_insert_*() to ensure we get the 1 -> 0
-> transition when the page is unmapped and therefore
-> freed. Alternatively we can make it so vmf_insert_*() don't take
-> references on the page, and instead ownership of the reference is
-> transfered to the mapping. Personally I prefered having those
-> functions take their own reference but let me know what you think.
+> The caveat to this is that even after a repair,
+> there's no guarantee an upgrade wouldn't go and realloc the same bad
+> chunk and end up right back in the same state, and thus fail just the
+> same.
 
-Oh, the model I was thinking was that until vmf_insert_XXX() succeeds
-then the page was never allocated because it was never mapped. What
-happens with the code as proposed is that put_page() triggers page-free
-semantics on vmf_insert_XXX() failures, right?
+Sure, but this can be said about every single sparse inode enabled
+filesystem that has an unaligned end of the runt AG whether the
+problem has manifested or not. There are going to *lots* of
+filesystems out there with this potential problem just waiting to be
+tripped over.
 
-There is no need to invoke the page-free / final-put path on
-vmf_insert_XXX() error because the storage-block / pfn never actually
-transitioned into a page / folio.
+i.e. the scope of this latent issue has the potential to affect a
+very large number of filesystems.  Hence saying that we can't
+upgrade -anything- on <some large subset> of sparse inode enable
+filesystems because they *might* fail with this problem doesn't make
+a whole lot of sense to me....
 
-> > [..]
-> >> @@ -519,21 +529,3 @@ void zone_device_page_init(struct page *page)
-> >>  	lock_page(page);
-> >>  }
-> >>  EXPORT_SYMBOL_GPL(zone_device_page_init);
-> >> -
-> >> -#ifdef CONFIG_FS_DAX
-> >> -bool __put_devmap_managed_folio_refs(struct folio *folio, int refs)
-> >> -{
-> >> -	if (folio->pgmap->type != MEMORY_DEVICE_FS_DAX)
-> >> -		return false;
-> >> -
-> >> -	/*
-> >> -	 * fsdax page refcounts are 1-based, rather than 0-based: if
-> >> -	 * refcount is 1, then the page is free and the refcount is
-> >> -	 * stable because nobody holds a reference on the page.
-> >> -	 */
-> >> -	if (folio_ref_sub_return(folio, refs) == 1)
-> >> -		wake_up_var(&folio->_refcount);
-> >> -	return true;
-> >
-> > It follow from the refcount disvussion above that I think there is an
-> > argument to still keep this wakeup based on the 2->1 transitition.
-> > pagecache pages are refcount==1 when they are dma-idle but still
-> > allocated. To keep the same semantics for dax a dax_folio would have an
-> > elevated refcount whenever it is referenced by mapping entry.
-> 
-> I'm not sold on keeping it as it doesn't seem to offer any benefit
-> IMHO. I know both Jason and Christoph were keen to see it go so it be
-> good to get their feedback too. Also one of the primary goals of this
-> series was to refcount the page normally so we could remove the whole
-> "page is free with a refcount of 1" semantics.
+> For example, I assume allocating the last handful of blocks out of the
+> runt AG would prevent the problem. Of course that technically creates
+> another corruption by leaking blocks, but as long repair knows to keep
+> it in place so long as the fs geometry is susceptible, perhaps that
+> would work..?
 
-The page is still free at refcount 0, no argument there. But, by
-introducing a new "page refcount is elevated while mapped" (as it
-should), it follows that "page is DMA idle at refcount == 1", right?
-Otherwise, the current assumption that fileystems can have
-dax_layout_busy_page_range() poll on the state of the pfn in the mapping
-is broken because page refcount == 0 also means no page to mapping
-association.
+I think that would become an implicit change of on-disk format.
+scrub would need to know about it, as would online repair. growfs
+will need to handle the case explicitly (is the trailing runt space
+on this filesystem leaked or not?), and so on. I don't see this as a
+viable solution.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
