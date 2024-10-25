@@ -1,169 +1,161 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62E5D1ACDF0;
-	Fri, 25 Oct 2024 03:46:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 077F33611B;
+	Fri, 25 Oct 2024 04:07:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729827994; cv=none; b=WMt6PSKivEVZM8+kRIM7Pt6Gp7dhUU4qfKU1Qx5olTdVY/wDil37rmD7fnNJMhRzPgSG8cXe/lBtP5gdmLsPhKv4288rPlZokVwVojV5op7yCd5XiwWzYyivpe5o+sgUbUFwRs7twKSJV25yIh3vBO8uyzvmfMyqXM2rMd5alPs=
+	t=1729829224; cv=none; b=XyljwPusoxYkus9fCZnaGbLdVvxWKsprnVcw4+B28eoukDbvIRrCJlJDbE8ZairMrkBe7w97bwj+UlRg7za/Brio2knetqMJhrneEMWRk3ZlqgmUkiEBzrFDdVudt3+wbAPjQ66fqbDGTOXWrNl/FcJlzuwqSsQ8l1LJ6iawbTc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729827994; c=relaxed/simple;
-	bh=+jbFavYt3S3M0UFG+Y++ADSwSWXABL573iBs3QaczNQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=c1mCNfDLyXHfF6YuiTE/c/k1q77PtsloR6m1PUFGvqTM96xJtwUZh5zMWgp6yVVteWkTJ8NV/TX3DRp820DWGu4SxEHqPX53KIXiimJgK3wltzqWhl7xA2wI95QqkIng1ZcR4hz5ORu6c9NOZyvfEjDtmyPRDHKZq0zfteZqdqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ChVnDbTf; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1729829224; c=relaxed/simple;
+	bh=xXviWkWgcwUJDrDIhg9GmNgc4frx4cg84P5Tr6Kedm8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=h1tMxdyjnuRf1ZKDFgyb3YDc1gbjihYvNh4VErDP6WiBrU3cYBQXz11EHgVZnanORIkjBwgwld1LH2vhUy05XOxUZTP94kTJjDGSOJjt7mOkgjZNaSUr1hYOfsg8ijF2BgxZxHypWAs9vpS/QSZFoin4nyw/qUIIvaLYAfrpGIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bl0a8IwC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ChVnDbTf"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-71e953f4e7cso1142968b3a.3;
-        Thu, 24 Oct 2024 20:46:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729827991; x=1730432791; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SV8eyMIG0H3BsY07DI6PZhHnOjAhFRubne0dZ3+5bLE=;
-        b=ChVnDbTfmGIPomXH3WduPk/qUQCxYuqG95MP46kzW0xeIZGBInLZPiUZYxhcY6ci6z
-         4LwiExHtP43MM2jCfJNRgEIa2gvnF2wLi52FyaWwMJE5QUHGmRqpkC4s+HNdN8w/gPSJ
-         LCO3cEuR7boehgFJpa4NETpqB3NJkLb5R4PKzl9fbZz3NI5k8nfBNOeUaJV8g6D9E4Sh
-         TChcb6M5IDQbWxTKpskGcwrk40zjnGvKEw3IH1IxIUamScAQVpiQXojYefcmDzuaj+C7
-         JDwkzMjcudYXVS0k2u34stvLP+wYoe6dMNh8KAKRd1j5r4bD0QoRpRpmGmWsdLx2zLwh
-         fR6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729827991; x=1730432791;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SV8eyMIG0H3BsY07DI6PZhHnOjAhFRubne0dZ3+5bLE=;
-        b=NyPdox3RvDLGj4DYI9zdC+t2ue1SlVsW7ss3IYFyy+X9o+yJMgY+skQnoAE1poCTnZ
-         1ZZNFzJkOBLd5xmnY3ray4J02hw2XTmdwti3KJuUY6pS/yTj6vETjYqUSDg7qOPoIyzi
-         rdzmuBjgih9ccmt7R0Znb9adLuhxNcJpA/TH1AT++BbERo8pUVflj4zBiWXA2OU3vxMa
-         0uP9sT0dxbQbeC+qQmKe3B78TudArn0Yj2qTEQUq1pVqFutGjGDe0cIZ7+hfWFtNugHJ
-         ewQRJXy9AoVMD/SckJQ/1KEIva6xdLv+we7fgEhciWpzCJQRQfoolgrmgypwpZ9oNJ0A
-         6ByQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVV6MUPGo+wOdFGU8x7UBSa+vGpv8WVkifmaFIRA3/AkleXHQIbcgvaysFDX6VJioG4XKFrXMbIwGoA@vger.kernel.org, AJvYcCVetRgFO1FHpMm0iTS5XOV57TKBG5njWHQ0HNNGSEHQO1Y8I1LegiLVyhiXhZwNeZbHK8WAfR51sZ1wNVmy@vger.kernel.org, AJvYcCVwLSSbLcBdyZepaDT733kuUph/F4bHdaiyI8QEVCoYw8NPeVfQK56HOv2g1z4gqUf1g7r5NaUyjJVDOI6u@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywe2gwe2ACvMYREE+4iNVm1KnILwc5fGi9oZ8/fHo8NFLsfO7fF
-	zAVLRNeK6tZpxe0ApGRvljnYA28rLNnEFD1WZi9N5mXqQVvFosC1coep2g==
-X-Google-Smtp-Source: AGHT+IHNv3nj9RCbYdpMn4CGatYSbVnL4coPHNxRpjeEP5ig4aeDgBKitBPLznyv9qpb0xdXrjrzzg==
-X-Received: by 2002:a05:6a21:6801:b0:1d9:76a3:a208 with SMTP id adf61e73a8af0-1d978bd6201mr10915868637.47.1729827991027;
-        Thu, 24 Oct 2024 20:46:31 -0700 (PDT)
-Received: from dw-tp.ibmuc.com ([171.76.85.20])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e5df40265fsm3463176a91.0.2024.10.24.20.46.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Oct 2024 20:46:30 -0700 (PDT)
-From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-To: linux-ext4@vger.kernel.org
-Cc: Theodore Ts'o <tytso@mit.edu>,
-	Jan Kara <jack@suse.cz>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	John Garry <john.g.garry@oracle.com>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	Dave Chinner <david@fromorbit.com>,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: [PATCH 6/6] ext4: Add atomic write support for bigalloc
-Date: Fri, 25 Oct 2024 09:15:55 +0530
-Message-ID: <37baa9f4c6c2994df7383d8b719078a527e521b9.1729825985.git.ritesh.list@gmail.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <cover.1729825985.git.ritesh.list@gmail.com>
-References: <cover.1729825985.git.ritesh.list@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bl0a8IwC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89EDEC4CEC3;
+	Fri, 25 Oct 2024 04:07:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729829223;
+	bh=xXviWkWgcwUJDrDIhg9GmNgc4frx4cg84P5Tr6Kedm8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bl0a8IwCZYV8sDK4nKMSWfOx8yqscqqf5LYmv9L5yCYDUvoTM1MWOTUWJLIGqDeZX
+	 g0DpCAHtaGBDTPfzwCtzEWBh3mAt4NOGSv3Zglhcxkq9+j7h2pTlk1lLaCtDt/cLNU
+	 YgFZoJIKxrJoUUOxlXEJ/u+DDomwzugpeHsYSzR9MyJho3zpFNP4v4ROV8dgEGuLp6
+	 l1C+sX6CUIG7i7toSWCLsHvCOK1VCWQkkzCLYnB5hjeNXZlJdhSPRsPco8tNFA6f+9
+	 3jcb2YdyBHOYJoS2k/+cV3th5Q8ZA57m4Kp5vAjK/Y1vG6nAL5Bs8N79hr30D50/Bh
+	 8Hv28aEDADwXw==
+Date: Thu, 24 Oct 2024 21:07:03 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Nirjhar Roy <nirjhar@linux.ibm.com>, fstests@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com, ojaswin@linux.ibm.com, zlang@kernel.org
+Subject: Re: [PATCH 1/2] common/xfs,xfs/207: Adding a common helper function
+ to check xflag bits on a given file
+Message-ID: <20241025040703.GQ2578692@frogsfrogsfrogs>
+References: <cover.1729624806.git.nirjhar@linux.ibm.com>
+ <6ba7f682af7e0bc99a8baeccc0d7aa4e5062a433.1729624806.git.nirjhar@linux.ibm.com>
+ <20241025025651.okneano7d324nl4e@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241025025651.okneano7d324nl4e@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-EXT4 supports bigalloc feature which allows the FS to work in size of
-clusters (group of blocks) rather than individual blocks. This patch
-adds atomic write support for bigalloc so that systems with bs = ps can
-create FS using -
-    mkfs.ext4 -F -O bigalloc -b 4096 -C 16384 <dev>
+On Fri, Oct 25, 2024 at 10:56:51AM +0800, Zorro Lang wrote:
+> On Wed, Oct 23, 2024 at 12:56:19AM +0530, Nirjhar Roy wrote:
+> > This patch defines a common helper function to test whether any of
+> > fsxattr xflags field is set or not. We will use this helper in the next
+> > patch for checking extsize (e) flag.
+> > 
+> > Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> > Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
+> > ---
+> >  common/xfs    |  9 +++++++++
+> >  tests/xfs/207 | 14 +++-----------
+> >  2 files changed, 12 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/common/xfs b/common/xfs
+> > index 62e3100e..7340ccbf 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -13,6 +13,15 @@ __generate_xfs_report_vars() {
+> >  	REPORT_ENV_LIST_OPT+=("TEST_XFS_REPAIR_REBUILD" "TEST_XFS_SCRUB_REBUILD")
+> >  }
+> >  
+> > +# Check whether a fsxattr xflags character field is set on a given file.
+> 
+> Better to explain the arguments, e.g.
+> 
+> # Check whether a fsxattr xflags character ($2) field is set on a given file ($1).
+> 
+> > +# e.g. fsxattr.xflags = 0x0 [--------------C-]
+> > +# Returns 0 if passed flag character is set, otherwise returns 1
+> > +_test_xfs_xflags_field()
+> > +{
+> > +    $XFS_IO_PROG -c "stat" "$1" | grep "fsxattr.xflags" | grep -q "\[.*$2.*\]" \
+> > +        && return 0 || return 1
+> 
+> That's too complex. Those "return" aren't needed as Darrick metioned. About
+> that two "grep", how about combine them, e.g.
+> 
+> _test_xfs_xflags_field()
+> {
+> 	grep -q "fsxattr.xflags.*\[.*$2.*\]" <($XFS_IO_PROG -c "stat" "$1")
+> }
+> 
+> 
+> 
+> > +}
+> > +
+> >  _setup_large_xfs_fs()
+> >  {
+> >  	fs_size=$1
+> > diff --git a/tests/xfs/207 b/tests/xfs/207
+> > index bbe21307..adb925df 100755
+> > --- a/tests/xfs/207
+> > +++ b/tests/xfs/207
+> > @@ -15,21 +15,13 @@ _begin_fstest auto quick clone fiemap
+> >  # Import common functions.
+> >  . ./common/filter
+> >  . ./common/reflink
+> > +. ./common/xfs
+> 
+> Is this really necessary? Will this test fail without this line?
+> The common/$FSTYP file is imported automatically, if it's not, that a bug.
 
-EXT4 can then adjust it's atomic write unit max value to cluster size.
-This can then support atomic write of size anywhere between
-[blocksize, clustersize].
+If the generic helper goes in common/rc instead then it's not necessary
+at all.
 
-Note: bigalloc can support writes of the pattern [0 16k] followed by [0 8k].
-However, if there is a write pattern detected of type [0 8k] followed by
-[0 16k], then we return an error (-EINVAL). It is ok to return an error here
-to avoid splitting of atomic write request. This is ok because anyways
-atomic write requests has many constraints to follow for e.g. writes of
-form which does not follow natural alignment [4k, 12k] ([start, end]) can
-also return -EINVAL (check generic_atomic_write_valid()).
-Hence the current patch adds the base support needed to support
-atomic writes with bigalloc. This is helpful for systems with 4k
-pagesize to support atomic writes.
+--D
 
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
----
- fs/ext4/inode.c | 13 +++++++++++++
- fs/ext4/super.c |  9 +++++++--
- 2 files changed, 20 insertions(+), 2 deletions(-)
-
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 897c028d5bc9..2dee8514d2f8 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3423,6 +3423,19 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	 */
- 	map.m_len = fscrypt_limit_io_blocks(inode, map.m_lblk, map.m_len);
- 
-+	/*
-+	 * [0 16k] followed by [0 8k] can work with bigalloc. However,
-+	 * For now we don't support atomic writes of the pattern
-+	 * [0 8k] followed by [0 16k] in case of bigalloc. This is because it
-+	 * can cause the atomic writes to split in the iomap layer.
-+	 * Atomic writes anyways has many constraints, so as a base support to
-+	 * enable atomic writes using bigalloc, it is ok to return an error for
-+	 * an unsupported write request.
-+	 */
-+	if (flags & IOMAP_ATOMIC) {
-+		if (map.m_len < (length >> blkbits))
-+			return -EINVAL;
-+	}
- 	ext4_set_iomap(inode, iomap, &map, offset, length, flags);
- 
- 	return 0;
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index f5c075aff060..eba16989ce36 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -4428,12 +4428,14 @@ static int ext4_handle_clustersize(struct super_block *sb)
- /*
-  * ext4_atomic_write_init: Initializes filesystem min & max atomic write units.
-  * @sb: super block
-- * TODO: Later add support for bigalloc
-  */
- static void ext4_atomic_write_init(struct super_block *sb)
- {
- 	struct ext4_sb_info *sbi = EXT4_SB(sb);
- 	struct block_device *bdev = sb->s_bdev;
-+	unsigned int blkbits = sb->s_blocksize_bits;
-+	unsigned int clustersize = sb->s_blocksize;
-+
- 
- 	if (!bdev_can_atomic_write(bdev))
- 		return;
-@@ -4441,9 +4443,12 @@ static void ext4_atomic_write_init(struct super_block *sb)
- 	if (!ext4_has_feature_extents(sb))
- 		return;
- 
-+	if (ext4_has_feature_bigalloc(sb))
-+		clustersize = 1U << (sbi->s_cluster_bits + blkbits);
-+
- 	sbi->fs_awu_min = max(sb->s_blocksize,
- 			      bdev_atomic_write_unit_min_bytes(bdev));
--	sbi->fs_awu_max = min(sb->s_blocksize,
-+	sbi->fs_awu_max = min(clustersize,
- 			      bdev_atomic_write_unit_max_bytes(bdev));
- 	if (sbi->fs_awu_min && sbi->fs_awu_max &&
- 			sbi->fs_awu_min <= sbi->fs_awu_max) {
--- 
-2.46.0
-
+> Thanks,
+> Zorro
+> 
+> >  
+> >  _require_scratch_reflink
+> >  _require_cp_reflink
+> >  _require_xfs_io_command "fiemap"
+> >  _require_xfs_io_command "cowextsize"
+> >  
+> > -# Takes the fsxattr.xflags line,
+> > -# i.e. fsxattr.xflags = 0x0 [--------------C-]
+> > -# and tests whether a flag character is set
+> > -test_xflag()
+> > -{
+> > -    local flg=$1
+> > -    grep -q "\[.*${flg}.*\]" && echo "$flg flag set" || echo "$flg flag unset"
+> > -}
+> > -
+> >  echo "Format and mount"
+> >  _scratch_mkfs > $seqres.full 2>&1
+> >  _scratch_mount >> $seqres.full 2>&1
+> > @@ -65,14 +57,14 @@ echo "Set cowextsize and check flag"
+> >  $XFS_IO_PROG -c "cowextsize 1048576" $testdir/file3 | _filter_scratch
+> >  _scratch_cycle_mount
+> >  
+> > -$XFS_IO_PROG -c "stat" $testdir/file3 | grep 'fsxattr.xflags' | test_xflag "C"
+> > +_test_xfs_xflags_field "$testdir/file3" "C" && echo "C flag set" || echo "C flag unset"
+> >  $XFS_IO_PROG -c "cowextsize" $testdir/file3 | _filter_scratch
+> >  
+> >  echo "Unset cowextsize and check flag"
+> >  $XFS_IO_PROG -c "cowextsize 0" $testdir/file3 | _filter_scratch
+> >  _scratch_cycle_mount
+> >  
+> > -$XFS_IO_PROG -c "stat" $testdir/file3 | grep 'fsxattr.xflags' | test_xflag "C"
+> > +_test_xfs_xflags_field "$testdir/file3" "C" && echo "C flag set" || echo "C flag unset"
+> >  $XFS_IO_PROG -c "cowextsize" $testdir/file3 | _filter_scratch
+> >  
+> >  status=0
+> > -- 
+> > 2.43.5
+> > 
+> > 
+> 
