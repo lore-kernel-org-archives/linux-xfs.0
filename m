@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E2718C935
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:38:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7841F18C935
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:38:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729838293; cv=none; b=GtAOHuO1LZ7qMmqnZhQhfsrCF1rnRtcpszGN938Jn6LiH7BMl+s26TPkViC6tKxPZlIgZXhmlCrSDwybv1xopNdlPXtb4nvxW0ZLXoqJWVYiZBeEhn1OKgM2BBOmKwDz+uzqECK69LOyPwTp5lsnxt1mnJ/Q3wbBKMz0lfAlUBw=
+	t=1729838308; cv=none; b=TZhDucJWSVg4RXePo+r5NZEv29NQnygeLVWPZkIWMWf5wGEfPpADkThLNNOhqQ/aowvz3WC1zcPJSVY0XeZwJE/jerkGOTnvdvGd8NgMN43FRFMQ0N0ua72fOORuTzFflhbTp4qWnG+bmVjaLqgfWdQ1vDBKWK5rFBuwqReD/Tk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729838293; c=relaxed/simple;
-	bh=rMS04JzWbTA10NoNgT1uDwTz6/mlMY+uwx8e75a0h5c=;
+	s=arc-20240116; t=1729838308; c=relaxed/simple;
+	bh=/0s+cECFMrndgKsuUBctaDvSKDcHV3O3N6OFXfIDH6g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TX9VDDmPSzW5Dl0bmD69rNleoEgqGiS/gQLRKhzM9SEbuJqi2h0nGx22RGC4Bngd/XmYP1DmSc02ezYK+z9XLmZUUIiaFAPLcuGZ1Lm73I5rAeobFkKFhPem+LCZxz1eCmdl0Op1+LWjO8rFUvWgFZNok+7Vu/0Pg52EaaYKLYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y9F7BrdT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MUPvOZbUaakALX1dv/lE+T9aG51EIGJI69IWA5rgR5hmyvt87XNij3qNkvRP80WPWnHb/NH9qWv7wiCtRFXH2CH3d1cDH5BxAiqJE6OGrnrXHWudvxkvd4YgL0CBy1HSyk7R/g9lexZ19tzinlwo6SMvyYwjIDdMMsfjMyPwiZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=InA1Udxf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y9F7BrdT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3B57C4CEC3;
-	Fri, 25 Oct 2024 06:38:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="InA1Udxf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CCCCC4CEC3;
+	Fri, 25 Oct 2024 06:38:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729838292;
-	bh=rMS04JzWbTA10NoNgT1uDwTz6/mlMY+uwx8e75a0h5c=;
+	s=k20201202; t=1729838308;
+	bh=/0s+cECFMrndgKsuUBctaDvSKDcHV3O3N6OFXfIDH6g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Y9F7BrdTNGbk5s24VgPJQk6MT5G/mrjDbIblknYWmMM6aLWT/zz4ylotEOvqjBnxm
-	 EOzpptBtHw38VqLt+DjzEHi9pRTGBmdIoiG5GsZXJNASUwJT1+p0iJsc4/n5TaXVpg
-	 VHpB9IT6IDJ0+B2UXXvxe4ffaSilpB7mQ0MhbUqLXBkcq6+lxe3sw/OfvMdHUJyML9
-	 nymFJLVAJWGWVqjwRbUJOvcEAMRF7Q/Wxt8arbvWxuLcmJCg0trcht4yYnVoiqRrv2
-	 6kqzK+HOCywvGofkSK1/3lwwzZe5zJe/5ZYrb1WwdOOvf7qF5hYVHrQY90mZ82RzYl
-	 bDQmMPuDdzRAA==
-Date: Thu, 24 Oct 2024 23:38:12 -0700
-Subject: [PATCH 6/6] xfs_repair: stop preallocating blocks in mk_rbmino and
- mk_rsumino
+	b=InA1Udxfya4Z5LAj13vlRuOH5GjRondXoW/tBJBpi0TNZcSR8SOcjkY+7i7xbzhxp
+	 GBo5z2TqvNcXnydclNAnDxjCOIqvWcY2JrfJysOxYeD/yWyi0za8xWA3b5BxGQihj8
+	 vTQ1E/QfT9xItzkE9rhUPmjZdQUNr2bb5Dh/KDgYLYLz0Dy+xEGxuWKkxdMKUrSQ/1
+	 aWTqsMTCyM/B3OdMgAFKG4i0veJ8JnSRfslYo2kHl42QnvSY+xp7J5km1gMsA6hHpl
+	 Le6CPK2R3uhaAkFhS2kNTbv32svhKQ7u2mgXFl/Hwq5UgS+Gcthkc932lUQAJiHNB0
+	 bhsmt3qgFAI/A==
+Date: Thu, 24 Oct 2024 23:38:27 -0700
+Subject: [PATCH 1/1] xfs_scrub_all: wait for services to start activating
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983774529.3041643.15165877380135579779.stgit@frogsfrogsfrogs>
-In-Reply-To: <172983774433.3041643.7410184047224484972.stgit@frogsfrogsfrogs>
-References: <172983774433.3041643.7410184047224484972.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <172983774826.3041899.15350842942789677656.stgit@frogsfrogsfrogs>
+In-Reply-To: <172983774811.3041899.4175728441279480358.stgit@frogsfrogsfrogs>
+References: <172983774811.3041899.4175728441279480358.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,170 +43,99 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Now that repair is using libxfs_rtfile_initialize_blocks to write to the
-rtbitmap and rtsummary inodes, space allocation is already taken care of
-that helper and there is no need to preallocate it.  Remove the code to
-do so.
+It seems that the function call to start a systemd unit completes
+asynchronously from any change in that unit's active state.  On a
+lightly loaded system, a Start() call followed by an ActiveState()
+call actually sees the change in state from inactive to activating.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Unfortunately, on a heavily loaded system, the state change may take a
+few seconds.  If this is the case, the wait() call can see that the unit
+state is "inactive", decide that the service already finished, and exit
+early, when in reality it hasn't even gotten to 'activating'.
+
+Fix this by adding a second method that watches either for the inactive
+-> activating state transition or for the last exit from inactivation
+timestamp to change before waiting for the unit to reach inactive state.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Cc: <linux-xfs@vger.kernel.org> # v6.10.0
+Fixes: 6d831e770359ff ("xfs_scrub_all: convert systemctl calls to dbus")
 ---
- repair/phase6.c |  116 +++++++------------------------------------------------
- 1 file changed, 14 insertions(+), 102 deletions(-)
+ scrub/xfs_scrub_all.in |   52 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 310a2b9c07bff0..630617ef8ab8fe 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -475,24 +475,16 @@ reset_sbroot_ino(
- }
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index 5e2e0446a99f89..fe4bca4b2edb11 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -249,6 +249,54 @@ class scrub_service(scrub_control):
+ 				print(e, file = sys.stderr)
+ 			return 'failed'
  
- static void
--mk_rbmino(xfs_mount_t *mp)
-+mk_rbmino(
-+	struct xfs_mount	*mp)
- {
--	xfs_trans_t	*tp;
--	xfs_inode_t	*ip;
--	xfs_bmbt_irec_t	*ep;
--	int		i;
--	int		nmap;
--	int		error;
--	xfs_fileoff_t	bno;
--	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
--	uint		blocks;
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
-+	int			error;
++	def last_activation(self):
++		'''Retrieve the last activation time, in microseconds since
++		boot.'''
++		global debug
++
++		l = lambda: self.prop.Get('org.freedesktop.systemd1.Unit',
++				'InactiveExitTimestampMonotonic')
++		try:
++			return self.__dbusrun(l)
++		except Exception as e:
++			if debug:
++				print(e, file = sys.stderr)
++			return 0
++
++	def wait_for_startup(self, last_active, wait_for = 30, interval = 0.5):
++		'''Wait for the service to start up.  This is defined as
++		exiting the inactive state.'''
++
++		for i in range(0, int(wait_for / interval)):
++			s = self.state()
++			if debug:
++				print('waiting for activation %s %s' % (self.unitname, s))
++			if s == 'failed':
++				return 1
++			if s != 'inactive':
++				return 0
++			# If the unit is inactive but the last activation time
++			# doesn't match, then the service ran so quickly that
++			# it's already gone.
++			if last_active != self.last_activation():
++				return 0
++			time.sleep(interval)
++
++		s = self.state()
++		if debug:
++			print('waited for startup %s %s' % (self.unitname, s))
++		if s == 'failed':
++			return 1
++		if s != 'inactive':
++			return 0
++
++		# If the unit is inactive but the last activation time doesn't
++		# match, then the service ran so quickly that it's already
++		# gone.
++		if last_active != self.last_activation():
++			return 0
++		return 2
++
+ 	def wait(self, interval = 1):
+ 		'''Wait until the service finishes.'''
+ 		global debug
+@@ -278,7 +326,11 @@ class scrub_service(scrub_control):
+ 			print('starting %s' % self.unitname)
  
--	/*
--	 * first set up inode
--	 */
--	i = -libxfs_trans_alloc_rollable(mp, 10, &tp);
--	if (i)
--		res_failed(i);
-+	error = -libxfs_trans_alloc_rollable(mp, 10, &tp);
-+	if (error)
-+		res_failed(error);
- 
- 	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
- 	if (error) {
-@@ -508,42 +500,6 @@ mk_rbmino(xfs_mount_t *mp)
- 	error = -libxfs_trans_commit(tp);
- 	if (error)
- 		do_error(_("%s: commit failed, error %d\n"), __func__, error);
--
--	/*
--	 * then allocate blocks for file and fill with zeroes (stolen
--	 * from mkfs)
--	 */
--	blocks = mp->m_sb.sb_rbmblocks +
--			XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
--	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
--	if (error)
--		res_failed(error);
--
--	libxfs_trans_ijoin(tp, ip, 0);
--	bno = 0;
--	while (bno < mp->m_sb.sb_rbmblocks) {
--		nmap = XFS_BMAP_MAX_NMAP;
--		error = -libxfs_bmapi_write(tp, ip, bno,
--			  (xfs_extlen_t)(mp->m_sb.sb_rbmblocks - bno),
--			  0, mp->m_sb.sb_rbmblocks, map, &nmap);
--		if (error) {
--			do_error(
--			_("couldn't allocate realtime bitmap, error = %d\n"),
--				error);
--		}
--		for (i = 0, ep = map; i < nmap; i++, ep++) {
--			libxfs_device_zero(mp->m_ddev_targp,
--				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
--				XFS_FSB_TO_BB(mp, ep->br_blockcount));
--			bno += ep->br_blockcount;
--		}
--	}
--	error = -libxfs_trans_commit(tp);
--	if (error) {
--		do_error(
--		_("allocation of the realtime bitmap failed, error = %d\n"),
--			error);
--	}
- 	libxfs_irele(ip);
- }
- 
-@@ -606,22 +562,13 @@ _("couldn't re-initialize realtime summary inode, error %d\n"), error);
- static void
- mk_rsumino(xfs_mount_t *mp)
- {
--	xfs_trans_t	*tp;
--	xfs_inode_t	*ip;
--	xfs_bmbt_irec_t	*ep;
--	int		i;
--	int		nmap;
--	int		error;
--	xfs_fileoff_t	bno;
--	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
--	uint		blocks;
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
-+	int			error;
- 
--	/*
--	 * first set up inode
--	 */
--	i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 10, 0, 0, &tp);
--	if (i)
--		res_failed(i);
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 10, 0, 0, &tp);
-+	if (error)
-+		res_failed(error);
- 
- 	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
- 	if (error) {
-@@ -637,41 +584,6 @@ mk_rsumino(xfs_mount_t *mp)
- 	error = -libxfs_trans_commit(tp);
- 	if (error)
- 		do_error(_("%s: commit failed, error %d\n"), __func__, error);
--
--	/*
--	 * then allocate blocks for file and fill with zeroes (stolen
--	 * from mkfs)
--	 */
--	blocks = mp->m_rsumblocks + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
--	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
--	if (error)
--		res_failed(error);
--
--	libxfs_trans_ijoin(tp, ip, 0);
--	bno = 0;
--	while (bno < mp->m_rsumblocks) {
--		nmap = XFS_BMAP_MAX_NMAP;
--		error = -libxfs_bmapi_write(tp, ip, bno,
--			  (xfs_extlen_t)(mp->m_rsumblocks - bno),
--			  0, mp->m_rsumblocks, map, &nmap);
--		if (error) {
--			do_error(
--		_("couldn't allocate realtime summary inode, error = %d\n"),
--				error);
--		}
--		for (i = 0, ep = map; i < nmap; i++, ep++) {
--			libxfs_device_zero(mp->m_ddev_targp,
--				      XFS_FSB_TO_DADDR(mp, ep->br_startblock),
--				      XFS_FSB_TO_BB(mp, ep->br_blockcount));
--			bno += ep->br_blockcount;
--		}
--	}
--	error = -libxfs_trans_commit(tp);
--	if (error) {
--		do_error(
--	_("allocation of the realtime summary ino failed, error = %d\n"),
--			error);
--	}
- 	libxfs_irele(ip);
- }
- 
+ 		try:
++			last_active = self.last_activation()
+ 			self.__dbusrun(lambda: self.unit.Start('replace'))
++			ret = self.wait_for_startup(last_active)
++			if ret > 0:
++				return ret
+ 			return self.wait()
+ 		except dbus.exceptions.DBusException as e:
+ 			# If the unit was masked, the sysadmin doesn't want us
 
