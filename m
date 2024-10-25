@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 177EC1CF96
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:31:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F59E170A16
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:31:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729837901; cv=none; b=KiZxLA9Weazpl/npAODm4H6rKlEuqhoM2GKgmv7ZY5csZEhMsVfLxq6oj52YdvDV7iIPRR66dzp3FucGuPgb3C6u9cgtK4TqI4Gp+91KCRDqLx6eJtZyOvj2Oe01hQFyXqCbYAUJsCHBTQ+dE25mJI3P/WqnSOJoVPUDtimh2LM=
+	t=1729837917; cv=none; b=hioN3HQ+1iBj/QIMOhx+80gIkPzlHeUQAr6FLkbwx5tpsQL9cmP46LZz2ZL+ly5/8M9r5lLFK32NbHfUm/BoC8BYHgGBNs/J2LLBe976oZN+3cGDqtcnE1d3wDpLN917UdU/EhqzU1LcQPD7LwIInjQWvjRplJM8saegdPUn6TA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729837901; c=relaxed/simple;
-	bh=VwQxmhc1kP0IhMbpyzw3/m63y7E2R6QcRECAmNV2fkM=;
+	s=arc-20240116; t=1729837917; c=relaxed/simple;
+	bh=3c8idNWl98g7ejLZ75yWlayva0mI92f2JclB4OnUHQI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sZEphFVD39u42mKjvzFwGl2folyxPkBmChLeM1peIsQiiW14BlrzDrP2vTqRRljOzng973+Y1h63wgsgfEWu2ISimhoCX6SZjygTfm9a3UqEL3OqFSm7OcLH22gqcSzS4OOJi2/IgxJuftNr2otpiuu9BE6rn1qVRlv0neOM4n8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bx31PjHK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TXW6jjm9MuE4Lr2dCZYGxVLR13iK78TJCjDiKpDmBVFH6VOdOa7+GtFK/yRp1WmpigmdG+IPe+y29CoyL34+CItedZ3Pa1/zSXNjrPBae6TN4mwQgGPxIN72CQaYVRCSStwQQ/TIUmeAStGbHp42YvLCrdh/Yg4Xk/fc9+in/SE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z1Y+d+jG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bx31PjHK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D759CC4CEC3;
-	Fri, 25 Oct 2024 06:31:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z1Y+d+jG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A534C4CEC3;
+	Fri, 25 Oct 2024 06:31:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729837900;
-	bh=VwQxmhc1kP0IhMbpyzw3/m63y7E2R6QcRECAmNV2fkM=;
+	s=k20201202; t=1729837916;
+	bh=3c8idNWl98g7ejLZ75yWlayva0mI92f2JclB4OnUHQI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bx31PjHK2QZwLYbkA6SL899GAnM4BmCUhP7QivQuKggAR6ZegbSxuVXFp1ZqeAY68
-	 tf+CDlRuMUrba+cBJ/i40pGkym7iArMZl5lIP0EWDLFAwHxHZ0tmsVSmkwUyYezcnj
-	 oufqvyRns7EhbDMNy/MLXXgcrjMJRanrRv6o9P4A+69s6pBTAybwCf+52o1e2jYX4C
-	 Xj8bejJN0K1ytHntrleiqsPq2d+1Ws+PikAMjIupVw7cmWXoNxgRB6VqsQbUKyQici
-	 cBxmcAYwTzDG8BzrKJ6yL+h8eRYXqwKTBrAVDPCCy6Nid0zeqkZS+2osRxZxd/AkvC
-	 gx4/iBZVjB9Yg==
-Date: Thu, 24 Oct 2024 23:31:40 -0700
-Subject: [PATCHSET v2.6 2/5] xfs_db: debug realtime geometry
+	b=Z1Y+d+jGRzHQCiZWvgX9gm8z/+QsoGVg8bHk+hIoDt/hdBKTAe1C427fcWos3Cc52
+	 72GzqRD/D+wF04oN5iN15lA8wRYBAFnmIUko2AWBck3oRKtGEd045MxUWUnY3orRBQ
+	 EZeYfCsjaBkaV/kRAggSzkYWbVx9bt04QHAG2+wp9ue3H09tHsIImvQClSuFy/2FpV
+	 58xSgy7xjueJXnNL06vRbNlbIv6hbAJX6O2uZfjZlgq7R4XdUG9uQfrLym8IRN8+Bj
+	 B94kfq5mqBBx6cQm2PGtNwzn/KJ/IW5YLIlnfr1e76EE3BAmBQVm3FgMtcTzimj/jw
+	 1rYhHklqI6odw==
+Date: Thu, 24 Oct 2024 23:31:56 -0700
+Subject: [PATCHSET v2.6 3/5] xfs_metadump: support external devices
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
+Message-ID: <172983774131.3041548.11544427959826174191.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241025062602.GH2386201@frogsfrogsfrogs>
 References: <20241025062602.GH2386201@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,14 +45,15 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Before we start modernizing the realtime device, let's first make a few
-improvements to the XFS debugger to make our lives easier.  First up is
-making it so that users can point the debugger at the block device
-containing the realtime section, and augmenting the io cursor code to be
-able to read blocks from the rt device.  Next, we add a new geometry
-conversion command (rtconvert) to make it easier to go back and forth
-between rt blocks, rt extents, and the corresponding locations within
-the rt bitmap and summary files.
+This series augments the xfs_metadump and xfs_mdrestore utilities to
+capture the contents of an external log in a metadump, and restore it on
+the other end.  This will enable better debugging analysis of broken
+filesystems, since it will now be possible to capture external log data.
+This is a prequisite for the rt groups feature, since we'll also need to
+capture the rt superblocks written to the rt device.
+
+This also means we can capture the contents of external logs for better
+analysis by support staff.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -60,25 +61,12 @@ from my git trees, which are linked below.
 Comments and questions are, as always, welcome.
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=debug-realtime-geometry-6.12
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadump-external-devices-6.12
 ---
 Commits in this patchset:
- * xfs_db: support passing the realtime device to the debugger
- * xfs_db: report the realtime device when associated with each io cursor
- * xfs_db: make the daddr command target the realtime device
- * xfs_db: access realtime file blocks
- * xfs_db: access arbitrary realtime blocks and extents
- * xfs_db: enable conversion of rt space units
- * xfs_db: convert rtbitmap geometry
- * xfs_db: convert rtsummary geometry
+ * xfs_db: allow setting current address to log blocks
 ---
- db/block.c        |  167 +++++++++++++++++++++-
- db/convert.c      |  409 ++++++++++++++++++++++++++++++++++++++++++++++++++---
- db/faddr.c        |    4 -
- db/init.c         |    7 +
- db/io.c           |   39 ++++-
- db/io.h           |    3 
- db/xfs_admin.sh   |    4 -
- man/man8/xfs_db.8 |  129 +++++++++++++++++
- 8 files changed, 722 insertions(+), 40 deletions(-)
+ db/block.c        |  103 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ man/man8/xfs_db.8 |   17 +++++++++
+ 2 files changed, 119 insertions(+), 1 deletion(-)
 
