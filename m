@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4096015B13D;
-	Fri, 25 Oct 2024 05:27:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8397515B13D;
+	Fri, 25 Oct 2024 05:28:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729834066; cv=none; b=nhs3I1q/S4SMMZ9XtlKQl2QqAb0p+FrGeh2uJt0EWxIJhRU7eRYXGyZs/OuWWIqQe0VbQ5mjYIS28ZEFue6NVaYucXp7GNf6m3XRLbSByctN53QWSCPX1GOCB81EWhzeywzZhuO9nuFJIaMyxHo5AFnUR3x+hrRqLTR9LkhQO0Y=
+	t=1729834119; cv=none; b=TtXHhKyl3ai9KRsQgkiWbbMsj61EO48JPc7vmjT4xmACMwZplwTeKsTrGZzdIUQvIRHSx6eHeYkfVN+mTS3ZVkS1JVBCgkfvq6bS3MXkDIcY0h5XNO44ho7Ov8Rc7OZRGEBC0FbykwVziqhb0X5IClVRAw7g7hUTO4k1rpIk4nU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729834066; c=relaxed/simple;
-	bh=MXpuubODSd79ThAPMN4CuRiLlrM5zlmsIwbCsCmq3+k=;
+	s=arc-20240116; t=1729834119; c=relaxed/simple;
+	bh=gNUkUpopSG0AEjCrs8KspM3nbAQKQoINg15YVq6Kea0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t8pOf/osdxb9Mtt8WlaJKRvCKgmcJrExLlTwxAoFbndMONc0ry8YX6Nc7fOihsciBBiJ6akuJ9LJper8DbJjn9zfrh0GE2tUWaIK6x1O+fnvBKNwUEBNQWv8mabs+oahfl/NHJI12RHJA2w4Vqx/HE1z7ryz1Wn16xJdCdmd6Xc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ppCg6bZQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=r60y2FoFuHzyJyspa1GrhjZWal7I4eauxo1BhCKuOh6Y2/gm0O4YEy2lYViEQpJMchGwYOf/5KTQAPs/siSKgCfz5k42GhJvURxHSh/riVcdiOoVXYfUDUISIMCHgyHNGWbYyT3WFywojZiBuJyI18afjPKuucWhckcxTSvN/l8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I1pltOJj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ppCg6bZQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9563CC4CEC3;
-	Fri, 25 Oct 2024 05:27:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I1pltOJj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F4E1C4CEC3;
+	Fri, 25 Oct 2024 05:28:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729834065;
-	bh=MXpuubODSd79ThAPMN4CuRiLlrM5zlmsIwbCsCmq3+k=;
+	s=k20201202; t=1729834119;
+	bh=gNUkUpopSG0AEjCrs8KspM3nbAQKQoINg15YVq6Kea0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ppCg6bZQczk7xIIucljCppL+E2pjL38WLqaCJHnMZLCRid+4Kiy3niaTuacPln02A
-	 iSvyw2SrlSl/Fr8L7nMydDEs5985ku/FXaiPTFsD+CJzIRffYmgWOfnI0pnbUUVKUh
-	 JuCas8ilpyZTa4K9C35L8uFlTq7MonsQmsp25lumIHE0YylWuG/RxsjRQ15dTGV2kf
-	 WAPdZQmHvGeejK8zloFqOUpSPnFHIbqC6iwXQXTOJ763F6uusU8/qu7Yip4rbFVPyM
-	 XbPiJEuMjKn1zWvPFwAhIq4uchxSGIE3OrlEZ9yEJDwKfVoGBb9DVXdW0kBPhyABxz
-	 f33SYA/5Y7+Tw==
-Date: Thu, 24 Oct 2024 22:27:44 -0700
+	b=I1pltOJjL1dX9X4pwg+7i9h7ORkdkFu/bytSmvTG5AqOn4Y9jrjVvbfl4qVlL7TPW
+	 FI5qmBvwfGOofrgzF5Djj8o2dUGHTtPnf7Iz5qu9exeXDI44RbUmdkQw2D3WssYgR5
+	 oE5Fd9bAzM2m1ln3006RTL0prVcpZ176pjEGf+H+jFOJ0aPoJBa7eMJqvcuwNB5Gj6
+	 MtbadTnCZpKlYD1N9LjtXoB/E+HmvBN7zsc5oo6Isn+L9JW1q13BEBFiZ6iqh+YBRa
+	 dpyiVvbZxeVQGPpSrsgR3mv8XDNSNvsXcoEQo7ZHz+6+VwhAUZpSJXGWg2Q1Q+bGp0
+	 qKfN+QlJ6v2vw==
+Date: Thu, 24 Oct 2024 22:28:38 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Nirjhar Roy <nirjhar@linux.ibm.com>, fstests@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com, ojaswin@linux.ibm.com, zlang@kernel.org
-Subject: Re: [PATCH 1/2] common/xfs,xfs/207: Adding a common helper function
- to check xflag bits on a given file
-Message-ID: <20241025052744.GR21840@frogsfrogsfrogs>
-References: <cover.1729624806.git.nirjhar@linux.ibm.com>
- <6ba7f682af7e0bc99a8baeccc0d7aa4e5062a433.1729624806.git.nirjhar@linux.ibm.com>
- <20241025025651.okneano7d324nl4e@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241025040703.GQ2578692@frogsfrogsfrogs>
- <20241025041501.jzj7b2ensn6lvpep@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: Pankaj Raghav <p.raghav@samsung.com>, fstests@vger.kernel.org,
+	zlang@redhat.com, linux-xfs@vger.kernel.org, gost.dev@samsung.com,
+	mcgrof@kernel.org, david@fromorbit.com
+Subject: Re: Re: [PATCH 1/2] generic/219: use filesystem blocksize while
+ calculating the file size
+Message-ID: <20241025052838.GS21840@frogsfrogsfrogs>
+References: <20241024112311.615360-1-p.raghav@samsung.com>
+ <20241024112311.615360-2-p.raghav@samsung.com>
+ <20241024181910.GG2386201@frogsfrogsfrogs>
+ <tkkmsrqrevdsjxybiheukav2tfqucb6hz2tstl2ritzsv3s5aw@gqjkppt7zie7>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,128 +47,92 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241025041501.jzj7b2ensn6lvpep@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <tkkmsrqrevdsjxybiheukav2tfqucb6hz2tstl2ritzsv3s5aw@gqjkppt7zie7>
 
-On Fri, Oct 25, 2024 at 12:15:01PM +0800, Zorro Lang wrote:
-> On Thu, Oct 24, 2024 at 09:07:03PM -0700, Darrick J. Wong wrote:
-> > On Fri, Oct 25, 2024 at 10:56:51AM +0800, Zorro Lang wrote:
-> > > On Wed, Oct 23, 2024 at 12:56:19AM +0530, Nirjhar Roy wrote:
-> > > > This patch defines a common helper function to test whether any of
-> > > > fsxattr xflags field is set or not. We will use this helper in the next
-> > > > patch for checking extsize (e) flag.
-> > > > 
-> > > > Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> > > > Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> > > > Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
-> > > > ---
-> > > >  common/xfs    |  9 +++++++++
-> > > >  tests/xfs/207 | 14 +++-----------
-> > > >  2 files changed, 12 insertions(+), 11 deletions(-)
-> > > > 
-> > > > diff --git a/common/xfs b/common/xfs
-> > > > index 62e3100e..7340ccbf 100644
-> > > > --- a/common/xfs
-> > > > +++ b/common/xfs
-> > > > @@ -13,6 +13,15 @@ __generate_xfs_report_vars() {
-> > > >  	REPORT_ENV_LIST_OPT+=("TEST_XFS_REPAIR_REBUILD" "TEST_XFS_SCRUB_REBUILD")
-> > > >  }
-> > > >  
-> > > > +# Check whether a fsxattr xflags character field is set on a given file.
+On Fri, Oct 25, 2024 at 06:42:20AM +0530, Pankaj Raghav (Samsung) wrote:
+> On Thu, Oct 24, 2024 at 11:19:10AM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 24, 2024 at 01:23:10PM +0200, Pankaj Raghav wrote:
+> > > generic/219 was failing for XFS with 32k and 64k blocksize. Even though
+> > > we do only 48k IO, XFS will allocate blocks rounded to the nearest
+> > > blocksize.
 > > > 
-> > > Better to explain the arguments, e.g.
+> > > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> > > ---
+> > >  tests/generic/219 | 18 +++++++++++++++---
+> > >  1 file changed, 15 insertions(+), 3 deletions(-)
 > > > 
-> > > # Check whether a fsxattr xflags character ($2) field is set on a given file ($1).
-> > > 
-> > > > +# e.g. fsxattr.xflags = 0x0 [--------------C-]
-> > > > +# Returns 0 if passed flag character is set, otherwise returns 1
-> > > > +_test_xfs_xflags_field()
-> > > > +{
-> > > > +    $XFS_IO_PROG -c "stat" "$1" | grep "fsxattr.xflags" | grep -q "\[.*$2.*\]" \
-> > > > +        && return 0 || return 1
-> > > 
-> > > That's too complex. Those "return" aren't needed as Darrick metioned. About
-> > > that two "grep", how about combine them, e.g.
-> > > 
-> > > _test_xfs_xflags_field()
-> > > {
-> > > 	grep -q "fsxattr.xflags.*\[.*$2.*\]" <($XFS_IO_PROG -c "stat" "$1")
-> > > }
-> > > 
-> > > 
-> > > 
-> > > > +}
-> > > > +
-> > > >  _setup_large_xfs_fs()
-> > > >  {
-> > > >  	fs_size=$1
-> > > > diff --git a/tests/xfs/207 b/tests/xfs/207
-> > > > index bbe21307..adb925df 100755
-> > > > --- a/tests/xfs/207
-> > > > +++ b/tests/xfs/207
-> > > > @@ -15,21 +15,13 @@ _begin_fstest auto quick clone fiemap
-> > > >  # Import common functions.
-> > > >  . ./common/filter
-> > > >  . ./common/reflink
-> > > > +. ./common/xfs
-> > > 
-> > > Is this really necessary? Will this test fail without this line?
-> > > The common/$FSTYP file is imported automatically, if it's not, that a bug.
+> > > diff --git a/tests/generic/219 b/tests/generic/219
+> > > index 940b902e..d72aa745 100755
+> > > --- a/tests/generic/219
+> > > +++ b/tests/generic/219
+> > > @@ -49,12 +49,24 @@ check_usage()
+> > >  	fi
+> > >  }
+> > >  
+> > > +_round_up_to_fs_blksz()
+> > > +{
+> > > +	local n=$1
+> > > +	local bs=$(_get_file_block_size "$SCRATCH_MNT")
+> > > +	local bs_kb=$(( bs >> 10 ))
+> > > +
+> > > +	echo $(( (n + bs_kb - 1) & ~(bs_kb - 1) ))
 > > 
-> > If the generic helper goes in common/rc instead then it's not necessary
-> > at all.
+> > Nit: you can divide here, right?
 > 
-> Won't the "_source_specific_fs $FSTYP" in common/rc helps to import common/xfs?
+> No. I think you are talking about DIV_ROUND_UP(). We are doing a
+> round_up operation here.
 
-Yeah, that too.
+Hah oops yeah.
+
+> We should get 64k as sz for bs 32k and 64k.
+> 
+> round_up(48k, 32k/64k) = 64k
+
+<nod>
+
+post clue-bat,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+
+> > 
+> > 	echo $(( (n + bs_kb - 1) / bs_kb ))
+> > 
+> > The rest seems fine.
 > > 
 > > --D
 > > 
-> > > Thanks,
-> > > Zorro
+> > > +}
+> > > +
+> > >  test_accounting()
+> > >  {
+> > > -	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
+> > > -	echo "--- initiating parallel IO..." >>$seqres.full
+> > >  	# Small ios here because ext3 will account for indirect blocks too ...
+> > >  	# 48k will fit w/o indirect for 4k blocks (default blocksize)
+> > > +	io_sz=$(_round_up_to_fs_blksz 48)
+> > > +	sz=$(( io_sz * 3 ))
+> > > +
+> > > +	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
+> > > +	echo "--- initiating parallel IO..." >>$seqres.full
+> > >  	$XFS_IO_PROG -c 'pwrite 0 48k' -c 'fsync' \
+> > >  					$SCRATCH_MNT/buffer >>$seqres.full 2>&1 &
+> > >  	$XFS_IO_PROG -c 'pwrite 0 48k' -d \
+> > > @@ -73,7 +85,7 @@ test_accounting()
+> > >  	else
+> > >  		id=$qa_group
+> > >  	fi
+> > > -	repquota -$type $SCRATCH_MNT | grep "^$id" | check_usage 144 3
+> > > +	repquota -$type $SCRATCH_MNT | grep "^$id" | check_usage $sz 3
+> > >  }
+> > >  
+> > >  
+> > > -- 
+> > > 2.44.1
 > > > 
-> > > >  
-> > > >  _require_scratch_reflink
-> > > >  _require_cp_reflink
-> > > >  _require_xfs_io_command "fiemap"
-> > > >  _require_xfs_io_command "cowextsize"
-> > > >  
-> > > > -# Takes the fsxattr.xflags line,
-> > > > -# i.e. fsxattr.xflags = 0x0 [--------------C-]
-> > > > -# and tests whether a flag character is set
-> > > > -test_xflag()
-> > > > -{
-> > > > -    local flg=$1
-> > > > -    grep -q "\[.*${flg}.*\]" && echo "$flg flag set" || echo "$flg flag unset"
-> > > > -}
-> > > > -
-> > > >  echo "Format and mount"
-> > > >  _scratch_mkfs > $seqres.full 2>&1
-> > > >  _scratch_mount >> $seqres.full 2>&1
-> > > > @@ -65,14 +57,14 @@ echo "Set cowextsize and check flag"
-> > > >  $XFS_IO_PROG -c "cowextsize 1048576" $testdir/file3 | _filter_scratch
-> > > >  _scratch_cycle_mount
-> > > >  
-> > > > -$XFS_IO_PROG -c "stat" $testdir/file3 | grep 'fsxattr.xflags' | test_xflag "C"
-> > > > +_test_xfs_xflags_field "$testdir/file3" "C" && echo "C flag set" || echo "C flag unset"
-> > > >  $XFS_IO_PROG -c "cowextsize" $testdir/file3 | _filter_scratch
-> > > >  
-> > > >  echo "Unset cowextsize and check flag"
-> > > >  $XFS_IO_PROG -c "cowextsize 0" $testdir/file3 | _filter_scratch
-> > > >  _scratch_cycle_mount
-> > > >  
-> > > > -$XFS_IO_PROG -c "stat" $testdir/file3 | grep 'fsxattr.xflags' | test_xflag "C"
-> > > > +_test_xfs_xflags_field "$testdir/file3" "C" && echo "C flag set" || echo "C flag unset"
-> > > >  $XFS_IO_PROG -c "cowextsize" $testdir/file3 | _filter_scratch
-> > > >  
-> > > >  status=0
-> > > > -- 
-> > > > 2.43.5
-> > > > 
-> > > > 
 > > > 
-> > 
 > 
+> -- 
+> Pankaj Raghav
 > 
