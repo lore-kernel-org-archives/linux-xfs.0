@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7254E170A16
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:33:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB9D1CF96
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:34:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729838026; cv=none; b=bgUVs4V5k/XKYRK1shY4UVfDp9IRYZgD/TBrrOrO2tiDi0HH7TrQun5SBKFMThzyVE9MXcalHnRPQf9l+QlDo7vnKfgHvlgiuuL5VfgvS1JvMTazUdtK15h388juBf0eGOkscsskV99UPvOCAaJwnqMwK0wjCE14e55It7VA/wg=
+	t=1729838041; cv=none; b=ZWJQeDwjaQZVfTtLRqowozhfOiVyvaXeTQc3xI3EYQx+pM82CLYIgG4giKtU67t8Uv4Gkqu4McX59F135eYqzH76dJZETTXSXyjgwT82Ig17+mgN5GWKXg5/djrMQF1S8DE23h/oywT+llUAhJo68UmpRBAPXRTGq61sLjqcITk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729838026; c=relaxed/simple;
-	bh=vS77g9y2vwqQciMlX71HgjaBSrkw3Kt6j/3hcuLOVV8=;
+	s=arc-20240116; t=1729838041; c=relaxed/simple;
+	bh=rXHBFprqFZ0S+yOqBS1KfHMnVEFYdReAsH5q7AKWnU0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GUu8BUObJn2sAhP8vlR6YxoZY/GUug6dArvwwOmf7pqiCLAEiG7S0OPpyyzqdyOIMipvX81kSVm74AfE2yHirm00Zvs3bb4XMxyT5Z1vUwLecNQyE/jDnLW1cfjBvUl56BJ6xAB3h748Y7aXH1BLKN8fN4kuBKhWB4BNPyqIrmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qwACuzKf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GwU1Jdck9STUa2Vnlqg9uOSqE8X0lSej4HQa8e5GD00se3I0cFLD4YZEhRqDmN6IciKPRE7DkP+cymW3omhWrz9IFRqw70uJ8IeGB7i7qNeRALm9yZpceqB8MKvOUdac+rLdvMRjWcEHGU6bf3QwTn1jpnCoU7lS3CYG7viJefA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pNGIqZBy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qwACuzKf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04173C4CEC3;
-	Fri, 25 Oct 2024 06:33:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pNGIqZBy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96CD0C4CEC3;
+	Fri, 25 Oct 2024 06:34:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729838026;
-	bh=vS77g9y2vwqQciMlX71HgjaBSrkw3Kt6j/3hcuLOVV8=;
+	s=k20201202; t=1729838041;
+	bh=rXHBFprqFZ0S+yOqBS1KfHMnVEFYdReAsH5q7AKWnU0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qwACuzKfOsDcBIjMSJbcqbUiO35SQlzEwWazP+v4GLF7P0beSglT6I2ObbsE0vVa1
-	 jkzh+SfXdW3wrdzKJpewURRkp468AshE2HxStAsPi2XJNNdgkYx8KJti4rkfQDbfwq
-	 i3lbc2NscOs7KieY7xU8y8/n1u7rLu1XWT9Cjaw5qJsBS4VYWJ3tgFv2gOc4uCmh56
-	 L1nHQlGu8xg9esY1rgDMNRwder79pKzV8pT0tdnUlgZFZyl7t2XNi0CZOgbjvOFULB
-	 CRdLr+XDhPZMRadc9xSZs9fuJovm6ieQNznnfjMy6MI/eFQ+GYAxJUHOyJ6bHBg38D
-	 vm+SP1tbC7VvQ==
-Date: Thu, 24 Oct 2024 23:33:45 -0700
-Subject: [PATCH 5/7] xfs_fsr: port to new file exchange library function
+	b=pNGIqZByqLR5d2LeEaPUP8lCsBz47uEOTHq08tMkd64hptYwkL6YaAmtwjH7B+wOV
+	 sUQ0mVSj8q4lTQ0CaLDlVGkcqmYJwGvHdhE7hbfLWYQl3k66ia9/lMuG+UpI0q/eiw
+	 eHsUbfUdgoIFexCzdGRv8rYPh8fTcHghYbcZMewgx+WZ4QoItwA22NnK69P6HdD5pc
+	 i1jQt1VSndO8jDCicHGdgeBfmfDy4fkA+rIl5rKGMh7MQNuew7JFOKlwoPAPJ0yaEY
+	 +eZnK3LKQXSduBVDYMdF+Ijc47c12dbhTectfp8AzsXiPCJH4ZSAO8+j6FX5B8ogUO
+	 k07q+HGaiJWTg==
+Date: Thu, 24 Oct 2024 23:34:01 -0700
+Subject: [PATCH 6/7] xfs_io: add a commitrange option to the exchangerange
+ command
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983773405.3040944.316630518119574344.stgit@frogsfrogsfrogs>
+Message-ID: <172983773420.3040944.255060526461776194.stgit@frogsfrogsfrogs>
 In-Reply-To: <172983773323.3040944.5615240418900510348.stgit@frogsfrogsfrogs>
 References: <172983773323.3040944.5615240418900510348.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,139 +46,95 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Port fsr to use the new libfrog library functions to handle exchanging
-mappings between the target and donor files.
+Teach the xfs_io exchangerange command to be able to use the commit
+range functionality so that we can test it piece by piece.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fsr/xfs_fsr.c |   74 ++++++++++++++++++++++++++-------------------------------
- 1 file changed, 34 insertions(+), 40 deletions(-)
+ io/exchrange.c    |   26 ++++++++++++++++++++++----
+ man/man8/xfs_io.8 |    3 +++
+ 2 files changed, 25 insertions(+), 4 deletions(-)
 
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 22e134adfd73ab..8845ff172fcb2e 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -13,6 +13,7 @@
- #include "libfrog/paths.h"
- #include "libfrog/fsgeom.h"
- #include "libfrog/bulkstat.h"
-+#include "libfrog/file_exchange.h"
- 
- #include <fcntl.h>
- #include <errno.h>
-@@ -122,12 +123,6 @@ open_handle(
- 	return 0;
- }
- 
--static int
--xfs_swapext(int fd, xfs_swapext_t *sx)
--{
--    return ioctl(fd, XFS_IOC_SWAPEXT, sx);
--}
--
- static int
- xfs_fscounts(int fd, xfs_fsop_counts_t *counts)
+diff --git a/io/exchrange.c b/io/exchrange.c
+index 016429280e2717..0a3750f1eb2607 100644
+--- a/io/exchrange.c
++++ b/io/exchrange.c
+@@ -19,6 +19,7 @@ exchangerange_help(void)
+ "\n"
+ " Exchange file data between the open file descriptor and the supplied filename.\n"
+ " -C   -- Print timing information in a condensed format\n"
++" -c   -- Commit to the exchange only if file2 has not changed.\n"
+ " -d N -- Start exchanging contents at this position in the open file\n"
+ " -f   -- Flush changed file data and metadata to disk\n"
+ " -l N -- Exchange this many bytes between the two files instead of to EOF\n"
+@@ -34,9 +35,9 @@ exchangerange_f(
+ 	int			argc,
+ 	char			**argv)
  {
-@@ -1189,14 +1184,13 @@ packfile(
- 	struct xfs_bulkstat	*statp,
- 	struct fsxattr		*fsxp)
- {
-+	struct xfs_commit_range	xdf;
- 	int			tfd = -1;
--	int			srval;
- 	int			retval = -1;	/* Failure is the default */
- 	int			nextents, extent, cur_nextents, new_nextents;
- 	unsigned		blksz_dio;
- 	unsigned		dio_min;
- 	struct dioattr		dio;
--	static xfs_swapext_t	sx;
- 	struct xfs_flock64	space;
- 	off_t			cnt, pos;
- 	void			*fbuf = NULL;
-@@ -1239,6 +1233,16 @@ packfile(
- 		goto out;
- 	}
- 
-+	/*
-+	 * Snapshot file_fd before we start copying data but after tweaking
-+	 * forkoff.
-+	 */
-+	error = xfrog_defragrange_prep(&xdf, file_fd->fd, statp, tfd);
-+	if (error) {
-+		fsrprintf(_("failed to prep for defrag: %s\n"), strerror(error));
-+		goto out;
-+	}
-+
- 	/* Setup extended inode flags, project identifier, etc */
- 	if (fsxp->fsx_xflags || fsxp->fsx_projid) {
- 		if (ioctl(tfd, FS_IOC_FSSETXATTR, fsxp) < 0) {
-@@ -1446,19 +1450,6 @@ packfile(
- 		goto out;
- 	}
- 
--	error = -xfrog_bulkstat_v5_to_v1(file_fd, &sx.sx_stat, statp);
--	if (error) {
--		fsrprintf(_("bstat conversion error on %s: %s\n"),
--				fname, strerror(error));
--		goto out;
--	}
--
--	sx.sx_version  = XFS_SX_VERSION;
--	sx.sx_fdtarget = file_fd->fd;
--	sx.sx_fdtmp    = tfd;
--	sx.sx_offset   = 0;
--	sx.sx_length   = statp->bs_size;
--
- 	/* switch to the owner's id, to keep quota in line */
-         if (fchown(tfd, statp->bs_uid, statp->bs_gid) < 0) {
-                 if (vflag)
-@@ -1468,25 +1459,28 @@ packfile(
-         }
- 
- 	/* Swap the extents */
--	srval = xfs_swapext(file_fd->fd, &sx);
--	if (srval < 0) {
--		if (errno == ENOTSUP) {
--			if (vflag || dflag)
--			   fsrprintf(_("%s: file type not supported\n"), fname);
--		} else if (errno == EFAULT) {
--			/* The file has changed since we started the copy */
--			if (vflag || dflag)
--			   fsrprintf(_("%s: file modified defrag aborted\n"),
--				     fname);
--		} else if (errno == EBUSY) {
--			/* Timestamp has changed or mmap'ed file */
--			if (vflag || dflag)
--			   fsrprintf(_("%s: file busy\n"), fname);
--		} else {
--			fsrprintf(_("XFS_IOC_SWAPEXT failed: %s: %s\n"),
--				  fname, strerror(errno));
--		}
--		goto out;
-+	error = xfrog_defragrange(file_fd->fd, &xdf);
-+	switch (error) {
-+		case 0:
+-	struct xfs_exchange_range	fxr;
+ 	struct stat		stat;
+ 	struct timeval		t1, t2;
++	bool			use_commit = false;
+ 	uint64_t		flags = XFS_EXCHANGE_RANGE_TO_EOF;
+ 	int64_t			src_offset = 0;
+ 	int64_t			dest_offset = 0;
+@@ -53,6 +54,9 @@ exchangerange_f(
+ 		case 'C':
+ 			condensed = 1;
+ 			break;
++		case 'c':
++			use_commit = true;
 +			break;
-+	case ENOTSUP:
-+		if (vflag || dflag)
-+			fsrprintf(_("%s: file type not supported\n"), fname);
-+		break;
-+	case EFAULT:
-+		/* The file has changed since we started the copy */
-+		if (vflag || dflag)
-+			fsrprintf(_("%s: file modified defrag aborted\n"),
-+					fname);
-+		break;
-+	case EBUSY:
-+		/* Timestamp has changed or mmap'ed file */
-+		if (vflag || dflag)
-+			fsrprintf(_("%s: file busy\n"), fname);
-+		break;
-+	default:
-+		fsrprintf(_("XFS_IOC_SWAPEXT failed: %s: %s\n"),
-+			  fname, strerror(error));
- 	}
+ 		case 'd':
+ 			dest_offset = cvtnum(fsblocksize, fssectsize, optarg);
+ 			if (dest_offset < 0) {
+@@ -117,8 +121,22 @@ exchangerange_f(
+ 	if (length < 0)
+ 		length = stat.st_size;
  
- 	/* Report progress */
+-	xfrog_exchangerange_prep(&fxr, dest_offset, fd, src_offset, length);
+-	ret = xfrog_exchangerange(file->fd, &fxr, flags);
++	if (use_commit) {
++		struct xfs_commit_range	xcr;
++
++		ret = xfrog_commitrange_prep(&xcr, file->fd, dest_offset, fd,
++				src_offset, length);
++		if (!ret) {
++			gettimeofday(&t1, NULL);
++			ret = xfrog_commitrange(file->fd, &xcr, flags);
++		}
++	} else {
++		struct xfs_exchange_range	fxr;
++
++		xfrog_exchangerange_prep(&fxr, dest_offset, fd, src_offset,
++				length);
++		ret = xfrog_exchangerange(file->fd, &fxr, flags);
++	}
+ 	if (ret) {
+ 		xfrog_perror(ret, "exchangerange");
+ 		exitcode = 1;
+@@ -149,7 +167,7 @@ static struct cmdinfo exchangerange_cmd = {
+ void
+ exchangerange_init(void)
+ {
+-	exchangerange_cmd.args = _("[-Cfntw] [-d dest_offset] [-s src_offset] [-l length] <donorfile>");
++	exchangerange_cmd.args = _("[-Ccfntw] [-d dest_offset] [-s src_offset] [-l length] <donorfile>");
+ 	exchangerange_cmd.oneline = _("Exchange contents between files.");
+ 
+ 	add_command(&exchangerange_cmd);
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 1e7901393ff4d4..49d4057bb069ed 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -732,6 +732,9 @@ .SH FILE I/O COMMANDS
+ .B \-C
+ Print timing information in a condensed format.
+ .TP
++.B \-c
++Exchange contents only if file2 has not changed.
++.TP
+ .BI \-d " dest_offset"
+ Swap extents with open file beginning at
+ .IR dest_offset .
 
