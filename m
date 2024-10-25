@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC921CF96
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:34:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A07D18CC1B
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:34:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729838057; cv=none; b=XdJLblLHIDh/hFJB+Bbgqoyv+tPbmGshitYFo1wyyJmtXJ0qiOikmT0W2vZFvb3l/M8v07cZeI9SMstTtpbq6PLDaTnCi6J+9cy9hQdkZ6JoYRZXymN7leOeH+sUghcvSz0zVQgihWaoo2EupcVv9uPfUtPeF/IgTr4Gca9qqao=
+	t=1729838073; cv=none; b=pLVDtRneyJhv4+gxj4pcA7IVzVZVrYh+//Bm73juERJDy6VsnDDDREkYcY1MUs7MaO7bwZd0GzOW5WZ7iuXF5hYVGVBwpCHHdBhWnBd7lp3EgoQrdU5C5It8zQkx1vxTJ5oew/eJPKRdpSHuZKUnxjSX2F+3VToHqr8AEHXl8UI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729838057; c=relaxed/simple;
-	bh=VMlnZuHjBiD6M2h6NQalcon/08D20hDwYhTgose8m2A=;
+	s=arc-20240116; t=1729838073; c=relaxed/simple;
+	bh=6J6dLNUxgc2+xaNQ0gf2z2HaX4VGnF2Tv4nWR5uSb7g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=if5xaADnK7BOq6i/gyp9qj7DQ7XsXBlG9Wf6LhrsFMILIWmd/B1YdCNFcOnZeBaZkdxHIaPMQXOIRlVeITIddNySlMk1dNXy/0cZlvvBvq7g725jq91zUZSaskQhkAu5pXsaK5P8PXh0WbkF+PZlMs3SxX4kDLB2W+DCbMFU/FY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jd5HdjP4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HL6lW+dk9MvPK55H2IuxpXLUA97A7o1xHzUNNqSxMDy9bnMFKH5IJe26rFs++eZqll80E9O+6RRdLY1bBjdqRZrMHvhfeetWx2oWu7VReJ/o8NHsGLh/gbqaCJbRzN/OHiUK2Mt/peVIZJK+mnygKLd7xLXjQo9sfyfHb3RH1IE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kXV5aKUQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jd5HdjP4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CE2CC4CEC3;
-	Fri, 25 Oct 2024 06:34:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kXV5aKUQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9D24C4CEC3;
+	Fri, 25 Oct 2024 06:34:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729838057;
-	bh=VMlnZuHjBiD6M2h6NQalcon/08D20hDwYhTgose8m2A=;
+	s=k20201202; t=1729838073;
+	bh=6J6dLNUxgc2+xaNQ0gf2z2HaX4VGnF2Tv4nWR5uSb7g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Jd5HdjP45xgn8T71T/R4jGhaIff/s9INwDaAPeLY9jPbMzTbR9six3VSj3tOpI6qv
-	 7y2IfhX0YstcmIouQ6RetYsXgAM/7VXMLi9b6e6eXKNoeDchadXCR7As+xLCVJweKI
-	 B3BFEMTGTg8uY3DgypPwenPh8HKbNpdIr8gtQhcF0/XSWJt8SMaKJ7zONUDnNFM2QE
-	 6kzzC/TFK1qm13tDvHxXUCmkQkFlXxAxG5IU8A/qFSsERcdExeF01RHrxC7bNa6e9s
-	 GwGEtxHEc8IwHyIcXE752Ewc5s4mCxOpZNsE/ePI0a3J2C3xTWNbCJNw4ygKrFgqkv
-	 l+8OiqY2Q+GkQ==
-Date: Thu, 24 Oct 2024 23:34:16 -0700
-Subject: [PATCH 7/7] xfs_io: add atomic file update commands to exercise file
- commit range
+	b=kXV5aKUQb7Cvq9vdCbgcyPIjxPl9nD21hWY16Uy89LVAJoZNEQtj1K1Pgm0tA50pk
+	 KljfPtjLWAodOszFxB2pYwwI+Kd+PV+s+gIS85CpVqF7SPkWncIyC7rV+nd2wQ5XC+
+	 6KHyHfiX/vgNuHRexuvPXqeq+dKVzwBb0stU6m5afl3DwYjou4ezZKk4Awv/uaI/Py
+	 jHbZmpqB5AsBC/Qe7cVHjMZHNJqgKEqZakIjXasqJLPW64uIFnQrkSbiAC5YG7Pqrg
+	 da8rIOHDnnrrpHOq+/5bDHOg8/LjyojU65EVnXrmuzEaAbqHOC0tMPEViaroSOP8nH
+	 3a+q7LCcQS3cw==
+Date: Thu, 24 Oct 2024 23:34:32 -0700
+Subject: [PATCH 1/8] xfs_db: support passing the realtime device to the
+ debugger
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983773435.3040944.11571503838591968979.stgit@frogsfrogsfrogs>
-In-Reply-To: <172983773323.3040944.5615240418900510348.stgit@frogsfrogsfrogs>
-References: <172983773323.3040944.5615240418900510348.stgit@frogsfrogsfrogs>
+Message-ID: <172983773744.3041229.13980914566378223145.stgit@frogsfrogsfrogs>
+In-Reply-To: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
+References: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,510 +46,197 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add three commands to xfs_io so that we can exercise atomic file updates
-as provided by reflink and the start-commit / commit-range functionality.
+Create a new -R flag so that sysadmins can pass the realtime device to
+the xfs debugger.  Since we can now have superblocks on the rt device,
+we need this to be able to inspect/dump/etc.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/exchrange.c    |  364 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- io/io.h           |    4 +
- io/open.c         |   27 +++-
- man/man8/xfs_io.8 |   32 +++++
- 4 files changed, 421 insertions(+), 6 deletions(-)
+ db/init.c         |    7 +++++--
+ db/io.c           |   28 +++++++++++++++++++++++-----
+ db/io.h           |    2 ++
+ db/xfs_admin.sh   |    4 +++-
+ man/man8/xfs_db.8 |   13 +++++++++++++
+ 5 files changed, 46 insertions(+), 8 deletions(-)
 
 
-diff --git a/io/exchrange.c b/io/exchrange.c
-index 0a3750f1eb2607..707d78d8e624fe 100644
---- a/io/exchrange.c
-+++ b/io/exchrange.c
-@@ -164,6 +164,358 @@ static struct cmdinfo exchangerange_cmd = {
- 	.help		= exchangerange_help,
- };
- 
-+/* Atomic file updates commands */
-+
-+struct update_info {
-+	/* File that we're updating. */
-+	int			fd;
-+
-+	/* ioctl data to commit the changes */
-+	struct xfs_commit_range	xcr;
-+
-+	/* Name of the file we're updating. */
-+	char			*old_fname;
-+
-+	/* fd we're using to stage the updates. */
-+	int			temp_fd;
-+};
-+
-+enum finish_how	{
-+	FINISH_ABORT,
-+	FINISH_COMMIT,
-+	FINISH_CHECK
-+};
-+
-+static struct update_info *updates;
-+static unsigned int nr_updates;
-+
-+static void
-+startupdate_help(void)
-+{
-+	printf(_(
-+"\n"
-+" Prepare for an atomic file update, if supported by the filesystem.\n"
-+" A temporary file will be opened for writing and inserted into the file\n"
-+" table.  The current file will be changed to this temporary file.  Neither\n"
-+" file can be closed for the duration of the update.\n"
-+"\n"
-+" -e   -- Start with an empty file\n"
-+"\n"));
-+}
-+
-+static int
-+startupdate_f(
-+	int			argc,
-+	char			*argv[])
-+{
-+	struct fsxattr		attr;
-+	struct xfs_fsop_geom	fsgeom;
-+	struct fs_path		fspath;
-+	struct stat		stat;
-+	struct update_info	*p;
-+	char			*fname;
-+	char			*path = NULL, *d;
-+	size_t			fname_len;
-+	int			flags = IO_TMPFILE | IO_ATOMICUPDATE;
-+	int			temp_fd = -1;
-+	bool			clone_file = true;
-+	int			c;
-+	int			ret;
-+
-+	while ((c = getopt(argc, argv, "e")) != -1) {
-+		switch (c) {
-+		case 'e':
-+			clone_file = false;
-+			break;
-+		default:
-+			startupdate_help();
-+			return 0;
-+		}
-+	}
-+	if (optind != argc) {
-+		startupdate_help();
-+		return 0;
-+	}
-+
-+	/* Allocate a new slot. */
-+	p = realloc(updates, (++nr_updates) * sizeof(*p));
-+	if (!p) {
-+		perror("startupdate realloc");
-+		goto fail;
-+	}
-+	updates = p;
-+
-+	/* Fill out the update information so that we can commit later. */
-+	p = &updates[nr_updates - 1];
-+	memset(p, 0, sizeof(*p));
-+
-+	ret = fstat(file->fd, &stat);
-+	if (ret) {
-+		perror(file->name);
-+		goto fail;
-+	}
-+
-+	/* Is the current file realtime?  If so, the temp file must match. */
-+	ret = ioctl(file->fd, FS_IOC_FSGETXATTR, &attr);
-+	if (ret == 0 && attr.fsx_xflags & FS_XFLAG_REALTIME)
-+		flags |= IO_REALTIME;
-+
-+	/* Compute path to the directory that the current file is in. */
-+	path = strdup(file->name);
-+	d = strrchr(path, '/');
-+	if (!d) {
-+		fprintf(stderr, _("%s: cannot compute dirname?"), path);
-+		goto fail;
-+	}
-+	*d = 0;
-+
-+	/* Open a temporary file to stage the new contents. */
-+	temp_fd = openfile(path, &fsgeom, flags, 0600, &fspath);
-+	if (temp_fd < 0) {
-+		perror(path);
-+		goto fail;
-+	}
-+
-+	/*
-+	 * Snapshot the original file metadata in anticipation of the later
-+	 * file mapping exchange request.
-+	 */
-+	ret = xfrog_commitrange_prep(&p->xcr, file->fd, 0, temp_fd, 0,
-+			stat.st_size);
-+	if (ret) {
-+		perror("update prep");
-+		goto fail;
-+	}
-+
-+	/* Clone all the data from the original file into the temporary file. */
-+	if (clone_file) {
-+		ret = ioctl(temp_fd, XFS_IOC_CLONE, file->fd);
-+		if (ret) {
-+			perror(path);
-+			goto fail;
-+		}
-+	}
-+
-+	/* Prepare a new path string for the duration of the update. */
-+#define FILEUPDATE_STR	" (fileupdate)"
-+	fname_len = strlen(file->name) + strlen(FILEUPDATE_STR);
-+	fname = malloc(fname_len + 1);
-+	if (!fname) {
-+		perror("new path");
-+		goto fail;
-+	}
-+	snprintf(fname, fname_len + 1, "%s%s", file->name, FILEUPDATE_STR);
-+
-+	/*
-+	 * Install the temporary file into the same slot of the file table as
-+	 * the original file.  Ensure that the original file cannot be closed.
-+	 */
-+	file->flags |= IO_ATOMICUPDATE;
-+	p->old_fname = file->name;
-+	file->name = fname;
-+	p->fd = file->fd;
-+	p->temp_fd = file->fd = temp_fd;
-+
-+	free(path);
-+	return 0;
-+fail:
-+	if (temp_fd >= 0)
-+		close(temp_fd);
-+	free(path);
-+	nr_updates--;
-+	exitcode = 1;
-+	return 1;
-+}
-+
-+static long long
-+finish_update(
-+	enum finish_how		how,
-+	uint64_t		flags,
-+	long long		*offset)
-+{
-+	struct update_info	*p;
-+	long long		committed_bytes = 0;
-+	size_t			length;
-+	unsigned int		i;
-+	unsigned int		upd_offset;
-+	int			temp_fd;
-+	int			ret;
-+
-+	/* Find our update descriptor. */
-+	for (i = 0, p = updates; i < nr_updates; i++, p++) {
-+		if (p->temp_fd == file->fd)
-+			break;
-+	}
-+
-+	if (i == nr_updates) {
-+		fprintf(stderr,
-+	_("Current file is not the staging file for an atomic update.\n"));
-+		exitcode = 1;
-+		return -1;
-+	}
-+
-+	/*
-+	 * Commit our changes, if desired.  If the mapping exchange fails, we
-+	 * stop processing immediately so that we can run more xfs_io commands.
-+	 */
-+	switch (how) {
-+	case FINISH_CHECK:
-+		flags |= XFS_EXCHANGE_RANGE_DRY_RUN;
-+		fallthrough;
-+	case FINISH_COMMIT:
-+		ret = xfrog_commitrange(p->fd, &p->xcr, flags);
-+		if (ret) {
-+			xfrog_perror(ret, _("committing update"));
-+			exitcode = 1;
-+			return -1;
-+		}
-+		printf(_("Committed updates to '%s'.\n"), p->old_fname);
-+		*offset = p->xcr.file2_offset;
-+		committed_bytes = p->xcr.length;
-+		break;
-+	case FINISH_ABORT:
-+		printf(_("Cancelled updates to '%s'.\n"), p->old_fname);
-+		break;
-+	}
-+
-+	/*
-+	 * Reset the filetable to point to the original file, and close the
-+	 * temporary file.
-+	 */
-+	free(file->name);
-+	file->name = p->old_fname;
-+	file->flags &= ~IO_ATOMICUPDATE;
-+	temp_fd = file->fd;
-+	file->fd = p->fd;
-+	ret = close(temp_fd);
-+	if (ret)
-+		perror(_("closing temporary file"));
-+
-+	/* Remove the atomic update context, shifting things down. */
-+	upd_offset = p - updates;
-+	length = nr_updates * sizeof(struct update_info);
-+	length -= (upd_offset + 1) * sizeof(struct update_info);
-+	if (length)
-+		memmove(p, p + 1, length);
-+
-+	nr_updates--;
-+	return committed_bytes;
-+}
-+
-+static void
-+cancelupdate_help(void)
-+{
-+	printf(_(
-+"\n"
-+" Cancels an atomic file update.  The temporary file will be closed, and the\n"
-+" current file set back to the original file.\n"
-+"\n"));
-+}
-+
-+static int
-+cancelupdate_f(
-+	int		argc,
-+	char		*argv[])
-+{
-+	return finish_update(FINISH_ABORT, 0, NULL);
-+}
-+
-+static void
-+commitupdate_help(void)
-+{
-+	printf(_(
-+"\n"
-+" Commits an atomic file update.  File contents written to the temporary file\n"
-+" will be exchanged atomically with the corresponding range in the original\n"
-+" file.  The temporary file will be closed, and the current file set back to\n"
-+" the original file.\n"
-+"\n"
-+" -C   -- Print timing information in a condensed format.\n"
-+" -h   -- Only exchange written ranges in the temporary file.\n"
-+" -k   -- Exchange to end of file, ignore any length previously set.\n"
-+" -n   -- Check parameters but do not change anything.\n"
-+" -q   -- Do not print timing information at all.\n"));
-+}
-+
-+static int
-+commitupdate_f(
-+	int		argc,
-+	char		*argv[])
-+{
-+	struct timeval	t1, t2;
-+	enum finish_how	how = FINISH_COMMIT;
-+	uint64_t	flags = XFS_EXCHANGE_RANGE_TO_EOF;
-+	long long	offset, len;
-+	int		condensed = 0, quiet_flag = 0;
-+	int		c;
-+
-+	while ((c = getopt(argc, argv, "Chknq")) != -1) {
-+		switch (c) {
-+		case 'C':
-+			condensed = 1;
-+			break;
-+		case 'h':
-+			flags |= XFS_EXCHANGE_RANGE_FILE1_WRITTEN;
-+			break;
-+		case 'k':
-+			flags &= ~XFS_EXCHANGE_RANGE_TO_EOF;
-+			break;
-+		case 'n':
-+			how = FINISH_CHECK;
-+			break;
-+		case 'q':
-+			quiet_flag = 1;
-+			break;
-+		default:
-+			commitupdate_help();
-+			return 0;
-+		}
-+	}
-+	if (optind != argc) {
-+		commitupdate_help();
-+		return 0;
-+	}
-+
-+	gettimeofday(&t1, NULL);
-+	len = finish_update(how, flags, &offset);
-+	if (len < 0)
-+		return 1;
-+	if (quiet_flag)
-+		return 0;
-+
-+	gettimeofday(&t2, NULL);
-+	t2 = tsub(t2, t1);
-+	report_io_times("commitupdate", &t2, offset, len, len, 1, condensed);
-+	return 0;
-+}
-+
-+static struct cmdinfo startupdate_cmd = {
-+	.name		= "startupdate",
-+	.cfunc		= startupdate_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.flags		= CMD_FLAG_ONESHOT | CMD_NOMAP_OK,
-+	.help		= startupdate_help,
-+};
-+
-+static struct cmdinfo cancelupdate_cmd = {
-+	.name		= "cancelupdate",
-+	.cfunc		= cancelupdate_f,
-+	.argmin		= 0,
-+	.argmax		= 0,
-+	.flags		= CMD_FLAG_ONESHOT | CMD_NOMAP_OK,
-+	.help		= cancelupdate_help,
-+};
-+
-+static struct cmdinfo commitupdate_cmd = {
-+	.name		= "commitupdate",
-+	.cfunc		= commitupdate_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.flags		= CMD_FLAG_ONESHOT | CMD_NOMAP_OK,
-+	.help		= commitupdate_help,
-+};
-+
- void
- exchangerange_init(void)
+diff --git a/db/init.c b/db/init.c
+index cea25ae52bd1b7..17fb094296c2b8 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -33,7 +33,7 @@ static void
+ usage(void)
  {
-@@ -171,4 +523,16 @@ exchangerange_init(void)
- 	exchangerange_cmd.oneline = _("Exchange contents between files.");
- 
- 	add_command(&exchangerange_cmd);
-+
-+	startupdate_cmd.oneline = _("start an atomic update of a file");
-+	startupdate_cmd.args = _("[-e]");
-+
-+	cancelupdate_cmd.oneline = _("cancel an atomic update");
-+
-+	commitupdate_cmd.oneline = _("commit a file update atomically");
-+	commitupdate_cmd.args = _("[-C] [-h] [-n] [-q]");
-+
-+	add_command(&startupdate_cmd);
-+	add_command(&cancelupdate_cmd);
-+	add_command(&commitupdate_cmd);
+ 	fprintf(stderr, _(
+-		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
++		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-R rtdev] [-c cmd]... device\n"
+ 		), progname);
+ 	exit(1);
  }
-diff --git a/io/io.h b/io/io.h
-index 8c5e59100c5cbd..4daedac06419ae 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -31,6 +31,9 @@
- #define IO_PATH		(1<<10)
- #define IO_NOFOLLOW	(1<<11)
+@@ -54,7 +54,7 @@ init(
+ 	textdomain(PACKAGE);
  
-+/* undergoing atomic update, do not close */
-+#define IO_ATOMICUPDATE	(1<<12)
-+
- /*
-  * Regular file I/O control
-  */
-@@ -74,6 +77,7 @@ extern int		openfile(char *, struct xfs_fsop_geom *, int, mode_t,
- 				 struct fs_path *);
- extern int		addfile(char *, int , struct xfs_fsop_geom *, int,
- 				struct fs_path *);
-+extern int		closefile(void);
- extern void		printxattr(uint, int, int, const char *, int, int);
+ 	progname = basename(argv[0]);
+-	while ((c = getopt(argc, argv, "c:fFip:rxVl:")) != EOF) {
++	while ((c = getopt(argc, argv, "c:fFip:rR:xVl:")) != EOF) {
+ 		switch (c) {
+ 		case 'c':
+ 			cmdline = xrealloc(cmdline, (ncmdline+1)*sizeof(char*));
+@@ -75,6 +75,9 @@ init(
+ 		case 'r':
+ 			x.flags = LIBXFS_ISREADONLY;
+ 			break;
++		case 'R':
++			x.rt.name = optarg;
++			break;
+ 		case 'l':
+ 			x.log.name = optarg;
+ 			break;
+diff --git a/db/io.c b/db/io.c
+index 9b2c6b4cf7e963..26b8e78c2ebda8 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -458,6 +458,7 @@ ring_add(void)
+ static void
+ write_cur_buf(void)
+ {
++	struct xfs_buftarg	*btp = iocur_top->bp->b_target;
+ 	int ret;
  
- extern unsigned int	recurse_all;
-diff --git a/io/open.c b/io/open.c
-index 15850b5557bc5b..a30dd89a1fd56c 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -338,14 +338,19 @@ open_f(
- 	return 0;
+ 	ret = -libxfs_bwrite(iocur_top->bp);
+@@ -465,7 +466,7 @@ write_cur_buf(void)
+ 		dbprintf(_("write error: %s\n"), strerror(ret));
+ 
+ 	/* re-read buffer from disk */
+-	ret = -libxfs_readbufr(mp->m_ddev_targp, iocur_top->bb, iocur_top->bp,
++	ret = -libxfs_readbufr(btp, iocur_top->bb, iocur_top->bp,
+ 			      iocur_top->blen, 0);
+ 	if (ret != 0)
+ 		dbprintf(_("read error: %s\n"), strerror(ret));
+@@ -474,6 +475,7 @@ write_cur_buf(void)
+ static void
+ write_cur_bbs(void)
+ {
++	struct xfs_buftarg	*btp = iocur_top->bp->b_target;
+ 	int ret;
+ 
+ 	ret = -libxfs_bwrite(iocur_top->bp);
+@@ -482,7 +484,7 @@ write_cur_bbs(void)
+ 
+ 
+ 	/* re-read buffer from disk */
+-	ret = -libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp, 0);
++	ret = -libxfs_readbufr_map(btp, iocur_top->bp, 0);
+ 	if (ret != 0)
+ 		dbprintf(_("read error: %s\n"), strerror(ret));
+ }
+@@ -541,9 +543,9 @@ static void
+ __set_cur(
+ 	struct xfs_buftarg	*btargp,
+ 	const typ_t		*type,
+-	xfs_daddr_t		 blknum,
+-	int			 len,
+-	int			 ring_flag,
++	xfs_daddr_t		blknum,
++	int			len,
++	int			ring_flag,
+ 	bbmap_t			*bbmap)
+ {
+ 	struct xfs_buf		*bp;
+@@ -647,6 +649,22 @@ set_log_cur(
+ 	__set_cur(mp->m_logdev_targp, type, blknum, len, ring_flag, bbmap);
  }
  
--static int
--close_f(
--	int		argc,
--	char		**argv)
 +int
-+closefile(void)
- {
- 	size_t		length;
- 	unsigned int	offset;
- 
-+	if (file->flags & IO_ATOMICUPDATE) {
-+		fprintf(stderr,
-+	_("%s: atomic update in progress, cannot close.\n"),
-+			file->name);
-+		exitcode = 1;
-+		return 0;
++set_rt_cur(
++	const typ_t	*type,
++	xfs_daddr_t	blknum,
++	int		len,
++	int		ring_flag,
++	bbmap_t		*bbmap)
++{
++	if (!mp->m_rtdev_targp->bt_bdev) {
++		printf(_("realtime device not loaded, use -R.\n"));
++		return ENODEV;
 +	}
- 	if (close(file->fd) < 0) {
- 		perror("close");
- 		exitcode = 1;
-@@ -371,7 +376,19 @@ close_f(
- 		free(filetable);
- 		file = filetable = NULL;
- 	}
--	filelist_f();
++
++	__set_cur(mp->m_rtdev_targp, type, blknum, len, ring_flag, bbmap);
 +	return 0;
 +}
-+
-+static int
-+close_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	int		ret;
-+
-+	ret = closefile();
-+	if (!ret)
-+		filelist_f();
- 	return 0;
- }
  
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 49d4057bb069ed..eb2201fca74380 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1058,7 +1058,37 @@ .SH FILE I/O COMMANDS
- nsec is the nanoseconds since the sec. This value needs to be in
- the range 0-999999999 with UTIME_NOW and UTIME_OMIT being exceptions.
- Each (sec, nsec) pair constitutes a single timestamp value.
--
-+.TP
-+.BI "startupdate [ " -e ]
-+Create a temporary clone of a file in which to stage file updates.
-+The
-+.B \-e
-+option creates an empty staging file.
-+.TP
-+.B cancelupdate
-+Abandon changes from a update staging file.
-+.TP
-+.BI "commitupdate [" OPTIONS ]
-+Commit changes from a update staging file to the real file.
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.B \-C
-+Print timing information in a condensed format.
-+.TP 0.4i
-+.B \-h
-+Only swap ranges in the update staging file that were actually written.
-+.TP 0.4i
-+.B \-k
-+Do not change file size.
-+.TP 0.4i
-+.B \-n
-+Check parameters without changing anything.
-+.TP 0.4i
-+.B \-q
-+Do not print timing information at all.
-+.PD
-+.RE
+ void
+ set_iocur_type(
+diff --git a/db/io.h b/db/io.h
+index f48b67b47a2b55..bb5065f06c0d8e 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -51,6 +51,8 @@ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
+ 			int len, int ring_add, bbmap_t *bbmap);
+ extern void	set_log_cur(const struct typ *type, xfs_daddr_t blknum,
+ 			int len, int ring_add, bbmap_t *bbmap);
++extern int	set_rt_cur(const struct typ *type, xfs_daddr_t blknum,
++			int len, int ring_add, bbmap_t *bbmap);
+ extern void     ring_add(void);
+ extern void	set_iocur_type(const struct typ *type);
+ extern void	xfs_dummy_verify(struct xfs_buf *bp);
+diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+index cc650c4255036b..52a658ba4a540f 100755
+--- a/db/xfs_admin.sh
++++ b/db/xfs_admin.sh
+@@ -8,6 +8,7 @@ status=0
+ require_offline=""
+ require_online=""
+ DB_OPTS=""
++DB_DEV_OPTS=""
+ REPAIR_OPTS=""
+ IO_OPTS=""
+ REPAIR_DEV_OPTS=""
+@@ -42,6 +43,7 @@ do
+ 		require_offline=1
+ 		;;
+ 	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'"
++		DB_DEV_OPTS=" -R '$OPTARG'"
+ 		require_offline=1
+ 		;;
+ 	u)	DB_OPTS=$DB_OPTS" -r -c uuid"
+@@ -89,7 +91,7 @@ case $# in
  
- .SH MEMORY MAPPED I/O COMMANDS
+ 		if [ -n "$DB_OPTS" ]
+ 		then
+-			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
++			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_DEV_OPTS $DB_OPTS "$1"
+ 			status=$?
+ 		fi
+ 		if [ -n "$REPAIR_OPTS" ]
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 291ec1c5827bfd..5faf8dbb1d679f 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -14,6 +14,9 @@ .SH SYNOPSIS
+ .B \-l
+ .I logdev
+ ] [
++.B \-R
++.I rtdev
++] [
+ .B \-p
+ .I progname
+ ]
+@@ -80,6 +83,16 @@ .SH OPTIONS
+ for prompts and some error messages, the default value is
+ .BR xfs_db .
  .TP
++.B -R
++.I rtdev
++Specifies the device where the realtime data resides.
++This is only relevant for filesystems that have a realtime section.
++See the
++.BR mkfs.xfs "(8) " \-r
++option, and refer to
++.BR xfs (5)
++for a detailed description of the XFS realtime section.
++.TP
+ .B -r
+ Open
+ .I device
 
