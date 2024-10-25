@@ -1,112 +1,231 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2833F20C33B;
-	Fri, 25 Oct 2024 18:18:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0EC818BC0E;
+	Fri, 25 Oct 2024 18:28:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729880304; cv=none; b=ZECZNA0w7bccmKlrXUspv3ZkEkIiIUqIAwLODqN/TRQlIIo1G9q1FpQ8Zacva+5d1PvhLD/TfAYRYRlQKX6ZP5WOsjgmcdh9fXo/fPS3tttWS4Cd1IM5od4OW9cQjCmqMLQDf0/H9ZB/N3pUIGY9IxyL/5WSmwntxKE80vTFihc=
+	t=1729880939; cv=none; b=baTGtaiS5oMO148QJnLlwZkxbt5+4qnNTcqyAt04GOTcCQerTNNW8d7VRyWaCt8BQ2P9jODd9OUXZFOjqgjgDTtso/44w1W+BAV4TzJcbspi3jEptKHVcOagZsjao8RbAjCMvMoKRkbyJbE57yu49JC5mC5x7l+1QoR0QkgDM4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729880304; c=relaxed/simple;
-	bh=v1hwuTl+8BCRTxe3Http9QiPRGIkrWefuEMHvq/QQz8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=F2mgvv+5p9duDzMoVcvhsXRxGtWuJSEtUYwjclyyxHKR13Qlo5bdoWBVpLWJAvEmBjFbJlo1XDLxTgw5IMSutl8FclVVU0w40jKb+cPMo8oEo5mA98/M9un2wPkeheRbPmkfKDbhUIOFSr083gLXN+BD4m8JpHsp/Q+T9bDy1qY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Im6NQyhj; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1729880939; c=relaxed/simple;
+	bh=4I5j/AD/SHyvVngXf3BZWdCJ3TDjPt4eufqTQIN4w4c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Pr8qFSjFOH+6IKfIqAxgWtehbwU/J61CVDHUJp5p240su5dNkV/UwkWUdRuO+nJJL5YXLOCKdgMLV9cue4VsqDs8CPuxjvSXgniw4lNBSMe7geaWoiVysm1U+sMGxfvAdnoYCKqkqbsQkgKc9bq7cBrEiQ2IT9KCcs9au6l1BEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I90BXuWw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Im6NQyhj"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-20c803787abso18439235ad.0;
-        Fri, 25 Oct 2024 11:18:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729880301; x=1730485101; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=+TOwZYNTv5eHUs8Bo46zVa+EwDHeJm+uvq59kPi1xAI=;
-        b=Im6NQyhjz1wbkG+HF7foFSed2lHv4a9VD4G6kWh5n7jQw8BDa1Y/CqAHfduQPZ40KV
-         yh0GGIHXuLfWRHNPdYf+us7cq6xPrTjpxFT9+WvqRe8sesfrTdBHKiFLOI3OeMCTppcJ
-         41/HrIeHVvX9xAIwOeb1zpIcc/EkM1ARTBc9cl+bmbh6Q1ZAEVjIk/lIR50ono4sdfX0
-         k8oUg+vzMqqqly7rNv8yUohKPJippJDXFlRIonYemIXt+2KqHtfB6s6DtWZ6BWwn4WXE
-         JjJbj7sPw/5E2UqsEViSzaL68OtddWvi5NejTYGizCEbpP6SlUeLpB4XCzC0p+oqJDFc
-         WH0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729880301; x=1730485101;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+TOwZYNTv5eHUs8Bo46zVa+EwDHeJm+uvq59kPi1xAI=;
-        b=jUXvaePgdubel9YlahirKxpfVWLe00NXclfszgMC1BfjvY/ZCAdRUEzOqfXslrjh6O
-         tNOPpGzBNTNWsVaepDYXv4Vu7rZe/dYza7j2kTi+ueoNFI3dsaxkUp7p7SmUcBwMVleb
-         VFULkVOOOgDOTvE0hVnqQDdxzqzBOaeCYMf7eRrdpZvyU1wo1SiSCK831MbwudFd0+3x
-         W/GVQ66cjk2rNux3RHOXQ15VYJw3qXPZRk4Pg2oZfLrW/eYkLWZADA5cgQ4Iaem99lPb
-         YX2unK/zc+9EDaL6GOe5x6d/vzYeudM37IgmPV+1Bi4+PuqtYjBFfrWXXCfmQGupJSOb
-         nh+g==
-X-Forwarded-Encrypted: i=1; AJvYcCWHkrs2xBQMn2ivVfQlO9OrxUUhTSsmVaCV69f0hkAYGjJBx1D45Vb9fxjjuaMXVkTtjiS21LnMS+I76Oyq@vger.kernel.org, AJvYcCWSk7TOOYCrKhtNMmcf6EIVE8O9tzyO6fbFFKcT7Im4T8gaYUV0mSbwnubZQz4AyQH3GxpkJwFjT31kiwGS@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxxf+QMnPxswzjgKuXHqLzappCBP2r4x8jHX5wvXHXQYh2s1JA1
-	lMDS6+ptdUH5yhyK4CE8E8grzhs/SeR0VJyYvJNpQR6NolrakODmrzRMZw==
-X-Google-Smtp-Source: AGHT+IGqdSuUo6Y6p7vHrxoGHchv3M7RNYWw0iN3cE1ZEsKpKIitnUBkviTKhO00d+TcjuMNK9CqVw==
-X-Received: by 2002:a17:902:ced2:b0:205:8a8b:bd2a with SMTP id d9443c01a7336-20fb8a04b12mr108551195ad.22.1729880301408;
-        Fri, 25 Oct 2024 11:18:21 -0700 (PDT)
-Received: from dw-tp.ibmuc.com ([171.76.85.20])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7edc8a6f4ddsm1388763a12.91.2024.10.25.11.18.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Oct 2024 11:18:20 -0700 (PDT)
-From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I90BXuWw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D37EC4CEC3;
+	Fri, 25 Oct 2024 18:28:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729880939;
+	bh=4I5j/AD/SHyvVngXf3BZWdCJ3TDjPt4eufqTQIN4w4c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=I90BXuWwgNxNtrqopdGcOJ+EuLNWitTQHGhiZil9bY7xmT/9uQNuR6ZJ4KNv5Xzp0
+	 /fQsBOnlVCZoi3b+QS4DKsBoEMP6tENQtN8vTSEg6Wgxo8SV2NUPphpwvgdJLHsekv
+	 K2/gDtMnWqgNy+V7k/5Nzt5kF9AOXu+vivinHhFOpo+NEzADZ5KQ8WMZwpTg29fZT/
+	 U5VAiqJqeb1OarCTTXePvKQbCYy3n89QaviuyyvcXAy5Rf+xZGy/3UibgHAsXFHKUn
+	 4YDmc6i0qS7FmP/SEi5fBLpGe9WCoPnVcK1fm2gmzBRwGLw8KkswBAaKeaQCf97maS
+	 7OFN9PXJIF0aw==
+Date: Fri, 25 Oct 2024 11:28:58 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: John Garry <john.g.garry@oracle.com>, linux-ext4@vger.kernel.org,
+	Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
 	Christoph Hellwig <hch@infradead.org>,
-	John Garry <john.g.garry@oracle.com>,
 	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	Dave Chinner <david@fromorbit.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: [PATCH] xfs: Do not fallback to buffered-io for DIO atomic write
-Date: Fri, 25 Oct 2024 23:48:05 +0530
-Message-ID: <627c14b7987a3ab91d9bff31b99d86167d56f476.1729879630.git.ritesh.list@gmail.com>
-X-Mailer: git-send-email 2.46.0
+	Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 5/6] iomap: Lift blocksize restriction on atomic writes
+Message-ID: <20241025182858.GM2386201@frogsfrogsfrogs>
+References: <1efb8d6d-ba2e-499d-abc5-e4f9a1e54e89@oracle.com>
+ <87zfmsmsvc.fsf@gmail.com>
+ <fc6fddee-2707-4cca-b0b7-983c8dd17e16@oracle.com>
+ <87v7xgmpwo.fsf@gmail.com>
+ <7e322989-c6e0-424a-94bd-3ad6ce5ffee9@oracle.com>
+ <87ttd0mnuo.fsf@gmail.com>
+ <7aea00d4-3914-414d-a18f-586a303868c1@oracle.com>
+ <87r084mkat.fsf@gmail.com>
+ <509180f3-4cc1-4cc2-9d43-5a1e728fb718@oracle.com>
+ <87plnomfsy.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87plnomfsy.fsf@gmail.com>
 
-iomap can return -ENOTBLK if pagecache invalidation fails.
-Let's make sure if -ENOTBLK is ever returned for atomic
-writes than we fail the write request (-EIO) instead of
-fallback to buffered-io.
+On Fri, Oct 25, 2024 at 07:43:17PM +0530, Ritesh Harjani wrote:
+> John Garry <john.g.garry@oracle.com> writes:
+> 
+> > On 25/10/2024 13:36, Ritesh Harjani (IBM) wrote:
+> >>>> So user will anyway will have to be made aware of not to
+> >>>> attempt writes of fashion which can cause them such penalties.
+> >>>>
+> >>>> As patch-6 mentions this is a base support for bs = ps systems for
+> >>>> enabling atomic writes using bigalloc. For now we return -EINVAL when we
+> >>>> can't allocate a continuous user requested mapping which means it won't
+> >>>> support operations of types 8k followed by 16k.
+> >>>>
+> >>> That's my least-preferred option.
+> >>>
+> >>> I think better would be reject atomic writes that cover unwritten
+> >>> extents always - but that boat is about to sail...
+> >> That's what this patch does.
+> >
+> > Not really.
+> >
+> > Currently we have 2x iomap restrictions:
+> > a. mapping length must equal fs block size
+> > b. bio created must equal total write size
+> >
+> > This patch just says that the mapping length must equal total write size 
+> > (instead of a.). So quite similar to b.
+> >
+> >> For whatever reason if we couldn't allocate
+> >> a single contiguous region of requested size for atomic write, then we
+> >> reject the request always, isn't it. Or maybe I didn't understand your comment.
+> >
+> > As the simplest example, for an atomic write to an empty file, there 
+> > should only be a single mapping returned to iomap_dio_bio_iter() and 
+> > that would be of IOMAP_UNWRITTEN type. And we don't reject that.
+> >
+> 
+> Ok. Maybe this is what I am missing. Could you please help me understand
+> why should such writes be rejected? 
+> 
+> For e.g. 
+> If FS could allocate a single contiguous IOMAP_UNWRITTEN extent of
+> atomic write request size, that means - 
+> 1. FS will allocate an unwritten extent.
+> 2. will do writes (using submit_bio) to the unwritten extent. 
+> 3. will do unwritten to written conversion. 
+> 
+> It is ok if either of the above operations fail right? If (3) fails
+> then the region will still be marked unwritten that means it will read
+> zero (old contents). (2) can anyway fail and will not result into
+> partial writes. (1) will anyway not result into any write whatsoever.
+> 
+> So we can never have a situation where there is partial writes leading
+> to mix of old and new write contents right for such cases? Which is what the
+> requirement of atomic/untorn write also is?
+> 
+> Sorry am I missing something here?
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
----
+I must be missing something; to perform an untorn write, two things must
+happen --
 
-This should be on top of John's atomic write series [1].
-[1]: https://lore.kernel.org/linux-xfs/20241019125113.369994-1-john.g.garry@oracle.com/
+1. The kernel writes the data to the storage device, and the storage
+device either persists all of it, or throws back an error having
+persisted none of it.
 
- fs/xfs/xfs_file.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+2. If (1) completes successfully, all file mapping updates for the range
+written must be persisted, or an error is thrown back and none of them
+are persisted.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index ca47cae5a40a..b819a9273511 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -876,6 +876,14 @@ xfs_file_write_iter(
- 		ret = xfs_file_dio_write(iocb, from);
- 		if (ret != -ENOTBLK)
- 			return ret;
-+		/*
-+		 * iomap can return -ENOTBLK if pagecache invalidation fails.
-+		 * Let's make sure if -ENOTBLK is ever returned for atomic
-+		 * writes than we fail the write request instead of fallback
-+		 * to buffered-io.
-+		 */
-+		if (iocb->ki_flags & IOCB_ATOMIC)
-+			return -EIO;
- 	}
+iomap doesn't have to know how the filesystem satisfies (2); it just has
+to create a single bio containing all data pages or it rejects the
+write.
 
- 	return xfs_file_buffered_write(iocb, from);
---
-2.39.5
+Currently, it's an implementation detail that the XFS directio write
+ioend code processes the file mapping updates for the range written by
+walking every extent mapping for that range and issuing separate
+transactions for each mapping update.  There's nothing that can restart
+the walk if it is interrupted.  That's why XFS cannot support multi
+fsblock untorn writes to blocks with different status.
 
+As I've said before, the most general solution to this would be to add a
+new log intent item that would track the "update all mappings in this
+file range" operation so that recovery could restart the walk.  This is
+the most technically challenging, so we decided not to implement it
+until there is demand.
+
+Having set aside the idea of redesigning ioend, the second-most general
+solution is pre-zeroing unwritten extents and holes so that
+->iomap_begin implementations can present a single mapping to the bio
+constructor.  Technically if there's only one unwritten extent or hole
+or cow, xfs can actually satisfy (2) because it only creates one
+transaction.
+
+This gets me to the third and much less general solution -- only allow
+untorn writes if we know that the ioend only ever has to run a single
+transaction.  That's why untorn writes are limited to a single fsblock
+for now -- it's a simple solution so that we can get our downstream
+customers to kick the tires and start on the next iteration instead of
+spending years on waterfalling.
+
+Did you notice that in all of these cases, the capabilities of the
+filesystem's ioend processing determines the restrictions on the number
+and type of mappings that ->iomap_begin can give to iomap?
+
+Now that we have a second system trying to hook up to the iomap support,
+it's clear to me that the restrictions on mappings are specific to each
+filesystem.  Therefore, the iomap directio code should not impose
+restrictions on the mappings it receives unless they would prevent the
+creation of the single aligned bio.
+
+Instead, xfs_direct_write_iomap_begin and ext4_iomap_begin should return
+EINVAL or something if they look at the file mappings and discover that
+they cannot perform the ioend without risking torn mapping updates.  In
+the long run, ->iomap_begin is where this iomap->len <= iter->len check
+really belongs, but hold that thought.
+
+For the multi fsblock case, the ->iomap_begin functions would have to
+check that only one metadata update would be necessary in the ioend.
+That's where things get murky, since ext4/xfs drop their mapping locks
+between calls to ->iomap_begin.  So you'd have to check all the mappings
+for unsupported mixed state every time.  Yuck.
+
+It might be less gross to retain the restriction that iomap accepts only
+one mapping for the entire file range, like Ritesh has here.  Users
+might be ok with us saying that you can't do a 16k atomic write to a
+region where you previously did an 8k write until you write the other
+8k, even if someone has to write zeroes.  Users might be ok with the
+kernel allowing multi-fsblock writes but only if the stars align.  But
+to learn the answers to those questions, we have to put /something/ in
+the hands of our users.
+
+For now (because we're already at -rc5), let's have xfs/ext4's
+->write_iter implementations restrict atomic writes to a single fsblock,
+and get both merged into the kernel.  Let's defer the multi fsblock work
+to 6.14, though I think we could take this patch.
+
+Does that sound cool?
+
+--D
+
+> >> 
+> >> If others prefer - we can maybe add such a check (e.g. ext4_dio_atomic_write_checks())
+> >> for atomic writes in ext4_dio_write_checks(), similar to how we detect
+> >> overwrites case to decide whether we need a read v/s write semaphore.
+> >> So this can check if the user has a partially allocated extent for the
+> >> user requested region and if yes, we can return -EINVAL from
+> >> ext4_dio_write_iter() itself.
+> >  > > I think this maybe better option than waiting until ->iomap_begin().
+> >> This might also bring all atomic write constraints to be checked in one
+> >> place i.e. during ext4_file_write_iter() itself.
+> >
+> > Something like this can be done once we decide how atomic writing to 
+> > regions which cover mixed unwritten and written extents is to be handled.
+> 
+> Mixed extent regions (written + unwritten) is a different case all
+> together (which can lead to mix of old and new contents).
+> 
+> 
+> But here what I am suggesting is to add following constraint in case of
+> ext4 with bigalloc - 
+> 
+> "Writes to a region which already has partially allocated extent is not supported."
+> 
+> That means we will return -EINVAL if we detect above case in
+> ext4_file_write_iter() and sure we can document this behavior.
+> 
+> In retrospect, I am not sure why we cannot add a constraint for atomic
+> writes (e.g. for ext4 bigalloc) and reject such writes outright,
+> instead of silently incurring a performance penalty by zeroing out the
+> partial regions by allowing such write request.
+> 
+> -ritesh
+> 
