@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71D531A3AB9
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:37:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E2718C935
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:38:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729838277; cv=none; b=s45Pd+G9zyVOhU6Iql3zRUsq8gDW7wzRnL3fEsqQ/9is2VCM+QZByOtg6toJtNIEIMxjn8Cr3JBb8cww52NB0LV8otzjb4G7aZg7HNkphqw4GAP1z+CfiQqbsqD0MMlAwa6i1nNG7g0nogJcQw9n6b5W+9oxy56l1DNB30SBRyQ=
+	t=1729838293; cv=none; b=GtAOHuO1LZ7qMmqnZhQhfsrCF1rnRtcpszGN938Jn6LiH7BMl+s26TPkViC6tKxPZlIgZXhmlCrSDwybv1xopNdlPXtb4nvxW0ZLXoqJWVYiZBeEhn1OKgM2BBOmKwDz+uzqECK69LOyPwTp5lsnxt1mnJ/Q3wbBKMz0lfAlUBw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729838277; c=relaxed/simple;
-	bh=xEOiA3GlXGGIbYMUXDQ9vw3RahS7fPrF7pQfmD+JO3U=;
+	s=arc-20240116; t=1729838293; c=relaxed/simple;
+	bh=rMS04JzWbTA10NoNgT1uDwTz6/mlMY+uwx8e75a0h5c=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jA/oFuHTk08Pd1vQJWTjE00KEyeXJWUksmCGhNVH5mydy9EW3IrjN4y0FN3c6T7Gz7ZLZL2K7LFamXGqHMvkrii3p1tpBYGw3d05K71mrEJVt1G1K19qCkd+x+yva0jhRGXvnMZWtKUq+DoVArUqcSgZ/9lHEpVSrE+lb6nllpY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aoygsbbB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TX9VDDmPSzW5Dl0bmD69rNleoEgqGiS/gQLRKhzM9SEbuJqi2h0nGx22RGC4Bngd/XmYP1DmSc02ezYK+z9XLmZUUIiaFAPLcuGZ1Lm73I5rAeobFkKFhPem+LCZxz1eCmdl0Op1+LWjO8rFUvWgFZNok+7Vu/0Pg52EaaYKLYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y9F7BrdT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aoygsbbB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0ED53C4CEC3;
-	Fri, 25 Oct 2024 06:37:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y9F7BrdT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3B57C4CEC3;
+	Fri, 25 Oct 2024 06:38:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729838277;
-	bh=xEOiA3GlXGGIbYMUXDQ9vw3RahS7fPrF7pQfmD+JO3U=;
+	s=k20201202; t=1729838292;
+	bh=rMS04JzWbTA10NoNgT1uDwTz6/mlMY+uwx8e75a0h5c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aoygsbbBo+duZE0mdecCeePx2Dp4iKog0eWawBiMToPnZ1E9sSABP3z9B7PG945ut
-	 A6OssoEnaRnhm+wJCMsHPqQhsZzDWCChI5PRXckWS5EMzLlvCsuZWbSvovR7m9Iply
-	 LnwM0TL4HZ3mjFELNAlGr8qfN75J41eGyFQylNiPh+06c/LBBvKZ+ZoM2Da3ijiNtE
-	 +InkOks9pz8BEE8IEsUz5DgWsOXDCqrzYKTpSK0E2X3bG/ebRUZZlGdZdLb485yCoz
-	 sHG9WU/0eklXLs+8mii7QjJA1rdr91v5Zm8yGSiAeYOoAB/HqbuO0Qsqd8HZMzAO5X
-	 ZsbyLyeTlg2Ag==
-Date: Thu, 24 Oct 2024 23:37:56 -0700
-Subject: [PATCH 5/6] xfs_repair: use libxfs_rtfile_initialize_blocks
+	b=Y9F7BrdTNGbk5s24VgPJQk6MT5G/mrjDbIblknYWmMM6aLWT/zz4ylotEOvqjBnxm
+	 EOzpptBtHw38VqLt+DjzEHi9pRTGBmdIoiG5GsZXJNASUwJT1+p0iJsc4/n5TaXVpg
+	 VHpB9IT6IDJ0+B2UXXvxe4ffaSilpB7mQ0MhbUqLXBkcq6+lxe3sw/OfvMdHUJyML9
+	 nymFJLVAJWGWVqjwRbUJOvcEAMRF7Q/Wxt8arbvWxuLcmJCg0trcht4yYnVoiqRrv2
+	 6kqzK+HOCywvGofkSK1/3lwwzZe5zJe/5ZYrb1WwdOOvf7qF5hYVHrQY90mZ82RzYl
+	 bDQmMPuDdzRAA==
+Date: Thu, 24 Oct 2024 23:38:12 -0700
+Subject: [PATCH 6/6] xfs_repair: stop preallocating blocks in mk_rbmino and
+ mk_rsumino
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983774514.3041643.10169739076819272552.stgit@frogsfrogsfrogs>
+Message-ID: <172983774529.3041643.15165877380135579779.stgit@frogsfrogsfrogs>
 In-Reply-To: <172983774433.3041643.7410184047224484972.stgit@frogsfrogsfrogs>
 References: <172983774433.3041643.7410184047224484972.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,227 +46,168 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Use libxfs_rtfile_initialize_blocks to write the re-computed rtbitmap
-and rtsummary contents.  This removes duplicate code and prepares for
-even more sharing once the rtgroup features adds a metadata header to
-the rtbitmap and rtsummary blocks.
+Now that repair is using libxfs_rtfile_initialize_blocks to write to the
+rtbitmap and rtsummary inodes, space allocation is already taken care of
+that helper and there is no need to preallocate it.  Remove the code to
+do so.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/phase6.c |  168 ++++++++++---------------------------------------------
- 1 file changed, 32 insertions(+), 136 deletions(-)
+ repair/phase6.c |  116 +++++++------------------------------------------------
+ 1 file changed, 14 insertions(+), 102 deletions(-)
 
 
 diff --git a/repair/phase6.c b/repair/phase6.c
-index c96b50cf6a69dd..310a2b9c07bff0 100644
+index 310a2b9c07bff0..630617ef8ab8fe 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -547,157 +547,60 @@ mk_rbmino(xfs_mount_t *mp)
- 	libxfs_irele(ip);
- }
- 
--static int
--fill_rbmino(xfs_mount_t *mp)
-+static void
-+fill_rbmino(
-+	struct xfs_mount	*mp)
- {
--	struct xfs_buf	*bp;
--	xfs_trans_t	*tp;
--	xfs_inode_t	*ip;
--	union xfs_rtword_raw	*bmp;
--	int		nmap;
--	int		error;
--	xfs_fileoff_t	bno;
--	xfs_bmbt_irec_t	map;
--
--	bmp = btmcompute;
--	bno = 0;
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
-+	int			error;
- 
- 	error = -libxfs_trans_alloc_rollable(mp, 10, &tp);
- 	if (error)
- 		res_failed(error);
- 
- 	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
--	if (error) {
-+	libxfs_trans_cancel(tp);
-+	if (error)
- 		do_error(
--		_("couldn't iget realtime bitmap inode -- error - %d\n"),
--			error);
--	}
--
--	while (bno < mp->m_sb.sb_rbmblocks)  {
--		struct xfs_rtalloc_args	args = {
--			.mp		= mp,
--			.tp		= tp,
--		};
--		union xfs_rtword_raw	*ondisk;
--
--		/*
--		 * fill the file one block at a time
--		 */
--		nmap = 1;
--		error = -libxfs_bmapi_write(tp, ip, bno, 1, 0, 1, &map, &nmap);
--		if (error || nmap != 1) {
--			do_error(
--	_("couldn't map realtime bitmap block %" PRIu64 ", error = %d\n"),
--				bno, error);
--		}
--
--		ASSERT(map.br_startblock != HOLESTARTBLOCK);
--
--		error = -libxfs_trans_read_buf(
--				mp, tp, mp->m_dev,
--				XFS_FSB_TO_DADDR(mp, map.br_startblock),
--				XFS_FSB_TO_BB(mp, 1), 1, &bp, NULL);
--
--		if (error) {
--			do_warn(
--_("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %" PRIu64 "\n"),
--				bno, map.br_startblock, mp->m_sb.sb_rbmino);
--			return(1);
--		}
-+_("couldn't iget realtime bitmap inode, error %d\n"), error);
- 
--		args.rbmbp = bp;
--		ondisk = xfs_rbmblock_wordptr(&args, 0);
--		memcpy(ondisk, bmp, mp->m_blockwsize << XFS_WORDLOG);
--
--		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
--
--		bmp += mp->m_blockwsize;
--		bno++;
--	}
--
--	libxfs_trans_ijoin(tp, ip, 0);
--	error = -libxfs_trans_commit(tp);
-+	error = -libxfs_rtfile_initialize_blocks(ip, 0, mp->m_sb.sb_rbmblocks,
-+			btmcompute);
- 	if (error)
--		do_error(_("%s: commit failed, error %d\n"), __func__, error);
-+		do_error(
-+_("couldn't re-initialize realtime bitmap inode, error %d\n"), error);
-+
- 	libxfs_irele(ip);
--	return(0);
- }
- 
--static int
--fill_rsumino(xfs_mount_t *mp)
-+static void
-+fill_rsumino(
-+	struct xfs_mount	*mp)
- {
--	struct xfs_buf	*bp;
--	xfs_trans_t	*tp;
--	xfs_inode_t	*ip;
--	union xfs_suminfo_raw *smp;
--	int		nmap;
--	int		error;
--	xfs_fileoff_t	bno;
--	xfs_bmbt_irec_t	map;
--
--	smp = sumcompute;
--	bno = 0;
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
-+	int			error;
- 
- 	error = -libxfs_trans_alloc_rollable(mp, 10, &tp);
- 	if (error)
- 		res_failed(error);
- 
- 	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
--	if (error) {
-+	libxfs_trans_cancel(tp);
-+	if (error)
- 		do_error(
--		_("couldn't iget realtime summary inode -- error - %d\n"),
--			error);
--	}
--
--	while (bno < mp->m_rsumblocks)  {
--		struct xfs_rtalloc_args	args = {
--			.mp		= mp,
--			.tp		= tp,
--		};
--		union xfs_suminfo_raw	*ondisk;
--
--		/*
--		 * fill the file one block at a time
--		 */
--		nmap = 1;
--		error = -libxfs_bmapi_write(tp, ip, bno, 1, 0, 1, &map, &nmap);
--		if (error || nmap != 1) {
--			do_error(
--	_("couldn't map realtime summary inode block %" PRIu64 ", error = %d\n"),
--				bno, error);
--		}
--
--		ASSERT(map.br_startblock != HOLESTARTBLOCK);
--
--		error = -libxfs_trans_read_buf(
--				mp, tp, mp->m_dev,
--				XFS_FSB_TO_DADDR(mp, map.br_startblock),
--				XFS_FSB_TO_BB(mp, 1), 1, &bp, NULL);
--
--		if (error) {
--			do_warn(
--_("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode %" PRIu64 "\n"),
--				bno, map.br_startblock, mp->m_sb.sb_rsumino);
--			libxfs_irele(ip);
--			return(1);
--		}
-+_("couldn't iget realtime summary inode, error %d\n"), error);
- 
--		args.sumbp = bp;
--		ondisk = xfs_rsumblock_infoptr(&args, 0);
--		memcpy(ondisk, smp, mp->m_blockwsize << XFS_WORDLOG);
--
--		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
--
--		smp += mp->m_blockwsize;
--		bno++;
--	}
--
--	libxfs_trans_ijoin(tp, ip, 0);
--	error = -libxfs_trans_commit(tp);
-+	mp->m_rsumip = ip;
-+	error = -libxfs_rtfile_initialize_blocks(ip, 0, mp->m_rsumblocks,
-+			sumcompute);
-+	mp->m_rsumip = NULL;
- 	if (error)
--		do_error(_("%s: commit failed, error %d\n"), __func__, error);
-+		do_error(
-+_("couldn't re-initialize realtime summary inode, error %d\n"), error);
-+
- 	libxfs_irele(ip);
--	return(0);
+@@ -475,24 +475,16 @@ reset_sbroot_ino(
  }
  
  static void
-@@ -3302,15 +3205,8 @@ phase6(xfs_mount_t *mp)
- 	if (!no_modify)  {
- 		do_log(
- _("        - resetting contents of realtime bitmap and summary inodes\n"));
--		if (fill_rbmino(mp))  {
--			do_warn(
--			_("Warning:  realtime bitmap may be inconsistent\n"));
--		}
--
--		if (fill_rsumino(mp))  {
--			do_warn(
--			_("Warning:  realtime bitmap may be inconsistent\n"));
--		}
-+		fill_rbmino(mp);
-+		fill_rsumino(mp);
- 	}
+-mk_rbmino(xfs_mount_t *mp)
++mk_rbmino(
++	struct xfs_mount	*mp)
+ {
+-	xfs_trans_t	*tp;
+-	xfs_inode_t	*ip;
+-	xfs_bmbt_irec_t	*ep;
+-	int		i;
+-	int		nmap;
+-	int		error;
+-	xfs_fileoff_t	bno;
+-	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
+-	uint		blocks;
++	struct xfs_trans	*tp;
++	struct xfs_inode	*ip;
++	int			error;
  
- 	mark_standalone_inodes(mp);
+-	/*
+-	 * first set up inode
+-	 */
+-	i = -libxfs_trans_alloc_rollable(mp, 10, &tp);
+-	if (i)
+-		res_failed(i);
++	error = -libxfs_trans_alloc_rollable(mp, 10, &tp);
++	if (error)
++		res_failed(error);
+ 
+ 	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
+ 	if (error) {
+@@ -508,42 +500,6 @@ mk_rbmino(xfs_mount_t *mp)
+ 	error = -libxfs_trans_commit(tp);
+ 	if (error)
+ 		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+-
+-	/*
+-	 * then allocate blocks for file and fill with zeroes (stolen
+-	 * from mkfs)
+-	 */
+-	blocks = mp->m_sb.sb_rbmblocks +
+-			XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
+-	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
+-	if (error)
+-		res_failed(error);
+-
+-	libxfs_trans_ijoin(tp, ip, 0);
+-	bno = 0;
+-	while (bno < mp->m_sb.sb_rbmblocks) {
+-		nmap = XFS_BMAP_MAX_NMAP;
+-		error = -libxfs_bmapi_write(tp, ip, bno,
+-			  (xfs_extlen_t)(mp->m_sb.sb_rbmblocks - bno),
+-			  0, mp->m_sb.sb_rbmblocks, map, &nmap);
+-		if (error) {
+-			do_error(
+-			_("couldn't allocate realtime bitmap, error = %d\n"),
+-				error);
+-		}
+-		for (i = 0, ep = map; i < nmap; i++, ep++) {
+-			libxfs_device_zero(mp->m_ddev_targp,
+-				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
+-				XFS_FSB_TO_BB(mp, ep->br_blockcount));
+-			bno += ep->br_blockcount;
+-		}
+-	}
+-	error = -libxfs_trans_commit(tp);
+-	if (error) {
+-		do_error(
+-		_("allocation of the realtime bitmap failed, error = %d\n"),
+-			error);
+-	}
+ 	libxfs_irele(ip);
+ }
+ 
+@@ -606,22 +562,13 @@ _("couldn't re-initialize realtime summary inode, error %d\n"), error);
+ static void
+ mk_rsumino(xfs_mount_t *mp)
+ {
+-	xfs_trans_t	*tp;
+-	xfs_inode_t	*ip;
+-	xfs_bmbt_irec_t	*ep;
+-	int		i;
+-	int		nmap;
+-	int		error;
+-	xfs_fileoff_t	bno;
+-	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
+-	uint		blocks;
++	struct xfs_trans	*tp;
++	struct xfs_inode	*ip;
++	int			error;
+ 
+-	/*
+-	 * first set up inode
+-	 */
+-	i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 10, 0, 0, &tp);
+-	if (i)
+-		res_failed(i);
++	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 10, 0, 0, &tp);
++	if (error)
++		res_failed(error);
+ 
+ 	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
+ 	if (error) {
+@@ -637,41 +584,6 @@ mk_rsumino(xfs_mount_t *mp)
+ 	error = -libxfs_trans_commit(tp);
+ 	if (error)
+ 		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+-
+-	/*
+-	 * then allocate blocks for file and fill with zeroes (stolen
+-	 * from mkfs)
+-	 */
+-	blocks = mp->m_rsumblocks + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
+-	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
+-	if (error)
+-		res_failed(error);
+-
+-	libxfs_trans_ijoin(tp, ip, 0);
+-	bno = 0;
+-	while (bno < mp->m_rsumblocks) {
+-		nmap = XFS_BMAP_MAX_NMAP;
+-		error = -libxfs_bmapi_write(tp, ip, bno,
+-			  (xfs_extlen_t)(mp->m_rsumblocks - bno),
+-			  0, mp->m_rsumblocks, map, &nmap);
+-		if (error) {
+-			do_error(
+-		_("couldn't allocate realtime summary inode, error = %d\n"),
+-				error);
+-		}
+-		for (i = 0, ep = map; i < nmap; i++, ep++) {
+-			libxfs_device_zero(mp->m_ddev_targp,
+-				      XFS_FSB_TO_DADDR(mp, ep->br_startblock),
+-				      XFS_FSB_TO_BB(mp, ep->br_blockcount));
+-			bno += ep->br_blockcount;
+-		}
+-	}
+-	error = -libxfs_trans_commit(tp);
+-	if (error) {
+-		do_error(
+-	_("allocation of the realtime summary ino failed, error = %d\n"),
+-			error);
+-	}
+ 	libxfs_irele(ip);
+ }
+ 
 
