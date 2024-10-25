@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC1CB18E362
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:35:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3103918DF85
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:35:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729838136; cv=none; b=c9sgRmsjpVH/PtDSxG++ndl+HuhuZ4QX1uXLZ/ZqJxwi+FTvEE6FVvYYW836uF+eFFGatsk4/D877kZN24Qd9YOVbwDxmT8cH3NNpKhfKipa+AvyBeLG5de4mgNmuV6y6Fa1NGHJKhFidqK3b9u9fRmblTFPlg+UsvPMyjSDG5Y=
+	t=1729838152; cv=none; b=Il0Na9WCG0N/LzC7FwK9G6YQJaeqJvZtAjPBFjaf5Wt27vd0LiVJZIJUdB0OB3QeD3YAf9ABiMiu6BPPQLQ6yrXISi/q5GT50ZldXOd8yKu5xgzOApIh2g0aj/qdw3TFcewDRDO5+Ww4ECWGK2yPhkG1OP4ugx7hNe30VIgN0DE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729838136; c=relaxed/simple;
-	bh=olGLUNO8PIP8mlB+mV8X32PYLLSWsLPUA98XskmuKo0=;
+	s=arc-20240116; t=1729838152; c=relaxed/simple;
+	bh=7QssViXl5FkbD6N6UmW+cI1hiqNtvaqzFr8TBJ2/sSw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cY1V0iQkiz5rM+d9B1x+P9xtRIxTZYrSaj72IerNuvMqGWhLBF/YiiaswHlTTD+YlebkxYNGx0XzMARVH4xyWE3ZjIWXcMaZEsr/oL64OLHEj50jI6UUSCQD2aF4KXdJtY5GCNJ/Kp5KNvV71TX+TqTXiwQBuF6yQIC50PkQjNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IU30SwP9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rA6kjVvJVaiUEd5Nhf/q5tSGbXBc+SEokuDfC05VS5H809iD0UfZklF/jE7agWljVR4MbwB8tT2gPKRX49TICX6yjmH+IWmch7TT1MGBEMYqNKjZcbVYxavS4ykSryELsQ/zNsmAAMWEzkVTo48ujasHZMmlnxF8uJRWO3VFqQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I+xkhFol; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IU30SwP9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BEA4C4CEC3;
-	Fri, 25 Oct 2024 06:35:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I+xkhFol"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09939C4CEC3;
+	Fri, 25 Oct 2024 06:35:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729838136;
-	bh=olGLUNO8PIP8mlB+mV8X32PYLLSWsLPUA98XskmuKo0=;
+	s=k20201202; t=1729838152;
+	bh=7QssViXl5FkbD6N6UmW+cI1hiqNtvaqzFr8TBJ2/sSw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IU30SwP9qdtoHeJVLoFCOe4Asq4pDpKddCpoh9uSHvLqZKG6P7kUoj6WbiS0fGR2h
-	 TrvqnGbUldmbhdIzDGwf1TzoAOzVayg+8r1mYFTjm3mTy5O+gd444PV+ntmc7VwDgb
-	 35yQ+MyWMnPc6Q3e1CQpxefDnPLEbA4Ejl0dAKpVpHyoFq4mhWMxZWERYYW+Ag0KgE
-	 KcKWbhForfky1QKre7oxTygKPEXH/97tyZPIOkrtxoZncYf9SkerzdqdrgTZcc/z9T
-	 9TtYM4CG4X9FBcmvMLgrGMDyBYfQYwBYPS5u0uoFf/SpZdVcWtL6e4GiZ+UkWZSS+T
-	 hsFev749UZfWw==
-Date: Thu, 24 Oct 2024 23:35:35 -0700
-Subject: [PATCH 5/8] xfs_db: access arbitrary realtime blocks and extents
+	b=I+xkhFol23RfE2Oz+hZUqd4+x2Pnhb/72Tyn4jDRpUkS9Jgu0jeWVYRGDm5ZpHXqj
+	 hGmFAgErHDyb4qq4SQHLGEvxxSohHOqxkzO/PI+SCA0FV7YlymyAQiN1teeb30nZgc
+	 0AV+ry8QfY1o09L3yy3E9DMA/KqTz+lmTsqMzZ5WN1rWS81GnnqSs4wQEu9xE7bg60
+	 iAUuibrjdjl3MEbQefiM7YGQlmlW9vpUU2n8xAPVrF0JCAEx55vzfGEV7j01gW50zk
+	 5+WwzZU5NuT6wap8aRHTTOZtqbY9oPNYctY5xKM3rT9LWvW/r05JXVDuAjrEj1zPYJ
+	 zo63/2RgOi72w==
+Date: Thu, 24 Oct 2024 23:35:51 -0700
+Subject: [PATCH 6/8] xfs_db: enable conversion of rt space units
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983773804.3041229.7516109047720839026.stgit@frogsfrogsfrogs>
+Message-ID: <172983773819.3041229.79394639669103592.stgit@frogsfrogsfrogs>
 In-Reply-To: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
 References: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,182 +45,415 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add two commands to xfs_db so that we can point ourselves at any
-arbitrary realtime block or extent.
+Teach the xfs_db convert function about rt extents, rt block numbers,
+and how to compute offsets within the rt bitmap and summary files.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/block.c        |  105 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |   20 ++++++++++
- 2 files changed, 125 insertions(+)
+ db/convert.c      |  232 ++++++++++++++++++++++++++++++++++++++++++++++++-----
+ man/man8/xfs_db.8 |   51 ++++++++++++
+ 2 files changed, 260 insertions(+), 23 deletions(-)
 
 
-diff --git a/db/block.c b/db/block.c
-index ff34557a612a2f..000f9c1ed10fcd 100644
---- a/db/block.c
-+++ b/db/block.c
-@@ -25,6 +25,10 @@ static int	dblock_f(int argc, char **argv);
- static void     dblock_help(void);
- static int	fsblock_f(int argc, char **argv);
- static void     fsblock_help(void);
-+static int	rtblock_f(int argc, char **argv);
-+static void	rtblock_help(void);
-+static int	rtextent_f(int argc, char **argv);
-+static void	rtextent_help(void);
- static void	print_rawdata(void *data, int len);
+diff --git a/db/convert.c b/db/convert.c
+index e1466057031da6..811bac00f7196f 100644
+--- a/db/convert.c
++++ b/db/convert.c
+@@ -26,6 +26,10 @@
+ 	 agino_to_bytes(XFS_INO_TO_AGINO(mp, (x))))
+ #define	inoidx_to_bytes(x)	\
+ 	((uint64_t)(x) << mp->m_sb.sb_inodelog)
++#define rtblock_to_bytes(x)	\
++	((uint64_t)(x) << mp->m_sb.sb_blocklog)
++#define rtx_to_rtblock(x)	\
++	((uint64_t)(x) * mp->m_sb.sb_rextsize)
  
- static const cmdinfo_t	ablock_cmd =
-@@ -39,6 +43,12 @@ static const cmdinfo_t	dblock_cmd =
- static const cmdinfo_t	fsblock_cmd =
- 	{ "fsblock", "fsb", fsblock_f, 0, 1, 1, N_("[fsb]"),
- 	  N_("set address to fsblock value"), fsblock_help };
-+static const cmdinfo_t	rtblock_cmd =
-+	{ "rtblock", "rtbno", rtblock_f, 0, 1, 1, N_("[rtbno]"),
-+	  N_("set address to rtblock value"), rtblock_help };
-+static const cmdinfo_t	rtextent_cmd =
-+	{ "rtextent", "rtx", rtextent_f, 0, 1, 1, N_("[rtxno]"),
-+	  N_("set address to rtextent value"), rtextent_help };
+ typedef enum {
+ 	CT_NONE = -1,
+@@ -40,11 +44,12 @@ typedef enum {
+ 	CT_INO,			/* xfs_ino_t */
+ 	CT_INOIDX,		/* index of inode in fsblock */
+ 	CT_INOOFF,		/* byte offset in inode */
++	CT_RTBLOCK,		/* realtime block */
++	CT_RTX,			/* realtime extent */
+ 	NCTS
+ } ctype_t;
  
- static void
- ablock_help(void)
-@@ -104,6 +114,8 @@ block_init(void)
- 	add_command(&daddr_cmd);
- 	add_command(&dblock_cmd);
- 	add_command(&fsblock_cmd);
-+	add_command(&rtblock_cmd);
-+	add_command(&rtextent_cmd);
- }
+ typedef struct ctydesc {
+-	ctype_t		ctype;
+ 	int		allowed;
+ 	const char	**names;
+ } ctydesc_t;
+@@ -61,12 +66,16 @@ typedef union {
+ 	xfs_ino_t	ino;
+ 	int		inoidx;
+ 	int		inooff;
++	xfs_rtblock_t	rtblock;
++	xfs_rtblock_t	rtx;
+ } cval_t;
  
- static void
-@@ -302,6 +314,99 @@ fsblock_f(
- 	return 0;
- }
+ static uint64_t		bytevalue(ctype_t ctype, cval_t *val);
++static int		rtconvert_f(int argc, char **argv);
+ static int		convert_f(int argc, char **argv);
+ static int		getvalue(char *s, ctype_t ctype, cval_t *val);
+-static ctype_t		lookupcty(char *ctyname);
++static ctype_t		lookupcty(const struct ctydesc *descs,
++				  const char *ctyname);
  
-+static void
-+rtblock_help(void)
-+{
-+	dbprintf(_(
-+"\n Example:\n"
-+"\n"
-+" 'rtblock 1023' - sets the file position to the 1023rd block on the realtime\n"
-+" volume. The filesystem block size is specified in the superblock and set\n"
-+" during mkfs time.\n\n"
-+));
-+}
+ static const char	*agblock_names[] = { "agblock", "agbno", NULL };
+ static const char	*agino_names[] = { "agino", "aginode", NULL };
+@@ -74,6 +83,8 @@ static const char	*agnumber_names[] = { "agnumber", "agno", NULL };
+ static const char	*bboff_names[] = { "bboff", "daddroff", NULL };
+ static const char	*blkoff_names[] = { "blkoff", "fsboff", "agboff",
+ 					    NULL };
++static const char	*rtblkoff_names[] = { "blkoff", "rtboff",
++					    NULL };
+ static const char	*byte_names[] = { "byte", "fsbyte", NULL };
+ static const char	*daddr_names[] = { "daddr", "bb", NULL };
+ static const char	*fsblock_names[] = { "fsblock", "fsb", "fsbno", NULL };
+@@ -81,30 +92,91 @@ static const char	*ino_names[] = { "ino", "inode", NULL };
+ static const char	*inoidx_names[] = { "inoidx", "offset", NULL };
+ static const char	*inooff_names[] = { "inooff", "inodeoff", NULL };
+ 
++static const char	*rtblock_names[] = { "rtblock", "rtb", "rtbno", NULL };
++static const char	*rtx_names[] = { "rtx", "rtextent", NULL };
 +
-+static int
-+rtblock_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	xfs_rtblock_t	rtbno;
-+	char		*p;
+ static const ctydesc_t	ctydescs[NCTS] = {
+-	{ CT_AGBLOCK, M(AGNUMBER)|M(BBOFF)|M(BLKOFF)|M(INOIDX)|M(INOOFF),
+-	  agblock_names },
+-	{ CT_AGINO, M(AGNUMBER)|M(INOOFF), agino_names },
+-	{ CT_AGNUMBER,
+-	  M(AGBLOCK)|M(AGINO)|M(BBOFF)|M(BLKOFF)|M(INOIDX)|M(INOOFF),
+-	  agnumber_names },
+-	{ CT_BBOFF, M(AGBLOCK)|M(AGNUMBER)|M(DADDR)|M(FSBLOCK), bboff_names },
+-	{ CT_BLKOFF, M(AGBLOCK)|M(AGNUMBER)|M(FSBLOCK), blkoff_names },
+-	{ CT_BYTE, 0, byte_names },
+-	{ CT_DADDR, M(BBOFF), daddr_names },
+-	{ CT_FSBLOCK, M(BBOFF)|M(BLKOFF)|M(INOIDX), fsblock_names },
+-	{ CT_INO, M(INOOFF), ino_names },
+-	{ CT_INOIDX, M(AGBLOCK)|M(AGNUMBER)|M(FSBLOCK)|M(INOOFF),
+-	  inoidx_names },
+-	{ CT_INOOFF,
+-	  M(AGBLOCK)|M(AGINO)|M(AGNUMBER)|M(FSBLOCK)|M(INO)|M(INOIDX),
+-	  inooff_names },
++	[CT_AGBLOCK] = {
++		.allowed = M(AGNUMBER)|M(BBOFF)|M(BLKOFF)|M(INOIDX)|M(INOOFF),
++		.names   = agblock_names,
++	},
++	[CT_AGINO] = {
++		.allowed = M(AGNUMBER)|M(INOOFF),
++		.names   = agino_names,
++	},
++	[CT_AGNUMBER] = {
++		.allowed = M(AGBLOCK)|M(AGINO)|M(BBOFF)|M(BLKOFF)|M(INOIDX)|M(INOOFF),
++		.names   = agnumber_names,
++	},
++	[CT_BBOFF] = {
++		.allowed = M(AGBLOCK)|M(AGNUMBER)|M(DADDR)|M(FSBLOCK),
++		.names   = bboff_names,
++	},
++	[CT_BLKOFF] = {
++		.allowed = M(AGBLOCK)|M(AGNUMBER)|M(FSBLOCK),
++		.names   = blkoff_names,
++	},
++	[CT_BYTE] = {
++		.allowed = 0,
++		.names   = byte_names,
++	},
++	[CT_DADDR] = {
++		.allowed = M(BBOFF),
++		.names   = daddr_names,
++	},
++	[CT_FSBLOCK] = {
++		.allowed = M(BBOFF)|M(BLKOFF)|M(INOIDX),
++		.names   = fsblock_names,
++	},
++	[CT_INO] = {
++		.allowed = M(INOOFF),
++		.names   = ino_names,
++	},
++	[CT_INOIDX] = {
++		.allowed = M(AGBLOCK)|M(AGNUMBER)|M(FSBLOCK)|M(INOOFF),
++		.names   = inoidx_names,
++	},
++	[CT_INOOFF] = {
++		.allowed = M(AGBLOCK)|M(AGINO)|M(AGNUMBER)|M(FSBLOCK)|M(INO)|M(INOIDX),
++		.names   = inooff_names,
++	},
++};
 +
-+	if (argc == 1) {
-+		if (!iocur_is_rtdev(iocur_top)) {
-+			dbprintf(_("cursor does not point to rt device\n"));
-+			return 0;
-+		}
-+		dbprintf(_("current rtblock is %lld\n"),
-+			XFS_BB_TO_FSB(mp, iocur_top->off >> BBSHIFT));
-+		return 0;
++static const ctydesc_t	ctydescs_rt[NCTS] = {
++	[CT_BBOFF] = {
++		.allowed = M(DADDR)|M(RTBLOCK),
++		.names   = bboff_names,
++	},
++	[CT_BLKOFF] = {
++		.allowed = M(RTBLOCK),
++		.names   = rtblkoff_names,
++	},
++	[CT_BYTE] = {
++		.allowed = 0,
++		.names   = byte_names,
++	},
++	[CT_DADDR] = {
++		.allowed = M(BBOFF),
++		.names   = daddr_names,
++	},
++	[CT_RTBLOCK] = {
++		.allowed = M(BBOFF)|M(BLKOFF),
++		.names   = rtblock_names,
++	},
++	[CT_RTX] = {
++		.allowed = M(BBOFF)|M(BLKOFF),
++		.names   = rtx_names,
++	},
+ };
+ 
+ static const cmdinfo_t	convert_cmd =
+ 	{ "convert", NULL, convert_f, 3, 9, 0, "type num [type num]... type",
+ 	  "convert from one address form to another", NULL };
+ 
++static const cmdinfo_t	rtconvert_cmd =
++	{ "rtconvert", NULL, rtconvert_f, 3, 9, 0, "type num [type num]... type",
++	  "convert from one realtime address form to another", NULL };
++
+ static uint64_t
+ bytevalue(ctype_t ctype, cval_t *val)
+ {
+@@ -131,6 +203,10 @@ bytevalue(ctype_t ctype, cval_t *val)
+ 		return inoidx_to_bytes(val->inoidx);
+ 	case CT_INOOFF:
+ 		return (uint64_t)val->inooff;
++	case CT_RTBLOCK:
++		return rtblock_to_bytes(val->rtblock);
++	case CT_RTX:
++		return rtblock_to_bytes(rtx_to_rtblock(val->rtx));
+ 	case CT_NONE:
+ 	case NCTS:
+ 		break;
+@@ -159,13 +235,13 @@ convert_f(int argc, char **argv)
+ 			 "arguments\n"), argc);
+ 		return 0;
+ 	}
+-	if ((wtype = lookupcty(argv[argc - 1])) == CT_NONE) {
++	if ((wtype = lookupcty(ctydescs, argv[argc - 1])) == CT_NONE) {
+ 		dbprintf(_("unknown conversion type %s\n"), argv[argc - 1]);
+ 		return 0;
+ 	}
+ 
+ 	for (i = mask = conmask = 0; i < (argc - 1) / 2; i++) {
+-		c = lookupcty(argv[i * 2]);
++		c = lookupcty(ctydescs, argv[i * 2]);
+ 		if (c == CT_NONE) {
+ 			dbprintf(_("unknown conversion type %s\n"), argv[i * 2]);
+ 			return 0;
+@@ -230,6 +306,107 @@ convert_f(int argc, char **argv)
+ 	case CT_INOOFF:
+ 		v &= mp->m_sb.sb_inodesize - 1;
+ 		break;
++	case CT_RTBLOCK:
++	case CT_RTX:
++		/* shouldn't get here */
++		ASSERT(0);
++		break;
++	case CT_NONE:
++	case NCTS:
++		/* NOTREACHED */
++		break;
 +	}
-+	rtbno = strtoull(argv[1], &p, 0);
-+	if (*p != '\0') {
-+		dbprintf(_("bad rtblock %s\n"), argv[1]);
-+		return 0;
-+	}
-+	if (rtbno >= mp->m_sb.sb_rblocks) {
-+		dbprintf(_("bad rtblock %s\n"), argv[1]);
-+		return 0;
-+	}
-+	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
-+	set_rt_cur(&typtab[TYP_DATA], XFS_FSB_TO_BB(mp, rtbno), blkbb,
-+			DB_RING_ADD, NULL);
++	dbprintf("0x%llx (%llu)\n", v, v);
 +	return 0;
 +}
 +
-+static void
-+rtextent_help(void)
++static inline xfs_rtblock_t
++xfs_daddr_to_rtb(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
 +{
-+	dbprintf(_(
-+"\n Example:\n"
-+"\n"
-+" 'rtextent 10' - sets the file position to the 10th extent on the realtime\n"
-+" volume. The realtime extent size is specified in the superblock and set\n"
-+" during mkfs or growfs time.\n\n"
-+));
++	return daddr >> mp->m_blkbb_log;
 +}
 +
 +static int
-+rtextent_f(
-+	int		argc,
-+	char		**argv)
++rtconvert_f(int argc, char **argv)
 +{
-+	xfs_rtblock_t	rtbno;
-+	xfs_rtxnum_t	rtx;
-+	char		*p;
++	ctype_t		c;
++	int		conmask;
++	cval_t		cvals[NCTS] = {};
++	int		i;
++	int		mask;
++	uint64_t	v;
++	ctype_t		wtype;
 +
-+	if (argc == 1) {
-+		if (!iocur_is_rtdev(iocur_top)) {
-+			dbprintf(_("cursor does not point to rt device\n"));
++	/* move past the "rtconvert" command */
++	argc--;
++	argv++;
++
++	if ((argc % 2) != 1) {
++		dbprintf(_("bad argument count %d to rtconvert, expected 3,5,7,9 "
++			 "arguments\n"), argc);
++		return 0;
++	}
++	if ((wtype = lookupcty(ctydescs_rt, argv[argc - 1])) == CT_NONE) {
++		dbprintf(_("unknown conversion type %s\n"), argv[argc - 1]);
++		return 0;
++	}
++
++	for (i = mask = conmask = 0; i < (argc - 1) / 2; i++) {
++		c = lookupcty(ctydescs_rt, argv[i * 2]);
++		if (c == CT_NONE) {
++			dbprintf(_("unknown conversion type %s\n"), argv[i * 2]);
 +			return 0;
 +		}
-+
-+		rtbno = XFS_BB_TO_FSB(mp, iocur_top->off >> BBSHIFT);
-+		dbprintf(_("current rtextent is %lld\n"),
-+				xfs_rtb_to_rtx(mp, rtbno));
-+		return 0;
++		if (c == wtype) {
++			dbprintf(_("result type same as argument\n"));
++			return 0;
++		}
++		if (conmask & (1 << c)) {
++			dbprintf(_("conflicting conversion type %s\n"),
++				argv[i * 2]);
++			return 0;
++		}
++		if (!getvalue(argv[i * 2 + 1], c, &cvals[c]))
++			return 0;
++		mask |= 1 << c;
++		conmask |= ~ctydescs_rt[c].allowed;
 +	}
-+	rtx = strtoull(argv[1], &p, 0);
-+	if (*p != '\0') {
-+		dbprintf(_("bad rtextent %s\n"), argv[1]);
-+		return 0;
++	v = 0;
++	for (c = (ctype_t)0; c < NCTS; c++) {
++		if (!(mask & (1 << c)))
++			continue;
++		v += bytevalue(c, &cvals[c]);
 +	}
-+	if (rtx >= mp->m_sb.sb_rextents) {
-+		dbprintf(_("bad rtextent %s\n"), argv[1]);
-+		return 0;
-+	}
-+
-+	rtbno = xfs_rtx_to_rtb(mp, rtx);
-+	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
-+	set_rt_cur(&typtab[TYP_DATA], XFS_FSB_TO_BB(mp, rtbno),
-+			mp->m_sb.sb_rextsize * blkbb, DB_RING_ADD, NULL);
-+	return 0;
-+}
-+
- void
- print_block(
- 	const field_t	*fields,
++	switch (wtype) {
++	case CT_BBOFF:
++		v &= BBMASK;
++		break;
++	case CT_BLKOFF:
++		v &= mp->m_blockmask;
++		break;
++	case CT_BYTE:
++		break;
++	case CT_DADDR:
++		v >>= BBSHIFT;
++		break;
++	case CT_RTBLOCK:
++		v = xfs_daddr_to_rtb(mp, v >> BBSHIFT);
++		break;
++	case CT_RTX:
++		v = xfs_daddr_to_rtb(mp, v >> BBSHIFT) / mp->m_sb.sb_rextsize;
++		break;
++	case CT_AGBLOCK:
++	case CT_AGINO:
++	case CT_AGNUMBER:
++	case CT_FSBLOCK:
++	case CT_INO:
++	case CT_INOIDX:
++	case CT_INOOFF:
++		/* shouldn't get here */
++		ASSERT(0);
++		break;
+ 	case CT_NONE:
+ 	case NCTS:
+ 		/* NOTREACHED */
+@@ -243,6 +420,7 @@ void
+ convert_init(void)
+ {
+ 	add_command(&convert_cmd);
++	add_command(&rtconvert_cmd);
+ }
+ 
+ static int
+@@ -290,6 +468,12 @@ getvalue(char *s, ctype_t ctype, cval_t *val)
+ 	case CT_INOOFF:
+ 		val->inooff = (int)v;
+ 		break;
++	case CT_RTBLOCK:
++		val->rtblock = (xfs_rtblock_t)v;
++		break;
++	case CT_RTX:
++		val->rtx = (xfs_rtblock_t)v;
++		break;
+ 	case CT_NONE:
+ 	case NCTS:
+ 		/* NOTREACHED */
+@@ -299,13 +483,15 @@ getvalue(char *s, ctype_t ctype, cval_t *val)
+ }
+ 
+ static ctype_t
+-lookupcty(char *ctyname)
++lookupcty(
++	const struct ctydesc	*descs,
++	const char		*ctyname)
+ {
+ 	ctype_t		cty;
+ 	const char	**name;
+ 
+ 	for (cty = (ctype_t)0; cty < NCTS; cty++) {
+-		for (name = ctydescs[cty].names; *name; name++) {
++		for (name = descs[cty].names; name && *name; name++) {
+ 			if (strcmp(ctyname, *name) == 0)
+ 				return cty;
+ 		}
 diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index f50ac949be0189..b5060a68d3bfc4 100644
+index b5060a68d3bfc4..fdff10cbb4fcbe 100644
 --- a/man/man8/xfs_db.8
 +++ b/man/man8/xfs_db.8
-@@ -1099,6 +1099,26 @@ .SH COMMANDS
- Exit
- .BR xfs_db .
+@@ -1125,6 +1125,57 @@ .SH COMMANDS
+ argument is given), or move to a specific entry in the position ring given by
+ .IR index .
  .TP
-+.BI "rtblock [" rtbno ]
-+Set current address to the rtblock value given by
-+.IR rtbno .
-+If no value for
-+.I rtbno
-+is given the current address is printed, expressed as an rtbno.
-+The type is set to
-+.B data
-+(uninterpreted).
++.BI "rtconvert " "type number" " [" "type number" "] ... " type
++Convert from one address form to another for realtime section addresses.
++The known
++.IR type s,
++with alternate names, are:
++.RS 1.0i
++.PD 0
++.HP
++.B bboff
++or
++.B daddroff
++(byte offset in a
++.BR daddr )
++.HP
++.B blkoff
++or
++.B fsboff or
++.B rtboff
++(byte offset in a
++.B rtblock
++or
++.BR rtextent )
++.HP
++.B byte
++or
++.B fsbyte
++(byte address in filesystem)
++.HP
++.B daddr
++or
++.B bb
++(disk address, 512-byte blocks)
++.HP
++.B rtblock
++or
++.B rtb
++or
++.B rtbno
++(realtime filesystem block, see the
++.B fsblock
++command)
++.HP
++.B rtx
++or
++.B rtextent
++(realtime extent)
++.PD
++.RE
++.IP
++Only conversions that "make sense" are allowed.
 +.TP
-+.BI "rtextent [" rtxno ]
-+Set current address to the rtextent value given by
-+.IR rtextent .
-+If no value for
-+.I rtextent
-+is given the current address is printed, expressed as an rtextent.
-+The type is set to
-+.B data
-+(uninterpreted).
-+.TP
- .BI "ring [" index ]
- Show position ring (if no
- .I index
+ .BI "sb [" agno ]
+ Set current address to SB header in allocation group
+ .IR agno .
 
