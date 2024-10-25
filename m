@@ -1,67 +1,38 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A7E219993D
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:29:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38C1418C018
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:31:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729837753; cv=none; b=BRtl21iyx/Xg0wVXMdvErZxYds2ETIKOQHYD8RrPrOnuzKJ+09I1RnmZphpWyRUXhvHkd0Grbc28qjfZbQxInQrqlAhwD/+cQVM84ipamftAV0AUvjJCOVYDU3Z1qHrFex3S3TCor8P+51HqH94MQW7JRlNul5y4I+z6DFXtcDk=
+	t=1729837873; cv=none; b=e4L2INZGAj0gGf7ZCqkecLq1qnylE3WgJEnbhLVx+LDFQi7S9abZVopktnA1FRXVAIlej+5dMVe9G5y+q/U3RHTcWwQDjdbyFhn5z7+nDZFxRooIKRXfopdUe5Ucoo4runxYKsKJoPbL2VEYrHBGZUHXCJZzKVPRvgpn2FtJCSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729837753; c=relaxed/simple;
-	bh=lXAEjM6XQBdPrpdvys1m8dWrReRdfQ157UMzTkZc68w=;
+	s=arc-20240116; t=1729837873; c=relaxed/simple;
+	bh=0wiLSOq5cV8MHlRmDPoQfMQqMngPKXNf+zxM0lSbmqA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kbCzFacj4D3TXYREuS2WTlG0SJEKgG1AcyWom09XH0OlDBVnSWgzpt3E3n10f39ttyTLCkMvngpXHuCwxg/F0YEnRWIlgLdM0PHhUqmOjd9VMrSQ2HwTNPtW5/I1VZ/LCySv9eFrTQ480SsDbTQwglrNB1TES3mWYjginRgXZaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xavgKTnb; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=NgMB7E3Jdsf8BfTCdhaCtynhP8RqE2IzwAaizTU3uJhWmlYABupZQN72oVPIiYiecwBxNbq0fSPJanqgBJOOPTQTsM+2BV14/h+y/skfK5XIngXKwM41PnQkNpWIcR9NYVrvuenI3uygTecQi8kki9ri1N3BzbqtHYHTPNgGqjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XD2ZBrZC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xavgKTnb"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2e2e8c8915eso1255375a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2024 23:29:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729837750; x=1730442550; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=R34AffjiRfd1LJBTXBUb7rrqnh7/FkEP8kDGT5MzEic=;
-        b=xavgKTnbScdmS6WcR1Ppa1dpEzokiStRsZEGTLDBZKa1XOtnkMB1kBPlURiAlra1xO
-         zd83yd7NtZSrZ9fJOsu6Uk42KS6P3vBmJaziK1aNfsi5o9HN0fy7tLmRvidRBb2S3tgp
-         PQW/t0SYzydbALt+Bp+wmsgzNpy+n5kqj0rT1zwaURbv6kOxpX/ewfv5JdmZM80vBBeY
-         iMvPYA2cyXXy8hyBwWZ8GL3pseCldIo7ApesNtglTDFZAOoZE4OilJQVyy7TxTDQt+O3
-         Ha9lNXCKPlIp8QH1UvmRWkblO9w+Ce1VVBekEZGeZfrWeLxi3O94b2oRLE3mfX+La07L
-         q4fg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729837750; x=1730442550;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=R34AffjiRfd1LJBTXBUb7rrqnh7/FkEP8kDGT5MzEic=;
-        b=ngC+r//eVlHmNsXLS6JEOZnt/V0AMLc5rEpA8UhdBJYsdga1Y20vIEc/FyMRpZ232n
-         QDD2NMP85CTQqsUHU7SF1geBasvY3yxP+LfHQVopjfrg+HLqaF7eFPEkK6auTtRFaemi
-         VVe1UJ9Hn57seiSeox1PAu5dacJn0ma6y574fGFdNEahYclYwxNnjpRBNHFEmOdQdl7w
-         CvZ60CoNcuwRv+bjzuLoOxral/xBGHXeMHQQh54fUsJvl0v14qIo4cNo2wdIPSYEjJOL
-         TxZwZTO5T1wF5uYwdOiUpYq/BE/T7DuER0AR7uot9iX6+CKJ1rnIXQljSLDZ1t8NYumT
-         b5BQ==
-X-Gm-Message-State: AOJu0Yz6pXtVWudd0ZzH1HnvtWmKxxIIUqB81DnSrnSoT+unzNfD/49c
-	lq2RfiUTyIloT25aA8z2le1OaPGlaw4TSTYnFbWxrA/0PR9gCzHM5vVgopmhS/Q=
-X-Google-Smtp-Source: AGHT+IFODc6njl+wAFVlRFrq6P9vp7VweiYSqddQ00zvs7Xv3OK63GzgfklMI1XlnQrMmwnIfiZbzQ==
-X-Received: by 2002:a17:90a:8d0a:b0:2e2:d9f5:9cf7 with SMTP id 98e67ed59e1d1-2e76b6cdb2amr9225560a91.26.1729837750312;
-        Thu, 24 Oct 2024 23:29:10 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e8e377179asm573558a91.53.2024.10.24.23.29.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Oct 2024 23:29:09 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1t4Dop-005TMU-0H;
-	Fri, 25 Oct 2024 17:29:07 +1100
-Date: Fri, 25 Oct 2024 17:29:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/3] xfs: sparse inodes overlap end of filesystem
-Message-ID: <Zxs6s/UqQgCf3Ad5@dread.disaster.area>
-References: <20241024025142.4082218-1-david@fromorbit.com>
- <20241024163804.GH21853@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XD2ZBrZC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7657C4CEC3;
+	Fri, 25 Oct 2024 06:31:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729837872;
+	bh=0wiLSOq5cV8MHlRmDPoQfMQqMngPKXNf+zxM0lSbmqA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XD2ZBrZCC6tfoMvcEkUiBNMZF0o1Cc8xk55n3hdmdP2tDQB7Cl5tz375P+sbTVUzH
+	 /kZ5pfs0STCfdh8d7i7uF1QjDgcodx0FStv/mWv4gfb6bIKfI5UICgHhkqwcYLsDAz
+	 6mkNtJqdKaP2DY/V752jushwh90dOcTUHx9MP3EgYXraJAJ3AW2aKJO7yoPI/qaADK
+	 2i7hukH9qwomd5lufS79OYqhkjmFaTB3QsOkcQXOULlHaTklfaqjVrOylyutkHff2b
+	 aS+koRfMkwuURTxFPrJRKbASU2/NTdFHqO0RdUS5Pk352UtOLatwOjW1pKz1JQu8P3
+	 aLgzJpLtHVvaw==
+Date: Thu, 24 Oct 2024 23:31:12 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCHBOMB] xfsprogs: utility changes for 6.12
+Message-ID: <20241025063112.GI2386201@frogsfrogsfrogs>
+References: <20241025062602.GH2386201@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,25 +41,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241024163804.GH21853@frogsfrogsfrogs>
+In-Reply-To: <20241025062602.GH2386201@frogsfrogsfrogs>
 
-On Thu, Oct 24, 2024 at 09:38:04AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 24, 2024 at 01:51:02PM +1100, Dave Chinner wrote:
-> > I'd prefer that we take the latter path: ignore the first patch.
-> > This results in more flexible behaviour, allows existing filesystems
-> > with this issue to work without needing xfs_repair to fix them, and
-> > we get to remove complexity from the code.
+On Thu, Oct 24, 2024 at 11:26:02PM -0700, Darrick J. Wong wrote:
+> Hi Andrey,
 > 
-> Do xfs_repair/scrub trip over these sparse chunks that cross EOAG,
-> or are they ok?
+> Here are all the changes to the xfsprogs utilities that I'd like to get
+> in for 6.12.  First we add support for the new exchange-range ioctl,
+> then wire up xfs_db support for realtime volumes in preparation for
+> future rt modernization.  Then there's some refactoring of mkfs, and a
+> bug fix for xfs_scrub_all.
 
-Repair trips over them and removes them (because they
-fail alignment checks). I haven't looked to see if it needs anything
-more than to consider the alignment of these sparse chunks as being
-ok. I suspect the same for scrub - as long as the alignment checks
-out, it shouldn't need to fail the cluster...
+And this is commitrange, not exchangerange.  We already did
+exchangerange.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> None of these patches are reviewed.
+
+Heh, sending patches too late at night after a too busy week.  Some of
+these patches are reviewed; here are the ones that aren't:
+
+[PATCHSET v31.2 1/5] xfsprogs: atomic file content commits
+  [PATCH 1/7] man: document file range commit ioctls
+  [PATCH 2/7] libfrog: add support for commit range ioctl family
+  [PATCH 3/7] libxfs: remove unused xfs_inode fields
+  [PATCH 4/7] libxfs: validate inumber in xfs_iget
+  [PATCH 5/7] xfs_fsr: port to new file exchange library function
+  [PATCH 6/7] xfs_io: add a commitrange option to the exchangerange
+  [PATCH 7/7] xfs_io: add atomic file update commands to exercise file
+[PATCHSET v2.6 2/5] xfs_db: debug realtime geometry
+  [PATCH 1/8] xfs_db: support passing the realtime device to the
+  [PATCH 2/8] xfs_db: report the realtime device when associated with
+  [PATCH 3/8] xfs_db: make the daddr command target the realtime device
+  [PATCH 4/8] xfs_db: access realtime file blocks
+  [PATCH 5/8] xfs_db: access arbitrary realtime blocks and extents
+  [PATCH 6/8] xfs_db: enable conversion of rt space units
+  [PATCH 7/8] xfs_db: convert rtbitmap geometry
+  [PATCH 8/8] xfs_db: convert rtsummary geometry
+[PATCHSET v2.6 3/5] xfs_metadump: support external devices
+  [PATCH 1/1] xfs_db: allow setting current address to log blocks
+[PATCHSET v2.6 4/5] mkfs/repair: use new rtbitmap helpers
+  [PATCH 1/6] xfs_repair: checking rt free space metadata must happen
+[PATCHSET v31.2 5/5] xfs_scrub_all: bug fix for 6.12
+  [PATCH 1/1] xfs_scrub_all: wait for services to start activating
+
+--D
