@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C4218BC1C
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:34:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D7D18DF85
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:35:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729838089; cv=none; b=t+jCRvpLb4YFuA7bNkav5AIbNYwCSsXdMSW3d2C0AN7QX7lULVdYnfU3xOlrLsGxuIthRWTkO8rtPjoAab7CsbVQSe7N41KsouVhx0RWDJzyu4wN4Ozbow1qwu/pt6lfiSGHTFTwYb1uXcvmmNDjO5YlKs/MSO9qDSt1+5NAYUg=
+	t=1729838105; cv=none; b=PyluDurLlkjxGVmlB3admvRPfhelNmsIwFwILO29YDpdtdWNFZf4m0S8xtpLf0vE1mKXXkHlrfSDUGC4KkV1/nXL2x9rdzzDEC+Crdosa84+y4lHLl/mAKqy59I8RLD9iasnlMgegnsbAzs2EPttLvhzNDsV6RemUePriSOuv4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729838089; c=relaxed/simple;
-	bh=kKP/2oRyEUxg0nSFFlYpDqEs/i5i9P3MINTQ9KdOlA8=;
+	s=arc-20240116; t=1729838105; c=relaxed/simple;
+	bh=FC4hdguicim44b3MeNYNjVMOZnJhIDO6MCH8X4RXsmg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wk72CKu64J1ZQPjg9BZtnd0pJg612PzB1CDtaf7wekfBwOllG9UPNvbLL+/hFQsc3UKk+N1u+z2dyhATSA4eeD7iUy9CQqgHC5aMbJik+n23mWAa3UKIiNkcrszU0bjm31WFJejnwTx/rpnEfrGxFx8tqa4BmfFVtePKf+o0hpE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TAS1JThq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=N13kRJGioggmIeJ+E6LvlxANySd5NAG6Tq0X5czpX6p5Iy2ERHbp02c+Jw4bh40ElgbkzbEnPYQku5FrtGyeBopRJ+K3R2m4kHD9DzTU3GKEdSgvygFmNR0Dzurezu3Dh+/GXfJiZkJH4QH6lY6pI2//Vy87h+vBd+iO57hEJOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZoFriuJl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TAS1JThq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99D07C4CEC3;
-	Fri, 25 Oct 2024 06:34:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZoFriuJl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FC71C4CEC3;
+	Fri, 25 Oct 2024 06:35:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729838088;
-	bh=kKP/2oRyEUxg0nSFFlYpDqEs/i5i9P3MINTQ9KdOlA8=;
+	s=k20201202; t=1729838105;
+	bh=FC4hdguicim44b3MeNYNjVMOZnJhIDO6MCH8X4RXsmg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TAS1JThqTIDvzBNzd6VBUBiQ1R5Rt95hQV47hbl4l3dK8P/GzDsORNDa82ZHI2fZh
-	 BkOiKXiJqnk3Yb0QnqtBPKOi7guabftKlt5yub4eT20YSPZEbQWaRmATo3m6eN7HBD
-	 S49RJbrPZ6wrPTagKDarBWyV8jjRq5C1o6BFkSJ/Buhb31/YS7Fl4A2OxnkhvsxgX2
-	 92FJsB0MCtpkpjJb/4tzvcPNI1m3qXXYM0BP5HYxqm8wJUKI/y0JegLtWbWJ65yEA9
-	 AIts8BzI7pQvgw72no708Za9zue6yyYuIj645+hQAK8ZRhRDqVGev1qzakWweQawot
-	 P13sxCcYm792w==
-Date: Thu, 24 Oct 2024 23:34:48 -0700
-Subject: [PATCH 2/8] xfs_db: report the realtime device when associated with
- each io cursor
+	b=ZoFriuJlPZkHwcjdEuPFETocorTg/N4RD+UBq2cvP5ZsIuoiXLjEIrzLSMf5QNkkj
+	 Pgx+hyrPWGSayrkPEZ4hPCb3HrptlDQYnrC3uNjjKXXOWranmZW/tjdJzwyytqISWi
+	 zO0xNhkfc7VxzMsG98mQz4lNczfRBVYYA0lSUxZmt50BtGTmoUrmXFVA//vUD1m5iw
+	 FC+QZD43t1u0Wt2wZmRDNyr8ipquyjCEWqxx46WE90cv2Si+ZG7p4HUKKxNPhvMySF
+	 e8K3dIUYRlxoVa+J904GWqIQIVtI0UK9I1+Hkl8PLS/kZK/Z3csqwXUNOnstDwU7uj
+	 f5uq3eGqvVxEQ==
+Date: Thu, 24 Oct 2024 23:35:03 -0700
+Subject: [PATCH 3/8] xfs_db: make the daddr command target the realtime device
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983773759.3041229.6653374398230478526.stgit@frogsfrogsfrogs>
+Message-ID: <172983773774.3041229.16383532207517050768.stgit@frogsfrogsfrogs>
 In-Reply-To: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
 References: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,69 +45,120 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When db is reporting on an io cursor and the cursor points to the
-realtime device, print that fact.
+Make it so that users can issue the command "daddr -r XXX" to select
+disk block XXX on the realtime device.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/block.c |    2 ++
- db/io.c    |   11 +++++++++++
- db/io.h    |    1 +
- 3 files changed, 14 insertions(+)
+ db/block.c        |   43 ++++++++++++++++++++++++++++++++++++++-----
+ man/man8/xfs_db.8 |    6 +++++-
+ 2 files changed, 43 insertions(+), 6 deletions(-)
 
 
 diff --git a/db/block.c b/db/block.c
-index 22930e5a287e8f..bd25cdbe193f4f 100644
+index bd25cdbe193f4f..6ad9f038c6da67 100644
 --- a/db/block.c
 +++ b/db/block.c
-@@ -133,6 +133,8 @@ daddr_f(
- 			dbprintf(_("datadev daddr is %lld\n"), daddr);
- 		else if (iocur_is_extlogdev(iocur_top))
- 			dbprintf(_("logdev daddr is %lld\n"), daddr);
-+		else if (iocur_is_rtdev(iocur_top))
-+			dbprintf(_("rtdev daddr is %lld\n"), daddr);
- 		else
- 			dbprintf(_("current daddr is %lld\n"), daddr);
- 
-diff --git a/db/io.c b/db/io.c
-index 26b8e78c2ebda8..3841c0dcb86ead 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -159,6 +159,15 @@ iocur_is_extlogdev(const struct iocur *ioc)
- 	return bp->b_target == bp->b_mount->m_logdev_targp;
+@@ -31,7 +31,7 @@ static const cmdinfo_t	ablock_cmd =
+ 	{ "ablock", NULL, ablock_f, 1, 1, 1, N_("filoff"),
+ 	  N_("set address to file offset (attr fork)"), ablock_help };
+ static const cmdinfo_t	daddr_cmd =
+-	{ "daddr", NULL, daddr_f, 0, 1, 1, N_("[d]"),
++	{ "daddr", NULL, daddr_f, 0, -1, 1, N_("[d]"),
+ 	  N_("set address to daddr value"), daddr_help };
+ static const cmdinfo_t	dblock_cmd =
+ 	{ "dblock", NULL, dblock_f, 1, 1, 1, N_("filoff"),
+@@ -117,16 +117,36 @@ daddr_help(void)
+ ));
  }
  
-+bool
-+iocur_is_rtdev(const struct iocur *ioc)
-+{
-+	if (!ioc->bp)
-+		return false;
++enum daddr_target {
++	DT_DATA,
++	DT_RT,
++};
 +
-+	return ioc->bp->b_target == ioc->bp->b_mount->m_rtdev_targp;
-+}
+ static int
+ daddr_f(
+ 	int		argc,
+ 	char		**argv)
+ {
++	xfs_rfsblock_t	max_daddrs = mp->m_sb.sb_dblocks;
+ 	int64_t		d;
+ 	char		*p;
+ 	int		bb_count = BTOBB(mp->m_sb.sb_sectsize);
++	int		c;
++	enum daddr_target tgt = DT_DATA;
+ 
+-	if (argc == 1) {
++	while ((c = getopt(argc, argv, "r")) != -1) {
++		switch (c) {
++		case 'r':
++			tgt = DT_RT;
++			max_daddrs = mp->m_sb.sb_rblocks;
++			break;
++		default:
++			daddr_help();
++			return 0;
++		}
++	}
 +
- void
- print_iocur(
- 	char	*tag,
-@@ -171,6 +180,8 @@ print_iocur(
- 		block_unit = "fsbno";
- 	else if (iocur_is_extlogdev(ioc))
- 		block_unit = "logbno";
-+	else if (iocur_is_rtdev(ioc))
-+		block_unit = "rtbno";
++	if (optind == argc) {
+ 		xfs_daddr_t	daddr = iocur_top->off >> BBSHIFT;
  
- 	dbprintf("%s\n", tag);
- 	dbprintf(_("\tbyte offset %lld, length %d\n"), ioc->off, ioc->len);
-diff --git a/db/io.h b/db/io.h
-index bb5065f06c0d8e..8eab4cd9c9a464 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -60,6 +60,7 @@ extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
+ 		if (iocur_is_ddev(iocur_top))
+@@ -140,14 +160,27 @@ daddr_f(
  
- bool iocur_is_ddev(const struct iocur *ioc);
- bool iocur_is_extlogdev(const struct iocur *ioc);
-+bool iocur_is_rtdev(const struct iocur *ioc);
+ 		return 0;
+ 	}
+-	d = (int64_t)strtoull(argv[1], &p, 0);
++
++	if (optind != argc - 1) {
++		daddr_help();
++		return 0;
++	}
++
++	d = (int64_t)strtoull(argv[optind], &p, 0);
+ 	if (*p != '\0' ||
+-	    d >= mp->m_sb.sb_dblocks << (mp->m_sb.sb_blocklog - BBSHIFT)) {
++	    d >= max_daddrs << (mp->m_sb.sb_blocklog - BBSHIFT)) {
+ 		dbprintf(_("bad daddr %s\n"), argv[1]);
+ 		return 0;
+ 	}
+ 	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
+-	set_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
++	switch (tgt) {
++	case DT_DATA:
++		set_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
++		break;
++	case DT_RT:
++		set_rt_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
++		break;
++	}
+ 	return 0;
+ }
  
- /*
-  * returns -1 for unchecked, 0 for bad and 1 for good
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 5faf8dbb1d679f..f50ac949be0189 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -671,7 +671,7 @@ .SH COMMANDS
+ Validate and display the current value and state of the structure's CRC.
+ .RE
+ .TP
+-.BI "daddr [" d ]
++.BI "daddr [" -r "] [" d ]
+ Set current address to the daddr (512 byte block) given by
+ .IR d .
+ If no value for
+@@ -680,6 +680,10 @@ .SH COMMANDS
+ The type is set to
+ .B data
+ (uninterpreted).
++
++If an address and the
++.B \-r
++option are specified, the current address is set to the realtime device.
+ .TP
+ .BI dblock " filoff"
+ Set current address to the offset
 
