@@ -1,141 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7841F18C935
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:38:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A1A18C018
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2024 06:43:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729838308; cv=none; b=TZhDucJWSVg4RXePo+r5NZEv29NQnygeLVWPZkIWMWf5wGEfPpADkThLNNOhqQ/aowvz3WC1zcPJSVY0XeZwJE/jerkGOTnvdvGd8NgMN43FRFMQ0N0ua72fOORuTzFflhbTp4qWnG+bmVjaLqgfWdQ1vDBKWK5rFBuwqReD/Tk=
+	t=1729838627; cv=none; b=RQ+kjyQyTyfa98inYkzoMfTZqPLRMVBZ1Ar0Xmn/TjDYwYMYCZoEjIMZ/ev4Zqoz3tnJiXsabju+7sQJJlrxeKyUfaLbLiD1K5zWtvtORga1TxCgRa6qcCVIPlBVWzDpazrV3/5kWDVeBeKr065mTIoFahiyZGtR5cNBSnoUCD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729838308; c=relaxed/simple;
-	bh=/0s+cECFMrndgKsuUBctaDvSKDcHV3O3N6OFXfIDH6g=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MUPvOZbUaakALX1dv/lE+T9aG51EIGJI69IWA5rgR5hmyvt87XNij3qNkvRP80WPWnHb/NH9qWv7wiCtRFXH2CH3d1cDH5BxAiqJE6OGrnrXHWudvxkvd4YgL0CBy1HSyk7R/g9lexZ19tzinlwo6SMvyYwjIDdMMsfjMyPwiZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=InA1Udxf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729838627; c=relaxed/simple;
+	bh=nQq2QvaclSfntj/G9zIMNGgbmmuQSEhBX8jIqNGALoU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uy5/bnbvEgMg75uDjSXHDxncStvS8ouBvU4TcaUE+XZmudBTYUugU5WVzVMkvpsIGbFc/3h4qjPs6ac/ezTyzC0iFNOgJjfQOnlFvfRI+gFy++h8Ok9nwfEhbr0HilExjMvRcIvieg7Y8Rv0Hyz8Ye7FMEkZROvoJWPWT3TM2dw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=T45QlCYm; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="InA1Udxf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CCCCC4CEC3;
-	Fri, 25 Oct 2024 06:38:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729838308;
-	bh=/0s+cECFMrndgKsuUBctaDvSKDcHV3O3N6OFXfIDH6g=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=InA1Udxfya4Z5LAj13vlRuOH5GjRondXoW/tBJBpi0TNZcSR8SOcjkY+7i7xbzhxp
-	 GBo5z2TqvNcXnydclNAnDxjCOIqvWcY2JrfJysOxYeD/yWyi0za8xWA3b5BxGQihj8
-	 vTQ1E/QfT9xItzkE9rhUPmjZdQUNr2bb5Dh/KDgYLYLz0Dy+xEGxuWKkxdMKUrSQ/1
-	 aWTqsMTCyM/B3OdMgAFKG4i0veJ8JnSRfslYo2kHl42QnvSY+xp7J5km1gMsA6hHpl
-	 Le6CPK2R3uhaAkFhS2kNTbv32svhKQ7u2mgXFl/Hwq5UgS+Gcthkc932lUQAJiHNB0
-	 bhsmt3qgFAI/A==
-Date: Thu, 24 Oct 2024 23:38:27 -0700
-Subject: [PATCH 1/1] xfs_scrub_all: wait for services to start activating
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <172983774826.3041899.15350842942789677656.stgit@frogsfrogsfrogs>
-In-Reply-To: <172983774811.3041899.4175728441279480358.stgit@frogsfrogsfrogs>
-References: <172983774811.3041899.4175728441279480358.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="T45QlCYm"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-71e467c3996so1265692b3a.2
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2024 23:43:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1729838624; x=1730443424; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Jaqpmns3LH1iP3YH6luYP6PQNY/LTYrSJAovgOC/eEk=;
+        b=T45QlCYmaBQGgjGQ3piGOwpDgK7//DOg+cj7/LuEo5RxZ0ab5LKjO0BQAS44IdaAzx
+         GhimqWZabgihOH8Lc+Ew6LdrQ5pUYf4TxVIjxGEiHAl8m+/I5hyVaOWpJ223NxUdg5lH
+         rpKKD+hm0hreygnQIiVM/gSIWo2LHferEgDz7uSPPhWeNYz3qQzSfi3vcCiuJujRBXll
+         60A6D6oGz4srutnPrjU5wR/7MMg9jBeKeTYxW+rVIvTwwQqicoBLbfi2sZXF5JpWJRwv
+         INulYEyj+Q3c2zBuxwVpO+2M0lfYam/fdwsMMQsZ30DAlUZupgn7yL50BN/ByVOGes7f
+         9xsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729838624; x=1730443424;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Jaqpmns3LH1iP3YH6luYP6PQNY/LTYrSJAovgOC/eEk=;
+        b=f2D7o9ugMhcQdx9Ru9v7rfarFjg4+I02UVB6szQ5V+aORei81NcAFYTtV8Es1GFF+V
+         dEFjPvTKQ1QuUT8XwgBdGpq2lop/bAtbLTElx+5yqWFlcKsnMI4Ym3l4Vy0ylDoSzPS8
+         HqWbkE8O8hR+zD9EngfR2xwT0Zu9Erohh9+KjedbTMbaSIJgJf3Ij4FuRUEgAy8MS5sR
+         iXkISpMLNzojbzoGxvBqovz6dbk0MfqjLSf5ZFOiKiquvGOAsLtq6muhTpGNQnUp5uql
+         Jp+XlmVqrQtPxMkViSAI+aHGHRCWsESG+yJ2sRS6NiebyZBJPGDXy71jWAPtN2JDMBOj
+         Mn3A==
+X-Gm-Message-State: AOJu0YxTV01sD0VVZgY3NY1tO3PuFjmDVC9CPHpiknTyQg4cYT1hfzNy
+	bL5gov6N396xKLJCPO7wCZKPdNgZLn6cqWNCCFNroIGHdwO3jKb7vGXw6SsFUTNCCvCV+GokufT
+	H
+X-Google-Smtp-Source: AGHT+IHNu8pS94Z7Qn+a1xYy0vONTD7Sm0vnbWHZbaFkvFVcHskBL3jABX6OpMqiqhdyBsWCiSmHFw==
+X-Received: by 2002:a05:6a00:1255:b0:71e:659:f2e7 with SMTP id d2e1a72fcca58-72045e456b6mr5895019b3a.8.1729838624273;
+        Thu, 24 Oct 2024 23:43:44 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72057950457sm448551b3a.95.2024.10.24.23.43.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Oct 2024 23:43:43 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t4E2v-005TYZ-1H;
+	Fri, 25 Oct 2024 17:43:41 +1100
+Date: Fri, 25 Oct 2024 17:43:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: allow sparse inode records at the end of runt
+ AGs
+Message-ID: <Zxs+HQGuJziECU5i@dread.disaster.area>
+References: <20241024025142.4082218-1-david@fromorbit.com>
+ <20241024025142.4082218-3-david@fromorbit.com>
+ <20241024170038.GJ21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241024170038.GJ21853@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Oct 24, 2024 at 10:00:38AM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 24, 2024 at 01:51:04PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Due to the failure to correctly limit sparse inode chunk allocation
+> > in runt AGs, we now have many production filesystems with sparse
+> > inode chunks allocated across the end of the runt AG. xfs_repair
+> > or a growfs is needed to fix this situation, neither of which are
+> > particularly appealing.
+> > 
+> > The on disk layout from the metadump shows AG 12 as a runt that is
+> > 1031 blocks in length and the last inode chunk allocated on disk at
+> > agino 8192.
+> 
+> Does this problem also happen on non-runt AGs?
 
-It seems that the function call to start a systemd unit completes
-asynchronously from any change in that unit's active state.  On a
-lightly loaded system, a Start() call followed by an ActiveState()
-call actually sees the change in state from inactive to activating.
+No. The highest agbno an inode chunk can be allocated at in a full
+size AG is aligned by rounding down from sb_agblocks.  Hence
+sb_agblocks can be unaligned and nothing will go wrong. The problem
+is purely that the runt AG being shorter than sb_agblocks and so
+this highest agbno allocation guard is set beyond the end of the
+AG...
 
-Unfortunately, on a heavily loaded system, the state change may take a
-few seconds.  If this is the case, the wait() call can see that the unit
-state is "inactive", decide that the service already finished, and exit
-early, when in reality it hasn't even gotten to 'activating'.
+> If the only free space
+> that could be turned into a sparse cluster is unaligned space at the
+> end of AG 0, would you still get the same corruption error?
 
-Fix this by adding a second method that watches either for the inactive
--> activating state transition or for the last exit from inactivation
-timestamp to change before waiting for the unit to reach inactive state.
+It will only happen if AG 0 is a runt AG, and then the same error
+would occur. We don't currently allow single AG filesystems, nor
+when they are set up  do we create them as a runt - the are always
+full size. So current single AG filesystems made by mkfs won't have
+this problem.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Cc: <linux-xfs@vger.kernel.org> # v6.10.0
-Fixes: 6d831e770359ff ("xfs_scrub_all: convert systemctl calls to dbus")
----
- scrub/xfs_scrub_all.in |   52 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+That said, the proposed single AG cloud image filesystems that set
+AG 0 up as a runt (i.e. dblocks smaller than sb_agblocks) to allow
+the AG 0 size to grow along with the size of the filesystem could
+definitely have this problem. i.e. sb_dblocks needs to be inode
+chunk aligned in this sort of setup, or these filesystems need to
+be restricted to fixed kernels....
 
+-Dave.
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 5e2e0446a99f89..fe4bca4b2edb11 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -249,6 +249,54 @@ class scrub_service(scrub_control):
- 				print(e, file = sys.stderr)
- 			return 'failed'
- 
-+	def last_activation(self):
-+		'''Retrieve the last activation time, in microseconds since
-+		boot.'''
-+		global debug
-+
-+		l = lambda: self.prop.Get('org.freedesktop.systemd1.Unit',
-+				'InactiveExitTimestampMonotonic')
-+		try:
-+			return self.__dbusrun(l)
-+		except Exception as e:
-+			if debug:
-+				print(e, file = sys.stderr)
-+			return 0
-+
-+	def wait_for_startup(self, last_active, wait_for = 30, interval = 0.5):
-+		'''Wait for the service to start up.  This is defined as
-+		exiting the inactive state.'''
-+
-+		for i in range(0, int(wait_for / interval)):
-+			s = self.state()
-+			if debug:
-+				print('waiting for activation %s %s' % (self.unitname, s))
-+			if s == 'failed':
-+				return 1
-+			if s != 'inactive':
-+				return 0
-+			# If the unit is inactive but the last activation time
-+			# doesn't match, then the service ran so quickly that
-+			# it's already gone.
-+			if last_active != self.last_activation():
-+				return 0
-+			time.sleep(interval)
-+
-+		s = self.state()
-+		if debug:
-+			print('waited for startup %s %s' % (self.unitname, s))
-+		if s == 'failed':
-+			return 1
-+		if s != 'inactive':
-+			return 0
-+
-+		# If the unit is inactive but the last activation time doesn't
-+		# match, then the service ran so quickly that it's already
-+		# gone.
-+		if last_active != self.last_activation():
-+			return 0
-+		return 2
-+
- 	def wait(self, interval = 1):
- 		'''Wait until the service finishes.'''
- 		global debug
-@@ -278,7 +326,11 @@ class scrub_service(scrub_control):
- 			print('starting %s' % self.unitname)
- 
- 		try:
-+			last_active = self.last_activation()
- 			self.__dbusrun(lambda: self.unit.Start('replace'))
-+			ret = self.wait_for_startup(last_active)
-+			if ret > 0:
-+				return ret
- 			return self.wait()
- 		except dbus.exceptions.DBusException as e:
- 			# If the unit was masked, the sysadmin doesn't want us
-
+-- 
+Dave Chinner
+david@fromorbit.com
