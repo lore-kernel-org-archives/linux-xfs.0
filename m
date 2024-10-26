@@ -1,69 +1,37 @@
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9052D538A;
-	Sat, 26 Oct 2024 18:01:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 887DA8494;
+	Sat, 26 Oct 2024 20:12:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729965692; cv=none; b=ZMtE5PY8xY3R2ZtViALw902arTNaaXZkaLilGErXS0fpTeg8+tBuIzGbFNS5xrIcYUgvO3/boVR9wooxbBWrlZZMIbLpJp6pFiMCUqB2mHv8O47JQ+2D/QTHiy1qIY+RrskmiNOFjdAaCOtSvGxfd+6idDZBj8sKb38wXl5quOs=
+	t=1729973558; cv=none; b=LHeEZQW5zMVuaXXh5evrg0BSlJE2wqd4iFKebawk9UTP42V+QPaaB8gp5edC1NRNuHNmQAHp/LsDvaV8hjw1vl1/NlKUOkC/MjEOrrPcOgpPHPhwBTG2hto4tUAfGotiN62n9heFOwH/PJA4vvrgNex+jLke1gLGbsfNtCpDqlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729965692; c=relaxed/simple;
-	bh=cX7dnLpyuAWg2Y5tu9dKUEnohBDqa9GTSOTqU8cQQ/I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SPsyTMEjz7r0L821de+vaniGK4PGBUu4wX/a9xrpkU/9i4xIjjfXWBlScRpRoZIBkhT6t06rMlLRIovcdogqVUIiHmys7DwQ3Z/HEHLSWdmyvh7oYhDgXA3Hhx3IBL8eKaknCkG6jRKQqWThSocqZ+oxtAXm1ydocTcPaP0dsn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PaWApvVq; arc=none smtp.client-ip=209.85.215.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1729973558; c=relaxed/simple;
+	bh=8JJ3WuQ7zBqgQWERCkgZi39Z7iknVCN5isYAoyhvvMk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Fc+LfiQ7/75Y7C2hCQxwEs9V4i9Shx2Rrl49UHG5edsScbGZcawoMRVUsonSVPRm/8Rfk9D5hnkkdWMvPwYJSXCgMRIPqva8rJrOcv8Os5EXUpagyOxlzyIytDk8krrQJtyRWTHV2FV7N+F9InhMM2BC1bRy3vJeZONVlg5ya90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=msfV8YoF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PaWApvVq"
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-7ea8d7341e6so2244997a12.3;
-        Sat, 26 Oct 2024 11:01:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729965690; x=1730570490; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Vx7n+lvYfx4acKCpfSYSV3abqUDWePGSSogzQMnaXSA=;
-        b=PaWApvVqMl8C+i3t0TOv4PG0abbn+aYXxz7Tv39m+l6CCMw5VENmeEcIhRbx5BVtBU
-         NnuLrWN98Nd2RbJWomBot2YD6wGlJDqnQdyhMv9JBGtf25w9RDvTpfHBPDol11sYYhFP
-         8WDZx0io7FLtvEfBsPlh2cXDN69Uc6pwcvR0x4Si5fKucwN4zVMkV8ZIxmfvGfqt8MEO
-         rI9Bw0FpDSjZh1dQTQafhCSWDXGMnWwdqCc8NT7PBhRRsWlGadvldNFpeGQfEf2vjuFK
-         v/T6Pb2xGf9U8msLYZVlJRHXzU8qBH+Kzg6tlQfzWVs6UzssEQVIUFAJikkTYC//y2fb
-         6g4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729965690; x=1730570490;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Vx7n+lvYfx4acKCpfSYSV3abqUDWePGSSogzQMnaXSA=;
-        b=Qt+gG73HvKfdMxWQR/0mQJ1zQ6hxWpcCIrjNG0jbajX+9iq11DjHCy2TWtZqtH4A6N
-         40cq49Ovg+EDxji1S46tZgANtoWz/HjpnnA7gZD8CTfJyOXcnmWVEdBdR+F0j7AhgyAe
-         M3QfPdiMhZ28e2BqCU1ypK8I2s31O8WTlhyfPQe8G/1J7OHGw5VMxJtSfNrhsdNS9yKv
-         dB9is4vCgC3gVmuhw6lXutqBEx+kvNdQxASn/8ujUKNNy+tazvYiL8/fO6aO/mEfIzDW
-         yOn8L4qAHwjWb8XZBYRtwW+QKwqeSWha0BF5GbOX8XxGjsxXPA5otu7V5e0zucjLL9wu
-         1FnQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV/BFKPVlG6++PP5tkd2yIgYOMEDBsC3GSVhK3PBl5WXH9DCyi7+5fpCIZCf79eU6oTZrxmL1NbpwEO@vger.kernel.org, AJvYcCXI1L+d1sRoT/vJ/ibBYOI0KzH0wp9Z74/Bz0xDL12INfOpLELE8hKbw+kAXjpLjXRzNQBTREBatReILD4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxpzz1nWiDqvkPylkecFsORtvORJym2v0l35m7S9bps6rAzXI9n
-	EmcaaIlUD//loCkW1Hdgl/NTsW7wz2QnIcB/K8oEo+bTyMZU2ZqX
-X-Google-Smtp-Source: AGHT+IFFTxk5AjBJDIWypGUlpf+BmaBo7RH0V0SpW7unIBn+62dXa4zxA0B4o6er3GA8aJ+UKbjlgQ==
-X-Received: by 2002:a17:90b:3848:b0:2e2:aef9:8f60 with SMTP id 98e67ed59e1d1-2e8f0d531ffmr4154393a91.0.1729965689714;
-        Sat, 26 Oct 2024 11:01:29 -0700 (PDT)
-Received: from localhost.localdomain ([119.28.17.178])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e8e3572d5asm3714962a91.17.2024.10.26.11.01.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 26 Oct 2024 11:01:29 -0700 (PDT)
-From: alexjlzheng@gmail.com
-X-Google-Original-From: alexjlzheng@tencent.com
-To: cem@kernel.org,
-	djwong@kernel.org
-Cc: chandanbabu@kernel.org,
-	dchinner@redhat.com,
-	zhangjiachen.jaycee@bytedance.com,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: [PATCH] xfs: fix the judgment of whether the file already has extents
-Date: Sun, 27 Oct 2024 02:01:16 +0800
-Message-ID: <20241026180116.10536-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.41.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="msfV8YoF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B85AC4CEC6;
+	Sat, 26 Oct 2024 20:12:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729973558;
+	bh=8JJ3WuQ7zBqgQWERCkgZi39Z7iknVCN5isYAoyhvvMk=;
+	h=From:To:Cc:Subject:Date:From;
+	b=msfV8YoFaUlWjOTsVvKkQ0Nwk1XW5q0oRc5L1hohU7VDoEiSjmX0JztldAWDwgDHI
+	 sOUZzXV9gq2Mx7XBc8uf7twIllYqyB8YiRib1tnqjbnFRx07CauTI+4OtOD1cBbbJ5
+	 S0C+1R+1C6nmhx5IC+YX5gA8/a86XWx4l+cJwwYW9eg3UJXrGPHXQ3//cq9XsveH/V
+	 VDEtV4VC16FBuWt/57qZU4SfQPOPszU7AcxzyeRKx1SKyAQj+SA7DfJ9ESe4ZVeDbM
+	 Vt0elri0fOeVd9l5dp/e0uquN8NQe0p+dPaKsatflCJ3ZOWGVmKD8kGuGT+bbihAIv
+	 3ec4CPKtCs8mQ==
+From: Zorro Lang <zlang@kernel.org>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: notrun if kernel xfs not supports ascii-ci feature
+Date: Sun, 27 Oct 2024 04:12:34 +0800
+Message-ID: <20241026201234.77387-1-zlang@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,32 +40,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Jinliang Zheng <alexjlzheng@tencent.com>
+As the ascii-ci feature is deprecated, if linux build without the
+CONFIG_XFS_SUPPORT_ASCII_CI, mount xfs with "-n version=ci" will
+get EINVAL. So let's notrun if it's not supported by kernel.
 
-When we call create(), lseek() and write() sequentially, offset != 0
-cannot be used as a judgment condition for whether the file already
-has extents.
-
-This patch uses prev.br_startoff instead of offset != 0.
-
-Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+Signed-off-by: Zorro Lang <zlang@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ common/xfs    | 10 ++++++++++
+ tests/xfs/188 |  1 +
+ tests/xfs/597 |  1 +
+ tests/xfs/598 |  1 +
+ 4 files changed, 13 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 36dd08d13293..94e7aeed9e95 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3536,7 +3536,7 @@ xfs_bmap_btalloc_at_eof(
- 	 * or it's the first allocation in a file, just try for a stripe aligned
- 	 * allocation.
- 	 */
--	if (ap->offset) {
-+	if (ap->prev.br_startoff != NULLFILEOFF) {
- 		xfs_extlen_t	nextminlen = 0;
+diff --git a/common/xfs b/common/xfs
+index 62e3100ee..cbcf4ee0b 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1181,6 +1181,16 @@ _require_xfs_mkfs_ciname()
+ 		|| _notrun "need case-insensitive naming support in mkfs.xfs"
+ }
  
- 		/*
++# this test requires the xfs kernel support ascii-ci feature
++#
++_require_xfs_ciname()
++{
++	_try_scratch_mkfs_xfs -n version=ci >/dev/null 2>&1
++	_try_scratch_mount >/dev/null 2>&1 \
++		|| _notrun "XFS doesn't support ascii-ci feature"
++	_scratch_unmount
++}
++
+ # this test requires mkfs.xfs have configuration file support
+ _require_xfs_mkfs_cfgfile()
+ {
+diff --git a/tests/xfs/188 b/tests/xfs/188
+index a72bf15d6..98cdfd501 100755
+--- a/tests/xfs/188
++++ b/tests/xfs/188
+@@ -31,6 +31,7 @@ _cleanup()
+ 
+ _require_scratch
+ _require_xfs_mkfs_ciname
++_require_xfs_ciname
+ 
+ _scratch_mkfs -n version=ci >/dev/null 2>&1
+ _scratch_mount
+diff --git a/tests/xfs/597 b/tests/xfs/597
+index d3bf91a99..2bf361080 100755
+--- a/tests/xfs/597
++++ b/tests/xfs/597
+@@ -20,6 +20,7 @@ _fixed_by_kernel_commit 9dceccc5822f \
+ 
+ _require_scratch
+ _require_xfs_mkfs_ciname
++_require_xfs_ciname
+ 
+ _scratch_mkfs -n version=ci > $seqres.full
+ _scratch_mount
+diff --git a/tests/xfs/598 b/tests/xfs/598
+index 54f50cd60..20a80fcb6 100755
+--- a/tests/xfs/598
++++ b/tests/xfs/598
+@@ -27,6 +27,7 @@ _fixed_by_kernel_commit 9dceccc5822f \
+ _require_test
+ _require_scratch
+ _require_xfs_mkfs_ciname
++_require_xfs_ciname
+ 
+ _scratch_mkfs -n version=ci > $seqres.full
+ _scratch_mount
 -- 
-2.41.1
+2.45.2
 
