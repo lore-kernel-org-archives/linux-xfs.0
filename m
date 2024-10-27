@@ -1,90 +1,120 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8203762E0;
-	Sun, 27 Oct 2024 20:32:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAFB9145A0B
+	for <linux-xfs@vger.kernel.org>; Sun, 27 Oct 2024 22:26:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730061164; cv=none; b=criz3df/NrNTGJaC3qzIJsVyzTUSV2fND4CbxHZqE4J7L34OFELX73YXlDud0f+Wk/x/JOnQt6qOy+CPPvWWcU+AVbKONH6uJvg4/skW1Xg/AOD3NZUTjIksdN8RIkPyJd5MnW33iWM2zsnZCrfl5RVCtqnBAhnBTJ/hlY9k7lM=
+	t=1730067998; cv=none; b=EM+BSXC+5wWVmCW9Z8upRmghO2u55/aS6WuFqn73/qA0IgTVM84euEOiYxWy5F5tRWuxYIgGOo3K8Zk70xfkP8EpTXt4CBK9axZS8sDTOzJsvAHYshw65JJDZnFPWsTCpRwTaO4Om+Qbb71XPqzbMfzlbAI2mXGtJlBnVGmqgp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730061164; c=relaxed/simple;
-	bh=MBLg/OHsvkXmNnHMU5vm8OYpQy434w+URxhW3T+UyhI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=diInD/5uVO+sFjzVfGO9Up2qnBJj8LCN69cvdxn6KwSPoom9KNlctQqJEpmxHtxKkBC24bAYFcHtWNy4VVFlm4XObD0tM37897RAnIQGqQeFJY+Bzn9DpzqvJpTnYw1SNDqyF23pQKpCI7UCJpr6PK3BU/r9783HKDXsTHzFa5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=armyY3y9; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730067998; c=relaxed/simple;
+	bh=zMgjdlwzIGQ5AXpdeYA4WHxBtuo2laAJNVW4nG/kSKM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nplMw+hmj+o0kjuxp4xFXocV78Reyaz/a4rf1VTyIt0Od1nScPsLFihoH4teTmFP+i9PC6taqAMn6IE2UuBv6mVHLdRXNCC4kbY85qsMLNgZKAXs2Yb0bXl53XKzHKUQIXZ6Oq5aaIUSsTKgrButu/prT8HV5FiBmiTa8wo7gT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=IjW6bUL0; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="armyY3y9"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2e2da8529e1so473056a91.1;
-        Sun, 27 Oct 2024 13:32:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="IjW6bUL0"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-71e5a1c9071so2740625b3a.0
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Oct 2024 15:26:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730061162; x=1730665962; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JO6Wn/W7DXpFOgOHg2+qI7JkUohymRKs3+L+zv+wF38=;
-        b=armyY3y9qUL5Y5GA636IRzQ7n6emVaOFCwgyVX57J1oWwZED073lcNKUZi0/vZ6+RI
-         EEk28Pyzs87hLBpCzA7f1rEirYm7FNnEEGSczp9affMR4xhUyKbEiekYY9ZbULdRIrIF
-         jfom9RI/vAaYWq7Pl+/YBHCLFwOPTXrsliwtbwox5FI1hfjjiNfQBKniqfa8ieZ7lnNx
-         fytPxWXIfdVMzLuRn/xelKjnVmPnVMeT4Wth655LzfaHTKy19EErFXX1ARbphEaHlK6f
-         O8BhFu6lqg5gZXiVYJCY2D67rxHepcyw6iQVi8G9AtwJqTSUxkjS+7NA6CmwgjGAm07l
-         6miA==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730067996; x=1730672796; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=D5KLTPWrKVlL1s8NH4uZYFz8Mrab34cutllMbEGsnf0=;
+        b=IjW6bUL0w0GP95A1OFoZtgJysmSK+I/YlutjD47ZGavOQkpRBMljk56UkLzQppNFLy
+         NSCS5b2oTnbc6focB85L/cPvTl8aWbQtup/EHtoyGyhjD/zU+6dMqvS5464cJZHEzfVT
+         YdPbiVD9GzQoN63AEALWVI7nWHv7JU5/rNGdW9t651c1gh5A9huuhP8Bnow3b6XaqagK
+         OCg3ubri/hR/BGRapJLMW4T4yuKwJZ0ZKXyxzB/gIo+rGlZUFz123qiTKq5Gsw14VPdj
+         I5d4U7tsa86RrwztM9D8lmbRwS7CKfuZPzzltx3ZCjo2CVahXpxWl6hWz5Ykzb7s4Q1Q
+         Dcaw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730061162; x=1730665962;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JO6Wn/W7DXpFOgOHg2+qI7JkUohymRKs3+L+zv+wF38=;
-        b=GZxQmpIXc5hJNl5X2WAqaS4k6XEKVCaLfaVlG/PB3dGMmE8KrT73DAz1h3IW7F/dpL
-         mfhrAVyTe70t8JuRIRqUdr4svoy69RgJ25ZKv8/oKH4VIiCSAjfPCi78N15NwIDW9qJc
-         +OtV89rWC/Ht65Qyks/O4LyTnAgOuryCakJhHVFpfFlOCXTBTop5RKtEw3Djhz6v17CP
-         b+aRCoRch5S9vauHthneQOFs2ym5VcM/Ubbno79UAyjpdB3TGoozvNAgDPleB0Y4utw0
-         IINPomzxl0+8v6+132uYQMq8PNa/qPBMh5QxPFeXRsNWzKXxTNlzbGL7PcNKI4wIvtB+
-         EZ3Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVVLyjsoRH+U1SUYDFsqQBTpFK76S79/NTc2Nv5vcfPgyJIQ/HJ1wJ9Ai6nEnS9r5DGVyAMpDbl5sMrpvE=@vger.kernel.org, AJvYcCWerhe6tkcEtPVOMSNkvqV86ZxZUUJ6Y5/VInp5RoVw360wuHpSpbinjDxKJIU/YgM5VOG/6fWUrUut@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzl/uftLebbii/KWflwwEPUn0uSTGP+VaH55R+GR33Us8eP4h9k
-	JDRteZ0A8ZKi6u1L8hBnVTrv+tu2/AiTXbt1WitswijSJhIjlgfh
-X-Google-Smtp-Source: AGHT+IE41L74XWGTVeMUakZ4CX5VZvMo59R24MX1T61Km8jGghKlk6rov9vGRiRc9gnRwWI7mCR7Cg==
-X-Received: by 2002:a17:90a:780b:b0:2e2:b20b:59de with SMTP id 98e67ed59e1d1-2e8f1068be8mr3059152a91.3.1730061162098;
-        Sun, 27 Oct 2024 13:32:42 -0700 (PDT)
-Received: from motti-test.. ([2409:40f4:300a:9618:92ca:3f55:718b:1cab])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e77e48bebasm7721636a91.7.2024.10.27.13.32.37
+        d=1e100.net; s=20230601; t=1730067996; x=1730672796;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=D5KLTPWrKVlL1s8NH4uZYFz8Mrab34cutllMbEGsnf0=;
+        b=H6wMnJJKXzj9xz1aE7plI4ZdXiFjjuAnV5PxlDDIPY4Opar5Y+ZPFq9INKIfDX1n0N
+         r/DUNiQVSrKAR0QJ+fSOsEhUIpWK+LuH1eDMftCOOttAs1/NbHPDckZndb4EJUp4/EoQ
+         8MiPkAKC8AP3BRkyDt/1hdj/6YeGAFJxUxhgO43dvwfpnGDsaL0jaQdR/9my14Ve6SKT
+         ut5EE/dqjZBwQmgm+tGfDeyWqtY1khKF5KasqU2cN1zQXzCl63ZFQncNFT5Yi/j4TMTh
+         lUNnfKwgDnBhwBPcp8HFkpPRcpyujjHIxOM8CthISc7D/HrLm4Vtp+Xqv4gZ0jf+nMrt
+         Unjg==
+X-Forwarded-Encrypted: i=1; AJvYcCXnF+xFTx5B8QHlhnTsTwuvxAcVVSLQtIL3rkBeS/RHN4Dpq4CrMU53ownuccdsHvHd3p9NLkuQ1gQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx/dSG1mFIEdRTKD2Y0j7dVifK8B/Zllp2OPAxBbpPjWOIZw5Cn
+	M9m8IA8zvTQD08GNwvE48Q5ocY0jVujydHtm05tiRsO7Bu3k0eF2ecWIHncuESI=
+X-Google-Smtp-Source: AGHT+IEAKeexdRAG9F5wrcM3jmaPqrDjugV8ZVU3CGrquy532srSBlH8YaKtAz3ee9RU27iCMWii5w==
+X-Received: by 2002:a05:6a00:845:b0:71e:7674:4cf6 with SMTP id d2e1a72fcca58-72062f8335fmr9345518b3a.8.1730067995974;
+        Sun, 27 Oct 2024 15:26:35 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72057935dafsm4482206b3a.87.2024.10.27.15.26.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Oct 2024 13:32:41 -0700 (PDT)
-From: MottiKumar Babu <mottikumarbabu@gmail.com>
-To: cem@kernel.org
-Cc: djwong@kernel.org,
-	chandanbabu@kernel.org,
-	dchinner@redhat.com,
-	zhangjiachen.jaycee@bytedance.com,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kernel-mentees@lists.linux.dev,
-	anupnewsmail@gmail.com,
-	skhan@linuxfoundation.org
-Subject: [PATCH] Follow-up on Submitted Patch: Fix out-of-bounds access in xfs_bmapi_allocate
-Date: Mon, 28 Oct 2024 02:02:28 +0530
-Message-ID: <20241027203231.20251-1-mottikumarbabu@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20241027193541.14212-1-mottikumarbabu@gmail.com>
-References: <20241027193541.14212-1-mottikumarbabu@gmail.com>
+        Sun, 27 Oct 2024 15:26:35 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t5BiR-006eji-2a;
+	Mon, 28 Oct 2024 09:26:31 +1100
+Date: Mon, 28 Oct 2024 09:26:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc: linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+	Jan Kara <jack@suse.cz>, "Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 4/6] ext4: Warn if we ever fallback to buffered-io for
+ DIO atomic writes
+Message-ID: <Zx6+F4Cl1owSDspD@dread.disaster.area>
+References: <cover.1729825985.git.ritesh.list@gmail.com>
+ <7c4779f1f0c8ead30f660a2cfbdf4d7cc08e405a.1729825985.git.ritesh.list@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7c4779f1f0c8ead30f660a2cfbdf4d7cc08e405a.1729825985.git.ritesh.list@gmail.com>
 
-Hi everyone,
+On Fri, Oct 25, 2024 at 09:15:53AM +0530, Ritesh Harjani (IBM) wrote:
+> iomap will not return -ENOTBLK in case of dio atomic writes. But let's
+> also add a WARN_ON_ONCE and return -EIO as a safety net.
+> 
+> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> ---
+>  fs/ext4/file.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index f9516121a036..af6ebd0ac0d6 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -576,8 +576,16 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  		iomap_ops = &ext4_iomap_overwrite_ops;
+>  	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
+>  			   dio_flags, NULL, 0);
+> -	if (ret == -ENOTBLK)
+> +	if (ret == -ENOTBLK) {
+>  		ret = 0;
+> +		/*
+> +		 * iomap will never return -ENOTBLK if write fails for atomic
+> +		 * write. But let's just add a safety net.
+> +		 */
+> +		if (WARN_ON_ONCE(iocb->ki_flags & IOCB_ATOMIC))
+> +			ret = -EIO;
+> +	}
 
-I hope this message finds you well. I wanted to follow up on my previously submitted patch titled "[PATCH] Fix out-of-bounds access in xfs_bmapi_allocate by validating whichfork."
+Why can't the iomap code return EIO in this case for IOCB_ATOMIC?
+That way we don't have to put this logic into every filesystem.
 
-As a reminder, this patch addresses an issue reported by Coverity Scan (CID 1633175), where the variable `whichfork` can take invalid values, specifically `2`, leading to an out-of-bounds access in `xfs_bmbt_init_cursor`. The added validation check ensures that `whichfork` remains within the valid range of 0 or 1. If it falls outside this range, the function will return `-EINVAL`, enhancing the code's robustness and preventing potential crashes or undefined behavior.
+When/if we start supporting atomic writes for buffered IO, then it's
+worth pushing this out to filesystems, but right now it doesn't seem
+necessary...
 
-I appreciate any feedback or suggestions you might have.
-
-Best,  
-MottiKumar Babu  
-mottikumarbabu@gmail.com
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
