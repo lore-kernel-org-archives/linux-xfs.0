@@ -1,71 +1,40 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4741D0BA3
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 12:50:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D8B814D43D
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 16:45:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730119824; cv=none; b=jecZK1jMP3Zu8dZB8eXp28YNwGMvum2jEfrEH2DXcoY6Xnw+JNutCnRE0ruTVNlz13C9B8AthMMzrv+BXHkH9s3yoh+Gmm9si2Zf/kKIeg++qGwUSV8kzZtCXWAhwD2aijWqzpv5S3ipVEtu1BE3H5qmcDxTNN3/eTe6K++5YZc=
+	t=1730133931; cv=none; b=bZjWaTMC5zw11VCuIN6mwKo0SFXVcfj7g+wq8G0/woorcrTrADO1w0Io+dFU/vex+xR/Qokdi09DeL8Z8GWyG9MuN3qt5onfivVGjbwpVOE+SoVzj/mtStoKVBmceV1Xiv8R5V+AgnhGynyO8hJUmpl7h6IBAch7Y7ce3Fsm73g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730119824; c=relaxed/simple;
-	bh=eVo74uH1a3S1xTDyHAwg/cqDzhhkxhUoHUiV5/lJywg=;
+	s=arc-20240116; t=1730133931; c=relaxed/simple;
+	bh=7yDJ0kNjFPeQs/sblfT5F0mgM8CnWJpcl56CrpMW558=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YtAzN7r4iOS5TpLQ0cKPE+Vq+Zc+AW+hjvhJRDSVFOkvfqjb8J/J7DezYd7AUkOQLah6P0ZQfutFT+OBbqjmk9Z3ZGl6Xb/pe6Yyrg2u5z3ButHPdR3Ne/jxlLnCfHxzy5nlSi+AIHk0ho4KCo3oiuQRuCuAiBcRkraZCYPLTKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WQVxIWK8; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=FuqPYy9ynGDH0QFo1KCod6hcEyWQKEN1Rvejpc9eziUtMp14FNk/uwVXuG5fR64yuM7SsHhnUfMcwdc6Q6NctweJjECiphGhnEZXQvm7UP4gmcuGLOBNOaq/gNvW5OmNTdzfDeu9BgiDPaaV+BKAqBqY3upbrLl/pGcXq+eLCKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ufO+B0+P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WQVxIWK8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730119821;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=locDhZ8enW58ZhgvKUzesyAlGj6c2tT4bEjg1OEiR/E=;
-	b=WQVxIWK8m2jC630owteMYGhEDiySLh5a/Amn2g4lwqV65Ve5VimZyBc6BPHOFGpTtqmGiB
-	1HikGRnS7QXrwUSoNCATCH9rk2H2IUe/IP4lhu/jf5AIZt7QxExbiGkbj2B5eu6bh1XaWY
-	RyyZzfa61IA93ZAlFVRwC2xQRCIG+ws=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-335-YKqwGf2nPGeYWciKCMJlMQ-1; Mon, 28 Oct 2024 08:50:20 -0400
-X-MC-Unique: YKqwGf2nPGeYWciKCMJlMQ-1
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-71a122bf521so3953613b3a.2
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 05:50:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730119819; x=1730724619;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=locDhZ8enW58ZhgvKUzesyAlGj6c2tT4bEjg1OEiR/E=;
-        b=a7N6I/qt1sdwNxFrn0uBpUkCnZKmF9PAF9KjMafFXcxOuWTQqKzRsHY9hwfB6+PNT0
-         nuD7rz9/6OkkoAyd3PppPsp6TzamJZ1Vy7m93QRtwTJ8cRBifydVtj+aGDpsF3shdmIo
-         g7iCY9nvTaKJWlrqblJSPupMgEUBZeabFBmaiqEwHEwNCehfjtSXW2XnQbgiRWOI75Sz
-         V8a5JXY4fl3ePJWcvaftLkdvq2nmebMNyB9FkmcynNQ01RlaiY3tlj/byXWuJQestXxm
-         VoTRCwzMafjfPArAAZI/Gw9RQu5yCg+4co4jEsrpqw2zGWVDdqGtFBjkgaV1XPNnPqy6
-         rZew==
-X-Forwarded-Encrypted: i=1; AJvYcCWML6tvWXBUIneTLdngiVmx9mTBY2UR+XO0+WImi018xRzIgS4mmcp6FIHKOXhD7m8N0XVid7004iU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxCY+NfR1HQd5zFIgpIkIuc5tlKmepGVaG5Fw9x1Zd5GnaardPR
-	kqxq50fJHKNjjmpNMupB530xp/WLZ3VsAZhvr7xm6gMbi/MZHaZIIcBhvKuSCWPBuYMcPoGKDtw
-	vnacz9dT6zLgofZoGaqiFHs1pAQd3SfW00fe3qXGM7/Y0Y4qplVLlOG1vK+W1sdJY+85x
-X-Received: by 2002:a05:6a00:1398:b0:71e:59d2:9c99 with SMTP id d2e1a72fcca58-72062f8376emr13432542b3a.4.1730119818929;
-        Mon, 28 Oct 2024 05:50:18 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHeDRueDu/QalrBy6yjA8xJl0WqO1On2tyepjdx21DYmt0yg/dQGMT4XuWo9uJuaZFlKRKqAQ==
-X-Received: by 2002:a05:6a00:1398:b0:71e:59d2:9c99 with SMTP id d2e1a72fcca58-72062f8376emr13432514b3a.4.1730119818590;
-        Mon, 28 Oct 2024 05:50:18 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72057935769sm5640003b3a.77.2024.10.28.05.50.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Oct 2024 05:50:18 -0700 (PDT)
-Date: Mon, 28 Oct 2024 20:50:15 +0800
-From: Zorro Lang <zlang@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ufO+B0+P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E07CC4CEC3;
+	Mon, 28 Oct 2024 16:45:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730133930;
+	bh=7yDJ0kNjFPeQs/sblfT5F0mgM8CnWJpcl56CrpMW558=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ufO+B0+P0UOyQmVnhBaR0bX/YytE9W3kqS41HTWWSLB61brZhWdQZvEgzxyZec4pO
+	 EzTwvmVhICI8ipBOhaDBeLJKjH4TfG+Gj+LcqIssWNNWOeuxfJQLe6J6+5gXpnMSna
+	 xnrN6C4M4vQbCKPMBHpZycjiwEpr2CGnKTJZ8+bMRUt0pmGWhXY5UYRu9jKYUTcdz0
+	 b2VYecQlUjpu0W3HcNaL7VJJ+nbDHYgFYC7tJnxH9qq6330lyv24OCyzGwvcVjR801
+	 3kRsIe8ssilot88+oJL3olcVFaNke4gFjpiaeb9JBvNJ05QtJo076Mp9eFV8iC+aY3
+	 iIb6/uvrm3YDg==
+Date: Mon, 28 Oct 2024 09:45:29 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: notrun if kernel xfs not supports ascii-ci feature
-Message-ID: <20241028125015.nzly4g4kxmyjtefv@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20241026201234.77387-1-zlang@kernel.org>
- <Zx9PGD6m8ySNaXSR@infradead.org>
+Cc: cem@kernel.org, aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs_scrub_all: wait for services to start activating
+Message-ID: <20241028164529.GQ2386201@frogsfrogsfrogs>
+References: <172983774811.3041899.4175728441279480358.stgit@frogsfrogsfrogs>
+ <172983774826.3041899.15350842942789677656.stgit@frogsfrogsfrogs>
+ <Zx9O53A6mhr2sF4b@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,26 +43,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zx9PGD6m8ySNaXSR@infradead.org>
+In-Reply-To: <Zx9O53A6mhr2sF4b@infradead.org>
 
-On Mon, Oct 28, 2024 at 01:45:12AM -0700, Christoph Hellwig wrote:
-> > +	_try_scratch_mount >/dev/null 2>&1 \
-> > +		|| _notrun "XFS doesn't support ascii-ci feature"
+On Mon, Oct 28, 2024 at 01:44:23AM -0700, Christoph Hellwig wrote:
+> On Thu, Oct 24, 2024 at 11:38:27PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > It seems that the function call to start a systemd unit completes
+> > asynchronously from any change in that unit's active state.  On a
+> > lightly loaded system, a Start() call followed by an ActiveState()
+> > call actually sees the change in state from inactive to activating.
+> > 
+> > Unfortunately, on a heavily loaded system, the state change may take a
+> > few seconds.  If this is the case, the wait() call can see that the unit
+> > state is "inactive", decide that the service already finished, and exit
+> > early, when in reality it hasn't even gotten to 'activating'.
+> > 
+> > Fix this by adding a second method that watches either for the inactive
+> > -> activating state transition or for the last exit from inactivation
+> > timestamp to change before waiting for the unit to reach inactive state.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Cc: <linux-xfs@vger.kernel.org> # v6.10.0
 > 
-> I would have normally expected the || to be placed on the previous
-> line.
+> What is this supposed to mean? 
 
-Sure, I'll merge this patch as this:
+It means that if anyone is supporting xfsprogs 6.10, this patch applies
+to it.
 
-_try_scratch_mount >/dev/null 2>&1 || \
-	_notrun "XFS doesn't support ascii-ci feature"
-
-Thanks for your reviewing.
-
-> 
-> Nitpicking aside:
+> The patch itself looks good:
 > 
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> 
 
+Thanks!
+
+--D
