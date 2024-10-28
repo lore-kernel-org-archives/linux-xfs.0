@@ -1,103 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 734771D934B;
-	Mon, 28 Oct 2024 12:27:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4741D0BA3
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 12:50:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730118453; cv=none; b=YVZqgiqRHxrfFRmIsXsAxSosTAHjjkF7ryAeH8qjtR90GAp3Ot+UXQ+Co1a7zYDy/PKiXBkW3r/mW11PNbOpjq/RPucVTm8mWklY0yn9/2O5FvSPYW48J7d0t7ucIzLVGiYOCP+F5aLRP+Lcq0MY4vFw/4GK13WMG97xvU7CC38=
+	t=1730119824; cv=none; b=jecZK1jMP3Zu8dZB8eXp28YNwGMvum2jEfrEH2DXcoY6Xnw+JNutCnRE0ruTVNlz13C9B8AthMMzrv+BXHkH9s3yoh+Gmm9si2Zf/kKIeg++qGwUSV8kzZtCXWAhwD2aijWqzpv5S3ipVEtu1BE3H5qmcDxTNN3/eTe6K++5YZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730118453; c=relaxed/simple;
-	bh=dBjKbQ72OiI43nKphYScHzSn1tB9+kybe2uOdPkKmfk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nSBmDG+2HdQmwQ2bppGfWOST9Iqy9hWtahu58E+ehTOUGHT3tRICJ4bWXOKz07enHV2oaqZoTfjG+E9hEPXZIOaAhOOVMGc0GZd9EN1jdRWDnNtD+8PSpUSEvRx+oyNPb4dkJs/udpzrQik0BiMoKskeXmidm9FTxA254zNv6Bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YOSHXXAD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730119824; c=relaxed/simple;
+	bh=eVo74uH1a3S1xTDyHAwg/cqDzhhkxhUoHUiV5/lJywg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YtAzN7r4iOS5TpLQ0cKPE+Vq+Zc+AW+hjvhJRDSVFOkvfqjb8J/J7DezYd7AUkOQLah6P0ZQfutFT+OBbqjmk9Z3ZGl6Xb/pe6Yyrg2u5z3ButHPdR3Ne/jxlLnCfHxzy5nlSi+AIHk0ho4KCo3oiuQRuCuAiBcRkraZCYPLTKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WQVxIWK8; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YOSHXXAD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F37D2C4CEC3;
-	Mon, 28 Oct 2024 12:27:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730118452;
-	bh=dBjKbQ72OiI43nKphYScHzSn1tB9+kybe2uOdPkKmfk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YOSHXXADjGIBHyQ2Iftg3bbghvOAJhq4EiqJMrhlWca7rTdICjxerGGqjybHz8Qbc
-	 1qq4wiHrRsAx7igB0qYo6Fqnnd4v2M9lfSoJiAEGsptqUmxJ3sPaIMsxPQFCXqFOFL
-	 G+8gnI756fFPrU5ye1iVoLnZitTPARuyPmAm5Zr5zW9eEIWd87YAkF5UWbkl8dzTD2
-	 Uyg1eVjUX/UcLLTT43Tpkx9dTMBwIE6R8L9X9vh1BDbi0Yg/K36rlQ2o1QGqS89eCT
-	 w666gTjX8lDiJQgsvbQmQAEqb5SeAZ7EXAbq3j/7n7enXbhgYmzw0IOiEXpI0DWbHu
-	 erUXacxTtG8bQ==
-From: Christian Brauner <brauner@kernel.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-fsdevel@vger.kernel.org,
-	mcgrof@kernel.org,
-	gost.dev@samsung.com,
-	linux-doc@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Chao Yu <chao@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	willy@infradead.org,
-	Josef Bacik <josef@toxicpanda.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Tejun Heo <tj@kernel.org>,
-	akpm@linux-foundation.org,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Jaegeuk Kim <jaegeuk@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Chris Mason <clm@fb.com>,
-	David Sterba <dsterba@suse.com>
-Subject: Re: [PATCH] fs/writeback: convert wbc_account_cgroup_owner to take a folio
-Date: Mon, 28 Oct 2024 13:27:12 +0100
-Message-ID: <20241028-jazzclub-kulant-81ce918f186d@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240926140121.203821-1-kernel@pankajraghav.com>
-References: <20240926140121.203821-1-kernel@pankajraghav.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WQVxIWK8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1730119821;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=locDhZ8enW58ZhgvKUzesyAlGj6c2tT4bEjg1OEiR/E=;
+	b=WQVxIWK8m2jC630owteMYGhEDiySLh5a/Amn2g4lwqV65Ve5VimZyBc6BPHOFGpTtqmGiB
+	1HikGRnS7QXrwUSoNCATCH9rk2H2IUe/IP4lhu/jf5AIZt7QxExbiGkbj2B5eu6bh1XaWY
+	RyyZzfa61IA93ZAlFVRwC2xQRCIG+ws=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-335-YKqwGf2nPGeYWciKCMJlMQ-1; Mon, 28 Oct 2024 08:50:20 -0400
+X-MC-Unique: YKqwGf2nPGeYWciKCMJlMQ-1
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-71a122bf521so3953613b3a.2
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 05:50:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730119819; x=1730724619;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=locDhZ8enW58ZhgvKUzesyAlGj6c2tT4bEjg1OEiR/E=;
+        b=a7N6I/qt1sdwNxFrn0uBpUkCnZKmF9PAF9KjMafFXcxOuWTQqKzRsHY9hwfB6+PNT0
+         nuD7rz9/6OkkoAyd3PppPsp6TzamJZ1Vy7m93QRtwTJ8cRBifydVtj+aGDpsF3shdmIo
+         g7iCY9nvTaKJWlrqblJSPupMgEUBZeabFBmaiqEwHEwNCehfjtSXW2XnQbgiRWOI75Sz
+         V8a5JXY4fl3ePJWcvaftLkdvq2nmebMNyB9FkmcynNQ01RlaiY3tlj/byXWuJQestXxm
+         VoTRCwzMafjfPArAAZI/Gw9RQu5yCg+4co4jEsrpqw2zGWVDdqGtFBjkgaV1XPNnPqy6
+         rZew==
+X-Forwarded-Encrypted: i=1; AJvYcCWML6tvWXBUIneTLdngiVmx9mTBY2UR+XO0+WImi018xRzIgS4mmcp6FIHKOXhD7m8N0XVid7004iU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxCY+NfR1HQd5zFIgpIkIuc5tlKmepGVaG5Fw9x1Zd5GnaardPR
+	kqxq50fJHKNjjmpNMupB530xp/WLZ3VsAZhvr7xm6gMbi/MZHaZIIcBhvKuSCWPBuYMcPoGKDtw
+	vnacz9dT6zLgofZoGaqiFHs1pAQd3SfW00fe3qXGM7/Y0Y4qplVLlOG1vK+W1sdJY+85x
+X-Received: by 2002:a05:6a00:1398:b0:71e:59d2:9c99 with SMTP id d2e1a72fcca58-72062f8376emr13432542b3a.4.1730119818929;
+        Mon, 28 Oct 2024 05:50:18 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHeDRueDu/QalrBy6yjA8xJl0WqO1On2tyepjdx21DYmt0yg/dQGMT4XuWo9uJuaZFlKRKqAQ==
+X-Received: by 2002:a05:6a00:1398:b0:71e:59d2:9c99 with SMTP id d2e1a72fcca58-72062f8376emr13432514b3a.4.1730119818590;
+        Mon, 28 Oct 2024 05:50:18 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72057935769sm5640003b3a.77.2024.10.28.05.50.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Oct 2024 05:50:18 -0700 (PDT)
+Date: Mon, 28 Oct 2024 20:50:15 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: notrun if kernel xfs not supports ascii-ci feature
+Message-ID: <20241028125015.nzly4g4kxmyjtefv@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20241026201234.77387-1-zlang@kernel.org>
+ <Zx9PGD6m8ySNaXSR@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1219; i=brauner@kernel.org; h=from:subject:message-id; bh=dBjKbQ72OiI43nKphYScHzSn1tB9+kybe2uOdPkKmfk=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTLN2uu+DzdfEnhecaTkubfhQ409WjqduxOmMF7KdigI N+yyLeio5SFQYyLQVZMkcWh3SRcbjlPxWajTA2YOaxMIEMYuDgFYCI68xn+WZ87u07/2LedTZON LEs8muedMzWVfFfzOC1n1XFJ7/Ypcgz//bxEjzupHb2h6ccRwHzg3uLVWQlS/A75P0Ptmaw/fzr GBwA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zx9PGD6m8ySNaXSR@infradead.org>
 
-On Thu, 26 Sep 2024 16:01:21 +0200, Pankaj Raghav (Samsung) wrote:
-> Most of the callers of wbc_account_cgroup_owner() are converting a folio
-> to page before calling the function. wbc_account_cgroup_owner() is
-> converting the page back to a folio to call mem_cgroup_css_from_folio().
+On Mon, Oct 28, 2024 at 01:45:12AM -0700, Christoph Hellwig wrote:
+> > +	_try_scratch_mount >/dev/null 2>&1 \
+> > +		|| _notrun "XFS doesn't support ascii-ci feature"
 > 
-> Convert wbc_account_cgroup_owner() to take a folio instead of a page,
-> and convert all callers to pass a folio directly except f2fs.
+> I would have normally expected the || to be placed on the previous
+> line.
+
+Sure, I'll merge this patch as this:
+
+_try_scratch_mount >/dev/null 2>&1 || \
+	_notrun "XFS doesn't support ascii-ci feature"
+
+Thanks for your reviewing.
+
 > 
-> [...]
+> Nitpicking aside:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> 
 
-Applied to the vfs.misc branch of the vfs/vfs.git tree.
-Patches in the vfs.misc branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.misc
-
-[1/1] fs/writeback: convert wbc_account_cgroup_owner to take a folio
-      https://git.kernel.org/vfs/vfs/c/30dac24e14b5
