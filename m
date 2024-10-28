@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59B6C1DE3C4
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 17:50:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C783B1552FC
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 17:51:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730137805; cv=none; b=n3Zrj63259ICxHwEriaBHZVhyNcucfdrhtqhf1MdmOmQfEeKxmqYjthwbO1d0XjPoMhPIIajuKqB5jrTIevqLILhHTtUCADowsciXRFHmzGEekLoM0KEOPOdeG0hPwAnWopbw0cYEHhCraRRA5IhEUnws/HSYzgInJXPFNs+By4=
+	t=1730137907; cv=none; b=GtrVJoj1Em2XOMkJz9m8dzuzCu8UivdbZsw2GkKMeBIvle94G81238w5I8zqRG3nEMs8ccOzXwXrKBJz3pJAR2ZU+WqVsB7g1G0cvUjFhlgrFQ9SwzjxkgRijNybwRZ9ZWSL3x/UlIjNw91bNRnv31wPPLvCYgYmkjDmys7tgf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730137805; c=relaxed/simple;
-	bh=qhO4HS0Z3c1JL9XylvJLmrR5ZDsNvEfsCK1ZHoWi8sQ=;
+	s=arc-20240116; t=1730137907; c=relaxed/simple;
+	bh=3BIyJ/Aqtip8/Dqj/YS9HGFBmANalXvPkyTg+oI4sIc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nRZ3qom3EC2QM9C+AbcSj53EGJ5zOPlzwP11p76iXSIHURSKRMxLNx3+p+jhrTOC/dZ9yaik4zJ+D0lWBX+8COAIlwqVSWVfRytYbuk+V1Fnua4173XpVfSZi8VfhLGSWBoJpBzqTKoq+BgvSq2Hhtdg2Gz504xWgwCK7AjOh2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rL5YwbYK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Of8dgndtzaInVuo/sQBwuaTQf/kvCz+JXbJOT0rvlLbw0QBEit9a6poF6bNj7OQYk+X960cDeHGdWz/CODNt92ArlPfzXv/Mf/vARdvncIipEnJen1D0f0itDDfFQhJV+h4bLHzV21AHKusolGC8ZP6ZdIR7eQj+o/1YDNRmwXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G5fx9U++; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rL5YwbYK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7227C4CEC3;
-	Mon, 28 Oct 2024 17:50:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G5fx9U++"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43CBDC4CEC3;
+	Mon, 28 Oct 2024 17:51:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730137804;
-	bh=qhO4HS0Z3c1JL9XylvJLmrR5ZDsNvEfsCK1ZHoWi8sQ=;
+	s=k20201202; t=1730137907;
+	bh=3BIyJ/Aqtip8/Dqj/YS9HGFBmANalXvPkyTg+oI4sIc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rL5YwbYKalHaACrEed22Rn4DOPBSXRd30IE8HeWihB/LntSuJzCoBcGg8Cb/PMhCe
-	 WO2z09OKqIjM8BVBX3p+zIOgqvOSfzsDTtwcbnw5Wlb7tAexwcK4vXQn7avmLlPDu5
-	 0JBXbyUavOVe15l9a1MEd/p905VRhmdC3L08rVsj3YHw2PIVMPVPmR/Y/e/3HfwQ6F
-	 woXvCPE2eYzGu46fZB2zP9fkJzsvK1zWMCXNgyTvEp7Qy2LBma0Y9YyRll+UB1QmMI
-	 jOFFreXkx25ZdEh0E+6SHXj30inhNNcRqNPKM6y2iIcBf0JQCRFcldZ409QiVz1rWJ
-	 7i5NFf/FVblcw==
-Date: Mon, 28 Oct 2024 10:50:04 -0700
+	b=G5fx9U++EQ0jMPz0XaK1rB6Xuam3vN98Hksjgyp+HxWHjMK8/uFexAxpx79gKX693
+	 P/Sp+ms2F0PrStUy0RoSaLySj96SAViSyirU6AWGsqvT+KUeYOddWjSrGiL6QWXAKw
+	 rUJGjN75NpSKqAxZ70iMt6029FWXQCoWRH0M+hpp5Da0O32vtbSPMnd0873wwHmgpr
+	 FA/AtuNZhAqL0DIYFyZGKpLJocMJcVoL+aSBUMN7K/s80lTqxRBSV3ljkU5q9gCdR8
+	 QR5uO710WdEZX89uZ6AnaWTeX029AApWQ8UqwqNpwH4SLUjHOuDipofGYtn6Qjx+Ci
+	 nAFX+dxqkpsmg==
+Date: Mon, 28 Oct 2024 10:51:46 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: cem@kernel.org, aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/8] xfs_db: access realtime file blocks
-Message-ID: <20241028175004.GT21840@frogsfrogsfrogs>
+Subject: Re: [PATCH 5/8] xfs_db: access arbitrary realtime blocks and extents
+Message-ID: <20241028175146.GR2386201@frogsfrogsfrogs>
 References: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
- <172983773789.3041229.10050634092165024838.stgit@frogsfrogsfrogs>
- <Zx9NOOgASfMFkqzP@infradead.org>
+ <172983773804.3041229.7516109047720839026.stgit@frogsfrogsfrogs>
+ <Zx9Nmhag3cYuzy3e@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,46 +43,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zx9NOOgASfMFkqzP@infradead.org>
+In-Reply-To: <Zx9Nmhag3cYuzy3e@infradead.org>
 
-On Mon, Oct 28, 2024 at 01:37:12AM -0700, Christoph Hellwig wrote:
-> > +	if (is_rtfile(iocur_top->data))
-> > +		set_rt_cur(&typtab[type], (int64_t)dfsbno << mp->m_blkbb_log,
-> 
-> Shouldn't this be xfs_rtb_to_daddr?
-
-This series is for xfsprogs 6.12; the helpers adding rtb <-> daddr
-conversions won't get added until the rtgroups cleanups that are headed
-towards 6.13.
-
-I could try to fling a patch for 6.12 to add these trivial helpers, hope
-that I can persuade Carlos to persuade Linus to add that for 6.12-rc6,
-then wait until next week to port the new helper patch to xfsprogs and
-*then* resend this series.  Then I'd rebase all the 6.13 stuff, initiate
-another round of review, and maybe we can push metadir into 6.13
-for-next after rc6.
-
-Good grief that sounds incredibly bureaucratic for a left and right
-shift helper.
-
-I'm going to add rtb_to_daddr and daddr_to_rtb to db/block.h for now and
-update them to the xfs_ versions in the metadir patchset.
-
-> > diff --git a/db/faddr.c b/db/faddr.c
-> > index ec4aae68bb5a81..fd65b86b5e915d 100644
-> > --- a/db/faddr.c
-> > +++ b/db/faddr.c
-> > @@ -323,7 +323,9 @@ fa_drtbno(
-> >  		dbprintf(_("null block number, cannot set new addr\n"));
-> >  		return;
-> >  	}
-> > -	/* need set_cur to understand rt subvolume */
-> > +
-> > +	set_rt_cur(&typtab[next], (int64_t)XFS_FSB_TO_BB(mp, bno), blkbb,
+On Mon, Oct 28, 2024 at 01:38:50AM -0700, Christoph Hellwig wrote:
+> > +	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
+> > +	set_rt_cur(&typtab[TYP_DATA], XFS_FSB_TO_BB(mp, rtbno), blkbb,
 > > +			DB_RING_ADD, NULL);
 > 
-> Same here?
+> xfs_rtb_to_daddr?
+> 
+> > +		rtbno = XFS_BB_TO_FSB(mp, iocur_top->off >> BBSHIFT);
+> 
+> xfs_daddr_to_rtb?
 
-Yep.
+Yes to both.
 
 --D
