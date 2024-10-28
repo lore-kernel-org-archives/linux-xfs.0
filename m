@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D8B814D43D
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 16:45:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59B6C1DE3C4
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Oct 2024 17:50:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730133931; cv=none; b=bZjWaTMC5zw11VCuIN6mwKo0SFXVcfj7g+wq8G0/woorcrTrADO1w0Io+dFU/vex+xR/Qokdi09DeL8Z8GWyG9MuN3qt5onfivVGjbwpVOE+SoVzj/mtStoKVBmceV1Xiv8R5V+AgnhGynyO8hJUmpl7h6IBAch7Y7ce3Fsm73g=
+	t=1730137805; cv=none; b=n3Zrj63259ICxHwEriaBHZVhyNcucfdrhtqhf1MdmOmQfEeKxmqYjthwbO1d0XjPoMhPIIajuKqB5jrTIevqLILhHTtUCADowsciXRFHmzGEekLoM0KEOPOdeG0hPwAnWopbw0cYEHhCraRRA5IhEUnws/HSYzgInJXPFNs+By4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730133931; c=relaxed/simple;
-	bh=7yDJ0kNjFPeQs/sblfT5F0mgM8CnWJpcl56CrpMW558=;
+	s=arc-20240116; t=1730137805; c=relaxed/simple;
+	bh=qhO4HS0Z3c1JL9XylvJLmrR5ZDsNvEfsCK1ZHoWi8sQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FuqPYy9ynGDH0QFo1KCod6hcEyWQKEN1Rvejpc9eziUtMp14FNk/uwVXuG5fR64yuM7SsHhnUfMcwdc6Q6NctweJjECiphGhnEZXQvm7UP4gmcuGLOBNOaq/gNvW5OmNTdzfDeu9BgiDPaaV+BKAqBqY3upbrLl/pGcXq+eLCKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ufO+B0+P; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nRZ3qom3EC2QM9C+AbcSj53EGJ5zOPlzwP11p76iXSIHURSKRMxLNx3+p+jhrTOC/dZ9yaik4zJ+D0lWBX+8COAIlwqVSWVfRytYbuk+V1Fnua4173XpVfSZi8VfhLGSWBoJpBzqTKoq+BgvSq2Hhtdg2Gz504xWgwCK7AjOh2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rL5YwbYK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ufO+B0+P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E07CC4CEC3;
-	Mon, 28 Oct 2024 16:45:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rL5YwbYK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7227C4CEC3;
+	Mon, 28 Oct 2024 17:50:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730133930;
-	bh=7yDJ0kNjFPeQs/sblfT5F0mgM8CnWJpcl56CrpMW558=;
+	s=k20201202; t=1730137804;
+	bh=qhO4HS0Z3c1JL9XylvJLmrR5ZDsNvEfsCK1ZHoWi8sQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ufO+B0+P0UOyQmVnhBaR0bX/YytE9W3kqS41HTWWSLB61brZhWdQZvEgzxyZec4pO
-	 EzTwvmVhICI8ipBOhaDBeLJKjH4TfG+Gj+LcqIssWNNWOeuxfJQLe6J6+5gXpnMSna
-	 xnrN6C4M4vQbCKPMBHpZycjiwEpr2CGnKTJZ8+bMRUt0pmGWhXY5UYRu9jKYUTcdz0
-	 b2VYecQlUjpu0W3HcNaL7VJJ+nbDHYgFYC7tJnxH9qq6330lyv24OCyzGwvcVjR801
-	 3kRsIe8ssilot88+oJL3olcVFaNke4gFjpiaeb9JBvNJ05QtJo076Mp9eFV8iC+aY3
-	 iIb6/uvrm3YDg==
-Date: Mon, 28 Oct 2024 09:45:29 -0700
+	b=rL5YwbYKalHaACrEed22Rn4DOPBSXRd30IE8HeWihB/LntSuJzCoBcGg8Cb/PMhCe
+	 WO2z09OKqIjM8BVBX3p+zIOgqvOSfzsDTtwcbnw5Wlb7tAexwcK4vXQn7avmLlPDu5
+	 0JBXbyUavOVe15l9a1MEd/p905VRhmdC3L08rVsj3YHw2PIVMPVPmR/Y/e/3HfwQ6F
+	 woXvCPE2eYzGu46fZB2zP9fkJzsvK1zWMCXNgyTvEp7Qy2LBma0Y9YyRll+UB1QmMI
+	 jOFFreXkx25ZdEh0E+6SHXj30inhNNcRqNPKM6y2iIcBf0JQCRFcldZ409QiVz1rWJ
+	 7i5NFf/FVblcw==
+Date: Mon, 28 Oct 2024 10:50:04 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: cem@kernel.org, aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs_scrub_all: wait for services to start activating
-Message-ID: <20241028164529.GQ2386201@frogsfrogsfrogs>
-References: <172983774811.3041899.4175728441279480358.stgit@frogsfrogsfrogs>
- <172983774826.3041899.15350842942789677656.stgit@frogsfrogsfrogs>
- <Zx9O53A6mhr2sF4b@infradead.org>
+Subject: Re: [PATCH 4/8] xfs_db: access realtime file blocks
+Message-ID: <20241028175004.GT21840@frogsfrogsfrogs>
+References: <172983773721.3041229.1240437778522879907.stgit@frogsfrogsfrogs>
+ <172983773789.3041229.10050634092165024838.stgit@frogsfrogsfrogs>
+ <Zx9NOOgASfMFkqzP@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,38 +43,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zx9O53A6mhr2sF4b@infradead.org>
+In-Reply-To: <Zx9NOOgASfMFkqzP@infradead.org>
 
-On Mon, Oct 28, 2024 at 01:44:23AM -0700, Christoph Hellwig wrote:
-> On Thu, Oct 24, 2024 at 11:38:27PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > It seems that the function call to start a systemd unit completes
-> > asynchronously from any change in that unit's active state.  On a
-> > lightly loaded system, a Start() call followed by an ActiveState()
-> > call actually sees the change in state from inactive to activating.
-> > 
-> > Unfortunately, on a heavily loaded system, the state change may take a
-> > few seconds.  If this is the case, the wait() call can see that the unit
-> > state is "inactive", decide that the service already finished, and exit
-> > early, when in reality it hasn't even gotten to 'activating'.
-> > 
-> > Fix this by adding a second method that watches either for the inactive
-> > -> activating state transition or for the last exit from inactivation
-> > timestamp to change before waiting for the unit to reach inactive state.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Cc: <linux-xfs@vger.kernel.org> # v6.10.0
+On Mon, Oct 28, 2024 at 01:37:12AM -0700, Christoph Hellwig wrote:
+> > +	if (is_rtfile(iocur_top->data))
+> > +		set_rt_cur(&typtab[type], (int64_t)dfsbno << mp->m_blkbb_log,
 > 
-> What is this supposed to mean? 
+> Shouldn't this be xfs_rtb_to_daddr?
 
-It means that if anyone is supporting xfsprogs 6.10, this patch applies
-to it.
+This series is for xfsprogs 6.12; the helpers adding rtb <-> daddr
+conversions won't get added until the rtgroups cleanups that are headed
+towards 6.13.
 
-> The patch itself looks good:
+I could try to fling a patch for 6.12 to add these trivial helpers, hope
+that I can persuade Carlos to persuade Linus to add that for 6.12-rc6,
+then wait until next week to port the new helper patch to xfsprogs and
+*then* resend this series.  Then I'd rebase all the 6.13 stuff, initiate
+another round of review, and maybe we can push metadir into 6.13
+for-next after rc6.
+
+Good grief that sounds incredibly bureaucratic for a left and right
+shift helper.
+
+I'm going to add rtb_to_daddr and daddr_to_rtb to db/block.h for now and
+update them to the xfs_ versions in the metadir patchset.
+
+> > diff --git a/db/faddr.c b/db/faddr.c
+> > index ec4aae68bb5a81..fd65b86b5e915d 100644
+> > --- a/db/faddr.c
+> > +++ b/db/faddr.c
+> > @@ -323,7 +323,9 @@ fa_drtbno(
+> >  		dbprintf(_("null block number, cannot set new addr\n"));
+> >  		return;
+> >  	}
+> > -	/* need set_cur to understand rt subvolume */
+> > +
+> > +	set_rt_cur(&typtab[next], (int64_t)XFS_FSB_TO_BB(mp, bno), blkbb,
+> > +			DB_RING_ADD, NULL);
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Same here?
 
-Thanks!
+Yep.
 
 --D
