@@ -1,146 +1,119 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51C4A17A5A4
-	for <linux-xfs@vger.kernel.org>; Sun, 27 Oct 2024 22:53:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22CB413C8E2;
+	Mon, 28 Oct 2024 01:14:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730069621; cv=none; b=oxkGk4C6dlpn5SRcE3/6ImCUU6+IfQ48ZmTUcz7v75B22g2RaC2qBd1c+YzjAxz3MlNseTqpN6RCUxqutjlqojCEKn2leHCUsDRTrNU7XRhSLiW6wRolfRgdwcVrR5Iwu+1jzj3Mh2MUCX8KOzWzqPzs8NNmslLxktgVMqmPrNM=
+	t=1730078097; cv=none; b=Pedo+zxMlWc3fif/kWAiEIfNVKpEPv9Pj9tg0zvv37JX8ujHYz/+4hGXkbhDfQqbT16UvD5sJWe+9z3Doocqm8J5M2PMSAxHV3UDsZ01R9fslI6VsNWWQuqyALB7At0hheUIlhtXvEzN+3lZF4n9NYpJu7eFU+11E9fa6L93X2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730069621; c=relaxed/simple;
-	bh=u9/0ARz33371gpbvia/4zMBxB73y5XPWJIiEiIAFKo0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ORs+fVjAKixmj9DIFo21IC5o0Pwd5YIiFN7OccQTD2NNs7pXgjWUQxwWkCPPtHvvQXMGSx83jtXdsBjzgeCBOS8mt/0Fuh7sWDek7xHosjDR20P0GbhRz2P+nCBtj6uWmGuy0fBwOGbQyTSS5wvEYlQmQCjRdIBPgvkfLOhuOpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=mRG6Hswu; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1730078097; c=relaxed/simple;
+	bh=GTI6i0pThJZo81GUgdeUZUnuzLBh1utpF3tlZ9PMBBk=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=Ac7hUoDU9ryUvfWMMLnyCQCPt0faLiGBetLZUplktLOHWFCTJtSn1n93iv2ndbS5YbYwZPXg/TZwUo7ZkOeFeRs2UhoeHanIkCa/gAJlySi5quW0xRiRzQjHUFr0om0pSmxU1ECaX+mYIfN1Ci772zz80L9pxG4KjlfP73Sgj1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Rq39yErg; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="mRG6Hswu"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-2e2a999b287so2942171a91.0
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Oct 2024 15:53:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rq39yErg"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-20e6981ca77so39996595ad.2;
+        Sun, 27 Oct 2024 18:14:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730069619; x=1730674419; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=nro3XxCXpJF+bC6xNwB831aGBU1HecPqJX4rsBIEnQw=;
-        b=mRG6Hswu0n5OkbQnCQRyF7ZqspO5KNseAWwIzOPv15UnoSHr9kMsG+EKqdA3N46gQk
-         NuiFj7FYEuVl5bBNGAYqjeRyR/0f8tyEjCYJwK53/F5LALKECQyKluDp750s89BLRVKM
-         KPP/+K3KI7HnQ7EM6aQ2kw+T/pFkAAGYRsV7DY0+jbzE68xAhrjjOOuTaQIcBbIUOmCL
-         r1gBGPGJjiEP515o9BAq4ML0FtdCE4HvqmSTzQFTD+gTJjvLv/0JNNfpu1xr7MJF/NEZ
-         T+71O+aIf0PVRFxZx8izE9FMYY0udxm23HDePZ7fDMJdjGQ5yNKYm6kAWTBuWrtPa+fy
-         1jIw==
+        d=gmail.com; s=20230601; t=1730078095; x=1730682895; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=+qDYDK7YLyDPpDO5MLd5DHVRviFiGrPx0QghsTgPlL0=;
+        b=Rq39yErgS96SnzL6hI5BGpFa3wFlhTlcBgPAeagt8C7xgCjNYEG9cQBK2cCisHXx53
+         j+O57KIA5BE2/e7REBp2ImVyvjE6ElTmNsC+wAPcIjU+Ig3yoE/4db2gGVLeVNIXA3v7
+         3x572RPz1gk/yHVoDkN0i3IlhZx9bsoVXKVyve/1nqq8d8Rhuq9eInr/AG4m447lm7Fo
+         I63B3zWyV9T40ZCyjLoUNjPMkYYuLkKOGCtmSmn9vvHc99oKO392ZEcKQ9CW088C01hU
+         kYWx9UhZ6qeVp5B4DyifGCJzOViWqtDovkBS4nQ3uIuiRh1alHbOQ0CskE0WE9m3ddjY
+         d6pA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730069619; x=1730674419;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=nro3XxCXpJF+bC6xNwB831aGBU1HecPqJX4rsBIEnQw=;
-        b=NSZ98MhjbfGWvTJKkTI3/CSIb6vsiGH23fqsqyjwV0aKBPsDc5EAzW4DkKmUyUMeGo
-         wYhKc1GMXEwmBp056NSf+4mo7F1D3qdUHGMlprgKXP+qlIVrQtG/hV68pZr7c6OKgzag
-         ciedBizg2PClxAjgMkVCR3S0gAglfD+PJofspOtJT1jRlkcXM5cLhLRHPHHCi1xNROXF
-         9PNYsz1NtvByXSy8bDXDMKxjJhiz7/wllvlzwURlb1cCv9JBSVVQqcLNynkmNjlPZ0no
-         /qelvq9pRHebbgSxnpHI4Eruxcqqmfirj5Oc0L/nITtKjjcIv19qmPg3Lk/tMo8aDPXA
-         Gx/g==
-X-Forwarded-Encrypted: i=1; AJvYcCV+AsDcwA120eeXFKOX96xxcuEcgM+iZ2Cd5WKPUmxSjBGHv8hzX30FULYgVYyVF6xucpYCPnIrP/s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxW9HN9A4B3jI7rOpSeXX9Sa+tznErGHFmjdakY8rLDogt1+0n5
-	lXCF/2FUBA78iilOPEKCYA9w7CTNfJMEmizz7InxJNiRQk0HeB1/RHr0dbYiJlc=
-X-Google-Smtp-Source: AGHT+IHJqXWaT3OZaNBdV7tF8LBOsA9mbk2i8yEcHUuwgfPiBXIf3iPvulK6GrS91qfDhUAAEqwctQ==
-X-Received: by 2002:a17:90b:4b42:b0:2e2:8995:dd1b with SMTP id 98e67ed59e1d1-2e8f0f533f7mr7653538a91.3.1730069618666;
-        Sun, 27 Oct 2024 15:53:38 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e8e3555c1dsm5595585a91.4.2024.10.27.15.53.37
+        d=1e100.net; s=20230601; t=1730078095; x=1730682895;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+qDYDK7YLyDPpDO5MLd5DHVRviFiGrPx0QghsTgPlL0=;
+        b=Uxl+7joqfEWloIDBUoSf6z4K99AmkLvqfGQTrdVgR5XI3o5oH6cy8cu3yuNSGEK3sn
+         qaEuNETEHHh3pbZgI+8f9H9hBhxrQptV9+Dg8CDmYWu4eRx+oArV2BCtS0spQ4fLeN30
+         iBaMUYM33Tm6Tz+3sViWj+8FUAcnWc5q/TCufo9dura91WO8v8tjq1EFa1+XADWQaU4u
+         8iU6B7JMGZ1H36hW3ttbXfavM6rrK/yQLLVpgdXkCHz1WjykSivU2nmX9AzBufk0c7Xm
+         UGUzWe5qAj2gjozHtDM07/kLLsa4OvjLD26mOLPISZ8+DDgybd7fWr0zfSOgxvtbY10W
+         jeZg==
+X-Forwarded-Encrypted: i=1; AJvYcCUeFfnUw/RQGAqJdQyc2wognK3ikpO2hTt1gczFrdnmcHPZ6KPlGNaMYNrbmI3VPU0AlcPi8zPxra456xhe@vger.kernel.org, AJvYcCWnBLnru0O5hhatBAE5/c/rBP+ilp+ZS/BUfhXfpkBr8BnMQbdObBARVUcMxIe6oAr68OAlxShTdaLfJwIj@vger.kernel.org, AJvYcCXIBCcLM0EwvtgtyYl9wDxo/BeNW3HZbST1ASgjaEt6PDrSTvQeuff8pmEtHrwID6yjUaTMhjofMNM4@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKhTMRaYv6dZi/b0KHKutDV/KcrZe8bbqYBnjVgdt2/HEODm+L
+	INr+8fTl8glprFWW8Np8LNLHceooTAPaqae90s7dIGYAUr28P0BfvKUWWw==
+X-Google-Smtp-Source: AGHT+IEIa1FGEG3VEnL+DXLN983cKV18Q6uhWAJQzSEwm6vWL2MM1AzDhwotPIvH6JEsdKUcMX8dEQ==
+X-Received: by 2002:a17:902:f54e:b0:20b:5439:f194 with SMTP id d9443c01a7336-210c6898707mr87541815ad.16.1730078093311;
+        Sun, 27 Oct 2024 18:14:53 -0700 (PDT)
+Received: from dw-tp ([171.76.83.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-210bc013462sm40900805ad.178.2024.10.27.18.14.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Oct 2024 15:53:38 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1t5C8c-006f5z-22;
-	Mon, 28 Oct 2024 09:53:34 +1100
-Date: Mon, 28 Oct 2024 09:53:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: MottiKumar Babu <mottikumarbabu@gmail.com>
-Cc: cem@kernel.org, djwong@kernel.org, chandanbabu@kernel.org,
-	dchinner@redhat.com, zhangjiachen.jaycee@bytedance.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-kernel-mentees@lists.linux.dev, anupnewsmail@gmail.com,
-	skhan@linuxfoundation.org
-Subject: Re: [PATCH] Fix out-of-bounds access in xfs_bmapi_allocate by
- validating whichfork
-Message-ID: <Zx7EbudZfwLQDuVS@dread.disaster.area>
-References: <20241027193541.14212-1-mottikumarbabu@gmail.com>
+        Sun, 27 Oct 2024 18:14:52 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <djwong@kernel.org>, Christoph Hellwig <hch@infradead.org>, John Garry <john.g.garry@oracle.com>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 4/6] ext4: Warn if we ever fallback to buffered-io for DIO atomic writes
+In-Reply-To: <Zx6+F4Cl1owSDspD@dread.disaster.area>
+Date: Mon, 28 Oct 2024 06:39:36 +0530
+Message-ID: <87iktdm3sf.fsf@gmail.com>
+References: <cover.1729825985.git.ritesh.list@gmail.com> <7c4779f1f0c8ead30f660a2cfbdf4d7cc08e405a.1729825985.git.ritesh.list@gmail.com> <Zx6+F4Cl1owSDspD@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241027193541.14212-1-mottikumarbabu@gmail.com>
 
-On Mon, Oct 28, 2024 at 01:05:27AM +0530, MottiKumar Babu wrote:
-> This issue was reported by Coverity Scan.
-> 
-> Report:
-> CID 1633175 Out-of-bounds access - Access of memory not owned by this buffer may cause crashes or incorrect computations.
-> In xfs_bmapi_allocate: Out-of-bounds access to a buffer (CWE-119)
 
-We really need more details than thisi about the issue. I have no
-idea what issue this describes, nor the code which it refers to.
-Where is the out of bounds memory access occurring, how does it
-trigger and where does the code end up crashing as a result?
+Hi Dave, 
 
-A link to the coverity report woudl certainly help....
+Dave Chinner <david@fromorbit.com> writes:
 
-> Signed-off-by: MottiKumar Babu <mottikumarbabu@gmail.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 36dd08d13293..6ff378d2d3d9 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4169,6 +4169,10 @@ xfs_bmapi_allocate(
->  		 * is not on the busy list.
->  		 */
->  		bma->datatype = XFS_ALLOC_NOBUSY;
-> +		// Ensure whichfork is valid (0 or 1) before further checks
-> +		if (whichfork < 0 || whichfork > 1) {
-> +			return -EINVAL; // Invalid fork
-> +		}
->  		if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK) {
->  			bma->datatype |= XFS_ALLOC_USERDATA;
->  			if (bma->offset == 0)
+> On Fri, Oct 25, 2024 at 09:15:53AM +0530, Ritesh Harjani (IBM) wrote:
+>> iomap will not return -ENOTBLK in case of dio atomic writes. But let's
+>> also add a WARN_ON_ONCE and return -EIO as a safety net.
+>> 
+>> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+>> ---
+>>  fs/ext4/file.c | 10 +++++++++-
+>>  1 file changed, 9 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+>> index f9516121a036..af6ebd0ac0d6 100644
+>> --- a/fs/ext4/file.c
+>> +++ b/fs/ext4/file.c
+>> @@ -576,8 +576,16 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>>  		iomap_ops = &ext4_iomap_overwrite_ops;
+>>  	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
+>>  			   dio_flags, NULL, 0);
+>> -	if (ret == -ENOTBLK)
+>> +	if (ret == -ENOTBLK) {
+>>  		ret = 0;
+>> +		/*
+>> +		 * iomap will never return -ENOTBLK if write fails for atomic
+>> +		 * write. But let's just add a safety net.
+>> +		 */
+>> +		if (WARN_ON_ONCE(iocb->ki_flags & IOCB_ATOMIC))
+>> +			ret = -EIO;
+>> +	}
+>
+> Why can't the iomap code return EIO in this case for IOCB_ATOMIC?
+> That way we don't have to put this logic into every filesystem.
 
-That's not going to work. If you look at how whichfork is
-initialised early on in the xfs_bmapi_allocate() function, you'll
-see it calls this function:
+This was origially intended as a safety net hence the WARN_ON_ONCE.
+Later Darrick pointed out that we still might have an unconverted
+condition in iomap which can return ENOTBLK for DIO atomic writes (page
+cache invalidation).
 
-static inline int xfs_bmapi_whichfork(uint32_t bmapi_flags)
-{
-        if (bmapi_flags & XFS_BMAPI_COWFORK)
-                return XFS_COW_FORK;
-        else if (bmapi_flags & XFS_BMAPI_ATTRFORK)
-                return XFS_ATTR_FORK;
-        return XFS_DATA_FORK;
-}
+You pointed it right that it should be fixed in iomap. However do you
+think filesystems can still keep this as safety net (maybe no need of
+WARN_ON_ONCE).
 
-A value of 2 (XFS_COW_FORK) is definitely a valid value for
-whichfork to have. Indeed, the line of code after the fix checks if
-whichfork == XFS_COW_FORK, indicating that such a value is expected
-and should be handled correctly.
-
-However, this patch will result in rejecting any request to allocate
-blocks in the XFS_COW_FORK. This will fail any COW operation we try
-to perform with -EINVAL. i.e. overwrites after a reflink copy will
-fail.
-
-This sort of regression would be picked up very quickly by fstests.
-Hence it is important that any change - even simple changes - are
-regression tested before they are proposed for review and merge....
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+>
+> When/if we start supporting atomic writes for buffered IO, then it's
+> worth pushing this out to filesystems, but right now it doesn't seem
+> necessary...
+>
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
