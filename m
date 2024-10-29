@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8932190049
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 15:12:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 058DE190049
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 15:12:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730214744; cv=none; b=uAHLj1vd5211mWufgV68TKkwZZfZTVhdqIf2mY5DmGZH6hTGdgh3gz37M06DpxMcw8B228ngLgak4gv43COt3/nQuhNpHkAhenDRM9jf9GT4qb8vzo+jkPwhnJq56jTOGX1WPER/eCLH8p03/RXWF4kCLUy2nk1s0hSH2zSKhsk=
+	t=1730214747; cv=none; b=sLAX2xcKKB4/qL74//cP7jNui+8HiR5t9w9vvKU9K1SdD461F1D4SuX3+XstR2tMCfKoCPY6L57vx8HYnp6HX2qFbNqbTuphNjPbnSZ6oh8w4cWzHIrZUuPgVFF8EvieMNwTOAhJqC6rggnff2KilOV7IVRGCqi1K+2Cg7y0ljQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730214744; c=relaxed/simple;
-	bh=xeQ26DIlFwrMo2tpZVlvM4eYdtwaRLKDa0qnE7po2qU=;
+	s=arc-20240116; t=1730214747; c=relaxed/simple;
+	bh=fOKLWD9ftUlx5K2yiKtmK3sXOAkSa4//Qrka9PhMHKg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=F+/NmWKNHSZxsJnUPjCQ18N9w9JomSbIiwrQ/9XAhywjrRMAmI8itSNlYBpQtnUZK8GIXDncNjuUbpS7VMAot2yoPUaNjID7DCgou3AdvIPUpber2C7OzQg6R/nDX8ovmLByJCpYzzHFcXaeNYXHK4AWs4PWM3X0kFU5LD65IUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wxHSJyo3; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=pDHKgk9MTpaNoZV+bKJH/8JBJ17icRNW4siq98zEDC5qFabd3uFniWDZBk5y45wrEQjrlahwWuPwCwCzer5cAG31D7kXzP8UX+U8TjXN/pVEWGOuRhXI/4W7UQoPskNlQTVPQKjGKscY4lj1FhQwe4+X3JCwJigYCunqqrMGwNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QBTXWM5Q; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wxHSJyo3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QBTXWM5Q"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=EVcjD4YSWsWdRq3FuGYrccSP7KzdxSTLpPYrhC9zBiA=; b=wxHSJyo31GIfFvVjmpuSKYyCq0
-	Mr0J16aCH3BZpxrsEYDRKvM3ysQmc1Bt//HBG+J7zNTD3hX9GRZb87vTonBenntClb3RsY+is2lPA
-	WU0/JiDrGB6+OmQSWXapW1J/7tj01P9+CR3A7E9NpVbFIArSZJJcic8+RUZsLJa5ZjtD0d1oJYbZc
-	MmtLhf03qFzYuzBIqpkxoRb+ZeokHr3p9lb6ujJUIke7H5q3tt1ljjsMwlihTeEYKKKV2mmMFoqib
-	7Qx+yOA4Hrz4YNtMTj2m+kor7OZePJc+5K+w5+i4/3UVSMNnP96FN7gybv7kisbLoBewqiJjVKQ7y
-	/zZ83RLg==;
+	bh=fXNg0673JUF6JDVyKLxZbzNHZL1M1b+N09iYlJm5zHM=; b=QBTXWM5Qax3bS5KgJbkDieSp7Q
+	+BYUSB8KWnvxKS/UVnccYLDL6pKJGHVvnkeBQwMrAfidhYmBHEjC6AR1JeL/fjmplefLz/7rC4Q4i
+	5h4s8qodoWuyhbNWpqZI4nYKe5zU3mm+dnPqnYwFsU/Avj9Ex6b3oktFj2QKfgBBkiIoGSvIwNLB2
+	1gKdI/huBdp+PuWjhZzdtNfQb80/4bAShm4eUAPWk7YX1l7QHIYShghYetRmah+IFxN34oeX+IBHy
+	+1gwWZgxcWopsF9PC5Ju08I17aSxsjzHuDoDoXw2WJjX5QvqOOFG6gmkF4Q+X7ZJMygCm6LQTBrOC
+	92xosp5w==;
 Received: from 2a02-8389-2341-5b80-1009-120a-6297-8bca.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:1009:120a:6297:8bca] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1t5ntN-0000000EqrL-0oZg;
-	Tue, 29 Oct 2024 15:12:21 +0000
+	id 1t5ntQ-0000000EqrY-0L6n;
+	Tue, 29 Oct 2024 15:12:24 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/4] xfs: split the page fault trace event
-Date: Tue, 29 Oct 2024 16:11:57 +0100
-Message-ID: <20241029151214.255015-2-hch@lst.de>
+Subject: [PATCH 2/4] xfs: split write fault handling out of __xfs_filemap_fault
+Date: Tue, 29 Oct 2024 16:11:58 +0100
+Message-ID: <20241029151214.255015-3-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20241029151214.255015-1-hch@lst.de>
 References: <20241029151214.255015-1-hch@lst.de>
@@ -49,97 +49,108 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Split the xfs_filemap_fault trace event into separate ones for read and
-write faults and move them into the applicable locations.
+Only two of the callers of __xfs_filemap_fault every handle read faults.
+Split the write_fault handling out of __xfs_filemap_fault so that all
+callers call that directly either conditionally or unconditionally and
+only leave the read fault handling in __xfs_filemap_fault.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_file.c  |  8 ++++++--
- fs/xfs/xfs_trace.h | 20 ++++++++++++--------
- 2 files changed, 18 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_file.c | 41 +++++++++++++++++++----------------------
+ 1 file changed, 19 insertions(+), 22 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index b19916b11fd5..20f7f92b8867 100644
+index 20f7f92b8867..0b8e36f8703c 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1425,6 +1425,8 @@ xfs_dax_read_fault(
- 	struct xfs_inode	*ip = XFS_I(file_inode(vmf->vma->vm_file));
- 	vm_fault_t		ret;
+@@ -1434,6 +1434,16 @@ xfs_dax_read_fault(
+ 	return ret;
+ }
  
-+	trace_xfs_read_fault(ip, order);
-+
- 	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
- 	ret = xfs_dax_fault_locked(vmf, order, false);
- 	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-@@ -1442,6 +1444,8 @@ xfs_write_fault(
- 	unsigned int		lock_mode = XFS_MMAPLOCK_SHARED;
- 	vm_fault_t		ret;
++/*
++ * Locking for serialisation of IO during page faults. This results in a lock
++ * ordering of:
++ *
++ * mmap_lock (MM)
++ *   sb_start_pagefault(vfs, freeze)
++ *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
++ *       page_lock (MM)
++ *         i_lock (XFS - extent map serialisation)
++ */
+ static vm_fault_t
+ xfs_write_fault(
+ 	struct vm_fault		*vmf,
+@@ -1471,26 +1481,13 @@ xfs_write_fault(
+ 	return ret;
+ }
  
-+	trace_xfs_write_fault(ip, order);
-+
- 	sb_start_pagefault(inode->i_sb);
- 	file_update_time(vmf->vma->vm_file);
- 
-@@ -1485,12 +1489,12 @@ __xfs_filemap_fault(
+-/*
+- * Locking for serialisation of IO during page faults. This results in a lock
+- * ordering of:
+- *
+- * mmap_lock (MM)
+- *   sb_start_pagefault(vfs, freeze)
+- *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
+- *       page_lock (MM)
+- *         i_lock (XFS - extent map serialisation)
+- */
+ static vm_fault_t
+ __xfs_filemap_fault(
+ 	struct vm_fault		*vmf,
+-	unsigned int		order,
+-	bool			write_fault)
++	unsigned int		order)
  {
  	struct inode		*inode = file_inode(vmf->vma->vm_file);
  
--	trace_xfs_filemap_fault(XFS_I(inode), order, write_fault);
--
- 	if (write_fault)
- 		return xfs_write_fault(vmf, order);
+-	if (write_fault)
+-		return xfs_write_fault(vmf, order);
  	if (IS_DAX(inode))
  		return xfs_dax_read_fault(vmf, order);
-+
-+	trace_xfs_read_fault(XFS_I(inode), order);
- 	return filemap_fault(vmf);
+ 
+@@ -1511,9 +1508,9 @@ xfs_filemap_fault(
+ 	struct vm_fault		*vmf)
+ {
+ 	/* DAX can shortcut the normal fault path on write faults! */
+-	return __xfs_filemap_fault(vmf, 0,
+-			IS_DAX(file_inode(vmf->vma->vm_file)) &&
+-			xfs_is_write_fault(vmf));
++	if (IS_DAX(file_inode(vmf->vma->vm_file)) && xfs_is_write_fault(vmf))
++		return xfs_write_fault(vmf, 0);
++	return __xfs_filemap_fault(vmf, 0);
  }
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index ee9f0b1f548d..efc4aae295aa 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -827,28 +827,32 @@ DEFINE_INODE_EVENT(xfs_inode_inactivating);
- TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_SHARED);
- TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_COW);
+ static vm_fault_t
+@@ -1525,15 +1522,16 @@ xfs_filemap_huge_fault(
+ 		return VM_FAULT_FALLBACK;
  
--TRACE_EVENT(xfs_filemap_fault,
--	TP_PROTO(struct xfs_inode *ip, unsigned int order, bool write_fault),
--	TP_ARGS(ip, order, write_fault),
-+DECLARE_EVENT_CLASS(xfs_fault_class,
-+	TP_PROTO(struct xfs_inode *ip, unsigned int order),
-+	TP_ARGS(ip, order),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
- 		__field(unsigned int, order)
--		__field(bool, write_fault)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
- 		__entry->ino = ip->i_ino;
- 		__entry->order = order;
--		__entry->write_fault = write_fault;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx order %u write_fault %d",
-+	TP_printk("dev %d:%d ino 0x%llx order %u",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
--		  __entry->order,
--		  __entry->write_fault)
-+		  __entry->order)
- )
+ 	/* DAX can shortcut the normal fault path on write faults! */
+-	return __xfs_filemap_fault(vmf, order,
+-			xfs_is_write_fault(vmf));
++	if (xfs_is_write_fault(vmf))
++		return xfs_write_fault(vmf, order);
++	return __xfs_filemap_fault(vmf, order);
+ }
  
-+#define DEFINE_FAULT_EVENT(name) \
-+DEFINE_EVENT(xfs_fault_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, unsigned int order), \
-+	TP_ARGS(ip, order))
-+DEFINE_FAULT_EVENT(xfs_read_fault);
-+DEFINE_FAULT_EVENT(xfs_write_fault);
-+
- DECLARE_EVENT_CLASS(xfs_iref_class,
- 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
- 	TP_ARGS(ip, caller_ip),
+ static vm_fault_t
+ xfs_filemap_page_mkwrite(
+ 	struct vm_fault		*vmf)
+ {
+-	return __xfs_filemap_fault(vmf, 0, true);
++	return xfs_write_fault(vmf, 0);
+ }
+ 
+ /*
+@@ -1545,8 +1543,7 @@ static vm_fault_t
+ xfs_filemap_pfn_mkwrite(
+ 	struct vm_fault		*vmf)
+ {
+-
+-	return __xfs_filemap_fault(vmf, 0, true);
++	return xfs_write_fault(vmf, 0);
+ }
+ 
+ static const struct vm_operations_struct xfs_file_vm_ops = {
 -- 
 2.45.2
 
