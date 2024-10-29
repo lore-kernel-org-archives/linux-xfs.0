@@ -1,121 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1742A3234
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 16:00:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E338C194AD1
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 16:14:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730217649; cv=none; b=jLBEB8a9s8dif8Mdcr1d5pqL5Ihxwlu9XWaVP+K7mogavklwQPwbVd2NgiEWBgiINY7L3rh4+COYKn/JRrmFCFSfHiLfuqykssyP5bRxbHaPwIy3apDk/RJD9SgPREct9iALPWJWkz9gkknFBc4Kdb9bF3F6diai4gdo8RQXLRM=
+	t=1730218463; cv=none; b=okO4SVgLa9yH2P4lkk/tMjEEN+K8uraan7VQrvIMASUZZ3ztEnpMr3MMzZwfQl05yzrMuBtmvtjnBtPpwtyrfXsKTpfX5BTC23Iyw+weCXaKoMK3GQnnrQfQkHAmFEtZ9uC/cP9Tee+doooiEomF3LjOFKOubDweFsWtMZYX0vM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730217649; c=relaxed/simple;
-	bh=ff3Wh9o7zgaGnjKjG2JfqW4PBIo2k9YE3lhnuoNM76Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=boDxAvH3RBqyHv461bSDaPhu0vCniKTiUCqyVZD3wYOhl+zRm7JO5A7gW+D7TGdHwF0BblUBJQZjO39K+Y74Y0CKQCkIu1KlG/cdgo1lOelikJBtvZPJTbVEDd+BJ0sD3/5VgombSBSkzbt3VHZNyyp2EVXMuwhcXi+VnoeNLjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XS6aRjvB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730218463; c=relaxed/simple;
+	bh=5ttpxhmr0BJ4/EQz5l2OPq48fstXuY+ayf3mya8zEJM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=fLJn6Zlx4u9FQQKWgIef6CzNOOjomnc93tua6X8cgoPInqWH1+vB1ydb7Wpyt99Kld5Vj8VUJP4WG2luMfnWoTwIx103yTuQ3sxmimwkMMwlxE+0Lv6O3qYMwAJW5AcVzkKePVEIiU5QfGZYfgD3xS6YksOcdx/+zya65JxpSFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=ndLlpAzX; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BPF1NtBA; arc=none smtp.client-ip=202.12.124.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XS6aRjvB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EDFDC4CECD;
-	Tue, 29 Oct 2024 16:00:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730217648;
-	bh=ff3Wh9o7zgaGnjKjG2JfqW4PBIo2k9YE3lhnuoNM76Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XS6aRjvBxJj87O31M+pFox+3IzLOSrvOolD4R4uygYQxnm4Q/78jfcslpLS4N406Z
-	 NOFs4TGkyKZPEFXz9DepOxQvIh5Lw/8/4cBJ6RS9eQrjNoPaFpv19FcbAMZdy5nZan
-	 eNvD9WYooh0JGjR27tGwjIBMZ6GmmeDHBBqnVCqnHRv5l3DXU9dR+JuSakUSf7sDkv
-	 Aty+wGIlol46RW8kzcxko4cSJBvnt4USZolSBteNYHAKJffcORivAdc1grBR8Swy41
-	 CicHYN8xeVCQz7jYTqxp/dy5HBf1D4QgVNz8M5zO6LZJeEKwgjPUAoaH657u3aqF02
-	 Ip3Os0XfqaHoA==
-Date: Tue, 29 Oct 2024 09:00:48 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: remove __xfs_filemap_fault
-Message-ID: <20241029160048.GX2386201@frogsfrogsfrogs>
-References: <20241029151214.255015-1-hch@lst.de>
- <20241029151214.255015-4-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="ndLlpAzX";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BPF1NtBA"
+Received: from phl-compute-04.internal (phl-compute-04.phl.internal [10.202.2.44])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 0BD7C2540199;
+	Tue, 29 Oct 2024 12:14:20 -0400 (EDT)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Tue, 29 Oct 2024 12:14:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:content-transfer-encoding:content-type:content-type:date:date
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1730218459;
+	 x=1730304859; bh=VWIGViBgecSo89X8MtXurfNJuxGlrnQLCKDy/4pMSd8=; b=
+	ndLlpAzXkvuNxCCmcIFtvI3lb4bAUuUErKh+hrhCJdWtbzMCZYx/qpnmofYQ72R1
+	w5taCceYpAh9LIcday1Vf+03TJSW0KnJhLahlN7UKZJVp12HstsfbXKNXS8EKvHw
+	EycjKiKTHnll+LhmQ92TK4yTifu0CVcDvf6yWNht6LFQcr26F05BcQVGqlEii20L
+	K+kvW/M/NLEPGVbvOICeAF5K37VJnNCiFz+VoGuXOsi31v5mVFUzxWSq4r1+wBLT
+	2EBHLMAZ95N2j3a3V1RL4K8ITWNi1Y19nj2pSQFbSQ8SG6k3AbUaFpfeGoTi/IbY
+	8rKVorHclaPriFQnqbXtLg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:content-transfer-encoding:content-type
+	:content-type:date:date:feedback-id:feedback-id:from:from
+	:in-reply-to:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
+	:x-me-sender:x-sasl-enc; s=fm3; t=1730218459; x=1730304859; bh=V
+	WIGViBgecSo89X8MtXurfNJuxGlrnQLCKDy/4pMSd8=; b=BPF1NtBAss6btBHNW
+	hm3R02sK5UOLXRxFrE2Gfa+sq7CsKXUPSm1EkVG05XsA9J6+jgo963KaZwKsE0U2
+	HxF2y/apxYlLfUF7nLL1gQX+1JwDkIPkzFET0dXBH81fQI2oKrowoIDXR/80w3gO
+	+MDRAA/5UA9svflZFm5Cs3vMiIgbgn+xei+zwRAGSl8RexOGx+V2iTf4e6TM80bN
+	KyJu64qaCCxCqobC5jmflxOv5ZmTmAycAaNZHvYlMHPcL86nlloZYHpcUGhybKWi
+	oJDgjFCieOD/pAgBVlTu1aWg36JtDCaPx/C0xHIoXBVCqjN+NeLV83oAtJFc5lgd
+	8CFBg==
+X-ME-Sender: <xms:2wkhZzdH3xxH8Pbu7Vpu32JJhxWn4DyTZxTZA1dRpYT_h1dB4MaDVw>
+    <xme:2wkhZ5PYtoVbQfQsR3Q32B-pyuNGoDT7h8pdOPc_1Cr1d1lR_xbmeIGhsGvtTqcVZ
+    RC5StfQnHBp-YL84ps>
+X-ME-Received: <xmr:2wkhZ8igUk4gcBAZwRKasAPr0DzuhlyeEs15RrQzNY6p3CH73vh4idPAHuufCw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrvdekuddgkeduucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggvpdfu
+    rfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkffggfg
+    fuvfhfhfgjtgfgsehtjeertddtvdejnecuhfhrohhmpefgrhhitgcuufgrnhguvggvnhcu
+    oehsrghnuggvvghnsehsrghnuggvvghnrdhnvghtqeenucggtffrrghtthgvrhhnpedvue
+    ejieffgeehjeelfeduieejfeejleffudfhudfgheejhedvgeeihfdvfeeifeenucevlhhu
+    shhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehsrghnuggvvghnse
+    hsrghnuggvvghnrdhnvghtpdhnsggprhgtphhtthhopedvpdhmohguvgepshhmthhpohhu
+    thdprhgtphhtthhopegurghvihgusehfrhhomhhorhgsihhtrdgtohhmpdhrtghpthhtoh
+    eplhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:2wkhZ0-R5YJlA9thEJcFl0eYXoad-ndBM1p595_p1flncRBvw6f9_w>
+    <xmx:2wkhZ_ucY69VZiF1Mof48_9K6aYQdR4NKYJ-Q3JzVaSHcqJ00Z13tQ>
+    <xmx:2wkhZzH1vQ7V1hwpKr09_BjUTydTyFh4X5Y_NshIpI6K-i-WrCA2Dg>
+    <xmx:2wkhZ2P99Oq6WIRmDtscV3p3IbDVjyquaV6mZQ-5aLCe_SDKazpeaA>
+    <xmx:2wkhZ44uacw4Fujg2TC-3sKCWNzQYRMscO2rQT4i9YDKu_iuL25FIVEq>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 29 Oct 2024 12:14:19 -0400 (EDT)
+Message-ID: <4da62d9a-0509-46e7-9021-d0bc771f86d9@sandeen.net>
+Date: Tue, 29 Oct 2024 11:14:18 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241029151214.255015-4-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] xfs: sparse inodes overlap end of filesystem
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+References: <20241024025142.4082218-1-david@fromorbit.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20241024025142.4082218-1-david@fromorbit.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 29, 2024 at 04:11:59PM +0100, Christoph Hellwig wrote:
-> xfs_filemap_huge_fault only ever serves DAX faults, so hard code the
-> call to xfs_dax_read_fault and open code __xfs_filemap_fault in the
-> only remaining caller.
+On 10/23/24 9:51 PM, Dave Chinner wrote:
+> There is one question that needs to be resolved in this patchset: if
+> we take patch 2 to allow sparse inodes at the end of the AG, why
+> would we need the change in patch 1? Indeed, at this point I have to
+> ask why we even need the min/max agbno guidelines to the inode chunk
+> allocation as we end up allowing any aligned location in the AG to
+> be used by sparse inodes. i.e. if we take patch 2, then patch 1 is
+> unnecessary and now we can remove a bunch of code (min/max_agbno
+> constraints) from the allocator paths...
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I'd prefer that we take the latter path: ignore the first patch.
+> This results in more flexible behaviour, allows existing filesystems
+> with this issue to work without needing xfs_repair to fix them, and
+> we get to remove complexity from the code.
+> 
+> Thoughts?
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+For some reason I'm struggling to grasp some of the details here, so
+maybe I can just throw out a "what I think should happen" type response.
 
---D
+A concern is that older xfs_repair binaries will continue to see
+inodes in this region as corrupt, and throw them away, IIUC - even
+if the kernel is updated to handle them properly.
 
-> ---
->  fs/xfs/xfs_file.c | 29 +++++++++++------------------
->  1 file changed, 11 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 0b8e36f8703c..7464d874e766 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1481,20 +1481,6 @@ xfs_write_fault(
->  	return ret;
->  }
->  
-> -static vm_fault_t
-> -__xfs_filemap_fault(
-> -	struct vm_fault		*vmf,
-> -	unsigned int		order)
-> -{
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -
-> -	if (IS_DAX(inode))
-> -		return xfs_dax_read_fault(vmf, order);
-> -
-> -	trace_xfs_read_fault(XFS_I(inode), order);
-> -	return filemap_fault(vmf);
-> -}
-> -
->  static inline bool
->  xfs_is_write_fault(
->  	struct vm_fault		*vmf)
-> @@ -1507,10 +1493,17 @@ static vm_fault_t
->  xfs_filemap_fault(
->  	struct vm_fault		*vmf)
->  {
-> +	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> +
->  	/* DAX can shortcut the normal fault path on write faults! */
-> -	if (IS_DAX(file_inode(vmf->vma->vm_file)) && xfs_is_write_fault(vmf))
-> -		return xfs_write_fault(vmf, 0);
-> -	return __xfs_filemap_fault(vmf, 0);
-> +	if (IS_DAX(inode)) {
-> +		if (xfs_is_write_fault(vmf))
-> +			return xfs_write_fault(vmf, 0);
-> +		return xfs_dax_read_fault(vmf, 0);
-> +	}
-> +
-> +	trace_xfs_read_fault(XFS_I(inode), 0);
-> +	return filemap_fault(vmf);
->  }
->  
->  static vm_fault_t
-> @@ -1524,7 +1517,7 @@ xfs_filemap_huge_fault(
->  	/* DAX can shortcut the normal fault path on write faults! */
->  	if (xfs_is_write_fault(vmf))
->  		return xfs_write_fault(vmf, order);
-> -	return __xfs_filemap_fault(vmf, order);
-> +	return xfs_dax_read_fault(vmf, order);
->  }
->  
->  static vm_fault_t
-> -- 
-> 2.45.2
-> 
-> 
+Older xfs_repair could be encountered on rescue CDs/images, maybe
+even in initramfs environments, by virt hosts managing guest filesystems,
+etc.
+
+So it seems to me that it would be worth it to prevent any new inode
+allocations in this region going forward, even if we *can* make it work,
+so that we won't continue to generate what looks like corruption to older
+userspace.
+
+That might not be the most "pure" upstream approach, but as a practical
+matter I think it might be a better outcome for users and support
+orgs... even if distros update kernels & userspace together, that does
+not necessarily prevent older userspace from encountering a filesystem
+with inodes in this range and trashing them.
+
+Thanks,
+-Eric
