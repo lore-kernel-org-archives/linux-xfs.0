@@ -1,69 +1,78 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D5C202F8D
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 20:54:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8C142071F6
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 22:29:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730235299; cv=none; b=Lyt3/oQy7y0rZreKJqfBkwlwsbut9/P1DOncqcmglwHY5R54zOm3gONqsZcMs1UdQXi2fIPQrQW1dVE2MWlyKQCP57ViAKOJdMzuuqfBNpqI3m0+oVnubzsVfO+CbB2dTl6diK1PX7A2KxNm2l34zaRKpS9QwHDNzYdNLOB1s2s=
+	t=1730241000; cv=none; b=OLEEpfX0NbrePNrjxEj0qFcfERlBmTHgV4vLiBx4iP+6gBy34I7hCL/gResfZcD1L3wVXrundiSaJUSA8Fla8DcNPP7zOIrPY2sWvbvXXgsyfpDQvqCDFQ0eZDocOOQdwyBDoKpXdYSAjqueg6cvIih1exDMJdH+CHAg9sYXi8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730235299; c=relaxed/simple;
-	bh=tEFsgg0WbA5wsbwUTObpEL2xlIVzTXGxExe1VoC8omo=;
+	s=arc-20240116; t=1730241000; c=relaxed/simple;
+	bh=/raPG8JWFslih/M7A6y3VrwVMOCWAU8s9C2vDWm32+Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cQDmntsE5QtrtcFxMtQo7i0AdcuKxm2mNr8hwvJWoHrKzuV30wxIws77etvoGy0cgfN45/yQmWiuQ3i7O91yBxHL7NmqVlm7TGf5gSLxuIod0FZp2VIPJkBfI4JRvDAq9Q+B4X3heQIm9qiFVyKK7oPVDfyA9AL06/M0gdQV9aI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=gNv/3muf; arc=none smtp.client-ip=209.85.215.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=O+xxv/eTD8Q4ZMaDzWu28jyqixm3lCRrteTy+QPif8LLofZ7x7A9l7+fLwezARt4cgqwdxtgTHo6q/V43Zy8mjaNgKNKCA2nl0Ix13fyRp0QzWkLy946MEnm4XoIhf4rDWUg+gP6/5TvxJO0lIIVV1krarvTrS8cXmYklkNsz8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=nwFSP/lZ; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="gNv/3muf"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7ee11ff7210so1249314a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 13:54:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="nwFSP/lZ"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-7205646f9ebso3752167b3a.0
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 15:29:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730235296; x=1730840096; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730240996; x=1730845796; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hgvfv4KMjPqGu5RsMXNUp8cKF2CFokczBlPhgy1p7RU=;
-        b=gNv/3mufzk6sKqCg6ztpP7FGYGXJ1bOhGSX7BwwtwN34MJ4in+YMEAp2wZpC2owE4T
-         Y4Pw2vMgqHuNCZryRqE6Di/mJeGWbWFUKlNvVxBfwjIPGkMVol8l0UkUaG538OmGwtEr
-         eG8ANZj9aMKEeXHja1rn05Gd4rlWLjw+ODJuL6jARvpHTbs6qwmJR776SgzyEGCQUbWS
-         XjRXeo87njvwq4Qw0cdlS7IwAR+LKH5HnE84X1p0/LnrWBApM7IbYtmBmLrseh2qCFMe
-         WDvEOQsDQNeP9CWitxNv0sBi7sN5t4r4OUoigFfh26hsQMMpEssP8pB0+tPNpsjR1Da0
-         kC0Q==
+        bh=oUVL3SAWt1umC95tyhCPn9FuARdi1+2feQgOINsa25o=;
+        b=nwFSP/lZjzbuEKyERoh++ej51NkO8Zr9hGMLsJpZ/eSXrCczk3t/wqtYmn3tY3DqTV
+         MR4qyinq1GnUEDLBmmGD1pi6HagvvWKNIiywpwFreqaj3x/Kf7LMaIX41nY6DJcTXL2Y
+         3WFqUB1T89n83B2lJqTw/2Gm5ZmMNqeK5ZJ0O9sPNSLbwq7xCW4kdb8X8UfliahTA+oG
+         Pxr5lKquACSk9pbFAGfi8T1+WW1ykmWtE4nZH4yYPPlDNsREnpxsvuXyUp/0aV4Fy6cv
+         zDGvu5StuZqEHjj0FYoaLiEpsmn07hnXy9/ubYuSit4QSismbkd9ogZ7CKh9NzrYr+1y
+         s7/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730235296; x=1730840096;
+        d=1e100.net; s=20230601; t=1730240996; x=1730845796;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hgvfv4KMjPqGu5RsMXNUp8cKF2CFokczBlPhgy1p7RU=;
-        b=PT+xBrIc9CZEVz/SdTykqrx3rOeaXget2hFlxtuTiqlAGEawOeoVQUCpYw29ODERMd
-         p3Zjq76JEUylqTnnfsWnMDV2wQq4rJNVM4hdLbMDIJBu8azxnqxa5Jwp8nlhm03sILAX
-         XrdHkpp+UeWdLlU0p5k356azatjaSLlA+ZudORyry5klJrZVfekQ45ReP12arX6nCiBL
-         K4bHPetVZx1/LFb1SWXp0dPYplcH5OlbZufY2p6IIarsMCJCNHsSz2K8aFC8agU2vbNZ
-         VUQmtmL8iHRd9A6q07rHiX6cHvxPyTrXbA68Na463kzzRMeSCvc6wLTQ5FGMRn4pjQaY
-         PvAQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXDC+eOvqqKMRfjXz/rRK8+KBClXD3KiLhSNbw4/7iytNwyuIu1Ht9ZGS19r4LMQCBqFiOGF6TczgY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw/YjL8jlnJFstDtA41ssTwMikD/aKxWE8qgwQg3OXOOYJTZ/fF
-	G3zCZcB3qnfWms+iMkKy0G03q1qadN7PXTF42+d3PmiQBPJ3qkFYrVmFM/CZv3T0sz7fObg4/wg
-	F
-X-Google-Smtp-Source: AGHT+IEcS1ymha0Q+4ugqNzePMpBu//ibYzWnv2gD57NGK2hRigYyiY0cbFqHKZX9SAwBFMGPi3UmA==
-X-Received: by 2002:a05:6a21:118e:b0:1d2:e889:1513 with SMTP id adf61e73a8af0-1d9a83d5a65mr18931343637.17.1730235296560;
-        Tue, 29 Oct 2024 13:54:56 -0700 (PDT)
+        bh=oUVL3SAWt1umC95tyhCPn9FuARdi1+2feQgOINsa25o=;
+        b=FU974TExO0Xr0HF1Jy11+8vGGVkS3My0gEIe1SEJxZ9o9sJCqdukqtexQJAt40Gqks
+         8GGwdfsrZCyG8HP2kpsAUdrPHLOMKAVtJtTT//qDg8B5S9FlEBhzd3eg0Utvj6RGOFUZ
+         qOOJA4Acc1qZ49M2qXLHzB0Ub80Rlgk/aGf/eDnlF5SkFVWwBAbIXyNn2zbAlzfEV3Xt
+         Q5JBWMRa1eTjjiXW9DUmH43LQmsaJhsr8HqHsSW53grRVceRFla9HFaCgt0fVyoEqODj
+         /UBjeFBh6E1rgeTzL21hIKrnnp1ibeZfmfWxorZaJOHO6Bl3OfvvhaD5Y+a/6Hrs4gq9
+         uRvQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUV7HcNRE4yIKsBPnUyEgqpvgQI2brbB6l1/00zbrrTDvLtaS+mPAHYAI3VbfcQyekGFotU8e9JC/0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwFey6X4oM4LsW7wVSzxY3jXE6wNJxO6xjxAPhtovp0/kmo4adR
+	RPlB3RaL/4iJA4I2A+3vVLtQ2gq0Zvarr6SUe98jCmKmYu3bs2Co9nbq9C4R1Pc=
+X-Google-Smtp-Source: AGHT+IGO9MhIpSqfKeXy5vAvn1zbzDm9cPtiSF9r1+C1go1FuzVvg5kHpeIXGGr9/+Tq/5YIOUAnzw==
+X-Received: by 2002:a05:6a00:2d8d:b0:71e:818a:97d9 with SMTP id d2e1a72fcca58-72062f8336amr19056400b3a.5.1730240995936;
+        Tue, 29 Oct 2024 15:29:55 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e92fa0f6edsm37917a91.1.2024.10.29.13.54.56
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7205794fd8dsm8332244b3a.96.2024.10.29.15.29.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Oct 2024 13:54:56 -0700 (PDT)
+        Tue, 29 Oct 2024 15:29:55 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1t5tEr-007W82-1V;
-	Wed, 30 Oct 2024 07:54:53 +1100
-Date: Wed, 30 Oct 2024 07:54:53 +1100
+	id 1t5uik-007Y8D-2k;
+	Wed, 30 Oct 2024 09:29:50 +1100
+Date: Wed, 30 Oct 2024 09:29:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: misc page fault handler cleanups
-Message-ID: <ZyFLnc88MFKnoL/X@dread.disaster.area>
-References: <20241029151214.255015-1-hch@lst.de>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+	Jan Kara <jack@suse.cz>, "Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 4/6] ext4: Warn if we ever fallback to buffered-io for
+ DIO atomic writes
+Message-ID: <ZyFh3uCGqB20+2X2@dread.disaster.area>
+References: <cover.1729825985.git.ritesh.list@gmail.com>
+ <7c4779f1f0c8ead30f660a2cfbdf4d7cc08e405a.1729825985.git.ritesh.list@gmail.com>
+ <Zx6+F4Cl1owSDspD@dread.disaster.area>
+ <87iktdm3sf.fsf@gmail.com>
+ <Zx8ga59h0JgU/YIC@dread.disaster.area>
+ <87a5eom6xj.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,21 +81,144 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241029151214.255015-1-hch@lst.de>
+In-Reply-To: <87a5eom6xj.fsf@gmail.com>
 
-On Tue, Oct 29, 2024 at 04:11:56PM +0100, Christoph Hellwig wrote:
-> Hi all,
+On Mon, Oct 28, 2024 at 11:44:00PM +0530, Ritesh Harjani wrote:
 > 
-> I recently started looking at the page fault handlers, and noticed
-> that our code is still a convoluted mess even after my previous
-> round of cleanups.
+> Hi Dave, 
 > 
-> No bug fixes or speedups in this series, just pure cleanups.
+> Dave Chinner <david@fromorbit.com> writes:
+> 
+> > On Mon, Oct 28, 2024 at 06:39:36AM +0530, Ritesh Harjani wrote:
+> >> 
+> >> Hi Dave, 
+> >> 
+> >> Dave Chinner <david@fromorbit.com> writes:
+> >> 
+> >> > On Fri, Oct 25, 2024 at 09:15:53AM +0530, Ritesh Harjani (IBM) wrote:
+> >> >> iomap will not return -ENOTBLK in case of dio atomic writes. But let's
+> >> >> also add a WARN_ON_ONCE and return -EIO as a safety net.
+> >> >> 
+> >> >> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> >> >> ---
+> >> >>  fs/ext4/file.c | 10 +++++++++-
+> >> >>  1 file changed, 9 insertions(+), 1 deletion(-)
+> >> >> 
+> >> >> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> >> >> index f9516121a036..af6ebd0ac0d6 100644
+> >> >> --- a/fs/ext4/file.c
+> >> >> +++ b/fs/ext4/file.c
+> >> >> @@ -576,8 +576,16 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
+> >> >>  		iomap_ops = &ext4_iomap_overwrite_ops;
+> >> >>  	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
+> >> >>  			   dio_flags, NULL, 0);
+> >> >> -	if (ret == -ENOTBLK)
+> >> >> +	if (ret == -ENOTBLK) {
+> >> >>  		ret = 0;
+> >> >> +		/*
+> >> >> +		 * iomap will never return -ENOTBLK if write fails for atomic
+> >> >> +		 * write. But let's just add a safety net.
+> >> >> +		 */
+> >> >> +		if (WARN_ON_ONCE(iocb->ki_flags & IOCB_ATOMIC))
+> >> >> +			ret = -EIO;
+> >> >> +	}
+> >> >
+> >> > Why can't the iomap code return EIO in this case for IOCB_ATOMIC?
+> >> > That way we don't have to put this logic into every filesystem.
+> >> 
+> >> This was origially intended as a safety net hence the WARN_ON_ONCE.
+> >> Later Darrick pointed out that we still might have an unconverted
+> >> condition in iomap which can return ENOTBLK for DIO atomic writes (page
+> >> cache invalidation).
+> >
+> > Yes. That's my point - iomap knows that it's an atomic write, it
+> > knows that invalidation failed, and it knows that there is no such
+> > thing as buffered atomic writes. So there is no possible fallback
+> > here, and it should be returning EIO in the page cache invalidation
+> > failure case and not ENOTBLK.
+> >
+> 
+> So the iomap DIO can return following as return values which can make
+> some filesystems fallback to buffered-io (if they implement fallback
+> logic) - 
+> (1) -ENOTBLK -> this is only returned for pagecache invalidation failure.
+> (2) 0 or partial write size -> This can never happen for atomic writes
+> (since we are only allowing for single fsblock as of now).
 
-Whole series looks good to me.
+Even when we allow multi-FSB atomic writes, the definition of
+atomic write is still "all or nothing". There is no scope for "short
+writes" when IOCB_ATOMIC is set - any condition that means we can't
+write the entire IO as a single bio, we need to abort and return
+EINVAL.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Hence -ENOTBLK should never be returned by iomap for atomic DIO
+writes - we need to say -EINVAL if the write could not be issued
+atomically for whatever reason it may be so the application knows
+that atomic IO submission was not possible for that IO.
 
+> Now looking at XFS, it never fallsback to buffered-io ever except just 2
+> cases - 
+> 1. When pagecache invalidation fails in iomap (can never happen for
+> atomic writes)
+
+Why can't this happen for atomic DIO writes?  It's the same failure
+cases as for normal DIO writes, isn't it? (i.e. race with mmap
+writes)
+
+My point is that if it's an atomic write, this failure should get
+turned into -EINVAL by the iomap code. We do not want a fallback to
+buffered IO when this situation happens for atomic IO.
+
+> 2. On unaligned DIO writes to reflinked CoW (not possible for atomic writes)
+
+This path doesn't ever go through iomap - XFS catches that case
+before it calls into iomap, so it's not relevant to how iomap
+behaves w.r.t atomic IO.
+
+> So it anyways should never happen that XFS ever fallback to buffered-io
+> for DIO atomic writes. Even today it does not fallback to buffered-io
+> for non-atomic short DIO writes.
+> 
+> >> You pointed it right that it should be fixed in iomap. However do you
+> >> think filesystems can still keep this as safety net (maybe no need of
+> >> WARN_ON_ONCE).
+> >
+> > I don't see any point in adding "impossible to hit" checks into
+> > filesystems just in case some core infrastructure has a bug
+> > introduced....
+> 
+> Yes, that is true for XFS. EXT4 however can return -ENOTBLK for short
+> writes, though it should not happen for current atomic write case where
+> we are only allowing for 1 fsblock. 
+
+Yes, but the -ENOTBLK error returned from ext4_iomap_end() if
+nothing was written does not get returned to ext4 from
+__iomap_dio_rw(). It is consumed by the iomap code:
+
+	/* magic error code to fall back to buffered I/O */
+        if (ret == -ENOTBLK) {
+                wait_for_completion = true;
+                ret = 0;
+	}
+
+This means that all the IO that was issued gets completed before
+returning to the caller and that's how the short write comes about.
+
+-ENOTBLK is *not returned to the caller* on a short write -
+iomap_dio_rw will return 0 (success).  The caller then has to look
+at the iov_iter state to determine if the write was fully completed.
+This is exactly what the ext4 code currently does for all DIO
+writes, not just those that return -ENOTBLK.
+
+> I would still like to go with a WARN_ON_ONCE where we are calling ext4
+> buffered-io handling for DIO fallback writes. This is to catch any bugs
+> even in future when we move to multi-fsblock case (until we have atomic
+> write support for buffered-io).
+
+Your choice, but please realise that it is not going to catch short
+atomic writes at all.
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
