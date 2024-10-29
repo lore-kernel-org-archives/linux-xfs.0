@@ -1,71 +1,69 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFDE2209669
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 20:46:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D5C202F8D
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 20:54:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730234786; cv=none; b=Ebhpw0UIE/6oHUuTUsEr5goht7uzj3UjXTBOHzZ7cNjYBRrJKSTNR3ci8Jc7bT8bypbDvhywVBD+H2qysGmijuHmxymZBq6kF0o+L60jVGUVo244TxC3us1KBBa/Qgk+sdxrQGvVcUUpxwFl/x1WxEPJX+xlpNQAjXaigFkDmOk=
+	t=1730235299; cv=none; b=Lyt3/oQy7y0rZreKJqfBkwlwsbut9/P1DOncqcmglwHY5R54zOm3gONqsZcMs1UdQXi2fIPQrQW1dVE2MWlyKQCP57ViAKOJdMzuuqfBNpqI3m0+oVnubzsVfO+CbB2dTl6diK1PX7A2KxNm2l34zaRKpS9QwHDNzYdNLOB1s2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730234786; c=relaxed/simple;
-	bh=+CNEOSC0DbQZy4K5AT+A96cCKNBKUjA01x9QZbYl6NM=;
+	s=arc-20240116; t=1730235299; c=relaxed/simple;
+	bh=tEFsgg0WbA5wsbwUTObpEL2xlIVzTXGxExe1VoC8omo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o/Q/XuWyXxx68Hp6bOT8XShJAA4DMJTYjFleKtw0jdRJ9PaGo+69weU/66xX/Rj96IOKBdnoixPRsHUeZQiq4xe2USclMsbkIYdXBIskAnYia0WR4JH4GcTqEzyFnJCVgXWDH7VkOCfZSjSpkJoMiwlE8dGLRsvabpe/gh5oZHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=1P67kI4g; arc=none smtp.client-ip=209.85.216.41
+	 Content-Type:Content-Disposition:In-Reply-To; b=cQDmntsE5QtrtcFxMtQo7i0AdcuKxm2mNr8hwvJWoHrKzuV30wxIws77etvoGy0cgfN45/yQmWiuQ3i7O91yBxHL7NmqVlm7TGf5gSLxuIod0FZp2VIPJkBfI4JRvDAq9Q+B4X3heQIm9qiFVyKK7oPVDfyA9AL06/M0gdQV9aI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=gNv/3muf; arc=none smtp.client-ip=209.85.215.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1P67kI4g"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-2e31af47681so4724514a91.2
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 13:46:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="gNv/3muf"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7ee11ff7210so1249314a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 13:54:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730234784; x=1730839584; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730235296; x=1730840096; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wJyMqwPMjPmPi5Jq2cvTimVnEwLKv1Tu1X/bYTSfjaA=;
-        b=1P67kI4g12yI2HYvP8MLyi2otzg5J3dFajgHgbJ2dK6HGLCXXuGCQ8FkkGQkj0Y61m
-         4lWHjXu2GJLh8ZDHOjpq/8NMdi5cer3pkl6PZRH/2CD/oiwalDlkA+tTUoCqDJDP3HTG
-         KtPDx+GhzHdMRg0zVU84A4+hekS+JFprMiSQBAsCZ1fPKfZ/EPklQfolDzAbcVBbUPsr
-         CiDGzxKlX5Co15JbWA+tu8uZHfWqeTPzP5okGgp5cDuq+OxeE304oxPCSpO67DQ9B102
-         xM84DLPL7AEwGDa/O51K1nzAlht1w/gpxzsj+A8+9R57Ah/bYxliHJttiJvE7YZMbjAs
-         rIug==
+        bh=hgvfv4KMjPqGu5RsMXNUp8cKF2CFokczBlPhgy1p7RU=;
+        b=gNv/3mufzk6sKqCg6ztpP7FGYGXJ1bOhGSX7BwwtwN34MJ4in+YMEAp2wZpC2owE4T
+         Y4Pw2vMgqHuNCZryRqE6Di/mJeGWbWFUKlNvVxBfwjIPGkMVol8l0UkUaG538OmGwtEr
+         eG8ANZj9aMKEeXHja1rn05Gd4rlWLjw+ODJuL6jARvpHTbs6qwmJR776SgzyEGCQUbWS
+         XjRXeo87njvwq4Qw0cdlS7IwAR+LKH5HnE84X1p0/LnrWBApM7IbYtmBmLrseh2qCFMe
+         WDvEOQsDQNeP9CWitxNv0sBi7sN5t4r4OUoigFfh26hsQMMpEssP8pB0+tPNpsjR1Da0
+         kC0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730234784; x=1730839584;
+        d=1e100.net; s=20230601; t=1730235296; x=1730840096;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wJyMqwPMjPmPi5Jq2cvTimVnEwLKv1Tu1X/bYTSfjaA=;
-        b=mrSh12oWMWLhHkWRIZizNMXBd2GDNyG7BEYYTb5mcw7sLTnDRsrWDf0W+O25IPF/b/
-         +Y76u3BP92lFyR9m8EfqX6uaA8WRb7GelEjnsILCNYGLZwlsgC6fM3jkDCvN8xM5z1BI
-         I2ENtH1r1U2kpM1xVZmHLoiFWk+bJkwoyLVG4FstMWPwcGDTNaYsPuBkOeRE5ci/IB+3
-         Jv6EFOo52Rgu9TT+z2WIZ7sHRPG04GGhJ3sb69SsGM53hqbZ447QQc/5yYpbJWvtImLz
-         GqgSutdRIVB4n8Vz4ptY2o1nYYpfyBR8WUXrOiMWbAk3D/+/AjS9paWgZBk85zXzC0PJ
-         MSfw==
-X-Forwarded-Encrypted: i=1; AJvYcCXR5P3WzfBuepSdxnYtE/DjTR/8CPWzlqlnCD6/EYlLV0tGVOTyeZWXum1d0HY5+jPwUc2nWm/iLW4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyLDxs9CyL5Z333VeD3ziKhKTN+Oc0C9FKV3dcogkB4tZhI/t0s
-	aHdqb/JCY/bG35PVxixIrEN+I5verFBO8Bq4arwxTXLyIWVQiy/wVUXlolkCbhc=
-X-Google-Smtp-Source: AGHT+IHGygLgAK8RY5HTrV4sAhs6n9uEfIRrZbFY6Pn4XambynjEgEko/5L4FIMbYTCHNWXvBvBabA==
-X-Received: by 2002:a17:90a:f596:b0:2e2:b922:492 with SMTP id 98e67ed59e1d1-2e8f107a5d6mr14046760a91.17.1730234784079;
-        Tue, 29 Oct 2024 13:46:24 -0700 (PDT)
+        bh=hgvfv4KMjPqGu5RsMXNUp8cKF2CFokczBlPhgy1p7RU=;
+        b=PT+xBrIc9CZEVz/SdTykqrx3rOeaXget2hFlxtuTiqlAGEawOeoVQUCpYw29ODERMd
+         p3Zjq76JEUylqTnnfsWnMDV2wQq4rJNVM4hdLbMDIJBu8azxnqxa5Jwp8nlhm03sILAX
+         XrdHkpp+UeWdLlU0p5k356azatjaSLlA+ZudORyry5klJrZVfekQ45ReP12arX6nCiBL
+         K4bHPetVZx1/LFb1SWXp0dPYplcH5OlbZufY2p6IIarsMCJCNHsSz2K8aFC8agU2vbNZ
+         VUQmtmL8iHRd9A6q07rHiX6cHvxPyTrXbA68Na463kzzRMeSCvc6wLTQ5FGMRn4pjQaY
+         PvAQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXDC+eOvqqKMRfjXz/rRK8+KBClXD3KiLhSNbw4/7iytNwyuIu1Ht9ZGS19r4LMQCBqFiOGF6TczgY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw/YjL8jlnJFstDtA41ssTwMikD/aKxWE8qgwQg3OXOOYJTZ/fF
+	G3zCZcB3qnfWms+iMkKy0G03q1qadN7PXTF42+d3PmiQBPJ3qkFYrVmFM/CZv3T0sz7fObg4/wg
+	F
+X-Google-Smtp-Source: AGHT+IEcS1ymha0Q+4ugqNzePMpBu//ibYzWnv2gD57NGK2hRigYyiY0cbFqHKZX9SAwBFMGPi3UmA==
+X-Received: by 2002:a05:6a21:118e:b0:1d2:e889:1513 with SMTP id adf61e73a8af0-1d9a83d5a65mr18931343637.17.1730235296560;
+        Tue, 29 Oct 2024 13:54:56 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e92fa273c7sm22567a91.24.2024.10.29.13.46.23
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e92fa0f6edsm37917a91.1.2024.10.29.13.54.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Oct 2024 13:46:23 -0700 (PDT)
+        Tue, 29 Oct 2024 13:54:56 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1t5t6Z-007W26-1K;
-	Wed, 30 Oct 2024 07:46:19 +1100
-Date: Wed, 30 Oct 2024 07:46:19 +1100
+	id 1t5tEr-007W82-1V;
+	Wed, 30 Oct 2024 07:54:53 +1100
+Date: Wed, 30 Oct 2024 07:54:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: alexjlzheng@gmail.com
-Cc: cem@kernel.org, djwong@kernel.org, chandanbabu@kernel.org,
-	dchinner@redhat.com, zhangjiachen.jaycee@bytedance.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: Re: [PATCH] xfs: fix the judgment of whether the file already has
- extents
-Message-ID: <ZyFJm7xg7Msd6eVr@dread.disaster.area>
-References: <20241026180116.10536-1-alexjlzheng@tencent.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: misc page fault handler cleanups
+Message-ID: <ZyFLnc88MFKnoL/X@dread.disaster.area>
+References: <20241029151214.255015-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,38 +72,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241026180116.10536-1-alexjlzheng@tencent.com>
+In-Reply-To: <20241029151214.255015-1-hch@lst.de>
 
-On Sun, Oct 27, 2024 at 02:01:16AM +0800, alexjlzheng@gmail.com wrote:
-> From: Jinliang Zheng <alexjlzheng@tencent.com>
+On Tue, Oct 29, 2024 at 04:11:56PM +0100, Christoph Hellwig wrote:
+> Hi all,
 > 
-> When we call create(), lseek() and write() sequentially, offset != 0
-> cannot be used as a judgment condition for whether the file already
-> has extents.
+> I recently started looking at the page fault handlers, and noticed
+> that our code is still a convoluted mess even after my previous
+> round of cleanups.
 > 
-> This patch uses prev.br_startoff instead of offset != 0.
-> 
-> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 36dd08d13293..94e7aeed9e95 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3536,7 +3536,7 @@ xfs_bmap_btalloc_at_eof(
->  	 * or it's the first allocation in a file, just try for a stripe aligned
->  	 * allocation.
->  	 */
-> -	if (ap->offset) {
-> +	if (ap->prev.br_startoff != NULLFILEOFF) {
->  		xfs_extlen_t	nextminlen = 0;
+> No bug fixes or speedups in this series, just pure cleanups.
 
-Makes sense, but the logic is not correct. See xfs_bmap_adjacent()
-on how it sets up the ap->blkno target for exact eof bno allocation.
+Whole series looks good to me.
 
--Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
