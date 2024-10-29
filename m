@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 003FE1957E9
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 15:47:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A195196C9C
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 15:48:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730216878; cv=none; b=k/f4gimB1uX/AUbUG8NXn0h77olvdeLTvg+7nl6XeFCcH5uc3DkTAEZGIaK8xHdwblvqZfOJ5SMvjuBllTET4AIsB/iPdWtZaspVZKk4mofTGpldaHUSroLa0flu+LuoZutVcgwiKmpVp2DqFi6VBgseBmch6CvH3B/gLhi+xMI=
+	t=1730216894; cv=none; b=NXkz3Fw0VFLU9sjRDqjoVPe9VCVO2qHOfu6tmpMljxmts/yD+E889WnyObOPPytH0uBKdxgyrZgGwcEcojSzz/vU5Eq+IGoY87MSBTS6x0HIkyXJCTZqlZYED2zD1pLObMw6iNkfPFwyXrOUyrNcaipIkNt0OJkQvcV+Ba0eml8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730216878; c=relaxed/simple;
-	bh=ur2gudVZzIXpQd8c6rSBo5jZllmdXOFK2Rv3VShCmr8=;
+	s=arc-20240116; t=1730216894; c=relaxed/simple;
+	bh=EqnF7CIpRC91gS4sEMx44gI53kQAc3v8T63Dw+Xutbw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NdBUwZ3rPRxb3mL/mw30kfH5/FMxtE9AVy+z08uwveaMwq/0GXViway+kLiTAJlo1jCOJ3thxCx9KVAYLZ5vznuDqtaesb2b5LZTR24viH05avTvwrFnJn/U3g53gizZJRZ+9uWYQ7G9yRVfE0cxNo8bx8GS7buxsSikCfiG99s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqtBHM9J; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=i4wRd1IgbSyod9STTbdwaz0pwXYRzaAy1OsdyKXEsifYP6donCsv3YjQ/ZIXpqFsjmTAX8Z934g+fXmRi69C8UlAQHZzyVwZdFAiVaEiaUs8jtHFkFg0Kt4HXVTjK6gW+NVGGqeQfolT1/GmIFlvMLXSWpkVCbZ9RRk5cQOIhBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uxBkyKqd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqtBHM9J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AA21C4CECD;
-	Tue, 29 Oct 2024 15:47:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uxBkyKqd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97C3AC4CEE8;
+	Tue, 29 Oct 2024 15:48:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730216877;
-	bh=ur2gudVZzIXpQd8c6rSBo5jZllmdXOFK2Rv3VShCmr8=;
+	s=k20201202; t=1730216893;
+	bh=EqnF7CIpRC91gS4sEMx44gI53kQAc3v8T63Dw+Xutbw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bqtBHM9JGgLIM2rShIZvmyWBJcB/G1drnXJttd5CG/hwnUzvvf+arq33Jkf/lgbcy
-	 K5aDxx3EizjG/dhq2A1N4Vx4lIu8NCklUO807avLZ7xtACw72PZQOgdIrvjtEKkfZC
-	 vbxa8Drfa+FD1fXoEQ/peu/z3j3oJ1SaRkBh6ofzZoXgFW32n9k0rZ9mj8gHcczBFO
-	 bMWI4Zg1S+lv2mNhAPWgHOOkuRtlP1Tir2ZrPBxpEOYT6uZXEcAxt3DOauMtOlVPdV
-	 f2QxCykq1IstxZZ5CqB+URcnXP/yLqmdxafbKjCQZl3cFErgfrRIaam49ssYjvbYWH
-	 BMmWtsJTXAyvw==
-Date: Tue, 29 Oct 2024 08:47:56 -0700
-Subject: [PATCH 1/8] xfs_db: support passing the realtime device to the
- debugger
+	b=uxBkyKqdn0vOpdFwpzOdwGbc5YIQYHthzksuwr9X39v+bUTGhvJRAt8Ga3UwA6HE0
+	 gu3RZS6QlUISRm7un1jfpAT2vIyock2Cmypvhlln+lSwy/Ewglp5VSmyBSPEg/7vYk
+	 gajcEKAjMM4l2Ao1nsbHq0NXf6LPh7KwhgJgCq9up2wEAsR7CSAfuSa9TAraqSU6xd
+	 nx8U0izAryDHNxSzPAdoNnUyPH1kWWHdIMAPgWwodrDaZdravblQlqm4wKloOgCFBK
+	 oltKMnqNikvYw0ILJrXBJk7GUzE9gkVRrHcKdkv+j2H1+q+vnPAJ8/SIu5JSm75mJA
+	 vg2tsOjuoPvzg==
+Date: Tue, 29 Oct 2024 08:48:12 -0700
+Subject: [PATCH 2/8] xfs_db: report the realtime device when associated with
+ each io cursor
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173021673250.3128727.4592508216176625209.stgit@frogsfrogsfrogs>
+Message-ID: <173021673265.3128727.15473481352708315057.stgit@frogsfrogsfrogs>
 In-Reply-To: <173021673227.3128727.17882979358320595734.stgit@frogsfrogsfrogs>
 References: <173021673227.3128727.17882979358320595734.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,198 +46,70 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new -R flag so that sysadmins can pass the realtime device to
-the xfs debugger.  Since we can now have superblocks on the rt device,
-we need this to be able to inspect/dump/etc.
+When db is reporting on an io cursor and the cursor points to the
+realtime device, print that fact.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/init.c         |    7 +++++--
- db/io.c           |   28 +++++++++++++++++++++++-----
- db/io.h           |    2 ++
- db/xfs_admin.sh   |    4 +++-
- man/man8/xfs_db.8 |   13 +++++++++++++
- 5 files changed, 46 insertions(+), 8 deletions(-)
+ db/block.c |    2 ++
+ db/io.c    |   11 +++++++++++
+ db/io.h    |    1 +
+ 3 files changed, 14 insertions(+)
 
 
-diff --git a/db/init.c b/db/init.c
-index cea25ae52bd1b7..17fb094296c2b8 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -33,7 +33,7 @@ static void
- usage(void)
- {
- 	fprintf(stderr, _(
--		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
-+		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-R rtdev] [-c cmd]... device\n"
- 		), progname);
- 	exit(1);
- }
-@@ -54,7 +54,7 @@ init(
- 	textdomain(PACKAGE);
+diff --git a/db/block.c b/db/block.c
+index 22930e5a287e8f..bd25cdbe193f4f 100644
+--- a/db/block.c
++++ b/db/block.c
+@@ -133,6 +133,8 @@ daddr_f(
+ 			dbprintf(_("datadev daddr is %lld\n"), daddr);
+ 		else if (iocur_is_extlogdev(iocur_top))
+ 			dbprintf(_("logdev daddr is %lld\n"), daddr);
++		else if (iocur_is_rtdev(iocur_top))
++			dbprintf(_("rtdev daddr is %lld\n"), daddr);
+ 		else
+ 			dbprintf(_("current daddr is %lld\n"), daddr);
  
- 	progname = basename(argv[0]);
--	while ((c = getopt(argc, argv, "c:fFip:rxVl:")) != EOF) {
-+	while ((c = getopt(argc, argv, "c:fFip:rR:xVl:")) != EOF) {
- 		switch (c) {
- 		case 'c':
- 			cmdline = xrealloc(cmdline, (ncmdline+1)*sizeof(char*));
-@@ -75,6 +75,9 @@ init(
- 		case 'r':
- 			x.flags = LIBXFS_ISREADONLY;
- 			break;
-+		case 'R':
-+			x.rt.name = optarg;
-+			break;
- 		case 'l':
- 			x.log.name = optarg;
- 			break;
 diff --git a/db/io.c b/db/io.c
-index 9b2c6b4cf7e963..26b8e78c2ebda8 100644
+index 26b8e78c2ebda8..3841c0dcb86ead 100644
 --- a/db/io.c
 +++ b/db/io.c
-@@ -458,6 +458,7 @@ ring_add(void)
- static void
- write_cur_buf(void)
- {
-+	struct xfs_buftarg	*btp = iocur_top->bp->b_target;
- 	int ret;
- 
- 	ret = -libxfs_bwrite(iocur_top->bp);
-@@ -465,7 +466,7 @@ write_cur_buf(void)
- 		dbprintf(_("write error: %s\n"), strerror(ret));
- 
- 	/* re-read buffer from disk */
--	ret = -libxfs_readbufr(mp->m_ddev_targp, iocur_top->bb, iocur_top->bp,
-+	ret = -libxfs_readbufr(btp, iocur_top->bb, iocur_top->bp,
- 			      iocur_top->blen, 0);
- 	if (ret != 0)
- 		dbprintf(_("read error: %s\n"), strerror(ret));
-@@ -474,6 +475,7 @@ write_cur_buf(void)
- static void
- write_cur_bbs(void)
- {
-+	struct xfs_buftarg	*btp = iocur_top->bp->b_target;
- 	int ret;
- 
- 	ret = -libxfs_bwrite(iocur_top->bp);
-@@ -482,7 +484,7 @@ write_cur_bbs(void)
- 
- 
- 	/* re-read buffer from disk */
--	ret = -libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp, 0);
-+	ret = -libxfs_readbufr_map(btp, iocur_top->bp, 0);
- 	if (ret != 0)
- 		dbprintf(_("read error: %s\n"), strerror(ret));
- }
-@@ -541,9 +543,9 @@ static void
- __set_cur(
- 	struct xfs_buftarg	*btargp,
- 	const typ_t		*type,
--	xfs_daddr_t		 blknum,
--	int			 len,
--	int			 ring_flag,
-+	xfs_daddr_t		blknum,
-+	int			len,
-+	int			ring_flag,
- 	bbmap_t			*bbmap)
- {
- 	struct xfs_buf		*bp;
-@@ -647,6 +649,22 @@ set_log_cur(
- 	__set_cur(mp->m_logdev_targp, type, blknum, len, ring_flag, bbmap);
+@@ -159,6 +159,15 @@ iocur_is_extlogdev(const struct iocur *ioc)
+ 	return bp->b_target == bp->b_mount->m_logdev_targp;
  }
  
-+int
-+set_rt_cur(
-+	const typ_t	*type,
-+	xfs_daddr_t	blknum,
-+	int		len,
-+	int		ring_flag,
-+	bbmap_t		*bbmap)
++bool
++iocur_is_rtdev(const struct iocur *ioc)
 +{
-+	if (!mp->m_rtdev_targp->bt_bdev) {
-+		printf(_("realtime device not loaded, use -R.\n"));
-+		return ENODEV;
-+	}
++	if (!ioc->bp)
++		return false;
 +
-+	__set_cur(mp->m_rtdev_targp, type, blknum, len, ring_flag, bbmap);
-+	return 0;
++	return ioc->bp->b_target == ioc->bp->b_mount->m_rtdev_targp;
 +}
- 
++
  void
- set_iocur_type(
+ print_iocur(
+ 	char	*tag,
+@@ -171,6 +180,8 @@ print_iocur(
+ 		block_unit = "fsbno";
+ 	else if (iocur_is_extlogdev(ioc))
+ 		block_unit = "logbno";
++	else if (iocur_is_rtdev(ioc))
++		block_unit = "rtbno";
+ 
+ 	dbprintf("%s\n", tag);
+ 	dbprintf(_("\tbyte offset %lld, length %d\n"), ioc->off, ioc->len);
 diff --git a/db/io.h b/db/io.h
-index f48b67b47a2b55..cece66a1cf825a 100644
+index cece66a1cf825a..653724e90bd270 100644
 --- a/db/io.h
 +++ b/db/io.h
-@@ -51,6 +51,8 @@ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
- 			int len, int ring_add, bbmap_t *bbmap);
- extern void	set_log_cur(const struct typ *type, xfs_daddr_t blknum,
- 			int len, int ring_add, bbmap_t *bbmap);
-+int		set_rt_cur(const struct typ *type, xfs_daddr_t blknum,
-+			int len, int ring_add, bbmap_t *bbmap);
- extern void     ring_add(void);
- extern void	set_iocur_type(const struct typ *type);
- extern void	xfs_dummy_verify(struct xfs_buf *bp);
-diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-index cc650c4255036b..52a658ba4a540f 100755
---- a/db/xfs_admin.sh
-+++ b/db/xfs_admin.sh
-@@ -8,6 +8,7 @@ status=0
- require_offline=""
- require_online=""
- DB_OPTS=""
-+DB_DEV_OPTS=""
- REPAIR_OPTS=""
- IO_OPTS=""
- REPAIR_DEV_OPTS=""
-@@ -42,6 +43,7 @@ do
- 		require_offline=1
- 		;;
- 	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'"
-+		DB_DEV_OPTS=" -R '$OPTARG'"
- 		require_offline=1
- 		;;
- 	u)	DB_OPTS=$DB_OPTS" -r -c uuid"
-@@ -89,7 +91,7 @@ case $# in
+@@ -60,6 +60,7 @@ extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
  
- 		if [ -n "$DB_OPTS" ]
- 		then
--			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
-+			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_DEV_OPTS $DB_OPTS "$1"
- 			status=$?
- 		fi
- 		if [ -n "$REPAIR_OPTS" ]
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 291ec1c5827bfd..5faf8dbb1d679f 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -14,6 +14,9 @@ .SH SYNOPSIS
- .B \-l
- .I logdev
- ] [
-+.B \-R
-+.I rtdev
-+] [
- .B \-p
- .I progname
- ]
-@@ -80,6 +83,16 @@ .SH OPTIONS
- for prompts and some error messages, the default value is
- .BR xfs_db .
- .TP
-+.B -R
-+.I rtdev
-+Specifies the device where the realtime data resides.
-+This is only relevant for filesystems that have a realtime section.
-+See the
-+.BR mkfs.xfs "(8) " \-r
-+option, and refer to
-+.BR xfs (5)
-+for a detailed description of the XFS realtime section.
-+.TP
- .B -r
- Open
- .I device
+ bool iocur_is_ddev(const struct iocur *ioc);
+ bool iocur_is_extlogdev(const struct iocur *ioc);
++bool iocur_is_rtdev(const struct iocur *ioc);
+ 
+ /*
+  * returns -1 for unchecked, 0 for bad and 1 for good
 
